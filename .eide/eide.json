@@ -1,0 +1,83 @@
+{
+  "name": "LearnADC",
+  "type": "RISC-V",
+  "dependenceList": [],
+  "srcDirs": [
+    "src",
+    "sdk",
+    "math/controller",
+    "math/filter",
+    "math/iq",
+    "math",
+    "src/clock",
+    "src/ST7789"
+  ],
+  "virtualFolder": {
+    "name": "<virtual_root>",
+    "files": [],
+    "folders": []
+  },
+  "outDir": "build",
+  "deviceName": null,
+  "packDir": null,
+  "miscInfo": {
+    "uid": "f4c5dfddb63afac268be43c17b8925f4"
+  },
+  "targets": {
+    "Debug": {
+      "excludeList": [
+        "Startup/startup_ch32v30x_D8.S",
+        "sdk/Startup/startup_ch32v20x_D8W.S",
+        "sdk/Startup/startup_ch32v20x_D8.S"
+      ],
+      "toolchain": "RISCV_GCC",
+      "compileConfig": {
+        "linkerScriptPath": "",
+        "options": "null"
+      },
+      "uploader": "Custom",
+      "uploadConfig": {
+        "bin": "${ExecutableName}.bin",
+        "commandLine": "download.cmd ${programFile}",
+        "eraseChipCommand": ""
+      },
+      "uploadConfigMap": {
+        "JLink": {
+          "bin": "",
+          "baseAddr": "0x08000000",
+          "cpuInfo": {
+            "vendor": "ST",
+            "cpuName": "STM32F103C8"
+          },
+          "proType": 1,
+          "speed": 8000,
+          "otherCmds": ""
+        },
+        "OpenOCD": {
+          "bin": "",
+          "target": "${workspaceFolder}/tools/wch-target",
+          "interface": "${workspaceFolder}/tools/wch-interface",
+          "baseAddr": "0x08000000"
+        },
+        "Custom": {
+          "bin": "${ExecutableName}.bin",
+          "commandLine": "download.cmd ${programFile}",
+          "eraseChipCommand": ""
+        }
+      },
+      "custom_dep": {
+        "name": "default",
+        "incList": [
+          "sdk/Peripheral/inc",
+          "src",
+          "sdk/Core",
+          "sdk/Debug"
+        ],
+        "libList": [],
+        "sourceDirList": [],
+        "defineList": []
+      }
+    }
+  },
+  "version": "3.3"
+}
