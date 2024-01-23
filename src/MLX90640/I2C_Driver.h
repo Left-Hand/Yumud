@@ -2,36 +2,23 @@
 
 #define __I2C_DRIVER_H__
 
-void IIC_Init(void)
-{
-    GPIO_InitTypeDef GPIO_InitStructure = {0};
-    I2C_InitTypeDef I2C_InitTSturcture = {0};
+#include "../src/defines/comm_inc.h"
+#include "ch32v20x_i2c.h"
+#include "clock/clock.h"
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
-    RCC_APB1PeriphClockCmd(I2C_RCC, ENABLE);
+#ifdef __cplusplus
+extern"C"{
+#endif
 
-    GPIO_InitStructure.GPIO_Pin = SCL_Pin;//SCL
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+#define I2C_MEMADD_SIZE_8BIT 1
+#define I2C_MEMADD_SIZE_16BIT 2
 
-    GPIO_InitStructure.GPIO_Pin = SDA_Pin;//SDA
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+void I2C2_Init(uint8_t address, uint16_t bound);
+int I2C_Mem_Read(I2C_TypeDef * I2Cx, uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+int I2C_Mem_Write(I2C_TypeDef* I2Cx, uint8_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t* pData, uint16_t Size, uint32_t Timeout);
 
-    I2C_InitTSturcture.I2C_ClockSpeed = 400000;
-    I2C_InitTSturcture.I2C_Mode = I2C_Mode_I2C;
-    I2C_InitTSturcture.I2C_DutyCycle = I2C_DutyCycle_2;
-    I2C_InitTSturcture.I2C_OwnAddress1 = 0x00;//随便外设不与外设相同即可
-    I2C_InitTSturcture.I2C_Ack = I2C_Ack_Enable;
-    I2C_InitTSturcture.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
-    I2C_Init(I2C_MODE, &I2C_InitTSturcture);
-
-    I2C_Cmd(I2C_MODE, ENABLE);
-
-    I2C_AcknowledgeConfig(I2C_MODE, ENABLE);
+#ifdef __cplusplus
 }
-
+#endif
 
 #endif

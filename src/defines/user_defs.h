@@ -9,12 +9,13 @@
 //defines for iqlib
 
 #define SPI_BaudRate SPI_BaudRatePrescaler_2
-// #define USE_DMA
+// #define SPI1_USE_DMA
 
 #define W (240)
 #define H (240)
 
-#define test_n 1
+//#defines for LCD
 
+#define I2C_BaudRate 400000
 
 #endif

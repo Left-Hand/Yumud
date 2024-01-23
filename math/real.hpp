@@ -2,6 +2,8 @@
 
 #define __REAL_HPP__
 
+#include "floatlib/fastsqrt.h"
+#include "iq/iqt.hpp"
 
 namespace std {
     int mean(const int & a, const int & b);
@@ -15,7 +17,5 @@ namespace std {
     // double abs(double dv);
 }
 
-#include "floatlib/fastsqrt.h"
-#include "iq/iqt.hpp"
 
 #endif

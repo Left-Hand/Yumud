@@ -3,8 +3,8 @@
 #define __IQT_HPP__
 
 
-#include <cstdint>
-#include "defines/comm_defs.h"
+#include "stdint.h"
+#include "defines/comm_inc.h"
 
 #ifdef USE_IQ
 #include <IQmath_RV32.h>
