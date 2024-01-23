@@ -410,9 +410,3 @@ void SPI1_DMA_Stop(){
     DMA_Cmd(DMA1_Channel3, DISABLE);
     SPI_I2S_DMACmd(SPI1, SPI_I2S_DMAReq_Tx, DISABLE);
 }
-
-void SWAP(int16_t * x, int16_t * y){
-    int16_t temp = *y;
-    *y = *x;
-    *x = temp;
-}

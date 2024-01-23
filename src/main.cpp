@@ -27,38 +27,38 @@ volatile uint16_t color = 0xffff;
 int cube2d[PCOUNT][2];
 
 uint16_t hsvToRgb565(real_t h, real_t s, real_t v) {
-  // 转换HSV到RGB
-  real_t r = real_t(0);
-  real_t g = real_t(0);
-  real_t b = real_t(0);
-  real_t c = v * s;
-  real_t x = c * (real_t(1) - std::abs(std::fmod(h / real_t(60), real_t(2)) - real_t(1)));
-  real_t m = v - c;
 
-  if (h >= real_t(0) && h < real_t(60)) {
-    r = c;
-    g = x;
-  } else if (h >= real_t(60) && h < real_t(120)) {
-    r = x;
-    g = c;
-  } else if (h >= real_t(120) && h < real_t(180)) {
-    g = c;
-    b = x;
-  } else if (h >= real_t(180) && h < real_t(240)) {
-    g = x;
-    b = c;
-  } else if (h >= real_t(240) && h < real_t(300)) {
-    r = x;
-    b = c;
-  } else {
-    r = c;
-    b = x;
-  }
+    real_t r = real_t(0);
+    real_t g = real_t(0);
+    real_t b = real_t(0);
+    real_t c = v * s;
+    real_t x = c * (real_t(1) - std::abs(std::fmod(h / real_t(60), real_t(2)) - real_t(1)));
 
-  // 将RGB映射到RGB565格式
-  uint16_t rgb565 = ((uint16_t)(int)(r * real_t(31)) << 11) | ((uint16_t)(int)(g *real_t(63)) << 5) | ((uint16_t)(int)(b *real_t(31)));
+    uint16_t ih = (int)h;
+    if (ih >= 0 && ih < 60) {
+        r = c;
+        g = x;
+    } else if (ih < 120) {
+        r = x;
+        g = c;
+    } else if (ih < 180) {
+        g = c;
+        b = x;
+    } else if (ih < 240) {
+        g = x;
+        b = c;
+    } else if (ih < 300) {
+        r = x;
+        b = c;
+    } else if (ih < 360){
+        r = c;
+        b = x;
+    }
 
-  return rgb565;
+
+    uint16_t rgb565 = ((uint16_t)(int)(r * real_t(31)) << 11) | ((uint16_t)(int)(g *real_t(63)) << 5) | ((uint16_t)(int)(b *real_t(31)));
+
+    return rgb565;
 }
 
 real_t cube3d[PCOUNT][3]={
@@ -156,7 +156,7 @@ int main(){
         // draw_cube(real_t(2.9), c, real_t(0), real_t(0));
         // draw_cube(real_t(4.5), b, c, a);
         // draw_cube(real_t(12.1), c, a, b);
-        LCD_Fill_Screen(0);
+        // LCD_Fill_Screen(0);
 
         a+=real_t(0.04f);
         b+=real_t(0.03f);
@@ -167,7 +167,7 @@ int main(){
         draw_cube(real_t(4.5), b, c, a);
         draw_cube(real_t(12.7), c, a, b);
         // delay(8);
-        delayMicroseconds(8100);
+        // delayMicroseconds(8100);
         printf("Fps: %d\r\n", (int)(1000000 / ((micros() - begin_m))));
         begin_m = micros();
     }

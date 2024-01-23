@@ -4,23 +4,10 @@
 
 #include "stdint.h"
 #include "clock/clock.h"
-
+#include "defines/comm_defs.h"
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
-
-#define CHECK_INIT \
-    { \
-        static uint8_t inited = 0; \
-        if (!inited) { \
-            inited = 1; \
-        }else{ \
-            return; \
-        }\
-    } \
-
-// #define NOP_DELAY(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
-
 
 #define LCD_DC_PORT GPIOA
 #define LCD_DC_PIN GPIO_Pin_15
@@ -35,31 +22,8 @@
 #define LCD_RESET_RES LCD_DC_PORT -> BCR = LCD_RES_PIN;
 
 // #define USE_DMA
-#define SPI_BaudRate SPI_BaudRatePrescaler_2
 
-#define W (240)
-#define H (240)
 
-#ifndef MAX
-#define MAX(x,y) (x > y ? x : y)
-#endif
-
-#ifndef MIN
-#define MIN(x,y) (x < y ? x : y)
-#endif
-
-#ifndef ABS
-#define ABS(x) (x < 0? -(x) : x)
-#endif
-
-#ifndef SIGN
-#define SIGN(x) (x < 0 ? -1 : 1)
-#endif
-
-// #ifndef SWAP
-// #define SWAP(a,b) (a)^=(b)^=(a)^=(b)
-// #endif
-void SWAP(int16_t * x, int16_t * y);
 void LCD_Init();
 void LCD_Write_Data_8b(uint8_t data);
 void LCD_Write_Data_16b(uint16_t data);

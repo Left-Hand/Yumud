@@ -17,7 +17,9 @@
             "*.cpp": "cpp",
             "*.cxx": "cpp",
             "*.cc": "cpp",
-            "*.a51": "a51"
+            "*.a51": "a51",
+            "MLX90640_API.H": "cpp",
+            "cmath": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

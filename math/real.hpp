@@ -10,17 +10,12 @@ namespace std {
 
     float frac(const float & fv);
     double frac(const double & dv);
+    
+    // float abs(float fv);
+    // double abs(double dv);
 }
 
 
 #include "iq/iqt.hpp"
-
-
-#ifdef USE_IQ
-typedef iq_t real_t;
-#else
-typedef float real_t;
-#endif
-
 
 #endif

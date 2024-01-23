@@ -48,4 +48,25 @@
 #define LOG2 0.301029995664
 #endif
 
+
+#ifndef MAX
+#define MAX(x,y) (x > y ? x : y)
+#endif
+
+#ifndef MIN
+#define MIN(x,y) (x < y ? x : y)
+#endif
+
+#ifndef ABS
+#define ABS(x) (x < 0? -(x) : x)
+#endif
+
+#ifndef SIGN
+#define SIGN(x) (x < 0 ? -1 : 1)
+#endif
+
+#ifndef SWAP
+#define SWAP(a,b) (a)^=(b)^=(a)^=(b)
+#endif
+
 #endif

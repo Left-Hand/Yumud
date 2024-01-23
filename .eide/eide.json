@@ -10,7 +10,8 @@
     "math/iq",
     "math",
     "src/clock",
-    "src/ST7789"
+    "src/ST7789",
+    "src/defines"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -75,7 +76,9 @@
         ],
         "libList": [],
         "sourceDirList": [],
-        "defineList": []
+        "defineList": [
+          "WCH"
+        ]
       }
     }
   },
