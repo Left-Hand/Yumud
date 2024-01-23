@@ -20,14 +20,17 @@ void Systick_Init(void)
 // #define IMAGE_H 32
 
 // uint16_t buf[IMAGE_H][IMAGE_W];
-volatile uint16_t color = 0xffff;
+uint16_t color = 0xffff;
+real_t delta = real_t(0);
+real_t fps = real_t(0);
+ real_t t = real_t(0);
 
 #define PCOUNT 8
 
 int cube2d[PCOUNT][2];
 
 uint16_t hsvToRgb565(real_t h, real_t s, real_t v) {
-
+    h = std::fmod(h, real_t(360));
     real_t r = real_t(0);
     real_t g = real_t(0);
     real_t b = real_t(0);
@@ -126,9 +129,106 @@ void draw_cube(real_t cz, real_t a, real_t b, real_t c) {
 }
 
 
-extern "C"{
+void renderTest1(){
+    static real_t a = real_t(0);
+    static real_t b = real_t(0);
+    static real_t c = real_t(0);
+
+    a+=real_t(0.04f);
+    b+=real_t(0.03f);
+    c+=real_t(0.008f);
+
+    draw_cube(real_t(2.9), c, real_t(0), real_t(0));
+    draw_cube(real_t(4.5), b, c, a);
+    draw_cube(real_t(12.7), c, a, b);
+
+    LCD_Printf(0, 8, 0xffff, "a:%.3f, b:%.3f, c:%.3f", float(a), float(b), float(c));
+
+    LCD_Draw_Hollow_Circle(W/2, H/2, 100, color);
+    LCD_Draw_Hollow_Ellipse(W/2, H/2, 100, 119, color);
+
+    for(int i = 0; i< 4; i++){
+        LCD_Draw_Filled_Circle(i * 20 + 10, 230, 9, color);
+    }
+
+    for(int i = 0; i< 4; i++){
+        LCD_Draw_Filled_Ellipse(i * 30 + 100, 230, 14, 9, color);
+    }
+
+    for(int i = 0; i< 4; i++){
+        LCD_Draw_Filled_Triangle(i * 20, 220, i * 20 + 19, 220,i * 20 + 9, 200, color);
+    }
+
+    for(int i = 0; i< 4; i++){
+        LCD_Draw_Hollow_Triangle(i * 30 + 85, 220, i * 30 + 85 + 29, 220,i * 30 + 85 + 15, 200, color);
+    }
+}
+
+void renderTest2(){
+    static int Vx = 5;
+    static int Vy = 8;
+    static int x = W/2;
+    static int y = H/2;
+    const int r = 10;
+
+    // LCD_Fill_Screen(0);
+    
+    // LCD_Printf(0, 0, 0xffff, "FPS:%.3f", float(fps));
+    LCD_Draw_Filled_Circle(x,y,r,0); 
+    LCD_Draw_Filled_Circle(x,y,r,color); 
+    // LCD_Draw_Hollow_Ellipse(x, y, 8, 6, color);
+    // LCD_Draw_Filled_Rect(0, 0, W/2, 8, 0);
+
+
+    x=x+Vx;
+    y=y+Vy;
+    if(x<=r || x>=W-r)
+        Vx=-Vx;
+    if(y<=r || y>=H-r)
+        Vy=-Vy;
+}
+
+real_t waveform(real_t x){
+    real_t s1x = std::sin(x);
+    real_t c1x = std::cos(x);
+    real_t s2x = real_t(2) * s1x * c1x;
+    real_t c2x = real_t(1) - real_t(2) * s1x * s1x;
+    real_t s3x = s1x * c2x + c1x * s2x;
+    real_t c3x = c1x * c2x - s1x * s2x;
+    real_t s5x = s2x * c3x + c2x * s3x;
+
+    return (s1x + s3x / real_t(3) + s5x / real_t(5));
+    // return (std::sin(x) + std::sin(real_t(3) * x) / real_t(3) + std::sin(real_t(5) * x) / real_t(5));
+}
+void renderTest3(){
+    // static int Vx = 5;
+    // static int Vy = 8;
+    // static int x = W/2;
+    // static int y = H/2;
+    // const int r = 10;
+    const real_t omiga = real_t(18);
+    const real_t phi = real_t(0.2);
+    const real_t amp = real_t(80);
+    const real_t window = real_t(10);
+    
+    real_t base_angle = omiga*t + phi;
+    
+    // LCD_Printf(0, 0, 0xffff, "FPS:%.3f", float(fps));
+    for(uint16_t x = 0; x < W - 1; x++){
+        int16_t y0 = (int)(amp * waveform(base_angle + real_t(x - W/2) / real_t(W/2) * (real_t(window) / real_t(2)))) + H/2;
+        int16_t y1 = (int)(amp * waveform(base_angle + real_t(x + 1 - W/2) / real_t(W/2) * (real_t(window) / real_t(2)))) + H/2;
+        uint16_t temp_color = hsvToRgb565(real_t(360) * std::frac(t / real_t(3)) + real_t(0.1)*real_t(x) + real_t(0.2) * real_t(y0), real_t(1), real_t(1));
+
+        if(y0 == y1){
+            LCD_Draw_Pixel(x, y0, temp_color);
+        }else{
+            LCD_Draw_Vertical_Line(x, y0, y1 - y0, temp_color);
+        }
+    }
+    // LCD_Draw_Filled_Rect(0, 0, W/2, 8, 0);
+}
+
 int main(){
-    // printf("main\r\n");
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
@@ -136,40 +236,31 @@ int main(){
     Systick_Init();
     USART_Printf_Init(921600);
 
-    // printf("start Init\r\n");
     LCD_Init();
-    printf("init done\r\n");
-    uint32_t begin_m = 0;
-
     LCD_Fill_Screen(0);
 
-    real_t a = real_t(0);
-    real_t b = real_t(0);
-    real_t c = real_t(0);
-
     while(1){
-        // for(real_t t = 0; t += 0.31415926f; t < 2 * 3.1415926f){
-        //     LCD_Draw_Line(W/2, H/2, W/2 + W/2 * std::cos(t + a), H/2 + H/2 * std::sin(t + a), 0xffff);
-        // }
-        // printf("%.3f, %.3f, %.3f\r\n", real_t(a), real_t(b), real_t(c));
-        // color = 0;
-        // draw_cube(real_t(2.9), c, real_t(0), real_t(0));
-        // draw_cube(real_t(4.5), b, c, a);
-        // draw_cube(real_t(12.1), c, a, b);
-        // LCD_Fill_Screen(0);
+        static uint32_t begin_m = 0;
 
-        a+=real_t(0.04f);
-        b+=real_t(0.03f);
-        c+=real_t(0.008f);
+        color = hsvToRgb565(std::fmod(t*real_t(180), real_t(360)), real_t(1), real_t(1));
 
-        color = hsvToRgb565(std::fmod(a*real_t(30), real_t(360)), real_t(1), real_t(1));
-        draw_cube(real_t(2.9), c, real_t(0), real_t(0));
-        draw_cube(real_t(4.5), b, c, a);
-        draw_cube(real_t(12.7), c, a, b);
-        // delay(8);
-        // delayMicroseconds(8100);
-        printf("Fps: %d\r\n", (int)(1000000 / ((micros() - begin_m))));
         begin_m = micros();
+        LCD_Fill_Screen(0);
+        LCD_Printf(0, 0, 0xffff, "FPS:%.3f", float(fps));
+        
+        renderTest1();
+        renderTest2();
+        renderTest3();
+
+        uint32_t delta_m = (micros() - begin_m);
+
+
+        delta = real_t(delta_m / 1000000.0f);
+        fps = real_t(1) / delta;
+
+        printf("%d\r\n", (int)(fps));
+        t += delta;
+
+        // delay(10);
     }
-}
 }

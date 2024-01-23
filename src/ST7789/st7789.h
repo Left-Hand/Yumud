@@ -3,8 +3,13 @@
 #define __ST7789_H__
 
 #include "stdint.h"
-#include "clock/clock.h"
 #include "defines/comm_defs.h"
+#include "clock/clock.h"
+#include "../math/floatlib/fastsqrt.h"
+#include "font.h"
+
+#include "stdlib.h"
+#include "stdarg.h"
 // #ifdef __cplusplus
 // extern "C" {
 // #endif
@@ -21,25 +26,38 @@
 #define LCD_SET_RES LCD_DC_PORT -> BSHR = LCD_RES_PIN;
 #define LCD_RESET_RES LCD_DC_PORT -> BCR = LCD_RES_PIN;
 
-// #define USE_DMA
-
-
 void LCD_Init();
+
 void LCD_Write_Data_8b(uint8_t data);
 void LCD_Write_Data_16b(uint16_t data);
 void LCD_Write_Command(uint8_t data);
-void LCD_Fill_Screen(uint16_t color);
-
 void LCD_Set_Postion(uint16_t x0, uint16_t y0);
+void LCD_Set_Window(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h);
 void LCD_Draw_Pixel(int16_t x0, int16_t y0, uint16_t color);
+void LCD_Draw_Pixel_Unwarpped(int16_t x0, int16_t y0, uint16_t color);
+
 void LCD_Draw_Hrizon_Line(int16_t x0, int16_t y0, int16_t l, uint16_t color);
 void LCD_Draw_Vertical_Line(int16_t x0, int16_t y0, int16_t l, uint16_t color);
 void LCD_Draw_Filled_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t color);
+void LCD_Fill_Screen(uint16_t color);
 void LCD_Draw_Hollow_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t color);
 void LCD_Draw_Line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color);
 void LCD_Draw_Image(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t * buf);
 void LCD_Draw_Textured_Line(int16_t x0, int16_t y0, int16_t l, uint16_t * buf);
-void LCD_Draw_Char();
+
+void LCD_Draw_Hollow_Circle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+void LCD_Draw_Filled_Circle(int16_t x0, int16_t y0, int16_t r, uint16_t color);
+
+void LCD_Draw_Hollow_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color);
+void LCD_Draw_Filled_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color);
+
+void LCD_Draw_Hollow_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+void LCD_Draw_Filled_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color);
+
+void LCD_Draw_Char(int16_t x0, int16_t y0, uint16_t color, char chr);
+void LCD_Draw_String(int16_t x0, int16_t y0, uint16_t color, char * str);
+void LCD_Draw_Const_String(int16_t x0, int16_t y0, uint16_t color, const char * str);
+void LCD_Printf(int16_t x0, int16_t y0, uint16_t color, const char *format, ...);
 
 void SPI1_Init(void);
 void SPI1_Write_8b(uint8_t dataTx);
@@ -55,10 +73,6 @@ void DMA1_CH3_IncConfig(FunctionalState inc);
 void DMA1_CH3_SourceConfig(void * source);
 
 void SPI1_DMA_Start();
-
 void SPI1_DMA_Stop();
 
-// #ifdef __cplusplus
-// }
-// #endif
 #endif

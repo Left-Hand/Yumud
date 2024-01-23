@@ -15,7 +15,7 @@ namespace std {
     // double abs(double dv);
 }
 
-
+#include "floatlib/fastsqrt.h"
 #include "iq/iqt.hpp"
 
 #endif

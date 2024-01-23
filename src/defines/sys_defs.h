@@ -26,6 +26,9 @@
 #endif
 #endif
 
+#ifndef __nop
+#define __nop __asm volatile ("nop")
+#endif
 
 #ifndef CHECK_INIT
 #define CHECK_INIT \

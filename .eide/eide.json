@@ -11,7 +11,8 @@
     "math",
     "src/clock",
     "src/ST7789",
-    "src/defines"
+    "src/defines",
+    "math/floatlib"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
