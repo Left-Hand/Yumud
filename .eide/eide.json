@@ -22,7 +22,8 @@
     "types",
     "types/iq",
     "src/errors",
-    "types/string"
+    "types/string",
+    "types/color"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",

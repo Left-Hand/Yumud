@@ -11,10 +11,15 @@
 #define IQ_VALUE(x) (*(_iq *)(&(x)))
 #endif
 
-#ifndef IQ_FULL
-#define IQ_FULL 0xFFFFFFFFUL
-#define IQ_TO_FULL(x) (IQ_VALUE(x) = IQ_FULL)
-#endif
+// #ifndef IQ_FULL
+// #define IQ_FULL 0xFFFFFFFFUL
+// #define IQ_TO_FULL(x) (IQ_VALUE(x) = IQ_FULL)
+// #endif
+
+// namespace{
+    class IQ_F;
+    static IQ_F * IQ_FULL;
+// }
 
 class iq_t{
 
@@ -24,7 +29,7 @@ private:
 public:
     __fast_inline iq_t(): value(0){;}
     __fast_inline explicit iq_t(const _iq & iqValue): value(iqValue){;}
-    __fast_inline explicit iq_t(const unsigned long & longValue): value(longValue){;}
+    __fast_inline explicit iq_t(const IQ_F * noneValue): value(0xffffffff){;}
     __fast_inline explicit iq_t(const int & intValue) : value(_IQ(intValue)) {;}
     __fast_inline explicit iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
     __fast_inline explicit iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
@@ -132,7 +137,9 @@ public:
     }
 
     __fast_inline iq_t operator/(const int & other) const {
-        return iq_t(other ? (value ? value / other : 0) : 0xffffffffUL);
+        if(other) return iq_t((value ? value / other : 0));
+        else return iq_t(IQ_FULL);
+        // return iq_t(other ? (value ? value / other : 0) : IQ_FULL());
     }
 
     __fast_inline iq_t operator/(const float & other) const {
@@ -314,6 +321,30 @@ public:
         return _IQint(value);
     }
 
+    __fast_inline explicit operator uint8_t() const {
+        return _IQint(value);
+    }
+
+    __fast_inline explicit operator int8_t() const {
+        return _IQint(value);
+    }
+
+    __fast_inline explicit operator uint16_t() const {
+        return _IQint(value);
+    }
+
+    __fast_inline explicit operator int16_t() const {
+        return _IQint(value);
+    }
+
+    __fast_inline explicit operator uint32_t() const {
+        return _IQint(value);
+    }
+
+    __fast_inline explicit operator int32_t() const {
+        return _IQint(value);
+    }
+
     __fast_inline explicit operator float() const{
         return _IQtoF(value);
     }
@@ -411,7 +442,9 @@ namespace std
 
     __fast_inline iq_t round(const iq_t & iq){return iq_t((int)_IQint(IQ_VALUE(iq) + _IQ(0.5)));}
 
-    __fast_inline bool is_equal_approx_ratio(iq_t a, iq_t b, iq_t epsilon = iq_t(CMP_EPSILON), iq_t min_epsilon = iq_t(CMP_EPSILON));
+	bool is_equal_approx(const iq_t & a,const iq_t & b);
+
+    bool is_equal_approx_ratio(const iq_t a, const iq_t & b, iq_t epsilon = iq_t(CMP_EPSILON), iq_t min_epsilon = iq_t(CMP_EPSILON));
 
     #ifdef USE_LOG
     

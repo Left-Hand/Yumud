@@ -1,6 +1,8 @@
 #include "ST7789/st7789.h"
 #include "stdio.h"
 #include "../types/real.hpp"
+#include "../types/string/String.hpp"
+#include "../types/color/color.hpp"
 #include "MLX90640/MLX90640_API.h"
 #include <complex>
 
@@ -134,7 +136,9 @@ real_t cube3d[PCOUNT][3]={
   { real_t(+0.5f), real_t(-0.5f), real_t(+0.5f) }
 };
 void zrotate(real_t v[3], real_t q, real_t rx, real_t ry) {
-  real_t tx,ty,temp;
+  real_t tx = real_t(0);
+  real_t ty = real_t(0);
+  real_t temp = real_t(0);
   tx=v[0]-rx;
   ty=v[1]-ry;
   temp=tx*std::cos(q)-ty*std::sin(q);
@@ -144,7 +148,9 @@ void zrotate(real_t v[3], real_t q, real_t rx, real_t ry) {
   v[1]=ty+ry;
 }
 void yrotate(real_t v[3], real_t q, real_t rx, real_t rz) {
-  real_t tx,tz,temp;
+  real_t tx = real_t(0);
+  real_t tz = real_t(0);
+  real_t temp = real_t(0);
   tx=v[0]-rx;
   tz=v[2]-rz;
   temp=tz*std::cos(q)-tx*std::sin(q);
@@ -154,7 +160,9 @@ void yrotate(real_t v[3], real_t q, real_t rx, real_t rz) {
   v[2]=tz+rz;
 }
 void xrotate(real_t v[3], real_t q, real_t ry, real_t rz) {
-  real_t ty,tz,temp;
+  real_t ty = real_t(0);
+  real_t tz = real_t(0);
+  real_t temp = real_t(0);
   ty=v[1]-ry;
   tz=v[2]-rz;
   temp=ty*std::cos(q)-tz*std::sin(q);
@@ -387,9 +395,9 @@ int main(){
 
     LCD_Init();
 
-
+    Color c1 = Color(real_t(0.2), real_t(0.8), real_t(0.9));
     // comp complex1 {real_t(0),real_t(1)};
-    comp deltacomplex {real_t(0.8),real_t(0.6)};
+    // comp deltacomplex {real_t(0.8),real_t(0.6)};
     while(1){
 
 
@@ -415,7 +423,9 @@ int main(){
         // uint64_t delta_m = (millis() - begin_m);
 
         delta = real_t(delta_u / 1000000.0f);
-
+// IQ_FULL test = IQ_FULL();
+// __FlashStringHelper t = __FlashStringHelper();
+StringSumHelper t = StringSumHelper("s");
         if(delta){
             fps = real_t(1) / delta;
             if(!fps_filted){
@@ -425,7 +435,8 @@ int main(){
             }
         }
 
-        LCD_Printf(170, 240 - 1 - 8, black, "cost %3dms", (int)(delta_u / 1000));
+        LCD_Printf(170, 240 - 1 - 8, black, (String("fps: ") + String(fps) + String("ms") + String(c1.get_h())).c_str());
+        // LCD_Printf()
         // printf("%d, %d\r\n", (int)(fps), (int)(fps_filted));
         t += delta;
         // delay(20);
