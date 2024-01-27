@@ -121,6 +121,14 @@ String::String(double value, unsigned char decimalPlaces)
 	*this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
 }
 
+String::String(iq_t value, unsigned char decimalPlaces)
+{
+	init();
+	char buf[33];
+	*this = dtostrf(double(value), (decimalPlaces + 2), decimalPlaces, buf);
+}
+
+
 String::~String()
 {
 	free(buffer);
@@ -333,6 +341,13 @@ unsigned char String::concat(double num)
 {
 	char buf[20];
 	char* string = dtostrf(num, 4, 2, buf);
+	return concat(string, strlen(string));
+}
+
+unsigned char String::concat(iq_t num)
+{
+	char buf[20];
+	char* string = dtostrf(double(num), 4, 2, buf);
 	return concat(string, strlen(string));
 }
 
@@ -745,4 +760,10 @@ float String::toFloat(void) const
 {
 	if (buffer) return float(atof(buffer));
 	return 0;
+}
+
+real_t String::toReal(void) const
+{
+	if (buffer) return real_t(atof(buffer));
+	return real_t(0);
 }
