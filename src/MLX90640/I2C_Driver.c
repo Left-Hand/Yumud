@@ -26,11 +26,11 @@ void I2C2_Init(uint8_t address, uint16_t bound){
     I2C_Init(I2C2, &I2C_InitTSturcture);
  
     I2C_Cmd(I2C2, ENABLE);
- 
+
     I2C_AcknowledgeConfig(I2C2, ENABLE);
 }
 
-int I2C_Mem_Read(I2C_TypeDef * I2Cx, uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout){
+uint8_t I2C_Mem_Read(I2C_TypeDef * I2Cx, uint16_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t *pData, uint16_t Size, uint32_t Timeout){
     uint32_t tickStart = 0;
     tickStart = millis(); // 获取当前的tick值，例如使用SysTick或其他定时器
 
@@ -120,7 +120,7 @@ int I2C_Mem_Read(I2C_TypeDef * I2Cx, uint16_t DevAddress, uint16_t MemAddress, u
     return 0;
 }
 
-int I2C_Mem_Write(I2C_TypeDef* I2Cx, uint8_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t* pData, uint16_t Size, uint32_t Timeout) {
+uint8_t I2C_Mem_Write(I2C_TypeDef* I2Cx, uint8_t DevAddress, uint16_t MemAddress, uint16_t MemAddSize, uint8_t* pData, uint16_t Size, uint32_t Timeout) {
     uint32_t tickStart = 0;
     tickStart = millis(); // 获取当前的tick值，例如使用SysTick或其他定时器
 

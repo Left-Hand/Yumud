@@ -1,9 +1,10 @@
-#include "SPI_Driver.h"
+#include "SPI1_Driver.h"
+
+static volatile uint16_t ConstData;
 
 void SPI1_Init(void)
 {
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
-
     //PB3 SCLK
     //PB5 MOSI
     GPIO_InitTypeDef GPIO_InitStructure = {0};
@@ -23,7 +24,7 @@ void SPI1_Init(void)
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRate;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI1_BaudRate;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(SPI1, &SPI_InitStructure);
@@ -102,4 +103,68 @@ void SPI1_Write_16b(uint16_t dataTx)
 {		
     while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);
     SPI1->DATAR = dataTx;	    
+}
+
+void SPI1_Write_Const_16b(uint16_t data, uint32_t length){
+
+    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);	
+    __nopn(8);
+    SPI_DataSizeConfig(SPI1, SPI_DataSize_16b);
+
+    #ifdef SPI1_USE_DMA
+
+    ConstData = data;
+
+    DMA1_CH3_DataSizeConfig(DMA_MemoryDataSize_HalfWord);
+    DMA1_CH3_DataLengthConfig(length);
+    DMA1_CH3_SourceConfig((void *)(&ConstData));
+    DMA1_CH3_IncConfig(DISABLE);
+
+    SPI1_DMA_Start();
+    while(DMA_GetFlagStatus(DMA1_FLAG_TC3) != SET);
+    DMA_ClearFlag(DMA1_FLAG_TC3);
+    SPI1_DMA_Stop();
+
+    #else
+
+    for(uint32_t i = 0; i < length;i++){
+        SPI1_Write_16b(data);
+    }
+    
+    #endif
+
+    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);
+    __nopn(8);
+    SPI_DataSizeConfig(SPI1, SPI_DataSize_8b);
+}
+
+void SPI1_Write_Pool_16b(uint16_t * data, uint32_t length)
+{
+    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);	
+    __nopn(8);
+    SPI_DataSizeConfig(SPI1, SPI_DataSize_16b);
+
+    #ifdef SPI1_USE_DMA
+
+    DMA1_CH3_DataSizeConfig(DMA_MemoryDataSize_HalfWord);
+    DMA1_CH3_DataLengthConfig(length);
+    DMA1_CH3_SourceConfig((void *)data);
+    DMA1_CH3_IncConfig(ENABLE);
+
+    SPI1_DMA_Start();
+    while(DMA_GetFlagStatus(DMA1_FLAG_TC3) != SET);
+    DMA_ClearFlag(DMA1_FLAG_TC3);
+    // SPI1_DMA_Stop();
+
+    #else
+
+    for(uint32_t i = 0; i < length;i++){
+        SPI1_Write_16b(data[i]);
+    }
+    
+    #endif
+
+    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);
+    __nopn(8);
+    SPI_DataSizeConfig(SPI1, SPI_DataSize_8b);
 }

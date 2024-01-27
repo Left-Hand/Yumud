@@ -19,8 +19,6 @@
 
 #include "ch32v20x.h"
 
-
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,8 +27,8 @@ void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 extern __IO uint64_t msTick;
 
 __attribute__ ((weak)) uint64_t GetTick(void);
-uint32_t millis(void);
-uint32_t micros(void);
+uint64_t millis(void);
+uint64_t micros(void);
 void delay(uint32_t ms);
 
 static inline void delayMicroseconds(uint32_t) __attribute__((always_inline, unused));
@@ -57,7 +55,9 @@ static inline void delayMicroseconds(uint32_t us)
   } while (nbTicks > elapsedTicks);  
 }
 
-#define NOP_DELAY(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
+#ifndef __nopn
+#define __nopn(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
+#endif
 
 #ifdef __cplusplus
 }

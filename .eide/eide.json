@@ -12,7 +12,17 @@
     "src/clock",
     "src/ST7789",
     "src/defines",
-    "math/floatlib"
+    "math/floatlib",
+    "src/OV7670",
+    "src/SDcard",
+    "dsp",
+    "dsp/controller",
+    "dsp/filter",
+    "dsp/floatlib",
+    "types",
+    "types/iq",
+    "src/errors",
+    "types/string"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",

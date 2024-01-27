@@ -2,7 +2,7 @@
 
 #define __KALMANFILTER_HPP__
 
-#include "../math/real.hpp"
+#include "../types/real.hpp"
 
 class KalmanFilter {
     public:

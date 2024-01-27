@@ -60,7 +60,8 @@
             "sstream": "cpp",
             "stdexcept": "cpp",
             "streambuf": "cpp",
-            "typeinfo": "cpp"
+            "typeinfo": "cpp",
+            "complex": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

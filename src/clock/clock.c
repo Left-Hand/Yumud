@@ -37,14 +37,13 @@ __attribute__ ((weak)) uint64_t GetTick(void)
   * @param  None
   * @retval None
   */
-uint32_t millis(void)
+uint64_t millis(void)
 {
   return GetTick();
 }
 
-uint32_t micros(void)
+uint64_t micros(void)
 {
-  
   uint64_t m0 = GetTick();
   __IO uint64_t u0 = SysTick->CNT;
   uint64_t m1 = GetTick();
@@ -61,7 +60,7 @@ uint32_t micros(void)
 void delay(uint32_t ms)
 {
   if (ms != 0) {
-    uint32_t start = millis();
+    uint64_t start = millis();
     do {
       // yield();
     } while (millis() - start < ms);

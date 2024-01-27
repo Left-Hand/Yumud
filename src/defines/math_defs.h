@@ -82,4 +82,8 @@
 }
 #endif
 
+#ifndef CLAMP
+#define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
+#endif
+
 #endif

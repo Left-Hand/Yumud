@@ -8,7 +8,18 @@
 extern "C"{
 #endif
 
-__fast_inline float int2float(int number) {
+#ifdef __has_include
+    #if __has_include(<cmath>)
+        #include <cmath>
+        #define __STD_MATH_EXIST
+    #endif
+    #if __has_include(<math.h>)
+        #include <math.h>
+        #define __STD_MATH_EXIST
+    #endif
+#endif
+
+static __fast_inline float int2float(int number) {
     union {
         int i;
         float f;
@@ -17,7 +28,7 @@ __fast_inline float int2float(int number) {
     return converter.f;
 }
 
-__fast_inline int float2int(float number) {
+static __fast_inline int float2int(float number) {
     union {
         int i;
         float f;
@@ -36,7 +47,6 @@ __fast_inline float fast_invsqrt(float number){
     return number;
 }
 
-
 __fast_inline float fast_sqrt(float number) {
 
     float x = number * 0.5f;
@@ -49,6 +59,10 @@ __fast_inline float fast_sqrt(float number) {
     return number * y;
 }
 
+#if defined(__cplusplus) && (!defined(__STD_MATH_EXIST))
+__fast_inline float std::invsqrt(const float & number){return fast_invsqrt(number);}
+__fast_inline float std::sqrt(const float & number){return fast_sqrt(number);}
+#endif
 
 #ifdef __cplusplus
 }

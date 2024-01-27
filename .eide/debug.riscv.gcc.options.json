@@ -33,6 +33,6 @@
         "output-format": "elf",
         "remove-unused-input-sections": true,
         "LD_FLAGS": "-Xlinker --gc-sections -nostartfiles -T \"sdk/Ld/Link.ld\"",
-        "LIB_FLAGS": "-lstdc++ -lIQmath_RV32 -u_printf_float"
+        "LIB_FLAGS": "-lstdc++ -lIQmath_RV32 -u_printf_float -lm"
     }
 }

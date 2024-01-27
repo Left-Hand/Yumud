@@ -14,6 +14,10 @@
 #define __fast_inline __always_inline __fast_access
 #endif
 
+#ifndef _FORCE_INLINE_
+#define _FORCE_INLINE_ __fast_inline
+#endif
+
 #ifndef __interrupt_soft
 #define __interrupt_soft extern "C" __attribute__((interrupt))
 #endif
@@ -43,5 +47,33 @@
 
 #endif
 
+
+
+#ifndef __nopn
+#define __nopn(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
+#endif
+
+#ifdef __GNUC__
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
+#else
+#define likely(x) x
+#define unlikely(x) x
+#endif
+
+#ifdef __GNUC__
+//#define FUNCTION_STR __PRETTY_FUNCTION__ - too annoying
+#define FUNCTION_STR __FUNCTION__
+#else
+#define FUNCTION_STR __FUNCTION__
+#endif
+
+#ifndef _STR
+#define _STR(m_x) #m_x
+#define _MKSTR(m_x) _STR(m_x)
+#endif
+
+#define __STRX(m_index) #m_index
+#define __STR(m_index) __STRX(m_index)
 
 #endif

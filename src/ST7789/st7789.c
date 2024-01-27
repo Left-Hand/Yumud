@@ -3,8 +3,6 @@
 
 SPI_InitTypeDef  SPI_InitStructure;
 
-static volatile uint16_t ConstData;
-
 void LCD_GPIO_Init(void){
     CHECK_INIT
 
@@ -30,69 +28,12 @@ void LCD_GPIO_Init(void){
 }
 
 void LCD_Write_Const_16b(uint16_t data, uint32_t length){
-
-    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);	
-    __nop;
-    SPI_DataSizeConfig(SPI1, SPI_DataSize_16b);
-
-    #ifdef SPI1_USE_DMA
-
-    ConstData = data;
-
-    DMA1_CH3_DataSizeConfig(DMA_MemoryDataSize_HalfWord);
-    DMA1_CH3_DataLengthConfig(length);
-    DMA1_CH3_SourceConfig((void *)(&ConstData));
-    DMA1_CH3_IncConfig(DISABLE);
-
-    SPI1_DMA_Start();
-    while(DMA_GetFlagStatus(DMA1_FLAG_TC3) != SET);
-    DMA_ClearFlag(DMA1_FLAG_TC3);
-    SPI1_DMA_Stop();
-
-    #else
-
-    for(uint32_t i = 0; i < length;i++){
-        SPI1_Write_16b(data);
-    }
-    
-    #endif
-
-    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);
-    __nop;
-    SPI_DataSizeConfig(SPI1, SPI_DataSize_8b);
+    SPI1_Write_Const_16b(data, length);
 }
 
-void LCD_Write_Pool_16b(uint16_t * dataTxPool, uint32_t length)
-{
-    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);	
-
-    SPI_DataSizeConfig(SPI1, SPI_DataSize_16b);
-    // delayMicroseconds(200);
-
-    #ifdef SPI1_USE_DMA
-
-    DMA1_CH3_DataSizeConfig(DMA_MemoryDataSize_HalfWord);
-    DMA1_CH3_DataLengthConfig(length);
-    DMA1_CH3_SourceConfig((void *)dataTxPool);
-    DMA1_CH3_IncConfig(ENABLE);
-
-    SPI1_DMA_Start();
-    while(DMA_GetFlagStatus(DMA1_FLAG_TC3) != SET);
-    DMA_ClearFlag(DMA1_FLAG_TC3);
-    // SPI1_DMA_Stop();
-
-    #else
-
-    for(uint32_t i = 0; i < length;i++){
-        SPI1_Write_16b(dataTxPool[i]);
-    }
-    
-    #endif
-
-    while ((SPI1->STATR & SPI_I2S_FLAG_TXE) == (uint16_t)RESET);
-    SPI_DataSizeConfig(SPI1, SPI_DataSize_8b);
+void LCD_Write_Pool_16b(uint16_t * data, uint32_t length){
+    SPI1_Write_Pool_16b(data, length);
 }
-
 
 void LCD_Init(){
 
@@ -104,13 +45,15 @@ void LCD_Init(){
     #endif
 
     LCD_RESET_RES
-    delay(120);
+    delayMicroseconds(5);
     LCD_SET_RES
 
     LCD_Write_Command(0x01);
-    delayMicroseconds(150);
+
+    delayMicroseconds(5);
 	LCD_Write_Command(0x11);
-	delayMicroseconds(120);
+	
+    delayMicroseconds(5);
 	LCD_Write_Command(0x3A);
 	LCD_Write_Data_8b(0x55);
 	LCD_Write_Command(0x36);
@@ -120,8 +63,6 @@ void LCD_Init(){
 	LCD_Write_Command(0x29);
 	
 }
-
-
 
 void LCD_Write_Data_8b(uint8_t data){
    LCD_ON_DATA
@@ -163,14 +104,18 @@ void LCD_Set_Window(uint16_t x0, uint16_t y0, uint16_t w, uint16_t h){
     LCD_Write_Command(0x2c);
 }
 
-void LCD_Draw_Pixel(int16_t x0, int16_t y0, uint16_t color){
+void LCD_Draw_Pixel(int16_t x0, int16_t y0, RGB565 color){
     if(x0 < 0 || y0 < 0 || x0 >= W || y0 >= H) return;
 
 	LCD_Set_Postion(x0, y0);
-    LCD_Write_Data_16b(color);
+    LCD_Write_Data_16b(color.data);
 }
 
-void LCD_Draw_Pixel_Unwarpped(int16_t x0, int16_t y0, uint16_t color){
+void LCD_Cont_Pixel(RGB565 color){
+    LCD_Write_Data_16b(color.data);
+}
+
+void LCD_Draw_Pixel_Unwarpped(int16_t x0, int16_t y0, RGB565 color){
 	LCD_Write_Command(0x2a);
     LCD_Write_Data_16b(x0);
 
@@ -178,10 +123,10 @@ void LCD_Draw_Pixel_Unwarpped(int16_t x0, int16_t y0, uint16_t color){
     LCD_Write_Data_16b(y0);
 
     LCD_Write_Command(0x2c);
-    LCD_Write_Data_16b(color);
+    LCD_Write_Data_16b(color.data);
 }
 
-void LCD_Draw_Hrizon_Line(int16_t x0, int16_t y0, int16_t l, uint16_t color){
+void LCD_Draw_Hrizon_Line(int16_t x0, int16_t y0, int16_t l, RGB565 color){
     int16_t xa = MAX(MIN(x0, x0 + l), 0);
     int16_t xb = MIN(MAX(x0, x0 + l), W);
     if(xb <= xa || y0 < 0 || y0 >= H) return;
@@ -190,10 +135,10 @@ void LCD_Draw_Hrizon_Line(int16_t x0, int16_t y0, int16_t l, uint16_t color){
     LCD_Set_Postion(xa, y0);
 
     LCD_ON_DATA
-    LCD_Write_Const_16b(color, dx);
+    LCD_Write_Const_16b(color.data, dx);
 }
 
-void LCD_Draw_Vertical_Line(int16_t x0, int16_t y0, int16_t l, uint16_t color){
+void LCD_Draw_Vertical_Line(int16_t x0, int16_t y0, int16_t l, RGB565 color){
     int16_t ya = MAX(MIN(y0, y0 + l), 0);
     int16_t yb = MIN(MAX(y0, y0 + l), H);
     if(x0 < 0 || x0 >= W || ya >= yb) return;
@@ -201,11 +146,11 @@ void LCD_Draw_Vertical_Line(int16_t x0, int16_t y0, int16_t l, uint16_t color){
     
     for(uint16_t y = ya; y < yb; y++){
         LCD_Set_Postion(x0, y);
-        LCD_Write_Data_16b(color);
+        LCD_Write_Data_16b(color.data);
     }
 }
 
-void LCD_Draw_Filled_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t color){
+void LCD_Draw_Filled_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, RGB565 color){
     int16_t xa = MAX(MIN(x0, x0 + w), 0);
     int16_t ya = MAX(MIN(y0, y0 + h), 0);
     int16_t xb = MIN(MAX(x0, x0 + w), W);
@@ -221,7 +166,7 @@ void LCD_Draw_Filled_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t
     }
 }
 
-void LCD_Draw_Hollow_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t color){
+void LCD_Draw_Hollow_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, RGB565 color){
     int16_t xa = MAX(MIN(x0, x0 + w), 0);
     int16_t ya = MAX(MIN(y0, y0 + h), 0);
     int16_t xb = MIN(MAX(x0, x0 + w), W);
@@ -243,7 +188,7 @@ void LCD_Draw_Hollow_Rect(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t
     }
 }
 
-void LCD_Draw_Line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color){
+void LCD_Draw_Line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, RGB565 color){
     if(y0 == y1){
         LCD_Draw_Hrizon_Line(x0, y0, x1 - x0, color);
         return;
@@ -280,12 +225,12 @@ void LCD_Draw_Line(int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t colo
     }
 }
 
-void LCD_Fill_Screen(uint16_t color){
+void LCD_Fill_Screen(RGB565 color){
     for(uint16_t y = 0; y < H; y++)
         LCD_Draw_Hrizon_Line(0,y,W,color);
 }
 
-void LCD_Draw_Textured_Line(int16_t x0, int16_t y0, int16_t l, uint16_t * buf){
+void LCD_Draw_Textured_Line(int16_t x0, int16_t y0, int16_t l, RGB565 * buf){
     if(y0 < 0 || l == 0) return;
     if((x0 < 0 && l < 0) || (x0 >= W && l > 0)) return;
 
@@ -309,10 +254,10 @@ void LCD_Draw_Textured_Line(int16_t x0, int16_t y0, int16_t l, uint16_t * buf){
 
     LCD_Set_Postion(x, y0);
     LCD_ON_DATA;
-    LCD_Write_Pool_16b(&buf[l-times], times);
+    LCD_Write_Pool_16b(&(buf[l-times].data), times);
 }
 
-void LCD_Draw_Image(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t * buf){
+void LCD_Draw_Image(int16_t x0, int16_t y0, int16_t w, int16_t h, RGB565 * buf){
     uint16_t xa = MIN(x0, x0 + w);
     int16_t xb = MIN(MAX(x0, x0 + w), W);
     uint16_t ya = MIN(y0, y0 + h);
@@ -326,10 +271,10 @@ void LCD_Draw_Image(int16_t x0, int16_t y0, int16_t w, int16_t h, uint16_t * buf
     LCD_Set_Postion(xa, ya);
 
     LCD_ON_DATA
-    LCD_Write_Pool_16b(buf, w*h);
+    LCD_Write_Pool_16b(&(buf[0].data), w*h);
 }
 
-void LCD_Draw_Hollow_Circle(int16_t x0, int16_t y0, int16_t r, uint16_t color){
+void LCD_Draw_Hollow_Circle(int16_t x0, int16_t y0, int16_t r, RGB565 color){
 	if(r<0)
 		return;
     int16_t x = r - 1;
@@ -361,7 +306,7 @@ void LCD_Draw_Hollow_Circle(int16_t x0, int16_t y0, int16_t r, uint16_t color){
     }
 }
 
-void LCD_Draw_Filled_Circle(int16_t x0, int16_t y0, int16_t r, uint16_t color){
+void LCD_Draw_Filled_Circle(int16_t x0, int16_t y0, int16_t r, RGB565 color){
 	if(r<0)
 		return;
 
@@ -390,7 +335,7 @@ void LCD_Draw_Filled_Circle(int16_t x0, int16_t y0, int16_t r, uint16_t color){
     }
 }
 
-void LCD_Draw_Hollow_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color) {
+void LCD_Draw_Hollow_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, RGB565 color) {
     if (rx<2) return;
     if (ry<2) return;
     if (rx == ry) return LCD_Draw_Hollow_Circle(x0, y0, rx, color);
@@ -429,7 +374,7 @@ void LCD_Draw_Hollow_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uin
     }
 }
 
-void LCD_Draw_Filled_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uint16_t color){
+void LCD_Draw_Filled_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, RGB565 color){
     if (rx<2) return;
     if (ry<2) return;
     if (rx == ry) return LCD_Draw_Filled_Circle(x0, y0, rx, color);
@@ -464,13 +409,13 @@ void LCD_Draw_Filled_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, uin
     }
 }
 
-void LCD_Draw_Hollow_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color){
+void LCD_Draw_Hollow_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, RGB565 color){
     LCD_Draw_Line(x0, y0, x1, y1, color);
     LCD_Draw_Line(x0, y0, x2, y2, color);
     LCD_Draw_Line(x1, y1, x2, y2, color);  
 }
 
-void LCD_Draw_Filled_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color){
+void LCD_Draw_Filled_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, RGB565 color){
     int32_t a, b, y, last;
 
     if (y0 > y1) {
@@ -533,8 +478,7 @@ void LCD_Draw_Filled_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, in
     }
 }
 
-
-void LCD_Draw_Char(int16_t x0, int16_t y0, uint16_t color, char chr){
+void LCD_Draw_Char(int16_t x0, int16_t y0, RGB565 color, char chr){
     const uint8_t font_w = 6;
     const uint8_t font_h = 8;
     uint8_t * ptr = (uint8_t *)&font_en[MAX(chr - 32, 0)];
@@ -550,7 +494,7 @@ void LCD_Draw_Char(int16_t x0, int16_t y0, uint16_t color, char chr){
     }
 }
 
-void LCD_Draw_String(int16_t x0, int16_t y0, uint16_t color, char * str){
+void LCD_Draw_String(int16_t x0, int16_t y0, RGB565 color, char * str){
     const uint8_t font_w = 6;
     const uint8_t font_space = 1;
     char * str_ptr = str;
@@ -565,13 +509,14 @@ void LCD_Draw_String(int16_t x0, int16_t y0, uint16_t color, char * str){
     }
 }
 
-void LCD_Draw_Const_String(int16_t x0, int16_t y0, uint16_t color, const char * str){
+void LCD_Draw_Const_String(int16_t x0, int16_t y0, RGB565 color, const char * str){
     LCD_Draw_String(x0, y0, color, (char *)str);
 }
 
-void LCD_Printf(int16_t x0, int16_t y0, uint16_t color, const char *format, ...){
+void LCD_Printf(int16_t x0, int16_t y0, RGB565 color, const char *format, ...){
     va_list pArgs;
-    char * str = (char *)malloc(64);
+    // char * str = (char *)malloc(64);
+    char str[64] = {0};
 
     va_start(pArgs,format);
     vsnprintf(str,64,format,pArgs); 
@@ -579,6 +524,6 @@ void LCD_Printf(int16_t x0, int16_t y0, uint16_t color, const char *format, ...)
 
     LCD_Draw_String(x0, y0, color, str);
 
-    free(str);
+    // free(str);
 }
 

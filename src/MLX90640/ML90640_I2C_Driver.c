@@ -1,6 +1,6 @@
 #include "MLX90640_I2C_Driver.h"
 
-void MLX90640_I2CInit(void){
+void MLX90640_Init(void){
     I2C2_Init(MLX90640_ADDR, (uint16_t)400000);
 }
 

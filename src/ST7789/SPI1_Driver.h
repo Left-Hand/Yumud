@@ -1,6 +1,6 @@
-#ifndef __SPI_DRIVER_H__
+#ifndef __SPI1_DRIVER_H__
 
-#define __SPI_DRIVER_H__
+#define __SPI1_DRIVER_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,6 +24,9 @@ void DMA1_CH3_SourceConfig(void * source);
 
 void SPI1_DMA_Start();
 void SPI1_DMA_Stop();
+
+void SPI1_Write_Const_16b(uint16_t data, uint32_t length);
+void SPI1_Write_Pool_16b(uint16_t * data, uint32_t length);
 
 #ifdef __cplusplus
 }

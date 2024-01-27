@@ -4,11 +4,14 @@
 
 #define USE_IQ
 // #define USE_DOUBLE
-#define USE_LOG
+// #define USE_LOG
+// #define USE_STDMATH
+#define EXTRA_IQ
+// #define STRICT_IQ
 
 //defines for iqlib
 
-#define SPI_BaudRate SPI_BaudRatePrescaler_2
+#define SPI1_BaudRate SPI_BaudRatePrescaler_2
 // #define SPI1_USE_DMA
 
 #define W (240)
@@ -16,6 +19,7 @@
 
 //#defines for LCD
 
+#define SPI2_BaudRate SPI_BaudRatePrescaler_256
 #define I2C_BaudRate 400000
 
 #endif

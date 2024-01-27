@@ -21,23 +21,13 @@ namespace std {
         return (dv - double(int(dv)));
     }
 
-    // float fabs(float fv){
-	// 	union {
-	// 		double f;
-	// 		uint64_t i;
-	// 	} u;
-	// 	u.f = fv;
-	// 	u.i &= (uint32_t)2147483647l;
-	// 	return u.fv;
-    // }
+    float round(const float & x)
+    {
+        return (int)(x+0.5f);
+    }
 
-    // double abs(double dv){
-	// 	union {
-	// 		double d;
-	// 		uint64_t i;
-	// 	} u;
-	// 	u.d = dv;
-	// 	u.i &= (uint64_t)9223372036854775807ll;
-	// 	return u.dv;
-    // }
+    double round(const double & x)
+    {
+        return (int)(x+0.5);
+    }
 }

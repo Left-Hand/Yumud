@@ -18,7 +18,7 @@
 #define _MLX90640_API_H_
 
 
-#include "../math/real.hpp"
+#include "../types/real.hpp"
 #include "MLX90640_I2C_Driver.h"
 
 #ifdef __cplusplus
