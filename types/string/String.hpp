@@ -73,7 +73,9 @@ public:
 	explicit String(unsigned long, unsigned char base=10);
 	explicit String(float, unsigned char decimalPlaces=2);
 	explicit String(double, unsigned char decimalPlaces=2);
+    #ifdef USE_IQ
 	explicit String(iq_t, unsigned char decimalPlaces=2);
+    #endif
 	~String(void);
 
 	// memory management
@@ -109,8 +111,10 @@ public:
 	unsigned char concat(unsigned long num);
 	unsigned char concat(float num);
 	unsigned char concat(double num);
+    #ifdef USE_IQ
 	unsigned char concat(iq_t num);
-	unsigned char concat(const __FlashStringHelper * str);
+	#endif
+    unsigned char concat(const __FlashStringHelper * str);
 	
 	// if there's not enough memory for the concatenated value, the string
 	// will be left unchanged (but this isn't signalled in any way)
@@ -124,8 +128,10 @@ public:
 	String & operator += (unsigned long num)	{concat(num); return (*this);}
 	String & operator += (float num)		{concat(num); return (*this);}
 	String & operator += (double num)		{concat(num); return (*this);}
+    #ifdef USE_IQ
 	String & operator += (iq_t num)		{concat(num); return (*this);}
-	String & operator += (const __FlashStringHelper *str){concat(str); return (*this);}
+	#endif
+    String & operator += (const __FlashStringHelper *str){concat(str); return (*this);}
 
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, const String &rhs);
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, const char *cstr);
@@ -137,7 +143,9 @@ public:
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned long num);
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, float num);
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, double num);
+    #ifdef USE_IQ
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, iq_t num);
+    #endif
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, const __FlashStringHelper *rhs);
 
 	// comparison (only works w/ Strings and "strings")
@@ -225,7 +233,9 @@ public:
 	StringSumHelper(unsigned long num) : String(num) {}
 	StringSumHelper(float num) : String(num) {}
 	StringSumHelper(double num) : String(num) {}
+    #ifdef USE_IQ
 	StringSumHelper(iq_t num) : String(num) {}
+    #endif
 };
 
 #endif  // __cplusplus

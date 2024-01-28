@@ -350,7 +350,7 @@ public:
     }
 
     __fast_inline explicit operator double() const{
-        return double(_IQtoF(value));
+        return _IQtoD(value);
     }
 
 

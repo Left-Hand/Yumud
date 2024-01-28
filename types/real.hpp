@@ -36,8 +36,11 @@ namespace std {
     float frac(const float & fv);
     double frac(const double & dv);
     
-    // float abs(float fv);
-    // double abs(double dv);
+	bool is_equal_approx(const float & a,const float & b);
+    bool is_equal_approx_ratio(const float a, const float & b, float epsilon = float(CMP_EPSILON), float min_epsilon = float(CMP_EPSILON));
+	bool is_equal_approx(const double & a,const double & b);
+    bool is_equal_approx_ratio(const double a, const double & b, double epsilon = double(CMP_EPSILON), double min_epsilon = double(CMP_EPSILON));
+
 }
 
 

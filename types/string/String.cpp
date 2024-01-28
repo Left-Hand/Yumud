@@ -121,13 +121,14 @@ String::String(double value, unsigned char decimalPlaces)
 	*this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
 }
 
+#ifdef USE_IQ
 String::String(iq_t value, unsigned char decimalPlaces)
 {
 	init();
 	char buf[33];
 	*this = dtostrf(double(value), (decimalPlaces + 2), decimalPlaces, buf);
 }
-
+#endif
 
 String::~String()
 {
@@ -344,12 +345,14 @@ unsigned char String::concat(double num)
 	return concat(string, strlen(string));
 }
 
+#ifdef USE_IQ
 unsigned char String::concat(iq_t num)
 {
 	char buf[20];
 	char* string = dtostrf(double(num), 4, 2, buf);
 	return concat(string, strlen(string));
 }
+#endif
 
 unsigned char String::concat(const __FlashStringHelper * str)
 {
