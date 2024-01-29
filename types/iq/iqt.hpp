@@ -4,24 +4,19 @@
 
 
 #include "stdint.h"
-#include "defines/comm_inc.h"
+#include "../../src/defines/comm_inc.h"
+#include "../string/String.hpp"
+
 #include <IQmath_RV32.h>
+#include <limits>
 
 #ifndef IQ_VALUE
 #define IQ_VALUE(x) (*(_iq *)(&(x)))
 #endif
 
-// #ifndef IQ_FULL
-// #define IQ_FULL 0xFFFFFFFFUL
-// #define IQ_TO_FULL(x) (IQ_VALUE(x) = IQ_FULL)
-// #endif
 
-// namespace{
-    class IQ_F;
-    static IQ_F * IQ_FULL;
-// }
 
-class iq_t{
+struct iq_t{
 
 private:
     volatile _iq value = 0;
@@ -29,7 +24,6 @@ private:
 public:
     __fast_inline iq_t(): value(0){;}
     __fast_inline explicit iq_t(const _iq & iqValue): value(iqValue){;}
-    __fast_inline explicit iq_t(const IQ_F * noneValue): value(0xffffffff){;}
     __fast_inline explicit iq_t(const int & intValue) : value(_IQ(intValue)) {;}
     __fast_inline explicit iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
     __fast_inline explicit iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
@@ -125,7 +119,7 @@ public:
     }
 
     __fast_inline iq_t operator*(const int & other) const {
-        return iq_t(value ? value * other : 0);
+        return iq_t(value * other);
     }
 
     __fast_inline iq_t operator*(const float & other) const {
@@ -133,21 +127,19 @@ public:
     }
 
     __fast_inline iq_t operator*(const double & other) const {
-       return iq_t(*this * iq_t(other));
+        return iq_t(*this * iq_t(other));
     }
 
     __fast_inline iq_t operator/(const int & other) const {
-        if(other) return iq_t((value ? value / other : 0));
-        else return iq_t(IQ_FULL);
-        // return iq_t(other ? (value ? value / other : 0) : IQ_FULL());
+        return iq_t((value / other));
     }
 
     __fast_inline iq_t operator/(const float & other) const {
-       return iq_t(*this / iq_t(other));
+        return iq_t(*this / iq_t(other));
     }
 
     __fast_inline iq_t operator/(const double & other) const {
-       return iq_t(*this / iq_t(other));
+        return iq_t(*this / iq_t(other));
     }
 
     __fast_inline iq_t& operator+=(const float & other) {
@@ -301,16 +293,7 @@ public:
     
     #ifdef EXTRA_IQ
 
-    // __fast_inline iq_t x31(){
-    //     value = 
-    //         (value << 4) + 
-    //         (value << 3) +
-    //         (value << 2) +
-    //         (value << 1) +
-    //         value;
-    //     return iq_t(IQ_VALUE(*this));
-    // }
-    
+
     #endif
     
     __fast_inline explicit operator bool() const {
@@ -353,6 +336,9 @@ public:
         return _IQtoD(value);
     }
 
+    __no_inline explicit operator String() const{
+        return String(_IQtoF(value));
+    }
 
 };
 
@@ -458,6 +444,13 @@ namespace std
 
     __fast_inline iq_t pow(const iq_t & base, const iq_t & exponent) {return iq_t(_IQexp(_IQmpy(IQ_VALUE(exponent), _IQdiv(_IQlog10(IQ_VALUE(base)), _IQlog10(_IQ(LOGE))))));}
     #endif
+
+    template<>
+    class numeric_limits<iq_t> {
+    public:
+        __fast_inline static iq_t infinity() noexcept {return iq_t(std::numeric_limits<float>::infinity());}
+        __fast_inline static iq_t lowest() noexcept {return iq_t(-std::numeric_limits<float>::infinity());}
+    };
 };
 
 #if defined(IQ_VALUE)

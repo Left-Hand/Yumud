@@ -122,12 +122,7 @@ String::String(double value, unsigned char decimalPlaces)
 }
 
 #ifdef USE_IQ
-String::String(iq_t value, unsigned char decimalPlaces)
-{
-	init();
-	char buf[33];
-	*this = dtostrf(double(value), (decimalPlaces + 2), decimalPlaces, buf);
-}
+
 #endif
 
 String::~String()
@@ -763,10 +758,4 @@ float String::toFloat(void) const
 {
 	if (buffer) return float(atof(buffer));
 	return 0;
-}
-
-real_t String::toReal(void) const
-{
-	if (buffer) return real_t(atof(buffer));
-	return real_t(0);
 }

@@ -14,6 +14,10 @@
 #define __fast_inline __always_inline __fast_access
 #endif
 
+#ifndef __no_inline
+#define __no_inline __attribute__((__noinline__))
+#endif
+
 #ifndef _FORCE_INLINE_
 #define _FORCE_INLINE_ __fast_inline
 #endif

@@ -2,12 +2,15 @@
 #include "stdio.h"
 #include "../types/real.hpp"
 #include "../types/string/String.hpp"
-#include "../types/color/color.hpp"
+#include "../types/complex/complex_t.hpp"
+#include "../types/color/color_t.hpp"
+#include "../types/matrix/matrix.hpp"
 #include "MLX90640/MLX90640_API.h"
-#include <complex>
+// #include <complex>
 
 // using real_t = real_t;
-using comp = std::complex<real_t>;
+using Complex = Complex_t<real_t>;
+using Color = Color_t<real_t>;
 
 void Systick_Init(void)
 {
@@ -336,6 +339,39 @@ uint8_t inter_fract(const real_t & ux, const real_t & uy){
 
     return count;
 }
+
+uint8_t inter_fract(const Complex & c){
+
+    Complex z = Complex();
+    uint8_t count = 0;
+    real_t zx_2 = real_t(0);
+    real_t zy_2 = real_t(0);
+    while ((zx_2 + zy_2 < real_t(4)) && (count < MAXCOUNT))
+    {
+        zx_2 = z.real * z.real;
+        zy_2 = z.imag * z.imag;
+        real_t & zx = z.real;
+        real_t & zy = z.imag;
+        z = Complex(zx_2 - zy_2 + c.real, 2 * zx * zy + c.imag);
+        count = count + 1;
+    }
+    // Color a = Color<real_t>(1,1,1);
+    return count;
+}
+
+uint8_t inter_fract2(const Complex & c){
+
+    Complex z(real_t(0), real_t(0));
+    uint8_t count = 0;
+    while ((z < real_t(4)) && (count < MAXCOUNT))
+    {
+        z = z * z + c;
+        count = count + 1;
+    }
+    // Color a = Color<real_t>(1,1,1);
+    return count;
+}
+
 void fractal(real_t left, real_t top, real_t xside, real_t yside)
 {
 
@@ -354,7 +390,8 @@ void fractal(real_t left, real_t top, real_t xside, real_t yside)
 		for (uint8_t x = 0; x < W; x++){
 			cx += xstep;
 
-            uint8_t count = inter_fract(cx, cy);
+            // uint8_t count = inter_fract(cx, cy);
+            uint8_t count = inter_fract2(Complex(cx,cy));
 
             if((count != last_count) || (x == 0)) 
                 color = hToRgb565(std::fmod(real_t(count * 9), real_t(360)));
@@ -395,9 +432,9 @@ int main(){
 
     LCD_Init();
 
-    Color c1 = Color(real_t(0.2), real_t(0.8), real_t(0.9));
-    // comp complex1 {real_t(0),real_t(1)};
-    // comp deltacomplex {real_t(0.8),real_t(0.6)};
+    Color c1 = Color(0.2, 0.8, 0.9);
+    // Complex complex1 {real_t(0),real_t(1)};
+    // Complex deltacomplex {real_t(0.8),real_t(0.6)};
     while(1){
 
 
@@ -423,9 +460,8 @@ int main(){
         // uint64_t delta_m = (millis() - begin_m);
 
         delta = real_t(delta_u / 1000000.0f);
-// IQ_FULL test = IQ_FULL();
-// __FlashStringHelper t = __FlashStringHelper();
-StringSumHelper t = StringSumHelper("s");
+
+        Matrix m1 = Matrix({1,0});
         if(delta){
             fps = real_t(1) / delta;
             if(!fps_filted){

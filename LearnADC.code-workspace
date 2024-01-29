@@ -62,7 +62,8 @@
             "streambuf": "cpp",
             "typeinfo": "cpp",
             "complex": "cpp",
-            "cinttypes": "cpp"
+            "cinttypes": "cpp",
+            "*.tpp": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
