@@ -1,65 +1,61 @@
-template <typename T, typename U>
-Complex_t<T> operator+(Complex_t<T> lhs, const Complex_t<U>& rhs) {
-    lhs += rhs;
-    return lhs;
+#define COMPLEX_ARITHMETIC_OPERATOR(op)\
+\
+template <typename T, typename U>\
+__fast_inline Complex_t<T> operator op (Complex_t<T> lhs, const Complex_t<U>& rhs) {\
+    lhs op##= rhs;\
+    return lhs;\
+}\
+\
+template <typename T, typename U>\
+__fast_inline Complex_t<T> operator op (Complex_t<T> lhs, const U & rhs) {\
+    lhs op##= static_cast<T>(rhs);\
+    return lhs;\
+}\
+\
+template <typename T, typename U>\
+__fast_inline Complex_t<T> operator op (const U & lhs, Complex_t<T> rhs) {\
+    Complex_t<T>(static_cast<T>(lhs), T(0)) op##= rhs;\
+    return lhs;\
 }
+
+COMPLEX_ARITHMETIC_OPERATOR(+)
+COMPLEX_ARITHMETIC_OPERATOR(-)
+COMPLEX_ARITHMETIC_OPERATOR(*)
+COMPLEX_ARITHMETIC_OPERATOR(/)
+
 
 template <typename T, typename U>
-Complex_t<T> operator+(Complex_t<T> lhs, const U & rhs) {
-    lhs += Complex_t<T>(rhs, T());
-    return lhs;
-}
-
-template <typename T, typename U>
-Complex_t<T> operator-(Complex_t<T> lhs, const Complex_t<T>& rhs) {
-    lhs -= rhs;
-    return lhs;
+__fast_inline bool operator==(const Complex_t<T>& lhs, const Complex_t<U>& rhs) {
+    return lhs.real == static_cast<T>(rhs.real) && lhs.imag == static_cast<T>(rhs.imag);
 }
 
 template <typename T>
-Complex_t<T> operator*(Complex_t<T> lhs, const Complex_t<T>& rhs) {
-    lhs *= rhs;
-    return lhs;
-}
-
-template <typename T>
-Complex_t<T> operator/(Complex_t<T> lhs, const Complex_t<T>& rhs) {
-    lhs /= rhs;
-    return lhs;
-}
-
-template <typename T>
-bool operator==(const Complex_t<T>& lhs, const Complex_t<T>& rhs) {
-    return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
-}
-
-template <typename T>
-bool operator!=(const Complex_t<T>& lhs, const Complex_t<T>& rhs) {
+__fast_inline bool operator!=(const Complex_t<T>& lhs, const Complex_t<T>& rhs) {
     return !(lhs == rhs);
 }
 
-
-template <typename T>
-Complex_t<T> operator/(const Complex_t<T>& lhs, const Complex_t<T>& rhs) {
-    T denominator = rhs.real() * rhs.real() + rhs.imag() * rhs.imag();
-    T realPart = (lhs.real() * rhs.real() + lhs.imag() * rhs.imag()) / denominator;
-    T imagPart = (lhs.imag() * rhs.real() - lhs.real() * rhs.imag()) / denominator;
-    return Complex_t<T>(realPart, imagPart);
+#define COMPLEX_COMPARE_IM_OPERATOR(op) \
+\
+template <typename T, typename U> \
+__fast_inline bool operator op (const Complex_t<T>& lhs, const U& rhs) { \
+    using CommonType = typename std::common_type<T, U>::type; \
+    U absrhs = std::abs(rhs); \
+    return static_cast<CommonType>(lhs.norm()) op static_cast<CommonType>(absrhs * absrhs); \
+} \
+\
+template <typename T, typename U> \
+__fast_inline bool operator op (const U& lhs, const Complex_t<T>& rhs) { \
+    using CommonType = typename std::common_type<T, U>::type; \
+    U abslhs = std::abs(lhs); \
+    return static_cast<CommonType>(abslhs * abslhs) op static_cast<CommonType>(rhs.norm()); \
 }
 
-template <typename T, typename U>
-bool operator<(const Complex_t<T>& lhs, const Complex_t<U>& rhs) {
-    using CommonType = typename std::common_type<T, U>::type;
-    return static_cast<CommonType>(lhs.norm()) < static_cast<CommonType>(rhs.norm());
-}
-
-
-template <typename T, typename U>
-bool operator<(const Complex_t<T>& lhs, const U& rhs) {
-    using CommonType = typename std::common_type<T, U>::type;
-    U absrhs = std::abs(rhs);
-    return static_cast<CommonType>(lhs.norm()) < static_cast<CommonType>(absrhs * absrhs);
-}
+COMPLEX_COMPARE_IM_OPERATOR(<)
+COMPLEX_COMPARE_IM_OPERATOR(<=)
+COMPLEX_COMPARE_IM_OPERATOR(>)
+COMPLEX_COMPARE_IM_OPERATOR(>=)
+COMPLEX_COMPARE_IM_OPERATOR(==)
+COMPLEX_COMPARE_IM_OPERATOR(!=)
 
 template <typename T>
 __fast_inline Complex_t<T> Complex_t<T>::proj() {

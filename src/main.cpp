@@ -363,9 +363,16 @@ uint8_t inter_fract2(const Complex & c){
 
     Complex z(real_t(0), real_t(0));
     uint8_t count = 0;
+    // real_t res = real_t();
+    // real_t ims = real_t();
+
     while ((z < real_t(4)) && (count < MAXCOUNT))
     {
-        z = z * z + c;
+        // res = z.real_squared();
+        // ims = z.imag_squared();
+
+        // z = Complex(res - ims + c.real, z.real * z.imag * 2 + c.imag);
+        z = z*z + c;
         count = count + 1;
     }
     // Color a = Color<real_t>(1,1,1);

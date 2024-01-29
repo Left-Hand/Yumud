@@ -49,9 +49,21 @@ public:
     }
 
     template <typename U>
+    __fast_inline Complex_t& operator+=(const U & other) {
+        real += static_cast<T>(other);
+        return *this;
+    }
+
+    template <typename U>
     __fast_inline Complex_t& operator-=(const Complex_t<U>& other) {
         real -= static_cast<T>(other.real);
         imag -= static_cast<T>(other.imag);
+        return *this;
+    }
+
+    template <typename U>
+    __fast_inline Complex_t& operator-=(const U & other) {
+        real -= static_cast<T>(other);
         return *this;
     }
 
