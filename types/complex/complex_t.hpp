@@ -3,6 +3,7 @@
 #define __Complex_t_HPP__
 
 #include "../../src/defines/comm_inc.h"
+#include <type_traits>
 
 template <typename T>
 struct Complex_t {
@@ -14,13 +15,17 @@ public:
     __fast_inline T imag_squared() const {return imag * imag;}
     __fast_inline T norm() const {return real * real + imag * imag;}
     __fast_inline T abs() const {return std::sqrt(real * real + imag * imag);}
-    __fast_inline T arg() const {return std::atan2(real, imag);}
-    __fast_inline Complex_t conj() const {return Complex_t(real, -imag);}
-    __fast_inline Complex_t proj();
+    __fast_inline T arg() const {return std::atan2(imag, real);}
+    __fast_inline Complex_t & normalized(){*this /= abs(); return *this;}
 
     __fast_inline explicit Complex_t() : real(T()), imag(T()) {;}
     __fast_inline explicit Complex_t(const T & im) : real(T()), imag(im) {;}
     __fast_inline explicit Complex_t(const T & re, const T & im) : real(re), imag(im) {;}
+
+    template <typename U>
+	__fast_inline Complex_t(const U & im) {
+		imag = static_cast<T>(im);
+	}
 
     template <typename U>
 	__fast_inline Complex_t(const U & re,const U & im) {
@@ -99,8 +104,19 @@ public:
         imag = static_cast<T>((static_cast<U>(orgImag) * other.real - static_cast<U>(orgReal) * other.imag) / denominator);
         return *this;
     }
-};
 
+    __no_inline explicit operator String() const{
+        if(imag > 0) return (String(static_cast<float>(real)) + String('+') + String(static_cast<float>(imag)) + String('i'));
+        else if(imag < 0)return (String(static_cast<float>(real)) + String(static_cast<float>(-imag)) + String('i'));
+        else return String(static_cast<float>(real));
+    }
+
+    __no_inline String toString(unsigned char decimalPlaces = 2){
+        if(imag > 0) return (String(static_cast<float>(imag), decimalPlaces) + String('+') + String(static_cast<float>(imag), decimalPlaces) + String('i'));
+        else if(imag < 0)return (String(static_cast<float>(imag), decimalPlaces) + String(static_cast<float>(-imag), decimalPlaces) + String('i'));
+        else return String(static_cast<float>(imag), decimalPlaces);
+    }
+};
 
 #include "complex_t.tpp"
 #endif

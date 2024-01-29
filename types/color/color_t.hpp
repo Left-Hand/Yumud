@@ -5,8 +5,8 @@
 #include <cstdint>
 
 #include "../real.hpp"
-#include "../src/errors/error_macros.h"
-#include "string.h"
+#include "../string/String.hpp"
+#include "../rgb.h"
 
 
 template <typename T>
@@ -112,6 +112,7 @@ public:
 				b < 0.04045 ? b * (1.0 / 12.92) : std::pow((b + 0.055) * (1.0 / (1 + 0.055)), T(2.4)),
 				a);
 	}
+
 	__fast_inline Color_t to_srgb() const {
 		return Color_t(
 				r < 0.0031308 ? 12.92 * r : (1.0 + 0.055) * std::pow(r, T(1.0f / 2.4f)) - T(0.055),
@@ -121,16 +122,13 @@ public:
 
 	static Color_t hex(uint32_t p_hex);
 	static Color_t hex64(uint64_t p_hex);
-	Color_t from_hsv(T p_h, T p_s, T p_v, T p_a) const;
+	static Color_t from_hsv(T p_h, T p_s = T(1), T p_v = T(1), T p_a = T(1));
 
-	__fast_inline bool operator<(const Color_t &p_Color_t) const; //used in set keys
-
-    
 	__fast_inline Color_t() {
-		r = 0;
-		g = 0;
-		b = 0;
-		a = 1.0;
+		r = T(0);
+		g = T(0);
+		b = T(0);
+		a = T(1);
 	}
 
     template <typename U>
@@ -140,6 +138,29 @@ public:
 		b = static_cast<T>(p_b);
 		a = static_cast<T>(p_a);
 	}
+
+    __no_inline explicit operator String() const{
+        return (String('(')     + String(static_cast<float>(r)) + String(',')
+                                + String(static_cast<float>(g)) + String(',')
+                                + String(static_cast<float>(b)) + String(',')
+                                + String(static_cast<float>(a)) + String(')')
+                                );
+    }
+
+    __no_inline String toString(unsigned char decimalPlaces = 2){
+        return (String('(')     + String(static_cast<float>(r), decimalPlaces) + String(',')
+                                + String(static_cast<float>(g), decimalPlaces) + String(',')
+                                + String(static_cast<float>(b), decimalPlaces) + String(',')
+                                + String(static_cast<float>(a), decimalPlaces) + String(')')
+                                );
+    }
+
+    __fast_inline operator RGB565() const {
+        return RGB565(
+            (uint8_t)(r * T(31)),
+            (uint8_t)(g * T(63)),
+            (uint8_t)(b * T(31)));
+    }
 };
 
 #include "color_t.tpp"

@@ -45,7 +45,7 @@ namespace std {
         return std::abs(a - b) < tolerance;
     }
 
-    bool is_equal_approx_ratio(const float & a, const float & b, float epsilon, float min_epsilon ) {
+    bool is_equal_approx_ratio(const float a, const float & b, float epsilon, float min_epsilon){
         float diff = std::abs(a - b);
         if (diff == 0.0 || diff < min_epsilon) {
             return true;
@@ -68,7 +68,7 @@ namespace std {
         return std::abs(a - b) < tolerance;
     }
 
-    bool is_equal_approx_ratio(const double & a, const double & b, double epsilon, double min_epsilon ) {
+    bool is_equal_approx_ratio(const double a, const double & b, double epsilon, double min_epsilon){
         double diff = std::abs(a - b);
         if (diff == 0.0 || diff < min_epsilon) {
             return true;
@@ -76,5 +76,17 @@ namespace std {
         double avg_size = (std::abs(a) + std::abs(b)) / 2.0;
         diff /= avg_size;
         return diff < epsilon;
+    }
+
+    __fast_inline float sign(const float & fv){
+        if(fv > 0.0f) return 1.0f;
+        else if(fv < 0.0f) return -1.0f;
+        return 0.0f;
+    }
+
+    __fast_inline double sign(const double & dv){
+        if(dv > 0.0) return 1.0;
+        else if(dv < 0.0) return -1.0;
+        return 0.0;
     }
 }

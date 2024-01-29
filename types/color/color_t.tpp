@@ -238,7 +238,7 @@ Color_t<T> Color_t<T>::contrasted() const {
 }
 
 template <typename T>
-Color_t<T> Color_t<T>::from_hsv(T p_h, T p_s, T p_v, T p_a) const {
+Color_t<T> Color_t<T>::from_hsv(T p_h, T p_s, T p_v, T p_a){
 	Color_t<T> c;
 	c.set_hsv(p_h, p_s, p_v, p_a);
 	return c;

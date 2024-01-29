@@ -20,9 +20,7 @@
 */
 
 #include "String.hpp"
-#include "itoa.h"
-#include "dtostrf.h"
-
+#include "string_utils.h"
 /*********************************************/
 /*  Constructors                             */
 /*********************************************/
@@ -70,15 +68,15 @@ String::String(char c)
 String::String(unsigned char value, unsigned char base)
 {
 	init();
-	char buf[1 + 8 * sizeof(unsigned char)];
-	utoa(value, buf, base);
+	char buf[8];
+	itoa(value, buf, base);
 	*this = buf;
 }
 
 String::String(int value, unsigned char base)
 {
 	init();
-	char buf[2 + 8 * sizeof(int)];
+	char buf[8];
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -86,44 +84,42 @@ String::String(int value, unsigned char base)
 String::String(unsigned int value, unsigned char base)
 {
 	init();
-	char buf[1 + 8 * sizeof(unsigned int)];
-	utoa(value, buf, base);
+	char buf[8];
+	itoa(value, buf, base);
 	*this = buf;
 }
 
 String::String(long value, unsigned char base)
 {
 	init();
-	char buf[2 + 8 * sizeof(long)];
-	ltoa(value, buf, base);
+	char buf[8];
+	itoa(value, buf, base);
 	*this = buf;
 }
 
 String::String(unsigned long value, unsigned char base)
 {
 	init();
-	char buf[1 + 8 * sizeof(unsigned long)];
-	ultoa(value, buf, base);
+	char buf[8];
+	itoa(value, buf, base);
 	*this = buf;
 }
 
 String::String(float value, unsigned char decimalPlaces)
 {
 	init();
-	char buf[33];
-	*this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+	char buf[8];
+	ftoa(value, buf, decimalPlaces);
+    *this = buf;
 }
 
 String::String(double value, unsigned char decimalPlaces)
 {
 	init();
-	char buf[33];
-	*this = dtostrf(value, (decimalPlaces + 2), decimalPlaces, buf);
+	char buf[8];
+	ftoa(value, buf, decimalPlaces);
+    *this = buf;
 }
-
-#ifdef USE_IQ
-
-#endif
 
 String::~String()
 {
@@ -277,6 +273,16 @@ unsigned char String::concat(const char *cstr, unsigned int length)
 	return 1;
 }
 
+// unsigned char String::concat(const char* cstr, unsigned int length) {
+//   unsigned int newlen = len + length;
+//   if (!cstr) return 0;
+//   if (length == 0) return 1;
+//   if (!reserve(newlen)) return 0;
+//   strncat(buffer + len - 1, cstr, length);
+//   len = newlen;
+//   return 1;
+// }
+
 unsigned char String::concat(const char *cstr)
 {
 	if (!cstr) return 0;
@@ -293,61 +299,52 @@ unsigned char String::concat(char c)
 
 unsigned char String::concat(unsigned char num)
 {
-	char buf[1 + 3 * sizeof(unsigned char)];
+	char buf[8];
 	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(int num)
 {
-	char buf[2 + 3 * sizeof(int)];
+	char buf[8];
 	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(unsigned int num)
 {
-	char buf[1 + 3 * sizeof(unsigned int)];
-	utoa(num, buf, 10);
+	char buf[8];
+	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(long num)
 {
-	char buf[2 + 3 * sizeof(long)];
-	ltoa(num, buf, 10);
+	char buf[8];
+	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(unsigned long num)
 {
-	char buf[1 + 3 * sizeof(unsigned long)];
-	ultoa(num, buf, 10);
+	char buf[8];
+	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(float num)
 {
-	char buf[20];
-	char* string = dtostrf(num, 4, 2, buf);
-	return concat(string, strlen(string));
+	char buf[8];
+	ftoa(num, buf, 6);
+	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(double num)
 {
-	char buf[20];
-	char* string = dtostrf(num, 4, 2, buf);
-	return concat(string, strlen(string));
+	char buf[8];
+	ftoa(num, buf, 6);
+	return concat(buf, strlen(buf));
 }
-
-#ifdef USE_IQ
-unsigned char String::concat(iq_t num)
-{
-	char buf[20];
-	char* string = dtostrf(double(num), 4, 2, buf);
-	return concat(string, strlen(string));
-}
-#endif
 
 unsigned char String::concat(const __FlashStringHelper * str)
 {

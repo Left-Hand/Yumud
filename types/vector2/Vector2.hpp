@@ -1,165 +1,108 @@
-// #ifndef __VECTOR2_H_
+#ifndef __VECTOR2_HPP_
 
-// #define __VECTOR2_H_
+#define __VECTOR2_HPP_
 
+#include "../../src/defines/comm_inc.h"
+#include "../string/String.hpp"
+#include <type_traits>
 
-// class Vector2
-// {
+template<typename T>
+struct Vector2_t{
+public:    
 
-// public:    
+    T x = T(0);
+    T y = T(0);
 
-//     float x = 0.0f;
-//     float y = 0.0f;
-//     Vector2();
-//     Vector2(float _x, float _y);
-//     ~Vector2();
+    __fast_inline explicit Vector2_t() : x(T()), y(T()) {;}
+    __fast_inline explicit Vector2_t(const T & _x, const T & _y) : x(_x), y(_y) {;}
 
-//     Vector2 abs() const;
-//     float angle() const {return atan2f(y, x);}
-//     float angle_to(const Vector2 & to) const;
-//     float angle_to_point(const Vector2 & to) const;
-//     float aspect() const {return (!!y) ? x/y : .0f;}
-//     Vector2 bounce(const Vector2 &n) const;
-//     Vector2 ceil() const;
-//     Vector2 clampmin(const float & length) const;
-//     Vector2 clampmax(const float & length) const;
-//     Vector2 clamp(const float & min, const float & max) const;
-//     float cross(const Vector2 & with) const;
-//     float dot(const Vector2 & with) const;
-//     Vector2 dir_to(const Vector2 & b) const;
-//     float dist_to(const Vector2 & b) const;
-//     float dist_squared_to(const Vector2 & b) const;
-//     Vector2 floor() const;
-//     bool is_equal_approx(const Vector2 & v) const;
-//     bool is_normalized() const {return (fabs(x*x + y*y - 1.0) <= CMP_EPSILON);}
-//     float length() const {return sqrt(x*x + y*y);}
-//     float length_squared() const {return (x*x + y*y);}
-//     Vector2 lerp(const Vector2 & b, const float & t) const;
-//     Vector2 move_toward(const Vector2 & to, const float & delta) const;
-//     Vector2 normalized() const;
-//     Vector2 posmod(const float & mod) const;
-//     Vector2 posmodv(const Vector2 & modv) const;
-//     Vector2 project(const Vector2 & b) const;
-//     Vector2 reflect(const Vector2 & n) const;
-//     Vector2 round() const;
-//     Vector2 sign() const;
-//     Vector2 slerp(const Vector2 & b, const float & t) const;
-//     Vector2 slide(const Vector2  & n) const;
-//     Vector2 snapped(const Vector2 & by) const;
-//     Vector2 improduct(const Vector2 & b) const;
-//     Vector2 rotate(const float & r)const;
+    template <typename U>
+	__fast_inline Vector2_t(const U & _x,const U & _y) {
+		x = static_cast<T>(_x);
+		y = static_cast<T>(_y);
+	}
 
+    __fast_inline Vector2_t<T> normalize();
+    __fast_inline Vector2_t<T> normalized() const;
+    __fast_inline T cross(const Vector2_t<T> & with) const;
+    __fast_inline T dot(const Vector2_t<T> & with) const;
+    __fast_inline Vector2_t<T> improduct(const Vector2_t<T> & b) const;
+    __fast_inline Vector2_t<T> rotate(const T & r)const;
 
-//     Vector2 operator+(const Vector2 & b) const;
-//     Vector2 operator+=(const Vector2 & b);
-//     Vector2 operator-(const Vector2 & b) const;
-//     Vector2 operator-=(const Vector2 & b);
-//     Vector2 operator-() const;
+    __fast_inline Vector2_t<T> abs() const;
+    __fast_inline T angle() const {return atan2f(y, x);}
+    T angle_to(const Vector2_t<T> & to) const;
+    T angle_to_point(const Vector2_t<T> & to) const;
+    T aspect() const {return (!!y) ? x/y : T(0);}
+    Vector2_t<T> bounce(const Vector2_t<T> &n) const;
+    Vector2_t<T> ceil() const;
+    Vector2_t<T> clampmin(const T & length) const;
+    Vector2_t<T> clampmax(const T & length) const;
+    Vector2_t<T> clamp(const T & min, const T & max) const;
 
-// 	Vector2 operator*(const Vector2 &b) const;
-//     Vector2 operator*(const float & n) const;
-//     void operator*=(const float &n){*this = *this * n;}
-// 	void operator*=(const Vector2 &b) { *this = *this * b; }
+    Vector2_t<T> dir_to(const Vector2_t<T> & b) const;
+    T dist_to(const Vector2_t<T> & b) const;
+    T dist_squared_to(const Vector2_t<T> & b) const;
+    Vector2_t<T> floor() const;
+    bool is_equal_approx(const Vector2_t<T> & v) const;
+    bool is_normalized() const {return (std::fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
+    __fast_inline T length() const {return std::sqrt(x*x + y*y);}
+    __fast_inline T length_squared() const {return (x*x + y*y);}
+    Vector2_t<T> lerp(const Vector2_t<T> & b, const T & t) const;
+    Vector2_t<T> move_toward(const Vector2_t<T> & to, const T & delta) const;
 
-//     Vector2 operator/(const float & n) const;
-//     Vector2 operator/(const Vector2 &b) const;
-//     void operator/=(const float &n);
-// 	void operator/=(const Vector2 &b) { *this = *this / b; }
-// 	bool operator==(const Vector2 &b) const { return ((x == b.x) && (y == b.y));}
-// 	bool operator!=(const Vector2 &b) const { return ((x != b.x) || (y != b.y));}
-
-// 	bool operator<(const Vector2 &b) const { return x == b.x ? (y < b.y) : (x < b.x); }
-// 	bool operator>(const Vector2 &b) const { return x == b.x ? (y > b.y) : (x > b.x); }
-// 	bool operator<=(const Vector2 &b) const { return x == b.x ? (y <= b.y) : (x < b.x); }
-// 	bool operator>=(const Vector2 &b) const { return x == b.x ? (y >= b.y) : (x > b.x); }
-
-//     friend Vector2 operator*(const float & n, const Vector2 & a){return (Vector2(a.x*n, a.y*n));}
+    Vector2_t<T> posmod(const T & mod) const;
+    Vector2_t<T> posmodv(const Vector2_t<T> & modv) const;
+    Vector2_t<T> project(const Vector2_t<T> & b) const;
+    Vector2_t<T> reflect(const Vector2_t<T> & n) const;
+    Vector2_t<T> round() const;
+    Vector2_t<T> sign() const;
+    Vector2_t<T> slerp(const Vector2_t<T> & b, const T & t) const;
+    Vector2_t<T> slide(const Vector2_t<T>  & n) const;
+    Vector2_t<T> snapped(const Vector2_t<T> & by) const;
 
 
-// };
+    __fast_inline Vector2_t<T> & operator+=(const Vector2_t<T> & b){
+        x += b.x;
+        y += b.y;
+        return *this;
+    }
+    __fast_inline Vector2_t<T> & operator-=(const Vector2_t<T> & b){
+        x -= b.y;
+        y -= b.y;
+        return *this;
+    }
+    __fast_inline Vector2_t<T> & operator-() const{
+        x = -x;
+        y = -y;
+        return *this;
+    }
 
-// inline Vector2::Vector2()
-// {
-//     x = 0.0;
-//     y = 0.0;
-// }
+    template<typename U>
+    __fast_inline Vector2_t<T> & operator*=(const U & n){
+        using CommonType = typename std::common_type<T, U>::type;
+        x = static_cast<T>(static_cast<CommonType>(x) * n);
+        y = static_cast<T>(static_cast<CommonType>(y) * n);
+        return *this;
+    }
 
-// inline Vector2::Vector2(float _x, float _y){
-//     x = _x;
-//     y = _y;
-// }
+    template<typename U>
+    __fast_inline Vector2_t<T> & operator/=(const U & n){
+        using CommonType = typename std::common_type<T, U>::type;
+        x = static_cast<T>(static_cast<CommonType>(x) / n);
+        y = static_cast<T>(static_cast<CommonType>(y) / n);
+        return *this;
+    }
 
-// inline Vector2::~Vector2()
-// {
-// }
+    __no_inline explicit operator String() const{
+        return (String('(') + String(static_cast<float>(x)) + String(',') + String(static_cast<float>(y)) + String(')'));
+    }
 
-// inline Vector2 Vector2::operator+(const Vector2 & b) const{
-//     return Vector2(x+b.x, y+b.y);
-// }
+    __no_inline String toString(unsigned char decimalPlaces = 2){
+        return (String('(') + String(static_cast<float>(x), decimalPlaces) + String(',') + String(static_cast<float>(y), decimalPlaces) + String(')'));
+    }
+};
 
-// inline Vector2 Vector2::operator+=(const Vector2 & b){
-//     *this = *this + b;
-//     return *this;
-// }
+#include "Vector2.tpp"
 
-// inline Vector2 Vector2::operator-(const Vector2 & b) const{
-//     return Vector2(x-b.x, y-b.y);
-// }
-
-// inline Vector2 Vector2::operator-=(const Vector2 & b){
-//     *this = *this - b;
-//     return *this;
-// }
-
-
-// inline Vector2 Vector2::operator-() const{
-//     return Vector2(-x, -y);
-// }
-
-
-// inline Vector2 Vector2::operator*(const float & n) const{
-//     return Vector2(x*n, y*n);
-// }
-
-// inline Vector2 Vector2::operator*(const Vector2 &b) const{
-//     return Vector2(x*b.x, y*b.y);
-// }
-
-// // void Vector2::operator*=(const float &n){
-// //     x *= n;
-// //     y *= n;
-// // }
-
-// inline Vector2 Vector2::operator/(const float & n) const{
-//     return Vector2(x/n, y/n);
-// }
-
-// inline Vector2 Vector2::operator/(const Vector2 &b) const{
-//     return Vector2(x/b.x, y/b.y);
-// }
-
-// inline void Vector2::operator/=(const float &n){
-//     x /= n;
-//     y /= n;
-// }
-
-// inline Vector2 Vector2::normalized() const{
-//     return *this/this->length();
-// }
-
-// inline float Vector2::dot(const Vector2 & with) const{
-//     return (x*with.x + y*with.y);
-// }
-
-// inline float Vector2::cross(const Vector2 & with) const{
-//     return (x*with.y - y*with.x);
-// }
-
-// inline Vector2 Vector2::improduct(const Vector2 & b) const{
-//     return Vector2(x*b.x - y*b.y, x*b.y + y*b.x);
-// }
-
-// inline Vector2 Vector2::rotate(const float & r) const{
-//     return this->improduct(Vector2(cos(r), sin(r)));
-// }
-// #endif
+#endif

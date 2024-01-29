@@ -17,11 +17,9 @@
 
 
 struct iq_t{
-
-private:
+public:
     volatile _iq value = 0;
 
-public:
     __fast_inline iq_t(): value(0){;}
     __fast_inline explicit iq_t(const _iq & iqValue): value(iqValue){;}
     __fast_inline explicit iq_t(const int & intValue) : value(_IQ(intValue)) {;}
@@ -396,37 +394,43 @@ __fast_inline iq_t operator/(double double_v, const iq_t & iq_v) {
 
 namespace std
 {
-    __fast_inline iq_t sin(const iq_t & iq){return iq_t(_IQsin(IQ_VALUE(iq)));}
+    __fast_inline iq_t sin(const iq_t & iq){return iq_t(_IQsin(iq.value));}
 
-    __fast_inline iq_t cos(const iq_t & iq){return iq_t(_IQcos(IQ_VALUE(iq)));}
+    __fast_inline iq_t cos(const iq_t & iq){return iq_t(_IQcos(iq.value));}
 
-    __fast_inline iq_t tan(const iq_t & iq) {return iq_t(_IQsin(IQ_VALUE(iq)) / _IQcos(IQ_VALUE(iq)));}
+    __fast_inline iq_t sinf(const iq_t & iq){return iq_t(_IQsin(iq.value));}
 
-    __fast_inline iq_t asin(const iq_t & iq) {return iq_t(_IQasin(IQ_VALUE(iq)));}
+    __fast_inline iq_t cosf(const iq_t & iq){return iq_t(_IQcos(iq.value));}
 
-    __fast_inline iq_t acos(const iq_t & iq) {return iq_t(_IQacos(IQ_VALUE(iq)));}
+    __fast_inline iq_t tan(const iq_t & iq) {return iq_t(_IQsin(iq.value) / _IQcos(iq.value));}
 
-    __fast_inline iq_t atan(const iq_t & iq) {return iq_t(_IQatan(IQ_VALUE(iq)));}
+    __fast_inline iq_t asin(const iq_t & iq) {return iq_t(_IQasin(iq.value));}
 
-    __fast_inline iq_t atan2(const iq_t & a, const iq_t & b) {return iq_t(_IQatan2(IQ_VALUE(a),IQ_VALUE(b)));}
+    __fast_inline iq_t acos(const iq_t & iq) {return iq_t(_IQacos(iq.value));}
 
-    __fast_inline iq_t sqrt(const iq_t & iq){return iq_t(_IQsqrt(IQ_VALUE(iq)));}
+    __fast_inline iq_t atan(const iq_t & iq) {return iq_t(_IQatan(iq.value));}
 
-    __fast_inline iq_t abs(const iq_t & iq) {return iq_t(_IQabs(IQ_VALUE(iq)));}
+    __fast_inline iq_t atan2(const iq_t & a, const iq_t & b) {return iq_t(_IQatan2(a.value,b.value));}
 
-    __fast_inline bool isnormal(const iq_t & iq){return bool(IQ_VALUE(iq));}
+    __fast_inline iq_t sqrt(const iq_t & iq){return iq_t(_IQsqrt(iq.value));}
 
-    __fast_inline bool signbit(const iq_t & iq){return bool(IQ_VALUE(iq) < 0);}
+    __fast_inline iq_t abs(const iq_t & iq) {return iq_t(_IQabs(iq.value));}
 
-    __fast_inline iq_t fmod(const iq_t & a, const iq_t & b){return iq_t((IQ_VALUE(a) < IQ_VALUE(b) && (0 <= IQ_VALUE(a))) ? IQ_VALUE(a) : _IQmpy(_IQfrac(_IQdiv(IQ_VALUE(a), IQ_VALUE(b))), IQ_VALUE(b)));}
+    __fast_inline bool isnormal(const iq_t & iq){return bool(iq.value);}
 
-    __fast_inline iq_t mean(const iq_t & a, const iq_t & b){return iq_t((IQ_VALUE(a) + IQ_VALUE(b)) >> 1);}
+    __fast_inline bool signbit(const iq_t & iq){return bool(iq.value < 0);}
 
-    __fast_inline iq_t frac(const iq_t & iq){return iq_t(_IQfrac(IQ_VALUE(iq)));}
+    __fast_inline iq_t sign(const iq_t & iq);
 
-    __fast_inline iq_t floor(const iq_t & iq){return iq_t(IQ_VALUE(iq) - _IQfrac(IQ_VALUE(iq)));}
+    __fast_inline iq_t fmod(const iq_t & a, const iq_t & b){return iq_t((a.value < b.value && (0 <= a.value)) ? a.value : _IQmpy(_IQfrac(_IQdiv(a.value, b.value)), b.value));}
 
-    __fast_inline iq_t round(const iq_t & iq){return iq_t((int)_IQint(IQ_VALUE(iq) + _IQ(0.5)));}
+    __fast_inline iq_t mean(const iq_t & a, const iq_t & b){return iq_t((a.value + b.value) >> 1);}
+
+    __fast_inline iq_t frac(const iq_t & iq){return iq_t(_IQfrac(iq.value));}
+
+    __fast_inline iq_t floor(const iq_t & iq){return iq_t(iq.value - _IQfrac(iq.value));}
+
+    __fast_inline iq_t round(const iq_t & iq){return iq_t((int)_IQint(iq.value + _IQ(0.5)));}
 
 	bool is_equal_approx(const iq_t & a,const iq_t & b);
 
@@ -434,15 +438,15 @@ namespace std
 
     #ifdef USE_LOG
     
-    __fast_inline iq_t log10(const iq_t & iq) {return iq_t(_IQlog10(IQ_VALUE(iq)));}
+    __fast_inline iq_t log10(const iq_t & iq) {return iq_t(_IQlog10(iq.value));}
 
-    __fast_inline iq_t log(const iq_t & iq) {return iq_t(_IQdiv(_IQlog10(IQ_VALUE(iq)), _IQlog10(_IQ(LOGE))));}
+    __fast_inline iq_t log(const iq_t & iq) {return iq_t(_IQdiv(_IQlog10(iq.value), _IQlog10(_IQ(LOGE))));}
 
-    __fast_inline iq_t exp(const iq_t & iq) {return iq_t(_IQexp(IQ_VALUE(iq)));}
+    __fast_inline iq_t exp(const iq_t & iq) {return iq_t(_IQexp(iq.value));}
 
-    __fast_inline iq_t exp2(const iq_t & iq) {return iq_t(_IQexp2(IQ_VALUE(iq)));}
+    __fast_inline iq_t exp2(const iq_t & iq) {return iq_t(_IQexp2(iq.value));}
 
-    __fast_inline iq_t pow(const iq_t & base, const iq_t & exponent) {return iq_t(_IQexp(_IQmpy(IQ_VALUE(exponent), _IQdiv(_IQlog10(IQ_VALUE(base)), _IQlog10(_IQ(LOGE))))));}
+    __fast_inline iq_t pow(const iq_t & base, const iq_t & exponent) {return iq_t(_IQexp(_IQmpy(exponent.value, _IQdiv(base.value, _IQlog10(_IQ(LOGE))))));}
     #endif
 
     template<>

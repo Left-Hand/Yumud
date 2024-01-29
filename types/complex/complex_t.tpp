@@ -57,9 +57,17 @@ COMPLEX_COMPARE_IM_OPERATOR(>=)
 COMPLEX_COMPARE_IM_OPERATOR(==)
 COMPLEX_COMPARE_IM_OPERATOR(!=)
 
+#undef COMPLEX_COMPARE_IM_OPERATOR
+
 template <typename T>
-__fast_inline Complex_t<T> Complex_t<T>::proj() {
-    if (std::isinf(real) || std::isinf(imag)) {
+__fast_inline Complex_t<T> proj(const Complex_t<T> & m){
+    if (std::isinf(m.real) || std::isinf(m.imag)) {
         return Complex_t<T>(std::numeric_limits<T>::infinity(), T(0));
-    }else return *this;
+    }else return *m;
 }
+
+template <typename T>
+__fast_inline Complex_t<T> conj(const Complex_t<T> & m){
+    return Complex_t(m.real, -m.imag);
+}
+

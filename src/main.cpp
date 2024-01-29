@@ -3,6 +3,7 @@
 #include "../types/real.hpp"
 #include "../types/string/String.hpp"
 #include "../types/complex/complex_t.hpp"
+#include "../types/vector2/Vector2.hpp"
 #include "../types/color/color_t.hpp"
 #include "../types/matrix/matrix.hpp"
 #include "MLX90640/MLX90640_API.h"
@@ -11,6 +12,7 @@
 // using real_t = real_t;
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
+using Vector2 = Vector2_t<real_t>;
 
 void Systick_Init(void)
 {
@@ -212,8 +214,8 @@ void renderTest1(){
     draw_cube(real_t(4.5), b, c, a);
     draw_cube(real_t(12.7), c, a, b);
 
-    RGB232 arr[2] = {0};
-    LCD_Printf(0, 8, white, "d:%d", sizeof(arr));
+    // RGB232 arr[2] = {0};
+    // LCD_Printf(0, 8, white, "d:%d", sizeof(arr));
     // LCD_Printf(0, 8, 0xffff, "a:%.3f, b:%.3f, c:%.3f", float(a), float(b), float(c));
 
     LCD_Draw_Hollow_Circle(W/2, H/2, 100, color);
@@ -379,6 +381,23 @@ uint8_t inter_fract2(const Complex & c){
     return count;
 }
 
+uint8_t inter_fract3(const Vector2 & c){
+
+    Vector2 z(real_t(0), real_t(0));
+    uint8_t count = 0;
+
+    while ((z < real_t(4)) && (count < MAXCOUNT))
+    {
+        real_t orgx = z.x;
+        real_t orgy = z.y;
+
+        z = Vector2(orgx * orgx - orgy * orgy + c.x, 2 * orgx * orgy + c.y);
+        count = count + 1;
+    }
+    // Color a = Color<real_t>(1,1,1);
+    return count;
+}
+
 void fractal(real_t left, real_t top, real_t xside, real_t yside)
 {
 
@@ -439,9 +458,7 @@ int main(){
 
     LCD_Init();
 
-    Color c1 = Color(0.2, 0.8, 0.9);
-    // Complex complex1 {real_t(0),real_t(1)};
-    // Complex deltacomplex {real_t(0.8),real_t(0.6)};
+    Color c1 = Color::from_hsv(real_t());
     while(1){
 
 
@@ -454,21 +471,27 @@ int main(){
         // begin_m = millis();
 
         // LCD_Fill_Screen((RGB565)0);
+        c1 = Color::from_hsv(fmod(t, real_t(360)));
+        color = c1;
 
-        renderTest4();
+        renderTest3();
+
+
         // color = hsvToRgb565(std::fmod(t, real_t(2))*1180, real_t(1), real_t(1));
 
         // complex1 *= deltacomplex;
         // LCD_Printf(0, 8, white, "(%.3f, %.3f)", float(complex1.real()), float(complex1.imag()));
         // printf("%.3f, %.3f\r\n", float(complex1.real()), float(complex1.imag()));
-
+        LCD_Printf(0,0,white, String(c1).c_str());
+        LCD_Printf(0,8,white, String(Vector2(1,1)).c_str());
+        LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
 
         uint64_t delta_u = (micros() - begin_u);
         // uint64_t delta_m = (millis() - begin_m);
 
         delta = real_t(delta_u / 1000000.0f);
 
-        Matrix m1 = Matrix({1,0});
+        // Matrix m1 = Matrix({1,0});
         if(delta){
             fps = real_t(1) / delta;
             if(!fps_filted){
@@ -478,12 +501,13 @@ int main(){
             }
         }
 
-        LCD_Printf(170, 240 - 1 - 8, black, (String("fps: ") + String(fps) + String("ms") + String(c1.get_h())).c_str());
-        // LCD_Printf()
-        // printf("%d, %d\r\n", (int)(fps), (int)(fps_filted));
+        LCD_Printf(170, 240 - 1 - 8, white, (String("fps: ") + String(fps)).c_str());
+
+
         t += delta;
-        // delay(20);
-        while(1);
+
+        // while(1);
         // delayMicroseconds(1200);
+        // delay(20);
     }
 }
