@@ -14,7 +14,7 @@ public:
     __fast_inline T real_squared() const {return real * real;}
     __fast_inline T imag_squared() const {return imag * imag;}
     __fast_inline T norm() const {return real * real + imag * imag;}
-    __fast_inline T abs() const {return std::sqrt(real * real + imag * imag);}
+    __fast_inline T abs() const {return sqrt(real * real + imag * imag);}
     __fast_inline T arg() const {return std::atan2(imag, real);}
     __fast_inline Complex_t & normalized(){*this /= abs(); return *this;}
 

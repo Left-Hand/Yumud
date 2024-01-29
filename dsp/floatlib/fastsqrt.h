@@ -61,7 +61,7 @@ __fast_inline float fast_sqrt(float number) {
 
 #if defined(__cplusplus) && (!defined(__STD_MATH_EXIST))
 __fast_inline float std::invsqrt(const float & number){return fast_invsqrt(number);}
-__fast_inline float std::sqrt(const float & number){return fast_sqrt(number);}
+__fast_inline float sqrt(const float & number){return fast_sqrt(number);}
 #endif
 
 #ifdef __cplusplus

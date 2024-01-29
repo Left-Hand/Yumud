@@ -4,6 +4,7 @@
 
 #include "../../src/defines/comm_inc.h"
 #include "../string/String.hpp"
+#include "../real.hpp"
 #include <type_traits>
 
 template<typename T>
@@ -45,8 +46,8 @@ public:
     T dist_squared_to(const Vector2_t<T> & b) const;
     Vector2_t<T> floor() const;
     bool is_equal_approx(const Vector2_t<T> & v) const;
-    bool is_normalized() const {return (std::fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
-    __fast_inline T length() const {return std::sqrt(x*x + y*y);}
+    bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
+    __fast_inline T length() const {return sqrt(x*x + y*y);}
     __fast_inline T length_squared() const {return (x*x + y*y);}
     Vector2_t<T> lerp(const Vector2_t<T> & b, const T & t) const;
     Vector2_t<T> move_toward(const Vector2_t<T> & to, const T & delta) const;

@@ -5,14 +5,9 @@
   "srcDirs": [
     "src",
     "sdk",
-    "math/controller",
-    "math/filter",
-    "math/iq",
-    "math",
     "src/clock",
     "src/ST7789",
     "src/defines",
-    "math/floatlib",
     "src/OV7670",
     "src/SDcard",
     "dsp",
@@ -30,7 +25,13 @@
   "virtualFolder": {
     "name": "<virtual_root>",
     "files": [],
-    "folders": []
+    "folders": [
+      {
+        "name": "testVirtualFolder",
+        "files": [],
+        "folders": []
+      }
+    ]
   },
   "outDir": "build",
   "deviceName": null,
@@ -43,7 +44,8 @@
       "excludeList": [
         "Startup/startup_ch32v30x_D8.S",
         "sdk/Startup/startup_ch32v20x_D8W.S",
-        "sdk/Startup/startup_ch32v20x_D8.S"
+        "sdk/Startup/startup_ch32v20x_D8.S",
+        "<virtual_root>/testVirtualFolder"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {

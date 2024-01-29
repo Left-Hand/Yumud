@@ -493,9 +493,9 @@
 //             alphaCompensated = alphaCompensated*((real_t)1 + params->KsTa * (ta - (real_t)25));
                         
 //             Sx = alphaCompensated * alphaCompensated * alphaCompensated * (irData + alphaCompensated * taTr);
-//             Sx = std::sqrt(std::sqrt(Sx)) * params->ksTo[1];            
+//             Sx = sqrt(sqrt(Sx)) * params->ksTo[1];            
             
-//             To = std::sqrt(std::sqrt(irData/(alphaCompensated * ((real_t)1 - params->ksTo[1] * (real_t)273.15) + Sx) + taTr)) - (real_t)273.15;                     
+//             To = sqrt(sqrt(irData/(alphaCompensated * ((real_t)1 - params->ksTo[1] * (real_t)273.15) + Sx) + taTr)) - (real_t)273.15;                     
                     
 //             if(To < (real_t)params->ct[1])
 //             {
@@ -514,7 +514,7 @@
 //                 range = 3;            
 //             }      
             
-//             To = std::sqrt(std::sqrt(irData / (alphaCompensated * alphaCorrR[range] * ((real_t)1 + params->ksTo[range] * (To - (real_t)params->ct[range]))) + taTr)) - (real_t)273.15;
+//             To = sqrt(sqrt(irData / (alphaCompensated * alphaCorrR[range] * ((real_t)1 + params->ksTo[range] * (To - (real_t)params->ct[range]))) + taTr)) - (real_t)273.15;
                         
 //             result[pixelNumber] = To;
 //         }
@@ -738,7 +738,7 @@
 //                 {
 //                     ap[0] = to[pixels[pix]+1] - to[pixels[pix]+2];
 //                     ap[1] = to[pixels[pix]-1] - to[pixels[pix]-2];
-//                     if(std::abs(ap[0]) > std::abs(ap[1]))
+//                     if(abs(ap[0]) > abs(ap[1]))
 //                     {
 //                         to[pixels[pix]] = to[pixels[pix]-1] + ap[1];                        
 //                     }
@@ -1072,12 +1072,12 @@
 //         }
 //     }
     
-//     temp = std::abs(ktaTemp[0]);
+//     temp = abs(ktaTemp[0]);
 //     for(int i = 1; i < MLX90640_PIXEL_NUM; i++)
 //     {
-//         if (std::abs(ktaTemp[i]) > temp)
+//         if (abs(ktaTemp[i]) > temp)
 //         {
-//             temp = std::abs(ktaTemp[i]);
+//             temp = abs(ktaTemp[i]);
 //         }
 //     }
     
@@ -1163,12 +1163,12 @@
 //         }
 //     }
     
-//     temp = std::abs(kvTemp[0]);
+//     temp = abs(kvTemp[0]);
 //     for(int i = 1; i < MLX90640_PIXEL_NUM; i++)
 //     {
-//         if (std::abs(kvTemp[i]) > temp)
+//         if (abs(kvTemp[i]) > temp)
 //         {
-//             temp = std::abs(kvTemp[i]);
+//             temp = abs(kvTemp[i]);
 //         }
 //     }
     

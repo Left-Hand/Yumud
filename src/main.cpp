@@ -28,6 +28,9 @@ void Systick_Init(void)
     NVIC_EnableIRQ(SysTicK_IRQn);
 }
 
+__fast_inline void foo(){
+    printf("foo!\r\n");
+}
 RGB565 color = 0xffff;
 const RGB565 white = 0xffff;
 const RGB565 black = 0;
@@ -55,12 +58,12 @@ real_t t = real_t(0);
 int cube2d[PCOUNT][2];
 
 RGB565 hsvToRgb565(real_t h, real_t s, real_t v) {
-    h = std::fmod(h, real_t(360));
+    h = fmod(h, real_t(360));
     real_t r = real_t(0);
     real_t g = real_t(0);
     real_t b = real_t(0);
     real_t c = v * s;
-    real_t x = c - c * std::abs(std::fmod(h / 60, real_t(2)) - 1);
+    real_t x = c - c * abs(fmod(h / 60, real_t(2)) - 1);
 
     uint16_t ih = (int)h;
     if (ih >= 0 && ih < 60) {
@@ -93,12 +96,12 @@ RGB565 hsvToRgb565(real_t h, real_t s, real_t v) {
 }
 
 RGB565 hToRgb565(real_t h) {
-    h = std::fmod(h, real_t(360));
+    h = fmod(h, real_t(360));
     real_t r = real_t(0);
     real_t g = real_t(0);
     real_t b = real_t(0);
     real_t c = real_t(1);
-    real_t x = c - c * std::abs(std::fmod(h / 60, real_t(2)) - 1);
+    real_t x = c - c * abs(fmod(h / 60, real_t(2)) - 1);
 
     uint16_t ih = (int)h;
     if (ih >= 0 && ih < 60) {
@@ -146,8 +149,8 @@ void zrotate(real_t v[3], real_t q, real_t rx, real_t ry) {
   real_t temp = real_t(0);
   tx=v[0]-rx;
   ty=v[1]-ry;
-  temp=tx*std::cos(q)-ty*std::sin(q);
-  ty=tx*std::sin(q)+ty*std::cos(q);
+  temp=tx*cos(q)-ty*sin(q);
+  ty=tx*sin(q)+ty*cos(q);
   tx=temp;
   v[0]=tx+rx;
   v[1]=ty+ry;
@@ -158,8 +161,8 @@ void yrotate(real_t v[3], real_t q, real_t rx, real_t rz) {
   real_t temp = real_t(0);
   tx=v[0]-rx;
   tz=v[2]-rz;
-  temp=tz*std::cos(q)-tx*std::sin(q);
-  tx=tz*std::sin(q)+tx*std::cos(q);
+  temp=tz*cos(q)-tx*sin(q);
+  tx=tz*sin(q)+tx*cos(q);
   tz=temp;
   v[0]=tx+rx;
   v[2]=tz+rz;
@@ -170,8 +173,8 @@ void xrotate(real_t v[3], real_t q, real_t ry, real_t rz) {
   real_t temp = real_t(0);
   ty=v[1]-ry;
   tz=v[2]-rz;
-  temp=ty*std::cos(q)-tz*std::sin(q);
-  tz=ty*std::sin(q)+tz*std::cos(q);
+  temp=ty*cos(q)-tz*sin(q);
+  tz=ty*sin(q)+tz*cos(q);
   ty=temp;
   v[1]=ty+ry;
   v[2]=tz+rz;
@@ -263,8 +266,8 @@ void renderTest2(){
 }
 
 real_t waveform(real_t x){
-    real_t s1x = std::sin(x);
-    real_t c1x = std::cos(x);
+    real_t s1x = sin(x);
+    real_t c1x = cos(x);
     real_t s2x = 2 * s1x * c1x;
     real_t c2x = real_t(1) - 2 * s1x * s1x;
     real_t s3x = s1x * c2x + c1x * s2x;
@@ -275,8 +278,8 @@ real_t waveform(real_t x){
     // s1x += s5x / 5;
     // return s1x;
     return (s1x + s3x / 3 + s5x / 5);
-    // return real_t(0.5f) - std::fmod(x/4, real_t(1));
-    // return (std::sin(x) + std::sin(real_t(3) * x) / real_t(3) + std::sin(real_t(5) * x) / real_t(5));
+    // return real_t(0.5f) - fmod(x/4, real_t(1));
+    // return (sin(x) + sin(real_t(3) * x) / real_t(3) + sin(real_t(5) * x) / real_t(5));
 }
 void renderTest3(){
     // static int Vx = 5;
@@ -297,8 +300,6 @@ void renderTest3(){
         int16_t y0 = (int)(amp * waveform(base_angle + real_t(x - W/2) / real_t(W/2) * (real_t(window) / real_t(2)))) + H/2;
         // debugMeausres.t1 = micros();
         int16_t y1 = (int)(amp * waveform(base_angle + real_t(x + 1 - W/2) / real_t(W/2) * (real_t(window) / real_t(2)))) + H/2;
-        // debugMeausres.t2 = micros();
-        // RGB565 temp_color = hsvToRgb565(real_t(360) * std::frac(t / real_t(3)) + real_t(0.1)*real_t(x) + real_t(0.2) * 
         // real_t(y0), real_t(1), real_t(1));
         // debugMeausres.t3 = micros();
 
@@ -420,7 +421,7 @@ void fractal(real_t left, real_t top, real_t xside, real_t yside)
             uint8_t count = inter_fract2(Complex(cx,cy));
 
             if((count != last_count) || (x == 0)) 
-                color = hToRgb565(std::fmod(real_t(count * 9), real_t(360)));
+                color = hToRgb565(fmod(real_t(count * 9), real_t(360)));
             last_count = count;
 
             buf[x] = color;
@@ -477,7 +478,7 @@ int main(){
         renderTest3();
 
 
-        // color = hsvToRgb565(std::fmod(t, real_t(2))*1180, real_t(1), real_t(1));
+        // color = hsvToRgb565(fmod(t, real_t(2))*1180, real_t(1), real_t(1));
 
         // complex1 *= deltacomplex;
         // LCD_Printf(0, 8, white, "(%.3f, %.3f)", float(complex1.real()), float(complex1.imag()));
@@ -505,9 +506,12 @@ int main(){
 
 
         t += delta;
-
+        // foo();
         // while(1);
         // delayMicroseconds(1200);
         // delay(20);
     }
 }
+
+// GENERATE_STD
+

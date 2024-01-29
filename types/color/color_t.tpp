@@ -1,75 +1,79 @@
+#include "../real.hpp"
+#include <cmath>
+#include "math.h"
+
 template <typename T>
 uint32_t Color_t<T>::to_argb32() const {
-	uint32_t c = (uint8_t)std::round(a * 255);
+	uint32_t c = (uint8_t)round(a * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(r * 255);
+	c |= (uint8_t)round(r * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(g * 255);
+	c |= (uint8_t)round(g * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(b * 255);
+	c |= (uint8_t)round(b * 255);
 
 	return c;
 }
 
 template <typename T>
 uint32_t Color_t<T>::to_abgr32() const {
-	uint32_t c = (uint8_t)std::round(a * 255);
+	uint32_t c = (uint8_t)round(a * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(b * 255);
+	c |= (uint8_t)round(b * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(g * 255);
+	c |= (uint8_t)round(g * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(r * 255);
+	c |= (uint8_t)round(r * 255);
 
 	return c;
 }
 
 template <typename T>
 uint32_t Color_t<T>::to_rgba32() const {
-	uint32_t c = (uint8_t)std::round(r * 255);
+	uint32_t c = (uint8_t)round(r * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(g * 255);
+	c |= (uint8_t)round(g * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(b * 255);
+	c |= (uint8_t)round(b * 255);
 	c <<= 8;
-	c |= (uint8_t)std::round(a * 255);	return c;
+	c |= (uint8_t)round(a * 255);	return c;
 }
 
 template <typename T>
 uint64_t Color_t<T>::to_abgr64() const {
-	uint64_t c = (uint16_t)std::round(a * 65535);
+	uint64_t c = (uint16_t)round(a * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(b * 65535);
+	c |= (uint16_t)round(b * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(g * 65535);
+	c |= (uint16_t)round(g * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(r * 65535);
+	c |= (uint16_t)round(r * 65535);
 
 	return c;
 }
 
 template <typename T>
 uint64_t Color_t<T>::to_argb64() const {
-	uint64_t c = (uint16_t)std::round(a * 65535);
+	uint64_t c = (uint16_t)round(a * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(r * 65535);
+	c |= (uint16_t)round(r * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(g * 65535);
+	c |= (uint16_t)round(g * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(b * 65535);
+	c |= (uint16_t)round(b * 65535);
 
 	return c;
 }
 
 template <typename T>
 uint64_t Color_t<T>::to_rgba64() const {
-	uint64_t c = (uint16_t)std::round(r * 65535);
+	uint64_t c = (uint16_t)round(r * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(g * 65535);
+	c |= (uint16_t)round(g * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(b * 65535);
+	c |= (uint16_t)round(b * 65535);
 	c <<= 16;
-	c |= (uint16_t)std::round(a * 65535);
+	c |= (uint16_t)round(a * 65535);
 
 	return c;
 }
@@ -136,8 +140,8 @@ void Color_t<T>::set_hsv(T p_h, T p_s, T p_v, T p_alpha) {
 	}
 
 	p_h *= 6;
-	p_h = std::fmod(p_h, T(6));
-	i = (int)std::floor(p_h);
+	p_h = fmod(p_h, T(6));
+	i = (int)floor(p_h);
 
 	f = p_h - i;
 	p = p_v * (1 - p_s);
@@ -180,7 +184,7 @@ void Color_t<T>::set_hsv(T p_h, T p_s, T p_v, T p_alpha) {
 
 template <typename T>
 bool Color_t<T>::is_equal_approx(const Color_t<T> &p_Color_t) const {
-	return std::is_equal_approx(r, p_Color_t.r) && std::is_equal_approx(g, p_Color_t.g) && std::is_equal_approx(b, p_Color_t.b) && std::is_equal_approx(a, p_Color_t.a);
+	return is_equal_approx(r, p_Color_t.r) && is_equal_approx(g, p_Color_t.g) && is_equal_approx(b, p_Color_t.b) && is_equal_approx(a, p_Color_t.a);
 }
 
 template <typename T>
@@ -192,9 +196,9 @@ void Color_t<T>::invert() {
 
 template <typename T>
 void Color_t<T>::contrast() {
-	r = std::fmod(r + 0.5, T(1));
-	g = std::fmod(g + 0.5, T(1));
-	b = std::fmod(b + 0.5, T(1));
+	r = fmod(r + 0.5, T(1));
+	g = fmod(g + 0.5, T(1));
+	b = fmod(b + 0.5, T(1));
 }
 
 template <typename T>

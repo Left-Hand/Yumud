@@ -1,4 +1,4 @@
-#include "Vector2.hpp"
+#include "../real.hpp"
 
 template<typename T>
 Vector2_t<T> Vector2_t<T>::abs() const{
@@ -95,17 +95,17 @@ Vector2_t<T> Vector2_t<T>::lerp(const Vector2_t<T> & b, const T & t) const{
 
 template<typename T>
 Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const T & t) const{
-    return lerp(b, std::sinf(1.5707963267948966192313216916398f*t));
+    return lerp(b, sinf(PI / 2 * t));
 }
 
 template<typename T>
 Vector2_t<T> Vector2_t<T>::posmod(const T & mod) const{
-    return Vector2_t<T>(std::fmod(x, mod), std::fmod(y, mod));
+    return Vector2_t<T>(fmod(x, mod), fmod(y, mod));
 }
 
 template<typename T>
 Vector2_t<T> Vector2_t<T>::posmodv(const Vector2_t<T> & b) const{
-    return Vector2_t<T>(std::fmod(x, b.x), std::fmod(y, b.y));
+    return Vector2_t<T>(fmod(x, b.x), fmod(y, b.y));
 }
 
 template<typename T>
@@ -134,7 +134,7 @@ Vector2_t<T> Vector2_t<T>::slide(const Vector2_t<T> & n) const {
 
 template<typename T>
 Vector2_t<T> Vector2_t<T>::sign() const{
-    return Vector2_t<T>(std::sign, sgn(y));
+    return Vector2_t<T>(sgn(x), sgn(y));
 }
 
 template<typename T>
@@ -172,14 +172,14 @@ __fast_inline Vector2_t<T> Vector2_t<T>::rotate(const T & r) const{
 template <typename T, typename U> \
 __fast_inline bool operator op (const Vector2_t<T>& lhs, const U& rhs) { \
     using CommonType = typename std::common_type<T, U>::type; \
-    U absrhs = std::abs(rhs); \
+    U absrhs = abs(rhs); \
     return static_cast<CommonType>(lhs.length_squared()) op static_cast<CommonType>(absrhs * absrhs); \
 } \
 \
 template <typename T, typename U> \
 __fast_inline bool operator op (const U& lhs, const Vector2_t<T>& rhs) { \
     using CommonType = typename std::common_type<T, U>::type; \
-    U abslhs = std::abs(lhs); \
+    U abslhs = abs(lhs); \
     return static_cast<CommonType>(abslhs * abslhs) op static_cast<CommonType>(rhs.length_squared()); \
 }
 

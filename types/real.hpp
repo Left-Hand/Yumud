@@ -10,11 +10,13 @@
 
 #if defined(USE_STDMATH)
 
-#ifdef __cplusplus
+// #ifdef __cplusplus
 #include <cmath>
-#else
+// #else
+// #include "math.h"
+// #endif
 #include "math.h"
-#endif
+
 
 #else
 #include "../dsp/floatlib/floatlib.h"
@@ -28,22 +30,22 @@ typedef double real_t;
 typedef float real_t;
 #endif
 
-namespace std {
-    __fast_inline int mean(const int & a, const int & b);
-    __fast_inline float mean(const float & a, const float & b);
-    __fast_inline double mean(const double & a, const double & b);
 
-    __fast_inline float frac(const float & fv);
-    __fast_inline double frac(const double & dv);
-    
-	__fast_inline bool is_equal_approx(const float & a,const float & b);
-    __fast_inline bool is_equal_approx_ratio(const float a, const float & b, float epsilon = float(CMP_EPSILON), float min_epsilon = float(CMP_EPSILON));
-	__fast_inline bool is_equal_approx(const double & a,const double & b);
-    __fast_inline bool is_equal_approx_ratio(const double a, const double & b, double epsilon = double(CMP_EPSILON), double min_epsilon = double(CMP_EPSILON));
+__fast_inline int mean(const int & a, const int & b);
+__fast_inline float mean(const float & a, const float & b);
+__fast_inline double mean(const double & a, const double & b);
 
-    __fast_inline float sign(const float & fv);
-    __fast_inline double sign(const double & dv);
-}
+__fast_inline float frac(const float & fv);
+__fast_inline double frac(const double & dv);
+
+__fast_inline bool is_equal_approx(const float & a,const float & b);
+__fast_inline bool is_equal_approx_ratio(const float a, const float & b, float epsilon = float(CMP_EPSILON), float min_epsilon = float(CMP_EPSILON));
+__fast_inline bool is_equal_approx(const double & a,const double & b);
+__fast_inline bool is_equal_approx_ratio(const double a, const double & b, double epsilon = double(CMP_EPSILON), double min_epsilon = double(CMP_EPSILON));
+
+__fast_inline float sign(const float & fv);
+__fast_inline double sign(const double & dv);
+
 
 
 #endif
