@@ -11,34 +11,6 @@ RingBuf::~RingBuf() {
     delete[] buf;
 }
 
-__fast_inline void RingBuf::addTxData(const uint8_t & data) {
-    *tx_ptr = data;
-    tx_ptr = advancePointer(tx_ptr);
-}
-
-
-__fast_inline void RingBuf::getTxData(uint8_t & data) {
-    data = *rx_ptr;
-    rx_ptr = advancePointer(rx_ptr);
-}
-
-
-__fast_inline void RingBuf::addRxData(const uint8_t & data) {
-    *rx_ptr = data;
-    rx_ptr = advancePointer(rx_ptr);
-}
-
-
-// __fast_inline void RingBuf::getRxData(uint8_t & data)
-
-
-size_t RingBuf::available() const {
-    if (tx_ptr >= rx_ptr) {
-        return tx_ptr - rx_ptr;
-    } else {
-        return size - (rx_ptr - tx_ptr);
-    }
-}
 
 void RingBuf::addTxdatas(const uint8_t * data_ptr, const size_t & len, bool msb){
     if(msb){

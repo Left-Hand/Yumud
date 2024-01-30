@@ -1,11 +1,11 @@
-#ifndef __UART1_HW_HPP__
+#ifndef __UART2_HW_HPP__
 
-#define __UART1_HW_HPP__
+#define __UART2_HW_HPP__
 
 #include "../printer.hpp"
 #include "../../defines/comm_inc.h"
 
-class Uart1:public Printer{
+class Uart2:public Printer{
 protected:
     void _write(const char & data) override;
     void _write(const char * data_ptr, const size_t & len) override;
@@ -19,6 +19,6 @@ public:
 };
 
 __interrupt 
-void USART1_IRQHandler();
+void USART2_IRQHandler();
 
 #endif

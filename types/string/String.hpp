@@ -68,6 +68,8 @@ public:
 	explicit String(char c);
     explicit String(char * c);
     explicit String(char * c, const size_t size);
+    explicit String(const char * c, const size_t size);
+
 	explicit String(unsigned char value, unsigned char base=10);
 	explicit String(int value, unsigned char base=10);
 	explicit String(unsigned int value, unsigned char base=10);
@@ -75,6 +77,7 @@ public:
 	explicit String(unsigned long value, unsigned char base=10);
 	explicit String(unsigned long long value, unsigned char base=10);
 	explicit String(long long value, unsigned char base=10);
+
 	explicit String(float value);
 	explicit String(double value);
 	explicit String(float value, unsigned char _decimalPlaces);

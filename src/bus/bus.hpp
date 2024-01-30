@@ -29,28 +29,15 @@ public:
 protected:
 
     virtual void init() = 0;
-    virtual void configDataSize() = 0;
+    virtual void configDataSize(uint8_t data_size) = 0;
+    virtual void configBaudRate(uint32_t baud_rate) = 0;
     
-    virtual Error _write(const uint8_t & data) = 0;
-    virtual Error _write(const uint8_t * data_ptr, const size_t & len, bool msb = false) = 0;
-    virtual Error _read(uint8_t & data, bool toAck = true) = 0;
-    virtual Error _read(uint8_t * data_ptr, const size_t & len, bool msb = false) = 0;
-    virtual Error _trans(uint8_t & data_rx, uint8_t & data_tx, bool toAck = true) = 0;
-    virtual Error _trans(uint8_t * data_rx_ptr, uint8_t * data_tx_ptr, const size_t & len, bool msb = false) = 0;
-
-    // virtual Error _write2B(const uint16_t & data) = 0;
-    // virtual Error _write2B(const uint16_t * data_ptr, const size_t & len, bool msb = false) = 0;
-    // virtual Error _read2B(uint16_t & data, bool & toAck) = 0;
-    // virtual Error _read2B(uint16_t * data_ptr, const size_t & len, bool msb = false) = 0;
-    // virtual Error _trans2B(uint16_t & data_rx, uint16_t & data_tx, bool & toAck) = 0;
-    // virtual Error _trans2B(uint16_t * data_rx_ptr, uint16_t * data_tx_ptr, const size_t & len, bool msb = false) = 0;
-
-    // virtual Error _write2B(const uint32_t & data) = 0;
-    // virtual Error _write2B(const uint32_t * data_ptr, const size_t & len, bool msb = false) = 0;
-    // virtual Error _read2B(uint32_t & data, bool & toAck) = 0;
-    // virtual Error _read2B(uint32_t * data_ptr, const size32_t & len, bool msb = false) = 0;
-    // virtual Error _trans2B(uint32_t & data_rx, uint32_t & data_tx, bool & toAck) = 0;
-    // virtual Error _trans2B(uint32_t * data_rx_ptr, uint32_t * data_tx_ptr, const size_t & len, bool msb = false) = 0;
+    virtual Error _write(const size_t & data) = 0;
+    virtual Error _write(const size_t * data_ptr, const size_t & len, bool msb = false) = 0;
+    virtual Error _read(size_t & data, bool toAck = true) = 0;
+    virtual Error _read(size_t * data_ptr, const size_t & len, bool msb = false) = 0;
+    virtual Error _trans(size_t & data_rx, size_t & data_tx, bool toAck = true) = 0;
+    virtual Error _trans(size_t * data_rx_ptr, size_t * data_tx_ptr, const size_t & len, bool msb = false) = 0;
 };
     
 #endif // !__PRINTABLE_HPP__

@@ -8,12 +8,14 @@
 #include "../types/matrix/matrix.hpp"
 #include "MLX90640/MLX90640_API.h"
 #include "bus/uart/uart1.hpp"
-
+#include "bus/uart/uart2.hpp"
 // using real_t = real_t;
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
+
 Uart1 uart1;
+Uart2 uart2;
 
 void Systick_Init(void)
 {
@@ -452,7 +454,7 @@ int main(){
     Systick_Init();
 
     uart1.init(460800);
-
+    uart2.init(460800);
     // MLX90640_Init();
 
     LCD_Init();
@@ -498,12 +500,26 @@ int main(){
         //     8.5532234, 2.4687, "hi",33,
         //     8.5532234, 2.4687, "hi",33
         // );
-        // uart1 << SpecToken::Eps4;
-        // for(float f = 0; f < PI/2; f += 0.1){
-        //     uart1 << f << ',';
-        // }
-        // uart1 << "\r\n";
-        // uart1.println(SpecToken::Eps3, c1.get_h(), c1, 34.54809);
+        static uint8_t cnt = 0;
+        static char chr = 'A';
+        cnt++;
+        chr = (chr == 'Z' ? 'A' : chr + 1);
+
+
+
+        uart1.println("Send:");
+
+        for(uint8_t i = 0; i < 23; i++){
+            uart2.print((char)(chr+i));
+            uart1.print((char)(chr+i));
+        }
+
+        uart1.print("\r\n");
+
+        String ret = uart1.readAll();
+        ret.trim();
+        
+        uart1.println("Recv:\r\n", ret);
 
         t += delta;
     }

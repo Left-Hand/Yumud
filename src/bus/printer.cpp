@@ -67,17 +67,18 @@ Printer& Printer::operator<<(const SpecToken & spec){
 }
 
 String Printer::read(const size_t & len){
-    char * read_ptr = _get_read_ptr();
-    if(read_ptr){
-        String str = String(read_ptr, len);
+    char * head_ptr = _get_read_ptr() - len;
+    if(head_ptr){
+        String str = String(head_ptr, len);
+        _fake_read(len);
         return str;
     }
     else{
-        read_ptr = new char[len+1];
-        if(read_ptr){
-            _read(read_ptr, len);
-            String str = String(read_ptr, len);
-            delete []read_ptr;
+        head_ptr = new char[len+1];
+        if(head_ptr){
+            _read(head_ptr, len);
+            String str = String(head_ptr, len);
+            delete []head_ptr;
             return str;
         }else{
             return String('\0');

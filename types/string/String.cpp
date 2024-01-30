@@ -76,8 +76,20 @@ String::String(char * c){
 
 String::String(char * c, const size_t size){
     init();
-    if (c) copy(c, size);
-	else invalidate();
+    char * cop = new char[size + 1];
+    cop[size] = '\0';
+    memcpy(cop, c, size);
+    *this = cop;
+    delete cop;
+}
+
+String::String(const char * c, const size_t size){
+    init();
+    char * cop = new char[size + 1];
+    cop[size] = '\0';
+    memcpy(cop, c, size);
+    *this = cop;
+    delete cop;
 }
 
 String::String(unsigned char value, unsigned char base)

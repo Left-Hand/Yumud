@@ -8,6 +8,10 @@
 
 #include <cstdint>
 
+#ifndef endl
+#define endl "\r\n";
+#endif
+
 enum class SpecToken {
     Space,
     NoSpace,
@@ -36,11 +40,13 @@ private:
     uint8_t eps = 2;
     bool skipSpec = false;
 
+    void printString(const String & str){write(str.c_str(), str.length());}
 protected:
     virtual void _write(const char & data) = 0;
     virtual void _write(const char * data_ptr, const size_t & len) = 0;
     virtual void _read(char & data) = 0;
     virtual void _read(char * data, const size_t len) = 0;
+    virtual void _fake_read(const size_t len) = 0;
     virtual char * _get_read_ptr(){return nullptr;}
 public:
     virtual size_t available() = 0;
@@ -50,30 +56,29 @@ public:
 
     __fast_inline char read(){char data; _read(data); return data;};
     String read(const size_t & len);
+    String readAll(){return read(available());}
 
-    void print(const char& chr){write((chr));}
-    void print(const char* pStr, size_t len){write((pStr), len);}
-    void print(const char* pStr){print(pStr, strlen(pStr));}
-    void print(const String & str){print(str.c_str(), str.length());}
+    // void print(const char* pStr){write(pStr, strlen(pStr));}
+    // void print(const String & str){write(str.c_str(), str.length());}
 
-    void println(const char* pStr){print(pStr, strlen(pStr)); print("\r\n");}
-    void println(const String & str){println(str.c_str());}
+    // void println(const char* pStr){write(pStr, strlen(pStr)); write("\r\n", 3);}
+    // void println(const String & str){write(str.c_str(), str.length()); write("\r\n", 3);}
 
-    void print(int val){print(String(val, radix));}
-    void print(float val){print(String(val, eps));}
-    void print(double val){print(String(val, eps));}
+    // void print(int val){print(String(val, radix));}
+    // void print(float val){print(String(val, eps));}
+    // void print(double val){print(String(val, eps));}
 
-    void println(int val){print(val); print("\r\n");}
-    void println(float val){print(val); print("\r\n");}
-    void println(double val){print(val); print("\r\n");}
+    // void println(int val){print(val); print("\r\n");}
+    // void println(float val){print(val); print("\r\n");}
+    // void println(double val){print(val); print("\r\n");}
 
-    Printer& operator<<(int val){print(val); return *this;}
-    Printer& operator<<(float val){print(val); return *this;}
-    Printer& operator<<(double val){print(val); return *this;}
+    Printer& operator<<(int val){printString(String(val)); return *this;}
+    Printer& operator<<(float val){printString(String(val)); return *this;}
+    Printer& operator<<(double val){printString(String(val)); return *this;}
 
-    Printer& operator<<(const char chr){print(chr); return *this;}
-    Printer& operator<<(const char* pStr){print(pStr); return *this;}
-    Printer& operator<<(const String & str){print(str); return *this;}
+    Printer& operator<<(const char chr){printString(String(chr)); return *this;}
+    Printer& operator<<(const char* pStr){printString(String(pStr)); return *this;}
+    Printer& operator<<(const String & str){printString(str); return *this;}
     Printer& operator<<(const SpecToken & spec);
 
     template<typename T>
@@ -104,7 +109,7 @@ public:
 	template <typename T>
 	void println(const T& first) {
 		*this << first;
-		println();
+        *this << "\r\n";
 	}
 
     template <typename T, typename... Args>
