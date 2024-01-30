@@ -15,13 +15,11 @@ public:
     T y = T(0);
 
     __fast_inline explicit Vector2_t() : x(T()), y(T()) {;}
-    __fast_inline explicit Vector2_t(const T & _x, const T & _y) : x(_x), y(_y) {;}
 
     template <typename U>
-	__fast_inline Vector2_t(const U & _x,const U & _y) {
-		x = static_cast<T>(_x);
-		y = static_cast<T>(_y);
-	}
+    __fast_inline explicit Vector2_t(const U & _x, const U & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
+
+
 
     __fast_inline Vector2_t<T> normalize(){*this /= this->length();}
     __fast_inline Vector2_t<T> normalized() const;
@@ -52,6 +50,9 @@ public:
     T dist_squared_to(const Vector2_t<T> & b) const;
     Vector2_t<T> floor() const;
     bool is_equal_approx(const Vector2_t<T> & v) const;
+
+    template<typename U>
+    bool has_point(const Vector2_t<U> & _v)const;
     bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
     __fast_inline T length() const {return sqrt(x*x + y*y);}
     __fast_inline T length_squared() const {return (x*x + y*y);}
@@ -67,6 +68,13 @@ public:
     Vector2_t<T> slerp(const Vector2_t<T> & b, const T & t) const;
     Vector2_t<T> slide(const Vector2_t<T>  & n) const;
     Vector2_t<T> snapped(const Vector2_t<T> & by) const;
+
+    template<typename U>
+    __fast_inline Vector2_t<T> & operator=(const Vector2_t<U> & b){
+        x = static_cast<T>(b.x);
+        y = static_cast<T>(b.y);
+        return *this;
+    }
 
     template<typename U>
     __fast_inline Vector2_t<T> & operator+=(const Vector2_t<U> & b){
@@ -113,6 +121,9 @@ public:
     }
 };
 
-#include "Vector2.tpp"
+#include "vector2_t.tpp"
+
+typedef Vector2_t<float> Vector2f;
+typedef Vector2_t<int> Vector2i;
 
 #endif

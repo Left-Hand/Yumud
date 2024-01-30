@@ -3,7 +3,7 @@
 #include "../types/real.hpp"
 #include "../types/string/String.hpp"
 #include "../types/complex/complex_t.hpp"
-#include "../types/vector2/Vector2.hpp"
+#include "../types/vector2/vector2_t.hpp"
 #include "../types/color/color_t.hpp"
 #include "../types/matrix/matrix.hpp"
 #include "MLX90640/MLX90640_API.h"

@@ -1,0 +1,202 @@
+Date : 2024-01-31 00:55:16
+Directory : c:\RV32\CH32V203\LearnADC
+Total : 130 files,  18570 codes, 10732 comments, 4415 blanks, all 33717 lines
+
+Languages
++--------------------+------------+------------+------------+------------+------------+
+| language           | files      | code       | comment    | blank      | total      |
++--------------------+------------+------------+------------+------------+------------+
+| C                  |         78 |     14,046 |      7,837 |      3,037 |     24,920 |
+| C++                |         38 |      3,323 |      2,789 |      1,281 |      7,393 |
+| ARM                |          3 |        756 |         42 |         34 |        832 |
+| JSON               |          3 |        146 |          0 |          0 |        146 |
+| LinkerScript       |          1 |        128 |         30 |         30 |        188 |
+| JSON with Comments |          1 |        123 |          0 |          0 |        123 |
+| YAML               |          2 |         21 |         33 |         17 |         71 |
+| Ini                |          1 |         14 |          0 |          5 |         19 |
+| Properties         |          2 |         10 |          1 |          7 |         18 |
+| Batch              |          1 |          3 |          0 |          4 |          7 |
++--------------------+------------+------------+------------+------------+------------+
+
+Directories
++----------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                           | files      | code       | comment    | blank      | total      |
++----------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                              |        130 |     18,570 |     10,732 |      4,415 |     33,717 |
+| . (Files)                                                      |          4 |        147 |          9 |         16 |        172 |
+| .eide                                                          |          4 |        160 |         24 |         10 |        194 |
+| dsp                                                            |          6 |        155 |          0 |         48 |        203 |
+| dsp\controller                                                 |          2 |         48 |          0 |         18 |         66 |
+| dsp\filter                                                     |          2 |         45 |          0 |         14 |         59 |
+| dsp\floatlib                                                   |          2 |         62 |          0 |         16 |         78 |
+| sdk                                                            |         47 |     12,569 |      6,888 |      2,337 |     21,794 |
+| sdk\Core                                                       |          2 |        310 |        312 |         90 |        712 |
+| sdk\Ld                                                         |          1 |        128 |         30 |         30 |        188 |
+| sdk\Peripheral                                                 |         41 |     11,375 |      6,504 |      2,183 |     20,062 |
+| sdk\Peripheral\inc                                             |         21 |      5,821 |      1,001 |      1,093 |      7,915 |
+| sdk\Peripheral\src                                             |         20 |      5,554 |      5,503 |      1,090 |     12,147 |
+| sdk\Startup                                                    |          3 |        756 |         42 |         34 |        832 |
+| src                                                            |         42 |      2,816 |      2,255 |      1,136 |      6,207 |
+| src (Files)                                                    |          8 |        990 |        760 |        360 |      2,110 |
+| src\MLX90640                                                   |          6 |        313 |      1,246 |        343 |      1,902 |
+| src\OV7670                                                     |          2 |          0 |        170 |         25 |        195 |
+| src\SDcard                                                     |          2 |         46 |          4 |         16 |         66 |
+| src\ST7789                                                     |          5 |        722 |         12 |        183 |        917 |
+| src\bus                                                        |          9 |        410 |         15 |         96 |        521 |
+| src\bus (Files)                                                |          4 |        202 |         15 |         45 |        262 |
+| src\bus\spi                                                    |          1 |          0 |          0 |          1 |          1 |
+| src\bus\uart                                                   |          4 |        208 |          0 |         50 |        258 |
+| src\clock                                                      |          2 |         79 |         41 |         28 |        148 |
+| src\defines                                                    |          4 |        149 |          6 |         54 |        209 |
+| src\errors                                                     |          2 |         35 |          1 |          8 |         44 |
+| src\ringbuf                                                    |          2 |         72 |          0 |         23 |         95 |
+| tools                                                          |          2 |         10 |          1 |          7 |         18 |
+| types                                                          |         25 |      2,713 |      1,555 |        861 |      5,129 |
+| types (Files)                                                  |          4 |        211 |          8 |         83 |        302 |
+| types\basis                                                    |          2 |          0 |      1,076 |        200 |      1,276 |
+| types\color                                                    |          2 |        444 |          0 |         81 |        525 |
+| types\complex                                                  |          2 |        163 |          0 |         31 |        194 |
+| types\iq                                                       |          2 |        357 |          2 |        133 |        492 |
+| types\matrix                                                   |          3 |        157 |         41 |         31 |        229 |
+| types\quat                                                     |          2 |          0 |        290 |         56 |        346 |
+| types\rect2                                                    |          1 |          4 |          0 |          6 |         10 |
+| types\string                                                   |          5 |      1,088 |        138 |        177 |      1,403 |
+| types\vector2                                                  |          2 |        289 |          0 |         63 |        352 |
++----------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++----------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| filename                                                       | language           | code       | comment    | blank      | total      |
++----------------------------------------------------------------+--------------------+------------+------------+------------+------------+
+| c:\RV32\CH32V203\LearnADC\.clang-format                        | YAML               |         18 |          9 |         12 |         39 |
+| c:\RV32\CH32V203\LearnADC\.eide.usr.ctx.json                   | JSON               |          3 |          0 |          0 |          3 |
+| c:\RV32\CH32V203\LearnADC\.eide\debug.files.options.yml        | YAML               |          3 |         24 |          5 |         32 |
+| c:\RV32\CH32V203\LearnADC\.eide\debug.riscv.gcc.options.json   | JSON               |         38 |          0 |          0 |         38 |
+| c:\RV32\CH32V203\LearnADC\.eide\eide.json                      | JSON               |        105 |          0 |          0 |        105 |
+| c:\RV32\CH32V203\LearnADC\.eide\env.ini                        | Ini                |         14 |          0 |          5 |         19 |
+| c:\RV32\CH32V203\LearnADC\LearnADC.code-workspace              | JSON with Comments |        123 |          0 |          0 |        123 |
+| c:\RV32\CH32V203\LearnADC\download.cmd                         | Batch              |          3 |          0 |          4 |          7 |
+| c:\RV32\CH32V203\LearnADC\dsp\controller\PID.cpp               | C++                |         16 |          0 |          6 |         22 |
+| c:\RV32\CH32V203\LearnADC\dsp\controller\PID.hpp               | C++                |         32 |          0 |         12 |         44 |
+| c:\RV32\CH32V203\LearnADC\dsp\filter\KalmanFilter.cpp          | C++                |         23 |          0 |          2 |         25 |
+| c:\RV32\CH32V203\LearnADC\dsp\filter\KalmanFilter.hpp          | C++                |         22 |          0 |         12 |         34 |
+| c:\RV32\CH32V203\LearnADC\dsp\floatlib\fastsqrt.h              | C                  |         58 |          0 |         13 |         71 |
+| c:\RV32\CH32V203\LearnADC\dsp\floatlib\floatlib.h              | C                  |          4 |          0 |          3 |          7 |
+| c:\RV32\CH32V203\LearnADC\sdk\Core\core_riscv.c                | C                  |        125 |        167 |         42 |        334 |
+| c:\RV32\CH32V203\LearnADC\sdk\Core\core_riscv.h                | C                  |        185 |        145 |         48 |        378 |
+| c:\RV32\CH32V203\LearnADC\sdk\Ld\Link.ld                       | LinkerScript       |        128 |         30 |         30 |        188 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x.h        | C                  |      3,799 |        401 |        618 |      4,818 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_adc.h    | C                  |        152 |         36 |         31 |        219 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_bkp.h    | C                  |         70 |         13 |          9 |         92 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_can.h    | C                  |        194 |         99 |         66 |        359 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_crc.h    | C                  |         16 |         10 |          6 |         32 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_dbgmcu.h | C                  |         34 |         10 |          7 |         51 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_dma.h    | C                  |        122 |         33 |         28 |        183 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_exti.h   | C                  |         60 |         19 |         15 |         94 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_flash.h  | C                  |        105 |         20 |         18 |        143 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_gpio.h   | C                  |        146 |         26 |         18 |        190 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_i2c.h    | C                  |        133 |         35 |         32 |        200 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_iwdg.h   | C                  |         27 |         13 |          9 |         49 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_misc.h   | C                  |         24 |         12 |          8 |         44 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_opa.h    | C                  |         46 |         15 |         12 |         73 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_pwr.h    | C                  |         39 |         14 |         10 |         63 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_rcc.h    | C                  |        195 |         29 |         32 |        256 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_rtc.h    | C                  |         65 |         12 |         20 |         97 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_spi.h    | C                  |        128 |         50 |         41 |        219 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_tim.h    | C                  |        335 |         98 |         74 |        507 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_usart.h  | C                  |        109 |         45 |         32 |        186 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\inc\ch32v20x_wwdg.h   | C                  |         22 |         11 |          7 |         40 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_adc.c    | C                  |        531 |        564 |        114 |      1,209 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_bkp.c    | C                  |        102 |        121 |         20 |        243 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_can.c    | C                  |        712 |        368 |        149 |      1,229 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_crc.c    | C                  |         30 |         58 |         10 |         98 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_dbgmcu.c | C                  |         34 |         54 |         11 |         99 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_dma.c    | C                  |        148 |        261 |         22 |        431 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_exti.c   | C                  |         87 |         82 |         12 |        181 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_flash.c  | C                  |        519 |        340 |        107 |        966 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_gpio.c   | C                  |        356 |        247 |         69 |        672 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_i2c.c    | C                  |        430 |        458 |         85 |        973 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_iwdg.c   | C                  |         36 |         75 |         10 |        121 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_misc.c   | C                  |         63 |         39 |          6 |        108 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_opa.c    | C                  |         33 |         46 |          6 |         85 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_pwr.c    | C                  |        181 |        168 |         52 |        401 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_rcc.c    | C                  |        435 |        493 |         91 |      1,019 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_rtc.c    | C                  |        193 |        159 |         22 |        374 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_spi.c    | C                  |        289 |        297 |         53 |        639 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_tim.c    | C                  |        945 |      1,238 |        169 |      2,352 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_usart.c  | C                  |        385 |        354 |         68 |        807 |
+| c:\RV32\CH32V203\LearnADC\sdk\Peripheral\src\ch32v20x_wwdg.c   | C                  |         45 |         81 |         14 |        140 |
+| c:\RV32\CH32V203\LearnADC\sdk\Startup\startup_ch32v20x_D6.S    | ARM                |        240 |         14 |         12 |        266 |
+| c:\RV32\CH32V203\LearnADC\sdk\Startup\startup_ch32v20x_D8.S    | ARM                |        256 |         14 |         10 |        280 |
+| c:\RV32\CH32V203\LearnADC\sdk\Startup\startup_ch32v20x_D8W.S   | ARM                |        260 |         14 |         12 |        286 |
+| c:\RV32\CH32V203\LearnADC\src\MLX90640\I2C_Driver.c            | C                  |        128 |         22 |         31 |        181 |
+| c:\RV32\CH32V203\LearnADC\src\MLX90640\I2C_Driver.h            | C                  |         17 |          0 |          7 |         24 |
+| c:\RV32\CH32V203\LearnADC\src\MLX90640\ML90640_I2C_Driver.c    | C                  |         42 |          0 |         20 |         62 |
+| c:\RV32\CH32V203\LearnADC\src\MLX90640\MLX90640_API.cpp        | C++                |          0 |      1,192 |        264 |      1,456 |
+| c:\RV32\CH32V203\LearnADC\src\MLX90640\MLX90640_API.h          | C                  |        111 |         16 |         15 |        142 |
+| c:\RV32\CH32V203\LearnADC\src\MLX90640\MLX90640_I2C_Driver.h   | C                  |         15 |         16 |          6 |         37 |
+| c:\RV32\CH32V203\LearnADC\src\OV7670\SCCB_Driver.c             | C                  |          0 |        131 |          7 |        138 |
+| c:\RV32\CH32V203\LearnADC\src\OV7670\SCCB_Driver.h             | C                  |          0 |         39 |         18 |         57 |
+| c:\RV32\CH32V203\LearnADC\src\SDcard\SPI2_Driver.c             | C                  |         32 |          4 |         10 |         46 |
+| c:\RV32\CH32V203\LearnADC\src\SDcard\SPI2_Driver.h             | C                  |         14 |          0 |          6 |         20 |
+| c:\RV32\CH32V203\LearnADC\src\ST7789\SPI1_Driver.c             | C                  |        127 |          4 |         40 |        171 |
+| c:\RV32\CH32V203\LearnADC\src\ST7789\SPI1_Driver.h             | C                  |         25 |          0 |         10 |         35 |
+| c:\RV32\CH32V203\LearnADC\src\ST7789\font.h                    | C                  |         98 |          1 |          7 |        106 |
+| c:\RV32\CH32V203\LearnADC\src\ST7789\st7789.c                  | C                  |        418 |          7 |        105 |        530 |
+| c:\RV32\CH32V203\LearnADC\src\ST7789\st7789.h                  | C                  |         54 |          0 |         21 |         75 |
+| c:\RV32\CH32V203\LearnADC\src\bus\bus.cpp                      | C++                |          1 |          5 |          4 |         10 |
+| c:\RV32\CH32V203\LearnADC\src\bus\bus.hpp                      | C++                |         32 |          0 |          9 |         41 |
+| c:\RV32\CH32V203\LearnADC\src\bus\printer.cpp                  | C++                |         81 |          0 |          6 |         87 |
+| c:\RV32\CH32V203\LearnADC\src\bus\printer.hpp                  | C++                |         88 |         10 |         26 |        124 |
+| c:\RV32\CH32V203\LearnADC\src\bus\spi\spi2.hpp                 | C++                |          0 |          0 |          1 |          1 |
+| c:\RV32\CH32V203\LearnADC\src\bus\uart\uart1.cpp               | C++                |         85 |          0 |         20 |        105 |
+| c:\RV32\CH32V203\LearnADC\src\bus\uart\uart1.hpp               | C++                |         19 |          0 |          5 |         24 |
+| c:\RV32\CH32V203\LearnADC\src\bus\uart\uart2.cpp               | C++                |         85 |          0 |         20 |        105 |
+| c:\RV32\CH32V203\LearnADC\src\bus\uart\uart2.hpp               | C++                |         19 |          0 |          5 |         24 |
+| c:\RV32\CH32V203\LearnADC\src\can_test.c                       | C                  |          0 |        231 |         74 |        305 |
+| c:\RV32\CH32V203\LearnADC\src\ch32v20x_conf.h                  | C                  |         23 |          9 |          9 |         41 |
+| c:\RV32\CH32V203\LearnADC\src\ch32v20x_it.c                    | C                  |         12 |         23 |          6 |         41 |
+| c:\RV32\CH32V203\LearnADC\src\ch32v20x_it.h                    | C                  |          3 |          9 |          6 |         18 |
+| c:\RV32\CH32V203\LearnADC\src\clock\clock.c                    | C                  |         45 |         21 |         13 |         79 |
+| c:\RV32\CH32V203\LearnADC\src\clock\clock.h                    | C                  |         34 |         20 |         15 |         69 |
+| c:\RV32\CH32V203\LearnADC\src\defines\comm_inc.h               | C                  |          8 |          0 |          4 |         12 |
+| c:\RV32\CH32V203\LearnADC\src\defines\math_defs.h              | C                  |         66 |          0 |         23 |         89 |
+| c:\RV32\CH32V203\LearnADC\src\defines\sys_defs.h               | C                  |         63 |          1 |         19 |         83 |
+| c:\RV32\CH32V203\LearnADC\src\defines\user_defs.h              | C                  |         12 |          5 |          8 |         25 |
+| c:\RV32\CH32V203\LearnADC\src\errors\error_macros.cpp          | C++                |          5 |          0 |          1 |          6 |
+| c:\RV32\CH32V203\LearnADC\src\errors\error_macros.h            | C                  |         30 |          1 |          7 |         38 |
+| c:\RV32\CH32V203\LearnADC\src\main.cpp                         | C++                |        387 |         48 |         95 |        530 |
+| c:\RV32\CH32V203\LearnADC\src\old.c                            | C                  |          0 |        147 |         34 |        181 |
+| c:\RV32\CH32V203\LearnADC\src\ringbuf\ringbuf.cpp              | C++                |         23 |          0 |          8 |         31 |
+| c:\RV32\CH32V203\LearnADC\src\ringbuf\ringbuf.hpp              | C++                |         49 |          0 |         15 |         64 |
+| c:\RV32\CH32V203\LearnADC\src\system_ch32v20x.c                | C                  |        553 |        283 |        127 |        963 |
+| c:\RV32\CH32V203\LearnADC\src\system_ch32v20x.h                | C                  |         12 |         10 |          9 |         31 |
+| c:\RV32\CH32V203\LearnADC\tools\wch-interface.cfg              | Properties         |          1 |          1 |          2 |          4 |
+| c:\RV32\CH32V203\LearnADC\tools\wch-target.cfg                 | Properties         |          9 |          0 |          5 |         14 |
+| c:\RV32\CH32V203\LearnADC\types\basis\Basis.cpp                | C++                |          0 |        838 |        137 |        975 |
+| c:\RV32\CH32V203\LearnADC\types\basis\Basis.hpp                | C++                |          0 |        238 |         63 |        301 |
+| c:\RV32\CH32V203\LearnADC\types\color\color_t.hpp              | C++                |        183 |          0 |         34 |        217 |
+| c:\RV32\CH32V203\LearnADC\types\color\color_t.tpp              | C++                |        261 |          0 |         47 |        308 |
+| c:\RV32\CH32V203\LearnADC\types\complex\complex_t.hpp          | C++                |        102 |          0 |         20 |        122 |
+| c:\RV32\CH32V203\LearnADC\types\complex\complex_t.tpp          | C++                |         61 |          0 |         11 |         72 |
+| c:\RV32\CH32V203\LearnADC\types\iq\iqt.cpp                     | C++                |         27 |          2 |          6 |         35 |
+| c:\RV32\CH32V203\LearnADC\types\iq\iqt.hpp                     | C++                |        330 |          0 |        127 |        457 |
+| c:\RV32\CH32V203\LearnADC\types\matrix\matrix.cpp              | C++                |        112 |         41 |         19 |        172 |
+| c:\RV32\CH32V203\LearnADC\types\matrix\matrix.hpp              | C++                |         27 |          0 |         11 |         38 |
+| c:\RV32\CH32V203\LearnADC\types\matrix\matrix.tpp              | C++                |         18 |          0 |          1 |         19 |
+| c:\RV32\CH32V203\LearnADC\types\quat\Quat.cpp                  | C++                |          0 |        177 |         34 |        211 |
+| c:\RV32\CH32V203\LearnADC\types\quat\Quat.hpp                  | C++                |          0 |        113 |         22 |        135 |
+| c:\RV32\CH32V203\LearnADC\types\real.cpp                       | C++                |         72 |          4 |         14 |         90 |
+| c:\RV32\CH32V203\LearnADC\types\real.hpp                       | C++                |         31 |          4 |         16 |         51 |
+| c:\RV32\CH32V203\LearnADC\types\rect2\rect2.hpp                | C++                |          4 |          0 |          6 |         10 |
+| c:\RV32\CH32V203\LearnADC\types\rgb.h                          | C                  |         80 |          0 |         40 |        120 |
+| c:\RV32\CH32V203\LearnADC\types\string\String.cpp              | C++                |        670 |         62 |        112 |        844 |
+| c:\RV32\CH32V203\LearnADC\types\string\String.hpp              | C++                |        169 |         55 |         27 |        251 |
+| c:\RV32\CH32V203\LearnADC\types\string\pgmspace.h              | C                  |        100 |         21 |         11 |        132 |
+| c:\RV32\CH32V203\LearnADC\types\string\string_utils.c          | C                  |        130 |          0 |         16 |        146 |
+| c:\RV32\CH32V203\LearnADC\types\string\string_utils.h          | C                  |         19 |          0 |         11 |         30 |
+| c:\RV32\CH32V203\LearnADC\types\uint24_t.h                     | C                  |         28 |          0 |         13 |         41 |
+| c:\RV32\CH32V203\LearnADC\types\vector2\Vector2.hpp            | C++                |         96 |          0 |         23 |        119 |
+| c:\RV32\CH32V203\LearnADC\types\vector2\Vector2.tpp            | C++                |        193 |          0 |         40 |        233 |
+| Total                                                          |                    |     18,570 |     10,732 |      4,415 |     33,717 |
++----------------------------------------------------------------+--------------------+------------+------------+------------+------------+
