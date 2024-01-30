@@ -38,16 +38,14 @@ __fast_inline bool operator!=(const Complex_t<T>& lhs, const Complex_t<T>& rhs) 
 \
 template <typename T, typename U> \
 __fast_inline bool operator op (const Complex_t<T>& lhs, const U& rhs) { \
-    using CommonType = typename std::common_type<T, U>::type; \
-    U absrhs = abs(rhs); \
-    return static_cast<CommonType>(lhs.norm()) op static_cast<CommonType>(absrhs * absrhs); \
+    T absrhs = static_cast<T>(abs(rhs)); \
+    return lhs.norm() op (absrhs * absrhs); \
 } \
 \
 template <typename T, typename U> \
 __fast_inline bool operator op (const U& lhs, const Complex_t<T>& rhs) { \
-    using CommonType = typename std::common_type<T, U>::type; \
-    U abslhs = abs(lhs); \
-    return static_cast<CommonType>(abslhs * abslhs) op static_cast<CommonType>(rhs.norm()); \
+    T abslhs = static_cast<T>(abs(lhs)); \
+    return (abslhs * abslhs) op (rhs.norm()); \
 }
 
 COMPLEX_COMPARE_IM_OPERATOR(<)

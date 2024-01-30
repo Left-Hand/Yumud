@@ -7,4 +7,6 @@
 #include "user_defs.h"
 
 #include "stdint.h"
+#include "ch32v20x.h"
+
 #endif

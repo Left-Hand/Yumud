@@ -6,7 +6,7 @@
 // #define PI 3.1415926f
 // #endif
 
-// #define cofac(row1, col1, row2, col2) \
+// #define cofac(row1, col1, row2, col2) 
 // 	(elements[row1][col1] * elements[row2][col2] - elements[row1][col2] * elements[row2][col1])
 
 // void Basis::from_z(const Vector3 &p_z) {

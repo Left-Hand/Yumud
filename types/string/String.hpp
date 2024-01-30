@@ -28,6 +28,7 @@
 #include <ctype.h>
 #include "string_utils.h"
 #include "pgmspace.h"
+#include "../../src/defines/comm_inc.h"
 
 // When compiling programs with this class, the following gcc parameters
 // dramatically increase performance and memory (RAM) efficiency, typically
@@ -65,13 +66,19 @@ public:
 	String(StringSumHelper &&rval);
 	#endif
 	explicit String(char c);
-	explicit String(unsigned char, unsigned char base=10);
-	explicit String(int, unsigned char base=10);
-	explicit String(unsigned int, unsigned char base=10);
-	explicit String(long, unsigned char base=10);
-	explicit String(unsigned long, unsigned char base=10);
-	explicit String(float, unsigned char decimalPlaces=2);
-	explicit String(double, unsigned char decimalPlaces=2);
+    explicit String(char * c);
+    explicit String(char * c, const size_t size);
+	explicit String(unsigned char value, unsigned char base=10);
+	explicit String(int value, unsigned char base=10);
+	explicit String(unsigned int value, unsigned char base=10);
+	explicit String(long value, unsigned char base=10);
+	explicit String(unsigned long value, unsigned char base=10);
+	explicit String(unsigned long long value, unsigned char base=10);
+	explicit String(long long value, unsigned char base=10);
+	explicit String(float value);
+	explicit String(double value);
+	explicit String(float value, unsigned char _decimalPlaces);
+	explicit String(double value, unsigned char _decimalPlaces);
 	~String(void);
 
 	// memory management
@@ -220,6 +227,21 @@ public:
 	StringSumHelper(float num) : String(num) {}
 	StringSumHelper(double num) : String(num) {}
 };
+
+
+String toString(char c);
+String toString(const char * c);
+String toString(unsigned char value, unsigned char base = 10);
+String toString(int value, unsigned char base = 10);
+String toString(unsigned int value, unsigned char base = 10);
+String toString(long value, unsigned char base = 10);
+String toString(unsigned long value, unsigned char base = 10);
+String toString(long long value, unsigned char base = 10);
+String toString(unsigned long long value, unsigned char base = 10);
+String toString(float value);
+String toString(double value);
+String toString(float value, unsigned char _decimalPlaces);
+String toString(double value, unsigned char _decimalPlaces);
 
 #endif  // __cplusplus
 #endif  // String_class_h

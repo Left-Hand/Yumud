@@ -23,7 +23,7 @@ public:
 		y = static_cast<T>(_y);
 	}
 
-    __fast_inline Vector2_t<T> normalize();
+    __fast_inline Vector2_t<T> normalize(){*this /= this->length();}
     __fast_inline Vector2_t<T> normalized() const;
     __fast_inline T cross(const Vector2_t<T> & with) const;
     __fast_inline T dot(const Vector2_t<T> & with) const;
@@ -37,9 +37,15 @@ public:
     T aspect() const {return (!!y) ? x/y : T(0);}
     Vector2_t<T> bounce(const Vector2_t<T> &n) const;
     Vector2_t<T> ceil() const;
-    Vector2_t<T> clampmin(const T & length) const;
-    Vector2_t<T> clampmax(const T & length) const;
-    Vector2_t<T> clamp(const T & min, const T & max) const;
+    
+    template<typename U>
+    Vector2_t<T> clampmin(const U & length) const;
+    
+    template<typename U>
+    Vector2_t<T> clampmax(const U & length) const;
+    
+    template<typename U>
+    Vector2_t<T> clamp(const U & _min, const U & _max) const;
 
     Vector2_t<T> dir_to(const Vector2_t<T> & b) const;
     T dist_to(const Vector2_t<T> & b) const;
@@ -62,17 +68,20 @@ public:
     Vector2_t<T> slide(const Vector2_t<T>  & n) const;
     Vector2_t<T> snapped(const Vector2_t<T> & by) const;
 
+    template<typename U>
+    __fast_inline Vector2_t<T> & operator+=(const Vector2_t<U> & b){
+        x += static_cast<T>(b.x);
+        y += static_cast<T>(b.y);
+        return *this;
+    }
 
-    __fast_inline Vector2_t<T> & operator+=(const Vector2_t<T> & b){
-        x += b.x;
-        y += b.y;
+    template<typename U>
+    __fast_inline Vector2_t<T> & operator-=(const Vector2_t<U> & b){
+        x -= static_cast<T>(b.x);
+        y -= static_cast<T>(b.y);
         return *this;
     }
-    __fast_inline Vector2_t<T> & operator-=(const Vector2_t<T> & b){
-        x -= b.y;
-        y -= b.y;
-        return *this;
-    }
+
     __fast_inline Vector2_t<T> & operator-() const{
         x = -x;
         y = -y;
@@ -96,11 +105,11 @@ public:
     }
 
     __no_inline explicit operator String() const{
-        return (String('(') + String(static_cast<float>(x)) + String(',') + String(static_cast<float>(y)) + String(')'));
+        return (String('(') + String(static_cast<float>(x)) + String(", ") + String(static_cast<float>(y)) + String(')'));
     }
 
     __no_inline String toString(unsigned char decimalPlaces = 2){
-        return (String('(') + String(static_cast<float>(x), decimalPlaces) + String(',') + String(static_cast<float>(y), decimalPlaces) + String(')'));
+        return (String('(') + String(static_cast<float>(x), decimalPlaces) + String(", ") + String(static_cast<float>(y), decimalPlaces) + String(')'));
     }
 };
 

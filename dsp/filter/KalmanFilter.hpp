@@ -4,25 +4,30 @@
 
 #include "../types/real.hpp"
 
+template<typename T>
 class KalmanFilter {
 
 private:
-    real_t r;
-    real_t q;
+    T r;
+    T q;
 
-    real_t x_last;
-    real_t p_last;
+    T x_last;
+    T p_last;
 
-    real_t p_mid;
-    real_t kg;
+    T p_mid;
+    T kg;
 
     bool init = false;
 
 public:
-    KalmanFilter(real_t _r = real_t(1), real_t _q = real_t(1)):r(_r), q(_q){;}
+    template<typename U>
+    KalmanFilter(T _r = T(1), T _q = T(1)):r(static_cast<T>(_r)), q(static_cast<T>(_q)){;}
     
-    const real_t update(const real_t & x);
-    const real_t predict(const real_t & x);
+    template<typename U>
+    const T update(const U & x);
+
+    template<typename U>
+    const T predict(const U & x);
 };
 
 #endif

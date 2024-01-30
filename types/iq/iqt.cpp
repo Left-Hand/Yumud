@@ -31,3 +31,4 @@ bool is_equal_approx_ratio(const iq_t a, const iq_t & b, iq_t epsilon, iq_t min_
     diff /= avg_size;
     return diff < epsilon;
 }
+

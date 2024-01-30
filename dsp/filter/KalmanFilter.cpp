@@ -1,9 +1,12 @@
 #include "KalmanFilter.hpp"
 
-const real_t KalmanFilter::update(const real_t & x) {
+template<typename T>
+template<typename U>
+const T KalmanFilter<T>::update(const U & _x) {
+    T x = static_cast<T>(_x);
     if (!init) {
         x_last = x;
-        p_last = real_t(0);
+        p_last = T(0);
         init = true;
     }else {
         x_last = predict(x);
@@ -12,7 +15,10 @@ const real_t KalmanFilter::update(const real_t & x) {
     return x_last;
 }
 
-const real_t KalmanFilter::predict(const real_t & x) {
+template<typename T>
+template<typename U>
+const T KalmanFilter<T>::predict(const U & _x) {
+    T x = static_cast<T>(_x);
     p_mid = p_last + q;
     kg = p_mid / (p_mid + r);
     return (x_last + kg*(x - x_last));

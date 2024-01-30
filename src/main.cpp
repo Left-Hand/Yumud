@@ -7,12 +7,13 @@
 #include "../types/color/color_t.hpp"
 #include "../types/matrix/matrix.hpp"
 #include "MLX90640/MLX90640_API.h"
-// #include <complex>
+#include "bus/uart/uart1.hpp"
 
 // using real_t = real_t;
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
+Uart1 uart1;
 
 void Systick_Init(void)
 {
@@ -349,12 +350,13 @@ uint8_t inter_fract(const Complex & c){
     uint8_t count = 0;
     real_t zx_2 = real_t(0);
     real_t zy_2 = real_t(0);
+    real_t zx, zy;
     while ((zx_2 + zy_2 < real_t(4)) && (count < MAXCOUNT))
     {
         zx_2 = z.real * z.real;
         zy_2 = z.imag * z.imag;
-        real_t & zx = z.real;
-        real_t & zy = z.imag;
+        zx = z.real;
+        zy = z.imag;
         z = Complex(zx_2 - zy_2 + c.real, 2 * zx * zy + c.imag);
         count = count + 1;
     }
@@ -369,7 +371,7 @@ uint8_t inter_fract2(const Complex & c){
     // real_t res = real_t();
     // real_t ims = real_t();
 
-    while ((z < real_t(4)) && (count < MAXCOUNT))
+    while ((z < 4.0) && (count < MAXCOUNT))
     {
         // res = z.real_squared();
         // ims = z.imag_squared();
@@ -386,11 +388,12 @@ uint8_t inter_fract3(const Vector2 & c){
 
     Vector2 z(real_t(0), real_t(0));
     uint8_t count = 0;
-
+    real_t orgx;
+    real_t orgy;
     while ((z < real_t(4)) && (count < MAXCOUNT))
     {
-        real_t orgx = z.x;
-        real_t orgy = z.y;
+        orgx = z.x;
+        orgy = z.y;
 
         z = Vector2(orgx * orgx - orgy * orgy + c.x, 2 * orgx * orgy + c.y);
         count = count + 1;
@@ -406,7 +409,7 @@ void fractal(real_t left, real_t top, real_t xside, real_t yside)
 	real_t ystep = yside / H;
 
     real_t cy = top - ystep;
-	for (uint8_t y = 0; y < H; y++) {
+	for (uint8_t y = 0; y < H / 2; y++) {
         
         uint8_t last_count;
         cy += ystep;
@@ -418,7 +421,7 @@ void fractal(real_t left, real_t top, real_t xside, real_t yside)
 			cx += xstep;
 
             // uint8_t count = inter_fract(cx, cy);
-            uint8_t count = inter_fract2(Complex(cx,cy));
+            uint8_t count = inter_fract(Complex(cx,cy));
 
             if((count != last_count) || (x == 0)) 
                 color = hToRgb565(fmod(real_t(count * 9), real_t(360)));
@@ -426,18 +429,12 @@ void fractal(real_t left, real_t top, real_t xside, real_t yside)
 
             buf[x] = color;
 		}
-        // if(changed){
         LCD_Draw_Textured_Line(0, y, W, buf);
-        // LCD_Draw_Textured_Line(0, H - y - 1, W, buf);
-        // }else{
-        //     LCD_Draw_Vertical_Line(0, y, W, buf[0]);
-        //     LCD_Draw_Vertical_Line(0, H - y - 1, W, buf[0]);
-        // }
+        LCD_Draw_Textured_Line(0, H - y - 1, W, buf);
 	}
 }
 
 void renderTest4(){
-    CHECK_INIT
     const float scale = 1.0;
 	const real_t left = real_t(0.5)*scale;
 	const real_t top = real_t(-1)*scale;
@@ -453,46 +450,32 @@ int main(){
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     Systick_Init();
-    USART_Printf_Init(921600);
 
-    MLX90640_Init();
+    uart1.init(460800);
+
+    // MLX90640_Init();
 
     LCD_Init();
 
-    Color c1 = Color::from_hsv(real_t());
+    Color c1 = Color::from_hsv(0);
+    c1 = 3 * Color::from_hsv(20);
     while(1){
 
-
-
-        // renderTest1();
-        // renderTest2();
-        // complex1/
         LCD_Fill_Screen(black);
         begin_u = micros();
-        // begin_m = millis();
 
-        // LCD_Fill_Screen((RGB565)0);
         c1 = Color::from_hsv(fmod(t, real_t(360)));
         color = c1;
 
-        renderTest3();
+        renderTest4();
 
-
-        // color = hsvToRgb565(fmod(t, real_t(2))*1180, real_t(1), real_t(1));
-
-        // complex1 *= deltacomplex;
-        // LCD_Printf(0, 8, white, "(%.3f, %.3f)", float(complex1.real()), float(complex1.imag()));
-        // printf("%.3f, %.3f\r\n", float(complex1.real()), float(complex1.imag()));
         LCD_Printf(0,0,white, String(c1).c_str());
         LCD_Printf(0,8,white, String(Vector2(1,1)).c_str());
         LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
 
         uint64_t delta_u = (micros() - begin_u);
-        // uint64_t delta_m = (millis() - begin_m);
-
         delta = real_t(delta_u / 1000000.0f);
 
-        // Matrix m1 = Matrix({1,0});
         if(delta){
             fps = real_t(1) / delta;
             if(!fps_filted){
@@ -504,12 +487,25 @@ int main(){
 
         LCD_Printf(170, 240 - 1 - 8, white, (String("fps: ") + String(fps)).c_str());
 
+        // uart1.print(SpecToken::Comma, SpecToken::Eps4, 8.45723, 2467.08849, 79,SpecToken::CommaWithSpace,"hi",33, c1.get_h(), c1);
+        // uart1.print(SpecToken::Comma, SpecToken::Eps4, 8.45723, 2467.08849, 79,SpecToken::CommaWithSpace,"hi",33);
+        // uart1.print(SpecToken::Comma, SpecToken::Eps4, 8.45723, 2467.08849, 79,SpecToken::CommaWithSpace,"hi",33);
+        // uart1.print(SpecToken::Comma, SpecToken::Eps3, 8.45723,SpecToken::Eps4, 2467.08849, 79,SpecToken::CommaWithSpace,"hi",33);
+        // uart1.println(SpecToken::Comma, SpecToken::Eps4, 8.45723, 2467.08849, 79,SpecToken::CommaWithSpace,"hi",33);
+        // uart1.println(SpecToken::Eps4, 
+        //     8.5532234, 2.4687, "hi",33,
+        //     8.5532234, 2.4687, "hi",33,
+        //     8.5532234, 2.4687, "hi",33,
+        //     8.5532234, 2.4687, "hi",33
+        // );
+        // uart1 << SpecToken::Eps4;
+        // for(float f = 0; f < PI/2; f += 0.1){
+        //     uart1 << f << ',';
+        // }
+        // uart1 << "\r\n";
+        // uart1.println(SpecToken::Eps3, c1.get_h(), c1, 34.54809);
 
         t += delta;
-        // foo();
-        // while(1);
-        // delayMicroseconds(1200);
-        // delay(20);
     }
 }
 

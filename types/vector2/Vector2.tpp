@@ -24,25 +24,27 @@ Vector2_t<T> Vector2_t<T>::round() const{
 }
 
 template<typename T>
-Vector2_t<T> Vector2_t<T>::clampmin(const T & length) const{
+template<typename U>
+Vector2_t<T> Vector2_t<T>::clampmin(const U & _length) const{
+    T length = static_cast<T>(_length);
     T l = this->length();
-    if (l < length){
-        return *this * length / l;
-    }
-    return *this;
+    return (l < length ? *this * length / l : *this);
 }
 
 template<typename T>
-Vector2_t<T> Vector2_t<T>::clampmax(const T & length) const{
+template<typename U>
+Vector2_t<T> Vector2_t<T>::clampmax(const U & _length) const{
+    T length = static_cast<T>(_length);
     T l = this->length();
-    if (l > length){
-        return *this * length / l;
-    }
-    return *this;
+    return (l > length ? *this * length / l : *this);
 }
 
+
 template<typename T>
-Vector2_t<T> Vector2_t<T>::clamp(const T & min, const T & max) const {
+template<typename U>
+Vector2_t<T> Vector2_t<T>::clamp(const U & _min, const U & _max) const {
+    T min = static_cast<T>(_min);
+    T max = static_cast<T>(_max);
     T l = this->length();
     if (l > max){
         return *this * max / l;
@@ -171,16 +173,14 @@ __fast_inline Vector2_t<T> Vector2_t<T>::rotate(const T & r) const{
 \
 template <typename T, typename U> \
 __fast_inline bool operator op (const Vector2_t<T>& lhs, const U& rhs) { \
-    using CommonType = typename std::common_type<T, U>::type; \
-    U absrhs = abs(rhs); \
-    return static_cast<CommonType>(lhs.length_squared()) op static_cast<CommonType>(absrhs * absrhs); \
+    T absrhs = static_cast<T>(abs(rhs)); \
+    return lhs.length_squared() op (absrhs * absrhs); \
 } \
 \
 template <typename T, typename U> \
 __fast_inline bool operator op (const U& lhs, const Vector2_t<T>& rhs) { \
-    using CommonType = typename std::common_type<T, U>::type; \
-    U abslhs = abs(lhs); \
-    return static_cast<CommonType>(abslhs * abslhs) op static_cast<CommonType>(rhs.length_squared()); \
+    T abslhs = static_cast<T>(abs(lhs)); \
+    return abslhs * abslhs op rhs.length_squared(); \
 }
 
 VECTOR2_COMPARE_IM_OPERATOR(<)
@@ -189,3 +189,45 @@ VECTOR2_COMPARE_IM_OPERATOR(>)
 VECTOR2_COMPARE_IM_OPERATOR(>=)
 VECTOR2_COMPARE_IM_OPERATOR(==)
 VECTOR2_COMPARE_IM_OPERATOR(!=)
+
+#define VECTOR2_ADD_SUB_MUL_OPERATOR(op) \
+template <typename T, typename U> \
+__fast_inline Vector2_t<T> operator op(const Vector2_t<T> &p_vector2, const U &rvalue){ \
+    Vector2_t<T> final = p_vector2; \
+    final op##= rvalue; \
+    return final; \
+}\
+\
+template <typename T, typename U> \
+__fast_inline Vector2_t<T> operator op(const U &lvalue, const Vector2_t<T> &p_vector2){ \
+    Vector2_t<T> final = p_vector2; \
+    final op##= lvalue; \
+    return final; \
+}\
+\
+template <typename T, typename U> \
+__fast_inline Vector2_t<T> operator op(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){ \
+    Vector2_t<T> final = p_vector2; \
+    final op##= d_vector2; \
+    return final; \
+}
+
+VECTOR2_ADD_SUB_MUL_OPERATOR(+) 
+VECTOR2_ADD_SUB_MUL_OPERATOR(-) 
+VECTOR2_ADD_SUB_MUL_OPERATOR(*) 
+
+#undef VECTOR2_ADD_SUB_MUL_OPERATOR
+
+template <typename T, typename U>
+Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const U &rvalue){
+    Vector2_t<T> final = p_vector2;
+    final /= rvalue;
+    return final;
+}
+
+template <typename T, typename U>
+Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
+    Vector2_t<T> final = p_vector2;
+    final /= d_vector2;
+    return final;
+}

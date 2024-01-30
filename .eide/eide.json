@@ -20,7 +20,10 @@
     "types/string",
     "types/color",
     "types/matrix",
-    "types/complex"
+    "types/complex",
+    "src/bus",
+    "src/ringbuf",
+    "src/bus/uart"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",

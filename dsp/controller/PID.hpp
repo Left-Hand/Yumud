@@ -5,27 +5,40 @@
 #include "../types/real.hpp"
 #include <algorithm>
 
+template<typename T>
 class PID{
     protected:
-        real_t kp = real_t(0.0);
-        real_t ki = real_t(0.0);
-        real_t kd = real_t(0.0);
+        T kp = T(0.0);
+        T ki = T(0.0);
+        T kd = T(0.0);
 
 
-        real_t _integral = real_t(0.0);
-        real_t err = real_t(0.0);       
-        real_t err_last = real_t(0.0);
+        T _integral = T(0.0);
+        T err = T(0.0);       
+        T err_last = T(0.0);
 
         
-        real_t clp_min = real_t(-514.0f);
-        real_t clp_max = real_t(514.0f);
+        T clp_min = T(-514.0f);
+        T clp_max = T(514.0f);
     public:
         PID() = delete;
-        PID(const real_t & _kp,const real_t & _ki,const real_t & _kd, const real_t & dur = real_t(1.0f)):kp(_kp), ki(_ki * dur), kd(_kd / dur){;}
-        real_t update(const real_t & setpoint, const real_t & pv);
 
-        void setClamp(const real_t & _clp){clp_min = real_t(0.0f) - _clp; clp_max = _clp;}
-        void setClamp(const real_t & _clp_min, const real_t & _clp_max){clp_min = _clp_min, clp_max = _clp_max;}
+        template<typename U>
+        PID(const U & _kp,const U & _ki,const U & _kd = T(0), const U & dur = T(1)):
+                kp(static_cast<T>(_kp)), ki(static_cast<T> (_ki * dur)), kd(static_cast<T>(_kd / dur)){;}
+
+        template<typename U>
+        T update(const U & setpoint, const U & pv);
+
+        template<typename U>
+        void setClamp(const U & _clp){
+            clp_min = static_cast<T>(abs(_clp)), 
+            clp_max = static_cast<T>(-abs(_clp));}
+
+        template<typename U>
+        void setClamp(const U & _clp_min, const U & _clp_max){
+            clp_min = static_cast<T>(_clp_min), 
+            clp_max = static_cast<T>(_clp_max);}
 };
 
 #endif

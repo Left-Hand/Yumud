@@ -10,11 +10,6 @@
 #include <IQmath_RV32.h>
 #include <limits>
 
-#ifndef IQ_VALUE
-#define IQ_VALUE(x) (*(_iq *)(&(x)))
-#endif
-
-
 
 struct iq_t{
 public:
@@ -338,6 +333,9 @@ public:
         return String(_IQtoF(value));
     }
 
+    __no_inline String toString(unsigned char decimalPlaces = 2){
+        return String(static_cast<float>(*this), decimalPlaces);
+    }
 };
 
 #ifndef STRICT_IQ
@@ -455,9 +453,5 @@ namespace std{
         __fast_inline static iq_t lowest() noexcept {return iq_t(-std::numeric_limits<float>::infinity());}
     };
 }
-
-#if defined(IQ_VALUE)
-#undef IQ_VALUE
-#endif
 
 #endif

@@ -17,8 +17,8 @@ private:
     T b;
     T a;
 public:
-	bool operator==(const Color_t &p_Color_t) const { return (r == p_Color_t.r && g == p_Color_t.g && b == p_Color_t.b && a == p_Color_t.a); }
-	bool operator!=(const Color_t &p_Color_t) const { return (r != p_Color_t.r || g != p_Color_t.g || b != p_Color_t.b || a != p_Color_t.a); }
+	bool operator==(const Color_t &p_Color) const { return (r == p_Color.r && g == p_Color.g && b == p_Color.b && a == p_Color.a); }
+	bool operator!=(const Color_t &p_Color) const { return (r != p_Color.r || g != p_Color.g || b != p_Color.b || a != p_Color.a); }
 
 	uint32_t to_rgba32() const;
 	uint32_t to_argb32() const;
@@ -29,7 +29,9 @@ public:
 	T get_h() const;
 	T get_s() const;
 	T get_v() const;
-	void set_hsv(T p_h, T p_s, T p_v, T p_alpha = T(1));
+    
+    template<typename U>
+    void set_hsv(U _p_h, U _p_s, U _p_v, U _p_alpha = U(1));
 
 	__fast_inline T &operator[](const uint8_t idx) {
         static T default_value = T();
@@ -40,24 +42,69 @@ public:
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
 
-	Color_t operator+(const Color_t &p_Color_t) const;
-	void operator+=(const Color_t &p_Color_t);
-
 	Color_t operator-() const;
-	Color_t operator-(const Color_t &p_Color_t) const;
-	void operator-=(const Color_t &p_Color_t);
 
-	Color_t operator*(const Color_t &p_Color_t) const;
-	Color_t operator*(const T &rvalue) const;
-	void operator*=(const Color_t &p_Color_t);
-	void operator*=(const T &rvalue);
+    template <typename U>
+    __fast_inline Color_t &operator+=(const Color_t<U> &p_Color) {
+        r += static_cast<T>(p_Color.r);
+        g += static_cast<T>(p_Color.g);
+        b += static_cast<T>(p_Color.b);
+        a += static_cast<T>(p_Color.a);
+        return *this;
+    }
 
-	Color_t operator/(const Color_t &p_Color_t) const;
-	Color_t operator/(const T &rvalue) const;
-	void operator/=(const Color_t &p_Color_t);
-	void operator/=(const T &rvalue);
+    template <typename U>
+    __fast_inline Color_t &operator-=(const Color_t<U> &p_Color) {
+        r -= static_cast<T>(p_Color.r);
+        g -= static_cast<T>(p_Color.g);
+        b -= static_cast<T>(p_Color.b);
+        a -= static_cast<T>(p_Color.a);
+        return *this;
+    }
 
-	bool is_equal_approx(const Color_t &p_Color_t) const;
+    template <typename U>
+    __fast_inline Color_t &operator*=(const Color_t<U> &p_Color) {
+        r *= static_cast<T>(p_Color.r);
+        g *= static_cast<T>(p_Color.g);
+        b *= static_cast<T>(p_Color.b);
+        a *= static_cast<T>(p_Color.a);
+        return *this;
+    }
+
+    template <typename U>
+    __fast_inline Color_t & operator*=(const U &rvalue) {
+        r = r * rvalue;
+        g = g * rvalue;
+        b = b * rvalue;
+        a = a * rvalue;
+        return *this;
+    }
+
+    template<typename U>
+    __fast_inline Color_t & operator/=(const Color_t<U> &p_Color) {
+        r /= static_cast<T>(p_Color.r);
+        g /= static_cast<T>(p_Color.g);
+        b /= static_cast<T>(p_Color.b);
+        a /= static_cast<T>(p_Color.a);
+        return *this;
+    }
+
+    template <typename U>
+    __fast_inline Color_t & operator/=(const U &rvalue) {
+        if (rvalue == 0) {
+            r = 1.0;
+            g = 1.0;
+            b = 1.0;
+            a = 1.0;
+        } else {
+            r = r / rvalue;
+            g = g / rvalue;
+            b = b / rvalue;
+            a = a / rvalue;
+        }
+    };
+
+	bool is_equal_approx(const Color_t &p_Color) const;
 
 	void invert();
 	void contrast();
@@ -120,9 +167,11 @@ public:
 				b < 0.0031308 ? 12.92 * b : (1.0 + 0.055) * pow(b, T(1.0f / 2.4f)) - T(0.055), a);
 	}
 
-	static Color_t hex(uint32_t p_hex);
-	static Color_t hex64(uint64_t p_hex);
-	static Color_t from_hsv(T p_h, T p_s = T(1), T p_v = T(1), T p_a = T(1));
+	Color_t hex(uint32_t p_hex);
+	Color_t hex64(uint64_t p_hex);
+
+    template<typename U>
+	static Color_t<T> from_hsv(U p_h, U p_s = U(1), U p_v = U(1), U p_a = U(1));
 
 	__fast_inline Color_t() {
 		r = T(0);
@@ -140,17 +189,17 @@ public:
 	}
 
     __no_inline explicit operator String() const{
-        return (String('(')     + String(static_cast<float>(r)) + String(',')
-                                + String(static_cast<float>(g)) + String(',')
-                                + String(static_cast<float>(b)) + String(',')
+        return (String('(')     + String(static_cast<float>(r)) + String(", ")
+                                + String(static_cast<float>(g)) + String(", ")
+                                + String(static_cast<float>(b)) + String(", ")
                                 + String(static_cast<float>(a)) + String(')')
                                 );
     }
 
     __no_inline String toString(unsigned char decimalPlaces = 2){
-        return (String('(')     + String(static_cast<float>(r), decimalPlaces) + String(',')
-                                + String(static_cast<float>(g), decimalPlaces) + String(',')
-                                + String(static_cast<float>(b), decimalPlaces) + String(',')
+        return (String('(')     + String(static_cast<float>(r), decimalPlaces) + String(", ")
+                                + String(static_cast<float>(g), decimalPlaces) + String(", ")
+                                + String(static_cast<float>(b), decimalPlaces) + String(", ")
                                 + String(static_cast<float>(a), decimalPlaces) + String(')')
                                 );
     }

@@ -10,9 +10,14 @@ extern "C" {
 #include "stdlib.h"
 #include "string.h"
 
+
 void ftoa(float value, char *str, uint8_t eps);
 
 void itoa(int value, char *str, uint8_t radix);
+void itoas(int value, char *str, uint8_t radix, uint8_t size);
+
+void iltoa(long long value, char *str, uint8_t radix);
+void iultoa(unsigned long long value, char *str, uint8_t radix);
 
 int stoi(const char * str);
 

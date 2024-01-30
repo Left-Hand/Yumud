@@ -1,6 +1,4 @@
 #include "../real.hpp"
-#include <cmath>
-#include "math.h"
 
 template <typename T>
 uint32_t Color_t<T>::to_argb32() const {
@@ -128,13 +126,19 @@ T Color_t<T>::get_v() const {
 }
 
 template <typename T>
-void Color_t<T>::set_hsv(T p_h, T p_s, T p_v, T p_alpha) {
+template <typename U>
+void Color_t<T>::set_hsv(U _p_h, U _p_s, U _p_v, U _p_alpha) {
+
+    T p_h = static_cast<T>(_p_h);
+    T p_s = static_cast<T>(_p_s);
+    T p_v = static_cast<T>(_p_v);
+    T p_alpha = static_cast<T>(_p_alpha);
+
 	int i;
 	T f, p, q, t;
 	a = p_alpha;
 
 	if (p_s == 0) {
-		// acp_hromatic (grey)
 		r = g = b = p_v;
 		return;
 	}
@@ -183,8 +187,8 @@ void Color_t<T>::set_hsv(T p_h, T p_s, T p_v, T p_alpha) {
 }
 
 template <typename T>
-bool Color_t<T>::is_equal_approx(const Color_t<T> &p_Color_t) const {
-	return is_equal_approx(r, p_Color_t.r) && is_equal_approx(g, p_Color_t.g) && is_equal_approx(b, p_Color_t.b) && is_equal_approx(a, p_Color_t.a);
+bool Color_t<T>::is_equal_approx(const Color_t<T> &p_Color) const {
+	return is_equal_approx(r, p_Color.r) && is_equal_approx(g, p_Color.g) && is_equal_approx(b, p_Color.b) && is_equal_approx(a, p_Color.a);
 }
 
 template <typename T>
@@ -241,121 +245,57 @@ Color_t<T> Color_t<T>::contrasted() const {
 	return c;
 }
 
-template <typename T>
-Color_t<T> Color_t<T>::from_hsv(T p_h, T p_s, T p_v, T p_a){
+template<typename T>
+template<typename U>
+Color_t<T> Color_t<T>::from_hsv(U p_h, U p_s, U p_v, U p_a){
 	Color_t<T> c;
 	c.set_hsv(p_h, p_s, p_v, p_a);
 	return c;
 }
 
-template <typename T>
-Color_t<T> Color_t<T>::operator+(const Color_t<T> &p_Color_t) const {
-	return Color_t<T>(
-			r + p_Color_t.r,
-			g + p_Color_t.g,
-			b + p_Color_t.b,
-			a + p_Color_t.a);
+
+#define COLOR_ADD_SUB_MUL_OPERATOR(op) \
+template <typename T, typename U> \
+__fast_inline Color_t<T> operator op(const Color_t<T> &p_Color, const U &rvalue){ \
+    Color_t<T> final = p_Color; \
+    final op##= rvalue; \
+    return final; \
+}\
+\
+template <typename T, typename U> \
+__fast_inline Color_t<T> operator op(const U &lvalue, const Color_t<T> &p_Color){ \
+    Color_t<T> final = p_Color; \
+    final op##= lvalue; \
+    return final; \
+}\
+\
+template <typename T, typename U> \
+__fast_inline Color_t<T> operator op(const Color_t<T> &p_Color, const Color_t<U> &d_Color){ \
+    Color_t<T> final = p_Color; \
+    final op##= d_Color; \
+    return final; \
 }
 
-template <typename T>
-void Color_t<T>::operator+=(const Color_t<T> &p_Color_t) {
-	r = r + p_Color_t.r;
-	g = g + p_Color_t.g;
-	b = b + p_Color_t.b;
-	a = a + p_Color_t.a;
+COLOR_ADD_SUB_MUL_OPERATOR(+) 
+COLOR_ADD_SUB_MUL_OPERATOR(-) 
+COLOR_ADD_SUB_MUL_OPERATOR(*) 
+
+#undef COLOR_ADD_SUB_MUL_OPERATOR
+
+template <typename T, typename U>
+Color_t<T> operator/(const Color_t<T> &p_Color, const U &rvalue){
+    Color_t<T> final = p_Color;
+    final /= rvalue;
+    return final;
 }
 
-template <typename T>
-Color_t<T> Color_t<T>::operator-(const Color_t<T> &p_Color_t) const {
-	return Color_t<T>(
-			r - p_Color_t.r,
-			g - p_Color_t.g,
-			b - p_Color_t.b,
-			a - p_Color_t.a);
+template <typename T, typename U>
+Color_t<T> operator/(const Color_t<T> &p_Color, const Color_t<U> &d_Color){
+    Color_t<T> final = p_Color;
+    final /= d_Color;
+    return final;
 }
 
-template <typename T>
-void Color_t<T>::operator-=(const Color_t<T> &p_Color_t) {
-	r = r - p_Color_t.r;
-	g = g - p_Color_t.g;
-	b = b - p_Color_t.b;
-	a = a - p_Color_t.a;
-}
-
-template <typename T>
-Color_t<T> Color_t<T>::operator*(const Color_t<T> &p_Color_t) const {
-	return Color_t<T>(
-			r * p_Color_t.r,
-			g * p_Color_t.g,
-			b * p_Color_t.b,
-			a * p_Color_t.a);
-}
-
-template <typename T>
-Color_t<T> Color_t<T>::operator*(const T &rvalue) const {
-	return Color_t<T>(
-			r * rvalue,
-			g * rvalue,
-			b * rvalue,
-			a * rvalue);
-}
-
-template <typename T>
-void Color_t<T>::operator*=(const Color_t<T> &p_Color_t) {
-	r = r * p_Color_t.r;
-	g = g * p_Color_t.g;
-	b = b * p_Color_t.b;
-	a = a * p_Color_t.a;
-}
-
-template <typename T>
-void Color_t<T>::operator*=(const T &rvalue) {
-	r = r * rvalue;
-	g = g * rvalue;
-	b = b * rvalue;
-	a = a * rvalue;
-}
-
-template <typename T>
-Color_t<T> Color_t<T>::operator/(const Color_t<T> &p_Color_t) const {
-	return Color_t<T>(
-			r / p_Color_t.r,
-			g / p_Color_t.g,
-			b / p_Color_t.b,
-			a / p_Color_t.a);
-}
-
-template <typename T>
-Color_t<T> Color_t<T>::operator/(const T &rvalue) const {
-	return Color_t<T>(
-			r / rvalue,
-			g / rvalue,
-			b / rvalue,
-			a / rvalue);
-}
-
-template <typename T>
-void Color_t<T>::operator/=(const Color_t<T> &p_Color_t) {
-	r = r / p_Color_t.r;
-	g = g / p_Color_t.g;
-	b = b / p_Color_t.b;
-	a = a / p_Color_t.a;
-}
-
-template <typename T>
-void Color_t<T>::operator/=(const T &rvalue) {
-	if (rvalue == 0) {
-		r = 1.0;
-		g = 1.0;
-		b = 1.0;
-		a = 1.0;
-	} else {
-		r = r / rvalue;
-		g = g / rvalue;
-		b = b / rvalue;
-		a = a / rvalue;
-	}
-};
 
 template <typename T>
 Color_t<T> Color_t<T>::operator-() const {

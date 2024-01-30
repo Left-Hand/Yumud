@@ -1,17 +1,22 @@
 #include "PID.hpp"
 
-real_t PID::update(const real_t & setpoint, const real_t & pv){
-	real_t error = setpoint - pv;
-	real_t Pout = kp * error;
+template<typename T>
+template<typename U>
+T PID<T>::update(const U & _setpoint, const U & _pv){
+    T setpoint = static_cast<T>(_setpoint);
+    T pv = static_cast<T>(_pv);
+
+	T error = setpoint - pv;
+	T Pout = kp * error;
 	
 	_integral += error;
-	real_t Iout = real_t(std::clamp(ki * _integral, clp_min, clp_max));
+	T Iout = T(std::clamp(ki * _integral, clp_min, clp_max));
 	
-	real_t derivative = (error - err_last);
-	real_t Dout = kd * derivative;
+	T derivative = (error - err_last);
+	T Dout = kd * derivative;
 	
-	real_t output = real_t(std::clamp(Pout + Iout + Dout, clp_min, clp_max));
+	T output = T(std::clamp(Pout + Iout + Dout, clp_min, clp_max));
 	err_last = error;
 
-	return real_t(output);
+	return T(output);
 }

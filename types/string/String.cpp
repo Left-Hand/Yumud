@@ -25,6 +25,10 @@
 /*  Constructors                             */
 /*********************************************/
 
+static uint8_t decimalPlaces;
+__fast_inline static void setDecimalPlaces(const uint8_t & _decimalPlaces){decimalPlaces = _decimalPlaces;}
+__fast_inline static uint8_t getDecimalPlaces(){return decimalPlaces;}
+
 String::String(const char *cstr)
 {
 	init();
@@ -65,10 +69,21 @@ String::String(char c)
 	*this = buf;
 }
 
+String::String(char * c){
+    init();
+    *this = c;
+}
+
+String::String(char * c, const size_t size){
+    init();
+    if (c) copy(c, size);
+	else invalidate();
+}
+
 String::String(unsigned char value, unsigned char base)
 {
 	init();
-	char buf[8];
+	char buf[12];
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -76,7 +91,7 @@ String::String(unsigned char value, unsigned char base)
 String::String(int value, unsigned char base)
 {
 	init();
-	char buf[8];
+	char buf[12];
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -84,7 +99,7 @@ String::String(int value, unsigned char base)
 String::String(unsigned int value, unsigned char base)
 {
 	init();
-	char buf[8];
+	char buf[12];
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -92,7 +107,7 @@ String::String(unsigned int value, unsigned char base)
 String::String(long value, unsigned char base)
 {
 	init();
-	char buf[8];
+	char buf[12];
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -100,24 +115,59 @@ String::String(long value, unsigned char base)
 String::String(unsigned long value, unsigned char base)
 {
 	init();
-	char buf[8];
+	char buf[10];
 	itoa(value, buf, base);
 	*this = buf;
 }
 
-String::String(float value, unsigned char decimalPlaces)
+String::String(long long value, unsigned char base)
 {
 	init();
-	char buf[8];
-	ftoa(value, buf, decimalPlaces);
+	char buf[24];
+	iltoa(value, buf, base);
+	*this = buf;
+}
+
+String::String(unsigned long long value, unsigned char base)
+{
+	init();
+	char buf[24];
+	iultoa(value, buf, base);
+	*this = buf;
+}
+
+String::String(float value)
+{
+	init();
+	char buf[12];
+	ftoa(value, buf, getDecimalPlaces());
     *this = buf;
 }
 
-String::String(double value, unsigned char decimalPlaces)
+
+String::String(float value, unsigned char _decimalPlaces)
 {
 	init();
-	char buf[8];
-	ftoa(value, buf, decimalPlaces);
+    setDecimalPlaces(_decimalPlaces);
+	char buf[12];
+	ftoa(value, buf, _decimalPlaces);
+    *this = buf;
+}
+
+String::String(double value)
+{
+	init();
+	char buf[12];
+	ftoa(value, buf, getDecimalPlaces());
+    *this = buf;
+}
+
+String::String(double value, unsigned char _decimalPlaces)
+{
+	init();
+    setDecimalPlaces(_decimalPlaces);
+	char buf[12];
+	ftoa(value, buf, _decimalPlaces);
     *this = buf;
 }
 
@@ -299,49 +349,49 @@ unsigned char String::concat(char c)
 
 unsigned char String::concat(unsigned char num)
 {
-	char buf[8];
+	char buf[12];
 	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(int num)
 {
-	char buf[8];
+	char buf[12];
 	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(unsigned int num)
 {
-	char buf[8];
+	char buf[12];
 	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(long num)
 {
-	char buf[8];
+	char buf[12];
 	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(unsigned long num)
 {
-	char buf[8];
+	char buf[12];
 	itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(float num)
 {
-	char buf[8];
+	char buf[12];
 	ftoa(num, buf, 6);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(double num)
 {
-	char buf[8];
+	char buf[12];
 	ftoa(num, buf, 6);
 	return concat(buf, strlen(buf));
 }
@@ -755,4 +805,27 @@ float String::toFloat(void) const
 {
 	if (buffer) return float(atof(buffer));
 	return 0;
+}
+
+String toString(char c) { return String(c); }
+String toString(const char * c) { return String(c); }
+String toString(unsigned char value, unsigned char base) { return String(value, base); }
+String toString(int value, unsigned char base) { return String(value, base); }
+String toString(unsigned int value, unsigned char base) { return String(value, base); }
+String toString(long value, unsigned char base) { return String(value, base); }
+String toString(unsigned long value, unsigned char base) { return String(value, base); }
+String toString(long long value, unsigned char base) { return String(value, base); }
+String toString(unsigned long long value, unsigned char base) { return String(value, base); }
+
+String toString(float value) {return String(value, getDecimalPlaces());}
+String toString(double value) {return String(value, getDecimalPlaces());}
+
+String toString(float value, unsigned char _decimalPlaces) {
+    setDecimalPlaces(_decimalPlaces);
+    return String(value, _decimalPlaces);
+}
+
+String toString(double value, unsigned char _decimalPlaces) {
+    setDecimalPlaces(_decimalPlaces);
+    return String(value, _decimalPlaces);
 }
