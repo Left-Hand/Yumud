@@ -23,7 +23,9 @@
     "types/complex",
     "src/bus",
     "src/ringbuf",
-    "src/bus/uart"
+    "src/bus/uart",
+    "types/buffer/ringbuf",
+    "types/buffer"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",

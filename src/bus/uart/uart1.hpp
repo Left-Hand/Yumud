@@ -3,20 +3,32 @@
 #define __UART1_HW_HPP__
 
 #include "../printer.hpp"
+#include "../../types/buffer/ringbuf/ringbuf_t.hpp"
 #include "../../defines/comm_inc.h"
 
 class Uart1:public Printer{
-protected:
-    void _write(const char & data) override;
-    void _write(const char * data_ptr, const size_t & len) override;
-    void _read(char & data) override;
-    void _read(char * data, const size_t len) override;
-    void _fake_read(const size_t len) override;
-    char * _get_read_ptr() override;
+    __fast_inline void _write(const char & data) override;
+    __fast_inline void _write(const char * data_ptr, const size_t & len) override;
 public:
+    RingBuf ringBuf;
+    Uart1():Printer(ringBuf){;}
+
     void init(const uint32_t & baudRate);
-    size_t available() override;
 };
+
+__fast_inline void Uart1::_write(const char & data){
+    while((USART1->STATR & USART_FLAG_TXE) == RESET);	   
+    USART1->DATAR = data;
+    while((USART1->STATR & USART_FLAG_TC) == RESET);
+}
+
+__fast_inline void Uart1::_write(const char * data_ptr, const size_t & len){
+  	for(size_t i=0;i<len;i++){	
+        _write(data_ptr[i]);
+	}	 	
+}
+
+extern Uart1 uart1;
 
 __interrupt 
 void USART1_IRQHandler();

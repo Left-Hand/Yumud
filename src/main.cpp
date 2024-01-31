@@ -14,8 +14,8 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
 
-Uart1 uart1;
-Uart2 uart2;
+// Uart1 uart1;
+// Uart2 uart2;
 
 void Systick_Init(void)
 {
@@ -471,9 +471,9 @@ int main(){
 
         renderTest4();
 
-        LCD_Printf(0,0,white, String(c1).c_str());
-        LCD_Printf(0,8,white, String(Vector2(1,1)).c_str());
-        LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
+        // LCD_Printf(0,0,white, String(c1).c_str());
+        // LCD_Printf(0,8,white, String(Vector2(1,1)).c_str());
+        // LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
 
         uint64_t delta_u = (micros() - begin_u);
         delta = real_t(delta_u / 1000000.0f);
@@ -500,26 +500,17 @@ int main(){
         //     8.5532234, 2.4687, "hi",33,
         //     8.5532234, 2.4687, "hi",33
         // );
+
         static uint8_t cnt = 0;
         static char chr = 'A';
         cnt++;
         chr = (chr == 'Z' ? 'A' : chr + 1);
-
-
-
-        uart1.println("Send:");
-
-        for(uint8_t i = 0; i < 23; i++){
-            uart2.print((char)(chr+i));
-            uart1.print((char)(chr+i));
-        }
-
-        uart1.print("\r\n");
+        for(uint8_t i = 0; i < 23; i++) uart2.print((char)(chr+i));
 
         String ret = uart1.readAll();
-        ret.trim();
-        
-        uart1.println("Recv:\r\n", ret);
+        // ret.trim();
+
+        uart1.println("Recv:", ret, ret.length());
 
         t += delta;
     }

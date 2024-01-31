@@ -3,7 +3,7 @@
 #define __PRINTABLE_HPP__
 
 #include "bus.hpp"
-#include "../ringbuf/ringbuf.hpp"
+#include "../../types/buffer/buffer.hpp"
 #include "../defines/comm_inc.h"
 
 #include <cstdint>
@@ -35,21 +35,25 @@ enum class SpecToken {
 
 class Printer{
 private:
+    Buffer & buffer;
+
     char space[3] = " ";
     uint8_t radix = 10;
     uint8_t eps = 2;
     bool skipSpec = false;
 
-    void printString(const String & str){write(str.c_str(), str.length());}
+    __fast_inline void printString(const String & str){write(str.c_str(), str.length());}
+
 protected:
     virtual void _write(const char & data) = 0;
     virtual void _write(const char * data_ptr, const size_t & len) = 0;
-    virtual void _read(char & data) = 0;
-    virtual void _read(char * data, const size_t len) = 0;
-    virtual void _fake_read(const size_t len) = 0;
-    virtual char * _get_read_ptr(){return nullptr;}
+    virtual void _read(char & data){buffer.getRxData((uint8_t &)data);}
+    virtual void _read(char * data_ptr, const size_t len){buffer.getRxDatas((uint8_t *)data_ptr, len);}
+
 public:
-    virtual size_t available() = 0;
+    Printer(Buffer & _buffer):buffer(_buffer){;}
+
+    virtual size_t available(){return buffer.available();}
 
     __fast_inline void write(const char & data){_write(data);}
     void write(const char * data_ptr, const size_t & len){_write(data_ptr, len);}
@@ -57,20 +61,6 @@ public:
     __fast_inline char read(){char data; _read(data); return data;};
     String read(const size_t & len);
     String readAll(){return read(available());}
-
-    // void print(const char* pStr){write(pStr, strlen(pStr));}
-    // void print(const String & str){write(str.c_str(), str.length());}
-
-    // void println(const char* pStr){write(pStr, strlen(pStr)); write("\r\n", 3);}
-    // void println(const String & str){write(str.c_str(), str.length()); write("\r\n", 3);}
-
-    // void print(int val){print(String(val, radix));}
-    // void print(float val){print(String(val, eps));}
-    // void print(double val){print(String(val, eps));}
-
-    // void println(int val){print(val); print("\r\n");}
-    // void println(float val){print(val); print("\r\n");}
-    // void println(double val){print(val); print("\r\n");}
 
     Printer& operator<<(int val){printString(String(val)); return *this;}
     Printer& operator<<(float val){printString(String(val)); return *this;}
@@ -84,8 +74,7 @@ public:
     template<typename T>
     Printer& operator<<(T misc){*this << String(misc); return *this;}
 
-    void print(){
-    }
+    void print(){}
 
 	template <typename T>
 	void print(const T& first) {
@@ -102,9 +91,7 @@ public:
     }
 
 
-    void println(){
-        *this << "\r\n";
-    }
+    void println(){*this << "\r\n";}
 
 	template <typename T>
 	void println(const T& first) {

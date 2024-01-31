@@ -55,39 +55,10 @@ void Uart2::init(const uint32_t & baudRate){
     NVIC_Configuration();
 }
 
-void Uart2::_write(const char & data){
-    USART_SendData(USART2, data);
-	while(USART_GetFlagStatus(USART2,USART_FLAG_TXE)==RESET);
-}
-
-void Uart2::_write(const char * data_ptr, const size_t & len){
-  	for(size_t i=0;i<len;i++){		   
-		while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);
-		USART_SendData(USART2,data_ptr[i]);
-	}	 
- 
-	while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);		
-}
-
-void Uart2::_read(char & data){
-    ringBuf.getRxData((uint8_t &)data);
-}
-
-void Uart2::_read(char * data, const size_t len){
-    ringBuf.getRxDatas((uint8_t *)data, len);
-}
-
-char * Uart2::_get_read_ptr(){
-    return (char *)(ringBuf.rxPtr());
-}
-
-void Uart2::_fake_read(const size_t len){
-    ringBuf.waste(len);
-}
-
-size_t Uart2::available(){
-    return ringBuf.available();
-}
+#ifndef HAVE_UART2
+Uart2 uart2;
+#define HAVE_UART2
+#endif
 
 __interrupt 
 void USART2_IRQHandler() 

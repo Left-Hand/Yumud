@@ -233,6 +233,9 @@ unsigned char String::changeBuffer(unsigned int maxStrLen)
 
 String & String::copy(const char *cstr, unsigned int length)
 {
+    if(length > 900){
+        
+    }
 	if (!reserve(length)) {
 		invalidate();
 		return *this;

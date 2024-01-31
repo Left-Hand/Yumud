@@ -67,21 +67,27 @@ Printer& Printer::operator<<(const SpecToken & spec){
 }
 
 String Printer::read(const size_t & len){
-    char * head_ptr = _get_read_ptr() - len;
-    if(head_ptr){
-        String str = String(head_ptr, len);
-        _fake_read(len);
-        return str;
+    // if(head_ptr){
+    String str;
+    str.reserve(len + 1);
+    // buffer.getRxDatas((uint8_t *)str.getBuffer(), len);
+    for(uint8_t i = 0; i < len; i++){
+        uint8_t _ = 0;
+        buffer.getRxData(_);
+        str += (char)_;
     }
-    else{
-        head_ptr = new char[len+1];
-        if(head_ptr){
-            _read(head_ptr, len);
-            String str = String(head_ptr, len);
-            delete []head_ptr;
-            return str;
-        }else{
-            return String('\0');
-        }
-    }
+
+    return str;
+    // }
+    // else{
+    //     head_ptr = new char[len+1];
+    //     if(head_ptr){
+    //         _read(head_ptr, len);
+    //         String str = String(head_ptr, len);
+    //         delete []head_ptr;
+    //         return str;
+    //     }else{
+    //         return String('\0');
+    //     }
+    // }
 }

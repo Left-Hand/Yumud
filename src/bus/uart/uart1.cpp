@@ -1,7 +1,5 @@
 #include "uart1.hpp"
 
-static RingBuf ringBuf;
-
 static void NVIC_Configuration(void){
     CHECK_INIT
     NVIC_InitTypeDef NVIC_InitStructure;
@@ -24,7 +22,7 @@ static void UART1_GPIO_Configuration(void){
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin = GPIO_Pin_10;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
     GPIO_Init(GPIOA, &GPIO_InitStructure);
 }
 
@@ -55,39 +53,11 @@ void Uart1::init(const uint32_t & baudRate){
     NVIC_Configuration();
 }
 
-void Uart1::_write(const char & data){
-    USART_SendData(USART1, data);
-	while(USART_GetFlagStatus(USART1,USART_FLAG_TXE)==RESET);
-}
 
-void Uart1::_write(const char * data_ptr, const size_t & len){
-  	for(size_t i=0;i<len;i++){		   
-		while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);
-		USART_SendData(USART1,data_ptr[i]);
-	}	 
- 
-	while(USART_GetFlagStatus(USART1, USART_FLAG_TC) == RESET);		
-}
-
-void Uart1::_read(char & data){
-    ringBuf.getRxData((uint8_t &)data);
-}
-
-void Uart1::_read(char * data, const size_t len){
-    ringBuf.getRxDatas((uint8_t *)data, len);
-}
-
-void Uart1::_fake_read(const size_t len){
-    ringBuf.waste(len);
-}
-
-char * Uart1::_get_read_ptr(){
-    return (char *)(ringBuf.rxPtr());
-}
-
-size_t Uart1::available(){
-    return ringBuf.available();
-}
+#ifndef HAVE_UART1
+Uart1 uart1;
+#define HAVE_UART1
+#endif
 
 __interrupt 
 void USART1_IRQHandler() 
@@ -95,7 +65,7 @@ void USART1_IRQHandler()
     if(USART_GetITStatus(USART1,USART_IT_RXNE) != RESET)
     { 
         USART_ClearITPendingBit(USART1,USART_IT_RXNE);
-        ringBuf.addRxData(USART_ReceiveData(USART1));
+        uart1.ringBuf.addRxData(USART_ReceiveData(USART1));
     } 
     if(USART_GetFlagStatus(USART1,USART_FLAG_ORE) == SET)
     { 
