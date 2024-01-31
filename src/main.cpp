@@ -467,7 +467,7 @@ int main(){
     c1 = 3 * Color::from_hsv(20);
     while(1){
 
-        LCD_Fill_Screen(black);
+        LCD_Fill_Screen(RGB565::PINK);
         begin_u = micros();
 
         c1 = Color::from_hsv(fmod(t, real_t(360)));
