@@ -10,11 +10,17 @@
 #include "../types/string/string.hpp"
 
 class Bus{
+protected:
+    uint16_t write_ovt = 114;
+    uint16_t read_ovt = 114;
+
+    uint8_t data_size = 8;
+
 public:
     enum class ErrorType{
-        OK = 0,
-        OVER_TIME = 1,
-        NO_ACK = 2
+        OK,
+        OVER_TIME,
+        NO_ACK
     };
 
     struct Error{
@@ -26,16 +32,25 @@ public:
         explicit operator ErrorType() {return errorType;}
     };
 
-    virtual void init() = 0;
-    virtual void configDataSize(uint8_t data_size) = 0;
-    virtual void configBaudRate(uint32_t baud_rate) = 0;
-    
-    virtual Error write(const size_t & data) = 0;
-    virtual Error write(const size_t * data_ptr, const size_t & len, bool msb = false) = 0;
-    virtual Error read(size_t & data, bool toAck = true) = 0;
-    virtual Error read(size_t * data_ptr, const size_t & len, bool msb = false) = 0;
-    virtual Error trans(size_t & data_rx, size_t & data_tx, bool toAck = true) = 0;
-    virtual Error trans(size_t * data_rx_ptr, size_t * data_tx_ptr, const size_t & len, bool msb = false) = 0;
+    virtual void init(const uint32_t & baudRate) = 0;
+
+    virtual void configDataSize(const uint8_t & data_size) = 0;
+    virtual void configBaudRate(const uint32_t & baudRate) = 0;
+    virtual void configBitOrder(const bool & msb) = 0;
+
+    virtual void begin() = 0;
+    virtual void end() = 0;
+
+    virtual bool busy() = 0;
+
+    virtual Error write(const uint32_t & data) = 0;
+    virtual Error write(void * _data_ptr, const size_t & len) = 0;
+
+    virtual Error read(uint32_t & data, bool toAck = true) = 0;
+    virtual Error read(void * _data_ptr, const size_t & len) = 0;
+
+    virtual Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) = 0;
+    virtual Error transfer(void * _data_rx_ptr, void * _data_tx_ptr, const size_t & len) = 0;
 };
     
 #endif // !__PRINTABLE_HPP__

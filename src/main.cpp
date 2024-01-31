@@ -7,8 +7,10 @@
 #include "../types/color/color_t.hpp"
 #include "../types/matrix/matrix.hpp"
 #include "MLX90640/MLX90640_API.h"
+#include "SDcard/SPI2_Driver.h"
 #include "bus/uart/uart1.hpp"
 #include "bus/uart/uart2.hpp"
+#include "bus/spi/spi2.hpp"
 // using real_t = real_t;
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
@@ -455,7 +457,9 @@ int main(){
 
     uart1.init(460800);
     uart2.init(460800);
-    // MLX90640_Init();
+    spi2.init(144000000 / 128);
+    spi2.configDataSize(8);
+    // SPI2_Init();
 
     LCD_Init();
 
@@ -501,16 +505,30 @@ int main(){
         //     8.5532234, 2.4687, "hi",33
         // );
 
-        static uint8_t cnt = 0;
-        static char chr = 'A';
-        cnt++;
-        chr = (chr == 'Z' ? 'A' : chr + 1);
-        for(uint8_t i = 0; i < 23; i++) uart2.print((char)(chr+i));
+        // static uint8_t cnt = 0;
+        // static char chr = 'A';
+        // cnt++;
+        // chr = (chr == 'Z' ? 'A' : chr + 1);
+        // for(uint8_t i = 0; i < 23; i++) uart2.print((char)(chr+i));
 
-        String ret = uart1.readAll();
+        // String ret = uart1.readAll();
         // ret.trim();
 
-        uart1.println("Recv:", ret, ret.length());
+
+        const char str[] = "Hello";
+        uint8_t cnt = sizeof(str);
+
+        uint8_t to_send[cnt] = {0};
+        memcpy((void *)to_send, str, cnt);
+
+        uint8_t to_recv[cnt] = {0};
+
+        spi2.begin();
+        spi2.transfer((void *)to_recv, (void *)to_send, cnt);
+        spi2.end();
+
+        uart1.println("Send:", (char *)to_send);
+        uart1.println("Recv:", String((char *)to_recv, cnt - 1));
 
         t += delta;
     }

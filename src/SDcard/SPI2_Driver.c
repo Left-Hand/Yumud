@@ -23,7 +23,7 @@ void SPI2_Init(void)
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_Init(GPIOB, &GPIO_InitStructure);
 
-	RCC_APB2PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);	
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);	
 
     SPI_InitTypeDef SPI_InitStructure = {0};
 
