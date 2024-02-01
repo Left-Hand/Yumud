@@ -39,7 +39,6 @@ public:
 __fast_inline Bus::Error Spi2_hs::write(const uint32_t & data){
     while ((SPI2->STATR & SPI_I2S_FLAG_TXE) == RESET);
     SPI2->DATAR = data;
-    // __nopn(2); 
     return Bus::ErrorType::OK;
 }
 

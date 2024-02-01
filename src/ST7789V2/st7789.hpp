@@ -24,6 +24,8 @@ private:
     uint16_t x_offset = 0;
     uint16_t y_offset = 0;
 
+    uint8_t scr_ctrl = 0;
+
     __fast_inline void writeCommand(const uint8_t & cmd){
         ST7789V2_ON_CMD;
         spibus.begin();
@@ -62,7 +64,14 @@ private:
     }
 
     void setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
+    void modifyCtrl(const bool & yes,const uint8_t & pos){
+        uint8_t temp = 0x01 << pos;
+        if (yes) scr_ctrl |= temp;
+        else scr_ctrl &= ~temp;
 
+        writeCommand(0x36);
+        writeData(scr_ctrl);
+    }
 public:
     ST7789V2(Spi2 & _spibus):spibus(_spibus){;}
     void init();
@@ -75,26 +84,13 @@ public:
         y_offset = _y_offset;
     }
 
-    enum class Rotation{
-        Rot0 = 0x00,
-        Rot90 = 0xC0,
-        Rot180 = 0xA0,
-        Rot270 = 0x60,
-        Rot360 = 0x70
-    };
+    void setFlipY(const bool & flip){modifyCtrl(flip, 7);}
+    void setFlipX(const bool & flip){modifyCtrl(flip, 6);}
+    void setSwapXY(const bool & flip){modifyCtrl(flip, 5);}
+    void setReflashDirV(const bool dir){modifyCtrl(dir, 4);}
+    void setFormatRGB(const bool isrgb){modifyCtrl(!isrgb, 3);}
+    void setReflashDirH(const bool dir){modifyCtrl(dir, 2);}
 
-    void setRotation(const Rotation & rot){
-        writeCommand(0x36);
-        writeData((uint8_t)rot);
-    }
-
-    enum class Inversion{
-        Disable = 0x20,
-        Enable = 0x21
-    };
-
-    void setInversion(const Inversion & inv){
-        writeCommand((uint8_t)inv);
-    }   
+    void setInversion(const bool & inv){writeCommand(0x20 + inv);}   
 };
 #endif

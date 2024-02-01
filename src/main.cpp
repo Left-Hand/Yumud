@@ -15,13 +15,15 @@
 #include "bus/spi/spi2.hpp"
 #include "bus/spi/spi2_hs.hpp"
 #include "ST7789V2/st7789.hpp"
+#include "SSD1306/ssd1306.hpp"
 
 // using real_t = real_t;
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
-ST7789V2 st7789v2(spi2);
-// ST7789V2 st7789v2(240, 240, 0, 0);
+ST7789V2 tftDisplayer(spi2);
+SSD1306 oledDisPlayer(spi2);
+// ST7789V2 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
 
@@ -483,28 +485,50 @@ int main(){
     uart1.init(115200);
     uart2.init(115200);
 
-    spi2.init(144000000 / 8);
+    spi2.init(144000000 );
     spi2.configDataSize(8);
+    spi2.configBaudRate(144000000 / 2);
     // spi2.configBitOrder(false);
 
     LCD_Init();
     
-    // bool use = false;
-    // if(use){
-    //     st7789v2.init();
-    //     // st7789v2.setRotation(ST7789V2::Rotation::Rot360);
-    //     // st7789v2.setInversion(ST7789V2::Inversion::Disable);
-    // }else{
-    //     st7789v2.init();
-    //     st7789v2.setDisplayArea(240, 240, 0, 0);
-    //     st7789v2.setRotation(ST7789V2::Rotation::Rot0);
-    //     st7789v2.setInversion(ST7789V2::Inversion::Enable);
-    // }
+    bool use_tft = false;
+    bool use_mini = true;
+    if(use_tft){
+    if(use_mini){
+        tftDisplayer.init();
+        tftDisplayer.setDisplayArea(160, 80, 1, 26);
+        tftDisplayer.setFlipX(true);
+        tftDisplayer.setFlipY(false);
+        tftDisplayer.setSwapXY(true);
+        tftDisplayer.setFormatRGB(false);
+        tftDisplayer.setReflashDirH(false);
+        tftDisplayer.setReflashDirV(false);
+        tftDisplayer.setInversion(true);
+    }else{
+        tftDisplayer.init();
+        tftDisplayer.setDisplayArea(240, 240, 0, 0);
 
-    st7789v2.init();
-    st7789v2.setDisplayArea(160, 80, 1, 26);
-    st7789v2.setRotation(ST7789V2::Rotation::Rot360);
-    st7789v2.setInversion(ST7789V2::Inversion::Disable);
+        tftDisplayer.setFlipX(false);
+        tftDisplayer.setFlipY(false);
+        tftDisplayer.setSwapXY(false);
+        tftDisplayer.setFormatRGB(true);
+        tftDisplayer.setReflashDirH(false);
+        tftDisplayer.setReflashDirV(false);
+        tftDisplayer.setInversion(true);
+    }}else{
+        oledDisPlayer.init();
+
+        oledDisPlayer.setOffsetY(6);
+        oledDisPlayer.setFlipX(false);
+        oledDisPlayer.setFlipY(false);
+        oledDisPlayer.setInversion(false);
+    }
+
+    // tftDisplayer.init();
+    // tftDisplayer.setDisplayArea(160, 80, 1, 26);
+    // tftDisplayer.setRotation(ST7789V2::Rotation::Rot360);
+    // tftDisplayer.setInversion(ST7789V2::Inversion::Disable);
     
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
@@ -517,11 +541,17 @@ int main(){
         color = c1;
 
         // renderTest4();
-        st7789v2.flush(RGB565::RED);
-        st7789v2.flush(RGB565::BLUE);
-
+        if(use_tft){
+            tftDisplayer.flush(RGB565::RED);
+            tftDisplayer.flush(RGB565::BLACK);
+        }else{
+            oledDisPlayer.flush(true);
+            // delay(200);
+            // oledDisPlayer.flush(false);
+            // delay(200);
+        }
         // delay(200);
-        // st7789v2.flush(RGB565::BLACK);
+        // tftDisplayer.flush(RGB565::BLACK);
         // LCD_Fill_Screen(RGB565::BLACK);
         // LCD_Fill_Screen(RGB565::BLUE);
         // LCD_Printf(0,0,white, String(c1).c_str());
@@ -603,20 +633,18 @@ int main(){
         // if(HX711_Valid())
         //     uart1.println(SpecToken::CommaWithSpace,waste_m,weight);
 
-        uint32_t start_m = micros();
-        TTP229_Scan();
-        uint32_t waste_m = micros() - start_m;
-        int32_t key = TTP229_Get_Key();
+        // uint32_t start_m = micros();
+        // TTP229_Scan();
+        // uint32_t waste_m = micros() - start_m;
+        // int32_t key = TTP229_Get_Key();
 
-        uart1.println(SpecToken::CommaWithSpace,waste_m,key);
-
+        // uart1.println(SpecToken::CommaWithSpace,waste_m,key);
+        uart1.println(fps);
         static bool pc13_on = false;
         pc13_on = !pc13_on;
         GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)pc13_on);
 
         t += delta;
-
-
     }
 }
 

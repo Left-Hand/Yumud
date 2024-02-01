@@ -16,13 +16,16 @@ void SSD1306::init(){
 
 
 void SSD1306::flush(bool Color){
-  uint8_t i,n;       
-  for(i=0xb0;i<0xb5;i++)  
-  {  
-    writeCommand(i);
-    writeCommand(0x00);
-    writeCommand(0x10);
-    for(n=0;n<128;n++) 
-        writeData(Color ? 0xff : 0x00); 
-  }
+    volatile static uint8_t t = 0;
+    for(uint8_t y = 0; y < h; y+=8)  
+    {  
+        setPos(0,y);
+        // for(uint8_t x = 0; x < w; x++){
+            // writeData((uint8_t)((uint16_t)x + (uint16_t)y + (uint16_t)(t++)));
+        // }
+        writePool((uint8_t)(y + t), (size_t)w);
+        t++;
+            // __nopn(30);
+
+    }
 }

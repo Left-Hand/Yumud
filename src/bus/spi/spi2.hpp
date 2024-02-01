@@ -18,14 +18,14 @@
 #define SPI2_MOSI_Pin GPIO_Pin_15
 
 #define CS_LOW \
-__nopn(10); \
+__nopn(6); \
 SPI2_CS_Port->BCR = SPI2_CS_Pin; \
-__nopn(10); \
+__nopn(6); \
 
 #define CS_HIGH \
-__nopn(10); \
+__nopn(6); \
 SPI2_CS_Port->BSHR = SPI2_CS_Pin; \
-__nopn(10); \
+__nopn(6); \
 
 class Spi2:public Bus{
 public:
@@ -61,8 +61,10 @@ __fast_inline Bus::Error Spi2::read(uint32_t & data, bool toAck){
 __fast_inline Bus::Error Spi2::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
     while ((SPI2->STATR & SPI_I2S_FLAG_TXE) == RESET);
     SPI2->DATAR = data_tx; 
+    
     while ((SPI2->STATR & SPI_I2S_FLAG_RXNE) == RESET);
     data_rx = SPI2->DATAR;
+    
     return Bus::ErrorType::OK;
 }
 

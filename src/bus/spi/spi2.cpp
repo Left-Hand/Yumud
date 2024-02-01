@@ -54,8 +54,7 @@ void SPI2_Init(uint32_t baudRate){
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	// SPI_InitStructure.SPI_BaudRatePrescaler = SPI2_Prescale_Caculate(baudRate);
-    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;
+    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(SPI2, &SPI_InitStructure);
@@ -80,8 +79,8 @@ void Spi2::configDataSize(const uint8_t & data_size){
 }
 
 void Spi2::configBaudRate(const uint32_t & baudRate){
-    SPI2->CTLR1 &= 0b000111;
-    SPI2->CTLR2 |= SPI2_Prescale_Caculate(baudRate);
+    SPI2->CTLR1 &= ~SPI_BaudRatePrescaler_256;
+    SPI2->CTLR1 |= SPI2_Prescale_Caculate(baudRate);
 }
 
 void Spi2::configBitOrder(const bool & msb){
