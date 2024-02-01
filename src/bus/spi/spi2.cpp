@@ -1,6 +1,6 @@
 #include "spi2.hpp"
 
-static uint16_t SPI2_Prescale_Caculate(uint32_t baudRate){
+uint16_t SPI2_Prescale_Caculate(uint32_t baudRate){
 	RCC_ClocksTypeDef RCC_CLK;
     RCC_GetClocksFreq(&RCC_CLK);
 
@@ -17,7 +17,7 @@ static uint16_t SPI2_Prescale_Caculate(uint32_t baudRate){
     return MIN(i * 8, SPI_BaudRatePrescaler_256);
 }
 
-static void SPI2_GPIO_Init(void){
+void SPI2_GPIO_Init(void){
     CHECK_INIT
 
     RCC_APB2PeriphClockCmd(SPI2_CS_Periph, ENABLE);
@@ -34,12 +34,14 @@ static void SPI2_GPIO_Init(void){
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_Init(SPI2_CS_Port, &GPIO_InitStructure);
 
+    SPI2_CS_Port->BSHR = SPI2_CS_Pin;
+
     GPIO_InitStructure.GPIO_Pin = SPI2_MISO_Pin;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_Init(SPI2_Port, &GPIO_InitStructure);
 }
 
-static void SPI2_Init(uint32_t baudRate){
+void SPI2_Init(uint32_t baudRate){
     CHECK_INIT
 
 	RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, ENABLE);	
@@ -52,7 +54,8 @@ static void SPI2_Init(uint32_t baudRate){
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI2_Prescale_Caculate(baudRate);
+	// SPI_InitStructure.SPI_BaudRatePrescaler = SPI2_Prescale_Caculate(baudRate);
+    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(SPI2, &SPI_InitStructure);

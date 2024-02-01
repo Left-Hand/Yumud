@@ -24,7 +24,7 @@ static void UART2_GPIO_Configuration(void){
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
  
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 }
 

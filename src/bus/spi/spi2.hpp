@@ -17,8 +17,15 @@
 #define SPI2_MISO_Pin GPIO_Pin_14
 #define SPI2_MOSI_Pin GPIO_Pin_15
 
-#define CS_LOW (SPI2_CS_Port->BCR = SPI2_CS_Pin)
-#define CS_HIGH (SPI2_CS_Port->BSHR = SPI2_CS_Pin)
+#define CS_LOW \
+__nopn(10); \
+SPI2_CS_Port->BCR = SPI2_CS_Pin; \
+__nopn(10); \
+
+#define CS_HIGH \
+__nopn(10); \
+SPI2_CS_Port->BSHR = SPI2_CS_Pin; \
+__nopn(10); \
 
 class Spi2:public Bus{
 public:
@@ -58,6 +65,10 @@ __fast_inline Bus::Error Spi2::transfer(uint32_t & data_rx, const uint32_t & dat
     data_rx = SPI2->DATAR;
     return Bus::ErrorType::OK;
 }
+
+uint16_t SPI2_Prescale_Caculate(uint32_t baudRate);
+void SPI2_GPIO_Init(void);
+void SPI2_Init(uint32_t baudRate);
 
 #undef CS_LOW
 #undef CS_HIGH

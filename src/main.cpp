@@ -11,11 +11,15 @@
 #include "bus/uart/uart1.hpp"
 #include "bus/uart/uart2.hpp"
 #include "bus/spi/spi2.hpp"
+#include "bus/spi/spi2_hs.hpp"
+#include "ST7789V2/st7789.hpp"
+
 // using real_t = real_t;
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
-
+ST7789V2 st7789v2(spi2);
+// ST7789V2 st7789v2(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
 
@@ -455,26 +459,49 @@ int main(){
 
     Systick_Init();
 
-    uart1.init(460800);
-    uart2.init(460800);
-    spi2.init(144000000 / 128);
+    uart1.init(115200);
+    uart2.init(115200);
+
+    spi2.init(144000000 / 8);
     spi2.configDataSize(8);
-    // SPI2_Init();
+    // spi2.configBitOrder(false);
 
     LCD_Init();
+    
+    // bool use = false;
+    // if(use){
+    //     st7789v2.init();
+    //     // st7789v2.setRotation(ST7789V2::Rotation::Rot360);
+    //     // st7789v2.setInversion(ST7789V2::Inversion::Disable);
+    // }else{
+    //     st7789v2.init();
+    //     st7789v2.setDisplayArea(240, 240, 0, 0);
+    //     st7789v2.setRotation(ST7789V2::Rotation::Rot0);
+    //     st7789v2.setInversion(ST7789V2::Inversion::Enable);
+    // }
 
+    st7789v2.init();
+    st7789v2.setDisplayArea(160, 80, 1, 26);
+        st7789v2.setRotation(ST7789V2::Rotation::Rot360);
+        st7789v2.setInversion(ST7789V2::Inversion::Disable);
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
     while(1){
 
-        LCD_Fill_Screen(RGB565::PINK);
+        // LCD_Fill_Screen(RGB565::BLACK);
         begin_u = micros();
 
-        c1 = Color::from_hsv(fmod(t, real_t(360)));
+        c1 = Color::from_hsv(fmod(t * 360, real_t(360)));
         color = c1;
 
-        renderTest4();
+        // renderTest4();
+        st7789v2.flush(RGB565::RED);
+        st7789v2.flush(RGB565::BLUE);
 
+        // delay(200);
+        // st7789v2.flush(RGB565::BLACK);
+        // LCD_Fill_Screen(RGB565::BLACK);
+        // LCD_Fill_Screen(RGB565::BLUE);
         // LCD_Printf(0,0,white, String(c1).c_str());
         // LCD_Printf(0,8,white, String(Vector2(1,1)).c_str());
         // LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
@@ -491,7 +518,7 @@ int main(){
             }
         }
 
-        LCD_Printf(170, 240 - 1 - 8, white, (String("fps: ") + String(fps)).c_str());
+        // LCD_Printf(170, 240 - 1 - 8, white, (String("fps: ") + String(fps)).c_str());
 
         // uart1.print(SpecToken::Comma, SpecToken::Eps4, 8.45723, 2467.08849, 79,SpecToken::CommaWithSpace,"hi",33, c1.get_h(), c1);
         // uart1.print(SpecToken::Comma, SpecToken::Eps4, 8.45723, 2467.08849, 79,SpecToken::CommaWithSpace,"hi",33);
@@ -511,26 +538,37 @@ int main(){
         // chr = (chr == 'Z' ? 'A' : chr + 1);
         // for(uint8_t i = 0; i < 23; i++) uart2.print((char)(chr+i));
 
+        // const char str[] = "Hello, a small fox jumps over a lazy dog!";
+        // uint8_t cnt = sizeof(str);
+
+        // uint8_t to_send[cnt] = {0};
+        // memcpy((void *)to_send, str, cnt);
+
+        // uint8_t to_recv[cnt] = {0};
+
+        // spi2.begin();
+        // spi2.transfer((void *)to_recv, (void *)to_send, cnt);
+        // spi2.end();
+
+        // uart1.println("Send:", (char *)to_send);
+        // uart1.println("Recv:", String((char *)to_recv, cnt - 1));
+        
+        // uart2.print(str);
+        // uint32_t startms = micros();
+        
+        // while(uart1.available() < sizeof(str) - 1);    
+        //     // uart1.println(uart1.available());
+        // // }
+        // uint32_t endms = micros();
+
         // String ret = uart1.readAll();
         // ret.trim();
 
-
-        const char str[] = "Hello";
-        uint8_t cnt = sizeof(str);
-
-        uint8_t to_send[cnt] = {0};
-        memcpy((void *)to_send, str, cnt);
-
-        uint8_t to_recv[cnt] = {0};
-
-        spi2.begin();
-        spi2.transfer((void *)to_recv, (void *)to_send, cnt);
-        spi2.end();
-
-        uart1.println("Send:", (char *)to_send);
-        uart1.println("Recv:", String((char *)to_recv, cnt - 1));
-
+        // uart1.println("recv: ", ret, ",", (endms - startms));
+        uart1.println("fps", fps);
         t += delta;
+
+
     }
 }
 

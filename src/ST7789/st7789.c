@@ -43,9 +43,9 @@ void LCD_Init(){
     #ifdef SPI1_USE_DMA
     DMA1_CH3_Init((void *)(&ConstData), (void *)(&SPI1->DATAR));	
     #endif
-
+    delayMicroseconds(50);
     LCD_RESET_RES
-    delayMicroseconds(5);
+    delayMicroseconds(50);
     LCD_SET_RES
 
     LCD_Write_Command(0x01);
