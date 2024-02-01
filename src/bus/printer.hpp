@@ -5,7 +5,7 @@
 #include "bus.hpp"
 #include "../../types/buffer/buffer.hpp"
 #include "../defines/comm_inc.h"
-
+#include "../../types/string/String.hpp"
 #include <cstdint>
 
 #ifndef endl
@@ -37,7 +37,7 @@ class Printer{
 private:
     Buffer & buffer;
 
-    char space[3] = " ";
+    String space = ", ";
     uint8_t radix = 10;
     uint8_t eps = 2;
     bool skipSpec = false;
@@ -62,17 +62,28 @@ public:
     String read(const size_t & len);
     String readAll(){return read(available());}
 
-    Printer& operator<<(int val){printString(String(val)); return *this;}
-    Printer& operator<<(float val){printString(String(val)); return *this;}
-    Printer& operator<<(double val){printString(String(val)); return *this;}
+    Printer& operator<<(uint8_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(uint16_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(uint32_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(uint64_t val){printString(String((unsigned long long)val, radix)); return *this;}
 
-    Printer& operator<<(const char chr){printString(String(chr)); return *this;}
+    Printer& operator<<(int8_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(int16_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(int32_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(int64_t val){printString(String((long long)(val), radix)); return *this;}
+
+    Printer& operator<<(int val){printString(String(val, radix)); return *this;}
+    Printer& operator<<(float val){printString(String(val, eps)); return *this;}
+    Printer& operator<<(double val){printString(String(val, eps)); return *this;}
+
+    Printer& operator<<(const char & chr){printString(String(chr)); return *this;}
+    Printer& operator<<(char* pStr){printString(String(pStr)); return *this;}
     Printer& operator<<(const char* pStr){printString(String(pStr)); return *this;}
     Printer& operator<<(const String & str){printString(str); return *this;}
     Printer& operator<<(const SpecToken & spec);
 
     template<typename T>
-    Printer& operator<<(T misc){*this << String(misc); return *this;}
+    Printer& operator<<(T misc){*this << misc.toString(eps); return *this;}
 
     void print(){}
 

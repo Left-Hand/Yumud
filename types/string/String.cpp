@@ -25,10 +25,6 @@
 /*  Constructors                             */
 /*********************************************/
 
-static uint8_t decimalPlaces;
-__fast_inline static void setDecimalPlaces(const uint8_t & _decimalPlaces){decimalPlaces = _decimalPlaces;}
-__fast_inline static uint8_t getDecimalPlaces(){return decimalPlaces;}
-
 String::String(const char *cstr)
 {
 	init();
@@ -39,12 +35,6 @@ String::String(const String &value)
 {
 	init();
 	*this = value;
-}
-
-String::String(const __FlashStringHelper *pstr)
-{
-	init();
-	*this = pstr;
 }
 
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
@@ -95,7 +85,7 @@ String::String(const char * c, const size_t size){
 String::String(unsigned char value, unsigned char base)
 {
 	init();
-	char buf[12];
+	char buf[12] = {0};
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -103,7 +93,7 @@ String::String(unsigned char value, unsigned char base)
 String::String(int value, unsigned char base)
 {
 	init();
-	char buf[12];
+	char buf[12] = {0};
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -111,7 +101,7 @@ String::String(int value, unsigned char base)
 String::String(unsigned int value, unsigned char base)
 {
 	init();
-	char buf[12];
+	char buf[12] = {0};
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -119,7 +109,7 @@ String::String(unsigned int value, unsigned char base)
 String::String(long value, unsigned char base)
 {
 	init();
-	char buf[12];
+	char buf[12] = {0};
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -127,7 +117,7 @@ String::String(long value, unsigned char base)
 String::String(unsigned long value, unsigned char base)
 {
 	init();
-	char buf[10];
+	char buf[12] = {0};
 	itoa(value, buf, base);
 	*this = buf;
 }
@@ -135,7 +125,7 @@ String::String(unsigned long value, unsigned char base)
 String::String(long long value, unsigned char base)
 {
 	init();
-	char buf[24];
+	char buf[24] = {0};
 	iltoa(value, buf, base);
 	*this = buf;
 }
@@ -143,43 +133,24 @@ String::String(long long value, unsigned char base)
 String::String(unsigned long long value, unsigned char base)
 {
 	init();
-	char buf[24];
+	char buf[24] = {0};
 	iultoa(value, buf, base);
 	*this = buf;
 }
 
-String::String(float value)
+String::String(float value, unsigned char decimalPlaces)
 {
 	init();
-	char buf[12];
-	ftoa(value, buf, getDecimalPlaces());
+	char buf[12] = {0};
+	ftoa(value, buf, decimalPlaces);
     *this = buf;
 }
 
-
-String::String(float value, unsigned char _decimalPlaces)
+String::String(double value, unsigned char decimalPlaces)
 {
 	init();
-    setDecimalPlaces(_decimalPlaces);
-	char buf[12];
-	ftoa(value, buf, _decimalPlaces);
-    *this = buf;
-}
-
-String::String(double value)
-{
-	init();
-	char buf[12];
-	ftoa(value, buf, getDecimalPlaces());
-    *this = buf;
-}
-
-String::String(double value, unsigned char _decimalPlaces)
-{
-	init();
-    setDecimalPlaces(_decimalPlaces);
-	char buf[12];
-	ftoa(value, buf, _decimalPlaces);
+	char buf[12] = {0};
+	ftoa(value, buf, decimalPlaces);
     *this = buf;
 }
 
@@ -245,17 +216,6 @@ String & String::copy(const char *cstr, unsigned int length)
 	return *this;
 }
 
-String & String::copy(const __FlashStringHelper *pstr, unsigned int length)
-{
-	if (!reserve(length)) {
-		invalidate();
-		return *this;
-	}
-	len = length;
-	strcpy_P(buffer, (PGM_P)pstr);
-	return *this;
-}
-
 #ifdef __GXX_EXPERIMENTAL_CXX0X__
 void String::move(String &rhs)
 {
@@ -310,13 +270,6 @@ String & String::operator = (const char *cstr)
 	return *this;
 }
 
-String & String::operator = (const __FlashStringHelper *pstr)
-{
-	if (pstr) copy(pstr, strlen_P((PGM_P)pstr));
-	else invalidate();
-
-	return *this;
-}
 
 /*********************************************/
 /*  concat                                   */
@@ -337,16 +290,6 @@ unsigned char String::concat(const char *cstr, unsigned int length)
 	len = newlen;
 	return 1;
 }
-
-// unsigned char String::concat(const char* cstr, unsigned int length) {
-//   unsigned int newlen = len + length;
-//   if (!cstr) return 0;
-//   if (length == 0) return 1;
-//   if (!reserve(newlen)) return 0;
-//   strncat(buffer + len - 1, cstr, length);
-//   len = newlen;
-//   return 1;
-// }
 
 unsigned char String::concat(const char *cstr)
 {
@@ -409,18 +352,6 @@ unsigned char String::concat(double num)
 	char buf[12];
 	ftoa(num, buf, 6);
 	return concat(buf, strlen(buf));
-}
-
-unsigned char String::concat(const __FlashStringHelper * str)
-{
-	if (!str) return 0;
-	int length = strlen_P((const char *) str);
-	if (length == 0) return 1;
-	unsigned int newlen = len + length;
-	if (!reserve(newlen)) return 0;
-	strcpy_P(buffer + len, (const char *) str);
-	len = newlen;
-	return 1;
 }
 
 /*********************************************/
@@ -494,13 +425,6 @@ StringSumHelper & operator + (const StringSumHelper &lhs, double num)
 {
 	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
 	if (!a.concat(num)) a.invalidate();
-	return a;
-}
-
-StringSumHelper & operator + (const StringSumHelper &lhs, const __FlashStringHelper *rhs)
-{
-	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
-	if (!a.concat(rhs))	a.invalidate();
 	return a;
 }
 
@@ -832,15 +756,5 @@ String toString(unsigned long value, unsigned char base) { return String(value, 
 String toString(long long value, unsigned char base) { return String(value, base); }
 String toString(unsigned long long value, unsigned char base) { return String(value, base); }
 
-String toString(float value) {return String(value, getDecimalPlaces());}
-String toString(double value) {return String(value, getDecimalPlaces());}
-
-String toString(float value, unsigned char _decimalPlaces) {
-    setDecimalPlaces(_decimalPlaces);
-    return String(value, _decimalPlaces);
-}
-
-String toString(double value, unsigned char _decimalPlaces) {
-    setDecimalPlaces(_decimalPlaces);
-    return String(value, _decimalPlaces);
-}
+String toString(float value, unsigned char decimalPlaces) {return String(value, decimalPlaces);}
+String toString(double value, unsigned char decimalPlaces) {return String(value, decimalPlaces);}

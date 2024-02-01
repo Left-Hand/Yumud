@@ -27,17 +27,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "string_utils.h"
-#include "pgmspace.h"
 #include "../../src/defines/comm_inc.h"
-
-// When compiling programs with this class, the following gcc parameters
-// dramatically increase performance and memory (RAM) efficiency, typically
-// with little or no increase in code size.
-//     -felide-constructors
-//     -std=c++0x
-
-class __FlashStringHelper;
-#define F(string_literal) (reinterpret_cast<const __FlashStringHelper *>(PSTR(string_literal)))
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
@@ -60,7 +50,6 @@ public:
 	// be false).
 	String(const char *cstr = "");
 	String(const String &str);
-	String(const __FlashStringHelper *str);
 	#ifdef __GXX_EXPERIMENTAL_CXX0X__
 	String(String &&rval);
 	String(StringSumHelper &&rval);
@@ -78,10 +67,9 @@ public:
 	explicit String(unsigned long long value, unsigned char base=10);
 	explicit String(long long value, unsigned char base=10);
 
-	explicit String(float value);
-	explicit String(double value);
-	explicit String(float value, unsigned char _decimalPlaces);
-	explicit String(double value, unsigned char _decimalPlaces);
+
+	explicit String(float value, unsigned char decimalPlaces = 3);
+	explicit String(double value, unsigned char decimalPlaces = 3);
 	~String(void);
 
 	// memory management
@@ -96,7 +84,6 @@ public:
 	// marked as invalid ("if (s)" will be false).
 	String & operator = (const String &rhs);
 	String & operator = (const char *cstr);
-	String & operator = (const __FlashStringHelper *str);
 	#ifdef __GXX_EXPERIMENTAL_CXX0X__
 	String & operator = (String &&rval);
 	String & operator = (StringSumHelper &&rval);
@@ -117,7 +104,6 @@ public:
 	unsigned char concat(unsigned long num);
 	unsigned char concat(float num);
 	unsigned char concat(double num);
-    unsigned char concat(const __FlashStringHelper * str);
 	
 	// if there's not enough memory for the concatenated value, the string
 	// will be left unchanged (but this isn't signalled in any way)
@@ -131,7 +117,6 @@ public:
 	String & operator += (unsigned long num)	{concat(num); return (*this);}
 	String & operator += (float num)		{concat(num); return (*this);}
 	String & operator += (double num)		{concat(num); return (*this);}
-    String & operator += (const __FlashStringHelper *str){concat(str); return (*this);}
 
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, const String &rhs);
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, const char *cstr);
@@ -143,7 +128,6 @@ public:
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned long num);
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, float num);
 	friend StringSumHelper & operator + (const StringSumHelper &lhs, double num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, const __FlashStringHelper *rhs);
 
 	// comparison (only works w/ Strings and "strings")
 	operator StringIfHelperType() const { return buffer ? &String::StringIfHelper : 0; }
@@ -211,7 +195,6 @@ protected:
 
 	// copy and move
 	String & copy(const char *cstr, unsigned int length);
-	String & copy(const __FlashStringHelper *pstr, unsigned int length);
 	#ifdef __GXX_EXPERIMENTAL_CXX0X__
 	void move(String &rhs);
 	#endif
@@ -242,10 +225,8 @@ String toString(long value, unsigned char base = 10);
 String toString(unsigned long value, unsigned char base = 10);
 String toString(long long value, unsigned char base = 10);
 String toString(unsigned long long value, unsigned char base = 10);
-String toString(float value);
-String toString(double value);
-String toString(float value, unsigned char _decimalPlaces);
-String toString(double value, unsigned char _decimalPlaces);
+String toString(float value, unsigned char decimalPlaces = 3);
+String toString(double value, unsigned char decimalPlaces = 3);
 
 #endif  // __cplusplus
 #endif  // String_class_h

@@ -26,7 +26,9 @@
     "src/bus/uart",
     "types/buffer/ringbuf",
     "types/buffer",
-    "src/SSD1306"
+    "src/SSD1306",
+    "src/HX711",
+    "src/TTP229"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",

@@ -90,7 +90,9 @@
             "shared_mutex": "cpp",
             "thread": "cpp",
             "typeindex": "cpp",
-            "valarray": "cpp"
+            "valarray": "cpp",
+            "HX711.C": "cpp",
+            "TTP229.C": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

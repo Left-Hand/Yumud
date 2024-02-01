@@ -1,53 +1,54 @@
 #include "string_utils.h"
 
+void reverse_str(char * str, size_t len){
+	if(len == 0) return;
+
+	len -= 1;
+	for(size_t i = 0; i < len / 2 + (len % 2); i++){
+		char temp = str[i];
+		str[i] = str[len - i];
+		str[len - i] = temp;
+	}
+	str[len + 1] = '\0';
+}
+
 void itoa(int value,char *str,uint8_t radix)  
 {
     int sign = 0;  
-    char ps[12];  
-    memset(ps,0,12);  
     int i=0;  
-    if(value < 0)  
-    {  
+    if(value < 0){  
         sign = -1;  
         value = -value;  
-    }  
-    do  
-    {  
+    }
+    do {  
         if(value%radix>9)  
-            ps[i] = value%radix +'0'+7;  
+            str[i] = value%radix +'0'+7;  
         else   
-            ps[i] = value%radix +'0';  
+            str[i] = value%radix +'0';  
         i++;  
-    }while((value/=radix)>0);  
-    if(sign<0)  
-        ps[i] = '-';  
-    else  
-        i--;  
-    for(int j=i;j>=0;j--)  
-    {  
-        str[i-j] = ps[j];  
-    }  
+    } while((value/=radix)>0);  
+    
+    if(sign<0) {
+        str[i] = '-';
+        i++;
+    } 
+
+    reverse_str(str, i);
 }
 
 void itoas(int value,char *str,uint8_t radix, uint8_t size)  
 {
-	char ps[size + 1];  
-	memset(ps,0,size + 1);  
 	uint8_t i = 0;
+    value = abs(value);
 	do{  
 		if(value%radix>9)  
-			ps[i] = value%radix +'0'+7;  
+			str[i] = value%radix +'0'+7;  
 		else   
-			ps[i] = value%radix +'0';  
+			str[i] = value%radix +'0';  
 		i++;  
-	}while((value/=radix)>0);  
+	}while((value/=radix)>0 && i < size);  
 	
-	for(;i<=size;i++) ps[i] = '0';
-	
-	for(uint8_t j = 0;j < size;j++)  
-	{  
-		str[j] = ps[size - j - 1];  
-	}  
+	reverse_str(str, size);
 }
 
 
@@ -55,59 +56,49 @@ void itoas(int value,char *str,uint8_t radix, uint8_t size)
 void iltoa(long long value,char *str,uint8_t radix)  
 {
     int sign = 0;  
-    char ps[22];  
-    memset(ps,0,22);  
     int i=0;  
-    if(value < 0)  
-    {  
+    if(value < 0){  
         sign = -1;  
         value = -value;  
-    }  
-    do  
-    {  
+    }
+    do {  
         if(value%radix>9)  
-            ps[i] = value%radix +'0'+7;  
+            str[i] = value%radix +'0'+7;  
         else   
-            ps[i] = value%radix +'0';  
+            str[i] = value%radix +'0';  
         i++;  
-    }while((value/=radix)>0);  
-    if(sign<0)  
-        ps[i] = '-';  
-    else  
-        i--;  
-    for(int j=i;j>=0;j--)  
-    {  
-        str[i-j] = ps[j];  
-    }  
+    } while((value/=radix)>0);  
+    
+    if(sign<0) {
+        str[i] = '-';
+        i++;
+    } 
+
+    reverse_str(str, i);
 }
 
 void iultoa(unsigned long long value,char *str,uint8_t radix)  
 {
     int sign = 0;  
-    char ps[22];  
-    memset(ps,0,22);  
     int i=0;  
-    if(value < 0)  
-    {  
+    if(value < 0){  
         sign = -1;  
         value = -value;  
-    }  
-    do  
-    {  
+    }
+    do {  
         if(value%radix>9)  
-            ps[i] = value%radix +'0'+7;  
+            str[i] = value%radix +'0'+7;  
         else   
-            ps[i] = value%radix +'0';  
+            str[i] = value%radix +'0';  
         i++;  
-    }while((value/=radix)>0);  
-    if(sign<0)  
-        ps[i] = '-';  
-    else  
-        i--;  
-    for(int j=i;j>=0;j--)  
-    {  
-        str[i-j] = ps[j];  
-    }  
+    } while((value/=radix)>0);  
+    
+    if(sign<0) {
+        str[i] = '-';
+        i++;
+    } 
+
+    reverse_str(str, i);
 }
 
 void ftoa(float number,char *buf, uint8_t eps)  

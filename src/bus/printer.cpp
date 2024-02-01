@@ -4,29 +4,22 @@ Printer& Printer::operator<<(const SpecToken & spec){
     switch(spec){
     
     case SpecToken::NoSpace:
-        space[0] = '\0';
+        space = '\0';
         break;
     case SpecToken::Space:
-        space[0] = ' ';
-        space[1] = '\0';
+        space = " ";
         break;
     case SpecToken::Comma:
-        space[0] = ',';
-        space[1] = '\0';
+        space = ",";
         break;
     case SpecToken::CommaWithSpace:
-        space[0] = ',';
-        space[1] = ' ';
-        space[2] = '\0';
+        space = ", ";
         break;
     case SpecToken::Tab:
-        space[0] = '\t';
-        space[1] = '\0';
+        space = "\t";
         break;
     case SpecToken::End:
-        space[0] = '\r';
-        space[1] = '\n';
-        space[2] = '\0';
+        space = "\r\n";
         break;
     
     case SpecToken::Bin:

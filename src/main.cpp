@@ -8,6 +8,8 @@
 #include "../types/matrix/matrix.hpp"
 #include "MLX90640/MLX90640_API.h"
 #include "SDcard/SPI2_Driver.h"
+#include "HX711/HX711.h"
+#include "TTP229/TTP229.h"
 #include "bus/uart/uart1.hpp"
 #include "bus/uart/uart2.hpp"
 #include "bus/spi/spi2.hpp"
@@ -37,9 +39,23 @@ void Systick_Init(void)
     NVIC_EnableIRQ(SysTicK_IRQn);
 }
 
-__fast_inline void foo(){
-    printf("foo!\r\n");
+void GPIO_PortC_INIT( void )
+{
+    GPIO_InitTypeDef  GPIO_InitStructure = {0};
+
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE );
+
+    PWR_BackupAccessCmd( ENABLE );
+    RCC_LSEConfig( RCC_LSE_OFF );
+    BKP_TamperPinCmd(DISABLE);
+
+    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13| GPIO_Pin_14 | GPIO_Pin_15;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
+    GPIO_Init( GPIOC, &GPIO_InitStructure );
+    PWR_BackupAccessCmd(DISABLE);
 }
+
 RGB565 color = 0xffff;
 const RGB565 white = 0xffff;
 const RGB565 black = 0;
@@ -458,6 +474,11 @@ int main(){
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     Systick_Init();
+    GPIO_PortC_INIT();
+    HX711_GPIO_Init();
+    // TTP229_GPIO_Init();
+    // delayMicroseconds(20);
+ 
 
     uart1.init(115200);
     uart2.init(115200);
@@ -482,8 +503,9 @@ int main(){
 
     st7789v2.init();
     st7789v2.setDisplayArea(160, 80, 1, 26);
-        st7789v2.setRotation(ST7789V2::Rotation::Rot360);
-        st7789v2.setInversion(ST7789V2::Inversion::Disable);
+    st7789v2.setRotation(ST7789V2::Rotation::Rot360);
+    st7789v2.setInversion(ST7789V2::Inversion::Disable);
+    
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
     while(1){
@@ -565,7 +587,33 @@ int main(){
         // ret.trim();
 
         // uart1.println("recv: ", ret, ",", (endms - startms));
-        uart1.println("fps", fps);
+
+
+        // static bool calied = false;
+        // if(!calied){
+        //     HX711_Cali();
+        //     calied = true;
+        // }
+        
+        // uint32_t start_m = micros();
+        // int32_t weight = HX711_Get_Weight();
+        // uint32_t waste_m = micros() - start_m;
+
+        // // uart1 << ;
+        // if(HX711_Valid())
+        //     uart1.println(SpecToken::CommaWithSpace,waste_m,weight);
+
+        uint32_t start_m = micros();
+        TTP229_Scan();
+        uint32_t waste_m = micros() - start_m;
+        int32_t key = TTP229_Get_Key();
+
+        uart1.println(SpecToken::CommaWithSpace,waste_m,key);
+
+        static bool pc13_on = false;
+        pc13_on = !pc13_on;
+        GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)pc13_on);
+
         t += delta;
 
 

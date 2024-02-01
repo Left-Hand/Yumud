@@ -10,6 +10,7 @@ extern "C" {
 #include "stdlib.h"
 #include "string.h"
 
+void reverse_str(char * str, size_t len);
 
 void ftoa(float value, char *str, uint8_t eps);
 
