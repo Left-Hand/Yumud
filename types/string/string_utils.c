@@ -12,7 +12,7 @@ void reverse_str(char * str, size_t len){
 	str[len + 1] = '\0';
 }
 
-void itoa(int value,char *str,uint8_t radix)  
+void itoa(int64_t value,char *str,uint8_t radix)  
 {
     int sign = 0;  
     int i=0;  
@@ -51,33 +51,7 @@ void itoas(int value,char *str,uint8_t radix, uint8_t size)
 	reverse_str(str, size);
 }
 
-
-
-void iltoa(long long value,char *str,uint8_t radix)  
-{
-    int sign = 0;  
-    int i=0;  
-    if(value < 0){  
-        sign = -1;  
-        value = -value;  
-    }
-    do {  
-        if(value%radix>9)  
-            str[i] = value%radix +'0'+7;  
-        else   
-            str[i] = value%radix +'0';  
-        i++;  
-    } while((value/=radix)>0);  
-    
-    if(sign<0) {
-        str[i] = '-';
-        i++;
-    } 
-
-    reverse_str(str, i);
-}
-
-void iultoa(unsigned long long value,char *str,uint8_t radix)  
+void iutoa(uint64_t value,char *str,uint8_t radix)  
 {
     int sign = 0;  
     int i=0;  
@@ -127,6 +101,66 @@ void ftoa(float number,char *buf, uint8_t eps)
     strcat(str_int,str_float);  
     strcpy(buf,str_int);   
 }
+
+int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len) {
+	size_t *table = (size_t *)malloc(match_len * sizeof(size_t));
+	size_t i = 0, j = 1;
+	table[0] = 0;
+	while (j < match_len) {
+		if (match[i] == match[j]) {
+			table[j] = i + 1;
+			i++; j++;
+		} else {
+			if (i != 0) {
+				i = table[i - 1];
+			} else {
+				table[j] = 0;
+				j++;
+			}
+		}
+	}
+	
+	i = 0;
+	j = 0;
+	while (i < src_len && j < match_len) {
+		if (src[i] == match[j]) {
+			i++; j++;
+		} else {
+			if (j != 0) {
+				j = table[j - 1];
+			} else {
+				i++;
+			}
+		}
+	}
+	
+	free(table);
+	
+	if (j == match_len) {
+		return i - j;
+	} else {
+		return -1;
+	}
+}
+
+void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
+	char * find_ptr = (char *)src;
+	size_t find_len = src_len;
+	char * replace_ptr = (char *)match;
+	
+	while(1){
+		int pos = kmp_find(find_ptr, find_len, replace_ptr, dst_len);
+		if(pos < 0) break;
+		else{
+			find_ptr += pos;
+			for(size_t i = 0; i < dst_len; i++){
+				find_ptr[i] = replace[i];
+			}
+			find_ptr += dst_len;
+		}
+	}
+}
+
 
 int stoi(const char * str) {
     return atoi(str);

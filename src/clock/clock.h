@@ -55,9 +55,13 @@ static inline void delayMicroseconds(uint32_t us)
   } while (nbTicks > elapsedTicks);  
 }
 
-#ifndef __nopn
-#define __nopn(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
+#ifndef F_CPU 
+#define F_CPU 144000000
 #endif
+
+static inline void delayNanoseconds(uint32_t ns) {
+    for (volatile uint32_t i = 0; i < ns; i++) __asm__ volatile("");
+}
 
 #ifdef __cplusplus
 }

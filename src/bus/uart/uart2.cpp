@@ -66,7 +66,7 @@ void USART2_IRQHandler()
     if(USART_GetITStatus(USART2,USART_IT_RXNE) != RESET)
     { 
         USART_ClearITPendingBit(USART2,USART_IT_RXNE);
-        ringBuf.addRxData(USART_ReceiveData(USART2));
+        ringBuf.addData(USART_ReceiveData(USART2));
     } 
     if(USART_GetFlagStatus(USART2,USART_FLAG_ORE) == SET)
     { 

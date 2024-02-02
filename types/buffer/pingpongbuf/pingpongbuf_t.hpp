@@ -1,21 +1,21 @@
-#ifndef __RING_BUF_HPP
+#ifndef __PINGPONG_BUF_HPP
 
-#define __RING_BUF_HPP
+#define __PINGPONG_BUF_HPP
 
 #include "../buffer.hpp"
 
 template<typename T>
-class RingBuf_t:public Buffer_t<T>{
+class PingPongBuf_t:public Buffer_t<T>{
 protected:
     volatile T * write_ptr;
-    volatile T * read_ptr;
+    volatile bool sect;
 
-    volatile T* advancePointer(volatile T* ptr, size_t step = 1) {
+    T* advancePointer(T* ptr, size_t step = 1) {
         return (ptr + step >=this->buf + this->size) ? ptr + step - this->size : ptr + step;
     }
 
 public:
-    RingBuf_t():Buffer_t<T>(), write_ptr(this->buf), read_ptr(this->buf){;}
+    PingPongBuf_t():Buffer_t<T>(), write_ptr(this->buf), read_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
@@ -53,6 +53,6 @@ public:
     }
 };
 
-typedef RingBuf_t<uint8_t> RingBuf;
+typedef PingPongBuf_t<uint8_t> PingPongBuf;
 
 #endif // !__RING_BUF_HPP

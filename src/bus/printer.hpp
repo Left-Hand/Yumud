@@ -47,8 +47,8 @@ private:
 protected:
     virtual void _write(const char & data) = 0;
     virtual void _write(const char * data_ptr, const size_t & len) = 0;
-    virtual void _read(char & data){buffer.getRxData((uint8_t &)data);}
-    virtual void _read(char * data_ptr, const size_t len){buffer.getRxDatas((uint8_t *)data_ptr, len);}
+    virtual void _read(char & data){buffer.getData((uint8_t &)data);}
+    virtual void _read(char * data_ptr, const size_t len){buffer.getDatas((uint8_t *)data_ptr, len);}
 
 public:
     Printer(Buffer & _buffer):buffer(_buffer){;}
@@ -61,6 +61,7 @@ public:
     __fast_inline char read(){char data; _read(data); return data;};
     String read(const size_t & len);
     String readAll(){return read(available());}
+    // String read
 
     Printer& operator<<(uint8_t val){printString(String((int)val, radix)); return *this;}
     Printer& operator<<(uint16_t val){printString(String((int)val, radix)); return *this;}
@@ -73,6 +74,7 @@ public:
     Printer& operator<<(int64_t val){printString(String((long long)(val), radix)); return *this;}
 
     Printer& operator<<(int val){printString(String(val, radix)); return *this;}
+    Printer& operator<<(unsigned int val){printString(String(val, radix)); return *this;}
     Printer& operator<<(float val){printString(String(val, eps)); return *this;}
     Printer& operator<<(double val){printString(String(val, eps)); return *this;}
 

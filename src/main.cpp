@@ -16,6 +16,8 @@
 #include "bus/spi/spi2_hs.hpp"
 #include "ST7789V2/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"
+#include "gpio/gpio.hpp"
+// #include 
 
 // using real_t = real_t;
 using Complex = Complex_t<real_t>;
@@ -26,6 +28,7 @@ SSD1306 oledDisPlayer(spi2);
 // ST7789V2 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
+Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 
 void Systick_Init(void)
 {
@@ -590,7 +593,7 @@ int main(){
         // chr = (chr == 'Z' ? 'A' : chr + 1);
         // for(uint8_t i = 0; i < 23; i++) uart2.print((char)(chr+i));
 
-        // const char str[] = "Hello, a small fox jumps over a lazy dog!";
+        const char str[] = "Hello, a small fox jumps over a lazy dog!";
         // uint8_t cnt = sizeof(str);
 
         // uint8_t to_send[cnt] = {0};
@@ -604,19 +607,28 @@ int main(){
 
         // uart1.println("Send:", (char *)to_send);
         // uart1.println("Recv:", String((char *)to_recv, cnt - 1));
-        
-        // uart2.print(str);
-        // uint32_t startms = micros();
-        
+        uart2.print(str);
+        uint64_t startms = micros();
+        // for(volatile uint32_t i = 0; i < 1000000; i++){
+        //     // GPIOC->BSHR = GPIO_Pin_0;
+
+        //     GPIOC -> BSHR = GPIO_Pin_0;
+        //     GPIOC->BCR = GPIO_Pin_1;
+        //     GPIOC -> BSHR = GPIO_Pin_0;
+        //     GPIOC->BCR = GPIO_Pin_1;
+        // }
         // while(uart1.available() < sizeof(str) - 1);    
-        //     // uart1.println(uart1.available());
-        // // }
-        // uint32_t endms = micros();
+        uint64_t endms = micros();
 
-        // String ret = uart1.readAll();
-        // ret.trim();
+        String ret = uart1.readAll();
+        ret.trim();
 
-        // uart1.println("recv: ", ret, ",", (endms - startms));
+        // uart1.println(SpecToken::Space, "recv: ", ret, (endms - startms));
+        String stri = "test, a, ,a, b";
+        String strm = "a,";
+        String strr = "!!";
+
+        uart1.println(stri, stri.replace(strm, strr));
 
 
         // static bool calied = false;
@@ -635,15 +647,18 @@ int main(){
 
         // uint32_t start_m = micros();
         // TTP229_Scan();
+
+
         // uint32_t waste_m = micros() - start_m;
         // int32_t key = TTP229_Get_Key();
-
+        // delayNanoseconds(100);
         // uart1.println(SpecToken::CommaWithSpace,waste_m,key);
         uart1.println(fps);
         static bool pc13_on = false;
         pc13_on = !pc13_on;
+        PC13 = pc13_on;
         GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)pc13_on);
-
+        delay(200);
         t += delta;
     }
 }

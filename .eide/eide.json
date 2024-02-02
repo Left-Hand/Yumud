@@ -22,24 +22,18 @@
     "types/matrix",
     "types/complex",
     "src/bus",
-    "src/ringbuf",
     "src/bus/uart",
     "types/buffer/ringbuf",
     "types/buffer",
     "src/SSD1306",
     "src/HX711",
-    "src/TTP229"
+    "src/TTP229",
+    "src/gpio"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
     "files": [],
-    "folders": [
-      {
-        "name": "testVirtualFolder",
-        "files": [],
-        "folders": []
-      }
-    ]
+    "folders": []
   },
   "outDir": "build",
   "deviceName": null,

@@ -126,7 +126,7 @@ String::String(long long value, unsigned char base)
 {
 	init();
 	char buf[24] = {0};
-	iltoa(value, buf, base);
+	itoa(value, buf, base);
 	*this = buf;
 }
 
@@ -134,7 +134,7 @@ String::String(unsigned long long value, unsigned char base)
 {
 	init();
 	char buf[24] = {0};
-	iultoa(value, buf, base);
+	iutoa(value, buf, base);
 	*this = buf;
 }
 
@@ -641,48 +641,19 @@ void String::replace(char find, char replace)
 	}
 }
 
-void String::replace(const String& find, const String& replace)
+String& String::replace(const String& match, const String& replace)
 {
-	if (len == 0 || find.len == 0) return;
-	int diff = replace.len - find.len;
-	char *readFrom = buffer;
-	char *foundAt;
-	if (diff == 0) {
-		while ((foundAt = strstr(readFrom, find.buffer)) != NULL) {
-			memcpy(foundAt, replace.buffer, replace.len);
-			readFrom = foundAt + replace.len;
-		}
-	} else if (diff < 0) {
-		char *writeTo = buffer;
-		while ((foundAt = strstr(readFrom, find.buffer)) != NULL) {
-			unsigned int n = foundAt - readFrom;
-			memcpy(writeTo, readFrom, n);
-			writeTo += n;
-			memcpy(writeTo, replace.buffer, replace.len);
-			writeTo += replace.len;
-			readFrom = foundAt + find.len;
-			len += diff;
-		}
-		strcpy(writeTo, readFrom);
-	} else {
-		unsigned int size = len; // compute size needed for result
-		while ((foundAt = strstr(readFrom, find.buffer)) != NULL) {
-			readFrom = foundAt + find.len;
-			size += diff;
-		}
-		if (size == len) return;
-		if (size > capacity && !changeBuffer(size)) return; // XXX: tell user!
-		int index = len - 1;
-		while (index >= 0 && (index = lastIndexOf(find, index)) >= 0) {
-			readFrom = buffer + index + find.len;
-			memmove(readFrom + diff, readFrom, len - (readFrom - buffer));
-			len += diff;
-			buffer[len] = 0;
-			memcpy(buffer + index, replace.buffer, replace.len);
-			index--;
-		}
-	}
+    size_t dst_len = match.length();
+    if(dst_len != replace.length()) return *this;
+	str_replace(
+            this->c_str(),this -> length(),
+            match.c_str(),replace.c_str(),dst_len);
+    return *this;
 }
+
+// void String::replace(const String& find, const String& replace){
+
+// }
 
 void String::remove(unsigned int index){
 	// Pass the biggest integer as the count. The remove method

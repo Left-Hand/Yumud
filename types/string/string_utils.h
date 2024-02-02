@@ -14,11 +14,12 @@ void reverse_str(char * str, size_t len);
 
 void ftoa(float value, char *str, uint8_t eps);
 
-void itoa(int value, char *str, uint8_t radix);
+void itoa(int64_t value, char *str, uint8_t radix);
 void itoas(int value, char *str, uint8_t radix, uint8_t size);
+void iutoa(uint64_t value, char *str, uint8_t radix);
 
-void iltoa(long long value, char *str, uint8_t radix);
-void iultoa(unsigned long long value, char *str, uint8_t radix);
+int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len);
+void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len);
 
 int stoi(const char * str);
 
