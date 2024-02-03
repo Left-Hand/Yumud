@@ -10,10 +10,13 @@
 #include "SDcard/SPI2_Driver.h"
 #include "HX711/HX711.h"
 #include "TTP229/TTP229.h"
+
 #include "bus/uart/uart1.hpp"
 #include "bus/uart/uart2.hpp"
 #include "bus/spi/spi2.hpp"
 #include "bus/spi/spi2_hs.hpp"
+#include "bus/i2c/i2cSw.hpp"
+
 #include "ST7789V2/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"
 #include "gpio/gpio.hpp"
@@ -24,10 +27,18 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
 
-SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
+BusDrv SpiDrvLcd = BusDrv(spi2_hs, 0);
 ST7789 tftDisplayer(SpiDrvLcd);
-SpiDrv SpiDrvOled = SpiDrv(spi2, 0);
+BusDrv SpiDrvOled = BusDrv(spi2, 0);
 SSD1306 oledDisPlayer(SpiDrvOled);
+
+#define I2C_SW_SCL GPIO_Pin_6
+#define I2C_SW_SDA GPIO_Pin_7
+
+Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
+Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
+I2cSw i2cSw(i2cScl, i2cSda);
+BusDrv i2cDrv = BusDrv(i2cSw,0x78);
 // ST7789 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
@@ -36,8 +47,7 @@ GpioImag PC13_2 = GpioImag(0,
     [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
     [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13);});
 
-void Systick_Init(void)
-{
+void Systick_Init(void){
     CHECK_INIT
 
     SysTick->SR  = 0;
@@ -50,8 +60,9 @@ void Systick_Init(void)
     NVIC_EnableIRQ(SysTicK_IRQn);
 }
 
-void GPIO_PortC_Init( void )
-{
+void GPIO_PortC_Init( void ){
+    CHECK_INIT
+
     GPIO_InitTypeDef  GPIO_InitStructure = {0};
 
     RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE );
@@ -65,6 +76,17 @@ void GPIO_PortC_Init( void )
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init( GPIOC, &GPIO_InitStructure );
     PWR_BackupAccessCmd(DISABLE);
+}
+
+void GPIO_SW_I2C_Init(void){
+    GPIO_InitTypeDef  GPIO_InitStructure = {0};
+
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE );
+
+    GPIO_InitStructure.GPIO_Pin = I2C_SW_SCL | I2C_SW_SDA;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
 
 RGB565 color = 0xffff;
@@ -487,6 +509,7 @@ int main(){
     Systick_Init();
     GPIO_PortC_Init();
     HX711_GPIO_Init();
+    GPIO_SW_I2C_Init();
     // TTP229_GPIO_Init();
     // delayMicroseconds(20);
  
@@ -660,7 +683,13 @@ int main(){
         // delayNanoseconds(100);
         // uart1.println(SpecToken::CommaWithSpace,waste_m,key);
         uart1.println(fps);
-
+        
+        // if(!i2cSw.begin(0xAA)){
+        //     i2cSw.write(0x55);
+        //     i2cSw.end();
+        // }
+        // uart1.println(typeid(i2cDrv) == typeid(int));
+        i2cDrv.write((uint8_t)0x55);
         PC13_2 = !PC13_2;
         t += delta;
     }

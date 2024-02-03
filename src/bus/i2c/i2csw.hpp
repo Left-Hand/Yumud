@@ -1,137 +1,166 @@
-// /*
-//  * i2c-soft.h
-//  *
-//  *  Created on: Jun 9, 2013
-//  *      Author: agu
-//  */
+/*
+ * i2c-soft.h
+ *
+ *  Created on: Jun 9, 2013
+ *      Author: agu
+ */
 
-// #ifndef I2C_SOFT_H_
-// #define I2C_SOFT_H_
+#ifndef I2C_SOFT_H_
+#define I2C_SOFT_H_
 
-// #include "i2c.hpp"
-// #include "../../gpio/gpio.hpp"
+#include "i2c.hpp"
+#include "../../gpio/gpio.hpp"
 
-// class I2cSw: public SerBus{
-// private:
+class I2cSw: public SerBus{
+private:
     
-//     Gpio & scl;
-//     Gpio & sda;
-//     int8_t occupied = -1;
+Gpio & scl;
+Gpio & sda;
+int8_t occupied = -1;
+uint8_t delays = 0;
+__fast_inline void delayDur(){
+    // delayMicroseconds(1);
+    __nopn(4);
+    // for(volatile uint16_t i = 0; i < delays; i++);
+}
+void clk(){
+    // delayDur();
+    scl = true;
+    delayDur();
+    delayDur();
+    scl = false;
+    delayDur();
+}
 
-//     void wbyte_non_delay(const uint8_t & data);
-//     uint8_t rbyte_non_delay();
+void ack(){
+    delayDur();
+    sda = false;
+    delayDur();
+    scl = true;
+    delayDur();
+    scl = false;
+    delayDur();
+}
 
-//     __fast_inline void clk(){
-//         scl = true;
-//         scl = false;
-//     }
+void nack(void) {
+    delayDur();
+    sda = true;
+    delayDur();
+    scl = true;
+    delayDur();
+    scl = false;
+    delayDur();
+}
 
-//     __fast_inline void ack(){
-//         sda = false;
-//         scl = true;
-//         scl = false;
-//     }
+bool wait_ack(){
+    bool ret;
+    delayDur();
+    scl = true;
+    delayDur();
+    ret = sda.read();
+    scl = false;
+    delayDur();
+    return ret;
+}
 
-//     __fast_inline void nack(void) {
-//         sda = true;
-//         scl = true;
-//         scl = false;
-//     }
+__fast_inline void start(const uint8_t & _address) {
+    occupied = _address >> 1;
+    sda = true;
+    scl = true;
+    delayDur();
+    sda = false;
+    delayDur();
+    scl = false;
+    delayDur();
+    write(_address);
+}
 
-//     __fast_inline void start(const uint8_t & _address) override{
-//         occupied = _address;
-//         sda = true;
-//         scl = true;
-//         sda = false;
-//         scl = false;
-//         _write(_address);
-//     }
+__fast_inline void stop() {
+    delayDur();
+    sda = false;
+    delayDur();
+    scl = true;
+    delayDur();
+    sda = true;
+    delayDur();
+    occupied = -1;
+}
 
-//     void stop() override{
-//         sda = false;
-//         scl = true;
-//         sda = true;
-//         occupied = -1;
-//     }
 
-// protected :
-//     __fast_inline void begin_use(const uint8_t & index = 0) override {start(index);}
-//     __fast_inline void end_use() override {stop();}
-//     bool usable(const uint8_t & index = 0) override {
-//         return (occupied >= 0 ? (occupied == (int8_t)index) : true);
-//     }
+protected :
+    __fast_inline void begin_use(const uint8_t & index = 0) override {start(index);}
+    __fast_inline void end_use() override {stop();}
+    __fast_inline bool usable(const uint8_t & index = 0) override {
+        return (occupied >= 0 ? (occupied == (int8_t)index) : true);
+    }
 
-//     public:
+public:
 
-//         I2cSw(Pin & _scl,Pin & _sda):scl(_scl), sda(_sda){;};
+    I2cSw(Gpio & _scl,Gpio & _sda):scl(_scl), sda(_sda){;};
 
-//         void begin() override;
-
-//         void _write_single(const uint8_t & data){
-//             _write(data);
-//         }
-
-//         void _write_head(const uint8_t & head){
-//             _write(head);
-//         }
-
-//         void _write_cont(const uint8_t & cont){
-//             _write(cont);
-//         }
+    __fast_inline Error write(const uint32_t & data) override {
+        sda.write(0x80 & data);
+        clk();
+        sda.write(0x40 & data);
+        clk();
+        sda.write(0x20 & data);
+        clk();
+        sda.write(0x10 & data);
+        clk();
         
-//         void _write_tail(const uint8_t * tail_ptr, const uint8_t & len, bool lsb = false){
-//             _write(tail_ptr, len, lsb);
-//         }
+        sda.write(0x08 & data);
+        clk();
+        sda.write(0x04 & data);
+        clk();
+        sda.write(0x02 & data);
+        clk();
+        sda.write(0x01 & data);
+        clk();
 
+        wait_ack();
 
-//         uint8_t _read_single(){
-//            return  _read(false);
-//         }   
+        return Bus::ErrorType::OK;
+    }
 
-//         void _read_head(uint8_t * data_ptr){
-//             *data_ptr = _read(true);
-//         }
-        
-//         void _read_tail(uint8_t * tail_ptr, const uint8_t & len, bool lsb = false){
-//             _read(tail_ptr, len, lsb);
-//         }
+    __fast_inline Error read(uint32_t & data, bool toAck = true) {
+        uint8_t ret = 0;
 
-//         void _write(const uint8_t * data_ptr, const uint8_t & len, bool lsb = false) override{
+        ret |= sda.read();
+        clk();
+        ret <<= 1; ret |= sda.read(); 
+        clk();
+        ret <<= 1; ret |= sda.read(); 
+        clk();
+        ret <<= 1; ret |= sda.read(); 
+        clk();
+        ret <<= 1; ret |= sda.read(); 
 
-//             for(uint8_t i = 0; i < len; i++){
-//                 wbyte_non_delay(data_ptr[lsb ? len - i - 1:i]);
-//                 // Serial.print((char)data_ptr[inv ? len - i - 1:i]);
-//             }
-//         }
+        clk();
+        ret <<= 1; ret |= sda.read(); 
+        clk();
+        ret <<= 1; ret |= sda.read(); 
+        clk();
+        ret <<= 1; ret |= sda.read(); 
+        clk();
 
-//         uint8_t _read(const bool & toAck) override{
-//             uint8_t ret = 0;
-//             if (!delay) 
-//                 ret = rbyte_non_delay();
-//             else{}
-//             if (toAck) ack();
-//             else nack();
-//             return ret;
-//         }
+        if(toAck) ack();
+        else nack();
 
-//         void _read(uint8_t * data_ptr, const uint8_t & len, bool lsb = false) override{
-//             for(uint8_t i = 0; i < len; i++){
-//                 data_ptr[!lsb ? len - i - 1:i] = _read((i != len - 1));
-//             }
-//             // Serial.println(String((int)data_ptr[0]) + ", " + String((int)data_ptr[1]));
-//         }
+        data = ret;
 
-//         bool wait_ack(){
-//             bool ret;
+        return Bus::ErrorType::OK;
+    }
 
-//             sda.configMode(GPIO_DIR_MODE_IN);
-//             scl.set();
-//             ret = sda.read();
-//             sda.configMode(GPIO_DIR_MODE_OUT);
-//             scl.reset();
+    __fast_inline Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+        write(data_tx);
+        read(data_rx, toAck);
+        return ErrorType::OK;
+    }
 
-//             return ret;
-//         }
-// };
+    void init(const uint32_t & baudRate) override {;}
+    void configDataSize(const uint8_t & data_size) override {;}
+    void configBaudRate(const uint32_t & baudRate) override {;}
+    void configBitOrder(const bool & msb) override {;}
+};
 
-// #endif 
+#endif 

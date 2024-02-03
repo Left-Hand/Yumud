@@ -2,7 +2,8 @@
 
 #define __ST7789V2_HPP__
 
-#include "bus/spi/spidrv.hpp"
+#include "../bus/busdrv.hpp"
+#include "../bus/spi/spi2.hpp"
 #include "../../types/rgb.h"
 
 #define ST7789V2_DC_Port SPI2_Port
@@ -17,7 +18,7 @@ ST7789V2_DC_Port -> BCR = ST7789V2_DC_Pin;
 
 class ST7789{
 private:
-    SpiDrv & spidrv;
+    BusDrv & busdrv;
 
     uint16_t w = 32;
     uint16_t h = 32;
@@ -28,27 +29,27 @@ private:
 
     __fast_inline void writeCommand(const uint8_t & cmd){
         ST7789V2_ON_CMD;
-        spidrv.write(cmd);
+        busdrv.write(cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data){
         ST7789V2_ON_DATA;
-        spidrv.write(data);
+        busdrv.write(data);
     }
 
     void writePool(uint8_t * data, const size_t & len){
         ST7789V2_ON_DATA;
-        spidrv.write(data, len);
+        busdrv.write(data, len);
     }
 
     void writePool(const uint8_t & data, const size_t & len){
         ST7789V2_ON_DATA;
-        spidrv.write(data, len);
+        busdrv.write(data, len);
     }
 
     void writePool(const uint16_t & data, const size_t & len){
         ST7789V2_ON_DATA;
-        spidrv.write(data, len);
+        busdrv.write(data, len);
     }
 
     void setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
@@ -61,7 +62,7 @@ private:
         writeData(scr_ctrl);
     }
 public:
-    ST7789(SpiDrv & _spidrv):spidrv(_spidrv){;}
+    ST7789(BusDrv & _busdrv):busdrv(_busdrv){;}
     void init();
     void flush(RGB565 color);     
 

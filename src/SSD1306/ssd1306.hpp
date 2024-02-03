@@ -1,8 +1,9 @@
 #ifndef __SSD1306_HPP__
 #define __SSD1306_HPP__
 
-
-#include "../bus/spi/spidrv.hpp"
+#include "../bus/i2c/i2c.hpp"
+#include "../bus/spi/spi2.hpp"
+#include "../bus/busdrv.hpp"
 #include "../../types/rgb.h"
 
 #define SSD1306_DC_Port SPI2_Port
@@ -16,35 +17,40 @@ SSD1306_DC_Port -> BCR = SSD1306_DC_Pin;
 
 class SSD1306{
 private:
-    SpiDrv & spidrv;
+    BusDrv & busdrv;
 
     uint16_t w = 128;
     uint16_t h = 80;
     uint16_t x_offset = 0;
 
     __fast_inline void writeCommand(const uint8_t & cmd){
-        SSD1306_ON_CMD;
-        spidrv.write(cmd);
+        if(busdrv.isBusType<I2c>()){
+            uint8_t buf[2] = {0, cmd};
+            busdrv.write(buf, 2);
+        }else if(busdrv.isBusType<Spi>()){
+            SSD1306_ON_CMD;
+            busdrv.write(cmd);
+        }
     }
 
     __fast_inline void writeData(const uint8_t & data){
         SSD1306_ON_DATA;
-        spidrv.write(data);
+        busdrv.write(data);
     }
 
     void writePool(uint8_t * data, const size_t & len){
         SSD1306_ON_DATA;
-        spidrv.write(data, len);
+        busdrv.write(data, len);
     }
 
     void writePool(const uint8_t & data, const size_t & len){
         SSD1306_ON_DATA;
-        for(size_t _ = 0; _ < len; _++) spidrv.write(data);
+        for(size_t _ = 0; _ < len; _++) busdrv.write(data);
     }
 
     void writePool(const uint16_t & data, const size_t & len){
         SSD1306_ON_DATA;
-        spidrv.write(data, len);
+        busdrv.write(data, len);
     }
 
     void setPos(uint16_t x,uint16_t y){
@@ -55,7 +61,7 @@ private:
         writeCommand((x&0x0f));
     }
 public:
-    SSD1306(SpiDrv & _spidrv):spidrv(_spidrv){;}
+    SSD1306(BusDrv & _spidrv):busdrv(_spidrv){;}
     void init();
     void flush(bool color);     
 
