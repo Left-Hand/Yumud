@@ -5,9 +5,9 @@
 #include "i2c/i2c.hpp"
 #include <type_traits>
 
-template<typename Derived, typename Base>
-struct isDerivedFrom {
-    static constexpr bool value = std::is_base_of<Base, Derived>::value;
+enum class BusType{
+    SpiBus,
+    I2cBus
 };
 
 class BusDrv{
@@ -15,11 +15,12 @@ protected:
     Bus & bus;
     uint8_t index = 0;
     uint8_t data_size = 0;
-
+    BusType bus_type = BusType::SpiBus;
 public:
-    BusDrv(Bus & _bus, const uint8_t & _index = 0):bus(_bus), index(_index){;}
+    BusDrv(I2c & _bus, const uint8_t & _index = 0):bus(_bus), index(_index){bus_type = BusType::I2cBus;}
+    BusDrv(Spi & _bus, const uint8_t & _index = 0):bus(_bus), index(_index){bus_type = BusType::SpiBus;}
     
-    void write(const uint8_t & data){
+    volatile void write(const uint8_t & data){
         if(!bus.begin(index)){
             bus.write((const uint32_t &)data);
             bus.end();
@@ -29,6 +30,22 @@ public:
     void write(const uint16_t & data){
         if(!bus.begin(index)){
             bus.write(data);
+            bus.end();
+        }
+    }
+
+    void write(const uint8_t & data0, uint8_t * data_ptr, const size_t & len){
+        if(!bus.begin(index)){
+            bus.write(data0);
+            for(size_t i = 0; i < len; i++) bus.write(data_ptr[i]);
+            bus.end();
+        }
+    }
+
+    void write(const uint8_t & data0, const uint8_t & data1, const size_t & len){
+        if(!bus.begin(index)){
+            bus.write(data0);
+            for(size_t i = 0; i < len; i++) bus.write(data1);
             bus.end();
         }
     }
@@ -65,17 +82,16 @@ public:
         }
     }
 
-    template<typename T>
-    bool isBusType() {
-        return (static_cast<T *>(&bus) != nullptr);
+    bool isBusType(const BusType & _bus_type) {
+        return (_bus_type == bus_type);
     }
 
     bool isI2cBus(){
-        return (static_cast<I2c *>(&bus) != nullptr);
+        return (bus_type == BusType::I2cBus);
     }
 
     bool isSpiBus(){
-        return (static_cast<Spi *>(&bus) != nullptr);
+        return (bus_type == BusType::SpiBus);
     }
 };
 

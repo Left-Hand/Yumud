@@ -19,21 +19,21 @@ class SSD1306{
 private:
     BusDrv & busdrv;
 
-    uint16_t w = 64;
-    uint16_t h = 128;
+    uint16_t w = 128;
+    uint16_t h = 64;
     uint16_t x_offset = 0;
 
+    uint8_t cmd_token = 0;
+    uint8_t data_token = 0x40;
+
     __fast_inline void writeCommand(const uint8_t & cmd){
+
         if(busdrv.isSpiBus()){
             SSD1306_ON_CMD;
             busdrv.write(cmd);
         }else if(busdrv.isI2cBus()){
-            uint8_t buf[2];
-            buf[0] = 0;
-            buf[1] = cmd;
-            // busdrv.write(buf, 2);
-            busdrv.write((uint8_t)0);
-            busdrv.write(cmd);
+            uint8_t buf[2] = {cmd_token, cmd};
+            busdrv.write(buf, 2);
         }
     }
 
@@ -42,7 +42,7 @@ private:
             SSD1306_ON_DATA;
             busdrv.write(data);
         }else if(busdrv.isI2cBus()){
-            uint8_t buf[2] = {0x40, data};
+            uint8_t buf[2] = {data_token, data};
             busdrv.write(buf, 2);
         }
     }
@@ -52,8 +52,7 @@ private:
             SSD1306_ON_DATA;
             busdrv.write(data, len);
         }else if(busdrv.isI2cBus()){
-            busdrv.write((uint8_t)0x40);
-            busdrv.write(data, len);
+            busdrv.write(data_token, data, len);
         }
     }
 
@@ -62,8 +61,7 @@ private:
             SSD1306_ON_DATA;
             busdrv.write(data, len);
         }else if(busdrv.isI2cBus()){
-            busdrv.write((uint8_t)0x40);
-            busdrv.write(data, len);
+            busdrv.write(data_token, data, len);
         }
     }
 

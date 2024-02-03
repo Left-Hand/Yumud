@@ -38,7 +38,7 @@ BusDrv spiDrvOled = BusDrv(spi2, 0);
 Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
 Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
 I2cSw i2cSw(i2cScl, i2cSda);
-BusDrv i2cDrv = BusDrv(i2cSw,0x78);
+BusDrv i2cDrv = BusDrv(i2cSw,(uint8_t)0x78);
 // ST7789 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
@@ -685,11 +685,16 @@ int main(){
         // delayNanoseconds(100);
         // uart1.println(SpecToken::CommaWithSpace,waste_m,key);
         uart1.println(fps);
-
-        uint8_t buf[] = "test";     
-        // if(!i2cDrv.begin(0xAA)){
-            // i2cDrv.write((uint8_t)0x40);
-            // i2cDrv.write(&buf[0], (size_t)sizeof(buf));
+        // uint8_t cmd_token = 0x00;
+        // uint8_t cmd = 0x89;
+        // if(i2cDrv.isI2cBus()){
+        //     uint8_t buf[2] = {cmd_token, cmd};
+        //     i2cDrv.write(buf, 2);
+        // }
+            // busdrv.write(cmd_token);
+            // busdrv.write(cmd);
+        // uint8_t buf[] = "test";     
+        // i2cDrv.write(&buf[0], (size_t)sizeof(buf));
             // i2cDrv.end();
         // }
         // uart1.println(typeid(i2cDrv) == typeid(int));

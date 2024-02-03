@@ -21,7 +21,7 @@ public:
 
 class Gpio:public GpioBase{
     protected:
-        GPIO_TypeDef* base = GPIOA;
+        volatile GPIO_TypeDef* base = GPIOA;
         uint16_t pin = 0;
 
     public:

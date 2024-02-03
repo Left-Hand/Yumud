@@ -18,9 +18,8 @@ void SSD1306::flush(bool Color){
     for(uint8_t y = 0; y < h; y+=8)  
     {  
         setPos(0,y);
-        writePool(0xfe, (size_t)w);
+        writePool(y + (t++), (size_t)w);
         t++;
-            // __nopn(30);
 
     }
 }

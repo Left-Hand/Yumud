@@ -11,7 +11,7 @@
 #include "i2c.hpp"
 #include "../../gpio/gpio.hpp"
 
-class I2cSw: public SerBus{
+class I2cSw: public I2c{
 private:
     
 Gpio & scl;
@@ -20,16 +20,17 @@ int8_t occupied = -1;
 uint8_t delays = 0;
 __fast_inline void delayDur(){
     // delayMicroseconds(1);
-    __nopn(4);
+    __nopn(6);
     // for(volatile uint16_t i = 0; i < delays; i++);
 }
+
 void clk(){
     // delayDur();
     scl = true;
     delayDur();
-    delayDur();
+    // delayDur();
     scl = false;
-    delayDur();
+    // delayDur();
 }
 
 void ack(){
