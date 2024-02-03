@@ -2,7 +2,7 @@
 #define __SSD1306_HPP__
 
 
-#include "../bus/spi/spi2.hpp"
+#include "../bus/spi/spidrv.hpp"
 #include "../../types/rgb.h"
 
 #define SSD1306_DC_Port SPI2_Port
@@ -16,7 +16,7 @@ SSD1306_DC_Port -> BCR = SSD1306_DC_Pin;
 
 class SSD1306{
 private:
-    Spi & spibus;
+    SpiDrv & spidrv;
 
     uint16_t w = 128;
     uint16_t h = 80;
@@ -24,39 +24,27 @@ private:
 
     __fast_inline void writeCommand(const uint8_t & cmd){
         SSD1306_ON_CMD;
-        spibus.begin();
-        spibus.write(cmd);
-        spibus.end();
+        spidrv.write(cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data){
         SSD1306_ON_DATA;
-        spibus.begin();
-        spibus.write(data);
-        spibus.end();
+        spidrv.write(data);
     }
 
     void writePool(uint8_t * data, const size_t & len){
         SSD1306_ON_DATA;
-        spibus.begin();
-        spibus.write(data, len);
-        spibus.end();
+        spidrv.write(data, len);
     }
 
     void writePool(const uint8_t & data, const size_t & len){
         SSD1306_ON_DATA;
-        spibus.begin();
-        for(size_t _ = 0; _ < len; _++) spibus.write(data);
-        spibus.end();
+        for(size_t _ = 0; _ < len; _++) spidrv.write(data);
     }
 
     void writePool(const uint16_t & data, const size_t & len){
         SSD1306_ON_DATA;
-        spibus.begin();
-        spibus.configDataSize(16);
-        for(size_t _ = 0; _ < len; _++) spibus.write((uint16_t)(data)); 
-        spibus.configDataSize(8);
-        spibus.end();
+        spidrv.write(data, len);
     }
 
     void setPos(uint16_t x,uint16_t y){
@@ -67,7 +55,7 @@ private:
         writeCommand((x&0x0f));
     }
 public:
-    SSD1306(Spi2 & _spibus):spibus(_spibus){;}
+    SSD1306(SpiDrv & _spidrv):spidrv(_spidrv){;}
     void init();
     void flush(bool color);     
 

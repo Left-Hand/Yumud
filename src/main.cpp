@@ -26,7 +26,8 @@ using Vector2 = Vector2_t<real_t>;
 
 SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
 ST7789 tftDisplayer(SpiDrvLcd);
-SSD1306 oledDisPlayer(spi2);
+SpiDrv SpiDrvOled = SpiDrv(spi2, 0);
+SSD1306 oledDisPlayer(SpiDrvOled);
 // ST7789 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;

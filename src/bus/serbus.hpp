@@ -12,7 +12,7 @@ protected:
 
 public:
 
-    __fast_inline Bus::Error begin(const uint8_t & index = 0) override {
+    __fast_inline Error begin(const uint8_t & index = 0) override {
         if(usable(index)){
             begin_use(index);
             return Bus::ErrorType::OK;

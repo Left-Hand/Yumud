@@ -12,7 +12,7 @@ public:
     
     void write(const uint8_t & data){
         if(!spibus.begin(index)){
-            spibus.write(data);
+            spibus.write((const uint32_t &)data);
             spibus.end();
         }
     }

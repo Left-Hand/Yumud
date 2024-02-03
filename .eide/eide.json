@@ -28,7 +28,8 @@
     "src/SSD1306",
     "src/HX711",
     "src/TTP229",
-    "src/gpio"
+    "src/gpio",
+    "src/bus/spi"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
