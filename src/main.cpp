@@ -27,10 +27,10 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
 
-BusDrv SpiDrvLcd = BusDrv(spi2_hs, 0);
+BusDrv SpiDrvLcd = BusDrv(spi2, 0);
 ST7789 tftDisplayer(SpiDrvLcd);
-BusDrv SpiDrvOled = BusDrv(spi2, 0);
-SSD1306 oledDisPlayer(SpiDrvOled);
+BusDrv spiDrvOled = BusDrv(spi2, 0);
+
 
 #define I2C_SW_SCL GPIO_Pin_6
 #define I2C_SW_SDA GPIO_Pin_7
@@ -42,6 +42,7 @@ BusDrv i2cDrv = BusDrv(i2cSw,0x78);
 // ST7789 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
+SSD1306 oledDisPlayer(i2cDrv);
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 GpioImag PC13_2 = GpioImag(0, 
     [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
@@ -86,6 +87,7 @@ void GPIO_SW_I2C_Init(void){
     GPIO_InitStructure.GPIO_Pin = I2C_SW_SCL | I2C_SW_SDA;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_WriteBit(GPIOB, GPIO_InitStructure.GPIO_Pin, (BitAction)true);
     GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
 
@@ -524,7 +526,7 @@ int main(){
 
     LCD_Init();
     
-    bool use_tft = true;
+    bool use_tft = false;
     bool use_mini = false;
     if(use_tft){
     if(use_mini){
@@ -683,13 +685,15 @@ int main(){
         // delayNanoseconds(100);
         // uart1.println(SpecToken::CommaWithSpace,waste_m,key);
         uart1.println(fps);
-        
-        // if(!i2cSw.begin(0xAA)){
-        //     i2cSw.write(0x55);
-        //     i2cSw.end();
+
+        uint8_t buf[] = "test";     
+        // if(!i2cDrv.begin(0xAA)){
+            // i2cDrv.write((uint8_t)0x40);
+            // i2cDrv.write(&buf[0], (size_t)sizeof(buf));
+            // i2cDrv.end();
         // }
         // uart1.println(typeid(i2cDrv) == typeid(int));
-        i2cDrv.write((uint8_t)0x55);
+        // i2cDrv.write((uint8_t)0x55);
         PC13_2 = !PC13_2;
         t += delta;
     }

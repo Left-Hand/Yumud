@@ -1,8 +1,14 @@
 #ifndef __SPIDRV_HPP__
 #define __SPIDRV_HPP__
 
-#include "bus.hpp"
+#include "spi/spi.hpp"
+#include "i2c/i2c.hpp"
 #include <type_traits>
+
+template<typename Derived, typename Base>
+struct isDerivedFrom {
+    static constexpr bool value = std::is_base_of<Base, Derived>::value;
+};
 
 class BusDrv{
 protected:
@@ -61,7 +67,15 @@ public:
 
     template<typename T>
     bool isBusType() {
-        return std::is_same<T, Bus>::value;
+        return (static_cast<T *>(&bus) != nullptr);
+    }
+
+    bool isI2cBus(){
+        return (static_cast<I2c *>(&bus) != nullptr);
+    }
+
+    bool isSpiBus(){
+        return (static_cast<Spi *>(&bus) != nullptr);
     }
 };
 

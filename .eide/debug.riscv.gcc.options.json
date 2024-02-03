@@ -24,7 +24,7 @@
         "one-elf-section-per-function": true,
         "one-elf-section-per-data": true,
         "C_FLAGS": "-Wl,-Bstatic",
-        "CXX_FLAGS": "-lstdc++"
+        "CXX_FLAGS": "-lstdc++ -frtti"
     },
     "asm-compiler": {
         "ASM_FLAGS": "-Wl,-Bstatic"

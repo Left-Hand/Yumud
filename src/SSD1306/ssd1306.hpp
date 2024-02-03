@@ -19,38 +19,52 @@ class SSD1306{
 private:
     BusDrv & busdrv;
 
-    uint16_t w = 128;
-    uint16_t h = 80;
+    uint16_t w = 64;
+    uint16_t h = 128;
     uint16_t x_offset = 0;
 
     __fast_inline void writeCommand(const uint8_t & cmd){
-        if(busdrv.isBusType<I2c>()){
-            uint8_t buf[2] = {0, cmd};
-            busdrv.write(buf, 2);
-        }else if(busdrv.isBusType<Spi>()){
+        if(busdrv.isSpiBus()){
             SSD1306_ON_CMD;
+            busdrv.write(cmd);
+        }else if(busdrv.isI2cBus()){
+            uint8_t buf[2];
+            buf[0] = 0;
+            buf[1] = cmd;
+            // busdrv.write(buf, 2);
+            busdrv.write((uint8_t)0);
             busdrv.write(cmd);
         }
     }
 
     __fast_inline void writeData(const uint8_t & data){
-        SSD1306_ON_DATA;
-        busdrv.write(data);
+        if(busdrv.isSpiBus()){
+            SSD1306_ON_DATA;
+            busdrv.write(data);
+        }else if(busdrv.isI2cBus()){
+            uint8_t buf[2] = {0x40, data};
+            busdrv.write(buf, 2);
+        }
     }
 
     void writePool(uint8_t * data, const size_t & len){
-        SSD1306_ON_DATA;
-        busdrv.write(data, len);
+        if(busdrv.isSpiBus()){
+            SSD1306_ON_DATA;
+            busdrv.write(data, len);
+        }else if(busdrv.isI2cBus()){
+            busdrv.write((uint8_t)0x40);
+            busdrv.write(data, len);
+        }
     }
 
     void writePool(const uint8_t & data, const size_t & len){
-        SSD1306_ON_DATA;
-        for(size_t _ = 0; _ < len; _++) busdrv.write(data);
-    }
-
-    void writePool(const uint16_t & data, const size_t & len){
-        SSD1306_ON_DATA;
-        busdrv.write(data, len);
+        if(busdrv.isSpiBus()){
+            SSD1306_ON_DATA;
+            busdrv.write(data, len);
+        }else if(busdrv.isI2cBus()){
+            busdrv.write((uint8_t)0x40);
+            busdrv.write(data, len);
+        }
     }
 
     void setPos(uint16_t x,uint16_t y){
