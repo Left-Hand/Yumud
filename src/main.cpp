@@ -50,7 +50,7 @@ void Systick_Init(void)
     NVIC_EnableIRQ(SysTicK_IRQn);
 }
 
-void GPIO_PortC_INIT( void )
+void GPIO_PortC_Init( void )
 {
     GPIO_InitTypeDef  GPIO_InitStructure = {0};
 
@@ -485,7 +485,7 @@ int main(){
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     Systick_Init();
-    GPIO_PortC_INIT();
+    GPIO_PortC_Init();
     HX711_GPIO_Init();
     // TTP229_GPIO_Init();
     // delayMicroseconds(20);

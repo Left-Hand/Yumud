@@ -74,7 +74,6 @@ void Spi2::init(const uint32_t & baudRate){
 }
 
 void Spi2::configDataSize(const uint8_t & data_size){
-    this->data_size = data_size;
     SPI_DataSizeConfig(SPI2, data_size == 16 ? SPI_DataSize_16b : SPI_DataSize_8b);
 }
 
@@ -88,56 +87,6 @@ void Spi2::configBitOrder(const bool & msb){
     SPI2->CTLR1 |= msb ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }
 
-Bus::Error Spi2::write(void * _data_ptr, const size_t & len){
-    if(data_size == 8){
-        uint8_t * data_ptr = (uint8_t *)(_data_ptr);
-        for(size_t i = 0; i < len; i++) this->write(data_ptr[i]);
-    }else{
-        uint16_t * data_ptr = (uint16_t *)(_data_ptr);
-        for(size_t i = 0; i < len; i++) this->write(data_ptr[i]);
-    }
-    return Bus::ErrorType::OK;
-}
-
-Bus::Error Spi2::transfer(void * _data_rx_ptr, void * _data_tx_ptr, const size_t & len){
-    if(data_size == 8){
-        uint8_t * data_rx_ptr = (uint8_t *)(_data_rx_ptr);
-        uint8_t * data_tx_ptr = (uint8_t *)(_data_tx_ptr);
-        uint32_t data_rx = 0;
-        for(size_t i = 0; i < len; i++){
-            this -> transfer(data_rx, data_tx_ptr[i]);
-            data_rx_ptr[i] = data_rx;
-        }
-    }else{
-        uint16_t * data_rx_ptr = (uint16_t *)(_data_rx_ptr);
-        uint16_t * data_tx_ptr = (uint16_t *)(_data_tx_ptr);
-        uint32_t data_rx = 0;
-        for(size_t i = 0; i < len; i++){
-            this -> transfer(data_rx, data_tx_ptr[i]);
-            data_rx_ptr[i] = data_rx;
-        }
-    }
-    return Bus::ErrorType::OK;
-}
-
-Bus::Error Spi2::read(void * _data_ptr, const size_t & len){
-    if(data_size == 8){
-        uint8_t * data_ptr = (uint8_t *)(_data_ptr);
-        uint32_t data_rx = 0;
-        for(size_t i = 0; i < len; i++){
-            this -> transfer(data_rx, 0);
-            data_ptr[i] = data_rx;
-        }
-    }else{
-        uint16_t * data_ptr = (uint16_t *)(_data_ptr);
-        uint32_t data_rx = 0;
-        for(size_t i = 0; i < len; i++){
-            this -> transfer(data_rx, 0);
-            data_ptr[i] = data_rx;
-        }
-    }
-    return Bus::ErrorType::OK;
-}
 #ifndef HAVE_SPI2
 #define HAVE_SPI2
 Spi2 spi2;

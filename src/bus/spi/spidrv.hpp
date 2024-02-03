@@ -7,6 +7,8 @@ class SpiDrv{
 protected:
     Spi & spibus;
     uint8_t index = 0;
+    uint8_t data_size = 0;
+
 public:
     SpiDrv(Spi & _spibus, const uint8_t & _index = 0):spibus(_spibus), index(_index){;}
     
@@ -24,9 +26,9 @@ public:
         }
     }
 
-    void write(uint8_t * data, const size_t & len){
+    void write(uint8_t * data_ptr, const size_t & len){
         if(!spibus.begin(index)){
-            spibus.write(data, len);
+            for(size_t i = 0; i < len; i++) spibus.write(data_ptr[i]);
             spibus.end();
         }
     }
@@ -38,9 +40,11 @@ public:
         }
     }
 
-    void write(uint16_t * data, const size_t & len){
+    void write(uint16_t * data_ptr, const size_t & len){
         if(!spibus.begin(index)){
-            spibus.write(data, len);
+            spibus.configDataSize(16);
+            for(size_t i = 0; i < len; i++) spibus.write(data_ptr[i]);
+            spibus.configDataSize(8);
             spibus.end();
         }
     }

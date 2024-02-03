@@ -13,10 +13,6 @@
 
 class Bus{
 protected:
-    uint16_t write_ovt = 114;
-    uint16_t read_ovt = 114;
-
-    uint8_t data_size = 8;
 
 public:
     enum class ErrorType{
@@ -45,13 +41,8 @@ public:
     virtual void end() = 0;
 
     virtual Error write(const uint32_t & data) = 0;
-    virtual Error write(void * _data_ptr, const size_t & len) = 0;
-
     virtual Error read(uint32_t & data, bool toAck = true) = 0;
-    virtual Error read(void * _data_ptr, const size_t & len) = 0;
-
     virtual Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) = 0;
-    virtual Error transfer(void * _data_rx_ptr, void * _data_tx_ptr, const size_t & len) = 0;
 };
     
 #endif // !__PRINTABLE_HPP__
