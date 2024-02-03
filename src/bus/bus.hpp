@@ -8,6 +8,8 @@
 #include <sstream>
 #include <cstdlib>
 #include "../types/string/string.hpp"
+#include "../defines/comm_inc.h"
+#include "../clock/clock.h"
 
 class Bus{
 protected:
@@ -19,6 +21,7 @@ protected:
 public:
     enum class ErrorType{
         OK,
+        IS_USING,
         OVER_TIME,
         NO_ACK
     };
@@ -28,7 +31,7 @@ public:
 
         Error(const ErrorType & _errorType):errorType(_errorType){;}
 
-        explicit operator bool() {return errorType == ErrorType::OK;}
+        explicit operator bool() {return errorType != ErrorType::OK;}
         explicit operator ErrorType() {return errorType;}
     };
 
@@ -38,10 +41,8 @@ public:
     virtual void configBaudRate(const uint32_t & baudRate) = 0;
     virtual void configBitOrder(const bool & msb) = 0;
 
-    virtual void begin() = 0;
+    virtual Bus::Error begin(const uint8_t & index = 0) = 0;
     virtual void end() = 0;
-
-    virtual bool busy() = 0;
 
     virtual Error write(const uint32_t & data) = 0;
     virtual Error write(void * _data_ptr, const size_t & len) = 0;

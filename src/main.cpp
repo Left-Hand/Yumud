@@ -23,12 +23,17 @@
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
-ST7789V2 tftDisplayer(spi2);
+
+SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
+ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spi2);
-// ST7789V2 tftDisplayer(240, 240, 0, 0);
+// ST7789 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
+GpioImag PC13_2 = GpioImag(0, 
+    [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
+    [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13);});
 
 void Systick_Init(void)
 {
@@ -488,15 +493,15 @@ int main(){
     uart1.init(115200);
     uart2.init(115200);
 
-    spi2.init(144000000 );
+    spi2.init(144000000);
     spi2.configDataSize(8);
     spi2.configBaudRate(144000000 / 2);
     // spi2.configBitOrder(false);
 
     LCD_Init();
     
-    bool use_tft = false;
-    bool use_mini = true;
+    bool use_tft = true;
+    bool use_mini = false;
     if(use_tft){
     if(use_mini){
         tftDisplayer.init();
@@ -530,8 +535,8 @@ int main(){
 
     // tftDisplayer.init();
     // tftDisplayer.setDisplayArea(160, 80, 1, 26);
-    // tftDisplayer.setRotation(ST7789V2::Rotation::Rot360);
-    // tftDisplayer.setInversion(ST7789V2::Inversion::Disable);
+    // tftDisplayer.setRotation(ST7789::Rotation::Rot360);
+    // tftDisplayer.setInversion(ST7789::Inversion::Disable);
     
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
@@ -540,13 +545,13 @@ int main(){
         // LCD_Fill_Screen(RGB565::BLACK);
         begin_u = micros();
 
-        c1 = Color::from_hsv(fmod(t * 360, real_t(360)));
+        c1 = Color::from_hsv(fmod(t, real_t(360)));
         color = c1;
 
         // renderTest4();
         if(use_tft){
-            tftDisplayer.flush(RGB565::RED);
-            tftDisplayer.flush(RGB565::BLACK);
+            tftDisplayer.flush(color);
+            // tftDisplayer.flush(RGB565::BLACK);
         }else{
             oledDisPlayer.flush(true);
             // delay(200);
@@ -593,7 +598,7 @@ int main(){
         // chr = (chr == 'Z' ? 'A' : chr + 1);
         // for(uint8_t i = 0; i < 23; i++) uart2.print((char)(chr+i));
 
-        const char str[] = "Hello, a small fox jumps over a lazy dog!";
+        // const char str[] = "Hello, a small fox jumps over a lazy dog!";
         // uint8_t cnt = sizeof(str);
 
         // uint8_t to_send[cnt] = {0};
@@ -607,8 +612,8 @@ int main(){
 
         // uart1.println("Send:", (char *)to_send);
         // uart1.println("Recv:", String((char *)to_recv, cnt - 1));
-        uart2.print(str);
-        uint64_t startms = micros();
+        // uart2.print(str);
+        // uint64_t startms = micros();
         // for(volatile uint32_t i = 0; i < 1000000; i++){
         //     // GPIOC->BSHR = GPIO_Pin_0;
 
@@ -618,17 +623,17 @@ int main(){
         //     GPIOC->BCR = GPIO_Pin_1;
         // }
         // while(uart1.available() < sizeof(str) - 1);    
-        uint64_t endms = micros();
+        // uint64_t endms = micros();
 
-        String ret = uart1.readAll();
-        ret.trim();
+        // String ret = uart1.readAll();
+        // ret.trim();
 
-        // uart1.println(SpecToken::Space, "recv: ", ret, (endms - startms));
-        String stri = "test, a, ,a, b";
-        String strm = "a,";
-        String strr = "!!";
+        // // uart1.println(SpecToken::Space, "recv: ", ret, (endms - startms));
+        // String stri = "test, a, ,a, b";
+        // String strm = "a,";
+        // String strr = "!!";
 
-        uart1.println(stri, stri.replace(strm, strr));
+        // uart1.println(stri, stri.replace(strm, strr));
 
 
         // static bool calied = false;
@@ -654,11 +659,8 @@ int main(){
         // delayNanoseconds(100);
         // uart1.println(SpecToken::CommaWithSpace,waste_m,key);
         uart1.println(fps);
-        static bool pc13_on = false;
-        pc13_on = !pc13_on;
-        PC13 = pc13_on;
-        GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)pc13_on);
-        delay(200);
+
+        PC13_2 = !PC13_2;
         t += delta;
     }
 }

@@ -143,3 +143,5 @@ Bus::Error Spi2::read(void * _data_ptr, const size_t & len){
 #define HAVE_SPI2
 Spi2 spi2;
 #endif
+
+int8_t Spi2::occupied = false; 

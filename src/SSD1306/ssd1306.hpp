@@ -16,7 +16,7 @@ SSD1306_DC_Port -> BCR = SSD1306_DC_Pin;
 
 class SSD1306{
 private:
-    Spi2 & spibus;
+    Spi & spibus;
 
     uint16_t w = 128;
     uint16_t h = 80;

@@ -2,7 +2,7 @@
 
 #define __ST7789V2_HPP__
 
-#include "../bus/spi/spi2.hpp"
+#include "bus/spi/spidrv.hpp"
 #include "../../types/rgb.h"
 
 #define ST7789V2_DC_Port SPI2_Port
@@ -15,9 +15,9 @@ ST7789V2_DC_Port -> BSHR = ST7789V2_DC_Pin;
 ST7789V2_DC_Port -> BCR = ST7789V2_DC_Pin;
 
 
-class ST7789V2{
+class ST7789{
 private:
-    Spi2 & spibus;
+    SpiDrv & spidrv;
 
     uint16_t w = 32;
     uint16_t h = 32;
@@ -28,39 +28,27 @@ private:
 
     __fast_inline void writeCommand(const uint8_t & cmd){
         ST7789V2_ON_CMD;
-        spibus.begin();
-        spibus.write(cmd);
-        spibus.end();
+        spidrv.write(cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data){
         ST7789V2_ON_DATA;
-        spibus.begin();
-        spibus.write(data);
-        spibus.end();
+        spidrv.write(data);
     }
 
     void writePool(uint8_t * data, const size_t & len){
         ST7789V2_ON_DATA;
-        spibus.begin();
-        spibus.write(data, len);
-        spibus.end();
+        spidrv.write(data, len);
     }
 
     void writePool(const uint8_t & data, const size_t & len){
         ST7789V2_ON_DATA;
-        spibus.begin();
-        for(size_t _ = 0; _ < len; _++) spibus.write(data);
-        spibus.end();
+        spidrv.write(data, len);
     }
 
     void writePool(const uint16_t & data, const size_t & len){
         ST7789V2_ON_DATA;
-        spibus.begin();
-        spibus.configDataSize(16);
-        for(size_t _ = 0; _ < len; _++) spibus.write((uint16_t)(data)); 
-        spibus.configDataSize(8);
-        spibus.end();
+        spidrv.write(data, len);
     }
 
     void setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
@@ -73,7 +61,7 @@ private:
         writeData(scr_ctrl);
     }
 public:
-    ST7789V2(Spi2 & _spibus):spibus(_spibus){;}
+    ST7789(SpiDrv & _spidrv):spidrv(_spidrv){;}
     void init();
     void flush(RGB565 color);     
 

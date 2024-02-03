@@ -1,6 +1,6 @@
 #include "st7789.hpp"
 
-void ST7789V2::setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
+void ST7789::setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
 {
     /* 指定X方向操作区域 */
     x1 += x_offset;
@@ -26,7 +26,7 @@ void ST7789V2::setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2)
     writeCommand(0x2C);
 }
 
-void ST7789V2::init(){
+void ST7789::init(){
     writeCommand(0x01);
 
     delayMicroseconds(50);
@@ -42,7 +42,7 @@ void ST7789V2::init(){
 	writeCommand(0x29);
 }
 
-void ST7789V2::flush(RGB565 color){
+void ST7789::flush(RGB565 color){
     setAddress(0, 0, w - 1, h - 1);
     writePool((uint16_t)color, w * h);
 }

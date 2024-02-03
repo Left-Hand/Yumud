@@ -4,6 +4,10 @@
 
 #include "../defines/comm_inc.h"
 
+#ifndef MCU_V
+#define MCU_V (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)
+#endif
+
 class GpioBase{
 public:
     virtual void set() = 0;
@@ -21,7 +25,7 @@ class Gpio:public GpioBase{
         uint16_t pin = 0;
 
     public:
-        Gpio(GPIO_TypeDef* _base, uint16_t _pin):base(_base), pin((_base != GPIOC)?_pin:(_pin >> 13)){};
+        Gpio(GPIO_TypeDef* _base, uint16_t _pin):base(_base), pin((_base == GPIOC && MCU_V) ? (_pin>>13) : _pin){};
         ~Gpio(){};
 
         __fast_inline void set()override{base->BSHR = pin;}
@@ -54,4 +58,9 @@ public:
 
     GpioImag & operator = (const bool _val) override {write(_val); return *this;}
 };
+
+#ifdef MCU_V
+#undef MCU_V
+#endif
+
 #endif
