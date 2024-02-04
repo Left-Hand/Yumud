@@ -35,8 +35,12 @@ protected:
         occupied = -1;
     }
 
-    bool usable(const uint8_t & index = 0) override {
-        return (occupied >= 0 ? (occupied == (int8_t)index) : true);
+    bool is_idle() override {
+        return (occupied >= 0 ? false : true);
+    }
+
+    bool owned_by(const uint8_t & index = 0) override{
+        return (occupied == index);
     }
 
 public:
@@ -50,6 +54,9 @@ public:
     __fast_inline Error read(uint32_t & data, bool toAck = true) override;
     __fast_inline Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) override;
 
+    // Error write(void * _data_ptr, const size_t & len) override;
+    // Error read(void * _data_ptr, const size_t & len) override;
+    // Error transfer(void * _data_rx_ptr, void * _data_tx_ptr, const size_t & len) override;
 };
 
 __fast_inline Bus::Error Spi2::write(const uint32_t & data){

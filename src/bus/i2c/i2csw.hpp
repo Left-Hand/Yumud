@@ -65,7 +65,7 @@ bool wait_ack(){
 }
 
 __fast_inline void start(const uint8_t & _address) {
-    occupied = _address >> 1;
+    occupied = _address & 0x7F;
     sda = true;
     scl = true;
     delayDur();
@@ -89,10 +89,15 @@ __fast_inline void stop() {
 
 
 protected :
-    __fast_inline void begin_use(const uint8_t & index = 0) override {start(index);}
-    __fast_inline void end_use() override {stop();}
-    __fast_inline bool usable(const uint8_t & index = 0) override {
-        return (occupied >= 0 ? (occupied == (int8_t)index) : true);
+    void begin_use(const uint8_t & index = 0) override {start(index);}
+    void end_use() override {stop();}
+
+    bool is_idle() override {
+        return (occupied >= 0 ? false : true);
+    }
+
+    bool owned_by(const uint8_t & index = 0) override{
+        return (occupied == index);
     }
 
 public:
@@ -125,7 +130,8 @@ public:
 
     __fast_inline Error read(uint32_t & data, bool toAck = true) {
         uint8_t ret = 0;
-
+        sda.InFloating();
+        delayDur();
         ret |= sda.read();
         clk();
         ret <<= 1; ret |= sda.read(); 
@@ -146,7 +152,7 @@ public:
 
         if(toAck) ack();
         else nack();
-
+        sda.OutPP();
         data = ret;
 
         return Bus::ErrorType::OK;

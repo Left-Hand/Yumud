@@ -17,7 +17,8 @@ protected:
 public:
     enum class ErrorType{
         OK,
-        IS_USING,
+        ALREADY,
+        OCCUPIED,
         OVER_TIME,
         NO_ACK
     };
@@ -37,7 +38,7 @@ public:
     virtual void configBaudRate(const uint32_t & baudRate) = 0;
     virtual void configBitOrder(const bool & msb) = 0;
 
-    virtual Bus::Error begin(const uint8_t & index = 0) = 0;
+    virtual Error begin(const uint8_t & index = 0) = 0;
     virtual void end() = 0;
 
     virtual Error write(const uint32_t & data) = 0;

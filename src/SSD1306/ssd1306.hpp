@@ -23,36 +23,35 @@ private:
     uint16_t h = 64;
     uint16_t x_offset = 0;
 
-    uint8_t cmd_token = 0;
-    uint8_t data_token = 0x40;
+    const uint8_t cmd_token = 0x00;
+    const uint8_t data_token = 0x40;
 
-    __fast_inline void writeCommand(const uint8_t & cmd){
+    __fast_inline void writeCommand(const uint8_t cmd){
 
         if(busdrv.isSpiBus()){
             SSD1306_ON_CMD;
             busdrv.write(cmd);
         }else if(busdrv.isI2cBus()){
-            uint8_t buf[2] = {cmd_token, cmd};
-            busdrv.write(buf, 2);
+            busdrv.write({cmd_token, cmd});
         }
     }
 
-    __fast_inline void writeData(const uint8_t & data){
+    __fast_inline void writeData(const uint8_t data){
         if(busdrv.isSpiBus()){
             SSD1306_ON_DATA;
             busdrv.write(data);
         }else if(busdrv.isI2cBus()){
-            uint8_t buf[2] = {data_token, data};
-            busdrv.write(buf, 2);
+            busdrv.write({data_token, data});
         }
     }
 
-    void writePool(uint8_t * data, const size_t & len){
+    void writePool(uint8_t * data_ptr, const size_t & len){
         if(busdrv.isSpiBus()){
             SSD1306_ON_DATA;
-            busdrv.write(data, len);
+            busdrv.write(data_ptr, len);
         }else if(busdrv.isI2cBus()){
-            busdrv.write(data_token, data, len);
+            busdrv.write(data_token, false);
+            busdrv.write(data_ptr, len);
         }
     }
 
@@ -61,7 +60,8 @@ private:
             SSD1306_ON_DATA;
             busdrv.write(data, len);
         }else if(busdrv.isI2cBus()){
-            busdrv.write(data_token, data, len);
+            busdrv.write(data_token, false);
+            busdrv.write(data, len);
         }
     }
 
@@ -73,7 +73,7 @@ private:
         writeCommand((x&0x0f));
     }
 public:
-    SSD1306(BusDrv & _spidrv):busdrv(_spidrv){;}
+    SSD1306(BusDrv & _busdrv):busdrv(_busdrv){;}
     void init();
     void flush(bool color);     
 

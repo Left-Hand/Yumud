@@ -42,7 +42,7 @@ BusDrv i2cDrv = BusDrv(i2cSw,(uint8_t)0x78);
 // ST7789 tftDisplayer(240, 240, 0, 0);
 // Uart1 uart1;
 // Uart2 uart2;
-SSD1306 oledDisPlayer(i2cDrv);
+SSD1306 oledDisPlayer(spiDrvOled);
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 GpioImag PC13_2 = GpioImag(0, 
     [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
