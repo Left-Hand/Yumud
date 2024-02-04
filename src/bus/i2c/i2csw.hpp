@@ -18,54 +18,73 @@ Gpio & scl;
 Gpio & sda;
 int8_t occupied = -1;
 uint8_t delays = 0;
-__fast_inline void delayDur(){
+
+volatile void delayDur(){
     // delayMicroseconds(1);
-    __nopn(6);
+    __nopn(60);
     // for(volatile uint16_t i = 0; i < delays; i++);
 }
 
 void clk(){
-    // delayDur();
+    delayDur();
     scl = true;
     delayDur();
-    // delayDur();
     scl = false;
-    // delayDur();
 }
 
+void clkr(){
+    delayDur();
+    scl = false;
+    delayDur();
+    scl = true;
+}
 void ack(){
     delayDur();
+    scl = false;
     sda = false;
+    delayDur();
     delayDur();
     scl = true;
     delayDur();
+    delayDur();
     scl = false;
+    sda = true;
+    delayDur();
     delayDur();
 }
 
 void nack(void) {
     delayDur();
+    scl = false;
     sda = true;
+    delayDur();
     delayDur();
     scl = true;
     delayDur();
+    delayDur();
     scl = false;
+    sda = true;
+    delayDur();
     delayDur();
 }
 
 bool wait_ack(){
     bool ret;
+    sda.InFloating();
     delayDur();
     scl = true;
     delayDur();
     ret = sda.read();
     scl = false;
     delayDur();
+    sda.OutOD();
     return ret;
 }
 
 __fast_inline void start(const uint8_t & _address) {
-    occupied = _address & 0x7F;
+    occupied = _address & 0xFE;
+    scl.OutOD();
+    sda.OutOD();
     sda = true;
     scl = true;
     delayDur();
@@ -77,7 +96,6 @@ __fast_inline void start(const uint8_t & _address) {
 }
 
 __fast_inline void stop() {
-    delayDur();
     sda = false;
     delayDur();
     scl = true;
@@ -102,9 +120,11 @@ protected :
 
 public:
 
-    I2cSw(Gpio & _scl,Gpio & _sda):scl(_scl), sda(_sda){;};
+    I2cSw(Gpio & _scl,Gpio & _sda):scl(_scl), sda(_sda){;}
 
-    __fast_inline Error write(const uint32_t & data) override {
+    Error write(const uint32_t & data) override {
+        sda.OutOD();
+        delayDur();
         sda.write(0x80 & data);
         clk();
         sda.write(0x40 & data);
@@ -128,33 +148,33 @@ public:
         return Bus::ErrorType::OK;
     }
 
-    __fast_inline Error read(uint32_t & data, bool toAck = true) {
+    Error read(uint32_t & data, bool toAck = true) {
         uint8_t ret = 0;
         sda.InFloating();
         delayDur();
+        clkr();
         ret |= sda.read();
-        clk();
+        clkr();
         ret <<= 1; ret |= sda.read(); 
-        clk();
+        clkr();
         ret <<= 1; ret |= sda.read(); 
-        clk();
+        clkr();
         ret <<= 1; ret |= sda.read(); 
-        clk();
+        
+        clkr();
+        ret <<= 1; ret |= sda.read(); 
+        clkr();
+        ret <<= 1; ret |= sda.read(); 
+        clkr();
+        ret <<= 1; ret |= sda.read(); 
+        clkr();
         ret <<= 1; ret |= sda.read(); 
 
-        clk();
-        ret <<= 1; ret |= sda.read(); 
-        clk();
-        ret <<= 1; ret |= sda.read(); 
-        clk();
-        ret <<= 1; ret |= sda.read(); 
-        clk();
-
+        sda = false;
         if(toAck) ack();
         else nack();
-        sda.OutPP();
         data = ret;
-
+        sda.OutOD();
         return Bus::ErrorType::OK;
     }
 

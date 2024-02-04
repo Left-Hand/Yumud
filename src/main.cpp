@@ -19,18 +19,12 @@
 
 #include "ST7789V2/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"
+#include "MPU6050/mpu6050.hpp"
 #include "gpio/gpio.hpp"
-// #include 
 
-// using real_t = real_t;
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 using Vector2 = Vector2_t<real_t>;
-
-BusDrv SpiDrvLcd = BusDrv(spi2, 0);
-ST7789 tftDisplayer(SpiDrvLcd);
-BusDrv spiDrvOled = BusDrv(spi2, 0);
-
 
 #define I2C_SW_SCL GPIO_Pin_6
 #define I2C_SW_SDA GPIO_Pin_7
@@ -38,11 +32,16 @@ BusDrv spiDrvOled = BusDrv(spi2, 0);
 Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
 Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
 I2cSw i2cSw(i2cScl, i2cSda);
-BusDrv i2cDrv = BusDrv(i2cSw,(uint8_t)0x78);
-// ST7789 tftDisplayer(240, 240, 0, 0);
-// Uart1 uart1;
-// Uart2 uart2;
+
+BusDrv SpiDrvLcd = BusDrv(spi2_hs, 0);
+BusDrv spiDrvOled = BusDrv(spi2, 0);
+BusDrv i2cDrvOled = BusDrv(i2cSw,(uint8_t)0x78);
+BusDrv i2cDrvMpu = BusDrv(i2cSw,(uint8_t)0xD0);
+
+ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spiDrvOled);
+MPU6050 mpu(i2cDrvMpu);
+
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 GpioImag PC13_2 = GpioImag(0, 
     [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
@@ -526,7 +525,7 @@ int main(){
 
     LCD_Init();
     
-    bool use_tft = false;
+    bool use_tft = true;
     bool use_mini = false;
     if(use_tft){
     if(use_mini){
@@ -559,6 +558,7 @@ int main(){
         oledDisPlayer.setInversion(false);
     }
 
+    mpu.init();
     // tftDisplayer.init();
     // tftDisplayer.setDisplayArea(160, 80, 1, 26);
     // tftDisplayer.setRotation(ST7789::Rotation::Rot360);
@@ -684,7 +684,6 @@ int main(){
         // int32_t key = TTP229_Get_Key();
         // delayNanoseconds(100);
         // uart1.println(SpecToken::CommaWithSpace,waste_m,key);
-        uart1.println(fps);
         // uint8_t cmd_token = 0x00;
         // uint8_t cmd = 0x89;
         // if(i2cDrv.isI2cBus()){
@@ -699,6 +698,14 @@ int main(){
         // }
         // uart1.println(typeid(i2cDrv) == typeid(int));
         // i2cDrv.write((uint8_t)0x55);
+
+
+
+        // uint8_t data = 0;
+        // i2cDrv.read(data);
+        // uart1.println(data);
+        mpu.getAccel();
+        mpu.getTemprature();
         PC13_2 = !PC13_2;
         t += delta;
     }

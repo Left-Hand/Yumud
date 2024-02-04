@@ -16,12 +16,15 @@ protected:
     friend BusDrv;
 public:
 
-    __fast_inline Error begin(const uint8_t & index = 0) override {
+    __fast_inline Error begin(const uint8_t & index = 0) override{
         if(is_idle()){
             begin_use(index);
             return ErrorType::OK;
+        }else if(owned_by(index)){
+            begin_use(index);
+            return ErrorType::OK;
         }else{
-            return (owned_by(index)) ? ErrorType::OK : ErrorType::OCCUPIED;
+            return ErrorType::OCCUPIED;
         }
     }
 
