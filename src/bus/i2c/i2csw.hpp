@@ -20,8 +20,9 @@ int8_t occupied = -1;
 uint8_t delays = 0;
 
 volatile void delayDur(){
-    // delayMicroseconds(1);
-    __nopn(60);
+    // delayMicroseconds(4);
+    // __nopn(6);
+
     // for(volatile uint16_t i = 0; i < delays; i++);
 }
 
@@ -37,10 +38,14 @@ void clkr(){
     scl = false;
     delayDur();
     scl = true;
+    delayDur();
+    scl = false;
 }
 void ack(){
     delayDur();
     scl = false;
+    delayDur();
+    sda.OutOD();
     sda = false;
     delayDur();
     delayDur();
@@ -48,7 +53,7 @@ void ack(){
     delayDur();
     delayDur();
     scl = false;
-    sda = true;
+    // sda = true;
     delayDur();
     delayDur();
 }
@@ -56,6 +61,8 @@ void ack(){
 void nack(void) {
     delayDur();
     scl = false;
+    delayDur();
+    sda.OutOD();
     sda = true;
     delayDur();
     delayDur();
@@ -63,7 +70,7 @@ void nack(void) {
     delayDur();
     delayDur();
     scl = false;
-    sda = true;
+    // sda = true;
     delayDur();
     delayDur();
 }
@@ -71,13 +78,15 @@ void nack(void) {
 bool wait_ack(){
     bool ret;
     sda.InFloating();
+    sda = true;
     delayDur();
     scl = true;
     delayDur();
     ret = sda.read();
     scl = false;
     delayDur();
-    sda.OutOD();
+
+    // sda.OutOD();
     return ret;
 }
 
@@ -96,6 +105,8 @@ __fast_inline void start(const uint8_t & _address) {
 }
 
 __fast_inline void stop() {
+    scl = false;
+    sda.OutOD();
     sda = false;
     delayDur();
     scl = true;
@@ -151,6 +162,7 @@ public:
     Error read(uint32_t & data, bool toAck = true) {
         uint8_t ret = 0;
         sda.InFloating();
+        sda = true;
         delayDur();
         clkr();
         ret |= sda.read();
@@ -174,7 +186,7 @@ public:
         if(toAck) ack();
         else nack();
         data = ret;
-        sda.OutOD();
+        // sda.OutOD();
         return Bus::ErrorType::OK;
     }
 
