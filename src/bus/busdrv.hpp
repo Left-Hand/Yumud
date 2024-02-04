@@ -100,21 +100,26 @@ public:
         read((uint8_t *)(&data), 2);
     }
 
-    void readReg(const uint8_t & reg, uint8_t * data_ptr, const size_t & len, const bool msb = true){
+    void readReg(const uint8_t & reg, uint8_t * data_ptr, const size_t & size, const size_t & len, const bool msb = true){
         if(!bus.begin(getIndex(false))){
             bus.write(reg);
             bus.begin(getIndex(true));
-            if(msb){
-                for(size_t i = len; i > 0; i--){
-                    uint32_t temp = 0;
-                    bus.read(temp, (i != 1));
-                    data_ptr[i-1] = temp;
-                }
-            }else{
-                for(size_t i = 0; i < len; i++){
-                    uint32_t temp = 0;
-                    bus.read(temp, (i != len - 1));
-                    data_ptr[i] = temp;
+
+            size_t base = 0;
+            for(size_t i = 0; i < len; i++){
+                base += size;
+                if(msb){
+                    for(size_t j = size; j > 0; j--){
+                        uint32_t temp = 0;
+                        bus.read(temp, !((j = 1) && (i = len - 1)));
+                        data_ptr[j-1 + base] = temp;
+                    }
+                }else{
+                    for(size_t j = 0; j < size; j++){
+                        uint32_t temp = 0;
+                        bus.read(temp, !((j = size - 1) && (i = len - 1)));
+                        data_ptr[j + base] = temp;
+                    }
                 }
             }
 

@@ -15,9 +15,11 @@ protected:
         int16_t z;
     };
 
-    vec3 accel;
-    vec3 gyro;
-    int16_t temprature;
+    struct __attribute__((packed)){
+        vec3 accel;
+        int16_t temprature;
+        vec3 gyro;
+    };
 
     enum class Reg:uint8_t{
         Accel_x = 0x3b,
@@ -38,12 +40,13 @@ protected:
     }
 
     void requestData(const Reg & reg, uint8_t * data, const size_t len){
-        busdrv.readReg((uint8_t)reg, data, len);
+        busdrv.readReg((uint8_t)reg, data, 2, len);
     }
 
 public:
     MPU6050(BusDrv & _busdrv):busdrv(_busdrv){;}
     void init();
+    void reflash();
     void getAccel();
     // void getGyro();
     void getTemprature();

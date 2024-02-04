@@ -12,11 +12,17 @@ void MPU6050::init(){
     writeReg(0x1c, 0x00);
 }
 
-void MPU6050::getAccel(){
-    requestData(Reg::Accel_x, (uint8_t *)(&this->accel.x), 2);
-    requestData(Reg::Accel_y, (uint8_t *)(&this->accel.y), 2);
-    requestData(Reg::Accel_z, (uint8_t *)(&this->accel.z), 2);
+void MPU6050::reflash(){
+    requestData(Reg::Accel_x, (uint8_t *)&accel, 7);
     uart1.println(accel.x, accel.y, accel.z);
+    // , 36.53+temprature/340.0, gyro.x, gyro.y, gyro.z, ",");
+}
+void MPU6050::getAccel(){
+    // uint8_t buf[6] = {0};
+    // accel.x = ((uint16_t)buf[1] << 8) | buf[0];
+    // accel.y = buf[2] << 8 | buf[3];
+    // accel.z = buf[4] << 8 | buf[5];
+
 }
 
 void MPU6050::getTemprature(){

@@ -704,8 +704,9 @@ int main(){
         // uint8_t data = 0;
         // i2cDrv.read(data);
         // uart1.println(data);
-        mpu.getAccel();
-        mpu.getTemprature();
+        mpu.reflash();
+        // mpu.getAccel();
+        // mpu.getTemprature();
         PC13_2 = !PC13_2;
         t += delta;
     }
