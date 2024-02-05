@@ -50,19 +50,19 @@
 
 
 #ifndef MAX
-#define MAX(x,y) (x > y ? x : y)
+#define MAX(x,y) ((x > y)? x : y)
 #endif
 
 #ifndef MIN
-#define MIN(x,y) (x < y ? x : y)
+#define MIN(x,y) ((x < y) ? x : y)
 #endif
 
 #ifndef ABS
-#define ABS(x) (x < 0? -(x) : x)
+#define ABS(x) ((x < 0)? -(x) : x)
 #endif
 
 #ifndef SIGN
-#define SIGN(x) (x < 0 ? -1 : 1)
+#define SIGN(x) ((x < 0) ? -1 : 1)
 #endif
 
 #ifndef IS_ALIGNED

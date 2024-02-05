@@ -12,11 +12,13 @@
 #include "../../gpio/gpio.hpp"
 
 class I2cSw: public I2c{
+    public:
+    int8_t occupied = -1;
 private:
     
 Gpio & scl;
 Gpio & sda;
-int8_t occupied = -1;
+
 uint8_t delays = 0;
 
 volatile void delayDur(){

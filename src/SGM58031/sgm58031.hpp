@@ -28,8 +28,12 @@ public:
         P0N1 = 0, P0N3, P1N3, P2N3, P0NG, P1NG, P2NG, P3NG
     };
 
-    enum class PGA:uint8_t{
+    enum class FS:uint8_t{
         FS6_144 = 0, FS4_096, FS2_048, FS1_024, FS0_512, FS0_256
+    };
+
+    enum class PGA:uint8_t{
+        RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
 protected:
     BusDrv & busdrv;
@@ -176,12 +180,43 @@ public:
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setPga(const PGA & _pga){
-        uint8_t pga = (uint8_t)_pga;
+    void setFS(const FS & _fs){
+        uint8_t pga = (uint8_t)_fs;
         configReg.pga = pga;
         writeReg(RegAddress::Config, configReg);
     }
 
+    void setFS(const float & _fs, const float & _vref){
+        float ratio = abs(_fs) / _vref;
+        PGA pga;
+        if(ratio >= 3.0f){
+            pga = PGA::RT2_3;
+        }else if(ratio >= 2){
+            pga = PGA::RT1;
+        }else if(ratio >= 1){
+            pga = PGA::RT2;
+        }else if(ratio >= 0.5){
+            pga = PGA::RT4;
+        }else if(ratio >= 0.25){
+            pga = PGA::RT8;
+        }else{
+            pga = PGA::RT16;
+        }
+        configReg.pga = (uint8_t)pga;
+        writeReg(RegAddress::Config, configReg);
+    }
+
+    void setTrim(const float & _trim){
+        float trim = _trim * 4.0f / 3.0f;
+        float offset = trim - 1.30225f;
+        trimReg.gn = (offset * 0b01111111010);
+        writeReg(RegAddress::Trim, trimReg);
+    }
+
+    void setCH3asRef(bool yes){
+        config1Reg.extRef = yes;
+        writeReg(RegAddress::Config1, config1Reg);
+    }
 };
 
 #ifdef SGM_DEBUG
