@@ -40,7 +40,7 @@ protected:
     }
 
     void requestData(const Reg & reg, uint8_t * data, const size_t len){
-        busdrv.readReg((uint8_t)reg, data, 2, len);
+        busdrv.readPool((uint8_t)reg, data, 2, len);
     }
 
 public:

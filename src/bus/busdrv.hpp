@@ -6,6 +6,7 @@
 #include <type_traits>
 #include <initializer_list>
 
+#include "uart/uart1.hpp"
 enum class BusType{
     SpiBus,
     I2cBus
@@ -89,20 +90,37 @@ public:
 
     void read(uint8_t & data){
         if(!bus.begin(getIndex(true))){
-            uint32_t & temp = (uint32_t &)data;
+            uint32_t temp;
             bus.read(temp);
+            data = temp;
             bus.end();
         }
-            bus.end();
     }
 
-    void read(uint16_t & data){
-        read((uint8_t *)(&data), 2);
-    }
-
-    void readReg(const uint8_t & reg, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+    void writePool(const uint8_t & reg_address, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
         if(!bus.begin(getIndex(false))){
-            bus.write(reg);
+            bus.write(reg_address);
+            // bus.begin(getIndex(false));
+
+            for(size_t i = 0; i < length; i += size){
+                if(msb){
+                    for(size_t j = size; j > 0; j--){
+                        bus.write(data_ptr[j-1 + i]);
+                    }
+                }else{
+                    for(size_t j = 0; j < size; j++){
+                        bus.write(data_ptr[j + i]);
+                    }
+                }
+            }
+
+            bus.end();
+        }
+    }
+
+    void readPool(const uint8_t & reg_address, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+        if(!bus.begin(getIndex(false))){
+            bus.write(reg_address);
             bus.begin(getIndex(true));
 
             for(size_t i = 0; i < length; i += size){
@@ -123,6 +141,24 @@ public:
 
             bus.end();
         }
+    }
+
+    void readReg(const uint8_t & reg_address, uint16_t & reg){
+        uint8_t buf[2] = {0};
+        readPool(reg_address, buf, 2, 2);
+        reg = buf[1] << 8 | buf[0];
+    }
+
+    void writeReg(const uint8_t & reg_address,  const uint16_t & reg_data){
+        // uart1.println("write", reg_data);
+        // uint8_t buf[4] = {0x01, 0x02, 0x03, 0x04};
+        writePool(reg_address, (uint8_t *)&reg_data, 2, 2);
+        // if(!bus.begin(getIndex(false))){
+        //     bus.write(reg_address);
+        //     bus.begin(getIndex(true));
+        //     for(uint8_t i = 0; i < sizeof(buf); i++) bus.write(buf[i]);
+        //     bus.end();
+        // }
     }
 
     bool isBusType(const BusType & _bus_type) {

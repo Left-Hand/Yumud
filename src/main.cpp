@@ -20,6 +20,7 @@
 #include "ST7789V2/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"
 #include "MPU6050/mpu6050.hpp"
+#include "SGM58031/sgm58031.hpp"
 #include "gpio/gpio.hpp"
 
 using Complex = Complex_t<real_t>;
@@ -37,10 +38,12 @@ BusDrv SpiDrvLcd = BusDrv(spi2_hs, 0);
 BusDrv spiDrvOled = BusDrv(spi2, 0);
 BusDrv i2cDrvOled = BusDrv(i2cSw,(uint8_t)0x78);
 BusDrv i2cDrvMpu = BusDrv(i2cSw,(uint8_t)0xD0);
+BusDrv i2cDrvAdc = BusDrv(i2cSw, 0x90);
 
 ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spiDrvOled);
 MPU6050 mpu(i2cDrvMpu);
+SGM58031 extadc(i2cDrvAdc);
 
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 GpioImag PC13_2 = GpioImag(0, 
@@ -515,7 +518,7 @@ int main(){
     // delayMicroseconds(20);
  
 
-    uart1.init(115200);
+    uart1.init(115200 * 4);
     uart2.init(115200);
 
     spi2.init(144000000);
@@ -559,6 +562,12 @@ int main(){
     }
 
     mpu.init();
+    extadc.init();
+    extadc.setContMode(true);
+    extadc.setPga(SGM58031::PGA::FS2_048);
+    extadc.setMux(SGM58031::MUX::P0NG);
+    extadc.setDataRate(SGM58031::DataRate::DR960);
+    extadc.startConv();
     // tftDisplayer.init();
     // tftDisplayer.setDisplayArea(160, 80, 1, 26);
     // tftDisplayer.setRotation(ST7789::Rotation::Rot360);
@@ -569,14 +578,14 @@ int main(){
     while(1){
 
         // LCD_Fill_Screen(RGB565::BLACK);
-        begin_u = micros();
+
 
         c1 = Color::from_hsv(fmod(t, real_t(360)));
         color = c1;
 
         // renderTest4();
         if(use_tft){
-            tftDisplayer.flush(color);
+            // tftDisplayer.flush(color);
             // tftDisplayer.flush(RGB565::BLACK);
         }else{
             oledDisPlayer.flush(true);
@@ -593,6 +602,7 @@ int main(){
         // LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
 
         uint64_t delta_u = (micros() - begin_u);
+        begin_u = micros();
         delta = real_t(delta_u / 1000000.0f);
 
         if(delta){
@@ -704,10 +714,41 @@ int main(){
         // uint8_t data = 0;
         // i2cDrv.read(data);
         // uart1.println(data);
-        mpu.reflash();
+        // mpu.reflash();
+        // extadc.getId();
         // mpu.getAccel();
         // mpu.getTemprature();
-        PC13_2 = !PC13_2;
+        // static uint8_t low_band_cnt = 0;
+        // low_band_cnt++;
+        // extadc.getId();
+        // static bool started = false;
+        int16_t buf[960];
+        for(uint16_t i = 0; i < 960; i++){
+            while(!extadc.isIdle());
+            buf[i] = extadc.getConvData();
+            extadc.startConv();
+        }
+        for(uint16_t i = 0; i < 960; i++){
+            uart1.println(buf[i], i);
+        }
+        // if (extadc.isIdle()){
+        //     // if(!started){
+        //         uart1.println(extadc.getConvData());
+
+        //         extadc.startConv();
+                // started = true;
+            // }else{
+                // started = false;
+            // }
+        // }
+        // int test_v = (int)(sin(t)*360);
+        // uart2.println(test_v);
+        // uart1.println(test_v);
+        // for(uint8_t i = 0; i<10;i++){
+            // delayMicroseconds(104);
+            PC13_2 = !PC13_2;
+        // }
+        // delay(200);
         t += delta;
     }
 }

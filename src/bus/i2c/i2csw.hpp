@@ -20,8 +20,8 @@ int8_t occupied = -1;
 uint8_t delays = 0;
 
 volatile void delayDur(){
-    // delayMicroseconds(4);
-    // __nopn(6);
+    delayMicroseconds(4);
+    // __nopn(60);
 
     // for(volatile uint16_t i = 0; i < delays; i++);
 }

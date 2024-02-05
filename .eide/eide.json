@@ -29,7 +29,8 @@
     "src/HX711",
     "src/TTP229",
     "src/gpio",
-    "src/bus/spi"
+    "src/bus/spi",
+    "src/SGM58031"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
