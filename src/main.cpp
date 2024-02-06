@@ -22,6 +22,8 @@
 #include "MPU6050/mpu6050.hpp"
 #include "SGM58031/sgm58031.hpp"
 #include "TCS34725/tcs34725.hpp"
+#include "VL53L0X/vl53l0x.hpp"
+#include "PCF8574/pcf8574.hpp"
 #include "gpio/gpio.hpp"
 
 using Complex = Complex_t<real_t>;
@@ -41,17 +43,36 @@ BusDrv i2cDrvOled = BusDrv(i2cSw,(uint8_t)0x78);
 BusDrv i2cDrvMpu = BusDrv(i2cSw,(uint8_t)0xD0);
 BusDrv i2cDrvAdc = BusDrv(i2cSw, 0x90);
 BusDrv i2cDrvTcs = BusDrv(i2cSw, 0x52);
+BusDrv i2cDrvVlx = BusDrv(i2cSw, 0x52);
+BusDrv i2cDrvPcf = BusDrv(i2cSw, 0x4e);
 
 ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spiDrvOled);
 MPU6050 mpu(i2cDrvMpu);
 SGM58031 extadc(i2cDrvAdc);
 TCS34725 tcs(i2cDrvTcs);
+VL53L0X vlx(i2cDrvVlx);
+PCF8574 pcf(i2cDrvPcf);
 
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
+
+void writePcfGpioImag(uint16_t index, bool value){
+    pcf.writeBit(index, value);
+}
+
+bool readPcfGpioImag(uint16_t index){
+    return pcf.readBit(index);
+}
+
 GpioImag PC13_2 = GpioImag(0, 
     [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
     [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13);});
+
+GpioImag tp = GpioImag(0, writePcfGpioImag, readPcfGpioImag);
+GpioImag i2cSclIm = GpioImag(1, writePcfGpioImag, readPcfGpioImag);
+GpioImag i2cSdaIm = GpioImag(2, writePcfGpioImag, readPcfGpioImag);
+
+I2cSw i2cSwIm = I2cSw(i2cSclIm, i2cSdaIm, 0);
 
 void Systick_Init(void){
     CHECK_INIT
@@ -157,7 +178,7 @@ int main(){
         tftDisplayer.setInversion(true);
     }else{
         tftDisplayer.init();
-        tftDisplayer.setDisplayArea(24, 24, 0, 0);
+        tftDisplayer.setDisplayArea(240, 240, 0, 0);
 
         tftDisplayer.setFlipX(false);
         tftDisplayer.setFlipY(false);
@@ -175,21 +196,21 @@ int main(){
         oledDisPlayer.setInversion(false);
     }
 
-    mpu.init();
+    // mpu.init();
     // extadc.init();
     // extadc.setContMode(true);
-    // extadc.setPga(SGM58031::PGA::FS2_048);
+    // extadc.setFS(SGM58031::FS::FS2_048);
     // extadc.setMux(SGM58031::MUX::P0NG);
     // extadc.setDataRate(SGM58031::DataRate::DR960);
     // extadc.startConv();
-    // tftDisplayer.init();
-    // tftDisplayer.setDisplayArea(160, 80, 1, 26);
-    // tftDisplayer.setRotation(ST7789::Rotation::Rot360);
-    // tftDisplayer.setInversion(ST7789::Inversion::Disable);
-    tcs.init();
-    tcs.startConv();
-    tcs.setIntegration(48);
-    tcs.setGain(TCS34725::Gain::X60);
+    // tcs.init();
+    // tcs.setIntegration(48);
+    // tcs.setGain(TCS34725::Gain::X60);
+    // tcs.startConv();
+    // vlx.init();
+    // vlx.setContinuous(true);
+    // vlx.setHighPrecision(false);
+    // vlx.startConv();
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
     while(1){
@@ -197,7 +218,7 @@ int main(){
         // LCD_Fill_Screen(RGB565::BLACK);
 
 
-        // c1 = Color::from_hsv(fmod(t, real_t(360)));
+        c1 = Color::from_hsv(fmod(t, real_t(360)));
         color = c1;
 
         // renderTest4();
@@ -362,25 +383,35 @@ int main(){
         // uart2.println(test_v);
         // uart1.println(i2cSw.occupied);
         // mpu.getAccel();
-        mpu.reflash();
+        // mpu.reflash();
         // uart1.println(i2cSw.occupied);
         // for(uint8_t i = 0; i<10;i++){
             // delayMicroseconds(1000);
-        if(tcs.isIdle()){
-            uint16_t c, r, g, b;
-            tcs.getCRGB(c,r,g,b);
-            uart1.println(c,r,g,b);
-            tcs.startConv();
+        // if(tcs.isIdle()){
+        //     uint16_t c, r, g, b;
+        //     tcs.getCRGB(c,r,g,b);
+        //     uart1.println(c,r,g,b);
+        //     tcs.startConv();
 
-            c1.r = r / 65525.0f;
-            c1.g = g / 65535.0f;
-            c1.b = b / 65535.0f;
-            c1.a = 1.0f;
-        }
+        //     c1.r = r / 65525.0f;
+        //     c1.g = g / 65535.0f;
+        //     c1.b = b / 65535.0f;
+        //     c1.a = 1.0f;
+        // }
+
+        // if(vlx.isIdle()){
+        //     vlx.reflash();
+        //     uart1.println(vlx.getDistanceMm(), vlx.getAmbientCount(), vlx.getSignalCount());
+        //     // vlx.startConv();
+        // }
 
         PC13_2 = !PC13_2;
-        // }
-        // delay(200);
+        tp = PC13_2;
+
+        i2cSwIm.begin(0x55);
+        i2cSwIm.end();
+
+        // delay(100);
         t += delta;
     }
 }

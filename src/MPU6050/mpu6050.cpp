@@ -13,7 +13,7 @@ void MPU6050::init(){
 }
 
 void MPU6050::reflash(){
-    requestData(Reg::Accel_x, (uint8_t *)&accel, 6 + 2 + 6);
+    requestData(RegAddress::Accel_x, (uint8_t *)&accel, 6 + 2 + 6);
     // uart1.println(accel.x, accel.y, accel.z, 36.53+temprature/340.0, gyro.x, gyro.y, gyro.z);
 }
 void MPU6050::getAccel(){
@@ -25,7 +25,7 @@ void MPU6050::getAccel(){
 }
 
 void MPU6050::getTemprature(){
-    requestData(Reg::Temprature, (uint8_t *)(&this->temprature), sizeof(this->temprature));
+    requestData(RegAddress::Temprature, (uint8_t *)(&this->temprature), sizeof(this->temprature));
     // uart1.println(36.53+temprature/340.0);
     // uart1.println(temprature << 8 | temprature >> 8);
     // uart1.println(temprature);

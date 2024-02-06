@@ -31,7 +31,9 @@
     "src/gpio",
     "src/bus/spi",
     "src/SGM58031",
-    "src/TCS34725"
+    "src/TCS34725",
+    "src/VL53L0X",
+    "src/PCF8574"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",

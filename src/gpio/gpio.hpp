@@ -63,7 +63,7 @@ class Gpio:public GpioBase{
         __fast_inline void write(const bool & val)override{(val) ? base->BSHR = pin : base->BCR = pin;}
         __fast_inline bool read() const override{return (bool)(base->INDR & pin);}
         __fast_inline Gpio & operator = (const bool _val) override {(_val) ? base->BSHR = pin : base->BCR = pin; return *this;}
-
+        __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? base->BSHR = pin : base->BCR = pin; return *this;}
         __fast_inline void OutPP() override {reConfig(0b0011);}
         __fast_inline void OutOD() override {reConfig(0b0111);}
         __fast_inline void OutAfPP() override {reConfig(0b1011);}
@@ -77,10 +77,10 @@ class Gpio:public GpioBase{
 class GpioImag:public GpioBase{
 private:
     typedef void (*WriteCallback)(uint16_t, bool);
-    typedef void (*DirCallback)(uint16_t, bool);
     typedef bool (*ReadCallback)(uint16_t);
+    typedef void (*DirCallback)(uint16_t, bool);
 
-    const uint16_t index;
+    uint16_t index;
 
     WriteCallback write_callback;
     ReadCallback read_callback;
@@ -93,9 +93,10 @@ public:
     void set() override {if(write_callback) write_callback(index, true);}
     void clr() override{if(write_callback) write_callback(index, false);}
     void write(const bool & val){if(write_callback) write_callback(index, val);}
-    bool read() const override {return read_callback(index);}
+    bool read() const override {return read_callback ? read_callback(index) : false;}
 
     GpioImag & operator = (const bool _val) override {write(_val); return *this;}
+    GpioImag & operator = (GpioImag & other) {write(other.read()); return *this;}
 
     void OutPP() override {if(dir_callback) dir_callback(index, true);}
     void OutOD() override {if(dir_callback) dir_callback(index, true);}

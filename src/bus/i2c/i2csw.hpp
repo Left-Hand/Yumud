@@ -14,16 +14,16 @@
 class I2cSw: public I2c{
 private:
 volatile int8_t occupied = -1;
-Gpio & scl;
-Gpio & sda;
+GpioBase & scl;
+GpioBase & sda;
 
-uint8_t delays = 0;
+uint16_t delays = 0;
 
-volatile void delayDur(){
-    delayMicroseconds(1);
-    // __nopn(60);
-
-    // for(volatile uint16_t i = 0; i < delays; i++);
+__fast_inline volatile void delayDur(){
+    // __nopn(delays);
+    volatile uint8_t i = delays;
+    while(i--);
+    // delayMicroseconds(1);
 }
 
 void clk(){
@@ -90,7 +90,7 @@ bool wait_ack(){
     return ret;
 }
 
-__fast_inline void start(const uint8_t & _address) {
+void start(const uint8_t & _address) {
     occupied = _address >> 1;
     scl.OutOD();
     sda.OutOD();
@@ -104,7 +104,7 @@ __fast_inline void start(const uint8_t & _address) {
     write(_address);
 }
 
-__fast_inline void stop() {
+void stop() {
     scl = false;
     sda.OutOD();
     sda = false;
@@ -134,7 +134,7 @@ protected :
     }
 public:
 
-    I2cSw(Gpio & _scl,Gpio & _sda):scl(_scl), sda(_sda){;}
+    I2cSw(GpioBase & _scl,GpioBase & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}
 
     Error write(const uint32_t & data) override {
         sda.OutOD();
