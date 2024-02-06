@@ -3,7 +3,6 @@
 #define __PCF8574_HPP__
 
 #include "../bus/busdrv.hpp"
-#include "../bus/uart/uart1.hpp"
 
 class PCF8574{
 protected:

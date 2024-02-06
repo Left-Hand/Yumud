@@ -1,5 +1,3 @@
-#include "../real.hpp"
-
 template <typename T>
 uint32_t Color_t<T>::to_argb32() const {
 	uint32_t c = (uint8_t)round(a * 255);

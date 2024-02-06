@@ -16,6 +16,7 @@
 #include "bus/spi/spi2.hpp"
 #include "bus/spi/spi2_hs.hpp"
 #include "bus/i2c/i2cSw.hpp"
+#include "bus/i2s/i2sSw.hpp"
 
 #include "ST7789V2/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"
@@ -24,6 +25,8 @@
 #include "TCS34725/tcs34725.hpp"
 #include "VL53L0X/vl53l0x.hpp"
 #include "PCF8574/pcf8574.hpp"
+#include "AS5600/as5600.hpp"
+#include "TM8211/tm8211.hpp"
 #include "gpio/gpio.hpp"
 
 using Complex = Complex_t<real_t>;
@@ -33,9 +36,19 @@ using Vector2 = Vector2_t<real_t>;
 #define I2C_SW_SCL GPIO_Pin_6
 #define I2C_SW_SDA GPIO_Pin_7
 
+#define I2S_SW_SCK GPIO_Pin_10
+#define I2S_SW_SDA GPIO_Pin_11
+#define I2S_SW_WS GPIO_Pin_1
+
 Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
 Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
+
+Gpio i2sSck = Gpio(GPIOB, I2S_SW_SCK);
+Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
+Gpio i2sWs = Gpio(GPIOB, I2S_SW_WS);
+
 I2cSw i2cSw(i2cScl, i2cSda);
+I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
 
 BusDrv SpiDrvLcd = BusDrv(spi2_hs, 0);
 BusDrv spiDrvOled = BusDrv(spi2, 0);
@@ -45,6 +58,8 @@ BusDrv i2cDrvAdc = BusDrv(i2cSw, 0x90);
 BusDrv i2cDrvTcs = BusDrv(i2cSw, 0x52);
 BusDrv i2cDrvVlx = BusDrv(i2cSw, 0x52);
 BusDrv i2cDrvPcf = BusDrv(i2cSw, 0x4e);
+BusDrv i2cDrvAS = BusDrv(i2cSw, 0x6c);
+BusDrv i2sDrvTm = BusDrv(i2sSw);
 
 ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spiDrvOled);
@@ -53,6 +68,8 @@ SGM58031 extadc(i2cDrvAdc);
 TCS34725 tcs(i2cDrvTcs);
 VL53L0X vlx(i2cDrvVlx);
 PCF8574 pcf(i2cDrvPcf);
+AS5600 mags(i2cDrvAS);
+TM8211 extdac(i2sDrvTm);
 
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 
@@ -104,6 +121,18 @@ void GPIO_SW_I2C_Init(void){
     GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
 
+void GPIO_SW_I2S_Init(void){
+    GPIO_InitTypeDef  GPIO_InitStructure = {0};
+
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE );
+
+    GPIO_InitStructure.GPIO_Pin = I2S_SW_SDA | I2S_SW_SCK | I2S_SW_WS;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_WriteBit(GPIOB, GPIO_InitStructure.GPIO_Pin, (BitAction)true);
+    GPIO_Init( GPIOB, &GPIO_InitStructure );
+}
+
 RGB565 color = 0xffff;
 const RGB565 white = 0xffff;
 const RGB565 black = 0;
@@ -134,8 +163,9 @@ int main(){
 
     Systick_Init();
     GPIO_PortC_Init();
-    HX711_GPIO_Init();
+    // HX711_GPIO_Init();
     GPIO_SW_I2C_Init();
+    GPIO_SW_I2S_Init();
     // TTP229_GPIO_Init();
     // delayMicroseconds(20);
  
@@ -184,12 +214,12 @@ int main(){
     }
 
     // mpu.init();
-    // extadc.init();
-    // extadc.setContMode(true);
-    // extadc.setFS(SGM58031::FS::FS2_048);
-    // extadc.setMux(SGM58031::MUX::P0NG);
-    // extadc.setDataRate(SGM58031::DataRate::DR960);
-    // extadc.startConv();
+    extadc.init();
+    extadc.setContMode(true);
+    extadc.setFS(SGM58031::FS::FS2_048);
+    extadc.setMux(SGM58031::MUX::P0NG);
+    extadc.setDataRate(SGM58031::DataRate::DR960);
+    extadc.startConv();
     // tcs.init();
     // tcs.setIntegration(48);
     // tcs.setGain(TCS34725::Gain::X60);
@@ -198,6 +228,8 @@ int main(){
     // vlx.setContinuous(true);
     // vlx.setHighPrecision(false);
     // vlx.startConv();
+    mags.init();
+
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
     while(1){
@@ -205,7 +237,7 @@ int main(){
         // LCD_Fill_Screen(RGB565::BLACK);
 
 
-        c1 = Color::from_hsv(fmod(t, real_t(360)));
+        c1 = Color::from_hsv(fmod(t*0.3, real_t(360)));
         color = c1;
 
         // renderTest4();
@@ -398,12 +430,33 @@ int main(){
         // i2cSwIm.end();
 
         // delay(100);
-        uint64_t micro_before = micros();
-        uint64_t cnt_before = SysTick->CNT;
-        for(uint8_t i = 0; i< 1; i++)uart2.println(String(3 * sin(4 * t)));
-        uint64_t micro_after = micros();
-        uint64_t cnt_after = SysTick->CNT;
-        uart1.println((uint32_t)(micro_after - micro_before));
+        // uint64_t micro_before = micros();
+        // for(uint8_t i = 0; i< 1; i++)uart2.println(String(3 * sin(4 * t)));
+        // uint64_t micro_after = micros();
+        // uart1.println((uint32_t)(micro_after - micro_before));
+        real_t play_v(100);
+        real_t volt_out_l = (1.35 + 0.5 * sin(play_v * t));
+        real_t volt_out_r = (1.35 + 0.5 * cos(play_v * t));
+        extdac.setVoltage((float)volt_out_l, (float)volt_out_r);
+
+        if(extadc.isIdle()){
+            static uint8_t adc_prog = 0;
+            static real_t volt_in_l(0);
+            static real_t volt_in_r(0);
+            switch(adc_prog){
+            case 0:
+                extadc.setMux(SGM58031::MUX::P1NG);
+                volt_in_l = extadc.getConvData() * 2.048 / 0x8000;
+                adc_prog = 1;
+                break;
+            case 1:
+                extadc.setMux(SGM58031::MUX::P0NG);
+                volt_in_r = extadc.getConvData() * 2.048 / 0x8000;
+                uart1.println(volt_in_l, volt_in_r);
+                adc_prog = 0;
+            }
+        }
+
         PC13_2 = !PC13_2;
         // delayMicroseconds
         t += delta;

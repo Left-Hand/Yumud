@@ -3,6 +3,7 @@
 
 #include "spi/spi.hpp"
 #include "i2c/i2c.hpp"
+#include "i2s/i2s.hpp"
 #include <type_traits>
 #include <initializer_list>
 
@@ -10,7 +11,8 @@
 #include "i2c/i2csw.hpp"
 enum class BusType{
     SpiBus,
-    I2cBus
+    I2cBus,
+    I2sBus
 };
 
 class BusDrv{
@@ -23,7 +25,7 @@ protected:
 public:
     BusDrv(I2c & _bus, const uint8_t & _index = 0):bus(_bus), index(_index){bus_type = BusType::I2cBus;}
     BusDrv(Spi & _bus, const uint8_t & _index = 0):bus(_bus), index(_index){bus_type = BusType::SpiBus;}
-
+    BusDrv(I2s & _bus, const uint8_t & _index = 0):bus(_bus), index(_index){bus_type = BusType::I2sBus;}
 
     void write(const uint8_t & data, bool discont = true){
         if(!bus.begin(index)){
@@ -33,6 +35,13 @@ public:
     }
 
     void write(const uint16_t & data, bool discont = true){
+        if(!bus.begin(index)){
+            bus.write(data);
+            if(discont) bus.end();
+        }
+    }
+
+    void write(const uint32_t & data, bool discont = true){
         if(!bus.begin(index)){
             bus.write(data);
             if(discont) bus.end();

@@ -128,10 +128,6 @@ protected :
     bool owned_by(const uint8_t & index = 0) override{
         return (occupied == (index >> 1));
     }
-
-    int8_t occupi() override{
-        return occupied;
-    }
 public:
 
     I2cSw(GpioBase & _scl,GpioBase & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}
@@ -193,7 +189,7 @@ public:
         return Bus::ErrorType::OK;
     }
 
-    __fast_inline Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+    Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
         write(data_tx);
         read(data_rx, toAck);
         return ErrorType::OK;

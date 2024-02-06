@@ -45,9 +45,6 @@ public:
     virtual Error write(const uint32_t & data) = 0;
     virtual Error read(uint32_t & data, bool toAck = true) = 0;
     virtual Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) = 0;
-    virtual int8_t occupi() {
-        return 0;
-    }
 };
     
 #endif // !__PRINTABLE_HPP__
