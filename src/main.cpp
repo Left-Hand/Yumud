@@ -405,13 +405,17 @@ int main(){
         //     // vlx.startConv();
         // }
 
-        PC13_2 = !PC13_2;
-        tp = PC13_2;
+        // tp = PC13_2;
 
-        i2cSwIm.begin(0x55);
-        i2cSwIm.end();
+        // i2cSwIm.begin(0x55);
+        // i2cSwIm.end();
 
         // delay(100);
+        uint64_t micro_before = micros();
+        uart1.println(String(3 * sin(4 * t)));
+        uart1.println(micros() - micro_before);
+        PC13_2 = !PC13_2;
+        // delayMicroseconds
         t += delta;
     }
 }

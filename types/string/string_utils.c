@@ -1,6 +1,6 @@
 #include "string_utils.h"
 
-void reverse_str(char * str, size_t len){
+volatile void reverse_str(char * str, size_t len){
 	if(len == 0) return;
 
 	len -= 1;
@@ -12,7 +12,7 @@ void reverse_str(char * str, size_t len){
 	str[len + 1] = '\0';
 }
 
-void itoa(int64_t value,char *str,uint8_t radix)  
+volatile void itoa(int64_t value,char *str,uint8_t radix)  
 {
     int sign = 0;  
     int i=0;  
@@ -36,7 +36,7 @@ void itoa(int64_t value,char *str,uint8_t radix)
     reverse_str(str, i);
 }
 
-void itoas(int value,char *str,uint8_t radix, uint8_t size)  
+volatile void itoas(int value,char *str,uint8_t radix, uint8_t size)  
 {
 	uint8_t i = 0;
     value = abs(value);
@@ -47,7 +47,7 @@ void itoas(int value,char *str,uint8_t radix, uint8_t size)
 			str[i] = value%radix +'0';  
 		i++;  
 	}while((value/=radix)>0 && i < size);  
-	
+	for(;i<= size; i++)str[i] = '0';
 	reverse_str(str, size);
 }
 
@@ -75,7 +75,7 @@ void iutoa(uint64_t value,char *str,uint8_t radix)
     reverse_str(str, i);
 }
 
-void ftoa(float number,char *buf, uint8_t eps)  
+volatile void ftoa(float number,char *buf, uint8_t eps)  
 {
     char str_int[12];  
     char str_float[eps+1];  
@@ -85,7 +85,11 @@ void ftoa(float number,char *buf, uint8_t eps)
     long int_part = (long)number;  
     float float_part = number - (float)int_part;  
 
-    itoa(int_part,str_int,10);  
+	if(number < 0 && int_part == 0){
+		str_int[0] = '-';
+		itoa(int_part,str_int + 1,10); 
+	}
+	else itoa(int_part,str_int,10);   
  
     if(eps){  
         float scale = 1;
@@ -93,7 +97,7 @@ void ftoa(float number,char *buf, uint8_t eps)
             scale *= 10;
 
         float_part *= scale;  
-        itoas((int)(float_part + 0.5f),str_float, 10, eps);
+        itoas((int)(float_part),str_float, 10, eps);
     }
 
     int i = strlen(str_int);  
