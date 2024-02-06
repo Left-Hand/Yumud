@@ -11,12 +11,12 @@
 
 template <typename T>
 struct Color_t {
-private:
+public:
     T r;
     T g;
     T b;
     T a;
-public:
+    
 	bool operator==(const Color_t &p_Color) const { return (r == p_Color.r && g == p_Color.g && b == p_Color.b && a == p_Color.a); }
 	bool operator!=(const Color_t &p_Color) const { return (r != p_Color.r || g != p_Color.g || b != p_Color.b || a != p_Color.a); }
 

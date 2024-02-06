@@ -12,17 +12,15 @@
 #include "../../gpio/gpio.hpp"
 
 class I2cSw: public I2c{
-    public:
-    int8_t occupied = -1;
 private:
-    
+volatile int8_t occupied = -1;
 Gpio & scl;
 Gpio & sda;
 
 uint8_t delays = 0;
 
 volatile void delayDur(){
-    delayMicroseconds(4);
+    delayMicroseconds(1);
     // __nopn(60);
 
     // for(volatile uint16_t i = 0; i < delays; i++);
@@ -93,7 +91,7 @@ bool wait_ack(){
 }
 
 __fast_inline void start(const uint8_t & _address) {
-    occupied = _address & 0xFE;
+    occupied = _address >> 1;
     scl.OutOD();
     sda.OutOD();
     sda = true;
@@ -128,9 +126,12 @@ protected :
     }
 
     bool owned_by(const uint8_t & index = 0) override{
-        return (occupied == index);
+        return (occupied == (index >> 1));
     }
 
+    int8_t occupi() override{
+        return occupied;
+    }
 public:
 
     I2cSw(Gpio & _scl,Gpio & _sda):scl(_scl), sda(_sda){;}

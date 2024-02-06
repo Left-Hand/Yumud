@@ -28,6 +28,7 @@ public:
 
         Error(const ErrorType & _errorType):errorType(_errorType){;}
 
+        bool operator ==(const ErrorType & _errorType){return errorType == _errorType;}
         explicit operator bool() {return errorType != ErrorType::OK;}
         explicit operator ErrorType() {return errorType;}
     };
@@ -44,6 +45,9 @@ public:
     virtual Error write(const uint32_t & data) = 0;
     virtual Error read(uint32_t & data, bool toAck = true) = 0;
     virtual Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) = 0;
+    virtual int8_t occupi() {
+        return 0;
+    }
 };
     
 #endif // !__PRINTABLE_HPP__
