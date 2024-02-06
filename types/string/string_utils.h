@@ -10,12 +10,12 @@ extern "C" {
 #include "stdlib.h"
 #include "string.h"
 
-volatile void reverse_str(char * str, size_t len);
+void reverse_str(char * str, size_t len);
 
-volatile void ftoa(float value, char *str, uint8_t eps);
+void ftoa(float value, char *str, uint8_t eps);
 
-volatile void itoa(int64_t value, char *str, uint8_t radix);
-volatile void itoas(int value, char *str, uint8_t radix, uint8_t size);
+void itoa(int64_t value, char *str, uint8_t radix);
+void itoas(int value, char *str, uint8_t radix, uint8_t size);
 void iutoa(uint64_t value, char *str, uint8_t radix);
 
 int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len);

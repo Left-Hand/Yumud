@@ -44,17 +44,14 @@ uint64_t millis(void)
 
 uint64_t micros(void)
 {
-  uint64_t m0 = GetTick();
-  __IO uint64_t u0 = SysTick->CNT;
-  uint64_t m1 = GetTick();
-  __IO uint32_t u1 = SysTick->CNT;   //may be a interruption
-   uint64_t tms = SysTick->CMP + 1;
+    __disable_irq();
+    uint64_t m0 = GetTick();
+    __IO uint64_t u0 = SysTick->CNT;
+    __enable_irq();
+    uint64_t tms = SysTick->CMP + 1;
 
-  if (m1 != m0) {
-    return (m1 * 1000 + ((tms - u1) * 1000) / tms);
-  } else {
-    return (m0 * 1000 + ((tms - u0) * 1000) / tms);
-  }
+    return (m0 * 1000 + (u0 * 1000) / tms);
+
 }
 
 void delay(uint32_t ms)

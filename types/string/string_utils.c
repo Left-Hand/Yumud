@@ -1,6 +1,6 @@
 #include "string_utils.h"
 
-volatile void reverse_str(char * str, size_t len){
+void reverse_str(char * str, size_t len){
 	if(len == 0) return;
 
 	len -= 1;
@@ -12,7 +12,7 @@ volatile void reverse_str(char * str, size_t len){
 	str[len + 1] = '\0';
 }
 
-volatile void itoa(int64_t value,char *str,uint8_t radix)  
+void itoa(int64_t value,char *str,uint8_t radix)  
 {
     int sign = 0;  
     int i=0;  
@@ -36,7 +36,7 @@ volatile void itoa(int64_t value,char *str,uint8_t radix)
     reverse_str(str, i);
 }
 
-volatile void itoas(int value,char *str,uint8_t radix, uint8_t size)  
+void itoas(int value,char *str,uint8_t radix, uint8_t size)  
 {
 	uint8_t i = 0;
     value = abs(value);
@@ -53,12 +53,8 @@ volatile void itoas(int value,char *str,uint8_t radix, uint8_t size)
 
 void iutoa(uint64_t value,char *str,uint8_t radix)  
 {
-    int sign = 0;  
     int i=0;  
-    if(value < 0){  
-        sign = -1;  
-        value = -value;  
-    }
+
     do {  
         if(value%radix>9)  
             str[i] = value%radix +'0'+7;  
@@ -66,16 +62,11 @@ void iutoa(uint64_t value,char *str,uint8_t radix)
             str[i] = value%radix +'0';  
         i++;  
     } while((value/=radix)>0);  
-    
-    if(sign<0) {
-        str[i] = '-';
-        i++;
-    } 
 
     reverse_str(str, i);
 }
 
-volatile void ftoa(float number,char *buf, uint8_t eps)  
+void ftoa(float number,char *buf, uint8_t eps)  
 {
     char str_int[12];  
     char str_float[eps+1];  

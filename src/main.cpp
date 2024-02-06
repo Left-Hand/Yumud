@@ -218,12 +218,12 @@ int main(){
         // LCD_Fill_Screen(RGB565::BLACK);
 
 
-        c1 = Color::from_hsv(fmod(t, real_t(360)));
-        color = c1;
+        // c1 = Color::from_hsv(fmod(t, real_t(360)));
+        // color = c1;
 
         // renderTest4();
         if(use_tft){
-            tftDisplayer.flush(color);
+            // tftDisplayer.flush(color);
             // tftDisplayer.flush(RGB565::BLACK);
         }else{
             oledDisPlayer.flush(true);
@@ -239,18 +239,18 @@ int main(){
         // LCD_Printf(0,8,white, String(Vector2(1,1)).c_str());
         // LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
 
-        uint64_t delta_u = (micros() - begin_u);
-        begin_u = micros();
-        delta = real_t(delta_u / 1000000.0f);
+        // uint64_t delta_u = (micros() - begin_u);
+        // begin_u = micros();
+        // delta = real_t(delta_u / 1000000.0f);
 
-        if(delta){
-            fps = real_t(1) / delta;
-            if(!fps_filted){
-                fps_filted = (fps_filted * 19 + fps) / 20;
-            }else{
-                fps_filted = fps;
-            }
-        }
+        // if(delta){
+        //     fps = real_t(1) / delta;
+        //     if(!fps_filted){
+        //         fps_filted = (fps_filted * 19 + fps) / 20;
+        //     }else{
+        //         fps_filted = fps;
+        //     }
+        // }
 
         // LCD_Printf(170, 240 - 1 - 8, white, (String("fps: ") + String(fps)).c_str());
 
@@ -411,9 +411,11 @@ int main(){
         // i2cSwIm.end();
 
         // delay(100);
-        uint64_t micro_before = micros();
-        uart1.println(String(3 * sin(4 * t)));
-        uart1.println(micros() - micro_before);
+        static uint64_t last_micros = 0;
+        uint64_t this_micros = micros();
+        uint64_t this_millis = millis();
+        uart1.println(this_micros, this_millis * 1000);
+        last_micros = this_micros;
         PC13_2 = !PC13_2;
         // delayMicroseconds
         t += delta;
