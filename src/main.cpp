@@ -74,19 +74,6 @@ GpioImag i2cSdaIm = GpioImag(2, writePcfGpioImag, readPcfGpioImag);
 
 I2cSw i2cSwIm = I2cSw(i2cSclIm, i2cSdaIm, 0);
 
-void Systick_Init(void){
-    CHECK_INIT
-
-    SysTick->SR  = 0;
-    SysTick->CTLR= 0;
-    SysTick->CNT = 0;
-    SysTick->CMP = SystemCoreClock / 1000 - 1;
-    SysTick->CTLR= 0xF;
-
-    NVIC_SetPriority(SysTicK_IRQn,0xFF);
-    NVIC_EnableIRQ(SysTicK_IRQn);
-}
-
 void GPIO_PortC_Init( void ){
     CHECK_INIT
 
@@ -218,12 +205,12 @@ int main(){
         // LCD_Fill_Screen(RGB565::BLACK);
 
 
-        // c1 = Color::from_hsv(fmod(t, real_t(360)));
-        // color = c1;
+        c1 = Color::from_hsv(fmod(t, real_t(360)));
+        color = c1;
 
         // renderTest4();
         if(use_tft){
-            // tftDisplayer.flush(color);
+            tftDisplayer.flush(color);
             // tftDisplayer.flush(RGB565::BLACK);
         }else{
             oledDisPlayer.flush(true);
@@ -239,18 +226,18 @@ int main(){
         // LCD_Printf(0,8,white, String(Vector2(1,1)).c_str());
         // LCD_Printf(0,16,white, String(Complex(1,1)).c_str());
 
-        // uint64_t delta_u = (micros() - begin_u);
-        // begin_u = micros();
-        // delta = real_t(delta_u / 1000000.0f);
+        uint64_t delta_u = (micros() - begin_u);
+        begin_u = micros();
+        delta = real_t(delta_u / 1000000.0f);
 
-        // if(delta){
-        //     fps = real_t(1) / delta;
-        //     if(!fps_filted){
-        //         fps_filted = (fps_filted * 19 + fps) / 20;
-        //     }else{
-        //         fps_filted = fps;
-        //     }
-        // }
+        if(delta){
+            fps = real_t(1) / delta;
+            if(!fps_filted){
+                fps_filted = (fps_filted * 19 + fps) / 20;
+            }else{
+                fps_filted = fps;
+            }
+        }
 
         // LCD_Printf(170, 240 - 1 - 8, white, (String("fps: ") + String(fps)).c_str());
 
@@ -411,11 +398,12 @@ int main(){
         // i2cSwIm.end();
 
         // delay(100);
-        static uint64_t last_micros = 0;
-        uint64_t this_micros = micros();
-        uint64_t this_millis = millis();
-        uart1.println(this_micros, this_millis * 1000);
-        last_micros = this_micros;
+        uint64_t micro_before = micros();
+        uint64_t cnt_before = SysTick->CNT;
+        for(uint8_t i = 0; i< 1; i++)uart2.println(String(3 * sin(4 * t)));
+        uint64_t micro_after = micros();
+        uint64_t cnt_after = SysTick->CNT;
+        uart1.println((uint32_t)(micro_after - micro_before));
         PC13_2 = !PC13_2;
         // delayMicroseconds
         t += delta;

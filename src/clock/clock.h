@@ -25,11 +25,16 @@ extern "C" {
 void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
 extern __IO uint64_t msTick;
+extern uint32_t tick_per_ms;
+extern uint32_t tick_per_us;
 
 __attribute__ ((weak)) uint64_t GetTick(void);
 uint64_t millis(void);
 uint64_t micros(void);
+
 void delay(uint32_t ms);
+
+void Systick_Init(void);
 
 static inline void delayMicroseconds(uint32_t) __attribute__((always_inline, unused));
 static inline void delayMicroseconds(uint32_t us)
@@ -38,7 +43,7 @@ static inline void delayMicroseconds(uint32_t us)
   /* Number of ticks per millisecond */
   uint64_t tickPerMs = SysTick->CMP + 1;
   /* Number of ticks to count */
-  uint64_t nbTicks = ((us - 1) * tickPerMs) / 1000;
+  uint64_t nbTicks = (us - 1) * tick_per_us;
   /* Number of elapsed ticks */
   uint64_t elapsedTicks = 0;
   __IO uint64_t oldTicks = currentTicks;
@@ -54,10 +59,6 @@ static inline void delayMicroseconds(uint32_t us)
     oldTicks = currentTicks;
   } while (nbTicks > elapsedTicks);  
 }
-
-#ifndef F_CPU 
-#define F_CPU 144000000
-#endif
 
 static inline void delayNanoseconds(uint32_t ns) {
     for (volatile uint32_t i = 0; i < ns; i++) __asm__ volatile("");

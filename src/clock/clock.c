@@ -20,10 +20,8 @@
 extern "C" {
 #endif
 
-#define TICK_FREQ_1KHz    1L
-// #define TICK_FREQ_100Hz   10L
-// #define TICK_FREQ_10Hz    100L 
-
+uint32_t tick_per_ms = 0;
+uint32_t tick_per_us = 0;
 
 __IO uint64_t msTick=0;
 __attribute__ ((weak)) uint64_t GetTick(void)
@@ -39,18 +37,17 @@ __attribute__ ((weak)) uint64_t GetTick(void)
   */
 uint64_t millis(void)
 {
-  return GetTick();
+  return msTick;
 }
 
 uint64_t micros(void)
 {
     __disable_irq();
-    uint64_t m0 = GetTick();
-    __IO uint64_t u0 = SysTick->CNT;
+    uint64_t m = GetTick();
+    __IO uint64_t u_ticks = SysTick->CNT;
     __enable_irq();
-    uint64_t tms = SysTick->CMP + 1;
 
-    return (m0 * 1000 + (u0 * 1000) / tms);
+    return (m * 1000 + u_ticks / tick_per_us);
 
 }
 
@@ -70,6 +67,22 @@ void SysTick_Handler(void)
   SysTick->SR = 0;
 }
 
+void Systick_Init(void){
+    static uint8_t inited = 0;
+    if(inited) return;
+    inited = 1;
+
+    tick_per_ms = SystemCoreClock / 1000;
+    tick_per_us = tick_per_ms / 1000;
+    SysTick->SR  = 0;
+    SysTick->CTLR= 0;
+    SysTick->CNT = 0;
+    SysTick->CMP = tick_per_ms - 1;
+    SysTick->CTLR= 0xF;
+
+    NVIC_SetPriority(SysTicK_IRQn,0xFF);
+    NVIC_EnableIRQ(SysTicK_IRQn);
+}
 
 #ifdef __cplusplus
 }
