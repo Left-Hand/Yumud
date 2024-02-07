@@ -106,6 +106,7 @@ void GPIO_PortC_Init( void ){
     PWR_BackupAccessCmd(DISABLE);
 }
 
+
 void GPIO_SW_I2C_Init(void){
     GPIO_InitTypeDef  GPIO_InitStructure = {0};
 
@@ -157,6 +158,7 @@ void GPIO_SW_I2S_Init(void){
     GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
 
+
 RGB565 color = 0xffff;
 const RGB565 white = 0xffff;
 const RGB565 black = 0;
@@ -179,6 +181,20 @@ real_t fps = real_t(0);
 real_t fps_filted = real_t(0);
 real_t t = real_t(0);
 
+void reCaculateTime(){
+    __disable_irq();
+    uint64_t m = GetTick();
+    int ticks = SysTick->CNT;
+    __enable_irq();
+    
+    real_t s = real_t((int)(m / 1000));
+    real_t ms = real_t((int)(m % 1000)) / real_t(1000);
+    // float us = ((ticks / tick_per_us) % 1000)/ 1000000.0f;
+    s += ms;
+    // s += us;
+    // uart1.println(s);
+    t = s;
+}
 
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -187,7 +203,7 @@ int main(){
 
     Systick_Init();
     GPIO_PortC_Init();
-    TIM2_Init();
+    // TIM2_Init();
     // HX711_GPIO_Init();
     GPIO_SW_I2C_Init();
     GPIO_SW_I2S_Init();
@@ -276,36 +292,33 @@ int main(){
 
 
 
-        // if(extadc.isIdle()){
-        //     uart1.println(extadc.getConvData(), extdac.ldata);
-        //     extadc.startConv();
-        // }
+        // nanos();
         PC13_2 = !PC13_2;
-        // t += delta;
 
+        reCaculateTime();
     }
 }
 
-real_t wave(const real_t & x){
-    if(x > 0){
-        const real_t play_v(50);
-        return  exp(-10 * x) * sin(TAU * frac(play_v * x));
-    }else{
-        return real_t(0);
-    }
-}
-extern "C"{
-void TIM2_IRQHandler(void) 
-{ 	    	  	
-	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
-	{
-        t = real_t(micros() / 1000000.0f);
-        real_t t_frac = frac(frac(t) * 3);
-        real_t volt_out_l = (2.5 + 0.4 * (wave(t_frac) + wave(t_frac - 0.25) + wave(t_frac - 0.5)));
-        extdac.setVoltage(volt_out_l, volt_out_l);
+// real_t wave(const real_t & x){
+//     if(x > 0){
+//         const real_t play_v(50);
+//         return  exp(-10 * x) * sin(TAU * frac(play_v * x));
+//     }else{
+//         return real_t(0);
+//     }
+// }
+// extern "C"{
+// void TIM2_IRQHandler(void) 
+// { 	    	  	
+// 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
+// 	{
+//         
+//         real_t t_frac = frac(frac(t) * 3);
+//         real_t volt_out_l = (2.5 + 0.4 * (wave(t_frac) + wave(t_frac - 0.25) + wave(t_frac - 0.5)));
+//         extdac.setVoltage(volt_out_l, volt_out_l);
 
-		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-    }     
-}
-}
+// 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+//     }     
+// }
+// }
 

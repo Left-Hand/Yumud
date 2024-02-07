@@ -20,8 +20,8 @@
 extern "C" {
 #endif
 
-uint32_t tick_per_ms = 0;
-uint32_t tick_per_us = 0;
+int tick_per_ms = 0;
+int tick_per_us = 0;
 
 
 __IO uint64_t msTick=0;
@@ -58,7 +58,7 @@ uint64_t nanos(){
     __IO uint64_t ticks = SysTick->CNT;
     __enable_irq();
 
-    return (m * 1000000 + ticks * NanoMut);
+    return (m * 1000000 + NanoMut(ticks));
 }
 
 void delay(uint32_t ms)

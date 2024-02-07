@@ -25,9 +25,21 @@ extern "C" {
 void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
 extern __IO uint64_t msTick;
-extern uint32_t tick_per_ms;
-extern uint32_t tick_per_us;
-#define NanoMut (144/1000)
+extern int tick_per_ms;
+extern int tick_per_us;
+#define NanoMut(x) ( x * 1000 / 144)
+
+#define MicroTrim 1
+#define NanoTrim 300
+
+#ifndef MAX
+#define MAX(x,y) ((x > y)? x : y)
+#endif
+
+#ifndef MIN
+#define MIN(x,y) ((x < y) ? x : y)
+#endif
+
 
 __attribute__ ((weak)) uint64_t GetTick(void);
 uint64_t millis(void);
@@ -45,7 +57,7 @@ static inline void delayMicroseconds(uint32_t us)
   /* Number of ticks per millisecond */
   uint64_t tickPerMs = SysTick->CMP + 1;
   /* Number of ticks to count */
-  uint64_t nbTicks = (us - 1) * tick_per_us;
+  uint64_t nbTicks = MAX(us - MicroTrim, 0) * tick_per_us;
   /* Number of elapsed ticks */
   uint64_t elapsedTicks = 0;
   __IO uint64_t oldTicks = currentTicks;
@@ -68,7 +80,7 @@ static inline void delayNanoseconds(uint32_t ns) {
     /* Number of ticks per millisecond */
     uint64_t tickPerMs = SysTick->CMP + 1;
     /* Number of ticks to count */
-    uint64_t nbTicks = (ns - 1) * NanoMut;
+    uint64_t nbTicks = NanoMut(MAX(ns - NanoTrim, 0));
     /* Number of elapsed ticks */
     uint64_t elapsedTicks = 0;
     __IO uint64_t oldTicks = currentTicks;
