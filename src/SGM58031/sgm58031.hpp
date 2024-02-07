@@ -70,7 +70,7 @@ protected:
         REG16_END
     };
 
-    struct ChipIdReg:public Reg16{
+    struct DeviceIdReg:public Reg16{
         REG16_BEGIN
         uint8_t __resv1__   :5;
         uint8_t ver         :3;
@@ -107,13 +107,13 @@ protected:
         LowThrReg lowThrReg;
         HighThrReg highThrReg;
         Config1Reg config1Reg;
-        ChipIdReg chipIdReg;
+        DeviceIdReg deviceIdReg;
         TrimReg trimReg;
     };
 
     enum class RegAddress:uint8_t{
         Conv = 0,
-        Config,LowThr, HighThr, Config1, ChipID,Trim 
+        Config,LowThr, HighThr, Config1, DeviceID,Trim 
     };
 
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
@@ -136,12 +136,12 @@ public:
         readReg(RegAddress::LowThr, lowThrReg);
         readReg(RegAddress::HighThr, highThrReg);
         readReg(RegAddress::Trim, trimReg);
-        readReg(RegAddress::ChipID, chipIdReg);
+        readReg(RegAddress::DeviceID, deviceIdReg);
     }
 
-    void getId(){
-        readReg(RegAddress::ChipID, chipIdReg);
-        // SGM_DEBUG("Ver:", chipIdReg.ver, "Id", chipIdReg.id, uint16_t(chipIdReg));
+    void getDeviceId(){
+        readReg(RegAddress::DeviceID, deviceIdReg);
+        // SGM_DEBUG("Ver:", deviceIdReg.ver, "Id", deviceIdReg.id, uint16_t(deviceIdReg));
     }
 
     bool isIdle(){

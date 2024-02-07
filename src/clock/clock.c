@@ -23,6 +23,7 @@ extern "C" {
 uint32_t tick_per_ms = 0;
 uint32_t tick_per_us = 0;
 
+
 __IO uint64_t msTick=0;
 __attribute__ ((weak)) uint64_t GetTick(void)
 {
@@ -44,11 +45,20 @@ uint64_t micros(void)
 {
     __disable_irq();
     uint64_t m = GetTick();
-    __IO uint64_t u_ticks = SysTick->CNT;
+    __IO uint64_t ticks = SysTick->CNT;
     __enable_irq();
 
-    return (m * 1000 + u_ticks / tick_per_us);
+    return (m * 1000 + ticks / tick_per_us);
 
+}
+
+uint64_t nanos(){
+    __disable_irq();
+    uint64_t m = GetTick();
+    __IO uint64_t ticks = SysTick->CNT;
+    __enable_irq();
+
+    return (m * 1000000 + ticks * NanoMut);
 }
 
 void delay(uint32_t ms)

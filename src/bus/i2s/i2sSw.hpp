@@ -67,33 +67,23 @@ public:
         uint16_t rdata = data;
 
         ws = false;
-        delayDur();
 
-        for(uint8_t i=0; i<16; i++)
+        for(uint16_t mask = 0x8000; mask; mask >>= 1)
         {
-            sck = false;
-            if( (rdata>>(15-i))&0x0001 ) sda = true;
-            else sda = false;
-            delayDur();
-            sck = true;
-            delayDur();
+            sck.clr();
+            sda = rdata & mask;
+            sck.set();
         }
 
-        delayDur();
 
         ws = true;
-        delayDur();
-        for(uint8_t i=0; i<16; i++)
+        for(uint16_t mask = 0x8000; mask; mask >>= 1)
         {
-            sck = false;
-            if( (ldata>>(15-i))&0x0001 ) sda = true;
-            else sda = false;
-            delayDur();
-            sck = true;
-            delayDur();
+            sck.clr();
+            sda = ldata & mask;
+            sck.set();
         }
 
-        delayDur();
         ws = false;
         return Bus::ErrorType::OK;
     }

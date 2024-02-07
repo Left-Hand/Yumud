@@ -23,12 +23,12 @@
 #endif
 
 #ifndef __interrupt_soft
-#define __interrupt_soft extern "C" __attribute__((interrupt))
+#define __interrupt_soft __attribute__((interrupt))
 #endif
 
 #ifndef __interrupt
 #if defined(__riscv) && defined(WCH)
-#define __interrupt extern "C" __attribute__((interrupt("WCH-Interrupt-fast")))
+#define __interrupt __attribute__((interrupt("WCH-Interrupt-fast")))
 #else 
 #define __interrupt __interrupt_soft 
 #endif

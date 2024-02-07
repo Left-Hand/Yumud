@@ -86,6 +86,8 @@ GpioImag i2cSdaIm = GpioImag(2, writePcfGpioImag, readPcfGpioImag);
 
 I2cSw i2cSwIm = I2cSw(i2cSclIm, i2cSdaIm, 0);
 
+extern "C" void TIM2_IRQHandler(void) __interrupt;
+
 void GPIO_PortC_Init( void ){
     CHECK_INIT
 
@@ -115,6 +117,33 @@ void GPIO_SW_I2C_Init(void){
     GPIO_WriteBit(GPIOB, GPIO_InitStructure.GPIO_Pin, (BitAction)true);
     GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
+
+void TIM2_Init(){
+    
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
+    TIM_TimeBaseStructure.TIM_Period=144000000/20000 - 1;
+    TIM_TimeBaseStructure.TIM_Prescaler=1;
+    TIM_TimeBaseStructure.TIM_ClockDivision=TIM_CKD_DIV1;
+    TIM_TimeBaseStructure.TIM_CounterMode=TIM_CounterMode_Up;
+    TIM_TimeBaseInit(TIM2,&TIM_TimeBaseStructure);
+
+    TIM_ARRPreloadConfig(TIM2, DISABLE);
+    
+    TIM_Cmd(TIM2, ENABLE);
+
+    TIM_ClearFlag(TIM2, TIM_FLAG_Update);
+    TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
+
+    NVIC_InitTypeDef NVIC_InitStructure = {0};
+    NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init(&NVIC_InitStructure); 
+}
+
 
 void GPIO_SW_I2S_Init(void){
     GPIO_InitTypeDef  GPIO_InitStructure = {0};
@@ -158,6 +187,7 @@ int main(){
 
     Systick_Init();
     GPIO_PortC_Init();
+    TIM2_Init();
     // HX711_GPIO_Init();
     GPIO_SW_I2C_Init();
     GPIO_SW_I2S_Init();
@@ -223,17 +253,19 @@ int main(){
     // vlx.setContinuous(true);
     // vlx.setHighPrecision(false);
     // vlx.startConv();
-    mags.init();
+    // mags.init();
+    extdac.setDistort(5);
+    extdac.setRail(real_t(1), real_t(4));
 
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
     while(1){
 
-        // c1 = Color::from_hsv(frac(t));
-        // color = c1;
+        c1 = Color::from_hsv(frac(t));
+        color = c1;
 
         if(use_tft){
-            // tftDisplayer.flush(color);
+            tftDisplayer.flush(color);
         }else{
             oledDisPlayer.flush(true);
         }
@@ -242,19 +274,38 @@ int main(){
         begin_u = micros();
         delta = real_t(delta_u / 1000000.0f);
 
-        real_t play_v(500);
-        real_t volt_out_l = (1.65 + 1.8 * sin(play_v * 3.14 * frac(t)));
-        // real_t volt_out_r = (1.35 + 0.5 * sin(play_v * frac(t)));
-        extdac.setVoltage(volt_out_l, volt_out_l);
+
 
         // if(extadc.isIdle()){
         //     uart1.println(extadc.getConvData(), extdac.ldata);
         //     extadc.startConv();
         // }
         PC13_2 = !PC13_2;
-        t += delta;
+        // t += delta;
+
     }
 }
 
-// GENERATE_STD
+real_t wave(const real_t & x){
+    if(x > 0){
+        const real_t play_v(50);
+        return  exp(-10 * x) * sin(TAU * frac(play_v * x));
+    }else{
+        return real_t(0);
+    }
+}
+extern "C"{
+void TIM2_IRQHandler(void) 
+{ 	    	  	
+	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
+	{
+        t = real_t(micros() / 1000000.0f);
+        real_t t_frac = frac(frac(t) * 3);
+        real_t volt_out_l = (2.5 + 0.4 * (wave(t_frac) + wave(t_frac - 0.25) + wave(t_frac - 0.5)));
+        extdac.setVoltage(volt_out_l, volt_out_l);
+
+		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
+    }     
+}
+}
 

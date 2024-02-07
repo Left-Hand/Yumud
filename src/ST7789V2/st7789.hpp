@@ -2,7 +2,7 @@
 
 #define __ST7789V2_HPP__
 
-#include "../bus/busdrv.hpp"
+#include "../bus/bus_inc.h"
 #include "../bus/spi/spi2.hpp"
 #include "../../types/rgb.h"
 
@@ -18,7 +18,7 @@ ST7789V2_DC_Port -> BCR = ST7789V2_DC_Pin;
 
 class ST7789{
 private:
-    BusDrv & busdrv;
+    SpiDrv & busdrv;
 
     uint16_t w = 32;
     uint16_t h = 32;
@@ -62,7 +62,7 @@ private:
         writeData(scr_ctrl);
     }
 public:
-    ST7789(BusDrv & _busdrv):busdrv(_busdrv){;}
+    ST7789(SpiDrv & _busdrv):busdrv(_busdrv){;}
     void init();
     void flush(RGB565 color);     
 

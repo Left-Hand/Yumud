@@ -27,10 +27,12 @@ void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 extern __IO uint64_t msTick;
 extern uint32_t tick_per_ms;
 extern uint32_t tick_per_us;
+#define NanoMut (144/1000)
 
 __attribute__ ((weak)) uint64_t GetTick(void);
 uint64_t millis(void);
 uint64_t micros(void);
+uint64_t nanos(void);
 
 void delay(uint32_t ms);
 
@@ -60,8 +62,27 @@ static inline void delayMicroseconds(uint32_t us)
   } while (nbTicks > elapsedTicks);  
 }
 
+static inline void delayNanoseconds(uint32_t) __attribute__((always_inline, unused));
 static inline void delayNanoseconds(uint32_t ns) {
-    for (volatile uint32_t i = 0; i < ns; i++) __asm__ volatile("");
+    __IO uint64_t currentTicks = SysTick->CNT;
+    /* Number of ticks per millisecond */
+    uint64_t tickPerMs = SysTick->CMP + 1;
+    /* Number of ticks to count */
+    uint64_t nbTicks = (ns - 1) * NanoMut;
+    /* Number of elapsed ticks */
+    uint64_t elapsedTicks = 0;
+    __IO uint64_t oldTicks = currentTicks;
+    do {
+        currentTicks = SysTick->CNT;
+        // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :
+        //                 oldTicks - currentTicks;
+        
+        //increment
+        elapsedTicks += (oldTicks <= currentTicks) ? currentTicks - oldTicks :
+                        tickPerMs - oldTicks + currentTicks;
+
+        oldTicks = currentTicks;
+    } while (nbTicks > elapsedTicks);  
 }
 
 #ifdef __cplusplus

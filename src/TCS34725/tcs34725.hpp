@@ -101,7 +101,7 @@ protected:
         REG8_END
     };
 
-    struct ChipIdReg:public Reg8{
+    struct DeviceIdReg:public Reg8{
         REG8_BEGIN
         REG8_END
     };
@@ -144,7 +144,7 @@ protected:
         IntPersistenceReg intPersistenceReg;
         LongWaitReg longWaitReg;
         GainReg gainReg;
-        ChipIdReg chipIdReg;
+        DeviceIdReg deviceIdReg;
         StatusReg statusReg;
         ClearDataReg clearDataReg;
         RedDataReg redDataReg;
@@ -161,7 +161,7 @@ protected:
         IntPersistence = 0x0C,
         LongWait = 0x0D,
         Gain = 0x0F,
-        ChipId = 0x12,
+        DeviceId = 0x12,
         Status = 0x13,
         ClearData = 0x14,
         RedData = 0x16,
@@ -250,7 +250,7 @@ public:
     }
 
     void getId(){
-        readReg(RegAddress::ChipId, chipIdReg);
+        readReg(RegAddress::DeviceId, deviceIdReg);
     }
 
     bool isIdle(){
