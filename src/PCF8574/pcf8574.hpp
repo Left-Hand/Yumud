@@ -6,19 +6,19 @@
 
 class PCF8574{
 protected:
-    I2cDrv & busdrv;
+    I2cDrv & bus_drv;
 
     uint8_t data;
 public:
-    PCF8574(I2cDrv & _busdrv):busdrv(_busdrv){;}
+    PCF8574(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     void write(const uint8_t & _data){
         data = _data;
-        busdrv.write(data);
+        bus_drv.write(data);
     }
 
     uint8_t read(){
         uint8_t ret = 0;
-        busdrv.read(ret);
+        bus_drv.read(ret);
         return ret;
     }
 

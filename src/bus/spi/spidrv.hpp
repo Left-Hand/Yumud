@@ -1,6 +1,6 @@
-#ifndef __SPIDRV_HPP__
+#ifndef __SPI_DRV_HPP__
 
-#define __SPIDRV_HPP__
+#define __SPI_DRV_HPP__
 
 #include "spi.hpp"
 #include "../busdrv.hpp"

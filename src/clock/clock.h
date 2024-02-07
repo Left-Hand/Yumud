@@ -24,7 +24,7 @@ extern "C" {
 #endif
 void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
-extern __IO uint64_t msTick;
+extern __IO uint32_t msTick;
 extern int tick_per_ms;
 extern int tick_per_us;
 #define NanoMut(x) ( x * 1000 / 144)
@@ -41,8 +41,8 @@ extern int tick_per_us;
 #endif
 
 
-__attribute__ ((weak)) uint64_t GetTick(void);
-uint64_t millis(void);
+__attribute__ ((weak)) uint32_t GetTick(void);
+uint32_t millis(void);
 uint64_t micros(void);
 uint64_t nanos(void);
 

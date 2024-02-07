@@ -1,5 +1,5 @@
-#ifndef __I2CDRV_HPP__
-#define __I2CDRV_HPP__
+#ifndef __I2C_DRV_HPP__
+#define __I2C_DRV_HPP__
 
 #include "i2c.hpp"
 #include "../busdrv.hpp"

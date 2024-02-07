@@ -7,9 +7,9 @@
 
 class VL53L0X{
 public:
-    I2cDrv & busdrv;
+    I2cDrv & bus_drv;
 
-  VL53L0X(I2cDrv & _busdrv):busdrv(_busdrv){;}
+  VL53L0X(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
   ~VL53L0X(){;}
 
     void startConv();
@@ -22,7 +22,7 @@ public:
 	void setHighPrecision(const bool _highPrec);
     void setContinuous(const bool _continuous);
     bool isIdle();	
-    void reflash();
+    void flush();
 private:
     bool highPrec = false;
     bool continuous = false;
@@ -35,21 +35,21 @@ private:
 
     uint16_t last_distance;
 	void writeByteData(unsigned char Reg, unsigned char byte){
-        busdrv.writeReg(Reg, byte);
+        bus_drv.writeReg(Reg, byte);
     }
 
 	uint8_t readByteData(unsigned char Reg){
         uint8_t data;
-        busdrv.readReg(Reg, data);
+        bus_drv.readReg(Reg, data);
         return data;
     }
 
 	void writeData(unsigned char Reg ,unsigned char *buf, unsigned char Num){
-        busdrv.writePool(Reg, buf, Num, Num, false);
+        bus_drv.writePool(Reg, buf, Num, Num, false);
     }
 
     void requestData(uint8_t reg, uint8_t * data, const size_t len){
-        busdrv.readPool(reg, data, 2, len);
+        bus_drv.readPool(reg, data, 2, len);
     }
 };
 

@@ -63,7 +63,7 @@ public:
         sck.OutPP();
         sda.OutPP();
 
-        uint16_t ldata = data >> 16;
+        uint16_t left_data = data >> 16;
         uint16_t rdata = data;
 
         ws = false;
@@ -80,7 +80,7 @@ public:
         for(uint16_t mask = 0x8000; mask; mask >>= 1)
         {
             sck.clr();
-            sda = ldata & mask;
+            sda = left_data & mask;
             sck.set();
         }
 

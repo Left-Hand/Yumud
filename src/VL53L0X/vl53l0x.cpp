@@ -58,7 +58,7 @@ bool VL53L0X::isIdle(){
     return !bool(readByteData(VL53L0X_REG_SYSRANGE_START) & 0x01);
 }
 
-void VL53L0X::reflash(){
+void VL53L0X::flush(){
 	requestData(VL53L0X_REG_RESULT_RANGE_STATUS + 6, (uint8_t *)&ambientCount, 6);
 }
 
@@ -83,7 +83,7 @@ void VL53L0X::stop(){
 }
 
 uint16_t VL53L0X::getDistanceMm(){
-	reflash();
+	flush();
     uint16_t ret;
     if(distance <= 20 || distance  > 2400){
         ret = last_distance;

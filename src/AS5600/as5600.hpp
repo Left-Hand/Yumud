@@ -47,7 +47,7 @@ public:
     };
 
 protected:
-    I2cDrv & busdrv;
+    I2cDrv & bus_drv;
 
     struct Reg16{};
 
@@ -159,52 +159,52 @@ protected:
     }
 
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
-        busdrv.writeReg((uint8_t)regAddress, *(uint16_t *)&regData);
+        bus_drv.writeReg((uint8_t)regAddress, *(uint16_t *)&regData);
     }
 
     void readReg(const RegAddress & regAddress, Reg16 & regData){
         uint16_t temp = 0;
-        busdrv.readReg((uint8_t)regAddress, temp);
+        bus_drv.readReg((uint8_t)regAddress, temp);
         regData = *(Reg16 *)&temp;
     }
 
     void writeReg(const RegAddress & regAddress, const Reg8 & regData){
-        busdrv.writeReg((uint8_t)regAddress, *(uint8_t *)&regData);
+        bus_drv.writeReg((uint8_t)regAddress, *(uint8_t *)&regData);
     }
 
     void readReg(const RegAddress & regAddress, Reg8 & regData){
-        busdrv.readReg((uint8_t)regAddress, *(uint8_t *)&regData);
+        bus_drv.readReg((uint8_t)regAddress, *(uint8_t *)&regData);
     }
 
     void requestRegData(const RegAddress & regAddress, uint8_t * data_ptr, const size_t len){
-        busdrv.readPool((uint8_t)regAddress, data_ptr, 2, len, false);
+        bus_drv.readPool((uint8_t)regAddress, data_ptr, 2, len, false);
     }
 
 public:
-    AS5600(I2cDrv & _busdrv):busdrv(_busdrv){;}
+    AS5600(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
 
-    void setPowerMode(const PowerMode & _powermode){
-        configReg.powerMode = (uint8_t)_powermode;
+    void setPowerMode(const PowerMode & _power_mode){
+        configReg.powerMode = (uint8_t)_power_mode;
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setFastFilter(const FastFilter & _fastfilter){
-        configReg.fastFilter = (uint8_t)_fastfilter;
+    void setFastFilter(const FastFilter & _fast_filter){
+        configReg.fastFilter = (uint8_t)_fast_filter;
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setSlowFilter(const SlowFilter & _slowfilter){
-        configReg.slowFilter = (uint8_t)_slowfilter;
+    void setSlowFilter(const SlowFilter & _slow_filter){
+        configReg.slowFilter = (uint8_t)_slow_filter;
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setPwmFrequency(const PwmFrequency & _pwmfrequency){
-        configReg.pwmFrequency = (uint8_t)_pwmfrequency;
+    void setPwmFrequency(const PwmFrequency & _pwm_frequency){
+        configReg.pwmFrequency = (uint8_t)_pwm_frequency;
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setOuputStage(const OutputStage & _outputstage){
-        configReg.outputStage = (uint8_t)_outputstage;
+    void setOuputStage(const OutputStage & _output_stage){
+        configReg.outputStage = (uint8_t)_output_stage;
         writeReg(RegAddress::Config, configReg);
     }
 

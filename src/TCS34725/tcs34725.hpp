@@ -34,7 +34,7 @@ public:
         X1 = 0, X4, X16, X60 
     };
 protected:
-    I2cDrv & busdrv;
+    I2cDrv & bus_drv;
 
     struct Reg16{
     public:
@@ -108,9 +108,9 @@ protected:
 
     struct StatusReg:public Reg8{
         REG8_BEGIN
-        uint8_t doneflag    :1;
+        uint8_t done_flag    :1;
         uint8_t __resv1__   :3;
-        uint8_t intflag     :1;
+        uint8_t interrupt_flag     :1;
         uint8_t __resv2__   :3;
         REG8_END
     };
@@ -174,27 +174,27 @@ protected:
     }
 
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
-        busdrv.writeReg(convRegAddress(regAddress), (uint16_t)regData, false);
+        bus_drv.writeReg(convRegAddress(regAddress), (uint16_t)regData, false);
     }
 
     void readReg(const RegAddress & regAddress, Reg16 & regData){
-        busdrv.readReg(convRegAddress(regAddress), (uint16_t &)regData, false);
+        bus_drv.readReg(convRegAddress(regAddress), (uint16_t &)regData, false);
     }
 
     void writeReg(const RegAddress & regAddress, const Reg8 & regData){
-        busdrv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData);
+        bus_drv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData);
     }
 
     void readReg(const RegAddress & regAddress, Reg8 & regData){
-        busdrv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData);
+        bus_drv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData);
     }
 
     void requestRegData(const RegAddress & regAddress, uint8_t * data_ptr, const size_t len){
-        busdrv.readPool(convRegAddress(regAddress), data_ptr, 2, len, false);
+        bus_drv.readPool(convRegAddress(regAddress), data_ptr, 2, len, false);
     }
 
 public:
-    TCS34725(I2cDrv & _busdrv):busdrv(_busdrv){;}
+    TCS34725(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
 
     void setIntegration(const uint16_t & ms){
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);
@@ -206,18 +206,18 @@ public:
     void setWaitTime(const uint16_t & ms){
         uint16_t ms_l = MAX(ms * 10 / 24,1);
         uint16_t value;
-        bool longwaitFlag = false;
+        bool long_waitFlag = false;
         if(ms_l <= 256){
             value = 256 - ms_l;
         }else{
             uint16_t ms_h = CLAMP(ms * 10 / 24 / 12, 1, 256);
             value = 256 - ms_h;
-            longwaitFlag = true;
+            long_waitFlag = true;
         }
 
         waitTimeReg.data = value;
         writeReg(RegAddress::WaitTime, waitTimeReg);
-        if(longwaitFlag){
+        if(long_waitFlag){
             longWaitReg.waitLong = true;
             writeReg(RegAddress::LongWait, longWaitReg);
         }
@@ -255,7 +255,7 @@ public:
 
     bool isIdle(){
         readReg(RegAddress::Status, statusReg);
-        return statusReg.doneflag;
+        return statusReg.done_flag;
     }
 
     void setPower(const bool & on){

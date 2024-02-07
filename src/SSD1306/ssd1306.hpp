@@ -17,7 +17,7 @@ SSD1306_DC_Port -> BCR = SSD1306_DC_Pin;
 
 class SSD1306{
 private:
-    BusDrv & busdrv;
+    BusDrv & bus_drv;
 
     uint16_t w = 128;
     uint16_t h = 64;
@@ -27,13 +27,13 @@ private:
     const uint8_t data_token = 0x40;
 
     __fast_inline void writeCommand(const uint8_t cmd){
-        switch(busdrv.getBusType()){
+        switch(bus_drv.getBusType()){
         case BusType::SpiBus:
             SSD1306_ON_CMD;
-            busdrv.write(cmd);
+            bus_drv.write(cmd);
             break;
         case BusType::I2cBus:
-            busdrv.write({cmd_token, cmd});
+            bus_drv.write({cmd_token, cmd});
             break;
         default:
             break;
@@ -41,13 +41,13 @@ private:
     }
 
     __fast_inline void writeData(const uint8_t data){
-        switch(busdrv.getBusType()){
+        switch(bus_drv.getBusType()){
         case BusType::SpiBus:
             SSD1306_ON_DATA;
-            busdrv.write(data);
+            bus_drv.write(data);
             break;
         case BusType::I2cBus:
-            busdrv.write({data_token, data});
+            bus_drv.write({data_token, data});
             break;
         default:
             break;
@@ -55,14 +55,14 @@ private:
     }
 
     void writePool(uint8_t * data_ptr, const size_t & len){
-        switch(busdrv.getBusType()){
+        switch(bus_drv.getBusType()){
         case BusType::SpiBus:
             SSD1306_ON_DATA;
-            busdrv.write(data_ptr, len);
+            bus_drv.write(data_ptr, len);
             break;
         case BusType::I2cBus:
-            busdrv.write(data_token, false);
-            busdrv.write(data_ptr, len);
+            bus_drv.write(data_token, false);
+            bus_drv.write(data_ptr, len);
             break;
         default:
             break;
@@ -70,14 +70,14 @@ private:
     }
 
     void writePool(const uint8_t & data, const size_t & len){
-        switch(busdrv.getBusType()){
+        switch(bus_drv.getBusType()){
         case BusType::SpiBus:
             SSD1306_ON_DATA;
-            busdrv.write(data, len);
+            bus_drv.write(data, len);
             break;
         case BusType::I2cBus:
-            busdrv.write(data_token, false);
-            busdrv.write(data, len);
+            bus_drv.write(data_token, false);
+            bus_drv.write(data, len);
             break;
         default:
             break;
@@ -92,7 +92,7 @@ private:
         writeCommand((x&0x0f));
     }
 public:
-    SSD1306(BusDrv & _busdrv):busdrv(_busdrv){;}
+    SSD1306(BusDrv & _bus_drv):bus_drv(_bus_drv){;}
     void init();
     void flush(bool color);     
 

@@ -64,7 +64,7 @@ TCS34725 tcs(i2cDrvTcs);
 VL53L0X vlx(i2cDrvVlx);
 PCF8574 pcf(i2cDrvPcf);
 AS5600 mags(i2cDrvAS);
-TM8211 extdac(i2sDrvTm);
+TM8211 extern_dac(i2sDrvTm);
 
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 
@@ -181,19 +181,12 @@ real_t fps = real_t(0);
 real_t fps_filted = real_t(0);
 real_t t = real_t(0);
 
-void reCaculateTime(){
-    __disable_irq();
-    uint64_t m = GetTick();
-    int ticks = SysTick->CNT;
-    __enable_irq();
-    
-    real_t s = real_t((int)(m / 1000));
-    real_t ms = real_t((int)(m % 1000)) / real_t(1000);
-    // float us = ((ticks / tick_per_us) % 1000)/ 1000000.0f;
-    s += ms;
-    // s += us;
-    // uart1.println(s);
-    t = s;
+void reCalculateTime(){
+    #ifdef USE_IQ
+    t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
+    #else
+    t = msTick * (1 / 1000.0f);
+    #endif
 }
 
 int main(){
@@ -231,8 +224,8 @@ int main(){
         tftDisplayer.setFlipY(false);
         tftDisplayer.setSwapXY(true);
         tftDisplayer.setFormatRGB(false);
-        tftDisplayer.setReflashDirH(false);
-        tftDisplayer.setReflashDirV(false);
+        tftDisplayer.setFlushDirH(false);
+        tftDisplayer.setFlushDirV(false);
         tftDisplayer.setInversion(true);
     }else{
         tftDisplayer.init();
@@ -242,8 +235,8 @@ int main(){
         tftDisplayer.setFlipY(false);
         tftDisplayer.setSwapXY(false);
         tftDisplayer.setFormatRGB(true);
-        tftDisplayer.setReflashDirH(false);
-        tftDisplayer.setReflashDirV(false);
+        tftDisplayer.setFlushDirH(false);
+        tftDisplayer.setFlushDirV(false);
         tftDisplayer.setInversion(true);
     }}else{
         oledDisPlayer.init();
@@ -270,8 +263,8 @@ int main(){
     // vlx.setHighPrecision(false);
     // vlx.startConv();
     // mags.init();
-    extdac.setDistort(5);
-    extdac.setRail(real_t(1), real_t(4));
+    extern_dac.setDistort(5);
+    extern_dac.setRail(real_t(1), real_t(4));
 
     Color c1 = Color::from_hsv(0);
     c1 = 3 * Color::from_hsv(20);
@@ -294,8 +287,10 @@ int main(){
 
         // nanos();
         PC13_2 = !PC13_2;
-
-        reCaculateTime();
+        uint64_t ns_before = nanos();
+        for(uint8_t i = 0; i<32; i++) reCalculateTime();
+        uint64_t ns_after = nanos();
+        uart1.println((uint32_t)(ns_after - ns_before) / 32);
     }
 }
 

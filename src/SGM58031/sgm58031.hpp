@@ -36,7 +36,7 @@ public:
         RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
 protected:
-    I2cDrv & busdrv;
+    I2cDrv & bus_drv;
 
     struct Reg16{
         Reg16 & operator = (const uint16_t & _data){(uint16_t &)*this = _data; return * this;}
@@ -117,19 +117,19 @@ protected:
     };
 
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
-        busdrv.writeReg((uint8_t)regAddress, (uint16_t)regData);
+        bus_drv.writeReg((uint8_t)regAddress, (uint16_t)regData);
     }
 
     void readReg(const RegAddress & regAddress, Reg16 & regData){
-        busdrv.readReg((uint8_t)regAddress, (uint16_t &)regData);
+        bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
     }
 
     void requestRegData(const RegAddress & regAddress, uint8_t * data_ptr, const size_t len){
-        busdrv.readPool((uint8_t)regAddress, data_ptr, 2, len);
+        bus_drv.readPool((uint8_t)regAddress, data_ptr, 2, len);
     }
 
 public:
-    SGM58031(I2cDrv & _busdrv):busdrv(_busdrv){;}
+    SGM58031(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
 
     void init(){
         readReg(RegAddress::Config, configReg);

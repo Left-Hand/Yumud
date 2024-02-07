@@ -100,7 +100,17 @@
             "editor.autoIndent": "advanced"
         },
         "C_Cpp.errorSquiggles": "Disabled",
-        "EIDE.SerialPortMonitor.BaudRate": 115200
+        "EIDE.SerialPortMonitor.BaudRate": 115200,
+        "cSpell.words": [
+            "BSHR",
+            "CRGB",
+            "CTLR",
+            "datas",
+            "inited",
+            "STDMATH",
+            "Systick",
+            "vref"
+        ]
     },
     "extensions": {
         "recommendations": [

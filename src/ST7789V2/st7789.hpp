@@ -18,7 +18,7 @@ ST7789V2_DC_Port -> BCR = ST7789V2_DC_Pin;
 
 class ST7789{
 private:
-    SpiDrv & busdrv;
+    SpiDrv & bus_drv;
 
     uint16_t w = 32;
     uint16_t h = 32;
@@ -29,27 +29,27 @@ private:
 
     __fast_inline void writeCommand(const uint8_t & cmd){
         ST7789V2_ON_CMD;
-        busdrv.write(cmd);
+        bus_drv.write(cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data){
         ST7789V2_ON_DATA;
-        busdrv.write(data);
+        bus_drv.write(data);
     }
 
     void writePool(uint8_t * data, const size_t & len){
         ST7789V2_ON_DATA;
-        busdrv.write(data, len);
+        bus_drv.write(data, len);
     }
 
     void writePool(const uint8_t & data, const size_t & len){
         ST7789V2_ON_DATA;
-        busdrv.write(data, len);
+        bus_drv.write(data, len);
     }
 
     void writePool(const uint16_t & data, const size_t & len){
         ST7789V2_ON_DATA;
-        busdrv.write(data, len);
+        bus_drv.write(data, len);
     }
 
     void setAddress(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2);
@@ -62,7 +62,7 @@ private:
         writeData(scr_ctrl);
     }
 public:
-    ST7789(SpiDrv & _busdrv):busdrv(_busdrv){;}
+    ST7789(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
     void init();
     void flush(RGB565 color);     
 
@@ -76,9 +76,9 @@ public:
     void setFlipY(const bool & flip){modifyCtrl(flip, 7);}
     void setFlipX(const bool & flip){modifyCtrl(flip, 6);}
     void setSwapXY(const bool & flip){modifyCtrl(flip, 5);}
-    void setReflashDirV(const bool dir){modifyCtrl(dir, 4);}
-    void setFormatRGB(const bool isrgb){modifyCtrl(!isrgb, 3);}
-    void setReflashDirH(const bool dir){modifyCtrl(dir, 2);}
+    void setFlushDirV(const bool dir){modifyCtrl(dir, 4);}
+    void setFormatRGB(const bool is_rgb){modifyCtrl(!is_rgb, 3);}
+    void setFlushDirH(const bool dir){modifyCtrl(dir, 2);}
 
     void setInversion(const bool & inv){writeCommand(0x20 + inv);}   
 };

@@ -24,8 +24,8 @@ int tick_per_ms = 0;
 int tick_per_us = 0;
 
 
-__IO uint64_t msTick=0;
-__attribute__ ((weak)) uint64_t GetTick(void)
+__IO uint32_t msTick=0;
+__attribute__ ((weak)) uint32_t GetTick(void)
 {
   return msTick;
 }
@@ -36,7 +36,7 @@ __attribute__ ((weak)) uint64_t GetTick(void)
   * @param  None
   * @retval None
   */
-uint64_t millis(void)
+uint32_t millis(void)
 {
   return msTick;
 }
