@@ -27,41 +27,60 @@ private:
     const uint8_t data_token = 0x40;
 
     __fast_inline void writeCommand(const uint8_t cmd){
-
-        if(busdrv.isSpiBus()){
+        switch(busdrv.getBusType()){
+        case BusType::SpiBus:
             SSD1306_ON_CMD;
             busdrv.write(cmd);
-        }else if(busdrv.isI2cBus()){
+            break;
+        case BusType::I2cBus:
             busdrv.write({cmd_token, cmd});
+            break;
+        default:
+            break;
         }
     }
 
     __fast_inline void writeData(const uint8_t data){
-        if(busdrv.isSpiBus()){
+        switch(busdrv.getBusType()){
+        case BusType::SpiBus:
             SSD1306_ON_DATA;
             busdrv.write(data);
-        }else if(busdrv.isI2cBus()){
+            break;
+        case BusType::I2cBus:
             busdrv.write({data_token, data});
+            break;
+        default:
+            break;
         }
     }
 
     void writePool(uint8_t * data_ptr, const size_t & len){
-        if(busdrv.isSpiBus()){
+        switch(busdrv.getBusType()){
+        case BusType::SpiBus:
             SSD1306_ON_DATA;
             busdrv.write(data_ptr, len);
-        }else if(busdrv.isI2cBus()){
+            break;
+        case BusType::I2cBus:
             busdrv.write(data_token, false);
             busdrv.write(data_ptr, len);
+            break;
+        default:
+            break;
         }
     }
 
     void writePool(const uint8_t & data, const size_t & len){
-        if(busdrv.isSpiBus()){
+        switch(busdrv.getBusType()){
+        case BusType::SpiBus:
             SSD1306_ON_DATA;
             busdrv.write(data, len);
-        }else if(busdrv.isI2cBus()){
+            break;
+        case BusType::I2cBus:
             busdrv.write(data_token, false);
             busdrv.write(data, len);
+            break;
+        default:
+            break;
         }
     }
 

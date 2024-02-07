@@ -1,17 +1,113 @@
-// #ifndef __I2CDRV_HPP__
-// #define __I2CDRV_HPP__
+#ifndef __I2CDRV_HPP__
+#define __I2CDRV_HPP__
 
-// #include "i2c.hpp"
-// #include "../busdrv.hpp"
-// #include <type_traits>
-// #include <initializer_list>
+#include "i2c.hpp"
+#include "../busdrv.hpp"
+#include <type_traits>
+#include <initializer_list>
 
-// class I2cDrv:public BusDrv{
-// protected:
-//     I2c & bus;
-// public:
+class I2cDrv:public BusDrv{
+public:
+    I2cDrv(I2c & _bus, const uint8_t & _index = 0):BusDrv(_bus, _index){;}
 
+    void writePool(const uint8_t & reg_address, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+        if(!bus.begin(index)){
+            bus.write(reg_address);
+            // bus.begin(index);
 
-// }
+            for(size_t i = 0; i < length; i += size){
+                if(msb){
+                    for(size_t j = size; j > 0; j--){
+                        bus.write(data_ptr[j-1 + i]);
+                    }
+                }else{
+                    for(size_t j = 0; j < size; j++){
+                        bus.write(data_ptr[j + i]);
+                    }
+                }
+            }
 
-// #endif
+            bus.end();
+        }
+    }
+
+    void readPool(const uint8_t & reg_address, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+        if(!bus.begin(index)){
+            bus.write(reg_address);
+            if(!bus.begin(index | 0x01)){
+                for(size_t i = 0; i < length; i += size){
+                    if(msb){
+                        for(size_t j = size; j > 0; j--){
+                            uint32_t temp = 0;
+                            bus.read(temp, !((j == 1) && (i == length - size)));
+                            data_ptr[j-1 + i] = temp;
+                        }
+                    }else{
+                        for(size_t j = 0; j < size; j++){
+                            uint32_t temp = 0;
+                            bus.read(temp, true);
+                            data_ptr[j + i] = temp;
+                        }
+                    }
+                }
+            }
+            bus.end();
+        }
+    }
+
+    void readReg(const uint8_t & reg_address, uint16_t & reg, bool msb = true){
+        uint8_t buf[2] = {0};
+        readPool(reg_address, buf, 2, 2, msb);
+        reg = buf[1] << 8 | buf[0];
+    }
+
+    void readReg(const uint8_t & reg_address, uint8_t & reg_data){
+        if(!bus.begin(index)){
+            bus.write(reg_address);
+            bus.begin(index | 0x01);
+            uint32_t temp;
+            bus.read(temp, false);
+            reg_data = temp;
+            bus.end();
+        }
+    }
+
+    void writeReg(const uint8_t & reg_address,  const uint16_t & reg_data, bool msb = true){
+        writePool(reg_address, (uint8_t *)&reg_data, 2, 2, msb);
+    }
+
+    void writeReg(const uint8_t & reg_address,  const uint8_t & reg_data){
+        if(!bus.begin(index)){
+            bus.write(reg_address);
+            bus.write(reg_data);
+            bus.end();
+        }
+    }
+
+    void read(uint8_t * data_ptr, const size_t & len) override {
+        if(!bus.begin(index | 0x01)){
+            for(size_t i = 0; i < len; i++){
+                uint32_t temp = 0;
+                bus.read(temp, (i != len - 1));
+                data_ptr[i] = temp;
+            }
+            bus.end();
+        }
+    }
+
+    void read(uint8_t & data) override {
+        if(!bus.begin(index | 0x01)){
+            uint32_t temp;
+            bus.read(temp);
+            data = temp;
+            bus.end();
+        }
+    }
+
+    BusType getBusType() override{
+        return BusType::I2cBus;
+    }
+
+};
+
+#endif

@@ -21,8 +21,8 @@ GpioBase & ws;
 uint16_t delays = 0;
 
 __fast_inline volatile void delayDur(){
-    volatile uint8_t i = delays;
-    while(i--);
+    // volatile uint8_t i = delays;
+    // while(i--);
 }
 
 void clk(){

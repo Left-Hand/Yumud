@@ -36,7 +36,7 @@ public:
         RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
 protected:
-    BusDrv & busdrv;
+    I2cDrv & busdrv;
 
     struct Reg16{
         Reg16 & operator = (const uint16_t & _data){(uint16_t &)*this = _data; return * this;}
@@ -129,7 +129,7 @@ protected:
     }
 
 public:
-    SGM58031(BusDrv & _busdrv):busdrv(_busdrv){;}
+    SGM58031(I2cDrv & _busdrv):busdrv(_busdrv){;}
 
     void init(){
         readReg(RegAddress::Config, configReg);

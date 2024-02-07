@@ -6,11 +6,11 @@
 
 class PCF8574{
 protected:
-    BusDrv & busdrv;
+    I2cDrv & busdrv;
 
     uint8_t data;
 public:
-    PCF8574(BusDrv & _busdrv):busdrv(_busdrv){;}
+    PCF8574(I2cDrv & _busdrv):busdrv(_busdrv){;}
     void write(const uint8_t & _data){
         data = _data;
         busdrv.write(data);

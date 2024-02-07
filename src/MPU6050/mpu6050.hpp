@@ -2,12 +2,11 @@
 
 #define __MPU6050_HPP__
 
-#include "../bus/busdrv.hpp"
-#include "../bus/uart/uart1.hpp"
+#include "../bus/bus_inc.h"
 
 class MPU6050{
 protected:
-    BusDrv & busdrv;
+    I2cDrv & busdrv;
 
     struct vec3{
         int16_t x;
@@ -44,7 +43,7 @@ protected:
     }
 
 public:
-    MPU6050(BusDrv & _busdrv):busdrv(_busdrv){;}
+    MPU6050(I2cDrv & _busdrv):busdrv(_busdrv){;}
     void init();
     void reflash();
     void getAccel();

@@ -1,17 +1,15 @@
 #ifndef __VL53L0X_H
 #define __VL53L0X_H
 
-#include "../bus/busdrv.hpp"
-
-#include "../bus/uart/uart1.hpp"
+#include "../bus/bus_inc.h"
 
 #define VL53L0X_DEF_I2C_ADDR 0x29
 
 class VL53L0X{
 public:
-    BusDrv & busdrv;
+    I2cDrv & busdrv;
 
-  VL53L0X(BusDrv & _busdrv):busdrv(_busdrv){;}
+  VL53L0X(I2cDrv & _busdrv):busdrv(_busdrv){;}
   ~VL53L0X(){;}
 
     void startConv();

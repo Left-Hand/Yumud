@@ -47,7 +47,7 @@ public:
     };
 
 protected:
-    BusDrv & busdrv;
+    I2cDrv & busdrv;
 
     struct Reg16{};
 
@@ -181,7 +181,7 @@ protected:
     }
 
 public:
-    AS5600(BusDrv & _busdrv):busdrv(_busdrv){;}
+    AS5600(I2cDrv & _busdrv):busdrv(_busdrv){;}
 
     void setPowerMode(const PowerMode & _powermode){
         configReg.powerMode = (uint8_t)_powermode;

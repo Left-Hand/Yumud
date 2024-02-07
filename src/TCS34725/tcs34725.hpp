@@ -34,7 +34,7 @@ public:
         X1 = 0, X4, X16, X60 
     };
 protected:
-    BusDrv & busdrv;
+    I2cDrv & busdrv;
 
     struct Reg16{
     public:
@@ -194,7 +194,7 @@ protected:
     }
 
 public:
-    TCS34725(BusDrv & _busdrv):busdrv(_busdrv){;}
+    TCS34725(I2cDrv & _busdrv):busdrv(_busdrv){;}
 
     void setIntegration(const uint16_t & ms){
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);
