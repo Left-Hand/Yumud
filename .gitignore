@@ -8,3 +8,5 @@ build
 # eide template
 *.ept
 *.eide-template
+tools
+.VSCodeCounter

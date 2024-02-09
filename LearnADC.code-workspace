@@ -106,10 +106,15 @@
             "CRGB",
             "CTLR",
             "datas",
+            "halfword",
+            "HCLK",
             "inited",
+            "PCLK",
+            "Prescaler",
             "STDMATH",
             "Systick",
-            "vref"
+            "vref",
+            "WRPR"
         ]
     },
     "extensions": {

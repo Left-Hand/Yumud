@@ -23,6 +23,7 @@
 #include "AS5600/as5600.hpp"
 #include "TM8211/tm8211.hpp"
 #include "gpio/gpio.hpp"
+#include "memory/flash.hpp"
 
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
@@ -59,7 +60,7 @@ I2sDrv i2sDrvTm = I2sDrv(i2sSw);
 ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spiDrvOled);
 MPU6050 mpu(i2cDrvMpu);
-SGM58031 extadc(i2cDrvAdc);
+SGM58031 ext_adc(i2cDrvAdc);
 TCS34725 tcs(i2cDrvTcs);
 VL53L0X vlx(i2cDrvVlx);
 PCF8574 pcf(i2cDrvPcf);
@@ -76,7 +77,7 @@ bool readPcfGpioImag(uint16_t index){
     return pcf.readBit(index);
 }
 
-GpioImag PC13_2 = GpioImag(0, 
+GpioImag PC13_2 = GpioImag(0,
     [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
     [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13);});
 
@@ -106,6 +107,21 @@ void GPIO_PortC_Init( void ){
     PWR_BackupAccessCmd(DISABLE);
 }
 
+void BKP_Init(){
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
+}
+
+void BKP_WriteData(uint8_t index, uint16_t data){
+    if(!index || index > 10) return;
+    PWR_BackupAccessCmd(ENABLE);
+    BKP_WriteBackupRegister(index << 2, data);
+    PWR_BackupAccessCmd(DISABLE);
+}
+
+uint16_t BKP_ReadData(uint8_t index){
+    if(!index || index > 10) return 0;
+    return BKP_ReadBackupRegister(index << 2);
+}
 
 void GPIO_SW_I2C_Init(void){
     GPIO_InitTypeDef  GPIO_InitStructure = {0};
@@ -120,7 +136,6 @@ void GPIO_SW_I2C_Init(void){
 }
 
 void TIM2_Init(){
-    
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
@@ -131,7 +146,7 @@ void TIM2_Init(){
     TIM_TimeBaseInit(TIM2,&TIM_TimeBaseStructure);
 
     TIM_ARRPreloadConfig(TIM2, DISABLE);
-    
+
     TIM_Cmd(TIM2, ENABLE);
 
     TIM_ClearFlag(TIM2, TIM_FLAG_Update);
@@ -142,7 +157,7 @@ void TIM2_Init(){
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure); 
+    NVIC_Init(&NVIC_InitStructure);
 }
 
 
@@ -158,6 +173,98 @@ void GPIO_SW_I2S_Init(void){
     GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
 
+typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
+#define PAGE_WRITE_START_ADDR  ((uint32_t)0x0800F000) /* Start from 60K */
+#define PAGE_WRITE_END_ADDR    ((uint32_t)0x08010000) /* End at 64K */
+#define FLASH_PAGE_SIZE                   4096
+
+/* Global Variable */
+uint32_t EraseCounter = 0x0, Address = 0x0;
+uint16_t Data = 0xAAAA;
+uint32_t WRPR_Value = 0xFFFFFFFF, ProtectedPages = 0x0;
+uint32_t NbrOfPage;
+volatile FLASH_Status FLASHStatus = FLASH_COMPLETE;
+volatile TestStatus MemoryProgramStatus = PASSED;
+volatile TestStatus MemoryEraseStatus = PASSED;
+u32 buf[64];
+
+/*********************************************************************
+ * @fn      Flash_Test
+ *
+ * @brief   Flash Program Test.
+ *
+ * @return  none
+ */
+void Flash_Test(void)
+{
+    uart1.print("FLASH Test\r\n");
+
+    __disable_irq();
+
+    RCC_ClocksTypeDef RCC_CLK;
+	RCC_GetClocksFreq(&RCC_CLK);
+
+    uint32_t hclkFrequency = RCC_CLK.HCLK_Frequency;
+    if(hclkFrequency > 120000000U){
+        RCC_HCLKConfig(RCC_SYSCLK_Div4);
+    }else if(hclkFrequency > 60000000U){
+        RCC_HCLKConfig(RCC_SYSCLK_Div2);
+    }
+
+    uart1.setBaudRate(UART1_Baudrate);
+    FLASH_Unlock();
+
+    NbrOfPage = (PAGE_WRITE_END_ADDR - PAGE_WRITE_START_ADDR) / FLASH_PAGE_SIZE;
+
+    FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP |FLASH_FLAG_WRPRTERR);
+
+    for(EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++)
+    {
+      FLASHStatus = FLASH_ErasePage(PAGE_WRITE_START_ADDR + (FLASH_PAGE_SIZE * EraseCounter));  //Erase 4KB
+
+    if(FLASHStatus != FLASH_COMPLETE){
+        uart1.print("FLASH Erase Fail\r\n");
+    }
+    uart1.print("FLASH Erase Suc\r\n");
+    }
+
+    Address = PAGE_WRITE_START_ADDR;
+    uart1.print("Programming...\r\n");
+    while((Address < PAGE_WRITE_END_ADDR) && (FLASHStatus == FLASH_COMPLETE)){
+        FLASHStatus = FLASH_ProgramHalfWord(Address, Data);
+        Address = Address + 2;
+    }
+
+    Address = PAGE_WRITE_START_ADDR;
+
+    uart1.print("Program Checking...\r\n");
+    while((Address < PAGE_WRITE_END_ADDR) && (MemoryProgramStatus != FAILED)){
+        uint16_t result =*(volatile uint16_t *)Address;
+        if(result != Data){
+            MemoryProgramStatus = FAILED;
+        }
+        if(Address < 10) uart1.println(result);
+        Address += 2;
+    }
+
+    if(MemoryProgramStatus == FAILED)
+    {
+        uart1.print("Memory Program FAIL!\r\n");
+    }
+    else{
+        uart1.print("Memory Program PASS!\r\n");
+    }
+
+    FLASH_Lock();
+
+    RCC_HCLKConfig(RCC_HCLK_Div1);
+    uart1.setBaudRate(UART1_Baudrate);
+    __enable_irq();
+}
+
+uint16_t FLash_Read(uint32_t Address){
+    return (*(__IO uint16_t*) (Address & 0xFFFFFFFE));
+}
 
 RGB565 color = 0xffff;
 const RGB565 white = 0xffff;
@@ -169,19 +276,19 @@ const RGB565 blue = RGB565(0,0,31);
 uint64_t begin_u = 0;
 uint64_t begin_m = 0;
 
-struct DebugMeausres{
+struct DebugMeasures{
     uint32_t t_base;
     uint32_t t1;
     uint32_t t2;
     uint32_t t3;
-}debugMeausres;
+}debugMeasures;
 
 real_t delta = real_t(0);
 real_t fps = real_t(0);
-real_t fps_filted = real_t(0);
+real_t fps_filtered = real_t(0);
 real_t t = real_t(0);
 
-void reCalculateTime(){
+__fast_inline void reCalculateTime(){
     #ifdef USE_IQ
     t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
     #else
@@ -189,6 +296,34 @@ void reCalculateTime(){
     #endif
 }
 
+void SysInfo_ShowUp(){
+    RCC_ClocksTypeDef RCC_CLK;
+	RCC_GetClocksFreq(&RCC_CLK);//Get chip frequencies
+
+    uart1.setSpace(" ");
+
+    uart1.println("\r\n\r\n------------------------");
+	uart1.println("System Clock Source : ", (int)RCC_GetSYSCLKSource());
+	uart1.println("APB1/PCLK1 : ", (int)RCC_CLK.PCLK1_Frequency, "Hz");
+	uart1.println("APB2/PCLK2 : ", (int)RCC_CLK.PCLK2_Frequency, "Hz");
+	uart1.println("SYSCLK     : ", (int)RCC_CLK.SYSCLK_Frequency, "Hz");
+	uart1.println("HCLK       : ", (int)RCC_CLK.HCLK_Frequency, "Hz");
+
+    uint16_t flash_size = *(volatile uint16_t *)0x1FFFF7E0;
+    uint32_t chip_id[2];
+    chip_id[0] = *(volatile uint32_t *)0x1FFFF7E8;
+    chip_id[1] = *(volatile uint32_t *)0x1FFFF7EC;
+
+	uart1.println("FlashSize       : ", (int)flash_size, "KB");
+    uart1 << SpecToken::Hex;
+    uart1.println("ChipID          : ", (uint64_t)chip_id[0], chip_id[1]);
+
+    RCC_AHBPeriphClockCmd(RCC_CRCEN, ENABLE);
+    CRC_ResetDR();
+    uint32_t crc_code = CRC_CalcBlockCRC(chip_id, 3);
+    uart1.println("CRC code:", crc_code);
+    uart1 << SpecToken::Dec;
+}
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
@@ -200,20 +335,38 @@ int main(){
     // HX711_GPIO_Init();
     GPIO_SW_I2C_Init();
     GPIO_SW_I2S_Init();
-    // TTP229_GPIO_Init();
-    // delayMicroseconds(20);
- 
 
-    uart1.init(115200 * 4);
-    uart2.init(115200);
+    uart1.init(UART1_Baudrate);
+    uart2.init(UART2_Baudrate);
+
+    SysInfo_ShowUp();
+
+    for(uint8_t i = 0; i <10; i++){
+        uart1 << SpecToken::Hex;
+        uart1.println(FLash_Read(PAGE_WRITE_START_ADDR + i));
+    }
+ 	// auto ok1 = EEPROM_Init(nullptr);
+    BKP_Init();
+	uint16_t boot_count = BKP_ReadData(1);
+	// auto ok2 = Config_Read_Buf(0, &boot_count, sizeof(boot_count));
+    boot_count++;
+    BKP_WriteData(1, boot_count);
+    // TODO :fix flash
+	// if(boot_count % 2)
+        // Flash_Test();
+
+    uart1.println("System boot times: ", boot_count);
+	// auto ok3 =Config_Write_Buf(0, &boot_count, sizeof(boot_count));
+	// uart1.println("System boot times: ", boot_count, ok2, ok3, EE_ReadWord(0), EE_ReadWord(1));
+
+
 
     spi2.init(144000000);
     spi2.configDataSize(8);
     spi2.configBaudRate(144000000 / 2);
-    // spi2.configBitOrder(false);
 
     LCD_Init();
-    
+
     bool use_tft = true;
     bool use_mini = false;
     if(use_tft){
@@ -248,12 +401,12 @@ int main(){
     }
 
     // mpu.init();
-    extadc.init();
-    extadc.setContMode(true);
-    extadc.setFS(SGM58031::FS::FS2_048);
-    extadc.setMux(SGM58031::MUX::P0NG);
-    extadc.setDataRate(SGM58031::DataRate::DR960);
-    extadc.startConv();
+    ext_adc.init();
+    ext_adc.setContMode(true);
+    ext_adc.setFS(SGM58031::FS::FS2_048);
+    ext_adc.setMux(SGM58031::MUX::P0NG);
+    ext_adc.setDataRate(SGM58031::DataRate::DR960);
+    ext_adc.startConv();
     // tcs.init();
     // tcs.setIntegration(48);
     // tcs.setGain(TCS34725::Gain::X60);
@@ -285,12 +438,15 @@ int main(){
 
 
 
-        // nanos();
+        reCalculateTime();
         PC13_2 = !PC13_2;
-        uint64_t ns_before = nanos();
-        for(uint8_t i = 0; i<32; i++) reCalculateTime();
-        uint64_t ns_after = nanos();
-        uart1.println((uint32_t)(ns_after - ns_before) / 32);
+        // uart1.println("a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!"
+        // ,"a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!");
+        // PCout(13) = !PCin(13);
+        // uint64_t ns_before = nanos();
+        // for(uint8_t i = 0; i<128; i++) reCalculateTime();
+        // uint64_t ns_after = nanos();
+        // uart1.println((uint32_t)(ns_after - ns_before) / 128);
     }
 }
 
@@ -310,7 +466,7 @@ int main(){
 //         
 //         real_t t_frac = frac(frac(t) * 3);
 //         real_t volt_out_l = (2.5 + 0.4 * (wave(t_frac) + wave(t_frac - 0.25) + wave(t_frac - 0.5)));
-//         extdac.setVoltage(volt_out_l, volt_out_l);
+//         ext_dac.setVoltage(volt_out_l, volt_out_l);
 
 // 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
 //     }     

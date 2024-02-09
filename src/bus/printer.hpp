@@ -61,16 +61,16 @@ public:
     __fast_inline char read(){char data; _read(data); return data;};
     String read(const size_t & len);
     String readAll(){return read(available());}
-    // String read
+    void setSpace(const String & _space){space = _space;}
 
-    Printer& operator<<(uint8_t val){printString(String((int)val, radix)); return *this;}
-    Printer& operator<<(uint16_t val){printString(String((int)val, radix)); return *this;}
-    Printer& operator<<(uint32_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(uint8_t val){printString(String((unsigned long long)val, radix)); return *this;}
+    Printer& operator<<(uint16_t val){printString(String((unsigned long long)val, radix)); return *this;}
+    Printer& operator<<(uint32_t val){printString(String((unsigned long long)val, radix)); return *this;}
     Printer& operator<<(uint64_t val){printString(String((unsigned long long)val, radix)); return *this;}
 
-    Printer& operator<<(int8_t val){printString(String((int)val, radix)); return *this;}
-    Printer& operator<<(int16_t val){printString(String((int)val, radix)); return *this;}
-    Printer& operator<<(int32_t val){printString(String((int)val, radix)); return *this;}
+    Printer& operator<<(int8_t val){printString(String((long long)val, radix)); return *this;}
+    Printer& operator<<(int16_t val){printString(String((long long)val, radix)); return *this;}
+    Printer& operator<<(int32_t val){printString(String((long long)val, radix)); return *this;}
     Printer& operator<<(int64_t val){printString(String((long long)(val), radix)); return *this;}
 
     Printer& operator<<(bool val){printString(String(val, radix)); return *this;}

@@ -11,8 +11,11 @@
 
 //defines for iqlib
 
-#define SPI1_BaudRate SPI_BaudRatePrescaler_2
+#define SPI1_Prescaler SPI_BaudRatePrescaler_2
 // #define SPI1_USE_DMA
+
+#define UART1_Baudrate (115200 * 4)
+#define UART2_Baudrate (115200)
 
 #define W (240)
 #define H (240)

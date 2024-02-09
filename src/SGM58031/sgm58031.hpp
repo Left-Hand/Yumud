@@ -3,6 +3,7 @@
 #define __SGM58031_HPP__
 
 #include "../bus/busdrv.hpp"
+#include "../types/real.hpp"
 
 #ifndef SGM_DEBUG
 #include "../bus/uart/uart1.hpp"
@@ -38,10 +39,7 @@ public:
 protected:
     I2cDrv & bus_drv;
 
-    struct Reg16{
-        Reg16 & operator = (const uint16_t & _data){(uint16_t &)*this = _data; return * this;}
-        explicit operator uint16_t() const {return *(uint16_t *)this;}
-    };
+    struct Reg16{};
 
     struct ConfigReg:public Reg16{
         REG16_BEGIN
@@ -113,11 +111,11 @@ protected:
 
     enum class RegAddress:uint8_t{
         Conv = 0,
-        Config,LowThr, HighThr, Config1, DeviceID,Trim 
+        Config,LowThr, HighThr, Config1, DeviceID,Trim
     };
 
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
-        bus_drv.writeReg((uint8_t)regAddress, (uint16_t)regData);
+        bus_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
     }
 
     void readReg(const RegAddress & regAddress, Reg16 & regData){
@@ -186,8 +184,8 @@ public:
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setFS(const float & _fs, const float & _vref){
-        float ratio = abs(_fs) / _vref;
+    void setFS(const real_t & _fs, const real_t & _vref){
+        real_t ratio = abs(_fs) / _vref;
         PGA pga;
         if(ratio >= 3.0f){
             pga = PGA::RT2_3;
@@ -206,14 +204,14 @@ public:
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setTrim(const float & _trim){
-        float trim = _trim * 4.0f / 3.0f;
-        float offset = trim - 1.30225f;
-        trimReg.gn = (offset * 0b01111111010);
+    void setTrim(const real_t & _trim){
+        real_t trim = _trim * 4.0f / 3.0f;
+        real_t offset = trim - 1.30225f;
+        trimReg.gn = (int)(offset * 0b01111111010);
         writeReg(RegAddress::Trim, trimReg);
     }
 
-    void setCH3asRef(bool yes){
+    void ENABLE(bool yes){
         config1Reg.extRef = yes;
         writeReg(RegAddress::Config1, config1Reg);
     }

@@ -13,22 +13,22 @@ void MPU6050::init(){
 }
 
 void MPU6050::flush(){
-    requestData(RegAddress::Accel_x, (uint8_t *)&accel, 6 + 2 + 6);
-    // uart1.println(accel.x, accel.y, accel.z, 36.53+temperature/340.0, gyro.x, gyro.y, gyro.z);
+    requestData(RegAddress::AccelX, accelXReg, 6 + 2 + 6);
 }
-void MPU6050::getAccel(){
-    // uint8_t buf[6] = {0};
-    // accel.x = ((uint16_t)buf[1] << 8) | buf[0];
-    // accel.y = buf[2] << 8 | buf[3];
-    // accel.z = buf[4] << 8 | buf[5];
-
+void MPU6050::getAccel(real_t &x, real_t &y, real_t &z){
+    x = Reg16ToI16(accelXReg) * accel_scaler;
+    y = Reg16ToI16(accelYReg) * accel_scaler;
+    z = Reg16ToI16(accelZReg) * accel_scaler;
 }
 
-void MPU6050::getTemperature(){
-    requestData(RegAddress::Temperature, (uint8_t *)(&this -> temperature), sizeof(this -> temperature));
-    // uart1.println(36.53+temperature/340.0);
-    // uart1.println(temperature << 8 | temperature >> 8);
-    // uart1.println(temperature);
+void MPU6050::getGyro(real_t &x, real_t &y, real_t &z){
+    x = Reg16ToI16(gyroXReg) * gyro_scaler;
+    y = Reg16ToI16(gyroYReg) * gyro_scaler;
+    z = Reg16ToI16(gyroZReg) * gyro_scaler;
+}
+
+void MPU6050::getTemperature(real_t &temp){
+    temp = real_t(36.65f) + Reg16ToI16(tempReg) / real_t(340);
 }
 
 

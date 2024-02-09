@@ -19,8 +19,8 @@ class SSD1306{
 private:
     BusDrv & bus_drv;
 
-    uint16_t w = 128;
-    uint16_t h = 64;
+    uint16_t width = 128;
+    uint16_t height = 64;
     uint16_t x_offset = 0;
 
     const uint8_t cmd_token = 0x00;

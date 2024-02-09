@@ -15,10 +15,10 @@ void SSD1306::init(){
 
 void SSD1306::flush(bool Color){
     volatile static uint8_t t = 0;
-    for(uint8_t y = 0; y < h; y+=8)  
+    for(uint8_t y = 0; y < height; y+=8)  
     {  
         setPos(0,y);
-        writePool(y + (t++), (size_t)w);
+        writePool(y + (t++), (size_t)width);
         t++;
 
     }

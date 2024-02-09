@@ -27,7 +27,7 @@ static void UART1_GPIO_Configuration(void){
 }
 
 static void UART1_Configuration(uint32_t baudRate){
-    CHECK_INIT
+    // CHECK_INIT
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, ENABLE);
     USART_InitTypeDef USART_InitStructure;
 
@@ -53,23 +53,27 @@ void Uart1::init(const uint32_t & baudRate){
     NVIC_Configuration();
 }
 
+void Uart1::setBaudRate(const uint32_t & baudRate){
+    UART1_Configuration(baudRate);
+}
+
 
 #ifndef HAVE_UART1
 Uart1 uart1;
 #define HAVE_UART1
 #endif
 
-__interrupt 
-void USART1_IRQHandler() 
-{ 
+__interrupt
+void USART1_IRQHandler()
+{
     if(USART_GetITStatus(USART1,USART_IT_RXNE) != RESET)
-    { 
+    {
         USART_ClearITPendingBit(USART1,USART_IT_RXNE);
         uart1.ringBuf.addData(USART_ReceiveData(USART1));
-    } 
+    }
     if(USART_GetFlagStatus(USART1,USART_FLAG_ORE) == SET)
-    { 
+    {
         USART_ClearFlag(USART1,USART_FLAG_ORE);
         USART_ReceiveData(USART1);
-    } 
+    }
 }

@@ -33,7 +33,9 @@
     "src/SGM58031",
     "src/TCS34725",
     "src/VL53L0X",
-    "src/PCF8574"
+    "src/PCF8574",
+    "src/memory",
+    "types/range"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -59,11 +61,12 @@
         "linkerScriptPath": "",
         "options": "null"
       },
-      "uploader": "Custom",
+      "uploader": "OpenOCD",
       "uploadConfig": {
-        "bin": "${ExecutableName}.bin",
-        "commandLine": "download.cmd ${programFile}",
-        "eraseChipCommand": ""
+        "bin": "",
+        "target": "${workspaceFolder}/tools/wch-target",
+        "interface": "${workspaceFolder}/tools/wch-interface",
+        "baseAddr": "0x08000000"
       },
       "uploadConfigMap": {
         "JLink": {
@@ -84,8 +87,8 @@
           "baseAddr": "0x08000000"
         },
         "Custom": {
-          "bin": "${ExecutableName}.bin",
-          "commandLine": "download.cmd ${programFile}",
+          "bin": "",
+          "commandLine": "bash ./tools/program_flash.sh \"${programFile}\"",
           "eraseChipCommand": ""
         }
       },

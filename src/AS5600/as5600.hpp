@@ -3,6 +3,7 @@
 #define __AS5600_HPP__
 
 #include "../bus/busdrv.hpp"
+#include "../types/real.hpp"
 
 #ifndef REG16_BEGIN
 #define REG16_BEGIN union{struct{
@@ -150,12 +151,12 @@ protected:
         Burn = 0xFF
     };
 
-    float From12BitTo360Degrees(const uint16_t & data){
-        return data * 360.0f / 0xFFF; 
+    real_t From12BitTo360Degrees(const uint16_t & data){
+        return data * real_t(360.0f / 0xFFF); 
     }
 
-    uint16_t From360DegreesTo12Bit(const float degrees){
-        return CLAMP(degrees, 0, 360) * 0xFFF / 360.0f;
+    uint16_t From360DegreesTo12Bit(const real_t degrees){
+        return (int)(CLAMP(degrees, real_t(0), real_t(360)) * real_t(0xFFF / 360.0f));
     }
 
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
@@ -230,27 +231,27 @@ public:
         return (magnitudeReg.data) & 0xFFF;
     }
 
-    float getRawAngle(){
+    real_t getRawAngle(){
         readReg(RegAddress::RawAngle, rawAngleReg);
         return From12BitTo360Degrees(rawAngleReg.data);
     }
 
-    float getAngle(){
+    real_t getAngle(){
         readReg(RegAddress::Angle, angleReg);
         return From12BitTo360Degrees(angleReg.data);
     }
 
-    void setStartAngle(const float & angle){
+    void setStartAngle(const real_t & angle){
         startAngleReg.data = From360DegreesTo12Bit(angle);
         writeReg(RegAddress::StartAngle, startAngleReg);
     }
 
-    void setEndAngle(const float & angle){
+    void setEndAngle(const real_t & angle){
         endAngleReg.data = From360DegreesTo12Bit(angle);
         writeReg(RegAddress::EndAngle, endAngleReg);
     } 
 
-    void setAmountAngle(const float & angle){
+    void setAmountAngle(const real_t & angle){
         amountAngleReg.data = From360DegreesTo12Bit(angle);
         writeReg(RegAddress::AmountAngle, amountAngleReg);
     }
@@ -270,9 +271,7 @@ public:
         writeReg(RegAddress::Burn, burnReg);
     }
 
-    void init(){
-        ;
-    }
+    void init(){;}
 };
 
 #endif

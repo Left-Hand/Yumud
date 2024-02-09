@@ -25,7 +25,7 @@ public:
     void writeBit(const uint16_t & index, const bool & value){
         if(value) data |= (1 << index);
         else data &= (~(1 << index));
-        busdrv.write(data);
+        bus_drv.write(data);
     }
 
     bool readBit(const uint16_t & index){
