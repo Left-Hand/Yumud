@@ -105,6 +105,13 @@ public:
     }
 
     template<typename U>
+    Rect2_t<T> merge(const Vector2_t<U> & point) const{
+        Rect2_t<T> regular = *this.abs();
+        Rangei range_x = regular.get_x_range().merge(point.x);
+        Rangei range_y = regular.get_y_range().merge(point.y);
+        return Rect2_t<T>(range_x, range_y);
+    }
+    template<typename U>
     Rect2_t<T> scale(const U & amount)const {
         Rect2_t<T> regular = *this.abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.get_center(), regular.size * amount);

@@ -101,6 +101,11 @@ protected:
         putPixel_Unsafe(pos.x, pos.y, color);
     }
 
+    __fast_inline void putPixelCont(const RGB565 & color) override{
+        writeData16(static_cast<uint16_t>(color));
+    }
+
+    RGB565 takePixel(const Vector2i & pos) const override{return RGB565();}
     void putTexture_Unsafe(const Rect2i & _area, const RGB565 * color_ptr) override{
         putTexture_Unsafe(_area.position.x, _area.position.y, _area.size.x, _area.size.y, color_ptr);
     }

@@ -96,6 +96,18 @@ public:
         return Range_t<T>(MIN(regular.start, other_regular.start), MAX(regular.end, other_regular.end));
     }
 
+    template<typename U>
+    Range_t<T> shift(const U & amount){
+        Range_t<T> regular = this -> abs();
+        Range_t<T> ret = Range_t<T>(regular.start + amount, regular.end + amount);
+        return ret;
+    }
+
+    template<typename U>
+    Range_t merge(const U & value){
+        Range_t<T> regular = this -> abs();
+        return Range_t<T>(MIN(regular.start, value), MAX(regular.end, value));
+    }
 
     explicit operator bool() const{
         return start!= end;

@@ -19,13 +19,13 @@ struct RGB332{
 #ifdef __cplusplus
 
     __fast_inline RGB332() : data(0){;}
-    
+
     __fast_inline RGB332(const int & _data): data((uint8_t)_data){;}
 
     __fast_inline explicit RGB332(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
 
     __fast_inline explicit RGB332(const uint8_t & _data): data(_data){;}
-    
+
     __fast_inline explicit operator uint8_t() const {return data;}
 
     enum {
@@ -57,13 +57,13 @@ struct RGB565{
 #ifdef __cplusplus
 
     __fast_inline RGB565() : data(0){;}
-    
+
     __fast_inline RGB565(const int & _data): data((uint16_t)_data){;}
 
     __fast_inline explicit RGB565(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
 
     __fast_inline explicit RGB565(const uint16_t & _data): data(_data){;}
-    
+
     __fast_inline explicit operator uint16_t() const {return data;}
 
     enum{
@@ -104,7 +104,7 @@ public:
     __fast_inline explicit RGB888(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):r(_r), g(_g), b(_b){;}
 
     __fast_inline explicit RGB888(const uint24_t & _data): data(_data){;}
-    
+
     __fast_inline explicit operator uint24_t() const {return (uint24_t)data;}
 
     enum {
@@ -147,12 +147,20 @@ struct ARGB32{
     __fast_inline explicit ARGB32(const uint8_t & _a, const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):a(_a), r(_r), g(_g), b(_b){;}
 
     __fast_inline explicit ARGB32(const uint32_t & _data): data(_data){;}
-    
+
     __fast_inline explicit operator uint32_t() const {return data;}
 
 #endif
 };
 
 typedef struct ARGB32 ARGB32;
+
+#ifdef __cplusplus
+typedef bool Binary;
+#else
+typedef uint8_t Binary;
+#endif
+
+typedef uint8_t Grayscale;
 
 #endif

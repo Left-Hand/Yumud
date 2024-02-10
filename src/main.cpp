@@ -30,7 +30,6 @@
 
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
-using Vector2 = Vector2_t<real_t>;
 
 #define I2C_SW_SCL GPIO_Pin_6
 #define I2C_SW_SDA GPIO_Pin_7
@@ -241,6 +240,12 @@ void SysInfo_ShowUp(){
     uart1.println("CRC code:", crc_code);
     uart1 << SpecToken::Dec;
 }
+
+RGB565 fullShader(const Vector2i & UV){
+    return UV.x + UV.y ;
+    // + (int)(sin(t) * real_t(200));
+    // return Color::from_hsv(frac(t - UV.x/real_t(2000) - UV.y / real_t(500)));
+}
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
@@ -336,25 +341,26 @@ int main(){
         // color = c1;
 
         if(use_tft){
-            for(uint8_t i = 0; i < 4; i++){
-                for(uint8_t j = 0; j < 4; j++){
-                    painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
-                    Vector2i pos = Vector2i(i * 40, j * 40);
-                    // painter.drawHollowRect(Rect2i(pos, Vector2i(12,12)));
-                    // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
-                    // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
-                    // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
-                    painter.drawHollowEllipse(pos, Vector2i(8,5));
-                    // painter.drawHriLine(pos, 2);
-                    // painter.drawPixel(pos);
-                    // painter.drawLine(pos, pos + Vector2i(2,2));
-                    // painter.setColor(RGB565::BLACK);
-                    // painter.drawPixel(pos);
-                    // painter.setColor(RGB565::BLACK);
-                    // painter.drawChar(pos, '#');
-                    // painter.drawLine(pos, pos + Vector2i(10, 10));
-                }
-            }
+            // for(uint8_t i = 0; i < 1; i++){
+            //     for(uint8_t j = 0; j < 4; j++){
+            //         painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
+            //         Vector2i pos = Vector2i(i * 40, j * 40);
+            //         // painter.drawHollowRect(Rect2i(pos, Vector2i(12,12)));
+            //         // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
+            //         // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
+            //         // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
+            //         // painter.drawHollowEllipse(pos, Vector2i(8,5));
+            //         // painter.drawPolyLine({pos, pos + Vector2i(5,5), pos + Vector2i(0, 6), pos + Vector2i(-9, -4)});
+            //         // painter.drawHriLine(pos, 2);
+            //         // painter.drawPixel(pos);
+            //         // painter.drawLine(pos, pos + Vector2i(2,2));
+            //         // painter.setColor(RGB565::BLACK);
+            //         // painter.drawPixel(pos);
+            //         // painter.setColor(RGB565::BLACK);
+            //         // painter.drawString(pos, "Hello, world!");
+            //     }
+            // }
+            tftDisplayer.shade(fullShader, tftDisplayer.get_display_area());
         }else{
             oledDisPlayer.flush(true);
         }

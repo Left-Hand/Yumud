@@ -191,24 +191,23 @@ public:
         Vector2i size = font->size;
         Rect2i char_area = Rect2i(pos, size).intersection(srcImage->area);
         if(!char_area) return;
-        for(uint8_t i = 0; i < char_area.get_x_range().get_length() ; i++){
-            for(uint8_t j = 0; j < char_area.get_y_range().get_length(); j++){
+
+        for(uint8_t i = 0; i < char_area.size.x ; i++){
+            for(uint8_t j = 0; j < char_area.size.y; j++){
                 Vector2i offs = Vector2i(i,j);
                 if(font->getPixel(chr, offs)){
-                    srcImage->putPixel_Unsafe(char_area.get_position() + offs, color);
+                    srcImage->putPixel_Unsafe(char_area.position + offs, color);
                 }
             }
         }
     }
 
     void drawString(const Vector2i & pos, const String & str){
-    const uint8_t font_w = 6;
-    const uint8_t font_space = 1;
-    char * str_ptr = str.c_str();
+    const char * str_ptr = str.c_str();
 
-    for(int16_t x = pos.x; x < srcImage -> area.size.x; x += (font_w + font_space)){
+    for(int x = pos.x; x < srcImage -> area.size.x; x += (font->size.x + 1)){
         if(*str_ptr){
-            drawChar(Vector2i(x, pos.y) *str_ptr);
+            drawChar(Vector2i(x, pos.y), *str_ptr);
         }else{
             break;
         }
@@ -295,6 +294,96 @@ public:
                 x--;
             }
             s += rx2 * ((4 * y) + 6);
+        }
+    }
+
+    void drawPolyLine(const std::initializer_list<Vector2i> &points){
+        if(points.size() < 2) return drawLine(*points.begin(), *points.end());
+
+        auto prev = points.begin();
+        for(auto it = points.begin() + 1; it!= points.end(); it++){
+            drawLine(*prev, *it);
+            prev = it;
+        }
+        drawLine(*prev, *points.begin());
+    }
+
+    void drawPolyLine(const std::vector<Vector2i> &points){
+        if(points.size() < 2) return drawLine(*points.begin(), *points.end());
+    }
+
+    void drawHollowTriangle(Vector2i p0, Vector2i p1, Vector2i p2){
+        drawLine(p0, p1);
+        drawLine(p1, p2);
+        drawLine(p0, p2);
+    }
+
+    void drawFilledTriangle(Vector2i p0, Vector2i p1, Vector2i p2){
+        int a, b, y, last;
+        int x0 = p0.x;
+        int y0 = p0.y;
+        int x1 = p1.x;
+        int y1 = p1.y;
+        int x2 = p2.x;
+        int y2 = p2.y;
+
+        if (y0 > y1) {
+            SWAP(y0, y1, int);
+            SWAP(x0, x1, int);
+        }
+        if (y1 > y2) {
+            SWAP(y2, y1, int);
+            SWAP(x2, x1, int);
+        }
+        if (y0 > y1) {
+            SWAP(y0, y1, int);
+            SWAP(x0, x1, int);
+        }
+
+        if (y0 == y2) { // Handle awkward all-on-same-line case as its own thing
+            a = b = x0;
+            if (x1 < a)      a = x1;
+            else if (x1 > b) b = x1;
+            if (x2 < a)      a = x2;
+            else if (x2 > b) b = x2;
+            drawHriLine(Rangei(a, b + 1), y);
+            return;
+        }
+
+
+        int
+        dx01 = x1 - x0,
+        dy01 = y1 - y0,
+        dx02 = x2 - x0,
+        dy02 = y2 - y0,
+        dx12 = x2 - x1,
+        dy12 = y2 - y1,
+        sa   = 0,
+        sb   = 0;
+
+        if (y1 == y2) last = y1;  // Include y1 scanline
+        else         last = y1 - 1; // Skip it
+
+        for (y = y0; y <= last; y++) {
+            a   = x0 + sa / dy01;
+            b   = x0 + sb / dy02;
+            sa += dx01;
+            sb += dx02;
+
+            if (a > b) SWAP(a, b, int16_t);
+            drawHriLine(Rangei(a, b + 1), y);
+        }
+
+        sa = dx12 * (y - y1);
+        sb = dx02 * (y - y0);
+        for (; y <= y2; y++) {
+            a   = x1 + sa / dy12;
+            b   = x0 + sb / dy02;
+            sa += dx12;
+            sb += dx02;
+
+            if (a > b) SWAP(a, b, int16_t);
+            drawHriLine(Rangei(a, b + 1), y);
         }
     }
 };
