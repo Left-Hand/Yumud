@@ -21,6 +21,8 @@ private:
     SpiDrv & bus_drv;
     Vector2i offset;
     uint8_t scr_ctrl = 0;
+    uint32_t last_point_index = 0;
+    bool area_locked = false;
 
     __fast_inline void writeCommand(const uint8_t & cmd){
         ST7789V2_ON_CMD;
@@ -36,29 +38,18 @@ private:
         ST7789V2_ON_DATA;
         bus_drv.write(data);
     }
-
-    __fast_inline void writeDataPool(const uint16_t & data, const size_t len){
+    __fast_inline void writePixel(const RGB565 & data){
         ST7789V2_ON_DATA;
-        bus_drv.write(data, len);
+        bus_drv.write((uint16_t)data);
     }
-
-    __fast_inline void writeDataPool(const uint16_t * data_ptr, const size_t len){
+    void putPixels(const RGB565 & data, const size_t & len) override{
         ST7789V2_ON_DATA;
-        bus_drv.write(data_ptr, len);
-    }
-    __fast_inline void writeRGB(const RGB565 & data){
-        writeCommand(0x2c);
-        writeData16(static_cast<uint16_t>(data));
-    }
-    void writeRGB(const RGB565 & data, const size_t & len){
-        writeCommand(0x2c);
-        writeDataPool(static_cast<uint16_t>(data), len);
+        bus_drv.write((uint16_t)data, len);
     }
 
-    void writeRGB(const RGB565 * data_ptr, const size_t & len){
+    void putPixels(const RGB565 * data_ptr, const size_t & len) override{
         ST7789V2_ON_DATA;
-        writeCommand(0x2c);
-        bus_drv.write((uint16_t *)(data_ptr), len);
+        bus_drv.write((uint16_t *)data_ptr, len);
     }
 
     void modifyCtrl(const bool & yes,const uint8_t & pos){
@@ -71,49 +62,22 @@ private:
     }
 
 protected:
-    __fast_inline bool pointValid(const uint16_t & x, const uint16_t & y){
-        return area.has_point(Vector2i(x,y));
-    }
-    void setPosition_Unsafe(const uint16_t & x, const uint16_t & y);
-    __fast_inline void putPixel_Unsafe(const uint16_t & x, const uint16_t & y, const RGB565 & color){
-        setPosition_Unsafe(x,y);
-        writeRGB(color);
-    }
 
-    void setArea_Unsafe(const uint16_t & x, const uint16_t & y, const uint16_t & w, const uint16_t & h);
-
-    void putTexture_Unsafe(const uint16_t & x, const uint16_t & y, const uint16_t & w, const uint16_t & h, const RGB565 * color_ptr){
-        setArea_Unsafe(x, y, w, h);
-        writeRGB(color_ptr, w*h);
+    __fast_inline uint32_t getPointIndex(const uint16_t & x, const uint16_t & y){
+        return (x + y * area.size.x);
     }
-
-    void putRect_Unsafe(const uint16_t & x, const uint16_t & y, const uint16_t & w, const uint16_t & h, const RGB565 & color){
-        setArea_Unsafe(x, y, w, h);
-        writeRGB(color, w*h);
+    void setPosition_Unsafe(const Vector2i & pos) override;
+    void setArea_Unsafe(const Rect2i & rect) override;
+    __fast_inline void putPixel_Unsafe(const Vector2i & pos, const RGB565 & color){
+        setPosition_Unsafe(pos);
+        writePixel(color);
     }
-
-    __fast_inline void putPixel_Unsafe(const Vector2i & pos, const RGB565 & color) override{
-        putPixel_Unsafe(pos.x, pos.y, color);
-    }
-
     __fast_inline void putPixel(const Vector2i & pos, const RGB565 & color) override{
-        if(!pointValid((uint16_t)pos.x, (uint16_t)pos.y)) return;
-        putPixel_Unsafe(pos.x, pos.y, color);
-    }
-
-    __fast_inline void putPixelCont(const RGB565 & color) override{
-        writeData16(static_cast<uint16_t>(color));
+        if(!area.has_point(pos)) return;
+        putPixel_Unsafe(pos, color);
     }
 
     RGB565 takePixel(const Vector2i & pos) const override{return RGB565();}
-    void putTexture_Unsafe(const Rect2i & _area, const RGB565 * color_ptr) override{
-        putTexture_Unsafe(_area.position.x, _area.position.y, _area.size.x, _area.size.y, color_ptr);
-    }
-
-    void putRect_Unsafe(const Rect2i & _area, const RGB565 & color) override{
-        putRect_Unsafe(_area.position.x, _area.position.y, _area.size.x, _area.size.y, color);
-    }
-
 public:
     ST7789(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
     void init();

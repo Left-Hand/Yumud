@@ -241,10 +241,18 @@ void SysInfo_ShowUp(){
     uart1 << SpecToken::Dec;
 }
 
-RGB565 fullShader(const Vector2i & UV){
-    return UV.x + UV.y ;
-    // + (int)(sin(t) * real_t(200));
-    // return Color::from_hsv(frac(t - UV.x/real_t(2000) - UV.y / real_t(500)));
+__fast_inline RGB565 ShaderP(const Vector2i & pos){
+    static int cnt = 0;
+    cnt++;
+    return pos.x + pos.y + cnt;
+}
+
+__fast_inline RGB565 ShaderUV(const Vector2 & UV){
+    if((UV - Vector2(0.5, 0.5)).length_squared() <= real_t(0.25)){
+        return RGB565::RED;
+    }else{
+        return RGB565::BLUE;
+    }
 }
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -341,36 +349,36 @@ int main(){
         // color = c1;
 
         if(use_tft){
-            // for(uint8_t i = 0; i < 1; i++){
-            //     for(uint8_t j = 0; j < 4; j++){
-            //         painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
-            //         Vector2i pos = Vector2i(i * 40, j * 40);
-            //         // painter.drawHollowRect(Rect2i(pos, Vector2i(12,12)));
-            //         // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
-            //         // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
-            //         // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
-            //         // painter.drawHollowEllipse(pos, Vector2i(8,5));
-            //         // painter.drawPolyLine({pos, pos + Vector2i(5,5), pos + Vector2i(0, 6), pos + Vector2i(-9, -4)});
-            //         // painter.drawHriLine(pos, 2);
-            //         // painter.drawPixel(pos);
-            //         // painter.drawLine(pos, pos + Vector2i(2,2));
-            //         // painter.setColor(RGB565::BLACK);
-            //         // painter.drawPixel(pos);
-            //         // painter.setColor(RGB565::BLACK);
-            //         // painter.drawString(pos, "Hello, world!");
-            //     }
-            // }
-            tftDisplayer.shade(fullShader, tftDisplayer.get_display_area());
+            for(uint8_t i = 0; i < 1; i++){
+                for(uint8_t j = 0; j < 4; j++){
+                    painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
+                    Vector2i pos = Vector2i(i * 40, j * 40);
+                    // painter.drawHollowRect(Rect2i(pos, Vector2i(12,12)));
+                    // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
+                    // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
+                    // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
+                    // painter.drawHollowEllipse(pos, Vector2i(8,5));
+                    // painter.drawPolyLine({pos, pos + Vector2i(5,5), pos + Vector2i(0, 6), pos + Vector2i(-9, -4)});
+                    // painter.drawHriLine(pos, 2);
+                    // painter.drawPixel(pos);
+                    // painter.drawLine(pos, pos + Vector2i(2,2));
+                    // painter.setColor(RGB565::BLACK);
+                    // painter.drawPixel(pos);
+                    // painter.setColor(RGB565::BLACK);
+                    // painter.drawString(pos, "Hello, world!");
+                }
+            }
+            tftDisplayer.shade(ShaderUV, Rect2i(Vector2i(0,0), Vector2i(24,24)));
         }else{
             oledDisPlayer.flush(true);
         }
 
-        uint64_t delta_u = (micros() - begin_u);
-        begin_u = micros();
-        delta = real_t(delta_u / 1000000.0f);
+        // uint64_t delta_u = (micros() - begin_u);
+        // begin_u = micros();
+        // delta = real_t(delta_u / 1000000.0f);
 
         reCalculateTime();
-        // uart1.println(CalculateFps());
+        uart1.println(CalculateFps());
         PC13_2 = !PC13_2;
 
         // uart1.println("a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!"
