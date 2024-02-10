@@ -34,8 +34,10 @@ public:
 
     void write(const uint16_t & data, bool discontinuous = true){
         if(!bus.begin(index)){
+            bus.configDataSize(16);
             bus.write(data);
             if(discontinuous) bus.end();
+            bus.configDataSize(8);
         }
     }
 
@@ -76,7 +78,7 @@ public:
         }
     }
     
-    void write(uint16_t * data_ptr, const size_t & len, bool discontinuous = true){
+    void write(const uint16_t * data_ptr, const size_t & len, bool discontinuous = true){
         if(!bus.begin(index)){
             bus.configDataSize(16);
             for(size_t i = 0; i < len; i++) bus.write(data_ptr[i]);

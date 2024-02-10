@@ -14,7 +14,7 @@ public:
     T x = T(0);
     T y = T(0);
 
-    __fast_inline explicit Vector2_t() : x(T()), y(T()) {;}
+    __fast_inline explicit Vector2_t(){;}
 
     template <typename U>
     __fast_inline explicit Vector2_t(const U & _x, const U & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}

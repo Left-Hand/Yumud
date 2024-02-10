@@ -412,7 +412,7 @@ void LCD_Draw_Filled_Ellipse(int16_t x0, int16_t y0, int16_t rx, int16_t ry, RGB
 void LCD_Draw_Hollow_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, RGB565 color){
     LCD_Draw_Line(x0, y0, x1, y1, color);
     LCD_Draw_Line(x0, y0, x2, y2, color);
-    LCD_Draw_Line(x1, y1, x2, y2, color);  
+    LCD_Draw_Line(x1, y1, x2, y2, color);
 }
 
 void LCD_Draw_Filled_Triangle(int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, RGB565 color){

@@ -1,5 +1,6 @@
-#include "ST7789/st7789.h"
-#include "stdio.h"
+// #include "ST7789/st7789.h"
+#include "bkp/bkp.hpp"
+// #include "stdio.h"
 #include "../types/real.hpp"
 #include "../types/string/String.hpp"
 #include "../types/complex/complex_t.hpp"
@@ -24,6 +25,8 @@
 #include "TM8211/tm8211.hpp"
 #include "gpio/gpio.hpp"
 #include "memory/flash.hpp"
+
+#include "../types/image/painter.hpp"
 
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
@@ -107,21 +110,7 @@ void GPIO_PortC_Init( void ){
     PWR_BackupAccessCmd(DISABLE);
 }
 
-void BKP_Init(){
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
-}
 
-void BKP_WriteData(uint8_t index, uint16_t data){
-    if(!index || index > 10) return;
-    PWR_BackupAccessCmd(ENABLE);
-    BKP_WriteBackupRegister(index << 2, data);
-    PWR_BackupAccessCmd(DISABLE);
-}
-
-uint16_t BKP_ReadData(uint8_t index){
-    if(!index || index > 10) return 0;
-    return BKP_ReadBackupRegister(index << 2);
-}
 
 void GPIO_SW_I2C_Init(void){
     GPIO_InitTypeDef  GPIO_InitStructure = {0};
@@ -173,97 +162,18 @@ void GPIO_SW_I2S_Init(void){
     GPIO_Init( GPIOB, &GPIO_InitStructure );
 }
 
-typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
-#define PAGE_WRITE_START_ADDR  ((uint32_t)0x0800F000) /* Start from 60K */
-#define PAGE_WRITE_END_ADDR    ((uint32_t)0x08010000) /* End at 64K */
-#define FLASH_PAGE_SIZE                   4096
+void GLobal_Reset(void){
+    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
+    GPIO_InitTypeDef  GPIO_InitStructure = {0};
+    GPIO_InitStructure.GPIO_Pin = LCD_RES_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(LCD_RES_PORT, &GPIO_InitStructure );
 
-/* Global Variable */
-uint32_t EraseCounter = 0x0, Address = 0x0;
-uint16_t Data = 0xAAAA;
-uint32_t WRPR_Value = 0xFFFFFFFF, ProtectedPages = 0x0;
-uint32_t NbrOfPage;
-volatile FLASH_Status FLASHStatus = FLASH_COMPLETE;
-volatile TestStatus MemoryProgramStatus = PASSED;
-volatile TestStatus MemoryEraseStatus = PASSED;
-u32 buf[64];
-
-/*********************************************************************
- * @fn      Flash_Test
- *
- * @brief   Flash Program Test.
- *
- * @return  none
- */
-void Flash_Test(void)
-{
-    uart1.print("FLASH Test\r\n");
-
-    __disable_irq();
-
-    RCC_ClocksTypeDef RCC_CLK;
-	RCC_GetClocksFreq(&RCC_CLK);
-
-    uint32_t hclkFrequency = RCC_CLK.HCLK_Frequency;
-    if(hclkFrequency > 120000000U){
-        RCC_HCLKConfig(RCC_SYSCLK_Div4);
-    }else if(hclkFrequency > 60000000U){
-        RCC_HCLKConfig(RCC_SYSCLK_Div2);
-    }
-
-    uart1.setBaudRate(UART1_Baudrate);
-    FLASH_Unlock();
-
-    NbrOfPage = (PAGE_WRITE_END_ADDR - PAGE_WRITE_START_ADDR) / FLASH_PAGE_SIZE;
-
-    FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP |FLASH_FLAG_WRPRTERR);
-
-    for(EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++)
-    {
-      FLASHStatus = FLASH_ErasePage(PAGE_WRITE_START_ADDR + (FLASH_PAGE_SIZE * EraseCounter));  //Erase 4KB
-
-    if(FLASHStatus != FLASH_COMPLETE){
-        uart1.print("FLASH Erase Fail\r\n");
-    }
-    uart1.print("FLASH Erase Suc\r\n");
-    }
-
-    Address = PAGE_WRITE_START_ADDR;
-    uart1.print("Programming...\r\n");
-    while((Address < PAGE_WRITE_END_ADDR) && (FLASHStatus == FLASH_COMPLETE)){
-        FLASHStatus = FLASH_ProgramHalfWord(Address, Data);
-        Address = Address + 2;
-    }
-
-    Address = PAGE_WRITE_START_ADDR;
-
-    uart1.print("Program Checking...\r\n");
-    while((Address < PAGE_WRITE_END_ADDR) && (MemoryProgramStatus != FAILED)){
-        uint16_t result =*(volatile uint16_t *)Address;
-        if(result != Data){
-            MemoryProgramStatus = FAILED;
-        }
-        if(Address < 10) uart1.println(result);
-        Address += 2;
-    }
-
-    if(MemoryProgramStatus == FAILED)
-    {
-        uart1.print("Memory Program FAIL!\r\n");
-    }
-    else{
-        uart1.print("Memory Program PASS!\r\n");
-    }
-
-    FLASH_Lock();
-
-    RCC_HCLKConfig(RCC_HCLK_Div1);
-    uart1.setBaudRate(UART1_Baudrate);
-    __enable_irq();
-}
-
-uint16_t FLash_Read(uint32_t Address){
-    return (*(__IO uint16_t*) (Address & 0xFFFFFFFE));
+    delayMicroseconds(50);
+    LCD_RESET_RES
+    delayMicroseconds(50);
+    LCD_SET_RES
 }
 
 RGB565 color = 0xffff;
@@ -294,6 +204,13 @@ __fast_inline void reCalculateTime(){
     #else
     t = msTick * (1 / 1000.0f);
     #endif
+}
+
+real_t CalculateFps(){
+    static real_t begin_t;
+    real_t dt = t - begin_t;
+    begin_t = t;
+    return dt ? real_t(1) / dt : real_t(0);
 }
 
 void SysInfo_ShowUp(){
@@ -341,38 +258,27 @@ int main(){
 
     SysInfo_ShowUp();
 
-    for(uint8_t i = 0; i <10; i++){
-        uart1 << SpecToken::Hex;
-        uart1.println(FLash_Read(PAGE_WRITE_START_ADDR + i));
-    }
- 	// auto ok1 = EEPROM_Init(nullptr);
-    BKP_Init();
-	uint16_t boot_count = BKP_ReadData(1);
-	// auto ok2 = Config_Read_Buf(0, &boot_count, sizeof(boot_count));
-    boot_count++;
-    BKP_WriteData(1, boot_count);
-    // TODO :fix flash
-	// if(boot_count % 2)
-        // Flash_Test();
+
+    Bkp & bkp = Bkp::getInstance();
+	auto boot_count = bkp.readData(1);
+    bkp.writeData(1, boot_count + 1);
 
     uart1.println("System boot times: ", boot_count);
-	// auto ok3 =Config_Write_Buf(0, &boot_count, sizeof(boot_count));
-	// uart1.println("System boot times: ", boot_count, ok2, ok3, EE_ReadWord(0), EE_ReadWord(1));
-
-
 
     spi2.init(144000000);
     spi2.configDataSize(8);
     spi2.configBaudRate(144000000 / 2);
 
-    LCD_Init();
+    GLobal_Reset();
+
 
     bool use_tft = true;
     bool use_mini = false;
     if(use_tft){
     if(use_mini){
         tftDisplayer.init();
-        tftDisplayer.setDisplayArea(160, 80, 1, 26);
+        tftDisplayer.setDisplayArea(Rect2i(0, 0, 160, 80));
+        tftDisplayer.setDisplayOffset(Vector2i(1, 26));
         tftDisplayer.setFlipX(true);
         tftDisplayer.setFlipY(false);
         tftDisplayer.setSwapXY(true);
@@ -382,7 +288,7 @@ int main(){
         tftDisplayer.setInversion(true);
     }else{
         tftDisplayer.init();
-        tftDisplayer.setDisplayArea(240, 240, 0, 0);
+        tftDisplayer.setDisplayArea(Rect2i(0, 0, 240, 240));
 
         tftDisplayer.setFlipX(false);
         tftDisplayer.setFlipY(false);
@@ -391,6 +297,7 @@ int main(){
         tftDisplayer.setFlushDirH(false);
         tftDisplayer.setFlushDirV(false);
         tftDisplayer.setInversion(true);
+        tftDisplayer.flush(RGB565::BLACK);
     }}else{
         oledDisPlayer.init();
 
@@ -419,15 +326,35 @@ int main(){
     extern_dac.setDistort(5);
     extern_dac.setRail(real_t(1), real_t(4));
 
-    Color c1 = Color::from_hsv(0);
-    c1 = 3 * Color::from_hsv(20);
-    while(1){
+    // Color c1 = Color::from_hsv(0);
+    // c1 = 3 * Color::from_hsv(20);
+    Font6x8 font6x8;
+    Painter<RGB565> painter(&tftDisplayer, &font6x8);
 
-        c1 = Color::from_hsv(frac(t));
-        color = c1;
+    while(1){
+        // tftDisplayer.flush(RGB565::BLACK);
+        // color = c1;
 
         if(use_tft){
-            tftDisplayer.flush(color);
+            for(uint8_t i = 0; i < 4; i++){
+                for(uint8_t j = 0; j < 4; j++){
+                    painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
+                    Vector2i pos = Vector2i(i * 40, j * 40);
+                    // painter.drawHollowRect(Rect2i(pos, Vector2i(12,12)));
+                    // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
+                    // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
+                    // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
+                    painter.drawHollowEllipse(pos, Vector2i(8,5));
+                    // painter.drawHriLine(pos, 2);
+                    // painter.drawPixel(pos);
+                    // painter.drawLine(pos, pos + Vector2i(2,2));
+                    // painter.setColor(RGB565::BLACK);
+                    // painter.drawPixel(pos);
+                    // painter.setColor(RGB565::BLACK);
+                    // painter.drawChar(pos, '#');
+                    // painter.drawLine(pos, pos + Vector2i(10, 10));
+                }
+            }
         }else{
             oledDisPlayer.flush(true);
         }
@@ -436,10 +363,10 @@ int main(){
         begin_u = micros();
         delta = real_t(delta_u / 1000000.0f);
 
-
-
         reCalculateTime();
+        // uart1.println(CalculateFps());
         PC13_2 = !PC13_2;
+
         // uart1.println("a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!"
         // ,"a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!");
         // PCout(13) = !PCin(13);

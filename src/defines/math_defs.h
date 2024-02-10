@@ -73,6 +73,10 @@
 #define TYPE_CHECK(a,b) (typeof(a) == typeof(b))
 #endif
 
+#ifndef IN_RANGE
+#define IN_RANGE(x,a,b) ((a < b) ? (a <= x && x <= b) : (a >= x && x >= b))
+#endif
+
 #ifndef SWAP
 #define SWAP(a, b, type) { \
     type temp; \

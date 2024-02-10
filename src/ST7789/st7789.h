@@ -18,18 +18,6 @@
 extern "C" {
 #endif
 
-#define LCD_DC_PORT GPIOA
-#define LCD_DC_PIN GPIO_Pin_15
-
-#define LCD_RES_PORT GPIOA
-#define LCD_RES_PIN GPIO_Pin_12
-
-#define LCD_ON_DATA LCD_DC_PORT -> BSHR = LCD_DC_PIN;
-#define LCD_ON_COMMAND LCD_DC_PORT -> BCR = LCD_DC_PIN;
-
-#define LCD_SET_RES LCD_DC_PORT -> BSHR = LCD_RES_PIN;
-#define LCD_RESET_RES LCD_DC_PORT -> BCR = LCD_RES_PIN;
-
 void LCD_Init();
 
 void LCD_Write_Data_8b(uint8_t data);

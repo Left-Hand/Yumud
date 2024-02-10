@@ -125,10 +125,10 @@ template<typename U>
 bool Vector2_t<T>::has_point(const Vector2_t<U> & _v) const{
     Vector2_t<T> v = _v;
     bool ret = true;
-    if(this.x < 0) ret &= (this.x <= v.x && v.x <= 0);
-    else ret &= (0 <= v.x && v.x <= this.x);
-    if(this.y < 0) ret &= (this.y <= v.y && v.y <= 0);
-    else ret &= (0 <= v.y && v.y <= this.y);
+    if(x < 0) ret &= (x <= v.x && v.x <= 0);
+    else ret &= (0 <= v.x && v.x <= x);
+    if(y < 0) ret &= (y <= v.y && v.y <= 0);
+    else ret &= (0 <= v.y && v.y <= y);
 
     return ret;
 }
@@ -136,7 +136,7 @@ bool Vector2_t<T>::has_point(const Vector2_t<U> & _v) const{
 template<typename T>
 Vector2_t<T> Vector2_t<T>::move_toward(const Vector2_t<T> & b, const T & delta) const{
     if (!is_equal_approx(b)){
-        Vector2_t<T> d = b - *this; 
+        Vector2_t<T> d = b - *this;
         return *this + d.clampmax(delta);
     }
     return *this;

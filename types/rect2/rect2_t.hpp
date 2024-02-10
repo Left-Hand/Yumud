@@ -22,7 +22,15 @@ public:
     Rect2_t(const Vector2_t<U> & _position,const Vector2_t<U> & _size):position(_position), size(_size){;}
 
     template<typename U>
+    Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
+            position(Vector2_t<T>(x_range.start, y_range.start)), size(Vector2_t<T>(x_range.get_length(), y_range.get_length())){;}
+    template<typename U>
     Rect2_t(U x, U y, U width, U height):position(Vector2_t<U>(x,y)),size(Vector2_t<U>(width, height)){;}
+
+    template<typename U>
+    static Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & size){
+        return Rect2_t<T>(center - size, size * 2);
+    }
 
     T get_area() const {return ABS(size.x * size.y);}
     Vector2_t<T> get_center() const {return(position + size / 2);}
@@ -42,31 +50,22 @@ public:
         return Rect2_t<T>(MIN(x0, x1), MIN(y0, y1), MAX(x0, x1) - MIN(x0, x1), MAX(y0, y1) - MIN(y0, y1));
     }
     template<typename U>
-    bool has_point(const Vector2_t<U> & _point) const {
-        Rect2_t<T> regular = *this.abs();
-        T x0 = regular.position.x;
-        T x1 = regular.position.x + regular.size.x;
-        T y0 = regular.position.y;
-        T y1 = regular.position.y + regular.size.y;
-        Vector2_t<T> point = _point;
-        T x = point.x;
-        T y = point.y;
-        return(x0 <= x && x <= x1 && y0 <= y && y <= y1);
+    bool has_point(const Vector2_t<U> & point) const {
+        Rect2_t<T> regular = this -> abs();
+        bool x_ok = regular.get_x_range().has_value(point.x);
+        if(!x_ok) return false;
+        bool y_ok = regular.get_y_range().has_value(point.y);
+        return(y_ok);
     }
 
     template<typename U>
     bool contains(const Rect2_t<U> & other)const {
-        Rect2_t<T> regular = *this.abs();
+        Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
-        T x0 = regular.position.x;
-        T x1 = regular.position.x + regular.size.x;
-        T y0 = regular.position.y;
-        T y1 = regular.position.y + regular.size.y;
-        T x0_other = other_regular.position.x;
-        T x1_other = other_regular.position.x + other_regular.size.x;
-        T y0_other = other_regular.position.y;
-        T y1_other = other_regular.position.y + other_regular.size.y;
-        return(x1 <= x1_other && x0 >= x0_other && y1 <= y1_other && y0 >= y0_other);
+        bool x_ok = regular.get_x_range().contains(other_regular.get_x_range());
+        if(!x_ok)return false;
+        bool y_ok = regular.get_y_range().contains(other_regular.get_y_range());
+        return y_ok;
     }
 
     template<typename U>
@@ -78,32 +77,21 @@ public:
 
     template<typename U>
     bool intersects(const Rect2_t<U> other) const{
-        Rect2_t<T> regular = *this.abs();
+        Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
-        T x0 = regular.position.x;
-        T x1 = regular.position.x + regular.size.x;
-        T y0 = regular.position.y;
-        T y1 = regular.position.y + regular.size.y;
-        T x0_other = other_regular.position.x;
-        T x1_other = other_regular.position.x + other_regular.size.x;
-        T y0_other = other_regular.position.y;
-        T y1_other = other_regular.position.y + other_regular.size.y;
-        return(x1 <= x0_other || x0 >= x1_other || y1 <= y0_other || y0 >= y1_other);
+        bool x_ok = regular.get_x_range().intersects(other_regular.get_x_range());
+        if(!x_ok) return false;
+        bool y_ok = regular.get_y_range().intersects(other_regular.get_y_range());
+        return y_ok;
     }
     template<typename U>
     Rect2_t<T> intersection(const Rect2_t<U> & other) const{
-        if(!this->intersects(other)) return Rect2_t<T>();
-        Rect2_t<T> regular = *this.abs();
+        Rect2_t<T> regular = this -> abs();
         Rect2_t<T> other_regular = other.abs();
-        T x0 = regular.position.x;
-        T x1 = regular.position.x + regular.size.x;
-        T y0 = regular.position.y;
-        T y1 = regular.position.y + regular.size.y;
-        T x0_other = other_regular.position.x;
-        T x1_other = other_regular.position.x + other_regular.size.x;
-        T y0_other = other_regular.position.y;
-        T y1_other = other_regular.position.y + other_regular.size.y;
-        return Rect2_t<T>(MAX(x0, x0_other), MAX(y0, y0_other), MIN(x1, x1_other) - MAX(x0, x0_other), MIN(y1, y1_other) - MAX(y0, y0_other));
+        Rangei range_x = regular.get_x_range().intersection(other_regular.get_x_range());
+        Rangei range_y = regular.get_y_range().intersection(other_regular.get_y_range());
+        if (((!bool(range_x)) || (!bool(range_y)))) return Rect2_t<T>();
+        return Rect2_t<T>(range_x,range_y);
     }
 
 
@@ -111,15 +99,9 @@ public:
     Rect2_t<T> merge(const Rect2_t<U> & other) const{
         Rect2_t<T> regular = *this.abs();
         Rect2_t<T> other_regular = other.abs();
-        T x0 = regular.position.x;
-        T x1 = regular.position.x + regular.size.x;
-        T y0 = regular.position.y;
-        T y1 = regular.position.y + regular.size.y;
-        T x0_other = other_regular.position.x;
-        T x1_other = other_regular.position.x + other_regular.size.x;
-        T y0_other = other_regular.position.y;
-        T y1_other = other_regular.position.y + other_regular.size.y;
-        return Rect2_t<T>(MIN(x0, x0_other), MIN(y0, y0_other), MAX(x1, x1_other) - MIN(x0, x0_other), MAX(y1, y1_other) - MIN(y0, y0_other));
+        Rangei range_x = regular.get_x_range().merge(other_regular.get_x_range());
+        Rangei range_y = regular.get_y_range().merge(other_regular.get_y_range());
+        return Rect2_t<T>(range_x, range_y);
     }
 
     template<typename U>
@@ -143,8 +125,16 @@ public:
         return Rect2_t<T>(position + offset, size);
     }
 
+    Range_t<T> get_x_range() const{
+        return Range_t<T>(position.x, position.x + size.x);
+    }
+
+    Range_t<T> get_y_range() const{
+        return Range_t<T>(position.y, position.y + size.y);
+    }
+
     explicit operator bool() const {
-        return(bool(size.x) && bool(size.y));
+        return (size.x != 0) && (size.y != 0);
     }
 };
 
