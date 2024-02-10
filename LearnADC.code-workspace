@@ -102,6 +102,7 @@
         "C_Cpp.errorSquiggles": "Disabled",
         "EIDE.SerialPortMonitor.BaudRate": 115200,
         "cSpell.words": [
+            "brclk",
             "BSHR",
             "CRGB",
             "CTLR",
@@ -111,6 +112,7 @@
             "inited",
             "PCLK",
             "Prescaler",
+            "scramable",
             "STDMATH",
             "Systick",
             "vref",

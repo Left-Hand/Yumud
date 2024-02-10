@@ -2,7 +2,7 @@
 
 #define __SGM58031_HPP__
 
-#include "../bus/busdrv.hpp"
+#include "../bus/bus_inc.h"
 #include "../types/real.hpp"
 
 #ifndef SGM_DEBUG

@@ -14,7 +14,7 @@
 
 #include "bus/bus_inc.h"
 
-#include "ST7789V2/st7789.hpp"
+#include "ST7789/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"
 #include "MPU6050/mpu6050.hpp"
 #include "SGM58031/sgm58031.hpp"

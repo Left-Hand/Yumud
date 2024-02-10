@@ -107,6 +107,21 @@ public:
         }
     }
 
+    void transmit(uint8_t & datarx, const uint8_t & datatx, bool discontinuous = true){
+        if(!bus.begin(index)){
+            bus.transfer(datarx, datatx);
+            if(discontinuous) bus.end();
+        }
+    }
+
+    void transmit(uint16_t & datarx, const uint16_t & datatx, bool discontinuous = true){
+        if(!bus.begin(index)){
+            bus.configDataSize(16);
+            bus.transfer(datarx, datatx);
+            bus.configDataSize(8);
+            if(discontinuous) bus.end();
+        }
+    }
     virtual BusType getBusType() = 0;
 };
 
