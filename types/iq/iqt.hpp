@@ -420,6 +420,8 @@ __fast_inline iq_t sign(const iq_t & iq);
 
 __fast_inline iq_t fmod(const iq_t & a, const iq_t & b){return iq_t((a.value < b.value && (0 <= a.value)) ? a.value : _IQmpy(_IQfrac(_IQdiv(a.value, b.value)), b.value));}
 
+
+__fast_inline iq_t lerp(const iq_t & x, const iq_t & a, const iq_t & b){return a * (iq_t(1) - x) + b * x;}
 __fast_inline iq_t mean(const iq_t & a, const iq_t & b){return iq_t((a.value + b.value) >> 1);}
 
 __fast_inline iq_t frac(const iq_t & iq){return iq_t(_IQfrac(iq.value));}

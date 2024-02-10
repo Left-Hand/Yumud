@@ -37,4 +37,11 @@
 #define LCD_SET_RES LCD_DC_PORT -> BSHR = LCD_RES_PIN;
 #define LCD_RESET_RES LCD_DC_PORT -> BCR = LCD_RES_PIN;
 
+#define SPI1_CS_Port GPIOB
+#define SPI1_CS_Pin GPIO_Pin_15
+#define SPI1_SCLK_Pin GPIO_Pin_3
+#define SPI1_MOSI_Pin GPIO_Pin_5
+#define SPI1_MISO_Pin GPIO_Pin_4
+#define SPI1_Remap GPIO_Remap_SPI1
+
 #endif

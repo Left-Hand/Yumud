@@ -241,6 +241,9 @@ void SysInfo_ShowUp(){
     uart1 << SpecToken::Dec;
 }
 
+
+
+namespace Shaders{
 __fast_inline RGB565 ShaderP(const Vector2i & pos){
     static int cnt = 0;
     cnt++;
@@ -254,6 +257,21 @@ __fast_inline RGB565 ShaderUV(const Vector2 & UV){
         return RGB565::BLUE;
     }
 }
+
+__fast_inline RGB565 Mandelbrot(const Vector2 & UV){
+    Complex c(lerp(UV.x, real_t(0.5), real_t(-1.5)), lerp(UV.y, real_t(-1), real_t(1)));
+    Complex z;
+    uint8_t count = 0;
+
+    while ((z < real_t(4)) && (count < 23))
+    {
+        z = z*z + c;
+        count = count + 1;
+    }
+    return count * 100;
+}
+};
+
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
@@ -368,7 +386,7 @@ int main(){
                     // painter.drawString(pos, "Hello, world!");
                 }
             }
-            tftDisplayer.shade(ShaderUV, Rect2i(Vector2i(0,0), Vector2i(24,24)));
+            tftDisplayer.shade(Shaders::Mandelbrot, Rect2i(Vector2i(0,0), Vector2i(48,48)));
         }else{
             oledDisPlayer.flush(true);
         }
