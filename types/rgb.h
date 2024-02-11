@@ -3,7 +3,7 @@
 #define __COLOR_H__
 
 #include "stdint.h"
-#include "defines/comm_inc.h"
+#include "src/comm_inc.h"
 #include "uint24_t.h"
 
 struct RGB332{

@@ -8,7 +8,7 @@
 #include <sstream>
 #include <cstdlib>
 #include "../types/string/string.hpp"
-#include "../defines/comm_inc.h"
+#include "src/comm_inc.h"
 #include "../clock/clock.h"
 
 class Bus{

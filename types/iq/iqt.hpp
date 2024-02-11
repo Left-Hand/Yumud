@@ -4,8 +4,8 @@
 
 
 #include "stdint.h"
-#include "../../src/defines/comm_inc.h"
-#include "../string/String.hpp"
+#include "src/comm_inc.h"
+#include "types/string/String.hpp"
 
 #include <IQmath_RV32.h>
 #include <limits>

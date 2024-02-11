@@ -4,7 +4,7 @@
 
 #include "../printer.hpp"
 #include "../../types/buffer/ringbuf/ringbuf_t.hpp"
-#include "../../defines/comm_inc.h"
+#include "src/comm_inc.h"
 
 class Uart1:public Printer{
     __fast_inline void _write(const char & data) override;

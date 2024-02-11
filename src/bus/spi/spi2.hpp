@@ -3,8 +3,8 @@
 #define __SPI2_HPP__
 
 #include "spi.hpp"
-#include "../../defines/comm_inc.h"
-#include "../../clock/clock.h"
+#include "src/comm_inc.h"
+
 
 
 #define SPI2_CS_Periph RCC_APB2Periph_GPIOB

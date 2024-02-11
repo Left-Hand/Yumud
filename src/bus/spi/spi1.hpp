@@ -3,8 +3,8 @@
 #define __SPI1_HPP__
 
 #include "spi.hpp"
-#include "../../defines/comm_inc.h"
-#include "../../clock/clock.h"
+#include "src/comm_inc.h"
+
 
 class Spi1:public Spi{
 protected:

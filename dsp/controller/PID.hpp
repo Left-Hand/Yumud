@@ -2,7 +2,7 @@
 
 #define __PID_H__
 
-#include "../types/real.hpp"
+#include "real.hpp"
 #include <algorithm>
 
 template<typename T>
@@ -14,10 +14,9 @@ class PID{
 
 
         T _integral = T(0.0);
-        T err = T(0.0);       
+        T err = T(0.0);
         T err_last = T(0.0);
 
-        
         T clp_min = T(-514.0f);
         T clp_max = T(514.0f);
     public:

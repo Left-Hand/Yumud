@@ -27,7 +27,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "string_utils.h"
-#include "../../src/defines/comm_inc.h"
+#include "src/comm_inc.h"
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.

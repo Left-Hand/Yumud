@@ -2,7 +2,7 @@
 #ifndef __HX711_H
 #define __HX711_H
  
-#include "../defines/comm_inc.h"
+#include "src/comm_inc.h"
  
 #ifdef __cplusplus
 extern "C" {

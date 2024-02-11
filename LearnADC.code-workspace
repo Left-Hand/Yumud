@@ -107,6 +107,7 @@
             "CRGB",
             "CTLR",
             "datas",
+            "Elog",
             "halfword",
             "HCLK",
             "inited",

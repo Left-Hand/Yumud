@@ -3,8 +3,8 @@
 #define __I2S_HPP__
 
 #include "../serbus.hpp"
-#include "../../defines/comm_inc.h"
-#include "../../clock/clock.h"
+#include "src/comm_inc.h"
+
 
 class I2s:public SerBus{
 

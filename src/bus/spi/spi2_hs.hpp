@@ -3,8 +3,8 @@
 #define __SPI2_HS_HPP__
 
 #include "../bus.hpp"
-#include "../../defines/comm_inc.h"
-#include "../../clock/clock.h"
+#include "src/comm_inc.h"
+
 #include "spi2.hpp"
 
 class Spi2_hs:public Spi2{

@@ -7,7 +7,7 @@ extern "C" {
 #endif 
 
 #include "stdint.h"
-#include "../src/defines/comm_inc.h"
+#include "src/comm_inc.h"
 
 #include "ch32v20x_spi.h"
 #include "ch32v20x_gpio.h"

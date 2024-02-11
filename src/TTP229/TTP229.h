@@ -1,8 +1,7 @@
 #ifndef __TTP229_H__
 #define __TTP229_H__
 
-#include "../defines/comm_inc.h"
-#include "../clock/clock.h"
+#include "src/comm_inc.h"
 
 #ifdef __cplusplus
 extern "C" {

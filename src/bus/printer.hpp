@@ -4,7 +4,7 @@
 
 #include "bus.hpp"
 #include "../../types/buffer/buffer.hpp"
-#include "../defines/comm_inc.h"
+#include "src/comm_inc.h"
 #include "../../types/string/String.hpp"
 #include <cstdint>
 

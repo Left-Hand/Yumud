@@ -2,7 +2,7 @@
 
 #define __BUFFER_HPP__
 
-#include "../../src/defines/comm_inc.h"
+#include "src/comm_inc.h"
 #include <cstdint>
 #include <string>
 
