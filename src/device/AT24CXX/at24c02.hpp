@@ -2,11 +2,10 @@
 
 #define __AT24C02_HPP__
 
-#include "../bus/bus_inc.hpp"
+#include "defines/device_def.h"
 
 #ifdef AT24C02_DEBUG
-#include "../bus/uart/uart1.hpp"
-#define AT24C02_DEBUG(...) uart1.println(__VA_ARGS__)
+#define AT24C02_DEBUG(...) DEBUG_LOG(...)
 #else
 #define AT24C02_DEBUG(...)
 #endif

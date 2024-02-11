@@ -1,10 +1,7 @@
 #ifndef __SSD1306_HPP__
 #define __SSD1306_HPP__
 
-#include "../bus/i2c/i2c.hpp"
-#include "../bus/spi/spi2.hpp"
-#include "../bus/busdrv.hpp"
-#include "../../types/rgb.h"
+#include "src/device/device_defs.h"
 
 #define SSD1306_DC_Port SPI2_Port
 #define SSD1306_DC_Pin SPI2_MISO_Pin

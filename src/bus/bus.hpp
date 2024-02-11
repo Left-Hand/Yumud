@@ -2,14 +2,7 @@
 #ifndef __BUS_HPP__
 #define __BUS_HPP__
 
-#include <cstring>
-#include <cstdint>
-#include <cmath>
-#include <sstream>
-#include <cstdlib>
-#include "../types/string/string.hpp"
-#include "src/comm_inc.h"
-#include "../clock/clock.h"
+#include "types/string/String.hpp"
 
 class Bus{
 protected:

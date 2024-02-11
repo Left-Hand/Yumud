@@ -1,6 +1,6 @@
-#ifndef __comm_inc_H__
+#ifndef __COMM_INC_H__
 
-#define __comm_inc_H__
+#define __COMM_INC_H__
 
 #include "defines/math_defs.h"
 #include "clock/clock.h"

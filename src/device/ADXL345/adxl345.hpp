@@ -1,8 +1,7 @@
 #ifndef __ADXL345_HPP__
 #define __ADXL345_HPP__
 
-#include "../bus/bus_inc.hpp"
-#include "stdint.h"
+#include "device_defs.h"
 
 #ifndef REG8_BEGIN
 #define REG8_BEGIN union{struct{
