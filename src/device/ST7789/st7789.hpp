@@ -2,9 +2,8 @@
 
 #define __ST7789V2_HPP__
 
-#include "../bus/bus_inc.h"
-#include "../bus/spi/spi2.hpp"
-#include "../types/image/image.hpp"
+#include "device_defs.h"
+#include "types/image/image.hpp"
 
 #define ST7789V2_DC_Port SPI2_Port
 #define ST7789V2_DC_Pin SPI2_MISO_Pin

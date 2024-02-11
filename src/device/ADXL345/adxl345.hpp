@@ -3,14 +3,6 @@
 
 #include "device_defs.h"
 
-#ifndef REG8_BEGIN
-#define REG8_BEGIN union{struct{
-#endif
-
-#ifndef REG8_END
-#define REG8_END };uint8_t data;};
-#endif
-
 class ADXL345{
 public:
     enum class DataRate:uint8_t{

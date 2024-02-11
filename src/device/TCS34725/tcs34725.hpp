@@ -4,29 +4,11 @@
 
 #define __TCS34725_HPP__
 
-#include "../bus/busdrv.hpp"
+#include "device_defs.h"
 
 #ifndef TCS34725_DEBUG
-#include "../bus/uart/uart1.hpp"
-#define TCS34725_DEBUG(...) uart1.println(__VA_ARGS__)
+#define TCS34725_DEBUG(...) DEBUG_LOG(...)
 #endif
-
-#ifndef REG16_BEGIN
-#define REG16_BEGIN union{struct{
-#endif
-
-#ifndef REG16_END
-#define REG16_END };uint16_t data;};
-#endif
-
-#ifndef REG8_BEGIN
-#define REG8_BEGIN union{struct{
-#endif
-
-#ifndef REG8_END
-#define REG8_END };uint8_t data;};
-#endif
-
 
 class TCS34725{
 public:

@@ -2,7 +2,7 @@
 
 #define __AT24C02_HPP__
 
-#include "defines/device_def.h"
+#include "device/device_defs.h"
 
 #ifdef AT24C02_DEBUG
 #define AT24C02_DEBUG(...) DEBUG_LOG(...)

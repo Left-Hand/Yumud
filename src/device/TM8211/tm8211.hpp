@@ -2,8 +2,8 @@
 
 #define __TM8211_HPP__
 
-#include "../bus/bus_inc.h"
-#include "../types/real.hpp"
+#include "device_defs.h"
+#include "types/real.hpp"
 
 class TM8211{
 private:

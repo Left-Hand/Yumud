@@ -2,12 +2,11 @@
 
 #define __SGM58031_HPP__
 
-#include "../bus/bus_inc.h"
-#include "../types/real.hpp"
+#include "device_defs.h"
+#include "types/real.hpp"
 
-#ifndef SGM_DEBUG
-#include "../bus/uart/uart1.hpp"
-#define SGM_DEBUG(...) uart1.println(__VA_ARGS__)
+#ifndef SGM58031_DEBUG
+#define SGM58031_DEBUG(...) DEBUG_LOG(...)
 #endif
 
 #ifndef REG16_BEGIN
@@ -139,7 +138,7 @@ public:
 
     void getDeviceId(){
         readReg(RegAddress::DeviceID, deviceIdReg);
-        // SGM_DEBUG("Ver:", deviceIdReg.ver, "Id", deviceIdReg.id, uint16_t(deviceIdReg));
+        // SGM58031_DEBUG("Ver:", deviceIdReg.ver, "Id", deviceIdReg.id, uint16_t(deviceIdReg));
     }
 
     bool isIdle(){
@@ -217,8 +216,8 @@ public:
     }
 };
 
-#ifdef SGM_DEBUG
-#undef SGM_DEBUG
+#ifdef SGM58031_DEBUG
+#undef SGM58031_DEBUG
 #endif
 
 #endif

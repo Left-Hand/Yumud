@@ -1,20 +1,11 @@
 #ifndef __INA226_HPP__
 #define __INA226_HPP__
 
-#include "../bus/bus_inc.hpp"
-#include "../types/real.hpp"
+#include "device_defs.h"
+#include "types/real.hpp"
 
-#ifndef INA226_DEBUG
-#include "../bus/uart/uart1.hpp"
-#define INA226_DEBUG(...) uart1.println(__VA_ARGS__)
-#endif
-
-#ifndef REG16_BEGIN
-#define REG16_BEGIN union{struct{
-#endif
-
-#ifndef REG16_END
-#define REG16_END };uint16_t data;};
+#ifdef INA226_DEBUG
+#define INA226_DEBUG(...) DEBUG_LOG(...)
 #endif
 
 

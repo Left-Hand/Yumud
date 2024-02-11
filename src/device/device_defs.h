@@ -6,4 +6,20 @@
 
 #define AT24C02_DEBUG
 
+#ifndef REG8_BEGIN
+#define REG8_BEGIN union{struct{
+#endif
+
+#ifndef REG8_END
+#define REG8_END };uint8_t data;};
+#endif
+
+#ifndef REG16_BEGIN
+#define REG16_BEGIN union{struct{
+#endif
+
+#ifndef REG16_END
+#define REG16_END };uint16_t data;};
+#endif
+
 #endif

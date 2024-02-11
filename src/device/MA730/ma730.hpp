@@ -1,15 +1,7 @@
 #ifndef __MA730_HPP__
 #define __MA730_HPP__
 
-#include "../bus/bus_inc.hpp"
-
-#ifndef REG8_BEGIN
-#define REG8_BEGIN union{struct{
-#endif
-
-#ifndef REG8_END
-#define REG8_END };uint8_t data;};
-#endif
+#include "device/device_defs.h"
 
 class MA730{
 protected:

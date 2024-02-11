@@ -2,21 +2,13 @@
 
 #define __LT8920_HPP__
 
-#include "../bus/bus_inc.h"
-#include "../types/real.hpp"
+#include "device_defs.h"
+#include "types/real.hpp"
 
 #ifndef LT8920_DEBUG
-#include "../bus/uart/uart1.hpp"
-#define LT8920_DEBUG(...) uart1.println(__VA_ARGS__)
+#define LT8920_DEBUG(...) DEBUG_LOG(...)
 #endif
 
-#ifndef REG16_BEGIN
-#define REG16_BEGIN union{struct{
-#endif
-
-#ifndef REG16_END
-#define REG16_END };uint16_t data;};
-#endif
 
 class LT8920{
 public:

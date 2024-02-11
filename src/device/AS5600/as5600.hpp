@@ -2,16 +2,8 @@
 
 #define __AS5600_HPP__
 
-#include "../bus/busdrv.hpp"
-#include "../types/real.hpp"
-
-#ifndef REG16_BEGIN
-#define REG16_BEGIN union{struct{
-#endif
-
-#ifndef REG16_END
-#define REG16_END };uint16_t data;};
-#endif
+#include "device_defs.h"
+#include "types/real.hpp"
 
 #ifndef REG8_BEGIN
 #define REG8_BEGIN union{struct{

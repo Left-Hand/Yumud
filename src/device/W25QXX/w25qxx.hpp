@@ -2,12 +2,11 @@
 
 #define __W25Qxx_HPP__
 
-#include "../bus/bus_inc.h"
-#include "../types/real.hpp"
+#include "device_defs.h"
+#include "real.hpp"
 
 #ifndef W25QXX_DEBUG
-#include "../bus/uart/uart1.hpp"
-#define W25QXX_DEBUG(...) uart1.println(__VA_ARGS__)
+#define W25QXX_DEBUG(...) DEBUG_LOG(...)
 #endif
 
 #ifndef REG8_BEGIN

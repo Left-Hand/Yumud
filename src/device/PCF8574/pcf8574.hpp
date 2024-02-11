@@ -2,7 +2,7 @@
 
 #define __PCF8574_HPP__
 
-#include "../bus/busdrv.hpp"
+#include "device_defs.h"
 
 class PCF8574{
 protected:
