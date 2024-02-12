@@ -6,6 +6,7 @@
 #include "uart/uart1.hpp"
 #include "uart/uart2.hpp"
 #include "i2c/i2cSw.hpp"
+#include "i2c/i2c1.hpp"
 #include "i2c/i2cdrv.hpp"
 #include "spi/spi2_hs.hpp"
 #include "spi/spidrv.hpp"

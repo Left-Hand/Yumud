@@ -5,20 +5,15 @@
 #include "device_defs.h"
 #include "real.hpp"
 
-#ifndef W25QXX_DEBUG
-#define W25QXX_DEBUG(...) DEBUG_LOG(...)
-#endif
-
-#ifndef REG8_BEGIN
-#define REG8_BEGIN union{struct{
-#endif
-
-#ifndef REG8_END
-#define REG8_END };uint8_t data;};
+#ifdef W25QXX_DEBUG
+#define W25QXX_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#else
+#define W25QXX_DEBUG(...)
 #endif
 
 class W25QXX{
 protected:
+    SpiDrv & bus_drv;
     enum class Commands:uint8_t{
         WriteEnable = 0x06,
         WriteDisable = 0x04,
@@ -36,7 +31,6 @@ protected:
         JedecId = 0x9F
     };
 
-    struct Reg8{};
     struct StatusReg:public Reg8{
         REG8_BEGIN
         uint8_t busy:1;
@@ -45,11 +39,17 @@ protected:
         uint8_t top_or_bottom_protect:1;
         uint8_t sector_or_block_protect:1;
         uint8_t __resv__:1;
+        REG8_END
     };
+
     StatusReg statusReg;
 
     void writeByte(const uint8_t & data){
         bus_drv.write(data);
+    }
+
+    void writeByte(const Commands & data){
+        bus_drv.write((uint8_t)data);
     }
 
     void readByte(uint8_t & data){
@@ -57,7 +57,8 @@ protected:
     }
 
 public:
-    void enableWrite(const bool & en){
+    W25QXX(SpiDrv & bus_drv):bus_drv(bus_drv){}
+    void enableWrite(const bool & en = true){
         if(en){
             writeByte(Commands::WriteEnable);
         }else{
@@ -112,13 +113,17 @@ public:
 
     bool isIdle(){
         writeByte(Commands::ReadStatusRegister);
-        readByte(*static_cast<uint8_t *>(&statusReg));
+        uint8_t temp = 0;
+        readByte(temp);
+        statusReg.data = temp;
         return statusReg.busy;
     }
 
     bool isWriteable(){
         writeByte(Commands::ReadStatusRegister);
-        readByte(*static_cast<uint8_t *>(&statusReg));
+        uint8_t temp = 0;
+        readByte(temp);
+        statusReg.data = temp;
         return statusReg.write_enable_latch;
     }
 
@@ -132,14 +137,14 @@ public:
         writeByte(addr >> 16);
         writeByte(addr >> 8);
         writeByte(addr);
-        for(size_t i = 0; i < size; i++){
+        for(size_t i = 0; i < len; i++){
             writeByte(data[i]);
         }
     }
 
-    void writeData(const uint32_t & _addr, const uint8_t * _data, coonst size_t & len){
+    void writeData(const uint32_t & _addr, const uint8_t * _data, const size_t & len){
         enableWrite();
-        uint16_t pages = addr / 256;
+        uint16_t pages = _addr / 256;
         uint32_t addr = _addr;
         uint8_t * data = (uint8_t *)_data;
         for(uint16_t i = 0; i < pages; i++){
@@ -150,7 +155,7 @@ public:
         uint8_t remains = addr % 256;
         writePage(addr, data, remains);
     }
-    void readData(const uint32_t & addr, const uint8_t * data, coonst size_t & len){
+    void readData(const uint32_t & addr, uint8_t * data, const size_t & len){
         writeByte(Commands::ReadData);
         writeByte(addr >> 16);
         writeByte(addr >> 8);
@@ -159,7 +164,8 @@ public:
             readByte(data[i]);
         }
     }
-}
+};
+
 #ifdef W25QXX_DEBUG
 #undef W25QXX_DEBUG
 #endif

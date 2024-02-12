@@ -42,10 +42,6 @@ public:
 protected:
     I2cDrv & bus_drv;
 
-    struct Reg16{};
-
-    struct Reg8{};
-
     struct ProgramTimesReg:public Reg8{
         REG8_BEGIN
         uint8_t times :2;

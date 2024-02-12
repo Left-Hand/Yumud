@@ -1,10 +1,3 @@
-/*
- * i2c-soft.h
- *
- *  Created on: Jun 9, 2013
- *      Author: agu
- */
-
 #ifndef I2C_SOFT_H_
 #define I2C_SOFT_H_
 

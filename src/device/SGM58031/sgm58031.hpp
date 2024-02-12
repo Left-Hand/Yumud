@@ -38,8 +38,6 @@ public:
 protected:
     I2cDrv & bus_drv;
 
-    struct Reg16{};
-
     struct ConfigReg:public Reg16{
         REG16_BEGIN
         uint8_t compQue : 2;
@@ -113,6 +111,7 @@ protected:
         Config,LowThr, HighThr, Config1, DeviceID,Trim
     };
 
+    real_t fullScale;
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
         bus_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
     }
@@ -158,6 +157,11 @@ public:
         return *(int16_t *)&convReg;
     }
 
+    real_t getConvVoltage(){
+        int16_t data = getConvData();
+        real_t uni = real_t(data) / (1 << 15);
+        return uni * fullScale;
+    }
     void setContMode(const bool continuous){
         configReg.mode = continuous;
         writeReg(RegAddress::Config, configReg);
@@ -177,9 +181,30 @@ public:
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setFS(const FS & _fs){
-        uint8_t pga = (uint8_t)_fs;
-        configReg.pga = pga;
+    void setFS(const FS & fs){
+        configReg.pga = (uint8_t)fs;
+        switch(fs){
+            case FS::FS0_256:
+                fullScale = real_t(0.256);
+                break;
+            case FS::FS0_512:
+                fullScale = real_t(0.512f);
+                break;
+            case FS::FS1_024:
+                fullScale = real_t(1.024f);
+                break;
+            case FS::FS2_048:
+                fullScale = real_t(2.048f);
+                break;
+            case FS::FS4_096:
+                fullScale = real_t(4.096f);
+                break;
+            case FS::FS6_144:
+                fullScale = real_t(6.144f);
+                break;
+            default:
+                break;
+        }
         writeReg(RegAddress::Config, configReg);
     }
 
@@ -210,7 +235,7 @@ public:
         writeReg(RegAddress::Trim, trimReg);
     }
 
-    void ENABLE(bool yes){
+    void enableCh3AsRef(bool yes){
         config1Reg.extRef = yes;
         writeReg(RegAddress::Config1, config1Reg);
     }

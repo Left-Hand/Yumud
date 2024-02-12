@@ -9,8 +9,6 @@ class MPU6050{
 protected:
     I2cDrv & bus_drv;
 
-    struct Reg16{};
-
     struct AccelXReg:public Reg16{
         REG16_BEGIN
         REG16_END

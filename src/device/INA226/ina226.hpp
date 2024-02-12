@@ -31,7 +31,6 @@ public:
     };
 protected:
     I2cDrv & i2c_drv;
-    struct Reg16{};
 
     enum class RegAddress:uint8_t{
         Config = 0x00,

@@ -5,8 +5,10 @@
 #include "device_defs.h"
 #include "types/real.hpp"
 
-#ifndef LT8920_DEBUG
-#define LT8920_DEBUG(...) DEBUG_LOG(...)
+#ifdef LT8920_DEBUG
+#define LT8920_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#else
+#define LT8920_DEBUG(...)
 #endif
 
 
@@ -40,7 +42,6 @@ public:
 
 protected:
     SpiDrv & bus_drv;
-    struct Reg16{};
 
     struct RfSynthLockReg:public Reg16{
         REG16_BEGIN
@@ -186,6 +187,7 @@ protected:
         uint16_t packLengthEN:1;
         uint16_t __resv2__ :1;
         uint16_t crcOn:1;
+        REG16_END
     };
 
     struct RxConfigReg:public Reg16{
@@ -291,7 +293,7 @@ protected:
         Flag = 48,
         Fifo = 50,
         FifoPtr = 52
-    }
+    };
 
     __fast_inline void delayT3(){
         delayNanoseconds(41);
@@ -302,26 +304,25 @@ protected:
     }
 
     void writeReg(const RegAddress& address, const Reg16 & reg){
-        bus_drv.write((uint8_t)address & 0x80, false);
+        bus_drv.write((uint8_t)((uint8_t)address & 0x80), false);
         delayT3();
 
-        bus_drv.write((uint8_t)((uint16_t)reg) >> 8);
+        uint8_t * reg_ptr = (uint8_t *)&reg;
+        bus_drv.write(reg_ptr[1], false);
         delayT5();
-        bus_drv.write((uint8_t)((uint16_t)reg) & 0xff);
+        bus_drv.write(reg_ptr[0]);
     }
 
     void readReg(const RegAddress& address, Reg16 & reg){
         uint8_t temp;
-        bus_drv.transmit(temp, (uint8_t)address & 0x80, false);
+        bus_drv.transmit(temp, (uint8_t)((uint8_t)address & 0x80), false);
         flagReg.data &= 0xff;
         flagReg.data |= temp << 8;
 
         delayT3();
 
         uint8_t buf[2];
-        bus_drv.read(buf[1], false);
-        delayT5();
-        bus_drv.read(buf[0]);
+        bus_drv.read(buf, 2);
 
         uint8_t * reg_ptr = (uint8_t *)&reg;
         reg_ptr[0] = buf[0];
@@ -329,23 +330,23 @@ protected:
     }
 
     void writeByte(const RegAddress& address, const uint8_t & data){
-        bus_drv.write((uint8_t)address & 0x80, false);
+        bus_drv.write((uint8_t)((uint8_t)address & 0x80), false);
         delayT3();
 
         bus_drv.write(data);
     }
 
     void readByte(const RegAddress& address, uint8_t & data){
-        bus_drv.write((uint8_t)address & 0x80, false);
+        bus_drv.write((uint8_t)((uint8_t)address & 0x80), false);
         delayT3();
         bus_drv.read(data);
     }
 public:
-
+    LT8920(SpiDrv & _bus_drv) : bus_drv(_bus_drv) {;}
 
     bool isRfSynthLocked(){
-        read(RegAddress::RfSynthLock, rfSynthLockReg);
-        return rfSynthLockReg.rfSynthLock;
+        readReg(RegAddress::RfSynthLock, rfSynthLockReg);
+        return rfSynthLockReg.synthLock;
     }
     uint8_t getRssi(){
         readReg(RegAddress::RawRssi, rawRssiReg);
@@ -358,11 +359,11 @@ public:
 
     void setRadioMode(const bool & isRx){
         if(isRx){
-            rfConfigReg.rxMode = 1;
-            rfConfigReg.txMode = 0;
+            rfConfigReg.rxEn = 1;
+            rfConfigReg.txEn = 0;
         }else{
-            rfConfigReg.txMode = 1;
-            rfConfigReg.rxMode = 0;
+            rfConfigReg.txEn = 1;
+            rfConfigReg.rxEn = 0;
         }
         writeReg(RegAddress::RfConfig, rfConfigReg);
     }
@@ -377,7 +378,7 @@ public:
         writeReg(RegAddress::PaConfig, paConfigReg);
     }
 
-    void enableRssi(const bool & open = enable){
+    void enableRssi(const bool & open = true){
         rssiPdnReg.rssiPdn = open;
         writeReg(RegAddress::RssiPdn, rssiPdnReg);
     }
@@ -398,8 +399,8 @@ public:
     }
 
     void setBrclkSel(const BrclkSel & brclkSel){
-        rfConfigReg.brclkSel = brclkSel;
-        writeReg(RegAddress::RfConfig, rfConfigReg);
+        config1Reg.clkSel = (uint8_t)brclkSel;
+        writeReg(RegAddress::Config1, config1Reg);
     }
 
     void clearFifoWritePtr(){
@@ -413,8 +414,8 @@ public:
     }
 
     void setSyncWordLength(const SyncWordLen & len){
-        syncWord0Reg.syncWordLength = (uint8_t)SyncWordLen;
-        writeReg(RegAddress::SyncWord0, syncWord0Reg);
+        config1Reg.syncWordLen= (uint8_t)len;
+        writeReg(RegAddress::Config1, config1Reg);
     }
 
     void setRetransTime(const uint8_t & times){
@@ -422,7 +423,7 @@ public:
         writeReg(RegAddress::Config2, config2Reg);
     }
 
-    void set
+    // void set
     void enableAutoAck(const bool & en = true){
         config3Reg.autoAck = en;
         writeReg(RegAddress::Config3, config3Reg);

@@ -20,9 +20,9 @@ public:
 
     enum class FifoMode:uint8_t{
         Bypass,Fifo, Stream, Trigger
-    }
+    };
+
 protected:
-    struct Reg8{};
 
     enum class RegAddress:uint8_t{
         DeviceID = 0x00,
@@ -43,7 +43,7 @@ protected:
         SourceOfSingle2DoubleTap = 0x2B,
         DataRate = 0x2C,
         PowerSaving = 0x2D,
-        InterruptEnabler = 0x2E
+        InterruptEnabler = 0x2E,
         InterruptMap = 0x2F,
         SourceOfInterrupt = 0x30,
         DataFormat = 0x31,
@@ -310,26 +310,25 @@ protected:
 protected:
     BusDrv & bus_drv;
 
-    struct Reg8{};
 
     void writeReg(const RegAddress & reg_address, const Reg8 & reg_data){
-        bus_drv.write({(uint8_t)reg_address & 0x7F, reg_data});
+        bus_drv.write({(uint8_t)((uint8_t)reg_address & 0x7F), *(uint8_t *)&reg_data});
     }
 
     void readReg(const RegAddress & reg_address, Reg8 & reg_data){
-        bus_drv.write((uint8_t)reg_address | 0x80, false);
+        bus_drv.write((uint8_t)((uint8_t)reg_address | 0x80), false);
         uint8_t temp = 0;
         bus_drv.read(temp);
-        reg_data = temp;
+        uint8_t * reg_ptr = (uint8_t *)&reg_data;
+        *reg_ptr = temp;
     }
 public:
+
+    ADXL345(BusDrv & _bus_drv): bus_drv(_bus_drv){;}
     uint8_t getDeviceID(){
         readReg(RegAddress::DeviceID, deviceIDReg);
-        return (uint8_t)deviceIDReg;
+        return deviceIDReg.data;
     }
-
-
-
 
 };
 

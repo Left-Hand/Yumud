@@ -23,6 +23,11 @@
 #include "PCF8574/pcf8574.hpp"
 #include "AS5600/as5600.hpp"
 #include "TM8211/tm8211.hpp"
+#include "BH1750/bh1750.hpp"
+#include "AT24CXX/at24c32.hpp"
+#include "W25QXX/w25qxx.hpp"
+#include "LT8920/lt8920.hpp"
+#include "ADXL345/adxl345.hpp"
 #include "gpio/gpio.hpp"
 #include "memory/flash.hpp"
 
@@ -50,44 +55,44 @@ I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
 
 SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
 SpiDrv spiDrvOled = SpiDrv(spi2, 0);
-I2cDrv i2cDrvOled = I2cDrv(i2cSw,(uint8_t)0x78);
-I2cDrv i2cDrvMpu = I2cDrv(i2cSw,(uint8_t)0xD0);
-I2cDrv i2cDrvAdc = I2cDrv(i2cSw, 0x90);
-I2cDrv i2cDrvTcs = I2cDrv(i2cSw, 0x52);
-I2cDrv i2cDrvVlx = I2cDrv(i2cSw, 0x52);
-I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
-I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
+// I2cDrv i2cDrvOled = I2cDrv(i2cSw,(uint8_t)0x78);
+// I2cDrv i2cDrvMpu = I2cDrv(i2cSw,(uint8_t)0xD0);
+I2cDrv i2cDrvAdc = I2cDrv(i2c1, 0x90);
+// I2cDrv i2cDrvTcs = I2cDrv(i2cSw, 0x52);
+// I2cDrv i2cDrvVlx = I2cDrv(i2cSw, 0x52);
+// I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
+// I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
 I2sDrv i2sDrvTm = I2sDrv(i2sSw);
 
 ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spiDrvOled);
-MPU6050 mpu(i2cDrvMpu);
+// MPU6050 mpu(i2cDrvMpu);
 SGM58031 ext_adc(i2cDrvAdc);
-TCS34725 tcs(i2cDrvTcs);
-VL53L0X vlx(i2cDrvVlx);
-PCF8574 pcf(i2cDrvPcf);
-AS5600 mags(i2cDrvAS);
+// TCS34725 tcs(i2cDrvTcs);
+// VL53L0X vlx(i2cDrvVlx);
+// PCF8574 pcf(i2cDrvPcf);
+// AS5600 mags(i2cDrvAS);
 TM8211 extern_dac(i2sDrvTm);
 
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 
-void writePcfGpioImag(uint16_t index, bool value){
-    pcf.writeBit(index, value);
-}
+// void writePcfGpioImag(uint16_t index, bool value){
+//     pcf.writeBit(index, value);
+// }
 
-bool readPcfGpioImag(uint16_t index){
-    return pcf.readBit(index);
-}
+// bool readPcfGpioImag(uint16_t index){
+//     return pcf.readBit(index);
+// }
 
 GpioImag PC13_2 = GpioImag(0,
     [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
     [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13);});
 
-GpioImag tp = GpioImag(0, writePcfGpioImag, readPcfGpioImag);
-GpioImag i2cSclIm = GpioImag(1, writePcfGpioImag, readPcfGpioImag);
-GpioImag i2cSdaIm = GpioImag(2, writePcfGpioImag, readPcfGpioImag);
+// GpioImag tp = GpioImag(0, writePcfGpioImag, readPcfGpioImag);
+// GpioImag i2cSclIm = GpioImag(1, writePcfGpioImag, readPcfGpioImag);
+// GpioImag i2cSdaIm = GpioImag(2, writePcfGpioImag, readPcfGpioImag);
 
-I2cSw i2cSwIm = I2cSw(i2cSclIm, i2cSdaIm, 0);
+// I2cSw i2cSwIm = I2cSw(i2cSclIm, i2cSdaIm, 0);
 
 extern "C" void TIM2_IRQHandler(void) __interrupt;
 
@@ -281,27 +286,26 @@ int main(){
     GPIO_PortC_Init();
     // TIM2_Init();
     // HX711_GPIO_Init();
-    GPIO_SW_I2C_Init();
+    // GPIO_SW_I2C_Init();
     GPIO_SW_I2S_Init();
+
 
     uart1.init(UART1_Baudrate);
     uart2.init(UART2_Baudrate);
 
-    SysInfo_ShowUp();
+    spi2.init(144000000);
+    spi2.configDataSize(8);
+    spi2.configBaudRate(144000000 / 2);
+    i2c1.init(400000);
 
+    GLobal_Reset();
+
+    SysInfo_ShowUp();
 
     Bkp & bkp = Bkp::getInstance();
 	auto boot_count = bkp.readData(1);
     bkp.writeData(1, boot_count + 1);
-
     uart1.println("System boot times: ", boot_count);
-
-    spi2.init(144000000);
-    spi2.configDataSize(8);
-    spi2.configBaudRate(144000000 / 2);
-
-    GLobal_Reset();
-
 
     bool use_tft = true;
     bool use_mini = false;
@@ -340,8 +344,9 @@ int main(){
 
     // mpu.init();
     ext_adc.init();
+    // print("ext_adc ini")
     ext_adc.setContMode(true);
-    ext_adc.setFS(SGM58031::FS::FS2_048);
+    ext_adc.setFS(SGM58031::FS::FS4_096);
     ext_adc.setMux(SGM58031::MUX::P0NG);
     ext_adc.setDataRate(SGM58031::DataRate::DR960);
     ext_adc.startConv();
@@ -361,17 +366,17 @@ int main(){
     // c1 = 3 * Color::from_hsv(20);
     Font6x8 font6x8;
     Painter<RGB565> painter(&tftDisplayer, &font6x8);
-
+    uart1.setSpace(",");
     while(1){
         // tftDisplayer.flush(RGB565::BLACK);
         // color = c1;
 
         if(use_tft){
-            for(uint8_t i = 0; i < 1; i++){
-                for(uint8_t j = 0; j < 4; j++){
+            for(uint8_t i = 0; i < 6; i++){
+                for(uint8_t j = 0; j < 6; j++){
                     painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
                     Vector2i pos = Vector2i(i * 40, j * 40);
-                    // painter.drawHollowRect(Rect2i(pos, Vector2i(12,12)));
+                    painter.drawFilledRect(Rect2i(pos, Vector2i(40,40)));
                     // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
                     // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
                     // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
@@ -386,7 +391,7 @@ int main(){
                     // painter.drawString(pos, "Hello, world!");
                 }
             }
-            tftDisplayer.shade(Shaders::Mandelbrot, Rect2i(Vector2i(0,0), Vector2i(48,48)));
+            // tftDisplayer.shade(Shaders::Mandelbrot, Rect2i(Vector2i(0,0), Vector2i(240,240)));
         }else{
             oledDisPlayer.flush(true);
         }
@@ -395,8 +400,28 @@ int main(){
         // begin_u = micros();
         // delta = real_t(delta_u / 1000000.0f);
 
+        if(ext_adc.isIdle()){
+            static uint8_t adc_prog = 0;
+            static real_t volt_in_l(0);
+            static real_t volt_in_r(0);
+            switch(adc_prog){
+            case 0:
+                ext_adc.setMux(SGM58031::MUX::P3NG);
+                // volt_in_l = ext_adc.getConvData() * 2.048 / 0x8000;
+                volt_in_l = ext_adc.getConvVoltage();
+                adc_prog = 1;
+                break;
+            case 1:
+                ext_adc.setMux(SGM58031::MUX::P2NG);
+                // volt_in_r = ext_adc.getConvData() * 2.048 / 0x8000;
+                volt_in_r = ext_adc.getConvVoltage();
+                uart1.println(volt_in_l, volt_in_r);
+                adc_prog = 0;
+                break;
+            }
+        }
+
         reCalculateTime();
-        uart1.println(CalculateFps());
         PC13_2 = !PC13_2;
 
         // uart1.println("a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!"

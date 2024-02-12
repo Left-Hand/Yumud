@@ -7,8 +7,6 @@ class MA730{
 protected:
     BusDrv & bus_drv;
 
-    struct Reg8{};
-
     // struct {
 
     // }

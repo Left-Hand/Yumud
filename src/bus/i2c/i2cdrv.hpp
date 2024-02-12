@@ -10,7 +10,7 @@ class I2cDrv:public BusDrv{
 public:
     I2cDrv(I2c & _bus, const uint8_t & _index = 0):BusDrv(_bus, _index){;}
 
-    void writePool(const uint8_t & reg_address, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+    void writePool(const uint8_t & reg_address, const uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
         if(!bus.begin(index)){
             bus.write(reg_address);
             // bus.begin(index);
