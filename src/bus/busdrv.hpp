@@ -107,6 +107,17 @@ public:
         }
     }
 
+    virtual void read(uint16_t & data){
+        if(!bus.begin(index)){
+            bus.configDataSize(16);
+            uint32_t temp;
+            bus.read(temp);
+            data = temp;
+            bus.configDataSize(8);
+            bus.end();
+        }
+    }
+
     void transmit(uint8_t & datarx, const uint8_t & datatx, bool discontinuous = true){
         if(!bus.begin(index)){
             uint32_t ret = 0;

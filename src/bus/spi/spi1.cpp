@@ -38,7 +38,7 @@ void SPI1_GPIO_Init(void){
     GPIO_InitStructure.GPIO_Pin = SPI1_CS_Pin;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_Init(SPI1_CS_Port, &GPIO_InitStructure);
 
     GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
     GPIO_PinRemapConfig(SPI1_Remap, ENABLE);
@@ -58,7 +58,7 @@ void SPI1_Init(uint32_t baudRate){
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
 	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI1_Prescaler;
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI1_Prescaler_Calculate(baudRate);
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(SPI1, &SPI_InitStructure);

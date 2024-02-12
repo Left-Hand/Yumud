@@ -9,6 +9,7 @@
 #include "i2c/i2c1.hpp"
 #include "i2c/i2cdrv.hpp"
 #include "spi/spi2_hs.hpp"
+#include "spi/spi1.hpp"
 #include "spi/spidrv.hpp"
 
 

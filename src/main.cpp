@@ -27,9 +27,11 @@
 #include "AT24CXX/at24c32.hpp"
 #include "W25QXX/w25qxx.hpp"
 #include "LT8920/lt8920.hpp"
+#include "MA730/ma730.hpp"
 #include "ADXL345/adxl345.hpp"
 #include "gpio/gpio.hpp"
 #include "memory/flash.hpp"
+#include "LT8920/lt8920.hpp"
 
 #include "../types/image/painter.hpp"
 
@@ -55,6 +57,9 @@ I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
 
 SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
 SpiDrv spiDrvOled = SpiDrv(spi2, 0);
+SpiDrv spiDrvFlash = SpiDrv(spi1, 0);
+SpiDrv spiDrvMagSensor = SpiDrv(spi1, 0);
+SpiDrv spiDrvRadio = SpiDrv(spi1, 0);
 // I2cDrv i2cDrvOled = I2cDrv(i2cSw,(uint8_t)0x78);
 // I2cDrv i2cDrvMpu = I2cDrv(i2cSw,(uint8_t)0xD0);
 I2cDrv i2cDrvAdc = I2cDrv(i2c1, 0x90);
@@ -68,11 +73,14 @@ ST7789 tftDisplayer(SpiDrvLcd);
 SSD1306 oledDisPlayer(spiDrvOled);
 // MPU6050 mpu(i2cDrvMpu);
 SGM58031 ext_adc(i2cDrvAdc);
+LT8920 radio(spiDrvRadio);
 // TCS34725 tcs(i2cDrvTcs);
 // VL53L0X vlx(i2cDrvVlx);
 // PCF8574 pcf(i2cDrvPcf);
 // AS5600 mags(i2cDrvAS);
 TM8211 extern_dac(i2sDrvTm);
+W25QXX extern_flash(spiDrvFlash);
+MA730 mag_sensor(spiDrvMagSensor);
 
 Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
 
@@ -293,9 +301,16 @@ int main(){
     uart1.init(UART1_Baudrate);
     uart2.init(UART2_Baudrate);
 
-    spi2.init(144000000);
+    // spi2.init(72000000);
+    // spi2.configDataSize(8);
+
+    spi2.init(72000000);
     spi2.configDataSize(8);
-    spi2.configBaudRate(144000000 / 2);
+    // spi2.configBaudRate(144000000 / 2);
+
+    spi1.init(18000000);
+    spi1.configDataSize(8);
+
     i2c1.init(400000);
 
     GLobal_Reset();
@@ -350,6 +365,8 @@ int main(){
     ext_adc.setMux(SGM58031::MUX::P0NG);
     ext_adc.setDataRate(SGM58031::DataRate::DR960);
     ext_adc.startConv();
+    radio.init();
+    uart1.println("flashCapacity: ", extern_flash.getDeviceCapacity());
     // tcs.init();
     // tcs.setIntegration(48);
     // tcs.setGain(TCS34725::Gain::X60);
@@ -362,8 +379,7 @@ int main(){
     extern_dac.setDistort(5);
     extern_dac.setRail(real_t(1), real_t(4));
 
-    // Color c1 = Color::from_hsv(0);
-    // c1 = 3 * Color::from_hsv(20);
+    // mag_sensor.setPulsePerTurn(30);
     Font6x8 font6x8;
     Painter<RGB565> painter(&tftDisplayer, &font6x8);
     uart1.setSpace(",");
@@ -400,27 +416,28 @@ int main(){
         // begin_u = micros();
         // delta = real_t(delta_u / 1000000.0f);
 
-        if(ext_adc.isIdle()){
-            static uint8_t adc_prog = 0;
-            static real_t volt_in_l(0);
-            static real_t volt_in_r(0);
-            switch(adc_prog){
-            case 0:
-                ext_adc.setMux(SGM58031::MUX::P3NG);
-                // volt_in_l = ext_adc.getConvData() * 2.048 / 0x8000;
-                volt_in_l = ext_adc.getConvVoltage();
-                adc_prog = 1;
-                break;
-            case 1:
-                ext_adc.setMux(SGM58031::MUX::P2NG);
-                // volt_in_r = ext_adc.getConvData() * 2.048 / 0x8000;
-                volt_in_r = ext_adc.getConvVoltage();
-                uart1.println(volt_in_l, volt_in_r);
-                adc_prog = 0;
-                break;
-            }
-        }
-
+        // if(ext_adc.isIdle()){
+        //     static uint8_t adc_prog = 0;
+        //     static real_t volt_in_l(0);
+        //     static real_t volt_in_r(0);
+        //     switch(adc_prog){
+        //     case 0:
+        //         ext_adc.setMux(SGM58031::MUX::P3NG);
+        //         // volt_in_l = ext_adc.getConvData() * 2.048 / 0x8000;
+        //         volt_in_l = ext_adc.getConvVoltage();
+        //         adc_prog = 1;
+        //         break;
+        //     case 1:
+        //         ext_adc.setMux(SGM58031::MUX::P2NG);
+        //         // volt_in_r = ext_adc.getConvData() * 2.048 / 0x8000;
+        //         volt_in_r = ext_adc.getConvVoltage();
+        //         uart1.println(volt_in_l, volt_in_r);
+        //         adc_prog = 0;
+        //         break;
+        //     }
+        // }
+        // uart1.println(mag_sensor.getRawPosition(), mag_sensor.isMagnitudeLow(), mag_sensor.isMagnitudeHigh());
+        uart1.println(radio.getRfVersion(), radio.getDigiVersion());
         reCalculateTime();
         PC13_2 = !PC13_2;
 

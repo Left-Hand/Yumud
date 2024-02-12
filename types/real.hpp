@@ -46,6 +46,12 @@ __fast_inline bool is_equal_approx_ratio(const double a, const double & b, doubl
 __fast_inline float sign(const float & fv);
 __fast_inline double sign(const double & dv);
 
+__fast_inline void u16_to_uni(const uint16_t & data, float & fv){
+    fv = (float)data / 65535;
+}
 
+__fast_inline void u16_to_uni(const uint16_t & data, double & dv){
+    dv = (float)data / 65535;
+}
 
 #endif

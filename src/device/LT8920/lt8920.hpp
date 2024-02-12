@@ -296,11 +296,13 @@ protected:
     };
 
     __fast_inline void delayT3(){
-        delayNanoseconds(41);
+        // delayNanoseconds(41);
+        delayMicroseconds(1);
     }
 
     __fast_inline void delayT5(){
-        delayNanoseconds(450);
+        // delayNanoseconds(450);
+        delayMicroseconds(1);
     }
 
     void writeReg(const RegAddress& address, const Reg16 & reg){
@@ -311,10 +313,12 @@ protected:
         bus_drv.write(reg_ptr[1], false);
         delayT5();
         bus_drv.write(reg_ptr[0]);
+
+        uart1.println("write",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
 
     void readReg(const RegAddress& address, Reg16 & reg){
-        uint8_t temp;
+        uint8_t temp = 0;
         bus_drv.transmit(temp, (uint8_t)((uint8_t)address & 0x80), false);
         flagReg.data &= 0xff;
         flagReg.data |= temp << 8;
@@ -327,6 +331,8 @@ protected:
         uint8_t * reg_ptr = (uint8_t *)&reg;
         reg_ptr[0] = buf[0];
         reg_ptr[1] = buf[1];
+
+        uart1.println("read",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
 
     void writeByte(const RegAddress& address, const uint8_t & data){

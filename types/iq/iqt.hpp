@@ -447,6 +447,31 @@ __fast_inline iq_t exp2(const iq_t & iq) {return iq_t(_IQexp2(iq.value));}
 __fast_inline iq_t pow(const iq_t & base, const iq_t & exponent) {return iq_t(_IQexp(_IQmpy(exponent.value, _IQdiv(base.value, _IQlog10(_IQ(LOGE))))));}
 #endif
 
+
+__fast_inline void u16_to_uni(const uint16_t & data, iq_t & qv){
+#if GLOBAL_Q >= 16
+    qv.value = data << (GLOBAL_Q - 16);
+#else
+    qv.value = data >> (16 - GLOBAL_Q);
+#endif
+}
+
+__fast_inline void s16_to_uni(const int16_t & data, iq_t & qv){
+#if GLOBAL_Q >= 16
+    qv.value = (data << (GLOBAL_Q - 15)) - ((1 << GLOBAL_Q));
+#else
+    qv.value = (data >> (17 - GLOBAL_Q)) - ((1 << GLOBAL_Q));
+#endif
+}
+
+__fast_inline void uni_to_u16(const iq_t & qv, uint16_t & data){
+#if GLOBAL_Q >= 16
+    data = qv.value >> (GLOBAL_Q - 16);
+#else
+    data = qv.value << (16 - GLOBAL_Q);
+#endif
+}
+
 namespace std{
     template<>
     class numeric_limits<iq_t> {

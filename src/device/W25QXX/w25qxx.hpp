@@ -66,23 +66,25 @@ public:
         }
     }
 
-    void getDeviceManufacturer(){
+    uint8_t getDeviceManufacturer(){
         uint8_t data;
         writeByte(Commands::ReadDeviceId);
         readByte(data);
         W25QXX_DEBUG("Device Manufacturer: ", data);
+        return data;
     }
 
-    void getDeviceStorageType(){
+    uint8_t getDeviceStorageType(){
         uint8_t data;
         uint8_t dummy;
         writeByte(Commands::ReadDeviceId);
         readByte(dummy);
         readByte(data);
         W25QXX_DEBUG("Device Storage Type: ", data);
+        return data;
     }
 
-    void getDeviceCapacity(){
+    uint8_t getDeviceCapacity(){
         uint8_t data;
         uint8_t dummy;
         writeByte(Commands::ReadDeviceId);
@@ -90,6 +92,7 @@ public:
         readByte(dummy);
         readByte(data);
         W25QXX_DEBUG("Device Capacity: ", data);
+        return data;
     }
 
     void eraseBlock(const uint32_t & addr){
