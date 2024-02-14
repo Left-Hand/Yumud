@@ -41,12 +41,7 @@ TM8211 extern_dac(i2sDrvTm);
 W25QXX extern_flash(spiDrvFlash);
 MA730 mag_sensor(spiDrvMagSensor);
 
-Gpio PC13 = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
-
-GpioImag PC13_2 = GpioImag(0,
-    [](uint16_t index, bool value){GPIO_WriteBit(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN, (BitAction)value);},
-    [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);});
-
+Gpio blueLed = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
 extern "C" void TIM2_IRQHandler(void) __interrupt;
 
@@ -64,28 +59,28 @@ void TIM2_Init(){
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+    GPIO_ResetBits(GPIOA, GPIO_Pin_0 | GPIO_Pin_1);
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
-    TIM_TimeBaseStructure.TIM_Period = 65534;
+    TIM_TimeBaseStructure.TIM_Period = 65535;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM2,&TIM_TimeBaseStructure);
 
 	TIM_ICInitTypeDef TIM_ICInitStruct;
+    TIM_ICStructInit(&TIM_ICInitStruct);
+
 	TIM_ICInitStruct.TIM_Channel = TIM_Channel_1;
 	TIM_ICInitStruct.TIM_ICFilter = 0xF;
-	TIM_ICInitStruct.TIM_ICPolarity = TIM_ICPolarity_Rising;
-	TIM_ICInitStruct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
-	TIM_ICInitStruct.TIM_ICSelection = TIM_ICSelection_DirectTI;
 
-	TIM_ICInit(TIM3,&TIM_ICInitStruct);
 
-	TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;  //选用TIM3的通道1
+	TIM_ICInit(TIM2,&TIM_ICInitStruct);
 
-	TIM_ICInit(TIM3,&TIM_ICInitStruct);
+	TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;
 
-    // TIM_ARRPreloadConfig(TIM2, DISABLE);
+	TIM_ICInit(TIM2,&TIM_ICInitStruct);
+
 	TIM_EncoderInterfaceConfig(TIM2,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
 
     TIM_Cmd(TIM2, ENABLE);
@@ -149,11 +144,11 @@ int main(){
 
     spi2.init(72000000);
     spi1.init(18000000);
-    // i2c1.init(400000);
 
     GLobal_Reset();
     SysInfo_ShowUp();
 
+    TIM2_Init();
     bool use_tft = true;
     bool use_mini = false;
     if(use_tft){
@@ -179,7 +174,6 @@ int main(){
         tftDisplayer.setFlushDirH(false);
         tftDisplayer.setFlushDirV(false);
         tftDisplayer.setInversion(true);
-        tftDisplayer.flush(RGB565::BLACK);
     }}else{
         oledDisPlayer.init();
 
@@ -216,70 +210,14 @@ int main(){
     Painter<RGB565> painter(&tftDisplayer, &font6x8);
     uart1.setSpace(",");
     while(1){
-        tftDisplayer.flush(RGB565::BLACK);
-        // color = c1;
-
-        if(use_tft){
-            for(uint8_t i = 0; i < 6; i++){
-                for(uint8_t j = 0; j < 6; j++){
-                    // painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
-                    // Vector2i pos = Vector2i(i * 40, j * 40);
-                    // painter.drawFilledRect(Rect2i(pos, Vector2i(40,40)));
-                    // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
-                    // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
-                    // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
-                    // painter.drawHollowEllipse(pos, Vector2i(8,5));
-                    // painter.drawPolyLine({pos, pos + Vector2i(5,5), pos + Vector2i(0, 6), pos + Vector2i(-9, -4)});
-                    // painter.drawHriLine(pos, 2);
-                    // painter.drawPixel(pos);
-                    // painter.drawLine(pos, pos + Vector2i(2,2));
-                    // painter.setColor(RGB565::BLACK);
-                    // painter.drawPixel(pos);
-                    // painter.setColor(RGB565::BLACK);
-                    painter.drawString(Vector2i(0,0), String(TIM_GetCounter(TIM2)));
-                }
-            }
-            // tftDisplayer.shade(Shaders::Mandelbrot, Rect2i(Vector2i(0,0), Vector2i(240,240)));
-        }else{
-            oledDisPlayer.flush(true);
-        }
-
-        // uint64_t delta_u = (micros() - begin_u);
-        // begin_u = micros();
-        // delta = real_t(delta_u / 1000000.0f);
-
-        // if(ext_adc.isIdle()){
-        //     static uint8_t adc_prog = 0;
-        //     static real_t volt_in_l(0);
-        //     static real_t volt_in_r(0);
-        //     switch(adc_prog){
-        //     case 0:
-        //         ext_adc.setMux(SGM58031::MUX::P3NG);
-        //         // volt_in_l = ext_adc.getConvData() * 2.048 / 0x8000;
-        //         volt_in_l = ext_adc.getConvVoltage();
-        //         adc_prog = 1;
-        //         break;
-        //     case 1:
-        //         ext_adc.setMux(SGM58031::MUX::P2NG);
-        //         // volt_in_r = ext_adc.getConvData() * 2.048 / 0x8000;
-        //         volt_in_r = ext_adc.getConvVoltage();
-        //         uart1.println(volt_in_l, volt_in_r);
-        //         adc_prog = 0;
-        //         break;
-        //     }
-        // }
-        // uart1.println(mag_sensor.getRawPosition(), mag_sensor.isMagnitudeLow(), mag_sensor.isMagnitudeHigh());
-        // uart1.println(radio.getRfVersion(), radio.getDigiVersion());
+        painter.setColor(RGB565::BLACK);
+        painter.flush();
+        painter.setColor(RGB565::WHITE);
+        painter.drawString(Vector2i(0,0), String(TIM_GetCounter(TIM2)));
+        uart1.println(TIM_GetCounter(TIM2));
         reCalculateTime();
-        PC13_2 = !PC13_2;
-
-        // uart1.println("a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!"
-        // ,"a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!", "a small fox jumps over a lazy dog!!");
-        // PCout(13) = !PCin(13);
-        // uint64_t ns_before = nanos();
-        // for(uint8_t i = 0; i<128; i++) reCalculateTime();
-        // uint64_t ns_after = nanos();
-        // uart1.println((uint32_t)(ns_after - ns_before) / 128);
+        blueLed = !blueLed;
+        delay(16);
     }
 }
 

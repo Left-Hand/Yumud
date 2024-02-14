@@ -59,6 +59,9 @@ public:
         srcImage -> putRect_Unsafe(rect_area, color);
     }
 
+    void flush(){
+        srcImage -> putRect_Unsafe(srcImage->area, color);
+    }
     void drawPixel(const Vector2i & pos){
         srcImage -> putPixel(pos, color);
     }

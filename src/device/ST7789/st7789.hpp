@@ -88,10 +88,6 @@ public:
 
     void setInversion(const bool & inv){writeCommand(0x20 + inv);}
 
-
-    void flush(const RGB565 & color){
-        putRect_Unsafe(area, color);
-    }
     // void putTexture(const Rect2i & _area, RGB565 * data){
     //     Rect2i area = _area.
     //     if(area.postion.x + area.size.x > width || )
