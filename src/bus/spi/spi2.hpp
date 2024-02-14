@@ -5,28 +5,6 @@
 #include "spi.hpp"
 #include "src/comm_inc.h"
 
-
-
-#define SPI2_CS_Periph RCC_APB2Periph_GPIOB
-#define SPI2_CS_Port GPIOB
-#define SPI2_CS_Pin GPIO_Pin_12
-
-#define SPI2_GPIO_Periph RCC_APB2Periph_GPIOB
-#define SPI2_Port GPIOB
-#define SPI2_SCK_Pin GPIO_Pin_13
-#define SPI2_MISO_Pin GPIO_Pin_14
-#define SPI2_MOSI_Pin GPIO_Pin_15
-
-#define SPI2_CS_Periph RCC_APB2Periph_GPIOB
-#define SPI2_CS_Port GPIOB
-#define SPI2_CS_Pin GPIO_Pin_12
-
-#define SPI2_GPIO_Periph RCC_APB2Periph_GPIOB
-#define SPI2_Port GPIOB
-#define SPI2_SCK_Pin GPIO_Pin_13
-#define SPI2_MISO_Pin GPIO_Pin_14
-#define SPI2_MOSI_Pin GPIO_Pin_15
-
 class Spi2:public Spi{
 protected:
     static int8_t occupied;

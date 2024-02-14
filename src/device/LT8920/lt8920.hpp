@@ -314,7 +314,7 @@ protected:
         delayT5();
         bus_drv.write(reg_ptr[0]);
 
-        uart1.println("write",*(uint16_t *)&reg, "at", (uint8_t)address);
+       LT8920_DEBUG("write",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
 
     void readReg(const RegAddress& address, Reg16 & reg){
@@ -332,7 +332,7 @@ protected:
         reg_ptr[0] = buf[0];
         reg_ptr[1] = buf[1];
 
-        uart1.println("read",*(uint16_t *)&reg, "at", (uint8_t)address);
+        LT8920_DEBUG("read",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
 
     void writeByte(const RegAddress& address, const uint8_t & data){

@@ -20,9 +20,6 @@ uint16_t SPI2_Prescaler_Calculate(uint32_t baudRate){
 void SPI2_GPIO_Init(void){
     CHECK_INIT
 
-    RCC_APB2PeriphClockCmd(SPI2_CS_Periph, ENABLE);
-    RCC_APB2PeriphClockCmd(SPI2_GPIO_Periph, ENABLE);
-
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 
     GPIO_InitStructure.GPIO_Pin = SPI2_MOSI_Pin | SPI2_SCK_Pin;

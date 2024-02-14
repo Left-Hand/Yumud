@@ -1,18 +1,9 @@
-#ifndef __ST7789V2_HPP__
+#ifndef __ST7789_HPP__
 
-#define __ST7789V2_HPP__
+#define __ST7789_HPP__
 
 #include "device_defs.h"
 #include "types/image/image.hpp"
-
-#define ST7789V2_DC_Port SPI2_Port
-#define ST7789V2_DC_Pin SPI2_MISO_Pin
-
-#define ST7789V2_ON_DATA \
-ST7789V2_DC_Port -> BSHR = ST7789V2_DC_Pin;
-
-#define ST7789V2_ON_CMD \
-ST7789V2_DC_Port -> BCR = ST7789V2_DC_Pin;
 
 
 class ST7789:public Image565{
@@ -24,30 +15,30 @@ private:
     bool area_locked = false;
 
     __fast_inline void writeCommand(const uint8_t & cmd){
-        ST7789V2_ON_CMD;
+        ST7789_ON_CMD;
         bus_drv.write(cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data){
-        ST7789V2_ON_DATA;
+        ST7789_ON_DATA;
         bus_drv.write(data);
     }
 
     __fast_inline void writeData16(const uint16_t & data){
-        ST7789V2_ON_DATA;
+        ST7789_ON_DATA;
         bus_drv.write(data);
     }
     __fast_inline void writePixel(const RGB565 & data){
-        ST7789V2_ON_DATA;
+        ST7789_ON_DATA;
         bus_drv.write((uint16_t)data);
     }
     void putPixels(const RGB565 & data, const size_t & len) override{
-        ST7789V2_ON_DATA;
+        ST7789_ON_DATA;
         bus_drv.write((uint16_t)data, len);
     }
 
     void putPixels(const RGB565 * data_ptr, const size_t & len) override{
-        ST7789V2_ON_DATA;
+        ST7789_ON_DATA;
         bus_drv.write((uint16_t *)data_ptr, len);
     }
 

@@ -9,10 +9,11 @@ void I2C1_GPIO_Init(){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
 
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6 | GPIO_Pin_7;
+    GPIO_InitStructure.GPIO_Pin = I2C1_SCL_Pin | I2C1_SDA_Pin;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
-    GPIO_Init(GPIOB, &GPIO_InitStructure);
+    GPIO_Init(I2C1_Port, &GPIO_InitStructure);
+    GPIO_PinRemapConfig(I2C1_REMAP, I2C1_REMAP_ENABLE);
 }
 
 void I2C1_Init(uint32_t baudRate){

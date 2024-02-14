@@ -21,8 +21,7 @@ void SPI1_GPIO_Init(void){
     CHECK_INIT
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
-    //PB3 SCLK
-    //PB5 MOSI
+
     GPIO_InitTypeDef GPIO_InitStructure = {0};
 
 	GPIO_InitStructure.GPIO_Pin = SPI1_SCLK_Pin | SPI1_MOSI_Pin;
@@ -41,7 +40,7 @@ void SPI1_GPIO_Init(void){
     GPIO_Init(SPI1_CS_Port, &GPIO_InitStructure);
 
     GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable, ENABLE);
-    GPIO_PinRemapConfig(SPI1_Remap, ENABLE);
+    GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
 }
 
 void SPI1_Init(uint32_t baudRate){

@@ -79,7 +79,6 @@ bool wait_ack(){
     scl = false;
     delayDur();
 
-    // sda.OutOD();
     return ret;
 }
 
@@ -136,7 +135,6 @@ public:
         clk();
         sda.write(0x10 & data);
         clk();
-        
         sda.write(0x08 & data);
         clk();
         sda.write(0x04 & data);
@@ -159,20 +157,20 @@ public:
         clkr();
         ret |= sda.read();
         clkr();
-        ret <<= 1; ret |= sda.read(); 
+        ret <<= 1; ret |= sda.read();
         clkr();
-        ret <<= 1; ret |= sda.read(); 
+        ret <<= 1; ret |= sda.read();
         clkr();
-        ret <<= 1; ret |= sda.read(); 
-        
+        ret <<= 1; ret |= sda.read();
+
         clkr();
-        ret <<= 1; ret |= sda.read(); 
+        ret <<= 1; ret |= sda.read();
         clkr();
-        ret <<= 1; ret |= sda.read(); 
+        ret <<= 1; ret |= sda.read();
         clkr();
-        ret <<= 1; ret |= sda.read(); 
+        ret <<= 1; ret |= sda.read();
         clkr();
-        ret <<= 1; ret |= sda.read(); 
+        ret <<= 1; ret |= sda.read();
 
         sda = false;
         if(toAck) ack();

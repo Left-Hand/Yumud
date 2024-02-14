@@ -1,49 +1,8 @@
-// #include "ST7789/st7789.h"
-#include "bkp/bkp.hpp"
-// #include "stdio.h"
-#include "../types/real.hpp"
-#include "../types/string/String.hpp"
-#include "../types/complex/complex_t.hpp"
-#include "../types/vector2/vector2_t.hpp"
-#include "../types/color/color_t.hpp"
-#include "../types/matrix/matrix.hpp"
-#include "MLX90640/MLX90640_API.h"
-#include "SDcard/SPI2_Driver.h"
-#include "HX711/HX711.h"
-#include "TTP229/TTP229.h"
-
-#include "bus/bus_inc.h"
-
-#include "ST7789/st7789.hpp"
-#include "SSD1306/ssd1306.hpp"
-#include "MPU6050/mpu6050.hpp"
-#include "SGM58031/sgm58031.hpp"
-#include "TCS34725/tcs34725.hpp"
-#include "VL53L0X/vl53l0x.hpp"
-#include "PCF8574/pcf8574.hpp"
-#include "AS5600/as5600.hpp"
-#include "TM8211/tm8211.hpp"
-#include "BH1750/bh1750.hpp"
-#include "AT24CXX/at24c32.hpp"
-#include "W25QXX/w25qxx.hpp"
-#include "LT8920/lt8920.hpp"
-#include "MA730/ma730.hpp"
-#include "ADXL345/adxl345.hpp"
-#include "gpio/gpio.hpp"
-#include "memory/flash.hpp"
-#include "LT8920/lt8920.hpp"
-
-#include "../types/image/painter.hpp"
+#include "misc.h"
 
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 
-#define I2C_SW_SCL GPIO_Pin_6
-#define I2C_SW_SDA GPIO_Pin_7
-
-#define I2S_SW_SCK GPIO_Pin_10
-#define I2S_SW_SDA GPIO_Pin_11
-#define I2S_SW_WS GPIO_Pin_1
 
 Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
 Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
@@ -82,111 +41,56 @@ TM8211 extern_dac(i2sDrvTm);
 W25QXX extern_flash(spiDrvFlash);
 MA730 mag_sensor(spiDrvMagSensor);
 
-Gpio PC13 = Gpio(GPIOC, GPIO_Pin_13);
-
-// void writePcfGpioImag(uint16_t index, bool value){
-//     pcf.writeBit(index, value);
-// }
-
-// bool readPcfGpioImag(uint16_t index){
-//     return pcf.readBit(index);
-// }
+Gpio PC13 = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
 GpioImag PC13_2 = GpioImag(0,
-    [](uint16_t index, bool value){GPIO_WriteBit(GPIOC, GPIO_Pin_13, (BitAction)value);},
-    [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(GPIOC, GPIO_Pin_13);});
+    [](uint16_t index, bool value){GPIO_WriteBit(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN, (BitAction)value);},
+    [](uint16_t index) -> bool {return GPIO_ReadInputDataBit(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);});
 
-// GpioImag tp = GpioImag(0, writePcfGpioImag, readPcfGpioImag);
-// GpioImag i2cSclIm = GpioImag(1, writePcfGpioImag, readPcfGpioImag);
-// GpioImag i2cSdaIm = GpioImag(2, writePcfGpioImag, readPcfGpioImag);
-
-// I2cSw i2cSwIm = I2cSw(i2cSclIm, i2cSdaIm, 0);
 
 extern "C" void TIM2_IRQHandler(void) __interrupt;
 
-void GPIO_PortC_Init( void ){
-    CHECK_INIT
 
-    GPIO_InitTypeDef  GPIO_InitStructure = {0};
-
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC, ENABLE );
-
-    PWR_BackupAccessCmd( ENABLE );
-    RCC_LSEConfig( RCC_LSE_OFF );
-    BKP_TamperPinCmd(DISABLE);
-
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_13| GPIO_Pin_14 | GPIO_Pin_15;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init( GPIOC, &GPIO_InitStructure );
-    PWR_BackupAccessCmd(DISABLE);
-}
-
-
-
-void GPIO_SW_I2C_Init(void){
-    GPIO_InitTypeDef  GPIO_InitStructure = {0};
-
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE );
-
-    GPIO_InitStructure.GPIO_Pin = I2C_SW_SCL | I2C_SW_SDA;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_WriteBit(GPIOB, GPIO_InitStructure.GPIO_Pin, (BitAction)true);
-    GPIO_Init( GPIOB, &GPIO_InitStructure );
-}
 
 void TIM2_Init(){
+    //PA0 CH1
+    //PA1 CH2
+    //PA2 CH3
+    //PA3 CH4
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
-    TIM_TimeBaseStructure.TIM_Period=144000000/20000 - 1;
-    TIM_TimeBaseStructure.TIM_Prescaler=1;
-    TIM_TimeBaseStructure.TIM_ClockDivision=TIM_CKD_DIV1;
-    TIM_TimeBaseStructure.TIM_CounterMode=TIM_CounterMode_Up;
+    TIM_TimeBaseStructure.TIM_Period = 65534;
+    TIM_TimeBaseStructure.TIM_Prescaler = 0;
+    TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM2,&TIM_TimeBaseStructure);
 
-    TIM_ARRPreloadConfig(TIM2, DISABLE);
+	TIM_ICInitTypeDef TIM_ICInitStruct;
+	TIM_ICInitStruct.TIM_Channel = TIM_Channel_1;
+	TIM_ICInitStruct.TIM_ICFilter = 0xF;
+	TIM_ICInitStruct.TIM_ICPolarity = TIM_ICPolarity_Rising;
+	TIM_ICInitStruct.TIM_ICPrescaler = TIM_ICPSC_DIV1;
+	TIM_ICInitStruct.TIM_ICSelection = TIM_ICSelection_DirectTI;
+
+	TIM_ICInit(TIM3,&TIM_ICInitStruct);
+
+	TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;  //选用TIM3的通道1
+
+	TIM_ICInit(TIM3,&TIM_ICInitStruct);
+
+    // TIM_ARRPreloadConfig(TIM2, DISABLE);
+	TIM_EncoderInterfaceConfig(TIM2,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
 
     TIM_Cmd(TIM2, ENABLE);
-
-    TIM_ClearFlag(TIM2, TIM_FLAG_Update);
-    TIM_ITConfig(TIM2, TIM_IT_Update, ENABLE);
-
-    NVIC_InitTypeDef NVIC_InitStructure = {0};
-    NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&NVIC_InitStructure);
 }
 
-
-void GPIO_SW_I2S_Init(void){
-    GPIO_InitTypeDef  GPIO_InitStructure = {0};
-
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE );
-
-    GPIO_InitStructure.GPIO_Pin = I2S_SW_SDA | I2S_SW_SCK | I2S_SW_WS;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_WriteBit(GPIOB, GPIO_InitStructure.GPIO_Pin, (BitAction)true);
-    GPIO_Init( GPIOB, &GPIO_InitStructure );
-}
-
-void GLobal_Reset(void){
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
-    GPIO_InitTypeDef  GPIO_InitStructure = {0};
-    GPIO_InitStructure.GPIO_Pin = LCD_RES_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(LCD_RES_PORT, &GPIO_InitStructure );
-
-    delayMicroseconds(50);
-    LCD_RESET_RES
-    delayMicroseconds(50);
-    LCD_SET_RES
-}
 
 RGB565 color = 0xffff;
 const RGB565 white = 0xffff;
@@ -195,66 +99,9 @@ const RGB565 red = RGB565(31,0,0);
 const RGB565 green = RGB565(0,63,0);
 const RGB565 blue = RGB565(0,0,31);
 
-uint64_t begin_u = 0;
-uint64_t begin_m = 0;
-
-struct DebugMeasures{
-    uint32_t t_base;
-    uint32_t t1;
-    uint32_t t2;
-    uint32_t t3;
-}debugMeasures;
-
 real_t delta = real_t(0);
 real_t fps = real_t(0);
-real_t fps_filtered = real_t(0);
 real_t t = real_t(0);
-
-__fast_inline void reCalculateTime(){
-    #ifdef USE_IQ
-    t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
-    #else
-    t = msTick * (1 / 1000.0f);
-    #endif
-}
-
-real_t CalculateFps(){
-    static real_t begin_t;
-    real_t dt = t - begin_t;
-    begin_t = t;
-    return dt ? real_t(1) / dt : real_t(0);
-}
-
-void SysInfo_ShowUp(){
-    RCC_ClocksTypeDef RCC_CLK;
-	RCC_GetClocksFreq(&RCC_CLK);//Get chip frequencies
-
-    uart1.setSpace(" ");
-
-    uart1.println("\r\n\r\n------------------------");
-	uart1.println("System Clock Source : ", (int)RCC_GetSYSCLKSource());
-	uart1.println("APB1/PCLK1 : ", (int)RCC_CLK.PCLK1_Frequency, "Hz");
-	uart1.println("APB2/PCLK2 : ", (int)RCC_CLK.PCLK2_Frequency, "Hz");
-	uart1.println("SYSCLK     : ", (int)RCC_CLK.SYSCLK_Frequency, "Hz");
-	uart1.println("HCLK       : ", (int)RCC_CLK.HCLK_Frequency, "Hz");
-
-    uint16_t flash_size = *(volatile uint16_t *)0x1FFFF7E0;
-    uint32_t chip_id[2];
-    chip_id[0] = *(volatile uint32_t *)0x1FFFF7E8;
-    chip_id[1] = *(volatile uint32_t *)0x1FFFF7EC;
-
-	uart1.println("FlashSize       : ", (int)flash_size, "KB");
-    uart1 << SpecToken::Hex;
-    uart1.println("ChipID          : ", (uint64_t)chip_id[0], chip_id[1]);
-
-    RCC_AHBPeriphClockCmd(RCC_CRCEN, ENABLE);
-    CRC_ResetDR();
-    uint32_t crc_code = CRC_CalcBlockCRC(chip_id, 3);
-    uart1.println("CRC code:", crc_code);
-    uart1 << SpecToken::Dec;
-}
-
-
 
 namespace Shaders{
 __fast_inline RGB565 ShaderP(const Vector2i & pos){
@@ -285,6 +132,9 @@ __fast_inline RGB565 Mandelbrot(const Vector2 & UV){
 }
 };
 
+
+
+
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
@@ -292,35 +142,17 @@ int main(){
 
     Systick_Init();
     GPIO_PortC_Init();
-    // TIM2_Init();
-    // HX711_GPIO_Init();
-    // GPIO_SW_I2C_Init();
     GPIO_SW_I2S_Init();
-
 
     uart1.init(UART1_Baudrate);
     uart2.init(UART2_Baudrate);
 
-    // spi2.init(72000000);
-    // spi2.configDataSize(8);
-
     spi2.init(72000000);
-    spi2.configDataSize(8);
-    // spi2.configBaudRate(144000000 / 2);
-
     spi1.init(18000000);
-    spi1.configDataSize(8);
-
-    i2c1.init(400000);
+    // i2c1.init(400000);
 
     GLobal_Reset();
-
     SysInfo_ShowUp();
-
-    Bkp & bkp = Bkp::getInstance();
-	auto boot_count = bkp.readData(1);
-    bkp.writeData(1, boot_count + 1);
-    uart1.println("System boot times: ", boot_count);
 
     bool use_tft = true;
     bool use_mini = false;
@@ -358,14 +190,14 @@ int main(){
     }
 
     // mpu.init();
-    ext_adc.init();
-    // print("ext_adc ini")
-    ext_adc.setContMode(true);
-    ext_adc.setFS(SGM58031::FS::FS4_096);
-    ext_adc.setMux(SGM58031::MUX::P0NG);
-    ext_adc.setDataRate(SGM58031::DataRate::DR960);
-    ext_adc.startConv();
-    radio.init();
+    // ext_adc.init();
+    // // print("ext_adc ini")
+    // ext_adc.setContMode(true);
+    // ext_adc.setFS(SGM58031::FS::FS4_096);
+    // ext_adc.setMux(SGM58031::MUX::P0NG);
+    // ext_adc.setDataRate(SGM58031::DataRate::DR960);
+    // ext_adc.startConv();
+    // radio.init();
     uart1.println("flashCapacity: ", extern_flash.getDeviceCapacity());
     // tcs.init();
     // tcs.setIntegration(48);
@@ -384,15 +216,15 @@ int main(){
     Painter<RGB565> painter(&tftDisplayer, &font6x8);
     uart1.setSpace(",");
     while(1){
-        // tftDisplayer.flush(RGB565::BLACK);
+        tftDisplayer.flush(RGB565::BLACK);
         // color = c1;
 
         if(use_tft){
             for(uint8_t i = 0; i < 6; i++){
                 for(uint8_t j = 0; j < 6; j++){
-                    painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
-                    Vector2i pos = Vector2i(i * 40, j * 40);
-                    painter.drawFilledRect(Rect2i(pos, Vector2i(40,40)));
+                    // painter.setColor(Color::from_hsv(frac(t - i/real_t(20) - j / real_t(5))));
+                    // Vector2i pos = Vector2i(i * 40, j * 40);
+                    // painter.drawFilledRect(Rect2i(pos, Vector2i(40,40)));
                     // painter.drawHollowCircle(pos + Vector2i(10,10), 2);
                     // painter.drawLine(pos, pos + Vector2(40, 0).rotate(t));
                     // painter.drawLine(pos, pos + Vector2(40, 40).rotate(t));
@@ -404,7 +236,7 @@ int main(){
                     // painter.setColor(RGB565::BLACK);
                     // painter.drawPixel(pos);
                     // painter.setColor(RGB565::BLACK);
-                    // painter.drawString(pos, "Hello, world!");
+                    painter.drawString(Vector2i(0,0), String(TIM_GetCounter(TIM2)));
                 }
             }
             // tftDisplayer.shade(Shaders::Mandelbrot, Rect2i(Vector2i(0,0), Vector2i(240,240)));
@@ -437,7 +269,7 @@ int main(){
         //     }
         // }
         // uart1.println(mag_sensor.getRawPosition(), mag_sensor.isMagnitudeLow(), mag_sensor.isMagnitudeHigh());
-        uart1.println(radio.getRfVersion(), radio.getDigiVersion());
+        // uart1.println(radio.getRfVersion(), radio.getDigiVersion());
         reCalculateTime();
         PC13_2 = !PC13_2;
 
