@@ -43,48 +43,9 @@ MA730 mag_sensor(spiDrvMagSensor);
 
 Gpio blueLed = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
-extern "C" void TIM2_IRQHandler(void) __interrupt;
+extern "C" void TimBase_IRQHandler(void) __interrupt;
 
 
-
-void TIM2_Init(){
-    //PA0 CH1
-    //PA1 CH2
-    //PA2 CH3
-    //PA3 CH4
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
-
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0 | GPIO_Pin_1;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-    GPIO_ResetBits(GPIOA, GPIO_Pin_0 | GPIO_Pin_1);
-
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
-    TIM_TimeBaseStructure.TIM_Period = 65535;
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
-    TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInit(TIM2,&TIM_TimeBaseStructure);
-
-	TIM_ICInitTypeDef TIM_ICInitStruct;
-    TIM_ICStructInit(&TIM_ICInitStruct);
-
-	TIM_ICInitStruct.TIM_Channel = TIM_Channel_1;
-	TIM_ICInitStruct.TIM_ICFilter = 0xF;
-
-
-	TIM_ICInit(TIM2,&TIM_ICInitStruct);
-
-	TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;
-
-	TIM_ICInit(TIM2,&TIM_ICInitStruct);
-
-	TIM_EncoderInterfaceConfig(TIM2,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
-
-    TIM_Cmd(TIM2, ENABLE);
-}
 
 
 RGB565 color = 0xffff;
@@ -128,7 +89,190 @@ __fast_inline RGB565 Mandelbrot(const Vector2 & UV){
 };
 
 
+constexpr uint16_t pwm_arr = 144000000/72000 - 1;
+constexpr uint16_t ir_arr = 144000000/38000 - 1;
 
+struct MotorPosition{
+    real_t lapPositionHome = real_t(0);
+    real_t lapPosition = real_t(0);
+    real_t lapPositionLast = real_t(0);
+
+    int16_t accTurns = 0;
+    real_t accPosition = real_t(0);
+    // real_t accPositionFixed = real_t(0);
+    real_t accPositionLast = real_t(0);
+
+    real_t vel = real_t(0);
+    real_t accPositionAgo = real_t(0);
+    real_t elecRad = real_t(0);
+    // real_t elecRadFixed = real_t(0);
+}motorPosition;
+real_t readLapPosition(){
+    real_t ret;
+    u16_to_uni((uint16_t)(TIM2->CNT), ret);
+    return ret;
+}
+void updatePosition(){
+    motorPosition.lapPosition = readLapPosition();
+    real_t deltaLapPosition = motorPosition.lapPosition - motorPosition.lapPositionLast;
+
+    if(deltaLapPosition > real_t(0.5f)){
+        motorPosition.accTurns -= 1;
+    }else if (deltaLapPosition < real_t(-0.5f)){
+        motorPosition.accTurns += 1;
+    }
+
+    motorPosition.lapPositionLast = motorPosition.lapPosition;
+    motorPosition.accPositionLast = motorPosition.accPosition;
+    motorPosition.accPosition = real_t(motorPosition.accTurns) + (motorPosition.lapPosition - motorPosition.lapPositionHome);
+}
+void setMotorDuty(const real_t & duty){
+    if(duty >= real_t(0)){
+        uint16_t value = (int)(duty * pwm_arr);
+        TIM4->CH1CVR = value;
+        TIM4->CH2CVR = 0;
+        TIM4->CH3CVR = value / 2;
+    }else{
+        uint16_t value = (int)((-duty) * pwm_arr);
+        TIM4->CH1CVR = 0;
+        TIM4->CH2CVR = value;
+        TIM4->CH3CVR = value / 2;
+    }
+}
+
+void setABCoilDuty(const real_t & aduty, const real_t & bduty){
+    if(aduty >= real_t(0)){
+        uint16_t value = (int)(aduty * pwm_arr);
+        TIM4->CH1CVR = value;
+        TIM4->CH2CVR = 0;
+    }else{
+        uint16_t value = (int)((-aduty) * pwm_arr);
+        TIM4->CH1CVR = 0;
+        TIM4->CH2CVR = value;
+    }
+
+    if(bduty >= real_t(0)){
+        uint16_t value = (int)(bduty * pwm_arr);
+        TIM4->CH3CVR = value;
+        TIM4->CH4CVR = 0;
+    }else{
+        uint16_t value = (int)((-bduty) * pwm_arr);
+        TIM4->CH3CVR = 0;
+        TIM4->CH4CVR = value;
+    }
+}
+
+
+void setIrState(const bool on){
+    TIM3->CH1CVR = on ? (ir_arr / 3) : 0;
+}
+
+
+
+class NecEncoder{
+protected:
+	uint8_t bit_prog;
+	uint8_t byte_prog;
+
+	struct NecCode{
+		uint8_t total_cnt;
+		uint8_t valid_cnt;
+	};
+
+	const NecCode codes[4] = {
+		{.total_cnt = 24, .valid_cnt = 16},
+		{.total_cnt = 2, .valid_cnt = 1},
+		{.total_cnt = 4, .valid_cnt = 1},
+		{.total_cnt = 2, .valid_cnt = 1}
+	};
+
+	enum class BitType:uint8_t{
+		Leader, Zero, One, Stop
+	};
+
+	enum class EncodeProg:uint8_t{
+		Idle, Lead, Address, invAddress, Command, invCommand, Stop
+	};
+
+	bool writeBit(const BitType & bit){
+		bit_prog ++;
+		const NecCode & code = codes[(uint8_t)bit];
+
+		setIrState(bit_prog <= code.valid_cnt);
+
+		bool ret = false;
+		if(bit_prog >= code.total_cnt){
+			bit_prog = 0;
+			ret = true;
+		}
+		return ret;
+	}
+	bool writeByte(const uint8_t & byte){
+
+		if(writeBit((byte & (0x01 << byte_prog)) ? BitType::One : BitType::Zero))
+			byte_prog ++;
+
+		bool ret = false;
+
+		if(byte_prog >= 8){
+			byte_prog = 0;
+			ret = true;
+		}
+
+		return ret;
+	};
+public:
+	uint8_t address = 0xAA;
+	uint8_t command = 0xCC;
+	EncodeProg encode_prog;
+	bool tick(){
+		switch(encode_prog){
+		case EncodeProg::Lead:
+			if(writeBit(BitType::Leader)){
+				encode_prog = EncodeProg::Address;
+			}
+			break;
+
+		case EncodeProg::Address:
+			if(writeByte(address)){
+				encode_prog = EncodeProg::invAddress;
+			}
+			break;
+		case EncodeProg::invAddress:
+			if(writeByte(~address)){
+				encode_prog = EncodeProg::Command;
+			}
+			break;
+		case EncodeProg::Command:
+			if(writeByte(command)){
+				encode_prog = EncodeProg::invCommand;
+			}
+			break;
+		case EncodeProg::invCommand:
+			if(writeByte(~command)){
+				encode_prog = EncodeProg::Stop;
+			}
+			break;
+		case EncodeProg::Stop:
+			if(writeBit(BitType::Stop)){
+				encode_prog = EncodeProg::Idle;
+			}
+            // setIrState(false);
+			break;
+		default:
+			break;
+		}
+
+		return (encode_prog == EncodeProg::Idle);
+	}
+
+	void emit(const uint8_t & _address, const uint8_t & _command){
+		address = _address;
+		command = _command;
+
+		encode_prog = EncodeProg::Lead;
+	}
+}ir_encoder;
 
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -136,52 +280,66 @@ int main(){
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     Systick_Init();
-    GPIO_PortC_Init();
-    GPIO_SW_I2S_Init();
+    LED_GPIO_Init();
+    Gpio Led = Gpio(GPIOA, GPIO_Pin_6);
+    // GPIO_PortC_Init();
+    // GPIO_SW_I2S_Init();
 
-    uart1.init(UART1_Baudrate);
+    // TIM2_GPIO_Init();
+    // TIM_Encoder_Init(TIM2);
+
+    // TIM4_GPIO_Init();
+    // TIM_PWM_Init(TIM4, pwm_arr);
+
+    // TIM3_GPIO_Init();
+    // TIM_PWM_Init(TIM3, ir_arr);
+    // ADC1_GPIO_Init();
+    // ADC1_Init();
+
+    // uart1.init(UART1_Baudrate);
     uart2.init(UART2_Baudrate);
 
-    spi2.init(72000000);
-    spi1.init(18000000);
+    // spi2.init(72000000);
+    // spi1.init(18000000);
 
-    GLobal_Reset();
-    SysInfo_ShowUp();
+    // GLobal_Reset();
+    // SysInfo_ShowUp(uart2);
 
-    TIM2_Init();
-    bool use_tft = true;
-    bool use_mini = false;
-    if(use_tft){
-    if(use_mini){
-        tftDisplayer.init();
-        tftDisplayer.setDisplayArea(Rect2i(0, 0, 160, 80));
-        tftDisplayer.setDisplayOffset(Vector2i(1, 26));
-        tftDisplayer.setFlipX(true);
-        tftDisplayer.setFlipY(false);
-        tftDisplayer.setSwapXY(true);
-        tftDisplayer.setFormatRGB(false);
-        tftDisplayer.setFlushDirH(false);
-        tftDisplayer.setFlushDirV(false);
-        tftDisplayer.setInversion(true);
-    }else{
-        tftDisplayer.init();
-        tftDisplayer.setDisplayArea(Rect2i(0, 0, 240, 240));
 
-        tftDisplayer.setFlipX(false);
-        tftDisplayer.setFlipY(false);
-        tftDisplayer.setSwapXY(false);
-        tftDisplayer.setFormatRGB(true);
-        tftDisplayer.setFlushDirH(false);
-        tftDisplayer.setFlushDirV(false);
-        tftDisplayer.setInversion(true);
-    }}else{
-        oledDisPlayer.init();
 
-        oledDisPlayer.setOffsetY(6);
-        oledDisPlayer.setFlipX(false);
-        oledDisPlayer.setFlipY(false);
-        oledDisPlayer.setInversion(false);
-    }
+    // bool use_tft = true;
+    // bool use_mini = false;
+    // if(use_tft){
+    // if(use_mini){
+    //     tftDisplayer.init();
+    //     tftDisplayer.setDisplayArea(Rect2i(0, 0, 160, 80));
+    //     tftDisplayer.setDisplayOffset(Vector2i(1, 26));
+    //     tftDisplayer.setFlipX(true);
+    //     tftDisplayer.setFlipY(false);
+    //     tftDisplayer.setSwapXY(true);
+    //     tftDisplayer.setFormatRGB(false);
+    //     tftDisplayer.setFlushDirH(false);
+    //     tftDisplayer.setFlushDirV(false);
+    //     tftDisplayer.setInversion(true);
+    // }else{
+    //     tftDisplayer.init();
+    //     tftDisplayer.setDisplayArea(Rect2i(0, 0, 240, 240));
+
+    //     tftDisplayer.setFlipX(false);
+    //     tftDisplayer.setFlipY(false);
+    //     tftDisplayer.setSwapXY(false);
+    //     tftDisplayer.setFormatRGB(true);
+    //     tftDisplayer.setFlushDirH(false);
+    //     tftDisplayer.setFlushDirV(false);
+    //     tftDisplayer.setInversion(true);
+    // }}else{
+    //     oledDisPlayer.init();
+
+    //     oledDisPlayer.setOffsetY(6);
+    //     oledDisPlayer.setFlipX(false);
+    //     oledDisPlayer.setFlipY(false);
+    //     oledDisPlayer.setInversion(false);
+    // }
 
     // mpu.init();
     // ext_adc.init();
@@ -192,7 +350,9 @@ int main(){
     // ext_adc.setDataRate(SGM58031::DataRate::DR960);
     // ext_adc.startConv();
     // radio.init();
-    uart1.println("flashCapacity: ", extern_flash.getDeviceCapacity());
+    // uart1.println("flashCapacity: ", extern_flash.getDeviceCapacity());
+    // uint8_t * buf = new uint8_t[uart1.read()];
+    // uart1.println(String((const char *)buf));
     // tcs.init();
     // tcs.setIntegration(48);
     // tcs.setGain(TCS34725::Gain::X60);
@@ -202,45 +362,65 @@ int main(){
     // vlx.setHighPrecision(false);
     // vlx.startConv();
     // mags.init();
-    extern_dac.setDistort(5);
-    extern_dac.setRail(real_t(1), real_t(4));
+    // extern_dac.setDistort(5);
+    // extern_dac.setRail(real_t(1), real_t(4));
 
     // mag_sensor.setPulsePerTurn(30);
-    Font6x8 font6x8;
-    Painter<RGB565> painter(&tftDisplayer, &font6x8);
-    uart1.setSpace(",");
+    // Font6x8 font6x8;
+    // Painter<RGB565> painter(&tftDisplayer, &font6x8);
+    // uart1.setSpace(",");
+    // uart2.setSpace(",");
+
+    // painter.setColor(RGB565::BLACK);
+    // painter.flush();
+    // painter.setColor(RGB565::WHITE);
+    // painter.drawString(Vector2i(0,0), String((int16_t)TIM2->CNT));
+    // painter.drawString(Vector2i(0,8), String(0.2));
+    // painter.drawString(Vector2i(0,16), String(0));
+    // painter.drawString(Vector2i(0,24), String(3672));
+
     while(1){
-        painter.setColor(RGB565::BLACK);
-        painter.flush();
-        painter.setColor(RGB565::WHITE);
-        painter.drawString(Vector2i(0,0), String(TIM_GetCounter(TIM2)));
-        uart1.println(TIM_GetCounter(TIM2));
+        static uint8_t cnt = 0;
+        uart2.println(cnt++, uart2.available());
+        Led = !Led;
+        delay(90);
+        // updatePosition();
+        // real_t pos = motorPosition.accPosition * 10;
+        // static PID pos_pid = PID(real_t(10), real_t(0), real_t(0));
+        // pos_pid.setClamp(real_t(0.94));
+
+        // real_t target = sin(t);
+        // // real_t duty = CLAMP((target - pos) * 30, real_t(-0.94), real_t(0.94));
+        // real_t duty = pos_pid.update(target, pos);
+        // // real_t duty = floor(fmod(t, real_t(3))-1);
+        // // real_t duty = sin(t * real_t(-2));
+        // setMotorDuty(duty);
+        // real_t position = t;
+        // const real_t omiga = real_t(10);
+        // const real_t amplitude = real_t(1);
+        // real_t rad = floor(omiga * position / real_t(TAU/4)) * real_t(TAU/4);
+        // real_t a = sin(rad) * amplitude;
+        // real_t b = cos(rad) * amplitude;
+        // uart1.println(a,b);
+        // setABCoilDuty(a, b);
+        // reCalculateTime();
+        // blueLed = !blueLed;
+        // setIrState((bool)blueLed);
+        // if(ir_encoder.tick()){
+        //     static uint8_t a = 0x00;
+        //     ir_encoder.emit(a++, a);
+        // }
+        // setIrState(true);
+        // delay(2);
+        // delayMicroseconds(160);
+        // uart1.println(millis());
         reCalculateTime();
-        blueLed = !blueLed;
-        delay(16);
+        // t = real_t(TAU/4);
+        // ADC_SoftwareStartInjectedConvCmd(ADC1,ENABLE);
+        // while(ADC_GetFlagStatus(ADC1,ADC_FLAG_JEOC)==RESET);
+
+        // uint16_t ad1 = ADC_GetInjectedConversionValue(ADC1,ADC_InjectedChannel_1);
+        // uint16_t ad2 = ADC_GetInjectedConversionValue(ADC1,ADC_InjectedChannel_2);
+        // uart1.println(ir_encoder.bit_prog, (uint8_t)ir_encoder.byte_prog, (uint8_t)ir_encoder.encode_prog, TIM3->CH1CVR);
     }
 }
-
-// real_t wave(const real_t & x){
-//     if(x > 0){
-//         const real_t play_v(50);
-//         return  exp(-10 * x) * sin(TAU * frac(play_v * x));
-//     }else{
-//         return real_t(0);
-//     }
-// }
-// extern "C"{
-// void TIM2_IRQHandler(void) 
-// { 	    	  	
-// 	if (TIM_GetITStatus(TIM2, TIM_IT_Update) != RESET)
-// 	{
-//         
-//         real_t t_frac = frac(frac(t) * 3);
-//         real_t volt_out_l = (2.5 + 0.4 * (wave(t_frac) + wave(t_frac - 0.25) + wave(t_frac - 0.5)));
-//         ext_dac.setVoltage(volt_out_l, volt_out_l);
-
-// 		TIM_ClearITPendingBit(TIM2, TIM_IT_Update);
-//     }     
-// }
-// }
-

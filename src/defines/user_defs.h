@@ -16,7 +16,16 @@
 // #define SPI1_USE_DMA
 
 #define UART1_Baudrate (115200 * 4)
-#define UART2_Baudrate (115200)
+
+#define UART1_TX_Pin GPIO_Pin_9
+#define UART1_RX_Pin GPIO_Pin_10
+#define UART1_Port GPIOA
+
+#define UART2_Baudrate (115200 * 4)
+
+#define UART2_TX_Pin GPIO_Pin_2
+#define UART2_RX_Pin GPIO_Pin_4
+#define UART2_Port GPIOA
 
 #define I2C_SW_PORT GPIOB
 #define I2C_SW_SCL GPIO_Pin_6
@@ -79,6 +88,10 @@
     #define I2C1_SDA_Pin GPIO_Pin_7
     #define I2C1_REMAP GPIO_Remap_I2C1
 #endif
+
+#define I2C2_Port GPIOB
+#define I2C2_SCL_Pin GPIO_Pin_10
+#define I2C2_SDA_Pin GPIO_Pin_11
 
 #define BUILTIN_LED_PORT GPIOC
 #define BUILTIN_RedLED_PIN GPIO_Pin_13

@@ -23,7 +23,7 @@ public:
     virtual bool read() const = 0;
 
     virtual GpioBase & operator = (const bool _val) = 0;
-    explicit operator bool(){return(this->read());}
+    operator bool(){return(this->read());}
 
     virtual void OutPP() = 0;
     virtual void OutOD() = 0;
@@ -50,7 +50,7 @@ class Gpio:public GpioBase{
         }
     public:
         Gpio(GPIO_TypeDef* _base,const uint16_t & _pin):
-            base(_base), 
+            base(_base),
             pin(((_base == GPIOC) && MCU_V) ? (_pin - 13) : _pin),
             pin_index(LeastBit(pin)),
             pin_mask(~(0xf << ((pin_index % 8) * 4))),
@@ -141,7 +141,7 @@ typedef struct {
 	uint32_t bit30 :1;
 	uint32_t bit31 :1;
 } GPIO_REG;
- 
+
 #define PAout(n)	(((GPIO_REG *)(&(GPIOA->OUTDR)))->bit##n)
 #define PAin(n)		(((GPIO_REG *)(&(GPIOA->INDR)))->bit##n)
 #define PBout(n)	(((GPIO_REG *)(&(GPIOB->OUTDR)))->bit##n)

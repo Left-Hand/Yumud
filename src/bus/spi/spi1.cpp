@@ -27,12 +27,12 @@ void SPI1_GPIO_Init(void){
 	GPIO_InitStructure.GPIO_Pin = SPI1_SCLK_Pin | SPI1_MOSI_Pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	GPIO_Init(SPI1_Port, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = SPI1_MISO_Pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
+	GPIO_Init(SPI1_Port, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin = SPI1_CS_Pin;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;

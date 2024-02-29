@@ -18,14 +18,14 @@ static void UART2_GPIO_Configuration(void){
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
     GPIO_InitTypeDef  GPIO_InitStructure;
 
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+	GPIO_InitStructure.GPIO_Pin = UART2_TX_Pin;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
- 
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
+	GPIO_Init(UART2_Port, &GPIO_InitStructure);
+
+	GPIO_InitStructure.GPIO_Pin = UART2_RX_Pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
+	GPIO_Init(UART2_Port, &GPIO_InitStructure);
 }
 
 static void UART2_Configuration(uint32_t baudRate){
@@ -60,17 +60,16 @@ Uart2 uart2;
 #define HAVE_UART2
 #endif
 
-__interrupt 
-void USART2_IRQHandler() 
-{ 
+__interrupt
+void USART2_IRQHandler(){
     if(USART_GetITStatus(USART2,USART_IT_RXNE) != RESET)
-    { 
+    {
         USART_ClearITPendingBit(USART2,USART_IT_RXNE);
         ringBuf.addData(USART_ReceiveData(USART2));
-    } 
+    }
     if(USART_GetFlagStatus(USART2,USART_FLAG_ORE) == SET)
-    { 
+    {
         USART_ClearFlag(USART2,USART_FLAG_ORE);
         USART_ReceiveData(USART2);
-    } 
+    }
 }

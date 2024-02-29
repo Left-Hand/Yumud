@@ -17,7 +17,7 @@ public:
 };
 
 __fast_inline void Uart2::_write(const char & data){
-    while((USART2->STATR & USART_FLAG_TXE) == RESET);	   
+    while((USART2->STATR & USART_FLAG_TXE) == RESET);
     USART2->DATAR = data;
     while((USART2->STATR & USART_FLAG_TC) == RESET);
 }
@@ -30,7 +30,9 @@ __fast_inline void Uart2::_write(const char * data_ptr, const size_t & len){
 
 extern Uart2 uart2;
 
-__interrupt 
-void USART2_IRQHandler();
+
+extern "C" {
+__interrupt void USART2_IRQHandler();
+}
 
 #endif

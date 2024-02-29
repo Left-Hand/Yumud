@@ -1,11 +1,11 @@
-#ifndef __KALMANFILTER_HPP__
+#ifndef __KALMAN_FILTER_HPP__
 
-#define __KALMANFILTER_HPP__
+#define __KALMAN_FILTER_HPP__
 
-#include "../types/real.hpp"
+#include "real.hpp"
 
 template<typename T>
-class KalmanFilter {
+class KalmanFilter_t{
 
 private:
     T r;
@@ -21,13 +21,17 @@ private:
 
 public:
     template<typename U>
-    KalmanFilter(T _r = T(1), T _q = T(1)):r(static_cast<T>(_r)), q(static_cast<T>(_q)){;}
-    
+    KalmanFilter_t(const U & _r,const U & _q ):r(static_cast<T>(_r)), q(static_cast<T>(_q)){;}
+
     template<typename U>
     const T update(const U & x);
 
     template<typename U>
     const T predict(const U & x);
 };
+
+#include "KalmanFilter.tpp"
+
+typedef KalmanFilter_t<real_t> KalmanFilter;
 
 #endif

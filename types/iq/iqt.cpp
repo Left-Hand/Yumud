@@ -1,12 +1,5 @@
 #include "iqt.hpp"
 
-__fast_inline iq_t sign(const iq_t & iq){
-    if(iq.value){
-        iq_t ret = iq_t();
-        ret.value |= (iq.value & 0x80000000);
-        return ret;
-    }else return iq_t(0);
-}
 
 bool is_equal_approx(const iq_t & a, const iq_t & b) {
     // Check for exact equality first, required to handle "infinity" values.

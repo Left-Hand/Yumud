@@ -472,6 +472,16 @@ __fast_inline void uni_to_u16(const iq_t & qv, uint16_t & data){
 #endif
 }
 
+__fast_inline iq_t sign(const iq_t & iq){
+    if(iq.value){
+        if(iq.value > 0){
+            return iq_t(1);
+        }else{
+            return iq_t(-1);
+        }
+    }else return iq_t(0);
+}
+
 namespace std{
     template<>
     class numeric_limits<iq_t> {

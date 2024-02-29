@@ -5,6 +5,8 @@
 #include "defines/defs.h"
 #include "bus/bus_inc.h"
 #include "bkp/bkp.hpp"
+#include "dsp/controller/PID.hpp"
+#include "dsp/filter/KalmanFilter.hpp"
 #include "../types/real.hpp"
 #include "../types/string/String.hpp"
 #include "../types/complex/complex_t.hpp"
@@ -43,9 +45,18 @@ void GPIO_SW_I2C_Init(void);
 void GPIO_SW_I2S_Init(void);
 void GLobal_Reset(void);
 real_t CalculateFps();
-void SysInfo_ShowUp();
+void SysInfo_ShowUp(Printer & uart);
 void Systick_Init(void);
 
+void LED_GPIO_Init();
+
+void TIM2_GPIO_Init();
+void TIM3_GPIO_Init();
+void TIM4_GPIO_Init();
+void TIM_Encoder_Init(TIM_TypeDef * TimBase);
+void TIM_PWM_Init(TIM_TypeDef * TimBase, const uint16_t arr);
+void ADC1_GPIO_Init();
+void ADC1_Init();
 __fast_inline void reCalculateTime(){
     #ifdef USE_IQ
     t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
