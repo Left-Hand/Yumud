@@ -30,13 +30,85 @@ void I2C1_Init(uint32_t baudRate){
     I2C_Cmd(I2C1, ENABLE);
 }
 
+void I2C1_HW_Timeout(FunctionalState en){
+    if(en) I2C1->STAR1 |= I2C_STAR1_TIMEOUT;
+    else I2C1->STAR1 &= ~I2C_STAR1_TIMEOUT;
+}
+
+bool I2C1_Bus_Locked(){
+    return (bool)(I2C1->STAR2 & I2C_STAR2_BUSY) & (bool)(!(I2C1->STAR1 & I2C_STAR1_STOPF));
+}
+
+void I2C1_Force_Unlock(){
+    I2C_Cmd(I2C1, DISABLE);
+
+    GPIO_InitTypeDef GPIO_InitStructure;
+
+    GPIO_InitStructure.GPIO_Pin = I2C1_SCL_Pin | I2C1_SDA_Pin;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+    GPIO_Init(I2C1_Port, &GPIO_InitStructure);
+
+    volatile uint32_t _;
+    for(uint8_t i = 0; i < 9; i++){
+        GPIO_SetBits(I2C1_Port, I2C1_SCL_Pin);
+
+        _ = 256;
+        while(_ --);
+
+        GPIO_ResetBits(I2C1_Port, I2C1_SCL_Pin);
+
+        _ = 256;
+        while(_ --);
+    }
+
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
+    GPIO_Init(I2C1_Port, &GPIO_InitStructure);
+
+    I2C_Cmd(I2C1, ENABLE);
+}
+
+
+void I2C1_Reset(){
+    I2C_Cmd(I2C1,DISABLE);
+    __nopn(4);
+    I2C_Cmd(I2C1,ENABLE);
+    __nopn(2);
+    I2C1->CTLR1 |= I2C_CTLR1_SWRST;
+    __nopn(4);
+    I2C1->CTLR1 &= ~I2C_CTLR1_SWRST;
+}
+
+I2c1::Error I2c1::start(const uint8_t & _address) {
+    bool is_read = (_address & 0x01);
+    // while(I2C_GetFlagStatus(I2C1, I2C_FLAG_BUSY));
+    I2C_GenerateSTART(I2C1, ENABLE);
+    I2C_WAIT_COND(I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT), timeout);
+
+    I2C_Send7bitAddress(I2C1, _address & 0xFE, is_read ? I2C_Direction_Receiver : I2C_Direction_Transmitter);
+    I2C_WAIT_COND(I2C_CheckEvent(I2C1,
+            is_read ? I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED :  I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED),
+            timeout);
+
+    return ErrorType::OK;
+}
+
 void I2c1::init(const uint32_t & baudRate){
     I2C1_GPIO_Init();
     I2C1_Init(baudRate);
 }
 
+void I2c1::reset(){
+    I2C1_Reset();
+}
 
-#ifndef HAVE_I2C1
-#define HAVE_I2C1
+void I2c1::enableHwTimeout(const bool en){
+    I2C1_HW_Timeout(en);
+}
+
+
+#if defined(HAVE_I2C1) && !defined(HAD_I2C1)
+#define HAD_I2C1
 I2c1 i2c1;
 #endif

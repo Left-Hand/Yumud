@@ -3,6 +3,7 @@
 #define __USER_DEFS_H__
 
 #include <ch32v20x.h>
+// #include <core_riscv.h>
 
 #define USE_IQ
 // #define USE_DOUBLE
@@ -14,6 +15,9 @@
 //defines for iqlib
 
 // #define SPI1_USE_DMA
+
+#define HAVE_I2C1
+
 
 #define UART1_Baudrate (115200 * 4)
 
@@ -75,9 +79,10 @@
 #define SPI2_MISO_Pin GPIO_Pin_14
 #define SPI2_MOSI_Pin GPIO_Pin_15
 
-#define I2C1_REMAP_ENABLE DISABLE
+#ifdef HAVE_I2C1
+#define I2C1_REMAP_ENABLE (DISABLE)
 
-#if I2C1_REMAP_ENABLE == ENABLE
+#if (I2C1_REMAP_ENABLE == ENABLE)
     #define I2C1_Port GPIOB
     #define I2C1_SCL_Pin GPIO_Pin_8
     #define I2C1_SDA_Pin GPIO_Pin_9
@@ -88,13 +93,14 @@
     #define I2C1_SDA_Pin GPIO_Pin_7
     #define I2C1_REMAP GPIO_Remap_I2C1
 #endif
+#endif
 
 #define I2C2_Port GPIOB
 #define I2C2_SCL_Pin GPIO_Pin_10
 #define I2C2_SDA_Pin GPIO_Pin_11
 
 
-#define CAN1_REMAP_ENABLE DISABLE
+#define CAN1_REMAP_ENABLE ENABLE
 
 #if CAN1_REMAP_ENABLE == ENABLE
     #define CAN1_Port GPIOA

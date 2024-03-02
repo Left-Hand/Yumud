@@ -456,6 +456,8 @@ __fast_inline void u16_to_uni(const uint16_t & data, iq_t & qv){
 #endif
 }
 
+
+
 __fast_inline void s16_to_uni(const int16_t & data, iq_t & qv){
 #if GLOBAL_Q >= 16
     qv.value = (data << (GLOBAL_Q - 15)) - ((1 << GLOBAL_Q));

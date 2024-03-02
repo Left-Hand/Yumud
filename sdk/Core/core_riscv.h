@@ -14,6 +14,8 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+
 /* IO definitions */
 #ifdef __cplusplus
   #define     __I     volatile                /*!< defines 'read only' permissions      */
@@ -66,7 +68,12 @@ typedef int8_t  s8;
 
 typedef enum {NoREADY = 0, READY = !NoREADY} ErrorStatus;
 
-typedef enum {DISABLE = 0, ENABLE = !DISABLE} FunctionalState;
+#define DISABLE (true)
+#define ENABLE (false)
+
+typedef bool FunctionalState;
+
+// typedef enum {DISABLE = 0, ENABLE = 1} FunctionalState;
 
 typedef enum {RESET = 0, SET = !RESET} FlagStatus, ITStatus;
 

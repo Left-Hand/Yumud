@@ -140,11 +140,15 @@ protected:
     };
 
     real_t From12BitTo360Degrees(const uint16_t & data){
-        return data * real_t(360.0f / 0xFFF); 
+        real_t uni;
+        u16_to_uni(data, uni);
+        return uni * 360;
     }
 
     uint16_t From360DegreesTo12Bit(const real_t degrees){
-        return (int)(CLAMP(degrees, real_t(0), real_t(360)) * real_t(0xFFF / 360.0f));
+        uint16_t ret;
+        uni_to_u16(CLAMP(degrees / real_t(360), real_t(0), real_t(1)), ret);
+        return ret;
     }
 
     void writeReg(const RegAddress & regAddress, const Reg16 & regData){
@@ -259,7 +263,9 @@ public:
         writeReg(RegAddress::Burn, burnReg);
     }
 
-    void init(){;}
+    void init(){
+        setPowerMode(PowerMode::Norm);
+    }
 };
 
 #endif
