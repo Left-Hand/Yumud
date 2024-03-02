@@ -300,6 +300,8 @@ int main(){
     uart2.init(UART2_Baudrate);
     // uart2.init(576000);
     can1.init(Can1::BaudRate::Mbps1);
+    can1.enableHwReTransmit();
+    bool tx_role = getChipId() == 6002379527825632205;
 
     // can1.write(CanMsg(0x11));
     // can1.write(CanMsg(0x14));
@@ -389,23 +391,36 @@ int main(){
     // painter.drawString(Vector2i(0,24), String(3672));
 
     while(1){
-        static uint8_t cnt = 0;
-        // CanMsg msg_v = CanMsg(cnt << 4, {cnt, (uint8_t)(cnt + 1)});
-        uint64_t chipId = getChipId();
-        CanMsg msg_v = CanMsg(cnt << 4, (uint8_t *)&chipId, 8);
+        if(tx_role){
+            static uint8_t cnt = 0;
+            // CanMsg msg_v = CanMsg(cnt << 4, {cnt, (uint8_t)(cnt + 1)});
+            uint64_t chipId = getChipId();
+            CanMsg msg_v = CanMsg(cnt << 4, (uint8_t *)&chipId, 8);
 
-        can1.write(msg_v);
-        uart2.println("tx", msg_v.getId(),msg_v(0), msg_v(1));
-        while(can1.pending());
-        while(can1.available()){
-            CanMsg msg_r = can1.read();
-            uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
+            can1.write(msg_v);
+            uart2.println("tx", msg_v.getId(),msg_v(0), msg_v(1));
+            while(can1.pending()){
+                uart2.println("err", can1.getTxErrCnt(), can1.getRxErrCnt(), can1.isBusOff());
+                delay(2);
+            }
+            while(can1.available()){
+                CanMsg msg_r = can1.read();
+                uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
+            }
+            // uart2.println(cnt++, uart2.available());
+            Led = !Led;
+            cnt++;
+            // delay(1);
+            // delay(20);
+            delayMicroseconds(20000);
+        }else{
+            // while(can1.available()){
+                // CanMsg msg_r = can1.read();
+                // uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
+            // }
+            uart2.println(can1.available());
+            delay(20);
         }
-        // uart2.println(cnt++, uart2.available());
-        Led = !Led;
-        cnt++;
-        // delay(1);
-        delay(200);
         // updatePosition();
         // real_t pos = motorPosition.accPosition * 10;
         // static PID pos_pid = PID(real_t(10), real_t(0), real_t(0));

@@ -14,8 +14,7 @@ public:
         Mbps1
     };
 
-protected:
-    CAN_InitTypeDef config;
+
 public:
 
 
@@ -24,6 +23,20 @@ public:
     size_t pending();
     CanMsg & read();
     size_t available();
+
+    bool isTranmitting();
+    bool isReceiving();
+    void enableHwReTransmit(const bool en = true);
+    void cancelTransmit(const uint8_t mbox);
+    void cancelAllTransmit();
+
+    void enableFifoLock(const bool en = true);
+    void enableIndexPriority(const bool en = true);
+    uint8_t getTxErrCnt();
+    uint8_t getRxErrCnt();
+    uint8_t getErrCode();
+
+    bool isBusOff();
 };
 
 extern Can1 can1;

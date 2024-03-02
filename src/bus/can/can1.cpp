@@ -2,7 +2,7 @@
 
 static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
 static RingBuf_t<std::shared_ptr<CanMsg>> pending_rx_msgs(8);
-
+static CAN_InitTypeDef config;
 void CAN1_GPIO_Init(){
     CHECK_INIT
 
@@ -55,11 +55,21 @@ void CAN1_IT_Init(){
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
     NVIC_Init(&NVIC_InitStructure);
 
+    CAN_ITConfig(CAN1, CAN_IT_ERR, ENABLE);
+    CAN_ITConfig(CAN1, CAN_IT_WKU, ENABLE);
+    CAN_ITConfig(CAN1, CAN_IT_SLK, ENABLE);
+    CAN_ITConfig(CAN1, CAN_IT_EWG, ENABLE);
+    CAN_ITConfig(CAN1, CAN_IT_EPV, ENABLE);
+    CAN_ITConfig(CAN1, CAN_IT_BOF, ENABLE);
+    CAN_ITConfig(CAN1, CAN_IT_LEC, ENABLE);
+    CAN_ITConfig(CAN1, CAN_IT_ERR, ENABLE);
+
+    // CAN_ITConfig(CAN1, CAN_IT_ERR, DISABLE);
     //sce interrupt
-    // NVIC_InitStructure.NVIC_IRQChannel = CAN1_SCE_IRQn;
-    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
-    // NVIC_Init(&NVIC_InitStructure);
+    NVIC_InitStructure.NVIC_IRQChannel = CAN1_SCE_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+    NVIC_Init(&NVIC_InitStructure);
 }
 
 void CAN1_Init_Filter(){
@@ -85,7 +95,9 @@ void CAN1_Init_Filter(){
     CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
     CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
 
+    CAN1->FWR |= 1;
     CAN_FilterInit(&CAN_FilterInitSturcture);
+    CAN1->FWR &=~1;
 }
 
 void Can1::init(const BaudRate & baudRate){
@@ -116,8 +128,8 @@ void Can1::init(const BaudRate & baudRate){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
 
     config.CAN_Prescaler = prescale;
-    // config.CAN_Mode = CAN_Mode_Normal;
-    config.CAN_Mode = CAN_Mode_LoopBack;
+    config.CAN_Mode = CAN_Mode_Normal;
+    // config.CAN_Mode = CAN_Mode_LoopBack;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;
@@ -140,7 +152,11 @@ size_t Can1::pending(){
     return cnt;
 }
 
-
+void Can1::enableHwReTransmit(const bool en){
+    config.CAN_NART = en ? DISABLE : ENABLE;
+    if(en)  CAN1->CTLR &= ~CAN_CTLR_NART;
+    else    CAN1->CTLR |=  CAN_CTLR_NART;
+}
 
 bool Can1::write(const CanMsg & msg){
     uint8_t mbox = CAN_Transmit(CAN1, msg.toTxMessage());
@@ -159,6 +175,45 @@ size_t Can1::available(){
     return pending_rx_msgs.available();
 }
 
+uint8_t Can1::getRxErrCnt(){
+    return CAN1->ERRSR >> 24;
+}
+
+uint8_t Can1::getTxErrCnt(){
+    return CAN1->ERRSR >> 16;
+}
+uint8_t Can1::getErrCode(){
+    return CAN_GetLastErrorCode(CAN1);
+}
+
+bool Can1::isTranmitting(){
+    return bool(CAN1->STATR & CAN_STATR_TXM);
+}
+
+bool Can1::isReceiving(){
+    return bool(CAN1->STATR & CAN_STATR_RXM);
+}
+bool Can1::isBusOff(){
+    return CAN1->ERRSR & CAN_ERRSR_BOFF;
+}
+
+void Can1::cancelTransmit(const uint8_t mbox){
+    CAN_CancelTransmit(CAN1, mbox);
+}
+
+void Can1::cancelAllTransmit(){
+    CAN1->TSTATR |= (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
+}
+
+void Can1::enableFifoLock(const bool en){
+    if(en) CAN1->CTLR |= CAN_CTLR_RFLM;
+    else CAN1->CTLR &= ~CAN_CTLR_RFLM;
+}
+
+void Can1::enableIndexPriority(const bool en){
+    if(en) CAN1->CTLR |= CAN_CTLR_TXFP;
+    else CAN1->CTLR &= ~CAN_CTLR_TXFP;
+}
 __fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
     switch(mbox){
     case 0:
@@ -253,9 +308,28 @@ void CAN1_RX1_IRQHandler(void){
 
 __interrupt
 void CAN1_SCE_IRQHandler(void){
-    // if (CAN_GetITStatus(CAN1, CAN_IT_FMP1)!= RESET)
-    // {
-    //     // Recv_Msg();
-    //     CAN_ClearITPendingBit(CAN1, CAN_IT_FMP1);
-    // }
+    if (CAN_GetITStatus(CAN1, CAN_IT_WKU)) {
+        // Handle Wake-up interrupt
+        CAN_ClearITPendingBit(CAN1, CAN_IT_WKU);
+    } else if (CAN_GetITStatus(CAN1, CAN_IT_SLK)) {
+        // Handle Sleep acknowledge interrupt
+        CAN_ClearITPendingBit(CAN1, CAN_IT_SLK);
+    } else if (CAN_GetITStatus(CAN1, CAN_IT_ERR)) {
+        // Handle Error interrupt
+        CAN_ClearITPendingBit(CAN1, CAN_IT_ERR);
+    } else if (CAN_GetITStatus(CAN1, CAN_IT_EWG)) {
+        // Handle Error warning interrupt
+        CAN_ClearITPendingBit(CAN1, CAN_IT_EWG);
+    } else if (CAN_GetITStatus(CAN1, CAN_IT_EPV)) {
+        // Handle Error passive interrupt
+        CAN_ClearITPendingBit(CAN1, CAN_IT_EPV);
+    } else if (CAN_GetITStatus(CAN1, CAN_IT_BOF)) {
+        // Handle Bus-off interrupt
+        CAN_ClearITPendingBit(CAN1, CAN_IT_BOF);
+    } else if (CAN_GetITStatus(CAN1, CAN_IT_LEC)) {
+        // Handle Last error code interrupt
+        CAN_ClearITPendingBit(CAN1, CAN_IT_LEC);
+    } else {
+        // Handle other interrupts or add more cases as needed
+    }
 }
