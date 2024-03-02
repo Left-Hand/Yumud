@@ -63,13 +63,7 @@ uint64_t nanos(){
 
 void delay(uint32_t ms)
 {
-  if (ms != 0) {
-    uint64_t elapsed = ms * 1000;
-    uint64_t start = micros();
-    do {
-      // yield();
-    } while (micros() - start < elapsed);
-  }
+  delayMicroseconds(ms * 1000);
 }
 
 void SysTick_Handler(void)

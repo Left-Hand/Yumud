@@ -300,7 +300,7 @@ int main(){
     uart2.init(UART2_Baudrate);
     // uart2.init(576000);
     can1.init(Can1::BaudRate::Mbps1);
-    can1.enableHwReTransmit();
+    // can1.enableHwReTransmit();
     bool tx_role = getChipId() == 6002379527825632205;
 
     // can1.write(CanMsg(0x11));
@@ -411,15 +411,15 @@ int main(){
             Led = !Led;
             cnt++;
             // delay(1);
-            // delay(20);
-            delayMicroseconds(20000);
-        }else{
-            // while(can1.available()){
-                // CanMsg msg_r = can1.read();
-                // uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
-            // }
-            uart2.println(can1.available());
             delay(20);
+            // delayMicroseconds(20000);/
+        }else{
+            while(can1.available()){
+                CanMsg msg_r = can1.read();
+                uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
+            }
+            // uart2.println(can1.available());
+            // delay(20);
         }
         // updatePosition();
         // real_t pos = motorPosition.accPosition * 10;

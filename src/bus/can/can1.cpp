@@ -94,10 +94,9 @@ void CAN1_Init_Filter(){
 
     CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
     CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
+    CAN_FilterInitSturcture.CAN_FilterScale = 14;
 
-    CAN1->FWR |= 1;
     CAN_FilterInit(&CAN_FilterInitSturcture);
-    CAN1->FWR &=~1;
 }
 
 void Can1::init(const BaudRate & baudRate){
@@ -129,7 +128,6 @@ void Can1::init(const BaudRate & baudRate){
 
     config.CAN_Prescaler = prescale;
     config.CAN_Mode = CAN_Mode_Normal;
-    // config.CAN_Mode = CAN_Mode_LoopBack;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;
