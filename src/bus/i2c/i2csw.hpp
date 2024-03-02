@@ -6,111 +6,116 @@
 
 class I2cSw: public I2c{
 private:
-volatile int8_t occupied = -1;
-GpioBase & scl;
-GpioBase & sda;
+    volatile int8_t occupied = -1;
+    GpioBase & scl;
+    GpioBase & sda;
 
-uint16_t delays = 0;
+    uint16_t delays = 0;
 
-__fast_inline volatile void delayDur(){
-    // __nopn(delays);
-    volatile uint8_t i = delays;
-    while(i--);
-    // delayMicroseconds(1);
-}
+    __fast_inline volatile void delayDur(){
+        // __nopn(delays);
+        volatile uint8_t i = delays;
+        while(i--);
+        // delayMicroseconds(1);
+    }
 
-void clk(){
-    delayDur();
-    scl = true;
-    delayDur();
-    scl = false;
-}
+    void clk(){
+        delayDur();
+        scl = true;
+        delayDur();
+        scl = false;
+    }
 
-void clkr(){
-    delayDur();
-    scl = false;
-    delayDur();
-    scl = true;
-    delayDur();
-    scl = false;
-}
-void ack(){
-    delayDur();
-    scl = false;
-    delayDur();
-    sda.OutOD();
-    sda = false;
-    delayDur();
-    delayDur();
-    scl = true;
-    delayDur();
-    delayDur();
-    scl = false;
-    // sda = true;
-    delayDur();
-    delayDur();
-}
+    void clkr(){
+        delayDur();
+        scl = false;
+        delayDur();
+        scl = true;
+        delayDur();
+        scl = false;
+    }
+    void ack(){
+        delayDur();
+        scl = false;
+        delayDur();
+        sda.OutOD();
+        sda = false;
+        delayDur();
+        delayDur();
+        scl = true;
+        delayDur();
+        delayDur();
+        scl = false;
+        // sda = true;
+        delayDur();
+        delayDur();
+    }
 
-void nack(void) {
-    delayDur();
-    scl = false;
-    delayDur();
-    sda.OutOD();
-    sda = true;
-    delayDur();
-    delayDur();
-    scl = true;
-    delayDur();
-    delayDur();
-    scl = false;
-    // sda = true;
-    delayDur();
-    delayDur();
-}
+    void nack(void) {
+        delayDur();
+        scl = false;
+        delayDur();
+        sda.OutOD();
+        sda = true;
+        delayDur();
+        delayDur();
+        scl = true;
+        delayDur();
+        delayDur();
+        scl = false;
+        // sda = true;
+        delayDur();
+        delayDur();
+    }
 
-bool wait_ack(){
-    bool ret;
-    sda.InFloating();
-    sda = true;
-    delayDur();
-    scl = true;
-    delayDur();
-    ret = sda.read();
-    scl = false;
-    delayDur();
+    bool wait_ack(){
+        bool ret;
+        sda.InFloating();
+        sda = true;
+        delayDur();
+        scl = true;
+        delayDur();
+        ret = sda.read();
+        scl = false;
+        delayDur();
 
-    return ret;
-}
+        return ret;
+    }
 
-void start(const uint8_t & _address) {
-    occupied = _address >> 1;
-    scl.OutOD();
-    sda.OutOD();
-    sda = true;
-    scl = true;
-    delayDur();
-    sda = false;
-    delayDur();
-    scl = false;
-    delayDur();
-    write(_address);
-}
+    Error start(const uint8_t & _address) override{
 
-void stop() {
-    scl = false;
-    sda.OutOD();
-    sda = false;
-    delayDur();
-    scl = true;
-    delayDur();
-    sda = true;
-    delayDur();
-    occupied = -1;
-}
+        scl.OutOD();
+        sda.OutOD();
+        sda = true;
+        scl = true;
+        delayDur();
+        sda = false;
+        delayDur();
+        scl = false;
+        delayDur();
+        write(_address);
+
+        return ErrorType::OK;
+    }
+
+    void stop() override {
+        scl = false;
+        sda.OutOD();
+        sda = false;
+        delayDur();
+        scl = true;
+        delayDur();
+        sda = true;
+        delayDur();
+        occupied = -1;
+    }
 
 
 protected :
-    void begin_use(const uint8_t & index = 0) override {start(index);}
+     Error begin_use(const uint8_t & index = 0) override {
+        occupied = index >> 1;
+        return start(index);
+    }
     void end_use() override {stop();}
 
     bool is_idle() override {

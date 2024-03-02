@@ -37,7 +37,7 @@
 #include "LT8920/lt8920.hpp"
 
 #include "../types/image/painter.hpp"
-
+#include "stdlib.h"
 extern real_t t;
 
 void GPIO_PortC_Init( void );
@@ -47,7 +47,7 @@ void GLobal_Reset(void);
 real_t CalculateFps();
 void SysInfo_ShowUp(Printer & uart);
 void Systick_Init(void);
-
+uint64_t getChipId();
 void LED_GPIO_Init();
 
 void TIM2_GPIO_Init();

@@ -298,7 +298,16 @@ int main(){
 
     // uart1.init(UART1_Baudrate);
     uart2.init(UART2_Baudrate);
+    // uart2.init(576000);
+    can1.init(Can1::BaudRate::Mbps1);
 
+    // can1.write(CanMsg(0x11));
+    // can1.write(CanMsg(0x14));
+    // CanMsg msg_v = CanMsg(0x800, {0x15, 0x16});
+    // can1.write(msg_v);
+    // while(can1.pending()){
+    //     uart2.println(can1.pending(), can1.available());
+    // }
     // spi2.init(72000000);
     // spi1.init(18000000);
 
@@ -381,9 +390,22 @@ int main(){
 
     while(1){
         static uint8_t cnt = 0;
-        uart2.println(cnt++, uart2.available());
+        // CanMsg msg_v = CanMsg(cnt << 4, {cnt, (uint8_t)(cnt + 1)});
+        uint64_t chipId = getChipId();
+        CanMsg msg_v = CanMsg(cnt << 4, (uint8_t *)&chipId, 8);
+
+        can1.write(msg_v);
+        uart2.println("tx", msg_v.getId(),msg_v(0), msg_v(1));
+        while(can1.pending());
+        while(can1.available()){
+            CanMsg msg_r = can1.read();
+            uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
+        }
+        // uart2.println(cnt++, uart2.available());
         Led = !Led;
-        delay(90);
+        cnt++;
+        // delay(1);
+        delay(200);
         // updatePosition();
         // real_t pos = motorPosition.accPosition * 10;
         // static PID pos_pid = PID(real_t(10), real_t(0), real_t(0));

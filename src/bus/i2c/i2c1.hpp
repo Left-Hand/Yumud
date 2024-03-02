@@ -8,14 +8,22 @@ class I2c1: public I2c{
 private:
     volatile int8_t occupied = -1;
 
-    void start(const uint8_t & _address) {
+    Error start(const uint8_t & _address) override{
         occupied = _address >> 1;
         bool is_read = (_address & 0x01);
         // while(I2C_GetFlagStatus(I2C1, I2C_FLAG_BUSY));
         I2C_GenerateSTART(I2C1, ENABLE);
-        while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT) );
+        {
+            uint32_t begin_time = micros();
+            while(!I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_MODE_SELECT)){
+                if(micros() - begin_time > 10000){
+                    return ErrorType::NO_ACK;
+                }
+            }
+        }
         I2C_Send7bitAddress(I2C1, _address & 0xFE, is_read ? I2C_Direction_Receiver : I2C_Direction_Transmitter);
         while(!I2C_CheckEvent(I2C1, is_read ? I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED :  I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+        return ErrorType::OK;
     }
 
     void stop() {
@@ -26,7 +34,7 @@ private:
 
 
 protected :
-    void begin_use(const uint8_t & index = 0) override {start(index);}
+    Error begin_use(const uint8_t & index = 0) override {return start(index);}
     void end_use() override {stop();}
 
     bool is_idle() override {
@@ -36,6 +44,7 @@ protected :
     bool owned_by(const uint8_t & index = 0) override{
         return (occupied == (index >> 1));
     }
+
 public:
 
     I2c1(){;}

@@ -66,6 +66,12 @@ real_t CalculateFps(){
     return dt ? real_t(1) / dt : real_t(0);
 }
 
+uint64_t getChipId(){
+    uint32_t chip_id[2];
+    chip_id[0] = *(volatile uint32_t *)0x1FFFF7E8;
+    chip_id[1] = *(volatile uint32_t *)0x1FFFF7EC;
+    return ((uint64_t)chip_id[1] << 32) | chip_id[0];
+}
 void SysInfo_ShowUp(Printer & uart){
     RCC_ClocksTypeDef RCC_CLK;
 	RCC_GetClocksFreq(&RCC_CLK);//Get chip frequencies
@@ -115,6 +121,7 @@ void Systick_Init(void){
 
     NVIC_SetPriority(SysTicK_IRQn,0xFF);
     NVIC_EnableIRQ(SysTicK_IRQn);
+
 }
 
 void TIM2_GPIO_Init(){
@@ -282,3 +289,4 @@ void ADC1_Init(){
 
     ADC_BufferCmd(ADC1, ENABLE);
 }
+

@@ -8,7 +8,7 @@ class BusDrv;
 
 class SerBus:public Bus{
 protected:
-    virtual void begin_use(const uint8_t & index = 0) = 0;
+    virtual Error begin_use(const uint8_t & index = 0) = 0;
     virtual void end_use() = 0;
     virtual bool is_idle() = 0;
     virtual bool owned_by(const uint8_t & index = 0) = 0;
@@ -18,11 +18,11 @@ public:
 
     __fast_inline Error begin(const uint8_t & index = 0) override{
         if(is_idle()){
-            begin_use(index);
-            return ErrorType::OK;
+            return begin_use(index);
+            // return ErrorType::OK;
         }else if(owned_by(index)){
-            begin_use(index);
-            return ErrorType::OK;
+            return begin_use(index);
+            // return ErrorType::OK;
         }else{
             return ErrorType::OCCUPIED;
         }

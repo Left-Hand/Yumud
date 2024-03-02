@@ -32,9 +32,11 @@ void clk(){
     delayDur();
 }
 
-void start(const uint8_t & _address) {
+Error start(const uint8_t & _address) {
     occupied = _address & 0b1;
     ws.OutPP();
+
+    return ErrorType::OK;
 }
 
 void stop() {
@@ -44,7 +46,9 @@ void stop() {
 
 
 protected :
-    void begin_use(const uint8_t & index = 0) override {start(index);}
+    Error begin_use(const uint8_t & index = 0) override {
+        return start(index);
+    }
     void end_use() override {stop();}
 
     bool is_idle() override {

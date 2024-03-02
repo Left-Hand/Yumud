@@ -19,11 +19,10 @@ enum class BusType{
 class BusDrv{
 protected:
     Bus & bus;
-    uint8_t index = 0;
-    BusType bus_type = BusType::SpiBus;
-
+    uint8_t index;
+    uint32_t wait_time;
 public:
-    BusDrv(Bus & _bus, const uint8_t & _index):bus(_bus), index(_index){;}
+    BusDrv(Bus & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):bus(_bus), index(_index), wait_time(_wait_time){;}
 
     void write(const uint8_t & data, bool discontinuous = true){
         if(!bus.begin(index)){

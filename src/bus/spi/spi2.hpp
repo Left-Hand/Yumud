@@ -9,11 +9,12 @@ class Spi2:public Spi{
 protected:
     static int8_t occupied;
 
-    void begin_use(const uint8_t & index = 0) override {
+    Error begin_use(const uint8_t & index = 0) override {
         occupied = index;
         __nopn(6);
         SPI2_CS_Port->BCR = SPI2_CS_Pin;
         __nopn(6);
+        return ErrorType::OK;
     }
 
     void end_use() override {

@@ -64,10 +64,11 @@ uint64_t nanos(){
 void delay(uint32_t ms)
 {
   if (ms != 0) {
-    uint64_t start = millis();
+    uint64_t elapsed = ms * 1000;
+    uint64_t start = micros();
     do {
       // yield();
-    } while (millis() - start < ms);
+    } while (micros() - start < elapsed);
   }
 }
 

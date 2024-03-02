@@ -93,6 +93,22 @@
 #define I2C2_SCL_Pin GPIO_Pin_10
 #define I2C2_SDA_Pin GPIO_Pin_11
 
+
+#define CAN1_REMAP_ENABLE DISABLE
+
+#if CAN1_REMAP_ENABLE == ENABLE
+    #define CAN1_Port GPIOA
+    #define CAN1_TX_Pin GPIO_Pin_12
+    #define CAN1_RX_Pin GPIO_Pin_11
+    #define CAN1_REMAP GPIO_Remap1_CAN1
+#else
+    #define CAN1_Port GPIOB
+    #define CAN1_TX_Pin GPIO_Pin_9
+    #define CAN1_RX_Pin GPIO_Pin_8
+    #define CAN1_REMAP GPIO_Remap1_CAN1
+#endif
+
+
 #define BUILTIN_LED_PORT GPIOC
 #define BUILTIN_RedLED_PIN GPIO_Pin_13
 #define BUILTIN_GreenLED_PIN GPIO_Pin_14

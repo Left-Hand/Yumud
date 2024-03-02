@@ -13,5 +13,6 @@
 #include "spi/spi1.hpp"
 #include "spi/spidrv.hpp"
 
+#include "can/can1.hpp"
 
 #endif

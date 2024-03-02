@@ -1,0 +1,261 @@
+#include "can1.hpp"
+
+static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
+static RingBuf_t<std::shared_ptr<CanMsg>> pending_rx_msgs(8);
+
+void CAN1_GPIO_Init(){
+    CHECK_INIT
+
+    GPIO_InitTypeDef      GPIO_InitSturcture = {0};
+    GPIO_PinRemapConfig(CAN1_REMAP, CAN1_REMAP_ENABLE);
+
+    GPIO_InitSturcture.GPIO_Pin = CAN1_TX_Pin;
+    GPIO_InitSturcture.GPIO_Mode = GPIO_Mode_AF_PP;
+    GPIO_InitSturcture.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(CAN1_Port, &GPIO_InitSturcture);
+
+    GPIO_InitSturcture.GPIO_Pin = CAN1_RX_Pin;
+    GPIO_InitSturcture.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_Init(CAN1_Port, &GPIO_InitSturcture);
+}
+
+void CAN1_IT_Init(){
+
+
+    NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+
+    //tx interrupt
+    /****************************************/
+    CAN_ClearITPendingBit(CAN1, CAN_IT_TME);
+    CAN_ITConfig(CAN1, CAN_IT_TME, ENABLE);
+
+    NVIC_InitStructure.NVIC_IRQChannel = USB_HP_CAN1_TX_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
+    NVIC_Init(&NVIC_InitStructure);
+
+    //rx0 interrupt
+    /***************************************/
+    CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
+    CAN_ITConfig(CAN1, CAN_IT_FMP0, ENABLE);
+
+    NVIC_InitStructure.NVIC_IRQChannel = USB_LP_CAN1_RX0_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_Init(&NVIC_InitStructure);
+
+    //rx1 interrupt
+    /***************************************/
+    CAN_ClearITPendingBit(CAN1, CAN_IT_FMP1);
+    CAN_ITConfig(CAN1, CAN_IT_FMP1, ENABLE);
+
+    NVIC_InitStructure.NVIC_IRQChannel = CAN1_RX1_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_Init(&NVIC_InitStructure);
+
+    //sce interrupt
+    // NVIC_InitStructure.NVIC_IRQChannel = CAN1_SCE_IRQn;
+    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+    // NVIC_Init(&NVIC_InitStructure);
+}
+
+void CAN1_Init_Filter(){
+    CAN_FilterInitTypeDef CAN_FilterInitSturcture = {0};
+
+    CAN_FilterInitSturcture.CAN_FilterNumber = 0;
+
+    CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;
+    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
+
+    CAN_FilterInitSturcture.CAN_FilterIdLow = (uint16_t)(0xffff << 5);
+    CAN_FilterInitSturcture.CAN_FilterMaskIdLow = (uint16_t)(0xffff << 5);
+
+    bool isrtr = false;
+    if (isrtr){
+        CAN_FilterInitSturcture.CAN_FilterIdHigh = (uint16_t)(0xffff << 5) | CAN_RTR_Remote;
+        CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = (0 << 5) | (CAN_Id_Extended | CAN_RTR_Remote);
+    }else{
+        CAN_FilterInitSturcture.CAN_FilterIdHigh = (uint16_t)(0xffff << 5);
+        CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = (0 << 5) | (CAN_Id_Extended);
+    }
+
+    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
+    CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
+
+    CAN_FilterInit(&CAN_FilterInitSturcture);
+}
+
+void Can1::init(const BaudRate & baudRate){
+    CAN1_GPIO_Init();
+
+    uint8_t swj, bs1, bs2;
+    uint16_t prescale = 0;
+
+    switch(baudRate){
+    case BaudRate::Kbps125:
+        swj = CAN_SJW_2tq;
+        bs1 = CAN_BS1_6tq;
+        bs2 = CAN_BS2_5tq;
+        prescale = 12 * 8;
+    case BaudRate::Mbps1:
+        swj = CAN_SJW_2tq;
+        bs1 = CAN_BS1_6tq;
+        bs2 = CAN_BS2_5tq;
+        prescale = 12;
+        break;
+    };
+
+    // RCC_ClocksTypeDef rcc_clocks;
+    // RCC_GetClocksFreq(&rcc_clocks);
+    // uint32_t pclk1 = rcc_clocks.PCLK1_Frequency;
+    // prescale = prescale * pclk1 / 72000000;
+    // prescale *= 2;
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+
+    config.CAN_Prescaler = prescale;
+    // config.CAN_Mode = CAN_Mode_Normal;
+    config.CAN_Mode = CAN_Mode_LoopBack;
+    config.CAN_SJW = swj;
+    config.CAN_BS1 = bs1;
+    config.CAN_BS2 = bs2;
+
+    config.CAN_TTCM = DISABLE;
+    config.CAN_ABOM = ENABLE;
+    config.CAN_AWUM = DISABLE;
+    config.CAN_NART = ENABLE;
+    config.CAN_RFLM = DISABLE;
+    config.CAN_TXFP = DISABLE;
+    CAN_Init(CAN1, &config);
+
+    CAN1_Init_Filter();
+    CAN1_IT_Init();
+}
+
+size_t Can1::pending(){
+    size_t cnt = 0;
+    for(uint8_t i = 0; i < 3; i++) cnt += bool(pending_tx_msg_ptrs[i]);
+    return cnt;
+}
+
+
+
+bool Can1::write(const CanMsg & msg){
+    uint8_t mbox = CAN_Transmit(CAN1, msg.toTxMessage());
+    if(mbox == CAN_TxStatus_NoMailBox) return false;
+
+    pending_tx_msg_ptrs[mbox] = std::make_unique<CanMsg>(msg);
+
+    return true;
+}
+
+CanMsg & Can1::read(){
+    return *(pending_rx_msgs.getData());
+}
+
+size_t Can1::available(){
+    return pending_rx_msgs.available();
+}
+
+__fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
+    switch(mbox){
+    case 0:
+        return CAN_TSTATR_RQCP0;
+    case 1:
+        return CAN_TSTATR_RQCP1;
+    case 2:
+        return CAN_TSTATR_RQCP2;
+    default:
+        static_assert(true, "Invalid value for switch!");
+        return 0;
+    }
+}
+
+__fast_inline bool CAN_Mailbox_Done(CAN_TypeDef* CANx, const uint8_t mbox){
+    const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
+    // static_assert(TSTATR_FLAG == CAN_TSTATR_RQCP0 || TSTATR_FLAG == CAN_TSTATR_RQCP1 || TSTATR_FLAG == CAN_TSTATR_RQCP2);
+    return ((CANx->TSTATR & TSTATR_FLAG) == TSTATR_FLAG);
+}
+
+__fast_inline void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
+    const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
+    // static_assert(TSTATR_FLAG == CAN_TSTATR_RQCP0 || TSTATR_FLAG == CAN_TSTATR_RQCP1 || TSTATR_FLAG == CAN_TSTATR_RQCP2);
+    CANx->TSTATR = TSTATR_FLAG;
+}
+
+#define HAVE_CAN1
+#ifdef HAVE_CAN1
+Can1 can1;
+#endif
+
+
+
+__interrupt
+void USB_HP_CAN1_TX_IRQHandler(void){
+    for(uint8_t mbox = 0; mbox < 3; mbox++){
+        if(pending_tx_msg_ptrs[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
+            uint8_t tx_status = CAN_TransmitStatus(CAN1, mbox);
+            switch (tx_status){
+            case(CAN_TxStatus_Failed):
+                //process failed message
+                pending_tx_msg_ptrs[mbox].reset();
+                break;
+            case(CAN_TxStatus_Ok):
+                //process success message
+                pending_tx_msg_ptrs[mbox].reset();
+                break;
+            }
+            CAN_Mailbox_Clear(CAN1, mbox);
+        }
+    }
+}
+
+void Save_CAN1_Msg(const uint8_t fifo_index){
+    CanMsg rx_msg;
+
+    if(CAN_MessagePending(CAN1, fifo_index) == 0) return;
+
+    CAN_Receive(CAN1, fifo_index, rx_msg.toRxMessage());
+    pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
+}
+
+__interrupt
+void USB_LP_CAN1_RX0_IRQHandler(void) {
+    if (CAN_GetITStatus(CAN1, CAN_IT_FMP0)){
+        //process rx pending
+        Save_CAN1_Msg(CAN_FIFO0);
+        CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
+    }else if(CAN_GetITStatus(CAN1, CAN_IT_FF0)){
+        //process rx full
+        CAN_ClearITPendingBit(CAN1, CAN_IT_FF0);
+    }else if(CAN_GetITStatus(CAN1, CAN_IT_FOV0)){
+        //process rx overrun
+        CAN_ClearITPendingBit(CAN1, CAN_IT_FOV0);
+    }
+}
+
+__interrupt
+void CAN1_RX1_IRQHandler(void){
+    if (CAN_GetITStatus(CAN1, CAN_IT_FMP1)){
+        //process rx pending
+        Save_CAN1_Msg(CAN_FIFO1);
+        CAN_ClearITPendingBit(CAN1, CAN_IT_FMP1);
+    }else if(CAN_GetITStatus(CAN1, CAN_IT_FF1)){
+        //process rx full
+        CAN_ClearITPendingBit(CAN1, CAN_IT_FF1);
+    }else if(CAN_GetITStatus(CAN1, CAN_IT_FOV1)){
+        //process rx overrun
+        CAN_ClearITPendingBit(CAN1, CAN_IT_FOV1);
+    }
+}
+
+__interrupt
+void CAN1_SCE_IRQHandler(void){
+    // if (CAN_GetITStatus(CAN1, CAN_IT_FMP1)!= RESET)
+    // {
+    //     // Recv_Msg();
+    //     CAN_ClearITPendingBit(CAN1, CAN_IT_FMP1);
+    // }
+}
