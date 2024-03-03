@@ -29,6 +29,7 @@ I2cSw i2cSw(i2cScl, i2cSda);
 // I2sDrv i2sDrvTm = I2sDrv(i2sSw);
 I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
 I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
+I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
 // ST7789 tftDisplayer(SpiDrvLcd);
 // SSD1306 oledDisPlayer(spiDrvOled);
 // MPU6050 mpu(i2cDrvMpu);
@@ -43,6 +44,7 @@ I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
 // MA730 mag_sensor(spiDrvMagSensor);
 AS5600 mag_sensor(i2cDrvAS);
 QMC5883L earth_sensor(i2cDrvQm);
+BMP280 prs_sensor(i2cDrvBm);
 
 Gpio blueLed = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
@@ -307,7 +309,8 @@ int main(){
     // i2cSw.
     // mag_sensor.init();
     earth_sensor.init();
-
+    prs_sensor.init();
+    while(true);
     while(true){
         while(!earth_sensor.isIdle());
         delay(2);

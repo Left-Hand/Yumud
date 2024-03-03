@@ -7,7 +7,7 @@
 
 
 #ifndef DEBUG_LOG
-#define DEBUG_LOG(...) uart1.println(__VA_ARGS__)
+#define DEBUG_LOG(...) uart2.println(__VA_ARGS__)
 #endif
 
 #endif

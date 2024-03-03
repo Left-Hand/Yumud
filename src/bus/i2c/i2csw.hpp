@@ -3,6 +3,7 @@
 
 #include "i2c.hpp"
 #include "../../gpio/gpio.hpp"
+#include "../uart/uart2.hpp"
 
 class I2cSw: public I2c{
 private:
@@ -33,6 +34,24 @@ private:
         scl = true;
         delayDur();
         scl = false;
+        delayDur();
+    }
+
+    void clk_up(){
+        delayDur();
+        scl = false;
+        delayDur();
+        scl = true;
+        delayDur();
+    }
+
+    void clk_down(){
+        scl = false;
+    }
+
+    void clk_down_then_up(){
+        clk_down();
+        clk_up();
     }
     void ack(){
         delayDur();
@@ -164,29 +183,32 @@ public:
         sda.InFloating();
         sda = true;
         delayDur();
-        clkr();
+        
+        clk_up();
         ret |= sda.read();
-        clkr();
+        clk_down_then_up();
         ret <<= 1; ret |= sda.read();
-        clkr();
+        clk_down_then_up();
         ret <<= 1; ret |= sda.read();
-        clkr();
+        clk_down_then_up();
         ret <<= 1; ret |= sda.read();
 
-        clkr();
+        clk_down_then_up();
         ret <<= 1; ret |= sda.read();
-        clkr();
+        clk_down_then_up();
         ret <<= 1; ret |= sda.read();
-        clkr();
+        clk_down_then_up();
         ret <<= 1; ret |= sda.read();
-        clkr();
+        clk_down_then_up();
         ret <<= 1; ret |= sda.read();
+        clk_down();
 
         sda = false;
         if(toAck) ack();
         else nack();
         data = ret;
         // sda.OutOD();
+
         return Bus::ErrorType::OK;
     }
 
@@ -202,4 +224,4 @@ public:
     void configBitOrder(const bool & msb) override {;}
 };
 
-#endif 
+#endif
