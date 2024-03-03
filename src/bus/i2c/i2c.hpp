@@ -11,6 +11,7 @@ protected:
     virtual void reset() = 0;
     virtual Error start(const uint8_t & _address) = 0;
     virtual void stop() = 0;
+    virtual void lock_avoid() = 0;
 public:
     void setTimeout(const uint32_t _timeout){timeout = _timeout;}
 };
@@ -25,6 +26,7 @@ public:
     uint32_t begin_time = micros();\
     while(!cond){\
         if(micros() - begin_time > timeout){\
+            end_use();\
             return ErrorType::NO_ACK;\
         }\
     }\

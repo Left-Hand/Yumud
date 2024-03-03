@@ -456,14 +456,10 @@ __fast_inline void u16_to_uni(const uint16_t & data, iq_t & qv){
 #endif
 }
 
-
-
 __fast_inline void s16_to_uni(const int16_t & data, iq_t & qv){
-#if GLOBAL_Q >= 16
-    qv.value = (data << (GLOBAL_Q - 15)) - ((1 << GLOBAL_Q));
-#else
-    qv.value = (data >> (17 - GLOBAL_Q)) - ((1 << GLOBAL_Q));
-#endif
+	constexpr uint16_t M = 1 << (GLOBAL_Q - 1);
+	constexpr uint32_t mask = ~(M-1);
+	qv.value = data & M ? data | mask : data;
 }
 
 __fast_inline void uni_to_u16(const iq_t & qv, uint16_t & data){

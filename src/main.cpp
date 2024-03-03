@@ -4,14 +4,14 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 
 
-// Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
-// Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
+Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
+Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
 
 // Gpio i2sSck = Gpio(GPIOB, I2S_SW_SCK);
 // Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
 // Gpio i2sWs = Gpio(GPIOB, I2S_SW_WS);
 
-// I2cSw i2cSw(i2cScl, i2cSda);
+I2cSw i2cSw(i2cScl, i2cSda);
 // I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
 
 // SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
@@ -27,8 +27,8 @@ using Color = Color_t<real_t>;
 // I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
 // I2sDrv i2sDrvTm = I2sDrv(i2sSw);
-I2cDrv i2cDrvAS = I2cDrv(i2c1, 0x36 << 1);
-
+I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
+I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
 // ST7789 tftDisplayer(SpiDrvLcd);
 // SSD1306 oledDisPlayer(spiDrvOled);
 // MPU6050 mpu(i2cDrvMpu);
@@ -42,6 +42,7 @@ I2cDrv i2cDrvAS = I2cDrv(i2c1, 0x36 << 1);
 // W25QXX extern_flash(spiDrvFlash);
 // MA730 mag_sensor(spiDrvMagSensor);
 AS5600 mag_sensor(i2cDrvAS);
+QMC5883L earth_sensor(i2cDrvQm);
 
 Gpio blueLed = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
@@ -279,6 +280,7 @@ int main(){
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     Systick_Init();
+    GPIO_SW_I2C_Init();
     // LED_GPIO_Init();
     GPIO_PortC_Init();
     Gpio Led = Gpio(GPIOC, GPIO_Pin_13);
@@ -299,11 +301,21 @@ int main(){
     // uart1.init(UART1_Baudrate);
     uart2.init(UART2_Baudrate);
     // uart2.init(576000);
-    can1.init(Can1::BaudRate::Mbps1);
-    i2c1.init(320000);
-    i2c1.setTimeout(3200);
+    // can1.init(Can1::BaudRate::Mbps1);
+    // i2c1.init(100000);
+    // i2c1.setTimeout(320);
+    // i2cSw.
+    // mag_sensor.init();
+    earth_sensor.init();
 
-    mag_sensor.init();
+    while(true){
+        while(!earth_sensor.isIdle());
+        delay(2);
+        real_t x, y, z;
+        earth_sensor.getMag(x, y, z);
+        uart2.println(x, y, z);
+        delay(10);
+    }
     // can1.enableHwReTransmit();
     // bool tx_role = getChipId() == 6002379527825632205;
 
@@ -426,7 +438,7 @@ int main(){
         //     // uart2.println(can1.available());
         //     // delay(20);
         // }
-        uart2.println(mag_sensor.getRawAngle());
+        uart2.println(mag_sensor.getRawAngle(), mag_sensor.getMagnitude(), mag_sensor.getMagStatus());
         Led = !Led;
         // updatePosition();
         // real_t pos = motorPosition.accPosition * 10;

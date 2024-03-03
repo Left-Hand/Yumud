@@ -10,13 +10,13 @@ private:
     GpioBase & scl;
     GpioBase & sda;
 
-    uint16_t delays = 0;
+    uint16_t delays = 100;
 
     __fast_inline volatile void delayDur(){
         // __nopn(delays);
-        volatile uint8_t i = delays;
-        while(i--);
-        // delayMicroseconds(1);
+        // volatile uint16_t i = delays;
+        // while(i--);
+        delayMicroseconds(3);
     }
 
     void clk(){
@@ -107,7 +107,6 @@ private:
         delayDur();
         sda = true;
         delayDur();
-        occupied = -1;
     }
 
 
@@ -116,7 +115,10 @@ protected :
         occupied = index >> 1;
         return start(index);
     }
-    void end_use() override {stop();}
+    void end_use() override {
+        stop();
+        occupied = -1;
+    }
 
     bool is_idle() override {
         return (occupied >= 0 ? false : true);
@@ -125,6 +127,9 @@ protected :
     bool owned_by(const uint8_t & index = 0) override{
         return (occupied == (index >> 1));
     }
+
+    void reset() override {};
+    void lock_avoid() override {};
 public:
 
     I2cSw(GpioBase & _scl,GpioBase & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}

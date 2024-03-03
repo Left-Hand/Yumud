@@ -29,7 +29,7 @@ extern int tick_per_ms;
 extern int tick_per_us;
 #define NanoMut(x) ( x * 1000 / 144)
 
-#define MicroTrim 1
+#define MicroTrim 0
 #define NanoTrim 300
 
 #ifndef MAX

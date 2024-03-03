@@ -31,8 +31,8 @@ void I2C1_Init(uint32_t baudRate){
 }
 
 void I2C1_HW_Timeout(FunctionalState en){
-    if(en) I2C1->STAR1 |= I2C_STAR1_TIMEOUT;
-    else I2C1->STAR1 &= ~I2C_STAR1_TIMEOUT;
+    // if(en) I2C1->STAR1 |= I2C_STAR1_TIMEOUT;
+    // else I2C1->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }
 
 bool I2C1_Bus_Locked(){
@@ -54,12 +54,12 @@ void I2C1_Force_Unlock(){
     for(uint8_t i = 0; i < 9; i++){
         GPIO_SetBits(I2C1_Port, I2C1_SCL_Pin);
 
-        _ = 256;
+        _ = 32;
         while(_ --);
 
         GPIO_ResetBits(I2C1_Port, I2C1_SCL_Pin);
 
-        _ = 256;
+        _ = 32;
         while(_ --);
     }
 
@@ -94,9 +94,36 @@ I2c1::Error I2c1::start(const uint8_t & _address) {
     return ErrorType::OK;
 }
 
+I2c1::Error I2c1::write(const uint32_t & data){
+    I2C_SendData(I2C1, data);
+    I2C_WAIT_COND(I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED), timeout);
+    return Bus::ErrorType::OK;
+}
+
+
+I2c1::Error I2c1::read(uint32_t & data, bool toAck) {
+    uint8_t ret = 0;
+    if(!toAck){
+        I2C_AcknowledgeConfig(I2C1, DISABLE);
+    }else{
+        I2C_AcknowledgeConfig(I2C1, ENABLE);
+    }
+    I2C_WAIT_COND(I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_RECEIVED), timeout);
+    ret = I2C_ReceiveData(I2C1);
+    data = ret;
+    return ErrorType::OK;
+}
+
+
+void I2c1::stop() {
+    I2C_GenerateSTOP(I2C1, ENABLE);
+    I2C_AcknowledgeConfig(I2C1, ENABLE);
+}
+
 void I2c1::init(const uint32_t & baudRate){
     I2C1_GPIO_Init();
     I2C1_Init(baudRate);
+    I2C1_HW_Timeout(true);
 }
 
 void I2c1::reset(){
@@ -107,6 +134,12 @@ void I2c1::enableHwTimeout(const bool en){
     I2C1_HW_Timeout(en);
 }
 
+void I2c1::lock_avoid(){
+    if(I2C1_Bus_Locked()){
+        I2C1_Force_Unlock();
+        I2C1_Reset();
+    }
+}
 
 #if defined(HAVE_I2C1) && !defined(HAD_I2C1)
 #define HAD_I2C1

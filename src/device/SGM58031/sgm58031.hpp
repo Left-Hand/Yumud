@@ -9,13 +9,6 @@
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
 #endif
 
-#ifndef REG16_BEGIN
-#define REG16_BEGIN union{struct{
-#endif
-
-#ifndef REG16_END
-#define REG16_END };uint16_t data;};
-#endif
 
 class SGM58031{
 public:

@@ -1,7 +1,7 @@
 #ifndef __VL53L0X_H
 #define __VL53L0X_H
 
-#include "device_defs.h"
+#include "bus/i2c/i2cdrv.hpp"
 
 #define VL53L0X_DEF_I2C_ADDR 0x29
 

@@ -9,13 +9,7 @@ private:
     volatile int8_t occupied = -1;
 
     Error start(const uint8_t & _address) override;
-
-    void stop() {
-        I2C_GenerateSTOP(I2C1, ENABLE);
-        I2C_AcknowledgeConfig(I2C1, ENABLE);
-    }
-
-
+    void stop();
 protected:
 
     Error begin_use(const uint8_t & index = 0) override {
@@ -38,28 +32,14 @@ protected:
         return (occupied == (index >> 1));
     }
 
+    void lock_avoid() override;
+
 public:
 
     I2c1(){;}
 
-    Error write(const uint32_t & data) override {
-        I2C_SendData(I2C1, data);
-        I2C_WAIT_COND(I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_TRANSMITTED), timeout);
-        return Bus::ErrorType::OK;
-    }
-
-    Error read(uint32_t & data, bool toAck = true) {
-        uint8_t ret = 0;
-        if(!toAck){
-            I2C_AcknowledgeConfig(I2C1, DISABLE);
-        }else{
-            I2C_AcknowledgeConfig(I2C1, ENABLE);
-        }
-        I2C_WAIT_COND(I2C_CheckEvent(I2C1, I2C_EVENT_MASTER_BYTE_RECEIVED), timeout);
-        ret = I2C_ReceiveData(I2C1);
-        data = ret;
-        return ErrorType::OK;
-    }
+    Error write(const uint32_t & data) override ;
+    Error read(uint32_t & data, bool toAck = true) override;
 
     Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
         write(data_tx);

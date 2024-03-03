@@ -45,7 +45,7 @@ public:
                     }else{
                         for(size_t j = 0; j < size; j++){
                             uint32_t temp = 0;
-                            bus.read(temp, true);
+                            bus.read(temp, (i + j != length - 1));
                             data_ptr[j + i] = temp;
                         }
                     }

@@ -17,6 +17,8 @@
 #include "HX711/HX711.h"
 #include "TTP229/TTP229.h"
 #include "AS5600/as5600.hpp"
+#include "HMC5883L/hmc5883l.hpp"
+#include "QMC5883L/qmc5883l.hpp"
 
 #include "ST7789/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"

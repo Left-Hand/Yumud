@@ -1,7 +1,7 @@
 #ifndef __MA730_HPP__
 #define __MA730_HPP__
 
-#include "device/device_defs.h"
+#include "bus/spi/spidrv.hpp"
 
 class MA730{
 public:
