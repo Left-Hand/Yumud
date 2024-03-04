@@ -30,6 +30,7 @@ I2cSw i2cSw(i2cScl, i2cSda);
 I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
 I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
 I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
+I2cDrv i2cDrvMt = I2cDrv(i2cSw, 0x0C);
 // ST7789 tftDisplayer(SpiDrvLcd);
 // SSD1306 oledDisPlayer(spiDrvOled);
 // MPU6050 mpu(i2cDrvMpu);
@@ -45,6 +46,7 @@ I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
 AS5600 mag_sensor(i2cDrvAS);
 QMC5883L earth_sensor(i2cDrvQm);
 BMP280 prs_sensor(i2cDrvBm);
+MT6701 mt_sensor(i2cDrvMt);
 
 Gpio blueLed = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
@@ -171,110 +173,7 @@ void setIrState(const bool on){
 
 
 
-class NecEncoder{
-protected:
-	uint8_t bit_prog;
-	uint8_t byte_prog;
 
-	struct NecCode{
-		uint8_t total_cnt;
-		uint8_t valid_cnt;
-	};
-
-	const NecCode codes[4] = {
-		{.total_cnt = 24, .valid_cnt = 16},
-		{.total_cnt = 2, .valid_cnt = 1},
-		{.total_cnt = 4, .valid_cnt = 1},
-		{.total_cnt = 2, .valid_cnt = 1}
-	};
-
-	enum class BitType:uint8_t{
-		Leader, Zero, One, Stop
-	};
-
-	enum class EncodeProg:uint8_t{
-		Idle, Lead, Address, invAddress, Command, invCommand, Stop
-	};
-
-	bool writeBit(const BitType & bit){
-		bit_prog ++;
-		const NecCode & code = codes[(uint8_t)bit];
-
-		setIrState(bit_prog <= code.valid_cnt);
-
-		bool ret = false;
-		if(bit_prog >= code.total_cnt){
-			bit_prog = 0;
-			ret = true;
-		}
-		return ret;
-	}
-	bool writeByte(const uint8_t & byte){
-
-		if(writeBit((byte & (0x01 << byte_prog)) ? BitType::One : BitType::Zero))
-			byte_prog ++;
-
-		bool ret = false;
-
-		if(byte_prog >= 8){
-			byte_prog = 0;
-			ret = true;
-		}
-
-		return ret;
-	};
-public:
-	uint8_t address = 0xAA;
-	uint8_t command = 0xCC;
-	EncodeProg encode_prog;
-	bool tick(){
-		switch(encode_prog){
-		case EncodeProg::Lead:
-			if(writeBit(BitType::Leader)){
-				encode_prog = EncodeProg::Address;
-			}
-			break;
-
-		case EncodeProg::Address:
-			if(writeByte(address)){
-				encode_prog = EncodeProg::invAddress;
-			}
-			break;
-		case EncodeProg::invAddress:
-			if(writeByte(~address)){
-				encode_prog = EncodeProg::Command;
-			}
-			break;
-		case EncodeProg::Command:
-			if(writeByte(command)){
-				encode_prog = EncodeProg::invCommand;
-			}
-			break;
-		case EncodeProg::invCommand:
-			if(writeByte(~command)){
-				encode_prog = EncodeProg::Stop;
-			}
-			break;
-		case EncodeProg::Stop:
-			if(writeBit(BitType::Stop)){
-				encode_prog = EncodeProg::Idle;
-			}
-            // setIrState(false);
-			break;
-		default:
-			break;
-		}
-
-		return (encode_prog == EncodeProg::Idle);
-	}
-
-	void emit(const uint8_t & _address, const uint8_t & _command){
-		address = _address;
-		command = _command;
-
-		encode_prog = EncodeProg::Lead;
-	}
-}ir_encoder;
 
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -308,17 +207,31 @@ int main(){
     // i2c1.setTimeout(320);
     // i2cSw.
     // mag_sensor.init();
-    earth_sensor.init();
+    // earth_sensor.init();
     prs_sensor.init();
-    while(true);
+    mt_sensor.init();
+
     while(true){
-        while(!earth_sensor.isIdle());
-        delay(2);
-        real_t x, y, z;
-        earth_sensor.getMag(x, y, z);
-        uart2.println(x, y, z);
-        delay(10);
+        uart2.println(mt_sensor.getRawPosition());
     }
+    
+    while(true){
+        while(!prs_sensor.isIdle());
+        // delay(2);
+        int32_t prs = 0;
+        prs_sensor.getPressure(prs);
+        real_t(8.0);
+        uart2.println(prs);
+        // delay(10);
+    }
+    // while(true){
+    //     while(!earth_sensor.isIdle());
+    //     delay(2);
+    //     real_t x, y, z;
+    //     earth_sensor.getMag(x, y, z);
+    //     uart2.println(x, y, z);
+    //     delay(10);
+    // }
     // can1.enableHwReTransmit();
     // bool tx_role = getChipId() == 6002379527825632205;
 

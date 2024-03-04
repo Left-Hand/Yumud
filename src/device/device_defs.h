@@ -3,9 +3,6 @@
 
 #include "comm_inc.h"
 #include "src/debug/debug_inc.h"
-#include "bus/bus_inc.h"
-
-#define AT24C02_DEBUG
 
 #ifndef REG8_BEGIN
 #define REG8_BEGIN union{struct{

@@ -6,19 +6,20 @@
 #include "types/real.hpp"
 
 #define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+// #define BMP280_DEBUG(...)
 
 class BMP280{
 public:
     enum class Mode:uint8_t{
-        Sleep, Single, Cont
+        Sleep, Single, Cont = 0x03
     };
 
     enum class TempratureSampleMode:uint8_t{
-        Bit16, Bit17, Bit18, Bit19, Bit20
+        SKIP, Bit16, Bit17, Bit18, Bit19, Bit20 = 0x07
     };
 
     enum class PressureSampleMode:uint8_t{
-        Bit16, Bit17, Bit18, Bit19, Bit20
+        SKIP, Bit16, Bit17, Bit18, Bit19, Bit20 = 0x07
     };
 
     enum class DataRate:uint8_t{
@@ -151,6 +152,7 @@ protected:
         pressureData = pressureReg.data << 4;
         readReg(RegAddress::PressureX, pressureXReg.data);
         pressureData |= pressureXReg.data >> 4;
+        // BMP280_DEBUG("PressureData:", pressureData);
         return pressureData;
     }
 
@@ -160,6 +162,7 @@ protected:
         temperatureData = temperatureReg.data << 4;
         readReg(RegAddress::TemperatureX, temperatureXReg.data);
         temperatureData |= temperatureXReg.data >> 4;
+        // BMP280_DEBUG("TempratureData:", temperatureData);
         return temperatureData;
     }
 
@@ -212,7 +215,7 @@ public:
         writeReg(RegAddress::Config, configReg.data);
     }
 
-    void getPressure(int32_t pressure){
+    void getPressure(int32_t & pressure){
 
         uint32_t adc_T = getTemperatureData();
         uint32_t adc_P = getPressureData();
@@ -223,45 +226,52 @@ public:
             return;
         }
 
+        uint64_t begin_t = nanos();
         //Temperature
-        uint32_t var1 = (((double)adc_T)/16384.0-((double)digT1)/1024.0)*((double)digT2);
-        uint32_t var2 = ((((double)adc_T)/131072.0-((double)digT1)/8192.0)*(((double)adc_T)
-                    /131072.0-((double)digT1)/8192.0))*((double)digT3);
+        uint32_t var1 = (((float)adc_T)/16384.0f-((float)digT1)/1024.0f)*((float)digT2);
+        uint32_t var2 = ((((float)adc_T)/131072.0f-((float)digT1)/8192.0f)*(((float)adc_T)
+                    /131072.0f-((float)digT1)/8192.0f))*((float)digT3);
 
         uint32_t t_fine = (unsigned long)(var1+var2);
 
-        var1 = ((double)t_fine/2.0)-64000.0;
-        var2 = var1*var1*((double)digP6)/32768.0;
-        var2 = var2 +var1*((double)digP5)*2.0;
-        var2 = (var2/4.0)+(((double)digP4)*65536.0);
-        var1 = (((double)digP3)*var1*var1/524288.0+((double)digP2)*var1)/524288.0;
-        var1 = (1.0+var1/32768.0)*((double)digP1);
-        uint32_t p = 1048576.0-(double)adc_P;
-        p = (p-(var2/4096.0))*6250.0/var1;
-        var1 = ((double)digP9)*p*p/2147483648.0;
-        var2 = p*((double)digP8)/32768.0;
-        pressure = p+(var1+var2+((double)digP7))/16.0;
+        var1 = ((float)t_fine/2.0f)-64000.0f;
+        var2 = var1*var1*((float)digP6)/32768.0f;
+        var2 = var2 +var1*((float)digP5)*2.0f;
+        var2 = (var2/4.0f)+(((float)digP4)*65536.0f);
+        var1 = (((float)digP3)*var1*var1/524288.0f+((float)digP2)*var1)/524288.0f;
+        var1 = (1.0f+var1/32768.0f)*((float)digP1);
+        uint32_t p = 1048576.0f-(float)adc_P;
+        p = (p-(var2/4096.0f))*6250.0f/var1;
+        var1 = ((float)digP9)*p*p/2147483648.0f;
+        var2 = p*((float)digP8)/32768.0f;
+        pressure = p+(var1+var2+((float)digP7))/16.0f;
+
+        uint64_t end_t = nanos();
+        BMP280_DEBUG("cal used", (uint32_t)(end_t - begin_t));
     }
 
     void init(){
         reset();
         bool chip_valid = isChipValid();
-        BMP280_DEBUG("BMP280 validation:", chip_valid);
-        // if(!chip_valid) return;
+        // BMP280_DEBUG("BMP280 validation:", chip_valid);
+        if(!chip_valid) return;
 
-        setMode(Mode::Cont);
-        setTempratureSampleMode(TempratureSampleMode::Bit20);
-        setPressureSampleMode(PressureSampleMode::Bit20);
+        // setMode(Mode::Cont);
+        // setTempratureSampleMode(TempratureSampleMode::Bit20);
+        // setPressureSampleMode(PressureSampleMode::Bit20);
+        writeReg(RegAddress::Ctrl, (uint8_t)0xFFU);
 
         setDataRate(DataRate::HZ200);
         setFilterCoefficient(FilterCoefficient::OFF);
         enableSpi3(false);
 
-        memset(&digT1, 0, 2 * 12);
+        // writeReg(RegAddress::Config, (uint8_t)0x00);
+
+        // memset(&digT1, 0, 2 * 12);
         requestPool(RegAddress::DigT1, (uint8_t *)&digT1, 2, 2*12);
 
-        for(uint16_t * ptr = &digT1; ptr < (uint16_t *)&digP9; ptr++)
-            BMP280_DEBUG(String(*ptr, 16));
+        // for(uint16_t * ptr = &digT1; ptr <= (uint16_t *)&digP9; ptr++)
+        //     BMP280_DEBUG(String(*ptr, 16));
     }
 };
 #endif
