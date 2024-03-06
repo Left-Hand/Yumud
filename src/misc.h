@@ -21,7 +21,8 @@
 #include "HMC5883L/hmc5883l.hpp"
 #include "QMC5883L/qmc5883l.hpp"
 #include "BMP280/bmp280.hpp"
-
+#include "HX711/hx711.hpp"
+#include "timer/timer.hpp"
 #include "ST7789/st7789.hpp"
 #include "SSD1306/ssd1306.hpp"
 #include "MPU6050/mpu6050.hpp"

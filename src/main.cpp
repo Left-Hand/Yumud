@@ -185,6 +185,7 @@ int main(){
     // LED_GPIO_Init();
     GPIO_PortC_Init();
     Gpio Led = Gpio(GPIOC, GPIO_Pin_13);
+    Led.OutPP();
 
     // GPIO_SW_I2S_Init();
 
@@ -211,10 +212,26 @@ int main(){
     prs_sensor.init();
     mt_sensor.init();
 
+    Gpio sckPin(GPIOB, GPIO_Pin_4);
+    Gpio sdoPin(GPIOB, GPIO_Pin_5);
+
+
+    HX711 hx711(sckPin, sdoPin);
+    hx711.init();
+    hx711.setConvType(HX711::ConvType::A128);
+    while(true){
+        while(!hx711.isIdle());
+        Led = !Led;
+        uint32_t weight = 0;
+        hx711.getWeightData(weight);
+        uart2.println(weight);
+    }
     while(true){
         uart2.println(mt_sensor.getRawPosition());
+        delay(20);
+        Led = !Led;
     }
-    
+
     while(true){
         while(!prs_sensor.isIdle());
         // delay(2);

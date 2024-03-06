@@ -9,11 +9,6 @@
 #define MCU_V (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)
 #endif
 
-inline uint8_t LeastBit(uint32_t x){
-    uint8_t i = 0;
-    for(; (x & 0x01) != 0; x >>= 1) i++;
-    return i;
-}
 
 class GpioBase{
 public:
@@ -31,46 +26,48 @@ public:
     virtual void OutAfOD() = 0;
     virtual void InAnalog() = 0;
     virtual void InFloating() = 0;
-    virtual void InPull() = 0;
+    virtual void InPullUP() = 0;
+    virtual void InPullDN() = 0;
 };
 
 class Gpio:public GpioBase{
-    protected:
-        volatile GPIO_TypeDef* base = GPIOA;
-        uint16_t pin = 0;
-        uint8_t pin_index = 0;
-        uint32_t pin_mask = 0;
-        volatile uint32_t * pin_cfg = nullptr;
+protected:
+    volatile GPIO_TypeDef* base = GPIOA;
+    uint16_t pin = 0;
+    uint8_t pin_index = 0;
+    uint32_t pin_mask = 0;
+    volatile uint32_t & pin_cfg;
 
-        __fast_inline void reConfig(const uint8_t cfg){
-            uint32_t tempreg = *pin_cfg;
-            tempreg &= pin_mask;
-            tempreg |= (cfg << ((pin_index % 8) * 4));
-            *pin_cfg = tempreg;
-        }
-    public:
-        Gpio(GPIO_TypeDef* _base,const uint16_t & _pin):
-            base(_base),
-            pin(((_base == GPIOC) && MCU_V) ? (_pin - 13) : _pin),
-            pin_index(LeastBit(pin)),
-            pin_mask(~(0xf << ((pin_index % 8) * 4))),
-            pin_cfg(pin_index >= 8 ? (&(base -> CFGHR)) : (&(base -> CFGLR))){;}
+    __fast_inline void reConfig(const uint8_t cfg){
+        uint32_t tempreg = pin_cfg;
+        tempreg &= pin_mask;
+        tempreg |= (cfg << ((pin_index % 8) * 4));
+        pin_cfg = tempreg;
+    }
+public:
+    Gpio(GPIO_TypeDef* _base,const uint16_t & _pin):
+        base(_base),
+        pin(((_base == GPIOC) && MCU_V) ? (_pin >> 13) : _pin),
+        pin_index(__builtin_ctz(pin)),
+        pin_mask(~(0xf << ((pin_index % 8) * 4))),
+        pin_cfg(pin_index >= 8 ? ((base -> CFGHR)) : ((base -> CFGLR))){;}
 
-        ~Gpio(){};
+    ~Gpio(){};
 
-        __fast_inline void set()override{base->BSHR = pin;}
-        __fast_inline void clr()override{base->BCR = pin;}
-        __fast_inline void write(const bool & val)override{(val) ? base->BSHR = pin : base->BCR = pin;}
-        __fast_inline bool read() const override{return (bool)(base->INDR & pin);}
-        __fast_inline Gpio & operator = (const bool _val) override {(_val) ? base->BSHR = pin : base->BCR = pin; return *this;}
-        __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? base->BSHR = pin : base->BCR = pin; return *this;}
-        __fast_inline void OutPP() override {reConfig(0b0011);}
-        __fast_inline void OutOD() override {reConfig(0b0111);}
-        __fast_inline void OutAfPP() override {reConfig(0b1011);}
-        __fast_inline void OutAfOD() override {reConfig(0b1111);}
-        __fast_inline void InAnalog() override {reConfig(0b0000);}
-        __fast_inline void InFloating() override {reConfig(0b0100);}
-        __fast_inline void InPull() override {reConfig(0b1000);}
+    __fast_inline void set()override{base->BSHR = pin;}
+    __fast_inline void clr()override{base->BCR = pin;}
+    __fast_inline void write(const bool & val)override{(val) ? base->BSHR = pin : base->BCR = pin;}
+    __fast_inline bool read() const override{return (bool)(base->INDR & pin);}
+    __fast_inline Gpio & operator = (const bool _val) override {(_val) ? base->BSHR = pin : base->BCR = pin; return *this;}
+    __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? base->BSHR = pin : base->BCR = pin; return *this;}
+    __fast_inline void OutPP() override {reConfig(0b0011);}
+    __fast_inline void OutOD() override {reConfig(0b0111);}
+    __fast_inline void OutAfPP() override {reConfig(0b1011);}
+    __fast_inline void OutAfOD() override {reConfig(0b1111);}
+    __fast_inline void InAnalog() override {reConfig(0b0000);}
+    __fast_inline void InFloating() override {reConfig(0b0100);}
+    __fast_inline void InPullUP() override {reConfig(0b1000); base -> OUTDR |= pin;}
+    __fast_inline void InPullDN() override {reConfig(0b1100); base -> OUTDR &= ~pin;}
 };
 
 
@@ -104,7 +101,8 @@ public:
     void OutAfOD() override {if(dir_callback) dir_callback(index, true);}
     void InAnalog() override {if(dir_callback) dir_callback(index, false);}
     void InFloating() override {if(dir_callback) dir_callback(index, false);}
-    void InPull() override {if(dir_callback) dir_callback(index, false);}
+    void InPullUP() override {if(dir_callback) dir_callback(index, false);}
+    void InPullDN() override {if(dir_callback) dir_callback(index, false);}
 };
 
 typedef struct {
