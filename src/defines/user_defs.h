@@ -114,6 +114,72 @@
     #define CAN1_REMAP GPIO_Remap1_CAN1
 #endif
 
+#define HAVE_TIM1
+
+#ifdef HAVE_TIM1
+    #define TIM1_CH1_Port GPIOA
+    #define TIM1_CH1_Pin GPIO_Pin_8
+    #define TIM1_CH1N_Port GPIOB
+    #define TIM1_CH1N_Pin GPIO_Pin_13
+
+    #define TIM1_CH2_Port GPIOA
+    #define TIM1_CH2_Pin GPIO_Pin_9
+    #define TIM1_CH2N_Port GPIOB
+    #define TIM1_CH2N_Pin GPIO_Pin_14
+
+    #define TIM1_CH3_Port GPIOA
+    #define TIM1_CH3_Pin GPIO_Pin_10
+    #define TIM1_CH3N_Port GPIOB
+    #define TIM1_CH3N_Pin GPIO_Pin_15
+
+    #define TIM1_CH4_Port GPIOA
+    #define TIM1_CH4_Pin GPIO_Pin_11
+#endif
+
+
+#ifdef HAVE_TIM2
+    #define TIM2_CH1_Port GPIOA
+    #define TIM2_CH1_Pin GPIO_Pin_0
+
+    #define TIM2_CH2_Port GPIOA
+    #define TIM2_CH2_Pin GPIO_Pin_1
+
+    #define TIM2_CH3_Port GPIOA
+    #define TIM2_CH3_Pin GPIO_Pin_2
+
+    #define TIM2_CH4_Port GPIOA
+    #define TIM2_CH4_Pin GPIO_Pin_3
+#endif
+
+
+#ifdef HAVE_TIM3
+    #define TIM3_CH1_Port GPIOA
+    #define TIM3_CH1_Pin GPIO_Pin_6
+
+    #define TIM3_CH2_Port GPIOA
+    #define TIM3_CH2_Pin GPIO_Pin_7
+
+    #define TIM3_CH3_Port GPIOB
+    #define TIM3_CH3_Pin GPIO_Pin_0
+
+    #define TIM3_CH4_Port GPIOB
+    #define TIM3_CH4_Pin GPIO_Pin_1
+#endif
+
+#ifdef HAVE_TIM4
+    #define TIM4_CH1_Port GPIOB
+    #define TIM4_CH1_Pin GPIO_Pin_6
+
+    #define TIM4_CH2_Port GPIOB
+    #define TIM4_CH2_Pin GPIO_Pin_7
+
+    #define TIM4_CH3_Port GPIOB
+    #define TIM4_CH3_Pin GPIO_Pin_8
+
+    #define TIM4_CH4_Port GPIOB
+    #define TIM4_CH4_Pin GPIO_Pin_9
+#endif
+
 
 #define BUILTIN_LED_PORT GPIOC
 #define BUILTIN_RedLED_PIN GPIO_Pin_13

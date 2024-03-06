@@ -100,7 +100,11 @@ public:
         return ErrorType::OK;
     }
 
-    void init(const uint32_t & baudRate) override {;}
+    void init(const uint32_t & baudRate) override {
+        sck.OutPP();
+        sda.OutPP();
+        ws.OutPP();
+    }
     void configDataSize(const uint8_t & data_size) override {;}
     void configBaudRate(const uint32_t & baudRate) override {;}
     void configBitOrder(const bool & msb) override {;}

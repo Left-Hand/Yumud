@@ -93,7 +93,7 @@ __fast_inline RGB565 Mandelbrot(const Vector2 & UV){
 };
 
 
-constexpr uint16_t pwm_arr = 144000000/72000 - 1;
+constexpr uint16_t pwm_arr = 144000000/12000 - 1;
 constexpr uint16_t ir_arr = 144000000/38000 - 1;
 
 struct MotorPosition{
@@ -172,23 +172,36 @@ void setIrState(const bool on){
 }
 
 
-
-
-
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
 
     Systick_Init();
-    GPIO_SW_I2C_Init();
-    // LED_GPIO_Init();
+
     GPIO_PortC_Init();
     Gpio Led = Gpio(GPIOC, GPIO_Pin_13);
     Led.OutPP();
 
-    // GPIO_SW_I2S_Init();
+    timer1.init(pwm_arr);
 
+
+    auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
+    tim1ch1.init();
+
+    tim1ch1 = int(pwm_arr * 0.4);
+
+
+    auto tim1ch2 = timer1.getChannel(TimerOC::Channel::CH2);
+
+    tim1ch2.init();
+    tim1ch2 = int(pwm_arr * 0.8);
+
+    auto tim1ch1n = timer1.getChannel(TimerOC::Channel::CH1N);
+    tim1ch1n.init();
+
+    timer1.initBdtr(AdvancedTimer::LockLevel::High);
+    timer1.enable();
     // TIM2_GPIO_Init();
     // TIM_Encoder_Init(TIM2);
 

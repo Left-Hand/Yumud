@@ -8,6 +8,7 @@
 class PwmChannelBase{
 public:
     virtual void enable(const bool en = true) = 0;
+
     virtual void setDuty(const real_t & duty) = 0;
 };
 
