@@ -27,10 +27,16 @@ protected:
             break;
         }
     }
-public:
+
     void setCaliData(const uint16_t _cali_data) override{
         ADC_SetInjectedOffset(instance, ch_code, _cali_data);
     }
+
+    friend class Adc;
+    friend class AdcPrimary;
+    friend class AdcCompanion;
+public:
+
 
     void setSampleTime(const SampleTime _sample_time) override{
         ADC_InjectedChannelConfig(instance, ch_code, rank, (uint8_t)_sample_time);
@@ -39,6 +45,7 @@ public:
     operator uint16_t() const{
         return ADC_GetInjectedConversionValue(instance, ch_code);
     }
+
 };
 
 #endif

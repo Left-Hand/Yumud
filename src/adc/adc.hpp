@@ -5,6 +5,7 @@
 #include "src/platform.h"
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
+#include "adc_enums.h"
 #include <initializer_list>
 
 class Adc{
@@ -83,13 +84,22 @@ public:
 };
 
 class AdcCompanion:public Adc{
-
+public:
+    AdcCompanion(ADC_TypeDef * _instance):Adc(_instance){;}
 };
 
 class AdcPrimary: public Adc{
 protected:
-    RegularChannel * regular_ptrs[16];
+    RegularChannel * regular_ptrs[16] = {nullptr};
+    InjectedChannel * injected_ptrs[4] = {nullptr};
+
+    uint8_t regular_cnt = 0;
+    uint8_t injected_cnt = 0;
+
     uint8_t disc_index = 0;
+
+    using Channel = AdcChannels;
+    using SampleTime = AdcSampleTimes;
 public:
     AdcPrimary(ADC_TypeDef * _instance):Adc(_instance){;}
     void cali(){
@@ -106,33 +116,70 @@ public:
         ADC_BufferCmd(ADC1, ENABLE);
     }
 
-    // void init(std::initializer_list<const RegularChannel &> _regulars, std::initializer_list<const InjectedChannel &> _injecteds){
-    //     ADC_InitTypeDef  ADC_InitStructure = {0};
+    void clearRegularQueue(){
+        for(RegularChannel * & regular : regular_ptrs){
+            regular = nullptr;
+        }
+        regular_cnt = 0;
+    }
 
-    //     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-    //     RCC_ADCCLKConfig(RCC_PCLK2_Div8);
+    void clearInjectedQueue(){
+        for(InjectedChannel * & injected : injected_ptrs){
+            injected = nullptr;
+        }
+        injected_cnt = 0;
+    }
 
-    //     ADC_DeInit(ADC1);
-    //     ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
-    //     ADC_InitStructure.ADC_ScanConvMode = ENABLE;
-    //     ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
-    //     ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-    //     ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-    //     ADC_InitStructure.ADC_NbrOfChannel = 2;
-    //     ADC_InitStructure.ADC_Pga = ADC_Pga_1;
-    //     ADC_Init(ADC1, &ADC_InitStructure);
+    void AddChannelToQueue(RegularChannel & regular_channel){
+        if(regular_cnt >= 16) return;
+        regular_ptrs[regular_cnt++] = &regular_channel;
+    }
 
-    //     // uint8_t cnt = 0;
-    //     // for(auto & it = regulars.begin(); it != regulars.end(); it++){
-            
-    //     // }
-    //     ADC_RegularChannelConfig(ADC1, ADC_Channel_0, 1, ADC_SampleTime_28Cycles5);
-    //     // ADC_InjectedChannelConfig
-    //     ADC_SetInjectedOffset(ADC1,ADC_InjectedChannel_1,0);
-    // }
+    void AddChannelToQueue(InjectedChannel & injected_channel){
+        if(injected_cnt >= 4) return;
+        injected_ptrs[injected_cnt++] = &injected_channel;
+    }
 
-    void initDma(){
-        ADC_DMACmd(ADC1, ENABLE);
+    void init(){
+        ADC_InitTypeDef  ADC_InitStructure = {0};
+
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+        RCC_ADCCLKConfig(RCC_PCLK2_Div8);
+
+        ADC_DeInit(ADC1);
+
+        ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
+        ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+        ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
+        ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
+        ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+        ADC_InitStructure.ADC_NbrOfChannel = regular_cnt;
+        ADC_InitStructure.ADC_Pga = ADC_Pga_1;
+        ADC_Init(ADC1, &ADC_InitStructure);
+
+        for(uint8_t i = 0; i < regular_cnt; i++){
+            RegularChannel & cha = *regular_ptrs[i];
+            uint8_t ch_index = (uint8_t)cha.channel;
+            ADC_RegularChannelConfig(ADC1, ch_index, i+1, (uint8_t)cha.sample_time);
+            if(ch_index >= (uint8_t)Channel::TEMP){
+                enableTempVref();
+            }
+            cha.installToPin();
+        }
+
+        ADC_InjectedSequencerLengthConfig(ADC1, injected_cnt);
+        for(uint8_t i = 0; i < injected_cnt; i++){
+            InjectedChannel & cha = *injected_ptrs[i];
+            ADC_InjectedChannelConfig(ADC1, (uint8_t)cha.channel, i+1, (uint8_t)cha.sample_time);
+            ADC_SetInjectedOffset(ADC1,ADC_InjectedChannel_1, MAX(cali_data, 0)); // offset can`t be negative
+            cha.installToPin();
+        }
+
+        ADC_Cmd(instance, ENABLE);
+    }
+
+    void enableDma(const bool en = true){
+        ADC_DMACmd(ADC1, en);
     }
 
     void setPga(const Pga pga){
@@ -156,10 +203,17 @@ public:
         instance->CTLR1 = tempreg.data;
     }
 
-    void enableLeftAlign(const bool en = true){
+    void enableRightAlign(const bool en = true){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
-        tempreg.ALIGN= en;
+        tempreg.ALIGN = !en;
+        instance->CTLR2 = tempreg.data;
+    }
+
+    void enableTempVref(const bool en = true){
+        CTLR2 tempreg;
+        tempreg.data = instance->CTLR2;
+        tempreg.TSVREFE = en;
         instance->CTLR2 = tempreg.data;
     }
 
@@ -187,8 +241,32 @@ public:
         instance->WDLTR = thr;
     }
 
-    void startConv(){
+    void start(){
         ADC_Cmd(ADC1, ENABLE);
+    }
+
+    bool isRegularIdle(){
+        return ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC);
+    }
+
+    bool isInjectedIdle(){
+        return ADC_GetFlagStatus(ADC1, ADC_FLAG_JEOC);
+    }
+
+    bool isIdle(){
+        return (isRegularIdle() && isInjectedIdle());
+    }
+
+    void addDataCB(const uint16_t data){
+
+    }
+
+    RegularChannel getRegularChannel(const Channel channel, const SampleTime sample_time = SampleTime::T28_5){
+        return RegularChannel(instance, channel, sample_time);
+    }
+
+    InjectedChannel getInjectedChannel(const Channel channel, const SampleTime sample_time = SampleTime::T28_5){
+        return InjectedChannel(instance, channel, sample_time);
     }
 };
 

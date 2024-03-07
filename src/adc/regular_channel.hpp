@@ -16,7 +16,15 @@ protected:
             AdcChannelOnChip(_instance, _channel, _sample_time){;}
 
     RegularChannel & operator = (const uint16_t & data){temp_data = CLAMP(data + cali_data, 0, 4095); return *this;}
+
+    void setCaliData(const uint16_t _cali_data) override{
+        cali_data = _cali_data;
+    }
+
     friend class Adc;
+    friend class AdcPrimary;
+    friend class AdcCompanion;
+
 public:
     void setSampleTime(const SampleTime _sample_time) override{
         sample_time = _sample_time;
@@ -36,12 +44,6 @@ public:
             instance->SAMPTR2 = tempreg;
         }
     }
-
-    void setCaliData(const uint16_t _cali_data) override{
-        cali_data = _cali_data;
-    }
-
-    void installToPin() override;
 
     operator uint16_t() const {return temp_data;}
 };
