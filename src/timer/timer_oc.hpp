@@ -1,14 +1,11 @@
 #ifndef __TIMER_OC_HPP__
 #define __TIMER_OC_HPP__
 
-#include "pwm_channel.hpp"
+#include "timer_channel.hpp"
 #include "src/gpio/gpio.hpp"
 #include "real.hpp"
 
-class PwmChannel:public PwmChannelBase{
-};
-
-class TimerOC:public PwmChannelBase{
+class TimerOC:public TimerChannel{
 public:
     enum class Channel:uint8_t{
         CH1, CH1N, CH2, CH2N, CH3, CH3N, CH4
@@ -36,13 +33,13 @@ public:
 
     void init(const bool install = true, const Mode mode = Mode::UpValid);
 
-    void enable(const bool en = true) override;
+    void enable(const bool en = true);
 
-    void configSync(const bool _sync){TIM_ARRPreloadConfig(base, (FunctionalState)_sync);}
-    void setPolarity(const bool pol = true);
+    void configSync(const bool _sync);
+    void setPolarity(const bool pol);
     void setIdleState(const bool state);
 
-    void setDuty(const real_t & duty) override{
+    void setDuty(const real_t & duty){
         *this = (uint16_t)(int)(duty * base->CNT);
     }
 

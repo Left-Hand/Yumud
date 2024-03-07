@@ -755,7 +755,7 @@ FlagStatus ADC_GetSoftwareStartInjectedConvCmdStatus(ADC_TypeDef *ADCx)
  *            ADC_SampleTime_7Cycles5 - Sample time equal to 7.5 cycles.
  *            ADC_SampleTime_13Cycles5 - Sample time equal to 13.5 cycles.
  *            ADC_SampleTime_28Cycles5 - Sample time equal to 28.5 cycles.
- *            ADC_SampleTime_41Cycles5 - Sample time equal to 41.5 cycles.
+ *            ADC_SampleTime_41Cycles5 - Sample time equal to 41.5 cycles. 
  *            ADC_SampleTime_55Cycles5 - Sample time equal to 55.5 cycles.
  *            ADC_SampleTime_71Cycles5 - Sample time equal to 71.5 cycles.
  *            ADC_SampleTime_239Cycles5 - Sample time equal to 239.5 cycles.

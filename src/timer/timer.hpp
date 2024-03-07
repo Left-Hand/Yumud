@@ -4,7 +4,6 @@
 
 #include "src/platform.h"
 #include "timer_oc.hpp"
-#include "bdtr.hpp"
 
 class Timer{
 public:
@@ -38,7 +37,7 @@ class GenericTimer:public BasicTimer{
 public:
     GenericTimer(TIM_TypeDef * _base):BasicTimer(_base){;}
     void initAsEncoder(const TimerMode mode = TimerMode::Up);
-    void enableSingle(const bool _single = true){TIM_SelectOnePulseMode(base, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);}
+    void enableSingle(const bool _single = true);
     TimerOC getChannel(const TimerOC::Channel ch){return TimerOC(base, ch);}
     GenericTimer & operator = (const uint16_t _val) override {base->CNT = _val;return *this;}
 };

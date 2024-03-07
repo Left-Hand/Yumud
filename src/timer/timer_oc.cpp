@@ -63,6 +63,14 @@ void TimerOC::setPolarity(const bool pol){
     else base->CCER &= ~(0b1 << (((uint8_t)channel) * 2 + 1));
 }
 
+void TimerOC::configSync(const bool _sync){
+    TIM_ARRPreloadConfig(base, (FunctionalState)_sync);
+}
+
+void TimerOC::setIdleState(const bool state){
+    
+}
+
 void TimerOC::installToPin(const bool en){
     GPIO_TypeDef * gpio_port;
     uint16_t gpio_pin = 0;

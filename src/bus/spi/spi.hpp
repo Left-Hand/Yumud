@@ -10,6 +10,8 @@ class Spi:public SerBus{
 public:
 };
 
+class SpiHw:public Spi{
 
+};
 
 #endif

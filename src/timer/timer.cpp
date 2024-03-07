@@ -63,6 +63,10 @@ void GenericTimer::initAsEncoder(const TimerMode mode){
     TIM_Cmd(base, ENABLE);
 }
 
+void GenericTimer::enableSingle(const bool _single){
+    TIM_SelectOnePulseMode(base, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
+}
+
 uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
 	RCC_ClocksTypeDef RCC_CLK;
     RCC_GetClocksFreq(&RCC_CLK);
