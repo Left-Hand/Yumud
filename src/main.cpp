@@ -215,6 +215,8 @@ int main(){
 
     // uart1.init(UART1_Baudrate);
     uart2.init(UART2_Baudrate);
+    adc1.init();
+    Basis_t<real_t> basis1(Vector3_t<real_t>(0, 0, 0), real_t(0.1));
     // uart2.init(576000);
     // can1.init(Can1::BaudRate::Mbps1);
     // i2c1.init(100000);

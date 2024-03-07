@@ -45,7 +45,8 @@
 #include "../types/image/painter.hpp"
 #include "stdlib.h"
 #include "timer/timers/timer1.hpp"
-#include "adc/adc.hpp"
+#include "adc/adcs/adc1.hpp"
+#include "types/basis/Basis_t.hpp"
 extern real_t t;
 
 void GPIO_PortC_Init( void );

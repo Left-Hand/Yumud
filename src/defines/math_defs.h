@@ -78,12 +78,17 @@
 #endif
 
 #ifndef SWAP
-#define SWAP(a, b, type) { \
-    type temp; \
-    temp = (a); \
-    (a) = (b); \
-    (b) = temp; \
-}
+#ifdef __cplusplus
+    #define SWAP(m_x, m_y) __swap_tmpl((m_x), (m_y))
+    template <class T>
+    inline void __swap_tmpl(T &x, T &y) {
+        T aux = x;
+        x = y;
+        y = aux;
+    }
+#else
+    #define SWAP(x,y)   do{typeof(x) t;t=x;x=y;y=t;}while(0)
+#endif
 #endif
 
 #ifndef CLAMP

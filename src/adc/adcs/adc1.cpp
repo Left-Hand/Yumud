@@ -1,5 +1,10 @@
 #include "adc1.hpp"
 
+
+#ifdef HAVE_ADC1
+Adc1 adc1;
+#endif
+
 __interrupt void ADC1_2_IRQHandler(void){
 
     if(ADC_GetITStatus(ADC1,ADC_IT_JEOC)){
@@ -16,3 +21,4 @@ __interrupt void ADC1_2_IRQHandler(void){
         ADC_ClearITPendingBit(ADC1,ADC_IT_EOC);
     }
 }
+

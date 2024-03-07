@@ -9,6 +9,13 @@ public:
     Adc1():AdcPrimary(ADC1){;}
 };
 
+#define HAVE_ADC1
+
+#ifdef HAVE_ADC1
+extern Adc1 adc1;
+#endif
+
+
 extern "C"{
 __interrupt void ADC1_2_IRQHandler(void);
 

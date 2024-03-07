@@ -331,16 +331,16 @@ public:
         int y2 = p2.y;
 
         if (y0 > y1) {
-            SWAP(y0, y1, int);
-            SWAP(x0, x1, int);
+            SWAP(y0, y1);
+            SWAP(x0, x1);
         }
         if (y1 > y2) {
-            SWAP(y2, y1, int);
-            SWAP(x2, x1, int);
+            SWAP(y2, y1);
+            SWAP(x2, x1);
         }
         if (y0 > y1) {
-            SWAP(y0, y1, int);
-            SWAP(x0, x1, int);
+            SWAP(y0, y1);
+            SWAP(x0, x1);
         }
 
         if (y0 == y2) { // Handle awkward all-on-same-line case as its own thing
@@ -373,7 +373,7 @@ public:
             sa += dx01;
             sb += dx02;
 
-            if (a > b) SWAP(a, b, int16_t);
+            if (a > b) SWAP(a, b);
             drawHriLine(Rangei(a, b + 1), y);
         }
 
@@ -385,7 +385,7 @@ public:
             sa += dx12;
             sb += dx02;
 
-            if (a > b) SWAP(a, b, int16_t);
+            if (a > b) SWAP(a, b);
             drawHriLine(Rangei(a, b + 1), y);
         }
     }

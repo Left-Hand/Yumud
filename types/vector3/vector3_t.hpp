@@ -21,6 +21,7 @@ public:
     template<typename U>
     Vector3_t(const U & _x, const U & _y, const U & _z): x(_x), y(_y), z(_z){;}
 
+    T & operator [](const int & index) { return *(&this->x + index); }
     template<typename U>
     Vector3_t& operator=(const Vector3_t<U>& v) {
         x = static_cast<T>(v.x);

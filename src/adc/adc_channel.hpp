@@ -3,6 +3,7 @@
 #define __ADC_CHANNEL_HPP__
 
 #include "src/platform.h"
+#include "analog_channel.hpp"
 #include "adc_enums.h"
 #include "src/gpio/gpio.hpp"
 
@@ -10,7 +11,7 @@ class Adc;
 class AdcPrimary;
 class AdcCompanion;
 
-class AdcChannelOnChip: public AnalogChannel{
+class AdcChannelOnChip{
 
 protected:
     using Channel = AdcChannels;
