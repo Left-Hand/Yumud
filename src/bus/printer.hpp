@@ -20,7 +20,7 @@ enum class SpecToken {
     Tab,
     End,
 
-    Bin, 
+    Bin,
     Oct,
     Dec,
     Hex,
@@ -53,7 +53,7 @@ protected:
 public:
     Printer(Buffer & _buffer):buffer(_buffer){;}
 
-    virtual size_t available(){return buffer.available();}
+    size_t available(){return buffer.available();}
 
     __fast_inline void write(const char & data){_write(data);}
     void write(const char * data_ptr, const size_t & len){_write(data_ptr, len);}

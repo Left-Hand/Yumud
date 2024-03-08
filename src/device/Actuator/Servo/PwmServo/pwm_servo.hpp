@@ -31,11 +31,11 @@ public:
             ):PwmServo(_instance, _min_value_duty, _max_value_duty), angle_range(_angle_range){;}
     void setDuty(const real_t & duty) override{
         if(!enabled) return instance.setDuty(real_t(0));
-        instance.setDuty(LERP(CLAMP(duty, 0, 1), min_value_duty, max_value_duty));
+        instance.setDuty(LERP(CLAMP(duty, real_t(0), real_t(1)), min_value_duty, max_value_duty));
     }
 
     void setAngle(const real_t & angle){
-        setDuty(CLAMP(INVLERP(angle, 0, angle_range), 0, 1));
+        setDuty(CLAMP(INVLERP(angle, real_t(0), angle_range), real_t(0), real_t(1)));
     }
 };
 
@@ -48,7 +48,7 @@ public:
 
     void setDuty(const real_t & duty) override{
         if(!enabled) return instance.setDuty(real_t(0));
-        instance.setDuty(LERP(CLAMP(duty, -1, 1) * 0.5 + 0.5, min_value_duty, max_value_duty));
+        instance.setDuty(LERP(CLAMP(duty, real_t(-1), real_t(1)) * real_t(0.5) + real_t(0.5), min_value_duty, max_value_duty));
     }
 
     void setSpeed(const real_t & rps){

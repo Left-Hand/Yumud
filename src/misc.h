@@ -48,7 +48,7 @@
 #include "timer/pwm_channel.hpp"
 #include "adc/adcs/adc1.hpp"
 #include "device/Actuator/Servo/PwmServo/pwm_servo.hpp"
-#include "device/Actuator/Power/Coil/coil.hpp"
+#include "device/Actuator/Coil/coil.hpp"
 #include "types/basis/Basis_t.hpp"
 #include "types/quat/Quat_t.hpp"
 extern real_t t;

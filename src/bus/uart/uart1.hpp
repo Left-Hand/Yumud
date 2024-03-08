@@ -29,9 +29,12 @@ __fast_inline void Uart1::_write(const char * data_ptr, const size_t & len){
 	}
 }
 
+#ifdef HAVE_UART1
 extern Uart1 uart1;
+#endif
 
-__interrupt
-void USART1_IRQHandler();
 
+extern "C"{
+__interrupt void USART1_IRQHandler();
+}
 #endif

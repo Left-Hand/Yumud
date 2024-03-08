@@ -18,18 +18,36 @@
 
 #define HAVE_I2C1
 
+#define HAVE_UART1
 
-#define UART1_Baudrate (115200 * 4)
+#ifdef HAVE_UART1
+    #define UART1_Baudrate (115200 * 4)
 
-#define UART1_TX_Pin GPIO_Pin_9
-#define UART1_RX_Pin GPIO_Pin_10
-#define UART1_Port GPIOA
+    #define UART1_TX_Port GPIOA
+    #define UART1_TX_Pin GPIO_Pin_9
 
-#define UART2_Baudrate (115200 * 4)
+    #define UART1_RX_Port GPIOA
+    #define UART1_RX_Pin GPIO_Pin_10
 
-#define UART2_TX_Pin GPIO_Pin_2
-#define UART2_RX_Pin GPIO_Pin_4
-#define UART2_Port GPIOA
+    #define UART1_IT_PP 1
+    #define UART1_IT_SP 0
+#endif
+
+#define HAVE_UART2
+
+#ifdef HAVE_UART2
+    #define UART2_Baudrate (115200 * 4)
+
+    #define UART2_TX_Port GPIOA
+    #define UART2_TX_Pin GPIO_Pin_2
+
+    #define UART2_RX_Port GPIOA
+    #define UART2_RX_Pin GPIO_Pin_4
+
+    #define UART2_IT_PP 1
+    #define UART2_IT_SP 1
+#endif
+
 
 #define I2C_SW_PORT GPIOB
 #define I2C_SW_SCL GPIO_Pin_6

@@ -23,13 +23,14 @@ __fast_inline void Uart2::_write(const char & data){
 }
 
 __fast_inline void Uart2::_write(const char * data_ptr, const size_t & len){
-  	for(size_t i=0;i<len;i++){	
+    for(size_t i=0;i<len;i++){
         _write(data_ptr[i]);
-	}	 	
+	}
 }
 
+#ifdef HAVE_UART2
 extern Uart2 uart2;
-
+#endif
 
 extern "C" {
 __interrupt void USART2_IRQHandler();

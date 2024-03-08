@@ -21,11 +21,11 @@ static void UART2_GPIO_Configuration(void){
 	GPIO_InitStructure.GPIO_Pin = UART2_TX_Pin;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-	GPIO_Init(UART2_Port, &GPIO_InitStructure);
+	GPIO_Init(UART2_TX_Port, &GPIO_InitStructure);
 
 	GPIO_InitStructure.GPIO_Pin = UART2_RX_Pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-	GPIO_Init(UART2_Port, &GPIO_InitStructure);
+	GPIO_Init(UART2_RX_Port, &GPIO_InitStructure);
 }
 
 static void UART2_Configuration(uint32_t baudRate){
@@ -55,9 +55,8 @@ void Uart2::init(const uint32_t & baudRate){
     NVIC_Configuration();
 }
 
-#ifndef HAVE_UART2
+#ifdef HAVE_UART2
 Uart2 uart2;
-#define HAVE_UART2
 #endif
 
 __interrupt

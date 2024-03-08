@@ -4,8 +4,8 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 
 
-Gpio i2cScl = Gpio(GPIOB, I2C_SW_SCL);
-Gpio i2cSda = Gpio(GPIOB, I2C_SW_SDA);
+Gpio i2cScl = Gpio(GPIOB, (Gpio::Pin)I2C_SW_SCL);
+Gpio i2cSda = Gpio(GPIOB, (Gpio::Pin)I2C_SW_SDA);
 
 // Gpio i2sSck = Gpio(GPIOB, I2S_SW_SCK);
 // Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
@@ -47,8 +47,6 @@ I2cDrv i2cDrvMt = I2cDrv(i2cSw, 0x0C);
 // QMC5883L earth_sensor(i2cDrvQm);
 // BMP280 prs_sensor(i2cDrvBm);
 // MT6701 mt_sensor(i2cDrvMt);
-
-Gpio blueLed = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
 extern "C" void TimBase_IRQHandler(void) __interrupt;
 
@@ -96,81 +94,6 @@ __fast_inline RGB565 Mandelbrot(const Vector2 & UV){
 constexpr uint16_t pwm_arr = 144000000/12000 - 1;
 constexpr uint16_t ir_arr = 144000000/38000 - 1;
 
-struct MotorPosition{
-    real_t lapPositionHome = real_t(0);
-    real_t lapPosition = real_t(0);
-    real_t lapPositionLast = real_t(0);
-
-    int16_t accTurns = 0;
-    real_t accPosition = real_t(0);
-    // real_t accPositionFixed = real_t(0);
-    real_t accPositionLast = real_t(0);
-
-    real_t vel = real_t(0);
-    real_t accPositionAgo = real_t(0);
-    real_t elecRad = real_t(0);
-    // real_t elecRadFixed = real_t(0);
-}motorPosition;
-real_t readLapPosition(){
-    real_t ret;
-    u16_to_uni((uint16_t)(TIM2->CNT), ret);
-    return ret;
-}
-void updatePosition(){
-    motorPosition.lapPosition = readLapPosition();
-    real_t deltaLapPosition = motorPosition.lapPosition - motorPosition.lapPositionLast;
-
-    if(deltaLapPosition > real_t(0.5f)){
-        motorPosition.accTurns -= 1;
-    }else if (deltaLapPosition < real_t(-0.5f)){
-        motorPosition.accTurns += 1;
-    }
-
-    motorPosition.lapPositionLast = motorPosition.lapPosition;
-    motorPosition.accPositionLast = motorPosition.accPosition;
-    motorPosition.accPosition = real_t(motorPosition.accTurns) + (motorPosition.lapPosition - motorPosition.lapPositionHome);
-}
-void setMotorDuty(const real_t & duty){
-    if(duty >= real_t(0)){
-        uint16_t value = (int)(duty * pwm_arr);
-        TIM4->CH1CVR = value;
-        TIM4->CH2CVR = 0;
-        TIM4->CH3CVR = value / 2;
-    }else{
-        uint16_t value = (int)((-duty) * pwm_arr);
-        TIM4->CH1CVR = 0;
-        TIM4->CH2CVR = value;
-        TIM4->CH3CVR = value / 2;
-    }
-}
-
-void setABCoilDuty(const real_t & aduty, const real_t & bduty){
-    if(aduty >= real_t(0)){
-        uint16_t value = (int)(aduty * pwm_arr);
-        TIM4->CH1CVR = value;
-        TIM4->CH2CVR = 0;
-    }else{
-        uint16_t value = (int)((-aduty) * pwm_arr);
-        TIM4->CH1CVR = 0;
-        TIM4->CH2CVR = value;
-    }
-
-    if(bduty >= real_t(0)){
-        uint16_t value = (int)(bduty * pwm_arr);
-        TIM4->CH3CVR = value;
-        TIM4->CH4CVR = 0;
-    }else{
-        uint16_t value = (int)((-bduty) * pwm_arr);
-        TIM4->CH3CVR = 0;
-        TIM4->CH4CVR = value;
-    }
-}
-
-
-void setIrState(const bool on){
-    TIM3->CH1CVR = on ? (ir_arr / 3) : 0;
-}
-
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
@@ -179,7 +102,8 @@ int main(){
     Systick_Init();
 
     GPIO_PortC_Init();
-    Gpio Led = Gpio(GPIOC, GPIO_Pin_13);
+
+    Gpio Led = Gpio(GPIOC, (Gpio::Pin)GPIO_Pin_13);
     Led.OutPP();
 
     timer1.init(10000, 288);
@@ -195,7 +119,6 @@ int main(){
 
     auto tim1ch3 = timer1.getChannel(TimerOC::Channel::CH3);
     tim1ch3.init();
-    tim1ch3.setPolarity(true);
 
     auto tim1ch4 = timer1.getChannel(TimerOC::Channel::CH4);
     tim1ch4.init();
@@ -221,6 +144,7 @@ int main(){
     servoX.init();
     servoX.setAngle(real_t(0));
 
+
     auto servoY = Servo180(pwmServoY);
     servoY.init();
     servoY.setAngle(real_t(0));
@@ -236,8 +160,7 @@ int main(){
         real_t dutyY = 0.5 + 0.5 * sin(t);
         servoY.setDuty(dutyY);
         servoX.setDuty(dutyX);
-        // delay(100);
-        uart2.println(TIM1->CH1CVR, TIM1->CH2CVR);
+        delay(100);
         reCalculateTime();
     }
     // tim1ch2.init();

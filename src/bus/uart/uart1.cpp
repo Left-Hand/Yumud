@@ -19,11 +19,11 @@ static void UART1_GPIO_Configuration(void){
     GPIO_InitStructure.GPIO_Pin = UART1_TX_Pin;
     GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_Init(UART1_Port, &GPIO_InitStructure);
+    GPIO_Init(UART1_TX_Port, &GPIO_InitStructure);
 
     GPIO_InitStructure.GPIO_Pin = UART1_RX_Pin;
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPD;
-    GPIO_Init(UART1_Port, &GPIO_InitStructure);
+    GPIO_Init(UART1_TX_Port, &GPIO_InitStructure);
 }
 
 static void UART1_Configuration(uint32_t baudRate){
@@ -58,9 +58,8 @@ void Uart1::setBaudRate(const uint32_t & baudRate){
 }
 
 
-#ifndef HAVE_UART1
+#ifdef HAVE_UART1
 Uart1 uart1;
-#define HAVE_UART1
 #endif
 
 __interrupt

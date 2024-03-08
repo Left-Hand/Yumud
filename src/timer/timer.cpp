@@ -106,7 +106,7 @@ uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
     RCC_GetClocksFreq(&RCC_CLK);
 	uint64_t busFreq = RCC_CLK.PCLK2_Frequency;
 
-    uint8_t dead = (ns * busFreq / 1E9);
+    uint8_t dead = (ns * busFreq / 1000000000);
     uint8_t head = 0;
     uint8_t mask = 0xff;
 

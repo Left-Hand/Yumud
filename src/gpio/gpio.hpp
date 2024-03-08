@@ -18,7 +18,7 @@ public:
     virtual bool read() const = 0;
 
     virtual GpioBase & operator = (const bool _val) = 0;
-    operator bool(){return(this->read());}
+    operator bool() const {return(this->read());}
 
     virtual void OutPP() = 0;
     virtual void OutOD() = 0;
@@ -28,50 +28,75 @@ public:
     virtual void InFloating() = 0;
     virtual void InPullUP() = 0;
     virtual void InPullDN() = 0;
+
+    virtual bool isValid() const = 0;
 };
 
 class Gpio:public GpioBase{
+public:
+    enum Pin{
+        None,
+        Pin0 = 1,
+        Pin1 = Pin0 << 1,
+        Pin2 = Pin1 << 1,
+        Pin3 = Pin2 << 1,
+        Pin4 = Pin3 << 1,
+        Pin5 = Pin4 << 1,
+        Pin6 = Pin5 << 1,
+        Pin7 = Pin6 << 1,
+        Pin8 = Pin7 << 1,
+        Pin9 = Pin8 << 1,
+        Pin10 = Pin9 << 1,
+        Pin11 = Pin10 << 1,
+        Pin12 = Pin11 << 1,
+        Pin13 = Pin12 << 1,
+        Pin14 = Pin13 << 1,
+        Pin15 = Pin14 << 1
+    };
 protected:
-    volatile GPIO_TypeDef* base = GPIOA;
-    uint16_t pin = 0;
-    uint8_t pin_index = 0;
+    volatile GPIO_TypeDef* instance = GPIOA;
+    const Pin pin = None;
+    int8_t pin_index = 0;
     uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;
 
     __fast_inline void reConfig(const uint8_t cfg){
+        if(!isValid()) return;
         uint32_t tempreg = pin_cfg;
         tempreg &= pin_mask;
         tempreg |= (cfg << ((pin_index % 8) * 4));
         pin_cfg = tempreg;
     }
 public:
-    Gpio(GPIO_TypeDef* _base,const uint16_t & _pin):
-        base(_base),
-        pin(((_base == GPIOC) && MCU_V) ? (_pin >> 13) : _pin),
-        pin_index(__builtin_ctz(pin)),
+    Gpio(GPIO_TypeDef * _instance,const Pin _pin):
+        instance(_instance),
+        pin(((_instance == GPIOC) && MCU_V) ? ((Pin)((uint16_t)_pin >> 13)) : _pin),
+        pin_index(__builtin_ctz((uint16_t)pin)),
         pin_mask(~(0xf << ((pin_index % 8) * 4))),
-        pin_cfg(pin_index >= 8 ? ((base -> CFGHR)) : ((base -> CFGLR))){;}
+        pin_cfg(pin_index >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){;}
 
     ~Gpio(){};
 
-    __fast_inline void set()override{base->BSHR = pin;}
-    __fast_inline void clr()override{base->BCR = pin;}
-    __fast_inline void write(const bool & val)override{(val) ? base->BSHR = pin : base->BCR = pin;}
-    __fast_inline bool read() const override{return (bool)(base->INDR & pin);}
-    __fast_inline Gpio & operator = (const bool _val) override {(_val) ? base->BSHR = pin : base->BCR = pin; return *this;}
-    __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? base->BSHR = pin : base->BCR = pin; return *this;}
+    __fast_inline void set()override{instance->BSHR = pin;}
+    __fast_inline void clr()override{instance->BCR = pin;}
+    __fast_inline void write(const bool & val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
+    __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
+    __fast_inline Gpio & operator = (const bool _val) override {(_val) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
+    __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
     __fast_inline void OutPP() override {reConfig(0b0011);}
     __fast_inline void OutOD() override {reConfig(0b0111);}
     __fast_inline void OutAfPP() override {reConfig(0b1011);}
     __fast_inline void OutAfOD() override {reConfig(0b1111);}
     __fast_inline void InAnalog() override {reConfig(0b0000);}
     __fast_inline void InFloating() override {reConfig(0b0100);}
-    __fast_inline void InPullUP() override {reConfig(0b1000); base -> OUTDR |= pin;}
-    __fast_inline void InPullDN() override {reConfig(0b1100); base -> OUTDR &= ~pin;}
+    __fast_inline void InPullUP() override {reConfig(0b1000); instance -> OUTDR |= pin;}
+    __fast_inline void InPullDN() override {reConfig(0b1100); instance -> OUTDR &= ~pin;}
+
+    bool isValid() const {return pin != None;}
 };
 
 
-class GpioImag:public GpioBase{
+class GpioVirtual:public GpioBase{
 private:
     typedef void (*WriteCallback)(uint16_t, bool);
     typedef bool (*ReadCallback)(uint16_t);
@@ -83,7 +108,7 @@ private:
     ReadCallback read_callback;
     DirCallback dir_callback;
 public:
-    GpioImag(const uint16_t & _index, WriteCallback _write_callback = nullptr, 
+    GpioVirtual(const uint16_t & _index, WriteCallback _write_callback = nullptr, 
         ReadCallback _read_callback = nullptr,DirCallback _dir_callback = nullptr)
         : index(_index), write_callback(_write_callback), read_callback(_read_callback), dir_callback(_dir_callback){;}
 
@@ -92,8 +117,8 @@ public:
     void write(const bool & val){if(write_callback) write_callback(index, val);}
     bool read() const override {return read_callback ? read_callback(index) : false;}
 
-    GpioImag & operator = (const bool _val) override {write(_val); return *this;}
-    GpioImag & operator = (GpioImag & other) {write(other.read()); return *this;}
+    GpioVirtual & operator = (const bool _val) override {write(_val); return *this;}
+    GpioVirtual & operator = (GpioVirtual & other) {write(other.read()); return *this;}
 
     void OutPP() override {if(dir_callback) dir_callback(index, true);}
     void OutOD() override {if(dir_callback) dir_callback(index, true);}
