@@ -43,10 +43,10 @@ I2cDrv i2cDrvMt = I2cDrv(i2cSw, 0x0C);
 // TM8211 extern_dac(i2sDrvTm);
 // W25QXX extern_flash(spiDrvFlash);
 // MA730 mag_sensor(spiDrvMagSensor);
-AS5600 mag_sensor(i2cDrvAS);
-QMC5883L earth_sensor(i2cDrvQm);
-BMP280 prs_sensor(i2cDrvBm);
-MT6701 mt_sensor(i2cDrvMt);
+// AS5600 mag_sensor(i2cDrvAS);
+// QMC5883L earth_sensor(i2cDrvQm);
+// BMP280 prs_sensor(i2cDrvBm);
+// MT6701 mt_sensor(i2cDrvMt);
 
 Gpio blueLed = Gpio(BUILTIN_LED_PORT, BUILTIN_RedLED_PIN);
 
@@ -171,7 +171,6 @@ void setIrState(const bool on){
     TIM3->CH1CVR = on ? (ir_arr / 3) : 0;
 }
 
-
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
@@ -183,25 +182,68 @@ int main(){
     Gpio Led = Gpio(GPIOC, GPIO_Pin_13);
     Led.OutPP();
 
-    timer1.init(pwm_arr);
-
+    timer1.init(10000, 288);
 
     auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
     tim1ch1.init();
 
-    tim1ch1 = int(pwm_arr * 0.4);
-
-
-    auto tim1ch2 = timer1.getChannel(TimerOC::Channel::CH2);
-
-    tim1ch2.init();
-    tim1ch2 = int(pwm_arr * 0.8);
-
     auto tim1ch1n = timer1.getChannel(TimerOC::Channel::CH1N);
     tim1ch1n.init();
 
-    timer1.initBdtr(AdvancedTimer::LockLevel::High);
+    auto tim1ch2 = timer1.getChannel(TimerOC::Channel::CH2);
+    tim1ch2.init();
+
+    auto tim1ch3 = timer1.getChannel(TimerOC::Channel::CH3);
+    tim1ch3.init();
+    tim1ch3.setPolarity(true);
+
+    auto tim1ch4 = timer1.getChannel(TimerOC::Channel::CH4);
+    tim1ch4.init();
+
+
+    timer1.initBdtr(AdvancedTimer::LockLevel::Off, 0);
     timer1.enable();
+
+    auto pwmServoX = PwmChannel(tim1ch1);
+    pwmServoX.init();
+
+    auto pwmServoY = PwmChannel(tim1ch2);
+    pwmServoY.init();
+
+    auto pwmCoilP = PwmChannel(tim1ch3);
+    pwmCoilP.init();
+
+    auto pwmCoilN = PwmChannel(tim1ch4);
+    pwmCoilN.init();
+
+
+    auto servoX = Servo180(pwmServoX);
+    servoX.init();
+    servoX.setAngle(real_t(0));
+
+    auto servoY = Servo180(pwmServoY);
+    servoY.init();
+    servoY.setAngle(real_t(0));
+
+    auto coil = Coil(pwmCoilP, pwmCoilN);
+    coil.init();
+    coil.setDuty(real_t(-0.4));
+
+    uart2.init(UART2_Baudrate);
+
+    while(true){
+        real_t dutyX = 0.5 + 0.5 * cos(t);
+        real_t dutyY = 0.5 + 0.5 * sin(t);
+        servoY.setDuty(dutyY);
+        servoX.setDuty(dutyX);
+        // delay(100);
+        uart2.println(TIM1->CH1CVR, TIM1->CH2CVR);
+        reCalculateTime();
+    }
+    // tim1ch2.init();
+    // tim1ch2 = real_t(0.8);
+
+
     // TIM2_GPIO_Init();
     // TIM_Encoder_Init(TIM2);
 
@@ -214,9 +256,9 @@ int main(){
     // ADC1_Init();
 
     // uart1.init(UART1_Baudrate);
-    uart2.init(UART2_Baudrate);
-    adc1.init();
-    Basis_t<real_t> basis1(Vector3_t<real_t>(0, 0, 0), real_t(0.1));
+
+    // adc1.init();
+    // Basis_t<real_t> basis1(Vector3_t<real_t>(0, 0, 0), real_t(0.1));
     // uart2.init(576000);
     // can1.init(Can1::BaudRate::Mbps1);
     // i2c1.init(100000);
@@ -224,38 +266,38 @@ int main(){
     // i2cSw.
     // mag_sensor.init();
     // earth_sensor.init();
-    prs_sensor.init();
-    mt_sensor.init();
+    // prs_sensor.init();
+    // mt_sensor.init();
 
-    Gpio sckPin(GPIOB, GPIO_Pin_4);
-    Gpio sdoPin(GPIOB, GPIO_Pin_5);
+    // Gpio sckPin(GPIOB, GPIO_Pin_4);
+    // Gpio sdoPin(GPIOB, GPIO_Pin_5);
 
 
-    HX711 hx711(sckPin, sdoPin);
-    hx711.init();
-    hx711.setConvType(HX711::ConvType::A128);
-    while(true){
-        while(!hx711.isIdle());
-        Led = !Led;
-        uint32_t weight = 0;
-        hx711.getWeightData(weight);
-        uart2.println(weight);
-    }
-    while(true){
-        uart2.println(mt_sensor.getRawPosition());
-        delay(20);
-        Led = !Led;
-    }
+    // HX711 hx711(sckPin, sdoPin);
+    // hx711.init();
+    // hx711.setConvType(HX711::ConvType::A128);
+    // while(true){
+    //     while(!hx711.isIdle());
+    //     Led = !Led;
+    //     uint32_t weight = 0;
+    //     hx711.getWeightData(weight);
+    //     uart2.println(weight);
+    // }
+    // while(true){
+    //     uart2.println(mt_sensor.getRawPosition());
+    //     delay(20);
+    //     Led = !Led;
+    // }
 
-    while(true){
-        while(!prs_sensor.isIdle());
-        // delay(2);
-        int32_t prs = 0;
-        prs_sensor.getPressure(prs);
-        real_t(8.0);
-        uart2.println(prs);
-        // delay(10);
-    }
+    // while(true){
+    //     while(!prs_sensor.isIdle());
+    //     // delay(2);
+    //     int32_t prs = 0;
+    //     prs_sensor.getPressure(prs);
+    //     real_t(8.0);
+    //     uart2.println(prs);
+    //     // delay(10);
+    // }
     // while(true){
     //     while(!earth_sensor.isIdle());
     //     delay(2);
@@ -386,8 +428,8 @@ int main(){
         //     // uart2.println(can1.available());
         //     // delay(20);
         // }
-        uart2.println(mag_sensor.getRawAngle(), mag_sensor.getMagnitude(), mag_sensor.getMagStatus());
-        Led = !Led;
+        // uart2.println(mag_sensor.getRawAngle(), mag_sensor.getMagnitude(), mag_sensor.getMagStatus());
+        // Led = !Led;
         // updatePosition();
         // real_t pos = motorPosition.accPosition * 10;
         // static PID pos_pid = PID(real_t(10), real_t(0), real_t(0));

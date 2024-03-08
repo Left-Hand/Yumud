@@ -5,20 +5,20 @@ volatile uint16_t & TimerOC::from_channel_to_cvr(const Channel _channel){
         default:
         case Channel::CH1:
         case Channel::CH1N:
-            return (base->CH1CVR);
+            return (instance->CH1CVR);
         case Channel::CH2:
         case Channel::CH2N:
-            return (base->CH2CVR);
+            return (instance->CH2CVR);
         case Channel::CH3:
         case Channel::CH3N:
-            return (base->CH3CVR);
+            return (instance->CH3CVR);
         case Channel::CH4:
-            return (base->CH4CVR);
+            return (instance->CH4CVR);
     }
 }
 
 
-TimerOC::TimerOC(TIM_TypeDef * _base, const Channel _channel):base(_base), cvr(from_channel_to_cvr(_channel)), channel(_channel){
+TimerOC::TimerOC(TIM_TypeDef * _base, const Channel _channel):instance(_base), cvr(from_channel_to_cvr(_channel)), channel(_channel){
     ;
 }
 
@@ -38,43 +38,45 @@ void TimerOC::init(const bool install, const Mode mode){
         default:
             break;
         case Channel::CH1:
-            TIM_OC1Init(base,&TIM_OCInitStructure);
+            TIM_OC1Init(instance,&TIM_OCInitStructure);
         case Channel::CH2:
-            TIM_OC2Init(base,&TIM_OCInitStructure);
+            TIM_OC2Init(instance,&TIM_OCInitStructure);
         case Channel::CH3:
-            TIM_OC3Init(base,&TIM_OCInitStructure);
+            TIM_OC3Init(instance,&TIM_OCInitStructure);
         case Channel::CH4:
-            TIM_OC4Init(base,&TIM_OCInitStructure);
+            TIM_OC4Init(instance,&TIM_OCInitStructure);
     }
 
+    setPolarity(true);
+    setSync(false);
     if(install){
         installToPin();
     }
 }
 
 void TimerOC::enable(const bool en){
-    if(en) base->CCER |= 1 << ((uint8_t)channel * 2);
-    else base->CCER &= ~(1 << ((uint8_t)channel) * 2);
+    if(en) instance->CCER |= 1 << ((uint8_t)channel * 2);
+    else instance->CCER &= ~(1 << ((uint8_t)channel) * 2);
 }
 
 
 void TimerOC::setPolarity(const bool pol){
-    if(!pol) base->CCER |= 0b1 << ((uint8_t)channel * 2 + 1);
-    else base->CCER &= ~(0b1 << (((uint8_t)channel) * 2 + 1));
+    if(!pol) instance->CCER |= 1 << ((uint8_t)channel * 2 + 1);
+    else instance->CCER &= ~(1 << (((uint8_t)channel) * 2 + 1));
 }
 
-void TimerOC::configSync(const bool _sync){
-    TIM_ARRPreloadConfig(base, (FunctionalState)_sync);
+void TimerOC::setSync(const bool _sync){
+    TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);
 }
 
 void TimerOC::setIdleState(const bool state){
-    
+
 }
 
 void TimerOC::installToPin(const bool en){
     GPIO_TypeDef * gpio_port;
     uint16_t gpio_pin = 0;
-    switch((uint32_t)base){
+    switch((uint32_t)instance){
     default:
     case TIM1_BASE:
         switch(channel){

@@ -17,7 +17,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "ch32v20x.h"
+#include "src/platform.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,15 +31,6 @@ extern int tick_per_us;
 
 #define MicroTrim 0
 #define NanoTrim 300
-
-#ifndef MAX
-#define MAX(x,y) ((x > y)? x : y)
-#endif
-
-#ifndef MIN
-#define MIN(x,y) ((x < y) ? x : y)
-#endif
-
 
 __attribute__ ((weak)) uint32_t GetTick(void);
 uint32_t millis(void);
@@ -65,13 +56,13 @@ static inline void delayMicroseconds(uint32_t us)
     currentTicks = SysTick->CNT;
     // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :
     //                 oldTicks - currentTicks;
-    
+
     //increment
     elapsedTicks += (oldTicks <= currentTicks) ? currentTicks - oldTicks :
-                     tickPerMs - oldTicks + currentTicks;
+                    tickPerMs - oldTicks + currentTicks;
 
     oldTicks = currentTicks;
-  } while (nbTicks > elapsedTicks);  
+    } while (nbTicks > elapsedTicks);
 }
 
 static inline void delayNanoseconds(uint32_t) __attribute__((always_inline, unused));
@@ -88,13 +79,13 @@ static inline void delayNanoseconds(uint32_t ns) {
         currentTicks = SysTick->CNT;
         // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :
         //                 oldTicks - currentTicks;
-        
+
         //increment
         elapsedTicks += (oldTicks <= currentTicks) ? currentTicks - oldTicks :
                         tickPerMs - oldTicks + currentTicks;
 
         oldTicks = currentTicks;
-    } while (nbTicks > elapsedTicks);  
+    } while (nbTicks > elapsedTicks);
 }
 
 #ifdef __cplusplus

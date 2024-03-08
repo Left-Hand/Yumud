@@ -20,17 +20,19 @@ public:
 
 class BasicTimer:public Timer{
 protected:
-    TIM_TypeDef * base;
+    TIM_TypeDef * instance;
 public:
-    BasicTimer(TIM_TypeDef * _base):base(_base){;}
-    void init(const uint16_t arr, const uint16_t psc = 0, const TimerMode mode = TimerMode::Up);
+    BasicTimer(TIM_TypeDef * _base):instance(_base){;}
+
+    void init(const uint32_t ferq, const TimerMode mode = TimerMode::Up);
+    void init(const uint16_t period, const uint16_t cycle, const TimerMode mode = TimerMode::Up);
     void enable(const bool en = true);
 
-    void enableIT(const uint16_t _it,const bool en = true){TIM_ITConfig(base, _it, (FunctionalState)en);}
-    void enableSync(const bool _sync = true){TIM_ARRPreloadConfig(base, (FunctionalState)_sync);}
+    void enableIT(const uint16_t _it,const bool en = true){TIM_ITConfig(instance, _it, (FunctionalState)en);}
+    void enableSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
 
-    BasicTimer & operator = (const uint16_t _val) override {base->CNT = _val;return *this;}
-    operator uint16_t() const {return base->CNT;}
+    BasicTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
+    operator uint16_t() const {return instance->CNT;}
 };
 
 class GenericTimer:public BasicTimer{
@@ -38,8 +40,8 @@ public:
     GenericTimer(TIM_TypeDef * _base):BasicTimer(_base){;}
     void initAsEncoder(const TimerMode mode = TimerMode::Up);
     void enableSingle(const bool _single = true);
-    TimerOC getChannel(const TimerOC::Channel ch){return TimerOC(base, ch);}
-    GenericTimer & operator = (const uint16_t _val) override {base->CNT = _val;return *this;}
+    TimerOC getChannel(const TimerOC::Channel ch){return TimerOC(instance, ch);}
+    GenericTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
 };
 
 class AdvancedTimer:public GenericTimer{
@@ -58,7 +60,7 @@ public:
     void initBdtr(const LockLevel level = LockLevel::Off, const uint32_t ns = 200);
     void setDeadZone(const uint32_t ns);
     AdvancedTimer(TIM_TypeDef * _base):GenericTimer(_base){;}
-    AdvancedTimer & operator = (const uint16_t _val) override {base->CNT = _val;return *this;}
+    AdvancedTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
 };
 
 #endif

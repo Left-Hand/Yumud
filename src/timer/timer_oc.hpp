@@ -21,7 +21,7 @@ public:
     };
 
 protected:
-    TIM_TypeDef * base;
+    TIM_TypeDef * instance;
     volatile uint16_t & cvr;
 
     const Channel channel;
@@ -35,20 +35,17 @@ public:
 
     void enable(const bool en = true);
 
-    void configSync(const bool _sync);
+    void setSync(const bool _sync);
     void setPolarity(const bool pol);
     void setIdleState(const bool state);
 
-    void setDuty(const real_t & duty){
-        *this = (uint16_t)(int)(duty * base->CNT);
-    }
-
+    __fast_inline uint16_t getPreloadData(){return instance->ATRLR;}
 
     void installToPin(const bool en = true);
 
-    TimerOC & operator = (const int _val){cvr = _val;return *this;}
-    operator int(){return cvr;}
-    TimerOC & operator = (const bool en){enable(en); return *this;}
+    __fast_inline TimerOC & operator = (const int _val){cvr = _val;return *this;}
+    __fast_inline operator int(){return cvr;}
+    // TimerOC & operator = (const bool en){enable(en); return *this;}
 
 };
 #endif

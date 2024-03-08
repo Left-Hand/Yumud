@@ -1,49 +1,83 @@
 #include "timer.hpp"
 
-static void TIM_RCC_ON(TIM_TypeDef * base){
-    if (base == TIM1) {
+static void TIM_RCC_ON(TIM_TypeDef * instance){
+    if (instance == TIM1) {
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
-    } else if (base == TIM2) {
+    } else if (instance == TIM2) {
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-    } else if (base == TIM3) {
+    } else if (instance == TIM3) {
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-    } else if (base == TIM4){
+    } else if (instance == TIM4){
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
     }
 }
 
+static uint32_t TIM_Get_BusFreq(TIM_TypeDef * instance){
+    bool isAbp2 = false;
+    switch(uint32_t(instance)){
+        default:
+        case TIM1_BASE:
+            isAbp2 = true;
+            break;
+        case TIM2_BASE:
+        case TIM3_BASE:
+        case TIM4_BASE:
+            break;
+    }
 
-void BasicTimer::init(const uint16_t arr, const uint16_t psc, const TimerMode mode){
-    TIM_RCC_ON(base);
+    RCC_ClocksTypeDef clock;
+    RCC_GetClocksFreq(&clock);
+    if (isAbp2) {
+        return clock.PCLK2_Frequency;
+    } else {
+        return clock.PCLK1_Frequency;
+    }
+}
+
+
+void BasicTimer::init(const uint32_t ferq, const TimerMode mode){
+    uint32_t raw_period = TIM_Get_BusFreq(instance) / ferq;
+    uint16_t cycle = 1;
+    while(raw_period / cycle > 65535){
+        cycle++;
+    }
+    init(raw_period / cycle, cycle, mode);
+}
+
+void BasicTimer::init(const uint16_t period, const uint16_t cycle, const TimerMode mode){
+    TIM_RCC_ON(instance);
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
 
-    TIM_TimeBaseStructure.TIM_Period = arr;
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
+    TIM_TimeBaseStructure.TIM_Period = period - 1;
+    TIM_TimeBaseStructure.TIM_Prescaler = cycle - 1;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
-    TIM_TimeBaseInit(base,&TIM_TimeBaseStructure);
+    TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
 }
+
+
+
 void BasicTimer::enable(const bool en){
     if(en){
-        TIM_Cmd(base, ENABLE);
-        if(base == TIM1){
+        TIM_Cmd(instance, ENABLE);
+        if(instance == TIM1){
             TIM_CtrlPWMOutputs(TIM1, ENABLE);
         }
     }else{
-        TIM_Cmd(base, DISABLE);
+        TIM_Cmd(instance, DISABLE);
     }
 }
 
 void GenericTimer::initAsEncoder(const TimerMode mode){
-    TIM_RCC_ON(base);
+    TIM_RCC_ON(instance);
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
     TIM_TimeBaseStructure.TIM_Period = 65535;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
-    TIM_TimeBaseInit(base,&TIM_TimeBaseStructure);
+    TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
 
 	TIM_ICInitTypeDef TIM_ICInitStruct;
     TIM_ICStructInit(&TIM_ICInitStruct);
@@ -52,19 +86,19 @@ void GenericTimer::initAsEncoder(const TimerMode mode){
 	TIM_ICInitStruct.TIM_ICFilter = 0xF;
 
 
-	TIM_ICInit(base,&TIM_ICInitStruct);
+	TIM_ICInit(instance,&TIM_ICInitStruct);
 
 	TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;
 
-	TIM_ICInit(base,&TIM_ICInitStruct);
+	TIM_ICInit(instance,&TIM_ICInitStruct);
 
-	TIM_EncoderInterfaceConfig(base,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
+	TIM_EncoderInterfaceConfig(instance,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
 
-    TIM_Cmd(base, ENABLE);
+    TIM_Cmd(instance, ENABLE);
 }
 
 void GenericTimer::enableSingle(const bool _single){
-    TIM_SelectOnePulseMode(base, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
+    TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
 }
 
 uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
@@ -118,14 +152,14 @@ void AdvancedTimer::initBdtr(const LockLevel level, const uint32_t ns){
     TIM_BDTRInitStructure.TIM_Break = TIM_Break_Disable;
     TIM_BDTRInitStructure.TIM_BreakPolarity = TIM_BreakPolarity_Low;
     TIM_BDTRInitStructure.TIM_AutomaticOutput = TIM_AutomaticOutput_Enable;
-    TIM_BDTRConfig(base, &TIM_BDTRInitStructure);
+    TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
 void AdvancedTimer::setDeadZone(const uint32_t ns){
     uint8_t dead = caculate_dead_zone(ns);
 
-    uint16_t tempreg = base->BDTR;
+    uint16_t tempreg = instance->BDTR;
     tempreg &= 0xff00;
     tempreg |= dead;
-    base->BDTR = tempreg;
+    instance->BDTR = tempreg;
 }

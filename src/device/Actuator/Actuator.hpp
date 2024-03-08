@@ -2,41 +2,29 @@
 
 #define __ACTUATOR_HPP__
 
+#include "src/timer/pwm_channel.hpp"
 #include "real.hpp"
-#include "functional"
 
 class Actuator{
-protected:
-    std::function<void (real_t)> speed_setter;
-    std::function<real_t> speed_getter;
-    std::function<void(real_t)> position_setter;
-    std::function<real_t()> position_getter;
-
-    Actuator(
-            std::function<void (real_t)> _speed_setter,
-            std::function<real_t> _speed_getter,
-            std::function<void(real_t)> _position_setter,
-            std::function<real_t()> _position_getter):
-            speed_setter(_speed_setter),
-            speed_getter(_speed_getter),
-            position_setter(_position_setter),
-            position_getter(_position_getter){;}
 public:
-    void setSpeed(real_t speed){
-        if(speed_setter) speed_setter(speed);
-    }
+    virtual void init() = 0;
+    virtual void enable(const bool en = true) = 0;
+    virtual void setDuty(const real_t & duty) = 0;
+};
 
-    real_t getSpeed(){
-        return speed_getter();
-    }
 
-    void setPosition(real_t position){
-        if(position_setter) position_setter(position);
-    }
+class Servo:public Actuator{
+public:
 
-    real_t getPosition(){
-        return position_getter();
-    }
+};
+
+class ServoOpenLoop:public Servo{
+
+};
+
+class ServoCloseLoop:public Servo{
+public:
+    virtual const real_t getAngle();
 };
 
 #endif

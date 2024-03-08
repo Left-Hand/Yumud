@@ -2,6 +2,8 @@
 
 #define __MATH_DEFS_H__
 
+#include "sys_defs.h"
+
 #define CMP_EPSILON 0.00001
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
 
@@ -50,11 +52,29 @@
 
 
 #ifndef MAX
-#define MAX(x,y) ((x > y)? x : y)
+#ifdef __cplusplus
+    #define MAX(a,b) __max_tmpl(a,b)
+    template <typename T, typename U>
+    __fast_inline T __max_tmpl(const T & a, const U & _b){
+        T b = static_cast<T>(_b);
+        return (a > b) ? a : b;
+    }
+#else
+    #define MAX(x,y) ((x > y) ? x : y)
+#endif
 #endif
 
 #ifndef MIN
-#define MIN(x,y) ((x < y) ? x : y)
+#ifdef __cplusplus
+    #define MIN(a,b) __min_tmpl(a,b)
+    template <typename T, typename U>
+    __fast_inline T __min_tmpl(const T & a, const U & _b){
+        T b = static_cast<T>(_b);
+        return (a < b) ? a : b;
+    }
+#else
+    #define MIN(x,y) ((x < y) ? x : y)
+#endif
 #endif
 
 #ifndef ABS
@@ -81,13 +101,42 @@
 #ifdef __cplusplus
     #define SWAP(m_x, m_y) __swap_tmpl((m_x), (m_y))
     template <class T>
-    inline void __swap_tmpl(T &x, T &y) {
+    __fast_inline void __swap_tmpl(T &x, T &y) {
         T aux = x;
         x = y;
         y = aux;
     }
 #else
     #define SWAP(x,y)   do{typeof(x) t;t=x;x=y;y=t;}while(0)
+#endif
+#endif
+
+#ifndef LERP
+#ifdef __cplusplus
+    #define LERP(x,a,b) __lerp_tmpl(x,a,b)
+    template <typename T, typename U, typename V>
+    // template <typename U>
+    __fast_inline T __lerp_tmpl(const T & x, const U & _a, const V & _b){
+        T a = static_cast<T>(_a);
+        T b = static_cast<T>(_b);
+        return a * (T(1) - x) + b * x;
+    }
+#else
+#define LERP(x,a,b) (a * (1 - x) + b * x)
+#endif
+#endif
+
+#ifndef INVLERP
+#ifdef __cplusplus
+    #define INVLERP(x,a,b) __invlerp_tmpl(x,a,b)
+    template <typename T, typename U, typename V>
+    __fast_inline T __invlerp_tmpl(const T& t, const U & _a, const V & _b){
+        T a = static_cast<T>(_a);
+        T b = static_cast<T>(_b);
+        return (t - a) / (b - a);
+    }
+#else
+    #define INVLERP(x,a,b) ((x - a) / (b - a))
 #endif
 #endif
 

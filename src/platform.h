@@ -3,7 +3,6 @@
 #define __PLATFORM_H__
 
 #include "defines/math_defs.h"
-#include "clock/clock.h"
 #include "defines/sys_defs.h"
 #include "defines/user_defs.h"
 
