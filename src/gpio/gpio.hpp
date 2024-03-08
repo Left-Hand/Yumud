@@ -55,7 +55,7 @@ public:
     };
 protected:
     volatile GPIO_TypeDef* instance = GPIOA;
-    const Pin pin = None;
+    const Pin pin;
     int8_t pin_index = 0;
     uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;

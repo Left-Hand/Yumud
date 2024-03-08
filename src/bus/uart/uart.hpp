@@ -27,8 +27,8 @@ class UartHw:public Uart{
 protected:
     USART_TypeDef * instance;
 
-    Gpio getTxPin(const Mode mode);
-    Gpio getRxPin(const Mode mode);
+    Gpio getTxPin(USART_TypeDef * _instance, const Mode mode);
+    Gpio getRxPin(USART_TypeDef * _instance, const Mode mode);
 
     void _write(const char * data_ptr, const size_t & len){
         for(size_t i=0;i<len;i++) _write(data_ptr[i]);
@@ -41,7 +41,7 @@ protected:
     }
 
 public:
-    UartHw(USART_TypeDef * _instance, const Mode _mode):Uart(getTxPin(_mode), getRxPin(_mode)), instance(_instance){;}
+    UartHw(USART_TypeDef * _instance, const Mode _mode):Uart(getTxPin(_instance,_mode), getRxPin(_instance, _mode)), instance(_instance){;}
 
     void init(const uint32_t & baudRate);
 

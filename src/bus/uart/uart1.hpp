@@ -2,39 +2,21 @@
 
 #define __UART1_HW_HPP__
 
-#include "../printer.hpp"
-#include "../../types/buffer/ringbuf/ringbuf_t.hpp"
-#include "src/comm_inc.h"
+#include "uart.hpp"
 
-class Uart1:public Printer{
-    __fast_inline void _write(const char & data) override;
-    __fast_inline void _write(const char * data_ptr, const size_t & len) override;
+class Uart1 : public UartHw{
 public:
-    RingBuf ringBuf;
-    Uart1():Printer(ringBuf){;}
-
-    void init(const uint32_t & baudRate);
-    void setBaudRate(const uint32_t & baudRate);
+    Uart1(const Mode _mode = Mode::TxRx):UartHw(USART1, _mode){;}
 };
 
-__fast_inline void Uart1::_write(const char & data){
-    while((USART1->STATR & USART_FLAG_TXE) == RESET);
-    USART1->DATAR = data;
-    while((USART1->STATR & USART_FLAG_TC) == RESET);
-}
-
-__fast_inline void Uart1::_write(const char * data_ptr, const size_t & len){
-    for(size_t i=0;i<len;i++){
-        _write(data_ptr[i]);
-	}
-}
 
 #ifdef HAVE_UART1
 extern Uart1 uart1;
-#endif
 
-
-extern "C"{
+extern "C" {
 __interrupt void USART1_IRQHandler();
 }
+
+#endif
+
 #endif

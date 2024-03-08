@@ -160,8 +160,9 @@ int main(){
         real_t dutyY = 0.5 + 0.5 * sin(t);
         servoY.setDuty(dutyY);
         servoX.setDuty(dutyX);
-        delay(100);
+        Led = !Led;
         reCalculateTime();
+        uart2.println(dutyX);
     }
     // tim1ch2.init();
     // tim1ch2 = real_t(0.8);

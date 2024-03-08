@@ -11,7 +11,7 @@ static void UART_RCC_ON(USART_TypeDef * instance){
 }
 
 
-Gpio UartHw::getRxPin(const Uart::Mode mode){
+Gpio UartHw::getRxPin(USART_TypeDef * _instance, const Uart::Mode mode){
     using Pin = Gpio::Pin;
 
     GPIO_TypeDef * gpio_instance = GPIOA;
@@ -19,7 +19,7 @@ Gpio UartHw::getRxPin(const Uart::Mode mode){
 
     if(!((uint8_t)mode & (uint8_t)Uart::Mode::RxOnly)) return Gpio(gpio_instance, (Pin)gpio_pin);
 
-    switch((uint32_t)instance){
+    switch((uint32_t)_instance){
         default:
         case USART1_BASE:
             gpio_instance = UART1_RX_Port;
@@ -34,7 +34,7 @@ Gpio UartHw::getRxPin(const Uart::Mode mode){
     return Gpio(gpio_instance, (Pin)gpio_pin);
 }
 
-Gpio UartHw::getTxPin(const Uart::Mode mode){
+Gpio UartHw::getTxPin(USART_TypeDef * _instance, const Uart::Mode mode){
     using Pin = Gpio::Pin;
 
     GPIO_TypeDef * gpio_instance = GPIOA;
@@ -42,7 +42,7 @@ Gpio UartHw::getTxPin(const Uart::Mode mode){
 
     if(!((uint8_t)mode & (uint8_t)Uart::Mode::TxOnly)) return Gpio(gpio_instance, (Pin)gpio_pin);
 
-    switch((uint32_t)instance){
+    switch((uint32_t)_instance){
         default:
         case USART1_BASE:
             gpio_instance = UART1_TX_Port;
@@ -76,6 +76,7 @@ void UartHw::initRxIt(){
             sp = UART2_IT_SP;
             break;
     }
+
     NVIC_InitTypeDef NVIC_InitStructure;
     NVIC_InitStructure.NVIC_IRQChannel = irqch;
     NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = pp;
@@ -87,8 +88,8 @@ void UartHw::initRxIt(){
 }
 
 void UartHw::init(const uint32_t & baudRate){
-    tx_pin.OutPP();
-    rx_pin.InPullDN();
+    tx_pin.OutAfPP();
+    rx_pin.InPullUP();
 
     UART_RCC_ON(instance);
 
@@ -100,8 +101,8 @@ void UartHw::init(const uint32_t & baudRate){
     USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
     USART_InitStructure.USART_Mode = (uint8_t)mode << 2;
 
-    USART_Init(USART1, &USART_InitStructure);
-    USART_Cmd(USART1, ENABLE);
+    USART_Init(instance, &USART_InitStructure);
+    USART_Cmd(instance, ENABLE);
 
     initRxIt();
 }
