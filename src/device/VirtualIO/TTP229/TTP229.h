@@ -1,7 +1,7 @@
 // #ifndef __TTP229_H__
 // #define __TTP229_H__
 
-// #include "src/comm_inc.h"
+// #include "src/platform.h"
 
 // #ifdef __cplusplus
 // extern "C" {

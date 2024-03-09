@@ -2,7 +2,7 @@
 
 #define __Complex_t_HPP__
 
-#include "src/comm_inc.h"
+#include "src/platform.h"
 #include <type_traits>
 
 template <typename T>

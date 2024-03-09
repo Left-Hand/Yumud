@@ -2,34 +2,15 @@
 
 #define __BKP_HPP__
 
-#include "src/comm_inc.h"
+#include "src/platform.h"
 
 struct BkpItem;
 
 class Bkp {
-private:
-    static Bkp* instance;
-
-    Bkp() {
-        init();
-    }
-
-    ~Bkp() {
-        if(instance != nullptr){
-            delete instance;
-            instance = nullptr;
-        }
-    }
-    Bkp(const Bkp& other) = delete;
-    Bkp& operator=(const Bkp& other) = delete;
-
+protected:
+    Bkp* instance;
 public:
-    static Bkp & getInstance() {
-        if (!instance) {
-            instance = new Bkp();
-        }
-        return *instance;
-    }
+    Bkp() {}
     void init();
 
     static void writeData(uint8_t index, uint16_t data);

@@ -6,7 +6,7 @@
 
 class Uart2 : public UartHw{
 public:
-    Uart2(const Mode _mode = Mode::TxRx):UartHw(USART2, _mode){;}
+    Uart2():UartHw(USART2){;}
 };
 
 

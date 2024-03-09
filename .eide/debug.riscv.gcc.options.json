@@ -18,13 +18,13 @@
     },
     "c/cpp-compiler": {
         "language-c": "c17",
-        "language-cpp": "c++17",
+        "language-cpp": "gnu++17",
         "optimization": "level-size",
         "warnings": "all-warnings",
         "one-elf-section-per-function": true,
         "one-elf-section-per-data": true,
-        "C_FLAGS": "-Wl,-Bstatic",
-        "CXX_FLAGS": "-lstdc++ -frtti"
+        "C_FLAGS": "-Wl,-Bstatic -Wno-empty-body -Wno-deprecated-volatile",
+        "CXX_FLAGS": "-std=gnu++2a -lstdc++ -fno-rtti -flto"
     },
     "asm-compiler": {
         "ASM_FLAGS": "-Wl,-Bstatic"

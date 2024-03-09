@@ -4,7 +4,7 @@
 
 
 #include "stdint.h"
-#include "src/comm_inc.h"
+#include "src/platform.h"
 #include "types/string/String.hpp"
 
 #include <IQmath_RV32.h>
@@ -96,7 +96,7 @@ public:
     }
 
     __fast_inline iq_t operator+(const double & other) const {
-       return iq_t(value + _IQ(other));
+        return iq_t(value + _IQ(other));
     }
 
     __fast_inline iq_t operator-(const int & other) const {
@@ -108,7 +108,7 @@ public:
     }
 
     __fast_inline iq_t operator-(const double & other) const {
-       return iq_t(value - _IQ(other));
+        return iq_t(value - _IQ(other));
     }
 
     __fast_inline iq_t operator*(const int & other) const {
@@ -283,12 +283,12 @@ public:
     }
 
     #endif
-    
+
     #ifdef EXTRA_IQ
 
 
     #endif
-    
+
     __fast_inline explicit operator bool() const {
         return bool(value);
     }
@@ -329,13 +329,7 @@ public:
         return _IQtoD(value);
     }
 
-    __no_inline explicit operator String() const{
-        return String(_IQtoF(value));
-    }
-
-    __no_inline String toString(unsigned char decimalPlaces = 2){
-        return String(static_cast<float>(*this), decimalPlaces);
-    }
+    String toString(const uint8_t eps) const;
 };
 
 #ifndef STRICT_IQ

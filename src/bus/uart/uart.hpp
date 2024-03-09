@@ -13,45 +13,37 @@ public:
         RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
     };
 protected:
-    Gpio tx_pin;
-    Gpio rx_pin;
-    Mode mode;
+    Mode mode = Mode::TxRx;
 
-    void _read(char & data) override {ringBuf.getData((uint8_t &)data);}
-    void _read(char * data_ptr, const size_t len) override {ringBuf.getDatas((uint8_t *)data_ptr, len);}
+    void _read(char & data) override;
+    void _read(char * data_ptr, const size_t len) override;
 
 
 public:
     RingBuf ringBuf;
 
     size_t available(){return ringBuf.available();}
-    Uart(Gpio _tx_pin, Gpio _rx_pin):tx_pin(_tx_pin), rx_pin(_rx_pin),
-            mode(Mode((tx_pin.isValid() ? (uint8_t)TxOnly : 0) | (rx_pin.isValid() ? (uint8_t)RxOnly : 0))){;}
 };
 
 class UartHw:public Uart{
 protected:
     USART_TypeDef * instance;
 
-    Gpio getTxPin(USART_TypeDef * _instance, const Mode mode);
-    Gpio getRxPin(USART_TypeDef * _instance, const Mode mode);
+    Gpio getTxPin();
+    Gpio getRxPin();
 
-    void _write(const char * data_ptr, const size_t & len){
-        for(size_t i=0;i<len;i++) _write(data_ptr[i]);
-	}
+    void enableRcc(const bool en = true);
+    void enableRxIt(const bool en = true);
+    void _write(const char * data_ptr, const size_t & len);
 
-    __fast_inline void _write(const char & data){
-        while((instance->STATR & USART_FLAG_TXE) == RESET);
-        instance->DATAR = data;
-        while((instance->STATR & USART_FLAG_TC) == RESET);
-    }
+    void _write(const char & data);
 
 public:
-    UartHw(USART_TypeDef * _instance, const Mode _mode):Uart(getTxPin(_instance,_mode), getRxPin(_instance, _mode)), instance(_instance){;}
+    UartHw(USART_TypeDef * _instance):instance(_instance){;}
 
-    void init(const uint32_t & baudRate);
+    void init(const uint32_t & baudRate, const Mode _mode = Mode::TxRx);
 
     void setBaudRate(const uint32_t & baudRate){init(baudRate);}
-    void initRxIt();
+
 };
 #endif

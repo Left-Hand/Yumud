@@ -6,7 +6,7 @@
 // #endif 
 
 // #include "stdint.h"
-// #include "../src/defines/comm_inc.h"
+// #include "../src/defines/platform.h"
 
 // #include "ch32v20x_gpio.h"
 

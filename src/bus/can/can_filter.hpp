@@ -2,7 +2,7 @@
 
 #define __CAN_FILTER_HPP__
 
-#include "src/comm_inc.h"
+#include "src/platform.h"
 
 struct CanFilter{
 

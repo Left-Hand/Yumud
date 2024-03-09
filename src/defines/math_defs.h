@@ -144,4 +144,20 @@
 #define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
 #endif
 
+#ifndef LSHIFT
+#define LSHIFT(x,s) (s >= 0 ? x << s : x >> -s)
+#endif
+
+#ifndef RSHIFT
+#define RSHIFT(x,s) LSHIFT(x, -s)
+#endif
+
+#ifndef CTZ
+#define CTZ(x) __builtin_ctz(x)
+#endif
+
+#ifndef CLZ
+#define CLZ(x) __builtin_clz(x)
+#endif
+
 #endif

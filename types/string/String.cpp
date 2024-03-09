@@ -20,7 +20,6 @@
 */
 
 #include "String.hpp"
-#include "string_utils.h"
 /*********************************************/
 /*  Constructors                             */
 /*********************************************/
@@ -86,7 +85,7 @@ String::String(unsigned char value, unsigned char base)
 {
 	init();
 	char buf[12] = {0};
-	itoa(value, buf, base);
+	StringUtils::itoa(value, buf, base);
 	*this = buf;
 }
 
@@ -94,7 +93,7 @@ String::String(int value, unsigned char base)
 {
 	init();
 	char buf[12] = {0};
-	itoa(value, buf, base);
+	StringUtils::itoa(value, buf, base);
 	*this = buf;
 }
 
@@ -102,7 +101,7 @@ String::String(unsigned int value, unsigned char base)
 {
 	init();
 	char buf[12] = {0};
-	itoa(value, buf, base);
+	StringUtils::itoa(value, buf, base);
 	*this = buf;
 }
 
@@ -110,7 +109,7 @@ String::String(long value, unsigned char base)
 {
 	init();
 	char buf[12] = {0};
-	itoa(value, buf, base);
+	StringUtils::itoa(value, buf, base);
 	*this = buf;
 }
 
@@ -118,7 +117,7 @@ String::String(unsigned long value, unsigned char base)
 {
 	init();
 	char buf[12] = {0};
-	itoa(value, buf, base);
+	StringUtils::itoa(value, buf, base);
 	*this = buf;
 }
 
@@ -126,7 +125,7 @@ String::String(long long value, unsigned char base)
 {
 	init();
 	char buf[24] = {0};
-	itoa(value, buf, base);
+	StringUtils::itoa(value, buf, base);
 	*this = buf;
 }
 
@@ -134,7 +133,7 @@ String::String(unsigned long long value, unsigned char base)
 {
 	init();
 	char buf[24] = {0};
-	iutoa(value, buf, base);
+	StringUtils::iutoa(value, buf, base);
 	*this = buf;
 }
 
@@ -142,7 +141,7 @@ String::String(float value, unsigned char decimalPlaces)
 {
 	init();
 	char buf[12] = {0};
-	ftoa(value, buf, decimalPlaces);
+	StringUtils::ftoa(value, buf, decimalPlaces);
     *this = buf;
 }
 
@@ -150,7 +149,7 @@ String::String(double value, unsigned char decimalPlaces)
 {
 	init();
 	char buf[12] = {0};
-	ftoa(value, buf, decimalPlaces);
+	StringUtils::ftoa(value, buf, decimalPlaces);
     *this = buf;
 }
 
@@ -308,49 +307,49 @@ unsigned char String::concat(char c)
 unsigned char String::concat(unsigned char num)
 {
 	char buf[12];
-	itoa(num, buf, 10);
+	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(int num)
 {
 	char buf[12];
-	itoa(num, buf, 10);
+	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(unsigned int num)
 {
 	char buf[12];
-	itoa(num, buf, 10);
+	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(long num)
 {
 	char buf[12];
-	itoa(num, buf, 10);
+	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(unsigned long num)
 {
 	char buf[12];
-	itoa(num, buf, 10);
+	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(float num)
 {
 	char buf[12];
-	ftoa(num, buf, 6);
+	StringUtils::ftoa(num, buf, 6);
 	return concat(buf, strlen(buf));
 }
 
 unsigned char String::concat(double num)
 {
 	char buf[12];
-	ftoa(num, buf, 6);
+	StringUtils::ftoa(num, buf, 6);
 	return concat(buf, strlen(buf));
 }
 
@@ -645,7 +644,7 @@ String& String::replace(const String& match, const String& replace)
 {
     size_t dst_len = match.length();
     if(dst_len != replace.length()) return *this;
-	str_replace(
+	StringUtils::str_replace(
             this->c_str(),this -> length(),
             match.c_str(),replace.c_str(),dst_len);
     return *this;

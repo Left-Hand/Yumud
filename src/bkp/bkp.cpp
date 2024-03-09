@@ -1,7 +1,5 @@
 #include "bkp.hpp"
 
-Bkp* Bkp::instance = nullptr;
-
 void Bkp::init(){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
 }

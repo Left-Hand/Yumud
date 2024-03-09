@@ -7,6 +7,12 @@
 class BusDrv;
 
 class SerBus:public Bus{
+public:
+    enum Mode:uint8_t{
+        RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
+    };
+
+    Mode mode;
 protected:
     virtual Error begin_use(const uint8_t & index = 0) = 0;
     virtual void end_use() = 0;
@@ -14,6 +20,7 @@ protected:
     virtual bool owned_by(const uint8_t & index = 0) = 0;
 
     friend BusDrv;
+
 public:
 
     __fast_inline Error begin(const uint8_t & index = 0) override{
@@ -32,7 +39,7 @@ public:
         end_use();
     }
 
-
+    virtual void configBitOrder(const bool & msb) = 0;
 };
 
 // class BusFullDuplex:public Bus{

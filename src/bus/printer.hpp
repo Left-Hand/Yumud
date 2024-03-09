@@ -4,7 +4,7 @@
 
 #include "bus.hpp"
 #include "../../types/buffer/buffer.hpp"
-#include "src/comm_inc.h"
+#include "src/platform.h"
 #include "../../types/string/String.hpp"
 #include <cstdint>
 
@@ -57,13 +57,15 @@ public:
     Printer(){;}
 
     virtual size_t available() = 0;
-    __fast_inline void write(const char & data){_write(data);}
+    void write(const char & data){_write(data);}
     void write(const char * data_ptr, const size_t & len){_write(data_ptr, len);}
 
-    __fast_inline char read(){char data; _read(data); return data;};
+    char read(){char data; _read(data); return data;};
     String read(const size_t & len);
     String readAll(){return read(available());}
     void setSpace(const String & _space){space = _space;}
+    void setRadix(const uint8_t & _radix){radix = _radix;}
+    void setEps(const uint8_t & _eps){eps = _eps;}
 
     Printer& operator<<(uint8_t val){printString(String((unsigned long long)val, radix)); return *this;}
     Printer& operator<<(uint16_t val){printString(String((unsigned long long)val, radix)); return *this;}

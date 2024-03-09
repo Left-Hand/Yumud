@@ -72,7 +72,50 @@ void SysTick_Handler(void)
   SysTick->SR = 0;
 }
 
+void delayMicroseconds(uint32_t us)
+{
+  __IO uint64_t currentTicks = SysTick->CNT;
+  /* Number of ticks per millisecond */
+  uint64_t tickPerMs = SysTick->CMP + 1;
+  /* Number of ticks to count */
+  uint64_t nbTicks = MAX(us - MicroTrim, 0) * tick_per_us;
+  /* Number of elapsed ticks */
+  uint64_t elapsedTicks = 0;
+  __IO uint64_t oldTicks = currentTicks;
+  do {
+    currentTicks = SysTick->CNT;
+    // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :
+    //                 oldTicks - currentTicks;
 
+    //increment
+    elapsedTicks += (oldTicks <= currentTicks) ? currentTicks - oldTicks :
+                    tickPerMs - oldTicks + currentTicks;
+
+    oldTicks = currentTicks;
+    } while (nbTicks > elapsedTicks);
+}
+
+void delayNanoseconds(uint32_t ns) {
+    __IO uint64_t currentTicks = SysTick->CNT;
+    /* Number of ticks per millisecond */
+    uint64_t tickPerMs = SysTick->CMP + 1;
+    /* Number of ticks to count */
+    uint64_t nbTicks = NanoMut(MAX(ns - NanoTrim, 0));
+    /* Number of elapsed ticks */
+    uint64_t elapsedTicks = 0;
+    __IO uint64_t oldTicks = currentTicks;
+    do {
+        currentTicks = SysTick->CNT;
+        // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :
+        //                 oldTicks - currentTicks;
+
+        //increment
+        elapsedTicks += (oldTicks <= currentTicks) ? currentTicks - oldTicks :
+                        tickPerMs - oldTicks + currentTicks;
+
+        oldTicks = currentTicks;
+    } while (nbTicks > elapsedTicks);
+}
 
 #ifdef __cplusplus
 }

@@ -2,7 +2,7 @@
 
 #define __REAL_HPP__
 
-#include "src/comm_inc.h"
+#include "src/platform.h"
 
 #ifdef USE_IQ
 #include "iq/iqt.hpp"

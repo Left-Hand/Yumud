@@ -1,6 +1,7 @@
-#include "string_utils.h"
+#include "string_utils.hpp"
 
-void reverse_str(char * str, size_t len){
+
+void StringUtils::reverse_str(char * str, size_t len){
 	if(len == 0) return;
 
 	len -= 1;
@@ -12,7 +13,7 @@ void reverse_str(char * str, size_t len){
 	str[len + 1] = '\0';
 }
 
-void itoa(int64_t value,char *str,uint8_t radix)  
+void StringUtils::itoa(int64_t value,char *str,uint8_t radix)  
 {
     int sign = 0;  
     int i=0;  
@@ -36,7 +37,7 @@ void itoa(int64_t value,char *str,uint8_t radix)
     reverse_str(str, i);
 }
 
-void itoas(int value,char *str,uint8_t radix, uint8_t size)  
+void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)  
 {
 	uint8_t i = 0;
     value = abs(value);
@@ -51,7 +52,7 @@ void itoas(int value,char *str,uint8_t radix, uint8_t size)
 	reverse_str(str, size);
 }
 
-void iutoa(uint64_t value,char *str,uint8_t radix)  
+void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix)  
 {
     int i=0;  
 
@@ -66,38 +67,36 @@ void iutoa(uint64_t value,char *str,uint8_t radix)
     reverse_str(str, i);
 }
 
-void ftoa(float number,char *buf, uint8_t eps)  
+void StringUtils::ftoa(float number,char *buf, uint8_t eps)  
 {
-    char str_int[12];  
-    char str_float[eps+1];  
-    memset(str_int,0,12);  
-    memset(str_float,0,eps+1);  
+    char str_int[12] = {0};
+    char str_float[eps+1] = {0};
 
-    long int_part = (long)number;  
-    float float_part = number - (float)int_part;  
+    long int_part = (long)number;
+    float float_part = number - (float)int_part;
 
 	if(number < 0 && int_part == 0){
 		str_int[0] = '-';
-		itoa(int_part,str_int + 1,10); 
+		itoa(int_part,str_int + 1,10);
 	}
-	else itoa(int_part,str_int,10);   
- 
-    if(eps){  
+	else itoa(int_part,str_int,10);
+
+    if(eps){
         float scale = 1;
         for(uint8_t i = 0; i < eps; i++)
             scale *= 10;
 
-        float_part *= scale;  
+        float_part *= scale;
         itoas((int)(float_part),str_float, 10, eps);
     }
 
-    int i = strlen(str_int);  
-    str_int[i] = '.';  
-    strcat(str_int,str_float);  
-    strcpy(buf,str_int);   
+    int i = strlen(str_int);
+    str_int[i] = '.';
+    strcat(str_int,str_float);
+    strcpy(buf,str_int);
 }
 
-int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len) {
+int StringUtils::kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len) {
 	size_t *table = (size_t *)malloc(match_len * sizeof(size_t));
 	size_t i = 0, j = 1;
 	table[0] = 0;
@@ -138,7 +137,7 @@ int kmp_find(const char *src, const size_t src_len, const char *match, const siz
 	}
 }
 
-void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
+void StringUtils::str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
 	char * find_ptr = (char *)src;
 	size_t find_len = src_len;
 	char * replace_ptr = (char *)match;
@@ -157,10 +156,10 @@ void str_replace(const char *src, const size_t src_len, const char *match, const
 }
 
 
-int stoi(const char * str) {
+int StringUtils::stoi(const char * str) {
     return atoi(str);
 }
 
-float stof(const char * str) {
+float StringUtils::stof(const char * str) {
     return atof(str);
 }

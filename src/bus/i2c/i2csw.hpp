@@ -13,11 +13,9 @@ private:
 
     uint16_t delays = 100;
 
-    __fast_inline volatile void delayDur(){
-        // __nopn(delays);
-        // volatile uint16_t i = delays;
-        // while(i--);
-        delayMicroseconds(3);
+    void delayDur(){
+        volatile uint16_t i = delays;
+        while(i--) __nop;
     }
 
     void clk(){
@@ -60,13 +58,10 @@ private:
         sda.OutOD();
         sda = false;
         delayDur();
-        delayDur();
         scl = true;
-        delayDur();
         delayDur();
         scl = false;
         // sda = true;
-        delayDur();
         delayDur();
     }
 
@@ -77,13 +72,10 @@ private:
         sda.OutOD();
         sda = true;
         delayDur();
-        delayDur();
         scl = true;
-        delayDur();
         delayDur();
         scl = false;
         // sda = true;
-        delayDur();
         delayDur();
     }
 
@@ -156,22 +148,11 @@ public:
     Error write(const uint32_t & data) override {
         sda.OutOD();
         delayDur();
-        sda.write(0x80 & data);
-        clk();
-        sda.write(0x40 & data);
-        clk();
-        sda.write(0x20 & data);
-        clk();
-        sda.write(0x10 & data);
-        clk();
-        sda.write(0x08 & data);
-        clk();
-        sda.write(0x04 & data);
-        clk();
-        sda.write(0x02 & data);
-        clk();
-        sda.write(0x01 & data);
-        clk();
+
+        for(uint8_t mask = 0x80; mask; mask >>= 1){
+            sda.write(mask & data);
+            clk();
+        }
 
         wait_ack();
 
@@ -183,32 +164,20 @@ public:
         sda.InFloating();
         sda = true;
         delayDur();
-        
+
         clk_up();
         ret |= sda.read();
-        clk_down_then_up();
-        ret <<= 1; ret |= sda.read();
-        clk_down_then_up();
-        ret <<= 1; ret |= sda.read();
-        clk_down_then_up();
-        ret <<= 1; ret |= sda.read();
+        for(uint8_t i = 0; i < 7; i++){
+            clk_down_then_up();
+            ret <<= 1; ret |= sda.read();
+        }
 
-        clk_down_then_up();
-        ret <<= 1; ret |= sda.read();
-        clk_down_then_up();
-        ret <<= 1; ret |= sda.read();
-        clk_down_then_up();
-        ret <<= 1; ret |= sda.read();
-        clk_down_then_up();
-        ret <<= 1; ret |= sda.read();
         clk_down();
 
         sda = false;
         if(toAck) ack();
         else nack();
         data = ret;
-        // sda.OutOD();
-
         return Bus::ErrorType::OK;
     }
 

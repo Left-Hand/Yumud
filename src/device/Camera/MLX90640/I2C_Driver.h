@@ -2,7 +2,7 @@
 
 #define __I2C_DRIVER_H__
 
-#include "src/comm_inc.h"
+#include "src/platform.h"
 #include "ch32v20x_i2c.h"
 #include "clock/clock.h"
 

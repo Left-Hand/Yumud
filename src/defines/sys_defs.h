@@ -72,12 +72,22 @@
 #define FUNCTION_STR __FUNCTION__
 #endif
 
-#ifndef _STR
-#define _STR(m_x) #m_x
-#define _MKSTR(m_x) _STR(m_x)
-#endif
+#define CONCAT(a, b) a ## b
+#define BUILD_BUG_ON_ZERO(e) (sizeof(struct { int:-!!(e); }))
 
-#define __STRX(m_index) #m_index
-#define __STR(m_index) __STRX(m_index)
+#define CHECK_TYPE(x, type) \
+({ type __dummy; \
+    typeof(x) __dummy2; \
+    (void)(&__dummy == &__dummy2); \
+    1; \
+})
+
+#define TYPE_CMP(a,b) __builtin_types_compatible_p(type_a, type_b);
+#define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
+
+#define BSWAP_8(x) ((x) & 0xff)
+#define BSWAP_16(x) ((BSWAP_8(x) << 8) | BSWAP_8((x) >> 8))
+#define BSWAP_32(x) ((BSWAP_16(x) << 16) | BSWAP_16((x) >> 16))
+#define BSWAP_64(x) ((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32))
 
 #endif

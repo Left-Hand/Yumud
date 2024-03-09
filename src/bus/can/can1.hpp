@@ -2,7 +2,7 @@
 #define __CAN_HPP__
 
 #include <memory>
-#include "src/comm_inc.h"
+#include "src/platform.h"
 #include "can_msg.hpp"
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
 

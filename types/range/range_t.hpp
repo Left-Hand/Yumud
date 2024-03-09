@@ -2,7 +2,7 @@
 
 #define __RANGE_HPP__
 
-#include "src/comm_inc.h"
+#include "src/platform.h"
 
 template<typename T>
 struct Range_t{

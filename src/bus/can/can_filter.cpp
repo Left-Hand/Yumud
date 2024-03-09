@@ -1,6 +1,6 @@
 #include "can_filter.hpp"
 
-void CANFilterConfig_List_Extend(u8 FGrop,u32 Ext_Id1,u32 Ext_Id2){
+void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id2){
     CAN_FilterInitTypeDef	CAN_FilterInitStructure;
 
     CAN1->FWR |= 1;            //过滤器组工作在初始化模式

@@ -11,7 +11,7 @@ Gpio i2cSda = Gpio(GPIOB, (Gpio::Pin)I2C_SW_SDA);
 // Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
 // Gpio i2sWs = Gpio(GPIOB, I2S_SW_WS);
 
-I2cSw i2cSw(i2cScl, i2cSda);
+// I2cSw i2cSw(i2cScl, i2cSda);
 // I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
 
 // SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
@@ -27,10 +27,10 @@ I2cSw i2cSw(i2cScl, i2cSda);
 // I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
 // I2sDrv i2sDrvTm = I2sDrv(i2sSw);
-I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
-I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
-I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
-I2cDrv i2cDrvMt = I2cDrv(i2cSw, 0x0C);
+// I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
+// I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
+// I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
+// I2cDrv i2cDrvMt = I2cDrv(i2cSw, 0x0C);
 // ST7789 tftDisplayer(SpiDrvLcd);
 // SSD1306 oledDisPlayer(spiDrvOled);
 // MPU6050 mpu(i2cDrvMpu);
@@ -153,24 +153,34 @@ int main(){
     coil.init();
     coil.setDuty(real_t(-0.4));
 
-    uart2.init(UART2_Baudrate);
-    uart1.init(UART1_Baudrate);
+    uart2.init(UART2_Baudrate, Uart::TxRx);
+    uart2.setEps(4);
+    // uart1.init(UART1_Baudrate);
 
+    // while(true){
+    //     uart2.println(".");
+    //     delay(100);
+    //     Led = !Led;
+    // }
     Gpio useless_pin = Gpio(GPIOC, Gpio::None);
     HC12 hc12(uart2, useless_pin);
+
     hc12.init();
     while(true){
         hc12.isValid();
     }
 
+    Led = false;
     while(true){
         real_t dutyX = 0.5 + 0.5 * cos(t);
         real_t dutyY = 0.5 + 0.5 * sin(t);
         servoY.setDuty(dutyY);
         servoX.setDuty(dutyX);
-        Led = !Led;
         reCalculateTime();
-        uart2.println(dutyX);
+        Led = true;
+        // uart2.println(dutyX);
+        // volatile String x = dutyX.toString(3);
+        Led = false;
     }
     // tim1ch2.init();
     // tim1ch2 = real_t(0.8);
