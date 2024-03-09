@@ -16,10 +16,16 @@ protected:
     Gpio tx_pin;
     Gpio rx_pin;
     Mode mode;
+
+    void _read(char & data) override {ringBuf.getData((uint8_t &)data);}
+    void _read(char * data_ptr, const size_t len) override {ringBuf.getDatas((uint8_t *)data_ptr, len);}
+
+
 public:
     RingBuf ringBuf;
 
-    Uart(Gpio _tx_pin, Gpio _rx_pin):Printer(ringBuf),tx_pin(_tx_pin), rx_pin(_rx_pin),
+    size_t available(){return ringBuf.available();}
+    Uart(Gpio _tx_pin, Gpio _rx_pin):tx_pin(_tx_pin), rx_pin(_rx_pin),
             mode(Mode((tx_pin.isValid() ? (uint8_t)TxOnly : 0) | (rx_pin.isValid() ? (uint8_t)RxOnly : 0))){;}
 };
 
@@ -47,7 +53,5 @@ public:
 
     void setBaudRate(const uint32_t & baudRate){init(baudRate);}
     void initRxIt();
-
-
 };
 #endif

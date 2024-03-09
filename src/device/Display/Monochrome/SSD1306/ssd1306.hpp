@@ -1,7 +1,7 @@
 #ifndef __SSD1306_HPP__
 #define __SSD1306_HPP__
 
-#include "src/device/device_defs.h"
+#include "device_defs.h"
 
 #define SSD1306_DC_Port SPI2_Port
 #define SSD1306_DC_Pin SPI2_MISO_Pin

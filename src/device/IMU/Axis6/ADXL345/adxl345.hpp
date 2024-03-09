@@ -3,7 +3,7 @@
 
 #include "device_defs.h"
 
-class ADXL345{
+class ADXL345:public Axis6{
 public:
     enum class DataRate:uint8_t{
         HZ0_1 = 0,HZ0_2, HZ0_39, HZ0_78,HZ1_56,HZ6_25,
@@ -329,6 +329,9 @@ public:
         readReg(RegAddress::DeviceID, deviceIDReg);
         return deviceIDReg.data;
     }
+
+    void getAccel(real_t & x, real_t & y, real_t & z) override;
+    void getGyro(real_t & x, real_t & y, real_t & z) override;
 
 };
 

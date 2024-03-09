@@ -2,10 +2,10 @@
 
 #define __MPU6050_HPP__
 
-#include "device_defs.h"
-#include "types/real.hpp"
+#include "device/device_defs.h"
+#include "device/IMU/IMU.hpp"
 
-class MPU6050{
+class MPU6050:public Axis6{
 protected:
     I2cDrv & bus_drv;
 
@@ -86,8 +86,8 @@ public:
     MPU6050(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     void init();
     void flush();
-    void getAccel(real_t & x, real_t & y, real_t & z);
-    void getGyro(real_t & x, real_t & y, real_t & z);
+    void getAccel(real_t & x, real_t & y, real_t & z) override;
+    void getGyro(real_t & x, real_t & y, real_t & z) override;
     void getTemperature(real_t & temp);
 };
 

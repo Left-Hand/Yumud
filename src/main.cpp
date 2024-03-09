@@ -154,6 +154,14 @@ int main(){
     coil.setDuty(real_t(-0.4));
 
     uart2.init(UART2_Baudrate);
+    uart1.init(UART1_Baudrate);
+
+    Gpio useless_pin = Gpio(GPIOC, Gpio::None);
+    HC12 hc12(uart2, useless_pin);
+    hc12.init();
+    while(true){
+        hc12.isValid();
+    }
 
     while(true){
         real_t dutyX = 0.5 + 0.5 * cos(t);

@@ -40,19 +40,19 @@ Printer& Printer::operator<<(const SpecToken & spec){
         break;
     case SpecToken::Eps2:
         eps = 2;
-        break;   
+        break;
     case SpecToken::Eps3:
         eps = 3;
         break;
     case SpecToken::Eps4:
         eps = 4;
-        break;   
+        break;
     case SpecToken::Eps5:
         eps = 5;
         break;
     case SpecToken::Eps6:
         eps = 6;
-        break;   
+        break;
     }
 
     skipSpec = true;
@@ -60,14 +60,13 @@ Printer& Printer::operator<<(const SpecToken & spec){
 }
 
 String Printer::read(const size_t & len){
-    // if(head_ptr){
     String str;
     str.reserve(len + 1);
-    // buffer.getDatas((uint8_t *)str.getBuffer(), len);
+
     for(uint8_t i = 0; i < len; i++){
-        uint8_t _ = 0;
-        buffer.getData(_);
-        str += (char)_;
+        char _;
+        _read(_);
+        str += _;
     }
 
     return str;

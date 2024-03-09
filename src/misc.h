@@ -51,6 +51,7 @@
 #include "device/Actuator/Coil/coil.hpp"
 #include "types/basis/Basis_t.hpp"
 #include "types/quat/Quat_t.hpp"
+#include "device/Wireless/Radio/HC12/HC12.hpp"
 extern real_t t;
 
 void GPIO_PortC_Init( void );

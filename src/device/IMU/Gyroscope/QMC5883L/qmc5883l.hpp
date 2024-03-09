@@ -2,10 +2,10 @@
 
 #define __QMC5883L_HPP__
 
-#include "device_defs.h"
-#include "types/real.hpp"
+#include "device/device_defs.h"
+#include "device/IMU/IMU.hpp"
 
-class QMC5883L{
+class QMC5883L:public Magnetometer{
 public:
     enum class DataRate:uint8_t{
         DR10, DR50, DR100, DR200
@@ -203,7 +203,7 @@ public:
         setOvsfix(ratio);
     }
 
-    void getMag(real_t & x, real_t & y, real_t & z){
+    void getMagnet(real_t & x, real_t & y, real_t & z) override{
         requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 2, 6);
         x = From16BitToGauss(magXReg.data);
         y = From16BitToGauss(magYReg.data);

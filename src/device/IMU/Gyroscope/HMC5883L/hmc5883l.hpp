@@ -5,7 +5,7 @@
 #include "device_defs.h"
 #include "types/real.hpp"
 
-class HMC5883L{
+class HMC5883L:public Magnetometer{
 public:
     enum class DataRate:uint8_t{
         DR0_75, DR1_5, DR3, DR7_5, DR15, DR30, DR75
@@ -208,7 +208,7 @@ public:
         writeReg(RegAddress::Mode, modeReg.data);
     }
 
-    void getMag(real_t & x, real_t & y, real_t & z){
+    void getMagnet(real_t & x, real_t & y, real_t & z) override{
         requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 2, 6);
         x = From12BitToGauss(magXReg.data);
         y = From12BitToGauss(magYReg.data);

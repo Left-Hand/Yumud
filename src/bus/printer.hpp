@@ -35,8 +35,6 @@ enum class SpecToken {
 
 class Printer{
 private:
-    Buffer & buffer;
-
     String space = ", ";
     uint8_t radix = 10;
     uint8_t eps = 2;
@@ -46,15 +44,19 @@ private:
 
 protected:
     virtual void _write(const char & data) = 0;
-    virtual void _write(const char * data_ptr, const size_t & len) = 0;
-    virtual void _read(char & data){buffer.getData((uint8_t &)data);}
-    virtual void _read(char * data_ptr, const size_t len){buffer.getDatas((uint8_t *)data_ptr, len);}
+    virtual void _write(const char * data_ptr, const size_t & len){
+        for(size_t i=0;i<len;i++) _write(data_ptr[i]);
+	}
+    virtual void _read(char & data) = 0;
+    virtual void _read(char * data_ptr, const size_t len){
+        for(size_t i=0;i<len;i++) _read(data_ptr[i]);
+    }
+
 
 public:
-    Printer(Buffer & _buffer):buffer(_buffer){;}
+    Printer(){;}
 
-    size_t available(){return buffer.available();}
-
+    virtual size_t available() = 0;
     __fast_inline void write(const char & data){_write(data);}
     void write(const char * data_ptr, const size_t & len){_write(data_ptr, len);}
 
