@@ -113,7 +113,7 @@ void TimerOC::installToPin(const bool en){
         break;
     }
 
-    Gpio io = Gpio(gpio_port, (Gpio::Pin)gpio_pin);
+    Gpio io = Gpio(gpio_port, (Pin)gpio_pin);
     if(en)io.OutAfPP();
     else io.InFloating();
     enable(en);

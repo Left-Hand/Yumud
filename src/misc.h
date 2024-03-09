@@ -46,12 +46,15 @@
 #include "stdlib.h"
 #include "timer/timers/timer1.hpp"
 #include "timer/pwm_channel.hpp"
-#include "adc/adcs/adc1.hpp"
+// #include "adc/adcs/adc1.hpp"
 #include "device/Actuator/Servo/PwmServo/pwm_servo.hpp"
 #include "device/Actuator/Coil/coil.hpp"
 #include "types/basis/Basis_t.hpp"
 #include "types/quat/Quat_t.hpp"
 #include "device/Wireless/Radio/HC12/HC12.hpp"
+#include "gpio/port_virtual.hpp"
+
+
 extern real_t t;
 
 void GPIO_PortC_Init( void );

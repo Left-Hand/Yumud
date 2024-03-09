@@ -1,13 +1,12 @@
 #include "adc_channel.hpp"
 
 void AdcChannelOnChip::installToPin(const bool en){
-    using Pin = Gpio::Pin;
     uint8_t ch_index = (uint8_t)channel;
 
     if(ch_index > 15) return;
 
     GPIO_TypeDef * gpio_port;
-    Pin gpio_pin = Pin::Pin0;
+    Pin gpio_pin = PinNone;
 
     if(ch_index <= 7){
         gpio_port = GPIOA;

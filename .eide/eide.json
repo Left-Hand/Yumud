@@ -141,7 +141,12 @@
         "libList": [],
         "sourceDirList": [],
         "defineList": [
-          "WCH"
+          "WCH",
+          "CH32V203",
+          "CH32V203FXX",
+          "CH32V203GXX",
+          "CH32V203KXX",
+          "CH32V203CXX"
         ]
       }
     }

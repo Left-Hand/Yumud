@@ -38,8 +38,6 @@ void UartHw::enableRcc(const bool en){
 
 
 Gpio UartHw::getRxPin(){
-    using Pin = Gpio::Pin;
-
     GPIO_TypeDef * gpio_instance = GPIOA;
     uint16_t gpio_pin = 0;
 
@@ -82,8 +80,6 @@ Gpio UartHw::getRxPin(){
 }
 
 Gpio UartHw::getTxPin(){
-    using Pin = Gpio::Pin;
-
     GPIO_TypeDef * gpio_instance = GPIOA;
     uint16_t gpio_pin = 0;
 

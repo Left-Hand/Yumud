@@ -4,8 +4,8 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 
 
-Gpio i2cScl = Gpio(GPIOB, (Gpio::Pin)I2C_SW_SCL);
-Gpio i2cSda = Gpio(GPIOB, (Gpio::Pin)I2C_SW_SDA);
+Gpio i2cScl = Gpio(GPIOB, (Pin)I2C_SW_SCL);
+Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
 
 // Gpio i2sSck = Gpio(GPIOB, I2S_SW_SCK);
 // Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
@@ -103,7 +103,7 @@ int main(){
 
     GPIO_PortC_Init();
 
-    Gpio Led = Gpio(GPIOC, (Gpio::Pin)GPIO_Pin_13);
+    Gpio Led = Gpio(GPIOC, Pin13);
     Led.OutPP();
 
     timer1.init(10000, 288);
@@ -162,25 +162,40 @@ int main(){
     //     delay(100);
     //     Led = !Led;
     // }
-    Gpio useless_pin = Gpio(GPIOC, Gpio::None);
-    HC12 hc12(uart2, useless_pin);
+    // Gpio useless_pin = Gpio(GPIOC, PinNone);
+    // HC12 hc12(uart2, useless_pin);
 
-    hc12.init();
-    while(true){
-        hc12.isValid();
-    }
+    // hc12.init();
+
+    // while(true){
+    //     hc12.isValid();
+    // }
+    PortVirtual pv = PortVirtual();
+    pv.init();
+    pv.bindPin(Led, 1);
 
     Led = false;
+    while(true){
+        static bool i = false;
+        i =!i;
+        delay(100);
+        pv.writeByIndex(1, i);
+
+    }
     while(true){
         real_t dutyX = 0.5 + 0.5 * cos(t);
         real_t dutyY = 0.5 + 0.5 * sin(t);
         servoY.setDuty(dutyY);
         servoX.setDuty(dutyX);
         reCalculateTime();
-        Led = true;
-        // uart2.println(dutyX);
+        // Led = true;
+        // pv.set(Pin1);
+        delay(100);
+        uart2.println(dutyX);
         // volatile String x = dutyX.toString(3);
-        Led = false;
+        // Led = false;
+        pv.clr(Pin1);
+        delay(100);
     }
     // tim1ch2.init();
     // tim1ch2 = real_t(0.8);

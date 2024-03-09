@@ -2,8 +2,10 @@
 
 #define __GPIO_HPP__
 
+#include "gpio_enums.h"
 #include "src/platform.h"
 #include "stdint.h"
+#include <functional>
 
 #ifndef MCU_V
 #define MCU_V (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)
@@ -19,40 +21,20 @@ public:
 
     virtual GpioBase & operator = (const bool _val) = 0;
     operator bool() const {return(this->read());}
-
-    virtual void OutPP() = 0;
-    virtual void OutOD() = 0;
-    virtual void OutAfPP() = 0;
-    virtual void OutAfOD() = 0;
-    virtual void InAnalog() = 0;
-    virtual void InFloating() = 0;
-    virtual void InPullUP() = 0;
-    virtual void InPullDN() = 0;
+    virtual void setMode(const PinMode mode) = 0;
+    void OutPP(){setMode(PinMode::OutPP);}
+    void OutOD(){setMode(PinMode::OutOD);}
+    void OutAfPP(){setMode(PinMode::OutAfPP);}
+    void OutAfOD(){setMode(PinMode::OutAfOD);}
+    void InAnalog(){setMode(PinMode::InAnalog);}
+    void InFloating(){setMode(PinMode::InFloating);}
+    void InPullUP(){setMode(PinMode::InPullUP);}
+    void InPullDN(){setMode(PinMode::InPullDN);}
 
     virtual bool isValid() const = 0;
 };
 
 class Gpio:public GpioBase{
-public:
-    enum Pin{
-        None,
-        Pin0 = 1,
-        Pin1 = Pin0 << 1,
-        Pin2 = Pin1 << 1,
-        Pin3 = Pin2 << 1,
-        Pin4 = Pin3 << 1,
-        Pin5 = Pin4 << 1,
-        Pin6 = Pin5 << 1,
-        Pin7 = Pin6 << 1,
-        Pin8 = Pin7 << 1,
-        Pin9 = Pin8 << 1,
-        Pin10 = Pin9 << 1,
-        Pin11 = Pin10 << 1,
-        Pin12 = Pin11 << 1,
-        Pin13 = Pin12 << 1,
-        Pin14 = Pin13 << 1,
-        Pin15 = Pin14 << 1
-    };
 protected:
     volatile GPIO_TypeDef* instance = GPIOA;
     const Pin pin;
@@ -60,13 +42,9 @@ protected:
     uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;
 
-    void reConfig(const uint8_t cfg){
-        if(!isValid()) return;
-        uint32_t tempreg = pin_cfg;
-        tempreg &= pin_mask;
-        tempreg |= (cfg << ((pin_index % 8) * 4));
-        pin_cfg = tempreg;
-    }
+
+
+    friend class PortVirtual;
 public:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         instance(_instance),
@@ -83,51 +61,54 @@ public:
     __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
     __fast_inline Gpio & operator = (const bool _val) override {(_val) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
     __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
-    void OutPP() override {reConfig(0b0011);}
-    void OutOD() override {reConfig(0b0111);}
-    void OutAfPP() override {reConfig(0b1011);}
-    void OutAfOD() override {reConfig(0b1111);}
-    void InAnalog() override {reConfig(0b0000);}
-    void InFloating() override {reConfig(0b0100);}
-    void InPullUP() override {reConfig(0b1000); instance -> OUTDR |= pin;}
-    void InPullDN() override {reConfig(0b1100); instance -> OUTDR &= ~pin;}
 
-    bool isValid() const {return pin != None;}
+    bool isValid() const {return pin != PinNone;}
+
+    void setMode(const PinMode mode) override{
+        if(!isValid()) return;
+        uint32_t tempreg = pin_cfg;
+        tempreg &= pin_mask;
+        tempreg |= ((uint8_t)mode << ((pin_index % 8) * 4));
+        pin_cfg = tempreg;
+
+        if(mode == PinMode::InPullUP){
+            instance -> OUTDR |= pin;
+        }else if(mode == PinMode::InPullDN){
+            instance -> OUTDR &= ~pin;
+        }
+    }
 };
 
 
 class GpioVirtual:public GpioBase{
-private:
-    typedef void (*WriteCallback)(uint16_t, bool);
-    typedef bool (*ReadCallback)(uint16_t);
-    typedef void (*DirCallback)(uint16_t, bool);
+protected:
+    typedef std::function<void(const int8_t&, const bool&)> WriteCallback;
+    typedef std::function<bool(const int8_t&)> ReadCallback;
+    typedef std::function<void(const int8_t&, const PinMode&)> ModeCallback;
 
-    uint16_t index;
+    int8_t pin_index;
 
     WriteCallback write_callback;
     ReadCallback read_callback;
-    DirCallback dir_callback;
-public:
-    GpioVirtual(const uint16_t & _index, WriteCallback _write_callback = nullptr, 
-        ReadCallback _read_callback = nullptr,DirCallback _dir_callback = nullptr)
-        : index(_index), write_callback(_write_callback), read_callback(_read_callback), dir_callback(_dir_callback){;}
+    ModeCallback mode_callback;
 
-    void set() override {if(write_callback) write_callback(index, true);}
-    void clr() override{if(write_callback) write_callback(index, false);}
-    void write(const bool & val){if(write_callback) write_callback(index, val);}
-    bool read() const override {return read_callback ? read_callback(index) : false;}
+    friend class PortVirtual;
+public:
+    GpioVirtual(const int8_t & _pin_index, WriteCallback _write_callback = nullptr,
+        ReadCallback _read_callback = nullptr, ModeCallback _mode_callback = nullptr)
+        : pin_index(_pin_index), write_callback(_write_callback), read_callback(_read_callback), mode_callback(_mode_callback){;}
+
+    void set() override {if(write_callback) write_callback(pin_index, true);}
+    void clr() override{if(write_callback) write_callback(pin_index, false);}
+    void write(const bool & val){if(write_callback) write_callback(pin_index, val);}
+    bool read() const override {return read_callback ? read_callback(pin_index) : false;}
 
     GpioVirtual & operator = (const bool _val) override {write(_val); return *this;}
     GpioVirtual & operator = (GpioVirtual & other) {write(other.read()); return *this;}
 
-    void OutPP() override {if(dir_callback) dir_callback(index, true);}
-    void OutOD() override {if(dir_callback) dir_callback(index, true);}
-    void OutAfPP() override {if(dir_callback) dir_callback(index, true);}
-    void OutAfOD() override {if(dir_callback) dir_callback(index, true);}
-    void InAnalog() override {if(dir_callback) dir_callback(index, false);}
-    void InFloating() override {if(dir_callback) dir_callback(index, false);}
-    void InPullUP() override {if(dir_callback) dir_callback(index, false);}
-    void InPullDN() override {if(dir_callback) dir_callback(index, false);}
+    bool isValid() const override{return true;}
+
+    void setMode(const PinMode mode) override{if(mode_callback) mode_callback(pin_index, mode);}
 };
 
 typedef struct {

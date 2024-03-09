@@ -20,7 +20,6 @@ void SpiHw::enableRcc(const bool en){
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
 Gpio SpiHw::get##name##Pin(){\
-    using Pin = Gpio::Pin;\
 \
     GPIO_TypeDef * gpio_instance = GPIOA;\
     uint16_t gpio_pin = 0;\

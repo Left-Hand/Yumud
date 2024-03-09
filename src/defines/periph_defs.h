@@ -4,6 +4,22 @@
 
 #include "user_defs.h"
 
+#ifdef CH32V203
+    #define HAVE_GPIOA
+    #define HAVE_GPIOB
+    #define HAVE_GPIOC
+    #if CH32V203R
+    #define HAVE_GPIOD
+    #endif
+#elif defined(CH32V303)
+
+#elif defined(CH32V305)
+
+#elif defined(CH32V307)
+
+#endif
+
+
 #ifdef HAVE_UART1
     #define UART1_Baudrate (115200 * 4)
 
