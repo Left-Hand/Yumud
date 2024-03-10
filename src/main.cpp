@@ -170,7 +170,8 @@ int main(){
     // while(true){
     //     hc12.isValid();
     // }
-    PortVirtual pv = PortVirtual();
+    GpioVirtual Ledv = GpioVirtual(Led);
+    auto pv = PortVirtual();
     pv.init();
     pv.bindPin(Led, 1);
 
@@ -178,10 +179,11 @@ int main(){
     while(true){
         static bool i = false;
         i =!i;
-        delay(100);
-        pv.writeByIndex(1, i);
-
+        // delay(100);
+        // pv.writeByIndex(1, i);
+        Ledv = i;
     }
+
     while(true){
         real_t dutyX = 0.5 + 0.5 * cos(t);
         real_t dutyY = 0.5 + 0.5 * sin(t);

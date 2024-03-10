@@ -104,46 +104,42 @@ void PortVirtual::bindPin(GpioVirtual & gpio, const uint8_t index){
 
 
 
-
-
-
-
-void PortVirtualDynamic::writeByIndex(const int8_t & index, const bool & data){
+void PortVirtualStatic::writeByIndex(const int8_t & index, const bool & data){
     if(pin_ptrs[index] == nullptr || index < 0) return;
     pin_ptrs[index]->write(data);
 }
 
-bool PortVirtualDynamic::readByIndex(const int8_t & index){
+bool PortVirtualStatic::readByIndex(const int8_t & index){
     if(pin_ptrs[index] == nullptr || index < 0) return false;
     return bool(*(pin_ptrs[index]));
 }
-void PortVirtualDynamic::write(const uint16_t & data){
+void PortVirtualStatic::write(const uint16_t & data){
     for(uint8_t i = 0; i < 16; i++){
         writeByIndex(i, bool(data & (1 << i)));
     }
 };
 
-void PortVirtualDynamic::set(const Pin & pin){
+void PortVirtualStatic::set(const Pin & pin){
     pin_ptrs[CTZ((uint16_t)pin)]->set();
 }
 
-void PortVirtualDynamic::clr(const Pin & pin){
+void PortVirtualStatic::clr(const Pin & pin){
     pin_ptrs[CTZ((uint16_t)pin)]->clr();
 }
 
-void PortVirtualDynamic::setBits(const uint16_t & data){
+void PortVirtualStatic::setBits(const uint16_t & data){
     for(uint8_t i = 0; i < 16; i++){
         if(data & (1 << i)) pin_ptrs[i]->set();
     }
 }
 
-void PortVirtualDynamic::clrBits(const uint16_t & data){
+void PortVirtualStatic::clrBits(const uint16_t & data){
     for(uint8_t i = 0; i < 16; i++){
         if(data & (1 << i)) pin_ptrs[i]->clr();
     }
 }
 
-const uint16_t PortVirtualDynamic::read(){
+const uint16_t PortVirtualStatic::read(){
     uint16_t data = 0;
     for(uint8_t i = 0; i < 16; i++){
         data |= uint16_t(pin_ptrs[i]->read() << i);
@@ -151,12 +147,12 @@ const uint16_t PortVirtualDynamic::read(){
     return data;
 }
 
-void PortVirtualDynamic::setModeByIndex(const int8_t & index, const PinMode & mode){
+void PortVirtualStatic::setModeByIndex(const int8_t & index, const PinMode & mode){
     if(pin_ptrs[index] == nullptr || index < 0) return;
     pin_ptrs[index]->setMode(mode);
 }
 
-void PortVirtualDynamic::bindPin(GpioVirtual & gpio, const uint8_t index){
+void PortVirtualStatic::bindPin(GpioVirtual & gpio, const uint8_t index){
     if(pin_ptrs[index] == nullptr || index < 0) return;
     pin_ptrs[index] = &gpio;
 }

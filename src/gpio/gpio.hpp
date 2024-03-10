@@ -3,8 +3,7 @@
 #define __GPIO_HPP__
 
 #include "gpio_enums.h"
-#include "src/platform.h"
-#include "stdint.h"
+#include "bitband.h"
 #include <functional>
 
 #ifndef MCU_V
@@ -34,6 +33,7 @@ public:
     virtual bool isValid() const = 0;
 };
 
+
 class Gpio:public GpioBase{
 protected:
     volatile GPIO_TypeDef* instance = GPIOA;
@@ -42,9 +42,8 @@ protected:
     uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;
 
-
-
     friend class PortVirtual;
+    friend class GpioVirtual;
 public:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         instance(_instance),
@@ -93,7 +92,13 @@ protected:
     ModeCallback mode_callback;
 
     friend class PortVirtual;
+
+    WriteCallback getNativeWriteCallback(Gpio & gpio);
+    ReadCallback getNativeReadCallback(Gpio & gpio);
+    ModeCallback getNativeModeCallback(Gpio & gpio);
 public:
+    GpioVirtual(Gpio & gpio):pin_index(gpio.pin_index),
+            write_callback(getNativeWriteCallback(gpio)), read_callback(getNativeReadCallback(gpio)),mode_callback(getNativeModeCallback(gpio)){;}
     GpioVirtual(const int8_t & _pin_index, WriteCallback _write_callback = nullptr,
         ReadCallback _read_callback = nullptr, ModeCallback _mode_callback = nullptr)
         : pin_index(_pin_index), write_callback(_write_callback), read_callback(_read_callback), mode_callback(_mode_callback){;}
@@ -111,47 +116,6 @@ public:
     void setMode(const PinMode mode) override{if(mode_callback) mode_callback(pin_index, mode);}
 };
 
-typedef struct {
-	uint32_t bit0 :1;
-	uint32_t bit1 :1;
-	uint32_t bit2 :1;
-	uint32_t bit3 :1;
-	uint32_t bit4 :1;
-	uint32_t bit5 :1;
-	uint32_t bit6 :1;
-	uint32_t bit7 :1;
-	uint32_t bit8 :1;
-	uint32_t bit9 :1;
-	uint32_t bit10 :1;
-	uint32_t bit11 :1;
-	uint32_t bit12 :1;
-	uint32_t bit13 :1;
-	uint32_t bit14 :1;
-	uint32_t bit15 :1;
-	uint32_t bit16 :1;
-	uint32_t bit17 :1;
-	uint32_t bit18 :1;
-	uint32_t bit19 :1;
-	uint32_t bit20 :1;
-	uint32_t bit21 :1;
-	uint32_t bit22 :1;
-	uint32_t bit23 :1;
-	uint32_t bit24 :1;
-	uint32_t bit25 :1;
-	uint32_t bit26 :1;
-	uint32_t bit27 :1;
-	uint32_t bit28 :1;
-	uint32_t bit29 :1;
-	uint32_t bit30 :1;
-	uint32_t bit31 :1;
-} GPIO_REG;
-
-#define PAout(n)	(((GPIO_REG *)(&(GPIOA->OUTDR)))->bit##n)
-#define PAin(n)		(((GPIO_REG *)(&(GPIOA->INDR)))->bit##n)
-#define PBout(n)	(((GPIO_REG *)(&(GPIOB->OUTDR)))->bit##n)
-#define PBin(n)		(((GPIO_REG *)(&(GPIOB->INDR)))->bit##n)
-#define PCout(n)	(((GPIO_REG *)(&(GPIOC->OUTDR)))->bit##n)
-#define PCin(n)		(((GPIO_REG *)(&(GPIOC->INDR)))->bit##n)
 
 #ifdef MCU_V
 #undef MCU_V

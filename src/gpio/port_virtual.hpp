@@ -32,14 +32,14 @@ public:
     void setModeByIndex(const int8_t & index, const PinMode & mode);
 };
 
-class PortVirtualDynamic : public PortBase{
+class PortVirtualStatic : public PortBase{
 protected:
     GpioVirtual * pin_ptrs[16] = {nullptr};
 
     void write(const uint16_t & data);
     const uint16_t read();
 public:
-    PortVirtualDynamic(){;}
+    PortVirtualStatic(){;}
     void init(){;}
     void writeByIndex(const int8_t & index, const bool & data) override;
     bool readByIndex(const int8_t & index) override;
@@ -52,7 +52,7 @@ public:
     void set(const Pin & pin) override;
     void clr(const Pin & pin) override;
 
-    PortVirtualDynamic & operator = (const uint16_t & data){write(data); return *this;}
+    PortVirtualStatic & operator = (const uint16_t & data){write(data); return *this;}
 
     operator uint16_t(){return read();}
 
