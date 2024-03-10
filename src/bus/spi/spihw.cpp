@@ -161,11 +161,6 @@ void SpiHw::init(const uint32_t & baudrate){
     instance->DATAR;
 }
 
-
-void SpiHw::bindCsPin(const GpioVirtual & gpio, const uint8_t index){
-    cs_pins.bindPin(gpio, index);
-}
-
 SpiHw::Error SpiHw::write(const uint32_t & data){
     uint32_t dummy = 0;
     transfer(dummy, data);

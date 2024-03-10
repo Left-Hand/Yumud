@@ -4,6 +4,8 @@
 
 Spi1 spi1;
 
+int8_t Spi1::occupied = -1;
+
 __interrupt
 void SPI1_IRQHandler(void){
 }

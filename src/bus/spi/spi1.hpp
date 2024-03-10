@@ -7,7 +7,7 @@
 
 class Spi1:public SpiHw{
 protected:
-    int8_t occupied;
+    static int8_t occupied;
 
     void lock(const uint8_t &index) override{occupied = index;}
     void unlock() override{occupied = -1;}

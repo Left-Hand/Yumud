@@ -6,26 +6,12 @@
 #include "src/gpio/port_virtual.hpp"
 #include "src/bus/serbus.hpp"
 
-class Spi:public SerBus{
-public:
-};
-
 constexpr int spi_max_cs_pins = 4;
-class SpiHw:public Spi{
+
+class Spi:public SerBus{
 protected:
-    SPI_TypeDef * instance;
     PortVirtual<spi_max_cs_pins> cs_pins = PortVirtual<spi_max_cs_pins>();
-    bool hw_cs_enabled = false;
-
-    Gpio getMosiPin();
-    Gpio getMisoPin();
-    Gpio getSclkPin();
-    Gpio getCsPin();
-
-    void enableRcc(const bool en = true);
-    uint16_t calculatePrescaler(const uint32_t baudRate);
-    void initGpios();
-
+public:
     Error begin_use(const uint8_t & index = 0) override {
         lock(index);
         GpioVirtual * cs_pin = cs_pins[wholock()];
@@ -50,11 +36,33 @@ protected:
     virtual void lock(const uint8_t & index) = 0;
     virtual void unlock() = 0;
     virtual int8_t wholock() = 0;
+
+    void bindCsPin(const GpioVirtual & gpio, const uint8_t index){
+        cs_pins.bindPin(gpio, index);
+    }
+};
+
+
+class SpiHw:public Spi{
+protected:
+    SPI_TypeDef * instance;
+    bool hw_cs_enabled = false;
+
+    Gpio getMosiPin();
+    Gpio getMisoPin();
+    Gpio getSclkPin();
+    Gpio getCsPin();
+
+    void enableRcc(const bool en = true);
+    uint16_t calculatePrescaler(const uint32_t baudRate);
+    void initGpios();
+
 public:
     SpiHw(SPI_TypeDef * _instance):instance(_instance){;}
+    SpiHw(SPI_TypeDef * _instance, GpioVirtual & _cs_pin):instance(_instance){bindCsPin(_cs_pin, 0);}
     void init(const uint32_t & baudRate) override;
     void enableHwCs(const bool en = true);
-    void bindCsPin(const GpioVirtual & gpio, const uint8_t index);
+
     void enableRxIt(const bool en = true);
 
     Error write(const uint32_t & data) override;

@@ -90,4 +90,7 @@
 #define BSWAP_32(x) ((BSWAP_16(x) << 16) | BSWAP_16((x) >> 16))
 #define BSWAP_64(x) ((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32))
 
+#ifdef __cplusplus
+// #define DECLTYPE(...) decltype(__VA_ARGS__)
+#endif
 #endif

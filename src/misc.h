@@ -55,6 +55,7 @@
 #include "types/quat/Quat_t.hpp"
 #include "device/Wireless/Radio/HC12/HC12.hpp"
 #include "gpio/port_virtual.hpp"
+#include "src/bus/spi/spi_sw.hpp"
 
 
 extern real_t t;

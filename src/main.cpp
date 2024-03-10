@@ -12,6 +12,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 
 #define I2C_BaudRate 400000
 
+
 // Gpio i2sSck = Gpio(GPIOB, I2S_SW_SCK);
 // Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
 // Gpio i2sWs = Gpio(GPIOB, I2S_SW_WS);
@@ -22,7 +23,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 // SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
 // SpiDrv spiDrvOled = SpiDrv(spi2, 0);
 // SpiDrv spiDrvFlash = SpiDrv(spi1, 0);
-SpiDrv spiDrvMagSensor = SpiDrv(spi1, 0);
+
 // SpiDrv spiDrvRadio = SpiDrv(spi1, 0);
 // I2cDrv i2cDrvOled = I2cDrv(i2cSw,(uint8_t)0x78);
 // I2cDrv i2cDrvMpu = I2cDrv(i2cSw,(uint8_t)0xD0);
@@ -47,7 +48,7 @@ SpiDrv spiDrvMagSensor = SpiDrv(spi1, 0);
 // AS5600 mags(i2cDrvAS);
 // TM8211 extern_dac(i2sDrvTm);
 // W25QXX extern_flash(spiDrvFlash);
-MA730 mag_sensor(spiDrvMagSensor);
+
 // AS5600 mag_sensor(i2cDrvAS);
 // QMC5883L earth_sensor(i2cDrvQm);
 // BMP280 prs_sensor(i2cDrvBm);
@@ -98,6 +99,7 @@ __fast_inline RGB565 Mandelbrot(const Vector2 & UV){
 
 constexpr uint16_t pwm_arr = 144000000/12000 - 1;
 constexpr uint16_t ir_arr = 144000000/38000 - 1;
+
 
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -162,18 +164,34 @@ int main(){
     auto pv = PortVirtual<8>();
     pv.bindPin(Led, 0);
     // uart1.init(UART1_Baudrate);
+    Gpio mosi_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
+    Gpio miso_pin = Gpio(SPI1_MISO_Port, (Pin)SPI1_MISO_Pin);
+    Gpio sck_pin = Gpio(SPI1_SCLK_Port, (Pin)SPI1_SCLK_Pin);
+    GpioVirtual cs_pin = Gpio(SPI1_CS_Port, (Pin)SPI1_CS_Pin);
+    cs_pin.OutPP();
+    SpiSw spisw(sck_pin, mosi_pin, miso_pin, cs_pin);
 
-    Gpio useless_pin = Gpio(GPIOC, Pin::None);
-    spi1.init(SPI1_BaudRate);
-    SerBus & bus = spi1;
+    Spi & spi = spisw;
+    // <DECLTYPE(miso_pin, mosi_pin)>
+    // SpiDrv spiDrvMagSensor = SpiDrv(spi, 0);
+    // MA730 mag_sensor(spiDrvMagSensor);
+    spi.init(SPI1_BaudRate);
+
     while(true){
         // Led = !Led;
         static bool i = false;
         i = !i;
         // delay (100);
         static uint8_t cnt = 0;
-        mag_sensor.setDirection(true);
-        mag_sensor.getRawData();
+        // mag_sensor.setDirection(true);
+        // mag_sensor.getRawData();
+        spi.begin(0);
+        // spi.write(0xA5);
+        static uint32_t ret;
+        spi.transfer(ret, ret+1);
+        uart2.println(ret);
+        spi.end();
+
         // pv.writeByIndex(0, i);
         // for(uint8_t _ = 0; _ < 32; _++)spi1.write(cnt++);
         // uint32_t dummy = 0;
