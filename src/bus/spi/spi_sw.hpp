@@ -103,7 +103,7 @@ public:
         uint8_t ret = 0;
         delayDur();
 
-        mosi_pin = data_tx & (1 << data_size - 1);
+        mosi_pin = data_tx & (1 << (data_size - 1));
         clk_up();
         ret |= miso_pin.read();
         for(uint8_t i = 0; i < data_size - 1; i++){

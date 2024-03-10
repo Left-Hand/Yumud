@@ -6,10 +6,11 @@
 #include "src/gpio/port_virtual.hpp"
 #include "src/bus/serbus.hpp"
 
-constexpr int spi_max_cs_pins = 4;
+
 
 class Spi:public SerBus{
 protected:
+    static constexpr uint8_t spi_max_cs_pins = 4;
     PortVirtual<spi_max_cs_pins> cs_pins = PortVirtual<spi_max_cs_pins>();
 public:
     Error begin_use(const uint8_t & index = 0) override {

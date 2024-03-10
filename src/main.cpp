@@ -177,6 +177,7 @@ int main(){
     // MA730 mag_sensor(spiDrvMagSensor);
     spi.init(SPI1_BaudRate);
 
+    HC595<2> hc595(sck_pin, mosi_pin, cs_pin);
     while(true){
         // Led = !Led;
         static bool i = false;
@@ -188,10 +189,11 @@ int main(){
         spi.begin(0);
         // spi.write(0xA5);
         static uint32_t ret;
-        spi.transfer(ret, ret+1);
-        uart2.println(ret);
+        // spi.transfer(ret, ret+1);
+        hc595.setContent({0, cnt});
+        // uart2.println(ret);
         spi.end();
-
+        cnt++;
         // pv.writeByIndex(0, i);
         // for(uint8_t _ = 0; _ < 32; _++)spi1.write(cnt++);
         // uint32_t dummy = 0;
