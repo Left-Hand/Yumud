@@ -1,5 +1,5 @@
 # vscode files
-# *.VSCodeCounter
+*.VSCodeCounter
 .vscode/launch.json
 .eide/log
 

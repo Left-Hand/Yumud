@@ -69,8 +69,7 @@ public:
                 mosi_pin(_mosi_pin), miso_pin(_miso_pin), delays(_delays){;}
     SpiSw(GpioBase & _sclk_pin,GpioBase & _mosi_pin,
             GpioBase & _miso_pin,GpioVirtual & _cs_pin, const uint16_t & _delays = 10):SpiSw(_sclk_pin, _mosi_pin, _miso_pin, delays){
-                // _cs_pin.OutPP();
-                bindCsPin(_cs_pin, 0);
+                bindCsPin(static_cast<GpioVirtual>(_cs_pin), 0);
             }
     Error write(const uint32_t & data) override {
         delayDur();
@@ -128,9 +127,9 @@ public:
         mosi_pin.OutPP();
         sclk_pin.OutPP();
 
-        // for(uint8_t i = 0; i < cs_pins.getSize(); i++){
-        //     cs_pins.setModeByIndex(i, PinMode::OutPP);
-        // }
+        for(uint8_t i = 0; i < cs_pins.getSize(); i++){
+            cs_pins.setModeByIndex(i, PinMode::OutPP);
+        }
 
         miso_pin.InFloating();
     }
