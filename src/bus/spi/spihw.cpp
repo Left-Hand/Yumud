@@ -96,9 +96,9 @@ void SpiHw::initGpios(){
 
 void SpiHw::enableHwCs(const bool en){
     if(en){
-        Gpio cs_pin = getCsPin();
-        cs_pin = true;
-        cs_pin.OutAfPP();
+        Gpio _cs_pin = getCsPin();
+        _cs_pin = true;
+        _cs_pin.OutAfPP();
     }
 }
 

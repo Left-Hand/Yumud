@@ -64,6 +64,8 @@ public:
 
     operator uint16_t(){return instance->INDR;}
     void setModeByIndex(const int8_t & index, const PinMode & mode) override;
+
+    GPIO_TypeDef * getInstance(){return instance;}
 };
 
 __fast_inline void Port::writeByIndex(const int8_t index, const bool data){

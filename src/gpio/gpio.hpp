@@ -41,7 +41,6 @@ protected:
     uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;
 
-    friend class PortVirtual;
     friend class GpioVirtual;
 public:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
@@ -51,6 +50,7 @@ public:
         pin_mask(~(0xf << ((pin_index % 8) * 4))),
         pin_cfg(pin_index >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){;}
 
+    Gpio(Port & _port, const Pin _pin):Gpio(_port.getInstance(), _pin){;}
     ~Gpio(){};
 
     __fast_inline void set()override{instance->BSHR = pin;}
