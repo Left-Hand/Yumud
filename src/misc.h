@@ -56,7 +56,7 @@
 #include "device/Wireless/Radio/HC12/HC12.hpp"
 #include "gpio/port_virtual.hpp"
 #include "src/bus/spi/spi_sw.hpp"
-#include "VirtualIO/HC595/HC595.hpp"
+#include "VirtualIO/HC595/hc595.hpp"
 
 
 extern real_t t;

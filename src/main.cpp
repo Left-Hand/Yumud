@@ -177,7 +177,11 @@ int main(){
     // MA730 mag_sensor(spiDrvMagSensor);
     spi.init(SPI1_BaudRate);
 
-    HC595<2> hc595(sck_pin, mosi_pin, cs_pin);
+    // HC595<2> hc595(sck_pin, mosi_pin, cs_pin);
+
+    HC595Single hc595single(sck_pin, mosi_pin, cs_pin);
+    GpioVirtual gv = GpioVirtual(&hc595single, 0);
+    hc595single.init();
     while(true){
         // Led = !Led;
         static bool i = false;
@@ -186,13 +190,16 @@ int main(){
         static uint8_t cnt = 0;
         // mag_sensor.setDirection(true);
         // mag_sensor.getRawData();
-        spi.begin(0);
+        // spi.begin(0);
         // spi.write(0xA5);
-        static uint32_t ret;
+        // static uint32_t ret;
+        // hc595single.writeByIndex(0, i);
+        gv = !gv;
         // spi.transfer(ret, ret+1);
-        hc595.setContent({0, cnt});
+        // hc595.setContent({0, cnt});
+        // hc595single = 1;
         // uart2.println(ret);
-        spi.end();
+        // spi.end();
         cnt++;
         // pv.writeByIndex(0, i);
         // for(uint8_t _ = 0; _ < 32; _++)spi1.write(cnt++);
