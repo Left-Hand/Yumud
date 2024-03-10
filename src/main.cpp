@@ -7,6 +7,11 @@ using Color = Color_t<real_t>;
 Gpio i2cScl = Gpio(GPIOB, (Pin)I2C_SW_SCL);
 Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
 
+constexpr uint32_t SPI1_BaudRate = (144000000/32);
+constexpr uint32_t SPI2_BaudRate = (144000000/8);
+
+#define I2C_BaudRate 400000
+
 // Gpio i2sSck = Gpio(GPIOB, I2S_SW_SCK);
 // Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
 // Gpio i2sWs = Gpio(GPIOB, I2S_SW_WS);
@@ -17,7 +22,7 @@ Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
 // SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
 // SpiDrv spiDrvOled = SpiDrv(spi2, 0);
 // SpiDrv spiDrvFlash = SpiDrv(spi1, 0);
-// SpiDrv spiDrvMagSensor = SpiDrv(spi1, 0);
+SpiDrv spiDrvMagSensor = SpiDrv(spi1, 0);
 // SpiDrv spiDrvRadio = SpiDrv(spi1, 0);
 // I2cDrv i2cDrvOled = I2cDrv(i2cSw,(uint8_t)0x78);
 // I2cDrv i2cDrvMpu = I2cDrv(i2cSw,(uint8_t)0xD0);
@@ -42,7 +47,7 @@ Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
 // AS5600 mags(i2cDrvAS);
 // TM8211 extern_dac(i2sDrvTm);
 // W25QXX extern_flash(spiDrvFlash);
-// MA730 mag_sensor(spiDrvMagSensor);
+MA730 mag_sensor(spiDrvMagSensor);
 // AS5600 mag_sensor(i2cDrvAS);
 // QMC5883L earth_sensor(i2cDrvQm);
 // BMP280 prs_sensor(i2cDrvBm);
@@ -160,16 +165,18 @@ int main(){
 
     Gpio useless_pin = Gpio(GPIOC, Pin::None);
     spi1.init(SPI1_BaudRate);
+    SerBus & bus = spi1;
     while(true){
         // Led = !Led;
         static bool i = false;
         i = !i;
         // delay (100);
         static uint8_t cnt = 0;
-        pv.writeByIndex(0, i);
-        spi1.begin(0);
-        spi1.write(cnt++);
-        spi1.end();
+        mag_sensor.setDirection(true);
+        mag_sensor.getRawData();
+        // pv.writeByIndex(0, i);
+        // for(uint8_t _ = 0; _ < 32; _++)spi1.write(cnt++);
+        // uint32_t dummy = 0;
         // Led = i;
     }
     // while(true){

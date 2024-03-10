@@ -182,8 +182,6 @@ public:
     }
 
     Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
-        write(data_tx);
-        read(data_rx, toAck);
         return ErrorType::OK;
     }
 

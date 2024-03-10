@@ -13,6 +13,7 @@
 #include "../types/vector2/vector2_t.hpp"
 #include "../types/color/color_t.hpp"
 #include "../types/matrix/matrix.hpp"
+#include "src/device/Encoder/MagEnc/MA730/ma730.hpp"
 // #include "MLX90640/MLX90640_API.h"
 // #include "HX711/HX711.h"
 // #include "TTP229/TTP229.h"
