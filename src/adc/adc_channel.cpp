@@ -6,7 +6,7 @@ void AdcChannelOnChip::installToPin(const bool en){
     if(ch_index > 15) return;
 
     GPIO_TypeDef * gpio_port;
-    Pin gpio_pin = PinNone;
+    Pin gpio_pin = Pin::None;
 
     if(ch_index <= 7){
         gpio_port = GPIOA;

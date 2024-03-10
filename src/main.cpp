@@ -103,58 +103,55 @@ int main(){
 
     GPIO_PortC_Init();
 
-    Gpio Led = Gpio(GPIOC, Pin13);
-    Led.OutPP();
+    // timer1.init(10000, 288);
 
-    timer1.init(10000, 288);
+    // auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
+    // tim1ch1.init();
 
-    auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
-    tim1ch1.init();
+    // auto tim1ch1n = timer1.getChannel(TimerOC::Channel::CH1N);
+    // tim1ch1n.init();
 
-    auto tim1ch1n = timer1.getChannel(TimerOC::Channel::CH1N);
-    tim1ch1n.init();
+    // auto tim1ch2 = timer1.getChannel(TimerOC::Channel::CH2);
+    // tim1ch2.init();
 
-    auto tim1ch2 = timer1.getChannel(TimerOC::Channel::CH2);
-    tim1ch2.init();
+    // auto tim1ch3 = timer1.getChannel(TimerOC::Channel::CH3);
+    // tim1ch3.init();
 
-    auto tim1ch3 = timer1.getChannel(TimerOC::Channel::CH3);
-    tim1ch3.init();
-
-    auto tim1ch4 = timer1.getChannel(TimerOC::Channel::CH4);
-    tim1ch4.init();
+    // auto tim1ch4 = timer1.getChannel(TimerOC::Channel::CH4);
+    // tim1ch4.init();
 
 
-    timer1.initBdtr(AdvancedTimer::LockLevel::Off, 0);
-    timer1.enable();
+    // timer1.initBdtr(AdvancedTimer::LockLevel::Off, 0);
+    // timer1.enable();
 
-    auto pwmServoX = PwmChannel(tim1ch1);
-    pwmServoX.init();
+    // auto pwmServoX = PwmChannel(tim1ch1);
+    // pwmServoX.init();
 
-    auto pwmServoY = PwmChannel(tim1ch2);
-    pwmServoY.init();
+    // auto pwmServoY = PwmChannel(tim1ch2);
+    // pwmServoY.init();
 
-    auto pwmCoilP = PwmChannel(tim1ch3);
-    pwmCoilP.init();
+    // auto pwmCoilP = PwmChannel(tim1ch3);
+    // pwmCoilP.init();
 
-    auto pwmCoilN = PwmChannel(tim1ch4);
-    pwmCoilN.init();
-
-
-    auto servoX = Servo180(pwmServoX);
-    servoX.init();
-    servoX.setAngle(real_t(0));
+    // auto pwmCoilN = PwmChannel(tim1ch4);
+    // pwmCoilN.init();
 
 
-    auto servoY = Servo180(pwmServoY);
-    servoY.init();
-    servoY.setAngle(real_t(0));
+    // auto servoX = Servo180(pwmServoX);
+    // servoX.init();
+    // servoX.setAngle(real_t(0));
 
-    auto coil = Coil(pwmCoilP, pwmCoilN);
-    coil.init();
-    coil.setDuty(real_t(-0.4));
 
-    uart2.init(UART2_Baudrate, Uart::TxRx);
-    uart2.setEps(4);
+    // auto servoY = Servo180(pwmServoY);
+    // servoY.init();
+    // servoY.setAngle(real_t(0));
+
+    // auto coil = Coil(pwmCoilP, pwmCoilN);
+    // coil.init();
+    // coil.setDuty(real_t(-0.4));
+
+    // uart2.init(UART2_Baudrate, Uart::TxRx);
+    // uart2.setEps(4);
     // uart1.init(UART1_Baudrate);
 
     // while(true){
@@ -170,35 +167,64 @@ int main(){
     // while(true){
     //     hc12.isValid();
     // }
+
+    Gpio Led = Gpio(GPIOB, Pin::_12);
+    // Led.OutPP();
     GpioVirtual Ledv = GpioVirtual(Led);
+    Ledv.OutPP();
     auto pv = PortVirtual();
     pv.init();
-    pv.bindPin(Led, 1);
-
-    Led = false;
+    pv.bindPin(Ledv, 1);
     while(true){
         static bool i = false;
-        i =!i;
-        // delay(100);
-        // pv.writeByIndex(1, i);
-        Ledv = i;
-    }
+        i = !i;
+        // delay(1);
 
-    while(true){
-        real_t dutyX = 0.5 + 0.5 * cos(t);
-        real_t dutyY = 0.5 + 0.5 * sin(t);
-        servoY.setDuty(dutyY);
-        servoX.setDuty(dutyX);
-        reCalculateTime();
-        // Led = true;
-        // pv.set(Pin1);
-        delay(100);
-        uart2.println(dutyX);
-        // volatile String x = dutyX.toString(3);
-        // Led = false;
-        pv.clr(Pin1);
-        delay(100);
+        // Led = i;
+        // portB.writeByIndex(12, i);
+        // Led = i;
+        // Ledv = i;
+    
+        // portB.setByIndex(12);
+        // portB.clrByIndex(12);
+        // portB.setBits(GPIO_Pin_12);
+        // portB.clrBits(GPIO_Pin_12);
+        // if(i)
+        // GPIOB->BSHR = (uint16_t)Pin::_12;
+        // __nopn(30);
+        // GPIOB->BCR = (uint16_t)Pin::_12;
+            // if(i)
+        // __nopn(30);
+        // GPIOB->BSHR = (uint16_t)Pin::_12;
+        // GPIOB->BCR = (uint16_t)Pin::_12;
+        // Ledv = i;
+        // pv.writeByIndex(1, i);
+        // if(i)GPIO_SetBits(GPIOC, GPIO_Pin_13);else GPIO_ResetBits(GPIOC, GPIO_Pin_13);
+        // delay(100);
     }
+    // while(true){
+    //     
+    //     i =!i;
+    //     // delay(100);
+    //     // pv.writeByIndex(1, i);
+    //     Ledv = i;
+    // }
+
+    // while(true){
+    //     real_t dutyX = 0.5 + 0.5 * cos(t);
+    //     real_t dutyY = 0.5 + 0.5 * sin(t);
+    //     servoY.setDuty(dutyY);
+    //     servoX.setDuty(dutyX);
+    //     reCalculateTime();
+    //     // Led = true;
+    //     // pv.set(Pin1);
+    //     delay(100);
+    //     uart2.println(dutyX);
+    //     // volatile String x = dutyX.toString(3);
+    //     // Led = false;
+    //     // pv.clr(Pin::_1);
+    //     delay(100);
+    // }
     // tim1ch2.init();
     // tim1ch2 = real_t(0.8);
 

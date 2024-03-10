@@ -2,7 +2,7 @@
 
 #define __SPI_HPP__
 
-#include "src/gpio/port.hpp"
+#include "src/gpio/gpio.hpp"
 #include "src/bus/serbus.hpp"
 
 class Spi:public SerBus{

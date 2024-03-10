@@ -2,14 +2,13 @@
 
 #define __GPIO_HPP__
 
-#include "gpio_enums.h"
 #include "bitband.h"
-#include <functional>
+#include "port.hpp"
+#include "gpio_enums.hpp"
 
 #ifndef MCU_V
 #define MCU_V (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)
 #endif
-
 
 class GpioBase{
 public:
@@ -36,8 +35,8 @@ public:
 
 class Gpio:public GpioBase{
 protected:
-    volatile GPIO_TypeDef* instance = GPIOA;
-    const Pin pin;
+    volatile GPIO_TypeDef * instance = GPIOA;
+    uint16_t pin;
     int8_t pin_index = 0;
     uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;
@@ -47,8 +46,8 @@ protected:
 public:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         instance(_instance),
-        pin(((_instance == GPIOC) && MCU_V) ? ((Pin)((uint16_t)_pin >> 13)) : _pin),
-        pin_index(__builtin_ctz((uint16_t)pin)),
+        pin(((_instance == GPIOC) && MCU_V) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
+        pin_index((_pin != Pin::None) ? __builtin_ctz((uint16_t)pin) : -1),
         pin_mask(~(0xf << ((pin_index % 8) * 4))),
         pin_cfg(pin_index >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){;}
 
@@ -61,7 +60,7 @@ public:
     __fast_inline Gpio & operator = (const bool _val) override {(_val) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
     __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
 
-    bool isValid() const {return pin != PinNone;}
+    bool isValid() const {return pin_index >= 0;}
 
     void setMode(const PinMode mode) override{
         if(!isValid()) return;
@@ -78,42 +77,25 @@ public:
     }
 };
 
-
 class GpioVirtual:public GpioBase{
 protected:
-    typedef std::function<void(const int8_t&, const bool&)> WriteCallback;
-    typedef std::function<bool(const int8_t&)> ReadCallback;
-    typedef std::function<void(const int8_t&, const PinMode&)> ModeCallback;
+    PortBase * instance;
+    const int8_t pin_index;
 
-    int8_t pin_index;
-
-    WriteCallback write_callback;
-    ReadCallback read_callback;
-    ModeCallback mode_callback;
-
-    friend class PortVirtual;
-
-    WriteCallback getNativeWriteCallback(Gpio & gpio);
-    ReadCallback getNativeReadCallback(Gpio & gpio);
-    ModeCallback getNativeModeCallback(Gpio & gpio);
+    PortBase * form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance);
 public:
-    GpioVirtual(Gpio & gpio):pin_index(gpio.pin_index),
-            write_callback(getNativeWriteCallback(gpio)), read_callback(getNativeReadCallback(gpio)),mode_callback(getNativeModeCallback(gpio)){;}
-    GpioVirtual(const int8_t & _pin_index, WriteCallback _write_callback = nullptr,
-        ReadCallback _read_callback = nullptr, ModeCallback _mode_callback = nullptr)
-        : pin_index(_pin_index), write_callback(_write_callback), read_callback(_read_callback), mode_callback(_mode_callback){;}
+    GpioVirtual(Gpio & gpio):instance(form_gpiotypedef_to_port(gpio.instance)), pin_index(gpio.pin_index){;}
+    GpioVirtual(PortBase * _instance, const int8_t _pin_index):instance(_instance), pin_index(_pin_index){;}
+    __fast_inline void set() override {instance->setByIndex(pin_index);}
+    __fast_inline void clr() override {instance->clrByIndex(pin_index);}
+    __fast_inline void write(const bool & val){instance->writeByIndex(pin_index, val);}
+    __fast_inline bool read() const override {return instance->readByIndex(pin_index);}
 
-    void set() override {if(write_callback) write_callback(pin_index, true);}
-    void clr() override{if(write_callback) write_callback(pin_index, false);}
-    void write(const bool & val){if(write_callback) write_callback(pin_index, val);}
-    bool read() const override {return read_callback ? read_callback(pin_index) : false;}
+    __fast_inline GpioVirtual & operator = (const bool _val) override {write(_val); return *this;}
+    __fast_inline GpioVirtual & operator = (GpioBase & other) {write(other.read()); return *this;}
 
-    GpioVirtual & operator = (const bool _val) override {write(_val); return *this;}
-    GpioVirtual & operator = (GpioVirtual & other) {write(other.read()); return *this;}
-
-    bool isValid() const override{return true;}
-
-    void setMode(const PinMode mode) override{if(mode_callback) mode_callback(pin_index, mode);}
+    bool isValid() const override{return pin_index >= 0;}
+    void setMode(const PinMode mode) override{instance->setModeByIndex(pin_index, mode);}
 };
 
 
