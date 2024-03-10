@@ -13,8 +13,9 @@ public:
         OK,
         ALREADY,
         OCCUPIED,
-        OVER_TIME,
-        NO_ACK
+        TIMEOUT,
+        OVERLOAD,
+        NACK
     };
 
     struct Error{

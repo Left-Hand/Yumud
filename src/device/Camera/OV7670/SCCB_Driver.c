@@ -46,7 +46,7 @@
 //     delay_us(50);
 // }  
 // //产生NA信号
-// void SCCB_No_Ack(void)
+// void SCCB_NACK(void)
 // {
 // 	delay_us(50);
 // 	SCCB_SDA=1;	
@@ -132,7 +132,7 @@
 // 	SCCB_WR_Byte(SCCB_ID|0X01);	//发送读命令	  
 // 	delay_us(100);
 //   	val=SCCB_RD_Byte();		 	//读取数据
-//   	SCCB_No_Ack();
+//   	SCCB_NACK();
 //   	SCCB_Stop();
 //   	return val;
 // }

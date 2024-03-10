@@ -36,8 +36,8 @@
 #define I2S_SW_SDA GPIO_Pin_11
 #define I2S_SW_WS GPIO_Pin_1
 
-#define SPI1_BaudRate (144000000/2)
-#define SPI2_BaudRate (144000000/2)
+#define SPI1_BaudRate (144000000/256)
+#define SPI2_BaudRate (144000000/8)
 
 #define I2C_BaudRate 400000
 

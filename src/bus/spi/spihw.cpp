@@ -92,22 +92,53 @@ void SpiHw::initGpios(){
 
     Gpio sclk_pin = getSclkPin();
     sclk_pin.OutAfPP();
+
+    if(!cs_pins.isIndexValid(0)){
+        Gpio cs_pin = getCsPin();
+        cs_pin = true;
+        if(hw_cs_enabled){
+            cs_pin.OutAfPP();
+        }else{
+            cs_pin.OutPP();
+        }
+        bindCsPin(GpioVirtual(cs_pin), 0);
+    }
+
+    for(uint8_t i = 0; i < cs_pins.getSize(); i++){
+        cs_pins.setModeByIndex(i, PinMode::OutPP);
+    }
+
+    switch((uint32_t)instance){
+        #ifdef HAVE_SPI1
+        case SPI1_BASE:
+            GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
+            break;
+        #endif
+        default:
+            break;
+    }
 }
 
 void SpiHw::enableHwCs(const bool en){
+    Gpio _cs_pin = getCsPin();
+    _cs_pin = true;
+
     if(en){
-        Gpio _cs_pin = getCsPin();
-        _cs_pin = true;
         _cs_pin.OutAfPP();
+    }else{
+        _cs_pin.OutPP();
     }
+
+    hw_cs_enabled = en;
 }
 
 void SpiHw::enableRxIt(const bool en){
 
 }
-void SpiHw::init(const uint32_t baudrate){
+void SpiHw::init(const uint32_t & baudrate){
 
 	enableRcc();
+    initGpios();
 
     SPI_InitTypeDef SPI_InitStructure = {0};
 
@@ -121,12 +152,33 @@ void SpiHw::init(const uint32_t baudrate){
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(instance, &SPI_InitStructure);
-
+    GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
 	SPI_Cmd(instance, ENABLE);
 
     while (SPI_I2S_GetFlagStatus(instance, SPI_I2S_FLAG_TXE) == RESET);
     instance->DATAR = 0;
     while (SPI_I2S_GetFlagStatus(instance, SPI_I2S_FLAG_RXNE) == RESET);
     instance->DATAR;
+}
 
+
+void SpiHw::bindCsPin(const GpioVirtual & gpio, const uint8_t index){
+    cs_pins.bindPin(gpio, index);
+}
+
+SpiHw::Error SpiHw::write(const uint32_t & data){
+    uint32_t dummy;
+    return transfer(dummy, data);
+}
+SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
+    return transfer(data, 0);
+}
+SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+    while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
+    instance->DATAR = data_tx;
+
+    while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
+    data_rx = instance->DATAR;
+
+    return Bus::ErrorType::OK;
 }

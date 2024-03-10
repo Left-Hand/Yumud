@@ -35,14 +35,14 @@ public:
         if(!isIndexValid(index))return false;
         return bool(*(pin_ptrs[index]));
     }
-    void bindPin(GpioVirtual & gpio, const uint8_t index){
+    void bindPin(const GpioVirtual & gpio, const uint8_t index){
         if(index < 0 && index >= size)return;
         pin_ptrs[index] = std::make_unique<GpioVirtual>(gpio);
     }
 
-    void bindPin(Gpio & gpio, const uint8_t index){
+    void bindPin(const Gpio & gpio, const uint8_t index){
         if(index < 0 && index >= size)return;
-        pin_ptrs[index] = std::make_unique<GpioVirtual>(GpioVirtual(gpio));
+        pin_ptrs[index] = std::make_unique<GpioVirtual>(gpio);
     }
 
     void setBits(const uint16_t & data) override{
@@ -68,10 +68,15 @@ public:
     PortVirtual & operator = (const uint16_t & data){write(data); return *this;}
 
     operator uint16_t(){return read();}
+    GpioVirtual * operator [](const uint8_t index){return isIndexValid(index) ? pin_ptrs[index].get() : nullptr;}
 
     void setModeByIndex(const int8_t & index, const PinMode & mode){
         if(!isIndexValid(index))return;
         pin_ptrs[index]->setMode(mode);
+    }
+
+    constexpr uint8_t getSize(){
+        return size;
     }
 };
 

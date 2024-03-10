@@ -26,7 +26,7 @@ public:
     while(!cond){\
         if(micros() - begin_time > timeout){\
             end_use();\
-            return ErrorType::NO_ACK;\
+            return ErrorType::NACK;\
         }\
     }\
 }\

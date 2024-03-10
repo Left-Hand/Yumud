@@ -12,7 +12,7 @@ public:
         RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
     };
 
-    Mode mode;
+    Mode mode = TxRx;
 protected:
     virtual Error begin_use(const uint8_t & index = 0) = 0;
     virtual void end_use() = 0;

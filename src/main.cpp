@@ -159,13 +159,17 @@ int main(){
     // uart1.init(UART1_Baudrate);
 
     Gpio useless_pin = Gpio(GPIOC, Pin::None);
-
+    spi1.init(SPI1_BaudRate);
     while(true){
         // Led = !Led;
         static bool i = false;
         i = !i;
-        delay (100);
+        // delay (100);
+        static uint8_t cnt = 0;
         pv.writeByIndex(0, i);
+        spi1.begin(0);
+        spi1.write(cnt++);
+        spi1.end();
         // Led = i;
     }
     // while(true){

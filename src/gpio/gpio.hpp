@@ -84,7 +84,7 @@ protected:
 
     PortBase * form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance);
 public:
-    GpioVirtual(Gpio & gpio):instance(form_gpiotypedef_to_port(gpio.instance)), pin_index(gpio.pin_index){;}
+    GpioVirtual(const Gpio & gpio):instance(form_gpiotypedef_to_port(gpio.instance)), pin_index(gpio.pin_index){;}
     GpioVirtual(PortBase * _instance, const int8_t _pin_index):instance(_instance), pin_index(_pin_index){;}
     __fast_inline void set() override {instance->setByIndex(pin_index);}
     __fast_inline void clr() override {instance->clrByIndex(pin_index);}

@@ -74,8 +74,10 @@ typedef enum {NoREADY = 0, READY = !NoREADY} ErrorStatus;
 typedef bool FunctionalState;
 
 // typedef enum {DISABLE = 0, ENABLE = 1} FunctionalState;
-
-typedef enum {RESET = 0, SET = !RESET} FlagStatus, ITStatus;
+#define RESET (false)
+#define SET (true)
+typedef bool FlagStatus;
+typedef bool ITStatus;
 
 #define   RV_STATIC_INLINE  static  inline
 
