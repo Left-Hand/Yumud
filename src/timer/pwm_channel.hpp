@@ -37,6 +37,7 @@ public:
     }
 
     __fast_inline PwmChannel & operator = (const real_t & duty){setDuty(duty); return *this;}
+    operator real_t() const {return real_t((uint16_t)(instance)) / instance.getPreloadData();}
 };
 
 #endif

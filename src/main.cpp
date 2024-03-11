@@ -100,6 +100,58 @@ __fast_inline RGB565 Mandelbrot(const Vector2 & UV){
 constexpr uint16_t pwm_arr = 144000000/12000 - 1;
 constexpr uint16_t ir_arr = 144000000/38000 - 1;
 
+#define narrow 12
+#define wide 12
+void sendCode(Gpio & gpio,const bool & state){
+    if(state){
+        gpio.set();
+        __nopn(120);
+        gpio.clr();
+        __nopn(32);
+    }else{
+        gpio.set();
+        __nopn(32);
+        gpio.clr();
+        __nopn(120);
+    }
+}
+
+void sendReset(Gpio & gpio){
+    gpio.clr();
+    delayMicroseconds(60);
+    gpio.set();
+}
+
+template <typename Real, int N>
+class LookUpTable {
+protected:
+    std::array<Real, N> values;
+public:
+    LookUpTable(std::array<Real, N> initializedValues) : values(initializedValues) {}
+    virtual Real operator[](const uint32_t & i) const = 0;
+    virtual Real operator[](const Real & x) const = 0;
+};
+
+template <typename Real, int N>
+class SinTable : public LookUpTable<Real, N> {
+public:
+    constexpr SinTable() : LookUpTable<Real, N>([]{
+        std::array<Real, N> arr {};
+        for (int i = 0; i < N; i++) {
+            arr[i] = static_cast<Real>(std::sin(i * TAU / N));
+        }
+        return arr;
+    }()) {}
+
+
+    Real operator[](const uint32_t & i) const override {
+        return this->values[i % N];
+    }
+
+    Real operator[](const Real & x) const override {
+        return this->values[static_cast<int>(x * N) % N];
+    }
+};
 
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -109,7 +161,8 @@ int main(){
     Systick_Init();
 
     GPIO_PortC_Init();
-    timer1.init(10000, 288);
+    // timer1.init(10000, 288);
+    timer1.init(64,1);
 
     auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
     tim1ch1.init();
@@ -130,34 +183,44 @@ int main(){
     timer1.initBdtr(AdvancedTimer::LockLevel::Off, 0);
     timer1.enable();
 
-    auto pwmServoX = PwmChannel(tim1ch1);
-    pwmServoX.init();
-
-    auto pwmServoY = PwmChannel(tim1ch2);
-    pwmServoY.init();
-
     auto pwmCoilP = PwmChannel(tim1ch3);
     pwmCoilP.init();
 
     auto pwmCoilN = PwmChannel(tim1ch4);
     pwmCoilN.init();
+    uart2.init(UART2_Baudrate, Uart::TxRx);
+    uart2.setEps(4);
+    constexpr int tablesize = 48;
+    SinTable<real_t, tablesize> sintable;
+    while(true){
+        // reCalculateTime();
+        // real_t _t = real_t(int(micros() % 64)) / real_t(64);
+        uint8_t _t = micros() % tablesize;
+        // uint16_t cnt = 0;
+        // uni_to_u16(_t, cnt);
+        // pwmCoilP = (sin(t*100) / 2 + 0.5);
+        real_t waves[3];
+        // waves[0] = INVLERP(sin(t*100), -1, 1);
+        // waves[0] = sin(_t * 1);
+        waves[0] = sintable[_t];
+        // waves[1] = INVLERP(sin(t*300) / 3, -1, 1);
+        waves[1] = sintable[_t * 3] / 3;
+        // waves[1] = real_t(0);
+        waves[2] = sintable[_t * 5] / 5;
+        // waves[2] = INVLERP(sin(t*500) / 5, -1, 1);
+        auto temp = real_t(0);
+        for(auto & wave : waves) temp += wave;
+        // waves[0] + waves[1] + waves[2];
+        //  + waves[1] + waves[2];
+        pwmCoilP = temp / 2 + real_t(0.5);
+        // uart2.println((float)real_t(pwmCoilP));
 
-
-    auto servoX = Servo180(pwmServoX);
-    servoX.init();
-    servoX.setAngle(real_t(0));
-
-
-    auto servoY = Servo180(pwmServoY);
-    servoY.init();
-    servoY.setAngle(real_t(0));
-
+    }
     auto coil = Coil(pwmCoilP, pwmCoilN);
     coil.init();
     coil.setDuty(real_t(-0.4));
 
-    uart2.init(UART2_Baudrate, Uart::TxRx);
-    uart2.setEps(4);
+
 
     Gpio Led = Gpio(GPIOC, Pin::_13);
     Led.OutPP();
@@ -194,13 +257,22 @@ int main(){
         // spi.write(0xA5);
         // static uint32_t ret;
         // hc595single.writeByIndex(0, i);
-        gv = !gv;
+        // gv = !gv;
         // spi.transfer(ret, ret+1);
         // hc595.setContent({0, cnt});
+
+        sendReset(mosi_pin);
+
+        for(uint8_t _ = 0; _ < 3; _++)
+        for(uint8_t mask = 0x80; mask; mask >>= 1){
+            sendCode(mosi_pin, bool(mask & cnt));
+        }
+
+        cnt++;
         // hc595single = 1;
         // uart2.println(ret);
         // spi.end();
-        cnt++;
+        // cnt++;
         // pv.writeByIndex(0, i);
         // for(uint8_t _ = 0; _ < 32; _++)spi1.write(cnt++);
         // uint32_t dummy = 0;

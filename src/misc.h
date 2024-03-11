@@ -57,6 +57,7 @@
 #include "gpio/port_virtual.hpp"
 #include "src/bus/spi/spi_sw.hpp"
 #include "VirtualIO/HC595/hc595.hpp"
+#include "src/nvic/nvic.hpp"
 
 
 extern real_t t;

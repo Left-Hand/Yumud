@@ -16,10 +16,10 @@ public:
     volatile _iq value = 0;
 
     __fast_inline iq_t(): value(0){;}
-    __fast_inline explicit iq_t(const _iq & iqValue): value(iqValue){;}
-    __fast_inline explicit iq_t(const int & intValue) : value(_IQ(intValue)) {;}
-    __fast_inline explicit iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
-    __fast_inline explicit iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
+    __fast_inline constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
+    __fast_inline constexpr explicit iq_t(const int & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline constexpr explicit iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
+    __fast_inline constexpr explicit iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
 
     __fast_inline iq_t operator+(const iq_t & other) const {
         return iq_t(value + other.value);
