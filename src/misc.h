@@ -58,6 +58,7 @@
 #include "src/bus/spi/spi_sw.hpp"
 #include "VirtualIO/HC595/hc595.hpp"
 #include "src/nvic/nvic.hpp"
+#include "dsp/lut.hpp"
 
 
 extern real_t t;

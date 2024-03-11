@@ -142,6 +142,7 @@
         "sourceDirList": [],
         "defineList": [
           "WCH",
+          "RISCV",
           "CH32V203",
           "CH32V203FXX",
           "CH32V203GXX",

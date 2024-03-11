@@ -91,7 +91,7 @@ void SysInfo_ShowUp(Printer & uart){
     uart.println("CRC code:", crc_code);
     uart << SpecToken::Dec;
 
-    Bkp bkp = Bkp();
+    // Bkp & bkp = Bkp::getInstance();
     bkp.init();
 	auto boot_count = bkp.readData(1);
     bkp.writeData(1, boot_count + 1);

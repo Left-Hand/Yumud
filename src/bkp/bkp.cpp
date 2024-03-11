@@ -19,3 +19,5 @@ uint16_t Bkp::readData(uint8_t index){
 BkpItem Bkp::operator [] (uint8_t index) {
     return BkpItem(index);
 }
+
+Bkp & bkp = Bkp::getInstance();

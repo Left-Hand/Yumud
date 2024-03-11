@@ -122,36 +122,6 @@ void sendReset(Gpio & gpio){
     gpio.set();
 }
 
-template <typename Real, int N>
-class LookUpTable {
-protected:
-    std::array<Real, N> values;
-public:
-    LookUpTable(std::array<Real, N> initializedValues) : values(initializedValues) {}
-    virtual Real operator[](const uint32_t & i) const = 0;
-    virtual Real operator[](const Real & x) const = 0;
-};
-
-template <typename Real, int N>
-class SinTable : public LookUpTable<Real, N> {
-public:
-    constexpr SinTable() : LookUpTable<Real, N>([]{
-        std::array<Real, N> arr {};
-        for (int i = 0; i < N; i++) {
-            arr[i] = static_cast<Real>(std::sin(i * TAU / N));
-        }
-        return arr;
-    }()) {}
-
-
-    Real operator[](const uint32_t & i) const override {
-        return this->values[i % N];
-    }
-
-    Real operator[](const Real & x) const override {
-        return this->values[static_cast<int>(x * N) % N];
-    }
-};
 
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -161,7 +131,7 @@ int main(){
     Systick_Init();
 
     GPIO_PortC_Init();
-    // timer1.init(10000, 288);
+
     timer1.init(64,1);
 
     auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
@@ -190,23 +160,26 @@ int main(){
     pwmCoilN.init();
     uart2.init(UART2_Baudrate, Uart::TxRx);
     uart2.setEps(4);
-    constexpr int tablesize = 48;
-    SinTable<real_t, tablesize> sintable;
+    // constexpr int tablesize = 128;
+    // SinTable<real_t, tablesize> sintable;
+
     while(true){
         // reCalculateTime();
-        // real_t _t = real_t(int(micros() % 64)) / real_t(64);
-        uint8_t _t = micros() % tablesize;
+        real_t _t = real_t(int(micros() % 64)) / real_t(64 / TAU);
+        // uint8_t _t = micros() % tablesize;
         // uint16_t cnt = 0;
         // uni_to_u16(_t, cnt);
         // pwmCoilP = (sin(t*100) / 2 + 0.5);
         real_t waves[3];
         // waves[0] = INVLERP(sin(t*100), -1, 1);
-        // waves[0] = sin(_t * 1);
-        waves[0] = sintable[_t];
+        waves[0] = sin(_t * 1);
+        // waves[0] = sintable[_t];
         // waves[1] = INVLERP(sin(t*300) / 3, -1, 1);
-        waves[1] = sintable[_t * 3] / 3;
+        waves[1] = sin(_t * 3) / 3;
+        // waves[1] = sintable[_t * 3] / 3;
         // waves[1] = real_t(0);
-        waves[2] = sintable[_t * 5] / 5;
+        waves[2] = sin(_t * 5) / 5;
+        // waves[2] = sintable[_t * 5] / 5;
         // waves[2] = INVLERP(sin(t*500) / 5, -1, 1);
         auto temp = real_t(0);
         for(auto & wave : waves) temp += wave;
