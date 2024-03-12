@@ -34,3 +34,7 @@ String iq_t::toString(const uint8_t eps) const{
 
     return String(buf);
 };
+
+String toString(const iq_t & iq, const uint8_t & eps){
+    return iq.toString(eps);
+}

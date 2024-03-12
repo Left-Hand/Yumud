@@ -25,7 +25,10 @@ int stoi(const char * str);
 
 float stof(const char * str);
 
-template<typename T>
+template<typename real>
 String type_to_string();
 }
+
+template <typename T>
+String toString(const T & value, const uint8_t & eps);
 #endif

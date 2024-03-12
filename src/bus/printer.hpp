@@ -89,19 +89,19 @@ public:
     Printer& operator<<(const String & str){printString(str); return *this;}
     Printer& operator<<(const SpecToken & spec);
 
-    template<typename T>
-    Printer& operator<<(T misc){*this << misc.toString(eps); return *this;}
+    template<typename real>
+    Printer& operator<<(real misc){*this << misc.toString(eps); return *this;}
 
     void print(){}
 
-	template <typename T>
-	void print(const T& first) {
+	template <typename real>
+	void print(const real& first) {
 		*this << first;
 		print();
 	}
 
-    template <typename T, typename... Args>
-    void print(T first, Args... args) {
+    template <typename real, typename... Args>
+    void print(real first, Args... args) {
         *this << first;
         if(!skipSpec) *this << space;
         else skipSpec = false;
@@ -111,14 +111,14 @@ public:
 
     void println(){*this << "\r\n";}
 
-	template <typename T>
-	void println(const T& first) {
+	template <typename real>
+	void println(const real& first) {
 		*this << first;
         *this << "\r\n";
 	}
 
-    template <typename T, typename... Args>
-    void println(T first, Args... args) {
+    template <typename real, typename... Args>
+    void println(real first, Args... args) {
         *this << first;
         if(!skipSpec) *this << space;
         else skipSpec = false;

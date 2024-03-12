@@ -5,7 +5,7 @@
 
 #include "stdint.h"
 #include "src/platform.h"
-#include "types/string/String.hpp"
+#include "extra_convs.hpp"
 
 #include <IQmath_RV32.h>
 #include <limits>

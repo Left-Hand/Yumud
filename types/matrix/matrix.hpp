@@ -25,11 +25,11 @@ private:
 	int Invert(mat_real_t* A, int n);
 
 public:
-    template <typename T>
-    Matrix(std::initializer_list<T> row);
+    template <typename real>
+    Matrix(std::initializer_list<real> row);
 
-    template <typename T>
-    Matrix(std::initializer_list<std::initializer_list<T>> matrix);
+    template <typename real>
+    Matrix(std::initializer_list<std::initializer_list<real>> matrix);
 
 };
 

@@ -123,6 +123,12 @@ protected:
     void enableIt(const IRQn irq, const bool en = true){
         NvicRequest request(irq, 1, 2);
         request.enable(en);
+    //     NVIC_InitTypeDef NVIC_InitStructure = {0};
+    // NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
+    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
+    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
+    // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    // NVIC_Init(&NVIC_InitStructure);
     }
 public:
     static Exti & getInstance(){
@@ -155,7 +161,8 @@ public:
         }
     }
 
-    void initIt(const Line & line, const std::function<void(void)> & func);
+    void bindCb(const Gpio & gpio, const std::function<void(void)> & func);
+    void bindCb(const Line & line, const std::function<void(void)> & func);
 
     static bool getItStatus(const Line & line){
         return EXTI_GetITStatus((uint32_t)line);

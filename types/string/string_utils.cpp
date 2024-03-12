@@ -164,10 +164,16 @@ float StringUtils::stof(const char * str) {
     return atof(str);
 }
 
-template<typename T>
+template<typename real>
 String StringUtils::type_to_string() {
     String type_name = __PRETTY_FUNCTION__;
     auto start_pos = type_name.indexOf('=') + 1;
     auto end_pos = type_name.indexOf(';', start_pos);
     return type_name.substring(start_pos, end_pos - start_pos);
+}
+
+
+template <typename T>
+String toString(const T & value, const uint8_t & eps){
+    return String(value, eps);
 }

@@ -1,8 +1,14 @@
 #include "exti.hpp"
 
 static std::array<std::function<void(void)>, 21> funcs;
-void Exti::initIt(const Line & line, const std::function<void(void)> & func){
+void Exti::bindCb(const Line & line, const std::function<void(void)> & func){
+    // NvicRequest request()
     funcs[CTZ((uint32_t)line)] = func;
+}
+
+void Exti::bindCb(const Gpio & gpio, const std::function<void(void)> & func){
+    if(!gpio.isValid()) return;
+    bindCb((Line)(1 << gpio.getIndex()), func);
 }
 
 Exti & exti = Exti::getInstance();

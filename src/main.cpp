@@ -133,7 +133,7 @@ int main(){
     GPIO_PortC_Init();
 
 
-    timer1.init(256,1);
+    timer1.init(256);
 
     auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
     tim1ch1.init();
@@ -187,48 +187,85 @@ int main(){
     MPU6050 mpu(i2cdrv);
     mpu.init();
     Axis6 & imu = mpu;
-    auto filter = BurrFilter_t<real_t>();
+    Gpio TrigA = Gpio(GPIOC, Pin::_14);
+    Gpio TrigB = Gpio(GPIOC, Pin::_15);
+    TrigA.InPullUP();
+    TrigB.InPullUP();
+
+    Gpio a0 = Gpio(GPIOA, Pin::_0);
+    a0.InAnalog();
+    AdcChannelOnChip ac0(ADC1);
+
+    adc1.clearRegularQueue();
+    adc1.AddChannelToQueue(ac0);
+    adc1.init();
+    adc1.setRegularTrigger(AdcHw::RegularTrigger::SW);
+    adc1.start();
+
+    exti.init();
+    exti.bindPin(TrigA, Exti::Trigger::Falling);
+
+    // adc1.init();
+    uint8_t cnt = 0;
+    auto cb = [&Led, &cnt, &uart2](){Led = !Led;cnt++;uart2.println(cnt, micros());};
+    exti.bindCb(TrigA, cb);
+    // GPIO_InitTypeDef GPIO_InitStructure = {0};
+
+    /* GPIOA ----> EXTI_Line0 */
+    GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource14);
+    EXTI_InitStructure.EXTI_Line = EXTI_Line14;
+    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
+    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
+    // EXTI_Init(&EXTI_InitStructure);
+
+
+
+    // auto filter = BurrFilter_t<real_t>();
+    Vector3 accel;
     while(true){
-        Led = (millis() / 100) & 0b1;
-    // }while(true){
-        // bmi.getChipId();
-        imu.flush();
-        real_t x, y, z;
-        imu.getGyro(x, y, z);
-        // imu.getAccel(x,y,z);
-
-        // uart2.println((float)filter.update(unlikely(millis() % 100 == 0) ? real_t(10000) : x), millis() % 100 == 0 ? real_t(10000) : x);
-        uart2.println(x,y,z, sqrt(x *x + y *y + z*z));
-
-        // static bool state = false;
-        // state = !state;
-        // GPIO_WriteBit(GPIOC,GPIO_Pin_13, state);
-        // delay(100);
-        // reCalculateTime();
-        real_t _t = real_t(int(micros() % 10000)) / real_t(10000 / TAU);
-        // uint8_t _t = micros() % tablesize;
-        // uint16_t cnt = 0;
-        // uni_to_u16(_t, cnt);
-        // pwmCoilP = (sin(t*100) / 2 + 0.5);
-        real_t waves[3];
-        // waves[0] = INVLERP(sin(t*100), -1, 1);
-        waves[0] = sin(_t * 1);
-        // waves[0] = sintable[_t];
-        // waves[1] = INVLERP(sin(t*300) / 3, -1, 1);
-        waves[1] = sin(_t * 3) / 3;
-        // waves[1] = sintable[_t * 3] / 3;
-        // waves[1] = real_t(0);
-        waves[2] = sin(_t * 5) / 5;
-        // waves[2] = sintable[_t * 5] / 5;
-        // waves[2] = INVLERP(sin(t*500) / 5, -1, 1);
-        auto temp = real_t(0);
-        for(auto & wave : waves) temp += wave;
-        // waves[0] + waves[1] + waves[2];
-        //  + waves[1] + waves[2];
-        pwmCoilP = temp / 2 + real_t(0.5);
-        // uart2.println((float)real_t(pwmCoilP));
-
+        // Led = (millis() / 100) & 0b1;
+        // if((millis() % 100) == 0){cb(); delay(1);}
     }
+    // }while(true){
+    //     // bmi.getChipId();
+    //     imu.flush();
+    //     // real_t x, y, z;
+    //     imu.getAccel(accel.x, accel.y, accel.z);
+    //     // imu.getAccel(x,y,z);
+    //     accel.normalize();
+
+    //     uart2.println(accel.x,accel.y,accel.z, accel.length());
+
+    //     // static bool state = false;
+    //     // state = !state;
+    //     // GPIO_WriteBit(GPIOC,GPIO_Pin_13, state);
+    //     // delay(100);
+    //     // reCalculateTime();
+    //     real_t _t = real_t(int(micros() % 10000)) / real_t(10000 / TAU);
+    //     // uint8_t _t = micros() % tablesize;
+    //     // uint16_t cnt = 0;
+    //     // uni_to_u16(_t, cnt);
+    //     // pwmCoilP = (sin(t*100) / 2 + 0.5);
+    //     real_t waves[3];
+    //     // waves[0] = INVLERP(sin(t*100), -1, 1);
+    //     waves[0] = sin(_t * 1);
+    //     // waves[0] = sintable[_t];
+    //     // waves[1] = INVLERP(sin(t*300) / 3, -1, 1);
+    //     waves[1] = sin(_t * 3) / 3;
+    //     // waves[1] = sintable[_t * 3] / 3;
+    //     // waves[1] = real_t(0);
+    //     waves[2] = sin(_t * 5) / 5;
+    //     // waves[2] = sintable[_t * 5] / 5;
+    //     // waves[2] = INVLERP(sin(t*500) / 5, -1, 1);
+    //     auto temp = real_t(0);
+    //     for(auto & wave : waves) temp += wave;
+    //     // waves[0] + waves[1] + waves[2];
+    //     //  + waves[1] + waves[2];
+    //     pwmCoilP = temp / 2 + real_t(0.5);
+    //     // uart2.println((float)real_t(pwmCoilP));
+
+    // }
     // auto coil = Coil(pwmCoilP, pwmCoilN);
     // coil.init();
     // coil.setDuty(real_t(-0.4));

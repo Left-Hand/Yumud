@@ -13,12 +13,11 @@ protected:
     const IRQn irq;
     const uint8_t pre;
     const uint8_t sub;
-    const bool en = false;
 public:
     NvicRequest(const IRQn & _irq, const uint8_t & _pre, const uint8_t & _sub):
             irq(_irq), pre(_pre), sub(_sub){;}
 
-    void enable(const bool & _en = true){
+    void enable(const bool & en = true){
         NVIC_InitTypeDef NVIC_InitStructure = {0};
         NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)irq;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = pre;
