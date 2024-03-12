@@ -8,7 +8,7 @@
 #include <array>
 
 template<int size>
-class PortVirtualInst : public PortBase{
+class PortVirtualConcept : public PortBase{
 private:
     bool isIndexValid(const uint8_t & index){return (index >= 0 && index < size);}
 
@@ -22,12 +22,12 @@ public:
         return size;
     }
 
-    PortVirtualInst & operator = (const uint16_t & data) override {write(data); return *this;}
+    PortVirtualConcept & operator = (const uint16_t & data) override {write(data); return *this;}
     virtual void setModeByIndex(const int8_t & index, const PinMode & mode) = 0;
 };
 
 template<int size>
-class PortVirtual : public PortVirtualInst<size>{
+class PortVirtual : public PortVirtualConcept<size>{
 protected:
     std::array<std::unique_ptr<GpioVirtual>, size> pin_ptrs = {nullptr};
 
@@ -96,7 +96,7 @@ public:
 };
 
 template<int size>
-class PortVirtualLocal : public PortVirtual<size>{
+class PortVirtualLocal : public PortVirtualConcept<size>{
 protected:
     std::array<Gpio *, size> pin_ptrs = {nullptr};
 

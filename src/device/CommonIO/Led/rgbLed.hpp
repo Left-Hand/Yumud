@@ -22,16 +22,16 @@ public:
 template<bool com_anode>
 class RgbLedDigital:public RgbLedInst<com_anode>{
 protected:
-    GpioBase & red_pin;
-    GpioBase & green_pin;
-    GpioBase & blue_pin;
+    GpioConcept & red_pin;
+    GpioConcept & green_pin;
+    GpioConcept & blue_pin;
     void _update(const Color &color) override{
         red_pin = (color.r > real_t(0.5));
         green_pin = (color.g > real_t(0.5));
         blue_pin = (color.b > real_t(0.5));
     }
 public:
-    RgbLedDigital(GpioBase & _red_pin, GpioBase & _green_pin, GpioBase & _blue_pin):
+    RgbLedDigital(GpioConcept & _red_pin, GpioConcept & _green_pin, GpioConcept & _blue_pin):
             red_pin(_red_pin), green_pin(_green_pin), blue_pin(_blue_pin){;}
 };
 

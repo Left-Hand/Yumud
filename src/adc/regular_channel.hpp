@@ -21,7 +21,7 @@ protected:
         cali_data = _cali_data;
     }
 
-    friend class Adc;
+    friend class AdcHw;
     friend class AdcPrimary;
     friend class AdcCompanion;
 

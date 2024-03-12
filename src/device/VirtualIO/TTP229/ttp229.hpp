@@ -7,11 +7,11 @@ class TTP229{
 protected:
     int8_t num = -1;
     uint16_t map = 0;
-    GpioBase & sck_pin;
-    GpioBase & sdo_pin;
+    GpioConcept & sck_pin;
+    GpioConcept & sdo_pin;
 
 public:
-    TTP229(GpioBase & _sck_pin, GpioBase & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin){;}
+    TTP229(GpioConcept & _sck_pin, GpioConcept & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin){;}
     ~TTP229(){;}
     void scan(){
         uint16_t new_map = 0;

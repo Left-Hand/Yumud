@@ -22,9 +22,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
-extern __IO uint32_t msTick;
+// #define TIMESTAMP_BEGIN(x) (uint32_t __time_begin_t__ = x;)
+// #define TIMESTAMP_SINCE(x) (uint32_t __time_current_t__ = x; __time_current_t__ + (__time_current_t__ ^ __time_begin_t__) & 0x8000 ?  __time_begin_t__ : -__time_begin_t__)
+#define TIMESTAMP_BEGIN(x) uint32_t time_begin = (x)
+#define TIMESTAMP_SINCE(x) (uint32_t time_current = (x); \
+            (time_current + (time_current ^ time_begin) & 0x8000? time_begin : -time_begin))
+
 extern int tick_per_ms;
 extern int tick_per_us;
 #define NanoMut(x) ( x * 1000 / 144)
@@ -43,6 +47,8 @@ void Systick_Init(void);
 
 void delayMicroseconds(uint32_t us);
 void delayNanoseconds(uint32_t ns);
+
+void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
 #ifdef __cplusplus
 }

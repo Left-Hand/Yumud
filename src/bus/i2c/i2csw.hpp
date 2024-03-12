@@ -2,14 +2,14 @@
 #define I2C_SOFT_H_
 
 #include "i2c.hpp"
-#include "../../gpio/gpio.hpp"
-#include "../uart/uart2.hpp"
+#include "src/gpio/gpio.hpp"
+#include "src/clock/time_stamp.hpp"
 
 class I2cSw: public I2c{
 private:
     volatile int8_t occupied = -1;
-    GpioBase & scl;
-    GpioBase & sda;
+    GpioConcept & scl;
+    GpioConcept & sda;
 
     uint16_t delays = 1000;
 
@@ -25,9 +25,9 @@ private:
         sda.InFloating();
         // delayDur();
         scl.set();
-        uint32_t begin_t = micros();
+        TimeStamp stamp;
         while(sda.read()){
-            if(micros() - begin_t >= timeout){
+            if(stamp >= timeout){
                 delayDur();
                 scl.clr();
                 return ErrorType::TIMEOUT;
@@ -88,7 +88,7 @@ protected :
     void lock_avoid() override {};
 public:
 
-    I2cSw(GpioBase & _scl,GpioBase & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}
+    I2cSw(GpioConcept & _scl,GpioConcept & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}
 
     Error write(const uint32_t & data) override {
         sda.OutOD();

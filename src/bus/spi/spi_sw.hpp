@@ -6,9 +6,9 @@
 class SpiSw: public Spi{
 protected:
     volatile int8_t occupied = -1;
-    GpioBase & sclk_pin;
-    GpioBase & mosi_pin;
-    GpioBase & miso_pin;
+    GpioConcept & sclk_pin;
+    GpioConcept & mosi_pin;
+    GpioConcept & miso_pin;
 
     uint16_t delays = 100;
     uint8_t data_size = 8;
@@ -64,11 +64,11 @@ protected :
     }
 public:
 
-    SpiSw(GpioBase & _sclk_pin,GpioBase & _mosi_pin,
-            GpioBase & _miso_pin, const uint16_t & _delays = 10):sclk_pin(_sclk_pin),
+    SpiSw(GpioConcept & _sclk_pin,GpioConcept & _mosi_pin,
+            GpioConcept & _miso_pin, const uint16_t & _delays = 10):sclk_pin(_sclk_pin),
                 mosi_pin(_mosi_pin), miso_pin(_miso_pin), delays(_delays){;}
-    SpiSw(GpioBase & _sclk_pin,GpioBase & _mosi_pin,
-            GpioBase & _miso_pin,GpioVirtual & _cs_pin, const uint16_t & _delays = 10):SpiSw(_sclk_pin, _mosi_pin, _miso_pin, delays){
+    SpiSw(GpioConcept & _sclk_pin,GpioConcept & _mosi_pin,
+            GpioConcept & _miso_pin,GpioVirtual & _cs_pin, const uint16_t & _delays = 10):SpiSw(_sclk_pin, _mosi_pin, _miso_pin, delays){
                 bindCsPin(static_cast<GpioVirtual>(_cs_pin), 0);
             }
     Error write(const uint32_t & data) override {

@@ -11,8 +11,8 @@ public:
     };
 protected:
     const uint32_t err_data = 0xFFFFFFFF;
-    GpioBase & sck_pin;
-    GpioBase & sdo_pin;
+    GpioConcept & sck_pin;
+    GpioConcept & sdo_pin;
     ConvType conv_type = ConvType::A128;
 
     uint32_t read_data(void){
@@ -36,7 +36,7 @@ protected:
         return(data);
     }
 public:
-    HX711(GpioBase & _sck_pin, GpioBase & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin){;}
+    HX711(GpioConcept & _sck_pin, GpioConcept & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin){;}
     ~HX711(){;}
     void init(){
         sck_pin.OutPP();

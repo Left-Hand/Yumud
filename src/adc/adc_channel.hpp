@@ -7,7 +7,7 @@
 #include "adc_enums.h"
 #include "src/gpio/gpio.hpp"
 
-class Adc;
+class AdcHw;
 class AdcPrimary;
 class AdcCompanion;
 
@@ -23,7 +23,7 @@ protected:
 
     virtual void setCaliData(const uint16_t data) = 0;
 
-    friend class Adc;
+    friend class AdcHw;
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:

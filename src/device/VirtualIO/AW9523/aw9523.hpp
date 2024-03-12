@@ -6,7 +6,7 @@
 #include "src/gpio/port_virtual.hpp"
 #include "device_defs.h"
 
-class AW9523: public PortVirtual<16>{
+class AW9523: public PortVirtualConcept<16>{
 public:
     enum class CurrentLimit{
         Low, Medium, High, Max

@@ -32,7 +32,7 @@ protected:
         ADC_SetInjectedOffset(instance, ch_code, _cali_data);
     }
 
-    friend class Adc;
+    friend class AdcHw;
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:

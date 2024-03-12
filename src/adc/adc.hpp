@@ -8,7 +8,11 @@
 #include "adc_enums.h"
 #include <initializer_list>
 
-class Adc{
+class AdcConcept{
+
+};
+
+class AdcHw:AdcConcept{
 public:
     enum class Pga:uint8_t{
         X1, X4, X16, X64
@@ -80,15 +84,15 @@ protected:
     };
 
 public:
-    Adc(ADC_TypeDef * _instance):instance(_instance){;}
+    AdcHw(ADC_TypeDef * _instance):instance(_instance){;}
 };
 
-class AdcCompanion:public Adc{
+class AdcCompanion:public AdcHw{
 public:
-    AdcCompanion(ADC_TypeDef * _instance):Adc(_instance){;}
+    AdcCompanion(ADC_TypeDef * _instance):AdcHw(_instance){;}
 };
 
-class AdcPrimary: public Adc{
+class AdcPrimary: public AdcHw{
 protected:
     RegularChannel * regular_ptrs[16] = {nullptr};
     InjectedChannel * injected_ptrs[4] = {nullptr};
@@ -101,7 +105,7 @@ protected:
     using Channel = AdcChannels;
     using SampleTime = AdcSampleTimes;
 public:
-    AdcPrimary(ADC_TypeDef * _instance):Adc(_instance){;}
+    AdcPrimary(ADC_TypeDef * _instance):AdcHw(_instance){;}
     void cali(){
         ADC_BufferCmd(ADC1, DISABLE);
 

@@ -85,7 +85,7 @@ void ADC1_GPIO_Init();
 void ADC1_Init();
 __fast_inline void reCalculateTime(){
     #ifdef USE_IQ
-    t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
+    t.value = millis() * (int)(0.001 * (1 << GLOBAL_Q));
     #else
     t = msTick * (1 / 1000.0f);
     #endif

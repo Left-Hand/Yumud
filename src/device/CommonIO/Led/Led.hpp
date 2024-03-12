@@ -8,9 +8,9 @@ template<bool com_anode>
 class Led{
 protected:
     bool state = false;
-    GpioBase & instance;
+    GpioConcept & instance;
 public:
-    Led(GpioBase & _instance):instance(_instance){;}
+    Led(GpioConcept & _instance):instance(_instance){;}
     operator = (const bool & _state){
         state = _state;
         instance = state ^ com_anode;

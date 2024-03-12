@@ -21,7 +21,7 @@ public:
     };
 
 protected:
-    GpioBase & set_pin;
+    GpioConcept & set_pin;
     uint16_t timeout = 5;
 
     bool sendAtCommand(const char * token){
@@ -66,7 +66,7 @@ protected:
         return is_valid;
     }
 public:
-    HC12(Uart & _uart, GpioBase & _set_pin):Uart(_uart), set_pin(_set_pin){;}
+    HC12(Uart & _uart, GpioConcept & _set_pin):Uart(_uart), set_pin(_set_pin){;}
 
     void init(){;}
     void sleep(){sendAtCommand("SLEEP");}

@@ -14,9 +14,9 @@
 class I2sSw: public I2s{
 private:
 volatile int8_t occupied = -1;
-GpioBase & sck;
-GpioBase & sda;
-GpioBase & ws;
+GpioConcept & sck;
+GpioConcept & sda;
+GpioConcept & ws;
 
 uint16_t delays = 0;
 
@@ -61,7 +61,7 @@ protected :
 
 public:
 
-    I2sSw(GpioBase & _sck,GpioBase & _sda,GpioBase & _ws,const uint16_t & _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
+    I2sSw(GpioConcept & _sck,GpioConcept & _sda,GpioConcept & _ws,const uint16_t & _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
 
     Error write(const uint32_t & data) override {
         sck.OutPP();

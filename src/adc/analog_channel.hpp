@@ -7,7 +7,7 @@
 
 class AdcChannelOnChip;
 
-class AnalogChannelBase{
+class AnalogChannelConcept{
 protected:
     uint8_t valid_bits = 12;
     real_t uni_to_voltage_scale = real_t(3.3);
@@ -26,14 +26,14 @@ public:
 };
 
 
-class AnalogChannel : public AnalogChannelBase{
+class AnalogChannel : public AnalogChannelConcept{
 protected:
     AdcChannelOnChip & channel;
 public:
     AnalogChannel(AdcChannelOnChip & _channel):channel(_channel) {;}
 };
 
-class AnalogChannelVirtual : public AnalogChannelBase{
+class AnalogChannelVirtual : public AnalogChannelConcept{
 
 
 };
