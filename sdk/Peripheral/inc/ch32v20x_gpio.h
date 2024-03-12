@@ -52,11 +52,10 @@ typedef struct
 } GPIO_InitTypeDef;
 
 /* Bit_SET and Bit_RESET enumeration */
-typedef enum
-{
-    Bit_RESET = 0,
-    Bit_SET
-} BitAction;
+#define Bit_RESET false
+#define Bit_SET true
+
+typedef bool BitAction;
 
 /* GPIO_pins_define */
 #define GPIO_Pin_0                      ((uint16_t)0x0001) /* Pin 0 selected */

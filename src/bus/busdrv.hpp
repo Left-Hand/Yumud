@@ -86,23 +86,23 @@ public:
         }
     }
 
-    virtual void read(uint8_t * data_ptr, const size_t & len){
+    virtual void read(uint8_t * data_ptr, const size_t & len, const bool & discontinuous = true){
         if(!bus.begin(index)){
             for(size_t i = 0; i < len; i++){
                 uint32_t temp = 0;
                 bus.read(temp, (i != len - 1));
                 data_ptr[i] = temp;
             }
-            bus.end();
+            if(discontinuous) bus.end();
         }
     }
 
-    virtual void read(uint8_t & data){
+    virtual void read(uint8_t & data, const bool & discontinuous = true){
         if(!bus.begin(index)){
             uint32_t temp;
             bus.read(temp);
             data = temp;
-            bus.end();
+            if(discontinuous) bus.end();
         }
     }
 

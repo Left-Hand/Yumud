@@ -613,6 +613,7 @@ int String::lastIndexOf(const String &s2, unsigned int fromIndex) const
 
 String String::substring(unsigned int left, unsigned int right) const
 {
+
 	if (left > right) {
 		unsigned int temp = right;
 		right = left;

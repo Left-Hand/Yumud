@@ -6,7 +6,7 @@
 
 class I2c:public SerBus{
 protected:
-    uint32_t timeout = 0;
+    uint32_t timeout = 10;
     virtual void reset() = 0;
     virtual Error start(const uint8_t & _address) = 0;
     virtual void stop() = 0;

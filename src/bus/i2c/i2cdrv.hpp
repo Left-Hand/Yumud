@@ -84,23 +84,23 @@ public:
         }
     }
 
-    void read(uint8_t * data_ptr, const size_t & len) override {
+    void read(uint8_t * data_ptr, const size_t & len, const bool & discontinus = true) override {
         if(!bus.begin(index | 0x01)){
             for(size_t i = 0; i < len; i++){
                 uint32_t temp = 0;
                 bus.read(temp, (i != len - 1));
                 data_ptr[i] = temp;
             }
-            bus.end();
+            if(discontinus) bus.end();
         }
     }
 
-    void read(uint8_t & data) override {
+    void read(uint8_t & data, const bool & discontinus = true) override {
         if(!bus.begin(index | 0x01)){
             uint32_t temp;
             bus.read(temp);
             data = temp;
-            bus.end();
+            if(discontinus) bus.end();
         }
     }
 

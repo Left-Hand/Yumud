@@ -132,7 +132,8 @@ int main(){
 
     GPIO_PortC_Init();
 
-    timer1.init(64,1);
+
+    timer1.init(256,1);
 
     auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
     tim1ch1.init();
@@ -158,14 +159,48 @@ int main(){
 
     auto pwmCoilN = PwmChannel(tim1ch4);
     pwmCoilN.init();
-    uart2.init(UART2_Baudrate, Uart::TxRx);
+    uart2.init(UART2_Baudrate);
     uart2.setEps(4);
+
+    // foo(real_t(0));
     // constexpr int tablesize = 128;
     // SinTable<real_t, tablesize> sintable;
+    Gpio Led = Gpio(GPIOC, Pin::_13);
+    Led.OutPP();
+    // Gpio mosi_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
+    // Gpio miso_pin = Gpio(SPI1_MISO_Port, (Pin)SPI1_MISO_Pin);
+    // Gpio sck_pin = Gpio(SPI1_SCLK_Port, (Pin)SPI1_SCLK_Pin);
+    // GpioVirtual cs_pin = Gpio(SPI1_CS_Port, (Pin)SPI1_CS_Pin);
+    // cs_pin.OutPP();
+    // SpiSw spisw(sck_pin, mosi_pin, miso_pin, cs_pin);
+    // spisw.init();
+    // SpiDrv drv(spisw, 0);
+    // BMI270 bmi(drv);
+    // bmi.init();
+    // bmi.flush();
 
+    Gpio sda_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
+    Gpio scl_pin = Gpio(SPI1_SCLK_Port, (Pin)SPI1_SCLK_Pin);
+    I2cSw i2csw(scl_pin, sda_pin);
+    i2csw.init(40000);
+    I2cDrv i2cdrv(i2csw, 0xd0);
+    MPU6050 mpu(i2cdrv);
+    mpu.init();
+    Axis6 & imu = mpu;
     while(true){
+        Led = (millis() / 100) & 0b1;
+    // }while(true){
+        // bmi.getChipId();
+        imu.flush();
+        real_t x, y, z;
+        // imu.getGyro(x, y, z);
+        // uart2.println((float)x,(float)y,(float)z);
+        // static bool state = false;
+        // state = !state;
+        // GPIO_WriteBit(GPIOC,GPIO_Pin_13, state);
+        // delay(100);
         // reCalculateTime();
-        real_t _t = real_t(int(micros() % 64)) / real_t(64 / TAU);
+        real_t _t = real_t(int(micros() % 10000)) / real_t(10000 / TAU);
         // uint8_t _t = micros() % tablesize;
         // uint16_t cnt = 0;
         // uni_to_u16(_t, cnt);
@@ -189,35 +224,29 @@ int main(){
         // uart2.println((float)real_t(pwmCoilP));
 
     }
-    auto coil = Coil(pwmCoilP, pwmCoilN);
-    coil.init();
-    coil.setDuty(real_t(-0.4));
+    // auto coil = Coil(pwmCoilP, pwmCoilN);
+    // coil.init();
+    // coil.setDuty(real_t(-0.4));
 
 
 
-    Gpio Led = Gpio(GPIOC, Pin::_13);
-    Led.OutPP();
-    auto pv = PortVirtual<8>();
-    pv.bindPin(Led, 0);
+
+    // auto pv = PortVirtual<8>();
+    // pv.bindPin(Led, 0);
     // uart1.init(UART1_Baudrate);
-    Gpio mosi_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
-    Gpio miso_pin = Gpio(SPI1_MISO_Port, (Pin)SPI1_MISO_Pin);
-    Gpio sck_pin = Gpio(SPI1_SCLK_Port, (Pin)SPI1_SCLK_Pin);
-    GpioVirtual cs_pin = Gpio(SPI1_CS_Port, (Pin)SPI1_CS_Pin);
-    cs_pin.OutPP();
-    SpiSw spisw(sck_pin, mosi_pin, miso_pin, cs_pin);
 
-    Spi & spi = spisw;
+
+    // Spi & spi = spisw;
     // <DECLTYPE(miso_pin, mosi_pin)>
     // SpiDrv spiDrvMagSensor = SpiDrv(spi, 0);
     // MA730 mag_sensor(spiDrvMagSensor);
-    spi.init(SPI1_BaudRate);
+    // spi.init(SPI1_BaudRate);
 
     // HC595<2> hc595(sck_pin, mosi_pin, cs_pin);
 
-    HC595Single hc595single(sck_pin, mosi_pin, cs_pin);
-    GpioVirtual gv = GpioVirtual(&hc595single, 0);
-    hc595single.init();
+    // HC595Single hc595single(sck_pin, mosi_pin, cs_pin);
+    // GpioVirtual gv = GpioVirtual(&hc595single, 0);
+    // hc595single.init();
     while(true){
         // Led = !Led;
         static bool i = false;
@@ -234,14 +263,14 @@ int main(){
         // spi.transfer(ret, ret+1);
         // hc595.setContent({0, cnt});
 
-        sendReset(mosi_pin);
+        // sendReset(mosi_pin);
 
-        for(uint8_t _ = 0; _ < 3; _++)
-        for(uint8_t mask = 0x80; mask; mask >>= 1){
-            sendCode(mosi_pin, bool(mask & cnt));
-        }
+        // for(uint8_t _ = 0; _ < 3; _++)
+        // for(uint8_t mask = 0x80; mask; mask >>= 1){
+        //     sendCode(mosi_pin, bool(mask & cnt));
+        // }
 
-        cnt++;
+        // cnt++;
         // hc595single = 1;
         // uart2.println(ret);
         // spi.end();

@@ -1,7 +1,6 @@
 #include "misc.h"
 
 void GPIO_PortC_Init( void ){
-    CHECK_INIT
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
     PWR_BackupAccessCmd( ENABLE );

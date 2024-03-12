@@ -12,10 +12,9 @@
 
 class GpioBase{
 protected:
-    int8_t pin_index = 0;
-
-    GpioBase(int8_t _pin_index):pin_index(_pin_index){;}
+    const int8_t pin_index = 0;
 public:
+    GpioBase(int8_t _pin_index):pin_index(_pin_index){;}
     virtual void set() = 0;
     virtual void clr() = 0;
     virtual void write(const bool & val) = 0;
@@ -42,19 +41,20 @@ class Exti;
 class Gpio:public GpioBase{
 protected:
     volatile GPIO_TypeDef * instance = GPIOA;
-    uint16_t pin;
-    uint32_t pin_mask = 0;
+    const uint16_t pin;
+    const uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;
 
     friend class GpioVirtual;
     friend class Exti;
 public:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
-        GpioBase((_pin != Pin::None) ? __builtin_ctz((uint16_t)pin) : -1),
+        GpioBase((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
         instance(_instance),
         pin(((_instance == GPIOC) && MCU_V) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
-        pin_mask(~(0xf << ((pin_index % 8) * 4))),
-        pin_cfg(pin_index >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){;}
+        pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
+        pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
+        }
 
     Gpio(Port & _port, const Pin _pin):Gpio(_port.getInstance(), _pin){;}
     ~Gpio(){};

@@ -14,37 +14,40 @@ private:
     uint16_t delays = 100;
 
     void delayDur(){
-        volatile uint16_t i = delays;
-        while(i--) __nop;
+        // volatile uint16_t i = delays;
+        // while(i--) __nop;
+        delayMicroseconds(4);
     }
 
     void clk(){
         delayDur();
-        scl = true;
+        scl.set();
         delayDur();
-        scl = false;
+        scl.clr();
     }
 
     void clkr(){
         delayDur();
-        scl = false;
+        scl.clr();
         delayDur();
-        scl = true;
+        scl.set();
         delayDur();
-        scl = false;
+        scl.clr();
         delayDur();
     }
 
     void clk_up(){
         delayDur();
-        scl = false;
+        scl.clr();
         delayDur();
-        scl = true;
+        scl.set();
         delayDur();
     }
 
     void clk_down(){
-        scl = false;
+        delayDur();
+        scl.clr();
+        delayDur();
     }
 
     void clk_down_then_up(){
@@ -53,56 +56,61 @@ private:
     }
     void ack(){
         delayDur();
-        scl = false;
+        scl.clr();
         delayDur();
         sda.OutOD();
-        sda = false;
+        sda.clr();
         delayDur();
-        scl = true;
+        scl.set();
         delayDur();
-        scl = false;
+        scl.clr();
         // sda = true;
         delayDur();
     }
 
     void nack(void) {
         delayDur();
-        scl = false;
+        scl.clr();
         delayDur();
         sda.OutOD();
-        sda = true;
+        sda.set();
         delayDur();
-        scl = true;
+        scl.set();
         delayDur();
-        scl = false;
-        // sda = true;
+        scl.clr();
+        sda.set();
         delayDur();
     }
 
-    bool wait_ack(){
-        bool ret;
+    Error wait_ack(){
         sda.InFloating();
-        sda = true;
+        sda.set();
         delayDur();
-        scl = true;
+        scl.set();
+        uint32_t begin_t = micros();
+        while(sda.read()){
+            if(micros() - begin_t >= timeout){
+                delayDur();
+                scl.clr();
+                return ErrorType::TIMEOUT;
+            }
+        }
         delayDur();
-        ret = sda.read();
-        scl = false;
+        scl.clr();
         delayDur();
-
-        return ret;
+        return ErrorType::OK;
     }
 
     Error start(const uint8_t & _address) override{
 
         scl.OutOD();
         sda.OutOD();
-        sda = true;
-        scl = true;
+        sda.set();
+        scl.set();
         delayDur();
-        sda = false;
+        sda.clr();
         delayDur();
-        scl = false;
+        scl.clr();
         delayDur();
         write(_address);
 
@@ -110,13 +118,13 @@ private:
     }
 
     void stop() override {
-        scl = false;
+        scl.clr();
         sda.OutOD();
-        sda = false;
+        sda.clr();
         delayDur();
-        scl = true;
+        scl.set();
         delayDur();
-        sda = true;
+        sda.set();
         delayDur();
     }
 
@@ -154,18 +162,18 @@ public:
             clk();
         }
 
-        wait_ack();
-
-        return Bus::ErrorType::OK;
+        return wait_ack();
     }
 
     Error read(uint32_t & data, bool toAck = true) {
         uint8_t ret = 0;
-        sda.InFloating();
-        sda = true;
+
+        sda.set();
+        sda.InPullUP();
         delayDur();
 
         clk_up();
+        delayDur();
         ret |= sda.read();
         for(uint8_t i = 0; i < 7; i++){
             clk_down_then_up();
@@ -174,7 +182,8 @@ public:
 
         clk_down();
 
-        sda = false;
+        delayDur();
+        sda.clr();
         if(toAck) ack();
         else nack();
         data = ret;
@@ -186,8 +195,10 @@ public:
     }
 
     void init(const uint32_t & baudRate) override {
-        sda.OutPP();
-        scl.OutPP();
+        sda.set();
+        sda.OutOD();
+        scl.set();
+        scl.OutOD();
     }
     void configDataSize(const uint8_t & data_size) override {;}
     void configBaudRate(const uint32_t & baudRate) override {;}

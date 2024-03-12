@@ -21,10 +21,11 @@ public:
 };
 
 class Axis6:public Accelerometer, public Gyroscope{
-
+public:
+    virtual void flush() = 0;
 };
 
-class Axis9:public Accelerometer, public Magnetometer, public Gyroscope{
+class Axis9:public Axis6, public Magnetometer{
 
 };
 

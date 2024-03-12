@@ -6,7 +6,7 @@
 #include "types/string/String.hpp"
 #include "../Radio.hpp"
 
-class HC12:public Printer, public Radio{
+class HC12:public Uart, public Radio{
 public:
     enum class PowerMode{
         Low,
@@ -21,12 +21,8 @@ public:
     };
 
 protected:
-    Uart & uart;
     GpioBase & set_pin;
     uint16_t timeout = 5;
-
-    void _write(const char & data) override{uart.write(data);}
-    void _read(char & data) override{uart.read(data);}
 
     bool sendAtCommand(const char * token){
         return sendAtCommand(String(token));
@@ -35,12 +31,12 @@ protected:
     bool sendAtCommand(const String & token){
         set_pin = false;
         delayMicroseconds(1);
-        uart.print("AT");
+        print("AT");
         if(token.length()){
-            uart.print('+');
-            uart.print(token);
+            print('+');
+            print(token);
         }
-        uart.println();
+        println();
 
         String recv = "";
         recv.reserve(3);
@@ -49,13 +45,13 @@ protected:
 
         uint32_t begin_ms = millis();
         while((millis() - begin_ms < timeout)){
-            if(!uart.available()) continue;
-            char chr = uart.read();
+            if(!available()) continue;
+            char chr = read();
             if(!chr) break;
             recv += chr;
             if(recv == "OK"){
                 while((millis() - begin_ms < timeout)){
-                    if(uart.available() && !uart.read()){
+                    if(available() && !read()){
                         is_valid = true;
                         goto end_process;
                     }
@@ -70,9 +66,8 @@ protected:
         return is_valid;
     }
 public:
-    HC12(Uart & _uart, GpioBase & _set_pin):uart(_uart), set_pin(_set_pin){;}
+    HC12(Uart & _uart, GpioBase & _set_pin):Uart(_uart), set_pin(_set_pin){;}
 
-    size_t available() override {return uart.available();}
     void init(){;}
     void sleep(){sendAtCommand("SLEEP");}
     void setPower(const Power power){sendAtCommand("P" + String((uint8_t)power));}

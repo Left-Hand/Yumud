@@ -9,53 +9,21 @@ class MPU6050:public Axis6{
 protected:
     I2cDrv & bus_drv;
 
-    struct AccelXReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct AccelYReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct AccelZReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct TempReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct GyroXReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct GyroYReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct GyroZReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+    struct vec3i{
+        int16_t x;
+        int16_t y;
+        int16_t z;
     };
 
     struct{
-        AccelXReg accelXReg;
-        AccelYReg accelYReg;
-        AccelZReg accelZReg;
-        TempReg tempReg;
-        GyroXReg gyroXReg;
-        GyroYReg gyroYReg;
-        GyroZReg gyroZReg;
+        vec3i accel;
+        uint16_t temprature;
+        vec3i gyro;
     };
 
-    real_t accel_scaler;
-    real_t gyro_scaler;
+    // real_t accel_scaler = real_t(9.8 / 16384);
+    real_t gyro_scaler = real_t(0.001064f * 16384);
+
     enum class RegAddress:uint8_t{
         AccelX = 0x3b,
         AccelY = 0x3d,
@@ -78,8 +46,8 @@ protected:
         bus_drv.writeReg((uint8_t)reg, data);
     }
 
-    void requestData(const RegAddress & reg_addr, Reg16 & reg, const size_t len){
-        bus_drv.readPool((uint8_t)reg_addr, (uint8_t *)&reg, 2, len);
+    void requestData(const RegAddress & reg_addr, uint8_t * datas, const size_t len){
+        bus_drv.readPool((uint8_t)reg_addr, datas, 2, len);
     }
 
 public:
