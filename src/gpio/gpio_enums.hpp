@@ -34,5 +34,22 @@ enum class PinMode:uint8_t{
     OutAfOD = 0b1111
 };
 
+namespace PinModeUtils{
+    constexpr bool isIn(const PinMode & pinmode){
+        return pinmode == PinMode::InAnalog || pinmode == PinMode::InFloating || pinmode == PinMode::InPullUP || pinmode == PinMode::InPullDN;
+    }
+
+    constexpr bool isOut(const PinMode & pinmode){
+        return pinmode == PinMode::OutPP || pinmode == PinMode::OutOD || pinmode == PinMode::OutAfPP || pinmode == PinMode::OutAfOD;
+    }
+
+    constexpr bool isPP(const PinMode & pinmode){
+        return pinmode == PinMode::OutPP || pinmode == PinMode::OutAfPP;
+    }
+
+    constexpr bool isOD(const PinMode & pinmode){
+        return pinmode == PinMode::OutOD || pinmode == PinMode::OutAfOD;
+    }
+}
 
 #endif
