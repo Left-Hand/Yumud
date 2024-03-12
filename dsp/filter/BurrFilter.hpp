@@ -2,11 +2,68 @@
 
 #define __BURR_FILTER_HPP__
 
-template<typename real>
-class BurrFilter{
+template<typename T>
+class BurrFilter_t{
+	T last = T(0);
+	T current = T(0);
 
+	const T certainty_tolerance;
+	const T error_tolerance;
+
+	const uint8_t max_misjudge_cnt;
+	uint8_t misjudge_cnt = 0;
+	bool inited = false;
+
+	T certainty(const T & x)const{
+		T ma = abs(x - current);
+		T mi = abs(current - last);
+		if(ma > mi){
+			if(ma) return mi / ma;
+			else return (mi ? T(0) : T(1));
+		}
+		else{
+			if(mi) return ma / mi;
+			else return (ma ? T(0) : T(1));
+		}
+	}
+	T error(const T & x)const{
+		return x - predict(x);
+	}
 public:
 
+	BurrFilter_t(const T & _certainty_tolerance = T(0.8),
+		const T & _error_tolerance = T(200),
+		const uint8_t & _max_misjudge_cnt = 2):
+			certainty_tolerance(_certainty_tolerance), error_tolerance(_error_tolerance), max_misjudge_cnt(_max_misjudge_cnt){;}
+
+	T update(const T & x){
+		if(inited){
+			if(certainty(x) < certainty_tolerance && abs(error(x)) > error_tolerance){
+				misjudge_cnt++;
+				if(misjudge_cnt > max_misjudge_cnt){
+					misjudge_cnt = 0;
+					goto follow_output;
+				}else{
+					T ret = predict(current);
+					last = current;
+
+					return ret;
+				}
+			}else{
+				misjudge_cnt = 0;
+				goto follow_output;
+			}
+		}
+		inited = true;
+		follow_output:
+		last = x;
+		current = x;
+		return x;
+	}
+
+	T predict(const T & x)const{
+		return x * 2 - last;
+	}
 };
 
 #endif

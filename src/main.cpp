@@ -187,14 +187,19 @@ int main(){
     MPU6050 mpu(i2cdrv);
     mpu.init();
     Axis6 & imu = mpu;
+    auto filter = BurrFilter_t<real_t>();
     while(true){
         Led = (millis() / 100) & 0b1;
     // }while(true){
         // bmi.getChipId();
         imu.flush();
         real_t x, y, z;
-        // imu.getGyro(x, y, z);
-        // uart2.println((float)x,(float)y,(float)z);
+        imu.getGyro(x, y, z);
+        // imu.getAccel(x,y,z);
+
+        // uart2.println((float)filter.update(unlikely(millis() % 100 == 0) ? real_t(10000) : x), millis() % 100 == 0 ? real_t(10000) : x);
+        uart2.println(x,y,z, sqrt(x *x + y *y + z*z));
+
         // static bool state = false;
         // state = !state;
         // GPIO_WriteBit(GPIOC,GPIO_Pin_13, state);
@@ -252,7 +257,7 @@ int main(){
         static bool i = false;
         i = !i;
         // delay (100);
-        static uint8_t cnt = 0;
+        // static uint8_t cnt = 0;
         // mag_sensor.setDirection(true);
         // mag_sensor.getRawData();
         // spi.begin(0);

@@ -160,4 +160,8 @@
 #define CLZ(x) __builtin_clz(x)
 #endif
 
+#define ANGLE2RAD(x) (x * TAU / 360)
+#define RAD2ANGLE(x) (x / TAU * 360)
+
+
 #endif

@@ -6,6 +6,18 @@
 #include "device/IMU/IMU.hpp"
 
 class MPU6050:public Axis6{
+public:
+    enum class DPS:uint8_t{
+        _250, _500, _1000, _2000
+    };
+
+    enum class G:uint8_t{
+        _2, _4, _8, _16
+    };
+
+    // enum class DataRate:uint8_t{
+
+    // }
 protected:
     I2cDrv & bus_drv;
 
@@ -21,7 +33,7 @@ protected:
         vec3i gyro;
     };
 
-    // real_t accel_scaler = real_t(9.8 / 16384);
+    real_t accel_scaler = real_t(9.8 * 4);
     real_t gyro_scaler = real_t(0.001064f * 16384);
 
     enum class RegAddress:uint8_t{
@@ -33,10 +45,6 @@ protected:
         GyroY = 0x45,
         GyroZ = 0x47,
     };
-
-    int16_t Reg16ToI16(const Reg16 & reg){
-        return *(int16_t *)&(reg);
-    }
 
     void writeReg(const uint8_t & reg_addr, const uint8_t data){
         bus_drv.writeReg(reg_addr, data);

@@ -11,12 +11,12 @@ private:
     GpioBase & scl;
     GpioBase & sda;
 
-    uint16_t delays = 100;
+    uint16_t delays = 1000;
 
     void delayDur(){
         // volatile uint16_t i = delays;
         // while(i--) __nop;
-        delayMicroseconds(4);
+        // delayMicroseconds(4);
     }
 
     void clk(){
@@ -24,6 +24,7 @@ private:
         scl.set();
         delayDur();
         scl.clr();
+        delayDur();
     }
 
     void clkr(){
@@ -51,20 +52,23 @@ private:
     }
 
     void clk_down_then_up(){
-        clk_down();
-        clk_up();
+        delayDur();
+        scl.clr();
+        delayDur();
+        scl.set();
+        delayDur();
     }
     void ack(){
         delayDur();
         scl.clr();
         delayDur();
-        sda.OutOD();
         sda.clr();
+        sda.OutOD();
         delayDur();
         scl.set();
         delayDur();
         scl.clr();
-        // sda = true;
+        sda.set();
         delayDur();
     }
 
@@ -72,8 +76,8 @@ private:
         delayDur();
         scl.clr();
         delayDur();
-        sda.OutOD();
         sda.set();
+        sda.OutOD();
         delayDur();
         scl.set();
         delayDur();
@@ -176,6 +180,7 @@ public:
         delayDur();
         ret |= sda.read();
         for(uint8_t i = 0; i < 7; i++){
+
             clk_down_then_up();
             ret <<= 1; ret |= sda.read();
         }

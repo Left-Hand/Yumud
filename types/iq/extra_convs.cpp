@@ -1,21 +1,21 @@
 #include "extra_convs.hpp"
 
 String iq_t::toString(const uint8_t eps) const{
-    using namespace StringUtils;
 
     char str_int[8] = {0};
     char str_float[eps+1] = {0};
 
     char buf[10 + eps];
 
-    int32_t int_part = value >> GLOBAL_Q;
-    int32_t float_part = value & ((1 << GLOBAL_Q )- 1);
+    uint32_t abs_value = abs(value);
+    uint32_t int_part = abs_value >> GLOBAL_Q;
+    uint32_t float_part = abs_value & ((1 << GLOBAL_Q )- 1);
 
-	if(value < 0 && int_part == 0){
+	if(value < 0){
 		str_int[0] = '-';
-		itoa(int_part,str_int + 1,10);
+		StringUtils::itoa(int_part,str_int + 1,10);
 	}
-	else itoa(int_part,str_int,10);
+	else StringUtils::itoa(int_part,str_int,10);
 
     if(eps){
         int32_t scale = 1;
@@ -24,7 +24,7 @@ String iq_t::toString(const uint8_t eps) const{
 
         float_part *= scale;
         float_part >>= GLOBAL_Q;
-        itoas(float_part,str_float, 10, eps);
+        StringUtils::itoas(float_part,str_float, 10, eps);
     }
 
     int i = strlen(str_int);
