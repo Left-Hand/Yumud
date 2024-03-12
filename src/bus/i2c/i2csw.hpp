@@ -13,83 +13,17 @@ private:
 
     uint16_t delays = 1000;
 
-    void delayDur(){
+    __fast_inline void delayDur(){
         // volatile uint16_t i = delays;
         // while(i--) __nop;
         // delayMicroseconds(4);
     }
 
-    void clk(){
-        delayDur();
-        scl.set();
-        delayDur();
-        scl.clr();
-        delayDur();
-    }
-
-    void clkr(){
-        delayDur();
-        scl.clr();
-        delayDur();
-        scl.set();
-        delayDur();
-        scl.clr();
-        delayDur();
-    }
-
-    void clk_up(){
-        delayDur();
-        scl.clr();
-        delayDur();
-        scl.set();
-        delayDur();
-    }
-
-    void clk_down(){
-        delayDur();
-        scl.clr();
-        delayDur();
-    }
-
-    void clk_down_then_up(){
-        delayDur();
-        scl.clr();
-        delayDur();
-        scl.set();
-        delayDur();
-    }
-    void ack(){
-        delayDur();
-        scl.clr();
-        delayDur();
-        sda.clr();
-        sda.OutOD();
-        delayDur();
-        scl.set();
-        delayDur();
-        scl.clr();
-        sda.set();
-        delayDur();
-    }
-
-    void nack(void) {
-        delayDur();
-        scl.clr();
-        delayDur();
-        sda.set();
-        sda.OutOD();
-        delayDur();
-        scl.set();
-        delayDur();
-        scl.clr();
-        sda.set();
-        delayDur();
-    }
 
     Error wait_ack(){
-        sda.InFloating();
         sda.set();
-        delayDur();
+        sda.InFloating();
+        // delayDur();
         scl.set();
         uint32_t begin_t = micros();
         while(sda.read()){
@@ -106,7 +40,6 @@ private:
     }
 
     Error start(const uint8_t & _address) override{
-
         scl.OutOD();
         sda.OutOD();
         sda.set();
@@ -159,38 +92,40 @@ public:
 
     Error write(const uint32_t & data) override {
         sda.OutOD();
-        delayDur();
 
         for(uint8_t mask = 0x80; mask; mask >>= 1){
             sda.write(mask & data);
-            clk();
+            delayDur();
+            scl.set();
+            delayDur();
+            scl.clr();
         }
 
         return wait_ack();
     }
 
-    Error read(uint32_t & data, bool toAck = true) {
+    __fast_inline Error read(uint32_t & data, bool toAck = true) {
         uint8_t ret = 0;
 
         sda.set();
         sda.InPullUP();
         delayDur();
 
-        clk_up();
-        delayDur();
-        ret |= sda.read();
-        for(uint8_t i = 0; i < 7; i++){
-
-            clk_down_then_up();
+        for(uint8_t i = 0; i < 8; i++){
+            scl.set();
             ret <<= 1; ret |= sda.read();
+            delayDur();
+            scl.clr();
+            delayDur();
         }
 
-        clk_down();
-
+        sda.write(!toAck);
+        sda.OutOD();
+        scl.set();
         delayDur();
-        sda.clr();
-        if(toAck) ack();
-        else nack();
+        scl.clr();
+        sda.InPullUP();
+
         data = ret;
         return Bus::ErrorType::OK;
     }
