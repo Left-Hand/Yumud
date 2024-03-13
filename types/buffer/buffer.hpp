@@ -11,7 +11,7 @@ template<typename T>
 class BufferConcept_t{
 public:
     virtual void addData(const T & data) = 0;
-    virtual void getData(T & data) = 0;
+    // virtual void getData(T & data) = 0;
     virtual T & getData() = 0;
     virtual size_t available() const = 0;
     virtual void addDatas(const T * data_ptr, const size_t & len, bool msb = false) = 0;

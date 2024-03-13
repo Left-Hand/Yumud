@@ -4,8 +4,8 @@
 
 #include "../buffer.hpp"
 
-template<typename T>
-class PingPongBuf_t:public DynamicBuffer_t<T>{
+template<typename T, uint32_t _size>
+class PingPongBuf_t:public StaticBuffer_t<T, _size>{
 protected:
     volatile T * write_ptr;
     volatile bool sect;
@@ -15,7 +15,7 @@ protected:
     }
 
 public:
-    PingPongBuf_t():DynamicBuffer_t<T>(), write_ptr(this->buf), read_ptr(this->buf){;}
+    PingPongBuf_t():write_ptr(this->buf), read_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
@@ -53,6 +53,7 @@ public:
     }
 };
 
-typedef PingPongBuf_t<uint8_t> PingPongBuf;
+template<uint32_t size>
+using PingPongBuf = PingPongBuf_t<uint8_t, size>;
 
 #endif // !__RING_BUF_HPP

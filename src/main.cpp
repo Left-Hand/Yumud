@@ -186,7 +186,7 @@ int main(){
     I2cDrv i2cdrv(i2csw, 0xd0);
     MPU6050 mpu(i2cdrv);
     mpu.init();
-    Axis6 & imu = mpu;
+    // Axis6 & imu = mpu;
     Gpio TrigA = Gpio(GPIOC, Pin::_14);
     Gpio TrigB = Gpio(GPIOC, Pin::_15);
     TrigA.InPullUP();
@@ -219,11 +219,31 @@ int main(){
 
     // auto filter = BurrFilter_t<real_t>();
     Vector3 accel;
+    real_t f0 = real_t(4);
+    real_t f_test = real_t(4);
+    LowpassFilter_t<real_t, real_t> lpf(f0);
+    HighpassFilter_t<real_t, real_t> hpf(f0);
+    auto lob = LinearObersver_t<real_t, real_t>();
+    auto lob2 = LinearObersver_t<real_t, real_t>();
+    real_t x;
+    real_t y;
+    real_t f;
     while(true){
-        static uint16_t last_cnt = 0;
-        uart2.println(cnt);
-        last_cnt = cnt;
-        delay(10);
+        // static uint16_t last_cnt = 0;
+        // uart2.println(cnt);
+        // last_cnt = cnt;
+        // delay(10);
+        static real_t last_t = t;
+        real_t x = sin(t * f_test * TAU);
+        x += 1 * sin(t * f_test * TAU * 0.1);
+        // x += 0.4 * sin(t * f_test * TAU * 510);
+        real_t out = hpf.update(x, t);
+        if(millis()%10 == 0) lob.update(x, t);
+        if(millis()%10 == 5) lob2.update(lob.predict(t),t);
+
+        uart2.println(x, out, lob.predict(t), lob2.predict(t));
+        reCalculateTime();
+        // t = real_t(float(millis()) / float(10000));
         // Led = (millis() / 100) & 0b1;
         // if((millis() % 100) == 0){cb(); delay(1);}
     }

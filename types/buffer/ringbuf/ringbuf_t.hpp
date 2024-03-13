@@ -21,12 +21,15 @@ public:
     __fast_inline void addData(const T & data) override{
         *read_ptr = data;
         read_ptr = advancePointer(read_ptr);
+        if(read_ptr == write_ptr){
+            write_ptr = advancePointer(write_ptr);
+        }
     }
 
-    __fast_inline void getData(T & data) override{
-        data = *write_ptr;
-        write_ptr = advancePointer(write_ptr);
-    }
+    // __fast_inline void getData(T & data) override{
+    //     data = *write_ptr;
+    //     write_ptr = advancePointer(write_ptr);
+    // }
 
     __fast_inline T & getData() override{
         auto ret_ptr = write_ptr;
@@ -52,9 +55,9 @@ public:
 
     void getDatas(T * data_ptr, const size_t & len, bool msb = false) override{
         if(msb){
-            for(size_t i = len - 1; i > 0; i--) getData(data_ptr[i]);
+            for(size_t i = len - 1; i > 0; i--) data_ptr[i] = getData();
         }else{
-            for(size_t i = 0; i < len; i++) getData(data_ptr[i]);
+            for(size_t i = 0; i < len; i++) data_ptr[i] = getData();
         }
     }
 };

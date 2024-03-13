@@ -1,6 +1,6 @@
 #include "uart.hpp"
 
-void Uart::_read(char & data){ringBuf.getData((uint8_t &)data);}
+void Uart::_read(char & data){data = ringBuf.getData();}
 void Uart::_read(char * data_ptr, const size_t len){ringBuf.getDatas((uint8_t *)data_ptr, len);}
 
 
