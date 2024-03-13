@@ -1,7 +1,7 @@
 #include "can1.hpp"
 
 static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
-static RingBuf_t<std::shared_ptr<CanMsg>> pending_rx_msgs(8);
+static RingBuf_t<std::shared_ptr<CanMsg>, 8> pending_rx_msgs;
 static CAN_InitTypeDef config;
 void CAN1_GPIO_Init(){
     CHECK_INIT

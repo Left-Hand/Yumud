@@ -20,7 +20,7 @@ protected:
 
 
 public:
-    RingBuf ringBuf;
+    RingBuf<128> ringBuf;
 
     size_t available(){return ringBuf.available();}
 };

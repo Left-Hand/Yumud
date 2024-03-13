@@ -192,31 +192,27 @@ int main(){
     TrigA.InPullUP();
     TrigB.InPullUP();
 
-    Gpio a0 = Gpio(GPIOA, Pin::_0);
-    a0.InAnalog();
-    AdcChannelOnChip ac0(ADC1);
+    // Gpio a0 = Gpio(GPIOA, Pin::_0);
+    // a0.InAnalog();
+    // AdcChannelOnChip ac0(ADC1);
 
-    adc1.clearRegularQueue();
-    adc1.AddChannelToQueue(ac0);
-    adc1.init();
-    adc1.setRegularTrigger(AdcHw::RegularTrigger::SW);
-    adc1.start();
+    // adc1.clearRegularQueue();
+    // adc1.AddChannelToQueue(ac0);
+    // adc1.init();
+    // adc1.setRegularTrigger(AdcHw::RegularTrigger::SW);
+    // adc1.start();
 
     exti.init();
     exti.bindPin(TrigA, Exti::Trigger::Falling);
 
     // adc1.init();
-    uint8_t cnt = 0;
-    auto cb = [&Led, &cnt, &uart2](){Led = !Led;cnt++;uart2.println(cnt, micros());};
+    uint16_t cnt = 0;
+    auto cb = [&Led, &TrigB, &cnt](){cnt += (bool(TrigB) ? 1 : -1);};
     exti.bindCb(TrigA, cb);
+    // VtfRequest(15EXTI15_10_IRQn, 0, cb);
     // GPIO_InitTypeDef GPIO_InitStructure = {0};
 
     /* GPIOA ----> EXTI_Line0 */
-    GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource14);
-    EXTI_InitStructure.EXTI_Line = EXTI_Line14;
-    EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising_Falling;
-    EXTI_InitStructure.EXTI_LineCmd = ENABLE;
     // EXTI_Init(&EXTI_InitStructure);
 
 
@@ -224,6 +220,10 @@ int main(){
     // auto filter = BurrFilter_t<real_t>();
     Vector3 accel;
     while(true){
+        static uint16_t last_cnt = 0;
+        uart2.println(cnt);
+        last_cnt = cnt;
+        delay(10);
         // Led = (millis() / 100) & 0b1;
         // if((millis() % 100) == 0){cb(); delay(1);}
     }

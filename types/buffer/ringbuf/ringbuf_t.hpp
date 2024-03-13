@@ -4,8 +4,8 @@
 
 #include "../buffer.hpp"
 
-template<typename T>
-class RingBuf_t:public Buffer_t<T>{
+template<typename T, uint32_t _size>
+class RingBuf_t:public StaticBuffer_t<T, _size>{
 protected:
     T * write_ptr;
     T * read_ptr;
@@ -15,7 +15,7 @@ protected:
     }
 
 public:
-    RingBuf_t(const size_t & _size = 128):Buffer_t<T>(_size), write_ptr(this->buf), read_ptr(this->buf){;}
+    RingBuf_t():write_ptr(this->buf), read_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
@@ -58,7 +58,7 @@ public:
         }
     }
 };
-
-typedef RingBuf_t<uint8_t> RingBuf;
+template<uint32_t size>
+using RingBuf = RingBuf_t<uint8_t, size>;
 
 #endif // !__RING_BUF_HPP

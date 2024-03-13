@@ -5,7 +5,7 @@
 #include "../buffer.hpp"
 
 template<typename T>
-class PingPongBuf_t:public Buffer_t<T>{
+class PingPongBuf_t:public DynamicBuffer_t<T>{
 protected:
     volatile T * write_ptr;
     volatile bool sect;
@@ -15,7 +15,7 @@ protected:
     }
 
 public:
-    PingPongBuf_t():Buffer_t<T>(), write_ptr(this->buf), read_ptr(this->buf){;}
+    PingPongBuf_t():DynamicBuffer_t<T>(), write_ptr(this->buf), read_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{

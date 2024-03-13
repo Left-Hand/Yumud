@@ -5,32 +5,50 @@
 #include "src/platform.h"
 #include <cstdint>
 #include <string>
+#include <array>
 
 template<typename T>
-class Buffer_t{
-protected:
-    T * buf;
-    size_t size;
-
+class BufferConcept_t{
 public:
-    Buffer_t(const size_t & _size = 128){
-        size = (volatile size_t)_size;
-        buf = new T[size];
-    }
-
-    ~Buffer_t(){
-        delete buf;
-    }
-
     virtual void addData(const T & data) = 0;
     virtual void getData(T & data) = 0;
     virtual T & getData() = 0;
     virtual size_t available() const = 0;
     virtual void addDatas(const T * data_ptr, const size_t & len, bool msb = false) = 0;
     virtual void getDatas(T * data_ptr, const size_t & len, bool msb = false) = 0;
-
 };
 
-typedef Buffer_t<uint8_t> Buffer;
 
+template<typename T>
+class DynamicBuffer_t:public BufferConcept_t<T>{
+protected:
+    T * buf;
+    size_t size;
+
+public:
+    DynamicBuffer_t(const size_t & _size = 128){
+        size = (volatile size_t)_size;
+        buf = new T[size];
+    }
+
+    ~DynamicBuffer_t(){
+        delete buf;
+    }
+};
+
+template<typename T, uint32_t _size>
+class StaticBuffer_t:public BufferConcept_t<T>{
+protected:
+    // std::array<T, _size> buf;
+    T buf[_size];
+    size_t size = _size;
+public:
+    StaticBuffer_t() = default;
+    ~StaticBuffer_t() = default;
+};
+
+typedef DynamicBuffer_t<uint8_t> DynamicBuffer;
+
+template<uint32_t size>
+using StaticBuffer = StaticBuffer_t<uint8_t,size>;
 #endif

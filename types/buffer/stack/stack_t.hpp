@@ -5,11 +5,11 @@
 #include "../buffer.hpp"
 
 template<typename T>
-class Stack_t:public Buffer_t<T>{
+class Stack_t:public DynamicBuffer_t<T>{
 protected:
     volatile T * data_ptr;
 public:
-    Stack_t():Buffer_t<T>(), data_ptr(this->buf){;}
+    Stack_t():DynamicBuffer_t<T>(), data_ptr(this->buf){;}
 
     __fast_inline void addData(const T & data) override{
         *data_ptr = data;
