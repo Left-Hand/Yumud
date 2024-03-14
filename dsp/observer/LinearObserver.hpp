@@ -22,12 +22,17 @@ public:
         last = Point{.x = x,.t = t};
 
         if(dt) dx_dt = dx / dt;
-        return x;
+        return dx_dt;
     }
 
     real predict(const time & t) override{
         time delta = t - last.t;
         return last.x + delta * dx_dt;
+    }
+
+    real predict(const real & x, const time & t) {
+        time delta = t - last.t;
+        return x + delta * dx_dt;
     }
 };
 

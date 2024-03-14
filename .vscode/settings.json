@@ -5,5 +5,7 @@
         "Injec",
         "Jedec",
         "JEOC"
-    ]
+    ],
+    "C_Cpp.default.enableConfigurationSquiggles": false,
+    "C_Cpp.errorSquiggles": "disabled"
 }

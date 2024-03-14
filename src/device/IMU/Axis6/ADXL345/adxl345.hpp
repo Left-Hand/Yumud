@@ -1,7 +1,7 @@
 #ifndef __ADXL345_HPP__
 #define __ADXL345_HPP__
 
-#include "device_defs.h"
+#include "src"
 
 class ADXL345:public Axis6{
 public:

@@ -6,12 +6,12 @@
 
 class PwmServo:public ServoOpenLoop{
 protected:
-    PwmChannelBase & instance;
+    PwmChannelConcept & instance;
     const real_t min_value_duty;
     const real_t max_value_duty;
     bool enabled = true;
 public:
-    PwmServo(PwmChannelBase & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty
+    PwmServo(PwmChannelConcept & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty
             ):instance(_instance), min_value_duty(_min_value_duty), max_value_duty(_max_value_duty){;}
 
     void init() override {;}
@@ -27,7 +27,7 @@ class PwmAngleServo:public PwmServo{
 protected:
     real_t angle_range;
 public:
-    PwmAngleServo(PwmChannelBase & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const real_t & _angle_range
+    PwmAngleServo(PwmChannelConcept & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const real_t & _angle_range
             ):PwmServo(_instance, _min_value_duty, _max_value_duty), angle_range(_angle_range){;}
     void setDuty(const real_t & duty) override{
         if(!enabled) return instance.setDuty(real_t(0));
@@ -43,7 +43,7 @@ class PwmSpeedServo:public PwmServo{
 protected:
     real_t max_rot_per_second;
 public:
-    PwmSpeedServo(PwmChannelBase & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const real_t & _max_rot_per_second
+    PwmSpeedServo(PwmChannelConcept & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const real_t & _max_rot_per_second
             ):PwmServo(_instance, _min_value_duty, _max_value_duty), max_rot_per_second(_max_rot_per_second){;}
 
     void setDuty(const real_t & duty) override{
@@ -58,12 +58,12 @@ public:
 
 class Servo180: public PwmAngleServo{
 public:
-    Servo180(PwmChannelBase & _instance):PwmAngleServo(_instance, real_t(0.025), real_t(0.125), real_t(180)){;}
+    Servo180(PwmChannelConcept & _instance):PwmAngleServo(_instance, real_t(0.025), real_t(0.125), real_t(180)){;}
 };
 
 class Servo360: public PwmSpeedServo{
 public:
-    Servo360(PwmChannelBase & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), real_t(360)){;}
+    Servo360(PwmChannelConcept & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), real_t(360)){;}
 };
 
 

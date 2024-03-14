@@ -21,6 +21,7 @@
 #include "dsp/filter/LowpassFilter.hpp"
 #include "dsp/filter/HighpassFilter.hpp"
 #include "dsp/observer/LinearObserver.hpp"
+#include "src/device/Encoder/MagEnc/MT6816/mt6816.hpp"
 // #include "MLX90640/MLX90640_API.h"
 // #include "HX711/HX711.h"
 // #include "TTP229/TTP229.h"
@@ -52,9 +53,10 @@
 
 #include "../types/image/painter.hpp"
 #include "stdlib.h"
-#include "timer/timers/timer1.hpp"
+#include "timer/timers/timer_hw.hpp"
 #include "timer/pwm_channel.hpp"
 #include "bus/spi/spi1.hpp"
+#include "dsp/controller/PID.hpp"
 // #include "adc/adcs/adc1.hpp"
 #include "device/Actuator/Servo/PwmServo/pwm_servo.hpp"
 #include "device/Actuator/Coil/coil.hpp"
@@ -69,6 +71,7 @@
 #include "src/nvic/nvic.hpp"
 #include "dsp/lut.hpp"
 #include "algo/any/any.hpp"
+#include "src/device/Encoder/odometer.hpp"
 
 extern real_t t;
 

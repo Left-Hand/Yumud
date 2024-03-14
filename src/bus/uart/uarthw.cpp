@@ -9,6 +9,7 @@ void UartHw::enableRcc(const bool en){
         #ifdef HAVE_UART1
         case USART1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en);
+            GPIO_PinRemapConfig(UART1_REMAP, UART1_REMAP_ENABLE);
             break;
         #endif
         #ifdef HAVE_UART2

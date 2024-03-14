@@ -99,7 +99,7 @@
             "editor.tabSize": 4,
             "editor.autoIndent": "advanced"
         },
-        "C_Cpp.errorSquiggles": "Disabled",
+        "C_Cpp.errorSquiggles": "disabled",
         "EIDE.SerialPortMonitor.BaudRate": 115200,
         "cSpell.words": [
             "brclk",
@@ -118,7 +118,8 @@
             "Systick",
             "vref",
             "WRPR"
-        ]
+        ],
+        "C_Cpp.default.enableConfigurationSquiggles": false
     },
     "extensions": {
         "recommendations": [

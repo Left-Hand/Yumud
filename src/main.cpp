@@ -121,19 +121,127 @@ void sendReset(Gpio & gpio){
     delayMicroseconds(60);
     gpio.set();
 }
+class SVPWM{
 
+};
 
+real_t CurrentToScale(const real_t & current){
+    real_t usi_c = abs(current);
+    real_t usi_v = real_t(0.8125f) - (real_t(0.1056f) / (usi_c + real_t(0.13f))) + (usi_c - real_t(0.2f)) * usi_c;
+    return current > real_t(0) ? usi_v : real_t(0) - usi_v;
+}
+
+constexpr int poles = 50;
+class SVPWM2:public SVPWM{
+protected:
+    CoilConcept & coilA;
+    CoilConcept & coilB;
+
+public:
+    SVPWM2(CoilConcept & _coilA, CoilConcept & _coilB):coilA(_coilA), coilB(_coilB){;}
+    void init(){
+        coilA.init();
+        coilB.init();
+    }
+    void setABCurrent(const real_t & aCurrentV, const real_t & bCurrentV){
+        real_t aDuty = aCurrentV / real_t(3.3f);
+        real_t bDuty = bCurrentV / real_t(3.3f);
+        coilA.setDuty(aDuty);
+        coilB.setDuty(bDuty);
+    }
+
+    void setDQCurrent(const real_t & dCurrentV, const real_t & qCurrentV, const real_t & prog){
+        real_t dCurrent = CurrentToScale(dCurrentV);
+        real_t qCurrent = CurrentToScale(qCurrentV);
+        setABCurrent(
+            cos(prog) * dCurrent - sin(prog) * qCurrent,
+            sin(prog) * dCurrent + cos(prog) * qCurrent
+        );
+    }
+
+    void setClamp(const real_t & _clamp){
+        coilA.setClamp(_clamp);
+        coilB.setClamp(_clamp);
+    }
+};
+
+enum class posModes:uint8_t{
+    Lap, Continuous
+};
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-
     Systick_Init();
 
     GPIO_PortC_Init();
 
+    uart1.init(115200 *4);
+    spi1.init(18000000);
+    spi1.bindCsPin(Gpio(GPIOA, Pin::_15), 0);
+    SpiDrv mt6816_drv(spi1, 0);
+    MT6816 mt6816(mt6816_drv);
+    Printer & log = uart1;
+    log.setEps(4);
+    auto tim2ch3 = timer2.getChannel(TimerOC::Channel::CH3);
+    auto tim2ch4 = timer2.getChannel(TimerOC::Channel::CH4);
 
-    timer1.init(256);
+    Gpio gpioCoilAp = Gpio(GPIOA, Pin::_5);
+    Gpio gpioCoilAm = Gpio(GPIOA, Pin::_4);
+    Gpio gpioCoilBp = Gpio(GPIOA, Pin::_2);
+    Gpio gpioCoilBm = Gpio(GPIOA, Pin::_3);
+    auto pwmCoilA = PwmChannel(tim2ch4);
+    auto pwmCoilB = PwmChannel(tim2ch3);
+    timer2.init(72000);
+
+    Coil1 coilA(gpioCoilAp, gpioCoilAm, pwmCoilA);
+    Coil1 coilB(gpioCoilBp, gpioCoilBm, pwmCoilB);
+    SVPWM2 svpwm(coilA, coilB);
+
+    svpwm.init();
+    auto pos_pid = PID_t<real_t>(real_t(2), real_t(), real_t());
+    svpwm.setABCurrent(real_t(0.8), real_t(0));
+    real_t omiga = real_t(20);
+    delay(100);
+
+    Odometer odo(mt6816,50);
+    odo.locateElecrad();
+    // odo.locateAbsolutely(real_t(0.5));
+    odo.locateRelatively(real_t(-1));
+    posModes pos_mode = posModes::Continuous;
+    while(true){
+        odo.update();
+        real_t pos, target;
+        switch(pos_mode){
+            case posModes::Lap:
+                // pos = odo.getPosition();
+                // target =
+                break;
+            case posModes::Continuous:
+                pos = odo.getPosition();
+                target = round(pos * 16) / 16;
+                // target = omiga * sin(t);
+                // target = real_t(0);
+                // target = real_t(0);
+                // if(odo.getLapPosition() > real_t(0.5)) target += int(pos)+1;
+                // else target += int(pos);
+                break;
+        }
+
+        // log.println(pos, target);
+
+        pos_pid.setClamp(real_t(0.35));
+        real_t curr = pos_pid.update(target, pos);
+        // real_t curr = real_t(0.07);
+        // svpwm.setPosition(mt6816.getPosition(), );
+        svpwm.setDQCurrent(real_t(0), curr, odo.getElecRad());
+        // mt6816.getPosition() * poles * TAU + PI / 2 );
+        // setDQCurrent(real_t(0), real_t(0.3), omiga * t);
+        reCalculateTime();
+        // delay(10);
+    }
+
+    timer1.init(25600);
 
     auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
     tim1ch1.init();
@@ -162,9 +270,6 @@ int main(){
     uart2.init(UART2_Baudrate);
     uart2.setEps(4);
 
-    // foo(real_t(0));
-    // constexpr int tablesize = 128;
-    // SinTable<real_t, tablesize> sintable;
     Gpio Led = Gpio(GPIOC, Pin::_13);
     Led.OutPP();
     // Gpio mosi_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
@@ -206,9 +311,11 @@ int main(){
     exti.bindPin(TrigA, Exti::Trigger::Falling);
 
     // adc1.init();
-    uint16_t cnt = 0;
-    auto cb = [&Led, &TrigB, &cnt](){cnt += (bool(TrigB) ? 1 : -1);};
+    real_t cnt;
+    auto cb = [&Led, &TrigB, &cnt](){cnt += real_t((bool(TrigB) ? 1 : -1)) / real_t(16384);};
     exti.bindCb(TrigA, cb);
+
+    uart1.init(115200);
     // VtfRequest(15EXTI15_10_IRQn, 0, cb);
     // GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -219,8 +326,8 @@ int main(){
 
     // auto filter = BurrFilter_t<real_t>();
     Vector3 accel;
-    real_t f0 = real_t(4);
-    real_t f_test = real_t(4);
+    real_t f0 = real_t(6);
+    real_t f_test = real_t(0.1);
     LowpassFilter_t<real_t, real_t> lpf(f0);
     HighpassFilter_t<real_t, real_t> hpf(f0);
     auto lob = LinearObersver_t<real_t, real_t>();
@@ -234,14 +341,13 @@ int main(){
         // last_cnt = cnt;
         // delay(10);
         static real_t last_t = t;
-        real_t x = sin(t * f_test * TAU);
-        x += 1 * sin(t * f_test * TAU * 0.1);
-        // x += 0.4 * sin(t * f_test * TAU * 510);
-        real_t out = hpf.update(x, t);
-        if(millis()%10 == 0) lob.update(x, t);
-        if(millis()%10 == 5) lob2.update(lob.predict(t),t);
+        real_t x = 6*sin(t * f_test * TAU);
 
-        uart2.println(x, out, lob.predict(t), lob2.predict(t));
+        real_t out = hpf.update(x, t);
+
+        if(millis()%10 == 0) lob2.update(lob.update(real_t(x), t),t);
+
+        uart2.println(x, lob2.predict(lob.predict(t),t) , lob.predict(t));
         reCalculateTime();
         // t = real_t(float(millis()) / float(10000));
         // Led = (millis() / 100) & 0b1;
@@ -286,7 +392,7 @@ int main(){
     //     // uart2.println((float)real_t(pwmCoilP));
 
     // }
-    // auto coil = Coil(pwmCoilP, pwmCoilN);
+    // auto coil = Coil2(pwmCoilP, pwmCoilN);
     // coil.init();
     // coil.setDuty(real_t(-0.4));
 

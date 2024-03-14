@@ -5,6 +5,7 @@ static void TIM_RCC_ON(TIM_TypeDef * instance){
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
     } else if (instance == TIM2) {
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+        GPIO_PinRemapConfig(TIM2_REMAP, TIM2_REMAP_ENABLE);
     } else if (instance == TIM3) {
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
     } else if (instance == TIM4){
@@ -54,6 +55,8 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const TimerMo
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
     TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
+
+    enable();
 }
 
 

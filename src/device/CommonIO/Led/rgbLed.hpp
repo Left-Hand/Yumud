@@ -37,16 +37,16 @@ public:
 
 class RgbLedPwm:public RegLedInst<false>{
 protected:
-    PwmChannelBase & red_channel;
-    PwmChannelBase & green_channel;
-    PwmChannelBase & blue_channel;
+    PwmChannelConcept & red_channel;
+    PwmChannelConcept & green_channel;
+    PwmChannelConcept & blue_channel;
     void _update(const Color &color) override{
         red_channel = color.r;
         green_channel = color.g;
         blue_channel = color.b;
     }
 public:
-    RegLedPwm(PwmChannelBase & _red_channel, PwmChannelBase & _green_channel, PwmChannelBase & _blue_channel):
+    RegLedPwm(PwmChannelConcept & _red_channel, PwmChannelConcept & _green_channel, PwmChannelConcept & _blue_channel):
             red_channel(_red_channel), green_channel(_green_channel), blue_channel(_blue_channel){;}
 };
 

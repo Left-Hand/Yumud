@@ -10,6 +10,9 @@ public:
     virtual void init() = 0;
     virtual void enable(const bool en = true) = 0;
     virtual void setDuty(const real_t & duty) = 0;
+    virtual void setClamp(const real_t & abs_max_value) = 0;
+
+    virtual Actuator & operator= (const real_t & duty) = 0;
 };
 
 

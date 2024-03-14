@@ -5,7 +5,7 @@
 #include "timer_oc.hpp"
 #include "types/real.hpp"
 
-class PwmChannelBase{
+class PwmChannelConcept{
 protected:
     real_t min_value = real_t(0);
     real_t max_value = real_t(1);
@@ -19,19 +19,21 @@ public:
         max_value = MIN(_max_value, real_t(1));
     }
 
-    void init(const real_t & abs_max_value = real_t(1)) {setClamp(abs_max_value);}
-    void init(const real_t & _min_value, const real_t & _max_value){setClamp(_min_value, _max_value);}
+    virtual void init() = 0;
 
     virtual void setDuty(const real_t & duty) = 0;
 };
 
-class PwmChannel:public PwmChannelBase{
+class PwmChannel:public PwmChannelConcept{
 protected:
     TimerOC & instance;
 
 public:
     PwmChannel(TimerOC & _pwm) : instance(_pwm) {;}
 
+    void init() override{
+        instance.init();
+    }
     __fast_inline void setDuty(const real_t & duty) override{
         instance = uint16_t(CLAMP(duty, min_value, max_value) * instance.getPreloadData());
     }

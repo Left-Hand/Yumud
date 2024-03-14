@@ -24,6 +24,7 @@
 #define HAVE_SPI2
 
 #define HAVE_TIM1
+#define HAVE_TIM2
 #define HAVE_CAN1
 
 

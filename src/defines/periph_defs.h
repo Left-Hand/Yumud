@@ -19,10 +19,23 @@
 
 #endif
 
+#define UART1_REMAP_ENABLE ENABLE
 
 #ifdef HAVE_UART1
     #define UART1_Baudrate (115200 * 4)
 
+    #ifdef UART1_REMAP_ENABLE
+    #define UART1_TX_Port GPIOB
+    #define UART1_TX_Pin GPIO_Pin_6
+
+    #define UART1_RX_Port GPIOB
+    #define UART1_RX_Pin GPIO_Pin_7
+
+    #define UART1_IT_PP 1
+    #define UART1_IT_SP 0
+    #define UART1_REMAP GPIO_Remap_USART1
+
+    #else
     #define UART1_TX_Port GPIOA
     #define UART1_TX_Pin GPIO_Pin_9
 
@@ -31,6 +44,8 @@
 
     #define UART1_IT_PP 1
     #define UART1_IT_SP 0
+    #define UART1_REMAP GPIO_Remap_USART1
+    #endif
 #endif
 
 
@@ -136,18 +151,45 @@
     #define TIM1_CH4_Pin GPIO_Pin_11
 #endif
 
+
+#define TIM2_REMAP (GPIO_PartialRemap2_TIM2)
+
 #ifdef HAVE_TIM2
-    #define TIM2_CH1_Port GPIOA
-    #define TIM2_CH1_Pin GPIO_Pin_0
+    #if ((TIM2_REMAP == GPIO_FullRemap_TIM2) || (TIM2_REMAP == GPIO_PartialRemap1_TIM2))
+        #define TIM2_CH1_Port GPIOA
+        #define TIM2_CH1_Pin GPIO_Pin_15
 
-    #define TIM2_CH2_Port GPIOA
-    #define TIM2_CH2_Pin GPIO_Pin_1
+        #define TIM2_CH2_Port GPIOB
+        #define TIM2_CH2_Pin GPIO_Pin_3
 
-    #define TIM2_CH3_Port GPIOA
-    #define TIM2_CH3_Pin GPIO_Pin_2
+        #define TIM2_REMAP_ENABLE ENABLE
+    #else
+        #define TIM2_CH1_Port GPIOA
+        #define TIM2_CH1_Pin GPIO_Pin_0
 
-    #define TIM2_CH4_Port GPIOA
-    #define TIM2_CH4_Pin GPIO_Pin_3
+        #define TIM2_CH2_Port GPIOA
+        #define TIM2_CH2_Pin GPIO_Pin_1
+
+        #define TIM2_REMAP_ENABLE ENABLE
+    #endif
+
+    #if ((TIM2_REMAP == GPIO_FullRemap_TIM2) || (TIM2_REMAP == GPIO_PartialRemap2_TIM2))
+        #define TIM2_CH3_Port GPIOB
+        #define TIM2_CH3_Pin GPIO_Pin_10
+
+        #define TIM2_CH4_Port GPIOB
+        #define TIM2_CH4_Pin GPIO_Pin_11
+
+        #define TIM2_REMAP_ENABLE ENABLE
+    #else
+        #define TIM2_CH3_Port GPIOA
+        #define TIM2_CH3_Pin GPIO_Pin_2
+
+        #define TIM2_CH4_Port GPIOA
+        #define TIM2_CH4_Pin GPIO_Pin_3
+
+        #define TIM2_REMAP_ENABLE ENABLE
+    #endif
 #endif
 
 

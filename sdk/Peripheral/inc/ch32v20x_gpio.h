@@ -78,58 +78,58 @@ typedef bool BitAction;
 
 /* GPIO_Remap_define */
 /* PCFR1 */
-#define GPIO_Remap_SPI1                 ((uint32_t)0x00000001) /* SPI1 Alternate Function mapping */
-#define GPIO_Remap_I2C1                 ((uint32_t)0x00000002) /* I2C1 Alternate Function mapping */
-#define GPIO_Remap_USART1               ((uint32_t)0x00000004) /* USART1 Alternate Function mapping low bit */
-#define GPIO_Remap_USART2               ((uint32_t)0x00000008) /* USART2 Alternate Function mapping */
-#define GPIO_PartialRemap_USART3        ((uint32_t)0x00140010) /* USART3 Partial Alternate Function mapping */
-#define GPIO_FullRemap_USART3           ((uint32_t)0x00140030) /* USART3 Full Alternate Function mapping */
-#define GPIO_PartialRemap_TIM1          ((uint32_t)0x00160040) /* TIM1 Partial Alternate Function mapping */
-#define GPIO_FullRemap_TIM1             ((uint32_t)0x001600C0) /* TIM1 Full Alternate Function mapping */
-#define GPIO_PartialRemap1_TIM2         ((uint32_t)0x00180100) /* TIM2 Partial1 Alternate Function mapping */
-#define GPIO_PartialRemap2_TIM2         ((uint32_t)0x00180200) /* TIM2 Partial2 Alternate Function mapping */
-#define GPIO_FullRemap_TIM2             ((uint32_t)0x00180300) /* TIM2 Full Alternate Function mapping */
-#define GPIO_PartialRemap_TIM3          ((uint32_t)0x001A0800) /* TIM3 Partial Alternate Function mapping */
-#define GPIO_FullRemap_TIM3             ((uint32_t)0x001A0C00) /* TIM3 Full Alternate Function mapping */
-#define GPIO_Remap_TIM4                 ((uint32_t)0x00001000) /* TIM4 Alternate Function mapping */
-#define GPIO_Remap1_CAN1                ((uint32_t)0x001D4000) /* CAN1 Alternate Function mapping */
-#define GPIO_Remap2_CAN1                ((uint32_t)0x001D6000) /* CAN1 Alternate Function mapping */
-#define GPIO_Remap_PD01                 ((uint32_t)0x00008000) /* PD01 Alternate Function mapping */
-#define GPIO_Remap_TIM5CH4_LSI          ((uint32_t)0x00200001) /* LSI connected to TIM5 Channel4 input capture for calibration */
-#define GPIO_Remap_ADC1_ETRGINJ         ((uint32_t)0x00200002) /* ADC1 External Trigger Injected Conversion remapping */
-#define GPIO_Remap_ADC1_ETRGREG         ((uint32_t)0x00200004) /* ADC1 External Trigger Regular Conversion remapping */
-#define GPIO_Remap_ADC2_ETRGINJ         ((uint32_t)0x00200008) /* ADC2 External Trigger Injected Conversion remapping */
-#define GPIO_Remap_ADC2_ETRGREG         ((uint32_t)0x00200010) /* ADC2 External Trigger Regular Conversion remapping */
-#define GPIO_Remap_ETH                  ((uint32_t)0x00200020) /* Ethernet remapping (only for Connectivity line devices) */
-#define GPIO_Remap_CAN2                 ((uint32_t)0x00200040) /* CAN2 remapping (only for Connectivity line devices) */
-#define GPIO_Remap_MII_RMII_SEL         ((uint32_t)0x00200080) /* MII or RMII selection */
-#define GPIO_Remap_SWJ_NoJTRST          ((uint32_t)0x00300100) /* Full SWJ Enabled (JTAG-DP + SW-DP) but without JTRST */
-#define GPIO_Remap_SWJ_JTAGDisable      ((uint32_t)0x00300200) /* JTAG-DP Disabled and SW-DP Enabled */
-#define GPIO_Remap_SWJ_Disable          ((uint32_t)0x00300400) /* Full SWJ Disabled (JTAG-DP + SW-DP) */
-#define GPIO_Remap_SPI3                 ((uint32_t)0x00201000) /* SPI3/I2S3 Alternate Function mapping (only for Connectivity line devices) */
-#define GPIO_Remap_TIM2ITR1_PTP_SOF     ((uint32_t)0x00202000) /* Ethernet PTP output or USB OTG SOF (Start of Frame) connected \
+#define GPIO_Remap_SPI1                 (0x00000001) /* SPI1 Alternate Function mapping */
+#define GPIO_Remap_I2C1                 (0x00000002) /* I2C1 Alternate Function mapping */
+#define GPIO_Remap_USART1               (0x00000004) /* USART1 Alternate Function mapping low bit */
+#define GPIO_Remap_USART2               (0x00000008) /* USART2 Alternate Function mapping */
+#define GPIO_PartialRemap_USART3        (0x00140010) /* USART3 Partial Alternate Function mapping */
+#define GPIO_FullRemap_USART3           (0x00140030) /* USART3 Full Alternate Function mapping */
+#define GPIO_PartialRemap_TIM1          (0x00160040) /* TIM1 Partial Alternate Function mapping */
+#define GPIO_FullRemap_TIM1             (0x001600C0) /* TIM1 Full Alternate Function mapping */
+#define GPIO_PartialRemap1_TIM2         (0x00180100) /* TIM2 Partial1 Alternate Function mapping */
+#define GPIO_PartialRemap2_TIM2         (0x00180200) /* TIM2 Partial2 Alternate Function mapping */
+#define GPIO_FullRemap_TIM2             (0x00180300) /* TIM2 Full Alternate Function mapping */
+#define GPIO_PartialRemap_TIM3          (0x001A0800) /* TIM3 Partial Alternate Function mapping */
+#define GPIO_FullRemap_TIM3             (0x001A0C00) /* TIM3 Full Alternate Function mapping */
+#define GPIO_Remap_TIM4                 (0x00001000) /* TIM4 Alternate Function mapping */
+#define GPIO_Remap1_CAN1                (0x001D4000) /* CAN1 Alternate Function mapping */
+#define GPIO_Remap2_CAN1                (0x001D6000) /* CAN1 Alternate Function mapping */
+#define GPIO_Remap_PD01                 (0x00008000) /* PD01 Alternate Function mapping */
+#define GPIO_Remap_TIM5CH4_LSI          (0x00200001) /* LSI connected to TIM5 Channel4 input capture for calibration */
+#define GPIO_Remap_ADC1_ETRGINJ         (0x00200002) /* ADC1 External Trigger Injected Conversion remapping */
+#define GPIO_Remap_ADC1_ETRGREG         (0x00200004) /* ADC1 External Trigger Regular Conversion remapping */
+#define GPIO_Remap_ADC2_ETRGINJ         (0x00200008) /* ADC2 External Trigger Injected Conversion remapping */
+#define GPIO_Remap_ADC2_ETRGREG         (0x00200010) /* ADC2 External Trigger Regular Conversion remapping */
+#define GPIO_Remap_ETH                  (0x00200020) /* Ethernet remapping (only for Connectivity line devices) */
+#define GPIO_Remap_CAN2                 (0x00200040) /* CAN2 remapping (only for Connectivity line devices) */
+#define GPIO_Remap_MII_RMII_SEL         (0x00200080) /* MII or RMII selection */
+#define GPIO_Remap_SWJ_NoJTRST          (0x00300100) /* Full SWJ Enabled (JTAG-DP + SW-DP) but without JTRST */
+#define GPIO_Remap_SWJ_JTAGDisable      (0x00300200) /* JTAG-DP Disabled and SW-DP Enabled */
+#define GPIO_Remap_SWJ_Disable          (0x00300400) /* Full SWJ Disabled (JTAG-DP + SW-DP) */
+#define GPIO_Remap_SPI3                 (0x00201000) /* SPI3/I2S3 Alternate Function mapping (only for Connectivity line devices) */
+#define GPIO_Remap_TIM2ITR1_PTP_SOF     (0x00202000) /* Ethernet PTP output or USB OTG SOF (Start of Frame) connected \
                                                                   to TIM2 Internal Trigger 1 for calibration                    \
                                                                   (only for Connectivity line devices) */
-#define GPIO_Remap_PTP_PPS              ((uint32_t)0x00204000) /* Ethernet MAC PPS_PTS output on PB05 (only for Connectivity line devices) */
+#define GPIO_Remap_PTP_PPS              (0x00204000) /* Ethernet MAC PPS_PTS output on PB05 (only for Connectivity line devices) */
 
 /* PCFR2 */
-#define GPIO_Remap_TIM8                 ((uint32_t)0x80000004) /* TIM8 Alternate Function mapping */
-#define GPIO_PartialRemap_TIM9          ((uint32_t)0x80130008) /* TIM9 Partial Alternate Function mapping */
-#define GPIO_FullRemap_TIM9             ((uint32_t)0x80130010) /* TIM9 Full Alternate Function mapping */
-#define GPIO_PartialRemap_TIM10         ((uint32_t)0x80150020) /* TIM10 Partial Alternate Function mapping */
-#define GPIO_FullRemap_TIM10            ((uint32_t)0x80150040) /* TIM10 Full Alternate Function mapping */
-#define GPIO_Remap_FSMC_NADV            ((uint32_t)0x80000400) /* FSMC_NADV Alternate Function mapping */
-#define GPIO_PartialRemap_USART4        ((uint32_t)0x80300001) /* USART4 Partial Alternate Function mapping */
-#define GPIO_FullRemap_USART4           ((uint32_t)0x80300002) /* USART4 Full Alternate Function mapping */
-#define GPIO_PartialRemap_USART5        ((uint32_t)0x80320004) /* USART5 Partial Alternate Function mapping */
-#define GPIO_FullRemap_USART5           ((uint32_t)0x80320008) /* USART5 Full Alternate Function mapping */
-#define GPIO_PartialRemap_USART6        ((uint32_t)0x80340010) /* USART6 Partial Alternate Function mapping */
-#define GPIO_FullRemap_USART6           ((uint32_t)0x80340020) /* USART6 Full Alternate Function mapping */
-#define GPIO_PartialRemap_USART7        ((uint32_t)0x80360040) /* USART7 Partial Alternate Function mapping */
-#define GPIO_FullRemap_USART7           ((uint32_t)0x80360080) /* USART7 Full Alternate Function mapping */
-#define GPIO_PartialRemap_USART8        ((uint32_t)0x80380100) /* USART8 Partial Alternate Function mapping */
-#define GPIO_FullRemap_USART8           ((uint32_t)0x80380200) /* USART8 Full Alternate Function mapping */
-#define GPIO_Remap_USART1_HighBit       ((uint32_t)0x80200400) /* USART1 Alternate Function mapping high bit */
+#define GPIO_Remap_TIM8                 (0x80000004) /* TIM8 Alternate Function mapping */
+#define GPIO_PartialRemap_TIM9          (0x80130008) /* TIM9 Partial Alternate Function mapping */
+#define GPIO_FullRemap_TIM9             (0x80130010) /* TIM9 Full Alternate Function mapping */
+#define GPIO_PartialRemap_TIM10         (0x80150020) /* TIM10 Partial Alternate Function mapping */
+#define GPIO_FullRemap_TIM10            (0x80150040) /* TIM10 Full Alternate Function mapping */
+#define GPIO_Remap_FSMC_NADV            (0x80000400) /* FSMC_NADV Alternate Function mapping */
+#define GPIO_PartialRemap_USART4        (0x80300001) /* USART4 Partial Alternate Function mapping */
+#define GPIO_FullRemap_USART4           (0x80300002) /* USART4 Full Alternate Function mapping */
+#define GPIO_PartialRemap_USART5        (0x80320004) /* USART5 Partial Alternate Function mapping */
+#define GPIO_FullRemap_USART5           (0x80320008) /* USART5 Full Alternate Function mapping */
+#define GPIO_PartialRemap_USART6        (0x80340010) /* USART6 Partial Alternate Function mapping */
+#define GPIO_FullRemap_USART6           (0x80340020) /* USART6 Full Alternate Function mapping */
+#define GPIO_PartialRemap_USART7        (0x80360040) /* USART7 Partial Alternate Function mapping */
+#define GPIO_FullRemap_USART7           (0x80360080) /* USART7 Full Alternate Function mapping */
+#define GPIO_PartialRemap_USART8        (0x80380100) /* USART8 Partial Alternate Function mapping */
+#define GPIO_FullRemap_USART8           (0x80380200) /* USART8 Full Alternate Function mapping */
+#define GPIO_Remap_USART1_HighBit       (0x80200400) /* USART1 Alternate Function mapping high bit */
 
 /* GPIO_Port_Sources */
 #define GPIO_PortSourceGPIOA            ((uint8_t)0x00)
