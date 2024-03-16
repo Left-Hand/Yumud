@@ -130,6 +130,8 @@ protected:
     const uint8_t sub;
     const Trigger trigger;
     const Mode mode;
+
+    friend class CaptureChannelExti;
 public:
     ExtiChannel(const Line & _line, const uint8_t & _pre, const uint8_t & sub,
             const Trigger & _trigger = Trigger::Rising, const Mode & _mode = Mode::Interrupt):

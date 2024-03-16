@@ -35,13 +35,20 @@ public:
         iq_t period_value;
         pulse_value.value = pulse;
         period_value.value = period;
+        iq_t ret = pulse_value/period_value;
+        // iq_t ret = pulse_value/period_value;
+        // if((pulse > (period - pulse)) ^ (ret.value < 0.5)) ret = 1 - ret;
         #else
         float pulse_value = pulse;
         float period_value = period;
+        float ret = pulse_value/period_value;
         #endif
 
-        return pulse_value / period_value;
+        return ret;
     }
+
+    virtual uint32_t getPulseUs() = 0;
+    virtual uint32_t getPeriodUs() = 0;
 };
 
 class CaptureChannel:public CaptureChannelConcept{
@@ -51,35 +58,46 @@ class CaptureChannel:public CaptureChannelConcept{
 class CaptureChannelExti:public CaptureChannelConcept{
 protected:
     ExtiChannel & instance;
+    Gpio & gpio;
     uint32_t last_t;
-    volatile bool state;
+    std::function<void(void)> cb;
 
     void update(){
         if(double_edge){
-            if(state){
+            if(!gpio.read()){
                 uint32_t current_t = micros();
                 pulse = current_t - last_t;
                 last_t = current_t;
-                state = false;
             }else{
                 uint32_t current_t = micros();
                 period = current_t - last_t + pulse;
                 last_t = current_t;
-                state = true;
             }
         }else{
             uint32_t current_t = micros();
             period = current_t - last_t;
             last_t = current_t;
         }
+        if(cb) cb();
     }
 public:
-    CaptureChannelExti(ExtiChannel & _instance, const bool & _double_edge):CaptureChannelConcept(1000000, _double_edge), instance(_instance){;}
+    CaptureChannelExti(ExtiChannel & _instance, Gpio & _gpio):CaptureChannelConcept(1000000, _instance.trigger == ExtiChannel::Trigger::RisingFalling), instance(_instance), gpio(_gpio){;}
+
     void init(){
+        gpio.InPullDN();
         instance.init();
         instance.bindCb(std::bind(&CaptureChannelExti::update, this));
         instance.enableIt();
     }
 
+    void bindCb(const std::function<void(void)>& _cb){cb = _cb;}
+
+    uint32_t getPulseUs() override{
+        return pulse;
+    }
+
+    uint32_t getPeriodUs() override{
+        return period;
+    }
 };
 #endif

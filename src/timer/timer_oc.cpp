@@ -65,8 +65,8 @@ void TimerOC::enable(const bool en){
 
 
 void TimerOC::setPolarity(const bool pol){
-    if(!pol) instance->CCER |= 1 << ((uint8_t)channel * 2 + 1);
-    else instance->CCER &= ~(1 << (((uint8_t)channel) * 2 + 1));
+    if(!pol) instance->CCER |= (1 << ((uint8_t)channel * 2 + 1));
+    else instance->CCER &= (~(1 << (((uint8_t)channel) * 2 + 1)));
 }
 
 void TimerOC::setSync(const bool _sync){
@@ -147,6 +147,10 @@ void TimerOC::installToPin(const bool en){
 
         #ifdef HAVE_TIM2
         GENERIC_TIMER_GPIO_TEMPLATE(2)
+        #endif
+
+        #ifdef HAVE_TIM3
+        GENERIC_TIMER_GPIO_TEMPLATE(3)
         #endif
 
         #ifdef HAVE_TIM4
