@@ -24,7 +24,7 @@ extern "C" {
 #define __MPU_PRESENT             0                   /* Other CH32 devices does not provide an MPU */
 #define __Vendor_SysTickConfig    0                   /* Set to 1 if different SysTick Config is used */
 
-#define OVCLK_SCALE 2
+#define OVCLK_SCALE 1
 
 #if defined(CH32V20x_D8) || defined(CH32V20x_D8W)
   #define HSE_VALUE    ((uint32_t)32000000) /* Value of the External oscillator in Hz */

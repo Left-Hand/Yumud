@@ -29,6 +29,7 @@
 #define TIM2_REMAP_ENABLE ENABLE
 
 #define HAVE_TIM3
+#define HAVE_TIM4
 #define TIM3_REMAP_ENABLE DISABLE
 
 

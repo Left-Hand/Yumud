@@ -136,7 +136,9 @@ int main(){
     GPIO_PortC_Init();
 
     // stepper_app();
-    chassis_app();
+    // chassis_app();
+    // while(true);
+    modem_app();
 
 
     timer1.init(25600);

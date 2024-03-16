@@ -62,7 +62,7 @@ public:
 	uint8_t command = 0xCC;
 	EncodeProg encode_prog;
 
-    NecEncoder(std::function<void(const bool)> _setter)setter(_setter){;}
+    NecEncoder(std::function<void(const bool)> _setter):setter(_setter){;}
 	bool tick(){
 		switch(encode_prog){
 		case EncodeProg::Lead:
