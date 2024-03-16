@@ -2,16 +2,14 @@
 
 #define __EXTI_HPP__
 
+#include "src/bus/uart/uart2.hpp"
 #include "src/platform.h"
 #include "src/nvic/nvic.hpp"
 #include "src/gpio/gpio.hpp"
 
 #include <functional>
 
-class Exti{
-protected:
-    uint8_t pre = 1;
-    uint8_t sub = 2;
+class ExtiChannel{
 public:
     enum class Trigger:uint8_t{
         Rising = EXTI_Trigger_Rising,
@@ -54,6 +52,8 @@ public:
     };
 
 protected:
+
+
     enum class Source:uint8_t{
         PA=0,
         PB=1,
@@ -63,7 +63,6 @@ protected:
         PF=5
     };
 
-    Exti(){;}
     Source from_gpio_to_source(const Gpio & gpio){
         switch((uint32_t)gpio.instance){
             default:
@@ -123,32 +122,28 @@ protected:
                 return IRQn(0);
         }
     }
-    void enableIt(const IRQn irq, const bool en = true){
-        NvicRequest request(irq, pre, sub);
-        request.enable(en);
-    }
-public:
-    static Exti & getInstance(){
-        static Exti instance;
-        return instance;
-    }
 
-    void setItPriority(const uint8_t & _pre, const uint8_t & _sub){
-        pre = _pre;
-        sub = _sub;
-    }
+    const Line line;
+    Source source = Source::PA;
+    uint8_t gpio_index = -1;
+    const uint8_t pre;
+    const uint8_t sub;
+    const Trigger trigger;
+    const Mode mode;
+public:
+    ExtiChannel(const Line & _line, const uint8_t & _pre, const uint8_t & sub,
+            const Trigger & _trigger = Trigger::Rising, const Mode & _mode = Mode::Interrupt):
+            line(_line), pre(_pre), sub(sub), trigger(_trigger), mode(_mode){;}
+    ExtiChannel(const Gpio & gpio, const uint8_t & _pre, const uint8_t & sub,
+            const Trigger & _trigger = Trigger::Rising,  const Mode & _mode = Mode::Interrupt):
+            line(gpio.isValid() ? (Line)(1 << gpio.getIndex()):Line::_0), source(from_gpio_to_source(gpio)),
+            gpio_index(gpio.getIndex()),pre(_pre),sub(sub), trigger(_trigger),  mode(_mode){;}
+
     void init(){
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-    }
+        uart2.println(gpio_index, (uint8_t)line);
+        if(gpio_index > 0) GPIO_EXTILineConfig((uint8_t)source, gpio_index);
 
-    void bindPin(const Gpio & gpio, const Trigger & trigger = Trigger::RisingFalling, const Mode & mode = Mode::Interrupt){
-        if(!gpio.isValid()) return;
-
-        GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(gpio), gpio.getIndex());
-        bindLine((Line)(1 << gpio.getIndex()), trigger, mode);
-    }
-
-    void bindLine(const Line & line, const Trigger & trigger = Trigger::RisingFalling, const Mode & mode = Mode::Interrupt){
         EXTI_InitTypeDef EXTI_InitStructure = {0};
 
         EXTI_InitStructure.EXTI_Line = (uint32_t)line;
@@ -158,31 +153,19 @@ public:
         EXTI_Init(&EXTI_InitStructure);
 
         if(mode == Mode::Interrupt){
-            enableIt(from_line_to_irqn(line), true);
+            enableIt(true);
         }
     }
 
-    void bindCb(const Gpio & gpio, const std::function<void(void)> & func);
-    void bindCb(const Line & line, const std::function<void(void)> & func);
 
-    static bool getItStatus(const Line & line){
-        return EXTI_GetITStatus((uint32_t)line);
-    }
+    void bindCb(const std::function<void(void)> & func);
 
-    static void clearItStatus(const Line & line){
-        EXTI_ClearITPendingBit((uint32_t)line);
-    }
-
-    static bool getFlagStatus(const Line & line){
-        return EXTI_GetFlagStatus((uint32_t)line);
-    }
-
-    static void clearFlagStatus(const Line & line){
-        EXTI_ClearFlag((uint32_t)line);
+    void enableIt(const bool en = true){
+        NvicRequest request(from_line_to_irqn(line), pre, sub);
+        request.enable(en);
     }
 };
 
-extern Exti & exti;
 
 extern "C"{
 __interrupt void EXTI0_IRQHandler(void);

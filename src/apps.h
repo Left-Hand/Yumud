@@ -5,4 +5,6 @@
 #include "misc.h"
 void stepper_app();
 void modem_app();
+
+void chassis_app();
 #endif

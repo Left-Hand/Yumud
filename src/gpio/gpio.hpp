@@ -46,7 +46,7 @@ protected:
     volatile uint32_t & pin_cfg;
 
     friend class GpioVirtual;
-    friend class Exti;
+    friend class ExtiChannel;
 public:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),

@@ -135,7 +135,8 @@ int main(){
 
     GPIO_PortC_Init();
 
-    stepper_app();
+    // stepper_app();
+    chassis_app();
 
 
     timer1.init(25600);
@@ -204,13 +205,14 @@ int main(){
     // adc1.setRegularTrigger(AdcHw::RegularTrigger::SW);
     // adc1.start();
 
-    exti.init();
-    exti.bindPin(TrigA, Exti::Trigger::Falling);
+    ExtiChannel channel(TrigA, 2,1);
+
 
     // adc1.init();
     real_t cnt;
     auto cb = [&Led, &TrigB, &cnt](){cnt += real_t((bool(TrigB) ? 1 : -1)) / real_t(16384);};
-    exti.bindCb(TrigA, cb);
+    channel.init();
+    channel.bindCb(cb);
 
     uart1.init(115200);
     // VtfRequest(15EXTI15_10_IRQn, 0, cb);

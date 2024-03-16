@@ -1,22 +1,15 @@
 #include "exti.hpp"
 
 static std::array<std::function<void(void)>, 21> funcs;
-void Exti::bindCb(const Line & line, const std::function<void(void)> & func){
-    // NvicRequest request()
+void ExtiChannel::bindCb(const std::function<void(void)> & func){
     funcs[CTZ((uint32_t)line)] = func;
+    uart2.println("reg");
 }
-
-void Exti::bindCb(const Gpio & gpio, const std::function<void(void)> & func){
-    if(!gpio.isValid()) return;
-    bindCb((Line)(1 << gpio.getIndex()), func);
-}
-
-Exti & exti = Exti::getInstance();
 
 #define EXTI_INTERRUPT_CONTENT_TEMPLATE(n)\
-if(exti.getItStatus(Exti::Line::_##n)){\
+if(EXTI_GetITStatus((uint32_t)ExtiChannel::Line::_##n)){\
     if(funcs[n]) funcs[n]();\
-    exti.clearItStatus(Exti::Line::_##n);\
+    EXTI_ClearITPendingBit((uint32_t)ExtiChannel::Line::_##n);\
 }\
 
 #define EXTI_INTERRUPT_HANDLER_TEMPLATE_BEGIN(n)\

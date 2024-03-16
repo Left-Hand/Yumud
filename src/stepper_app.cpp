@@ -40,20 +40,23 @@ void stepper_app(){
 
     Odometer odo(mt6816,50);
     odo.locateElecrad();
-    odo.locateAbsolutely();
+    odo.locateAbsolutely(real_t(-0.5));
 
     MotorWithFoc motor(svpwm, odo, pos_pid);
     motor.setMaxCurrent(real_t(0.13));
 
     timer1.enableIt(Timer::IT::Update);
-    timer1.bindCb(Timer::IT::Update, [&motor, &target](){
+    timer1.bindCb(Timer::IT::Update, [&motor, &target, &nanos1, &nanos0](){
+        nanos1 = micros();
         motor.closeLoopPos(target);
+        nanos0 = micros();
     });
 
     while(true){
         uart1.println(motor.getPosition(), target, nanos1, nanos0);
         delay(1);
-        target = floor(t*16)/4 + 0.125;
+        // target = floor(t*16)/4 + 0.125;
+        target = real_t(0);
         // target = 6 * sin(t);
         reCalculateTime();
 
