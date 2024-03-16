@@ -24,16 +24,18 @@ extern "C" {
 #define __MPU_PRESENT             0                   /* Other CH32 devices does not provide an MPU */
 #define __Vendor_SysTickConfig    0                   /* Set to 1 if different SysTick Config is used */
 
+#define OVCLK_SCALE 2
+
 #if defined(CH32V20x_D8) || defined(CH32V20x_D8W)
   #define HSE_VALUE    ((uint32_t)32000000) /* Value of the External oscillator in Hz */
 #else
-  #define HSE_VALUE    ((uint32_t)8000000) /* Value of the External oscillator in Hz */
+  #define HSE_VALUE    ((uint32_t)8000000 / OVCLK_SCALE) /* Value of the External oscillator in Hz */
 #endif
 
 /* In the following line adjust the External High Speed oscillator (HSE) Startup Timeout value */
 #define HSE_STARTUP_TIMEOUT    ((uint16_t)0x1000) /* Time out for HSE start up */
 
-#define HSI_VALUE              ((uint32_t)4000000) /* Value of the Internal oscillator in Hz */
+#define HSI_VALUE              ((uint32_t)8000000 / OVCLK_SCALE) /* Value of the Internal oscillator in Hz */
 
 /* Interrupt Number Definition, according to the selected device */
 typedef enum IRQn

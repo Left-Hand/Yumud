@@ -3,6 +3,7 @@
 #define __TIMER_HPP__
 
 #include "src/platform.h"
+#include "src/nvic/nvic.hpp"
 #include "timer_oc.hpp"
 #include <functional>
 
@@ -33,6 +34,48 @@ public:
 class BasicTimer:public Timer{
 protected:
     TIM_TypeDef * instance;
+
+    IRQn ItToIrq(const IT & it){
+        switch((uint32_t)instance){
+            #ifdef HAVE_TIM1
+            case TIM1_BASE:
+                switch(it){
+                    case IT::Update:
+                        return TIM1_UP_IRQn;
+                    case IT::CC1:
+                    case IT::CC2:
+                    case IT::CC3:
+                    case IT::CC4:
+                        return TIM1_CC_IRQn;
+                    case IT::Trigger:
+                    case IT::COM:
+                        return TIM1_TRG_COM_IRQn;
+                    case IT::Break:
+                        return TIM1_BRK_IRQn;
+                }
+                break;
+            #endif
+
+            #ifdef HAVE_TIM2
+            case TIM2_BASE:
+                return TIM2_IRQn;
+            #endif
+
+            #ifdef HAVE_TIM3
+            case TIM3_BASE:
+                return TIM3_IRQn;
+            #endif
+
+            #ifdef HAVE_TIM4
+            case TIM4_BASE:
+                return TIM4_IRQn;
+            #endif
+
+            default:
+                break;
+        }
+        return Software_IRQn;
+    }
 public:
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}
 
@@ -40,7 +83,11 @@ public:
     void init(const uint16_t period, const uint16_t cycle, const TimerMode mode = TimerMode::Up);
     void enable(const bool en = true);
 
-    void enableIT(const uint16_t _it,const bool en = true){TIM_ITConfig(instance, _it, (FunctionalState)en);}
+    void enableIt(const IT & it,const uint8_t & pre = 0, const uint8_t & sub = 0, const bool & en = true){
+        NvicRequest request(ItToIrq(it), pre, sub);
+        request.enable(en);
+        TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
+    }
     void enableSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
 
     virtual void bindCb(const IT & ch, const std::function<void(void)> & cb) = 0;

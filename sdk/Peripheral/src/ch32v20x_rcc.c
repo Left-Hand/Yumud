@@ -624,6 +624,12 @@ void RCC_GetClocksFreq(RCC_ClocksTypeDef* RCC_Clocks)
     tmp = tmp >> 14;
     presc = ADCPrescTable[tmp];
     RCC_Clocks->ADCCLK_Frequency = RCC_Clocks->PCLK2_Frequency / presc;
+
+    RCC_Clocks->SYSCLK_Frequency *= OVCLK_SCALE;
+    RCC_Clocks->HCLK_Frequency *= OVCLK_SCALE;
+    RCC_Clocks->PCLK1_Frequency *= OVCLK_SCALE;
+    RCC_Clocks->PCLK2_Frequency *= OVCLK_SCALE;
+    RCC_Clocks->ADCCLK_Frequency *= OVCLK_SCALE;
 }
 
 /*********************************************************************

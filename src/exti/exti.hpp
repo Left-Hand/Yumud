@@ -9,6 +9,9 @@
 #include <functional>
 
 class Exti{
+protected:
+    uint8_t pre = 1;
+    uint8_t sub = 2;
 public:
     enum class Trigger:uint8_t{
         Rising = EXTI_Trigger_Rising,
@@ -121,14 +124,8 @@ protected:
         }
     }
     void enableIt(const IRQn irq, const bool en = true){
-        NvicRequest request(irq, 1, 2);
+        NvicRequest request(irq, pre, sub);
         request.enable(en);
-    //     NVIC_InitTypeDef NVIC_InitStructure = {0};
-    // NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn;
-    // NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-    // NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;
-    // NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    // NVIC_Init(&NVIC_InitStructure);
     }
 public:
     static Exti & getInstance(){
@@ -136,6 +133,10 @@ public:
         return instance;
     }
 
+    void setItPriority(const uint8_t & _pre, const uint8_t & _sub){
+        pre = _pre;
+        sub = _sub;
+    }
     void init(){
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
     }

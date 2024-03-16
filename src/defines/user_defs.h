@@ -25,8 +25,17 @@
 
 #define HAVE_TIM1
 #define HAVE_TIM2
+#define TIM2_REMAP (GPIO_PartialRemap2_TIM2)
+#define TIM2_REMAP_ENABLE ENABLE
+
+#define HAVE_TIM3
+#define TIM3_REMAP_ENABLE ENABLE
+
+
 #define HAVE_CAN1
 
+#define HAVE_I2C1
+#define I2C1_REMAP_ENABLE (DISABLE)
 
 #define I2C_SW_PORT GPIOB
 #define I2C_SW_SCL GPIO_Pin_6
