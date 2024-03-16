@@ -5,7 +5,10 @@
 #include "src/gpio/gpio.hpp"
 
 class CoilConcept: public Actuator{
-
+public:
+    virtual void setClamp(const real_t & abs_max_value) = 0;
+    virtual void setDuty(const real_t & duty) = 0;
+    virtual Actuator & operator= (const real_t & duty) = 0;
 };
 
 class Coil1:public CoilConcept{

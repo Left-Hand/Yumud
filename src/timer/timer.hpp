@@ -4,6 +4,7 @@
 
 #include "src/platform.h"
 #include "timer_oc.hpp"
+#include <functional>
 
 class Timer{
 public:
@@ -13,6 +14,17 @@ public:
         CenterAlignedDownTrig = TIM_CounterMode_CenterAligned1,
         CenterAlignedCenterUpTrig = TIM_CounterMode_CenterAligned2,
         CenterAlignedCenterDualTrig = TIM_CounterMode_CenterAligned3
+    };
+
+    enum class IT:uint8_t{
+        Update = TIM_IT_Update,
+        CC1 = TIM_IT_CC1,
+        CC2 = TIM_IT_CC2,
+        CC3 = TIM_IT_CC3,
+        CC4 = TIM_IT_CC4,
+        COM = TIM_IT_COM,
+        Trigger = TIM_IT_Trigger,
+        Break = TIM_IT_Break,
     };
 
     virtual Timer & operator = (const uint16_t _val) = 0;
@@ -31,6 +43,7 @@ public:
     void enableIT(const uint16_t _it,const bool en = true){TIM_ITConfig(instance, _it, (FunctionalState)en);}
     void enableSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
 
+    virtual void bindCb(const IT & ch, const std::function<void(void)> & cb) = 0;
     BasicTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
     operator uint16_t() const {return instance->CNT;}
 };

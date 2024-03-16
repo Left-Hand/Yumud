@@ -20,6 +20,8 @@ public:
         enabled = en;
         if(!en) setDuty(real_t(0));
     }
+
+    virtual void setDuty(const real_t & duty) = 0;
 };
 
 

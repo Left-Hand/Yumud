@@ -57,6 +57,7 @@
 #include "timer/pwm_channel.hpp"
 #include "bus/spi/spi1.hpp"
 #include "dsp/controller/PID.hpp"
+#include "Actuator/Servo/FOC/tinyfoc.hpp"
 // #include "adc/adcs/adc1.hpp"
 #include "device/Actuator/Servo/PwmServo/pwm_servo.hpp"
 #include "device/Actuator/Coil/coil.hpp"

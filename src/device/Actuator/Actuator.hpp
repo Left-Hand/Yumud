@@ -9,10 +9,6 @@ class Actuator{
 public:
     virtual void init() = 0;
     virtual void enable(const bool en = true) = 0;
-    virtual void setDuty(const real_t & duty) = 0;
-    virtual void setClamp(const real_t & abs_max_value) = 0;
-
-    virtual Actuator & operator= (const real_t & duty) = 0;
 };
 
 
@@ -21,13 +17,17 @@ public:
 
 };
 
+class PwmBaseServo:public Servo{
+
+};
+
 class ServoOpenLoop:public Servo{
 
 };
 
-class ServoCloseLoop:public Servo{
+class ServoCloseLoop{
 public:
-    virtual const real_t getAngle();
+    virtual real_t getPosition() = 0;
 };
 
 #endif

@@ -7,5 +7,8 @@
         "JEOC"
     ],
     "C_Cpp.default.enableConfigurationSquiggles": false,
-    "C_Cpp.errorSquiggles": "disabled"
+    "C_Cpp.errorSquiggles": "disabled",
+    "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
+        "clang-diagnostic-error"
+    ]
 }
