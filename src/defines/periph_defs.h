@@ -8,9 +8,7 @@
     #define HAVE_GPIOA
     #define HAVE_GPIOB
     #define HAVE_GPIOC
-    #if CH32V203R
     #define HAVE_GPIOD
-    #endif
 #elif defined(CH32V303)
 
 #elif defined(CH32V305)
@@ -228,18 +226,19 @@
 
 
 #ifdef HAVE_CAN1
-    #define CAN1_REMAP_ENABLE ENABLE
+
 
     #if CAN1_REMAP_ENABLE == ENABLE
-        #define CAN1_Port GPIOA
-        #define CAN1_TX_Pin GPIO_Pin_12
-        #define CAN1_RX_Pin GPIO_Pin_11
-        #define CAN1_REMAP GPIO_Remap1_CAN1
-    #else
         #define CAN1_Port GPIOB
         #define CAN1_TX_Pin GPIO_Pin_9
         #define CAN1_RX_Pin GPIO_Pin_8
         #define CAN1_REMAP GPIO_Remap1_CAN1
+    #else
+        #define CAN1_Port GPIOA
+        #define CAN1_TX_Pin GPIO_Pin_12
+        #define CAN1_RX_Pin GPIO_Pin_11
+        #define CAN1_REMAP GPIO_Remap1_CAN1
+
     #endif
 #endif
 

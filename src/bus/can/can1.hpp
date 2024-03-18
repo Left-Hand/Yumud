@@ -6,18 +6,18 @@
 #include "can_msg.hpp"
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
 
-class Can1{
+class Can{
 public:
-
     enum class BaudRate{
         Kbps125,
         Mbps1
     };
 
+};
 
+
+class Can1:public Can{
 public:
-
-
     void init(const BaudRate & baudRate);
     bool write(const CanMsg & msg);
     size_t pending();

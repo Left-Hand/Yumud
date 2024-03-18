@@ -11,12 +11,10 @@ private:
     GpioConcept & scl;
     GpioConcept & sda;
 
-    uint16_t delays = 1000;
+    uint16_t delays = 10;
 
     __fast_inline void delayDur(){
-        // volatile uint16_t i = delays;
-        // while(i--) __nop;
-        // delayMicroseconds(4);
+        delayMicroseconds(delays);
     }
 
 
@@ -139,6 +137,12 @@ public:
         sda.OutOD();
         scl.set();
         scl.OutOD();
+        if(baudRate == 0){
+            delays = 0;
+        }else{
+            uint32_t b = baudRate / 1000;
+            delays = 400 / b;
+        }
     }
     void configDataSize(const uint8_t & data_size) override {;}
     void configBaudRate(const uint32_t & baudRate) override {;}

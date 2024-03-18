@@ -111,6 +111,7 @@ void Can1::init(const BaudRate & baudRate){
         bs1 = CAN_BS1_6tq;
         bs2 = CAN_BS2_5tq;
         prescale = 12 * 8;
+        break;
     case BaudRate::Mbps1:
         swj = CAN_SJW_2tq;
         bs1 = CAN_BS1_6tq;

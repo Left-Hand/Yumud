@@ -143,7 +143,6 @@ public:
 
     void init(){
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-        uart2.println(gpio_index, (uint8_t)line);
         if(gpio_index > 0) GPIO_EXTILineConfig((uint8_t)source, gpio_index);
 
         EXTI_InitTypeDef EXTI_InitStructure = {0};

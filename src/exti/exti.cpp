@@ -3,7 +3,6 @@
 static std::array<std::function<void(void)>, 21> funcs;
 void ExtiChannel::bindCb(const std::function<void(void)> & func){
     funcs[CTZ((uint32_t)line)] = func;
-    uart2.println("reg", CTZ((uint32_t)line));
 }
 
 #define EXTI_INTERRUPT_CONTENT_TEMPLATE(n)\

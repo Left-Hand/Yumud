@@ -5,7 +5,7 @@
 #include "src/platform.h"
 #include "gpio_enums.hpp"
 
-class PortBase{
+class PortConcept{
 public:
     __fast_inline virtual void writeByIndex(const int8_t index, const bool data);
     __fast_inline virtual bool readByIndex(const int8_t index);
@@ -17,22 +17,22 @@ public:
     virtual void clr(const Pin & pin) = 0;
     __fast_inline void clrByIndex(const int8_t index);
     virtual void setModeByIndex(const int8_t & index, const PinMode & mode) = 0;
-    virtual PortBase & operator = (const uint16_t & data) = 0;
+    virtual PortConcept & operator = (const uint16_t & data) = 0;
 
     virtual operator uint16_t() = 0;
 };
 
-__fast_inline void PortBase::setByIndex(const int8_t index){
+__fast_inline void PortConcept::setByIndex(const int8_t index){
     if(index < 0) return;
     setBits(1 << index);
 }
 
-__fast_inline void PortBase::clrByIndex(const int8_t index){
+__fast_inline void PortConcept::clrByIndex(const int8_t index){
     if(index < 0) return;
     clrBits(1 << index);
 }
 
-__fast_inline void PortBase::writeByIndex(const int8_t index, const bool data){
+__fast_inline void PortConcept::writeByIndex(const int8_t index, const bool data){
     if(index < 0) return;
     uint16_t mask = 1 << index;
     if(data){
@@ -42,13 +42,13 @@ __fast_inline void PortBase::writeByIndex(const int8_t index, const bool data){
     }
 }
 
-__fast_inline bool PortBase::readByIndex(const int8_t index){
+__fast_inline bool PortConcept::readByIndex(const int8_t index){
     if(index < 0) return false;
     return uint16_t(*this) & (1 << index);
 };
 
 
-class Port : public PortBase{
+class Port : public PortConcept{
 protected:
     GPIO_TypeDef * instance;
 public:

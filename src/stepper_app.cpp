@@ -56,7 +56,7 @@ void stepper_app(){
         uart1.println(motor.getPosition(), target, nanos1, nanos0);
         delay(1);
         // target = floor(t*16)/4 + 0.125;
-        target = real_t(0);
+        target = real_t(sin(t));
         // target = 6 * sin(t);
         reCalculateTime();
 

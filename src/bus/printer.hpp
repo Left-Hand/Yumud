@@ -77,7 +77,7 @@ public:
     Printer& operator<<(int32_t val){printString(String((long long)val, radix)); return *this;}
     Printer& operator<<(int64_t val){printString(String((long long)(val), radix)); return *this;}
 
-    Printer& operator<<(bool val){printString(String(val, radix)); return *this;}
+    Printer& operator<<(bool val){write(val ? '1' : '0'); return *this;}
     Printer& operator<<(int val){printString(String(val, radix)); return *this;}
     Printer& operator<<(unsigned int val){printString(String(val, radix)); return *this;}
     Printer& operator<<(float val){printString(String(val, eps)); return *this;}

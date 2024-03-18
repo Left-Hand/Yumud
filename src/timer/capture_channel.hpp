@@ -72,13 +72,14 @@ protected:
                 uint32_t current_t = micros();
                 period = current_t - last_t + pulse;
                 last_t = current_t;
+                if(cb) cb();
             }
         }else{
             uint32_t current_t = micros();
             period = current_t - last_t;
             last_t = current_t;
+            if(cb) cb();
         }
-        if(cb) cb();
     }
 public:
     CaptureChannelExti(ExtiChannel & _instance, Gpio & _gpio):CaptureChannelConcept(1000000, _instance.trigger == ExtiChannel::Trigger::RisingFalling), instance(_instance), gpio(_gpio){;}
@@ -86,11 +87,15 @@ public:
     void init(){
         gpio.InPullDN();
         instance.init();
-        instance.bindCb(std::bind(&CaptureChannelExti::update, this));
         instance.enableIt();
     }
 
-    void bindCb(const std::function<void(void)>& _cb){cb = _cb;}
+
+
+    void bindCb(const std::function<void(void)>& _cb){
+        instance.bindCb([this](){this->update();});
+        cb = _cb;
+    }
 
     uint32_t getPulseUs() override{
         return pulse;

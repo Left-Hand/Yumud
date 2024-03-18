@@ -23,6 +23,7 @@
 #include "dsp/observer/LinearObserver.hpp"
 #include "src/device/Encoder/MagEnc/MT6816/mt6816.hpp"
 #include "src/device/Modem/Nec/Encoder/nec_encoder.hpp"
+#include "device/VirtualIO/AW9523/aw9523.hpp"
 // #include "MLX90640/MLX90640_API.h"
 // #include "HX711/HX711.h"
 // #include "TTP229/TTP229.h"

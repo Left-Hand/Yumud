@@ -12,7 +12,7 @@
 //     return bool(GPIOC->INDR & index);
 // }
 
-PortBase * GpioVirtual::form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance){
+PortConcept * GpioVirtual::form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance){
     switch((uint32_t)_instance){
         default:
         #ifdef HAVE_GPIOA

@@ -11,7 +11,7 @@
 #endif
 
 class GpioConcept{
-protected:
+public:
     const int8_t pin_index = 0;
 public:
     GpioConcept(int8_t _pin_index):pin_index(_pin_index){;}
@@ -82,12 +82,13 @@ public:
 
 class GpioVirtual:public GpioConcept{
 protected:
-    PortBase * instance;
+    PortConcept * instance;
 
-    PortBase * form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance);
+    PortConcept * form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance);
 public:
     GpioVirtual(const Gpio & gpio):GpioConcept(gpio.pin_index), instance(form_gpiotypedef_to_port(gpio.instance)){;}
-    GpioVirtual(PortBase * _instance, const int8_t _pin_index):GpioConcept(_pin_index), instance(_instance){;}
+    GpioVirtual(PortConcept * _instance, const int8_t _pin_index):GpioConcept(_pin_index), instance(_instance){;}
+    GpioVirtual(PortConcept * _instance, const Pin _pin):GpioConcept(CTZ((uint16_t)_pin)), instance(_instance){;}
     __fast_inline void set() override {instance->setByIndex(pin_index);}
     __fast_inline void clr() override {instance->clrByIndex(pin_index);}
     __fast_inline void write(const bool & val){instance->writeByIndex(pin_index, val);}

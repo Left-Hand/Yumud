@@ -8,8 +8,8 @@
 #include <array>
 
 template<int size>
-class PortVirtualConcept : public PortBase{
-private:
+class PortVirtualConcept : public PortConcept{
+protected:
     bool isIndexValid(const uint8_t & index){return (index >= 0 && index < size);}
 
     virtual void write(const uint16_t & data) = 0;

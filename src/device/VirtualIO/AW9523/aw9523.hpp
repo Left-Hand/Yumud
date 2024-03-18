@@ -9,7 +9,7 @@
 class AW9523: public PortVirtualConcept<16>{
 public:
     enum class CurrentLimit{
-        Low, Medium, High, Max
+        Max, High, Medium, Low
     };
 
 protected:
@@ -36,32 +36,30 @@ protected:
         ledMode = 0x12,
         dim = 0x20,
         swRst = 0x7f
-    }
+    };
 
     struct{
         uint16_t dir;
         uint16_t inten;
-    //     uint8_t chipId;
         CtlReg ctl;
         uint16_t ledMode;
-    //     uint8_t dim[16];
-    //     uint8_t swRst;
+
     };
 
     void writeReg(const RegAddress & addr, const uint8_t & data){
-        bus_drv.write((uint8_t)addr, data);
+        bus_drv.writeReg((uint8_t)addr, data);
     };
 
     void writeReg(const RegAddress & addr, const uint16_t & data){
-        bus_drv.writeReg((uint8_t)addr, data);
+        bus_drv.writeReg((uint8_t)addr, data, false);
     }
 
     void readReg(const RegAddress & addr, uint8_t & data){
-        bus_drv.read((uint8_t)addr, data);
+        bus_drv.readReg((uint8_t)addr, data);
     }
 
     void readReg(const RegAddress & addr, uint16_t & data){
-        bus_drv.readReg((uint8_t)addr, data);
+        bus_drv.readReg((uint8_t)addr, data, false);
     }
 
     void write(const uint16_t & data) override{
@@ -78,10 +76,14 @@ public:
     AW9523(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
 
     void init(){
-
+        reset();
+        setLedCurrentLimit(CurrentLimit::Low);
+        ledMode = 0xffff;
     }
 
-
+    void reset(){
+        writeReg(RegAddress::swRst, (uint8_t)0x00);
+    }
     void set(const Pin & pin) override{
         buf |= (uint16_t)pin;
         write(buf);
@@ -103,16 +105,17 @@ public:
 
     void writeByIndex(const int8_t index, const bool data) override{
         if(!isIndexValid(index))return;
-        buf |= (data << index);
+        if(data) buf |= 1 << index;
+        else buf &= ~(1 << index);
         write(buf);
     }
     bool readByIndex(const int8_t index) override{
-        if(!isIndexValid(index))return;
+        if(!isIndexValid(index)) return false;
         read();
         return (buf & (1 << index));
     }
 
-    void setModeByIndex(const int8_t & index, const PinMode & mode){
+    void setModeByIndex(const int8_t & index, const PinMode & mode) override{
         if(!isIndexValid(index))return;
         uint16_t mask = 1 << index;
         if(PinModeUtils::isIn(mode)) dir |= mask;
@@ -121,30 +124,32 @@ public:
 
         if(index < 8){
             ctl.p0mod = PinModeUtils::isPP(mode);
-            writeReg(RegAddress::ctl, ctl);
+            writeReg(RegAddress::ctl, ctl.data);
         }
     }
 
     void enableIrqByIndex(const int8_t & index, const bool & en = true){
         if(!isIndexValid(index))return;
-        writeReg(RegAddress::inten, en << index);
+        writeReg(RegAddress::inten, (uint8_t)(en << index));
     }
 
-    void enableLedModeByIndex(const int8_t & index, const bool & en = true){
-        if(!isIndexValid(index) || (index >= 8))return;
-        writeReg(RegAddress::ledMode, (!en) << index);
+    void enableLedMode(const Pin & pin, const bool & en = true){
+        uint8_t index = CTZ((uint16_t)pin);
+        if(en) ledMode &= ~(1 << index);
+        else ledMode |= (1 << index);
+        writeReg(RegAddress::ledMode, ledMode);
     }
 
     void setLedCurrentLimit(const CurrentLimit & limit){
         ctl.isel = (uint8_t)limit;
-        writeReg(RegAddress::ctl, ctl);
+        writeReg(RegAddress::ctl, ctl.data);
     }
 
     void setLedCurrent(const Pin & pin, const uint8_t current){
-        uint8_t index = CTZ((uint8_t)pin);
+        uint8_t index = CTZ((uint16_t)pin);
         if(index < 8) index += 4;
         else if(index < 12) index -= 8;
-        writeByIndex((RegAddress)((uint8_t)RegAddress::dim + index), current);
+        writeReg((RegAddress)((uint8_t)RegAddress::dim + index), current);
     }
 
     bool isChipValid(){

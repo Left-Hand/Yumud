@@ -34,6 +34,7 @@
 
 
 #define HAVE_CAN1
+#define CAN1_REMAP_ENABLE DISABLE
 
 #define HAVE_I2C1
 #define I2C1_REMAP_ENABLE (DISABLE)
