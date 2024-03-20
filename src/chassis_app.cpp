@@ -28,9 +28,9 @@ protected:
 public:
 
     Motion(GM25 & _motorLeft,GM25 & _motorRight): motorLeft(_motorLeft), motorRight(_motorRight){;}
-    void setVelocity(const Vector2 & vel){
-        motorLeft.setSpeed(vel.x);
-        motorRight.setSpeed(vel.y);
+    void setForce(const real_t & w_c, const real_t & w_d){
+        motorLeft.setSpeed(w_c - w_d);
+        motorRight.setSpeed(w_c + w_d);
     }
 
     void init(){
@@ -94,7 +94,7 @@ void chassis_app(){
         // log.println(rpmA, filterB.update(CapB.getFreq()), dutyA, dutyB, rawA);
         // PwmA = dutyA; PwmB = dutyB;
 
-        motion.setVelocity(Vector2(400,0).rotate(t));
+        motion.setForce(real_t(80), real_t(80));
         delay(10);
         reCalculateTime();
     }

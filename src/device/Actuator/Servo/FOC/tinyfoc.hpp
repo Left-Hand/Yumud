@@ -22,7 +22,10 @@ public:
         odo.update();
         real_t pos = odo.getPosition();
 
-        real_t curr = pos_pid.update(targ, pos);
+        // real_t curr = pos_pid.update(targ, pos);
+
+        real_t curr = pos_pid.update(round(pos - targ) + targ, pos);
+
         svpwm.setDQCurrent(real_t(0), curr, odo.getElecRad());
     }
 

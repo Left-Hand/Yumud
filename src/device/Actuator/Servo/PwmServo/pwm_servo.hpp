@@ -29,7 +29,7 @@ class PwmAngleServo:public PwmServo{
 protected:
     real_t angle_range;
 public:
-    PwmAngleServo(PwmChannelConcept & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const real_t & _angle_range
+    PwmAngleServo(PwmChannelConcept & _instance, const real_t & _min_value_duty = real_t(0.025), const real_t & _max_value_duty = real_t(0.125), const real_t & _angle_range = real_t(270)
             ):PwmServo(_instance, _min_value_duty, _max_value_duty), angle_range(_angle_range){;}
     void setDuty(const real_t & duty) override{
         if(!enabled) return instance.setDuty(real_t(0));

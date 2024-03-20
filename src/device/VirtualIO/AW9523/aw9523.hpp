@@ -160,7 +160,22 @@ public:
 
     AW9523 & operator << (const uint8_t & data){write(data); return *this;}
     AW9523 & operator = (const uint16_t & data) override {write(data); return *this;}
+};
 
+class AwLed{
+protected:
+    AW9523 & aw9523;
+    Pin pin;
+public:
+    AwLed(AW9523 & _aw9523, const Pin & _pin):aw9523(_aw9523), pin(_pin){;}
 
+    void init(){
+        aw9523.enableLedMode(pin);
+    }
+
+    AwLed & operator = (const real_t & _duty){
+        aw9523.setLedCurrent(pin,int(255 * _duty));
+        return *this;
+    }
 };
 #endif

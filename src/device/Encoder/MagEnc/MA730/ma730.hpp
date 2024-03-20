@@ -1,10 +1,10 @@
 #ifndef __MA730_HPP__
 #define __MA730_HPP__
 
-#include "bus/spi/spidrv.hpp"
-#include "src/device/device_defs.h"
+#include "device_defs.h"
+#include "device/Encoder/MagEncoder.hpp"
 
-class MA730{
+class MA730:public MagEncoder{
 public:
     enum class Width:uint8_t{
         W90, W180, W270, W360
@@ -33,22 +33,22 @@ protected:
         Magnitude = 27
     };
 
-    struct ZeroDataLowReg:public Reg8{
+    struct ZeroDataLowReg{
         REG8_BEGIN
         REG8_END
     };
 
-    struct ZeroDataHighReg:public Reg8{
+    struct ZeroDataHighReg{
         REG8_BEGIN
         REG8_END
     };
 
-    struct TrimReg:public Reg8{
+    struct TrimReg{
         REG8_BEGIN
         REG8_END
     };
 
-    struct TrimConfigReg:public Reg8{
+    struct TrimConfigReg{
         REG8_BEGIN
         uint8_t enableX:1;
         uint8_t enableY:1;
@@ -56,7 +56,7 @@ protected:
         REG8_END
     };
 
-    struct ZParametersReg:public Reg8{
+    struct ZParametersReg{
         REG8_BEGIN
         uint8_t __resv__ :2;
         uint8_t zPhase :2;
@@ -65,13 +65,13 @@ protected:
         REG8_END
     };
 
-    struct PulsePerTurnReg:public Reg8{
+    struct PulsePerTurnReg{
         REG8_BEGIN
         uint8_t ppt;
         REG8_END
     };
 
-    struct ThresholdReg:public Reg8{
+    struct ThresholdReg{
         REG8_BEGIN
         uint8_t __resv__ :2;
         uint8_t thresholdHigh :3;
@@ -79,14 +79,14 @@ protected:
         REG8_END
     };
 
-    struct DirectionReg:public Reg8{
+    struct DirectionReg{
         REG8_BEGIN
         uint8_t __resv__ :7;
         uint8_t direction :1;
         REG8_END
     };
 
-    struct MagnitudeReg:public Reg8{
+    struct MagnitudeReg{
         REG8_BEGIN
         uint8_t __resv1__ :2;
         uint8_t mgl1:1;
@@ -109,14 +109,14 @@ protected:
         MagnitudeReg magnitudeReg;
     };
 
-    void writeReg(const RegAddress & reg_addr, Reg8 & reg_data){
+    void writeReg(const RegAddress & reg_addr, uint8_t & reg_data){
         uint16_t ret;
         bus_drv.write((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | *(uint8_t *)&reg_data));
         bus_drv.read(ret);
         *(uint8_t *)&reg_data = ret  >> 8;
     }
 
-    void readReg(const RegAddress & reg_addr, Reg8 & reg_data){
+    void readReg(const RegAddress & reg_addr, uint8_t & reg_data){
         uint16_t ret;
         bus_drv.write((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
         bus_drv.read(ret);
@@ -138,8 +138,8 @@ public:
     void setZeroData(const uint16_t & data){
         zeroDataLowReg.data = data & 0xff;
         zeroDataHighReg.data = data >> 8;
-        writeReg(RegAddress::ZeroDataLow, zeroDataLowReg);
-        writeReg(RegAddress::ZeroDataHigh, zeroDataHighReg);
+        writeReg(RegAddress::ZeroDataLow, zeroDataLowReg.data);
+        writeReg(RegAddress::ZeroDataHigh, zeroDataHighReg.data);
     }
 
     void setZeroPosition(const real_t & position){
@@ -147,7 +147,7 @@ public:
         uni_to_u16(frac(position), data);
         setZeroData(data);
     }
-    real_t getRawPosition(){
+    real_t getPosition() override{
         uint16_t data = 0;
         directRead(data);
         real_t ret;
@@ -157,18 +157,18 @@ public:
 
     void setTrimX(const real_t & k){
         trimReg.data = (uint8_t)((real_t(1) - real_t(1) / k) * 258);
-        writeReg(RegAddress::Trim, trimReg);
+        writeReg(RegAddress::Trim, trimReg.data);
         trimConfigReg.enableX = true;
         trimConfigReg.enableY = false;
-        writeReg(RegAddress::TrimConfig, trimConfigReg);
+        writeReg(RegAddress::TrimConfig, trimConfigReg.data);
     }
 
     void setTrimY(const real_t & k){
         trimReg.data = (uint8_t)((real_t(1) - k) * 258);
-        writeReg(RegAddress::Trim, trimReg);
+        writeReg(RegAddress::Trim, trimReg.data);
         trimConfigReg.enableX = false;
         trimConfigReg.enableY = true;
-        writeReg(RegAddress::TrimConfig, trimConfigReg);
+        writeReg(RegAddress::TrimConfig, trimConfigReg.data);
     }
     void setTrim(const real_t & am, const real_t & e){
         real_t k = tan(am + e) / tan(am);
@@ -178,32 +178,32 @@ public:
 
     void setMagThresholdLow(const MagThreshold & threshold){
         thresholdReg.thresholdLow = (uint8_t)threshold;
-        writeReg(RegAddress::Threshold, thresholdReg);
+        writeReg(RegAddress::Threshold, thresholdReg.data);
     }
 
     void setMagThresholdHigh(const MagThreshold & threshold){
         thresholdReg.thresholdHigh = (uint8_t)threshold;
-        writeReg(RegAddress::Threshold, thresholdReg);
+        writeReg(RegAddress::Threshold, thresholdReg.data);
     }
 
     void setDirection(const bool & direction){
         directionReg.direction = direction;
-        writeReg(RegAddress::Direction, directionReg);
+        writeReg(RegAddress::Direction, directionReg.data);
     }
 
     bool isMagnitudeLow(){
-        readReg(RegAddress::Magnitude, magnitudeReg);
+        readReg(RegAddress::Magnitude, magnitudeReg.data);
         bool correctMgl = !(magnitudeReg.mgl1 | magnitudeReg.mgl2);
         return correctMgl;
     }
 
     bool isMagnitudeHigh(){
-        readReg(RegAddress::Magnitude, magnitudeReg);
+        readReg(RegAddress::Magnitude, magnitudeReg.data);
         return magnitudeReg.magnitudeHigh;
     }
 
     bool isMagnitudeProper(){
-        readReg(RegAddress::Magnitude, magnitudeReg);
+        readReg(RegAddress::Magnitude, magnitudeReg.data);
         bool proper = !((!(magnitudeReg.mgl1 | magnitudeReg.mgl2)) | magnitudeReg.magnitudeHigh);
         return proper;
     }
@@ -212,7 +212,7 @@ public:
     void setZparameters(const Width & width, const Phase & phase){
         zParametersReg.zWidth = (uint8_t)width;
         zParametersReg.zPhase = (uint8_t)phase;
-        writeReg(RegAddress::ZParameters, zParametersReg);
+        writeReg(RegAddress::ZParameters, zParametersReg.data);
     }
 
     void setPulsePerTurn(const uint16_t _ppt){
@@ -221,8 +221,8 @@ public:
         uint8_t ppt_h = ppt >> 2;
         zParametersReg.ppt = ppt_l;
         pulsePerTurnReg.ppt = ppt_h;
-        writeReg(RegAddress::ZParameters, zParametersReg);
-        writeReg(RegAddress::PulsePerTurn, pulsePerTurnReg);
+        writeReg(RegAddress::ZParameters, zParametersReg.data);
+        writeReg(RegAddress::PulsePerTurn, pulsePerTurnReg.data);
     }
 
 };
