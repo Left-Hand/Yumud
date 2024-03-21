@@ -1,5 +1,8 @@
 #include "apps.h"
 
+#include "src/device/CommonIO/Led/rgbLed.hpp"
+
+using Color = Color_t<real_t>;
 
 
 class SimpleModem{
@@ -111,6 +114,7 @@ public:
     SimpleDeModem(CaptureChannelExti & _capturer,const uint16_t & _freq):capturer(_capturer), max_period(1000000 / _freq * 3 / 2 * 4){;}
 
     void init(){
+        capturer.init();
         capturer.bindCb([this](){this->update();});
     }
 
@@ -134,6 +138,7 @@ protected:
     volatile uint8_t combo_cnt = 0;
     static constexpr uint8_t combo_thr = 3;
     volatile bool shotted = false;
+    volatile bool outline = false;
 
     void update(const uint8_t & code){
         if(!shotted){
@@ -144,6 +149,9 @@ protected:
                     combo_cnt = 0;
                 }
             }else{
+                if(code == 3){
+                    outline = true;
+                }
                 combo_cnt = 0;
             }
         }
@@ -164,47 +172,133 @@ public:
         return _shotted;
     }
 
+    bool isOutline(){
+        return outline;
+    }
+
     void bindCb(const std::function<void(void)>& _cb){
         cb = _cb;
     }
 };
 
 class PanelLed{
-protected:
-    AwLed & led;
 public:
-    PanelLed(AwLed & _led) : led(_led){;}
+    enum class Method:uint8_t{
+        Sine = 0,
+        Saw,
+    };
+protected:
+    RgbLedConcept<true> & led;
 
+    Color color_a;
+    Color color_b;
+    uint16_t period;
+
+    Method method;
+public:
+    PanelLed(RgbLedConcept<true> & _led) : led(_led){;}
 
     void init(){
         led.init();
     }
 
-    PanelLed & operator = (const real_t & _duty){
-        led = _duty;
+    void setPeriod(const uint16_t & _period){
+        period = _period;
+    }
+
+    void setTranstit(const Color & _color_a, const Color & _color_b, const Method & _method){
+        color_a = _color_a;
+        color_b = _color_b;
+        method = _method;
+    }
+
+    void run(){
+        real_t ratio;
+        real_t _t = t / (real_t(period) / 1000);
+        switch(method){
+        case Method::Saw:
+            ratio = frac(_t);
+            break;
+        case Method::Sine:
+            ratio = 0.5 * sin(_t * TAU) + 0.5;
+        }
+
+        Color color_mux = color_a.linear_interpolate(color_b, ratio);
+        led = color_mux;
+    }
+
+    PanelLed & operator = (const Color & color){
+        led = color;
         return *this;
     }
 };
 
-class PanelProtocol{
-    // Printer
+enum class CanCommand:uint8_t{
+    INACTIVE = 0,
+    ACTIVE,
+    HP,
+    MP,
+    WEIGHT,
+
+    RST = 0x70,
+    POWER_ON = 0x7e,
+    OUTBOUND = 0x7f
 };
+
 
 class PanelUnit{
 protected:
     enum class StateMachine:uint8_t{
-        IDLE, SHOTTED, RECOVER
+        NONE, IDLE, SHOTTED, RECOVER, DIED
     };
-    StateMachine sm = StateMachine::IDLE;
+    StateMachine sm = StateMachine::NONE;
 public:
     PanelTarget & target;
     PanelLed & led;
 
     int32_t shot_tick = -10000;
-    uint32_t besta_time = 1600;
-    uint32_t transtit_time = 3400;
+    static constexpr uint32_t besta_time = 1600;
+    static constexpr uint32_t transtit_time = 2400;
+    static constexpr uint8_t max_hp = 2;
+    bool shot = false;
 
+    Color from_hp_to_color(const uint8_t & _hp){
+        return Color::from_hsv(real_t(MAX(_hp, 0)) / max_hp * real_t(0.66), real_t(1), real_t(1));
+    }
+
+    void sw(const StateMachine & _sm){
+        switch(_sm){
+        case StateMachine::IDLE:
+            led.setPeriod(1200);
+            {
+                Color hp_color = from_hp_to_color(hp);
+                led.setTranstit(hp_color, Color(), PanelLed::Method::Sine);
+            }
+            break;
+        case StateMachine::RECOVER:
+            led.setPeriod(400);
+            goto saw_transtit;
+        case StateMachine::SHOTTED:
+            led.setPeriod(200);
+
+        saw_transtit:
+            led.setTranstit(from_hp_to_color(hp + 1), from_hp_to_color(hp), PanelLed::Method::Saw);
+            sm = StateMachine::SHOTTED;
+            break;
+        case StateMachine::DIED:
+            {
+                Color hp_color = from_hp_to_color(0);
+                led.setTranstit(hp_color, hp_color, PanelLed::Method::Sine);
+            }
+        default:
+            break;
+        }
+
+        sm = _sm;
+    }
 public:
+    uint8_t hp = max_hp;
+
     PanelUnit(PanelTarget & _target, PanelLed & _led) : target(_target), led(_led){;}
 
     void init(){
@@ -214,26 +308,165 @@ public:
 
     void run(){
         switch(sm){
-            case StateMachine::IDLE:
-                led = 0.1 + 0.1 * sin(4 * t);
-                if(target.isShotted()){
-                    sm = StateMachine::SHOTTED;
-                    shot_tick = millis();
+        case StateMachine::NONE:
+            sw(StateMachine::IDLE);
+        case StateMachine::IDLE:
+            if(target.isOutline()){
+                hp = 0;
+                sw(StateMachine::DIED);
+            }else if(target.isShotted()){
+                hp --;
+                if(hp > 0) sw(StateMachine::SHOTTED);
+                else sw(StateMachine::DIED);
+                shot = true;
+                shot_tick = millis();
+            }
+            break;
+        case StateMachine::SHOTTED:
+            if(millis() - shot_tick > besta_time){
+                sw(StateMachine::RECOVER);
+            }
+            break;
+        case StateMachine::RECOVER:
+            if(millis() - shot_tick > transtit_time + besta_time){
+                target.isShotted();
+                sw(StateMachine::IDLE);
+            }
+        case StateMachine::DIED:
+            break;
+        }
+
+        led.run();
+    }
+
+    bool isShotted(){
+        auto _shot = shot;
+        shot = false;
+        return _shot;
+    }
+
+    bool isOutline(){
+        return target.isOutline();
+    }
+};
+
+#define VAR_AND_SIZE(x) x,sizeof(x)
+
+class Panel{
+protected:
+
+    PanelUnit & unit;
+    Can & can;
+
+    uint8_t node_id = 0;
+    using Command = CanCommand;
+
+    volatile void sendCommand(const Command & command, const uint8_t *buf, const uint8_t len){
+        can.write(CanMsg((uint16_t)((uint8_t)command << 4 | node_id), buf, len));
+    }
+
+    volatile void sendCommand(const Command & command){
+        can.write(CanMsg((uint16_t)((uint8_t)command << 4 | node_id), {0}));
+    }
+
+    void OutLineNotify(){
+        sendCommand(Command::OUTBOUND);
+    }
+    void HpNotify(const uint8_t & hp){
+        uint8_t buf[1] = {hp};
+        sendCommand(Command::HP, VAR_AND_SIZE(buf));
+        uart2.println("HP", hp);
+    }
+
+    void PowerOnNotify(){
+        sendCommand(Command::POWER_ON);
+        uart2.println("Pw On");
+    }
+
+
+    enum class StateMachine:uint8_t{
+        POWER_ON,
+        INACTIVE,
+        ACTIVE
+    };
+
+    volatile StateMachine sm = StateMachine::POWER_ON;
+
+    bool Shotted(){
+        return unit.isShotted();
+    }
+
+    bool Outline(){
+        return unit.isOutline();
+    }
+
+    uint8_t getSubHp(){
+        return unit.hp;
+    }
+public:
+    Panel(PanelUnit & _unit, Can & _can) : unit(_unit), can(_can){;}
+
+    void init(){
+        unit.init();
+    }
+
+    void run(){
+        if(can.available()){
+            const CanMsg & msg = can.read();
+            uint8_t id = msg.getId() & 0b1111;
+            if(id == node_id){
+                CanCommand cmd = (CanCommand)(msg.getId() >> 4);
+                switch(cmd){
+                    case CanCommand::POWER_ON:
+                        sm = StateMachine::POWER_ON;
+                        break;
+                    case CanCommand::INACTIVE:
+                        sm = StateMachine::INACTIVE;
+                        break;
+                    case CanCommand::ACTIVE:
+                        sm = StateMachine::ACTIVE;
+                        break;
+                    case CanCommand::HP:
+                        if(msg.isRemote()){
+                            HpNotify(unit.hp);
+                        }else{
+                            unit.hp = msg.getData()[0];
+                        }
+                        break;
+                    case CanCommand::RST:
+                        Sys::Reset();
+                    default:
+                        break;
                 }
-                break;
-            case StateMachine::SHOTTED:
-                led = 0.1 + 0.1 * sign(sin(48*t));
-                if(millis() - shot_tick > besta_time){
-                    sm = StateMachine::RECOVER;
+            }
+        }
+
+        switch(sm){
+        case StateMachine::POWER_ON:
+            PowerOnNotify();
+            sm = StateMachine::ACTIVE;
+            break;
+
+        case StateMachine::INACTIVE:
+            break;
+
+        case StateMachine::ACTIVE:
+
+            if(Outline()){
+                OutLineNotify();
+                sm = StateMachine::INACTIVE;
+            }else if(Shotted()){
+                uint8_t subHp = getSubHp();
+                HpNotify(subHp);
+                if(subHp == 0){
+                    sm = StateMachine::INACTIVE;
                 }
-                break;
-            case StateMachine::RECOVER:
-                led = 0.1 + 0.1 * sign(sin(24*t));
-                if(millis() - shot_tick > transtit_time + besta_time){
-                    target.isShotted();
-                    sm = StateMachine::IDLE;
-                }
-                break;
+            }
+
+            unit.run();
+
+
+            break;
         }
     }
 };
@@ -244,13 +477,6 @@ public:
 //TrigIn PA4
 void modem_app(){
 
-
-    // auto canTxPin = Gpio(CAN1_Port, (Pin)CAN1_TX_Pin);
-    // // auto canRxPin = Gpio(CAN1_Port, (Pin)CAN1_RX_Pin);
-    // canTxPin.OutAfPP();
-    // while(true){
-
-    // }
     uart2.init(115200*4);
     Printer & log = uart2;
     log.setEps(4);
@@ -266,14 +492,6 @@ void modem_app(){
 
     aw.init();
     aw.setLedCurrentLimit(AW9523::CurrentLimit::Low);
-    // aw.enableLedMode(Pin::_8, false);
-    // aw.setModeByIndex(8, PinMode::OutPP);
-
-    auto awio = GpioVirtual(&aw, Pin::_0);
-    awio.OutPP();
-
-    auto awLed = AwLed(aw, Pin::_0);
-    awLed.init();
 
     timer4.init(38000);
     auto tim4ch3 = timer4.getChannel(TimerOC::Channel::CH3);
@@ -293,23 +511,22 @@ void modem_app(){
     auto TrigGpioA = Gpio(GPIOA, Pin::_4);
     auto TrigExtiCHA = ExtiChannel(TrigGpioA, 1, 2, ExtiChannel::Trigger::RisingFalling);
     auto CapA = CaptureChannelExti(TrigExtiCHA, TrigGpioA);
-    CapA.init();
 
     auto demodem = SimpleDeModem(CapA, mo_freq);
-    auto panel1_targ = PanelTarget(demodem, 2, 0);
-    auto panel1_led = PanelLed(awLed);
+    auto unit1_targ = PanelTarget(demodem, 2, 0);
 
-    auto panel1 = PanelUnit(panel1_targ, panel1_led);
-    panel1.init();
-    // targ1.init();
-    
-    // targ1.bindCb([&log, &targ1](){
-    // });
+    auto led = AW9523::RgbLed(aw, Pin::_2, Pin::_3, Pin::_4);
+    led.setBrightness(real_t(0.1));
+    auto unit1_led = PanelLed(led);
 
-    can1.init(Can1::BaudRate::Mbps1);
+    auto unit1 = PanelUnit(unit1_targ, unit1_led);
+
+    can1.init(Can::BaudRate::Mbps1);
     can1.enableHwReTransmit(false);
 
-    uint16_t cnt = 0;
+    auto panel = Panel(unit1, can1);
+    panel.init();
+
     while(true){
         // awLed = 0.1 + 0.1 * sin(t * 6);
         // delay(40);
@@ -317,9 +534,8 @@ void modem_app(){
         // delay(1);
         // awio = !awio;
         // log.println(bool(awio));
-        panel1.run();
-        log.println(panel1.shot_tick);
-        if(modem.isIdle()) modem.sendCode(2);
+        panel.run();
+        if(modem.isIdle()) modem.sendCode(3);
         reCalculateTime();
         // log.println(demodem.getCode());
         // log.println(targ1.isShotted());

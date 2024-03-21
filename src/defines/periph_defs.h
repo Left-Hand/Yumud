@@ -226,12 +226,23 @@
 
 
 #ifdef HAVE_CAN1
+    #define CAN1_TX_RM0_Port GPIOA
+    #define CAN1_RX_RM0_Port GPIOA
+    #define CAN1_TX_RM0_Pin GPIO_Pin_12
+    #define CAN1_RX_RM0_Pin GPIO_Pin_11
 
+    #define CAN1_TX_RM1_Port GPIOB
+    #define CAN1_RX_RM1_Port GPIOB
+    #define CAN1_TX_RM1_Pin GPIO_Pin_9
+    #define CAN1_RX_RM1_Pin GPIO_Pin_8
 
     #if CAN1_REMAP_ENABLE == ENABLE
         #define CAN1_Port GPIOB
+        #define CAN1_TX_Port GPIOB
+        #define CAN1_RX_Port GPIOB
         #define CAN1_TX_Pin GPIO_Pin_9
         #define CAN1_RX_Pin GPIO_Pin_8
+
         #define CAN1_REMAP GPIO_Remap1_CAN1
     #else
         #define CAN1_Port GPIOA

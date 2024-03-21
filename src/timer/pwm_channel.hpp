@@ -22,6 +22,8 @@ public:
     virtual void init() = 0;
 
     virtual void setDuty(const real_t & duty) = 0;
+
+    virtual PwmChannelConcept & operator = (const real_t & duty) = 0;
 };
 
 class PwmChannel:public PwmChannelConcept{

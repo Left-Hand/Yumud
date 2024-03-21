@@ -60,7 +60,7 @@ public:
         }
     }
 
-    uint32_t getId(){
+    uint32_t getId() const{
         switch(IDE){
         case CAN_Id_Standard:
             return StdId;
@@ -71,9 +71,11 @@ public:
         }
     }
 
-    bool isRemote(){return (RTR == CAN_RTR_Remote);}
-    uint8_t getLen(){return DLC;}
-    uint8_t getMailBox(){return mbox;}
+    bool isRemote() const {return (RTR == CAN_RTR_Remote);}
+    uint8_t getLen() const {return DLC;}
+    uint8_t getMailBox() const {return mbox;}
+
+    const uint8_t * getData() const{return Data;}
 
     // void write(const uint8_t *buf, uint32_t len){
     //     if(RTR == CAN_RTR_Remote) return;

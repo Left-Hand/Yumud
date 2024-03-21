@@ -3,25 +3,35 @@
 #define __RGB_HPP__
 
 #include "Led.hpp"
-#include "types/color/color_t.hpp¡°
+#include "types/color/color_t.hpp"
 #include "src/timer/pwm_channel.hpp"
 
+
 template<bool com_anode>
-class RgbLedInst{
+class RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
-
-    virtual void _update(const Color &color);
+    real_t brightness = real_t(1);
+    virtual void _update(const Color &color) = 0;
 public:
-    void update(const Color & color){
-        if(com_anode) _update(color);
-        else _update(color.invert());
+
+    virtual void init() = 0;
+
+    void setBrightness(real_t _brightness){
+        brightness = _brightness;
+    }
+
+    RgbLedConcept & operator = (const Color & color){
+        if(com_anode) _update(color * brightness);
+        else _update((color.inverted()) * brightness);
+        return *this;
     }
 };
 
 template<bool com_anode>
-class RgbLedDigital:public RgbLedInst<com_anode>{
+class RgbLedDigital:public RgbLedConcept<com_anode>{
 protected:
+    using Color = Color_t<real_t>;
     GpioConcept & red_pin;
     GpioConcept & green_pin;
     GpioConcept & blue_pin;
@@ -35,18 +45,20 @@ public:
             red_pin(_red_pin), green_pin(_green_pin), blue_pin(_blue_pin){;}
 };
 
-class RgbLedPwm:public RegLedInst<false>{
+template<bool com_anode>
+class RgbLedPwm:public RgbLedConcept<com_anode>{
 protected:
+    using Color = Color_t<real_t>;
     PwmChannelConcept & red_channel;
     PwmChannelConcept & green_channel;
     PwmChannelConcept & blue_channel;
     void _update(const Color &color) override{
-        red_channel = color.r;
-        green_channel = color.g;
-        blue_channel = color.b;
+        red_channel = color.r / real_t(1);
+        green_channel = color.g / real_t(1);
+        blue_channel = color.b / real_t(1);
     }
 public:
-    RegLedPwm(PwmChannelConcept & _red_channel, PwmChannelConcept & _green_channel, PwmChannelConcept & _blue_channel):
+    RgbLedPwm(PwmChannelConcept & _red_channel, PwmChannelConcept & _green_channel, PwmChannelConcept & _blue_channel):
             red_channel(_red_channel), green_channel(_green_channel), blue_channel(_blue_channel){;}
 };
 

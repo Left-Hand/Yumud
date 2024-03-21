@@ -236,10 +236,8 @@ int main(){
     real_t y;
     real_t f;
     while(true){
-        static real_t last_t = t;
         real_t x = 6*sin(t * f_test * TAU);
 
-        real_t out = hpf.update(x, t);
 
         if(millis()%10 == 0) lob2.update(lob.update(real_t(x), t),t);
 

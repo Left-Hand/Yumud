@@ -105,5 +105,8 @@ __fast_inline void reCalculateTime(){
     #endif
 }
 
+namespace Sys{
+    __fast_inline void Reset(){NVIC_SystemReset();}
+};
 
 #endif

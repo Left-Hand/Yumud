@@ -11,7 +11,7 @@ protected:
     GpioConcept & instance;
 public:
     Led(GpioConcept & _instance):instance(_instance){;}
-    operator = (const bool & _state){
+    Led & operator = (const bool & _state){
         state = _state;
         instance = state ^ com_anode;
         return *this;

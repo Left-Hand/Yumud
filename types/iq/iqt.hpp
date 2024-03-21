@@ -181,7 +181,7 @@ public:
     }
 
     __fast_inline iq_t& operator/=(const int & other) {
-        *this /= other;
+        value /= other;
         return *this;
     }
 

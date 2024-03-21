@@ -29,9 +29,6 @@ void stepper_app(){
     auto pwmCoilB = PwmChannel(tim2ch3);
 
     timer2.init(72000);
-
-    uint32_t nanos0 = 0;
-    uint32_t nanos1 = 0;
     real_t target;
 
     timer1.init(20000);

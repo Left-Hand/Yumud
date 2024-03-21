@@ -116,9 +116,7 @@
     #define LERP(x,a,b) __lerp_tmpl(x,a,b)
     template <typename T, typename U, typename V>
     // template <typename U>
-    constexpr __fast_inline T __lerp_tmpl(const T & x, const U & _a, const V & _b){
-        T a = static_cast<T>(_a);
-        T b = static_cast<T>(_b);
+    constexpr __fast_inline T __lerp_tmpl(const T & x, const U & a, const V & b){
         return a * (T(1) - x) + b * x;
     }
 #else

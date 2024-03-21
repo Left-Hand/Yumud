@@ -97,11 +97,12 @@ public:
             b = 1.0;
             a = 1.0;
         } else {
-            r = r / rvalue;
-            g = g / rvalue;
-            b = b / rvalue;
-            a = a / rvalue;
+            r /= rvalue;
+            g /= rvalue;
+            b /= rvalue;
+            a /= rvalue;
         }
+        return *this;
     };
 
 	bool is_equal_approx(const Color_t &p_Color) const;
