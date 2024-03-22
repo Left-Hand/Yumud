@@ -95,7 +95,7 @@ void delayMicroseconds(uint32_t us)
     } while (nbTicks > elapsedTicks);
 }
 
-void delayNanoseconds(uint32_t ns) {
+volatile void delayNanoseconds(uint32_t ns) {
     __IO uint64_t currentTicks = SysTick->CNT;
     /* Number of ticks per millisecond */
     uint64_t tickPerMs = SysTick->CMP + 1;

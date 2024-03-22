@@ -29,8 +29,8 @@
 #ifndef __interrupt
 #if defined(__riscv) && defined(WCH)
 #define __interrupt __attribute__((interrupt("WCH-Interrupt-fast")))
-#else 
-#define __interrupt __interrupt_soft 
+#else
+#define __interrupt __interrupt_soft
 #endif
 #endif
 
@@ -89,6 +89,8 @@
 #define BSWAP_16(x) ((BSWAP_8(x) << 8) | BSWAP_8((x) >> 8))
 #define BSWAP_32(x) ((BSWAP_16(x) << 16) | BSWAP_16((x) >> 16))
 #define BSWAP_64(x) ((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32))
+
+#define VAR_AND_SIZE(x) x,sizeof(x)
 
 #ifdef __cplusplus
 // #define DECLTYPE(...) decltype(__VA_ARGS__)

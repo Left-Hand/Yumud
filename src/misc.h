@@ -87,7 +87,7 @@ void GLobal_Reset(void);
 real_t CalculateFps();
 void SysInfo_ShowUp(Printer & uart);
 void Systick_Init(void);
-uint64_t getChipId();
+
 void LED_GPIO_Init();
 
 void TIM2_GPIO_Init();
@@ -97,16 +97,27 @@ void TIM_Encoder_Init(TIM_TypeDef * TimBase);
 void TIM_PWM_Init(TIM_TypeDef * TimBase, const uint16_t arr);
 void ADC1_GPIO_Init();
 void ADC1_Init();
-__fast_inline void reCalculateTime(){
-    #ifdef USE_IQ
-    t.value = millis() * (int)(0.001 * (1 << GLOBAL_Q));
-    #else
-    t = msTick * (1 / 1000.0f);
-    #endif
-}
+
 
 namespace Sys{
     __fast_inline void Reset(){NVIC_SystemReset();}
+
+    __fast_inline void reCalculateTime(){
+        #ifdef USE_IQ
+        t.value = millis() * (int)(0.001 * (1 << GLOBAL_Q));
+        #else
+        t = msTick * (1 / 1000.0f);
+        #endif
+    }
+
+
+    __fast_inline real_t getCurrentSeconds(){
+        reCalculateTime();
+        return t;
+    }
+
+
+    uint64_t getChipId();
 };
 
 #endif

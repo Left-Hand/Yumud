@@ -462,6 +462,7 @@ __fast_inline void uni_to_u16(const iq_t & qv, uint16_t & data){
 #else
     data = qv.value << (16 - GLOBAL_Q);
 #endif
+    if(data == 0 && qv.value != 0) data = 0xffff;
 }
 
 __fast_inline iq_t sign(const iq_t & iq){

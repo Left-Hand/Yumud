@@ -55,7 +55,6 @@ protected:
 
 public:
     Printer(){;}
-
     virtual size_t available() = 0;
     void write(const char & data){_write(data);}
     void write(const char * data_ptr, const size_t & len){_write(data_ptr, len);}

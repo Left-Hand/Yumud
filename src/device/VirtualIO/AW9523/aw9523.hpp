@@ -79,7 +79,11 @@ public:
 
     void init(){
         reset();
+        delay(10);
         setLedCurrentLimit(CurrentLimit::Low);
+        for(uint8_t i = 0; i< 16; i++){
+            writeReg((RegAddress)((uint8_t)RegAddress::dim + i), (uint8_t)0);
+        }
         ledMode = 0xffff;
     }
 
@@ -185,6 +189,11 @@ public:
             aw.enableLedMode(pin_r);
             aw.enableLedMode(pin_g);
             aw.enableLedMode(pin_b);
+        }
+
+        RgbLed & operator = (const Color &color){
+            setColor(color);
+            return *this;
         }
     };
 };

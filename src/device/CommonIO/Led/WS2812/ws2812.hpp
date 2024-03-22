@@ -4,31 +4,39 @@
 
 #include "../rgbLed.hpp"
 
-class Ws2812: public RgbLedInst<false>{
+class WS2812: public RgbLedConcept<true>{
 protected:
-    Gpio & gpio;
+    Gpio gpio;
 
+    void delayLong(){
+        __nopn(120);
+    }
+
+    void delayShort(){
+        __nopn(32);
+    }
     void sendCode(const bool & state){
+        __disable_irq();
         if(state){
             gpio.set();
-            __nopn(120);
+            delayLong();
             gpio.clr();
-            __nopn(32);
+            delayShort();
         }else{
             gpio.set();
-            __nopn(32);
+            delayShort();
             gpio.clr();
-            __nopn(120);
+            delayLong();
         }
+        __enable_irq();
     }
 
     void sendReset(){
         gpio.clr();
         delayMicroseconds(60);
-        gpio.set();
     }
 
-    void sendByte(const uin8_t & data){
+    void sendByte(const uint8_t & data){
         for(uint8_t mask = 0x80; mask; mask >>= 1){
             sendCode(data & mask);
         }
@@ -40,12 +48,22 @@ protected:
         uni_to_u16(color.b, b);
 
         sendReset();
+        sendByte(g >> 8);
         sendByte(r >> 8);
         sendByte(b >> 8);
-        sendByte(g >> 8);
+
+        // gpio.set();
     }
 
 public:
-    Ws2812(Gpio & _gpio):gpio(_gpio){;}
+    WS2812(Gpio _gpio):gpio(_gpio){;}
+    void init(){
+        // gpio.set();
+        gpio.OutPP();
+    }
+    WS2812 & operator = (const Color & color) override{
+        setColor(color);
+        return *this;
+    }
 };
 #endif

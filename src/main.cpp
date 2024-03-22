@@ -138,6 +138,7 @@ int main(){
     // stepper_app();
     // chassis_app();
     modem_app();
+    // test_app();
 
 
     timer1.init(25600);
@@ -242,7 +243,6 @@ int main(){
         if(millis()%10 == 0) lob2.update(lob.update(real_t(x), t),t);
 
         uart2.println(x, lob2.predict(lob.predict(t),t) , lob.predict(t));
-        reCalculateTime();
         // t = real_t(float(millis()) / float(10000));
         // Led = (millis() / 100) & 0b1;
         // if((millis() % 100) == 0){cb(); delay(1);}
@@ -423,16 +423,8 @@ int main(){
     //     uart2.println(x, y, z);
     //     delay(10);
     // }
-    // can1.enableHwReTransmit();
     // bool tx_role = getChipId() == 6002379527825632205;
 
-    // can1.write(CanMsg(0x11));
-    // can1.write(CanMsg(0x14));
-    // CanMsg msg_v = CanMsg(0x800, {0x15, 0x16});
-    // can1.write(msg_v);
-    // while(can1.pending()){
-    //     uart2.println(can1.pending(), can1.available());
-    // }
     // spi2.init(72000000);
     // spi1.init(18000000);
 
@@ -515,36 +507,7 @@ int main(){
 
     uart2.println("initialized");
     while(1){
-        // if(tx_role){
-        //     static uint8_t cnt = 0;
-        //     // CanMsg msg_v = CanMsg(cnt << 4, {cnt, (uint8_t)(cnt + 1)});
-        //     uint64_t chipId = getChipId();
-        //     CanMsg msg_v = CanMsg(cnt << 4, (uint8_t *)&chipId, 8);
 
-        //     can1.write(msg_v);
-        //     uart2.println("tx", msg_v.getId(),msg_v(0), msg_v(1));
-        //     while(can1.pending()){
-        //         uart2.println("err", can1.getTxErrCnt(), can1.getRxErrCnt(), can1.isBusOff());
-        //         delay(2);
-        //     }
-        //     while(can1.available()){
-        //         CanMsg msg_r = can1.read();
-        //         uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
-        //     }
-        //     // uart2.println(cnt++, uart2.available());
-        //     Led = !Led;
-        //     cnt++;
-        //     // delay(1);
-        //     delay(20);
-        //     // delayMicroseconds(20000);/
-        // }else{
-        //     while(can1.available()){
-        //         CanMsg msg_r = can1.read();
-        //         uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
-        //     }
-        //     // uart2.println(can1.available());
-        //     // delay(20);
-        // }
         // uart2.println(mag_sensor.getRawAngle(), mag_sensor.getMagnitude(), mag_sensor.getMagStatus());
         // Led = !Led;
         // updatePosition();
@@ -577,7 +540,6 @@ int main(){
         // delay(2);
         // delayMicroseconds(160);
         // uart1.println(millis());
-        reCalculateTime();
         // t = real_t(TAU/4);
         // ADC_SoftwareStartInjectedConvCmd(ADC1,ENABLE);
         // while(ADC_GetFlagStatus(ADC1,ADC_FLAG_JEOC)==RESET);

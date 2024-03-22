@@ -65,7 +65,7 @@ void stepper_app(){
         // target = real_t(0);
         // target = 6 * sin(t);
         servo.setAngle(4* sin(4*t) + 92);
-        reCalculateTime();
+        Sys::reCalculateTime();
 
     }
 }

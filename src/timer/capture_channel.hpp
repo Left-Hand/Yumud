@@ -85,7 +85,7 @@ public:
     CaptureChannelExti(ExtiChannel & _instance, Gpio & _gpio):CaptureChannelConcept(1000000, _instance.trigger == ExtiChannel::Trigger::RisingFalling), instance(_instance), gpio(_gpio){;}
 
     void init(){
-        gpio.InPullDN();
+        gpio.InPullUP();
         instance.init();
         instance.enableIt();
     }

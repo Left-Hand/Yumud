@@ -60,7 +60,7 @@ real_t CalculateFps(){
     return dt ? real_t(1) / dt : real_t(0);
 }
 
-uint64_t getChipId(){
+uint64_t Sys::getChipId(){
     uint32_t chip_id[2];
     chip_id[0] = *(volatile uint32_t *)0x1FFFF7E8;
     chip_id[1] = *(volatile uint32_t *)0x1FFFF7EC;

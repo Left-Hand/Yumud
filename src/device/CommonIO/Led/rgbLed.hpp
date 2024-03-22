@@ -21,11 +21,12 @@ public:
         brightness = _brightness;
     }
 
-    RgbLedConcept & operator = (const Color & color){
+    void setColor(const Color& color){
         if(com_anode) _update(color * brightness);
         else _update((color.inverted()) * brightness);
-        return *this;
     }
+
+    virtual RgbLedConcept & operator = (const Color & color) = 0;
 };
 
 template<bool com_anode>

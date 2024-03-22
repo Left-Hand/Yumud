@@ -7,4 +7,5 @@ void stepper_app();
 void modem_app();
 
 void chassis_app();
+void test_app();
 #endif
