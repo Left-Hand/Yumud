@@ -1,101 +1,85 @@
 #include "apps.h"
 
-class GM25{
-protected:
-    PwmChannel & pwm_channel;
-    Gpio & dir_pin;
-    CaptureChannelConcept & cap_channel;
-    bool rsv;
-    static constexpr int speed_scaler = 400;
-public:
-    GM25(PwmChannel & _pwm_channel,Gpio & _dir_pin,CaptureChannelConcept & _cap_channel,const bool & _rsv = false):
-            pwm_channel(_pwm_channel), dir_pin(_dir_pin), cap_channel(_cap_channel), rsv(_rsv){;}
-    void setSpeed(const real_t & speed){
-        pwm_channel.setDuty(abs(speed / speed_scaler));
-        dir_pin = (speed > 0) ^ rsv;
-    }
+#include "src/device/CommonIO/Led/WS2812/ws2812.hpp"
+#include "fwwb_compents/stations/chassis_station.hpp"
 
-    void init(){
-        dir_pin.OutPP();
-    }
-};
+constexpr uint16_t mo_freq = 3800;
 
-
-class Motion{
-protected:
-    GM25 & motorLeft;
-    GM25 & motorRight;
-public:
-
-    Motion(GM25 & _motorLeft,GM25 & _motorRight): motorLeft(_motorLeft), motorRight(_motorRight){;}
-    void setForce(const real_t & w_c, const real_t & w_d){
-        motorLeft.setSpeed(w_c - w_d);
-        motorRight.setSpeed(w_c + w_d);
-    }
-
-    void init(){
-        motorLeft.init();
-        motorRight.init();
-    }
-};
+static Printer & logger = uart2;
+using namespace FWWB;
 
 void chassis_app(){
 
     uart2.init(115200*4, Uart::Mode::TxOnly);
 
+    logger.setEps(4);
 
-    Printer & log = uart2;
-    log.setEps(4);
+    can1.init(Can::BaudRate::Mbps1);
 
-    auto TrigGpioA = Gpio(GPIOA, Pin::_5);
-    auto TrigGpioB = Gpio(GPIOB, Pin::_1);
+    auto ws_out = Gpio(GPIOB, Pin::_8);
+    auto leds = WS2812Chain<3>(ws_out);
+    leds.init();
 
-    auto TrigExtiCHA = ExtiChannel(TrigGpioA, 1, 2, ExtiChannel::Trigger::Rising);
-    auto TrigExtiCHB = ExtiChannel(TrigGpioB, 1, 2, ExtiChannel::Trigger::Rising);
-    auto CapA = CaptureChannelExti(TrigExtiCHA, TrigGpioA);
-    auto CapB = CaptureChannelExti(TrigExtiCHB, TrigGpioB);
-    CapA.init();
-    CapB.init();
+
+    auto trigGpioA = Gpio(GPIOA, Pin::_4);;
+    auto trigExtiCHA = ExtiChannel(trigGpioA, 1, 0, ExtiChannel::Trigger::RisingFalling);
+    auto capA = CaptureChannelExti(trigExtiCHA, trigGpioA);
+    auto demodemA = SimpleDeModem(capA, mo_freq);
+    auto panelTargetA = PanelTarget(demodemA, 2, 0);
+
+    auto panelLedA = PanelLed(leds[0]);
+
+
+    auto trigGpioB = Gpio(GPIOA, Pin::_0);
+    auto trigExtiCHB = ExtiChannel(trigGpioB, 1, 1, ExtiChannel::Trigger::RisingFalling);
+    auto capB = CaptureChannelExti(trigExtiCHB, trigGpioB);
+    auto demodemB = SimpleDeModem(capB, mo_freq);
+    auto panelTargetB = PanelTarget(demodemB, 2, 1);
+
+    auto panelLedB = PanelLed(leds[2]);
+
+    auto panelUnitA = PanelUnit(panelTargetA, panelLedA);
+    auto panelUnitB = PanelUnit(panelTargetB, panelLedB);
+
+    auto can_station = CanStation(can1, logger);
+    auto target_station = TargetStation(can_station, panelUnitA, panelUnitB);
+
+    auto trigGpioL = Gpio(GPIOA, Pin::_5);
+    auto trigGpioR = Gpio(GPIOB, Pin::_1);
+
+    auto trigExtiCHL = ExtiChannel(trigGpioL, 1, 3, ExtiChannel::Trigger::Rising);
+    auto trigExtiCHR = ExtiChannel(trigGpioR, 1, 4, ExtiChannel::Trigger::Rising);
+    auto capL = CaptureChannelExti(trigExtiCHL, trigGpioL);
+    auto capR = CaptureChannelExti(trigExtiCHR, trigGpioR);
+    capL.init();
+    capR.init();
 
     timer3.init(3000);
     auto tim3ch1 = timer3.getChannel(TimerOC::Channel::CH1);
-
     auto tim3ch2 = timer3.getChannel(TimerOC::Channel::CH2);
-    auto PwmA = PwmChannel(tim3ch1);
-    auto PwmB = PwmChannel(tim3ch2);
-    PwmA.init();
-    PwmB.init();
+
+    auto pwmL = PwmChannel(tim3ch1);
+    auto pwmR = PwmChannel(tim3ch2);
+
+    pwmL.init();
+    pwmR.init();
 
     tim3ch1.setPolarity(false);
     tim3ch2.setPolarity(false);
 
-    PwmA = real_t(0.1);
-    PwmB = real_t(0.2);
+    auto dirPinL = Gpio(GPIOD, Pin::_1);
+    auto dirPinR = Gpio(GPIOD, Pin::_0);
 
-    auto dirPinA = Gpio(GPIOA, Pin::_0);
-    auto dirPinB = Gpio(GPIOA, Pin::_1);
+    auto motorL = GM25(pwmL, dirPinL, capL, false);
+    auto motorR = GM25(pwmR, dirPinR, capR, true);
+    auto station = DiffChassisStation(target_station, motorL, motorR);
+    station.init();
 
-    auto motorX = GM25(PwmA, dirPinA, CapA, false);
-    auto motorY = GM25(PwmB, dirPinB, CapB, true);
-    auto motion = Motion(motorX, motorY);
-    motion.init();
-    // auto filterA = BurrFilter_t<real_t>(real_t(0.7), real_t(40), 2);
-    // auto filterB = BurrFilter_t<real_t>(real_t(0.7), real_t(40), 2);
-    // auto speed_pid = PID_t<real_t>(real_t(0.0007), real_t(0), real_t(0));
-    // real_t dutyA = real_t(1);
     while(1){
-        // real_t targetA = real_t(348) + (439-348)*sign(cos(8*t));
-        // real_t rpmA = filterA.update(CapA.getFreq());
-        // real_t rawA = rpmA;
-        // if(rpmA > 1000) rpmA = real_t(70);
-        // dutyA = CLAMP(dutyA + speed_pid.update(targetA, rpmA), real_t(0), real_t(1));
-
-        // real_t dutyB = real_t(0.2);
-        // log.println(rpmA, filterB.update(CapB.getFreq()), dutyA, dutyB, rawA);
-        // PwmA = dutyA; PwmB = dutyB;
-
-        motion.setForce(real_t(80), real_t(80));
-        delay(10);
+        station.run();
+        if(millis() % 16 == 0)leds.refresh();
+        // motorL.setOmega(400 * sin(t));
+        // motorR.setOmega(400 * sin(t));
         Sys::reCalculateTime();
     }
 };

@@ -40,6 +40,31 @@ public:
     }
 
     template<typename U>
+    Range_t<T> operator + (const U & value) const{
+        Range_t<T> regular = this -> abs();
+        return (regular.start + value, regular.end + value);
+    }
+
+    template<typename U>
+    Range_t<T> operator - (const U & value) const{
+        Range_t<T> regular = this -> abs();
+        return Range_t<T>(regular.start - value, regular.end - value);
+    }
+
+    template<typename U>
+    Range_t<T> operator * (const U & value) const{
+        Range_t<T> regular = this -> abs();
+        return Range_t<T>(regular.start * value, regular.end * value);
+    }
+
+    template<typename U>
+    Range_t<T> operator / (const U & value) const{
+        Range_t<T> regular = this -> abs();
+        return Range_t<T>(regular.start / value, regular.end / value);
+    }
+
+
+    template<typename U>
     bool has_value(const U & value){
         Range_t<T> regular = this -> abs();
         return (regular.start <= value && value < regular.end);

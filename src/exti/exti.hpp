@@ -23,6 +23,7 @@ public:
     };
 
     enum class Line:uint32_t{
+        _None = 0,
         _0 = EXTI_Line0,
         _1 = EXTI_Line1,
         _2 = EXTI_Line2,
@@ -138,7 +139,7 @@ public:
             line(_line), pre(_pre), sub(sub), trigger(_trigger), mode(_mode){;}
     ExtiChannel(const Gpio & gpio, const uint8_t & _pre, const uint8_t & sub,
             const Trigger & _trigger = Trigger::Rising,  const Mode & _mode = Mode::Interrupt):
-            line(gpio.isValid() ? (Line)(1 << gpio.getIndex()):Line::_0), source(from_gpio_to_source(gpio)),
+            line(gpio.isValid() ? (Line)(1 << gpio.getIndex()):Line::_None), source(from_gpio_to_source(gpio)),
             gpio_index(gpio.getIndex()),pre(_pre),sub(sub), trigger(_trigger),  mode(_mode){;}
 
     void init(){

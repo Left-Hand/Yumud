@@ -8,7 +8,7 @@
 class Actuator{
 public:
     virtual void init() = 0;
-    virtual void enable(const bool en = true) = 0;
+    virtual void enable(const bool & en = true) = 0;
 };
 
 
@@ -17,15 +17,17 @@ public:
 
 };
 
-class PwmBaseServo:public Servo{
-
-};
 
 class ServoOpenLoop:public Servo{
 
 };
 
-class ServoCloseLoop{
+class PwmBaseServo:public ServoOpenLoop{
+
+};
+
+
+class ServoCloseLoop:public Servo{
 public:
     virtual real_t getPosition() = 0;
 };

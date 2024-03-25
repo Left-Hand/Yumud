@@ -7,6 +7,7 @@
 class SVPWM{
 public:
     virtual void setDQCurrent(const real_t & dCurrentV, const real_t & qCurrentV, const real_t & prog) = 0;
+    virtual void enable(const bool & en = true) = 0;
 };
 
 
@@ -22,6 +23,7 @@ public:
         coilA.init();
         coilB.init();
     }
+
     void setABCurrent(const real_t & aCurrent, const real_t & bCurrent){
         coilA.setDuty(aCurrent);
         coilB.setDuty(bCurrent);
@@ -41,6 +43,11 @@ public:
     void setClamp(const real_t & _clamp){
         coilA.setClamp(_clamp);
         coilB.setClamp(_clamp);
+    }
+
+    void enable(const bool & en) override{
+        coilA.enable(en);
+        coilB.enable(en);
     }
 };
 

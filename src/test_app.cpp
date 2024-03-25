@@ -27,7 +27,7 @@ void test_app(){
 
             while(can1.available()){
                 CanMsg msg_r = can1.read();
-                uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
+                uart2.println("rx", msg_r.getId(), msg_r[0], msg_r[1]);
             }
             // uart2.println(cnt++, uart2.available());
             cnt++;
@@ -38,7 +38,7 @@ void test_app(){
             delay(10);
             while(can1.available()){
                 CanMsg msg_r = can1.read();
-                uart2.println("rx", msg_r.getId(), msg_r(0), msg_r(1));
+                uart2.println("rx", msg_r.getId(), msg_r[0], msg_r[1]);
             }
             CanMsg msg_v = CanMsg(0, {13,14});
 

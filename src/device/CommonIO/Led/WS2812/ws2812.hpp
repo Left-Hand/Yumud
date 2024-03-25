@@ -3,6 +3,7 @@
 #define __WS2812_HPP__
 
 #include "../rgbLed.hpp"
+#include <array>
 
 class WS2812: public RgbLedConcept<true>{
 protected:
@@ -51,8 +52,6 @@ protected:
         sendByte(g >> 8);
         sendByte(r >> 8);
         sendByte(b >> 8);
-
-        // gpio.set();
     }
 
 public:
@@ -66,4 +65,92 @@ public:
         return *this;
     }
 };
+
+class WS2812Single: public RgbLedConcept<true>{
+protected:
+    using Color = Color_t<real_t>;
+
+
+    void _update(const Color & _color) override{
+        color = _color;
+    }
+public:
+    Color color;
+    WS2812Single() = default;
+    void init() override{;}
+
+    WS2812Single & operator = (const Color & _color) override{
+        setColor(_color);
+        return *this;
+    }
+};
+
+
+template<uint16_t size>
+class WS2812Chain{
+protected:
+    Gpio gpio;
+    std::array<WS2812Single, size> leds;
+
+    void delayLong(){
+        __nopn(120);
+    }
+
+    void delayShort(){
+        __nopn(32);
+    }
+    void sendCode(const bool & state){
+        __disable_irq();
+        if(state){
+            gpio.set();
+            delayLong();
+            gpio.clr();
+            delayShort();
+        }else{
+            gpio.set();
+            delayShort();
+            gpio.clr();
+            delayLong();
+        }
+        __enable_irq();
+    }
+
+    void sendReset(){
+        gpio.clr();
+        delayMicroseconds(60);
+    }
+
+    void sendByte(const uint8_t & data){
+        for(uint8_t mask = 0x80; mask; mask >>= 1){
+            sendCode(data & mask);
+        }
+    }
+
+public:
+    WS2812Chain(Gpio _gpio):gpio(_gpio){;}
+    void init(){
+        gpio.OutPP();
+    }
+
+    WS2812Single & operator[](const uint16_t index){
+        return leds.at(index);;
+    }
+
+    void refresh(){
+        sendReset();
+
+        for(auto & led : leds){
+            uint16_t r,g,b;
+
+            uni_to_u16(led.color.r, r);
+            uni_to_u16(led.color.g, g);
+            uni_to_u16(led.color.b, b);
+
+            sendByte(g >> 8);
+            sendByte(r >> 8);
+            sendByte(b >> 8);
+        }
+    }
+};
+
 #endif

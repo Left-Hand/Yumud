@@ -9,4 +9,8 @@
 #include "simple_modem.hpp"
 
 #include "can_station.hpp"
+
+#include "stations/target_station.hpp"
+
+
 #endif

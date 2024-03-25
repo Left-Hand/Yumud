@@ -30,7 +30,7 @@ public:
         instance.setClamp(abs(abs_max_value));
     }
 
-    void enable(const bool en = true) override{
+    void enable(const bool & en = true) override{
         enabled = en;
         if(!en) setDuty(real_t(0));
     }
@@ -74,7 +74,7 @@ public:
         instanceN.setClamp(abs(abs_max_value));
     }
 
-    void enable(const bool en = true) override{
+    void enable(const bool & en = true) override{
         enabled = en;
         if(!en) setDuty(real_t(0));
     }

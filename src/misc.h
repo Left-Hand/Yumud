@@ -77,6 +77,7 @@
 #include "dsp/lut.hpp"
 #include "algo/any/any.hpp"
 #include "src/device/Encoder/odometer.hpp"
+#include "src/crc/crc.hpp"
 
 extern real_t t;
 
@@ -118,6 +119,7 @@ namespace Sys{
 
 
     uint64_t getChipId();
+    uint32_t getChipIdCrc();
 };
 
 #endif

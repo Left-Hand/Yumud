@@ -61,11 +61,24 @@ real_t CalculateFps(){
 }
 
 uint64_t Sys::getChipId(){
-    uint32_t chip_id[2];
-    chip_id[0] = *(volatile uint32_t *)0x1FFFF7E8;
-    chip_id[1] = *(volatile uint32_t *)0x1FFFF7EC;
+    static uint32_t chip_id[2] = {
+        *(volatile uint32_t *)0x1FFFF7E8,
+        *(volatile uint32_t *)0x1FFFF7EC
+    };
     return ((uint64_t)chip_id[1] << 32) | chip_id[0];
 }
+
+uint32_t Sys::getChipIdCrc(){
+    static uint32_t chip_id_crc = 0;
+    if(!chip_id_crc){
+        crc.init();
+        crc.clear();
+        uint64_t chip_id = getChipId();
+        chip_id_crc = crc.update({(uint32_t)chip_id, (uint32_t)(chip_id >> 32)});
+    }
+    return chip_id_crc;
+}
+
 void SysInfo_ShowUp(Printer & uart){
     RCC_ClocksTypeDef RCC_CLK;
 	RCC_GetClocksFreq(&RCC_CLK);//Get chip frequencies

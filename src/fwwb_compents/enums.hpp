@@ -3,18 +3,38 @@
 #define __FWWB_ENUMS_HPP__
 
 namespace FWWB{
-
-enum class CanCommand:uint8_t{
-    INACTIVE = 0,
-    ACTIVE,
-    HP,
+enum class Command:uint8_t{
+    HP = 0,
     MP,
     WEIGHT,
 
+    DEFENSE_GET_HP = 0x40,
+
+    ATTACK_SET_FACE = 0x50,
+    ATTACK_SET_PITCH,
+    ATTACK_GET_PITCH,
+    ATTACK_SET_YAW,
+    ATTACK_GET_YAW,
+    ATTACK_SET_SHOT_SPEC,
+    ATTACK_SHOT,
+
+    CHASSIS_SET_VEL = 0x60,
+    CHASSIS_GET_VEL,
+    CHASSIS_SET_OMEGA,
+    CHASSIS_GET_OMEGA,
+    CHASSIS_GET_ODO,
+    CHASSIS_GET_POS,
+
     RST = 0x70,
+    INACTIVE,
+    ACTIVE,
+    SCAN,
+    REGISTER_NODEID,
+    MANU_ID,
     POWER_ON = 0x7e,
     OUTBOUND = 0x7f
 };
+
 };
 
 

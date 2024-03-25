@@ -6,7 +6,8 @@ class SimpleDeModem{
 protected:
     CaptureChannelExti & capturer;
     std::function<void(void)> cb;
-    uint16_t max_period;
+    Range_t<uint16_t> bit_period;
+    static constexpr uint16_t bit_tolerance = 80;
     struct Code{
         union{
             struct{
@@ -32,12 +33,12 @@ protected:
     void update(){
         switch (prog){
         case Progs::IDLE:
-            if(capturer.getPeriodUs() > max_period){
+            if(capturer.getPeriodUs() > bit_period.end){
                 prog = Progs::BIT0;
             }
             break;
         case Progs::BIT0:
-            if(capturer.getPeriodUs() > max_period){
+            if(!bit_period.has_value(capturer.getPeriodUs())){
                 prog = Progs::IDLE;
                 break;
             }
@@ -45,7 +46,7 @@ protected:
             prog = Progs::BIT1;
             break;
         case Progs::BIT1:
-            if(capturer.getPeriodUs() > max_period){
+            if(!bit_period.has_value(capturer.getPeriodUs())){
                 prog = Progs::IDLE;
                 break;
             }
@@ -59,7 +60,8 @@ protected:
         }
     };
 public:
-    SimpleDeModem(CaptureChannelExti & _capturer,const uint16_t & _freq):capturer(_capturer), max_period(1000000 / _freq * 3 / 2 * 4){;}
+    SimpleDeModem(CaptureChannelExti & _capturer,const uint16_t & _freq):capturer(_capturer),
+            bit_period(1000000 / _freq * 4 - bit_tolerance, 1000000 / _freq * 4 + bit_tolerance){;}
 
     void init(){
         capturer.init();

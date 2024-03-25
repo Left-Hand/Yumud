@@ -47,6 +47,9 @@ protected:
     }
 public:
     Odometer(Encoder & _encoder, const uint8_t _poles):encoder(_encoder), poles(_poles){;}
+
+    void init(){
+    }
     void locateRelatively(const real_t & offset = real_t(0)){
         locate(offset);
     }
@@ -60,7 +63,7 @@ public:
         elecRadOffset = position2rad(getLapPosition());
     }
 
-    real_t update(){
+    void update(){
         lapPosition = getLapPosition();
 
         real_t deltaLapPosition = lapPosition - lapPositionLast;
@@ -77,8 +80,6 @@ public:
 
         lapPositionLast = lapPosition;
         accPosition += deltaLapPosition;
-
-        return accPosition;
     }
 
     real_t getElecRad(){

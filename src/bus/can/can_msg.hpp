@@ -89,7 +89,7 @@ public:
     //     DLC = len;
     // }
 
-    uint8_t & operator()(const uint8_t index){return *(Data + index);}
+    const uint8_t & operator[](const uint8_t index) const {return *(Data + index);};
     CanTxMsg * toTxMessage() const {return (CanTxMsg *)this;}
     CanRxMsg * toRxMessage() const {return (CanRxMsg *)this;}
 

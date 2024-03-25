@@ -3,7 +3,7 @@
 
 using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
-
+#include "src/fwwb_compents/fwwb_inc.h"
 
 Gpio i2cScl = Gpio(GPIOB, (Pin)I2C_SW_SCL);
 Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
@@ -135,9 +135,21 @@ int main(){
 
     GPIO_PortC_Init();
 
+    // Gpio bled(GPIOC, Pin::_13);
+    // bled.OutPP();
+    //     can1.init(Can1::BaudRate::Mbps1);
+    // while(true){
+    //     bled=  !bled;
+    //     // delay(2000);
+
+    //     Vector2 vel = Vector2(0.2,0.0).rotate(t);
+    //     can1.write(CanMsg(uint8_t(FWWB::Command::CHASSIS_SET_VEL) << 4, (uint8_t *)&vel, 8));
+    //     delay(100);
+    //     Sys::reCalculateTime();
+    // }
     // stepper_app();
-    // chassis_app();
-    modem_app();
+    chassis_app();
+    // modem_app();
     // test_app();
 
 
@@ -522,9 +534,9 @@ int main(){
         // // real_t duty = sin(t * real_t(-2));
         // setMotorDuty(duty);
         // real_t position = t;
-        // const real_t omiga = real_t(10);
+        // const real_t omega = real_t(10);
         // const real_t amplitude = real_t(1);
-        // real_t rad = floor(omiga * position / real_t(TAU/4)) * real_t(TAU/4);
+        // real_t rad = floor(omega * position / real_t(TAU/4)) * real_t(TAU/4);
         // real_t a = sin(rad) * amplitude;
         // real_t b = cos(rad) * amplitude;
         // uart1.println(a,b);
