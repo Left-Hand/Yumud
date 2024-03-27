@@ -155,7 +155,7 @@ void UartHw::enableRxIt(const bool en){
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = sp;
     NVIC_InitStructure.NVIC_IRQChannelCmd = en;
     NVIC_Init(&NVIC_InitStructure);
-
+        USART_SendData(USART2, '!');
     USART_ITConfig(instance, USART_IT_RXNE, en);
 }
 
@@ -189,11 +189,13 @@ void UartHw::init(const uint32_t & baudRate, const Mode _mode){
 }
 
 void UartHw::_write(const char * data_ptr, const size_t & len){
+    instance->DATAR;
     for(size_t i=0;i<len;i++) _write(data_ptr[i]);
     while((instance->STATR & USART_FLAG_TC) == RESET);
 }
 
 void UartHw::_write(const char & data){
+    instance->DATAR;
     instance->DATAR = data;
     while((instance->STATR & USART_FLAG_TXE) == RESET);
 }

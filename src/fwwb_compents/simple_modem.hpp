@@ -32,9 +32,8 @@ public:
                 sendBit(cnt - 12, code & 0b10);
             }else if(cnt < 20){
                 setOut(true);
-            }
-            else{
-                cnt = -1;
+            }else{
+                idle();
                 return;
             }
             cnt++;
@@ -48,6 +47,16 @@ public:
     void sendCode(const uint8_t & _code){
         code = _code;
         cnt = 0;
+    }
+
+    void init(){
+        pwm_out.init();
+        idle();
+    }
+
+    void idle(){
+        setOut(true);
+        cnt = -1;
     }
 };
 };

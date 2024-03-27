@@ -60,8 +60,9 @@ public:
     void write(const char * data_ptr, const size_t & len){_write(data_ptr, len);}
 
     char read(){char data; _read(data); return data;};
-    String read(const size_t & len);
-    String readAll(){return read(available());}
+    String readString(const size_t & len);
+    String readStringUntil(const char & chr);
+    String readStringAll(){return readString(available());}
     void setSpace(const String & _space){space = _space;}
     void setRadix(const uint8_t & _radix){radix = _radix;}
     void setEps(const uint8_t & _eps){eps = _eps;}
@@ -108,7 +109,7 @@ public:
     }
 
 
-    void println(){*this << "\r\n";}
+    void println(){*this << "\n";}
 
 	template <typename real>
 	void println(const real& first) {

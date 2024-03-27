@@ -13,26 +13,70 @@ void StringUtils::reverse_str(char * str, size_t len){
 	str[len + 1] = '\0';
 }
 
-void StringUtils::itoa(int64_t value,char *str,uint8_t radix)  
+void StringUtils::disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale){
+    char * p = const_cast<char *>(str);
+    // char * const p = const_cast<char * const>(str);
+
+    scale = 1;
+    bool minus = false;
+
+    while(!((*p>='0'&& *p<='9')||*p=='+'||*p=='-'||*p=='.')&&*p!='\0'){
+        p++;
+    }
+
+    if(*p=='\0'){
+        int_part = 0;
+        frac_part = 0;
+	}else{
+        if(*p=='-'){
+            minus = true;
+            p++;
+        }
+
+        if(*p=='+'){
+            p++;
+        }
+
+        while(*p>='0'&&*p<='9'){
+            int_part = int_part * 10 + (*p-'0');
+            p++;
+        }
+
+        if(*p=='.'){
+            p++;
+            while(*p>='0'&&*p<='9'){
+                frac_part = frac_part * 10 + (*p-'0');
+                scale *= 10;
+                p++;
+			}
+		}
+
+        if(minus){
+            int_part = -int_part;
+            frac_part = -frac_part;
+        }
+	}
+}
+
+void StringUtils::itoa(int64_t value,char *str,uint8_t radix)
 {
-    int sign = 0;  
-    int i=0;  
-    if(value < 0){  
-        sign = -1;  
+    int sign = 0;
+    int i=0;
+    if(value < 0){
+        sign = -1;
         value = -value;  
     }
-    do {  
-        if(value%radix>9)  
-            str[i] = value%radix +'0'+7;  
-        else   
-            str[i] = value%radix +'0';  
-        i++;  
-    } while((value/=radix)>0);  
-    
+    do {
+        if(value%radix>9)
+            str[i] = value%radix +'0'+7;
+        else
+            str[i] = value%radix +'0';
+        i++;
+    } while((value/=radix)>0);
     if(sign<0) {
         str[i] = '-';
         i++;
-    } 
+    }
 
     reverse_str(str, i);
 }
@@ -41,33 +85,33 @@ void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)
 {
 	uint8_t i = 0;
     value = abs(value);
-	do{  
-		if(value%radix>9)  
-			str[i] = value%radix +'0'+7;  
-		else   
-			str[i] = value%radix +'0';  
-		i++;  
-	}while((value/=radix)>0 && i < size);  
+	do{
+		if(value%radix>9)
+			str[i] = value%radix +'0'+7;
+		else
+			str[i] = value%radix +'0';
+		i++;
+	}while((value/=radix)>0 && i < size);
 	for(;i<= size; i++)str[i] = '0';
 	reverse_str(str, size);
 }
 
-void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix)  
+void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix)
 {
-    int i=0;  
+    int i=0;
 
-    do {  
-        if(value%radix>9)  
-            str[i] = value%radix +'0'+7;  
-        else   
-            str[i] = value%radix +'0';  
-        i++;  
-    } while((value/=radix)>0);  
+    do {
+        if(value%radix>9)
+            str[i] = value%radix +'0'+7;
+        else
+            str[i] = value%radix +'0';
+        i++;
+    } while((value/=radix)>0);
 
     reverse_str(str, i);
 }
 
-void StringUtils::ftoa(float number,char *buf, uint8_t eps)  
+void StringUtils::ftoa(float number,char *buf, uint8_t eps)
 {
     char str_int[12] = {0};
     char str_float[eps+1] = {0};
@@ -96,6 +140,40 @@ void StringUtils::ftoa(float number,char *buf, uint8_t eps)
     strcpy(buf,str_int);
 }
 
+bool StringUtils::is_digit(const char & chr){
+    return chr >= '0' && chr <= '9';
+}
+bool StringUtils::is_numeric(const char* str) {
+	bool hasDigit = false;
+	bool hasDot = false;
+	bool hasSign = false;
+
+	for (int i = 0; str[i] != '\0'; i++) {
+		if (is_digit(str[i])) {
+			hasDigit = true;
+		} else if (str[i] == '.') {
+			if (hasDot || !hasDigit) {
+				return false; // 多个小数点或者小数点前没有数字，返回 false
+			}
+			hasDot = true;
+		} else if (str[i] == '+' || str[i] == '-') {
+			if (hasSign || hasDigit) {
+				return false; // 多个正负号或者正负号出现在数字之后，返回 false
+			}
+			hasSign = true;
+		} else {
+			return false; // 非数字、正负号或小数点，返回 false
+		}
+	}
+	return hasDigit; // 至少包含一个数字才认为是合法数字
+}
+
+bool StringUtils::is_digit(const char * str){
+    for(int i = 0; str[i]!= '\0'; i++){
+        if(!is_digit(str[i])) return false;
+    }
+    return true;
+}
 int StringUtils::kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len) {
 	size_t *table = (size_t *)malloc(match_len * sizeof(size_t));
 	size_t i = 0, j = 1;
@@ -157,12 +235,42 @@ void StringUtils::str_replace(const char *src, const size_t src_len, const char 
 
 
 int StringUtils::stoi(const char * str) {
-    return atoi(str);
+	int s=0;
+	bool flag=false;
+
+	while(*str==' '){
+		str++;
+	}
+
+	if(*str=='-'||*str=='+'){
+		if(*str=='-')
+            flag=true;
+		str++;
+	}
+
+	while(*str>='0'&&*str<='9'){
+		s *= 10;
+        s += *str-'0';
+		str++;
+		if(s<0){
+			s=2147483647;
+			break;
+		}
+	}
+	if(flag) return -s;
+    else return s;
 }
 
 float StringUtils::stof(const char * str) {
-    return atof(str);
+    char * p = const_cast<char *>(str);
+
+    int int_part = 0;
+    int frac_part = 0;
+    int scale = 1;
+    disassemble_fstr(p, int_part, frac_part, scale);
+    return(int_part + (float)frac_part / scale);
 }
+
 
 template<typename real>
 String StringUtils::type_to_string() {

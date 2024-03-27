@@ -4,6 +4,7 @@
 
 #include "../can_station.hpp"
 
+namespace FWWB{
 class CanAcessPoint:public CanFacility{
 protected:
     enum class StateMachine:uint8_t{
@@ -37,8 +38,33 @@ protected:
             sendCommand(i + 1, Command::SCAN, PTR8_AND_SIZE(content));
         }
     }
-public:
-    CanAcessPoint(Can & can) : CanFacility(can, 0xf) {;}
+
+    std::vector<String> splitString(const String& input, char delimiter) {
+        std::vector<String> result;
+
+        int startPos = 0;
+        int endPos = input.indexOf(delimiter, startPos);
+
+        while (endPos != -1) {
+            String token = input.substring(startPos, endPos);
+            result.push_back(token.c_str());
+
+            startPos = endPos + 1;
+            endPos = input.indexOf(delimiter, startPos);
+        }
+
+        if (startPos < input.length()) {
+            String lastToken = input.substring(startPos);
+            result.push_back(lastToken.c_str());
+        }
+
+        return result;
+    }
+
+    String temp_str = "";
+    uint8_t chassis_id = 0;
+    uint8_t attack_id = 0;
+    uint8_t defense_id = 0;
 
     virtual void parseCommand(const Command & cmd, const CanMsg & msg){
         switch(cmd){
@@ -49,6 +75,73 @@ public:
         }
     }
 
+    virtual void parseCommand(const char & argc, const std::vector<String> & argv){
+        switch(argc){
+        case 'L'://list module
+            {
+                logger.setSpace(" ");
+                logger.print("A", attack_id);
+                logger.print("C", chassis_id);
+                logger.println("D", defense_id);
+            }
+        case 'S':
+            // [S] x[0]
+            // shot x times
+            {
+                uint8_t buf[1];
+                buf[0] = int(argv.at(0));
+                sendCommand(attack_id, Command::ATTACK_SHOT, PTR8_AND_SIZE(buf));
+            }
+            break;
+        case 'H'://shot_spec
+
+            // [H] p[0]
+            // shot type change to p
+            {
+                uint8_t buf[1];
+                buf[0] = int(argv.at(0));
+                sendCommand(attack_id, Command::ATTACK_SET_SHOT_SPEC, PTR8_AND_SIZE(buf));
+            }
+        case 'F'://face
+            {
+                Vector2 _face = Vector2(real_t(argv.at(0)), real_t(argv.at(1)));
+                uint8_t buf[8] = {0};
+                memcpy(&buf, &_face, sizeof(buf));
+                sendCommand(chassis_id, Command::ATTACK_SET_FACE, buf, sizeof(buf));
+            }
+            break;
+        case 'V'://velocity
+            {
+                Vector2 _vel = Vector2(real_t(argv.at(0)), real_t(argv.at(1)));
+                uint8_t buf[8] = {0};
+                memcpy(&buf, &_vel, sizeof(buf));
+                sendCommand(chassis_id, Command::CHASSIS_SET_VEL, buf, sizeof(buf));
+            }
+            break;
+        case 'O'://Omega
+            {
+                real_t _omega = real_t(argv.at(0));
+                uint8_t buf[4] = {0};
+                memcpy(&buf, &_omega, sizeof(buf));
+                sendCommand(chassis_id, Command::CHASSIS_GET_OMEGA, buf, sizeof(buf));
+            }
+            break;
+        case 'R'://rst
+            sendCommand(0, Command::RST);
+        default:
+            logger.println("Unknown command:", argc);
+        }
+    }
+public:
+    CanAcessPoint(Can & _can, Printer & _logger) : CanFacility(_can, _logger, 0xf) {;}
+
+    void init(){
+        // can.write(CanMsg((uint16_t)((uint8_t)Command::RST << 4), true));
+        sendCommand(0, Command::RST);
+    }
+
+
+
     void run(){
         if(can.available()){
             const CanMsg & msg = can.read();
@@ -58,7 +151,22 @@ public:
                 parseCommand(cmd, msg);
             }
         }
+
+        if(logger.available()){
+            char chr = logger.read();
+            if(chr == '\n'){
+                temp_str.trim();
+                auto tokens = splitString(temp_str, ' ');
+                auto argc = tokens[0][0];
+                tokens.erase(tokens.begin());
+                parseCommand(argc, tokens);
+                temp_str = "";
+            }else{
+                temp_str.concat(chr);
+            }
+        }
     }
+};
 };
 
 #endif

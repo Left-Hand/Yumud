@@ -11,6 +11,10 @@ class String;
 
 namespace StringUtils {
 void reverse_str(char * str, size_t len);
+void disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale);
+bool is_numeric(const char* str);
+bool is_digit(const char * str);
+bool is_digit(const char & chr);
 
 void ftoa(float value, char *str, uint8_t eps);
 
@@ -22,7 +26,6 @@ int kmp_find(const char *src, const size_t src_len, const char *match, const siz
 void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len);
 
 int stoi(const char * str);
-
 float stof(const char * str);
 
 template<typename real>

@@ -332,3 +332,4 @@ uint32_t __get_SP(void)
 }
 
 void _init(void) {}
+void _fini(void) {}

@@ -33,7 +33,7 @@ protected:
     Gpio getRxPin();
 
     void enableRcc(const bool en = true);
-    void enableRxIt(const bool en = true);
+
     void _write(const char * data_ptr, const size_t & len);
 
     void _write(const char & data);
@@ -44,6 +44,8 @@ public:
     void init(const uint32_t & baudRate, const Mode _mode = Mode::TxRx);
 
     void setBaudRate(const uint32_t & baudRate){init(baudRate);}
+
+    void enableRxIt(const bool en = true);
 
 };
 #endif

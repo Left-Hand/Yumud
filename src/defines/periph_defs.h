@@ -54,7 +54,7 @@
     #define UART2_TX_Pin GPIO_Pin_2
 
     #define UART2_RX_Port GPIOA
-    #define UART2_RX_Pin GPIO_Pin_4
+    #define UART2_RX_Pin GPIO_Pin_3
 
     #define UART2_IT_PP 1
     #define UART2_IT_SP 1

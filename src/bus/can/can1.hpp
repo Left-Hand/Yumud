@@ -19,8 +19,8 @@ public:
 
     using Callback = std::function<void(void)>;
 protected:
-    // virtual void settleTxPin(const uint8_t & remap) = 0;
-    // virtual void settleRxPin(const uint8_t & remap) = 0;
+    virtual void settleTxPin(const uint8_t & remap) = 0;
+    virtual void settleRxPin(const uint8_t & remap) = 0;
 public:
     virtual void init(const BaudRate & baudRate, const uint8_t & remap = 0, const uint16_t & mask = 0) = 0;
     virtual bool write(const CanMsg & msg) = 0;
@@ -42,17 +42,17 @@ public:
 
     virtual bool isBusOff() = 0;
 
-    // virtual void bindCbTxOk(const Callback & _cb) = 0;
-    // virtual void bindCbTxFail(const Callback & _cb) = 0;
-    // virtual void bindCbRx(const Callback & _cb) = 0;
+    virtual void bindCbTxOk(const Callback & _cb) = 0;
+    virtual void bindCbTxFail(const Callback & _cb) = 0;
+    virtual void bindCbRx(const Callback & _cb) = 0;
 };
 
 
 
 class Can1:public Can{
 protected:
-    // void settleTxPin(const uint8_t & remap) override;
-    // void settleRxPin(const uint8_t & remap) override;
+    void settleTxPin(const uint8_t & remap) override;
+    void settleRxPin(const uint8_t & remap) override;
 public:
     void init(const BaudRate & baudRate, const uint8_t & remap = 0, const uint16_t & mask = 0) override;
     bool write(const CanMsg & msg) override;
@@ -73,9 +73,9 @@ public:
 
     bool isBusOff() override;
 
-    // void bindCbTxOk(const Callback & _cb) override;
-    // void bindCbTxFail(const Callback & _cb) override;
-    // void bindCbRx(const Callback & _cb) override;
+    void bindCbTxOk(const Callback & _cb) override;
+    void bindCbTxFail(const Callback & _cb) override;
+    void bindCbRx(const Callback & _cb) override;
 };
 
 extern Can1 can1;

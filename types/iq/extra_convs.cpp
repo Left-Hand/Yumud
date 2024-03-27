@@ -35,6 +35,25 @@ String iq_t::toString(const uint8_t eps) const{
     return String(buf);
 };
 
+
+iq_t::iq_t(const String & str){
+    int int_part = 0;
+    int frac_part = 0;
+    int scale = 1;
+
+    StringUtils::disassemble_fstr(str.c_str(), int_part, frac_part, scale);
+
+    while(scale > 10000){
+        frac_part /= 10;
+        scale /= 10;
+    }
+    *this = int_part + iq_t(frac_part) / scale;
+}
+
+iq_t::operator String() const{
+    return toString(3);
+}
+
 String toString(const iq_t & iq, const uint8_t & eps){
     return iq.toString(eps);
 }

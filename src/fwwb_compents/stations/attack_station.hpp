@@ -17,8 +17,8 @@ protected:
 
     real_t yaw;
     real_t pitch;
-    uint8_t shot_remains;
-    uint8_t shot_code;
+    uint8_t shot_remains = 0;
+    uint8_t shot_code = 3;
 
     void setYaw(const real_t & _yaw){
         yaw = _yaw;
@@ -36,7 +36,11 @@ protected:
     }
 
     void faceNotify(const CanMsg & msg){
-        setFace(*reinterpret_cast<const Vector2 *>(msg.getData()));
+        Vector2 vel;
+
+        memcpy((void *)&vel, msg.getData(), sizeof(Vector2));
+
+        setFace(vel);
     }
 
     void pitchNotify(const CanMsg & msg){
@@ -73,10 +77,10 @@ protected:
     void runMachine() override{
         switch(sm){
         case StateMachine::ACTIVE:
-            if(modem.isIdle() && shot_remains > 0){
-                modem.sendCode(shot_code);
-                shot_remains--;
-            }
+            // if(modem.isIdle() && shot_remains > 0){
+                // modem.sendCode(shot_code);
+            //     shot_remains--;
+            // }
             FATHER_STATION::runMachine();
             break;
         default:

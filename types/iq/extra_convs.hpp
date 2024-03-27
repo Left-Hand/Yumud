@@ -7,4 +7,5 @@
 
 struct iq_t;
 String toString(const iq_t & iq, const uint8_t & eps);
+
 #endif

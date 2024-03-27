@@ -12,5 +12,4 @@
 
 #include "stations/target_station.hpp"
 
-
 #endif

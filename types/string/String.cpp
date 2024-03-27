@@ -203,9 +203,6 @@ unsigned char String::changeBuffer(unsigned int maxStrLen)
 
 String & String::copy(const char *cstr, unsigned int length)
 {
-    if(length > 900){
-        
-    }
 	if (!reserve(length)) {
 		invalidate();
 		return *this;
@@ -265,7 +262,7 @@ String & String::operator = (const char *cstr)
 {
 	if (cstr) copy(cstr, strlen(cstr));
 	else invalidate();
-	
+
 	return *this;
 }
 
@@ -643,7 +640,7 @@ void String::replace(char find, char replace)
 
 String& String::replace(const String& match, const String& replace)
 {
-    size_t dst_len = match.length();
+    int dst_len = match.length();
     if(dst_len != replace.length()) return *this;
 	StringUtils::str_replace(
             this->c_str(),this -> length(),
@@ -717,6 +714,8 @@ float String::toFloat(void) const
 	return 0;
 }
 
+bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str());}
+bool String::isDigit(void) const {return StringUtils::is_digit(c_str());}
 String toString(char c) { return String(c); }
 String toString(const char * c) { return String(c); }
 String toString(unsigned char value, unsigned char base) { return String(value, base); }

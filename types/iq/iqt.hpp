@@ -17,9 +17,12 @@ public:
 
     __fast_inline iq_t(): value(0){;}
     __fast_inline constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
+
     __fast_inline constexpr explicit iq_t(const int & intValue) : value(_IQ(intValue)) {;}
     __fast_inline constexpr explicit iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
     __fast_inline constexpr explicit iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
+    explicit iq_t(const String & str);
+
 
     __fast_inline iq_t operator+(const iq_t & other) const {
         return iq_t(value + other.value);
@@ -87,52 +90,33 @@ public:
 
     #ifndef STRICT_IQ
 
-    __fast_inline iq_t operator+(const int & other) const {
-        return iq_t(value + _IQ(other));
+    template <typename U>
+    __fast_inline iq_t operator+(const U & other) const {
+        return iq_t(value + iq_t(other).value);
     }
 
-    __fast_inline iq_t operator+(const float & other) const {
-        return iq_t(value + _IQ(other));
+    template <typename U>
+    __fast_inline iq_t operator-(const U & other) const {
+        return iq_t(value - iq_t(other).value);
     }
 
-    __fast_inline iq_t operator+(const double & other) const {
-        return iq_t(value + _IQ(other));
-    }
-
-    __fast_inline iq_t operator-(const int & other) const {
-        return iq_t(value - _IQ(other));
-    }
-
-    __fast_inline iq_t operator-(const float & other) const {
-        return iq_t(value - _IQ(other));
-    }
-
-    __fast_inline iq_t operator-(const double & other) const {
-        return iq_t(value - _IQ(other));
-    }
 
     __fast_inline iq_t operator*(const int & other) const {
         return iq_t(value * other);
     }
 
-    __fast_inline iq_t operator*(const float & other) const {
-        return iq_t(*this * iq_t(other));
-    }
-
-    __fast_inline iq_t operator*(const double & other) const {
-        return iq_t(*this * iq_t(other));
+    template <typename U>
+    __fast_inline iq_t operator*(const U & other) const {
+        return *this * iq_t(other);
     }
 
     __fast_inline iq_t operator/(const int & other) const {
         return iq_t((value / other));
     }
 
-    __fast_inline iq_t operator/(const float & other) const {
-        return iq_t(*this / iq_t(other));
-    }
-
-    __fast_inline iq_t operator/(const double & other) const {
-        return iq_t(*this / iq_t(other));
+    template <typename U>
+    __fast_inline iq_t operator/(const U & other) const {
+        return *this / iq_t(other);
     }
 
     __fast_inline iq_t& operator+=(const float & other) {
@@ -195,77 +179,19 @@ public:
         return *this;
     }
 
-    __fast_inline bool operator==(const int & other) const {
-        return value == _IQ(other);
+    #define IQ_OPERATOR_TEMPLATE(op)\
+    __fast_inline bool operator op (const int & other) const {\
+        return *this op iq_t(other);\
     }
 
-    __fast_inline bool operator==(const float & other) const {
-        return value == _IQ(other);
-    }
+    IQ_OPERATOR_TEMPLATE(==);
+    IQ_OPERATOR_TEMPLATE(!=);
+    IQ_OPERATOR_TEMPLATE(>);
+    IQ_OPERATOR_TEMPLATE(<);
+    IQ_OPERATOR_TEMPLATE(>=);
+    IQ_OPERATOR_TEMPLATE(<=);
 
-    __fast_inline bool operator==(const double & other) const {
-        return value == _IQ(other);
-    }
-
-    __fast_inline bool operator!=(const int & other) const {
-        return value != _IQ(other);
-    }
-
-    __fast_inline bool operator!=(const float & other) const {
-        return value != _IQ(other);
-    }
-
-    __fast_inline bool operator!=(const double & other) const {
-        return value != _IQ(other);
-    }
-
-    __fast_inline bool operator>(const int & other) const {
-        return value > _IQ(other);
-    }
-
-    __fast_inline bool operator>(const float & other) const {
-        return value > _IQ(other);
-    }
-
-    __fast_inline bool operator>(const double & other) const {
-        return value > _IQ(other);
-    }
-
-    __fast_inline bool operator<(const int & other) const {
-        return value < _IQ(other);
-    }
-
-    __fast_inline bool operator<(const float & other) const {
-        return value < _IQ(other);
-    }
-
-    __fast_inline bool operator<(const double & other) const {
-        return value < _IQ(other);
-    }
-
-    __fast_inline bool operator>=(const int & other) const {
-        return value >= _IQ(other);
-    }
-
-    __fast_inline bool operator>=(const float & other) const {
-        return value >= _IQ(other);
-    }
-
-    __fast_inline bool operator>=(const double & other) const {
-        return value >= _IQ(other);
-    }
-
-    __fast_inline bool operator<=(const int & other) const {
-        return value <= _IQ(other);
-    }
-
-    __fast_inline bool operator<=(const float & other) const {
-        return value <= _IQ(other);
-    }
-
-    __fast_inline bool operator<=(const double & other) const {
-        return value <= _IQ(other);
-    }
+    #undef IQ_OPERATOR_TEMPLATE
 
     __fast_inline iq_t& operator=(const int & other){
         value = _IQ(other);
@@ -284,42 +210,25 @@ public:
 
     #endif
 
-    #ifdef EXTRA_IQ
-
-
-    #endif
 
     __fast_inline explicit operator bool() const {
         return bool(value);
     }
 
-    __fast_inline explicit operator int() const {
-        return _IQint(value);
+    #define IQ_INT_TEMPLATE(op)\
+    __fast_inline explicit operator op() const {\
+        return op(_IQint(value));\
     }
 
-    __fast_inline explicit operator uint8_t() const {
-        return _IQint(value);
-    }
+    IQ_INT_TEMPLATE(int);
+    IQ_INT_TEMPLATE(int8_t);
+    IQ_INT_TEMPLATE(int16_t);
+    IQ_INT_TEMPLATE(int32_t);
+    IQ_INT_TEMPLATE(uint8_t);
+    IQ_INT_TEMPLATE(uint16_t);
+    IQ_INT_TEMPLATE(uint32_t);
 
-    __fast_inline explicit operator int8_t() const {
-        return _IQint(value);
-    }
-
-    __fast_inline explicit operator uint16_t() const {
-        return _IQint(value);
-    }
-
-    __fast_inline explicit operator int16_t() const {
-        return _IQint(value);
-    }
-
-    __fast_inline explicit operator uint32_t() const {
-        return _IQint(value);
-    }
-
-    __fast_inline explicit operator int32_t() const {
-        return _IQint(value);
-    }
+    #undef IQ_INT_TEMPLATE
 
     __fast_inline explicit operator float() const{
         return _IQtoF(value);
@@ -329,58 +238,35 @@ public:
         return _IQtoD(value);
     }
 
-    String toString(const uint8_t eps) const;
+    __no_inline explicit operator String() const;
+    String toString(const uint8_t eps = 3) const;
 };
 
 #ifndef STRICT_IQ
 
-__fast_inline iq_t operator+(int int_v, const iq_t & iq_v) {
-	return iq_v + iq_t(int_v);
-}
+#define IQ_BINA_OP_TEMPLATE(type, op)\
+__fast_inline iq_t operator op (type val, const iq_t & iq_v) {\
+	return iq_v op iq_t(val);\
+}\
 
-__fast_inline iq_t operator+(float float_v, const iq_t & iq_v) {
-	return iq_v + iq_t(float_v);
-}
+IQ_BINA_OP_TEMPLATE(int, +);
+IQ_BINA_OP_TEMPLATE(float, +);
+IQ_BINA_OP_TEMPLATE(double, +);
 
-__fast_inline iq_t operator+(double double_v, const iq_t & iq_v) {
-	return iq_v + iq_t(double_v);
-}
+IQ_BINA_OP_TEMPLATE(int, -);
+IQ_BINA_OP_TEMPLATE(float, -);
+IQ_BINA_OP_TEMPLATE(double, -);
 
-__fast_inline iq_t operator-(int int_v, const iq_t & iq_v) {
-	return iq_t(int_v) - iq_v;
-}
+IQ_BINA_OP_TEMPLATE(int, *);
+IQ_BINA_OP_TEMPLATE(float, *);
 
-__fast_inline iq_t operator-(float float_v, const iq_t & iq_v) {
-	return iq_t(float_v) - iq_v;
-}
+IQ_BINA_OP_TEMPLATE(double, *);
+IQ_BINA_OP_TEMPLATE(int, /);
+IQ_BINA_OP_TEMPLATE(float, /);
+IQ_BINA_OP_TEMPLATE(double, /);
 
-__fast_inline iq_t operator-(double double_v, const iq_t & iq_v) {
-	return iq_t(double_v) - iq_v;
-}
+#undef IQ_BINA_OP_TEMPLATE
 
-__fast_inline iq_t operator*(int int_v, const iq_t & iq_v) {
-	return iq_v * int_v;
-}
-
-__fast_inline iq_t operator*(float float_v, const iq_t & iq_v) {
-	return iq_v * float_v;
-}
-
-__fast_inline iq_t operator*(double double_v, const iq_t & iq_v) {
-	return iq_v * double_v;
-}
-
-__fast_inline iq_t operator/(int int_v, const iq_t & iq_v) {
-	return iq_t(int_v) / iq_v;
-}
-
-__fast_inline iq_t operator/(float float_v, const iq_t & iq_v) {
-	return iq_t(float_v) / iq_v;
-}
-
-__fast_inline iq_t operator/(double double_v, const iq_t & iq_v) {
-	return iq_t(double_v) / iq_v;
-}
 
 #endif
 

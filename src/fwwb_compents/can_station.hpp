@@ -50,12 +50,10 @@ protected:
     void sendCommand(const Command & command, const uint8_t *buf, const uint8_t len){
         uint16_t std_id = (uint16_t)((uint8_t)command << 4 | node_id);
         can.write(CanMsg(std_id, buf, len));
-        logger.println("H:", (uint8_t)command, (uint8_t)node_id);
     }
 
     void sendCommand(const Command & command){
         can.write(CanMsg((uint16_t)((uint8_t)command << 4 | node_id), true));
-        logger.println("H:", (uint8_t)command, (uint8_t)node_id);
     }
 
     void powerOnNotify(){
@@ -64,11 +62,12 @@ protected:
             uint32_t val;
         }msgFormat;
         msgFormat.val = Sys::getChipIdCrc();
-        FWWB_DEBUG(msgFormat.val);
+        FWWB_DEBUG("ChipCrc: ", msgFormat.val);
         sendCommand(Command::POWER_ON, msgFormat.buf, 4);
     }
 
     void manuIdNotify(){
+        FWWB_DEBUG("Manu: ", supported_manu);
         sendCommand(Command::MANU_ID, (const uint8_t *)supported_manu, 8);
     }
 
@@ -155,7 +154,9 @@ public:
     }
 
     void run(){
+
         if(can.available()){
+
             const CanMsg & msg = can.read();
             uint8_t id = msg.getId() & 0b1111;
             if(id == 0 || id == node_id){

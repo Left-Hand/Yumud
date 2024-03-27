@@ -16,46 +16,65 @@ static void TIM_RCC_ON(TIM_TypeDef * instance){
 static uint32_t TIM_Get_BusFreq(TIM_TypeDef * instance){
     bool isAbp2 = false;
     switch(uint32_t(instance)){
-        default:
+
         case TIM1_BASE:
             isAbp2 = true;
             break;
+        default:
         case TIM2_BASE:
+            isAbp2 = false;
+            break;
         case TIM3_BASE:
+            isAbp2 = false;
+            break;
         case TIM4_BASE:
+            isAbp2 = false;
             break;
     }
 
+
     RCC_ClocksTypeDef clock;
     RCC_GetClocksFreq(&clock);
+
     if (isAbp2) {
         return clock.PCLK2_Frequency;
+        // return SystemCoreClock;
     } else {
         return clock.PCLK1_Frequency;
+        // return SystemCoreClock;
     }
 }
 
 
-void BasicTimer::init(const uint32_t ferq, const TimerMode mode){
-    uint32_t raw_period = TIM_Get_BusFreq(instance) / ferq;
+void BasicTimer::init(const uint32_t freq, const TimerMode mode){
+    TIM_RCC_ON(instance);
+    uint32_t raw_period = TIM_Get_BusFreq(instance) / freq;
+    // TIM_Get_BusFreq(instance);
+    // uint32_t raw_period = 144000000 / freq;
     uint16_t cycle = 1;
-    while(raw_period / cycle > 65535){
+    while(raw_period / cycle > 16384){
         cycle++;
     }
+
     init(raw_period / cycle, cycle, mode);
 }
 
 void BasicTimer::init(const uint16_t period, const uint16_t cycle, const TimerMode mode){
     TIM_RCC_ON(instance);
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+    TIM_InternalClockConfig(instance);
+    TIM_DeInit(instance);
 
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
     TIM_TimeBaseStructure.TIM_Period = period - 1;
     TIM_TimeBaseStructure.TIM_Prescaler = cycle - 1;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
     TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
-
+    TIM_Get_BusFreq(instance);
+    TIM_ClearFlag(instance, 0x1e7f);
+    TIM_ClearITPendingBit(instance, 0x00ff);
+    // TIM_ITConfig(instance, 0x00ff, DISABLE);
     enable();
 }
 

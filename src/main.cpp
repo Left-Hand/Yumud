@@ -135,20 +135,9 @@ int main(){
 
     GPIO_PortC_Init();
 
-    // Gpio bled(GPIOC, Pin::_13);
-    // bled.OutPP();
-    //     can1.init(Can1::BaudRate::Mbps1);
-    // while(true){
-    //     bled=  !bled;
-    //     // delay(2000);
 
-    //     Vector2 vel = Vector2(0.2,0.0).rotate(t);
-    //     can1.write(CanMsg(uint8_t(FWWB::Command::CHASSIS_SET_VEL) << 4, (uint8_t *)&vel, 8));
-    //     delay(100);
-    //     Sys::reCalculateTime();
-    // }
-    // stepper_app();
-    chassis_app();
+    stepper_app();
+    // chassis_app();
     // modem_app();
     // test_app();
 

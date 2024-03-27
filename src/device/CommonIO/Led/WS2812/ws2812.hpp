@@ -17,7 +17,7 @@ protected:
         __nopn(32);
     }
     void sendCode(const bool & state){
-        __disable_irq();
+        // __disable_irq();
         if(state){
             gpio.set();
             delayLong();
@@ -29,7 +29,7 @@ protected:
             gpio.clr();
             delayLong();
         }
-        __enable_irq();
+        // __enable_irq();
     }
 
     void sendReset(){

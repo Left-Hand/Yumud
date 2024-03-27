@@ -59,7 +59,7 @@ Printer& Printer::operator<<(const SpecToken & spec){
     return *this;
 }
 
-String Printer::read(const size_t & len){
+String Printer::readString(const size_t & len){
     String str;
     str.reserve(len + 1);
 
@@ -70,5 +70,28 @@ String Printer::read(const size_t & len){
     }
 
     return str;
+}
 
+String Printer::readStringUntil(const char & chr) {
+    String str;
+    size_t cap = 16;
+    str.reserve(cap);
+
+    char _;
+    while (true) {
+        _read(_);
+
+        if (_ == chr) {
+            break;
+        }
+
+        str += _;
+
+        if ((size_t)str.length() == cap) {
+            cap *= 2;
+            str.reserve(cap);
+        }
+    }
+
+    return str;
 }
