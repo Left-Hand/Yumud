@@ -6,7 +6,9 @@
 
 class SVPWM{
 public:
+    virtual void init() = 0;
     virtual void setDQCurrent(const real_t & dCurrentV, const real_t & qCurrentV, const real_t & prog) = 0;
+    virtual void setClamp(const real_t & _clamp) = 0;
     virtual void enable(const bool & en = true) = 0;
 };
 
@@ -14,12 +16,12 @@ public:
 
 class SVPWM2:public SVPWM{
 protected:
-    CoilConcept & coilA;
-    CoilConcept & coilB;
+    Coil2PConcept & coilA;
+    Coil2PConcept & coilB;
 
 public:
-    SVPWM2(CoilConcept & _coilA, CoilConcept & _coilB):coilA(_coilA), coilB(_coilB){;}
-    void init(){
+    SVPWM2(Coil2PConcept & _coilA, Coil2PConcept & _coilB):coilA(_coilA), coilB(_coilB){;}
+    void init() override{
         coilA.init();
         coilB.init();
     }
@@ -50,5 +52,9 @@ public:
         coilB.enable(en);
     }
 };
+
+// class SVPWM3:public SVPWM{
+//     PwmChannel
+// }
 
 #endif

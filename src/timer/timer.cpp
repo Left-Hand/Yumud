@@ -74,7 +74,6 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const TimerMo
     TIM_Get_BusFreq(instance);
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
-    // TIM_ITConfig(instance, 0x00ff, DISABLE);
     enable();
 }
 

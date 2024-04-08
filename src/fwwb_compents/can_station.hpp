@@ -17,6 +17,8 @@ static constexpr const char supported_manu[] = "Rstr1aN";
 static std::array<uint32_t, 14> sta_crcs = {
     0xC3C0612,
     1180707222,
+    3458428716,
+    205260306
 };
 
 __fast_inline
@@ -32,6 +34,7 @@ protected:
     Can & can;
     Printer & logger;
     uint8_t node_id = 0;
+    uint8_t weight = 0;
 
 public:
     CanFacility(Can & _can, Printer & _logger, const uint8_t & _node_id) : can(_can), logger(_logger), node_id(_node_id) {;}
@@ -62,7 +65,7 @@ protected:
             uint32_t val;
         }msgFormat;
         msgFormat.val = Sys::getChipIdCrc();
-        FWWB_DEBUG("ChipCrc: ", msgFormat.val);
+        // FWWB_DEBUG("ChipCrc: ", msgFormat.val);
         sendCommand(Command::POWER_ON, msgFormat.buf, 4);
     }
 
@@ -71,16 +74,18 @@ protected:
         sendCommand(Command::MANU_ID, (const uint8_t *)supported_manu, 8);
     }
 
-    void manuIdNotified(){
-        manuIdNotify();
-    }
-
     void resetNotified(){
         Sys::Reset();
     }
 
     void scanNotified(){
 
+    }
+
+    void SyncNotified(const CanMsg & msg){
+        uint32_t new_tick;
+        memcpy(&new_tick, msg.getData(), sizeof(uint32_t));
+        SetTick(new_tick);
     }
 
     void registerNodeIDNotified(const CanMsg & msg){
@@ -101,8 +106,8 @@ protected:
     }
 
     virtual void parseCommand(const Command & cmd, const CanMsg & msg){
+        if(!msg.isRemote()) return;
         switch(cmd){
-
         case Command::INACTIVE:
             sm = StateMachine::INACTIVE;
             break;
@@ -114,12 +119,15 @@ protected:
         case Command::REGISTER_NODEID:
             registerNodeIDNotified(msg);
         case Command::MANU_ID:
-            manuIdNotified();
+            manuIdNotify();
         case Command::POWER_ON:
             sm = StateMachine::POWER_ON;
             break;
         case Command::RST:
             resetNotified();
+            break;
+        case Command::SYNC:
+            SyncNotified(msg);
             break;
         default:
             break;
@@ -146,6 +154,8 @@ public:
         auto default_id = getDeaultID(Sys::getChipIdCrc());
         if(default_id >= 0){
             node_id = default_id;
+        }else{
+            node_id = 0;
         }
     }
     CanStation(Can & _can, Printer & _logger, const uint8_t & _node_id) : CanFacility(_can, _logger, _node_id) {;}

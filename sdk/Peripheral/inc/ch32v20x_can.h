@@ -333,7 +333,7 @@ void       CAN_StructInit(CAN_InitTypeDef *CAN_InitStruct);
 void       CAN_SlaveStartBank(uint8_t CAN_BankNumber);
 void       CAN_DBGFreeze(CAN_TypeDef *CANx, FunctionalState NewState);
 void       CAN_TTComModeCmd(CAN_TypeDef *CANx, FunctionalState NewState);
-uint8_t    CAN_Transmit(CAN_TypeDef *CANx, CanTxMsg *TxMessage);
+uint8_t    CAN_Transmit(CAN_TypeDef *CANx, const CanTxMsg *TxMessage);
 uint8_t    CAN_TransmitStatus(CAN_TypeDef *CANx, uint8_t TransmitMailbox);
 void       CAN_CancelTransmit(CAN_TypeDef *CANx, uint8_t Mailbox);
 void       CAN_Receive(CAN_TypeDef *CANx, uint8_t FIFONumber, CanRxMsg *RxMessage);

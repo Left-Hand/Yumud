@@ -23,6 +23,7 @@ public:
 protected:
     TIM_TypeDef * instance;
     volatile uint16_t & cvr;
+    volatile uint16_t & arr;
 
     const Channel channel;
     volatile uint16_t & from_channel_to_cvr(const Channel _channel);
@@ -35,6 +36,7 @@ public:
 
     void enable(const bool en = true);
 
+    void setMode(const Mode _mode);
     void setSync(const bool _sync);
     void setPolarity(const bool pol);
     void setIdleState(const bool state);
@@ -44,7 +46,10 @@ public:
     void installToPin(const bool en = true);
 
     __fast_inline TimerOC & operator = (const int _val){cvr = _val;return *this;}
+    __fast_inline TimerOC & operator = (const real_t & duty){cvr = int(duty * arr); return *this;}
+
     __fast_inline operator int(){return cvr;}
+    __fast_inline operator real_t(){return real_t(cvr) / real_t(arr);}
     // TimerOC & operator = (const bool en){enable(en); return *this;}
 
 };

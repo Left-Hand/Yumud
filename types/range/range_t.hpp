@@ -134,6 +134,16 @@ public:
         return Range_t<T>(MIN(regular.start, value), MAX(regular.end, value));
     }
 
+    template<typename U>
+    T invlerp(const U & value){
+        return (value - start) / (end - start);
+    }
+
+    template<typename U>
+    U lerp(const U & value){
+        return start + (value) * (end - start);
+    }
+
     explicit operator bool() const{
         return start!= end;
     }

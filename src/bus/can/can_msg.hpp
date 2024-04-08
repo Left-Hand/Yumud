@@ -72,6 +72,7 @@ public:
     }
 
     bool isRemote() const {return (RTR == CAN_RTR_Remote);}
+    void remote(const bool & _rm){RTR = _rm ? CAN_RTR_Remote : CAN_RTR_Data;}
     uint8_t getLen() const {return DLC;}
     uint8_t getMailBox() const {return mbox;}
 
@@ -90,7 +91,7 @@ public:
     // }
 
     const uint8_t & operator[](const uint8_t index) const {return *(Data + index);};
-    CanTxMsg * toTxMessage() const {return (CanTxMsg *)this;}
+    const CanTxMsg * toTxMessage() const {return (CanTxMsg *)this;}
     CanRxMsg * toRxMessage() const {return (CanRxMsg *)this;}
 
 };

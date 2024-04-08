@@ -127,6 +127,8 @@ enum class posModes:uint8_t{
     Lap, Continuous
 };
 
+
+
 int main(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
@@ -135,28 +137,30 @@ int main(){
 
     GPIO_PortC_Init();
 
+    // while(true);
 
-    stepper_app();
+    // stepper_app();
+    stepper_app_new();
     // chassis_app();
     // modem_app();
-    // test_app();
+    test_app();
 
 
     timer1.init(25600);
 
-    auto tim1ch1 = timer1.getChannel(TimerOC::Channel::CH1);
+    auto tim1ch1 = timer1[1];
     tim1ch1.init();
 
-    auto tim1ch1n = timer1.getChannel(TimerOC::Channel::CH1N);
+    auto tim1ch1n = timer1[-1];
     tim1ch1n.init();
 
-    auto tim1ch2 = timer1.getChannel(TimerOC::Channel::CH2);
+    auto tim1ch2 = timer1[2];
     tim1ch2.init();
 
-    auto tim1ch3 = timer1.getChannel(TimerOC::Channel::CH3);
+    auto tim1ch3 = timer1[3];
     tim1ch3.init();
 
-    auto tim1ch4 = timer1.getChannel(TimerOC::Channel::CH4);
+    auto tim1ch4 = timer1[4];
     tim1ch4.init();
 
 

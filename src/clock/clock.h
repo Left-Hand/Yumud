@@ -37,6 +37,7 @@ extern int tick_per_us;
 #define NanoTrim 300
 
 __attribute__ ((weak)) uint32_t GetTick(void);
+__attribute__ ((weak)) void SetTick(uint32_t _tick);
 uint32_t millis(void);
 uint64_t micros(void);
 uint64_t nanos(void);

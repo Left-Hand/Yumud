@@ -18,11 +18,21 @@ volatile uint16_t & TimerOC::from_channel_to_cvr(const Channel _channel){
 }
 
 
-TimerOC::TimerOC(TIM_TypeDef * _base, const Channel _channel):instance(_base), cvr(from_channel_to_cvr(_channel)), channel(_channel){
-    ;
+TimerOC::TimerOC(TIM_TypeDef * _base, const Channel _channel):instance(_base),
+        cvr(from_channel_to_cvr(_channel)),
+        arr(_base->ATRLR),
+        channel(_channel){
+
+    setPolarity(true);
+    setSync(false);
 }
 
 void TimerOC::init(const bool install, const Mode mode){
+    // setMode(mode);
+
+    // if(install){
+    //     installToPin();
+    // }
     TIM_OCInitTypeDef TIM_OCInitStructure;
 
     TIM_OCInitStructure.TIM_OCMode = (uint16_t)mode;
@@ -56,6 +66,35 @@ void TimerOC::init(const bool install, const Mode mode){
     if(install){
         installToPin();
     }
+}
+
+void TimerOC::setMode(const Mode mode){
+    uint16_t tmpccmrx = instance->CHCTLR2;
+    uint16_t m_code,s_code;
+    switch(channel){
+        default:
+            return;
+        case Channel::CH1:
+            m_code = TIM_OC1M;
+            s_code = TIM_CC1S;
+            break;
+        case Channel::CH2:
+            m_code = TIM_OC2M;
+            s_code = TIM_CC2S;
+            break;
+        case Channel::CH3:
+            m_code = TIM_OC3M;
+            s_code = TIM_CC3S;
+            break;
+        case Channel::CH4:
+            m_code = TIM_OC4M;
+            s_code = TIM_CC4S;
+            break;
+    }
+    tmpccmrx &= (uint16_t)(~((uint16_t)(m_code)));
+    tmpccmrx &= (uint16_t)(~((uint16_t)(s_code)));
+    tmpccmrx |= (uint16_t)mode;
+    instance->CHCTLR2 = tmpccmrx;
 }
 
 void TimerOC::enable(const bool en){

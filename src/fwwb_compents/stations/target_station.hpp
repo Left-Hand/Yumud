@@ -30,13 +30,24 @@ protected:
 
     void HpNotify(){
         uint8_t buf[2] = {unit0.hp, unit1.hp};
-        sendCommand(Command::HP, VAR_AND_SIZE(buf));
+        sendCommand(Command::GET_HP, VAR_AND_SIZE(buf));
+    }
+
+    void WeightNotify(){
+        uint8_t buf[1] = {weight};
+        sendCommand(Command::GET_WEIGHT, VAR_AND_SIZE(buf));
     }
 
     void HpNotified(const CanMsg & msg){
         unit0.hp = msg.getData()[0];
         unit1.hp = msg.getData()[1];
     }
+
+    void WeightNotified(const CanMsg & msg){
+        weight = msg.getData()[0];
+    }
+
+
 
     void runMachine() override{
         unit0.run();
@@ -65,13 +76,19 @@ protected:
     void parseCommand(const Command & cmd, const CanMsg & msg) override{
 
         switch(cmd){
-        case Command::HP:
-            if(msg.isRemote())
-                HpNotify();
-            else
-                HpNotified(msg);
+        case Command::GET_HP:
+            HpNotify();
             break;
-
+        case Command::SET_HP:
+            HpNotified(msg);
+            break;
+        case Command::GET_WEIGHT:
+            WeightNotify();
+            break;
+        case Command::SET_WEIGHT:
+            WeightNotified(msg);
+            break;
+        // case Command::
         default:
             CanStation::parseCommand(cmd, msg);
             break;

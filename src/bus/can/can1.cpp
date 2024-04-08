@@ -93,35 +93,28 @@ void CAN1_IT_Init(){
 void CAN1_Init_Filter(uint16_t mask){
     CAN_FilterInitTypeDef CAN_FilterInitSturcture = {0};
 
-    CAN_FilterInitSturcture.CAN_FilterNumber = 0;
+    CAN_FilterInitSturcture.CAN_FilterNumber = 1;
 
     CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;
     CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
 
-    // CAN_FilterInitSturcture.CAN_FilterIdLow = (uint16_t)(0x0000 << 5);
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdLow = (uint16_t)(0x0 << 5) | (CAN_Id_Standard);
+    CAN_FilterInitSturcture.CAN_FilterIdLow  = 0;
+    CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;
+    CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;
+    CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;
 
-    // CAN_FilterInitSturcture.CAN_FilterIdHigh = (uint16_t)(0xffff << 5);
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = (mask << 5) | (CAN_Id_Standard);
-    // CAN_FilterInitSturcture.CAN_FilterIdHigh = (uint16_t)(0xffff << 5);
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = (0 << 5) | (CAN_Id_Standard);
-    CAN_FilterInitSturcture.CAN_FilterIdLow = (uint16_t)(0xffff << 5);
-    CAN_FilterInitSturcture.CAN_FilterMaskIdLow = (uint16_t)(0xffff << 5);
-
-    bool isrtr = false;
-    if (isrtr){
-        CAN_FilterInitSturcture.CAN_FilterIdHigh = (uint16_t)(0xffff << 5) | CAN_RTR_Remote;
-        CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = (0 << 5) | (CAN_Id_Extended | CAN_RTR_Remote);
-    }else{
-        CAN_FilterInitSturcture.CAN_FilterIdHigh = (uint16_t)(0xffff << 5);
-        CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = (0 << 5) | (CAN_Id_Extended);
-    }
 
     CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
     CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
-    CAN_FilterInitSturcture.CAN_FilterScale = 14;
+    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
 
     CAN_FilterInit(&CAN_FilterInitSturcture);
+
+    CAN_FilterInitSturcture.CAN_FilterNumber = 0;
+    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO1;
+    CAN_FilterInit(&CAN_FilterInitSturcture);
+
+
 }
 
 void Can1::init(const BaudRate & baudRate, const uint8_t & remap,  const uint16_t & mask){
@@ -315,10 +308,8 @@ void Save_CAN1_Msg(const uint8_t fifo_index){
 
 __interrupt
 void USB_LP_CAN1_RX0_IRQHandler(void) {
-        uart2.println("???cd");
     if (CAN_GetITStatus(CAN1, CAN_IT_FMP0)){
         //process rx pending
-
         Save_CAN1_Msg(CAN_FIFO0);
         EXECUTE(cb_rx);
         CAN_ClearITPendingBit(CAN1, CAN_IT_FMP0);
@@ -335,7 +326,6 @@ __interrupt
 void CAN1_RX1_IRQHandler(void){
     if (CAN_GetITStatus(CAN1, CAN_IT_FMP1)){
         //process rx pending
-        uart2.println("???csd");
         Save_CAN1_Msg(CAN_FIFO1);
         EXECUTE(cb_rx);
         CAN_ClearITPendingBit(CAN1, CAN_IT_FMP1);

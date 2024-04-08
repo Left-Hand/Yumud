@@ -32,19 +32,15 @@ public:
 class ChassisStation : public TargetStation{
 protected:
     virtual void updateMotorTarget() = 0;
-    virtual void setVelocity(const Vector2 & velocity) = 0;
+    virtual void setMove(const Vector2 & move) = 0;
     virtual void setOmega(const real_t & omega) = 0;
 
-    void velocityNotify(const CanMsg & msg){
+    void moveNotify(const CanMsg & msg){
         Vector2 vel;
 
         memcpy((void *)&vel, msg.getData(), sizeof(Vector2));
-        vel.x *= 60;
-        vel.y *= 60;
-        setVelocity(vel);
-        setOmega(vel.y);
+        setMove(vel);
         updateMotorTarget();
-        logger.println(vel.x, vel.y);
     }
 
     void omegaNotify(const CanMsg & msg){
@@ -55,8 +51,8 @@ protected:
     void parseCommand(const Command & cmd, const CanMsg & msg) override{
         TargetStation::parseCommand(cmd, msg);
         switch(cmd){
-        case Command::CHASSIS_SET_VEL:
-            velocityNotify(msg);
+        case Command::CHASSIS_SET_MOVE:
+            moveNotify(msg);
             break;
         case Command::CHASSIS_SET_OMEGA:
             omegaNotify(msg);
@@ -94,8 +90,8 @@ protected:
         motor_right.setOmega(omega_comm + omega_diff);
     }
 
-    void setVelocity(const Vector2 & velocity) override{
-        omega_comm = velocity.x / real_t(wheel_radius);
+    void setMove(const Vector2 & move) override{
+        omega_comm = move.x / real_t(wheel_radius);
     }
 
     void setOmega(const real_t & omega) override{

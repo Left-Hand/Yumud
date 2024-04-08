@@ -16,7 +16,6 @@ static Printer & logger = uart2;
 void test_app(){
     // bool tx_role = Sys::getChipId() == 6002379527825632205;
     uart2.init(115200);
-    uart2.enableRxIt();
     logger.setRadix(16);
     logger.setSpace("");
     logger.println("ChipId: ", Sys::getChipId());
@@ -26,7 +25,7 @@ void test_app(){
 
     Gpio bled(GPIOC, Pin::_13);
     bled.OutPP();
-    can1.init(Can1::BaudRate::Mbps1);
+    can1.init(Can1::BaudRate::Mbps1, 0);
     CanAcessPoint ap(can1, logger);
     delay(100);
     ap.init();
@@ -35,6 +34,7 @@ void test_app(){
         if((millis() > last_blink_millis) and (millis() % 200 == 0)){
             bled= !bled;
             last_blink_millis = millis();
+            can1.write(CanMsg((uint8_t)Command::ACTIVE << 4, true));
         }
         ap.run();
         Sys::reCalculateTime();

@@ -25,11 +25,14 @@ int tick_per_us = 0;
 
 
 __IO uint32_t msTick=0;
-__attribute__ ((weak)) uint32_t GetTick(void)
-{
-  return msTick;
+__attribute__ ((weak)) uint32_t GetTick(void){
+    return msTick;
 }
 
+
+__attribute__ ((weak)) void SetTick(uint32_t _tick){
+    msTick = _tick;
+}
 
 /**
   * @brief  Function called wto read the current millisecond
@@ -38,7 +41,7 @@ __attribute__ ((weak)) uint32_t GetTick(void)
   */
 uint32_t millis(void)
 {
-  return msTick;
+    return msTick;
 }
 
 uint64_t micros(void)

@@ -1,5 +1,5 @@
 #include "gpio.hpp"
-// #include "port.hpp"
+#include "port.hpp"
 // static void GpioNativeWriteCallback(const int8_t & index, const bool & data){
 //     if(data){
 //         GPIOC->BSHR = (1 << index);

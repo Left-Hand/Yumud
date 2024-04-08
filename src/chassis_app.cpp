@@ -10,7 +10,7 @@ using namespace FWWB;
 
 void chassis_app(){
 
-    uart2.init(115200*4, Uart::Mode::TxOnly);
+    uart2.init(115200, Uart::Mode::TxOnly);
 
     logger.setEps(4);
 
@@ -55,11 +55,11 @@ void chassis_app(){
     capR.init();
 
     timer3.init(3000);
-    auto tim3ch1 = timer3.getChannel(TimerOC::Channel::CH1);
-    auto tim3ch2 = timer3.getChannel(TimerOC::Channel::CH2);
+    auto & tim3ch1 = timer3[1];
+    auto & tim3ch2 = timer3[2];
 
-    auto pwmL = PwmChannel(tim3ch1);
-    auto pwmR = PwmChannel(tim3ch2);
+    auto pwmL = PwmChannel(timer3[1]);
+    auto pwmR = PwmChannel(timer3[2]);
 
     pwmL.init();
     pwmR.init();

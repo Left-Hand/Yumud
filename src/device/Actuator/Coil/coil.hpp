@@ -4,14 +4,23 @@
 #include "src/device/Actuator/Actuator.hpp"
 #include "src/gpio/gpio.hpp"
 
+
 class CoilConcept: public Actuator{
 public:
     virtual void setClamp(const real_t & abs_max_value) = 0;
     virtual void setDuty(const real_t & duty) = 0;
-    virtual Actuator & operator= (const real_t & duty) = 0;
+};
+class Coil2PConcept: public CoilConcept{
+public:
+    virtual Coil2PConcept& operator= (const real_t & duty) = 0;
 };
 
-class Coil1:public CoilConcept{
+class Coil3PConcept: public CoilConcept{
+public:
+    virtual Coil3PConcept & operator= (const Vector2_t<real_t> & duty) = 0;
+};
+
+class Coil1:public Coil2PConcept{
 protected:
     GpioConcept & gpioP;
     GpioConcept & gpioN;
@@ -26,7 +35,7 @@ public:
         instance.init();
     }
 
-    void setClamp(const real_t & abs_max_value){
+    void setClamp(const real_t & abs_max_value) override{
         instance.setClamp(abs(abs_max_value));
     }
 
@@ -56,7 +65,7 @@ public:
 };
 
 
-class Coil2:public CoilConcept{
+class Coil2:public Coil2PConcept{
 protected:
     PwmChannelConcept & instanceP;
     PwmChannelConcept & instanceN;
@@ -69,9 +78,10 @@ public:
         instanceN.init();
     }
 
-    void setClamp(const real_t & abs_max_value){
-        instanceP.setClamp(abs(abs_max_value));
-        instanceN.setClamp(abs(abs_max_value));
+    void setClamp(const real_t & max_value) override{
+        real_t abs_max_value = abs(max_value);
+        instanceP.setClamp(abs_max_value);
+        instanceN.setClamp(abs_max_value);
     }
 
     void enable(const bool & en = true) override{
@@ -93,6 +103,32 @@ public:
             instanceN.setDuty(-duty);
         }
     }
+
+    Coil2 & operator = (const real_t & duty) override {setDuty(duty); return *this;}
 };
 
+
+class Coil3:public Coil3PConcept{
+protected:
+    PwmChannelConcept & instanceU;
+    PwmChannelConcept & instanceV;
+    PwmChannelConcept & instanceW;
+    bool enabled = true;
+public:
+    Coil3(PwmChannelConcept & _instanceU, PwmChannelConcept & _instanceV, PwmChannelConcept & _instanceW):
+            instanceU(_instanceU), instanceV(_instanceV), instanceW(_instanceW){;}
+
+    void init() override{
+        instanceU.init();
+        instanceV.init();
+        instanceW.init();
+    }
+
+    void setClamp(const real_t & max_value){
+        real_t abs_max_value = abs(max_value);
+        instanceU.setClamp(abs_max_value);
+        instanceV.setClamp(abs_max_value);
+        instanceW.setClamp(abs_max_value);
+    }
+};
 #endif

@@ -89,6 +89,7 @@ public:
 template<uint16_t size>
 class WS2812Chain{
 protected:
+    using Color = Color_t<real_t>;
     Gpio gpio;
     std::array<WS2812Single, size> leds;
 
@@ -129,6 +130,7 @@ protected:
 public:
     WS2812Chain(Gpio _gpio):gpio(_gpio){;}
     void init(){
+        for(auto & led : leds) led = Color(0,0,0);
         gpio.OutPP();
     }
 

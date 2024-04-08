@@ -374,7 +374,7 @@ void CAN_TTComModeCmd(CAN_TypeDef* CANx, FunctionalState NewState)
  * @return  transmit_mailbox - The number of the mailbox that is used for
  *        transmission or CAN_TxStatus_NoMailBox if there is no empty mailbox.
  */
-uint8_t CAN_Transmit(CAN_TypeDef* CANx, CanTxMsg* TxMessage)
+uint8_t CAN_Transmit(CAN_TypeDef* CANx, const CanTxMsg* TxMessage)
 {
   uint8_t transmit_mailbox = 0;
 
@@ -410,9 +410,8 @@ uint8_t CAN_Transmit(CAN_TypeDef* CANx, CanTxMsg* TxMessage)
                                                   TxMessage->RTR);
     }
     
-    TxMessage->DLC &= (uint8_t)0x0000000F;
     CANx->sTxMailBox[transmit_mailbox].TXMDTR &= (uint32_t)0xFFFFFFF0;
-    CANx->sTxMailBox[transmit_mailbox].TXMDTR |= TxMessage->DLC;
+    CANx->sTxMailBox[transmit_mailbox].TXMDTR |= (TxMessage->DLC & 0x0F);
 
     CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[3] << 24) | 
                                              ((uint32_t)TxMessage->Data[2] << 16) |

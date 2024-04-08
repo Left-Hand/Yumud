@@ -27,27 +27,31 @@ public:
 
 class PwmAngleServo:public PwmServo{
 protected:
-    real_t angle_range;
+    Range_t<real_t> angle_elec_range;
+    Range_t<real_t> angle_phy_range;
+
+
 public:
-    PwmAngleServo(PwmChannelConcept & _instance, const real_t & _min_value_duty = real_t(0.025), const real_t & _max_value_duty = real_t(0.125), const real_t & _angle_range = real_t(270)
-            ):PwmServo(_instance, _min_value_duty, _max_value_duty), angle_range(_angle_range){;}
+    PwmAngleServo(PwmChannelConcept & _instance, const int & _angle_scale, const real_t & _min_value_duty = real_t(0.025), const real_t & _max_value_duty = real_t(0.125)):
+            PwmServo(_instance, _min_value_duty, _max_value_duty), angle_elec_range(real_t(_angle_scale < 0  ?  - _angle_scale:0),real_t( _angle_scale < 0 ? 0 : _angle_scale)){;}
+
     void setDuty(const real_t & duty) override{
         if(!enabled) return instance.setDuty(real_t(0));
         instance.setDuty(LERP(CLAMP(duty, real_t(0), real_t(1)), min_value_duty, max_value_duty));
     }
 
     void setAngle(const real_t & angle){
-        setDuty(CLAMP(INVLERP(angle, real_t(0), angle_range), real_t(0), real_t(1)));
+        setDuty(CLAMP(angle_elec_range.invlerp(angle), real_t(0), real_t(1)));
     }
 };
 
 class PwmSpeedServo:public PwmServo{
 protected:
     real_t max_rot_per_second;
-public:
-    PwmSpeedServo(PwmChannelConcept & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const real_t & _max_rot_per_second
-            ):PwmServo(_instance, _min_value_duty, _max_value_duty), max_rot_per_second(_max_rot_per_second){;}
 
+    PwmSpeedServo(PwmChannelConcept & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const int & _max_rot_per_second
+            ):PwmServo(_instance, _min_value_duty, _max_value_duty), max_rot_per_second(_max_rot_per_second){;}
+public:
     void setDuty(const real_t & duty) override{
         if(!enabled) return instance.setDuty(real_t(0));
         instance.setDuty(LERP(CLAMP(duty, real_t(-1), real_t(1)) * real_t(0.5) + real_t(0.5), min_value_duty, max_value_duty));
@@ -60,12 +64,19 @@ public:
 
 class Servo180: public PwmAngleServo{
 public:
-    Servo180(PwmChannelConcept & _instance):PwmAngleServo(_instance, real_t(0.025), real_t(0.125), real_t(180)){;}
+    Servo180(PwmChannelConcept & _instance):PwmAngleServo(_instance, 180){;}
 };
+
+
+class Servo270: public PwmAngleServo{
+public:
+    Servo270(PwmChannelConcept & _instance):PwmAngleServo(_instance, 270){;}
+};
+
 
 class Servo360: public PwmSpeedServo{
 public:
-    Servo360(PwmChannelConcept & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), real_t(360)){;}
+    Servo360(PwmChannelConcept & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), 270){;}
 };
 
 

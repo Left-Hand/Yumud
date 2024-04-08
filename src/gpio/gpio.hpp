@@ -3,7 +3,7 @@
 #define __GPIO_HPP__
 
 #include "bitband.h"
-#include "port.hpp"
+#include "port_concept.hpp"
 #include "gpio_enums.hpp"
 
 #ifndef MCU_V
@@ -56,7 +56,7 @@ public:
         pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
         }
 
-    Gpio(Port & _port, const Pin _pin):Gpio(_port.getInstance(), _pin){;}
+    // Gpio(Port & _port, const Pin _pin):Gpio(_port.instance, _pin){;}
     ~Gpio(){};
 
     __fast_inline void set()override{instance->BSHR = pin;}

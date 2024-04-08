@@ -38,7 +38,7 @@ __interrupt void TIM##x##_TRG_COM_IRQHandler(void){\
 __interrupt void TIM##x##_CC_IRQHandler(void){\
     for(uint8_t it = (uint8_t)Timer::IT::CC1; it <= (uint8_t)Timer::IT::CC4; it <<= 1){\
         if(TIM_GetITStatus(TIM##x, it)){\
-            auto & cb = cbs##x[CTZ((uint8_t)Timer::IT::CC4)];\
+            auto & cb = cbs##x[CTZ(it)];\
             if(cb) cb();\
             TIM_ClearITPendingBit(TIM##x, it);\
         }\
@@ -55,7 +55,7 @@ extern "C"{\
 __interrupt void TIM##x##_IRQHandler(void){\
     for(uint8_t it = (uint8_t)Timer::IT::Update; it <= (uint8_t)Timer::IT::CC4; it <<= 1){\
         if(TIM_GetITStatus(TIM##x, it)){\
-            auto & cb = cbs##x[CTZ((uint8_t)Timer::IT::CC4)];\
+            auto & cb = cbs##x[CTZ(it)];\
             if(cb) cb();\
             TIM_ClearITPendingBit(TIM##x, it);\
         }\

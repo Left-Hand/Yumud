@@ -96,17 +96,29 @@ public:
 };
 
 class GenericTimer:public BasicTimer{
+protected:
+    TimerOC channels[4];
 public:
-    GenericTimer(TIM_TypeDef * _base):BasicTimer(_base){;}
+    GenericTimer(TIM_TypeDef * _base):BasicTimer(_base),
+            channels({
+                TimerOC(instance, TimerOC::Channel::CH1),
+                TimerOC(instance, TimerOC::Channel::CH2),
+                TimerOC(instance, TimerOC::Channel::CH3),
+                TimerOC(instance, TimerOC::Channel::CH4)
+            }){;}
     void initAsEncoder(const TimerMode mode = TimerMode::Up);
     void enableSingle(const bool _single = true);
-    TimerOC getChannel(const TimerOC::Channel ch){return TimerOC(instance, ch);}
+    // TimerOC getChannel(const TimerOC::Channel ch){return TimerOC(instance, ch);}
+    virtual TimerOC & operator [](const int index){return channels[CLAMP(index, 1, 4) - 1];}
+    virtual TimerOC & operator [](const TimerOC::Channel ch){return channels[(uint8_t)ch >> 1];}
     GenericTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
 };
 
 class AdvancedTimer:public GenericTimer{
 protected:
     uint8_t caculate_dead_zone(uint32_t ns);
+
+    TimerOC co_channels[3];
 public:
 
     enum class LockLevel:uint16_t{
@@ -119,7 +131,28 @@ public:
     // Bdtr getBdtr();
     void initBdtr(const LockLevel level = LockLevel::Off, const uint32_t ns = 200);
     void setDeadZone(const uint32_t ns);
-    AdvancedTimer(TIM_TypeDef * _base):GenericTimer(_base){;}
+
+    TimerOC & operator [](const int index) override{
+        bool is_co = index < 0;
+        if(is_co) return co_channels[CLAMP(-index, 1, 3) - 1];
+        else return channels[CLAMP(index, 1, 4) - 1];
+    }
+
+    TimerOC & operator [](const TimerOC::Channel ch) override {
+        bool is_co = (uint8_t) ch & 0b1;
+        if(is_co){
+            return co_channels[((uint8_t)ch - 1) >> 1];
+        }else{
+            return channels[(uint8_t)ch >> 1];
+        }
+    }
+    
+    AdvancedTimer(TIM_TypeDef * _base):GenericTimer(_base),
+            co_channels({
+                TimerOC(instance, TimerOC::Channel::CH1N),
+                TimerOC(instance, TimerOC::Channel::CH2N),
+                TimerOC(instance, TimerOC::Channel::CH3N),
+            }){;}
     AdvancedTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
 };
 

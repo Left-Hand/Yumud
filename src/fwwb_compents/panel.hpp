@@ -132,7 +132,17 @@ public:
     bool shot = false;
 
     Color from_hp_to_color(const uint8_t & _hp){
-        return Color::from_hsv(real_t(MAX(_hp, 0)) / max_hp * real_t(0.6666), real_t(1), real_t(1));
+        // return Color::from_hsv(real_t(MAX(_hp, 0)) / max_hp * real_t(0.6666), real_t(1), real_t(1));
+        switch(_hp){
+        case 0:
+            return Color(1,0,0);
+        case 1:
+            return Color(0,1,0);
+        case 2:
+            return Color(0,0,1);
+        default:
+            return Color();
+        }
     }
 
     void sw(const StateMachine & _sm){
@@ -184,7 +194,7 @@ public:
                 hp = 0;
                 sw(StateMachine::DIED);
             }else if(target.isShotted()){
-                hp --;
+                hp = MAX(0, hp - 1);
                 if(hp > 0) sw(StateMachine::SHOTTED);
                 else sw(StateMachine::DIED);
                 shot = true;
