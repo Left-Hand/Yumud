@@ -8,20 +8,44 @@
 #define SUPPORT_VTF
 #endif
 
-class NvicRequest{
-protected:
-    const IRQn irq;
+struct NvicPriority{
     const uint8_t pre;
     const uint8_t sub;
-public:
-    NvicRequest(const IRQn & _irq, const uint8_t & _pre, const uint8_t & _sub):
-            irq(_irq), pre(_pre), sub(_sub){;}
+
+    NvicPriority(const uint8_t _pre, const uint8_t _sub):pre(_pre), sub(_sub){;}
+
+    static void enable(const NvicPriority & request, const IRQn _irq, const bool en = true){
+        NVIC_InitTypeDef NVIC_InitStructure = {0};
+        NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)_irq;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = request.pre;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = request.sub;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = en;
+        NVIC_Init(&NVIC_InitStructure);
+    }
+};
+
+
+struct NvicRequest:public NvicPriority{
+
+    const IRQn irq;
+// public:
+    NvicRequest(const uint8_t _pre, const uint8_t _sub, const IRQn _irq = IRQn::Software_IRQn):
+            NvicPriority(_pre, _sub), irq(_irq){;}
 
     void enable(const bool & en = true){
         NVIC_InitTypeDef NVIC_InitStructure = {0};
         NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)irq;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = pre;
         NVIC_InitStructure.NVIC_IRQChannelSubPriority = sub;
+        NVIC_InitStructure.NVIC_IRQChannelCmd = en;
+        NVIC_Init(&NVIC_InitStructure);
+    }
+
+    static void enable(const NvicRequest & request, const bool en = true){
+        NVIC_InitTypeDef NVIC_InitStructure = {0};
+        NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)request.irq;
+        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = request.pre;
+        NVIC_InitStructure.NVIC_IRQChannelSubPriority = request.sub;
         NVIC_InitStructure.NVIC_IRQChannelCmd = en;
         NVIC_Init(&NVIC_InitStructure);
     }

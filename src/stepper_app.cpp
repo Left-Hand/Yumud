@@ -88,9 +88,9 @@ void stepper_app(){
     auto modem = SimpleModem(modem_pwm_out);
     modem.init();
 
-    timer1.enableIt(Timer::IT::Update, 0, 0);
+    timer1.enableIt(Timer::IT::Update, NvicRequest(0, 0));
     timer1.bindCb(Timer::IT::Update, [&motor, & modem](){
-        motor.closeLoop();
+        motor.run();
         static uint8_t cycle = 0;
         cycle++;
         if(cycle == 10){
@@ -103,7 +103,7 @@ void stepper_app(){
     leds.init();
 
     Gpio trigGpioA(GPIOA, Pin::_9);
-    ExtiChannel trigExtiCHA(trigGpioA, 1, 0, ExtiChannel::Trigger::RisingFalling);
+    ExtiChannel trigExtiCHA(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     CaptureChannelExti capA(trigExtiCHA, trigGpioA);
     SimpleDeModem demodemA(capA, mo_freq);
     PanelTarget panelTargetA(demodemA, 2, 0);
@@ -111,7 +111,7 @@ void stepper_app(){
     PanelLed panelLedA(leds[0]);
 
     Gpio trigGpioB(GPIOB, Pin::_12);
-    ExtiChannel trigExtiCHB(trigGpioB, 1, 1, ExtiChannel::Trigger::RisingFalling);
+    ExtiChannel trigExtiCHB(trigGpioB, NvicPriority(1, 1), ExtiChannel::Trigger::RisingFalling);
     CaptureChannelExti capB(trigExtiCHB, trigGpioB);
     SimpleDeModem demodemB(capB, mo_freq);
     PanelTarget panelTargetB(demodemB, 2, 1);
@@ -162,111 +162,65 @@ void stepper_app(){
 
 void stepper_app_new(){
     uart1.init(115200);
+    logger.setEps(4);
 
     can1.init(Can::BaudRate::Mbps1, 1);
 
-    spi1.init(18000000);
-    spi1.bindCsPin(Gpio(GPIOA, Pin::_15), 0);
-
-    SpiDrv mt6816_drv(spi1, 0);
-    MT6816 mt6816(mt6816_drv);
-    // MA730 ma730(mt6816_drv);
-    // ma730.setDirection(true);
-
-    logger.setEps(4);
-
+    spi1.init(9000000);
+    spi1.bindCsPin(portA[15], 0);
 
     timer3.init(38000);
 
-    // auto servo_pwm = PwmChannel(tim3ch1);
     PwmChannel pwmCoilA(timer3[3]);
     PwmChannel pwmCoilB(timer3[2]);
 
     Coil1 coilA(portA[10], portA[11], pwmCoilA);
     Coil1 coilB(portA[8], portA[9], pwmCoilB);
     SVPWM2 svpwm(coilA, coilB);
+    svpwm.init();
+
+
+    SpiDrv mt6816_drv(spi1, 0);
+    MT6816 mt6816(mt6816_drv);
+    Odometer odo(mt6816,50);
+    odo.init();
+
+    auto pos_pid = PID_t<real_t>(real_t(10), real_t(), real_t(700));
+    pos_pid.setClamp(real_t(0.35));
+
+    MotorWithFoc motor(svpwm, odo, pos_pid);
+    motor.setMaxCurrent(real_t(0.15));
 
     auto modem_pwm_out = PwmChannel(timer3[1]);
     auto modem = SimpleModem(modem_pwm_out);
     modem.init();
 
-    svpwm.init();
-    svpwm.setABCurrent(real_t(0.8), real_t(0));
-    delay(100);
-    Odometer odo(mt6816,50);
-    odo.locateElecrad();
-    odo.locateAbsolutely(real_t(0.19));
-    svpwm.setABCurrent(real_t(0), real_t(0));
-    // while(true){
-    //     svpwm.setABCurrent(cos(200*t)*0.2, sin(200*t)*0.2);
-    //     odo.update();
-    //     logger.println(odo.getPosition().value, mt6816.getPositionData());
-    //     Sys::reCalculateTime();
-    // }
-
-
-
-
-
-    // timer3.init(50);
-    // uint32_t raw_period = 144000000 / 50;
-    // uint16_t cycle = 1;
-    // while(raw_period / cycle > 16384){
-    //     cycle++;
-    // }
-
-    // timer3.init(raw_period / cycle, cycle);
-
     timer2.init(14400, 200);
-    // timer3.enableIt
-
-    // if(Sys::getChipIdCrc() == 4127488304){
-    // // logger.println(1);
-    // volatile String str = String(1);
-    // // uart1.println(str);
-    // // USART1->DATAR = '1';
-    // // delay(1);
-    // // USART1->DATAR = '\r';
-    // // delay(1);
-    // // USART1->DATAR = '\n';
-    // }
-    // logger.println(Sys::getChipIdCrc());
-    // logger.println("hihigyuhkoihojiojo");
-    // timer3.init(raw_period / cycle,cycle);
-    // timer3.init(0, 18);
 
     auto servo_pwm = PwmChannel(timer2[1]);
+    timer2[1].init();
     auto servo = PwmAngleServo(servo_pwm, -180);
     servo.init();
 
 
-    //align motor
-    auto pos_pid = PID_t<real_t>(real_t(10), real_t(), real_t(700));
-    pos_pid.setClamp(real_t(0.35));
-    //setup motor
-    MotorWithFoc motor(svpwm, odo, pos_pid);
-    motor.setMaxCurrent(real_t(0.15));
-
-
-    Gpio ws_out(GPIOB, Pin::_1);
-    WS2812Chain<3> leds(ws_out);
+    WS2812Chain<2> leds(portB[1]);
     leds.init();
 
-    Gpio trigGpioA(GPIOA, Pin::_2);
-    ExtiChannel trigExtiCHA(trigGpioA, 1, 0, ExtiChannel::Trigger::RisingFalling);
+    Gpio & trigGpioA = portA[2];
+    ExtiChannel trigExtiCHA(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     CaptureChannelExti capA(trigExtiCHA, trigGpioA);
     SimpleDeModem demodemA(capA, mo_freq);
     PanelTarget panelTargetA(demodemA, 2, 0);
 
     PanelLed panelLedA(leds[0]);
 
-    Gpio trigGpioB(GPIOA, Pin::_1);
-    ExtiChannel trigExtiCHB(trigGpioB, 1, 1, ExtiChannel::Trigger::RisingFalling);
+    Gpio & trigGpioB = portA[1];
+    ExtiChannel trigExtiCHB(trigGpioB, NvicPriority(1, 1), ExtiChannel::Trigger::RisingFalling);
     CaptureChannelExti capB(trigExtiCHB, trigGpioB);
     SimpleDeModem demodemB(capB, mo_freq);
     PanelTarget panelTargetB(demodemB, 2, 1);
 
-    PanelLed panelLedB(leds[2]);
+    PanelLed panelLedB(leds[-1]);
 
     PanelUnit panelUnitA(panelTargetA, panelLedA);
     PanelUnit panelUnitB(panelTargetB, panelLedB);
@@ -275,12 +229,30 @@ void stepper_app_new(){
     can_station.init();
     TargetStation target_station(can_station, panelUnitA, panelUnitB);
     target_station.init();
-    AttackStation attack_station(target_station, motor, servo, modem);
-    attack_station.init();
+    AttackStation station(target_station, motor, servo, modem);
+    station.init();
 
-    timer3.enableIt(Timer::IT::Update, 0, 0);
-    timer3.bindCb(Timer::IT::Update, [&motor, &modem](){
-        motor.closeLoop();
+    auto & bled = portC[13];
+    bled.OutPP();
+
+
+
+
+
+    svpwm.setABCurrent(real_t(0.4), real_t(0));
+    delay(100);
+
+    odo.inverse(false);
+    odo.locateElecrad();
+    odo.locateAbsolutely(real_t(0.19));
+    svpwm.setABCurrent(real_t(0), real_t(0));
+    // motor.enable(false);
+    // motor.open();
+
+    timer1.init(38000);
+    // timer1.enableIt(Timer::IT::Update, NvicPriority(0, 0));
+    timer1.bindCb(Timer::IT::Update, [&motor, &modem](){
+        motor.run();
         static uint8_t cycle = 0;
         cycle++;
         if(cycle == 10){
@@ -289,41 +261,34 @@ void stepper_app_new(){
         }
     });
 
-    Gpio bled(GPIOC, Pin::_13);
-    bled.OutPP();
     volatile uint32_t last_blink_millis = 0;
     while(true){
-        if((millis() > last_blink_millis) and (millis() % 200 == 0)){
-            bled= !bled;
-            last_blink_millis = millis();
-        }
+        // if((millis() > last_blink_millis) and (millis() % 16 == 0)){
+        //     bled= !bled;
+        //     leds.refresh();
+        //     last_blink_millis = millis();
+        // }
 
-        // attack_station.shotMs(200);
-        if(modem.isIdle())modem.sendCode(3);
-        // modem_pwm_out = real_t(0.1);
-        // TIM3->CH1CVR = TIM3->ATRLR >> 3;
-        logger.println(TIM3->CH1CVR);
-        // logger.println(odo.getPosition().toString());
-        // delayMicroseconds(500);
-        // target = floor(t*16)/4 + 0.125;
-        // real_t target = real_t(0.015*cos(4 *t));
-        // logger.println(TIM3->CH2CVR);
-        // odo.update();
-        // motor.closeLoop();
-        motor.trackLapPos(0.2*sin(t));
-        // logger.println(int(mt6816.getPosition()));
-        // logger.println(target);
-        // target = real_t(0);
-        // target = 6 * sin(t);
-        // servo.setAngle(4* sin(4*t) + 92);
-// servo.setAngle(4* sin(t) + 92);
-        // modem.tick();
-        // if(modem.isIdle())
-        // attack_station.setFace(Vector2(real_t(0.2), real_t(0)).rotate(real_t(PI / 4) + real_t(PI / 2) * int(t)));
-        // attack_station.run();
-        // can1.write(CanMsg((uint8_t)(Command::ACTIVE) << 4, true));
-        // target_station.run();
+        // station.run();
+        // station.setYaw(sin(t));
+        // motor.run();
 
+
+        // logger.println(odo.getPosition(), odo.getElecRad(), mt6816.getPositionData());
+        // logger.println(int(timer3[2]), int(timer3[3]));
+        // leds[0] = Color_t<real_t>(1, 0, 0, 1);
+        // leds.refresh();
+        // if(modem.isIdle())modem.sendCode(2);
+        
+        // motor.enable(false);
+        // logger.println(int(mt6816.getPositionData()));
+        odo.update();
+        motor.trackLapPos(0.5 + 0.4 * sin(t));
+        // motor.trackCurr(real_t(0.1));
+
+        real_t elecrad = odo.getElecRad() + PI / 2;
+        svpwm.setABCurrent(0.04 * cos(elecrad), 0.04 * sin(elecrad));
+        // servo.setDuty(0.5 + 0.5 * sin(t));
         Sys::reCalculateTime();
     }
 }

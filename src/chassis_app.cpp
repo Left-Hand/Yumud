@@ -22,7 +22,7 @@ void chassis_app(){
 
 
     auto trigGpioA = Gpio(GPIOA, Pin::_4);;
-    auto trigExtiCHA = ExtiChannel(trigGpioA, 1, 0, ExtiChannel::Trigger::RisingFalling);
+    auto trigExtiCHA = ExtiChannel(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     auto capA = CaptureChannelExti(trigExtiCHA, trigGpioA);
     auto demodemA = SimpleDeModem(capA, mo_freq);
     auto panelTargetA = PanelTarget(demodemA, 2, 0);
@@ -31,7 +31,7 @@ void chassis_app(){
 
 
     auto trigGpioB = Gpio(GPIOA, Pin::_0);
-    auto trigExtiCHB = ExtiChannel(trigGpioB, 1, 1, ExtiChannel::Trigger::RisingFalling);
+    auto trigExtiCHB = ExtiChannel(trigGpioB, NvicPriority(1, 1), ExtiChannel::Trigger::RisingFalling);
     auto capB = CaptureChannelExti(trigExtiCHB, trigGpioB);
     auto demodemB = SimpleDeModem(capB, mo_freq);
     auto panelTargetB = PanelTarget(demodemB, 2, 1);
@@ -47,8 +47,8 @@ void chassis_app(){
     auto trigGpioL = Gpio(GPIOA, Pin::_5);
     auto trigGpioR = Gpio(GPIOB, Pin::_1);
 
-    auto trigExtiCHL = ExtiChannel(trigGpioL, 1, 3, ExtiChannel::Trigger::Rising);
-    auto trigExtiCHR = ExtiChannel(trigGpioR, 1, 4, ExtiChannel::Trigger::Rising);
+    auto trigExtiCHL = ExtiChannel(trigGpioL, NvicPriority(1, 3), ExtiChannel::Trigger::Rising);
+    auto trigExtiCHR = ExtiChannel(trigGpioR, NvicPriority(1, 4), ExtiChannel::Trigger::Rising);
     auto capL = CaptureChannelExti(trigExtiCHL, trigGpioL);
     auto capR = CaptureChannelExti(trigExtiCHR, trigGpioR);
     capL.init();

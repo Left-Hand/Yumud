@@ -101,7 +101,6 @@ protected:
         __nopn(32);
     }
     void sendCode(const bool & state){
-        __disable_irq();
         if(state){
             gpio.set();
             delayLong();
@@ -113,7 +112,7 @@ protected:
             gpio.clr();
             delayLong();
         }
-        __enable_irq();
+
     }
 
     void sendReset(){
@@ -134,11 +133,13 @@ public:
         gpio.OutPP();
     }
 
-    WS2812Single & operator[](const uint16_t index){
-        return leds.at(index);;
+    WS2812Single & operator[](const int index){
+        if(index < 0) return leds.at(size + index);
+        else return leds.at(index);
     }
 
     void refresh(){
+        __disable_irq();
         sendReset();
 
         for(auto & led : leds){
@@ -151,7 +152,9 @@ public:
             sendByte(g >> 8);
             sendByte(r >> 8);
             sendByte(b >> 8);
+
         }
+        __enable_irq();
     }
 };
 

@@ -22,7 +22,7 @@ protected:
 
     Encoder & encoder;
     uint8_t poles;
-    bool rsv = true;
+    bool rsv = false;
 
     real_t position2rad(const real_t & position){
         real_t frac1 = real_t(poles) * frac(position);
@@ -49,6 +49,7 @@ public:
     Odometer(Encoder & _encoder, const uint8_t _poles):encoder(_encoder), poles(_poles){;}
 
     void init(){
+        // encoder.init();
     }
     void locateRelatively(const real_t & offset = real_t(0)){
         locate(offset);
@@ -58,6 +59,9 @@ public:
         locate(getLapPosition() + offset);
     }
 
+    void inverse(const bool en = true){
+        rsv = en;
+    }
 
     void locateElecrad(){
         elecRadOffset = position2rad(getLapPosition());

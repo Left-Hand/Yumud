@@ -64,7 +64,7 @@ protected:
         PF=5
     };
 
-    Source from_gpio_to_source(const Gpio & gpio){
+    static Source from_gpio_to_source(const Gpio & gpio){
         switch((uint32_t)gpio.instance){
             default:
             #ifdef HAVE_GPIOA
@@ -94,7 +94,11 @@ protected:
         }
     }
 
-    IRQn from_line_to_irqn(const Line & line){
+    static Line from_gpio_to_line(const Gpio & gpio){
+        return gpio.isValid() ? (Line)(1 << gpio.getIndex()):Line::_None;
+    }
+    
+    static IRQn from_line_to_irqn(const Line & line){
         switch(line){
             case Line::_0:
                 return EXTI0_IRQn;
@@ -125,26 +129,28 @@ protected:
     }
 
     const Line line;
-    Source source = Source::PA;
-    uint8_t gpio_index = -1;
-    const uint8_t pre;
-    const uint8_t sub;
+
+    Gpio * gpio;
+    NvicPriority priority;
     const Trigger trigger;
     const Mode mode;
 
     friend class CaptureChannelExti;
 public:
-    ExtiChannel(const Line & _line, const uint8_t & _pre, const uint8_t & sub,
+    ExtiChannel(const Line & _line, const NvicPriority & _priority,
             const Trigger & _trigger = Trigger::Rising, const Mode & _mode = Mode::Interrupt):
-            line(_line), pre(_pre), sub(sub), trigger(_trigger), mode(_mode){;}
-    ExtiChannel(const Gpio & gpio, const uint8_t & _pre, const uint8_t & sub,
+            line(_line), gpio(nullptr), priority(_priority), trigger(_trigger), mode(_mode){;}
+    ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
             const Trigger & _trigger = Trigger::Rising,  const Mode & _mode = Mode::Interrupt):
-            line(gpio.isValid() ? (Line)(1 << gpio.getIndex()):Line::_None), source(from_gpio_to_source(gpio)),
-            gpio_index(gpio.getIndex()),pre(_pre),sub(sub), trigger(_trigger),  mode(_mode){;}
+            line(from_gpio_to_line(_gpio)), gpio(&_gpio),priority(_priority), trigger(_trigger),  mode(_mode){
+            }
 
     void init(){
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-        if(gpio_index > 0) GPIO_EXTILineConfig((uint8_t)source, gpio_index);
+        if(gpio){
+            gpio->InPullDN();
+            if(gpio->getIndex() > 0) GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(*gpio), gpio->getIndex());
+        }
 
         EXTI_InitTypeDef EXTI_InitStructure = {0};
 
@@ -163,8 +169,7 @@ public:
     void bindCb(const std::function<void(void)> & func);
 
     void enableIt(const bool en = true){
-        NvicRequest request(from_line_to_irqn(line), pre, sub);
-        request.enable(en);
+        NvicPriority::enable(priority, from_line_to_irqn(line));
     }
 };
 

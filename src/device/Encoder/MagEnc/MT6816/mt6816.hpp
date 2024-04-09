@@ -12,7 +12,7 @@
 class MT6816:public MagEncoder{
 protected:
     SpiDrv & bus_drv;
-
+    uint16_t last_data;
     enum class RegAddress:uint8_t{
 
     };
@@ -36,8 +36,11 @@ public:
         bus_drv.transmit(dataRx[0], dataTx[0]);
         bus_drv.transmit(dataRx[1], dataTx[1]);
 
-        return ((dataRx[0] & 0x00FF) << 8) | (dataRx[1] & 0x00FC);
-
+        uint16_t new_data = ((dataRx[0] & 0x00FF) << 8) | (dataRx[1] & 0x00FC);
+        // if((new_data > 300)){
+            last_data = new_data;
+        // }
+        return last_data;
     }
 
 };

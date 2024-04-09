@@ -83,11 +83,17 @@ public:
     void init(const uint16_t period, const uint16_t cycle, const TimerMode mode = TimerMode::Up);
     void enable(const bool en = true);
 
-    void enableIt(const IT & it,const uint8_t & pre = 0, const uint8_t & sub = 0, const bool & en = true){
-        NvicRequest request(ItToIrq(it), pre, sub);
-        request.enable(en);
+    // void enableIt(const IT & it,const uint8_t & pre = 0, const uint8_t & sub = 0, const bool & en = true){
+    //     NvicRequest request(ItToIrq(it), pre, sub);
+    //     request.enable(en);
+    //     TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
+    // }
+
+    void enableIt(const IT it,const NvicPriority & request, const bool en = true){
+        NvicPriority::enable(request, ItToIrq(it), en);
         TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
     }
+
     void enableSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
 
     virtual void bindCb(const IT & ch, const std::function<void(void)> & cb) = 0;

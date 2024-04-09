@@ -14,7 +14,9 @@ public:
     PwmServo(PwmChannelConcept & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty
             ):instance(_instance), min_value_duty(_min_value_duty), max_value_duty(_max_value_duty){;}
 
-    void init() override {;}
+    void init() override {
+        instance.init();
+    }
 
     void enable(const bool & en = true) override {
         enabled = en;

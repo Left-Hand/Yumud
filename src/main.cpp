@@ -212,7 +212,7 @@ int main(){
     // adc1.setRegularTrigger(AdcHw::RegularTrigger::SW);
     // adc1.start();
 
-    ExtiChannel channel(TrigA, 2,1);
+    ExtiChannel channel(TrigA, NvicPriority(2,1));
 
 
     // adc1.init();

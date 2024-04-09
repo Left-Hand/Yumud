@@ -19,12 +19,13 @@ protected:
     };
 
     enum class CtrlMethod:uint8_t{
+        OPEN,
         LAPPOS,
         POS,
         VEL,
         CURR
     }
-    ctrl_method = CtrlMethod::LAPPOS;
+    ctrl_method = CtrlMethod::OPEN;
 public:
     void init() override{;}
     void enable(const bool & en = true) override{
@@ -35,9 +36,11 @@ public:
         pos_pid.setClamp(_max_current);
     }
 
-    void closeLoop(){
+    void run(){
         odo.update();
         switch(ctrl_method){
+        case CtrlMethod::OPEN:
+            break;
         case CtrlMethod::LAPPOS:
             {
                 real_t real_pos = odo.getPosition();
@@ -70,7 +73,7 @@ public:
         ctrl_method = CtrlMethod::VEL;
     }
 
-    void trackOmega(const real_t & targ){
+    void trackCurr(const real_t & targ){
         target_curr = targ;
         ctrl_method = CtrlMethod::CURR;
     }
@@ -78,6 +81,10 @@ public:
     void trackLapPos(const real_t & targ){
         target_pos = targ;
         ctrl_method = CtrlMethod::LAPPOS;
+    }
+
+    void open(){
+        ctrl_method = CtrlMethod::OPEN;
     }
 
     real_t getPosition() override{

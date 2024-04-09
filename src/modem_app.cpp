@@ -44,7 +44,7 @@ void modem_app(){
     led0.setBrightness(real_t(0.1));
 
     auto trigGpioA = Gpio(GPIOA, Pin::_0);
-    auto trigExtiCHA = ExtiChannel(trigGpioA, 1, 0, ExtiChannel::Trigger::RisingFalling);
+    auto trigExtiCHA = ExtiChannel(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     auto capA = CaptureChannelExti(trigExtiCHA, trigGpioA);
     auto demodemA = SimpleDeModem(capA, mo_freq);
     auto panelTargetA = PanelTarget(demodemA, 2, 0);
@@ -53,7 +53,7 @@ void modem_app(){
 
 
     auto trigGpioB = Gpio(GPIOA, Pin::_4);
-    auto trigExtiCHB = ExtiChannel(trigGpioB, 1, 0, ExtiChannel::Trigger::RisingFalling);
+    auto trigExtiCHB = ExtiChannel(trigGpioB, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     auto capB = CaptureChannelExti(trigExtiCHB, trigGpioB);
     auto demodemB = SimpleDeModem(capB, mo_freq);
     auto panelTargetB = PanelTarget(demodemB, 2, 1);
