@@ -7,7 +7,7 @@
 
 class Encoder{
 public:
-    virtual real_t getPosition() = 0;
+    virtual real_t getLapPosition() = 0;
 };
 
 class IncrementalEncoder: public Encoder{

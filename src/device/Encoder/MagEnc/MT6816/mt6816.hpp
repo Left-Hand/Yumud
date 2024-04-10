@@ -12,18 +12,49 @@
 class MT6816:public MagEncoder{
 protected:
     SpiDrv & bus_drv;
-    uint16_t last_data;
-    enum class RegAddress:uint8_t{
+    real_t last_position;
 
+    bool use_verification;
+
+    struct Semantic{
+        union{
+            struct{
+                uint16_t pc:1;
+                uint16_t no_mag:1;
+                uint16_t data_14bit:14;
+            };
+            uint16_t m_raw;
+        };
+
+
+        Semantic(const uint16_t & raw):m_raw(raw){;}
     };
     // void writeReg()
 public:
     MT6816(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
 
-    real_t getPosition() override{
-        real_t position;
-        u16_to_uni(getPositionData(), position);
-        return position;
+    real_t getLapPosition() override{
+
+        uint16_t raw = getPositionData();
+        Semantic semantic = Semantic(raw);
+
+        if(use_verification){
+            uint8_t count = 0;
+
+            raw -= semantic.pc;
+            while(raw){//Brian Kernighan algorithm
+                raw &= raw - 1;
+                ++count;
+            }
+
+            if(count % 2 == semantic.pc){
+                u16_to_uni(semantic.data_14bit << 2, last_position);
+            }
+            return last_position;
+        }else{
+            u16_to_uni(semantic.data_14bit << 2, last_position);
+            return last_position;
+        }
     }
 
     uint16_t getPositionData(){
@@ -36,11 +67,11 @@ public:
         bus_drv.transmit(dataRx[0], dataTx[0]);
         bus_drv.transmit(dataRx[1], dataTx[1]);
 
-        uint16_t new_data = ((dataRx[0] & 0x00FF) << 8) | (dataRx[1] & 0x00FC);
-        // if((new_data > 300)){
-            last_data = new_data;
-        // }
-        return last_data;
+        return((dataRx[0] & 0x00FF) << 8) | (dataRx[1]);
+    }
+
+    void enableVerification(const bool & en = true){
+        use_verification = en;
     }
 
 };

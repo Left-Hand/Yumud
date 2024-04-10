@@ -115,9 +115,12 @@
           "thirdparty/easylogger/plugins/file",
           "thirdparty/easylogger/plugins/flash",
           "src/debug",
-          "src/device"
+          "src/device",
+          "src/clock"
         ],
-        "libList": [],
+        "libList": [
+          "src/clock"
+        ],
         "sourceDirList": [],
         "defineList": [
           "WCH",

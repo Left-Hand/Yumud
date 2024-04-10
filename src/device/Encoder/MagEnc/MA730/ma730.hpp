@@ -147,7 +147,7 @@ public:
         uni_to_u16(frac(position), data);
         setZeroData(data);
     }
-    real_t getPosition() override{
+    real_t getLapPosition() override{
         uint16_t data = 0;
         directRead(data);
         real_t ret;

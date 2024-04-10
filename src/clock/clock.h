@@ -36,6 +36,8 @@ extern int tick_per_us;
 #define MicroTrim 0
 #define NanoTrim 300
 
+extern volatile uint32_t msTick;
+
 __attribute__ ((weak)) uint32_t GetTick(void);
 __attribute__ ((weak)) void SetTick(uint32_t _tick);
 uint32_t millis(void);

@@ -183,7 +183,7 @@ void Can1::enableHwReTransmit(const bool en){
 }
 
 bool Can1::write(const CanMsg & msg){
-    uint8_t mbox = CAN_Transmit(CAN1, msg.toTxMessage());
+    uint8_t mbox = CAN_Transmit(CAN1, msg.toTxMessagePtr());
     if(mbox == CAN_TxStatus_NoMailBox) return false;
 
     pending_tx_msg_ptrs[mbox] = std::make_unique<CanMsg>(msg);
@@ -296,13 +296,13 @@ void Save_CAN1_Msg(const uint8_t fifo_index){
     // if(CAN_MessagePending(CAN1, fifo_index) == 0) return;
 
     // std::unique_ptr<CanMsg> rx_msg = std::make_unique<CanMsg>();
-    // CAN_Receive(CAN1, fifo_index, rx_msg->toRxMessage());
+    // CAN_Receive(CAN1, fifo_index, rx_msg->toRxMessagePtr());
     // pending_rx_msgs.addData(std::move(rx_msg));
     CanMsg rx_msg;
 
     if(CAN_MessagePending(CAN1, fifo_index) == 0) return;
 
-    CAN_Receive(CAN1, fifo_index, rx_msg.toRxMessage());
+    CAN_Receive(CAN1, fifo_index, rx_msg.toRxMessagePtr());
     pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
 }
 
@@ -519,7 +519,7 @@ void CAN1_SCE_IRQHandler(void){
 // }
 
 // bool Can1::write(const CanMsg & msg){
-//     uint8_t mbox = CAN_Transmit(CAN1, msg.toTxMessage());
+//     uint8_t mbox = CAN_Transmit(CAN1, msg.toTxMessagePtr());
 //     if(mbox == CAN_TxStatus_NoMailBox) return false;
 
 //     pending_tx_msg_ptrs[mbox] = std::make_unique<CanMsg>(msg);
@@ -634,7 +634,7 @@ void CAN1_SCE_IRQHandler(void){
 
 //     if(CAN_MessagePending(CAN1, fifo_index) == 0) return;
 
-//     CAN_Receive(CAN1, fifo_index, rx_msg.toRxMessage());
+//     CAN_Receive(CAN1, fifo_index, rx_msg.toRxMessagePtr());
 //     pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
 // }
 

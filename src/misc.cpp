@@ -53,31 +53,13 @@ void GLobal_Reset(void){
 
 
 
-real_t CalculateFps(){
-    static real_t begin_t;
-    real_t dt = t - begin_t;
-    begin_t = t;
-    return dt ? real_t(1) / dt : real_t(0);
-}
+// real_t CalculateFps(){
 
-uint64_t Sys::getChipId(){
-    static uint32_t chip_id[2] = {
-        *(volatile uint32_t *)0x1FFFF7E8,
-        *(volatile uint32_t *)0x1FFFF7EC
-    };
-    return ((uint64_t)chip_id[1] << 32) | chip_id[0];
-}
-
-uint32_t Sys::getChipIdCrc(){
-    static uint32_t chip_id_crc = 0;
-    if(!chip_id_crc){
-        crc.init();
-        crc.clear();
-        uint64_t chip_id = getChipId();
-        chip_id_crc = crc.update({(uint32_t)chip_id, (uint32_t)(chip_id >> 32)});
-    }
-    return chip_id_crc;
-}
+//     static real_t begin_t;
+//     real_t dt = t - begin_t;
+//     begin_t = t;
+//     return dt ? real_t(1) / dt : real_t(0);
+// }
 
 void SysInfo_ShowUp(Printer & uart){
     RCC_ClocksTypeDef RCC_CLK;

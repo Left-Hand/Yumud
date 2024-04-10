@@ -4,8 +4,12 @@
 
 #include "simple_demodem.hpp"
 #include "src/device/CommonIO/Led/rgbLed.hpp"
+#include "src/system.hpp"
 
 namespace FWWB{
+
+using Sys::t;
+
 class PanelTarget{
 protected:
 // public:

@@ -101,6 +101,7 @@ protected:
         __nopn(32);
     }
     void sendCode(const bool & state){
+        __disable_irq();
         if(state){
             gpio.set();
             delayLong();
@@ -112,7 +113,8 @@ protected:
             gpio.clr();
             delayLong();
         }
-
+        __enable_irq();
+        __nopn(4);
     }
 
     void sendReset(){
@@ -139,7 +141,7 @@ public:
     }
 
     void refresh(){
-        __disable_irq();
+
         sendReset();
 
         for(auto & led : leds){
@@ -154,7 +156,7 @@ public:
             sendByte(b >> 8);
 
         }
-        __enable_irq();
+
     }
 };
 

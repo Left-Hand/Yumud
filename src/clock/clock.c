@@ -24,7 +24,8 @@ int tick_per_ms = 0;
 int tick_per_us = 0;
 
 
-__IO uint32_t msTick=0;
+volatile uint32_t msTick=0;
+
 __attribute__ ((weak)) uint32_t GetTick(void){
     return msTick;
 }
@@ -34,11 +35,6 @@ __attribute__ ((weak)) void SetTick(uint32_t _tick){
     msTick = _tick;
 }
 
-/**
-  * @brief  Function called wto read the current millisecond
-  * @param  None
-  * @retval None
-  */
 uint32_t millis(void)
 {
     return msTick;
@@ -71,8 +67,8 @@ void delay(uint32_t ms)
 
 void SysTick_Handler(void)
 {
-  msTick+=1;
-  SysTick->SR = 0;
+    msTick+=1;
+    SysTick->SR = 0;
 }
 
 void delayMicroseconds(uint32_t us)

@@ -5,6 +5,8 @@
 #include "device/Actuator/Coil/coil.hpp"
 
 class SVPWM{
+protected:
+    bool rsv = false;
 public:
     virtual void init() = 0;
     virtual void setDQCurrent(const real_t & dCurrentV, const real_t & qCurrentV, const real_t & prog) = 0;
@@ -31,7 +33,8 @@ public:
         coilB.setDuty(bCurrent);
     }
 
-    void setDQCurrent(const real_t & dCurrent, const real_t & qCurrent, const real_t & prog) override{
+    void setDQCurrent(const real_t & dCurrent, const real_t & _qCurrent, const real_t & prog) override{
+        real_t qCurrent = rsv ? - _qCurrent : _qCurrent;
         if(dCurrent){
             setABCurrent(
                 cos(prog) * dCurrent - sin(prog) * qCurrent,
@@ -50,6 +53,10 @@ public:
     void enable(const bool & en) override{
         coilA.enable(en);
         coilB.enable(en);
+    }
+
+    void inverse(const bool & en = true){
+        rsv = true;
     }
 };
 

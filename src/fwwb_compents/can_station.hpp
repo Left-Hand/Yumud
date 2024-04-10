@@ -2,7 +2,8 @@
 #define __FWWB_CAN_STATION_HPP__
 
 #include "src/bus/can/can1.hpp"
-#include "src/crc/crc.hpp"
+#include "src/system.hpp"
+
 #include "src/misc.h"
 #include "enums.hpp"
 #include <algorithm>
@@ -12,6 +13,7 @@
 #endif
 
 namespace FWWB{
+using Sys::t;
 static constexpr const char supported_manu[] = "Rstr1aN";
 
 static std::array<uint32_t, 14> sta_crcs = {

@@ -155,7 +155,6 @@ void UartHw::enableRxIt(const bool en){
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = sp;
     NVIC_InitStructure.NVIC_IRQChannelCmd = en;
     NVIC_Init(&NVIC_InitStructure);
-        USART_SendData(USART2, '!');
     USART_ITConfig(instance, USART_IT_RXNE, en);
 }
 

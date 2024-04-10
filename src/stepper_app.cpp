@@ -166,7 +166,7 @@ void stepper_app_new(){
 
     can1.init(Can::BaudRate::Mbps1, 1);
 
-    spi1.init(9000000);
+    spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
 
     timer3.init(38000);
@@ -179,13 +179,13 @@ void stepper_app_new(){
     SVPWM2 svpwm(coilA, coilB);
     svpwm.init();
 
-
     SpiDrv mt6816_drv(spi1, 0);
     MT6816 mt6816(mt6816_drv);
+    mt6816.enableVerification();
     Odometer odo(mt6816,50);
     odo.init();
 
-    auto pos_pid = PID_t<real_t>(real_t(10), real_t(), real_t(700));
+    auto pos_pid = PID_t<real_t>(real_t(4), real_t(), real_t(0));
     pos_pid.setClamp(real_t(0.35));
 
     MotorWithFoc motor(svpwm, odo, pos_pid);
@@ -235,23 +235,71 @@ void stepper_app_new(){
     auto & bled = portC[13];
     bled.OutPP();
 
+    uint8_t motor_code = 0;
 
+    switch(Sys::getChipIdCrc()){
+        case 3789686793:
+            motor_code = 1;
+            break;
+        case 181345611:
+            motor_code = 0;
+    }
+    logger.println(Sys::getChipIdCrc());
 
+    if(motor_code == 0){
+        odo.inverse(true);
+    }
+    // 
+    // odo.inverse(false);
+    // svpwm.inverse(true);
+    // svpwm.inverse(false);
+    odo.reset();
+    {
+        logger.println("Cali..");
 
+        constexpr int forwardpreturns = 2;
+        constexpr int forwardturns = 9;
+        constexpr int backwardpreturns = 4;
+        constexpr int backwardturns = 9;
+        constexpr int turnmircos = 32;
+        constexpr int dur = 600;
+        constexpr float cali_current = 0.6;
 
-    svpwm.setABCurrent(real_t(0.4), real_t(0));
-    delay(100);
+        for(int i = -forwardpreturns * turnmircos; i < forwardturns * turnmircos; i++){
 
-    odo.inverse(false);
-    odo.locateElecrad();
-    odo.locateAbsolutely(real_t(0.19));
+            if(i >= 0 && i % turnmircos == 0){//measureable
+                odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
+            }
+            real_t elecrad = i * real_t((TAU / turnmircos));
+            svpwm.setABCurrent(cos(elecrad) * cali_current, sin(elecrad) * cali_current);
+            delayMicroseconds(dur);
+        }
+
+        for(int i = -backwardpreturns * turnmircos; i < backwardturns * turnmircos; i++){
+
+            if(i >= 0 && i % turnmircos == 0){//measureable
+                odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
+            }
+            real_t elecrad = -i * real_t((TAU / turnmircos));
+            svpwm.setABCurrent(cos(elecrad) * cali_current, sin(elecrad) * cali_current);
+            delayMicroseconds(dur);
+        }
+
+        logger.println("Cali done");
+    }
+
+    if(motor_code == 1){
+        odo.locateAbsolutely(real_t(-0.01));
+    }else{
+        odo.locateAbsolutely(real_t(0.47));
+    }
     svpwm.setABCurrent(real_t(0), real_t(0));
     // motor.enable(false);
     // motor.open();
 
-    timer1.init(38000);
-    // timer1.enableIt(Timer::IT::Update, NvicPriority(0, 0));
-    timer1.bindCb(Timer::IT::Update, [&motor, &modem](){
+    timer4.init(38000);
+    timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
+    timer4.bindCb(Timer::IT::Update, [&motor, &modem](){
         motor.run();
         static uint8_t cycle = 0;
         cycle++;
@@ -263,31 +311,34 @@ void stepper_app_new(){
 
     volatile uint32_t last_blink_millis = 0;
     while(true){
-        // if((millis() > last_blink_millis) and (millis() % 16 == 0)){
-        //     bled= !bled;
-        //     leds.refresh();
-        //     last_blink_millis = millis();
-        // }
+        if((millis() > last_blink_millis) and (millis() % 16 == 0)){
+            bled= !bled;
+            leds.refresh();
+            last_blink_millis = millis();
+        }
 
-        // station.run();
+        station.run();
+        station.setFace(Vector2(real_t(0.1), real_t(0)).rotate(t));
         // station.setYaw(sin(t));
         // motor.run();
-
-
-        // logger.println(odo.getPosition(), odo.getElecRad(), mt6816.getPositionData());
         // logger.println(int(timer3[2]), int(timer3[3]));
         // leds[0] = Color_t<real_t>(1, 0, 0, 1);
         // leds.refresh();
         // if(modem.isIdle())modem.sendCode(2);
-        
-        // motor.enable(false);
-        // logger.println(int(mt6816.getPositionData()));
-        odo.update();
-        motor.trackLapPos(0.5 + 0.4 * sin(t));
-        // motor.trackCurr(real_t(0.1));
 
-        real_t elecrad = odo.getElecRad() + PI / 2;
-        svpwm.setABCurrent(0.04 * cos(elecrad), 0.04 * sin(elecrad));
+        // motor.enable(false);
+
+        // odo.update();
+        // motor.trackLapPos(sin(t) * 0);
+        // motor.trackLapPos(real_t(0));
+        // motor.trackCurr(real_t(0.1));
+        // odo.update();
+        // real_t elecrad = odo.getElecRad();
+        // real_t elecrad = odo.getElecRad();
+        // odo.update();
+        // logger.println(odo.getElecRad(), fmod(elecrad, real_t(TAU)));
+        // svpwm.setABCurrent(0.14 * sin(elecrad), 0.14 * cos(elecrad));
+        // svpwm.setDQCurrent(real_t(0), real_t(0.08), elecrad);
         // servo.setDuty(0.5 + 0.5 * sin(t));
         Sys::reCalculateTime();
     }

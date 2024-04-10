@@ -41,7 +41,7 @@ protected:
     }
 
     real_t getLapPosition(){
-        real_t undiredLapPostion = encoder.getPosition();
+        real_t undiredLapPostion = encoder.getLapPosition();
         if (rsv) return real_t(real_t(1) - undiredLapPostion);
         else return real_t(undiredLapPostion);
     }
@@ -59,12 +59,22 @@ public:
         locate(getLapPosition() + offset);
     }
 
+    void reset(){
+        lapPosition = real_t(0);
+        lapPositionLast = real_t(0);
+
+        accPosition = real_t(0);
+        accPositionLast = real_t(0);
+        elecRad = real_t(0);
+        elecRadOffset = real_t(0);
+    }
+
     void inverse(const bool en = true){
         rsv = en;
     }
 
-    void locateElecrad(){
-        elecRadOffset = position2rad(getLapPosition());
+    void locateElecrad(const real_t & percentage = real_t(1)){
+        elecRadOffset += position2rad(getLapPosition()) * percentage;
     }
 
     void update(){

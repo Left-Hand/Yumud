@@ -30,6 +30,7 @@ public:
     void init() override{;}
     void enable(const bool & en = true) override{
         svpwm.enable(en);
+        enabled = en;
     }
     MotorWithFoc(SVPWM & _svpwm, Odometer & _odo, PID_t<real_t> & _pos_pid):svpwm(_svpwm), odo(_odo), pos_pid(_pos_pid){;}
     void setMaxCurrent(real_t _max_current){
@@ -37,6 +38,7 @@ public:
     }
 
     void run(){
+        if(!enabled) return;
         odo.update();
         switch(ctrl_method){
         case CtrlMethod::OPEN:

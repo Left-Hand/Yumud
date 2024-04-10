@@ -3,7 +3,6 @@
 void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id2){
     CAN_FilterInitTypeDef	CAN_FilterInitStructure;
 
-    CAN1->FWR |= 1;            //过滤器组工作在初始化模式
     CAN_FilterInitStructure.CAN_FilterNumber = FGrop;				 //设置过滤器组0，范围为0~13
     CAN_FilterInitStructure.CAN_FilterMode=CAN_FilterMode_IdList;	 //设置过滤器组0为标识符列表模式
     CAN_FilterInitStructure.CAN_FilterScale=CAN_FilterScale_32bit;  //设置过滤器组0位宽为32位
@@ -19,6 +18,4 @@ void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id
     CAN_FilterInitStructure.CAN_FilterFIFOAssignment=CAN_FIFO0; //此过滤器组关联到接收FIFO0
     CAN_FilterInitStructure.CAN_FilterActivation=ENABLE;		 //激活此过滤器组
     CAN_FilterInit(&CAN_FilterInitStructure);					 //设置过滤器
-
-    CAN1->FWR &=~1;            //过滤器组正常工作
 }

@@ -2,6 +2,7 @@
 
 #include "src/device/CommonIO/Led/WS2812/ws2812.hpp"
 #include "fwwb_compents/stations/chassis_station.hpp"
+#include "src/system.hpp"
 
 constexpr uint16_t mo_freq = 3800;
 

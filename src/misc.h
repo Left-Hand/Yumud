@@ -79,13 +79,11 @@
 #include "src/device/Encoder/odometer.hpp"
 #include "src/crc/crc.hpp"
 
-extern real_t t;
-
 void GPIO_PortC_Init( void );
 void GPIO_SW_I2C_Init(void);
 void GPIO_SW_I2S_Init(void);
 void GLobal_Reset(void);
-real_t CalculateFps();
+// real_t CalculateFps();
 void SysInfo_ShowUp(Printer & uart);
 void Systick_Init(void);
 
@@ -100,26 +98,6 @@ void ADC1_GPIO_Init();
 void ADC1_Init();
 
 
-namespace Sys{
-    __fast_inline void Reset(){NVIC_SystemReset();}
 
-    __fast_inline void reCalculateTime(){
-        #ifdef USE_IQ
-        t.value = millis() * (int)(0.001 * (1 << GLOBAL_Q));
-        #else
-        t = msTick * (1 / 1000.0f);
-        #endif
-    }
-
-
-    __fast_inline real_t getCurrentSeconds(){
-        reCalculateTime();
-        return t;
-    }
-
-
-    uint64_t getChipId();
-    uint32_t getChipIdCrc();
-};
 
 #endif
