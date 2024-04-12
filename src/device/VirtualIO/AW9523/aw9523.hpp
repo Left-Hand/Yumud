@@ -167,35 +167,7 @@ public:
     AW9523 & operator << (const uint8_t & data){write(data); return *this;}
     AW9523 & operator = (const uint16_t & data) override {write(data); return *this;}
 
-    class RgbLed :public RgbLedConcept<true>{
-    protected:
-        using Color = Color_t<real_t>;
 
-        AW9523 & aw;
-        Pin pin_r;
-        Pin pin_g;
-        Pin pin_b;
-
-        void _update(const Color &color){
-            aw.setLedCurrent(pin_r,int(255 * color.r));
-            aw.setLedCurrent(pin_g,int(255 * color.g));
-            aw.setLedCurrent(pin_b,int(255 * color.b));
-        }
-    public:
-        RgbLed(AW9523 & _aw, const Pin & _pin_r, const Pin & _pin_g, const Pin & _pin_b):
-            aw(_aw), pin_r(_pin_r), pin_g(_pin_g), pin_b(_pin_b) {;}
-
-        void init() override{
-            aw.enableLedMode(pin_r);
-            aw.enableLedMode(pin_g);
-            aw.enableLedMode(pin_b);
-        }
-
-        RgbLed & operator = (const Color &color){
-            setColor(color);
-            return *this;
-        }
-    };
 };
 
 class AW9523Pwm:public PwmChannelConcept{
@@ -216,6 +188,36 @@ public:
 
     AW9523Pwm & operator = (const real_t & duty) override{
         setDuty(duty);
+        return *this;
+    }
+};
+
+class AW9523RgbLed :public RgbLedConcept<true>{
+protected:
+    using Color = Color_t<real_t>;
+
+    AW9523 & aw;
+    Pin pin_r;
+    Pin pin_g;
+    Pin pin_b;
+
+    void _update(const Color &color){
+        aw.setLedCurrent(pin_r,int(255 * color.r));
+        aw.setLedCurrent(pin_g,int(255 * color.g));
+        aw.setLedCurrent(pin_b,int(255 * color.b));
+    }
+public:
+    AW9523RgbLed(AW9523 & _aw, const Pin & _pin_r, const Pin & _pin_g, const Pin & _pin_b):
+        aw(_aw), pin_r(_pin_r), pin_g(_pin_g), pin_b(_pin_b) {;}
+
+    void init() override{
+        aw.enableLedMode(pin_r);
+        aw.enableLedMode(pin_g);
+        aw.enableLedMode(pin_b);
+    }
+
+    AW9523RgbLed & operator = (const Color &color){
+        setColor(color);
         return *this;
     }
 };

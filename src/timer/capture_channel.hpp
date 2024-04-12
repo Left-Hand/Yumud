@@ -47,8 +47,9 @@ public:
         return ret;
     }
 
-    virtual uint32_t getPulseUs() = 0;
-    virtual uint32_t getPeriodUs() = 0;
+    virtual uint32_t getPulseUs() const = 0;
+    virtual uint32_t getPeriodUs() const = 0;
+    virtual void init() = 0;
 };
 
 class CaptureChannel:public CaptureChannelConcept{
@@ -84,24 +85,22 @@ protected:
 public:
     CaptureChannelExti(ExtiChannel & _instance, Gpio & _gpio):CaptureChannelConcept(1000000, _instance.trigger == ExtiChannel::Trigger::RisingFalling), instance(_instance), gpio(_gpio){;}
 
-    void init(){
+    void init() override{
         gpio.InPullUP();
         instance.init();
+        instance.bindCb([this](){this->update();});
         instance.enableIt();
     }
 
-
-
     void bindCb(const std::function<void(void)>& _cb){
-        instance.bindCb([this](){this->update();});
         cb = _cb;
     }
 
-    uint32_t getPulseUs() override{
+    uint32_t getPulseUs() const override{
         return pulse;
     }
 
-    uint32_t getPeriodUs() override{
+    uint32_t getPeriodUs() const override{
         return period;
     }
 };

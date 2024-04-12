@@ -8,7 +8,7 @@ using Color = Color_t<real_t>;
 Printer & logger = uart2;
 constexpr uint32_t mo_freq = 3800;
 
-
+using namespace Sys::Clock;
 //Laser PB8 TM4CH3
 //TrigIn PA4
 void modem_app(){
@@ -39,7 +39,7 @@ void modem_app(){
     auto awio = GpioVirtual(&aw, Pin::_0);
     awio.OutPP();
 
-    auto led0 = AW9523::RgbLed(aw, Pin::_2, Pin::_3, Pin::_4);
+    auto led0 = AW9523RgbLed(aw, Pin::_2, Pin::_3, Pin::_4);
     led0.init();
     led0.setBrightness(real_t(0.1));
 
@@ -87,6 +87,6 @@ void modem_app(){
             awio = !awio;
         }
         station.run();
-        Sys::reCalculateTime();
+        reCalculateTime();
     }
 }

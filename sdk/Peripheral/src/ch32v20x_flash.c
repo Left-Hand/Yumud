@@ -901,6 +901,7 @@ void FLASH_ProgramPage_Fast(uint32_t Page_Address, uint32_t *pbuf)
     FLASH->CTLR &= ~CR_PAGE_PG;
 }
 
+
 /*********************************************************************
  * @fn      FLASH_Access_Clock_Cfg
  *

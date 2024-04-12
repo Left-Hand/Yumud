@@ -4,9 +4,13 @@
 #include "src/fwwb_compents/stations/attack_station.hpp"
 
 using namespace FWWB;
+using namespace Sys::Clock;
+using namespace Sys::Chip;
+
 
 constexpr uint16_t mo_freq = 3800;
 static Printer & logger = uart1;
+
 
 void stepper_app(){
     uart1.init(115200);
@@ -155,7 +159,7 @@ void stepper_app(){
         // can1.write(CanMsg((uint8_t)(Command::ACTIVE) << 4, true));
         // target_station.run();
 
-        Sys::reCalculateTime();
+        reCalculateTime();
     }
 }
 
@@ -237,14 +241,14 @@ void stepper_app_new(){
 
     uint8_t motor_code = 0;
 
-    switch(Sys::getChipIdCrc()){
+    switch(getChipIdCrc()){
         case 3789686793:
             motor_code = 1;
             break;
         case 181345611:
             motor_code = 0;
     }
-    logger.println(Sys::getChipIdCrc());
+    logger.println(getChipIdCrc());
 
     if(motor_code == 0){
         odo.inverse(true);
@@ -340,6 +344,6 @@ void stepper_app_new(){
         // svpwm.setABCurrent(0.14 * sin(elecrad), 0.14 * cos(elecrad));
         // svpwm.setDQCurrent(real_t(0), real_t(0.08), elecrad);
         // servo.setDuty(0.5 + 0.5 * sin(t));
-        Sys::reCalculateTime();
+        reCalculateTime();
     }
 }

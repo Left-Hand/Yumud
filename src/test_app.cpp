@@ -9,6 +9,9 @@
 
 
 using namespace FWWB;
+using namespace Sys::Clock;
+using namespace Sys::Chip;
+
 static Printer & logger = uart2;
 
 
@@ -18,8 +21,8 @@ void test_app(){
     uart2.init(115200);
     logger.setRadix(16);
     logger.setSpace("");
-    logger.println("ChipId: ", Sys::getChipId());
-    logger.println("ChipId: ", Sys::getChipIdCrc());
+    logger.println("ChipId: ", getChipId());
+    logger.println("ChipId: ", getChipIdCrc());
     logger.setRadix(10);
     logger.setSpace(",");
 
@@ -31,13 +34,20 @@ void test_app(){
     ap.init();
     volatile uint32_t last_blink_millis = 0;
     while(true){
-        if((millis() > last_blink_millis) and (millis() % 200 == 0)){
-            bled= !bled;
-            last_blink_millis = millis();
-            can1.write(CanMsg((uint8_t)Command::ACTIVE << 4, true));
-        }
+        // if((millis() > last_blink_millis) and (millis() % 200 == 0)){
+        //     bled= !bled;
+        //     last_blink_millis = millis();
+        //     
+        // }
         ap.run();
-        Sys::reCalculateTime();
+        can1.write(CanMsg((uint8_t)Command::ACTIVE << 4, true));
+        // ap.parseCommand()
+        // delay(20);
+        ap.parseLine("O 1");
+        delay(200);
+        ap.parseLine("O -1");
+        delay(200);
+        reCalculateTime();
     }
     // can1.init(Can1::BaudRate::Mbps1);
     // uart2.println("can test");

@@ -1,55 +1,7 @@
 #include "misc.h"
 
-void GPIO_PortC_Init( void ){
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
-    #ifdef HAVE_GPIOD
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
-    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
-    #endif
-    PWR_BackupAccessCmd( ENABLE );
-    RCC_LSEConfig( RCC_LSE_OFF );
-    BKP_TamperPinCmd(DISABLE);
-    PWR_BackupAccessCmd(DISABLE);
-}
 
-void GPIO_SW_I2C_Init(void){
-    GPIO_InitTypeDef  GPIO_InitStructure = {0};
 
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE );
-
-    GPIO_InitStructure.GPIO_Pin = I2C_SW_SCL | I2C_SW_SDA;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_WriteBit(GPIOB, GPIO_InitStructure.GPIO_Pin, Bit_SET);
-    GPIO_Init( GPIOB, &GPIO_InitStructure );
-}
-
-void GPIO_SW_I2S_Init(void){
-    GPIO_InitTypeDef  GPIO_InitStructure = {0};
-
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOB, ENABLE );
-
-    GPIO_InitStructure.GPIO_Pin = I2S_SW_SDA | I2S_SW_SCK | I2S_SW_WS;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_WriteBit(GPIOB, GPIO_InitStructure.GPIO_Pin, Bit_SET);
-    GPIO_Init( GPIOB, &GPIO_InitStructure );
-}
-
-void GLobal_Reset(void){
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOA, ENABLE);
-    GPIO_InitTypeDef  GPIO_InitStructure = {0};
-    GPIO_InitStructure.GPIO_Pin = RES_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(RES_PORT, &GPIO_InitStructure );
-
-    delayMicroseconds(50);
-    GPIO_WriteBit(RES_PORT, RES_PIN, Bit_RESET);
-    delayMicroseconds(50);
-    GPIO_WriteBit(RES_PORT, RES_PIN, Bit_SET);
-}
 
 
 
@@ -96,23 +48,6 @@ void SysInfo_ShowUp(Printer & uart){
     uart.println("System boot times: ", boot_count);
 }
 
-void Systick_Init(void){
-    static uint8_t initd = 0;
-    if(initd) return;
-    initd = 1;
-
-    tick_per_ms = SystemCoreClock / 1000;
-    tick_per_us = tick_per_ms / 1000;
-    SysTick->SR  = 0;
-    SysTick->CTLR= 0;
-    SysTick->CNT = 0;
-    SysTick->CMP = tick_per_ms - 1;
-    SysTick->CTLR= 0xF;
-
-    NVIC_SetPriority(SysTicK_IRQn,0xFF);
-    NVIC_EnableIRQ(SysTicK_IRQn);
-
-}
 
 void TIM2_GPIO_Init(){
     //PA0 CH1
@@ -228,17 +163,6 @@ void ADC1_GPIO_Init(){
     GPIO_ResetBits(GPIOA, GPIO_Pin_2 | GPIO_Pin_3);
     // GPIO_SetBits(GPIOA, GPIO_Pin_2);
 }
-
-void LED_GPIO_Init(){
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-    GPIO_ResetBits(GPIOA, GPIO_Pin_6);
-}
-
 
 void ADC1_Init(){
     CHECK_INIT

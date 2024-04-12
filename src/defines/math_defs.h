@@ -150,13 +150,14 @@
 #define RSHIFT(x,s) LSHIFT(x, -s)
 #endif
 
-#ifndef CTZ
-#define CTZ(x) __builtin_ctz(x)
-#endif
+#define PLAT_WIDTH (sizeof(size_t) * 8)
+#define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))
+#define PREV_POWER_OF_2(x) (1 << (31 - __builtin_clz(x)))
 
-#ifndef CLZ
-#define CLZ(x) __builtin_clz(x)
-#endif
+
+#define CTZ(x) __builtin_ctz(x)
+#define BIT_WIDTH(x) (sizeof(x) * 8)
+#define CLZ(x) __builtin_clz(x << (PLAT_WIDTH - BIT_WIDTH(x)))
 
 #define ANGLE2RAD(x) (x * TAU / 360)
 #define RAD2ANGLE(x) (x / TAU * 360)

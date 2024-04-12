@@ -104,7 +104,7 @@ public:
             ratio = frac(_t);
             break;
         case Method::Sine:
-            ratio = 0.5 * sin(_t * TAU) + 0.5;
+            ratio = abs(2 * frac(_t) - 1);
         }
 
         Color color_mux = color_a.linear_interpolate(color_b, ratio);

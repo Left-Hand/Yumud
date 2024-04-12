@@ -11,17 +11,23 @@
 class Spi:public SerBus{
 protected:
     static constexpr uint8_t spi_max_cs_pins = 4;
-    PortVirtual<spi_max_cs_pins> cs_pins = PortVirtual<spi_max_cs_pins>();
+    PortVirtual <spi_max_cs_pins> cs_pins = PortVirtual<spi_max_cs_pins>();
 public:
     Error begin_use(const uint8_t & index = 0) override {
         lock(index);
-        GpioVirtual * cs_pin = cs_pins[wholock()];
-        if(cs_pin) cs_pin->clr();
-        return ErrorType::OK;
+        auto * cs_pin = cs_pins[wholock()];
+        if(cs_pin){
+            cs_pin->set();
+            cs_pin->clr();
+            return ErrorType::OK;
+        }else{
+            return ErrorType::NO_CS_PIN;
+        }
+
     }
 
     void end_use() override {
-        GpioVirtual * cs_pin = cs_pins[wholock()];
+        auto * cs_pin = cs_pins[wholock()];
         if(cs_pin) cs_pin->set();
         unlock();
     }
@@ -37,6 +43,10 @@ public:
     virtual void lock(const uint8_t & index) = 0;
     virtual void unlock() = 0;
     virtual int8_t wholock() = 0;
+
+    void bindCsPin(Gpio & gpio, const uint8_t index){
+        cs_pins.bindPin(gpio, index);
+    }
 
     void bindCsPin(const GpioVirtual & gpio, const uint8_t index){
         cs_pins.bindPin(gpio, index);
@@ -60,6 +70,7 @@ protected:
 
 public:
     SpiHw(SPI_TypeDef * _instance):instance(_instance){;}
+    SpiHw(SPI_TypeDef * _instance, Gpio & _cs_pin):instance(_instance){bindCsPin(_cs_pin, 0);}
     SpiHw(SPI_TypeDef * _instance, GpioVirtual & _cs_pin):instance(_instance){bindCsPin(_cs_pin, 0);}
     void init(const uint32_t & baudRate) override;
     void enableHwCs(const bool en = true);

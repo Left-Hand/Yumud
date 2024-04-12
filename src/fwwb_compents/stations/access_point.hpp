@@ -244,7 +244,7 @@ protected:
                 real_t _omega = real_t(argv.at(0));
                 uint8_t buf[4] = {0};
                 memcpy(&buf, &_omega, sizeof(buf));
-                sendCommand(chassis_id, Command::CHASSIS_GET_OMEGA, buf, sizeof(buf));
+                sendCommand(chassis_id, Command::CHASSIS_SET_OMEGA, buf, sizeof(buf));
             }
             break;
         case 'R'://rst
@@ -274,7 +274,12 @@ public:
         sendCommand(0, Command::RST);
     }
 
-
+    void parseLine(const String & line){
+        auto tokens = splitString(line, ' ');
+        auto argc = tokens[0][0];
+        tokens.erase(tokens.begin());
+        parseCommand(argc, tokens);
+    }
 
     void run(){
         if(can.available()){
@@ -288,10 +293,7 @@ public:
             char chr = logger.read();
             if(chr == '\n'){
                 temp_str.trim();
-                auto tokens = splitString(temp_str, ' ');
-                auto argc = tokens[0][0];
-                tokens.erase(tokens.begin());
-                parseCommand(argc, tokens);
+                parseLine(temp_str);
                 temp_str = "";
             }else{
                 temp_str.concat(chr);

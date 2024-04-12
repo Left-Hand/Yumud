@@ -152,7 +152,7 @@ public:
 
     bool isIndexValid(const uint8_t & index){return (index >= 0 && index < size && pin_ptrs[index] != nullptr);}
 
-    GpioVirtual * operator [](const uint8_t index){return isIndexValid(index) ? pin_ptrs[index].get() : nullptr;}
+    Gpio * operator [](const uint8_t index){return isIndexValid(index) ? pin_ptrs[index].get() : nullptr;}
 
     void setModeByIndex(const int8_t & index, const PinMode & mode) override{
         if(!isIndexValid(index))return;

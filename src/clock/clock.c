@@ -71,6 +71,25 @@ void SysTick_Handler(void)
     SysTick->SR = 0;
 }
 
+
+void Systick_Init(){
+    static uint8_t initd = 0;
+    if(initd) return;
+    initd = 1;
+
+    tick_per_ms = SystemCoreClock / 1000;
+    tick_per_us = tick_per_ms / 1000;
+    SysTick->SR  = 0;
+    SysTick->CTLR= 0;
+    SysTick->CNT = 0;
+    SysTick->CMP = tick_per_ms - 1;
+    SysTick->CTLR= 0xF;
+
+    NVIC_SetPriority(SysTicK_IRQn,0xFF);
+    NVIC_EnableIRQ(SysTicK_IRQn);
+}
+
+
 void delayMicroseconds(uint32_t us)
 {
   __IO uint64_t currentTicks = SysTick->CNT;

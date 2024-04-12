@@ -13,7 +13,7 @@ protected:
     Gpio & dir_pin;
     CaptureChannelConcept & cap_channel;
     bool rsv;
-    static constexpr int speed_scaler = 400;
+    static constexpr int speed_scaler = 288;
 public:
     GM25(PwmChannel & _pwm_channel,Gpio & _dir_pin,CaptureChannelConcept & _cap_channel,const bool & _rsv = false):
             pwm_channel(_pwm_channel), dir_pin(_dir_pin), cap_channel(_cap_channel), rsv(_rsv){;}
@@ -24,7 +24,9 @@ public:
     }
 
     void init(){
+        pwm_channel.init();
         dir_pin.OutPP();
+        cap_channel.init();
     }
 };
 
@@ -44,12 +46,15 @@ protected:
     }
 
     void omegaNotify(const CanMsg & msg){
-        setOmega(*reinterpret_cast<const real_t *>(msg.getData()));
+        real_t omega;
+        memcpy(&omega, msg.getData(), sizeof(real_t));
+        setOmega(omega);
         updateMotorTarget();
     }
 
     void parseCommand(const Command & cmd, const CanMsg & msg) override{
-        TargetStation::parseCommand(cmd, msg);
+        if(!msg.isRemote()) return;
+        logger.println("cmd:", (uint8_t)cmd);
         switch(cmd){
         case Command::CHASSIS_SET_MOVE:
             moveNotify(msg);
@@ -58,6 +63,7 @@ protected:
             omegaNotify(msg);
             break;
         default:
+            TargetStation::parseCommand(cmd, msg);
             break;
         }
     }

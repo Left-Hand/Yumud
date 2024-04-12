@@ -78,20 +78,9 @@
 #include "algo/any/any.hpp"
 #include "src/device/Encoder/odometer.hpp"
 #include "src/crc/crc.hpp"
-
-void GPIO_PortC_Init( void );
-void GPIO_SW_I2C_Init(void);
-void GPIO_SW_I2S_Init(void);
-void GLobal_Reset(void);
 // real_t CalculateFps();
 void SysInfo_ShowUp(Printer & uart);
-void Systick_Init(void);
 
-void LED_GPIO_Init();
-
-void TIM2_GPIO_Init();
-void TIM3_GPIO_Init();
-void TIM4_GPIO_Init();
 void TIM_Encoder_Init(TIM_TypeDef * TimBase);
 void TIM_PWM_Init(TIM_TypeDef * TimBase, const uint16_t arr);
 void ADC1_GPIO_Init();

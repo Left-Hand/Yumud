@@ -1,85 +1,127 @@
-/* eeprom in flash
- * Copyright (c) 2021-2022 epoko
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-#ifndef _EEPROM_IN_FLASH_H_
-#define _EEPROM_IN_FLASH_H_
+#ifndef __ON_CHIP_FLASH_HPP__
 
-#include "../clock/clock.h"
-#include "stdint.h"
-#include "string.h"
+#define __ON_CHIP_FLASH_HPP__
+
+#include "types/range/range_t.hpp"
 
 
-/* eeprom storage data num max, 1-65535, unit halfword.
-Must be smaller than (EEPROM_PART_SIZE/4)-2 */
-#define EEPROM_NUM_MAX          12		//*2byte
-
-/* EEPROM Use two partitions, each partition size is
-an integer multiple of the erased page */
-#define EEPROM_PART0_SIZE       (2048)  //eeprom part size 2K, total size 4K
-#define EEPROM_PART1_SIZE       (EEPROM_PART0_SIZE)
-
-/* EEPROM start address in Flash */
-#define EEPROM_START_ADDRESS    (0x0800F000U)  //use flash 0x0800F000 - 0x08010000, for 64k flash mcu
-#define EEPROM_END_ADDRESS      (EEPROM_START_ADDRESS + EEPROM_PART0_SIZE + EEPROM_PART1_SIZE)
+class OnChipFlash{
+protected:
 
 
-/* Pages 0 and 1 base and end addresses */
-#define PART0_BASE_ADDRESS      (EEPROM_START_ADDRESS)
-#define PART0_END_ADDRESS       ((PART0_BASE_ADDRESS + EEPROM_PART0_SIZE))
+    using Page = uint32_t;
+    using PageRange = Range_t<Page>;
+    using Address = uint32_t;
+    using AddressRange = Range_t<Address>;
 
-#define PART1_BASE_ADDRESS      (PART0_END_ADDRESS)
-#define PART1_END_ADDRESS       ((PART1_BASE_ADDRESS + EEPROM_PART1_SIZE))
+    static constexpr Page page_size = 256;
+    static constexpr Address base_address = 0x08000000;
 
-/* PAGE is marked to record data */
-// #define PART_USED_MARK          (0xEAE5D135 + EEPROM_NUM_MAX)	//Different number, use new data
-#define PART_USED_MARK          (0xEAE5D135)  //Different number, use old data
+    Page page_count;
+    PageRange page_range;
 
-#ifndef log_printf
-    #include "bus/uart/uart1.hpp"
-	#define LOG_Assert "[A] "
-	#define LOG_Error "[E] "
-	#define LOG_Warn "[W] "
-	#define LOG_Info "[I] "
-	#define LOG_Debug "[D] "
-	#define LOG_Verbose "[V] "
-	#define log_printf(...) uart1.println(__VA_ARGS__)
-#endif
+    uint32_t pre_clock;
 
-#ifndef USE_HAL_DRIVER
-	#define HAL_GetTick() millis()
-	#define HAL_Delay(ms) delay(ms)
-typedef enum
-{
-  HAL_OK       = 0x00U,
-  HAL_ERROR    = 0x01U,
-  HAL_BUSY     = 0x02U,
-  HAL_TIMEOUT  = 0x03U
-} HAL_StatusTypeDef;
-#endif
+    void settleClock(){
+        pre_clock = Sys::Clock::getAHBFreq();
+        Sys::Clock::setAHBFreq(72000000);
+    }
 
-int EEPROM_Init(void *default_data);
-int EEPROM_Format(void *default_data);
-uint16_t EEPROM_Read(uint16_t Address);
-int EEPROM_Write(uint16_t Address, uint16_t Data);
-int EEPROM_Read_Buf(uint16_t Address, uint16_t *buf, uint16_t length);
-int EEPROM_Write_Buf(uint16_t Address, uint16_t *buf, uint16_t length);
-#define Config_Read_Buf(addr, buf, length) EEPROM_Read_Buf((addr)/2, (uint16_t *)(buf), (length)/2)
-#define Config_Write_Buf(addr, buf, length) EEPROM_Write_Buf((addr)/2, (uint16_t *)(buf), (length)/2)
+    void resetClock(){
+        Sys::Clock::setAHBFreq(pre_clock);
+    }
 
-int EE_ErasePart(int part);
-int EE_ProgramWord(uint32_t Address, uint32_t Data);
-#define EE_ReadWord(Addr) (*(volatile uint32_t*)Addr)
+    Page pageWarp(const int & index){
+        return index > 0 ? index : page_count + index;
+    }
+
+    AddressRange getAddressRange(){
+        return (page_range * page_size).shift(base_address);
+    }
+public:
+    Flash(int _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
+    Flash(int _page_begin, int _page_end):
+            page_count(Sys::Chip::getFlashSize() / page_size),
+            page_range(PageRange(Page(0),Sys::Chip::getFlashSize() / page_size)
+            .intersection(PageRange(pageWarp(_page_begin), pageWarp(_page_end)))){;}
+
+    ~Flash(){exit();}
+
+    void init(){
+        settleClock();
+        Systick_Init();
+        delay(10);
+    }
+
+    void test(){
+
+        auto NbrOfPage = page_range.get_length(); //计算要擦除多少页
+        Address PAGE_WRITE_START_ADDR = getAddressRange().start;
+        Address PAGE_WRITE_END_ADDR = getAddressRange().end;
+        Address address = PAGE_WRITE_START_ADDR;
+
+        FLASH_Status FLASHStatus =  FLASH_COMPLETE;
+
+        __disable_irq();
+        // uint16_t Data = 0x1234;
+        // FLASH_Unlock(); //解锁
+        //FLASH_FLAG_BSY:指示忙状态标志；FLASH_FLAG_EOP：指示操作结束标志；FLASH_FLAG_PGERR：闪存程序错误标志；FLASH_FLAG_WRPRTERR：指示写保护错误标志
+
+        // FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR); //清空所有标志位
+
+        // logger.println("begin erase", PAGE_WRITE_START_ADDR);
+        // for(Page EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++){
+        //     FLASHStatus = FLASH_ErasePage(PAGE_WRITE_START_ADDR + (page_size * EraseCounter));
+        // }
+
+        // address = PAGE_WRITE_START_ADDR; //向内部FLASH写入数据起始地址
+        // while((address < PAGE_WRITE_END_ADDR) && (FLASHStatus == FLASH_COMPLETE)){
+        //     FLASHStatus = FLASH_ProgramHalfWord(address, Data); //向指定地址写入半字
+        //     address += 2;
+        // }
+
+        // FLASH_Lock(); //上锁
+
+        FLASH_Unlock_Fast();
+        uint32_t Data = 0x12345678;
+        FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
+
+        for(Page EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++){
+            FLASH_ErasePage_Fast(PAGE_WRITE_START_ADDR + (page_size * EraseCounter));
+        }
+
+        address = PAGE_WRITE_START_ADDR; //向内部FLASH写入数据起始地址
+        while((address < PAGE_WRITE_END_ADDR) && (FLASHStatus == FLASH_COMPLETE)){
+            FLASH_ProgramWord_Fast(address, Data); //向指定地址写入半字
+            address += 4;
+        }
+
+        FLASH_Lock_Fast();
+        __enable_irq();
+
+        address = PAGE_WRITE_START_ADDR;
+        bool MemoryProgramStatus = true;
+
+        while((address < PAGE_WRITE_END_ADDR) && (MemoryProgramStatus != false)){
+            auto read_data = (*(__IO uint32_t*) address);
+            if(read_data != Data){
+                MemoryProgramStatus = false;
+            }
+            address += 4;
+        }
+
+    };
+    void exit(){
+        resetClock();
+    }
+
+
+};
+
+
+class OnChipFlashSector:public Sector<256>{
+
+};
+
 
 #endif

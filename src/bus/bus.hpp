@@ -15,7 +15,8 @@ public:
         OCCUPIED,
         TIMEOUT,
         OVERLOAD,
-        NACK
+        NACK,
+        NO_CS_PIN
     };
 
     struct Error{

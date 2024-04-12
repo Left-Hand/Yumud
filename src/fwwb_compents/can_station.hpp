@@ -66,7 +66,7 @@ protected:
             uint8_t buf[4];
             uint32_t val;
         }msgFormat;
-        msgFormat.val = Sys::getChipIdCrc();
+        msgFormat.val = Sys::Chip::getChipIdCrc();
         // FWWB_DEBUG("ChipCrc: ", msgFormat.val);
         sendCommand(Command::POWER_ON, msgFormat.buf, 4);
     }
@@ -77,7 +77,9 @@ protected:
     }
 
     void resetNotified(){
-        Sys::Reset();
+        FWWB_DEBUG("rst");
+        NVIC_SystemReset();
+        // Sys::Reset();
     }
 
     void scanNotified(){
@@ -101,7 +103,7 @@ protected:
 
         const MsgFormat& format = *reinterpret_cast<const MsgFormat*>(msg.getData());
 
-        uint32_t crc_code = Sys::getChipIdCrc();
+        uint32_t crc_code = Sys::Chip::getChipIdCrc();
         if(memcmp((void *)crc_code, (void *)format.buf, 4)){
             node_id = format.node_id;
         }
@@ -153,7 +155,7 @@ protected:
     }
 public:
     CanStation(Can & _can, Printer & _logger) : CanFacility(_can, _logger, 0) {
-        auto default_id = getDeaultID(Sys::getChipIdCrc());
+        auto default_id = getDeaultID(Sys::Chip::getChipIdCrc());
         if(default_id >= 0){
             node_id = default_id;
         }else{
