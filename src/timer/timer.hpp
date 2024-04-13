@@ -106,12 +106,12 @@ protected:
     TimerOC channels[4];
 public:
     GenericTimer(TIM_TypeDef * _base):BasicTimer(_base),
-            channels({
+            channels{
                 TimerOC(instance, TimerOC::Channel::CH1),
                 TimerOC(instance, TimerOC::Channel::CH2),
                 TimerOC(instance, TimerOC::Channel::CH3),
                 TimerOC(instance, TimerOC::Channel::CH4)
-            }){;}
+            }{;}
     void initAsEncoder(const TimerMode mode = TimerMode::Up);
     void enableSingle(const bool _single = true);
     // TimerOC getChannel(const TimerOC::Channel ch){return TimerOC(instance, ch);}
@@ -154,11 +154,11 @@ public:
     }
     
     AdvancedTimer(TIM_TypeDef * _base):GenericTimer(_base),
-            co_channels({
+            co_channels{
                 TimerOC(instance, TimerOC::Channel::CH1N),
                 TimerOC(instance, TimerOC::Channel::CH2N),
                 TimerOC(instance, TimerOC::Channel::CH3N),
-            }){;}
+            }{;}
     AdvancedTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
 };
 

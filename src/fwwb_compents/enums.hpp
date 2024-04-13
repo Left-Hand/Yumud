@@ -33,6 +33,8 @@ enum class Command:uint8_t{
     CHASSIS_GET_ODO,
     CHASSIS_GET_POS,
 
+    CHASSIS_SET_MODE = CHASSIS_SET_ID + 0x0f,
+
     RST = 0x70,
     INACTIVE,
     ACTIVE,

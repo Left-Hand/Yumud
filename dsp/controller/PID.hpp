@@ -17,14 +17,18 @@ class PID_t{
         T err = T(0.0);
         T err_last = T(0.0);
 
-        T clp_min = T(-514.0f);
-        T clp_max = T(514.0f);
+        T clp_min = T(-1.0f);
+        T clp_max = T(1.0f);
+
+
     public:
         PID_t() = delete;
 
         template<typename U>
-        PID_t(const U & _kp,const U & _ki,const U & _kd = T(0), const U & dur = T(1)):
-                kp(static_cast<T>(_kp)), ki(static_cast<T> (_ki * dur)), kd(static_cast<T>(_kd / dur)){;}
+        PID_t(const U & _kp,const U & _ki = U(0),const U & _kd = U(0), const U & _cl = U(1)):
+                kp(static_cast<T>(_kp)), ki(static_cast<T> (_ki)), kd(static_cast<T>(_kd)){
+                    setClamp(_cl);
+                }
 
         template<typename U>
         T update(const U & setpoint, const U & pv);

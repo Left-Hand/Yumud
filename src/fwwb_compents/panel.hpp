@@ -98,7 +98,7 @@ public:
 
     void run(){
         real_t ratio;
-        real_t _t = t / (real_t(period) / 1000);
+        real_t _t = t * real_t(100000 / period) * real_t(0.01);
         switch(method){
         case Method::Saw:
             ratio = frac(_t);

@@ -194,7 +194,7 @@ public:
         Address PAGE_WRITE_START_ADDR = getAddressRange().start;
         Address PAGE_WRITE_END_ADDR = getAddressRange().end;
 
-
+        logger.println(PAGE_WRITE_START_ADDR);
         FLASH_Status FLASHStatus =  FLASH_COMPLETE;
 
         __disable_irq();
@@ -261,146 +261,148 @@ public:
     }
 };
 
+// void testFlash(){
 
+
+//     Flash flash(-1);
+//     flash.init();
+//     Sys::Misc::prework();
+
+//     uart2.init(115200);
+
+//     logger.setSpace(" ");
+//     logger.setRadix(16);
+
+//     // logger.println("Flash Size:", Sys::Chip::getFlashSize());
+//     // logger.println("Sys Clock:", Sys::Clock::getSystemFreq());
+//     // logger.println("AHB Clock:", Sys::Clock::getAHBFreq());
+//     // logger.println("APB1 Clock:", Sys::Clock::getAPB1Freq());
+//     // logger.println("APB2 Clock:", Sys::Clock::getAPB2Freq());
+//     struct Temp{
+//         uint8_t data[4] = {0,1,2,3};
+//         char name[8] = "Rstr1aN";
+//         real_t value = real_t(0.1);
+//         uint8_t crc = 0x08;
+//     };
+//     Temp temp;
+
+//     logger.println("单纯的妇女而会计法v你rfwevdnoln");
+//     // bkp.init();
+//     // logger.println("bkp_data", bkp.readData(1));
+
+//     // if(bkp.readData(1) % 2){
+//     //     // flash.load(temp);
+//     //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+//     //     logger.println(temp.name);
+//     //     logger.println(temp.value);
+//     //     logger.println(temp.crc);
+
+//     // }
+//     flash.load(temp);
+//     if(temp.data[0] == 0x39){
+//         logger.println("need to store new");
+//         logger.println("new data is");
+//         Temp new_temp = Temp();
+//         logger.println(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
+//         flash.store(new_temp);
+//         flash.load(temp);
+//         logger.println("new store done");
+//     }
+
+//     logger.println("data loaded");
+//     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+//     logger.println(temp.name);
+//     logger.println(temp.value);
+//     logger.println(temp.crc);
+//     bkp.init();
+//     bkp.writeData(1, bkp.readData(1) + 1);
+//     temp.crc = bkp.readData(1);
+//     flash.store(temp);
+//     // flash.load(temp);
+//     // logger.println();
+//     // if(temp.data[0] == 0xE3 || temp.data[0] == 0x39 || (bkp.readData(1) & 0b11) == 0){
+//     //     logger.println(temp.data[0]);
+
+//     //     temp.data[3] = bkp.readData(1);
+//     //     temp.name[2] = 'k';
+//     //     // temp.value = real_t(0.2);
+//     //     temp.crc = 10;
+
+//     //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+//     //     logger.println(temp.name);
+//     //     logger.println(temp.value);
+//     //     logger.println(temp.crc);
+//     //     flash.store(temp);
+//     //     flash.load(temp);
+//     // }else{
+//     //     logger.println("suss");
+//     //         logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+//     // logger.println(temp.name);
+//     // logger.println(temp.value);
+//     // logger.println(temp.crc);
+//     // }
+
+
+//     // }
+//     // logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+//     // logger.println(temp.name);
+//     // logger.println(temp.value);
+//     // logger.println(temp.crc);
+
+//     // 
+
+
+
+
+
+//     // flash.load(temp);
+//     while(true) __WFI;
+//     // while(true){
+//         // logger.println("Hi");
+//         // delay(100);
+//     // }
+
+// }
 int main(){
-
-
-    Flash flash(-2, -1);
-    flash.init();
     Sys::Misc::prework();
-
-    uart2.init(115200);
-
-    logger.setSpace(" ");
-    logger.setRadix(16);
-
-    // logger.println("Flash Size:", Sys::Chip::getFlashSize());
-    // logger.println("Sys Clock:", Sys::Clock::getSystemFreq());
-    // logger.println("AHB Clock:", Sys::Clock::getAHBFreq());
-    // logger.println("APB1 Clock:", Sys::Clock::getAPB1Freq());
-    // logger.println("APB2 Clock:", Sys::Clock::getAPB2Freq());
-    struct Temp{
-        uint8_t data[4] = {0,1,2,3};
-        char name[8] = "Rstr1aN";
-        real_t value = real_t(0.1);
-        uint8_t crc = 0x08;
-    };
-    Temp temp;
-
-    
-    // bkp.init();
-    // logger.println("bkp_data", bkp.readData(1));
-
-    // if(bkp.readData(1) % 2){
-    //     // flash.load(temp);
-    //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    //     logger.println(temp.name);
-    //     logger.println(temp.value);
-    //     logger.println(temp.crc);
-
-    // }
-    flash.load(temp);
-    if(temp.data[0] == 0x39){
-        logger.println("need to store new");
-        logger.println("new data is");
-        Temp new_temp = Temp();
-        logger.println(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
-        flash.store(new_temp);
-        flash.load(temp);
-        logger.println("new store done");
-    }
-
-    logger.println("data loaded");
-    logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    logger.println(temp.name);
-    logger.println(temp.value);
-    logger.println(temp.crc);
-    bkp.init();
-    bkp.writeData(1, bkp.readData(1) + 1);
-    temp.crc = bkp.readData(1);
-    flash.store(temp);
-    // flash.load(temp);
-    // logger.println();
-    // if(temp.data[0] == 0xE3 || temp.data[0] == 0x39 || (bkp.readData(1) & 0b11) == 0){
-    //     logger.println(temp.data[0]);
-
-    //     temp.data[3] = bkp.readData(1);
-    //     temp.name[2] = 'k';
-    //     // temp.value = real_t(0.2);
-    //     temp.crc = 10;
-
-    //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    //     logger.println(temp.name);
-    //     logger.println(temp.value);
-    //     logger.println(temp.crc);
-    //     flash.store(temp);
-    //     flash.load(temp);
-    // }else{
-    //     logger.println("suss");
-    //         logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    // logger.println(temp.name);
-    // logger.println(temp.value);
-    // logger.println(temp.crc);
-    // }
-
-
-    // }
-    // logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    // logger.println(temp.name);
-    // logger.println(temp.value);
-    // logger.println(temp.crc);
-
-    // 
-
-
-
-
-
-    // flash.load(temp);
-    while(true) __WFI;
-    // while(true){
-        // logger.println("Hi");
-        // delay(100);
-    // }
-
     // stepper_app();
     // stepper_app_new();
     chassis_app();
     // modem_app();
-    test_app();
+    // test_app();
+}
+
+    // timer1.init(25600);
+
+    // auto tim1ch1 = timer1[1];
+    // tim1ch1.init();
+
+    // auto tim1ch1n = timer1[-1];
+    // tim1ch1n.init();
+
+    // auto tim1ch2 = timer1[2];
+    // tim1ch2.init();
+
+    // auto tim1ch3 = timer1[3];
+    // tim1ch3.init();
+
+    // auto tim1ch4 = timer1[4];
+    // tim1ch4.init();
 
 
-    timer1.init(25600);
+    // timer1.initBdtr(AdvancedTimer::LockLevel::Off, 0);
+    // timer1.enable();
 
-    auto tim1ch1 = timer1[1];
-    tim1ch1.init();
+    // auto pwmCoilP = PwmChannel(tim1ch3);
+    // pwmCoilP.init();
 
-    auto tim1ch1n = timer1[-1];
-    tim1ch1n.init();
+    // auto pwmCoilN = PwmChannel(tim1ch4);
+    // pwmCoilN.init();
+    // uart2.init(UART2_Baudrate);
+    // uart2.setEps(4);
 
-    auto tim1ch2 = timer1[2];
-    tim1ch2.init();
-
-    auto tim1ch3 = timer1[3];
-    tim1ch3.init();
-
-    auto tim1ch4 = timer1[4];
-    tim1ch4.init();
-
-
-    timer1.initBdtr(AdvancedTimer::LockLevel::Off, 0);
-    timer1.enable();
-
-    auto pwmCoilP = PwmChannel(tim1ch3);
-    pwmCoilP.init();
-
-    auto pwmCoilN = PwmChannel(tim1ch4);
-    pwmCoilN.init();
-    uart2.init(UART2_Baudrate);
-    uart2.setEps(4);
-
-    Gpio Led = Gpio(GPIOC, Pin::_13);
-    Led.OutPP();
+    // Gpio Led = Gpio(GPIOC, Pin::_13);
+    // Led.OutPP();
     // Gpio mosi_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
     // Gpio miso_pin = Gpio(SPI1_MISO_Port, (Pin)SPI1_MISO_Pin);
     // Gpio sck_pin = Gpio(SPI1_SCLK_Port, (Pin)SPI1_SCLK_Pin);
@@ -413,18 +415,18 @@ int main(){
     // bmi.init();
     // bmi.flush();
 
-    Gpio sda_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
-    Gpio scl_pin = Gpio(SPI1_SCLK_Port, (Pin)SPI1_SCLK_Pin);
-    I2cSw i2csw(scl_pin, sda_pin);
-    i2csw.init(40000);
-    I2cDrv i2cdrv(i2csw, 0xd0);
-    MPU6050 mpu(i2cdrv);
-    mpu.init();
+    // Gpio sda_pin = Gpio(SPI1_MOSI_Port, (Pin)SPI1_MOSI_Pin);
+    // Gpio scl_pin = Gpio(SPI1_SCLK_Port, (Pin)SPI1_SCLK_Pin);
+    // I2cSw i2csw(scl_pin, sda_pin);
+    // i2csw.init(40000);
+    // I2cDrv i2cdrv(i2csw, 0xd0);
+    // MPU6050 mpu(i2cdrv);
+    // mpu.init();
     // Axis6 & imu = mpu;
-    Gpio TrigA = Gpio(GPIOC, Pin::_14);
-    Gpio TrigB = Gpio(GPIOC, Pin::_15);
-    TrigA.InPullUP();
-    TrigB.InPullUP();
+    // Gpio TrigA = Gpio(GPIOC, Pin::_14);
+    // Gpio TrigB = Gpio(GPIOC, Pin::_15);
+    // TrigA.InPullUP();
+    // TrigB.InPullUP();
 
     // Gpio a0 = Gpio(GPIOA, Pin::_0);
     // a0.InAnalog();
@@ -436,15 +438,15 @@ int main(){
     // adc1.setRegularTrigger(AdcHw::RegularTrigger::SW);
     // adc1.start();
 
-    ExtiChannel channel(TrigA, NvicPriority(2,1));
+    // ExtiChannel channel(TrigA, NvicPriority(2,1));
 
-    // adc1.init();
-    real_t cnt;
-    auto cb = [&Led, &TrigB, &cnt](){cnt += real_t((bool(TrigB) ? 1 : -1)) / real_t(16384);};
-    channel.init();
-    channel.bindCb(cb);
+    // // adc1.init();
+    // real_t cnt;
+    // auto cb = [&Led, &TrigB, &cnt](){cnt += real_t((bool(TrigB) ? 1 : -1)) / real_t(16384);};
+    // channel.init();
+    // channel.bindCb(cb);
 
-    uart1.init(115200);
+    // uart1.init(115200);
     // VtfRequest(15EXTI15_10_IRQn, 0, cb);
     // GPIO_InitTypeDef GPIO_InitStructure = {0};
 
@@ -454,27 +456,27 @@ int main(){
 
 
     // auto filter = BurrFilter_t<real_t>();
-    Vector3 accel;
-    real_t f0 = real_t(6);
-    real_t f_test = real_t(0.1);
-    LowpassFilter_t<real_t, real_t> lpf(f0);
-    HighpassFilter_t<real_t, real_t> hpf(f0);
-    auto lob = LinearObersver_t<real_t, real_t>();
-    auto lob2 = LinearObersver_t<real_t, real_t>();
-    real_t x;
-    real_t y;
-    real_t f;
-    while(true){
-        real_t x = 6*sin(t * f_test * TAU);
+    // Vector3 accel;
+    // real_t f0 = real_t(6);
+    // real_t f_test = real_t(0.1);
+    // LowpassFilter_t<real_t, real_t> lpf(f0);
+    // HighpassFilter_t<real_t, real_t> hpf(f0);
+    // auto lob = LinearObersver_t<real_t, real_t>();
+    // auto lob2 = LinearObersver_t<real_t, real_t>();
+    // real_t x;
+    // real_t y;
+    // real_t f;
+    // while(true){
+    //     real_t x = 6*sin(t * f_test * TAU);
 
 
-        if(millis()%10 == 0) lob2.update(lob.update(real_t(x), t),t);
+    //     if(millis()%10 == 0) lob2.update(lob.update(real_t(x), t),t);
 
-        uart2.println(x, lob2.predict(lob.predict(t),t) , lob.predict(t));
+    //     uart2.println(x, lob2.predict(lob.predict(t),t) , lob.predict(t));
         // t = real_t(float(millis()) / float(10000));
         // Led = (millis() / 100) & 0b1;
         // if((millis() % 100) == 0){cb(); delay(1);}
-    }
+    // }
     // }while(true){
     //     // bmi.getChipId();
     //     imu.flush();
@@ -537,10 +539,10 @@ int main(){
     // HC595Single hc595single(sck_pin, mosi_pin, cs_pin);
     // GpioVirtual gv = GpioVirtual(&hc595single, 0);
     // hc595single.init();
-    while(true){
+    // while(true){
         // Led = !Led;
-        static bool i = false;
-        i = !i;
+        // static bool i = false;
+        // i = !i;
         // delay (100);
         // static uint8_t cnt = 0;
         // mag_sensor.setDirection(true);
@@ -569,7 +571,7 @@ int main(){
         // for(uint8_t _ = 0; _ < 32; _++)spi1.write(cnt++);
         // uint32_t dummy = 0;
         // Led = i;
-    }
+    // }
     // while(true){
     //     real_t dutyX = 0.5 + 0.5 * cos(t);
     //     real_t dutyY = 0.5 + 0.5 * sin(t);
@@ -733,8 +735,8 @@ int main(){
     // painter.drawString(Vector2i(0,16), String(0));
     // painter.drawString(Vector2i(0,24), String(3672));
 
-    uart2.println("initialized");
-    while(1){
+    // uart2.println("initialized");
+    // while(1){
 
         // uart2.println(mag_sensor.getRawAngle(), mag_sensor.getMagnitude(), mag_sensor.getMagStatus());
         // Led = !Led;
@@ -775,5 +777,5 @@ int main(){
         // uint16_t ad1 = ADC_GetInjectedConversionValue(ADC1,ADC_InjectedChannel_1);
         // uint16_t ad2 = ADC_GetInjectedConversionValue(ADC1,ADC_InjectedChannel_2);
         // uart1.println(ir_encoder.bit_prog, (uint8_t)ir_encoder.byte_prog, (uint8_t)ir_encoder.encode_prog, TIM3->CH1CVR);
-    }
-}
+//     }
+// }

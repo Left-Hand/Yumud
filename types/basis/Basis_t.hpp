@@ -199,9 +199,9 @@ public:
 				elements[0].z * m[0].y + elements[1].z * m[1].y + elements[2].z * m[2].y,
 				elements[0].z * m[0].z + elements[1].z * m[1].z + elements[2].z * m[2].z);
 	}
-	Basis_t<real>(real xx, real xy, real xz, real yx, real yy, real yz, real zx, real zy, real zz) {
-		set(xx, xy, xz, yx, yy, yz, zx, zy, zz);
-	}
+	// Basis_t<real>(real xx, real xy, real xz, real yx, real yy, real yz, real zx, real zy, real zz) {
+	// 	set(xx, xy, xz, yx, yy, yz, zx, zy, zz);
+	// }
 
 	void orthonormalize();
 	Basis_t<real> orthonormalized() const;
@@ -214,11 +214,11 @@ public:
 	// Basis_t<real>(const Quat &p_quat) { set_quat(p_quat); };
 	// Basis_t<real>(const Quat &p_quat, const Vector3 &p_scale) { set_quat_scale(p_quat, p_scale); }
 
-	Basis_t<real>(const Vector3 &p_euler) { set_euler(p_euler); }
-	Basis_t<real>(const Vector3 &p_euler, const Vector3 &p_scale) { set_euler_scale(p_euler, p_scale); }
+	// Basis_t<real>(const Vector3 &p_euler) { set_euler(p_euler); }
+	// Basis_t<real>(const Vector3 &p_euler, const Vector3 &p_scale) { set_euler_scale(p_euler, p_scale); }
 
-	Basis_t<real>(const Vector3 &p_axis, real p_phi) { set_axis_angle(p_axis, p_phi); }
-	Basis_t<real>(const Vector3 &p_axis, real p_phi, const Vector3 &p_scale) { set_axis_angle_scale(p_axis, p_phi, p_scale); }
+	// Basis_t<real>(const Vector3 &p_axis, real p_phi) { set_axis_angle(p_axis, p_phi); }
+	// Basis_t<real>(const Vector3 &p_axis, real p_phi, const Vector3 &p_scale) { set_axis_angle_scale(p_axis, p_phi, p_scale); }
 
 	inline Basis_t<real>(const Vector3 &row0, const Vector3 &row1, const Vector3 &row2) {
 		elements[0] = row0;

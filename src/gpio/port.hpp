@@ -19,7 +19,7 @@ protected:
 public:
     Port(GPIO_TypeDef * _instance):
         instance(_instance),
-        channels({
+        channels{
             Gpio(instance, Pin::_0),
             Gpio(instance, Pin::_1),
             Gpio(instance, Pin::_2),
@@ -36,7 +36,7 @@ public:
             Gpio(instance, Pin::_13),
             Gpio(instance, Pin::_14),
             Gpio(instance, Pin::_15),
-        }){;}
+        }{;}
     void init();
     void enableRcc(const bool en = true);
     __fast_inline void writeByIndex(const int8_t index, const bool data) override;

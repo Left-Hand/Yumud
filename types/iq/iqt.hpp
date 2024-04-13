@@ -298,7 +298,10 @@ __fast_inline bool signbit(const iq_t & iq){return bool(iq.value < 0);}
 
 __fast_inline iq_t sign(const iq_t & iq);
 
-__fast_inline iq_t fmod(const iq_t & a, const iq_t & b){return iq_t((a.value < b.value && (0 <= a.value)) ? a.value : _IQmpy(_IQfrac(_IQdiv(a.value, b.value)), b.value));}
+__fast_inline iq_t fmod(const iq_t & a, const iq_t & b){
+    // return iq_t((a.value < b.value && (0 <= a.value)) ? a.value : _IQmpy(_IQfrac(_IQdiv(a.value, b.value)), b.value));
+    return iq_t(_iq(a.value % b.value));
+}
 
 
 __fast_inline iq_t lerp(const iq_t & x, const iq_t & a, const iq_t & b){return a * (iq_t(1) - x) + b * x;}
@@ -336,10 +339,12 @@ __fast_inline void u16_to_uni(const uint16_t & data, iq_t & qv){
 #endif
 }
 
-__fast_inline void s16_to_uni(const int16_t & data, iq_t & qv){
-	constexpr uint16_t M = 1 << (GLOBAL_Q - 1);
-	constexpr uint32_t mask = ~(M-1);
-	qv.value = data & M ? data | mask : data;
+__fast_inline constexpr void s16_to_uni(const int16_t & data, iq_t & qv){
+	// constexpr uint16_t M = (uint16_t)(1 << (GLOBAL_Q - 1));
+	// constexpr uint32_t mask = ~(M-1);
+	// qv.value = data & M ? data | mask : data;
+    // qv.value = data;
+    qv.value = data > 0 ? data : -((_iq)-data);
 }
 
 __fast_inline void uni_to_u16(const iq_t & qv, uint16_t & data){

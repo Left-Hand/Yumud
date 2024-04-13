@@ -59,7 +59,7 @@ bool VL53L0X::isIdle(){
 }
 
 void VL53L0X::flush(){
-	requestData(VL53L0X_REG_RESULT_RANGE_STATUS + 6, (uint8_t *)&ambientCount, 6);
+	requestData(VL53L0X_REG_RESULT_RANGE_STATUS + 6, (uint8_t *)&result.ambientCount, 6);
 }
 
 
@@ -74,7 +74,6 @@ void VL53L0X::setContinuous(bool _continuous){
 
 void VL53L0X::stop(){
 	writeByteData(VL53L0X_REG_SYSRANGE_START, VL53L0X_REG_SYSRANGE_MODE_SINGLESHOT);
-	
 	writeByteData(0xFF, 0x01);
 	writeByteData(0x00, 0x00);
 	writeByteData(0x91, 0x00);
@@ -82,23 +81,31 @@ void VL53L0X::stop(){
 	writeByteData(0xFF, 0x00);
 }
 
-uint16_t VL53L0X::getDistanceMm(){
-	flush();
-    uint16_t ret;
-    if(distance <= 20 || distance  > 2400){
-        ret = last_distance;
-    }else{
-        ret = distance;
-        last_distance = distance;
+bool VL53L0X::update(){
+    bool conv_done = (isIdle());
+    if(conv_done){
+        flush();
     }
+    return conv_done;
+}
+uint16_t VL53L0X::getDistance(){
+    uint16_t ret;
+    if(result.distance <= 20 || result.distance  > 2400){
+        ret = last_result.distance;
+    }else{
+        ret = result.distance;
+        last_result.distance = result.distance;
+    }
+    // ret = result.distance;
+
 	if(highPrec) return ret / 4;
 	else return ret;
 }
-		
+
 uint16_t VL53L0X::getAmbientCount(){
-	return ambientCount;
+	return result.ambientCount;
 }
-		
+
 uint16_t VL53L0X::getSignalCount(){
-	return signalCount;
+	return result.signalCount;
 }

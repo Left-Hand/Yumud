@@ -333,3 +333,5 @@ uint32_t __get_SP(void)
 
 void _init(void) {}
 void _fini(void) {}
+
+__attribute__((weak)) void *__dso_handle;

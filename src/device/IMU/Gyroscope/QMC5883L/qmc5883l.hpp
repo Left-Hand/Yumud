@@ -168,17 +168,23 @@ protected:
             break;
         }
     }
+
+    bool isIdle(){
+        readReg(RegAddress::Status, statusReg.data);
+        return statusReg.ready;
+    }
 public:
     QMC5883L(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     ~QMC5883L(){;}
 
     void init(){
-        setResetPeriod(1);
-        enableContMode();
-        setFullScale(FullScale::FS2G);
-        setOverSampleRatio(OverSampleRatio::OSR512);
-        setDataRate(DataRate::DR200);
-        isChipValid();
+        if(isChipValid()){
+            setResetPeriod(1);
+            enableContMode();
+            setFullScale(FullScale::FS2G);
+            setOverSampleRatio(OverSampleRatio::OSR512);
+            setDataRate(DataRate::DR200);
+        }
     }
 
     void enableContMode(const bool en = true){
@@ -203,8 +209,14 @@ public:
         setOvsfix(ratio);
     }
 
+    bool update(){
+        bool done = isIdle();
+        if(done){
+            requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 2, 6);
+        }
+        return done;
+    }
     void getMagnet(real_t & x, real_t & y, real_t & z) override{
-        requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 2, 6);
         x = From16BitToGauss(magXReg.data);
         y = From16BitToGauss(magYReg.data);
         z = From16BitToGauss(magZReg.data);
@@ -232,10 +244,7 @@ public:
         writeReg(RegAddress::ConfigB, configBReg.data);
     }
 
-    bool isIdle(){
-        readReg(RegAddress::Status, statusReg.data);
-        return statusReg.ready;
-    }
+
 
     bool isOverflow(){
         readReg(RegAddress::Status, statusReg.data);

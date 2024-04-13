@@ -37,6 +37,7 @@ protected:
     Printer & logger;
     uint8_t node_id = 0;
     uint8_t weight = 0;
+    uint8_t mode = 0;
 
 public:
     CanFacility(Can & _can, Printer & _logger, const uint8_t & _node_id) : can(_can), logger(_logger), node_id(_node_id) {;}
@@ -180,6 +181,10 @@ public:
         }
 
         runMachine();
+    }
+
+    void setMode(const bool & _mode){
+        mode = _mode;
     }
 };
 };

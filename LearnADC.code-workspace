@@ -92,7 +92,8 @@
             "typeindex": "cpp",
             "valarray": "cpp",
             "HX711.C": "cpp",
-            "TTP229.C": "cpp"
+            "TTP229.C": "cpp",
+            "concepts": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
@@ -119,7 +120,8 @@
             "vref",
             "WRPR"
         ],
-        "C_Cpp.default.enableConfigurationSquiggles": false
+        "C_Cpp.default.enableConfigurationSquiggles": false,
+        "C_Cpp.default.cppStandard": "gnu++23"
     },
     "extensions": {
         "recommendations": [

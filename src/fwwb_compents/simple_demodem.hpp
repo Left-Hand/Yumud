@@ -42,7 +42,7 @@ protected:
                 prog = Progs::IDLE;
                 break;
             }
-            code.bit0 = (capturer.getDuty() > real_t(0.5));
+            code.bit0 = (capturer.getPulseUs() > capturer.getPeriodUs() / 2);
             prog = Progs::BIT1;
             break;
         case Progs::BIT1:
@@ -50,7 +50,7 @@ protected:
                 prog = Progs::IDLE;
                 break;
             }
-            code.bit1 = (capturer.getDuty() > real_t(0.5));
+            code.bit1 = (capturer.getPulseUs() > capturer.getPeriodUs() / 2);
             prog = Progs::IDLE;
 
         default:
