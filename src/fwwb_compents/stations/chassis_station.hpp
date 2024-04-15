@@ -5,6 +5,8 @@
 
 #include "target_station.hpp"
 #include "src/device/Proximeter/VL53L0X/vl53l0x.hpp"
+#include "src/device/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
+#include "dsp/cordic/cordic.hpp"
 #include "src/device/VirtualIO/AW9523/aw9523.hpp"
 #include "src/device/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
 
@@ -38,27 +40,40 @@ class ChassisStation : public TargetStation{
 protected:
     virtual void updateMotorTarget() = 0;
     VL53L0X & vl;
+    QMC5883L & qmc;
+    Cordic<real_t, 7> cordic = Cordic<real_t, 7>();
     GpioConcept & ir_left;
     GpioConcept & ir_right;
+    GpioConcept & coil_left;
+    GpioConcept & coil_right;
 
     void moveNotify(const CanMsg & msg){
         Vector2 vel;
 
         memcpy((void *)&vel, msg.getData(), sizeof(Vector2));
         setMove(vel);
-        updateMotorTarget();
+        // updateMotorTarget();
     }
 
-    void omegaNotify(const CanMsg & msg){
+    void omegaNotify(CanMsg msg){
         real_t omega;
         memcpy(&omega, msg.getData(), sizeof(real_t));
+        // FWWB_DEBUG(msg.getId(), msg[3], msg[2], msg[1], msg[0], omega);
         setOmega(omega);
-        updateMotorTarget();
+        // updateMotorTarget();
     }
 
+    void HpNotify() override{
+        TargetStation::HpNotify();
+        // logger.println(unit0.hp, unit1.hp);
+        coil_left = bool(unit0.hp);
+        coil_right = bool(unit1.hp);
+
+    };
+
     void parseCommand(const Command & cmd, const CanMsg & msg) override{
-        if(!msg.isRemote()) return;
-        logger.println("cmd:", (uint8_t)cmd);
+        // if(!msg.isRemote()) return;
+        // logger.println("cmd", (uint8_t)cmd);
         switch(cmd){
         case Command::CHASSIS_SET_MOVE:
             moveNotify(msg);
@@ -77,8 +92,12 @@ protected:
     }
 public:
 
-    ChassisStation(TargetStation & _instance, VL53L0X & _vl, GpioConcept & _ir_left, GpioConcept & _ir_right):
-        TargetStation(_instance), vl(_vl), ir_left(_ir_left), ir_right(_ir_right){;}
+    ChassisStation(TargetStation & _instance, VL53L0X & _vl, QMC5883L & _qmc,
+                    GpioConcept & _ir_left, GpioConcept & _ir_right,
+                    GpioConcept & _coil_left, GpioConcept & _coil_right):
+                    TargetStation(_instance), vl(_vl), qmc(_qmc),
+                    ir_left(_ir_left), ir_right(_ir_right),
+                    coil_left(_coil_left), coil_right(_coil_right){;}
 
     void init() override{
         TargetStation::init();
@@ -89,18 +108,21 @@ public:
 };
 
 class DiffChassisStation : public ChassisStation{
+public:
+    real_t omega_comm;
+    real_t omega_diff;
 protected:
     GM25 & motor_left;
     GM25 & motor_right;
 
-    real_t omega_comm;
-    real_t omega_diff;
-
     static constexpr float wheel_radius = 0.047 / 2;
     static constexpr float wheel_base = 0.1;
     PID_t<real_t> pos_pid = PID_t<real_t>(real_t(0.01), real_t(0), real_t(0), real_t(0.4));
+    PID_t<real_t> dir_pid = PID_t<real_t>(real_t(10), real_t(0), real_t(0), real_t(TAU));
+
 
     void updateMotorTarget() override{
+        // logger.println(omega_comm, omega_diff);
         motor_left.setOmega(omega_comm - omega_diff);
         motor_right.setOmega(omega_comm + omega_diff);
     }
@@ -112,17 +134,36 @@ protected:
     void runMachine() override{
         ChassisStation::runMachine();
 
-        if(mode){
+        switch(mode){
+        case 1:
             vl.update();
-            real_t force_x = pos_pid.update(real_t(vl.getDistance()), real_t(100));
-            real_t force_y = real_t(bool(ir_right) - bool(ir_left)) * PI;
-            setMove(Vector2(force_x, force_y));
+            {
+                real_t force_x = pos_pid.update(real_t(vl.getDistance()), real_t(100));
+                real_t force_y = real_t(bool(ir_right) - bool(ir_left)) * PI;
+                setMove(Vector2(force_x, force_y));
+            }
+            break;
+        case 2:
+            {
+                qmc.update();
+                real_t mag_x, mag_y, _;
+                qmc.getMagnet(mag_x, mag_y, _);
+                real_t angle = real_t(cordic.atan2(mag_y, mag_x));
+                real_t force_w = dir_pid.update(real_t(1.43), angle);
+                setMove(Vector2(real_t(0), force_w));
+            }
+            break;
+        default:
+            break;
         }
     }
 
 public:
-    DiffChassisStation(TargetStation & _instance, VL53L0X & _vl, GpioConcept & _ir_left, GpioConcept & _ir_right, GM25 & _motor_left, GM25 & _motor_right):
-            ChassisStation(_instance, _vl, _ir_left, _ir_right), motor_left(_motor_left), motor_right(_motor_right){;}
+    DiffChassisStation(TargetStation & _instance, VL53L0X & _vl, QMC5883L & _qmc, 
+            GpioConcept & _ir_left, GpioConcept & _ir_right, GpioConcept & _coil_left, GpioConcept & _coil_right, 
+            GM25 & _motor_left, GM25 & _motor_right):
+            ChassisStation(_instance, _vl, _qmc, _ir_left, _ir_right, _coil_left, _coil_right), 
+            motor_left(_motor_left), motor_right(_motor_right){;}
 
     void init() override{
         ChassisStation::init();

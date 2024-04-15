@@ -411,7 +411,7 @@ uint8_t CAN_Transmit(CAN_TypeDef* CANx, const CanTxMsg* TxMessage)
     }
     
     CANx->sTxMailBox[transmit_mailbox].TXMDTR &= (uint32_t)0xFFFFFFF0;
-    CANx->sTxMailBox[transmit_mailbox].TXMDTR |= (TxMessage->DLC & 0x0F);
+    CANx->sTxMailBox[transmit_mailbox].TXMDTR |= (TxMessage->RTR ? 0 : TxMessage->DLC & 0x0F);
 
     CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[3] << 24) | 
                                              ((uint32_t)TxMessage->Data[2] << 16) |

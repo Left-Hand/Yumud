@@ -16,12 +16,10 @@ protected:
 
     void sendCommand(const uint8_t & sta_id, const Command & command, const uint8_t *buf, const uint8_t len){
         auto msg = CanMsg((uint16_t)((uint8_t)command << 4 | sta_id), buf, len);
-        msg.remote(true);
         can.write(msg);
     }
 
     void sendCommand(const uint8_t & sta_id, const Command & command){
-        // logger.println((uint8_t)command, sta_id);
         can.write(CanMsg((uint16_t)((uint8_t)command << 4 | sta_id), true));
     }
 
@@ -244,6 +242,7 @@ protected:
                 real_t _omega = real_t(argv.at(0));
                 uint8_t buf[4] = {0};
                 memcpy(&buf, &_omega, sizeof(buf));
+                // logger.println(buf[2], buf[1], buf[0]);
                 sendCommand(chassis_id, Command::CHASSIS_SET_OMEGA, buf, sizeof(buf));
             }
             break;
@@ -270,6 +269,7 @@ public:
 
     void init(){
         // can.write(CanMsg((uint16_t)((uint8_t)Command::RST << 4), true));
+        can.init(Can::BaudRate::Mbps1);
         node_id = 0xf;
         sendCommand(0, Command::RST);
     }
@@ -286,13 +286,14 @@ public:
             const CanMsg & msg = can.read();
             uint8_t id = msg.getId() & 0b1111;
             Command cmd = (Command)(msg.getId() >> 4);
-            parseCommand(id, cmd, msg);
+        parseCommand(id, cmd, msg);
         }
 
         if(logger.available()){
             char chr = logger.read();
             if(chr == '\n'){
                 temp_str.trim();
+                logger.println(temp_str);
                 parseLine(temp_str);
                 temp_str = "";
             }else{

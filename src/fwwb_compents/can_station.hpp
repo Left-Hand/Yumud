@@ -77,11 +77,7 @@ protected:
         sendCommand(Command::MANU_ID, (const uint8_t *)supported_manu, 8);
     }
 
-    void resetNotified(){
-        FWWB_DEBUG("rst");
-        NVIC_SystemReset();
-        // Sys::Reset();
-    }
+
 
     void scanNotified(){
 
@@ -111,7 +107,8 @@ protected:
     }
 
     virtual void parseCommand(const Command & cmd, const CanMsg & msg){
-        if(!msg.isRemote()) return;
+        // if(!msg.isRemote()) return;
+        // logger.println("cmd", (uint8_t)cmd);
         switch(cmd){
         case Command::INACTIVE:
             sm = StateMachine::INACTIVE;
@@ -142,8 +139,8 @@ protected:
     virtual void runMachine(){
         switch(sm){
         case StateMachine::POWER_ON:
-            powerOnNotify();
-            manuIdNotify();
+            // powerOnNotify();
+            // manuIdNotify();
             sm = StateMachine::ACTIVE;
             break;
 
@@ -166,11 +163,13 @@ public:
     CanStation(Can & _can, Printer & _logger, const uint8_t & _node_id) : CanFacility(_can, _logger, _node_id) {;}
 
     virtual void init(){
+        can.init(Can::BaudRate::Mbps1, Sys::Chip::getFlashSize() > 32_KB
+        , CanFilter(node_id, 0x00));
+        // while(can.available()) can.read();
     }
 
     void run(){
-
-        if(can.available()){
+        while(can.available()){
 
             const CanMsg & msg = can.read();
             uint8_t id = msg.getId() & 0b1111;
@@ -183,7 +182,19 @@ public:
         runMachine();
     }
 
-    void setMode(const bool & _mode){
+    bool to_rst = false;
+    void resetNotified(){
+        // FWWB_DEBUG("rst");
+        // delayMicroseconds(999);
+        // delay(1);
+        __disable_irq();
+        // __nopn(4);
+        NVIC_SystemReset();
+        // to_rst = true;
+        // Sys::Reset();
+    }
+
+    void setMode(const uint8_t & _mode){
         mode = _mode;
     }
 };

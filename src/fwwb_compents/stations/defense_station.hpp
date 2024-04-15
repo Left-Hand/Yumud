@@ -16,7 +16,7 @@ protected:
     PortVirtual<panel_size>coil_pins;
 
     void parseCommand(const Command & cmd, const CanMsg & msg) override{
-        if(!msg.isRemote()) return;
+        // if(!msg.isRemote()) return;
         switch(cmd){
             case Command::DEFENSE_GET_ID:
                 {

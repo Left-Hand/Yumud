@@ -28,25 +28,29 @@ void test_app(){
 
     Gpio bled(GPIOC, Pin::_13);
     bled.OutPP();
-    can1.init(Can1::BaudRate::Mbps1, 0);
     CanAcessPoint ap(can1, logger);
     delay(100);
     ap.init();
-    volatile uint32_t last_blink_millis = 0;
+    // volatile uint32_t last_blink_millis = 0;
     while(true){
         // if((millis() > last_blink_millis) and (millis() % 200 == 0)){
-        //     bled= !bled;
+        //     // logger.println("run");
+        //     // bled= !bled;
         //     last_blink_millis = millis();
-        //     
+            
         // }
+        // logger.println("run");
         ap.run();
-        can1.write(CanMsg((uint8_t)Command::ACTIVE << 4, true));
-        // ap.parseCommand()
-        // delay(20);
-        ap.parseLine("O 1");
-        delay(200);
-        ap.parseLine("O -1");
-        delay(200);
+        // delay(1);
+        // can1.write(CanMsg((uint8_t)Command::ACTIVE << 4, true));
+        // delay(1);
+        // can1.write(CanMsg((uint8_t)Command::RST << 4, true));
+        // // ap.parseCommand()
+        // // delay(20);
+        // ap.parseLine("O 1");
+        // delay(200);
+        // ap.parseLine("O -1");
+        // delay(200);
         reCalculateTime();
     }
     // can1.init(Can1::BaudRate::Mbps1);

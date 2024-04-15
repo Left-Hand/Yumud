@@ -367,9 +367,9 @@ int main(){
     Sys::Misc::prework();
     // stepper_app();
     // stepper_app_new();
-    chassis_app();
+    // chassis_app();
     // modem_app();
-    // test_app();
+    test_app();
 }
 
     // timer1.init(25600);

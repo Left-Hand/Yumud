@@ -27,10 +27,12 @@ public:
         if(is_idle()){
             return begin_use(index);
             // return ErrorType::OK;
-        }else if(owned_by(index)){
+        }
+        else if(owned_by(index)){
             return begin_use(index);
             // return ErrorType::OK;
-        }else{
+        }
+        else{
             return ErrorType::OCCUPIED;
         }
     }

@@ -90,7 +90,7 @@ void CAN1_IT_Init(){
     NVIC_Init(&NVIC_InitStructure);
 }
 
-void CAN1_Init_Filter(uint16_t mask){
+void CAN1_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t mask2){
     CAN_FilterInitTypeDef CAN_FilterInitSturcture = {0};
 
     CAN_FilterInitSturcture.CAN_FilterNumber = 1;
@@ -98,11 +98,14 @@ void CAN1_Init_Filter(uint16_t mask){
     CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;
     CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
 
+    // CAN_FilterInitSturcture.CAN_FilterIdLow  = id1 << 5;
+    // CAN_FilterInitSturcture.CAN_FilterMaskIdLow = mask2 << 5;
+    // CAN_FilterInitSturcture.CAN_FilterIdHigh = id2 << 5;
+    // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = mask2 << 5;
     CAN_FilterInitSturcture.CAN_FilterIdLow  = 0;
     CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;
     CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;
     CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;
-
 
     CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
     CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
@@ -117,9 +120,10 @@ void CAN1_Init_Filter(uint16_t mask){
 
 }
 
-void Can1::init(const BaudRate & baudRate, const uint8_t & remap,  const uint16_t & mask){
+void Can1::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter & filter){
     settleTxPin(remap);
     settleRxPin(remap);
+    // CAN1_Init_Filter(filter.id, filter.mask, 0, 0x0f);
 
     switch(remap){
     case 0:
@@ -165,8 +169,7 @@ void Can1::init(const BaudRate & baudRate, const uint8_t & remap,  const uint16_
     config.CAN_RFLM = DISABLE;
     config.CAN_TXFP = DISABLE;
     CAN_Init(CAN1, &config);
-
-    CAN1_Init_Filter(mask);
+    CAN1_Init_Filter(filter.id, filter.mask, 0, 0xf);
     CAN1_IT_Init();
 }
 

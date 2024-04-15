@@ -24,11 +24,11 @@ protected:
         return unit0.isDied() && unit1.isDied();
     }
 
-    void OutLineNotify(){
+    virtual void OutLineNotify(){
         sendCommand(Command::OUTBOUND);
     }
 
-    void HpNotify(){
+    virtual void HpNotify(){
         uint8_t buf[2] = {unit0.hp, unit1.hp};
         sendCommand(Command::GET_HP, VAR_AND_SIZE(buf));
     }
@@ -97,6 +97,7 @@ protected:
 public:
 
     virtual void init(){
+        CanStation::init();
         unit0.init();
         unit1.init();
     }

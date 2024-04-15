@@ -33,7 +33,6 @@ enum class Command:uint8_t{
     CHASSIS_GET_ODO,
     CHASSIS_GET_POS,
 
-    CHASSIS_SET_MODE = CHASSIS_SET_ID + 0x0f,
 
     RST = 0x70,
     INACTIVE,
@@ -41,7 +40,9 @@ enum class Command:uint8_t{
     SYNC,
     SCAN,
     REGISTER_NODEID,
-    MANU_ID,
+
+    SET_MODE = 0x7c,
+    MANU_ID = 0x7d,
     POWER_ON = 0x7e,
     OUTBOUND = 0x7f
 };
