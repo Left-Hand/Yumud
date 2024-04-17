@@ -2,6 +2,7 @@
 
 #include "src/device/CommonIO/Led/WS2812/ws2812.hpp"
 #include "src/fwwb_compents/stations/attack_station.hpp"
+#include "src/device/Encoder/Odometer.hpp"
 
 using namespace FWWB;
 using namespace Sys::Clock;
@@ -41,7 +42,7 @@ void stepper_app(){
     svpwm.init();
     svpwm.setABCurrent(real_t(0.8), real_t(0));
     delay(100);
-    Odometer odo(mt6816,50);
+    auto odo = OdometerPoles(mt6816, 50);
     odo.locateElecrad();
     odo.locateAbsolutely(real_t(0.19));
     svpwm.setABCurrent(real_t(0), real_t(0));
@@ -186,10 +187,10 @@ void stepper_app_new(){
     SpiDrv mt6816_drv(spi1, 0);
     MT6816 mt6816(mt6816_drv);
     mt6816.enableVerification();
-    Odometer odo(mt6816,50);
+    auto odo = OdometerPoles(mt6816,50);
     odo.init();
 
-    auto pos_pid = PID_t<real_t>(real_t(4), real_t(), real_t(0));
+    auto pos_pid = PID_t<real_t>(real_t(10), real_t(), real_t(0));
     pos_pid.setClamp(real_t(0.35));
 
     MotorWithFoc motor(svpwm, odo, pos_pid);
@@ -241,14 +242,15 @@ void stepper_app_new(){
 
     uint8_t motor_code = 0;
 
+    logger.println(getChipIdCrc());
     switch(getChipIdCrc()){
-        case 3789686793:
+        case 3273134334:
             motor_code = 1;
             break;
         case 181345611:
             motor_code = 0;
     }
-    logger.println(getChipIdCrc());
+    // logger.println(getChipIdCrc());
 
     if(motor_code == 0){
         odo.inverse(true);
@@ -261,11 +263,11 @@ void stepper_app_new(){
     {
         logger.println("Cali..");
 
-        constexpr int forwardpreturns = 2;
-        constexpr int forwardturns = 9;
-        constexpr int backwardpreturns = 4;
-        constexpr int backwardturns = 9;
-        constexpr int turnmircos = 32;
+        constexpr int forwardpreturns = 1;
+        constexpr int forwardturns = 3;
+        constexpr int backwardpreturns = 1;
+        constexpr int backwardturns = 3;
+        constexpr int turnmircos = 256;
         constexpr int dur = 600;
         constexpr float cali_current = 0.6;
 
@@ -322,7 +324,11 @@ void stepper_app_new(){
         }
 
         station.run();
-        station.setFace(Vector2(real_t(0.1), real_t(0)).rotate(t));
+        // logger.println(odo.getPosition());
+        // station.setFace(Vector2(real_t(0.2), real_t(0)).rotate(t));
+        // station.setShotCode(2);
+        // station.shotMs(65535);
+        // station.setFace(Vector2(real_t(0.1), real_t(0)).rotate(t));
         // station.setYaw(sin(t));
         // motor.run();
         // logger.println(int(timer3[2]), int(timer3[3]));

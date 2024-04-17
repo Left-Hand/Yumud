@@ -41,7 +41,7 @@ void Sys::Clock::reCalculateTime(){
 
 
 real_t Sys::Clock::getCurrentSeconds(){
-        reCalculateTime();
+        // reCalculateTime();
         return t;
     }
 

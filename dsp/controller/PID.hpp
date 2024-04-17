@@ -8,20 +8,19 @@
 template<typename T>
 class PID_t{
     protected:
-        T kp = T(0.0);
-        T ki = T(0.0);
-        T kd = T(0.0);
-
-
-        T _integral = T(0.0);
         T err = T(0.0);
         T err_last = T(0.0);
+        T m_integral = T(0.0);
 
         T clp_min = T(-1.0f);
         T clp_max = T(1.0f);
 
 
     public:
+        T kp = T(0.0);
+        T ki = T(0.0);
+        T kd = T(0.0);
+
         PID_t() = delete;
 
         template<typename U>
@@ -30,8 +29,45 @@ class PID_t{
                     setClamp(_cl);
                 }
 
-        template<typename U>
-        T update(const U & setpoint, const U & pv);
+        // template<typename U>
+        // T update(const auto & _error){
+
+        // }
+        auto update(const auto & _target, const auto & _value, const auto & _value_integral, const auto & _value_derivative){
+            T target = static_cast<T>(_target);
+            T value = static_cast<T>(_value);
+
+            // T error = setpoint - value;
+            // T Pout = kp * error;
+
+            // _integral += error;
+            // T Iout = ;
+
+            // T derivative = (error - err_last);
+            // T Dout = kd * derivative;
+
+            T output = CLAMP(
+                kp * (target - value) + ki * _value_integral + kd * _value_derivative,
+                clp_min, clp_max);
+
+            return T(output);
+        }
+
+
+        auto update(const auto & _target, const auto & _value, const auto & _value_derivative){
+            // T error  = static_cast<T>(_target - _value);
+            m_integral = CLAMP(m_integral + _target - _value, clp_min, clp_max);
+            auto ret = update(_target, _value, m_integral, -static_cast<T>(_value_derivative));
+            // err_last = err;
+            return ret;
+        }
+
+        auto update(const auto & _target, const auto & _value){
+            T error  = static_cast<T>(_target - _value);
+            auto ret = update(_target, _value, m_integral, error - err_last);
+            err_last = err;
+            return ret;
+        }
 
         template<typename U>
         void setClamp(const U & _clp){

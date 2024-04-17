@@ -77,13 +77,13 @@ protected:
 
         switch(cmd){
         case Command::GET_HP:
-            HpNotify();
+            if(msg.isRemote()) HpNotify();
             break;
         case Command::SET_HP:
             HpNotified(msg);
             break;
         case Command::GET_WEIGHT:
-            WeightNotify();
+            if(msg.isRemote()) WeightNotify();
             break;
         case Command::SET_WEIGHT:
             WeightNotified(msg);

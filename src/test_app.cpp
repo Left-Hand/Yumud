@@ -37,7 +37,6 @@ void test_app(){
         //     // logger.println("run");
         //     // bled= !bled;
         //     last_blink_millis = millis();
-            
         // }
         // logger.println("run");
         ap.run();

@@ -13,19 +13,37 @@ protected:
     Point last;
     const real inverse_tau;
     bool inited = false;
+
+    void init(const real & x){
+        // if(!inited){
+            last.x = x;
+            inited = true;
+            // return last.x;
+        // }
+    }
 public:
-    LowpassFilter_t(const real & cutoff_freq) : last(Point{real(0), time(0)}), inverse_tau(TAU * cutoff_freq) {;}
+    template<typename U>
+    consteval LowpassFilter_t(const U & cutoff_freq) : last(Point{real(0), time(0)}), inverse_tau(static_cast<real>(TAU * cutoff_freq)) {;}
 
     real update(const real & x, const time & t) override {
         if(!inited){
-            last.x = x;
+            init(x);
             last.t = t;
-            inited = true;
-            return last.x;
+            return x;
         }
-        real k = (t - last.t)* inverse_tau;
-        last.x = k * x + (1 - k) * last.x;
+        real_t ret = forward(x, t - last.t);
         last.t = t;
+        return ret;
+    }
+
+    real_t forward(const real & x, const time & delta){
+        if(!inited){
+            init(x);
+            return x;
+        }
+        real b = delta * inverse_tau;
+        real alpha = b / (b + 1);
+        last.x = last.x + alpha * (x - last.x);
         return last.x;
     }
 };

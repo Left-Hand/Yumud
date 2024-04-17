@@ -12,7 +12,7 @@ struct NvicPriority{
     const uint8_t pre;
     const uint8_t sub;
 
-    NvicPriority(const uint8_t _pre, const uint8_t _sub):pre(_pre), sub(_sub){;}
+    NvicPriority(const uint8_t _pre, const uint8_t _sub):pre(MIN(_pre,1)), sub(MIN(_sub, 7)){;}
 
     static void enable(const NvicPriority & request, const IRQn _irq, const bool en = true){
         NVIC_InitTypeDef NVIC_InitStructure = {0};

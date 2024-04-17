@@ -363,13 +363,280 @@ public:
 //     // }
 
 // }
+
+
+// class Pmdc{
+// protected:
+//     PwmChannel & pwm_f;
+//     PwmChannel & pwm_b;
+// public:
+//     Pmdc(PwmChannel & _pwm_f, PwmChannel & _pwm_b):pwm_f(_pwm_f), pwm_b(_pwm_b){;}
+
+
+// }
+
+#include "src/device/Encoder/ABEncoder.hpp"
+#include "src/device/Encoder/OdometerLines.hpp"
+#include "src/adc/adcs/adc1.hpp"
+
+static auto pos_pid = PID_t<real_t>(3.1, 0.5, 1.02, 1.0);
+static auto curr_pid = PID_t<real_t>(0.1, 0.0, 0.0, 1.0);
+class Estimmator{
+// protected:
+public:
+
+    using PositionObserver =  LinearObersver_t<real_t, real_t>;
+    Odometer & instance;
+    // real_t lastPosition;
+    PositionObserver positionObserver;
+    uint32_t dur;
+    uint32_t cnt;
+public:
+    Estimmator(Odometer & _instance, const int & _dur = 20):
+        instance(_instance),
+        dur(_dur){;}
+
+    virtual void init(){
+        instance.init();
+    }
+    void update(){
+        instance.update();
+
+        cnt++;
+        if(cnt % dur == 0){
+            positionObserver.update(instance.getPosition(), Sys::Clock::getCurrentSeconds());
+        }
+    }
+
+    real_t getPosition(){
+        // return instance.getPosition();
+        return positionObserver.predict(Sys::Clock::getCurrentSeconds());
+    }
+
+    real_t getSpeed(){
+        return positionObserver.getDerivative();
+    }
+
+    real_t getDirection(){
+        return sign(getSpeed());
+    }
+
+};
+
+std::vector<String> splitString(const String& input, char delimiter) {
+    std::vector<String> result;
+
+    int startPos = 0;
+    int endPos = input.indexOf(delimiter, startPos);
+
+    while (endPos != -1) {
+        String token = input.substring(startPos, endPos);
+        result.push_back(token.c_str());
+
+        startPos = endPos + 1;
+        endPos = input.indexOf(delimiter, startPos);
+    }
+
+    if (startPos < input.length()) {
+        String lastToken = input.substring(startPos);
+        result.push_back(lastToken.c_str());
+    }
+
+    return result;
+}
+
+void parseCommand(const char & argc, const std::vector<String> & argv){
+    switch(argc){
+        case 'P':
+            if(argv.size() == 0) goto syntax_error;
+            curr_pid.kp = real_t(argv[0]);
+            break;
+        case 'I':
+            if(argv.size() == 0) goto syntax_error;
+            curr_pid.ki = real_t(argv[0]);
+            break;
+        case 'D':
+            if(argv.size() == 0) goto syntax_error;
+            curr_pid.kd = real_t(argv[0]);
+            break;
+        case 'R':
+            __disable_irq();
+            NVIC_SystemReset();
+        syntax_error:
+            // logger.println("SyntexError", argc);
+            break;
+        default:
+            break;
+    }
+}
+void parseLine(const String & line){
+    if(line.length() == 0) return;
+    auto tokens = splitString(line, ' ');
+    auto argc = tokens[0][0];
+    tokens.erase(tokens.begin());
+    parseCommand(argc, tokens);
+}
+
+
+void pmdc_test(){
+    uart2.init(115200 * 8, Uart::Mode::TxRx);
+    logger.setSpace(",");
+    logger.setEps(4);
+
+    timer3.init(36000);
+    timer3[1].setPolarity(true);
+    timer3[2].setPolarity(true);
+
+    auto pwmL = PwmChannel(timer3[1]);
+    auto pwmR = PwmChannel(timer3[2]);
+    pwmL.init();
+    pwmR.init();
+
+    Coil2 motor = Coil2(pwmL, pwmR);
+    motor.init();
+
+    // Exti
+    // auto trigGpioA = portA[1];
+    // auto trigGpioB = portA[4];
+    ABEncoderExti enc(portA[4], portA[1], NvicPriority(0, 7));
+    // enc.init();
+
+    // auto odo = Odometer(enc);
+    OdometerLines odo(enc, 1000);
+    Estimmator est(odo);
+    // constexpr auto a = ((uint32_t)(16384  << 16) / 1000) >> 16;
+
+    // AdcChannelConfig{.}
+    adc1.init(
+        {
+            AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T28_5}
+        },
+        {
+            AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T28_5}
+        });
+    // adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
+    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
+    // timer3[4] = 0;
+    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
+    TIM3->CH4CVR = TIM3->ATRLR >> 1;
+    adc1.enableCont();
+    adc1.enableScan();
+    adc1.enableAutoInject();
+
+    // adc1.enableRightAlign(false);
+    real_t motor_curr;
+    // adc1.start();
+    // adc1.startRegular();
+    // adc1.startInjected();
+
+    est.init();
+    // trigGpioA.InPullUP();
+    // trigGpioB.InPullUP();
+    // auto trigExtiCHA = ExtiChannel(trigGpioA, NvicPriority(0, 0), ExtiChannel::Trigger::RisingFalling);
+    // auto trigExtiCHB = ExtiChannel(trigGpioB, NvicPriority(1, 4), ExtiChannel::Trigger::RisingFalling);
+
+    // int16_t cnt = 0;
+    // trigExtiCHA.bindCb([&cnt, &trigGpioA, &trigGpioB](){
+    //     if(bool(trigGpioA)){
+    //         if(bool(trigGpioB)) cnt--;
+    //         else cnt++;
+    //     }else{
+    //         if(bool(trigGpioB)) cnt++;
+    //         else cnt--;
+    //     }
+    // });
+
+    // trigExtiCHB.bindCb([&cnt,&trigGpioA,  &trigGpioB](){
+    //     if(bool(trigGpioB)){
+    //         if(bool(trigGpioA)) cnt++;
+    //         else cnt--;
+    //     }else{
+    //         if(bool(trigGpioA)) cnt--;
+    //         else cnt++;
+    //     }
+    // });
+
+
+    // trigExtiCHA.init();
+    // trigExtiCHB.init();
+
+    motor.enable();
+    real_t duty;
+    // real_t duty(0);
+    real_t target;
+    LowpassFilter_t<real_t, real_t> lpf(10);
+    String temp_str;
+
+    constexpr int closeloop_freq = 1000;
+    timer4.init(closeloop_freq);
+    timer4.bindCb(Timer::IT::Update, [&](){
+        est.update();
+        // duty = CLAMP(duty +), -1, 1);
+        // motor.setDuty( pos_pid.update(target, odo.getPosition(), est.getSpeed()));
+        real_t sense_uni;
+        u16_to_uni(ADC1->IDATAR1 << 4, sense_uni);
+        constexpr float sense_scale = (1000.0 / 680.0) * 3.3;
+        auto motor_curr_temp = sense_uni * sense_scale;
+        // motor_curr = lpf.update(motor_curr_temp, t);4
+        motor_curr = lpf.forward(motor_curr_temp, real_t(1.0 / closeloop_freq));
+
+        duty = curr_pid.update(target, est.getDirection() * motor_curr);
+        // duty = real_t(0.7);
+        // motor.setDuty(sign(target) * abs(duty));
+        if(target > 0){
+            motor.setDuty(MAX(duty, 0));
+        }else{
+            motor.setDuty(MIN(duty, 0));
+        }
+    });
+
+    timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
+    // uint16_t adc_out;
+
+    while(true){
+        // est.update();
+        // if(adc1.isInjectedIdle()) adc1.startInjected();
+            // adc_out = ADC1->RDATAR;
+
+        // }
+        // target = 10 * sin(t / 4);
+        // target = 4 * floor(t/3);
+        // target = real_t(0.12) * sin(4 * t);
+        // target = real_t(0.1);
+
+        // uart2.println(target, est.getPosition(), est.getSpeed(), motor_curr, duty, lpf.update(motor_curr, t));
+        // static auto prog = real_t(0); prog += real_t(0.01);
+        // uart2.println(motor_curr, );
+        // logger.println(target, odo.getPosition(), est.getPosition(),est.getSpeed(), motor_curr);
+        motor.setDuty(sin(t));
+        logger.println(ADC1->IDATAR1);
+        delay(2);
+
+        
+        if(logger.available()){
+            char chr = logger.read();
+            if(chr == '\n'){
+                temp_str.trim();
+                // logger.println(temp_str);
+                if(temp_str.length()) parseLine(temp_str);
+                temp_str = "";
+            }else{
+                temp_str.concat(chr);
+            }
+        }
+        Sys::Clock::reCalculateTime();
+
+    }
+}
 int main(){
     Sys::Misc::prework();
     // stepper_app();
     // stepper_app_new();
     // chassis_app();
     // modem_app();
-    test_app();
+    // test_app();
+    pmdc_test();
+
 }
 
     // timer1.init(25600);
@@ -435,7 +702,7 @@ int main(){
     // adc1.clearRegularQueue();
     // adc1.AddChannelToQueue(ac0);
     // adc1.init();
-    // adc1.setRegularTrigger(AdcHw::RegularTrigger::SW);
+    // adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
     // adc1.start();
 
     // ExtiChannel channel(TrigA, NvicPriority(2,1));

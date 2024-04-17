@@ -1,47 +1,51 @@
-#ifndef __ADC_CHANNEL_HPP__
+// #ifndef __ADC_CHANNEL_HPP__
 
-#define __ADC_CHANNEL_HPP__
+// #define __ADC_CHANNEL_HPP__
 
-#include "src/platform.h"
-#include "analog_channel.hpp"
-#include "adc_enums.h"
-#include "src/gpio/gpio.hpp"
-
-class AdcHw;
-class AdcPrimary;
-class AdcCompanion;
-
-class AdcChannelOnChip{
-
-protected:
-    using Channel = AdcChannels;
-    using SampleTime = AdcSampleTimes;
-
-    ADC_TypeDef * instance;
-    Channel channel;
-    SampleTime sample_time;
-
-    virtual void setCaliData(const uint16_t data) = 0;
-
-    friend class AdcHw;
-    friend class AdcPrimary;
-    friend class AdcCompanion;
-public:
-    AdcChannelOnChip(ADC_TypeDef * _instance,
-            const Channel _channel = Channel::CH0, const SampleTime _sample_time = SampleTime::T28_5):
-            instance(_instance), channel(_channel),
-            sample_time(_sample_time){;}
-
-    virtual void setSampleTime(const SampleTime time) = 0;
-
-    void installToPin(const bool en = true);
-
-    void init(){
-        installToPin();
-    }
-};
+// #include "src/platform.h"
+// #include "analog_channel.hpp"
+// #include "adc_enums.h"
+// #include "src/gpio/gpio.hpp"
+// #include "adc/adc.hpp"
 
 
-#endif
+// class AdcOnChip;
+// class AdcPrimary;
+// class AdcCompanion;
+
+// class AdcChannel{
+
+// };
+
+// class AdcChannelOnChip: public AdcChannel{
+
+// protected:
+//     using Channel = AdcChannels;
+//     using SampleCycles = AdcSampleCycles;
+
+//     AdcOnChip & instance;
+//     Channel channel;
+//     // SampleTime sample_time;
+
+//     // virtual void setCaliData(const uint16_t data) = 0;
+
+//     friend class AdcOnChip;
+//     friend class AdcPrimary;
+//     friend class AdcCompanion;
+// public:
+//     AdcChannelOnChip(AdcOnChip & _instance, const Channel & _channel):
+//             instance(_instance), channel(_channel){};
+
+//     virtual void setSampleTime(const SampleTime time) = 0;
+
+//     void installToPin(const bool en = true);
+
+//     void init(){
+//         installToPin();
+//     }
+// };
+
+
+// #endif
 
 

@@ -275,6 +275,7 @@ public:
     }
 
     void parseLine(const String & line){
+        if(line.length() == 0) return;
         auto tokens = splitString(line, ' ');
         auto argc = tokens[0][0];
         tokens.erase(tokens.begin());
@@ -293,8 +294,8 @@ public:
             char chr = logger.read();
             if(chr == '\n'){
                 temp_str.trim();
-                logger.println(temp_str);
-                parseLine(temp_str);
+                // logger.println(temp_str);
+                if(temp_str.length()) parseLine(temp_str);
                 temp_str = "";
             }else{
                 temp_str.concat(chr);

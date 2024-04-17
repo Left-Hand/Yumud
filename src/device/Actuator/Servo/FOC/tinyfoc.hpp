@@ -9,7 +9,7 @@
 class MotorWithFoc:public ServoCloseLoop{
 protected:
     SVPWM & svpwm;
-    Odometer & odo;
+    OdometerPoles & odo;
     PID_t<real_t> & pos_pid;
 
     union{
@@ -32,7 +32,7 @@ public:
         svpwm.enable(en);
         enabled = en;
     }
-    MotorWithFoc(SVPWM & _svpwm, Odometer & _odo, PID_t<real_t> & _pos_pid):svpwm(_svpwm), odo(_odo), pos_pid(_pos_pid){;}
+    MotorWithFoc(SVPWM & _svpwm, OdometerPoles & _odo, PID_t<real_t> & _pos_pid):svpwm(_svpwm), odo(_odo), pos_pid(_pos_pid){;}
     void setMaxCurrent(real_t _max_current){
         pos_pid.setClamp(_max_current);
     }

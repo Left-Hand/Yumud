@@ -33,6 +33,10 @@ protected:
 public:
     MT6816(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
 
+    void init() override{
+        last_position = real_t();
+        use_verification = true;
+    }
     real_t getLapPosition() override{
 
         uint16_t raw = getPositionData();

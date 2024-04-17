@@ -65,7 +65,7 @@ protected:
 
     void HpNotify() override{
         TargetStation::HpNotify();
-        // logger.println(unit0.hp, unit1.hp);
+        logger.println(unit0.hp, unit1.hp);
         coil_left = bool(unit0.hp);
         coil_right = bool(unit1.hp);
 

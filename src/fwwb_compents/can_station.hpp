@@ -73,7 +73,7 @@ protected:
     }
 
     void manuIdNotify(){
-        FWWB_DEBUG("Manu: ", supported_manu);
+        // FWWB_DEBUG("Manu: ", supported_manu);
         sendCommand(Command::MANU_ID, (const uint8_t *)supported_manu, 8);
     }
 
@@ -120,13 +120,15 @@ protected:
             break;
         case Command::REGISTER_NODEID:
             registerNodeIDNotified(msg);
+            break;
         case Command::MANU_ID:
-            manuIdNotify();
+            if(msg.isRemote()) manuIdNotify();
+            break;
         case Command::POWER_ON:
-            sm = StateMachine::POWER_ON;
+            if(msg.isRemote()) sm = StateMachine::POWER_ON;
             break;
         case Command::RST:
-            resetNotified();
+            if(msg.isRemote()) resetNotified();
             break;
         case Command::SYNC:
             SyncNotified(msg);

@@ -86,7 +86,7 @@ void chassis_app(){
     uart2.init(115200, Uart::Mode::TxOnly);
     logger.setEps(4);
     logger.setSpace(",");
-    // logger.println("chassis power on");
+    logger.println("chassis power on");
 
     auto i2c_scl = portD[1];
     auto i2c_sda = portD[0];
