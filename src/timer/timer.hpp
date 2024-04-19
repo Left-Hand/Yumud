@@ -79,9 +79,9 @@ protected:
 public:
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}
 
-    void init(const uint32_t ferq, const TimerMode mode = TimerMode::Up);
-    void init(const uint16_t period, const uint16_t cycle, const TimerMode mode = TimerMode::Up);
-    void enable(const bool en = true);
+    void init(const uint32_t & ferq, const TimerMode & mode = TimerMode::Up, const bool & en = true);
+    void init(const uint16_t & period, const uint16_t & cycle, const TimerMode & mode = TimerMode::Up, const bool & en = true);
+    void enable(const bool & en = true);
 
     // void enableIt(const IT & it,const uint8_t & pre = 0, const uint8_t & sub = 0, const bool & en = true){
     //     NvicRequest request(ItToIrq(it), pre, sub);
@@ -103,20 +103,21 @@ public:
 
 class GenericTimer:public BasicTimer{
 protected:
-    TimerOC channels[4];
+    TimerOutChannelPosOnChip channels[4];
 public:
     GenericTimer(TIM_TypeDef * _base):BasicTimer(_base),
             channels{
-                TimerOC(instance, TimerOC::Channel::CH1),
-                TimerOC(instance, TimerOC::Channel::CH2),
-                TimerOC(instance, TimerOC::Channel::CH3),
-                TimerOC(instance, TimerOC::Channel::CH4)
+                TimerOutChannelPosOnChip(instance, TimerChannelOnChip::Channel::CH1),
+                TimerOutChannelPosOnChip(instance, TimerChannelOnChip::Channel::CH2),
+                TimerOutChannelPosOnChip(instance, TimerChannelOnChip::Channel::CH3),
+                TimerOutChannelPosOnChip(instance, TimerChannelOnChip::Channel::CH4)
             }{;}
     void initAsEncoder(const TimerMode mode = TimerMode::Up);
     void enableSingle(const bool _single = true);
-    // TimerOC getChannel(const TimerOC::Channel ch){return TimerOC(instance, ch);}
-    virtual TimerOC & operator [](const int index){return channels[CLAMP(index, 1, 4) - 1];}
-    virtual TimerOC & operator [](const TimerOC::Channel ch){return channels[(uint8_t)ch >> 1];}
+    TimerOutChannelPosOnChip & ch(const int & index){return channels[CLAMP(index, 1, 4) - 1];}
+    // TimerOutChannelOnChip getChannel(const TimerOutChannelOnChip::Channel ch){return TimerOutChannelOnChip(instance, ch);}
+    virtual TimerOutChannelPosOnChip & operator [](const int & index){return ch(index);}
+    virtual TimerOutChannelPosOnChip & operator [](const TimerOutChannelOnChip::Channel & channel){return channels[(uint8_t)channel >> 1];}
     GenericTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
 };
 
@@ -124,7 +125,7 @@ class AdvancedTimer:public GenericTimer{
 protected:
     uint8_t caculate_dead_zone(uint32_t ns);
 
-    TimerOC co_channels[3];
+    TimerOutChannelNegOnChip n_channels[3];
 public:
 
     enum class LockLevel:uint16_t{
@@ -135,30 +136,33 @@ public:
 
     };
     // Bdtr getBdtr();
-    void initBdtr(const LockLevel level = LockLevel::Off, const uint32_t ns = 200);
-    void setDeadZone(const uint32_t ns);
+    void initBdtr(const uint32_t & ns = 200, const LockLevel & level = LockLevel::Off);
+    void setDeadZone(const uint32_t & ns);
 
-    TimerOC & operator [](const int index) override{
-        bool is_co = index < 0;
-        if(is_co) return co_channels[CLAMP(-index, 1, 3) - 1];
-        else return channels[CLAMP(index, 1, 4) - 1];
-    }
 
-    TimerOC & operator [](const TimerOC::Channel ch) override {
-        bool is_co = (uint8_t) ch & 0b1;
-        if(is_co){
-            return co_channels[((uint8_t)ch - 1) >> 1];
-        }else{
-            return channels[(uint8_t)ch >> 1];
-        }
-    }
-    
+    // TimerOutChannelOnChip & operator [](const int index) override{
+    //     bool is_co = index < 0;
+    //     if(is_co) return co_channels[CLAMP(-index, 1, 3) - 1];
+    //     else return channels[CLAMP(index, 1, 4) - 1];
+    // }
+
+    // TimerOutChannelOnChip & operator [](const TimerChannelOnChip::Channel ch) override {
+    //     bool is_co = (uint8_t) ch & 0b1;
+    //     if(is_co){
+    //         return co_channels[((uint8_t)ch - 1) >> 1];
+    //     }else{
+    //         return channels[(uint8_t)ch >> 1];
+    //     }
+    // }
+
+    TimerOutChannelNegOnChip & chn(const int & index){return n_channels[CLAMP(index, 1, 3) - 1];}
     AdvancedTimer(TIM_TypeDef * _base):GenericTimer(_base),
-            co_channels{
-                TimerOC(instance, TimerOC::Channel::CH1N),
-                TimerOC(instance, TimerOC::Channel::CH2N),
-                TimerOC(instance, TimerOC::Channel::CH3N),
+            n_channels{
+                TimerOutChannelNegOnChip(instance, TimerChannelOnChip::Channel::CH1N),
+                TimerOutChannelNegOnChip(instance, TimerChannelOnChip::Channel::CH2N),
+                TimerOutChannelNegOnChip(instance, TimerChannelOnChip::Channel::CH3N),
             }{;}
+
     AdvancedTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
 };
 

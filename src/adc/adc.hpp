@@ -7,6 +7,7 @@
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
 #include "adc_enums.h"
+#include "types/range/range_t.hpp"
 #include <initializer_list>
 
 class AdcConcept{
@@ -42,7 +43,7 @@ protected:
     struct CTLR1{
         union{
             struct{
-                uint32_t AWDCH:4;
+                uint32_t AWDCH:5;
                 uint32_t EOCIE:1;
                 uint32_t AWDIE:1;
                 uint32_t JEOCIE:1;
@@ -65,6 +66,7 @@ protected:
             uint32_t data;
         };
     };
+
 
     struct CTLR2{
         union{
@@ -91,7 +93,7 @@ protected:
             uint32_t data;
         };
     };
-
+    // static constexpr int u = sizeof(CTLR2);
 public:
     AdcOnChip(ADC_TypeDef * _instance):instance(_instance){;}
 };
@@ -109,28 +111,19 @@ protected:
     //     RegularChannel()
     // };
     // InjectedChannel injected_channels[4];
-    volatile uint16_t regular_datas[16];
-    volatile int16_t cali_data;
-    // uint8_t regular_cnt = 0;
-    // uint8_t injected_cnt = 0;
+
+
+    bool right_align = true;
+    uint8_t regular_cnt = 0;
+    uint8_t injected_cnt = 0;
+    int16_t cali_data;
 
     using Channel = AdcChannels;
     using SampleTime = AdcSampleCycles;
 
-    void cali(){
-        ADC_BufferCmd(ADC1, DISABLE);
-
-        ADC_ResetCalibration(ADC1);
-
-        while(ADC_GetResetCalibrationStatus(ADC1));
-        ADC_StartCalibration(ADC1);
-
-        while(ADC_GetCalibrationStatus(ADC1));
-        cali_data = Get_CalibrationValue(ADC1);
-
-        ADC_BufferCmd(ADC1, ENABLE);
+    uint32_t getMaxValue() const {
+        return ((1 << 12) - 1) << (right_align ? 0 : 4);
     }
-
     // void clearRegularQueue(){
     //     for(RegularChannel * & regular : regular_ptrs){
     //         regular = nullptr;
@@ -154,14 +147,20 @@ protected:
     //     if(injected_cnt >= 4) return;
     //     injected_ptrs[injected_cnt++] = &injected_channel;
     // }
-    void setRegularCount(const uint8_t cnt){
+    void setRegularCount(const uint8_t & cnt){
         CTLR1 tempreg;
         tempreg.data = instance->CTLR1;
         tempreg.DISCNUM = cnt;
         instance->CTLR1 = tempreg.data;
+        regular_cnt = cnt;
     }
 
-    void setRegularSampleTime(const Channel & channel,  const SampleTime _sample_time){
+    void setInjectedCount(const uint8_t & cnt){
+        ADC_InjectedSequencerLengthConfig(instance, cnt);
+        injected_cnt = cnt;
+    }
+
+    void setRegularSampleTime(const Channel & channel,  const SampleTime & _sample_time){
         auto sample_time = _sample_time;
         uint8_t ch = (uint8_t)channel;
         uint8_t offset = ch % 10;
@@ -207,6 +206,8 @@ protected:
     // void setInjectedSampleTime(const SampleTime _sample_time) override{
         // ADC_InjectedChannelConfig(instance, ch_code, rank, (uint8_t)_sample_time);
     // }
+
+
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
     void init(std::initializer_list<AdcChannelConfig>regular_list,
@@ -249,13 +250,23 @@ public:
         //     ADC_SetInjectedOffset(ADC1,ADC_InjectedChannel_1, MAX(cali_data, 0)); // offset can`t be negative
         //     cha.installToPin();
         // }
-    ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T3_CC4);
+    // ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T3_CC4);
     // ADC_ExternalTrigInjectedConvEdgeConfig(ADC1,adcexternaltriginjeced);
-    ADC_ExternalTrigInjectedConvCmd(ADC1, ENABLE);
+    // ADC_ExternalTrigInjectedConvCmd(ADC1, ENABLE);
         // start();
         ADC_Cmd(ADC1, ENABLE);
-        cali();
-        ADC_BufferCmd(ADC1, ENABLE); //enable buffer
+
+        ADC_BufferCmd(ADC1, DISABLE);
+
+        ADC_ResetCalibration(ADC1);
+
+        while(ADC_GetResetCalibrationStatus(ADC1));
+        ADC_StartCalibration(ADC1);
+
+        while(ADC_GetCalibrationStatus(ADC1));
+        cali_data = Get_CalibrationValue(ADC1);
+
+        ADC_BufferCmd(ADC1, ENABLE);
 
         {
             setRegularCount(regular_list.size());
@@ -272,7 +283,7 @@ public:
         }
 
         {
-            ADC_InjectedSequencerLengthConfig(instance, injected_list.size());
+            setInjectedCount(injected_list.size());
             uint8_t i = 0;
             for(auto injected_config : injected_list){
                 ADC_InjectedChannelConfig(instance,
@@ -290,7 +301,7 @@ public:
     }
 
     void enableDma(const bool en = true){
-        ADC_DMACmd(ADC1, en);
+        ADC_DMACmd(instance, en);
     }
 
     // void enableIT(const Nvic)
@@ -315,6 +326,12 @@ public:
         instance->CTLR2 = tempreg.data;
     }
 
+    void enableDisc(const bool & en = true){
+        CTLR1 tempreg;
+        tempreg.data = instance->CTLR1;
+        tempreg.DISCEN = en;
+        instance->CTLR1 = tempreg.data;
+    }
 
     void enableScan(const bool&  en = true){
         CTLR1 tempreg;
@@ -332,6 +349,7 @@ public:
         tempreg.data = instance->CTLR2;
         tempreg.ALIGN = !en;
         instance->CTLR2 = tempreg.data;
+        right_align = en;
     }
 
     void enableTempVref(const bool & en = true){
@@ -347,9 +365,9 @@ public:
         tempreg.EXTSEL = static_cast<uint8_t>(trigger);
         instance->CTLR2 = tempreg.data;
 
-        // if(trigger != RegularTrigger::SW){
+        if(trigger != RegularTrigger::SW){
             ADC_ExternalTrigConvCmd(instance,ENABLE);
-        // }
+        }
     }
 
     void setInjectedTrigger(const InjectedTrigger & trigger){
@@ -358,29 +376,27 @@ public:
         tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
         instance->CTLR2 = tempreg.data;
 
-        // if(trigger != InjectedTrigger::SW){
+        if(trigger != InjectedTrigger::SW){
             ADC_ExternalTrigInjectedConvCmd(instance, ENABLE);
             ADC_ExternalTrigConvCmd(instance,ENABLE);
-        // }
+        }else{
+            ADC_ExternalTrigInjectedConvCmd(instance, DISABLE);
+        }
     }
 
-    void setHighThr(const uint16_t & thr){
-        // if(thr > 4096) thr >>= 4;
-        // instance->WDHTR = thr > 4096 ? thr >> 4 : thr;
-        instance->WDHTR = thr;
+    void setWdtThreshold(const Range_t<int> & _threshold){
+        // CTLR3 tempreg;
+        auto threshold = _threshold.intersection(Rangei(0, (int)getMaxValue()));
+        instance->WDHTR = threshold.end;
+        instance->WDLTR = threshold.start;
     }
 
-    void setLowThr(const uint16_t & thr){
-        // instance->WDLTR = thr > 4096 ? thr >> 4 : thr;
-        instance->WDLTR = thr;
-    }
-
-    void startRegular(){
+    void swStartRegular(){
         //
         ADC_SoftwareStartConvCmd(instance, true);
     }
 
-    void startInjected(){
+    void swStartInjected(){
         ADC_SoftwareStartInjectedConvCmd(instance, true);
     }
 
@@ -407,6 +423,12 @@ public:
     // InjectedChannel getInjectedChannel(const Channel channel, const SampleTime sample_time = SampleTime::T28_5){
     //     return InjectedChannel(instance, channel, sample_time);
     // }
+
+    virtual void refreshRegularData() = 0;
+    virtual void refreshInjectedData() = 0;
+
+    virtual uint16_t getRegularDataByRank(const uint8_t & rank) = 0;
+    virtual uint16_t getInjectedDataByRank(const uint8_t & rank) = 0;
 };
 
 #endif

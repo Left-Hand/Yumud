@@ -380,7 +380,9 @@ public:
 #include "src/adc/adcs/adc1.hpp"
 
 static auto pos_pid = PID_t<real_t>(3.1, 0.5, 1.02, 1.0);
-static auto curr_pid = PID_t<real_t>(0.1, 0.0, 0.0, 1.0);
+static auto curr_pid = PID_t<real_t>(20.0, 0.0, 0.0, 1.0);
+static auto pos2curr_pid = PID_t<real_t>(11.0, 0.05, 1.1, 1.0);
+static real_t omega = real_t(0.3);
 class Estimmator{
 // protected:
 public:
@@ -389,8 +391,10 @@ public:
     Odometer & instance;
     // real_t lastPosition;
     PositionObserver positionObserver;
+    LowpassFilter_t<real_t, real_t>speed_lpf = LowpassFilter_t<real_t, real_t>(30.0);
+    real_t speed;
     uint32_t dur;
-    uint32_t cnt;
+    uint32_t cnt = 0;
 public:
     Estimmator(Odometer & _instance, const int & _dur = 20):
         instance(_instance),
@@ -403,9 +407,11 @@ public:
         instance.update();
 
         cnt++;
-        if(cnt % dur == 0){
+        if(cnt == dur){
+            cnt = 0;
             positionObserver.update(instance.getPosition(), Sys::Clock::getCurrentSeconds());
         }
+        speed = speed_lpf.update(positionObserver.getDerivative(), t);
     }
 
     real_t getPosition(){
@@ -414,7 +420,7 @@ public:
     }
 
     real_t getSpeed(){
-        return positionObserver.getDerivative();
+        return speed;
     }
 
     real_t getDirection(){
@@ -449,15 +455,19 @@ void parseCommand(const char & argc, const std::vector<String> & argv){
     switch(argc){
         case 'P':
             if(argv.size() == 0) goto syntax_error;
-            curr_pid.kp = real_t(argv[0]);
+            pos2curr_pid.kp = real_t(argv[0]);
             break;
         case 'I':
             if(argv.size() == 0) goto syntax_error;
-            curr_pid.ki = real_t(argv[0]);
+            pos2curr_pid.ki = real_t(argv[0]);
             break;
         case 'D':
             if(argv.size() == 0) goto syntax_error;
-            curr_pid.kd = real_t(argv[0]);
+            pos2curr_pid.kd = real_t(argv[0]);
+            break;
+        case 'O':
+            if(argv.size() == 0) goto syntax_error;
+            omega = real_t(argv[0]);
             break;
         case 'R':
             __disable_irq();
@@ -486,15 +496,16 @@ void pmdc_test(){
     timer3.init(36000);
     timer3[1].setPolarity(true);
     timer3[2].setPolarity(true);
-
-    auto pwmL = PwmChannel(timer3[1]);
-    auto pwmR = PwmChannel(timer3[2]);
+    // timer3[1].setPolarity(false);
+    // timer3[2].setPolarity(false);
+    auto pwmL = PwmChannel(timer3[2]);
+    auto pwmR = PwmChannel(timer3[1]);
     pwmL.init();
     pwmR.init();
 
     Coil2 motor = Coil2(pwmL, pwmR);
     motor.init();
-
+    // tim1ch1n
     // Exti
     // auto trigGpioA = portA[1];
     // auto trigGpioB = portA[4];
@@ -502,7 +513,7 @@ void pmdc_test(){
     // enc.init();
 
     // auto odo = Odometer(enc);
-    OdometerLines odo(enc, 1000);
+    OdometerLines odo(enc, 1100);
     Estimmator est(odo);
     // constexpr auto a = ((uint32_t)(16384  << 16) / 1000) >> 16;
 
@@ -512,7 +523,7 @@ void pmdc_test(){
             AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T28_5}
         },
         {
-            AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T28_5}
+            AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T71_5}
         });
     // adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
     // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
@@ -526,8 +537,8 @@ void pmdc_test(){
     // adc1.enableRightAlign(false);
     real_t motor_curr;
     // adc1.start();
-    // adc1.startRegular();
-    // adc1.startInjected();
+    // adc1.swStartRegular();
+    // adc1.swStartInjected();
 
     est.init();
     // trigGpioA.InPullUP();
@@ -563,54 +574,67 @@ void pmdc_test(){
     motor.enable();
     real_t duty;
     // real_t duty(0);
-    real_t target;
+    real_t target_curr;
+    real_t motor_curr_temp;
+    real_t target_pos;
     LowpassFilter_t<real_t, real_t> lpf(10);
     String temp_str;
 
     constexpr int closeloop_freq = 1000;
+    Gpio & t_watch = portA[5];
+    t_watch.OutPP();
     timer4.init(closeloop_freq);
     timer4.bindCb(Timer::IT::Update, [&](){
+        t_watch.set();
         est.update();
         // duty = CLAMP(duty +), -1, 1);
         // motor.setDuty( pos_pid.update(target, odo.getPosition(), est.getSpeed()));
+        target_curr = pos2curr_pid.update(target_pos, odo.getPosition(), est.getSpeed());
         real_t sense_uni;
         u16_to_uni(ADC1->IDATAR1 << 4, sense_uni);
         constexpr float sense_scale = (1000.0 / 680.0) * 3.3;
-        auto motor_curr_temp = sense_uni * sense_scale;
+        motor_curr_temp = sign(duty) * sense_uni * sense_scale;
         // motor_curr = lpf.update(motor_curr_temp, t);4
         motor_curr = lpf.forward(motor_curr_temp, real_t(1.0 / closeloop_freq));
 
-        duty = curr_pid.update(target, est.getDirection() * motor_curr);
-        // duty = real_t(0.7);
-        // motor.setDuty(sign(target) * abs(duty));
-        if(target > 0){
-            motor.setDuty(MAX(duty, 0));
-        }else{
-            motor.setDuty(MIN(duty, 0));
-        }
+        duty = curr_pid.update(target_curr, motor_curr);
+        motor = duty;
+        t_watch.clr();
     });
 
     timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
     // uint16_t adc_out;
+    pos2curr_pid.setClamp(0.2);
 
     while(true){
         // est.update();
-        // if(adc1.isInjectedIdle()) adc1.startInjected();
+        // if(adc1.isInjectedIdle()) adc1.swStartInjected();
             // adc_out = ADC1->RDATAR;
 
         // }
         // target = 10 * sin(t / 4);
         // target = 4 * floor(t/3);
-        // target = real_t(0.12) * sin(4 * t);
+        // target_pos = real_t(0.12) * t;
+        static real_t ang = real_t(0);
+        static real_t last_t = real_t(0);
+
+        // target_pos = 2 * sign(frac(ang += omega * (t - last_t)) - 0.5);
+        target_pos = sin(ang +=  omega * (t - last_t));
+        last_t = t;
+        // motor = 0.7 * sin(t);
+        // motor = duty;
+        // motor = frac(t);
         // target = real_t(0.1);
 
         // uart2.println(target, est.getPosition(), est.getSpeed(), motor_curr, duty, lpf.update(motor_curr, t));
         // static auto prog = real_t(0); prog += real_t(0.01);
         // uart2.println(motor_curr, );
-        // logger.println(target, odo.getPosition(), est.getPosition(),est.getSpeed(), motor_curr);
-        motor.setDuty(sin(t));
-        logger.println(ADC1->IDATAR1);
-        delay(2);
+        // logger.println(odo.getPosition(),est.getSpeed(), target_pos, motor_curr, target_curr);
+        // logger.println(duty, motor_curr_temp, motor_curr, odo.getPosition(), est.getSpeed(), 0);
+        logger.println(target_pos, odo.getPosition(), est.getSpeed(), TIM3->CH2CVR);
+        // motor.setDuty(sin(t));
+        // logger.println(ADC1->IDATAR1);
+        // delay(2);
 
         
         if(logger.available()){
@@ -628,6 +652,213 @@ void pmdc_test(){
 
     }
 }
+
+
+class Opa{
+protected:
+    uint8_t opa_num;
+    uint8_t psel;
+    uint8_t nsel;
+    uint8_t osel;
+
+    Gpio getPosPin(){
+        switch(opa_num){
+            case 1:
+                switch(psel){
+                    case 0:
+                        return Gpio(OPA1_P0_Port, (Pin)OPA1_P0_Pin);
+                    case 1:
+                        return Gpio(OPA1_P1_Port, (Pin)OPA1_P1_Pin);
+                    default:
+                        break;
+                }
+                break;
+            case 2:
+                switch(psel){
+                    case 0:
+                        return Gpio(OPA2_P0_Port, (Pin)OPA2_P0_Pin);
+                    case 1:
+                        return Gpio(OPA2_P1_Port, (Pin)OPA2_P1_Pin);
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+        return Gpio(GPIOA, Pin::None);
+    };
+
+    Gpio getNegPin(){
+        switch(opa_num){
+            case 1:
+                switch(psel){
+                    case 0:
+                        return Gpio(OPA1_N0_Port, (Pin)OPA1_N0_Pin);
+                    case 1:
+                        return Gpio(OPA1_N1_Port, (Pin)OPA1_N1_Pin);
+                    default:
+                        break;
+                }
+                break;
+            case 2:
+                switch(psel){
+                    case 0:
+                        return Gpio(OPA2_N0_Port, (Pin)OPA2_N0_Pin);
+                    case 1:
+                        return Gpio(OPA2_N1_Port, (Pin)OPA2_N1_Pin);
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
+        }
+        return Gpio(GPIOA, Pin::None);
+    };
+
+    // Gpio getOutPin(){
+    //     switch(opa_num){
+    //         case 1:
+    //             switch(psel){
+    //                 case 0:
+    //                     return Gpio(OPA1_O0_Port, (Pin)OPA1_O0_Pin);
+    //                 case 1:
+    //                     return Gpio(OPA1_O1_Port, (Pin)OPA1_O1_Pin);
+    //                 default:
+    //                     break;
+    //             }
+    //             break;
+    //         case 2:
+    //             switch(psel){
+    //                 case 0:
+    //                     return Gpio(OPA2_O0_Port, (Pin)OPA2_O0_Pin);
+    //                 case 1:
+    //                     return Gpio(OPA2_O1_Port, (Pin)OPA2_O1_Pin);
+    //                 default:
+    //                     break;
+    //             }
+    //             break;
+    //         default:
+    //             break;
+    //     }
+    //     return Gpio(GPIOA, Pin::None);
+    // };
+public:
+    Opa(const uint8_t & _opa_num):opa_num( _opa_num ){;}
+
+    void init( const uint8_t & sel){
+        getNegPin().InAnalog();
+        getPosPin().InAnalog();
+        OPA_InitTypeDef OPA_InitStructure;
+        OPA_InitStructure.OPA_NUM = CLAMP((OPA_Num_TypeDef)(OPA1 + (opa_num - 1)), OPA1, OPA4);
+        OPA_InitStructure.PSEL = (OPA_PSEL_TypeDef)sel;
+        OPA_InitStructure.NSEL = (OPA_NSEL_TypeDef)sel;
+        OPA_InitStructure.Mode = (OPA_Mode_TypeDef)sel;
+        OPA_Init(&OPA_InitStructure);
+        OPA_Cmd(OPA_InitStructure.OPA_NUM, ENABLE);
+    }
+};
+
+Opa opa1(1);
+Opa opa2(2);
+
+template<typename T>
+struct targAndMeasurePair_t{
+    T target;
+    T measure;
+};
+
+using targAndMeasurePair = targAndMeasurePair_t<real_t>;
+
+
+struct buckRuntimeValues{
+    targAndMeasurePair curr;
+    targAndMeasurePair volt;
+};
+
+
+// class Test:pub
+void buck_test(){
+    uart2.init(115200 * 8, Uart::Mode::TxRx);
+    logger.setSpace(",");
+    logger.setEps(4);
+
+    timer1.initBdtr();
+    timer1.init(32000, Timer::TimerMode::Up, false);
+    auto & ch = timer1.ch(1);
+    auto & chn = timer1.chn(1);
+
+    ch.setIdleState(true);
+    chn.setIdleState(true);
+    chn.init();
+
+    auto buck_pwm = PwmChannel(ch);
+    buck_pwm.setClamp(real_t(0.1), real_t(0.9));
+    buck_pwm.init();
+
+    adc1.init(
+        {
+            AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T28_5}
+        },
+        {
+            AdcChannelConfig{.channel = AdcChannels::CH4, .sample_cycles = AdcSampleCycles::T239_5}
+            // AdcChannelConfig{.channel = AdcChannels::CH1, .sample_cycles = AdcSampleCycles::T239_5},
+        });
+
+    static constexpr int buck_freq = 1000;
+    timer3.init(buck_freq);
+
+    real_t adc_fl1, adc_fl2, adc_out, duty;
+    buckRuntimeValues buck_rv;
+    LowpassFilter_t<real_t, real_t> lpf(50);
+    LowpassFilter_t<real_t, real_t> lpf2(30);
+
+    timer3.bindCb(Timer::IT::CC4, [&](){
+        duty = real_t(0.3) + 0.14 * sin(4 * TAU * t);
+        // duty = real_t(0.5);
+        u16_to_uni(ADC1->IDATAR1<<4, adc_out);
+        adc_fl1 = lpf.forward(adc_out, real_t(1.0 / buck_freq));
+        adc_fl2 = lpf2.forward(adc_fl1, real_t(1.0 / buck_freq));
+
+        buck_rv.curr.measure = real_t(adc_fl2);
+        buck_pwm = duty;
+    });
+    timer3.enableIt(Timer::IT::CC4, NvicPriority(0, 0));
+
+    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
+    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
+    // adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
+    adc1.setPga(AdcOnChip::Pga::X64);
+    // adc1.enableCont();
+    // adc1.setPga(AdcOnChip::Pga::X4);
+    // adc1.enableScan();
+    adc1.enableAutoInject(); // must be enabled for ext.inj
+    // adc1.swStartRegular();
+    adc1.swStartInjected();
+    opa2.init(1);
+
+    timer1.enable();
+
+    while(true){
+
+        // if(adc1.isRegularIdle()){
+        //     // adc1.refreshInjectedData();
+        //     // adc1.swStartInjected();
+        //     adc1.swStartRegular();
+        // }
+
+        // if(adc1.isInjectedIdle()){
+        //     // adc1.refreshInjectedData();
+        //     // adc1.swStartInjected();
+        //     adc1.swStartInjected();
+        // }
+        // u16_to_uni(ADC1->RDATAR << 4, adc_out);
+
+        logger.println(duty, adc_out, adc_fl1, adc_fl2);
+        Sys::Clock::reCalculateTime();
+    }
+}
 int main(){
     Sys::Misc::prework();
     // stepper_app();
@@ -635,7 +866,8 @@ int main(){
     // chassis_app();
     // modem_app();
     // test_app();
-    pmdc_test();
+    // pmdc_test();
+    buck_test();
 
 }
 

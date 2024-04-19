@@ -7,6 +7,12 @@
 class Adc1:public AdcPrimary{
 public:
     Adc1():AdcPrimary(ADC1){;}
+
+    void refreshRegularData() override;
+    void refreshInjectedData() override;
+
+    uint16_t getRegularDataByRank(const uint8_t & rank) override;
+    uint16_t getInjectedDataByRank(const uint8_t & rank) override;
 };
 
 #define HAVE_ADC1

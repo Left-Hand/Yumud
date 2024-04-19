@@ -28,20 +28,20 @@ public:
 
 class PwmChannel:public PwmChannelConcept{
 protected:
-    TimerOC & instance;
+    TimerOutChannelPosOnChip & instance;
 
 public:
-    PwmChannel(TimerOC & _pwm) : instance(_pwm) {;}
+    PwmChannel(TimerOutChannelPosOnChip & _pwm) : instance(_pwm) {;}
 
     void init() override{
         instance.init();
     }
     __fast_inline void setDuty(const real_t & duty) override{
-        instance = uint16_t(CLAMP(duty, min_value, max_value) * instance.getPreloadData());
+        instance = CLAMP(duty, min_value, max_value);
     }
 
     __fast_inline PwmChannel & operator = (const real_t & duty){setDuty(duty); return *this;}
-    operator real_t() const {return real_t((uint16_t)(instance)) / instance.getPreloadData();}
+    operator real_t() const {return real_t(instance);}
 };
 
 #endif

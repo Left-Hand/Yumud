@@ -3,6 +3,8 @@
 #define __USER_DEFS_H__
 
 #include <ch32v20x.h>
+#include <ch32v20x_opa.h>
+#include <ch32v20x_iwdg.h>
 // #include <core_riscv.h>
 
 #define USE_IQ

@@ -46,7 +46,7 @@ static uint32_t TIM_Get_BusFreq(TIM_TypeDef * instance){
 }
 
 
-void BasicTimer::init(const uint32_t freq, const TimerMode mode){
+void BasicTimer::init(const uint32_t & freq, const TimerMode & mode, const bool & en){
     TIM_RCC_ON(instance);
     uint32_t raw_period = TIM_Get_BusFreq(instance) / freq;
     // TIM_Get_BusFreq(instance);
@@ -56,10 +56,10 @@ void BasicTimer::init(const uint32_t freq, const TimerMode mode){
         cycle++;
     }
 
-    init(raw_period / cycle, cycle, mode);
+    init(raw_period / cycle, cycle, mode, en);
 }
 
-void BasicTimer::init(const uint16_t period, const uint16_t cycle, const TimerMode mode){
+void BasicTimer::init(const uint16_t & period, const uint16_t & cycle, const TimerMode & mode, const bool & en){
     TIM_RCC_ON(instance);
     TIM_InternalClockConfig(instance);
     TIM_DeInit(instance);
@@ -74,12 +74,12 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const TimerMo
     TIM_Get_BusFreq(instance);
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
-    enable();
+    enable(en);
 }
 
 
 
-void BasicTimer::enable(const bool en){
+void BasicTimer::enable(const bool & en){
     if(en){
         TIM_Cmd(instance, ENABLE);
         if(instance == TIM1){
@@ -163,7 +163,7 @@ uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
     return dead;
 }
 
-void AdvancedTimer::initBdtr(const LockLevel level, const uint32_t ns){
+void AdvancedTimer::initBdtr(const uint32_t & ns, const LockLevel & level){
 
     TIM_BDTRInitTypeDef TIM_BDTRInitStructure;
     TIM_BDTRInitStructure.TIM_OSSIState = TIM_OSSIState_Disable;
@@ -176,7 +176,7 @@ void AdvancedTimer::initBdtr(const LockLevel level, const uint32_t ns){
     TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::setDeadZone(const uint32_t ns){
+void AdvancedTimer::setDeadZone(const uint32_t & ns){
     uint8_t dead = caculate_dead_zone(ns);
 
     uint16_t tempreg = instance->BDTR;

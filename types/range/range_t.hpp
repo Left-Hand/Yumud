@@ -106,8 +106,8 @@ public:
         else return Range_t<T>();
     }
 
-    template<typename U>
-    Range_t<T> grow(const U & amount){
+    // template<typename U>
+    Range_t<T> grow(const auto & amount){
         Range_t<T> regular = this -> abs();
         Range_t<T> ret = Range_t<T>(regular.start - amount, regular.end + amount);
         if (ret.is_regular()) return ret;
@@ -121,27 +121,32 @@ public:
         return Range_t<T>(MIN(regular.start, other_regular.start), MAX(regular.end, other_regular.end));
     }
 
-    template<typename U>
-    Range_t<T> shift(const U & amount){
+    // template<typename U>
+    Range_t<T> shift(const auto & amount){
         Range_t<T> regular = this -> abs();
         Range_t<T> ret = Range_t<T>(regular.start + amount, regular.end + amount);
         return ret;
     }
 
-    template<typename U>
-    Range_t merge(const U & value){
+    // template<typename U>
+    Range_t merge(const auto & value){
         Range_t<T> regular = this -> abs();
         return Range_t<T>(MIN(regular.start, value), MAX(regular.end, value));
     }
 
-    template<typename U>
-    T invlerp(const U & value){
+    // template<typename U>
+    T invlerp(const auto & value){
         return (value - start) / (end - start);
     }
 
-    template<typename U>
-    U lerp(const U & value){
+    // template<typename U>
+    T lerp(const auto & value){
         return start + (value) * (end - start);
+    }
+
+    T clamp(const auto & value){
+        Range_t<T> regular = this -> abs();
+        return MIN(MAX(value, regular.start), regular.end);
     }
 
     explicit operator bool() const{
