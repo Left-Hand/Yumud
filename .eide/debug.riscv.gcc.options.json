@@ -1,6 +1,14 @@
 {
     "version": 2,
-    "beforeBuildTasks": [],
+    "beforeBuildTasks": [
+        {
+            "name": "new prebuild task",
+            "disable": false,
+            "abortAfterFailed": false,
+            "stopBuildAfterFailed": true,
+            "command": "python scripts/hello.py"
+        }
+    ],
     "afterBuildTasks": [
         {
             "name": "elf_to_lst",

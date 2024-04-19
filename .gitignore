@@ -5,9 +5,12 @@
 
 # project out
 build
+node_modules
+
 
 # eide template
 *.ept
 *.eide-template
 tools
 .VSCodeCounter
+hello
