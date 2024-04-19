@@ -39,7 +39,7 @@ public:
 // ADC_ExternalTrigInjecConv_T3_CC4
 protected:
     ADC_TypeDef * instance;
-
+    // ADC_TypeDef * instance2;
     struct CTLR1{
         union{
             struct{
@@ -219,41 +219,8 @@ public:
 
         ADC_DeInit(instance);
 
-        // ADC_InitStructure.ADC_Mode = (uint32_t)mode;
         setMode(mode);
 
-        // ADC_InitStructure.ADC_ScanConvMode = DISABLE;
-        // ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
-        // ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-        // ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-        // ADC_InitStructure.ADC_NbrOfChannel = ;
-        // ADC_InitStructure.ADC_Pga = ADC_Pga_1;
-        // ADC_Init(instance, &ADC_InitStructure);
-
-
-
-        // i = 0;
-        // for(uint8_t i = 0; i < regular_cnt; i++){
-        //     RegularChannel & cha = *regular_ptrs[i];
-        //     uint8_t ch_index = (uint8_t)cha.channel;
-        //     
-        //     if(ch_index >= (uint8_t)Channel::TEMP){
-        //         enableTempVref();
-        //     }
-        //     cha.installToPin();
-        // }
-
-        // ADC_InjectedSequencerLengthConfig(ADC1, injected_cnt);
-        // for(uint8_t i = 0; i < injected_cnt; i++){
-        //     InjectedChannel & cha = *injected_ptrs[i];
-        //     ADC_InjectedChannelConfig(ADC1, (uint8_t)cha.channel, i+1, (uint8_t)cha.sample_time);
-        //     ADC_SetInjectedOffset(ADC1,ADC_InjectedChannel_1, MAX(cali_data, 0)); // offset can`t be negative
-        //     cha.installToPin();
-        // }
-    // ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T3_CC4);
-    // ADC_ExternalTrigInjectedConvEdgeConfig(ADC1,adcexternaltriginjeced);
-    // ADC_ExternalTrigInjectedConvCmd(ADC1, ENABLE);
-        // start();
         ADC_Cmd(ADC1, ENABLE);
 
         ADC_BufferCmd(ADC1, DISABLE);

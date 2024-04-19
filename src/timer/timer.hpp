@@ -83,12 +83,6 @@ public:
     void init(const uint16_t & period, const uint16_t & cycle, const TimerMode & mode = TimerMode::Up, const bool & en = true);
     void enable(const bool & en = true);
 
-    // void enableIt(const IT & it,const uint8_t & pre = 0, const uint8_t & sub = 0, const bool & en = true){
-    //     NvicRequest request(ItToIrq(it), pre, sub);
-    //     request.enable(en);
-    //     TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
-    // }
-
     void enableIt(const IT it,const NvicPriority & request, const bool en = true){
         NvicPriority::enable(request, ItToIrq(it), en);
         TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
@@ -115,7 +109,6 @@ public:
     void initAsEncoder(const TimerMode mode = TimerMode::Up);
     void enableSingle(const bool _single = true);
     TimerOutChannelPosOnChip & ch(const int & index){return channels[CLAMP(index, 1, 4) - 1];}
-    // TimerOutChannelOnChip getChannel(const TimerOutChannelOnChip::Channel ch){return TimerOutChannelOnChip(instance, ch);}
     virtual TimerOutChannelPosOnChip & operator [](const int & index){return ch(index);}
     virtual TimerOutChannelPosOnChip & operator [](const TimerOutChannelOnChip::Channel & channel){return channels[(uint8_t)channel >> 1];}
     GenericTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
@@ -135,7 +128,7 @@ public:
         High = TIM_LOCKLevel_3
 
     };
-    // Bdtr getBdtr();
+
     void initBdtr(const uint32_t & ns = 200, const LockLevel & level = LockLevel::Off);
     void setDeadZone(const uint32_t & ns);
 
