@@ -16,13 +16,13 @@ void Can1::settleTxPin(const uint8_t & remap){
     switch(remap){
         case 0:
         {
-            Gpio gpio = Gpio(CAN1_TX_RM0_Port, (Pin)CAN1_TX_RM0_Pin);
+            Gpio & gpio = portA[(Pin)CAN1_TX_RM0_Pin];
             gpio.OutAfPP();
             break;
         }
         case 1:
         {
-            Gpio gpio = Gpio(CAN1_TX_RM1_Port, (Pin)CAN1_TX_RM1_Pin);
+            Gpio & gpio = portB[(Pin)CAN1_TX_RM1_Pin];
             gpio.OutAfPP();
             break;
         }
@@ -33,14 +33,14 @@ void Can1::settleRxPin(const uint8_t & remap){
     switch(remap){
         case 0:
         {
-            Gpio gpio = Gpio(CAN1_RX_RM0_Port, (Pin)CAN1_RX_RM0_Pin);
-            gpio.InPullUP();
+            Gpio & gpio = portA[(Pin)CAN1_RX_RM0_Pin];
+            gpio.OutAfPP();
             break;
         }
         case 1:
         {
-            Gpio gpio = Gpio(CAN1_RX_RM1_Port, (Pin)CAN1_RX_RM1_Pin);
-            gpio.InPullUP();
+            Gpio & gpio = portB[(Pin)CAN1_RX_RM1_Pin];
+            gpio.OutAfPP();
             break;
         }
     }

@@ -7,7 +7,7 @@
 
 class WS2812: public RgbLedConcept<true>{
 protected:
-    Gpio gpio;
+    Gpio & gpio;
 
     void delayLong(){
         __nopn(120);
@@ -55,7 +55,7 @@ protected:
     }
 
 public:
-    WS2812(Gpio _gpio):gpio(_gpio){;}
+    WS2812(Gpio & _gpio):gpio(_gpio){;}
     void init(){
         // gpio.set();
         gpio.OutPP();
@@ -90,7 +90,7 @@ template<uint16_t size>
 class WS2812Chain{
 protected:
     using Color = Color_t<real_t>;
-    Gpio gpio;
+    Gpio & gpio;
     std::array<WS2812Single, size> leds;
 
     void delayLong(){
@@ -129,7 +129,7 @@ protected:
     }
 
 public:
-    WS2812Chain(Gpio _gpio):gpio(_gpio){;}
+    WS2812Chain(Gpio & _gpio):gpio(_gpio){;}
     void init(){
         for(auto & led : leds) led = Color(0,0,0);
         gpio.OutPP();

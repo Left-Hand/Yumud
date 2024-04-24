@@ -26,7 +26,7 @@ void test_app(){
     logger.setRadix(10);
     logger.setSpace(",");
 
-    Gpio bled(GPIOC, Pin::_13);
+    Gpio & bled = portC[13];
     bled.OutPP();
     CanAcessPoint ap(can1, logger);
     delay(100);

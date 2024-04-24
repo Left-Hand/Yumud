@@ -62,13 +62,4 @@
 #define BUILTIN_BlueLED_PIN GPIO_Pin_15
 
 
-#define ST7789_DC_Port SPI2_Port
-#define ST7789_DC_Pin SPI2_MISO_Pin
-
-#define ST7789_ON_DATA \
-ST7789_DC_Port -> BSHR = ST7789_DC_Pin;
-
-#define ST7789_ON_CMD \
-ST7789_DC_Port -> BCR = ST7789_DC_Pin;
-
 #endif

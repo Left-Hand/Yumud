@@ -19,7 +19,7 @@ void stepper_app(){
     can1.init(Can::BaudRate::Mbps1, 1);
 
     spi1.init(18000000);
-    spi1.bindCsPin(Gpio(GPIOA, Pin::_15), 0);
+    spi1.bindCsPin(portA[15], 0);
 
     SpiDrv mt6816_drv(spi1, 0);
     MT6816 mt6816(mt6816_drv);
@@ -107,7 +107,7 @@ void stepper_app(){
     WS2812Chain<3> leds(portB[-1]);
     leds.init();
 
-    Gpio trigGpioA(GPIOA, Pin::_9);
+    Gpio & trigGpioA = portA[9];
     ExtiChannel trigExtiCHA(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     CaptureChannelExti capA(trigExtiCHA, trigGpioA);
     SimpleDeModem demodemA(capA, mo_freq);
@@ -115,7 +115,7 @@ void stepper_app(){
 
     PanelLed panelLedA(leds[0]);
 
-    Gpio trigGpioB(GPIOB, Pin::_12);
+    Gpio & trigGpioB = portB[12];
     ExtiChannel trigExtiCHB(trigGpioB, NvicPriority(1, 1), ExtiChannel::Trigger::RisingFalling);
     CaptureChannelExti capB(trigExtiCHB, trigGpioB);
     SimpleDeModem demodemB(capB, mo_freq);
@@ -133,7 +133,7 @@ void stepper_app(){
     AttackStation attack_station(target_station, motor, servo, modem);
     attack_station.init();
 
-    Gpio bled(GPIOC, Pin::_13);
+    Gpio & bled = portC[13];
     bled.OutPP();
     volatile uint32_t last_blink_millis = 0;
     while(true){

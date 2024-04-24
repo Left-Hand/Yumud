@@ -3,14 +3,14 @@
 
 #include "device_defs.h"
 
-#define SSD1306_DC_Port SPI2_Port
-#define SSD1306_DC_Pin SPI2_MISO_Pin
+// #define SSD1306_DC_Port SPI2_Port
+// #define SSD1306_DC_Pin SPI2_MISO_Pin
 
-#define SSD1306_ON_DATA \
-SSD1306_DC_Port -> BSHR = SSD1306_DC_Pin;
+#define SSD1306_ON_DATA 
+// SSD1306_DC_Port -> BSHR = SSD1306_DC_Pin;
 
-#define SSD1306_ON_CMD \
-SSD1306_DC_Port -> BCR = SSD1306_DC_Pin;
+#define SSD1306_ON_CMD 
+// SSD1306_DC_Port -> BCR = SSD1306_DC_Pin;
 
 class SSD1306{
 private:

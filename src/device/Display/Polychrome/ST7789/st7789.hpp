@@ -15,30 +15,30 @@ private:
     bool area_locked = false;
 
     __fast_inline void writeCommand(const uint8_t & cmd){
-        ST7789_ON_CMD;
+        // ST7789_ON_CMD;
         bus_drv.write(cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data){
-        ST7789_ON_DATA;
+        // ST7789_ON_DATA;
         bus_drv.write(data);
     }
 
     __fast_inline void writeData16(const uint16_t & data){
-        ST7789_ON_DATA;
+        // ST7789_ON_DATA;
         bus_drv.write(data);
     }
     __fast_inline void writePixel(const RGB565 & data){
-        ST7789_ON_DATA;
+        // ST7789_ON_DATA;
         bus_drv.write((uint16_t)data);
     }
     void putPixels(const RGB565 & data, const size_t & len) override{
-        ST7789_ON_DATA;
+        // ST7789_ON_DATA;
         bus_drv.write((uint16_t)data, len);
     }
 
     void putPixels(const RGB565 * data_ptr, const size_t & len) override{
-        ST7789_ON_DATA;
+        // ST7789_ON_DATA;
         bus_drv.write((uint16_t *)data_ptr, len);
     }
 

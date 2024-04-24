@@ -1,18 +1,15 @@
 #include "i2c1.hpp"
+#include "src/gpio/port.hpp"
+
 
 void I2C1_GPIO_Init(){
     CHECK_INIT
 
-    GPIO_InitTypeDef GPIO_InitStructure;
-
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, ENABLE);
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_InitStructure.GPIO_Pin = I2C1_SCL_Pin | I2C1_SDA_Pin;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-
-    GPIO_Init(I2C1_Port, &GPIO_InitStructure);
+    I2C1_Port[Pin(I2C1_SCL_Pin)].OutAfOD();
+    I2C1_Port[Pin(I2C1_SDA_Pin)].OutAfOD();
     GPIO_PinRemapConfig(I2C1_REMAP, I2C1_REMAP_ENABLE);
 }
 
@@ -40,33 +37,33 @@ bool I2C1_Bus_Locked(){
 }
 
 void I2C1_Force_Unlock(){
-    I2C_Cmd(I2C1, DISABLE);
+    // I2C_Cmd(I2C1, DISABLE);
 
-    GPIO_InitTypeDef GPIO_InitStructure;
+    // GPIO_InitTypeDef GPIO_InitStructure;
 
-    GPIO_InitStructure.GPIO_Pin = I2C1_SCL_Pin | I2C1_SDA_Pin;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    // GPIO_InitStructure.GPIO_Pin = I2C1_SCL_Pin | I2C1_SDA_Pin;
+    // GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
-    GPIO_Init(I2C1_Port, &GPIO_InitStructure);
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
+    // GPIO_Init(I2C1_Port, &GPIO_InitStructure);
 
-    volatile uint32_t _;
-    for(uint8_t i = 0; i < 9; i++){
-        GPIO_SetBits(I2C1_Port, I2C1_SCL_Pin);
+    // volatile uint32_t _;
+    // for(uint8_t i = 0; i < 9; i++){
+    //     I2C1_Port[Pin(I2C1_SCL_Pin)].set();
 
-        _ = 32;
-        while(_ --);
+    //     _ = 32;
+    //     while(_ --);
 
-        GPIO_ResetBits(I2C1_Port, I2C1_SCL_Pin);
+    //     I2C1_Port[Pin(I2C1_SCL_Pin)].clr();
 
-        _ = 32;
-        while(_ --);
-    }
+    //     _ = 32;
+    //     while(_ --);
+    // }
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
-    GPIO_Init(I2C1_Port, &GPIO_InitStructure);
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_OD;
+    // GPIO_Init(I2C1_Port, &GPIO_InitStructure);
 
-    I2C_Cmd(I2C1, ENABLE);
+    // I2C_Cmd(I2C1, ENABLE);
 }
 
 

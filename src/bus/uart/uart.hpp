@@ -29,8 +29,8 @@ class UartHw:public Uart{
 protected:
     USART_TypeDef * instance;
 
-    Gpio getTxPin();
-    Gpio getRxPin();
+    Gpio & getTxPin();
+    Gpio & getRxPin();
 
     void enableRcc(const bool en = true);
 

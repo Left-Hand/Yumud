@@ -4,6 +4,7 @@
 
 #include "src/platform.h"
 #include "src/gpio/gpio.hpp"
+#include "src/gpio/port.hpp"
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
 #include "adc_enums.h"
@@ -184,21 +185,21 @@ protected:
 
         if(ch_index > 15) return;
 
-        GPIO_TypeDef * gpio_port;
+        Port * gpio_port = nullptr;
         Pin gpio_pin = Pin::None;
 
         if(ch_index <= 7){
-            gpio_port = GPIOA;
+            gpio_port = &portA;
             gpio_pin = (Pin)(1 << ch_index);
         }else if(ch_index <= 9){
-            gpio_port = GPIOB;
+            gpio_port = &portB;
             gpio_pin = (Pin)(1 << (ch_index - 8));
         }else if(ch_index <= 15){
-            gpio_port = GPIOC;
+            gpio_port = &portC;
             gpio_pin = (Pin)(1 << (ch_index - 10));
         }
 
-        Gpio io = Gpio(gpio_port, gpio_pin);
+        Gpio & io = (*gpio_port)[gpio_pin];
         if(en)io.InAnalog();
         else io.InFloating();
     }

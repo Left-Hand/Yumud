@@ -45,18 +45,22 @@ protected:
     const uint32_t pin_mask = 0;
     volatile uint32_t & pin_cfg;
 
-    friend class GpioVirtual;
-    friend class ExtiChannel;
-public:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
         instance(_instance),
         pin(((_instance == GPIOC) && MCU_V) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
         pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
         pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
-        }
+    }
 
-    // Gpio(Port & _port, const Pin _pin):Gpio(_port.instance, _pin){;}
+    friend class GpioVirtual;
+    friend class ExtiChannel;
+    friend class Port;
+public:
+
+    Gpio(const Gpio & other) = delete;
+    Gpio(Gpio && other) = delete;
+
     ~Gpio(){};
 
     __fast_inline void set()override{instance->BSHR = pin;}

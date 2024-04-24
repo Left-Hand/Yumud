@@ -19,23 +19,23 @@ void SpiHw::enableRcc(const bool en){
 
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
-Gpio SpiHw::get##name##Pin(){\
+Gpio & SpiHw::get##name##Pin(){\
 \
-    GPIO_TypeDef * gpio_instance = GPIOA;\
+    Port * gpio_port = nullptr;\
     uint16_t gpio_pin = 0;\
 \
     switch((uint32_t)instance){\
         default:\
         case SPI1_BASE:\
-            gpio_instance = SPI1_##upper##_Port;\
+            gpio_port = &SPI1_##upper##_Port;\
             gpio_pin = SPI1_##upper##_Pin;\
             break;\
         case SPI2_BASE:\
-            gpio_instance = SPI2_##upper##_Port;\
+            gpio_port = &SPI2_##upper##_Port;\
             gpio_pin = SPI2_##upper##_Pin;\
             break;\
     }\
-    return Gpio(gpio_instance, (Pin)gpio_pin);\
+    return (*gpio_port)[(Pin)gpio_pin];\
 }\
 
 SPI_HW_GET_PIN_TEMPLATE(Mosi, MOSI)
@@ -81,20 +81,20 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
 
 void SpiHw::initGpios(){
     if(((uint8_t)mode & (uint8_t)Mode::TxOnly)){
-        Gpio mosi_pin = getMosiPin();
+        Gpio & mosi_pin = getMosiPin();
         mosi_pin.OutAfPP();
     }
 
     if(((uint8_t)mode & (uint8_t)Mode::RxOnly)){
-        Gpio miso_pin = getMisoPin();
+        Gpio & miso_pin = getMisoPin();
         miso_pin.InFloating();
     }
 
-    Gpio sclk_pin = getSclkPin();
+    Gpio & sclk_pin = getSclkPin();
     sclk_pin.OutAfPP();
 
     if(!cs_pins.isIndexValid(0)){
-        Gpio cs_pin = getCsPin();
+        Gpio & cs_pin = getCsPin();
         cs_pin = true;
         if(hw_cs_enabled){
             cs_pin.OutAfPP();
@@ -120,7 +120,7 @@ void SpiHw::initGpios(){
 }
 
 void SpiHw::enableHwCs(const bool en){
-    Gpio _cs_pin = getCsPin();
+    Gpio & _cs_pin = getCsPin();
     _cs_pin = true;
 
     if(en){

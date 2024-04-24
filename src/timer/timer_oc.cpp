@@ -1,4 +1,5 @@
 #include "timer_oc.hpp"
+#include "src/gpio/port.hpp"
 
 volatile uint16_t & TimerOutChannelOnChip::from_channel_to_cvr(const Channel & _channel){
     switch(_channel){
@@ -101,7 +102,23 @@ void TimerOutChannelOnChip::setPolarity(const bool & pol){
 }
 
 void TimerOutChannelOnChip::enableSync(const bool & _sync){
-    TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);
+    switch(channel){
+        case Channel::CH1:
+            TIM_OC1PreloadConfig(instance, _sync ? TIM_OC1PE : (uint16_t)0);
+            break;
+        case Channel::CH2:
+            TIM_OC2PreloadConfig(instance, _sync ? TIM_OC2PE : (uint16_t)0);
+            break;
+        case Channel::CH3:
+            TIM_OC3PreloadConfig(instance, _sync ? TIM_OC3PE : (uint16_t)0);
+            break;
+        case Channel::CH4:
+            TIM_OC4PreloadConfig(instance, _sync ? TIM_OC4PE : (uint16_t)0);
+            break;
+        default:
+            break;
+    }
+
 }
 
 void TimerOutChannelOnChip::setIdleState(const bool & state){
@@ -121,31 +138,31 @@ case TIM##x##_BASE:\
     switch(channel){\
         default:\
         case Channel::CH1:\
-            gpio_port = TIM##x##_CH1_Port;\
+            gpio_port = &TIM##x##_CH1_Port;\
             gpio_pin = TIM##x##_CH1_Pin;\
             break;\
         case Channel::CH1N:\
-            gpio_port = TIM##x##_CH1N_Port;\
+            gpio_port = &TIM##x##_CH1N_Port;\
             gpio_pin = TIM##x##_CH1N_Pin;\
             break;\
         case Channel::CH2:\
-            gpio_port = TIM##x##_CH2_Port;\
+            gpio_port = &TIM##x##_CH2_Port;\
             gpio_pin = TIM##x##_CH2_Pin;\
             break;\
         case Channel::CH2N:\
-            gpio_port = TIM##x##_CH2N_Port;\
+            gpio_port = &TIM##x##_CH2N_Port;\
             gpio_pin = TIM##x##_CH2N_Pin;\
             break;\
         case Channel::CH3:\
-            gpio_port = TIM##x##_CH3_Port;\
+            gpio_port = &TIM##x##_CH3_Port;\
             gpio_pin = TIM##x##_CH3_Pin;\
             break;\
         case Channel::CH3N:\
-            gpio_port = TIM##x##_CH3N_Port;\
+            gpio_port = &TIM##x##_CH3N_Port;\
             gpio_pin = TIM##x##_CH3N_Pin;\
             break;\
         case Channel::CH4:\
-            gpio_port = TIM##x##_CH4_Port;\
+            gpio_port = &TIM##x##_CH4_Port;\
             gpio_pin = TIM##x##_CH4_Pin;\
             break;\
     }\
@@ -156,26 +173,26 @@ case TIM##x##_BASE:\
     switch(channel){\
         default:\
         case Channel::CH1:\
-            gpio_port = TIM##x##_CH1_Port;\
+            gpio_port = &TIM##x##_CH1_Port;\
             gpio_pin = TIM##x##_CH1_Pin;\
             break;\
         case Channel::CH2:\
-            gpio_port = TIM##x##_CH2_Port;\
+            gpio_port = &TIM##x##_CH2_Port;\
             gpio_pin = TIM##x##_CH2_Pin;\
             break;\
         case Channel::CH3:\
-            gpio_port = TIM##x##_CH3_Port;\
+            gpio_port = &TIM##x##_CH3_Port;\
             gpio_pin = TIM##x##_CH3_Pin;\
             break;\
         case Channel::CH4:\
-            gpio_port = TIM##x##_CH4_Port;\
+            gpio_port = &TIM##x##_CH4_Port;\
             gpio_pin = TIM##x##_CH4_Pin;\
             break;\
     }\
     break;\
 
 void TimerOutChannelOnChip::installToPin(const bool & en){
-    GPIO_TypeDef * gpio_port;
+    Port * gpio_port;
     uint16_t gpio_pin = 0;
     switch((uint32_t)instance){
         default:
@@ -204,7 +221,7 @@ void TimerOutChannelOnChip::installToPin(const bool & en){
         #endif
     }
 
-    Gpio io = Gpio(gpio_port, (Pin)gpio_pin);
+    Gpio & io = (*gpio_port)[(Pin)gpio_pin];
     if(en)io.OutAfPP();
     else io.InFloating();
     enable(en);

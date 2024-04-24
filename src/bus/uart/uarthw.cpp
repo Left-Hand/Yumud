@@ -1,5 +1,5 @@
 #include "uart.hpp"
-
+#include "src/gpio/port.hpp"
 void Uart::_read(char & data){data = ringBuf.getData();}
 void Uart::_read(char * data_ptr, const size_t len){ringBuf.getDatas((uint8_t *)data_ptr, len);}
 
@@ -38,20 +38,20 @@ void UartHw::enableRcc(const bool en){
 }
 
 
-Gpio UartHw::getRxPin(){
-    GPIO_TypeDef * gpio_instance = GPIOA;
+Gpio & UartHw::getRxPin(){
+    Port * gpio_instance = nullptr;
     uint16_t gpio_pin = 0;
 
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            gpio_instance = UART1_RX_Port;
+            gpio_instance = &portB;
             gpio_pin = UART1_RX_Pin;
             break;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            gpio_instance = UART2_RX_Port;
+            gpio_instance = &portA;
             gpio_pin = UART2_RX_Pin;
             break;
         #endif
@@ -74,26 +74,26 @@ Gpio UartHw::getRxPin(){
             break;
         #endif
         default:
-            break;
+            return portA[Pin::None];
     }
 
-    return Gpio(gpio_instance, (Pin)gpio_pin);
+    return (*gpio_instance)[(Pin)gpio_pin];
 }
 
-Gpio UartHw::getTxPin(){
-    GPIO_TypeDef * gpio_instance = GPIOA;
+Gpio & UartHw::getTxPin(){
+    Port * gpio_instance = nullptr;
     uint16_t gpio_pin = 0;
 
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-                gpio_instance = UART1_TX_Port;
+                gpio_instance = &portB;
                 gpio_pin = UART1_TX_Pin;
                 break;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-                gpio_instance = UART2_TX_Port;
+                gpio_instance = &portA;
                 gpio_pin = UART2_TX_Pin;
                 break;
         #endif
@@ -107,7 +107,7 @@ Gpio UartHw::getTxPin(){
             break;
     }
 
-    return Gpio(gpio_instance, (Pin)gpio_pin);
+    return (*gpio_instance)[(Pin)gpio_pin];
 }
 
 void UartHw::enableRxIt(const bool en){
@@ -162,12 +162,12 @@ void UartHw::init(const uint32_t & baudRate, const Mode _mode){
     mode = _mode;
 
     if(((uint8_t)mode & (uint8_t)Mode::TxOnly)){
-        Gpio tx_pin = getTxPin();
+        Gpio & tx_pin = getTxPin();
         tx_pin.OutAfPP();
     }
 
     if(((uint8_t)mode & (uint8_t)Mode::RxOnly)){
-        Gpio rx_pin = getRxPin();
+        Gpio & rx_pin = getRxPin();
         rx_pin.InPullUP();
     }
 

@@ -88,8 +88,7 @@ public:
         TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
     }
 
-    void enableSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
-
+    void enableArrSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
     virtual void bindCb(const IT & ch, const std::function<void(void)> & cb) = 0;
     BasicTimer & operator = (const uint16_t _val) override {instance->CNT = _val;return *this;}
     operator uint16_t() const {return instance->CNT;}
@@ -130,6 +129,8 @@ public:
     };
 
     void initBdtr(const uint32_t & ns = 200, const LockLevel & level = LockLevel::Off);
+    void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, (FunctionalState)_sync);}
+
     void setDeadZone(const uint32_t & ns);
 
 

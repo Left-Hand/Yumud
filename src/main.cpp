@@ -128,7 +128,7 @@ enum class posModes:uint8_t{
 
 using Sys::t;
 
-static Printer & logger = uart2;
+// static Printer & logger = uart2;
 
 
 
@@ -137,127 +137,127 @@ static Printer & logger = uart2;
 
 
 
-class Flash{
-protected:
+// class Flash{
+// protected:
 
 
-    using Page = uint32_t;
-    using PageRange = Range_t<Page>;
-    using Address = uint32_t;
-    using AddressRange = Range_t<Address>;
+//     using Page = uint32_t;
+//     using PageRange = Range_t<Page>;
+//     using Address = uint32_t;
+//     using AddressRange = Range_t<Address>;
 
-    static constexpr Page page_size = 256;
-    static constexpr Address base_address = 0x08000000;
+//     static constexpr Page page_size = 256;
+//     static constexpr Address base_address = 0x08000000;
 
-    Page page_count;
-    PageRange page_range;
+//     Page page_count;
+//     PageRange page_range;
 
-    uint32_t pre_clock;
+//     uint32_t pre_clock;
 
-    void settleClock(){
-        pre_clock = Sys::Clock::getAHBFreq();
-        Sys::Clock::setAHBFreq(72000000);
-    }
+//     void settleClock(){
+//         pre_clock = Sys::Clock::getAHBFreq();
+//         Sys::Clock::setAHBFreq(72000000);
+//     }
 
-    void resetClock(){
-        Sys::Clock::setAHBFreq(pre_clock);
-    }
+//     void resetClock(){
+//         Sys::Clock::setAHBFreq(pre_clock);
+//     }
 
-    Page pageWarp(const int & index){
-        return index > 0 ? index : page_count + index;
-    }
+//     Page pageWarp(const int & index){
+//         return index > 0 ? index : page_count + index;
+//     }
 
-    AddressRange getAddressRange(){
-        return (page_range * page_size).shift(base_address);
-    }
-public:
-    Flash(int _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
-    Flash(int _page_begin, int _page_end):
-            page_count(Sys::Chip::getFlashSize() / page_size),
-            page_range(PageRange(Page(0),Sys::Chip::getFlashSize() / page_size)
-            .intersection(PageRange(pageWarp(_page_begin), pageWarp(_page_end)))){;}
+//     AddressRange getAddressRange(){
+//         return (page_range * page_size).shift(base_address);
+//     }
+// public:
+//     Flash(int _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
+//     Flash(int _page_begin, int _page_end):
+//             page_count(Sys::Chip::getFlashSize() / page_size),
+//             page_range(PageRange(Page(0),Sys::Chip::getFlashSize() / page_size)
+//             .intersection(PageRange(pageWarp(_page_begin), pageWarp(_page_end)))){;}
 
-    ~Flash(){exit();}
+//     ~Flash(){exit();}
 
-    void init(){
-        settleClock();
-        Systick_Init();
-        delay(10);
-    }
+//     void init(){
+//         settleClock();
+//         Systick_Init();
+//         delay(10);
+//     }
 
-    template<typename T>
-    volatile bool store(const T & data){
+//     template<typename T>
+//     volatile bool store(const T & data){
 
-        auto NbrOfPage = page_range.get_length(); //计算要擦除多少页
-        Address PAGE_WRITE_START_ADDR = getAddressRange().start;
-        Address PAGE_WRITE_END_ADDR = getAddressRange().end;
+//         auto NbrOfPage = page_range.get_length(); //计算要擦除多少页
+//         Address PAGE_WRITE_START_ADDR = getAddressRange().start;
+//         Address PAGE_WRITE_END_ADDR = getAddressRange().end;
 
-        logger.println(PAGE_WRITE_START_ADDR);
-        FLASH_Status FLASHStatus =  FLASH_COMPLETE;
+//         logger.println(PAGE_WRITE_START_ADDR);
+//         FLASH_Status FLASHStatus =  FLASH_COMPLETE;
 
-        __disable_irq();
-        FLASH_Unlock_Fast();
+//         __disable_irq();
+//         FLASH_Unlock_Fast();
 
-        FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
+//         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
 
-        // logger.println("begin erase", PAGE_WRITE_START_ADDR);
+//         // logger.println("begin erase", PAGE_WRITE_START_ADDR);
 
-        // uint32_t len = sizeof(data);
-        // for(Page EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++){
-            // Address op_address = PAGE_WRITE_START_ADDR + (page_size * EraseCounter)
-        uint32_t buf[page_size / sizeof(uint32_t)] = {0};
-        // memcpy(&buf, &data, sizeof(T));
-        for(size_t i = 0; i < sizeof(T); i++){
-            ((uint8_t *)buf)[i] = ((uint8_t *)&data)[i];
-            // logger.println(i,((uint8_t *)&data)[i] );
-        }
+//         // uint32_t len = sizeof(data);
+//         // for(Page EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++){
+//             // Address op_address = PAGE_WRITE_START_ADDR + (page_size * EraseCounter)
+//         uint32_t buf[page_size / sizeof(uint32_t)] = {0};
+//         // memcpy(&buf, &data, sizeof(T));
+//         for(size_t i = 0; i < sizeof(T); i++){
+//             ((uint8_t *)buf)[i] = ((uint8_t *)&data)[i];
+//             // logger.println(i,((uint8_t *)&data)[i] );
+//         }
 
-        FLASH_ErasePage_Fast(PAGE_WRITE_START_ADDR);
-            // if()
-            // FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)((uint8_t *)&data + page_size * EraseCounter));
-        FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)&buf);
-        // }
+//         FLASH_ErasePage_Fast(PAGE_WRITE_START_ADDR);
+//             // if()
+//             // FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)((uint8_t *)&data + page_size * EraseCounter));
+//         FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)&buf);
+//         // }
 
-        FLASH_Lock_Fast();
-        __enable_irq();
+//         FLASH_Lock_Fast();
+//         __enable_irq();
 
-        Address address = PAGE_WRITE_START_ADDR;
-        bool MemoryProgramStatus = true;
+//         Address address = PAGE_WRITE_START_ADDR;
+//         bool MemoryProgramStatus = true;
 
-        uint32_t i = 0;
-        while((address < PAGE_WRITE_END_ADDR) && (MemoryProgramStatus != false)){
-            auto read_data = (*(__IO uint32_t*) address);
-            auto examine_data = buf[i];
-            if(read_data != examine_data){
-                MemoryProgramStatus = false;
-            }
-            // logger.println("vait", address, read_data, examine_data);
-            address += 4;
-            i++;
-        }
-        // logger.println("vait", MemoryProgramStatus);
-        return MemoryProgramStatus;
-    };
+//         uint32_t i = 0;
+//         while((address < PAGE_WRITE_END_ADDR) && (MemoryProgramStatus != false)){
+//             auto read_data = (*(__IO uint32_t*) address);
+//             auto examine_data = buf[i];
+//             if(read_data != examine_data){
+//                 MemoryProgramStatus = false;
+//             }
+//             // logger.println("vait", address, read_data, examine_data);
+//             address += 4;
+//             i++;
+//         }
+//         // logger.println("vait", MemoryProgramStatus);
+//         return MemoryProgramStatus;
+//     };
 
-    template<typename T>
-    volatile void load(T & data){
-        Address PAGE_WRITE_START_ADDR = getAddressRange().start;
-        Address PAGE_WRITE_END_ADDR = getAddressRange().end;
-        Address address = PAGE_WRITE_START_ADDR;
-        // uint32_t i = 0;
-        for(size_t i = 0; i<sizeof(T);i++){
-            auto read_data = (*(__IO uint8_t*)(PAGE_WRITE_START_ADDR + i));
-            *((volatile uint8_t*)&data + i) = read_data;
-            // logger.println("read", address, read_data);
-            // address += 1;
-            // i++;
-        }
-    };
+//     template<typename T>
+//     volatile void load(T & data){
+//         Address PAGE_WRITE_START_ADDR = getAddressRange().start;
+//         Address PAGE_WRITE_END_ADDR = getAddressRange().end;
+//         Address address = PAGE_WRITE_START_ADDR;
+//         // uint32_t i = 0;
+//         for(size_t i = 0; i<sizeof(T);i++){
+//             auto read_data = (*(__IO uint8_t*)(PAGE_WRITE_START_ADDR + i));
+//             *((volatile uint8_t*)&data + i) = read_data;
+//             // logger.println("read", address, read_data);
+//             // address += 1;
+//             // i++;
+//         }
+//     };
 
-    void exit(){
-        resetClock();
-    }
-};
+//     void exit(){
+//         resetClock();
+//     }
+// };
 
 // void testFlash(){
 
@@ -487,7 +487,9 @@ void parseLine(const String & line){
 
 
 void pmdc_test(){
+
     uart2.init(115200 * 8, Uart::Mode::TxRx);
+    Printer & logger = uart2;
     logger.setSpace(",");
     logger.setEps(4);
 
@@ -659,14 +661,14 @@ protected:
     uint8_t nsel;
     uint8_t osel;
 
-    Gpio getPosPin(){
+    Gpio & getPosPin(){
         switch(opa_num){
             case 1:
                 switch(psel){
                     case 0:
-                        return Gpio(OPA1_P0_Port, (Pin)OPA1_P0_Pin);
+                        return portB[(Pin)OPA1_P0_Pin];
                     case 1:
-                        return Gpio(OPA1_P1_Port, (Pin)OPA1_P1_Pin);
+                        return portB[(Pin)OPA1_P1_Pin];
                     default:
                         break;
                 }
@@ -674,9 +676,9 @@ protected:
             case 2:
                 switch(psel){
                     case 0:
-                        return Gpio(OPA2_P0_Port, (Pin)OPA2_P0_Pin);
+                        return portB[(Pin)OPA2_P0_Pin];
                     case 1:
-                        return Gpio(OPA2_P1_Port, (Pin)OPA2_P1_Pin);
+                        return portA[(Pin)OPA2_P1_Pin];
                     default:
                         break;
                 }
@@ -684,17 +686,17 @@ protected:
             default:
                 break;
         }
-        return Gpio(GPIOA, Pin::None);
+        return portA[Pin::None];
     };
 
-    Gpio getNegPin(){
+    Gpio & getNegPin(){
         switch(opa_num){
             case 1:
                 switch(psel){
                     case 0:
-                        return Gpio(OPA1_N0_Port, (Pin)OPA1_N0_Pin);
+                        return portB[(Pin)OPA1_N0_Pin];
                     case 1:
-                        return Gpio(OPA1_N1_Port, (Pin)OPA1_N1_Pin);
+                        return portA[(Pin)OPA1_N1_Pin];
                     default:
                         break;
                 }
@@ -702,9 +704,9 @@ protected:
             case 2:
                 switch(psel){
                     case 0:
-                        return Gpio(OPA2_N0_Port, (Pin)OPA2_N0_Pin);
+                        return portB[(Pin)OPA2_N0_Pin];
                     case 1:
-                        return Gpio(OPA2_N1_Port, (Pin)OPA2_N1_Pin);
+                        return portA[(Pin)OPA2_N1_Pin];
                     default:
                         break;
                 }
@@ -712,7 +714,7 @@ protected:
             default:
                 break;
         }
-        return Gpio(GPIOA, Pin::None);
+        return portA[Pin::None];
     };
 
     // Gpio getOutPin(){
@@ -779,6 +781,7 @@ struct buckRuntimeValues{
 // class Test:pub
 void buck_test(){
     uart2.init(115200 * 8, Uart::Mode::TxRx);
+    Printer & logger = uart2;
     logger.setSpace(",");
     logger.setEps(4);
 
@@ -883,11 +886,12 @@ struct SineOsc:public Osc<real_t>{
 
 void osc_test(){
     uart2.init(115200 * 8, Uart::Mode::TxRx);
+    Printer & logger = uart2;
     logger.setSpace(",");
     logger.setEps(4);
-    Gpio i2sSck = Gpio(GPIOA, Pin::_1);
-    Gpio i2sSda = Gpio(GPIOA, Pin::_0);
-    Gpio i2sWs = Gpio(GPIOA, Pin::_4);
+    Gpio & i2sSck = portA[1];
+    Gpio & i2sSda = portA[0];
+    Gpio & i2sWs = portA[4];
     i2sSck.OutPP();
     i2sSda.OutPP();
     i2sWs.OutPP();
@@ -1341,7 +1345,7 @@ real_t est_pos = real_t();
         uint32_t foc_begin_micros = micros();
         uint16_t dataTx[2];
         uint16_t dataRx[2];
-        mt6816_drv.mtransmit(dataRx[0], dataTx[0], true);
+        // mt6816_drv.mtransmit(dataRx[0], dataTx[0], true);
         // mt6816_drv.transmit(dataRx[1], dataTx[1]);
 
         // if(!spi1.begin(0)){
@@ -1446,15 +1450,111 @@ real_t est_pos = real_t();
 };
 
 
+namespace SpreadCycle{
+
+constexpr float coil_inductor_mH = 4.0;
+constexpr float coil_resistor_Ohm = 3.4;
+constexpr float busbar_voltage = 9.0;
+
+constexpr float c1 = busbar_voltage / coil_inductor_mH;
+constexpr float coil_current = 0.3;
+constexpr float c2 = - coil_current * coil_resistor_Ohm / coil_inductor_mH;
+
+PwmChannel coil_pwm_p(timer1[3]);
+PwmChannel coil_pwm_n(timer1[4]);
+
+real_t dual_duty[2] = {
+    real_t(0.3),
+    real_t(0.14)
+};
+
+uint16_t dual_cvr[2] = {799,1299};
+
+real_t chopper_current = real_t(0.2);
+
+uint8_t chopper_run_cnt = 0;
+struct {
+    uint8_t odd_is_forward:1;
+    uint8_t even_is_forward:1;
+}chopper_run_mode;
+
+void chopper_run(){
+
+    if(chopper_run_cnt == 0){
+        chopper_run_mode.odd_is_forward = 0;
+        chopper_run_mode.even_is_forward = 0;
+        chopper_run_cnt = 1;
+        return;
+    }
+
+    chopper_run_cnt++;
+    bool cycle_is_odd = chopper_run_cnt % 2;
+
+    // bool cycle_is_forward = cycle_is_odd ? chopper_run_mode.odd_is_forward : chopper_run_mode.even_is_forward;
+    bool cycle_is_forward = cycle_is_odd;
+
+    // int pwm_duty_p = cycle_is_forward ? 0 : dual_cvr[cycle_is_odd];
+    // int pwm_duty_n = cycle_is_forward ? dual_cvr[cycle_is_odd] : 0;
+    int forward_duty = dual_cvr[0];
+    int backward_duty = dual_cvr[1];
+    if(cycle_is_forward){
+        timer1[3] = forward_duty;
+        timer1[4] = 0;
+    }else{
+        timer1[3] = 0;
+        timer1[4] = backward_duty;
+    }
+
+}
+
+
+void chopper_test(){
+    uart1.init(115200 * 8, Uart::Mode::TxRx);
+    Printer & logger = uart1;
+    logger.setSpace(",");
+    logger.setEps(4);
+
+    timer1.init(36000);
+    timer1.enableArrSync();
+    // timer1.enableCvrSync();
+    // timer1[3].enableSync();
+    timer1[4].enableSync();
+    timer1[3].setPolarity(false);
+    timer1[4].setPolarity(false);
+
+    timer1[3].init();
+    timer1[4].init();
+
+    coil_pwm_p.setClamp(real_t(0.4));
+    coil_pwm_n.setClamp(real_t(0.4));
+
+    timer3.init(36000);
+    timer3[2].init();
+    timer3[3].init();
+    timer3[2].setPolarity(true);
+    timer3[2] = real_t(0.0);
+    timer3[3] = real_t(0.3);
+    timer1.bindCb(Timer::IT::Update, std::function<void(void)>(chopper_run));
+    timer1.enableIt(Timer::IT::Update, NvicPriority(0, 0));
+
+    while(true){
+        logger.println(int(timer1[3]), int(timer1[4]));
+    }
+}
+
+
+
+};
 int main(){
     Sys::Misc::prework();
     // stepper_app();
     // stepper_app_new();
-    StepperTest::stepper_test();
+    // StepperTest::stepper_test();
     // chassis_app();
     // modem_app();
     // test_app();
     // pmdc_test();
+    SpreadCycle::chopper_test();
     // buck_test();
     osc_test();
 }

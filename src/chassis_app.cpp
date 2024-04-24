@@ -88,8 +88,8 @@ void chassis_app(){
     logger.setSpace(",");
     logger.println("chassis power on");
 
-    auto i2c_scl = portD[1];
-    auto i2c_sda = portD[0];
+    auto & i2c_scl = portD[1];
+    auto & i2c_sda = portD[0];
     auto i2csw = I2cSw(i2c_scl, i2c_sda);
     i2csw.init(0);
 
@@ -128,7 +128,7 @@ void chassis_app(){
 
     qmc.init();
 
-    auto trigGpioA = portA[0];
+    auto & trigGpioA = portA[0];
     auto trigExtiCHA = ExtiChannel(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     auto capA = CaptureChannelExti(trigExtiCHA, trigGpioA);
     auto demodemA = SimpleDeModem(capA, mo_freq);
@@ -137,7 +137,7 @@ void chassis_app(){
     auto panelLedA = PanelLed(awled_l);
 
 
-    auto trigGpioB = portA[4];
+    auto & trigGpioB = portA[4];
     auto trigExtiCHB = ExtiChannel(trigGpioB, NvicPriority(1, 1), ExtiChannel::Trigger::RisingFalling);
     auto capB = CaptureChannelExti(trigExtiCHB, trigGpioB);
     auto demodemB = SimpleDeModem(capB, mo_freq);
@@ -148,8 +148,8 @@ void chassis_app(){
     auto panelUnitA = PanelUnit(panelTargetA, panelLedA);
     auto panelUnitB = PanelUnit(panelTargetB, panelLedB);
 
-    auto trigGpioL = portA[5];
-    auto trigGpioR = portB[1];
+    auto & trigGpioL = portA[5];
+    auto & trigGpioR = portB[1];
 
     auto trigExtiCHL = ExtiChannel(trigGpioL, NvicPriority(1, 3), ExtiChannel::Trigger::Rising);
     auto trigExtiCHR = ExtiChannel(trigGpioR, NvicPriority(1, 4), ExtiChannel::Trigger::Rising);
@@ -182,7 +182,7 @@ void chassis_app(){
     // IWDG_Feed_Init( IWDG_Prescaler_32, 4000 );
     // station.setMode(1);
     // NVIC_SystemReset();
-    Gpio pp = Gpio(TIM3_CH2_Port, (Pin)TIM3_CH2_Pin);
+
     while(true){
         station.run();
         // IWDG_ReloadCounter();

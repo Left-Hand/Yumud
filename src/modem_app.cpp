@@ -20,12 +20,12 @@ void modem_app(){
     can1.init(Can::BaudRate::Mbps1);
     can1.enableHwReTransmit(false);
 
-    auto ws_out = Gpio(GPIOB, Pin::_8);
+    auto & ws_out = portB[8];
     auto leds = WS2812Chain<3>(ws_out);
     leds.init();
 
-    auto i2c_scl = Gpio(GPIOD, Pin::_1);
-    auto i2c_sda = Gpio(GPIOD, Pin::_0);
+    auto & i2c_scl = portD[1];
+    auto & i2c_sda = portD[0];
     auto i2csw = I2cSw(i2c_scl, i2c_sda);
     i2csw.init(400000);
 
@@ -43,7 +43,7 @@ void modem_app(){
     led0.init();
     led0.setBrightness(real_t(0.1));
 
-    auto trigGpioA = Gpio(GPIOA, Pin::_0);
+    auto & trigGpioA = portA[0];
     auto trigExtiCHA = ExtiChannel(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     auto capA = CaptureChannelExti(trigExtiCHA, trigGpioA);
     auto demodemA = SimpleDeModem(capA, mo_freq);
@@ -52,7 +52,7 @@ void modem_app(){
     auto panelLedA = PanelLed(led0);
 
 
-    auto trigGpioB = Gpio(GPIOA, Pin::_4);
+    auto & trigGpioB = portA[4];
     auto trigExtiCHB = ExtiChannel(trigGpioB, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     auto capB = CaptureChannelExti(trigExtiCHB, trigGpioB);
     auto demodemB = SimpleDeModem(capB, mo_freq);

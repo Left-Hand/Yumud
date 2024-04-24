@@ -59,10 +59,10 @@ protected:
     SPI_TypeDef * instance;
     bool hw_cs_enabled = false;
 
-    Gpio getMosiPin();
-    Gpio getMisoPin();
-    Gpio getSclkPin();
-    Gpio getCsPin();
+    Gpio & getMosiPin();
+    Gpio & getMisoPin();
+    Gpio & getSclkPin();
+    Gpio & getCsPin();
 
     void enableRcc(const bool en = true);
     uint16_t calculatePrescaler(const uint32_t baudRate);
