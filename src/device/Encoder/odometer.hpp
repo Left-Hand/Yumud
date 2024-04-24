@@ -101,15 +101,7 @@ protected:
     real_t elecRad = real_t(0);
     real_t elecRadOffset = real_t(0);
 
-    real_t position2rad(const real_t & position){
-        real_t frac1 = real_t(poles) * frac(position);
-        return real_t(TAU) * (frac(frac1));
-    }
 
-    int position2pole(const iq_t & position){
-        real_t pole = frac(position) * real_t(poles);
-        return int(pole);
-    }
 
 
 public:
@@ -126,8 +118,22 @@ public:
         return position2rad(lapPosition) - elecRadOffset;
     }
 
+    real_t getElecRadOffset(){
+        return elecRadOffset;
+    }
+
     void locateElecrad(const real_t & percentage = real_t(1)){
         elecRadOffset += position2rad(getLapPosition()) * percentage;
+    }
+
+    real_t position2rad(const real_t & position){
+        real_t frac1 = real_t(poles) * frac(position);
+        return real_t(TAU) * (frac(frac1));
+    }
+
+    int position2pole(const iq_t & position){
+        real_t pole = frac(position) * real_t(poles);
+        return int(pole);
     }
 };
 

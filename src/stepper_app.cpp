@@ -40,12 +40,12 @@ void stepper_app(){
     SVPWM2 svpwm(coilA, coilB);
 
     svpwm.init();
-    svpwm.setABCurrent(real_t(0.8), real_t(0));
+    svpwm.setDQCurrent(Vector2(0.8, 0.0), real_t(0));
     delay(100);
     auto odo = OdometerPoles(mt6816, 50);
     odo.locateElecrad();
     odo.locateAbsolutely(real_t(0.19));
-    svpwm.setABCurrent(real_t(0), real_t(0));
+    svpwm.setDQCurrent(Vector2(), real_t(0));
 
 
     // timer3.init(50);
@@ -186,7 +186,6 @@ void stepper_app_new(){
 
     SpiDrv mt6816_drv(spi1, 0);
     MT6816 mt6816(mt6816_drv);
-    mt6816.enableVerification();
     auto odo = OdometerPoles(mt6816,50);
     odo.init();
 
@@ -253,7 +252,9 @@ void stepper_app_new(){
     // logger.println(getChipIdCrc());
 
     if(motor_code == 0){
-        odo.inverse(true);
+        odo.inverse(false);
+    }else{
+        odo.inverse(false);
     }
     // 
     // odo.inverse(false);
@@ -277,7 +278,7 @@ void stepper_app_new(){
                 odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
             }
             real_t elecrad = i * real_t((TAU / turnmircos));
-            svpwm.setABCurrent(cos(elecrad) * cali_current, sin(elecrad) * cali_current);
+            svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), elecrad);
             delayMicroseconds(dur);
         }
 
@@ -287,7 +288,7 @@ void stepper_app_new(){
                 odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
             }
             real_t elecrad = -i * real_t((TAU / turnmircos));
-            svpwm.setABCurrent(cos(elecrad) * cali_current, sin(elecrad) * cali_current);
+            svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), elecrad);
             delayMicroseconds(dur);
         }
 
@@ -299,7 +300,7 @@ void stepper_app_new(){
     }else{
         odo.locateAbsolutely(real_t(0.47));
     }
-    svpwm.setABCurrent(real_t(0), real_t(0));
+    svpwm.setDQCurrent(Vector2(), real_t(0));
     // motor.enable(false);
     // motor.open();
 

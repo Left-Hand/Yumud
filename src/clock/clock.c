@@ -43,7 +43,7 @@ uint32_t millis(void)
 uint64_t micros(void)
 {
     __disable_irq();
-    uint64_t m = GetTick();
+    uint64_t m = msTick;
     __IO uint64_t ticks = SysTick->CNT;
     __enable_irq();
 

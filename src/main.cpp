@@ -5,8 +5,8 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 #include "src/fwwb_compents/fwwb_inc.h"
 
-Gpio i2cScl = Gpio(GPIOB, (Pin)I2C_SW_SCL);
-Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
+// Gpio i2cScl = Gpio(GPIOB, (Pin)I2C_SW_SCL);
+// Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
 
 constexpr uint32_t SPI1_BaudRate = (144000000/32);
 constexpr uint32_t SPI2_BaudRate = (144000000/8);
@@ -14,12 +14,10 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 #define I2C_BaudRate 400000
 
 
-// Gpio i2sSck = Gpio(GPIOB, I2S_SW_SCK);
-// Gpio i2sSda = Gpio(GPIOB, I2S_SW_SDA);
-// Gpio i2sWs = Gpio(GPIOB, I2S_SW_WS);
+
 
 // I2cSw i2cSw(i2cScl, i2cSda);
-// I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
+
 
 // SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
 // SpiDrv spiDrvOled = SpiDrv(spi2, 0);
@@ -33,7 +31,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 // I2cDrv i2cDrvVlx = I2cDrv(i2cSw, 0x52);
 // I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
-// I2sDrv i2sDrvTm = I2sDrv(i2sSw);
+// 
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
 // I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
 // I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
@@ -47,7 +45,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 // VL53L0X vlx(i2cDrvVlx);
 // PCF8574 pcf(i2cDrvPcf);
 // AS5600 mags(i2cDrvAS);
-// TM8211 extern_dac(i2sDrvTm);
+
 // W25QXX extern_flash(spiDrvFlash);
 
 // AS5600 mag_sensor(i2cDrvAS);
@@ -859,16 +857,606 @@ void buck_test(){
         Sys::Clock::reCalculateTime();
     }
 }
+
+template<typename real>
+struct Osc{
+    // real_t ms;
+
+    real ang;
+    real freq_khz;
+    real amp;
+    virtual real forward(const real & delta_ms) = 0;
+};
+
+// template<typename real>
+struct SineOsc:public Osc<real_t>{
+    real_t forward(const real_t & delta_ms) override{
+        ang += delta_ms * freq_khz;
+        return sin(ang) * amp;
+    }
+};
+
+#include "src/device/Dac/TM8211/tm8211.hpp"
+
+
+
+
+void osc_test(){
+    uart2.init(115200 * 8, Uart::Mode::TxRx);
+    logger.setSpace(",");
+    logger.setEps(4);
+    Gpio i2sSck = Gpio(GPIOA, Pin::_1);
+    Gpio i2sSda = Gpio(GPIOA, Pin::_0);
+    Gpio i2sWs = Gpio(GPIOA, Pin::_4);
+    i2sSck.OutPP();
+    i2sSda.OutPP();
+    i2sWs.OutPP();
+    I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
+    i2sSw.init(114514);
+    // I2sDrv i2sDrvTm = I2sDrv(i2sSw);
+    // TM8211 extern_dac(i2sDrvTm);
+    // extern_dac.
+
+    // extern_dac.setDistort(0);
+    // extern_dac.setRail(real_t(0.3), real_t(3.0));
+    while(true){
+        // real_t audio_out = sin(40*t);
+        // real_t audio_volt = audio_out * 2 + 2.5;
+        // extern_dac.setVoltage(frac(t), frac(t));
+        // extern_dac.setChData(0, );
+        // uint32_t data = 0x8000 + int(0x7fff * sin(400 * t));
+        // data |= (data << 16);
+        // static uint16_t cnt;
+        // i2sSw.write((++cnt) << 16);
+        // uint16_t data = int(frac(t) * 0xffff);
+        static uint16_t data = 0;
+        data+= 80;
+        uint32_t data_out=  data<<16;
+        i2sSw.write(data_out);
+
+        // {
+        //     i2sWs.clr();
+        //     delayMicroseconds(10);
+        //     for(int i = 16; i > 0; i--)
+        //     {
+        //         i2sSck.clr();
+        //     delayMicroseconds(10);
+        //         i2sSda = (data >> i) & 0x01;
+        //     delayMicroseconds(10);
+        //         // digitalWrite(BCK, HIGH);
+        //         i2sSck.set();
+        //     delayMicroseconds(10);
+        //     }
+        //                     i2sSda.clr();
+        //     for(int i = 16; i > 0; i--)
+        //     {
+        //         i2sSck.clr();
+        //     delayMicroseconds(10);
+
+        //     // delayMicroseconds(10);
+        //         // digitalWrite(BCK, HIGH);
+        //         i2sSck.set();
+        //     delayMicroseconds(10);
+        //     }
+        //     i2sWs.set();
+        //     delayMicroseconds(10);
+        //     i2sWs.clr();
+        // }
+
+
+        logger.println(data_out);
+        // delayMicroseconds(100);
+        Sys::Clock::reCalculateTime();
+    }
+}
+real_t s(const real_t & x){
+    return 1/(1 + exp(4 * x));
+}
+real_t a(const real_t & x){
+    return 4 * abs(frac(x/2) - 0.5)-1;
+}
+
+
+namespace StepperTest{
+
+
+// static void run(){
+//         uint32_t foc_begin_micros = nanos();
+
+//         // odo.update();
+        
+//         // mt6816.getLapPosition(); // 8000us
+//         // mt6816.getPositionData(); // 8000us
+
+//         uint16_t dataTx[2];
+//         uint16_t dataRx[2];
+//         mt6816_drv.mtransmit(dataRx[0], dataTx[0], true);
+//         // mt6816_drv.transmit(dataRx[1], dataTx[1]);
+
+//         // if(!spi1.begin(0)){
+//         //     spi1.configDataSize(16);
+//         //     uint32_t ret = 0;
+//         //     spi1.transfer(ret, dataTx[0]);
+//         //     dataRx[0] = ret;
+//         //     spi1.configDataSize(8);
+//         //     spi1.end();
+//         // }
+
+//         // if(!spi1.begin(0)){
+//         //     spi1.configDataSize(16);
+//         //     uint32_t ret = 0;
+//         //     spi1.transfer(ret, dataTx[1]);
+//         //     dataRx[1] = ret;
+//         //     spi1.configDataSize(8);
+//         // }
+//         // // spi1.write(0x00);
+//         uint32_t foc_end_micros = nanos();
+//         // real_t raw_pos = odo.getPosition();
+
+//         // static bool first_entry = true;
+//         // if(first_entry){
+//         //     first_entry = false;
+//         //     est_pos = raw_pos;
+//         //     est_speed = real_t();
+//         // }
+
+//         // static real_t last_raw_pos = odo.getPosition();
+
+//         // real_t delta_raw_pos = raw_pos - last_raw_pos;
+
+//         // if(false){
+//         //     real_t est_pos_execute_fix_addition = raw_pos + delta_raw_pos * foc_execute_duty;
+//         //     real_t est_pos_enc_delay_fix_addition = real_t(0);
+//         //     est_pos = raw_pos + est_pos_execute_fix_addition + est_pos_enc_delay_fix_addition;
+//         // }else{
+//         //     est_pos = raw_pos;
+//         // }
+
+//         // last_raw_pos = raw_pos;
+
+//         // static uint32_t est_cnt = 0;
+//         // est_cnt = (est_cnt + 1) % est_devider;
+
+//         // static real_t est_delta_raw_pos_intergal = real_t();
+
+//         // if(est_cnt == 0){ // est happens
+//         //     real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
+
+//         //     est_speed = est_speed_new;
+
+//         //     est_delta_raw_pos_intergal = real_t();
+//         // }else{
+//         //     est_delta_raw_pos_intergal += delta_raw_pos;
+//         // }
+
+//         // real_t curr = pos_pid.update(target_pos, est_pos);
+
+//         // svpwm.setDQCurrent(real_t(0), curr, odo.getElecRad());
+//         // svpwm.setDQCurrent(Vector2(real_t(openloop_current_limit), real_t(0)), odo.position2rad(target_pos));
+
+
+
+//         foc_pulse_micros = foc_end_micros - foc_begin_micros;
+// }
+
+// void run2(){
+//     run();
+// }
+void stepper_test(){
+Printer & logger = uart1;
+PwmChannel pwmCoilA(timer3[3]);
+PwmChannel pwmCoilB(timer3[2]);
+
+Coil1 coilA(portA[10], portA[11], pwmCoilA);
+Coil1 coilB(portA[8], portA[9], pwmCoilB);
+SVPWM2 svpwm(coilA, coilB);
+
+SpiDrv mt6816_drv(spi1, 0);
+MT6816 mt6816(mt6816_drv);
+
+auto odo = OdometerPoles(mt6816,50);
+
+real_t target_pos;
+
+
+
+constexpr uint32_t foc_freq = 32000;
+constexpr uint32_t est_freq = 200;
+constexpr uint32_t est_devider = foc_freq / est_freq;
+constexpr float foc_execute_duty = 0.3;
+constexpr float openloop_current_limit = 0.3;
+
+
+constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
+uint32_t foc_pulse_micros;
+
+
+real_t est_speed = real_t();
+real_t est_pos = real_t();
+    uart1.init(115200);
+
+    logger.setEps(4);
+
+
+
+    spi1.init(18000000);
+    spi1.bindCsPin(portA[15], 0);
+
+    timer3.init(72000);
+
+
+    svpwm.init();
+
+
+    // mt6816.enableVerification();
+
+    odo.init();
+    // while(true) logger.println("??");
+    // auto pos_pid = PID_t<real_t>(real_t(50), real_t(), real_t(0));
+    // pos_pid.setClamp(real_t(0.35));
+
+    // MotorWithFoc motor(svpwm, odo, pos_pid);
+
+
+    // motor.setMaxCurrent(real_t(0.25));
+
+    auto & bled = portC[13];
+    bled.OutPP();
+
+    odo.inverse(false);
+
+
+    {
+        constexpr int turnmircos = 64;
+        constexpr int dur = 600;
+
+        odo.reset();
+        logger.println("testing coil..");
+
+        Coil1 * coil = nullptr;
+
+        for(uint8_t coil_index = 0; coil_index < 2; coil_index++){
+
+            switch(coil_index){
+                default:
+                case 0:
+                    coil = &coilA;
+                    break;
+                case 1:
+                    coil = &coilB;
+                    break;
+            }
+
+            odo.update();
+            real_t min_pos = odo.getPosition();
+            real_t max_pos = min_pos;
+
+            logger.println("Coil", coil_index, " test started");
+
+            coilA.setDuty(real_t(0));
+            coilB.setDuty(real_t(0));
+            delay(10);
+
+            for(int i = 0; i < turnmircos; i++){
+                coil->setDuty(cos(i * real_t((PI / turnmircos))));
+                delayMicroseconds(dur);
+
+                odo.update();
+                real_t current_pos = odo.getPosition();
+
+                min_pos = MIN(current_pos, min_pos);
+                max_pos = MAX(current_pos, max_pos);
+            }
+
+            coil->setDuty(real_t(0));
+
+            real_t abs_diff_pos = ABS(max_pos - min_pos);
+            if(abs_diff_pos < real_t(0.005)){
+
+                logger.println("Coil", coil_index, " not connected, Please Check");
+                // logger.println("MAX diff", abs_diff_pos);
+            }else{
+                logger.println("Coil", coil_index, " connected well");
+                // logger.println("MAX diff", abs_diff_pos);
+            }
+
+        }
+    }
+
+    {
+        constexpr float tone_current = 0.2;
+
+        logger.println("tone");
+
+        struct Tone{
+            uint32_t freq_hz;
+            uint32_t sustain_ms;
+        };
+
+        constexpr int freq_G4 = 392;
+        constexpr int freq_A4 = 440;
+        constexpr int freq_B4 = 494;
+        constexpr int freq_C5 = 523;
+        constexpr int freq_D5 = 587;
+        constexpr int freq_E5 = 659;
+        constexpr int freq_F5 = 698;
+        constexpr int freq_G5 = 784;
+
+        Tone tones[] = {
+            {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
+            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+            {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
+            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+            
+            {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
+            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+            {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
+            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+            
+            {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
+            {.freq_hz = freq_C5,.sustain_ms = 100},  // 1
+            {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
+            {.freq_hz = freq_G4,.sustain_ms = 100}   // 5
+        };
+        for(auto & tone : tones){
+            uint32_t play_begin_ms = millis();
+            uint32_t tone_period_us = 1000000 / tone.freq_hz;
+            tone_period_us /= 2;
+            while(millis() - play_begin_ms < tone.sustain_ms){
+                svpwm.setDQCurrent(Vector2(real_t(tone_current), real_t(0)), real_t());
+                delayMicroseconds(tone_period_us);
+                svpwm.setDQCurrent(Vector2(real_t(0), real_t(tone_current)), real_t());
+                delayMicroseconds(tone_period_us);
+            }
+        }
+    }
+
+    {
+        odo.reset();
+        logger.println("Cali And Direction Identify..");
+
+        constexpr int forwardpreturns = 2;
+        constexpr int forwardturns = 5;
+        constexpr int backwardpreturns = 2;
+        constexpr int backwardturns = 5;
+        constexpr int turnmircos = 64;
+        constexpr int dur = 600;
+        constexpr float cali_current = 0.6;
+
+        real_t elecrad = real_t(0);
+        real_t elecrad_step = real_t(TAU / turnmircos);
+        real_t percent = real_t(1.0 / (forwardturns + backwardturns));
+
+        struct{
+            public:
+
+            real_t start_pos;
+            real_t after_forward_pos;
+            real_t after_backward_pos;
+
+            const real_t max_diff_tolerance = real_t(0.05);
+
+            bool isForwardBackwardFluent(const int & forward_total_turns, const int & backward_total_turns){
+                real_t forward_trip = after_forward_pos - start_pos;
+                real_t backward_trip = after_backward_pos - after_forward_pos;
+
+                if(ABS(forward_trip) < max_diff_tolerance || ABS(backward_trip) < max_diff_tolerance){
+                    logger.println("Stuck happend while froward and backward");
+                    logger.println("Forward trip:", forward_trip);
+                    logger.println("Backward trip:", backward_trip);
+                    return false;
+                }
+
+                if(ABS(ABS(forward_trip) * backward_total_turns - ABS(backward_trip) * forward_total_turns)
+                     > max_diff_tolerance * forward_total_turns * backward_total_turns){
+                    logger.println("Bump happend while froward and backward");
+                    logger.println("Forward trip:", forward_trip);
+                    logger.println("Backward trip:", backward_trip);
+                    logger.println(ABS(ABS(forward_trip) * backward_total_turns - ABS(backward_trip) * forward_total_turns));
+                    logger.println(max_diff_tolerance * forward_total_turns * backward_total_turns);
+                    return false;
+                }
+
+                if(forward_trip * backward_trip >= 0){
+                    logger.println("Direction still while forward and backward");
+                    return false;
+                }
+
+                return true;
+            }
+
+            bool needToInverse(){
+                real_t forward_trip = after_forward_pos - start_pos;
+                real_t backward_trip = after_backward_pos - after_forward_pos;
+                return forward_trip * backward_trip < 0;
+            }
+        }pos_trend;
+
+        delay(10);
+        odo.update();
+        pos_trend.start_pos = odo.getPosition();
+        delay(10);
+
+        for(int i = -forwardpreturns * turnmircos;i < forwardturns * turnmircos; i++){
+
+            if(i % turnmircos == 0 && i >= 0){//measureable
+                odo.locateElecrad(percent);
+            }
+
+            elecrad += elecrad_step;
+            svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), elecrad);
+            delayMicroseconds(dur);
+        }
+
+        delay(10);
+        odo.update();
+        pos_trend.after_forward_pos = odo.getPosition();
+        delay(10);
+
+        for(int i = -backwardpreturns * turnmircos; i < backwardturns * turnmircos; i++){
+
+            if(i % turnmircos == 0 && i >= 0){//measureable
+                odo.locateElecrad(percent);
+            }
+
+            elecrad -= elecrad_step;
+            svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), elecrad);
+            delayMicroseconds(dur);
+        }
+
+        delay(10);
+        odo.update();
+        pos_trend.after_backward_pos = odo.getPosition();
+        delay(10);
+
+        logger.println("Cali Done..");
+        logger.println("elecrad offset is", odo.getElecRadOffset());
+        pos_trend.isForwardBackwardFluent(forwardpreturns + forwardturns, backwardpreturns + backwardturns);
+        // odo.inverse(pos_trend.needToInverse());
+        odo.inverse(false);
+    }
+
+    odo.locateRelatively(real_t(0));
+    svpwm.setDQCurrent(Vector2(), real_t());
+
+
+    timer4.init(foc_freq);
+    timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
+
+
+
+    // uint32_t foc_begin_micros;
+    // uint32_t foc_end_micros;
+
+    timer4.bindCb(Timer::IT::Update, [&](){
+
+        // odo.update();
+        
+        // mt6816.getLapPosition(); // 8000us
+        // mt6816.getPositionData(); // 8000us
+        uint32_t foc_begin_micros = micros();
+        uint16_t dataTx[2];
+        uint16_t dataRx[2];
+        mt6816_drv.mtransmit(dataRx[0], dataTx[0], true);
+        // mt6816_drv.transmit(dataRx[1], dataTx[1]);
+
+        // if(!spi1.begin(0)){
+        //     spi1.configDataSize(16);
+        //     uint32_t ret = 0;
+        //     spi1.transfer(ret, dataTx[0]);
+        //     dataRx[0] = ret;
+        //     spi1.configDataSize(8);
+        //     spi1.end();
+        // }
+
+        // if(!spi1.begin(0)){
+        //     spi1.configDataSize(16);
+        //     uint32_t ret = 0;
+        //     spi1.transfer(ret, dataTx[1]);
+        //     dataRx[1] = ret;
+        //     spi1.configDataSize(8);
+        // }
+        // // spi1.write(0x00);
+        uint32_t foc_end_micros = nanos();
+        // real_t raw_pos = odo.getPosition();
+
+        // static bool first_entry = true;
+        // if(first_entry){
+        //     first_entry = false;
+        //     est_pos = raw_pos;
+        //     est_speed = real_t();
+        // }
+
+        // static real_t last_raw_pos = odo.getPosition();
+
+        // real_t delta_raw_pos = raw_pos - last_raw_pos;
+
+        // if(false){
+        //     real_t est_pos_execute_fix_addition = raw_pos + delta_raw_pos * foc_execute_duty;
+        //     real_t est_pos_enc_delay_fix_addition = real_t(0);
+        //     est_pos = raw_pos + est_pos_execute_fix_addition + est_pos_enc_delay_fix_addition;
+        // }else{
+        //     est_pos = raw_pos;
+        // }
+
+        // last_raw_pos = raw_pos;
+
+        // static uint32_t est_cnt = 0;
+        // est_cnt = (est_cnt + 1) % est_devider;
+
+        // static real_t est_delta_raw_pos_intergal = real_t();
+
+        // if(est_cnt == 0){ // est happens
+        //     real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
+
+        //     est_speed = est_speed_new;
+
+        //     est_delta_raw_pos_intergal = real_t();
+        // }else{
+        //     est_delta_raw_pos_intergal += delta_raw_pos;
+        // }
+
+        // real_t curr = pos_pid.update(target_pos, est_pos);
+
+        // svpwm.setDQCurrent(real_t(0), curr, odo.getElecRad());
+        // svpwm.setDQCurrent(Vector2(real_t(openloop_current_limit), real_t(0)), odo.position2rad(target_pos));
+
+
+
+        foc_pulse_micros = foc_end_micros - foc_begin_micros;
+    });
+
+
+    // motor.enable();
+    // motor.trackPos(real_t(0));
+    // motor.setMaxCurrent(real_t(0.45));
+
+    logger.setEps(4);
+
+    while(true){
+        // real_t total = real_t(3);
+        // static real_t freq = real_t(10);
+        // static real_t freq_dir = real_t(1);
+        // const real_t freq_delta = real_t(20);
+        // if(freq > real_t(300)) freq_dir = real_t(-1);
+        // else if(freq < real_t(4)) freq_dir = real_t(1);
+        // static real_t last_t = t;
+        // real_t delta = (t - last_t);
+        // freq += delta * freq_dir * freq_delta;
+        // last_t = t;
+        // static real_t ang = real_t(0);
+        // ang += freq * delta;
+        // real_t target = (total / freq) * sin(ang);
+
+        // target_pos = sign(frac(t) - 0.5);
+        target_pos = sin(t);
+        logger.println(est_speed, est_pos, foc_pulse_micros, foc_period_micros);
+        // real_t target = sin()
+        // logger.println(motor.getPosition(), target);
+        // motor.trackPos(target);
+
+
+        Sys::Clock::reCalculateTime();
+}    
+}
+};
+
+
 int main(){
     Sys::Misc::prework();
     // stepper_app();
     // stepper_app_new();
+    StepperTest::stepper_test();
     // chassis_app();
     // modem_app();
     // test_app();
     // pmdc_test();
-    buck_test();
-
+    // buck_test();
+    osc_test();
 }
 
     // timer1.init(25600);
@@ -1217,8 +1805,7 @@ int main(){
     // vlx.setHighPrecision(false);
     // vlx.startConv();
     // mags.init();
-    // extern_dac.setDistort(5);
-    // extern_dac.setRail(real_t(1), real_t(4));
+
 
     // mag_sensor.setPulsePerTurn(30);
     // Font6x8 font6x8;

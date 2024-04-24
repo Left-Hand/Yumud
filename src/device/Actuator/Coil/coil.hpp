@@ -64,7 +64,7 @@ public:
     Coil1 & operator = (const real_t & duty) override {setDuty(duty); return *this;}
 };
 
-
+class TB67H450{};
 class Coil2:public Coil2PConcept{
 protected:
     PwmChannelConcept & instanceP;

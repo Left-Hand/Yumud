@@ -34,7 +34,8 @@ public:
     }
     MotorWithFoc(SVPWM & _svpwm, OdometerPoles & _odo, PID_t<real_t> & _pos_pid):svpwm(_svpwm), odo(_odo), pos_pid(_pos_pid){;}
     void setMaxCurrent(real_t _max_current){
-        pos_pid.setClamp(_max_current);
+        // pos_pid.setClamp(_max_current);
+        svpwm.setClamp(_max_current);
     }
 
     void run(){

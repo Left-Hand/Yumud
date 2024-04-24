@@ -3,7 +3,7 @@
     "beforeBuildTasks": [
         {
             "name": "new prebuild task",
-            "disable": false,
+            "disable": true,
             "abortAfterFailed": false,
             "stopBuildAfterFailed": true,
             "command": "python scripts/hello.py"
@@ -27,7 +27,7 @@
     "c/cpp-compiler": {
         "language-c": "c17",
         "language-cpp": "gnu++17",
-        "optimization": "level-size",
+        "optimization": "level-fast",
         "warnings": "all-warnings",
         "one-elf-section-per-function": true,
         "one-elf-section-per-data": true,

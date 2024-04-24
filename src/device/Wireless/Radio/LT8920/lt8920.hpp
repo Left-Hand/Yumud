@@ -295,13 +295,11 @@ protected:
         FifoPtr = 52
     };
 
-    __fast_inline void delayT3(){
-        // delayNanoseconds(41);
+    void delayT3(){
         delayMicroseconds(1);
     }
 
-    __fast_inline void delayT5(){
-        // delayNanoseconds(450);
+    void delayT5(){
         delayMicroseconds(1);
     }
 
