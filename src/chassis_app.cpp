@@ -104,11 +104,11 @@ void chassis_app(){
     auto awled_l = AW9523RgbLed(aw, Pin::_8, Pin::_10, Pin::_9);
     auto awpwm = AW9523Pwm(aw, Pin::_11);
     awpwm.init();
-    auto ir_left = GpioVirtual(&aw, Pin::_4);
-    auto ir_right = GpioVirtual(&aw, Pin::_5);
-    auto beep = GpioVirtual(&aw, Pin::_6);
-    auto coil_left = GpioVirtual(&aw, Pin::_2);
-    auto coil_right = GpioVirtual(&aw, Pin::_15);
+    auto ir_left = GpioVirtual(aw, Pin::_4);
+    auto ir_right = GpioVirtual(aw, Pin::_5);
+    auto beep = GpioVirtual(aw, Pin::_6);
+    auto coil_left = GpioVirtual(aw, Pin::_2);
+    auto coil_right = GpioVirtual(aw, Pin::_15);
     ir_left.InFloating();
     ir_right.InFloating();
     beep.OutPP(); beep.set();

@@ -69,7 +69,7 @@ public:
                 mosi_pin(_mosi_pin), miso_pin(_miso_pin), delays(_delays){;}
     SpiSw(GpioConcept & _sclk_pin,GpioConcept & _mosi_pin,
             GpioConcept & _miso_pin,GpioVirtual & _cs_pin, const uint16_t & _delays = 10):SpiSw(_sclk_pin, _mosi_pin, _miso_pin, delays){
-                bindCsPin(static_cast<GpioVirtual>(_cs_pin), 0);
+                bindCsPin(_cs_pin, 0);
             }
     Error write(const uint32_t & data) override {
         delayDur();

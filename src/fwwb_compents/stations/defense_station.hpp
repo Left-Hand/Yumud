@@ -42,11 +42,11 @@ public:
         FATHER_STATION::init();
     }
 
-    void bindPin(const GpioVirtual & gpio, const uint8_t index){
+    void bindPin(GpioVirtual & gpio, const uint8_t index){
         coil_pins.bindPin(gpio, index);
     }
 
-    void bindPin(const Gpio & gpio, const uint8_t index){
+    void bindPin(Gpio & gpio, const uint8_t index){
         coil_pins.bindPin(gpio, index);
     }
 

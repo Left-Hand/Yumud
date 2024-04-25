@@ -36,7 +36,7 @@ void modem_app(){
     aw.enableLedMode(Pin::_8, true);
     // aw.setModeByIndex(8, PinMode::OutPP);
 
-    auto awio = GpioVirtual(&aw, Pin::_0);
+    auto awio = GpioVirtual(aw, Pin::_0);
     awio.OutPP();
 
     auto led0 = AW9523RgbLed(aw, Pin::_2, Pin::_3, Pin::_4);

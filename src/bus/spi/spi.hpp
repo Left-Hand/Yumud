@@ -15,20 +15,13 @@ protected:
 public:
     Error begin_use(const uint8_t & index = 0) override {
         lock(index);
-        auto * cs_pin = cs_pins[wholock()];
-        if(cs_pin){
-            cs_pin->set();
-            cs_pin->clr();
-            return ErrorType::OK;
-        }else{
-            return ErrorType::NO_CS_PIN;
-        }
+        cs_pins[wholock()].clr();
+        return ErrorType::OK;
 
     }
 
     void end_use() override {
-        auto * cs_pin = cs_pins[wholock()];
-        if(cs_pin) cs_pin->set();
+        cs_pins[wholock()].set();
         unlock();
     }
 
@@ -48,7 +41,7 @@ public:
         cs_pins.bindPin(gpio, index);
     }
 
-    void bindCsPin(const GpioVirtual & gpio, const uint8_t index){
+    void bindCsPin(GpioVirtual & gpio, const uint8_t index){
         cs_pins.bindPin(gpio, index);
     }
 };
@@ -82,7 +75,14 @@ public:
     Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) override;
 
     void configDataSize(const uint8_t & data_size) override{
-        SPI_DataSizeConfig(instance, data_size == 16 ? SPI_DataSize_16b : SPI_DataSize_8b);
+        uint16_t tempreg =  instance->CTLR1;
+        if(data_size == 16){
+            if(tempreg & SPI_DataSize_16b) return;
+            tempreg |= SPI_DataSize_16b;
+        }else{
+            tempreg &= ~SPI_DataSize_16b;
+        }
+        instance->CTLR1 = tempreg;
     }
 
     void configBaudRate(const uint32_t & baudRate) override{

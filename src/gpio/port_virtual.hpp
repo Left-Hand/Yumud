@@ -29,7 +29,7 @@ public:
 template<int size>
 class PortVirtual : public PortVirtualConcept<size>{
 protected:
-    std::array<std::unique_ptr<GpioVirtual>, size> pin_ptrs = {nullptr};
+    std::array<GpioConcept *, size> pin_ptrs = {nullptr};
 
     void write(const uint16_t & data) override {
         for(uint8_t i = 0; i < 16; i++){
@@ -47,14 +47,14 @@ public:
     PortVirtual(){;}
     void init(){;}
 
-    void bindPin(const GpioVirtual & gpio, const uint8_t index){
+    void bindPin(GpioVirtual & gpio, const uint8_t index){
         if(index < 0 && index >= size)return;
-        pin_ptrs[index] = std::make_unique<GpioVirtual>(gpio);
+        pin_ptrs[index] = &gpio;
     }
 
-    void bindPin(const Gpio & gpio, const uint8_t index){
+    void bindPin(Gpio & gpio, const uint8_t index){
         if(index < 0 && index >= size)return;
-        pin_ptrs[index] = std::make_unique<GpioVirtual>(gpio);
+        pin_ptrs[index] = &gpio;
     }
 
     void writeByIndex(const int8_t index, const bool data) override{
@@ -87,7 +87,7 @@ public:
 
     bool isIndexValid(const uint8_t & index){return (index >= 0 && index < size && pin_ptrs[index] != nullptr);}
 
-    GpioVirtual * operator [](const uint8_t index){return isIndexValid(index) ? pin_ptrs[index].get() : nullptr;}
+    GpioConcept & operator [](const uint8_t index){return isIndexValid(index) ? *pin_ptrs[index] : portA[Pin::None];}
 
     void setModeByIndex(const int8_t & index, const PinMode & mode) override{
         if(!isIndexValid(index))return;

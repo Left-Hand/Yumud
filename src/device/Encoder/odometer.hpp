@@ -33,13 +33,13 @@ protected:
         accPosition = pos;
     }
 
-    real_t getLapPosition(){
-        real_t undiredLapPostion = encoder.getLapPosition();
-        if (rsv) return real_t(real_t(1) - undiredLapPostion);
-        else return real_t(undiredLapPostion);
-    }
+
 public:
     Odometer(Encoder & _encoder):encoder(_encoder){;}
+
+    real_t getLapPosition(){
+        return lapPosition;
+    }
 
     void init(){
         encoder.init();
@@ -66,8 +66,11 @@ public:
     }
 
     void update(){
-        lapPosition = getLapPosition();
-
+        {
+            real_t undiredLapPostion = encoder.getLapPosition();
+            if (rsv) lapPosition = real_t(1) - undiredLapPostion;
+            else lapPosition = undiredLapPostion;
+        }
         real_t deltaLapPosition = lapPosition - lapPositionLast;
 
         if(deltaLapPosition > real_t(0.5f)){
@@ -133,7 +136,7 @@ public:
 
     int position2pole(const iq_t & position){
         real_t pole = frac(position) * real_t(poles);
-        return int(pole);
+        return MIN(int(pole), poles - 1);
     }
 };
 

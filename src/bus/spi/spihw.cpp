@@ -101,7 +101,7 @@ void SpiHw::initGpios(){
         }else{
             cs_pin.OutPP();
         }
-        bindCsPin(GpioVirtual(cs_pin), 0);
+        bindCsPin(cs_pin, 0);
     }
 
     for(uint8_t i = 0; i < cs_pins.getSize(); i++){

@@ -9,9 +9,9 @@ class Spi1:public SpiHw{
 protected:
     static int8_t occupied;
 
-    void lock(const uint8_t &index) override{occupied = index;}
-    void unlock() override{occupied = -1;}
-    int8_t wholock() override{return occupied;}
+    __fast_inline void lock(const uint8_t &index) override{occupied = index;}
+    __fast_inline void unlock() override{occupied = -1;}
+    __fast_inline int8_t wholock() override{return occupied;}
 public:
 
     Spi1():SpiHw(SPI1){;}

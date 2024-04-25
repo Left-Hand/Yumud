@@ -104,16 +104,16 @@ void TimerOutChannelOnChip::setPolarity(const bool & pol){
 void TimerOutChannelOnChip::enableSync(const bool & _sync){
     switch(channel){
         case Channel::CH1:
-            TIM_OC1PreloadConfig(instance, _sync ? TIM_OC1PE : (uint16_t)0);
+            TIM_OC1PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case Channel::CH2:
-            TIM_OC2PreloadConfig(instance, _sync ? TIM_OC2PE : (uint16_t)0);
+            TIM_OC2PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case Channel::CH3:
-            TIM_OC3PreloadConfig(instance, _sync ? TIM_OC3PE : (uint16_t)0);
+            TIM_OC3PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         case Channel::CH4:
-            TIM_OC4PreloadConfig(instance, _sync ? TIM_OC4PE : (uint16_t)0);
+            TIM_OC4PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         default:
             break;

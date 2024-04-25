@@ -5,8 +5,7 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 #include "src/fwwb_compents/fwwb_inc.h"
 
-// Gpio i2cScl = Gpio(GPIOB, (Pin)I2C_SW_SCL);
-// Gpio i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
+#include "src/opa/opa.hpp"
 
 constexpr uint32_t SPI1_BaudRate = (144000000/32);
 constexpr uint32_t SPI2_BaudRate = (144000000/8);
@@ -55,16 +54,6 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 
 extern "C" void TimBase_IRQHandler(void) __interrupt;
 
-RGB565 color = 0xffff;
-const RGB565 white = 0xffff;
-const RGB565 black = 0;
-const RGB565 red = RGB565(31,0,0);
-const RGB565 green = RGB565(0,63,0);
-const RGB565 blue = RGB565(0,0,31);
-
-real_t delta = real_t(0);
-real_t fps = real_t(0);
-
 
 namespace Shaders{
 __fast_inline RGB565 ShaderP(const Vector2i & pos){
@@ -96,34 +85,6 @@ __fast_inline RGB565 Mandelbrot(const Vector2 & UV){
 };
 
 
-constexpr uint16_t pwm_arr = 144000000/12000 - 1;
-constexpr uint16_t ir_arr = 144000000/38000 - 1;
-
-#define narrow 12
-#define wide 12
-void sendCode(Gpio & gpio,const bool & state){
-    if(state){
-        gpio.set();
-        __nopn(120);
-        gpio.clr();
-        __nopn(32);
-    }else{
-        gpio.set();
-        __nopn(32);
-        gpio.clr();
-        __nopn(120);
-    }
-}
-
-void sendReset(Gpio & gpio){
-    gpio.clr();
-    delayMicroseconds(60);
-    gpio.set();
-}
-
-enum class posModes:uint8_t{
-    Lap, Continuous
-};
 
 
 using Sys::t;
@@ -137,217 +98,6 @@ using Sys::t;
 
 
 
-// class Flash{
-// protected:
-
-
-//     using Page = uint32_t;
-//     using PageRange = Range_t<Page>;
-//     using Address = uint32_t;
-//     using AddressRange = Range_t<Address>;
-
-//     static constexpr Page page_size = 256;
-//     static constexpr Address base_address = 0x08000000;
-
-//     Page page_count;
-//     PageRange page_range;
-
-//     uint32_t pre_clock;
-
-//     void settleClock(){
-//         pre_clock = Sys::Clock::getAHBFreq();
-//         Sys::Clock::setAHBFreq(72000000);
-//     }
-
-//     void resetClock(){
-//         Sys::Clock::setAHBFreq(pre_clock);
-//     }
-
-//     Page pageWarp(const int & index){
-//         return index > 0 ? index : page_count + index;
-//     }
-
-//     AddressRange getAddressRange(){
-//         return (page_range * page_size).shift(base_address);
-//     }
-// public:
-//     Flash(int _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
-//     Flash(int _page_begin, int _page_end):
-//             page_count(Sys::Chip::getFlashSize() / page_size),
-//             page_range(PageRange(Page(0),Sys::Chip::getFlashSize() / page_size)
-//             .intersection(PageRange(pageWarp(_page_begin), pageWarp(_page_end)))){;}
-
-//     ~Flash(){exit();}
-
-//     void init(){
-//         settleClock();
-//         Systick_Init();
-//         delay(10);
-//     }
-
-//     template<typename T>
-//     volatile bool store(const T & data){
-
-//         auto NbrOfPage = page_range.get_length(); //计算要擦除多少页
-//         Address PAGE_WRITE_START_ADDR = getAddressRange().start;
-//         Address PAGE_WRITE_END_ADDR = getAddressRange().end;
-
-//         logger.println(PAGE_WRITE_START_ADDR);
-//         FLASH_Status FLASHStatus =  FLASH_COMPLETE;
-
-//         __disable_irq();
-//         FLASH_Unlock_Fast();
-
-//         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
-
-//         // logger.println("begin erase", PAGE_WRITE_START_ADDR);
-
-//         // uint32_t len = sizeof(data);
-//         // for(Page EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++){
-//             // Address op_address = PAGE_WRITE_START_ADDR + (page_size * EraseCounter)
-//         uint32_t buf[page_size / sizeof(uint32_t)] = {0};
-//         // memcpy(&buf, &data, sizeof(T));
-//         for(size_t i = 0; i < sizeof(T); i++){
-//             ((uint8_t *)buf)[i] = ((uint8_t *)&data)[i];
-//             // logger.println(i,((uint8_t *)&data)[i] );
-//         }
-
-//         FLASH_ErasePage_Fast(PAGE_WRITE_START_ADDR);
-//             // if()
-//             // FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)((uint8_t *)&data + page_size * EraseCounter));
-//         FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)&buf);
-//         // }
-
-//         FLASH_Lock_Fast();
-//         __enable_irq();
-
-//         Address address = PAGE_WRITE_START_ADDR;
-//         bool MemoryProgramStatus = true;
-
-//         uint32_t i = 0;
-//         while((address < PAGE_WRITE_END_ADDR) && (MemoryProgramStatus != false)){
-//             auto read_data = (*(__IO uint32_t*) address);
-//             auto examine_data = buf[i];
-//             if(read_data != examine_data){
-//                 MemoryProgramStatus = false;
-//             }
-//             // logger.println("vait", address, read_data, examine_data);
-//             address += 4;
-//             i++;
-//         }
-//         // logger.println("vait", MemoryProgramStatus);
-//         return MemoryProgramStatus;
-//     };
-
-//     template<typename T>
-//     volatile void load(T & data){
-//         Address PAGE_WRITE_START_ADDR = getAddressRange().start;
-//         Address PAGE_WRITE_END_ADDR = getAddressRange().end;
-//         Address address = PAGE_WRITE_START_ADDR;
-//         // uint32_t i = 0;
-//         for(size_t i = 0; i<sizeof(T);i++){
-//             auto read_data = (*(__IO uint8_t*)(PAGE_WRITE_START_ADDR + i));
-//             *((volatile uint8_t*)&data + i) = read_data;
-//             // logger.println("read", address, read_data);
-//             // address += 1;
-//             // i++;
-//         }
-//     };
-
-//     void exit(){
-//         resetClock();
-//     }
-// };
-
-// void testFlash(){
-
-
-//     Flash flash(-1);
-//     flash.init();
-//     Sys::Misc::prework();
-
-//     uart2.init(115200);
-
-//     logger.setSpace(" ");
-//     logger.setRadix(16);
-
-//     // logger.println("Flash Size:", Sys::Chip::getFlashSize());
-//     // logger.println("Sys Clock:", Sys::Clock::getSystemFreq());
-//     // logger.println("AHB Clock:", Sys::Clock::getAHBFreq());
-//     // logger.println("APB1 Clock:", Sys::Clock::getAPB1Freq());
-//     // logger.println("APB2 Clock:", Sys::Clock::getAPB2Freq());
-//     struct Temp{
-//         uint8_t data[4] = {0,1,2,3};
-//         char name[8] = "Rstr1aN";
-//         real_t value = real_t(0.1);
-//         uint8_t crc = 0x08;
-//     };
-//     Temp temp;
-
-//     logger.println("单纯的妇女而会计法v你rfwevdnoln");
-//     // bkp.init();
-//     // logger.println("bkp_data", bkp.readData(1));
-
-//     // if(bkp.readData(1) % 2){
-//     //     // flash.load(temp);
-//     //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-//     //     logger.println(temp.name);
-//     //     logger.println(temp.value);
-//     //     logger.println(temp.crc);
-
-//     // }
-//     flash.load(temp);
-//     if(temp.data[0] == 0x39){
-//         logger.println("need to store new");
-//         logger.println("new data is");
-//         Temp new_temp = Temp();
-//         logger.println(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
-//         flash.store(new_temp);
-//         flash.load(temp);
-//         logger.println("new store done");
-//     }
-
-//     logger.println("data loaded");
-//     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-//     logger.println(temp.name);
-//     logger.println(temp.value);
-//     logger.println(temp.crc);
-//     bkp.init();
-//     bkp.writeData(1, bkp.readData(1) + 1);
-//     temp.crc = bkp.readData(1);
-//     flash.store(temp);
-//     // flash.load(temp);
-//     // logger.println();
-//     // if(temp.data[0] == 0xE3 || temp.data[0] == 0x39 || (bkp.readData(1) & 0b11) == 0){
-//     //     logger.println(temp.data[0]);
-
-//     //     temp.data[3] = bkp.readData(1);
-//     //     temp.name[2] = 'k';
-//     //     // temp.value = real_t(0.2);
-//     //     temp.crc = 10;
-
-//     //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-//     //     logger.println(temp.name);
-//     //     logger.println(temp.value);
-//     //     logger.println(temp.crc);
-//     //     flash.store(temp);
-//     //     flash.load(temp);
-//     // }else{
-//     //     logger.println("suss");
-//     //         logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-//     // logger.println(temp.name);
-//     // logger.println(temp.value);
-//     // logger.println(temp.crc);
-//     // }
-
-
-//     // }
-//     // logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-//     // logger.println(temp.name);
-//     // logger.println(temp.value);
-//     // logger.println(temp.crc);
-
-//     // 
 
 
 
@@ -636,7 +386,7 @@ void pmdc_test(){
         // logger.println(ADC1->IDATAR1);
         // delay(2);
 
-        
+
         if(logger.available()){
             char chr = logger.read();
             if(chr == '\n'){
@@ -654,114 +404,6 @@ void pmdc_test(){
 }
 
 
-class Opa{
-protected:
-    uint8_t opa_num;
-    uint8_t psel;
-    uint8_t nsel;
-    uint8_t osel;
-
-    Gpio & getPosPin(){
-        switch(opa_num){
-            case 1:
-                switch(psel){
-                    case 0:
-                        return portB[(Pin)OPA1_P0_Pin];
-                    case 1:
-                        return portB[(Pin)OPA1_P1_Pin];
-                    default:
-                        break;
-                }
-                break;
-            case 2:
-                switch(psel){
-                    case 0:
-                        return portB[(Pin)OPA2_P0_Pin];
-                    case 1:
-                        return portA[(Pin)OPA2_P1_Pin];
-                    default:
-                        break;
-                }
-                break;
-            default:
-                break;
-        }
-        return portA[Pin::None];
-    };
-
-    Gpio & getNegPin(){
-        switch(opa_num){
-            case 1:
-                switch(psel){
-                    case 0:
-                        return portB[(Pin)OPA1_N0_Pin];
-                    case 1:
-                        return portA[(Pin)OPA1_N1_Pin];
-                    default:
-                        break;
-                }
-                break;
-            case 2:
-                switch(psel){
-                    case 0:
-                        return portB[(Pin)OPA2_N0_Pin];
-                    case 1:
-                        return portA[(Pin)OPA2_N1_Pin];
-                    default:
-                        break;
-                }
-                break;
-            default:
-                break;
-        }
-        return portA[Pin::None];
-    };
-
-    // Gpio getOutPin(){
-    //     switch(opa_num){
-    //         case 1:
-    //             switch(psel){
-    //                 case 0:
-    //                     return Gpio(OPA1_O0_Port, (Pin)OPA1_O0_Pin);
-    //                 case 1:
-    //                     return Gpio(OPA1_O1_Port, (Pin)OPA1_O1_Pin);
-    //                 default:
-    //                     break;
-    //             }
-    //             break;
-    //         case 2:
-    //             switch(psel){
-    //                 case 0:
-    //                     return Gpio(OPA2_O0_Port, (Pin)OPA2_O0_Pin);
-    //                 case 1:
-    //                     return Gpio(OPA2_O1_Port, (Pin)OPA2_O1_Pin);
-    //                 default:
-    //                     break;
-    //             }
-    //             break;
-    //         default:
-    //             break;
-    //     }
-    //     return Gpio(GPIOA, Pin::None);
-    // };
-public:
-    Opa(const uint8_t & _opa_num):opa_num( _opa_num ){;}
-
-    void init( const uint8_t & sel){
-        getNegPin().InAnalog();
-        getPosPin().InAnalog();
-        OPA_InitTypeDef OPA_InitStructure;
-        OPA_InitStructure.OPA_NUM = CLAMP((OPA_Num_TypeDef)(OPA1 + (opa_num - 1)), OPA1, OPA4);
-        OPA_InitStructure.PSEL = (OPA_PSEL_TypeDef)sel;
-        OPA_InitStructure.NSEL = (OPA_NSEL_TypeDef)sel;
-        OPA_InitStructure.Mode = (OPA_Mode_TypeDef)sel;
-        OPA_Init(&OPA_InitStructure);
-        OPA_Cmd(OPA_InitStructure.OPA_NUM, ENABLE);
-    }
-};
-
-Opa opa1(1);
-Opa opa2(2);
 
 template<typename T>
 struct targAndMeasurePair_t{
@@ -953,100 +595,11 @@ void osc_test(){
         Sys::Clock::reCalculateTime();
     }
 }
-real_t s(const real_t & x){
-    return 1/(1 + exp(4 * x));
-}
-real_t a(const real_t & x){
-    return 4 * abs(frac(x/2) - 0.5)-1;
-}
+
 
 
 namespace StepperTest{
 
-
-// static void run(){
-//         uint32_t foc_begin_micros = nanos();
-
-//         // odo.update();
-        
-//         // mt6816.getLapPosition(); // 8000us
-//         // mt6816.getPositionData(); // 8000us
-
-//         uint16_t dataTx[2];
-//         uint16_t dataRx[2];
-//         mt6816_drv.mtransmit(dataRx[0], dataTx[0], true);
-//         // mt6816_drv.transmit(dataRx[1], dataTx[1]);
-
-//         // if(!spi1.begin(0)){
-//         //     spi1.configDataSize(16);
-//         //     uint32_t ret = 0;
-//         //     spi1.transfer(ret, dataTx[0]);
-//         //     dataRx[0] = ret;
-//         //     spi1.configDataSize(8);
-//         //     spi1.end();
-//         // }
-
-//         // if(!spi1.begin(0)){
-//         //     spi1.configDataSize(16);
-//         //     uint32_t ret = 0;
-//         //     spi1.transfer(ret, dataTx[1]);
-//         //     dataRx[1] = ret;
-//         //     spi1.configDataSize(8);
-//         // }
-//         // // spi1.write(0x00);
-//         uint32_t foc_end_micros = nanos();
-//         // real_t raw_pos = odo.getPosition();
-
-//         // static bool first_entry = true;
-//         // if(first_entry){
-//         //     first_entry = false;
-//         //     est_pos = raw_pos;
-//         //     est_speed = real_t();
-//         // }
-
-//         // static real_t last_raw_pos = odo.getPosition();
-
-//         // real_t delta_raw_pos = raw_pos - last_raw_pos;
-
-//         // if(false){
-//         //     real_t est_pos_execute_fix_addition = raw_pos + delta_raw_pos * foc_execute_duty;
-//         //     real_t est_pos_enc_delay_fix_addition = real_t(0);
-//         //     est_pos = raw_pos + est_pos_execute_fix_addition + est_pos_enc_delay_fix_addition;
-//         // }else{
-//         //     est_pos = raw_pos;
-//         // }
-
-//         // last_raw_pos = raw_pos;
-
-//         // static uint32_t est_cnt = 0;
-//         // est_cnt = (est_cnt + 1) % est_devider;
-
-//         // static real_t est_delta_raw_pos_intergal = real_t();
-
-//         // if(est_cnt == 0){ // est happens
-//         //     real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
-
-//         //     est_speed = est_speed_new;
-
-//         //     est_delta_raw_pos_intergal = real_t();
-//         // }else{
-//         //     est_delta_raw_pos_intergal += delta_raw_pos;
-//         // }
-
-//         // real_t curr = pos_pid.update(target_pos, est_pos);
-
-//         // svpwm.setDQCurrent(real_t(0), curr, odo.getElecRad());
-//         // svpwm.setDQCurrent(Vector2(real_t(openloop_current_limit), real_t(0)), odo.position2rad(target_pos));
-
-
-
-//         foc_pulse_micros = foc_end_micros - foc_begin_micros;
-// }
-
-// void run2(){
-//     run();
-// }
-void stepper_test(){
 Printer & logger = uart1;
 PwmChannel pwmCoilA(timer3[3]);
 PwmChannel pwmCoilB(timer3[2]);
@@ -1069,7 +622,7 @@ constexpr uint32_t est_freq = 200;
 constexpr uint32_t est_devider = foc_freq / est_freq;
 constexpr float foc_execute_duty = 0.3;
 constexpr float openloop_current_limit = 0.3;
-
+constexpr float cali_current = 0.6;
 
 constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 uint32_t foc_pulse_micros;
@@ -1077,6 +630,91 @@ uint32_t foc_pulse_micros;
 
 real_t est_speed = real_t();
 real_t est_pos = real_t();
+
+std::array<real_t, 50>elecrad_offs;
+
+static void run(){
+        uint32_t foc_begin_micros = nanos();
+        odo.update();
+        // mt6816.getLapPosition();
+
+        // uint16_t dataTx[2];
+        // uint16_t dataRx[2];
+        // mt6816_drv.transmit(dataRx[0], dataTx[0]);
+        // mt6816_drv.transmit(dataRx[1], dataTx[1]);
+
+        // if(!spi1.begin(0)){
+        //     spi1.configDataSize(16);
+        //     uint32_t ret = 0;
+        //     spi1.transfer(ret, 0);
+        //     // datarx = ret;
+        //     spi1.configDataSize(8);
+        //     spi1.end();
+        // }
+
+
+        real_t raw_pos = odo.getPosition();
+
+        static bool first_entry = true;
+        if(first_entry){
+            first_entry = false;
+            est_pos = raw_pos;
+            est_speed = real_t();
+        }
+
+        static real_t last_raw_pos = odo.getPosition();
+
+        real_t delta_raw_pos = raw_pos - last_raw_pos;
+
+        if(false){
+            real_t est_pos_execute_fix_addition = delta_raw_pos * foc_execute_duty;
+            real_t est_pos_enc_delay_fix_addition = real_t(0.0003) * est_speed;
+            est_pos = raw_pos + est_pos_execute_fix_addition + est_pos_enc_delay_fix_addition;
+        }else{
+            // _iq fix = (est_speed.value >> 2) >> 15;
+            // _iq fix = 30;
+            // est_pos = raw_pos + real_t(fix);
+            // est_pos.value = raw_pos.value + 10;
+            est_pos = raw_pos;
+        }
+
+        last_raw_pos = raw_pos;
+
+        static uint32_t est_cnt = 0;
+        est_cnt = (est_cnt + 1) % est_devider;
+
+        static real_t est_delta_raw_pos_intergal = real_t();
+
+        if(est_cnt == 0){ // est happens
+            real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
+
+            est_speed = est_speed_new;
+
+            est_delta_raw_pos_intergal = real_t();
+        }else{
+            est_delta_raw_pos_intergal += delta_raw_pos;
+        }
+
+        // pos_pid.setClamp(real_t(0.4));
+        // real_t curr = pos_pid.update(target_pos, est_pos);
+        // TIM_OC1PreloadConfig
+
+        real_t est_elecrad = odo.position2rad(odo.getLapPosition()) - elecrad_offs[odo.position2pole(odo.getLapPosition())];
+        // real_t est_elecrad = odo.getElecRad();
+        svpwm.setDQCurrent(Vector2(real_t(0), real_t(0.4)), est_elecrad + real_t(PI / 2));
+        // svpwm.setDQCurrent(Vector2(), real_t());
+
+
+        // svpwm.setDQCurrent(Vector2(real_t(openloop_current_limit), real_t(0)),odo.position2rad(t / 4));
+
+
+        uint32_t foc_end_micros = nanos();
+        foc_pulse_micros = foc_end_micros - foc_begin_micros;
+}
+
+
+void stepper_test(){
+
     uart1.init(115200);
 
     logger.setEps(4);
@@ -1085,32 +723,36 @@ real_t est_pos = real_t();
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
+    // spi1.configDataSize(16);
+    mt6816_drv.configDatasize(16);
 
     timer3.init(72000);
 
 
     svpwm.init();
 
-
-    // mt6816.enableVerification();
-
     odo.init();
-    // while(true) logger.println("??");
-    // auto pos_pid = PID_t<real_t>(real_t(50), real_t(), real_t(0));
-    // pos_pid.setClamp(real_t(0.35));
 
-    // MotorWithFoc motor(svpwm, odo, pos_pid);
-
-
-    // motor.setMaxCurrent(real_t(0.25));
+    adc1.init(
+        {},{
+            AdcChannelConfig{.channel = AdcChannels::CH3, .sample_cycles = AdcSampleCycles::T71_5},
+            AdcChannelConfig{.channel = AdcChannels::CH4, .sample_cycles = AdcSampleCycles::T71_5}
+        });
+    // adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
+    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
+    // timer3[4] = 0;
+    adc1.setPga(AdcOnChip::Pga::X64);
+    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
+    TIM3->CH4CVR = TIM3->ATRLR >> 1;
+    adc1.enableCont();
+    adc1.enableScan();
+    adc1.enableAutoInject();
 
     auto & bled = portC[13];
     bled.OutPP();
 
-    odo.inverse(false);
 
-
-    {
+    if(false){
         constexpr int turnmircos = 64;
         constexpr int dur = 600;
 
@@ -1163,11 +805,11 @@ real_t est_pos = real_t();
                 logger.println("Coil", coil_index, " connected well");
                 // logger.println("MAX diff", abs_diff_pos);
             }
-
+        odo.inverse(true);
         }
     }
-
-    {
+    odo.inverse();
+    if(false){
         constexpr float tone_current = 0.2;
 
         logger.println("tone");
@@ -1219,7 +861,65 @@ real_t est_pos = real_t();
         }
     }
 
+
     {
+        odo.reset();
+        // logger.println("Cali And Direction Identify..");
+
+        constexpr int forwardpreturns = 2;
+        constexpr int forwardturns = 50;
+        constexpr int backwardpreturns = 2;
+        constexpr int backwardturns = 50;
+        constexpr int turnmircos = 256;
+        constexpr int dur = 200;
+
+
+        real_t openloop_elecrad = real_t(0);
+        real_t openloop_elecrad_step = real_t(TAU / turnmircos);
+
+        std::array<real_t, 50>forward_offs;
+        std::array<real_t, 50>backward_offs;
+
+        for(int i = -forwardpreturns * turnmircos;i < forwardturns * turnmircos; i++){
+            odo.update();
+            if (i % turnmircos == 0 && i >= 0){
+                real_t position = odo.getLapPosition();
+                int pole = odo.position2pole(position);
+                real_t real_elecrad = odo.position2rad(position);
+                forward_offs.at(pole) = fmod(real_elecrad - openloop_elecrad, real_t(TAU));
+            }
+            openloop_elecrad += openloop_elecrad_step;
+            svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), openloop_elecrad);
+            delayMicroseconds(dur);
+        }
+
+        delay(20);
+
+        for(int i = -backwardpreturns * turnmircos;i < backwardturns * turnmircos; i++){
+            odo.update();
+            if (i % turnmircos == 0 && i >= 0){
+                real_t position = odo.getLapPosition();
+                int pole = odo.position2pole(position);
+                real_t real_elecrad = odo.position2rad(position);
+                backward_offs.at(pole) = fmod(real_elecrad - openloop_elecrad, real_t(TAU));
+            }
+            openloop_elecrad -= openloop_elecrad_step;
+            svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), openloop_elecrad);
+            delayMicroseconds(dur);
+        }
+
+        for(int i = 0; i < int(elecrad_offs.size()); i++){
+            elecrad_offs[i] = mean(forward_offs[i], backward_offs[i]);
+            // logger.println(elecrad_offs[i]);
+        }
+
+        svpwm.setDQCurrent(Vector2(), real_t());
+        // while(true);
+    }
+
+
+
+    if(false){
         odo.reset();
         logger.println("Cali And Direction Identify..");
 
@@ -1275,11 +975,12 @@ real_t est_pos = real_t();
 
             bool needToInverse(){
                 real_t forward_trip = after_forward_pos - start_pos;
-                real_t backward_trip = after_backward_pos - after_forward_pos;
-                return forward_trip * backward_trip < 0;
+                // real_t backward_trip = after_backward_pos - after_forward_pos;
+                return forward_trip < 0;
             }
         }pos_trend;
 
+        svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), elecrad);
         delay(10);
         odo.update();
         pos_trend.start_pos = odo.getPosition();
@@ -1320,10 +1021,12 @@ real_t est_pos = real_t();
         logger.println("Cali Done..");
         logger.println("elecrad offset is", odo.getElecRadOffset());
         pos_trend.isForwardBackwardFluent(forwardpreturns + forwardturns, backwardpreturns + backwardturns);
-        // odo.inverse(pos_trend.needToInverse());
-        odo.inverse(false);
+
     }
 
+    svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), real_t(0));
+    delay(20);
+    odo.locateElecrad(real_t(0));
     odo.locateRelatively(real_t(0));
     svpwm.setDQCurrent(Vector2(), real_t());
 
@@ -1336,83 +1039,7 @@ real_t est_pos = real_t();
     // uint32_t foc_begin_micros;
     // uint32_t foc_end_micros;
 
-    timer4.bindCb(Timer::IT::Update, [&](){
-
-        // odo.update();
-        
-        // mt6816.getLapPosition(); // 8000us
-        // mt6816.getPositionData(); // 8000us
-        uint32_t foc_begin_micros = micros();
-        uint16_t dataTx[2];
-        uint16_t dataRx[2];
-        // mt6816_drv.mtransmit(dataRx[0], dataTx[0], true);
-        // mt6816_drv.transmit(dataRx[1], dataTx[1]);
-
-        // if(!spi1.begin(0)){
-        //     spi1.configDataSize(16);
-        //     uint32_t ret = 0;
-        //     spi1.transfer(ret, dataTx[0]);
-        //     dataRx[0] = ret;
-        //     spi1.configDataSize(8);
-        //     spi1.end();
-        // }
-
-        // if(!spi1.begin(0)){
-        //     spi1.configDataSize(16);
-        //     uint32_t ret = 0;
-        //     spi1.transfer(ret, dataTx[1]);
-        //     dataRx[1] = ret;
-        //     spi1.configDataSize(8);
-        // }
-        // // spi1.write(0x00);
-        uint32_t foc_end_micros = nanos();
-        // real_t raw_pos = odo.getPosition();
-
-        // static bool first_entry = true;
-        // if(first_entry){
-        //     first_entry = false;
-        //     est_pos = raw_pos;
-        //     est_speed = real_t();
-        // }
-
-        // static real_t last_raw_pos = odo.getPosition();
-
-        // real_t delta_raw_pos = raw_pos - last_raw_pos;
-
-        // if(false){
-        //     real_t est_pos_execute_fix_addition = raw_pos + delta_raw_pos * foc_execute_duty;
-        //     real_t est_pos_enc_delay_fix_addition = real_t(0);
-        //     est_pos = raw_pos + est_pos_execute_fix_addition + est_pos_enc_delay_fix_addition;
-        // }else{
-        //     est_pos = raw_pos;
-        // }
-
-        // last_raw_pos = raw_pos;
-
-        // static uint32_t est_cnt = 0;
-        // est_cnt = (est_cnt + 1) % est_devider;
-
-        // static real_t est_delta_raw_pos_intergal = real_t();
-
-        // if(est_cnt == 0){ // est happens
-        //     real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
-
-        //     est_speed = est_speed_new;
-
-        //     est_delta_raw_pos_intergal = real_t();
-        // }else{
-        //     est_delta_raw_pos_intergal += delta_raw_pos;
-        // }
-
-        // real_t curr = pos_pid.update(target_pos, est_pos);
-
-        // svpwm.setDQCurrent(real_t(0), curr, odo.getElecRad());
-        // svpwm.setDQCurrent(Vector2(real_t(openloop_current_limit), real_t(0)), odo.position2rad(target_pos));
-
-
-
-        foc_pulse_micros = foc_end_micros - foc_begin_micros;
-    });
+    timer4.bindCb(Timer::IT::Update, std::function<void(void)>(run));
 
 
     // motor.enable();
@@ -1438,26 +1065,25 @@ real_t est_pos = real_t();
 
         // target_pos = sign(frac(t) - 0.5);
         target_pos = sin(t);
-        logger.println(est_speed, est_pos, foc_pulse_micros, foc_period_micros);
-        // real_t target = sin()
-        // logger.println(motor.getPosition(), target);
-        // motor.trackPos(target);
-
+        logger.println(est_speed, est_pos);
+        // logger.println(odo.position2rad(odo.getPosition()), odo.position2rad(odo.getLapPosition()) - elecrad_offs[odo.position2pole(odo.getLapPosition())]);
+        // logger.println(ADC1->IDATAR1, ADC1->IDATAR2);
 
         Sys::Clock::reCalculateTime();
-}    
+    }
+    while(true);
 }
 };
 
 
 namespace SpreadCycle{
 
-constexpr float coil_inductor_mH = 4.0;
-constexpr float coil_resistor_Ohm = 3.4;
+constexpr float coil_inductor_mH = 0.83;
+constexpr float coil_resistor_Ohm = 2.24;
 constexpr float busbar_voltage = 9.0;
 
 constexpr float c1 = busbar_voltage / coil_inductor_mH;
-constexpr float coil_current = 0.3;
+constexpr float coil_current = 0.23;
 constexpr float c2 = - coil_current * coil_resistor_Ohm / coil_inductor_mH;
 
 PwmChannel coil_pwm_p(timer1[3]);
@@ -1468,21 +1094,21 @@ real_t dual_duty[2] = {
     real_t(0.14)
 };
 
-uint16_t dual_cvr[2] = {799,1299};
+uint16_t dual_cvr[2] = {699,2299};
 
 real_t chopper_current = real_t(0.2);
 
-uint8_t chopper_run_cnt = 0;
+uint32_t chopper_run_cnt = 0;
 struct {
-    uint8_t odd_is_forward:1;
-    uint8_t even_is_forward:1;
+    bool odd_is_forward:1;
+    bool even_is_forward:1;
 }chopper_run_mode;
 
 void chopper_run(){
 
     if(chopper_run_cnt == 0){
-        chopper_run_mode.odd_is_forward = 0;
-        chopper_run_mode.even_is_forward = 0;
+        chopper_run_mode.odd_is_forward = true;
+        chopper_run_mode.even_is_forward = false;
         chopper_run_cnt = 1;
         return;
     }
@@ -1490,19 +1116,19 @@ void chopper_run(){
     chopper_run_cnt++;
     bool cycle_is_odd = chopper_run_cnt % 2;
 
-    // bool cycle_is_forward = cycle_is_odd ? chopper_run_mode.odd_is_forward : chopper_run_mode.even_is_forward;
-    bool cycle_is_forward = cycle_is_odd;
+    bool cycle_is_forward = cycle_is_odd ? chopper_run_mode.odd_is_forward : chopper_run_mode.even_is_forward;
+    // bool cycle_is_forward = cycle_is_odd;
 
     // int pwm_duty_p = cycle_is_forward ? 0 : dual_cvr[cycle_is_odd];
     // int pwm_duty_n = cycle_is_forward ? dual_cvr[cycle_is_odd] : 0;
-    int forward_duty = dual_cvr[0];
-    int backward_duty = dual_cvr[1];
+    int pwm_duty = dual_cvr[cycle_is_odd];
+    // int backward_duty = dual_cvr[1];
     if(cycle_is_forward){
-        timer1[3] = forward_duty;
+        timer1[3] = pwm_duty;
         timer1[4] = 0;
     }else{
         timer1[3] = 0;
-        timer1[4] = backward_duty;
+        timer1[4] = pwm_duty;
     }
 
 }
@@ -1517,7 +1143,7 @@ void chopper_test(){
     timer1.init(36000);
     timer1.enableArrSync();
     // timer1.enableCvrSync();
-    // timer1[3].enableSync();
+    timer1[3].enableSync();
     timer1[4].enableSync();
     timer1[3].setPolarity(false);
     timer1[4].setPolarity(false);
@@ -1532,8 +1158,13 @@ void chopper_test(){
     timer3[2].init();
     timer3[3].init();
     timer3[2].setPolarity(true);
-    timer3[2] = real_t(0.0);
-    timer3[3] = real_t(0.3);
+    timer3[3].setPolarity(true);
+
+    timer3[2] = real_t(0.4);
+    timer3[3] = real_t(0.4);
+
+
+
     timer1.bindCb(Timer::IT::Update, std::function<void(void)>(chopper_run));
     timer1.enableIt(Timer::IT::Update, NvicPriority(0, 0));
 
@@ -1549,12 +1180,12 @@ int main(){
     Sys::Misc::prework();
     // stepper_app();
     // stepper_app_new();
-    // StepperTest::stepper_test();
+    StepperTest::stepper_test();
     // chassis_app();
     // modem_app();
     // test_app();
     // pmdc_test();
-    SpreadCycle::chopper_test();
+    // SpreadCycle::chopper_test();
     // buck_test();
     osc_test();
 }
