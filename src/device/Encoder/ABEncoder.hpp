@@ -78,4 +78,35 @@ class ABZEncoder:public ABEncoder{
 
 
 
+    // trigGpioA.InPullUP();
+    // trigGpioB.InPullUP();
+    // auto trigExtiCHA = ExtiChannel(trigGpioA, NvicPriority(0, 0), ExtiChannel::Trigger::RisingFalling);
+    // auto trigExtiCHB = ExtiChannel(trigGpioB, NvicPriority(1, 4), ExtiChannel::Trigger::RisingFalling);
+
+    // int16_t cnt = 0;
+    // trigExtiCHA.bindCb([&cnt, &trigGpioA, &trigGpioB](){
+    //     if(bool(trigGpioA)){
+    //         if(bool(trigGpioB)) cnt--;
+    //         else cnt++;
+    //     }else{
+    //         if(bool(trigGpioB)) cnt++;
+    //         else cnt--;
+    //     }
+    // });
+
+    // trigExtiCHB.bindCb([&cnt,&trigGpioA,  &trigGpioB](){
+    //     if(bool(trigGpioB)){
+    //         if(bool(trigGpioA)) cnt++;
+    //         else cnt--;
+    //     }else{
+    //         if(bool(trigGpioA)) cnt--;
+    //         else cnt++;
+    //     }
+    // });
+
+
+    // trigExtiCHA.init();
+    // trigExtiCHB.init();
+
+
 #endif

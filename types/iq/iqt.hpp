@@ -18,9 +18,9 @@ public:
     __fast_inline iq_t(): value(0){;}
     __fast_inline constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
 
-    __fast_inline constexpr explicit iq_t(const int & intValue) : value(_IQ(intValue)) {;}
-    __fast_inline constexpr explicit iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
-    __fast_inline constexpr explicit iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
+    __fast_inline constexpr iq_t(const int & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline constexpr iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
+    __fast_inline constexpr iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
     explicit iq_t(const String & str);
 
 
@@ -114,8 +114,11 @@ public:
         return iq_t((value / other));
     }
 
-    template <typename U>
-    __fast_inline iq_t operator/(const U & other) const {
+    __fast_inline iq_t operator/(const float & other) const {
+        return *this / iq_t(other);
+    }
+
+    __fast_inline iq_t operator/(const double & other) const {
         return *this / iq_t(other);
     }
 
@@ -290,7 +293,7 @@ __fast_inline iq_t atan2(const iq_t & a, const iq_t & b) {return iq_t(_IQatan2(a
 
 __fast_inline iq_t sqrt(const iq_t & iq){return iq_t(_IQsqrt(iq.value));}
 
-__fast_inline iq_t abs(const iq_t & iq) {return iq_t(_IQabs(iq.value));}
+__fast_inline iq_t abs(const iq_t & iq) {return iq_t(iq.value > 0 ? iq.value : -iq.value);}
 
 __fast_inline bool isnormal(const iq_t & iq){return bool(iq.value);}
 

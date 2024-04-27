@@ -32,7 +32,7 @@ public:
 
     enum class RegularTrigger:uint8_t{
         T1CC1, T1CC2, T1CC3, T2CC2, T3TRGO, T4CC4, EXTI11_T8TRGO, SW
-    };;;
+    };
 
     enum class InjectedTrigger:uint8_t{
         T1TRGO, T1CC4, T2TRGO, T2CC1, T3CC4, T4TRGO, EXTI1515_T8CC4, SW
@@ -221,7 +221,9 @@ public:
         ADC_DeInit(instance);
 
         setMode(mode);
-
+    ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T3_CC4);
+    // ADC_ExternalTrigInjectedConvEdgeConfig(ADC1,adcexternaltriginjeced);
+    ADC_ExternalTrigInjectedConvCmd(ADC1, ENABLE);
         ADC_Cmd(ADC1, ENABLE);
 
         ADC_BufferCmd(ADC1, DISABLE);

@@ -47,12 +47,7 @@ public:
     PortVirtual(){;}
     void init(){;}
 
-    void bindPin(GpioVirtual & gpio, const uint8_t index){
-        if(index < 0 && index >= size)return;
-        pin_ptrs[index] = &gpio;
-    }
-
-    void bindPin(Gpio & gpio, const uint8_t index){
+    void bindPin(GpioConcept & gpio, const uint8_t index){
         if(index < 0 && index >= size)return;
         pin_ptrs[index] = &gpio;
     }

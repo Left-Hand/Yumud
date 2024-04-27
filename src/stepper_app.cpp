@@ -43,7 +43,7 @@ void stepper_app(){
     svpwm.setDQCurrent(Vector2(0.8, 0.0), real_t(0));
     delay(100);
     auto odo = OdometerPoles(mt6816, 50);
-    odo.locateElecrad();
+    // odo.locateElecrad();
     odo.locateAbsolutely(real_t(0.19));
     svpwm.setDQCurrent(Vector2(), real_t(0));
 
@@ -275,7 +275,7 @@ void stepper_app_new(){
         for(int i = -forwardpreturns * turnmircos; i < forwardturns * turnmircos; i++){
 
             if(i >= 0 && i % turnmircos == 0){//measureable
-                odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
+                // odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
             }
             real_t elecrad = i * real_t((TAU / turnmircos));
             svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), elecrad);
@@ -285,7 +285,7 @@ void stepper_app_new(){
         for(int i = -backwardpreturns * turnmircos; i < backwardturns * turnmircos; i++){
 
             if(i >= 0 && i % turnmircos == 0){//measureable
-                odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
+                // odo.locateElecrad(real_t(1.0 / (forwardturns + backwardturns)));
             }
             real_t elecrad = -i * real_t((TAU / turnmircos));
             svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), elecrad);

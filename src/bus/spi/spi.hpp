@@ -37,11 +37,7 @@ public:
     virtual void unlock() = 0;
     virtual int8_t wholock() = 0;
 
-    void bindCsPin(Gpio & gpio, const uint8_t index){
-        cs_pins.bindPin(gpio, index);
-    }
-
-    void bindCsPin(GpioVirtual & gpio, const uint8_t index){
+    void bindCsPin(GpioConcept & gpio, const uint8_t index){
         cs_pins.bindPin(gpio, index);
     }
 };

@@ -94,7 +94,11 @@ public:
     // __fast_inline uint16_t getPreloadData(){return instance->ATRLR;}
 
     __fast_inline TimerOutChannelPosOnChip & operator = (const int & _val){cvr = _val;return *this;}
-    __fast_inline TimerOutChannelPosOnChip & operator = (const real_t & duty){cvr = int(duty * arr); return *this;}
+    __fast_inline TimerOutChannelPosOnChip & operator = (const real_t & duty){
+        if(duty == 0) {cvr = 0;}
+        else if(duty == 1) {cvr = arr - 1;}
+        else {cvr = int(duty * arr);}
+        return *this;}
 
     __fast_inline operator int(){return cvr;}
     __fast_inline operator real_t(){return real_t(cvr) / real_t(arr);}
