@@ -116,18 +116,20 @@ public:
         Odometer(_encoder),scale(_scale){;}
 };
 
-
+// template<int poles>
 class OdometerPoles:public Odometer{
-protected:
-    real_t poles;
+// protected:
+public:
+    static constexpr int poles = 50;
     real_t elecRad = real_t(0);
     // real_t elecRadOffset = real_t(0);
 
-    std::array<real_t, 50>cali_map;
+    std::array<real_t, poles>cali_map;
+    std::array<int, poles>cali_map_scores;
 
     real_t position2rad(const real_t & position){
-        real_t frac1 = real_t(poles) * frac(position);
-        return real_t(TAU) * (frac(frac1));
+        real_t frac1 = poles * frac(position);
+        return TAU * (frac(frac1));
     }
 
     int position2pole(const iq_t & position){
@@ -140,12 +142,13 @@ protected:
     }
 
 public:
-    OdometerPoles(Encoder & _encoder, const int & _poles):
-            Odometer(_encoder), poles(_poles){;}
+    OdometerPoles(Encoder & _encoder):Odometer(_encoder){;}
 
     void reset() override{
         Odometer::reset();
         elecRad = real_t(0);
+        cali_map.fill(real_t(0));
+        cali_map_scores.fill(0);
     }
 
     real_t getElecRad(){
@@ -156,16 +159,66 @@ public:
     //     return elecRadOffset;
     // }
 
-    // void locateElecrad(const real_t & percentage = real_t(1)){
-
-    // }
+    void locateElecrad(){
+        update();
+        int pole = getRawPole();
+        real_t zero_offset = cali_map[pole];
+        for(int i = 0; i < poles; i++){
+            cali_map[i] -= zero_offset;
+        }
+    }
 
     // void locateElecradByPercent(const real_t & __elecrad, const real_t & percentage = real_t(1)){
     //     elecRadOffset += position2rad(getLapPosition()) * percentage;
     // }
+    int getRawPole(){
+        return position2pole(getRawLapPosition());
+    }
 
-    void addCaliPoint(const real_t & correct_position){
-        cali_map[position2pole(getRawLapPosition())] = correct_position - rawLapPosition;
+    int warp_mod(const int & x, const int & y){
+        int ret = x % y;
+        if(ret < 0) ret += y;
+        return ret;
+    }
+
+    real_t warp_around_zero(const real_t & x){
+        // return warp_mod(x.value, iq_t(1).value);
+        // real_t ret = x;
+        // while(ret > 1){
+        //     ret -= 1;
+        //     return ret;
+        // }
+        // while(ret < -1){
+        //     ret += 1;
+        //     return ret;
+        // }
+
+
+        return frac(x - 0.5) - 0.5;
+    }
+
+
+    void addCaliPoint(const real_t & correct_position, const int pole){
+        int index = warp_mod(pole, poles);
+
+        cali_map[index] += (warp_around_zero(correct_position) - rawLapPosition);
+        cali_map_scores[index] ++;
+        // cali_map[position2pole(getRawLapPosition())] += (correct_position - rawLapPosition) * percent;
+    }
+
+    void runCaliAnalysis(){
+        for(int i = 0; i < poles; i++){
+            if(cali_map_scores[i]){
+                cali_map[i] /= real_t(cali_map_scores[i]);
+                cali_map[i] = warp_around_zero(cali_map[i]);
+            }
+        }
+
+        // for(int i = 0; i < poles; i++){
+        //     if(!cali_map_scores[i]){
+        //         cali_map[i] = mean(cali_map[warp_mod(i - 1, poles)], cali_map[warp_mod(i + 1, poles)]);
+        //     }
+        // }
     }
 };
 

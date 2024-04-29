@@ -42,7 +42,7 @@ void stepper_app(){
     svpwm.init();
     svpwm.setDQCurrent(Vector2(0.8, 0.0), real_t(0));
     delay(100);
-    auto odo = OdometerPoles(mt6816, 50);
+    auto odo = OdometerPoles(mt6816);
     // odo.locateElecrad();
     odo.locateAbsolutely(real_t(0.19));
     svpwm.setDQCurrent(Vector2(), real_t(0));
@@ -186,7 +186,7 @@ void stepper_app_new(){
 
     SpiDrv mt6816_drv(spi1, 0);
     MT6816 mt6816(mt6816_drv);
-    auto odo = OdometerPoles(mt6816,50);
+    auto odo = OdometerPoles(mt6816);
     odo.init();
 
     auto pos_pid = PID_t<real_t>(real_t(10), real_t(), real_t(0));
