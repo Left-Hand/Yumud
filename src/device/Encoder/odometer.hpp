@@ -122,10 +122,10 @@ class OdometerPoles:public Odometer{
 public:
     static constexpr int poles = 50;
     real_t elecRad = real_t(0);
-    // real_t elecRadOffset = real_t(0);
+    real_t elecRadOffset = real_t(0);
 
     std::array<real_t, poles>cali_map;
-    std::array<int, poles>cali_map_scores;
+    // std::array<int, poles>cali_map_scores;
 
     real_t position2rad(const real_t & position){
         real_t frac1 = poles * frac(position);
@@ -148,27 +148,25 @@ public:
         Odometer::reset();
         elecRad = real_t(0);
         cali_map.fill(real_t(0));
-        cali_map_scores.fill(0);
+        // cali_map_scores.fill(0);
     }
 
     real_t getElecRad(){
-        return position2rad(getLapPosition());
+        return position2rad(getLapPosition())
+         - elecRadOffset;
     }
 
     real_t getElecRadFixed(){
         return position2rad(getLapPosition() + deltaLapPosition);
     }
 
-    // real_t getElecRadOffset(){
-    //     return elecRadOffset;
-    // }
+    real_t getElecRadOffset(){
+        return elecRadOffset;
+    }
 
-    // void adjustZeroOffset(){
-    //     real_t zero_offset = getRawLapPosition();
-    //     for(int i = 0; i < poles; i++){
-    //         cali_map[i] -= zero_offset;
-    //     }
-    // }
+    void adjustZeroOffset(){
+        elecRadOffset = position2rad(getLapPosition());
+    }
 
     // void locateElecradByPercent(const real_t & __elecrad, const real_t & percentage = real_t(1)){
     //     elecRadOffset += position2rad(getLapPosition()) * percentage;
@@ -200,28 +198,28 @@ public:
     }
 
 
-    void addCaliPoint(const real_t & correct_position, const int pole){
-        int index = warp_mod(pole, poles);
+    // void addCaliPoint(const real_t & correct_position, const int pole){
+    //     int index = warp_mod(pole, poles);
 
-        cali_map[index] += warp_around_zero(frac(correct_position) - rawLapPosition);
-        cali_map_scores[index] ++;
-        // cali_map[position2pole(getRawLapPosition())] += (correct_position - rawLapPosition) * percent;
-    }
+    //     cali_map[index] += warp_around_zero(frac(correct_position) - rawLapPosition);
+    //     cali_map_scores[index] ++;
+    //     // cali_map[position2pole(getRawLapPosition())] += (correct_position - rawLapPosition) * percent;
+    // }
 
-    void runCaliAnalysis(){
-        for(int i = 0; i < poles; i++){
-            if(cali_map_scores[i]){
-                cali_map[i] /= real_t(cali_map_scores[i]);
-                cali_map[i] = warp_around_zero(cali_map[i]);
-            }
-        }
+    // void runCaliAnalysis(){
+    //     for(int i = 0; i < poles; i++){
+    //         if(cali_map_scores[i]){
+    //             cali_map[i] /= real_t(cali_map_scores[i]);
+    //             cali_map[i] = warp_around_zero(cali_map[i]);
+    //         }
+    //     }
 
         // for(int i = 0; i < poles; i++){
         //     if(!cali_map_scores[i]){
         //         cali_map[i] = mean(cali_map[warp_mod(i - 1, poles)], cali_map[warp_mod(i + 1, poles)]);
         //     }
         // }
-    }
+    // }
 };
 
 #endif
