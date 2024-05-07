@@ -50,13 +50,15 @@ public:
             gpioP.clr();
             return;
         }
+
+        // constexpr float curr_base = 0.02;
         if(duty > 0){
             gpioP.set();
             gpioN.clr();
             instance.setDuty(duty);
         }else{
-            gpioP.clr();
             gpioN.set();
+            gpioP.clr();
             instance.setDuty(-duty);
         }
     }

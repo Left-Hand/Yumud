@@ -44,6 +44,14 @@ protected:
 public:
     RgbLedDigital(GpioConcept & _red_pin, GpioConcept & _green_pin, GpioConcept & _blue_pin):
             red_pin(_red_pin), green_pin(_green_pin), blue_pin(_blue_pin){;}
+    
+    void init() override{
+        red_pin.OutPP();
+        green_pin.OutPP();
+        blue_pin.OutPP();
+    }
+
+    RgbLedDigital & operator = (const Color & color) override{_update(color); return *this;}
 };
 
 template<bool com_anode>

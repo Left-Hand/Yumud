@@ -19,6 +19,15 @@ public:
     __fast_inline constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
 
     __fast_inline constexpr iq_t(const int & intValue) : value(_IQ(intValue)) {;}
+
+    __fast_inline constexpr iq_t(const int8_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline constexpr iq_t(const int16_t & intValue) : value(_IQ(intValue)) {;}
+    // __fast_inline constexpr iq_t(const int32_t & intValue) : value(_IQ(intValue)) {;}
+
+    __fast_inline constexpr iq_t(const uint8_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline constexpr iq_t(const uint16_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline constexpr iq_t(const uint32_t & intValue) : value(_IQ(intValue)) {;}
+
     __fast_inline constexpr iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
     __fast_inline constexpr iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
     explicit iq_t(const String & str);

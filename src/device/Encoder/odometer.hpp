@@ -155,18 +155,20 @@ public:
         return position2rad(getLapPosition());
     }
 
+    real_t getElecRadFixed(){
+        return position2rad(getLapPosition() + deltaLapPosition);
+    }
+
     // real_t getElecRadOffset(){
     //     return elecRadOffset;
     // }
 
-    void locateElecrad(){
-        update();
-        int pole = getRawPole();
-        real_t zero_offset = cali_map[pole];
-        for(int i = 0; i < poles; i++){
-            cali_map[i] -= zero_offset;
-        }
-    }
+    // void adjustZeroOffset(){
+    //     real_t zero_offset = getRawLapPosition();
+    //     for(int i = 0; i < poles; i++){
+    //         cali_map[i] -= zero_offset;
+    //     }
+    // }
 
     // void locateElecradByPercent(const real_t & __elecrad, const real_t & percentage = real_t(1)){
     //     elecRadOffset += position2rad(getLapPosition()) * percentage;
@@ -194,14 +196,14 @@ public:
         // }
 
 
-        return frac(x - 0.5) - 0.5;
+        return fmod(frac(x - 0.5) - 0.5, real_t(0.02));
     }
 
 
     void addCaliPoint(const real_t & correct_position, const int pole){
         int index = warp_mod(pole, poles);
 
-        cali_map[index] += (warp_around_zero(correct_position) - rawLapPosition);
+        cali_map[index] += warp_around_zero(frac(correct_position) - rawLapPosition);
         cali_map_scores[index] ++;
         // cali_map[position2pole(getRawLapPosition())] += (correct_position - rawLapPosition) * percent;
     }

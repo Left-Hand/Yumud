@@ -340,7 +340,7 @@ void buck_test(){
     LowpassFilter_t<real_t, real_t> lpf(50);
     LowpassFilter_t<real_t, real_t> lpf2(30);
 
-    TIM3->CH4CVR = TIM3->ATRLR >> 1;
+    // TIM3->CH4CVR = TIM3->ATRLR >> 1;
     // timer3.bindCb(Timer::IT::CC4, [&](){
 
     //     duty = real_t(0.3) + 0.14 * sin(4 * TAU * t);
@@ -397,7 +397,6 @@ void buck_test(){
 
 #include "dsp/oscillator.hpp"
 #include "src/device/Dac/TM8211/tm8211.hpp"
-
 
 
 
@@ -465,13 +464,16 @@ void osc_test(){
         // }
 
 
+
+
         logger.println(data_out);
         // delayMicroseconds(100);
         Sys::Clock::reCalculateTime();
     }
 }
 
-
+#include "enum.h"
+#include <bits/stl_numeric.h>
 
 namespace StepperTest{
 
@@ -494,6 +496,7 @@ auto & verfChannelB = timer3[2];
 PwmChannel pwmCoilB(verfChannelB);
 PwmChannel pwmCoilA(verfChannelA);
 
+
 Coil1 coilA(portA[10], portA[11], pwmCoilA);
 Coil1 coilB(portA[8], portA[9], pwmCoilB);
 // TB67H450 coilA(forwardChannelA, backwardChannelA, verfChannelA);
@@ -511,12 +514,13 @@ real_t target_pos;
 
 
 constexpr uint32_t foc_freq = 36000;
+constexpr int poles = 50;
 constexpr uint32_t est_freq = 1800;
 constexpr uint32_t est_devider = foc_freq / est_freq;
-constexpr float foc_execute_duty = 0.3;
-
+// constexpr float foc_execute_duty = 0.3;
+constexpr float inv_poles = 0.02;
 constexpr float openloop_current_limit = 0.3;
-constexpr float cali_current = 0.4;
+
 
 
 
@@ -530,13 +534,14 @@ real_t est_pos = real_t();
 real_t est_elecrad = real_t();
 
 real_t run_current = real_t();
+real_t run_elecrad = real_t();
 real_t run_elecrad_addition = real_t();
 
 struct Targets{
-    real_t curr;
-    real_t speed;
-    real_t pos;
-    real_t time;
+    real_t curr = real_t();
+    real_t speed = real_t();
+    real_t pos = real_t();
+    real_t time = real_t();
 };
 
 Targets targets;
@@ -568,6 +573,27 @@ struct StallObserver{
         return false;
     }
 };
+
+struct CurrentCtrl{
+public:
+    real_t slew_rate = real_t(20.0 / foc_freq);
+    real_t current_output = real_t(0);
+    real_t current_limit = real_t(0.4);
+
+    void update(const real_t & current_setpoint){
+        real_t current_delta = CLAMP(current_setpoint - current_output, -slew_rate, slew_rate);
+        current_output = CLAMP(current_output + current_delta, -current_limit, current_limit);
+    }
+
+    real_t getCurrent(){
+        return current_output;
+    }
+};
+
+struct TorqueCtrl{
+    // real_t
+};
+
 struct SpeedCtrl{
     real_t kp = real_t(0.03);
     real_t ki;
@@ -576,6 +602,7 @@ struct SpeedCtrl{
     real_t intergal;
     real_t intergal_clamp;
     real_t ki_clamp;
+
 
 
     real_t current_output;
@@ -619,6 +646,78 @@ struct SpeedCtrl{
     }
 };
 
+
+struct PositionCtrl{
+    real_t kp;
+    real_t ki;
+    real_t kd;
+    real_t ks;
+
+    real_t kp_clamp;
+    real_t intergal;
+    real_t ki_clamp;
+    real_t kd_enable_speed_threshold;//minimal speed for activation kd
+    real_t kd_clamp;
+    real_t ks_enable_speed_threshold; // minimal speed for activation ks
+    real_t ks_clamp;
+
+    real_t target_position;
+    real_t target_speed;
+
+    real_t current_slew_rate = real_t(20.0 / foc_freq);
+    real_t current_minimal = real_t(0.1);
+    real_t current_clamp = real_t(0.6);
+
+    real_t err_to_current_ratio = real_t(200);
+
+    real_t current_output;
+
+    real_t elecrad_offset_output;
+
+    real_t last_error;
+
+    void update(const real_t & measured_position, const real_t & measuresd_speed){
+        real_t error = target_position - measured_position;
+
+        real_t kp_contribute = CLAMP(error * kp, -kp_clamp, kp_clamp);
+
+        if((error.value ^ last_error.value) & 0x8000){ // clear intergal when reach target
+            intergal = real_t(0);
+        }else{
+            intergal += error;
+        }
+
+        real_t ki_contribute = CLAMP(intergal * ki, -ki_clamp, ki_clamp);
+
+        real_t kd_contribute;
+        if(abs(measuresd_speed) > kd_enable_speed_threshold){ // enable kd only highspeed
+            kd_contribute =  CLAMP(- measuresd_speed * kd, -kd_clamp, kd_clamp);
+        }else{
+            kd_contribute = real_t(0);
+        }
+
+        real_t speed_error = target_speed - measuresd_speed;
+        real_t ks_contribute;
+        if(abs(speed_error) > ks_enable_speed_threshold){
+            ks_contribute = CLAMP(speed_error * ks, -ks_clamp, ks_clamp);
+        }else{
+            ks_contribute = real_t(0);
+        }
+
+        last_error = error;
+
+        real_t current_delta = CLAMP(kp_contribute + ki_contribute, -current_slew_rate, current_slew_rate);
+        current_output = CLAMP(current_output + current_delta, -current_clamp, current_clamp);
+        // return current_slew_rate;
+        if(false){
+            // if(abs(error) < inv_poles / 4)
+            real_t abs_error = abs(error);
+            current_output = CLAMP(abs_error * err_to_current_ratio, current_minimal, current_clamp);
+            elecrad_offset_output = error * poles * TAU;
+        }
+    }
+};
+
 std::vector<String> splitString(const String& input, char delimiter) {
     std::vector<String> result;
 
@@ -641,11 +740,139 @@ std::vector<String> splitString(const String& input, char delimiter) {
     return result;
 }
 
+
+
+
+void setCurrent(const real_t & _current, const real_t & _elecrad){
+    coilA = cos(_elecrad) * _current;
+    coilB = sin(_elecrad) * _current;
+}
+
+real_t openloop_elecrad;
+static SpeedCtrl ctrl;
+static CurrentCtrl currCtrl;
+static PositionCtrl posctrl;
+
+
+// enum class RunStatus{
+//     INIT,
+//     INACTIVE,
+//     ACTIVE,
+//     BEEP,
+//     CALI,
+//     ERROR,
+//     EXCEPTION
+// };
+
+BETTER_ENUM(RunStatus, uint8_t,     
+    INIT = 0,
+    INACTIVE,
+    ACTIVE,
+    BEEP,
+    CALI,
+    ERROR,
+    EXCEPTION
+)
+
+RunStatus run_status = RunStatus::INIT;
+
+using DoneFlag = bool;
+using InitFlag = bool;
+
+enum class ErrorCode:uint8_t{
+    OK = 0,
+    COIL_A_DISCONNECTED,
+    COIL_A_NO_SIGNAL,
+    COIL_B_DISCONNECTED,
+    COIL_B_NO_SIGNAL,
+    ODO_DISCONNECTED,
+    ODO_NO_SIGNAL
+};
+
+ErrorCode error_code = ErrorCode::OK;
+String error_message;
+
+bool auto_shutdown_activation = true;
+bool auto_shutdown_actived = false;
+uint16_t auto_shutdown_timeout_ms = 200;
+uint16_t auto_shutdown_last_wake_ms = 0;
+
+bool shutdown_when_error_occurred;
+bool shutdown_when_exception_occurred;
+
+void shutdown(){
+    coilA.enable(false);
+    coilB.enable(false);
+}
+
+void wakeup(){
+    coilA.enable(true);
+    coilB.enable(true);
+}
+
+struct ShutdownFlag{
+protected:
+    bool state = false;
+public:
+
+    ShutdownFlag() = default;
+
+    auto & operator = (const bool & _state){
+        state = _state;
+        if(state) shutdown();
+        else wakeup();
+
+        return *this;
+    }
+
+    operator bool() const{
+        return state;
+    }
+};
+
+
+ShutdownFlag shutdown_flag;
+
+constexpr bool cali_debug_enabled = false;
+constexpr bool command_debug_enabled = true;
+constexpr bool run_debug_enabled = false;
+
+#define CALI_DEBUG(...)\
+if(cali_debug_enabled){\
+logger.println(__VA_ARGS__);};
+
+#define COMMAND_DEBUG(...)\
+if(command_debug_enabled){\
+logger.println(__VA_ARGS__);};
+
+#define RUN_DEBUG(...)\
+if(run_debug_enabled){\
+logger.println(__VA_ARGS__);};
+
+void throw_error(const ErrorCode & _error_code,const char * _error_message) {
+    error_message = String(_error_message);
+    run_status = RunStatus::ERROR;
+    if(shutdown_when_error_occurred){
+        shutdown_flag = true;
+    }
+}
+
+void throw_exception(const ErrorCode & ecode, const char * emessage){
+    error_message = String(emessage);
+    run_status = RunStatus::EXCEPTION;
+    if(shutdown_when_exception_occurred){
+        shutdown_flag = true;
+    }
+}
+
+
 void parseCommand(const char & argc, const std::vector<String> & argv){
     switch(argc){
         case 'C':
             if(argv.size() == 0) goto syntax_error;
             targets.curr = real_t(argv[0]);
+            COMMAND_DEBUG("SetCurrent to ", targets.curr);
+        
             break;
         case 'E':
             if(argv.size() == 0) goto syntax_error;
@@ -654,17 +881,49 @@ void parseCommand(const char & argc, const std::vector<String> & argv){
         case 'S':
             if(argv.size() == 0) goto syntax_error;
             targets.speed = real_t(argv[0]);
+            COMMAND_DEBUG("SetSpeed to ", targets.curr);
+            break;
+        case 'D':
+            if(argv.size() == 0){
+                COMMAND_DEBUG("ShutdownState: ", bool(shutdown_flag));
+            }else{
+                COMMAND_DEBUG("Shutdown Command REcved");
+                shutdown_flag = bool(argv[0]);
+            }
+            break;
+
+        case 'I':
+            if(argv.size() == 0){
+                COMMAND_DEBUG("Run state:", run_status._to_string());
+            }
+            // else{
+            //     COMMAND_DEBUG("Run state switch Command Recved");
+            //     if(RunStatus::_is_valid(argv[0].c_str())){
+            //         run_status = RunStatus::_from_string_nocase(argv[0].c_str());
+            //     }
+            //     COMMAND_DEBUG("Run state switched to:", argv[0]);
+            // }
+            break;
+        case 'G':
+            if(argv.size() == 0){
+                COMMAND_DEBUG("cali_debug_enabled", cali_debug_enabled);
+                COMMAND_DEBUG("command_debug_enabled", command_debug_enabled);
+                COMMAND_DEBUG("run_debug_enabled", run_debug_enabled);
+            }
+            
+            // else if{argv.size() == 1}
             break;
         case 'R':
             __disable_irq();
             NVIC_SystemReset();
         syntax_error:
-            // logger.println("SyntexError", argc);
+            COMMAND_DEBUG("SyntexError", argc);
             break;
         default:
             break;
     }
 }
+
 void parseLine(const String & line){
     if(line.length() == 0) return;
     auto tokens = splitString(line, ' ');
@@ -674,271 +933,399 @@ void parseLine(const String & line){
 }
 
 
-void setCurrent(const real_t & _current, const real_t & _elecrad){
-    coilA = cos(_elecrad) * _current;
-    coilB = sin(_elecrad) * _current;
-}
+static DoneFlag active_prog(const InitFlag & init_flag = false){
+    currCtrl.update(targets.curr);
 
-real_t openloop_elecrad;
-        static SpeedCtrl ctrl;
-    
-static void run(){
-        uint32_t foc_begin_micros = nanos();
-        // setCurrent(ctrl.getCurrent(), est_elecrad + ctrl.getElecradOffset());
-        setCurrent(ctrl.getCurrent(), est_elecrad + run_elecrad_addition);
 
-        odo.update();
+    run_current = currCtrl.getCurrent();
+    run_elecrad = est_elecrad;
+    // run_elecrad = TAU * frac(t);
 
-        raw_pos = odo.getPosition();
 
-        static bool first_entry = true;
-        if(first_entry){
-            first_entry = false;
-            est_pos = raw_pos;
-            est_speed = real_t();
-        }
+    setCurrent(run_current, run_elecrad + run_elecrad_addition);
 
-        static real_t last_raw_pos = odo.getPosition();
-        real_t delta_raw_pos = raw_pos - last_raw_pos;
+    // uint32_t foc_begin_micros = nanos();
+    odo.update();
+
+    raw_pos = odo.getPosition();
+
+    static real_t last_raw_pos;
+    static uint32_t est_cnt;
+
+
+    if(init_flag){
+        est_pos = raw_pos;
+        est_speed = real_t();
         last_raw_pos = raw_pos;
+        est_cnt = 0;
 
-        // constexpr float fix_dynamic_delay_speed_threshold = 10.0;
-        // constexpr float fix_dynamic_delay_min_delta_pos = fix_dynamic_delay_speed_threshold / foc_freq;
+        setCurrent(real_t(0), real_t(0));
+    }
 
+    if(auto_shutdown_activation){
+        if(targets.curr){
+            auto_shutdown_actived = false;
+            wakeup();
+            auto_shutdown_last_wake_ms = millis();
+        }else{
+            if(millis() - auto_shutdown_last_wake_ms > auto_shutdown_timeout_ms){
+                auto_shutdown_actived = true;
+                shutdown();
+                auto_shutdown_last_wake_ms = millis();
+                
+            }
+        }
+    }
 
-        static uint32_t est_cnt = 0;
-        est_cnt++;
+    real_t delta_raw_pos = raw_pos - last_raw_pos;
+    last_raw_pos = raw_pos;
 
+    est_pos = raw_pos + delta_raw_pos;
+    est_elecrad = odo.getElecRad();
+    // Fixed();
+
+    {//estimate speed and update controller
         static real_t est_delta_raw_pos_intergal = real_t();
-        static real_t est_pos_lantency = real_t();
 
+        est_cnt++;
         if(est_cnt == est_devider){ // est happens
             real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
 
             est_speed.value = (est_speed_new.value + est_speed.value * 3) >> 2;
-            est_pos_lantency = est_speed / (int)foc_freq;
-            // est_pos_lantency = real_t(0);
-            // est_pos_lantency.value = est_speed.value / foc_freq;
 
             est_delta_raw_pos_intergal = real_t();
             est_cnt = 0;
 
             ctrl.update(real_t(targets.speed), est_speed);
-            // ctrl.current_output = real_t(0.2);
-            // ctrl.elecrad_offset_output = real_t(PI / 2);
         }else{
             est_delta_raw_pos_intergal += delta_raw_pos;
         }
-
-        est_elecrad = odo.getElecRad();
-
-        // if(true){//takes no effect
-        //     est_pos = raw_pos;
-
-        //     // est_pos -= position_offs[odo.position2pole(raw_pos)];
-
-        //     // if(abs(delta_raw_pos) > fix_dynamic_delay_min_delta_pos){
-        //     if(true){
-        //         est_pos += est_pos_lantency;
-        //     }if(false){
-        //         est_pos += real_t(0);
-        //     }
-
-        // }else{
-            // _iq fix = (est_speed.value >> 2) >> 15;
-            // _iq fix = 30;
-            // est_pos = raw_pos + real_t(fix);
-            // est_pos.value = raw_pos.value + 10;
-        est_pos = raw_pos;
-        // }
+    }
 
 
-        // setCurrent(real_t(0.2), est_elecrad + real_t(2.37));
-        // setCurrent(run_current, est_elecrad + run_elecrad_addition);
-        // setCurrent(run_current, frac(frac(t) * 50) * TAU);
-        uint32_t foc_end_micros = nanos();
-        foc_pulse_micros = foc_end_micros - foc_begin_micros;
 
-        {
-            struct PositionCtrl{
-                real_t kp;
-                real_t ki;
-                real_t kd;
-                real_t ks;
+    // uint32_t foc_end_micros = nanos();
+    // foc_pulse_micros = foc_end_micros - foc_begin_micros;
 
-                real_t kp_clamp;
-                real_t intergal;
-                real_t ki_clamp;
-                real_t kd_enable_speed_threshold;//minimal speed for activation kd
-                real_t kd_clamp;
-                real_t ks_enable_speed_threshold; // minimal speed for activation ks
-                real_t ks_clamp;
+    {
+        // struct SpeedCtrl{
+        //     real_t kp;
+        //     real_t ki;
+        //     real_t kd;
+        //     real_t ks;
 
-                real_t target_position;
-                real_t target_speed;
+        //     real_t kp_clamp;
+        //     real_t intergal;
+        //     real_t ki_clamp;
+        //     real_t kd_enable_speed_threshold;//minimal speed for activation kd
+        //     real_t kd_clamp;
+        //     real_t ks_enable_speed_threshold; // minimal speed for activation ks
+        //     real_t ks_clamp;
+        // };
+    }
 
-                real_t current_slew_rate;
-
-                real_t last_error;
-
-                real_t update(const real_t & measured_position, const real_t & measuresd_speed){
-                    real_t error = target_position - measured_position;
-
-                    real_t kp_contribute = CLAMP(error * kp, -kp_clamp, kp_clamp);
-
-                    if(error * last_error < 0){ // zero intergal when reach target
-                        intergal = real_t(0);
-                    }else{
-                        intergal += error;
-                    }
-
-                    real_t ki_contribute = CLAMP(intergal * ki, -ki_clamp, ki_clamp);
-
-                    real_t kd_contribute;
-                    if(abs(measuresd_speed) > kd_enable_speed_threshold){ // enable kd only highspeed
-                        kd_contribute =  CLAMP(- measuresd_speed * kp, -kp_clamp, kp_clamp);
-                    }else{
-                        kd_contribute = real_t(0);
-                    }
-
-                    real_t speed_error = target_speed - measuresd_speed;
-                    real_t ks_contribute;
-                    if(abs(speed_error) > ks_enable_speed_threshold){
-                        ks_contribute = CLAMP(speed_error * ks, -ks_clamp, ks_clamp);
-                    }else{
-                        ks_contribute = real_t(0);
-                    }
-
-                    last_error = error;
-
-                    current_slew_rate = kp_contribute + ki_contribute + kd_contribute + ks_contribute;
-                    return current_slew_rate;
-                }
-            };
-
-            static PositionCtrl positionCtrl;
-        }
-
-        {
-            // struct SpeedCtrl{
-            //     real_t kp;
-            //     real_t ki;
-            //     real_t kd;
-            //     real_t ks;
-
-            //     real_t kp_clamp;
-            //     real_t intergal;
-            //     real_t ki_clamp;
-            //     real_t kd_enable_speed_threshold;//minimal speed for activation kd
-            //     real_t kd_clamp;
-            //     real_t ks_enable_speed_threshold; // minimal speed for activation ks
-            //     real_t ks_clamp;
-            // };
-        }
+    return false;
 }
 
-enum class RunStatus{
-    NORMAL,
-    BEEP,
-    CALI,
-    BORKEN
-};
-
-using DoneFlag = bool;
-using InitFlag = bool;
-
-DoneFlag cali_prog(const InitFlag & init_flag){
+DoneFlag cali_prog(const InitFlag & init_flag = false){
     enum class SubState{
+        ALIGN,
         INIT,
         PRE_FORWARD,
         FORWARD,
+        BREAK,
+        REALIGN,
         PRE_BACKWARD,
         BACKWARD,
+        LANDING,
+        STOP,
+        ANALYSIS,
+        EXAMINE,
+        DONE
+    };
+
+    constexpr int forwardpreturns = 15;
+    constexpr int forwardturns = 50;
+    constexpr int backwardpreturns = forwardpreturns;
+    constexpr int backwardturns = forwardturns;
+
+    constexpr int subdivide_micros = 256;
+    constexpr int align_ms = 200;
+    constexpr int break_ms = 500;
+    constexpr int landing_ms = 200;
+
+    constexpr float cali_current = 0.5;
+    constexpr float align_current = 1.0;
+
+
+    static SubState sub_state = SubState::DONE;
+    static uint32_t cnt = 0;
+    static real_t openloop_elecrad;
+    static real_t openloop_position;
+    // static real_t openloop_elecrad_step = real_t(TAU / subdivide_micros);
+
+    static real_t raw_position_accumulate = real_t(0);
+    static real_t last_raw_lap_position = real_t(0);
+
+    // using real = real_t;
+
+    static int openloop_pole;
+
+    static std::array<std::pair<real_t, real_t>, 50> forward_test_data;
+    static std::array<std::pair<real_t, real_t>, 50> backward_test_data;
+    static std::array<std::pair<real_t, real_t>, 50> elecrad_test_data;
+
+    static std::array<real_t, 50> forward_err;
+    static std::array<real_t, 50> backward_err;
+
+    if(init_flag){
+        sub_state = SubState::ALIGN;
+        cnt = 0;
+        return false;
+    }
+
+    auto sw_state = [](const SubState & new_state){
+        sub_state = new_state;
+        cnt = 0;
+    };
+
+    auto accumulate_raw_position = [](const real_t & raw_lap_position){
+        real_t deltaLapPosition = raw_lap_position - last_raw_lap_position;
+        if(deltaLapPosition > real_t(0.5f)){
+            deltaLapPosition -= real_t(1);
+        }else if (deltaLapPosition < real_t(-0.5f)){
+            deltaLapPosition += real_t(1);
+        }
+
+        raw_position_accumulate += deltaLapPosition;
+        last_raw_lap_position = raw_lap_position;
+    };
+
+    if(sub_state == SubState::DONE){
+        return true;
+    }
+
+    else{
+
+        switch(sub_state){
+            case SubState::ALIGN:
+                setCurrent(real_t(align_current), real_t(0));
+                if(cnt >= (int)((foc_freq / 1000) * align_ms)){
+                    sw_state(SubState::INIT);
+                }
+                break;
+            case SubState::INIT:
+                odo.reset();
+                odo.inverse();
+                odo.update();
+
+                sw_state(SubState::PRE_FORWARD);
+                break;
+
+            case SubState::PRE_FORWARD:
+
+                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+
+                if(cnt >= forwardpreturns * subdivide_micros){
+                    odo.update();
+                    raw_position_accumulate = openloop_position;
+                    last_raw_lap_position = odo.getRawLapPosition();
+                    openloop_pole = odo.getRawPole();
+
+                    openloop_elecrad = real_t(0);
+                    sw_state(SubState::FORWARD);
+                }
+                break;
+            case SubState::FORWARD:
+                odo.update();
+                accumulate_raw_position(odo.getRawLapPosition());
+
+                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+
+                if(cnt % subdivide_micros == 0){
+                    const uint8_t cali_index = odo.warp_mod(openloop_pole, 50);
+                    openloop_position = real_t(cnt / subdivide_micros) * real_t(inv_poles);
+
+                    forward_test_data[cali_index].first = openloop_position;
+                    forward_test_data[cali_index].second = raw_position_accumulate;
+
+                    forward_err[cali_index] = openloop_position - raw_position_accumulate;
+                    openloop_pole++;
+                }
+
+                if(cnt >= forwardturns * subdivide_micros){
+                    sw_state(SubState::BREAK);
+                }
+                break;
+            case SubState::BREAK:
+                setCurrent(real_t(cali_current), real_t(0));
+                if(cnt >= (int)((foc_freq / 1000) * break_ms)){
+                    sw_state(SubState::REALIGN);
+                }
+                break;
+            case SubState::REALIGN:
+                setCurrent(real_t(align_current), real_t(0));
+                if(cnt >= (int)((foc_freq / 1000) * align_ms)){
+                    sw_state(SubState::PRE_BACKWARD);
+                }
+                break;
+            case SubState::PRE_BACKWARD:
+
+                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+
+                if(cnt >= backwardpreturns * subdivide_micros){
+                    odo.update();
+                    raw_position_accumulate = openloop_position;
+                    last_raw_lap_position = odo.getRawLapPosition();
+                    // openloop_pole = odo.getRawPole();
+                    openloop_pole = 0;
+
+                    openloop_elecrad = real_t(0);
+                    sw_state(SubState::BACKWARD);
+                }
+                break;
+
+            case SubState::BACKWARD:
+                odo.update();
+                accumulate_raw_position(odo.getRawLapPosition());
+
+                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+
+                if(cnt % subdivide_micros == 0){
+                    const uint8_t cali_index = CLAMP(odo.warp_mod(openloop_pole, 50), 0, 50 - 1);
+                    openloop_position = real_t(cnt / subdivide_micros) * real_t(inv_poles) + 3;
+                    // openloop_position = 114.514;
+
+                    backward_test_data[cali_index].first = openloop_position;
+                    // backward_test_data[cali_index].second = raw_position_accumulate;
+                    backward_test_data[cali_index].second = odo.getRawLapPosition();
+
+                    backward_err[cali_index] = openloop_position - raw_position_accumulate;
+                    openloop_pole--;
+                }
+
+                if(cnt >= backwardturns * subdivide_micros){
+                    sw_state(SubState::LANDING);
+                }
+                break;
+            case SubState::LANDING:
+                setCurrent(real_t(align_current), real_t(0));
+                if(cnt >= (int)((foc_freq / 1000) * landing_ms)){
+                    sw_state(SubState::STOP);
+                }
+            case SubState::STOP:
+                setCurrent(real_t(0), real_t(0));
+                sw_state(SubState::ANALYSIS);
+                break;
+            case SubState::ANALYSIS:
+                // odo.runCaliAnalysis();
+                // for(uint8_t i = 0; i < 50; i++){
+                //     odo.cali_map[i] = mean(forward_test_data[i].second, backward_test_data[i].second);
+                // }
+
+                // for(auto & forward_err_item : forward_err){
+                //     forward_err_item -= round(forward_err_item);
+                // }
+
+                // for(auto & backward_err_item : backward_err){
+                //     backward_err_item -= round(backward_err_item);
+                // }
+
+                // {
+                //     real_t forward_max = *std::max_element(std::begin(forward_err), std::end(forward_err));
+                //     real_t forward_min = *std::min_element(std::begin(forward_err), std::end(forward_err));
+                // }
+
+                // {
+                //     real_t forward_mean = std::accumulate(std::begin(forward_err), std::end(forward_err), real_t(0)) / int(forward_err.size());
+                //     for(auto & forward_err_item : forward_err){
+                //         forward_err_item -= forward_mean;
+                //     }
+                // }
+                sw_state(SubState::EXAMINE);
+                break;
+            case SubState::EXAMINE:
+                for(uint8_t i = 0; i < 50; i++){
+                    // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << endl;
+                    logger.println(backward_test_data[i].first, backward_test_data[i].second, backward_err[i]);
+                }
+
+                for(uint8_t i = 0; i < poles; i++){
+                    odo.cali_map[i] = mean(forward_err[i], backward_err[i]);
+                }
+                // logger.setEps(4);
+                // logger.setSpace(", ");
+                // for(uint8_t i = 0; i < poles; i++){
+                //     logger.println(forward_err.at(i), backward_err.at(i));
+                // }
+                odo.locateRelatively(real_t(0));
+                sw_state(SubState::DONE);
+                break;
+
+            case SubState::DONE:
+                return true;
+                break;
+            default:
+                break;
+        }
+        cnt++;
+    }
+    return false;
+}
+
+DoneFlag selfcheck_prog(const InitFlag & init_flag){
+    constexpr int subdivide_micros = 2048;
+    // constexpr int dur = 600;
+
+    enum class SubState{
+        INIT,
+        TEST_A,
+        REINIT,
+        TEST_B,
         ANALYSIS,
         EXAMINE,
         STOP,
         DONE
     };
 
-    constexpr int forwardpreturns = 15;
-    constexpr int forwardturns = 100;
-    constexpr int backwardpreturns = 15;
-    constexpr int backwardturns = 100;
-    constexpr int turnmircos = 64;
-    constexpr int dur = 200;
-
     static SubState sub_state = SubState::INIT;
-    static int cnt = -1;
-    static real_t openloop_elecrad;
-    static real_t openloop_position;
-    static real_t openloop_elecrad_step;
-    static int pole;
+
+    static int cnt;
+
+    auto sw_state = [](const SubState & new_state){
+        sub_state = new_state;
+        cnt = 0;
+    };
 
     if(init_flag){
         sub_state = SubState::INIT;
         cnt = 0;
     }
 
-    auto sw_state = [&sub_state, &cnt](const SubState & new_state){
-        sub_state = new_state;
-        cnt = 0;
-    };
-
+    static Range_t<real_t> move_range;
 
     if(cnt < 0){
         return false;
-    }{
+    }
+
+    else{
 
         switch(sub_state){
             case SubState::INIT:
                 odo.reset();
                 odo.update();
-                openloop_elecrad = odo.getRawLapPosition() * 50 * TAU;
-                openloop_position;
-                openloop_elecrad_step = real_t(TAU / turnmircos);
-                pole = odo.getRawPole();
+                odo.update();
+                move_range.start = odo.getPosition();
+                move_range.end = move_range.start;
                 break;
-
-            case SubState::PRE_FORWARD:
-                openloop_elecrad += openloop_elecrad_step;
-                setCurrent(real_t(cali_current), openloop_elecrad);
-
-                if(cnt > forwardpreturns * turnmircos){
-                    sw_state(SubState::FORWARD);
-                }
-                break;
-            case SubState::FORWARD:
-
-                if(cnt % turnmircos == 0){
-                    odo.update();
-                    odo.addCaliPoint(real_t(openloop_position), pole);
-                    openloop_position += 0.02;
-                    pole++;
-                }
-
-                if(cnt > forwardturns * turnmircos){
-                    sw_state(SubState::DONE);
-                }
-                break;
-
-            case SubState::PRE_BACKWARD:
-                break;
-            case SubState::BACKWARD:
-                break;
-            case SubState::STOP:
-                setCurrent(real_t(), real_t());
-                break;
+            case SubState::TEST_A:
+                coilA = cos(real_t(cnt) * real_t(PI / subdivide_micros));
+                
+                odo.update();
+                move_range.merge(odo.getPosition());
+                if(cnt > subdivide_micros) sw_state(SubState::TEST_B);
+            case SubState::TEST_B:
             case SubState::ANALYSIS:
-                odo.runCaliAnalysis();
-                break;
-            case SubState::EXAMINE:
-                for(auto & item : odo.cali_map){
-                    logger << item << endl;
-                }
-                break;
-            case SubState::DONE:
-                return true;
-                break;
             default:
                 break;
         }
@@ -946,13 +1333,192 @@ DoneFlag cali_prog(const InitFlag & init_flag){
     return false;
 }
 
-void selfcheck_prog(){
+DoneFlag beep_prog(const InitFlag & init_flag = false){
 
+
+    struct Tone{
+        uint32_t freq_hz;
+        uint32_t sustain_ms;
+    };
+
+    constexpr int freq_G4 = 392;
+    constexpr int freq_A4 = 440;
+    constexpr int freq_B4 = 494;
+    constexpr int freq_C5 = 523;
+    constexpr int freq_D5 = 587;
+    constexpr int freq_E5 = 659;
+    constexpr int freq_F5 = 698;
+    constexpr int freq_G5 = 784;
+
+    static const auto tones = std::to_array<Tone>({
+        {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
+        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+        {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
+        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+        
+        {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
+        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+        {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
+        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
+        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+        
+        {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
+        {.freq_hz = freq_C5,.sustain_ms = 100},  // 1
+        {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
+        {.freq_hz = freq_G4,.sustain_ms = 100}   // 5
+    });
+
+    constexpr float tone_current = 0.4;
+
+    static uint32_t cnt;
+    static uint32_t tone_index;
+    static uint32_t play_begin_ms;
+    // static Tone * tone = nullptr;
+
+    if(init_flag){
+        cnt = 0;
+        tone_index = 0;
+        play_begin_ms = millis();
+    }
+
+    if(millis() >= tones[tone_index].sustain_ms + play_begin_ms){ // play one note done
+        if(tone_index >= tones.size()) return true; // play done
+        else{
+            tone_index++;
+            play_begin_ms = millis();
+        }
+    }
+    
+    {
+        // auto play_us = cnt * (1000000 / foc_freq);
+        const auto & tone = tones[tone_index];
+        auto tone_cnt = foc_freq / tone.freq_hz / 2;
+        // auto tone_ms = tones[tone_index].sustain_ms;
+        bool phase = (cnt / tone_cnt) % 2;
+        setCurrent(real_t(tone_current), phase ? real_t(0.5) : real_t(-0.5));
+        cnt++;
+    }
+    // for(const auto & tone : tones){
+    //     uint32_t play_begin_ms = millis();
+    //     uint32_t tone_period_us = 1000000 / tone.freq_hz;
+    //     tone_period_us /= 2;
+    //     while(millis() - play_begin_ms < tone.sustain_ms){
+    //         // svpwm.setDQCurrent(Vector2(real_t(tone_current), real_t(0)), real_t());
+    //         
+    //         delayMicroseconds(tone_period_us);
+    //         setCurrent(tone_current, );
+    //         // svpwm.setDQCurrent(Vector2(real_t(0), real_t(tone_current)), real_t());
+    //         delayMicroseconds(tone_period_us);
+    //     }
+    // }
+
+    return false;
 }
-void tone_prog{
 
+#include "src/device/CommonIO/Led/rgbLed.hpp"
+
+class PanelLed{
+public:
+    enum class Method:uint8_t{
+        Sine = 0,
+        Saw,
+        Squ,
+        Tri
+    };
+protected:
+    RgbLedConcept<true> & led;
+
+    using Color = Color_t<real_t>;
+
+    Color color_a;
+    Color color_b;
+    uint16_t period;
+
+    Method method;
+public:
+    PanelLed(RgbLedConcept<true> & _led) : led(_led){;}
+
+    void init(){
+        led.init();
+    }
+
+    void setPeriod(const uint16_t & _period){
+        period = _period;
+    }
+
+    void setTranstit(const Color & _color_a, const Color & _color_b, const Method & _method){
+        color_a = _color_a;
+        color_b = _color_b;
+        method = _method;
+    }
+
+    void run(){
+        real_t ratio;
+        real_t _t = t * real_t(100000 / period) * real_t(0.01);
+        switch(method){
+        case Method::Saw:
+            ratio = frac(_t);
+            break;
+        case Method::Sine:
+            ratio = abs(2 * frac(_t) - 1);
+            break;
+        case Method::Squ:
+            ratio = sign(2 * frac(_t) - 1) * 0.5 + 0.5;
+            break;
+        case Method::Tri:
+            ratio = abs(2 * frac(_t) - 1);
+            break;
+        }
+
+        Color color_mux = color_a.linear_interpolate(color_b, ratio);
+        led = color_mux;
+    }
 };
 
+// class Panel{
+//     Panel
+// };
+RgbLedDigital<true> led_instance(portC[14], portC[15], portC[13]);
+PanelLed panel_led = PanelLed(led_instance);
+
+void run(){
+    // logger.println("RUN");
+    switch(run_status){
+        case RunStatus::INIT:
+            run_status = RunStatus::CALI;
+            cali_prog(true);
+            break;
+        case RunStatus::CALI:
+            if(cali_prog()){
+                // beep_prog(true);
+                // run_status = RunStatus::BEEP;
+                active_prog(true);
+                run_status = RunStatus::ACTIVE;
+            }
+            break;
+        
+        case RunStatus::BEEP:
+            if(beep_prog()){
+                active_prog(true);
+                run_status = RunStatus::ACTIVE;
+            }
+            break;
+
+        case RunStatus::INACTIVE:
+            run_status = RunStatus::ACTIVE;
+            break;
+        case RunStatus::ACTIVE:
+            if(active_prog()){
+                run_status = RunStatus::INACTIVE;
+            }
+            break;
+        default:
+            break;
+    }
+}
 
 void stepper_test(){
 
@@ -977,7 +1543,7 @@ void stepper_test(){
     // backwardChannelA.init();
     // backwardChannelB.init();
 
-    timer3.init(144000);
+    timer3.init(1024, 1, Timer::TimerMode::CenterAlignedDownTrig);
     timer3.enableArrSync();
 
     // verfChannelA.enableSync();
@@ -1003,138 +1569,30 @@ void stepper_test(){
 
     odo.init();
 
-    adc1.init(
-        {},{
-            AdcChannelConfig{.channel = AdcChannels::CH3, .sample_cycles = AdcSampleCycles::T71_5},
-            AdcChannelConfig{.channel = AdcChannels::CH4, .sample_cycles = AdcSampleCycles::T71_5}
-        });
+    // adc1.init(
+    //     {},{
+    //         AdcChannelConfig{.channel = AdcChannels::CH3, .sample_cycles = AdcSampleCycles::T71_5},
+    //         AdcChannelConfig{.channel = AdcChannels::CH4, .sample_cycles = AdcSampleCycles::T71_5}
+    //     });
     // adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
     // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
     // timer3[4] = 0;
-    adc1.setPga(AdcOnChip::Pga::X64);
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
-    TIM3->CH4CVR = TIM3->ATRLR >> 1;
-    adc1.enableCont();
-    adc1.enableScan();
-    adc1.enableAutoInject();
+    // adc1.setPga(AdcOnChip::Pga::X64);
+    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
+    // TIM3->CH4CVR = TIM3->ATRLR >> 1;
+    // adc1.enableCont();
+    // adc1.enableScan();
+    // adc1.enableAutoInject();
 
-    auto & bled = portC[13];
-    bled.OutPP();
-
-
+    // auto & bled = portC[13];
+    // bled.OutPP();
+    panel_led.init();
     if(false){
-        constexpr int turnmircos = 64;
-        constexpr int dur = 600;
-
-        odo.reset();
-        logger.println("testing coil..");
-
-        Coil2PConcept * coil = nullptr;
-
-        for(uint8_t coil_index = 0; coil_index < 2; coil_index++){
-
-            switch(coil_index){
-                default:
-                case 0:
-                    coil = &coilA;
-                    break;
-                case 1:
-                    coil = &coilB;
-                    break;
-            }
-
-            odo.update();
-            real_t min_pos = odo.getPosition();
-            real_t max_pos = min_pos;
-
-            logger.println("Coil", coil_index, " test started");
-
-            coilA.setDuty(real_t(0));
-            coilB.setDuty(real_t(0));
-            delay(10);
-
-            for(int i = 0; i < turnmircos; i++){
-                coil->setDuty(cos(i * real_t((PI / turnmircos))));
-                delayMicroseconds(dur);
-
-                odo.update();
-                real_t current_pos = odo.getPosition();
-
-                min_pos = MIN(current_pos, min_pos);
-                max_pos = MAX(current_pos, max_pos);
-            }
-
-            coil->setDuty(real_t(0));
-
-            real_t abs_diff_pos = ABS(max_pos - min_pos);
-            if(abs_diff_pos < real_t(0.005)){
-
-                logger.println("Coil", coil_index, " not connected, Please Check");
-                // logger.println("MAX diff", abs_diff_pos);
-            }else{
-                logger.println("Coil", coil_index, " connected well");
-                // logger.println("MAX diff", abs_diff_pos);
-            }
-        odo.inverse(true);
-        }
-    }
-    odo.inverse();
-    if(false){
-        constexpr float tone_current = 0.2;
-
-        logger.println("tone");
-
-        struct Tone{
-            uint32_t freq_hz;
-            uint32_t sustain_ms;
-        };
-
-        constexpr int freq_G4 = 392;
-        constexpr int freq_A4 = 440;
-        constexpr int freq_B4 = 494;
-        constexpr int freq_C5 = 523;
-        constexpr int freq_D5 = 587;
-        constexpr int freq_E5 = 659;
-        constexpr int freq_F5 = 698;
-        constexpr int freq_G5 = 784;
-
-        Tone tones[] = {
-            {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
-            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
-            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-            {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
-            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
-            
-            {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
-            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
-            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-            {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
-            {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-            {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
-            
-            {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
-            {.freq_hz = freq_C5,.sustain_ms = 100},  // 1
-            {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
-            {.freq_hz = freq_G4,.sustain_ms = 100}   // 5
-        };
-        for(auto & tone : tones){
-            uint32_t play_begin_ms = millis();
-            uint32_t tone_period_us = 1000000 / tone.freq_hz;
-            tone_period_us /= 2;
-            while(millis() - play_begin_ms < tone.sustain_ms){
-                // svpwm.setDQCurrent(Vector2(real_t(tone_current), real_t(0)), real_t());
-                setCurrent(tone_current, real_t(0));
-                delayMicroseconds(tone_period_us);
-                setCurrent(tone_current, real_t(PI/2));
-                // svpwm.setDQCurrent(Vector2(real_t(0), real_t(tone_current)), real_t());
-                delayMicroseconds(tone_period_us);
-            }
-        }
+        
     }
 
 
-    if(true){
+    if(false){
         odo.reset();
         // logger.println("Cali And Direction Identify..");
 
@@ -1142,7 +1600,7 @@ void stepper_test(){
         constexpr int forwardturns = 100;
         constexpr int backwardpreturns = 15;
         constexpr int backwardturns = 100;
-        constexpr int turnmircos = 64;
+        constexpr int subdivide_micros = 64;
         constexpr int dur = 200;
 
 
@@ -1151,46 +1609,46 @@ void stepper_test(){
         real_t openloop_elecrad = odo.getRawLapPosition() * 50 * TAU;
 
         real_t openloop_position;
-        // real_t openloop_position_step = real_t(TAU / turnmircos);
-        real_t openloop_elecrad_step = real_t(TAU / turnmircos);
-        int pole = odo.getRawPole();
+        // real_t openloop_position_step = real_t(TAU / subdivide_micros);
+        real_t openloop_elecrad_step = real_t(TAU / subdivide_micros);
+        int openloop_pole = odo.getRawPole();
 
-        for(int i = -forwardpreturns * turnmircos;i < forwardturns * turnmircos; i++){
+        for(int i = -forwardpreturns * subdivide_micros;i < forwardturns * subdivide_micros; i++){
             odo.update();
             // real_t openloop_position = openloop_elecrad / (50 * TAU);
-            if (i % turnmircos == 0){
+            if (i % subdivide_micros == 0){
                 if(i >= 0){
                     if(i == 0){openloop_position = odo.getRawLapPosition();}
                         // logger.println(openloop_position, odo.getRawLapPosition(),odo.warp_around_zero( openloop_position - odo.getRawLapPosition()));
 
-                    odo.addCaliPoint(real_t(openloop_position), pole);
+                    odo.addCaliPoint(real_t(openloop_position), openloop_pole);
                 }
                 openloop_position += 0.02;
-                pole++;
+                openloop_pole++;
             }
             openloop_elecrad += openloop_elecrad_step;
             // svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), openloop_elecrad);
-            setCurrent(real_t(cali_current), openloop_elecrad);
+            setCurrent(real_t(0.3), openloop_elecrad);
             // logger.println(openloop_position, odo.getRawLapPosition(), openloop_position - odo.getRawLapPosition());
             delayMicroseconds(dur);
         }
 
         delay(20);
-        // pole -= backwardpreturns;
-        for(int i = -backwardpreturns * turnmircos;i < backwardturns * turnmircos; i++){
+        // openloop_pole -= backwardpreturns;
+        for(int i = -backwardpreturns * subdivide_micros;i < backwardturns * subdivide_micros; i++){
             odo.update();
-            if (i % turnmircos == 0){
+            if (i % subdivide_micros == 0){
                 if(i >= 0){
-                    odo.addCaliPoint(real_t(openloop_position), pole);
+                    odo.addCaliPoint(real_t(openloop_position), openloop_pole);
                                 // logger.println(openloop_position, odo.getRawLapPosition(),odo.warp_around_zero( openloop_position - odo.getRawLapPosition()));
 
                 }
                 openloop_position -= 0.02;
-                pole--;
+                openloop_pole--;
             }
             openloop_elecrad -= openloop_elecrad_step;
 
-            setCurrent(real_t(cali_current), openloop_elecrad);
+            setCurrent(real_t(0.3), openloop_elecrad);
             delayMicroseconds(dur);
         }
 
@@ -1199,9 +1657,6 @@ void stepper_test(){
         setCurrent(real_t(), real_t());
 
         odo.runCaliAnalysis();
-        for(auto & item : odo.cali_map){
-            logger << item << endl;
-        }
         // while(true);
     }
 
@@ -1215,12 +1670,12 @@ void stepper_test(){
         // constexpr int forwardturns = 5;
         // constexpr int backwardpreturns = 2;
         // constexpr int backwardturns = 5;
-        // constexpr int turnmircos = 64;
+        // constexpr int subdivide_micros = 64;
         // constexpr int dur = 600;
         // constexpr float cali_current = 0.6;
 
         // real_t elecrad = real_t(0);
-        // real_t elecrad_step = real_t(TAU / turnmircos);
+        // real_t elecrad_step = real_t(TAU / subdivide_micros);
         // real_t percent = real_t(1.0 / (forwardturns + backwardturns));
 
         // struct{
@@ -1275,9 +1730,9 @@ void stepper_test(){
         // pos_trend.start_pos = odo.getPosition();
         // delay(10);
 
-        // for(int i = -forwardpreturns * turnmircos;i < forwardturns * turnmircos; i++){
+        // for(int i = -forwardpreturns * subdivide_micros;i < forwardturns * subdivide_micros; i++){
 
-        //     if(i % turnmircos == 0 && i >= 0){//measureable
+        //     if(i % subdivide_micros == 0 && i >= 0){//measureable
         //         odo.locateElecrad(percent);
         //     }
 
@@ -1292,9 +1747,9 @@ void stepper_test(){
         // pos_trend.after_forward_pos = odo.getPosition();
         // delay(10);
 
-        // for(int i = -backwardpreturns * turnmircos; i < backwardturns * turnmircos; i++){
+        // for(int i = -backwardpreturns * subdivide_micros; i < backwardturns * subdivide_micros; i++){
 
-        //     if(i % turnmircos == 0 && i >= 0){//measureable
+        //     if(i % subdivide_micros == 0 && i >= 0){//measureable
         //         odo.locateElecrad(percent);
         //     }
 
@@ -1316,30 +1771,22 @@ void stepper_test(){
     }
 
     // svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), real_t(0));
-    setCurrent(real_t(cali_current), real_t());
-    delay(200);
+    // setCurrent(real_t(0.3), real_t());
+    // delay(200);
     // odo.locateElecrad();
-    odo.locateRelatively(real_t(0));
-    setCurrent(real_t(), real_t());
-
 
     timer4.init(foc_freq);
     timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
-
-
-
-    // uint32_t foc_begin_micros;
-    // uint32_t foc_end_micros;
-
     timer4.bindCb(Timer::IT::Update, std::function<void(void)>(run));
 
-    delay(200);
+    // delay(200);
     // motor.enable();
     // motor.trackPos(real_t(0));
     // motor.setMaxCurrent(real_t(0.45));
 
     logger.setEps(4);
-
+    panel_led.setPeriod(200);
+    panel_led.setTranstit(Color(), Color(0,1,0,0), PanelLed::Method::Squ);
     while(true){
         // real_t total = real_t(3);
         // static real_t freq = real_t(10);
@@ -1358,10 +1805,15 @@ void stepper_test(){
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // logger.println(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-        // logger.println(est_speed, targets.curr, run_elecrad_addition);
+        // logger.println(est_speed, est_pos, targets.curr, run_elecrad_addition);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
-
+        // logger << est_pos << est_speed << run_current << run_elecrad_addition << endl;
+        // logger.println(est_pos, est_speed, run_current, run_elecrad, run_elecrad_addition, est_elecrad, uint16_t(verfChannelA), uint16_t(verfChannelB));
         static String temp_str = "";
+
+        // bool led_status = (millis() / 200) % 2;
+        // bled = led_status;
+        panel_led.run();
 
         if(logger.available()){
             char chr = logger.read();
@@ -1369,11 +1821,13 @@ void stepper_test(){
                 temp_str.trim();
                 // logger.println(temp_str);
                 if(temp_str.length()) parseLine(temp_str);
+                // logger.println(temp_str);
                 temp_str = "";
             }else{
                 temp_str.concat(chr);
             }
         }
+
         Sys::Clock::reCalculateTime();
     }
     while(true);

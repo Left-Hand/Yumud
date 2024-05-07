@@ -101,6 +101,7 @@ public:
         return *this;}
 
     __fast_inline operator int(){return cvr;}
+    __fast_inline operator uint16_t(){return cvr;}
     __fast_inline operator real_t(){return real_t(cvr) / real_t(arr);}
     // TimerOutChannelOnChip & operator = (const bool en){enable(en); return *this;}
 };

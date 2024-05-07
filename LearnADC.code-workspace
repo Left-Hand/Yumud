@@ -93,7 +93,10 @@
             "valarray": "cpp",
             "HX711.C": "cpp",
             "TTP229.C": "cpp",
-            "concepts": "cpp"
+            "concepts": "cpp",
+            "bit": "cpp",
+            "compare": "cpp",
+            "numbers": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
