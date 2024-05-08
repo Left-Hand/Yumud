@@ -137,8 +137,19 @@ public:
         return MIN(int(pole), poles - 1);
     }
 
+    real_t pole2position(const int & pole){
+        return real_t(pole) / 50;
+    }
+
     real_t correctPosition(const real_t rawPosition) override{
-        return rawPosition + cali_map[position2pole(rawPosition)];
+        // uint8_t pole_a = position2pole(rawPosition);
+        // uint8_t pole_b = warp_mod(pole_a, 50);
+
+        // real_t p_a = cali_map[pole_a];
+        // real_t p_b = cali_map[pole_b];
+        // real_t ratio = (rawPosition - pole2position(pole_a)) * 50;
+        // return LERP(ratio, p_a, p_b) + rawPosition;
+        return (rawPosition + cali_map[position2pole(rawPosition)]);
     }
 
 public:
@@ -169,6 +180,10 @@ public:
 
     void fixElecRadOffset(){
         elecRadOffset = position2rad(getLapPosition());
+    }
+
+    void addPostDynamicFixPosition(const real_t & err){
+        elecRadOffset += err * 50 * TAU;
     }
 
     int getRawPole(){

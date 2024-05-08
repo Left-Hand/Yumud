@@ -1206,6 +1206,21 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 }
 
                 if(cnt >= backwardturns * subdivide_micros){
+                    real_t forward_mean = std::accumulate(std::begin(forward_err), std::end(forward_err), real_t(0)) / int(forward_err.size());
+                    for(auto & forward_err_item : forward_err){
+                        forward_err_item -= forward_mean;
+                    }
+
+                    real_t backward_mean = std::accumulate(std::begin(backward_err), std::end(backward_err), real_t(0)) / int(backward_err.size());
+                    for(auto & backward_err_item : backward_err){
+                        backward_err_item -= backward_mean;
+                    }
+
+                    for(uint8_t i = 0; i < poles; i++){
+                        odo.cali_map[i] = mean(forward_err[i], backward_err[i]);
+                    }
+
+                    raw_position_accumulate = real_t(0);
                     sw_state(SubState::PRE_LANDING);
                 }
                 break;
@@ -1221,16 +1236,16 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 break;
             case SubState::LANDING:
                 odo.update();
+                accumulate_raw_position(odo.getRawLapPosition());
 
                 setCurrent(real_t(cali_current), sin(real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * PI));
                 if(cnt % subdivide_micros == 0){
-                    landing_position_accumulate += odo.getRawLapPosition();
+                    landing_position_accumulate += raw_position_accumulate;
                 }
 
                 if(cnt >= landingturns * subdivide_micros){
                     sw_state(SubState::STOP);
                 }
-                break;
             case SubState::STOP:
                 odo.update();
 
@@ -1273,37 +1288,31 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 //         logger.println(odo.getRawLapPosition() - landing_position_err);
                 //     }
                 // }
-                {
-                    real_t forward_mean = std::accumulate(std::begin(forward_err), std::end(forward_err), real_t(0)) / int(forward_err.size());
-                    for(auto & forward_err_item : forward_err){
-                        forward_err_item -= forward_mean;
-                    }
-
-                    real_t backward_mean = std::accumulate(std::begin(backward_err), std::end(backward_err), real_t(0)) / int(backward_err.size());
-                    for(auto & backward_err_item : backward_err){
-                        backward_err_item -= backward_mean;
-                    }
-
-                    for(uint8_t i = 0; i < poles; i++){
-                        odo.cali_map[i] = mean(forward_err[i], backward_err[i]);
-                        //  + forward_mean + backward_mean;
-                    }
-                }
                 odo.update();
                 // odo.fixElecRadOffset(odo.getLapPosition() - landing_position_accumulate / landingturns);
                 odo.fixElecRadOffset();
+                odo.addPostDynamicFixPosition(-landing_position_accumulate / landingturns);
                 // odo.fixElecRad();
                 // odo.adjustZeroOffset();
-                setCurrent(real_t(align_current), real_t(1.57));
-                delay(100);
-                odo.update();
-                logger.println(odo.getElecRadOffset(), odo.getElecRad());
+                // setCurrent(real_t(align_current), real_t(PI / 2));
+                // delay(100);
+                // odo.update();
+                // logger.println(landing_position_accumulate / landingturns, odo.getElecRad());
 
-                setCurrent(real_t(align_current), real_t(0));
-                delay(100);
-                odo.update();
-                logger.println(odo.getElecRadOffset(), odo.getElecRad());
+                // setCurrent(real_t(align_current), real_t(0));
+                // delay(100);
+                // odo.update();
+                // logger.println(odo.getRawLapPosition(), odo.getElecRad());
 
+                // setCurrent(real_t(align_current), real_t(-PI / 2));
+                // delay(100);
+                // odo.update();
+                // logger.println(odo.getRawLapPosition(), odo.getElecRad());
+
+                // setCurrent(real_t(align_current), real_t(0));
+                // delay(100);
+                // odo.update();
+                // logger.println(odo.getRawLapPosition(), odo.getElecRad());
                 sw_state(SubState::EXAMINE);
                 break;
             case SubState::EXAMINE:
