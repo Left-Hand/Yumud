@@ -152,8 +152,7 @@ public:
     }
 
     real_t getElecRad(){
-        return position2rad(getLapPosition())
-         - elecRadOffset;
+        return position2rad(getLapPosition()) - elecRadOffset;
     }
 
     real_t getElecRadFixed(){
@@ -164,13 +163,14 @@ public:
         return elecRadOffset;
     }
 
-    void adjustZeroOffset(){
+    void fixElecRadOffset(const real_t & pos_err){
+        elecRadOffset = position2rad(pos_err);
+    }
+
+    void fixElecRadOffset(){
         elecRadOffset = position2rad(getLapPosition());
     }
 
-    // void locateElecradByPercent(const real_t & __elecrad, const real_t & percentage = real_t(1)){
-    //     elecRadOffset += position2rad(getLapPosition()) * percentage;
-    // }
     int getRawPole(){
         return position2pole(getRawLapPosition());
     }

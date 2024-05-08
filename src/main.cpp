@@ -1037,6 +1037,7 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
         REALIGN,
         PRE_BACKWARD,
         BACKWARD,
+        PRE_LANDING,
         LANDING,
         STOP,
         ANALYSIS,
@@ -1049,13 +1050,16 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
     constexpr int backwardpreturns = forwardpreturns;
     constexpr int backwardturns = forwardturns;
 
-    constexpr int subdivide_micros = 256;
-    constexpr int align_ms = 200;
-    constexpr int break_ms = 500;
-    constexpr int landing_ms = 200;
+    constexpr int landingpreturns = 15;
+    constexpr int landingturns = 50;
 
-    constexpr float cali_current = 0.5;
-    constexpr float align_current = 1.0;
+    constexpr int subdivide_micros = 256;
+    constexpr int align_ms = 100;
+    constexpr int break_ms = 100;
+    constexpr int stop_ms = 400;
+
+    constexpr float cali_current = 0.3;
+    constexpr float align_current = 0.4;
 
 
     static SubState sub_state = SubState::DONE;
@@ -1064,6 +1068,8 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
 
     static real_t raw_position_accumulate = real_t(0);
     static real_t last_raw_lap_position = real_t(0);
+
+    static real_t landing_position_accumulate = real_t(0);
 
     // using real = real_t;
 
@@ -1128,7 +1134,7 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                     odo.update();
                     raw_position_accumulate = real_t(0);
                     last_raw_lap_position = odo.getRawLapPosition();
-                    openloop_pole = odo.getRawPole() + 1;
+                    openloop_pole = odo.getRawPole();
 
                     sw_state(SubState::FORWARD);
                 }
@@ -1140,6 +1146,8 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
 
                 if(cnt % subdivide_micros == 0){
+                    openloop_pole++;
+
                     const uint8_t cali_index = odo.warp_mod(openloop_pole, 50);
                     real_t openloop_position = real_t(cnt / subdivide_micros) * real_t(inv_poles);
 
@@ -1147,7 +1155,6 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                     forward_test_data[cali_index].second = raw_position_accumulate;
 
                     forward_err[cali_index] = openloop_position - raw_position_accumulate;
-                    openloop_pole++;
                 }
 
                 if(cnt >= forwardturns * subdivide_micros){
@@ -1174,7 +1181,7 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                     odo.update();
                     raw_position_accumulate = real_t(0);
                     last_raw_lap_position = odo.getRawLapPosition();
-                    openloop_pole = odo.getRawPole() - 1;
+                    openloop_pole = odo.getRawPole();
 
                     sw_state(SubState::BACKWARD);
                 }
@@ -1187,6 +1194,8 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
 
                 if(cnt % subdivide_micros == 0){
+                    openloop_pole--;
+
                     const uint8_t cali_index = odo.warp_mod(openloop_pole, 50);
                     real_t openloop_position = -real_t(cnt / subdivide_micros) * real_t(inv_poles);
 
@@ -1194,22 +1203,43 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                     backward_test_data[cali_index].second = raw_position_accumulate;
 
                     backward_err[cali_index] = openloop_position - raw_position_accumulate;
-                    openloop_pole--;
                 }
 
                 if(cnt >= backwardturns * subdivide_micros){
+                    sw_state(SubState::PRE_LANDING);
+                }
+                break;
+            
+            case SubState::PRE_LANDING:
+                odo.update();
+
+                setCurrent(real_t(cali_current), sin(real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * PI));
+                if(cnt >= landingpreturns * subdivide_micros){
+                    landing_position_accumulate = real_t(0);
                     sw_state(SubState::LANDING);
                 }
                 break;
             case SubState::LANDING:
-                setCurrent(real_t(align_current), real_t(0));
-                if(cnt >= (int)((foc_freq / 1000) * landing_ms)){
-                    odo.adjustZeroOffset();
+                odo.update();
+
+                setCurrent(real_t(cali_current), sin(real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * PI));
+                if(cnt % subdivide_micros == 0){
+                    landing_position_accumulate += odo.getRawLapPosition();
+                }
+
+                if(cnt >= landingturns * subdivide_micros){
                     sw_state(SubState::STOP);
                 }
+                break;
             case SubState::STOP:
-                setCurrent(real_t(0), real_t(0));
-                sw_state(SubState::ANALYSIS);
+                odo.update();
+
+                setCurrent(real_t(align_current), real_t(0));
+                if(cnt >= (int)((foc_freq / 1000) * stop_ms)){
+                    sw_state(SubState::ANALYSIS);
+                }
+
+                
                 break;
             case SubState::ANALYSIS:
                 // odo.runCaliAnalysis();
@@ -1229,7 +1259,20 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 //     real_t forward_max = *std::max_element(std::begin(forward_err), std::end(forward_err));
                 //     real_t forward_min = *std::min_element(std::begin(forward_err), std::end(forward_err));
                 // }
-
+                // {
+                //     real_t landing_position_err = landing_position_accumulate / landingturns;
+                //     constexpr int iter_times = 160;
+                //     // for(uint8_t i = 0; i < iter_times; i ++){
+                //     //     odo.update();
+                //     //     // delayMicros
+                //     //     // logger.println(odo.getRawLapPosition());
+                //     //     delayMicroseconds(20);
+                //     // }
+                //     for(uint8_t i = 0; i < iter_times; i ++){
+                //         odo.update();
+                //         logger.println(odo.getRawLapPosition() - landing_position_err);
+                //     }
+                // }
                 {
                     real_t forward_mean = std::accumulate(std::begin(forward_err), std::end(forward_err), real_t(0)) / int(forward_err.size());
                     for(auto & forward_err_item : forward_err){
@@ -1246,6 +1289,21 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                         //  + forward_mean + backward_mean;
                     }
                 }
+                odo.update();
+                // odo.fixElecRadOffset(odo.getLapPosition() - landing_position_accumulate / landingturns);
+                odo.fixElecRadOffset();
+                // odo.fixElecRad();
+                // odo.adjustZeroOffset();
+                setCurrent(real_t(align_current), real_t(1.57));
+                delay(100);
+                odo.update();
+                logger.println(odo.getElecRadOffset(), odo.getElecRad());
+
+                setCurrent(real_t(align_current), real_t(0));
+                delay(100);
+                odo.update();
+                logger.println(odo.getElecRadOffset(), odo.getElecRad());
+
                 sw_state(SubState::EXAMINE);
                 break;
             case SubState::EXAMINE:
@@ -1253,9 +1311,7 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 //     // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << endl;
                 //     logger.println(forward_err[i], backward_err[i]);
                 // }
-                odo.adjustZeroOffset();
-                // logger.println(odo.getElecRadOffset(), "elecoffset");
-                // logger.println(odo.getElecRad(), "elecrad");
+
                 // for(uint8_t i = 0; i < poles; i++){
                     
                 // }
@@ -1266,6 +1322,7 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 // }
 
                 odo.locateRelatively(real_t(0));
+                setCurrent(real_t(0), real_t(0));
                 sw_state(SubState::DONE);
                 break;
 
@@ -1340,9 +1397,23 @@ DoneFlag selfcheck_prog(const InitFlag & init_flag){
     return false;
 }
 
+// template<typename T>
+// class baseClass{
+// protected:
+//     T data;
+// public:
+//     void speak(){;}
+//     void run(){;}
+// };
+
+// class drivedClass:public baseClass<int>{
+// public:
+//     // using baseClass<int>;
+// };
+
 DoneFlag beep_prog(const InitFlag & init_flag = false){
-
-
+    // drivedClass dri;
+    // dri.run();
     struct Tone{
         uint32_t freq_hz;
         uint32_t sustain_ms;
@@ -1490,6 +1561,8 @@ public:
 // };
 RgbLedDigital<true> led_instance(portC[14], portC[15], portC[13]);
 PanelLed panel_led = PanelLed(led_instance);
+
+
 
 void run(){
     // logger.println("RUN");
@@ -1745,7 +1818,8 @@ void stepper_test(){
         // logger.println(est_speed, est_pos, targets.curr, run_elecrad_addition);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << run_elecrad_addition << endl;
-        // logger.println(est_pos, est_speed, run_current, run_elecrad, run_elecrad_addition, est_elecrad, uint16_t(verfChannelA), uint16_t(verfChannelB));
+        // logger.println(est_pos, est_speed, run_current, run_elecrad_addition);
+        RUN_DEBUG(est_pos, est_speed, run_current, run_elecrad_addition);
         static String temp_str = "";
 
         // bool led_status = (millis() / 200) % 2;
