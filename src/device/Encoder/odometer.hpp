@@ -158,6 +158,7 @@ public:
     void reset() override{
         Odometer::reset();
         elecRad = real_t(0);
+        elecRadOffset = real_t(0);
         cali_map.fill(real_t(0));
         // cali_map_scores.fill(0);
     }
@@ -174,12 +175,12 @@ public:
         return elecRadOffset;
     }
 
-    void fixElecRadOffset(const real_t & pos_err){
-        elecRadOffset = position2rad(pos_err);
-    }
+    // real_t getElecRadOffset(){
+    //     return = position2rad(getLapPosition());
+    // }
 
-    void fixElecRadOffset(){
-        elecRadOffset = position2rad(getLapPosition());
+    void setElecRadOffset(const real_t & new_offset){
+        elecRadOffset = new_offset;
     }
 
     void addPostDynamicFixPosition(const real_t & err){

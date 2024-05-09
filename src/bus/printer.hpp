@@ -7,10 +7,12 @@
 #include "src/platform.h"
 #include "../../types/string/String.hpp"
 #include <cstdint>
+#include <string>
+#include <string_view>
 
-#ifndef endl
-#define endl "\r\n";
-#endif
+// #ifndef endl
+// #define endl "\r\n";
+// #endif
 
 enum class SpecToken {
     Space,
@@ -41,6 +43,10 @@ private:
     bool skipSpec = false;
 
     __fast_inline void printString(const String & str){write(str.c_str(), str.length());}
+    __fast_inline void printString(const std::string & str){write(str.c_str(), str.length());}
+    
+    __fast_inline void printString(const std::string_view & str){write(str.data(), str.length());}
+    __fast_inline void printString(const char * str){write(str, strlen(str));}
 
 protected:
     virtual void _write(const char & data) = 0;
@@ -87,6 +93,9 @@ public:
     Printer& operator<<(char* pStr){printString(String(pStr)); return *this;}
     Printer& operator<<(const char* pStr){printString(String(pStr)); return *this;}
     Printer& operator<<(const String & str){printString(str); return *this;}
+    Printer& operator<<(const std::string & str){printString(str); return *this;}
+    Printer& operator<<(const std::string_view & str){printString(str); return * this;}
+
     Printer& operator<<(const SpecToken & spec);
 
     template<typename real>

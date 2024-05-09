@@ -73,28 +73,28 @@ public:
         return *this;
     }
 
-    __fast_inline bool operator==(const iq_t & other) const {
-        return value == other.value;
+    __fast_inline bool operator==(const auto & other) const {
+        return value == static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator!=(const iq_t & other) const {
-        return value != other.value;
+    __fast_inline bool operator!=(const auto & other) const {
+        return value != static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator>(const iq_t & other) const {
-        return value > other.value;
+    __fast_inline bool operator>(const auto & other) const {
+        return value > static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator<(const iq_t & other) const {
-        return value < other.value;
+    __fast_inline bool operator<(const auto & other) const {
+        return value < static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator>=(const iq_t & other) const {
-        return value >= other.value;
+    __fast_inline bool operator>=(const auto & other) const {
+        return value >= static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator<=(const iq_t & other) const {
-        return value <= other.value;
+    __fast_inline bool operator<=(const auto & other) const {
+        return value <= static_cast<iq_t>(other).value;
     }
 
     #ifndef STRICT_IQ

@@ -24,19 +24,24 @@ class Coil1:public Coil2PConcept{
 protected:
     GpioConcept & gpioP;
     GpioConcept & gpioN;
-    PwmChannelConcept & instance;
+    // PwmChannelConcept & instance;
+    TimerOutChannelPosOnChip & vref_pwm;
     bool enabled = true;
 public:
-    Coil1(GpioConcept & _instanceP, GpioConcept & _instanceN, PwmChannelConcept & _instance):gpioP(_instanceP), gpioN(_instanceN), instance(_instance){;}
+    Coil1(GpioConcept & _instanceP, GpioConcept & _instanceN, TimerOutChannelPosOnChip & _vref_pwm):gpioP(_instanceP), gpioN(_instanceN), vref_pwm(_vref_pwm){;}
 
     void init() override{
         gpioP.OutPP();
         gpioN.OutPP();
-        instance.init();
+
+        gpioP.clr();
+        gpioN.clr();
+
+        vref_pwm.init();
     }
 
     void setClamp(const real_t & abs_max_value) override{
-        instance.setClamp(abs(abs_max_value));
+        // instance.setClamp(abs(abs_max_value));
     }
 
     void enable(const bool & en = true) override{
@@ -55,11 +60,11 @@ public:
         if(duty > 0){
             gpioP.set();
             gpioN.clr();
-            instance.setDuty(duty);
+            vref_pwm = duty;
         }else{
             gpioN.set();
             gpioP.clr();
-            instance.setDuty(-duty);
+            vref_pwm = -duty;
         }
     }
 

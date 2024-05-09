@@ -22,7 +22,7 @@
         "arch": "rv32imac",
         "abi": "ilp32",
         "code-model": "medany",
-        "misc-control": "-msmall-data-limit=8 -msave-restore -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized --specs=nano.specs --specs=nosys.specs -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -fno-exceptions -finput-charset=UTF-8 -fexec-charset=UTF-8 -fomit-frame-pointer"
+        "misc-control": "-msmall-data-limit=8 -msave-restore -fmessage-length=0 -fsigned-char -ffunction-sections -fdata-sections -fno-common -Wunused -Wuninitialized --specs=nano.specs --specs=nosys.specs -ffunction-sections -fdata-sections -fno-common -fmessage-length=0 -fno-exceptions -finput-charset=UTF-8 -fexec-charset=UTF-8 -fomit-frame-pointer -flto=1"
     },
     "c/cpp-compiler": {
         "language-c": "c17",

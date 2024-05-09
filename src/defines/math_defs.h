@@ -22,10 +22,6 @@
 #define PI 3.1415926535897932384626433833
 #endif
 
-#ifndef E
-#define E 2.7182818284590452353602874714
-#endif
-
 #ifndef INF
 #define INF (__builtin_inff())
 #endif

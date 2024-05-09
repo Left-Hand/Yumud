@@ -443,7 +443,7 @@ void osc_test(){
         //     delayMicroseconds(10);
         //         i2sSda = (data >> i) & 0x01;
         //     delayMicroseconds(10);
-        //         // digitalWrite(BCK, HIGH);
+        //        // digitalWrite(BCK, HIGH);
         //         i2sSck.set();
         //     delayMicroseconds(10);
         //     }
@@ -473,7 +473,60 @@ void osc_test(){
 }
 
 #include "enum.h"
+#include "json.hpp"
+
 #include <bits/stl_numeric.h>
+#include <optional>
+
+using json = nlohmann::json;
+
+struct GCODE{
+
+};
+
+struct G_MOVECODE:public GCODE{
+    Vector3 pos;
+};
+
+struct G_SPINCODE:public G_MOVECODE{
+    Vector3 org;
+};
+
+struct G0{
+    std::optional<real_t> x;
+    operator bool() const{
+        return x.has_value();
+    }
+};
+
+class CharOrdedParaments{
+protected:
+    std::array<real_t, 26> charOrdedParaments;
+public:
+    auto operator [](const char & _chr){
+        if(_chr < 'z' or _chr > 'A') return charOrdedParaments.at(0);
+        auto chr = std::toupper(_chr);
+        return charOrdedParaments.at(chr - 'A');
+    }
+};
+
+class GcodeQueue{
+    std::array<real_t, 26> charOrdedParaments;
+
+
+};
+
+class GcodeParser{
+
+
+    std::pair<char, real_t> fetchNewPair(){
+        return {'e', 3.0};
+    }
+public:
+    GcodeParser(){
+
+    }
+};
 
 namespace StepperTest{
 
@@ -497,10 +550,8 @@ PwmChannel pwmCoilB(verfChannelB);
 PwmChannel pwmCoilA(verfChannelA);
 
 
-Coil1 coilA(portA[10], portA[11], pwmCoilA);
-Coil1 coilB(portA[8], portA[9], pwmCoilB);
-// TB67H450 coilA(forwardChannelA, backwardChannelA, verfChannelA);
-// TB67H450 coilB(forwardChannelB, backwardChannelB, verfChannelB);
+Coil1 coilA(portA[10], portA[11],  verfChannelA);
+Coil1 coilB(portA[8], portA[9],  verfChannelB);
 
 SVPWM2 svpwm(coilA, coilB);
 
@@ -522,8 +573,6 @@ constexpr float inv_poles = 0.02;
 constexpr float openloop_current_limit = 0.3;
 
 
-
-
 constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 uint32_t foc_pulse_micros;
 
@@ -536,6 +585,20 @@ real_t est_elecrad = real_t();
 real_t run_current = real_t();
 real_t run_elecrad = real_t();
 real_t run_elecrad_addition = real_t();
+
+
+struct SetPoints{
+
+};
+
+struct RunTimeValues{
+
+};
+
+struct Paraments{
+
+};
+
 
 struct Targets{
     real_t curr = real_t();
@@ -550,6 +613,7 @@ struct Setpoints{
 
 };
 
+using Range = Range_t<real_t>;
 
 struct StallObserver{
     real_t max_position_error;
@@ -557,18 +621,20 @@ struct StallObserver{
     uint32_t entry_time_ms;
     uint32_t max_sustain_time_ms;
 
+    static constexpr uint32_t no_stall_time_ms = 0;
+
     bool update(const real_t & target_position, const real_t & measured_position, const real_t & measured_speed){
+        auto current_time_ms = millis();
         if(abs(measured_speed) < inspect_enable_speed_threshold){ // stall means low speed
-            if(entry_time_ms == 0){
+            if(entry_time_ms == no_stall_time_ms){
                 if(abs(target_position - measured_position) > max_position_error){ //
                     entry_time_ms = millis();
                 }
             }else{
                 return (millis() - entry_time_ms> max_sustain_time_ms);
             }
-
         }else{
-            entry_time_ms = 0;
+            entry_time_ms = no_stall_time_ms;
         }
         return false;
     }
@@ -576,22 +642,20 @@ struct StallObserver{
 
 struct CurrentCtrl{
 public:
-    real_t slew_rate = real_t(20.0 / foc_freq);
+    real_t current_slew_rate = real_t(20.0 / foc_freq);
     real_t current_output = real_t(0);
-    real_t current_limit = real_t(0.4);
+    Range current_range{real_t(-0.4), real_t(0.4)};
 
-    void update(const real_t & current_setpoint){
-        real_t current_delta = CLAMP(current_setpoint - current_output, -slew_rate, slew_rate);
-        current_output = CLAMP(current_output + current_delta, -current_limit, current_limit);
-    }
-
-    real_t getCurrent(){
+    real_t update(const real_t & current_setpoint){
+        real_t current_delta = CLAMP(current_setpoint - current_output, -current_slew_rate, current_slew_rate);
+        current_output = current_range.clamp(current_output + current_delta);
         return current_output;
     }
 };
 
 struct TorqueCtrl{
-    // real_t
+    CurrentCtrl & currCtrl;
+
 };
 
 struct SpeedCtrl{
@@ -613,7 +677,7 @@ struct SpeedCtrl{
 
 
     bool inited = false;
-    void update(const real_t & goal_speed,const real_t & measured_speed){
+    auto update(const real_t & goal_speed,const real_t & measured_speed){
         if(!inited){
             inited = true;
             elecrad_offset_output = real_t(0);
@@ -631,10 +695,12 @@ struct SpeedCtrl{
         elecrad_addition = CLAMP(elecrad_addition + kp_contribute + ki_contribute, real_t(0), elecrad_addition_clamp);
 
         real_t elecrad_offset = real_t(PI / 2) + elecrad_addition;
-        if(goal_speed < 0) elecrad_offset = -elecrad_offset;
+        if(goal_speed < 0) elecrad_offset = - elecrad_offset;
 
-        current_output = targets.curr;
-        elecrad_offset_output = elecrad_offset;
+        // current_output = targets.curr;
+        // elecrad_offset_output = elecrad_offset;
+
+        return std::make_tuple(current_output, elecrad_offset + odo.getElecRad());
     }
 
     real_t getElecradOffset(){
@@ -665,56 +731,65 @@ struct PositionCtrl{
     real_t target_speed;
 
     real_t current_slew_rate = real_t(20.0 / foc_freq);
-    real_t current_minimal = real_t(0.1);
-    real_t current_clamp = real_t(0.6);
+    real_t current_minimal = real_t(0.05);
+    real_t current_clamp = real_t(0.3);
 
-    real_t err_to_current_ratio = real_t(200);
+    real_t err_to_current_ratio = real_t(20);
 
     real_t current_output;
-
-    real_t elecrad_offset_output;
-
+    real_t elecrad_output;
     real_t last_error;
 
-    void update(const real_t & measured_position, const real_t & measuresd_speed){
+    auto update(const real_t & _target_position, const real_t & measured_position, const real_t & measuresd_speed){
+        target_position = _target_position;
         real_t error = target_position - measured_position;
 
-        real_t kp_contribute = CLAMP(error * kp, -kp_clamp, kp_clamp);
+        // real_t kp_contribute = CLAMP(error * kp, -kp_clamp, kp_clamp);
 
-        if((error.value ^ last_error.value) & 0x8000){ // clear intergal when reach target
-            intergal = real_t(0);
-        }else{
-            intergal += error;
-        }
+        // if((error.value ^ last_error.value) & 0x8000){ // clear intergal when reach target
+        //     intergal = real_t(0);0
+        // }else{
+        //     intergal += error;
+        // }
 
-        real_t ki_contribute = CLAMP(intergal * ki, -ki_clamp, ki_clamp);
+        // real_t ki_contribute = CLAMP(intergal * ki, -ki_clamp, ki_clamp);
 
-        real_t kd_contribute;
-        if(abs(measuresd_speed) > kd_enable_speed_threshold){ // enable kd only highspeed
-            kd_contribute =  CLAMP(- measuresd_speed * kd, -kd_clamp, kd_clamp);
-        }else{
-            kd_contribute = real_t(0);
-        }
+        // real_t kd_contribute;
+        // if(abs(measuresd_speed) > kd_enable_speed_threshold){ // enable kd only highspeed
+        //     kd_contribute =  CLAMP(- measuresd_speed * kd, -kd_clamp, kd_clamp);
+        // }else{
+        //     kd_contribute = real_t(0);
+        // }
 
-        real_t speed_error = target_speed - measuresd_speed;
-        real_t ks_contribute;
-        if(abs(speed_error) > ks_enable_speed_threshold){
-            ks_contribute = CLAMP(speed_error * ks, -ks_clamp, ks_clamp);
-        }else{
-            ks_contribute = real_t(0);
-        }
+        // real_t speed_error = target_speed - measuresd_speed;
+        // real_t ks_contribute;
+        // if(abs(speed_error) > ks_enable_speed_threshold){
+        //     ks_contribute = CLAMP(speed_error * ks, -ks_clamp, ks_clamp);
+        // }else{
+        //     ks_contribute = real_t(0);
+        // }
 
-        last_error = error;
+        // last_error = error;
 
-        real_t current_delta = CLAMP(kp_contribute + ki_contribute, -current_slew_rate, current_slew_rate);
-        current_output = CLAMP(current_output + current_delta, -current_clamp, current_clamp);
-        // return current_slew_rate;
-        if(false){
-            // if(abs(error) < inv_poles / 4)
+        // real_t current_delta = CLAMP(kp_contribute + ki_contribute, -current_slew_rate, current_slew_rate);
+        // current_output = CLAMP(current_output + current_delta, -current_clamp, current_clamp);
+        // // return current_slew_rate;
+
+        if(true){
             real_t abs_error = abs(error);
             current_output = CLAMP(abs_error * err_to_current_ratio, current_minimal, current_clamp);
-            elecrad_offset_output = error * poles * TAU;
+            // if(abs(error) < inv_poles * 2){
+            if(false){
+                // elecrad_offset_output = error * poles * TAU;
+                elecrad_output = odo.position2rad(target_position);
+                // elecrad_output = real_t(0);
+            }else{
+                elecrad_output = est_elecrad + (error > 0 ? 2.5 : - 2.5);
+                // elecrad_output = real_t(0);
+            }
         }
+
+        return std::make_tuple(current_output, elecrad_output);
     }
 };
 
@@ -835,7 +910,7 @@ ShutdownFlag shutdown_flag;
 
 constexpr bool cali_debug_enabled = false;
 constexpr bool command_debug_enabled = true;
-constexpr bool run_debug_enabled = false;
+constexpr bool run_debug_enabled = true;
 
 #define CALI_DEBUG(...)\
 if(cali_debug_enabled){\
@@ -934,11 +1009,13 @@ void parseLine(const String & line){
 
 
 static DoneFlag active_prog(const InitFlag & init_flag = false){
-    currCtrl.update(targets.curr);
 
+    auto [curr_out, elecrad_out] = posctrl.update(10 * sin(t), est_pos, est_speed);
+    
 
-    run_current = currCtrl.getCurrent();
-    run_elecrad = est_elecrad;
+    run_current = currCtrl.update(curr_out);
+    // run_current = real_t(0.2);
+    run_elecrad = elecrad_out;
     // run_elecrad = TAU * frac(t);
 
 
@@ -963,7 +1040,7 @@ static DoneFlag active_prog(const InitFlag & init_flag = false){
     }
 
     if(auto_shutdown_activation){
-        if(targets.curr){
+        if(run_current){
             auto_shutdown_actived = false;
             wakeup();
             auto_shutdown_last_wake_ms = millis();
@@ -1077,7 +1154,7 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
 
     static std::array<std::pair<real_t, real_t>, 50> forward_test_data;
     static std::array<std::pair<real_t, real_t>, 50> backward_test_data;
-    static std::array<std::pair<real_t, real_t>, 50> elecrad_test_data;
+    static std::array<real_t, 50> elecrad_test_data;
 
     static std::array<real_t, 50> forward_err;
     static std::array<real_t, 50> backward_err;
@@ -1228,19 +1305,23 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
             case SubState::PRE_LANDING:
                 odo.update();
 
-                setCurrent(real_t(cali_current), sin(real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * PI));
+                setCurrent(real_t(cali_current), sin(real_t(cnt % (subdivide_micros * 2)) / real_t(subdivide_micros) * PI));
                 if(cnt >= landingpreturns * subdivide_micros){
                     landing_position_accumulate = real_t(0);
+                    openloop_pole = 0;
+                    odo.setElecRadOffset(real_t(0));
                     sw_state(SubState::LANDING);
                 }
                 break;
             case SubState::LANDING:
                 odo.update();
-                accumulate_raw_position(odo.getRawLapPosition());
+                // accumulate_raw_position(odo.getRawLapPosition());
 
-                setCurrent(real_t(cali_current), sin(real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * PI));
+                setCurrent(real_t(cali_current), sin(real_t(cnt % (subdivide_micros * 2)) / real_t(subdivide_micros) * PI));
                 if(cnt % subdivide_micros == 0){
                     landing_position_accumulate += raw_position_accumulate;
+                    elecrad_test_data[openloop_pole] = odo.getElecRad();
+                    openloop_pole++;
                 }
 
                 if(cnt >= landingturns * subdivide_micros){
@@ -1290,15 +1371,21 @@ DoneFlag cali_prog(const InitFlag & init_flag = false){
                 // }
                 odo.update();
                 // odo.fixElecRadOffset(odo.getLapPosition() - landing_position_accumulate / landingturns);
-                odo.fixElecRadOffset();
-                odo.addPostDynamicFixPosition(-landing_position_accumulate / landingturns);
+
+                // odo.addPostDynamicFixPosition(-odo.warp_around_zero(landing_position_accumulate / landingturns));
                 // odo.fixElecRad();
                 // odo.adjustZeroOffset();
                 // setCurrent(real_t(align_current), real_t(PI / 2));
                 // delay(100);
                 // odo.update();
-                // logger.println(landing_position_accumulate / landingturns, odo.getElecRad());
+                // logger.println(l-anding_position_accumulate / landingturns, odo.getElecRad());
 
+                for(auto & item : elecrad_test_data){
+                    logger.println(item);
+                }
+
+                odo.setElecRadOffset(std::accumulate(std::begin(elecrad_test_data), std::end(elecrad_test_data), real_t(0)) / real_t(int(elecrad_test_data.size())));
+                                logger.println(odo.getElecRad());
                 // setCurrent(real_t(align_current), real_t(0));
                 // delay(100);
                 // odo.update();
@@ -1455,7 +1542,9 @@ DoneFlag beep_prog(const InitFlag & init_flag = false){
         {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
         {.freq_hz = freq_C5,.sustain_ms = 100},  // 1
         {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
-        {.freq_hz = freq_G4,.sustain_ms = 100}   // 5
+        {.freq_hz = freq_G4,.sustain_ms = 100},  // 5
+
+        {.freq_hz = freq_F5,.sustain_ms = 100}   // 6
     });
 
     constexpr float tone_current = 0.4;
@@ -1571,6 +1660,7 @@ public:
 RgbLedDigital<true> led_instance(portC[14], portC[15], portC[13]);
 PanelLed panel_led = PanelLed(led_instance);
 
+#include "nameof.hpp"
 
 
 void run(){
@@ -1658,6 +1748,29 @@ void stepper_test(){
 
     odo.init();
 
+    // cxxopts::Options options("test", "A brief description");
+
+    // options.add_options()
+    //     ("b,bar", "Param bar", cxxopts::value<std::string>())
+    //     ("d,debug", "Enable debugging", cxxopts::value<bool>()->default_value("false"))
+    //     ("f,foo", "Param foo", cxxopts::value<int>()->default_value("10"))
+    //     ("h,help", "Print usage")
+    // ;
+
+    // const char * r[] =  {"mm", "xsa"};
+    // auto result = options.parse(2,r);
+
+    // if (result.count("help"))
+    // {
+    //   logger << options.help() << endl;
+    //   exit(0);
+    // }
+    // bool debug = result["debug"].as<bool>();
+    // std::string bar;
+    // if (result.count("bar"))
+    //   bar = result["bar"].as<std::string>();
+    // int foo = result["foo"].as<int>();
+
     // adc1.init(
     //     {},{
     //         AdcChannelConfig{.channel = AdcChannels::CH3, .sample_cycles = AdcSampleCycles::T71_5},
@@ -1680,6 +1793,8 @@ void stepper_test(){
         
     }
 
+
+    // logger << ex3.dump();
 
     if(false){
         // odo.reset();
@@ -1828,7 +1943,7 @@ void stepper_test(){
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << run_elecrad_addition << endl;
         // logger.println(est_pos, est_speed, run_current, run_elecrad_addition);
-        RUN_DEBUG(est_pos, est_speed, run_current, run_elecrad_addition);
+        RUN_DEBUG(est_pos, est_speed, run_current, run_elecrad);
         static String temp_str = "";
 
         // bool led_status = (millis() / 200) % 2;

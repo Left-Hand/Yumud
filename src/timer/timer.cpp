@@ -69,6 +69,7 @@ void BasicTimer::init(const uint16_t & period, const uint16_t & cycle, const Tim
     TIM_TimeBaseStructure.TIM_Period = period - 1;
     TIM_TimeBaseStructure.TIM_Prescaler = cycle - 1;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
     TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
     TIM_Get_BusFreq(instance);
