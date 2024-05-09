@@ -3,30 +3,20 @@
 
 #include "device_defs.h"
 
-// #define SSD1306_DC_Port SPI2_Port
-// #define SSD1306_DC_Pin SPI2_MISO_Pin
-
-#define SSD1306_ON_DATA 
-// SSD1306_DC_Port -> BSHR = SSD1306_DC_Pin;
-
-#define SSD1306_ON_CMD 
-// SSD1306_DC_Port -> BCR = SSD1306_DC_Pin;
-
 class SSD1306{
-private:
+protected:
     BusDrv & bus_drv;
 
     uint16_t width = 128;
     uint16_t height = 64;
     uint16_t x_offset = 0;
 
-    const uint8_t cmd_token = 0x00;
-    const uint8_t data_token = 0x40;
+    static constexpr uint8_t cmd_token = 0x00;
+    static constexpr uint8_t data_token = 0x40;
 
     __fast_inline void writeCommand(const uint8_t cmd){
         switch(bus_drv.getBusType()){
         case BusType::SpiBus:
-            SSD1306_ON_CMD;
             bus_drv.write(cmd);
             break;
         case BusType::I2cBus:
@@ -54,7 +44,6 @@ private:
     void writePool(uint8_t * data_ptr, const size_t & len){
         switch(bus_drv.getBusType()){
         case BusType::SpiBus:
-            SSD1306_ON_DATA;
             bus_drv.write(data_ptr, len);
             break;
         case BusType::I2cBus:
@@ -69,7 +58,6 @@ private:
     void writePool(const uint8_t & data, const size_t & len){
         switch(bus_drv.getBusType()){
         case BusType::SpiBus:
-            SSD1306_ON_DATA;
             bus_drv.write(data, len);
             break;
         case BusType::I2cBus:

@@ -1,6 +1,6 @@
-#ifndef __FWWB_CHASSIS_STATION_HPP__
+#ifndef __FWWB_PEDESTRIAN_STATION_HPP__
 
-#define __FWWB_CHASSIS_STATION_HPP__
+#define __FWWB_PEDESTRIAN_STATION_HPP__
 
 
 #include "target_station.hpp"
@@ -36,7 +36,7 @@ public:
 };
 
 
-class ChassisStation : public TargetStation{
+class PedestrianStation : public TargetStation{
 protected:
     virtual void updateMotorTarget() = 0;
     VL53L0X & vl;
@@ -75,10 +75,10 @@ protected:
         // if(!msg.isRemote()) return;
         // logger.println("cmd", (uint8_t)cmd);
         switch(cmd){
-        case Command::CHASSIS_SET_MOVE:
+        case Command::PEDESTRIAN_SET_MOVE:
             moveNotify(msg);
             break;
-        case Command::CHASSIS_SET_OMEGA:
+        case Command::PEDESTRIAN_SET_OMEGA:
             omegaNotify(msg);
             break;
         default:
@@ -92,7 +92,7 @@ protected:
     }
 public:
 
-    ChassisStation(TargetStation & _instance, VL53L0X & _vl, QMC5883L & _qmc,
+    PedestrianStation(TargetStation & _instance, VL53L0X & _vl, QMC5883L & _qmc,
                     GpioConcept & _ir_left, GpioConcept & _ir_right,
                     GpioConcept & _coil_left, GpioConcept & _coil_right):
                     TargetStation(_instance), vl(_vl), qmc(_qmc),
@@ -107,7 +107,7 @@ public:
     virtual void setOmega(const real_t & omega) = 0;
 };
 
-class DiffChassisStation : public ChassisStation{
+class DiffPedestrianStation : public PedestrianStation{
 public:
     real_t omega_comm;
     real_t omega_diff;
@@ -128,11 +128,11 @@ protected:
     }
 
     void parseCommand(const Command & cmd, const CanMsg & msg) override{
-        ChassisStation::parseCommand(cmd, msg);
+        PedestrianStation::parseCommand(cmd, msg);
     }
 
     void runMachine() override{
-        ChassisStation::runMachine();
+        PedestrianStation::runMachine();
 
         switch(mode){
         case 1:
@@ -159,14 +159,14 @@ protected:
     }
 
 public:
-    DiffChassisStation(TargetStation & _instance, VL53L0X & _vl, QMC5883L & _qmc, 
+    DiffPedestrianStation(TargetStation & _instance, VL53L0X & _vl, QMC5883L & _qmc, 
             GpioConcept & _ir_left, GpioConcept & _ir_right, GpioConcept & _coil_left, GpioConcept & _coil_right, 
             GM25 & _motor_left, GM25 & _motor_right):
-            ChassisStation(_instance, _vl, _qmc, _ir_left, _ir_right, _coil_left, _coil_right), 
+            PedestrianStation(_instance, _vl, _qmc, _ir_left, _ir_right, _coil_left, _coil_right), 
             motor_left(_motor_left), motor_right(_motor_right){;}
 
     void init() override{
-        ChassisStation::init();
+        PedestrianStation::init();
         motor_left.init();
         motor_right.init();
     }

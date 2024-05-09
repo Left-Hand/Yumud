@@ -2,7 +2,7 @@
 
 #include "src/device/CommonIO/Led/WS2812/ws2812.hpp"
 
-#include "fwwb_compents/stations/chassis_station.hpp"
+#include "fwwb_compents/stations/pedestrian_station.hpp"
 #include "src/system.hpp"
 
 
@@ -82,16 +82,15 @@ void IWDG_Feed_Init(u16 prer, u16 rlr)
 	IWDG_Enable();
 }
 
-void chassis_app(){
-    uart2.init(115200, Uart::Mode::TxOnly);
+void pedestrian_app(){
+    uart2.init(115200 * 4, Uart::Mode::TxOnly);
     logger.setEps(4);
     logger.setSpace(",");
-    logger.println("chassis power on");
 
     auto & i2c_scl = portD[1];
     auto & i2c_sda = portD[0];
     auto i2csw = I2cSw(i2c_scl, i2c_sda);
-    i2csw.init(0);
+    i2csw.init(400000);
 
     delay(20);
 
@@ -165,10 +164,14 @@ void chassis_app(){
 
     auto motorL = GM25(pwmL, portA[1], capL, true);
     auto motorR = GM25(pwmR, portB[8], capR, false);
-
+ 
     auto can_station = CanStation(can1, logger);
+
+
     auto target_station = TargetStation(can_station, panelUnitA, panelUnitB);
-    auto station = DiffChassisStation(target_station,
+
+
+    auto station = DiffPedestrianStation(target_station,
         vl, qmc, ir_left, ir_right, coil_left,coil_right,motorL, motorR);
 
     // timer4.init(3000);
@@ -178,6 +181,7 @@ void chassis_app(){
     // });
 
     station.init();
+
     logger.println("init done");
     // IWDG_Feed_Init( IWDG_Prescaler_32, 4000 );
     // station.setMode(1);
@@ -185,6 +189,7 @@ void chassis_app(){
 
     while(true){
         station.run();
+        station.setOmega(real_t(6 * sin(t)));
         // IWDG_ReloadCounter();
         // if(millis() > 60){
         //     delay(1);

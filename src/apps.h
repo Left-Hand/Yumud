@@ -7,6 +7,6 @@ void stepper_app();
 void stepper_app_new();
 void modem_app();
 
-void chassis_app();
+void pedestrian_app();
 void test_app();
 #endif

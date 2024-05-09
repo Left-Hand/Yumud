@@ -6,7 +6,6 @@ using Callback = std::function<void(void)>;
 #define EXECUTE(x)
 static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
 static RingBuf_t<std::shared_ptr<CanMsg>, 8> pending_rx_msgs;
-static CAN_InitTypeDef config;
 static Callback cb_txok;
 static Callback cb_txfail;
 static Callback cb_rx;
@@ -123,7 +122,6 @@ void CAN1_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t mask2
 void Can1::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter & filter){
     settleTxPin(remap);
     settleRxPin(remap);
-    // CAN1_Init_Filter(filter.id, filter.mask, 0, 0x0f);
 
     switch(remap){
     case 0:
@@ -144,7 +142,7 @@ void Can1::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilte
         swj = CAN_SJW_2tq;
         bs1 = CAN_BS1_6tq;
         bs2 = CAN_BS2_5tq;
-        prescale = 12 * 8;
+        prescale = 96;
         break;
     case BaudRate::Mbps1:
         swj = CAN_SJW_2tq;
@@ -155,7 +153,7 @@ void Can1::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilte
     };
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
-
+    CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
     config.CAN_Mode = CAN_Mode_Normal;
     config.CAN_SJW = swj;
@@ -180,7 +178,7 @@ size_t Can1::pending(){
 }
 
 void Can1::enableHwReTransmit(const bool en){
-    config.CAN_NART = en ? DISABLE : ENABLE;
+    // config.CAN_NART = en ? DISABLE : ENABLE;
     if(en)  CAN1->CTLR &= ~CAN_CTLR_NART;
     else    CAN1->CTLR |=  CAN_CTLR_NART;
 }

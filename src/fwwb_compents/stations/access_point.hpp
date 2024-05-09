@@ -63,7 +63,7 @@ protected:
     }
 
     String temp_str = "";
-    uint8_t chassis_id = 0;
+    uint8_t pedestrian_id = 0;
     uint8_t attack_id = 0;
     uint8_t defense_id = 0;
 
@@ -81,8 +81,8 @@ protected:
             attack_id = msg[0];
             logger.println("I A", msg[0]);
             break;
-        case Command::CHASSIS_GET_ID:
-            chassis_id = msg[0];
+        case Command::PEDESTRIAN_GET_ID:
+            pedestrian_id = msg[0];
             logger.println("I C", msg[0]);
             break;
         case Command::DEFENSE_GET_ID:
@@ -114,7 +114,7 @@ protected:
                         targ_node_id = attack_id;
                         break;
                     case 'C':
-                        targ_node_id = chassis_id;
+                        targ_node_id = pedestrian_id;
                         break;
                     case 'D':
                         targ_node_id = defense_id;
@@ -136,7 +136,7 @@ protected:
                         sendCommand(0, Command::ATTACK_GET_ID);
                         break;
                     case 'C':
-                        sendCommand(0, Command::CHASSIS_GET_ID);
+                        sendCommand(0, Command::PEDESTRIAN_GET_ID);
                         break;
                     case 'D':
                         sendCommand(0, Command::DEFENSE_GET_ID);
@@ -153,8 +153,8 @@ protected:
                             attack_id = targ_id;
                             break;
                         case 'C':
-                            sendCommand(0, Command::CHASSIS_SET_ID, PTR8_AND_SIZE(buf));
-                            chassis_id = targ_id;
+                            sendCommand(0, Command::PEDESTRIAN_SET_ID, PTR8_AND_SIZE(buf));
+                            pedestrian_id = targ_id;
                             break;
                         case 'D':
                             sendCommand(0, Command::DEFENSE_SET_ID, PTR8_AND_SIZE(buf));
@@ -197,7 +197,7 @@ protected:
             if(argv.size() != 0) goto syntax_error;
 
             {
-                logger.println('L', attack_id, chassis_id, defense_id);
+                logger.println('L', attack_id, pedestrian_id, defense_id);
             }
             break;
 
@@ -232,7 +232,7 @@ protected:
                 Vector2 _vel = Vector2(real_t(argv.at(0)), real_t(argv.at(1)));
                 uint8_t buf[8] = {0};
                 memcpy(&buf, &_vel, sizeof(buf));
-                sendCommand(chassis_id, Command::CHASSIS_SET_MOVE, buf, sizeof(buf));
+                sendCommand(pedestrian_id, Command::PEDESTRIAN_SET_MOVE, buf, sizeof(buf));
             }
             break;
 
@@ -243,7 +243,7 @@ protected:
                 uint8_t buf[4] = {0};
                 memcpy(&buf, &_omega, sizeof(buf));
                 // logger.println(buf[2], buf[1], buf[0]);
-                sendCommand(chassis_id, Command::CHASSIS_SET_OMEGA, buf, sizeof(buf));
+                sendCommand(pedestrian_id, Command::PEDESTRIAN_SET_OMEGA, buf, sizeof(buf));
             }
             break;
         case 'R'://rst
