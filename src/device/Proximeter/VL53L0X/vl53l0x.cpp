@@ -62,13 +62,12 @@ void VL53L0X::flush(){
 	requestData(VL53L0X_REG_RESULT_RANGE_STATUS + 6, (uint8_t *)&result.ambientCount, 6);
 }
 
-
-void VL53L0X::setHighPrecision(const bool _highPrec){
+void VL53L0X::enableHighPrecision(const bool &_highPrec){
     highPrec = _highPrec;
 	writeByteData(VL53L0X_REG_SYSTEM_RANGE_CONFIG, highPrec);
 }
 
-void VL53L0X::setContinuous(bool _continuous){
+void VL53L0X::enableContMode(const bool & _continuous){
     continuous = _continuous;
 }
 

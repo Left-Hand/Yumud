@@ -146,8 +146,7 @@ protected:
         case 2:
             {
                 qmc.update();
-                real_t mag_x, mag_y, _;
-                qmc.getMagnet(mag_x, mag_y, _);
+                auto [mag_x, mag_y, _] = qmc.getMagnet();
                 real_t angle = real_t(cordic.atan2(mag_y, mag_x));
                 real_t force_w = dir_pid.update(real_t(1.43), angle);
                 setMove(Vector2(real_t(0), force_w));

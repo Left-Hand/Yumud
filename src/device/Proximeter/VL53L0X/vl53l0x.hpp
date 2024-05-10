@@ -9,6 +9,7 @@ class VL53L0X{
 protected:
     I2cDrv & bus_drv;
 public:
+    static constexpr uint8_t default_id = 0x52;
     VL53L0X(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     ~VL53L0X(){;}
 
@@ -19,8 +20,8 @@ public:
     uint16_t getAmbientCount();
     uint16_t getSignalCount();
 
-	void setHighPrecision(const bool _highPrec);
-    void setContinuous(const bool _continuous);
+	void enableHighPrecision(const bool & _highPrec = true);
+    void enableContMode(const bool & _continuous = true);
     bool update();
 
 private:

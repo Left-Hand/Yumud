@@ -4,6 +4,7 @@
 
 #include "device/device_defs.h"
 #include "device/IMU/IMU.hpp"
+#include <tuple>
 
 class QMC5883L:public Magnetometer{
 public:
@@ -216,12 +217,20 @@ public:
         }
         return done;
     }
+
     void getMagnet(real_t & x, real_t & y, real_t & z) override{
         x = From16BitToGauss(magXReg.data);
         y = From16BitToGauss(magYReg.data);
         z = From16BitToGauss(magZReg.data);
     }
 
+    auto getMagnet(){
+        return std::make_tuple(
+            From16BitToGauss(magXReg.data),
+            From16BitToGauss(magYReg.data),
+            From16BitToGauss(magZReg.data)
+        );
+    }
     bool isChipValid(){
         readReg(RegAddress::ChipID, chipIDReg.data);
         return (chipIDReg.data == 0xFF);

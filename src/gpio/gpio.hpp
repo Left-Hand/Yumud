@@ -6,10 +6,6 @@
 #include "port_concept.hpp"
 #include "gpio_enums.hpp"
 
-#ifndef MCU_V
-#define MCU_V (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)
-#endif
-
 class GpioConcept{
 public:
     const int8_t pin_index = 0;
@@ -27,6 +23,12 @@ public:
     void OutOD(){setMode(PinMode::OutOD);}
     void OutAfPP(){setMode(PinMode::OutAfPP);}
     void OutAfOD(){setMode(PinMode::OutAfOD);}
+
+    void OutPP(const bool & initial_state){setMode(PinMode::OutPP);write(initial_state);}
+    void OutOD(const bool & initial_state){setMode(PinMode::OutOD);write(initial_state);}
+    void OutAfPP(const bool & initial_state){setMode(PinMode::OutAfPP);write(initial_state);}
+    void OutAfOD(const bool & initial_state){setMode(PinMode::OutAfOD);write(initial_state);}
+
     void InAnalog(){setMode(PinMode::InAnalog);}
     void InFloating(){setMode(PinMode::InFloating);}
     void InPullUP(){setMode(PinMode::InPullUP);}
@@ -48,7 +50,9 @@ protected:
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
         instance(_instance),
-        pin(((_instance == GPIOC) && MCU_V) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
+        pin(((_instance == GPIOC) && 
+        (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
+        ) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
         pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
         pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
     }
@@ -59,7 +63,6 @@ protected:
 public:
 
     Gpio(const Gpio & other) = delete;
-    Gpio(Gpio && other) = delete;
 
     ~Gpio(){};
 
@@ -102,10 +105,5 @@ public:
     __fast_inline GpioVirtual & operator = (GpioConcept & other) {write(other.read()); return *this;}
     void setMode(const PinMode mode) override{instance.setModeByIndex(pin_index, mode);}
 };
-
-
-#ifdef MCU_V
-#undef MCU_V
-#endif
 
 #endif

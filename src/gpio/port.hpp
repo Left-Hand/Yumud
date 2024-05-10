@@ -110,4 +110,7 @@ extern Port portD;
 extern Port portE;
 #endif
 
+
+#define GpioNull portD[Pin::None]
+
 #endif

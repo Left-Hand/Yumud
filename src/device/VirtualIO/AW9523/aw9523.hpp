@@ -14,6 +14,7 @@ public:
         Max, High, Medium, Low
     };
 
+    static constexpr uint8_t default_id = 0b10110000;
 protected:
     I2cDrv & bus_drv;
     uint16_t buf;

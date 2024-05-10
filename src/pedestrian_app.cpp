@@ -1,7 +1,7 @@
 #include "apps.h"
 
 #include "src/device/CommonIO/Led/WS2812/ws2812.hpp"
-
+#include "src/device/Display/MonoChrome/SSD1306/ssd1306.hpp"
 #include "fwwb_compents/stations/pedestrian_station.hpp"
 #include "src/system.hpp"
 
@@ -61,18 +61,6 @@ int my_atan5(int x, int y){
 }
 
 
-template <typename T>
-concept Addable = requires(T a, T b) {
-    { a + b } -> std::convertible_to<T>;
-};
-
-// 使用概念来定义一个模板函数
-template <typename T>
-requires Addable<T>
-T sum(T a, T b) {
-    return a + b;
-}
-
 void IWDG_Feed_Init(u16 prer, u16 rlr)
 {
 	IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
@@ -87,109 +75,93 @@ void pedestrian_app(){
     logger.setEps(4);
     logger.setSpace(",");
 
-    auto & i2c_scl = portD[1];
-    auto & i2c_sda = portD[0];
-    auto i2csw = I2cSw(i2c_scl, i2c_sda);
+    I2cSw               i2csw(portD[1], portD[0]);
     i2csw.init(400000);
-
-    delay(20);
-
-    auto aw_drv = I2cDrv(i2csw, 0b10110000);
-    auto aw = AW9523(aw_drv);
-    aw.init();
-
-
-    auto awled_r = AW9523RgbLed(aw, Pin::_11, Pin::_1, Pin::_0);
-    auto awled_l = AW9523RgbLed(aw, Pin::_8, Pin::_10, Pin::_9);
-    auto awpwm = AW9523Pwm(aw, Pin::_11);
-    awpwm.init();
-    auto ir_left = GpioVirtual(aw, Pin::_4);
-    auto ir_right = GpioVirtual(aw, Pin::_5);
-    auto beep = GpioVirtual(aw, Pin::_6);
-    auto coil_left = GpioVirtual(aw, Pin::_2);
-    auto coil_right = GpioVirtual(aw, Pin::_15);
-    ir_left.InFloating();
-    ir_right.InFloating();
-    beep.OutPP(); beep.set();
-    coil_left.OutPP(); coil_left.set();
-    coil_right.OutPP(); coil_right.set();
-
-    auto vl_drv = I2cDrv(i2csw, 0x52);
-    auto vl = VL53L0X(vl_drv);
-
-    vl.init();
-    vl.setContinuous(true);
-    vl.setHighPrecision(false);
-    vl.startConv();
-
-    auto qmc_drv = I2cDrv(i2csw, 0x1a);
-    auto qmc = QMC5883L(qmc_drv);
-
-    qmc.init();
-
-    auto & trigGpioA = portA[0];
-    auto trigExtiCHA = ExtiChannel(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
-    auto capA = CaptureChannelExti(trigExtiCHA, trigGpioA);
-    auto demodemA = SimpleDeModem(capA, mo_freq);
-    auto panelTargetA = PanelTarget(demodemA, 2, 0);
-
-    auto panelLedA = PanelLed(awled_l);
-
-
-    auto & trigGpioB = portA[4];
-    auto trigExtiCHB = ExtiChannel(trigGpioB, NvicPriority(1, 1), ExtiChannel::Trigger::RisingFalling);
-    auto capB = CaptureChannelExti(trigExtiCHB, trigGpioB);
-    auto demodemB = SimpleDeModem(capB, mo_freq);
-    auto panelTargetB = PanelTarget(demodemB, 2, 1);
-
-    auto panelLedB = PanelLed(awled_r);
-
-    auto panelUnitA = PanelUnit(panelTargetA, panelLedA);
-    auto panelUnitB = PanelUnit(panelTargetB, panelLedB);
-
-    auto & trigGpioL = portA[5];
-    auto & trigGpioR = portB[1];
-
-    auto trigExtiCHL = ExtiChannel(trigGpioL, NvicPriority(1, 3), ExtiChannel::Trigger::Rising);
-    auto trigExtiCHR = ExtiChannel(trigGpioR, NvicPriority(1, 4), ExtiChannel::Trigger::Rising);
-    auto capL = CaptureChannelExti(trigExtiCHL, trigGpioL);
-    auto capR = CaptureChannelExti(trigExtiCHR, trigGpioR);
 
     timer3.init(3000);
     timer3[1].setPolarity(false);
     timer3[2].setPolarity(false);
 
-    auto pwmL = PwmChannel(timer3[1]);
-    auto pwmR = PwmChannel(timer3[2]);
+    auto & trigGpioL    (portA[5]);
+    auto & trigGpioR    (portB[1]);
 
-    auto motorL = GM25(pwmL, portA[1], capL, true);
-    auto motorR = GM25(pwmR, portB[8], capR, false);
- 
-    auto can_station = CanStation(can1, logger);
+    ExtiChannel         trigExtiCHL(trigGpioL, NvicPriority(1, 3), ExtiChannel::Trigger::Rising);
+    ExtiChannel         trigExtiCHR(trigGpioR, NvicPriority(1, 4), ExtiChannel::Trigger::Rising);
+    CaptureChannelExti  capL(trigExtiCHL, trigGpioL);
+    CaptureChannelExti  capR(trigExtiCHR, trigGpioR);
+
+    PwmChannel          pwmL(timer3[1]);
+    PwmChannel          pwmR(timer3[2]);
+
+    GM25                motorL(pwmL, portA[1], capL, true);
+    GM25                motorR(pwmR, portB[8], capR, false);
+
+    auto &              trigGpioA(portA[0]);
+    ExtiChannel         trigExtiCHA(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
+    CaptureChannelExti  capA(trigExtiCHA, trigGpioA);
+    SimpleDeModem       demodemA(capA, mo_freq);
+    PanelTarget         panelTargetA(demodemA, 2, 0);
 
 
-    auto target_station = TargetStation(can_station, panelUnitA, panelUnitB);
+    auto & trigGpioB    (portA[4]);
+    ExtiChannel         trigExtiCHB(trigGpioB, NvicPriority(1, 1), ExtiChannel::Trigger::RisingFalling);
+    CaptureChannelExti  capB(trigExtiCHB, trigGpioB);
+    SimpleDeModem       demodemB(capB, mo_freq);
+    PanelTarget         panelTargetB(demodemB, 2, 1);
 
 
-    auto station = DiffPedestrianStation(target_station,
-        vl, qmc, ir_left, ir_right, coil_left,coil_right,motorL, motorR);
+    delay(200);
 
-    // timer4.init(3000);
-    // timer4.enableIt(Timer::IT::Update, NvicPriority(1, 7));
-    // timer4.bindCb(Timer::IT::Update, [&beep](){
-    //     beep= !beep;
-    // });
+    I2cDrv aw_drv(i2csw, AW9523::default_id);
+    AW9523 aw(aw_drv);
+    aw.init();
 
+    // OledInterfaceI2c oled_interface(i2csw, SSD1306::default_id);
+    // SSD1306 oled(oled_interface);
+    // oled.init();
+
+    AW9523RgbLed        awled_l(aw, Pin::_8, Pin::_10, Pin::_9);
+    PanelLed panelLedA(awled_l);
+    AW9523RgbLed        awled_r(aw, Pin::_11, Pin::_1, Pin::_0);
+    PanelLed            panelLedB(awled_r);
+    
+    AW9523Pwm           awpwm(aw, Pin::_11);
+    awpwm.init();
+
+    GpioVirtual         ir_left(aw, Pin::_4);
+    GpioVirtual         ir_right(aw, Pin::_5);
+    GpioVirtual         beep(aw, Pin::_6);
+    GpioVirtual         coil_left(aw, Pin::_2);
+    GpioVirtual         coil_right(aw, Pin::_15);
+    ir_left.InFloating();
+    ir_right.InFloating();
+    beep.OutPP(true);
+    coil_left.OutPP(true); 
+    coil_right.OutPP(true);
+
+    I2cDrv              vl_drv(i2csw, VL53L0X::default_id);
+    VL53L0X             vl(vl_drv);
+    vl.init();
+    vl.enableContMode();
+    vl.enableHighPrecision();
+    vl.startConv();
+
+    I2cDrv qmc_drv(i2csw, 0x1a);
+    QMC5883L qmc(qmc_drv);
+    qmc.init();
+
+    PanelUnit           panelUnitA(panelTargetA, panelLedA);
+    PanelUnit           panelUnitB(panelTargetB, panelLedB); 
+    CanStation          can_station(can1, logger);
+    TargetStation       target_station(can_station, panelUnitA, panelUnitB);
+    DiffPedestrianStation   station(target_station, vl, qmc, ir_left, ir_right, coil_left,coil_right,motorL, motorR);
     station.init();
-
-    logger.println("init done");
-    // IWDG_Feed_Init( IWDG_Prescaler_32, 4000 );
-    // station.setMode(1);
-    // NVIC_SystemReset();
 
     while(true){
         station.run();
-        station.setOmega(real_t(6 * sin(t)));
+        station.setOmega(real_t(6 * frac(t)));
+        logger.println(t);
+
         // IWDG_ReloadCounter();
         // if(millis() > 60){
         //     delay(1);

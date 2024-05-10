@@ -131,7 +131,8 @@ protected:
     const Line line;
 
     Gpio * gpio;
-    NvicPriority priority;
+    PinMode gpio_mode = PinMode::InPullDN;
+    const NvicPriority priority;
     const Trigger trigger;
     const Mode mode;
 
@@ -145,10 +146,14 @@ public:
             line(from_gpio_to_line(_gpio)), gpio(&_gpio),priority(_priority), trigger(_trigger),  mode(_mode){
             }
 
+    void setPinMode(const PinMode & mode){
+        gpio_mode = mode;
+        if(gpio) gpio->setMode(mode);
+    }
+
     void init(){
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
         if(gpio){
-            gpio->InPullDN();
+            gpio->setMode(gpio_mode);
             if(gpio->getIndex() > 0) GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(*gpio), gpio->getIndex());
         }
 

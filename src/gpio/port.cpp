@@ -1,7 +1,7 @@
 #include "port.hpp"
 #include "gpio.hpp"
 
-Gpio Port::channel_none = Gpio(GPIOA, Pin::None);
+Gpio Port::channel_none = Gpio(GPIOD, Pin::None);
 
 void Port::setModeByIndex(const int8_t & index, const PinMode & mode){
     Gpio gpio = Gpio(instance, (Pin)(1 << index));
