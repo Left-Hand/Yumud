@@ -71,9 +71,10 @@ void IWDG_Feed_Init(u16 prer, u16 rlr)
 }
 
 void pedestrian_app(){
-    uart2.init(115200 * 4, Uart::Mode::TxOnly);
+    uart2.init(115200, Uart::Mode::TxOnly);
     logger.setEps(4);
     logger.setSpace(",");
+
 
     I2cSw               i2csw(portD[1], portD[0]);
     i2csw.init(400000);
@@ -162,7 +163,7 @@ void pedestrian_app(){
         station.run();
         // delay(200);
         // station.setOmega(real_t(6 * frac(t)));
-        // logger.println(t);
+        // logger.println(int(t * 1000));
 
         // IWDG_ReloadCounter();
         // if(millis() > 60){

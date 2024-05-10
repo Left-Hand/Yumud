@@ -2070,6 +2070,8 @@ logger.println(__VA_ARGS__);};
 
 // };
 
+#include "image/packedImage.hpp"
+
 
 
 int main(){
@@ -2078,6 +2080,22 @@ int main(){
     // stepper_app();
     // stepper_app_new();
     // StepperTest::stepper_test();
+
+    uart2.init(115200, Uart::Mode::TxOnly);
+    Printer & logger = uart2;
+    logger.setRadix(16);
+    logger.setEps(4);
+    logger.setSpace(",");
+
+
+
+    image.putHorizon8(Vector2i{0,0}, 0x5a, true);
+    image.putVertical8(Vector2i{0,0}, 0x39, true);
+
+    for(auto & datum : data){
+        logger.println(datum);
+    }
+
     pedestrian_app();
     // modem_app();
     // test_app();
