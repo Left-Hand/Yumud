@@ -85,7 +85,6 @@ public:
         if(pos.y % 8){
             uint16_t datum = (data[data_index + size.x] << 8) | data[data_index];
             uint16_t shifted_mask = mask << (pos.y % 8);
-            // uint16_t presv = datum & (~shifted_mask);
             if(color){
                 datum |= shifted_mask;
             }else{

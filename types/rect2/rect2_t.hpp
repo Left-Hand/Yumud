@@ -13,22 +13,22 @@ public:
     Vector2_t<T> position = Vector2_t<T>(0,0);
     Vector2_t<T> size = Vector2_t<T>(0,0);
 
-    Rect2_t(){;}
+    __fast_inline constexpr Rect2_t(){;}
 
     template<typename U>
-    Rect2_t(const Rect2_t<U> other):position(other.position), size(other.size){;}
+    __fast_inline constexpr Rect2_t(const Rect2_t<U> other):position(other.position), size(other.size){;}
 
     template<typename U>
-    Rect2_t(const Vector2_t<U> & _position,const Vector2_t<U> & _size):position(_position), size(_size){;}
+    __fast_inline constexpr Rect2_t(const Vector2_t<U> & _position,const Vector2_t<U> & _size):position(_position), size(_size){;}
 
     template<typename U>
-    Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
+    __fast_inline constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
             position(Vector2_t<T>(x_range.start, y_range.start)), size(Vector2_t<T>(x_range.get_length(), y_range.get_length())){;}
     template<typename U>
-    Rect2_t(U x, U y, U width, U height):position(Vector2_t<U>(x,y)),size(Vector2_t<U>(width, height)){;}
+    __fast_inline constexpr Rect2_t(U x, U y, U width, U height):position(Vector2_t<U>(x,y)),size(Vector2_t<U>(width, height)){;}
 
     template<typename U>
-    static Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & size){
+    static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & size){
         return Rect2_t<T>(center - size, size * 2);
     }
 
