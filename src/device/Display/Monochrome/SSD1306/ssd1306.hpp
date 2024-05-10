@@ -107,9 +107,13 @@ protected:
 
 
     void setPos(uint16_t x,uint16_t y){
-        x += x_offset;
-        y >>= 3;
-        interface.writeCommand(0xb0 + y);
+        // x += x_offset;
+        // y >>= 3;
+        // interface.writeCommand(0xb0 + y);
+        // interface.writeCommand(((x&0xf0)>>4)|0x10);
+        // interface.writeCommand((x&0x0f));
+        x+=28;
+        interface.writeCommand(0xb0+y);
         interface.writeCommand(((x&0xf0)>>4)|0x10);
         interface.writeCommand((x&0x0f));
     }
@@ -125,10 +129,36 @@ public:
         interface.writeCommand(0xD3); 
         interface.writeCommand(offset);
     }
+    void enable(const bool & en = true){
+        if(en){
+            interface.writeCommand(0x8D);
+            interface.writeCommand(0x14);
+            interface.writeCommand(0xAF);
+        }else{
+            interface.writeCommand(0x8D);
+            interface.writeCommand(0x10);
+            interface.writeCommand(0xAE);
+        }
+    }
 
+    void turnDisplay(const bool & i){
+        interface.writeCommand(0xC8 - 8*i);//正常显示
+        interface.writeCommand(0xA1 - i);
+    }
     void enableFlipY(const bool & flip = true){interface.writeCommand(0xA0 | flip);}
     void enableFlipX(const bool & flip = true){interface.writeCommand(0xC0 | (flip << 3));}
-    void enableInversion(const bool & inv = true){interface.writeCommand(0x7A - inv);}  
+    void enableInversion(const bool & inv = true){interface.writeCommand(0xA7 - inv);}  
+    void clear(){
+  uint8_t i,n;       
+  for(i=0xb0;i<0xb5;i++)  
+  {  
+    interface.writeCommand(i);
+    interface.writeCommand(0x0c);
+    interface.writeCommand(0x11);    
+    for(n=0;n<72;n++) interface.writeData(0); 
+  }
+}
+
 };
 
 

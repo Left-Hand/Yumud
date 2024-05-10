@@ -116,9 +116,9 @@ void pedestrian_app(){
     AW9523 aw(aw_drv);
     aw.init();
 
-    // OledInterfaceI2c oled_interface(i2csw, SSD1306::default_id);
-    // SSD1306 oled(oled_interface);
-    // oled.init();
+    OledInterfaceI2c oled_interface(i2csw, SSD1306::default_id);
+    SSD1306 oled(oled_interface);
+    oled.init();
 
     AW9523RgbLed        awled_l(aw, Pin::_8, Pin::_10, Pin::_9);
     PanelLed panelLedA(awled_l);
@@ -158,9 +158,11 @@ void pedestrian_app(){
     station.init();
 
     while(true){
+        oled.flush(false);
         station.run();
-        station.setOmega(real_t(6 * frac(t)));
-        logger.println(t);
+        // delay(200);
+        // station.setOmega(real_t(6 * frac(t)));
+        // logger.println(t);
 
         // IWDG_ReloadCounter();
         // if(millis() > 60){
