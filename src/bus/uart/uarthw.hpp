@@ -13,17 +13,14 @@ protected:
 
     void enableRcc(const bool & en = true);
 
-    void _write(const char * data_ptr, const size_t & len);
+    void _write(const char * data_ptr, const size_t & len) override;
 
-    void _write(const char & data);
+    void _write(const char & data) override;
 
     void setupDma(char * reg_ptr, char * buf_ptr, size_t buf_size, DMA_Channel_TypeDef * dma_instance, const bool & buf_as_receiver);
 
     void setupNvic(const bool & en = true);
 
-
-    CommMethod txMethod = CommMethod::None;
-    CommMethod rxMethod = CommMethod::None;
 
     void triggerTxIt(){
         if(txMethod == CommMethod::Interrupt){
@@ -47,11 +44,11 @@ public:
         const uint32_t & baudRate, 
         const Mode & _mode = Mode::TxRx, 
         const CommMethod & _rxMethod = CommMethod::Interrupt,
-        const CommMethod & _txMethod = CommMethod::Blocking);
+        const CommMethod & _txMethod = CommMethod::Blocking) override;
 
-    void setTxMethod(const CommMethod & _txMethod);
+    void setTxMethod(const CommMethod & _txMethod) override;
 
-    void setRxMethod(const CommMethod & _rxMethod);
+    void setRxMethod(const CommMethod & _rxMethod) override;
 };
 
 #endif /* UARTHW_HPP */

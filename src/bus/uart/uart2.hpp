@@ -16,7 +16,7 @@ public:
     }
     void enableRxDma(const bool & en = true) override {
         if(en){
-            setupDma((char *)&USART1->DATAR, &rxBuf[0], rxBuf.getSize(), DMA1_Channel6, true);
+            // usartdm
         }
         USART_DMACmd(USART2, USART_DMAReq_Rx , en);
     }
@@ -27,7 +27,10 @@ public:
 extern Uart2 uart2;
 
 extern "C" {
-__interrupt void USART2_IRQHandler();
+__interrupt void USART2_IRQHandler(void);
+__interrupt void DMA1_Channel6_IRQHandler(void);
+__interrupt void DMA1_Channel7_IRQHandler(void);
+
 }
 
 #endif

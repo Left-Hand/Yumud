@@ -12,6 +12,11 @@ public:
     enum Mode:uint8_t{
         RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
     };
+
+
+    CommMethod txMethod = CommMethod::None;
+    CommMethod rxMethod = CommMethod::None;
+
 protected:
     Mode mode = Mode::TxRx;
 
@@ -23,8 +28,17 @@ public:
     RingBuf_t<char, 128> rxBuf;
     RingBuf_t<char, 128> txBuf;
 
+    virtual void init(
+        const uint32_t & baudRate, 
+        const Mode & _mode = Mode::TxRx, 
+        const CommMethod & _rxMethod = CommMethod::Interrupt,
+        const CommMethod & _txMethod = CommMethod::Blocking) = 0;
     size_t available(){return rxBuf.available();}
 
-    void flush(){}
+    virtual void flush(){}
+
+    virtual void setTxMethod(const CommMethod & _txMethod) = 0;
+
+    virtual void setRxMethod(const CommMethod & _rxMethod) = 0;
 };
 #endif
