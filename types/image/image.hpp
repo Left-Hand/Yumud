@@ -40,19 +40,23 @@ class ImageWithData;
 template<typename ColorType>
 class ImageBasics{
 public:
-    Rect2i area = Rect2i();
-    ImageBasics(const Vector2i & size):area(Vector2i(), size){;}
+    Vector2i size;
 
-    Rect2i getDisplayArea() const {
-        return area;
-    }
+    ImageBasics(const Vector2i & _size):size(_size){;}
+
+    // Rect2i getDisplayArea() const {
+    //     return area;
+    // }
 
     
-    Rect2i getArea() const{return area;}
-    Vector2i getSize() const{return area.size;}
+    // Rect2i getArea() const{return area;}
+    Vector2i getSize() const{return size;}
 
+    // bool hasPoint(const Vector2i & pos){
+    //     return area.has_point(pos);
+    // }
     bool hasPoint(const Vector2i & pos){
-        return area.has_point(pos);
+        return size.has_point(pos);
     }
 };
 
@@ -76,13 +80,14 @@ public:
 
 template<typename ColorType>
 class ImageWritable:virtual public ImageBasics<ColorType>{
-protected:
+// protected:
+public:
     virtual void setPosition_Unsafe(const Vector2i & pos) = 0;
     virtual void setArea_Unsafe(const Rect2i & rect) = 0;
     virtual void putPixel_Unsafe(const Vector2i & pos, const ColorType & color) = 0;
     void putPixel(const Vector2i & pos, const ColorType & color){
         if(this->hasPoint(pos)){
-            getPixel_Unsafe(pos, color);
+            putPixel_Unsafe(pos, color);
         }
     }
 
@@ -119,8 +124,8 @@ protected:
 
     void setPosition_Unsafe(const Vector2i & pos) override {select_area.position = pos;}
     void setArea_Unsafe(const Rect2i & rect) override {select_area = rect;}
-    void putPixel_Unsafe(const Vector2i & pos, const ColorType & color) override{data[this->getArea().size.x * pos.y + pos.x] = color;}
-    void getPixel_Unsafe(const Vector2i & pos, ColorType & color) override{color = data[this->getArea().size.x * pos.y + pos.x];}
+    void putPixel_Unsafe(const Vector2i & pos, const ColorType & color) override{data[this->size.x * pos.y + pos.x] = color;}
+    void getPixel_Unsafe(const Vector2i & pos, ColorType & color) override{color = data[this->size.x * pos.y + pos.x];}
     void putTexture_Unsafe(const Rect2i & rect, const ColorType * color_ptr) override{
         setArea_Unsafe(rect);
         uint32_t i = 0;

@@ -75,7 +75,7 @@ private:
 protected:
 
     __fast_inline uint32_t getPointIndex(const uint16_t & x, const uint16_t & y){
-        return (x + y * area.size.x);
+        return (x + y * size.x);
     }
     void setPosition_Unsafe(const Vector2i & pos) override;
     void setArea_Unsafe(const Rect2i & rect) override;
@@ -94,9 +94,9 @@ public:
     void setDisplayOffset(const Vector2i & _offset){
         offset = _offset;
     }
-    void setDisplayArea(const Rect2i & _area){
-        area = _area;
-    }
+    // void setDisplayArea(const Rect2i & _area){
+    //     area = _area;
+    // }
     void putTexture_Unsafe(const Rect2i & rect, const Grayscale * color_ptr){
         setArea_Unsafe(rect);
         for(size_t i = 0; i < (size_t)rect.get_area(); i++){
