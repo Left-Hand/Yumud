@@ -12,6 +12,11 @@ protected:
     Image<ColorType> * srcImage = nullptr;
     Font * font = nullptr;
     ColorType color;
+
+    void drawTextureRect_Unsafe(const Rect2i & rect,const ColorType * color_ptr){
+        srcImage -> putTexture_Unsafe(rect, color_ptr);
+    }
+
 public:
     Painter(Image<ColorType> * _srcImage, Font * _font):srcImage(_srcImage),font(_font) {;}
 
@@ -34,6 +39,17 @@ public:
 
         srcImage -> putRect_Unsafe(Rect2i(x_range, Rangei(pos.y, pos.y+1)), color);
     }
+
+    void drawTextureRect(const Rect2i & rect,const ColorType * color_ptr){
+        if(!srcImage->getDisplayArea().contains(rect)) return;
+        drawTextureRect_Unsafe(rect, color_ptr);
+    }
+
+    void drawImage(Image<ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+        if(!srcImage->getDisplayArea().contains(image.getDisplayArea()) || !image.getData()) return;
+        drawTextureRect_Unsafe(Rect2i(pos, image.getSize()), image.getData());
+    }
+
 
     void drawHriLine(const Rangei & x_range, const int & y){
         if(!x_range ||!srcImage -> area.get_y_range().has_value(y)) return;
@@ -63,7 +79,7 @@ public:
         srcImage -> putRect_Unsafe(srcImage->area, color);
     }
     void drawPixel(const Vector2i & pos){
-        srcImage -> putPixel(pos, color);
+        srcImage -> _putPixel(pos, color);
     }
 
     void drawLine(const Vector2i & start, const Vector2i & end){
@@ -138,14 +154,14 @@ public:
         int err=dx - 2 * radius;
 
         while (x>=y) {
-            srcImage -> putPixel(Vector2i(x0-x, y0+y), color);
-            srcImage -> putPixel(Vector2i(x0+x, y0+y), color);
-            srcImage -> putPixel(Vector2i(x0-y, y0+x), color);
-            srcImage -> putPixel(Vector2i(x0+y, y0+x), color);
-            srcImage -> putPixel(Vector2i(x0-x, y0-y), color);
-            srcImage -> putPixel(Vector2i(x0+x, y0-y), color);
-            srcImage -> putPixel(Vector2i(x0-y, y0-x), color);
-            srcImage -> putPixel(Vector2i(x0+y, y0-x), color);
+            srcImage -> _putPixel(Vector2i(x0-x, y0+y), color);
+            srcImage -> _putPixel(Vector2i(x0+x, y0+y), color);
+            srcImage -> _putPixel(Vector2i(x0-y, y0+x), color);
+            srcImage -> _putPixel(Vector2i(x0+y, y0+x), color);
+            srcImage -> _putPixel(Vector2i(x0-x, y0-y), color);
+            srcImage -> _putPixel(Vector2i(x0+x, y0-y), color);
+            srcImage -> _putPixel(Vector2i(x0-y, y0-x), color);
+            srcImage -> _putPixel(Vector2i(x0+y, y0-x), color);
 
             if (err<=0) {
                 y++;

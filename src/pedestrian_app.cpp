@@ -121,7 +121,7 @@ void pedestrian_app(){
     oled.init();
 
     AW9523RgbLed        awled_l(aw, Pin::_8, Pin::_10, Pin::_9);
-    PanelLed panelLedA(awled_l);
+    PanelLed            panelLedA(awled_l);
     AW9523RgbLed        awled_r(aw, Pin::_11, Pin::_1, Pin::_0);
     PanelLed            panelLedB(awled_r);
     
