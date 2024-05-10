@@ -90,12 +90,37 @@ public:
             putPixel_Unsafe(pos, color);
         }
     }
-
     virtual void putTexture_Unsafe(const Rect2i & rect, const ColorType * color_ptr) = 0;
 
     virtual void putRect_Unsafe(const Rect2i & rect, const ColorType & color) = 0;
 public:
     ImageWritable(const Vector2i & size):ImageBasics<ColorType>(size){;}
+    virtual void putVertical8(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
+        Rect2i area(pos, Vector2i(1, 8));
+        if(Rect2i(this->size, Vector2i()).contains(area)){
+            for(int i = 0; i < 8; i++){
+                if(mask & (1 << i)) putPixel_Unsafe(pos + Vector2i(0, i), color);
+            }
+        }else{
+            for(int i = 0; i < 8; i++){
+                if(mask & (1 << i))putPixel(pos + Vector2i(0, i), color);
+            }
+        }
+    }
+
+    virtual void putHorizon8(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
+        Rect2i area(pos, Vector2i(8, 1));
+        if(Rect2i(this->size, Vector2i()).contains(area)){
+            for(int i = 0; i < 8; i++){
+                if(mask & (0x80 >> i))putPixel_Unsafe(pos + Vector2i(i, 0), color);
+            }
+        }else{
+            for(int i = 0; i < 8; i++){
+                if(mask & (1 << i))putPixel(pos + Vector2i(i, 0), color);
+            }
+        }
+    }
+
 };
 
 
