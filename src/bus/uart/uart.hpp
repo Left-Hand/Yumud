@@ -5,7 +5,7 @@
 #include "src/gpio/gpio.hpp"
 #include "../printer.hpp"
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
-
+#include "src/gpio/port.hpp"
 
 class Uart:public Printer{
 public:
@@ -20,32 +20,11 @@ protected:
 
 
 public:
-    RingBuf<128> ringBuf;
+    RingBuf_t<char, 128> rxBuf;
+    RingBuf_t<char, 128> txBuf;
 
-    size_t available(){return ringBuf.available();}
-};
+    size_t available(){return rxBuf.available();}
 
-class UartHw:public Uart{
-protected:
-    USART_TypeDef * instance;
-
-    Gpio & getTxPin();
-    Gpio & getRxPin();
-
-    void enableRcc(const bool en = true);
-
-    void _write(const char * data_ptr, const size_t & len);
-
-    void _write(const char & data);
-
-public:
-    UartHw(USART_TypeDef * _instance):instance(_instance){;}
-
-    void init(const uint32_t & baudRate, const Mode _mode = Mode::TxRx);
-
-    void setBaudRate(const uint32_t & baudRate){init(baudRate);}
-
-    void enableRxIt(const bool en = true);
-
+    void flush(){}
 };
 #endif

@@ -1,10 +1,6 @@
-#include "uart.hpp"
-#include "src/gpio/port.hpp"
-void Uart::_read(char & data){data = ringBuf.getData();}
-void Uart::_read(char * data_ptr, const size_t len){ringBuf.getDatas((uint8_t *)data_ptr, len);}
+#include "uarthw.hpp"
 
-
-void UartHw::enableRcc(const bool en){
+void UartHw::enableRcc(const bool & en){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
@@ -110,8 +106,7 @@ Gpio & UartHw::getTxPin(){
     return (*gpio_instance)[(Pin)gpio_pin];
 }
 
-void UartHw::enableRxIt(const bool en){
-
+void UartHw::setupNvic(const bool & en){
     uint8_t irqch;
     uint8_t pp;
     uint8_t sp;
@@ -155,10 +150,71 @@ void UartHw::enableRxIt(const bool en){
     NVIC_InitStructure.NVIC_IRQChannelSubPriority = sp;
     NVIC_InitStructure.NVIC_IRQChannelCmd = en;
     NVIC_Init(&NVIC_InitStructure);
+}
+void UartHw::enableRxIt(const bool & en){
+    USART_ClearITPendingBit(instance, USART_IT_RXNE);
     USART_ITConfig(instance, USART_IT_RXNE, en);
 }
 
-void UartHw::init(const uint32_t & baudRate, const Mode _mode){
+void UartHw::enableTxIt(const bool &en){
+    USART_ClearITPendingBit(instance, USART_IT_TXE);
+}
+
+void UartHw::setTxMethod(const CommMethod &_txMethod){
+    if(txMethod != _txMethod){
+        txMethod = _txMethod;
+        switch(txMethod){
+            case CommMethod::Blocking:
+                break;
+            case CommMethod::Interrupt:
+                enableTxIt(true);
+                break;
+            case CommMethod::DmaNormal:
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void UartHw::setRxMethod(const CommMethod &_rxMethod){
+    if(rxMethod != _rxMethod){
+        rxMethod = _rxMethod;
+        switch(rxMethod){
+            case CommMethod::Blocking:
+                break;
+            case CommMethod::Interrupt:
+                enableRxIt(true);
+                break;
+            case CommMethod::DmaNormal:
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+void UartHw::setupDma(char * reg_ptr, char * buf_ptr, 
+        size_t buf_size, DMA_Channel_TypeDef * dma_instance, const bool & buf_as_receiver){
+    DMA_InitTypeDef DMA_InitStructure = {0};
+
+    DMA_DeInit(dma_instance);
+    DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)reg_ptr;
+    DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)buf_ptr;
+    DMA_InitStructure.DMA_DIR = buf_as_receiver ? DMA_DIR_PeripheralSRC : DMA_DIR_PeripheralDST;
+    DMA_InitStructure.DMA_BufferSize = (uint32_t)buf_size;
+    DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+    DMA_InitStructure.DMA_Priority = DMA_Priority_Medium;
+    DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
+    DMA_Init(dma_instance, &DMA_InitStructure);
+    DMA_Cmd(dma_instance, ENABLE);
+}
+
+void UartHw::init(const uint32_t & baudRate, const Mode & _mode,const CommMethod & _rxMethod,const CommMethod & _txMethod){
     mode = _mode;
 
     if(((uint8_t)mode & (uint8_t)Mode::TxOnly)){
@@ -184,17 +240,52 @@ void UartHw::init(const uint32_t & baudRate, const Mode _mode){
     USART_Init(instance, &USART_InitStructure);
     USART_Cmd(instance, ENABLE);
 
-    enableRxIt();
+    setupNvic(true);
+    setRxMethod(_rxMethod);
+    setTxMethod(_txMethod);
 }
 
+
 void UartHw::_write(const char * data_ptr, const size_t & len){
-    instance->DATAR;
-    for(size_t i=0;i<len;i++) _write(data_ptr[i]);
-    while((instance->STATR & USART_FLAG_TC) == RESET);
+    switch(txMethod){
+        case CommMethod::Blocking:
+            instance->DATAR;
+            for(size_t i=0;i<len;i++) _write(data_ptr[i]);
+            while((instance->STATR & USART_FLAG_TC) == RESET);
+            break;
+        case CommMethod::Interrupt:
+            for(size_t i=0;i<len;i++)txBuf.addData(data_ptr[i]);
+            triggerTxIt();
+            break;
+        case CommMethod::DmaNormal:
+            break;
+        case CommMethod::DmaCircular:
+            break;
+        case CommMethod::DmaDual:
+            break;
+        default:
+            break;
+    }
 }
 
 void UartHw::_write(const char & data){
-    instance->DATAR;
-    instance->DATAR = data;
-    while((instance->STATR & USART_FLAG_TXE) == RESET);
+    switch(txMethod){
+        case CommMethod::Blocking:
+            instance->DATAR;
+            instance->DATAR = data;
+            while((instance->STATR & USART_FLAG_TXE) == RESET);
+            break;
+        case CommMethod::Interrupt:
+            txBuf.addData(data);
+            triggerTxIt();
+            break;
+        case CommMethod::DmaNormal:
+            break;
+        case CommMethod::DmaCircular:
+            break;
+        case CommMethod::DmaDual:
+            break;
+        default:
+            break;
+    }
 }

@@ -71,7 +71,8 @@ void IWDG_Feed_Init(u16 prer, u16 rlr)
 }
 
 void pedestrian_app(){
-    uart2.init(115200 * 4, Uart::Mode::TxOnly);
+    uart2.init(115200 * 8, Uart::Mode::TxOnly, CommMethod::Interrupt, CommMethod::Interrupt);
+
     logger.setEps(4);
     logger.setSpace(",");
 
