@@ -13,28 +13,28 @@ class Painter;
 template <typename ColorType>
 class Image;
 
-template <typename ColorType>
+template <typename ColorType, typename DataType>
 class ImageWithData;
 
 
-template<typename ColorType>
-struct PixelProxy{
-public:
-    ImageWithData<ColorType> & src;
-    Vector2i pos;
+// template<typename ColorType>
+// struct PixelProxy{
+// public:
+//     ImageWithData<ColorType> & src;
+//     Vector2i pos;
 
-    PixelProxy(ImageWithData<ColorType> & _src, Vector2i _pos) : src(_src), pos(_pos) {}
+//     PixelProxy(ImageWithData<ColorType> & _src, Vector2i _pos) : src(_src), pos(_pos) {}
 
-    auto & operator = (const ColorType & color){
-        src.putPixel(pos, color);
-        return *this;
-    }
+//     auto & operator = (const ColorType & color){
+//         src.putPixel(pos, color);
+//         return *this;
+//     }
 
-    operator ColorType () const{
-        return src.getPixel(pos);
-    }
+//     operator ColorType () const{
+//         return src.getPixel(pos);
+//     }
 
-};
+// };
 
 
 template<typename ColorType>
@@ -71,7 +71,6 @@ protected:
     virtual void putRect_Unsafe(const Rect2i & rect, const ColorType & color) = 0;
 
 public:
-    // ImageReadable() = default;
     ImageReadable(const Vector2i & size):ImageBasics<ColorType>(size){;}
 };
 
@@ -91,9 +90,10 @@ protected:
 
     virtual void putRect_Unsafe(const Rect2i & rect, const ColorType & color) = 0;
 public:
-    // ImageWritable() = default;
     ImageWritable(const Vector2i & size):ImageBasics<ColorType>(size){;}
 };
+
+
 
 template<typename ColorType>
 class Image:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
@@ -103,31 +103,26 @@ protected:
     using UVShaderCallback = ColorType(*)(const Vector2 &);
 
     friend class Painter<ColorType>;
-    friend class PixelProxy<ColorType>;
+    // friend class PixelProxy<ColorType>;
 public:
     Image(const Vector2i & size):ImageReadable<ColorType>(size), ImageWritable<ColorType>(size){;}
-    void shade(PixelShaderCallback callback, const Rect2i & _shade_area);
-    void shade(UVShaderCallback callback, const Rect2i & _shade_area);
+    // void shade(PixelShaderCallback callback, const Rect2i & _shade_area);
+    // void shade(UVShaderCallback callback, const Rect2i & _shade_area);
 };
 
-template<typename ColorType>
+template<typename ColorType, typename DataType>
 class ImageWithData:public Image<ColorType>{
-private:
+protected:
     Rect2i select_area;
     bool removeable = false;
-protected:
-    ColorType * data = nullptr;
+
 
     void setPosition_Unsafe(const Vector2i & pos) override {select_area.position = pos;}
     void setArea_Unsafe(const Rect2i & rect) override {select_area = rect;}
     void putPixel_Unsafe(const Vector2i & pos, const ColorType & color) override{data[this->getArea().size.x * pos.y + pos.x] = color;}
     void getPixel_Unsafe(const Vector2i & pos, ColorType & color) override{color = data[this->getArea().size.x * pos.y + pos.x];}
-    // void putTexture_Unsafe(const Rect2i & rect, const Grayscale * color_ptr)   override{
-
-    // }
     void putTexture_Unsafe(const Rect2i & rect, const ColorType * color_ptr) override{
         setArea_Unsafe(rect);
-        // Vector2i point = rect.position;
         uint32_t i = 0;
         for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
             for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++)
@@ -144,8 +139,8 @@ protected:
 
 
 public:
-
-    ImageWithData(ColorType * _data, const Vector2i & size): Image<ColorType>(size), data(_data){;}
+    DataType * data = nullptr;
+    ImageWithData(DataType * _data, const Vector2i & size): ImageBasics<ColorType>(size), Image<ColorType>(size), data(_data){;}
     ImageWithData(const Vector2i & size): Image<ColorType>(size), data(new ColorType[size.x * size.y]){
         removeable = true;
     }
@@ -155,22 +150,22 @@ public:
             delete[] data;
         }
     }
-    ColorType * getData() override{return data;}
-    ColorType & operator [](const size_t & index){return data[index];}
+    DataType * getData() {return data;}
+    DataType & operator [](const size_t & index){return data[index];}
 
-    __fast_inline ColorType & operator()(const Vector2i & pos){
+    __fast_inline DataType & operator()(const Vector2i & pos){
         if(!this->area.has_point(pos)) return data[0];
         return data[pos.x + pos.y * this -> area.size.x];
     }
 
-    __fast_inline ColorType & operator()(const int & x, const int & y){
+    __fast_inline DataType & operator()(const int & x, const int & y){
         if(!this->area.has_point(Vector2i(x,y))) return data[0];
         return data[x + y * this -> area.size.x];
     }
 
-    __fast_inline ColorType operator()(const Vector2 & pos);
-    __fast_inline ColorType operator()(const real_t & x, const real_t & y);
-    __fast_inline ColorType pick(const int & x, const int & y) const{return data[x + y * this -> area.size.x];}
+    __fast_inline DataType operator()(const Vector2 & pos);
+    __fast_inline DataType operator()(const real_t & x, const real_t & y);
+    __fast_inline DataType pick(const int & x, const int & y) const{return data[x + y * this -> area.size.x];}
 
     Vector2i uv2pixel(const Vector2 & uv) const{
         return Vector2i(int(LERP((uv.x + 1) / 2, 0, this->area.size.x)), int(LERP((uv.y + 1) / 2, 0, this->area.size.y)));
@@ -206,6 +201,27 @@ public:
         else return 0;
     }
 };
+
+
+template<typename ColorType>
+class ImageView:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
+    using m_Image = ImageView<ColorType>;
+    m_Image & instance;
+public:
+    ImageView(m_Image & _instance, const Rect2i piv):instance(_instance){;}
+};
+
+template<typename ColorType>
+class Camera:public ImageReadable<ColorType>{
+
+};
+
+template<typename ColorType>
+class Displayer:public ImageWritable<ColorType>{
+
+};
+
+
 
 #include "Image.tpp"
 

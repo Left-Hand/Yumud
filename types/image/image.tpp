@@ -1,5 +1,5 @@
-template<typename ColorType>
-ColorType ImageWithData<ColorType>::operator()(const Vector2 & pos){
+template<typename ColorType, typename DataType>
+DataType ImageWithData<ColorType, DataType>::operator()(const Vector2 & pos){
     Vector2i pos_i = Vector2i(int(pos.x), int(pos.y));
     if(!this->area.has_point(pos_i)) return ColorType();
     Vector2 pos_frac = pos - Vector2(pos);
@@ -32,8 +32,8 @@ ColorType ImageWithData<ColorType>::operator()(const Vector2 & pos){
     //         LERP(pos_frac.x, operator()(pos_i + Vector2i(0, 1)), operator()(pos_i + Vector2i(1, 1))));
 }
 
-template<typename ColorType>
-ColorType ImageWithData<ColorType>::operator()(const real_t & x, const real_t & y){
+template<typename ColorType, typename DataType>
+DataType ImageWithData<ColorType, DataType>::operator()(const real_t & x, const real_t & y){
         return this -> operator()(Vector2(x,y));
 }
 
