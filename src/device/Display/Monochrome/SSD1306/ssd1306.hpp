@@ -2,8 +2,10 @@
 #define __SSD1306_HPP__
 
 #include "../../DisplayerInterface.hpp"
+#include "types/image/packedImage.hpp"
 
-class SSD1306{
+// class OldeDisplayer : public D
+class SSD13XX:public VerticalBinaryImage{
 protected:
     DisplayerInterface & interface;
 
@@ -11,9 +13,7 @@ protected:
     uint16_t height = 40;
     uint16_t x_offset = 0;
 
-
-
-    void setPos(uint16_t x,uint16_t y){
+    virtual void setPos(uint16_t x,uint16_t y){
         // x += x_offset;
         // y >>= 3;
         // interface.writeCommand(0xb0 + y);
@@ -24,10 +24,13 @@ protected:
         interface.writeCommand(((x&0xf0)>>4)|0x10);
         interface.writeCommand((x&0x0f));
     }
+
+    virtual void preinitByCmds() = 0;
+
+    SSD13XX(DisplayerInterface & _interface,uint8_t * data, const Vector2i & _size):VerticalBinaryImage(data, _size), interface(_interface){;}
 public:
     static constexpr uint8_t default_id = 0x78;
 
-    SSD1306(DisplayerInterface & _interface):interface(_interface){;}
     void init();
     void flush(const Binary & color);     
 
@@ -56,16 +59,25 @@ public:
     void enableFlipX(const bool & flip = true){interface.writeCommand(0xC0 | (flip << 3));}
     void enableInversion(const bool & inv = true){interface.writeCommand(0xA7 - inv);}  
     void clear(){
-  uint8_t i,n;       
-  for(i=0xb0;i<0xb5;i++)  
-  {  
-    interface.writeCommand(i);
-    interface.writeCommand(0x0c);
-    interface.writeCommand(0x11);    
-    for(n=0;n<72;n++) interface.writeData(0); 
-  }
+        uint8_t i,n;       
+        for(i=0xb0;i<0xb5;i++)  
+        {  
+            interface.writeCommand(i);
+            interface.writeCommand(0x0c);
+            interface.writeCommand(0x11);    
+            for(n=0;n<72;n++) interface.writeData(0); 
+    }
 }
 
+};
+
+class SSD13XX_72X40:public SSD13XX{
+protected:
+    static constexpr Vector2i phy_size = Vector2i(72, 40);
+    uint8_t data[phy_size.x * phy_size.y / 8];
+public:
+    void preinitByCmds() override;
+    SSD13XX_72X40(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface, &data[0], phy_size){;}
 };
 
 
