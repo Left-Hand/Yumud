@@ -2,15 +2,13 @@
 
 #define __ST7789_HPP__
 
-#include "device_defs.h"
+#include "../../DisplayerInterface.hpp"
 #include "types/image/image.hpp"
 
 
 class ST7789:public ImageWritable<RGB565>{
 private:
-    SpiDrv & bus_drv;
-    GpioConcept & dc_pin;
-    GpioConcept & rst_pin;
+    DisplayInterfaceSpi & interface;
 
     Vector2i offset;
 
@@ -18,38 +16,27 @@ private:
 
     bool area_locked = false;
     uint8_t scr_ctrl = 0;
+
     __fast_inline void writeCommand(const uint8_t & cmd){
-        // ST7789_ON_CMD;
-        dc_pin.clr();
-        bus_drv.write(cmd);
+        interface.writeCommand(cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data){
-        // ST7789_ON_DATA;
-        dc_pin.set();
-        bus_drv.write(data);
+        interface.writeData(data);
     }
 
     __fast_inline void writeData16(const uint16_t & data){
-        // ST7789_ON_DATA;
-        dc_pin.set();
-        bus_drv.write(data);
+        interface.writeData(data);
     }
     __fast_inline void writePixel(const RGB565 & data){
-        // ST7789_ON_DATA;
-        dc_pin.set();
-        bus_drv.write((uint16_t)data);
+        interface.writeData(data.data);
     }
     void putPixels(const RGB565 & data, const size_t & len){
-        // ST7789_ON_DATA;
-        dc_pin.set();
-        bus_drv.write((uint16_t)data, len);
+        interface.writePool(data.data, len);
     }
 
     void putPixels(const RGB565 * data_ptr, const size_t & len){
-        // ST7789_ON_DATA;
-        dc_pin.set();
-        bus_drv.write((uint16_t *)data_ptr, len);
+        interface.writePool((const uint16_t *)(data_ptr), len);
     }
 
     void modifyCtrl(const bool & yes,const uint8_t & pos){
@@ -85,12 +72,10 @@ protected:
         writePixel(color);
     }
 
-    // RGB565 takePixel(const Vector2i & pos) const override{return RGB565();}
 public:
-    ST7789(SpiDrv & _bus_drv, const Vector2i & _size, GpioConcept & _dc_pin,  GpioConcept &  _rst_pin):
-            ImageBasics(_size), ImageWritable<RGB565>(_size),bus_drv(_bus_drv), dc_pin(_dc_pin), rst_pin(_rst_pin){;}
+    ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
+            ImageBasics(_size), ImageWritable<RGB565>(_size),interface(_interface){;}
     void init();
-    RGB565 * getData(){return nullptr;}
     void setDisplayOffset(const Vector2i & _offset){
         offset = _offset;
     }

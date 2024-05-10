@@ -2,13 +2,9 @@
 
 
 void ST7789::init(){
-    dc_pin.OutPP();
-    rst_pin.OutPP();
+    interface.init();
 
-    rst_pin.clr();
-    delay(1);
-    rst_pin.set();
-
+    
     writeCommand(0x01);
 
     delayMicroseconds(50);
