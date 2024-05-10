@@ -37,8 +37,20 @@ public:
     
     void init() override{
         dc_gpio.OutPP();
-        res_gpio.OutPP();
-        blk_gpio.OutPP();
+        res_gpio.OutPP(1);
+        blk_gpio.OutPP(1);
+
+        reset();
+    }
+
+    void reset(){
+        res_gpio.clr();
+        delay(1);
+        res_gpio.set();
+    }
+
+    void setBackLight(const uint8_t & brightness){
+
     }
 
     __fast_inline void writeCommand(const uint8_t & cmd) override{
@@ -51,8 +63,6 @@ public:
         dc_gpio = data_level;
         bus_drv.write(data);
     }
-
-    
 
     void writePool(const uint8_t * data_ptr, const size_t & len) override{
         dc_gpio = data_level;

@@ -9,8 +9,6 @@
 class ST7789:public ImageWritable<RGB565>{
 private:
     DisplayInterfaceSpi & interface;
-    GpioConcept & dc_pin;
-    GpioConcept & rst_pin;
 
     Vector2i offset;
 
@@ -75,8 +73,8 @@ protected:
     }
 
 public:
-    ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size, GpioConcept & _dc_pin,  GpioConcept &  _rst_pin):
-            ImageBasics(_size), ImageWritable<RGB565>(_size),interface(_interface), dc_pin(_dc_pin), rst_pin(_rst_pin){;}
+    ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
+            ImageBasics(_size), ImageWritable<RGB565>(_size),interface(_interface){;}
     void init();
     void setDisplayOffset(const Vector2i & _offset){
         offset = _offset;
