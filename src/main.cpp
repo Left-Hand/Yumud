@@ -2075,21 +2075,6 @@ int main(){
 
     Sys::Misc::prework();
 
-    UartSw ut   (portA[2], portA[3]);
-    // uart2.init(115200, Uart::Mode::TxOnly, CommMethod::Interrupt, CommMethod::Interrupt);
-    ut.init(115200);
-
-    UartSw & u = ut;
-
-    while(true){
-        if(!u.txBuf.available())     u.println(t);
-        u.tick();
-        delayMicroseconds(1000000 / 9600  / 2);
-        // portA[2].clr();
-        // delay(1);
-        // portA[2].set();
-        Sys::Clock::reCalculateTime();
-    }
 
 
     // stepper_app();
