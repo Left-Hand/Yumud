@@ -2,9 +2,9 @@
 
 #define __IMAGE_HPP__
 
-#include "../rect2/rect2_t.hpp"
-#include "../color/color_t.hpp"
-#include "../rgb.h"
+#include "types/rect2/rect2_t.hpp"
+#include "types/color/color_t.hpp"
+#include "types/rgb.h"
 #include <functional>
 
 template <typename ColorType>
@@ -48,8 +48,6 @@ public:
     //     return area;
     // }
 
-    
-    // Rect2i getArea() const{return area;}
     Vector2i getSize() const{return size;}
 
     // bool hasPoint(const Vector2i & pos){
@@ -57,6 +55,10 @@ public:
     // }
     bool hasPoint(const Vector2i & pos){
         return size.has_point(pos);
+    }
+
+    virtual Rect2i getWindow() const{
+        return Rect2i({}, size);
     }
 };
 
@@ -69,10 +71,6 @@ protected:
             getPixel_Unsafe(pos, color);
         }
     }
-
-    virtual void putTexture_Unsafe(const Rect2i & rect, const ColorType * color_ptr) = 0;
-
-    virtual void putRect_Unsafe(const Rect2i & rect, const ColorType & color) = 0;
 
 public:
     ImageReadable(const Vector2i & size):ImageBasics<ColorType>(size){;}
@@ -90,9 +88,20 @@ public:
             putPixel_Unsafe(pos, color);
         }
     }
-    virtual void putTexture_Unsafe(const Rect2i & rect, const ColorType * color_ptr) = 0;
+    virtual void putTexture_Unsafe(const Rect2i & rect, const ColorType * color_ptr){
+        setArea_Unsafe(rect);
+        uint32_t i = 0;
+        for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
+            for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++)
+                putPixel_Unsafe(Vector2i(x,y), color_ptr[i]);
+    }
 
-    virtual void putRect_Unsafe(const Rect2i & rect, const ColorType & color) = 0;
+    virtual void putRect_Unsafe(const Rect2i & rect, const ColorType & color){
+        setArea_Unsafe(rect);
+        for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
+            for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
+                putPixel_Unsafe(Vector2i(x,y), color);
+    }
 public:
     ImageWritable(const Vector2i & size):ImageBasics<ColorType>(size){;}
     virtual void putVertical8(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
@@ -146,26 +155,11 @@ protected:
     Rect2i select_area;
     bool removeable = false;
 
-
+public:
     void setPosition_Unsafe(const Vector2i & pos) override {select_area.position = pos;}
     void setArea_Unsafe(const Rect2i & rect) override {select_area = rect;}
     void putPixel_Unsafe(const Vector2i & pos, const ColorType & color) override{data[this->size.x * pos.y + pos.x] = color;}
     void getPixel_Unsafe(const Vector2i & pos, ColorType & color) override{color = data[this->size.x * pos.y + pos.x];}
-    void putTexture_Unsafe(const Rect2i & rect, const ColorType * color_ptr) override{
-        setArea_Unsafe(rect);
-        uint32_t i = 0;
-        for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
-            for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++)
-                putPixel_Unsafe(Vector2i(x,y), color_ptr[i]);
-    }
-
-    void putRect_Unsafe(const Rect2i & rect, const ColorType & color) override{
-        setArea_Unsafe(rect);
-        for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
-            for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
-                putPixel_Unsafe(Vector2i(x,y), color);
-    }
-
 
 
 public:
@@ -235,10 +229,17 @@ public:
 
 template<typename ColorType>
 class ImageView:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
-    using m_Image = ImageView<ColorType>;
+protected:
+    using m_Image = Image<ColorType>;
     m_Image & instance;
+    Rect2i window;
 public:
-    ImageView(m_Image & _instance, const Rect2i piv):instance(_instance){;}
+    ImageView(m_Image & _instance):instance(_instance){}
+    ImageView(m_Image & _instance, const Rect2i & _window):instance(_instance), window(_window){;}
+
+    ImageView(ImageView & other, const Rect2i & _window):instance(other.instance), 
+        window(Rect2i(other.window.position + _window.position, other.window.size).intersection(Vector2i(), other.instance.getSize())){;}
+    Rect2i getWindow() const {return window;}
 };
 
 template<typename ColorType>
@@ -248,7 +249,8 @@ class Camera:public ImageReadable<ColorType>{
 
 template<typename ColorType>
 class Displayer:public ImageWritable<ColorType>{
-
+public:
+    Displayer(const Vector2i & size):ImageBasics<ColorType>(size), ImageWritable<ColorType>(size){;}
 };
 
 

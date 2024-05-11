@@ -5,34 +5,33 @@
 #include "types/image/packedImage.hpp"
 
 // class OldeDisplayer : public D
-class SSD13XX:public VerticalBinaryImage{
+class SSD13XX:public Displayer<Binary>{
 protected:
     DisplayerInterface & interface;
-
     uint16_t width = 72;
     uint16_t height = 40;
     uint16_t x_offset = 0;
 
-    virtual void setPos(uint16_t x,uint16_t y){
-        // x += x_offset;
-        // y >>= 3;
-        // interface.writeCommand(0xb0 + y);
-        // interface.writeCommand(((x&0xf0)>>4)|0x10);
-        // interface.writeCommand((x&0x0f));
-        x+=28;
-        interface.writeCommand(0xb0+y);
-        interface.writeCommand(((x&0xf0)>>4)|0x10);
-        interface.writeCommand((x&0x0f));
+
+
+
+    void setArea_Unsafe(const Rect2i & area){
+        setPosition_Unsafe(area.position);
     }
 
     virtual void preinitByCmds() = 0;
 
-    SSD13XX(DisplayerInterface & _interface,uint8_t * data, const Vector2i & _size):VerticalBinaryImage(data, _size), interface(_interface){;}
+
+    SSD13XX(DisplayerInterface & _interface):Displayer(size), interface(_interface){;}
+
+    virtual void setFlushPos(const Vector2i & pos) = 0;
 public:
     static constexpr uint8_t default_id = 0x78;
 
     void init();
-    void flush(const Binary & color);     
+    void flush(const Binary & color);
+
+    void update();
 
     void setOffsetX(const uint8_t & offset){x_offset = offset;}
     void setOffsetY(const uint8_t & offset){
@@ -55,29 +54,47 @@ public:
         interface.writeCommand(0xC8 - 8*i);//正常显示
         interface.writeCommand(0xA1 - i);
     }
+
     void enableFlipY(const bool & flip = true){interface.writeCommand(0xA0 | flip);}
     void enableFlipX(const bool & flip = true){interface.writeCommand(0xC0 | (flip << 3));}
     void enableInversion(const bool & inv = true){interface.writeCommand(0xA7 - inv);}  
-    void clear(){
-        uint8_t i,n;       
-        for(i=0xb0;i<0xb5;i++)  
-        {  
-            interface.writeCommand(i);
-            interface.writeCommand(0x0c);
-            interface.writeCommand(0x11);    
-            for(n=0;n<72;n++) interface.writeData(0); 
-    }
-}
+
+    virtual VerticalBinaryImage & fetchFrame() = 0;
 
 };
 
 class SSD13XX_72X40:public SSD13XX{
 protected:
     static constexpr Vector2i phy_size = Vector2i(72, 40);
-    uint8_t data[phy_size.x * phy_size.y / 8];
-public:
+    PackedBinary frame_buf[phy_size.x*phy_size.y / 8];
+    VerticalBinaryImage frame_instance = VerticalBinaryImage(frame_buf, phy_size);
+
+
+
+    void putPixel_Unsafe(const Vector2i & pos, const Binary & color){
+        auto & frame = fetchFrame();
+        frame.putPixel_Unsafe(pos, color);
+    }
+
+    void setPosition_Unsafe(const Vector2i & pos) override{
+        auto & frame = fetchFrame();
+        frame.setPosition_Unsafe(pos);
+    }
+
+    void setFlushPos(const Vector2i & pos) override{
+        auto [x, y] = pos;
+        x+=28;
+        interface.writeCommand(0xb0 + (y / 8));
+        interface.writeCommand(((x & 0xf0 )>>4) |0x10);
+        interface.writeCommand((x & 0x0f));
+    }
     void preinitByCmds() override;
-    SSD13XX_72X40(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface, &data[0], phy_size){;}
+
+    friend class VerticalBinaryImage;
+public:
+
+    VerticalBinaryImage & fetchFrame() override{return frame_instance;};
+    SSD13XX_72X40(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface){;}
 };
 
 

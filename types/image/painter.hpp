@@ -3,83 +3,99 @@
 #define __PAINTER_HPP__
 
 #include "image.hpp"
+#include "packedImage.hpp"
+
+#include "types/rect2/rect2_t.hpp"
+#include "types/color/color_t.hpp"
+#include "types/rgb.h"
+
 #include "font/font.hpp"
-#include "../string/String.hpp"
+#include "types/string/String.hpp"
 
 template<typename ColorType>
 class Painter{
 protected:
-    Image<ColorType> * srcImage = nullptr;
-    Font * font = nullptr;
+    ImageWritable<ColorType> * src_image = nullptr;
+    Font & font;
     ColorType color;
 
     void drawTextureRect_Unsafe(const Rect2i & rect,const ColorType * color_ptr){
-        srcImage -> putTexture_Unsafe(rect, color_ptr);
+        src_image -> putTexture_Unsafe(rect, color_ptr);
     }
 
 public:
-    Painter(Image<ColorType> * _srcImage, Font * _font):srcImage(_srcImage),font(_font) {;}
+    Painter(Font & _font = font8x6):font(_font){;}
+
+    // Painter(ImageView<ColorType> * _srcImage, Font * _font):src_image(_srcImage),font(_font) {;}
 
     template<typename U>
     void setColor(U _color){
         color = _color;
     }
 
-    void setFont(Font * _font){
-        font = _font;
-    }
+    // void setFont(Font * _font){
+    //     font = _font;
+    // }
 
-    void setSource(Image<ColorType> & _source){
-        srcImage = &_source;
+    // void setSource(Image<ColorType> & _source){
+    //     src_image = &_source;
+    // }
+    
+    void setSource(ImageWritable<ColorType> & _source){
+        src_image = &_source;
     }
-
     void drawHriLine(const Vector2i & pos,const int &l){
-        Rangei x_range = srcImage -> area.get_x_range().intersection(Rangei(pos.x, pos.x + l).abs());
-        if(!x_range || !srcImage -> area.get_y_range().has_value(pos.y)) return;
+        auto area = Rect2i(Vector2i(), src_image->size);
+        Rangei x_range = area.get_x_range().intersection(Rangei(pos.x, pos.x + l).abs());
+        if(!x_range || area.get_y_range().has_value(pos.y)) return;
 
-        srcImage -> putRect_Unsafe(Rect2i(x_range, Rangei(pos.y, pos.y+1)), color);
+        src_image -> putRect_Unsafe(Rect2i(x_range, Rangei(pos.y, pos.y+1)), color);
     }
 
     void drawTextureRect(const Rect2i & rect,const ColorType * color_ptr){
-        if(!srcImage->getDisplayArea().contains(rect)) return;
+        if(!src_image->getDisplayArea().contains(rect)) return;
         drawTextureRect_Unsafe(rect, color_ptr);
     }
 
     void drawImage(Image<ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-        if(!srcImage->getDisplayArea().contains(image.getDisplayArea()) || !image.getData()) return;
+        if(!src_image->getDisplayArea().contains(image.getDisplayArea()) || !image.getData()) return;
         drawTextureRect_Unsafe(Rect2i(pos, image.getSize()), image.getData());
     }
 
 
     void drawHriLine(const Rangei & x_range, const int & y){
-        if(!x_range ||!srcImage -> area.get_y_range().has_value(y)) return;
+        if(!x_range ||!src_image -> getArea().get_y_range().has_value(y)) return;
 
-        srcImage -> putRect_Unsafe(Rect2i(x_range, Rangei(y, y+1)), color);
+        src_image -> putRect_Unsafe(Rect2i(x_range, Rangei(y, y+1)), color);
     }
 
     void drawVerLine(const Vector2i & pos,const int &l){
-        Rangei y_range = srcImage -> area.get_y_range().intersection(Rangei(pos.y, pos.y + l).abs());
-        if(!y_range ||!srcImage -> area.get_x_range().has_value(pos.x)) return;
+        Rangei y_range = src_image->getWindow().get_y_range().intersection(Rangei(pos.y, pos.y + l).abs());
+        if(!y_range ||!src_image->getWindow().get_x_range().has_value(pos.x)) return;
 
-        srcImage -> putRect_Unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), color);
+        src_image -> putRect_Unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), color);
     }
 
     void drawVerLine(const Rangei & y_range, const int & x){
-        if(!y_range ||!srcImage -> area.get_x_range().has_value(x)) return;
-        srcImage -> putRect_Unsafe(Rect2i(Rangei(x,x+1), y_range), color);
+        if(!y_range ||!src_image -> getArea().get_x_range().has_value(x)) return;
+        src_image -> putRect_Unsafe(Rect2i(Rangei(x,x+1), y_range), color);
     }
 
-    void drawFilledRect(const Rect2i & rect){
-        Rect2i rect_area = srcImage -> area.intersection(rect);
+    void drawFilledRect(const Rect2i & rect, const ColorType & color){
+        Rect2i rect_area = src_image->getArea().intersection(rect);
         if(!rect_area) return;
-        srcImage -> putRect_Unsafe(rect_area, color);
+        src_image -> putRect_Unsafe(rect_area, color);
     }
 
     void flush(){
-        srcImage -> putRect_Unsafe(srcImage->area, color);
+        src_image -> putRect_Unsafe(src_image->area, color);
     }
+    void drawPixel(const Vector2i & pos, const ColorType & color){
+        src_image -> putPixel(pos, color);
+    }
+
     void drawPixel(const Vector2i & pos){
-        srcImage -> _putPixel(pos, color);
+        src_image -> putPixel(pos, color);
     }
 
     void drawLine(const Vector2i & start, const Vector2i & end){
@@ -108,7 +124,7 @@ public:
         int16_t y = y0;
 
         while(1){
-            srcImage -> putPixel(Vector2i(x,y), color);
+            src_image -> putPixel(Vector2i(x,y), color);
             if (x==x1 && y==y1)
                 break;
 
@@ -126,7 +142,7 @@ public:
 
     void drawHollowRect(const Rect2i & rect){
         Rect2i regular = rect.abs();
-        if(!srcImage -> area.intersects(regular)) return;
+        if(!src_image -> getArea().intersects(regular)) return;
 
         Rangei x_range = regular.get_x_range();
         Rangei y_range = regular.get_y_range();
@@ -138,12 +154,12 @@ public:
             drawVerLine(shrunk_y_range, x_range.start);
             drawVerLine(shrunk_y_range, x_range.end - 1);
         }else{
-            drawFilledRect(Rect2i(x_range, y_range));
+            drawFilledRect(Rect2i(x_range, y_range), color);
         }
     }
 
     void drawHollowCircle(const Vector2i & pos, const int & radius){
-        if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(srcImage->area))) || radius <= 0) return;
+        if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(src_image->area))) || radius <= 0) return;
 
         int x0 = pos.x;
         int y0 = pos.y;
@@ -154,14 +170,14 @@ public:
         int err=dx - 2 * radius;
 
         while (x>=y) {
-            srcImage -> _putPixel(Vector2i(x0-x, y0+y), color);
-            srcImage -> _putPixel(Vector2i(x0+x, y0+y), color);
-            srcImage -> _putPixel(Vector2i(x0-y, y0+x), color);
-            srcImage -> _putPixel(Vector2i(x0+y, y0+x), color);
-            srcImage -> _putPixel(Vector2i(x0-x, y0-y), color);
-            srcImage -> _putPixel(Vector2i(x0+x, y0-y), color);
-            srcImage -> _putPixel(Vector2i(x0-y, y0-x), color);
-            srcImage -> _putPixel(Vector2i(x0+y, y0-x), color);
+            src_image -> _putPixel(Vector2i(x0-x, y0+y), color);
+            src_image -> _putPixel(Vector2i(x0+x, y0+y), color);
+            src_image -> _putPixel(Vector2i(x0-y, y0+x), color);
+            src_image -> _putPixel(Vector2i(x0+y, y0+x), color);
+            src_image -> _putPixel(Vector2i(x0-x, y0-y), color);
+            src_image -> _putPixel(Vector2i(x0+x, y0-y), color);
+            src_image -> _putPixel(Vector2i(x0-y, y0-x), color);
+            src_image -> _putPixel(Vector2i(x0+y, y0-x), color);
 
             if (err<=0) {
                 y++;
@@ -177,15 +193,15 @@ public:
     }
 
     void drawFilledCircle(const Vector2i & pos, const int & radius){
-        if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(srcImage->area))) || radius <= 0) return;
+        if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(Rect2i(Vector2i(), src_image->size)))) || radius == 0) return;
 
         int x0 = pos.x;
         int y0 = pos.y;
-        int x = radius - 1;
+        int x = ABS(radius) - 1;
         int y = 0;
         int dx = 1;
         int dy = 1;
-        int err=dx - 2 * radius;
+        int err=dx - 2 * ABS(radius);
 
         while (x>=y) {
             drawHriLine(Vector2i(x0 - x, y0 + y), 2*x);
@@ -201,21 +217,24 @@ public:
             if (err>0) {
                 x--;
                 dx += 2;
-                err += dx-radius * 2;
+                err += dx-ABS(radius * 2);
             }
         }
     }
 
-    void drawChar(const Vector2i & pos,char chr){
-        Vector2i size = font->size;
-        Rect2i char_area = Rect2i(pos, size).intersection(srcImage->area);
+    void drawChar(const Vector2i & pos,const char & chr){
+        Rect2i image_area = Rect2i({}, src_image->size);
+        Rect2i char_area = Rect2i(pos, font.size);
+
+        char_area = char_area.intersection(image_area);
+
         if(!char_area) return;
 
         for(uint8_t i = 0; i < char_area.size.x ; i++){
             for(uint8_t j = 0; j < char_area.size.y; j++){
                 Vector2i offs = Vector2i(i,j);
-                if(font->getPixel(chr, offs)){
-                    srcImage->putPixel_Unsafe(char_area.position + offs, color);
+                if(font.getPixel(chr, offs)){
+                    drawPixel(char_area.position + offs, color);
                 }
             }
         }
@@ -224,7 +243,7 @@ public:
     void drawString(const Vector2i & pos, const String & str){
     const char * str_ptr = str.c_str();
 
-    for(int x = pos.x; x < srcImage -> area.size.x; x += (font->size.x + 1)){
+    for(int x = pos.x; x < src_image->size.x; x += (font.size.x + 1)){
         if(*str_ptr){
             drawChar(Vector2i(x, pos.y), *str_ptr);
         }else{
@@ -238,7 +257,7 @@ public:
         int rx = r.x;
         int ry = r.y;
         if (rx == ry) return drawHollowCircle(pos, rx);
-        if (rx<2 || ry<2|| !srcImage->area.intersects(Rect2i::from_center(pos, r))) return;
+        if (rx<2 || ry<2|| !src_image->area.intersects(Rect2i::from_center(pos, r))) return;
 
         int x0 = pos.x;
         int y0 = pos.y;
@@ -279,7 +298,7 @@ public:
         int rx = r.x;
         int ry = r.y;
         if (rx == ry) return drawHollowCircle(pos, rx);
-        if (rx<2 || ry<2|| !srcImage->area.intersects(Rect2i::from_center(pos, r))) return;
+        if (rx<2 || ry<2|| !src_image->area.intersects(Rect2i::from_center(pos, r))) return;
 
         int x0 = pos.x;
         int y0 = pos.y;

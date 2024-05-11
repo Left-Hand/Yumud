@@ -15,7 +15,7 @@ protected:
 };
 
 class HorizonBinaryImage : public PackedBinaryImage{
-protected:
+public:
     void putPixel_Unsafe(const Vector2i & pos, const Binary & color) override{
         uint32_t point_index = (pos.y * size.x + pos.x);
         uint32_t data_index = point_index / 8;
@@ -62,7 +62,7 @@ public:
 };
 
 class VerticalBinaryImage : public PackedBinaryImage{
-protected:
+public:
     void putPixel_Unsafe(const Vector2i & pos, const Binary & color) override{
         uint32_t data_index = pos.x + (pos.y / 8) * size.x; 
         uint8_t mask = (1 << (pos.y % 8));

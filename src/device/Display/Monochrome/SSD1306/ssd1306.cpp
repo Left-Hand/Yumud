@@ -3,35 +3,23 @@
 
 void SSD13XX::init(){    
     preinitByCmds();
-    clear();
+    flush(false);
     enable();
-    for(uint16_t i = 0; i < 360; i++){
-        data[i] = 0x55;
-    }
 }
 
 
 void SSD13XX::flush(const Binary & color){
-    static uint8_t cnt = 0;
-    cnt++;
-    for(uint8_t i=0;i<size.y / 8;i++){
-        setPos(0,i);
+    auto & frame = fetchFrame();
+    frame.putRect_Unsafe(Rect2i(Vector2i(), this->size), color);
+    update();
+}
 
-        // interface.writePool(color ? 0xFF : 0x00, (size_t)size.x);
-        for(uint8_t j = 0; j < size.x; j++){
-            data[i * size.x + j] = i + j + cnt;
-            interface.writeData(data[i * size.x + j]);
-        }
+void SSD13XX::update(){
+    auto & frame = fetchFrame();
+    for(int i = 0; i < size.y;i += 8){
+        setFlushPos(Vector2i(0, i));
+        interface.writePool(&frame[(i / 8) * size.x], size.x);
     }
-    // static uint8_t t = 0;
-    // t++;
-
-    // for(uint8_t i=0;i<5;i++){
-    //     setPos(0,i);
-    //     for(uint8_t m = 0; m < 72;m++){
-    //         interface.writeData(t);
-    //     }
-    // }
 }
 
 void SSD13XX_72X40::preinitByCmds(){
