@@ -78,7 +78,7 @@ void pedestrian_app(){
 
 
     I2cSw               i2csw(portD[1], portD[0]);
-    i2csw.init(400000);
+    i2csw.init(0);
 
     timer3.init(3000);
     timer3[1].setPolarity(false);
@@ -119,19 +119,21 @@ void pedestrian_app(){
     aw.init();
 
     OledInterfaceI2c oled_interface(i2csw, SSD13XX::default_id);
-    SSD13XX_72X40 oled(oled_interface);
+    SSD13XX_128X32
+    oled(oled_interface);
     oled.init();
     oled.enableFlipX(false);
     oled.enableFlipY(false);
 
     Painter<Binary> painter;
-    painter.setSource(oled.fetchFrame());
+    painter.bindImage(oled.fetchFrame());
     // oled.fetchFrame().putpixel({0, 0}, true);
     painter.setColor(true);
     painter.drawString({14, 2}, "Rst");
+    oled.update();
     // painter.drawChar({20, 4}, '&');
     // for(int i = 0; i < 7; i ++){
-        // oled.putsegv8(Vector2i(i, 0), font8x6_enc[6][i], true);
+        // oled.putseg_v8_unsafe(Vector2i(i, 0), font8x6_enc[6][i], true);
     // }
     // painter.drawHriLine(Vector2i{20, 2}, 8);
     // painter.drawHriLine(Rangei{17, 28}, 9);
@@ -178,6 +180,10 @@ void pedestrian_app(){
     // station.init();
 
     while(true){
+        oled.flush(false);
+        painter.drawChar(Vector2i{14 + 16 * sin(t), 0}, 'h');
+        // painter.drawString(Vector2i{0, 0}, String(frac(t)));
+        oled.update();
         // oled.flush(false);
         // station.run();
         // delay(200);

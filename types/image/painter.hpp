@@ -33,7 +33,7 @@ public:
         color = _color;
     }
     
-    void setSource(ImageWritable<ColorType> & _source){
+    void bindImage(ImageWritable<ColorType> & _source){
         src_image = &_source;
     }
 
@@ -215,34 +215,22 @@ public:
 
     void drawChar(const Vector2i & pos,const char & chr){
         Rect2i image_area = Rect2i({}, src_image->size);
-        Rect2i char_area = Rect2i(pos, font.size);
-
-        char_area = char_area.intersection(image_area);
+        Rect2i char_area = Rect2i(pos, font.size).intersection(image_area);
 
         if(!char_area) return;
-
-        // for(uint8_t i = 0; i < char_area.size.x ; i++){
-        //     uint8_t mask;
-        //     for(uint8_t j = 0; j < char_area.size.y; j++){
-        //         Vector2i offs = Vector2i(i,j);
-        //         if(font.get_pixel(chr, offs)){
-        //             // drawPixel(char_area.position + offs, color);
-        //             src_image->putpixel(char_area.position + offs, color);
-        //         }
-        //     }
-        // }
         
-        for(int i = 0; i < char_area.size.x ; i++){
+        for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
             uint8_t mask;
-            for(int j = 0; j < 8; j++){
+            for(int j = 0; j < char_area.size.y; j++){
                 if(j % 8 == 0) mask = 0;
 
-                Vector2i offs = Vector2i(i,j % 8);
+                Vector2i offs = Vector2i(i,j % 8) - pos;
+                if(!Rangei{0, font.size.x}.has_value(offs.x)) continue;
                 if(font.get_pixel(chr, offs)){
                     mask |= (0x01 << j % 8);
                 }
 
-                if(j % 8 == 7) src_image->putsegv8(Vector2i(i, j & (~(8 - 1))) + pos, mask, color);
+                if(j % 8 == 7) src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, color);
             }
         }
     }

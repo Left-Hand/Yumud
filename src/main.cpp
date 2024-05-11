@@ -2081,8 +2081,8 @@ int main(){
     // stepper_app_new();
     // StepperTest::stepper_test();
 
-    // image.putsegh8(Vector2i{0,0}, 0x5a, true);
-    // image.putsegv8(Vector2i{0,0}, 0x39, true);
+    // image.putseg_h8_unsafe(Vector2i{0,0}, 0x5a, true);
+    // image.putseg_v8_unsafe(Vector2i{0,0}, 0x39, true);
 
     // for(auto & datum : data){
     //     logger.println(datum);
