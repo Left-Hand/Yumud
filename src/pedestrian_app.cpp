@@ -133,7 +133,7 @@ void pedestrian_app(){
     // for(int i = 0; i < 7; i ++){
         // oled.putsegv8(Vector2i(i, 0), font8x6_enc[6][i], true);
     // }
-    painter.drawHriLine(Vector2i{20, 2}, 8);
+    // painter.drawHriLine(Vector2i{20, 2}, 8);
     // painter.drawHriLine(Rangei{17, 28}, 9);
     // painter.drawVerLine(Vector2i{14, 5}, 8);
     // painter.draw
@@ -175,11 +175,11 @@ void pedestrian_app(){
     CanStation          can_station(can1, logger);
     TargetStation       target_station(can_station, panelUnitA, panelUnitB);
     DiffPedestrianStation   station(target_station, vl, qmc, ir_left, ir_right, coil_left,coil_right,motorL, motorR);
-    station.init();
+    // station.init();
 
     while(true){
         // oled.flush(false);
-        station.run();
+        // station.run();
         // delay(200);
         // station.setOmega(real_t(6 * frac(t)));
         // logger.println(int(t * 1000));
