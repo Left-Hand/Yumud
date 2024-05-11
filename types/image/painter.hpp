@@ -20,7 +20,7 @@ protected:
     ColorType color;
 
     void drawTextureRect_Unsafe(const Rect2i & rect,const ColorType * color_ptr){
-        src_image -> putTexture_Unsafe(rect, color_ptr);
+        src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
 public:
@@ -49,7 +49,7 @@ public:
         Rangei x_range = area.get_x_range().intersection(Rangei(pos.x, pos.x + l).abs());
         if(!x_range || area.get_y_range().has_value(pos.y)) return;
 
-        src_image -> putRect_Unsafe(Rect2i(x_range, Rangei(pos.y, pos.y+1)), color);
+        src_image -> putrect_unsafe(Rect2i(x_range, Rangei(pos.y, pos.y+1)), color);
     }
 
     void drawTextureRect(const Rect2i & rect,const ColorType * color_ptr){
@@ -66,36 +66,36 @@ public:
     void drawHriLine(const Rangei & x_range, const int & y){
         if(!x_range ||!src_image -> getArea().get_y_range().has_value(y)) return;
 
-        src_image -> putRect_Unsafe(Rect2i(x_range, Rangei(y, y+1)), color);
+        src_image -> putrect_unsafe(Rect2i(x_range, Rangei(y, y+1)), color);
     }
 
     void drawVerLine(const Vector2i & pos,const int &l){
-        Rangei y_range = src_image->getWindow().get_y_range().intersection(Rangei(pos.y, pos.y + l).abs());
-        if(!y_range ||!src_image->getWindow().get_x_range().has_value(pos.x)) return;
+        Rangei y_range = src_image->get_window().get_y_range().intersection(Rangei(pos.y, pos.y + l).abs());
+        if(!y_range ||!src_image->get_window().get_x_range().has_value(pos.x)) return;
 
-        src_image -> putRect_Unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), color);
+        src_image -> putrect_unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), color);
     }
 
     void drawVerLine(const Rangei & y_range, const int & x){
         if(!y_range ||!src_image -> getArea().get_x_range().has_value(x)) return;
-        src_image -> putRect_Unsafe(Rect2i(Rangei(x,x+1), y_range), color);
+        src_image -> putrect_unsafe(Rect2i(Rangei(x,x+1), y_range), color);
     }
 
     void drawFilledRect(const Rect2i & rect, const ColorType & color){
         Rect2i rect_area = src_image->getArea().intersection(rect);
         if(!rect_area) return;
-        src_image -> putRect_Unsafe(rect_area, color);
+        src_image -> putrect_unsafe(rect_area, color);
     }
 
     void flush(){
-        src_image -> putRect_Unsafe(src_image->area, color);
+        src_image -> putrect_unsafe(src_image->area, color);
     }
     void drawPixel(const Vector2i & pos, const ColorType & color){
-        src_image -> putPixel(pos, color);
+        src_image -> putpixel(pos, color);
     }
 
     void drawPixel(const Vector2i & pos){
-        src_image -> putPixel(pos, color);
+        src_image -> putpixel(pos, color);
     }
 
     void drawLine(const Vector2i & start, const Vector2i & end){
@@ -124,7 +124,7 @@ public:
         int16_t y = y0;
 
         while(1){
-            src_image -> putPixel(Vector2i(x,y), color);
+            src_image -> putpixel(Vector2i(x,y), color);
             if (x==x1 && y==y1)
                 break;
 
@@ -233,7 +233,7 @@ public:
         for(uint8_t i = 0; i < char_area.size.x ; i++){
             for(uint8_t j = 0; j < char_area.size.y; j++){
                 Vector2i offs = Vector2i(i,j);
-                if(font.getPixel(chr, offs)){
+                if(font.get_pixel(chr, offs)){
                     drawPixel(char_area.position + offs, color);
                 }
             }

@@ -19,7 +19,7 @@ void ST7789::init(){
 	writeCommand(0x29);
 }
 
-void ST7789::setArea_Unsafe(const Rect2i & rect){
+void ST7789::setarea_unsafe(const Rect2i & rect){
     int x = rect.position.x;
     int y = rect.position.y;
     int w = rect.size.x;
@@ -54,7 +54,7 @@ void ST7789::setArea_Unsafe(const Rect2i & rect){
     area_locked = true;
 }
 
-void ST7789::setPosition_Unsafe(const Vector2i & pos){
+void ST7789::setpos_unsafe(const Vector2i & pos){
     uint32_t this_point_index = getPointIndex(pos.x, pos.y);
     uint32_t last_point_index_temp = last_point_index;
     last_point_index = this_point_index;

@@ -120,6 +120,15 @@ void pedestrian_app(){
     OledInterfaceI2c oled_interface(i2csw, SSD13XX::default_id);
     SSD13XX_72X40 oled(oled_interface);
     oled.init();
+    oled.enableFlipX(false);
+    oled.enableFlipY(false);
+
+    Painter<Binary> painter;
+    painter.setSource(oled.fetchFrame());
+    // oled.fetchFrame().putpixel({0, 0}, true);
+    painter.drawString({14, 2}, "Rstr1aN");
+
+    oled.update();
 
     AW9523RgbLed        awled_l(aw, Pin::_8, Pin::_10, Pin::_9);
     PanelLed            panelLedA(awled_l);
@@ -159,7 +168,7 @@ void pedestrian_app(){
     station.init();
 
     while(true){
-        oled.flush(false);
+        // oled.flush(false);
         station.run();
         // delay(200);
         // station.setOmega(real_t(6 * frac(t)));

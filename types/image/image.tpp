@@ -44,7 +44,7 @@ DataType ImageWithData<ColorType, DataType>::operator()(const real_t & x, const 
 //     size_t buflen = shade_area.size.x;
 //     ColorType * buf = new ColorType[buflen];
 
-//     setArea_Unsafe(shade_area);
+//     setarea_unsafe(shade_area);
 //     for(int y = 0; y < shade_area.size.y; y++){
 //         for(int x = 0; x < shade_area.size.x; x++){
 //             buf[x] = (callback(Vector2i(x, y)));
@@ -61,7 +61,7 @@ DataType ImageWithData<ColorType, DataType>::operator()(const real_t & x, const 
 //     size_t buflen = shade_area.size.x;
 //     ColorType * buf = new ColorType[buflen];
 
-//     setArea_Unsafe(shade_area);
+//     setarea_unsafe(shade_area);
 //     real_t fx, fy;
 //     real_t dx = real_t(1) / shade_area.size.x;
 //     real_t dy = real_t(1) / shade_area.size.y;

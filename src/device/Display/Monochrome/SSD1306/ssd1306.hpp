@@ -15,8 +15,8 @@ protected:
 
 
 
-    void setArea_Unsafe(const Rect2i & area){
-        setPosition_Unsafe(area.position);
+    void setarea_unsafe(const Rect2i & area){
+        setpos_unsafe(area.position);
     }
 
     virtual void preinitByCmds() = 0;
@@ -71,14 +71,14 @@ protected:
 
 
 
-    void putPixel_Unsafe(const Vector2i & pos, const Binary & color){
+    void putpixel_unsafe(const Vector2i & pos, const Binary & color){
         auto & frame = fetchFrame();
-        frame.putPixel_Unsafe(pos, color);
+        frame.putpixel_unsafe(pos, color);
     }
 
-    void setPosition_Unsafe(const Vector2i & pos) override{
+    void setpos_unsafe(const Vector2i & pos) override{
         auto & frame = fetchFrame();
-        frame.setPosition_Unsafe(pos);
+        frame.setpos_unsafe(pos);
     }
 
     void setFlushPos(const Vector2i & pos) override{

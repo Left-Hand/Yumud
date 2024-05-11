@@ -49,13 +49,13 @@ private:
     }
 
 
-    void putTexture_Unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
-        setArea_Unsafe(rect);
+    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
+        setarea_unsafe(rect);
         putPixels(color_ptr, rect.get_area());
     }
 
-    void putRect_Unsafe(const Rect2i & rect, const RGB565 & color) override{
-        setArea_Unsafe(rect);
+    void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override{
+        setarea_unsafe(rect);
         putPixels(color, rect.get_area());
     }
 
@@ -64,11 +64,11 @@ protected:
     __fast_inline uint32_t getPointIndex(const uint16_t & x, const uint16_t & y){
         return (x + y * size.x);
     }
-    void setPosition_Unsafe(const Vector2i & pos) override;
-    void setArea_Unsafe(const Rect2i & rect) override;
+    void setpos_unsafe(const Vector2i & pos) override;
+    void setarea_unsafe(const Rect2i & rect) override;
 
-    __fast_inline void putPixel_Unsafe(const Vector2i & pos, const RGB565 & color){
-        setPosition_Unsafe(pos);
+    __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
+        setpos_unsafe(pos);
         writePixel(color);
     }
 
@@ -82,8 +82,8 @@ public:
     // void setDisplayArea(const Rect2i & _area){
     //     area = _area;
     // }
-    void putTexture_Unsafe(const Rect2i & rect, const Grayscale * color_ptr){
-        setArea_Unsafe(rect);
+    void puttexture_unsafe(const Rect2i & rect, const Grayscale * color_ptr){
+        setarea_unsafe(rect);
         for(size_t i = 0; i < (size_t)rect.get_area(); i++){
             writePixel(RGB565(color_ptr[i]));
         }

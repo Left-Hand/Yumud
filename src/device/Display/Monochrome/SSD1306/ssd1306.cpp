@@ -10,7 +10,7 @@ void SSD13XX::init(){
 
 void SSD13XX::flush(const Binary & color){
     auto & frame = fetchFrame();
-    frame.putRect_Unsafe(Rect2i(Vector2i(), this->size), color);
+    frame.putrect_unsafe(Rect2i(Vector2i(), this->size), color);
     update();
 }
 

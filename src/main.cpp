@@ -2089,8 +2089,8 @@ int main(){
 
 
 
-    // image.putHorizon8(Vector2i{0,0}, 0x5a, true);
-    // image.putVertical8(Vector2i{0,0}, 0x39, true);
+    // image.putsegh8(Vector2i{0,0}, 0x5a, true);
+    // image.putsegv8(Vector2i{0,0}, 0x39, true);
 
     // for(auto & datum : data){
     //     logger.println(datum);
