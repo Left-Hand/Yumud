@@ -16,15 +16,10 @@ public:
 
     __fast_inline constexpr Vector2_t(){;}
 
-<<<<<<< HEAD
-    __fast_inline constexpr Vector2_t(const auto & _x, const auto & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
-
-=======
     // template <typename U>
     __fast_inline constexpr Vector2_t(const auto & _x, const auto & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
 
     // template <typename U>
->>>>>>> oled_support
     __fast_inline constexpr Vector2_t(const Vector2_t<auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
 

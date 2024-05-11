@@ -12,97 +12,86 @@ public:
 
     Range_t() = default;
 
-    template<typename U>
-    __fast_inline constexpr Range_t(const U & _start, const U & _end): start(_start), end(_end) {;}
+    __fast_inline constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
 
-    template<typename U>
-    __fast_inline constexpr Range_t<T> & operator=(const Range_t<U> & other) {
+    __fast_inline constexpr auto & operator=(const Range_t<auto> & other) {
         this->start = other.start;
         this->end = other.end;
         return *this;
     }
 
-    template<typename U>
-    static Range_t<T> from_center(const U & center, const U & length){
+    constexpr static Range_t<T> from_center(const auto & center, const auto & length){
         return Range_t<T>(center - length / T(2), center + length / T(2));
     }
-    bool is_regular() const {
+
+    constexpr bool is_regular() const {
         return start <= end;
     }
 
-    T get_length() const{
+    constexpr T get_length() const{
         return ABS(end - start);
     }
 
-    Range_t<T> abs() const{
+    constexpr Range_t<T> abs() const{
         if(start > end) return Range_t<T>(end, start);
         else return *this;
     }
 
-    template<typename U>
-    Range_t<T> operator + (const U & value) const{
+    constexpr Range_t<T> operator + (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return (regular.start + value, regular.end + value);
     }
 
-    template<typename U>
-    Range_t<T> operator - (const U & value) const{
+    constexpr Range_t<T> operator - (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start - value, regular.end - value);
     }
 
-    template<typename U>
-    Range_t<T> operator * (const U & value) const{
+    constexpr Range_t<T> operator * (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start * value, regular.end * value);
     }
 
-    template<typename U>
-    Range_t<T> operator / (const U & value) const{
+
+    constexpr Range_t<T> operator / (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start / value, regular.end / value);
     }
 
 
-    template<typename U>
-    bool has_value(const U & value){
+    constexpr bool has_value(const auto & value){
         Range_t<T> regular = this -> abs();
         return (regular.start <= value && value < regular.end);
     }
 
-    template<typename U>
-    bool intersects(const Range_t<U> & _other) const {
+    constexpr bool intersects(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
         return(other_regular.end >= regular.start || regular.end >= other_regular.start);
     }
 
-    template<typename U>
-    bool contains(const Range_t<U> & _other) const {
+    constexpr bool contains(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
         return (regular.start <= other_regular.start && regular.end >= other_regular.end);
     }
 
-    template<typename U>
-    bool inside(const Range_t<U> & _other) const {
+    constexpr bool inside(const Range_t<auto> & _other) const {
         return _other.contains(*this);
     }
 
-    template<typename U>
-    Range_t<T> intersection(const Range_t<U> & _other) const {
+    constexpr Range_t<T> intersection(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
         if(!regular.intersects(other_regular)) return Range_t<T>();
         return Range_t<T>(MAX(regular.start, other_regular.start), MIN(regular.end, other_regular.end));
     }
 
-    T get_center()const{
+    constexpr T get_center()const{
         return (start + end) / 2;
     }
 
-    template<typename U>
-    Range_t<T> scale(const U & amount){
+    constexpr Range_t<T> scale(const auto & amount){
         Range_t<T> regular = *this.abs();
         T len = regular.get_length();
         T center = regular.get_center();
@@ -111,50 +100,48 @@ public:
         else return Range_t<T>();
     }
 
-    // template<typename U>
-    Range_t<T> grow(const auto & amount){
+    constexpr Range_t<T> grow(const auto & amount){
         Range_t<T> regular = this -> abs();
         Range_t<T> ret = Range_t<T>(regular.start - amount, regular.end + amount);
         if (ret.is_regular()) return ret;
         else return Range_t<T>();
     }
 
-    template<typename U>
-    Range_t<T> merge(const Range_t<U> & other){
+    constexpr Range_t<T> merge(const Range_t<auto> & other){
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = other -> abs();
         return Range_t<T>(MIN(regular.start, other_regular.start), MAX(regular.end, other_regular.end));
     }
 
     // template<typename U>
-    Range_t<T> shift(const auto & amount){
+    constexpr Range_t<T> shift(const auto & amount){
         Range_t<T> regular = this -> abs();
         Range_t<T> ret = Range_t<T>(regular.start + amount, regular.end + amount);
         return ret;
     }
 
     // template<typename U>
-    Range_t merge(const auto & value){
+    constexpr Range_t merge(const auto & value){
         Range_t<T> regular = this -> abs();
         return Range_t<T>(MIN(regular.start, value), MAX(regular.end, value));
     }
 
     // template<typename U>
-    T invlerp(const auto & value){
+    constexpr T invlerp(const auto & value){
         return (value - start) / (end - start);
     }
 
     // template<typename U>
-    T lerp(const auto & value){
+    constexpr T lerp(const auto & value){
         return start + (value) * (end - start);
     }
 
-    T clamp(const auto & value){
+    constexpr T clamp(const auto & value){
         Range_t<T> regular = this -> abs();
         return MIN(MAX(value, regular.start), regular.end);
     }
 
-    explicit operator bool() const{
+    constexpr explicit operator bool() const{
         return start!= end;
     }
 };
