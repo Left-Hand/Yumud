@@ -226,7 +226,7 @@ public:
 
                 Vector2i offs = Vector2i(i,j % 8) - pos;
                 if(!Rangei{0, font.size.x}.has_value(offs.x)) continue;
-                if(font.get_pixel(chr, offs)){
+                if(font.getpixel(chr, offs)){
                     mask |= (0x01 << j % 8);
                 }
 

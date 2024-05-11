@@ -31,7 +31,7 @@ class ImageWithData;
 //     }
 
 //     operator ColorType () const{
-//         return src.get_pixel(pos);
+//         return src.getpixel(pos);
 //     }
 
 // };
@@ -44,15 +44,22 @@ public:
 
     ImageBasics(const Vector2i & _size):size(_size){;}
 
-    // Rect2i getDisplayArea() const {
-    //     return area;
-    // }
+    Vector2i uv2pixel(const Vector2 & uv) const{
+        return Vector2i(int(LERP((uv.x + 1) / 2, 0, this->size.x)), int(LERP((uv.y + 1) / 2, 0, this->size.y)));
+    }
 
-    Vector2i getSize() const{return size;}
+    Vector2 uv2aero(const Vector2 & uv) const{
+        return Vector2(((uv.x + 1) * (this->size.x / 2)), (uv.y + 1) * (this->size.y / 2));
+    }
 
-    // bool has_point(const Vector2i & pos){
-    //     return area.has_point(pos);
-    // }
+    Vector2 pixel2uv(const Vector2i & pixel)const{
+        return Vector2(INVLERP((real_t)pixel.x, this->size.x / 2, this->size.x), INVLERP((real_t)pixel.y, this->size.y / 2, this->size.y));
+    }
+
+    Vector2 uvstep(){
+        return Vector2(real_t(2) / this->size.x, real_t(2) / this->size.y);
+    }
+
     bool has_point(const Vector2i & pos){
         return size.has_point(pos);
     }
@@ -66,21 +73,28 @@ template<typename ColorType>
 class ImageReadable:virtual public ImageBasics<ColorType>{
 protected:
     virtual void getpixel_unsafe(const Vector2i & pos, ColorType & color) = 0;
-    void get_pixel(const Vector2i & pos, ColorType & color){
+    void getpixel(const Vector2i & pos, ColorType & color){
         if(this->has_point(pos)){
             getpixel_unsafe(pos, color);
         }
     }
 
-    uint8_t getsegv8() const{return 0;}
-    uint8_t getsegh8() const{return 0;}
+    uint8_t getseg_v8() const{return 0;}
+    uint8_t getseg_h8() const{return 0;}
 public:
     ImageReadable(const Vector2i & size):ImageBasics<ColorType>(size){;}
+
+    __fast_inline ColorType operator()(const Vector2i & pos){
+        ColorType color;
+        getpixel(pos, color);
+        return color;
+    }
+
+    __fast_inline ColorType operator()(const Vector2 & pos);
 };
 
 template<typename ColorType>
 class ImageWritable:virtual public ImageBasics<ColorType>{
-// protected:
 public:
     virtual void setpos_unsafe(const Vector2i & pos) = 0;
     virtual void setarea_unsafe(const Rect2i & rect) = 0;
@@ -172,6 +186,7 @@ public:
     // void shade(UVShaderCallback callback, const Rect2i & _shade_area);
 };
 
+
 template<typename ColorType, typename DataType>
 class ImageWithData:public Image<ColorType>{
 protected:
@@ -197,57 +212,40 @@ public:
             delete[] data;
         }
     }
-    DataType * getData() {return data;}
+
+
+
     DataType & operator [](const size_t & index){return data[index];}
+};
 
-    __fast_inline DataType & operator()(const Vector2i & pos){
-        if(!this->area.has_point(pos)) return data[0];
-        return data[pos.x + pos.y * this -> area.size.x];
-    }
-
-    __fast_inline DataType & operator()(const int & x, const int & y){
-        if(!this->area.has_point(Vector2i(x,y))) return data[0];
-        return data[x + y * this -> area.size.x];
-    }
-
-    __fast_inline DataType operator()(const Vector2 & pos);
-    __fast_inline DataType operator()(const real_t & x, const real_t & y);
-    __fast_inline DataType pick(const int & x, const int & y) const{return data[x + y * this -> area.size.x];}
-
-    Vector2i uv2pixel(const Vector2 & uv) const{
-        return Vector2i(int(LERP((uv.x + 1) / 2, 0, this->area.size.x)), int(LERP((uv.y + 1) / 2, 0, this->area.size.y)));
-    }
-
-    Vector2 uv2aero(const Vector2 & uv) const{
-        return Vector2(((uv.x + 1) * (this->area.size.x / 2)), (uv.y + 1) * (this->area.size.y / 2));
-    }
-
-    Vector2 pixel2uv(const Vector2i & pixel)const{
-        return Vector2(INVLERP((real_t)pixel.x, this->area.size.x / 2, this->area.size.x), INVLERP((real_t)pixel.y, this->area.size.y / 2, this->area.size.y));
-    }
-
-    Vector2 uvstep(){
-        return Vector2(real_t(2) / this->area.size.x, real_t(2) / this->area.size.y);
-    }
-
-    uint8_t adaptiveThreshold(const Vector2i & pos){
-        auto & x = pos.x;
-        auto & y = pos.y;
-        uint16_t average=0;
-        int i,j;
-        for(i=y-3;i<=y+3;i++)
-        {
-            for(j=x-3;j<=x+3;j++)
-            {
-                average += uint8_t(operator()(j, i));
-            }
-        }
-        average=average/49-23;
-        if(uint8_t(operator()(x, y)) > average)
-            return 255;
-        else return 0;
+template<typename ColorType>
+class ImageDataTypeSame:public ImageWithData<ColorType, ColorType>{
+    __fast_inline ColorType & operator[](const Vector2i & pos){
+        return this->data[this->size.x * pos.y + pos.x];
     }
 };
+
+template<typename ColorType, typename DataType>
+class ImageDataTypeDiff:public ImageWithData<ColorType, DataType>{
+
+};
+    // uint8_t adaptiveThreshold(const Vector2i & pos){
+    //     auto & x = pos.x;
+    //     auto & y = pos.y;
+    //     uint16_t average=0;
+    //     int i,j;
+    //     for(i=y-3;i<=y+3;i++)
+    //     {
+    //         for(j=x-3;j<=x+3;j++)
+    //         {
+    //             average += uint8_t(operator()(j, i));
+    //         }
+    //     }
+    //     average=average/49-23;
+    //     if(uint8_t(operator()(x, y)) > average)
+    //         return 255;
+    //     else return 0;
+    // }
 
 
 template<typename ColorType>
@@ -280,7 +278,7 @@ public:
 
 #include "Image.tpp"
 
-class Image565 : public Image<RGB565>{
+class Image565 : public ImageDataTypeSame<RGB565>{
 
 };
 #endif
