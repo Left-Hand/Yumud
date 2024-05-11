@@ -117,8 +117,8 @@ void pedestrian_app(){
     AW9523 aw(aw_drv);
     aw.init();
 
-    OledInterfaceI2c oled_interface(i2csw, SSD1306::default_id);
-    SSD1306 oled(oled_interface);
+    OledInterfaceI2c oled_interface(i2csw, SSD13XX::default_id);
+    SSD13XX_72X40 oled(oled_interface);
     oled.init();
 
     AW9523RgbLed        awled_l(aw, Pin::_8, Pin::_10, Pin::_9);

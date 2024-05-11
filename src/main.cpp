@@ -36,7 +36,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 // I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
 // I2cDrv i2cDrvMt = I2cDrv(i2cSw, 0x0C);
 // ST7789 tftDisplayer(SpiDrvLcd);
-// SSD1306 oledDisPlayer(spiDrvOled);
+// SSD13XX oledDisPlayer(spiDrvOled);
 // MPU6050 mpu(i2cDrvMpu);
 // SGM58031 ext_adc(i2cDrvAdc);
 // LT8920 radio(spiDrvRadio);
@@ -2089,12 +2089,12 @@ int main(){
 
 
 
-    image.putHorizon8(Vector2i{0,0}, 0x5a, true);
-    image.putVertical8(Vector2i{0,0}, 0x39, true);
+    // image.putHorizon8(Vector2i{0,0}, 0x5a, true);
+    // image.putVertical8(Vector2i{0,0}, 0x39, true);
 
-    for(auto & datum : data){
-        logger.println(datum);
-    }
+    // for(auto & datum : data){
+    //     logger.println(datum);
+    // }
 
     pedestrian_app();
     // modem_app();

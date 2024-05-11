@@ -35,7 +35,7 @@
 // #include "HX711/hx711.hpp"
 // #include "timer/timer.hpp"
 // #include "ST7789/st7789.hpp"
-// #include "SSD1306/ssd1306.hpp"
+// #include "SSD13XX/ssd1306.hpp"
 // #include "MPU6050/mpu6050.hpp"
 // #include "SGM58031/sgm58031.hpp"
 // #include "TCS34725/tcs34725.hpp"
