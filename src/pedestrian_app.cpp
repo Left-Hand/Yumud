@@ -73,6 +73,7 @@ void IWDG_Feed_Init(u16 prer, u16 rlr)
 void pedestrian_app(){
     uart2.init(115200, Uart::Mode::TxOnly);
     logger.setEps(4);
+    logger.setRadix(2);
     logger.setSpace(",");
 
 
@@ -126,11 +127,16 @@ void pedestrian_app(){
     Painter<Binary> painter;
     painter.setSource(oled.fetchFrame());
     // oled.fetchFrame().putpixel({0, 0}, true);
-    // painter.drawString({14, 2}, "Rstr1aN");
     painter.setColor(true);
+    // painter.drawString({14, 2}, "Rstr1aN");
+    painter.drawChar({0, 0}, '&');
+    // for(int i = 0; i < 7; i ++){
+        // oled.putsegv8(Vector2i(i, 0), font8x6_enc[6][i], true);
+    // }
     painter.drawHriLine(Vector2i{20, 2}, 8);
-    painter.drawHriLine(Rangei{17, 28}, 9);
-    painter.drawVerLine(Vector2i{14, 5}, 8);
+    // painter.drawHriLine(Rangei{17, 28}, 9);
+    // painter.drawVerLine(Vector2i{14, 5}, 8);
+    // painter.draw
 
     oled.update();
 

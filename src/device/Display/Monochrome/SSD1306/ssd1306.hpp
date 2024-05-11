@@ -23,9 +23,7 @@ protected:
 
     virtual void setFlushPos(const Vector2i & pos) = 0;
 
-    void putsegv8(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
-        fetchFrame().putsegv8(pos, mask, color);
-    }
+
 public:
     static constexpr uint8_t default_id = 0x78;
 
@@ -61,7 +59,9 @@ public:
     void enableInversion(const bool & inv = true){interface.writeCommand(0xA7 - inv);}  
 
     virtual VerticalBinaryImage & fetchFrame() = 0;
-
+    void putsegv8(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
+        fetchFrame().putsegv8(pos, mask, color);
+    }
 };
 
 class SSD13XX_72X40:public SSD13XX{

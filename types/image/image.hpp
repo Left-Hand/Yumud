@@ -72,6 +72,8 @@ protected:
         }
     }
 
+    uint8_t getsegv8() const{return 0;}
+    uint8_t getsegh8() const{return 0;}
 public:
     ImageReadable(const Vector2i & size):ImageBasics<ColorType>(size){;}
 };
@@ -157,6 +159,7 @@ public:
 template<typename ColorType>
 class Image:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
 protected:
+
 
     using PixelShaderCallback = ColorType(*)(const Vector2i &);
     using UVShaderCallback = ColorType(*)(const Vector2 &);

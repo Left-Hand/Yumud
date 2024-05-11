@@ -19,7 +19,7 @@ protected:
     Font & font;
     ColorType color;
 
-    void drawTextureRect_Unsafe(const Rect2i & rect,const ColorType * color_ptr){
+    void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
@@ -32,14 +32,6 @@ public:
     void setColor(U _color){
         color = _color;
     }
-
-    // void setFont(Font * _font){
-    //     font = _font;
-    // }
-
-    // void setSource(Image<ColorType> & _source){
-    //     src_image = &_source;
-    // }
     
     void setSource(ImageWritable<ColorType> & _source){
         src_image = &_source;
@@ -48,12 +40,12 @@ public:
 
     void drawTextureRect(const Rect2i & rect,const ColorType * color_ptr){
         if(!src_image->getDisplayArea().contains(rect)) return;
-        drawTextureRect_Unsafe(rect, color_ptr);
+        drawtexture_unsafe(rect, color_ptr);
     }
 
     void drawImage(Image<ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->getDisplayArea().contains(image.getDisplayArea()) || !image.getData()) return;
-        drawTextureRect_Unsafe(Rect2i(pos, image.getSize()), image.getData());
+        drawtexture_unsafe(Rect2i(pos, image.getSize()), image.getData());
     }
 
 
@@ -169,14 +161,14 @@ public:
         int err=dx - 2 * radius;
 
         while (x>=y) {
-            src_image -> _putPixel(Vector2i(x0-x, y0+y), color);
-            src_image -> _putPixel(Vector2i(x0+x, y0+y), color);
-            src_image -> _putPixel(Vector2i(x0-y, y0+x), color);
-            src_image -> _putPixel(Vector2i(x0+y, y0+x), color);
-            src_image -> _putPixel(Vector2i(x0-x, y0-y), color);
-            src_image -> _putPixel(Vector2i(x0+x, y0-y), color);
-            src_image -> _putPixel(Vector2i(x0-y, y0-x), color);
-            src_image -> _putPixel(Vector2i(x0+y, y0-x), color);
+            src_image -> putPixel(Vector2i(x0-x, y0+y), color);
+            src_image -> putPixel(Vector2i(x0+x, y0+y), color);
+            src_image -> putPixel(Vector2i(x0-y, y0+x), color);
+            src_image -> putPixel(Vector2i(x0+y, y0+x), color);
+            src_image -> putPixel(Vector2i(x0-x, y0-y), color);
+            src_image -> putPixel(Vector2i(x0+x, y0-y), color);
+            src_image -> putPixel(Vector2i(x0-y, y0-x), color);
+            src_image -> putPixel(Vector2i(x0+y, y0-x), color);
 
             if (err<=0) {
                 y++;
@@ -229,13 +221,27 @@ public:
 
         if(!char_area) return;
 
-        for(uint8_t i = 0; i < char_area.size.x ; i++){
-            for(uint8_t j = 0; j < char_area.size.y; j++){
+        // for(uint8_t i = 0; i < char_area.size.x ; i++){
+        //     uint8_t mask;
+        //     for(uint8_t j = 0; j < char_area.size.y; j++){
+        //         Vector2i offs = Vector2i(i,j);
+        //         if(font.get_pixel(chr, offs)){
+        //             // drawPixel(char_area.position + offs, color);
+        //             src_image->putpixel(char_area.position + offs, color);
+        //         }
+        //     }
+        // }
+        
+        for(int i = 0; i < char_area.size.x ; i++){
+            uint8_t mask = 0;
+            for(int j = 0; j < 8; j++){
                 Vector2i offs = Vector2i(i,j);
                 if(font.get_pixel(chr, offs)){
-                    drawPixel(char_area.position + offs, color);
+                    mask |= (0x01 << j);
+                    // DEBUG_LOG(mask);
                 }
             }
+            src_image->putsegv8(Vector2i(i, 0), mask, true);
         }
     }
 
