@@ -16,11 +16,11 @@ public:
 
     __fast_inline constexpr Vector2_t(){;}
 
-    template <typename U>
-    __fast_inline constexpr Vector2_t(const U & _x, const U & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
+    // template <typename U>
+    __fast_inline constexpr Vector2_t(const auto & _x, const auto & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
 
-    template <typename U>
-    __fast_inline constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    // template <typename U>
+    __fast_inline constexpr Vector2_t(const Vector2_t<auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
 
     __fast_inline Vector2_t<T> normalize(){*this /= this->length();}

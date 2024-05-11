@@ -33,7 +33,7 @@ public:
         color = _color;
     }
     
-    void setSource(ImageWritable<ColorType> & _source){
+    void bindImage(ImageWritable<ColorType> & _source){
         src_image = &_source;
     }
 
