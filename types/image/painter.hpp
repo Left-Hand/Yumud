@@ -233,15 +233,17 @@ public:
         // }
         
         for(int i = 0; i < char_area.size.x ; i++){
-            uint8_t mask = 0;
+            uint8_t mask;
             for(int j = 0; j < 8; j++){
-                Vector2i offs = Vector2i(i,j);
+                if(j % 8 == 0) mask = 0;
+
+                Vector2i offs = Vector2i(i,j % 8);
                 if(font.get_pixel(chr, offs)){
-                    mask |= (0x01 << j);
-                    // DEBUG_LOG(mask);
+                    mask |= (0x01 << j % 8);
                 }
+
+                if(j % 8 == 7) src_image->putsegv8(Vector2i(i, j & (~(8 - 1))) + pos, mask, color);
             }
-            src_image->putsegv8(Vector2i(i, 0), mask, true);
         }
     }
 

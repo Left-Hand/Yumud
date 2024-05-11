@@ -128,8 +128,8 @@ void pedestrian_app(){
     painter.setSource(oled.fetchFrame());
     // oled.fetchFrame().putpixel({0, 0}, true);
     painter.setColor(true);
-    // painter.drawString({14, 2}, "Rstr1aN");
-    painter.drawChar({0, 0}, '&');
+    painter.drawString({14, 2}, "Rst");
+    // painter.drawChar({20, 4}, '&');
     // for(int i = 0; i < 7; i ++){
         // oled.putsegv8(Vector2i(i, 0), font8x6_enc[6][i], true);
     // }

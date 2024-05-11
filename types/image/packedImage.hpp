@@ -80,7 +80,7 @@ public:
 public:
     VerticalBinaryImage(PackedBinary * _data, const Vector2i & _size): ImageBasics<Binary>(_size), PackedBinaryImage(_data, _size){;}
 
-    virtual void putsegv8(const Vector2i & pos, const uint8_t & mask, const Binary & color){
+    void putsegv8(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
         uint32_t data_index = pos.x + (pos.y / 8) * size.x; 
         if(pos.y % 8){
             uint16_t datum = (data[data_index + size.x] << 8) | data[data_index];
@@ -90,6 +90,8 @@ public:
             }else{
                 datum &= (~shifted_mask); 
             }
+            data[data_index] = datum & 0xFF;
+            data[data_index + size.x] = datum >> 8;
         }else{
             if(color){
                 data[data_index] |= mask;
