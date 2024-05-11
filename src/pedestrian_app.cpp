@@ -126,7 +126,11 @@ void pedestrian_app(){
     Painter<Binary> painter;
     painter.setSource(oled.fetchFrame());
     // oled.fetchFrame().putpixel({0, 0}, true);
-    painter.drawString({14, 2}, "Rstr1aN");
+    // painter.drawString({14, 2}, "Rstr1aN");
+    painter.setColor(true);
+    painter.drawHriLine(Vector2i{20, 2}, 8);
+    painter.drawHriLine(Rangei{17, 28}, 9);
+    painter.drawVerLine(Vector2i{14, 5}, 8);
 
     oled.update();
 

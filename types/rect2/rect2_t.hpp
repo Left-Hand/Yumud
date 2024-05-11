@@ -59,13 +59,18 @@ public:
     }
 
     template<typename U>
-    bool contains(const Rect2_t<U> & other)const {
+    bool contains(const Rect2_t<U> & other) const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
         bool x_ok = regular.get_x_range().contains(other_regular.get_x_range());
         if(!x_ok)return false;
         bool y_ok = regular.get_y_range().contains(other_regular.get_y_range());
         return y_ok;
+    }
+
+    template<typename U>
+    bool inside(const Rect2_t<U> & other) const{
+        return other.contains(*this);
     }
 
     template<typename U>

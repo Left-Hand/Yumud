@@ -83,11 +83,7 @@ public:
     virtual void setpos_unsafe(const Vector2i & pos) = 0;
     virtual void setarea_unsafe(const Rect2i & rect) = 0;
     virtual void putpixel_unsafe(const Vector2i & pos, const ColorType & color) = 0;
-    void putpixel(const Vector2i & pos, const ColorType & color){
-        if(this->has_point(pos)){
-            putpixel_unsafe(pos, color);
-        }
-    }
+
     virtual void puttexture_unsafe(const Rect2i & rect, const ColorType * color_ptr){
         setarea_unsafe(rect);
         uint32_t i = 0;
@@ -101,6 +97,30 @@ public:
         for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
             for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
                 putpixel_unsafe(Vector2i(x,y), color);
+    }
+
+    void putpixel(const Vector2i & pos, const ColorType & color){
+        if(this->has_point(pos)){
+            putpixel_unsafe(pos, color);
+        }
+    }
+
+    void putrect(const Rect2i & rect, const ColorType & color){
+        auto area = rect.intersection(this->get_window());
+        putrect_unsafe(area, color);
+    }
+
+    void puttexture(const Rect2i & rect, const ColorType * color_ptr){
+        if(rect.inside(this->get_window())){
+            puttexture_unsafe(rect, color_ptr);
+        }else{
+            auto area = rect.intersection(this->get_window());
+            setarea(area);
+            uint32_t i = 0;
+            for(int x = area.position.x; x < area.position.x + area.size.x; x++)
+                for(int y = area.position.y; y < area.position.y + area.size.y; y++, i++)
+                    putpixel_unsafe(Vector2i(x,y), color_ptr[i]);
+        }
     }
 public:
     ImageWritable(const Vector2i & size):ImageBasics<ColorType>(size){;}

@@ -13,10 +13,10 @@ public:
     Range_t() = default;
 
     template<typename U>
-    Range_t(const U & _start, const U & _end): start(_start), end(_end) {;}
+    __fast_inline constexpr Range_t(const U & _start, const U & _end): start(_start), end(_end) {;}
 
     template<typename U>
-    Range_t<T> & operator=(const Range_t<U> & other) {
+    __fast_inline constexpr Range_t<T> & operator=(const Range_t<U> & other) {
         this->start = other.start;
         this->end = other.end;
         return *this;
@@ -82,6 +82,11 @@ public:
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
         return (regular.start <= other_regular.start && regular.end >= other_regular.end);
+    }
+
+    template<typename U>
+    bool inside(const Range_t<U> & _other) const {
+        return _other.contains(*this);
     }
 
     template<typename U>

@@ -44,13 +44,7 @@ public:
     void setSource(ImageWritable<ColorType> & _source){
         src_image = &_source;
     }
-    void drawHriLine(const Vector2i & pos,const int &l){
-        auto area = Rect2i(Vector2i(), src_image->size);
-        Rangei x_range = area.get_x_range().intersection(Rangei(pos.x, pos.x + l).abs());
-        if(!x_range || area.get_y_range().has_value(pos.y)) return;
 
-        src_image -> putrect_unsafe(Rect2i(x_range, Rangei(pos.y, pos.y+1)), color);
-    }
 
     void drawTextureRect(const Rect2i & rect,const ColorType * color_ptr){
         if(!src_image->getDisplayArea().contains(rect)) return;
@@ -64,25 +58,30 @@ public:
 
 
     void drawHriLine(const Rangei & x_range, const int & y){
-        if(!x_range ||!src_image -> getArea().get_y_range().has_value(y)) return;
+        if(!x_range ||!src_image->get_window().get_y_range().has_value(y)) return;
 
         src_image -> putrect_unsafe(Rect2i(x_range, Rangei(y, y+1)), color);
     }
 
+    void drawHriLine(const Vector2i & pos,const int &l){
+        Rangei x_range = src_image->get_window().get_x_range().intersection(Rangei(pos.x, pos.x + ABS(l)));
+        drawHriLine(x_range, pos.y);
+    }
+
     void drawVerLine(const Vector2i & pos,const int &l){
-        Rangei y_range = src_image->get_window().get_y_range().intersection(Rangei(pos.y, pos.y + l).abs());
+        Rangei y_range = src_image->get_window().get_y_range().intersection(Rangei(pos.y, pos.y + ABS(l)));
         if(!y_range ||!src_image->get_window().get_x_range().has_value(pos.x)) return;
 
         src_image -> putrect_unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), color);
     }
 
     void drawVerLine(const Rangei & y_range, const int & x){
-        if(!y_range ||!src_image -> getArea().get_x_range().has_value(x)) return;
+        if(!y_range ||!src_image -> get_window().get_x_range().has_value(x)) return;
         src_image -> putrect_unsafe(Rect2i(Rangei(x,x+1), y_range), color);
     }
 
     void drawFilledRect(const Rect2i & rect, const ColorType & color){
-        Rect2i rect_area = src_image->getArea().intersection(rect);
+        Rect2i rect_area = src_image->get_window().intersection(rect);
         if(!rect_area) return;
         src_image -> putrect_unsafe(rect_area, color);
     }
@@ -142,7 +141,7 @@ public:
 
     void drawHollowRect(const Rect2i & rect){
         Rect2i regular = rect.abs();
-        if(!src_image -> getArea().intersects(regular)) return;
+        if(!src_image -> get_window().intersects(regular)) return;
 
         Rangei x_range = regular.get_x_range();
         Rangei y_range = regular.get_y_range();
