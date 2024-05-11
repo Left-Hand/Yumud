@@ -110,22 +110,25 @@ public:
     void init()override{;}
 
     __fast_inline void writeCommand(const uint8_t & cmd) override{
-        bus_drv.write({cmd_token, cmd});
+        bus_drv.writeReg(cmd_token, cmd);
     }
 
     __fast_inline void writeData(const uint8_t & data) override{
-        bus_drv.write({data_token, data});
+        bus_drv.writeReg(data_token, data);
     }
 
     void writePool(const uint8_t * data_ptr, const size_t & len) override{
-        bus_drv.write(data_token, false);
-        bus_drv.write(data_ptr, len);
+        bus_drv.writePool(data_token, data_ptr, 1, len, false);
     }
 
     void writePool(const uint8_t & data, const size_t & len) override{
-        bus_drv.write(data_token, false);
-        bus_drv.write(data, len);
-    }    
+        // bus_drv.write(data_token, false);
+        auto data_ptr = new uint8_t[len];
+        memset(data_ptr, data, len);
+        bus_drv.writePool(data_token, data_ptr, 1, len, false);
+        // bus_drv.write(data, len);
+        delete data_ptr;
+    }
 };
 
 
