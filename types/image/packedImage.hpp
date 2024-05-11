@@ -37,7 +37,7 @@ public:
 public:
     HorizonBinaryImage(PackedBinary * _data, const Vector2i & _size): ImageBasics<Binary>(_size), PackedBinaryImage(_data, _size){;}
 
-    void putsegh8(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
+    void putseg_h8_unsafe(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
         uint32_t point_index = (pos.y * size.x + pos.x);
         uint32_t data_index = point_index / 8;
         if(data_index % 8){
@@ -80,7 +80,7 @@ public:
 public:
     VerticalBinaryImage(PackedBinary * _data, const Vector2i & _size): ImageBasics<Binary>(_size), PackedBinaryImage(_data, _size){;}
 
-    void putsegv8(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
+    void putseg_v8_unsafe(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
         uint32_t data_index = pos.x + (pos.y / 8) * size.x; 
         if(pos.y % 8){
             uint16_t datum = (data[data_index + size.x] << 8) | data[data_index];

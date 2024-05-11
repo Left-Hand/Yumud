@@ -126,7 +126,7 @@ public:
     }
 public:
     ImageWritable(const Vector2i & size):ImageBasics<ColorType>(size){;}
-    virtual void putsegv8(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
+    virtual void putseg_v8_unsafe(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
         Rect2i area(pos, Vector2i(1, 8));
         if(Rect2i(this->size, Vector2i()).contains(area)){
             for(int i = 0; i < 8; i++){
@@ -139,7 +139,7 @@ public:
         }
     }
 
-    virtual void putsegh8(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
+    virtual void putseg_h8_unsafe(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
         Rect2i area(pos, Vector2i(8, 1));
         if(Rect2i(this->size, Vector2i()).contains(area)){
             for(int i = 0; i < 8; i++){
