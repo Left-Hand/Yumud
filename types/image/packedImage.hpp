@@ -30,7 +30,7 @@ public:
     void getpixel_unsafe(const Vector2i & pos, Binary & color) override{
         uint32_t point_index = (pos.y * size.x + pos.x);
         uint32_t data_index = point_index / 8;
-        color = Binary(data[data_index] & (1 << (point_index % 8)));
+        color = data[data_index] & (1 << (point_index % 8));
     }
 
 

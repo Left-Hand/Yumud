@@ -16,6 +16,16 @@ struct RGB332{
         uint8_t data;
     };
 
+    enum {
+        BLACK   = 0x00,    // Black color
+        RED     = 0xE0,    // Red color
+        GREEN   = 0x1C,    // Green color
+        BLUE    = 0x03,    // Blue color
+        YELLOW  = 0xFC,    // Yellow color
+        MAGENTA = 0xE3,    // Magenta color
+        CYAN    = 0x1F,    // Cyan color
+        WHITE   = 0xFF     // White color
+    };
 #ifdef __cplusplus
 
     __fast_inline RGB332() : data(0){;}
@@ -28,62 +38,12 @@ struct RGB332{
 
     __fast_inline explicit operator uint8_t() const {return data;}
 
-    enum {
-        BLACK   = 0x00,    // Black color
-        RED     = 0xE0,    // Red color
-        GREEN   = 0x1C,    // Green color
-        BLUE    = 0x03,    // Blue color
-        YELLOW  = 0xFC,    // Yellow color
-        MAGENTA = 0xE3,    // Magenta color
-        CYAN    = 0x1F,    // Cyan color
-        WHITE   = 0xFF     // White color
-    };
-
 #endif
 };
 
 typedef struct RGB332 RGB332;
 
-struct RGB565{
-    union{
-        struct{
-            uint16_t b : 5;
-            uint16_t g : 6;
-            uint16_t r : 5;
-        };
-        uint16_t data;
-    };
 
-#ifdef __cplusplus
-
-    __fast_inline RGB565() : data(0){;}
-
-    __fast_inline RGB565(const int & _data): data((uint16_t)_data){;}
-
-    __fast_inline explicit RGB565(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
-
-    __fast_inline explicit RGB565(const uint16_t & _data): data(_data){;}
-
-    __fast_inline explicit operator uint16_t() const {return data;}
-
-    enum{
-        WHITE   = 0xFFFF,  // White color
-        YELLOW  = 0xFFE0,  // Yellow color
-        BRRED   = 0XFC07,  // Brown-red color
-        PINK    = 0XF81F,  // Pink color
-        RED     = 0xF800,  // Red color
-        BROWN   = 0XBC40,  // Brown color
-        GRAY    = 0X8430,  // Gray color
-        GBLUE   = 0X07FF,  // Light blue color
-        GREEN   = 0x07E0,  // Green color
-        BLUE    = 0x001F,  // Blue color
-        BLACK   = 0x0000   // Black color
-    };
-
-#endif
-};
-
-typedef struct RGB565 RGB565;
 
 struct RGB888 {
     union {
@@ -94,18 +54,6 @@ struct RGB888 {
         };
         uint24_t data;
     };
-
-#ifdef __cplusplus
-public:
-    __fast_inline RGB888() : data(0){;}
-
-    __fast_inline RGB888(const int & _data): data((uint24_t)_data){;}
-
-    __fast_inline explicit RGB888(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):r(_r), g(_g), b(_b){;}
-
-    __fast_inline explicit RGB888(const uint24_t & _data): data(_data){;}
-
-    __fast_inline explicit operator uint24_t() const {return (uint24_t)data;}
 
     enum {
         WHITE   = 0xFFFFFF,    // White color
@@ -120,6 +68,17 @@ public:
         BLUE    = 0x0000FF,    // Blue color
         BLACK   = 0x000000     // Black color
     };
+#ifdef __cplusplus
+public:
+    __fast_inline RGB888() : data(0){;}
+
+    __fast_inline RGB888(const int & _data): data((uint24_t)_data){;}
+
+    __fast_inline explicit RGB888(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):r(_r), g(_g), b(_b){;}
+
+    __fast_inline explicit RGB888(const uint24_t & _data): data(_data){;}
+
+    __fast_inline explicit operator uint24_t() const {return (uint24_t)data;}
 #endif
 };
 
@@ -155,12 +114,104 @@ struct ARGB32{
 
 typedef struct ARGB32 ARGB32;
 
-#ifdef __cplusplus
-typedef bool Binary;
-#else
-typedef uint8_t Binary;
-#endif
+struct Binary{
+    uint8_t data;
 
-typedef uint8_t Grayscale;
+    enum{
+        WHITE   = 0x01,  // White color
+        BLACK   = 0x00   // Black color
+    };
+#ifdef __cplusplus
+    __fast_inline constexpr Binary() : data(0){;}
+
+    __fast_inline constexpr Binary(const uint8_t & _data): data(_data){;}
+    //bool will be implicitly converted to uint8_t, add the bool constructer will be ambiguous 
+
+    __fast_inline explicit operator uint8_t() const {return data;}
+
+    __fast_inline constexpr operator bool() const {return data;}
+#endif
+};
+
+typedef struct Binary Binary;
+
+struct Grayscale{
+    uint8_t data;
+
+    enum{
+        WHITE   = 0xFF,  // White color
+        BLACK   = 0x00   // Black color
+    };
+#ifdef __cplusplus
+    __fast_inline constexpr Grayscale() : data(0){;}
+
+    __fast_inline constexpr Grayscale(const uint8_t & _data): data(_data){;}
+
+    __fast_inline constexpr Grayscale(const bool & bina): data(bina ? 0xff : 0x00){;}
+
+    __fast_inline constexpr Grayscale & operator = (const uint8_t & _data){data = _data; return *this;}
+
+    __fast_inline constexpr operator uint8_t() const {return data;}
+
+    __fast_inline explicit operator bool() const {return data;}
+
+    __fast_inline constexpr bool operator > (const Grayscale & other){return data > other.data;}
+
+    __fast_inline constexpr bool operator < (const Grayscale & other){return data < other.data;}
+
+    __fast_inline constexpr bool operator >= (const Grayscale & other){return data >= other.data;}
+
+    __fast_inline constexpr bool operator <= (const Grayscale & other){return data <= other.data;}
+
+    __fast_inline constexpr Binary to_bina(const uint8_t threshold = 128){return Binary(data > threshold);}
+#endif
+};
+
+typedef struct Grayscale Grayscale;
+
+struct RGB565{
+    union{
+        struct{
+            uint16_t b : 5;
+            uint16_t g : 6;
+            uint16_t r : 5;
+        };
+        uint16_t data;
+    };
+
+    enum{
+        WHITE   = 0xFFFF,  // White color
+        YELLOW  = 0xFFE0,  // Yellow color
+        BRRED   = 0XFC07,  // Brown-red color
+        PINK    = 0XF81F,  // Pink color
+        RED     = 0xF800,  // Red color
+        BROWN   = 0XBC40,  // Brown color
+        GRAY    = 0X8430,  // Gray color
+        GBLUE   = 0X07FF,  // Light blue color
+        GREEN   = 0x07E0,  // Green color
+        BLUE    = 0x001F,  // Blue color
+        BLACK   = 0x0000   // Black color
+    };
+#ifdef __cplusplus
+
+    __fast_inline RGB565() : data(0){;}
+
+    __fast_inline RGB565(const int & _data): data((uint16_t)_data){;}
+
+    __fast_inline RGB565(const Grayscale & gs): b((uint8_t)gs >> 3), g((uint8_t)gs >> 2), r((uint8_t)gs >> 3){;}
+
+    __fast_inline RGB565(const Binary & bn): RGB565((bool)bn ? 0xffff : 0){;}
+
+    __fast_inline explicit RGB565(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
+
+    __fast_inline explicit RGB565(const uint16_t & _data): data(_data){;}
+
+    __fast_inline explicit operator uint16_t() const {return data;}
+
+#endif
+};
+
+typedef struct RGB565 RGB565;
+typedef int8_t sGrayscale;
 
 #endif

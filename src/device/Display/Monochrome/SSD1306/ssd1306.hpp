@@ -12,9 +12,6 @@ protected:
     uint16_t height = 40;
     uint16_t x_offset = 0;
 
-
-
-
     void setarea_unsafe(const Rect2i & area){
         setpos_unsafe(area.position);
     }
@@ -25,6 +22,10 @@ protected:
     SSD13XX(DisplayerInterface & _interface):Displayer(size), interface(_interface){;}
 
     virtual void setFlushPos(const Vector2i & pos) = 0;
+
+    void putsegv8(const Vector2i & pos, const uint8_t & mask, const Binary & color) override{
+        fetchFrame().putsegv8(pos, mask, color);
+    }
 public:
     static constexpr uint8_t default_id = 0x78;
 
