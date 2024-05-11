@@ -32,16 +32,16 @@ public:
         return Rect2_t<T>(center - size, size * 2);
     }
 
-    T get_area() const {return ABS(size.x * size.y);}
-    Vector2_t<T> get_center() const {return(position + size / 2);}
-    Vector2_t<T> get_position() const {return(position);}
-    Vector2_t<T> get_size() const {return(size);}
-    Vector2_t<T> get_end() const {return(position + size);}
+    constexpr T get_area() const {return ABS(size.x * size.y);}
+    constexpr Vector2_t<T> get_center() const {return(position + size / 2);}
+    constexpr Vector2_t<T> get_position() const {return(position);}
+    constexpr Vector2_t<T> get_size() const {return(size);}
+    constexpr Vector2_t<T> get_end() const {return(position + size);}
 
-    bool is_regular() const{
+    constexpr bool is_regular() const{
         return(this->size.x >= 0 && this->size.y >= 0);
     }
-    Rect2_t<T> abs() const {
+    constexpr Rect2_t<T> abs() const {
         if(is_regular()) return(*this);
         T x0 = position.x;
         T x1 = position.x + size.x;
@@ -49,8 +49,9 @@ public:
         T y1 = position.y + size.y;
         return Rect2_t<T>(MIN(x0, x1), MIN(y0, y1), MAX(x0, x1) - MIN(x0, x1), MAX(y0, y1) - MIN(y0, y1));
     }
-    template<typename U>
-    bool has_point(const Vector2_t<U> & point) const {
+
+
+    constexpr bool has_point(const Vector2_t<auto> & point) const {
         Rect2_t<T> regular = this -> abs();
         bool x_ok = regular.get_x_range().has_value(point.x);
         if(!x_ok) return false;
@@ -58,8 +59,7 @@ public:
         return(y_ok);
     }
 
-    template<typename U>
-    bool contains(const Rect2_t<U> & other) const {
+    constexpr bool contains(const Rect2_t<auto> & other) const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
         bool x_ok = regular.get_x_range().contains(other_regular.get_x_range());
@@ -68,20 +68,18 @@ public:
         return y_ok;
     }
 
-    template<typename U>
-    bool inside(const Rect2_t<U> & other) const{
+    constexpr bool inside(const Rect2_t<auto> & other) const{
         return other.contains(*this);
     }
 
-    template<typename U>
-    Rect2_t<T> & operator=(const Rect2_t<U> & other){
+
+    constexpr Rect2_t<T> & operator=(const Rect2_t<auto> & other){
         this->position = other.position;
         this->size = other.size;
         return(*this);
     }
 
-    template<typename U>
-    bool intersects(const Rect2_t<U> other) const{
+    constexpr Rect2_t<T> intersects(const Rect2_t<auto> other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
         bool x_ok = regular.get_x_range().intersects(other_regular.get_x_range());
@@ -89,8 +87,8 @@ public:
         bool y_ok = regular.get_y_range().intersects(other_regular.get_y_range());
         return y_ok;
     }
-    template<typename U>
-    Rect2_t<T> intersection(const Rect2_t<U> & other) const{
+
+    constexpr Rect2_t<T> intersection(const Rect2_t<auto> & other) const{
         Rect2_t<T> regular = this -> abs();
         Rect2_t<T> other_regular = other.abs();
         Rangei range_x = regular.get_x_range().intersection(other_regular.get_x_range());
@@ -100,8 +98,7 @@ public:
     }
 
 
-    template<typename U>
-    Rect2_t<T> merge(const Rect2_t<U> & other) const{
+    constexpr Rect2_t<T> merge(const Rect2_t<auto> & other) const{
         Rect2_t<T> regular = *this.abs();
         Rect2_t<T> other_regular = other.abs();
         Rangei range_x = regular.get_x_range().merge(other_regular.get_x_range());
@@ -109,43 +106,39 @@ public:
         return Rect2_t<T>(range_x, range_y);
     }
 
-    template<typename U>
-    Rect2_t<T> merge(const Vector2_t<U> & point) const{
+    constexpr Rect2_t<T> merge(const Vector2_t<auto> & point) const{
         Rect2_t<T> regular = *this.abs();
         Rangei range_x = regular.get_x_range().merge(point.x);
         Rangei range_y = regular.get_y_range().merge(point.y);
         return Rect2_t<T>(range_x, range_y);
     }
-    template<typename U>
-    Rect2_t<T> scale(const U & amount)const {
+    constexpr Rect2_t<T> scale(const auto & amount)const {
         Rect2_t<T> regular = *this.abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.get_center(), regular.size * amount);
         if(ret.is_regular())return ret;
         else return Rect2_t<T>();
     }
 
-    template<typename U>
-    Rect2_t<T> grow(const U & amount)const {
+    constexpr Rect2_t<T> grow(const auto & amount)const {
         Rect2_t<T> regular = *this.abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.position - amount * Vector2_t<T>(1,1), regular.size + amount * Vector2_t<T>(2,2));
         if(ret.is_regular())return ret;
         else return Rect2_t<T>();
     }
 
-    template<typename U>
-    Rect2_t<T> move(const Vector2_t<U> offset)const{
+    constexpr Rect2_t<T> move(const Vector2_t<auto> offset)const{
         return Rect2_t<T>(position + offset, size);
     }
 
-    Range_t<T> get_x_range() const{
+    constexpr Range_t<T> get_x_range() const{
         return Range_t<T>(position.x, position.x + size.x);
     }
 
-    Range_t<T> get_y_range() const{
+    constexpr Range_t<T> get_y_range() const{
         return Range_t<T>(position.y, position.y + size.y);
     }
 
-    explicit operator bool() const {
+    constexpr explicit operator bool() const {
         return (size.x != 0) && (size.y != 0);
     }
 };
