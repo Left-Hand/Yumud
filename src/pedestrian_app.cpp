@@ -2,6 +2,7 @@
 
 #include "src/device/CommonIO/Led/WS2812/ws2812.hpp"
 #include "src/device/Display/MonoChrome/SSD1306/ssd1306.hpp"
+#include "src/device/Memory/memory.hpp"
 #include "fwwb_compents/stations/pedestrian_station.hpp"
 #include "src/system.hpp"
 

@@ -4,18 +4,35 @@
 
 #include "storage.hpp"
 
-template<int size>
 class Memory{
-protected:
-    Storage & storage;
 public:
-    Memory(Storage & _storage):storage(_storage){;}
+
+    Memory(Storage & _storage, const Rangei & _window):storage(_storage), window(_window){;}
     ~Memory(){;}
+protected:
+    using Address = uint32_t;
+    using AddressWindow = Range_t<Address>;
+
+    Storage & storage;
+    AddressWindow window;
+public:
+    auto getWindow(){
+        return window;
+    }
+
+    template<typename T>
+    void store(const T & data){
+
+    }
+
+    template<typename T>
+    void load(T & data){
+        
+    }
 };
 
 
-template<int size>
-class Sector:public Memory<size>{
+class Sector:public Memory{
 
 };
 

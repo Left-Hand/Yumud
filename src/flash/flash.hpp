@@ -11,7 +11,7 @@ protected:
     using Page = uint32_t;
     using PageRange = Range_t<Page>;
     using Address = uint32_t;
-    using AddressRange = Range_t<Address>;
+    using AddressWindow = Range_t<Address>;
 
     static constexpr Page page_size = 256;
     static constexpr Address base_address = 0x08000000;
@@ -34,7 +34,7 @@ protected:
         return index > 0 ? index : page_count + index;
     }
 
-    AddressRange getAddressRange(){
+    AddressWindow getAddressRange(){
         return (page_range * page_size).shift(base_address);
     }
 public:
