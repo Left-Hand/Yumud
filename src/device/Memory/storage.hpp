@@ -40,6 +40,7 @@ public:
         }
     }
 public:
+    virtual void init() = 0;
     auto getSize() const {return size;}
 
     void store(const void * data, const Address & data_size, const Address & loc){

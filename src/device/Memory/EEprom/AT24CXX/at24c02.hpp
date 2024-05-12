@@ -37,7 +37,11 @@ protected:
         bus_drv.readReg((uint8_t)loc, data);
     }
     // void _load(void * data, const Address & data_size, const Address & loc) = 0;
+
+    void entry() override{};
+    void exit() override{};
 public:
+    void init() override{};
 
     static constexpr uint8_t default_id = 0b10100000; 
     AT24C02(I2cDrv & _bus_drv):Storage(256), bus_drv(_bus_drv){;}

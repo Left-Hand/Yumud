@@ -2073,12 +2073,11 @@ logger.println(__VA_ARGS__);};
 // };
 
 #include "image/packedImage.hpp"
-
+#include "src/bus/bus_inc.h"
 
 int main(){
 
     Sys::Misc::prework();
-
 
 
     // stepper_app();
@@ -2092,6 +2091,25 @@ int main(){
     //     logger.println(datum);
     // }
 
+    uart2.init(115200, Uart::Mode::TxOnly);
+    Printer & logger = uart2;
+    logger.setEps(4);
+    logger.setRadix(10);
+    logger.setSpace(",");
+
+    I2cSw i2csw = I2cSw(portD[1], portD[0]);
+    i2csw.init(400000);
+
+    I2cDrv at24drv(i2csw, AT24C02::default_id);
+    AT24C02 at24(at24drv);
+
+    delay(200);
+    at24.init();
+    at24.store(at24.load(0) + 1, 0);
+    delay(20);
+    uart2.println(at24.load(0));
+    while(true);
+    // at24.
     pedestrian_app();
     // modem_app();
     // test_app();
