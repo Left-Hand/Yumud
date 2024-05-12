@@ -8,6 +8,7 @@
 #include "extra_convs.hpp"
 
 #include <IQmath_RV32.h>
+#include <type_traits>
 #include <limits>
 
 
@@ -34,67 +35,73 @@ public:
     explicit iq_t(const String & str);
 
 
-    __fast_inline iq_t operator+(const iq_t & other) const {
+    __fast_inline_constexpr iq_t operator+(const iq_t & other) const {
         return iq_t(value + other.value);
     }
 
-    __fast_inline iq_t operator-(const iq_t & other) const {
+    __fast_inline_constexpr iq_t operator-(const iq_t & other) const {
         return iq_t(value - other.value);
     }
 
-    __fast_inline iq_t operator-() const {
+    __fast_inline_constexpr iq_t operator-() const {
         return iq_t(-value);
     }
 
-    __fast_inline iq_t operator*(const iq_t & other) const {
-        return iq_t(_IQmpy(value, other.value));
+    __fast_inline_constexpr iq_t operator*(const iq_t & other) const {
+    if (std::is_constant_evaluated()) {
+        return iq_t((_iq)((int64_t)value * (int64_t)other.value >> GLOBAL_Q));
+    }
+    return iq_t(_IQmpy(value, other.value));
     }
 
-    __fast_inline iq_t operator/(const iq_t & other) const {
+    __fast_inline_constexpr iq_t operator/(const iq_t & other) const {
+    if (std::is_constant_evaluated()) {
+        return iq_t((_iq)((int64_t)value / (int64_t)other.value << GLOBAL_Q));
+    }
         return iq_t(_IQdiv(value, other.value));
     }
 
-    __fast_inline iq_t& operator+=(const iq_t& other) {
+    __fast_inline_constexpr iq_t& operator+=(const iq_t& other) {
         value = value + other.value;
         return *this;
     }
 
-    __fast_inline iq_t& operator-=(const iq_t& other) {
+    __fast_inline_constexpr iq_t& operator-=(const iq_t& other) {
         value = value - other.value;
         return *this;
     }
 
-    __fast_inline iq_t& operator*=(const iq_t& other) {
-        value = _IQmpy(value, other.value);
+    __fast_inline_constexpr iq_t& operator*=(const iq_t& other) {
+        *this = *this * other;
         return *this;
     }
 
-    __fast_inline iq_t& operator/=(const iq_t& other) {
-        value = _IQdiv(value, other.value);
+    __fast_inline_constexpr iq_t& operator/=(const iq_t& other) {
+        *this = *this / other;
         return *this;
     }
 
-    __fast_inline bool operator==(const auto & other) const {
+    __fast_inline_constexpr bool operator==(const auto & other) const {
         return value == static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator!=(const auto & other) const {
+    __fast_inline_constexpr bool operator!=(const auto & other) const {
         return value != static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator>(const auto & other) const {
+    __fast_inline_constexpr bool operator>(const auto & other) const {
         return value > static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator<(const auto & other) const {
+    __fast_inline_constexpr bool operator<(const auto & other) const {
         return value < static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator>=(const auto & other) const {
+    __fast_inline_constexpr bool operator>=(const auto & other) const {
         return value >= static_cast<iq_t>(other).value;
     }
 
-    __fast_inline bool operator<=(const auto & other) const {
+    __fast_inline_constexpr bool operator<=(const auto & other) const {
         return value <= static_cast<iq_t>(other).value;
     }
 
