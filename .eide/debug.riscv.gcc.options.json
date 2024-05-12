@@ -27,7 +27,7 @@
     "c/cpp-compiler": {
         "language-c": "c17",
         "language-cpp": "gnu++17",
-        "optimization": "level-fast",
+        "optimization": "level-size",
         "warnings": "all-warnings",
         "one-elf-section-per-function": true,
         "one-elf-section-per-data": true,

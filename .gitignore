@@ -2,6 +2,7 @@
 *.VSCodeCounter
 .vscode/launch.json
 .eide/log
+.eide
 
 # project out
 build

@@ -129,7 +129,7 @@ protected:
     }
 
     Vector2i getOffset() const override{
-        return {2, 1};
+        return {2, 0};
     }
 
     friend class VerticalBinaryImage;

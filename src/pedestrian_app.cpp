@@ -184,8 +184,8 @@ void pedestrian_app(){
     while(true){
         oled.flush(false);
 
-        // painter.drawString(Vector2i{0, 0}, String(frac(t)));
-        // oled.update();
+        painter.drawString(Vector2i{0, 0}, String(frac(t)));
+        oled.update();
         // oled.flush(false);
         // station.run();
         // delay(200);
