@@ -212,6 +212,39 @@ struct RGB565{
 };
 
 typedef struct RGB565 RGB565;
-typedef int8_t sGrayscale;
+
+struct sGrayscale{
+    int8_t data;
+
+    enum{
+        WHITE   = 127,  // White color
+        BLACK   = 0x00   // Black color
+    };
+#ifdef __cplusplus
+    __fast_inline constexpr sGrayscale() : data(0){;}
+
+    __fast_inline constexpr sGrayscale(const int8_t & _data): data(_data){;}
+
+    __fast_inline constexpr sGrayscale(const bool & bina): data(bina ? 127 : 0x00){;}
+
+    __fast_inline constexpr sGrayscale & operator = (const uint8_t & _data){data = _data; return *this;}
+
+    __fast_inline constexpr operator uint8_t() const {return data;}
+
+    __fast_inline explicit operator bool() const {return data;}
+
+    __fast_inline constexpr bool operator > (const auto & other){return data > other.data;}
+
+    __fast_inline constexpr bool operator < (const auto & other){return data < other.data;}
+
+    __fast_inline constexpr bool operator >= (const auto & other){return data >= other.data;}
+
+    __fast_inline constexpr bool operator <= (const auto & other){return data <= other.data;}
+
+    __fast_inline constexpr Binary to_bina(const int8_t & threshold){return Binary(ABS(data) > threshold);}
+
+    __fast_inline constexpr Binary to_bina_singed(const int8_t & threshold){return Binary(data > threshold);}
+#endif
+};
 
 #endif

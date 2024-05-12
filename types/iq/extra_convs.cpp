@@ -55,5 +55,5 @@ iq_t::operator String() const{
 }
 
 String toString(const iq_t & iq, const uint8_t & eps){
-    return iq.toString(eps);
+    return iq.toString(MIN(eps, 4));
 }

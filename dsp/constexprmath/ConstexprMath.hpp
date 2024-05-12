@@ -351,6 +351,26 @@ template <int Nrep = 65536, typename float_type = double>
             }
         }
 
+        template <int Nrep = 65536, typename float_type>
+        constexpr_decl(float_type, atan2, float_type _x, float_type _y){
+            static_assert(_x != 0 && _y != 0, "atan2 undefined when x and y are zero");
+            if(_x > 0){
+                atan(_y / _x);
+            }else if(_x < 0){
+                if(_y >= 0){
+                    return atan(_y / _x) + M_PI;
+                }else{
+                    return atan(_y / _x) - M_PI;
+                }
+            }else if(_x == 0){
+                if(_y > 0){
+                    return M_PI / 2;
+                }else if(_y < 0){
+                    return -M_PI / 2;
+                }
+            }
+        }
+
         protected:
         template <int Nrep = 65536, typename float_type>
         constexpr_decl(float_type, atan_0_to_1, float_type _x)
