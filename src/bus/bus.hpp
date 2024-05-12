@@ -5,6 +5,16 @@
 #include "src/platform.h"
 #include "src/clock/clock.h"
 
+enum class CommMethod:uint8_t{
+    None = 0,
+    Blocking,
+    Interrupt,
+    DmaNormal,
+    DmaCircular,
+    DmaDual
+};
+
+
 class Bus{
 protected:
 

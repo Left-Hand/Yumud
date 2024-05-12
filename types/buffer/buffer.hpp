@@ -11,7 +11,6 @@ template<typename T>
 class BufferConcept_t{
 public:
     virtual void addData(const T & data) = 0;
-    // virtual void getData(T & data) = 0;
     virtual T & getData() = 0;
     virtual size_t available() const = 0;
     virtual void addDatas(const T * data_ptr, const size_t & len, bool msb = false) = 0;
@@ -45,6 +44,14 @@ protected:
 public:
     StaticBuffer_t() = default;
     ~StaticBuffer_t() = default;
+
+    T & operator[](const size_t & index){
+        return buf[index];
+    }
+
+    constexpr size_t getSize() const {
+        return size;
+    }
 };
 
 typedef DynamicBuffer_t<uint8_t> DynamicBuffer;

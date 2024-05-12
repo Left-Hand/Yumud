@@ -6,6 +6,9 @@ real_t Sys::t;
 static void PortC_Init( void ){
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
+
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
     #ifdef HAVE_GPIOD
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);

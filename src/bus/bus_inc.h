@@ -5,6 +5,7 @@
 #include "i2s/i2sdrv.hpp"
 #include "uart/uart1.hpp"
 #include "uart/uart2.hpp"
+#include "uart/uartsw.hpp"
 #include "i2c/i2cSw.hpp"
 #include "i2c/i2c1.hpp"
 #include "i2c/i2c2.hpp"
