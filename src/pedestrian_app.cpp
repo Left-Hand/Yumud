@@ -181,7 +181,7 @@ void pedestrian_app(){
 
     while(true){
         oled.flush(false);
-        painter.drawChar(Vector2i{14 + 16 * sin(t), 0}, 'h');
+        painter.drawChar(Vector2i{54 + 54 * sin(4 * t), 0}, 'h');
         // painter.drawString(Vector2i{0, 0}, String(frac(t)));
         oled.update();
         // oled.flush(false);

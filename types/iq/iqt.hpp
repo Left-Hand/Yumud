@@ -13,23 +13,24 @@
 
 struct iq_t{
 public:
-    volatile _iq value = 0;
+    _iq value = 0;
 
     __fast_inline iq_t(): value(0){;}
-    __fast_inline constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
+    __fast_inline_constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
 
-    __fast_inline constexpr iq_t(const int & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline_constexpr iq_t(const int & intValue) : value(_IQ(intValue)) {;}
 
-    __fast_inline constexpr iq_t(const int8_t & intValue) : value(_IQ(intValue)) {;}
-    __fast_inline constexpr iq_t(const int16_t & intValue) : value(_IQ(intValue)) {;}
-    // __fast_inline constexpr iq_t(const int32_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline_constexpr iq_t(const int8_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline_constexpr iq_t(const int16_t & intValue) : value(_IQ(intValue)) {;}
+    // int32_t could cause ambigous with _iq(aka long) but int won`t
 
-    __fast_inline constexpr iq_t(const uint8_t & intValue) : value(_IQ(intValue)) {;}
-    __fast_inline constexpr iq_t(const uint16_t & intValue) : value(_IQ(intValue)) {;}
-    __fast_inline constexpr iq_t(const uint32_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline_constexpr iq_t(const uint8_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline_constexpr iq_t(const uint16_t & intValue) : value(_IQ(intValue)) {;}
+    __fast_inline_constexpr iq_t(const uint32_t & intValue) : value(_IQ(intValue)) {;}
 
-    __fast_inline constexpr iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
-    __fast_inline constexpr iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
+    __fast_inline_constexpr iq_t(const float & floatValue) : value(_IQ(floatValue)) {;}
+    __fast_inline_constexpr iq_t(const double & doubleValue) : value(_IQ(doubleValue)) {;}
+    
     explicit iq_t(const String & str);
 
 
@@ -256,26 +257,26 @@ public:
 
 #ifndef STRICT_IQ
 
-#define IQ_BINA_OP_TEMPLATE(type, op)\
+#define IQ_OP_TEMPLATE(type, op)\
 __fast_inline iq_t operator op (type val, const iq_t & iq_v) {\
 	return iq_v op iq_t(val);\
 }\
 
-IQ_BINA_OP_TEMPLATE(int, +);
-IQ_BINA_OP_TEMPLATE(float, +);
-IQ_BINA_OP_TEMPLATE(double, +);
+IQ_OP_TEMPLATE(int, +);
+IQ_OP_TEMPLATE(float, +);
+IQ_OP_TEMPLATE(double, +);
 
-IQ_BINA_OP_TEMPLATE(int, -);
-IQ_BINA_OP_TEMPLATE(float, -);
-IQ_BINA_OP_TEMPLATE(double, -);
+IQ_OP_TEMPLATE(int, -);
+IQ_OP_TEMPLATE(float, -);
+IQ_OP_TEMPLATE(double, -);
 
-IQ_BINA_OP_TEMPLATE(int, *);
-IQ_BINA_OP_TEMPLATE(float, *);
+IQ_OP_TEMPLATE(int, *);
+IQ_OP_TEMPLATE(float, *);
 
-IQ_BINA_OP_TEMPLATE(double, *);
-IQ_BINA_OP_TEMPLATE(int, /);
-IQ_BINA_OP_TEMPLATE(float, /);
-IQ_BINA_OP_TEMPLATE(double, /);
+IQ_OP_TEMPLATE(double, *);
+IQ_OP_TEMPLATE(int, /);
+IQ_OP_TEMPLATE(float, /);
+IQ_OP_TEMPLATE(double, /);
 
 #undef IQ_BINA_OP_TEMPLATE
 
@@ -329,7 +330,7 @@ bool is_equal_approx(const iq_t & a,const iq_t & b);
 
 bool is_equal_approx_ratio(const iq_t a, const iq_t & b, iq_t epsilon = iq_t(CMP_EPSILON), iq_t min_epsilon = iq_t(CMP_EPSILON));
 
-#ifdef USE_LOG
+#ifdef IQ_USE_LOG
 
 __fast_inline iq_t log10(const iq_t & iq) {return iq_t(_IQlog10(iq.value));}
 
@@ -352,10 +353,6 @@ __fast_inline void u16_to_uni(const uint16_t & data, iq_t & qv){
 }
 
 __fast_inline constexpr void s16_to_uni(const int16_t & data, iq_t & qv){
-	// constexpr uint16_t M = (uint16_t)(1 << (GLOBAL_Q - 1));
-	// constexpr uint32_t mask = ~(M-1);
-	// qv.value = data & M ? data | mask : data;
-    // qv.value = data;
     qv.value = data > 0 ? data : -((_iq)-data);
 }
 

@@ -23,13 +23,13 @@ public:
     __fast_inline constexpr Vector2_t(const Vector2_t<auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
 
-    __fast_inline constexpr Vector2_t<T> normalize(){*this /= this->length();}
-    __fast_inline constexpr Vector2_t<T> normalized() const;
-    __fast_inline constexpr T cross(const Vector2_t<T> & with) const;
-    __fast_inline constexpr T dot(const Vector2_t<T> & with) const;
-    __fast_inline constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
-    __fast_inline constexpr Vector2_t<T> rotate(const T & r)const;
-    __fast_inline constexpr Vector2_t<T> abs() const;
+    __fast_inline_constexpr Vector2_t<T> normalize(){*this /= this->length();}
+    __fast_inline_constexpr Vector2_t<T> normalized() const;
+    __fast_inline_constexpr T cross(const Vector2_t<T> & with) const;
+    __fast_inline_constexpr T dot(const Vector2_t<T> & with) const;
+    __fast_inline_constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
+    __fast_inline_constexpr Vector2_t<T> rotate(const T & r)const;
+    __fast_inline_constexpr Vector2_t<T> abs() const;
     __fast_inline T angle() const {return atan2f(y, x);}
     constexpr T angle_to(const Vector2_t<T> & to) const;
     constexpr T angle_to_point(const Vector2_t<T> & to) const;
