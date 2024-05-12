@@ -5,16 +5,17 @@
 #include "storage.hpp"
 
 class Memory{
-public:
 
-    Memory(Storage & _storage, const Rangei & _window):storage(_storage), window(_window){;}
-    ~Memory(){;}
 protected:
     using Address = uint32_t;
     using AddressWindow = Range_t<Address>;
 
     Storage & storage;
     AddressWindow window;
+public:
+
+    Memory(Storage & _storage, const AddressWindow & _window):storage(_storage), window(_window){;}
+    ~Memory(){;}
 public:
     auto getWindow(){
         return window;

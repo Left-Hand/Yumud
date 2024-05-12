@@ -14,6 +14,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 
 
 #include "src/device/Encoder/Estimmator.hpp"
+#include "src/device/Memory/EEPROM/AT24CXX/at24c02.hpp"
 
 // I2cSw i2cSw(i2cScl, i2cSda);
 
@@ -51,6 +52,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 // QMC5883L earth_sensor(i2cDrvQm);
 // BMP280 prs_sensor(i2cDrvBm);
 // MT6701 mt_sensor(i2cDrvMt);
+
 
 extern "C" void TimBase_IRQHandler(void) __interrupt;
 
