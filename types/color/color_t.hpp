@@ -17,35 +17,35 @@ public:
     T b;
     T a;
     
-	bool operator==(const Color_t &p_Color) const { return (r == p_Color.r && g == p_Color.g && b == p_Color.b && a == p_Color.a); }
-	bool operator!=(const Color_t &p_Color) const { return (r != p_Color.r || g != p_Color.g || b != p_Color.b || a != p_Color.a); }
+	constexpr bool operator==(const Color_t &p_Color) const { return (r == p_Color.r && g == p_Color.g && b == p_Color.b && a == p_Color.a); }
+	constexpr bool operator!=(const Color_t &p_Color) const { return (r != p_Color.r || g != p_Color.g || b != p_Color.b || a != p_Color.a); }
 
-	uint32_t to_rgba32() const;
-	uint32_t to_argb32() const;
-	uint32_t to_abgr32() const;
-	uint64_t to_rgba64() const;
-	uint64_t to_argb64() const;
-	uint64_t to_abgr64() const;
-	T get_h() const;
-	T get_s() const;
-	T get_v() const;
+	constexpr uint32_t to_rgba32() const;
+	constexpr uint32_t to_argb32() const;
+	constexpr uint32_t to_abgr32() const;
+	constexpr uint64_t to_rgba64() const;
+	constexpr uint64_t to_argb64() const;
+	constexpr uint64_t to_abgr64() const;
+	constexpr T get_h() const;
+	constexpr T get_s() const;
+	constexpr T get_v() const;
     
     template<typename U>
-    void set_hsv(U _p_h, U _p_s, U _p_v, U _p_alpha = U(1));
+    constexpr void set_hsv(U _p_h, U _p_s, U _p_v, U _p_alpha = U(1));
 
-	__fast_inline T &operator[](const uint8_t idx) {
+	__fast_inline_constexpr T &operator[](const uint8_t idx) {
         static T default_value = T();
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
-	__fast_inline const T &operator[](const uint8_t idx) const {
+	__fast_inline_constexpr T &operator[](const uint8_t idx) const {
         static const T default_value = T();
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
 
-	Color_t operator-() const;
+	constexpr Color_t operator-() const;
 
     template <typename U>
-    __fast_inline Color_t &operator+=(const Color_t<U> &p_Color) {
+    __fast_inline_constexpr Color_t &operator+=(const Color_t<U> &p_Color) {
         r += static_cast<T>(p_Color.r);
         g += static_cast<T>(p_Color.g);
         b += static_cast<T>(p_Color.b);
@@ -54,7 +54,7 @@ public:
     }
 
     template <typename U>
-    __fast_inline Color_t &operator-=(const Color_t<U> &p_Color) {
+    __fast_inline_constexpr Color_t &operator-=(const Color_t<U> &p_Color) {
         r -= static_cast<T>(p_Color.r);
         g -= static_cast<T>(p_Color.g);
         b -= static_cast<T>(p_Color.b);
@@ -63,7 +63,7 @@ public:
     }
 
     template <typename U>
-    __fast_inline Color_t &operator*=(const Color_t<U> &p_Color) {
+    __fast_inline_constexpr Color_t &operator*=(const Color_t<U> &p_Color) {
         r *= static_cast<T>(p_Color.r);
         g *= static_cast<T>(p_Color.g);
         b *= static_cast<T>(p_Color.b);
@@ -72,7 +72,7 @@ public:
     }
 
     template <typename U>
-    __fast_inline Color_t & operator*=(const U &rvalue) {
+    __fast_inline_constexpr Color_t & operator*=(const U &rvalue) {
         r = r * rvalue;
         g = g * rvalue;
         b = b * rvalue;
@@ -105,12 +105,11 @@ public:
         return *this;
     };
 
-	bool is_equal_approx(const Color_t &p_Color) const;
-
-	void invert();
-	void contrast();
-	Color_t inverted() const;
-	Color_t contrasted() const;
+	constexpr bool is_equal_approx(const Color_t &p_Color) const;
+	constexpr void invert();
+	constexpr void contrast();
+	constexpr Color_t inverted() const;
+	constexpr Color_t contrasted() const;
 
 	__fast_inline Color_t linear_interpolate(const Color_t &p_to, T p_weight) const {
 		Color_t res = *this;
@@ -168,8 +167,8 @@ public:
 				b < 0.0031308 ? 12.92 * b : (1.0 + 0.055) * pow(b, T(1.0f / 2.4f)) - T(0.055), a);
 	}
 
-	Color_t hex(uint32_t p_hex);
-	Color_t hex64(uint64_t p_hex);
+	constexpr Color_t hex(uint32_t p_hex);
+	constexpr Color_t hex64(uint64_t p_hex);
 
     template<typename U>
 	static Color_t<T> from_hsv(U p_h, U p_s = U(1), U p_v = U(1), U p_a = U(1));

@@ -28,15 +28,15 @@ struct RGB332{
     };
 #ifdef __cplusplus
 
-    __fast_inline RGB332() : data(0){;}
+    __fast_inline constexpr RGB332() : data(0){;}
 
-    __fast_inline RGB332(const int & _data): data((uint8_t)_data){;}
+    __fast_inline constexpr RGB332(const int & _data): data((uint8_t)_data){;}
 
-    __fast_inline explicit RGB332(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
+    __fast_inline constexpr explicit RGB332(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
 
-    __fast_inline explicit RGB332(const uint8_t & _data): data(_data){;}
+    __fast_inline constexpr explicit RGB332(const uint8_t & _data): data(_data){;}
 
-    __fast_inline explicit operator uint8_t() const {return data;}
+    __fast_inline constexpr explicit operator uint8_t() const {return data;}
 
 #endif
 };
@@ -70,15 +70,15 @@ struct RGB888 {
     };
 #ifdef __cplusplus
 public:
-    __fast_inline RGB888() : data(0){;}
+    __fast_inline constexpr RGB888() : data(0){;}
 
-    __fast_inline RGB888(const int & _data): data((uint24_t)_data){;}
+    __fast_inline constexpr RGB888(const int & _data): data((uint24_t)_data){;}
 
-    __fast_inline explicit RGB888(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):r(_r), g(_g), b(_b){;}
+    __fast_inline constexpr explicit RGB888(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):r(_r), g(_g), b(_b){;}
 
-    __fast_inline explicit RGB888(const uint24_t & _data): data(_data){;}
+    __fast_inline constexpr explicit RGB888(const uint24_t & _data): data(_data){;}
 
-    __fast_inline explicit operator uint24_t() const {return (uint24_t)data;}
+    __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)data;}
 #endif
 };
 
@@ -99,15 +99,15 @@ struct ARGB32{
 
 #ifdef __cplusplus
 
-    __fast_inline ARGB32() : data(0){;}
+    __fast_inline constexpr ARGB32() : data(0){;}
 
-    __fast_inline ARGB32(const int & _data): data((uint32_t)_data){;}
+    __fast_inline constexpr ARGB32(const int & _data): data((uint32_t)_data){;}
 
-    __fast_inline explicit ARGB32(const uint8_t & _a, const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):a(_a), r(_r), g(_g), b(_b){;}
+    __fast_inline constexpr explicit ARGB32(const uint8_t & _a, const uint8_t & _r, const uint8_t & _g, const uint8_t & _b):a(_a), r(_r), g(_g), b(_b){;}
 
-    __fast_inline explicit ARGB32(const uint32_t & _data): data(_data){;}
+    __fast_inline constexpr explicit ARGB32(const uint32_t & _data): data(_data){;}
 
-    __fast_inline explicit operator uint32_t() const {return data;}
+    __fast_inline constexpr explicit operator uint32_t() const {return data;}
 
 #endif
 };
@@ -153,7 +153,7 @@ struct Grayscale{
 
     __fast_inline constexpr operator uint8_t() const {return data;}
 
-    __fast_inline explicit operator bool() const {return data;}
+    __fast_inline constexpr explicit operator bool() const {return data;}
 
     __fast_inline constexpr bool operator > (const Grayscale & other){return data > other.data;}
 
@@ -194,19 +194,19 @@ struct RGB565{
     };
 #ifdef __cplusplus
 
-    __fast_inline RGB565() : data(0){;}
+    __fast_inline constexpr RGB565() : data(0){;}
 
-    __fast_inline RGB565(const int & _data): data((uint16_t)_data){;}
+    __fast_inline constexpr RGB565(const int & _data): data((uint16_t)_data){;}
 
-    __fast_inline RGB565(const Grayscale & gs): b((uint8_t)gs >> 3), g((uint8_t)gs >> 2), r((uint8_t)gs >> 3){;}
+    __fast_inline constexpr RGB565(const Grayscale & gs): b((uint8_t)gs >> 3), g((uint8_t)gs >> 2), r((uint8_t)gs >> 3){;}
 
-    __fast_inline RGB565(const Binary & bn): RGB565((bool)bn ? 0xffff : 0){;}
+    __fast_inline constexpr RGB565(const Binary & bn): RGB565((bool)bn ? 0xffff : 0){;}
 
-    __fast_inline explicit RGB565(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
+    __fast_inline constexpr explicit RGB565(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
 
-    __fast_inline explicit RGB565(const uint16_t & _data): data(_data){;}
+    __fast_inline constexpr explicit RGB565(const uint16_t & _data): data(_data){;}
 
-    __fast_inline explicit operator uint16_t() const {return data;}
+    __fast_inline constexpr explicit operator uint16_t() const {return data;}
 
 #endif
 };
