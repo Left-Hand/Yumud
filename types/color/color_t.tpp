@@ -1,5 +1,5 @@
-template <typename T>
-uint32_t Color_t<T>::to_argb32() const {
+template <typename T> 
+constexpr uint32_t Color_t<T>::to_argb32() const {
 	uint32_t c = (uint8_t)round(a * 255);
 	c <<= 8;
 	c |= (uint8_t)round(r * 255);
@@ -11,7 +11,7 @@ uint32_t Color_t<T>::to_argb32() const {
 	return c;
 }
 
-template <typename T>
+template <typename T> constexpr 
 uint32_t Color_t<T>::to_abgr32() const {
 	uint32_t c = (uint8_t)round(a * 255);
 	c <<= 8;
@@ -24,7 +24,7 @@ uint32_t Color_t<T>::to_abgr32() const {
 	return c;
 }
 
-template <typename T>
+template <typename T> constexpr 
 uint32_t Color_t<T>::to_rgba32() const {
 	uint32_t c = (uint8_t)round(r * 255);
 	c <<= 8;
@@ -35,7 +35,7 @@ uint32_t Color_t<T>::to_rgba32() const {
 	c |= (uint8_t)round(a * 255);	return c;
 }
 
-template <typename T>
+template <typename T> constexpr 
 uint64_t Color_t<T>::to_abgr64() const {
 	uint64_t c = (uint16_t)round(a * 65535);
 	c <<= 16;
@@ -48,7 +48,7 @@ uint64_t Color_t<T>::to_abgr64() const {
 	return c;
 }
 
-template <typename T>
+template <typename T> constexpr 
 uint64_t Color_t<T>::to_argb64() const {
 	uint64_t c = (uint16_t)round(a * 65535);
 	c <<= 16;
@@ -61,7 +61,7 @@ uint64_t Color_t<T>::to_argb64() const {
 	return c;
 }
 
-template <typename T>
+template <typename T> constexpr 
 uint64_t Color_t<T>::to_rgba64() const {
 	uint64_t c = (uint16_t)round(r * 65535);
 	c <<= 16;
@@ -74,7 +74,7 @@ uint64_t Color_t<T>::to_rgba64() const {
 	return c;
 }
 
-template <typename T>
+template <typename T> constexpr 
 T Color_t<T>::get_h() const {
 	T min = MIN(r, g);
 	min = MIN(min, b);
@@ -104,7 +104,7 @@ T Color_t<T>::get_h() const {
 	return h;
 }
 
-template <typename T>
+template <typename T> constexpr 
 T Color_t<T>::get_s() const {
 	T min = MIN(r, g);
 	min = MIN(min, b);
@@ -116,7 +116,7 @@ T Color_t<T>::get_s() const {
 	return (max != 0) ? (delta / max) : T();
 }
 
-template <typename T>
+template <typename T> constexpr 
 T Color_t<T>::get_v() const {
 	T max = MAX(r, g);
 	max = MAX(max, b);
@@ -124,8 +124,7 @@ T Color_t<T>::get_v() const {
 }
 
 template <typename T>
-template <typename U>
-void Color_t<T>::set_hsv(U _p_h, U _p_s, U _p_v, U _p_alpha) {
+constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const auto & _p_v, const auto & _p_alpha) {
 
     T p_h = static_cast<T>(_p_h);
     T p_s = static_cast<T>(_p_s);
@@ -184,26 +183,26 @@ void Color_t<T>::set_hsv(U _p_h, U _p_s, U _p_v, U _p_alpha) {
 	}
 }
 
-template <typename T>
+template <typename T> constexpr 
 bool Color_t<T>::is_equal_approx(const Color_t<T> &p_Color) const {
 	return is_equal_approx(r, p_Color.r) && is_equal_approx(g, p_Color.g) && is_equal_approx(b, p_Color.b) && is_equal_approx(a, p_Color.a);
 }
 
-template <typename T>
+template <typename T> constexpr 
 void Color_t<T>::invert() {
 	r = 1.0 - r;
 	g = 1.0 - g;
 	b = 1.0 - b;
 }
 
-template <typename T>
+template <typename T> constexpr 
 void Color_t<T>::contrast() {
 	r = fmod(r + 0.5, T(1));
 	g = fmod(g + 0.5, T(1));
 	b = fmod(b + 0.5, T(1));
 }
 
-template <typename T>
+template <typename T> constexpr 
 Color_t<T> Color_t<T>::hex(uint32_t p_hex) {
 	T a = (T)((p_hex & 0xFF) / 255.0);
 	p_hex >>= 8;
@@ -216,7 +215,7 @@ Color_t<T> Color_t<T>::hex(uint32_t p_hex) {
 	return Color_t<T>(r, g, b, a);
 }
 
-template <typename T>
+template <typename T> constexpr 
 Color_t<T> Color_t<T>::hex64(uint64_t p_hex) {
 	T a = (T)((p_hex & 0xFFFF) / 65535.0);
 	p_hex >>= 16;
@@ -229,14 +228,14 @@ Color_t<T> Color_t<T>::hex64(uint64_t p_hex) {
 	return Color_t<T>(r, g, b, a);
 }
 
-template <typename T>
+template <typename T> constexpr 
 Color_t<T> Color_t<T>::inverted() const {
 	Color_t<T> c = *this;
 	c.invert();
 	return c;
 }
 
-template <typename T>
+template <typename T> constexpr 
 Color_t<T> Color_t<T>::contrasted() const {
 	Color_t<T> c = *this;
 	c.contrast();
@@ -244,8 +243,7 @@ Color_t<T> Color_t<T>::contrasted() const {
 }
 
 template<typename T>
-template<typename U>
-Color_t<T> Color_t<T>::from_hsv(U p_h, U p_s, U p_v, U p_a){
+constexpr Color_t<T> Color_t<T>::from_hsv(const auto & p_h, const auto & p_s, const auto & p_v, const auto & p_a){
 	Color_t<T> c;
 	c.set_hsv(p_h, p_s, p_v, p_a);
 	return c;
@@ -253,22 +251,22 @@ Color_t<T> Color_t<T>::from_hsv(U p_h, U p_s, U p_v, U p_a){
 
 
 #define COLOR_ADD_SUB_MUL_OPERATOR(op) \
-template <typename T, typename U> \
-__fast_inline Color_t<T> operator op(const Color_t<T> &p_Color, const U &rvalue){ \
+template <typename T> \
+__fast_inline_constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const auto &rvalue){ \
     Color_t<T> final = p_Color; \
     final op##= rvalue; \
     return final; \
 }\
 \
-template <typename T, typename U> \
-__fast_inline Color_t<T> operator op(const U &lvalue, const Color_t<T> &p_Color){ \
+template <typename T> \
+__fast_inline_constexpr Color_t<T> operator op(const auto &lvalue, const Color_t<T> &p_Color){ \
     Color_t<T> final = p_Color; \
     final op##= lvalue; \
     return final; \
 }\
 \
-template <typename T, typename U> \
-__fast_inline Color_t<T> operator op(const Color_t<T> &p_Color, const Color_t<U> &d_Color){ \
+template <typename T> \
+__fast_inline_constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const Color_t<auto> &d_Color){ \
     Color_t<T> final = p_Color; \
     final op##= d_Color; \
     return final; \
@@ -280,22 +278,22 @@ COLOR_ADD_SUB_MUL_OPERATOR(*)
 
 #undef COLOR_ADD_SUB_MUL_OPERATOR
 
-template <typename T, typename U>
-Color_t<T> operator/(const Color_t<T> &p_Color, const U &rvalue){
+template <typename T>
+Color_t<T> operator/(const Color_t<T> &p_Color, const auto &rvalue){
     Color_t<T> final = p_Color;
     final /= rvalue;
     return final;
 }
 
-template <typename T, typename U>
-Color_t<T> operator/(const Color_t<T> &p_Color, const Color_t<U> &d_Color){
+template <typename T>
+Color_t<T> operator/(const Color_t<T> &p_Color, const Color_t<auto> &d_Color){
     Color_t<T> final = p_Color;
     final /= d_Color;
     return final;
 }
 
 
-template <typename T>
+template <typename T> constexpr 
 Color_t<T> Color_t<T>::operator-() const {
 	return Color_t<T>(
 			1.0 - r,
