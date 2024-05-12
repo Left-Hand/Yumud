@@ -124,8 +124,7 @@ T Color_t<T>::get_v() const {
 }
 
 template <typename T>
-template <typename U>
-constexpr void Color_t<T>::set_hsv(U _p_h, U _p_s, U _p_v, U _p_alpha) {
+constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const auto & _p_v, const auto & _p_alpha) {
 
     T p_h = static_cast<T>(_p_h);
     T p_s = static_cast<T>(_p_s);
@@ -244,8 +243,7 @@ Color_t<T> Color_t<T>::contrasted() const {
 }
 
 template<typename T>
-template<typename U>
-Color_t<T> Color_t<T>::from_hsv(U p_h, U p_s, U p_v, U p_a){
+constexpr Color_t<T> Color_t<T>::from_hsv(const auto & p_h, const auto & p_s, const auto & p_v, const auto & p_a){
 	Color_t<T> c;
 	c.set_hsv(p_h, p_s, p_v, p_a);
 	return c;
@@ -253,22 +251,22 @@ Color_t<T> Color_t<T>::from_hsv(U p_h, U p_s, U p_v, U p_a){
 
 
 #define COLOR_ADD_SUB_MUL_OPERATOR(op) \
-template <typename T, typename U> \
-__fast_inline Color_t<T> operator op(const Color_t<T> &p_Color, const U &rvalue){ \
+template <typename T> \
+__fast_inline_constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const auto &rvalue){ \
     Color_t<T> final = p_Color; \
     final op##= rvalue; \
     return final; \
 }\
 \
-template <typename T, typename U> \
-__fast_inline Color_t<T> operator op(const U &lvalue, const Color_t<T> &p_Color){ \
+template <typename T> \
+__fast_inline_constexpr Color_t<T> operator op(const auto &lvalue, const Color_t<T> &p_Color){ \
     Color_t<T> final = p_Color; \
     final op##= lvalue; \
     return final; \
 }\
 \
-template <typename T, typename U> \
-__fast_inline Color_t<T> operator op(const Color_t<T> &p_Color, const Color_t<U> &d_Color){ \
+template <typename T> \
+__fast_inline_constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const Color_t<auto> &d_Color){ \
     Color_t<T> final = p_Color; \
     final op##= d_Color; \
     return final; \
@@ -280,15 +278,15 @@ COLOR_ADD_SUB_MUL_OPERATOR(*)
 
 #undef COLOR_ADD_SUB_MUL_OPERATOR
 
-template <typename T, typename U>
-Color_t<T> operator/(const Color_t<T> &p_Color, const U &rvalue){
+template <typename T>
+Color_t<T> operator/(const Color_t<T> &p_Color, const auto &rvalue){
     Color_t<T> final = p_Color;
     final /= rvalue;
     return final;
 }
 
-template <typename T, typename U>
-Color_t<T> operator/(const Color_t<T> &p_Color, const Color_t<U> &d_Color){
+template <typename T>
+Color_t<T> operator/(const Color_t<T> &p_Color, const Color_t<auto> &d_Color){
     Color_t<T> final = p_Color;
     final /= d_Color;
     return final;
