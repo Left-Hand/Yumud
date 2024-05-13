@@ -23,7 +23,7 @@ public:
 
     template<typename U>
     __fast_inline constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
-            position(Vector2_t<T>(x_range.start, y_range.start)), size(Vector2_t<T>(x_range.get_length(), y_range.get_length())){;}
+            position(Vector2_t<T>(x_range.start, y_range.start)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
     template<typename U>
     __fast_inline constexpr Rect2_t(U x, U y, U width, U height):position(Vector2_t<U>(x,y)),size(Vector2_t<U>(width, height)){;}
 
