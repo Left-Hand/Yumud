@@ -44,7 +44,7 @@ public:
 
     __fast_inline_constexpr Range_t<T> operator + (const auto & value) const{
         Range_t<T> regular = this -> abs();
-        return (regular.start + value, regular.end + value);
+        return Range_t<T>(regular.start + value, regular.end + value);
     }
 
     __fast_inline_constexpr Range_t<T> operator - (const auto & value) const{
@@ -224,25 +224,16 @@ public:
             else return {regular.start, grid_field.end};
         }
 
+
         if(part_right_in_grid(before.end, grid_size)){
             return {before.end, before.end};
         }
 
-        if(part_left_in_grid(before.start, grid_size)){
-            return grid_next_right(before.start, grid_size);
+        auto ret = grid_next_right(before.start, grid_size);
+        if(ret.has(regular.end)){
+            return ret.part_left_in_grid(regular.end, grid_size);
         }
-        else{
-            auto ret = grid_next_right(before.start, grid_size);
-            if(ret.has(regular.end)){
-                return ret.part_left_in_grid(regular.end, grid_size);
-            }
-            return ret;
-        }
-
-        //should never reach here
-
-        // if(std::is_consta`)
-        return{0, 0};
+        return ret;
     }
 
     constexpr Range_t<T> scale(const auto & amount){
