@@ -2105,9 +2105,35 @@ int main(){
 
     delay(200);
     at24.init();
-    at24.store(at24.load(0) + 1, 0);
-    delay(20);
-    uart2.println(at24.load(0));
+
+    if(false){
+        at24.store(at24.load(0) + 1, 0);
+        delay(20);
+        uart2.println(at24.load(0));
+    }
+
+    if(false){
+        AT24C02_DEBUG("muti store begin");
+        constexpr auto begin_addr = 7;
+        // constexpr auto end_addr = 15;
+        uint8_t data[] = {0, 1, 2, 4};
+
+        at24.store(data, sizeof(data), begin_addr);
+        AT24C02_DEBUG("muti store end");
+    }
+
+    {
+        constexpr int page_size = 8;
+        Rangei plat = {8, 17};
+        Rangei window = {0, 0};
+
+        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+        // AT24C02_DEBUG(plat.gird_part(17, page_size, false));
+    }
+
     while(true);
     // at24.
     pedestrian_app();
