@@ -55,7 +55,7 @@ public:
     template<typename T>
     volatile bool store(const T & data){
 
-        auto NbrOfPage = page_range.get_length(); //计算要擦除多少页
+        auto NbrOfPage = page_range.length(); //计算要擦除多少页
         Address PAGE_WRITE_START_ADDR = getAddressRange().start;
         Address PAGE_WRITE_END_ADDR = getAddressRange().end;
 

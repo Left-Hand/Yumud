@@ -22,10 +22,11 @@ public:
 
     friend class Memory;
 
-    virtual void entry() = 0;
-    virtual void exit() = 0;
+    virtual void entry_store() = 0;
+    virtual void exit_store() = 0;
 
-
+    virtual void entry_load() = 0;
+    virtual void exit_load() = 0;
     virtual void _store(const uint8_t & data, const Address & loc) = 0;
     virtual void _load(uint8_t & data, const Address & loc) = 0;
 
@@ -41,37 +42,37 @@ public:
     }
 public:
     virtual void init() = 0;
-    auto getSize() const {return size;}
 
+    virtual bool busy() = 0;
+    auto getSize() const {return size;}
+    Rangei getWindow() const {return {0, getSize()}; }
     void store(const void * data, const Address & data_size, const Address & loc){
-        entry();
+        entry_store();
         _store(data, data_size, loc);
-        exit();
+        exit_store();
     }
 
     void store(const uint8_t & data, const Address & loc){
-        entry();
+        entry_store();
         _store(data, loc);
-        exit();
+        exit_store();
     }
 
     void load(uint8_t & data, const Address & loc){
-        entry();
+        entry_load();
         _load(data, loc);
-        exit();
+        exit_load();
     }
 
     void load(void * data, const Address & data_size, const Address & loc){
-        entry();
+        entry_load();
         _load(data, data_size, loc);
-        exit();
+        exit_load();
     }
 
     uint8_t load(const Address & loc){
-        entry();
         uint8_t data;
-        _load(data, loc);
-        exit();
+        load(data, loc);
         return data;
     }
 };

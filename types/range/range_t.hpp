@@ -91,6 +91,121 @@ public:
         return (start + end) / 2;
     }
 
+    static constexpr Range_t<T> grid(const auto & value, const auto & grid_size){
+        T ret_start;
+        if constexpr(std::is_integral<T>::value){
+            ret_start = (value / grid_size) * grid_size;
+        }else{
+            ret_start = floor(value / grid_size) * grid_size;
+        }
+        return Range_t<T>(ret_start, ret_start + grid_size);
+    }
+
+    static constexpr Range_t<T> grid_next(const auto & value, const auto & grid_size, const bool & right = true){
+        return grid(right ? (value + grid_size) : (value-grid_size), grid_size);
+    }
+
+    static constexpr Range_t<T> grid_next_right(const auto & value, const auto & grid_size){
+        return grid_next(value, grid_size, true);
+    }
+
+    static constexpr Range_t<T> grid_next_left(const auto & value, const auto & grid_size){
+        return grid_next(value, grid_size, false);
+    }
+
+    constexpr Range_t<T> gridfy(const auto & grid_size){
+        return Range_t<T>(grid(start, grid_size), grid(end, grid_size));
+    }
+
+    static constexpr Range_t<T> part_in_grid(const auto & value, const auto & grid_size, const bool & right_part = true){
+        if constexpr(std::is_integral<T>::value){
+            if(value % grid_size == 0) return {value, value};
+            auto gridfied = grid(value, grid_size);
+            if(right_part){
+                return {value, gridfied.end};
+            }else{
+                return {gridfied.start, value};
+            }
+        }
+    }
+
+    constexpr Range_t<T> part_right_in_grid(const auto & value, const auto & grid_size) const{
+        return part_in_grid(value, grid_size, true);
+    }
+
+    constexpr Range_t<T> part_left_in_grid(const auto & value, const auto & grid_size) const{
+        return part_in_grid(value, grid_size, false);
+    }
+
+
+
+    // constexpr bool lean_left_outside(const const Range_t<T> src){
+    //     Range_t<T> regular = this -> abs();
+    //     Range_t<T> src_regular = src.abs();
+
+    //     // f | src.f | t | src.t
+    //     return src_regular.has_value(regular.start) && regular.has_value(src_regular.end);
+    // }
+
+    // constexpr bool lean_right_outside(const const Range_t<T> src){
+    //     Range_t<T> regular = this -> abs();
+    //     Range_t<T> src_regular = src.abs();
+    //     // src.f | f | src.t | 
+
+    // }
+    // __fast_inline_constexpr Range_t<T> room_left(const Range_t<auto> & _content) const{
+    //     Range_t<T> content = _content.abs();
+    //     Range_t<T> regular = this -> abs();
+    //     return {regular.start, MAX(content.start, regular.start)};
+    // }
+
+    __fast_inline_constexpr Range_t<T> room_left(const Range_t<auto> & _content) const{
+        Range_t<T> content = _content.abs();
+        Range_t<T> regular = this -> abs();
+        return {regular.start, MAX(content.start, regular.start)};
+    }
+
+    __fast_inline_constexpr Range_t<T> room_right(const Range_t<auto> & _content) const{
+        Range_t<T> content = _content.abs();
+        Range_t<T> regular = this -> abs();
+        return {regular.start, MIN(content.start, regular.start)};
+    }
+
+    __fast_inline_constexpr int rooms(const Range_t<auto> & _content) const{
+        return bool(room_left(_content)) + bool(room_right(_content));
+    }
+
+
+
+    constexpr Range_t<T> grid_forward(const Range_t<auto> & _before, const auto & grid_size) const{
+        Range_t<T> before = _before.abs();
+        Range_t<T> regular = this -> abs();
+
+        if(before.start == before.end && before.start == 0){//initial
+            auto grid_field = grid(regular.start, grid_size);
+            if(grid_field.has(regular)) return regular;
+            else return {regular.start, grid_field.end};
+        }
+
+        if(part_right_in_grid(before.end, grid_size)){
+            return {before.end, before.end};
+        }
+
+        if(part_left_in_grid(before.start, grid_size)){
+            return grid_next_right(before.start, grid_size);
+        }
+        else{
+            auto ret = grid_next_right(before.start, grid_size);
+            if(ret.has(regular.end)){
+                return ret.part_left_in_grid(regular.end, grid_size);
+            }
+            return ret;
+        }
+
+        // should never reach here
+        return{0, 0};
+    }
+
     constexpr Range_t<T> scale(const auto & amount){
         Range_t<T> regular = *this.abs();
         T len = regular.get_length();
