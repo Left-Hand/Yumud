@@ -15,6 +15,7 @@ constexpr uint32_t SPI2_BaudRate = (144000000/8);
 
 #include "src/device/Encoder/Estimmator.hpp"
 #include "src/device/Memory/EEPROM/AT24CXX/at24c02.hpp"
+#include "src/flash/flash.hpp"
 
 // I2cSw i2cSw(i2cScl, i2cSda);
 
@@ -2103,6 +2104,8 @@ int main(){
     I2cDrv at24drv(i2csw, AT24C02::default_id);
     AT24C02 at24(at24drv);
 
+    // Flash flash(-2);
+
     delay(200);
     at24.init();
 
@@ -2128,17 +2131,17 @@ int main(){
         }
     }
 
-    if(false){
-        constexpr int page_size = 8;
-        Rangei plat = {11, 17};
-        Rangei window = {0, 0};
+    // if(false){
+    //     constexpr int page_size = 8;
+    //     Rangei plat = {11, 17};
+    //     Rangei window = {0, 0};
 
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        // AT24C02_DEBUG(plat.gird_part(17, page_size, false));
-    }
+    //     AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+    //     AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+    //     AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+    //     AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
+    //     // AT24C02_DEBUG(plat.gird_part(17, page_size, false));
+    // }
 
     while(true);
     // at24.

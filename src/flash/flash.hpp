@@ -3,10 +3,18 @@
 #define __FLASH_HPP__
 
 #include "src/platform.h"
+#include "src/device/Memory/storage.hpp"
+#include "src/device/Memory/memory.hpp"
 
-class Flash{
+#ifdef FLASH_DEBUG
+#undef FLASH_DEBUG
+#define FLASH_DEBUG(...) DEBUG_LOG(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#else
+#define FLASH_DEBUG(...)
+#endif
+
+class Flash:public Storage{
 protected:
-
 
     using Page = uint32_t;
     using PageRange = Range_t<Page>;
@@ -17,7 +25,7 @@ protected:
     static constexpr Address base_address = 0x08000000;
 
     Page page_count;
-    PageRange page_range;
+    // PageRange page_range;
 
     uint32_t pre_clock;
 
@@ -34,95 +42,83 @@ protected:
         return index > 0 ? index : page_count + index;
     }
 
-    AddressWindow getAddressRange(){
-        return (page_range * page_size).shift(base_address);
-    }
-public:
-    Flash(int _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
-    Flash(int _page_begin, int _page_end):
-            page_count(Sys::Chip::getFlashSize() / page_size),
-            page_range(PageRange(Page(0),Sys::Chip::getFlashSize() / page_size)
-            .intersection(PageRange(pageWarp(_page_begin), pageWarp(_page_end)))){;}
-
-    ~Flash(){exit();}
-
-    void init(){
+    void entry_store() override{
         settleClock();
         Systick_Init();
         delay(10);
     }
 
-    template<typename T>
-    volatile bool store(const T & data){
+    void exit_store() override{
 
-        auto NbrOfPage = page_range.length(); //计算要擦除多少页
-        Address PAGE_WRITE_START_ADDR = getAddressRange().start;
-        Address PAGE_WRITE_END_ADDR = getAddressRange().end;
+    }
 
-        logger.println(PAGE_WRITE_START_ADDR);
-        FLASH_Status FLASHStatus =  FLASH_COMPLETE;
+    // void entry_load(){}
+    // void exit_load(){}
+    void entry_load() override{
 
+    }
+
+    void exit_load() override{
+        resetClock();
+    }
+
+
+    void lock(){
+        FLASH_Lock_Fast();
+        __enable_irq();
+
+    }
+
+    void unlock(){
         __disable_irq();
         FLASH_Unlock_Fast();
 
         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
+    }
 
-        // logger.println("begin erase", PAGE_WRITE_START_ADDR);
+    void _store(const void * data, const Address & data_size, const Address & loc) override{
 
-        // uint32_t len = sizeof(data);
-        // for(Page EraseCounter = 0; (EraseCounter < NbrOfPage) && (FLASHStatus == FLASH_COMPLETE); EraseCounter++){
-            // Address op_address = PAGE_WRITE_START_ADDR + (page_size * EraseCounter)
+        unlock();
         uint32_t buf[page_size / sizeof(uint32_t)] = {0};
-        // memcpy(&buf, &data, sizeof(T));
-        for(size_t i = 0; i < sizeof(T); i++){
-            ((uint8_t *)buf)[i] = ((uint8_t *)&data)[i];
-            // logger.println(i,((uint8_t *)&data)[i] );
-        }
 
-        FLASH_ErasePage_Fast(PAGE_WRITE_START_ADDR);
-            // if()
-            // FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)((uint8_t *)&data + page_size * EraseCounter));
-        FLASH_ProgramPage_Fast(PAGE_WRITE_START_ADDR, (uint32_t *)&buf);
-        // }
+        AddressWindow store_window = AddressWindow{loc,loc + data_size};
+        AddressWindow op_window = {0,0};
+        do{
+            op_window = store_window.grid_forward(op_window, page_size);
+            if(op_window){
+                auto phy_window = decltype(op_window)::grid(op_window.shift(base_address).start, page_size);
+                if(op_window.length() < page_size) load(buf, page_size, phy_window.start);
 
-        FLASH_Lock_Fast();
-        __enable_irq();
-
-        Address address = PAGE_WRITE_START_ADDR;
-        bool MemoryProgramStatus = true;
-
-        uint32_t i = 0;
-        while((address < PAGE_WRITE_END_ADDR) && (MemoryProgramStatus != false)){
-            auto read_data = (*(__IO uint32_t*) address);
-            auto examine_data = buf[i];
-            if(read_data != examine_data){
-                MemoryProgramStatus = false;
+                memcpy(buf, (uint8_t *)data + op_window.start, op_window.length());
+                FLASH_ErasePage_Fast(phy_window.start);
+                FLASH_ProgramPage_Fast(phy_window.start, (uint32_t *)&buf);
             }
-            // logger.println("vait", address, read_data, examine_data);
-            address += 4;
-            i++;
-        }
-        // logger.println("vait", MemoryProgramStatus);
-        return MemoryProgramStatus;
+
+        }while(op_window);
+    
+
+        lock();
+
     };
 
-    template<typename T>
-    volatile void load(T & data){
-        Address PAGE_WRITE_START_ADDR = getAddressRange().start;
-        Address PAGE_WRITE_END_ADDR = getAddressRange().end;
-        Address address = PAGE_WRITE_START_ADDR;
-        // uint32_t i = 0;
-        for(size_t i = 0; i<sizeof(T);i++){
-            auto read_data = (*(__IO uint8_t*)(PAGE_WRITE_START_ADDR + i));
-            *((volatile uint8_t*)&data + i) = read_data;
-            // logger.println("read", address, read_data);
-            // address += 1;
-            // i++;
-        }
+    void _load(void * data, const Address & data_size, const Address & loc) override{
+        AddressWindow phy_window = AddressWindow{0, data_size}.shift(loc + base_address);
+        memcpy(data, (void *)phy_window.start, data_size);
     };
 
-    void exit(){
-        resetClock();
+public:
+    Flash(Address _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
+    Flash(Address _page_begin, Address _page_end):Storage((_page_end - _page_begin) * page_size),
+            page_count(Sys::Chip::getFlashSize() / page_size){;}
+
+    ~Flash(){}
+
+    void init() override{
+
+    }
+
+    bool busy() override{
+        return false;
     }
 };
 
