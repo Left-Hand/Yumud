@@ -3,6 +3,8 @@
 #define __RANGE_HPP__
 
 #include "src/platform.h"
+#include "types/string/String.hpp"
+#include "type_traits"
 
 template<typename T>
 struct Range_t{
@@ -12,9 +14,9 @@ public:
 
     Range_t() = default;
 
-    __fast_inline constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
+    __fast_inline_constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
 
-    __fast_inline constexpr auto & operator=(const Range_t<auto> & other) {
+    __fast_inline_constexpr auto & operator=(const Range_t<auto> & other) {
         this->start = other.start;
         this->end = other.end;
         return *this;
@@ -28,57 +30,92 @@ public:
         return start <= end;
     }
 
-    constexpr T get_length() const{
+    constexpr T length() const{
         return ABS(end - start);
     }
+    constexpr T length_signed() const{
+        return (end - start);
+    }
 
-    constexpr Range_t<T> abs() const{
+    __fast_inline_constexpr Range_t<T> abs() const{
         if(start > end) return Range_t<T>(end, start);
         else return *this;
     }
 
-    constexpr Range_t<T> operator + (const auto & value) const{
+    __fast_inline_constexpr Range_t<T> operator + (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return (regular.start + value, regular.end + value);
     }
 
-    constexpr Range_t<T> operator - (const auto & value) const{
+    __fast_inline_constexpr Range_t<T> operator - (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start - value, regular.end - value);
     }
 
-    constexpr Range_t<T> operator * (const auto & value) const{
+    __fast_inline_constexpr Range_t<T> operator * (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start * value, regular.end * value);
     }
 
-
-    constexpr Range_t<T> operator / (const auto & value) const{
+    __fast_inline constexpr Range_t<T> operator / (const auto & value) const{
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start / value, regular.end / value);
     }
 
-
-    constexpr bool has_value(const auto & value){
-        Range_t<T> regular = this -> abs();
-        return (regular.start <= value && value < regular.end);
+    __fast_inline_constexpr Range_t<T> & operator += (const auto & value) {
+        *this = *this + value;
+        return *this;
     }
 
-    constexpr bool intersects(const Range_t<auto> & _other) const {
+    __fast_inline_constexpr Range_t<T> & operator -= (const auto & value) {
+        *this = *this - value;
+        return *this;
+    }
+
+    __fast_inline_constexpr Range_t<T> & operator *= (const auto & value) {
+        *this = *this * value;
+        return *this;
+    }
+
+    __fast_inline_constexpr Range_t<T> & operator /= (const auto & value){
+        *this = *this / value;
+        return *this;
+    }
+
+    __fast_inline_constexpr bool operator == (const Range_t<auto> & _other) const {
+        Range_t<T> regular = this -> abs();
+        Range_t<T> other_regular = _other.abs();
+        return (regular.start == other_regular.start && regular.end == other_regular.end);
+    }
+
+    __fast_inline_constexpr bool operator!= (const Range_t<auto> & _other) const {
+        return !(*this == _other);
+    }
+
+    __fast_inline_constexpr bool intersects(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
         return(other_regular.end >= regular.start || regular.end >= other_regular.start);
     }
 
-    constexpr bool contains(const Range_t<auto> & _other) const {
+    __fast_inline_constexpr bool contains(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
         return (regular.start <= other_regular.start && regular.end >= other_regular.end);
     }
 
-    constexpr bool inside(const Range_t<auto> & _other) const {
+    __fast_inline_constexpr bool inside(const Range_t<auto> & _other) const {
         return _other.contains(*this);
     }
+
+    __fast_inline_constexpr bool has_value(const auto & value) const{
+        Range_t<T> regular = this -> abs();
+        return (regular.start <= value && value < regular.end);
+    }
+
+    constexpr bool has(const auto & value) const{return has_value(value);}
+    constexpr bool has(const Range_t<auto> & _other) const{return contains(_other);}
+
 
     constexpr Range_t<T> intersection(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
@@ -210,7 +247,7 @@ public:
 
     constexpr Range_t<T> scale(const auto & amount){
         Range_t<T> regular = *this.abs();
-        T len = regular.get_length();
+        T len = regular.length();
         T center = regular.get_center();
         Range_t<T> ret = Range_t<T>(center - len * amount / 2, center + len * amount / 2);
         if (ret.is_regular()) return ret;
@@ -260,6 +297,18 @@ public:
 
     constexpr explicit operator bool() const{
         return start!= end;
+    }
+
+    constexpr  __no_inline explicit operator String() const{
+        return toString();
+    }
+
+    __no_inline String toString(unsigned char decimalPlaces = 2){
+        if constexpr(std::is_integral<T>::value){
+            return ('[' + String(start) + ',' + String(end) + ')');
+        }else{
+            return ('[' + String(start, decimalPlaces) + ',' + String(end, decimalPlaces) + ')');
+        }
     }
 };
 
