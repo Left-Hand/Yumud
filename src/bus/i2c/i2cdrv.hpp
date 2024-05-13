@@ -11,6 +11,7 @@ public:
     I2cDrv(I2c & _bus, const uint8_t & _index = 0):BusDrv(_bus, _index){;}
 
     void writePool(const uint8_t & reg_address, const uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+        if(length == 0) return;
         if(!bus.begin(index)){
             bus.write(reg_address);
             // bus.begin(index);
@@ -32,6 +33,7 @@ public:
     }
 
     void readPool(const uint8_t & reg_address, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+        if(length == 0) return;
         if(!bus.begin(index)){
             bus.write(reg_address);
             if(!bus.begin(index | 0x01)){

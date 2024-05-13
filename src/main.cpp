@@ -2112,19 +2112,24 @@ int main(){
         uart2.println(at24.load(0));
     }
 
-    if(false){
+    if(true){
         AT24C02_DEBUG("muti store begin");
         constexpr auto begin_addr = 7;
         // constexpr auto end_addr = 15;
         uint8_t data[] = {0, 1, 2, 4};
-
-        at24.store(data, sizeof(data), begin_addr);
+        uint8_t data2[sizeof(data)];
+        // at24.store(data, sizeof(data), begin_addr);
         AT24C02_DEBUG("muti store end");
+
+        at24.load(data2, sizeof(data2), begin_addr);
+        for(const auto & item : data2){
+            logger.println("data_read", int(item));
+        }
     }
 
-    {
+    if(false){
         constexpr int page_size = 8;
-        Rangei plat = {8, 17};
+        Rangei plat = {11, 17};
         Rangei window = {0, 0};
 
         AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
