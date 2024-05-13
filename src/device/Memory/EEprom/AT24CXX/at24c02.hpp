@@ -5,7 +5,7 @@
 #include "device/device_defs.h"
 #include "../../memory.hpp"
 
-#define AT24C02_DEBUG
+// #define AT24C02_DEBUG
 
 #ifdef AT24C02_DEBUG
 #undef AT24C02_DEBUG
@@ -70,11 +70,11 @@ protected:
         // auto chip_window = getWindow();
         AddressWindow store_window = AddressWindow{loc,loc + data_size};
         AddressWindow op_window = {0,0};
-        // AT24C02_DEBUG("multi store entry", store_window);
+        AT24C02_DEBUG("multi store entry", store_window);
         do{
             op_window = store_window.grid_forward(op_window, page_size);
             if(op_window){
-                // AT24C02_DEBUG("write page happens", op_window);
+                AT24C02_DEBUG("write page happens", op_window);
                 wait_for_done();
                 bus_drv.writePool(op_window.start, (uint8_t *)data + (op_window.start - store_window.start), 1, op_window.length());
                 update_entry_ms();
@@ -117,6 +117,8 @@ protected:
     }
 
     void _load(void * data, const Address & data_size, const Address & loc) override {
+        // AddressWindow store_window = AddressWindow{loc,loc + data_size};
+        // AT24C02_DEBUG("multi load entry", store_window);
         bus_drv.readPool(loc, (uint8_t *)data, 1, data_size);
     }
 
@@ -131,6 +133,7 @@ protected:
 
     void entry_load() override{
         // last_entry_ms = millis();
+        wait_for_done();
         update_entry_ms();
     };
 

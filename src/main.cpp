@@ -2118,10 +2118,11 @@ int main(){
         // constexpr auto end_addr = 15;
         uint8_t data[] = {0, 1, 2, 4};
         uint8_t data2[sizeof(data)];
-        // at24.store(data, sizeof(data), begin_addr);
-        AT24C02_DEBUG("muti store end");
 
-        at24.load(data2, sizeof(data2), begin_addr);
+        Memory mem = {at24};
+        mem.store(data, begin_addr);
+
+        mem.load(data2, begin_addr);
         for(const auto & item : data2){
             logger.println("data_read", int(item));
         }

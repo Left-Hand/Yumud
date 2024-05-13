@@ -15,10 +15,10 @@ public:
     Range_t() = default;
 
     __fast_inline_constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
-
-    __fast_inline_constexpr auto & operator=(const Range_t<auto> & other) {
-        this->start = other.start;
-        this->end = other.end;
+    __fast_inline_constexpr Range_t(const Range_t<auto> & other): start(static_cast<T>(other.start)), end(static_cast<T>(other.end)) {;}
+    __fast_inline_constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
+        this->start = static_cast<T>(other.start);
+        this->end = static_cast<T>(other.end);
         return *this;
     }
 
