@@ -138,7 +138,7 @@ public:
         Rangei x_range = regular.get_x_range();
         Rangei y_range = regular.get_y_range();
 
-        if(y_range.get_length() > 2){
+        if(y_range.length() > 2){
             drawHriLine(x_range, y_range.start);
             drawHriLine(x_range, y_range.end - 1);
             Rangei shrunk_y_range = y_range.grow(-1);
