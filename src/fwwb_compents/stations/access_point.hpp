@@ -262,7 +262,6 @@ protected:
             logger.println("Unknown Command:", argc);
             break;
         }
-
     }
 public:
     CanAcessPoint(Can & _can, Printer & _logger) : CanFacility(_can, _logger, 0xf) {;}

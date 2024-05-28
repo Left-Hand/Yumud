@@ -6,9 +6,10 @@ using Color = Color_t<real_t>;
 #include "src/fwwb_compents/fwwb_inc.h"
 #include "dsp/pll.hpp"
 #include "src/opa/opa.hpp"
+#include "src/device/Adc/INA226/ina226.hpp"
 
-constexpr uint32_t SPI1_BaudRate = (144000000/32);
-constexpr uint32_t SPI2_BaudRate = (144000000/8);
+// constexpr uint32_t SPI1_BaudRate = (144000000/32);
+// constexpr uint32_t SPI2_BaudRate = (144000000/8);
 
 #define I2C_BaudRate 400000
 
@@ -2079,69 +2080,7 @@ int main(){
 
     Sys::Misc::prework();
 
-
-    // stepper_app();
-    // stepper_app_new();
-    // StepperTest::stepper_test();
-
-    // image.putseg_h8_unsafe(Vector2i{0,0}, 0x5a, true);
-    // image.putseg_v8_unsafe(Vector2i{0,0}, 0x39, true);
-
-    // for(auto & datum : data){
-    //     logger.println(datum);
-    // }
-
-    uart2.init(115200, Uart::Mode::TxOnly);
-    Printer & logger = uart2;
-    logger.setEps(4);
-    logger.setRadix(10);
-    logger.setSpace(",");
-
-    I2cSw i2csw = I2cSw(portD[1], portD[0]);
-    i2csw.init(400000);
-
-    I2cDrv at24drv(i2csw, AT24C02::default_id);
-    AT24C02 at24(at24drv);
-
-    delay(200);
-    at24.init();
-
-    if(false){
-        at24.store(at24.load(0) + 1, 0);
-        delay(20);
-        uart2.println(at24.load(0));
-    }
-
-    if(true){
-        AT24C02_DEBUG("muti store begin");
-        constexpr auto begin_addr = 7;
-        // constexpr auto end_addr = 15;
-        uint8_t data[] = {0, 1, 2, 4};
-        uint8_t data2[sizeof(data)];
-
-        Memory mem = {at24};
-        mem.store(data, begin_addr);
-
-        mem.load(data2, begin_addr);
-        for(const auto & item : data2){
-            logger.println("data_read", int(item));
-        }
-    }
-
-    if(false){
-        constexpr int page_size = 8;
-        Rangei plat = {11, 17};
-        Rangei window = {0, 0};
-
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        AT24C02_DEBUG(window = plat.grid_forward(window, page_size));
-        // AT24C02_DEBUG(plat.gird_part(17, page_size, false));
-    }
-
-    while(true);
-    // at24.
+    
     pedestrian_app();
     // modem_app();
     // test_app();

@@ -77,7 +77,8 @@ void pedestrian_app(){
     logger.setRadix(2);
     logger.setSpace(",");
 
-
+    while(true)
+    logger.println("why");
     I2cSw               i2csw(portD[1], portD[0]);
     i2csw.init(0);
 
@@ -119,20 +120,20 @@ void pedestrian_app(){
     AW9523 aw(aw_drv);
     aw.init();
 
-    OledInterfaceI2c oled_interface(i2csw, SSD13XX::default_id);
-    SSD13XX_128X32
-    oled(oled_interface);
-    oled.init();
-    oled.enableFlipX(false);
-    oled.enableFlipY(false);
+    // OledInterfaceI2c oled_interface(i2csw, SSD13XX::default_id);
+    // SSD13XX_72X40
+    // oled(oled_interface);
+    // oled.init();
+    // oled.enableFlipX(false);
+    // oled.enableFlipY(false);
 
-    Painter<Binary> painter;
-    painter.bindImage(oled.fetchFrame());
-    // oled.fetchFrame().putpixel({0, 0}, true);
-    painter.setColor(true);
-    // painter.drawString({14, 2}, "Rst");
-    painter.drawChar(Vector2i{54 + 54 * sin(4), 0}, 'h');
-    oled.update();
+    // Painter<Binary> painter;
+    // painter.bindImage(oled.fetchFrame());
+    // // oled.fetchFrame().putpixel({0, 0}, true);
+    // painter.setColor(true);
+    // // painter.drawString({14, 2}, "Rst");
+    // painter.drawChar(Vector2i{30 + 30 * sin(4), 0}, 'h');
+    // oled.update();
 
     // painter.drawChar({20, 4}, '&');
     // for(int i = 0; i < 7; i ++){
@@ -143,7 +144,7 @@ void pedestrian_app(){
     // painter.drawVerLine(Vector2i{14, 5}, 8);
     // painter.draw
 
-    oled.update();
+    // oled.update();
 
     AW9523RgbLed        awled_l(aw, Pin::_8, Pin::_10, Pin::_9);
     PanelLed            panelLedA(awled_l);
@@ -180,15 +181,16 @@ void pedestrian_app(){
     CanStation          can_station(can1, logger);
     TargetStation       target_station(can_station, panelUnitA, panelUnitB);
     DiffPedestrianStation   station(target_station, vl, qmc, ir_left, ir_right, coil_left,coil_right,motorL, motorR);
-    // station.init();
+    station.init();
 
     while(true){
-        oled.flush(false);
-
-        painter.drawString(Vector2i{0, 0}, String(frac(t)));
-        oled.update();
         // oled.flush(false);
-        // station.run();
+
+        // painter.drawString(Vector2i{0, 0}, String(frac(t)));
+        // oled.update();
+        // logger.println(t);
+        // oled.flush(false);
+        station.run();
         // delay(200);
         // station.setOmega(real_t(6 * frac(t)));
         // logger.println(int(t * 1000));

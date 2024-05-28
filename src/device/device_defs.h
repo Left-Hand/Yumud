@@ -28,9 +28,14 @@ public:
     int numerator;
     int denominator;
     Fraction(int numerator, int denominator) : numerator(numerator), denominator(denominator) {}
+
     int operator * (const int & value){
         return numerator * value / denominator;
     }
+
+    // real_t operator * (const real_t & value){
+        // return numerator * value / denominator;
+    // }
 
     Fraction operator * (const Fraction & value){
         return Fraction(numerator * value.numerator, denominator * value.denominator);
