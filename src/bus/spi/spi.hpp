@@ -61,7 +61,7 @@ public:
     SpiHw(SPI_TypeDef * _instance):instance(_instance){;}
     SpiHw(SPI_TypeDef * _instance, Gpio & _cs_pin):instance(_instance){bindCsPin(_cs_pin, 0);}
     SpiHw(SPI_TypeDef * _instance, GpioVirtual & _cs_pin):instance(_instance){bindCsPin(_cs_pin, 0);}
-    void init(const uint32_t & baudRate) override;
+    void init(const uint32_t & baudRate, const Mode & _mode = Mode::TxRx);
     void enableHwCs(const bool en = true);
 
     void enableRxIt(const bool en = true);

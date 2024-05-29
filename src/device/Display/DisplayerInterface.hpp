@@ -19,8 +19,9 @@ public:
 
 
 class DisplayInterfaceSpi:public DisplayerInterface{
-protected:
-    SpiDrv & bus_drv;
+// protected:
+public:
+    SpiDrv bus_drv;
     GpioConcept & dc_gpio;
     GpioConcept & res_gpio;
     GpioConcept & blk_gpio;
@@ -34,7 +35,15 @@ public:
             GpioConcept & _res_gpio = GpioNull,
             GpioConcept & _blk_gpio = GpioNull
             ):bus_drv(_bus_drv),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
-    
+
+    DisplayInterfaceSpi(
+            Spi & _bus,
+            const uint8_t & index,
+            GpioConcept & _dc_gpio, 
+            GpioConcept & _res_gpio = GpioNull,
+            GpioConcept & _blk_gpio = GpioNull
+            ):bus_drv(_bus, index),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
+
     void init() override{
         dc_gpio.OutPP();
         res_gpio.OutPP(1);

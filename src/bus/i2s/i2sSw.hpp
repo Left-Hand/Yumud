@@ -100,7 +100,7 @@ public:
         return ErrorType::OK;
     }
 
-    void init(const uint32_t & baudRate) override {
+    void init(const uint32_t & baudRate){
         sck.OutPP();
         sda.OutPP();
         ws.OutPP();

@@ -29,6 +29,8 @@ public:
     enum class ShuntVoltageConversionTime:uint8_t{
         us140 = 0, us204, us332, us588, ms1_1, ms2_116, ms4_156, ms8_244
     };
+
+    static constexpr uint8_t default_id = 0x80; 
 protected:
     I2cDrv & bus_drv;
     

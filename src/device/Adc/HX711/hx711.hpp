@@ -10,10 +10,15 @@ public:
         A128 = 1, B32, A64
     };
 protected:
-    const uint32_t err_data = 0xFFFFFFFF;
     GpioConcept & sck_pin;
     GpioConcept & sdo_pin;
     ConvType conv_type = ConvType::A128;
+
+    uint32_t last_data;
+    uint32_t zero_offset;
+    bool inversed = false;
+
+    static constexpr real_t G = 9.8;
 
     uint32_t read_data(void){
         uint32_t data=0;
@@ -48,8 +53,30 @@ public:
         return sdo_pin == false;
     }
 
-    void getWeightData(uint32_t & weight){
-        weight = read_data();
+    void update(){
+        if(isIdle()) last_data = read_data();
+    }
+
+    void inverse(const bool & en = true){
+        inversed = en;
+    }
+    void compensate(){
+        while(!isIdle());
+        update();
+        zero_offset = last_data;
+    }
+
+    int getWeightData(){
+        return inversed ? (last_data - zero_offset) : (zero_offset - last_data);
+    }
+
+    int getWeightGram(){
+        return getWeightData() / 1000;
+    }
+
+    real_t getNewton(){
+        return G * (real_t(getWeightGram()) / 1000);
+        // return real_t(getWeightGram());
     }
 
     void setConvType(const ConvType & _convtype){

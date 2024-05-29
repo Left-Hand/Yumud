@@ -39,7 +39,7 @@ public:
         explicit operator ErrorType() {return errorType;}
     };
 
-    virtual void init(const uint32_t & baudRate) = 0;
+    // virtual void init(const uint32_t & baudRate) = 0;
 
     virtual void configDataSize(const uint8_t & data_size) = 0;
     virtual void configBaudRate(const uint32_t & baudRate) = 0;

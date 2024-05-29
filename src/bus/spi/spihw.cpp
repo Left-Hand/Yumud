@@ -135,7 +135,7 @@ void SpiHw::enableHwCs(const bool en){
 void SpiHw::enableRxIt(const bool en){
 
 }
-void SpiHw::init(const uint32_t & baudrate){
+void SpiHw::init(const uint32_t & baudrate, const Mode & mode){
 
 	enableRcc();
     initGpios();

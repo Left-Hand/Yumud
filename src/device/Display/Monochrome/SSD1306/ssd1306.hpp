@@ -2,7 +2,7 @@
 #define __SSD1306_HPP__
 
 #include "../../DisplayerInterface.hpp"
-#include "types/image/packedImage.hpp"
+#include "types/image/packed_image.hpp"
 
 // class OldeDisplayer : public D
 class SSD13XX:public Displayer<Binary>{
@@ -76,8 +76,7 @@ public:
 class SSD13XX_72X40:public SSD13XX{
 protected:
     static constexpr Vector2i phy_size = Vector2i(72, 40);
-    PackedBinary frame_buf[phy_size.x*phy_size.y / 8];
-    VerticalBinaryImage frame_instance = VerticalBinaryImage(frame_buf, phy_size);
+    VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
 
@@ -96,8 +95,7 @@ public:
 class SSD13XX_128X64:public SSD13XX{
 protected:
     static constexpr Vector2i phy_size = Vector2i(128, 64);
-    PackedBinary frame_buf[phy_size.x*phy_size.y / 8];
-    VerticalBinaryImage frame_instance = VerticalBinaryImage(frame_buf, phy_size);
+    VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
 
     void preinitByCmds() override;
@@ -117,8 +115,7 @@ public:
 class SSD13XX_128X32:public SSD13XX{
 protected:
     static constexpr Vector2i phy_size = Vector2i(128, 32);
-    PackedBinary frame_buf[phy_size.x*phy_size.y / 8];
-    VerticalBinaryImage frame_instance = VerticalBinaryImage(frame_buf, phy_size);
+    VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
     void setFlushPos(const Vector2i & pos) override{
@@ -143,8 +140,7 @@ public:
 class SSD13XX_88X48:public SSD13XX{
 protected:
     static constexpr Vector2i phy_size = Vector2i(88, 48);
-    PackedBinary frame_buf[phy_size.x*phy_size.y / 8];
-    VerticalBinaryImage frame_instance = VerticalBinaryImage(frame_buf, phy_size);
+    VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
 
@@ -163,8 +159,7 @@ public:
 class SSD13XX_64X48:public SSD13XX{
 protected:
     static constexpr Vector2i phy_size = Vector2i(64, 48);
-    PackedBinary frame_buf[phy_size.x*phy_size.y / 8];
-    VerticalBinaryImage frame_instance = VerticalBinaryImage(frame_buf, phy_size);
+    VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
 
@@ -183,8 +178,7 @@ public:
 class SSD13XX_128X80:public SSD13XX{
 protected:
     static constexpr Vector2i phy_size = Vector2i(128, 80);
-    PackedBinary frame_buf[phy_size.x*phy_size.y / 8];
-    VerticalBinaryImage frame_instance = VerticalBinaryImage(frame_buf, phy_size);
+    VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
 

@@ -1,11 +1,11 @@
 #include "extra_convs.hpp"
 
-String iq_t::toString(const uint8_t eps) const{
+String iq_t::toString(unsigned char eps) const{
 
-    char str_int[8] = {0};
-    char str_float[eps+1] = {0};
+    char str_int[6] = {0};
+    char str_frac[6] = {0};
 
-    char buf[10 + eps];
+    char buf[12];
 
     uint32_t abs_value = abs(value);
     uint32_t int_part = abs_value >> GLOBAL_Q;
@@ -24,12 +24,12 @@ String iq_t::toString(const uint8_t eps) const{
 
         float_part *= scale;
         float_part >>= GLOBAL_Q;
-        StringUtils::itoas(float_part,str_float, 10, eps);
+        StringUtils::itoas(float_part,str_frac, 10, eps);
     }
 
     int i = strlen(str_int);
     str_int[i] = '.';
-    strcat(str_int,str_float);
+    strcat(str_int,str_frac);
     strcpy(buf,str_int);
 
     return String(buf);
@@ -54,6 +54,6 @@ iq_t::operator String() const{
     return toString(3);
 }
 
-String toString(const iq_t & iq, const uint8_t & eps){
+String toString(const iq_t & iq, unsigned char eps){
     return iq.toString(MIN(eps, 4));
 }

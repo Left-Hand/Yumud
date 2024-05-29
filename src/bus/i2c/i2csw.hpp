@@ -132,7 +132,7 @@ public:
         return ErrorType::OK;
     }
 
-    void init(const uint32_t & baudRate) override {
+    void init(const uint32_t & baudRate){
         sda.set();
         sda.OutOD();
         scl.set();

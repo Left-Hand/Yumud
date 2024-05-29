@@ -4,9 +4,9 @@
 
 #include "../../DisplayerInterface.hpp"
 #include "types/image/image.hpp"
+#include "src/bus/spi/spi2.hpp"
 
-
-class ST7789:public ImageWritable<RGB565>{
+class ST7789:public Displayer<RGB565>{
 private:
     DisplayInterfaceSpi & interface;
 
@@ -71,22 +71,42 @@ protected:
         setpos_unsafe(pos);
         writePixel(color);
     }
-
 public:
     ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
-            ImageBasics(_size), ImageWritable<RGB565>(_size),interface(_interface){;}
+            ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
     void init();
     void setDisplayOffset(const Vector2i & _offset){
         offset = _offset;
     }
-    // void setDisplayArea(const Rect2i & _area){
-    //     area = _area;
-    // }
+
     void puttexture_unsafe(const Rect2i & rect, const Grayscale * color_ptr){
         setarea_unsafe(rect);
-        for(size_t i = 0; i < (size_t)rect.get_area(); i++){
-            writePixel(RGB565(color_ptr[i]));
-        }
+        auto size = (size_t)rect.get_area();
+        // for(size_t i = 0; i < size; i++){
+        //     writePixel(RGB565(color_ptr[i]));
+        // }
+                    interface.dc_gpio = DisplayInterfaceSpi::data_level;
+            if(!spi2.begin(0)){
+                spi2.configDataSize(16);
+                for(size_t i = 0; i < size; i++) spi2.write((uint16_t)RGB565(color_ptr[i]));
+                spi2.end();
+                spi2.configDataSize(8);
+            }
+
+    }
+
+    void puttexture_unsafe(const Rect2i & rect, const Binary * color_ptr){
+        setarea_unsafe(rect);
+        auto size = (size_t)rect.get_area();
+        // for(size_t i = 0; i < size; i++){
+        //     writePixel(((uint8_t *)color_ptr)[i] ? 0xffff : 0);
+        // }
+            // interface.writeData()
+            interface.dc_gpio = DisplayInterfaceSpi::data_level;
+            if(!spi2.begin(0)){
+                spi2.configDataSize(16);
+                for(size_t i = 0; i < size; i++) spi2.write((((const uint8_t *)color_ptr)[i] ? 0xffff : 0));
+            }
     }
     void setFlipY(const bool & flip){modifyCtrl(flip, 7);}
     void setFlipX(const bool & flip){modifyCtrl(flip, 6);}
