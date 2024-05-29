@@ -2073,22 +2073,22 @@ logger.println(__VA_ARGS__);};
 
 // };
 
-#include "image/packedImage.hpp"
+// #include "image/packedImage.hpp"
 #include "src/bus/bus_inc.h"
 
-int main(){
+// int main(){
 
-    Sys::Misc::prework();
+    // Sys::Misc::prework();
 
     
-    pedestrian_app();
+    // pedestrian_app();
     // modem_app();
     // test_app();
     // pmdc_test();
     // SpreadCycle::chopper_test();
     // buck_test();
     // osc_test();
-}
+// }
 
     // timer1.init(25600);
 
@@ -2338,16 +2338,6 @@ int main(){
     // Gpio sdoPin(GPIOB, GPIO_Pin_5);
 
 
-    // HX711 hx711(sckPin, sdoPin);
-    // hx711.init();
-    // hx711.setConvType(HX711::ConvType::A128);
-    // while(true){
-    //     while(!hx711.isIdle());
-    //     Led = !Led;
-    //     uint32_t weight = 0;
-    //     hx711.getWeightData(weight);
-    //     uart2.println(weight);
-    // }
     // while(true){
     //     uart2.println(mt_sensor.getRawPosition());
     //     delay(20);
