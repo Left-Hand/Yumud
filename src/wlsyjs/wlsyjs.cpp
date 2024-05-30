@@ -190,18 +190,25 @@ public:
 
         static int cnt = 0;
         cnt++;
-        painter.drawString({0, 24}, "N:" + toString(cnt));
-        painter.drawString({0, 0}, "输入功率/W:" + toString(bm.getInputWatt()));
-        painter.drawString({0, 8}, "输出功率/W:" + toString(bm.getOutputWatt()));
-        painter.drawString({0, 16}, "效率/%:" + toString(bm.getEffiency()));
 
+        // painter.setFont(font7x7);
+        // painter.drawString({0, 24}, "N:");
+        // painter.drawString({0, 0}, "入瓦");
+        // painter.drawString({0, 8}, "出瓦" + toString(bm.getOutputWatt()));
+        // painter.drawString({0, 16}, "效率" + toString(bm.getEffiency()));
+
+        painter.setFont(font8x6);
+        painter.drawString({20, 0}, toString(cnt));
+
+        // ds.fill(false);
+        // oled.update();
         ds.update();
     }
 
 };
 
 void app_main(){
-    I2cSw               i2csw(portB[3], portB[5]);
+    I2cSw               i2csw(portB[2], portB[10]);
     i2csw.init(0);
 
     auto &              trigGpioA(portA[0]);
@@ -222,8 +229,15 @@ void app_main(){
 
 
 
-    OledInterfaceI2c oled_drv(i2csw, SSD13XX::default_id);
-    SSD13XX_128X32 oled(oled_drv);
+    // OledInterfaceI2c oled_drv(i2csw, SSD13XX::default_id);
+    spi1.init(1000000, SerBus::TxOnly);
+    spi1.bindCsPin(portA[15], 0);
+
+    SpiDrv spi1drv{spi1, 0};
+    
+    DisplayInterfaceSpi oled_drv{spi1drv, portB[4], portA[9]};
+    SSD13XX_128X64 oled(oled_drv);
+
 
     BackModule machine{inputMachine, outputMachine};
     FrontModule interact{oled, machine};

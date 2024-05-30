@@ -1,7 +1,8 @@
 #include "ssd1306.hpp"
 
 
-void SSD13XX::init(){    
+void SSD13XX::init(){   
+    interface.init(); 
     preinitByCmds();
     flush(false);
     enable();

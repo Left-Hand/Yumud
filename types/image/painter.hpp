@@ -16,7 +16,7 @@ template<typename ColorType>
 class Painter{
 protected:
     ImageWritable<ColorType> * src_image = nullptr;
-    Font & font;
+    const Font * font;
     ColorType m_color;
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
@@ -24,7 +24,7 @@ protected:
     }
 
 public:
-    Painter(Font & _font = font7x7):font(_font){;}
+    Painter(){;}
 
     // Painter(ImageView<ColorType> * _srcImage, Font * _font):src_image(_srcImage),font(_font) {;}
 
@@ -35,6 +35,10 @@ public:
     
     void bindImage(ImageWritable<ColorType> & _source){
         src_image = &_source;
+    }
+
+    void setFont(const Font & _font){
+        font = &_font;
     }
 
 
@@ -239,26 +243,26 @@ public:
 
     void drawChar(const Vector2i & pos,const wchar_t & chr){
         Rect2i image_area = Rect2i({}, src_image->size);
-        Rect2i char_area = Rect2i(pos, font.size).intersection(image_area);
+
+        const Vector2i font_size = font->size;
+        Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
 
         if(!char_area) return;
         
         for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
             uint8_t mask;
-            for(int j = 0; j < 7; j++){
-            // for(int j = 0; j < 8; j++){
+            for(int j = 0; j < font_size.y; j++){
+ 
                 if(j % 8 == 0) mask = 0;
 
                 Vector2i offs = Vector2i(i - char_area.position.x ,j % 8);
-                // if(!Rangei{0, font.size.x}.has_value(offs.x)) continue;
-                if(font.getpixel(chr, offs)){
+                if(font->getpixel(chr, offs)){
                     mask |= (0x01 << (j % 8));
                 }
 
-                if(j % 8 == 7 || j == font.size.y - 1){
+                if(j % 8 == 7 || j == font_size.y - 1){
                     src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
                 }
-                // if(j % 8 == 7 || j == font.size.y - 1) src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), 0xff, m_color);
                 DEBUG_PRINT(Vector2i(i, (j & (~(8 - 1))) + pos.y));
             }
         }
@@ -268,7 +272,7 @@ public:
     const char * str_ptr = str.c_str();
 	GBKIterator iterator(str_ptr);
 	
-    for(int x = pos.x; x < src_image->size.x; x += (font.size.x + 1)){
+    for(int x = pos.x; x < src_image->size.x; x += (font->size.x + 1)){
         if(iterator.hasNext()){
             drawChar(Vector2i(x, pos.y), iterator.next());
         }else{

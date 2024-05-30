@@ -17,10 +17,10 @@ public:
 
 class Font8x6:public Font{
 public:
-    Font8x6():Font( Vector2i(6,8)){;}
+    Font8x6():Font( Vector2i(5,8)){;}
     bool getpixel(const wchar_t & chr, const Vector2i & offset) const override{
         if (!size.has_point(offset)) return false;
-        return font8x6_enc[MAX(chr - ' ', 0)][offset.x] & (1 << offset.y);
+        return font8x6_enc[MAX(chr - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
 };
 
@@ -116,15 +116,25 @@ public:
         // if(!size.has_point(offset)) return false;
         if(offset.y > 6) return false;
 		static wchar_t last_chr = 0;
-		static const font_item_t * last_font_item = nullptr;
-		
+		static const font_item_t * last_font_ptr = nullptr;
+		static uint8_t buf[7];
+
 		if(chr != last_chr){
-			last_font_item = find_font_item(chr);
-			last_chr = chr;
+            last_font_ptr = find_font_item(chr);
+            if(last_font_ptr){
+                for(uint8_t i = 0; i < 7; i++){
+                    buf[i] = last_font_ptr->data[i];
+                }
+            }else{
+                for(uint8_t i = 0; i < 7; i++){
+                    buf[i] = 0;
+                }
+            }
+            last_chr = chr;
 		}
 
-		if(last_font_item){
-			return last_font_item->data[offset.y] & (0x80 >> offset.x);
+		if(last_font_ptr){
+			return buf[offset.y] & (0x80 >> offset.x);
 		}else{
 			return false;
 		}
