@@ -24,7 +24,7 @@ protected:
     }
 
 public:
-    Painter(Font & _font = font8x6):font(_font){;}
+    Painter(Font & _font = font7x7):font(_font){;}
 
     // Painter(ImageView<ColorType> * _srcImage, Font * _font):src_image(_srcImage),font(_font) {;}
 
@@ -237,7 +237,7 @@ public:
         }
     }
 
-    void drawChar(const Vector2i & pos,const char & chr){
+    void drawChar(const Vector2i & pos,const wchar_t & chr){
         Rect2i image_area = Rect2i({}, src_image->size);
         Rect2i char_area = Rect2i(pos, font.size).intersection(image_area);
 
@@ -245,7 +245,8 @@ public:
         
         for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
             uint8_t mask;
-            for(int j = 0; j < font.size.y; j++){
+            for(int j = 0; j < 7; j++){
+            // for(int j = 0; j < 8; j++){
                 if(j % 8 == 0) mask = 0;
 
                 Vector2i offs = Vector2i(i - char_area.position.x ,j % 8);
@@ -254,18 +255,22 @@ public:
                     mask |= (0x01 << (j % 8));
                 }
 
-                if(j % 8 == 7) src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
-                // if(j % 8 == 7) src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), 0xff, m_color);
+                if(j % 8 == 7 || j == font.size.y - 1){
+                    src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
+                }
+                // if(j % 8 == 7 || j == font.size.y - 1) src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), 0xff, m_color);
+                DEBUG_PRINT(Vector2i(i, (j & (~(8 - 1))) + pos.y));
             }
         }
     }
 
     void drawString(const Vector2i & pos, const String & str){
     const char * str_ptr = str.c_str();
-
+	GBKIterator iterator(str_ptr);
+	
     for(int x = pos.x; x < src_image->size.x; x += (font.size.x + 1)){
-        if(*str_ptr){
-            drawChar(Vector2i(x, pos.y), *str_ptr);
+        if(iterator.hasNext()){
+            drawChar(Vector2i(x, pos.y), iterator.next());
         }else{
             break;
         }

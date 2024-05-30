@@ -4,6 +4,7 @@
 
 #include "odometer.hpp"
 #include "dsp/observer/LinearObserver.hpp"
+#include "src/system.hpp"
 
 class Estimmator{
 // protected:

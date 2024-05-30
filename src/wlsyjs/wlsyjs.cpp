@@ -191,9 +191,9 @@ public:
         static int cnt = 0;
         cnt++;
         painter.drawString({0, 24}, "N:" + toString(cnt));
-        painter.drawString({0, 0}, "I/W:" + toString(bm.getInputWatt()));
-        painter.drawString({0, 8}, "O/W:" + toString(bm.getOutputWatt()));
-        painter.drawString({0, 16}, "E/%:" + toString(bm.getEffiency()));
+        painter.drawString({0, 0}, "输入功率/W:" + toString(bm.getInputWatt()));
+        painter.drawString({0, 8}, "输出功率/W:" + toString(bm.getOutputWatt()));
+        painter.drawString({0, 16}, "效率/%:" + toString(bm.getEffiency()));
 
         ds.update();
     }

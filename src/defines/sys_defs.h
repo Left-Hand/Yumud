@@ -76,6 +76,7 @@
 
 #endif
 
+#define ARRSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 
 #ifndef __nopn
