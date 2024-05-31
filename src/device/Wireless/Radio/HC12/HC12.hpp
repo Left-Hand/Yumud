@@ -6,7 +6,7 @@
 #include "types/string/String.hpp"
 #include "../Radio.hpp"
 
-class HC12:public Uart, public Radio{
+class HC12:public Printer, public Radio{
 public:
     enum class PowerMode{
         Low,
@@ -21,9 +21,19 @@ public:
     };
 
 protected:
+    Uart & uart;
     GpioConcept & set_pin;
     uint16_t timeout = 5;
 
+    void _write(const char & data) override{
+        uart.write(data);
+    }
+    void _read(char & data) override{
+        data = uart.read();
+    }
+    size_t available() override{
+        return uart.available();
+    }
     bool sendAtCommand(const char * token){
         return sendAtCommand(String(token));
     }
@@ -66,7 +76,7 @@ protected:
         return is_valid;
     }
 public:
-    HC12(Uart & _uart, GpioConcept & _set_pin):Uart(_uart), set_pin(_set_pin){;}
+    HC12(Uart & _uart, GpioConcept & _set_pin = GpioNull):uart(_uart), set_pin(_set_pin){;}
 
     void init(){;}
     void sleep(){sendAtCommand("SLEEP");}

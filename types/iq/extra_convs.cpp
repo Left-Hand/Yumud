@@ -2,10 +2,8 @@
 
 String iq_t::toString(unsigned char eps) const{
 
-    char str_int[6] = {0};
-    char str_frac[6] = {0};
-
-    char buf[12];
+    char str_int[16] = {0};
+    char str_frac[8] = {0};
 
     uint32_t abs_value = abs(value);
     uint32_t int_part = abs_value >> GLOBAL_Q;
@@ -27,12 +25,18 @@ String iq_t::toString(unsigned char eps) const{
         StringUtils::itoas(float_part,str_frac, 10, eps);
     }
 
-    int i = strlen(str_int);
-    str_int[i] = '.';
-    strcat(str_int,str_frac);
-    strcpy(buf,str_int);
+    // int i = 0;
+    // for(;;i < int(strlen(str_int))){buf[i] = str_int[i];}
+    // i++;
+    // strcpy(buf,str_int);
+    str_int[strlen(str_int)] = '.';
+    // buf[strlen(buf)] = '.';
+    str_frac[eps] = 0;
+    // strcat(buf, str_frac);
 
-    return String(buf);
+    // for(int j = 0; j < eps; j++){buf[i + j] = str_frac[j];}
+
+    return String(str_int) + String(str_frac);
 };
 
 

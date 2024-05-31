@@ -3,7 +3,7 @@
 #define __FONT_HPP__
 
 #include "../../vector2/vector2_t.hpp"
-#include "font8x6.h"
+#include "font8x5.h"
 #include "font16x8.h"
 #include "chfont7x7.h"
 
@@ -15,16 +15,16 @@ public:
 };
 
 
-class Font8x6:public Font{
+class Font8x5:public Font{
 public:
-    Font8x6():Font( Vector2i(5,8)){;}
+    Font8x5():Font( Vector2i(5,8)){;}
     bool getpixel(const wchar_t & chr, const Vector2i & offset) const override{
         if (!size.has_point(offset)) return false;
-        return font8x6_enc[MAX(chr - ' ', 0)][offset.x + 1] & (1 << offset.y);
+        return font8x5_enc[MAX(chr - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
 };
 
-extern Font8x6 font8x6;
+extern Font8x5 font8x5;
 
 
 class GBKIterator {

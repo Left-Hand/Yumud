@@ -21,7 +21,7 @@ private:
     Error wait_ack(){
         sda.set();
         sda.InFloating();
-        // delayDur();
+        delayDur();
         scl.set();
         TimeStamp stamp;
         while(sda.read()){

@@ -15,6 +15,8 @@
 
 #include "src/device/Display/Monochrome/SSD1306/ssd1306.hpp"
 #include "src/device/Adc/HX711/HX711.hpp"
+#include "src/device/Wireless/Radio/HC12/HC12.hpp"
+
 
 #include "types/image/painter.hpp"
 
@@ -191,14 +193,15 @@ public:
         static int cnt = 0;
         cnt++;
 
-        // painter.setFont(font7x7);
-        // painter.drawString({0, 24}, "N:");
+        painter.setFont(font7x7);
+        painter.drawString({0, 24}, "N:");
         // painter.drawString({0, 0}, "入瓦");
-        // painter.drawString({0, 8}, "出瓦" + toString(bm.getOutputWatt()));
-        // painter.drawString({0, 16}, "效率" + toString(bm.getEffiency()));
+        painter.drawString({0, 0}, "首先打开基于开发板方式新建项目");
+        painter.drawString({0, 8}, "出瓦" + toString(bm.getOutputWatt()));
+        painter.drawString({0, 16}, "效率" + toString(bm.getEffiency()));
 
-        painter.setFont(font8x6);
-        painter.drawString({20, 0}, toString(cnt));
+        painter.setFont(font8x5);
+        painter.drawString({20, 24}, toString(cnt));
 
         // ds.fill(false);
         // oled.update();
@@ -208,17 +211,23 @@ public:
 };
 
 void app_main(){
-    I2cSw               i2csw(portB[2], portB[10]);
-    i2csw.init(0);
+    auto & scl_pin = portB[6];
+    auto & sda_pin = portB[7];
+    I2cSw               i2csw(scl_pin, sda_pin);
+    i2csw.init(100000);
+
+    I2cDrv ina226_drv(i2csw, INA226::default_id);
+    INA226 ina226(ina226_drv);
+
+    ina226.init(0.007,5);
 
     auto &              trigGpioA(portA[0]);
     ExtiChannel         trigExtiCHA(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
     CaptureChannelExti  capA(trigExtiCHA, trigGpioA);
 
 
-    Heater heater{portA[4]};
-    I2cDrv ina226_drv(i2csw, INA226::default_id);
-    INA226 ina226(ina226_drv);
+    Heater heater{portB[15]};
+
 
     InputModule inputMachine{ina226, heater};
 
@@ -227,10 +236,10 @@ void app_main(){
 
     OutputModule outputMachine{speedCapture, hx711};
 
-
+    HC12 hc12{uart1};
 
     // OledInterfaceI2c oled_drv(i2csw, SSD13XX::default_id);
-    spi1.init(1000000, SerBus::TxOnly);
+    spi1.init(18000000, SerBus::TxOnly);
     spi1.bindCsPin(portA[15], 0);
 
     SpiDrv spi1drv{spi1, 0};

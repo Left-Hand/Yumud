@@ -46,8 +46,8 @@ protected:
         calibration = 0x05,
         mask = 0x06,
         alertLimit = 0x07,
-        manufactureID = 0x08,
-        chipID = 0x09,
+        manufactureID = 0xFE,
+        chipID = 0xFF,
     };
 
     struct ConfigReg:public Reg16{
@@ -154,17 +154,25 @@ public:
 
 
     void init(const real_t & ohms, const real_t & max_current_a){
-        setAverageTimes(16);
-        setBusConversionTime(BusVoltageConversionTime::ms1_1);
-        setShuntConversionTime(ShuntVoltageConversionTime::ms1_1);
-        enableBusVoltageMeasure();
-        enableContinuousMeasure();
-        enableShuntVoltageMeasure();
+        // setAverageTimes(16);
+        // setBusConversionTime(BusVoltageConversionTime::ms1_1);
+        // setShuntConversionTime(ShuntVoltageConversionTime::ms1_1);
+        // enableBusVoltageMeasure();
+        // enableContinuousMeasure();
+        // enableShuntVoltageMeasure();
+        writeReg(RegAddress::Config, 0x4527);
 
-        currentLsb = max_current_a * ((1000000.0) / 32767.0);
+        currentLsb = max_current_a * real_t(1/32768.0);
 	    real_t theCal = (0.00512 * 32768) / (ohms * max_current_a);
+        DEBUG_VALUE(theCal);
+    	// double theCurrentLSB = ceil( ( (double)max_current_a* 1000000.0) / (double)32767.0);
+	    // double theCal = (double)0.00512 /  ((double)ohms * (theCurrentLSB/1000000.0));
+
+        // currentLsb = theCurrentLSB;
         calibrationReg = (uint16_t)theCal;
         writeReg(RegAddress::calibration, calibrationReg);
+
+        delay(10);
     }
 
     uint16_t isValid(){
@@ -182,6 +190,15 @@ public:
     real_t getVoltage(){
         readReg(RegAddress::busVoltage, busVoltageReg);
         return busVoltageReg * voltageLsb;
+    }
+
+    int getShuntVoltageuV(){
+        readReg(RegAddress::shuntVoltage, shuntVoltageReg);
+        return((shuntVoltageReg << 1) + (shuntVoltageReg >> 1));
+    }
+    real_t getShuntVoltage(){
+        auto uv = getShuntVoltageuV();
+        return real_t(uv / 100) / 10000;
     }
 
     real_t getCurrent(){

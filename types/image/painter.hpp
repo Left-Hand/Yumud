@@ -263,7 +263,6 @@ public:
                 if(j % 8 == 7 || j == font_size.y - 1){
                     src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
                 }
-                DEBUG_PRINT(Vector2i(i, (j & (~(8 - 1))) + pos.y));
             }
         }
     }
@@ -278,7 +277,6 @@ public:
         }else{
             break;
         }
-        str_ptr++;
     }
 }
 
