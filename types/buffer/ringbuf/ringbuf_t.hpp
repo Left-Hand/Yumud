@@ -7,41 +7,44 @@
 template<typename T, uint32_t _size>
 class RingBuf_t:public StaticBuffer_t<T, _size>{
 protected:
-    T * write_ptr;
-    T * read_ptr;
-
     T* advancePointer(T* ptr, size_t step = 1) {
         return (ptr + step >=this->buf + this->size) ? ptr + step - this->size : ptr + step;
     }
 
 public:
-    RingBuf_t():write_ptr(this->buf), read_ptr(this->buf){;}
+    T * rd_ptr;
+    T * wr_ptr;
+
+    RingBuf_t():rd_ptr(this->buf), wr_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
-        *read_ptr = data;
-        read_ptr = advancePointer(read_ptr);
-        if(read_ptr == write_ptr){
-            write_ptr = advancePointer(write_ptr);
+        *wr_ptr = data;
+        wr_ptr = advancePointer(wr_ptr);
+        if(wr_ptr == rd_ptr){
+            rd_ptr = advancePointer(rd_ptr);
         }
     }
 
-    // __fast_inline void getData(T & data) override{
-    //     data = *write_ptr;
-    //     write_ptr = advancePointer(write_ptr);
-    // }
-
     __fast_inline T & getData() override{
-        auto ret_ptr = write_ptr;
-        write_ptr = advancePointer(write_ptr);
+        auto ret_ptr = rd_ptr;
+        rd_ptr = advancePointer(rd_ptr);
         return *ret_ptr;
     }
 
     size_t available() const override{
-        if (read_ptr >= write_ptr) {
-            return read_ptr - write_ptr;
+        if (wr_ptr >= rd_ptr) {
+            return wr_ptr - rd_ptr;
         } else {
-            return this->size - (write_ptr - read_ptr);
+            return this->size - (rd_ptr - wr_ptr);
+        }
+    }
+
+    size_t straight() const{
+        if (wr_ptr >= rd_ptr) {
+            return wr_ptr - rd_ptr;
+        }else{
+            return this->size - (rd_ptr - this->buf);
         }
     }
 
@@ -59,6 +62,11 @@ public:
         }else{
             for(size_t i = 0; i < len; i++) data_ptr[i] = getData();
         }
+    }
+
+    void readForward(const size_t len){
+        rd_ptr = advancePointer(rd_ptr, len);
+        return;
     }
 };
 template<uint32_t size>

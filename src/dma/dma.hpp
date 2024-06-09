@@ -62,12 +62,13 @@ public:
         #ifdef HAVE_DMA2
         if(instance < DMA2_Channel1){
             RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-        }else
-        #endif
-
-        {
+        }else{
             RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
         }
+
+        #else
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+        #endif
     }
     void configPeriphDataBits(const uint8_t bits){
         uint32_t tmpreg = instance->CFGR;
@@ -108,6 +109,42 @@ public:
             default:
                 return 1;
         }
+    }
+
+    uint32_t getDoneFlag(){
+        uint32_t flag = 0;
+        
+        switch(dma_index){
+            case 1:
+                flag = DMA1_IT_TC1 + (DMA1_IT_TC2 - DMA1_IT_TC1) * channel_index;
+                break;
+            #ifdef HAVE_DMA2
+            case 2:
+                flag = DMA2_IT_TC1 + (DMA2_IT_TC2 - DMA2_IT_TC1) * channel_index;
+                break;
+            #endif
+            default:
+                break;
+        }
+        return flag;
+    }
+
+    uint32_t getHalfFlag(){
+        uint32_t flag = 0;
+        
+        switch(dma_index){
+            case 1:
+                flag = DMA1_IT_HT1 + (DMA1_IT_HT2 - DMA1_IT_HT1) * channel_index;
+                break;
+            #ifdef HAVE_DMA2
+            case 2:
+                flag = DMA2_IT_HT1 + (DMA2_IT_HT2 - DMA2_IT_HT1) * channel_index;
+                break;
+            #endif
+            default:
+                break;
+        }
+        return flag;
     }
 public:
     DmaChannel(DMA_Channel_TypeDef * _instance):
@@ -226,29 +263,20 @@ public:
     }
 
     void enableDoneIt(const bool en = true){
+        DMA_ClearITPendingBit(getDoneFlag());
         DMA_ITConfig(instance, DMA_IT_TC, en);
     }
 
     void enableHalfIt(const bool en = true){
+        DMA_ClearITPendingBit(getHalfFlag());
         DMA_ITConfig(instance, DMA_IT_HT, en);
     }
 
+
+
+
     bool isDone(){
-        uint32_t flag;
-        
-        switch(dma_index){
-            case 1:
-                flag = DMA1_IT_TC1 + (DMA1_IT_TC2 - DMA1_IT_TC1) * channel_index;
-                break;
-            #ifdef HAVE_DMA2
-            case 2:
-                flag = DMA2_IT_TC1 + (DMA2_IT_TC2 - DMA2_IT_TC1) * channel_index;
-                break;
-            #endif
-            default:
-                break;
-        }
-        return DMA_GetFlagStatus(flag);
+        return DMA_GetFlagStatus(getDoneFlag());
     }
 };
 

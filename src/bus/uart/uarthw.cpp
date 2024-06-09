@@ -11,7 +11,7 @@ static char u1rx_dma_buf[rx_dma_buf_size];
 
 __interrupt
 void USART1_IRQHandler(void){
-    
+
     if(USART_GetITStatus(USART1,USART_IT_RXNE)){
         USART_ClearITPendingBit(USART1,USART_IT_RXNE);
         uart1.rxBuf.addData(USART_ReceiveData(USART1));
@@ -30,16 +30,34 @@ void USART1_IRQHandler(void){
     }
 }
 
+//uart1 rx
 __interrupt void DMA1_Channel5_IRQHandler(void){
+    __disable_irq();
+    __disable_irq();
+    NVIC_SystemReset();
+    __enable_irq();
     if(DMA_GetFlagStatus(DMA1_IT_TC5)){
-        USART1->DATAR = 'c';
+        DMA_ClearFlag(DMA1_IT_TC5);
+        // USART1->DATAR = 'c';
     }else if(DMA_GetFlagStatus(DMA1_IT_HT5)){
-        USART1->DATAR = 't';
+        DMA_ClearFlag(DMA1_IT_HT5);
+        // USART1->DATAR = 't';
     }
 }
 
-__interrupt void DMA1_Channel4_IRQHandler(void){
 
+//uart1 tx
+__interrupt void DMA1_Channel4_IRQHandler(void){
+    __disable_irq();
+    __disable_irq();
+    delay(10);
+    NVIC_SystemReset();
+    __enable_irq();
+    if(DMA_GetFlagStatus(DMA1_IT_TC4)){
+        DMA_ClearFlag(DMA1_IT_TC4);
+    }else if(DMA_GetFlagStatus(DMA1_IT_HT4)){
+        DMA_ClearFlag(DMA1_IT_HT4);
+    }
 }
 #endif
 
@@ -264,20 +282,13 @@ void UartHw::invokeTxIt(){
     USART_ITConfig(instance, USART_IT_TXE, ENABLE);
 }
 
-void UartHw::invokeTxDma(){
-    // if( dma2Ch8.pending() == 0 && txBuf.available() != 0){
-    //     dma2Ch8.begin((void *)(&UART7->DATAR), (void *)txBuf.rd_ptr, txBuf.straight());
-    //     USART_DMACmd(UART7, USART_DMAReq_Tx, ENABLE);
-    // }
-
-}
 
 void UartHw::enableRxDma(const bool en){
     if(en){
         UART1_RX_DMA_CH.init(DmaChannel::Mode::toMemCircular);
-        UART1_RX_DMA_CH.enableIt({0,0});
         UART1_RX_DMA_CH.enableDoneIt();
         UART1_RX_DMA_CH.enableHalfIt();
+        UART1_RX_DMA_CH.enableIt({0,0});
         UART1_RX_DMA_CH.begin((void *)u1rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
     }
     USART_DMACmd(instance, USART_DMAReq_Rx, en);
@@ -285,9 +296,21 @@ void UartHw::enableRxDma(const bool en){
 
 
 void UartHw::enableTxDma(const bool en){
-    // dma2Ch8.init(DmaChannel::Mode::toPeriph);
-    // dma2Ch8.initIt({0,0});
+    // UART1_TX_DMA_CH.init(DmaChannel::Mode::toPeriph);
+    // UART1_TX_DMA_CH.enableIt({1,1});
+    // UART1_TX_DMA_CH.enableDoneIt();
+    // USART_DMACmd(instance, USART_DMAReq_Tx, ENABLE);
+    // dma1Ch4.init(DmaChannel::Mode::toPeriph);
+    // dma1Ch4.enableDoneIt();
+    // dma1Ch4.begin((void *)(&USART1->DATAR), (void *)mem_buf, mem_size);
 }
+
+void UartHw::invokeTxDma(){
+    if(UART1_TX_DMA_CH.pending() == 0 && txBuf.available() != 0){
+        UART1_TX_DMA_CH.begin((void *)(&instance->DATAR), (void *)txBuf.rd_ptr, txBuf.straight());
+    }
+}
+
 
 void UartHw::enableRxIt(const bool en){
     USART_ClearITPendingBit(instance, USART_IT_RXNE);
@@ -400,11 +423,12 @@ void UartHw::_write(const char & data){
             while((instance->STATR & USART_FLAG_TC) == RESET);
             break;
         case CommMethod::Interrupt:
-            // instance->DATAR = data;
             txBuf.addData(data);
             invokeTxIt();
             break;
         case CommMethod::Dma:
+            txBuf.addData(data);
+            invokeTxDma();
             break;
         default:
             break;
