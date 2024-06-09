@@ -125,7 +125,8 @@ int main(){
 
     Sys::Misc::prework();
 
-    StepperTest::stepper_test();
+    Stepper stp;
+    stp.stepper_test();
     // pedestrian_app();
     // modem_app();
     // test_app();
