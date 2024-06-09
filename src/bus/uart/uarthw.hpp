@@ -2,6 +2,7 @@
 #define __UARTHW_HPP__
 
 #include "uart.hpp"
+#include "src/dma/dma.hpp"
 
 class UartHw:public Uart{
 public:
@@ -11,44 +12,37 @@ protected:
     Gpio & getTxPin();
     Gpio & getRxPin();
 
-    void enableRcc(const bool & en = true);
+    void enableRcc(const bool en = true);
 
     void _write(const char * data_ptr, const size_t & len) override;
 
     void _write(const char & data) override;
 
-    void setupDma(char * reg_ptr, char * buf_ptr, size_t buf_size, DMA_Channel_TypeDef * dma_instance, const bool & buf_as_receiver);
-
-    void setupNvic(const bool & en = true);
+    void enableIt(const bool en = true);
 
 
-    void triggerTxIt(){
-        if(txMethod == CommMethod::Interrupt){
-            USART_ITConfig(instance, USART_IT_TXE, true);
-        }
-    }
+    void enableRxIt(const bool en = true);
+    void enableTxIt(const bool en = true);
+    void enableIdleIt(const bool en = true);
+    void invokeTxIt();
 
-    void enableRxIt(const bool &en = true);
+    void enableRxDma(const bool en = true);
+    void enableTxDma(const bool en = true);
 
-    void enableTxIt(const bool &en = true);
 
-    virtual void enableTxDma(const bool &en = true) = 0;
-
-    virtual void enableRxDma(const bool &en = true) = 0;
 public:
-
+    void invokeTxDma();
 
     UartHw(USART_TypeDef * _instance):instance(_instance){;}
 
     void init(
-        const uint32_t & baudRate, 
-        const Mode & _mode = Mode::TxRx, 
-        const CommMethod & _rxMethod = CommMethod::Interrupt,
-        const CommMethod & _txMethod = CommMethod::Blocking) override;
+        const uint32_t baudRate, 
+        const CommMethod _rxMethod = CommMethod::Interrupt,
+        const CommMethod _txMethod = CommMethod::Blocking) override;
 
-    void setTxMethod(const CommMethod & _txMethod) override;
+    void setTxMethod(const CommMethod _txMethod) override;
 
-    void setRxMethod(const CommMethod & _rxMethod) override;
+    void setRxMethod(const CommMethod _rxMethod) override;
 };
 
 #endif /* UARTHW_HPP */

@@ -1,15 +1,8 @@
 #include "uartsw.hpp"
 
-void UartSw::init(const uint32_t & baudRate, const Mode & _mode,const CommMethod & _rxMethod,const CommMethod & _txMethod){
-    mode = _mode;
-
-    if(((uint8_t)mode & (uint8_t)Mode::TxOnly)){
-        m_tx_gpio.OutPP(true);
-    }
-
-    if(((uint8_t)mode & (uint8_t)Mode::RxOnly)){
-        m_rx_gpio.InPullUP();
-    }
+void UartSw::init(const uint32_t baudRate, const CommMethod _rxMethod,const CommMethod _txMethod){
+    setTxMethod(_txMethod);
+    setRxMethod(_rxMethod);
 }
 
 void UartSw::tick(){
@@ -37,6 +30,14 @@ void UartSw::tick(){
 
 }
 
-void UartSw::setTxMethod(const CommMethod & _txMethod){}
+void UartSw::setTxMethod(const CommMethod _txMethod){
+    if(_txMethod != CommMethod::None){
+        m_tx_gpio.OutPP(true);
+    }
+}
 
-void UartSw::setRxMethod(const CommMethod & _rxMethod){}
+void UartSw::setRxMethod(const CommMethod _rxMethod){
+    if(_rxMethod != CommMethod::None){
+        m_rx_gpio.InPullUP();
+    }
+}

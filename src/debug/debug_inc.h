@@ -5,8 +5,8 @@
 #include "bus/bus_inc.h"
 #include "clock/clock.h"
 
-#define DEBUGGER uart2
-#define LOGGER uart2
+#define DEBUGGER uart1
+#define LOGGER uart1
 
 #ifndef VOFA_PRINT
 #define VOFA_PRINT(...) LOGGER.println(__VA_ARGS__);

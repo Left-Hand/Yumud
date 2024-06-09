@@ -16,7 +16,7 @@
 
 class AT24C02:public Storage{
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
     static constexpr Address chip_size = 256;
     static constexpr Address page_size = 8;
     static constexpr uint32_t min_duration_ms = 5;
@@ -147,7 +147,10 @@ public:
     bool busy() override{return last_entry_ms + min_duration_ms - millis() > 0;}
 
     static constexpr uint8_t default_id = 0b10100000; 
-    AT24C02(I2cDrv & _bus_drv):Storage(256), bus_drv(_bus_drv){;}
+
+
+    AT24C02(I2cDrv && _bus_drv):Storage(256), bus_drv(_bus_drv){;}
+    AT24C02(I2c & _bus):AT24C02(I2cDrv(_bus, default_id)){;}
 };
 
 #endif

@@ -22,6 +22,10 @@ struct NvicPriority{
         NVIC_InitStructure.NVIC_IRQChannelCmd = en;
         NVIC_Init(&NVIC_InitStructure);
     }
+
+    void enable(const IRQn _irq, const bool en = true){
+        enable(*this, _irq, en);
+    }
 };
 
 

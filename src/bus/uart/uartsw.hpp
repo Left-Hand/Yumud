@@ -27,14 +27,13 @@ public:
     UartSw(Gpio & _m_tx_gpio, Gpio & _m_rx_gpio): m_tx_gpio(_m_tx_gpio), m_rx_gpio(_m_rx_gpio){;}
 
     void init(
-        const uint32_t & baudRate, 
-        const Mode & _mode = Mode::TxRx, 
-        const CommMethod & _rxMethod = CommMethod::Interrupt,
-        const CommMethod & _txMethod = CommMethod::Blocking) override;
+        const uint32_t baudRate, 
+        const CommMethod _rxMethod = CommMethod::Interrupt,
+        const CommMethod _txMethod = CommMethod::Blocking) override;
     void tick();
 
-    void setTxMethod(const CommMethod & _txMethod) override;
+    void setTxMethod(const CommMethod _txMethod) override;
 
-    void setRxMethod(const CommMethod & _rxMethod) override;
+    void setRxMethod(const CommMethod _rxMethod) override;
 };
 #endif

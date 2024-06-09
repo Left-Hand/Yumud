@@ -9,16 +9,12 @@
 
 class Uart:public Printer{
 public:
-    enum Mode:uint8_t{
-        RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
-    };
-
+    using Mode = CommMode;
 
     CommMethod txMethod = CommMethod::None;
     CommMethod rxMethod = CommMethod::None;
 
 protected:
-    Mode mode = Mode::TxRx;
 
     void _read(char & data) override;
     void _read(char * data_ptr, const size_t len) override;
@@ -29,16 +25,15 @@ public:
     RingBuf_t<char, 128> txBuf;
 
     virtual void init(
-        const uint32_t & baudRate, 
-        const Mode & _mode = Mode::TxRx, 
-        const CommMethod & _rxMethod = CommMethod::Interrupt,
-        const CommMethod & _txMethod = CommMethod::Blocking) = 0;
+        const uint32_t baudRate, 
+        const CommMethod _rxMethod = CommMethod::Interrupt,
+        const CommMethod _txMethod = CommMethod::Blocking) = 0;
     size_t available(){return rxBuf.available();}
 
     virtual void flush(){}
 
-    virtual void setTxMethod(const CommMethod & _txMethod) = 0;
+    virtual void setTxMethod(const CommMethod _txMethod) = 0;
 
-    virtual void setRxMethod(const CommMethod & _rxMethod) = 0;
+    virtual void setRxMethod(const CommMethod _rxMethod) = 0;
 };
 #endif

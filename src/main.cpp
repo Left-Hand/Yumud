@@ -125,11 +125,17 @@ int main(){
 
     Sys::Misc::prework();
 
-    Stepper stp;
-    stp.init();
+    uart1.init(115200 * 8, CommMethod::Interrupt, CommMethod::Interrupt);
     while(true){
-        stp.run();
+        delay(200);
+        uart1.println("r");
     }
+
+    // Stepper stp;
+    // stp.init();
+    // while(true){
+    //     stp.run();
+    // }
     // pedestrian_app();
     // modem_app();
     // test_app();

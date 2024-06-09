@@ -7,7 +7,6 @@
 #include <type_traits>
 #include <initializer_list>
 
-#include "uart/uart1.hpp"
 #include "i2c/i2csw.hpp"
 
 enum class BusType{

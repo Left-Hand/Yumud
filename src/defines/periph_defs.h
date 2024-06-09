@@ -20,7 +20,8 @@
 #define UART1_REMAP_ENABLE ENABLE
 
 #ifdef HAVE_UART1
-    #define UART1_Baudrate (115200 * 4)
+    #define UART1_TX_DMA_CH dma1Ch4
+    #define UART1_RX_DMA_CH dma1Ch5
 
     #ifdef UART1_REMAP_ENABLE
     #define UART1_TX_Port portB
@@ -29,8 +30,8 @@
     #define UART1_RX_Port portB
     #define UART1_RX_Pin GPIO_Pin_7
 
-    #define UART1_IT_PP 1
-    #define UART1_IT_SP 0
+    #define UART1_IT_PP 0
+    #define UART1_IT_SP 1
     #define UART1_REMAP GPIO_Remap_USART1
 
     #else
@@ -48,7 +49,6 @@
 
 
 #ifdef HAVE_UART2
-    #define UART2_Baudrate (115200 * 4)
 
     #define UART2_TX_Port portA
     #define UART2_TX_Pin GPIO_Pin_2
@@ -58,6 +58,9 @@
 
     #define UART2_IT_PP 1
     #define UART2_IT_SP 1
+
+    #define UART2_REMAP_ENABLE ENABLE
+    #define UART2_REMAP GPIO_Remap_USART2
 #endif
 
 

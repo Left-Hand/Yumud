@@ -6,7 +6,8 @@
 #include "../debug/debug_inc.h"
 #include "../enum.h"
 #include "../src/timer/timers/timer_hw.hpp"
-
+#include "../src/device/Memory/EEPROM/AT24CXX/at24c02.hpp"
+#include "../src/device/Memory/memory.hpp"
 
 namespace StepperEnums{
     BETTER_ENUM(RunStatus, uint8_t,     
@@ -83,8 +84,6 @@ namespace StepperUtils{
 
     class Cli{
     private:
-
-
         std::vector<String> split_string(const String& input, char delimiter) {
             std::vector<String> result;
 
@@ -159,7 +158,8 @@ namespace StepperUtils{
 }
 
 class Stepper:public StepperUtils::Cli{
-public:
+
+protected:
     using RunStatus = StepperEnums::RunStatus;
     Printer & logger = uart1;
 
@@ -175,6 +175,10 @@ public:
     MT6816 mt6816{mt6816_drv};
 
     OdometerPoles odo = OdometerPoles(mt6816);
+
+    I2cSw i2cSw{portD[1], portD[0]};
+    AT24C02 at24{i2cSw};
+    Memory memory{at24};
 
 
     static constexpr uint32_t foc_freq = 36000;
@@ -1224,6 +1228,18 @@ public:
     PanelLed panel_led = PanelLed{led_instance};
 
 
+    void parse_command(const String & _command, const std::vector<String> & args) override{
+        auto command = _command;
+        command.toLowerCase();
+        switch(hash_impl(command.c_str(), command.length())){
+            // case ""
+            default:
+                Cli::parse_command(command, args);
+                break;
+        }
+    }
+    
+public:
 
     void tick(){
         switch(run_status){
@@ -1260,7 +1276,8 @@ public:
 
     void init(){
 
-        uart1.init(115200 * 4);
+        uart1.init(115200 * 8, CommMethod::Dma);
+        // uart1.init(115200 * 8);
 
         logger.setEps(4);
 
@@ -1310,6 +1327,8 @@ public:
 
         panel_led.setPeriod(200);
         panel_led.setTranstit(Color(), Color(0,1,0,0), PanelLed::Method::Squ);
+
+
     }
 
     void run() override{
@@ -1347,16 +1366,6 @@ public:
     }
 
 
-    void parse_command(const String & _command, const std::vector<String> & args) override{
-        auto command = _command;
-        command.toLowerCase();
-        switch(hash_impl(command.c_str(), command.length())){
-
-            default:
-                Cli::parse_command(command, args);
-                break;
-        }
-    }
 };
 
 #endif

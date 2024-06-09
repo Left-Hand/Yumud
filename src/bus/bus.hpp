@@ -9,9 +9,11 @@ enum class CommMethod:uint8_t{
     None = 0,
     Blocking,
     Interrupt,
-    DmaNormal,
-    DmaCircular,
-    DmaDual
+    Dma,
+};
+
+enum class CommMode:uint8_t{
+    RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
 };
 
 
