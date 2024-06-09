@@ -25,7 +25,11 @@ void Sys::Misc::prework(){
 
 
 void Sys::Misc::reset(){
+    __disable_irq();
+    __disable_irq();
     NVIC_SystemReset();
+    // __enable_irq();
+    // NVIC_SystemReset();
 }
 
 

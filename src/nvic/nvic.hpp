@@ -8,15 +8,18 @@
 #define SUPPORT_VTF
 #endif
 
+struct NvicPriority;
+class NvicRequest;
+
 struct NvicPriority{
     const uint8_t pre;
     const uint8_t sub;
 
     NvicPriority(const uint8_t _pre, const uint8_t _sub):pre(MIN(_pre,1)), sub(MIN(_sub, 7)){;}
 
-    static void enable(const NvicPriority & request, const IRQn _irq, const bool en = true){
+    static void enable(const NvicPriority request, const IRQn _irq, const bool en = true){
         NVIC_InitTypeDef NVIC_InitStructure = {0};
-        NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)_irq;
+        NVIC_InitStructure.NVIC_IRQChannel = _irq;
         NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = request.pre;
         NVIC_InitStructure.NVIC_IRQChannelSubPriority = request.sub;
         NVIC_InitStructure.NVIC_IRQChannelCmd = en;
@@ -29,29 +32,22 @@ struct NvicPriority{
 };
 
 
-struct NvicRequest:public NvicPriority{
-
+class NvicRequest:public NvicPriority{
+protected:
     const IRQn irq;
-// public:
-    NvicRequest(const uint8_t _pre, const uint8_t _sub, const IRQn _irq = IRQn::Software_IRQn):
+public:
+    NvicRequest(const IRQn _irq, const uint8_t _pre, const uint8_t _sub):
             NvicPriority(_pre, _sub), irq(_irq){;}
 
-    void enable(const bool & en = true){
-        NVIC_InitTypeDef NVIC_InitStructure = {0};
-        NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)irq;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = pre;
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = sub;
-        NVIC_InitStructure.NVIC_IRQChannelCmd = en;
-        NVIC_Init(&NVIC_InitStructure);
+    NvicRequest(const IRQn _irq, const NvicPriority priority):
+            NvicPriority(priority), irq(_irq){;}
+
+    void enable(const bool en = true){
+        enable(*this, en);
     }
 
-    static void enable(const NvicRequest & request, const bool en = true){
-        NVIC_InitTypeDef NVIC_InitStructure = {0};
-        NVIC_InitStructure.NVIC_IRQChannel = (uint8_t)request.irq;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = request.pre;
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = request.sub;
-        NVIC_InitStructure.NVIC_IRQChannelCmd = en;
-        NVIC_Init(&NVIC_InitStructure);
+    static void enable(const NvicRequest request, const bool en = true){
+        NvicPriority::enable(request, request.irq, en);
     }
 
 };

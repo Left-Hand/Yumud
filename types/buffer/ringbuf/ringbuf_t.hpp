@@ -26,6 +26,20 @@ public:
         }
     }
 
+    __fast_inline void addData(const T * data,const size_t size){
+        for(size_t i = 0; i < size;i++){
+            addData(data[size]);
+        }
+    }
+    //     auto ptr_before = write_ptr;
+    //     // *write_ptr = data;
+    //     memcpy(write_ptr, data, )
+    //     write_ptr = advancePointer(write_ptr);
+    //     if(write_ptr == read_ptr){
+    //         read_ptr = advancePointer(read_ptr);
+    //     }
+    // }
+
     __fast_inline T & getData() override{
         auto ret_ptr = read_ptr;
         read_ptr = advancePointer(read_ptr);
@@ -44,8 +58,7 @@ public:
         if (write_ptr >= read_ptr) {
             return write_ptr - read_ptr;
         }else{
-            return this->size - (read_ptr - this->buf);
-            // return 0;
+            return (this->buf + this->size) - read_ptr;
         }
     }
 

@@ -38,6 +38,7 @@ public:
 // protected:
 public:
     DMA_Channel_TypeDef * instance;
+    Mode mode;
     uint8_t dma_index;
     uint8_t channel_index;
 
@@ -116,11 +117,11 @@ public:
         
         switch(dma_index){
             case 1:
-                flag = DMA1_IT_TC1 + (DMA1_IT_TC2 - DMA1_IT_TC1) * channel_index;
+                flag = DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1));
                 break;
             #ifdef HAVE_DMA2
             case 2:
-                flag = DMA2_IT_TC1 + (DMA2_IT_TC2 - DMA2_IT_TC1) * channel_index;
+                flag = DMA2_IT_TC1 << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1));
                 break;
             #endif
             default:
@@ -134,11 +135,11 @@ public:
         
         switch(dma_index){
             case 1:
-                flag = DMA1_IT_HT1 + (DMA1_IT_HT2 - DMA1_IT_HT1) * channel_index;
+                flag = DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1));
                 break;
             #ifdef HAVE_DMA2
             case 2:
-                flag = DMA2_IT_HT1 + (DMA2_IT_HT2 - DMA2_IT_HT1) * channel_index;
+                flag = DMA2_IT_HT1 << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1));
                 break;
             #endif
             default:
@@ -152,9 +153,9 @@ public:
                 dma_index(getDmaIndex(_instance)),
                 channel_index(getChannelIndex(_instance)){;}
 
-    void init(const Mode mode,const Priority priority = Priority::medium){
+    void init(const Mode _mode,const Priority priority = Priority::medium){
         enableRcc();
-
+        mode = _mode;
         DMA_InitTypeDef DMA_InitStructure = {0};
         DMA_DeInit(instance);
 
@@ -224,8 +225,14 @@ public:
     }
 
     void begin(void * dst, const void * src, size_t size){
-        instance -> PADDR = (uint32_t)dst;
-        instance -> MADDR = (uint32_t)src;
+        if(mode == Mode::toMem || mode == Mode::toMemCircular){
+            instance -> PADDR = (uint32_t)src;
+            instance -> MADDR = (uint32_t)dst;
+        }else{
+            instance -> PADDR = (uint32_t)dst;
+            instance -> MADDR = (uint32_t)src;
+        }
+
         instance -> CNTR = size;
         begin();
     }

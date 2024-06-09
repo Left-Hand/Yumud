@@ -34,7 +34,9 @@ public:
     DmaChannel & txDma;
     DmaChannel & rxDma;
 
-    void invokeTxDma(size_t amount);
+    void invokeTxDma();
+
+    void invokeRxDma();
 
     UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
 
