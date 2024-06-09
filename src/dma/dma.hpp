@@ -246,7 +246,7 @@ public:
         int irq = int(IRQn_Type::Software_IRQn);
         switch(dma_index){
             case 1:
-                irq = DMA1_Channel1_IRQn + (DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * (dma_index - 1);
+                irq = (DMA1_Channel1_IRQn + (DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * (channel_index - 1));
                 break;
             #ifdef HAVE_DMA2
             case 2:
@@ -260,6 +260,7 @@ public:
         }
 
         _priority.enable(IRQn(irq), ENABLE);
+        _priority.enable(IRQn(DMA1_Channel4_IRQn), ENABLE);
     }
 
     void enableDoneIt(const bool en = true){
