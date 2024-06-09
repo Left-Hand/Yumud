@@ -18,7 +18,7 @@ struct iq_t{
 public:
     _iq value = 0;
 
-    __fast_inline iq_t(): value(0){;}
+    __fast_inline iq_t():value(0){;}
     __fast_inline_constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
 
     __fast_inline_constexpr iq_t(const int & intValue) : value(_IQ(intValue)) {;}

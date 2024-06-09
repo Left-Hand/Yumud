@@ -50,7 +50,7 @@ protected:
         chipID = 0xFF,
     };
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg{
         REG16_BEGIN
         uint16_t shuntVoltageEnable :1;
         uint16_t busVoltageEnable :1;
@@ -63,32 +63,7 @@ protected:
         REG16_END
     };
 
-    // struct ShuntVoltageReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
-
-    // struct BusVoltageReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
-
-    // struct PowerReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
-
-    // struct CurrentReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
-
-    // struct CalibrationReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
-
-    struct MaskReg:public Reg16{
+    struct MaskReg{
         REG16_BEGIN
         uint16_t alertLatchEnable:1;
         uint16_t alertPolarity:1;
@@ -104,21 +79,6 @@ protected:
         uint16_t shuntOverVoltage:1;
         REG16_END
     };
-
-    // struct AlertLimitReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
-
-    // struct ManufactureIDReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
-
-    // struct ChipIDReg:public Reg16{
-    //     REG16_BEGIN
-    //     REG16_END
-    // };
 
     struct{
         ConfigReg configReg;
@@ -141,35 +101,33 @@ protected:
         bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
     }
 
-    void requestRegData(const RegAddress & regAddress, uint8_t * data_ptr, const size_t len){
-        bus_drv.readPool((uint8_t)regAddress, data_ptr, 2, len);
+    void requestPool(const RegAddress & regAddress, void * data_ptr, const size_t len){
+        bus_drv.readPool((uint8_t)regAddress, (uint8_t *)data_ptr, 2, len);
     }
 public:
     INA226(I2cDrv & _i2c_drv):bus_drv(_i2c_drv){};
 
     void update(){
-
+        // requestPool(RegAddress::shuntVoltage, &shuntVoltageReg, 2 * 4);
+        readReg(RegAddress::busVoltage, busVoltageReg);
+        readReg(RegAddress::current, *(uint16_t *)&currentReg);
+        readReg(RegAddress::power, powerReg);
     }
 
 
-
     void init(const real_t & ohms, const real_t & max_current_a){
-        // setAverageTimes(16);
-        // setBusConversionTime(BusVoltageConversionTime::ms1_1);
-        // setShuntConversionTime(ShuntVoltageConversionTime::ms1_1);
-        // enableBusVoltageMeasure();
-        // enableContinuousMeasure();
-        // enableShuntVoltageMeasure();
-        writeReg(RegAddress::Config, 0x4527);
+        configReg.rst = 0b0;
+        configReg.__resv__ = 0b100;
+
+        setAverageTimes(16);
+        setBusConversionTime(BusVoltageConversionTime::ms1_1);
+        setShuntConversionTime(ShuntVoltageConversionTime::ms1_1);
+        enableBusVoltageMeasure();
+        enableContinuousMeasure();
+        enableShuntVoltageMeasure();
 
         currentLsb = max_current_a * real_t(1/32768.0);
-	    real_t theCal = (0.00512 * 32768) / (ohms * max_current_a);
-        DEBUG_VALUE(theCal);
-    	// double theCurrentLSB = ceil( ( (double)max_current_a* 1000000.0) / (double)32767.0);
-	    // double theCal = (double)0.00512 /  ((double)ohms * (theCurrentLSB/1000000.0));
-
-        // currentLsb = theCurrentLSB;
-        calibrationReg = (uint16_t)theCal;
+        calibrationReg = (uint16_t)real_t((0.00512 * 32768) / (ohms * max_current_a));
         writeReg(RegAddress::calibration, calibrationReg);
 
         delay(10);
@@ -183,17 +141,13 @@ public:
         readReg(RegAddress::manufactureID, manufactureIDReg);
 
         return chipIDReg == valid_chip_id && manufactureIDReg == valid_manu_id;
-        // return 
-        // return chipIDReg.data;
     }
 
     real_t getVoltage(){
-        readReg(RegAddress::busVoltage, busVoltageReg);
         return busVoltageReg * voltageLsb;
     }
 
     int getShuntVoltageuV(){
-        readReg(RegAddress::shuntVoltage, shuntVoltageReg);
         return((shuntVoltageReg << 1) + (shuntVoltageReg >> 1));
     }
     real_t getShuntVoltage(){
@@ -202,12 +156,10 @@ public:
     }
 
     real_t getCurrent(){
-        readReg(RegAddress::current, *(uint16_t *)&currentReg);
         return currentReg * currentLsb;
     }
 
     real_t getPower(){
-        readReg(RegAddress::power, powerReg);
         return powerReg * currentLsb * 25;
     }
 
@@ -222,6 +174,7 @@ public:
         }
 
         configReg.averageMode = temp2;
+        DEBUG_VALUE(temp2);
         writeReg(RegAddress::Config, configReg.data);
     }
 

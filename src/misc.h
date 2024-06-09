@@ -78,15 +78,5 @@
 #include "algo/any/any.hpp"
 #include "src/device/Encoder/odometer.hpp"
 #include "src/crc/crc.hpp"
-// real_t CalculateFps();
-void SysInfo_ShowUp(Printer & uart);
-
-void TIM_Encoder_Init(TIM_TypeDef * TimBase);
-void TIM_PWM_Init(TIM_TypeDef * TimBase, const uint16_t arr);
-void ADC1_GPIO_Init();
-void ADC1_Init();
-
-
-
 
 #endif

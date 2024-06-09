@@ -16,7 +16,8 @@ template<typename ColorType>
 class Painter{
 protected:
     ImageWritable<ColorType> * src_image = nullptr;
-    const Font * font;
+    const Font * chfont = &font7x7;
+    const Font * enfont = &font8x5;
     ColorType m_color;
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
@@ -25,8 +26,6 @@ protected:
 
 public:
     Painter(){;}
-
-    // Painter(ImageView<ColorType> * _srcImage, Font * _font):src_image(_srcImage),font(_font) {;}
 
     template<typename U>
     void setColor(U _color){
@@ -37,8 +36,12 @@ public:
         src_image = &_source;
     }
 
-    void setFont(const Font & _font){
-        font = &_font;
+    void setChFont(const Font & _chfont){
+        chfont = &_chfont;
+    }
+
+    void setEnFont(const Font & _enfont){
+        enfont = &_enfont;
     }
 
 
@@ -243,7 +246,7 @@ public:
 
     void drawChar(const Vector2i & pos,const wchar_t & chr){
         Rect2i image_area = Rect2i({}, src_image->size);
-
+        const Font * font = chr > 0x80 ? chfont : enfont;
         const Vector2i font_size = font->size;
         Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
 
@@ -271,9 +274,11 @@ public:
     const char * str_ptr = str.c_str();
 	GBKIterator iterator(str_ptr);
 	
-    for(int x = pos.x; x < src_image->size.x; x += (font->size.x + 1)){
+    for(int x = pos.x; x < src_image->size.x;){
         if(iterator.hasNext()){
-            drawChar(Vector2i(x, pos.y), iterator.next());
+            auto chr = iterator.next();
+            drawChar(Vector2i(x, pos.y), chr);
+            x += ((chr > 0x80 ? chfont->size.x : enfont->size.x) + 1);
         }else{
             break;
         }
