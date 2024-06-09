@@ -8,20 +8,6 @@
 #include "../src/timer/timers/timer_hw.hpp"
 
 
-
-// class T0{
-//     BETTER_ENUM(s, uint8_t,     
-//     INIT = 0,
-//     INACTIVE,
-//     ACTIVE,
-//     BEEP,
-//     CALI,
-//     ERROR,
-//     EXCEPTION
-// )
-// };
-
-
 namespace StepperEnums{
     BETTER_ENUM(RunStatus, uint8_t,     
         INIT = 0,
@@ -34,7 +20,145 @@ namespace StepperEnums{
     )
 };
 
-class Stepper{
+constexpr uint32_t hash_impl(char const * str , size_t size){
+    uint32_t hash = 5381;
+
+    for (size_t i = 0; i < size; i++) {
+        hash = ((hash << 5) + hash) ^ str[i]; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
+constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
+    return hash_impl(p, size);
+}
+
+namespace StepperUtils{
+
+    #define VNAME(x) #x
+
+    #define read_value(value)\
+    {\
+        DEBUG_PRINT("get", VNAME(value), "\t\t is", value);\
+    }
+
+    #define settle_value(value, args)\
+    {\
+        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
+        if(args.size() == 0){\
+            read_value(value);\
+        }else if(args.size() == 1){\
+            value = decltype(value)(args[0]);\
+            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", args[0]);\
+        }\
+    }
+
+    #define settle_positive_value(value, args)\
+    {\
+        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
+        auto temp_value = decltype(value)(args[0]);\
+        ASSERT_WITH_RETURN((temp_value >= 0), "arg max should be greater than zero");\
+        if(args.size() == 0){\
+            read_value(value);\
+        }else if(args.size() == 1){\
+            value = temp_value;\
+            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+        }\
+    }
+
+    #define settle_clamped_value(value, args, mi, ma)\
+    {\
+        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
+        auto temp_value = decltype(value)(args[0]);\
+        ASSERT_WITH_RETURN((temp_value >= mi), "arg < ", mi, "\t failed to settle");\
+        ASSERT_WITH_RETURN((temp_value < ma), "arg >= ", ma, "\t failed to settle");\
+        if(args.size() == 0){\
+            read_value(value);\
+        }else if(args.size() == 1){\
+            value = temp_value;\
+            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+        }\
+    }
+
+    class Cli{
+    private:
+
+
+        std::vector<String> split_string(const String& input, char delimiter) {
+            std::vector<String> result;
+
+            int startPos = 0;
+            int endPos = input.indexOf(delimiter, startPos);
+
+            while (endPos != -1) {
+                if(not(endPos - startPos <= 1 and input[startPos] == delimiter)){
+                    String token = input.substring(startPos, endPos);
+                    result.push_back(token.c_str());
+                }
+                startPos = endPos + 1;
+                endPos = input.indexOf(delimiter, startPos);
+            }
+
+            if (startPos < input.length()) {
+                String lastToken = input.substring(startPos);
+                result.push_back(lastToken.c_str());
+            }
+
+            return result;
+        }
+
+        void parse_line(const String & line){
+            if(line.length() == 0) return;
+            auto tokens = split_string(line, ' ');
+            auto command = tokens[0];
+            tokens.erase(tokens.begin());
+            parse_command(command, tokens);
+        }
+    public:
+        Cli() = default;
+
+        virtual void parse_command(const String & _command,const std::vector<String> & args){
+            auto command = _command;
+            command.toLowerCase();
+            switch(hash_impl(command.c_str(), command.length())){
+                case "reset"_ha:
+                case "rst"_ha:
+                case "r"_ha:
+                    DEBUG_PRINT("rsting");
+                    NVIC_SystemReset();
+                    break;
+                case "alive"_ha:
+                case "a"_ha:
+                    DEBUG_PRINT("chip is alive");
+                    break;
+                default:
+                    DEBUG_PRINT("no command available:", command);
+                    break;
+            }
+        }
+
+        virtual void run(){
+            if(DEBUGGER.available()){
+                static String temp_str;
+                while(DEBUGGER.available()){
+                    auto chr = DEBUGGER.read();
+                    if(chr == '\n'){
+                        temp_str.alphanum();
+                        DEBUG_PRINT("cli cmd:", temp_str);
+                        if(temp_str.length()) parse_line(temp_str);
+
+                        temp_str = "";
+                    }else{
+                        temp_str.concat(chr);
+                    }
+                }
+            }
+        }
+    };
+}
+
+class Stepper:public StepperUtils::Cli{
 public:
     using RunStatus = StepperEnums::RunStatus;
     Printer & logger = uart1;
@@ -52,12 +176,9 @@ public:
 
     OdometerPoles odo = OdometerPoles(mt6816);
 
-    real_t target_pos;
-
-
 
     static constexpr uint32_t foc_freq = 36000;
-    static constexpr uint32_t est_freq = 1800;
+    static constexpr uint32_t est_freq = foc_freq / 16;
     static constexpr uint32_t est_devider = foc_freq / est_freq;
 
     static constexpr int poles = 50;
@@ -68,6 +189,7 @@ public:
     static constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 
 
+    real_t target_pos;
     uint32_t foc_pulse_micros;
     real_t est_speed;
     real_t raw_pos;
@@ -956,8 +1078,6 @@ public:
 
 
     DoneFlag beep_prog(const InitFlag & init_flag = false){
-        // drivedClass dri;
-        // dri.run();
         struct Tone{
             uint32_t freq_hz;
             uint32_t sustain_ms;
@@ -1105,7 +1225,7 @@ public:
 
 
 
-    void run(){
+    void tick(){
         switch(run_status){
             case RunStatus::INIT:
                 run_status = RunStatus::CALI;
@@ -1113,8 +1233,6 @@ public:
                 break;
             case RunStatus::CALI:
                 if(cali_prog()){
-                    // beep_prog(true);
-                    // run_status = RunStatus::BEEP;
                     active_prog(true);
                     run_status = RunStatus::ACTIVE;
                 }
@@ -1140,7 +1258,7 @@ public:
         }
     }
 
-    void stepper_test(){
+    void init(){
 
         uart1.init(115200 * 4);
 
@@ -1164,7 +1282,6 @@ public:
         spi1.bindCsPin(portA[15], 0);
 
 
-
         odo.init();
 
         // adc1.init(
@@ -1186,69 +1303,59 @@ public:
         // bled.OutPP();
         panel_led.init();
 
-
-        // svpwm.setDQCurrent(Vector2(real_t(cali_current), real_t(0)), real_t(0));
-        // setCurrent(real_t(0.3), real_t());
-        // delay(200);
-        // odo.locateElecrad();
-
         timer4.init(foc_freq);
         timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
-        timer4.bindCb(Timer::IT::Update, [&](){this->run();});
+        timer4.bindCb(Timer::IT::Update, [&](){this->tick();});
 
-        // delay(200);
-        // motor.enable();
-        // motor.trackPos(real_t(0));
-        // motor.setMaxCurrent(real_t(0.45));
 
-        logger.setEps(4);
         panel_led.setPeriod(200);
         panel_led.setTranstit(Color(), Color(0,1,0,0), PanelLed::Method::Squ);
-        while(true){
-            // real_t total = real_t(3);
-            // static real_t freq = real_t(10);
-            // static real_t freq_dir = real_t(1);
-            // const real_t freq_delta = real_t(20);
-            // if(freq > real_t(300)) freq_dir = real_t(-1);
-            // else if(freq < real_t(4)) freq_dir = real_t(1);
-            // static real_t last_t = t;
-            // real_t delta = (t - last_t);
-            // freq += delta * freq_dir * freq_delta;
-            // last_t = t;
-            // static real_t ang = real_t(0);
-            // ang += freq * delta;
-            // real_t target = (total / freq) * sin(ang);
+    }
 
-            // target_pos = sign(frac(t) - 0.5);
-            // target_pos = sin(t);
-            // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-            // RUN_DEBUG(est_speed, est_pos, targets.curr, elecrad_zerofix);
-            // , est_speed, t, odo.getElecRad(), openloop_elecrad);
-            // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
-            // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
-            // RUN_DEBUG(est_pos, est_speed, run_current, run_elecrad);
-            static String temp_str = "";
+    void run() override{
+        Cli::run();
+        // real_t total = real_t(3);
+        // static real_t freq = real_t(10);
+        // static real_t freq_dir = real_t(1);
+        // const real_t freq_delta = real_t(20);
+        // if(freq > real_t(300)) freq_dir = real_t(-1);
+        // else if(freq < real_t(4)) freq_dir = real_t(1);
+        // static real_t last_t = t;
+        // real_t delta = (t - last_t);
+        // freq += delta * freq_dir * freq_delta;
+        // last_t = t;
+        // static real_t ang = real_t(0);
+        // ang += freq * delta;
+        // real_t target = (total / freq) * sin(ang);
 
-            // bool led_status = (millis() / 200) % 2;
-            // bled = led_status;
-            panel_led.run();
+        // target_pos = sign(frac(t) - 0.5);
+        // target_pos = sin(t);
+        // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
+        // RUN_DEBUG(est_speed, est_pos, targets.curr, elecrad_zerofix);
+        // , est_speed, t, odo.getElecRad(), openloop_elecrad);
+        // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
+        // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
+        // RUN_DEBUG(est_pos, est_speed, run_current, run_elecrad);
+        static String temp_str = "";
 
-            if(logger.available()){
-                char chr = logger.read();
-                if(chr == '\n'){
-                    temp_str.trim();
-                    // RUN_DEBUG(temp_str);
-                    if(temp_str.length()) parseLine(temp_str);
-                    // RUN_DEBUG(temp_str);
-                    temp_str = "";
-                }else{
-                    temp_str.concat(chr);
-                }
-            }
+        // bool led_status = (millis() / 200) % 2;
+        // bled = led_status;
+        panel_led.run();
 
-            Sys::Clock::reCalculateTime();
+
+        Sys::Clock::reCalculateTime();
+    }
+
+
+    void parse_command(const String & _command, const std::vector<String> & args) override{
+        auto command = _command;
+        command.toLowerCase();
+        switch(hash_impl(command.c_str(), command.length())){
+
+            default:
+                Cli::parse_command(command, args);
+                break;
         }
-        while(true);
     }
 };
 

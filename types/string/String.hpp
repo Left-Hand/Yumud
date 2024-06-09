@@ -179,11 +179,13 @@ public:
 	void toLowerCase(void);
 	void toUpperCase(void);
 	void trim(void);
+	void alphanum(void);
 
 	// parsing/conversion
 	long toInt(void) const;
 	float toFloat(void) const;
 
+	explicit operator uint8_t(void) const {return toInt();}
     explicit operator int(void) const{return toInt();}
     explicit operator float(void) const{return toFloat();}
     bool isNumeric(void) const;
