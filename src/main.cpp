@@ -193,22 +193,34 @@ int main(){
 
     Sys::Misc::prework();
 
-    uart1.init(115200 * 8, CommMethod::None, CommMethod::Blocking);
+    UartHw & uart = uart2;
+    uart.init(115200 * 8, CommMethod::Dma, CommMethod::Blocking);
+    // uart.init(115200 * 8);
     // DEBUG_PRINT(dma1Ch4.dma_index, dma1Ch4.channel_index);
-    DMA_INIT();
-    USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
+    // DMA_INIT();
+    // USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
     // delay(100);
     // mem_buf[5] = '0';
     // DMA_INIT();
     // USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
     // delay(100);
-    while(true);
+    // while(true);
     // uart1.init(115200 * 8, CommMethod::Interrupt, CommMethod::Dma);
     // test();
-    uint8_t cnt = 0;
+    // uint8_t cnt = 0;
+
+    // while(true){
+    //     if(uart.available()){
+    //         delay(10);
+    //         uart.println(uart.readStringAll());
+    //     }
+    //     delay(500);
+    //     uart.println("??");
+    // }
     while(true){
-        delay(200);
-        uart1 << '.' << +(cnt++) << '.' << "\r\n";
+        delay(100);
+        // for(uint8_t i = 0; i < 8; i++)
+        uart << millis() << "\r\n";
     }
 
     // Stepper stp;

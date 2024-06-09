@@ -21,7 +21,7 @@ protected:
     void enableIt(const bool en = true);
 
 
-    void enableRxIt(const bool en = true);
+    void enableRxneIt(const bool en = true);
     void enableTxIt(const bool en = true);
     void enableIdleIt(const bool en = true);
     void invokeTxIt();
@@ -31,9 +31,12 @@ protected:
 
 
 public:
-    void invokeTxDma();
+    DmaChannel & txDma;
+    DmaChannel & rxDma;
 
-    UartHw(USART_TypeDef * _instance):instance(_instance){;}
+    void invokeTxDma(size_t amount);
+
+    UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
 
     void init(
         const uint32_t baudRate, 

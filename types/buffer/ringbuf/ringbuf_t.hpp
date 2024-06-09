@@ -12,39 +12,40 @@ protected:
     }
 
 public:
-    T * rd_ptr;
-    T * wr_ptr;
+    T * read_ptr;
+    T * write_ptr;
 
-    RingBuf_t():rd_ptr(this->buf), wr_ptr(this->buf){;}
+    RingBuf_t():read_ptr(this->buf), write_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
-        *wr_ptr = data;
-        wr_ptr = advancePointer(wr_ptr);
-        if(wr_ptr == rd_ptr){
-            rd_ptr = advancePointer(rd_ptr);
+        *write_ptr = data;
+        write_ptr = advancePointer(write_ptr);
+        if(write_ptr == read_ptr){
+            read_ptr = advancePointer(read_ptr);
         }
     }
 
     __fast_inline T & getData() override{
-        auto ret_ptr = rd_ptr;
-        rd_ptr = advancePointer(rd_ptr);
+        auto ret_ptr = read_ptr;
+        read_ptr = advancePointer(read_ptr);
         return *ret_ptr;
     }
 
     size_t available() const override{
-        if (wr_ptr >= rd_ptr) {
-            return wr_ptr - rd_ptr;
+        if (write_ptr >= read_ptr) {
+            return write_ptr - read_ptr;
         } else {
-            return this->size - (rd_ptr - wr_ptr);
+            return this->size - (read_ptr - write_ptr);
         }
     }
 
     size_t straight() const{
-        if (wr_ptr >= rd_ptr) {
-            return wr_ptr - rd_ptr;
+        if (write_ptr >= read_ptr) {
+            return write_ptr - read_ptr;
         }else{
-            return this->size - (rd_ptr - this->buf);
+            return this->size - (read_ptr - this->buf);
+            // return 0;
         }
     }
 
@@ -65,7 +66,7 @@ public:
     }
 
     void readForward(const size_t len){
-        rd_ptr = advancePointer(rd_ptr, len);
+        read_ptr = advancePointer(read_ptr, len);
         return;
     }
 };
