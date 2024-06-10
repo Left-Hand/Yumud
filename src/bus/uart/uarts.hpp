@@ -7,11 +7,7 @@
 #ifdef HAVE_UART1
 extern UartHw uart1;
 
-extern "C" {
-    __interrupt void USART1_IRQHandler();
-    __interrupt void DMA1_Channel5_IRQHandler(void);
-    __interrupt void DMA1_Channel4_IRQHandler(void);
-}
+// extern "C" __interrupt void USART1_IRQHandler();
 
 #endif
 
@@ -19,11 +15,7 @@ extern "C" {
 
 extern UartHw uart2;
 
-extern "C"{
-    __interrupt void USART2_IRQHandler(void);
-    __interrupt void DMA1_Channel6_IRQHandler(void);
-    __interrupt void DMA1_Channel7_IRQHandler(void);
-}
+extern "C" __interrupt void USART2_IRQHandler(void);
 
 #endif
 

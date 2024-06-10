@@ -5,62 +5,6 @@
 static constexpr size_t rx_dma_buf_size = 64;
 static constexpr size_t tx_dma_buf_size = 64;
 
-
-// #ifdef HAVE_UART1
-// UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
-
-// static char u1rx_dma_buf[rx_dma_buf_size];
-
-// __interrupt
-// void USART1_IRQHandler(void){
-
-//     if(USART_GetITStatus(USART1,USART_IT_RXNE)){
-//         USART_ClearITPendingBit(USART1,USART_IT_RXNE);
-//         uart1.rxBuf.addData(USART_ReceiveData(USART1));
-//     }else if(USART_GetITStatus(USART1,USART_IT_IDLE)){
-//         USART_ClearITPendingBit(USART1,USART_IT_IDLE);
-//     }else if(USART_GetITStatus(USART1,USART_IT_TXE)){
-//         USART_ClearITPendingBit(USART1,USART_IT_TXE);
-//         if(uart1.txBuf.available()){
-//             USART1->DATAR = uart1.txBuf.getData();
-//         }else{
-//             USART_ITConfig(USART1, USART_IT_TXE, DISABLE);
-//         }
-//     }else if(USART_GetFlagStatus(USART1,USART_FLAG_ORE)){
-//         USART_ClearFlag(USART1,USART_FLAG_ORE);
-//         USART_ReceiveData(USART1);
-//     }
-// }
-
-// //uart1 rx
-// __interrupt void DMA1_Channel5_IRQHandler(void){
-//     if(DMA_GetFlagStatus(DMA1_IT_TC5)){
-//         DMA_ClearFlag(DMA1_IT_TC5);
-
-//     }else if(DMA_GetFlagStatus(DMA1_IT_HT5)){
-//         DMA_ClearFlag(DMA1_IT_HT5);
-//         // USART1->DATAR = 't';
-//     }
-// }
-
-
-// //uart1 tx
-// __interrupt void DMA1_Channel4_IRQHandler(void){
-//     if(DMA_GetFlagStatus(DMA1_IT_TC4)){
-//         static size_t last_amount = 0;
-//         uart1.txBuf.vent(last_amount);
-
-//         if(uart1.txBuf.available()){
-//             uart1.invokeTxDma();
-//         }
-
-//         DMA_ClearFlag(DMA1_IT_TC4);
-//     }else if(DMA_GetFlagStatus(DMA1_IT_HT4)){
-//         DMA_ClearFlag(DMA1_IT_HT4);
-//     }
-// }
-// #endif
-
 #ifdef HAVE_UART2
 UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
 static size_t uart2_rx_dma_buf_index = 0;
@@ -117,9 +61,6 @@ __interrupt void DMA1_Channel6_IRQHandler(void){
 }
 
 #endif
-
-
-
 
 
 

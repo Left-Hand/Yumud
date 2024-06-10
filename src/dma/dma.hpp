@@ -153,6 +153,8 @@ public:
         return flag;
     }
 public:
+
+    DmaChannel() = delete;
     DmaChannel(DMA_Channel_TypeDef * _instance):
                 instance(_instance), 
                 dma_index(getDmaIndex(_instance)),
@@ -294,6 +296,9 @@ public:
     }
 };
 
+#define DMA_XY_TEMPLATE(x,y)
+// extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
+
 
 #ifdef HAVE_DMA1
     extern DmaChannel dma1Ch1;
@@ -303,8 +308,15 @@ public:
     extern DmaChannel dma1Ch5;
     extern DmaChannel dma1Ch6;
     extern DmaChannel dma1Ch7;
+    
+    DMA_XY_TEMPLATE(1,1)
+    DMA_XY_TEMPLATE(1,2)
+    DMA_XY_TEMPLATE(1,3)
+    DMA_XY_TEMPLATE(1,4)
+    DMA_XY_TEMPLATE(1,5)
+    DMA_XY_TEMPLATE(1,6)
+    DMA_XY_TEMPLATE(1,7)
 
-    // __interrupt void DMA1_Channel6_IRQHandler(void);
 #endif
 
 #ifdef HAVE_DMA2
@@ -319,6 +331,18 @@ public:
     extern DmaChannel dma2Ch9;
     extern DmaChannel dma2Ch10;
     extern DmaChannel dma2Ch11;
+
+    DMA_XY_TEMPLATE(2,1)
+    DMA_XY_TEMPLATE(2,2)
+    DMA_XY_TEMPLATE(2,3)
+    DMA_XY_TEMPLATE(2,4)
+    DMA_XY_TEMPLATE(2,5)
+    DMA_XY_TEMPLATE(2,6)
+    DMA_XY_TEMPLATE(2,7)
+    DMA_XY_TEMPLATE(2,8)
+    DMA_XY_TEMPLATE(2,9)
+    DMA_XY_TEMPLATE(2,10)
+    DMA_XY_TEMPLATE(2,11)
 #endif
 
 
