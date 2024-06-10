@@ -81,6 +81,12 @@
 #define ARRSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
 
+#define ISSFR(ptr) (((uint32_t)ptr > 0x40000000))
+#define ISRAM(ptr) ((!ISSFR(ptr)) && (((uint32_t)(ptr)) > 0x20000000))
+#define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
+#define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
+
+
 #ifndef __nopn
 #define __nopn(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
 #endif

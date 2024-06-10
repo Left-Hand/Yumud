@@ -6,11 +6,12 @@
 #include "../printer.hpp"
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
 #include "src/gpio/port.hpp"
-
+#include <functional>
 
 class Uart:public Printer{
 public:
     using Mode = CommMode;
+    using Callback = std::function<void(void)>;
 
     CommMethod txMethod = CommMethod::None;
     CommMethod rxMethod = CommMethod::None;

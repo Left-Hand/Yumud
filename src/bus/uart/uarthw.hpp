@@ -4,6 +4,9 @@
 #include "uart.hpp"
 #include "src/dma/dma.hpp"
 
+static constexpr size_t rx_dma_buf_size = 64;
+static constexpr size_t tx_dma_buf_size = 64;
+
 class UartHw:public Uart{
 public:
 protected:
@@ -22,7 +25,7 @@ protected:
 
 
     void enableRxneIt(const bool en = true);
-    void enableTxIt(const bool en = true);
+    void enableTxeIt(const bool en = true);
     void enableIdleIt(const bool en = true);
     void invokeTxIt();
 
@@ -30,20 +33,32 @@ protected:
     void enableTxDma(const bool en = true);
 
 
-public:
-    DmaChannel & txDma;
-    DmaChannel & rxDma;
-
     void invokeTxDma();
-
     void invokeRxDma();
 
-    UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
+    void bindRxneCb(Callback && cb);
+    void bindTxeCb(Callback && cb);
+    void bindIdleCb(Callback && cb);
+
+    size_t rx_dma_buf_index;
+    size_t tx_dma_buf_index;
+
+    char tx_dma_buf[tx_dma_buf_size];
+    char rx_dma_buf[rx_dma_buf_size];
+    
+    DmaChannel & txDma;
+    DmaChannel & rxDma;
+public:
+
+
+    UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):
+            instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
+
 
     void init(
         const uint32_t baudRate, 
-        const CommMethod _rxMethod = CommMethod::Interrupt,
-        const CommMethod _txMethod = CommMethod::Blocking) override;
+        const CommMethod _rxMethod = CommMethod::Dma,
+        const CommMethod _txMethod = CommMethod::Dma) override;
 
     void setTxMethod(const CommMethod _txMethod) override;
 

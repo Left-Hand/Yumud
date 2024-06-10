@@ -47,35 +47,7 @@ public:
     uint8_t dma_index;
     uint8_t channel_index;
 
-    constexpr bool isSFR(void * ptr){
-        return ((uint32_t)ptr > 0x40000000);
-    }
-
-    constexpr bool isRam(void * ptr){
-        return  (not isSFR(ptr))and ((uint32_t)ptr > 0x20000000);
-    }
-
-    constexpr bool isRom(void * ptr){
-        return ((uint32_t)ptr < 0x20000000);
-    }
-
-    constexpr bool isAlign(void * ptr){
-        return ((uint32_t)ptr & 0x3) == 0;
-    }
-
-    void enableRcc(){
-
-        #ifdef HAVE_DMA2
-        if(instance < DMA2_Channel1){
-            RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-        }else{
-            RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
-        }
-
-        #else
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-        #endif
-    }
+    void enableRcc();
     void configPeriphDataBits(const uint8_t bits){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11 << 8)));
@@ -98,60 +70,12 @@ public:
         return 1;
         #endif
     }
-    uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
-        uint8_t _dma_index = getDmaIndex(_instance);
-        switch(_dma_index){
-            case 1:
-                return ((uint32_t)_instance - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
 
-            #ifdef HAVE_DMA2
-            case 2:
-                if((uint32_t)_instance < DMA2_Channel7_BASE){ 
-                    return ((uint32_t)_instance - DMA2_Channel1_BASE) / (DMA2_Channel2_BASE - DMA2_Channel1_BASE) + 1;
-                }else{
-                    return ((uint32_t)_instance - DMA2_Channel7_BASE) / (DMA2_Channel8_BASE - DMA2_Channel7_BASE) + 7;
-                }
-            #endif
-            default:
-                return 1;
-        }
-    }
+    uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance);
 
-    uint32_t getDoneFlag(){
-        uint32_t flag = 0;
-        
-        switch(dma_index){
-            case 1:
-                flag = DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1));
-                break;
-            #ifdef HAVE_DMA2
-            case 2:
-                flag = DMA2_IT_TC1 << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1));
-                break;
-            #endif
-            default:
-                break;
-        }
-        return flag;
-    }
+    uint32_t getDoneFlag();
 
-    uint32_t getHalfFlag(){
-        uint32_t flag = 0;
-        
-        switch(dma_index){
-            case 1:
-                flag = DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1));
-                break;
-            #ifdef HAVE_DMA2
-            case 2:
-                flag = DMA2_IT_HT1 << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1));
-                break;
-            #endif
-            default:
-                break;
-        }
-        return flag;
-    }
+    uint32_t getHalfFlag();
 public:
 
     DmaChannel() = delete;
@@ -160,74 +84,12 @@ public:
                 dma_index(getDmaIndex(_instance)),
                 channel_index(getChannelIndex(_instance)){;}
 
-    void init(const Mode _mode,const Priority priority = Priority::medium){
-        enableRcc();
-        mode = _mode;
-        DMA_InitTypeDef DMA_InitStructure = {0};
-        DMA_DeInit(instance);
-
-        DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
-        switch(mode){
-            case Mode::toMemCircular:
-                DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            case Mode::toMem:
-                DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralSRC;
-                DMA_InitStructure.DMA_BufferSize = 0;
-                DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-                DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-                DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-                break;
-            case Mode::toPeriphCircular:
-                DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            case Mode::toPeriph:
-                DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-                DMA_InitStructure.DMA_BufferSize = 0;
-                DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
-                DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-                DMA_InitStructure.DMA_M2M = DMA_M2M_Disable;
-                break;
-            case Mode::synergyCircular:
-                DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            case Mode::synergy:
-                DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-                DMA_InitStructure.DMA_BufferSize = 0;
-                DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
-                DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable;
-                DMA_InitStructure.DMA_M2M = DMA_M2M_Enable;
-                break;
-            case Mode::distributeCircular:
-                DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
-            case Mode::distribute:
-                DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
-                DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
-                DMA_InitStructure.DMA_BufferSize = 0;
-                DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
-                DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Disable;
-                DMA_InitStructure.DMA_M2M = DMA_M2M_Enable;
-                break;
-            case Mode::automatic:
-                break;
-        }
-
-        DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-        DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
-
-        DMA_InitStructure.DMA_Priority = (uint32_t)priority;
-
-        DMA_Init(instance, &DMA_InitStructure);
-    }
+    void init(const Mode _mode,const Priority priority = Priority::medium);
 
     void begin(){
         DMA_ClearFlag(DMA1_IT_TC5);
         DMA_ClearFlag(DMA1_IT_HT5);
-        
+
         DMA_Cmd(instance, ENABLE);
     }
 
