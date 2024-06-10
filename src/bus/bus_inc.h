@@ -3,7 +3,7 @@
 
 #include "i2s/i2sSw.hpp"
 #include "i2s/i2sdrv.hpp"
-#include "uart/uarts.hpp"
+#include "uart/uarthw.hpp"
 #include "uart/uartsw.hpp"
 #include "i2c/i2cSw.hpp"
 #include "i2c/i2c1.hpp"

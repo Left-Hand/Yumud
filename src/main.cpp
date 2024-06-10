@@ -142,9 +142,11 @@ struct buckRuntimeValues{
 int main(){
 
     Sys::Misc::prework();
-    UartHw & uart = uart2;
+    Gpio & led = portC[13];
+    led.OutPP();
+    UartHw & uart = uart1;
     // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);
-    uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);
+    uart.init(115200 * 8);
     // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Blocking);
     // uart.init(115200 * 8);
     // DEBUG_PRINT(dma1Ch4.dma_index, dma1Ch4.channel_index);
@@ -172,12 +174,8 @@ int main(){
     // DMA_RX_INIT();
 
     while(true){
+        led = !led;
         delay(100);
-        // for(uint8_t i = 0; i < 8; i++)
-        // uart.txBuf.addData('.');
-        // uart << uart.txBuf.straight() << "\r\n";
-        // uart << "abcdefg\r\n";
-        // uart.println(millis());
 
         if(uart.available()){
             delay(10);

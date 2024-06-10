@@ -1,5 +1,4 @@
 #include "uarthw.hpp"
-#include "uarts.hpp"
 #include "src/system.hpp"
 
 #define UART_CB_TEMPLATE(name)\
@@ -27,16 +26,24 @@ __interrupt void uname##_IRQHandler(void){\
 
 #define UART_TEMPLATE(name, pname, uname)\
 UART_CB_TEMPLATE(name)\
-UART_IT_TEMPLATE(name, uname)\
-UartHw name{uname, pname##_TX_DMA_CH, pname##_RX_DMA_CH};\
+UART_IT_TEMPLATE(name, (uname))\
+
+
+// UartHw name{uname, pname##_TX_DMA_CH, pname##_RX_DMA_CH};
 
 
 #ifdef HAVE_UART2
 UART_CB_TEMPLATE(uart2)
-UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
 UART_IT_TEMPLATE(uart2, USART2)
+UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
 
-// UART_TEMPLATE(uart2, UART2, USART2)
+#endif
+
+#ifdef HAVE_UART1
+UART_CB_TEMPLATE(uart1)
+UART_IT_TEMPLATE(uart1, USART1)
+UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
+
 #endif
 
 
@@ -44,7 +51,7 @@ void UartHw::bindRxneCb(Callback && cb){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            // uart1_rxne_cb = cb;
+            uart1_rxne_cb = cb;
             break;
         #endif
         #ifdef HAVE_UART2
@@ -76,11 +83,73 @@ void UartHw::bindRxneCb(Callback && cb){
 }
 
 void UartHw::bindTxeCb(Callback && cb){
-    uart2_txe_cb = cb;
+    switch((uint32_t)instance){
+        #ifdef HAVE_UART1
+        case USART1_BASE:
+            uart1_txe_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART2
+        case USART2_BASE:
+            uart2_txe_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART3
+        case USART3_BASE:
+            uart3_txe_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART4
+        case UART4_BASE:
+            uart4_txe_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART5
+        case UART5_BASE:
+            uart5_txe_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART6
+        case UART6_BASE:
+            uart6_txe_cb = cb;
+            break;
+        #endif
+    }
 }
 
 void UartHw::bindIdleCb(Callback && cb){
-    uart2_idle_cb = cb;
+    switch((uint32_t)instance){
+        #ifdef HAVE_UART1
+        case USART1_BASE:
+            uart1_idle_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART2
+        case USART2_BASE:
+            uart2_idle_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART3
+        case USART3_BASE:
+            uart3_idle_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART4
+        case UART4_BASE:
+            uart4_idle_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART5
+        case UART5_BASE:
+            uart5_idle_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART6
+        case UART6_BASE:
+            uart6_idle_cb = cb;
+            break;
+        #endif
+    }
 }
 
 void UartHw::enableRcc(const bool en){
