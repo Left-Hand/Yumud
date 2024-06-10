@@ -6,8 +6,11 @@
 #include "src/gpio/gpio.hpp"
 #include "src/gpio/port.hpp"
 #include "src/nvic/nvic.hpp"
+
 #include <stddef.h>
 #include <initializer_list>
+#include <functional>
+
 
 #define HAVE_DMA1
 // #define HAVE_DMA2
@@ -15,6 +18,8 @@
 class DmaChannel{
 
 public:
+
+    using Callback = std::function<void(void)>;
     enum class Mode:uint8_t{
         toMem = DMA_DIR_PeripheralSRC,
         toPeriph = DMA_DIR_PeripheralDST,
@@ -281,7 +286,8 @@ public:
     }
 
 
-
+    void bindDoneCb(Callback && cb);
+    void bindHalfCb(Callback && cb);
 
     bool isDone(){
         return DMA_GetFlagStatus(getDoneFlag());
@@ -297,6 +303,8 @@ public:
     extern DmaChannel dma1Ch5;
     extern DmaChannel dma1Ch6;
     extern DmaChannel dma1Ch7;
+
+    // __interrupt void DMA1_Channel6_IRQHandler(void);
 #endif
 
 #ifdef HAVE_DMA2

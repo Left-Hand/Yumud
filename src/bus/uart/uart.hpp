@@ -7,6 +7,7 @@
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
 #include "src/gpio/port.hpp"
 
+
 class Uart:public Printer{
 public:
     using Mode = CommMode;
@@ -19,10 +20,11 @@ protected:
     void _read(char & data) override;
     void _read(char * data_ptr, const size_t len) override;
 
+    static constexpr size_t uart_fifo_size = 256;
 
 public:
-    RingBuf_t<char, 128> rxBuf;
-    RingBuf_t<char, 128> txBuf;
+    RingBuf_t<char, uart_fifo_size> rxBuf;
+    RingBuf_t<char, uart_fifo_size> txBuf;
 
     virtual void init(
         const uint32_t baudRate, 

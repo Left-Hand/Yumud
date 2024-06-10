@@ -109,13 +109,9 @@ void GenericTimer::initAsEncoder(const TimerMode mode){
 
 
 	TIM_ICInit(instance,&TIM_ICInitStruct);
-
 	TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;
-
 	TIM_ICInit(instance,&TIM_ICInitStruct);
-
 	TIM_EncoderInterfaceConfig(instance,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
-
     TIM_Cmd(instance, ENABLE);
 }
 

@@ -51,6 +51,8 @@
 #define __interrupt_soft __attribute__((interrupt))
 #endif
 
+#define EXECUTE(x, ...) if(x) x(__VA_ARGS__)
+
 #ifndef __interrupt
 #if defined(__riscv) && defined(WCH)
 #define __interrupt __attribute__((interrupt("WCH-Interrupt-fast")))

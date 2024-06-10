@@ -2,7 +2,8 @@
 #include "uarts.hpp"
 #include "src/system.hpp"
 
-static constexpr size_t rx_dma_buf_size = 128;
+static constexpr size_t rx_dma_buf_size = 64;
+static constexpr size_t tx_dma_buf_size = 64;
 
 
 // #ifdef HAVE_UART1
@@ -62,47 +63,39 @@ static constexpr size_t rx_dma_buf_size = 128;
 
 #ifdef HAVE_UART2
 UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
-static size_t u2tx_amount = 0;
-static char u2rx_dma_buf[rx_dma_buf_size];
-static size_t u2rx_dma_buf_index = 0;
+static size_t uart2_rx_dma_buf_index = 0;
+static char uart2_rx_dma_buf[rx_dma_buf_size];
+static char uart2_tx_dma_buf[tx_dma_buf_size];
+
 __interrupt
 void USART2_IRQHandler(void){
     if(USART_GetITStatus(USART2,USART_IT_RXNE)){
-        USART_ClearITPendingBit(USART2,USART_IT_RXNE);
         uart2.rxBuf.addData(USART_ReceiveData(USART2));
+        USART_ClearITPendingBit(USART2,USART_IT_RXNE);
     }else if(USART_GetITStatus(USART2,USART_IT_IDLE)){
-
-        USART2->STATR;
-        USART2->DATAR;//clear idle flag
-
         size_t index = rx_dma_buf_size - DMA1_Channel6->CNTR;
         if(index != rx_dma_buf_size / 2 && index != rx_dma_buf_size){
-            // uart2.rxBuf.addData(u2rx_dma_buf + u2rx_dma_buf_index, index - u2rx_dma_buf_index); 
-            if(index < rx_dma_buf_size / 2){
-                for(size_t i = u2rx_dma_buf_index; i < index; i++) uart2.rxBuf.addData(u2rx_dma_buf[i]); 
-            }else if(index > rx_dma_buf_size / 2){
-                for(size_t i = u2rx_dma_buf_index; i < index; i++) uart2.rxBuf.addData(u2rx_dma_buf[i]); 
-            }
+            for(size_t i = uart2_rx_dma_buf_index; i < index; i++) uart2.rxBuf.addData(uart2_rx_dma_buf[i]); 
         }
-        u2rx_dma_buf_index = index;
+        uart2_rx_dma_buf_index = index;
+        USART2->STATR;
+        USART2->DATAR;//clear idle flag
     }else if(USART_GetITStatus(USART2,USART_IT_TXE)){
-        USART_ClearITPendingBit(USART2,USART_IT_TXE);
         if(uart2.txBuf.available()){
             USART2->DATAR = uart2.txBuf.getData();
         }else{
             USART_ITConfig(USART2, USART_IT_TXE, false);
         }
+        USART_ClearITPendingBit(USART2,USART_IT_TXE);
     }else if(USART_GetFlagStatus(USART2,USART_FLAG_ORE)){
-        USART_ClearFlag(USART2,USART_FLAG_ORE);
         USART_ReceiveData(USART2);
+        USART_ClearFlag(USART2,USART_FLAG_ORE);
     }
 }
 
 //uart2 tx
 __interrupt void DMA1_Channel7_IRQHandler(void){
-
     if(DMA_GetFlagStatus(DMA1_IT_TC7)){
-        uart2.txBuf.vent(u2tx_amount);
         uart2.invokeTxDma();
         DMA_ClearFlag(DMA1_IT_TC7);
     }
@@ -111,16 +104,15 @@ __interrupt void DMA1_Channel7_IRQHandler(void){
 
 //uart2 rx
 __interrupt void DMA1_Channel6_IRQHandler(void){
-
     if(DMA_GetFlagStatus(DMA1_IT_TC6)){
-        DMA_ClearFlag(DMA1_IT_TC6);
         uart2.invokeRxDma();
-        for(size_t i = u2rx_dma_buf_index; i < rx_dma_buf_size; i++) uart2.rxBuf.addData(u2rx_dma_buf[i]); 
-        u2rx_dma_buf_index = 0;
+        for(size_t i = uart2_rx_dma_buf_index; i < rx_dma_buf_size; i++) uart2.rxBuf.addData(uart2_rx_dma_buf[i]); 
+        uart2_rx_dma_buf_index = 0;
+        DMA_ClearFlag(DMA1_IT_TC6);
     }else if(DMA_GetFlagStatus(DMA1_IT_HT6)){
+        for(size_t i = uart2_rx_dma_buf_index; i < rx_dma_buf_size / 2; i++) uart2.rxBuf.addData(uart2_rx_dma_buf[i]); 
+        uart2_rx_dma_buf_index = rx_dma_buf_size / 2;
         DMA_ClearFlag(DMA1_IT_HT6); 
-        for(size_t i = u2rx_dma_buf_index; i < rx_dma_buf_size / 2; i++) uart2.rxBuf.addData(u2rx_dma_buf[i]); 
-        u2rx_dma_buf_index = rx_dma_buf_size / 2;
     }
 }
 
@@ -332,25 +324,31 @@ void UartHw::enableRxDma(const bool en){
         rxDma.enableIt({1,1});
         rxDma.enableDoneIt();
         rxDma.enableHalfIt();
-        rxDma.begin((void *)u2rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
+        rxDma.begin((void *)uart2_rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
     }
 }
 
 void UartHw::invokeTxDma(){
     if(txDma.pending() == 0 && txBuf.available() != 0){
-        u2tx_amount = txBuf.straight();
-        txDma.begin((void *)(&instance->DATAR), (void *)txBuf.read_ptr, u2tx_amount);
+        size_t uart2_tx_amount = 0;
+        while(txBuf.available()){
+            uart2_tx_dma_buf[uart2_tx_amount++] = txBuf.getData();
+            if(uart2_tx_amount >= tx_dma_buf_size){
+                break;
+            }
+        }
+        txDma.begin((void *)(&instance->DATAR), (void *)uart2_tx_dma_buf, uart2_tx_amount);
     }
     // if(txBuf.available() != 0){
-    //     u2tx_amount = txBuf.straight();
+    //     uart2_tx_amount = txBuf.straight();
 
     //     auto base = txBuf.read_ptr;
-    //     for(size_t i = 0; i < u2tx_amount; i++){
+    //     for(size_t i = 0; i < uart2_tx_amount; i++){
     //         instance->DATAR = base[i];
     //         while((instance->STATR & USART_FLAG_TXE) == RESET);
     //     }
 
-    //     txBuf.vent(u2tx_amount);
+    //     txBuf.vent(uart2_tx_amount);
     //     invokeTxDma();
     // }
 

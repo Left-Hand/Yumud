@@ -2,8 +2,9 @@
 
 
 using Callback = std::function<void(void)>;
-// #define EXECUTE(x) if(x != nullptr) x();
-#define EXECUTE(x)
+
+
+
 static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
 static RingBuf_t<std::shared_ptr<CanMsg>, 8> pending_rx_msgs;
 static Callback cb_txok;
