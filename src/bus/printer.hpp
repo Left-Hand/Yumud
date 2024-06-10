@@ -68,7 +68,7 @@ public:
     char read(){char data; _read(data); return data;};
     String readString(const size_t & len);
     String readStringUntil(const char & chr);
-    String readStringAll(){return readString(available());}
+    String readString(){return readString(available());}
     void setSpace(const String & _space){space = _space;}
     void setRadix(const uint8_t & _radix){radix = _radix;}
     void setEps(const uint8_t & _eps){eps = _eps;}

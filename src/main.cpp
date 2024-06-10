@@ -8,9 +8,6 @@ using Color = Color_t<real_t>;
 #include "src/opa/opa.hpp"
 #include "src/device/Adc/INA226/ina226.hpp"
 
-// constexpr uint32_t SPI1_BaudRate = (144000000/32);
-// constexpr uint32_t SPI2_BaudRate = (144000000/8);
-
 #define I2C_BaudRate 400000
 
 
@@ -148,12 +145,8 @@ int main(){
 
     UartHw & uart = uart2;
     // uart.init(115200 * 8, CommMethod::Interrupt, CommMethod::Dma);
-    uart.init(115200 * 8, CommMethod::Dma, CommMethod::Interrupt);
-    // uart.println(UART2_RX_DMA_CH.getDoneFlag(), DMA1_IT_TC6);
-    // uart.println(UART2_RX_DMA_CH.getHalfFlag(), DMA1_IT_HT6);
-
-    // uart.println(UART2_TX_DMA_CH.getDoneFlag(), DMA1_IT_TC7);
-    // uart.println(UART2_TX_DMA_CH.getHalfFlag(), DMA1_IT_HT7);
+    // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);
+    uart.init(115200 * 8, CommMethod::Dma, CommMethod::Blocking);
     // uart.init(115200 * 8);
     // DEBUG_PRINT(dma1Ch4.dma_index, dma1Ch4.channel_index);
     // DMA_INIT();
@@ -189,7 +182,7 @@ int main(){
 
         if(uart.available()){
             delay(10);
-            uart.println(uart.readStringAll());
+            uart.println(uart.readString());
         }
     }
 
