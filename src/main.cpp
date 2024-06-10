@@ -144,9 +144,9 @@ int main(){
     Sys::Misc::prework();
 
     UartHw & uart = uart2;
-    // uart.init(115200 * 8, CommMethod::Interrupt, CommMethod::Dma);
     // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);
-    uart.init(115200 * 8, CommMethod::Dma, CommMethod::Blocking);
+    uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);
+    // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Blocking);
     // uart.init(115200 * 8);
     // DEBUG_PRINT(dma1Ch4.dma_index, dma1Ch4.channel_index);
     // DMA_INIT();

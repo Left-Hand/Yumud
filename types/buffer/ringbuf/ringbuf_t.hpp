@@ -26,9 +26,9 @@ public:
         }
     }
 
-    __fast_inline void addData(const T * data,const size_t size){
-        for(size_t i = 0; i < size;i++){
-            addData(data[size]);
+    __fast_inline void addData(const T * data,const size_t data_size){
+        for(size_t i = 0; i < data_size; i++){
+            addData(data[data_size]);
         }
     }
     //     auto ptr_before = write_ptr;
@@ -78,7 +78,7 @@ public:
         }
     }
 
-    void readForward(const size_t len){
+    void vent(const size_t len){
         read_ptr = advancePointer(read_ptr, len);
         return;
     }
