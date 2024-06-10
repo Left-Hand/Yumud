@@ -296,8 +296,8 @@ public:
     }
 };
 
-#define DMA_XY_TEMPLATE(x,y)
-// extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
+#define DMA_XY_TEMPLATE(x,y)\
+extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
 
 
 #ifdef HAVE_DMA1
@@ -308,7 +308,7 @@ public:
     extern DmaChannel dma1Ch5;
     extern DmaChannel dma1Ch6;
     extern DmaChannel dma1Ch7;
-    
+
     DMA_XY_TEMPLATE(1,1)
     DMA_XY_TEMPLATE(1,2)
     DMA_XY_TEMPLATE(1,3)
