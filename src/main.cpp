@@ -142,7 +142,6 @@ struct buckRuntimeValues{
 int main(){
 
     Sys::Misc::prework();
-    dma1Ch6.begin();
     UartHw & uart = uart2;
     // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);
     uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);

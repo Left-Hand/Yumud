@@ -37,29 +37,6 @@ void USART2_IRQHandler(void){
     }
 }
 
-//uart2 tx
-// __interrupt void DMA1_Channel7_IRQHandler(void){
-//     if(DMA_GetFlagStatus(DMA1_IT_TC7)){
-//         uart2.invokeTxDma();
-//         DMA_ClearFlag(DMA1_IT_TC7);
-//     }
-// }
-
-
-//uart2 rx
-// __interrupt void DMA1_Channel6_IRQHandler(void){
-//     if(DMA_GetFlagStatus(DMA1_IT_TC6)){
-//         uart2.invokeRxDma();
-//         for(size_t i = uart2_rx_dma_buf_index; i < rx_dma_buf_size; i++) uart2.rxBuf.addData(uart2_rx_dma_buf[i]); 
-//         uart2_rx_dma_buf_index = 0;
-//         DMA_ClearFlag(DMA1_IT_TC6);
-//     }else if(DMA_GetFlagStatus(DMA1_IT_HT6)){
-//         for(size_t i = uart2_rx_dma_buf_index; i < rx_dma_buf_size / 2; i++) uart2.rxBuf.addData(uart2_rx_dma_buf[i]); 
-//         uart2_rx_dma_buf_index = rx_dma_buf_size / 2;
-//         DMA_ClearFlag(DMA1_IT_HT6); 
-//     }
-// }
-
 #endif
 
 
@@ -255,6 +232,7 @@ void UartHw::enableTxDma(const bool en){
         txDma.init(DmaChannel::Mode::toPeriph);
         txDma.enableIt({1,1});
         txDma.enableDoneIt();
+        txDma.bindDoneCb([this](){this->invokeTxDma();});
     }
 }
 
@@ -265,6 +243,17 @@ void UartHw::enableRxDma(const bool en){
         rxDma.enableIt({1,1});
         rxDma.enableDoneIt();
         rxDma.enableHalfIt();
+        rxDma.bindDoneCb([this](){
+            this->invokeRxDma();
+            for(size_t i = uart2_rx_dma_buf_index; i < rx_dma_buf_size; i++) this->rxBuf.addData(uart2_rx_dma_buf[i]); 
+            uart2_rx_dma_buf_index = 0;
+        });
+
+        rxDma.bindHalfCb([this](){
+            for(size_t i = uart2_rx_dma_buf_index; i < rx_dma_buf_size / 2; i++) this->rxBuf.addData(uart2_rx_dma_buf[i]); 
+            uart2_rx_dma_buf_index = rx_dma_buf_size / 2;
+        });
+
         rxDma.begin((void *)uart2_rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
     }
 }
