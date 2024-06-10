@@ -116,10 +116,12 @@
           "thirdparty/easylogger/plugins/flash",
           "src/debug",
           "src/device",
-          "src/clock"
+          "src/clock",
+          "src/dma"
         ],
         "libList": [
-          "src/clock"
+          "src/clock",
+          "src/dma"
         ],
         "sourceDirList": [],
         "defineList": [

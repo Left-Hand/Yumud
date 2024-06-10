@@ -15,10 +15,7 @@ public:
     virtual Coil2PConcept& operator= (const real_t & duty) = 0;
 };
 
-class Coil3PConcept: public CoilConcept{
-public:
-    virtual Coil3PConcept & operator= (const Vector2_t<real_t> & duty) = 0;
-};
+
 
 class Coil1:public Coil2PConcept{
 protected:
@@ -180,27 +177,27 @@ public:
 };
 
 
-class Coil3:public Coil3PConcept{
-protected:
-    PwmChannelConcept & instanceU;
-    PwmChannelConcept & instanceV;
-    PwmChannelConcept & instanceW;
-    bool enabled = true;
-public:
-    Coil3(PwmChannelConcept & _instanceU, PwmChannelConcept & _instanceV, PwmChannelConcept & _instanceW):
-            instanceU(_instanceU), instanceV(_instanceV), instanceW(_instanceW){;}
+// class Coil3:public Coil3PConcept{
+// protected:
+//     PwmChannelConcept & instanceU;
+//     PwmChannelConcept & instanceV;
+//     PwmChannelConcept & instanceW;
+//     bool enabled = true;
+// public:
+//     Coil3(PwmChannelConcept & _instanceU, PwmChannelConcept & _instanceV, PwmChannelConcept & _instanceW):
+//             instanceU(_instanceU), instanceV(_instanceV), instanceW(_instanceW){;}
 
-    void init() override{
-        instanceU.init();
-        instanceV.init();
-        instanceW.init();
-    }
+//     void init() override{
+//         instanceU.init();
+//         instanceV.init();
+//         instanceW.init();
+//     }
 
-    void setClamp(const real_t & max_value){
-        real_t abs_max_value = abs(max_value);
-        instanceU.setClamp(abs_max_value);
-        instanceV.setClamp(abs_max_value);
-        instanceW.setClamp(abs_max_value);
-    }
-};
+//     void setClamp(const real_t & max_value){
+//         real_t abs_max_value = abs(max_value);
+//         instanceU.setClamp(abs_max_value);
+//         instanceV.setClamp(abs_max_value);
+//         instanceW.setClamp(abs_max_value);
+//     }
+// };
 #endif

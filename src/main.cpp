@@ -29,7 +29,7 @@ using Color = Color_t<real_t>;
 // I2cDrv i2cDrvVlx = I2cDrv(i2cSw, 0x52);
 // I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
-// 
+/
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
 // I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
 // I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
@@ -89,7 +89,7 @@ using Sys::t;
 
 #include "src/bus/bus_inc.h"
 #include "robots/buck.hpp"
-#include "robots/stepper.hpp"
+#include "robots/stepper/stepper.hpp"
 
 
 template<typename T>
@@ -115,79 +115,14 @@ struct buckRuntimeValues{
 };
 
 
-
-
-
-// void DMA_INIT(void){
-//     dma1Ch4.init(DmaChannel::Mode::toPeriph);
-//     dma1Ch4.begin((void *)(&USART1->DATAR), (void *)mem_buf, mem_size);
-//     dma1Ch4.enableIt({1,1});
-//     dma1Ch4.enableDoneIt();
-
-//     DMA_Cmd (DMA1_Channel4,ENABLE);  //使能DMA
-// }
-
-// void DMA_RX_INIT(void){
-//     auto & rxDma = UART2_RX_DMA_CH;
-//     rxDma.init(DmaChannel::Mode::toMemCircular);
-//     rxDma.enableIt({1,1});
-//     rxDma.enableDoneIt();
-//     rxDma.enableHalfIt();
-//     rxDma.begin((void *)mem_buf,(void *)(&USART2->DATAR), mem_size);
-    // rxDma.begin((void *)u1rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
-    // DMA_Cmd (DMA1_Channel4,ENABLE);  //使能DMA
-// }
-
-
 int main(){
 
     Sys::Misc::prework();
-    Gpio & led = portC[13];
-    led.OutPP();
-    UartHw & uart = uart1;
-    // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Dma);
-    uart.init(115200 * 8);
-    // uart.init(115200 * 8, CommMethod::Dma, CommMethod::Blocking);
-    // uart.init(115200 * 8);
-    // DEBUG_PRINT(dma1Ch4.dma_index, dma1Ch4.channel_index);
-    // DMA_INIT();
-    // USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
-    // delay(100);
-    // mem_buf[5] = '0';
-    // DMA_INIT();
-    // USART_DMACmd(USART1, USART_DMAReq_Tx, ENABLE);
-    // delay(100);
-    // while(true);
-    // uart1.init(115200 * 8, CommMethod::Interrupt, CommMethod::Dma);
-    // test();
-    // uint8_t cnt = 0;
-
-    // while(true){
-    //     if(uart.available()){
-    //         delay(10);
-    //         uart.println(uart.readStringAll());
-    //     }
-    //     delay(500);
-    //     uart.println("??");
-    // }
-
-    // DMA_RX_INIT();
-
+    Stepper stp;
+    stp.init();
     while(true){
-        led = !led;
-        delay(100);
-
-        if(uart.available()){
-            delay(10);
-            uart.println(uart.readString());
-        }
+        stp.run();
     }
-
-    // Stepper stp;
-    // stp.init();
-    // while(true){
-    //     stp.run();
-    // }
     // pedestrian_app();
     // modem_app();
     // test_app();

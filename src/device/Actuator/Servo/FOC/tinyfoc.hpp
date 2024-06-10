@@ -2,7 +2,7 @@
 
 #define __TINY_FOC_HPP__
 
-#include "svpwm.hpp"
+#include "src/robots/stepper/svpwm.hpp"
 #include "device/Encoder/Odometer.hpp"
 #include "dsp/controller/pid.hpp"
 
