@@ -165,28 +165,12 @@ using Color = Color_t<real_t>;
 #include "drivers/Encoder/Estimmator.hpp"
 #include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
 
-template<typename T>
-struct targAndMeasurePair_t{
-    T target;
-    T measure;
-};
-
-using targAndMeasurePair = targAndMeasurePair_t<real_t>;
-
-
 real_t warp_to_halfpi(const real_t & x){
     real_t ret = x;
     while(ret > PI / 2) ret -= PI;
     while(ret < -PI / 2) ret += PI;
     return ret;
 }
-
-
-struct buckRuntimeValues{
-    targAndMeasurePair curr;
-    targAndMeasurePair volt;
-};
-
 
 int main(){
 
