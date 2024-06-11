@@ -4,12 +4,24 @@
 
 #include "src/system.hpp"
 #include "types/range/range_t.hpp"
+// #include "memory.hpp"
 
-class Memory;
+// class Memory;
 
-class StorageProxy{
+// class StorageProxy{
 
-};
+// };
+
+
+
+
+
+
+
+
+
+
+
 
 class Storage{
 protected:
@@ -17,7 +29,8 @@ protected:
     using AddressWindow = Range_t<Address>;
     const Address size;
 
-public:
+    friend class Memory;
+protected:
     Storage(const Address & _size):size(_size){;}
 
     friend class Memory;
@@ -27,54 +40,77 @@ public:
 
     virtual void entry_load() = 0;
     virtual void exit_load() = 0;
-    virtual void _store(const uint8_t & data, const Address & loc) = 0;
-    virtual void _load(uint8_t & data, const Address & loc) = 0;
 
-    virtual void _store(const void * data, const Address & data_size, const Address & loc){
-        for(Address addr = loc; addr < loc + data_size; addr++){
-            _store(*((const uint8_t *)data + addr - loc), addr);
-        }
+
+
+
+
+    virtual void _store(const uint8_t & data, const Address & loc){
+        _store(&data, 1, loc);
     }
-    virtual void _load(void * data, const Address & data_size, const Address & loc) {
-        for(Address addr = loc; addr < loc + data_size; addr++){
-            _load(*((uint8_t *)data + addr - loc), addr);
-        }
+    virtual void _load(uint8_t & data, const Address & loc){
+        _load(&data, 1, loc);
     }
+
+    virtual void _store(const void * data, const Address & data_size, const Address & loc) = 0;
+    virtual void _load(void * data, const Address & data_size, const Address & loc) = 0;
 public:
     virtual void init() = 0;
 
     virtual bool busy() = 0;
     auto getSize() const {return size;}
-    Rangei getWindow() const {return {0, getSize()}; }
+    AddressWindow getWindow() const {return {0, getSize()}; }
     void store(const void * data, const Address & data_size, const Address & loc){
-        entry_store();
-        _store(data, data_size, loc);
-        exit_store();
+        if(getWindow().has(loc)){
+            entry_store();
+            _store(data, data_size, loc);
+            exit_store();
+        }
     }
 
     void store(const uint8_t & data, const Address & loc){
-        entry_store();
-        _store(data, loc);
-        exit_store();
+        if(getWindow().has(loc)){
+            entry_store();
+            _store(data, loc);
+            exit_store();
+        }
     }
 
     void load(uint8_t & data, const Address & loc){
-        entry_load();
-        _load(data, loc);
-        exit_load();
+        if(getWindow().has(loc)){
+            entry_load();
+            _load(data, loc);
+            exit_load();
+        }
     }
 
     void load(void * data, const Address & data_size, const Address & loc){
-        entry_load();
-        _load(data, data_size, loc);
-        exit_load();
+        if(getWindow().has(loc)){
+            entry_load();
+            _load(data, data_size, loc);
+            exit_load();
+        }
     }
 
     uint8_t load(const Address & loc){
-        uint8_t data;
-        load(data, loc);
-        return data;
+        if(getWindow().has(loc)){
+            uint8_t data;
+            load(data, loc);
+            return data;
+        }
+        return 0;
     }
+
+    // operator Memory(){
+    //     return Memory(*this, getWindow());
+    // }
+
+    // Memory pick(){
+    //     return Memory(*this, getWindow());
+    // }
+    // Memory pick(const AddressWindow & window){
+    //     return Memory(*this, window.intersection(getWindow()));
+    // }
 };
 
 
