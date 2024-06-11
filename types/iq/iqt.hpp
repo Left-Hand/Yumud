@@ -136,6 +136,13 @@ public:
         return iq_t(value - iq_t(other).value);
     }
 
+    __fast_inline_constexpr iq_t operator<<(int shift) const {
+        return iq_t(value << shift);
+    }
+
+    __fast_inline_constexpr iq_t operator>>(int shift) const {
+        return iq_t(value >> shift);
+    }
 
     __fast_inline_constexpr iq_t& operator+=(const auto & other) {
         *this += iq_t(other);

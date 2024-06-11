@@ -14,6 +14,7 @@
 #include "svpwm.hpp"
 
 
+
 static constexpr uint32_t foc_freq = 36000;
 static constexpr uint32_t est_freq = foc_freq / 16;
 static constexpr uint32_t est_devider = foc_freq / est_freq;
@@ -35,6 +36,21 @@ namespace StepperEnums{
         ERROR,
         EXCEPTION
     )
+
+    BETTER_ENUM(CtrlType, uint8_t,     
+        POS = 0,
+        SPEED
+    )
+
+    enum class ErrorCode:uint8_t{
+        OK = 0,
+        COIL_A_DISCONNECTED,
+        COIL_A_NO_SIGNAL,
+        COIL_B_DISCONNECTED,
+        COIL_B_NO_SIGNAL,
+        ODO_DISCONNECTED,
+        ODO_NO_SIGNAL
+    };
 };
 
 #endif

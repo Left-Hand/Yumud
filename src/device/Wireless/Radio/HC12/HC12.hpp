@@ -31,7 +31,7 @@ protected:
     void _read(char & data) override{
         data = uart.read();
     }
-    size_t available() override{
+    size_t available() const override{
         return uart.available();
     }
     bool sendAtCommand(const char * token){

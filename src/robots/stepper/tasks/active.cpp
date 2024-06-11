@@ -2,18 +2,14 @@
 
 
 Stepper::ExitFlag Stepper::active_task(const Stepper::InitFlag init_flag){
+    // auto target = sign(frac(t) - 0.5);
+    auto target = floor(t);
+// auto target=sin(t);
+    // real_t raw_current = 0.1 * sin(t);
+    // run_current = abs(raw_current);
+    // run_raddiff = SIGN_AS(PI / 2, raw_current);
 
-    auto [curr_out, elecrad_out] = posctrl.update(10 * sin(t), est_pos, est_speed);
-    
-
-    run_current = real_t(-0.2);
-    // run_elecrad = TAU * frac(t);
-
-    // run_current = currCtrl.update(curr_out);
-    run_elecrad = elecrad_out;
-
-    // setCurrent(run_current, run_elecrad + elecrad_zerofix);
-    setCurrent(run_current, odo.getElecRad() + real_t(PI / 2) + elecrad_zerofix);
+    setCurrent(curr_ctrl.update(run_current), (run_elecrad = est_elecrad + run_raddiff) + elecrad_zerofix);
 
     // uint32_t foc_begin_micros = nanos();
     odo.update();
@@ -62,12 +58,17 @@ Stepper::ExitFlag Stepper::active_task(const Stepper::InitFlag init_flag){
         if(est_cnt == est_devider){ // est happens
             real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
 
-            est_speed.value = (est_speed_new.value + est_speed.value * 3) >> 2;
+            est_speed = (est_speed_new + est_speed * 31) >> 5;
 
             est_delta_raw_pos_intergal = real_t();
             est_cnt = 0;
 
-            ctrl.update(real_t(targets.speed), est_speed);
+
+            // auto result = speed_ctrl.update(target, est_speed);
+            auto result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
+
+            run_current = result.current;
+            run_raddiff = result.raddiff;
         }else{
             est_delta_raw_pos_intergal += delta_raw_pos;
         }

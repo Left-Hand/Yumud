@@ -29,7 +29,7 @@ using Color = Color_t<real_t>;
 // I2cDrv i2cDrvVlx = I2cDrv(i2cSw, 0x52);
 // I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
-/
+
 // I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
 // I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
 // I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);

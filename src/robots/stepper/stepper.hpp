@@ -7,11 +7,14 @@
 #include "obs.hpp"
 
 class Stepper:public StepperUtils::Cli{
-public:
+protected:
     using ExitFlag = bool;
     using InitFlag = bool;
-protected:
+
+    using Range = Range_t<real_t>;
+    using ErrorCode = StepperEnums::ErrorCode;
     using RunStatus = StepperEnums::RunStatus;
+
     Printer & logger = uart1;
 
     TimerOutChannelPosOnChip & verfChannelA = timer3[3];
@@ -32,7 +35,6 @@ protected:
     Memory memory{at24};
 
 
-    real_t target_pos;
     uint32_t foc_pulse_micros;
     real_t est_speed;
     real_t raw_pos;
@@ -41,23 +43,16 @@ protected:
 
     real_t run_current;
     real_t run_elecrad;
+    real_t run_raddiff;
     real_t elecrad_zerofix;
 
-    struct Targets{
-        real_t curr = real_t();
-        real_t speed = real_t();
-        real_t pos = real_t();
-        real_t time = real_t();
-    };
+    real_t target;
 
-    Targets targets;
-
-    struct Setpoints{
-
-    };
-
-    using Range = Range_t<real_t>;
-
+    real_t openloop_elecrad;
+    CurrentCtrl curr_ctrl;
+    GeneralSpeedCtrl speed_ctrl{curr_ctrl};
+    GeneralPositionCtrl position_ctrl{curr_ctrl};
+    RunStatus run_status = RunStatus::INIT;
 
 
     void setCurrent(const real_t & _current, const real_t & _elecrad){
@@ -65,21 +60,6 @@ protected:
         coilB = sin(_elecrad) * _current;
     }
 
-    real_t openloop_elecrad;
-    SpeedCtrl ctrl;
-    CurrentCtrl currCtrl;
-    PositionCtrl posctrl;
-    RunStatus run_status = RunStatus::INIT;
-
-    enum class ErrorCode:uint8_t{
-        OK = 0,
-        COIL_A_DISCONNECTED,
-        COIL_A_NO_SIGNAL,
-        COIL_B_DISCONNECTED,
-        COIL_B_NO_SIGNAL,
-        ODO_DISCONNECTED,
-        ODO_NO_SIGNAL
-    };
 
     ErrorCode error_code = ErrorCode::OK;
     String error_message;
@@ -158,7 +138,9 @@ protected:
         auto command = _command;
         command.toLowerCase();
         switch(hash_impl(command.c_str(), command.length())){
-            // case ""
+            case "shut"_ha:
+                shutdown();
+                break;
             default:
                 Cli::parse_command(command, args);
                 break;
@@ -176,7 +158,7 @@ public:
             case RunStatus::CALI:
                 if(cali_task()){
                     active_task(true);
-                    run_status = RunStatus::BEEP;
+                    run_status = RunStatus::ACTIVE;
                 }
                 break;
             
@@ -276,7 +258,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-        // RUN_DEBUG(est_speed, est_pos, targets.curr, elecrad_zerofix);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(est_speed, est_pos, run_current, run_raddiff, position_ctrl.error, position_ctrl.near);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

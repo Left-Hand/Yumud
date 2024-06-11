@@ -23,16 +23,17 @@ protected:
 
     static constexpr size_t uart_fifo_size = 256;
 
-public:
-    RingBuf_t<char, uart_fifo_size> rxBuf;
     RingBuf_t<char, uart_fifo_size> txBuf;
+    RingBuf_t<char, uart_fifo_size> rxBuf;
+
+public:
 
     virtual void init(
         const uint32_t baudRate, 
         const CommMethod _rxMethod = CommMethod::Interrupt,
         const CommMethod _txMethod = CommMethod::Blocking) = 0;
-    size_t available(){return rxBuf.available();}
-
+    size_t available() const {return rxBuf.available();}
+    size_t pending() const {return txBuf.available();}
     virtual void flush(){}
 
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
