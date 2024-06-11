@@ -2,14 +2,7 @@
 
 #define __STEPPER_STATLED_HPP__
 
-
-#include "../debug/debug_inc.h"
-#include "../enum.h"
-#include "../src/timer/timers/timer_hw.hpp"
-#include "../src/device/Memory/EEPROM/AT24CXX/at24c02.hpp"
-#include "../src/device/Memory/memory.hpp"
-#include "algo/hash_func.hpp"
-
+#include "constants.hpp"
 #include "src/device/CommonIO/Led/rgbLed.hpp"
 #include "types/color/color_t.hpp"
 

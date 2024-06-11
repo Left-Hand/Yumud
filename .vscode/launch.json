@@ -1,0 +1,23 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceRoot}",
+            "executable": "build\\Debug\\LearnADC.elf",
+            "name": "Debug with OpenOCD",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "searchDir": [],
+            "runToEntryPoint": "main",
+            "showDevDebugOutput": "none",
+            "device": "CH32V203",
+            "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V203/NoneOS/CH32V203xx.svd",
+            "toolchainPrefix": "riscv-none-embed",
+            "configFiles": [
+                "${workspaceFolder}/tools/wch-interface.cfg",
+                "${workspaceFolder}/tools/wch-target.cfg"
+            ]
+        }
+    ]
+}

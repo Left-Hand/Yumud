@@ -82,8 +82,6 @@ using Sys::t;
 #include "dsp/oscillator.hpp"
 #include "src/device/Dac/TM8211/tm8211.hpp"
 
-#include "json.hpp"
-
 #include <bits/stl_numeric.h>
 #include <optional>
 

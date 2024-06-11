@@ -3,7 +3,7 @@
 #define __STEPPER_CONSTANTS_HPP__
 
 #include "../debug/debug_inc.h"
-#include "../enum.h"
+#include "../thirdparty/enums/enum.h"
 #include "../src/timer/timers/timer_hw.hpp"
 #include "../src/device/Memory/EEPROM/AT24CXX/at24c02.hpp"
 #include "../src/device/Memory/memory.hpp"

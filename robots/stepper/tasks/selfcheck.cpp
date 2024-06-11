@@ -1,4 +1,4 @@
-#include "../stepper.hpp"
+#include "robots/stepper/stepper.hpp"
 
     Stepper::ExitFlag Stepper::selfcheck_task(const Stepper::InitFlag init_flag){
         constexpr int subdivide_micros = 2048;

@@ -26,9 +26,9 @@
     "src/bus/spi",
     "types/range",
     "types/image/font",
-    "src/adapters",
     "src/device",
-    "src/timer"
+    "src/timer",
+    "robots"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -106,22 +106,20 @@
           "types/string",
           "types/vector2",
           ".",
-          "thirdparty",
-          "thirdparty/easylogger",
-          "thirdparty/easylogger/inc",
-          "thirdparty/easylogger/plugins",
-          "thirdparty/easylogger/port",
-          "thirdparty/easylogger/src",
-          "thirdparty/easylogger/plugins/file",
-          "thirdparty/easylogger/plugins/flash",
           "src/debug",
           "src/device",
           "src/clock",
-          "src/dma"
+          "src/dma",
+          "robots",
+          "robots/stepper/tasks",
+          "robots/stepper"
         ],
         "libList": [
           "src/clock",
-          "src/dma"
+          "src/dma",
+          "robots",
+          "robots/stepper/tasks",
+          "robots/stepper"
         ],
         "sourceDirList": [],
         "defineList": [
