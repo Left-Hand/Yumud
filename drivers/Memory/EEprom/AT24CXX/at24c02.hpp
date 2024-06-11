@@ -22,7 +22,7 @@ protected:
     static constexpr uint32_t min_duration_ms = 5;
     uint32_t last_entry_ms = 0;
     
-    void _store(const uint8_t & data, const Address & loc) override{
+    void _store(const uint8_t & data, const Address loc) override{
         if(loc >= chip_size){
             AT24C02_DEBUG("invalid addr");
             return;
@@ -31,7 +31,7 @@ protected:
         AT24C02_DEBUG("store", data, "at", loc);
         bus_drv.writeReg((uint8_t)loc, data);
     }
-    void _load(uint8_t & data, const Address & loc) override{
+    void _load(uint8_t & data, const Address loc) override{
         if(loc >= chip_size){
             AT24C02_DEBUG("invalid addr");
             return;
@@ -59,7 +59,7 @@ protected:
         last_entry_ms = millis();
     }
 
-    void _store(const void * data, const Address & data_size, const Address & loc) override {
+    void _store(const void * data, const Address data_size, const Address loc) override {
         auto full_end = loc + data_size; 
         if(full_end >= chip_size){
             AT24C02_DEBUG("invalid addr");
@@ -116,7 +116,7 @@ protected:
         // }
     }
 
-    void _load(void * data, const Address & data_size, const Address & loc) override {
+    void _load(void * data, const Address data_size, const Address loc) override {
         // AddressWindow store_window = AddressWindow{loc,loc + data_size};
         // AT24C02_DEBUG("multi load entry", store_window);
         bus_drv.readPool(loc, (uint8_t *)data, 1, data_size);

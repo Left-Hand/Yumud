@@ -705,7 +705,7 @@ void String::alphanum(void){
 	len = 0;
 	for(size_t i = 0; i < len0; i++){
 		char chr = buffer[i];
-		if(isalpha(chr) || isdigit(chr)){
+		if(isalpha(chr) || isdigit(chr) || chr == ' ' || chr == '+' || chr == '-' || chr == '.'){
 			new_buf[len++] = chr;
 		}
 	}

@@ -34,14 +34,16 @@ public:
 
 
 struct HighLayerCtrl{
-protected:
-    using Range = Range_t<real_t>;
-    CurrentCtrl & currCtrl;
+public:
 
     struct Result{
         real_t current;
         real_t raddiff;
     };
+protected:
+    using Range = Range_t<real_t>;
+    CurrentCtrl & currCtrl;
+
 public:
 
     HighLayerCtrl(CurrentCtrl & _ctrl):currCtrl(_ctrl){;}
@@ -69,7 +71,7 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
     real_t kd = 10;
 
     real_t targ_current_256x = 0;
-    Range current_clamp = {0, 25.6};
+    Range current_clamp_256x = {0, 51.6};
 
     bool inited = false;
 
@@ -88,18 +90,17 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
 
         real_t abs_real_speed = ABS(real_speed);
         real_t speed_delta = abs_real_speed - last_speed;
-        if(abs_real_speed < 1) speed_delta *= (abs_real_speed * abs_real_speed);
-        last_speed = abs_real_speed;
+        last_speed = abs_real_speed; 
+
+        real_t kd_scaler = 1;
+        if(abs_real_speed < 1) kd_scaler = (abs_real_speed * abs_real_speed);
 
         real_t kp_contribute = kp_clamp.clamp(error * kp);
-
-        real_t kd_contribute = kd * speed_delta;
-
+        real_t kd_contribute = kd * speed_delta * kd_scaler;
 
         real_t delta = kp_contribute - kd_contribute;
 
-
-        targ_current_256x = current_clamp.clamp(targ_current_256x + delta);
+        targ_current_256x = current_clamp_256x.clamp(targ_current_256x + delta);
 
         return {targ_current_256x >> 8, SIGN_AS(PI / 2, targ_speed)};
     }
@@ -126,21 +127,20 @@ struct GeneralPositionCtrl:public PositionCtrl{
         return SIGN_AS(TAU * (frac(abs_frac1)), position);
     }
 
-real_t error;
-bool near;
+
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) override{
 
         if(!inited){
             inited = true;
         }
 
-        error = targ_position - real_position;
+        real_t error = targ_position - real_position;
         real_t raddiff = (error *50 *TAU);
         if(ABS(raddiff) > PI / 2 ) raddiff = SIGN_AS(PI / 2, raddiff);
         // else raddiff = raddiff - real_elecrad;
 
         real_t kp_contribute = kp_clamp.clamp(ABS(error) * kp);
-        near = kd_active_range.has(ABS(error));
+        bool near = kd_active_range.has(ABS(error));
         real_t kd_contribute = near ? kd * ABS(real_speed): 0;
 
         real_t pid_out = kp_contribute - kd_contribute;

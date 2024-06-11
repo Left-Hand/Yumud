@@ -3,7 +3,7 @@
 
 Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     // auto target = sign(frac(t) - 0.5);
-    auto target = floor(t);
+    // auto target = floor(t);
 // auto target=sin(t);
     // real_t raw_current = 0.1 * sin(t);
     // run_current = abs(raw_current);
@@ -59,15 +59,43 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         est_cnt++;
         if(est_cnt == est_devider){ // est happens
             real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
-
-            est_speed = (est_speed_new + est_speed * 31) >> 5;
-
+            switch(CTZ(MAX(int(est_speed), 1))){
+                case 0://  1r/s
+                    est_speed = (est_speed_new + est_speed * 63) >> 6;
+                    break;
+                case 1://  2r/s
+                    est_speed = (est_speed_new + est_speed * 63) >> 6;
+                    break;
+                case 2:// 4r/s
+                    est_speed = (est_speed_new + est_speed * 31) >> 5;
+                    break;
+                case 3:// 8r/s
+                    est_speed = (est_speed_new + est_speed * 15) >> 4;
+                    break;
+                case 4:// 16r/s
+                    est_speed = (est_speed_new + est_speed * 7) >> 3;
+                    break;
+                case 5:// 32r/s
+                    est_speed = (est_speed_new + est_speed * 3) >> 2;
+                    break;
+                default:
+                case 6:// 64r/s or more
+                    est_speed = (est_speed_new + est_speed) >> 1;
+                    break;
+            }
             est_delta_raw_pos_intergal = real_t();
             est_cnt = 0;
 
 
-            // auto result = speed_ctrl.update(target, est_speed);
-            auto result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
+            HighLayerCtrl::Result result;
+            
+            switch(ctrl_type){
+                case CtrlType::POSITION:
+                    result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
+                    break;
+                case CtrlType::SPEED:
+                    result = speed_ctrl.update(target, est_speed);
+            } 
 
             run_current = result.current;
             run_raddiff = result.raddiff;

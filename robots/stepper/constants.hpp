@@ -37,11 +37,11 @@ namespace StepperEnums{
         CALI,
         ERROR,
         EXIT,
-        EXCEPTION
+        WARN
     )
 
     BETTER_ENUM(CtrlType, uint8_t,     
-        POS = 0,
+        POSITION = 0,
         SPEED
     )
 
