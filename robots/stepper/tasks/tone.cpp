@@ -1,5 +1,5 @@
 #include "robots/stepper/stepper.hpp"
-Stepper::ExitFlag Stepper::beep_task(const Stepper::InitFlag init_flag){
+Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
     struct Tone{
         uint32_t freq_hz;
         uint32_t sustain_ms;
@@ -47,10 +47,12 @@ Stepper::ExitFlag Stepper::beep_task(const Stepper::InitFlag init_flag){
         cnt = 0;
         tone_index = 0;
         play_begin_ms = millis();
+        run_status = RunStatus::BEEP;
+        return RunStatus::NONE;
     }
 
     if(millis() >= tones[tone_index].sustain_ms + play_begin_ms){ // play one note done
-        if(tone_index >= tones.size()) return true; // play done
+        if(tone_index >= tones.size()) return RunStatus::EXIT; // play done
         else{
             tone_index++;
             play_begin_ms = millis();
@@ -64,5 +66,6 @@ Stepper::ExitFlag Stepper::beep_task(const Stepper::InitFlag init_flag){
         setCurrent(real_t(tone_current), phase ? real_t(0.5) : real_t(-0.5));
         cnt++;
     }
-    return false;
+
+    return RunStatus::NONE;
 }

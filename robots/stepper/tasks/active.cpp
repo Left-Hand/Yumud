@@ -1,7 +1,7 @@
 #include "robots/stepper/stepper.hpp"
 
 
-Stepper::ExitFlag Stepper::active_task(const Stepper::InitFlag init_flag){
+Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     // auto target = sign(frac(t) - 0.5);
     auto target = floor(t);
 // auto target=sin(t);
@@ -25,8 +25,10 @@ Stepper::ExitFlag Stepper::active_task(const Stepper::InitFlag init_flag){
         est_speed = real_t();
         last_raw_pos = raw_pos;
         est_cnt = 0;
+        run_status = RunStatus::ACTIVE;
 
         setCurrent(real_t(0), real_t(0));
+        return RunStatus::NONE;
     }
 
     if(auto_shutdown_activation){
@@ -96,5 +98,5 @@ Stepper::ExitFlag Stepper::active_task(const Stepper::InitFlag init_flag){
         // };
     }
 
-    return false;
+    return RunStatus::NONE;
 }

@@ -126,10 +126,10 @@ protected:
     }
 
 
-    ExitFlag cali_task(const InitFlag init_flag = false);
-    ExitFlag active_task(const InitFlag init_flag = false);
-    ExitFlag beep_task(const InitFlag init_flag = false);
-    ExitFlag selfcheck_task(const InitFlag init_flag = false);
+    RunStatus cali_task(const InitFlag init_flag = false);
+    RunStatus active_task(const InitFlag init_flag = false);
+    RunStatus beep_task(const InitFlag init_flag = false);
+    RunStatus check_task(const InitFlag init_flag = false);
 
     RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
     StatLed panel_led = StatLed{led_instance};
@@ -138,8 +138,22 @@ protected:
         auto command = _command;
         command.toLowerCase();
         switch(hash_impl(command.c_str(), command.length())){
+
+            case "enable"_ha:
+            case "en"_ha:
+                break;
+            
+            case "disable"_ha:
+            case "de"_ha:
+                break;
+            case "status"_ha:
+            case "stat"_ha:
+                DEBUG_PRINT("current status:", run_status._to_string());
+                break;
+            case "shutdown"_ha:
             case "shut"_ha:
                 shutdown();
+                DEBUG_PRINT("shutdown ok");
                 break;
             default:
                 Cli::parse_command(command, args);
@@ -150,36 +164,80 @@ protected:
 public:
 
     void tick(){
+        RunStatus new_status = RunStatus::NONE;
+
         switch(run_status){
             case RunStatus::INIT:
-                run_status = RunStatus::CALI;
                 cali_task(true);
                 break;
             case RunStatus::CALI:
-                if(cali_task()){
-                    active_task(true);
-                    run_status = RunStatus::ACTIVE;
-                }
+                new_status = cali_task();
                 break;
-            
+            case RunStatus::ACTIVE:
+                new_status = active_task();
+                break;
+
             case RunStatus::BEEP:
-                if(beep_task()){
-                    active_task(true);
-                    run_status = RunStatus::ACTIVE;
-                }
+                new_status = beep_task();
                 break;
 
             case RunStatus::INACTIVE:
                 run_status = RunStatus::ACTIVE;
                 break;
-            case RunStatus::ACTIVE:
-                if(active_task()){
-                    run_status = RunStatus::INACTIVE;
-                }
-                break;
+
             default:
                 break;
         }
+
+        if(not (+new_status == (+RunStatus::NONE))){
+            if((+new_status == +RunStatus::EXIT)){
+                switch(run_status){
+                    case RunStatus::CHECK:
+                        cali_task(true);
+                        break;
+                    case RunStatus::CALI:
+                        beep_task(true);
+                        break;
+                    case RunStatus::BEEP:
+                        active_task(true);
+                        break;
+                    case RunStatus::ACTIVE:
+                        break;
+                    case RunStatus::INACTIVE:
+                        break;
+                    case RunStatus::ERROR:
+                        break;
+                    case RunStatus::EXCEPTION:
+                        break;
+                    default:
+                        break;
+                }
+            }else{
+                switch(run_status){
+                    case RunStatus::CHECK:
+                        check_task(true);
+                        break;
+                    case RunStatus::CALI:
+                        cali_task(true);
+                        break;
+                    case RunStatus::ACTIVE:
+                        active_task(true);
+                        break;
+                    case RunStatus::BEEP:
+                        beep_task(true);
+                        break;
+                    case RunStatus::INACTIVE:
+                        break;
+                    case RunStatus::ERROR:
+                        break;
+                    case RunStatus::EXCEPTION:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
     }
 
     void init(){
@@ -258,7 +316,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(est_speed, est_pos, run_current, run_raddiff, position_ctrl.error, position_ctrl.near);
+        // if(DEBUGGER.pending() == 0) RUN_DEBUG(est_speed, est_pos, run_current, run_raddiff, position_ctrl.error, position_ctrl.near);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

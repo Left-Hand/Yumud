@@ -1,7 +1,7 @@
 #include "robots/stepper/stepper.hpp"
 #include <numeric>
 
-Stepper::ExitFlag Stepper::cali_task(const Stepper::InitFlag init_flag){
+Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     enum class SubState{
         ALIGN,
         INIT,
@@ -59,7 +59,8 @@ Stepper::ExitFlag Stepper::cali_task(const Stepper::InitFlag init_flag){
     if(init_flag){
         sub_state = SubState::ALIGN;
         cnt = 0;
-        return false;
+        run_status = RunStatus::CALI;
+        return RunStatus::NONE;
     }
 
     auto sw_state = [](const SubState & new_state){
@@ -79,11 +80,7 @@ Stepper::ExitFlag Stepper::cali_task(const Stepper::InitFlag init_flag){
         last_raw_lap_position = raw_lap_position;
     };
 
-    if(sub_state == SubState::DONE){
-        return true;
-    }
-
-    else{
+    {
 
         switch(sub_state){
             case SubState::ALIGN:
@@ -319,12 +316,12 @@ Stepper::ExitFlag Stepper::cali_task(const Stepper::InitFlag init_flag){
                 break;
 
             case SubState::DONE:
-                return true;
+                return RunStatus::EXIT;
                 break;
             default:
                 break;
         }
         cnt++;
     }
-    return false;
+    return RunStatus::NONE;
 }
