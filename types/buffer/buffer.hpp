@@ -39,9 +39,9 @@ template<typename T, uint32_t _size>
 class StaticBuffer_t:public BufferConcept_t<T>{
 protected:
     // std::array<T, _size> buf;
-    T buf[_size];
-    size_t size = _size;
 public:
+    T buf[_size]; 
+    size_t size = _size;
     StaticBuffer_t() = default;
     ~StaticBuffer_t() = default;
 

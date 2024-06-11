@@ -51,6 +51,8 @@
 #define __interrupt_soft __attribute__((interrupt))
 #endif
 
+#define EXECUTE(x, ...) if(x) x(__VA_ARGS__)
+
 #ifndef __interrupt
 #if defined(__riscv) && defined(WCH)
 #define __interrupt __attribute__((interrupt("WCH-Interrupt-fast")))
@@ -76,6 +78,13 @@
 
 #endif
 
+#define ARRSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
+
+
+#define ISSFR(ptr) (((uint32_t)ptr > 0x40000000))
+#define ISRAM(ptr) ((!ISSFR(ptr)) && (((uint32_t)(ptr)) > 0x20000000))
+#define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
+#define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
 
 
 #ifndef __nopn

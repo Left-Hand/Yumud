@@ -99,7 +99,13 @@
             "numbers": "cpp",
             "any": "cpp",
             "ranges": "cpp",
-            "span": "cpp"
+            "span": "cpp",
+            "executor": "cpp",
+            "io_context": "cpp",
+            "netfwd": "cpp",
+            "timer": "cpp",
+            "semaphore": "cpp",
+            "stop_token": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

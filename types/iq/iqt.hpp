@@ -6,8 +6,8 @@
 #include "stdint.h"
 #include "src/platform.h"
 #include "extra_convs.hpp"
+#include "IQmath_RV32.h"
 
-#include <IQmath_RV32.h>
 #include <type_traits>
 #include <limits>
 
@@ -18,7 +18,7 @@ struct iq_t{
 public:
     _iq value = 0;
 
-    __fast_inline iq_t(): value(0){;}
+    __fast_inline iq_t():value(0){;}
     __fast_inline_constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
 
     __fast_inline_constexpr iq_t(const int & intValue) : value(_IQ(intValue)) {;}
@@ -55,8 +55,6 @@ public:
     }
     return iq_t(_IQmpy(value, other.value));
     }
-
-
 
 
     __fast_inline_constexpr iq_t operator/(const iq_t & other) const {
@@ -138,6 +136,13 @@ public:
         return iq_t(value - iq_t(other).value);
     }
 
+    __fast_inline_constexpr iq_t operator<<(int shift) const {
+        return iq_t(value << shift);
+    }
+
+    __fast_inline_constexpr iq_t operator>>(int shift) const {
+        return iq_t(value >> shift);
+    }
 
     __fast_inline_constexpr iq_t& operator+=(const auto & other) {
         *this += iq_t(other);
@@ -203,14 +208,14 @@ public:
     }
 
     __no_inline explicit operator String() const;
-    String toString(const uint8_t eps = 3) const;
+    String toString(unsigned char eps = 3) const;
 };
 
 #ifndef STRICT_IQ
 
 #define IQ_OP_TEMPLATE(type, op)\
 __fast_inline_constexpr iq_t operator op (type val, const iq_t & iq_v) {\
-	return iq_v op iq_t(val);\
+	return iq_t(val) op iq_v;\
 }\
 
 IQ_OP_TEMPLATE(int, +);
@@ -223,7 +228,6 @@ IQ_OP_TEMPLATE(double, -);
 
 IQ_OP_TEMPLATE(int, *);
 IQ_OP_TEMPLATE(float, *);
-
 IQ_OP_TEMPLATE(double, *);
 IQ_OP_TEMPLATE(int, /);
 IQ_OP_TEMPLATE(float, /);
@@ -252,7 +256,7 @@ __fast_inline_constexpr iq_t cosf(const iq_t & iq){
 
 __fast_inline_constexpr iq_t sin(const iq_t & iq){return sinf(iq);}
 
-__fast_inline_constexpr iq_t cos(const iq_t & iq){return sinf(iq);}
+__fast_inline_constexpr iq_t cos(const iq_t & iq){return cosf(iq);}
 
 __fast_inline_constexpr iq_t tan(const iq_t & iq) {return sin(iq) / cos(iq);}
 
@@ -320,6 +324,7 @@ bool is_equal_approx(const iq_t & a,const iq_t & b);
 
 bool is_equal_approx_ratio(const iq_t a, const iq_t & b, iq_t epsilon = iq_t(CMP_EPSILON), iq_t min_epsilon = iq_t(CMP_EPSILON));
 
+#define IQ_USE_LOG
 #ifdef IQ_USE_LOG
 
 __fast_inline_constexpr iq_t log10(const iq_t & iq) {
@@ -333,7 +338,9 @@ __fast_inline_constexpr iq_t log(const iq_t & iq) {
     if(std::is_constant_evaluated()){
         return cem::ln(double(iq));
     }
-    return iq_t(_IQdiv(_IQlog10(iq.value), _IQlog10(_IQ(LOGE))));
+    return iq_t(_IQdiv(_IQlog10(iq.value), _IQlog10(_IQ(M_E))));
+    // return iq_t(_IQsin(iq.value));
+    // return 
 }
 
 __fast_inline_constexpr iq_t exp(const iq_t & iq) {
@@ -394,9 +401,17 @@ namespace std{
     template<>
     class numeric_limits<iq_t> {
     public:
-        __fast_inline static iq_t infinity() noexcept {return iq_t(std::numeric_limits<float>::infinity());}
-        __fast_inline static iq_t lowest() noexcept {return iq_t(-std::numeric_limits<float>::infinity());}
+        __fast_inline static iq_t infinity() noexcept {return iq_t((1 << GLOBAL_Q) - 1);}
+        __fast_inline static iq_t lowest() noexcept {return iq_t(-(1 << GLOBAL_Q));}
     };
+
+    typedef std::common_type<iq_t, float>::type real_t;
+    typedef std::common_type<iq_t, double>::type real_t;
+    typedef std::common_type<iq_t, int>::type real_t;
+
+    typedef std::common_type<float, iq_t>::type real_t;
+    typedef std::common_type<double, iq_t>::type real_t;
+    typedef std::common_type<int, iq_t>::type real_t;
 }
 
 #endif

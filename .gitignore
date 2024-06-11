@@ -1,7 +1,6 @@
 # vscode files
-*.VSCodeCounter
-.vscode/launch.json
-.eide/log
+.VSCodeCounter
+.vscode/settings.json
 .eide
 
 # project out

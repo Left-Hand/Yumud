@@ -13,7 +13,7 @@ public:
     T end = T(0);
 
     Range_t() = default;
-
+    __fast_inline_constexpr Range_t(const auto & _value): start(static_cast<T>(-ABS(_value))), end(static_cast<T>(ABS(_value))) {;}
     __fast_inline_constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
     __fast_inline_constexpr Range_t(const Range_t<auto> & other): start(static_cast<T>(other.start)), end(static_cast<T>(other.end)) {;}
     __fast_inline_constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
@@ -51,6 +51,10 @@ public:
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start - value, regular.end - value);
     }
+
+    // __fast_inline_constexpr Range_t<T> operator-() const {
+    //     return {end, start};
+    // }
 
     __fast_inline_constexpr Range_t<T> operator * (const auto & value) const{
         Range_t<T> regular = this -> abs();

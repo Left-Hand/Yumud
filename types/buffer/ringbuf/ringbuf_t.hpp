@@ -7,41 +7,58 @@
 template<typename T, uint32_t _size>
 class RingBuf_t:public StaticBuffer_t<T, _size>{
 protected:
-    T * write_ptr;
-    T * read_ptr;
-
     T* advancePointer(T* ptr, size_t step = 1) {
         return (ptr + step >=this->buf + this->size) ? ptr + step - this->size : ptr + step;
     }
 
 public:
-    RingBuf_t():write_ptr(this->buf), read_ptr(this->buf){;}
+    T * read_ptr;
+    T * write_ptr;
+
+    RingBuf_t():read_ptr(this->buf), write_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
-        *read_ptr = data;
-        read_ptr = advancePointer(read_ptr);
-        if(read_ptr == write_ptr){
-            write_ptr = advancePointer(write_ptr);
+        *write_ptr = data;
+        write_ptr = advancePointer(write_ptr);
+        if(write_ptr == read_ptr){
+            read_ptr = advancePointer(read_ptr);
         }
     }
 
-    // __fast_inline void getData(T & data) override{
-    //     data = *write_ptr;
+    __fast_inline void addData(const T * data,const size_t data_size){
+        for(size_t i = 0; i < data_size; i++){
+            addData(data[data_size]);
+        }
+    }
+    //     auto ptr_before = write_ptr;
+    //     // *write_ptr = data;
+    //     memcpy(write_ptr, data, )
     //     write_ptr = advancePointer(write_ptr);
+    //     if(write_ptr == read_ptr){
+    //         read_ptr = advancePointer(read_ptr);
+    //     }
     // }
 
     __fast_inline T & getData() override{
-        auto ret_ptr = write_ptr;
-        write_ptr = advancePointer(write_ptr);
+        auto ret_ptr = read_ptr;
+        read_ptr = advancePointer(read_ptr);
         return *ret_ptr;
     }
 
     size_t available() const override{
-        if (read_ptr >= write_ptr) {
-            return read_ptr - write_ptr;
+        if (write_ptr >= read_ptr) {
+            return write_ptr - read_ptr;
         } else {
-            return this->size - (write_ptr - read_ptr);
+            return this->size - (read_ptr - write_ptr);
+        }
+    }
+
+    size_t straight() const{
+        if (write_ptr >= read_ptr) {
+            return write_ptr - read_ptr;
+        }else{
+            return (this->buf + this->size) - read_ptr;
         }
     }
 
@@ -59,6 +76,11 @@ public:
         }else{
             for(size_t i = 0; i < len; i++) data_ptr[i] = getData();
         }
+    }
+
+    void vent(const size_t len){
+        read_ptr = advancePointer(read_ptr, len);
+        return;
     }
 };
 template<uint32_t size>

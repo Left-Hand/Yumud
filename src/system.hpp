@@ -64,4 +64,9 @@ namespace Sys{
         real_t getCurrentSeconds();
     };
 };
+
+
+extern "C" void NMI_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+extern "C" void HardFault_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+
 #endif // !__SYSTEM_HPP__

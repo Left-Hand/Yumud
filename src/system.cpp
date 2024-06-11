@@ -1,14 +1,18 @@
 #include "system.hpp"
-#include "src/crc/crc.hpp"
+#include "hal/crc/crc.hpp"
 
 real_t Sys::t;
 
-static void PortC_Init( void ){
+
+void Sys::Misc::prework(){
+    RCC_PCLK1Config(RCC_HCLK_Div1);
+    RCC_PCLK2Config(RCC_HCLK_Div1);
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+    Systick_Init();
+
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
 
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
     #ifdef HAVE_GPIOD
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
@@ -20,17 +24,12 @@ static void PortC_Init( void ){
 }
 
 
-void Sys::Misc::prework(){
-    RCC_PCLK1Config(RCC_HCLK_Div1);
-    RCC_PCLK2Config(RCC_HCLK_Div1);
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-    Systick_Init();
-    PortC_Init();
-}
-
-
 void Sys::Misc::reset(){
+    __disable_irq();
+    __disable_irq();
     NVIC_SystemReset();
+    // __enable_irq();
+    // NVIC_SystemReset();
 }
 
 
@@ -166,4 +165,16 @@ void Sys::Clock::setAPB1Freq(const uint32_t & freq){
 
 void Sys::Clock::setAPB2Freq(const uint32_t & freq){
     setAPB2Div(getAPB2Freq() / freq);
+}
+
+
+void NMI_Handler(void)
+{
+}
+
+void HardFault_Handler(void)
+{
+  while (1)
+  {
+  }
 }

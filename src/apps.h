@@ -2,7 +2,6 @@
 
 #define __APPS_H__
 
-#include "misc.h"
 void stepper_app();
 void stepper_app_new();
 void modem_app();

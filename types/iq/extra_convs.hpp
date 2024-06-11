@@ -6,6 +6,6 @@
 #include "types/iq/iqt.hpp"
 
 struct iq_t;
-String toString(const iq_t & iq, const uint8_t & eps);
+String toString(const iq_t & iq, unsigned char eps = 3);
 
 #endif

@@ -1,0 +1,9 @@
+[submodule "thirdparty/sstl"]
+	path = thirdparty/sstl
+	url = https://github.com/rukkal/static-stl.git
+[submodule "thirdparty/enums"]
+	path = thirdparty/enums
+	url = https://github.com/aantron/better-enums
+[submodule "thirdparty/json"]
+	path = thirdparty/json
+	url = https://github.com/nlohmann/json

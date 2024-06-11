@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "string_utils.hpp"
+#include "sys/kernel/string_utils.hpp"
 #include "src/platform.h"
 
 // An inherited class for holding the result of a concatenation.  These
@@ -179,11 +179,13 @@ public:
 	void toLowerCase(void);
 	void toUpperCase(void);
 	void trim(void);
+	void alphanum(void);
 
 	// parsing/conversion
 	long toInt(void) const;
 	float toFloat(void) const;
 
+	explicit operator uint8_t(void) const {return toInt();}
     explicit operator int(void) const{return toInt();}
     explicit operator float(void) const{return toFloat();}
     bool isNumeric(void) const;

@@ -138,6 +138,10 @@
 #define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
 #endif
 
+#ifndef SIGN_AS
+#define SIGN_AS(y,x) ((x > 0) ? y : -y)
+#endif
+
 #ifndef LSHIFT
 #define LSHIFT(x,s) (s >= 0 ? x << s : x >> -s)
 #endif

@@ -3,7 +3,7 @@
 #define __PAINTER_HPP__
 
 #include "image.hpp"
-#include "packedImage.hpp"
+#include "packed_image.hpp"
 
 #include "types/rect2/rect2_t.hpp"
 #include "types/color/color_t.hpp"
@@ -16,25 +16,32 @@ template<typename ColorType>
 class Painter{
 protected:
     ImageWritable<ColorType> * src_image = nullptr;
-    Font & font;
-    ColorType color;
+    const Font * chfont = &font7x7;
+    const Font * enfont = &font8x5;
+    ColorType m_color;
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
 public:
-    Painter(Font & _font = font8x6):font(_font){;}
-
-    // Painter(ImageView<ColorType> * _srcImage, Font * _font):src_image(_srcImage),font(_font) {;}
+    Painter(){;}
 
     template<typename U>
     void setColor(U _color){
-        color = _color;
+        m_color = _color;
     }
     
     void bindImage(ImageWritable<ColorType> & _source){
         src_image = &_source;
+    }
+
+    void setChFont(const Font & _chfont){
+        chfont = &_chfont;
+    }
+
+    void setEnFont(const Font & _enfont){
+        enfont = &_enfont;
     }
 
 
@@ -43,16 +50,31 @@ public:
         drawtexture_unsafe(rect, color_ptr);
     }
 
-    void drawImage(Image<ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-        if(!src_image->getDisplayArea().contains(image.getDisplayArea()) || !image.getData()) return;
-        drawtexture_unsafe(Rect2i(pos, image.getSize()), image.getData());
+
+
+    void drawImage(ImageWithData<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+        if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
+        drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
     }
 
+    template<typename w_ColorType, w_ColorType>
+    void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+        if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
+        auto rect = Rect2i(pos, image.get_size());
+        src_image->setarea_unsafe(rect);
+        uint32_t i = 0;
+        w_ColorType * ptr = image.data.get();
+        for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
+            for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++)
+                putpixel_unsafe(Vector2i(x,y), ptr[i]);
+        // drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
+
+    }
 
     void drawHriLine(const Rangei & x_range, const int & y){
         if(!x_range ||!src_image->get_window().get_y_range().has_value(y)) return;
 
-        src_image -> putrect_unsafe(Rect2i(x_range, Rangei(y, y+1)), color);
+        src_image -> putrect_unsafe(Rect2i(x_range, Rangei(y, y+1)), m_color);
     }
 
     void drawHriLine(const Vector2i & pos,const int &l){
@@ -64,12 +86,12 @@ public:
         Rangei y_range = src_image->get_window().get_y_range().intersection(Rangei(pos.y, pos.y + ABS(l)));
         if(!y_range ||!src_image->get_window().get_x_range().has_value(pos.x)) return;
 
-        src_image -> putrect_unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), color);
+        src_image -> putrect_unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), m_color);
     }
 
     void drawVerLine(const Rangei & y_range, const int & x){
         if(!y_range ||!src_image -> get_window().get_x_range().has_value(x)) return;
-        src_image -> putrect_unsafe(Rect2i(Rangei(x,x+1), y_range), color);
+        src_image -> putrect_unsafe(Rect2i(Rangei(x,x+1), y_range), m_color);
     }
 
     void drawFilledRect(const Rect2i & rect, const ColorType & color){
@@ -79,54 +101,57 @@ public:
     }
 
     void flush(){
-        src_image -> putrect_unsafe(src_image->area, color);
+        flush(m_color);
+        // src_image -> putrect_unsafe(src_image->get_window(), m_color);
+    }
+
+    void flush(const ColorType & color){
+        src_image -> putrect_unsafe(src_image->get_window(), color);
     }
     void drawPixel(const Vector2i & pos, const ColorType & color){
         src_image -> putpixel(pos, color);
     }
 
     void drawPixel(const Vector2i & pos){
-        src_image -> putpixel(pos, color);
+        src_image -> putpixel(pos, m_color);
     }
 
     void drawLine(const Vector2i & start, const Vector2i & end){
-        int x0 = start.x;
-        int y0 = start.y;
-        int x1 = end.x;
-        int y1 = end.y;
-
-        if(y0 == y1){
-            drawHriLine(start, x1 - x0);
+        if(!src_image->has_point(start)){
+            DEBUG_LOG("start point lost: ", start);
             return;
-        }else if (x0 == x1){
-            drawVerLine(start, y1 - y0);
+        }else if(!src_image->has_point(end)){
+            DEBUG_LOG("end point lost: ", end);
             return;
         }
-
-        int16_t dx=ABS(x1-x0);
-        int8_t sx=(x1 > x0)? 1: -1;
-        int16_t dy=ABS(y1-y0);
-        int8_t sy=(y1 > y0)? 1 : -1;
-
-        int16_t err=(dx>dy ? dx : -dy)/2;
-        int16_t e2;
-
-        int16_t x = x0;
-        int16_t y = y0;
-
-        while(1){
-            src_image -> putpixel(Vector2i(x,y), color);
-            if (x==x1 && y==y1)
-                break;
-
-            e2=err;
-            if (e2>-dx) {
-                err-=dy;
-                x+=sx;
+        auto [x0, y0] = start;
+        auto [x1, y1] = end;
+        bool steep = false;
+        if (std::abs(x1 - x0) < std::abs(y1 - y0)) {
+            std::swap(x0, y0);
+            std::swap(x1, y1);
+            steep = true;
+        }
+        if (x0 > x1) {
+            std::swap(x0, x1);
+            std::swap(y0, y1);
+        }
+        int dx = x1 - x0;
+        int dy = y1 - y0;
+        int deltaY = ABS(dy << 1);
+        int middle = dx;
+        int y = y0;
+        for (int x = x0; x <= x1; ++x) {
+            if (steep) {
+                drawPixel({y,x});
             }
-            if (e2<dy) {
-                err+=dx;
-                y+=sy;
+            else {
+                drawPixel({x,y});
+            }
+            deltaY += std::abs(dy << 1);
+            if (deltaY >= middle) {
+                y += (y1 > y0 ? 1 : -1);
+                middle += std::abs(dx << 1);
             }
         }
     }
@@ -145,7 +170,7 @@ public:
             drawVerLine(shrunk_y_range, x_range.start);
             drawVerLine(shrunk_y_range, x_range.end - 1);
         }else{
-            drawFilledRect(Rect2i(x_range, y_range), color);
+            drawFilledRect(Rect2i(x_range, y_range), m_color);
         }
     }
 
@@ -161,14 +186,14 @@ public:
         int err=dx - 2 * radius;
 
         while (x>=y) {
-            src_image -> putPixel(Vector2i(x0-x, y0+y), color);
-            src_image -> putPixel(Vector2i(x0+x, y0+y), color);
-            src_image -> putPixel(Vector2i(x0-y, y0+x), color);
-            src_image -> putPixel(Vector2i(x0+y, y0+x), color);
-            src_image -> putPixel(Vector2i(x0-x, y0-y), color);
-            src_image -> putPixel(Vector2i(x0+x, y0-y), color);
-            src_image -> putPixel(Vector2i(x0-y, y0-x), color);
-            src_image -> putPixel(Vector2i(x0+y, y0-x), color);
+            src_image -> putPixel(Vector2i(x0-x, y0+y), m_color);
+            src_image -> putPixel(Vector2i(x0+x, y0+y), m_color);
+            src_image -> putPixel(Vector2i(x0-y, y0+x), m_color);
+            src_image -> putPixel(Vector2i(x0+y, y0+x), m_color);
+            src_image -> putPixel(Vector2i(x0-x, y0-y), m_color);
+            src_image -> putPixel(Vector2i(x0+x, y0-y), m_color);
+            src_image -> putPixel(Vector2i(x0-y, y0-x), m_color);
+            src_image -> putPixel(Vector2i(x0+y, y0-x), m_color);
 
             if (err<=0) {
                 y++;
@@ -184,8 +209,11 @@ public:
     }
 
     void drawFilledCircle(const Vector2i & pos, const int & radius){
-        if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(Rect2i(Vector2i(), src_image->size)))) || radius == 0) return;
-
+        // if(src_image !)
+        if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), src_image->size)))) || radius == 0) return;
+        if(radius == 1){
+            return drawPixel(pos);
+        }
         int x0 = pos.x;
         int y0 = pos.y;
         int x = ABS(radius) - 1;
@@ -195,6 +223,7 @@ public:
         int err=dx - 2 * ABS(radius);
 
         while (x>=y) {
+            // if(src_image->has_point(x0 - y))
             drawHriLine(Vector2i(x0 - x, y0 + y), 2*x);
             drawHriLine(Vector2i(x0 - y, y0 + x), 2*y);
             drawHriLine(Vector2i(x0 - x, y0 - y), 2*x);
@@ -210,41 +239,49 @@ public:
                 dx += 2;
                 err += dx-ABS(radius * 2);
             }
+
+
         }
     }
 
-    void drawChar(const Vector2i & pos,const char & chr){
+    void drawChar(const Vector2i & pos,const wchar_t & chr){
         Rect2i image_area = Rect2i({}, src_image->size);
-        Rect2i char_area = Rect2i(pos, font.size).intersection(image_area);
+        const Font * font = chr > 0x80 ? chfont : enfont;
+        const Vector2i font_size = font->size;
+        Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
 
         if(!char_area) return;
         
         for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
             uint8_t mask;
-            for(int j = 0; j < char_area.size.y; j++){
+            for(int j = 0; j < font_size.y; j++){
+ 
                 if(j % 8 == 0) mask = 0;
 
-                Vector2i offs = Vector2i(i,j % 8) - pos;
-                if(!Rangei{0, font.size.x}.has_value(offs.x)) continue;
-                if(font.getpixel(chr, offs)){
-                    mask |= (0x01 << j % 8);
+                Vector2i offs = Vector2i(i - char_area.position.x ,j % 8);
+                if(font->getpixel(chr, offs)){
+                    mask |= (0x01 << (j % 8));
                 }
 
-                if(j % 8 == 7) src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, color);
+                if(j % 8 == 7 || j == font_size.y - 1){
+                    src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
+                }
             }
         }
     }
 
     void drawString(const Vector2i & pos, const String & str){
     const char * str_ptr = str.c_str();
-
-    for(int x = pos.x; x < src_image->size.x; x += (font.size.x + 1)){
-        if(*str_ptr){
-            drawChar(Vector2i(x, pos.y), *str_ptr);
+	GBKIterator iterator(str_ptr);
+	
+    for(int x = pos.x; x < src_image->size.x;){
+        if(iterator.hasNext()){
+            auto chr = iterator.next();
+            drawChar(Vector2i(x, pos.y), chr);
+            x += ((chr > 0x80 ? chfont->size.x : enfont->size.x) + 1);
         }else{
             break;
         }
-        str_ptr++;
     }
 }
 

@@ -698,6 +698,21 @@ void String::trim(void)
 	buffer[len] = 0;
 }
 
+void String::alphanum(void){
+	char * new_buf = (char *)malloc(len);
+
+	size_t len0 = len;
+	len = 0;
+	for(size_t i = 0; i < len0; i++){
+		char chr = buffer[i];
+		if(isalpha(chr) || isdigit(chr) || chr == ' ' || chr == '+' || chr == '-' || chr == '.'){
+			new_buf[len++] = chr;
+		}
+	}
+
+	memcpy(buffer, new_buf, len);
+	buffer[len] = 0;
+}
 /*********************************************/
 /*  Parsing / Conversion                     */
 /*********************************************/
