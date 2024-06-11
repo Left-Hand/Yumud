@@ -166,3 +166,15 @@ void Sys::Clock::setAPB1Freq(const uint32_t & freq){
 void Sys::Clock::setAPB2Freq(const uint32_t & freq){
     setAPB2Div(getAPB2Freq() / freq);
 }
+
+
+void NMI_Handler(void)
+{
+}
+
+void HardFault_Handler(void)
+{
+  while (1)
+  {
+  }
+}

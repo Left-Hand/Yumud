@@ -1,5 +1,24 @@
 # Yumud
 
+## catalog
+
+##### docu 文档
+##### algo 数据算法
+##### dsp 信号处理
+##### types 各种类型
+##### protocol 通信协议
+##### drivers 设备驱动
+##### scripts 脚本文件
+##### sys 系统设定
+##### thirdparty 第三方库
+##### src 主要源代码
+##### hal 物理抽象层
+##### robots 机器人学相关代码（）
+
+
+
+## info
+
 项目架构不稳定 作者不会用git 可能会强行推流 不要轻易fork！！！！！
 
 算是用来练习git的项目
