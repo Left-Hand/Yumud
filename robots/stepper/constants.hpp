@@ -28,17 +28,20 @@ static constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 
 namespace StepperEnums{
     BETTER_ENUM(RunStatus, uint8_t,     
-        INIT = 0,
+        NONE,
+        INIT,
         INACTIVE,
         ACTIVE,
+        CHECK,
         BEEP,
         CALI,
         ERROR,
-        EXCEPTION
+        EXIT,
+        WARN
     )
 
     BETTER_ENUM(CtrlType, uint8_t,     
-        POS = 0,
+        POSITION = 0,
         SPEED
     )
 

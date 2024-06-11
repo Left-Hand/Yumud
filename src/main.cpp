@@ -179,6 +179,10 @@ int main(){
     stp.init();
     while(true){
         stp.run();
+
+        const real_t sum = 20;
+        const real_t ms = 5; 
+        // stp.setTargetSpeed(20 * sin(t));
     }
     // pedestrian_app();
     // modem_app();

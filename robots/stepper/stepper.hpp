@@ -5,6 +5,7 @@
 #include "cli.hpp"
 #include "ctrls.hpp"
 #include "obs.hpp"
+#include "archive.hpp"
 
 class Stepper:public StepperUtils::Cli{
 protected:
@@ -14,6 +15,7 @@ protected:
     using Range = Range_t<real_t>;
     using ErrorCode = StepperEnums::ErrorCode;
     using RunStatus = StepperEnums::RunStatus;
+    using CtrlType = StepperEnums::CtrlType;
 
     IOStream & logger = uart1;
 
@@ -53,6 +55,10 @@ protected:
     GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
     RunStatus run_status = RunStatus::INIT;
+    CtrlType ctrl_type = CtrlType::POSITION;
+
+    bool skip_tone = true;
+    bool cmd_mode = false;
 
 
     void setCurrent(const real_t & _current, const real_t & _elecrad){
@@ -62,7 +68,8 @@ protected:
 
 
     ErrorCode error_code = ErrorCode::OK;
-    String error_message;
+    const char * error_message = nullptr;
+    const char * warn_message = nullptr;
 
     bool auto_shutdown_activation = true;
     bool auto_shutdown_actived = false;
@@ -70,7 +77,7 @@ protected:
     uint16_t auto_shutdown_last_wake_ms = 0;
 
     bool shutdown_when_error_occurred;
-    bool shutdown_when_exception_occurred;
+    bool shutdown_when_warn_occurred;
 
     void shutdown(){
         coilA.enable(false);
@@ -110,26 +117,26 @@ protected:
 
 
     void throw_error(const ErrorCode & _error_code,const char * _error_message) {
-        error_message = String(_error_message);
+        error_message = _error_message;
         run_status = RunStatus::ERROR;
         if(shutdown_when_error_occurred){
             shutdown_flag = true;
         }
     }
 
-    void throw_exception(const ErrorCode & ecode, const char * emessage){
-        error_message = String(emessage);
-        run_status = RunStatus::EXCEPTION;
-        if(shutdown_when_exception_occurred){
+    void throw_warn(const ErrorCode & ecode, const char * _warn_message){
+        warn_message = _warn_message;
+        run_status = RunStatus::WARN;
+        if(shutdown_when_warn_occurred){
             shutdown_flag = true;
         }
     }
 
 
-    ExitFlag cali_task(const InitFlag init_flag = false);
-    ExitFlag active_task(const InitFlag init_flag = false);
-    ExitFlag beep_task(const InitFlag init_flag = false);
-    ExitFlag selfcheck_task(const InitFlag init_flag = false);
+    RunStatus cali_task(const InitFlag init_flag = false);
+    RunStatus active_task(const InitFlag init_flag = false);
+    RunStatus beep_task(const InitFlag init_flag = false);
+    RunStatus check_task(const InitFlag init_flag = false);
 
     RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
     StatLed panel_led = StatLed{led_instance};
@@ -138,48 +145,165 @@ protected:
         auto command = _command;
         command.toLowerCase();
         switch(hash_impl(command.c_str(), command.length())){
+            case "save"_ha:
+            case "sv"_ha:
+                saveAchive();
+                break;
+
+            case "load"_ha:
+            case "ld"_ha:
+                loadAchive();
+                break;
+
+            case "speed"_ha:
+            case "spd"_ha:
+            case "s"_ha:
+                if(args.size()) setTargetSpeed(real_t(args[0]));
+                break;
+
+            case "position"_ha:
+            case "pos"_ha:
+            case "p"_ha:
+                if(args.size()) setTargetPosition(real_t(args[0]));
+                break;
+
+            case "eleczero"_ha:
+            case "ez"_ha:
+                settle_value(elecrad_zerofix, args);
+                break;
+
+            case "error"_ha:
+            case "err"_ha:
+                if(error_message) {DEBUG_PRINT(error_message)}
+                else {DEBUG_PRINT("no error")}
+                break;
+
+            case "warn"_ha:
+            case "wa"_ha:
+                if(warn_message) {DEBUG_PRINT(warn_message)}
+                else {DEBUG_PRINT("no warn")}
+                break;
+
+            case "enable"_ha:
+            case "en"_ha:
+                break;
+            
+            case "disable"_ha:
+            case "de"_ha:
+                break;
+
+            case "status"_ha:
+            case "stat"_ha:
+                DEBUG_PRINT("current status:", run_status._to_string());
+                break;
+
+            case "shutdown"_ha:
             case "shut"_ha:
                 shutdown();
+                DEBUG_PRINT("shutdown ok");
                 break;
+
             default:
                 Cli::parse_command(command, args);
                 break;
         }
     }
     
+
+    void saveAchive(){
+        using Archive = StepperUtils::Archive;
+        Archive archive;
+        memory.store(archive);
+    }
+
+    void loadAchive(){
+        using Archive = StepperUtils::Archive;
+        Archive archive;
+        memory.load(archive);
+
+        DEBUG_PRINT("build version:\t\t", archive.bver);
+        DEBUG_PRINT("build time:\t\t20", archive.y, '/', archive.m, '/', archive.d, ' ', archive.h, 'h');
+        DEBUG_PRINT("driver type:\t\t", archive.dtype);
+        DEBUG_PRINT("driver branch:\t\t", archive.dbranch);
+    }
 public:
 
     void tick(){
+        RunStatus new_status = RunStatus::NONE;
+
         switch(run_status){
             case RunStatus::INIT:
-                run_status = RunStatus::CALI;
                 cali_task(true);
                 break;
             case RunStatus::CALI:
-                if(cali_task()){
-                    active_task(true);
-                    run_status = RunStatus::ACTIVE;
-                }
+                new_status = cali_task();
                 break;
-            
+            case RunStatus::ACTIVE:
+                new_status = active_task();
+                break;
+
             case RunStatus::BEEP:
-                if(beep_task()){
-                    active_task(true);
-                    run_status = RunStatus::ACTIVE;
-                }
+                new_status = beep_task();
                 break;
 
             case RunStatus::INACTIVE:
                 run_status = RunStatus::ACTIVE;
                 break;
-            case RunStatus::ACTIVE:
-                if(active_task()){
-                    run_status = RunStatus::INACTIVE;
-                }
-                break;
+
             default:
                 break;
         }
+
+        if(not (+new_status == (+RunStatus::NONE))){
+            if((+new_status == +RunStatus::EXIT)){
+                switch(run_status){
+                    case RunStatus::CHECK:
+                        cali_task(true);
+                        break;
+                    case RunStatus::CALI:
+                        if(skip_tone) active_task(true);
+                        else beep_task(true);
+                        break;
+                    case RunStatus::BEEP:
+                        active_task(true);
+                        break;
+                    case RunStatus::ACTIVE:
+                        break;
+                    case RunStatus::INACTIVE:
+                        break;
+                    case RunStatus::ERROR:
+                        break;
+                    case RunStatus::WARN:
+                        break;
+                    default:
+                        break;
+                }
+            }else{
+                switch(run_status){
+                    case RunStatus::CHECK:
+                        check_task(true);
+                        break;
+                    case RunStatus::CALI:
+                        cali_task(true);
+                        break;
+                    case RunStatus::ACTIVE:
+                        active_task(true);
+                        break;
+                    case RunStatus::BEEP:
+                        beep_task(true);
+                        break;
+                    case RunStatus::INACTIVE:
+                        break;
+                    case RunStatus::ERROR:
+                        break;
+                    case RunStatus::WARN:
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+
     }
 
     void init(){
@@ -235,8 +359,16 @@ public:
 
         panel_led.setPeriod(200);
         panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+    }
 
+    void setTargetSpeed(const real_t speed){
+        target = speed;
+        ctrl_type = CtrlType::SPEED;
+    }
 
+    void setTargetPosition(const real_t speed){
+        target = speed;
+        ctrl_type = CtrlType::POSITION;
     }
 
     void run() override{
@@ -258,7 +390,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(est_speed, est_pos, run_current, run_raddiff, position_ctrl.error, position_ctrl.near);
+        // if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

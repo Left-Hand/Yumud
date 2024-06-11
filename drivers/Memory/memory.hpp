@@ -23,13 +23,13 @@ public:
     }
 
     template<typename T>
-    void store(const T & data, const Address & loc){
-        storage.store(data, sizeof(data), loc);
+    void store(const T & data, const Address loc = 0){
+        storage.store(&data, (Address)sizeof(data), loc);
     }
 
     template<typename T>
-    void load(T & data, const Address & loc){
-        storage.load(data, sizeof(data), loc);
+    void load(T & data, const Address loc = 0){
+        storage.load(&data, (Address)sizeof(data), loc);
     }
 };
 
