@@ -3,8 +3,8 @@
 #define __AB_ENCODER_HPP__
 
 #include "Encoder.hpp"
-#include "src/gpio/gpio.hpp"
-#include "src/exti/exti.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/exti/exti.hpp"
 
 class ABEncoder:public AbsoluteEncoder{
 protected:

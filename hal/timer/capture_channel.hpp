@@ -4,7 +4,7 @@
 
 #include "src/clock/clock.h"
 #include "src/clock/time_stamp.hpp"
-#include "src/exti/exti.hpp"
+#include "hal/exti/exti.hpp"
 #include "real.hpp"
 
 class CaptureChannelConcept{

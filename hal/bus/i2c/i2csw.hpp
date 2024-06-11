@@ -2,7 +2,7 @@
 #define I2C_SOFT_H_
 
 #include "i2c.hpp"
-#include "src/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 #include "src/clock/time_stamp.hpp"
 
 class I2cSw: public I2c{

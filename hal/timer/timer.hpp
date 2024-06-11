@@ -3,7 +3,7 @@
 #define __TIMER_HPP__
 
 #include "src/platform.h"
-#include "src/nvic/nvic.hpp"
+#include "hal/nvic/nvic.hpp"
 #include "timer_oc.hpp"
 #include <functional>
 

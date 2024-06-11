@@ -2,7 +2,7 @@
 
 #define __HX711_HPP__
 
-#include "src/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 
 class HX711{
 public:

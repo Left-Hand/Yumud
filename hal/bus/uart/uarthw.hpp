@@ -2,7 +2,7 @@
 #define __UARTHW_HPP__
 
 #include "uart.hpp"
-#include "src/dma/dma.hpp"
+#include "hal/dma/dma.hpp"
 
 static constexpr size_t rx_dma_buf_size = 64;
 static constexpr size_t tx_dma_buf_size = 64;
@@ -17,9 +17,9 @@ protected:
 
     void enableRcc(const bool en = true);
 
-    void _write(const char * data_ptr, const size_t & len) override;
+    void write(const char * data_ptr, const size_t len) override;
 
-    void _write(const char & data) override;
+    void write(const char data) override;
 
     void enableIt(const bool en = true);
 

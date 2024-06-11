@@ -1,7 +1,7 @@
 #ifndef __TTP229_HPP__
 #define __TTP229_HPP__
 
-#include "src/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 
 class TTP229{
 protected:

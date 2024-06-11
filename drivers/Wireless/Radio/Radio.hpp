@@ -2,7 +2,7 @@
 
 #define __RADIO_HPP__
 
-#include "src/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 class Radio{
 public:
 protected:

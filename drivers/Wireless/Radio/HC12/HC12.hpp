@@ -2,11 +2,11 @@
 
 #define __HC12_HPP__
 
-#include "src/bus/uart/uart.hpp"
+#include "hal/bus/uart/uart.hpp"
 #include "types/string/String.hpp"
 #include "../Radio.hpp"
 
-class HC12:public Printer, public Radio{
+class HC12:public IOStream, public Radio{
 public:
     enum class PowerMode{
         Low,
@@ -25,11 +25,11 @@ protected:
     GpioConcept & set_pin;
     uint16_t timeout = 5;
 
-    void _write(const char & data) override{
+    void write(const char data) override{
         uart.write(data);
     }
-    void _read(char & data) override{
-        data = uart.read();
+    void read(char & data) override{
+        uart.read(data);
     }
     size_t available() const override{
         return uart.available();
@@ -56,16 +56,17 @@ protected:
         uint32_t begin_ms = millis();
         while((millis() - begin_ms < timeout)){
             if(!available()) continue;
-            char chr = read();
+            char chr;
+            read(chr);
             if(!chr) break;
             recv += chr;
             if(recv == "OK"){
-                while((millis() - begin_ms < timeout)){
-                    if(available() && !read()){
-                        is_valid = true;
-                        goto end_process;
-                    }
-                }
+                // while((millis() - begin_ms < timeout)){
+                //     if(available() && !read()){
+                //         is_valid = true;
+                //         goto end_process;
+                //     }
+                // }
                 goto end_process;
             }
         }

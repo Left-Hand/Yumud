@@ -2,7 +2,7 @@
 #define __TIMER_OC_HPP__
 
 #include "timer_channel.hpp"
-#include "src/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 #include "real.hpp"
 
 

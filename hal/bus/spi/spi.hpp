@@ -2,9 +2,9 @@
 
 #define __SPI_HPP__
 
-#include "src/gpio/gpio.hpp"
-#include "src/gpio/port_virtual.hpp"
-#include "src/bus/serbus.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port_virtual.hpp"
+#include "hal/bus/serbus.hpp"
 
 
 

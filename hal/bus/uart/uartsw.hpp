@@ -17,7 +17,7 @@ protected:
     char current_char;
     ByteProg byteProg = ByteProg::STOP;
     
-    void _write(const char & data) override{
+    void write(const char data) override{
         txBuf.addData(data);
     }
 

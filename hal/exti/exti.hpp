@@ -3,8 +3,8 @@
 #define __EXTI_HPP__
 
 #include "src/platform.h"
-#include "src/nvic/nvic.hpp"
-#include "src/gpio/gpio.hpp"
+#include "hal/nvic/nvic.hpp"
+#include "hal/gpio/gpio.hpp"
 
 #include <functional>
 

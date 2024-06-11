@@ -4,7 +4,7 @@
 
 #include "../debug/debug_inc.h"
 #include "../thirdparty/enums/enum.h"
-#include "../src/timer/timers/timer_hw.hpp"
+#include "../hal/timer/timers/timer_hw.hpp"
 #include "../drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
 #include "../drivers/Memory/memory.hpp"
 

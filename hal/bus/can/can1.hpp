@@ -4,10 +4,10 @@
 #include <memory>
 #include <functional>
 #include "src/platform.h"
-#include "src/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 #include "can_msg.hpp"
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
-#include "src/bus/bus_inc.h"
+#include "hal/bus/bus_inc.h"
 #include "can_filter.hpp"
 
 

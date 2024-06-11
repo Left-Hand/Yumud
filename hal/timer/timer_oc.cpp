@@ -1,5 +1,5 @@
 #include "timer_oc.hpp"
-#include "src/gpio/port.hpp"
+#include "hal/gpio/port.hpp"
 
 volatile uint16_t & TimerOutChannelOnChip::from_channel_to_cvr(const Channel & _channel){
     switch(_channel){

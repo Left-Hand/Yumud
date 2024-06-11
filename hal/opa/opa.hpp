@@ -3,8 +3,8 @@
 #define __OPA_HPP__
 
 #include "src/platform.h"
-#include "src/gpio/gpio.hpp"
-#include "src/gpio/port.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
 
 class Opa{
 protected:

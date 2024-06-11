@@ -127,7 +127,11 @@ namespace StepperUtils{
             if(DEBUGGER.available()){
                 static String temp_str;
                 while(DEBUGGER.available()){
-                    auto chr = DEBUGGER.read();
+                    char chr;
+                    DEBUGGER.read(chr);
+
+                    // IOStream & out = DEBUGGER;
+
                     if(chr == '\n'){
                         temp_str.alphanum();
                         DEBUG_PRINT("cli cmd:", temp_str);

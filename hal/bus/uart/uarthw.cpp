@@ -498,7 +498,7 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _rxMethod, const Com
 }
 
 
-void UartHw::_write(const char * data_ptr, const size_t & len){
+void UartHw::write(const char * data_ptr, const size_t len){
     switch(txMethod){
         case CommMethod::Blocking:
             instance->DATAR;
@@ -523,7 +523,7 @@ void UartHw::_write(const char * data_ptr, const size_t & len){
     }
 }
 
-void UartHw::_write(const char & data){
+void UartHw::write(const char data){
     switch(txMethod){
         case CommMethod::Blocking:
             txBuf.addData(data);

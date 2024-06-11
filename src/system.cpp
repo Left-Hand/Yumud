@@ -1,5 +1,5 @@
 #include "system.hpp"
-#include "src/crc/crc.hpp"
+#include "hal/crc/crc.hpp"
 
 real_t Sys::t;
 

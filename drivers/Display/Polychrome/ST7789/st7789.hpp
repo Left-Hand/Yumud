@@ -4,7 +4,7 @@
 
 #include "../../DisplayerInterface.hpp"
 #include "types/image/image.hpp"
-#include "src/bus/spi/spi2.hpp"
+#include "hal/bus/spi/spi2.hpp"
 
 class ST7789:public Displayer<RGB565>{
 private:

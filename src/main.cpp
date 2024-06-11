@@ -41,7 +41,7 @@ using Sys::t;
 
 
 
-// static Printer & logger = uart2;
+// static IOStream & logger = uart2;
 //     // flash.load(temp);
 //     while(true) __WFI;
 //     // while(true){
@@ -64,14 +64,14 @@ using Sys::t;
 
 #include "drivers/Encoder/ABEncoder.hpp"
 #include "drivers/Encoder/OdometerLines.hpp"
-#include "src/adc/adcs/adc1.hpp"
+#include "hal/adc/adcs/adc1.hpp"
 #include "dsp/oscillator.hpp"
 #include "drivers/Dac/TM8211/tm8211.hpp"
 
 #include <bits/stl_numeric.h>
 #include <optional>
 
-#include "src/bus/bus_inc.h"
+#include "hal/bus/bus_inc.h"
 #include "robots/buck.hpp"
 #include "robots/stepper/stepper.hpp"
 #include "defines/defs.h"
@@ -88,8 +88,8 @@ using Sys::t;
 #include "../types/matrix/matrix.hpp"
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "dsp/filter/BurrFilter.hpp"
-#include "src/exti/exti.hpp"
-#include "src/adc/adcs/adc1.hpp"
+#include "hal/exti/exti.hpp"
+#include "hal/adc/adcs/adc1.hpp"
 #include "dsp/filter/LowpassFilter.hpp"
 #include "dsp/filter/HighpassFilter.hpp"
 #include "dsp/observer/LinearObserver.hpp"
@@ -131,7 +131,7 @@ using Sys::t;
 #include "timer/pwm_channel.hpp"
 #include "bus/spi/spi1.hpp"
 #include "dsp/controller/PID.hpp"
-#include "src/timer/capture_channel.hpp"
+#include "hal/timer/capture_channel.hpp"
 #include "dsp/filter/BurrFilter.hpp"
 // #include "adc/adcs/adc1.hpp"
 #include "drivers/Actuator/Servo/PwmServo/pwm_servo.hpp"
@@ -140,15 +140,15 @@ using Sys::t;
 #include "types/quat/Quat_t.hpp"
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 #include "gpio/port_virtual.hpp"
-#include "src/bus/spi/spi_sw.hpp"
+#include "hal/bus/spi/spi_sw.hpp"
 #include "drivers/VirtualIO/HC595/hc595.hpp"
 #include "drivers/IMU/Axis6/BMI270/bmi270.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-#include "src/nvic/nvic.hpp"
+#include "hal/nvic/nvic.hpp"
 #include "dsp/lut.hpp"
 #include "algo/any/any.hpp"
 #include "drivers/Encoder/odometer.hpp"
-#include "src/crc/crc.hpp"
+#include "hal/crc/crc.hpp"
 
 #include "apps.h"
 
@@ -156,7 +156,7 @@ using Complex = Complex_t<real_t>;
 using Color = Color_t<real_t>;
 
 #include "dsp/pll.hpp"
-#include "src/opa/opa.hpp"
+#include "hal/opa/opa.hpp"
 #include "drivers/Adc/INA226/ina226.hpp"
 
 #define I2C_BaudRate 400000

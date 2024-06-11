@@ -3,8 +3,8 @@
 #define __MYADC_HPP__
 
 #include "src/platform.h"
-#include "src/gpio/gpio.hpp"
-#include "src/gpio/port.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
 #include "adc_enums.h"

@@ -15,7 +15,7 @@ protected:
     using ErrorCode = StepperEnums::ErrorCode;
     using RunStatus = StepperEnums::RunStatus;
 
-    Printer & logger = uart1;
+    IOStream & logger = uart1;
 
     TimerOutChannelPosOnChip & verfChannelA = timer3[3];
     TimerOutChannelPosOnChip & verfChannelB = timer3[2];

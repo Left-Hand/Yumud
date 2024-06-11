@@ -4,7 +4,7 @@
 
 #include "Led.hpp"
 #include "types/color/color_t.hpp"
-#include "src/timer/pwm_channel.hpp"
+#include "hal/timer/pwm_channel.hpp"
 
 
 template<bool com_anode>

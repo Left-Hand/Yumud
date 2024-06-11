@@ -2,7 +2,7 @@
 #define __COIL_HPP__
 
 #include "drivers/Actuator/Actuator.hpp"
-#include "src/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 
 
 class CoilConcept: public Actuator{

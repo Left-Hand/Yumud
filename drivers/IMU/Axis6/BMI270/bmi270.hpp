@@ -2,7 +2,7 @@
 #define __BMI270_HPP__
 
 #include "drivers/IMU/IMU.hpp"
-#include "src/bus/spi/spidrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 #include "types/real.hpp"
 #include "src/platform.h"
 

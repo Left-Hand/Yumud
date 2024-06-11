@@ -1,6 +1,6 @@
-#include "printer.hpp"
+#include "stream.hpp"
 
-Printer& Printer::operator<<(const SpecToken & spec){
+OutputStream& OutputStream::operator<<(const SpecToken & spec){
     switch(spec){
     
     case SpecToken::NoSpace:
@@ -59,27 +59,27 @@ Printer& Printer::operator<<(const SpecToken & spec){
     return *this;
 }
 
-String Printer::readString(const size_t & len){
+String InputStream::readString(const size_t & len){
     String str;
     str.reserve(len + 1);
 
     for(uint8_t i = 0; i < len; i++){
         char _;
-        _read(_);
+        read(_);
         str += _;
     }
 
     return str;
 }
 
-String Printer::readStringUntil(const char & chr) {
+String InputStream::readStringUntil(const char & chr) {
     String str;
     size_t cap = 16;
     str.reserve(cap);
 
     char _;
     while (true) {
-        _read(_);
+        read(_);
 
         if (_ == chr) {
             break;

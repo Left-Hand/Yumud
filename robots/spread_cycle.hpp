@@ -64,7 +64,7 @@
 
 // void chopper_test(){
 //     uart1.init(115200 * 8, Uart::Mode::TxRx);
-//     Printer & logger = uart1;
+//     IOStream & logger = uart1;
 //     logger.setSpace(",");
 //     logger.setEps(4);
 

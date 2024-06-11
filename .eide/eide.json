@@ -31,7 +31,9 @@
     "sys/sdk/ch32v203",
     "sys/sdk/ch32v203/Peripheral",
     "sys/sdk/ch32v203/Peripheral/inc",
-    "sys/sdk/ch32v203/Peripheral/src"
+    "sys/sdk/ch32v203/Peripheral/src",
+    "sys/kernel",
+    "hal"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -119,7 +121,8 @@
           "sys/sdk/ch32v203",
           "src/defines",
           "sys/sdk/ch32v203/Peripheral/inc",
-          "sys/sdk/ch32v203/Peripheral/src"
+          "sys/sdk/ch32v203/Peripheral/src",
+          "hal"
         ],
         "libList": [
           "src/clock",
@@ -130,7 +133,8 @@
           "sys/sdk/ch32v203",
           "src/defines",
           "sys/sdk/ch32v203/Peripheral/inc",
-          "sys/sdk/ch32v203/Peripheral/src"
+          "sys/sdk/ch32v203/Peripheral/src",
+          "hal"
         ],
         "sourceDirList": [],
         "defineList": [

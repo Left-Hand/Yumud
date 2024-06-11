@@ -5,7 +5,7 @@
 // #include "src/platform.h"
 // #include "analog_channel.hpp"
 // #include "adc_enums.h"
-// #include "src/gpio/gpio.hpp"
+// #include "hal/gpio/gpio.hpp"
 // #include "adc/adc.hpp"
 
 

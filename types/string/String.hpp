@@ -26,7 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "string_utils.hpp"
+#include "sys/kernel/string_utils.hpp"
 #include "src/platform.h"
 
 // An inherited class for holding the result of a concatenation.  These

@@ -2,13 +2,16 @@
 
 #define __UART_HPP__
 
-#include "src/gpio/gpio.hpp"
-#include "../printer.hpp"
+#include "../bus.hpp"
+#include "sys/kernel/stream.hpp"
+
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
-#include "src/gpio/port.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
+
 #include <functional>
 
-class Uart:public Printer{
+class Uart:public IOStream{
 public:
     using Mode = CommMode;
     using Callback = std::function<void(void)>;
@@ -18,15 +21,14 @@ public:
 
 protected:
 
-    void _read(char & data) override;
-    void _read(char * data_ptr, const size_t len) override;
-
     static constexpr size_t uart_fifo_size = 256;
 
     RingBuf_t<char, uart_fifo_size> txBuf;
     RingBuf_t<char, uart_fifo_size> rxBuf;
 
 public:
+    void read(char & data) override;
+    void read(char * data_ptr, const size_t len) override;
 
     virtual void init(
         const uint32_t baudRate, 

@@ -2,7 +2,7 @@
 
 #define __ACTUATOR_HPP__
 
-#include "src/timer/pwm_channel.hpp"
+#include "hal/timer/pwm_channel.hpp"
 #include "real.hpp"
 
 class Actuator{

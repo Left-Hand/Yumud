@@ -3,9 +3,9 @@
 #define __DMA_HPP__
 
 #include "src/platform.h"
-#include "src/gpio/gpio.hpp"
-#include "src/gpio/port.hpp"
-#include "src/nvic/nvic.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
+#include "hal/nvic/nvic.hpp"
 
 #include <stddef.h>
 #include <initializer_list>

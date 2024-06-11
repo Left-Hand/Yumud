@@ -11,7 +11,7 @@ static real_t omega = real_t(0.3);
 void pmdc_test(){
 
     uart2.init(115200 * 8, Uart::Mode::TxRx);
-    Printer & logger = uart2;
+    IOStream & logger = uart2;
     logger.setSpace(",");
     logger.setEps(4);
 
