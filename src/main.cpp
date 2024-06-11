@@ -187,8 +187,8 @@ int main(){
     //     logger.println(datum);
     // }
 
-    uart2.init(115200, Uart::Mode::TxOnly);
-    Printer & logger = uart2;
+    uart2.init(115200);
+    IOStream & logger = uart2;
     logger.setEps(4);
     logger.setRadix(10);
     logger.setSpace(",");
@@ -196,10 +196,7 @@ int main(){
     I2cSw i2csw = I2cSw(portD[1], portD[0]);
     i2csw.init(400000);
 
-    I2cDrv at24drv(i2csw, AT24C02::default_id);
-    AT24C02 at24(at24drv);
-
-    // Flash flash(-2);
+    AT24C02 at24{I2cDrv(i2csw, AT24C02::default_id)};
 
     delay(200);
     at24.init();

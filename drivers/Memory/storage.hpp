@@ -54,8 +54,6 @@ protected:
         }
     }
 
-    virtual void _store(const void * data, const Address & data_size, const Address & loc) = 0;
-    virtual void _load(void * data, const Address & data_size, const Address & loc) = 0;
 public:
     virtual void init() = 0;
 
