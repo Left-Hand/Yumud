@@ -40,7 +40,7 @@
     "linker": {
         "output-format": "elf",
         "remove-unused-input-sections": true,
-        "LD_FLAGS": "-Xlinker --gc-sections -nostartfiles -T \"sdk/Ld/Link.ld\"",
+        "LD_FLAGS": "-Xlinker --gc-sections -nostartfiles -T \"sys/sdk/ch32v203/Ld/C8T6.ld\"",
         "LIB_FLAGS": "-lstdc++ -lIQmath_RV32",
         "$toolName": "auto"
     }

@@ -5,11 +5,11 @@
 #include "../debug/debug_inc.h"
 #include "../thirdparty/enums/enum.h"
 #include "../src/timer/timers/timer_hw.hpp"
-#include "../src/device/Memory/EEPROM/AT24CXX/at24c02.hpp"
-#include "../src/device/Memory/memory.hpp"
+#include "../drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
+#include "../drivers/Memory/memory.hpp"
 
-#include "src/device/Encoder/MagEnc/MT6816/mt6816.hpp"
-#include "src/device/Encoder/OdometerLines.hpp"
+#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
+#include "drivers/Encoder/OdometerLines.hpp"
 #include "algo/hash_func.hpp"
 #include "svpwm.hpp"
 

@@ -1,9 +1,7 @@
 #ifndef __BASIS_T_HPP__
 #define __BASIS_T_HPP__
 
-#include "../Vector3/vector3_t.hpp"
-// #include "../Quat/Quat.hpp"
-#include "../misc.h"
+#include "types/Vector3/vector3_t.hpp"
 
 template <typename real>
 class Basis_t {

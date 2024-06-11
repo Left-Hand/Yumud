@@ -12,9 +12,7 @@
  */
 
 #include "clock.h"
-#include "core_riscv.h"
 #include "ch32v20x_rcc.h"
-// #include "stdio.h"
 
 #ifdef __cplusplus
 extern "C" {

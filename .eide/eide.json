@@ -4,7 +4,6 @@
   "dependenceList": [],
   "srcDirs": [
     "src",
-    "sdk",
     "src/clock",
     "src/defines",
     "dsp",
@@ -26,9 +25,13 @@
     "src/bus/spi",
     "types/range",
     "types/image/font",
-    "src/device",
     "src/timer",
-    "robots"
+    "robots",
+    "drivers",
+    "sys/sdk/ch32v203",
+    "sys/sdk/ch32v203/Peripheral",
+    "sys/sdk/ch32v203/Peripheral/inc",
+    "sys/sdk/ch32v203/Peripheral/src"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -112,14 +115,22 @@
           "src/dma",
           "robots",
           "robots/stepper/tasks",
-          "robots/stepper"
+          "robots/stepper",
+          "sys/sdk/ch32v203",
+          "src/defines",
+          "sys/sdk/ch32v203/Peripheral/inc",
+          "sys/sdk/ch32v203/Peripheral/src"
         ],
         "libList": [
           "src/clock",
           "src/dma",
           "robots",
           "robots/stepper/tasks",
-          "robots/stepper"
+          "robots/stepper",
+          "sys/sdk/ch32v203",
+          "src/defines",
+          "sys/sdk/ch32v203/Peripheral/inc",
+          "sys/sdk/ch32v203/Peripheral/src"
         ],
         "sourceDirList": [],
         "defineList": [

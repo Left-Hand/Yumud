@@ -1,19 +1,6 @@
-#include "misc.h"
-#include "apps.h"
 
-using Complex = Complex_t<real_t>;
-using Color = Color_t<real_t>;
-
-#include "dsp/pll.hpp"
-#include "src/opa/opa.hpp"
-#include "src/device/Adc/INA226/ina226.hpp"
-
-#define I2C_BaudRate 400000
-
-
-#include "src/device/Encoder/Estimmator.hpp"
-#include "src/device/Memory/EEPROM/AT24CXX/at24c02.hpp"
-
+#include "system.hpp"
+using Sys::t;
 // I2cSw i2cSw(i2cScl, i2cSda);
 
 
@@ -53,7 +40,6 @@ using Color = Color_t<real_t>;
 
 
 
-using Sys::t;
 
 // static Printer & logger = uart2;
 //     // flash.load(temp);
@@ -76,11 +62,11 @@ using Sys::t;
 
 // }
 
-#include "src/device/Encoder/ABEncoder.hpp"
-#include "src/device/Encoder/OdometerLines.hpp"
+#include "drivers/Encoder/ABEncoder.hpp"
+#include "drivers/Encoder/OdometerLines.hpp"
 #include "src/adc/adcs/adc1.hpp"
 #include "dsp/oscillator.hpp"
-#include "src/device/Dac/TM8211/tm8211.hpp"
+#include "drivers/Dac/TM8211/tm8211.hpp"
 
 #include <bits/stl_numeric.h>
 #include <optional>
@@ -88,7 +74,96 @@ using Sys::t;
 #include "src/bus/bus_inc.h"
 #include "robots/buck.hpp"
 #include "robots/stepper/stepper.hpp"
+#include "defines/defs.h"
+#include "bus/bus_inc.h"
+#include "bkp/bkp.hpp"
+#include "dsp/controller/PID.hpp"
+#include "dsp/filter/KalmanFilter.hpp"
+#include "../types/real.hpp"
+#include "../types/string/String.hpp"
+#include "../types/complex/complex_t.hpp"
+#include "../types/vector2/vector2_t.hpp"
+#include "../types/vector3/vector3_t.hpp"
+#include "../types/color/color_t.hpp"
+#include "../types/matrix/matrix.hpp"
+#include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
+#include "dsp/filter/BurrFilter.hpp"
+#include "src/exti/exti.hpp"
+#include "src/adc/adcs/adc1.hpp"
+#include "dsp/filter/LowpassFilter.hpp"
+#include "dsp/filter/HighpassFilter.hpp"
+#include "dsp/observer/LinearObserver.hpp"
+#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
+#include "drivers/Modem/Nec/Encoder/nec_encoder.hpp"
+#include "drivers/VirtualIO/AW9523/aw9523.hpp"
+// #include "MLX90640/MLX90640_API.h"
+// #include "HX711/HX711.h"
+// #include "TTP229/TTP229.h"
+// #include "AS5600/as5600.hpp"
+// #include "MT6701/mt6701.hpp"
+// #include "HMC5883L/hmc5883l.hpp"
+// #include "QMC5883L/qmc5883l.hpp"
+// #include "BMP280/bmp280.hpp"
+// #include "HX711/hx711.hpp"
+// #include "timer/timer.hpp"
+// #include "ST7789/st7789.hpp"
+// #include "SSD13XX/ssd1306.hpp"
+// #include "MPU6050/mpu6050.hpp"
+// #include "SGM58031/sgm58031.hpp"
+// #include "TCS34725/tcs34725.hpp"
+// #include "VL53L0X/vl53l0x.hpp"
+// #include "PCF8574/pcf8574.hpp"
+// #include "AS5600/as5600.hpp"
+// #include "TM8211/tm8211.hpp"
+// #include "BH1750/bh1750.hpp"
+// #include "AT24CXX/at24c32.hpp"
+// #include "W25QXX/w25qxx.hpp"
+// #include "LT8920/lt8920.hpp"
+// #include "MA730/ma730.hpp"
+// #include "ADXL345/adxl345.hpp"
+// #include "gpio/gpio.hpp"
+// #include "memory/flash.hpp"
+// #include "LT8920/lt8920.hpp"
 
+#include "../types/image/painter.hpp"
+#include "stdlib.h"
+#include "timer/timers/timer_hw.hpp"
+#include "timer/pwm_channel.hpp"
+#include "bus/spi/spi1.hpp"
+#include "dsp/controller/PID.hpp"
+#include "src/timer/capture_channel.hpp"
+#include "dsp/filter/BurrFilter.hpp"
+// #include "adc/adcs/adc1.hpp"
+#include "drivers/Actuator/Servo/PwmServo/pwm_servo.hpp"
+#include "drivers/Actuator/Coil/coil.hpp"
+#include "types/basis/Basis_t.hpp"
+#include "types/quat/Quat_t.hpp"
+#include "drivers/Wireless/Radio/HC12/HC12.hpp"
+#include "gpio/port_virtual.hpp"
+#include "src/bus/spi/spi_sw.hpp"
+#include "drivers/VirtualIO/HC595/hc595.hpp"
+#include "drivers/IMU/Axis6/BMI270/bmi270.hpp"
+#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
+#include "src/nvic/nvic.hpp"
+#include "dsp/lut.hpp"
+#include "algo/any/any.hpp"
+#include "drivers/Encoder/odometer.hpp"
+#include "src/crc/crc.hpp"
+
+#include "apps.h"
+
+using Complex = Complex_t<real_t>;
+using Color = Color_t<real_t>;
+
+#include "dsp/pll.hpp"
+#include "src/opa/opa.hpp"
+#include "drivers/Adc/INA226/ina226.hpp"
+
+#define I2C_BaudRate 400000
+
+
+#include "drivers/Encoder/Estimmator.hpp"
+#include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
 
 template<typename T>
 struct targAndMeasurePair_t{

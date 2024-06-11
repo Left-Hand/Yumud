@@ -3,7 +3,7 @@
 #define __STEPPER_STATLED_HPP__
 
 #include "constants.hpp"
-#include "src/device/CommonIO/Led/rgbLed.hpp"
+#include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "types/color/color_t.hpp"
 
 using Sys::t;
