@@ -148,9 +148,9 @@ public:
 
     static constexpr uint8_t default_id = 0b10100000; 
 
-
     AT24C02(I2cDrv && _bus_drv):Storage(256), bus_drv(_bus_drv){;}
-    AT24C02(I2c & _bus):AT24C02(I2cDrv(_bus, default_id)){;}
+    AT24C02(I2c & _bus):Storage(256), bus_drv{_bus, default_id}{;}
+    AT24C02(I2cDrv & _bus_drv):Storage(256), bus_drv(_bus_drv){;}
 };
 
 #endif
