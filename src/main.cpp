@@ -186,6 +186,7 @@ int main(){
     // for(auto & datum : data){
     //     logger.println(datum);
     // }
+    SpiDrv spibus{spi1, 0};
 
     uart2.init(115200);
     IOStream & logger = uart2;

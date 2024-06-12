@@ -7,14 +7,17 @@
 #include <initializer_list>
 
 class I2cDrv:public BusDrv{
+protected:
+    using BusDrv::write;
+    using BusDrv::read;
+    using BusDrv::transmit;
 public:
-    I2cDrv(I2c & _bus, const uint8_t & _index = 0):BusDrv(_bus, _index){;}
+    I2cDrv(I2c & _bus, const uint8_t _index = 0):BusDrv(_bus, _index){;}
 
-    void writePool(const uint8_t & reg_address, const uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+    void writePool(const uint8_t reg_address, const uint8_t * data_ptr, const size_t size, const size_t length, const bool msb = true){
         if(length == 0) return;
         if(!bus.begin(index)){
             bus.write(reg_address);
-            // bus.begin(index);
 
             for(size_t i = 0; i < length; i += size){
                 if(msb){
@@ -32,7 +35,7 @@ public:
         }
     }
 
-    void readPool(const uint8_t & reg_address, uint8_t * data_ptr, const size_t & size, const size_t & length, const bool msb = true){
+    void readPool(const uint8_t reg_address, uint8_t * data_ptr, const size_t size, const size_t length, const bool msb = true){
         if(length == 0) return;
         if(!bus.begin(index)){
             bus.write(reg_address);
@@ -57,13 +60,13 @@ public:
         }
     }
 
-    void readReg(const uint8_t & reg_address, uint16_t & reg, bool msb = true){
+    void readReg(const uint8_t reg_address,uint16_t & reg, bool msb = true){
         uint8_t buf[2] = {0};
         readPool(reg_address, buf, 2, 2, msb);
         reg = buf[1] << 8 | buf[0];
     }
 
-    void readReg(const uint8_t & reg_address, uint8_t & reg_data){
+    void readReg(const uint8_t reg_address, uint8_t & reg_data){
         if(!bus.begin(index)){
             bus.write(reg_address);
             bus.begin(index | 0x01);
@@ -74,40 +77,16 @@ public:
         }
     }
 
-    void writeReg(const uint8_t & reg_address,  const uint16_t & reg_data, bool msb = true){
+    void writeReg(const uint8_t reg_address,  const uint16_t reg_data, bool msb = true){
         writePool(reg_address, (uint8_t *)&reg_data, 2, 2, msb);
     }
 
-    void writeReg(const uint8_t & reg_address,  const uint8_t & reg_data){
+    void writeReg(const uint8_t reg_address,  const uint8_t reg_data){
         if(!bus.begin(index)){
             bus.write(reg_address);
             bus.write(reg_data);
             bus.end();
         }
-    }
-
-    void read(uint8_t * data_ptr, const size_t & len, const bool & discontinus = true) override {
-        if(!bus.begin(index | 0x01)){
-            for(size_t i = 0; i < len; i++){
-                uint32_t temp = 0;
-                bus.read(temp, (i != len - 1));
-                data_ptr[i] = temp;
-            }
-            if(discontinus) bus.end();
-        }
-    }
-
-    void read(uint8_t & data, const bool & discontinus = true) override {
-        if(!bus.begin(index | 0x01)){
-            uint32_t temp;
-            bus.read(temp);
-            data = temp;
-            if(discontinus) bus.end();
-        }
-    }
-
-    BusType getBusType() override{
-        return BusType::I2cBus;
     }
 
 };

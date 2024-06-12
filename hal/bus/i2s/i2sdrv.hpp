@@ -10,10 +10,6 @@
 class I2sDrv:public BusDrv{
 public:
     I2sDrv(I2s & _bus, const uint8_t & _index = 0):BusDrv(_bus, _index){;}
-
-    BusType getBusType() override{
-        return BusType::SpiBus;
-    }
 };
 
 #endif
