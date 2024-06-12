@@ -40,8 +40,12 @@ protected:
 
     virtual void entry_load() = 0;
     virtual void exit_load() = 0;
-    virtual void _store(const uint8_t & data, const Address loc) = 0;
-    virtual void _load(uint8_t & data, const Address loc) = 0;
+    virtual void _store(const uint8_t data, const Address loc){
+        _store(&data, sizeof(data), loc);
+    }
+    virtual void _load(uint8_t & data, const Address loc){
+        _load(&data, sizeof(data), loc);
+    }
 
     virtual void _store(const void * data, const Address data_size, const Address loc){
         for(Address addr = loc; addr < loc + data_size; addr++){

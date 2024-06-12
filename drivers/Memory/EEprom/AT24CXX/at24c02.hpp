@@ -22,7 +22,7 @@ protected:
     static constexpr uint32_t min_duration_ms = 5;
     uint32_t last_entry_ms = 0;
     
-    void _store(const uint8_t & data, const Address loc) override{
+    void _store(const uint8_t data, const Address loc) override{
         if(loc >= chip_size){
             AT24C02_DEBUG("invalid addr");
             return;

@@ -3,8 +3,8 @@
 #define __FLASH_HPP__
 
 #include "src/platform.h"
-#include "src/device/Memory/storage.hpp"
-#include "src/device/Memory/memory.hpp"
+#include "drivers/Memory/storage.hpp"
+#include "drivers/Memory/memory.hpp"
 
 #ifdef FLASH_DEBUG
 #undef FLASH_DEBUG
@@ -52,8 +52,6 @@ protected:
 
     }
 
-    // void entry_load(){}
-    // void exit_load(){}
     void entry_load() override{
 
     }
@@ -76,7 +74,7 @@ protected:
         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
     }
 
-    void _store(const void * data, const Address & data_size, const Address & loc) override{
+    void _store(const void * data, const Address data_size, const Address loc) override{
 
         unlock();
         uint32_t buf[page_size / sizeof(uint32_t)] = {0};
@@ -101,7 +99,7 @@ protected:
 
     };
 
-    void _load(void * data, const Address & data_size, const Address & loc) override{
+    void _load(void * data, const Address data_size, const Address loc) override{
         AddressWindow phy_window = AddressWindow{0, data_size}.shift(loc + base_address);
         memcpy(data, (void *)phy_window.start, data_size);
     };
@@ -121,6 +119,8 @@ public:
         return false;
     }
 };
+
+
 
 // void testFlash(){
 
