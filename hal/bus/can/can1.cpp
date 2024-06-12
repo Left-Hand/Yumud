@@ -13,29 +13,6 @@ static Callback cb_rx;
 
 Can can1{CAN1};
 
-__interrupt
-void USB_HP_CAN1_TX_IRQHandler(void){
-    for(uint8_t mbox = 0; mbox < 3; mbox++){
-        if(pending_tx_msg_ptrs[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
-            uint8_t tx_status = CAN_TransmitStatus(CAN1, mbox);
-
-            switch (tx_status){
-            case(CAN_TxStatus_Failed):
-                //process failed message
-                EXECUTE(cb_txfail);
-                pending_tx_msg_ptrs[mbox].reset();
-                break;
-            case(CAN_TxStatus_Ok):
-                //process success message
-                EXECUTE(cb_txok);
-                pending_tx_msg_ptrs[mbox].reset();
-                break;
-            }
-            CAN_Mailbox_Clear(CAN1, mbox);
-        }
-    }
-}
-
 #endif
 
 
@@ -294,6 +271,28 @@ void Can::enableIndexPriority(const bool en){
 
 
 #ifdef HAVE_CAN1
+__interrupt
+void USB_HP_CAN1_TX_IRQHandler(void){
+    for(uint8_t mbox = 0; mbox < 3; mbox++){
+        if(pending_tx_msg_ptrs[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
+            uint8_t tx_status = CAN_TransmitStatus(CAN1, mbox);
+
+            switch (tx_status){
+            case(CAN_TxStatus_Failed):
+                //process failed message
+                EXECUTE(cb_txfail);
+                pending_tx_msg_ptrs[mbox].reset();
+                break;
+            case(CAN_TxStatus_Ok):
+                //process success message
+                EXECUTE(cb_txok);
+                pending_tx_msg_ptrs[mbox].reset();
+                break;
+            }
+            CAN_Mailbox_Clear(CAN1, mbox);
+        }
+    }
+}
 
 __interrupt
 void USB_LP_CAN1_RX0_IRQHandler(void) {
