@@ -3,7 +3,14 @@
 
 using Callback = Can::Callback;
 
+static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
+static RingBuf_t<std::shared_ptr<CanMsg>, 8> pending_rx_msgs;
+static Callback cb_txok;
+static Callback cb_txfail;
+static Callback cb_rx;
+
 #ifdef HAVE_CAN1
+
 Can can1{CAN1};
 
 __interrupt
@@ -33,11 +40,6 @@ void USB_HP_CAN1_TX_IRQHandler(void){
 
 
 
-static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
-static RingBuf_t<std::shared_ptr<CanMsg>, 8> pending_rx_msgs;
-static Callback cb_txok;
-static Callback cb_txfail;
-static Callback cb_rx;
 
 
 
