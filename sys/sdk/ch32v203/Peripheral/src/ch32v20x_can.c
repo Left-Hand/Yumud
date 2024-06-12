@@ -549,7 +549,7 @@ void CAN_CancelTransmit(CAN_TypeDef* CANx, uint8_t Mailbox)
  *
  * @return  none
  */
-void CAN_Receive(CAN_TypeDef* CANx, uint8_t FIFONumber, CanRxMsg* RxMessage)
+void CAN_Receive(CAN_TypeDef* CANx, uint8_t FIFONumber,CanRxMsg* RxMessage)
 {
   RxMessage->IDE = (uint8_t)0x04 & CANx->sFIFOMailBox[FIFONumber].RXMIR;
 	

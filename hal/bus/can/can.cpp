@@ -1,4 +1,4 @@
-#include "can1.hpp"
+#include "can.hpp"
 
 
 using Callback = Can::Callback;
@@ -48,7 +48,7 @@ void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
 
     if(CAN_MessagePending(instance, fifo_index) == 0) return;
 
-    CAN_Receive(instance, fifo_index, rx_msg.toRxMessagePtr());
+    CAN_Receive(instance, fifo_index, &rx_msg);
     pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
 }
 
@@ -212,7 +212,7 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
-    uint8_t mbox = CAN_Transmit(instance, msg.toTxMessagePtr());
+    uint8_t mbox = CAN_Transmit(instance, (const CanTxMsg *)&msg);
     if(mbox == CAN_TxStatus_NoMailBox) return false;
 
     pending_tx_msg_ptrs[mbox] = std::make_unique<CanMsg>(msg);
