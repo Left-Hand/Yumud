@@ -21,7 +21,7 @@ protected:
 
     static constexpr auto is_writable_bus = std::is_base_of_v<WritableBus, BusType>;
     static constexpr auto is_readable_bus = std::is_base_of_v<ReadableBus, BusType>;
-    static constexpr auto is_fulldup_bus = std::is_base_of_v<SerBus, BusType>;
+    static constexpr auto is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
 
     void configDataSize(const size_t _data_size){
         if(_data_size == data_size) return;

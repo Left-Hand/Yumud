@@ -81,12 +81,12 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
 }
 
 void SpiHw::initGpios(){
-    if(((uint8_t)mode & (uint8_t)Mode::TxOnly)){
+    if(txMethod != CommMethod::None){
         Gpio & mosi_pin = getMosiPin();
         mosi_pin.OutAfPP();
     }
 
-    if(((uint8_t)mode & (uint8_t)Mode::RxOnly)){
+    if(rxMethod != CommMethod::None){
         Gpio & miso_pin = getMisoPin();
         miso_pin.InFloating();
     }
@@ -136,9 +136,10 @@ void SpiHw::enableHwCs(const bool en){
 void SpiHw::enableRxIt(const bool en){
 
 }
-void SpiHw::init(const uint32_t baudrate, const Mode & mode){
+void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
     preinit();
-
+    txMethod = tx_method;
+    rxMethod = rx_method;
 	enableRcc();
     initGpios();
 
@@ -173,11 +174,11 @@ SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
     return ErrorType::OK;
 }
 SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
-    if(mode != Mode::RxOnly){
+    if(txMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
     }
-    if(mode != Mode::TxOnly){
+    if(rxMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
         data_rx = instance->DATAR;
     }

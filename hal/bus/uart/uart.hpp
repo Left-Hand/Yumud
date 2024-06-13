@@ -15,10 +15,7 @@ class Uart:public IOStream{
 public:
     using Mode = CommMode;
     using Callback = std::function<void(void)>;
-
-    CommMethod txMethod = CommMethod::None;
-    CommMethod rxMethod = CommMethod::None;
-
+    CommMethod txMethod, rxMethod;
 protected:
 
     static constexpr size_t uart_fifo_size = 256;

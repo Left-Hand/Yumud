@@ -4,8 +4,10 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/bus/serbus.hpp"
 
-class Spi:public SerBus{
+class Spi:public FullDuplexBus{
 protected:
+
+
     static constexpr uint8_t spi_max_cs_pins = 4;
     PortVirtual <spi_max_cs_pins> cs_pins = PortVirtual<spi_max_cs_pins>();
 
