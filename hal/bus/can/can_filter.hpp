@@ -3,14 +3,28 @@
 #define __CAN_FILTER_HPP__
 
 #include "src/platform.h"
+#include <initializer_list>
 
 struct CanFilter{
-    uint16_t id = 0;
-    uint16_t mask = 0;
+protected:
+    union{
+        uint16_t id16[2];
+        uint32_t id32;
+    };
+
+    union{
+        uint16_t mask16[2] = {0};
+        uint32_t mask32;
+    };
+
 public:
     CanFilter() = default;
-    CanFilter(const uint16_t & _id): id(_id), mask(_id){;}
-    CanFilter(const uint16_t & _id, const uint16_t & _mask) : id(_id), mask(_mask){;}
+    CanFilter(const uint16_t _id): id16{_id, 0}, mask16{_id, 0}{;}
+    CanFilter(const uint16_t _id, const uint16_t _mask) : id16{_id, 0}, mask16{_mask, 0}{;}
+    CanFilter(const std::initializer_list<uint16_t> & list);
+
+    void init();
+    static void init(const CanFilter & filter);
 };
 
 

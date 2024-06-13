@@ -1,4 +1,4 @@
-#include "can1.hpp"
+#include "can.hpp"
 
 
 using Callback = Can::Callback;
@@ -48,36 +48,8 @@ void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
 
     if(CAN_MessagePending(instance, fifo_index) == 0) return;
 
-    CAN_Receive(instance, fifo_index, rx_msg.toRxMessagePtr());
+    CAN_Receive(instance, fifo_index, &rx_msg);
     pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
-}
-
-void CAN_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t mask2){
-    CAN_FilterInitTypeDef CAN_FilterInitSturcture = {0};
-
-    CAN_FilterInitSturcture.CAN_FilterNumber = 1;
-
-    CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
-
-    // CAN_FilterInitSturcture.CAN_FilterIdLow  = id1 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdLow = mask2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterIdHigh = id2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = mask2 << 5;
-    CAN_FilterInitSturcture.CAN_FilterIdLow  = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;
-    CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;
-
-    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
-    CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
-
-    CAN_FilterInit(&CAN_FilterInitSturcture);
-
-    CAN_FilterInitSturcture.CAN_FilterNumber = 0;
-    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO1;
-    CAN_FilterInit(&CAN_FilterInitSturcture);
 }
 
 __fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
@@ -105,7 +77,7 @@ __fast_inline void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
     CANx->TSTATR = TSTATR_FLAG;
 }
 
-void Can::settleTxPin(const uint8_t & remap){
+void Can::settleTxPin(const uint8_t remap){
 
     #ifdef HAVE_CAN1
     switch(remap){
@@ -125,7 +97,7 @@ void Can::settleTxPin(const uint8_t & remap){
     #endif
 }
 
-void Can::settleRxPin(const uint8_t & remap){
+void Can::settleRxPin(const uint8_t remap){
     #ifdef HAVE_CAN1
     switch(remap){
         case 0:
@@ -144,10 +116,12 @@ void Can::settleRxPin(const uint8_t & remap){
     #endif
 }
 
-void Can::bindCbTxOk(const Callback & _cb){cb_txok = _cb;}
-void Can::bindCbTxFail(const Callback & _cb){cb_txfail = _cb;}
-void Can::bindCbRx(const Callback & _cb){cb_rx = _cb;}
-void Can::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter & filter){
+void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
+void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
+void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
+void Can::init(const BaudRate baudRate, const CanFilter & filter){
+    uint8_t remap = 1;
+
     settleTxPin(remap);
     settleRxPin(remap);
 
@@ -195,7 +169,7 @@ void Can::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter
     config.CAN_RFLM = DISABLE;
     config.CAN_TXFP = DISABLE;
     CAN_Init(instance, &config);
-    CAN_Init_Filter(filter.id, filter.mask, 0, 0xf);
+    CanFilter::init(filter);
     CAN_IT_Init(CAN1);
 }
 
@@ -212,7 +186,7 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
-    uint8_t mbox = CAN_Transmit(instance, msg.toTxMessagePtr());
+    uint8_t mbox = CAN_Transmit(instance, (const CanTxMsg *)&msg);
     if(mbox == CAN_TxStatus_NoMailBox) return false;
 
     pending_tx_msg_ptrs[mbox] = std::make_unique<CanMsg>(msg);
@@ -268,7 +242,10 @@ void Can::enableIndexPriority(const bool en){
     else CAN1->CTLR &= ~CAN_CTLR_TXFP;
 }
 
-
+void Can::configBaudRate(const uint32_t baudRate){
+    //TODO
+    // static_assert(false,"configBaudRate is not supported currently");
+}
 
 #ifdef HAVE_CAN1
 __interrupt
