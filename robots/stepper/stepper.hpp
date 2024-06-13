@@ -55,7 +55,7 @@ protected:
 
     real_t openloop_elecrad;
     CurrentCtrl curr_ctrl;
-    GeneralSpeedCtrl speed_ctrl{curr_ctrl};
+    OverSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
     RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;
@@ -409,7 +409,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-        // if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

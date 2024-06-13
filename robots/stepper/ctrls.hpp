@@ -17,7 +17,7 @@ public:
 
     real_t current_slew_rate    = 20.0 / foc_freq;   //20A/S
     real_t current_output       = 0;
-    Range current_range         {0, 0.2};
+    Range current_range         {0, 0.3};
 
     void reset(){
         current_output = 0;
@@ -141,6 +141,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
     }
 
 
+
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) override{
 
         if(!inited){
@@ -165,51 +166,55 @@ struct GeneralPositionCtrl:public PositionCtrl{
     }
 };
 
-// struct OverSpeedCtrl:public SpeedCtrl{
-
-//     real_t kp = real_t(0.03);
-//     Range kp_clamp = {-0.1, 0.1};
-
-//     real_t ki;
-//     real_t intergal;
-//     real_t intergal_clamp;
-//     Range ki_clamp;
-
-//     real_t elecrad_addition;
-//     real_t elecrad_addition_clamp = real_t(0.8);
 
 
-//     bool inited = false;
 
-//     OverSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
+struct OverSpeedCtrl:public SpeedCtrl{
 
-//     void reset() override {
-//         inited = false;
-//     }
+    real_t kp = real_t(0.00014);
+    Range kp_clamp = {-0.1, 0.1};
+
+    // real_t ki;
+    // real_t intergal;
+    // real_t intergal_clamp;
+    // Range ki_clamp;
+
+    real_t elecrad_addition;
+    real_t elecrad_addition_clamp = real_t(1.7);
 
 
-//     Result update(const real_t targ_speed,const real_t real_speed) override{
+    bool inited = false;
 
-//         if(!inited){
-//             inited = true;
-//             elecrad_addition = real_t(0);
-//         }
+    OverSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
-//         real_t error = targ_speed - real_speed;
-//         if(targ_speed < 0) error = - error;
-//         // real_t abs_error = abs(error);
+    void reset() override {
+        inited = false;
+    }
 
-//         real_t kp_contribute = kp_clamp.clamp(kp);
-//         intergal = CLAMP(intergal + error, -intergal_clamp, intergal_clamp);
-//         real_t ki_contribute = CLAMP(intergal * ki, -ki_clamp, ki_clamp);
+    void setCurrentClamp(const real_t clamp) override {;}
 
-//         elecrad_addition = CLAMP(elecrad_addition + kp_contribute + ki_contribute, real_t(0), elecrad_addition_clamp);
 
-//         real_t elecrad_offset = SIGN_AS(real_t(PI / 2) + elecrad_addition, targ_speed);
+    Result update(const real_t targ_speed,const real_t real_speed) override{
 
-//         return {currCtrl.update(0.2), elecrad_offset};
-//     }
-// // };
+        if(!inited){
+            inited = true;
+            elecrad_addition = real_t(0);
+        }
+
+        real_t error = SIGN_AS(targ_speed - real_speed, targ_speed);
+        // real_t abs_error = abs(error);
+
+        real_t kp_contribute = kp_clamp.clamp(error * kp);
+        // intergal = CLAMP(intergal + error, -intergal_clamp, intergal_clamp);
+        // real_t ki_contribute = CLAMP(intergal * ki, -ki_clamp, ki_clamp);
+
+        elecrad_addition = CLAMP(elecrad_addition + kp_contribute, real_t(0), elecrad_addition_clamp);
+
+        real_t elecrad_offset = SIGN_AS(real_t(PI / 2) + elecrad_addition, targ_speed);
+
+        return {currCtrl.update(0.37), elecrad_offset};
+    }
+};
 
 // struct PositionCtrl{
 //     real_t kp;

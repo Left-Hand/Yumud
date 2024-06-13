@@ -190,20 +190,12 @@ int main(){
     can1.init(Can::BaudRate::Mbps1);
 
     stp.init();
-    stp.setCurrentClamp(0.6);
+    stp.setCurrentClamp(0.3);
     while(true){
         stp.run();
         stp.setTargetPosition(8*sin(t));
 
-        // static uint8_t cnt;
-        // uart1.println(can1.write({0x1234, {cnt++, 2}}));
-
-        // delay(10);
-        // if(can1.available()){
-        //     uart1.println(can1.available(), can1.read()[0]);
-        //     while(can1.available()) can1.read();
-        // }
-        // stp.setTargetSpeed(15*sin(t));
+        stp.setTargetSpeed(30 + 5 * sin(t));
     }
     // if(false){
     //     constexpr int page_size = 8;
