@@ -185,74 +185,25 @@ int main(){
     // for(auto & datum : data){
     //     logger.println(datum);
     // }
-
     Stepper stp;
     uart1.init(115200 * 8);
-    portC[13].OutPP();
     can1.init(Can::BaudRate::Mbps1);
-    // bool tx_role = true;
-    // while(1){
-    //     if(tx_role){
-    //         static uint8_t cnt = 0;
-    //         CanMsg msg_v = CanMsg(1, {52, 55});
-    //         can1.write(msg_v);
-    //         delay(1);
-    //         LOGGER.println("??");
-    //         while(can1.pending()){
-    //             LOGGER.println("err", can1.getTxErrCnt(), can1.getRxErrCnt(), can1.isBusOff());
-    //             delay(2);
-    //         }
-
-    //         while(can1.available()){
-    //             CanMsg msg_r = can1.read();
-    //             LOGGER.println("rx", msg_r.id(), msg_r[0], msg_r[1]);
-    //         }
-
-    //         cnt++;
-    //         delay(200);
-    //         portC[13] = !portC[13];
-    //     }else{
-    //         delay(10);
-    //         while(can1.available()){
-    //             CanMsg msg_r = can1.read();
-    //             LOGGER.println("rx", msg_r.id(), msg_r[0], msg_r[1]);
-    //         }
-    //         CanMsg msg_v = CanMsg(0, {13,14});
-    //         can1.write(msg_v);
-    //     }
-    // }
 
     stp.init();
-    portC[14].OutPP();
+    stp.setCurrentClamp(0.6);
     while(true){
         stp.run();
+        stp.setTargetPosition(8*sin(t));
 
-            static uint8_t cnt = 0;
-            CanMsg msg_v = CanMsg(1, {cnt++, 55});
-            while(can1.pending()){
+        // static uint8_t cnt;
+        // uart1.println(can1.write({0x1234, {cnt++, 2}}));
 
-                // LOGGER.println("tx", can1.pending());
-                // while(LOGGER.pending());
-            }
-            delay(20);
-            can1.write(msg_v);
-            // delay(1);
-            // LOGGER.println("??");
-            // while(can1.pending()){
-            //     LOGGER.println("err", can1.getTxErrCnt(), can1.getRxErrCnt(), can1.isBusOff());
-            //     delay(2);
-            // }
-
-            while(can1.available()){
-                CanMsg msg_r = can1.read();
-                while(LOGGER.pending());
-                LOGGER.println("rx", msg_r.id(), msg_r[0], msg_r[1]);
-            }
-
-            // cnt++;
-            portC[14] = !portC[14];
-            // CanMsg msg_v = CanMsg(1, {52, 55});
-            // can1.write(msg_v);
+        // delay(10);
+        // if(can1.available()){
+        //     uart1.println(can1.available(), can1.read()[0]);
+        //     while(can1.available()) can1.read();
+        // }
+        // stp.setTargetSpeed(15*sin(t));
     }
     // if(false){
     //     constexpr int page_size = 8;
