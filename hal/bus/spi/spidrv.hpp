@@ -7,13 +7,12 @@
 #include <type_traits>
 #include <initializer_list>
 
-// class SpiDrv:public BusDrv{
-// public:
-//     SpiDrv(Spi & _bus, const uint8_t & _index = 0):BusDrv(_bus, _index){;}
 
-//     BusType getBusType() override{
-//         return BusType::SpiBus;
-//     }
-// };
+class SpiDrv:public BusDrv<Spi>{
+public:
+    SpiDrv(Spi & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):BusDrv<Spi>(_bus, _index,_wait_time){;}
+
+
+};
 
 #endif

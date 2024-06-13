@@ -1,10 +1,11 @@
-#include "spi.hpp"
+#include "spihw.hpp"
 
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef HAVE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en);
+            GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
             break;
         #endif
         #ifdef HAVE_SPI2
@@ -135,7 +136,8 @@ void SpiHw::enableHwCs(const bool en){
 void SpiHw::enableRxIt(const bool en){
 
 }
-void SpiHw::init(const uint32_t & baudrate, const Mode & mode){
+void SpiHw::init(const uint32_t baudrate, const Mode & mode){
+    preinit();
 
 	enableRcc();
     initGpios();
@@ -152,7 +154,7 @@ void SpiHw::init(const uint32_t & baudrate, const Mode & mode){
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(instance, &SPI_InitStructure);
-    GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
+
 	SPI_Cmd(instance, ENABLE);
 
     while (SPI_I2S_GetFlagStatus(instance, SPI_I2S_FLAG_TXE) == RESET);
@@ -182,3 +184,11 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool 
 
     return Bus::ErrorType::OK;
 }
+
+#ifdef HAVE_SPI1
+SpiHw spi1{SPI1};
+#endif
+
+#ifdef HAVE_SPI2
+SpiHw spi2{SPI2};
+#endif

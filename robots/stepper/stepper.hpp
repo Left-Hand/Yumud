@@ -186,10 +186,17 @@ protected:
 
             case "enable"_ha:
             case "en"_ha:
+            case "e"_ha:
+                logger.println("enabled");
+                wakeup();
                 break;
             
             case "disable"_ha:
+            case "dis"_ha:
             case "de"_ha:
+            case "d"_ha:
+                logger.println("disabled");
+                shutdown();
                 break;
 
             case "status"_ha:
@@ -221,10 +228,13 @@ protected:
         Archive archive;
         memory.load(archive);
 
-        DEBUG_PRINT("build version:\t\t", archive.bver);
-        DEBUG_PRINT("build time:\t\t20", archive.y, '/', archive.m, '/', archive.d, ' ', archive.h, 'h');
-        DEBUG_PRINT("driver type:\t\t", archive.dtype);
-        DEBUG_PRINT("driver branch:\t\t", archive.dbranch);
+        logger << "build version:\t\t" << archive.bver << "\r\n";
+        logger << "build time:\t\t20" << 
+                archive.y << '/' << archive.m << '/' << 
+                archive.d << '\t' << archive.h << ':' << archive.mi << "\r\n";
+
+        logger << "driver type:\t\t" << archive.dtype << "\r\n";
+        logger << "driver branch:\t\t" << archive.dbranch << "\r\n";
     }
 public:
 

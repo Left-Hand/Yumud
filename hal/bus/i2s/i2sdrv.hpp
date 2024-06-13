@@ -7,13 +7,9 @@
 #include <type_traits>
 #include <initializer_list>
 
-class I2sDrv:public BusDrv{
+class I2sDrv:public BusDrv<I2s>{
 public:
-    I2sDrv(I2s & _bus, const uint8_t & _index = 0):BusDrv(_bus, _index){;}
-
-    BusType getBusType() override{
-        return BusType::SpiBus;
-    }
+    I2sDrv(I2s & _bus, const uint8_t & _index = 0):BusDrv<I2s>(_bus, _index){;}
 };
 
 #endif

@@ -53,15 +53,6 @@ protected:
     }
 
 protected :
-    void lock(const uint8_t & index) override{
-        occupied = index;
-    }
-    void unlock() override{
-        occupied = -1;
-    }
-    int8_t wholock() override{
-        return occupied;
-    }
 public:
 
     SpiSw(GpioConcept & _sclk_pin,GpioConcept & _mosi_pin,
@@ -123,7 +114,9 @@ public:
         configBaudRate(baudRate);
         init();
     }
+
     void init(){
+        preinit();
         mosi_pin.OutPP();
         sclk_pin.OutPP();
 
@@ -134,16 +127,6 @@ public:
         miso_pin.InFloating();
     }
 
-    void configBitOrder(const bool & msb) override {
-
-    }
-
-    void configDataSize(const uint8_t & _data_size) override{
-        data_size = _data_size;
-    }
-
-    void configBaudRate(const uint32_t & baudRate) override{
-    }
 
 };
 

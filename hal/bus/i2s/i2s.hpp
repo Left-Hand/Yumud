@@ -6,7 +6,7 @@
 #include "src/platform.h"
 
 
-class I2s:public SerBus{
+class I2s:public WritableBus{
 
 };
 
