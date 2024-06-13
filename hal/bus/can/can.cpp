@@ -10,14 +10,8 @@ static Callback cb_txfail;
 static Callback cb_rx;
 
 #ifdef HAVE_CAN1
-
 Can can1{CAN1};
-
 #endif
-
-
-
-
 
 
 void CAN_IT_Init(CAN_TypeDef * instance){

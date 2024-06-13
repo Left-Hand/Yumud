@@ -188,8 +188,10 @@ int main(){
 
     Stepper stp;
     stp.init();
+    can1.init(Can::BaudRate::Mbps1);
     while(true){
         stp.run();
+        can1.write({0x4321, {1,2,3,4}});
     }
     // if(false){
     //     constexpr int page_size = 8;

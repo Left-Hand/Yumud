@@ -11,7 +11,7 @@
 #include "can_filter.hpp"
 
 
-class Can:public PackedBus{
+class Can:public PackedBus<CanMsg>{
 public:
     enum class BaudRate{
         Kbps125,
@@ -30,9 +30,9 @@ public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
     void configBaudRate(const uint32_t baudRate) override;
     void init(const BaudRate baudRate, const CanFilter & filter = CanFilter());
-    bool write(const CanMsg & msg);
+    bool write(const CanMsg & msg) override;
+    const CanMsg & read() override;
     size_t pending();
-    const CanMsg & read();
     size_t available();
 
     bool isTranmitting();

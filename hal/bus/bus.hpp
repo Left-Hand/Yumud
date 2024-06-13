@@ -138,13 +138,13 @@ protected:
 
 };
 
+template<typename Packet>
 class PackedBus:public Bus{
 private:
     using Bus::configDataSize;//disable this;
 public:
-    struct Packet;
-
-
+    virtual bool write(const Packet & msg) = 0;
+    virtual const Packet & read() = 0;
 };
 
 

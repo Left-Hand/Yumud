@@ -1,6 +1,6 @@
 #include "can_filter.hpp"
 
-static void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id2){
+[[maybe_unused]]static void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id2){
     CAN_FilterInitTypeDef	CAN_FilterInitStructure;
 
     CAN_FilterInitStructure.CAN_FilterNumber = FGrop;				 //设置过滤器组0，范围为0~13
@@ -52,7 +52,6 @@ void CanFilter::init(){
     init(*this);
 }
 
-static void init(const CanFilter & filter){
-
+void CanFilter::init(const CanFilter & filter){
     CAN_Init_Filter(0,0,0, 0xf);
 }
