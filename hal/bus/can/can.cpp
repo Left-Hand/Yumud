@@ -3,8 +3,8 @@
 
 using Callback = Can::Callback;
 
-static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
-static RingBuf_t<std::shared_ptr<CanMsg>, 8> pending_rx_msgs;
+static bool pending_tx_msg_exist[3] = {};
+static RingBuf_t<CanMsg, 8> pending_rx_msgs;
 static Callback cb_txok;
 static Callback cb_txfail;
 static Callback cb_rx;
@@ -20,13 +20,13 @@ void CAN_IT_Init(CAN_TypeDef * instance){
     CAN_ClearITPendingBit(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1);
     CAN_ITConfig(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1, ENABLE);
 
-    NvicRequest{USB_HP_CAN1_TX_IRQn,0,6}.enable();
+    NvicRequest{USB_HP_CAN1_TX_IRQn,1,6}.enable();
     //rx0 interrupt
 
-    NvicRequest{USB_LP_CAN1_RX0_IRQn,0,4}.enable();
+    NvicRequest{USB_LP_CAN1_RX0_IRQn,1,4}.enable();
 
     //rx1 interrupt
-    NvicRequest{CAN1_RX1_IRQn,0,5}.enable();
+    NvicRequest{CAN1_RX1_IRQn,1,5}.enable();
 
     CAN_ITConfig(instance, CAN_IT_ERR | CAN_IT_WKU
             | CAN_IT_SLK | CAN_IT_EWG | CAN_IT_EPV | CAN_IT_BOF
@@ -43,7 +43,7 @@ void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
     if(CAN_MessagePending(instance, fifo_index) == 0) return;
 
     CAN_Receive(instance, fifo_index, &rx_msg);
-    pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
+    pending_rx_msgs.addData(rx_msg);
 }
 
 __fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
@@ -169,7 +169,7 @@ void Can::init(const BaudRate baudRate, const CanFilter & filter){
 
 size_t Can::pending(){
     size_t cnt = 0;
-    for(uint8_t i = 0; i < 3; i++) cnt += bool(pending_tx_msg_ptrs[i]);
+    for(uint8_t i = 0; i < 3; i++) cnt += bool(pending_tx_msg_exist[i]);
     return cnt;
 }
 
@@ -183,13 +183,12 @@ bool Can::write(const CanMsg & msg){
     uint8_t mbox = CAN_Transmit(instance, (const CanTxMsg *)&msg);
     if(mbox == CAN_TxStatus_NoMailBox) return false;
 
-    pending_tx_msg_ptrs[mbox] = std::make_unique<CanMsg>(msg);
-
+    pending_tx_msg_exist[mbox] = true;
     return true;
 }
 
 const CanMsg & Can::read(){
-    return *(pending_rx_msgs.getData());
+    return pending_rx_msgs.getData();
 }
 
 size_t Can::available(){
@@ -245,19 +244,19 @@ void Can::configBaudRate(const uint32_t baudRate){
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void){
     for(uint8_t mbox = 0; mbox < 3; mbox++){
-        if(pending_tx_msg_ptrs[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
+        if(pending_tx_msg_exist[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
             uint8_t tx_status = CAN_TransmitStatus(CAN1, mbox);
 
             switch (tx_status){
             case(CAN_TxStatus_Failed):
                 //process failed message
                 EXECUTE(cb_txfail);
-                pending_tx_msg_ptrs[mbox].reset();
+                pending_tx_msg_exist[mbox] = false;
                 break;
             case(CAN_TxStatus_Ok):
                 //process success message
                 EXECUTE(cb_txok);
-                pending_tx_msg_ptrs[mbox].reset();
+                pending_tx_msg_exist[mbox] = false;
                 break;
             }
             CAN_Mailbox_Clear(CAN1, mbox);
