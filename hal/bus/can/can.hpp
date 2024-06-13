@@ -11,20 +11,24 @@
 #include "can_filter.hpp"
 
 
-class Can{
+class Can:public PackedBus{
 public:
     enum class BaudRate{
         Kbps125,
         Mbps1
     };
 
+    using Packet = CanMsg;
     using Callback = std::function<void(void)>;
 protected:
     CAN_TypeDef * instance;
-    void settleTxPin(const uint8_t & remap);
-    void settleRxPin(const uint8_t & remap);
+    void settleTxPin(const uint8_t remap);
+    void settleRxPin(const uint8_t remap);
+    Error lead(const uint8_t index) override{return ErrorType::OK;};
+    void trail() override{};
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
+    void configBaudRate(const uint32_t baudRate) override;
     void init(const BaudRate baudRate, const CanFilter & filter = CanFilter());
     bool write(const CanMsg & msg);
     size_t pending();

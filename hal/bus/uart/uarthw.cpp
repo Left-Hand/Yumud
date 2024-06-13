@@ -497,6 +497,13 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _rxMethod, const Com
     USART_Cmd(instance, ENABLE);
 }
 
+UartHw::Error UartHw::lead(const uint8_t index){
+    while((instance->STATR & USART_FLAG_TXE) == RESET);
+    return ErrorType::OK;
+}
+void UartHw::trail(){
+    while((instance->STATR & USART_FLAG_TC) == RESET);
+}
 
 void UartHw::write(const char * data_ptr, const size_t len){
     switch(txMethod){

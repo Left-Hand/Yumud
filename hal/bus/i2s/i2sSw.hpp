@@ -63,7 +63,7 @@ public:
 
     I2sSw(GpioConcept & _sck,GpioConcept & _sda,GpioConcept & _ws,const uint16_t & _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
 
-    Error write(const uint32_t & data) override {
+    Error write(const uint32_t data) override {
         sck.OutPP();
         sda.OutPP();
 
@@ -100,14 +100,12 @@ public:
         return ErrorType::OK;
     }
 
-    void init(const uint32_t & baudRate){
+    void init(const uint32_t baudRate){
         sck.OutPP();
         sda.OutPP();
         ws.OutPP();
     }
-    void configDataSize(const uint8_t & data_size) override {;}
-    void configBaudRate(const uint32_t & baudRate) override {;}
-    void configBitOrder(const bool & msb) override {;}
+    void configBaudRate(const uint32_t baudRate) override {;}
 };
 
 #endif 

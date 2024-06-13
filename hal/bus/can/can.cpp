@@ -52,34 +52,6 @@ void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
     pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
 }
 
-void CAN_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t mask2){
-    CAN_FilterInitTypeDef CAN_FilterInitSturcture = {0};
-
-    CAN_FilterInitSturcture.CAN_FilterNumber = 1;
-
-    CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
-
-    // CAN_FilterInitSturcture.CAN_FilterIdLow  = id1 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdLow = mask2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterIdHigh = id2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = mask2 << 5;
-    CAN_FilterInitSturcture.CAN_FilterIdLow  = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;
-    CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;
-
-    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
-    CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
-
-    CAN_FilterInit(&CAN_FilterInitSturcture);
-
-    CAN_FilterInitSturcture.CAN_FilterNumber = 0;
-    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO1;
-    CAN_FilterInit(&CAN_FilterInitSturcture);
-}
-
 __fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
     switch(mbox){
     case 0:
@@ -105,7 +77,7 @@ __fast_inline void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
     CANx->TSTATR = TSTATR_FLAG;
 }
 
-void Can::settleTxPin(const uint8_t & remap){
+void Can::settleTxPin(const uint8_t remap){
 
     #ifdef HAVE_CAN1
     switch(remap){
@@ -125,7 +97,7 @@ void Can::settleTxPin(const uint8_t & remap){
     #endif
 }
 
-void Can::settleRxPin(const uint8_t & remap){
+void Can::settleRxPin(const uint8_t remap){
     #ifdef HAVE_CAN1
     switch(remap){
         case 0:
@@ -270,7 +242,10 @@ void Can::enableIndexPriority(const bool en){
     else CAN1->CTLR &= ~CAN_CTLR_TXFP;
 }
 
-
+void Can::configBaudRate(const uint32_t baudRate){
+    //TODO
+    // static_assert(false,"configBaudRate is not supported currently");
+}
 
 #ifdef HAVE_CAN1
 __interrupt

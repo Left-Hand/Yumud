@@ -17,12 +17,7 @@ protected:
 
     void enableRcc(const bool en = true);
 
-    void write(const char * data_ptr, const size_t len) override;
-
-    void write(const char data) override;
-
     void enableIt(const bool en = true);
-
 
     void enableRxneIt(const bool en = true);
     void enableTxeIt(const bool en = true);
@@ -48,8 +43,13 @@ protected:
 
     DmaChannel & txDma;
     DmaChannel & rxDma;
-public:
 
+    Error lead(const uint8_t _address) override;
+    void trail() override;
+public:
+    void write(const char * data_ptr, const size_t len) override;
+
+    void write(const char data) override;
 
     UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):
             instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
@@ -63,6 +63,8 @@ public:
     void setTxMethod(const CommMethod _txMethod) override;
 
     void setRxMethod(const CommMethod _rxMethod) override;
+
+    void configBaudRate(const uint32_t baudRate) override{;}//TODO
 };
 
 

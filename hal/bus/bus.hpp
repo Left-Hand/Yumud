@@ -60,7 +60,7 @@ protected:
     int8_t m_lock;
     int8_t * locker = nullptr;
 
-    virtual Error lead(const uint8_t & _address) = 0;
+    virtual Error lead(const uint8_t _address) = 0;
     virtual void trail() = 0;
 
     void lock(const uint8_t & index){*locker = index >> 1;}
@@ -114,26 +114,26 @@ class WritableBus:virtual public Bus{
 protected:
 public:
     CommMethod txMethod = CommMethod::None;
-    virtual Error write(const uint32_t & data) = 0;
+    virtual Error write(const uint32_t data) = 0;
 };
 
-class HalfDuplexBus:public ReadableBus, WritableBus{
+class DuplexBus:public ReadableBus, WritableBus{
 public:
 // public:
     using WritableBus::txMethod;
     using ReadableBus::rxMethod;
     using WritableBus::write;
     using ReadableBus::read;
-    HalfDuplexBus():ReadableBus(), WritableBus(){;}
+    DuplexBus():ReadableBus(), WritableBus(){;}
 };
 
-class FullDuplexBus:public HalfDuplexBus{
+class FullDuplexBus:public DuplexBus{
 public:
     virtual Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) = 0;
 };
 
 
-class ProtocolBus:public HalfDuplexBus{
+class ProtocolBus:public DuplexBus{
 protected:
 
 };
@@ -141,9 +141,8 @@ protected:
 class PackedBus:public Bus{
 private:
     using Bus::configDataSize;//disable this;
-protected:
-    class Packet;
-protected:
+public:
+    struct Packet;
 
 
 };
