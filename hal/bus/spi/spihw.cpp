@@ -1,10 +1,11 @@
-#include "spi.hpp"
+#include "spihw.hpp"
 
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef HAVE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en);
+            GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
             break;
         #endif
         #ifdef HAVE_SPI2
@@ -80,12 +81,12 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
 }
 
 void SpiHw::initGpios(){
-    if(((uint8_t)mode & (uint8_t)Mode::TxOnly)){
+    if(txMethod != CommMethod::None){
         Gpio & mosi_pin = getMosiPin();
         mosi_pin.OutAfPP();
     }
 
-    if(((uint8_t)mode & (uint8_t)Mode::RxOnly)){
+    if(rxMethod != CommMethod::None){
         Gpio & miso_pin = getMisoPin();
         miso_pin.InFloating();
     }
@@ -135,8 +136,10 @@ void SpiHw::enableHwCs(const bool en){
 void SpiHw::enableRxIt(const bool en){
 
 }
-void SpiHw::init(const uint32_t & baudrate, const Mode & mode){
-
+void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
+    preinit();
+    txMethod = tx_method;
+    rxMethod = rx_method;
 	enableRcc();
     initGpios();
 
@@ -152,7 +155,7 @@ void SpiHw::init(const uint32_t & baudrate, const Mode & mode){
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(instance, &SPI_InitStructure);
-    GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
+
 	SPI_Cmd(instance, ENABLE);
 
     while (SPI_I2S_GetFlagStatus(instance, SPI_I2S_FLAG_TXE) == RESET);
@@ -161,7 +164,7 @@ void SpiHw::init(const uint32_t & baudrate, const Mode & mode){
     instance->DATAR;
 }
 
-SpiHw::Error SpiHw::write(const uint32_t & data){
+SpiHw::Error SpiHw::write(const uint32_t data){
     uint32_t dummy = 0;
     transfer(dummy, data);
     return ErrorType::OK;
@@ -171,14 +174,22 @@ SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
     return ErrorType::OK;
 }
 SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
-    if(mode != Mode::RxOnly){
+    if(txMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
     }
-    if(mode != Mode::TxOnly){
+    if(rxMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
         data_rx = instance->DATAR;
     }
 
     return Bus::ErrorType::OK;
 }
+
+#ifdef HAVE_SPI1
+SpiHw spi1{SPI1};
+#endif
+
+#ifdef HAVE_SPI2
+SpiHw spi2{SPI2};
+#endif

@@ -2,11 +2,11 @@
 
 #define __I2S_HPP__
 
-#include "../serbus.hpp"
+#include "hal/bus/bus.hpp"
 #include "src/platform.h"
 
 
-class I2s:public SerBus{
+class I2s:public WritableBus{
 
 };
 

@@ -50,7 +50,7 @@ private:
     }
 
 	void writeData(unsigned char Reg ,unsigned char *buf, unsigned char Num){
-        bus_drv.writePool(Reg, buf, Num, Num, false);
+        bus_drv.writePool(Reg, buf, Num, false);
     }
 
     void requestData(uint8_t reg, uint8_t * data, const size_t len){

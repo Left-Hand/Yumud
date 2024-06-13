@@ -16,7 +16,10 @@ protected:
     using ErrorCode = StepperEnums::ErrorCode;
     using RunStatus = StepperEnums::RunStatus;
     using CtrlType = StepperEnums::CtrlType;
+    using Switches = StepperUtils::Switches;
 
+    Switches switches;
+    // constexpr size_t n = sizeof(Switches);
     IOStream & logger = uart1;
 
     TimerOutChannelPosOnChip & verfChannelA = timer3[3];
@@ -56,6 +59,8 @@ protected:
     GeneralPositionCtrl position_ctrl{curr_ctrl};
     RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;
+
+    uint64_t exe_micros = 0;
 
     bool skip_tone = true;
     bool cmd_mode = false;
@@ -141,30 +146,42 @@ protected:
     RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
     StatLed panel_led = StatLed{led_instance};
 
+    void loadArchive();
+    void saveArchive();
+
     void parse_command(const String & _command, const std::vector<String> & args) override{
         auto command = _command;
         command.toLowerCase();
         switch(hash_impl(command.c_str(), command.length())){
             case "save"_ha:
             case "sv"_ha:
-                saveAchive();
+                saveArchive();
                 break;
 
+            // case ""
             case "load"_ha:
             case "ld"_ha:
-                loadAchive();
+                loadArchive();
                 break;
 
             case "speed"_ha:
             case "spd"_ha:
             case "s"_ha:
-                if(args.size()) setTargetSpeed(real_t(args[0]));
+                if(args.size()){
+                    real_t spd = real_t(args[0]);
+                    setTargetSpeed(spd);
+                    logger << "targ speed\t" << toString(spd,2) << " n/s\r\n";
+                }
                 break;
 
             case "position"_ha:
             case "pos"_ha:
             case "p"_ha:
-                if(args.size()) setTargetPosition(real_t(args[0]));
+                if(args.size()){
+                    real_t pos = real_t(args[0]);
+                    setTargetPosition(pos);
+                    logger << "targ position\t" << toString(pos,2) << " n\r\n";
+                }
                 break;
 
             case "eleczero"_ha:
@@ -186,10 +203,20 @@ protected:
 
             case "enable"_ha:
             case "en"_ha:
+            case "e"_ha:
+                logger.println("enabled");
+                wakeup();
                 break;
             
+            case "exe"_ha:
+                logger << "exe" << exe_micros << "us\r\n";
+                break;
             case "disable"_ha:
+            case "dis"_ha:
             case "de"_ha:
+            case "d"_ha:
+                logger.println("disabled");
+                shutdown();
                 break;
 
             case "status"_ha:
@@ -209,26 +236,11 @@ protected:
         }
     }
     
-
-    void saveAchive(){
-        using Archive = StepperUtils::Archive;
-        Archive archive;
-        memory.store(archive);
-    }
-
-    void loadAchive(){
-        using Archive = StepperUtils::Archive;
-        Archive archive;
-        memory.load(archive);
-
-        DEBUG_PRINT("build version:\t\t", archive.bver);
-        DEBUG_PRINT("build time:\t\t20", archive.y, '/', archive.m, '/', archive.d, ' ', archive.h, 'h');
-        DEBUG_PRINT("driver type:\t\t", archive.dtype);
-        DEBUG_PRINT("driver branch:\t\t", archive.dbranch);
-    }
 public:
 
     void tick(){
+
+        auto begin_micros = micros();
         RunStatus new_status = RunStatus::NONE;
 
         switch(run_status){
@@ -238,6 +250,7 @@ public:
             case RunStatus::CALI:
                 new_status = cali_task();
                 break;
+
             case RunStatus::ACTIVE:
                 new_status = active_task();
                 break;
@@ -303,7 +316,7 @@ public:
                 }
             }
         }
-
+        exe_micros = micros() - begin_micros;
     }
 
     void init(){
@@ -369,6 +382,12 @@ public:
     void setTargetPosition(const real_t speed){
         target = speed;
         ctrl_type = CtrlType::POSITION;
+    }
+
+    void setCurrentClamp(const real_t max_current){
+        curr_ctrl.setCurrentClamp(max_current);
+        speed_ctrl.setCurrentClamp(max_current);
+        position_ctrl.setCurrentClamp(max_current);
     }
 
     void run() override{

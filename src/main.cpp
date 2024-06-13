@@ -130,7 +130,7 @@ using Sys::t;
 #include "stdlib.h"
 #include "timer/timers/timer_hw.hpp"
 #include "timer/pwm_channel.hpp"
-#include "bus/spi/spi1.hpp"
+#include "bus/spi/spihw.hpp"
 #include "dsp/controller/PID.hpp"
 #include "hal/timer/capture_channel.hpp"
 #include "dsp/filter/BurrFilter.hpp"
@@ -141,7 +141,6 @@ using Sys::t;
 #include "types/quat/Quat_t.hpp"
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 #include "gpio/port_virtual.hpp"
-#include "hal/bus/spi/spi_sw.hpp"
 #include "drivers/VirtualIO/HC595/hc595.hpp"
 #include "drivers/IMU/Axis6/BMI270/bmi270.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
@@ -273,43 +272,26 @@ int main(){
     // for(auto & datum : data){
     //     logger.println(datum);
     // }
+    Stepper stp;
+    uart1.init(115200 * 8);
+    can1.init(Can::BaudRate::Mbps1);
 
-    uart2.init(115200);
-    IOStream & logger = uart2;
-    logger.setEps(4);
-    logger.setRadix(10);
-    logger.setSpace(",");
+    stp.init();
+    stp.setCurrentClamp(0.6);
+    while(true){
+        stp.run();
+        stp.setTargetPosition(8*sin(t));
 
-    I2cSw i2csw = I2cSw(portD[1], portD[0]);
-    i2csw.init(400000);
+        // static uint8_t cnt;
+        // uart1.println(can1.write({0x1234, {cnt++, 2}}));
 
-    AT24C02 at24{I2cDrv(i2csw, AT24C02::default_id)};
-
-    delay(200);
-    at24.init();
-
-    if(false){
-        at24.store(at24.load(0) + 1, 0);
-        delay(20);
-        uart2.println(at24.load(0));
+        // delay(10);
+        // if(can1.available()){
+        //     uart1.println(can1.available(), can1.read()[0]);
+        //     while(can1.available()) can1.read();
+        // }
+        // stp.setTargetSpeed(15*sin(t));
     }
-
-    if(true){
-        AT24C02_DEBUG("muti store begin");
-        constexpr auto begin_addr = 7;
-        // constexpr auto end_addr = 15;
-        uint8_t data[] = {0, 1, 2, 4};
-        uint8_t data2[sizeof(data)];
-
-        Memory mem = {at24};
-        mem.store(data, begin_addr);
-
-        mem.load(data2, begin_addr);
-        for(const auto & item : data2){
-            logger.println("data_read", int(item));
-        }
-    }
-
     // if(false){
     //     constexpr int page_size = 8;
     //     Rangei plat = {11, 17};
@@ -322,9 +304,6 @@ int main(){
     //     // AT24C02_DEBUG(plat.gird_part(17, page_size, false));
     // }
 
-    while(true);
-    // at24.
-    pedestrian_app();
     // modem_app();
     // test_app();
     // pmdc_test();

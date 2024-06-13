@@ -23,7 +23,11 @@ public:
         current_output = 0;
     }
 
-    void setRange(const real_t maximum){current_range.end = maximum;}
+
+    void setCurrentClamp(const real_t maximum){
+        current_range.end = maximum;
+
+    }
     real_t update(const real_t target){
         real_t current_delta = CLAMP(target - current_output, -current_slew_rate, current_slew_rate);
         current_output = current_range.clamp(current_output + current_delta);
@@ -47,7 +51,7 @@ protected:
 public:
 
     HighLayerCtrl(CurrentCtrl & _ctrl):currCtrl(_ctrl){;}
-
+    virtual void setCurrentClamp(const real_t max_current) = 0;
     virtual void reset() = 0;
 };
 
@@ -58,6 +62,7 @@ struct SpeedCtrl:public HighLayerCtrl{
 
 struct PositionCtrl:public HighLayerCtrl{
     PositionCtrl(CurrentCtrl & ctrl):HighLayerCtrl(ctrl){;}
+
     virtual Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) = 0;
 };
 
@@ -77,6 +82,10 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
 
     void reset() override {
         inited = false;
+    }
+
+    void setCurrentClamp(const real_t max_current){
+        current_clamp_256x = {0, max_current * 256};
     }
 
     Result update(const real_t targ_speed,const real_t real_speed) override{
@@ -117,6 +126,10 @@ struct GeneralPositionCtrl:public PositionCtrl{
 
     Range kd_active_range = {0.02, 0.1};
     bool inited = false;
+
+    void setCurrentClamp(const real_t max_current) override {
+
+    }
 
     void reset() override {
         inited = false;

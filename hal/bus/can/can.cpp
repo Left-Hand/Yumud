@@ -1,23 +1,17 @@
-#include "can1.hpp"
+#include "can.hpp"
 
 
 using Callback = Can::Callback;
 
-static std::unique_ptr<CanMsg> pending_tx_msg_ptrs[3] = {nullptr};
-static RingBuf_t<std::shared_ptr<CanMsg>, 8> pending_rx_msgs;
+static bool pending_tx_msg_exist[3] = {};
+static RingBuf_t<CanMsg, 8> pending_rx_msgs;
 static Callback cb_txok;
 static Callback cb_txfail;
 static Callback cb_rx;
 
 #ifdef HAVE_CAN1
-
 Can can1{CAN1};
-
 #endif
-
-
-
-
 
 
 void CAN_IT_Init(CAN_TypeDef * instance){
@@ -26,13 +20,13 @@ void CAN_IT_Init(CAN_TypeDef * instance){
     CAN_ClearITPendingBit(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1);
     CAN_ITConfig(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1, ENABLE);
 
-    NvicRequest{USB_HP_CAN1_TX_IRQn,1,1}.enable();
+    NvicRequest{USB_HP_CAN1_TX_IRQn,1,6}.enable();
     //rx0 interrupt
 
-    NvicRequest{USB_LP_CAN1_RX0_IRQn,1,0}.enable();
+    NvicRequest{USB_LP_CAN1_RX0_IRQn,1,4}.enable();
 
     //rx1 interrupt
-    NvicRequest{CAN1_RX1_IRQn,1,0}.enable();
+    NvicRequest{CAN1_RX1_IRQn,1,5}.enable();
 
     CAN_ITConfig(instance, CAN_IT_ERR | CAN_IT_WKU
             | CAN_IT_SLK | CAN_IT_EWG | CAN_IT_EPV | CAN_IT_BOF
@@ -48,36 +42,8 @@ void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
 
     if(CAN_MessagePending(instance, fifo_index) == 0) return;
 
-    CAN_Receive(instance, fifo_index, rx_msg.toRxMessagePtr());
-    pending_rx_msgs.addData(std::make_shared<CanMsg>(rx_msg));
-}
-
-void CAN_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t mask2){
-    CAN_FilterInitTypeDef CAN_FilterInitSturcture = {0};
-
-    CAN_FilterInitSturcture.CAN_FilterNumber = 1;
-
-    CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
-
-    // CAN_FilterInitSturcture.CAN_FilterIdLow  = id1 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdLow = mask2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterIdHigh = id2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = mask2 << 5;
-    CAN_FilterInitSturcture.CAN_FilterIdLow  = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;
-    CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;
-
-    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
-    CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
-
-    CAN_FilterInit(&CAN_FilterInitSturcture);
-
-    CAN_FilterInitSturcture.CAN_FilterNumber = 0;
-    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO1;
-    CAN_FilterInit(&CAN_FilterInitSturcture);
+    CAN_Receive(instance, fifo_index, &rx_msg);
+    pending_rx_msgs.addData(rx_msg);
 }
 
 __fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
@@ -105,7 +71,7 @@ __fast_inline void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
     CANx->TSTATR = TSTATR_FLAG;
 }
 
-void Can::settleTxPin(const uint8_t & remap){
+void Can::settleTxPin(const uint8_t remap){
 
     #ifdef HAVE_CAN1
     switch(remap){
@@ -125,7 +91,7 @@ void Can::settleTxPin(const uint8_t & remap){
     #endif
 }
 
-void Can::settleRxPin(const uint8_t & remap){
+void Can::settleRxPin(const uint8_t remap){
     #ifdef HAVE_CAN1
     switch(remap){
         case 0:
@@ -144,10 +110,12 @@ void Can::settleRxPin(const uint8_t & remap){
     #endif
 }
 
-void Can::bindCbTxOk(const Callback & _cb){cb_txok = _cb;}
-void Can::bindCbTxFail(const Callback & _cb){cb_txfail = _cb;}
-void Can::bindCbRx(const Callback & _cb){cb_rx = _cb;}
-void Can::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter & filter){
+void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
+void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
+void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
+void Can::init(const BaudRate baudRate, const CanFilter & filter){
+    uint8_t remap = 1;
+
     settleTxPin(remap);
     settleRxPin(remap);
 
@@ -183,7 +151,7 @@ void Can::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
-    config.CAN_Mode = CAN_Mode_Normal;
+    config.CAN_Mode = CAN_Mode_Silent_LoopBack;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;
@@ -195,13 +163,13 @@ void Can::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter
     config.CAN_RFLM = DISABLE;
     config.CAN_TXFP = DISABLE;
     CAN_Init(instance, &config);
-    CAN_Init_Filter(filter.id, filter.mask, 0, 0xf);
+    CanFilter::init(filter);
     CAN_IT_Init(CAN1);
 }
 
 size_t Can::pending(){
     size_t cnt = 0;
-    for(uint8_t i = 0; i < 3; i++) cnt += bool(pending_tx_msg_ptrs[i]);
+    for(uint8_t i = 0; i < 3; i++) cnt += bool(pending_tx_msg_exist[i]);
     return cnt;
 }
 
@@ -212,16 +180,15 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
-    uint8_t mbox = CAN_Transmit(instance, msg.toTxMessagePtr());
+    uint8_t mbox = CAN_Transmit(instance, (const CanTxMsg *)&msg);
     if(mbox == CAN_TxStatus_NoMailBox) return false;
 
-    pending_tx_msg_ptrs[mbox] = std::make_unique<CanMsg>(msg);
-
+    pending_tx_msg_exist[mbox] = true;
     return true;
 }
 
 const CanMsg & Can::read(){
-    return *(pending_rx_msgs.getData());
+    return pending_rx_msgs.getData();
 }
 
 size_t Can::available(){
@@ -268,25 +235,28 @@ void Can::enableIndexPriority(const bool en){
     else CAN1->CTLR &= ~CAN_CTLR_TXFP;
 }
 
-
+void Can::configBaudRate(const uint32_t baudRate){
+    //TODO
+    // static_assert(false,"configBaudRate is not supported currently");
+}
 
 #ifdef HAVE_CAN1
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void){
     for(uint8_t mbox = 0; mbox < 3; mbox++){
-        if(pending_tx_msg_ptrs[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
+        if(pending_tx_msg_exist[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
             uint8_t tx_status = CAN_TransmitStatus(CAN1, mbox);
 
             switch (tx_status){
             case(CAN_TxStatus_Failed):
                 //process failed message
                 EXECUTE(cb_txfail);
-                pending_tx_msg_ptrs[mbox].reset();
+                pending_tx_msg_exist[mbox] = false;
                 break;
             case(CAN_TxStatus_Ok):
                 //process success message
                 EXECUTE(cb_txok);
-                pending_tx_msg_ptrs[mbox].reset();
+                pending_tx_msg_exist[mbox] = false;
                 break;
             }
             CAN_Mailbox_Clear(CAN1, mbox);

@@ -37,7 +37,7 @@ private:
         return ErrorType::OK;
     }
 
-    Error start(const uint8_t & _address) override{
+    Error lead(const uint8_t _address) override{
         scl.OutOD();
         sda.OutOD();
         sda.set();
@@ -52,7 +52,7 @@ private:
         return ErrorType::OK;
     }
 
-    void stop() override {
+    void trail() override {
         scl.clr();
         sda.OutOD();
         sda.clr();
@@ -65,22 +65,6 @@ private:
 
 
 protected :
-     Error begin_use(const uint8_t & index = 0) override {
-        occupied = index >> 1;
-        return start(index);
-    }
-    void end_use() override {
-        stop();
-        occupied = -1;
-    }
-
-    bool is_idle() override {
-        return (occupied >= 0 ? false : true);
-    }
-
-    bool owned_by(const uint8_t & index = 0) override{
-        return (occupied == (index >> 1));
-    }
 
     void reset() override {};
     void lock_avoid() override {};
@@ -88,7 +72,7 @@ public:
 
     I2cSw(GpioConcept & _scl,GpioConcept & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}
 
-    Error write(const uint32_t & data) override {
+    Error write(const uint32_t data) override {
         sda.OutOD();
 
         for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -132,11 +116,18 @@ public:
         return ErrorType::OK;
     }
 
-    void init(const uint32_t & baudRate){
+    void init(const uint32_t baudRate){
+        preinit();
+
         sda.set();
         sda.OutOD();
         scl.set();
         scl.OutOD();
+
+        configBaudRate(baudRate);
+    }
+
+    void configBaudRate(const uint32_t baudRate) override {
         if(baudRate == 0){
             delays = 0;
         }else{
@@ -144,9 +135,6 @@ public:
             delays = 400 / b;
         }
     }
-    void configDataSize(const uint8_t & data_size) override {;}
-    void configBaudRate(const uint32_t & baudRate) override {;}
-    void configBitOrder(const bool & msb) override {;}
 };
 
 #endif

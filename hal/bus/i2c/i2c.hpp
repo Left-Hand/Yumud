@@ -2,14 +2,13 @@
 
 #define __I2C_HPP__
 
-#include "../serbus.hpp"
+#include "hal/bus/bus.hpp"
 
-class I2c:public SerBus{
+class I2c:public ProtocolBus{
 protected:
     uint32_t timeout = 10;
     virtual void reset() = 0;
-    virtual Error start(const uint8_t & _address) = 0;
-    virtual void stop() = 0;
+
     virtual void lock_avoid() = 0;
 public:
     void setTimeout(const uint32_t _timeout){timeout = _timeout;}
