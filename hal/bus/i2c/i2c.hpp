@@ -2,7 +2,7 @@
 
 #define __I2C_HPP__
 
-#include "../serbus.hpp"
+#include "hal/bus/bus.hpp"
 
 class I2c:public ProtocolBus{
 protected:

@@ -2,7 +2,7 @@
 
 #define __I2S_HPP__
 
-#include "../serbus.hpp"
+#include "hal/bus/bus.hpp"
 #include "src/platform.h"
 
 

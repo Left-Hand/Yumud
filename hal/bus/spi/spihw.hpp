@@ -24,11 +24,11 @@ public:
 
     void enableRxIt(const bool en = true);
 
-    Error write(const uint32_t & data) override;
+    Error write(const uint32_t data) override;
     Error read(uint32_t & data, bool toAck = true) override;
     Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) override;
 
-    void configDataSize(const uint8_t & data_size) override{
+    void configDataSize(const uint8_t data_size) override{
         uint16_t tempreg =  instance->CTLR1;
         if(data_size == 16){
             if(tempreg & SPI_DataSize_16b) return;
@@ -39,12 +39,12 @@ public:
         instance->CTLR1 = tempreg;
     }
 
-    void configBaudRate(const uint32_t & baudRate) override{
+    void configBaudRate(const uint32_t baudRate) override{
         instance->CTLR1 &= ~SPI_BaudRatePrescaler_256;
         instance->CTLR1 |= calculatePrescaler(baudRate);
     }
 
-    void configBitOrder(const bool & msb) override {
+    void configBitOrder(const bool msb) override {
         instance->CTLR1 &= (!SPI_FirstBit_LSB);
         instance->CTLR1 |= msb ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
     }

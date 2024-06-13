@@ -22,6 +22,8 @@ protected:
     }
 
     char fetch_next(){return txBuf.getData();}
+    Error lead(const uint8_t _address) override;
+    void trail() override{;}
 public:
 
     UartSw(Gpio & _m_tx_gpio, Gpio & _m_rx_gpio): m_tx_gpio(_m_tx_gpio), m_rx_gpio(_m_rx_gpio){;}

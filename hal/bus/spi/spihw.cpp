@@ -164,7 +164,7 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
     instance->DATAR;
 }
 
-SpiHw::Error SpiHw::write(const uint32_t & data){
+SpiHw::Error SpiHw::write(const uint32_t data){
     uint32_t dummy = 0;
     transfer(dummy, data);
     return ErrorType::OK;
