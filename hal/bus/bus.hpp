@@ -94,49 +94,57 @@ public:
     virtual void configDataSize(const uint8_t & data_size){};
     virtual void configBaudRate(const uint32_t & baudRate) = 0;
 
+public:
+    enum Mode:uint8_t{
+        RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
+    };
+protected:
+    Mode mode = TxRx;
 };
 
+
 class ReadableBus:virtual public Bus{
+protected:
 public:
+    CommMethod rxMethod = CommMethod::None;
     virtual Error read(uint32_t & data, bool toAck = true) = 0;
 };
 
 class WritableBus:virtual public Bus{
+protected:
 public:
+    CommMethod txMethod = CommMethod::None;
     virtual Error write(const uint32_t & data) = 0;
 };
 
 class HalfDuplexBus:public ReadableBus, WritableBus{
 public:
+// public:
+    using WritableBus::txMethod;
+    using ReadableBus::rxMethod;
     using WritableBus::write;
     using ReadableBus::read;
     HalfDuplexBus():ReadableBus(), WritableBus(){;}
 };
 
-class DualDuplexBus:public HalfDuplexBus{
+class FullDuplexBus:public HalfDuplexBus{
 public:
-
     virtual Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) = 0;
 };
 
-class SerBus:public DualDuplexBus{
-public:
-    enum Mode:uint8_t{
-        RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
-    };
-
-    Mode mode = TxRx;
-
-protected:
-public:
-};
 
 class ProtocolBus:public HalfDuplexBus{
 protected:
 
 };
 
-class PackedBus:public ProtocolBus{
+class PackedBus:public Bus{
+private:
+    using Bus::configDataSize;//disable this;
+protected:
+    class Packet;
+protected:
+
 
 };
 
