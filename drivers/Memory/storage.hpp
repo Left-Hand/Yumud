@@ -6,33 +6,19 @@
 #include "types/range/range_t.hpp"
 // #include "memory.hpp"
 
-// class Memory;
-
-// class StorageProxy{
-
-// };
-
-
-
-
-
-
-
-
-
-
-
-
+class Memory;
 class Storage{
 protected:
     using Address = uint32_t;
     using AddressWindow = Range_t<Address>;
-    const Address size;
+
+    const Address m_size;
+    const AddressWindow m_window;
 
     friend class Memory;
 protected:
-    Storage(const Address & _size):size(_size){;}
-
+    Storage(const Address _size):m_size(_size), m_window({0, _size}){;}
+    Storage(const Address _size, const AddressWindow  & _window):m_size(_size), m_window(_window){;}
     friend class Memory;
 
     virtual void entry_store() = 0;
@@ -62,10 +48,10 @@ public:
     virtual void init() = 0;
 
     virtual bool busy() = 0;
-    auto getSize() const {return size;}
-    AddressWindow getWindow() const {return {0, getSize()}; }
+    Address size() const {return m_size;}
+    AddressWindow window() const {return {0, m_size};}
     void store(const void * data, const Address & data_size, const Address & loc){
-        if(getWindow().has(loc)){
+        if(window().has(loc)){
             entry_store();
             _store(data, data_size, loc);
             exit_store();
@@ -96,16 +82,8 @@ public:
         return data;
     }
 
-    // operator Memory(){
-    //     return Memory(*this, getWindow());
-    // }
-
-    // Memory pick(){
-    //     return Memory(*this, getWindow());
-    // }
-    // Memory pick(const AddressWindow & window){
-    //     return Memory(*this, window.intersection(getWindow()));
-    // }
+    operator Memory();
+    Memory slice(const AddressWindow & _window);
 };
 
 

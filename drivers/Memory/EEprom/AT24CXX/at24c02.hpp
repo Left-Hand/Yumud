@@ -67,7 +67,7 @@ protected:
         }
 
 
-        // auto chip_window = getWindow();
+        // auto chip_window = window();
         AddressWindow store_window = AddressWindow{loc,loc + data_size};
         AddressWindow op_window = {0,0};
         AT24C02_DEBUG("multi store entry", store_window);
