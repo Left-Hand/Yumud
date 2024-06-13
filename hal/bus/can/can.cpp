@@ -20,13 +20,13 @@ void CAN_IT_Init(CAN_TypeDef * instance){
     CAN_ClearITPendingBit(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1);
     CAN_ITConfig(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1, ENABLE);
 
-    NvicRequest{USB_HP_CAN1_TX_IRQn,1,1}.enable();
+    NvicRequest{USB_HP_CAN1_TX_IRQn,0,6}.enable();
     //rx0 interrupt
 
-    NvicRequest{USB_LP_CAN1_RX0_IRQn,1,0}.enable();
+    NvicRequest{USB_LP_CAN1_RX0_IRQn,0,4}.enable();
 
     //rx1 interrupt
-    NvicRequest{CAN1_RX1_IRQn,1,0}.enable();
+    NvicRequest{CAN1_RX1_IRQn,0,5}.enable();
 
     CAN_ITConfig(instance, CAN_IT_ERR | CAN_IT_WKU
             | CAN_IT_SLK | CAN_IT_EWG | CAN_IT_EPV | CAN_IT_BOF
@@ -151,7 +151,7 @@ void Can::init(const BaudRate baudRate, const CanFilter & filter){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
-    config.CAN_Mode = CAN_Mode_Normal;
+    config.CAN_Mode = CAN_Mode_Silent_LoopBack;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;

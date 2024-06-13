@@ -48,8 +48,8 @@ public:
         }
     }
 
-    bool isStd(){return IDE == CAN_Id_Standard;}
-    bool isExt(){return IDE == CAN_Id_Extended;}
+    bool isStd() const {return IDE == CAN_Id_Standard;}
+    bool isExt() const {return IDE == CAN_Id_Extended;}
     bool isRemote() const {return (RTR == CAN_RTR_Remote);}
     uint8_t length() const {return DLC;}
     uint8_t mailbox() const {return mbox;}
@@ -68,6 +68,11 @@ public:
         DLC = len;
     }
 
+    uint32_t id() const {
+        if(isStd()) return StdId;
+        else if(isExt()) return ExtId;
+        else return 0; 
+    }
     const uint8_t & operator[](const uint8_t index) const {return *(Data + index);};
 };
 #endif

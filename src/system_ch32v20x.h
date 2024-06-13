@@ -14,6 +14,7 @@
  extern "C" {
 #endif 
 
+#define SYSCLK 144000000
 extern uint32_t SystemCoreClock;          /* System Clock Frequency (Core Clock) */
 
 /* System_Exported_Functions */  

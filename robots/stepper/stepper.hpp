@@ -57,6 +57,8 @@ protected:
     RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;
 
+    uint64_t exe_micros = 0;
+
     bool skip_tone = true;
     bool cmd_mode = false;
 
@@ -150,6 +152,7 @@ protected:
                 saveAchive();
                 break;
 
+            // case ""
             case "load"_ha:
             case "ld"_ha:
                 loadAchive();
@@ -158,13 +161,21 @@ protected:
             case "speed"_ha:
             case "spd"_ha:
             case "s"_ha:
-                if(args.size()) setTargetSpeed(real_t(args[0]));
+                if(args.size()){
+                    real_t spd = real_t(args[0]);
+                    setTargetSpeed(spd);
+                    logger << "targ speed\t" << toString(spd,2) << " n/s\r\n";
+                }
                 break;
 
             case "position"_ha:
             case "pos"_ha:
             case "p"_ha:
-                if(args.size()) setTargetPosition(real_t(args[0]));
+                if(args.size()){
+                    real_t pos = real_t(args[0]);
+                    setTargetPosition(pos);
+                    logger << "targ position\t" << toString(pos,2) << " n\r\n";
+                }
                 break;
 
             case "eleczero"_ha:
@@ -191,6 +202,9 @@ protected:
                 wakeup();
                 break;
             
+            case "exe"_ha:
+                logger << "exe" << exe_micros << "us\r\n";
+                break;
             case "disable"_ha:
             case "dis"_ha:
             case "de"_ha:
@@ -239,6 +253,8 @@ protected:
 public:
 
     void tick(){
+
+        auto begin_micros = micros();
         RunStatus new_status = RunStatus::NONE;
 
         switch(run_status){
@@ -313,7 +329,7 @@ public:
                 }
             }
         }
-
+        exe_micros = micros() - begin_micros;
     }
 
     void init(){
@@ -409,7 +425,7 @@ public:
 
         // bool led_status = (millis() / 200) % 2;
         // bled = led_status;
-        panel_led.run();
+        // panel_led.run();
 
 
         Sys::Clock::reCalculateTime();

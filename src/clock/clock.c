@@ -13,13 +13,14 @@
 
 #include "clock.h"
 #include "ch32v20x_rcc.h"
+#include "system_ch32v20x.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int tick_per_ms = 0;
-int tick_per_us = 0;
+#define tick_per_ms (SYSCLK / 1000)
+#define tick_per_us (tick_per_ms / 1000)
 
 
 volatile uint32_t msTick=0;
@@ -74,9 +75,6 @@ void Systick_Init(){
     static uint8_t initd = 0;
     if(initd) return;
     initd = 1;
-
-    tick_per_ms = SystemCoreClock / 1000;
-    tick_per_us = tick_per_ms / 1000;
     SysTick->SR  = 0;
     SysTick->CTLR= 0;
     SysTick->CNT = 0;
