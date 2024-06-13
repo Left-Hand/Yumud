@@ -127,14 +127,14 @@ public:
     }
 
     void writePool(const uint8_t * data_ptr, const size_t & len) override{
-        bus_drv.writePool(data_token, data_ptr, 1, len, false);
+        bus_drv.writePool(data_token, data_ptr, len, false);
     }
 
     void writePool(const uint8_t & data, const size_t & len) override{
         // bus_drv.write(data_token, false);
         auto data_ptr = new uint8_t[len];
         memset(data_ptr, data, len);
-        bus_drv.writePool(data_token, data_ptr, 1, len, false);
+        bus_drv.writePool(data_token, data_ptr, len, false);
         // bus_drv.write(data, len);
         delete data_ptr;
     }

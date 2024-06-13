@@ -15,12 +15,16 @@ protected:
 public:
     I2cDrv(I2c & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):
         BusDrv<I2c>(_bus, _index, _wait_time){};
-    void writePool(const uint8_t reg_address, const uint8_t * data_ptr, const size_t size, const size_t length, const bool msb = true){
+
+    template<typename T>
+    void writePool(const uint8_t reg_address, const T * data_ptr, const size_t length, const bool msb = true){
+        constexpr size_t size = sizeof(T);
         if(length == 0) return;
+        size_t bytes = length * size;
         if(!bus.begin(index)){
             bus.write(reg_address);
 
-            for(size_t i = 0; i < length; i += size){
+            for(size_t i = 0; i < bytes; i += size){
                 if(msb){
                     for(size_t j = size; j > 0; j--){
                         bus.write(data_ptr[j-1 + i]);
@@ -36,22 +40,25 @@ public:
         }
     }
 
-    void readPool(const uint8_t reg_address, uint8_t * data_ptr, const size_t size, const size_t length, const bool msb = true){
+    template<typename T>
+    void readPool(const uint8_t reg_address, T * data_ptr, const size_t length, const bool msb = true){
+        constexpr size_t size = sizeof(T);
         if(length == 0) return;
+        size_t bytes = length * size;
         if(!bus.begin(index)){
             bus.write(reg_address);
             if(!bus.begin(index | 0x01)){
-                for(size_t i = 0; i < length; i += size){
+                for(size_t i = 0; i < bytes; i += size){
                     if(msb){
                         for(size_t j = size; j > 0; j--){
                             uint32_t temp = 0;
-                            bus.read(temp, !((j == 1) && (i == length - size)));
+                            bus.read(temp, !((j == 1) && (i == bytes - size)));
                             data_ptr[j-1 + i] = temp;
                         }
                     }else{
                         for(size_t j = 0; j < size; j++){
                             uint32_t temp = 0;
-                            bus.read(temp, (i + j != length - 1));
+                            bus.read(temp, (i + j != bytes - 1));
                             data_ptr[j + i] = temp;
                         }
                     }
@@ -61,10 +68,9 @@ public:
         }
     }
 
-    void readReg(const uint8_t reg_address,uint16_t & reg, bool msb = true){
-        uint8_t buf[2] = {0};
-        readPool(reg_address, buf, 2, 2, msb);
-        reg = buf[1] << 8 | buf[0];
+    template<typename T>
+    void readReg(const uint8_t reg_address,T & reg, bool msb = true){
+        readPool(reg_address, &reg, 1, msb);
     }
 
     void readReg(const uint8_t reg_address, uint8_t & reg_data){
@@ -78,8 +84,9 @@ public:
         }
     }
 
-    void writeReg(const uint8_t reg_address,  const uint16_t reg_data, bool msb = true){
-        writePool(reg_address, (uint8_t *)&reg_data, 2, 2, msb);
+    template<typename T>
+    void writeReg(const uint8_t reg_address, const T reg_data, bool msb = true){
+        writePool(reg_address, &reg_data, 1, msb);
     }
 
 
