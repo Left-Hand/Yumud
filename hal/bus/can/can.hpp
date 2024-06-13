@@ -11,48 +11,6 @@
 #include "can_filter.hpp"
 
 
-// class Can{
-// public:
-//     enum class BaudRate{
-//         Kbps125,
-//         Mbps1
-//     };
-
-//     using Callback = std::function<void(void)>;
-// protected:
-//     CAN_TypeDef * instance;
-
-//     virtual void settleTxPin(const uint8_t & remap) = 0;
-//     virtual void settleRxPin(const uint8_t & remap) = 0;
-// public:
-//     Can(CAN_TypeDef * _instance):instance(_instance){;}
-//     virtual void init(const BaudRate & baudRate, const uint8_t & remap = 0, const CanFilter & filter = CanFilter()) = 0;
-//     virtual bool write(const CanMsg & msg) = 0;
-//     virtual size_t pending() = 0;
-//     virtual const CanMsg & read() = 0;
-//     virtual size_t available() = 0;
-
-//     virtual bool isTranmitting() = 0;
-//     virtual bool isReceiving() = 0;
-//     virtual void enableHwReTransmit(const bool en = true) = 0;
-//     virtual void cancelTransmit(const uint8_t mbox) = 0;
-//     virtual void cancelAllTransmit() = 0;
-
-//     virtual void enableFifoLock(const bool en = true) = 0;
-//     virtual void enableIndexPriority(const bool en = true) = 0;
-//     virtual uint8_t getTxErrCnt() = 0;
-//     virtual uint8_t getRxErrCnt() = 0;
-//     virtual uint8_t getErrCode() = 0;
-
-//     virtual bool isBusOff() = 0;
-
-//     virtual void bindCbTxOk(const Callback & _cb) = 0;
-//     virtual void bindCbTxFail(const Callback & _cb) = 0;
-//     virtual void bindCbRx(const Callback & _cb) = 0;
-// };
-
-
-
 class Can{
 public:
     enum class BaudRate{
@@ -67,7 +25,7 @@ protected:
     void settleRxPin(const uint8_t & remap);
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
-    void init(const BaudRate & baudRate, const uint8_t & remap = 0, const CanFilter & filter = CanFilter());
+    void init(const BaudRate baudRate, const CanFilter & filter = CanFilter());
     bool write(const CanMsg & msg);
     size_t pending();
     const CanMsg & read();
@@ -86,9 +44,9 @@ public:
 
     bool isBusOff();
 
-    void bindCbTxOk(const Callback & _cb);
-    void bindCbTxFail(const Callback & _cb);
-    void bindCbRx(const Callback & _cb);
+    void bindCbTxOk(Callback && _cb);
+    void bindCbTxFail(Callback && _cb);
+    void bindCbRx(Callback && _cb);
 };
 
 #ifdef HAVE_CAN1

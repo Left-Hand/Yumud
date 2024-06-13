@@ -144,10 +144,12 @@ void Can::settleRxPin(const uint8_t & remap){
     #endif
 }
 
-void Can::bindCbTxOk(const Callback & _cb){cb_txok = _cb;}
-void Can::bindCbTxFail(const Callback & _cb){cb_txfail = _cb;}
-void Can::bindCbRx(const Callback & _cb){cb_rx = _cb;}
-void Can::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter & filter){
+void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
+void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
+void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
+void Can::init(const BaudRate baudRate, const CanFilter & filter){
+    uint8_t remap = 1;
+
     settleTxPin(remap);
     settleRxPin(remap);
 
@@ -195,7 +197,7 @@ void Can::init(const BaudRate & baudRate, const uint8_t & remap, const CanFilter
     config.CAN_RFLM = DISABLE;
     config.CAN_TXFP = DISABLE;
     CAN_Init(instance, &config);
-    CAN_Init_Filter(filter.id, filter.mask, 0, 0xf);
+    CanFilter::init(filter);
     CAN_IT_Init(CAN1);
 }
 
