@@ -9,16 +9,18 @@ void Stepper::loadArchive(){
 
     bool match;
 
+    logger.println("======");
     {
         auto board_info = archive.board_info;
+
         match = board_info.match();
 
+        logger.println("reading board information...");
         board_info.printout(logger);
 
         if(!match){
-            logger.println("!!!board does not match current build!!!\r\n\
-                            we suggest you to save data once to cover useless data by typing\r\n\
-                            [save]");
+            logger.println("!!!board does not match current build!!!");
+            logger.println("we suggest you to save data once to cover useless data by typing\r\n->save");
             if(board_info.broken()){
                 logger.println("!!!board eeprom seems to be trash!!!\r\n");
             }else if(board_info.empty()){
@@ -41,6 +43,7 @@ void Stepper::loadArchive(){
     }else{
         logger.println("load aborted because data is corrupted");
     }
+    logger.println("======");
 }
 
 void Stepper::saveArchive(){
@@ -49,6 +52,7 @@ void Stepper::saveArchive(){
 
     static_assert(sizeof(Archive) <= 256, "archive size overflow");
 
+    logger.println("======");
     logger.println("generating archive...");
     archive.board_info.construct();
     logger.println("current board info:");
@@ -57,7 +61,7 @@ void Stepper::saveArchive(){
 
     archive.switches = switches;
     uint32_t hashcode = archive.hash();
-    archive.hashcode = hashcode;
+    // archive.hashcode = hashcode;
 
     for(size_t i = 0; i < odo.cali_map.size(); i++){
         archive.cali_map[i] = int((odo.cali_map[i] + elecrad_zerofix) * 65536);
@@ -76,5 +80,6 @@ void Stepper::saveArchive(){
     logger.println("there is no verification currently");
 
     logger.println("verification done");
+    logger.println("======");
 }
 

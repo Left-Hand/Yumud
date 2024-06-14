@@ -101,6 +101,17 @@ public:
 
     OutputStream & operator<<(const SpecToken & spec);
 
+    template<typename real, size_t size>
+    OutputStream & operator<<(const real (&arr)[size]){
+        *this << '[';
+        for(size_t i = 0; i < size - 1; ++i)
+            *this << arr[i] << ',';
+        if(size > 0)
+            *this << arr[size - 1];
+        *this << ']';
+        return *this;
+    }
+
     template<typename real>
     requires (!std::is_pointer<real>::value)
     OutputStream & operator<<(real misc){*this << misc.toString(eps); return *this;}
