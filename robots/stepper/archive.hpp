@@ -116,7 +116,7 @@ namespace StepperUtils{
     struct Archive{
         union{
             struct{
-                uint32_t hashcode;
+                // uint32_t hashcode;
                 BoardInfo board_info;
                 Switches switches;
             };
@@ -125,7 +125,9 @@ namespace StepperUtils{
         uint16_t cali_map[50];
 
         uint32_t hash(){
-            return hash_impl((char *)this + sizeof(hashcode), sizeof(*this) - sizeof(hashcode));
+            return 0;
+            //TODO
+            // return hash_impl((char *)this + sizeof(hashcode), sizeof(*this) - sizeof(hashcode));
         }
     };
 }
