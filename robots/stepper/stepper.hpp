@@ -46,7 +46,7 @@ protected:
 
     real_t run_current;
     real_t run_elecrad;
-    real_t run_raddiff;
+    real_t run_leadangle;
     real_t elecrad_zerofix;
 
     real_t target;
@@ -216,6 +216,17 @@ protected:
                 shutdown();
                 break;
 
+            case "cali"_ha:
+                cali_task(true);
+                break;
+
+            case "beep"_ha:
+                beep_task(true);
+                break;
+
+            case "rd"_ha:
+                if(args.size() == 1) run_debug_enabled = int(args[0]);
+                break;
             case "status"_ha:
             case "stat"_ha:
                 DEBUG_PRINT("current status:", run_status._to_string());
@@ -318,6 +329,8 @@ public:
         exe_micros = micros() - begin_micros;
     }
 
+    void autoload();
+
     void init(){
 
         // uart1.init(115200 * 8, CommMethod::Dma);
@@ -411,7 +424,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

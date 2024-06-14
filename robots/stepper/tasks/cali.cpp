@@ -25,8 +25,6 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     constexpr int backwardpreturns = forwardpreturns;
     constexpr int backwardturns = forwardturns;
 
-    constexpr int landingturns = 200;
-
     constexpr int subdivide_micros = 256;
     constexpr int cogging_samples = 16;
     constexpr int align_ms = 200;
@@ -37,26 +35,22 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
     static SubState sub_state = SubState::DONE;
     static uint32_t cnt = 0;
-
-    // static real_t raw_position_accumulate = real_t(0);
-    // static real_t last_raw_lap_position = real_t(0);
-
-    static int openloop_pole;
-
-    // static std::array<std::pair<real_t, real_t>, 50> forward_test_data;
-    // static std::array<std::pair<real_t, real_t>, 50> backward_test_data;
-    // static std::array<real_t, 50> elecrad_test_data;
+    static int openloop_pole = 0;
 
     static std::array<real_t, 50> forward_pole_err;
     static std::array<real_t, 50> backward_pole_err;
-    static std::array<std::pair<real_t, real_t>, landingturns> elecrad_test_data;
 
     static std::array<real_t, cogging_samples> forward_cogging_err;
     static std::array<real_t, cogging_samples> backward_cogging_err;
 
     if(init_flag){
-        sub_state = SubState::ALIGN;
         cnt = 0;
+        sub_state = SubState::ALIGN;
+        openloop_pole = 0;
+        forward_pole_err.fill(0);
+        backward_pole_err.fill(0);
+        forward_cogging_err.fill(0);
+        backward_cogging_err.fill(0);
         run_status = RunStatus::CALI;
         return RunStatus::NONE;
     }
@@ -81,15 +75,11 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     {
 
         switch(sub_state){
-            case SubState::ENTRY:
-
-                sw_state(SubState::ALIGN);
-                break;
-
             case SubState::ALIGN:
                 setCurrent(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * 500)){
                     sw_state(SubState::PRE_FORWARD);
+                    odo.reset();
                     odo.inverse();
                     odo.update();
                 }

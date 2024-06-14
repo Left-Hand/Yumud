@@ -124,20 +124,6 @@ protected:
 
     std::array<real_t, poles>cali_map;
 
-    real_t position2rad(const real_t & position){
-        real_t frac1 = poles * frac(position);
-        return TAU * (frac(frac1));
-    }
-
-    int position2pole(const iq_t & position){
-        real_t pole = frac(position) * real_t(poles);
-        return MIN(int(pole), poles - 1);
-    }
-
-    real_t pole2position(const int & pole){
-        return real_t(pole) / 50;
-    }
-
     real_t correctPosition(const real_t rawPosition) override{
         return (rawPosition - cali_map[position2pole(rawPosition)]);
     }
@@ -167,6 +153,19 @@ public:
         return cali_map;
     }
 
+    real_t position2rad(const real_t & position){
+        real_t frac1 = poles * frac(position);
+        return TAU * (frac(frac1));
+    }
+
+    int position2pole(const iq_t & position){
+        real_t pole = frac(position) * real_t(poles);
+        return MIN(int(pole), poles - 1);
+    }
+
+    real_t pole2position(const int & pole){
+        return real_t(pole) / 50;
+    }
 };
 
 #endif
