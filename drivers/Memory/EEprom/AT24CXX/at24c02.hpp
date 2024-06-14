@@ -5,11 +5,11 @@
 #include "drivers/device_defs.h"
 #include "../../memory.hpp"
 
-// #define AT24C02_DEBUG
+#define AT24C02_DEBUG
 
 #ifdef AT24C02_DEBUG
 #undef AT24C02_DEBUG
-#define AT24C02_DEBUG(...) DEBUG_LOG(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#define AT24C02_DEBUG(...) DEBUG_PRINT(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
 #else
 #define AT24C02_DEBUG(...)
 #endif
@@ -22,7 +22,7 @@ protected:
     static constexpr uint32_t min_duration_ms = 5;
     uint32_t last_entry_ms = 0;
     
-    void _store(const uint8_t & data, const Address loc) override{
+    void _store(const uint8_t data, const Address loc) override{
         if(loc >= chip_size){
             AT24C02_DEBUG("invalid addr");
             return;
@@ -67,59 +67,25 @@ protected:
         }
 
 
-        // auto chip_window = getWindow();
+        // auto chip_window = window();
         AddressWindow store_window = AddressWindow{loc,loc + data_size};
         AddressWindow op_window = {0,0};
         AT24C02_DEBUG("multi store entry", store_window);
         do{
             op_window = store_window.grid_forward(op_window, page_size);
             if(op_window){
-                AT24C02_DEBUG("write page happens", op_window);
+                AT24C02_DEBUG("write page happens", op_window, op_window.length());
+                for(uint32_t i = op_window.start; i < op_window.end; i++) AT24C02_DEBUG(toString(((uint8_t*)data)[i], 16), "wtf");
                 wait_for_done();
-                bus_drv.writePool(op_window.start, (uint8_t *)data + (op_window.start - store_window.start), 1, op_window.length());
+                bus_drv.writePool(op_window.start, (uint8_t *)((uint8_t *)data + (op_window.start - store_window.start)), op_window.length());
                 update_entry_ms();
-                // AT24C02_DEBUG("write page done", op_window);
+                AT24C02_DEBUG("write page done", op_window);
             }
-
-            // delay(200);
         }while(op_window);
-        // if(loc_begin)
-        // bool virgin = true;
-        // for(Address i = 0; i < data_size; i++){
-        //     Address loc_global = loc + i;
-        //     store_window = chip_window.part_in_grid(loc_global, page_size, virgin);
-        //     AT24C02_DEBUG("iter", store_window, loc_global);
-        //     if(!store_window)break;
-        //     else{
-        //         if(store_window != store_window_last){
-        //             virgin = false;
-        //             // AT24C02_DEBUG("write page happens", store_window.start, store_window.end);
-        //         }
-        //     }
-        //     store_window_last = store_window;
-        // }
-
-
-        //     Address loc_begin = (loc_global / page_size) * page_size;
-        //     Address loc_end = MIN(full_end, (loc_global / page_size + 1) * page_size);
-        //     AT24C02_DEBUG("loc", loc_global, loc_begin, loc_end);
-        //     if(loc_global == loc_end) break;
-        //     if(loc_global % page_size == 0 && loc_global != loc_begin){
-        //         wait_for_done();
-        //         AT24C02_DEBUG("write page happens", loc_begin, loc_end);
-        //         // bus_drv.writePool(loc_begin, (uint8_t *)data + (loc_begin - loc), 1, loc_end - loc_begin);
-        //     }else if(loc_global == loc_end){
-        //         wait_for_done();
-        //         AT24C02_DEBUG("write page happens", loc_begin, loc_end);
-                
-        //     }
-        // }
     }
 
     void _load(void * data, const Address data_size, const Address loc) override {
-        // AddressWindow store_window = AddressWindow{loc,loc + data_size};
-        // AT24C02_DEBUG("multi load entry", store_window);
-        bus_drv.readPool(loc, (uint8_t *)data, 1, data_size);
+        bus_drv.readPool(loc, (uint8_t *)data, data_size);
     }
 
     void entry_store() override{

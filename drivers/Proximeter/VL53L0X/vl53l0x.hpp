@@ -54,7 +54,7 @@ private:
     }
 
     void requestData(uint8_t reg, uint8_t * data, const size_t len){
-        bus_drv.readPool(reg, data, 2, len);
+        bus_drv.readPool(reg, data, len);
     }
 };
 
