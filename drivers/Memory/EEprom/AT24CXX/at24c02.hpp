@@ -5,7 +5,7 @@
 #include "drivers/device_defs.h"
 #include "../../memory.hpp"
 
-#define AT24C02_DEBUG
+// #define AT24C02_DEBUG
 
 #ifdef AT24C02_DEBUG
 #undef AT24C02_DEBUG
@@ -75,9 +75,9 @@ protected:
             op_window = store_window.grid_forward(op_window, page_size);
             if(op_window){
                 uint8_t * ptr = ((uint8_t *)data + (op_window.start - store_window.start));
-                DEBUGGER << op_window;
-                for(uint32_t i = op_window.start; i < op_window.end; i++) DEBUGGER << ',' << ((uint8_t*)data)[i];
-                DEBUGGER << "\r\n";
+                // DEBUGGER << op_window;
+                // for(uint32_t i = op_window.start; i < op_window.end; i++) DEBUGGER << ',' << ((uint8_t*)data)[i];
+                // DEBUGGER << "\r\n";
                 wait_for_done();
                 bus_drv.writePool(op_window.start, ptr, op_window.length());
                 update_entry_ms();
@@ -94,19 +94,19 @@ protected:
 
         bus_drv.readPool(loc, (uint8_t *)data, data_size);
 
-        #ifdef AT24C02_DEBUG
-        AddressWindow store_window = AddressWindow{loc,loc + data_size};
-        AddressWindow op_window = {0,0};
-        AT24C02_DEBUG("check entry", store_window);
-        do{
-            op_window = store_window.grid_forward(op_window, page_size);
-            if(op_window){
-                DEBUGGER << op_window;
-                for(uint32_t i = op_window.start; i < op_window.end; i++) DEBUGGER << ',' << ((uint8_t*)data)[i];
-                DEBUGGER << "\r\n";
-            }
-        }while(op_window);
-        #endif
+        // #ifdef AT24C02_DEBUG
+        // AddressWindow store_window = AddressWindow{loc,loc + data_size};
+        // AddressWindow op_window = {0,0};
+        // AT24C02_DEBUG("check entry", store_window);
+        // do{
+        //     op_window = store_window.grid_forward(op_window, page_size);
+        //     if(op_window){
+        //         DEBUGGER << op_window;
+        //         for(uint32_t i = op_window.start; i < op_window.end; i++) DEBUGGER << ',' << ((uint8_t*)data)[i];
+        //         DEBUGGER << "\r\n";
+        //     }
+        // }while(op_window);
+        // #endif
     }
 
     void entry_store() override{

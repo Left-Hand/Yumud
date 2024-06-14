@@ -342,6 +342,8 @@ public:
         spi1.init(18000000);
         spi1.bindCsPin(portA[15], 0);
 
+        i2cSw.init(400000);
+
         logger.println("======");
         logger.println("pwon");
 

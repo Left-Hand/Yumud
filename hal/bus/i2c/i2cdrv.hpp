@@ -24,14 +24,12 @@ public:
         if(length == 0) return;
         size_t bytes = length * size;
         if(!bus.begin(index)){
-        uart1.println("start write pool");
             bus.write(reg_address);
 
             for(size_t i = 0; i < bytes; i += size){
                 if(msb){
                     for(size_t j = size; j > 0; j--){
                         bus.write(data_ptr[j-1 + i]);
-                        uart1.println(data_ptr[j-1+i]);
                     }
                 }else{
                     for(size_t j = 0; j < size; j++){

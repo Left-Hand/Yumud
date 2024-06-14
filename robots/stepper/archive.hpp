@@ -35,7 +35,6 @@ namespace StepperUtils{
     static constexpr uint8_t minute = MINUTE;
 
     struct BoardInfo{
-        int8_t flash_times;
         uint8_t bver ;
         uint8_t dtype ;
         char dbranch ;
@@ -57,12 +56,20 @@ namespace StepperUtils{
         }
 
         bool broken(){
-            return (y > 30) || //no one will use this shit after 2030
-            (m > 12) || (d > 31) || (h > 23) || (mi > 59);
+            return (y > 30) || (y < 24) || //no one will use this shit after 2030
+            (m > 12) || (m == 0) || (d > 31) || (d == 0) || (h > 23) || (h == 0) || (mi > 59) || (mi == 0);
         }
 
         bool empty(){
-            return (!broken()) && (flash_times == 0);
+            bool is_empty = false;
+            uint8_t * ptr = (uint8_t *)this;
+            for(size_t i = 0; i < sizeof(*this); i++){
+                if(ptr[i]!= 0){
+                    is_empty = true;
+                    break;
+                }
+            }
+            return is_empty;
         }
 
         bool match(){

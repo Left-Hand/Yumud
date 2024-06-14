@@ -7,7 +7,6 @@ void stepper_tb(IOStream & logger){
 
     stp.init();
     stp.setCurrentClamp(0.3);
-    stp.saveArchive();
     while(true){
         stp.run();
         stp.setTargetPosition(8*sin(t));
