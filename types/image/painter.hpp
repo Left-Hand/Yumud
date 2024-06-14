@@ -16,8 +16,8 @@ template<typename ColorType>
 class Painter{
 protected:
     ImageWritable<ColorType> * src_image = nullptr;
-    const Font * chfont = &font7x7;
-    const Font * enfont = &font8x5;
+    Font * enfont = &font8x5;
+    Font * chfont = &font7x7;
     ColorType m_color;
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
@@ -36,12 +36,12 @@ public:
         src_image = &_source;
     }
 
-    void setChFont(const Font & _chfont){
-        chfont = &_chfont;
+    void setChFont(Font * _chfont){
+        chfont = _chfont;
     }
 
-    void setEnFont(const Font & _enfont){
-        enfont = &_enfont;
+    void setEnFont(Font * _enfont){
+        enfont = _enfont;
     }
 
 
@@ -247,7 +247,7 @@ public:
     void drawChar(const Vector2i & pos,const wchar_t & chr){
         Rect2i image_area = Rect2i({}, src_image->size);
         const Font * font = chr > 0x80 ? chfont : enfont;
-        const Vector2i font_size = font->size;
+        const Vector2i font_size = font->getSize();
         Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
 
         if(!char_area) return;
@@ -258,16 +258,22 @@ public:
  
                 if(j % 8 == 0) mask = 0;
 
-                Vector2i offs = Vector2i(i - char_area.position.x ,j % 8);
+                Vector2i offs = Vector2i(i - char_area.position.x ,j);
                 if(font->getpixel(chr, offs)){
                     mask |= (0x01 << (j % 8));
                 }
 
                 if(j % 8 == 7 || j == font_size.y - 1){
                     src_image->putseg_v8_unsafe(Vector2i(i, (j & (~(8 - 1))) + pos.y), mask, m_color);
+                    mask = 0;
                 }
             }
         }
+    }
+
+    void setFontScale(const uint8_t & scale){
+        chfont->setScale(scale);
+        enfont->setScale(scale);
     }
 
     void drawString(const Vector2i & pos, const String & str){
@@ -278,7 +284,7 @@ public:
         if(iterator.hasNext()){
             auto chr = iterator.next();
             drawChar(Vector2i(x, pos.y), chr);
-            x += ((chr > 0x80 ? chfont->size.x : enfont->size.x) + 1);
+            x += ((chr > 0x80 ? chfont->getSize().x : enfont->getSize().x) + 1);
         }else{
             break;
         }

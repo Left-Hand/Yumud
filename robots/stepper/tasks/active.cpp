@@ -7,9 +7,9 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 // auto target=sin(t);
     // real_t raw_current = 0.1 * sin(t);
     // run_current = abs(raw_current);
-    // run_raddiff = SIGN_AS(PI / 2, raw_current);
-
-    setCurrent(curr_ctrl.update(run_current), (run_elecrad = est_elecrad + run_raddiff) + elecrad_zerofix);
+    // run_leadangle = SIGN_AS(PI / 2, raw_current);
+    run_elecrad = est_elecrad + run_leadangle;
+    setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
 
     // uint32_t foc_begin_micros = nanos();
     odo.update();
@@ -59,7 +59,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         est_cnt++;
         if(est_cnt == est_devider){ // est happens
             real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
-            switch(CTZ(MAX(int(est_speed), 1))){
+            switch(CTZ(MAX(int(abs(est_speed_new)), 1))){
                 case 0://  1r/s
                     est_speed = (est_speed_new + est_speed * 63) >> 6;
                     break;
@@ -86,7 +86,6 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
             est_delta_raw_pos_intergal = real_t();
             est_cnt = 0;
 
-
             HighLayerCtrl::Result result;
             
             switch(ctrl_type){
@@ -98,7 +97,9 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
             } 
 
             run_current = result.current;
-            run_raddiff = result.raddiff;
+            run_leadangle = result.raddiff;
+            // run_current = 0.2;
+            // run_leadangle = -PI / 2;
         }else{
             est_delta_raw_pos_intergal += delta_raw_pos;
         }

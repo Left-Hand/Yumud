@@ -367,11 +367,14 @@ __fast_inline_constexpr iq_t pow(const iq_t & base, const iq_t & exponent) {
 
 
 __fast_inline_constexpr void u16_to_uni(const uint16_t & data, iq_t & qv){
-#if GLOBAL_Q >= 16
+#if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
-#else
+#elif(GLOBAL_Q < 16)
     qv.value = data >> (16 - GLOBAL_Q);
+#else
+    qv.value = data;
 #endif
+
 }
 
 __fast_inline_constexpr void s16_to_uni(const int16_t & data, iq_t & qv){
