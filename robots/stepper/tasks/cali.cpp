@@ -25,10 +25,9 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     constexpr int backwardpreturns = forwardpreturns;
     constexpr int backwardturns = forwardturns;
 
-    constexpr int landingpreturns = 15;
     constexpr int landingturns = 200;
 
-    constexpr int subdivide_micros = 128;
+    constexpr int subdivide_micros = 256;
     constexpr int cogging_samples = 16;
     constexpr int align_ms = 200;
 
@@ -50,7 +49,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
     static std::array<real_t, 50> forward_pole_err;
     static std::array<real_t, 50> backward_pole_err;
-    static std::array<real_t, landingturns> elecrad_test_data;
+    static std::array<std::pair<real_t, real_t>, landingturns> elecrad_test_data;
 
     static std::array<real_t, cogging_samples> forward_cogging_err;
     static std::array<real_t, cogging_samples> backward_cogging_err;
@@ -115,7 +114,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 if(cnt % subdivide_micros == 0){
                     openloop_pole++;
 
-                    const uint8_t cali_index = odo.warp_mod(openloop_pole, 50);
+                    const uint8_t cali_index =warp_mod(openloop_pole, 50);
 
                     static real_t last_err = 0;
 
@@ -164,7 +163,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 if(cnt % subdivide_micros == 0){
                     openloop_pole--;
 
-                    const uint8_t cali_index = odo.warp_mod(openloop_pole, 50);
+                    const uint8_t cali_index = warp_mod(openloop_pole, 50);
 
                     static real_t last_err = 0.1;
 
@@ -179,39 +178,36 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 }
 
                 if(cnt >= backwardturns * subdivide_micros){
-                    sw_state(SubState::PRE_LANDING);
+                    sw_state(SubState::STOP);
                     openloop_pole = 0;
                 }
                 break;
             
-            case SubState::PRE_LANDING:
-                odo.update();
+            // case SubState::PRE_LANDING:
+            //     odo.update();
 
-                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
-                if(cnt >= landingpreturns * subdivide_micros){
-                    openloop_pole = 0;
-                                    for(uint8_t i = 0; i < poles; i++){
-                    odo.cali_map[i] = mean(forward_pole_err[i], backward_pole_err[i]);
-                    // odo.cali_map[i] = forward_err[i];
-                }
-                    sw_state(SubState::LANDING);
-                }
-                break;
+            //     setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+            //     if(cnt >= landingpreturns * subdivide_micros){
+            //         openloop_pole = 0;
 
-            case SubState::LANDING:
-                odo.update();
+            //         sw_state(SubState::LANDING);
+            //     }
+            //     break;
 
-                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
-                if(cnt % subdivide_micros == 0){
-                    // elecrad_test_data[openloop_pole] = odo.getRawLapPosition();
-                    elecrad_test_data[openloop_pole] = mt6816.getPositionData();
-                    openloop_pole++;
-                }
+            // case SubState::LANDING:
+            //     odo.update();
 
-                if(cnt >= landingturns * subdivide_micros){
-                    sw_state(SubState::STOP);
-                }
-                break;
+            //     setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+            //     if(cnt % subdivide_micros == 0){
+            //         elecrad_test_data[openloop_pole].first = odo.getLapPosition();
+            //         elecrad_test_data[openloop_pole].second = odo.getElecRad();
+            //         openloop_pole++;
+            //     }
+
+            //     if(cnt >= landingturns * subdivide_micros){
+            //         sw_state(SubState::STOP);
+            //     }
+            //     break;
             case SubState::STOP:
                 odo.update();
 
@@ -235,14 +231,15 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                     // }
                 }
 
-                odo.update();
-
-                // initial_err -= forward_err[initial_pole];
-                for(size_t p = 0; p < landingturns; p++){
-                    size_t i = p % 50;
-                    // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
-                    CALI_DEBUG(forward_pole_err[i], backward_pole_err[i], odo.cali_map[i], abs(forward_pole_err[i] - backward_pole_err[i]), fmod(elecrad_test_data[i], 0.02), elecrad_test_data[p]);
+                for(uint8_t i = 0; i < poles; i++){
+                    odo.map()[i] = mean(forward_pole_err[i], backward_pole_err[i]);
                 }
+                // initial_err -= forward_err[initial_pole];
+                // for(size_t p = 0; p < landingturns; p++){
+                //     size_t i = p % 50;
+                //     // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
+                //     CALI_DEBUG(forward_pole_err[i], backward_pole_err[i], odo.cali_map[i], fmod(elecrad_test_data[p].first, 0.02), elecrad_test_data[p].first, elecrad_test_data[p].second);
+                // }
 
                 sw_state(SubState::EXAMINE);
                 break;

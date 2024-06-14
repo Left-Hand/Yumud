@@ -99,6 +99,8 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
             run_current = result.current;
             run_raddiff = result.raddiff;
+            // run_current = 0.2;
+            // run_raddiff = -PI / 2;
         }else{
             est_delta_raw_pos_intergal += delta_raw_pos;
         }

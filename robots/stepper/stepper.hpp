@@ -320,9 +320,9 @@ public:
 
     void init(){
 
-        uart1.init(115200 * 8, CommMethod::Blocking);
+        // uart1.init(115200 * 8, CommMethod::Dma);
 
-        logger.setEps(5);
+        logger.setEps(4);
 
         timer1.init(4096, 1, Timer::TimerMode::CenterAlignedDownTrig);
         timer1.enableArrSync();
@@ -410,8 +410,8 @@ public:
 
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
-        // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-        // if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
+        // RUN_DEBUG(, est_pos, est_speed);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

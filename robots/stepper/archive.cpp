@@ -35,8 +35,8 @@ void Stepper::loadArchive(){
     }
 
     if(match){
-        for(size_t i = 0; i < odo.cali_map.size(); i++){
-            odo.cali_map[i] = (odo.cali_map[i]) / 65536;
+        for(size_t i = 0; i < odo.map().size(); i++){
+            odo.map()[i] = (odo.map()[i]) / 65536;
             elecrad_zerofix = 0;
             // cali_map in archive is q16
         }
@@ -62,8 +62,8 @@ void Stepper::saveArchive(){
     archive.switches = switches;
     uint32_t hashcode = archive.hash();
 
-    for(size_t i = 0; i < odo.cali_map.size(); i++){
-        archive.cali_map[i] = int((odo.cali_map[i] + elecrad_zerofix) * 65536);
+    for(size_t i = 0; i < odo.map().size(); i++){
+        archive.cali_map[i] = int((odo.map()[i] + elecrad_zerofix) * 65536);
     }
 
     logger.println("generate done");

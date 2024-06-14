@@ -54,4 +54,10 @@ __fast_inline void u16_to_uni(const uint16_t & data, double & dv){
     dv = (float)data / 65535;
 }
 
+__fast_inline int warp_mod(const int x, const int y){
+    int ret = x % y;
+    if(ret < 0) ret += y;
+    return ret;
+}
+
 #endif

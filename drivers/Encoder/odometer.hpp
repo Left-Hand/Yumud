@@ -66,7 +66,7 @@ public:
     }
 
     void locateAbsolutely(const real_t & offset = real_t(0)){
-        locate(getRawLapPosition() + offset);
+        locate(getLapPosition() + offset);
     }
 
     virtual void reset(){
@@ -118,10 +118,9 @@ public:
 
 // template<int poles>
 class OdometerPoles:public Odometer{
-// protected:
-public:
+protected:
     static constexpr int poles = 50;
-    real_t elecRad = real_t(0);
+    real_t elecrad_cache = real_t(0);
 
     std::array<real_t, poles>cali_map;
 
@@ -148,7 +147,7 @@ public:
 
     void reset() override{
         Odometer::reset();
-        elecRad = real_t(0);
+        elecrad_cache = real_t(0);
         cali_map.fill(real_t(0));
     }
 
@@ -164,39 +163,10 @@ public:
         return position2pole(getRawLapPosition());
     }
 
-    int warp_mod(const int & x, const int & y){
-        int ret = x % y;
-        if(ret < 0) ret += y;
-        return ret;
+    auto & map(){
+        return cali_map;
     }
 
-    real_t warp_around_zero(const real_t & x){
-        return fmod(frac(x - 0.5) - 0.5, real_t(0.02));
-    }
-
-
-    // void addCaliPoint(const real_t & correct_position, const int pole){
-    //     int index = warp_mod(pole, poles);
-
-    //     cali_map[index] += warp_around_zero(frac(correct_position) - rawLapPosition);
-    //     cali_map_scores[index] ++;
-    //     // cali_map[position2pole(getRawLapPosition())] += (correct_position - rawLapPosition) * percent;
-    // }
-
-    // void runCaliAnalysis(){
-    //     for(int i = 0; i < poles; i++){
-    //         if(cali_map_scores[i]){
-    //             cali_map[i] /= real_t(cali_map_scores[i]);
-    //             cali_map[i] = warp_around_zero(cali_map[i]);
-    //         }
-    //     }
-
-        // for(int i = 0; i < poles; i++){
-        //     if(!cali_map_scores[i]){
-        //         cali_map[i] = mean(cali_map[warp_mod(i - 1, poles)], cali_map[warp_mod(i + 1, poles)]);
-        //     }
-        // }
-    // }
 };
 
 #endif

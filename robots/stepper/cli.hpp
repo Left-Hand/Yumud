@@ -56,7 +56,7 @@ namespace StepperUtils{
     protected:
         bool cali_debug_enabled = true;
         bool command_debug_enabled = false;
-        bool run_debug_enabled = false;
+        bool run_debug_enabled = true;
 
         #define CALI_DEBUG(...)\
         if(cali_debug_enabled){\
