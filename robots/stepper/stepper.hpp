@@ -320,10 +320,9 @@ public:
 
     void init(){
 
-        uart1.init(115200 * 8);
-        // uart1.init(115200 * 8);
+        uart1.init(115200 * 8, CommMethod::Blocking);
 
-        logger.setEps(4);
+        logger.setEps(5);
 
         timer1.init(4096, 1, Timer::TimerMode::CenterAlignedDownTrig);
         timer1.enableArrSync();
@@ -344,8 +343,8 @@ public:
 
         i2cSw.init(400000);
 
-        logger.println("======");
-        logger.println("pwon");
+        // logger.println("======");
+        // logger.println("pwon");
 
         odo.init();
 

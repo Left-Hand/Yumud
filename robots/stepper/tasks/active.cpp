@@ -8,8 +8,8 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     // real_t raw_current = 0.1 * sin(t);
     // run_current = abs(raw_current);
     // run_raddiff = SIGN_AS(PI / 2, raw_current);
-
-    setCurrent(curr_ctrl.update(run_current), (run_elecrad = est_elecrad + run_raddiff) + elecrad_zerofix);
+    run_elecrad = est_elecrad + run_raddiff;
+    setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
 
     // uint32_t foc_begin_micros = nanos();
     odo.update();

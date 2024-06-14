@@ -57,8 +57,8 @@ public:
 
     void init(
         const uint32_t baudRate, 
-        const CommMethod _rxMethod = CommMethod::Dma,
-        const CommMethod _txMethod = CommMethod::Dma) override;
+        const CommMethod _txMethod = CommMethod::Dma,
+        const CommMethod _rxMethod = CommMethod::Dma) override;
 
     void setTxMethod(const CommMethod _txMethod) override;
 

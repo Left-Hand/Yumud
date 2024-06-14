@@ -477,7 +477,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
 
 
 
-void UartHw::init(const uint32_t baudRate, const CommMethod _rxMethod, const CommMethod _txMethod){
+void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const CommMethod _rxMethod){
     enableRcc();
 
     USART_InitTypeDef USART_InitStructure;

@@ -61,7 +61,6 @@ void Stepper::saveArchive(){
 
     archive.switches = switches;
     uint32_t hashcode = archive.hash();
-    // archive.hashcode = hashcode;
 
     for(size_t i = 0; i < odo.cali_map.size(); i++){
         archive.cali_map[i] = int((odo.cali_map[i] + elecrad_zerofix) * 65536);
