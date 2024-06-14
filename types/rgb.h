@@ -147,8 +147,6 @@ struct Grayscale{
 
     __fast_inline constexpr Grayscale(const uint8_t & _data): data(_data){;}
 
-    __fast_inline constexpr Grayscale(const bool & bina): data(bina ? 0xff : 0x00){;}
-
     __fast_inline constexpr Grayscale & operator = (const uint8_t & _data){data = _data; return *this;}
 
     __fast_inline constexpr operator uint8_t() const {return data;}
