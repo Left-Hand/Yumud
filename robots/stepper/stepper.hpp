@@ -16,7 +16,10 @@ protected:
     using ErrorCode = StepperEnums::ErrorCode;
     using RunStatus = StepperEnums::RunStatus;
     using CtrlType = StepperEnums::CtrlType;
+    using Switches = StepperUtils::Switches;
 
+    Switches switches;
+    // constexpr size_t n = sizeof(Switches);
     IOStream & logger = uart1;
 
     TimerOutChannelPosOnChip & verfChannelA = timer3[3];
@@ -143,19 +146,22 @@ protected:
     RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
     StatLed panel_led = StatLed{led_instance};
 
+    void loadArchive();
+    void saveArchive();
+
     void parse_command(const String & _command, const std::vector<String> & args) override{
         auto command = _command;
         command.toLowerCase();
         switch(hash_impl(command.c_str(), command.length())){
             case "save"_ha:
             case "sv"_ha:
-                saveAchive();
+                saveArchive();
                 break;
 
             // case ""
             case "load"_ha:
             case "ld"_ha:
-                loadAchive();
+                loadArchive();
                 break;
 
             case "speed"_ha:
@@ -230,26 +236,6 @@ protected:
         }
     }
     
-
-    void saveAchive(){
-        using Archive = StepperUtils::Archive;
-        Archive archive;
-        memory.store(archive);
-    }
-
-    void loadAchive(){
-        using Archive = StepperUtils::Archive;
-        Archive archive;
-        memory.load(archive);
-
-        logger << "build version:\t\t" << archive.bver << "\r\n";
-        logger << "build time:\t\t20" << 
-                archive.y << '/' << archive.m << '/' << 
-                archive.d << '\t' << archive.h << ':' << archive.mi << "\r\n";
-
-        logger << "driver type:\t\t" << archive.dtype << "\r\n";
-        logger << "driver branch:\t\t" << archive.dbranch << "\r\n";
-    }
 public:
 
     void tick(){
@@ -264,6 +250,7 @@ public:
             case RunStatus::CALI:
                 new_status = cali_task();
                 break;
+
             case RunStatus::ACTIVE:
                 new_status = active_task();
                 break;
@@ -397,6 +384,12 @@ public:
         ctrl_type = CtrlType::POSITION;
     }
 
+    void setCurrentClamp(const real_t max_current){
+        curr_ctrl.setCurrentClamp(max_current);
+        speed_ctrl.setCurrentClamp(max_current);
+        position_ctrl.setCurrentClamp(max_current);
+    }
+
     void run() override{
         Cli::run();
         // real_t total = real_t(3);
@@ -425,7 +418,7 @@ public:
 
         // bool led_status = (millis() / 200) % 2;
         // bled = led_status;
-        // panel_led.run();
+        panel_led.run();
 
 
         Sys::Clock::reCalculateTime();

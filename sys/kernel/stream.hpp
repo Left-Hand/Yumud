@@ -102,6 +102,7 @@ public:
     OutputStream & operator<<(const SpecToken & spec);
 
     template<typename real>
+    requires (!std::is_pointer<real>::value)
     OutputStream & operator<<(real misc){*this << misc.toString(eps); return *this;}
 
     void print(){}

@@ -38,6 +38,7 @@
 #define DEBUG_VALUE(value, ...) DEBUG_PRINT("[V]", #value, "is", value, ##__VA_ARGS__)
 #endif
 
+
 #define RUN_TIME_DEBUG
 
 // #define ASSERT(condition, ...)
@@ -70,7 +71,7 @@ if(bool(condition) == false){\
 
 #define ASSERT_WITH_DOWN(condition, ...) \
 if(bool(condition) == false){\
-    DEBUG_PRINT("[f]:", __LINE__, ##__VA_ARGS__);\
+    DEBUG_PRINT("[f]:", __LINE__, ':', ##__VA_ARGS__);\
     while(true);\
 }
 

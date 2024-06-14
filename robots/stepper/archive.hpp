@@ -3,7 +3,7 @@
 #define __STEPPER_ARCHIVE_HPP__
 
 #include "constants.hpp"
-
+#include "sys/kernel/stream.hpp"
 
 //at24c02 can max contain 256 bytes
 
@@ -34,20 +34,101 @@ namespace StepperUtils{
     static constexpr uint8_t hour = HOUR;
     static constexpr uint8_t minute = MINUTE;
 
-struct Archive{
-    struct{
-        uint8_t bver = build_version;
-        uint8_t dtype = drv_type;
-        char dbranch = drv_branch;
-        uint8_t y = year;
-        uint8_t m = month;
-        uint8_t d = day;
-        uint8_t h = hour;
-        uint8_t mi = minute;
+    struct BoardInfo{
+        int8_t flash_times;
+        uint8_t bver ;
+        uint8_t dtype ;
+        char dbranch ;
+        uint8_t y ;
+        uint8_t m ;
+        uint8_t d;
+        uint8_t h;
+        uint8_t mi;
+
+        void construct(){
+            bver = build_version;
+            dtype = drv_type;
+            dbranch = drv_branch;
+            y = year;
+            m = month;
+            d = day;
+            h = hour;
+            mi = minute;
+        }
+
+        bool broken(){
+            return (y > 30) || //no one will use this shit after 2030
+            (m > 12) || (d > 31) || (h > 23) || (mi > 59);
+        }
+
+        bool empty(){
+            return (!broken()) && (flash_times == 0);
+        }
+
+        bool match(){
+            return (y == year && m == month && d == day && h == hour && mi == minute); 
+        }
+
+        void printout(IOStream & logger){
+            logger << "build version:\t\t" << this->bver << "\r\n";
+            logger << "build time:\t\t20" << 
+                    this->y << '/' << this->m << '/' << 
+                    this->d << '\t' << this->h << ':' << this->mi << "\r\n";
+
+            logger << "driver type:\t\t" << this->dtype << "\r\n";
+            logger << "driver branch:\t\t" << this->dbranch << "\r\n";
+        }
     };
 
-    uint16_t offs[50];
-};
+    struct Switches{
+        union{
+            struct{
+                struct{
+                    uint8_t cali_every_pwon:1;
+                    uint8_t cali_when_update:1;
+                    uint8_t cali_done:1;
+                };
 
+                struct{
+                    uint8_t skip_tone:1;
+
+
+                };
+
+                struct{
+                    uint8_t cmd_mode:1;
+                };
+
+                struct{
+                    uint8_t auto_shutdown_activation:1;
+                    uint8_t shutdown_when_error_occurred:1;
+                    uint8_t shutdown_when_warn_occurred:1;
+                };
+            };
+            uint32_t data;
+        };
+
+        void construct(){
+
+        }
+    };
+
+    struct Archive{
+        union{
+            struct{
+                uint32_t hashcode;
+                BoardInfo board_info;
+                Switches switches;
+            };
+            uint8_t resv[256 - 100];
+        };
+        uint16_t cali_map[50];
+
+        uint32_t hash(){
+            return hash_impl((char *)this + sizeof(hashcode), sizeof(*this) - sizeof(hashcode));
+        }
+    };
 }
+
+
 #endif
