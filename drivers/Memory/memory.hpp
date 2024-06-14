@@ -27,6 +27,7 @@ public:
 
     template<typename T>
     void load(T & data, const Address loc = 0);
+
 };
 
 #include "memory.tpp"
