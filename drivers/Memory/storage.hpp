@@ -4,6 +4,7 @@
 
 #include "src/system.hpp"
 #include "types/range/range_t.hpp"
+#include "src/debug/debug_inc.h"
 // #include "memory.hpp"
 
 class Memory;

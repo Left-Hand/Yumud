@@ -1,8 +1,9 @@
 #include "tb.h"
 
 #define EEPROM_TB_FIRSTBYTE
-#define EEPROM_TB_WHOLECHIP
-#define EEPROM_TB_PIECES
+#define EEPROM_TB_SEVERLBYTES
+// #define EEPROM_TB_WHOLECHIP
+// #define EEPROM_TB_PIECES
 
 void eeprom_tb(IOStream & logger){
 
@@ -24,11 +25,24 @@ void eeprom_tb(IOStream & logger){
         uint8_t before;
         mem.load(before, 0);
         if(before == 0xff) before = 0;
-        mem.store(before + 1, 0);
+        mem.store(uint8_t(before + 1), 0);
         uint8_t after;
         mem.load(after, 0);
         ASSERT_WITH_DOWN(before + 1 == after, "firstbyte tb failed", before, "->", after);
         DEBUG_PRINT("firstbyte tb passed", before, "->", after);
+    }
+    #endif
+
+    #ifdef EEPROM_TB_SEVERLBYTES
+    {
+        auto before = Sys::Chip::getChipIdCrc();
+        mem.store(before, 0);
+
+        decltype(before) after;
+        mem.load(after, 0);
+
+        ASSERT_WITH_DOWN(before == after, "svbytes tb failed: ", toString(before,16), "->", toString(after, 16));
+        DEBUG_PRINT("svbytes tb passed");
     }
     #endif
 
@@ -37,7 +51,7 @@ void eeprom_tb(IOStream & logger){
         constexpr auto begin_addr = 0;
         bool passflag = true;
 
-        uint8_t data_before[] = {0, 1, 2, 4};
+        uint8_t data_before[] = {3, 1, 2, 4};
         uint8_t data_after[sizeof(data_before)] = {0};
 
         passflag &= (0 != memcmp(data_before, data_after, sizeof(data_before)));
@@ -72,7 +86,7 @@ void eeprom_tb(IOStream & logger){
         DEBUG_PRINT("muti store begin");
         constexpr auto begin_addr = 7;
         // constexpr auto end_addr = 15;
-        uint8_t data[] = {0, 1, 2, 4};
+        uint8_t data[] = {3, 1, 2, 4};
         uint8_t data2[sizeof(data)];
 
         Memory mem = {mem};
