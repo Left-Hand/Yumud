@@ -4,7 +4,7 @@
 
 #include "src/platform.h"
 #include "ch32v20x_i2c.h"
-#include "clock/clock.h"
+#include "sys/kernel/clock/clock.h"
 
 #ifdef __cplusplus
 extern"C"{

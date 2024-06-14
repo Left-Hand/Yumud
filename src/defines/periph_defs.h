@@ -270,31 +270,34 @@
     #endif
 #endif
 
-#define OPA2_O0_Pin GPIO_Pin_2
-#define OPA1_O0_Pin GPIO_Pin_3
-#define OPA2_O1_Pin GPIO_Pin_4
-#define OPA2_N1_Pin GPIO_Pin_5
-#define OPA1_N1_Pin GPIO_Pin_6
-#define OPA2_P1_Pin GPIO_Pin_7
+#ifdef HAVE_OPA2
+    #define OPA2_O0_Pin GPIO_Pin_2
+    #define OPA2_O1_Pin GPIO_Pin_4
+    #define OPA2_N1_Pin GPIO_Pin_5
+    #define OPA2_P1_Pin GPIO_Pin_7
+    #define OPA2_O0_Port GPIOA
+    #define OPA2_O1_Port GPIOA
+    #define OPA2_N1_Port GPIOA
+    #define OPA2_P1_Port GPIOA
+    #define OPA2_P0_Pin GPIO_Pin_14
+    #define OPA2_N0_Pin GPIO_Pin_10
+    #define OPA2_N0_Port GPIOB
+    #define OPA2_P0_Port GPIOB
+#endif
 
-#define OPA2_O0_Port GPIOA
-#define OPA1_O0_Port GPIOA
-#define OPA2_O1_Port GPIOA
-#define OPA2_N1_Port GPIOA
-#define OPA1_N1_Port GPIOA
-#define OPA2_P1_Port GPIOA
+#ifdef HAVE_OPA1
+    #define OPA1_O0_Pin GPIO_Pin_3
+    #define OPA1_N1_Pin GPIO_Pin_6
+    #define OPA1_N1_Port GPIOA
+    #define OPA1_O0_Port GPIOA
+    #define OPA1_P1_Pin GPIO_Pin_0
+    #define OPA1_O1_Pin GPIO_Pin_1
+    #define OPA1_N0_Pin GPIO_Pin_11
+    #define OPA1_P0_Pin GPIO_Pin_15
+    #define OPA1_P1_Port GPIOB
+    #define OPA1_O1_Port GPIOB
+    #define OPA1_N0_Port GPIOB
+    #define OPA1_P0_Port GPIOB
+#endif
 
-#define OPA1_P1_Pin GPIO_Pin_0
-#define OPA1_O1_Pin GPIO_Pin_1
-#define OPA2_N0_Pin GPIO_Pin_10
-#define OPA1_N0_Pin GPIO_Pin_11
-#define OPA2_P0_Pin GPIO_Pin_14
-#define OPA1_P0_Pin GPIO_Pin_15
-
-#define OPA1_P1_Port GPIOB
-#define OPA1_O1_Port GPIOB
-#define OPA2_N0_Port GPIOB
-#define OPA1_N0_Port GPIOB
-#define OPA2_P0_Port GPIOB
-#define OPA1_P0_Port GPIOB
 #endif

@@ -2,9 +2,9 @@
 
 #define __STORAGE_HPP__
 
-#include "src/system.hpp"
+#include "sys/system.hpp"
 #include "types/range/range_t.hpp"
-#include "src/debug/debug_inc.h"
+#include "sys/kernel/debug/debug_inc.h"
 // #include "memory.hpp"
 
 class Memory;
