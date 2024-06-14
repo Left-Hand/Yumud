@@ -35,7 +35,8 @@
     "sys/kernel",
     "hal",
     "hal/bus/usb",
-    "hal/bus/usb/cdc"
+    "hal/bus/usb/cdc",
+    "src/testbench"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
