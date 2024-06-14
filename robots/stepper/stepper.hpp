@@ -19,7 +19,6 @@ protected:
     using Switches = StepperUtils::Switches;
 
     Switches switches;
-    // constexpr size_t n = sizeof(Switches);
     IOStream & logger = uart1;
 
     TimerOutChannelPosOnChip & verfChannelA = timer3[3];
@@ -38,7 +37,6 @@ protected:
     I2cSw i2cSw{portD[1], portD[0]};
     AT24C02 at24{i2cSw};
     Memory memory{at24};
-
 
     uint32_t foc_pulse_micros;
     real_t est_speed;
@@ -146,8 +144,7 @@ protected:
     RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
     StatLed panel_led = StatLed{led_instance};
 
-    void loadArchive();
-    void saveArchive();
+
 
     void parse_command(const String & _command, const std::vector<String> & args) override{
         auto command = _command;
@@ -237,6 +234,8 @@ protected:
     }
     
 public:
+    void loadArchive();
+    void saveArchive();
 
     void tick(){
 
@@ -343,7 +342,11 @@ public:
         spi1.init(18000000);
         spi1.bindCsPin(portA[15], 0);
 
+        i2cSw.init(400000);
+
+        logger.println("======");
         logger.println("pwon");
+
         odo.init();
 
         // adc1.init(
@@ -409,7 +412,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(odo.getPosition(), est_pos, est_speed, ctrl.elecrad_offset_output, odo.getRawLapPosition(), odo.getLapPosition());
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
+        // if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_raddiff);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

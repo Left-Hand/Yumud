@@ -6,5 +6,6 @@ int main(){
     delay(200);
     uart1.println("power on");
     stepper_tb(uart1);
+    // eeprom_tb(uart1);
     while(true);
 }

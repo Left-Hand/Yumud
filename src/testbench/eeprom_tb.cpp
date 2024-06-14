@@ -1,8 +1,8 @@
 #include "tb.h"
 
-#define EEPROM_TB_FIRSTBYTE
-#define EEPROM_TB_SEVERLBYTES
-// #define EEPROM_TB_WHOLECHIP
+// #define EEPROM_TB_FIRSTBYTE
+// #define EEPROM_TB_SEVERLBYTES
+#define EEPROM_TB_WHOLECHIP
 // #define EEPROM_TB_PIECES
 
 void eeprom_tb(IOStream & logger){
@@ -50,7 +50,8 @@ void eeprom_tb(IOStream & logger){
         constexpr auto begin_addr = 0;
         bool passflag = true;
 
-        uint8_t data_before[] = {3, 1, 2, 4};
+        uint8_t data_before[256];
+        for(size_t i = 0; i < sizeof(data_before);i++) data_before[i] = i;
         uint8_t data_after[sizeof(data_before)] = {0};
 
         passflag &= (0 != memcmp(data_before, data_after, sizeof(data_before)));
@@ -80,7 +81,7 @@ void eeprom_tb(IOStream & logger){
     }
     #endif
 
-    #ifdef EEPROM_TB_WHOLECHIP
+    #ifdef EEPROM_TB_PIECES
     {
         DEBUG_PRINT("muti store begin");
         constexpr auto begin_addr = 7;

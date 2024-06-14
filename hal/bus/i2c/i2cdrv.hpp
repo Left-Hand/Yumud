@@ -30,7 +30,6 @@ public:
                 if(msb){
                     for(size_t j = size; j > 0; j--){
                         bus.write(data_ptr[j-1 + i]);
-                        // DEBUG_PRINT(data_ptr[j-1+i]);
                     }
                 }else{
                     for(size_t j = 0; j < size; j++){
