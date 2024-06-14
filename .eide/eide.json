@@ -30,7 +30,9 @@
     "hal/bus/usb",
     "hal/bus/usb/cdc",
     "src/testbench",
-    "sys"
+    "sys",
+    "thirdparty/lua",
+    "thirdparty/sstl"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -120,7 +122,8 @@
           "sys/sdk/ch32v203/Peripheral/inc",
           "sys/sdk/ch32v203/Peripheral/src",
           "hal",
-          "hal/bus/usb/cdc"
+          "hal/bus/usb/cdc",
+          "thirdparty/sstl"
         ],
         "libList": [
           "src/clock",
@@ -133,7 +136,8 @@
           "sys/sdk/ch32v203/Peripheral/inc",
           "sys/sdk/ch32v203/Peripheral/src",
           "hal",
-          "hal/bus/usb/cdc"
+          "hal/bus/usb/cdc",
+          "thirdparty/sstl"
         ],
         "sourceDirList": [],
         "defineList": [

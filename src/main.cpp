@@ -5,7 +5,8 @@ int main(){
     // uart1.init(921600, CommMethod::Dma, CommMethod::Blocking);
     delay(200);
     // uart1.println("power on");
-    stepper_tb(uart1);
+    // stepper_tb(uart1);
+    lua_tb(uart1);
     // eeprom_tb(uart1);
     while(true);
 }
