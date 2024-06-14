@@ -19,7 +19,6 @@ void eeprom_tb(IOStream & logger){
 
     Memory mem = at24;
 
-
     #ifdef EEPROM_TB_FIRSTBYTE
     {
         uint8_t before;

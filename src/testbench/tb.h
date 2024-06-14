@@ -159,6 +159,6 @@ using Sys::t;
 
 void eeprom_tb(IOStream & logger);
 void flash_tb(void);
+void memory_tb(IOStream & logger);
 
-
-
+void stepper_tb(IOStream & logger);
