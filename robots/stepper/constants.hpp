@@ -14,7 +14,7 @@
 #include "svpwm.hpp"
 
 
-static constexpr uint32_t foc_freq = 48000;
+static constexpr uint32_t foc_freq = 36000;
 static constexpr uint32_t est_freq = foc_freq / 16;
 static constexpr uint32_t est_devider = foc_freq / est_freq;
 

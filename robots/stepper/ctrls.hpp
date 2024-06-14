@@ -136,10 +136,9 @@ struct GeneralPositionCtrl:public PositionCtrl{
     }
 
     __fast_inline real_t position2rad(const real_t position){
-        real_t abs_frac1 = poles * abs(position);
-        return SIGN_AS(TAU * (frac(abs_frac1)), position);
+        real_t frac1 = SIGN_AS(frac(position), position) * poles;
+        return (poles * TAU) * (SIGN_AS(frac(abs(frac1)), frac1));
     }
-
 
 
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) override{
@@ -149,7 +148,9 @@ struct GeneralPositionCtrl:public PositionCtrl{
         }
 
         real_t error = targ_position - real_position;
-        real_t raddiff = (error *50 *TAU);
+        // real_t raddiff = (error *50 *TAU);
+        real_t raddiff = position2rad(error);
+
         if(ABS(raddiff) > PI / 2 ) raddiff = SIGN_AS(PI / 2, raddiff);
         // else raddiff = raddiff - real_elecrad;
 

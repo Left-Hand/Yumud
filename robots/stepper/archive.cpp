@@ -35,8 +35,8 @@ void Stepper::loadArchive(){
     }
 
     if(match){
-        for(size_t i = 0; i < odo.cali_map.size(); i++){
-            odo.cali_map[i] = (odo.cali_map[i]) / 65536;
+        for(size_t i = 0; i < odo.map().size(); i++){
+            odo.map()[i] = real_t(archive.cali_map[i]) / 16384;
             elecrad_zerofix = 0;
             // cali_map in archive is q16
         }
@@ -45,6 +45,24 @@ void Stepper::loadArchive(){
     }
     logger.println("======");
 }
+
+void Stepper::autoload(){
+    using Archive = StepperUtils::Archive;
+    Archive archive;
+    memory.load(archive);
+
+    bool en = true;
+
+    en &= (archive.hash() == archive.hashcode);
+    if(!en) return;
+
+    auto m_switches = archive.switches;
+    en &= (m_switches.cali_done); // if cali done, continue
+    en &= !(m_switches.cali_every_pwon);// if cali is forced when power on, break;
+    en &= !(m_switches.cali_when_update && !archive.board_info.match());// if update cali enabled and version out, break; 
+    if(!en) return;
+}
+
 
 void Stepper::saveArchive(){
     using Archive = StepperUtils::Archive;
@@ -58,13 +76,12 @@ void Stepper::saveArchive(){
     logger.println("current board info:");
     archive.board_info.printout(logger);
 
-
     archive.switches = switches;
     uint32_t hashcode = archive.hash();
-    // archive.hashcode = hashcode;
+    archive.hashcode = hashcode;
 
-    for(size_t i = 0; i < odo.cali_map.size(); i++){
-        archive.cali_map[i] = int((odo.cali_map[i] + elecrad_zerofix) * 65536);
+    for(size_t i = 0; i < odo.map().size(); i++){
+        archive.cali_map[i] = uint16_t((odo.map()[i] + (elecrad_zerofix / real_t(poles * TAU))) * 16384);
     }
 
     logger.println("generate done");

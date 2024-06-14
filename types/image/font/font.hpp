@@ -8,20 +8,28 @@
 #include "chfont7x7.h"
 
 class Font{
-public:
+protected:
     Vector2i size;
-    Font(Vector2i _size):size(_size){;}
-    virtual bool getpixel(const wchar_t & chr, const Vector2i & offset) const = 0;
+    uint8_t scale;
+    virtual bool _getpixel(const wchar_t & chr, const Vector2i & offset) const = 0;
+public:
+    Font(Vector2i _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
+    bool getpixel(const wchar_t & chr, const Vector2i & offset) const{
+        return _getpixel(chr, {offset.x / scale, offset.y / scale});
+    }
+
+    void setScale(const uint8_t & _scale){scale = _scale;}
+    Vector2i getSize() const { return size * scale; }
 };
 
 
 class Font8x5:public Font{
-public:
-    Font8x5():Font( Vector2i(5,8)){;}
-    bool getpixel(const wchar_t & chr, const Vector2i & offset) const override{
+    bool _getpixel(const wchar_t & chr, const Vector2i & offset) const override{
         if (!size.has_point(offset)) return false;
         return font8x5_enc[MAX(chr - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
+public:
+    Font8x5():Font( Vector2i(5,8)){;}
 };
 
 extern Font8x5 font8x5;
@@ -112,7 +120,7 @@ protected:
     }
 public:
 	Font7x7():Font(Vector2i{7,7}){;}
-	bool getpixel(const wchar_t & chr, const Vector2i & offset) const override{
+	bool _getpixel(const wchar_t & chr, const Vector2i & offset) const override{
         // if(!size.has_point(offset)) return false;
         if(offset.y > 6) return false;
 		static wchar_t last_chr = 0;
