@@ -4,7 +4,7 @@
 
 #include "platform.h"
 #include "types/real.hpp"
-#include "clock/clock.h"
+#include "sys/kernel/clock/clock.h"
 
 __fast_inline uint64_t operator"" _KHz(uint64_t x){
     return x * 1000;
@@ -45,20 +45,20 @@ namespace Sys{
     };
 
     namespace Clock{
-        void delayMs(const uint32_t & ms);
-        void delayUs(const uint32_t & us);
+        void delayMs(const uint32_t ms);
+        void delayUs(const uint32_t us);
 
         uint32_t getSystemFreq();
         uint32_t getAPB1Freq();
-        void setAPB1Freq(const uint32_t &ferq);
+        void setAPB1Freq(const uint32_t ferq);
         uint32_t getAPB2Freq();
-        void setAPB2Freq(const uint32_t &ferq);
+        void setAPB2Freq(const uint32_t ferq);
         uint32_t getAHBFreq();
-        void setAHBFreq(const uint32_t &ferq);
+        void setAHBFreq(const uint32_t ferq);
 
-        void setAPB1Div(const uint8_t & div);
-        void setAPB2Div(const uint8_t & div);
-        void setAHBDiv(const uint8_t & div);
+        void setAPB1Div(const uint8_t div);
+        void setAPB2Div(const uint8_t div);
+        void setAHBDiv(const uint8_t div);
 
         void reCalculateTime();
         real_t getCurrentSeconds();

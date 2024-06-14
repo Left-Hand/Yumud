@@ -2,8 +2,8 @@
 
 #define __CAPTURE_CHANNEL_HPP__
 
-#include "src/clock/clock.h"
-#include "src/clock/time_stamp.hpp"
+#include "sys/kernel/clock/clock.h"
+#include "sys/kernel/clock/time_stamp.hpp"
 #include "hal/exti/exti.hpp"
 #include "real.hpp"
 

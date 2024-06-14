@@ -1,8 +1,16 @@
-#include "system.hpp"
+#include "sys/system.hpp"
 #include "hal/crc/crc.hpp"
 
 real_t Sys::t;
 
+
+void Sys::Clock::delayMs(const uint32_t ms){
+    delay(ms);
+}
+
+void Sys::Clock::delayUs(const uint32_t us){
+    delayMicroseconds(us);
+}
 
 void Sys::Misc::prework(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -89,7 +97,7 @@ uint32_t Sys::Clock::getAPB1Freq(){
 }
 
 
-void Sys::Clock::setAHBDiv(const uint8_t & _div){
+void Sys::Clock::setAHBDiv(const uint8_t _div){
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
@@ -102,7 +110,7 @@ void Sys::Clock::setAHBDiv(const uint8_t & _div){
     }
 }
 
-void Sys::Clock::setAPB1Div(const uint8_t & _div){
+void Sys::Clock::setAPB1Div(const uint8_t _div){
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
@@ -123,7 +131,7 @@ void Sys::Clock::setAPB1Div(const uint8_t & _div){
     }
 }
 
-void Sys::Clock::setAPB2Div(const uint8_t & _div){
+void Sys::Clock::setAPB2Div(const uint8_t _div){
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
@@ -155,15 +163,15 @@ uint32_t Sys::Clock::getAHBFreq(){
     return RCC_CLK.HCLK_Frequency;
 }
 
-void Sys::Clock::setAHBFreq(const uint32_t & freq){
+void Sys::Clock::setAHBFreq(const uint32_t freq){
     setAHBDiv(getAHBFreq() / freq);
 }
 
-void Sys::Clock::setAPB1Freq(const uint32_t & freq){
+void Sys::Clock::setAPB1Freq(const uint32_t freq){
     setAPB1Div(getAPB1Freq() / freq);
 }
 
-void Sys::Clock::setAPB2Freq(const uint32_t & freq){
+void Sys::Clock::setAPB2Freq(const uint32_t freq){
     setAPB2Div(getAPB2Freq() / freq);
 }
 
@@ -174,7 +182,7 @@ void NMI_Handler(void)
 
 void HardFault_Handler(void)
 {
-  while (1)
-  {
-  }
+    while (1)
+    {
+    }
 }
