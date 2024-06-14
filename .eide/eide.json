@@ -4,6 +4,7 @@
   "dependenceList": [],
   "srcDirs": [
     "src",
+    "src/clock",
     "src/defines",
     "dsp",
     "dsp/controller",
@@ -11,14 +12,20 @@
     "dsp/floatlib",
     "types",
     "types/iq",
+    "src/errors",
     "types/string",
     "types/color",
     "types/matrix",
     "types/complex",
+    "src/bus",
+    "src/bus/uart",
     "types/buffer/ringbuf",
     "types/buffer",
+    "src/gpio",
+    "src/bus/spi",
     "types/range",
     "types/image/font",
+    "src/timer",
     "robots",
     "drivers",
     "sys/sdk/ch32v203",
@@ -29,10 +36,7 @@
     "hal",
     "hal/bus/usb",
     "hal/bus/usb/cdc",
-    "src/testbench",
-    "sys",
-    "thirdparty/lua",
-    "thirdparty/sstl"
+    "src/testbench"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -122,8 +126,7 @@
           "sys/sdk/ch32v203/Peripheral/inc",
           "sys/sdk/ch32v203/Peripheral/src",
           "hal",
-          "hal/bus/usb/cdc",
-          "thirdparty/sstl"
+          "hal/bus/usb/cdc"
         ],
         "libList": [
           "src/clock",
@@ -136,8 +139,7 @@
           "sys/sdk/ch32v203/Peripheral/inc",
           "sys/sdk/ch32v203/Peripheral/src",
           "hal",
-          "hal/bus/usb/cdc",
-          "thirdparty/sstl"
+          "hal/bus/usb/cdc"
         ],
         "sourceDirList": [],
         "defineList": [
