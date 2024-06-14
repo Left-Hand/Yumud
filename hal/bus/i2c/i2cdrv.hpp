@@ -2,6 +2,7 @@
 #define __I2C_DRV_HPP__
 
 #include "i2c.hpp"
+#include "src/debug/debug_inc.h"
 #include "hal/bus/busdrv.hpp"
 
 #include <type_traits>
@@ -17,6 +18,7 @@ public:
         BusDrv<I2c>(_bus, _index, _wait_time){};
 
     template<typename T>
+    requires (std::is_same_v<T, uint16_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) && (!std::is_same_v<T, int>)
     void writePool(const uint8_t reg_address, const T * data_ptr, const size_t length, const bool msb = true){
         constexpr size_t size = sizeof(T);
         if(length == 0) return;
@@ -28,6 +30,7 @@ public:
                 if(msb){
                     for(size_t j = size; j > 0; j--){
                         bus.write(data_ptr[j-1 + i]);
+                        // DEBUG_PRINT(data_ptr[j-1+i]);
                     }
                 }else{
                     for(size_t j = 0; j < size; j++){
