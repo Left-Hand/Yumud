@@ -67,7 +67,7 @@ private:
 protected :
 
     void reset() override {};
-    void lock_avoid() override {};
+    void unlock() override {};
 public:
 
     I2cSw(GpioConcept & _scl,GpioConcept & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}

@@ -125,7 +125,7 @@
 
 #ifdef HAVE_I2C1
 #if (I2C1_REMAP_ENABLE == ENABLE)
-    #define I2C1_Port GPIOB
+    #define I2C1_Port portB
     #define I2C1_SCL_Pin GPIO_Pin_8
     #define I2C1_SDA_Pin GPIO_Pin_9
     #define I2C1_REMAP GPIO_Remap_I2C1
@@ -139,7 +139,7 @@
 
 
 #ifdef HAVE_I2C2
-    #define I2C2_Port GPIOB
+    #define I2C2_Port portB
     #define I2C2_SCL_Pin GPIO_Pin_10
     #define I2C2_SDA_Pin GPIO_Pin_11
 #endif
