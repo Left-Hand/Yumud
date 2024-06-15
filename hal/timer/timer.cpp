@@ -51,6 +51,10 @@ void BasicTimer::init(const uint32_t & freq, const Mode & mode, const bool & en)
     uint32_t raw_period = TIM_Get_BusFreq(instance) / freq;
     // TIM_Get_BusFreq(instance);
     // uint32_t raw_period = 144000000 / freq;
+
+    // can`t adaptly select the best frequency by gcd
+    // TODO
+
     uint16_t cycle = 1;
     while(raw_period / cycle > 16384){
         cycle++;

@@ -14,8 +14,11 @@ void pwm_tb(OutputStream & logger){
     #ifdef PWM_TB_SIN
 
     #ifdef PWM_TB_CO
-    // timer1.ocn(1).init();
-    // timer1.ocn(1).setPolarity(false);
+    auto & co = timer1.ocn(1);
+    co.init();
+    co.setPolarity(HIGH);
+    co.setIdleState(HIGH);
+
 
     timer1.initBdtr();
     #endif

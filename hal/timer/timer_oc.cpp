@@ -3,8 +3,14 @@
 
 
 
+void TimerOut::installToPin(const bool & en){
+    Gpio & io = getPin();
+    if(en)io.OutAfPP();
+    else io.InFloating();
+    enable(en);
+}
 
-void TimerOC::init(const bool & install, const Mode & mode){
+void TimerOC::init(const bool & install, const TimerOC::Mode & mode){
     setPolarity(true);
     enableSync();
 
@@ -17,7 +23,7 @@ void TimerOC::init(const bool & install, const Mode & mode){
     enable();
 }
 
-void TimerOC::setMode(const Mode & mode){
+void TimerOC::setMode(const TimerOC::Mode & mode){
     uint16_t m_code,s_code;
     switch(channel){
         default:
@@ -69,18 +75,18 @@ void TimerOC::setMode(const Mode & mode){
     }
 }
 
-void TimerOC::enable(const bool & en){
+void TimerOut::enable(const bool & en){
     if(en) instance->CCER |= 1 << ((uint8_t)channel * 2);
     else instance->CCER &= ~(1 << ((uint8_t)channel) * 2);
 }
 
 
-void TimerOC::setPolarity(const bool & pol){
+void TimerOut::setPolarity(const bool & pol){
     if(!pol) instance->CCER |= (1 << ((uint8_t)channel * 2 + 1));
     else instance->CCER &= (~(1 << (((uint8_t)channel) * 2 + 1)));
 }
 
-void TimerOC::enableSync(const bool & _sync){
+void TimerOut::enableSync(const bool & _sync){
     switch(channel){
         case Channel::CH1:
             TIM_OC1PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
@@ -97,10 +103,9 @@ void TimerOC::enableSync(const bool & _sync){
         default:
             break;
     }
-
 }
 
-void TimerOC::setIdleState(const bool & state){
+void TimerOut::setIdleState(const bool & state){
     if(TimerUtils::isAdvancedTimer(instance)){
         auto tmpcr2 = instance->CTLR2;
         const auto mask = (uint16_t)(TIM_OIS1 << (uint8_t)channel);
@@ -108,99 +113,4 @@ void TimerOC::setIdleState(const bool & state){
         if(state) tmpcr2 |= mask;
         instance->CTLR2 = tmpcr2;
     }
-}
-
-
-#define ADVANCED_TIMER_GPIO_TEMPLATE(x)\
-case TIM##x##_BASE:\
-    switch(channel){\
-        default:\
-        case Channel::CH1:\
-            gpio_port = &TIM##x##_CH1_Port;\
-            gpio_pin = TIM##x##_CH1_Pin;\
-            break;\
-        case Channel::CH1N:\
-            gpio_port = &TIM##x##_CH1N_Port;\
-            gpio_pin = TIM##x##_CH1N_Pin;\
-            break;\
-        case Channel::CH2:\
-            gpio_port = &TIM##x##_CH2_Port;\
-            gpio_pin = TIM##x##_CH2_Pin;\
-            break;\
-        case Channel::CH2N:\
-            gpio_port = &TIM##x##_CH2N_Port;\
-            gpio_pin = TIM##x##_CH2N_Pin;\
-            break;\
-        case Channel::CH3:\
-            gpio_port = &TIM##x##_CH3_Port;\
-            gpio_pin = TIM##x##_CH3_Pin;\
-            break;\
-        case Channel::CH3N:\
-            gpio_port = &TIM##x##_CH3N_Port;\
-            gpio_pin = TIM##x##_CH3N_Pin;\
-            break;\
-        case Channel::CH4:\
-            gpio_port = &TIM##x##_CH4_Port;\
-            gpio_pin = TIM##x##_CH4_Pin;\
-            break;\
-    }\
-    break;\
-
-#define GENERIC_TIMER_GPIO_TEMPLATE(x)\
-case TIM##x##_BASE:\
-    switch(channel){\
-        default:\
-        case Channel::CH1:\
-            gpio_port = &TIM##x##_CH1_Port;\
-            gpio_pin = TIM##x##_CH1_Pin;\
-            break;\
-        case Channel::CH2:\
-            gpio_port = &TIM##x##_CH2_Port;\
-            gpio_pin = TIM##x##_CH2_Pin;\
-            break;\
-        case Channel::CH3:\
-            gpio_port = &TIM##x##_CH3_Port;\
-            gpio_pin = TIM##x##_CH3_Pin;\
-            break;\
-        case Channel::CH4:\
-            gpio_port = &TIM##x##_CH4_Port;\
-            gpio_pin = TIM##x##_CH4_Pin;\
-            break;\
-    }\
-    break;\
-
-void TimerOC::installToPin(const bool & en){
-    Port * gpio_port;
-    uint16_t gpio_pin = 0;
-    switch((uint32_t)instance){
-        default:
-        #ifdef HAVE_TIM1
-        ADVANCED_TIMER_GPIO_TEMPLATE(1)
-        #endif
-
-        #ifdef HAVE_TIM2
-        GENERIC_TIMER_GPIO_TEMPLATE(2)
-        #endif
-
-        #ifdef HAVE_TIM3
-        GENERIC_TIMER_GPIO_TEMPLATE(3)
-        #endif
-
-        #ifdef HAVE_TIM4
-        GENERIC_TIMER_GPIO_TEMPLATE(4)
-        #endif
-
-        #ifdef HAVE_TIM5
-        GENERIC_TIMER_GPIO_TEMPLATE(5)
-        #endif
-
-        #ifdef HAVE_TIM8
-        ADVANCED_TIMER_GPIO_TEMPLATE(8)
-        #endif
-    }
-
-    Gpio & io = (*gpio_port)[(Pin)gpio_pin];
-    if(en)io.OutAfPP();
-    else io.InFloating();
-    enable(en);
 }
