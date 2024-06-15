@@ -5,7 +5,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "drivers/CommonIO/Led/rgbLed.hpp"
-#include "hal/timer/pwm_channel.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
 #include "drivers/device_defs.h"
 
 class AW9523: public PortVirtualConcept<16>{

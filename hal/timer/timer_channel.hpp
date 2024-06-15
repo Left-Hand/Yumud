@@ -2,7 +2,7 @@
 
 #include "hal/gpio/port.hpp"
 #include "hal/timer/timer_utils.hpp"
-#include "hal/timer/pwm_channel.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
 
 class TimerChannel{
 public:

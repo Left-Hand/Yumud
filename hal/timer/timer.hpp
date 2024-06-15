@@ -39,13 +39,13 @@ public:
                 TimerOC(instance, TimerChannel::Channel::CH3),
                 TimerOC(instance, TimerChannel::Channel::CH4)
             }{;}
+
     void initAsEncoder(const Mode mode = Mode::Up);
     void enableSingle(const bool _single = true);
-    TimerChannel & ch(const int index){return channels[CLAMP(index, 1, 4) - 1];}//TODO
+    TimerChannel & ch(const int index){return channels[CLAMP(index, 1, 4) - 1];}
     TimerOC & oc(const int index){return channels[CLAMP(index, 1, 4) - 1];}
     virtual TimerChannel & operator [](const int index){return ch(index);}
     virtual TimerChannel & operator [](const TimerChannel::Channel channel){return channels[(uint8_t)channel >> 1];}
-
 };
 
 class AdvancedTimer:public GenericTimer{
