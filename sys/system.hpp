@@ -2,7 +2,7 @@
 
 #define __SYSTEM_HPP__
 
-#include "platform.h"
+#include "sys/platform.h"
 #include "types/real.hpp"
 #include "sys/kernel/clock.h"
 

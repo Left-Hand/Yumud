@@ -20,9 +20,7 @@ public:
     using DuplexBus::txMethod;
     using DuplexBus::rxMethod;
 protected:
-
     static constexpr size_t uart_fifo_size = 256;
-
     RingBuf_t<char, uart_fifo_size> txBuf;
     RingBuf_t<char, uart_fifo_size> rxBuf;
 

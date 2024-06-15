@@ -2,7 +2,7 @@
 
 #define __BKP_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 
 struct BkpItem;
 

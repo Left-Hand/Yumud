@@ -21,7 +21,7 @@ const char lua_test[] = {
     "print(\"and sum = 2^11 =\", 2 ^ 11)\n"
 };
 
-void lua_tb(IOStream & logger){
+void lua_tb(OutputStream & logger){
     // lua_State * L = luaL_newstate();
     // luaL_openlibs(L);
     // lua_tb_open(L);

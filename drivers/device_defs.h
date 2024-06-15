@@ -1,7 +1,7 @@
 #ifndef __DEVICE_INC_H__
 #define __DEVICE_INC_H__
 
-#include "platform.h"
+#include "sys/platform.h"
 #include "sys/kernel/debug/debug_inc.h"
 
 #ifndef REG8_BEGIN

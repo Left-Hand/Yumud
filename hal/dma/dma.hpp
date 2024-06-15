@@ -2,7 +2,7 @@
 
 #define __DMA_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port.hpp"
 #include "hal/nvic/nvic.hpp"

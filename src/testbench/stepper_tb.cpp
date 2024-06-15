@@ -1,6 +1,6 @@
 #include "tb.h"
 
-void stepper_tb(IOStream & logger){
+void stepper_tb(OutputStream & logger){
     Stepper stp;
     uart1.init(115200 * 8);
     can1.init(Can::BaudRate::Mbps1);

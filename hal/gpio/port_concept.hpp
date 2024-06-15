@@ -2,7 +2,7 @@
 
 #define __PORT_CONCEPT_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "gpio_enums.hpp"
 
 class PortConcept{

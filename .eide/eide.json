@@ -149,7 +149,8 @@
           "CH32V203GXX",
           "CH32V203KXX",
           "CH32V203CXX",
-          "LUA_USE_C89"
+          "LUA_USE_C89",
+          "CH32V20X"
         ]
       }
     },

@@ -12,81 +12,25 @@
  */
 
 #include "clock.h"
-#include "ch32v20x_rcc.h"
-#include "system_ch32v20x.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define tick_per_ms (SYSCLK / 1000)
+#define tick_per_ms (F_CPU / 1000)
 #define tick_per_us (tick_per_ms / 1000)
 
 
-volatile uint32_t msTick=0;
+volatile uint32_t msTick = 0;
 
-__attribute__ ((weak)) uint32_t GetTick(void){
-    return msTick;
-}
-
-
-__attribute__ ((weak)) void SetTick(uint32_t _tick){
-    msTick = _tick;
-}
-
-uint32_t millis(void)
-{
-    return msTick;
-}
-
-uint64_t micros(void)
-{
-    __disable_irq();
-    uint64_t m = msTick;
-    __IO uint64_t ticks = SysTick->CNT;
-    __enable_irq();
-
-    return (m * 1000 + ticks / tick_per_us);
-
-}
-
-uint64_t nanos(){
-    __disable_irq();
-    uint64_t m = GetTick();
-    __IO uint64_t ticks = SysTick->CNT;
-    __enable_irq();
-
-    return (m * 1000000 + NanoMut(ticks));
-}
-
-void delay(uint32_t ms)
+void delay(const uint32_t ms)
 {
   delayMicroseconds(ms * 1000);
 }
 
-void SysTick_Handler(void)
-{
-    msTick+=1;
-    SysTick->SR = 0;
-}
 
 
-void Systick_Init(){
-    static uint8_t initd = 0;
-    if(initd) return;
-    initd = 1;
-    SysTick->SR  = 0;
-    SysTick->CTLR= 0;
-    SysTick->CNT = 0;
-    SysTick->CMP = tick_per_ms - 1;
-    SysTick->CTLR= 0xF;
-
-    NVIC_SetPriority(SysTicK_IRQn,0xFF);
-    NVIC_EnableIRQ(SysTicK_IRQn);
-}
-
-
-void delayMicroseconds(uint32_t us)
+void delayMicroseconds(const uint32_t us)
 {
   __IO uint64_t currentTicks = SysTick->CNT;
   /* Number of ticks per millisecond */
@@ -130,6 +74,21 @@ volatile void delayNanoseconds(uint32_t ns) {
         oldTicks = currentTicks;
     } while (nbTicks > elapsedTicks);
 }
+
+void Systick_Init(){
+    static uint8_t initd = 0;
+    if(initd) return;
+    initd = 1;
+    SysTick->SR  = 0;
+    SysTick->CTLR= 0;
+    SysTick->CNT = 0;
+    SysTick->CMP = tick_per_ms - 1;
+    SysTick->CTLR= 0xF;
+
+    NVIC_SetPriority(SysTicK_IRQn,0xFF);
+    NVIC_EnableIRQ(SysTicK_IRQn);
+}
+
 
 #ifdef __cplusplus
 }

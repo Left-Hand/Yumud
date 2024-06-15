@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "src/platform.h"
+#include "sys/platform.h"
 
 	/** @addtogroup Utilities
   * @{

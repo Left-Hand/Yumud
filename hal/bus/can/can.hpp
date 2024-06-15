@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <functional>
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "hal/gpio/gpio.hpp"
 #include "can_msg.hpp"
 #include "types/buffer/ringbuf/ringbuf_t.hpp"

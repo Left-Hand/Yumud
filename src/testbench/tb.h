@@ -157,10 +157,11 @@ using Sys::t;
 #include "drivers/Encoder/Estimmator.hpp"
 #include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
 
-void eeprom_tb(IOStream & logger);
+void eeprom_tb(OutputStream & logger);
 void flash_tb(void);
-void memory_tb(IOStream & logger);
+void memory_tb(OutputStream & logger);
 
-void stepper_tb(IOStream & logger);
+void stepper_tb(OutputStream & logger);
 
-void lua_tb(IOStream & logger);
+void lua_tb(OutputStream & logger);
+void pwm_tb(OutputStream & logger);

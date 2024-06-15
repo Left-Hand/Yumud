@@ -2,7 +2,7 @@
 
 #define __NVIC_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 
 #if defined(WCH) && defined(RISCV)
 #define SUPPORT_VTF

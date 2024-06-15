@@ -2,7 +2,7 @@
 
 #define __FAST_SQRT_H__
 
-#include "../src/defines/platform.h"
+#include "../src/defines/sys/platform.h"
 
 #ifdef __cplusplus
 extern "C"{
