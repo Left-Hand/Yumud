@@ -2,8 +2,8 @@
 
 #define __DEFS_H__
 
-#include "math_defs.h"
-#include "sys/kernel/sys_defs.h"
+#include "sys/math_defs.h"
+#include "sys/sys_defs.h"
 #include "user_defs.h"
 #include "periph_defs.h"
 

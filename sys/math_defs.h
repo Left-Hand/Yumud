@@ -2,7 +2,7 @@
 
 #define __MATH_DEFS_H__
 
-#include "sys/kernel/sys_defs.h"
+#include "sys/sys_defs.h"
 
 #define CMP_EPSILON 0.00001
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
