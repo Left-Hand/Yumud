@@ -4,7 +4,7 @@
 
 #include "platform.h"
 #include "types/real.hpp"
-#include "sys/kernel/clock/clock.h"
+#include "sys/kernel/clock.h"
 
 __fast_inline uint64_t operator"" _KHz(uint64_t x){
     return x * 1000;

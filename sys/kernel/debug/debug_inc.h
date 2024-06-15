@@ -3,7 +3,7 @@
 #define __DEBUG_INC_H__
 
 #include "bus/bus_inc.h"
-#include "sys/kernel/clock/clock.h"
+#include "sys/kernel/clock.h"
 
 #define DEBUGGER uart1
 #define LOGGER uart1
