@@ -3,7 +3,7 @@
 
 #include "i2c.hpp"
 #include "hal/gpio/gpio.hpp"
-#include "src/clock/time_stamp.hpp"
+#include "sys/kernel/time_stamp.hpp"
 
 class I2cSw: public I2c{
 private:

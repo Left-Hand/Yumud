@@ -2,7 +2,7 @@
 
 #define __VECTOR3_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "../string/String.hpp"
 #include "types/real.hpp"
 #include <type_traits>

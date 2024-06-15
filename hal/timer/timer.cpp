@@ -46,11 +46,15 @@ static uint32_t TIM_Get_BusFreq(TIM_TypeDef * instance){
 }
 
 
-void BasicTimer::init(const uint32_t & freq, const TimerMode & mode, const bool & en){
+void BasicTimer::init(const uint32_t & freq, const Mode & mode, const bool & en){
     TIM_RCC_ON(instance);
     uint32_t raw_period = TIM_Get_BusFreq(instance) / freq;
     // TIM_Get_BusFreq(instance);
     // uint32_t raw_period = 144000000 / freq;
+
+    // can`t adaptly select the best frequency by gcd
+    // TODO
+
     uint16_t cycle = 1;
     while(raw_period / cycle > 16384){
         cycle++;
@@ -59,7 +63,7 @@ void BasicTimer::init(const uint32_t & freq, const TimerMode & mode, const bool 
     init(raw_period / cycle, cycle, mode, en);
 }
 
-void BasicTimer::init(const uint16_t & period, const uint16_t & cycle, const TimerMode & mode, const bool & en){
+void BasicTimer::init(const uint16_t & period, const uint16_t & cycle, const Mode & mode, const bool & en){
     TIM_RCC_ON(instance);
     TIM_InternalClockConfig(instance);
     TIM_DeInit(instance);
@@ -91,7 +95,7 @@ void BasicTimer::enable(const bool & en){
     }
 }
 
-void GenericTimer::initAsEncoder(const TimerMode mode){
+void GenericTimer::initAsEncoder(const Mode mode){
     TIM_RCC_ON(instance);
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 

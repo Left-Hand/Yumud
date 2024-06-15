@@ -1,5 +1,5 @@
 #include "../can.hpp"
-#include "src/debug/debug_inc.h"
+#include "sys/kernel/debug/debug_inc.h"
 
 void can_tb(bool tx_role){
     LOGGER.init(115200);

@@ -2,7 +2,7 @@
 
 #define __MATH_DEFS_H__
 
-#include "sys_defs.h"
+#include "sys/kernel/sys_defs.h"
 
 #define CMP_EPSILON 0.00001
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
@@ -90,7 +90,7 @@
 #endif
 
 #ifndef IN_RANGE
-#define IN_RANGE(x,a,b) ((a < b) ? (a <= x && x <= b) : (a >= x && x >= b))
+#define IN_RANGE(x,a,b) ((a < b) ? (a <= x && x < b) : (a > x && x >= b))
 #endif
 
 #ifndef SWAP

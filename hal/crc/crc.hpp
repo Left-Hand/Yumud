@@ -2,7 +2,7 @@
 
 #define __CRC_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include <initializer_list>
 
 class Crc{

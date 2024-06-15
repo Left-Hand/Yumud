@@ -5,7 +5,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "drivers/CommonIO/Led/rgbLed.hpp"
-#include "hal/timer/pwm_channel.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
 #include "drivers/device_defs.h"
 
 class AW9523: public PortVirtualConcept<16>{
@@ -171,7 +171,7 @@ public:
 
 };
 
-class AW9523Pwm:public PwmChannelConcept{
+class AW9523Pwm:public PwmChannel{
 protected:
     AW9523 & aw9523;
     Pin pin;
@@ -182,13 +182,8 @@ public:
         aw9523.enableLedMode(pin);
     }
 
-
-    void setDuty(const real_t & duty) override{
-        aw9523.setLedCurrent(pin,int(255 * duty));
-    }
-
     AW9523Pwm & operator = (const real_t & duty) override{
-        setDuty(duty);
+        aw9523.setLedCurrent(pin,int(255 * duty));
         return *this;
     }
 };

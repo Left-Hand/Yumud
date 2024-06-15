@@ -2,7 +2,7 @@
 
 #define __CAN_MSG_HPP__
 
-#include "platform.h"
+#include "sys/platform.h"
 #include <memory.h>
 #include <initializer_list>
 #include <vector>

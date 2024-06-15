@@ -5,7 +5,7 @@
 #include "../real.hpp"
 #include "../range/range_t.hpp"
 #include "../vector2/vector2_t.hpp"
-#include "src/platform.h"
+#include "sys/platform.h"
 
 template<typename T>
 class Rect2_t{

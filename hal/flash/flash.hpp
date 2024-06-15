@@ -2,7 +2,7 @@
 
 #define __FLASH_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "drivers/Memory/storage.hpp"
 #include "drivers/Memory/memory.hpp"
 

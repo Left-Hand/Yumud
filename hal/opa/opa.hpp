@@ -2,7 +2,7 @@
 
 #define __OPA_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port.hpp"
 
@@ -15,6 +15,7 @@ protected:
 
     Gpio & getPosPin(){
         switch(opa_num){
+            #ifdef HAVE_OPA1
             case 1:
                 switch(psel){
                     case 0:
@@ -25,6 +26,8 @@ protected:
                         break;
                 }
                 break;
+            #endif
+            #ifdef HAVE_OPA2
             case 2:
                 switch(psel){
                     case 0:
@@ -35,14 +38,17 @@ protected:
                         break;
                 }
                 break;
+            #endif
             default:
                 break;
         }
-        return portA[Pin::None];
-    };
+        // return portA[Pin::None];
+        return GpioNull;
+    }
 
     Gpio & getNegPin(){
         switch(opa_num){
+            #ifdef HAVE_OPA1
             case 1:
                 switch(psel){
                     case 0:
@@ -53,6 +59,9 @@ protected:
                         break;
                 }
                 break;
+            #endif
+
+            #ifdef HAVE_OPA2
             case 2:
                 switch(psel){
                     case 0:
@@ -63,11 +72,13 @@ protected:
                         break;
                 }
                 break;
+            #endif
             default:
                 break;
         }
-        return portA[Pin::None];
-    };
+        // return portA[Pin::None];
+        return GpioNull;
+    }
 
 public:
     Opa(const uint8_t & _opa_num):opa_num( _opa_num ){;}

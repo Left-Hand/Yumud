@@ -2,7 +2,7 @@
 
 // #define __ADC_CHANNEL_HPP__
 
-// #include "src/platform.h"
+// #include "sys/platform.h"
 // #include "analog_channel.hpp"
 // #include "adc_enums.h"
 // #include "hal/gpio/gpio.hpp"

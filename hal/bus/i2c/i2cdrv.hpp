@@ -2,7 +2,7 @@
 #define __I2C_DRV_HPP__
 
 #include "i2c.hpp"
-#include "src/debug/debug_inc.h"
+#include "sys/kernel/debug/debug_inc.h"
 #include "hal/bus/busdrv.hpp"
 
 #include <type_traits>

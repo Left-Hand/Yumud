@@ -5,5 +5,5 @@
 // #define MEMORY_TB_WHOLECHIP
 // #define MEMORY_TB_PIECES
 
-void memory_tb(IOStream & logger){
+void memory_tb(OutputStream & logger){
 }
