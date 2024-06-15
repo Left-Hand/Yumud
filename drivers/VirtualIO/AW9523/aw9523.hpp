@@ -171,7 +171,7 @@ public:
 
 };
 
-class AW9523Pwm:public PwmChannelConcept{
+class AW9523Pwm:public PwmChannel{
 protected:
     AW9523 & aw9523;
     Pin pin;
@@ -182,13 +182,8 @@ public:
         aw9523.enableLedMode(pin);
     }
 
-
-    void setDuty(const real_t & duty) override{
-        aw9523.setLedCurrent(pin,int(255 * duty));
-    }
-
     AW9523Pwm & operator = (const real_t & duty) override{
-        setDuty(duty);
+        aw9523.setLedCurrent(pin,int(255 * duty));
         return *this;
     }
 };

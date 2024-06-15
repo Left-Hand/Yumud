@@ -58,16 +58,16 @@ template<bool com_anode>
 class RgbLedPwm:public RgbLedConcept<com_anode>{
 protected:
     using Color = Color_t<real_t>;
-    PwmChannelConcept & red_channel;
-    PwmChannelConcept & green_channel;
-    PwmChannelConcept & blue_channel;
+    PwmChannel & red_channel;
+    PwmChannel & green_channel;
+    PwmChannel & blue_channel;
     void _update(const Color &color) override{
         red_channel = color.r / real_t(1);
         green_channel = color.g / real_t(1);
         blue_channel = color.b / real_t(1);
     }
 public:
-    RgbLedPwm(PwmChannelConcept & _red_channel, PwmChannelConcept & _green_channel, PwmChannelConcept & _blue_channel):
+    RgbLedPwm(PwmChannel & _red_channel, PwmChannel & _green_channel, PwmChannel & _blue_channel):
             red_channel(_red_channel), green_channel(_green_channel), blue_channel(_blue_channel){;}
 };
 

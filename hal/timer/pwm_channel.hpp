@@ -5,7 +5,7 @@
 #include "timer_oc.hpp"
 #include "types/real.hpp"
 
-class PwmChannelConcept{
+class PwmChannel{
 protected:
     real_t min_value = real_t(0);
     real_t max_value = real_t(1);
@@ -21,27 +21,13 @@ public:
 
     virtual void init() = 0;
 
-    virtual void setDuty(const real_t & duty) = 0;
-
-    virtual PwmChannelConcept & operator = (const real_t & duty) = 0;
+    virtual PwmChannel & operator = (const real_t & duty) = 0;
 };
 
-class PwmChannel:public PwmChannelConcept{
-protected:
-    TimerOutChannelPosOnChip & instance;
-
-public:
-    PwmChannel(TimerOutChannelPosOnChip & _pwm) : instance(_pwm) {;}
-
-    void init() override{
-        instance.init();
-    }
-    __fast_inline void setDuty(const real_t & duty) override{
-        instance = CLAMP(duty, min_value, max_value);
-    }
-
-    __fast_inline PwmChannel & operator = (const real_t & duty){setDuty(duty); return *this;}
-    operator real_t() const {return real_t(instance);}
+class PwmChannelAccessible:public PwmChannel{
+    virtual volatile uint16_t & cnt() = 0;
+    virtual volatile uint16_t & cvr() = 0;
+    virtual volatile uint16_t & arr() = 0;
 };
 
 #endif

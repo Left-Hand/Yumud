@@ -21,8 +21,8 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    TimerOutChannelPosOnChip & verfChannelA = timer3[3];
-    TimerOutChannelPosOnChip & verfChannelB = timer3[2];
+    PwmChannel & verfChannelA = timer3[3];
+    PwmChannel & verfChannelB = timer3[2];
 
     Coil1 coilA{portA[10], portA[11],  verfChannelA};
     Coil1 coilB{portA[8], portA[9],  verfChannelB};

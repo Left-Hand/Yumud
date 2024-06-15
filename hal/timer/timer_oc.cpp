@@ -1,7 +1,7 @@
 #include "timer_oc.hpp"
 #include "hal/gpio/port.hpp"
 
-volatile uint16_t & TimerOutChannelOnChip::from_channel_to_cvr(const Channel & _channel){
+volatile uint16_t & TimerOC::from_channel_to_cvr(const Channel & _channel){
     switch(_channel){
         default:
         case Channel::CH1:
@@ -19,16 +19,10 @@ volatile uint16_t & TimerOutChannelOnChip::from_channel_to_cvr(const Channel & _
 }
 
 
-TimerOutChannelPosOnChip::TimerOutChannelPosOnChip(TIM_TypeDef * _base, const Channel & _channel):
-        TimerOutChannelOnChip(_base, _channel),
-        cvr(from_channel_to_cvr(_channel)),
-        arr(_base->ATRLR){
-
+void TimerOC::init(const bool & install, const Mode & mode){
     setPolarity(true);
-    enableSync(false);
-}
+    enableSync();
 
-void TimerOutChannelOnChip::init(const bool & install, const Mode & mode){
     setMode(mode);
 
     if(install){
@@ -38,7 +32,7 @@ void TimerOutChannelOnChip::init(const bool & install, const Mode & mode){
     enable();
 }
 
-void TimerOutChannelOnChip::setMode(const Mode & mode){
+void TimerOC::setMode(const Mode & mode){
     uint16_t m_code,s_code;
     switch(channel){
         default:
@@ -90,18 +84,18 @@ void TimerOutChannelOnChip::setMode(const Mode & mode){
     }
 }
 
-void TimerOutChannelOnChip::enable(const bool & en){
+void TimerOC::enable(const bool & en){
     if(en) instance->CCER |= 1 << ((uint8_t)channel * 2);
     else instance->CCER &= ~(1 << ((uint8_t)channel) * 2);
 }
 
 
-void TimerOutChannelOnChip::setPolarity(const bool & pol){
+void TimerOC::setPolarity(const bool & pol){
     if(!pol) instance->CCER |= (1 << ((uint8_t)channel * 2 + 1));
     else instance->CCER &= (~(1 << (((uint8_t)channel) * 2 + 1)));
 }
 
-void TimerOutChannelOnChip::enableSync(const bool & _sync){
+void TimerOC::enableSync(const bool & _sync){
     switch(channel){
         case Channel::CH1:
             TIM_OC1PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
@@ -121,7 +115,7 @@ void TimerOutChannelOnChip::enableSync(const bool & _sync){
 
 }
 
-void TimerOutChannelOnChip::setIdleState(const bool & state){
+void TimerOC::setIdleState(const bool & state){
     // TIM_OC1Init();
     if(isAdvancedTimer(instance)){
         auto tmpcr2 = instance->CTLR2;
@@ -191,7 +185,7 @@ case TIM##x##_BASE:\
     }\
     break;\
 
-void TimerOutChannelOnChip::installToPin(const bool & en){
+void TimerOC::installToPin(const bool & en){
     Port * gpio_port;
     uint16_t gpio_pin = 0;
     switch((uint32_t)instance){
