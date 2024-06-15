@@ -270,8 +270,9 @@ public:
                 i++;
                 if(i > 4) break;
             }
-            
         }
+
+        enableScan(MAX(injected_list.size(), regular_list.size()) > 1);
     }
 
     void enableDma(const bool en = true){
@@ -293,14 +294,14 @@ public:
         instance->CTLR1 = tempreg.data;
     }
 
-    void enableCont(const bool & en = true){
+    void enableContinous(const bool & en = true){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.CONT = en;
         instance->CTLR2 = tempreg.data;
     }
 
-    void enableDisc(const bool & en = true){
+    void enableSingleshot(const bool & en = true){
         CTLR1 tempreg;
         tempreg.data = instance->CTLR1;
         tempreg.DISCEN = en;
@@ -327,11 +328,11 @@ public:
     }
 
     void enableTempVref(const bool & en = true){
-        // CTLR2 tempreg;
-        // tempreg.data = instance->CTLR2;
-        // tempreg.TSVREFE = en;
-        // instance->CTLR2 = tempreg.data;
-        ADC_TempSensorVrefintCmd(en);
+        CTLR2 tempreg;
+        tempreg.data = instance->CTLR2;
+        tempreg.TSVREFE = en;
+        instance->CTLR2 = tempreg.data;
+        // ADC_TempSensorVrefintCmd(en);
     }
 
     void setRegularTrigger(const RegularTrigger & trigger){
