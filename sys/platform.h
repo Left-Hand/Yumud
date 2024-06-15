@@ -11,4 +11,8 @@
 #include <ch32v20x.h>
 #endif
 
+
+#define HIGH true
+#define LOW false
+
 #endif

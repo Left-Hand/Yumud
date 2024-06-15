@@ -21,11 +21,11 @@ class Coil1:public Coil2PConcept{
 protected:
     GpioConcept & gpioP;
     GpioConcept & gpioN;
-    // PwmChannelConcept & instance;
-    TimerOutChannelPosOnChip & vref_pwm;
+    // PwmChannel & instance;
+    PwmChannel & vref_pwm;
     bool enabled = true;
 public:
-    Coil1(GpioConcept & _instanceP, GpioConcept & _instanceN, TimerOutChannelPosOnChip & _vref_pwm):gpioP(_instanceP), gpioN(_instanceN), vref_pwm(_vref_pwm){;}
+    Coil1(GpioConcept & _instanceP, GpioConcept & _instanceN, PwmChannel & _vref_pwm):gpioP(_instanceP), gpioN(_instanceN), vref_pwm(_vref_pwm){;}
 
     void init() override{
         gpioP.OutPP();
@@ -70,24 +70,24 @@ public:
 
 class TB67H450:public Coil2PConcept{
 protected:
-    TimerOutChannelPosOnChip & forward_pwm;
-    TimerOutChannelPosOnChip & backward_pwm;
-    TimerOutChannelPosOnChip & vref_pwm;
+    PwmChannel & forward_pwm;
+    PwmChannel & backward_pwm;
+    PwmChannel & vref_pwm;
     bool enabled = true;
     bool hardmode = false;
 public:
-    TB67H450(TimerOutChannelPosOnChip & _forward_pwm, TimerOutChannelPosOnChip & _backward_pwm, TimerOutChannelPosOnChip & _vref_pwm):
+    TB67H450(PwmChannel & _forward_pwm, PwmChannel & _backward_pwm, PwmChannel & _vref_pwm):
             forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), vref_pwm(_vref_pwm){;}
 
     void init() override{
 
-        forward_pwm.enableSync();
-        backward_pwm.enableSync();
-        vref_pwm.enableSync();
+        // forward_pwm.enableSync();
+        // backward_pwm.enableSync();
+        // vref_pwm.enableSync();
 
-        forward_pwm.setPolarity(false);
-        backward_pwm.setPolarity(false);
-        vref_pwm.setPolarity(true);
+        // forward_pwm.setPolarity(f);
+        // backward_pwm.setPolarity(false);
+        // vref_pwm.setPolarity(true);
 
         forward_pwm.init();
         backward_pwm.init();
@@ -136,11 +136,11 @@ public:
 };
 class Coil2:public Coil2PConcept{
 protected:
-    PwmChannelConcept & instanceP;
-    PwmChannelConcept & instanceN;
+    PwmChannel & instanceP;
+    PwmChannel & instanceN;
     bool enabled = true;
 public:
-    Coil2(PwmChannelConcept & _instanceP, PwmChannelConcept & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
+    Coil2(PwmChannel & _instanceP, PwmChannel & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
 
     void init() override{
         instanceP.init();
@@ -160,16 +160,16 @@ public:
 
     void setDuty(const real_t & duty) override{
         if(!enabled){
-            instanceP.setDuty(real_t(0));
-            instanceN.setDuty(real_t(0));
+            instanceP = 0;
+            instanceN = 0;
             return;
         }
         if(duty > 0){
-            instanceP.setDuty(duty);
-            instanceN.setDuty(real_t(0));
+            instanceP = duty;
+            instanceN = 0;
         }else{
-            instanceP.setDuty(real_t(0));
-            instanceN.setDuty(-duty);
+            instanceP = 0;
+            instanceN = -duty;
         }
     }
 
@@ -179,12 +179,12 @@ public:
 
 // class Coil3:public Coil3PConcept{
 // protected:
-//     PwmChannelConcept & instanceU;
-//     PwmChannelConcept & instanceV;
-//     PwmChannelConcept & instanceW;
+//     PwmChannel & instanceU;
+//     PwmChannel & instanceV;
+//     PwmChannel & instanceW;
 //     bool enabled = true;
 // public:
-//     Coil3(PwmChannelConcept & _instanceU, PwmChannelConcept & _instanceV, PwmChannelConcept & _instanceW):
+//     Coil3(PwmChannel & _instanceU, PwmChannel & _instanceV, PwmChannel & _instanceW):
 //             instanceU(_instanceU), instanceV(_instanceV), instanceW(_instanceW){;}
 
 //     void init() override{
