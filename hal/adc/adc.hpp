@@ -221,9 +221,6 @@ public:
         ADC_DeInit(instance);
 
         setMode(mode);
-    ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T3_CC4);
-    // ADC_ExternalTrigInjectedConvEdgeConfig(ADC1,adcexternaltriginjeced);
-    ADC_ExternalTrigInjectedConvCmd(ADC1, ENABLE);
         ADC_Cmd(ADC1, ENABLE);
 
         ADC_BufferCmd(ADC1, DISABLE);
@@ -247,6 +244,9 @@ public:
                         i+1,
                         (uint8_t)regular_config.sample_cycles);
                 installChannel(regular_config.channel, true);
+                if(regular_config.channel == Channel::TEMP || regular_config.channel == Channel::VREF){
+                    enableTempVref();
+                }
                 i++;
                 if(i > 16) break;
             }
@@ -264,9 +264,13 @@ public:
                         ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * i,
                         MAX(cali_data, 0)); // offset can`t be negative
                 installChannel(injected_config.channel);
+                if(injected_config.channel == Channel::TEMP || injected_config.channel == Channel::VREF){
+                    enableTempVref();
+                }
                 i++;
                 if(i > 4) break;
             }
+            
         }
     }
 
@@ -323,10 +327,11 @@ public:
     }
 
     void enableTempVref(const bool & en = true){
-        CTLR2 tempreg;
-        tempreg.data = instance->CTLR2;
-        tempreg.TSVREFE = en;
-        instance->CTLR2 = tempreg.data;
+        // CTLR2 tempreg;
+        // tempreg.data = instance->CTLR2;
+        // tempreg.TSVREFE = en;
+        // instance->CTLR2 = tempreg.data;
+        ADC_TempSensorVrefintCmd(en);
     }
 
     void setRegularTrigger(const RegularTrigger & trigger){

@@ -9,7 +9,8 @@ int main(){
     // stepper_tb(uart1);
     // lua_tb(uart1);
     // pwm_tb(logger);
-    adc_tb(logger);
+    // adc_tb(logger);
+    temp_tb(logger);
     // eeprom_tb(uart1);
     while(true);
 }
