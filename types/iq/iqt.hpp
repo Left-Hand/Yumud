@@ -97,11 +97,11 @@ public:
     }
 
     __fast_inline_constexpr iq_t operator/(const float & other) const {
-        return iq_t((value / other));
+        return iq_t((value / (other * (1 << GLOBAL_Q))));
     }
 
     __fast_inline_constexpr iq_t operator/(const double & other) const {
-        return iq_t((value / other));
+        return iq_t((value / (other * (1 << GLOBAL_Q))));
     }
 
     __fast_inline_constexpr bool operator==(const auto & other) const {
