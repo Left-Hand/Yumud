@@ -2,7 +2,6 @@
 
 #define __PWMCHANNEL_HPP__
 
-#include "timer_oc.hpp"
 #include "types/real.hpp"
 
 class PwmChannel{

@@ -1,10 +1,8 @@
-#ifndef __TIMER_OC_HPP__
-#define __TIMER_OC_HPP__
+#pragma once
 
-#include "timer_channel.hpp"
+#include "hal/timer/timer_channel.hpp"
+#include "hal/timer/timer_utils.hpp"
 #include "hal/gpio/gpio.hpp"
-#include "real.hpp"
-
 
 class TimerOC:public TimerChannel, public PwmChannelAccessible{
 public:
@@ -19,7 +17,6 @@ public:
 protected:
     volatile uint16_t & m_cvr;
     volatile uint16_t & m_arr;
-    volatile uint16_t & from_channel_to_cvr(const Channel & _channel);
 public:
     TimerOC(TIM_TypeDef * _instance, const Channel _channel):TimerChannel(_instance, _channel), m_cvr(from_channel_to_cvr(_channel)), m_arr(instance->ATRLR){;}
 
@@ -46,8 +43,7 @@ public:
     __fast_inline operator real_t(){return real_t(m_cvr) / real_t(m_arr);}
 };
 
-class TimerOCN:public TimerOC {
+class TimerOCN:public TimerChannel{
 public:
-    TimerOCN(TIM_TypeDef * _base, const Channel _channel):TimerOC(_base, _channel){;}
+    TimerOCN(TIM_TypeDef * _base, const Channel _channel):TimerChannel(_base, _channel){;}
 };
-#endif

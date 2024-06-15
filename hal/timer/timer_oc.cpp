@@ -1,22 +1,7 @@
 #include "timer_oc.hpp"
 #include "hal/gpio/port.hpp"
 
-volatile uint16_t & TimerOC::from_channel_to_cvr(const Channel & _channel){
-    switch(_channel){
-        default:
-        case Channel::CH1:
-        case Channel::CH1N:
-            return (instance->CH1CVR);
-        case Channel::CH2:
-        case Channel::CH2N:
-            return (instance->CH2CVR);
-        case Channel::CH3:
-        case Channel::CH3N:
-            return (instance->CH3CVR);
-        case Channel::CH4:
-            return (instance->CH4CVR);
-    }
-}
+
 
 
 void TimerOC::init(const bool & install, const Mode & mode){
@@ -116,8 +101,7 @@ void TimerOC::enableSync(const bool & _sync){
 }
 
 void TimerOC::setIdleState(const bool & state){
-    // TIM_OC1Init();
-    if(isAdvancedTimer(instance)){
+    if(TimerUtils::isAdvancedTimer(instance)){
         auto tmpcr2 = instance->CTLR2;
         const auto mask = (uint16_t)(TIM_OIS1 << (uint8_t)channel);
         tmpcr2 &= (uint16_t)(~mask);

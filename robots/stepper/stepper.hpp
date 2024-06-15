@@ -21,8 +21,8 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    PwmChannel & verfChannelA = timer3[3];
-    PwmChannel & verfChannelB = timer3[2];
+    PwmChannel & verfChannelA = timer3.oc(3);
+    PwmChannel & verfChannelB = timer3.oc(2);
 
     Coil1 coilA{portA[10], portA[11],  verfChannelA};
     Coil1 coilB{portA[8], portA[9],  verfChannelB};
@@ -332,15 +332,15 @@ public:
     void autoload();
 
     void init(){
-
-        // uart1.init(115200 * 8, CommMethod::Dma);
-
+        using TimerUtils::TimerMode;
+        using TimerUtils::TimerIT;
+        
         logger.setEps(4);
 
-        timer1.init(4096, 1, Timer::TimerMode::CenterAlignedDownTrig);
+        timer1.init(4096, 1, TimerMode::CenterAlignedDownTrig);
         timer1.enableArrSync();
 
-        timer3.init(1024, 1, Timer::TimerMode::CenterAlignedDownTrig);
+        timer3.init(1024, 1, TimerMode::CenterAlignedDownTrig);
         timer3.enableArrSync();
 
         svpwm.init();
@@ -378,11 +378,12 @@ public:
 
         // auto & bled = portC[13];
         // bled.OutPP();
+        using TimerIT = TimerUtils::TimerIT;
         panel_led.init();
 
         timer4.init(foc_freq);
-        timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
-        timer4.bindCb(Timer::IT::Update, [&](){this->tick();});
+        timer4.enableIt(TimerIT::Update, NvicPriority(0, 0));
+        timer4.bindCb(TimerIT::Update, [&](){this->tick();});
 
 
         panel_led.setPeriod(200);

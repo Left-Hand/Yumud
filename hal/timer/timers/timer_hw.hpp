@@ -2,16 +2,13 @@
 
 #define __TIMHW_HPP__
 
-#include "../timer.hpp"
-
-
-
+#include "hal/timer/timer.hpp"
 
 #define ADVANCED_TIMER_TEMPLATE(x)\
 class Timer##x:public AdvancedTimer{\
 public:\
     Timer##x():AdvancedTimer(TIM##x){;}\
-    void bindCb(const IT & ch, const std::function<void(void)> & cb) override;\
+    void bindCb(const IT ch, std::function<void(void)> && cb) override;\
 };\
 \
 extern "C"{\
@@ -27,7 +24,7 @@ extern Timer##x timer##x;\
 class Timer##x:public GenericTimer{\
 public:\
     Timer##x():GenericTimer(TIM##x){;}\
-    void bindCb(const IT & ch, const std::function<void(void)> & cb) override;\
+    void bindCb(const IT ch, std::function<void(void)> && cb) override;\
 };\
 \
 extern "C"{\

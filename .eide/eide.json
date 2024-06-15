@@ -31,7 +31,8 @@
     "hal/bus/usb/cdc",
     "src/testbench",
     "thirdparty/lua",
-    "sys"
+    "sys",
+    "hal/timer"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
