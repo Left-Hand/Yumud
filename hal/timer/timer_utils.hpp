@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/platform.h"
+#include "hal/gpio/port.hpp"
 #include "hal/nvic/nvic.hpp"
 #include <functional>
 
@@ -11,6 +12,10 @@ namespace TimerUtils{
         CenterAlignedDownTrig = TIM_CounterMode_CenterAligned1,
         CenterAlignedCenterUpTrig = TIM_CounterMode_CenterAligned2,
         CenterAlignedCenterDualTrig = TIM_CounterMode_CenterAligned3
+    };
+
+    enum class Channel:uint8_t{
+        CH1, CH1N, CH2, CH2N, CH3, CH3N, CH4
     };
 
     enum class TimerIT:uint8_t{
@@ -31,4 +36,6 @@ namespace TimerUtils{
     bool isAdvancedTimer(const TIM_TypeDef * instance);
 
     IRQn ItToIrq(const TIM_TypeDef * instance, const TimerIT & it);
+
+    Gpio & getPin(const TIM_TypeDef * instance, const Channel channel);
 };

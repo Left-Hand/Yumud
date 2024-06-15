@@ -3,7 +3,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "pwm_channel.hpp"
 
-class GpioPwm:public PwmChannelAccessible{
+class GpioPwm:public PwmChannel, public Countable{
 protected:
     Gpio & m_gpio;
 public:

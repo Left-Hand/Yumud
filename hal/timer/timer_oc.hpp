@@ -15,7 +15,7 @@ public:
     void enable(const bool & en = true);
 };
 
-class TimerOC:public TimerOut,public PwmChannelAccessible{
+class TimerOC:public TimerOut,public PwmChannel, public Countable{
 public:
     enum class Mode:uint16_t{
         Timing = TIM_OCMode_Timing,
@@ -43,13 +43,16 @@ public:
         return *this;
     }
 
+    __fast_inline operator real_t(){return real_t(m_cvr) / real_t(m_arr);}
     __fast_inline volatile uint16_t & cnt() override {return instance->CNT;}
     __fast_inline volatile uint16_t & cvr() override {return m_cvr;}
     __fast_inline volatile uint16_t & arr() override {return m_arr;}
-    __fast_inline operator real_t(){return real_t(m_cvr) / real_t(m_arr);}
 };
 
 class TimerOCN:public TimerOut{
+protected:
+    volatile uint16_t m_cvr = 0;
+    volatile uint16_t m_arr = 0;
 public:
     TimerOCN(TIM_TypeDef * _base, const Channel _channel):TimerOut(_base, _channel){;}
     void init() {installToPin();}

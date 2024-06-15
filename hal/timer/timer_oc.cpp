@@ -4,7 +4,7 @@
 
 
 void TimerOut::installToPin(const bool & en){
-    Gpio & io = getPin();
+    Gpio & io = TimerUtils::getPin(instance, channel);
     if(en)io.OutAfPP();
     else io.InFloating();
     enable(en);

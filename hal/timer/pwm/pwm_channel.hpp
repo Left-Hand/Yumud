@@ -23,10 +23,10 @@ public:
     virtual PwmChannel & operator = (const real_t & duty) = 0;
 };
 
-class PwmChannelAccessible:public PwmChannel{
+class Countable{
+public:
     virtual volatile uint16_t & cnt() = 0;
     virtual volatile uint16_t & cvr() = 0;
     virtual volatile uint16_t & arr() = 0;
 };
-
 #endif

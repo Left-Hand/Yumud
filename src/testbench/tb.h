@@ -165,3 +165,5 @@ void stepper_tb(OutputStream & logger);
 
 void lua_tb(OutputStream & logger);
 void pwm_tb(OutputStream & logger);
+
+void adc_tb(OutputStream & logger);

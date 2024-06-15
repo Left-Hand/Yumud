@@ -158,9 +158,9 @@
     - [x] 编码器模式
     - [ ] PWMModule PWM输出集线器
 
-    - [ ] PWMChannel PWM输出概念
+    - [x] PWMChannel PWM输出概念
         - [x] AW9523Pwm 基于AW9523的pwm
-        - [ ] GPIOPwm 使用GPIO配合定时触发模拟pwm
+        - [x] GPIOPwm 使用GPIO配合定时触发模拟pwm
 
         - [ ] TimerOC(定时器输出)
             - [x] TimerOC
