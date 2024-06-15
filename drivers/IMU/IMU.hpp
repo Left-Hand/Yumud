@@ -2,7 +2,7 @@
 
 #define __IMU_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "drivers/device_defs.h"
 #include "types/real.hpp"
 

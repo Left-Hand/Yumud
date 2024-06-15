@@ -30,7 +30,9 @@
     "hal/bus/usb",
     "hal/bus/usb/cdc",
     "src/testbench",
-    "sys"
+    "thirdparty/lua",
+    "sys",
+    "hal/timer"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -45,6 +47,115 @@
   },
   "targets": {
     "Debug": {
+      "excludeList": [
+        "Startup/startup_ch32v30x_D8.S",
+        "sdk/Startup/startup_ch32v20x_D8W.S",
+        "sdk/Startup/startup_ch32v20x_D8.S",
+        "<virtual_root>/testVirtualFolder",
+        "thirdparty/lua/manual",
+        "thirdparty/lua/testes",
+        "thirdparty/lua/lua.c",
+        "thirdparty/lua/onelua.c"
+      ],
+      "toolchain": "RISCV_GCC",
+      "compileConfig": {
+        "linkerScriptPath": "",
+        "options": "null"
+      },
+      "uploader": "OpenOCD",
+      "uploadConfig": {
+        "bin": "",
+        "target": "${workspaceFolder}/tools/wch-target",
+        "interface": "${workspaceFolder}/tools/wch-interface",
+        "baseAddr": "0x08000000"
+      },
+      "uploadConfigMap": {
+        "JLink": {
+          "bin": "",
+          "baseAddr": "0x08000000",
+          "cpuInfo": {
+            "vendor": "ST",
+            "cpuName": "STM32F103C8"
+          },
+          "proType": 1,
+          "speed": 8000,
+          "otherCmds": ""
+        },
+        "OpenOCD": {
+          "bin": "",
+          "target": "${workspaceFolder}/tools/wch-target",
+          "interface": "${workspaceFolder}/tools/wch-interface",
+          "baseAddr": "0x08000000"
+        },
+        "Custom": {
+          "bin": "",
+          "commandLine": "bash ./tools/program_flash.sh \"${programFile}\"",
+          "eraseChipCommand": ""
+        }
+      },
+      "custom_dep": {
+        "name": "default",
+        "incList": [
+          "sdk/Peripheral/inc",
+          "src",
+          "sdk/Core",
+          "sdk/Debug",
+          "types",
+          "types/basis",
+          "types/buffer",
+          "types/color",
+          "types/complex",
+          "types/image",
+          "types/iq",
+          "types/matrix",
+          "types/quat",
+          "types/range",
+          "types/rect2",
+          "types/string",
+          "types/vector2",
+          ".",
+          "src/debug",
+          "src/device",
+          "src/clock",
+          "src/dma",
+          "robots",
+          "robots/stepper/tasks",
+          "robots/stepper",
+          "sys/sdk/ch32v203",
+          "src/defines",
+          "sys/sdk/ch32v203/Peripheral/inc",
+          "sys/sdk/ch32v203/Peripheral/src",
+          "hal",
+          "hal/bus/usb/cdc"
+        ],
+        "libList": [
+          "src/clock",
+          "src/dma",
+          "robots",
+          "robots/stepper/tasks",
+          "robots/stepper",
+          "sys/sdk/ch32v203",
+          "src/defines",
+          "sys/sdk/ch32v203/Peripheral/inc",
+          "sys/sdk/ch32v203/Peripheral/src",
+          "hal",
+          "hal/bus/usb/cdc"
+        ],
+        "sourceDirList": [],
+        "defineList": [
+          "WCH",
+          "RISCV",
+          "CH32V203",
+          "CH32V203FXX",
+          "CH32V203GXX",
+          "CH32V203KXX",
+          "CH32V203CXX",
+          "LUA_USE_C89",
+          "CH32V20X"
+        ]
+      }
+    },
+    "OS": {
       "excludeList": [
         "Startup/startup_ch32v30x_D8.S",
         "sdk/Startup/startup_ch32v20x_D8W.S",
@@ -143,7 +254,8 @@
           "CH32V203FXX",
           "CH32V203GXX",
           "CH32V203KXX",
-          "CH32V203CXX"
+          "CH32V203CXX",
+          "LUA_USE_C89"
         ]
       }
     }

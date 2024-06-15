@@ -10,6 +10,7 @@ node_modules
 
 # eide template
 *.ept
+*.diff
 *.eide-template
 tools
 .VSCodeCounter

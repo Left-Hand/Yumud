@@ -12,22 +12,28 @@
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __CLOCK_H
-#define __CLOCK_H
-
+#pragma once
 /* Includes ------------------------------------------------------------------*/
 
-#include "src/platform.h"
+#include "sys/platform.h"
 
 #ifdef __cplusplus
+#include "sys/system.hpp"
+#include <functional>
+void bindSystickCb(std::function<void(void)> && cb);
 extern "C" {
 #endif
 
-// #define TIMESTAMP_BEGIN(x) (uint32_t __time_begin_t__ = x;)
-// #define TIMESTAMP_SINCE(x) (uint32_t __time_current_t__ = x; __time_current_t__ + (__time_current_t__ ^ __time_begin_t__) & 0x8000 ?  __time_begin_t__ : -__time_begin_t__)
+#ifdef CH32V20X
+
 #define TIMESTAMP_BEGIN(x) uint32_t time_begin = (x)
 #define TIMESTAMP_SINCE(x) (uint32_t time_current = (x); \
             (time_current + (time_current ^ time_begin) & 0x8000? time_begin : -time_begin))
+#else
+#define TIMESTAMP_BEGIN(x) (uint32_t __time_begin_t__ = x;)
+#define TIMESTAMP_SINCE(x) (uint32_t __time_current_t__ = x; \
+            __time_current_t__ + (__time_current_t__ ^ __time_begin_t__) & 0x8000 ?  __time_begin_t__ : -__time_begin_t__)
+#endif
 
 extern int tick_per_ms;
 extern int tick_per_us;
@@ -38,25 +44,36 @@ extern int tick_per_us;
 
 extern volatile uint32_t msTick;
 
-__attribute__ ((weak)) uint32_t GetTick(void);
-__attribute__ ((weak)) void SetTick(uint32_t _tick);
-uint32_t millis(void);
-uint64_t micros(void);
-uint64_t nanos(void);
+__fast_inline uint32_t millis(void){return msTick;}
+
+__fast_inline static uint64_t micros(void){
+    __disable_irq();
+    uint64_t m = msTick;
+    __IO uint64_t ticks = SysTick->CNT;
+    __enable_irq();
+
+    return (m * 1000 + ticks / tick_per_us);
+}
+
+__fast_inline static uint64_t nanos(){
+    __disable_irq();
+    uint64_t m = msTick;
+    __IO uint64_t ticks = SysTick->CNT;
+    __enable_irq();
+
+    return (m * 1000000 + NanoMut(ticks));
+}
 
 void delay(uint32_t ms);
 
+
+void delayMicroseconds(const uint32_t us);
+void delayNanoseconds(const uint32_t ns);
+
 void Systick_Init(void);
-
-void delayMicroseconds(uint32_t us);
-void delayNanoseconds(uint32_t ns);
-
-void SysTick_Handler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
+__interrupt void SysTick_Handler(void);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* __CLOCK_H */
-
 

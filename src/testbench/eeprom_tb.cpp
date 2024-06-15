@@ -5,7 +5,7 @@
 #define EEPROM_TB_WHOLECHIP
 // #define EEPROM_TB_PIECES
 
-void eeprom_tb(IOStream & logger){
+void eeprom_tb(OutputStream & logger){
 
     logger.setEps(4);
     logger.setRadix(10);

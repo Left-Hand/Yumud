@@ -2,7 +2,7 @@
 
 #define __PORT_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "gpio.hpp"
 #include "port_concept.hpp"
 #include "gpio_enums.hpp"

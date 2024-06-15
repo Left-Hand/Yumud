@@ -3,7 +3,7 @@
 #define __UINT24_T_H__
 
 #include "stdint.h"
-#include "src/platform.h"
+#include "sys/platform.h"
 
 #pragma pack(push, 1)
 struct uint24_t{

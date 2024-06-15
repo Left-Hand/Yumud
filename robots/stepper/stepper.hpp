@@ -21,8 +21,8 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    TimerOutChannelPosOnChip & verfChannelA = timer3[3];
-    TimerOutChannelPosOnChip & verfChannelB = timer3[2];
+    PwmChannel & verfChannelA = timer3.oc(3);
+    PwmChannel & verfChannelB = timer3.oc(2);
 
     Coil1 coilA{portA[10], portA[11],  verfChannelA};
     Coil1 coilB{portA[8], portA[9],  verfChannelB};
@@ -332,15 +332,15 @@ public:
     void autoload();
 
     void init(){
-
-        // uart1.init(115200 * 8, CommMethod::Dma);
-
+        using TimerUtils::TimerMode;
+        using TimerUtils::TimerIT;
+        
         logger.setEps(4);
 
-        timer1.init(4096, 1, Timer::TimerMode::CenterAlignedDownTrig);
+        timer1.init(4096, 1, TimerMode::CenterAlignedDownTrig);
         timer1.enableArrSync();
 
-        timer3.init(1024, 1, Timer::TimerMode::CenterAlignedDownTrig);
+        timer3.init(1024, 1, TimerMode::CenterAlignedDownTrig);
         timer3.enableArrSync();
 
         svpwm.init();
@@ -361,28 +361,12 @@ public:
 
         odo.init();
 
-        // adc1.init(
-        //     {},{
-        //         AdcChannelConfig{.channel = AdcChannels::CH3, .sample_cycles = AdcSampleCycles::T71_5},
-        //         AdcChannelConfig{.channel = AdcChannels::CH4, .sample_cycles = AdcSampleCycles::T71_5}
-        //     });
-        // adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
-        // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
-        // timer3[4] = 0;
-        // adc1.setPga(AdcOnChip::Pga::X64);
-        // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
-        // TIM3->CH4CVR = TIM3->ATRLR >> 1;
-        // adc1.enableCont();
-        // adc1.enableScan();
-        // adc1.enableAutoInject();
-
-        // auto & bled = portC[13];
-        // bled.OutPP();
+        using TimerIT = TimerUtils::TimerIT;
         panel_led.init();
 
         timer4.init(foc_freq);
-        timer4.enableIt(Timer::IT::Update, NvicPriority(0, 0));
-        timer4.bindCb(Timer::IT::Update, [&](){this->tick();});
+        timer4.enableIt(TimerIT::Update, NvicPriority(0, 0));
+        timer4.bindCb(TimerIT::Update, [&](){this->tick();});
 
 
         panel_led.setPeriod(200);

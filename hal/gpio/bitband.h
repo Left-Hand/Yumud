@@ -2,7 +2,7 @@
 
 #define __BITBAND_H__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 
 typedef struct {
 	uint32_t bit0 :1;

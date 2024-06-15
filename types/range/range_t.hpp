@@ -2,7 +2,7 @@
 
 #define __RANGE_HPP__
 
-#include "src/platform.h"
+#include "sys/platform.h"
 #include "types/string/String.hpp"
 #include "type_traits"
 

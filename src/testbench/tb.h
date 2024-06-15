@@ -132,9 +132,9 @@ using Sys::t;
 #include "../types/image/painter.hpp"
 #include "stdlib.h"
 #include "timer/timers/timer_hw.hpp"
-#include "timer/pwm_channel.hpp"
+#include "timer/pwm/pwm_channel.hpp"
 #include "dsp/controller/PID.hpp"
-#include "hal/timer/capture_channel.hpp"
+#include "hal/timer/capture/capture_channel.hpp"
 #include "dsp/filter/BurrFilter.hpp"
 #include "drivers/Actuator/Servo/PwmServo/pwm_servo.hpp"
 #include "drivers/Actuator/Coil/coil.hpp"
@@ -157,8 +157,13 @@ using Sys::t;
 #include "drivers/Encoder/Estimmator.hpp"
 #include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
 
-void eeprom_tb(IOStream & logger);
+void eeprom_tb(OutputStream & logger);
 void flash_tb(void);
-void memory_tb(IOStream & logger);
+void memory_tb(OutputStream & logger);
 
-void stepper_tb(IOStream & logger);
+void stepper_tb(OutputStream & logger);
+
+void lua_tb(OutputStream & logger);
+void pwm_tb(OutputStream & logger);
+
+void adc_tb(OutputStream & logger);
