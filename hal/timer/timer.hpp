@@ -5,7 +5,8 @@
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
 
-class BasicTimer{
+class TimerHw{};
+class BasicTimer:public TimerHw{
 protected:
     TIM_TypeDef * instance;
     using IT = TimerUtils::TimerIT;
@@ -26,6 +27,9 @@ public:
     void enableArrSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
     virtual void bindCb(const IT ch, std::function<void(void)> && cb) = 0;
     volatile uint16_t & cnt(){return instance->CNT;}
+    volatile uint16_t & arr(){return instance->ATRLR;}
+
+    BasicTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
 
 class GenericTimer:public BasicTimer{
@@ -44,8 +48,11 @@ public:
     void enableSingle(const bool _single = true);
     TimerChannel & ch(const int index){return channels[CLAMP(index, 1, 4) - 1];}
     TimerOC & oc(const int index){return channels[CLAMP(index, 1, 4) - 1];}
+
     virtual TimerChannel & operator [](const int index){return ch(index);}
     virtual TimerChannel & operator [](const TimerChannel::Channel channel){return channels[(uint8_t)channel >> 1];}
+
+    GenericTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
 
 class AdvancedTimer:public GenericTimer{
@@ -90,6 +97,8 @@ public:
                 TimerOCN(instance, TimerChannel::Channel::CH2N),
                 TimerOCN(instance, TimerChannel::Channel::CH3N),
             }{;}
+
+    AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
 
 #endif
