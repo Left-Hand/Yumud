@@ -61,7 +61,7 @@ __fast_inline int warp_mod(const int x, const int y){
 }
 
 __fast_inline iq_t warp_mod(const iq_t a, const iq_t b){
-    return iq_t(_IQmpy(_IQfrac(_IQdiv(a.value, b.value)), b.value));
+    return iq_t(_iq(_IQmpy(_IQfrac(_IQdiv(a.value, b.value)), b.value)));
 }
 
 #endif

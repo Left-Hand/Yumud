@@ -13,19 +13,24 @@
 
 #include "dsp/constexprmath/ConstexprMath.hpp"
 
+struct _iq{
+    _iq16 value = 0;
+    __fast_inline_constexpr _iq(const _iq16 & _value) : value(_value){;}
+    __fast_inline_constexpr operator _iq16() const{return value;}
+};
 
 struct iq_t{
 public:
     _iq value = 0;
 
     __fast_inline iq_t():value(0){;}
-    __fast_inline_constexpr explicit iq_t(const _iq & iqValue): value(iqValue){;}
+    __fast_inline_constexpr explicit iq_t(const _iq & iqValue): value(iqValue.value){;}
 
     __fast_inline_constexpr iq_t(const int & intValue) : value(_IQ(intValue)) {;}
 
     __fast_inline_constexpr iq_t(const int8_t & intValue) : value(_IQ(intValue)) {;}
     __fast_inline_constexpr iq_t(const int16_t & intValue) : value(_IQ(intValue)) {;}
-    // int32_t could cause ambigous with _iq(aka long) but int won`t
+    __fast_inline_constexpr iq_t(const int32_t & intValue) : value(_IQ(intValue)) {;}
 
     __fast_inline_constexpr iq_t(const uint8_t & intValue) : value(_IQ(intValue)) {;}
     __fast_inline_constexpr iq_t(const uint16_t & intValue) : value(_IQ(intValue)) {;}
@@ -38,22 +43,22 @@ public:
 
 
     __fast_inline_constexpr iq_t operator+(const iq_t & other) const {
-        return iq_t(value + other.value);
+        return iq_t(_iq(value + other.value));
     }
 
     __fast_inline_constexpr iq_t operator-(const iq_t & other) const {
-        return iq_t(value - other.value);
+        return iq_t(_iq(value - other.value));
     }
 
     __fast_inline_constexpr iq_t operator-() const {
-        return iq_t(-value);
+        return iq_t(_iq(-value));
     }
 
     __fast_inline_constexpr iq_t operator*(const iq_t & other) const {
     if (std::is_constant_evaluated()) {
         return iq_t((_iq)((int64_t)value * (int64_t)other.value >> GLOBAL_Q));
     }
-    return iq_t(_IQmpy(value, other.value));
+    return iq_t(_iq(_IQmpy(value, other.value)));
     }
 
 
@@ -61,7 +66,7 @@ public:
     if (std::is_constant_evaluated()) {
         return iq_t((_iq)((int64_t)value / (int64_t)other.value << GLOBAL_Q));
     }
-    return iq_t(_IQdiv(value, other.value));
+    return iq_t(_iq(_IQdiv(value, other.value)));
     }
 
     __fast_inline_constexpr iq_t& operator+=(const iq_t& other) {
@@ -85,7 +90,7 @@ public:
     }
 
     __fast_inline_constexpr iq_t operator*(const int & other) const {
-        return iq_t(value * other);
+        return iq_t(_iq(value * other));
     }
 
     __fast_inline_constexpr iq_t operator*(const auto & other) const {
@@ -93,15 +98,11 @@ public:
     }
 
     __fast_inline_constexpr iq_t operator/(const int & other) const {
-        return iq_t((value / other));
+        return iq_t(_iq((value / other)));
     }
 
-    __fast_inline_constexpr iq_t operator/(const float & other) const {
-        return iq_t((value / (other * (1 << GLOBAL_Q))));
-    }
-
-    __fast_inline_constexpr iq_t operator/(const double & other) const {
-        return iq_t((value / (other * (1 << GLOBAL_Q))));
+    __fast_inline_constexpr iq_t operator/(const auto & other) const {
+        return *this * iq_t(other);
     }
 
     __fast_inline_constexpr bool operator==(const auto & other) const {
@@ -129,19 +130,19 @@ public:
     }
 
     __fast_inline_constexpr iq_t operator+(const auto & other) const {
-        return iq_t(value + iq_t(other).value);
+        return iq_t(_iq(value + iq_t(other).value));
     }
 
     __fast_inline_constexpr iq_t operator-(const auto & other) const {
-        return iq_t(value - iq_t(other).value);
+        return iq_t(_iq(value - iq_t(other).value));
     }
 
     __fast_inline_constexpr iq_t operator<<(int shift) const {
-        return iq_t(value << shift);
+        return iq_t(_iq(value << shift));
     }
 
     __fast_inline_constexpr iq_t operator>>(int shift) const {
-        return iq_t(value >> shift);
+        return iq_t(_iq(value >> shift));
     }
 
     __fast_inline_constexpr iq_t& operator+=(const auto & other) {
@@ -244,14 +245,14 @@ __fast_inline_constexpr iq_t sinf(const iq_t & iq){
     if (std::is_constant_evaluated()) {
         return cem::sin(double(iq));
     }
-    return iq_t(_IQsin(iq.value));
+    return iq_t(_iq(_IQsin(iq.value)));
 }
 
 __fast_inline_constexpr iq_t cosf(const iq_t & iq){
     if (std::is_constant_evaluated()) {
         return cem::cos(double(iq));
     }
-    return iq_t(_IQcos(iq.value));
+    return iq_t(_iq(_IQcos(iq.value)));
 }
 
 __fast_inline_constexpr iq_t sin(const iq_t & iq){return sinf(iq);}
@@ -264,38 +265,38 @@ __fast_inline_constexpr iq_t asin(const iq_t & iq) {
     if (std::is_constant_evaluated()) {
         return cem::asin(double(iq));
     }
-    return iq_t(_IQasin(iq.value));
+    return iq_t(_iq(_IQasin(iq.value)));
 }
 
 __fast_inline_constexpr iq_t acos(const iq_t & iq) {
     if (std::is_constant_evaluated()) {
         return cem::acos(double(iq));
     }
-    return iq_t(_IQacos(iq.value));
+    return iq_t(_iq(_IQacos(iq.value)));
 }
 
 __fast_inline_constexpr iq_t atan(const iq_t & iq) {
     if (std::is_constant_evaluated()) {
         return cem::atan(double(iq));
     }
-    return iq_t(_IQatan(iq.value));
+    return iq_t(_iq(_IQatan(iq.value)));
 }
 
 __fast_inline_constexpr iq_t atan2(const iq_t & a, const iq_t & b) {
     if (std::is_constant_evaluated()) {
         return cem::atan(atan2(a, b));
     }
-    return iq_t(_IQatan2(a.value,b.value));
+    return iq_t(_iq(_IQatan2(a.value,b.value)));
 }
 
 __fast_inline_constexpr iq_t sqrt(const iq_t & iq){
     if(std::is_constant_evaluated()) {
         return cem::sqrt(double(iq));
     }
-    return iq_t(_IQsqrt(iq.value));
+    return iq_t(_iq(_IQsqrt(iq.value)));
 }
 
-__fast_inline_constexpr iq_t abs(const iq_t & iq) {return iq_t(iq.value > 0 ? iq.value : -iq.value);}
+__fast_inline_constexpr iq_t abs(const iq_t & iq) {return iq.value > 0 ? iq : -iq;}
 
 __fast_inline_constexpr bool isnormal(const iq_t & iq){return bool(iq.value);}
 
@@ -307,13 +308,13 @@ __fast_inline_constexpr iq_t fmod(const iq_t & a, const iq_t & b){return iq_t(_i
 
 
 __fast_inline_constexpr iq_t lerp(const iq_t & x, const iq_t & a, const iq_t & b){return a * (iq_t(1) - x) + b * x;}
-__fast_inline_constexpr iq_t mean(const iq_t & a, const iq_t & b){return iq_t((a.value + b.value) >> 1);}
+__fast_inline_constexpr iq_t mean(const iq_t & a, const iq_t & b){return iq_t(_iq((a.value + b.value) >> 1));}
 
 __fast_inline_constexpr iq_t frac(const iq_t & iq){
     if(std::is_constant_evaluated()) {
             return iq - int(iq);
     }
-    else return iq_t(_IQfrac(iq.value));
+    else return iq_t(_iq(_IQfrac(iq.value)));
 }
 
 __fast_inline_constexpr iq_t floor(const iq_t & iq){return int(iq);}
@@ -331,37 +332,35 @@ __fast_inline_constexpr iq_t log10(const iq_t & iq) {
     if(std::is_constant_evaluated()){
         return cem::ln(double(iq)) / cem::ln(10.0);
     }
-    return iq_t(_IQlog10(iq.value));
+    return iq_t(_iq(_IQlog10(iq.value)));
 }
 
 __fast_inline_constexpr iq_t log(const iq_t & iq) {
     if(std::is_constant_evaluated()){
         return cem::ln(double(iq));
     }
-    return iq_t(_IQdiv(_IQlog10(iq.value), _IQlog10(_IQ(M_E))));
-    // return iq_t(_IQsin(iq.value));
-    // return 
+    return iq_t(_iq(_IQdiv(_IQlog10(iq.value), _IQlog10(_IQ(M_E)))));
 }
 
 __fast_inline_constexpr iq_t exp(const iq_t & iq) {
     if(std::is_constant_evaluated()){
         return cem::exp(double(iq));
     }
-    return iq_t(_IQexp(iq.value));
+    return iq_t(_iq(_IQexp(iq.value)));
 }
 
 __fast_inline_constexpr iq_t exp2(const iq_t & iq) {
     if(std::is_constant_evaluated()){
         return cem::pow(2.0, double(iq));
     }
-    return iq_t(_IQexp2(iq.value));
+    return iq_t(_iq(_IQexp2(iq.value)));
 }
 
 __fast_inline_constexpr iq_t pow(const iq_t & base, const iq_t & exponent) {
     if(std::is_constant_evaluated()){
         return cem::pow(double(base), double(exponent));
     }
-    return iq_t(_IQexp(_IQmpy(exponent.value, _IQdiv(base.value, _IQlog10(_IQ(LOGE))))));
+    return iq_t(_iq(_IQexp(_IQmpy(exponent.value, _IQdiv(base.value, _IQlog10(_IQ(LOGE)))))));
 }
 #endif
 
