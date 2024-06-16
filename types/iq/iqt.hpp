@@ -377,11 +377,11 @@ __fast_inline_constexpr void u16_to_uni(const uint16_t & data, iq_t & qv){
 
 }
 
-__fast_inline_constexpr void s16_to_uni(const int16_t & data, iq_t & qv){
+__fast_inline_constexpr void s16_to_uni(const int16_t data, iq_t & qv){
     qv.value = data > 0 ? data : -((_iq)-data);
 }
 
-__fast_inline_constexpr void uni_to_u16(const iq_t & qv, uint16_t & data){
+__fast_inline_constexpr void uni_to_u16(const iq_t qv, uint16_t & data){
 #if GLOBAL_Q >= 16
     data = qv.value >> (GLOBAL_Q - 16);
 #else

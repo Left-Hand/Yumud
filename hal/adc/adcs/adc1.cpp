@@ -2,6 +2,9 @@
 
 #ifdef HAVE_ADC1
 Adc1 adc1;
+#endif
+
+#if defined(HAVE_ADC1) || defined(HAVE_ADC2)
 
 __interrupt void ADC1_2_IRQHandler(void){
     if(ADC_GetITStatus(ADC1,ADC_IT_JEOC)){
@@ -18,7 +21,6 @@ __interrupt void ADC1_2_IRQHandler(void){
         ADC_ClearITPendingBit(ADC1,ADC_IT_AWD);
     }
 }
-
 
 #endif
 

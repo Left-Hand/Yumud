@@ -1,6 +1,4 @@
-#ifndef __ADC_ENUMS_H__
-
-#define __ADC_ENUMS_H__
+#pragma once
 
 enum class AdcChannel:uint8_t{
     CH0, CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9, CH10, CH11, CH12, CH13, CH14, CH15, TEMP, VREF
@@ -31,5 +29,3 @@ enum class AdcSampleCycles:uint8_t{
     T71_5 = ADC_SampleTime_71Cycles5,
     T239_5 = ADC_SampleTime_239Cycles5
 };
-
-#endif

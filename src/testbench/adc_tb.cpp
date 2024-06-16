@@ -13,15 +13,15 @@ void adc_tb(OutputStream & logger){
 
     adc1.init(
         {},{
-            AdcChannelConfig{.channel = AdcChannels::TEMP, .sample_cycles = AdcSampleCycles::T239_5},
-            AdcChannelConfig{.channel = AdcChannels::VREF, .sample_cycles = AdcSampleCycles::T239_5},
-            AdcChannelConfig{.channel = AdcChannels::CH1, .sample_cycles = AdcSampleCycles::T239_5},
-            AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T239_5},
+            AdcChannelConfig{.channel = AdcChannel::TEMP, .sample_cycles = AdcSampleCycles::T239_5},
+            AdcChannelConfig{.channel = AdcChannel::VREF, .sample_cycles = AdcSampleCycles::T239_5},
+            AdcChannelConfig{.channel = AdcChannel::CH1, .sample_cycles = AdcSampleCycles::T239_5},
+            AdcChannelConfig{.channel = AdcChannel::CH0, .sample_cycles = AdcSampleCycles::T239_5},
         });
 
     adc1.setRegularTrigger(AdcOnChip::RegularTrigger::SW);
     adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
-    adc1.setPga(AdcOnChip::Pga::X1);
+    // adc1.setPga(AdcOnChip::Pga::X1);
     // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T3CC4);
 
     // timer3.oc(4).cnt() = timer3.arr() >> 1;
