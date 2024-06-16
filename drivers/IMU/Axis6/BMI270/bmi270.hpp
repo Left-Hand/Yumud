@@ -133,7 +133,6 @@ public:
         u16_to_uni(gyro.x, x); x *= gyro_scaler;
         u16_to_uni(gyro.y, y); y *= gyro_scaler;
         u16_to_uni(gyro.z, z); z *= gyro_scaler;
-        uart2.println(gyro.x, gyro.y, gyro.z);
     }
 
 };

@@ -4,9 +4,7 @@
 
 #include "bus/bus_inc.h"
 #include "sys/kernel/clock.h"
-
-#define DEBUGGER uart1
-#define LOGGER uart1
+#include "src/defines/user_defs.h"
 
 #ifndef VOFA_PRINT
 #define VOFA_PRINT(...) LOGGER.println(__VA_ARGS__);

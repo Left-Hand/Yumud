@@ -18,6 +18,7 @@ void SpiHw::enableRcc(const bool en){
     }
 }
 
+#if (defined(HAVE_SPI1) && defined(HAVE_SPI2))
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
 Gpio & SpiHw::get##name##Pin(){\
@@ -39,10 +40,16 @@ Gpio & SpiHw::get##name##Pin(){\
     return (*gpio_port)[(Pin)gpio_pin];\
 }\
 
+#endif
+
+#if (defined(HAVe_SPI1) || defined(HAVE_SPI2))
+
 SPI_HW_GET_PIN_TEMPLATE(Mosi, MOSI)
 SPI_HW_GET_PIN_TEMPLATE(Miso, MISO)
 SPI_HW_GET_PIN_TEMPLATE(Sclk, SCLK)
 SPI_HW_GET_PIN_TEMPLATE(Cs, CS)
+
+#endif
 
 #undef SPI_HW_GET_PIN_TEMPLATE
 

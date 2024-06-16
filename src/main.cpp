@@ -3,7 +3,7 @@
 int main(){
     Sys::Misc::prework();
     UartHw & logger = uart2;
-    logger.init(921600, CommMethod::Blocking);
+    logger.init(115200 * 4, CommMethod::Blocking);
 
     delay(200);
     // stepper_tb(uart1);

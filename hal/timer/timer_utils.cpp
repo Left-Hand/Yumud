@@ -147,6 +147,8 @@ Gpio & TimerUtils::getPin(const TIM_TypeDef * instance, const Channel channel){
     uint16_t gpio_pin = 0;
     switch((uint32_t)instance){
         default:
+            break;
+
         #ifdef HAVE_TIM1
         ADVANCED_TIMER_GPIO_TEMPLATE(1)
         #endif

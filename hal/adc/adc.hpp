@@ -358,6 +358,11 @@ public:
         instance->WDLTR = threshold.start;
     }
 
+    void setTrigger(const RegularTrigger _rtrigger, const InjectedTrigger _jtrigger){
+        setRegularTrigger(_rtrigger);
+        setInjectedTrigger(_jtrigger);
+    }
+
     void swStartRegular(const bool force = false){
         if(force) setRegularTrigger(RegularTrigger::SW);
         ADC_SoftwareStartConvCmd(instance, true);
