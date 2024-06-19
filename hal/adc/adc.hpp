@@ -13,7 +13,8 @@
 #include <initializer_list>
 
 class AdcConcept{
-
+protected:
+    using Callback = std::function<void(void)>;
 };
 
 struct AdcChannelConfig{
@@ -46,6 +47,7 @@ public:
 
 protected:
     ADC_TypeDef * instance;
+    using AdcConcept::Callback;
 
     struct CTLR1{
         union{
@@ -186,10 +188,6 @@ protected:
         instance->CTLR2 = tempreg.data;
     }
 
-    void enableDma(const bool en = true){
-        ADC_DMACmd(instance, en);
-    }
-
     void enableIT(const NvicPriority & priority){
 
     }
@@ -198,66 +196,8 @@ public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
 
     void init(const std::initializer_list<AdcChannelConfig> regular_list,
-            const std::initializer_list<AdcChannelConfig> injected_list, const Mode mode = Mode::Independent){
-
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-        RCC_ADCCLKConfig(RCC_PCLK2_Div8);
-
-        ADC_DeInit(instance);
-
-        setMode(mode);
-        ADC_Cmd(ADC1, ENABLE);
-
-        ADC_BufferCmd(ADC1, DISABLE);
-
-        ADC_ResetCalibration(ADC1);
-
-        while(ADC_GetResetCalibrationStatus(ADC1));
-        ADC_StartCalibration(ADC1);
-
-        while(ADC_GetCalibrationStatus(ADC1));
-        cali_data = Get_CalibrationValue(ADC1);
-
-        ADC_BufferCmd(ADC1, ENABLE);
-
-        bool temp_verf_activation = false;
-    
-        {
-            setRegularCount(regular_list.size());
-            uint8_t i = 0;
-            for(auto config : regular_list){
-                i++;
-                ADC_RegularChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
-                AdcUtils::installPin(config.channel);
-
-                temp_verf_activation |= (config.channel == Channel::TEMP || config.channel == Channel::VREF);
-
-                if(i > 16) break;
-            }
-        }
-
-        {
-            setInjectedCount(injected_list.size());
-            uint8_t i = 0;
-            for(auto config : injected_list){
-                i++;
-
-                ADC_InjectedChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
-                ADC_SetInjectedOffset(instance, ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); // offset can`t be negative
-                installPin(config.channel);
-
-                temp_verf_activation |= (config.channel == Channel::TEMP || config.channel == Channel::VREF);
-
-                if(i > 4) break;
-            }
-        }
-
-        if(temp_verf_activation) enableTempVref();
-
-        if(MAX(injected_list.size(), regular_list.size()) > 1) enableScan();
-        else enableSingleshot();
-
-    }
+            const std::initializer_list<AdcChannelConfig> injected_list, 
+            const Mode mode = Mode::Independent);
 
     void setMode(const Mode mode){
         CTLR1 tempreg;
@@ -316,6 +256,10 @@ public:
         instance->WDLTR = threshold.start;
     }
 
+    void bindWdtIt(Callback && cb){
+        //TODO
+    }
+
     void setTrigger(const RegularTrigger _rtrigger, const InjectedTrigger _jtrigger){
         setRegularTrigger(_rtrigger);
         setInjectedTrigger(_jtrigger);
@@ -341,6 +285,10 @@ public:
 
     bool isIdle(){
         return (isRegularIdle() && isInjectedIdle());
+    }
+
+    void enableDma(const bool en = true){
+        ADC_DMACmd(instance, en);
     }
 
     // void addDataCB(const uint16_t data){

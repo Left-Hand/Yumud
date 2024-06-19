@@ -178,12 +178,19 @@ public:
 
     template <typename U, typename T>
     requires std::is_array_v<T>
-    void begin(U * dst, const T & src){
+    void begin(U * dst, const T & src){//TODO array can only be c-ctyle array
         configDstMemDataBytes(sizeof(U));
         configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
-        begin((void *)dst, (const void *)src, std::distance(std::begin(src), std::end(src)));
+        begin((void *)dst, (const void *)&src[0], std::distance(std::begin(src), std::end(src)));
     }
 
+    template <typename U, typename T>
+    requires std::is_array_v<U>
+    void begin(U & dst, const T * src){
+        configDstMemDataBytes(sizeof(U));
+        configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
+        begin((void *)&dst[0], (const void *)src, std::distance(std::begin(dst), std::end(dst)));
+    }
 
     void configDataBytes(const size_t bytes){
         configMemDataBytes(bytes);
