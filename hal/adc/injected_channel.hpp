@@ -4,13 +4,9 @@
 
 class InjectedChannel: public AdcChannelOnChip{
 protected:
-    using SampleCycles = AdcSampleCycles;
-    using Channel = AdcChannel;
-
-    uint8_t rank;
     uint8_t mask;
     InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
-            AdcChannelOnChip(_instance, _channel), rank(_rank), 
+            AdcChannelOnChip(_instance, _channel, _rank),
             mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
 
     void setCaliData(const uint16_t _cali_data){
@@ -21,8 +17,8 @@ protected:
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    void setSampleTime(const SampleCycles _sample_time){
-        ADC_InjectedChannelConfig(instance, mask, rank, (uint8_t)_sample_time);
+    void setSampleTime(const SampleCycles cycles){
+        ADC_InjectedChannelConfig(instance, mask, rank, (uint8_t)cycles);
     }
 
     real_t uni() const override{

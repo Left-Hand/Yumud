@@ -9,14 +9,14 @@
 
 // template<int valid_bits>
 
-struct AnalogChannelBasics{
+struct AnalogChannel{
 // protected:
     // uint32_t data;
 public:
     real_t scale = 1;
     real_t basis = 0;
 };
-class AnalogChannelReadable: virtual public AnalogChannelBasics{
+class AnalogInChannel: virtual public AnalogChannel{
 protected:
 public:
     virtual real_t uni() const = 0;
@@ -26,12 +26,12 @@ public:
     }
 };
 
-class AnalogChannelWritable: virtual public AnalogChannelBasics{
+class AnalogOutChannel: virtual public AnalogChannel{
 protected:
     virtual void write(const uint32_t data) = 0;
 public:
 
-    AnalogChannelWritable & operator = (const real_t value){
+    AnalogOutChannel & operator = (const real_t value){
         uint16_t data16;
         uni_to_u16(value, data16);
         write(data16);
@@ -39,7 +39,7 @@ public:
     }
 };
 
-// class AnalogChannel : public AnalogChannelReadable, public AnalogChannelWritable{
+// class AnalogChannel : public AnalogInChannel, public AnalogOutChannel{
 // protected:
 // public:
 //     AnalogChannel(AdcChannel & _channel):channel(_channel) {;}

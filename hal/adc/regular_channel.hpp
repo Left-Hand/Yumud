@@ -4,13 +4,13 @@
 
 class RegularChannel: public AdcChannelOnChip{
 public:
-    using SampleCycles = AdcSampleCycles;
-    using Channel = AdcChannel;
+    using SampleCycles = AdcUtils::SampleCycles;
+    using Channel = AdcUtils::Channel;
 protected:
     uint32_t data_cache;
 
     RegularChannel(ADC_TypeDef * _instance,const Channel _channel, const uint8_t _rank):
-        AdcChannelOnChip(_instance, _channel){;}
+        AdcChannelOnChip(_instance, _channel, _rank){;}
 
     friend class AdcOnChip;
     friend class AdcPrimary;
@@ -18,7 +18,7 @@ protected:
 
 public:
     void setSampleCycles(const SampleCycles cycles) override{
-
+        ADC_RegularChannelConfig(instance, (uint8_t)channel, rank, (uint8_t)cycles);
     }
 
     real_t uni() const override{

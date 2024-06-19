@@ -13,24 +13,25 @@ class AdcPrimary;
 class AdcCompanion;
 
 
-class AdcChannelConcept:public AnalogChannelReadable{
+class AdcChannelConcept:public AnalogInChannel{
 
 };
 
 class AdcChannelOnChip: public AdcChannelConcept{
 protected:
-    using Channel = AdcChannel;
-    using SampleCycles = AdcSampleCycles;
+    using Channel = AdcUtils::Channel;
+    using SampleCycles = AdcUtils::SampleCycles;
 
     ADC_TypeDef * instance;
     Channel channel;
+    uint8_t rank;
 
     friend class AdcOnChip;
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    AdcChannelOnChip(ADC_TypeDef * _instance, const Channel _channel):
-            instance(_instance), channel(_channel){};
+    AdcChannelOnChip(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
+            instance(_instance), channel(_channel), rank(_rank){};
     
     virtual void setSampleCycles(const SampleCycles cycles) = 0;
 };

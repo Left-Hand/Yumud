@@ -5,7 +5,7 @@ enum class AdcChannel:uint8_t{
 };
 
 
-enum class AdcMode:uint32_t{
+enum class Mode:uint32_t{
     Independent                       	= ADC_Mode_Independent,
     RegInjecSimult                      = ADC_Mode_RegSimult,
 	RegSimult_AlterTrig                	= ADC_Mode_RegSimult_AlterTrig,

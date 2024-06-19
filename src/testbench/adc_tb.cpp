@@ -10,13 +10,15 @@
 // DATA[4] <- temprature()
 
 void adc_tb(OutputStream & logger){
+    using AdcChannelEnum = AdcUtils::Channel;
+    using AdcCycleEnum = AdcUtils::SampleCycles;
 
     adc1.init(
         {},{
-            // AdcChannelConfig{.channel = AdcChannel::TEMP, .sample_cycles = AdcSampleCycles::T239_5},
-            // AdcChannelConfig{.channel = AdcChannel::VREF, .sample_cycles = AdcSampleCycles::T239_5},
-            // AdcChannelConfig{.channel = AdcChannel::CH1, .sample_cycles = AdcSampleCycles::T239_5},
-            AdcChannelConfig{.channel = AdcChannel::CH0, .sample_cycles = AdcSampleCycles::T239_5},
+            // AdcChannelConfig{.channel = AdcChannel::TEMP, .cycles = AdcSampleCycles::T239_5},
+            // AdcChannelConfig{.channel = AdcChannel::VREF, .cycles = AdcSampleCycles::T239_5},
+            // AdcChannelConfig{.channel = AdcChannel::CH1, .cycles = AdcSampleCycles::T239_5},
+            AdcChannelConfig{AdcChannelEnum::CH0, AdcCycleEnum::T239_5},
         });
 
     adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);

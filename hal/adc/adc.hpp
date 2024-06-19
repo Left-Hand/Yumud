@@ -18,11 +18,14 @@ class AdcConcept{
 };
 
 struct AdcChannelConfig{
-    using Channel = AdcChannel;
-    using SampleCycles = AdcSampleCycles;
+    using Channel = AdcUtils::Channel;
+    using SampleCycles = AdcUtils::SampleCycles;
 
     Channel channel;
-    SampleCycles sample_cycles;
+    SampleCycles cycles;
+
+    AdcChannelConfig(const Channel _channel, const SampleCycles _sample = SampleCycles::T41_5):
+            channel(_channel), cycles(_sample){;}
 };
 
 
@@ -108,16 +111,14 @@ public:
 
 class AdcPrimary: public AdcOnChip{
 protected:
-
-    using Mode = AdcMode;
+    using Channel = AdcUtils::Channel;
+    using SampleCycles = AdcUtils::SampleCycles;
+    using Mode = AdcUtils::Mode;
 
     bool right_align = true;
     uint8_t regular_cnt = 0;
     uint8_t injected_cnt = 0;
     int16_t cali_data;
-
-    using Channel = AdcChannel;
-    using SampleCycles = AdcSampleCycles;
 
     uint32_t getMaxValue() const {
         return ((1 << 12) - 1) << (right_align ? 0 : 4);
@@ -255,7 +256,7 @@ public:
             uint8_t i = 0;
             for(auto config : regular_list){
                 i++;
-                ADC_RegularChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.sample_cycles);
+                ADC_RegularChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
                 installPin(config.channel);
 
                 temp_verf_activation |= (config.channel == Channel::TEMP || config.channel == Channel::VREF);
@@ -270,7 +271,7 @@ public:
             for(auto config : injected_list){
                 i++;
 
-                ADC_InjectedChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.sample_cycles);
+                ADC_InjectedChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
                 ADC_SetInjectedOffset(instance, ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); // offset can`t be negative
                 installPin(config.channel);
 
