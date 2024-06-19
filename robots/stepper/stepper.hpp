@@ -356,9 +356,6 @@ public:
 
         i2cSw.init(400000);
 
-        // logger.println("======");
-        // logger.println("pwon");
-
         odo.init();
 
         using TimerIT = TimerUtils::TimerIT;

@@ -105,7 +105,8 @@
             "netfwd": "cpp",
             "timer": "cpp",
             "semaphore": "cpp",
-            "stop_token": "cpp"
+            "stop_token": "cpp",
+            "variant": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

@@ -118,7 +118,7 @@ typedef long _iq4;
 typedef long _iq3;
 typedef long _iq2;
 typedef long _iq1;
-typedef long _iq;
+
 
 /* 各种IQ格式的数乘以2的倍数 */
 #define _IQmpy2(A)              ((A) << 1)
@@ -3663,88 +3663,6 @@ extern _iq1 _IQ1mag(_iq1 A, _iq1 B);
 #if GLOBAL_Q == 1
 #define _IQmag(A, B)            _IQ1mag(A, B)
 #endif
-
-
-extern _iq _atoIQN(const char *A, long B);
-#define _atoIQ30(A)             _atoIQN(A, 30)
-#define _atoIQ29(A)             _atoIQN(A, 29)
-#define _atoIQ28(A)             _atoIQN(A, 28)
-#define _atoIQ27(A)             _atoIQN(A, 27)
-#define _atoIQ26(A)             _atoIQN(A, 26)
-#define _atoIQ25(A)             _atoIQN(A, 25)
-#define _atoIQ24(A)             _atoIQN(A, 24)
-#define _atoIQ23(A)             _atoIQN(A, 23)
-#define _atoIQ22(A)             _atoIQN(A, 22)
-#define _atoIQ21(A)             _atoIQN(A, 21)
-#define _atoIQ20(A)             _atoIQN(A, 20)
-#define _atoIQ19(A)             _atoIQN(A, 19)
-#define _atoIQ18(A)             _atoIQN(A, 18)
-#define _atoIQ17(A)             _atoIQN(A, 17)
-#define _atoIQ16(A)             _atoIQN(A, 16)
-#define _atoIQ15(A)             _atoIQN(A, 15)
-#define _atoIQ14(A)             _atoIQN(A, 14)
-#define _atoIQ13(A)             _atoIQN(A, 13)
-#define _atoIQ12(A)             _atoIQN(A, 12)
-#define _atoIQ11(A)             _atoIQN(A, 11)
-#define _atoIQ10(A)             _atoIQN(A, 10)
-#define _atoIQ9(A)              _atoIQN(A, 9)
-#define _atoIQ8(A)              _atoIQN(A, 8)
-#define _atoIQ7(A)              _atoIQN(A, 7)
-#define _atoIQ6(A)              _atoIQN(A, 6)
-#define _atoIQ5(A)              _atoIQN(A, 5)
-#define _atoIQ4(A)              _atoIQN(A, 4)
-#define _atoIQ3(A)              _atoIQN(A, 3)
-#define _atoIQ2(A)              _atoIQN(A, 2)
-#define _atoIQ1(A)              _atoIQN(A, 1)
-/*******************************************************************************
-* Function Name  : _atoIQ
-* Description    : 将一个字符串转换成IQ格式数。
-* Input          : 参数A为一个字符串
-* Return         : 返回IQ格式数
-*******************************************************************************/
-#define _atoIQ(A)               _atoIQN(A, GLOBAL_Q)
-
-extern int _IQNtoa(char *A, const char *B, _iq C, int D);
-#define _IQ30toa(A, B, C)       _IQNtoa(A, B, C, 30);
-#define _IQ29toa(A, B, C)       _IQNtoa(A, B, C, 29);
-#define _IQ28toa(A, B, C)       _IQNtoa(A, B, C, 28);
-#define _IQ27toa(A, B, C)       _IQNtoa(A, B, C, 27);
-#define _IQ26toa(A, B, C)       _IQNtoa(A, B, C, 26);
-#define _IQ25toa(A, B, C)       _IQNtoa(A, B, C, 25);
-#define _IQ24toa(A, B, C)       _IQNtoa(A, B, C, 24);
-#define _IQ23toa(A, B, C)       _IQNtoa(A, B, C, 23);
-#define _IQ22toa(A, B, C)       _IQNtoa(A, B, C, 22);
-#define _IQ21toa(A, B, C)       _IQNtoa(A, B, C, 21);
-#define _IQ20toa(A, B, C)       _IQNtoa(A, B, C, 20);
-#define _IQ19toa(A, B, C)       _IQNtoa(A, B, C, 19);
-#define _IQ18toa(A, B, C)       _IQNtoa(A, B, C, 18);
-#define _IQ17toa(A, B, C)       _IQNtoa(A, B, C, 17);
-#define _IQ16toa(A, B, C)       _IQNtoa(A, B, C, 16);
-#define _IQ15toa(A, B, C)       _IQNtoa(A, B, C, 15);
-#define _IQ14toa(A, B, C)       _IQNtoa(A, B, C, 14);
-#define _IQ13toa(A, B, C)       _IQNtoa(A, B, C, 13);
-#define _IQ12toa(A, B, C)       _IQNtoa(A, B, C, 12);
-#define _IQ11toa(A, B, C)       _IQNtoa(A, B, C, 11);
-#define _IQ10toa(A, B, C)       _IQNtoa(A, B, C, 10);
-#define _IQ9toa(A, B, C)        _IQNtoa(A, B, C, 9);
-#define _IQ8toa(A, B, C)        _IQNtoa(A, B, C, 8);
-#define _IQ7toa(A, B, C)        _IQNtoa(A, B, C, 7);
-#define _IQ6toa(A, B, C)        _IQNtoa(A, B, C, 6);
-#define _IQ5toa(A, B, C)        _IQNtoa(A, B, C, 5);
-#define _IQ4toa(A, B, C)        _IQNtoa(A, B, C, 4);
-#define _IQ3toa(A, B, C)        _IQNtoa(A, B, C, 3);
-#define _IQ2toa(A, B, C)        _IQNtoa(A, B, C, 2);
-#define _IQ1toa(A, B, C)        _IQNtoa(A, B, C, 1);
-/*******************************************************************************
-* Function Name  : _IQtoa
-* Description    : 将IQ格式数转换成一个字符串。
-* Input          : A:存放转换结果的缓冲区。
-*                : B:格式化输出参数"%I.Qf",I和Q分别代表整数、小数部分的10进制个数。
-*                :   例如，"%7.8f"打印整数部分7个10进制数，小数部分打印8个10进制数。
-*                : C:要转换的IQ格式数。
-* Return         : 返回C的字符串形式。
-*******************************************************************************/
-#define _IQtoa(A, B, C)         _IQNtoa(A, B, C, GLOBAL_Q)
 
 
 #define _IQ30abs(A)             (((A) < 0) ? - (A) : (A))

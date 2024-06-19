@@ -10,7 +10,7 @@ void TimerOut::installToPin(const bool & en){
     enable(en);
 }
 
-void TimerOC::init(const bool & install, const TimerOC::Mode & mode){
+void TimerOC::init(const TimerOC::Mode mode, const bool install){
     setPolarity(true);
     enableSync();
 
@@ -23,7 +23,7 @@ void TimerOC::init(const bool & install, const TimerOC::Mode & mode){
     enable();
 }
 
-void TimerOC::setMode(const TimerOC::Mode & mode){
+void TimerOC::setMode(const TimerOC::Mode mode){
     uint16_t m_code,s_code;
     switch(channel){
         default:

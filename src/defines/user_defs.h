@@ -2,23 +2,19 @@
 
 #define __USER_DEFS_H__
 
-#include <ch32v20x.h>
-#include <ch32v20x_opa.h>
-#include <ch32v20x_iwdg.h>
-// #include <core_riscv.h>
+#include "sys/platform.h"
 
+//defines for iqlib
 #define USE_IQ
+
 // #define USE_DOUBLE
 #define IQ_USE_LOG
 #define USE_STDMATH
 #define EXTRA_IQ
 // #define STRICT_IQ
 
-//defines for iqlib
 
-// #define SPI1_USE_DMA
-
-#define HAVE_I2C1
+// #define HAVE_I2C1
 #define HAVE_UART1
 #define HAVE_UART2
 
@@ -43,5 +39,8 @@
 
 #define HAVE_OPA1
 #define HAVE_OPA2
+
+#define DEBUGGER uart2
+#define LOGGER uart2
 
 #endif

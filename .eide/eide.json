@@ -55,7 +55,10 @@
         "thirdparty/lua/manual",
         "thirdparty/lua/testes",
         "thirdparty/lua/lua.c",
-        "thirdparty/lua/onelua.c"
+        "thirdparty/lua/onelua.c",
+        "src/testbench/stepper_tb.cpp",
+        "robots/stepper",
+        "src/testbench/pwm_tb.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -141,7 +144,6 @@
           "hal",
           "hal/bus/usb/cdc"
         ],
-        "sourceDirList": [],
         "defineList": [
           "WCH",
           "RISCV",
@@ -260,5 +262,5 @@
       }
     }
   },
-  "version": "3.3"
+  "version": "3.4"
 }

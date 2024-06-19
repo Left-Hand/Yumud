@@ -31,12 +31,12 @@ public:
             last.t = t;
             return x;
         }
-        real_t ret = forward(x, t - last.t);
+        real ret = forward(x, t - last.t);
         last.t = t;
         return ret;
     }
 
-    real_t forward(const real & x, const time & delta){
+    real forward(const real & x, const time & delta){
         if(!inited){
             init(x);
             return x;

@@ -168,10 +168,10 @@
 
 #ifdef HAVE_TIM2
     #if ((TIM2_REMAP == GPIO_FullRemap_TIM2) || (TIM2_REMAP == GPIO_PartialRemap1_TIM2))
-        #define TIM2_CH1_Port GPIOA
+        #define TIM2_CH1_Port portA
         #define TIM2_CH1_Pin GPIO_Pin_15
 
-        #define TIM2_CH2_Port GPIOB
+        #define TIM2_CH2_Port portB
         #define TIM2_CH2_Pin GPIO_Pin_3
 
         #define TIM2_REMAP_ENABLE ENABLE
@@ -207,10 +207,10 @@
 
 #ifdef HAVE_TIM3
     #if TIM3_REMAP_ENABLE == ENABLE
-    #define TIM3_CH1_Port GPIOB
+    #define TIM3_CH1_Port portB
     #define TIM3_CH1_Pin GPIO_Pin_4
 
-    #define TIM3_CH2_Port GPIOB
+    #define TIM3_CH2_Port portB
     #define TIM3_CH2_Pin GPIO_Pin_5
     #else
     #define TIM3_CH1_Port portA

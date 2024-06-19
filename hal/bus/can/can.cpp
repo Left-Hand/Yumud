@@ -20,13 +20,13 @@ void CAN_IT_Init(CAN_TypeDef * instance){
     CAN_ClearITPendingBit(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1);
     CAN_ITConfig(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1, ENABLE);
 
-    NvicRequest{USB_HP_CAN1_TX_IRQn,1,6}.enable();
+    NvicRequest{1, 6, USB_HP_CAN1_TX_IRQn}.enable();
     //rx0 interrupt
 
-    NvicRequest{USB_LP_CAN1_RX0_IRQn,1,4}.enable();
+    NvicRequest{1, 4, USB_LP_CAN1_RX0_IRQn}.enable();
 
     //rx1 interrupt
-    NvicRequest{CAN1_RX1_IRQn,1,5}.enable();
+    NvicRequest{1, 5, CAN1_RX1_IRQn}.enable();
 
     CAN_ITConfig(instance, CAN_IT_ERR | CAN_IT_WKU
             | CAN_IT_SLK | CAN_IT_EWG | CAN_IT_EPV | CAN_IT_BOF
@@ -34,7 +34,7 @@ void CAN_IT_Init(CAN_TypeDef * instance){
 
     // CAN_ITConfig(instance, CAN_IT_ERR, DISABLE);
     //sce interrupt
-    NvicRequest{CAN1_SCE_IRQn,1,2}.enable();
+    NvicRequest{1,2, CAN1_SCE_IRQn}.enable();
 }
 
 void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
@@ -131,27 +131,32 @@ void Can::init(const BaudRate baudRate, const CanFilter & filter){
         break;
     }
     uint8_t swj, bs1, bs2;
-    uint16_t prescale = 0;
+    uint8_t prescale = 0;
+
+    swj = CAN_SJW_2tq;
+    bs1 = CAN_BS1_6tq;
+    bs2 = CAN_BS2_5tq;
 
     switch(baudRate){
     case BaudRate::Kbps125:
-        swj = CAN_SJW_2tq;
-        bs1 = CAN_BS1_6tq;
-        bs2 = CAN_BS2_5tq;
         prescale = 96;
         break;
+    case BaudRate::Kbps250:
+        prescale = 48;
+        break;
+    case BaudRate::Kbps500:
+        prescale = 24;
+        break;
     case BaudRate::Mbps1:
-        swj = CAN_SJW_2tq;
-        bs1 = CAN_BS1_6tq;
-        bs2 = CAN_BS2_5tq;
         prescale = 12;
         break;
     };
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
-    config.CAN_Mode = CAN_Mode_Silent_LoopBack;
+    config.CAN_Mode = CAN_Mode_Normal;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;

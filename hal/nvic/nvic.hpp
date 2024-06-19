@@ -36,10 +36,10 @@ class NvicRequest:public NvicPriority{
 protected:
     const IRQn irq;
 public:
-    NvicRequest(const IRQn _irq, const uint8_t _pre, const uint8_t _sub):
+    NvicRequest(const uint8_t _pre, const uint8_t _sub, const IRQn _irq):
             NvicPriority(_pre, _sub), irq(_irq){;}
 
-    NvicRequest(const IRQn _irq, const NvicPriority priority):
+    NvicRequest(const NvicPriority priority, const IRQn _irq):
             NvicPriority(priority), irq(_irq){;}
 
     void enable(const bool en = true){

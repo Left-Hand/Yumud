@@ -30,11 +30,11 @@
 
 //     adc1.init(
 //         {
-//             AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T239_5}
+//             AdcChannelConfig{.channel = AdcChannels::CH0, .cycles = AdcSampleCycles::T239_5}
 //         },
 //         {
-//             AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T239_5}
-//             // AdcChannelConfig{.channel = AdcChannels::CH1, .sample_cycles = AdcSampleCycles::T239_5},
+//             AdcChannelConfig{.channel = AdcChannels::CH0, .cycles = AdcSampleCycles::T239_5}
+//             // AdcChannelConfig{.channel = AdcChannels::CH1, .cycles = AdcSampleCycles::T239_5},
 //         });
 
 //     static constexpr int buck_freq = 1000;
