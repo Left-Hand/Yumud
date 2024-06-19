@@ -4,10 +4,9 @@
 
 class InjectedChannel: public AdcChannelOnChip{
 protected:
+
     uint8_t mask;
-    InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
-            AdcChannelOnChip(_instance, _channel, _rank),
-            mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
+
 
     void setCaliData(const uint16_t _cali_data){
         ADC_SetInjectedOffset(instance, mask, _cali_data);
@@ -17,6 +16,10 @@ protected:
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
+    InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
+            AdcChannelOnChip(_instance, _channel, _rank),
+            mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
+            
     void setSampleTime(const SampleCycles cycles){
         ADC_InjectedChannelConfig(instance, mask, rank, (uint8_t)cycles);
     }

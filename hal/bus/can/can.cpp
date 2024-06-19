@@ -131,24 +131,29 @@ void Can::init(const BaudRate baudRate, const CanFilter & filter){
         break;
     }
     uint8_t swj, bs1, bs2;
-    uint16_t prescale = 0;
+    uint8_t prescale = 0;
+
+    swj = CAN_SJW_2tq;
+    bs1 = CAN_BS1_6tq;
+    bs2 = CAN_BS2_5tq;
 
     switch(baudRate){
     case BaudRate::Kbps125:
-        swj = CAN_SJW_2tq;
-        bs1 = CAN_BS1_6tq;
-        bs2 = CAN_BS2_5tq;
         prescale = 96;
         break;
+    case BaudRate::Kbps250:
+        prescale = 48;
+        break;
+    case BaudRate::Kbps500:
+        prescale = 24;
+        break;
     case BaudRate::Mbps1:
-        swj = CAN_SJW_2tq;
-        bs1 = CAN_BS1_6tq;
-        bs2 = CAN_BS2_5tq;
         prescale = 12;
         break;
     };
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
     config.CAN_Mode = CAN_Mode_Silent_LoopBack;

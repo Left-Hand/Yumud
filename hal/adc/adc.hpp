@@ -120,7 +120,10 @@ protected:
     uint8_t regular_cnt = 0;
     uint8_t injected_cnt = 0;
 
-    uint16_t regular_data_dma[16] = {0};
+    uint16_t regular_data_cache[16] = {0};
+
+    // RegularChannel regular_channels[16];
+    // InjectedChannel injected_channels[4];
 
 
     uint32_t getMaxValue() const {
@@ -341,6 +344,12 @@ public:
 
     // }
 
+    // AdcChannelOnChip & ch(int8_t channel){
+    //     if(channel > 0){
+    //         return regular_channels[channel-1];
+    //     }
+    //     return 
+    // }
     // RegularChannel getRegularChannel(const Channel channel, const SampleCycles sample_time = SampleCycles::T28_5){
     //     return RegularChannel(instance, channel, sample_time);
     // }
