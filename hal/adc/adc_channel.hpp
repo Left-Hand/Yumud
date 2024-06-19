@@ -6,8 +6,6 @@
 #include "adc_enums.h"
 
 #include "analog_channel.hpp"
-#include "hal/gpio/gpio.hpp"
-#include "adc/adc.hpp"
 
 
 class AdcOnChip;
@@ -31,8 +29,10 @@ protected:
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    AdcChannelOnChip(ADC_TypeDef * _instance, const Channel & _channel):
+    AdcChannelOnChip(ADC_TypeDef * _instance, const Channel _channel):
             instance(_instance), channel(_channel){};
+    
+    virtual void setSampleCycles(const SampleCycles cycles) = 0;
 };
 
 

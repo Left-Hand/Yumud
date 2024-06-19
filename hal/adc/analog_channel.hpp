@@ -10,23 +10,19 @@
 // template<int valid_bits>
 
 struct AnalogChannelBasics{
-protected:
-    uint32_t data;
+// protected:
+    // uint32_t data;
 public:
-    real_t scale;
-    real_t basis;
+    real_t scale = 1;
+    real_t basis = 0;
 };
 class AnalogChannelReadable: virtual public AnalogChannelBasics{
 protected:
-    virtual void read(uint32_t & _data) const = 0;
 public:
+    virtual real_t uni() const = 0;
 
     operator real_t() const {
-        real_t uni = real_t(1);
-        uint32_t _data; 
-        read(_data);
-        u16_to_uni(data, uni);
-        return uni;
+        return uni() * scale + basis;
     }
 };
 

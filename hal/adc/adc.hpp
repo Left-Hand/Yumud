@@ -117,7 +117,7 @@ protected:
     int16_t cali_data;
 
     using Channel = AdcChannel;
-    using SampleTime = AdcSampleCycles;
+    using SampleCycles = AdcSampleCycles;
 
     uint32_t getMaxValue() const {
         return ((1 << 12) - 1) << (right_align ? 0 : 4);
@@ -158,7 +158,7 @@ protected:
         injected_cnt = cnt;
     }
 
-    void setRegularSampleTime(const Channel channel,  const SampleTime _sample_time){
+    void setRegularSampleTime(const Channel channel,  const SampleCycles _sample_time){
         auto sample_time = _sample_time;
         uint8_t ch = (uint8_t)channel;
         uint8_t offset = ch % 10;
@@ -389,11 +389,11 @@ public:
 
     // }
 
-    // RegularChannel getRegularChannel(const Channel channel, const SampleTime sample_time = SampleTime::T28_5){
+    // RegularChannel getRegularChannel(const Channel channel, const SampleCycles sample_time = SampleCycles::T28_5){
     //     return RegularChannel(instance, channel, sample_time);
     // }
 
-    // InjectedChannel getInjectedChannel(const Channel channel, const SampleTime sample_time = SampleTime::T28_5){
+    // InjectedChannel getInjectedChannel(const Channel channel, const SampleCycles sample_time = SampleCycles::T28_5){
     //     return InjectedChannel(instance, channel, sample_time);
     // }
 
