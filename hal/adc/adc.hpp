@@ -1,6 +1,4 @@
-#ifndef __MYADC_HPP__
-
-#define __MYADC_HPP__
+#pragma once
 
 #include "types/range/range_t.hpp"
 #include "sys/platform.h"
@@ -10,7 +8,7 @@
 
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
-#include "adc_enums.h"
+#include "adc_utils.hpp"
 #include <initializer_list>
 
 class AdcConcept{
@@ -116,36 +114,19 @@ protected:
     using Mode = AdcUtils::Mode;
 
     bool right_align = true;
+
+    int16_t cali_data;
+
     uint8_t regular_cnt = 0;
     uint8_t injected_cnt = 0;
-    int16_t cali_data;
+
+    uint16_t regular_data_dma[16] = {0};
+
 
     uint32_t getMaxValue() const {
         return ((1 << 12) - 1) << (right_align ? 0 : 4);
     }
-    // void clearRegularQueue(){
-    //     for(RegularChannel * & regular : regular_ptrs){
-    //         regular = nullptr;
-    //     }
-    //     regular_cnt = 0;
-    // }
 
-    // void clearInjectedQueue(){
-    //     for(InjectedChannel * & injected : injected_ptrs){
-    //         injected = nullptr;
-    //     }
-    //     injected_cnt = 0;
-    // }
-
-    // void AddChannelToQueue(RegularChannel & regular_channel){
-    //     if(regular_cnt >= 16) return;
-    //     regular_ptrs[regular_cnt++] = &regular_channel;
-    // }
-
-    // void AddChannelToQueue(InjectedChannel & injected_channel){
-    //     if(injected_cnt >= 4) return;
-    //     injected_ptrs[injected_cnt++] = &injected_channel;
-    // }
     void setRegularCount(const uint8_t cnt){
         CTLR1 tempreg;
         tempreg.data = instance->CTLR1;
@@ -178,30 +159,6 @@ protected:
         }
     }
 
-    void installPin(const Channel channel, const bool en = true){
-        uint8_t ch_index = (uint8_t)channel;
-
-        if(ch_index > 15) return;
-
-        Port * gpio_port = nullptr;
-        Pin gpio_pin = Pin::None;
-
-        if(ch_index <= 7){
-            gpio_port = &portA;
-            gpio_pin = (Pin)(1 << ch_index);
-        }else if(ch_index <= 9){
-            gpio_port = &portB;
-            gpio_pin = (Pin)(1 << (ch_index - 8));
-        }else if(ch_index <= 15){
-            gpio_port = &portC;
-            gpio_pin = (Pin)(1 << (ch_index - 10));
-        }
-
-        Gpio & io = (*gpio_port)[gpio_pin];
-        if(en)io.InAnalog();
-        else io.InFloating();
-    }
-
     void enableSingleshot(const bool en = true){
         CTLR1 tempreg;
         tempreg.data = instance->CTLR1;
@@ -221,6 +178,14 @@ protected:
         tempreg.data = instance->CTLR2;
         tempreg.TSVREFE = en;
         instance->CTLR2 = tempreg.data;
+    }
+
+    void enableDma(const bool en = true){
+        ADC_DMACmd(instance, en);
+    }
+
+    void enableIT(const NvicPriority & priority){
+
     }
 
 public:
@@ -257,7 +222,7 @@ public:
             for(auto config : regular_list){
                 i++;
                 ADC_RegularChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
-                installPin(config.channel);
+                AdcUtils::installPin(config.channel);
 
                 temp_verf_activation |= (config.channel == Channel::TEMP || config.channel == Channel::VREF);
 
@@ -288,13 +253,6 @@ public:
 
     }
 
-    void enableDma(const bool en = true){
-        ADC_DMACmd(instance, en);
-    }
-
-    void enableIT(const NvicPriority & priority){
-
-    }
     void setMode(const Mode mode){
         CTLR1 tempreg;
         tempreg.data = instance->CTLR1;
@@ -334,9 +292,7 @@ public:
         tempreg.EXTSEL = static_cast<uint8_t>(trigger);
         instance->CTLR2 = tempreg.data;
 
-        if(trigger != RegularTrigger::SW){
-            ADC_ExternalTrigConvCmd(instance,ENABLE);
-        }
+        ADC_ExternalTrigConvCmd(instance, trigger == RegularTrigger::SW);
     }
 
     void setInjectedTrigger(const InjectedTrigger trigger){
@@ -345,12 +301,7 @@ public:
         tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
         instance->CTLR2 = tempreg.data;
 
-        if(trigger != InjectedTrigger::SW){
-            ADC_ExternalTrigInjectedConvCmd(instance, ENABLE);
-            ADC_ExternalTrigConvCmd(instance,ENABLE);
-        }else{
-            ADC_ExternalTrigInjectedConvCmd(instance, DISABLE);
-        }
+        ADC_ExternalTrigInjectedConvCmd(instance, trigger == InjectedTrigger::SW);
     }
 
     void setWdtThreshold(const Range_t<int> & _threshold){
@@ -404,5 +355,3 @@ public:
     virtual uint16_t getRegularDataByRank(const uint8_t & rank) = 0;
     virtual uint16_t getInjectedDataByRank(const uint8_t & rank) = 0;
 };
-
-#endif

@@ -3,7 +3,7 @@
 #define __ADC_CHANNEL_HPP__
 
 #include "sys/platform.h"
-#include "adc_enums.h"
+#include "adc_utils.hpp"
 
 #include "analog_channel.hpp"
 
@@ -33,6 +33,10 @@ public:
     AdcChannelOnChip(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
             instance(_instance), channel(_channel), rank(_rank){};
     
+    void init(){
+        AdcUtils::installPin(channel, true);
+    }
+
     virtual void setSampleCycles(const SampleCycles cycles) = 0;
 };
 

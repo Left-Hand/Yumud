@@ -21,6 +21,8 @@ public:
         ADC_RegularChannelConfig(instance, (uint8_t)channel, rank, (uint8_t)cycles);
     }
 
+
+
     real_t uni() const override{
         real_t result;
         u16_to_uni(data_cache, result);
