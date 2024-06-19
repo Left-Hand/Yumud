@@ -19,8 +19,8 @@ public:
     InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
             AdcChannelOnChip(_instance, _channel, _rank),
             mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
-            
-    void setSampleTime(const SampleCycles cycles){
+
+    void setSampleCycles(const SampleCycles cycles){
         ADC_InjectedChannelConfig(instance, mask, rank, (uint8_t)cycles);
     }
 

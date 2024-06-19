@@ -1,5 +1,9 @@
 #include "tb.h"
 
+#define ADC_TB_MAIN
+// #define ADC_TB_REGULAR
+// #define ADC_TB_INJECT
+
 
 // PA^8 -> LED 
 // PA^9 -> DEBUGGER^URX
@@ -10,24 +14,32 @@
 // DATA[4] <- temprature()
 
 void adc_tb(OutputStream & logger){
+    #ifdef ADC_TB_MAIN
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
     adc1.init(
-        {},{
+        {
+            AdcChannelConfig{AdcChannelEnum::CH0},
+        },{
             // AdcChannelConfig{.channel = AdcChannel::TEMP, .cycles = AdcSampleCycles::T239_5},
             // AdcChannelConfig{.channel = AdcChannel::VREF, .cycles = AdcSampleCycles::T239_5},
             // AdcChannelConfig{.channel = AdcChannel::CH1, .cycles = AdcSampleCycles::T239_5},
-            AdcChannelConfig{AdcChannelEnum::CH0, AdcCycleEnum::T239_5},
+            // AdcChannelConfig{AdcChannelEnum::CH0, AdcCycleEnum::T239_5},
         });
 
-    adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
+    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
 
     // adc1.enableContinous();
-    adc1.enableAutoInject();
+    // adc1.enableAutoInject();
 
     // auto & bled = portA[8];
     // bled.OutPP();
+    // auto fn = [&logger](){logger.println("Hi");};
+    // void (* fn2)(void) = fn;
+    dma1Ch1.init(DmaUtils::Mode::toMemCircular);
+    dma1Ch1.begin();
+
     timer1.init(36000);
     auto & pwm = timer1.oc(1);
     pwm.init(true);
@@ -65,4 +77,15 @@ void adc_tb(OutputStream & logger){
 
         // delay(1);
     }
+    #endif
+
+    #ifdef ADC_TB_REGULAR
+    
+    RegularChannel rch{ADC1, AdcUtils::Channel::CH0, 0};
+    #endif
+
+    #ifdef ADC_TB_INJECT
+    InjectedChannel jch{ADC1, AdcUtils::Channel::CH0, 0};
+    #endif
+
 }

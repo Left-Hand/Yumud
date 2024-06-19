@@ -9,8 +9,7 @@ public:
 protected:
     uint32_t data_cache;
 
-    RegularChannel(ADC_TypeDef * _instance,const Channel _channel, const uint8_t _rank):
-        AdcChannelOnChip(_instance, _channel, _rank){;}
+
 
     friend class AdcOnChip;
     friend class AdcPrimary;
@@ -21,6 +20,8 @@ public:
         ADC_RegularChannelConfig(instance, (uint8_t)channel, rank, (uint8_t)cycles);
     }
 
+    RegularChannel(ADC_TypeDef * _instance,const Channel _channel, const uint8_t _rank):
+        AdcChannelOnChip(_instance, _channel, _rank){;}
 
 
     real_t uni() const override{

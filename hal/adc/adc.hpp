@@ -5,6 +5,7 @@
 
 #include "hal/gpio/port.hpp"
 #include "hal/nvic/nvic.hpp"
+#include "hal/dma/dma.hpp"
 
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
@@ -16,14 +17,16 @@ class AdcConcept{
 };
 
 struct AdcChannelConfig{
+// protected:
+public:
     using Channel = AdcUtils::Channel;
     using SampleCycles = AdcUtils::SampleCycles;
 
     Channel channel;
     SampleCycles cycles;
-
-    AdcChannelConfig(const Channel _channel, const SampleCycles _sample = SampleCycles::T41_5):
-            channel(_channel), cycles(_sample){;}
+public:
+    AdcChannelConfig(const Channel _channel, const SampleCycles _cycles = SampleCycles::T41_5):
+            channel(_channel), cycles(_cycles){;}
 };
 
 
@@ -40,10 +43,10 @@ public:
     enum class InjectedTrigger:uint8_t{
         T1TRGO, T1CC4, T2TRGO, T2CC1, T3CC4, T4TRGO, EXTI1515_T8CC4, SW
     };
-// ADC_ExternalTrigInjecConv_T3_CC4
+
 protected:
     ADC_TypeDef * instance;
-    // ADC_TypeDef * instance2;
+
     struct CTLR1{
         union{
             struct{
@@ -194,8 +197,8 @@ protected:
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
 
-    void init(const std::initializer_list<AdcChannelConfig> & regular_list,
-            const std::initializer_list<AdcChannelConfig> & injected_list, const Mode mode = Mode::Independent){
+    void init(const std::initializer_list<AdcChannelConfig> regular_list,
+            const std::initializer_list<AdcChannelConfig> injected_list, const Mode mode = Mode::Independent){
 
         RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
         RCC_ADCCLKConfig(RCC_PCLK2_Div8);

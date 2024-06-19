@@ -81,16 +81,16 @@ public:
 
     void puttexture_unsafe(const Rect2i & rect, const Grayscale * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
 
         interface.dc_gpio = DisplayInterfaceSpi::data_level;
         //TODO
+        // auto size = (size_t)rect.get_area();
         // interface.writePool(color_ptr, size);
     }
 
     void puttexture_unsafe(const Rect2i & rect, const Binary * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
+        // auto size = (size_t)rect.get_area();
         // for(size_t i = 0; i < size; i++){
         //     writePixel(((uint8_t *)color_ptr)[i] ? 0xffff : 0);
         // }
