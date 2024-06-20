@@ -109,10 +109,10 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                     static real_t last_err = 0;
 
                     real_t err_a = fmod(odo.getRawLapPosition(), 0.02);
-                    // real_t err_b = err_a - 0.02;
+                    real_t err_b = err_a - 0.02;
 
-                    // last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
-                    last_err = err_a;
+                    last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
+                    // last_err = err_a;
 
                     forward_pole_err[cali_index] += last_err / (forwardturns / 50);
                     
@@ -158,10 +158,10 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                     static real_t last_err = 0.1;
 
                     real_t err_a = fmod(odo.getRawLapPosition(), 0.02);
-                    // real_t err_b = err_a - 0.02;
+                    real_t err_b = err_a - 0.02;
 
-                    // last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
-                    last_err = err_a;
+                    last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
+                    // last_err = err_a;
 
                     backward_pole_err[cali_index] += last_err / (backwardturns / 50);
                     // backward_err[cali_index] = odo.getRawLapPosition();
@@ -210,26 +210,50 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 break;
             case SubState::ANALYSIS:
                 {
-                    // real_t forward_mean = std::accumulate(std::begin(forward_err), std::end(forward_err), real_t(0)) / int(forward_err.size());
-                    // for(auto & forward_err_item : forward_err){
-                    //     forward_err_item -= forward_mean;
+                    real_t forward_mean = std::accumulate(std::begin(forward_pole_err), std::end(forward_pole_err), real_t(0)) / poles;
+                    real_t backward_mean = std::accumulate(std::begin(backward_pole_err), std::end(backward_pole_err), real_t(0)) / poles;
+
+                    // maybe forward is delayed by a inv_poles
+                    // assume inv_poles is 0.2
+                    // for example:
+
+                    // backward mean -0.03 
+                    // forward mean -0.13
+                    // final -0.08
+
+                    // but the fact is that
+                    // forward mean 0.07
+                    // backward mean -0.03
+                    // final 0.02
+
+                    // we will fix that
+
+                    // if(ABS((forward_mean - backward_mean) - inv_poles / 2) < ABS((forward_mean + inv_poles - backward_mean) - inv_poles / 2)){
+                    //     for(auto & item : forward_pole_err) item += inv_poles;
                     // }
 
-                    // real_t backward_mean = std::accumulate(std::begin(backward_err), std::end(backward_err), real_t(0)) / int(backward_err.size());
-                    // for(auto & backward_err_item : backward_err){
-                    //     backward_err_item -= backward_mean;
-                    // }
+                    if(forward_mean < backward_mean){
+                        for(auto & item : forward_pole_err) item += inv_poles;
+                    }
+
+                    bool load_ok = autoload();
+                    if(load_ok){
+                        
+                    }else{
+                        for(uint8_t i = 0; i < poles; i++){
+                            odo.map()[i] = mean(forward_pole_err[i], backward_pole_err[i]);
+                        }
+                    }
+                    // initial_err -= forward_err[initial_pole];
+                    for(size_t p = 0; p < poles; p++){
+                        size_t i = p % 50;
+                        // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
+                        logger.println(odo.map()[i], forward_pole_err[i], backward_pole_err[i], forward_mean, backward_mean);
+                        delay(1);
+                    }
                 }
 
-                for(uint8_t i = 0; i < poles; i++){
-                    odo.map()[i] = mean(forward_pole_err[i], backward_pole_err[i]);
-                }
-                // initial_err -= forward_err[initial_pole];
-                // for(size_t p = 0; p < landingturns; p++){
-                //     size_t i = p % 50;
-                //     // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
-                //     CALI_DEBUG(forward_pole_err[i], backward_pole_err[i], odo.cali_map[i], fmod(elecrad_test_data[p].first, 0.02), elecrad_test_data[p].first, elecrad_test_data[p].second);
-                // }
+
 
                 sw_state(SubState::EXAMINE);
                 break;

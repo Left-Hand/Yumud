@@ -14,7 +14,7 @@ public:
 
     void init() override{m_gpio.OutPP(false);}
 
-    __fast_inline GpioPwm & operator = (const real_t & duty) override{
+    __fast_inline GpioPwm & operator = (const real_t duty) override{
         if(duty == 0) {m_cvr = 0;}
         else if(duty == 1) {m_cvr = m_arr - 1;}
         else {m_cvr = int(duty * m_arr);}

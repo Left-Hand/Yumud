@@ -255,8 +255,20 @@ public:
 
         switch(run_status){
             case RunStatus::INIT:
-                cali_task(true);
-                break;
+                {
+                    // static bool load_lock = false;
+                    // bool load_ok = autoload();
+                    // // bool load_ok = false;
+                    // if(load_ok){
+                    //     run_status = RunStatus::CALI;
+                    //     new_status = RunStatus::EXIT;
+                    //     logger.println("autoload ok");
+                    // }else{
+                        cali_task(true);
+                    //     logger.println("autoload failed");
+                    // }
+                    break;
+                }
             case RunStatus::CALI:
                 new_status = cali_task();
                 break;
@@ -329,7 +341,7 @@ public:
         exe_micros = micros() - begin_micros;
     }
 
-    void autoload();
+    bool autoload();
 
     void init(){
         using TimerUtils::TimerMode;
@@ -405,7 +417,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        // if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
