@@ -43,26 +43,43 @@ public:
 
     void enable(const bool & en = true) override{
         enabled = en;
-        if(!en) setDuty(real_t(0));
+        if(!en) sleep();
     }
 
     void setDuty(const real_t & duty) override{
-        if(!enabled){
-            gpioN.clr();
-            gpioP.clr();
-            return;
-        }
+        // if(!enabled){
+        //     gpioN.clr();
+        //     gpioP.clr();
+        //     return;
+        // }
 
         // constexpr float curr_base = 0.02;
-        if(duty > 0){
-            gpioP.set();
-            gpioN.clr();
-            vref_pwm = duty;
-        }else{
-            gpioN.set();
-            gpioP.clr();
-            vref_pwm = -duty;
+        vref_pwm = ABS(duty);
+
+        switch (int(sign(duty))){
+            case 1:
+                gpioP.set();
+                gpioN.clr();
+                break;
+            case 0:
+                gpioP.set();
+                gpioN.set();
+                break;
+            case -1:
+                gpioP.clr();
+                gpioN.set();
+                break;
         }
+    }
+
+    void sleep(){
+        gpioN.clr();
+        gpioP.clr();
+    }
+
+    void brake(){
+        gpioN.set();
+        gpioP.set();
     }
 
     Coil1 & operator = (const real_t & duty) override {setDuty(duty); return *this;}

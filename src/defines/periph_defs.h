@@ -17,6 +17,9 @@
 
 #endif
 
+#define ENABLE 1
+#define DISABLE 0
+
 #define UART1_REMAP_ENABLE ENABLE
 #define UART2_REMAP_ENABLE DISABLE
 
@@ -174,15 +177,12 @@
         #define TIM2_CH2_Port portB
         #define TIM2_CH2_Pin GPIO_Pin_3
 
-        #define TIM2_REMAP_ENABLE ENABLE
     #else
         #define TIM2_CH1_Port portA
         #define TIM2_CH1_Pin GPIO_Pin_0
 
         #define TIM2_CH2_Port portA
         #define TIM2_CH2_Pin GPIO_Pin_1
-
-        #define TIM2_REMAP_ENABLE ENABLE
     #endif
 
     #if ((TIM2_REMAP == GPIO_FullRemap_TIM2) || (TIM2_REMAP == GPIO_PartialRemap2_TIM2))
@@ -192,7 +192,6 @@
         #define TIM2_CH4_Port portB
         #define TIM2_CH4_Pin GPIO_Pin_11
 
-        #define TIM2_REMAP_ENABLE ENABLE
     #else
         #define TIM2_CH3_Port GPIOA
         #define TIM2_CH3_Pin GPIO_Pin_2
@@ -200,7 +199,6 @@
         #define TIM2_CH4_Port GPIOA
         #define TIM2_CH4_Pin GPIO_Pin_3
 
-        #define TIM2_REMAP_ENABLE ENABLE
     #endif
 #endif
 

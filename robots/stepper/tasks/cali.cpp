@@ -248,7 +248,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                     for(size_t p = 0; p < poles; p++){
                         size_t i = p % 50;
                         // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
-                        logger.println(odo.map()[i], forward_pole_err[i], backward_pole_err[i], forward_mean, backward_mean);
+                        // logger.println(odo.map()[i], forward_pole_err[i], backward_pole_err[i], forward_mean, backward_mean);
                         delay(1);
                     }
                 }

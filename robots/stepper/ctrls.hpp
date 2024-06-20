@@ -26,8 +26,8 @@ public:
 
     void setCurrentClamp(const real_t maximum){
         current_range.end = maximum;
-
     }
+
     real_t update(const real_t target){
         real_t current_delta = CLAMP(target - current_output, -current_slew_rate, current_slew_rate);
         current_output = current_range.clamp(current_output + current_delta);
@@ -118,14 +118,21 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
 struct GeneralPositionCtrl:public PositionCtrl{
     GeneralPositionCtrl(CurrentCtrl & ctrl):PositionCtrl(ctrl){;}
 
-    real_t kp = 4.47;
+    real_t kp = 9.41;
     Range kp_clamp = {-0.2, 0.2};
 
-    real_t min_current = 0.02;
-    real_t kd = 0.01;
+    real_t min_current = 0.0;
+    real_t kd = 0;
 
     Range kd_active_range = {0.02, 0.1};
     bool inited = false;
+
+    real_t kq = 10;
+    real_t ki = 0.0;
+    real_t intergalx256 = 0;
+    Range ki_clamp = {25.6, -25.6};
+
+    real_t last_error;
 
     void setCurrentClamp(const real_t max_current) override {
 
@@ -145,24 +152,40 @@ struct GeneralPositionCtrl:public PositionCtrl{
 
         if(!inited){
             inited = true;
+            intergalx256 = 0;
         }
 
         real_t error = targ_position - real_position;
-        // real_t raddiff = (error *50 *TAU);
-        real_t raddiff = position2rad(error);
+        bool cross_zero = error * last_error < 0;
+        last_error = error;
 
-        if(ABS(raddiff) > PI / 2 ) raddiff = SIGN_AS(PI / 2, raddiff);
-        // else raddiff = raddiff - real_elecrad;
+        real_t raddiff;
+            // raddiff = SIGN_AS(PI / 2, error);
+        if(ABS(error) > inv_poles / 4){
+            raddiff = SIGN_AS(PI / 2, error);
+        }else{
+            raddiff = error * poles * TAU;
+        }
 
         real_t kp_contribute = kp_clamp.clamp(ABS(error) * kp);
-        bool near = kd_active_range.has(ABS(error));
-        real_t kd_contribute = near ? kd * ABS(real_speed): 0;
 
-        real_t pid_out = kp_contribute - kd_contribute;
+        if(cross_zero){
+            intergalx256 = min_current << 8;
+        }else{
+            intergalx256 += ki;
+            intergalx256 = ki_clamp.clamp(intergalx256);
+        }
+        // bool near = kd_active_range.has(ABS(error));
+        // real_t kd_contribute = near ? kd * ABS(real_speed): 0;
+
+        real_t pid_out =  (intergalx256 >> 8) + kp_contribute;
+        // - kd_contribute;
 
         // DEBUG_PRINT(ABS(error) < kd_active_radius);
         // real_t kd_contribute = (ABS(error) < kd_active_radius) ? kd * SIGN_AS(real_speed, error) : 0;
-        real_t current = MAX(pid_out, 0);
+        real_t current = pid_out;
+        current *= current * kq;
+
         return {current, raddiff};
     }
 };
@@ -175,10 +198,7 @@ struct OverSpeedCtrl:public SpeedCtrl{
     real_t kp = real_t(0.00014);
     Range kp_clamp = {-0.1, 0.1};
 
-    // real_t ki;
-    // real_t intergal;
-    // real_t intergal_clamp;
-    // Range ki_clamp;
+
 
     real_t elecrad_addition;
     real_t elecrad_addition_clamp = real_t(1.7);

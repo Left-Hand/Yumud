@@ -64,9 +64,16 @@ protected:
     bool cmd_mode = false;
 
 
-    void setCurrent(const real_t & _current, const real_t & _elecrad){
-        coilA = cos(_elecrad) * _current;
-        coilB = sin(_elecrad) * _current;
+    void setCurrent(const real_t _current, const real_t _elecrad){
+        // real_t current = _current + 0.05;
+        // static constexpr real_t base_current = 0.05;
+
+        real_t cA = cos(_elecrad) * _current;
+        real_t cB = sin(_elecrad) * _current;
+        coilA = cA;
+        coilB = cB;
+        // coilA = cA + SIGN_AS(base_current, cA);
+        // coilB = cB + SIGN_AS(base_current, cB);
     }
 
 
@@ -99,7 +106,7 @@ protected:
 
         ShutdownFlag() = default;
 
-        auto & operator = (const bool & _state){
+        auto & operator = (const bool _state){
             state = _state;
 
             //TODO
@@ -355,6 +362,9 @@ public:
         timer3.init(1024, 1, TimerMode::CenterAlignedDownTrig);
         timer3.enableArrSync();
 
+        timer3.oc(2).enableSync();
+        timer3.oc(3).enableSync();
+
         svpwm.init();
 
         coilA.setClamp(real_t(1));
@@ -362,6 +372,11 @@ public:
 
         coilA.init();
         coilB.init();
+
+        // timer3.oc(2).init()
+        // setMode(TimerOC::Mode::Inactive);
+        // timer3.oc(3).setMode(TimerOC::Mode::Inactive);
+        // timer3.init();
 
         spi1.init(18000000);
         spi1.bindCsPin(portA[15], 0);
@@ -417,7 +432,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        // if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, sin(run_leadangle + est_elecrad), TIM3->CH2CVR, TIM3->CH3CVR);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
