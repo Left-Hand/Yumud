@@ -10,9 +10,21 @@ void stepper_tb(IOStream & logger){
         // stp.setTargetPosition(0.005 + 0.002 * sin(t));
         // stp.setTargetPosition(1 * sin(t));
         // stp.setTargetPosition(0.8 * floor(6 * t));
-        // stp.setTargetPosition(20 * sin(t));
+        // stp.setTargetPosition(30 * sin(t));
         // stp.setTargetPosition(2.4 * sin(t));
         // stp.setTargetSpeed(2 + sin(t));
-        stp.setTargetSpeed((2 << (int(1.5 * t) % 3)));
+        // stp.setTargetSpeed(-(2 << (int(1.5 * t) % 3)));
+        // switch(int(t)){
+
+        // real_t _t = fmod(t * 3, 6);
+        // // stp.setTargetSpeed(CLAMP(40 * sin(PI / 2 * t), -20, 20));
+        // if(IN_RANGE(_t, 1, 3))stp.setTargetSpeed(40);
+        // else if(IN_RANGE(_t, 4, 6)) stp.setTargetSpeed(0);
+        // else{
+        //     real_t temp = sin(PI / 2 * _t);
+        //     stp.setTargetSpeed(40 * temp * temp);
+        // }
+        // }
+
     }
 }

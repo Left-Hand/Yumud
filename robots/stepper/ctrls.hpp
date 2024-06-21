@@ -69,19 +69,21 @@ struct PositionCtrl:public HighLayerCtrl{
 struct GeneralSpeedCtrl:public SpeedCtrl{
     GeneralSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
-    real_t kp = 1;
-    Range kp_clamp = {-4, 4};
+    real_t kp = 3;
+    Range kp_clamp = {-20, 20};
 
     real_t last_speed = 0;
-    real_t kd = 30;
-    real_t kd_radius = 0.5;
+    real_t kd = 70;
+    real_t kd_radius = 1;
     Range kd_clamp = {-1, 1};
 
     real_t targ_current_256x = 0;
-    Range current_clamp_256x = {0, 51.6};
+    real_t current_clamp_256x = 1.2 * 256;
 
     real_t last_error = 0;
-    real_t lock_radius = 0.2;
+    real_t lock_radius = 0;
+    real_t error;
+    real_t delta;
     bool locked = false;
 
     bool inited = false;
@@ -91,7 +93,7 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
     }
 
     void setCurrentClamp(const real_t max_current){
-        current_clamp_256x = {0, max_current * 256};
+        current_clamp_256x = max_current * 256;
     }
 
     Result update(const real_t targ_speed,const real_t real_speed) override{
@@ -101,30 +103,30 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
             inited = true;
         }
 
-        real_t error = SIGN_AS((targ_speed - real_speed), targ_speed);
-        if(ABS(error) > lock_radius) locked = false;
-        bool cross = (error * last_error < 0);
-        last_error = error;
+        error = (targ_speed - real_speed);
+        // if(ABS(error) > lock_radius) locked = false;
+        // bool cross = (error * last_error < 0);
+        // last_error = error;
 
-        if(cross and (not locked)) locked = true;
+        // if(cross and (not locked)) locked = true;
 
         // if(not locked){
-            real_t abs_real_speed = ABS(real_speed);
-            real_t speed_delta = abs_real_speed - last_speed;
-            last_speed = abs_real_speed; 
+        real_t speed_delta = real_speed - last_speed;
+        last_speed = real_speed; 
 
-            // real_t kd_scaler = 1;
-            // if(abs_real_speed < 1) kd_scaler = (abs_real_speed * abs_real_speed);
 
-            real_t kp_contribute = kp_clamp.clamp(error * kp);
-            real_t kd_contribute = ABS(error) < kd_radius ? kd_clamp.clamp(kd * speed_delta) : 0;
+        real_t kp_contribute = kp_clamp.clamp(error * kp);
+        real_t kd_contribute = (ABS(error) < kd_radius) ? kd_clamp.clamp(kd * speed_delta) : 0;
 
-            real_t delta = kp_contribute - (kd_contribute << 8);
+        // delta = kp_contribute - (kd_contribute << 8);
 
-            targ_current_256x = current_clamp_256x.clamp(targ_current_256x + (delta >> 8));
-        // }
+        targ_current_256x += (kp_contribute >> 8) - kd_contribute; 
+        
+        if(targ_speed > 0) targ_current_256x = CLAMP(targ_current_256x, 0, current_clamp_256x);
+        else targ_current_256x = CLAMP(targ_current_256x, -current_clamp_256x, 0);
 
-        return {targ_current_256x >> 8, SIGN_AS(PI / 2, targ_speed)};
+        real_t current_out = ABS(targ_current_256x >> 8);
+        return {current_out, SIGN_AS((PI / 2 * (1 + MIN(current_out, 0.9))), targ_speed)};
     }
 };
 
@@ -144,6 +146,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
     Range ki_clamp = {25.6, -25.6};
 
     real_t last_error;
+    real_t last_current;
     real_t error;
 
     void setCurrentClamp(const real_t max_current) override {
@@ -159,13 +162,13 @@ struct GeneralPositionCtrl:public PositionCtrl{
         return (poles * TAU) * (SIGN_AS(frac(abs(frac1)), frac1));
     }
 
-    __fast_inline real_t s(const real_t err){
+    __fast_inline real_t s(const real_t err, const real_t abs_current){
         static constexpr double u = TAU;
         static constexpr double pu = poles * u;
         static constexpr double a = 2 / PI;
         static constexpr double k = a * a * pu;
         real_t abs_out = PI/2 - 1/(real_t(k) * ABS(err) + a);
-        return SIGN_AS(abs_out * 1.4, err);
+        return SIGN_AS(abs_out * (1 + MIN(abs_current, 0.36)) , err);
     }
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) override{
 
@@ -186,7 +189,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
         //     raddiff = error * poles * TAU;
         // }
 
-        raddiff = s(error);
+        raddiff = s(error, last_current);
 
         real_t kp_contribute = kp_clamp.clamp(ABS(error) * kp);
 
@@ -208,6 +211,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
         // DEBUG_PRINT(ABS(error) < kd_active_radius);
         // real_t kd_contribute = (ABS(error) < kd_active_radius) ? kd * SIGN_AS(real_speed, error) : 0;
         real_t current = MAX(pid_out, 0);
+        last_current = current;
         // current *= current * kq;
 
         return {current, raddiff};

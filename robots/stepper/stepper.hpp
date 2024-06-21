@@ -223,6 +223,7 @@ protected:
             case "exe"_ha:
                 logger << "exe" << exe_micros << "us\r\n";
                 break;
+
             case "disable"_ha:
             case "dis"_ha:
             case "de"_ha:
@@ -441,7 +442,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, sin(run_leadangle + est_elecrad), position_ctrl.error);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, speed_ctrl.targ_current_256x, speed_ctrl.delta, speed_ctrl.error);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
