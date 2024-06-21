@@ -37,9 +37,9 @@ public:
 
 
     __fast_inline TimerOC & operator = (const real_t duty){
-        if(duty == 0) {m_cvr = 0;}
-        else if(duty == 1) {m_cvr = m_arr - 1;}
-        else {m_cvr = int(duty * m_arr);}
+        // if(duty == 0) {m_cvr = 0;}
+        // else if(duty == 1) {m_cvr = m_arr - 1;}
+        m_cvr = int(duty * m_arr);
         return *this;
     }
 

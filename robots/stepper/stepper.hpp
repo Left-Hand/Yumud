@@ -7,6 +7,9 @@
 #include "obs.hpp"
 #include "archive.hpp"
 
+using AT8222 = TB67H450;
+
+
 class Stepper:public StepperUtils::Cli{
 protected:
     using ExitFlag = bool;
@@ -21,13 +24,18 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    PwmChannel & verfChannelA = timer3.oc(3);
-    PwmChannel & verfChannelB = timer3.oc(2);
+    TimerOC & vrefChannelA = timer3.oc(3);
+    TimerOC & vrefChannelB = timer3.oc(2);
 
-    Coil1 coilA{portA[10], portA[11],  verfChannelA};
-    Coil1 coilB{portA[8], portA[9],  verfChannelB};
 
-    SVPWM2 svpwm{coilA, coilB};
+    // Coil1 coilA{portA[10], portA[11],  vrefChannelA};
+    // Coil1 coilB{portA[8], portA[9],  vrefChannelB};
+
+    AT8222 coilA{timer1.oc(3), timer1.oc(4), vrefChannelA};
+    AT8222 coilB{timer1.oc(1), timer1.oc(2), vrefChannelB};
+
+
+    // SVPWM2 svpwm{coilA, coilB};
 
     SpiDrv mt6816_drv{spi1, 0};
     MT6816 mt6816{mt6816_drv};
@@ -65,11 +73,11 @@ protected:
 
 
     void setCurrent(const real_t _current, const real_t _elecrad){
-        // real_t current = _current + 0.05;
+        real_t current = -_current;
         // static constexpr real_t base_current = 0.05;
 
-        real_t cA = cos(_elecrad) * _current;
-        real_t cB = sin(_elecrad) * _current;
+        real_t cA = cos(_elecrad) * current;
+        real_t cB = sin(_elecrad) * current;
         coilA = cA;
         coilB = cB;
         // coilA = cA + SIGN_AS(base_current, cA);
@@ -351,21 +359,23 @@ public:
     bool autoload();
 
     void init(){
-        using TimerUtils::TimerMode;
-        using TimerUtils::TimerIT;
+        using TimerUtils::Mode;
+        using TimerUtils::IT;
         
         logger.setEps(4);
 
-        timer1.init(4096, 1, TimerMode::CenterAlignedDownTrig);
+        timer1.init(4096, 1, Mode::CenterAlignedDownTrig);
         timer1.enableArrSync();
 
-        timer3.init(1024, 1, TimerMode::CenterAlignedDownTrig);
+        timer3.init(1024, 1, Mode::CenterAlignedDownTrig);
         timer3.enableArrSync();
 
         timer3.oc(2).enableSync();
         timer3.oc(3).enableSync();
 
-        svpwm.init();
+        // svpwm.init();
+        coilA.init();
+        coilB.init();
 
         coilA.setClamp(real_t(1));
         coilB.setClamp(real_t(1));
@@ -385,12 +395,11 @@ public:
 
         odo.init();
 
-        using TimerIT = TimerUtils::TimerIT;
         panel_led.init();
 
         timer4.init(foc_freq);
-        timer4.enableIt(TimerIT::Update, NvicPriority(0, 0));
-        timer4.bindCb(TimerIT::Update, [&](){this->tick();});
+        timer4.enableIt(IT::Update, NvicPriority(0, 0));
+        timer4.bindCb(IT::Update, [&](){this->tick();});
 
 
         panel_led.setPeriod(200);

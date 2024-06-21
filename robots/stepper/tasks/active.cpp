@@ -13,6 +13,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     run_elecrad = est_elecrad + run_leadangle;setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
 
     // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.02, run_elecrad + elecrad_zerofix);//n = 2
+    // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.3, TAU * frac(t));//n = 2
 
 
     // setCurrent(0.2, odo.position2rad(target));

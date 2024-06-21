@@ -44,7 +44,7 @@ void adc_tb(OutputStream & logger){
     timer3.init(40000);
     timer3.oc(4).init();
     timer3.oc(4) = 0.5;
-    timer3.bindCb(TimerUtils::TimerIT::CC4, [&](){
+    timer3.bindCb(TimerUtils::IT::CC4, [&](){
         real_t angle = TAU * t * 50;
         src_data = 0.5 + 0.2 * sin(angle) + 0.2 * sin(angle * 64);
         pwm = src_data;
@@ -53,7 +53,7 @@ void adc_tb(OutputStream & logger){
         Sys::Clock::reCalculateTime();
     });
 
-    timer3.enableIt(TimerUtils::TimerIT::CC4, {0,0});
+    timer3.enableIt(TimerUtils::IT::CC4, {0,0});
 
     while(true){
         // bled = (millis() / 2000) & 0b1;

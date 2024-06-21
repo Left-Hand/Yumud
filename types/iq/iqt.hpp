@@ -103,7 +103,7 @@ public:
     }
 
     __fast_inline_constexpr iq_t operator/(const auto & other) const {
-        return *this * iq_t(other);
+        return *this / iq_t(other);
     }
 
     __fast_inline_constexpr bool operator==(const auto & other) const {

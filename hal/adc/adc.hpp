@@ -291,6 +291,10 @@ public:
         ADC_DMACmd(instance, en);
     }
 
+    uint16_t getConvResult(){
+        return instance->RDATAR;
+    }
+
     // void addDataCB(const uint16_t data){
 
     // }

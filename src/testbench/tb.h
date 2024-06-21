@@ -171,3 +171,4 @@ void temp_tb(OutputStream & logger);
 void temp_tb2(OutputStream & logger);
 
 void uart_tb(Uart & uart);
+void pmdc_tb();
