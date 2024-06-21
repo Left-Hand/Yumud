@@ -69,10 +69,11 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
         switch(ctrl_type){
             case CtrlType::POSITION:
-                result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
+                result = trapezoid_ctrl.update(target, est_pos, est_speed, est_elecrad);
                 break;
             case CtrlType::SPEED:
                 result = speed_ctrl.update(target, est_speed);
+                break;
         } 
 
         run_current = result.current;

@@ -63,6 +63,7 @@ protected:
     CurrentCtrl curr_ctrl;
     GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
+    TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl};
     RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;
 

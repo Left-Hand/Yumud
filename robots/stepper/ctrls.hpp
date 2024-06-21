@@ -218,7 +218,91 @@ struct GeneralPositionCtrl:public PositionCtrl{
     }
 };
 
+struct TopLayerCtrl{
 
+};
+
+struct TrapezoidPosCtrl:public TopLayerCtrl{
+    GeneralSpeedCtrl & speed_ctrl;
+    GeneralPositionCtrl & position_ctrl;
+
+    TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):speed_ctrl(_speed_ctrl), position_ctrl(_position_ctrl){;}
+
+    enum Tstatus{
+        ACC,
+        // SUS,
+        DEC,
+        STA,
+    };
+    Tstatus tstatus = Tstatus::STA;
+    real_t goal_speed = 0;
+        // real_t goal_pos = target;
+    real_t last_pos_err = 0;
+    using Result = HighLayerCtrl::Result;
+    
+    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
+        // static constexpr real_t max_acc = 10.0;
+        static constexpr real_t max_dec = 168.0;
+        static constexpr real_t spd_delta = 0.01;
+        static constexpr real_t max_spd = 40;
+        static constexpr real_t hug_speed = 0.6;
+        // static constexpr real_t spd_sw_radius = 0.7;
+        static constexpr real_t pos_sw_radius = 0.1;
+
+        real_t pos_err = targ_position - real_position;
+        bool cross = pos_err * last_pos_err < 0;
+        last_pos_err = pos_err;
+        switch(tstatus){
+            case Tstatus::ACC:
+                if(real_speed * real_speed > 2 * max_dec* ABS(pos_err)){
+                    tstatus = Tstatus::DEC;
+                }
+                {
+                    goal_speed += SIGN_AS(spd_delta, pos_err);
+                    goal_speed = CLAMP(goal_speed, -max_spd, max_spd);
+                    return speed_ctrl.update(goal_speed, real_speed);
+                }
+                // tstatus = Tstatus::STA;
+
+            // case Tstatus::SUS:
+
+                // else if(pos_err * last_pos_err < 0){
+                    // tstatus = Tstatus::STA;
+                // }
+                break;
+                // break;
+            case Tstatus::DEC:
+                // tstatus = Tstatus::STA;
+                // break;
+                if(cross and ABS(real_speed) < hug_speed){
+                    tstatus = Tstatus::STA;
+                }
+
+                {
+                    bool ovs = real_speed * real_speed > 2 * max_dec* ABS(pos_err);
+                    // goal_speed = SIGN_AS(sqrt(2 * max_dec* ABS(pos_err)), goal_speed);
+                    if(ovs) goal_speed += SIGN_AS(-spd_delta, pos_err);
+                    else goal_speed += SIGN_AS(spd_delta / 10, pos_err);
+
+                    if(pos_err > 0) goal_speed = CLAMP(goal_speed, 0, max_spd);
+                    else goal_speed = CLAMP(goal_speed, -max_spd, 0);
+                    return speed_ctrl.update(goal_speed, real_speed);
+                }
+
+                break;
+            default:
+            case Tstatus::STA:
+                if(ABS(pos_err) > pos_sw_radius){
+                    goal_speed = 0;
+                    tstatus = Tstatus::ACC;
+                }
+                return position_ctrl.update(targ_position, real_position, real_speed, real_elecrad);
+
+                break;
+        }
+        
+    }
+};
 
 
 struct OverloadSpeedCtrl:public SpeedCtrl{

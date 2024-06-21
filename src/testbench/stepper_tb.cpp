@@ -9,7 +9,7 @@ void stepper_tb(IOStream & logger){
         stp.run();
         // stp.setTargetPosition(0.005 + 0.002 * sin(t));
         // stp.setTargetPosition(1 * sin(t));
-        // stp.setTargetPosition(0.8 * floor(6 * t));
+        stp.setTargetPosition(70 * floor(t/4));
         // stp.setTargetPosition(30 * sin(t));
         // stp.setTargetPosition(2.4 * sin(t));
         // stp.setTargetSpeed(2 + sin(t));
