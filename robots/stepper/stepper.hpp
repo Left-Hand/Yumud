@@ -61,7 +61,7 @@ protected:
 
     real_t openloop_elecrad;
     CurrentCtrl curr_ctrl;
-    OverSpeedCtrl speed_ctrl{curr_ctrl};
+    GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
     RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;

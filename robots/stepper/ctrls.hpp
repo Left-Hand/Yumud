@@ -69,14 +69,20 @@ struct PositionCtrl:public HighLayerCtrl{
 struct GeneralSpeedCtrl:public SpeedCtrl{
     GeneralSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
-    real_t kp = 0.11;
-    Range kp_clamp = {-0.7, 0.7};
+    real_t kp = 1;
+    Range kp_clamp = {-4, 4};
 
     real_t last_speed = 0;
-    real_t kd = 10;
+    real_t kd = 30;
+    real_t kd_radius = 0.5;
+    Range kd_clamp = {-1, 1};
 
     real_t targ_current_256x = 0;
     Range current_clamp_256x = {0, 51.6};
+
+    real_t last_error = 0;
+    real_t lock_radius = 0.2;
+    bool locked = false;
 
     bool inited = false;
 
@@ -96,20 +102,27 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
         }
 
         real_t error = SIGN_AS((targ_speed - real_speed), targ_speed);
+        if(ABS(error) > lock_radius) locked = false;
+        bool cross = (error * last_error < 0);
+        last_error = error;
 
-        real_t abs_real_speed = ABS(real_speed);
-        real_t speed_delta = abs_real_speed - last_speed;
-        last_speed = abs_real_speed; 
+        if(cross and (not locked)) locked = true;
 
-        real_t kd_scaler = 1;
-        if(abs_real_speed < 1) kd_scaler = (abs_real_speed * abs_real_speed);
+        // if(not locked){
+            real_t abs_real_speed = ABS(real_speed);
+            real_t speed_delta = abs_real_speed - last_speed;
+            last_speed = abs_real_speed; 
 
-        real_t kp_contribute = kp_clamp.clamp(error * kp);
-        real_t kd_contribute = kd * speed_delta * kd_scaler;
+            // real_t kd_scaler = 1;
+            // if(abs_real_speed < 1) kd_scaler = (abs_real_speed * abs_real_speed);
 
-        real_t delta = kp_contribute - kd_contribute;
+            real_t kp_contribute = kp_clamp.clamp(error * kp);
+            real_t kd_contribute = ABS(error) < kd_radius ? kd_clamp.clamp(kd * speed_delta) : 0;
 
-        targ_current_256x = current_clamp_256x.clamp(targ_current_256x + delta);
+            real_t delta = kp_contribute - (kd_contribute << 8);
+
+            targ_current_256x = current_clamp_256x.clamp(targ_current_256x + (delta >> 8));
+        // }
 
         return {targ_current_256x >> 8, SIGN_AS(PI / 2, targ_speed)};
     }
@@ -204,7 +217,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
 
 
 
-struct OverSpeedCtrl:public SpeedCtrl{
+struct OverloadSpeedCtrl:public SpeedCtrl{
 
     real_t kp = real_t(0.00014);
     Range kp_clamp = {-0.1, 0.1};
@@ -217,7 +230,7 @@ struct OverSpeedCtrl:public SpeedCtrl{
 
     bool inited = false;
 
-    OverSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
+    OverloadSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
     void reset() override {
         inited = false;

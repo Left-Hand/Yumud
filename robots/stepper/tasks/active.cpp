@@ -91,14 +91,14 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
                         est_speed = (est_speed_new + est_speed * 63) >> 6;
                         break;
                     case 1://  2r/s
-                        est_speed = (est_speed_new + est_speed * 63) >> 6;
-                        break;
-                    case 2:// 4r/s
                         est_speed = (est_speed_new + est_speed * 31) >> 5;
                         break;
+                    case 2:// 4r/s
+                        // est_speed = (est_speed_new + est_speed * 31) >> 5;
+                        // break;
                     case 3:// 8r/s
-                        est_speed = (est_speed_new + est_speed * 15) >> 4;
-                        break;
+                        // est_speed = (est_speed_new + est_speed * 15) >> 4;
+                        // break;
                     case 4:// 16r/s
                         est_speed = (est_speed_new + est_speed * 7) >> 3;
                         break;
