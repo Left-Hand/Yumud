@@ -45,6 +45,8 @@ public:
 
     __fast_inline operator real_t(){return real_t(m_cvr) / real_t(m_arr);}
     __fast_inline volatile uint16_t & cnt() override {return instance->CNT;}
+
+    __fast_inline volatile uint16_t cnt() const {return instance->CNT;}
     __fast_inline volatile uint16_t & cvr() override {return m_cvr;}
     __fast_inline volatile uint16_t & arr() override {return m_arr;}
 };

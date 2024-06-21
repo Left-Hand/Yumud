@@ -2,6 +2,7 @@
 
 #include "types/real.hpp"
 #include "hal/gpio/port.hpp"
+#include <functional>
 
 namespace AdcUtils{
 
@@ -34,6 +35,14 @@ namespace AdcUtils{
         T71_5 = ADC_SampleTime_71Cycles5,
         T239_5 = ADC_SampleTime_239Cycles5
     };
+
+    enum class IT:uint16_t{
+        EOC = ADC_IT_EOC,
+        JEOC = ADC_IT_JEOC,
+        AWD = ADC_IT_AWD
+    };
+
+    using Callback = std::function<void(void)>;
 
     void installPin(const Channel channel, const bool en = true);
     real_t getTemperature();

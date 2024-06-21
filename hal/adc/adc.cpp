@@ -40,6 +40,10 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> regular_list
 
     ADC_BufferCmd(instance, ENABLE);
 
+
+    ADC_ExternalTrigConvCmd(instance, ENABLE);
+    ADC_ExternalTrigInjectedConvCmd(instance, ENABLE);
+
     bool temp_verf_activation = false;
 
     {
