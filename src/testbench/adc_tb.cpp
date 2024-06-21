@@ -1,7 +1,8 @@
 #include "tb.h"
 
-#define ADC_TB_MAIN
-// #define ADC_TB_REGULAR
+// #define ADC_TB_MAIN
+// #define ADC_TB_REGULAR_BLOCKING
+#define ADC_TB_REGULAR_DMA
 // #define ADC_TB_INJECT
 
 
@@ -71,15 +72,44 @@ void adc_tb(OutputStream & logger){
     }
     #endif
 
-    #ifdef ADC_TB_REGULAR
+    #ifdef ADC_TB_REGULAR_BLOCKING
+    adc1.init(
+        {
+            AdcChannelConfig{AdcChannelEnum::TEMP, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T239_5},
+        },{
+            // AdcChannelConfig{AdcChannelEnum::CH0},
+        });
+
+    while(true){
+        adc1.swStartRegular(true);
+
+        while(true){
+            delay(1);
+            bool still_waiting = !adc1.isIdle();
+            while(!adc1.isIdle()){
+                logger.println(".");
+                delay(200);
+            }
+            if(still_waiting) logger.println();
+            break;
+        };
+        logger.println(adc1.getConvResult() * 3300 / 4096);
+    }
+    #endif
+
+    #ifdef ADC_TB_REGULAR_DMA
     
     // RegularChannel rch{ADC1, AdcUtils::Channel::CH0, 0};
 
     adc1.init(
         {
-            AdcChannelConfig{AdcChannelEnum::CH0},
+            AdcChannelConfig{AdcChannelEnum::TEMP, AdcCycleEnum::T239_5},
+            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T239_5},
+            // AdcChannelConfig{AdcChannelEnum::CH0, AdcCycleEnum::T239_5},
+            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T239_5},
         },{
-            AdcChannelConfig{AdcChannelEnum::CH0},
+            // AdcChannelConfig{AdcChannelEnum::CH0},
         });
 
     // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T3CC4);
@@ -95,7 +125,8 @@ void adc_tb(OutputStream & logger){
     dma1Ch1.init(DmaUtils::Mode::toMemCircular);
     dma1Ch1.begin((void *)adc_dma_buf, (void *)(ADC1->RDATAR), ARRSIZE(adc_dma_buf));
     dma1Ch1.configDataBytes(2);
-    adc1.enableContinous();
+
+    // adc1.enableContinous();
     adc1.enableDma();
     adc1.swStartRegular(true);
     while(true){
