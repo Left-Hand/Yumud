@@ -17,7 +17,7 @@ public:
 
     real_t current_slew_rate    = 20.0 / foc_freq;   //20A/S
     real_t current_output       = 0;
-    Range current_range         {0, 0.3};
+    Range current_range         {0, 0.7};
 
     void reset(){
         current_output = 0;
@@ -119,20 +119,19 @@ struct GeneralPositionCtrl:public PositionCtrl{
     GeneralPositionCtrl(CurrentCtrl & ctrl):PositionCtrl(ctrl){;}
 
     real_t kp = 9.41;
-    Range kp_clamp = {-0.2, 0.2};
+    Range kp_clamp = {-1.2, 1.2};
 
-    real_t min_current = 0.0;
-    real_t kd = 0;
-
-    Range kd_active_range = {0.02, 0.1};
+    real_t kd = 0.05;
+    Range kd_active_range = {0.02, 0.3};
     bool inited = false;
 
-    real_t kq = 10;
+    // real_t kq = 10;
     real_t ki = 0.0;
     real_t intergalx256 = 0;
     Range ki_clamp = {25.6, -25.6};
 
     real_t last_error;
+    real_t error;
 
     void setCurrentClamp(const real_t max_current) override {
 
@@ -147,7 +146,14 @@ struct GeneralPositionCtrl:public PositionCtrl{
         return (poles * TAU) * (SIGN_AS(frac(abs(frac1)), frac1));
     }
 
-
+    __fast_inline real_t s(const real_t err){
+        static constexpr double u = TAU;
+        static constexpr double pu = poles * u;
+        static constexpr double a = 2 / PI;
+        static constexpr double k = a * a * pu;
+        real_t abs_out = PI/2 - 1/(real_t(k) * ABS(err) + a);
+        return SIGN_AS(abs_out * 1.4, err);
+    }
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) override{
 
         if(!inited){
@@ -155,36 +161,41 @@ struct GeneralPositionCtrl:public PositionCtrl{
             intergalx256 = 0;
         }
 
-        real_t error = targ_position - real_position;
-        bool cross_zero = error * last_error < 0;
-        last_error = error;
+        error = targ_position - real_position;
+        // bool cross_zero = error * last_error < 0;
+        // last_error = error;
 
         real_t raddiff;
             // raddiff = SIGN_AS(PI / 2, error);
-        if(ABS(error) > inv_poles / 4){
-            raddiff = SIGN_AS(PI / 2, error);
-        }else{
-            raddiff = error * poles * TAU;
-        }
+        // if(ABS(error) > (inv_poles / 4)){
+        //     raddiff = SIGN_AS(PI / 2, error);
+        // }else{
+        //     raddiff = error * poles * TAU;
+        // }
+
+        raddiff = s(error);
 
         real_t kp_contribute = kp_clamp.clamp(ABS(error) * kp);
 
-        if(cross_zero){
-            intergalx256 = min_current << 8;
-        }else{
-            intergalx256 += ki;
-            intergalx256 = ki_clamp.clamp(intergalx256);
-        }
-        // bool near = kd_active_range.has(ABS(error));
-        // real_t kd_contribute = near ? kd * ABS(real_speed): 0;
+        // if(cross_zero){
+        //     intergalx256 = 0;
+        // }else{
+        //     intergalx256 += ki;
+        //     intergalx256 = ki_clamp.clamp(intergalx256);
+        // }
 
-        real_t pid_out =  (intergalx256 >> 8) + kp_contribute;
+        // bool near = (ABS(error) < real_t(0.7));
+        // real_t kd_contribute = near ? kd * ABS(real_speed): 0;
+        // real_t kd_contribute = kd * ABS(real_speed);
+
+        real_t pid_out = kp_contribute;
+        // real_t pid_out =  (intergalx256 >> 8) + kp_contribute - kd_contribute;
         // - kd_contribute;
 
         // DEBUG_PRINT(ABS(error) < kd_active_radius);
         // real_t kd_contribute = (ABS(error) < kd_active_radius) ? kd * SIGN_AS(real_speed, error) : 0;
-        real_t current = pid_out;
-        current *= current * kq;
+        real_t current = MAX(pid_out, 0);
+        // current *= current * kq;
 
         return {current, raddiff};
     }

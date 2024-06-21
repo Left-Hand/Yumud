@@ -6,9 +6,9 @@ int main(){
     logger.init(115200 * 4);
 
     delay(200);
-    pmdc_tb();
+    // pmdc_tb();
     // uart_tb(uart1);
-    // stepper_tb(uart1);
+    stepper_tb(uart1);
     // lua_tb(uart1);
     // pwm_tb(logger);
     // adc_tb(logger);

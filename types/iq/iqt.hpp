@@ -119,7 +119,7 @@ public:
     }
 
     __fast_inline_constexpr bool operator<(const auto & other) const {
-        return value < static_cast<iq_t>(other).value;
+        return value < iq_t(other).value;
     }
 
     __fast_inline_constexpr bool operator>=(const auto & other) const {

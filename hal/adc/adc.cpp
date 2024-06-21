@@ -7,22 +7,7 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> regular_list
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);
 
-    // ADC_DeInit(instance);
-
-
-
-    ADC_InitTypeDef ADC_InitStructure; 
-	
-    ADC_DeInit(ADC1);
-	
-    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
-    ADC_InitStructure.ADC_ScanConvMode = DISABLE;                    
-    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;                
-    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;      
-    ADC_InitStructure.ADC_NbrOfChannel = 1;      
-    ADC_InitStructure.ADC_Pga = ADC_Pga_1;
-    ADC_Init(ADC1, &ADC_InitStructure);   
+    ADC_DeInit(instance);
 
     // setMode(mode);
     // setRegularTrigger(RegularTrigger::SW);

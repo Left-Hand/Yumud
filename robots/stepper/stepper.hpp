@@ -441,7 +441,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, sin(run_leadangle + est_elecrad), TIM3->CH2CVR, TIM3->CH3CVR);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, sin(run_leadangle + est_elecrad), position_ctrl.error);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

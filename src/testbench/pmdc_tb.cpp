@@ -12,7 +12,7 @@ protected:
     TimerOC & backward_pwm;
     TimerOC & vref_pwm;
     bool enabled = true;
-    bool softmode = true;
+    bool softctrl = false;
     bool fastdecay = false;
 public:
     AT82XX(TimerOC & _forward_pwm, TimerOC & _backward_pwm, TimerOC & _vref_pwm):
@@ -23,8 +23,10 @@ public:
         // forward_pwm.enableSync();
         // backward_pwm.enableSync();
         // vref_pwm.enableSync();
-        forward_pwm.setPolarity(fastdecay);
-        backward_pwm.setPolarity(fastdecay);
+        if(softctrl){
+            forward_pwm.setPolarity(fastdecay);
+            backward_pwm.setPolarity(fastdecay);
+        }
         // vref_pwm.setPolarity(true);
 
         forward_pwm.init();
@@ -48,7 +50,7 @@ public:
 
         if(!enabled) return;
 
-        if(softmode){
+        if(softctrl){
             if(!fastdecay){
                 if(curr > 0){
                     forward_pwm = 0;
@@ -81,14 +83,13 @@ public:
         }
         
         else{
+            setCurrentClamp(ABS(curr));
             if(curr > 0){
                 forward_pwm = real_t(0);
                 backward_pwm = real_t(1);
-                vref_pwm = curr;
             }else{
                 forward_pwm = real_t(1);
                 backward_pwm = real_t(0);
-                vref_pwm = -curr;
             }
         }
     }
@@ -218,13 +219,12 @@ void pmdc_tb(){
 
 
     driver.init();
-    driver.setCurrentClamp(0.7);
     driver.enable();
 
     while(true){
         // real_t targ_current = 0.20 + 0.04 * sin(7 * t);
         // real_t targ_current = 0.7 + 0.15 * sin(7 * t);
-        real_t targ_current = 0.77;
+        real_t targ_current = sin(6 * t);
         driver = targ_current;
         // feed_current = driver.getCurrent();
         // filt_current = follower.update(feed_current);
