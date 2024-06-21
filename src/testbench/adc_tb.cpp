@@ -1,8 +1,8 @@
 #include "tb.h"
 
-#define ADC_TB_MAIN
+// #define ADC_TB_MAIN
 // #define ADC_TB_REGULAR_BLOCKING
-// #define ADC_TB_REGULAR_DMA
+#define ADC_TB_REGULAR_DMA
 // #define ADC_TB_INJECT
 
 
@@ -75,6 +75,7 @@ void adc_tb(OutputStream & logger){
     #ifdef ADC_TB_REGULAR_BLOCKING
     adc1.init(
         {
+            AdcChannelConfig{AdcChannelEnum::TEMP, AdcCycleEnum::T239_5},
             AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T239_5},
         },{
             // AdcChannelConfig{AdcChannelEnum::CH0},
@@ -82,6 +83,7 @@ void adc_tb(OutputStream & logger){
 
     while(true){
         adc1.swStartRegular(true);
+
         while(true){
             delay(1);
             bool still_waiting = !adc1.isIdle();
@@ -123,7 +125,8 @@ void adc_tb(OutputStream & logger){
     dma1Ch1.init(DmaUtils::Mode::toMemCircular);
     dma1Ch1.begin((void *)adc_dma_buf, (void *)(ADC1->RDATAR), ARRSIZE(adc_dma_buf));
     dma1Ch1.configDataBytes(2);
-    adc1.enableContinous();
+
+    // adc1.enableContinous();
     adc1.enableDma();
     adc1.swStartRegular(true);
     while(true){
