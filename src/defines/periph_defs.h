@@ -20,34 +20,30 @@
 #define ENABLE 1
 #define DISABLE 0
 
-#define UART1_REMAP_ENABLE ENABLE
+#define UART1_REMAP GPIO_Remap_USART1
+#define UART1_REMAP_ENABLE DISABLE
 #define UART2_REMAP_ENABLE DISABLE
 
 #ifdef HAVE_UART1
     #define UART1_TX_DMA_CH dma1Ch4
     #define UART1_RX_DMA_CH dma1Ch5
 
-    #ifdef UART1_REMAP_ENABLE
+    #if (UART1_REMAP_ENABLE == ENABLE)
     #define UART1_TX_Port portB
     #define UART1_TX_Pin GPIO_Pin_6
 
     #define UART1_RX_Port portB
     #define UART1_RX_Pin GPIO_Pin_7
 
-    #define UART1_IT_PP 0
-    #define UART1_IT_SP 1
-    #define UART1_REMAP GPIO_Remap_USART1
-
     #else
-    #define UART1_TX_Port GPIOA
+    #define UART1_TX_Port portA
     #define UART1_TX_Pin GPIO_Pin_9
 
-    #define UART1_RX_Port GPIOA
+    #define UART1_RX_Port portA
     #define UART1_RX_Pin GPIO_Pin_10
 
     #define UART1_IT_PP 1
     #define UART1_IT_SP 0
-    #define UART1_REMAP GPIO_Remap_USART1
     #endif
 #endif
 

@@ -32,12 +32,12 @@ void UartSw::tick(){
 
 void UartSw::setTxMethod(const CommMethod _txMethod){
     if(_txMethod != CommMethod::None){
-        m_tx_gpio.OutPP(true);
+        m_tx_gpio.outpp(true);
     }
 }
 
 void UartSw::setRxMethod(const CommMethod _rxMethod){
     if(_rxMethod != CommMethod::None){
-        m_rx_gpio.InPullUP();
+        m_rx_gpio.inpu();
     }
 }

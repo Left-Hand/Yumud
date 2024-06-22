@@ -34,7 +34,7 @@ void clk(){
 
 Error start(const uint8_t & _address) {
     occupied = _address & 0b1;
-    ws.OutPP();
+    ws.outpp();
 
     return ErrorType::OK;
 }
@@ -64,8 +64,8 @@ public:
     I2sSw(GpioConcept & _sck,GpioConcept & _sda,GpioConcept & _ws,const uint16_t & _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
 
     Error write(const uint32_t data) override {
-        sck.OutPP();
-        sda.OutPP();
+        sck.outpp();
+        sda.outpp();
 
         uint16_t left_data = data >> 16;
         uint16_t rdata = data;
@@ -101,9 +101,9 @@ public:
     }
 
     void init(const uint32_t baudRate){
-        sck.OutPP();
-        sda.OutPP();
-        ws.OutPP();
+        sck.outpp();
+        sda.outpp();
+        ws.outpp();
     }
     void configBaudRate(const uint32_t baudRate) override {;}
 };

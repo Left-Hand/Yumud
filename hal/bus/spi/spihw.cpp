@@ -90,24 +90,24 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
 void SpiHw::initGpios(){
     if(txMethod != CommMethod::None){
         Gpio & mosi_pin = getMosiPin();
-        mosi_pin.OutAfPP();
+        mosi_pin.afpp();
     }
 
     if(rxMethod != CommMethod::None){
         Gpio & miso_pin = getMisoPin();
-        miso_pin.InFloating();
+        miso_pin.inflt();
     }
 
     Gpio & sclk_pin = getSclkPin();
-    sclk_pin.OutAfPP();
+    sclk_pin.afpp();
 
     if(!cs_pins.isIndexValid(0)){
         Gpio & cs_pin = getCsPin();
         cs_pin = true;
         if(hw_cs_enabled){
-            cs_pin.OutAfPP();
+            cs_pin.afpp();
         }else{
-            cs_pin.OutPP();
+            cs_pin.outpp();
         }
         bindCsPin(cs_pin, 0);
     }
@@ -132,9 +132,9 @@ void SpiHw::enableHwCs(const bool en){
     _cs_pin = true;
 
     if(en){
-        _cs_pin.OutAfPP();
+        _cs_pin.afpp();
     }else{
-        _cs_pin.OutPP();
+        _cs_pin.outpp();
     }
 
     hw_cs_enabled = en;

@@ -12,7 +12,7 @@ public:
     volatile uint16_t m_arr = 1;
     GpioPwm(Gpio & gpio, const uint16_t arr):m_gpio(gpio), m_arr(arr){;}
 
-    void init() override{m_gpio.OutPP(false);}
+    void init() override{m_gpio.outpp(false);}
 
     __fast_inline GpioPwm & operator = (const real_t duty) override{
         if(duty == 0) {m_cvr = 0;}

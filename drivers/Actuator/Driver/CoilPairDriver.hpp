@@ -63,8 +63,8 @@ public:
     }
 
     void init() override{
-        m_gp.OutPP();
-        m_gn.OutPP();
+        m_gp.outpp();
+        m_gn.outpp();
         m_vref.init();
     }
 

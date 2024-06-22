@@ -20,7 +20,7 @@ private:
 
     Error wait_ack(){
         sda.set();
-        sda.InFloating();
+        sda.inflt();
         delayDur();
         scl.set();
         TimeStamp stamp;
@@ -38,8 +38,8 @@ private:
     }
 
     Error lead(const uint8_t _address) override{
-        scl.OutOD();
-        sda.OutOD();
+        scl.outod();
+        sda.outod();
         sda.set();
         scl.set();
         delayDur();
@@ -54,7 +54,7 @@ private:
 
     void trail() override {
         scl.clr();
-        sda.OutOD();
+        sda.outod();
         sda.clr();
         delayDur();
         scl.set();
@@ -73,7 +73,7 @@ public:
     I2cSw(GpioConcept & _scl,GpioConcept & _sda, const uint16_t & _delays = 10):scl(_scl), sda(_sda), delays(_delays){;}
 
     Error write(const uint32_t data) override {
-        sda.OutOD();
+        sda.outod();
 
         for(uint8_t mask = 0x80; mask; mask >>= 1){
             sda.write(mask & data);
@@ -86,11 +86,11 @@ public:
         return wait_ack();
     }
 
-    __fast_inline Error read(uint32_t & data, bool toAck = true) {
+    Error read(uint32_t & data, bool toAck = true) override{
         uint8_t ret = 0;
 
         sda.set();
-        sda.InPullUP();
+        sda.inpu();
         delayDur();
 
         for(uint8_t i = 0; i < 8; i++){
@@ -102,27 +102,23 @@ public:
         }
 
         sda.write(!toAck);
-        sda.OutOD();
+        sda.outod();
         scl.set();
         delayDur();
         scl.clr();
-        sda.InPullUP();
+        sda.inpu();
 
         data = ret;
         return Bus::ErrorType::OK;
-    }
-
-    Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
-        return ErrorType::OK;
     }
 
     void init(const uint32_t baudRate){
         preinit();
 
         sda.set();
-        sda.OutOD();
+        sda.outod();
         scl.set();
-        scl.OutOD();
+        scl.outod();
 
         configBaudRate(baudRate);
     }

@@ -118,7 +118,7 @@ void adc_tb(OutputStream & logger){
     // adc1.enableAutoInject();
 
     // auto & bled = portA[8];
-    // bled.OutPP();
+    // bled.outpp();
     // auto fn = [&logger](){logger.println("Hi");};
     // void (* fn2)(void) = fn;
     uint16_t adc_dma_buf[16];

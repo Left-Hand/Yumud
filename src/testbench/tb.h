@@ -172,3 +172,7 @@ void temp_tb2(OutputStream & logger);
 
 void uart_tb(Uart & uart);
 void pmdc_tb();
+
+void lds14_tb(IOStream & logger,Uart & uart);
+
+void pca_tb(IOStream & logger);

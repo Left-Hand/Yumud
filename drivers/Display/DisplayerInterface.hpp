@@ -45,9 +45,9 @@ public:
             ):bus_drv(_bus, index),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
 
     void init() override{
-        dc_gpio.OutPP();
-        res_gpio.OutPP(1);
-        blk_gpio.OutPP(1);
+        dc_gpio.outpp();
+        res_gpio.outpp(1);
+        blk_gpio.outpp(1);
 
         reset();
     }

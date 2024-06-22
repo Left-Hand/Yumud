@@ -78,13 +78,13 @@ void Can::settleTxPin(const uint8_t remap){
         case 0:
         {
             Gpio & gpio = portA[(Pin)CAN1_TX_RM0_Pin];
-            gpio.OutAfPP();
+            gpio.afpp();
             break;
         }
         case 1:
         {
             Gpio & gpio = portB[(Pin)CAN1_TX_RM1_Pin];
-            gpio.OutAfPP();
+            gpio.afpp();
             break;
         }
     }
@@ -97,13 +97,13 @@ void Can::settleRxPin(const uint8_t remap){
         case 0:
         {
             Gpio & gpio = portA[(Pin)CAN1_RX_RM0_Pin];
-            gpio.OutAfPP();
+            gpio.afpp();
             break;
         }
         case 1:
         {
             Gpio & gpio = portB[(Pin)CAN1_RX_RM1_Pin];
-            gpio.OutAfPP();
+            gpio.afpp();
             break;
         }
     }
