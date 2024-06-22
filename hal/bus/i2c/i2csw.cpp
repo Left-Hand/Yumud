@@ -89,7 +89,7 @@ I2cSw::Error I2cSw::read(uint32_t & data, const bool toAck){
 }
 
 void I2cSw::init(const uint32_t baudRate){
-    preinit();
+    // preinit();
 
     sda_gpio.set();
     sda_gpio.outod();

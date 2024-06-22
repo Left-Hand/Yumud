@@ -11,7 +11,7 @@ protected:
 
     uint32_t timeout = 10;
     virtual void reset() = 0;
-    virtual void unlock() = 0;
+    virtual void unlock_bus() = 0;
 
     I2c(GpioConcept & _scl_gpio, GpioConcept & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio) {}
 public:
