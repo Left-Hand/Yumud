@@ -11,10 +11,12 @@
 #include "can_filter.hpp"
 
 
-class Can:public PackedBus<CanMsg>{
+class Can: public PackedBus<CanMsg>{
 public:
     enum class BaudRate{
         Kbps125,
+        Kbps250,
+        Kbps500,
         Mbps1
     };
 

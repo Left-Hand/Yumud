@@ -46,9 +46,9 @@ public:
             red_pin(_red_pin), green_pin(_green_pin), blue_pin(_blue_pin){;}
     
     void init() override{
-        red_pin.OutPP();
-        green_pin.OutPP();
-        blue_pin.OutPP();
+        red_pin.outpp();
+        green_pin.outpp();
+        blue_pin.outpp();
     }
 
     RgbLedDigital & operator = (const Color & color) override{_update(color); return *this;}

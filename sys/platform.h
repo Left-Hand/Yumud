@@ -9,6 +9,7 @@
 
 #ifdef CH32V20X
 #include <ch32v20x.h>
+#include <ch32v20x_opa.h>
 #endif
 
 

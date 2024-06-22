@@ -1,28 +1,32 @@
-// #ifndef __REGULAR_CHANNEL_HPP__
+#pragma once
 
-// #define __REGULAR_CHANNEL_HPP__
+#include "adc_channel.hpp"
 
-// #include "adc_channel.hpp"
-
-// class RegularChannel: public AdcChannelOnChip{
-// public:
-// protected:
-//     RegularChannel(AdcOnChip &  _instance,const Channel &  _channel):
-//         AdcChannelOnChip(_instance, _channel){;}
-
-//     // RegularChannel & operator = (const uint16_t & data){temp_data = CLAMP(data + cali_data, 0, 4095); return *this;}
+class RegularChannel: public AdcChannelOnChip{
+public:
+    using SampleCycles = AdcUtils::SampleCycles;
+    using Channel = AdcUtils::Channel;
+protected:
+    uint32_t data_cache;
 
 
-//     friend class AdcOnChip;
-//     friend class AdcPrimary;
-//     friend class AdcCompanion;
 
-// public:
-//     void setSampleTime(const SampleTime _sample_time) override{
+    friend class AdcOnChip;
+    friend class AdcPrimary;
+    friend class AdcCompanion;
 
-//     }
+public:
+    void setSampleCycles(const SampleCycles cycles) override{
+        ADC_RegularChannelConfig(instance, (uint8_t)channel, rank, (uint8_t)cycles);
+    }
 
-//     operator uint16_t() const {return temp_data;}
-// };
+    RegularChannel(ADC_TypeDef * _instance,const Channel _channel, const uint8_t _rank):
+        AdcChannelOnChip(_instance, _channel, _rank){;}
 
-// #endif
+
+    real_t uni() const override{
+        real_t result;
+        u16_to_uni(data_cache, result);
+        return result;
+    }
+};

@@ -1,45 +1,48 @@
-// #ifndef __ANALOG_CHANNEL_HPP__
+#pragma once
 
-// #define __ANALOG_CHANNEL_HPP__
-
-// #include "adc_channel.hpp"
-// #include "types/real.hpp"
+#include "adc_channel.hpp"
+#include "types/real.hpp"
 
 // class AdcChannelOnChip{
 
 // }
 
-// // template<int valid_bits>
-// class AnalogChannelConcept{
-// protected:
-//     real_t uni_to_voltage_scale = real_t(3.3);
-
-//     virtual uint32_t getData() = 0;
-// public:
-//     real_t getVoltage(){
-//         real_t uni = real_t(1);
-//         // if(valid_bits <= 16){
-//             uint16_t data = getData();
-//             u16_to_uni(data, uni);
-//         // }
-
-//         return uni * uni_to_voltage_scale;
-//     }
-// };
-
 // template<int valid_bits>
-// class AnalogChannel : public AnalogChannelConcept{
+
+struct AnalogChannel{
 // protected:
-//     union{
-//         AdcChannel & channel;
-//     }
+    // uint32_t data;
+public:
+    real_t scale = 1;
+    real_t basis = 0;
+};
+class AnalogInChannel: virtual public AnalogChannel{
+protected:
+public:
+    virtual real_t uni() const = 0;
+
+    operator real_t() const {
+        return uni() * scale + basis;
+    }
+};
+
+class AnalogOutChannel: virtual public AnalogChannel{
+protected:
+    virtual void write(const uint32_t data) = 0;
+public:
+
+    AnalogOutChannel & operator = (const real_t value){
+        uint16_t data16;
+        uni_to_u16(value, data16);
+        write(data16);
+        return *this;
+    }
+};
+
+// class AnalogChannel : public AnalogInChannel, public AnalogOutChannel{
+// protected:
 // public:
 //     AnalogChannel(AdcChannel & _channel):channel(_channel) {;}
 // };
 
-// template<int valid_bits>
-// class AnalogChannelVirtual : public AnalogChannelConcept{
-
-
-// };
 // #endif

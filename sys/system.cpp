@@ -43,7 +43,8 @@ void Sys::Misc::reset(){
 
 void Sys::Clock::reCalculateTime(){
         #ifdef USE_IQ
-        t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
+        // t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
+        t.value = (micros() / 100) * (int)(0.0001 * (1 << GLOBAL_Q));
         #else
         t = msTick * (1 / 1000.0f);
         #endif

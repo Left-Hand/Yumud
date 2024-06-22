@@ -2,7 +2,7 @@
 
 #define __STEPPER_CONSTANTS_HPP__
 
-#include "sys/kernel/debug/debug_inc.h"
+#include "sys/debug/debug_inc.h"
 #include "../thirdparty/enums/enum.h"
 #include "../hal/timer/timers/timer_hw.hpp"
 #include "../drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"

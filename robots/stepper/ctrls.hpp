@@ -17,7 +17,7 @@ public:
 
     real_t current_slew_rate    = 20.0 / foc_freq;   //20A/S
     real_t current_output       = 0;
-    Range current_range         {0, 0.3};
+    Range current_range         {0, 0.7};
 
     void reset(){
         current_output = 0;
@@ -26,8 +26,8 @@ public:
 
     void setCurrentClamp(const real_t maximum){
         current_range.end = maximum;
-
     }
+
     real_t update(const real_t target){
         real_t current_delta = CLAMP(target - current_output, -current_slew_rate, current_slew_rate);
         current_output = current_range.clamp(current_output + current_delta);
@@ -69,14 +69,22 @@ struct PositionCtrl:public HighLayerCtrl{
 struct GeneralSpeedCtrl:public SpeedCtrl{
     GeneralSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
-    real_t kp = 0.11;
-    Range kp_clamp = {-0.7, 0.7};
+    real_t kp = 3;
+    Range kp_clamp = {-20, 20};
 
     real_t last_speed = 0;
-    real_t kd = 10;
+    real_t kd = 70;
+    real_t kd_radius = 1;
+    Range kd_clamp = {-1, 1};
 
     real_t targ_current_256x = 0;
-    Range current_clamp_256x = {0, 51.6};
+    real_t current_clamp_256x = 1.2 * 256;
+
+    real_t last_error = 0;
+    real_t lock_radius = 0;
+    real_t error;
+    real_t delta;
+    bool locked = false;
 
     bool inited = false;
 
@@ -85,7 +93,7 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
     }
 
     void setCurrentClamp(const real_t max_current){
-        current_clamp_256x = {0, max_current * 256};
+        current_clamp_256x = max_current * 256;
     }
 
     Result update(const real_t targ_speed,const real_t real_speed) override{
@@ -95,37 +103,51 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
             inited = true;
         }
 
-        real_t error = SIGN_AS((targ_speed - real_speed), targ_speed);
+        error = (targ_speed - real_speed);
+        // if(ABS(error) > lock_radius) locked = false;
+        // bool cross = (error * last_error < 0);
+        // last_error = error;
 
-        real_t abs_real_speed = ABS(real_speed);
-        real_t speed_delta = abs_real_speed - last_speed;
-        last_speed = abs_real_speed; 
+        // if(cross and (not locked)) locked = true;
 
-        real_t kd_scaler = 1;
-        if(abs_real_speed < 1) kd_scaler = (abs_real_speed * abs_real_speed);
+        // if(not locked){
+        real_t speed_delta = real_speed - last_speed;
+        last_speed = real_speed; 
+
 
         real_t kp_contribute = kp_clamp.clamp(error * kp);
-        real_t kd_contribute = kd * speed_delta * kd_scaler;
+        real_t kd_contribute = (ABS(error) < kd_radius) ? kd_clamp.clamp(kd * speed_delta) : 0;
 
-        real_t delta = kp_contribute - kd_contribute;
+        // delta = kp_contribute - (kd_contribute << 8);
 
-        targ_current_256x = current_clamp_256x.clamp(targ_current_256x + delta);
+        targ_current_256x += (kp_contribute >> 8) - kd_contribute; 
+        
+        if(targ_speed > 0) targ_current_256x = CLAMP(targ_current_256x, 0, current_clamp_256x);
+        else targ_current_256x = CLAMP(targ_current_256x, -current_clamp_256x, 0);
 
-        return {targ_current_256x >> 8, SIGN_AS(PI / 2, targ_speed)};
+        real_t current_out = ABS(targ_current_256x >> 8);
+        return {current_out, SIGN_AS((PI / 2 * (1 + MIN(current_out, 0.9))), targ_speed)};
     }
 };
 
 struct GeneralPositionCtrl:public PositionCtrl{
     GeneralPositionCtrl(CurrentCtrl & ctrl):PositionCtrl(ctrl){;}
 
-    real_t kp = 4.47;
-    Range kp_clamp = {-0.2, 0.2};
+    real_t kp = 9.41;
+    Range kp_clamp = {-1.2, 1.2};
 
-    real_t min_current = 0.02;
-    real_t kd = 0.01;
-
-    Range kd_active_range = {0.02, 0.1};
+    real_t kd = 0.05;
+    Range kd_active_range = {0.02, 0.3};
     bool inited = false;
+
+    // real_t kq = 10;
+    real_t ki = 0.0;
+    real_t intergalx256 = 0;
+    Range ki_clamp = {25.6, -25.6};
+
+    real_t last_error;
+    real_t last_current;
+    real_t error;
 
     void setCurrentClamp(const real_t max_current) override {
 
@@ -140,45 +162,155 @@ struct GeneralPositionCtrl:public PositionCtrl{
         return (poles * TAU) * (SIGN_AS(frac(abs(frac1)), frac1));
     }
 
-
+    __fast_inline real_t s(const real_t err, const real_t abs_current){
+        static constexpr double u = TAU;
+        static constexpr double pu = poles * u;
+        static constexpr double a = 2 / PI;
+        static constexpr double k = a * a * pu;
+        real_t abs_out = PI/2 - 1/(real_t(k) * ABS(err) + a);
+        return SIGN_AS(abs_out * (1 + MIN(abs_current, 0.36)) , err);
+    }
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) override{
 
         if(!inited){
             inited = true;
+            intergalx256 = 0;
         }
 
-        real_t error = targ_position - real_position;
-        // real_t raddiff = (error *50 *TAU);
-        real_t raddiff = position2rad(error);
+        error = targ_position - real_position;
+        // bool cross_zero = error * last_error < 0;
+        // last_error = error;
 
-        if(ABS(raddiff) > PI / 2 ) raddiff = SIGN_AS(PI / 2, raddiff);
-        // else raddiff = raddiff - real_elecrad;
+        real_t raddiff;
+            // raddiff = SIGN_AS(PI / 2, error);
+        // if(ABS(error) > (inv_poles / 4)){
+        //     raddiff = SIGN_AS(PI / 2, error);
+        // }else{
+        //     raddiff = error * poles * TAU;
+        // }
+
+        raddiff = s(error, last_current);
 
         real_t kp_contribute = kp_clamp.clamp(ABS(error) * kp);
-        bool near = kd_active_range.has(ABS(error));
-        real_t kd_contribute = near ? kd * ABS(real_speed): 0;
 
-        real_t pid_out = kp_contribute - kd_contribute;
+        // if(cross_zero){
+        //     intergalx256 = 0;
+        // }else{
+        //     intergalx256 += ki;
+        //     intergalx256 = ki_clamp.clamp(intergalx256);
+        // }
+
+        // bool near = (ABS(error) < real_t(0.7));
+        // real_t kd_contribute = near ? kd * ABS(real_speed): 0;
+        // real_t kd_contribute = kd * ABS(real_speed);
+
+        real_t pid_out = kp_contribute;
+        // real_t pid_out =  (intergalx256 >> 8) + kp_contribute - kd_contribute;
+        // - kd_contribute;
 
         // DEBUG_PRINT(ABS(error) < kd_active_radius);
         // real_t kd_contribute = (ABS(error) < kd_active_radius) ? kd * SIGN_AS(real_speed, error) : 0;
         real_t current = MAX(pid_out, 0);
+        last_current = current;
+        // current *= current * kq;
+
         return {current, raddiff};
     }
 };
 
+struct TopLayerCtrl{
+
+};
+
+struct TrapezoidPosCtrl:public TopLayerCtrl{
+    GeneralSpeedCtrl & speed_ctrl;
+    GeneralPositionCtrl & position_ctrl;
+
+    TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):speed_ctrl(_speed_ctrl), position_ctrl(_position_ctrl){;}
+
+    enum Tstatus{
+        ACC,
+        // SUS,
+        DEC,
+        STA,
+    };
+    Tstatus tstatus = Tstatus::STA;
+    real_t goal_speed = 0;
+        // real_t goal_pos = target;
+    real_t last_pos_err = 0;
+    using Result = HighLayerCtrl::Result;
+    
+    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
+        // static constexpr real_t max_acc = 10.0;
+        static constexpr real_t max_dec = 168.0;
+        static constexpr real_t spd_delta = 0.01;
+        static constexpr real_t max_spd = 40;
+        static constexpr real_t hug_speed = 0.6;
+        // static constexpr real_t spd_sw_radius = 0.7;
+        static constexpr real_t pos_sw_radius = 0.1;
+
+        real_t pos_err = targ_position - real_position;
+        bool cross = pos_err * last_pos_err < 0;
+        last_pos_err = pos_err;
+        switch(tstatus){
+            case Tstatus::ACC:
+                if(real_speed * real_speed > 2 * max_dec* ABS(pos_err)){
+                    tstatus = Tstatus::DEC;
+                }
+                {
+                    goal_speed += SIGN_AS(spd_delta, pos_err);
+                    goal_speed = CLAMP(goal_speed, -max_spd, max_spd);
+                    return speed_ctrl.update(goal_speed, real_speed);
+                }
+                // tstatus = Tstatus::STA;
+
+            // case Tstatus::SUS:
+
+                // else if(pos_err * last_pos_err < 0){
+                    // tstatus = Tstatus::STA;
+                // }
+                break;
+                // break;
+            case Tstatus::DEC:
+                // tstatus = Tstatus::STA;
+                // break;
+                if(cross and ABS(real_speed) < hug_speed){
+                    tstatus = Tstatus::STA;
+                }
+
+                {
+                    bool ovs = real_speed * real_speed > 2 * max_dec* ABS(pos_err);
+                    // goal_speed = SIGN_AS(sqrt(2 * max_dec* ABS(pos_err)), goal_speed);
+                    if(ovs) goal_speed += SIGN_AS(-spd_delta, pos_err);
+                    else goal_speed += SIGN_AS(spd_delta / 10, pos_err);
+
+                    if(pos_err > 0) goal_speed = CLAMP(goal_speed, 0, max_spd);
+                    else goal_speed = CLAMP(goal_speed, -max_spd, 0);
+                    return speed_ctrl.update(goal_speed, real_speed);
+                }
+
+                break;
+            default:
+            case Tstatus::STA:
+                if(ABS(pos_err) > pos_sw_radius){
+                    goal_speed = 0;
+                    tstatus = Tstatus::ACC;
+                }
+                return position_ctrl.update(targ_position, real_position, real_speed, real_elecrad);
+
+                break;
+        }
+        
+    }
+};
 
 
-
-struct OverSpeedCtrl:public SpeedCtrl{
+struct OverloadSpeedCtrl:public SpeedCtrl{
 
     real_t kp = real_t(0.00014);
     Range kp_clamp = {-0.1, 0.1};
 
-    // real_t ki;
-    // real_t intergal;
-    // real_t intergal_clamp;
-    // Range ki_clamp;
+
 
     real_t elecrad_addition;
     real_t elecrad_addition_clamp = real_t(1.7);
@@ -186,7 +318,7 @@ struct OverSpeedCtrl:public SpeedCtrl{
 
     bool inited = false;
 
-    OverSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
+    OverloadSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
     void reset() override {
         inited = false;

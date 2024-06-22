@@ -182,7 +182,7 @@ public:
         aw9523.enableLedMode(pin);
     }
 
-    AW9523Pwm & operator = (const real_t & duty) override{
+    AW9523Pwm & operator = (const real_t duty) override{
         aw9523.setLedCurrent(pin,int(255 * duty));
         return *this;
     }

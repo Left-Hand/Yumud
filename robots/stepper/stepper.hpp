@@ -7,6 +7,9 @@
 #include "obs.hpp"
 #include "archive.hpp"
 
+using AT8222 = TB67H450;
+
+
 class Stepper:public StepperUtils::Cli{
 protected:
     using ExitFlag = bool;
@@ -21,13 +24,18 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    PwmChannel & verfChannelA = timer3.oc(3);
-    PwmChannel & verfChannelB = timer3.oc(2);
+    TimerOC & vrefChannelA = timer3.oc(3);
+    TimerOC & vrefChannelB = timer3.oc(2);
 
-    Coil1 coilA{portA[10], portA[11],  verfChannelA};
-    Coil1 coilB{portA[8], portA[9],  verfChannelB};
 
-    SVPWM2 svpwm{coilA, coilB};
+    // Coil1 coilA{portA[10], portA[11],  vrefChannelA};
+    // Coil1 coilB{portA[8], portA[9],  vrefChannelB};
+
+    AT8222 coilA{timer1.oc(3), timer1.oc(4), vrefChannelA};
+    AT8222 coilB{timer1.oc(1), timer1.oc(2), vrefChannelB};
+
+
+    // SVPWM2 svpwm{coilA, coilB};
 
     SpiDrv mt6816_drv{spi1, 0};
     MT6816 mt6816{mt6816_drv};
@@ -53,8 +61,9 @@ protected:
 
     real_t openloop_elecrad;
     CurrentCtrl curr_ctrl;
-    OverSpeedCtrl speed_ctrl{curr_ctrl};
+    GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
+    TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl};
     RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;
 
@@ -64,9 +73,16 @@ protected:
     bool cmd_mode = false;
 
 
-    void setCurrent(const real_t & _current, const real_t & _elecrad){
-        coilA = cos(_elecrad) * _current;
-        coilB = sin(_elecrad) * _current;
+    void setCurrent(const real_t _current, const real_t _elecrad){
+        real_t current = -_current;
+        // static constexpr real_t base_current = 0.05;
+
+        real_t cA = cos(_elecrad) * current;
+        real_t cB = sin(_elecrad) * current;
+        coilA = cA;
+        coilB = cB;
+        // coilA = cA + SIGN_AS(base_current, cA);
+        // coilB = cB + SIGN_AS(base_current, cB);
     }
 
 
@@ -99,7 +115,7 @@ protected:
 
         ShutdownFlag() = default;
 
-        auto & operator = (const bool & _state){
+        auto & operator = (const bool _state){
             state = _state;
 
             //TODO
@@ -208,6 +224,7 @@ protected:
             case "exe"_ha:
                 logger << "exe" << exe_micros << "us\r\n";
                 break;
+
             case "disable"_ha:
             case "dis"_ha:
             case "de"_ha:
@@ -255,8 +272,20 @@ public:
 
         switch(run_status){
             case RunStatus::INIT:
-                cali_task(true);
-                break;
+                {
+                    // static bool load_lock = false;
+                    // bool load_ok = autoload();
+                    // // bool load_ok = false;
+                    // if(load_ok){
+                    //     run_status = RunStatus::CALI;
+                    //     new_status = RunStatus::EXIT;
+                    //     logger.println("autoload ok");
+                    // }else{
+                        cali_task(true);
+                    //     logger.println("autoload failed");
+                    // }
+                    break;
+                }
             case RunStatus::CALI:
                 new_status = cali_task();
                 break;
@@ -329,21 +358,26 @@ public:
         exe_micros = micros() - begin_micros;
     }
 
-    void autoload();
+    bool autoload();
 
     void init(){
-        using TimerUtils::TimerMode;
-        using TimerUtils::TimerIT;
+        using TimerUtils::Mode;
+        using TimerUtils::IT;
         
         logger.setEps(4);
 
-        timer1.init(4096, 1, TimerMode::CenterAlignedDownTrig);
+        timer1.init(4096, 1, Mode::CenterAlignedDownTrig);
         timer1.enableArrSync();
 
-        timer3.init(1024, 1, TimerMode::CenterAlignedDownTrig);
+        timer3.init(1024, 1, Mode::CenterAlignedDownTrig);
         timer3.enableArrSync();
 
-        svpwm.init();
+        timer3.oc(2).enableSync();
+        timer3.oc(3).enableSync();
+
+        // svpwm.init();
+        coilA.init();
+        coilB.init();
 
         coilA.setClamp(real_t(1));
         coilB.setClamp(real_t(1));
@@ -351,22 +385,23 @@ public:
         coilA.init();
         coilB.init();
 
+        // timer3.oc(2).init()
+        // setMode(TimerOC::Mode::Inactive);
+        // timer3.oc(3).setMode(TimerOC::Mode::Inactive);
+        // timer3.init();
+
         spi1.init(18000000);
         spi1.bindCsPin(portA[15], 0);
 
         i2cSw.init(400000);
 
-        // logger.println("======");
-        // logger.println("pwon");
-
         odo.init();
 
-        using TimerIT = TimerUtils::TimerIT;
         panel_led.init();
 
         timer4.init(foc_freq);
-        timer4.enableIt(TimerIT::Update, NvicPriority(0, 0));
-        timer4.bindCb(TimerIT::Update, [&](){this->tick();});
+        timer4.enableIt(IT::Update, NvicPriority(0, 0));
+        timer4.bindCb(IT::Update, [&](){this->tick();});
 
 
         panel_led.setPeriod(200);
@@ -408,7 +443,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, speed_ctrl.targ_current_256x, speed_ctrl.delta, speed_ctrl.error);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);

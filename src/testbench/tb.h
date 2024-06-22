@@ -161,7 +161,7 @@ void eeprom_tb(OutputStream & logger);
 void flash_tb(void);
 void memory_tb(OutputStream & logger);
 
-void stepper_tb(OutputStream & logger);
+void stepper_tb(IOStream & logger);
 
 void lua_tb(OutputStream & logger);
 void pwm_tb(OutputStream & logger);
@@ -169,3 +169,10 @@ void pwm_tb(OutputStream & logger);
 void adc_tb(OutputStream & logger);
 void temp_tb(OutputStream & logger);
 void temp_tb2(OutputStream & logger);
+
+void uart_tb(Uart & uart);
+void pmdc_tb();
+
+void lds14_tb(IOStream & logger,Uart & uart);
+
+void pca_tb(IOStream & logger);

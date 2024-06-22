@@ -3,13 +3,18 @@
 #define __DMA_HPP__
 
 #include "sys/platform.h"
+
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port.hpp"
 #include "hal/nvic/nvic.hpp"
 
+#include "dma_utils.hpp"
+
 #include <stddef.h>
 #include <initializer_list>
 #include <functional>
+#include <type_traits>
+#include <array>
 
 
 #define HAVE_DMA1
@@ -20,50 +25,55 @@ class DmaChannel{
 public:
 
     using Callback = std::function<void(void)>;
-    enum class Mode:uint8_t{
-        toMem = DMA_DIR_PeripheralSRC,
-        toPeriph = DMA_DIR_PeripheralDST,
-        synergy,
-        distribute,
-
-        toMemCircular = DMA_DIR_PeripheralSRC | 0x80,
-        toPeriphCircular = DMA_DIR_PeripheralDST | 0x80,
-        synergyCircular,
-        distributeCircular,
-        automatic
-    };
-
-    enum class Priority:uint16_t{
-        low = DMA_Priority_Low,
-        medium = DMA_Priority_Medium,
-        high = DMA_Priority_High,
-        ultra = DMA_Priority_VeryHigh
-    };
-
-// protected:
-public:
+    using Mode = DmaUtils::Mode;
+    using Priority = DmaUtils::Priority;
+protected:
+// public:
     DMA_Channel_TypeDef * instance;
     Mode mode;
     uint8_t dma_index;
     uint8_t channel_index;
 
+    uint32_t done_mask;
+    uint32_t half_mask;
+
     void enableRcc();
-    void configPeriphDataBits(const uint8_t bits){
+    void configPeriphDataBytes(const size_t bytes){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11 << 8)));
-        tmpreg |= (bits/8 - 1) << 8;
+        tmpreg |= (bytes - 1) << 8;
         instance->CFGR = tmpreg;
-
     }
 
-    void configMemDataBits(const uint8_t bits){
+    void configMemDataBytes(const size_t bytes){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11 << 10)));
-        tmpreg |= (bits/8 - 1) << 10;
+        tmpreg |= (bytes - 1) << 10;
         instance->CFGR = tmpreg;
     }
 
-    uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
+    bool periphIsDst() const{
+        if(mode == Mode::toMem || mode == Mode::toMemCircular) return false;
+        else return true;
+    }
+
+    void configDstMemDataBytes(const size_t bytes){
+        if(periphIsDst()){
+            configPeriphDataBytes(bytes);
+        }else{
+            configMemDataBytes(bytes);
+        }
+    }
+
+    void configSrcMemDataBytes(const size_t bytes){
+        if(!periphIsDst()){
+            configPeriphDataBytes(bytes);
+        }else{
+            configMemDataBytes(bytes);
+        }
+    }
+
+    constexpr uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
         #ifdef HAVE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
@@ -71,30 +81,83 @@ public:
         #endif
     }
 
-    uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance);
+    constexpr uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
+        switch(dma_index){
+            case 1:
+                return ((uint32_t)_instance - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
 
-    uint32_t getDoneFlag();
+            #ifdef HAVE_DMA2
+            case 2:
+                if((uint32_t)_instance < DMA2_Channel7_BASE){ 
+                    return ((uint32_t)_instance - DMA2_Channel1_BASE) / (DMA2_Channel2_BASE - DMA2_Channel1_BASE) + 1;
+                }else{
+                    return ((uint32_t)_instance - DMA2_Channel7_BASE) / (DMA2_Channel8_BASE - DMA2_Channel7_BASE) + 7;
+                }
+            #endif
+            default:
+                return 1;
+        }
+    }
 
-    uint32_t getHalfFlag();
+    constexpr uint32_t getDoneMask(){
+        uint32_t flag = 0;
+        
+        switch(dma_index){
+            case 1:
+                flag = DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1));
+                break;
+            #ifdef HAVE_DMA2
+            case 2:
+                flag = DMA2_IT_TC1 << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1));
+                break;
+            #endif
+            default:
+                break;
+        }
+        return flag;
+    }
+
+
+    constexpr uint32_t getHalfMask(){
+        uint32_t flag = 0;
+        
+        switch(dma_index){
+            case 1:
+                flag = DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1));
+                break;
+            #ifdef HAVE_DMA2
+            case 2:
+                flag = DMA2_IT_HT1 << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1));
+                break;
+            #endif
+            default:
+                break;
+        }
+        return flag;
+    }
+
 public:
 
     DmaChannel() = delete;
     DmaChannel(DMA_Channel_TypeDef * _instance):
                 instance(_instance), 
                 dma_index(getDmaIndex(_instance)),
-                channel_index(getChannelIndex(_instance)){;}
+                channel_index(getChannelIndex(_instance)),
+                done_mask(getDoneMask()),
+                half_mask(getHalfMask()){;}
 
     void init(const Mode _mode,const Priority priority = Priority::medium);
 
     void begin(){
-        DMA_ClearFlag(DMA1_IT_TC5);
-        DMA_ClearFlag(DMA1_IT_HT5);
+        DMA_ClearFlag(done_mask);
+        DMA_ClearFlag(half_mask);
 
         DMA_Cmd(instance, ENABLE);
     }
 
     void begin(void * dst, const void * src, size_t size){
-        if(mode == Mode::toMem || mode == Mode::toMemCircular){
+
+        if(!periphIsDst()){
             instance -> PADDR = (uint32_t)src;
             instance -> MADDR = (uint32_t)dst;
         }else{
@@ -108,44 +171,45 @@ public:
 
     template <typename T>
     void begin(T * dst, const T * src, size_t size){
-        configMemDataBits(sizeof(T) * 8);
-        configPeriphDataBits(sizeof(T) * 8);
+        configDstMemDataBytes(sizeof(T));
+        configSrcMemDataBytes(sizeof(T));
         begin((void *)dst, (const void *)src, size);
+    }
+
+    template <typename U, typename T>
+    requires std::is_array_v<T>
+    void begin(U * dst, const T & src){//TODO array can only be c-ctyle array
+        configDstMemDataBytes(sizeof(U));
+        configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
+        begin((void *)dst, (const void *)&src[0], std::distance(std::begin(src), std::end(src)));
+    }
+
+    template <typename U, typename T>
+    requires std::is_array_v<U>
+    void begin(U & dst, const T * src){
+        configDstMemDataBytes(sizeof(U));
+        configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
+        begin((void *)&dst[0], (const void *)src, std::distance(std::begin(dst), std::end(dst)));
+    }
+
+    void configDataBytes(const size_t bytes){
+        configMemDataBytes(bytes);
+        configPeriphDataBytes(bytes);
     }
 
     size_t pending(){
         return instance -> CNTR;
     }
 
-    void enableIt(NvicPriority _priority){
-
-        int irq = int(IRQn_Type::Software_IRQn);
-        switch(dma_index){
-            case 1:
-                irq = (DMA1_Channel1_IRQn + (DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * (channel_index - 1));
-                break;
-            #ifdef HAVE_DMA2
-            case 2:
-                if(channel_index <= 5){
-                    irq = DMA2_Channel1_IRQn + (DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index - 1);
-                }else{
-                    irq = DMA2_Channel6_IRQn + (DMA2_Channel7_IRQn - DMA2_Channel6_IRQn) * (channel_index - 6);
-                }
-                break;
-            #endif
-        }
-
-        _priority.enable(IRQn(irq), ENABLE);
-        _priority.enable(IRQn(DMA1_Channel4_IRQn), ENABLE);
-    }
+    void enableIt(const NvicPriority _priority, const bool en = true);
 
     void enableDoneIt(const bool en = true){
-        DMA_ClearITPendingBit(getDoneFlag());
+        DMA_ClearITPendingBit(done_mask);
         DMA_ITConfig(instance, DMA_IT_TC, en);
     }
 
     void enableHalfIt(const bool en = true){
-        DMA_ClearITPendingBit(getHalfFlag());
+        DMA_ClearITPendingBit(half_mask);
         DMA_ITConfig(instance, DMA_IT_HT, en);
     }
 
@@ -154,7 +218,7 @@ public:
     void bindHalfCb(Callback && cb);
 
     bool isDone(){
-        return DMA_GetFlagStatus(getDoneFlag());
+        return DMA_GetFlagStatus(done_mask);
     }
 };
 

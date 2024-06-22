@@ -154,60 +154,6 @@ void DmaChannel::enableRcc(){
     #endif
 }
 
-uint8_t DmaChannel::getChannelIndex(const DMA_Channel_TypeDef * _instance){
-    uint8_t _dma_index = getDmaIndex(_instance);
-    switch(_dma_index){
-        case 1:
-            return ((uint32_t)_instance - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
-
-        #ifdef HAVE_DMA2
-        case 2:
-            if((uint32_t)_instance < DMA2_Channel7_BASE){ 
-                return ((uint32_t)_instance - DMA2_Channel1_BASE) / (DMA2_Channel2_BASE - DMA2_Channel1_BASE) + 1;
-            }else{
-                return ((uint32_t)_instance - DMA2_Channel7_BASE) / (DMA2_Channel8_BASE - DMA2_Channel7_BASE) + 7;
-            }
-        #endif
-        default:
-            return 1;
-    }
-}
-
-uint32_t DmaChannel::getDoneFlag(){
-    uint32_t flag = 0;
-    
-    switch(dma_index){
-        case 1:
-            flag = DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1));
-            break;
-        #ifdef HAVE_DMA2
-        case 2:
-            flag = DMA2_IT_TC1 << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1));
-            break;
-        #endif
-        default:
-            break;
-    }
-    return flag;
-}
-
-uint32_t DmaChannel::getHalfFlag(){
-    uint32_t flag = 0;
-    
-    switch(dma_index){
-        case 1:
-            flag = DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1));
-            break;
-        #ifdef HAVE_DMA2
-        case 2:
-            flag = DMA2_IT_HT1 << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1));
-            break;
-        #endif
-        default:
-            break;
-    }
-    return flag;
-}
 
 void DmaChannel::init(const Mode _mode,const Priority priority){
     enableRcc();
@@ -271,4 +217,24 @@ void DmaChannel::init(const Mode _mode,const Priority priority){
     DMA_InitStructure.DMA_Priority = (uint32_t)priority;
 
     DMA_Init(instance, &DMA_InitStructure);
+}
+
+void DmaChannel::enableIt(const NvicPriority _priority, const bool en){
+    IRQn irq = IRQn_Type::Software_IRQn;
+    switch(dma_index){
+        case 1:
+            irq = (IRQn)((int)DMA1_Channel1_IRQn + ((int)(DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * (channel_index - 1)));
+            break;
+        #ifdef HAVE_DMA2
+        case 2:
+            if(channel_index <= 5){
+                irq = DMA2_Channel1_IRQn + (DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index - 1);
+            }else{
+                irq = DMA2_Channel6_IRQn + (DMA2_Channel7_IRQn - DMA2_Channel6_IRQn) * (channel_index - 6);
+            }
+            break;
+        #endif
+    }
+
+    NvicPriority::enable(_priority, IRQn(irq), en);
 }

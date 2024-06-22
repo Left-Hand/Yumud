@@ -35,12 +35,14 @@ extern "C" {
             __time_current_t__ + (__time_current_t__ ^ __time_begin_t__) & 0x8000 ?  __time_begin_t__ : -__time_begin_t__)
 #endif
 
-extern int tick_per_ms;
-extern int tick_per_us;
 #define NanoMut(x) ( x * 1000 / 144)
 
 #define MicroTrim 0
 #define NanoTrim 300
+
+#define tick_per_ms (F_CPU / 1000)
+#define tick_per_us (tick_per_ms / 1000)
+
 
 extern volatile uint32_t msTick;
 

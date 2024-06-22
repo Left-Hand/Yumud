@@ -12,31 +12,31 @@ TIMER_IT_BIND_TEMPLATE(x)\
 extern "C"{\
 __interrupt void TIM##x##_BRK_IRQHandler(void){\
     if(TIM_GetITStatus(TIM##x, TIM_IT_Break)){\
-        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::TimerIT::Break)];\
+        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::IT::Break)];\
         if(cb) cb();\
         TIM_ClearITPendingBit(TIM##x, TIM_IT_Break);\
     }\
 }\
 __interrupt void TIM##x##_UP_IRQHandler(void){\
     if(TIM_GetITStatus(TIM##x, TIM_IT_Update)){\
-        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::TimerIT::Update)];\
+        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::IT::Update)];\
         if(cb) cb();\
         TIM_ClearITPendingBit(TIM##x, TIM_IT_Update);\
     }\
 }\
 __interrupt void TIM##x##_TRG_COM_IRQHandler(void){\
     if(TIM_GetITStatus(TIM##x, TIM_IT_Trigger)){\
-        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::TimerIT::Trigger)];\
+        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::IT::Trigger)];\
         if(cb) cb();\
         TIM_ClearITPendingBit(TIM##x, TIM_IT_Trigger);\
     }else if(TIM_GetITStatus(TIM##x, TIM_IT_COM)){\
-        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::TimerIT::COM)];\
+        auto & cb = cbs##x[CTZ((uint8_t)TimerUtils::IT::COM)];\
         if(cb) cb();\
         TIM_ClearITPendingBit(TIM##x, TIM_IT_COM);\
     }\
 }\
 __interrupt void TIM##x##_CC_IRQHandler(void){\
-    for(uint8_t it = (uint8_t)TimerUtils::TimerIT::CC1; it <= (uint8_t)TimerUtils::TimerIT::CC4; it <<= 1){\
+    for(uint8_t it = (uint8_t)TimerUtils::IT::CC1; it <= (uint8_t)TimerUtils::IT::CC4; it <<= 1){\
         if(TIM_GetITStatus(TIM##x, it)){\
             auto & cb = cbs##x[CTZ(it)];\
             if(cb) cb();\
@@ -53,7 +53,7 @@ Timer##x timer##x;\
 TIMER_IT_BIND_TEMPLATE(x)\
 extern "C"{\
 __interrupt void TIM##x##_IRQHandler(void){\
-    for(uint8_t it = (uint8_t)TimerUtils::TimerIT::Update; it <= (uint8_t)TimerUtils::TimerIT::CC4; it <<= 1){\
+    for(uint8_t it = (uint8_t)TimerUtils::IT::Update; it <= (uint8_t)TimerUtils::IT::CC4; it <<= 1){\
         if(TIM_GetITStatus(TIM##x, it)){\
             auto & cb = cbs##x[CTZ(it)];\
             if(cb) cb();\

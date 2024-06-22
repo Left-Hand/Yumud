@@ -285,42 +285,42 @@ Gpio & UartHw::getTxPin(){
 }
 
 void UartHw::enableIt(const bool en){
-    uint8_t irqch;
+    IRQn irq;
     uint8_t pp;
     uint8_t sp;
 
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            irqch = USART1_IRQn;
+            irq = USART1_IRQn;
             pp = UART1_IT_PP;
             sp = UART1_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            irqch = USART2_IRQn;
+            irq = USART2_IRQn;
             pp = UART2_IT_PP;
             sp = UART2_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-            irqch = USART3_IRQn;
+            irq = USART3_IRQn;
             pp = UART3_IT_PP;
             sp = UART3_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            irqch = UART4_IRQn;
+            irq = UART4_IRQn;
             pp = UART4_IT_PP;
             sp = UART4_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-            irqch = UART7_IRQn;
+            irq = UART7_IRQn;
             pp = UART7_IT_PP;
             sp = UART7_IT_SP;
 
@@ -330,7 +330,7 @@ void UartHw::enableIt(const bool en){
             return;
     }
 
-    NvicRequest(IRQn(irqch),pp, sp).enable();
+    NvicRequest(pp, sp, irq).enable();
 }
 
 void UartHw::invokeTxIt(){
@@ -430,7 +430,7 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
         txMethod = _txMethod;
         if(txMethod != CommMethod::None){
             Gpio & tx_pin = getTxPin();
-            tx_pin.OutAfPP();
+            tx_pin.afpp();
         }
         switch(txMethod){
             case CommMethod::Blocking:
@@ -454,7 +454,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
         rxMethod = _rxMethod;
         if(rxMethod != CommMethod::None){
             Gpio & rx_pin = getRxPin();
-            rx_pin.InPullUP();
+            rx_pin.inpu();
         }
         switch(rxMethod){
             case CommMethod::Blocking:
