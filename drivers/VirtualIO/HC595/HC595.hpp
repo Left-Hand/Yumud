@@ -36,9 +36,9 @@ public:
             sclk_pin(_sclk_pin), data_pin(_data_pin), latch_pin(_latch_pin){;}
 
     void init(){
-        sclk_pin.OutPP();
-        data_pin.OutPP();
-        latch_pin.OutPP();
+        sclk_pin.outpp();
+        data_pin.outpp();
+        latch_pin.outpp();
     }
     void setContent(const uint8_t * data_ptr, size_t data_len){
         for(size_t i = 0; i < data_len; i++){
@@ -89,9 +89,9 @@ public:
             sclk_pin(_sclk_pin), data_pin(_data_pin), latch_pin(_latch_pin){;}
 
     void init(){
-        sclk_pin.OutPP();
-        data_pin.OutPP();
-        latch_pin.OutPP();
+        sclk_pin.outpp();
+        data_pin.outpp();
+        latch_pin.outpp();
     }
 
 

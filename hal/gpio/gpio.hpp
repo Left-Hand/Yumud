@@ -19,20 +19,20 @@ public:
     virtual GpioConcept & operator = (const bool _val) = 0;
     operator bool() const {return(this->read());}
     virtual void setMode(const PinMode mode) = 0;
-    void OutPP(){setMode(PinMode::OutPP);}
-    void OutOD(){setMode(PinMode::OutOD);}
-    void OutAfPP(){setMode(PinMode::OutAfPP);}
-    void OutAfOD(){setMode(PinMode::OutAfOD);}
+    void outpp(){setMode(PinMode::OutPP);}
+    void outod(){setMode(PinMode::OutOD);}
+    void afpp(){setMode(PinMode::OutAfPP);}
+    void afod(){setMode(PinMode::OutAfOD);}
 
-    void OutPP(const bool & initial_state){setMode(PinMode::OutPP);write(initial_state);}
-    void OutOD(const bool & initial_state){setMode(PinMode::OutOD);write(initial_state);}
-    void OutAfPP(const bool & initial_state){setMode(PinMode::OutAfPP);write(initial_state);}
-    void OutAfOD(const bool & initial_state){setMode(PinMode::OutAfOD);write(initial_state);}
+    void outpp(const bool & initial_state){setMode(PinMode::OutPP);write(initial_state);}
+    void outod(const bool & initial_state){setMode(PinMode::OutOD);write(initial_state);}
+    void afpp(const bool & initial_state){setMode(PinMode::OutAfPP);write(initial_state);}
+    void afod(const bool & initial_state){setMode(PinMode::OutAfOD);write(initial_state);}
 
-    void InAnalog(){setMode(PinMode::InAnalog);}
-    void InFloating(){setMode(PinMode::InFloating);}
-    void InPullUP(){setMode(PinMode::InPullUP);}
-    void InPullDN(){setMode(PinMode::InPullDN);}
+    void inana(){setMode(PinMode::InAnalog);}
+    void inflt(){setMode(PinMode::InFloating);}
+    void inpu(){setMode(PinMode::InPullUP);}
+    void inpd(){setMode(PinMode::InPullDN);}
 
     bool isValid() const {return pin_index >= 0;}
     int8_t getIndex() const {return pin_index;}
@@ -63,6 +63,7 @@ protected:
 public:
 
     Gpio(const Gpio & other) = delete;
+    Gpio(Gpio && other) = delete;
 
     ~Gpio(){};
 

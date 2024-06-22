@@ -58,7 +58,7 @@ public:
     WS2812(Gpio & _gpio):gpio(_gpio){;}
     void init(){
         // gpio.set();
-        gpio.OutPP();
+        gpio.outpp();
     }
     WS2812 & operator = (const Color & color) override{
         setColor(color);
@@ -132,7 +132,7 @@ public:
     WS2812Chain(Gpio & _gpio):gpio(_gpio){;}
     void init(){
         for(auto & led : leds) led = Color(0,0,0);
-        gpio.OutPP();
+        gpio.outpp();
     }
 
     WS2812Single & operator[](const int index){

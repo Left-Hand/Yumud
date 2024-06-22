@@ -13,9 +13,9 @@
 //     Gpio & i2sSck = portA[1];
 //     Gpio & i2sSda = portA[0];
 //     Gpio & i2sWs = portA[4];
-//     i2sSck.OutPP();
-//     i2sSda.OutPP();
-//     i2sWs.OutPP();
+//     i2sSck.outpp();
+//     i2sSda.outpp();
+//     i2sWs.outpp();
 //     I2sSw i2sSw(i2sSck, i2sSda, i2sWs);
 //     i2sSw.init(114514);
 //     // I2sDrv i2sDrvTm = I2sDrv(i2sSw);

@@ -13,7 +13,7 @@
 int main(){
     //...prework()
     auto & bled = portC[13];
-    bled.OutPP();
+    bled.outpp();
     while(true){
         bled = !bled;//blink XD
         delay(200);

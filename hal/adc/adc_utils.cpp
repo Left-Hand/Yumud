@@ -22,8 +22,8 @@ namespace AdcUtils{
         }
 
         Gpio & io = (*gpio_port)[gpio_pin];
-        if(en)io.InAnalog();
-        else io.InFloating();
+        if(en)io.inana();
+        else io.inflt();
     }
 
     real_t getTemperature(){

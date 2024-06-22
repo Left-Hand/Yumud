@@ -44,8 +44,8 @@ public:
     HX711(GpioConcept & _sck_pin, GpioConcept & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin){;}
     ~HX711(){;}
     void init(){
-        sck_pin.OutPP();
-        sdo_pin.InPullUP();
+        sck_pin.outpp();
+        sdo_pin.inpu();
         read_data();
     }
 

@@ -28,8 +28,8 @@ public:
     Coil1(GpioConcept & _instanceP, GpioConcept & _instanceN, PwmChannel & _vref_pwm):gpioP(_instanceP), gpioN(_instanceN), vref_pwm(_vref_pwm){;}
 
     void init() override{
-        gpioP.OutPP();
-        gpioN.OutPP();
+        gpioP.outpp();
+        gpioN.outpp();
 
         gpioP.clr();
         gpioN.clr();

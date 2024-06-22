@@ -5,8 +5,8 @@
 
 void TimerOut::installToPin(const bool & en){
     Gpio & io = TimerUtils::getPin(instance, channel);
-    if(en)io.OutAfPP();
-    else io.InFloating();
+    if(en)io.afpp();
+    else io.inflt();
     enable(en);
 }
 

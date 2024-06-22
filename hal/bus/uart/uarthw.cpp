@@ -430,7 +430,7 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
         txMethod = _txMethod;
         if(txMethod != CommMethod::None){
             Gpio & tx_pin = getTxPin();
-            tx_pin.OutAfPP();
+            tx_pin.afpp();
         }
         switch(txMethod){
             case CommMethod::Blocking:
@@ -454,7 +454,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
         rxMethod = _rxMethod;
         if(rxMethod != CommMethod::None){
             Gpio & rx_pin = getRxPin();
-            rx_pin.InPullUP();
+            rx_pin.inpu();
         }
         switch(rxMethod){
             case CommMethod::Blocking:

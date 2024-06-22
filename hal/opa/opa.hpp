@@ -85,8 +85,8 @@ public:
     Opa(const uint8_t & _opa_num):opa_num( _opa_num ){;}
 
     void init( const uint8_t & sel){
-        getNegPin().InAnalog();
-        getPosPin().InAnalog();
+        getNegPin().inana();
+        getPosPin().inana();
         OPA_InitTypeDef OPA_InitStructure;
         OPA_InitStructure.OPA_NUM = CLAMP((OPA_Num_TypeDef)(OPA1 + (opa_num - 1)), OPA1, OPA4);
         OPA_InitStructure.PSEL = (OPA_PSEL_TypeDef)sel;
