@@ -8,9 +8,20 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     // real_t raw_current = 0.1 * sin(t);
     // run_current = abs(raw_current);
     // run_leadangle = SIGN_AS(PI / 2, raw_current);
-    run_elecrad = est_elecrad + run_leadangle;
-    setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
 
+
+    run_elecrad = est_elecrad + run_leadangle;setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
+
+    // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.02, run_elecrad + elecrad_zerofix);//n = 2
+    // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.3, TAU * frac(t));//n = 2
+
+
+    // setCurrent(0.2, odo.position2rad(target));
+    // setCurrent(0.4, TAU * frac(t));
+    // setCurrent(0, 0);
+
+    // coilB = (0.2);
+    // coilA = 0.2 * sin(t);
     // uint32_t foc_begin_micros = nanos();
     odo.update();
 
@@ -31,20 +42,20 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         return RunStatus::NONE;
     }
 
-    if(auto_shutdown_activation){
-        if(run_current){
-            auto_shutdown_actived = false;
-            wakeup();
-            auto_shutdown_last_wake_ms = millis();
-        }else{
-            if(millis() - auto_shutdown_last_wake_ms > auto_shutdown_timeout_ms){
-                auto_shutdown_actived = true;
-                shutdown();
-                auto_shutdown_last_wake_ms = millis();
+    // if(auto_shutdown_activation){
+    //     if(run_current){
+    //         auto_shutdown_actived = false;
+    //         wakeup();
+    //         auto_shutdown_last_wake_ms = millis();
+    //     }else{
+    //         if(millis() - auto_shutdown_last_wake_ms > auto_shutdown_timeout_ms){
+    //             auto_shutdown_actived = true;
+    //             shutdown();
+    //             auto_shutdown_last_wake_ms = millis();
                 
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
 
     real_t delta_raw_pos = raw_pos - last_raw_pos;
     last_raw_pos = raw_pos;
@@ -53,51 +64,62 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     est_elecrad = odo.getElecRad();
     // Fixed();
 
+    {
+        HighLayerCtrl::Result result;
+
+        switch(ctrl_type){
+            case CtrlType::POSITION:
+                result = trapezoid_ctrl.update(target, est_pos, est_speed, est_elecrad);
+                break;
+            case CtrlType::SPEED:
+                result = speed_ctrl.update(target, est_speed);
+                break;
+        } 
+
+        run_current = result.current;
+        run_leadangle = result.raddiff;
+    }
+
     {//estimate speed and update controller
         static real_t est_delta_raw_pos_intergal = real_t();
 
         est_cnt++;
         if(est_cnt == est_devider){ // est happens
             real_t est_speed_new = est_delta_raw_pos_intergal * (int)est_freq;
-            switch(CTZ(MAX(int(abs(est_speed_new)), 1))){
-                case 0://  1r/s
-                    est_speed = (est_speed_new + est_speed * 63) >> 6;
-                    break;
-                case 1://  2r/s
-                    est_speed = (est_speed_new + est_speed * 63) >> 6;
-                    break;
-                case 2:// 4r/s
-                    est_speed = (est_speed_new + est_speed * 31) >> 5;
-                    break;
-                case 3:// 8r/s
-                    est_speed = (est_speed_new + est_speed * 15) >> 4;
-                    break;
-                case 4:// 16r/s
-                    est_speed = (est_speed_new + est_speed * 7) >> 3;
-                    break;
-                case 5:// 32r/s
-                    est_speed = (est_speed_new + est_speed * 3) >> 2;
-                    break;
-                default:
-                case 6:// 64r/s or more
-                    est_speed = (est_speed_new + est_speed) >> 1;
-                    break;
+            if(true){
+                switch(CTZ(MAX(int(abs(est_speed_new)), 1))){
+                    case 0://  1r/s
+                        est_speed = (est_speed_new + est_speed * 63) >> 6;
+                        break;
+                    case 1://  2r/s
+                        est_speed = (est_speed_new + est_speed * 15) >> 4;
+                        break;
+                    case 2:// 4r/s
+                        // est_speed = (est_speed_new + est_speed * 31) >> 5;
+                        // break;
+                    case 3:// 8r/s
+                        // est_speed = (est_speed_new + est_speed * 15) >> 4;
+                        // break;
+                    case 4:// 16r/s
+                        est_speed = (est_speed_new + est_speed * 7) >> 3;
+                        break;
+                    case 5:// 32r/s
+                        // est_speed = (est_speed_new + est_speed * 3) >> 2;
+                        // break;
+                    default:
+                    case 6:// 64r/s or more
+                        est_speed = (est_speed_new + est_speed) >> 1;
+                        break;
+                }
+            }else{
+                est_speed = est_speed_new;
             }
             est_delta_raw_pos_intergal = real_t();
             est_cnt = 0;
 
-            HighLayerCtrl::Result result;
-            
-            switch(ctrl_type){
-                case CtrlType::POSITION:
-                    result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
-                    break;
-                case CtrlType::SPEED:
-                    result = speed_ctrl.update(target, est_speed);
-            } 
 
-            run_current = result.current;
-            run_leadangle = result.raddiff;
+            
+
             // run_current = 0.2;
             // run_leadangle = -PI / 2;
         }else{

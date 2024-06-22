@@ -43,62 +43,82 @@ public:
 
     void enable(const bool & en = true) override{
         enabled = en;
-        if(!en) setDuty(real_t(0));
+        if(!en) sleep();
     }
 
     void setDuty(const real_t & duty) override{
-        if(!enabled){
-            gpioN.clr();
-            gpioP.clr();
-            return;
-        }
+        // if(!enabled){
+        //     gpioN.clr();
+        //     gpioP.clr();
+        //     return;
+        // }
 
         // constexpr float curr_base = 0.02;
-        if(duty > 0){
-            gpioP.set();
-            gpioN.clr();
-            vref_pwm = duty;
-        }else{
-            gpioN.set();
-            gpioP.clr();
-            vref_pwm = -duty;
+        vref_pwm = ABS(duty);
+
+        switch (int(sign(duty))){
+            case 1:
+                gpioP.set();
+                gpioN.clr();
+                break;
+            case 0:
+                gpioP.set();
+                gpioN.set();
+                break;
+            case -1:
+                gpioP.clr();
+                gpioN.set();
+                break;
         }
+    }
+
+    void sleep(){
+        gpioN.clr();
+        gpioP.clr();
+    }
+
+    void brake(){
+        gpioN.set();
+        gpioP.set();
     }
 
     Coil1 & operator = (const real_t & duty) override {setDuty(duty); return *this;}
 };
 
-class TB67H450:public Coil2PConcept{
+class TB67H450{
 protected:
-    PwmChannel & forward_pwm;
-    PwmChannel & backward_pwm;
+    TimerOC & forward_pwm;
+    TimerOC & backward_pwm;
     PwmChannel & vref_pwm;
     bool enabled = true;
     bool hardmode = false;
+    int full_current = 3;
 public:
-    TB67H450(PwmChannel & _forward_pwm, PwmChannel & _backward_pwm, PwmChannel & _vref_pwm):
+    TB67H450(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannel & _vref_pwm):
             forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), vref_pwm(_vref_pwm){;}
 
-    void init() override{
+    void init(){
 
         // forward_pwm.enableSync();
         // backward_pwm.enableSync();
         // vref_pwm.enableSync();
 
-        // forward_pwm.setPolarity(f);
-        // backward_pwm.setPolarity(false);
+        forward_pwm.setPolarity(false);
+        backward_pwm.setPolarity(false);
         // vref_pwm.setPolarity(true);
 
         forward_pwm.init();
         backward_pwm.init();
         vref_pwm.init();
+
+        setClamp(1.0);
     }
 
-    void setClamp(const real_t & abs_max_value) override{
-        vref_pwm = abs(abs_max_value);
+    void setClamp(const real_t abs_max_value){
+        vref_pwm = ABS(abs_max_value);
     }
 
-    void enable(const bool & en = true) override{
+    void enable(const bool en = true){
         enabled = en;
         if(!en){
             forward_pwm = real_t(1);
@@ -107,32 +127,37 @@ public:
         }
     }
 
-    void setDuty(const real_t & duty) override{
+    void setCurrent(const real_t curr){
 
         if(!enabled) return;
 
         if(hardmode){
-            if(duty > 0){
+            if(curr > 0){
                 forward_pwm = 0;
-                backward_pwm = duty;
+                backward_pwm = curr * full_current;
+            }else if(curr < 0){
+                forward_pwm = -curr * full_current;
+                backward_pwm = 0;
             }else{
-                forward_pwm = -duty;
+                forward_pwm = 0;
                 backward_pwm = 0;
             }
-        }else{
-            if(duty > 0){
+        }
+        
+        else{
+            if(curr > 0){
                 forward_pwm = real_t(0);
                 backward_pwm = real_t(1);
-                vref_pwm = duty;
+                vref_pwm = curr / 3.3;
             }else{
                 forward_pwm = real_t(1);
                 backward_pwm = real_t(0);
-                vref_pwm = -duty;
+                vref_pwm = -curr / 3.3;
             }
         }
     }
 
-    TB67H450 & operator = (const real_t & duty) override {setDuty(duty); return *this;}
+    TB67H450 & operator = (const real_t curr){setCurrent(curr); return *this;}
 };
 class Coil2:public Coil2PConcept{
 protected:

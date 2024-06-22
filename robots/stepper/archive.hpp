@@ -61,15 +61,13 @@ namespace StepperUtils{
         }
 
         bool empty(){
-            bool is_empty = false;
             uint8_t * ptr = (uint8_t *)this;
             for(size_t i = 0; i < sizeof(*this); i++){
                 if(ptr[i]!= 0){
-                    is_empty = true;
-                    break;
+                    return false;
                 }
             }
-            return is_empty;
+            return true;
         }
 
         bool match(){

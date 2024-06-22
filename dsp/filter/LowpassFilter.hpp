@@ -48,4 +48,24 @@ public:
     }
 };
 
+template<typename real>
+class LowpassFilterZ_t{
+// protected:
+public:
+    real k;
+    real last;
+    bool inited = false;
+public:
+    LowpassFilterZ_t(const auto & cutoff_freq) : k(cutoff_freq), last(real()){;}
+
+    real update(const real & x){
+        if(!inited){
+            last = real();
+            inited = true;
+        }
+        last = last * k + (1-k) * x;
+        return last;
+    }
+};
+
 #endif

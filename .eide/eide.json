@@ -55,10 +55,7 @@
         "thirdparty/lua/manual",
         "thirdparty/lua/testes",
         "thirdparty/lua/lua.c",
-        "thirdparty/lua/onelua.c",
-        "src/testbench/stepper_tb.cpp",
-        "robots/stepper",
-        "src/testbench/pwm_tb.cpp"
+        "thirdparty/lua/onelua.c"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {

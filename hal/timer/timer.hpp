@@ -9,8 +9,8 @@ class TimerHw{};
 class BasicTimer:public TimerHw{
 protected:
     TIM_TypeDef * instance;
-    using IT = TimerUtils::TimerIT;
-    using Mode = TimerUtils::TimerMode;
+    using IT = TimerUtils::IT;
+    using Mode = TimerUtils::Mode;
 
 public:
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}

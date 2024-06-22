@@ -14,6 +14,7 @@
 
 class AdcConcept{
 protected:
+public:
     using Callback = std::function<void(void)>;
 };
 
@@ -117,6 +118,8 @@ protected:
     using Channel = AdcUtils::Channel;
     using SampleCycles = AdcUtils::SampleCycles;
     using Mode = AdcUtils::Mode;
+    using IT = AdcUtils::IT;
+    using Callback = AdcUtils::Callback;
 
     bool right_align = true;
 
@@ -188,9 +191,6 @@ protected:
         instance->CTLR2 = tempreg.data;
     }
 
-    void enableIT(const NvicPriority & priority){
-
-    }
 
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
@@ -198,6 +198,13 @@ public:
     void init(const std::initializer_list<AdcChannelConfig> regular_list,
             const std::initializer_list<AdcChannelConfig> injected_list, 
             const Mode mode = Mode::Independent);
+
+    void bindCb(const IT it,Callback && cb);
+
+    void enableIT(const IT it, const NvicPriority & priority){
+        ADC_ITConfig(instance, (uint16_t)it, true);
+        priority.enable(ADC_IRQn);
+    }
 
     void setMode(const Mode mode){
         CTLR1 tempreg;
@@ -237,8 +244,6 @@ public:
         tempreg.data = instance->CTLR2;
         tempreg.EXTSEL = static_cast<uint8_t>(trigger);
         instance->CTLR2 = tempreg.data;
-
-        ADC_ExternalTrigConvCmd(instance, trigger == RegularTrigger::SW);
     }
 
     void setInjectedTrigger(const InjectedTrigger trigger){
@@ -246,8 +251,6 @@ public:
         tempreg.data = instance->CTLR2;
         tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
         instance->CTLR2 = tempreg.data;
-
-        ADC_ExternalTrigInjectedConvCmd(instance, trigger == InjectedTrigger::SW);
     }
 
     void setWdtThreshold(const Range_t<int> & _threshold){
@@ -289,6 +292,10 @@ public:
 
     void enableDma(const bool en = true){
         ADC_DMACmd(instance, en);
+    }
+
+    uint16_t getConvResult(){
+        return instance->RDATAR;
     }
 
     // void addDataCB(const uint16_t data){

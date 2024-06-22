@@ -68,9 +68,6 @@ typedef int8_t  s8;
 
 typedef enum {NoREADY = 0, READY = !NoREADY} ErrorStatus;
 
-#define DISABLE (false)
-#define ENABLE (true)
-
 typedef bool FunctionalState;
 
 // typedef enum {DISABLE = 0, ENABLE = 1} FunctionalState;
@@ -126,6 +123,13 @@ typedef struct
 
 #define SysTick         ((SysTick_Type *) 0xE000F000)
 
+#ifndef DISABLE
+#define DISABLE 0
+#endif
+
+#ifndef ENABLE
+#define ENABLE 1
+#endif
 
 /*********************************************************************
  * @fn      __enable_irq

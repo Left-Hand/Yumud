@@ -8,6 +8,7 @@ static void TIM_RCC_ON(TIM_TypeDef * instance){
         GPIO_PinRemapConfig(TIM2_REMAP, TIM2_REMAP_ENABLE);
     } else if (instance == TIM3) {
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+        GPIO_PinRemapConfig(TIM3_REMAP, TIM3_REMAP_ENABLE);
     } else if (instance == TIM4){
         RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
     }

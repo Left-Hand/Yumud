@@ -4,7 +4,7 @@
 
 #include "sys/system.hpp"
 #include "types/range/range_t.hpp"
-#include "sys/kernel/debug/debug_inc.h"
+#include "sys/debug/debug_inc.h"
 // #include "memory.hpp"
 
 class Memory;

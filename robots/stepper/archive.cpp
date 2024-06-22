@@ -7,7 +7,8 @@ void Stepper::loadArchive(){
     Archive archive;
     memory.load(archive);
 
-    bool match;
+    bool match = true;
+    bool corrupt = false;
 
     logger.println("======");
     {
@@ -21,11 +22,15 @@ void Stepper::loadArchive(){
         if(!match){
             logger.println("!!!board does not match current build!!!");
             logger.println("we suggest you to save data once to cover useless data by typing\r\n->save");
+
             if(board_info.broken()){
+                corrupt = true;
                 logger.println("!!!board eeprom seems to be trash!!!\r\n");
             }else if(board_info.empty()){
+                corrupt = true;
                 logger.println("!!!board eeprom is empty!!!\r\n");
             }
+
             logger.println("current build is:");
             board_info.construct();
             board_info.printout(logger);
@@ -34,33 +39,41 @@ void Stepper::loadArchive(){
         }
     }
 
-    if(match){
+    if(!corrupt){
         for(size_t i = 0; i < odo.map().size(); i++){
             odo.map()[i] = real_t(archive.cali_map[i]) / 16384;
             elecrad_zerofix = 0;
             // cali_map in archive is q16
         }
+        logger.println("load successfully!");
     }else{
         logger.println("load aborted because data is corrupted");
     }
     logger.println("======");
 }
 
-void Stepper::autoload(){
+bool Stepper::autoload(){
     using Archive = StepperUtils::Archive;
     Archive archive;
     memory.load(archive);
 
     bool en = true;
 
-    en &= (archive.hash() == archive.hashcode);
-    if(!en) return;
+    // en &= (archive.hash() == archive.hashcode);
+    if(!en) return false;
 
-    auto m_switches = archive.switches;
-    en &= (m_switches.cali_done); // if cali done, continue
-    en &= !(m_switches.cali_every_pwon);// if cali is forced when power on, break;
-    en &= !(m_switches.cali_when_update && !archive.board_info.match());// if update cali enabled and version out, break; 
-    if(!en) return;
+    // auto m_switches = archive.switches;
+    // en &= (m_switches.cali_done); // if cali done, continue
+    // en &= !(m_switches.cali_every_pwon);// if cali is forced when power on, break;
+    // en &= !(m_switches.cali_when_update && !archive.board_info.match());// if update cali enabled and version out, break; 
+    if(!en) return false;
+
+    for(size_t i = 0; i < odo.map().size(); i++){
+        odo.map()[i] = real_t(archive.cali_map[i]) / 16384;
+        elecrad_zerofix = 0;
+    }
+
+    return true;
 }
 
 

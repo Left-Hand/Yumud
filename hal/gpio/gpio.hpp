@@ -13,7 +13,7 @@ public:
     GpioConcept(int8_t _pin_index):pin_index(_pin_index){;}
     virtual void set() = 0;
     virtual void clr() = 0;
-    virtual void write(const bool & val) = 0;
+    virtual void write(const bool val) = 0;
     virtual bool read() const = 0;
 
     virtual GpioConcept & operator = (const bool _val) = 0;
@@ -68,7 +68,7 @@ public:
 
     __fast_inline void set()override{instance->BSHR = pin;}
     __fast_inline void clr()override{instance->BCR = pin;}
-    __fast_inline void write(const bool & val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
+    __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
     __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
     __fast_inline Gpio & operator = (const bool _val) override {(_val) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
     __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
@@ -98,7 +98,7 @@ public:
     GpioVirtual(PortConcept & _instance, const Pin _pin):GpioConcept(CTZ((uint16_t)_pin)), instance(_instance){;}
     __fast_inline void set() override {instance.setByIndex(pin_index);}
     __fast_inline void clr() override {instance.clrByIndex(pin_index);}
-    __fast_inline void write(const bool & val){instance.writeByIndex(pin_index, val);}
+    __fast_inline void write(const bool val){instance.writeByIndex(pin_index, val);}
     __fast_inline bool read() const override {return instance.readByIndex(pin_index);}
 
     __fast_inline GpioVirtual & operator = (const bool _val) override {write(_val); return *this;}
