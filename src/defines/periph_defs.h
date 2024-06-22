@@ -133,6 +133,10 @@
     #define I2C1_Port portB
     #define I2C1_SCL_Pin GPIO_Pin_6
     #define I2C1_SDA_Pin GPIO_Pin_7
+
+    #define I2C1_SCL_Gpio portB[6]
+    #define I2C1_SDA_Gpio portB[7]
+
     #define I2C1_REMAP GPIO_Remap_I2C1
 #endif
 #endif
