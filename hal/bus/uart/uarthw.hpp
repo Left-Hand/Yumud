@@ -1,5 +1,4 @@
-#ifndef __UARTHW_HPP__
-#define __UARTHW_HPP__
+#pragma once
 
 #include "uart.hpp"
 #include "hal/dma/dma.hpp"
@@ -102,5 +101,3 @@ extern "C" __interrupt void USART6_IRQHandler(void);
 extern UartHw uart7;
 extern "C" __interrupt void UART7_IRQHandler(void);
 #endif
-
-#endif /* UARTHW_HPP */

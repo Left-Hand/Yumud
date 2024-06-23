@@ -1,6 +1,4 @@
-#ifndef __EXTI_HPP__
-
-#define __EXTI_HPP__
+#pragma once
 
 #include "sys/platform.h"
 #include "hal/nvic/nvic.hpp"
@@ -187,4 +185,3 @@ __interrupt void EXTI4_IRQHandler(void);
 __interrupt void EXTI9_5_IRQHandler(void);
 __interrupt void EXTI15_10_IRQHandler(void);
 }
-#endif
