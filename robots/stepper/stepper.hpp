@@ -427,13 +427,12 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(+run_status == +RunStatus::ACTIVE) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, speed_ctrl.targ_current_256x, speed_ctrl.delta, speed_ctrl.error);
+        if(+run_status == +RunStatus::ACTIVE) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
         delay(1);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
         // RUN_DEBUG(est_pos, est_speed, run_current, run_elecrad);
-        static String temp_str = "";
 
         // bool led_status = (millis() / 200) % 2;
         // bled = led_status;

@@ -93,7 +93,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         static SpeedEstimator speed_estmator;
         est_cnt++;
         if(est_cnt%est_devider == 0){ // est happens
-            est_speed = (speed_estmator.update(raw_pos) + est_speed * 63) >> 6;
+            est_speed = (speed_estmator.update(raw_pos) + est_speed * 255) >> 8;
             // est_speed = speed_estmator.update(raw_pos);
             // if(true){
             //     switch(CTZ(MAX(int(abs(est_speed_new)), 1))){

@@ -23,9 +23,11 @@ void stepper_tb(IOStream & logger){
         // real_t temp = sin(2 * t);
         // temp += 10 * sign(temp);
         // stp.setTargetSpeed(20 + temp);
-        stp.setTargetSpeed(20 * sin(6*t));
-        // stp.setTargetSpeed(CLAMP(60 * sin(3 * t), 0, 30));
-        // stp.setTargetSpeed((4 << (int(4 * t) % 3)));
+        // stp.setTargetSpeed(20 * sin(6*t));
+        // stp.setTargetSpeed(4 + 2 * sin(64*t));
+        // stp.setTargetSpeed(-CLAMP(60 * sin(2 * t), 4, 30));
+        stp.setTargetSpeed((5 << (int(2 * t) % 4)));
+        // stp.setTargetSpeed(20);
         // switch(int(t)){
 
         // real_t _t = fmod(t * 3, 6);
