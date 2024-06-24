@@ -29,6 +29,23 @@ namespace TimerUtils{
         Break = TIM_IT_Break,
     };
 
+    
+    enum class BdtrLockLevel:uint16_t{
+        Off = TIM_LOCKLevel_OFF,
+        Low = TIM_LOCKLevel_1,
+        Medium = TIM_LOCKLevel_2,
+        High = TIM_LOCKLevel_3
+    };
+
+    enum class OcMode:uint16_t{
+        Timing = TIM_OCMode_Timing,
+        Active = TIM_OCMode_Active,
+        Inactive = TIM_OCMode_Inactive,
+        Toggle = TIM_OCMode_Toggle,
+        UpValid = TIM_OCMode_PWM1,
+        DownValid = TIM_OCMode_PWM2
+    };
+
     bool isBasicTimer(const TIM_TypeDef * instance);
 
     bool isGenericTimer(const TIM_TypeDef * instance);

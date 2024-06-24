@@ -3,8 +3,6 @@
 #include "uart.hpp"
 #include "hal/dma/dma.hpp"
 
-static constexpr size_t rx_dma_buf_size = 64;
-static constexpr size_t tx_dma_buf_size = 64;
 
 class UartHw:public Uart{
 public:
@@ -36,6 +34,9 @@ protected:
 
     size_t rx_dma_buf_index;
     size_t tx_dma_buf_index;
+
+    static constexpr size_t rx_dma_buf_size = 64;
+    static constexpr size_t tx_dma_buf_size = 64;
 
     char tx_dma_buf[tx_dma_buf_size];
     char rx_dma_buf[rx_dma_buf_size];

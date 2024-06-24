@@ -24,8 +24,6 @@ public:
     using Callback = std::function<void(void)>;
 protected:
     CAN_TypeDef * instance;
-    void settleTxPin(const uint8_t remap);
-    void settleRxPin(const uint8_t remap);
 
     Gpio & getTxGpio();
     Gpio & getRxGpio();

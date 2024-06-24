@@ -20,14 +20,8 @@
 #define ENABLE 1
 #define DISABLE 0
 
-#define UART1_REMAP 0
-#define UART2_REMAP 1
-
-#define I2C1_REMAP 0
-#define I2C2_REMAP 0
 
 
-#define UART2_REMAP_ENABLE DISABLE
 
 #ifdef HAVE_UART1
     #define UART1_IT_PP 1
@@ -72,47 +66,27 @@
 
 
 #ifdef HAVE_SPI1
-    #define SPI1_REMAP_ENABLE ENABLE
 
-    #if SPI1_REMAP_ENABLE == ENABLE
-        #define SPI1_CS_Port portA
-        #define SPI1_CS_Pin GPIO_Pin_15
+    #if SPI1_REMAP == 0
+        #define SPI1_CS_Gpio portA[4]
+        #define SPI1_SCLK_Gpio portA[5]
+        #define SPI1_MISO_Gpio portA[6]
+        #define SPI1_MOSI_Gpio portA[7]
 
-        #define SPI1_Port portB
-        #define SPI1_SCLK_Port portB
-        #define SPI1_SCLK_Pin GPIO_Pin_3
-        #define SPI1_MISO_Port portB
-        #define SPI1_MISO_Pin GPIO_Pin_4
-        #define SPI1_MOSI_Port portB
-        #define SPI1_MOSI_Pin GPIO_Pin_5
-        #define SPI1_REMAP GPIO_Remap_SPI1
-    #else
-        #define SPI1_CS_Port GPIOA
-        #define SPI1_CS_Pin GPIO_Pin_4
-
-        #define SPI1_Port GPIOA
-        #define SPI1_SCLK_Port GPIOA
-        #define SPI1_SCLK_Pin GPIO_Pin_5
-        #define SPI1_MISO_Port GPIOA
-        #define SPI1_MISO_Pin GPIO_Pin_6
-        #define SPI1_MOSI_Port GPIOA
-        #define SPI1_MOSI_Pin GPIO_Pin_7
-        #define SPI1_REMAP GPIO_Remap_SPI1
+    #elif SPI1_REMAP == 1
+        #define SPI1_CS_Gpio portA[15]
+        #define SPI1_SCLK_Gpio portB[3]
+        #define SPI1_MISO_Gpio portB[4]
+        #define SPI1_MOSI_Gpio portB[5]
     #endif
 #endif
 
 
 #ifdef HAVE_SPI2
-    #define SPI2_CS_Port portB
-    #define SPI2_CS_Pin GPIO_Pin_12
-
-    #define SPI2_Port portB
-    #define SPI2_SCLK_Port portB
-    #define SPI2_SCLK_Pin GPIO_Pin_13
-    #define SPI2_MISO_Port portB
-    #define SPI2_MISO_Pin GPIO_Pin_14
-    #define SPI2_MOSI_Port portB
-    #define SPI2_MOSI_Pin GPIO_Pin_15
+    #define SPI2_CS_Gpio portB[12]
+    #define SPI2_SCLK_Gpio portB[13]
+    #define SPI2_MISO_Gpio portB[14]
+    #define SPI2_MOSI_Gpio portB[15]
 #endif
 
 
@@ -146,94 +120,100 @@
 
 
 #ifdef HAVE_TIM1
-    #define TIM1_CH1_Port portA
-    #define TIM1_CH1_Pin GPIO_Pin_8
-    #define TIM1_CH1N_Port portB
-    #define TIM1_CH1N_Pin GPIO_Pin_13
+    #if TIM1_REMAP == 0
+        #define TIM1_CH1_Gpio portA[8]
+        #define TIM1_CH1N_Gpio portB[13]
 
-    #define TIM1_CH2_Port portA
-    #define TIM1_CH2_Pin GPIO_Pin_9
-    #define TIM1_CH2N_Port portB
-    #define TIM1_CH2N_Pin GPIO_Pin_14
+        #define TIM1_CH2_Gpio portA[9]
+        #define TIM1_CH2N_Gpio portB[14]
 
-    #define TIM1_CH3_Port portA
-    #define TIM1_CH3_Pin GPIO_Pin_10
-    #define TIM1_CH3N_Port portB
-    #define TIM1_CH3N_Pin GPIO_Pin_15
+        #define TIM1_CH3_Gpio portA[10]
+        #define TIM1_CH3N_Gpio portB[15]
 
-    #define TIM1_CH4_Port portA
-    #define TIM1_CH4_Pin GPIO_Pin_11
+        #define TIM1_CH4_Gpio portA[11]
+    #elif TIM1_REMAP == 1
+        #define TIM1_CH1_Gpio portA[8]
+        #define TIM1_CH1N_Gpio portA[7]
+
+        #define TIM1_CH2_Gpio portA[9]
+        #define TIM1_CH2N_Gpio portB[0]
+
+        #define TIM1_CH3_Gpio portA[10]
+        #define TIM1_CH3N_Gpio portB[1]
+
+        #define TIM1_CH4_Gpio portA[11]
+    #elif TIM1_REMAP == 2
+        #error TIM1 remap 2 is preserved
+    #elif TIM1_REMAP == 3
+        #define TIM1_CH1_Gpio portE[9]
+        #define TIM1_CH1N_Gpio portE[8]
+
+        #define TIM1_CH2_Gpio portE[11]
+        #define TIM1_CH2N_Gpio portE[10]
+
+        #define TIM1_CH3_Gpio portE[13]
+        #define TIM1_CH3N_Gpio portE[12]
+
+        #define TIM1_CH4_Gpio portE[14]
+    #endif
 #endif
 
 
 #ifdef HAVE_TIM2
-    #if ((TIM2_REMAP == GPIO_FullRemap_TIM2) || (TIM2_REMAP == GPIO_PartialRemap1_TIM2))
-        #define TIM2_CH1_Port portA
-        #define TIM2_CH1_Pin GPIO_Pin_15
-
-        #define TIM2_CH2_Port portB
-        #define TIM2_CH2_Pin GPIO_Pin_3
-
-    #else
-        #define TIM2_CH1_Port portA
-        #define TIM2_CH1_Pin GPIO_Pin_0
-
-        #define TIM2_CH2_Port portA
-        #define TIM2_CH2_Pin GPIO_Pin_1
-    #endif
-
-    #if ((TIM2_REMAP == GPIO_FullRemap_TIM2) || (TIM2_REMAP == GPIO_PartialRemap2_TIM2))
-        #define TIM2_CH3_Port portB
-        #define TIM2_CH3_Pin GPIO_Pin_10
-
-        #define TIM2_CH4_Port portB
-        #define TIM2_CH4_Pin GPIO_Pin_11
-
-    #else
-        #define TIM2_CH3_Port GPIOA
-        #define TIM2_CH3_Pin GPIO_Pin_2
-
-        #define TIM2_CH4_Port GPIOA
-        #define TIM2_CH4_Pin GPIO_Pin_3
-
+    #if TIM2_REMAP == 0
+        #define TIM2_CH1_Gpio portA[0]
+        #define TIM2_CH2_Gpio portA[1]
+        #define TIM2_CH3_Gpio portA[2]
+        #define TIM2_CH4_Gpio portA[3]
+    #elif TIM2_REMAP == 1
+        #define TIM2_CH1_Gpio portA[15]
+        #define TIM2_CH2_Gpio portB[3]
+        #define TIM2_CH3_Gpio portA[2]
+        #define TIM2_CH4_Gpio portA[3]
+    #elif TIM2_REMAP == 2
+        #define TIM2_CH1_Gpio portA[0]
+        #define TIM2_CH2_Gpio portA[1]
+        #define TIM2_CH3_Gpio portB[10]
+        #define TIM2_CH4_Gpio portB[11]
+    #elif TIM2_REMAP == 3
+        #define TIM2_CH1_Gpio portA[15]
+        #define TIM2_CH2_Gpio portB[3]
+        #define TIM2_CH3_Gpio portB[10]
+        #define TIM2_CH4_Gpio portB[11]
     #endif
 #endif
 
 
 #ifdef HAVE_TIM3
-    #if TIM3_REMAP_ENABLE == ENABLE
-    #define TIM3_CH1_Port portB
-    #define TIM3_CH1_Pin GPIO_Pin_4
-
-    #define TIM3_CH2_Port portB
-    #define TIM3_CH2_Pin GPIO_Pin_5
-    #else
-    #define TIM3_CH1_Port portA
-    #define TIM3_CH1_Pin GPIO_Pin_6
-
-    #define TIM3_CH2_Port portA
-    #define TIM3_CH2_Pin GPIO_Pin_7
+    #if TIM3_REMAP == 0
+        #define TIM3_CH1_Gpio portA[6]
+        #define TIM3_CH2_Gpio portA[7]
+        #define TIM3_CH3_Gpio portB[0]
+        #define TIM3_CH4_Gpio portB[1]
+    #elif TIM3_REMAP == 1
+        #error TIM3 remap 1 is preserved
+    #elif TIM3_REMAP == 2
+        #define TIM3_CH1_Gpio portB[4]
+        #define TIM3_CH2_Gpio portB[5]
+        #define TIM3_CH3_Gpio portB[0]
+        #define TIM3_CH4_Gpio portB[1]
+    #elif TIM3_REMAP == 3
+        #error TIM3 remap 3 is imcomplete
     #endif
-    #define TIM3_CH3_Port portB
-    #define TIM3_CH3_Pin GPIO_Pin_0
-
-    #define TIM3_CH4_Port portB
-    #define TIM3_CH4_Pin GPIO_Pin_1
-
 #endif
 
 #ifdef HAVE_TIM4
-    #define TIM4_CH1_Port portB
-    #define TIM4_CH1_Pin GPIO_Pin_6
-
-    #define TIM4_CH2_Port portB
-    #define TIM4_CH2_Pin GPIO_Pin_7
-
-    #define TIM4_CH3_Port portB
-    #define TIM4_CH3_Pin GPIO_Pin_8
-
-    #define TIM4_CH4_Port portB
-    #define TIM4_CH4_Pin GPIO_Pin_9
+    #if TIM4_REMAP == 0
+        #define TIM4_CH1_Gpio portB[6]
+        #define TIM4_CH2_Gpio portB[7]
+        #define TIM4_CH3_Gpio portB[8]
+        #define TIM4_CH4_Gpio portB[9]
+    #elif TIM4_REMAP == 1
+        #define TIM4_CH1_Gpio portD[12]
+        #define TIM4_CH2_Gpio portD[13]
+        #define TIM4_CH3_Gpio portD[14]
+        #define TIM4_CH4_Gpio portD[15]
+    #endif
 #endif
 
 

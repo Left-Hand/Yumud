@@ -1,4 +1,4 @@
-#include "../can.hpp"
+#include "hal/can/can.hpp"
 #include "sys/debug/debug_inc.h"
 
 void can_tb(bool tx_role){

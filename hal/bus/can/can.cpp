@@ -37,7 +37,7 @@ static void CAN_IT_Init(CAN_TypeDef * instance){
     NvicRequest{1,2, CAN1_SCE_IRQn}.enable();
 }
 
-static void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
+[[maybe_unused]] static void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
     CanMsg rx_msg;
 
     if(CAN_MessagePending(instance, fifo_index) == 0) return;
@@ -73,11 +73,17 @@ __fast_inline static void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbo
 
 
 Gpio & Can::getTxGpio(){
+    #ifdef HAVE_CAN1
     return CAN1_TX_Gpio;
+    #endif
+    return GpioNull;
 }
 
 Gpio & Can::getRxGpio(){
+    #ifdef HAVE_CAN1
     return CAN1_RX_Gpio;
+    #endif
+    return GpioNull;
 }
 
 void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}

@@ -4,12 +4,11 @@
 
 void pca_tb(IOStream & logger){
     // LDS14 lds14(uart);
-    auto & i2c = i2c1;
-    // I2cSw i2csw = I2cSw(I2C1_SCL_Gpio, I2C1_SDA_Gpio);
-    // i2csw.init(0);
+    // auto & i2c = i2c1;
+    I2cSw i2c {portB[6], portB[7]};
     
     i2c.init(100000);
-    PCA9685 pca{I2cDrv{i2c, 0x80}};
+    PCA9685 pca{i2c};
     // lds14.run();
     pca.init();
 }
