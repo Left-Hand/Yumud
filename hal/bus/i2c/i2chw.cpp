@@ -7,7 +7,9 @@ void I2cHw::enableRcc(const bool en){
         #ifdef HAVE_I2C1
         case I2C1_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, en);
-            GPIO_PinRemapConfig(I2C1_REMAP, I2C1_REMAP_ENABLE);
+            if(I2C1_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
+            }
             break;
         #endif
 

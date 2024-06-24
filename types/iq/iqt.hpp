@@ -90,7 +90,9 @@ public:
         return *this;
     }
 
-    __fast_inline_constexpr iq_t operator*(const int other) const {
+    template<typename T>
+    requires std::is_integral_v<T>
+    __fast_inline_constexpr iq_t operator*(const T other) const {
         return iq_t(_iq(value * other));
     }
 
@@ -98,7 +100,9 @@ public:
         return *this * iq_t(other);
     }
 
-    __fast_inline_constexpr iq_t operator/(const int other) const {
+    template<typename T>
+    requires std::is_integral_v<T>
+    __fast_inline_constexpr iq_t operator/(const T other) const {
         return iq_t(_iq((value / other)));
     }
 
@@ -167,20 +171,20 @@ public:
         return bool(value);
     }
 
-    #define IQ_INT_TEMPLATE(op)\
+    #define IQ_TOINT_TEMPLATE(op)\
     __fast_inline_constexpr explicit operator op() const {\
         return op(_IQint(value));\
     }
 
-    IQ_INT_TEMPLATE(int);
-    IQ_INT_TEMPLATE(int8_t);
-    IQ_INT_TEMPLATE(int16_t);
-    IQ_INT_TEMPLATE(int32_t);
-    IQ_INT_TEMPLATE(uint8_t);
-    IQ_INT_TEMPLATE(uint16_t);
-    IQ_INT_TEMPLATE(uint32_t);
+    IQ_TOINT_TEMPLATE(int);
+    IQ_TOINT_TEMPLATE(int8_t);
+    IQ_TOINT_TEMPLATE(int16_t);
+    IQ_TOINT_TEMPLATE(int32_t);
+    IQ_TOINT_TEMPLATE(uint8_t);
+    IQ_TOINT_TEMPLATE(uint16_t);
+    IQ_TOINT_TEMPLATE(uint32_t);
 
-    #undef IQ_INT_TEMPLATE
+    #undef IQ_TOINT_TEMPLATE
 
     __fast_inline_constexpr explicit operator float() const{
         if(std::is_constant_evaluated()){
@@ -218,6 +222,12 @@ IQ_OP_TEMPLATE(type, /)\
 IQ_OPS_TEMPLATE(int);
 IQ_OPS_TEMPLATE(float);
 IQ_OPS_TEMPLATE(double);
+// IQ_OPS_TEMPLATE(uint8_t);
+// IQ_OPS_TEMPLATE(uint16_t);
+// IQ_OPS_TEMPLATE(uint32_t);
+// IQ_OPS_TEMPLATE(int8_t);
+// IQ_OPS_TEMPLATE(int16_t);
+// IQ_OPS_TEMPLATE(int32_t);
 
 
 #define IQ_BINA_TEMPLATE(type, op)\
@@ -310,7 +320,7 @@ __fast_inline_constexpr iq_t sqrt(const iq_t iq){
     }
 }
 
-__fast_inline_constexpr iq_t abs(const iq_t iq) {return long(iq.value) > 0 ? iq : -iq;}
+__fast_inline_constexpr iq_t abs(const iq_t iq) {return iq_t(_iq(iq.value & 0x7FFFFFFF));}
 
 __fast_inline_constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
 
