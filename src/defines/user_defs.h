@@ -8,7 +8,7 @@
 #define USE_IQ
 
 // #define USE_DOUBLE
-#define IQ_USE_LOG
+// #define IQ_USE_LOG
 #define USE_STDMATH
 #define EXTRA_IQ
 // #define STRICT_IQ

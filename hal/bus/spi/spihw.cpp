@@ -144,7 +144,7 @@ void SpiHw::enableRxIt(const bool en){
 
 }
 void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
-    preinit();
+    // preinit();
     txMethod = tx_method;
     rxMethod = rx_method;
 	enableRcc();
