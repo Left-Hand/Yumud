@@ -39,8 +39,10 @@ namespace StepperEnums{
         WARN
     )
 
-    BETTER_ENUM(CtrlType, uint8_t,     
-        POSITION = 0,
+    BETTER_ENUM(CtrlType, uint8_t, 
+        VECTOR,    
+        POSITION,
+        TRAPEZOID,
         SPEED
     )
 
