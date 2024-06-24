@@ -14,7 +14,7 @@ Can can1{CAN1};
 #endif
 
 
-void CAN_IT_Init(CAN_TypeDef * instance){
+static void CAN_IT_Init(CAN_TypeDef * instance){
     //tx interrupt
     /****************************************/
     CAN_ClearITPendingBit(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1);
@@ -37,7 +37,7 @@ void CAN_IT_Init(CAN_TypeDef * instance){
     NvicRequest{1,2, CAN1_SCE_IRQn}.enable();
 }
 
-void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
+static void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
     CanMsg rx_msg;
 
     if(CAN_MessagePending(instance, fifo_index) == 0) return;
@@ -46,7 +46,7 @@ void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
     pending_rx_msgs.addData(rx_msg);
 }
 
-__fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
+__fast_inline constexpr static uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
     switch(mbox){
     case 0:
         return CAN_TSTATR_RQCP0;
@@ -61,53 +61,23 @@ __fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
 }
 
 
-__fast_inline bool CAN_Mailbox_Done(CAN_TypeDef* CANx, const uint8_t mbox){
+__fast_inline static bool CAN_Mailbox_Done(const CAN_TypeDef* CANx, const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     return ((CANx->TSTATR & TSTATR_FLAG) == TSTATR_FLAG);
 }
 
-__fast_inline void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
+__fast_inline static void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     CANx->TSTATR = TSTATR_FLAG;
 }
 
-void Can::settleTxPin(const uint8_t remap){
 
-    #ifdef HAVE_CAN1
-    switch(remap){
-        case 0:
-        {
-            Gpio & gpio = portA[(Pin)CAN1_TX_RM0_Pin];
-            gpio.afpp();
-            break;
-        }
-        case 1:
-        {
-            Gpio & gpio = portB[(Pin)CAN1_TX_RM1_Pin];
-            gpio.afpp();
-            break;
-        }
-    }
-    #endif
+Gpio & Can::getTxGpio(){
+    return CAN1_TX_Gpio;
 }
 
-void Can::settleRxPin(const uint8_t remap){
-    #ifdef HAVE_CAN1
-    switch(remap){
-        case 0:
-        {
-            Gpio & gpio = portA[(Pin)CAN1_RX_RM0_Pin];
-            gpio.afpp();
-            break;
-        }
-        case 1:
-        {
-            Gpio & gpio = portB[(Pin)CAN1_RX_RM1_Pin];
-            gpio.afpp();
-            break;
-        }
-    }
-    #endif
+Gpio & Can::getRxGpio(){
+    return CAN1_RX_Gpio;
 }
 
 void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
@@ -116,8 +86,11 @@ void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
 void Can::init(const BaudRate baudRate, const CanFilter & filter){
     uint8_t remap = 1;
 
-    settleTxPin(remap);
-    settleRxPin(remap);
+    auto & txGpio = getTxGpio();
+    auto & rxGpio = getRxGpio();
+
+    txGpio.afpp();
+    rxGpio.afpp();
 
     switch(remap){
     case 0:

@@ -20,59 +20,53 @@
 #define ENABLE 1
 #define DISABLE 0
 
-#define UART1_REMAP GPIO_Remap_USART1
-#define UART1_REMAP_ENABLE DISABLE
+#define UART1_REMAP 0
+#define UART2_REMAP 1
+
+#define I2C1_REMAP 0
+#define I2C2_REMAP 0
+
+
 #define UART2_REMAP_ENABLE DISABLE
 
 #ifdef HAVE_UART1
+    #define UART1_IT_PP 1
+    #define UART1_IT_SP 0
+
     #define UART1_TX_DMA_CH dma1Ch4
     #define UART1_RX_DMA_CH dma1Ch5
 
-    #if (UART1_REMAP_ENABLE == ENABLE)
-    #define UART1_TX_Port portB
-    #define UART1_TX_Pin GPIO_Pin_6
+    #if UART1_REMAP == 0
 
-    #define UART1_RX_Port portB
-    #define UART1_RX_Pin GPIO_Pin_7
+    #define UART1_TX_Gpio portA[9]
+    #define UART1_RX_Gpio portA[10]
 
-    #else
-    #define UART1_TX_Port portA
-    #define UART1_TX_Pin GPIO_Pin_9
+    #elif UART1_REMAP == 1
 
-    #define UART1_RX_Port portA
-    #define UART1_RX_Pin GPIO_Pin_10
+    #define UART1_TX_Gpio portB[6]
+    #define UART1_RX_Gpio portB[7]
 
-    #define UART1_IT_PP 1
-    #define UART1_IT_SP 0
     #endif
 #endif
 
 
 #ifdef HAVE_UART2
+    #define UART2_IT_PP 1
+    #define UART2_IT_SP 1
+
     #define UART2_TX_DMA_CH dma1Ch7
     #define UART2_RX_DMA_CH dma1Ch6
 
-    #ifdef UART1_REMAP_ENABLE
-    #define UART2_TX_Port portA
-    #define UART2_TX_Pin GPIO_Pin_2
+    #if UART2_REMAP == 0
 
-    #define UART2_RX_Port portA
-    #define UART2_RX_Pin GPIO_Pin_3
+    #define UART2_TX_Gpio portA[2]
+    #define UART2_RX_Gpio portA[3]
 
-    #define UART2_IT_PP 1
-    #define UART2_IT_SP 1
-    #define UART2_REMAP GPIO_Remap_USART2
-    #else
+    #elif UART2_REMAP == 1
 
-    #define UART2_TX_Port portD
-    #define UART2_TX_Pin GPIO_Pin_5
+    #define UART2_TX_Gpio portD[5]
+    #define UART2_RX_Gpio portD[6]
 
-    #define UART2_RX_Port portD
-    #define UART2_RX_Pin GPIO_Pin_6
-
-    #define UART2_IT_PP 1
-    #define UART2_IT_SP 1
-    #define UART2_REMAP GPIO_Remap_USART2
     #endif
 #endif
 
@@ -124,29 +118,32 @@
 
 
 #ifdef HAVE_I2C1
-#if (I2C1_REMAP_ENABLE == ENABLE)
-    #define I2C1_Port portB
-    #define I2C1_SCL_Pin GPIO_Pin_8
-    #define I2C1_SDA_Pin GPIO_Pin_9
-    #define I2C1_REMAP GPIO_Remap_I2C1
-#else
-    #define I2C1_Port portB
-    #define I2C1_SCL_Pin GPIO_Pin_6
-    #define I2C1_SDA_Pin GPIO_Pin_7
+    #if I2C1_REMAP == 0
 
-    #define I2C1_SCL_Gpio portB[6]
-    #define I2C1_SDA_Gpio portB[7]
+        #define I2C1_SCL_Gpio portB[6]
+        #define I2C1_SDA_Gpio portB[7]
 
-    #define I2C1_REMAP GPIO_Remap_I2C1
-#endif
+    #elif I2C1_REMAP == 1
+
+        #define I2C1_SCL_Gpio portB[8]
+        #define I2C1_SDA_Gpio portB[9]
+
+    #endif
 #endif
 
 
 #ifdef HAVE_I2C2
-    #define I2C2_Port portB
-    #define I2C2_SCL_Pin GPIO_Pin_10
-    #define I2C2_SDA_Pin GPIO_Pin_11
+
+    #if I2C2_REMAP == 0
+
+    #define I2C2_SCL_Gpio portB[10]
+    #define I2C2_SDA_Gpio portB[11]
+
+    #endif
 #endif
+
+
+
 
 #ifdef HAVE_TIM1
     #define TIM1_CH1_Port portA
@@ -241,61 +238,39 @@
 
 
 #ifdef HAVE_CAN1
-    #define CAN1_TX_RM0_Port GPIOA
-    #define CAN1_RX_RM0_Port GPIOA
-    #define CAN1_TX_RM0_Pin GPIO_Pin_12
-    #define CAN1_RX_RM0_Pin GPIO_Pin_11
+    #define CAN1_RM0_TX_Gpio portA[12]
+    #define CAN1_RM0_RX_Gpio portA[11]
+    #define CAN1_RM2_TX_Gpio portB[9]
+    #define CAN1_RM2_RX_Gpio portB[8]
 
-    #define CAN1_TX_RM1_Port GPIOB
-    #define CAN1_RX_RM1_Port GPIOB
-    #define CAN1_TX_RM1_Pin GPIO_Pin_9
-    #define CAN1_RX_RM1_Pin GPIO_Pin_8
-
-    #if CAN1_REMAP_ENABLE == ENABLE
-        #define CAN1_Port GPIOB
-        #define CAN1_TX_Port GPIOB
-        #define CAN1_RX_Port GPIOB
-        #define CAN1_TX_Pin GPIO_Pin_9
-        #define CAN1_RX_Pin GPIO_Pin_8
-
-        #define CAN1_REMAP GPIO_Remap1_CAN1
-    #else
-        #define CAN1_Port GPIOA
-        #define CAN1_TX_Pin GPIO_Pin_12
-        #define CAN1_RX_Pin GPIO_Pin_11
-        #define CAN1_REMAP GPIO_Remap1_CAN1
-
+    #if CAN1_REMAP == 0
+        #define CAN1_TX_Gpio CAN1_RM0_TX_Gpio
+        #define CAN1_RX_Gpio CAN1_RM0_RX_Gpio
+    #elif CAN1_REMAP == 2
+        #define CAN1_TX_Gpio CAN1_RM2_TX_Gpio
+        #define CAN1_RX_Gpio CAN1_RM2_RX_Gpio
     #endif
 #endif
 
 #ifdef HAVE_OPA2
-    #define OPA2_O0_Pin GPIO_Pin_2
-    #define OPA2_O1_Pin GPIO_Pin_4
-    #define OPA2_N1_Pin GPIO_Pin_5
-    #define OPA2_P1_Pin GPIO_Pin_7
-    #define OPA2_O0_Port GPIOA
-    #define OPA2_O1_Port GPIOA
-    #define OPA2_N1_Port GPIOA
-    #define OPA2_P1_Port GPIOA
-    #define OPA2_P0_Pin GPIO_Pin_14
-    #define OPA2_N0_Pin GPIO_Pin_10
-    #define OPA2_N0_Port GPIOB
-    #define OPA2_P0_Port GPIOB
+    #define OPA2_N0_Gpio portB[10]
+    #define OPA2_P0_Gpio portB[14]
+    #define OPA2_O0_Gpio portA[2]
+
+    #define OPA2_N1_Gpio portA[5]
+    #define OPA2_P1_Gpio portA[7]
+    #define OPA2_O1_Gpio portA[4]
+
 #endif
 
 #ifdef HAVE_OPA1
-    #define OPA1_O0_Pin GPIO_Pin_3
-    #define OPA1_N1_Pin GPIO_Pin_6
-    #define OPA1_N1_Port GPIOA
-    #define OPA1_O0_Port GPIOA
-    #define OPA1_P1_Pin GPIO_Pin_0
-    #define OPA1_O1_Pin GPIO_Pin_1
-    #define OPA1_N0_Pin GPIO_Pin_11
-    #define OPA1_P0_Pin GPIO_Pin_15
-    #define OPA1_P1_Port GPIOB
-    #define OPA1_O1_Port GPIOB
-    #define OPA1_N0_Port GPIOB
-    #define OPA1_P0_Port GPIOB
+    #define OPA1_N0_Gpio portB[11]
+    #define OPA1_P0_Gpio portB[15]
+    #define OPA1_O0_Gpio portA[3]
+
+    #define OPA1_N1_Gpio portA[6]
+    #define OPA1_P1_Gpio portB[0]
+    #define OPA1_O1_Gpio portB[1]
 #endif
 
 #endif

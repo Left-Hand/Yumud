@@ -338,7 +338,7 @@ uint8_t    CAN_TransmitStatus(CAN_TypeDef *CANx, uint8_t TransmitMailbox);
 void       CAN_CancelTransmit(CAN_TypeDef *CANx, uint8_t Mailbox);
 void       CAN_Receive(CAN_TypeDef *CANx, uint8_t FIFONumber, CanRxMsg *RxMessage);
 void       CAN_FIFORelease(CAN_TypeDef *CANx, uint8_t FIFONumber);
-uint8_t    CAN_MessagePending(CAN_TypeDef *CANx, uint8_t FIFONumber);
+uint8_t    CAN_MessagePending(const CAN_TypeDef *CANx, uint8_t FIFONumber);
 uint8_t    CAN_OperatingModeRequest(CAN_TypeDef *CANx, uint8_t CAN_OperatingMode);
 uint8_t    CAN_Sleep(CAN_TypeDef *CANx);
 uint8_t    CAN_WakeUp(CAN_TypeDef *CANx);
