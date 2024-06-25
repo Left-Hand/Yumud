@@ -15,31 +15,27 @@
 
 struct _iq{
     _iq16 value = 0;
-    __fast_inline_constexpr _iq(const _iq16 & _value) : value(_value){;}
+    __fast_inline_constexpr explicit _iq(const _iq16 & _value) : value(_value){;}
     __fast_inline_constexpr operator _iq16() const{return value;}
 };
 
 struct iq_t{
 public:
-    _iq value = 0;
+    _iq value = _iq(0);
 
     __fast_inline_constexpr iq_t():value(0){;}
     __fast_inline_constexpr explicit iq_t(const _iq iqValue): value(iqValue.value){;}
 
-    __fast_inline_constexpr iq_t(const int intValue) : value(_IQ(intValue)) {;}
+    // __fast_inline_constexpr iq_t(const int intValue) : value(_IQ(intValue)) {;}
 
-    __fast_inline_constexpr iq_t(const int8_t intValue) : value(_IQ(intValue)) {;}
-    __fast_inline_constexpr iq_t(const int16_t intValue) : value(_IQ(intValue)) {;}
-    __fast_inline_constexpr iq_t(const int32_t intValue) : value(_IQ(intValue)) {;}
-
-    __fast_inline_constexpr iq_t(const uint8_t intValue) : value(_IQ(intValue)) {;}
-    __fast_inline_constexpr iq_t(const uint16_t intValue) : value(_IQ(intValue)) {;}
-    __fast_inline_constexpr iq_t(const uint32_t intValue) : value(_IQ(intValue)) {;}
+    template<typename T>
+    requires std::is_integral_v<T>
+    __fast_inline_constexpr iq_t(const T intValue) : value(_IQ(intValue)) {;}
 
     __fast_inline_constexpr iq_t(const float floatValue) : value(_IQ(floatValue)) {;}
     __fast_inline_constexpr iq_t(const double doubleValue) : value(_IQ(doubleValue)) {;}
     
-    explicit iq_t(const String & str);
+    __no_inline explicit iq_t(const String & str);
 
     __fast_inline_constexpr iq_t operator+(const iq_t other) const {
         return iq_t(_iq(value + other.value));
@@ -71,12 +67,12 @@ public:
     }
 
     __fast_inline_constexpr iq_t& operator+=(const iq_t other) {
-        value = value + other.value;
+        value = _iq(value + other.value);
         return *this;
     }
 
     __fast_inline_constexpr iq_t& operator-=(const iq_t other) {
-        value = value - other.value;
+        value = _iq(value - other.value);
         return *this;
     }
 
@@ -320,7 +316,7 @@ __fast_inline_constexpr iq_t sqrt(const iq_t iq){
     }
 }
 
-__fast_inline_constexpr iq_t abs(const iq_t iq) {return iq_t(_iq(iq.value & 0x7FFFFFFF));}
+__fast_inline_constexpr iq_t abs(const iq_t iq) {return iq_t(_iq(ABS(iq.value)));}
 
 __fast_inline_constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
 
@@ -409,13 +405,13 @@ __fast_inline_constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 #elif(GLOBAL_Q < 16)
     qv.value = data >> (16 - GLOBAL_Q);
 #else
-    qv.value = data;
+    qv.value = _iq(data);
 #endif
 
 }
 
 __fast_inline_constexpr void s16_to_uni(const int16_t data, iq_t & qv){
-    qv.value = data > 0 ? data : -((_iq)-data);
+    qv.value = data > 0 ? _iq(data) : _iq(-(_iq(-data)));
 }
 
 __fast_inline_constexpr void uni_to_u16(const iq_t qv, uint16_t & data){

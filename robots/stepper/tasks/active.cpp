@@ -14,6 +14,10 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     else run_elecrad = odo.position2rad(target);
 
     setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
+    // setCurrent(2, est_elecrad + PI / 2);
+
+
+
     // coilB = 0.1 * sin(run_elecrad);
     // coilA = 0.1 * cos(run_elecrad);
     // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.02, run_elecrad + elecrad_zerofix);//n = 2
@@ -67,7 +71,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
         switch(ctrl_type){
             case CtrlType::VECTOR:
-                result = {0.4, 0};
+                result = {0.6, 0};
                 break;
             case CtrlType::POSITION:
                 result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
@@ -93,7 +97,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         static SpeedEstimator speed_estmator;
         est_cnt++;
         if(est_cnt%est_devider == 0){ // est happens
-            est_speed = (speed_estmator.update(raw_pos) + est_speed * 255) >> 8;
+            est_speed = (speed_estmator.update(raw_pos) + est_speed * 31) >> 5;
             // est_speed = speed_estmator.update(raw_pos);
             // if(true){
             //     switch(CTZ(MAX(int(abs(est_speed_new)), 1))){

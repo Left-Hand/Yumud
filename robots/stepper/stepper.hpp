@@ -68,10 +68,10 @@ protected:
 
 
     void setCurrent(const real_t _current, const real_t _elecrad){
-        real_t current = -_current;
+        // real_t current = -_current;
 
-        real_t cA = cos(_elecrad) * current;
-        real_t cB = sin(_elecrad) * current;
+        real_t cA = cos(_elecrad) * _current;
+        real_t cB = sin(_elecrad) * _current;
         coilA = cA;
         coilB = cB;
     }
@@ -302,10 +302,14 @@ public:
             if((+new_status == +RunStatus::EXIT)){
                 switch(run_status){
                     case RunStatus::CHECK:
+                        panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
                         cali_task(true);
                         break;
                     case RunStatus::CALI:
-                        if(skip_tone) active_task(true);
+                        if(skip_tone){
+                            panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
+                            active_task(true);
+                        }
                         else beep_task(true);
                         break;
                     case RunStatus::BEEP:
@@ -320,7 +324,7 @@ public:
                     case RunStatus::WARN:
                         break;
                     default:
-                        break;
+                    break;
                 }
             }else{
                 switch(run_status){
@@ -358,13 +362,13 @@ public:
         
         logger.setEps(4);
 
-        timer1.init(F_CPU / foc_freq, 1, Mode::CenterAlignedDownTrig);
+        timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
         timer1.enableArrSync();
-        timer3.init(16384);
+        timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
+        timer3.enableArrSync();
 
         coilA.init();
         coilB.init();
-
 
         spi1.init(18000000);
         spi1.bindCsPin(portA[15], 0);
@@ -375,25 +379,28 @@ public:
 
         panel_led.init();
 
-        timer1.enableIt(IT::Update, NvicPriority(0, 0));
-        timer1.bindCb(IT::Update, [&](){this->tick();});
+        timer3.enableIt(IT::Update, NvicPriority(0, 0));
+        timer3.bindCb(IT::Update, [&](){this->tick();});
 
-        panel_led.setPeriod(200);
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        panel_led.setPeriod(400);
+        panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Squ);
     }
 
     void setTargetSpeed(const real_t speed){
         target = speed;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
         ctrl_type = CtrlType::SPEED;
     }
 
     void setTargetPosition(const real_t pos){
         target = pos;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
         ctrl_type = CtrlType::POSITION;
     }
 
     void setTagretTrapezoid(const real_t pos){
         target = pos;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
         ctrl_type = CtrlType::TRAPEZOID;
     }
 
@@ -410,6 +417,10 @@ public:
 
     void run() override{
         Cli::run();
+        panel_led.run();
+    }
+
+    void report(){
         // real_t total = real_t(3);
         // static real_t freq = real_t(10);
         // static real_t freq_dir = real_t(1);
@@ -427,8 +438,8 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(+run_status == +RunStatus::ACTIVE) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
-        delay(1);
+        if(+run_status == +RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        // delay(1);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
@@ -436,11 +447,6 @@ public:
 
         // bool led_status = (millis() / 200) % 2;
         // bled = led_status;
-        
-        panel_led.run();
-
-
-        Sys::Clock::reCalculateTime();
     }
 
 

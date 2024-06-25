@@ -15,6 +15,7 @@
 
 
 static constexpr uint32_t foc_freq = 36000;
+static constexpr uint32_t chopper_freq = 36000;
 static constexpr uint32_t est_freq = foc_freq / 16;
 static constexpr uint32_t est_devider = foc_freq / est_freq;
 
@@ -31,12 +32,13 @@ namespace StepperEnums{
         INIT,
         INACTIVE,
         ACTIVE,
+        IDLE,
         CHECK,
         BEEP,
         CALI,
         ERROR,
-        EXIT,
-        WARN
+        WARN,
+        EXIT
     )
 
     BETTER_ENUM(CtrlType, uint8_t, 

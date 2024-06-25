@@ -73,7 +73,6 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     // };
 
     {
-
         switch(sub_state){
             case SubState::ALIGN:
                 setCurrent(real_t(align_current), real_t(0));

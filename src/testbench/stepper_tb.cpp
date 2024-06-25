@@ -7,15 +7,19 @@ void stepper_tb(IOStream & logger){
     stp.setCurrentClamp(1.2);
     while(true){
         stp.run();
-        // stp.setTagretVector(0.005 + 0.02 * sin(t));
-        // stp.setTagretVector(0.1 * t);
+        // stp.setTagretVector(2 * sin(t));
+        // stp.setTagretVector(2 * t);
+        
+        stp.report();
+        Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(0.005 + 0.02 * sin(t));
-        // stp.setTargetPosition(1 * sin(t));
-        // stp.setTargetPosition(70 * floor(t/4));
+        // stp.setTargetPosition(2 * sin(8 * t));
+        // stp.setTargetPosition(20 * floor(t/3));
         // stp.setTagretTrapezoid(70 * floor(t / 3));
 
         // stp.setTargetPosition(0.2 * floor(t*32));
+        stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
         // stp.setTargetPosition(16 * sin(t));
         // stp.setTargetPosition(t/8);
         // stp.setTargetPosition(-t/8);
@@ -23,10 +27,11 @@ void stepper_tb(IOStream & logger){
         // real_t temp = sin(2 * t);
         // temp += 10 * sign(temp);
         // stp.setTargetSpeed(20 + temp);
-        // stp.setTargetSpeed(20 * sin(6*t));
-        // stp.setTargetSpeed(4 + 2 * sin(64*t));
-        // stp.setTargetSpeed(-CLAMP(60 * sin(2 * t), 4, 30));
-        stp.setTargetSpeed((5 << (int(2 * t) % 4)));
+        // stp.setTargetSpeed(sin(t));
+        // stp.setTargetSpeed(5);
+        // stp.setTargetSpeed(2 * sin(6*t));
+        // stp.setTargetSpeed(CLAMP(60 * sin(2 * t), 10, 35));
+        // stp.setTargetSpeed((5 << (int(2 * t) % 4)));
         // stp.setTargetSpeed(20);
         // switch(int(t)){
 
