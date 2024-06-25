@@ -157,35 +157,56 @@ void UartHw::enableRcc(const bool en){
         #ifdef HAVE_UART1
         case USART1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART1, en);
-            GPIO_PinRemapConfig(UART1_REMAP, UART1_REMAP_ENABLE);
+            if(UART1_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_USART1, true);
+            }
             break;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, en);
-            GPIO_PinRemapConfig(UART2_REMAP, UART2_REMAP_ENABLE);
+            if(UART2_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_USART2, true);
+            }
             break;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, en);
+            if(UART3_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_USART3, true);
+            }
             break;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART4, en);
-            GPIO_PinRemapConfig(UART4_REMAP, UART4_REMAP_ENABLE);
+            if(UART4_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_UART4, true);
+            }
             break;
         #endif
         #ifdef HAVE_UART5
         case UART5_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART5, en);
+            if(UART5_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_UART5, true);
+            }
+        #endif
+        #ifdef HAVE_UART6
+        case UART6_BASE:
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_USART6, en);
+            if(UART6_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_USART6, true);
+            }
             break;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en);
-            GPIO_PinRemapConfig(UART7_REMAP, UART7_REMAP_ENABLE);
+            if(UART7_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_UART7, true);
+            }
             break;
         #endif
         default:
@@ -195,132 +216,105 @@ void UartHw::enableRcc(const bool en){
 
 
 Gpio & UartHw::getRxPin(){
-    Port * gpio_instance = nullptr;
-    uint16_t gpio_pin = 0;
-
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            gpio_instance = &UART1_TX_Port;
-            gpio_pin = UART1_RX_Pin;
-            break;
+            return UART1_RX_Gpio;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            gpio_instance = &UART2_RX_Port;
-            gpio_pin = UART2_RX_Pin;
-            break;
+            return UART2_RX_Gpio;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-            gpio_instance = UART3_RX_Port;
-            gpio_pin = UART3_RX_Pin;
-            break;
+            return UART3_RX_Gpio;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            gpio_instance = &UART4_RX_Port;
-            gpio_pin = UART4_RX_Pin;
-            break;
+            return UART4_RX_Gpio;
         #endif
         #ifdef HAVE_UART5
         case UART5_BASE:
-            gpio_instance = UART5_RX_Port;
-            gpio_pin = UART5_RX_Pin;
-            break;
+            return UART5_RX_Gpio;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-            gpio_instance = &UART7_RX_Port;
-            gpio_pin = UART7_RX_Pin;
-            break;
+            return UART7_RX_Gpio;
         #endif
-        default:
-            return portA[Pin::None];
-    }
 
-    return (*gpio_instance)[(Pin)gpio_pin];
+        default:
+            return GpioNull;
+    }
 }
 
 Gpio & UartHw::getTxPin(){
-    Port * gpio_instance = nullptr;
-    uint16_t gpio_pin = 0;
-
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-                gpio_instance = &portB;
-                gpio_pin = UART1_TX_Pin;
-                break;
+            return UART1_TX_Gpio;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-                gpio_instance = &UART2_TX_Port;
-                gpio_pin = UART2_TX_Pin;
-                break;
+            return UART2_TX_Gpio;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-                gpio_instance = UART2_TX_Port;
-                gpio_pin = UART2_TX_Pin;
-                break;
+            return UART3_TX_Gpio;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            gpio_instance = &UART4_TX_Port;
-            gpio_pin = UART4_TX_Pin;
-            break;
+            return UART4_TX_Gpio;
+        #endif
+        #ifdef HAVE_UART5
+        case UART5_BASE:
+            return UART5_TX_Gpio;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-                gpio_instance = &UART7_TX_Port;
-                gpio_pin = UART7_TX_Pin;
-                break;
+            return UART7_TX_Gpio;
         #endif
         default:
-            break;
+            return GpioNull;
     }
-
-    return (*gpio_instance)[(Pin)gpio_pin];
 }
 
 void UartHw::enableIt(const bool en){
-    uint8_t irqch;
+    IRQn irq;
     uint8_t pp;
     uint8_t sp;
 
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            irqch = USART1_IRQn;
+            irq = USART1_IRQn;
             pp = UART1_IT_PP;
             sp = UART1_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            irqch = USART2_IRQn;
+            irq = USART2_IRQn;
             pp = UART2_IT_PP;
             sp = UART2_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-            irqch = USART3_IRQn;
+            irq = USART3_IRQn;
             pp = UART3_IT_PP;
             sp = UART3_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            irqch = UART4_IRQn;
+            irq = UART4_IRQn;
             pp = UART4_IT_PP;
             sp = UART4_IT_SP;
             break;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-            irqch = UART7_IRQn;
+            irq = UART7_IRQn;
             pp = UART7_IT_PP;
             sp = UART7_IT_SP;
 
@@ -330,7 +324,7 @@ void UartHw::enableIt(const bool en){
             return;
     }
 
-    NvicRequest(IRQn(irqch),pp, sp).enable();
+    NvicRequest(pp, sp, irq).enable();
 }
 
 void UartHw::invokeTxIt(){
@@ -430,7 +424,7 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
         txMethod = _txMethod;
         if(txMethod != CommMethod::None){
             Gpio & tx_pin = getTxPin();
-            tx_pin.OutAfPP();
+            tx_pin.afpp();
         }
         switch(txMethod){
             case CommMethod::Blocking:
@@ -454,7 +448,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
         rxMethod = _rxMethod;
         if(rxMethod != CommMethod::None){
             Gpio & rx_pin = getRxPin();
-            rx_pin.InPullUP();
+            rx_pin.inpu();
         }
         switch(rxMethod){
             case CommMethod::Blocking:

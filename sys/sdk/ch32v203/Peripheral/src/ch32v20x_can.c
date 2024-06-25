@@ -620,7 +620,7 @@ void CAN_FIFORelease(CAN_TypeDef* CANx, uint8_t FIFONumber)
  *
  * @return  message_pending: which is the number of pending message.
  */
-uint8_t CAN_MessagePending(CAN_TypeDef* CANx, uint8_t FIFONumber)
+uint8_t CAN_MessagePending(const CAN_TypeDef* CANx, uint8_t FIFONumber)
 {
   uint8_t message_pending=0;
 

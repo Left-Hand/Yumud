@@ -1,5 +1,4 @@
-#ifndef __SPI_SOFT_HPP__
-#define __SPI_SOFT_HPP__
+#pragma once
 
 #include "spi.hpp"
 
@@ -117,17 +116,14 @@ public:
 
     void init(){
         preinit();
-        mosi_pin.OutPP();
-        sclk_pin.OutPP();
+        mosi_pin.outpp();
+        sclk_pin.outpp();
 
         for(uint8_t i = 0; i < cs_pins.getSize(); i++){
             cs_pins.setModeByIndex(i, PinMode::OutPP);
         }
 
-        miso_pin.InFloating();
+        miso_pin.inflt();
     }
-
-
 };
 
-#endif

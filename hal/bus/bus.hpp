@@ -29,6 +29,10 @@ public:
         NO_CS_PIN
     };
 
+    enum Mode:uint8_t{
+        RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
+    };
+
     struct Error{
         ErrorType errorType = ErrorType::OK;
 
@@ -56,8 +60,11 @@ public:
     __fast_inline void end(){
         end_use();
     }
+
+
 protected:
-    int8_t m_lock;
+    Mode mode = TxRx;
+    int8_t m_lock = -1;
     int8_t * locker = nullptr;
 
     virtual Error lead(const uint8_t _address) = 0;
@@ -66,40 +73,42 @@ protected:
     void lock(const uint8_t & index){*locker = index >> 1;}
     void unlock(){*locker = -1;}
 
-    uint8_t wholock(){return *locker;}
+    uint8_t wholock(){
+        if(locker == nullptr) exit(1);
+        return *locker;
+    }
 
     virtual Error begin_use(const uint8_t & index = 0){
+        if(locker == nullptr) exit(1);
         *locker = index >> 1;
         return lead(index);
     }
-
 
     virtual void end_use(){
         trail();
         unlock();
     }
+
     virtual bool is_idle(){
+        if(locker == nullptr) exit(1);
         return (*locker >= 0 ? false : true);
     }
+
     virtual bool owned_by(const uint8_t & index = 0){
+        if(locker == nullptr) exit(1);
         return (*locker == (index >> 1));
     }
 
-    void preinit(){
-        m_lock = -1;
-        locker = &m_lock;
-    }
+    // void preinit(){
+    //     m_lock = -1;
+    //     locker = &m_lock;
+    // }
 public:
     virtual void configBitOrder(const bool msb){};
     virtual void configDataSize(const uint8_t data_size){};
     virtual void configBaudRate(const uint32_t baudRate) = 0;
 
-public:
-    enum Mode:uint8_t{
-        RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
-    };
-protected:
-    Mode mode = TxRx;
+    Bus():locker(&m_lock){;}
 };
 
 

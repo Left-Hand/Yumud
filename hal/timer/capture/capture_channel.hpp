@@ -19,8 +19,8 @@ public:
         #ifdef USE_IQ
         iq_t unit_value;
         iq_t period_value;
-        unit_value.value = unit;
-        period_value.value = period;
+        unit_value.value = _iq(unit);
+        period_value.value = _iq(period);
         #else
         float unit_value = unit;
         float period_value = period;
@@ -33,8 +33,8 @@ public:
         #ifdef USE_IQ
         iq_t pulse_value;
         iq_t period_value;
-        pulse_value.value = pulse;
-        period_value.value = period;
+        pulse_value.value = _iq(pulse);
+        period_value.value = _iq(period);
         iq_t ret = pulse_value/period_value;
         // iq_t ret = pulse_value/period_value;
         // if((pulse > (period - pulse)) ^ (ret.value < 0.5)) ret = 1 - ret;

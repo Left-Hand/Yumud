@@ -81,32 +81,26 @@ public:
 
     void puttexture_unsafe(const Rect2i & rect, const Grayscale * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
-        // for(size_t i = 0; i < size; i++){
-        //     writePixel(RGB565(color_ptr[i]));
-        // }
-                    interface.dc_gpio = DisplayInterfaceSpi::data_level;
-            if(!spi2.begin(0)){
-                spi2.configDataSize(16);
-                for(size_t i = 0; i < size; i++) spi2.write((uint16_t)RGB565(color_ptr[i]));
-                spi2.end();
-                spi2.configDataSize(8);
-            }
 
+        interface.dc_gpio = DisplayInterfaceSpi::data_level;
+        //TODO
+        // auto size = (size_t)rect.get_area();
+        // interface.writePool(color_ptr, size);
     }
 
     void puttexture_unsafe(const Rect2i & rect, const Binary * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
+        // auto size = (size_t)rect.get_area();
         // for(size_t i = 0; i < size; i++){
         //     writePixel(((uint8_t *)color_ptr)[i] ? 0xffff : 0);
         // }
             // interface.writeData()
             interface.dc_gpio = DisplayInterfaceSpi::data_level;
-            if(!spi2.begin(0)){
-                spi2.configDataSize(16);
-                for(size_t i = 0; i < size; i++) spi2.write((((const uint8_t *)color_ptr)[i] ? 0xffff : 0));
-            }
+            //TODO
+            // if(!spi2.begin(0)){
+            //     spi2.configDataSize(16);
+            //     for(size_t i = 0; i < size; i++) spi2.write((((const uint8_t *)color_ptr)[i] ? 0xffff : 0));
+            // }
     }
     void setFlipY(const bool & flip){modifyCtrl(flip, 7);}
     void setFlipX(const bool & flip){modifyCtrl(flip, 6);}

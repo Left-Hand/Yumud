@@ -76,7 +76,7 @@ void pmdc_test(){
 
     constexpr int closeloop_freq = 1000;
     Gpio & t_watch = portA[5];
-    t_watch.OutPP();
+    t_watch.outpp();
     timer4.init(closeloop_freq);
             real_t sense_uni;
     timer4.bindCb(Timer::IT::Update, [&](){

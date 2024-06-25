@@ -31,12 +31,12 @@ public:
             last.t = t;
             return x;
         }
-        real_t ret = forward(x, t - last.t);
+        real ret = forward(x, t - last.t);
         last.t = t;
         return ret;
     }
 
-    real_t forward(const real & x, const time & delta){
+    real forward(const real & x, const time & delta){
         if(!inited){
             init(x);
             return x;
@@ -45,6 +45,26 @@ public:
         real alpha = b / (b + 1);
         last.x = last.x + alpha * (x - last.x);
         return last.x;
+    }
+};
+
+template<typename real>
+class LowpassFilterZ_t{
+// protected:
+public:
+    real k;
+    real last;
+    bool inited = false;
+public:
+    LowpassFilterZ_t(const auto & cutoff_freq) : k(cutoff_freq), last(real()){;}
+
+    real update(const real & x){
+        if(!inited){
+            last = real();
+            inited = true;
+        }
+        last = last * k + (1-k) * x;
+        return last;
     }
 };
 

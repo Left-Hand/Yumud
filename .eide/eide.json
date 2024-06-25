@@ -55,7 +55,19 @@
         "thirdparty/lua/manual",
         "thirdparty/lua/testes",
         "thirdparty/lua/lua.c",
-        "thirdparty/lua/onelua.c"
+        "thirdparty/lua/onelua.c",
+        "src/testbench/adc_tb.cpp",
+        "src/testbench/can_tb.cpp",
+        "src/testbench/dma_tb.cpp",
+        "src/testbench/eeprom_tb.cpp",
+        "src/testbench/flash_tb.cpp",
+        "src/testbench/lua_tb.cpp",
+        "src/testbench/memory_tb.cpp",
+        "src/testbench/pmdc_tb.cpp",
+        "src/testbench/pwm_tb.cpp",
+        "src/testbench/temp_tb.cpp",
+        "src/testbench/temp_tb2.cpp",
+        "src/testbench/uart_tb.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -141,7 +153,6 @@
           "hal",
           "hal/bus/usb/cdc"
         ],
-        "sourceDirList": [],
         "defineList": [
           "WCH",
           "RISCV",
@@ -260,5 +271,5 @@
       }
     }
   },
-  "version": "3.3"
+  "version": "3.4"
 }

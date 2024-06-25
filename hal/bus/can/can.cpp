@@ -14,19 +14,19 @@ Can can1{CAN1};
 #endif
 
 
-void CAN_IT_Init(CAN_TypeDef * instance){
+static void CAN_IT_Init(CAN_TypeDef * instance){
     //tx interrupt
     /****************************************/
     CAN_ClearITPendingBit(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1);
     CAN_ITConfig(instance, CAN_IT_TME | CAN_IT_FMP0 | CAN_IT_FMP1, ENABLE);
 
-    NvicRequest{USB_HP_CAN1_TX_IRQn,1,6}.enable();
+    NvicRequest{1, 6, USB_HP_CAN1_TX_IRQn}.enable();
     //rx0 interrupt
 
-    NvicRequest{USB_LP_CAN1_RX0_IRQn,1,4}.enable();
+    NvicRequest{1, 4, USB_LP_CAN1_RX0_IRQn}.enable();
 
     //rx1 interrupt
-    NvicRequest{CAN1_RX1_IRQn,1,5}.enable();
+    NvicRequest{1, 5, CAN1_RX1_IRQn}.enable();
 
     CAN_ITConfig(instance, CAN_IT_ERR | CAN_IT_WKU
             | CAN_IT_SLK | CAN_IT_EWG | CAN_IT_EPV | CAN_IT_BOF
@@ -34,10 +34,10 @@ void CAN_IT_Init(CAN_TypeDef * instance){
 
     // CAN_ITConfig(instance, CAN_IT_ERR, DISABLE);
     //sce interrupt
-    NvicRequest{CAN1_SCE_IRQn,1,2}.enable();
+    NvicRequest{1,2, CAN1_SCE_IRQn}.enable();
 }
 
-void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
+[[maybe_unused]] static void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
     CanMsg rx_msg;
 
     if(CAN_MessagePending(instance, fifo_index) == 0) return;
@@ -46,7 +46,7 @@ void Save_CAN_Msg(CAN_TypeDef * instance, const uint8_t fifo_index){
     pending_rx_msgs.addData(rx_msg);
 }
 
-__fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
+__fast_inline constexpr static uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
     switch(mbox){
     case 0:
         return CAN_TSTATR_RQCP0;
@@ -61,53 +61,29 @@ __fast_inline constexpr uint32_t Mailbox_Index_To_TSTATR(const uint8_t mbox){
 }
 
 
-__fast_inline bool CAN_Mailbox_Done(CAN_TypeDef* CANx, const uint8_t mbox){
+__fast_inline static bool CAN_Mailbox_Done(const CAN_TypeDef* CANx, const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     return ((CANx->TSTATR & TSTATR_FLAG) == TSTATR_FLAG);
 }
 
-__fast_inline void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
+__fast_inline static void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
     CANx->TSTATR = TSTATR_FLAG;
 }
 
-void Can::settleTxPin(const uint8_t remap){
 
+Gpio & Can::getTxGpio(){
     #ifdef HAVE_CAN1
-    switch(remap){
-        case 0:
-        {
-            Gpio & gpio = portA[(Pin)CAN1_TX_RM0_Pin];
-            gpio.OutAfPP();
-            break;
-        }
-        case 1:
-        {
-            Gpio & gpio = portB[(Pin)CAN1_TX_RM1_Pin];
-            gpio.OutAfPP();
-            break;
-        }
-    }
+    return CAN1_TX_Gpio;
     #endif
+    return GpioNull;
 }
 
-void Can::settleRxPin(const uint8_t remap){
+Gpio & Can::getRxGpio(){
     #ifdef HAVE_CAN1
-    switch(remap){
-        case 0:
-        {
-            Gpio & gpio = portA[(Pin)CAN1_RX_RM0_Pin];
-            gpio.OutAfPP();
-            break;
-        }
-        case 1:
-        {
-            Gpio & gpio = portB[(Pin)CAN1_RX_RM1_Pin];
-            gpio.OutAfPP();
-            break;
-        }
-    }
+    return CAN1_RX_Gpio;
     #endif
+    return GpioNull;
 }
 
 void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
@@ -116,8 +92,11 @@ void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
 void Can::init(const BaudRate baudRate, const CanFilter & filter){
     uint8_t remap = 1;
 
-    settleTxPin(remap);
-    settleRxPin(remap);
+    auto & txGpio = getTxGpio();
+    auto & rxGpio = getRxGpio();
+
+    txGpio.afpp();
+    rxGpio.afpp();
 
     switch(remap){
     case 0:
@@ -131,27 +110,32 @@ void Can::init(const BaudRate baudRate, const CanFilter & filter){
         break;
     }
     uint8_t swj, bs1, bs2;
-    uint16_t prescale = 0;
+    uint8_t prescale = 0;
+
+    swj = CAN_SJW_2tq;
+    bs1 = CAN_BS1_6tq;
+    bs2 = CAN_BS2_5tq;
 
     switch(baudRate){
     case BaudRate::Kbps125:
-        swj = CAN_SJW_2tq;
-        bs1 = CAN_BS1_6tq;
-        bs2 = CAN_BS2_5tq;
         prescale = 96;
         break;
+    case BaudRate::Kbps250:
+        prescale = 48;
+        break;
+    case BaudRate::Kbps500:
+        prescale = 24;
+        break;
     case BaudRate::Mbps1:
-        swj = CAN_SJW_2tq;
-        bs1 = CAN_BS1_6tq;
-        bs2 = CAN_BS2_5tq;
         prescale = 12;
         break;
     };
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
-    config.CAN_Mode = CAN_Mode_Silent_LoopBack;
+    config.CAN_Mode = CAN_Mode_Normal;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;

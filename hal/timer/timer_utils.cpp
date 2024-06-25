@@ -42,22 +42,22 @@ bool TimerUtils::isAdvancedTimer(const TIM_TypeDef * instance){
     return false;
 }
 
-IRQn TimerUtils::ItToIrq(const TIM_TypeDef * instance, const TimerIT & it){
+IRQn TimerUtils::ItToIrq(const TIM_TypeDef * instance, const IT & it){
     switch((uint32_t)instance){
         #ifdef HAVE_TIM1
         case TIM1_BASE:
             switch(it){
-                case TimerIT::Update:
+                case IT::Update:
                     return TIM1_UP_IRQn;
-                case TimerIT::CC1:
-                case TimerIT::CC2:
-                case TimerIT::CC3:
-                case TimerIT::CC4:
+                case IT::CC1:
+                case IT::CC2:
+                case IT::CC3:
+                case IT::CC4:
                     return TIM1_CC_IRQn;
-                case TimerIT::Trigger:
-                case TimerIT::COM:
+                case IT::Trigger:
+                case IT::COM:
                     return TIM1_TRG_COM_IRQn;
-                case TimerIT::Break:
+                case IT::Break:
                     return TIM1_BRK_IRQn;
             }
             break;
@@ -89,33 +89,19 @@ case TIM##x##_BASE:\
     switch(channel){\
         default:\
         case Channel::CH1:\
-            gpio_port = &TIM##x##_CH1_Port;\
-            gpio_pin = TIM##x##_CH1_Pin;\
-            break;\
+            return TIM##x##_CH1_Gpio;\
         case Channel::CH1N:\
-            gpio_port = &TIM##x##_CH1N_Port;\
-            gpio_pin = TIM##x##_CH1N_Pin;\
-            break;\
+            return TIM##x##_CH1N_Gpio;\
         case Channel::CH2:\
-            gpio_port = &TIM##x##_CH2_Port;\
-            gpio_pin = TIM##x##_CH2_Pin;\
-            break;\
+            return TIM##x##_CH2_Gpio;\
         case Channel::CH2N:\
-            gpio_port = &TIM##x##_CH2N_Port;\
-            gpio_pin = TIM##x##_CH2N_Pin;\
-            break;\
+            return TIM##x##_CH2N_Gpio;\
         case Channel::CH3:\
-            gpio_port = &TIM##x##_CH3_Port;\
-            gpio_pin = TIM##x##_CH3_Pin;\
-            break;\
+            return TIM##x##_CH3_Gpio;\
         case Channel::CH3N:\
-            gpio_port = &TIM##x##_CH3N_Port;\
-            gpio_pin = TIM##x##_CH3N_Pin;\
-            break;\
+            return TIM##x##_CH3N_Gpio;\
         case Channel::CH4:\
-            gpio_port = &TIM##x##_CH4_Port;\
-            gpio_pin = TIM##x##_CH4_Pin;\
-            break;\
+            return TIM##x##_CH4_Gpio;\
     }\
     break;\
 
@@ -124,29 +110,21 @@ case TIM##x##_BASE:\
     switch(channel){\
         default:\
         case Channel::CH1:\
-            gpio_port = &TIM##x##_CH1_Port;\
-            gpio_pin = TIM##x##_CH1_Pin;\
-            break;\
+            return TIM##x##_CH1_Gpio;\
         case Channel::CH2:\
-            gpio_port = &TIM##x##_CH2_Port;\
-            gpio_pin = TIM##x##_CH2_Pin;\
-            break;\
+            return TIM##x##_CH2_Gpio;\
         case Channel::CH3:\
-            gpio_port = &TIM##x##_CH3_Port;\
-            gpio_pin = TIM##x##_CH3_Pin;\
-            break;\
+            return TIM##x##_CH3_Gpio;\
         case Channel::CH4:\
-            gpio_port = &TIM##x##_CH4_Port;\
-            gpio_pin = TIM##x##_CH4_Pin;\
-            break;\
+            return TIM##x##_CH4_Gpio;\
     }\
     break;\
 
 Gpio & TimerUtils::getPin(const TIM_TypeDef * instance, const Channel channel){
-    Port * gpio_port;
-    uint16_t gpio_pin = 0;
     switch((uint32_t)instance){
         default:
+            return GpioNull;
+
         #ifdef HAVE_TIM1
         ADVANCED_TIMER_GPIO_TEMPLATE(1)
         #endif
@@ -171,6 +149,4 @@ Gpio & TimerUtils::getPin(const TIM_TypeDef * instance, const Channel channel){
         ADVANCED_TIMER_GPIO_TEMPLATE(8)
         #endif
     }
-
-    return(*gpio_port)[(Pin)gpio_pin];
 }

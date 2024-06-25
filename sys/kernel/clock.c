@@ -17,8 +17,6 @@
 extern "C" {
 #endif
 
-#define tick_per_ms (F_CPU / 1000)
-#define tick_per_us (tick_per_ms / 1000)
 
 
 volatile uint32_t msTick = 0;

@@ -13,7 +13,7 @@
 int main(){
     //...prework()
     auto & bled = portC[13];
-    bled.OutPP();
+    bled.outpp();
     while(true){
         bled = !bled;//blink XD
         delay(200);
@@ -294,7 +294,7 @@ cpp20 +
     - [x] 任意通道多路信号采集
     - [ ] DMA绑定API
     - [x] 片上温度/参考电压采集
-    - [ ] 虚拟ADCChannel类
+    - [x] 虚拟ADCChannel类
 
 - [x] DVP
     - [x] MT9V034摄像头驱动
@@ -306,7 +306,7 @@ cpp20 +
 - [x] EXTI
 
 - [x] FLASH
-    - [ ] 普通FLASH读写(以弃用)
+    - [ ] 普通FLASH读写(已弃用)
     - [x] 快速FLASH读写
 
 - [x] TIM(定时器相关代码)
@@ -318,7 +318,7 @@ cpp20 +
         - [x] AW9523Pwm 基于AW9523的pwm
         - [x] GPIOPwm 使用GPIO配合定时触发模拟pwm
 
-        - [ ] TimerOC(定时器输出)
+        - [x] TimerOC(定时器输出)
             - [x] TimerOC
             - [ ] Hrpwm(高精度PWM)
 
@@ -333,7 +333,17 @@ cpp20 +
 
 ##### robots 机器人学相关代码
 
-- [ ] 步进电机FOC算法
+- [x] `stepper` 步进电机FOC算法
+    - [x] 速度环
+        - [ ] 低速速度环(0rpm~240rpm)
+        - [x] 中速速度环(300rpm~2400rpm)
+        - [ ] 高速速度环(2400rpm~8000rpm)
+    - [x] 位置环
+        - [x] 高精度位置环
+        - [ ] 常规位置环
+        - [x] 梯形加减速速度环
+        - [ ] S形加减速速度环
+- [ ] `bldc` 无刷电机FOC算法
 
 - [x] `buck.hpp` BUCK驱动
 - [x] `pmdc.hpp` 直流有刷电机驱动算法

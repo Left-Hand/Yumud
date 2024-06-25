@@ -1,6 +1,4 @@
-#ifndef __UART_HPP__
-
-#define __UART_HPP__
+#pragma once
 
 #include "../bus.hpp"
 #include "sys/kernel/stream.hpp"
@@ -19,6 +17,7 @@ public:
     using DuplexBus::ErrorType;
     using DuplexBus::txMethod;
     using DuplexBus::rxMethod;
+    using InputStream::read;
 protected:
     static constexpr size_t uart_fifo_size = 256;
     RingBuf_t<char, uart_fifo_size> txBuf;
@@ -43,4 +42,3 @@ public:
 
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
 };
-#endif

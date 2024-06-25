@@ -11,10 +11,12 @@
 #include "can_filter.hpp"
 
 
-class Can:public PackedBus<CanMsg>{
+class Can: public PackedBus<CanMsg>{
 public:
     enum class BaudRate{
         Kbps125,
+        Kbps250,
+        Kbps500,
         Mbps1
     };
 
@@ -22,8 +24,9 @@ public:
     using Callback = std::function<void(void)>;
 protected:
     CAN_TypeDef * instance;
-    void settleTxPin(const uint8_t remap);
-    void settleRxPin(const uint8_t remap);
+
+    Gpio & getTxGpio();
+    Gpio & getRxGpio();
     Error lead(const uint8_t index) override{return ErrorType::OK;};
     void trail() override{};
 public:

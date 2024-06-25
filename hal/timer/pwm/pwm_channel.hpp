@@ -20,7 +20,7 @@ public:
 
     virtual void init() = 0;
 
-    virtual PwmChannel & operator = (const real_t & duty) = 0;
+    virtual PwmChannel & operator = (const real_t duty) = 0;
 };
 
 class Countable{

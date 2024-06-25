@@ -58,8 +58,8 @@ public:
         trigExtiCHB(trigGpioB, _priority, ExtiChannel::Trigger::RisingFalling){;}
 
     void init() override{
-        trigGpioA.InPullUP();
-        trigGpioB.InPullUP();
+        trigGpioA.inpu();
+        trigGpioB.inpu();
         trigExtiCHA.bindCb(std::bind(&ABEncoderExti::a_pulse, this));
         trigExtiCHB.bindCb(std::bind(&ABEncoderExti::b_pulse, this));
         trigExtiCHA.init();

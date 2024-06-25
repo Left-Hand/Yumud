@@ -1,22 +1,70 @@
 #include "timer.hpp"
 
-static void TIM_RCC_ON(TIM_TypeDef * instance){
-    if (instance == TIM1) {
-        RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
-    } else if (instance == TIM2) {
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
-        GPIO_PinRemapConfig(TIM2_REMAP, TIM2_REMAP_ENABLE);
-    } else if (instance == TIM3) {
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
-    } else if (instance == TIM4){
-        RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+static void TIM_RCC_ON(const TIM_TypeDef * instance){
+    switch(uint32_t(instance)){
+        case TIM1_BASE:
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
+            switch(TIM1_REMAP){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM1, ENABLE);
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM1, ENABLE);
+                    break;
+            }
+            break;
+        case TIM2_BASE:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
+            switch(TIM2_REMAP){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap1_TIM2, ENABLE);
+                    break;
+                case 2:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap2_TIM2, ENABLE);
+                    break;
+                case 3:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM2, ENABLE);
+                    break;
+            }
+            
+            break;
+        case TIM3_BASE:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+            switch(TIM3_REMAP){
+                case 0:
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM3, ENABLE);
+                    break;
+                case 3:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM3, ENABLE);
+                    break;
+            }
+            break;
+        case TIM4_BASE:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
+            switch(TIM4_REMAP){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_Remap_TIM4, ENABLE);
+                    break;
+            }
+            break;
     }
 }
 
-static uint32_t TIM_Get_BusFreq(TIM_TypeDef * instance){
+static uint32_t TIM_Get_BusFreq(const TIM_TypeDef * instance){
     bool isAbp2 = false;
     switch(uint32_t(instance)){
-
         case TIM1_BASE:
             isAbp2 = true;
             break;
@@ -46,7 +94,7 @@ static uint32_t TIM_Get_BusFreq(TIM_TypeDef * instance){
 }
 
 
-void BasicTimer::init(const uint32_t & freq, const Mode & mode, const bool & en){
+void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
     TIM_RCC_ON(instance);
     uint32_t raw_period = TIM_Get_BusFreq(instance) / freq;
     // TIM_Get_BusFreq(instance);
@@ -63,7 +111,7 @@ void BasicTimer::init(const uint32_t & freq, const Mode & mode, const bool & en)
     init(raw_period / cycle, cycle, mode, en);
 }
 
-void BasicTimer::init(const uint16_t & period, const uint16_t & cycle, const Mode & mode, const bool & en){
+void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mode, const bool en){
     TIM_RCC_ON(instance);
     TIM_InternalClockConfig(instance);
     TIM_DeInit(instance);
@@ -84,7 +132,7 @@ void BasicTimer::init(const uint16_t & period, const uint16_t & cycle, const Mod
 
 
 
-void BasicTimer::enable(const bool & en){
+void BasicTimer::enable(const bool en){
     if(en){
         TIM_Cmd(instance, ENABLE);
         if(instance == TIM1){
@@ -164,7 +212,7 @@ uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
     return dead;
 }
 
-void AdvancedTimer::initBdtr(const uint32_t & ns, const LockLevel & level){
+void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
 
     TIM_BDTRInitTypeDef TIM_BDTRInitStructure;
     TIM_BDTRInitStructure.TIM_OSSIState = TIM_OSSIState_Disable;
@@ -177,7 +225,7 @@ void AdvancedTimer::initBdtr(const uint32_t & ns, const LockLevel & level){
     TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
 }
 
-void AdvancedTimer::setDeadZone(const uint32_t & ns){
+void AdvancedTimer::setDeadZone(const uint32_t ns){
     uint8_t dead = caculate_dead_zone(ns);
 
     uint16_t tempreg = instance->BDTR;
