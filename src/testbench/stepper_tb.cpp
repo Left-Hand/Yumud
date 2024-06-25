@@ -13,13 +13,13 @@ void stepper_tb(IOStream & logger){
         stp.report();
         Sys::Clock::reCalculateTime();
 
-        // stp.setTargetPosition(0.005 + 0.02 * sin(t));
+        stp.setTargetPosition(0.005 + 0.02 * sin(8 * t));
         // stp.setTargetPosition(2 * sin(8 * t));
         // stp.setTargetPosition(20 * floor(t/3));
         // stp.setTagretTrapezoid(70 * floor(t / 3));
 
         // stp.setTargetPosition(0.2 * floor(t*32));
-        stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
+        // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
         // stp.setTargetPosition(16 * sin(t));
         // stp.setTargetPosition(t/8);
         // stp.setTargetPosition(-t/8);
