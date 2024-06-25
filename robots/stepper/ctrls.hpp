@@ -1,6 +1,10 @@
-#pragma once
+#ifndef __STEPPER_CTRLS_HPP__
+
+#define __STEPPER_CTRLS_HPP__
 
 #include "constants.hpp"
+
+
 struct LowerLayerCtrl{
     virtual void reset() = 0;
     virtual real_t update(const real_t target) = 0;
@@ -113,15 +117,6 @@ struct GeneralPositionCtrl:public PositionCtrl{
     real_t kd_active_radius = 0.7;
     bool inited = false;
 
-    // real_t kq = 10;
-    real_t ki = 0.0;
-    real_t intergalx256 = 0;
-    Range ki_clamp = {25.6, -25.6};
-
-    real_t last_error;
-    real_t last_current;
-    real_t error;
-
     void setCurrentClamp(const real_t max_current) override {
 
     }
@@ -134,7 +129,6 @@ struct GeneralPositionCtrl:public PositionCtrl{
 
         if(!inited){
             inited = true;
-            intergalx256 = 0;
         }
 
         real_t error = targ_position - real_position;
@@ -414,3 +408,5 @@ struct OverloadSpeedCtrl:public SpeedCtrl{
 //         return std::make_tuple(current_output, elecrad_output);
 //     }
 // };
+
+#endif
