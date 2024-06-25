@@ -5,7 +5,9 @@ void SpiHw::enableRcc(const bool en){
         #ifdef HAVE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en);
-            GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
+            if(SPI1_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_SPI1, ENABLE);
+            }
             break;
         #endif
         #ifdef HAVE_SPI2
@@ -18,31 +20,47 @@ void SpiHw::enableRcc(const bool en){
     }
 }
 
-#if (defined(HAVE_SPI1) && defined(HAVE_SPI2))
+#if (defined(HAVE_SPI1) & defined(HAVE_SPI2))
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
 Gpio & SpiHw::get##name##Pin(){\
 \
-    Port * gpio_port = nullptr;\
-    uint16_t gpio_pin = 0;\
+    switch((uint32_t)instance){\
+        default:\
+        case SPI1_BASE:\
+            return SPI1_##upper##_Gpio;\
+        case SPI2_BASE:\
+            return SPI2_##upper##_Gpio;\
+    }\
+}\
+
+#elif defined(HAVE_SPI1)
+
+#define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
+Gpio & SpiHw::get##name##Pin(){\
 \
     switch((uint32_t)instance){\
         default:\
         case SPI1_BASE:\
-            gpio_port = &SPI1_##upper##_Port;\
-            gpio_pin = SPI1_##upper##_Pin;\
-            break;\
-        case SPI2_BASE:\
-            gpio_port = &SPI2_##upper##_Port;\
-            gpio_pin = SPI2_##upper##_Pin;\
-            break;\
+            return SPI1_##upper##_Gpio;\
     }\
-    return (*gpio_port)[(Pin)gpio_pin];\
+}\
+
+#elif defined(HAVE_SPI1)
+
+#define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
+Gpio & SpiHw::get##name##Pin(){\
+\
+    switch((uint32_t)instance){\
+        default:\
+        case SPI2_BASE:\
+            return SPI2_##upper##_Gpio;\
+    }\
 }\
 
 #endif
 
-#if (defined(HAVe_SPI1) || defined(HAVE_SPI2))
+#if (defined(HAVE_SPI1) || defined(HAVE_SPI2))
 
 SPI_HW_GET_PIN_TEMPLATE(Mosi, MOSI)
 SPI_HW_GET_PIN_TEMPLATE(Miso, MISO)
@@ -87,7 +105,7 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
     return MIN(i * 8, SPI_BaudRatePrescaler_256);
 }
 
-void SpiHw::initGpios(){
+void SpiHw::installGpios(){
     if(txMethod != CommMethod::None){
         Gpio & mosi_pin = getMosiPin();
         mosi_pin.afpp();
@@ -103,7 +121,7 @@ void SpiHw::initGpios(){
 
     if(!cs_pins.isIndexValid(0)){
         Gpio & cs_pin = getCsPin();
-        cs_pin = true;
+        cs_pin.set();
         if(hw_cs_enabled){
             cs_pin.afpp();
         }else{
@@ -113,17 +131,7 @@ void SpiHw::initGpios(){
     }
 
     for(uint8_t i = 0; i < cs_pins.getSize(); i++){
-        cs_pins.setModeByIndex(i, PinMode::OutPP);
-    }
-
-    switch((uint32_t)instance){
-        #ifdef HAVE_SPI1
-        case SPI1_BASE:
-            GPIO_PinRemapConfig(SPI1_REMAP, SPI1_REMAP_ENABLE);
-            break;
-        #endif
-        default:
-            break;
+        cs_pins[i].outpp();
     }
 }
 
@@ -144,11 +152,11 @@ void SpiHw::enableRxIt(const bool en){
 
 }
 void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
-    preinit();
+    // preinit();
     txMethod = tx_method;
     rxMethod = rx_method;
 	enableRcc();
-    initGpios();
+    installGpios();
 
     SPI_InitTypeDef SPI_InitStructure = {0};
 
@@ -193,6 +201,27 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool 
     return Bus::ErrorType::OK;
 }
 
+
+void SpiHw::configDataSize(const uint8_t data_size){
+    uint16_t tempreg =  instance->CTLR1;
+    if(data_size == 16){
+        if(tempreg & SPI_DataSize_16b) return;
+        tempreg |= SPI_DataSize_16b;
+    }else{
+        tempreg &= ~SPI_DataSize_16b;
+    }
+    instance->CTLR1 = tempreg;
+}
+
+void SpiHw::configBaudRate(const uint32_t baudRate){
+    instance->CTLR1 &= ~SPI_BaudRatePrescaler_256;
+    instance->CTLR1 |= calculatePrescaler(baudRate);
+}
+
+void SpiHw::configBitOrder(const bool msb){
+    instance->CTLR1 &= (!SPI_FirstBit_LSB);
+    instance->CTLR1 |= msb ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
+}
 #ifdef HAVE_SPI1
 SpiHw spi1{SPI1};
 #endif

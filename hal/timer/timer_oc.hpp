@@ -8,23 +8,16 @@ class TimerOut: public TimerChannel{
 protected:
     TimerOut(TIM_TypeDef * _instance, const Channel _channel):TimerChannel(_instance, _channel){;}
 public:
-    void installToPin(const bool & en = true);
-    void enableSync(const bool & _sync = true);
-    void setPolarity(const bool & pol);
-    void setIdleState(const bool & state);
-    void enable(const bool & en = true);
+    void installToPin(const bool en = true);
+    void enableSync(const bool _sync = true);
+    void setPolarity(const bool pol);
+    void setIdleState(const bool state);
+    void enable(const bool en = true);
 };
 
 class TimerOC:public TimerOut,public PwmChannel, public Countable{
 public:
-    enum class Mode:uint16_t{
-        Timing = TIM_OCMode_Timing,
-        Active = TIM_OCMode_Active,
-        Inactive = TIM_OCMode_Inactive,
-        Toggle = TIM_OCMode_Toggle,
-        UpValid = TIM_OCMode_PWM1,
-        DownValid = TIM_OCMode_PWM2
-    };
+    using Mode = TimerUtils::OcMode;
 protected:
     volatile uint16_t & m_cvr;
     volatile uint16_t & m_arr;
@@ -36,13 +29,7 @@ public:
     void setMode(const Mode _mode);
 
 
-    __fast_inline TimerOC & operator = (const real_t duty){
-        // if(duty == 0) {m_cvr = 0;}
-        // else if(duty == 1) {m_cvr = m_arr - 1;}
-        m_cvr = int(duty * m_arr);
-        return *this;
-    }
-
+    __fast_inline TimerOC & operator = (const real_t duty) override{m_cvr = int(duty * m_arr);return *this;}
     __fast_inline operator real_t(){return real_t(m_cvr) / real_t(m_arr);}
     __fast_inline volatile uint16_t & cnt() override {return instance->CNT;}
 

@@ -51,8 +51,9 @@ protected:
         GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
         instance(_instance),
         pin(((_instance == GPIOC) && 
-        (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
-        ) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
+            (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
+            ) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
+
         pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
         pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
     }

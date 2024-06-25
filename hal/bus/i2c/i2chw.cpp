@@ -1,12 +1,15 @@
 #include "i2chw.hpp"
 #include "hal/gpio/port.hpp"
+#include "sys/debug/debug_inc.h"
 
 void I2cHw::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef HAVE_I2C1
         case I2C1_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, en);
-            GPIO_PinRemapConfig(I2C1_REMAP, I2C1_REMAP_ENABLE);
+            if(I2C1_REMAP){
+                GPIO_PinRemapConfig(GPIO_Remap_I2C1, ENABLE);
+            }
             break;
         #endif
 
@@ -22,7 +25,7 @@ void I2cHw::enableRcc(const bool en){
 }
 
 
-GpioConcept & I2cHw::getScl(){
+GpioConcept & I2cHw::getScl(const I2C_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef HAVE_I2C1
         case I2C1_BASE:
@@ -39,7 +42,7 @@ GpioConcept & I2cHw::getScl(){
     }
 }
 
-GpioConcept & I2cHw::getSda(){
+GpioConcept & I2cHw::getSda(const I2C_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef HAVE_I2C1
         case I2C1_BASE:
@@ -61,14 +64,16 @@ bool I2cHw::locked(){
 }
 
 void I2cHw::init(const uint32_t baudRate){
+    // preinit();
+    enableRcc();
+
     scl_gpio.afod();
     sda_gpio.afod();
 
-    reset();
     I2C_InitTypeDef I2C_InitStructure;
     I2C_InitStructure.I2C_Mode = I2C_Mode_I2C;
     I2C_InitStructure.I2C_DutyCycle = I2C_DutyCycle_2;
-    I2C_InitStructure.I2C_OwnAddress1 = 0;
+    I2C_InitStructure.I2C_OwnAddress1 = 0x80;
     I2C_InitStructure.I2C_Ack = I2C_Ack_Enable;
     I2C_InitStructure.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
     I2C_InitStructure.I2C_ClockSpeed = baudRate;
@@ -93,7 +98,7 @@ void I2cHw::enableHwTimeout(const bool en){
     else instance->STAR1 &= ~I2C_STAR1_TIMEOUT;
 }
 
-void I2cHw::unlock(){
+void I2cHw::unlock_bus(){
     if(locked()){
         I2C_Cmd(instance, DISABLE);
 
@@ -145,7 +150,6 @@ I2cHw::Error I2cHw::write(const uint32_t data){
 }
 
 I2cHw::Error I2cHw::read(uint32_t & data, const bool toAck){
-
     I2C_AcknowledgeConfig(instance, toAck);
     while(I2C_GetFlagStatus(instance, I2C_FLAG_RXNE) == RESET);
     // while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_RECEIVED));

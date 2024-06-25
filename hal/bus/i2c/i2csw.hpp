@@ -18,7 +18,7 @@ private:
     void trail() override;
 protected :
     void reset() override {};
-    void unlock() override {};
+    void unlock_bus() override {};
 public:
 
     I2cSw(GpioConcept & scl,GpioConcept & sda):I2c(scl, sda){;}

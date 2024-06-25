@@ -1,5 +1,4 @@
-#ifndef __I2C_DRV_HPP__
-#define __I2C_DRV_HPP__
+#pragma once
 
 #include "i2c.hpp"
 #include "sys/debug/debug_inc.h"
@@ -100,6 +99,3 @@ public:
         }
     }
 };
-
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __UARTSW_HPP__
-#define __UARTSW_HPP__
+#pragma once
 
 #include "uart.hpp"
 
@@ -38,4 +37,3 @@ public:
 
     void setRxMethod(const CommMethod _rxMethod) override;
 };
-#endif

@@ -1,6 +1,4 @@
-#ifndef __UART_HPP__
-
-#define __UART_HPP__
+#pragma once
 
 #include "../bus.hpp"
 #include "sys/kernel/stream.hpp"
@@ -44,4 +42,3 @@ public:
 
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
 };
-#endif

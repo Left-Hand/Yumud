@@ -1,5 +1,4 @@
-#ifndef __SPI_SOFT_HPP__
-#define __SPI_SOFT_HPP__
+#pragma once
 
 #include "spi.hpp"
 
@@ -126,8 +125,5 @@ public:
 
         miso_pin.inflt();
     }
-
-
 };
 
-#endif

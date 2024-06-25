@@ -8,18 +8,18 @@ Adc1 adc1;
 using Callback = AdcUtils::Callback;
 
 static Callback jeoc_cb;
+static Callback eoc_cb;
+static Callback awd_cb;
 
 __interrupt void ADC1_2_IRQHandler(void){
     if(ADC_GetITStatus(ADC1,ADC_IT_JEOC)){
         EXECUTE(jeoc_cb);
         ADC_ClearITPendingBit(ADC1,ADC_IT_JEOC);
     }else if(ADC_GetITStatus(ADC1, ADC_IT_EOC)){
-        
-
+        EXECUTE(eoc_cb);
         ADC_ClearITPendingBit(ADC1,ADC_IT_EOC);
     }else if(ADC_GetITStatus(ADC1,ADC_IT_AWD)){
-
-
+        EXECUTE(awd_cb);
         ADC_ClearITPendingBit(ADC1,ADC_IT_AWD);
     }
 }
@@ -36,6 +36,12 @@ void AdcPrimary::bindCb(const IT it,Callback && cb){
     switch(it){
         case IT::JEOC:
             jeoc_cb = cb;
+            break;
+        case IT::EOC:
+            eoc_cb = cb;
+            break;
+        case IT::AWD:
+            awd_cb = cb;
             break;
         default:
             break;

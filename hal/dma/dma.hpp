@@ -1,6 +1,4 @@
-#ifndef __DMA_HPP__
-
-#define __DMA_HPP__
+#pragma once
 
 #include "sys/platform.h"
 
@@ -269,7 +267,4 @@ extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
     DMA_XY_TEMPLATE(2,9)
     DMA_XY_TEMPLATE(2,10)
     DMA_XY_TEMPLATE(2,11)
-#endif
-
-
 #endif

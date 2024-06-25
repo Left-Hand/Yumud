@@ -1,11 +1,8 @@
-#ifndef __UARTHW_HPP__
-#define __UARTHW_HPP__
+#pragma once
 
 #include "uart.hpp"
 #include "hal/dma/dma.hpp"
 
-static constexpr size_t rx_dma_buf_size = 64;
-static constexpr size_t tx_dma_buf_size = 64;
 
 class UartHw:public Uart{
 public:
@@ -37,6 +34,9 @@ protected:
 
     size_t rx_dma_buf_index;
     size_t tx_dma_buf_index;
+
+    static constexpr size_t rx_dma_buf_size = 64;
+    static constexpr size_t tx_dma_buf_size = 64;
 
     char tx_dma_buf[tx_dma_buf_size];
     char rx_dma_buf[rx_dma_buf_size];
@@ -102,5 +102,3 @@ extern "C" __interrupt void USART6_IRQHandler(void);
 extern UartHw uart7;
 extern "C" __interrupt void UART7_IRQHandler(void);
 #endif
-
-#endif /* UARTHW_HPP */

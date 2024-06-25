@@ -24,15 +24,8 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    TimerOC & vrefChannelA = timer3.oc(3);
-    TimerOC & vrefChannelB = timer3.oc(2);
-
-
-    // Coil1 coilA{portA[10], portA[11],  vrefChannelA};
-    // Coil1 coilB{portA[8], portA[9],  vrefChannelB};
-
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), vrefChannelA};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), vrefChannelB};
+    AT8222 coilA{timer1.oc(3), timer1.oc(4), timer3.oc(3)};
+    AT8222 coilB{timer1.oc(1), timer1.oc(2), timer3.oc(2)};
 
 
     // SVPWM2 svpwm{coilA, coilB};
@@ -64,6 +57,7 @@ protected:
     GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
     TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl};
+
     RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;
 
@@ -74,15 +68,12 @@ protected:
 
 
     void setCurrent(const real_t _current, const real_t _elecrad){
-        real_t current = -_current;
-        // static constexpr real_t base_current = 0.05;
+        // real_t current = -_current;
 
-        real_t cA = cos(_elecrad) * current;
-        real_t cB = sin(_elecrad) * current;
+        real_t cA = cos(_elecrad) * _current;
+        real_t cB = sin(_elecrad) * _current;
         coilA = cA;
         coilB = cB;
-        // coilA = cA + SIGN_AS(base_current, cA);
-        // coilB = cB + SIGN_AS(base_current, cB);
     }
 
 
@@ -92,6 +83,7 @@ protected:
 
     bool auto_shutdown_activation = true;
     bool auto_shutdown_actived = false;
+
     uint16_t auto_shutdown_timeout_ms = 200;
     uint16_t auto_shutdown_last_wake_ms = 0;
 
@@ -310,10 +302,14 @@ public:
             if((+new_status == +RunStatus::EXIT)){
                 switch(run_status){
                     case RunStatus::CHECK:
+                        panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
                         cali_task(true);
                         break;
                     case RunStatus::CALI:
-                        if(skip_tone) active_task(true);
+                        if(skip_tone){
+                            panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
+                            active_task(true);
+                        }
                         else beep_task(true);
                         break;
                     case RunStatus::BEEP:
@@ -328,7 +324,7 @@ public:
                     case RunStatus::WARN:
                         break;
                     default:
-                        break;
+                    break;
                 }
             }else{
                 switch(run_status){
@@ -366,21 +362,10 @@ public:
         
         logger.setEps(4);
 
-        timer1.init(4096, 1, Mode::CenterAlignedDownTrig);
+        timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
         timer1.enableArrSync();
-
-        timer3.init(1024, 1, Mode::CenterAlignedDownTrig);
+        timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
         timer3.enableArrSync();
-
-        timer3.oc(2).enableSync();
-        timer3.oc(3).enableSync();
-
-        // svpwm.init();
-        coilA.init();
-        coilB.init();
-
-        coilA.setClamp(real_t(1));
-        coilB.setClamp(real_t(1));
 
         coilA.init();
         coilB.init();
@@ -399,23 +384,34 @@ public:
 
         panel_led.init();
 
-        timer4.init(foc_freq);
-        timer4.enableIt(IT::Update, NvicPriority(0, 0));
-        timer4.bindCb(IT::Update, [&](){this->tick();});
+        timer3.enableIt(IT::Update, NvicPriority(0, 0));
+        timer3.bindCb(IT::Update, [&](){this->tick();});
 
-
-        panel_led.setPeriod(200);
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        panel_led.setPeriod(400);
+        panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Squ);
     }
 
     void setTargetSpeed(const real_t speed){
         target = speed;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
         ctrl_type = CtrlType::SPEED;
     }
 
-    void setTargetPosition(const real_t speed){
-        target = speed;
+    void setTargetPosition(const real_t pos){
+        target = pos;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
         ctrl_type = CtrlType::POSITION;
+    }
+
+    void setTagretTrapezoid(const real_t pos){
+        target = pos;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        ctrl_type = CtrlType::TRAPEZOID;
+    }
+
+    void setTagretVector(const real_t pos){
+        target = pos;
+        ctrl_type = CtrlType::VECTOR;
     }
 
     void setCurrentClamp(const real_t max_current){
@@ -426,6 +422,10 @@ public:
 
     void run() override{
         Cli::run();
+        panel_led.run();
+    }
+
+    void report(){
         // real_t total = real_t(3);
         // static real_t freq = real_t(10);
         // static real_t freq_dir = real_t(1);
@@ -443,19 +443,15 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(DEBUGGER.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, speed_ctrl.targ_current_256x, speed_ctrl.delta, speed_ctrl.error);
+        if(+run_status == +RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        // delay(1);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
         // RUN_DEBUG(est_pos, est_speed, run_current, elecrad_zerofix);
         // RUN_DEBUG(est_pos, est_speed, run_current, run_elecrad);
-        static String temp_str = "";
 
         // bool led_status = (millis() / 200) % 2;
         // bled = led_status;
-        panel_led.run();
-
-
-        Sys::Clock::reCalculateTime();
     }
 
 
