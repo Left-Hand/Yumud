@@ -3,6 +3,7 @@
 #define __RANGE_HPP__
 
 #include "sys/platform.h"
+#include "types/real.hpp"
 #include "types/string/String.hpp"
 #include "type_traits"
 
@@ -16,6 +17,7 @@ public:
     __fast_inline_constexpr Range_t(const auto & _value): start(static_cast<T>(-ABS(_value))), end(static_cast<T>(ABS(_value))) {;}
     __fast_inline_constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
     __fast_inline_constexpr Range_t(const Range_t<auto> & other): start(static_cast<T>(other.start)), end(static_cast<T>(other.end)) {;}
+
     __fast_inline_constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
         this->start = static_cast<T>(other.start);
         this->end = static_cast<T>(other.end);
@@ -178,28 +180,6 @@ public:
         return part_in_grid(value, grid_size, false);
     }
 
-
-
-    // constexpr bool lean_left_outside(const const Range_t<T> src){
-    //     Range_t<T> regular = this -> abs();
-    //     Range_t<T> src_regular = src.abs();
-
-    //     // f | src.f | t | src.t
-    //     return src_regular.has_value(regular.start) && regular.has_value(src_regular.end);
-    // }
-
-    // constexpr bool lean_right_outside(const const Range_t<T> src){
-    //     Range_t<T> regular = this -> abs();
-    //     Range_t<T> src_regular = src.abs();
-    //     // src.f | f | src.t | 
-
-    // }
-    // __fast_inline_constexpr Range_t<T> room_left(const Range_t<auto> & _content) const{
-    //     Range_t<T> content = _content.abs();
-    //     Range_t<T> regular = this -> abs();
-    //     return {regular.start, MAX(content.start, regular.start)};
-    // }
-
     __fast_inline_constexpr Range_t<T> room_left(const Range_t<auto> & _content) const{
         Range_t<T> content = _content.abs();
         Range_t<T> regular = this -> abs();
@@ -307,5 +287,6 @@ public:
     }
 };
 
-typedef Range_t<int> Rangei;
+using Rangei = Range_t<int>;
+using Range = Range_t<real_t>;
 #endif

@@ -294,18 +294,26 @@ __fast_inline_constexpr iq_t acos(const iq_t iq) {
 
 __fast_inline_constexpr iq_t atan(const iq_t iq) {
     if (std::is_constant_evaluated()) {
-        return cem::atan(double(iq));
+        // return cem::atan(double(iq));
+        return 0;
+        //TODO
     }else{
         return iq_t(_iq(_IQatan(iq.value)));
     }
 }
 
-__fast_inline_constexpr iq_t atan2(const iq_t a, const iq_t b) {
+__fast_inline_constexpr iq_t atan2f(const iq_t a, const iq_t b) {
     if (std::is_constant_evaluated()) {
-        return cem::atan(atan2(a, b));
+        // return cem::atan2(float(a), float(b));
+        return 0;
+        //TODO
     }else{
         return iq_t(_iq(_IQatan2(a.value,b.value)));
     }
+}
+
+__fast_inline_constexpr iq_t atan2(const iq_t a, const iq_t b) {
+    return atan2f(a, b);
 }
 
 __fast_inline_constexpr iq_t sqrt(const iq_t iq){
@@ -450,6 +458,7 @@ namespace std{
     __fast_inline_constexpr iq_t asin(const iq_t iq){return ::asin(iq);}
     __fast_inline_constexpr iq_t acos(const iq_t iq){return ::acos(iq);}
     __fast_inline_constexpr iq_t atan(const iq_t iq){return ::atan(iq);}
+    __fast_inline_constexpr iq_t atan2f(const iq_t a, const iq_t b){return ::atan2f(a,b);}
     __fast_inline_constexpr iq_t atan2(const iq_t a, const iq_t b){return ::atan2(a,b);}
     __fast_inline_constexpr iq_t sqrt(const iq_t iq){return ::sqrt(iq);}
     __fast_inline_constexpr iq_t abs(const iq_t iq){return ::abs(iq);}

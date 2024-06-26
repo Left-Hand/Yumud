@@ -57,6 +57,9 @@ namespace StepperEnums{
         ODO_DISCONNECTED,
         ODO_NO_SIGNAL
     };
+
+    using ExitFlag = bool;
+    using InitFlag = bool;
 };
 
 #endif
