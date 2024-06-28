@@ -50,22 +50,32 @@ public:
 
 template<typename real>
 class LowpassFilterZ_t{
-// protected:
 public:
-    real k;
-    real last;
+    const real m_alaph;
+    real last = 0;
     bool inited = false;
 public:
-    LowpassFilterZ_t(const auto & cutoff_freq) : k(cutoff_freq), last(real()){;}
+    LowpassFilterZ_t() = delete;
 
-    real update(const real & x){
-        if(!inited){
-            last = real();
-            inited = true;
-        }
-        last = last * k + (1-k) * x;
-        return last;
+    LowpassFilterZ_t(const real fc, const real fs) : LowpassFilterZ_t(calculateAlaph(fc, fs)) {;}
+    LowpassFilterZ_t(const real alaph) : m_alaph(alaph) {reset();}
+
+    void reset(){
+        last = 0;
+    }
+
+    real update(const real x){
+        return last = last * m_alaph + (1-m_alaph) * x;
+    }
+
+    static real calculateAlaph(const real fc, const real fs){
+        real omega_c = 2 * M_PI * fc / fs;  // Angular cutoff frequency
+        real alpha = omega_c / (1 + omega_c);  // Alpha coefficient
+        return alpha;
     }
 };
+
+using LPF = LowpassFilter_t<real_t, real_t>;
+using LPFZ = LowpassFilterZ_t<real_t>;
 
 #endif

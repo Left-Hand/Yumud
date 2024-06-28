@@ -12,15 +12,18 @@ protected:
 
 public:
 
-	SchmittFilter(const real & _lowThr,const real & _highThr):lowThr(_lowThr),highThr(_highThr){;}
+	SchmittFilter(const real _lowThr,const real _highThr):lowThr(_lowThr),highThr(_highThr){;}
 
 	bool update(const real & input){
-        if(input < lowThr and output){
+        if(input < lowThr and 
+				output == true){
             output = false;
-        }else if(input > highThr and (!output)){
+        }else if(input > highThr and 
+				output == false){
             output = true;
         return output;
 	}
 };
 }
+
 #endif
