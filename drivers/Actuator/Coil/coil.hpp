@@ -85,7 +85,7 @@ public:
     Coil1 & operator = (const real_t & duty) override {setDuty(duty); return *this;}
 };
 
-class TB67H450{
+class AT8222{
 protected:
     TimerOC & forward_pwm;
     TimerOC & backward_pwm;
@@ -94,7 +94,7 @@ protected:
     bool softmode = true;
     real_t inv_fullscale = 0.5;
 public:
-    TB67H450(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannel & _vref_pwm):
+    AT8222(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannel & _vref_pwm):
             forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), vref_pwm(_vref_pwm){;}
 
     void init(){
@@ -150,7 +150,7 @@ public:
         }
     }
 
-    TB67H450 & operator = (const real_t curr){setCurrent(curr); return *this;}
+    AT8222 & operator = (const real_t curr){setCurrent(curr); return *this;}
 };
 
 

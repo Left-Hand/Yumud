@@ -6,9 +6,8 @@
 #include "ctrls.hpp"
 #include "obs.hpp"
 #include "archive.hpp"
+#include "hal/adc/adcs/adc1.hpp"
 
-
-using AT8222 = TB67H450;
 
 class Stepper:public StepperUtils::Cli{
 protected:
@@ -349,6 +348,9 @@ public:
         exe_micros = micros() - begin_micros;
     }
 
+    uint16_t adcv1;
+    uint16_t adcv2;
+
     bool autoload();
 
     void init(){
@@ -359,23 +361,46 @@ public:
 
         timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
         timer1.enableArrSync();
+        TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
         timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
         timer3.enableArrSync();
+
+        adc1.init(
+            {
+            },{
+                AdcChannelConfig{AdcUtils::Channel::CH3, AdcUtils::SampleCycles::T13_5},
+                // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T1_5},
+                // AdcChannelConfig{AdcUtils::Channel::CH4, AdcUtils::SampleCycles::T13_5},
+                AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
+                // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
+                AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
+            });
+
+        adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
+        // adc1.enableContinous();
+        adc1.enableAutoInject();
+        adc1.setPga(AdcOnChip::Pga::X1);
+
 
         coilA.init();
         coilB.init();
 
         spi1.init(18000000);
         spi1.bindCsPin(portA[15], 0);
-
+        svpwm.inverse(true);
         i2cSw.init(400000);
 
         odo.init();
 
         panel_led.init();
+        adc1.bindCb(AdcUtils::IT::JEOC, [&](){
+            adcv1 = ADC1->IDATAR1;
+            adcv2 = ADC1->IDATAR3;
+        });
+        adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
-        timer3.enableIt(IT::Update, NvicPriority(0, 0));
         timer3.bindCb(IT::Update, [&](){this->tick();});
+        timer3.enableIt(IT::Update, NvicPriority(0, 0));
 
         panel_led.setPeriod(400);
         panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Squ);
@@ -431,7 +456,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(+run_status == +RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        if(+run_status == +RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, adcv1, adcv2);
         // delay(1);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;

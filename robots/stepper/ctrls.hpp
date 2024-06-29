@@ -132,6 +132,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
         static constexpr double k = a * a * pu;
 
         real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
+        // real_t abs_uni_raddiff = MIN(abs_err * pu, PI/2);
         real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.42)) , error);
 
 
@@ -148,11 +149,11 @@ struct GeneralPositionCtrl:public PositionCtrl{
 struct SpeedEstimator{
 public:
     real_t last_position = 0;
-    real_t delta_speed_per_cycle = 0;
+    // real_t delta_speed_per_cycle = 0;
     real_t last_speed = 0;
     size_t cycles = 1;
     static constexpr real_t err_threshold = inv_poles/4;
-    static constexpr size_t max_cycles = foc_freq / 80;
+    static constexpr size_t max_cycles = foc_freq / 40;
 
     void reset(){
         *this = SpeedEstimator();

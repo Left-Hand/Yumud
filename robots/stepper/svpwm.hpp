@@ -27,8 +27,6 @@ public:
 class SVPWM2:public SVPWM{
 protected:
 
-    using AT8222 = TB67H450;
-
     AT8222 & coilA;
     AT8222 & coilB;
 
@@ -40,10 +38,12 @@ protected:
 public:
     SVPWM2(AT8222 & _coilA, AT8222 & _coilB):coilA(_coilA), coilB(_coilB){;}
 
-    __fast_inline void setCurrent(const real_t _current, const real_t _elecrad) override {
-        real_t current = rsv ? -_current : _current;
-        real_t cA = cos(_elecrad) * current;
-        real_t cB = sin(_elecrad) * current;
+    __fast_inline void setCurrent(const real_t current, const real_t _elecrad) override {
+        real_t elecrad = rsv ? -_elecrad : _elecrad;
+        // real_t curr = -_current;
+        // real_t current = _current;
+        real_t cA = cos(elecrad) * current;
+        real_t cB = sin(elecrad) * current;
         setABCurrent(cA, cB);
     }
 
@@ -63,7 +63,7 @@ public:
     }
 
     void inverse(const bool & en = true){
-        rsv = true;
+        rsv = en;
     }
 };
 

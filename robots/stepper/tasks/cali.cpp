@@ -2,6 +2,69 @@
 #include "cali.hpp"
 #include <numeric>
 
+
+struct CircularTracker{
+protected:
+
+    static constexpr real_t circ = inv_poles;
+
+    real_t last_output;
+    
+    real_t findClosest(const real_t * arr, const real_t * arr_end, const real_t target){
+        //Corner cases
+        const size_t n = std::distance(arr, arr_end);
+        // 如果目标值小于等于数组第一个元素，直接返回第一个元素
+        if (target <= arr[0])
+            return arr[0];
+        // 如果目标值大于等于数组最后一个元素，直接返回最后一个元素
+        if (target >= arr[n - 1])
+            return arr[n - 1];
+        //Doing binary search
+        size_t i = 0, j = n, mid = 0;
+        while (i < j) {
+            mid = (i + j) / 2;
+    
+            if (arr[mid] == target)
+                return arr[mid];
+            if (target < arr[mid]) {
+                // 如果目标值在当前元素和前一个元素之间，返回前一个元素
+                if (mid > 0 && target > arr[mid - 1])
+                    return getClosest(arr[mid - 1],arr[mid], target);
+                j = mid;
+            }
+            else {
+                // 如果目标值在当前元素和下一个元素之间，返回下一个元素
+                if (mid < (n - 1) && target < arr[mid + 1])
+                    return getClosest(arr[mid],arr[mid + 1], target);
+                i = mid + 1;
+            }
+        }
+        return arr[mid];
+    }
+    real_t getClosest(const real_t val1,const real_t val2,const real_t target)
+    {
+        if (target - val1 >= val2 - target)
+            return val2;
+        else
+            return val1;
+    }
+public:
+    void reset(){
+        last_output = 0;
+    }
+
+    real_t update(const real_t input){
+        std::array<real_t, 3> choice;
+        // 准备三个可能的选择，考虑输入值的正负和循环周期
+        choice[1] = fmod(input, circ);
+        choice[0] = choice[1] - circ;
+        choice[2] = choice[1] + circ;
+
+        // 找到这三个选择中最接近上一次输出的值，并更新最后输出
+        return last_output = findClosest(choice.begin(), choice.end(), last_output);
+    }
+};
+
 Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     enum class SubState{
         ENTRY,
@@ -30,8 +93,8 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     constexpr int cogging_samples = 16;
     constexpr int align_ms = 200;
 
-    constexpr float cali_current = 0.6;
-    constexpr float align_current = 0.6;
+    constexpr real_t cali_current = 1.2;
+    constexpr real_t align_current = 1.2;
 
 
     static SubState sub_state = SubState::DONE;
@@ -61,18 +124,6 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
         cnt = 0;
     };
 
-    // auto accumulate_raw_position = [](const real_t & raw_lap_position){
-    //     real_t deltaLapPosition = raw_lap_position - last_raw_lap_position;
-    //     if(deltaLapPosition > real_t(0.5f)){
-    //         deltaLapPosition -= real_t(1);
-    //     }else if (deltaLapPosition < real_t(-0.5f)){
-    //         deltaLapPosition += real_t(1);
-    //     }
-
-    //     raw_position_accumulate += deltaLapPosition;
-    //     last_raw_lap_position = raw_lap_position;
-    // };
-
     {
         switch(sub_state){
             case SubState::ALIGN:
@@ -80,7 +131,6 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 if(cnt >= (int)((foc_freq / 1000) * 500)){
                     sw_state(SubState::PRE_FORWARD);
                     odo.reset();
-                    odo.inverse();
                     odo.update();
                 }
                 break;
@@ -106,12 +156,14 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
                     const uint8_t cali_index =warp_mod(openloop_pole, 50);
 
-                    static real_t last_err = 0;
+                    // static real_t last_err = 0;
 
-                    real_t err_a = fmod(odo.getRawLapPosition(), 0.02);
-                    real_t err_b = err_a - 0.02;
-
-                    last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
+                    // real_t err_a = fmod(odo.getRawLapPosition(), 0.02);
+                    // real_t err_a = odo.getRawLapPosition();
+                    // real_t err_b = err_a - 0.02;
+                    static CircularTracker tracker;
+                    real_t last_err = tracker.update(odo.getRawLapPosition());
+                    // last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
                     // last_err = err_a;
 
                     forward_pole_err[cali_index] += last_err / (forwardturns / 50);
@@ -155,12 +207,14 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
                     const uint8_t cali_index = warp_mod(openloop_pole, 50);
 
-                    static real_t last_err = 0.1;
+                    // static real_t last_err = 0.1;
+                    static CircularTracker tracker;
+                    real_t last_err = tracker.update(odo.getRawLapPosition());
+                    // real_t err_a = fmod(odo.getRawLapPosition(), 0.02);
+                    // real_t err_a = odo.getRawLapPosition();
+                    // real_t err_b = err_a - 0.02;
 
-                    real_t err_a = fmod(odo.getRawLapPosition(), 0.02);
-                    real_t err_b = err_a - 0.02;
-
-                    last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
+                    // last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
                     // last_err = err_a;
 
                     backward_pole_err[cali_index] += last_err / (backwardturns / 50);
@@ -244,12 +298,12 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                             odo.map()[i] = mean(forward_pole_err[i], backward_pole_err[i]);
                         }
                     }
-                    // initial_err -= forward_err[initial_pole];
+                    // // initial_err -= forward_err[initial_pole];
                     for(size_t p = 0; p < poles; p++){
-                        // size_t i = p % 50;
+                        size_t i = p % 50;
                         // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
-                        // logger.println(odo.map()[i], forward_pole_err[i], backward_pole_err[i], forward_mean, backward_mean);
-                        // delay(1);
+                        logger.println(odo.map()[i], forward_pole_err[i], backward_pole_err[i], forward_mean, backward_mean);
+                        delay(1);
                     }
                 }
 
