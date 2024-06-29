@@ -15,7 +15,9 @@ public:
         return 0;
     }
 
-
-
     void init();
 };
+
+#ifdef HAVE_SDI
+extern Sdi sdi;
+#endif

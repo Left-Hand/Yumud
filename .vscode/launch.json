@@ -26,8 +26,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/Yumud/src/testbench",
-      "program": "d:/Yumud/src/testbench/build/Debug/outDebug",
+      "cwd": "d:/Yumud/robots/stepper/tasks",
+      "program": "d:/Yumud/robots/stepper/tasks/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

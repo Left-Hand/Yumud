@@ -46,6 +46,7 @@
 
 
 #define DEBUGGER uart1
+// #define DEBUGGER sdi
 #define LOGGER uart1
 
 #endif

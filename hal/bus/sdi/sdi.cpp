@@ -43,3 +43,7 @@ void Sdi::write(const char * data_ptr, const size_t len){
 void Sdi::init(){
     *DEBUG_DATA0_ADDRESS = 0u;
 }
+
+#ifdef HAVE_SDI
+Sdi sdi;
+#endif
