@@ -23,19 +23,15 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), TIM3_CH3_Gpio};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), TIM3_CH2_Gpio};
+    SVPWM2 & svpwm;
 
-    SVPWM2 svpwm{coilA, coilB};
 
-    SpiDrv mt6816_drv{spi1, 0};
-    MT6816 mt6816{mt6816_drv};
+    OdometerPoles odo;
+    Memory & memory;
 
-    OdometerPoles odo = OdometerPoles(mt6816);
+    RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
+    StatLed panel_led = StatLed{led_instance};
 
-    I2cSw i2cSw{portD[1], portD[0]};
-    AT24C02 at24{i2cSw};
-    Memory memory{at24};
 
     real_t est_speed;
     real_t raw_pos;
@@ -61,6 +57,7 @@ protected:
     bool skip_tone = true;
     bool cmd_mode = false;
 
+    ShutdownFlag shutdown_flag;
 
     void setCurrent(const real_t _current, const real_t _elecrad){
         svpwm.setCurrent(_current, _elecrad);
@@ -81,19 +78,14 @@ protected:
     bool shutdown_when_warn_occurred;
 
     void shutdown(){
-        coilA.enable(false);
-        coilB.enable(false);
+        // coilA.enable(false);
+        // coilB.enable(false);
+        svpwm.enable(false);
     }
 
     void wakeup(){
-        coilA.enable(true);
-        coilB.enable(true);
+        svpwm.enable(true);
     }
-
-
-    ShutdownFlag shutdown_flag;
-
-
 
     void throw_error(const ErrorCode & _error_code,const char * _error_message) {
         error_message = _error_message;
@@ -117,8 +109,7 @@ protected:
     RunStatus beep_task(const InitFlag init_flag = false);
     RunStatus check_task(const InitFlag init_flag = false);
 
-    RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
-    StatLed panel_led = StatLed{led_instance};
+
 
 
 
@@ -131,7 +122,6 @@ protected:
                 saveArchive();
                 break;
 
-            // case ""
             case "load"_ha:
             case "ld"_ha:
                 loadArchive();
@@ -224,6 +214,9 @@ protected:
 public:
     void loadArchive();
     void saveArchive();
+
+    Stepper(IOStream & _logger, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
+            logger(_logger), svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
     void tick(){
 
@@ -321,69 +314,12 @@ public:
         }
         exe_micros = micros() - begin_micros;
     }
-
-    uint16_t adcv1;
-    uint16_t adcv2;
-
     bool autoload();
 
     void init(){
-        using TimerUtils::Mode;
-        using TimerUtils::IT;
-        
-        logger.setEps(4);
-
-        timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
-        timer1.enableArrSync();
-        timer1.oc(1).init();
-        timer1.oc(2).init();
-        timer1.oc(3).init();
-        timer1.oc(4).init();
-
-        TIM3_CH2_Gpio.outpp(1);
-        TIM3_CH3_Gpio.outpp(1);
-
-
-        TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
-        timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
-        timer3.enableArrSync();
-
-        adc1.init(
-            {
-            },{
-                AdcChannelConfig{AdcUtils::Channel::CH3, AdcUtils::SampleCycles::T13_5},
-                // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T1_5},
-                // AdcChannelConfig{AdcUtils::Channel::CH4, AdcUtils::SampleCycles::T13_5},
-                AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-                // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-                AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-            });
-
-        adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
-        // adc1.enableContinous();
-        adc1.enableAutoInject();
-        adc1.setPga(AdcOnChip::Pga::X1);
-
-        adc1.bindCb(AdcUtils::IT::JEOC, [&](){
-            adcv1 = ADC1->IDATAR1;
-            adcv2 = ADC1->IDATAR3;
-        });
-        adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
-
-        coilA.init();
-        coilB.init();
-
-        spi1.init(18000000);
-        spi1.bindCsPin(portA[15], 0);
-        svpwm.inverse(false);
-        i2cSw.init(400000);
-
         odo.init();
 
         panel_led.init();
-
-        timer3.bindCb(IT::Update, [&](){this->tick();});
-        timer3.enableIt(IT::Update, NvicPriority(0, 0));
 
         panel_led.setPeriod(400);
         panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Squ);
@@ -445,7 +381,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(+run_status == +RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle, adcv1, adcv2);
+        if(+run_status == +RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
         // delay(1);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
@@ -456,7 +392,9 @@ public:
         // bled = led_status;
     }
 
-
+    bool isActive(){
+        return +RunStatus::ACTIVE == +run_status;
+    }
 };
 
 #endif

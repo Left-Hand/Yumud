@@ -25,31 +25,28 @@ public:
 
 
 class SVPWM2:public SVPWM{
-protected:
+public:
+    AT8222 & coil_a;
+    AT8222 & coil_b;
 
-    AT8222 & coilA;
-    AT8222 & coilB;
-
-    __fast_inline void setABCurrent(const real_t aCurrent, const real_t bCurrent){
-        coilA = aCurrent;
-        coilB = bCurrent;
+    void setABCurrent(const real_t aCurrent, const real_t bCurrent){
+        coil_a = aCurrent;
+        coil_b = bCurrent;
     }
 
 public:
-    SVPWM2(AT8222 & _coilA, AT8222 & _coilB):coilA(_coilA), coilB(_coilB){;}
+    SVPWM2(AT8222 & _coilA, AT8222 & _coilB):coil_a(_coilA), coil_b(_coilB){;}
 
-    __fast_inline void setCurrent(const real_t current, const real_t _elecrad) override {
+    void setCurrent(const real_t current, const real_t _elecrad) override {
         real_t elecrad = rsv ? -_elecrad : _elecrad;
-        // real_t curr = -_current;
-        // real_t current = _current;
         real_t cA = cos(elecrad) * current;
         real_t cB = sin(elecrad) * current;
         setABCurrent(cA, cB);
     }
 
     void init() override{
-        coilA.init();
-        coilB.init();
+        coil_a.init();
+        coil_b.init();
     }
 
     void setClamp(const real_t & _clamp) override{
@@ -58,11 +55,11 @@ public:
     }
 
     void enable(const bool & en) override{
-        coilA.enable(en);
-        coilB.enable(en);
+        coil_a.enable(en);
+        coil_b.enable(en);
     }
 
-    void inverse(const bool & en = true){
+    void inverse(const bool en = true){
         rsv = en;
     }
 };

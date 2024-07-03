@@ -100,11 +100,8 @@ public:
     void init(){
         forward_pwm.setPolarity(false);
         backward_pwm.setPolarity(false);
-    }
 
-    void setHwCurrentClamp(const real_t abs_max_value){
-        // vref_pwm = ABS(abs_max_value) * inv_fullscale;
-        // vref_pwm = 1.0;
+        enable_gpio.set();
     }
 
     void enable(const bool en = true){
@@ -116,6 +113,7 @@ public:
     }
 
     void setCurrent(const real_t curr){
+        // enable_gpio.set();
         if(curr > 0){
             forward_pwm = 0;
             backward_pwm = curr * inv_fullscale;
