@@ -18,7 +18,7 @@ public:
 
     operator uint16_t(){return read();}
 
-    constexpr uint8_t getSize(){
+    constexpr uint8_t length(){
         return size;
     }
 

@@ -26,8 +26,8 @@ public:
 
 class SVPWM2:public SVPWM{
 public:
-    AT8222 & coil_a;
-    AT8222 & coil_b;
+    Coil2PConcept & coil_a;
+    Coil2PConcept & coil_b;
 
     void setABCurrent(const real_t aCurrent, const real_t bCurrent){
         coil_a = aCurrent;
@@ -35,7 +35,7 @@ public:
     }
 
 public:
-    SVPWM2(AT8222 & _coilA, AT8222 & _coilB):coil_a(_coilA), coil_b(_coilB){;}
+    SVPWM2(Coil2PConcept & _coilA, Coil2PConcept & _coilB):coil_a(_coilA), coil_b(_coilB){;}
 
     void setCurrent(const real_t current, const real_t _elecrad) override {
         real_t elecrad = rsv ? -_elecrad : _elecrad;

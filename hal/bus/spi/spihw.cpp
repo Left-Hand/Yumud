@@ -119,19 +119,21 @@ void SpiHw::installGpios(){
     Gpio & sclk_pin = getSclkPin();
     sclk_pin.afpp();
 
-    if(!cs_pins.isIndexValid(0)){
-        Gpio & cs_pin = getCsPin();
-        cs_pin.set();
-        if(hw_cs_enabled){
-            cs_pin.afpp();
-        }else{
-            cs_pin.outpp();
-        }
-        bindCsPin(cs_pin, 0);
-    }
+    // if(!cs_pins.isIndexValid(0)){
+    //     Gpio & cs_pin = getCsPin();
+    //     cs_pin.set();
+    //     if(hw_cs_enabled){
+    //         cs_pin.afpp();
+    //     }else{
+    //         cs_pin.outpp();
+    //     }
+    //     bindCsPin(cs_pin, 0);
+    // }
 
-    for(uint8_t i = 0; i < cs_pins.getSize(); i++){
-        cs_pins[i].outpp();
+    for(uint8_t i = 0; i < cs_pins.length(); i++){
+        auto & cs_gpio = cs_pins[i];
+        if(cs_gpio.isValid())
+            cs_gpio.outpp();
     }
 }
 

@@ -23,6 +23,7 @@ public:
 
 
     void bindCsPin(GpioConcept & gpio, const uint8_t index){
+        gpio.outpp();
         cs_pins.bindPin(gpio, index);
     }
 };

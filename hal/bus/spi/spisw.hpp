@@ -119,7 +119,7 @@ public:
         mosi_pin.outpp();
         sclk_pin.outpp();
 
-        for(uint8_t i = 0; i < cs_pins.getSize(); i++){
+        for(uint8_t i = 0; i < cs_pins.length(); i++){
             cs_pins.setModeByIndex(i, PinMode::OutPP);
         }
 

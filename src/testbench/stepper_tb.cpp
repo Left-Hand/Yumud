@@ -139,6 +139,7 @@ void stepper_tb(IOStream & logger){
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
+
     SpiDrv mt6816_drv{spi1, 0};
     MT6816 mt6816{mt6816_drv};
 
