@@ -146,46 +146,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
         }
     }
 };
-struct SpeedEstimator{
-public:
-    real_t last_position = 0;
-    // real_t delta_speed_per_cycle = 0;
-    real_t last_speed = 0;
-    size_t cycles = 1;
-    static constexpr real_t err_threshold = inv_poles/4;
-    static constexpr size_t max_cycles = foc_freq / 40;
 
-    void reset(){
-        *this = SpeedEstimator();
-    }
-
-    real_t update(const real_t position){
-        real_t delta_pos = position - last_position;
-        real_t abs_delta_pos = ABS(delta_pos);
-        real_t this_speed = (delta_pos * int(foc_freq) / int(cycles));
-
-        if(abs_delta_pos > err_threshold){//high speed one cycle
-            // real_t delta_speed_per_cycle_clamp = ABS(last_speed / (cycles * 8));
-            // delta_speed_per_cycle = SIGN_AS(MIN(ABS(this_speed - last_speed)/cycles, delta_speed_per_cycle_clamp), this_speed - last_speed);
-
-            cycles = 1;
-            last_position = position;
-            return last_speed = this_speed;
-        }else{
-            cycles++;
-            if(cycles > max_cycles){
-                
-                cycles = 1;
-                last_position = position;
-                // delta_speed_per_cycle = 0;
-                return last_speed = this_speed;
-            }
-        }
-
-        // if(ABS(last_speed) < (1)) return last_speed + delta_speed_per_cycle * cycles;
-        return last_speed;
-    }
-};
 struct TopLayerCtrl{
 
 };

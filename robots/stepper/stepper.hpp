@@ -4,7 +4,7 @@
 
 #include "cli.hpp"
 #include "ctrls.hpp"
-#include "obs.hpp"
+#include "observer.hpp"
 #include "archive.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
@@ -23,9 +23,8 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), timer3.oc(3)};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), timer3.oc(2)};
-
+    AT8222 coilA{timer1.oc(3), timer1.oc(4), TIM3_CH3_Gpio};
+    AT8222 coilB{timer1.oc(1), timer1.oc(2), TIM3_CH2_Gpio};
 
     SVPWM2 svpwm{coilA, coilB};
 
@@ -38,20 +37,17 @@ protected:
     AT24C02 at24{i2cSw};
     Memory memory{at24};
 
-    uint32_t foc_pulse_micros;
     real_t est_speed;
     real_t raw_pos;
     real_t est_pos;
     real_t est_elecrad;
+    real_t elecrad_zerofix;
 
     real_t run_current;
     real_t run_elecrad;
     real_t run_leadangle;
-    real_t elecrad_zerofix;
-
     real_t target;
 
-    real_t openloop_elecrad;
     CurrentCtrl curr_ctrl;
     GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
@@ -93,28 +89,6 @@ protected:
         coilA.enable(true);
         coilB.enable(true);
     }
-
-    struct ShutdownFlag{
-    protected:
-        bool state = false;
-    public:
-
-        ShutdownFlag() = default;
-
-        auto & operator = (const bool _state){
-            state = _state;
-
-            //TODO
-            // if(state) shutdown();
-            // else wakeup();
-
-            return *this;
-        }
-
-        operator bool() const{
-            return state;
-        }
-    };
 
 
     ShutdownFlag shutdown_flag;
@@ -361,6 +335,15 @@ public:
 
         timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
         timer1.enableArrSync();
+        timer1.oc(1).init();
+        timer1.oc(2).init();
+        timer1.oc(3).init();
+        timer1.oc(4).init();
+
+        TIM3_CH2_Gpio.outpp(1);
+        TIM3_CH3_Gpio.outpp(1);
+
+
         TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
         timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
         timer3.enableArrSync();
@@ -381,29 +364,35 @@ public:
         adc1.enableAutoInject();
         adc1.setPga(AdcOnChip::Pga::X1);
 
-
-        coilA.init();
-        coilB.init();
-
-        spi1.init(18000000);
-        spi1.bindCsPin(portA[15], 0);
-        svpwm.inverse(true);
-        i2cSw.init(400000);
-
-        odo.init();
-
-        panel_led.init();
         adc1.bindCb(AdcUtils::IT::JEOC, [&](){
             adcv1 = ADC1->IDATAR1;
             adcv2 = ADC1->IDATAR3;
         });
         adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
+        coilA.init();
+        coilB.init();
+
+        spi1.init(18000000);
+        spi1.bindCsPin(portA[15], 0);
+        svpwm.inverse(false);
+        i2cSw.init(400000);
+
+        odo.init();
+
+        panel_led.init();
+
         timer3.bindCb(IT::Update, [&](){this->tick();});
         timer3.enableIt(IT::Update, NvicPriority(0, 0));
 
         panel_led.setPeriod(400);
         panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Squ);
+    }
+
+    void setTargetCurrent(const real_t current){
+        target = current;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){

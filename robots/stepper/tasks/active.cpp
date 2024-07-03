@@ -70,8 +70,11 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         HighLayerCtrl::Result result;
 
         switch(ctrl_type){
+            case CtrlType::CURRENT:
+                result = {ABS(target), SIGN_AS(PI / 2, target)};
+                break;
             case CtrlType::VECTOR:
-                result = {0.6, 0};
+                result = {openloop_current_limit, 0};
                 break;
             case CtrlType::POSITION:
                 result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);

@@ -290,21 +290,24 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                         for(auto & item : forward_pole_err) item += inv_poles;
                     }
 
-                    bool load_ok = autoload();
-                    if(load_ok){
+                    for(uint8_t i = 0; i < poles; i++){
+                        odo.map()[i] = mean(forward_pole_err[i], backward_pole_err[i]);
+                    }
+                    // bool load_ok = autoload();
+                    // if(load_ok){
                         
-                    }else{
-                        for(uint8_t i = 0; i < poles; i++){
-                            odo.map()[i] = mean(forward_pole_err[i], backward_pole_err[i]);
-                        }
-                    }
-                    // // initial_err -= forward_err[initial_pole];
-                    for(size_t p = 0; p < poles; p++){
-                        size_t i = p % 50;
-                        // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
-                        logger.println(odo.map()[i], forward_pole_err[i], backward_pole_err[i], forward_mean, backward_mean);
-                        delay(1);
-                    }
+                    // }else{
+                    //     for(uint8_t i = 0; i < poles; i++){
+                    //         odo.map()[i] = mean(forward_pole_err[i], backward_pole_err[i]);
+                    //     }
+                    // }
+                    // // // initial_err -= forward_err[initial_pole];
+                    // for(size_t p = 0; p < poles; p++){
+                    //     size_t i = p % 50;
+                    //     // logger << forward_test_data[i].first << ", " << forward_test_data[i].second << ", " << forward_err[i] << ", " << backward_test_data[i].first << ", " << backward_test_data[i].second << ", " <<  backward_err[i] << "\r\n";
+                    //     // logger.println(odo.map()[i], forward_pole_err[i], backward_pole_err[i], forward_mean, backward_mean);
+                    //     delay(1);
+                    // }
                 }
 
 

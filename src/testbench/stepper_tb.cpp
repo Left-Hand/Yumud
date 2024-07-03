@@ -116,7 +116,7 @@ void stepper_tb(IOStream & logger){
 
     // can1.init(Can::BaudRate::Mbps1);
     stp.init();
-    stp.setCurrentClamp(1.7);
+    stp.setCurrentClamp(1.2);
     while(true){
         stp.run();
         // stp.setTagretVector(2 * sin(t));
@@ -126,6 +126,7 @@ void stepper_tb(IOStream & logger){
         Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(0.05 * t);
+        // stp.setTargetCurrent(0.6 * sin(t));
         // stp.setTargetPosition(2 * sin(8 * t));
         // stp.setTargetPosition(20 * floor(t/3));
         // stp.setTagretTrapezoid(70 * floor(t / 3));
@@ -142,7 +143,7 @@ void stepper_tb(IOStream & logger){
         // stp.setTargetSpeed(20 * sin(t));
         // stp.setTargetSpeed(5);
         // stp.setTargetSpeed(sin(t));
-        // ss();
+        ss();
         // stp.setTargetSpeed(CLAMP(60 * sin(2 * t), 10, 35));
         // stp.setTargetSpeed((5 << (int(2 * t) % 4)));
         // stp.setTargetSpeed(5 * sin(2*t));

@@ -66,8 +66,7 @@
         "src/testbench/pmdc_tb.cpp",
         "src/testbench/pwm_tb.cpp",
         "src/testbench/temp_tb.cpp",
-        "src/testbench/temp_tb2.cpp",
-        "src/testbench/uart_tb.cpp"
+        "src/testbench/temp_tb2.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {

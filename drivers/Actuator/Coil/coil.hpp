@@ -85,27 +85,21 @@ public:
     Coil1 & operator = (const real_t & duty) override {setDuty(duty); return *this;}
 };
 
+
+
 class AT8222{
 protected:
     TimerOC & forward_pwm;
     TimerOC & backward_pwm;
-    PwmChannel & vref_pwm;
-    bool enabled = true;
-    bool softmode = true;
+    GpioConcept & enable_gpio;
     real_t inv_fullscale = 0.5;
 public:
-    AT8222(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannel & _vref_pwm):
-            forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), vref_pwm(_vref_pwm){;}
+    AT8222(TimerOC & _forward_pwm, TimerOC & _backward_pwm, GpioConcept & _en_gpio):
+            forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), enable_gpio(_en_gpio){;}
 
     void init(){
-        forward_pwm.init();
-        backward_pwm.init();
-        vref_pwm.init();
-
         forward_pwm.setPolarity(false);
         backward_pwm.setPolarity(false);
-
-        if(softmode) vref_pwm = 1.0;
     }
 
     void setHwCurrentClamp(const real_t abs_max_value){
@@ -114,39 +108,23 @@ public:
     }
 
     void enable(const bool en = true){
-        enabled = en;
+        enable_gpio = en;
         if(!en){
             forward_pwm = real_t(1);
             backward_pwm = real_t(1);
-            vref_pwm = real_t(0);
         }
     }
 
     void setCurrent(const real_t curr){
-
-        if(!enabled) return;
-
-        if(softmode){
-            if(curr > 0){
-                forward_pwm = 0;
-                backward_pwm = curr * inv_fullscale;
-            }else if(curr < 0){
-                forward_pwm = -curr * inv_fullscale;
-                backward_pwm = 0;
-            }else{
-                forward_pwm = 0;
-                backward_pwm = 0;
-            }
+        if(curr > 0){
+            forward_pwm = 0;
+            backward_pwm = curr * inv_fullscale;
+        }else if(curr < 0){
+            forward_pwm = -curr * inv_fullscale;
+            backward_pwm = 0;
         }else{
-            if(curr > 0){
-                forward_pwm = real_t(0);
-                backward_pwm = real_t(1);
-                vref_pwm = curr * inv_fullscale;
-            }else{
-                forward_pwm = real_t(1);
-                backward_pwm = real_t(0);
-                vref_pwm = -curr * inv_fullscale;
-            }
+            forward_pwm = 0;
+            backward_pwm = 0;
         }
     }
 
