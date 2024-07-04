@@ -9,7 +9,7 @@ int main(){
     // pmdc_tb();
     // uart_tb(uart1);
     // joystick_tb(uart1);
-    gpio_tb(portC[15]);
+    gpio_tb(portC[13]);
     // stepper_tb(uart1);
     // lds14_tb(logger, uart2);-
     // pca_tb(logger);

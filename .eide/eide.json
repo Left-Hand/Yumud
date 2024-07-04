@@ -30,11 +30,8 @@
     "sys/sdk/ch32v307/Ld",
     "sys/sdk/ch32v307/Startup",
     "sys",
-    "sys/sdk/ch32v307/Peripheral/inc",
-    "sys/sdk/ch32v307/Peripheral/src",
     "sys/sdk/ch32v203/Core",
     "sys/sdk/ch32v203/Ld",
-    "sys/sdk/ch32v203/Peripheral",
     "sys/sdk/ch32v203/Startup",
     "sys/sdk/ch32v203",
     "sys/sdk/ch32v307"
@@ -56,7 +53,6 @@
         "Startup/startup_ch32v30x_D8.S",
         "sdk/Startup/startup_ch32v20x_D8W.S",
         "sdk/Startup/startup_ch32v20x_D8.S",
-        "<virtual_root>/testVirtualFolder",
         "thirdparty/lua/manual",
         "thirdparty/lua/testes",
         "thirdparty/lua/lua.c",
@@ -189,115 +185,6 @@
         "defineList": [
           "WCH",
           "RISCV",
-          "CH32V203",
-          "CH32V203FXX",
-          "CH32V203GXX",
-          "CH32V203KXX",
-          "CH32V203CXX",
-          "LUA_USE_C89",
-          "CH32V20X"
-        ]
-      }
-    },
-    "OS": {
-      "excludeList": [
-        "Startup/startup_ch32v30x_D8.S",
-        "sdk/Startup/startup_ch32v20x_D8W.S",
-        "sdk/Startup/startup_ch32v20x_D8.S",
-        "<virtual_root>/testVirtualFolder"
-      ],
-      "toolchain": "RISCV_GCC",
-      "compileConfig": {
-        "linkerScriptPath": "",
-        "options": "null"
-      },
-      "uploader": "OpenOCD",
-      "uploadConfig": {
-        "bin": "",
-        "target": "${workspaceFolder}/tools/wch-target",
-        "interface": "${workspaceFolder}/tools/wch-interface",
-        "baseAddr": "0x08000000"
-      },
-      "uploadConfigMap": {
-        "JLink": {
-          "bin": "",
-          "baseAddr": "0x08000000",
-          "cpuInfo": {
-            "vendor": "ST",
-            "cpuName": "STM32F103C8"
-          },
-          "proType": 1,
-          "speed": 8000,
-          "otherCmds": ""
-        },
-        "OpenOCD": {
-          "bin": "",
-          "target": "${workspaceFolder}/tools/wch-target",
-          "interface": "${workspaceFolder}/tools/wch-interface",
-          "baseAddr": "0x08000000"
-        },
-        "Custom": {
-          "bin": "",
-          "commandLine": "bash ./tools/program_flash.sh \"${programFile}\"",
-          "eraseChipCommand": ""
-        }
-      },
-      "custom_dep": {
-        "name": "default",
-        "incList": [
-          "sdk/Peripheral/inc",
-          "src",
-          "sdk/Core",
-          "sdk/Debug",
-          "types",
-          "types/basis",
-          "types/buffer",
-          "types/color",
-          "types/complex",
-          "types/image",
-          "types/iq",
-          "types/matrix",
-          "types/quat",
-          "types/range",
-          "types/rect2",
-          "types/string",
-          "types/vector2",
-          ".",
-          "src/debug",
-          "src/device",
-          "src/clock",
-          "src/dma",
-          "robots",
-          "robots/stepper/tasks",
-          "robots/stepper",
-          "sys/sdk/ch32v203",
-          "src/defines",
-          "sys/sdk/ch32v203/Peripheral/inc",
-          "sys/sdk/ch32v203/Peripheral/src",
-          "hal",
-          "hal/bus/usb/cdc"
-        ],
-        "libList": [
-          "src/clock",
-          "src/dma",
-          "robots",
-          "robots/stepper/tasks",
-          "robots/stepper",
-          "sys/sdk/ch32v203",
-          "src/defines",
-          "sys/sdk/ch32v203/Peripheral/inc",
-          "sys/sdk/ch32v203/Peripheral/src",
-          "hal",
-          "hal/bus/usb/cdc"
-        ],
-        "defineList": [
-          "WCH",
-          "RISCV",
-          "CH32V203",
-          "CH32V203FXX",
-          "CH32V203GXX",
-          "CH32V203KXX",
-          "CH32V203CXX",
           "LUA_USE_C89",
           "CH32V20X"
         ]
@@ -308,7 +195,6 @@
         "Startup/startup_ch32v30x_D8.S",
         "sdk/Startup/startup_ch32v20x_D8W.S",
         "sdk/Startup/startup_ch32v20x_D8.S",
-        "<virtual_root>/testVirtualFolder",
         "thirdparty/lua/manual",
         "thirdparty/lua/testes",
         "thirdparty/lua/lua.c",
@@ -324,7 +210,36 @@
         "src/testbench/pwm_tb.cpp",
         "src/testbench/temp_tb.cpp",
         "src/testbench/temp_tb2.cpp",
-        "sys/sdk"
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_adc.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_bkp.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_crc.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_can.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_dac.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_dbgmcu.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_dma.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_dvp.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_eth.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_exti.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_flash.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_fsmc.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_gpio.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_i2c.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_iwdg.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_misc.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_opa.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_pwr.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_rcc.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_rng.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_rtc.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_sdio.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_spi.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_tim.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_usart.c",
+        "sys/sdk/ch32v203/Peripheral/src/ch32v20x_wwdg.c",
+        "sys/sdk/ch32v203/Startup/startup_ch32v20x_D8.S",
+        "sys/sdk/ch32v203/Core/core_riscv.c",
+        "sys/sdk/ch32v203/system_ch32v20x.c",
+        "sys/sdk/ch32v203/Startup/startup_ch32v20x_D6.S"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -394,11 +309,8 @@
           "hal",
           "hal/bus/usb/cdc",
           "sys/sdk/ch32v307",
-          "sys/sdk/ch32v307/Core",
-          "sys/sdk/ch32v307/Ld",
-          "sys/sdk/ch32v307/Peripheral",
-          "sys/sdk/ch32v307/Startup",
-          "sys/sdk/ch32v307/Peripheral/inc"
+          "sys/sdk/ch32v307/Peripheral/inc",
+          "sys/sdk/ch32v307/Peripheral/src"
         ],
         "libList": [
           "src/clock",
@@ -406,10 +318,12 @@
           "robots",
           "robots/stepper/tasks",
           "robots/stepper",
+          "sys/sdk/ch32v307",
           "src/defines",
           "hal",
           "hal/bus/usb/cdc",
-          "sys/sdk/ch32v307/Peripheral/inc"
+          "sys/sdk/ch32v307/Peripheral/inc",
+          "sys/sdk/ch32v307/Peripheral/src"
         ],
         "defineList": [
           "WCH",
