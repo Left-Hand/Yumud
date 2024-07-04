@@ -8,6 +8,7 @@
 #include <type_traits>
 
 template <typename real>
+requires std::is_arithmetic_v<real>
 struct Vector3_t{
 public:
     real x = real(0);

@@ -176,3 +176,4 @@ void pmdc_tb();
 void lds14_tb(IOStream & logger,Uart & uart);
 
 void pca_tb(IOStream & logger);
+void joystick_tb(OutputStream & logger);

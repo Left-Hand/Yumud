@@ -119,21 +119,19 @@ void SpiHw::installGpios(){
     Gpio & sclk_pin = getSclkPin();
     sclk_pin.afpp();
 
-    // if(!cs_pins.isIndexValid(0)){
-    //     Gpio & cs_pin = getCsPin();
-    //     cs_pin.set();
-    //     if(hw_cs_enabled){
-    //         cs_pin.afpp();
-    //     }else{
-    //         cs_pin.outpp();
-    //     }
-    //     bindCsPin(cs_pin, 0);
-    // }
+    if(!cs_port.isIndexValid(0)){
+        Gpio & cs_pin = getCsPin();
+        cs_pin.set();
+        if(hw_cs_enabled){
+            cs_pin.afpp();
+        }else{
+            cs_pin.outpp();
+        }
+        bindCsPin(cs_pin, 0);
+    }
 
-    for(uint8_t i = 0; i < cs_pins.length(); i++){
-        auto & cs_gpio = cs_pins[i];
-        if(cs_gpio.isValid())
-            cs_gpio.outpp();
+    for(uint8_t i = 0; i < cs_port.length(); i++){
+        cs_port[i].outpp();
     }
 }
 
@@ -190,7 +188,7 @@ SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
     transfer(data, 0);
     return ErrorType::OK;
 }
-SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
     if(txMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
@@ -221,7 +219,7 @@ void SpiHw::configBaudRate(const uint32_t baudRate){
 }
 
 void SpiHw::configBitOrder(const bool msb){
-    instance->CTLR1 &= (!SPI_FirstBit_LSB);
+    instance->CTLR1 &= ~SPI_FirstBit_LSB;
     instance->CTLR1 |= msb ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }
 #ifdef HAVE_SPI1

@@ -26,7 +26,7 @@ public:
 
     Error write(const uint32_t data) override;
     Error read(uint32_t & data, bool toAck = true) override;
-    Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) override;
+    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override;
 
     void configDataSize(const uint8_t data_size) override;
     void configBaudRate(const uint32_t baudRate) override;

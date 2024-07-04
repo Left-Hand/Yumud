@@ -138,7 +138,7 @@ public:
 
 class FullDuplexBus:public DuplexBus{
 public:
-    virtual Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck = true) = 0;
+    virtual Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) = 0;
 };
 
 
