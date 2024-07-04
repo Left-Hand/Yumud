@@ -7,6 +7,8 @@
 //defines for iqlib
 #define USE_IQ
 
+#define IQ_USE_LOG
+
 #define EXTRA_IQ
 
 #define HAVE_UART1

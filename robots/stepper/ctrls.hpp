@@ -23,8 +23,8 @@ public:
         current_clamp = maximum;
     }
 
-    real_t update(const real_t target){
-        real_t current_delta = CLAMP(target - current_output, -current_slew_rate, current_slew_rate);
+    real_t update(const real_t targ_current){
+        real_t current_delta = CLAMP(targ_current - current_output, -current_slew_rate, current_slew_rate);
         current_output = MIN(current_output + current_delta, current_clamp);
         return current_output;
     }
@@ -46,7 +46,6 @@ protected:
 public:
 
     HighLayerCtrl(CurrentCtrl & _ctrl):curr_ctrl(_ctrl){;}
-    virtual void setCurrentClamp(const real_t max_current) = 0;
     virtual void reset() = 0;
 };
 
@@ -64,11 +63,11 @@ struct PositionCtrl:public HighLayerCtrl{
 struct GeneralSpeedCtrl:public SpeedCtrl{
     GeneralSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
-    real_t kp = 5;
-    real_t kp_clamp = 40;
+    real_t kp = 4;
+    real_t kp_clamp = 60;
 
     real_t last_speed = 0;
-    real_t kd = 170;
+    real_t kd = 40;
     real_t kd_active_radius = 1.2;
     real_t kd_clamp = 2.4;
 
@@ -76,9 +75,6 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
 
     void reset() override {
         targ_current = 0;
-    }
-
-    void setCurrentClamp(const real_t max_current) override{
     }
 
     Result update(const real_t targ_speed,const real_t real_speed) override{
@@ -91,7 +87,7 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
         real_t kp_contribute = CLAMP(error * kp, -kp_clamp, kp_clamp);
         real_t kd_contribute = CLAMP(kd * speed_delta, -kd_clamp, kd_clamp);
 
-        if((ABS(error) > kd_active_radius)) kd_contribute /= 2;
+        if((ABS(error) > kd_active_radius)) kd_contribute /= 3;
 
         targ_current += (kp_contribute >> 16) - (kd_contribute >> 8); 
 
@@ -107,9 +103,8 @@ struct GeneralPositionCtrl:public PositionCtrl{
     GeneralPositionCtrl(CurrentCtrl & ctrl):PositionCtrl(ctrl){;}
 
     real_t kp = 80;
-
     real_t kd = 50;
-    // Range kd_active_range = {0.02, 0.3};
+
     real_t kd_active_radius = 0.7;
     bool inited = false;
 
@@ -122,9 +117,6 @@ struct GeneralPositionCtrl:public PositionCtrl{
     real_t last_current;
     real_t error;
 
-    void setCurrentClamp(const real_t max_current) override {
-
-    }
 
     void reset() override {
         inited = false;
@@ -167,7 +159,7 @@ public:
     real_t last_speed = 0;
     size_t cycles = 1;
     static constexpr real_t err_threshold = inv_poles/4;
-    static constexpr size_t max_cycles = est_freq / 80;
+    static constexpr size_t max_cycles = foc_freq / 80;
 
     void reset(){
         *this = SpeedEstimator();
@@ -176,7 +168,7 @@ public:
     real_t update(const real_t position){
         real_t delta_pos = position - last_position;
         real_t abs_delta_pos = ABS(delta_pos);
-        real_t this_speed = (delta_pos * int(est_freq) / int(cycles));
+        real_t this_speed = (delta_pos * int(foc_freq) / int(cycles));
 
         if(abs_delta_pos > err_threshold){//high speed one cycle
             // real_t delta_speed_per_cycle_clamp = ABS(last_speed / (cycles * 8));
@@ -218,7 +210,6 @@ struct TrapezoidPosCtrl:public TopLayerCtrl{
     };
     Tstatus tstatus = Tstatus::STA;
     real_t goal_speed = 0;
-        // real_t goal_pos = target;
     real_t last_pos_err = 0;
     using Result = HighLayerCtrl::Result;
     
@@ -246,18 +237,9 @@ struct TrapezoidPosCtrl:public TopLayerCtrl{
                     goal_speed = CLAMP(goal_speed, -max_spd, max_spd);
                     return speed_ctrl.update(goal_speed, real_speed);
                 }
-                // tstatus = Tstatus::STA;
-
-            // case Tstatus::SUS:
-
-                // else if(pos_err * last_pos_err < 0){
-                    // tstatus = Tstatus::STA;
-                // }
                 break;
-                // break;
+
             case Tstatus::DEC:
-                // tstatus = Tstatus::STA;
-                // break;
                 if(cross and (ABS(goal_speed) < hug_speed)){
                     tstatus = Tstatus::STA;
                 }
@@ -307,8 +289,6 @@ struct OverloadSpeedCtrl:public SpeedCtrl{
     void reset() override {
         inited = false;
     }
-
-    void setCurrentClamp(const real_t clamp) override {;}
 
 
     Result update(const real_t targ_speed,const real_t real_speed) override{

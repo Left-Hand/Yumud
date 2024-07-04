@@ -7,13 +7,13 @@
 #include "obs.hpp"
 #include "archive.hpp"
 
-using AT8222 = TB67H450;
 
+using AT8222 = TB67H450;
 
 class Stepper:public StepperUtils::Cli{
 protected:
-    using ExitFlag = bool;
-    using InitFlag = bool;
+    using ExitFlag = StepperEnums::ExitFlag;
+    using InitFlag = StepperEnums::InitFlag;
 
     using Range = Range_t<real_t>;
     using ErrorCode = StepperEnums::ErrorCode;
@@ -28,7 +28,7 @@ protected:
     AT8222 coilB{timer1.oc(1), timer1.oc(2), timer3.oc(2)};
 
 
-    // SVPWM2 svpwm{coilA, coilB};
+    SVPWM2 svpwm{coilA, coilB};
 
     SpiDrv mt6816_drv{spi1, 0};
     MT6816 mt6816{mt6816_drv};
@@ -68,12 +68,7 @@ protected:
 
 
     void setCurrent(const real_t _current, const real_t _elecrad){
-        // real_t current = -_current;
-
-        real_t cA = cos(_elecrad) * _current;
-        real_t cB = sin(_elecrad) * _current;
-        coilA = cA;
-        coilB = cB;
+        svpwm.setCurrent(_current, _elecrad);
     }
 
 
@@ -416,8 +411,6 @@ public:
 
     void setCurrentClamp(const real_t max_current){
         curr_ctrl.setCurrentClamp(max_current);
-        speed_ctrl.setCurrentClamp(max_current);
-        position_ctrl.setCurrentClamp(max_current);
     }
 
     void run() override{

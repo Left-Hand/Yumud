@@ -92,28 +92,12 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
     
 
-    {
-        HighLayerCtrl::Result result;
-
-        switch(ctrl_type){
-            case CtrlType::POSITION:
-                result = trapezoid_ctrl.update(target, est_pos, est_speed, est_elecrad);
-                break;
-            case CtrlType::SPEED:
-                result = speed_ctrl.update(target, est_speed);
-                break;
-        } 
-
-        run_current = result.current;
-        run_leadangle = result.raddiff;
-    }
-
-    {//estimate speed and update controller
+    static SpeedEstimator speed_estmator;
+    est_speed = (speed_estmator.update(raw_pos) + est_speed * 127) >> 7;
+    if(false){//estimate speed and update controller
         // static real_t est_delta_raw_pos_intergal = real_t();
-        static SpeedEstimator speed_estmator;
         est_cnt++;
         if(est_cnt%est_devider == 0){ // est happens
-            est_speed = (speed_estmator.update(raw_pos) + est_speed * 31) >> 5;
             // est_speed = speed_estmator.update(raw_pos);
             // if(true){
             //     switch(CTZ(MAX(int(abs(est_speed_new)), 1))){
