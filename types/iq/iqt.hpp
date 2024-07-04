@@ -6,16 +6,17 @@
 #include "stdint.h"
 #include "sys/platform.h"
 #include "extra_convs.hpp"
-#include "IQmath_RV32.h"
 
+#include <IQmath_RV32.h>
 #include <type_traits>
 #include <limits>
 
 #include "dsp/constexprmath/ConstexprMath.hpp"
 
+
 struct _iq{
     _iq16 value = 0;
-    __fast_inline_constexpr explicit _iq(const _iq16 & _value) : value(_value){;}
+    __fast_inline_constexpr explicit _iq(const _iq16 _value) : value(_value){;}
     __fast_inline_constexpr operator _iq16() const{return value;}
 };
 
@@ -158,7 +159,7 @@ public:
 
     #undef IQ_OPERATOR_TEMPLATE
 
-    __fast_inline_constexpr iq_t& operator=(const auto & other){
+    __fast_inline_constexpr iq_t& operator=(const auto other){
         *this = iq_t(other);
         return *this;
     }
@@ -437,8 +438,14 @@ namespace std{
     class numeric_limits<iq_t> {
     public:
         __fast_inline_constexpr static iq_t infinity() noexcept {return iq_t((1 << GLOBAL_Q) - 1);}
-        __fast_inline_constexpr static iq_t lowest() noexcept {return iq_t(-(1 << GLOBAL_Q));}
+        __fast_inline_constexpr static iq_t lowest() noexcept {return iq_t((1 << GLOBAL_Q));}
+
+        __fast_inline_constexpr static iq_t min() noexcept {return iq_t((1 << GLOBAL_Q) - 1);}
+        __fast_inline_constexpr static iq_t max() noexcept {return iq_t((1 << GLOBAL_Q));}
     };
+
+    template <>
+    struct is_arithmetic<iq_t> : std::true_type {};
 
     typedef std::common_type<iq_t, float>::type real_t;
     typedef std::common_type<iq_t, double>::type real_t;
