@@ -25,7 +25,6 @@ protected:
 
     SVPWM2 & svpwm;
 
-
     OdometerPoles odo;
     Memory & memory;
 
@@ -110,9 +109,6 @@ protected:
     RunStatus check_task(const InitFlag init_flag = false);
 
 
-
-
-
     void parse_command(const String & _command, const std::vector<String> & args) override{
         auto command = _command;
         command.toLowerCase();
@@ -125,6 +121,13 @@ protected:
             case "load"_ha:
             case "ld"_ha:
                 loadArchive();
+                break;
+            
+            case "pos.p"_ha:
+                settle_value(position_ctrl.kp, args);
+                break;
+            case "pos.d"_ha:
+                settle_value(position_ctrl.kd, args);
                 break;
 
             case "speed"_ha:
@@ -187,6 +190,7 @@ protected:
                 cali_task(true);
                 break;
 
+
             case "beep"_ha:
                 beep_task(true);
                 break;
@@ -205,6 +209,14 @@ protected:
                 DEBUG_PRINT("shutdown ok");
                 break;
 
+
+            case "remove"_ha:
+            case "rm"_ha:
+                // shutdown();
+                removeArchive();
+                // DEBUG_PRINT("shutdown ok");
+                break;
+
             default:
                 Cli::parse_command(command, args);
                 break;
@@ -214,6 +226,7 @@ protected:
 public:
     void loadArchive();
     void saveArchive();
+    void removeArchive();
 
     Stepper(IOStream & _logger, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
             logger(_logger), svpwm(_svpwm), odo(encoder), memory(_memory){;}

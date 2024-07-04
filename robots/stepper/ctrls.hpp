@@ -132,12 +132,13 @@ struct GeneralPositionCtrl:public PositionCtrl{
         static constexpr double k = a * a * pu;
 
         real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
-        // real_t abs_uni_raddiff = MIN(abs_err * pu, PI/2);
+
+        // real_t abs_uni_raddiff = MIN(pu * abs_err, PI/2);
         real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.42)) , error);
 
 
         real_t current = MIN(abs_err * kp, curr_ctrl.current_clamp); 
-        if(abs_err < kd_active_radius) current = MAX(current - (kd * ABS(real_speed) >> 8), 0);
+        // if(abs_err < kd_active_radius) current = MAX(current - (kd * ABS(real_speed) >> 8), 0);
         
         if(error * real_speed < 0){
             return {current, SIGN_AS(PI / 2, error)};

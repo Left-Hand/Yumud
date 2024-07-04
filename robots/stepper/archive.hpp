@@ -132,6 +132,10 @@ namespace StepperUtils{
         uint32_t hash(){
             return hash_impl((char *)this + sizeof(hashcode), sizeof(*this) - sizeof(hashcode));
         }
+
+        void clear(){
+            memset(this, 0, sizeof(*this));
+        }
     };
 }
 

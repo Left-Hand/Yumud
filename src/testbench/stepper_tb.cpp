@@ -196,7 +196,7 @@ void stepper_tb(IOStream & logger){
 
     stp.init();
 
-    stp.setCurrentClamp(1.2);
+    stp.setCurrentClamp(1.7);
     while(not stp.isActive());
     while(true){
         stp.run();
@@ -207,13 +207,13 @@ void stepper_tb(IOStream & logger){
         Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(0.05 * t);
-        stp.setTargetCurrent(0.6 * sin(t));
+        // stp.setTargetCurrent(0.6 * sin(t));
 
-        // stp.setTargetPosition(2 * sin(8 * t));
-        // stp.setTargetPosition(20 * floor(t/3));
+        stp.setTargetPosition(2 * sin(8 * t));
+        // stp.setTargetPosition(20 * sign(sin(t)));
         // stp.setTagretTrapezoid(70 * floor(t / 3));
 
-        // stp.setTargetPosition(0.2 * floor(t*32));
+        // stp.setTargetPosition(0.2 * floor(t*10));
         // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
         // stp.setTargetPosition(sin(t));
         // stp.setTargetPosition(t);
