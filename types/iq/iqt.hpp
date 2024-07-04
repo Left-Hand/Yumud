@@ -447,13 +447,10 @@ namespace std{
     template <>
     struct is_arithmetic<iq_t> : std::true_type {};
 
-<<<<<<< HEAD
     template <>
     struct is_floating_point<iq_t> : std::true_type {};
     
 
-=======
->>>>>>> addv3
     typedef std::common_type<iq_t, float>::type real_t;
     typedef std::common_type<iq_t, double>::type real_t;
     typedef std::common_type<iq_t, int>::type real_t;

@@ -132,16 +132,16 @@ public:
 
 
 
-class TB67H450{
+class TB67H452{
 protected:
     TimerOC & forward_pwm;
     TimerOC & backward_pwm;
     PwmChannel & vref_pwm;
     bool enabled = true;
     bool softmode = true;
-    real_t inv_fullscale = 0.5;
+    real_t inv_fullscale = (1);
 public:
-    TB67H450(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannel & _vref_pwm):
+    TB67H452(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannel & _vref_pwm):
             forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), vref_pwm(_vref_pwm){;}
 
     void init(){
@@ -152,23 +152,11 @@ public:
         backward_pwm.init();
         vref_pwm.init();
 
-<<<<<<< HEAD
-        forward_pwm.setPolarity(false);
-        backward_pwm.setPolarity(false);
-
-        if(softmode) vref_pwm = 1.0;
-    }
-
-    void setHwCurrentClamp(const real_t abs_max_value){
-        // vref_pwm = ABS(abs_max_value) * inv_fullscale;
-        // vref_pwm = 1.0;
-=======
         setClamp(1.0);
     }
 
     void setClamp(const real_t abs_max_value){
         vref_pwm = ABS(abs_max_value);
->>>>>>> addv3
     }
 
     void enable(const bool en = true){
@@ -181,33 +169,6 @@ public:
     }
 
     void setCurrent(const real_t curr){
-<<<<<<< HEAD
-
-        if(!enabled) return;
-
-        if(softmode){
-            if(curr > 0){
-                forward_pwm = 0;
-                backward_pwm = curr * inv_fullscale;
-            }else if(curr < 0){
-                forward_pwm = -curr * inv_fullscale;
-                backward_pwm = 0;
-            }else{
-                forward_pwm = 0;
-                backward_pwm = 0;
-            }
-        }else{
-            if(curr > 0){
-                forward_pwm = real_t(0);
-                backward_pwm = real_t(1);
-                vref_pwm = curr * inv_fullscale;
-            }else{
-                forward_pwm = real_t(1);
-                backward_pwm = real_t(0);
-                vref_pwm = -curr * inv_fullscale;
-            }
-        }
-=======
         if(curr > 0){
             forward_pwm = 0;
             backward_pwm = curr * inv_fullscale;
@@ -219,15 +180,10 @@ public:
             backward_pwm = 0;
         }
     
->>>>>>> addv3
     }
 
-    TB67H450 & operator = (const real_t curr){setCurrent(curr); return *this;}
+    TB67H452 & operator = (const real_t curr){setCurrent(curr); return *this;}
 };
-<<<<<<< HEAD
-
-=======
->>>>>>> addv3
 class Coil2:public Coil2PConcept{
 protected:
     PwmChannel & instanceP;

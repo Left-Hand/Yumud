@@ -207,17 +207,11 @@ void stepper_tb(IOStream & logger){
         stp.report();
         Sys::Clock::reCalculateTime();
 
-<<<<<<< HEAD
-        stp.setTargetPosition(0.005 + 0.02 * sin(8 * t));
-        // stp.setTargetPosition(2 * sin(8 * t));
-        // stp.setTargetPosition(20 * floor(t/3));
-=======
         stp.setTargetPosition(0.05 * t);
         // stp.setTargetCurrent(1.2 * sin(t));
 
         // stp.setTargetPosition(2.6 * sin(4 * t));
         // stp.setTargetPosition(20 * sign(sin(t)));
->>>>>>> addv3
         // stp.setTagretTrapezoid(70 * floor(t / 3));
 
         // stp.setTargetPosition(0.2 * floor(t*10));

@@ -330,32 +330,6 @@ public:
     bool autoload();
 
     void init(){
-<<<<<<< HEAD
-        using TimerUtils::Mode;
-        using TimerUtils::IT;
-        
-        logger.setEps(4);
-
-        timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
-        timer1.enableArrSync();
-        timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
-        timer3.enableArrSync();
-
-        coilA.init();
-        coilB.init();
-
-        // timer3.oc(2).init()
-        // setMode(TimerOC::Mode::Inactive);
-        // timer3.oc(3).setMode(TimerOC::Mode::Inactive);
-        // timer3.init();
-
-        spi1.init(18000000);
-        spi1.bindCsPin(portA[15], 0);
-
-        i2cSw.init(400000);
-
-=======
->>>>>>> addv3
         odo.init();
 
         panel_led.init();

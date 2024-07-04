@@ -4,12 +4,8 @@
 
 #include "sys/platform.h"
 
-<<<<<<< HEAD
-//defines for iqlib
-=======
 #define F_CPU 144000000
 
->>>>>>> addv3
 #define USE_IQ
 
 #define IQ_USE_LOG
