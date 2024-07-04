@@ -66,14 +66,10 @@ protected:
         };
     };
 
-
-
+    DataFrame frame;
     
     SpiDrv & bus_drv;
-
-
 public:
-    DataFrame frame;
     Ps2Joystick(SpiDrv & spi_drv):bus_drv(spi_drv){;}
     void init(){
         // Initialize the PS2 controller and set up the necessary pins
@@ -90,14 +86,14 @@ public:
 
         bus_drv.transfer(*(uint8_t *)&frame.dev_id, (uint8_t)0x42, false);
         new_frame.dev_id = frame.dev_id;
-        // delay(10);
-        // uint8_t permit;
+
         bus_drv.transfer(permit, (uint8_t)0x00, false);
 
-        // bus_drv.read(&new_frame.data[0], 6);
+
         for(uint8_t i = 0; i < 6; i++){
             bus_drv.transfer(new_frame.data[i], (uint8_t)0x00, i == 5);
         }
+
         if(permit == 0x5a){
             frame = new_frame;
         }
@@ -105,7 +101,6 @@ public:
 
     DevID id(){
         return frame.dev_id;
-        // return DevID::NONE;
     }
 
     uint8_t valueof(const JoyStickEvent event){
@@ -158,4 +153,22 @@ public:
         return 0;
     }
 
+    Vector2i getLeftJoystick() const {
+        return Vector2i{frame.lx, frame.ly};
+    }
+
+    Vector2i getRightJoystick() const {
+        return Vector2i{frame.rx, frame.ry};
+    }
+
+    Vector2i getLeftDirection() const{
+        Vector2i dir;
+
+        if(frame.left) dir += Vector2i::LEFT;
+        if(frame.right) dir += Vector2i::RIGHT;
+        if(frame.up) dir += Vector2i::UP;
+        if(frame.down) dir += Vector2i::DOWN;
+
+        return dir;
+    }
 };
