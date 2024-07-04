@@ -3,11 +3,19 @@
 #define __VECTOR2_HPP_
 
 #include "sys/platform.h"
-#include "../string/String.hpp"
-#include "../real.hpp"
+#include "types/string/String.hpp"
+#include "types/real.hpp"
+
+
 #include <type_traits>
+#include <tuple>
 
 template<typename T>
+requires std::is_arithmetic_v<T>
+struct Rect2_t;
+
+template<typename T>
+requires std::is_arithmetic_v<T>
 struct Vector2_t{
 public:
 
@@ -16,21 +24,34 @@ public:
 
     __fast_inline constexpr Vector2_t(){;}
 
-    // template <typename U>
     __fast_inline constexpr Vector2_t(const auto & _x, const auto & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
 
-    // template <typename U>
+    // template<typename U>
+    __fast_inline constexpr Vector2_t(const std::tuple<auto, auto> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
+
     __fast_inline constexpr Vector2_t(const Vector2_t<auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
+    static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
+    static constexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
+    static constexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
+    static constexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
+    static constexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
+    static constexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
+    static constexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
+    static constexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
+    static constexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
+    static constexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
 
     __fast_inline_constexpr Vector2_t<T> normalize(){*this /= this->length();}
     __fast_inline_constexpr Vector2_t<T> normalized() const;
     __fast_inline_constexpr T cross(const Vector2_t<T> & with) const;
     __fast_inline_constexpr T dot(const Vector2_t<T> & with) const;
     __fast_inline_constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
-    __fast_inline_constexpr Vector2_t<T> rotate(const T & r)const;
+    __fast_inline_constexpr Vector2_t<T> rotated(const T r)const;
     __fast_inline_constexpr Vector2_t<T> abs() const;
-    __fast_inline T angle() const {return atan2f(y, x);}
+    __fast_inline_constexpr T cos(const Vector2_t<auto> & b) const;
+    __fast_inline_constexpr T sin(const Vector2_t<auto> & b) const;
+    __fast_inline T angle() const {return atan2(y, x);}
     constexpr T angle_to(const Vector2_t<T> & to) const;
     constexpr T angle_to_point(const Vector2_t<T> & to) const;
     constexpr T aspect() const {return (!!y) ? x/y : T(0);}
@@ -86,10 +107,11 @@ public:
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator-() const{
-        x = -x;
-        y = -y;
-        return *this;
+    constexpr __fast_inline Vector2_t<T> operator-() const{
+        Vector2_t<T> ret;
+        ret.x = -x;
+        ret.y = -y;
+        return ret;
     }
 
     constexpr __fast_inline Vector2_t<T> & operator*=(const auto & n){
@@ -106,12 +128,32 @@ public:
         return *this;
     }
 
+    __fast_inline_constexpr operator bool() const {
+        if constexpr(std::is_integral<T>::value){
+            return x != 0 || y != 0;
+        }else{
+            return !::is_equal_approx(x, T(0)) || !::is_equal_approx(y, T(0));
+        }
+    }
     constexpr  __no_inline explicit operator String() const{
-        return (String('(') + String(static_cast<float>(x)) + String(", ") + String(static_cast<float>(y)) + String(')'));
+        return toString();
     }
 
     __no_inline String toString(unsigned char decimalPlaces = 2){
-        return (String('(') + String(static_cast<float>(x), decimalPlaces) + String(", ") + String(static_cast<float>(y), decimalPlaces) + String(')'));
+        if constexpr(std::is_integral<T>::value){
+            return ('(' + String(x) + ',' + String(y) + ')');
+        }else{
+            return ('(' + ::toString(x, decimalPlaces) + ',' + ::toString(y, decimalPlaces) + ')');
+        }
+    }
+
+    Rect2_t<T> form_rect() const {
+        return Rect2_t<T>(Vector2_t<T>(), *this);
+    }
+
+    Rect2_t<T> form_rect(const Vector2_t<auto> & other) const {
+        auto rect = Rect2_t<T>(other, other - *this);
+        return rect.abs();
     }
 };
 

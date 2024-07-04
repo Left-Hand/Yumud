@@ -7,8 +7,8 @@
  * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
-#include "ch32v20x_iwdg.h"
-
+// #include "ch32v20x_iwdg.h"
+#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_iwdg.h"
 /* CTLR register bit mask */
 #define CTLR_KEY_Reload    ((uint16_t)0xAAAA)
 #define CTLR_KEY_Enable    ((uint16_t)0xCCCC)

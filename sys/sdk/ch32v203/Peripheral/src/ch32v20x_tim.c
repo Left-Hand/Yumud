@@ -7,8 +7,10 @@
  * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
-#include "ch32v20x_tim.h"
-#include "ch32v20x_rcc.h"
+// #include "ch32v20x_tim.h"
+// #include "ch32v20x_rcc.h"
+#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_tim.h"
+#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 
 /* TIM registers bit mask */
 #define SMCFGR_ETR_Mask    ((uint16_t)0x00FF)

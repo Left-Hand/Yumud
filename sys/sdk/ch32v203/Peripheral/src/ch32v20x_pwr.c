@@ -7,8 +7,10 @@
  * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
  * SPDX-License-Identifier: Apache-2.0
  ********************************************************************************/
-#include "ch32v20x_pwr.h"
-#include "ch32v20x_rcc.h"
+// #include "ch32v20x_pwr.h"
+// #include "ch32v20x_rcc.h"
+#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_pwr.h"
+#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 
 /* PWR registers bit mask */
 /* CTLR register bit mask */

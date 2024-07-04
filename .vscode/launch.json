@@ -26,8 +26,13 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
+<<<<<<< HEAD
       "cwd": "d:/Yumud/src/testbench",
       "program": "d:/Yumud/src/testbench/build/Debug/outDebug",
+=======
+      "cwd": "d:/Yumud/robots/stepper/tasks",
+      "program": "d:/Yumud/robots/stepper/tasks/build/Debug/outDebug",
+>>>>>>> addv3
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

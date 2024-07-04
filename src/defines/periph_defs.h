@@ -4,23 +4,22 @@
 
 #include "user_defs.h"
 
-#ifdef CH32V203
+#ifdef CH32V20X
+    // #define HAVE_SDI
     #define HAVE_GPIOA
     #define HAVE_GPIOB
     #define HAVE_GPIOC
     #define HAVE_GPIOD
-#elif defined(CH32V303)
 
-#elif defined(CH32V305)
-
-#elif defined(CH32V307)
-
+#elif defined(CH32V30X)
+    #define HAVE_SDI
+    #define HAVE_GPIOA
+    #define HAVE_GPIOB
+    #define HAVE_GPIOC
+    #define HAVE_GPIOD
+    #define HAVE_GPIOE
+    #define HAVE_DVP
 #endif
-
-#define ENABLE 1
-#define DISABLE 0
-
-
 
 
 #ifdef HAVE_UART1
@@ -64,6 +63,37 @@
     #endif
 #endif
 
+#ifdef HAVE_UART4
+    #define UART4_Baudrate (115200 * 4)
+
+    #define UART4_TX_Port portE
+    #define UART4_TX_Pin GPIO_Pin_0
+
+    #define UART4_RX_Port portE
+    #define UART4_RX_Pin GPIO_Pin_1
+
+    #define UART4_IT_PP 0
+    #define UART4_IT_SP 0
+
+    #define UART4_REMAP_ENABLE ENABLE
+    #define UART4_REMAP GPIO_FullRemap_USART4
+
+
+#endif
+
+#ifdef HAVE_UART7
+    #if UART7_REMAP == 3
+    #define UART7_TX_Gpio portE[12]
+    #define UART7_RX_Gpio portE[13]
+    #endif
+#endif
+
+#ifdef HAVE_UART4
+    #if UART4_REMAP == 3
+    #define UART7_TX_Gpio portE[0]
+    #define UART7_RX_Gpio portE[1]
+    #endif
+#endif
 
 #ifdef HAVE_SPI1
 
@@ -213,6 +243,31 @@
         #define TIM4_CH2_Gpio portD[13]
         #define TIM4_CH3_Gpio portD[14]
         #define TIM4_CH4_Gpio portD[15]
+    #endif
+#endif
+
+
+#ifdef HAVE_TIM5
+    #if TIM5_REMAP == 0
+        #define TIM4_CH1_Gpio portA[0]
+        #define TIM4_CH2_Gpio portA[1]
+        #define TIM4_CH3_Gpio portA[2]
+        #define TIM4_CH4_Gpio portA[3]
+    #endif
+#endif
+
+#ifdef HAVE_TIM8
+    #if TIM8_REMAP == 0
+        #define TIM8_CH1_Gpio portC[6]
+        #define TIM8_CH1N_Gpio portA[7]
+
+        #define TIM8_CH2_Gpio portC[7]
+        #define TIM8_CH2N_Gpio portB[0]
+
+        #define TIM8_CH3_Gpio portC[8]
+        #define TIM8_CH3N_Gpio portB[1]
+
+        #define TIM8_CH4_Gpio portC[9]
     #endif
 #endif
 

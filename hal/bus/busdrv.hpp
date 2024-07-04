@@ -14,7 +14,7 @@ class BusDrv{
 protected:
     BusType & bus;
     uint8_t index;
-    uint8_t data_size = 8;
+    uint8_t data_bits = 8;
     bool timeout;
     uint32_t wait_time;
 
@@ -23,14 +23,15 @@ protected:
     static constexpr auto is_readable_bus = std::is_base_of_v<ReadableBus, BusType>;
     static constexpr auto is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
 
-    void configDataSize(const size_t _data_size){
-        if(_data_size == data_size) return;
+    void configDataBits(const size_t _data_size){
+        if(_data_size == data_bits) return;
         else{
-            data_size = _data_size;
+            data_bits = _data_size;
             bus.configDataSize(_data_size);
-        }
+        }  
     }
 
+    virtual void speclize(){;}                                                                                                                             
     BusDrv(BusType & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):bus(_bus), index(_index), wait_time(_wait_time){;}
 public:
 
@@ -38,10 +39,10 @@ public:
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T & data, bool discontinuous = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataSize(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
             bus.write(data);
             if(discontinuous) bus.end();
-            if (sizeof(T) != 1) this->configDataSize(8);
+            if (sizeof(T) != 1) this->configDataBits(8);
         }
 
     }
@@ -58,10 +59,10 @@ public:
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T data, const size_t len, bool discontinuous = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataSize(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
             for(size_t i = 0; i < len; i++) bus.write(data);
             if (discontinuous) bus.end();
-            if (sizeof(T) != 1) this->configDataSize(8);
+            if (sizeof(T) != 1) this->configDataBits(8);
         }
     }
 
@@ -69,10 +70,10 @@ public:
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T * data_ptr, const size_t len, bool discontinuous = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataSize(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
             for(size_t i = 0; i < len; i++) bus.write(data_ptr[i]);
             if (discontinuous) bus.end();
-            if (sizeof(T) != 1)this->configDataSize(8);
+            if (sizeof(T) != 1)this->configDataBits(8);
         }
     }
 
@@ -102,17 +103,20 @@ public:
 
     template<typename T>
     requires std::is_integral<T>::value && is_fulldup_bus
-    void transmit(T & datarx, T datatx, bool discontinuous = true){
+    void transfer(T & datarx, T datatx, bool discontinuous = true){
         if(!bus.begin(index)){
-            this->configDataSize(16);
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
             uint32_t ret = 0;
             bus.transfer(ret, datatx);
             datarx = ret;
-            this->configDataSize(8);
+            if (sizeof(T) != 1)this->configDataBits(8);
             if(discontinuous) bus.end();
         }
     }
 
+    void end(){
+        bus.end();
+    }
 
 };
 

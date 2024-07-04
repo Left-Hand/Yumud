@@ -42,7 +42,8 @@ namespace StepperEnums{
     )
 
     BETTER_ENUM(CtrlType, uint8_t, 
-        VECTOR,    
+        VECTOR,
+        CURRENT,
         POSITION,
         TRAPEZOID,
         SPEED

@@ -4,11 +4,10 @@
 
 #include "cli.hpp"
 #include "ctrls.hpp"
-#include "obs.hpp"
+#include "observer.hpp"
 #include "archive.hpp"
+#include "hal/adc/adcs/adc1.hpp"
 
-
-using AT8222 = TB67H450;
 
 class Stepper:public StepperUtils::Cli{
 protected:
@@ -24,35 +23,26 @@ protected:
     Switches switches;
     IOStream & logger = uart1;
 
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), timer3.oc(3)};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), timer3.oc(2)};
+    SVPWM2 & svpwm;
+
+    OdometerPoles odo;
+    Memory & memory;
+
+    RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
+    StatLed panel_led = StatLed{led_instance};
 
 
-    SVPWM2 svpwm{coilA, coilB};
-
-    SpiDrv mt6816_drv{spi1, 0};
-    MT6816 mt6816{mt6816_drv};
-
-    OdometerPoles odo = OdometerPoles(mt6816);
-
-    I2cSw i2cSw{portD[1], portD[0]};
-    AT24C02 at24{i2cSw};
-    Memory memory{at24};
-
-    uint32_t foc_pulse_micros;
     real_t est_speed;
     real_t raw_pos;
     real_t est_pos;
     real_t est_elecrad;
+    real_t elecrad_zerofix;
 
     real_t run_current;
     real_t run_elecrad;
     real_t run_leadangle;
-    real_t elecrad_zerofix;
-
     real_t target;
 
-    real_t openloop_elecrad;
     CurrentCtrl curr_ctrl;
     GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
@@ -66,6 +56,7 @@ protected:
     bool skip_tone = true;
     bool cmd_mode = false;
 
+    ShutdownFlag shutdown_flag;
 
     void setCurrent(const real_t _current, const real_t _elecrad){
         svpwm.setCurrent(_current, _elecrad);
@@ -86,41 +77,14 @@ protected:
     bool shutdown_when_warn_occurred;
 
     void shutdown(){
-        coilA.enable(false);
-        coilB.enable(false);
+        // coilA.enable(false);
+        // coilB.enable(false);
+        svpwm.enable(false);
     }
 
     void wakeup(){
-        coilA.enable(true);
-        coilB.enable(true);
+        svpwm.enable(true);
     }
-
-    struct ShutdownFlag{
-    protected:
-        bool state = false;
-    public:
-
-        ShutdownFlag() = default;
-
-        auto & operator = (const bool _state){
-            state = _state;
-
-            //TODO
-            // if(state) shutdown();
-            // else wakeup();
-
-            return *this;
-        }
-
-        operator bool() const{
-            return state;
-        }
-    };
-
-
-    ShutdownFlag shutdown_flag;
-
-
 
     void throw_error(const ErrorCode & _error_code,const char * _error_message) {
         error_message = _error_message;
@@ -144,10 +108,6 @@ protected:
     RunStatus beep_task(const InitFlag init_flag = false);
     RunStatus check_task(const InitFlag init_flag = false);
 
-    RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
-    StatLed panel_led = StatLed{led_instance};
-
-
 
     void parse_command(const String & _command, const std::vector<String> & args) override{
         auto command = _command;
@@ -158,10 +118,16 @@ protected:
                 saveArchive();
                 break;
 
-            // case ""
             case "load"_ha:
             case "ld"_ha:
                 loadArchive();
+                break;
+            
+            case "pos.p"_ha:
+                settle_value(position_ctrl.kp, args);
+                break;
+            case "pos.d"_ha:
+                settle_value(position_ctrl.kd, args);
                 break;
 
             case "speed"_ha:
@@ -224,6 +190,7 @@ protected:
                 cali_task(true);
                 break;
 
+
             case "beep"_ha:
                 beep_task(true);
                 break;
@@ -242,6 +209,14 @@ protected:
                 DEBUG_PRINT("shutdown ok");
                 break;
 
+
+            case "remove"_ha:
+            case "rm"_ha:
+                // shutdown();
+                removeArchive();
+                // DEBUG_PRINT("shutdown ok");
+                break;
+
             default:
                 Cli::parse_command(command, args);
                 break;
@@ -251,6 +226,10 @@ protected:
 public:
     void loadArchive();
     void saveArchive();
+    void removeArchive();
+
+    Stepper(IOStream & _logger, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
+            logger(_logger), svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
     void tick(){
 
@@ -348,10 +327,10 @@ public:
         }
         exe_micros = micros() - begin_micros;
     }
-
     bool autoload();
 
     void init(){
+<<<<<<< HEAD
         using TimerUtils::Mode;
         using TimerUtils::IT;
         
@@ -375,15 +354,20 @@ public:
 
         i2cSw.init(400000);
 
+=======
+>>>>>>> addv3
         odo.init();
 
         panel_led.init();
 
-        timer3.enableIt(IT::Update, NvicPriority(0, 0));
-        timer3.bindCb(IT::Update, [&](){this->tick();});
-
         panel_led.setPeriod(400);
         panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Squ);
+    }
+
+    void setTargetCurrent(const real_t current){
+        target = current;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
@@ -447,7 +431,9 @@ public:
         // bled = led_status;
     }
 
-
+    bool isActive(){
+        return +RunStatus::ACTIVE == +run_status;
+    }
 };
 
 #endif

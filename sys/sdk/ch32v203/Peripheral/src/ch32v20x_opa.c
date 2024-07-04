@@ -7,7 +7,8 @@
  * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
  * SPDX-License-Identifier: Apache-2.0
  ***************************************************************************************/
-#include "ch32v20x_opa.h"
+// #include "ch32v20x_opa.h"
+#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_opa.h"
 
 #define OPA_MASK         ((uint32_t)0x000F)
 #define OPA_Total_NUM    4

@@ -34,13 +34,15 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     odo.update();
 
     raw_pos = odo.getPosition();
-    static uint32_t est_cnt;
-
+    est_pos = raw_pos;
+    est_elecrad = odo.getElecRad();
+    static SpeedEstimator speed_estmator;
+    est_speed = (speed_estmator.update(raw_pos) + est_speed * 127) >> 7;
 
     if(init_flag){
         est_pos = raw_pos;
         est_speed = real_t();
-        est_cnt = 0;
+
         run_status = RunStatus::ACTIVE;
 
         setCurrent(real_t(0), real_t(0));
@@ -63,15 +65,16 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     // }
 
 
-    est_pos = raw_pos;
-    est_elecrad = odo.getElecRad();
 
     {
         HighLayerCtrl::Result result;
 
         switch(ctrl_type){
+            case CtrlType::CURRENT:
+                result = {ABS(target), SIGN_AS(PI / 2, target)};
+                break;
             case CtrlType::VECTOR:
-                result = {0.6, 0};
+                result = {openloop_current_limit, 0};
                 break;
             case CtrlType::POSITION:
                 result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
@@ -89,73 +92,6 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     }
 
 
-
-    
-
-    static SpeedEstimator speed_estmator;
-    est_speed = (speed_estmator.update(raw_pos) + est_speed * 127) >> 7;
-    if(false){//estimate speed and update controller
-        // static real_t est_delta_raw_pos_intergal = real_t();
-        est_cnt++;
-        if(est_cnt%est_devider == 0){ // est happens
-            // est_speed = speed_estmator.update(raw_pos);
-            // if(true){
-            //     switch(CTZ(MAX(int(abs(est_speed_new)), 1))){
-            //         case 0://  1r/s
-            //             est_speed = (est_speed_new + est_speed * 63) >> 6;
-            //             break;
-            //         case 1://  2r/s
-            //             est_speed = (est_speed_new + est_speed * 15) >> 4;
-            //             break;
-            //         case 2:// 4r/s
-            //             // est_speed = (est_speed_new + est_speed * 31) >> 5;
-            //             // break;
-            //         case 3:// 8r/s
-            //             // est_speed = (est_speed_new + est_speed * 15) >> 4;
-            //             // break;
-            //         case 4:// 16r/s
-            //             est_speed = (est_speed_new + est_speed * 7) >> 3;
-            //             break;
-            //         case 5:// 32r/s
-            //             // est_speed = (est_speed_new + est_speed * 3) >> 2;
-            //             // break;
-            //         default:
-            //         case 6:// 64r/s or more
-            //             est_speed = (est_speed_new + est_speed) >> 1;
-            //             break;
-            //     }
-            // }else{
-            //     est_speed = est_speed_new;
-            // }
-            // est_delta_raw_pos_intergal = real_t();
-            // est_cnt = 0;
-
-            // run_current = 0.2;
-            // run_leadangle = -PI / 2;
-        }
-    }
-
-
-
-    // uint32_t foc_end_micros = nanos();
-    // foc_pulse_micros = foc_end_micros - foc_begin_micros;
-
-    {
-        // struct SpeedCtrl{
-        //     real_t kp;
-        //     real_t ki;
-        //     real_t kd;
-        //     real_t ks;
-
-        //     real_t kp_clamp;
-        //     real_t intergal;
-        //     real_t ki_clamp;
-        //     real_t kd_enable_speed_threshold;//minimal speed for activation kd
-        //     real_t kd_clamp;
-        //     real_t ks_enable_speed_threshold; // minimal speed for activation ks
-        //     real_t ks_clamp;
-        // };
-    }
 
     return RunStatus::NONE;
 }

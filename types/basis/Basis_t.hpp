@@ -4,6 +4,7 @@
 #include "types/Vector3/vector3_t.hpp"
 
 template <typename real>
+requires std::is_arithmetic_v<real>
 class Basis_t {
 public:
     using Vector3 = Vector3_t<real>;

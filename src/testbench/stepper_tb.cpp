@@ -60,9 +60,9 @@ real_t cubicBezier(real_t x, const Vector2 & a,const Vector2 & b){
   return y;
 }
 
-Stepper stp;
 
-void ss(){
+
+real_t ss(){
     auto turnCnt = millis() % 2667;
     uint32_t turns = millis() / 2667;
     
@@ -107,15 +107,98 @@ void ss(){
     real_t new_pos =  real_t(turns) + turnSolver.pa + dp * yt;
     // turnSolver.pos = new_pos;
 
-    stp.setTargetPosition(new_pos * 2);
+    // stp.setTargetPosition(new_pos);
+    return new_pos;
+    // stp.setTagretVector(new_pos*2);
 }
 
 
 void stepper_tb(IOStream & logger){
+    using TimerUtils::Mode;
+    using TimerUtils::IT;
+    logger.setEps(4);
 
+    auto & ena_gpio = TIM3_CH3_Gpio;
+    auto & enb_gpio = TIM3_CH2_Gpio;
+    AT8222 coilA{timer1.oc(3), timer1.oc(4), ena_gpio};
+    AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio};
+
+
+    SVPWM2 svpwm{coilA, coilB};
+    svpwm.inverse(true);
+    timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
+    timer1.enableArrSync();
+    timer1.oc(1).init();
+    timer1.oc(2).init();
+    timer1.oc(3).init();
+    timer1.oc(4).init();
+
+    ena_gpio.outpp(1);
+    enb_gpio.outpp(1);
+    svpwm.init();
+    svpwm.inverse(true);
+
+    spi1.init(18000000);
+    spi1.bindCsPin(portA[15], 0);
+
+    SpiDrv mt6816_drv{spi1, 0};
+    MT6816 mt6816{mt6816_drv};
+
+    I2cSw i2cSw{portD[1], portD[0]};
+    i2cSw.init(400000);
+    AT24C02 at24{i2cSw};
+    Memory mem{at24};
+
+    Stepper stp{logger, svpwm, mt6816, mem};
+
+
+
+
+
+    // while(true){
+    //     svpwm.setCurrent(0.6, t);
+    // }
+
+    // TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
+
+
+    // adc1.init(
+    //     {
+    //     },{
+    //         AdcChannelConfig{AdcUtils::Channel::CH3, AdcUtils::SampleCycles::T13_5},
+    //         // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T1_5},
+    //         // AdcChannelConfig{AdcUtils::Channel::CH4, AdcUtils::SampleCycles::T13_5},
+    //         AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
+    //         // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
+    //         AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
+    //     });
+
+    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
+    // // adc1.enableContinous();
+    // adc1.enableAutoInject();
+    // adc1.setPga(AdcOnChip::Pga::X1);
+
+    // adc1.bindCb(AdcUtils::IT::JEOC, [&](){
+    //     adcv1 = ADC1->IDATAR1;
+    //     adcv2 = ADC1->IDATAR3;
+    // });
+    // adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
+
+
+
+
+
+
+    timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
+    timer3.enableArrSync();
+    timer3.bindCb(IT::Update, [&](){stp.tick();});
+    timer3.enableIt(IT::Update, NvicPriority(0, 0));
     // can1.init(Can::BaudRate::Mbps1);
+
     stp.init();
-    stp.setCurrentClamp(1.2);
+
+    stp.setCurrentClamp(1.4);
+    while(not stp.isActive());
     while(true){
         stp.run();
         // stp.setTagretVector(2 * sin(t));
@@ -124,27 +207,35 @@ void stepper_tb(IOStream & logger){
         stp.report();
         Sys::Clock::reCalculateTime();
 
+<<<<<<< HEAD
         stp.setTargetPosition(0.005 + 0.02 * sin(8 * t));
         // stp.setTargetPosition(2 * sin(8 * t));
         // stp.setTargetPosition(20 * floor(t/3));
+=======
+        stp.setTargetPosition(0.05 * t);
+        // stp.setTargetCurrent(1.2 * sin(t));
+
+        // stp.setTargetPosition(2.6 * sin(4 * t));
+        // stp.setTargetPosition(20 * sign(sin(t)));
+>>>>>>> addv3
         // stp.setTagretTrapezoid(70 * floor(t / 3));
 
-        // stp.setTargetPosition(0.2 * floor(t*32));
+        // stp.setTargetPosition(0.2 * floor(t*10));
         // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
-        // stp.setTargetPosition(16 * sin(t));
-        // stp.setTargetPosition(t/8);
+        // stp.setTargetPosition(sin(t));
+        // stp.setTargetPosition(t);
         // stp.setTargetPosition(-t/8);
         // stp.setTargetPosition(4 * floor(fmod(t * 4,2)));
         // real_t temp = sin(2 * t);
         // temp += 10 * sign(temp);
         // stp.setTargetSpeed(20 + temp);
-        // stp.setTargetSpeed(sin(t));
+        // stp.setTargetSpeed(20 * sin(t));
         // stp.setTargetSpeed(5);
         // stp.setTargetSpeed(sin(t));
-        ss();
+        // stp.setTargetPosition(ss());
         // stp.setTargetSpeed(CLAMP(60 * sin(2 * t), 10, 35));
         // stp.setTargetSpeed((5 << (int(2 * t) % 4)));
-        // stp.setTargetSpeed(20);
+        // stp.setTargetSpeed(5 * sin(2*t));
         // switch(int(t)){
 
         // real_t _t = fmod(t * 3, 6);
