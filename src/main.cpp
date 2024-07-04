@@ -8,9 +8,10 @@ int main(){
     delay(200);
     // pmdc_tb();
     // uart_tb(uart1);
-    joystick_tb(uart1);
+    // joystick_tb(uart1);
+    gpio_tb(portC[15]);
     // stepper_tb(uart1);
-    // lds14_tb(logger, uart2);
+    // lds14_tb(logger, uart2);-
     // pca_tb(logger);
     // lua_tb(uart1);p
     // pwm_tb(logger);

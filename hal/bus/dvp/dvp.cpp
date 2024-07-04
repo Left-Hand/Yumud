@@ -3,18 +3,18 @@
 #ifdef HAVE_DVP
 
 void Dvp::install(){
-    portA[9].InPullUP();
-    portA[10].InPullUP();
-    portC[8].InPullUP();
-    portC[9].InPullUP();
-    portC[11].InPullUP();
-    portB[6].InPullUP();
-    portB[8].InPullUP();
-    portB[9].InPullUP();
+    portA[9].inpu();
+    portA[10].inpu();
+    portC[8].inpu();
+    portC[9].inpu();
+    portC[11].inpu();
+    portB[6].inpu();
+    portB[8].inpu();
+    portB[9].inpu();
 
-    portA[6].InPullUP();
-    portA[4].InPullUP();
-    portA[5].InPullUP();
+    portA[6].inpu();
+    portA[4].inpu();
+    portA[5].inpu();
 }
 
 void Dvp::init(uint32_t *image0_addr, uint32_t *image1_addr, uint16_t col_len, uint16_t row_len){

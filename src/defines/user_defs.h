@@ -4,6 +4,8 @@
 
 #include "sys/platform.h"
 
+#define F_CPU 144000000
+
 #define USE_IQ
 
 #define EXTRA_IQ

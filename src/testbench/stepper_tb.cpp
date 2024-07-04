@@ -125,6 +125,7 @@ void stepper_tb(IOStream & logger){
 
 
     SVPWM2 svpwm{coilA, coilB};
+    svpwm.inverse(true);
     timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
     timer1.enableArrSync();
     timer1.oc(1).init();
@@ -135,7 +136,7 @@ void stepper_tb(IOStream & logger){
     ena_gpio.outpp(1);
     enb_gpio.outpp(1);
     svpwm.init();
-    svpwm.inverse(false);
+    svpwm.inverse(true);
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
@@ -196,7 +197,7 @@ void stepper_tb(IOStream & logger){
 
     stp.init();
 
-    stp.setCurrentClamp(1.7);
+    stp.setCurrentClamp(1.4);
     while(not stp.isActive());
     while(true){
         stp.run();
@@ -206,10 +207,10 @@ void stepper_tb(IOStream & logger){
         stp.report();
         Sys::Clock::reCalculateTime();
 
-        // stp.setTargetPosition(0.05 * t);
-        // stp.setTargetCurrent(0.6 * sin(t));
+        stp.setTargetPosition(0.05 * t);
+        // stp.setTargetCurrent(1.2 * sin(t));
 
-        stp.setTargetPosition(2 * sin(8 * t));
+        // stp.setTargetPosition(2.6 * sin(4 * t));
         // stp.setTargetPosition(20 * sign(sin(t)));
         // stp.setTagretTrapezoid(70 * floor(t / 3));
 

@@ -4,25 +4,14 @@
 
 #include "user_defs.h"
 
-#ifdef CH32V203
+#ifdef CH32V20X
     // #define HAVE_SDI
     #define HAVE_GPIOA
     #define HAVE_GPIOB
     #define HAVE_GPIOC
     #define HAVE_GPIOD
-#elif defined(CH32V303)
-    #define HAVE_SDI
-    #define HAVE_GPIOA
-    #define HAVE_GPIOB
-    #define HAVE_GPIOC
-    #define HAVE_GPIOD
-#elif defined(CH32V305)
-    #define HAVE_SDI
-    #define HAVE_GPIOA
-    #define HAVE_GPIOB
-    #define HAVE_GPIOC
-    #define HAVE_GPIOD
-#elif defined(CH32V307)
+
+#elif defined(CH32V30X)
     #define HAVE_SDI
     #define HAVE_GPIOA
     #define HAVE_GPIOB
