@@ -8,7 +8,8 @@ int main(){
     delay(200);
     // pmdc_tb();
     // uart_tb(uart1);
-    stepper_tb(uart1);
+    // stepper_tb(uart1);
+    filter_tb(uart1);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);

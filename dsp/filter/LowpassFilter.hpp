@@ -49,11 +49,11 @@ public:
 };
 
 template<typename real>
+requires std::is_arithmetic_v<real>
 class LowpassFilterZ_t{
 public:
     const real m_alaph;
     real last = 0;
-    bool inited = false;
 public:
     LowpassFilterZ_t() = delete;
 
@@ -65,11 +65,11 @@ public:
     }
 
     real update(const real x){
-        return last = last * m_alaph + (1-m_alaph) * x;
+        return last = last * (1-m_alaph) + (m_alaph) * x;
     }
 
     static real calculateAlaph(const real fc, const real fs){
-        real omega_c = 2 * M_PI * fc / fs;  // Angular cutoff frequency
+        real omega_c = TAU * fc / fs;  // Angular cutoff frequency
         real alpha = omega_c / (1 + omega_c);  // Alpha coefficient
         return alpha;
     }

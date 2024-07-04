@@ -32,6 +32,7 @@ public:
 
 
 template<typename real>
+requires std::is_arithmetic_v<real>
 class HighpassFilterZ_t{
 public:
     const real m_alpha;

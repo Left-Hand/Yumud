@@ -169,6 +169,7 @@ void pwm_tb(OutputStream & logger);
 void adc_tb(OutputStream & logger);
 void temp_tb(OutputStream & logger);
 void temp_tb2(OutputStream & logger);
+void filter_tb(OutputStream & logger);
 
 void uart_tb(Uart & uart);
 void pmdc_tb();
