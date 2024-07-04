@@ -76,7 +76,6 @@ public:
         // Configure the SPI interface and enable the controller
     }
 
-    uint8_t permit;
     void update(){
         // Read and process data from the PS2 controller
         // Update the 'frame' struct with the new data
@@ -87,6 +86,7 @@ public:
         bus_drv.transfer(*(uint8_t *)&frame.dev_id, (uint8_t)0x42, false);
         new_frame.dev_id = frame.dev_id;
 
+        uint8_t permit;
         bus_drv.transfer(permit, (uint8_t)0x00, false);
 
 
@@ -106,39 +106,39 @@ public:
     uint8_t valueof(const JoyStickEvent event){
         switch(event){
             case JoyStickEvent::SELECT:
-                return frame.select;
+                return not frame.select;
             case JoyStickEvent::L3:
-                return frame.l3;
+                return not frame.l3;
             case JoyStickEvent::R3:
-                return frame.r3;
+                return not frame.r3;
             case JoyStickEvent::START:
-                return frame.start;
+                return not frame.start;
             case JoyStickEvent::UP:
-                return frame.up;
+                return not frame.up;
             case JoyStickEvent::RIGHT:
-                return frame.right;
+                return not frame.right;
             case JoyStickEvent::DOWN:
-                return frame.down;
+                return not frame.down;
             case JoyStickEvent::LEFT:
-                return frame.left;
+                return not frame.left;
 
 
             case JoyStickEvent::L2:
-                return frame.l2;
+                return not frame.l2;
             case JoyStickEvent::R2:
-                return frame.r2;
+                return not frame.r2;
             case JoyStickEvent::L1:
-                return frame.l1;
+                return not frame.l1;
             case JoyStickEvent::R1:
-                return frame.r1;
+                return not frame.r1;
             case JoyStickEvent::DELTA:
-                return frame.delta;
+                return not frame.delta;
             case JoyStickEvent::CIRC:
-                return frame.circ;
+                return not frame.circ;
             case JoyStickEvent::CROSS:
-                return frame.cross;
+                return not frame.cross;
             case JoyStickEvent::SQU:
-                return frame.squ;
+                return not frame.squ;
 
 
             case JoyStickEvent::RX:
@@ -153,22 +153,24 @@ public:
         return 0;
     }
 
-    Vector2i getLeftJoystick() const {
-        return Vector2i{frame.lx, frame.ly};
+    Vector2 getLeftJoystick() const {
+        return Vector2{frame.lx-127, 127-frame.ly}/128;
     }
 
-    Vector2i getRightJoystick() const {
-        return Vector2i{frame.rx, frame.ry};
+    Vector2 getRightJoystick() const {
+        return Vector2{frame.rx-127, 127-frame.ry}/128;
     }
 
     Vector2i getLeftDirection() const{
         Vector2i dir;
 
-        if(frame.left) dir += Vector2i::LEFT;
-        if(frame.right) dir += Vector2i::RIGHT;
-        if(frame.up) dir += Vector2i::UP;
-        if(frame.down) dir += Vector2i::DOWN;
+        if(not frame.left) dir += Vector2i::LEFT;
+        if(not frame.right) dir += Vector2i::RIGHT;
+        if(not frame.up) dir += Vector2i::UP;
+        if(not frame.down) dir += Vector2i::DOWN;
 
-        return dir;
+        // return dir;
+
+        return dir;//why?
     }
 };

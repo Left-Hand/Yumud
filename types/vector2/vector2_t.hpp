@@ -107,10 +107,11 @@ public:
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator-() const{
-        x = -x;
-        y = -y;
-        return *this;
+    constexpr __fast_inline Vector2_t<T> operator-() const{
+        Vector2_t<T> ret;
+        ret.x = -x;
+        ret.y = -y;
+        return ret;
     }
 
     constexpr __fast_inline Vector2_t<T> & operator*=(const auto & n){

@@ -148,7 +148,7 @@ public:
             delays = 0;
         }else{
             uint32_t b = baudRate / 1000;
-            delays = 300 / b;
+            delays = 200 / b;
         }
     }
 
