@@ -5,125 +5,174 @@
 class SpiSw: public Spi{
 protected:
     volatile int8_t occupied = -1;
-    GpioConcept & sclk_pin;
-    GpioConcept & mosi_pin;
-    GpioConcept & miso_pin;
+    GpioConcept & sclk_gpio;
+    GpioConcept & mosi_gpio;
+    GpioConcept & miso_gpio;
 
     uint16_t delays = 100;
-    uint8_t data_size = 8;
+    uint8_t data_bits = 8;
+    bool m_msb = true;
 
     __fast_inline void delayDur(){
-        // volatile uint16_t i = delays;
-        // while(i--) __nop;
+        delayMicroseconds(delays);
     }
 
     void clk(){
-        // delayDur();
-        sclk_pin.set();
-        // delayDur();
-        sclk_pin.clr();
-    }
-
-    void clkr(){
-        // delayDur();
-        sclk_pin.clr();
-        // delayDur();
-        sclk_pin.set();
-        // delayDur();
-        sclk_pin.clr();
-        // delayDur();
+        delayDur();
+        sclk_gpio.set();
+        delayDur();
+        sclk_gpio.clr();
+        delayDur();
     }
 
     void clk_up(){
         // delayDur();
-        sclk_pin.clr();
-        // delayDur();
-        sclk_pin.set();
-        // delayDur();
+        sclk_gpio.clr();
+        delayDur();
+        sclk_gpio.set();
+        delayDur();
     }
 
     void clk_down(){
-        sclk_pin.clr();
+        delayDur();
+        sclk_gpio.clr();
+        delayDur();
     }
 
     void clk_down_then_up(){
-        clk_down();
-        clk_up();
+        delayDur();
+        sclk_gpio.clr();
+        delayDur();
+        sclk_gpio.set();
+        delayDur();
     }
 
+    Error lead(const uint8_t index) override{
+        auto ret = Spi::lead(index);
+        delayDur();
+        return ret;
+    }
+
+    void trail() override{
+        sclk_gpio.set();
+        delayDur();
+        Spi::trail();
+    }
 protected :
 public:
 
     SpiSw(GpioConcept & _sclk_pin,GpioConcept & _mosi_pin,
-            GpioConcept & _miso_pin, const uint16_t & _delays = 10):sclk_pin(_sclk_pin),
-                mosi_pin(_mosi_pin), miso_pin(_miso_pin), delays(_delays){;}
+            GpioConcept & _miso_pin):sclk_gpio(_sclk_pin),
+                mosi_gpio(_mosi_pin), miso_gpio(_miso_pin){;}
     SpiSw(GpioConcept & _sclk_pin,GpioConcept & _mosi_pin,
-            GpioConcept & _miso_pin,GpioVirtual & _cs_pin, const uint16_t & _delays = 10):SpiSw(_sclk_pin, _mosi_pin, _miso_pin, delays){
+            GpioConcept & _miso_pin,GpioConcept & _cs_pin):SpiSw(_sclk_pin, _mosi_pin, _miso_pin){
                 bindCsPin(_cs_pin, 0);
             }
-    Error write(const uint32_t & data) override {
-        delayDur();
+    Error write(const uint32_t data) override {
+        // delayDur();
 
-        for(uint16_t mask = 1 << (data_size - 1); mask; mask >>= 1){
-            mosi_pin.write(mask & data);
-            clk();
-        }
-
+        // for(uint16_t mask = m_msb ? 1 << (data_bits - 1) : 0x01; mask; mask = m_msb ? (mask >> 1) : (mask << 1)){
+        //     mosi_gpio.write(mask & data);
+        //     clk();
+        // }
+        uint32_t dummy;
+        transfer(dummy, data, false);
         return Bus::ErrorType::OK;
     }
 
     Error read(uint32_t & data, bool toAck = true) {
-        uint8_t ret = 0;
-        delayDur();
+        // uint8_t ret = 0;
+        // delayDur();
 
-        clk_up();
-        ret |= miso_pin.read();
-        for(uint8_t i = 0; i < data_size - 1; i++){
-            clk_down_then_up();
-            ret <<= 1; ret |= miso_pin.read();
-        }
+        // clk_up();
 
-        clk_down();
+        // ret |= m_msb ? miso_gpio.read() : miso_gpio.read() << (data_bits - 1);
 
-        data = ret;
+        // for(uint8_t i = 0; i < data_bits - 1; i++){
+        //     clk_down_then_up();
+        //     // ret <<= 1;
+        //     ret = m_msb ? (ret << 1) : (ret >> 1);
+        //     ret |= miso_gpio.read();
+        // }
+
+        // clk_down();
+
+        // data = ret;
+        uint32_t ret;
+        static constexpr uint32_t dummy = 0;
+        transfer(ret, dummy, toAck); 
         return Bus::ErrorType::OK;
     }
 
-    Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true){
         uint8_t ret = 0;
-        delayDur();
 
-        mosi_pin = data_tx & (1 << (data_size - 1));
-        clk_up();
-        ret |= miso_pin.read();
-        for(uint8_t i = 0; i < data_size - 1; i++){
-            clk_down();
-            mosi_pin = bool(data_tx & (1 << (data_size - 2 - i)));
-            clk_up();
-            ret <<= 1; ret |= miso_pin.read();
+        sclk_gpio.set();
+
+        // if(m_msb)
+        //     mosi_gpio = data_tx & (1 << (data_bits - 1));
+        // else
+        //     mosi_gpio = data_tx & (0x01);
+
+
+        // if(m_msb) ret |= miso_gpio.read();
+        // else ret |= (miso_gpio.read() << (data_bits - 1)) ;
+
+        for(uint8_t i = 0; i < data_bits; i++){
+            if(m_msb){
+                mosi_gpio = bool(data_tx & (1 << (data_bits - 2 - i)));
+                // clk_down_then_up();
+                ret <<= 1; ret |= miso_gpio.read();
+                delayDur();
+            }else{
+                sclk_gpio = true;
+                delayDur();
+                mosi_gpio = bool(data_tx & (1 << (i)));
+                delayDur();
+                sclk_gpio = false;
+                delayDur();
+                // clk_down_then_up();
+                ret >>= 1; ret |= (miso_gpio.read() << (data_bits - 1)) ;
+                delayDur();
+            }
         }
 
-        clk_down();
+        sclk_gpio.set();
 
         data_rx = ret;
         return Bus::ErrorType::OK;
     }
 
-    void init(const uint32_t & baudRate){
+    void configBaudRate(const uint32_t baudRate) {
+        if(baudRate == 0){
+            delays = 0;
+        }else{
+            uint32_t b = baudRate / 1000;
+            delays = 300 / b;
+        }
+    }
+
+    void init(const uint32_t baudRate){
         configBaudRate(baudRate);
         init();
     }
 
     void init(){
-        preinit();
-        mosi_pin.outpp();
-        sclk_pin.outpp();
+        mosi_gpio.outpp();
+        sclk_gpio.outpp(1);
 
-        for(uint8_t i = 0; i < cs_pins.getSize(); i++){
-            cs_pins.setModeByIndex(i, PinMode::OutPP);
+        for(uint8_t i = 0; i < cs_port.getSize(); i++){
+            if(cs_port.isIndexValid(i)){
+                auto & cs_gpio = cs_port[i];
+                cs_gpio.outpp(1);
+            }
         }
 
-        miso_pin.inflt();
+        miso_gpio.inpd();
+    }
+
+    void configBitOrder(const bool en) override {
+        m_msb = en;
     }
 };
 

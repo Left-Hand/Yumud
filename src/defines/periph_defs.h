@@ -5,7 +5,7 @@
 #include "user_defs.h"
 
 #ifdef CH32V203
-    #define HAVE_SDI
+    // #define HAVE_SDI
     #define HAVE_GPIOA
     #define HAVE_GPIOB
     #define HAVE_GPIOC

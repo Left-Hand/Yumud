@@ -119,7 +119,7 @@ void SpiHw::installGpios(){
     Gpio & sclk_pin = getSclkPin();
     sclk_pin.afpp();
 
-    if(!cs_pins.isIndexValid(0)){
+    if(!cs_port.isIndexValid(0)){
         Gpio & cs_pin = getCsPin();
         cs_pin.set();
         if(hw_cs_enabled){
@@ -130,8 +130,8 @@ void SpiHw::installGpios(){
         bindCsPin(cs_pin, 0);
     }
 
-    for(uint8_t i = 0; i < cs_pins.getSize(); i++){
-        cs_pins[i].outpp();
+    for(uint8_t i = 0; i < cs_port.getSize(); i++){
+        cs_port[i].outpp();
     }
 }
 
@@ -164,9 +164,10 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
 	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
 	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
 	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = calculatePrescaler(baudrate);
+	// SPI_InitStructure.SPI_BaudRatePrescaler = calculatePrescaler(baudrate);
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_256;
 	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
 	SPI_InitStructure.SPI_CRCPolynomial = 7;
 	SPI_Init(instance, &SPI_InitStructure);
@@ -188,7 +189,7 @@ SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
     transfer(data, 0);
     return ErrorType::OK;
 }
-SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
     if(txMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
@@ -219,7 +220,7 @@ void SpiHw::configBaudRate(const uint32_t baudRate){
 }
 
 void SpiHw::configBitOrder(const bool msb){
-    instance->CTLR1 &= (!SPI_FirstBit_LSB);
+    instance->CTLR1 &= ~SPI_FirstBit_LSB;
     instance->CTLR1 |= msb ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }
 #ifdef HAVE_SPI1
