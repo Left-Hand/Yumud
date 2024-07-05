@@ -34,7 +34,7 @@ int main(){
     // pmdc_tb();
     // gpio_tb(portC[13]);
     // dma_tb(logger, dma1Ch1);
-    // dma_tb(logger, UART7_TX_DMA_CH);
+    // dma_tb(logger, UART7_RX_DMA_CH);
     uart_tb(logger);
     #endif
     while(true);

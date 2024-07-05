@@ -115,12 +115,12 @@ void UartHw::bindRxneCb(Callback && cb){
             uart6_rxne_cb = cb;
             break;
         #endif
-        #ifdef HAVE_UART6
+        #ifdef HAVE_UART7
         case UART7_BASE:
             uart7_rxne_cb = cb;
             break;
         #endif
-        #ifdef HAVE_UART6
+        #ifdef HAVE_UART8
         case UART8_BASE:
             uart8_rxne_cb = cb;
             break;
@@ -160,6 +160,16 @@ void UartHw::bindTxeCb(Callback && cb){
             uart6_txe_cb = cb;
             break;
         #endif
+        #ifdef HAVE_UART7
+        case UART7_BASE:
+            uart7_txe_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART8
+        case UART8_BASE:
+            uart8_txe_cb = cb;
+            break;
+        #endif
     }
 }
 
@@ -193,6 +203,16 @@ void UartHw::bindIdleCb(Callback && cb){
         #ifdef HAVE_UART6
         case UART6_BASE:
             uart6_idle_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART7
+        case UART7_BASE:
+            uart7_idle_cb = cb;
+            break;
+        #endif
+        #ifdef HAVE_UART8
+        case UART8_BASE:
+            uart8_idle_cb = cb;
             break;
         #endif
     }
