@@ -7,19 +7,15 @@
 #include <initializer_list>
 #include <vector>
 
-class Can;
-
 struct CanMsg:public CanRxMsg{
 protected:
     uint8_t mbox;
-
-    friend Can;
 public:
     CanMsg(){
         DLC = 0;
     }
 
-    CanMsg(const uint32_t & id, const bool & is_rtr = false){
+    CanMsg(const uint32_t id, const bool is_rtr = false){
         StdId = id;
         ExtId = id;
         IDE = (id > 0x7FF ? CAN_ID_EXT : CAN_ID_STD);
@@ -27,21 +23,21 @@ public:
         DLC = 0;
     }
 
-    CanMsg(const uint32_t & id, const std::initializer_list<uint8_t> & datas):CanMsg(id){
+    CanMsg(const uint32_t id, const std::initializer_list<uint8_t> & datas):CanMsg(id){
         for(auto it = datas.begin(); it != datas.end(); it++){
             Data[DLC++] = *it;
             if(DLC == 8) break;
         }
     }
 
-    CanMsg(const uint32_t & id, const std::vector<uint8_t> &datas) : CanMsg(id) {
+    CanMsg(const uint32_t id, const std::vector<uint8_t> &datas) : CanMsg(id) {
         for(auto it = datas.begin(); it != datas.end(); it++){
             Data[DLC++] = *it;
             if(DLC == 8) break;
         }
     }
 
-    CanMsg(const uint32_t & id, const uint8_t *buf, const uint8_t len) : CanMsg(id) {
+    CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id) {
         for(uint8_t i = 0; i < len; i++){
             Data[DLC++] = buf[i];
             if(DLC == 8) break;

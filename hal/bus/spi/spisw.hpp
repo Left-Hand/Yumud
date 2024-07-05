@@ -152,12 +152,9 @@ public:
         }
     }
 
-    void init(const uint32_t baudRate){
+    void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) override{
         configBaudRate(baudRate);
-        init();
-    }
 
-    void init(){
         mosi_gpio.outpp();
         sclk_gpio.outpp(1);
 

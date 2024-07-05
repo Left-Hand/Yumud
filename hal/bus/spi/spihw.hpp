@@ -19,7 +19,8 @@ protected:
 public:
     SpiHw(SPI_TypeDef * _instance):instance(_instance){;}
 
-    void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking);
+    void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) override;
+
     void enableHwCs(const bool en = true);
 
     void enableRxIt(const bool en = true);

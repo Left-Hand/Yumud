@@ -24,12 +24,17 @@ public:
 
     __fast_inline constexpr Vector2_t(){;}
 
-    __fast_inline constexpr Vector2_t(const auto & _x, const auto & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
+    template<typename U, typename V>
+    requires std::is_arithmetic_v<U> and std::is_arithmetic_v<V>
+    __fast_inline constexpr Vector2_t(const U & _x, const V & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
 
-    // template<typename U>
-    __fast_inline constexpr Vector2_t(const std::tuple<auto, auto> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
+    template<typename U, typename V>
+    requires std::is_arithmetic_v<U> and std::is_arithmetic_v<V>
+    __fast_inline constexpr Vector2_t(const std::tuple<U, V> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
 
-    __fast_inline constexpr Vector2_t(const Vector2_t<auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    template<typename U>
+    requires std::is_arithmetic_v<U>
+    __fast_inline constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
     static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
     static constexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
@@ -58,10 +63,13 @@ public:
     constexpr Vector2_t<T> bounce(const Vector2_t<T> &n) const;
     constexpr Vector2_t<T> ceil() const;
 
-    constexpr Vector2_t<T> clampmin(const auto & length) const;
-    constexpr Vector2_t<T> clampmax(const auto & length) const;
+    template<typename U>
+    constexpr Vector2_t<T> clampmin(const U & length) const;
 
+    template<typename U>
+    constexpr Vector2_t<T> clampmax(const U & length) const;
 
+    // template<typename U>
     constexpr Vector2_t<T> clamp(const auto & _min, const auto & _max) const;
     constexpr Vector2_t<T> dir_to(const Vector2_t<T> & b) const;
     constexpr T dist_to(const Vector2_t<T> & b) const;

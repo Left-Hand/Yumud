@@ -1,24 +1,16 @@
 #ifndef __CAN_HPP__
 #define __CAN_HPP__
 
-#include <memory>
-#include <functional>
-#include "sys/platform.h"
-#include "hal/gpio/gpio.hpp"
+#include "can_utils.hpp"
 #include "can_msg.hpp"
-#include "types/buffer/ringbuf/ringbuf_t.hpp"
-#include "hal/bus/bus_inc.h"
 #include "can_filter.hpp"
+#include "hal/bus/bus.hpp"
 
 
 class Can: public PackedBus<CanMsg>{
 public:
-    enum class BaudRate{
-        Kbps125,
-        Kbps250,
-        Kbps500,
-        Mbps1
-    };
+    using BaudRate = CanUtils::BaudRate;
+    using Mode = CanUtils::Mode;
 
     using Packet = CanMsg;
     using Callback = std::function<void(void)>;
@@ -29,10 +21,13 @@ protected:
     Gpio & getRxGpio();
     Error lead(const uint8_t index) override{return ErrorType::OK;};
     void trail() override{};
+
+    void installGpio();
+    void enableRcc();
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
     void configBaudRate(const uint32_t baudRate) override;
-    void init(const BaudRate baudRate, const CanFilter & filter = CanFilter());
+    void init(const BaudRate baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
     bool write(const CanMsg & msg) override;
     const CanMsg & read() override;
     size_t pending();
@@ -58,6 +53,8 @@ public:
 
 #ifdef HAVE_CAN1
 extern Can can1;
+
+
 extern "C"{
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void);

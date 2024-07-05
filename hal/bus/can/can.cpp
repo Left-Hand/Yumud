@@ -1,5 +1,5 @@
 #include "can.hpp"
-
+#include "hal/nvic/nvic.hpp"
 
 using Callback = Can::Callback;
 
@@ -86,29 +86,39 @@ Gpio & Can::getRxGpio(){
     return GpioNull;
 }
 
-void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
-void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
-void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
-void Can::init(const BaudRate baudRate, const CanFilter & filter){
-    uint8_t remap = 1;
-
+void Can::installGpio(){
     auto & txGpio = getTxGpio();
     auto & rxGpio = getRxGpio();
 
     txGpio.afpp();
     rxGpio.afpp();
 
+}
+void Can::enableRcc(){
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+    uint8_t remap = CAN1_REMAP;
     switch(remap){
     case 0:
         GPIO_PinRemapConfig(GPIO_Remap1_CAN1, DISABLE);
         break;
     case 1:
+    case 2:
         GPIO_PinRemapConfig(GPIO_Remap1_CAN1, ENABLE);
         break;
-    case 2:
+    case 3:
         GPIO_PinRemapConfig(GPIO_Remap2_CAN1, ENABLE);
         break;
     }
+}
+
+void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
+void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
+void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
+void Can::init(const BaudRate baudRate, const Mode mode, const CanFilter & filter){
+
+    installGpio();
+    enableRcc();
+
     uint8_t swj, bs1, bs2;
     uint8_t prescale = 0;
 
@@ -131,11 +141,9 @@ void Can::init(const BaudRate baudRate, const CanFilter & filter){
         break;
     };
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
-
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
-    config.CAN_Mode = CAN_Mode_Normal;
+    config.CAN_Mode = (uint8_t)mode;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;

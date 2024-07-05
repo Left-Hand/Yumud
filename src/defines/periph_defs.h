@@ -10,6 +10,7 @@
     #define HAVE_GPIOB
     #define HAVE_GPIOC
     #define HAVE_GPIOD
+    #define HAVE_DMA1
 
 #elif defined(CH32V30X)
     #define HAVE_SDI
@@ -19,6 +20,8 @@
     #define HAVE_GPIOD
     #define HAVE_GPIOE
     #define HAVE_DVP
+    #define HAVE_DMA1
+    #define HAVE_DMA2
 #endif
 
 
@@ -63,37 +66,149 @@
     #endif
 #endif
 
+#ifdef HAVE_UART3
+    #define UART3_IT_PP 1
+    #define UART3_IT_SP 1
+
+    #define UART3_TX_DMA_CH dma1Ch2
+    #define UART3_RX_DMA_CH dma1Ch3
+
+    #if UART3_REMAP == 0
+    #define UART3_TX_Gpio portB[10]
+    #define UART3_RX_Gpio portB[11]
+
+    #elif UART3_REMAP == 1
+    #define UART3_TX_Gpio portC[10]
+    #define UART3_RX_Gpio portC[11]
+
+    #elif UART3_REMAP == 2
+    #define UART3_TX_Gpio portA[13]
+    #define UART3_RX_Gpio portA[14]
+
+    #elif UART3_REMAP == 3
+    #define UART3_TX_Gpio portD[8]
+    #define UART3_RX_Gpio portD[9]
+
+    #endif
+#endif
+
 #ifdef HAVE_UART4
-    #define UART4_Baudrate (115200 * 4)
+    #define UART4_IT_PP 1
+    #define UART4_IT_SP 1
 
-    #define UART4_TX_Port portE
-    #define UART4_TX_Pin GPIO_Pin_0
+    #define UART4_TX_DMA_CH dma2Ch5
+    #define UART4_RX_DMA_CH dma2Ch3
 
-    #define UART4_RX_Port portE
-    #define UART4_RX_Pin GPIO_Pin_1
+    #if UART4_REMAP == 0
+    #define UART4_TX_Gpio portC[10]
+    #define UART4_RX_Gpio portC[11]
 
-    #define UART4_IT_PP 0
-    #define UART4_IT_SP 0
+    #elif UART4_REMAP == 1
+    #define UART4_TX_Gpio portB[0]
+    #define UART4_RX_Gpio portB[1]
 
-    #define UART4_REMAP_ENABLE ENABLE
-    #define UART4_REMAP GPIO_FullRemap_USART4
+    #elif UART4_REMAP == 2
+    #define UART4_TX_Gpio portE[0]
+    #define UART4_RX_Gpio portE[1]
+
+    #elif UART4_REMAP == 3
+    #define UART4_TX_Gpio portE[0]
+    #define UART4_RX_Gpio portE[1]
+
+    #endif
+#endif
+
+#ifdef HAVE_UART5
+    #define UART5_IT_PP 1
+    #define UART5_IT_SP 1
+
+    #define UART5_TX_DMA_CH dma2Ch4
+    #define UART5_RX_DMA_CH dma2Ch2
+
+    #if UART5_REMAP == 0
+    #define UART5_TX_Gpio portC[12]
+    #define UART5_RX_Gpio portD[2]
+
+    #elif UART5_REMAP == 1
+    #define UART5_TX_Gpio portB[4]
+    #define UART5_RX_Gpio portB[5]
+
+    #else
+    error uart5 1\x rm not supported
+    #endif
+#endif
 
 
+
+#ifdef HAVE_UART6
+    #define UART6_IT_PP 1
+    #define UART6_IT_SP 1
+
+    #define UART6_TX_DMA_CH dma2Ch6
+    #define UART6_RX_DMA_CH dma2Ch7
+
+    #if UART6_REMAP == 0
+    #define UART6_TX_Gpio portC[0]
+    #define UART6_RX_Gpio portC[1]
+
+    #elif UART6_REMAP == 1
+    #define UART6_TX_Gpio portB[8]
+    #define UART6_RX_Gpio portB[9]
+
+    #elif (UART6_REMAP == 2) || (UART6_REMAP == 3)
+    #define UART6_TX_Gpio portE[10]
+    #define UART6_RX_Gpio portE[11]
+
+    #endif
 #endif
 
 #ifdef HAVE_UART7
-    #if UART7_REMAP == 3
+    #define UART7_IT_PP 1
+    #define UART7_IT_SP 1
+
+    #define UART7_TX_DMA_CH dma2Ch8
+    #define UART7_RX_DMA_CH dma2Ch9
+
+    #if UART7_REMAP == 0
+    #define UART7_TX_Gpio portC[2]
+    #define UART7_RX_Gpio portC[3]
+
+    #elif UART7_REMAP == 1
+    #define UART7_TX_Gpio portA[6]
+    #define UART7_RX_Gpio portA[7]
+
+    #elif (UART7_REMAP == 2) || (UART_REMAP == 3)
     #define UART7_TX_Gpio portE[12]
     #define UART7_RX_Gpio portE[13]
+
     #endif
 #endif
 
-#ifdef HAVE_UART4
-    #if UART4_REMAP == 3
-    #define UART7_TX_Gpio portE[0]
-    #define UART7_RX_Gpio portE[1]
+
+#ifdef HAVE_UART8
+    #define UART8_IT_PP 1
+    #define UART8_IT_SP 1
+
+    #define UART8_TX_DMA_CH dma2Ch10
+    #define UART8_RX_DMA_CH dma2Ch11
+
+    #if UART8_REMAP == 0
+    #define UART8_TX_Gpio portC[4]
+    #define UART8_RX_Gpio portC[5]
+
+    #elif UART8_REMAP == 1
+    #define UART8_TX_Gpio portA[14]
+    #define UART8_RX_Gpio portA[15]
+
+    #elif (UART8_REMAP == 2) || (UART8_REMAP == 3)
+    #define UART8_TX_Gpio portE[14]
+    #define UART8_RX_Gpio portE[15]
+
     #endif
 #endif
+
+
+
 
 #ifdef HAVE_SPI1
 
@@ -249,10 +364,28 @@
 
 #ifdef HAVE_TIM5
     #if TIM5_REMAP == 0
-        #define TIM4_CH1_Gpio portA[0]
-        #define TIM4_CH2_Gpio portA[1]
-        #define TIM4_CH3_Gpio portA[2]
-        #define TIM4_CH4_Gpio portA[3]
+        #define TIM5_CH1_Gpio portA[0]
+        #define TIM5_CH2_Gpio portA[1]
+        #define TIM5_CH3_Gpio portA[2]
+        #define TIM5_CH4_Gpio portA[3]
+    #endif
+#endif
+
+#ifdef HAVE_TIM6
+    #if TIM6_REMAP == 0
+        #define TIM6_CH1_Gpio portA[0]
+        #define TIM6_CH2_Gpio portA[1]
+        #define TIM6_CH3_Gpio portA[2]
+        #define TIM6_CH4_Gpio portA[3]
+    #endif
+#endif
+
+#ifdef HAVE_TIM7
+    #if TIM7_REMAP == 0
+        #define TIM7_CH1_Gpio portA[0]
+        #define TIM7_CH2_Gpio portA[1]
+        #define TIM7_CH3_Gpio portA[2]
+        #define TIM7_CH4_Gpio portA[3]
     #endif
 #endif
 
@@ -275,15 +408,28 @@
 #ifdef HAVE_CAN1
     #define CAN1_RM0_TX_Gpio portA[12]
     #define CAN1_RM0_RX_Gpio portA[11]
-    #define CAN1_RM2_TX_Gpio portB[9]
-    #define CAN1_RM2_RX_Gpio portB[8]
 
+    #define CAN1_RM1_TX_Gpio portB[9]
+    #define CAN1_RM1_RX_Gpio portB[8]
+
+    #define CAN1_RM3_TX_Gpio portD[1]
+    #define CAN1_RM3_RX_Gpio portD[0]
+    
     #if CAN1_REMAP == 0
         #define CAN1_TX_Gpio CAN1_RM0_TX_Gpio
         #define CAN1_RX_Gpio CAN1_RM0_RX_Gpio
+
+    #elif CAN1_REMAP == 1
+        #define CAN1_TX_Gpio CAN1_RM1_TX_Gpio
+        #define CAN1_RX_Gpio CAN1_RM1_RX_Gpio
+
     #elif CAN1_REMAP == 2
-        #define CAN1_TX_Gpio CAN1_RM2_TX_Gpio
-        #define CAN1_RX_Gpio CAN1_RM2_RX_Gpio
+        #warn no can1 remap2
+
+    #elif CAN1_REMAP == 3
+        #define CAN1_TX_Gpio CAN1_RM3_TX_Gpio
+        #define CAN1_RX_Gpio CAN1_RM3_RX_Gpio
+
     #endif
 #endif
 
@@ -307,5 +453,6 @@
     #define OPA1_P1_Gpio portB[0]
     #define OPA1_O1_Gpio portB[1]
 #endif
+
 
 #endif
