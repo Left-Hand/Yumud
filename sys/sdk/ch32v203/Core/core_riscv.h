@@ -378,6 +378,10 @@ extern uint32_t __get_MIMPID(void);
 extern uint32_t __get_MHARTID(void);
 extern uint32_t __get_SP(void);
 
+
+#define ENABLE 1
+#define DISABLE 0
+
 #ifdef __cplusplus
 }
 #endif

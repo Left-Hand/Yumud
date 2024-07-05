@@ -42,7 +42,8 @@ namespace StepperEnums{
     )
 
     BETTER_ENUM(CtrlType, uint8_t, 
-        VECTOR,    
+        VECTOR,
+        CURRENT,
         POSITION,
         TRAPEZOID,
         SPEED
@@ -57,6 +58,9 @@ namespace StepperEnums{
         ODO_DISCONNECTED,
         ODO_NO_SIGNAL
     };
+
+    using ExitFlag = bool;
+    using InitFlag = bool;
 };
 
 #endif

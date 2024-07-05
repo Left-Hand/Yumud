@@ -113,3 +113,16 @@ void Stepper::saveArchive(){
     logger.println("======");
 }
 
+
+void Stepper::removeArchive(){
+    using Archive = StepperUtils::Archive;
+    Archive archive;
+    archive.clear();
+    logger.println("======");
+    logger.println("removing archive...");
+
+    memory.store(archive);
+
+    logger.println("done");
+    logger.println("======");
+}

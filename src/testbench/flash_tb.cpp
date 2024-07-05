@@ -1,14 +1,11 @@
 #include "tb.h"
 
-void flash_tb(void){
-    IOStream & logger = uart2;
+void flash_tb(IOStream & logger){
 
     Flash sto(-1);
     sto.init();
     Memory flash = sto;
     Sys::Misc::prework();
-
-    uart2.init(115200);
 
     logger.setSpace(" ");
     logger.setRadix(16);

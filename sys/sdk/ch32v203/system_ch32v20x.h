@@ -14,7 +14,6 @@
  extern "C" {
 #endif 
 
-#define F_CPU 144000000
 extern uint32_t SystemCoreClock;          /* System Clock Frequency (Core Clock) */
 
 /* System_Exported_Functions */  

@@ -45,7 +45,7 @@ Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
                 move_range.end = move_range.start;
                 break;
             case SubState::TEST_A:
-                coilA = cos(real_t(cnt) * real_t(PI / subdivide_micros));
+                svpwm.coil_a = cos(real_t(cnt) * real_t(PI / subdivide_micros));
                 
                 odo.update();
                 move_range.merge(odo.getPosition());

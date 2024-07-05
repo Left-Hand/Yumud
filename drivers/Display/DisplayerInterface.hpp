@@ -53,8 +53,9 @@ public:
     }
 
     void reset(){
+        delay(10);
         res_gpio.clr();
-        delay(1);
+        delay(10);
         res_gpio.set();
     }
 
@@ -99,6 +100,20 @@ public:
         dc_gpio = data_level;
         bus_drv.write(data, len);
     } 
+
+    // template<>
+    void writePixels(const Grayscale * data, const size_t & len){
+        dc_gpio = data_level;
+        // for(size_t i = 0; i < len; i++) bus_drv.write(RGB565(data[i]));
+        // return;
+        auto & bus = bus_drv.bus;
+        if(!bus.begin(0)){
+            bus.configDataSize(16);
+            for(size_t i = 0; i < len; i++) bus.write(RGB565(data[i]));
+            bus.end();
+            bus.configDataSize(8);
+        }
+    } 
 };
 
 class DisplayInterfaceI2c:public DisplayerInterface{
@@ -130,14 +145,14 @@ public:
         bus_drv.writePool(data_token, data_ptr, len, false);
     }
 
-    void writePool(const uint8_t & data, const size_t & len) override{
-        // bus_drv.write(data_token, false);
-        auto data_ptr = new uint8_t[len];
-        memset(data_ptr, data, len);
-        bus_drv.writePool(data_token, data_ptr, len, false);
-        // bus_drv.write(data, len);
-        delete data_ptr;
-    }
+    // void writePool(const uint8_t & data, const size_t & len) override{
+    //     // bus_drv.write(data_token, false);
+    //     auto data_ptr = new uint8_t[len];
+    //     memset(data_ptr, data, len);
+    //     bus_drv.writePool(data_token, data_ptr, len, false);
+    //     // bus_drv.write(data, len);
+    //     delete data_ptr;
+    // }
 };
 
 

@@ -4,7 +4,13 @@
 
 #include "stdint.h"
 #include "sys/platform.h"
+
 #include "uint24_t.h"
+
+#ifdef __cplusplus
+#include "real.hpp"
+#include "types/string/String.hpp"
+#endif
 
 struct RGB332{
     union{
@@ -118,13 +124,15 @@ struct Binary{
     uint8_t data;
 
     enum{
-        WHITE   = 0x01,  // White color
+        WHITE   = 0xFF,  // White color
         BLACK   = 0x00   // Black color
     };
 #ifdef __cplusplus
     __fast_inline constexpr Binary() : data(0){;}
-
-    __fast_inline constexpr Binary(const uint8_t & _data): data(_data){;}
+    // __fast_inline constexpr Binary(Binary & other) : data(other.data){;}
+    // __fast_inline constexpr Binary(Binary && other) : data(other.data){;}
+    // __fast_inline constexpr Binary(const uint8_t & _data): data(_data){;}
+    __fast_inline constexpr Binary(const bool & _data): data(_data ? 0xff : 0x00){;}
     //bool will be implicitly converted to uint8_t, add the bool constructer will be ambiguous 
 
     __fast_inline explicit operator uint8_t() const {return data;}
@@ -147,9 +155,13 @@ struct Grayscale{
 
     __fast_inline constexpr Grayscale(const uint8_t & _data): data(_data){;}
 
+    __fast_inline constexpr Grayscale(const real_t & _data): data(int(_data * 256)){;}
+
     __fast_inline constexpr Grayscale & operator = (const uint8_t & _data){data = _data; return *this;}
 
     __fast_inline constexpr operator uint8_t() const {return data;}
+
+    __no_inline Grayscale(const String & str): Grayscale(str.toInt()){;}
 
     __fast_inline constexpr explicit operator bool() const {return data;}
 
@@ -161,7 +173,15 @@ struct Grayscale{
 
     __fast_inline constexpr bool operator <= (const Grayscale & other){return data <= other.data;}
 
-    __fast_inline constexpr Binary to_bina(const uint8_t threshold = 128){return Binary(data > threshold);}
+    __fast_inline constexpr Binary to_bina(const Grayscale & threshold = 128){return Binary(data > (uint8_t)threshold);}
+
+    __no_inline explicit operator String() const{
+        return this->toString();
+    }
+
+    __no_inline String toString(unsigned char decimalPlaces = 2)const{
+        return ::toString((uint8_t)data);
+    }
 #endif
 };
 
@@ -181,14 +201,15 @@ struct RGB565{
         WHITE   = 0xFFFF,  // White color
         YELLOW  = 0xFFE0,  // Yellow color
         BRRED   = 0XFC07,  // Brown-red color
-        PINK    = 0XF81F,  // Pink color
+        PINK    = 0XFE19,  // Pink color
         RED     = 0xF800,  // Red color
         BROWN   = 0XBC40,  // Brown color
         GRAY    = 0X8430,  // Gray color
         GBLUE   = 0X07FF,  // Light blue color
         GREEN   = 0x07E0,  // Green color
         BLUE    = 0x001F,  // Blue color
-        BLACK   = 0x0000   // Black color
+        BLACK   = 0x0000,   // Black color
+        ORANGE = 0xFFA5
     };
 #ifdef __cplusplus
 
@@ -198,14 +219,27 @@ struct RGB565{
 
     __fast_inline constexpr RGB565(const Grayscale & gs): b((uint8_t)gs >> 3), g((uint8_t)gs >> 2), r((uint8_t)gs >> 3){;}
 
+    __fast_inline constexpr RGB565(const real_t & _r, const real_t & _g, const real_t & _b): b(int(_b * 32)), g(int(_g * 64)), r(int(_r * 32)){;}
+
     __fast_inline constexpr RGB565(const Binary & bn): RGB565((bool)bn ? 0xffff : 0){;}
+
+    // __no_inline RGB565(const String & str): RGB565(str.toInt()){;}
 
     __fast_inline constexpr explicit RGB565(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
 
     __fast_inline constexpr explicit RGB565(const uint16_t & _data): data(_data){;}
 
-    __fast_inline constexpr explicit operator uint16_t() const {return data;}
+    __fast_inline constexpr operator uint16_t() const {return data;}
 
+    __fast_inline constexpr RGB565 & operator = (const uint16_t & _data){data = _data; return *this;}
+
+    // __no_inline explicit operator String() const{
+    //     return this->toString();
+    // }
+
+    // __no_inline String toString(unsigned char decimalPlaces = 2)const{
+    //     return ::toString('(' + ::toString((uint8_t)r) + ',' + ::toString((uint8_t)g) + ',' + ::toString((uint8_t)b) + ')');
+    // }
 #endif
 };
 
@@ -244,5 +278,15 @@ struct sGrayscale{
     __fast_inline constexpr Binary to_bina_singed(const int8_t & threshold){return Binary(data > threshold);}
 #endif
 };
+
+#ifdef __cplusplus
+namespace RGB{
+
+    // template<typename T>
+    // __fast_inline constexpr conv(Grayscale & gs, const RGB565 & rgb565){return RGB888(rgb565.r, rgb565.g, rgb565.b);}
+    
+    __fast_inline constexpr void conv(RGB565 & rgb565,const Grayscale & gs){rgb565 = RGB565(gs);}
+}
+#endif
 
 #endif

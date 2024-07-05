@@ -39,10 +39,6 @@
 
 #define RUN_TIME_DEBUG
 
-// #define ASSERT(condition, ...)
-// if(std::is_constant_evaluated() && std::is_con){ 
-//     static_assert(condition, ##__VA_ARGS__);
-// }else 
 #if !defined(ASSERT) && defined(__cplusplus)
 #ifdef RUN_TIME_DEBUG
 #define ASSERT(condition, ...) \
@@ -72,5 +68,13 @@ if(bool(condition) == false){\
     DEBUG_PRINT("[f]:", __LINE__, ':', ##__VA_ARGS__);\
     while(true);\
 }
+
+extern "C"{
+
+__attribute__((used)) int _write(int fd, char *buf, int size);
+__attribute__((used)) void *_sbrk(ptrdiff_t incr);
+
+}
+
 
 #endif // __DEBUG_INC_H__

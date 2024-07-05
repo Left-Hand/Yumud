@@ -3,7 +3,6 @@
 
 void ST7789::init(){
     interface.init();
-
     
     writeCommand(0x01);
 

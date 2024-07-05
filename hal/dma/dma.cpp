@@ -65,8 +65,8 @@ case 2:\
 #define DMA_BIND_CB_TEMPLATE(name,uname)\
 void DmaChannel::bind##name##Cb(Callback && cb){\
     switch(dma_index){\
-        DMA1_BIND_CB_TEMPLATE(uname)
-        DMA2_BIND_CB_TEMPLATE(uname)
+        DMA1_BIND_CB_TEMPLATE(uname)\
+        DMA2_BIND_CB_TEMPLATE(uname)\
     }\
 }\
 
@@ -228,9 +228,9 @@ void DmaChannel::enableIt(const NvicPriority _priority, const bool en){
         #ifdef HAVE_DMA2
         case 2:
             if(channel_index <= 5){
-                irq = DMA2_Channel1_IRQn + (DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index - 1);
+                irq = (IRQn)((int)DMA2_Channel1_IRQn + ((int)(DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index - 1)));
             }else{
-                irq = DMA2_Channel6_IRQn + (DMA2_Channel7_IRQn - DMA2_Channel6_IRQn) * (channel_index - 6);
+                irq = (IRQn)((int)DMA2_Channel6_IRQn + ((int)(DMA2_Channel7_IRQn - DMA2_Channel6_IRQn) * (channel_index - 6)));
             }
             break;
         #endif
