@@ -158,7 +158,7 @@ using Sys::t;
 #include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
 
 void eeprom_tb(OutputStream & logger);
-void flash_tb(void);
+void flash_tb(IOStream & logger);
 void memory_tb(OutputStream & logger);
 
 void stepper_tb(IOStream & logger);
@@ -169,10 +169,20 @@ void pwm_tb(OutputStream & logger);
 void adc_tb(OutputStream & logger);
 void temp_tb(OutputStream & logger);
 void temp_tb2(OutputStream & logger);
+void filter_tb(OutputStream & logger);
 
 void uart_tb(Uart & uart);
 void pmdc_tb();
 
 void lds14_tb(IOStream & logger,Uart & uart);
-
+void gpio_tb(GpioConcept & gpio);
 void pca_tb(IOStream & logger);
+void st77xx_tb(IOStream & logger, Spi & spi);
+
+void joystick_tb(OutputStream & logger);
+
+void dma_tb(OutputStream & logger, DmaChannel & channel);
+
+void ch9141_tb(IOStream & logger, Uart & uart);
+
+void can_tb(IOStream & logger, Can & can, bool tx_role = true);

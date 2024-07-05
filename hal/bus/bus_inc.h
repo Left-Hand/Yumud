@@ -9,9 +9,12 @@
 #include "i2c/i2chw.hpp"
 #include "i2c/i2cdrv.hpp"
 
+// #include "sdi/sdi.hpp"
+
 #include "spi/spihw.hpp"
 #include "spi/spidrv.hpp"
 
 #include "can/can.hpp"
+#include "dvp/dvp.hpp"
 
 #endif

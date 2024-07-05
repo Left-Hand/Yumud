@@ -1,6 +1,6 @@
 template<typename T>
 template<typename U>
-const T KalmanFilter_t<T>::update(const U & _x) {
+const T KalmanFilterZ_t<T>::update(const U _x) {
     T x = static_cast<T>(_x);
     if (!init) {
         x_last = x;
@@ -15,7 +15,7 @@ const T KalmanFilter_t<T>::update(const U & _x) {
 
 template<typename T>
 template<typename U>
-const T KalmanFilter_t<T>::predict(const U & _x) {
+const T KalmanFilterZ_t<T>::predict(const U _x) {
     T x = static_cast<T>(_x);
     p_mid = p_last + q;
     kg = p_mid / (p_mid + r);

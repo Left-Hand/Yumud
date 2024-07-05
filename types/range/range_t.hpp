@@ -6,14 +6,25 @@
 #include "types/string/String.hpp"
 #include "type_traits"
 
+#include <algorithm>
+
 template<typename T>
+requires std::is_arithmetic_v<T>
 struct Range_t{
 public:
-    T start = T(0);
-    T end = T(0);
+    union{
+        T start;
+        T from;
+        T a;
+    };
 
-    Range_t() = default;
-    __fast_inline_constexpr Range_t(const auto & _value): start(static_cast<T>(-ABS(_value))), end(static_cast<T>(ABS(_value))) {;}
+    union{
+        T end;
+        T to;
+        T b;
+    };
+
+    __fast_inline_constexpr Range_t(): start(T(0)), end(T(0)) {;}
     __fast_inline_constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
     __fast_inline_constexpr Range_t(const Range_t<auto> & other): start(static_cast<T>(other.start)), end(static_cast<T>(other.end)) {;}
     __fast_inline_constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
@@ -51,10 +62,6 @@ public:
         Range_t<T> regular = this -> abs();
         return Range_t<T>(regular.start - value, regular.end - value);
     }
-
-    // __fast_inline_constexpr Range_t<T> operator-() const {
-    //     return {end, start};
-    // }
 
     __fast_inline_constexpr Range_t<T> operator * (const auto & value) const{
         Range_t<T> regular = this -> abs();
@@ -99,7 +106,7 @@ public:
     __fast_inline_constexpr bool intersects(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
-        return(other_regular.end >= regular.start || regular.end >= other_regular.start);
+        return(regular.has(other_regular.start) || other_regular.has(regular.start));
     }
 
     __fast_inline_constexpr bool contains(const Range_t<auto> & _other) const {
@@ -248,46 +255,50 @@ public:
         if (ret.is_regular()) return ret;
         else return Range_t<T>();
     }
-
-    constexpr Range_t<T> grow(const auto & amount){
+    template<typename U>
+    requires std::is_arithmetic_v<U>
+    constexpr Range_t<T> grow(const U amount) const{
         Range_t<T> regular = this -> abs();
         Range_t<T> ret = Range_t<T>(regular.start - amount, regular.end + amount);
         if (ret.is_regular()) return ret;
         else return Range_t<T>();
     }
-
-    constexpr Range_t<T> merge(const Range_t<auto> & other){
+    template<typename U>
+    requires std::is_arithmetic_v<U>
+    constexpr Range_t<T> merge(const Range_t<U> & other) const {
         Range_t<T> regular = this -> abs();
-        Range_t<T> other_regular = other -> abs();
-        return Range_t<T>(MIN(regular.start, other_regular.start), MAX(regular.end, other_regular.end));
+        Range_t<T> other_regular = other.abs();
+        return Range_t<T>(std::min(regular.start, other_regular.start), std::max(regular.end, other_regular.end));
     }
 
-    // template<typename U>
-    constexpr Range_t<T> shift(const auto & amount){
+    template<typename U>
+    requires std::is_arithmetic_v<U>
+    constexpr Range_t<T> shift(const U amount){
         Range_t<T> regular = this -> abs();
         Range_t<T> ret = Range_t<T>(regular.start + amount, regular.end + amount);
         return ret;
     }
 
-    // template<typename U>
-    constexpr Range_t merge(const auto & value){
+    template<typename U>
+    requires std::is_arithmetic_v<U>
+    constexpr Range_t<T> merge(const U & value){
         Range_t<T> regular = this -> abs();
         return Range_t<T>(MIN(regular.start, value), MAX(regular.end, value));
     }
 
     // template<typename U>
-    constexpr T invlerp(const auto & value){
-        return (value - start) / (end - start);
+    __fast_inline_constexpr T invlerp(const auto & value){
+        return T((value - start) / (end - start));
     }
 
     // template<typename U>
-    constexpr T lerp(const auto & value){
+    __fast_inline_constexpr T lerp(const auto & value){
         return start + (value) * (end - start);
     }
 
-    constexpr T clamp(const auto & value){
+    __fast_inline_constexpr T clamp(const auto & value){
         Range_t<T> regular = this -> abs();
-        return MIN(MAX(value, regular.start), regular.end);
+        return CLAMP(value, regular.start, regular.end);
     }
 
     constexpr explicit operator bool() const{
@@ -302,7 +313,7 @@ public:
         if constexpr(std::is_integral<T>::value){
             return ('[' + String(start) + ',' + String(end) + ')');
         }else{
-            return ('[' + String(start, decimalPlaces) + ',' + String(end, decimalPlaces) + ')');
+            return ('[' + toString(start, decimalPlaces) + ',' + toString(end, decimalPlaces) + ')');
         }
     }
 };

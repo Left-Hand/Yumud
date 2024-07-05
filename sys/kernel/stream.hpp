@@ -92,7 +92,7 @@ public:
     OutputStream & operator<<(float val){printString(String(val, eps)); return *this;}
     OutputStream & operator<<(double val){printString(String(val, eps)); return *this;}
 
-    OutputStream & operator<<(const char chr){printString(String(chr)); return *this;}
+    OutputStream & operator<<(const char chr){write(chr); return *this;}
     OutputStream & operator<<(char* pStr){printString(String(pStr)); return *this;}
     OutputStream & operator<<(const char* pStr){printString(String(pStr)); return *this;}
     OutputStream & operator<<(const String & str){printString(str); return *this;}
@@ -151,9 +151,8 @@ public:
 };
 
 class IOStream:public OutputStream, public InputStream{
-
-
-
+public:
+    using InputStream::read;
 };
 
 #endif

@@ -6,6 +6,7 @@
 #include <type_traits>
 
 template <typename T>
+requires std::is_arithmetic_v<T>
 struct Complex_t {
 public:
     T real;

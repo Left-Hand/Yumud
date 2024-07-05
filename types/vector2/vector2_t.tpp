@@ -175,7 +175,7 @@ constexpr __fast_inline Vector2_t<T> Vector2_t<T>::improduct(const Vector2_t<T> 
 }
 
 template<typename T>
-constexpr __fast_inline Vector2_t<T> Vector2_t<T>::rotate(const T & r) const{
+constexpr __fast_inline Vector2_t<T> Vector2_t<T>::rotated(const T r) const{
     return this->improduct(Vector2_t<T>(cos(r), sin(r)));
 }
 

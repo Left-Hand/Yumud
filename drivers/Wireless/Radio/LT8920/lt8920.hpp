@@ -317,7 +317,7 @@ protected:
 
     void readReg(const RegAddress& address, Reg16 & reg){
         uint8_t temp = 0;
-        bus_drv.transmit(temp, (uint8_t)((uint8_t)address & 0x80), false);
+        bus_drv.transfer(temp, (uint8_t)((uint8_t)address & 0x80), false);
         flagReg.data &= 0xff;
         flagReg.data |= temp << 8;
 

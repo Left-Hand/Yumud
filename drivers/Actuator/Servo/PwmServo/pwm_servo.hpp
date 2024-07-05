@@ -18,12 +18,12 @@ public:
         instance.init();
     }
 
-    void enable(const bool & en = true) override {
+    void enable(const bool en = true) override {
         enabled = en;
         if(!en) setDuty(real_t(0));
     }
 
-    virtual void setDuty(const real_t & duty) = 0;
+    virtual void setDuty(const real_t duty) = 0;
 };
 
 
@@ -37,12 +37,12 @@ public:
     PwmAngleServo(PwmChannel & _instance, const int & _angle_scale, const real_t & _min_value_duty = real_t(0.025), const real_t & _max_value_duty = real_t(0.125)):
             PwmServo(_instance, _min_value_duty, _max_value_duty), angle_elec_range(real_t(_angle_scale < 0  ?  - _angle_scale:0),real_t( _angle_scale < 0 ? 0 : _angle_scale)){;}
 
-    void setDuty(const real_t & duty) override{
+    void setDuty(const real_t duty) override{
         if(!enabled) {(instance = 0); return;}
         instance = (LERP(CLAMP(duty, real_t(0), real_t(1)), min_value_duty, max_value_duty));
     }
 
-    void setAngle(const real_t & angle){
+    void setAngle(const real_t angle){
         setDuty(CLAMP(angle_elec_range.invlerp(angle), real_t(0), real_t(1)));
     }
 };
@@ -54,12 +54,12 @@ protected:
     PwmSpeedServo(PwmChannel & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const int & _max_rot_per_second
             ):PwmServo(_instance, _min_value_duty, _max_value_duty), max_rot_per_second(_max_rot_per_second){;}
 public:
-    void setDuty(const real_t & duty) override{
+    void setDuty(const real_t duty) override{
         if(!enabled){(instance = (real_t(0))); return;}
         instance = (LERP(CLAMP(duty, real_t(-1), real_t(1)) * real_t(0.5) + real_t(0.5), min_value_duty, max_value_duty));
     }
 
-    void setSpeed(const real_t & rps){
+    void setSpeed(const real_t rps){
         setDuty(rps / max_rot_per_second);
     }
 };

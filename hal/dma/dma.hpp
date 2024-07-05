@@ -14,10 +14,6 @@
 #include <type_traits>
 #include <array>
 
-
-#define HAVE_DMA1
-// #define HAVE_DMA2
-
 class DmaChannel{
 
 public:
@@ -71,7 +67,7 @@ protected:
         }
     }
 
-    constexpr uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
         #ifdef HAVE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
@@ -79,10 +75,13 @@ protected:
         #endif
     }
 
-    constexpr uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = getDmaIndex(_instance);
         switch(dma_index){
+            #ifdef HAVE_DMA1
             case 1:
                 return ((uint32_t)_instance - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
+            #endif
 
             #ifdef HAVE_DMA2
             case 2:
@@ -97,41 +96,49 @@ protected:
         }
     }
 
-    constexpr uint32_t getDoneMask(){
-        uint32_t flag = 0;
-        
+    static constexpr uint32_t getDoneMask(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = getDmaIndex(_instance);
+        uint8_t channel_index = getChannelIndex(_instance);
         switch(dma_index){
+            #ifdef HAVE_DMA1
             case 1:
-                flag = DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1));
-                break;
+                return (DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1)));
+            #endif
             #ifdef HAVE_DMA2
             case 2:
-                flag = DMA2_IT_TC1 << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1));
-                break;
+                if((uint32_t)_instance <= DMA2_Channel7_BASE){ 
+                    return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
+                }else{
+                    return ((uint32_t)(DMA2_IT_TC8 & 0xff) << ((CTZ(DMA2_IT_TC9) - CTZ(DMA2_IT_TC8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
+                }
             #endif
             default:
                 break;
         }
-        return flag;
+        return 0;
     }
 
 
-    constexpr uint32_t getHalfMask(){
-        uint32_t flag = 0;
-        
+    static constexpr uint32_t getHalfMask(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = getDmaIndex(_instance);
+        uint8_t channel_index = getChannelIndex(_instance);
         switch(dma_index){
+            #ifdef HAVE_DMA1
             case 1:
-                flag = DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1));
-                break;
+                return (DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1)));
+            #endif
             #ifdef HAVE_DMA2
             case 2:
-                flag = DMA2_IT_HT1 << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1));
-                break;
+                if((uint32_t)_instance <= DMA2_Channel7_BASE){ 
+                    return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
+                }else{
+                    return ((uint32_t)(DMA2_IT_HT8 & 0xff) << ((CTZ(DMA2_IT_HT9) - CTZ(DMA2_IT_HT8)) * (channel_index - 8))) | (uint32_t)(0x20000000);
+                }
             #endif
             default:
                 break;
         }
-        return flag;
+        return 0;
     }
 
 public:
@@ -141,8 +148,8 @@ public:
                 instance(_instance), 
                 dma_index(getDmaIndex(_instance)),
                 channel_index(getChannelIndex(_instance)),
-                done_mask(getDoneMask()),
-                half_mask(getHalfMask()){;}
+                done_mask(getDoneMask(instance)),
+                half_mask(getHalfMask(instance)){;}
 
     void init(const Mode _mode,const Priority priority = Priority::medium);
 
@@ -215,7 +222,7 @@ public:
     void bindDoneCb(Callback && cb);
     void bindHalfCb(Callback && cb);
 
-    bool isDone(){
+    bool done(){
         return DMA_GetFlagStatus(done_mask);
     }
 };
