@@ -5,14 +5,15 @@ int main(){
 
     #ifdef CH32V20X
     UartHw & logger = uart1;
-    logger.init(115200 * 4);
+    logger.init(115200);
 
     delay(200);
     // pmdc_tb();
     // uart_tb(uart1);
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
-    stepper_tb(uart1);
+    can_tb(logger, can1, false);
+    // stepper_tb(uart1);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);p
@@ -31,6 +32,8 @@ int main(){
     
     logger.init(115200);
     delay(200);
+
+// rng.init();
     // pmdc_tb();
     // gpio_tb(portC[13]);
     // dma_tb(logger, dma1Ch1);
@@ -44,8 +47,8 @@ int main(){
     uart7.init(115200);
     // uart7.init(57600);
     // ch9141_tb(logger, uart7);
-    st77xx_tb(logger, spi2);
-    // can_tb(logger, can1);
+    // st77xx_tb(logger, spi2);
+    can_tb(logger, can1);
     #endif
     while(true);
 }

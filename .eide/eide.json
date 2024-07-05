@@ -25,7 +25,6 @@
     "hal",
     "src/testbench",
     "thirdparty/lua",
-    "hal/timer",
     "sys/sdk/ch32v307/Core",
     "sys/sdk/ch32v307/Ld",
     "sys/sdk/ch32v307/Startup",
@@ -60,7 +59,6 @@
         "thirdparty/lua/lua.c",
         "thirdparty/lua/onelua.c",
         "src/testbench/adc_tb.cpp",
-        "src/testbench/can_tb.cpp",
         "src/testbench/dma_tb.cpp",
         "src/testbench/eeprom_tb.cpp",
         "src/testbench/flash_tb.cpp",
@@ -239,7 +237,8 @@
         "sys/sdk/ch32v203/Startup/startup_ch32v20x_D8.S",
         "sys/sdk/ch32v203/Core/core_riscv.c",
         "sys/sdk/ch32v203/system_ch32v20x.c",
-        "sys/sdk/ch32v203/Startup/startup_ch32v20x_D6.S"
+        "sys/sdk/ch32v203/Startup/startup_ch32v20x_D6.S",
+        "hal/rng/rng.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {

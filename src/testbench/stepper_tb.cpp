@@ -125,7 +125,7 @@ void stepper_tb(IOStream & logger){
 
 
     SVPWM2 svpwm{coilA, coilB};
-    svpwm.inverse(true);
+    svpwm.inverse(false);
     timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
     timer1.enableArrSync();
     timer1.oc(1).init();
@@ -151,63 +151,26 @@ void stepper_tb(IOStream & logger){
 
     Stepper stp{logger, svpwm, mt6816, mem};
 
-
-
-
-
-    // while(true){
-    //     svpwm.setCurrent(0.6, t);
-    // }
-
-    // TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
-
-
-    // adc1.init(
-    //     {
-    //     },{
-    //         AdcChannelConfig{AdcUtils::Channel::CH3, AdcUtils::SampleCycles::T13_5},
-    //         // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T1_5},
-    //         // AdcChannelConfig{AdcUtils::Channel::CH4, AdcUtils::SampleCycles::T13_5},
-    //         AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-    //         // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-    //         AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-    //     });
-
-    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
-    // // adc1.enableContinous();
-    // adc1.enableAutoInject();
-    // adc1.setPga(AdcOnChip::Pga::X1);
-
-    // adc1.bindCb(AdcUtils::IT::JEOC, [&](){
-    //     adcv1 = ADC1->IDATAR1;
-    //     adcv2 = ADC1->IDATAR3;
-    // });
-    // adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
-
-
-
-
-
-
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
     timer3.bindCb(IT::Update, [&](){stp.tick();});
     timer3.enableIt(IT::Update, NvicPriority(0, 0));
-    // can1.init(Can::BaudRate::Mbps1);
 
+    can1.init(Can::BaudRate::Mbps1);
+ 
     stp.init();
 
     stp.setCurrentClamp(1.4);
     while(not stp.isActive());
     while(true){
         stp.run();
-        // stp.setTagretVector(2 * sin(t));
+        stp.setTagretVector(2 * sin(t));
         // stp.setTagretVector(2 * t);
         
         stp.report();
         Sys::Clock::reCalculateTime();
 
-        stp.setTargetPosition(0.05 * t);
+        // stp.setTargetPosition(0.05 * t);
         // stp.setTargetCurrent(1.2 * sin(t));
 
         // stp.setTargetPosition(2.6 * sin(4 * t));

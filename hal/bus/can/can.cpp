@@ -115,7 +115,6 @@ void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
 void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
 void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
 void Can::init(const BaudRate baudRate, const Mode mode, const CanFilter & filter){
-
     installGpio();
     enableRcc();
 
@@ -155,8 +154,9 @@ void Can::init(const BaudRate baudRate, const Mode mode, const CanFilter & filte
     config.CAN_RFLM = DISABLE;
     config.CAN_TXFP = DISABLE;
     CAN_Init(instance, &config);
+
     CanFilter::init(filter);
-    CAN_IT_Init(CAN1);
+    CAN_IT_Init(instance);
 }
 
 size_t Can::pending(){
@@ -166,9 +166,8 @@ size_t Can::pending(){
 }
 
 void Can::enableHwReTransmit(const bool en){
-    // config.CAN_NART = en ? DISABLE : ENABLE;
-    if(en)  CAN1->CTLR &= ~CAN_CTLR_NART;
-    else    CAN1->CTLR |=  CAN_CTLR_NART;
+    if(en)  instance->CTLR &= ~CAN_CTLR_NART;
+    else    instance->CTLR |=  CAN_CTLR_NART;
 }
 
 bool Can::write(const CanMsg & msg){
@@ -188,25 +187,25 @@ size_t Can::available(){
 }
 
 uint8_t Can::getRxErrCnt(){
-    return CAN1->ERRSR >> 24;
+    return instance->ERRSR >> 24;
 }
 
 uint8_t Can::getTxErrCnt(){
-    return CAN1->ERRSR >> 16;
+    return instance->ERRSR >> 16;
 }
-uint8_t Can::getErrCode(){
-    return CAN_GetLastErrorCode(CAN1);
+Can::ErrCode Can::getErrCode(){
+    return (ErrCode)CAN_GetLastErrorCode(instance);
 }
 
 bool Can::isTranmitting(){
-    return bool(CAN1->STATR & CAN_STATR_TXM);
+    return bool(instance->STATR & CAN_STATR_TXM);
 }
 
 bool Can::isReceiving(){
-    return bool(CAN1->STATR & CAN_STATR_RXM);
+    return bool(instance->STATR & CAN_STATR_RXM);
 }
 bool Can::isBusOff(){
-    return CAN1->ERRSR & CAN_ERRSR_BOFF;
+    return instance->ERRSR & CAN_ERRSR_BOFF;
 }
 
 void Can::cancelTransmit(const uint8_t mbox){
@@ -214,17 +213,17 @@ void Can::cancelTransmit(const uint8_t mbox){
 }
 
 void Can::cancelAllTransmit(){
-    CAN1->TSTATR |= (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
+    instance->TSTATR |= (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
 }
 
 void Can::enableFifoLock(const bool en){
-    if(en) CAN1->CTLR |= CAN_CTLR_RFLM;
-    else CAN1->CTLR &= ~CAN_CTLR_RFLM;
+    if(en) instance->CTLR |= CAN_CTLR_RFLM;
+    else instance->CTLR &= ~CAN_CTLR_RFLM;
 }
 
 void Can::enableIndexPriority(const bool en){
-    if(en) CAN1->CTLR |= CAN_CTLR_TXFP;
-    else CAN1->CTLR &= ~CAN_CTLR_TXFP;
+    if(en) instance->CTLR |= CAN_CTLR_TXFP;
+    else instance->CTLR &= ~CAN_CTLR_TXFP;
 }
 
 void Can::configBaudRate(const uint32_t baudRate){
