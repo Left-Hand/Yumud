@@ -201,7 +201,6 @@
         "thirdparty/lua/onelua.c",
         "src/testbench/adc_tb.cpp",
         "src/testbench/can_tb.cpp",
-        "src/testbench/dma_tb.cpp",
         "src/testbench/eeprom_tb.cpp",
         "src/testbench/flash_tb.cpp",
         "src/testbench/lua_tb.cpp",

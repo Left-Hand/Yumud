@@ -5,12 +5,16 @@
 void uart_tb(Uart & uart){
     #ifdef UART_TB_ECHO
     while(true){
+        size_t size = uart.available();
         if(uart.available()){
             delay(5);
-            uart.println(uart.readString());
+
+            auto str = uart.readString();
+            str.toUpperCase();
+            uart.println(str, size);
         }
         delay(300);
-        uart.println("nothing");
+        uart.println("nothing", size);
     }
     #endif
 }

@@ -178,3 +178,5 @@ void lds14_tb(IOStream & logger,Uart & uart);
 void gpio_tb(GpioConcept & gpio);
 void pca_tb(IOStream & logger);
 void joystick_tb(OutputStream & logger);
+
+void dma_tb(OutputStream & logger, DmaChannel & channel);

@@ -66,7 +66,6 @@ __interrupt void TIM##x##_IRQHandler(void){\
 
 
 #ifdef HAVE_TIM1
-
 ADVANCED_TIMER_IT_TEMPLATE(1)
 #endif
 
@@ -81,3 +80,22 @@ GENERIC_TIMER_IT_TEMPLATE(3)
 #ifdef HAVE_TIM4
 GENERIC_TIMER_IT_TEMPLATE(4)
 #endif
+
+#ifdef HAVE_TIM5
+GENERIC_TIMER_IT_TEMPLATE(5)
+#endif
+
+#ifdef HAVE_TIM8
+ADVANCED_TIMER_IT_TEMPLATE(8)
+#endif
+
+#ifdef HAVE_TIM9
+ADVANCED_TIMER_IT_TEMPLATE(9)
+#endif
+
+#ifdef HAVE_TIM10
+ADVANCED_TIMER_IT_TEMPLATE(10)
+#endif
+
+
+

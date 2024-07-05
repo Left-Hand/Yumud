@@ -2,6 +2,8 @@
 
 int main(){
     Sys::Misc::prework();
+
+    #ifdef CH32V20X
     UartHw & logger = uart1;
     logger.init(115200 * 4);
 
@@ -19,5 +21,21 @@ int main(){
     // temp_tb(logger);
     // temp_tb2(logger);
     // eeprom_tb(uart1);
+
+    #elif defined(CH32V30X)
+
+    // UartHw & logger = uart2;
+    UartHw & logger = uart8;
+    // logger.init(115200 * 4, CommMethod::Dma, CommMethod::Interrupt);
+    // logger.init(115200 * 4, CommMethod::Dma);
+    
+    logger.init(115200 * 4);
+    delay(200);
+    // pmdc_tb();
+    // gpio_tb(portC[13]);
+    // dma_tb(logger, dma1Ch1);
+    // dma_tb(logger, UART7_TX_DMA_CH);
+    uart_tb(logger);
+    #endif
     while(true);
 }
