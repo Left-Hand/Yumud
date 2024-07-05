@@ -31,7 +31,7 @@
 #define HAVE_SPI1
 #define SPI1_REMAP 1
 
-// #define HAVE_SPI2
+#define HAVE_SPI2
 
 #define HAVE_TIM1
 #define TIM1_REMAP 0
@@ -58,12 +58,15 @@
 #define TIM8_REMAP 0
 
 #define HAVE_CAN1
-#define CAN1_REMAP 0
+#define CAN1_REMAP 3
 
 // #define HAVE_I2C1
 #define I2C1_REMAP 0
 // #define HAVE_I2C2
 #define I2C2_REMAP 0
+
+
+#define CAN_REMAP 3
 
 #define HAVE_OPA1
 #define HAVE_OPA2

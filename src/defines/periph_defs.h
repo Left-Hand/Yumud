@@ -408,15 +408,28 @@
 #ifdef HAVE_CAN1
     #define CAN1_RM0_TX_Gpio portA[12]
     #define CAN1_RM0_RX_Gpio portA[11]
-    #define CAN1_RM2_TX_Gpio portB[9]
-    #define CAN1_RM2_RX_Gpio portB[8]
 
+    #define CAN1_RM1_TX_Gpio portB[9]
+    #define CAN1_RM1_RX_Gpio portB[8]
+
+    #define CAN1_RM3_TX_Gpio portD[1]
+    #define CAN1_RM3_RX_Gpio portD[0]
+    
     #if CAN1_REMAP == 0
         #define CAN1_TX_Gpio CAN1_RM0_TX_Gpio
         #define CAN1_RX_Gpio CAN1_RM0_RX_Gpio
+
+    #elif CAN1_REMAP == 1
+        #define CAN1_TX_Gpio CAN1_RM1_TX_Gpio
+        #define CAN1_RX_Gpio CAN1_RM1_RX_Gpio
+
     #elif CAN1_REMAP == 2
-        #define CAN1_TX_Gpio CAN1_RM2_TX_Gpio
-        #define CAN1_RX_Gpio CAN1_RM2_RX_Gpio
+        #warn no can1 remap2
+
+    #elif CAN1_REMAP == 3
+        #define CAN1_TX_Gpio CAN1_RM3_TX_Gpio
+        #define CAN1_RX_Gpio CAN1_RM3_RX_Gpio
+
     #endif
 #endif
 
@@ -440,5 +453,6 @@
     #define OPA1_P1_Gpio portB[0]
     #define OPA1_O1_Gpio portB[1]
 #endif
+
 
 #endif
