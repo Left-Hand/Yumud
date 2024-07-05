@@ -9,7 +9,7 @@
 void joystick_tb(OutputStream & logger){
     #ifdef JOYSTICK_TB
 
-    using Event = Ps2Joystick::JoyStickEvent;
+    //  using [[maybe_unused]] Event = Ps2Joystick::JoyStickEvent;
 
     SpiSw spisw{SPI1_SCLK_Gpio, SPI1_MOSI_Gpio, SPI1_MISO_Gpio, SPI1_CS_Gpio};
     auto & spi = spisw;

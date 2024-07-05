@@ -24,18 +24,28 @@ int main(){
 
     #elif defined(CH32V30X)
 
-    // UartHw & logger = uart2;
-    UartHw & logger = uart8;
+    UartHw & logger = uart2;
+    // UartHw & logger = uart8;
     // logger.init(115200 * 4, CommMethod::Dma, CommMethod::Interrupt);
     // logger.init(115200 * 4, CommMethod::Dma);
     
-    logger.init(115200 * 4);
+    logger.init(115200);
     delay(200);
     // pmdc_tb();
     // gpio_tb(portC[13]);
     // dma_tb(logger, dma1Ch1);
     // dma_tb(logger, UART7_RX_DMA_CH);
-    uart_tb(logger);
+    // uart_tb(logger);
+
+    // uart7.init(1000000);
+    // uart7.init(9600);
+    // uart7.init(19200);
+
+    uart7.init(115200);
+    // uart7.init(57600);
+    // ch9141_tb(logger, uart7);
+    st77xx_tb(logger);
+    // can_tb(logger, can1);
     #endif
     while(true);
 }

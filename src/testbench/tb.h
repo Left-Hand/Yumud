@@ -177,6 +177,12 @@ void pmdc_tb();
 void lds14_tb(IOStream & logger,Uart & uart);
 void gpio_tb(GpioConcept & gpio);
 void pca_tb(IOStream & logger);
+void st77xx_tb(IOStream & logger);
+
 void joystick_tb(OutputStream & logger);
 
 void dma_tb(OutputStream & logger, DmaChannel & channel);
+
+void ch9141_tb(IOStream & logger, Uart & uart);
+
+void can_tb(IOStream & logger, Can & can, bool tx_role = true);

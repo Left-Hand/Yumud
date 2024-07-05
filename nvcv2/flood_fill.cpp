@@ -345,14 +345,8 @@ Image<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
                     skip_flag |= (int(rect_b) < 25);
                     skip_flag |= blob.area < 13;
 
-                    if(rect_a.intersects(rect_b)){
-                        merge_flag = true;
-                        skip_flag = true;
-                    }
-    
-                    
                     if((iou(rect_a, rect_b) > 0.3)){
-                        merge_flag = true;
+                        // merge_flag = true;
                         skip_flag = true;
                     }
 
