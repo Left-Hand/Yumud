@@ -5,16 +5,12 @@
 
 #include "../camera.hpp" 
 
-
-
-
 class MT9V034:public CameraWithSccb<Grayscale>{
 protected:
     enum class RegAddress : uint8_t {
         ChipId = 0,
         RowStart,
         ColumnStart,
-        // RowStart,
         WindowHeight,
         WindowWidth,
         HriBlanking,

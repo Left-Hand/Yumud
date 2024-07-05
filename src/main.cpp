@@ -13,7 +13,7 @@ int main(){
     // joystick_tb(uart1);
     gpio_tb(portC[13]);
     // stepper_tb(uart1);
-    // lds14_tb(logger, uart2);-
+    // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);p
     // pwm_tb(logger);
@@ -44,7 +44,7 @@ int main(){
     uart7.init(115200);
     // uart7.init(57600);
     // ch9141_tb(logger, uart7);
-    st77xx_tb(logger);
+    st77xx_tb(logger, spi2);
     // can_tb(logger, can1);
     #endif
     while(true);

@@ -10,7 +10,7 @@
 
 using namespace NVCV2;
 
-void st77xx_tb(IOStream & logger){
+void st77xx_tb(IOStream & logger, Spi & spi){
     auto & led = portC[14];
     auto & lcd_blk = portC[7];
     auto & light = portC[6];
@@ -23,10 +23,10 @@ void st77xx_tb(IOStream & logger){
     lcd_blk.outpp(1);
     light.outpp(1);
 
-    spi2.bindCsPin(lcd_cs, 0);
-    spi2.init(144000000);
+    spi.bindCsPin(lcd_cs, 0);
+    spi.init(144000000);
 
-    SpiDrv SpiDrvLcd = SpiDrv(spi2, 0);
+    SpiDrv SpiDrvLcd = SpiDrv(spi, 0);
     DisplayInterfaceSpi SpiInterfaceLcd{SpiDrvLcd, lcd_dc, dev_rst};
 
     ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));

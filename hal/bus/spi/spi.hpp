@@ -18,7 +18,7 @@ protected:
         cs_port[wholock()].set();
     }
 public:
-
+    virtual void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) = 0;
     void bindCsPin(GpioConcept & gpio, const uint8_t index){
         gpio.outpp();
         cs_port.bindPin(gpio, index);
