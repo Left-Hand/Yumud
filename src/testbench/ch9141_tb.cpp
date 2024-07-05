@@ -19,8 +19,15 @@ void ch9141_tb(IOStream & logger, Uart & uart){
         static uint32_t last_millis = millis();
         if(millis() - last_millis >= 200){
             commer.println("Hello", commer.available());
-            if(commer.available()){commer.println(commer.readString());}
+            auto str = commer.readString();
+            str.toUpperCase();
+            commer.println(str);
             last_millis = millis();
+        }
+
+        if(logger.available()){
+            delay(2);
+            commer.println("from l:", logger.readString());
         }
 
         portC[13] = (millis() / 200) % 2;

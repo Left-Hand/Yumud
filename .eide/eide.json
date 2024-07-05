@@ -102,7 +102,7 @@
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
-        "linkerScriptPath": "",
+        "linkerScriptPath": "sys/sdk/ch32v203/Ld/C8T6.ld",
         "options": "null"
       },
       "uploader": "OpenOCD",
@@ -243,7 +243,7 @@
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
-        "linkerScriptPath": "",
+        "linkerScriptPath": "sys/sdk/ch32v307/Ld/VCT6.ld",
         "options": "null"
       },
       "uploader": "OpenOCD",
