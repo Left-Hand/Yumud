@@ -52,13 +52,13 @@ public:
 
 
 
-    void drawImage(ImageWithData<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    void drawImage(Image<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
         drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
     }
 
     template<typename w_ColorType, w_ColorType>
-    void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
         auto rect = Rect2i(pos, image.get_size());
         src_image->setarea_unsafe(rect);
@@ -70,6 +70,25 @@ public:
         // drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
 
     }
+    // template<typename w_ColorType, w_ColorType>
+    // void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    //     if(image.data == nullptr) return;
+    //     bool unsafe = !src_image->get_window().contains(image.get_window());
+
+    //     auto rect = Rect2i(pos, image.get_size()).intersection(src_image->get_window());
+    //     src_image->setarea_unsafe(rect);
+
+    //     uint32_t i = 0;
+    //     w_ColorType * ptr = image.data.get();
+
+    //     for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++){
+
+    //         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++){
+    //             // putpixel_unsafe(Vector2i(x,y), ptr[i]);
+    //             drawtexture_unsafe(, &ptr[i]);
+    //         }
+    //     }
+    // }
 
     void drawHriLine(const Rangei & x_range, const int & y){
         if(!x_range ||!src_image->get_window().get_y_range().has_value(y)) return;
@@ -118,10 +137,10 @@ public:
 
     void drawLine(const Vector2i & start, const Vector2i & end){
         if(!src_image->has_point(start)){
-            DEBUG_LOG("start point lost: ", start);
+            // DEBUG_PRINT("start point lost: ", start);
             return;
         }else if(!src_image->has_point(end)){
-            DEBUG_LOG("end point lost: ", end);
+            // DEBUG_PRINT("end point lost: ", end);
             return;
         }
         auto [x0, y0] = start;
@@ -172,6 +191,13 @@ public:
         }else{
             drawFilledRect(Rect2i(x_range, y_range), m_color);
         }
+    }
+
+    void drawRoi(const Rect2i & rect){
+        drawHollowRect(rect);
+        Vector2i center = rect.get_center();
+        drawHriLine(center+Vector2i(-2,0), 5);
+        drawVerLine(center+Vector2i(0,-2), 5);
     }
 
     void drawHollowCircle(const Vector2i & pos, const int & radius){

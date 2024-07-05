@@ -34,7 +34,9 @@
     "sys/sdk/ch32v203/Ld",
     "sys/sdk/ch32v203/Startup",
     "sys/sdk/ch32v203",
-    "sys/sdk/ch32v307"
+    "sys/sdk/ch32v307",
+    "nvcv2",
+    "nvcv2/mnist"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",

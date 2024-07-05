@@ -11,8 +11,9 @@
 
 template<typename BusType>
 class BusDrv{
-protected:
+public:
     BusType & bus;
+protected:
     uint8_t index;
     uint8_t data_bits = 8;
     bool timeout;
