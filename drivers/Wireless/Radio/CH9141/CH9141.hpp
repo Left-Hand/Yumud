@@ -74,25 +74,12 @@ protected:
     };
 
     Uart & uart;
-    GpioConcept & set_gpio;
-    // uint16_t timeout = 5;
-
-    void write(const char data) override{
-        uart.write(data);
-    }
-
-    void read(char & data) override{
-        uart.read(data);
-    }
-
-    size_t available() const override{
-        return uart.available();
-    }
-
+    GpioConcept & at_gpio;
+    GpioConcept & slp_gpio;
 
     bool sendAtCommand(const char * token){
-        SetKeeper{set_gpio};
-    
+        SetKeeper{at_gpio};
+
         print("AT");
         if(token[0] != '.'){// string command
             print('+');
@@ -106,7 +93,7 @@ protected:
         recv.reserve(3);
 
         bool is_valid = false;
-        uint32_t begin_ms = millis();
+        // uint32_t begin_ms = millis();
         // while((millis() - begin_ms < timeout)){
         //     if(!available()) continue;
         //     char chr;
@@ -120,7 +107,7 @@ protected:
 
 
         delayMicroseconds(1);
-        set_gpio = true;
+        at_gpio = true;
         return is_valid;
     }
 
@@ -129,14 +116,37 @@ protected:
         //TODO
     }
 public:
-    CH9141(Uart & _uart, GpioConcept & _set_pin = GpioNull):uart(_uart), set_gpio(_set_pin){;}
+    CH9141(Uart & _uart, GpioConcept & _set_gpio = GpioNull, GpioConcept & _slp_gpio = GpioNull):uart(_uart), at_gpio(_set_gpio), slp_gpio(_slp_gpio){;}
 
-    void init(){;}
+    void write(const char data) override{
+        uart.write(data);
+    }
+
+    void read(char & data) override{
+        uart.read(data);
+    }
+
+    using InputStream::read;
+
+    size_t available() const override{
+        return uart.available();
+    }
+
+    size_t pending() const override{
+        return uart.pending();
+    }
+
+    void init(){
+        at_gpio.outpp(1);
+        slp_gpio.outpp(1);
+    }
+
     void reset(){sendAtCommand("RESET");}
     void factory(){sendAtCommand("RELOAD");}
     void chipInfo(){sendAtCommand("SHOW");}
     void save(){sendAtCommand("SAVE");}
     void exit(){sendAtCommand("EXIT");}
+    void setChannel(const uint16_t _channel) override {sendAtCommand(("BCCH=" + String((uint8_t)_channel)).c_str());}
 
     // void setMac(){}
     //TODO
