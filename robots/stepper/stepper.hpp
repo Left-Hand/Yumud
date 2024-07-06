@@ -4,8 +4,8 @@
 
 #include "cli.hpp"
 #include "ctrls.hpp"
-#include "observer.hpp"
-#include "archive.hpp"
+#include "observer/observer.hpp"
+#include "archive/archive.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
 
@@ -31,6 +31,7 @@ protected:
     RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
     StatLed panel_led = StatLed{led_instance};
 
+    real_t openloop_current = 0.8; 
 
     real_t est_speed;
     real_t raw_pos;
@@ -56,34 +57,29 @@ protected:
     bool skip_tone = true;
     bool cmd_mode = false;
 
-    ShutdownFlag shutdown_flag;
+    ShutdownFlag shutdown_flag{*this};
 
     void setCurrent(const real_t _current, const real_t _elecrad){
         svpwm.setCurrent(_current, _elecrad);
     }
 
-
     ErrorCode error_code = ErrorCode::OK;
-    const char * error_message = nullptr;
-    const char * warn_message = nullptr;
-
-    bool auto_shutdown_activation = true;
-    bool auto_shutdown_actived = false;
-
-    uint16_t auto_shutdown_timeout_ms = 200;
-    uint16_t auto_shutdown_last_wake_ms = 0;
+    String error_message;
+    String warn_message;
 
     bool shutdown_when_error_occurred;
     bool shutdown_when_warn_occurred;
 
     void shutdown(){
-        // coilA.enable(false);
-        // coilB.enable(false);
         svpwm.enable(false);
     }
 
     void wakeup(){
         svpwm.enable(true);
+    }
+
+    bool on_exeception(){
+        return +RunStatus::WARN == run_status || +RunStatus::ERROR == run_status; 
     }
 
     void throw_error(const ErrorCode & _error_code,const char * _error_message) {
@@ -92,6 +88,7 @@ protected:
         if(shutdown_when_error_occurred){
             shutdown_flag = true;
         }
+        logger.println(error_message);
     }
 
     void throw_warn(const ErrorCode & ecode, const char * _warn_message){
@@ -100,6 +97,7 @@ protected:
         if(shutdown_when_warn_occurred){
             shutdown_flag = true;
         }
+        logger.println(warn_message);
     }
 
 
@@ -223,6 +221,7 @@ protected:
         }
     }
     
+    friend ShutdownFlag;
 public:
     void loadArchive();
     void saveArchive();
@@ -231,10 +230,14 @@ public:
     Stepper(IOStream & _logger, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
             logger(_logger), svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
-    void tick(){
 
+    void setOpenLoopCurrent(const real_t current){
+        openloop_current = current;
+    }
+
+    void tick(){
         auto begin_micros = micros();
-        RunStatus new_status = RunStatus::NONE;
+        RunStatus exe_status = RunStatus::NONE;
 
         switch(run_status){
             case RunStatus::INIT:
@@ -247,21 +250,26 @@ public:
                     //     new_status = RunStatus::EXIT;
                     //     logger.println("autoload ok");
                     // }else{
-                        cali_task(true);
+                        check_task(true);
                     //     logger.println("autoload failed");
                     // }
                     break;
                 }
+
+            case RunStatus::CHECK:
+                exe_status = check_task();
+                break;
+
             case RunStatus::CALI:
-                new_status = cali_task();
+                exe_status = cali_task();
                 break;
 
             case RunStatus::ACTIVE:
-                new_status = active_task();
+                exe_status = active_task();
                 break;
 
             case RunStatus::BEEP:
-                new_status = beep_task();
+                exe_status = beep_task();
                 break;
 
             case RunStatus::INACTIVE:
@@ -272,8 +280,18 @@ public:
                 break;
         }
 
-        if(not (+new_status == (+RunStatus::NONE))){
-            if((+new_status == +RunStatus::EXIT)){
+        //decide next status from execution result 
+
+        if(not (+exe_status == (+RunStatus::NONE))){//execution meet sth.
+
+            if((+exe_status == +RunStatus::ERROR)){
+                // logger.println("exit");
+                // logger.println(RunStatus.to_name());
+                // logger.
+                // shutdown_flag = true;
+            }
+
+            else if((+exe_status == +RunStatus::EXIT)){
                 switch(run_status){
                     case RunStatus::CHECK:
                         panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
@@ -327,6 +345,7 @@ public:
         }
         exe_micros = micros() - begin_micros;
     }
+
     bool autoload();
 
     void init(){

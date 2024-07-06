@@ -74,7 +74,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
                 result = {ABS(target), SIGN_AS(PI / 2, target)};
                 break;
             case CtrlType::VECTOR:
-                result = {openloop_current_limit, 0};
+                result = {openloop_current, 0};
                 break;
             case CtrlType::POSITION:
                 result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);

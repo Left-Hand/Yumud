@@ -68,24 +68,17 @@ struct StallObserver{
     }
 };
 
+class Stepper;
 
 struct ShutdownFlag{
 protected:
+    Stepper & m_stp;
     bool state = false;
+
 public:
+    ShutdownFlag(Stepper & stp):m_stp(stp){;}
 
-    ShutdownFlag() = default;
-
-    auto & operator = (const bool _state){
-        state = _state;
-
-        //TODO
-        // if(state) shutdown();
-        // else wakeup();
-
-        return *this;
-    }
-
+    ShutdownFlag & operator = (const bool _state);
     operator bool() const{
         return state;
     }

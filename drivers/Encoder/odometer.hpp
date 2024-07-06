@@ -18,8 +18,9 @@ namespace MotorUntils{
 
 
 class Odometer{
+public:
+    Encoder & encoder;
 protected:
-// public:
     real_t rawLapPosition = real_t(0);
 
     real_t lapPosition = real_t(0);
@@ -28,8 +29,6 @@ protected:
 
     real_t accPosition = real_t(0);
     real_t accPositionLast = real_t(0);
-
-    Encoder & encoder;
 
     bool rsv = false;
 
@@ -54,8 +53,6 @@ public:
     real_t getLapPosition(){
         return lapPosition;
     }
-
-
 
     void init(){
         encoder.init();

@@ -135,8 +135,8 @@ void stepper_tb(IOStream & logger){
 
     ena_gpio.outpp(1);
     enb_gpio.outpp(1);
+
     svpwm.init();
-    svpwm.inverse(true);
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
@@ -161,10 +161,10 @@ void stepper_tb(IOStream & logger){
     stp.init();
 
     stp.setCurrentClamp(1.4);
-    while(not stp.isActive());
+    stp.setOpenLoopCurrent(0.8);
     while(true){
         stp.run();
-        stp.setTagretVector(2 * sin(t));
+        // stp.setTagretVector(sin(t));
         // stp.setTagretVector(2 * t);
         
         stp.report();
@@ -180,7 +180,7 @@ void stepper_tb(IOStream & logger){
         // stp.setTargetPosition(0.2 * floor(t*10));
         // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
         // stp.setTargetPosition(sin(t));
-        // stp.setTargetPosition(t);
+        stp.setTargetPosition(0.1 * sin(8 * t));
         // stp.setTargetPosition(-t/8);
         // stp.setTargetPosition(4 * floor(fmod(t * 4,2)));
         // real_t temp = sin(2 * t);

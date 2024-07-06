@@ -33,8 +33,10 @@ public:
         return *this;
     }
 
-    constexpr static Range_t<T> from_center(const auto & center, const auto & length){
-        return Range_t<T>(center - length / T(2), center + length / T(2));
+    template<typename U, typename V>
+    requires std::is_arithmetic_v<U> and std::is_arithmetic_v<V>
+    constexpr static Range_t<T> from_center(const U & center, const V & length){
+        return Range_t<T>(center - length / 2, center + length / 2);
     }
 
     constexpr bool is_regular() const {
@@ -313,7 +315,7 @@ public:
         if constexpr(std::is_integral<T>::value){
             return ('[' + String(start) + ',' + String(end) + ')');
         }else{
-            return ('[' + toString(start, decimalPlaces) + ',' + toString(end, decimalPlaces) + ')');
+            return ('[' + ::toString(start, decimalPlaces) + ',' + ::toString(end, decimalPlaces) + ')');
         }
     }
 };

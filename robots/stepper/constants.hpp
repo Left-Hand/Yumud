@@ -51,12 +51,12 @@ namespace StepperEnums{
 
     enum class ErrorCode:uint8_t{
         OK = 0,
+        ODO_DISCONNECTED,
+        ODO_NO_SIGNAL,
         COIL_A_DISCONNECTED,
         COIL_A_NO_SIGNAL,
         COIL_B_DISCONNECTED,
         COIL_B_NO_SIGNAL,
-        ODO_DISCONNECTED,
-        ODO_NO_SIGNAL
     };
 
     using ExitFlag = bool;

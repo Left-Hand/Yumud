@@ -11,7 +11,7 @@
 
 class MT6816:public MagEncoder{
 protected:
-    SpiDrv & bus_drv;
+    SpiDrv bus_drv;
     real_t last_position;
     uint32_t errcnt = 0;
 
@@ -24,11 +24,10 @@ protected:
             };
             uint16_t m_raw;
         };
-
-
-        Semantic(const uint16_t & raw):m_raw(raw){;}
+        Semantic(const uint16_t raw):m_raw(raw){;}
     };
-    // void writeReg()
+
+    Semantic last_semantic{0};
 public:
     MT6816(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
 
@@ -36,23 +35,22 @@ public:
         last_position = real_t(-1); // not possible before init done;
         while(getLapPosition() < 0); // while reading before get correct position
     }
+
     real_t getLapPosition() override{
 
         uint16_t raw = getPositionData();
-        // uint16_t raw = 0;
-        Semantic semantic = Semantic(raw);
+        last_semantic = Semantic(raw);
 
-        // if(use_verification){
         uint8_t count = 0;
 
-        raw -= semantic.pc;
+        raw -= last_semantic.pc;
         while(raw){//Brian Kernighan algorithm
             raw &= raw - 1;
             ++count;
         }
 
-        if(count % 2 == semantic.pc){
-            u16_to_uni(semantic.data_14bit << 2, last_position);
+        if(count % 2 == last_semantic.pc){
+            u16_to_uni(last_semantic.data_14bit << 2, last_position);
         }else{
             errcnt++;
         }
@@ -73,10 +71,13 @@ public:
         return((dataRx[0] & 0x00FF) << 8) | (dataRx[1]);
     }
 
-    uint32_t getErrCnt(){
+    uint32_t getErrCnt() const {
         return errcnt;
     }
 
+    bool stable() const override {
+        return not last_semantic.no_mag;
+    }
 };
 
 #endif
