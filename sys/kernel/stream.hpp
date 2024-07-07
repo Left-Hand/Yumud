@@ -5,9 +5,12 @@
 #include "sys/platform.h"
 #include "types/buffer/buffer.hpp"
 #include "types/string/String.hpp"
+
+
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 enum class SpecToken {
     Space,
@@ -112,9 +115,14 @@ public:
         return *this;
     }
 
-    template<typename real>
-    requires (!std::is_pointer<real>::value)
-    OutputStream & operator<<(real misc){*this << misc.toString(eps); return *this;}
+    template<typename T>
+    // requires (!std::is_pointer_v<T>)
+    OutputStream & operator<<(const T & misc){*this << misc.toString(eps); return *this;}
+
+
+    template<typename T>
+    requires std::is_enum_v<T>
+    OutputStream & operator<<(const T & misc){*this << int(misc); return *this;}
 
     void print(){}
 
@@ -135,14 +143,14 @@ public:
 
     void println(){*this << "\n";}
 
-	template <typename real>
-	void println(const real& first) {
+	template <typename T>
+	void println(const T & first) {
 		*this << first;
         *this << "\r\n";
 	}
 
-    template <typename real, typename... Args>
-    void println(real first, Args... args) {
+    template <typename T, typename... Args>
+    void println(T first, Args... args) {
         *this << first;
         if(!skipSpec) *this << space;
         else skipSpec = false;

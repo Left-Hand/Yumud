@@ -10,18 +10,19 @@
 
 
 class Stepper:public StepperUtils::Cli{
+public:
+    using ErrorCode = StepperEnums::ErrorCode;
+    using RunStatus = StepperEnums::RunStatus;
 protected:
     using ExitFlag = StepperEnums::ExitFlag;
     using InitFlag = StepperEnums::InitFlag;
 
     using Range = Range_t<real_t>;
-    using ErrorCode = StepperEnums::ErrorCode;
-    using RunStatus = StepperEnums::RunStatus;
+
     using CtrlType = StepperEnums::CtrlType;
     using Switches = StepperUtils::Switches;
 
     Switches switches;
-    IOStream & logger = uart1;
 
     SVPWM2 & svpwm;
 
@@ -42,14 +43,18 @@ protected:
     real_t run_current;
     real_t run_elecrad;
     real_t run_leadangle;
+
     real_t target;
+    Range target_position_clamp = Range{std::numeric_limits<iq_t>::min(), std::numeric_limits<iq_t>::max()};
+
+    uint8_t node_id = 0;
 
     CurrentCtrl curr_ctrl;
     GeneralSpeedCtrl speed_ctrl{curr_ctrl};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
     TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl};
 
-    RunStatus run_status = RunStatus::INIT;
+    volatile RunStatus run_status = RunStatus::INIT;
     CtrlType ctrl_type = CtrlType::POSITION;
 
     uint64_t exe_micros = 0;
@@ -79,7 +84,7 @@ protected:
     }
 
     bool on_exeception(){
-        return +RunStatus::WARN == run_status || +RunStatus::ERROR == run_status; 
+        return RunStatus::WARN == run_status || RunStatus::ERROR == run_status; 
     }
 
     void throw_error(const ErrorCode & _error_code,const char * _error_message) {
@@ -198,7 +203,7 @@ protected:
                 break;
             case "status"_ha:
             case "stat"_ha:
-                DEBUG_PRINT("current status:", run_status._to_string());
+                DEBUG_PRINT("current status:", int(run_status));
                 break;
 
             case "shutdown"_ha:
@@ -220,6 +225,74 @@ protected:
                 break;
         }
     }
+
+
+
+    void parse_command(const Command command, const CanMsg & msg) override{
+        const uint16_t tx_id = ((uint16_t)(node_id << 7 | (uint8_t)command));
+
+        #define SET_METHOD_BIND_VOID(cmd, method)\
+        case cmd:\
+            method();\
+            break;\
+
+        #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
+        case cmd:\
+            method(__VA_ARGS__);\
+            break;\
+
+        #define SET_METHOD_BIND(cmd, method, type)\
+        case cmd:\
+            method(type(msg));\
+            break;\
+        
+        #define SET_VALUE_BIND(cmd, value)\
+        case cmd:\
+            value = (decltype(value)(msg));\
+            break;\
+
+        #define SET_METHOD_BIND_REAL(cmd, method) SET_METHOD_BIND(cmd, method, real_t)
+
+        #define GET_VALUE(cmd, value)\
+            case cmd:\
+                if(msg.isRemote()){\
+                    CanMsg msg {tx_id, false};\
+                    can.write(msg.load(value));\
+                }\
+                break;\
+        
+        switch(command){
+
+            SET_VALUE_BIND(Command::SET_TARGET, target)
+
+            SET_METHOD_BIND_REAL(Command::TRG_VECT, setTargetVector)
+            SET_METHOD_BIND_REAL(Command::TRG_CURR, setTargetCurrent)
+            SET_METHOD_BIND_REAL(Command::TRG_POS, setTargetPosition)
+            SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTagretTrapezoid)
+
+            SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)
+            SET_METHOD_BIND_REAL(Command::CLAMP_CURRENT, setCurrentClamp)
+            SET_METHOD_BIND(Command::CLAMP_POS, setTargetPositionClamp, (std::tuple<real_t, real_t>))
+            SET_METHOD_BIND(Command::CLAMP_SPD, setSpeedClamp, (real_t))
+            SET_METHOD_BIND(Command::CLAMP_ACC, setAccelClamp, (real_t))
+
+            GET_VALUE(Command::GET_POS, est_pos)
+            GET_VALUE(Command::GET_SPD, est_speed)
+            GET_VALUE(Command::GET_ACC, 0)
+
+
+            SET_METHOD_BIND_EXECUTE(Command::INACTIVE, enable, false)
+            SET_METHOD_BIND_EXECUTE(Command::ACTIVE, enable, true)
+            SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
+            default:
+                break;
+        }
+
+        #undef SET_METHOD_BIND
+        #undef SET_VALUE_BIND
+        #undef SET_METHOD_BIND_REAL
+        #undef SET_VALUE_BIND_REAL
+    }
     
     friend ShutdownFlag;
 public:
@@ -227,13 +300,11 @@ public:
     void saveArchive();
     void removeArchive();
 
-    Stepper(IOStream & _logger, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
-            logger(_logger), svpwm(_svpwm), odo(encoder), memory(_memory){;}
+    Stepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
+            Cli(_logger,_can) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
 
-    void setOpenLoopCurrent(const real_t current){
-        openloop_current = current;
-    }
+
 
     void tick(){
         auto begin_micros = micros();
@@ -282,16 +353,16 @@ public:
 
         //decide next status from execution result 
 
-        if(not (+exe_status == (+RunStatus::NONE))){//execution meet sth.
+        if(not (exe_status == (RunStatus::NONE))){//execution meet sth.
 
-            if((+exe_status == +RunStatus::ERROR)){
+            if((exe_status == RunStatus::ERROR)){
                 // logger.println("exit");
                 // logger.println(RunStatus.to_name());
                 // logger.
                 // shutdown_flag = true;
             }
 
-            else if((+exe_status == +RunStatus::EXIT)){
+            else if((exe_status == RunStatus::EXIT)){
                 switch(run_status){
                     case RunStatus::CHECK:
                         panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
@@ -369,6 +440,7 @@ public:
         ctrl_type = CtrlType::SPEED;
     }
 
+
     void setTargetPosition(const real_t pos){
         target = pos;
         panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
@@ -381,13 +453,21 @@ public:
         ctrl_type = CtrlType::TRAPEZOID;
     }
 
-    void setTagretVector(const real_t pos){
+    void setOpenLoopCurrent(const real_t current){
+        openloop_current = current;
+    }
+
+    void setTargetVector(const real_t pos){
         target = pos;
         ctrl_type = CtrlType::VECTOR;
     }
 
     void setCurrentClamp(const real_t max_current){
         curr_ctrl.setCurrentClamp(max_current);
+    }
+
+    void locateRelatively(const real_t pos = 0){
+        odo.locateRelatively(pos);
     }
 
     void run() override{
@@ -413,7 +493,7 @@ public:
         // target_pos = sign(frac(t) - 0.5);
         // target_pos = sin(t);
         // RUN_DEBUG(, est_pos, est_speed);
-        if(+run_status == +RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        if(run_status == RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
         // delay(1);
         // , est_speed, t, odo.getElecRad(), openloop_elecrad);
         // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
@@ -424,8 +504,49 @@ public:
         // bled = led_status;
     }
 
-    bool isActive(){
-        return +RunStatus::ACTIVE == +run_status;
+    bool isActive() const {
+        return (RunStatus::ACTIVE) == run_status;
+    }
+
+    const auto & status() const {
+        return run_status;
+    }
+
+
+    real_t getSpeed() const{
+        return est_speed;
+    }
+
+    real_t getPosition() const {
+        return est_pos;
+    }
+
+    real_t getCurrent() const {
+        return run_current;
+    }
+
+    void setTargetPositionClamp(const Range & clamp){
+        target_position_clamp = clamp;
+    }
+
+    void enable(const bool en = true){
+        if(en){
+            wakeup();
+        }else{
+            shutdown();
+        }
+    }
+
+    void setNodeId(const uint8_t _id){
+        node_id = _id;
+    }
+
+    void setSpeedClamp(const real_t max_spd){
+        speed_ctrl.max_spd = max_spd;
+    }
+
+    void setAccelClamp(const real_t max_acc){
+        trapezoid_ctrl.max_dec = max_acc;
     }
 };
 

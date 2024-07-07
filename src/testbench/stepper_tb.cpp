@@ -109,7 +109,7 @@ real_t ss(){
 
     // stp.setTargetPosition(new_pos);
     return new_pos;
-    // stp.setTagretVector(new_pos*2);
+    // stp.setTargetVector(new_pos*2);
 }
 
 
@@ -149,7 +149,8 @@ void stepper_tb(IOStream & logger){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    Stepper stp{logger, svpwm, mt6816, mem};
+    can1.init(Can::BaudRate::Kbps125);
+    Stepper stp{logger, can1, svpwm, mt6816, mem};
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
@@ -159,18 +160,27 @@ void stepper_tb(IOStream & logger){
     can1.init(Can::BaudRate::Mbps1);
  
     stp.init();
+    // logger.println("stat is", stp.status()._to_string());
+    // while(+stp.status() == +Stepper::RunStatus::ACTIVE);
 
     stp.setOpenLoopCurrent(0.8);
     stp.setCurrentClamp(1.4);
-    stp.setTargetCurrent(-1.4);
-    delay(5000);
+    stp.setTargetCurrent(-0.6);
+    while(stp.isActive() == false);
+    delay(200);
+
+    // while(ABS(stp.getSpeed()) > 0.02);
+    delay(1000);
+
+    stp.locateRelatively(-3);
     stp.setCurrentClamp(1.4);
+
     while(true){
-        stp.run();
-        // stp.setTagretVector(sin(t));
-        // stp.setTagretVector(2 * t);
-        
-        stp.report();
+        stp.run(); 
+        // stp.setTargetVector(sin(t));
+        // stp.setTargetVector(2 * t);
+        logger.println(stp.getSpeed());
+        // stp.report();
         Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(0.05 * t);
@@ -183,7 +193,7 @@ void stepper_tb(IOStream & logger){
         // stp.setTargetPosition(0.2 * floor(t*10));
         // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
         // stp.setTargetPosition(sin(t));
-        stp.setTargetPosition(0.3 * sin(8 * t));
+        stp.setTargetPosition(0.6 * sin(16 * t));
         // stp.setTargetPosition(-t/8);
         // stp.setTargetPosition(4 * floor(fmod(t * 4,2)));
         // real_t temp = sin(2 * t);

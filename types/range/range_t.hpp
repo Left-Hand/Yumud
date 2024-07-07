@@ -26,7 +26,16 @@ public:
 
     __fast_inline_constexpr Range_t(): start(T(0)), end(T(0)) {;}
     __fast_inline_constexpr Range_t(const auto & _start, const auto & _end): start(static_cast<T>(_start)), end(static_cast<T>(_end)) {;}
+
     __fast_inline_constexpr Range_t(const Range_t<auto> & other): start(static_cast<T>(other.start)), end(static_cast<T>(other.end)) {;}
+
+    template<typename U, typename V>
+    requires std::is_arithmetic_v<U> && std::is_arithmetic_v<V>
+    __fast_inline_constexpr Range_t(std::pair<U, V> && other): start(static_cast<T>(other.first)), end(static_cast<T>(other.second)) {;}
+
+    template<typename U, typename V>
+    requires std::is_arithmetic_v<U> && std::is_arithmetic_v<V>
+    __fast_inline_constexpr Range_t(std::tuple<U, V> && other): start(static_cast<T>(std::get<0>(other))), end(static_cast<T>(std::get<1>(other))) {;}
     __fast_inline_constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
         this->start = static_cast<T>(other.start);
         this->end = static_cast<T>(other.end);

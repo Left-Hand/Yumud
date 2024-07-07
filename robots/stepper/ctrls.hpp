@@ -63,6 +63,7 @@ struct PositionCtrl:public HighLayerCtrl{
 struct GeneralSpeedCtrl:public SpeedCtrl{
     GeneralSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
+    real_t max_spd = 40;
     real_t kp = 4;
     real_t kp_clamp = 60;
 
@@ -77,8 +78,8 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
         targ_current = 0;
     }
 
-    Result update(const real_t targ_speed,const real_t real_speed) override{
-
+    Result update(const real_t _targ_speed,const real_t real_speed) override{
+        const real_t targ_speed = CLAMP(_targ_speed, -max_spd, max_spd);
         real_t error = (targ_speed - real_speed);
 
         real_t speed_delta = real_speed - last_speed;
@@ -163,6 +164,9 @@ struct TrapezoidPosCtrl:public TopLayerCtrl{
     GeneralSpeedCtrl & speed_ctrl;
     GeneralPositionCtrl & position_ctrl;
 
+    // real_t max_spd = 40;
+    real_t max_dec = 168.0;
+
     TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):speed_ctrl(_speed_ctrl), position_ctrl(_position_ctrl){;}
 
     enum Tstatus{
@@ -171,17 +175,20 @@ struct TrapezoidPosCtrl:public TopLayerCtrl{
         DEC,
         STA,
     };
+
+protected:
     Tstatus tstatus = Tstatus::STA;
     real_t goal_speed = 0;
     real_t last_pos_err = 0;
     using Result = HighLayerCtrl::Result;
-    
+public:
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
         // static constexpr real_t max_acc = 10.0;
-        static constexpr real_t max_dec = 168.0;
-        static constexpr real_t spd_delta = max_dec/foc_freq;
+
+        real_t spd_delta = max_dec/foc_freq;
+        real_t max_spd = speed_ctrl.max_spd;
         // static constexpr real_t spd_delta = 0.01;
-        static constexpr real_t max_spd = 40;
+
         static constexpr real_t hug_speed = 0.1;
         // static constexpr real_t spd_sw_radius = 0.7;
         static constexpr real_t pos_sw_radius = 0.1;

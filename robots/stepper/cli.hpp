@@ -5,6 +5,8 @@
 #include "constants.hpp"
 #include "statled.hpp"
 
+#include "hal/bus/can/can.hpp"
+
 namespace StepperUtils{
 
     #define VNAME(x) #x
@@ -100,8 +102,11 @@ namespace StepperUtils{
             tokens.erase(tokens.begin());
             parse_command(command, tokens);
         }
+    protected:
+        IOStream & logger = uart1;
+        Can & can = can1;
     public:
-        Cli() = default;
+        Cli(IOStream & _logger, Can & _can):logger(_logger), can(_can){;}
 
         virtual void parse_command(const String & _command,const std::vector<String> & args){
             auto command = _command;
@@ -119,6 +124,18 @@ namespace StepperUtils{
                     break;
                 default:
                     DEBUG_PRINT("no command available:", command);
+                    break;
+            }
+        }
+
+        using Command = StepperEnums::Command;
+
+        virtual void parse_command(const Command command, const CanMsg & msg){
+            switch(command){
+                case Command::RST:
+                    Sys::Misc::reset();
+                    break;
+                default:
                     break;
             }
         }

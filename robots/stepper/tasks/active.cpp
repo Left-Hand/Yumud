@@ -77,7 +77,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
                 result = {openloop_current, 0};
                 break;
             case CtrlType::POSITION:
-                result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
+                result = position_ctrl.update(target_position_clamp.clamp(target), est_pos, est_speed, est_elecrad);
                 break;
             case CtrlType::TRAPEZOID:
                 result = trapezoid_ctrl.update(target, est_pos, est_speed, est_elecrad);

@@ -2,10 +2,11 @@
 
 Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
     static constexpr int subdivide_micros = 1024;
-    static constexpr int check_times = 4;
+    static constexpr int check_times = 2;
     // static constexpr real_t minimal_motion = inv_poles / 32;
-    static constexpr real_t minimal_motion = inv_poles / 8;
-    static constexpr real_t check_current = 0.6;
+    static constexpr real_t minimal_motion = inv_poles / 8 * 0.9;
+    static constexpr real_t check_current = 1.2;
+    static constexpr real_t idle_current = 0;
 
     enum class SubState{
         INIT,
@@ -54,7 +55,7 @@ Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
                 break;
 
             case SubState::TEST_A:
-                svpwm.setABCurrent(sin(cnt * real_t((PI / subdivide_micros))) * check_current, 0);
+                svpwm.setABCurrent(sin(cnt * real_t((PI / subdivide_micros))) * check_current, idle_current);
 
                 odo.update();
                 move_range = move_range.merge(odo.getPosition());
@@ -71,7 +72,7 @@ Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
                 break;
 
             case SubState::TEST_B:
-                svpwm.setABCurrent(0, sin(cnt * real_t(PI / subdivide_micros)) * check_current);
+                svpwm.setABCurrent(idle_current, sin(cnt * real_t(PI / subdivide_micros)) * check_current);
 
                 odo.update();
                 move_range = move_range.merge(odo.getPosition());

@@ -58,11 +58,11 @@ public:
         encoder.init();
     }
 
-    void locateRelatively(const real_t & offset = real_t(0)){
+    void locateRelatively(const real_t offset = real_t(0)){
         locate(offset);
     }
 
-    void locateAbsolutely(const real_t & offset = real_t(0)){
+    void locateAbsolutely(const real_t offset = real_t(0)){
         locate(getLapPosition() + offset);
     }
 
