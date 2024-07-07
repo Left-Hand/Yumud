@@ -44,7 +44,7 @@ int main(){
     // uart7.init(9600);
     // uart7.init(19200);
 
-    uart7.init(115200);
+    // uart7.init(115200);
     // uart7.init(57600);
     // ch9141_tb(logger, uart7);
     st77xx_tb(logger, spi2);

@@ -125,8 +125,8 @@
 #define BSWAP_64(x) ((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32))
 
 #define VAR_AND_SIZE(x) x,sizeof(x)
-#define PTR8_AND_SIZE(x) (uint8_t *)&x, sizeof(x)
-
+#define PTR8_AND_SIZE(x) (const uint8_t *)&x, sizeof(x)
+#define CHR8_AND_SIZE(x) (const char *)&x, sizeof(x)
 
 #ifdef __cplusplus
 #define DECLTYPE(...) decltype(__VA_ARGS__)

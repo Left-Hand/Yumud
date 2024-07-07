@@ -20,8 +20,8 @@ public:
     uint16_t getAmbientCount();
     uint16_t getSignalCount();
 
-	void enableHighPrecision(const bool & _highPrec = true);
-    void enableContMode(const bool & _continuous = true);
+	void enableHighPrecision(const bool _highPrec = true);
+    void enableContMode(const bool _continuous = true);
     bool update();
 
 private:
@@ -36,24 +36,20 @@ private:
 
     // uint16_t last_distance;
     Result result, last_result;
-	void writeByteData(unsigned char Reg, unsigned char byte){
+	void writeByteData(const uint8_t Reg, const uint8_t byte){
         bus_drv.writeReg(Reg, byte);
     }
 
     void flush();
     bool isIdle();
 
-	uint8_t readByteData(unsigned char Reg){
+	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
         bus_drv.readReg(Reg, data);
         return data;
     }
 
-	void writeData(unsigned char Reg ,unsigned char *buf, unsigned char Num){
-        bus_drv.writePool(Reg, buf, Num, false);
-    }
-
-    void requestData(uint8_t reg, uint8_t * data, const size_t len){
+    void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         bus_drv.readPool(reg, data, len);
     }
 };

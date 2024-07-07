@@ -160,8 +160,11 @@ void stepper_tb(IOStream & logger){
  
     stp.init();
 
-    stp.setCurrentClamp(1.4);
     stp.setOpenLoopCurrent(0.8);
+    stp.setCurrentClamp(1.4);
+    stp.setTargetCurrent(-1.4);
+    delay(5000);
+    stp.setCurrentClamp(1.4);
     while(true){
         stp.run();
         // stp.setTagretVector(sin(t));
@@ -180,7 +183,7 @@ void stepper_tb(IOStream & logger){
         // stp.setTargetPosition(0.2 * floor(t*10));
         // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
         // stp.setTargetPosition(sin(t));
-        stp.setTargetPosition(0.1 * sin(8 * t));
+        stp.setTargetPosition(0.3 * sin(8 * t));
         // stp.setTargetPosition(-t/8);
         // stp.setTargetPosition(4 * floor(fmod(t * 4,2)));
         // real_t temp = sin(2 * t);

@@ -35,7 +35,8 @@
     "sys/sdk/ch32v203",
     "sys/sdk/ch32v307",
     "nvcv2",
-    "nvcv2/mnist"
+    "nvcv2/mnist",
+    "thirdparty/lodepng"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -238,7 +239,13 @@
         "sys/sdk/ch32v203/Core/core_riscv.c",
         "sys/sdk/ch32v203/system_ch32v20x.c",
         "sys/sdk/ch32v203/Startup/startup_ch32v20x_D6.S",
-        "hal/rng/rng.cpp"
+        "hal/rng/rng.cpp",
+        "thirdparty/lodepng/examples",
+        "thirdparty/lodepng/lodepng_benchmark.cpp",
+        "thirdparty/lodepng/lodepng_unittest.cpp",
+        "thirdparty/lodepng/lodepng_fuzzer.cpp",
+        "thirdparty/lodepng/lodepng_util.cpp",
+        "thirdparty/lodepng/pngdetail.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
