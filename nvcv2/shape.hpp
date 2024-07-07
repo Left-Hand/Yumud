@@ -333,6 +333,21 @@ namespace NVCV2::Shape{
         return dst;
     }
 
+    void x2(Image<Grayscale, Grayscale> & dst, const Image<Grayscale, Grayscale> & src){
+        const auto size = dst.size;
+        for(int y = 0; y < size.y; y++){
+            for(int x = 0; x < size.x; x++){
+                dst[{x,y}] = src[{x << 1,y << 1}];
+            }
+        }
+    }
+
+    auto x2(const Image<Grayscale, Grayscale> & src){
+        Image<Grayscale, Grayscale> dst(src.size / 2);
+        x2(dst, src);
+        return dst;
+    }
+
     void XN(Image<Binary, Binary> dst, const Image<Binary, Binary> & src, const int & m, const real_t & percent){
         auto size = src.get_size();
         int n = int(m * m * percent);

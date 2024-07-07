@@ -1,4 +1,6 @@
-#include "tb.h"
+#include "embd.h"
+#include "src/testbench/tb.h"
+
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
 #include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
@@ -19,14 +21,37 @@ using namespace NVCV2;
 #pragma pack(push, 1)
 
 
-enum class TransType:uint8_t{
-    GS_0,
-    GS_1,
-    GS_2,
-    GS_3,
-    RGB,
-    STR
+// enum class TransType:uint8_t{
+//     GS_0,
+//     GS_1,
+//     GS_2,
+//     GS_3,
+//     BN_0,
+//     BN_1,
+//     BN_2,
+//     BN_3,
+//     RGB,
+//     STR
+// };
+
+struct TransType{
+    uint8_t index:4;
+    uint8_t type:4;
+
+    enum {
+        GS_0 = 0x00,
+        GS_1,
+        GS_2,
+        GS_3,
+        BN_0 = 0x10,
+        BN_1,
+        BN_2,
+        BN_3,
+        RGB = 0x20,
+        STR = 0x30
+    };
 };
+
 
 struct PieceHeader{
     uint16_t header;
@@ -59,13 +84,6 @@ protected:
     static constexpr size_t img_tx_buf_size = 1024;
 
 public:
-    enum class Type{
-        IMG0,
-        IMG1,
-        IMG2,
-        IMG3,
-        STR,
-    };
 
     IOStream & instance;
     Uart & logger = uart2;
@@ -100,7 +118,6 @@ public:
     void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
 
         unit.header = header;
-        unit.trans_type = TransType::GS_0;
         unit.hash = hash_djb2_buffer(data_from, len);
         unit.time_stamp = time_stamp;
 
@@ -116,7 +133,7 @@ public:
     }
 
     void transmit(const Image<Grayscale, Grayscale> & img, const uint8_t index){
-        constexpr size_t mtu = 180;
+        constexpr size_t mtu = 80;
         const auto & img_size = img.get_size();
         size_t len = img_size.x * img_size.y;
 
@@ -132,6 +149,7 @@ public:
             ImagePieceUnit unit;
             unit.size_x = img_size.x;
             unit.size_y = img_size.y;
+            unit.trans_type = TransType(index);
             unit.data_index = block_start;
 
             sendBlockData(unit, (const uint8_t *)buf + block_start, block_end - block_start);
@@ -149,7 +167,11 @@ public:
 };
 
 
-void st77xx_tb(IOStream & logger, Spi & spi){
+void embd_main(){
+    auto & logger = uart2;
+    logger.init(921600, CommMethod::Blocking);
+    auto & spi = spi2;
+
     auto & led = portC[14];
     auto & lcd_blk = portC[7];
     auto & light = portC[6];
@@ -219,15 +241,17 @@ void st77xx_tb(IOStream & logger, Spi & spi){
     CH9141 ch9141{uart7, portC[1], portD[3]};
     ch9141.init();
 
-    Transmitter trans{ch9141};
-    // Transmitter trans{logger};
+    // Transmitter trans{ch9141};
+    Transmitter trans{logger};
 
     while(true){
         led = !led;
         // continue;
         auto img = Shape::x4(camera,2);
-        auto piece = Shape::x4(img,4);
+        // trans.transmit(img, 0);
+        // continue;
         Pixels::inverse(img);
+        auto piece = Shape::x4(img,2);
         auto bina = Pixels::binarization(img, 200);
 
         vl.update();
@@ -278,7 +302,9 @@ void st77xx_tb(IOStream & logger, Spi & spi){
             painter.drawRoi(blob.rect);
         }
 
-        trans.transmit(piece, 0);
+
+        // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
+        trans.transmit(img, 1);
         painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
         // painter.drawString(Vector2i{0,230-50}, toString(trans.compress_png(piece).size()));
 

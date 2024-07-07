@@ -97,7 +97,14 @@
         "sys/sdk/ch32v307/Peripheral/src/ch32v30x_usart.c",
         "sys/sdk/ch32v307/Peripheral/src/ch32v30x_wwdg.c",
         "sys/sdk/ch32v307/Startup/startup_ch32v30x_D8.S",
-        "sys/sdk/ch32v307/system_ch32v30x.c"
+        "sys/sdk/ch32v307/system_ch32v30x.c",
+        "thirdparty/lodepng/examples",
+        "thirdparty/lodepng/lodepng_benchmark.cpp",
+        "thirdparty/lodepng/lodepng_fuzzer.cpp",
+        "thirdparty/lodepng/lodepng_unittest.cpp",
+        "thirdparty/lodepng/lodepng_util.cpp",
+        "thirdparty/lodepng/pngdetail.cpp",
+        "src/testbench/st77xx_tb.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -245,7 +252,8 @@
         "thirdparty/lodepng/lodepng_unittest.cpp",
         "thirdparty/lodepng/lodepng_fuzzer.cpp",
         "thirdparty/lodepng/lodepng_util.cpp",
-        "thirdparty/lodepng/pngdetail.cpp"
+        "thirdparty/lodepng/pngdetail.cpp",
+        "src/testbench/st77xx_tb.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -279,7 +287,7 @@
         },
         "Custom": {
           "bin": "",
-          "commandLine": "bash ./tools/program_flash.sh \"${programFile}\"",
+          "commandLine": "download.cmd",
           "eraseChipCommand": ""
         }
       },
