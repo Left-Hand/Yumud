@@ -38,47 +38,54 @@ struct ImagePieceUnit:public PieceHeader{
 
 
 
-class Transmitter:public IOStream{
+class Transmitter{
 protected:
-    static constexpr size_t str_tx_buf_size = 512;
-    static constexpr size_t str_rx_buf_size = 512;
-    static constexpr size_t img_tx_buf_size = 1024;
+    // static constexpr size_t str_tx_buf_size = 512;
+    // static constexpr size_t str_rx_buf_size = 512;
+    // static constexpr size_t img_tx_buf_size = 1024;
 
 public:
 
-    IOStream & instance;
+    OutputStream & instance;
     Uart & logger = uart2;
 
-    RingBuf<str_tx_buf_size> str_tx_buf;
-    RingBuf<str_rx_buf_size> str_rx_buf;
-    RingBuf<img_tx_buf_size> img_buf;
+    // RingBuf<str_tx_buf_size> str_tx_buf;
+    // RingBuf<str_rx_buf_size> str_rx_buf;
+    // RingBuf<img_tx_buf_size> img_buf;
 
-    void write(const char data) override{
-        str_rx_buf.addData(data);
-    }
+    // void write(const char data) override{
+    //     str_rx_buf.addData(data);
+    // }
 
-    void read(char & data) override{
-        data = str_rx_buf.getData();
-    }
+    // void read(char & data) override{
+    //     data = str_rx_buf.getData();
+    // }
 
-    using InputStream::read;
+    // using InputStream::read;
 
-    size_t available() const override{
-        return str_rx_buf.available();
-    }
+    // size_t available() const override{
+    //     return str_rx_buf.available();
+    // }
 
-    size_t pending() const override{
-        return str_tx_buf.available();
-    }
+    // size_t pending() const override{
+    //     return str_tx_buf.available();
+    // }
 
 protected:
     static constexpr uint16_t header = 0x54A8;
-    uint8_t time_stamp;
+    static constexpr size_t mtu = 320;
+    uint8_t time_stamp = 0;
+    void transmit(const uint8_t * img_buf, const Vector2i & img_size, const uint8_t index);
+
 public:
-    Transmitter(IOStream & _instance):instance(_instance){;}
+    Transmitter(OutputStream & _instance):instance(_instance){;}
     void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 
     std::vector<uint8_t> compress_png(const Image<Grayscale, Grayscale> & img);
 
-    void transmit(const Image<Grayscale, Grayscale> & img, const uint8_t index);
+    template<typename T>
+    requires std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>
+    void transmit(const Image<T, T> & img, const uint8_t index){
+        transmit((const uint8_t *)img.data.get(),img.get_size(), index); 
+    }
 };

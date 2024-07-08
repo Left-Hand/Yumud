@@ -70,6 +70,7 @@
 #define HAVE_OPA1
 #define HAVE_OPA2
 
+#define HAVE_USBFS
 
 #define DEBUGGER uart1
 // #define DEBUGGER sdi
