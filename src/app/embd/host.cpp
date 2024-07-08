@@ -120,17 +120,18 @@ void EmbdHost::main(){
     // Transmitter trans{ch9141};
     // Transmitter trans{logger};
     Transmitter trans{usbfs};
+    Mnist mnist;
 
 
     // auto & led = portC[14];
     
     auto img = Shape::x4(camera, 2);
-    auto bina = Pixels::binarization(img, 70);
+    // auto bina = Pixels::binarization(img, 70);
     while(true){
         led = !led;
         // continue;
         img = Shape::x4(camera,2);
-        auto new_bina = Pixels::binarization(img, 40);
+        auto bina = Pixels::binarization(img,  170);
         // trans.transmit(img, 0);
         // continue;
         // Pixels::inverse(img);
@@ -139,11 +140,12 @@ void EmbdHost::main(){
         auto diff = img.space();
         Shape::convo_roberts_xy(diff, img);
 
-        auto diff_bina = make_bina_mirror(diff);
-        Pixels::binarization(diff_bina, diff, 40);
-        Pixels::and_with(new_bina, diff_bina);
-        Shape::morph_close(new_bina);
-        Pixels::copy(bina, new_bina);
+        // auto diff_bina = make_bina_mirror(diff);
+        // Pixels::binarization(diff_bina, diff, 40);
+        // Pixels::or_with(bina, diff_bina);
+        // Shape::morph_close(new_bina);
+        // Pixels::copy(bina, new_bina);
+        // Shape::erosion(bina, bina);
         // Pixels::and_with(bina, new_bina);
 
         vl.update();
@@ -196,10 +198,15 @@ void EmbdHost::main(){
             painter.drawString(blob.rect.position, "2");
             // logger.println(blob.rect, int(blob.rect));
         }
+            painter.setColor(RGB565::YELLOW);
+            painter.drawRoi({0,0,28,28});
 
-
+        {
+            auto result = mnist.update(img, {0,0});
+            logger.println(result.token, result.confidence);
+        }
         // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
-        trans.transmit(img, 1);
+        // trans.transmit(img, 1);
         // trans.transmit(bina, 0);
         // painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
         // logger.println(real_t(light_pwm));
@@ -235,7 +242,7 @@ void EmbdHost::run() {
     // logger.println(steppers.y.getSpeed());
     
     // steppers.z.setTargetPosition(ss());
-    logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
+    // logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
     // can.write(CanMsg{0x70});
 }
 
