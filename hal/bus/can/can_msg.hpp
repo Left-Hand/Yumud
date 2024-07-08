@@ -90,8 +90,8 @@ public:
         return ret;\
     } \
     \
-    explicit CanMsg(type && para){\
-        msg_memcpy((void *)&Data, (void *)&para, sizeof(type), DLC);\
+    explicit CanMsg(const type & para){\
+        msg_memcpy((void *)&Data, (void *)&para, sizeof(type), sizeof(type));\
         DLC = sizeof(type) / sizeof(uint8_t);\
         if(DLC > 8) DLC = 8;\
     }\
@@ -134,7 +134,7 @@ public:
     }
 
     template<typename T>
-    CanMsg & load(T && para) {
+    CanMsg & load(const T & para) {
         msg_memcpy((void *)this, (void *)&para, sizeof(para), DLC);
         return *this;
     }

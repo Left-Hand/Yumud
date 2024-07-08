@@ -70,6 +70,7 @@ namespace StepperEnums{
         TRG_TPZ,
 
         LOCATE = 0x20,
+        SET_OLP_CURR,
         CLAMP_CURRENT,
         CLAMP_POS,
         CLAMP_SPD,
@@ -78,6 +79,7 @@ namespace StepperEnums{
         GET_POS = 0x30,
         GET_SPD,
         GET_ACC,
+        GET_CURR,
 
         CALI = 0X40,
 

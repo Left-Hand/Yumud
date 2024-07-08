@@ -192,6 +192,7 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTagretTrapezoid)
 
         SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)
+        SET_METHOD_BIND_REAL(Command::SET_OLP_CURR, setOpenLoopCurrent)
         SET_METHOD_BIND_REAL(Command::CLAMP_CURRENT, setCurrentClamp)
         SET_METHOD_BIND_TYPE(Command::CLAMP_POS, setTargetPositionClamp, (std::tuple<real_t, real_t>))
         SET_METHOD_BIND_REAL(Command::CLAMP_SPD, setSpeedClamp)

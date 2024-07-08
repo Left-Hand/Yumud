@@ -88,6 +88,7 @@ void host_main(){
     // Transmitter trans{ch9141};
     Transmitter trans{logger};
 
+    EmbdHost host{logger, can1};
     while(true){
         led = !led;
         // continue;
@@ -163,4 +164,10 @@ void host_main(){
     }
 }
 
+
 #endif
+
+void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg &msg){
+
+
+}
