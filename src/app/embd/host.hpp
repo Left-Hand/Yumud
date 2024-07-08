@@ -42,20 +42,30 @@ class EmbdHost:public CliAP{
         // }
     // }
 
+    // struct{
+    RemoteStepper stepper_w;
     RemoteStepper stepper_x;
     RemoteStepper stepper_y;
     RemoteStepper stepper_z;
+    // }
+    RemoteSteppers steppers;
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),
-            stepper_x{_logger, _can, 0},
-            stepper_y{_logger, _can, 1},
-            stepper_z{_logger, _can, 2}
-            
-            {;}
+            stepper_w{_logger, _can, 0}, 
+            stepper_x{_logger, _can, 1},
+            stepper_y{_logger, _can, 2},
+            stepper_z{_logger, _can, 3},
+            steppers(
+                stepper_w,
+                stepper_x,
+                stepper_y,
+                stepper_z
+            ){;}
 
     void parse_command(const uint8_t id, const Command & cmd, const CanMsg & msg);
 
+    void main();
     void run() override;
 };
 

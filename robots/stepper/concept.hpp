@@ -33,7 +33,7 @@ public:
     virtual void setTargetCurrent(const real_t current) = 0;
     virtual void setTargetSpeed(const real_t speed) = 0;
     virtual void setTargetPosition(const real_t pos) = 0;
-    virtual void setTagretTrapezoid(const real_t pos) = 0;
+    virtual void setTargetTrapezoid(const real_t pos) = 0;
     virtual void setOpenLoopCurrent(const real_t current) = 0;
     virtual void setTargetVector(const real_t pos) = 0;
     virtual void setCurrentClamp(const real_t max_current) = 0;

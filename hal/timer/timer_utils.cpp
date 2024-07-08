@@ -78,6 +78,40 @@ IRQn TimerUtils::ItToIrq(const TIM_TypeDef * instance, const IT & it){
             return TIM4_IRQn;
         #endif
 
+        #ifdef HAVE_TIM5
+        case TIM5_BASE:
+            return TIM5_IRQn;
+        #endif
+
+        #ifdef HAVE_TIM6
+        case TIM6_BASE:
+            return TIM6_IRQn;
+        #endif
+
+        #ifdef HAVE_TIM7
+        case TIM7_BASE:
+            return TIM7_IRQn;
+        #endif
+
+        #ifdef HAVE_TIM8
+        case TIM8_BASE:
+            switch(it){
+                case IT::Update:
+                    return TIM8_UP_IRQn;
+                case IT::CC1:
+                case IT::CC2:
+                case IT::CC3:
+                case IT::CC4:
+                    return TIM8_CC_IRQn;
+                case IT::Trigger:
+                case IT::COM:
+                    return TIM8_TRG_COM_IRQn;
+                case IT::Break:
+                    return TIM8_BRK_IRQn;
+            }
+            break;
+        #endif
+
         default:
             break;
     }

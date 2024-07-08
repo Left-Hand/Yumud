@@ -7,26 +7,54 @@
 #include "nvcv2/two_pass.hpp"
 #include "nvcv2/flood_fill.hpp"
 
+#include "interpolation.hpp"
+
+using namespace Interpolation;
 using namespace NVCV2;
 
 #ifdef CH32V30X
 
 void host_main(){
+    using TimerUtils::IT;
+
     auto & logger = uart2;
     logger.init(921600, CommMethod::Blocking);
-    auto & spi = spi2;
+
+
+    // can1.init(Can::BaudRate::Mbps1, Can::Mode::Internal);
+    can1.init(Can::BaudRate::Mbps1);
+    EmbdHost host{logger, can1};
+
+    timer3.init(800);
+    timer3.bindCb(IT::Update, [&](){host.run();});
+    timer3.enableIt(IT::Update, NvicPriority(0, 0));
+
+    host.main();
+}
+
+
+void EmbdHost::main(){
 
     auto & led = portC[14];
     auto & lcd_blk = portC[7];
-    auto & light = portC[6];
+    auto & spi = spi2;
+    // auto & light = portC[6];
+    
+    led.outpp();
+    lcd_blk.outpp(1);
+
+    auto & light_pwm = timer8.oc(1);
+    timer8.init(2000);
+    light_pwm.init();
+    light_pwm = 0.9;
+    light_pwm.io().outpp(1);
+
 
     auto & lcd_cs = portD[6];
     auto & lcd_dc = portD[7];
     auto & dev_rst = portB[7];
 
-    led.outpp();
-    lcd_blk.outpp(1);
-    light.outpp(1);
+    // light.outpp(1);
 
     spi.bindCsPin(lcd_cs, 0);
     spi.init(144000000);
@@ -88,24 +116,30 @@ void host_main(){
     // Transmitter trans{ch9141};
     Transmitter trans{logger};
 
-    can1.init(Can::BaudRate::Mbps1);
-    EmbdHost host{logger, can1};
 
-    timer3.init(200);
-
-    using TimerUtils::IT;
-    timer3.bindCb(IT::Update, [&](){host.run();});
-    timer3.enableIt(IT::Update, NvicPriority(0, 0));
+    // auto & led = portC[14];
     
+    auto img = Shape::x4(camera, 2);
+    auto bina = Pixels::binarization(img, 70);
     while(true){
         led = !led;
         // continue;
-        auto img = Shape::x4(camera,2);
+        img = Shape::x4(camera,2);
+        auto new_bina = Pixels::binarization(img, 40);
         // trans.transmit(img, 0);
         // continue;
-        Pixels::inverse(img);
-        auto piece = Shape::x4(img,2);
-        auto bina = Pixels::binarization(img, 200);
+        // Pixels::inverse(img);
+        // auto piece = Shape::x4(img,2);
+
+        auto diff = img.space();
+        Shape::convo_roberts_xy(diff, img);
+
+        auto diff_bina = make_bina_mirror(diff);
+        Pixels::binarization(diff_bina, diff, 40);
+        Pixels::and_with(new_bina, diff_bina);
+        Shape::morph_close(new_bina);
+        Pixels::copy(bina, new_bina);
+        // Pixels::and_with(bina, new_bina);
 
         vl.update();
         // real_t dist = vl.getDistance();
@@ -150,15 +184,20 @@ void host_main(){
 
 
         const auto & blobs = ff.blobs();
-        painter.setColor(RGB565::RED);
         for(const auto & blob : blobs){
+            if(int(blob) == 0 || int(blob.rect) == 0) continue;
+            painter.setColor(RGB565::RED);
             painter.drawRoi(blob.rect);
+            painter.setColor(RGB565::GREEN);
+            painter.drawString(blob.rect.position, "2");
+            // logger.println(blob.rect, int(blob.rect));
         }
 
 
         // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
         // trans.transmit(img, 1);
-        painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
+        // painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
+        // logger.println(real_t(light_pwm));
         // painter.drawString(Vector2i{0,230-50}, toString(trans.compress_png(piece).size()));
 
         // delay(300);
@@ -167,15 +206,11 @@ void host_main(){
 
         // delay(10);
         // const auto & blob = blobs[0];
-        // printf("%d, %d, %d, %d\r\n", blob.rect.x, blob.rect.w, blob.rect.h, blob.area);
+        // f("%d, %d, %d, %d\r\n", blob.rect.x, blob.rect.w, blob.rect.h, blob.area);
         // printf("%d\r\n", blobs.size());
         // host.run();
-
     }
 }
-
-
-#endif
 
 void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg &msg){
 
@@ -184,7 +219,18 @@ void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg 
 
 void EmbdHost::run() {
     CliAP::run();
-    stepper_x.setTargetPosition(sin(t));
-    // logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
+    const real_t ang = 2 * t;
+    const real_t amp = 2;
+    steppers.x.setTargetPosition(amp * sin(ang));
+    steppers.y.setTargetPosition(amp * cos(ang));
+    steppers.z.setTargetPosition(4 + sin(t));
+    // logger.println("why");
+    // steppers.y.setTargetCurrent(sign(sin(8 * t)));
+    // logger.println(steppers.y.getSpeed());
+    
+    // steppers.z.setTargetPosition(ss());
+    logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
     // can.write(CanMsg{0x70});
 }
+
+#endif

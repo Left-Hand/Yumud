@@ -117,14 +117,12 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     
     friend ShutdownFlag;
 
-    uint8_t getNodeID(){
-        return 0;
-    }
+
 public:
 
 
     Stepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
-            CliSTA(_logger, _can, getNodeID()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
+            CliSTA(_logger, _can, getNodeId()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);
@@ -160,7 +158,7 @@ public:
         ctrl_type = CtrlType::POSITION;
     }
 
-    void setTagretTrapezoid(const real_t pos){
+    void setTargetTrapezoid(const real_t pos){
         target = pos;
         panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
         ctrl_type = CtrlType::TRAPEZOID;
@@ -225,6 +223,23 @@ public:
 
     void setNodeId(const uint8_t _id){
         node_id = _id;
+    }
+
+    uint8_t getNodeId(){
+        // return 0;
+        auto chip_id = Sys::Chip::getChipIdCrc();
+        // logger.println("chip_id:", chip_id);
+        switch(chip_id){
+            case 3273134334:
+                return node_id = 3;
+            case 341554774:
+                return node_id = 2;
+            case 4079188777:
+                return node_id = 1;
+            case 0:
+            default:
+                return node_id = 0;
+        }
     }
 
     void setSpeedClamp(const real_t max_spd){

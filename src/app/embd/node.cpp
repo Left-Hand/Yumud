@@ -39,7 +39,6 @@ void node_main(){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    // can1.init(Can::BaudRate::Kbps125);
     Stepper stp{logger, can1, svpwm, mt6816, mem};
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
@@ -54,6 +53,7 @@ void node_main(){
     stp.setOpenLoopCurrent(0.8);
     stp.setCurrentClamp(1.4);
 
+    logger.println(stp.getNodeId());
     while(true){
         stp.run(); 
         Sys::Clock::reCalculateTime();

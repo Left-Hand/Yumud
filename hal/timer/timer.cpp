@@ -2,6 +2,7 @@
 
 static void TIM_RCC_ON(const TIM_TypeDef * instance){
     switch(uint32_t(instance)){
+        #ifdef HAVE_TIM1
         case TIM1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
             switch(TIM1_REMAP){
@@ -17,6 +18,9 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     break;
             }
             break;
+        #endif
+
+        #ifdef HAVE_TIM2
         case TIM2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
             switch(TIM2_REMAP){
@@ -32,8 +36,10 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     GPIO_PinRemapConfig(GPIO_FullRemap_TIM2, ENABLE);
                     break;
             }
-            
             break;
+        #endif
+
+        #ifdef HAVE_TIM3
         case TIM3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
             switch(TIM3_REMAP){
@@ -49,6 +55,9 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     break;
             }
             break;
+        #endif
+
+        #ifdef HAVE_TIM4
         case TIM4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
             switch(TIM4_REMAP){
@@ -59,24 +68,35 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     break;
             }
             break;
+        #endif
+
+        #ifdef HAVE_TIM8
+        case TIM8_BASE:
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
+            switch(TIM8_REMAP){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_Remap_TIM8, ENABLE);
+                    break;
+            }
+            break;
+        #endif
     }
 }
 
 static uint32_t TIM_Get_BusFreq(const TIM_TypeDef * instance){
     bool isAbp2 = false;
     switch(uint32_t(instance)){
+        #ifdef HAVE_TIM8
+        case TIM8_BASE:
+        #endif
+
+        #ifdef HAVE_TIM1
         case TIM1_BASE:
+        #endif
+
             isAbp2 = true;
-            break;
-        default:
-        case TIM2_BASE:
-            isAbp2 = false;
-            break;
-        case TIM3_BASE:
-            isAbp2 = false;
-            break;
-        case TIM4_BASE:
-            isAbp2 = false;
             break;
     }
 

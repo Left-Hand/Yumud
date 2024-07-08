@@ -10,9 +10,17 @@ protected:
         Rect2i rect;
         int area;
         int index;
+
+        constexpr operator int() const {
+            return area;
+        }
+
+        constexpr operator bool() const {
+            return area;
+        }
     };
 
-    using Blobs = std::vector<Blob>;
+    using Blobs = sstl::vector<Blob, 316>;
     Blobs m_blobs;
 
     // static void found(ImageWritable<Binary> & map, Blob & blob);
@@ -22,8 +30,6 @@ public:
     Image<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
     auto & blobs() const{return m_blobs;}
 };
-
-
 class SimilarRects{
 public:    
     SimilarRects(const real_t _eps) : eps(_eps) {}

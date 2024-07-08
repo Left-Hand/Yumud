@@ -128,7 +128,10 @@ namespace NVCV2::Pixels{
         dyeing(tmp, src);
         return tmp;
     }
-    void copy(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src) {
+
+    template<typename T>
+    requires (std::is_same_v<T, Grayscale> || std::is_same_v<T, Binary>)
+    void copy(ImageWritable<T>& dst, const ImageReadable<T>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
                 dst[Vector2i{x, y}] = src(Vector2i{x, y});

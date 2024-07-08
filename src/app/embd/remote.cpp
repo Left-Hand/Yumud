@@ -43,13 +43,13 @@ bool RemoteStepper::autoload(const bool outen){
     return true;
 }
 
-// void RemoteStepper::setTagretTrapezoid
+// void RemoteStepper::setTargetTrapezoid
 
 void RemoteStepper::setTargetVector(const real_t pos){}
 void RemoteStepper::setTargetCurrent(const real_t current){POST(Command::TRG_CURR, current);}
 void RemoteStepper::setTargetSpeed(const real_t speed){POST(Command::TRG_SPD, speed);}
 void RemoteStepper::setTargetPosition(const real_t pos){POST(Command::TRG_POS, pos);}
-void RemoteStepper::setTagretTrapezoid(const real_t pos){POST(Command::TRG_TPZ, pos);}
+void RemoteStepper::setTargetTrapezoid(const real_t pos){POST(Command::TRG_TPZ, pos);}
 void RemoteStepper::setOpenLoopCurrent(const real_t current){POST(Command::SET_OLP_CURR, current);}
 void RemoteStepper::setCurrentClamp(const real_t max_current){POST(Command::CLAMP_CURRENT, max_current);}
 void RemoteStepper::locateRelatively(const real_t pos){POST(Command::LOCATE, pos);}

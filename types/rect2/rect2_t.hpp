@@ -212,6 +212,14 @@ public:
     constexpr explicit operator T() const {
         return get_area();
     }
+
+    constexpr  __no_inline explicit operator String() const{
+        return toString();
+    }
+
+    __no_inline String toString(unsigned char decimalPlaces = 2) const {
+        return ('(' + String(position) + ',' + String(size) + ')');
+    }
 };
 
 typedef Rect2_t<int> Rect2i;

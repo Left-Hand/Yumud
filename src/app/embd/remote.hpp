@@ -32,7 +32,7 @@ public:
     void setTargetCurrent(const real_t current);
     void setTargetSpeed(const real_t speed);
     void setTargetPosition(const real_t pos);
-    void setTagretTrapezoid(const real_t pos);
+    void setTargetTrapezoid(const real_t pos);
     void setOpenLoopCurrent(const real_t current);
     void setTargetVector(const real_t pos);
     void setCurrentClamp(const real_t max_current);
@@ -52,6 +52,33 @@ public:
     void setAccelClamp(const real_t max_acc);
 
     void triggerCali();
+};
 
+struct RemoteSteppers{
+public:
+    RemoteStepper & w;
+    RemoteStepper & x;
+    RemoteStepper & y;
+    RemoteStepper & z;
+    RemoteSteppers(
+        RemoteStepper & _w,
+        RemoteStepper & _x,
+        RemoteStepper & _y,
+        RemoteStepper & _z
+    ):w(_w), x(_x), y(_y), z(_z){;}
 
+    RemoteStepper & operator [](const uint8_t index){
+        switch(index){
+            case 0:
+                return w;
+            case 1:
+                return x;
+            case 2:
+                return y;
+            case 3:
+                return z;
+            default:
+                return w;
+        }
+    }
 };

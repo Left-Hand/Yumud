@@ -312,6 +312,9 @@ public:
         return temp;
     }
 
+    Image<ColorType, DataType> space() const {
+        return Image<ColorType, DataType>(this->get_size());
+    }
     void copy_from(const Image<ColorType, DataType> & src){
         auto size = ImageBasics<ColorType>::get_size();
         memcpy(this->data.get(), src.data.get(),size.x * size.y);

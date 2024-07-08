@@ -62,16 +62,38 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
                 setTargetPosition(pos);
                 logger << "targ position\t" << toString(pos,3) << " n\r\n";
             }else{
-                logger << "curr pos\t" << toString(getPosition(),4) << " n\r\n";
+                logger << "now pos\t" << toString(getPosition(),4) << " n\r\n";
             }
             break;
 
         case "tpz"_ha:
             if(args.size()){
                 real_t val = real_t(args[0]);
-                setTagretTrapezoid(val);
+                setTargetTrapezoid(val);
                 logger << "targ position\t" << toString(val,3) << " n\r\n";
+            }else{
+                logger << "now position\t" << toString(getPosition(),4) << " n\r\n";
             }
+            break;
+
+        case "stable"_ha:
+            logger.println(odo.encoder.stable());
+            break;
+
+        case "curr"_ha:
+        case "c"_ha:
+            if(args.size()){
+                real_t val = real_t(args[0]);
+                setTargetCurrent(val);
+                logger << "targ current\t" << toString(val,3) << " n\r\n";
+            }else{
+                logger << "now current\t" << toString(getCurrent(),4) << " n\r\n";
+            }
+            break;
+
+        case "crc"_ha:
+        case "cc"_ha:
+            logger.println(Sys::Chip::getChipIdCrc());
             break;
 
         case "autoload"_ha:
@@ -127,6 +149,10 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             cali_task(true);
             break;
 
+        case "locate"_ha:
+        case "loc"_ha:
+            locateRelatively(args.size() ? real_t(args[0]) : 0);
+            break;
 
         case "beep"_ha:
             beep_task(true);
@@ -189,7 +215,7 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_REAL(Command::TRG_VECT, setTargetVector)
         SET_METHOD_BIND_REAL(Command::TRG_CURR, setTargetCurrent)
         SET_METHOD_BIND_REAL(Command::TRG_POS, setTargetPosition)
-        SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTagretTrapezoid)
+        SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTargetTrapezoid)
 
         SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)
         SET_METHOD_BIND_REAL(Command::SET_OLP_CURR, setOpenLoopCurrent)
