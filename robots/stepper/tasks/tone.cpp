@@ -37,7 +37,7 @@ Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
         {.freq_hz = freq_F5,.sustain_ms = 100}   // 6
     });
 
-    constexpr real_t tone_current = 2.4;
+    static constexpr real_t tone_current = 0.4;
 
     static uint32_t cnt;
     static uint32_t tone_index;

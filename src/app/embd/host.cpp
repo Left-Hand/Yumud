@@ -90,6 +90,12 @@ void host_main(){
 
     can1.init(Can::BaudRate::Mbps1);
     EmbdHost host{logger, can1};
+
+    timer3.init(200);
+
+    using TimerUtils::IT;
+    timer3.bindCb(IT::Update, [&](){host.run();});
+    timer3.enableIt(IT::Update, NvicPriority(0, 0));
     
     while(true){
         led = !led;
@@ -163,7 +169,7 @@ void host_main(){
         // const auto & blob = blobs[0];
         // printf("%d, %d, %d, %d\r\n", blob.rect.x, blob.rect.w, blob.rect.h, blob.area);
         // printf("%d\r\n", blobs.size());
-        host.run();
+        // host.run();
 
     }
 }
@@ -178,7 +184,7 @@ void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg 
 
 void EmbdHost::run() {
     CliAP::run();
-    stepper_x.setTargetPosition(frac(t));
+    stepper_x.setTargetPosition(sin(t));
     // logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
     // can.write(CanMsg{0x70});
 }

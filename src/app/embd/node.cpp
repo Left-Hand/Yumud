@@ -4,7 +4,7 @@ void node_main(){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    uart1.init(115200);
+    uart1.init(921600);
     auto & logger = uart1;
     logger.setEps(4);
 

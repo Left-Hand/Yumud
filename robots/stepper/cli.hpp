@@ -144,16 +144,7 @@ namespace StepperUtils{
 
     class CliSTA : public Cli{
     private:
-        void read_can() override{
-            if(can.available()){
-                const CanMsg & msg = can.read();
-                uint8_t id = msg.id() & 0b1111;
-                if(id == 0 || id == node_id){
-                    Command cmd = (Command)(msg.id() >> 4);
-                    parse_command(cmd, msg);
-                }
-            }
-        }
+        void read_can() override;
     public:
         CliSTA(IOStream & _logger, Can & _can, const uint8_t _node_id):Cli(_logger, _can, _node_id){;}
         virtual void parse_command(const Command command, const CanMsg & msg){

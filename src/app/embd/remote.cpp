@@ -5,8 +5,8 @@ using RunStatus = StepperEnums::RunStatus;
 
 #define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
 
-#define DEBUG_MSG(msg) logger.println( msg.length(), msg.isRemote(), msg.to<real_t>())
-// #define DEBUG_MSG(msg)
+// #define DEBUG_MSG(msg) logger.println( msg.length(), msg.isRemote(), msg.to<real_t>())
+#define DEBUG_MSG(msg)
 
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, __VA_ARGS__);\
