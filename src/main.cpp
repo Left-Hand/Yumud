@@ -3,11 +3,8 @@
 
 int main(){
     Sys::Misc::prework();
-    embd_main();
 
     #ifdef CH32V20X
-    UartHw & logger = uart1;
-    logger.init(115200);
 
     delay(200);
     // pmdc_tb();
@@ -26,7 +23,14 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
+    auto & logger = uart2;
+    logger.init(921600);
 
+    can_tb(logger, can1, true);
+    embd_main();
+    // UartHw & logger = uart2;
+    // logger.init(115200);
+    // can_tb(logger, can1, true);
     // UartHw & logger = uart8;
     // logger.init(115200 * 4, CommMethod::Dma, CommMethod::Interrupt);
     // logger.init(115200 * 4, CommMethod::Dma);

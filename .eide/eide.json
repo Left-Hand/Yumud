@@ -104,7 +104,10 @@
         "thirdparty/lodepng/lodepng_unittest.cpp",
         "thirdparty/lodepng/lodepng_util.cpp",
         "thirdparty/lodepng/pngdetail.cpp",
-        "src/testbench/st77xx_tb.cpp"
+        "src/testbench/st77xx_tb.cpp",
+        "src/app/embd/host.cpp",
+        "src/app/embd/img_trans.cpp",
+        "src/app/embd/remote.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -253,7 +256,8 @@
         "thirdparty/lodepng/lodepng_fuzzer.cpp",
         "thirdparty/lodepng/lodepng_util.cpp",
         "thirdparty/lodepng/pngdetail.cpp",
-        "src/testbench/st77xx_tb.cpp"
+        "src/testbench/st77xx_tb.cpp",
+        "src/app/embd/node.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {

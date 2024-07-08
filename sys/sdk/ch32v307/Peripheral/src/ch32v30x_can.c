@@ -399,14 +399,22 @@ uint8_t CAN_Transmit(CAN_TypeDef *CANx, const CanTxMsg *TxMessage)
         CANx->sTxMailBox[transmit_mailbox].TXMDTR &= (uint32_t)0xFFFFFFF0;
         CANx->sTxMailBox[transmit_mailbox].TXMDTR |= TxMessage->DLC & 0x0F;
 
-        CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[3] << 24) |
-                                                     ((uint32_t)TxMessage->Data[2] << 16) |
-                                                     ((uint32_t)TxMessage->Data[1] << 8) |
-                                                     ((uint32_t)TxMessage->Data[0]));
-        CANx->sTxMailBox[transmit_mailbox].TXMDHR = (((uint32_t)TxMessage->Data[7] << 24) |
-                                                     ((uint32_t)TxMessage->Data[6] << 16) |
-                                                     ((uint32_t)TxMessage->Data[5] << 8) |
-                                                     ((uint32_t)TxMessage->Data[4]));
+        if(TxMessage->DLC && TxMessage->RTR)
+        {
+            switch(TxMessage->DLC){
+                case 8: CANx->sTxMailBox[transmit_mailbox].TXMDHR = (((uint32_t)TxMessage->Data[7] << 24));
+                case 7: CANx->sTxMailBox[transmit_mailbox].TXMDHR = (((uint32_t)TxMessage->Data[6] << 16));
+                case 6: CANx->sTxMailBox[transmit_mailbox].TXMDHR = (((uint32_t)TxMessage->Data[5] << 8));
+                case 5: CANx->sTxMailBox[transmit_mailbox].TXMDHR = (((uint32_t)TxMessage->Data[4] << 0));
+                case 4: CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[3] << 24));
+                case 3: CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[2] << 16));
+                case 2: CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[1] << 8));
+                case 1: CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[0] << 0));
+                case 0:
+                default:
+                    break;
+            }
+        }
         CANx->sTxMailBox[transmit_mailbox].TXMIR |= TMIDxR_TXRQ;
     }
 

@@ -39,7 +39,7 @@ void node_main(){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    can1.init(Can::BaudRate::Kbps125);
+    // can1.init(Can::BaudRate::Kbps125);
     Stepper stp{logger, can1, svpwm, mt6816, mem};
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);

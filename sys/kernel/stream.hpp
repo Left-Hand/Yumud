@@ -7,6 +7,9 @@
 #include "types/string/String.hpp"
 
 
+#include <vector>
+#include <array>
+
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -104,8 +107,31 @@ public:
 
     OutputStream & operator<<(const SpecToken & spec);
 
-    template<typename real, size_t size>
-    OutputStream & operator<<(const real (&arr)[size]){
+    template<typename T, size_t size>
+    OutputStream & operator<<(const T (&arr)[size]){
+        *this << '[';
+        for(size_t i = 0; i < size - 1; ++i)
+            *this << arr[i] << ',';
+        if(size > 0)
+            *this << arr[size - 1];
+        *this << ']';
+        return *this;
+    }
+
+    template<typename T, size_t size>
+    OutputStream & operator<<(const std::array<T, size> & arr){
+        *this << '[';
+        for(size_t i = 0; i < size - 1; ++i)
+            *this << arr[i] << ',';
+        if(size > 0)
+            *this << arr[size - 1];
+        *this << ']';
+        return *this;
+    }
+
+    template<typename T>
+    OutputStream & operator<<(const std::vector<T> & arr){
+        size_t size = arr.size();
         *this << '[';
         for(size_t i = 0; i < size - 1; ++i)
             *this << arr[i] << ',';

@@ -155,8 +155,8 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
 
 
 void Stepper::parse_command(const Command command, const CanMsg & msg){
-    const uint16_t tx_id = ((uint16_t)(node_id << 7 | (uint8_t)command));
-
+    const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
+    using dual_real = std::tuple<real_t, real_t>;
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
     case cmd:\
         method(__VA_ARGS__);\
@@ -164,12 +164,12 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
 
     #define SET_METHOD_BIND_TYPE(cmd, method, type)\
     case cmd:\
-        method(type(msg));\
+        method((msg).to<type>());\
         break;\
     
     #define SET_VALUE_BIND(cmd, value)\
     case cmd:\
-        value = (decltype(value)(msg));\
+        value = ((msg).to<decltype(value)>());\
         break;\
 
     #define SET_METHOD_BIND_REAL(cmd, method) SET_METHOD_BIND_TYPE(cmd, method, real_t)
@@ -177,7 +177,7 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
     #define GET_BIND_VALUE(cmd, value)\
         case cmd:\
             if(msg.isRemote()){\
-                CanMsg msg {tx_id, false};\
+                CanMsg msg {tx_id};\
                 can.write(msg.load(value));\
             }\
             break;\
@@ -194,7 +194,7 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)
         SET_METHOD_BIND_REAL(Command::SET_OLP_CURR, setOpenLoopCurrent)
         SET_METHOD_BIND_REAL(Command::CLAMP_CURRENT, setCurrentClamp)
-        SET_METHOD_BIND_TYPE(Command::CLAMP_POS, setTargetPositionClamp, (std::tuple<real_t, real_t>))
+        SET_METHOD_BIND_TYPE(Command::CLAMP_POS, setTargetPositionClamp, dual_real)
         SET_METHOD_BIND_REAL(Command::CLAMP_SPD, setSpeedClamp)
         SET_METHOD_BIND_REAL(Command::CLAMP_ACC, setAccelClamp)
 

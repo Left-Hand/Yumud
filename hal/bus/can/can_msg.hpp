@@ -17,43 +17,80 @@ protected:
     uint8_t mbox;
 public:
     CanMsg(){
+        StdId = 0;
+        ExtId = 0;
+        IDE = 0;
+        RTR = 0;
         DLC = 0;
     }
 
-    CanMsg(const uint32_t id, const bool is_rtr = false){
+    CanMsg(const uint32_t id, const bool remote = true){
         StdId = id;
         ExtId = id;
         IDE = (id > 0x7FF ? CAN_ID_EXT : CAN_ID_STD);
-        RTR = (is_rtr ? CAN_RTR_Remote : CAN_RTR_Data);
+        RTR = remote ? CAN_RTR_Remote : CAN_RTR_DATA;
         DLC = 0;
     }
 
-    CanMsg(const uint32_t id, const std::initializer_list<uint8_t> & datas):CanMsg(id){
+    CanMsg(const uint32_t id, const std::initializer_list<uint8_t> & datas):CanMsg(id, false){
         for(auto it = datas.begin(); it != datas.end(); it++){
             Data[DLC++] = *it;
             if(DLC == 8) break;
         }
     }
 
-    CanMsg(const uint32_t id, const std::vector<uint8_t> &datas) : CanMsg(id) {
+    CanMsg(const uint32_t id, const std::vector<uint8_t> &datas) : CanMsg(id, false) {
         for(auto it = datas.begin(); it != datas.end(); it++){
             Data[DLC++] = *it;
             if(DLC == 8) break;
         }
     }
 
-    CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id) {
+    template <size_t size>
+    CanMsg(const uint32_t id, const std::array<uint8_t, size> &datas) : CanMsg(id, false) {
+        for(auto it = datas.begin(); it != datas.end(); it++){
+            Data[DLC++] = *it;
+            if(DLC == 8) break;
+        }
+    }
+
+    CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id, false) {
         for(uint8_t i = 0; i < len; i++){
             Data[DLC++] = buf[i];
             if(DLC == 8) break;
         }
     }
 
-    bool isStd() const {return IDE == CAN_Id_Standard;}
-    bool isExt() const {return IDE == CAN_Id_Extended;}
-    bool isRemote() const {return (RTR == CAN_RTR_Remote);}
-    uint8_t length() const {return DLC;}
-    uint8_t mailbox() const {return mbox;}
+    template<typename T>
+    CanMsg(const uint32_t id, const T & value) : CanMsg(id, (const uint8_t *)&value, sizeof(T)) {;}
+
+    operator std::vector<uint8_t>() const{
+        std::vector<uint8_t> vec(DLC);
+        memcpy(vec.data(), Data, DLC);
+        return vec;
+    }
+
+    template<size_t size>
+    operator std::array<uint8_t, size>() const{
+        std::array<uint8_t, size> vec;
+        memcpy(vec.data(), Data, size);
+        return vec;
+    }
+
+    auto to_vector() const {
+        return std::vector<uint8_t>(*this);
+    }
+
+    template<size_t size>
+    auto to_array() const {
+        return std::array<uint8_t, size>(*this);
+    }
+
+    constexpr bool isStd() const {return IDE == CAN_Id_Standard;}
+    constexpr bool isExt() const {return IDE == CAN_Id_Extended;}
+    constexpr bool isRemote() const {return (RTR == CAN_RTR_Remote);}
+    constexpr uint8_t length() const {return DLC;}
+    constexpr uint8_t mailbox() const {return mbox;}
 
     void write(const uint8_t *buf, size_t len){
         if(RTR == CAN_RTR_Remote) return;
@@ -74,75 +111,26 @@ public:
         else if(isExt()) return ExtId;
         else return 0; 
     }
-    const uint8_t & operator[](const uint8_t index) const {return *(Data + index);};
-
-private:
-    using tuple_1 = std::tuple<real_t, real_t>;
-    using tuple_2 = std::tuple<float, float>;
-    using tuple_3 = std::tuple<real_t, real_t>;
-    using tuple_4 = std::tuple<real_t, real_t>;
+    constexpr const uint8_t & operator[](const uint8_t index) const {return *(Data + index);};
+    constexpr uint8_t & operator[](const uint8_t index) {return *(Data + index);};
 
 public:
-    #define CONV_FUNC(type)\
-    explicit operator type () const{\
-        type ret;\
-        msg_memcpy((void *)&ret, (void *)&Data, sizeof(type), DLC);\
-        return ret;\
-    } \
-    \
-    explicit CanMsg(const type & para){\
-        msg_memcpy((void *)&Data, (void *)&para, sizeof(type), sizeof(type));\
-        DLC = sizeof(type) / sizeof(uint8_t);\
-        if(DLC > 8) DLC = 8;\
-    }\
-
-    #define CONV_TUPLE(...)\
-    explicit operator std::tuple<__VA_ARGS__> () const{\
-        std::tuple<__VA_ARGS__> ret;\
-        msg_memcpy((void *)&ret, (void *)&Data, sizeof(ret), DLC);\
-        return ret;\
-    } \
-    \
-    explicit CanMsg(std::tuple<__VA_ARGS__> && para){\
-        msg_memcpy((void *)&Data, (void *)&para, sizeof(para), DLC);\
-        DLC = sizeof(para) / sizeof(uint8_t);\
-        if(DLC > 8) DLC = 8;\
-    }\
-
-    CONV_FUNC(real_t)
-    CONV_FUNC(float)
-    CONV_FUNC(int)
-
-
-    CONV_TUPLE(real_t, real_t)
-    CONV_TUPLE(float, float)
-    CONV_TUPLE(int, int)
-
     template<typename T>
-    static CanMsg from(T && para){
-        CanMsg ret;
-        msg_memcpy((void *)&ret.Data, (void *)&para, sizeof(para), 8);
-        ret.DLC = MIN(sizeof(para), 8);
-        return ret;
-    }
-
-    template<typename T>
-    T to() const {
+    constexpr T to() const {
         T ret;
         msg_memcpy((void *)&ret, (void *)&Data, sizeof(ret), DLC);
         return ret;
     }
 
     template<typename T>
-    CanMsg & load(const T & para) {
-        msg_memcpy((void *)this, (void *)&para, sizeof(para), DLC);
+    constexpr CanMsg & load(const T & para) {
+        msg_memcpy((void *)this->Data, (void *)&para, sizeof(para), sizeof(para));
+        RTR = CAN_RTR_DATA;
         return *this;
     }
 
-    #undef CONV_FUNC
-    #undef CONV_TUPLE
-protected:
-    static void msg_memcpy(void * dst, const void *src,const size_t len, const size_t dlc){
+private:
+    constexpr static void msg_memcpy(void * dst, const void *src,const size_t len, const size_t dlc){
         for(uint8_t i = 0; i < len; i++){
             ((uint8_t *)dst)[i] = (i < dlc) ? ((const uint8_t *)src)[i] : 0;
         }

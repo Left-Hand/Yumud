@@ -88,7 +88,9 @@ void host_main(){
     // Transmitter trans{ch9141};
     Transmitter trans{logger};
 
+    can1.init(Can::BaudRate::Mbps1);
     EmbdHost host{logger, can1};
+    
     while(true){
         led = !led;
         // continue;
@@ -161,6 +163,8 @@ void host_main(){
         // const auto & blob = blobs[0];
         // printf("%d, %d, %d, %d\r\n", blob.rect.x, blob.rect.w, blob.rect.h, blob.area);
         // printf("%d\r\n", blobs.size());
+        host.run();
+
     }
 }
 
@@ -170,4 +174,11 @@ void host_main(){
 void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg &msg){
 
 
+}
+
+void EmbdHost::run() {
+    CliAP::run();
+    stepper_x.setTargetPosition(sin(t));
+    logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
+    // can.write(CanMsg{0x70});
 }

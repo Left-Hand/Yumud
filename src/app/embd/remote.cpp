@@ -3,19 +3,19 @@
 using Command = StepperEnums::Command;
 using RunStatus = StepperEnums::RunStatus;
 
-#define MSG(cmd, rtr) CanMsg{((uint16_t)(node_id << 7 | (uint8_t)(cmd))), rtr}
+#define MSG(cmd) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd))}
 
 #define POST(cmd)\
-can.write(MSG(cmd, false));
+can.write(MSG(cmd));
 
 #define POST_VALUE(cmd, value, type)\
-auto msg = MSG(cmd, false);\
+auto msg = MSG(cmd);\
 can.write(msg.load<type>(value));\
 
 #define POST_VALUE_REAL(cmd, value) POST_VALUE(cmd, value, real_t)
 
 #define REQUEST_VALUE(cmd, value, type)\
-can.write(MSG(cmd, true));\
+can.write(MSG(cmd));\
 return value;\
 
 #define REQUEST_VALUE_REAL(cmd, value) REQUEST_VALUE(cmd, value, real_t)
@@ -23,6 +23,8 @@ return value;\
 
 bool RemoteStepper::loadArchive(const bool outen){
     POST(Command::LOAD)
+    // can.write({(uint32_t)0x00});
+    // can.write(MSG(Command::LOAD));
     return true;
 }
 
