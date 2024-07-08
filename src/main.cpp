@@ -3,6 +3,7 @@
 
 int main(){
     Sys::Misc::prework();
+    embd_main();
 
     #ifdef CH32V20X
     UartHw & logger = uart1;

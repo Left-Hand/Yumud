@@ -48,7 +48,9 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             if(args.size()){
                 real_t spd = real_t(args[0]);
                 setTargetSpeed(spd);
-                logger << "targ speed\t" << toString(spd,2) << " n/s\r\n";
+                logger << "targ speed\t" << toString(spd,3) << " n/s\r\n";
+            }else{
+                logger << "curr speed\t" << toString(getSpeed(),4) << " n/s\r\n";
             }
             break;
 
@@ -58,7 +60,17 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             if(args.size()){
                 real_t pos = real_t(args[0]);
                 setTargetPosition(pos);
-                logger << "targ position\t" << toString(pos,2) << " n\r\n";
+                logger << "targ position\t" << toString(pos,3) << " n\r\n";
+            }else{
+                logger << "curr pos\t" << toString(getPosition(),4) << " n\r\n";
+            }
+            break;
+
+        case "tpz"_ha:
+            if(args.size()){
+                real_t val = real_t(args[0]);
+                setTagretTrapezoid(val);
+                logger << "targ position\t" << toString(val,3) << " n\r\n";
             }
             break;
 
@@ -123,6 +135,7 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
         case "rd"_ha:
             if(args.size() == 1) run_debug_enabled = int(args[0]);
             break;
+    
         case "status"_ha:
         case "stat"_ha:
             DEBUG_PRINT("current status:", int(run_status));
@@ -134,11 +147,8 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             DEBUG_PRINT("shutdown ok");
             break;
 
-
-
-
         default:
-            Cli::parse_command(command, args);
+            CliSTA::parse_command(command, args);
             break;
     }
 }
@@ -199,10 +209,11 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
 
         SET_METHOD_BIND_EXECUTE(Command::INACTIVE, enable, false)
         SET_METHOD_BIND_EXECUTE(Command::ACTIVE, enable, true)
+        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
 
         default:
-            Cli::parse_command(command, msg);
+            CliSTA::parse_command(command, msg);
             break;
     }
 

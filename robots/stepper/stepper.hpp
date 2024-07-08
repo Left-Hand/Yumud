@@ -25,7 +25,7 @@ protected:
     real_t est_pos;
     real_t run_current;
     real_t target;
-    uint8_t node_id = 0;
+
 public:
     virtual bool loadArchive(const bool outen = false) = 0;
     virtual void saveArchive(const bool outen = false) = 0;
@@ -57,7 +57,7 @@ public:
     virtual void triggerCali() = 0;
 };
 
-class Stepper:public StepperUtils::Cli, public StepperConcept{
+class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     volatile RunStatus run_status = RunStatus::INIT;
     Switches switches;
 
@@ -164,11 +164,15 @@ class Stepper:public StepperUtils::Cli, public StepperConcept{
     void parse_command(const Command command, const CanMsg & msg) override;
     
     friend ShutdownFlag;
+
+    uint8_t getNodeID(){
+        return 0;
+    }
 public:
 
 
     Stepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
-            Cli(_logger,_can) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
+            CliSTA(_logger, _can, getNodeID()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);

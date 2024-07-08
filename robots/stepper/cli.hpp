@@ -89,8 +89,10 @@ namespace StepperUtils{
     protected:
         IOStream & logger;
         Can & can;
+        uint8_t node_id;
+        using Command = StepperEnums::Command;
     public:
-        Cli(IOStream & _logger, Can & _can):logger(_logger), can(_can){;}
+        Cli(IOStream & _logger, Can & _can, const uint8_t _node_id):logger(_logger), can(_can), node_id(_node_id){;}
 
         virtual void parse_command(const String & _command,const std::vector<String> & args){
             auto command = _command;
@@ -112,19 +114,14 @@ namespace StepperUtils{
             }
         }
 
-        using Command = StepperEnums::Command;
-
-        virtual void parse_command(const Command command, const CanMsg & msg){
-            switch(command){
-                case Command::RST:
-                    Sys::Misc::reset();
-                    break;
-                default:
-                    break;
-            }
-        }
-
         virtual void run(){
+            read_str();
+            read_can();
+        }
+    protected:
+        virtual void read_can() = 0;
+    private:
+        void read_str(){
             if(DEBUGGER.available()){
                 static String temp_str;
                 while(DEBUGGER.available()){
@@ -143,6 +140,49 @@ namespace StepperUtils{
                 }
             }
         }
+    };
+
+    class CliSTA : public Cli{
+    private:
+        void read_can() override{
+            if(can.available()){
+                const CanMsg & msg = can.read();
+                uint8_t id = msg.id() & 0b1111;
+                if(id == 0 || id == node_id){
+                    Command cmd = (Command)(msg.id() >> 4);
+                    parse_command(cmd, msg);
+                }
+            }
+        }
+    public:
+        CliSTA(IOStream & _logger, Can & _can, const uint8_t _node_id):Cli(_logger, _can, _node_id){;}
+        virtual void parse_command(const Command command, const CanMsg & msg){
+            switch(command){
+                case Command::RST:
+                    Sys::Misc::reset();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        using Cli::parse_command;
+    };
+
+    class CliAP : public Cli{
+    private:
+        void read_can() override{
+            if(can.available()){
+                const CanMsg & msg = can.read();
+                uint8_t id = msg.id() & 0b1111;
+                Command cmd = (Command)(msg.id() >> 4);
+                parse_command(id, cmd, msg);
+            }
+        }
+    public:
+        CliAP(IOStream & _logger, Can & _can):Cli(_logger, _can, 0x0f){;}
+        virtual void parse_command(const uint8_t id, const Command & cmd, const CanMsg & msg) = 0;
+
     };
 
 }

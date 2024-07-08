@@ -47,6 +47,8 @@ bool Stepper::loadArchive(const bool outen){
             odo.map()[i] = real_t(archive.cali_map[i]) / 16384;
             elecrad_zerofix = 0;
         }
+
+        setNodeId(archive.node_id);
         ARCHIVE_LOG("load successfully!");
     }else{
         ARCHIVE_LOG("load aborted because data is corrupted");
@@ -114,6 +116,8 @@ void Stepper::saveArchive(const bool outen){
     for(size_t i = 0; i < odo.map().size(); i++){
         archive.cali_map[i] = uint16_t((odo.map()[i] + (elecrad_zerofix / real_t(poles * TAU))) * 16384);
     }
+
+    archive.node_id = node_id;
 
     ARCHIVE_LOG("generate done");
     ARCHIVE_LOG("hash of archive is ", toString(hashcode, 16));
