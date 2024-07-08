@@ -98,7 +98,7 @@ public:
         getPosPin().inana();
 
         OPA_InitTypeDef OPA_InitStructure;
-        OPA_InitStructure.OPA_NUM = CLAMP((OPA_Num_TypeDef)(OPA1 + (opa_index - 1)), OPA1, OPA4);
+        OPA_InitStructure.OPA_NUM = (OPA_Num_TypeDef)CLAMP((int)(OPA1 + (opa_index - 1)), (int)OPA1, (int)OPA4);
         OPA_InitStructure.PSEL = (OPA_PSEL_TypeDef)sel;
         OPA_InitStructure.NSEL = (OPA_NSEL_TypeDef)sel;
         OPA_InitStructure.Mode = (OPA_Mode_TypeDef)sel;

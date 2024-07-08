@@ -65,7 +65,6 @@
 // #define HAVE_I2C2
 #define I2C2_REMAP 0
 
-
 #define CAN_REMAP 3
 
 #define HAVE_OPA1

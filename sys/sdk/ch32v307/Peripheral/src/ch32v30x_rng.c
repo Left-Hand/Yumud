@@ -33,7 +33,7 @@ void RNG_Cmd(FunctionalState NewState)
 
 /*********************************************************************
  * @fn      RNG_GetRandomNumber
- *
+*
  * @brief   Returns a 32-bit random number.
  *
  * @return  32-bit random number.

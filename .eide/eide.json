@@ -25,7 +25,6 @@
     "hal",
     "src/testbench",
     "thirdparty/lua",
-    "hal/timer",
     "sys/sdk/ch32v307/Core",
     "sys/sdk/ch32v307/Ld",
     "sys/sdk/ch32v307/Startup",
@@ -36,7 +35,8 @@
     "sys/sdk/ch32v203",
     "sys/sdk/ch32v307",
     "nvcv2",
-    "nvcv2/mnist"
+    "nvcv2/mnist",
+    "thirdparty/lodepng"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -60,7 +60,6 @@
         "thirdparty/lua/lua.c",
         "thirdparty/lua/onelua.c",
         "src/testbench/adc_tb.cpp",
-        "src/testbench/can_tb.cpp",
         "src/testbench/dma_tb.cpp",
         "src/testbench/eeprom_tb.cpp",
         "src/testbench/flash_tb.cpp",
@@ -98,7 +97,14 @@
         "sys/sdk/ch32v307/Peripheral/src/ch32v30x_usart.c",
         "sys/sdk/ch32v307/Peripheral/src/ch32v30x_wwdg.c",
         "sys/sdk/ch32v307/Startup/startup_ch32v30x_D8.S",
-        "sys/sdk/ch32v307/system_ch32v30x.c"
+        "sys/sdk/ch32v307/system_ch32v30x.c",
+        "thirdparty/lodepng/examples",
+        "thirdparty/lodepng/lodepng_benchmark.cpp",
+        "thirdparty/lodepng/lodepng_fuzzer.cpp",
+        "thirdparty/lodepng/lodepng_unittest.cpp",
+        "thirdparty/lodepng/lodepng_util.cpp",
+        "thirdparty/lodepng/pngdetail.cpp",
+        "src/testbench/st77xx_tb.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -239,7 +245,15 @@
         "sys/sdk/ch32v203/Startup/startup_ch32v20x_D8.S",
         "sys/sdk/ch32v203/Core/core_riscv.c",
         "sys/sdk/ch32v203/system_ch32v20x.c",
-        "sys/sdk/ch32v203/Startup/startup_ch32v20x_D6.S"
+        "sys/sdk/ch32v203/Startup/startup_ch32v20x_D6.S",
+        "hal/rng/rng.cpp",
+        "thirdparty/lodepng/examples",
+        "thirdparty/lodepng/lodepng_benchmark.cpp",
+        "thirdparty/lodepng/lodepng_unittest.cpp",
+        "thirdparty/lodepng/lodepng_fuzzer.cpp",
+        "thirdparty/lodepng/lodepng_util.cpp",
+        "thirdparty/lodepng/pngdetail.cpp",
+        "src/testbench/st77xx_tb.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -273,7 +287,7 @@
         },
         "Custom": {
           "bin": "",
-          "commandLine": "bash ./tools/program_flash.sh \"${programFile}\"",
+          "commandLine": "download.cmd",
           "eraseChipCommand": ""
         }
       },

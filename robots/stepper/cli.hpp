@@ -5,6 +5,8 @@
 #include "constants.hpp"
 #include "statled.hpp"
 
+#include "hal/bus/can/can.hpp"
+
 namespace StepperUtils{
 
     #define VNAME(x) #x
@@ -53,22 +55,6 @@ namespace StepperUtils{
     }
 
     class Cli{
-    protected:
-        bool cali_debug_enabled = true;
-        bool command_debug_enabled = false;
-        bool run_debug_enabled = true;
-
-        #define CALI_DEBUG(...)\
-        if(cali_debug_enabled){\
-        logger.println(__VA_ARGS__);};
-
-        #define COMMAND_DEBUG(...)\
-        if(command_debug_enabled){\
-        logger.println(__VA_ARGS__);};
-
-        #define RUN_DEBUG(...)\
-        if(run_debug_enabled){\
-        logger.println(__VA_ARGS__);};
     private:
         std::vector<String> split_string(const String& input, char delimiter) {
             std::vector<String> result;
@@ -100,8 +86,11 @@ namespace StepperUtils{
             tokens.erase(tokens.begin());
             parse_command(command, tokens);
         }
+    protected:
+        IOStream & logger;
+        Can & can;
     public:
-        Cli() = default;
+        Cli(IOStream & _logger, Can & _can):logger(_logger), can(_can){;}
 
         virtual void parse_command(const String & _command,const std::vector<String> & args){
             auto command = _command;
@@ -119,6 +108,18 @@ namespace StepperUtils{
                     break;
                 default:
                     DEBUG_PRINT("no command available:", command);
+                    break;
+            }
+        }
+
+        using Command = StepperEnums::Command;
+
+        virtual void parse_command(const Command command, const CanMsg & msg){
+            switch(command){
+                case Command::RST:
+                    Sys::Misc::reset();
+                    break;
+                default:
                     break;
             }
         }
@@ -144,9 +145,6 @@ namespace StepperUtils{
         }
     };
 
-    class Module{
-
-    };
 }
 
 #endif

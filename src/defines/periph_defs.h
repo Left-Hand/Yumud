@@ -20,6 +20,7 @@
     #define HAVE_GPIOD
     #define HAVE_GPIOE
     #define HAVE_DVP
+    #define HAVE_RNG
     #define HAVE_DMA1
     #define HAVE_DMA2
 #endif

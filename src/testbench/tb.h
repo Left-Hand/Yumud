@@ -4,6 +4,8 @@
 
 #include "sys/system.hpp"
 #include "hal/flash/flash.hpp"
+// #include "hal/rng/rng.hpp"
+
 using Sys::t;
 // I2cSw i2cSw(i2cScl, i2cSda);
 

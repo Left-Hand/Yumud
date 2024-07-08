@@ -52,23 +52,21 @@ public:
 
 
 
-    void drawImage(Image<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-        if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
-        drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
-    }
+    // void drawImage(Image<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    //     if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
+    //     drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
+    // }
 
-    template<typename w_ColorType, w_ColorType>
+    template<typename w_ColorType>
     void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
         auto rect = Rect2i(pos, image.get_size());
         src_image->setarea_unsafe(rect);
         uint32_t i = 0;
         w_ColorType * ptr = image.data.get();
-        for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
-            for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++)
-                putpixel_unsafe(Vector2i(x,y), ptr[i]);
-        // drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
-
+        for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)
+            for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
+                src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
     }
     // template<typename w_ColorType, w_ColorType>
     // void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){

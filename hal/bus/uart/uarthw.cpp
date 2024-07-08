@@ -525,6 +525,7 @@ void UartHw::enableRxDma(const bool en){
                 for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.addData(rx_dma_buf[i]); 
             }
             rx_dma_buf_index = index;
+            EXECUTE(rxPostCb);
         });
 
         rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
@@ -537,15 +538,19 @@ void UartHw::enableRxDma(const bool en){
 }
 
 void UartHw::invokeTxDma(){
-    if(txDma.pending() == 0 && txBuf.available() != 0){
-        size_t tx_amount = 0;
-        while(txBuf.available()){
-            tx_dma_buf[tx_amount++] = txBuf.getData();
-            if(tx_amount >= tx_dma_buf_size){
-                break;
+    if(txDma.pending() == 0){
+        if(txBuf.available()){
+            size_t tx_amount = 0;
+            while(txBuf.available()){
+                tx_dma_buf[tx_amount++] = txBuf.getData();
+                if(tx_amount >= tx_dma_buf_size){
+                    break;
+                }
             }
+            txDma.begin((void *)(&instance->DATAR), (void *)tx_dma_buf, tx_amount);
+        }else{
+            EXECUTE(txPostCb);
         }
-        txDma.begin((void *)(&instance->DATAR), (void *)tx_dma_buf, tx_amount);
     }
 }
 

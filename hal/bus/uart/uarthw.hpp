@@ -65,6 +65,8 @@ public:
     void setRxMethod(const CommMethod _rxMethod) override;
 
     void configBaudRate(const uint32_t baudRate) override{;}//TODO
+
+
 };
 
 

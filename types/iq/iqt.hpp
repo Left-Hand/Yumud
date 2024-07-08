@@ -325,7 +325,13 @@ __fast_inline_constexpr iq_t sqrt(const iq_t iq){
     }
 }
 
-__fast_inline_constexpr iq_t abs(const iq_t iq) {return iq_t(_iq(ABS(iq.value)));}
+__fast_inline_constexpr iq_t abs(const iq_t iq){
+        if(long(iq.value) > 0){
+            return iq;
+        }else{
+            return -iq;
+        }
+}
 
 __fast_inline_constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
 
@@ -437,11 +443,11 @@ namespace std{
     template<>
     class numeric_limits<iq_t> {
     public:
-        __fast_inline_constexpr static iq_t infinity() noexcept {return iq_t((1 << GLOBAL_Q) - 1);}
-        __fast_inline_constexpr static iq_t lowest() noexcept {return iq_t((1 << GLOBAL_Q));}
+        __fast_inline_constexpr static iq_t infinity() noexcept {return iq_t(_iq(0x80000000));}
+        __fast_inline_constexpr static iq_t lowest() noexcept {return iq_t(_iq(0x7FFFFFFF));}
 
-        __fast_inline_constexpr static iq_t min() noexcept {return iq_t((1 << GLOBAL_Q) - 1);}
-        __fast_inline_constexpr static iq_t max() noexcept {return iq_t((1 << GLOBAL_Q));}
+        __fast_inline_constexpr static iq_t min() noexcept {return iq_t(_iq(0x80000000));}
+        __fast_inline_constexpr static iq_t max() noexcept {return iq_t(_iq(0x7FFFFFFF));}
     };
 
     template <>

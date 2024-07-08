@@ -7,6 +7,7 @@ void can_tb(IOStream & logger, Can & can, bool tx_role){
     can.init(Can::BaudRate::Kbps125, Can::Mode::Normal);
 
     portC[13].outpp();
+    portC[14].outpp();
 
     while(1){
         if(tx_role){
@@ -15,7 +16,7 @@ void can_tb(IOStream & logger, Can & can, bool tx_role){
             can.write(msg_v);
 
             while(can.pending()){
-                logger.println("err", can.getTxErrCnt(), can.getRxErrCnt(), can.isBusOff());
+                logger.println("err", can.getTxErrCnt(), can.getRxErrCnt(), can.isBusOff(), (int)can.getErrCode());
                 delay(2);
             }
 
@@ -28,6 +29,7 @@ void can_tb(IOStream & logger, Can & can, bool tx_role){
             delay(200);
             portC[13] = !portC[13];
         }else{
+            logger.println("ava", can.available());
             while(can.available()){
                 CanMsg msg_r = can.read();
                 logger.println("rx", msg_r.id(), msg_r[0], msg_r[1]);
@@ -35,6 +37,9 @@ void can_tb(IOStream & logger, Can & can, bool tx_role){
 
             CanMsg msg_v = CanMsg(0, {0x13,0x14});
             can.write(msg_v);
+
+            delay(200);
+            portC[14] = !portC[14];
         }
     }
 }

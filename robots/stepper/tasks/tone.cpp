@@ -37,7 +37,7 @@ Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
         {.freq_hz = freq_F5,.sustain_ms = 100}   // 6
     });
 
-    constexpr float tone_current = 0.4;
+    constexpr real_t tone_current = 2.4;
 
     static uint32_t cnt;
     static uint32_t tone_index;
@@ -63,7 +63,7 @@ Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
         const auto & tone = tones[tone_index];
         auto tone_cnt = foc_freq / tone.freq_hz / 2;
         bool phase = (cnt / tone_cnt) % 2;
-        setCurrent(real_t(tone_current), phase ? real_t(0.5) : real_t(-0.5));
+        setCurrent(tone_current, phase ? PI/2 : 0);
         cnt++;
     }
 

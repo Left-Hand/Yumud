@@ -11,6 +11,7 @@ class Can: public PackedBus<CanMsg>{
 public:
     using BaudRate = CanUtils::BaudRate;
     using Mode = CanUtils::Mode;
+    using ErrCode = CanUtils::ErrCode;
 
     using Packet = CanMsg;
     using Callback = std::function<void(void)>;
@@ -42,7 +43,7 @@ public:
     void enableIndexPriority(const bool en = true);
     uint8_t getTxErrCnt();
     uint8_t getRxErrCnt();
-    uint8_t getErrCode();
+    ErrCode getErrCode();
 
     bool isBusOff();
 
