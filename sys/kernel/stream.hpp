@@ -126,8 +126,8 @@ public:
 
     void print(){}
 
-	template <typename real>
-	void print(const real& first) {
+	template <typename T>
+	void print(const T & first) {
 		*this << first;
 		print();
 	}
@@ -140,8 +140,7 @@ public:
         print(args...);
     }
 
-
-    void println(){*this << "\n";}
+    void println(){*this << "\r\n";}
 
 	template <typename T>
 	void println(const T & first) {
@@ -151,6 +150,22 @@ public:
 
     template <typename T, typename... Args>
     void println(T first, Args... args) {
+        *this << first;
+        if(!skipSpec) *this << space;
+        else skipSpec = false;
+        println(args...);
+    }
+
+    void prints(){*this << "\r\n";}
+
+	template <typename T>
+	void prints(const T & first) {
+		*this << first;
+        *this << "\r\n";
+	}
+
+    template <typename T, typename... Args>
+    void prints(T first, Args... args) {
         *this << first;
         if(!skipSpec) *this << space;
         else skipSpec = false;

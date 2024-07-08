@@ -55,22 +55,6 @@ namespace StepperUtils{
     }
 
     class Cli{
-    protected:
-        bool cali_debug_enabled = true;
-        bool command_debug_enabled = false;
-        bool run_debug_enabled = true;
-
-        #define CALI_DEBUG(...)\
-        if(cali_debug_enabled){\
-        logger.println(__VA_ARGS__);};
-
-        #define COMMAND_DEBUG(...)\
-        if(command_debug_enabled){\
-        logger.println(__VA_ARGS__);};
-
-        #define RUN_DEBUG(...)\
-        if(run_debug_enabled){\
-        logger.println(__VA_ARGS__);};
     private:
         std::vector<String> split_string(const String& input, char delimiter) {
             std::vector<String> result;
@@ -103,8 +87,8 @@ namespace StepperUtils{
             parse_command(command, tokens);
         }
     protected:
-        IOStream & logger = uart1;
-        Can & can = can1;
+        IOStream & logger;
+        Can & can;
     public:
         Cli(IOStream & _logger, Can & _can):logger(_logger), can(_can){;}
 
@@ -161,9 +145,6 @@ namespace StepperUtils{
         }
     };
 
-    class Module{
-
-    };
 }
 
 #endif

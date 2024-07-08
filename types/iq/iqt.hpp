@@ -325,7 +325,13 @@ __fast_inline_constexpr iq_t sqrt(const iq_t iq){
     }
 }
 
-__fast_inline_constexpr iq_t abs(const iq_t iq) {return iq_t(_iq(ABS(iq.value)));}
+__fast_inline_constexpr iq_t abs(const iq_t iq){
+        if(long(iq.value) > 0){
+            return iq;
+        }else{
+            return -iq;
+        }
+}
 
 __fast_inline_constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
 

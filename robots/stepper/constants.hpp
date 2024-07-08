@@ -27,19 +27,6 @@ static constexpr float openloop_current_limit = 0.3;
 static constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 
 namespace StepperEnums{
-    // BETTER_ENUM(RunStatus, uint8_t,     
-    //     NONE,
-    //     INIT,
-    //     INACTIVE,
-    //     ACTIVE,
-    //     IDLE,
-    //     CHECK,
-    //     BEEP,
-    //     CALI,
-    //     ERROR,
-    //     WARN,
-    //     EXIT
-    // )
 
     enum class RunStatus:uint8_t{
         NONE,
@@ -55,14 +42,15 @@ namespace StepperEnums{
         EXIT
     };
 
-    BETTER_ENUM(CtrlType, uint8_t, 
+    // BETTER_ENUM(CtrlType, uint8_t, 
+    enum class CtrlType:uint8_t{
         VECTOR,
         CURRENT,
         POSITION,
         TRAPEZOID,
         SPEED
-    )
-
+    };
+    
     enum class ErrorCode:uint8_t{
         OK = 0,
         ODO_DISCONNECTED,
@@ -91,7 +79,14 @@ namespace StepperEnums{
         GET_SPD,
         GET_ACC,
 
+        CALI = 0X40,
+
+        SAVE = 0X50,
+        LOAD,
+        RM,
+
         RST = 0x70,
+        STAT,
         INACTIVE,
         ACTIVE,
         SET_NODEID,
