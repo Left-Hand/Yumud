@@ -188,3 +188,5 @@ void dma_tb(OutputStream & logger, DmaChannel & channel);
 void ch9141_tb(IOStream & logger, Uart & uart);
 
 void can_tb(IOStream & logger, Can & can, bool tx_role = true);
+
+void usbcdc_tb();

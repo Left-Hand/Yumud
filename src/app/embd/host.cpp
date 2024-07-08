@@ -9,6 +9,8 @@
 
 #include "interpolation.hpp"
 
+#include "hal/bus/usb/usbfs/usbfs.hpp"
+
 using namespace Interpolation;
 using namespace NVCV2;
 
@@ -24,6 +26,8 @@ void host_main(){
     // can1.init(Can::BaudRate::Mbps1, Can::Mode::Internal);
     can1.init(Can::BaudRate::Mbps1);
     EmbdHost host{logger, can1};
+
+    usbfs.init();
 
     timer3.init(800);
     timer3.bindCb(IT::Update, [&](){host.run();});
@@ -114,7 +118,8 @@ void EmbdHost::main(){
     ch9141.init();
 
     // Transmitter trans{ch9141};
-    Transmitter trans{logger};
+    // Transmitter trans{logger};
+    Transmitter trans{usbfs};
 
 
     // auto & led = portC[14];
@@ -145,7 +150,6 @@ void EmbdHost::main(){
         // real_t dist = vl.getDistance();
 
         // logger.println(dist);
-
         // Pixels::gamma(img, 0.1);
         plot_gray(img, img.get_window());
         // plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
@@ -195,7 +199,8 @@ void EmbdHost::main(){
 
 
         // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
-        // trans.transmit(img, 1);
+        trans.transmit(img, 1);
+        // trans.transmit(bina, 0);
         // painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
         // logger.println(real_t(light_pwm));
         // painter.drawString(Vector2i{0,230-50}, toString(trans.compress_png(piece).size()));
@@ -219,10 +224,11 @@ void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg 
 
 void EmbdHost::run() {
     CliAP::run();
-    const real_t ang = 2 * t;
+    const real_t ang1 = 4 * t;
+    const real_t ang2 = 3 * t;
     const real_t amp = 2;
-    steppers.x.setTargetPosition(amp * sin(ang));
-    steppers.y.setTargetPosition(amp * cos(ang));
+    steppers.x.setTargetPosition(amp * sin(ang1));
+    steppers.y.setTargetPosition(amp * cos(ang2));
     steppers.z.setTargetPosition(4 + sin(t));
     // logger.println("why");
     // steppers.y.setTargetCurrent(sign(sin(8 * t)));

@@ -65,10 +65,10 @@ protected:
     uint8_t eps = 2;
     bool skipSpec = false;
 
-    __fast_inline void printString(const String & str){write(str.c_str(), str.length());}
-    __fast_inline void printString(const std::string & str){write(str.c_str(), str.length());}
-    __fast_inline void printString(const std::string_view & str){write(str.data(), str.length());}
-    __fast_inline void printString(const char * str){write(str, strlen(str));}
+    void printString(const String & str){write(str.c_str(), str.length());}
+    void printString(const std::string & str){write(str.c_str(), str.length());}
+    void printString(const std::string_view & str){write(str.data(), str.length());}
+    void printString(const char * str){write(str, strlen(str));}
 public:
 
     virtual void write(const char data) = 0;

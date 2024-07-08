@@ -13,6 +13,7 @@
 #define HAVE_UART1
 #define HAVE_UART2
 
+#define HAVE_USBFS
 
 #define UART1_REMAP 1
 #define UART2_REMAP 1
