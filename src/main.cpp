@@ -3,16 +3,16 @@
 
 int main(){
     Sys::Misc::prework();
-
+    embd_main();
     #ifdef CH32V20X
 
-    delay(200);
+    // delay(200);
     // pmdc_tb();
     // uart_tb(uart1);
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
-    stepper_tb(uart1);
+    // stepper_tb(uart1);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);p
@@ -23,10 +23,7 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
-    auto & logger = uart2;
-    logger.init(921600);
 
-    can_tb(logger, can1, true);
     embd_main();
     // UartHw & logger = uart2;
     // logger.init(115200);

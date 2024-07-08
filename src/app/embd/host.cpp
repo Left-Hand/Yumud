@@ -178,7 +178,7 @@ void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg 
 
 void EmbdHost::run() {
     CliAP::run();
-    stepper_x.setTargetPosition(sin(t));
-    logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
+    stepper_x.setTargetPosition(frac(t));
+    // logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
     // can.write(CanMsg{0x70});
 }
