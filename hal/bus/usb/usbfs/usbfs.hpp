@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../bus.hpp"
+#include "../../bus.hpp"
 #include "sys/kernel/stream.hpp"
 
 #include "hal/gpio/gpio.hpp"
@@ -20,6 +20,6 @@ public:
     size_t pending() const {return 0;}
 };
 
-#ifdef HAVE_USBFS
+#if defined(CH32V30X) && defined(HAVE_USBFS)
 extern UsbFS usbfs;
 #endif

@@ -7,9 +7,9 @@
 *******************************************************************************/
 #include "stdio.h"
 
-#include "ch32v30x_rcc.h"
+#ifdef CH32V30X
+#include "sys/platform.h"
 #include "ch32v30x_usbotg_device.h"
-
 
 
 /* Global define */
@@ -906,3 +906,5 @@ void OTG_FS_IRQHandler( void )
         USBOTG_FS->INT_FG = intflag;
     }
 }
+
+#endif

@@ -9,6 +9,8 @@
 #ifndef __CH32V30X_USBOTG_DEVICE_H_
 #define __CH32V30X_USBOTG_DEVICE_H_
 
+#ifdef CH32V30X
+
 #include "string.h"
 
 #ifdef __cplusplus
@@ -752,4 +754,5 @@ extern void USBDeviceInit( void );
 }
 #endif
 
+#endif
 #endif

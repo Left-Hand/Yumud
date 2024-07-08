@@ -1,15 +1,16 @@
 #include "host.hpp"
-#include "img_trans.hpp"
+#include "imgtrans/img_trans.hpp"
 
 #include "nvcv2/pixels.hpp"
 #include "nvcv2/shape.hpp"
 #include "nvcv2/geometry.hpp"
 #include "nvcv2/two_pass.hpp"
 #include "nvcv2/flood_fill.hpp"
+#include "nvcv2/mnist/mnist.hpp"
 
-#include "interpolation.hpp"
+#include "interpolation/interpolation.hpp"
 
-#include "hal/bus/usb/usbfs/usbfs.hpp"
+
 
 using namespace Interpolation;
 using namespace NVCV2;
@@ -111,7 +112,6 @@ void EmbdHost::main(){
     //     painter.drawFilledCircle({40,60 + 30 * sin(8 * t)}, 8);
     // }
 
-    // mnist_tb();
     uart7.init(1000000, CommMethod::Blocking);
 
     CH9141 ch9141{uart7, portC[1], portD[3]};

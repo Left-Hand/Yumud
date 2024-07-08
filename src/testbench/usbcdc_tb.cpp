@@ -1,13 +1,11 @@
 #include "tb.h"
 #include "hal/bus/usb/usbfs/usbfs.hpp"
 
-void usbcdc_tb(void){
-    // usb_cdc_init();
-
-    usbfs.init();
+void usbcdc_tb(UsbFS & fs){
+    fs.init();
     while(true){
         static int i = 0;
-        usbfs.println(i++);
+        fs.println(i++);
         delay(100);
     }
 }
