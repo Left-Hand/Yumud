@@ -28,12 +28,9 @@ std::vector<uint8_t> Transmitter::compress_png(const Image<Grayscale, Grayscale>
     return buffer;
 }
 
-void Transmitter::transmit(const Image<Grayscale, Grayscale> & img, const uint8_t index){
-    constexpr size_t mtu = 80;
-    const auto & img_size = img.get_size();
-    size_t len = img_size.x * img_size.y;
 
-    const uint8_t * buf = (const uint8_t *)img.data.get();
+void Transmitter::transmit(const uint8_t *buf, const Vector2i &img_size, const uint8_t index){
+    size_t len = img_size.x * img_size.y;
     uint8_t block_total = len / mtu + bool(len % mtu);
     uint8_t block_number = 0;
 

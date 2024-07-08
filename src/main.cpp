@@ -4,8 +4,8 @@
 
 int main(){
     Sys::Misc::prework();
-    embd_main();
     #ifdef CH32V20X
+    embd_main();
 
     // delay(200);
     // pmdc_tb();
@@ -24,7 +24,7 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
-
+    // usbcdc_tb();
     embd_main();
     // UartHw & logger = uart2;
     // logger.init(115200);
@@ -47,7 +47,7 @@ int main(){
     // uart7.init(57600);
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
-    embd_main();
+    // embd_main();
     // can_tb(logger, can1);
     #endif
     while(true);
