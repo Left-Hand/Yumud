@@ -10,10 +10,6 @@
 
 #include "interpolation/interpolation.hpp"
 
-#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
-
-
-
 using namespace Interpolation;
 using namespace NVCV2;
 
@@ -41,11 +37,10 @@ void EmbdHost::main(){
     auto & lcd_dc = portD[7];
     auto & dev_rst = portB[7];
 
-    // light.outpp(1);
 
     spi.bindCsPin(lcd_cs, 0);
     spi.init(144000000);
-
+    usbfs.init();
     SpiDrv SpiDrvLcd = SpiDrv(spi, 0);
     DisplayInterfaceSpi SpiInterfaceLcd{SpiDrvLcd, lcd_dc, dev_rst};
 
@@ -66,10 +61,8 @@ void EmbdHost::main(){
     Painter<RGB565> painter = Painter<RGB565>();
     painter.bindImage(tftDisplayer);
     tftDisplayer.fill(RGB565::BLACK);
-
-    I2cSw i2c(portD[2], portC[12]);
     i2c.init(400000);
-    MT9V034 camera(i2c);
+
 
     [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
@@ -79,42 +72,68 @@ void EmbdHost::main(){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    camera.init();
+    [[maybe_unused]] auto plot_rgb = [&](Image<RGB565, RGB565> & src, const Rect2i & area){
+        tftDisplayer.puttexture_unsafe(area, src.data.get());
+    };
 
-    VL53L0X             vl(i2c);
+
+    camera.init();
+    camera.setExposureValue(800);
+
+
     vl.init();
     vl.enableContMode();
     vl.startConv();
 
-    TCS34725            tcs(i2c);
+
     tcs.init();
     tcs.startConv();
 
     uart7.init(1000000, CommMethod::Blocking);
 
-    CH9141 ch9141{uart7, portC[1], portD[3]};
+
     ch9141.init();
 
     // Transmitter trans{ch9141};
     // Transmitter trans{logger};
-    Transmitter trans{usbfs};
-    Mnist mnist;
 
-    auto img = Shape::x4(camera,2);
-    auto bina = Pixels::binarization(img, 70);
+
     while(true){
         led = !led;
         // continue;
-        img = Shape::x4(camera,2);
-        bina = Pixels::binarization(img,  170);
+        auto img = Shape::x4(camera,2);
+        plot_gray(img, img.get_window());
+
+        auto diff = img.space();
+        Shape::sobel_xy(diff, img);
+        // plot_gray(diff, diff.get_window() + Vector2i{0, 2 * img.size.y});
+        // auto diff_bina = Image<Binary, Binary>(img.get_size());
+        auto diff_bina = make_bina_mirror(diff);
+        Pixels::binarization(diff_bina, diff, diff_threshold);
+        // plot_bina(diff_bina, diff_bina.get_window() + Vector2i{0, 3 * img.size.y});
+
+
+        auto img_bina = Image<Binary, Binary>(img.get_size());
+        // auto img_bina = make_bina_mirror(img);
+        Pixels::binarization(img_bina, img, bina_threshold);
+        Pixels::or_with(img_bina, diff_bina);
+
+        // Shape::erosion(img_bina);
+        plot_bina(img_bina, img.get_window() + Vector2i{0, img.size.y});
+        
+        // Pixels::binarization(img_bina, img,  bina_threshold);
+
+
+
         // trans.transmit(img, 0);
         // continue;
         // Pixels::inverse(img);
         // auto piece = Shape::x4(img,2);
-
-        auto diff = img.space();
-        Shape::convo_roberts_xy(diff, img);
-
+        // auto diff2 = img.space();
+        // Shape::sobel_xy(diff, img);
+        
+        // Shape::sobel_y(diff2, img);
+        // Pixels::or_with(diff, diff2);
         // auto diff_bina = make_bina_mirror(diff);
         // Pixels::binarization(diff_bina, diff, 40);
         // Pixels::or_with(bina, diff_bina);
@@ -126,18 +145,19 @@ void EmbdHost::main(){
 
         // logger.println(dist);
         // Pixels::gamma(img, 0.1);
-        // plot_gray(img, img.get_window());
+
         // plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
         // int dummy = 0;
         // logger.println("rect", bina.get_window() + Vector2i{0, img.size.y});
-        plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
+        // plot_bina(img_bina, img_bina.get_window() + Vector2i{0, img.size.y});
 
         Shape::FloodFill ff;
-        auto map = ff.run(bina);
-
+        auto map = ff.run(img_bina);
         Pixels::dyeing(map, map);
-        plot_gray(map, map.get_window() + Vector2i{0, img.size.y * 2});
+        plot_gray(map, diff.get_window() + Vector2i{0, 2 * img.size.y});
 
+        // plot_gray(map, map.get_window() + Vector2i{0, img.size.y * 2});
+        // plot_gray(diff, map.get_window() + Vector2i{0, img.size.y * 3});
         // Shape::TwoPass tp(bina.w * bina.h);
         // map = tp.run(bina);
 
@@ -163,36 +183,55 @@ void EmbdHost::main(){
 
 
         const auto & blobs = ff.blobs();
-        for(const auto & blob : blobs){
-            if(int(blob) == 0 || int(blob.rect) == 0) continue;
+        // for(const auto & blob : blobs){
+        if(blobs.size()){
+            const auto & blob = blobs[0];
             painter.setColor(RGB565::RED);
             painter.drawRoi(blob.rect);
             painter.setColor(RGB565::GREEN);
-            painter.drawString(blob.rect.position, "2");
-            // logger.println(blob.rect, int(blob.rect));
+            Rect2i view = Rect2i::from_center(blob.rect.get_center(), Vector2i(14,14));
+            painter.drawRoi(view);
+            auto piece = img.clone(view);
+            auto mask = img_bina.clone(view);
+            Pixels::mask_with(piece, mask);
+            Shape::gauss(piece);
+            // Pixels::inverse(piece);
+            Mnist mnist;
+            auto result = mnist.update(piece);
+            // logger.println(mnist.outputs);
+            const auto & outputs = mnist.outputs;
+            for(size_t i = 0; i < outputs.size(); i++){
+                logger << outputs[i];
+                if(i != outputs.size() - 1) logger << ',';
+            };
+            logger.println();
+            // trans.transmit(piece, 1);
+            // painter.drawString(blob.rect.position, "2");
+            // logger.println(blob.rect, int(blob.rect), blob.index, blob.area);
         }
 
-        {
-            painter.setColor(RGB565::YELLOW);
-            painter.drawRoi({0,0,28,28});
-        }
+        // {
+        //     painter.setColor(RGB565::YELLOW);
+        //     painter.drawRoi({0,0,28,28});
+        // }
 
         {
-            [[maybe_unused]] auto result = mnist.update(img, {0,0});
-            // logger.println(result.token, result.confidence);
+            
+            // 
         }
 
         {
             vl.update();
-            logger.println(vl.getDistance());
         }
 
         {
-            // tcs.update();
+            tcs.update();
+            // RGB565 color = RGB888(tcs);
+            
             // logger.println(tcs.getCRGB());
         }
         // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
-        // trans.transmit(img, 1);
+        // 
         // trans.transmit(bina, 0);
         // painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
         // logger.println(real_t(light_pwm));
@@ -213,6 +252,26 @@ void EmbdHost::main(){
 void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg &msg){
 
 
+}
+
+
+void EmbdHost::parse_command(const String & _command,const std::vector<String> & args){
+    auto command = _command;
+    command.toLowerCase();
+    switch(hash_impl(command.c_str(), command.length())){
+        case "exp"_ha:
+            settle_method(camera.setExposureValue, args, int)
+            break;
+        case "bina"_ha:
+            settle_value(bina_threshold, args)
+            break;
+        case "diff"_ha:
+            settle_value(diff_threshold, args)
+            break;
+        default:
+            CliAP::parse_command(_command, args);
+            break;
+    }
 }
 
 void EmbdHost::run() {

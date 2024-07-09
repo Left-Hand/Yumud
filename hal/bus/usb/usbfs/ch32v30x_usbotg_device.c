@@ -827,17 +827,17 @@ void OTG_FS_IRQHandler( void )
                                   ((LINECODINGST *)pEP0_DataBuf)->dataRat[2] || ((LINECODINGST *)pEP0_DataBuf)->dataRat[3]))
                                 {
 
-                                    printf( "\nBaud Rate = %d",
-                                            (((LINECODINGST *)pEP0_DataBuf)->dataRat[3] <<24) |
-                                            (((LINECODINGST *)pEP0_DataBuf)->dataRat[2] <<16) |
-                                            (((LINECODINGST *)pEP0_DataBuf)->dataRat[1] <<8) |
-                                            (((LINECODINGST *)pEP0_DataBuf)->dataRat[0]));
+                                    // printf( "\nBaud Rate = %d",
+                                    //         (((LINECODINGST *)pEP0_DataBuf)->dataRat[3] <<24) |
+                                    //         (((LINECODINGST *)pEP0_DataBuf)->dataRat[2] <<16) |
+                                    //         (((LINECODINGST *)pEP0_DataBuf)->dataRat[1] <<8) |
+                                    //         (((LINECODINGST *)pEP0_DataBuf)->dataRat[0]));
                                 }
                                 else
                                 {
-                                    printf( "\ndataBit = %d",  ((LINECODINGST *)pEP0_DataBuf)->dataBit);
-                                    printf( "\nstopBit = %d",  ((LINECODINGST *)pEP0_DataBuf)->stopBit);
-                                    printf( "\nparityType = %d",  ((LINECODINGST *)pEP0_DataBuf)->parityType);
+                                    // printf( "\ndataBit = %d",  ((LINECODINGST *)pEP0_DataBuf)->dataBit);
+                                    // printf( "\nstopBit = %d",  ((LINECODINGST *)pEP0_DataBuf)->stopBit);
+                                    // printf( "\nparityType = %d",  ((LINECODINGST *)pEP0_DataBuf)->parityType);
 
                                 }
                                break;

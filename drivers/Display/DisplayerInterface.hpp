@@ -9,12 +9,12 @@
 class DisplayerInterface{
 public:
     virtual void init() = 0;
-    virtual void writeCommand(const uint8_t & cmd) = 0;
+    virtual void writeCommand(const uint8_t cmd) = 0;
 
 
-    virtual void writeData(const uint8_t & data) = 0;
-    virtual void writePool(const uint8_t * data_ptr, const size_t & len) = 0;
-    virtual void writePool(const uint8_t & data, const size_t & len) = 0;
+    virtual void writeData(const uint8_t data) = 0;
+    virtual void writePool(const uint8_t * data_ptr, const size_t len) = 0;
+    virtual void writePool(const uint8_t data, const size_t len) = 0;
 };
 
 
@@ -59,53 +59,50 @@ public:
         res_gpio.set();
     }
 
-    void setBackLight(const uint8_t & brightness){
+    void setBackLight(const uint8_t brightness){
 
     }
 
-    __fast_inline void writeCommand(const uint8_t & cmd) override{
+    __fast_inline void writeCommand(const uint8_t cmd) override{
         dc_gpio = command_level;
         bus_drv.write(cmd);
     }
 
-
-    __fast_inline void writeData(const uint8_t & data) override{
+    __fast_inline void writeData(const uint8_t data) override{
         dc_gpio = data_level;
         bus_drv.write(data);
     }
 
-    void writePool(const uint8_t * data_ptr, const size_t & len) override{
+    void writePool(const uint8_t * data_ptr, const size_t len) override{
         dc_gpio = data_level;
         bus_drv.write(data_ptr, len);
     }
 
 
-    void writePool(const uint8_t & data, const size_t & len) override{
+    void writePool(const uint8_t data, const size_t len) override{
         dc_gpio = data_level;
         bus_drv.write(data, len);
     }
 
-    __fast_inline void writeData(const uint16_t & data){
+    __fast_inline void writeData(const uint16_t data){
         dc_gpio = data_level;
         bus_drv.write(data);
     }
 
-    void writePool(const uint16_t * data_ptr, const size_t & len){
+    void writePool(const uint16_t * data_ptr, const size_t len){
         dc_gpio = data_level;
         bus_drv.write(data_ptr, len);
     }
 
 
-    void writePool(const uint16_t & data, const size_t & len){
+    void writePool(const uint16_t & data, const size_t len){
         dc_gpio = data_level;
         bus_drv.write(data, len);
     } 
 
     // template<>
-    void writePixels(const Grayscale * data, const size_t & len){
+    void writePixels(const Grayscale * data, const size_t len){
         dc_gpio = data_level;
-        // for(size_t i = 0; i < len; i++) bus_drv.write(RGB565(data[i]));
-        // return;
         auto & bus = bus_drv.bus;
         if(!bus.begin(0)){
             bus.configDataSize(16);
@@ -114,13 +111,18 @@ public:
             bus.configDataSize(8);
         }
     } 
+
+    void writePixels(const RGB565 * data, const size_t len){
+        dc_gpio = data_level;
+        bus_drv.write((uint16_t *)data, len);
+    } 
 };
 
 class DisplayInterfaceI2c:public DisplayerInterface{
 protected:
     I2cDrv bus_drv;
 public:
-    DisplayInterfaceI2c(I2c & i2c_bus, const uint8_t & i2c_id):bus_drv(i2c_bus, i2c_id){};
+    DisplayInterfaceI2c(I2c & i2c_bus, const uint8_t i2c_id):bus_drv(i2c_bus, i2c_id){};
 };
 
 class OledInterfaceI2c:public DisplayInterfaceI2c{
@@ -129,19 +131,19 @@ protected:
     static constexpr uint8_t data_token = 0x40;
 
 public:
-    OledInterfaceI2c(I2c & i2c_bus, const uint8_t & i2c_id):DisplayInterfaceI2c(i2c_bus, i2c_id){};
+    OledInterfaceI2c(I2c & i2c_bus, const uint8_t i2c_id):DisplayInterfaceI2c(i2c_bus, i2c_id){};
 
     void init()override{;}
 
-    __fast_inline void writeCommand(const uint8_t & cmd) override{
+    __fast_inline void writeCommand(const uint8_t cmd) override{
         bus_drv.writeReg(cmd_token, cmd);
     }
 
-    __fast_inline void writeData(const uint8_t & data) override{
+    __fast_inline void writeData(const uint8_t data) override{
         bus_drv.writeReg(data_token, data);
     }
 
-    void writePool(const uint8_t * data_ptr, const size_t & len) override{
+    void writePool(const uint8_t * data_ptr, const size_t len) override{
         bus_drv.writePool(data_token, data_ptr, len, false);
     }
 

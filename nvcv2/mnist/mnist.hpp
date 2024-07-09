@@ -38,4 +38,5 @@ public:
     Mnist(){load();}
     ~Mnist(){unload();}
     Result update(const Image<Grayscale, Grayscale> & img, const Vector2i & pos);
+    Result update(const Image<Grayscale, Grayscale> & img);
 };

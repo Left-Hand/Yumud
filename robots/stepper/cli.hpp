@@ -13,7 +13,20 @@ namespace StepperUtils{
 
     #define read_value(value)\
     {\
-        DEBUG_PRINT("get", VNAME(value), "\t\t is", value);\
+        logger.println("get", VNAME(value), "\t\t is", value);\
+        break;\
+    }
+
+    #define settle_method(method, args, type)\
+    {\
+        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
+        if(args.size() == 0){\
+            logger.println("no arg");\
+        }else if(args.size() == 1){\
+            method(type(args[0]));\
+            logger.println("method", #method, "called");\
+        }\
+        break;\
     }
 
     #define settle_value(value, args)\
@@ -23,8 +36,9 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = decltype(value)(args[0]);\
-            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", args[0]);\
+            logger.println("set: ", VNAME(value), "\t\t to", args[0]);\
         }\
+        break;\
     }
 
     #define settle_positive_value(value, args)\
@@ -36,8 +50,9 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+            logger.println("set: ", VNAME(value), "\t\t to", value);\
         }\
+        break;\
     }
 
     #define settle_clamped_value(value, args, mi, ma)\
@@ -50,8 +65,9 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+            logger.println("set: ", VNAME(value), "\t\t to", value);\
         }\
+        break;\
     }
 
     class Cli{
@@ -101,15 +117,15 @@ namespace StepperUtils{
                 case "reset"_ha:
                 case "rst"_ha:
                 case "r"_ha:
-                    DEBUG_PRINT("rsting");
+                    logger.println("rsting");
                     NVIC_SystemReset();
                     break;
                 case "alive"_ha:
                 case "a"_ha:
-                    DEBUG_PRINT("chip is alive");
+                    logger.println("chip is alive");
                     break;
                 default:
-                    DEBUG_PRINT("no command available:", command);
+                    logger.println("no command available:", command);
                     break;
             }
         }
@@ -122,11 +138,11 @@ namespace StepperUtils{
         virtual void read_can() = 0;
     private:
         void read_str(){
-            if(DEBUGGER.available()){
+            if(logger.available()){
                 static String temp_str;
-                while(DEBUGGER.available()){
+                while(logger.available()){
                     char chr;
-                    DEBUGGER.read(chr);
+                    logger.read(chr);
                     
                     if(chr == '\n'){
                         temp_str.alphanum();
@@ -173,7 +189,7 @@ namespace StepperUtils{
     public:
         CliAP(IOStream & _logger, Can & _can):Cli(_logger, _can, 0x0f){;}
         virtual void parse_command(const uint8_t id, const Command & cmd, const CanMsg & msg) = 0;
-
+        using Cli::parse_command;
     };
 
 }

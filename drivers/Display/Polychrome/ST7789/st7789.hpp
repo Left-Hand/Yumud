@@ -39,10 +39,7 @@ private:
     }
 
 
-    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
-        setarea_unsafe(rect);
-        interface.writePool((const uint16_t *)(color_ptr), int(rect));
-    }
+
 
     void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override{
         setarea_unsafe(rect);
@@ -72,21 +69,17 @@ public:
 
     void puttexture_unsafe(const Rect2i & rect, const Grayscale * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
-        interface.dc_gpio = DisplayInterfaceSpi::data_level;
-        interface.writePixels(color_ptr, size);
+        interface.writePixels(color_ptr, int(rect));
     }
 
     void puttexture_unsafe(const Rect2i & rect, const Binary * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
+        interface.writePixels((Grayscale *)color_ptr, int(rect));
+    }
 
-        interface.dc_gpio = DisplayInterfaceSpi::data_level;
-        auto & spi = interface.bus_drv.bus;
-        if(!spi.begin(0)){
-            spi.configDataSize(16);
-            for(size_t i = 0; i < size; i++) spi.write((((const uint8_t *)color_ptr)[i] ? 0xffff : 0));
-        }
+    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
+        setarea_unsafe(rect);
+        interface.writePixels((color_ptr), int(rect));
     }
 
     void setFlipY(const bool flip){modifyCtrl(flip, 7);}
