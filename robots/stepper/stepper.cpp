@@ -48,7 +48,9 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             if(args.size()){
                 real_t spd = real_t(args[0]);
                 setTargetSpeed(spd);
-                logger << "targ speed\t" << toString(spd,2) << " n/s\r\n";
+                logger << "targ speed\t" << toString(spd,3) << " n/s\r\n";
+            }else{
+                logger << "curr speed\t" << toString(getSpeed(),4) << " n/s\r\n";
             }
             break;
 
@@ -58,8 +60,40 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             if(args.size()){
                 real_t pos = real_t(args[0]);
                 setTargetPosition(pos);
-                logger << "targ position\t" << toString(pos,2) << " n\r\n";
+                logger << "targ position\t" << toString(pos,3) << " n\r\n";
+            }else{
+                logger << "now pos\t" << toString(getPosition(),4) << " n\r\n";
             }
+            break;
+
+        case "tpz"_ha:
+            if(args.size()){
+                real_t val = real_t(args[0]);
+                setTargetTrapezoid(val);
+                logger << "targ position\t" << toString(val,3) << " n\r\n";
+            }else{
+                logger << "now position\t" << toString(getPosition(),4) << " n\r\n";
+            }
+            break;
+
+        case "stable"_ha:
+            logger.println(odo.encoder.stable());
+            break;
+
+        case "curr"_ha:
+        case "c"_ha:
+            if(args.size()){
+                real_t val = real_t(args[0]);
+                setTargetCurrent(val);
+                logger << "targ current\t" << toString(val,3) << " n\r\n";
+            }else{
+                logger << "now current\t" << toString(getCurrent(),4) << " n\r\n";
+            }
+            break;
+
+        case "crc"_ha:
+        case "cc"_ha:
+            logger.println(Sys::Chip::getChipIdCrc());
             break;
 
         case "autoload"_ha:
@@ -115,6 +149,10 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             cali_task(true);
             break;
 
+        case "locate"_ha:
+        case "loc"_ha:
+            locateRelatively(args.size() ? real_t(args[0]) : 0);
+            break;
 
         case "beep"_ha:
             beep_task(true);
@@ -123,6 +161,7 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
         case "rd"_ha:
             if(args.size() == 1) run_debug_enabled = int(args[0]);
             break;
+    
         case "status"_ha:
         case "stat"_ha:
             DEBUG_PRINT("current status:", int(run_status));
@@ -134,19 +173,16 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             DEBUG_PRINT("shutdown ok");
             break;
 
-
-
-
         default:
-            Cli::parse_command(command, args);
+            CliSTA::parse_command(command, args);
             break;
     }
 }
 
 
 void Stepper::parse_command(const Command command, const CanMsg & msg){
-    const uint16_t tx_id = ((uint16_t)(node_id << 7 | (uint8_t)command));
-
+    const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
+    using dual_real = std::tuple<real_t, real_t>;
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
     case cmd:\
         method(__VA_ARGS__);\
@@ -154,12 +190,12 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
 
     #define SET_METHOD_BIND_TYPE(cmd, method, type)\
     case cmd:\
-        method(type(msg));\
+        method((msg).to<type>());\
         break;\
     
     #define SET_VALUE_BIND(cmd, value)\
     case cmd:\
-        value = (decltype(value)(msg));\
+        value = ((msg).to<decltype(value)>());\
         break;\
 
     #define SET_METHOD_BIND_REAL(cmd, method) SET_METHOD_BIND_TYPE(cmd, method, real_t)
@@ -167,7 +203,7 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
     #define GET_BIND_VALUE(cmd, value)\
         case cmd:\
             if(msg.isRemote()){\
-                CanMsg msg {tx_id, false};\
+                CanMsg msg {tx_id};\
                 can.write(msg.load(value));\
             }\
             break;\
@@ -179,11 +215,12 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_REAL(Command::TRG_VECT, setTargetVector)
         SET_METHOD_BIND_REAL(Command::TRG_CURR, setTargetCurrent)
         SET_METHOD_BIND_REAL(Command::TRG_POS, setTargetPosition)
-        SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTagretTrapezoid)
+        SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTargetTrapezoid)
 
         SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)
+        SET_METHOD_BIND_REAL(Command::SET_OLP_CURR, setOpenLoopCurrent)
         SET_METHOD_BIND_REAL(Command::CLAMP_CURRENT, setCurrentClamp)
-        SET_METHOD_BIND_TYPE(Command::CLAMP_POS, setTargetPositionClamp, (std::tuple<real_t, real_t>))
+        SET_METHOD_BIND_TYPE(Command::CLAMP_POS, setTargetPositionClamp, dual_real)
         SET_METHOD_BIND_REAL(Command::CLAMP_SPD, setSpeedClamp)
         SET_METHOD_BIND_REAL(Command::CLAMP_ACC, setAccelClamp)
 
@@ -199,10 +236,11 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
 
         SET_METHOD_BIND_EXECUTE(Command::INACTIVE, enable, false)
         SET_METHOD_BIND_EXECUTE(Command::ACTIVE, enable, true)
+        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
 
         default:
-            Cli::parse_command(command, msg);
+            CliSTA::parse_command(command, msg);
             break;
     }
 

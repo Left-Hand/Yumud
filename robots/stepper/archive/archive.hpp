@@ -127,14 +127,19 @@ namespace StepperUtils{
         union{
             struct{
                 struct alignas(128){
-                    uint32_t hashcode;
-                    BoardInfo board_info;
-                    Switches switches;
+                    struct alignas(16){
+                        uint32_t hashcode;
+                        BoardInfo board_info;
+                        Switches switches;
+                    };
+
+                    struct alignas(16){
+                        uint8_t node_id;
+                    };
                 
                 };
 
                 struct alignas(128){
-                    // int16_t cali_map[50];
                     std::array<int16_t, 50> cali_map;
                 };
             };

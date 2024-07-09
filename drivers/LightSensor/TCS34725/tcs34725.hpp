@@ -4,31 +4,22 @@
 
 #define __TCS34725_HPP__
 
-#include "device_defs.h"
+#include "drivers/device_defs.h"
+#include "types/rgb.h"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
-#ifndef TCS34725_DEBUG
-#define TCS34725_DEBUG(...) DEBUG_LOG(...)
-#endif
 
 class TCS34725{
 public:
     enum class Gain:uint8_t{
         X1 = 0, X4, X16, X60 
     };
+
+    static constexpr uint8_t default_id = 0x29 << 1;
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
 
-    struct Reg16{
-    public:
-        Reg16 & operator = (const uint16_t & _data){(uint16_t &)*this = _data; return * this;}
-        explicit operator uint16_t() const {return *(uint16_t *)this;}
-    };
-
-    struct Reg8{
-    public:
-        Reg8 & operator = (const uint8_t & _data){(uint8_t &)*this = _data; return * this;}
-        explicit operator uint8_t() const {return *(uint8_t *)this;}
-    };
+    #pragma pack(push, 1)
 
     struct EnableReg:public Reg8{
         REG8_BEGIN
@@ -40,27 +31,6 @@ protected:
         uint8_t __resv2__ :3;
         REG8_END
     };
-
-    struct IntegrationReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
-    };
-    
-    struct WaitTimeReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
-    };
-
-    struct LowThrReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct HighThrReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
     struct IntPersistenceReg:public Reg8{
         REG8_BEGIN
         uint8_t __resv__ :4;
@@ -83,11 +53,6 @@ protected:
         REG8_END
     };
 
-    struct DeviceIdReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
-    };
-
     struct StatusReg:public Reg8{
         REG8_BEGIN
         uint8_t done_flag    :1;
@@ -97,42 +62,21 @@ protected:
         REG8_END
     };
 
-    struct ClearDataReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct RedDataReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct GreenDataReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct BlueDataReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
-    };
 
     struct{
         EnableReg enableReg;
-        IntegrationReg integrationReg;
-        WaitTimeReg waitTimeReg;
-        LowThrReg lowThrReg;
-        HighThrReg highThrReg;
+        uint8_t integrationReg;
+        uint8_t waitTimeReg;
+        uint16_t lowThrReg;
+        uint16_t highThrReg;
         IntPersistenceReg intPersistenceReg;
         LongWaitReg longWaitReg;
         GainReg gainReg;
-        DeviceIdReg deviceIdReg;
+        uint8_t deviceIdReg;
         StatusReg statusReg;
-        ClearDataReg clearDataReg;
-        RedDataReg redDataReg;
-        GreenDataReg greenDataReg;
-        BlueDataReg blueDataReg;
+        uint16_t data[4];
     };
+    #pragma pack(pop)
 
     enum class RegAddress:uint8_t{
         Enable = 0x00,
@@ -155,37 +99,37 @@ protected:
         return ((uint8_t) regAddress) | 0x80 | (repeat ? 1 << 5 : 0);
     }
 
-    void writeReg(const RegAddress & regAddress, const Reg16 & regData){
+    void writeReg(const RegAddress & regAddress, const uint16_t regData){
         bus_drv.writeReg(convRegAddress(regAddress), (uint16_t)regData, false);
     }
 
-    void readReg(const RegAddress & regAddress, Reg16 & regData){
+    void readReg(const RegAddress & regAddress, uint16_t & regData){
         bus_drv.readReg(convRegAddress(regAddress), (uint16_t &)regData, false);
     }
 
-    void writeReg(const RegAddress & regAddress, const Reg8 & regData){
+    void writeReg(const RegAddress & regAddress, const uint8_t regData){
         bus_drv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData);
     }
 
-    void readReg(const RegAddress & regAddress, Reg8 & regData){
+    void readReg(const RegAddress & regAddress, uint8_t & regData){
         bus_drv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData);
     }
 
-    void requestRegData(const RegAddress & regAddress, uint8_t * data_ptr, const size_t len){
-        bus_drv.readPool(convRegAddress(regAddress), data_ptr, 2, len, false);
-    }
+    void requestRegData(const RegAddress & regAddress, uint16_t * data_ptr, const size_t len);
 
 public:
     TCS34725(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    TCS34725(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
+    TCS34725(I2c & bus):bus_drv(bus, default_id){;}
 
-    void setIntegration(const uint16_t & ms){
+    void setIntegration(const uint16_t ms){
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);
         uint8_t temp = 256 - cycles;
-        integrationReg.data = temp;
+        integrationReg = temp;
         writeReg(RegAddress::Integration, integrationReg);
     }
 
-    void setWaitTime(const uint16_t & ms){
+    void setWaitTime(const uint16_t ms){
         uint16_t ms_l = MAX(ms * 10 / 24,1);
         uint16_t value;
         bool long_waitFlag = false;
@@ -197,21 +141,21 @@ public:
             long_waitFlag = true;
         }
 
-        waitTimeReg.data = value;
+        waitTimeReg = value;
         writeReg(RegAddress::WaitTime, waitTimeReg);
         if(long_waitFlag){
             longWaitReg.waitLong = true;
-            writeReg(RegAddress::LongWait, longWaitReg);
+            writeReg(RegAddress::LongWait, longWaitReg.data);
         }
     }
 
     void setIntThrLow(const uint16_t & thr){
-        lowThrReg.data = thr;
+        lowThrReg = thr;
         writeReg(RegAddress::LowThr, lowThrReg);
     }
 
     void setIntThrHigh(const uint16_t & thr){
-        highThrReg.data = thr;
+        highThrReg = thr;
         writeReg(RegAddress::HighThr, highThrReg);
     }
 
@@ -228,7 +172,7 @@ public:
 
     void setGain(const Gain & gain){
         gainReg.data = (uint8_t)gain;
-        writeReg(RegAddress::Gain, gainReg);
+        writeReg(RegAddress::Gain, gainReg.data);
     }
 
     void getId(){
@@ -236,30 +180,29 @@ public:
     }
 
     bool isIdle(){
-        readReg(RegAddress::Status, statusReg);
+        readReg(RegAddress::Status, statusReg.data);
         return statusReg.done_flag;
     }
 
-    void setPower(const bool & on){
+    void setPower(const bool on){
         enableReg.powerOn = on;
-        writeReg(RegAddress::Enable, enableReg);
+        writeReg(RegAddress::Enable, enableReg.data);
     }
 
     void startConv(){
         enableReg.adcEn = true;
-        writeReg(RegAddress::Enable, enableReg);
+        writeReg(RegAddress::Enable, enableReg.data);
     }
 
-    void getCRGB(uint16_t & c, uint16_t & r, uint16_t & g, uint16_t & b){
-        uint16_t buf[4];
-        requestRegData(RegAddress::ClearData, (uint8_t *)&buf, 8);
+    void update();
 
-        c = buf[0];
-        r = buf[1];
-        g = buf[2];
-        b = buf[3];
+    void getCRGB(real_t & c, real_t & r, real_t & g, real_t & b);
+
+    auto getCRGB(){
+        real_t c,r,g,b;
+        getCRGB(c,r,g,b);
+        return std::make_tuple(c,r,g,b);
     }
-
 
     void init(){
         setPower(true);
@@ -267,10 +210,7 @@ public:
         setGain(Gain::X1);
     }
 
+    operator RGB888();
 };
-
-#ifdef TCS34725_DEBUG
-#undef TCS34725_DEBUG
-#endif
 
 #endif

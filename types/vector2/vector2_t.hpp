@@ -169,6 +169,7 @@ public:
 
 typedef Vector2_t<float> Vector2f;
 typedef Vector2_t<int> Vector2i;
+using Point = Vector2i;
 typedef Vector2_t<real_t> Vector2;
 
 #endif

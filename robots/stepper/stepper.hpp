@@ -7,57 +7,9 @@
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 #include "hal/adc/adcs/adc1.hpp"
+#include "robots/stepper/concept.hpp"
 
-class StepperConcept{ 
-public:
-    using ErrorCode = StepperEnums::ErrorCode;
-    using RunStatus = StepperEnums::RunStatus;
-    using CtrlType = StepperEnums::CtrlType;
-protected:
-    using ExitFlag = StepperEnums::ExitFlag;
-    using InitFlag = StepperEnums::InitFlag;
-
-    using Range = Range_t<real_t>;
-
-    using Switches = StepperUtils::Switches;
-
-    real_t est_speed;
-    real_t est_pos;
-    real_t run_current;
-    real_t target;
-    uint8_t node_id = 0;
-public:
-    virtual bool loadArchive(const bool outen = false) = 0;
-    virtual void saveArchive(const bool outen = false) = 0;
-    virtual void removeArchive(const bool outen = false) = 0;
-    virtual bool autoload(const bool outen = false) = 0;
-
-    virtual void setTargetCurrent(const real_t current) = 0;
-    virtual void setTargetSpeed(const real_t speed) = 0;
-    virtual void setTargetPosition(const real_t pos) = 0;
-    virtual void setTagretTrapezoid(const real_t pos) = 0;
-    virtual void setOpenLoopCurrent(const real_t current) = 0;
-    virtual void setTargetVector(const real_t pos) = 0;
-    virtual void setCurrentClamp(const real_t max_current) = 0;
-    virtual void locateRelatively(const real_t pos = 0) = 0;
-
-    virtual bool isActive() const = 0;
-    virtual const volatile RunStatus & status() = 0;
-
-    virtual real_t getSpeed() const = 0;
-    virtual real_t getPosition() const = 0;
-    virtual real_t getCurrent() const = 0;
-
-    virtual void setTargetPositionClamp(const Range & clamp) = 0;
-    virtual void enable(const bool en = true) = 0;
-    virtual void setNodeId(const uint8_t _id) = 0;
-    virtual void setSpeedClamp(const real_t max_spd) = 0;
-    virtual void setAccelClamp(const real_t max_acc) = 0;
-
-    virtual void triggerCali() = 0;
-};
-
-class Stepper:public StepperUtils::Cli, public StepperConcept{
+class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     volatile RunStatus run_status = RunStatus::INIT;
     Switches switches;
 
@@ -164,11 +116,13 @@ class Stepper:public StepperUtils::Cli, public StepperConcept{
     void parse_command(const Command command, const CanMsg & msg) override;
     
     friend ShutdownFlag;
+
+
 public:
 
 
     Stepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
-            Cli(_logger,_can) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
+            CliSTA(_logger, _can, getNodeId()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);
@@ -204,7 +158,7 @@ public:
         ctrl_type = CtrlType::POSITION;
     }
 
-    void setTagretTrapezoid(const real_t pos){
+    void setTargetTrapezoid(const real_t pos){
         target = pos;
         panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
         ctrl_type = CtrlType::TRAPEZOID;
@@ -269,6 +223,23 @@ public:
 
     void setNodeId(const uint8_t _id){
         node_id = _id;
+    }
+
+    uint8_t getNodeId(){
+        // return 0;
+        auto chip_id = Sys::Chip::getChipIdCrc();
+        // logger.println("chip_id:", chip_id);
+        switch(chip_id){
+            case 3273134334:
+                return node_id = 3;
+            case 341554774:
+                return node_id = 2;
+            case 4079188777:
+                return node_id = 1;
+            case 0:
+            default:
+                return node_id = 0;
+        }
     }
 
     void setSpeedClamp(const real_t max_spd){

@@ -28,7 +28,7 @@ tm_err_t tm_load  (tm_mdl_t* mdl, const uint8_t* bin, uint8_t*buf, tm_cb_t cb, t
     TM_READ_LAYER(l_buf, bin, sizeof(tm_mdlbin_t));
     tm_mdlbin_t* mdl_bin = (tm_mdlbin_t*)l_buf;
     char* tmp = (char*)mdl_bin;
-    TM_PRINTF("%c%c%c%c\n",tmp[0],tmp[1],tmp[2],tmp[3]);
+    // TM_PRINTF("%c%c%c%c\n",tmp[0],tmp[1],tmp[2],tmp[3]);
     if(tmp[0]!='M'||tmp[1]!='A'||tmp[2]!='I'||tmp[3]!='X')return TM_ERR_MAGIC;
     //if(mdl_bin->magic != TM_MDL_MAGIC)   return TM_ERR_MAGIC; //avr is big endian...
     if(mdl_bin->mdl_type != TM_MDL_TYPE) return TM_ERR_MDLTYPE;

@@ -36,7 +36,8 @@
     "sys/sdk/ch32v307",
     "nvcv2",
     "nvcv2/mnist",
-    "thirdparty/lodepng"
+    "thirdparty/lodepng",
+    "hal/bus/usb/usbfs"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -104,7 +105,10 @@
         "thirdparty/lodepng/lodepng_unittest.cpp",
         "thirdparty/lodepng/lodepng_util.cpp",
         "thirdparty/lodepng/pngdetail.cpp",
-        "src/testbench/st77xx_tb.cpp"
+        "src/testbench/st77xx_tb.cpp",
+        "src/app/embd/host.cpp",
+        "src/app/embd/img_trans.cpp",
+        "src/app/embd/remote.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -253,7 +257,8 @@
         "thirdparty/lodepng/lodepng_fuzzer.cpp",
         "thirdparty/lodepng/lodepng_util.cpp",
         "thirdparty/lodepng/pngdetail.cpp",
-        "src/testbench/st77xx_tb.cpp"
+        "src/testbench/st77xx_tb.cpp",
+        "src/app/embd/node.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
@@ -326,7 +331,8 @@
           "sys/sdk/ch32v307/Peripheral/inc",
           "sys/sdk/ch32v307/Peripheral/src",
           "nvcv2/mnist",
-          "nvcv2"
+          "nvcv2",
+          "hal/bus/usb"
         ],
         "libList": [
           "src/clock",
@@ -339,7 +345,8 @@
           "hal",
           "hal/bus/usb/cdc",
           "sys/sdk/ch32v307/Peripheral/inc",
-          "sys/sdk/ch32v307/Peripheral/src"
+          "sys/sdk/ch32v307/Peripheral/src",
+          "hal/bus/usb/usbfs"
         ],
         "defineList": [
           "WCH",

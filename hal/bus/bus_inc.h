@@ -16,5 +16,6 @@
 
 // #include "can/can.hpp"
 #include "dvp/dvp.hpp"
+#include "usb/usbfs/usbfs.hpp"
 
 #endif

@@ -1,20 +1,19 @@
 #include "testbench/tb.h"
 #include "app/embd/embd.h"
 
+
 int main(){
     Sys::Misc::prework();
-
     #ifdef CH32V20X
-    UartHw & logger = uart1;
-    logger.init(115200);
+    embd_main();
 
-    delay(200);
+    // delay(200);
     // pmdc_tb();
     // uart_tb(uart1);
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
-    stepper_tb(uart1);
+    // stepper_tb(uart1);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);p
@@ -25,7 +24,11 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
-
+    // usbcdc_tb();
+    embd_main();
+    // UartHw & logger = uart2;
+    // logger.init(115200);
+    // can_tb(logger, can1, true);
     // UartHw & logger = uart8;
     // logger.init(115200 * 4, CommMethod::Dma, CommMethod::Interrupt);
     // logger.init(115200 * 4, CommMethod::Dma);
@@ -44,7 +47,7 @@ int main(){
     // uart7.init(57600);
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
-    embd_main();
+    // embd_main();
     // can_tb(logger, can1);
     #endif
     while(true);

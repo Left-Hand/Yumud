@@ -7,7 +7,9 @@ struct TurnSolver{
     real_t pb = 0.0f;
     real_t va = 0.0f;
     real_t vb = 0.0f;
-}turnSolver;
+};
+
+TurnSolver turnSolver;
 // Helper functions:
 real_t slopeFromT (real_t t, real_t A, real_t B, real_t C){
   real_t dtdx = 1.0/(3.0*A*t*t + 2.0*B*t + C); 
@@ -149,7 +151,6 @@ void stepper_tb(IOStream & logger){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    can1.init(Can::BaudRate::Kbps125);
     Stepper stp{logger, can1, svpwm, mt6816, mem};
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
@@ -187,7 +188,7 @@ void stepper_tb(IOStream & logger){
 
         // stp.setTargetPosition(2.6 * sin(4 * t));
         // stp.setTargetPosition(20 * sign(sin(t)));
-        // stp.setTagretTrapezoid(70 * floor(t / 3));
+        // stp.setTargetTrapezoid(70 * floor(t / 3));
 
         // stp.setTargetPosition(0.2 * floor(t*10));
         // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);

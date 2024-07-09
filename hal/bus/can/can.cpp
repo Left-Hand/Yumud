@@ -171,6 +171,7 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
+
     uint8_t mbox = CAN_Transmit(instance, (const CanTxMsg *)&msg);
     if(mbox == CAN_TxStatus_NoMailBox) return false;
 

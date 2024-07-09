@@ -32,7 +32,7 @@ using Sys::t;
 // MPU6050 mpu(i2cDrvMpu);
 // SGM58031 ext_adc(i2cDrvAdc);
 // LT8920 radio(spiDrvRadio);
-// TCS34725 tcs(i2cDrvTcs);
+// 
 // VL53L0X vlx(i2cDrvVlx);
 // PCF8574 pcf(i2cDrvPcf);
 // AS5600 mags(i2cDrvAS);
@@ -145,7 +145,7 @@ using Sys::t;
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 #include "gpio/port_virtual.hpp"
 #include "drivers/VirtualIO/HC595/hc595.hpp"
-#include "drivers/IMU/Axis6/BMI270/bmi270.hpp"
+// #include "drivers/IMU/Axis6/BMI270/bmi270.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "hal/nvic/nvic.hpp"
 #include "dsp/lut.hpp"
@@ -188,3 +188,5 @@ void dma_tb(OutputStream & logger, DmaChannel & channel);
 void ch9141_tb(IOStream & logger, Uart & uart);
 
 void can_tb(IOStream & logger, Can & can, bool tx_role = true);
+
+void usbcdc_tb();
