@@ -10,32 +10,14 @@
 
 #include "interpolation/interpolation.hpp"
 
+#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
+
 
 
 using namespace Interpolation;
 using namespace NVCV2;
 
 #ifdef CH32V30X
-
-void host_main(){
-    using TimerUtils::IT;
-
-    auto & logger = uart2;
-    logger.init(921600, CommMethod::Blocking);
-
-
-    // can1.init(Can::BaudRate::Mbps1, Can::Mode::Internal);
-    can1.init(Can::BaudRate::Mbps1);
-    EmbdHost host{logger, can1};
-
-    usbfs.init();
-
-    timer3.init(800);
-    timer3.bindCb(IT::Update, [&](){host.run();});
-    timer3.enableIt(IT::Update, NvicPriority(0, 0));
-
-    host.main();
-}
 
 
 void EmbdHost::main(){
@@ -85,9 +67,9 @@ void EmbdHost::main(){
     painter.bindImage(tftDisplayer);
     tftDisplayer.fill(RGB565::BLACK);
 
-    I2cSw SccbSw(portD[2], portC[12]);
-    SccbSw.init(400000);
-    MT9V034 camera(SccbSw);
+    I2cSw i2c(portD[2], portC[12]);
+    i2c.init(400000);
+    MT9V034 camera(i2c);
 
     [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
@@ -99,18 +81,14 @@ void EmbdHost::main(){
 
     camera.init();
 
-    I2cDrv              vl_drv(SccbSw, VL53L0X::default_id);
-    VL53L0X             vl(vl_drv);
+    VL53L0X             vl(i2c);
     vl.init();
     vl.enableContMode();
     vl.startConv();
 
-    // while(true){
-    //     led = !led;
-    //     tftDisplayer.fill(RGB565::BLACK);
-    //     // tftDisplayer.fill(RGB565::GREEN);
-    //     painter.drawFilledCircle({40,60 + 30 * sin(8 * t)}, 8);
-    // }
+    TCS34725            tcs(i2c);
+    tcs.init();
+    tcs.startConv();
 
     uart7.init(1000000, CommMethod::Blocking);
 
@@ -122,16 +100,13 @@ void EmbdHost::main(){
     Transmitter trans{usbfs};
     Mnist mnist;
 
-
-    // auto & led = portC[14];
-    
-    auto img = Shape::x4(camera, 2);
-    // auto bina = Pixels::binarization(img, 70);
+    auto img = Shape::x4(camera,2);
+    auto bina = Pixels::binarization(img, 70);
     while(true){
         led = !led;
         // continue;
         img = Shape::x4(camera,2);
-        auto bina = Pixels::binarization(img,  170);
+        bina = Pixels::binarization(img,  170);
         // trans.transmit(img, 0);
         // continue;
         // Pixels::inverse(img);
@@ -147,16 +122,14 @@ void EmbdHost::main(){
         // Pixels::copy(bina, new_bina);
         // Shape::erosion(bina, bina);
         // Pixels::and_with(bina, new_bina);
-
-        vl.update();
         // real_t dist = vl.getDistance();
 
         // logger.println(dist);
         // Pixels::gamma(img, 0.1);
-        plot_gray(img, img.get_window());
+        // plot_gray(img, img.get_window());
         // plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
         // int dummy = 0;
-
+        // logger.println("rect", bina.get_window() + Vector2i{0, img.size.y});
         plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
 
         Shape::FloodFill ff;
@@ -198,12 +171,25 @@ void EmbdHost::main(){
             painter.drawString(blob.rect.position, "2");
             // logger.println(blob.rect, int(blob.rect));
         }
-            painter.setColor(RGB565::YELLOW);
-            painter.drawRoi({0,0,28,28});
 
         {
-            auto result = mnist.update(img, {0,0});
-            logger.println(result.token, result.confidence);
+            painter.setColor(RGB565::YELLOW);
+            painter.drawRoi({0,0,28,28});
+        }
+
+        {
+            [[maybe_unused]] auto result = mnist.update(img, {0,0});
+            // logger.println(result.token, result.confidence);
+        }
+
+        {
+            vl.update();
+            logger.println(vl.getDistance());
+        }
+
+        {
+            // tcs.update();
+            // logger.println(tcs.getCRGB());
         }
         // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
         // trans.transmit(img, 1);
