@@ -19,20 +19,22 @@ public:
     template<typename T>
     requires (std::is_same_v<T, uint16_t> || std::is_same_v<T, int16_t> || std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) && (!std::is_same_v<T, int>)
     void writePool(const uint8_t reg_address, const T * data_ptr, const size_t length, const bool msb = true){
-        constexpr size_t size = sizeof(T);
         if(length == 0) return;
+        constexpr size_t size = sizeof(T);
         size_t bytes = length * size;
+        uint8_t * u8_ptr = (uint8_t *)data_ptr;
+
         if(!bus.begin(index)){
             bus.write(reg_address);
 
             for(size_t i = 0; i < bytes; i += size){
                 if(msb){
                     for(size_t j = size; j > 0; j--){
-                        bus.write(data_ptr[j-1 + i]);
+                        bus.write(u8_ptr[j-1 + i]);
                     }
                 }else{
                     for(size_t j = 0; j < size; j++){
-                        bus.write(data_ptr[j + i]);
+                        bus.write(u8_ptr[j + i]);
                     }
                 }
             }
@@ -43,9 +45,11 @@ public:
 
     template<typename T>
     void readPool(const uint8_t reg_address, T * data_ptr, const size_t length, const bool msb = true){
-        constexpr size_t size = sizeof(T);
         if(length == 0) return;
+        constexpr size_t size = sizeof(T);
         size_t bytes = length * size;
+        uint8_t * u8_ptr = (uint8_t *)data_ptr;
+    
         if(!bus.begin(index)){
             bus.write(reg_address);
             if(!bus.begin(index | 0x01)){
@@ -54,13 +58,13 @@ public:
                         for(size_t j = size; j > 0; j--){
                             uint32_t temp = 0;
                             bus.read(temp, !((j == 1) && (i == bytes - size)));
-                            data_ptr[j-1 + i] = temp;
+                            u8_ptr[j-1 + i] = temp;
                         }
                     }else{
                         for(size_t j = 0; j < size; j++){
                             uint32_t temp = 0;
                             bus.read(temp, (i + j != bytes - 1));
-                            data_ptr[j + i] = temp;
+                            u8_ptr[j + i] = temp;
                         }
                     }
                 }
