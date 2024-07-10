@@ -32,18 +32,9 @@ bool RemoteStepper::loadArchive(const bool outen){
 }
 
 
-void RemoteStepper::saveArchive(const bool outen){
-    POST(Command::SAVE)
-}
-void RemoteStepper::removeArchive(const bool outen){
-    POST(Command::RM)
-}
-bool RemoteStepper::autoload(const bool outen){
-    // POST(Command::a)
-    return true;
-}
-
-// void RemoteStepper::setTargetTrapezoid
+void RemoteStepper::saveArchive(const bool outen){POST(Command::SAVE);}
+void RemoteStepper::removeArchive(const bool outen){POST(Command::RM);}
+bool RemoteStepper::autoload(const bool outen){return true;}
 
 void RemoteStepper::setTargetVector(const real_t pos){}
 void RemoteStepper::setTargetCurrent(const real_t current){POST(Command::TRG_CURR, current);}
@@ -67,4 +58,16 @@ void RemoteStepper::setNodeId(const uint8_t _id){}
 void RemoteStepper::setSpeedClamp(const real_t max_spd){}
 void RemoteStepper::setAccelClamp(const real_t max_acc){}
 
-void RemoteStepper::triggerCali(){}
+void RemoteStepper::triggerCali(){POST(Command::CALI);}
+
+void RemoteStepper::reset(){POST(Command::RST);}
+
+void RemoteStepper::mt(const bool en){
+    do{
+        if(en){
+            POST(Command::SERVO_ON);
+        }else{
+            POST(Command::SERVO_OFF);
+        }
+    }while(false);
+}

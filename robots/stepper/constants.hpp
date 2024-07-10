@@ -87,6 +87,9 @@ namespace StepperEnums{
         LOAD,
         RM,
 
+        SERVO_ON = 0x60,
+        SERVO_OFF,
+
         RST = 0x70,
         STAT,
         INACTIVE,

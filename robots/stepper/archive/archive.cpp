@@ -114,7 +114,7 @@ void Stepper::saveArchive(const bool outen){
     archive.hashcode = hashcode;
 
     for(size_t i = 0; i < odo.map().size(); i++){
-        archive.cali_map[i] = uint16_t((odo.map()[i] + (elecrad_zerofix / real_t(poles * TAU))) * 16384);
+        archive.cali_map[i] = int16_t((odo.map()[i] + (elecrad_zerofix / real_t(poles * TAU))) * 16384);
     }
 
     archive.node_id = node_id;

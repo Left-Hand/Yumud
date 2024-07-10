@@ -253,6 +253,10 @@ public:
     void triggerCali(){
         cali_task(true);
     }
+
+    void reset()override{
+        Sys::Misc::reset();
+    }
 };
 
 #endif

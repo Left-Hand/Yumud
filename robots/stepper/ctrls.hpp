@@ -103,13 +103,11 @@ struct GeneralSpeedCtrl:public SpeedCtrl{
 struct GeneralPositionCtrl:public PositionCtrl{
     GeneralPositionCtrl(CurrentCtrl & ctrl):PositionCtrl(ctrl){;}
 
-    real_t kp = 80;
-    real_t kd = 50;
+    real_t kp = 60;
+    real_t kd = 5;
 
     real_t kd_active_radius = 0.7;
-    bool inited = false;
 
-    // real_t kq = 10;
     real_t ki = 0.0;
     real_t intergalx256 = 0;
     Range ki_clamp = {25.6, -25.6};
@@ -120,15 +118,11 @@ struct GeneralPositionCtrl:public PositionCtrl{
 
 
     void reset() override {
-        inited = false;
+        intergalx256 = 0;
     }
 
-    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) override{
-
-        if(!inited){
-            inited = true;
-            intergalx256 = 0;
-        }
+    Result update(const real_t targ_position, const real_t real_position, 
+            const real_t real_speed, const real_t real_elecrad) override{
 
         real_t error = targ_position - real_position;
         real_t abs_err = ABS(error);
@@ -141,12 +135,10 @@ struct GeneralPositionCtrl:public PositionCtrl{
 
         real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
 
-        // real_t abs_uni_raddiff = MIN(pu * abs_err, PI/2);
-        real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.42)) , error);
-
+        real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.45)) , error);
 
         real_t current = MIN(abs_err * kp, curr_ctrl.current_clamp); 
-        // if(abs_err < kd_active_radius) current = MAX(current - (kd * ABS(real_speed) >> 8), 0);
+        if(abs_err < kd_active_radius) current = MAX(current - (kd * ABS(real_speed) >> 8), 0);
         
         if(error * real_speed < 0){
             return {current, SIGN_AS(PI / 2, error)};
@@ -165,7 +157,7 @@ struct TrapezoidPosCtrl:public TopLayerCtrl{
     GeneralPositionCtrl & position_ctrl;
 
     // real_t max_spd = 40;
-    real_t max_dec = 168.0;
+    real_t max_dec = 18.0;
 
     TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):speed_ctrl(_speed_ctrl), position_ctrl(_position_ctrl){;}
 
@@ -189,9 +181,9 @@ public:
         real_t max_spd = speed_ctrl.max_spd;
         // static constexpr real_t spd_delta = 0.01;
 
-        static constexpr real_t hug_speed = 0.1;
+        // static constexpr real_t hug_speed = 1;
         // static constexpr real_t spd_sw_radius = 0.7;
-        static constexpr real_t pos_sw_radius = 0.1;
+        static constexpr real_t pos_sw_radius = 0.6;
 
         real_t pos_err = targ_position - real_position;
         bool cross = pos_err * last_pos_err < 0;
@@ -210,18 +202,24 @@ public:
                 break;
 
             case Tstatus::DEC:
-                if(cross and (ABS(goal_speed) < hug_speed)){
+                // if((cross and (ABS(goal_speed) < hug_speed)) || abs(pos_err) < pos_sw_radius){
+                //     tstatus = Tstatus::STA;
+                // }
+                if(cross){
                     tstatus = Tstatus::STA;
                 }
 
                 {
-                    bool ovs = real_speed * real_speed > 2 * max_dec* ABS(pos_err);
+                    // bool ovs = real_speed * real_speed > 2 * max_dec* ABS(pos_err);
                     // goal_speed = SIGN_AS(sqrt(2 * max_dec* ABS(pos_err)), goal_speed);
-                    if(ovs) goal_speed += SIGN_AS(-spd_delta, pos_err);
-                    else goal_speed += SIGN_AS(spd_delta / 3, pos_err);
+                    // if(ovs) goal_speed += SIGN_AS(-spd_delta, pos_err);
+                    // if(ovs) goal_speed += -spd_delta;
+                    // else goal_speed += SIGN_AS(spd_delta / 3, pos_err);
 
-                    if(pos_err > 0) goal_speed = CLAMP(goal_speed, 0, max_spd);
-                    else goal_speed = CLAMP(goal_speed, -max_spd, 0);
+                    // if(pos_err > 0) goal_speed = CLAMP(goal_speed, hug_speed, max_spd);
+                    // else goal_speed = CLAMP(goal_speed, -max_spd, -hug_speed);
+
+                    goal_speed = SIGN_AS(sqrt(2 * max_dec * ABS(pos_err)), pos_err);
                     return speed_ctrl.update(goal_speed, real_speed);
                 }
 

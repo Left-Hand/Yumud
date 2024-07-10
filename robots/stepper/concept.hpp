@@ -53,4 +53,5 @@ public:
     virtual void setAccelClamp(const real_t max_acc) = 0;
 
     virtual void triggerCali() = 0;
+    virtual void reset() = 0;
 };

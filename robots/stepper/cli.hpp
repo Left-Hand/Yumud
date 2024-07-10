@@ -17,6 +17,12 @@ namespace StepperUtils{
         break;\
     }
 
+    #define trigger_method(method, ...)\
+    {\
+        method(__VA_ARGS__);\
+        break;\
+    }
+
     #define settle_method(method, args, type)\
     {\
         ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\

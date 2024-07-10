@@ -3,7 +3,7 @@
 #include "stdio.h"
 
 #include "nvcv2/mnist/tinymaix.h"
-#include "nvcv2.hpp"
+#include "../nvcv2.hpp"
 
 class Mnist{
 public:

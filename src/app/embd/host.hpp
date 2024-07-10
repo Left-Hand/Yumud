@@ -17,7 +17,7 @@
 #include "stepper/constants.hpp"
 #include "stepper/cli.hpp"
 
-
+#ifdef CH32V30X
 using StepperUtils::CliAP;
 
 class EmbdHost:public CliAP{
@@ -82,10 +82,24 @@ public:
     void parse_command(const String & _command,const std::vector<String> & args);
     void main();
     void run() override;
+    void reset();
+    void cali();
+
+    enum class ActMethod{
+        NONE = 0,
+        HUI,
+        LISA,
+        GRAB,
+        INTER,
+        REP
+    };
+    
+    ActMethod act_method = ActMethod::NONE;
+    void set_demo_method(const ActMethod new_method);
+    void act();
 };
 
-
-
+#endif
 
 
 void host_main();

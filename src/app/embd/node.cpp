@@ -50,12 +50,18 @@ void node_main(){
  
     stp.init();
 
-    stp.setOpenLoopCurrent(0.8);
-    stp.setCurrentClamp(1.4);
+    stp.setOpenLoopCurrent(0.6);
+    stp.setCurrentClamp(0.4);
 
-    logger.println(stp.getNodeId());
+    while(!stp.isActive());
+    stp.setTargetCurrent(0);
+    stp.setCurrentClamp(1.2);
+    // logger.println(stp.getNodeId());
     while(true){
         stp.run(); 
+        stp.report();
         Sys::Clock::reCalculateTime();
+        // stp.setTargetTrapezoid(16 * sin(t));
+        // stp.setTargetPosition(16 * sin(t));
     }
 }

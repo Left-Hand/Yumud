@@ -1,5 +1,11 @@
 #include "stepper.hpp"
 
+static void set_motor_gpio(const bool en){
+    auto & gpio = portA[0];
+    gpio.outpp();
+    gpio = en;
+}
+
 void Stepper::parse_command(const String & _command, const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
@@ -20,6 +26,11 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
                 
                 loadArchive(outen);
             }
+            break;
+
+        case "mt"_ha:
+            portA[0].outpp();
+            portA = args.size() ? bool(int(args[0])) : false;
             break;
 
         case "remove"_ha:
@@ -67,6 +78,7 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
 
         case "tpz"_ha:
+        case "t"_ha:
             if(args.size()){
                 real_t val = real_t(args[0]);
                 setTargetTrapezoid(val);
@@ -160,8 +172,12 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
 
         case "rd"_ha:
             if(args.size() == 1) run_debug_enabled = int(args[0]);
+            DEBUG_PRINT("rd", run_debug_enabled);
             break;
-    
+
+        case "clp"_ha:
+            if(args.size() == 1) setCurrentClamp(real_t(args[0]));
+            break;
         case "status"_ha:
         case "stat"_ha:
             DEBUG_PRINT("current status:", int(run_status));
@@ -234,9 +250,13 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_EXECUTE(Command::LOAD, loadArchive, false)
         SET_METHOD_BIND_EXECUTE(Command::RM, removeArchive, false)
 
+        SET_METHOD_BIND_EXECUTE(Command::SERVO_ON, set_motor_gpio, true)
+        SET_METHOD_BIND_EXECUTE(Command::SERVO_OFF, set_motor_gpio, false)
+
+        SET_METHOD_BIND_EXECUTE(Command::RST, reset)
+        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::INACTIVE, enable, false)
         SET_METHOD_BIND_EXECUTE(Command::ACTIVE, enable, true)
-        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
 
         default:
@@ -389,7 +409,11 @@ void Stepper::report(){
     // target_pos = sign(frac(t) - 0.5);
     // target_pos = sin(t);
     // RUN_DEBUG(, est_pos, est_speed);
-    if(run_status == RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+    if(run_status == RunStatus::ACTIVE and logger.pending() == 0 && run_debug_enabled){
+        // delayMicroseconds(200);   
+        delay(1); 
+        RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+    }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);
     // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;
