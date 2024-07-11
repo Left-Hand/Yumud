@@ -47,10 +47,10 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
 
         case "pos.p"_ha:
-            settle_value(position_ctrl.kp, args);
+            settle_value(position_ctrl.config.kp, args);
             break;
         case "pos.d"_ha:
-            settle_value(position_ctrl.kd, args);
+            settle_value(position_ctrl.config.kd, args);
             break;
 
         case "speed"_ha:

@@ -36,7 +36,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     raw_pos = odo.getPosition();
     est_pos = raw_pos;
     est_elecrad = odo.getElecRad();
-    static SpeedEstimator speed_estmator;
+
     est_speed = (speed_estmator.update(raw_pos) + est_speed * 127) >> 7;
 
     if(init_flag){
@@ -67,6 +67,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
 
     {
+        using Result = CtrlResult;
         Result result;
 
         switch(ctrl_type){
@@ -74,7 +75,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
                 result = {ABS(target), SIGN_AS(PI / 2, target)};
                 break;
             case CtrlType::VECTOR:
-                result = {openloop_current, 0};
+                result = {curr_ctrl.config.current_clamp, 0};
                 break;
             case CtrlType::POSITION:
                 result = position_ctrl.update(target_position_clamp.clamp(target), est_pos, est_speed, est_elecrad);

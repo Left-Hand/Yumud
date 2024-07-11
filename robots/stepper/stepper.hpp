@@ -26,24 +26,29 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
     StatLed panel_led = StatLed{led_instance};
 
-    real_t openloop_current = 0.8; 
-
     real_t raw_pos;
     real_t est_elecrad;
     real_t elecrad_zerofix;
 
-    real_t run_current;
     real_t run_elecrad;
     real_t run_leadangle;
 
     Range target_position_clamp = Range{std::numeric_limits<iq_t>::min(), std::numeric_limits<iq_t>::max()};
 
-    CurrentCtrlConfig curr_config;
-    GeneralSpeedCtrlConfig spd_config;
+    CurrentCtrl::Config curr_config;
     CurrentCtrl curr_ctrl{curr_config};
+    
+    GeneralSpeedCtrl::Config spd_config;
     GeneralSpeedCtrl speed_ctrl{curr_ctrl, spd_config};
-    GeneralPositionCtrl position_ctrl{curr_ctrl};
-    TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl};
+    
+    GeneralPositionCtrl::Config pos_config;
+    GeneralPositionCtrl position_ctrl{curr_ctrl, pos_config};
+
+    TrapezoidPosCtrl::Config trape_config;
+    TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl, trape_config};
+
+    SpeedEstimator::Config spe_config;
+    SpeedEstimator speed_estmator{spe_config};
 
     bool cali_debug_enabled = true;
     bool command_debug_enabled = false;
@@ -171,7 +176,7 @@ public:
     }
 
     void setOpenLoopCurrent(const real_t current){
-        openloop_current = current;
+        curr_ctrl.config.current_clamp = current;
     }
 
     void setTargetVector(const real_t pos){
@@ -253,7 +258,7 @@ public:
     }
 
     void setAccelClamp(const real_t max_acc){
-        trapezoid_ctrl.max_dec = max_acc;
+        trapezoid_ctrl.config.max_dec = max_acc;
     }
 
     void triggerCali(){
