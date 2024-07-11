@@ -48,16 +48,16 @@ protected:
         GyroZ = 0x47,
     };
 
-    void writeReg(const uint8_t & reg_addr, const uint8_t data){
+    void writeReg(const uint8_t reg_addr, const uint8_t data){
         bus_drv.writeReg(reg_addr, data);
     }
 
-    void writeReg(const RegAddress & reg, const uint8_t data){
+    void writeReg(const RegAddress reg, const uint8_t data){
         bus_drv.writeReg((uint8_t)reg, data);
     }
 
-    void requestData(const RegAddress & reg_addr, uint8_t * datas, const size_t len){
-        bus_drv.readPool((uint8_t)reg_addr, datas, 2, len);
+    void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
+        bus_drv.readPool((uint8_t)reg_addr, datas, len);
     }
 
 public:

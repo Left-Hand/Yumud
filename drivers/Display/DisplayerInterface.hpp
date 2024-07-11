@@ -144,7 +144,7 @@ public:
     }
 
     void writePool(const uint8_t * data_ptr, const size_t len) override{
-        bus_drv.writePool(data_token, data_ptr, len, false);
+        bus_drv.writePool(data_token, data_ptr, len, LSB);
     }
 
     // void writePool(const uint8_t & data, const size_t & len) override{

@@ -102,7 +102,7 @@ protected:
     }
 
     void requestPool(const RegAddress & regAddress, void * data_ptr, const size_t len){
-        bus_drv.readPool((uint8_t)regAddress, (uint8_t *)data_ptr, 2, len);
+        bus_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len);
     }
 public:
     INA226(I2cDrv & _i2c_drv):bus_drv(_i2c_drv){};

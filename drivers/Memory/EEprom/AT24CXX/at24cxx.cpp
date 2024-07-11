@@ -48,7 +48,6 @@ void AT24CXX::_store(const void * data, const Address data_size, const Address l
         return;
     }
 
-
     // auto chip_window = window();
     AddressWindow store_window = AddressWindow{loc,loc + data_size};
     AddressWindow op_window = {0,0};

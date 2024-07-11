@@ -82,7 +82,7 @@ protected:
     };
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        bus_drv.writeReg((uint8_t)addr, data, false);
+        bus_drv.writeReg((uint8_t)addr, data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
@@ -90,7 +90,7 @@ protected:
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        bus_drv.readReg((uint8_t)addr, data, LSB);
+        bus_drv.readReg((uint8_t)addr, data);
     }
 
     uint8_t readReg(const RegAddress addr){
