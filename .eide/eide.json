@@ -107,8 +107,7 @@
         "thirdparty/lodepng/pngdetail.cpp",
         "src/testbench/st77xx_tb.cpp",
         "src/app/embd/host.cpp",
-        "src/app/embd/img_trans.cpp",
-        "src/testbench/dshot_tb.cpp"
+        "src/app/embd/img_trans.cpp"
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {

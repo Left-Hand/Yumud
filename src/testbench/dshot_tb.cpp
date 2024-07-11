@@ -4,7 +4,7 @@ static constexpr size_t n = 40;
 static std::array<uint16_t, n> data;
 
 
-static uint16_t m_crc(uint16_t data_in){
+[[maybe_unused]] static uint16_t m_crc(uint16_t data_in){
 	uint16_t speed_data;
 	speed_data = data_in << 5;
 	data_in = data_in << 1;
@@ -14,7 +14,7 @@ static uint16_t m_crc(uint16_t data_in){
 }
 	
 
-static void transfer(uint16_t data_in){
+[[maybe_unused]]static void transfer(uint16_t data_in){
 	uint8_t i;
 	for(i=0;i<16;i++)
 	{
@@ -122,6 +122,14 @@ void dshot_tb(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
     }
 }
 
+[[maybe_unused]]static void dshot_tb2(OutputStream & logger, TimerOC & oc){
+    while(true){
+        real_t val = 0.5 * sin(t) + 0.5;
+        oc = val;
+        logger.println(val);
+    }
+}
+
 void dshot_main(){
         // USART_Printf_Init(115200);
     // Delay_Init();
@@ -153,4 +161,16 @@ void dshot_main(){
     // 144000000/233
 
 
+    // uart1.init(576000, CommMethod::Blocking);
+    // auto & logger = uart1;
+    // logger.setEps(4);
+    // logger.setRadix(10);
+    // logger.setSpace(",");
+
+    // timer1.init(10000);
+
+    // auto & oc = timer1.oc(1);
+    // oc.init();
+
+    // dshot_tb(logger, oc);
 }

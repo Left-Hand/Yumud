@@ -204,3 +204,5 @@ void tcs34725_main();
 void dshot_main();
 
 void at24cxx_tb(OutputStream & logger, I2c & i2c);
+
+void dshot_main();
