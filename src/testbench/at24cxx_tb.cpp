@@ -1,7 +1,6 @@
 #include "tb.h"
 
-#include "drivers/Memory/EEprom/AT24CXX/at24c02.hpp"
-#include "drivers/Memory/EEprom/AT24CXX/at24c32.hpp"
+#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
 
 void at24cxx_tb(OutputStream & logger, I2c & i2c){
     AT24C02 at24(i2c);

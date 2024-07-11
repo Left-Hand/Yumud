@@ -157,7 +157,7 @@ using Sys::t;
 #include "hal/opa/opa.hpp"
 #include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/Encoder/Estimmator.hpp"
-#include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
+#include "drivers/Memory/EEPROM/AT24CXX/at24cxx.hpp"
 
 void memory_tb(OutputStream & logger);
 

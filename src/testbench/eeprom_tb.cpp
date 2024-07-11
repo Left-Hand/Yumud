@@ -1,5 +1,5 @@
 #include "tb.h"
-#include "drivers/Memory/EEprom/AT24CXX/at24c02.hpp"
+#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
 #include "drivers/Memory/Flash/W25QXX/w25qxx.hpp"
 #include "hal/flash/flash.hpp"
 
