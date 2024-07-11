@@ -5,7 +5,12 @@
 int main(){
     Sys::Misc::prework();
     #ifdef CH32V20X
-    embd_main();
+    auto & logger = uart1;
+    logger.init(921600);
+    I2cSw i2c{portD[0], portD[1]};
+    i2c.init(400000);
+    at24cxx_tb(logger, i2c);
+    // embd_main();
 
     // delay(200);
     // pmdc_tb();
