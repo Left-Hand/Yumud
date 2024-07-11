@@ -322,7 +322,7 @@ public:
         return toString();
     }
 
-    __no_inline String toString(unsigned char decimalPlaces = 2){
+    __no_inline String toString(unsigned char decimalPlaces = 2) const{
         if constexpr(std::is_integral<T>::value){
             return ('[' + String(start) + ',' + String(end) + ')');
         }else{

@@ -159,7 +159,6 @@ using Sys::t;
 #include "drivers/Encoder/Estimmator.hpp"
 #include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
 
-void flash_tb(IOStream & logger);
 void memory_tb(OutputStream & logger);
 
 void stepper_tb(IOStream & logger);

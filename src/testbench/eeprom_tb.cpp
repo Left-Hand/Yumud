@@ -1,25 +1,33 @@
 #include "tb.h"
 #include "drivers/Memory/EEprom/AT24CXX/at24c02.hpp"
 #include "drivers/Memory/Flash/W25QXX/w25qxx.hpp"
-// #include "drivers/"
+#include "hal/flash/flash.hpp"
 
 
 #define EEPROM_TB_FIRSTBYTE
 #define EEPROM_TB_SEVERLBYTES
-#define EEPROM_TB_WHOLECHIP
-#define EEPROM_TB_PIECES
+// #define EEPROM_TB_WHOLECHIP
+// #define EEPROM_TB_PIECES
+#define EEPROM_TB_CONTENT
+
+struct Temp{
+    uint8_t data[4] = {0,1,2,3};
+    char name[8] = "Rstr1aN";
+    real_t value = real_t(0.1);
+    uint8_t crc = 0x08;
+};
 
 static void mem_tb(OutputStream & logger, Memory & mem){
-
+    [[maybe_unused]] bool passflag = true;
 
     #ifdef EEPROM_TB_FIRSTBYTE
     {
-        uint8_t before;
-        mem.load(before, 0);
-        if(before == 0xff) before = 0;
-        mem.store(uint8_t(before + 1), 0);
+        uint8_t before = 22;
+        mem.load(before);
+        // if(before == 0xff) before = 0;
+        mem.store(uint8_t(before + 1));
         uint8_t after;
-        mem.load(after, 0);
+        mem.load(after);
         ASSERT_WITH_DOWN(before + 1 == after, "firstbyte tb failed", before, "->", after);
         DEBUG_PRINT("firstbyte tb passed", before, "->", after);
     }
@@ -28,10 +36,10 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     #ifdef EEPROM_TB_SEVERLBYTES
     {
         auto before = Sys::Chip::getChipIdCrc();
-        mem.store(before, 0);
+        mem.store(before);
 
         decltype(before) after;
-        mem.load(after, 0);
+        mem.load(after);
 
         ASSERT_WITH_DOWN(before == after, "svbytes tb failed: ", toString(before,16), "->", toString(after, 16));
         DEBUG_PRINT("svbytes tb passed");
@@ -41,7 +49,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     #ifdef EEPROM_TB_WHOLECHIP
     {
         constexpr auto begin_addr = 0;
-        bool passflag = true;
+
 
         uint8_t data_before[256];
         for(size_t i = 0; i < sizeof(data_before);i++) data_before[i] = i;
@@ -84,26 +92,123 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
         Memory mem = {mem};
         mem.store(data, begin_addr);
-
         mem.load(data2, begin_addr);
         for(const auto & item : data2){
             logger.println("data_read", int(item));
         }
     }
     #endif
+
+    #ifdef EEPROM_TB_CONTENT
+    {
+
+        logger.println("struct tb");
+        Temp temp;
+        mem.store(temp);
+        temp.value = 0.2;
+        logger.println(temp.value);
+        mem.load(temp);
+        logger.println(temp.value);
+    }
+    #endif
+
+    logger.println("at24 tb done");
 }
 
-static void eeprom_tb(OutputStream & logger, I2c & i2c){
+[[maybe_unused]] static void eeprom_tb(OutputStream & logger, I2c & i2c){
     AT24C02 at24{i2c};
     at24.init();
     Memory mem = at24;
     mem_tb(logger, mem);
 }
 
+// static void flash_tb(OutputStream & logger){
+//     // AT24C02 at24{i2c};
+//     Flash flash{0};
+//     flash.init();
+//     Memory mem = flash;
+//     mem_tb(logger, mem);
+// }
 
+
+static void flash_tb(IOStream & logger){
+
+    Flash sto(-1);
+    sto.init();
+    Memory flash = sto;
+    Sys::Misc::prework();
+
+    logger.setSpace(" ");
+    logger.setRadix(16);
+
+    logger.println("Flash Size:", Sys::Chip::getFlashSize());
+    logger.println("Sys Clock:", Sys::Clock::getSystemFreq());
+    logger.println("AHB Clock:", Sys::Clock::getAHBFreq());
+    logger.println("APB1 Clock:", Sys::Clock::getAPB1Freq());
+    logger.println("APB2 Clock:", Sys::Clock::getAPB2Freq());
+
+    Temp temp;
+
+    flash.load(temp);
+    if(temp.data[0] == 0x39){
+        logger.println("need to store new");
+        logger.println("new data is");
+        Temp new_temp = Temp();
+        logger.println(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
+        flash.store(new_temp);
+        flash.load(temp);
+        logger.println("new store done");
+    }
+
+    logger.println("data loaded");
+    logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    logger.println(temp.name);
+    logger.println(temp.value);
+    logger.println(temp.crc);
+
+    logger.println("init bkp");
+    bkp.init();
+    bkp.writeData(1, bkp.readData(1) + 1);
+    temp.crc = bkp.readData(1);
+    flash.store(temp);
+    logger.println("flash tb done");
+
+    // flash.load(temp);
+    // logger.println();
+    // if(temp.data[0] == 0xE3 || temp.data[0] == 0x39 || (bkp.readData(1) & 0b11) == 0){
+    //     logger.println(temp.data[0]);
+
+    //     temp.data[3] = bkp.readData(1);
+    //     temp.name[2] = 'k';
+    //     // temp.value = real_t(0.2);
+    //     temp.crc = 10;
+
+    //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    //     logger.println(temp.name);
+    //     logger.println(temp.value);
+    //     logger.println(temp.crc);
+    //     flash.store(temp);
+    //     flash.load(temp);
+    // }else{
+    //     logger.println("suss");
+    //         logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    // logger.println(temp.name);
+    // logger.println(temp.value);
+    // logger.println(temp.crc);
+    // }
+
+
+    // }
+    // logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    // logger.println(temp.name);
+    // logger.println(temp.value);
+    // logger.println(temp.crc);
+
+    // 
+}
 
 void eeprom_main(){
-    uart1.init(921600);
+    uart1.init(921600, CommMethod::Blocking);
     auto & logger = uart1;
     logger.setEps(4);
     logger.setRadix(10);
@@ -113,4 +218,5 @@ void eeprom_main(){
     i2csw.init(400000);
 
     eeprom_tb(logger, i2csw);
+    // flash_tb(logger);
 }
