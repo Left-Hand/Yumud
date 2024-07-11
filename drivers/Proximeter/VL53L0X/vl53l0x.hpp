@@ -1,16 +1,16 @@
-#ifndef __VL53L0X_H
-#define __VL53L0X_H
+#pragma once
 
-#include "bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
-#define VL53L0X_DEF_I2C_ADDR 0x29
 
 class VL53L0X{
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
 public:
     static constexpr uint8_t default_id = 0x52;
     VL53L0X(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    VL53L0X(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
+    VL53L0X(I2c & bus):bus_drv(bus, default_id){;}
     ~VL53L0X(){;}
 
     void startConv();
@@ -20,13 +20,15 @@ public:
     uint16_t getAmbientCount();
     uint16_t getSignalCount();
 
-	void enableHighPrecision(const bool & _highPrec = true);
-    void enableContMode(const bool & _continuous = true);
+	void enableHighPrecision(const bool _highPrec = true);
+    void enableContMode(const bool _continuous = true);
     bool update();
 
 private:
     bool highPrec = false;
     bool continuous = false;
+
+    #pragma pack(push, 1)
 
     struct Result{
         uint16_t ambientCount; /**< Environment quantity */
@@ -34,30 +36,23 @@ private:
         uint16_t distance;
     };
 
-    // uint16_t last_distance;
+    #pragma pack(pop)
+
     Result result, last_result;
-	void writeByteData(unsigned char Reg, unsigned char byte){
+	void writeByteData(const uint8_t Reg, const uint8_t byte){
         bus_drv.writeReg(Reg, byte);
     }
 
     void flush();
     bool isIdle();
 
-	uint8_t readByteData(unsigned char Reg){
+	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
         bus_drv.readReg(Reg, data);
         return data;
     }
 
-	void writeData(unsigned char Reg ,unsigned char *buf, unsigned char Num){
-        bus_drv.writePool(Reg, buf, Num, false);
-    }
-
-    void requestData(uint8_t reg, uint8_t * data, const size_t len){
+    void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         bus_drv.readPool(reg, data, len);
     }
 };
-
-#endif
-
-

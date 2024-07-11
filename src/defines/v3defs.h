@@ -65,13 +65,13 @@
 // #define HAVE_I2C2
 #define I2C2_REMAP 0
 
-
 #define CAN_REMAP 3
 
 #define HAVE_OPA1
 #define HAVE_OPA2
 
+#define HAVE_USBFS
 
-#define DEBUGGER uart1
+#define DEBUGGER uart2
 // #define DEBUGGER sdi
-#define LOGGER uart1
+#define LOGGER uart2

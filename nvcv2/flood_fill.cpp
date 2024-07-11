@@ -246,8 +246,8 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
         }
     }
 }
+[[maybe_unused]] static real_t iou(const Rect2i & a, const Rect2i & b){
 
-static real_t iou(const Rect2i & a, const Rect2i & b){
     Rect2i _a = a.abs();
     Rect2i _b = b.abs();
 
@@ -264,7 +264,7 @@ Image<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
     auto [nrow,ncol] = src.size;
     Image<Grayscale, Grayscale> map({src.size});
     static constexpr Grayscale labelable = 255;
-    m_blobs.resize(0);
+    m_blobs.clear();
 
     for(int y = 0; y < ncol; ++y){
         for(int x = 0; x < nrow; ++x){
@@ -304,8 +304,8 @@ Image<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
             std::vector<Vector2i> current_indices;
             map[{row,col}] = label;
             Blob blob{
-                .rect = Rect2i(Vector2i{row, col}, Vector2i{1,1}),
-                .area = 1,
+                .rect = Rect2i(Vector2i{row, col}, Vector2i{0,0}),
+                .area = 0,
                 .index = label,
             };
 
@@ -335,30 +335,43 @@ Image<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
             }
 
             {
+                const auto & rect = blob.rect;
                 bool skip_flag = false;
+                bool merge_flag = false;
+                Rect2i * merge_with = nullptr;
+
+                skip_flag |= (int(rect) > 650);
+                skip_flag |= (int(rect) < 300);
+                skip_flag |= rect.height > 40;
+                // skip_flag |= real_t(int(rect)) / blob.area < (1.0 / 0.7);
+                // skip_flag |= blob.area < 50;
+                // skip_flag |= blob.area > 20;
+                // skip_flag |= true;
+
+                if(skip_flag) goto choice;
+
                 for(auto & m_blob : m_blobs){
-                    bool merge_flag = false;
-                    const auto & rect_a = m_blob.rect;
-                    const auto & rect_b = blob.rect;
+                    auto & m_rect = m_blob.rect;
+                    
+                    // merge_flag |= ((iou(rect_a, rect_b) > 0.3));
 
-                    // skip_flag |= rect_
-                    skip_flag |= (int(rect_b) < 25);
-                    skip_flag |= blob.area < 13;
-
-                    if((iou(rect_a, rect_b) > 0.3)){
-                        // merge_flag = true;
-                        skip_flag = true;
-                    }
-
-                    if(skip_flag){
-                        if(merge_flag) m_blob.rect = m_blob.rect.merge(blob.rect);
+                    if(merge_flag){
+                        merge_with = &m_rect;
                         break;
                     }
                 }
 
-                if(!skip_flag){
-                    m_blobs.push_back(blob);
-                    label++;
+                choice:
+
+                if(skip_flag){
+
+                }else{
+                    if(merge_flag){
+                        merge_with->merge(blob.rect);
+                    }else{
+                        m_blobs.push_back(blob);
+                        label++;
+                    }
                 }
             }
         }

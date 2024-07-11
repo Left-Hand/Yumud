@@ -4,6 +4,10 @@
 
 #include "sys/sys_defs.h"
 
+#ifdef __cplusplus
+#include <type_traits>
+#endif
+
 #define CMP_EPSILON 0.00001
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
 
@@ -51,6 +55,7 @@
 #ifdef __cplusplus
     #define MAX(a,b) __max_tmpl(a,b)
     template <typename T, typename U>
+    requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
     constexpr __fast_inline T __max_tmpl(const T & a, const U & _b){
         T b = static_cast<T>(_b);
         return (a > b) ? a : b;
@@ -64,6 +69,7 @@
 #ifdef __cplusplus
     #define MIN(a,b) __min_tmpl(a,b)
     template <typename T, typename U>
+    requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
     constexpr __fast_inline T __min_tmpl(const T & a, const U & _b){
         T b = static_cast<T>(_b);
         return (a < b) ? a : b;
@@ -74,7 +80,16 @@
 #endif
 
 #ifndef ABS
+#ifdef __cplusplus
+    #define ABS(a) __abs_tmpl(a)
+    template <typename T>
+    requires std::is_arithmetic_v<T>
+    constexpr __fast_inline T __abs_tmpl(const T & a){
+        return (a < 0) ? -a : a;
+    }
+#else
 #define ABS(x) ((x < 0)? -(x) : x)
+#endif
 #endif
 
 #ifndef SIGN
@@ -111,7 +126,7 @@
 #ifdef __cplusplus
     #define LERP(x,a,b) __lerp_tmpl(x,a,b)
     template <typename T, typename U, typename V>
-    // template <typename U>
+    requires std::is_arithmetic_v<V>
     constexpr __fast_inline T __lerp_tmpl(const T & x, const U & a, const V & b){
         return a * (T(1) - x) + b * x;
     }

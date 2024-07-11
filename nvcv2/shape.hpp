@@ -16,6 +16,7 @@ namespace NVCV2::Shape{
         const int scharr_y[3][3] = {{-3, -10, -3}, {0, 0, 0}, {3, 10, 3}};
         const int laplacian_4[3][3] = {{0, -1, 0}, {-1, 4, -1}, {0, -1, 0}};
         const int laplacian_8[3][3] = {{-1, -1, -1}, {-1, 8, -1}, {-1, -1, -1}};
+        const int gauss[3][3] = {{1, 1, 1}, {1, 2, 1}, {1, 1, 1}};
     }
 
 
@@ -37,6 +38,87 @@ namespace NVCV2::Shape{
                 pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
                 
                 dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+            }
+        }
+    }
+
+    void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
+        auto size = dst.get_size();
+        const auto & core = Cores::gauss;
+        for(int y = 1; y < size.y-1; y++){
+            for(int x = 1; x < size.x-1; x++){
+                int pixel = 0;
+                pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
+                pixel += src(x +  (y - 1) * size.x)		* core[0][1];
+                pixel += src(x + 1 + (y - 1) * size.x)	* core[0][2];
+                
+                pixel += src(x - 1 + (y) * size.x)		* core[1][0];
+                pixel += src(x +  (y) * size.x)			* core[1][1];
+                pixel += src(x + 1 + (y) * size.x)		* core[1][2];
+                
+                pixel += src(x - 1 + (y + 1) * size.x) 	* core[2][0];
+                pixel += src(x +  (y + 1) * size.x)		* core[2][1];
+                pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
+
+                pixel /= 10;
+                
+                dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+            }
+        }
+    }
+
+    void gauss(Image<Grayscale, Grayscale> src){
+        auto temp = src.space();
+        gauss(temp, src);
+        Pixels::copy(src, temp);
+    }
+    void sobel_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_x);}
+    void sobel_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_y);}
+    void scharr_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_x);}
+    void scharr_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_y);}
+
+    void sobel_xy(Image<Grayscale, Grayscale> & dst, const ImageReadable<Grayscale> & src){
+        auto size = dst.get_size();
+        {
+            const auto & core = Cores::sobel_x;
+            for(int y = 1; y < size.y-1; y++){
+                for(int x = 1; x < size.x-1; x++){
+                    int pixel = 0;
+                    pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
+                    pixel += src(x +  (y - 1) * size.x)		* core[0][1];
+                    pixel += src(x + 1 + (y - 1) * size.x)	* core[0][2];
+                    
+                    pixel += src(x - 1 + (y) * size.x)		* core[1][0];
+                    pixel += src(x +  (y) * size.x)			* core[1][1];
+                    pixel += src(x + 1 + (y) * size.x)		* core[1][2];
+                    
+                    pixel += src(x - 1 + (y + 1) * size.x) 	* core[2][0];
+                    pixel += src(x +  (y + 1) * size.x)		* core[2][1];
+                    pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
+                    
+                    dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+                }
+            }
+        }
+        {
+            const auto & core = Cores::sobel_y;
+            for(int y = 1; y < size.y-1; y++){
+                for(int x = 1; x < size.x-1; x++){
+                    int pixel = 0;
+                    pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
+                    pixel += src(x +  (y - 1) * size.x)		* core[0][1];
+                    pixel += src(x + 1 + (y - 1) * size.x)	* core[0][2];
+                    
+                    pixel += src(x - 1 + (y) * size.x)		* core[1][0];
+                    pixel += src(x +  (y) * size.x)			* core[1][1];
+                    pixel += src(x + 1 + (y) * size.x)		* core[1][2];
+                    
+                    pixel += src(x - 1 + (y + 1) * size.x) 	* core[2][0];
+                    pixel += src(x +  (y + 1) * size.x)		* core[2][1];
+                    pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
+                    
+                    dst[x + y * size.x] = std::max((uint8_t)dst[x + y *size.x], (uint8_t)CLAMP(ABS(pixel), 0, 255));
+                }
             }
         }
     }
@@ -330,6 +412,21 @@ namespace NVCV2::Shape{
     auto x4(const ImageReadable<Grayscale> & src, const int m = 2){
         Image<Grayscale, Grayscale> dst(src.size / m);
         x4(dst, src, m);
+        return dst;
+    }
+
+    void x2(Image<Grayscale, Grayscale> & dst, const Image<Grayscale, Grayscale> & src){
+        const auto size = dst.size;
+        for(int y = 0; y < size.y; y++){
+            for(int x = 0; x < size.x; x++){
+                dst[{x,y}] = src[{x << 1,y << 1}];
+            }
+        }
+    }
+
+    auto x2(const Image<Grayscale, Grayscale> & src){
+        Image<Grayscale, Grayscale> dst(src.size / 2);
+        x2(dst, src);
         return dst;
     }
 

@@ -17,29 +17,19 @@ private:
     bool area_locked = false;
     uint8_t scr_ctrl = 0;
 
-    __fast_inline void writeCommand(const uint8_t & cmd){
+    __fast_inline void writeCommand(const uint8_t cmd){
         interface.writeCommand(cmd);
     }
 
-    __fast_inline void writeData(const uint8_t & data){
+    __fast_inline void writeData(const uint8_t data){
         interface.writeData(data);
     }
 
-    __fast_inline void writeData16(const uint16_t & data){
+    __fast_inline void writeData16(const uint16_t data){
         interface.writeData(data);
     }
-    __fast_inline void writePixel(const RGB565 & data){
-        interface.writeData(data.data);
-    }
-    void putPixels(const RGB565 & data, const size_t & len){
-        interface.writePool(data.data, len);
-    }
 
-    void putPixels(const RGB565 * data_ptr, const size_t & len){
-        interface.writePool((const uint16_t *)(data_ptr), len);
-    }
-
-    void modifyCtrl(const bool & yes,const uint8_t & pos){
+    void modifyCtrl(const bool yes,const uint8_t pos){
         uint8_t temp = 0x01 << pos;
         if (yes) scr_ctrl |= temp;
         else scr_ctrl &= ~temp;
@@ -49,19 +39,16 @@ private:
     }
 
 
-    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
-        setarea_unsafe(rect);
-        putPixels(color_ptr, rect.get_area());
-    }
+
 
     void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override{
         setarea_unsafe(rect);
-        putPixels(color, rect.get_area());
+        interface.writePool((uint16_t)color, int(rect));
     }
 
 protected:
 
-    __fast_inline uint32_t getPointIndex(const uint16_t & x, const uint16_t & y){
+    __fast_inline uint32_t getPointIndex(const uint16_t x, const uint16_t y){
         return (x + y * size.x);
     }
     void setpos_unsafe(const Vector2i & pos) override;
@@ -69,42 +56,32 @@ protected:
 
     __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
         setpos_unsafe(pos);
-        writePixel(color);
+        interface.writeData(color.data);
     }
 public:
     ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
             ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
     void init();
+
     void setDisplayOffset(const Vector2i & _offset){
         offset = _offset;
     }
 
     void puttexture_unsafe(const Rect2i & rect, const Grayscale * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
-        // auto size = 1;
-        interface.dc_gpio = DisplayInterfaceSpi::data_level;
-        interface.writePixels(color_ptr, size);
-        // if(!spi2.begin(0)){
-        //     spi2.configDataSize(16);
-        //     for(size_t i = 0; i < size; i++) spi2.write((uint16_t)RGB565(color_ptr[i]));
-        //     spi2.end();
-        //     spi2.configDataSize(8);
-        // }
-
+        interface.writePixels(color_ptr, int(rect));
     }
 
     void puttexture_unsafe(const Rect2i & rect, const Binary * color_ptr){
         setarea_unsafe(rect);
-        auto size = (size_t)rect.get_area();
-
-        interface.dc_gpio = DisplayInterfaceSpi::data_level;
-        auto & spi = interface.bus_drv.bus;
-        if(!spi.begin(0)){
-            spi.configDataSize(16);
-            for(size_t i = 0; i < size; i++) spi.write((((const uint8_t *)color_ptr)[i] ? 0xffff : 0));
-        }
+        interface.writePixels((Grayscale *)color_ptr, int(rect));
     }
+
+    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
+        setarea_unsafe(rect);
+        interface.writePixels((color_ptr), int(rect));
+    }
+
     void setFlipY(const bool flip){modifyCtrl(flip, 7);}
     void setFlipX(const bool flip){modifyCtrl(flip, 6);}
     void setSwapXY(const bool flip){modifyCtrl(flip, 5);}
@@ -113,12 +90,6 @@ public:
     void setFlushDirH(const bool dir){modifyCtrl(dir, 2);}
 
     void setInversion(const bool & inv){writeCommand(0x20 + inv);}
-
-    // void putTexture(const Rect2i & _area, RGB565 * data){
-    //     Rect2i area = _area.
-    //     if(area.postion.x + area.size.x > width || )
-    //     uint16_t x_begin_in_canvas =
-    // }
 };
 
 #endif

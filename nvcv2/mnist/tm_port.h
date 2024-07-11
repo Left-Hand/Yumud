@@ -35,11 +35,13 @@ limitations under the License.
 #define tm_malloc(x)   malloc(x)
 #define tm_free(x)     free(x)
 
-#define TM_PRINTF(...) DEBUG_PRINT(__VA_ARGS__);
-#define TM_DBG(...)    DEBUG_LOG(__VA_ARGS__);
-#define TM_DBGL()      DEBUG_LOG();
+// #define TM_PRINTF(...) DEBUG_PRINT(__VA_ARGS__);
+// #define TM_DBG(...)    DEBUG_LOG(__VA_ARGS__);
+// #define TM_DBGL()      DEBUG_LOG();
 
-
+#define TM_PRINTF(...)
+#define TM_DBG(...)
+#define TM_DBGL()
 
 #define  TM_GET_US()       ((uint32_t)(micros()))
 

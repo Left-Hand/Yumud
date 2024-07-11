@@ -7,7 +7,9 @@ struct TurnSolver{
     real_t pb = 0.0f;
     real_t va = 0.0f;
     real_t vb = 0.0f;
-}turnSolver;
+};
+
+TurnSolver turnSolver;
 // Helper functions:
 real_t slopeFromT (real_t t, real_t A, real_t B, real_t C){
   real_t dtdx = 1.0/(3.0*A*t*t + 2.0*B*t + C); 
@@ -109,7 +111,7 @@ real_t ss(){
 
     // stp.setTargetPosition(new_pos);
     return new_pos;
-    // stp.setTagretVector(new_pos*2);
+    // stp.setTargetVector(new_pos*2);
 }
 
 
@@ -125,7 +127,7 @@ void stepper_tb(IOStream & logger){
 
 
     SVPWM2 svpwm{coilA, coilB};
-    svpwm.inverse(true);
+    svpwm.inverse(false);
     timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
     timer1.enableArrSync();
     timer1.oc(1).init();
@@ -135,8 +137,8 @@ void stepper_tb(IOStream & logger){
 
     ena_gpio.outpp(1);
     enb_gpio.outpp(1);
+
     svpwm.init();
-    svpwm.inverse(true);
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
@@ -149,75 +151,49 @@ void stepper_tb(IOStream & logger){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    Stepper stp{logger, svpwm, mt6816, mem};
-
-
-
-
-
-    // while(true){
-    //     svpwm.setCurrent(0.6, t);
-    // }
-
-    // TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
-
-
-    // adc1.init(
-    //     {
-    //     },{
-    //         AdcChannelConfig{AdcUtils::Channel::CH3, AdcUtils::SampleCycles::T13_5},
-    //         // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T1_5},
-    //         // AdcChannelConfig{AdcUtils::Channel::CH4, AdcUtils::SampleCycles::T13_5},
-    //         AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-    //         // AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-    //         AdcChannelConfig{AdcUtils::Channel::VREF, AdcUtils::SampleCycles::T28_5},
-    //     });
-
-    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
-    // // adc1.enableContinous();
-    // adc1.enableAutoInject();
-    // adc1.setPga(AdcOnChip::Pga::X1);
-
-    // adc1.bindCb(AdcUtils::IT::JEOC, [&](){
-    //     adcv1 = ADC1->IDATAR1;
-    //     adcv2 = ADC1->IDATAR3;
-    // });
-    // adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
-
-
-
-
-
+    Stepper stp{logger, can1, svpwm, mt6816, mem};
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
     timer3.bindCb(IT::Update, [&](){stp.tick();});
     timer3.enableIt(IT::Update, NvicPriority(0, 0));
-    // can1.init(Can::BaudRate::Mbps1);
 
+    can1.init(Can::BaudRate::Mbps1);
+ 
     stp.init();
+    // logger.println("stat is", stp.status()._to_string());
+    // while(+stp.status() == +Stepper::RunStatus::ACTIVE);
 
+    stp.setOpenLoopCurrent(0.8);
     stp.setCurrentClamp(1.4);
-    while(not stp.isActive());
+    stp.setTargetCurrent(-0.9);
+
+    while(stp.isActive() == false);
+    
+    delay(3400);
+
+    stp.locateRelatively(-3);
+    stp.setCurrentClamp(1.4);
+
     while(true){
-        stp.run();
-        // stp.setTagretVector(2 * sin(t));
-        // stp.setTagretVector(2 * t);
-        
+        stp.run(); 
+        // stp.setTargetVector(sin(t));
+        // stp.setTargetVector(2 * t);
+        // logger.println(stp.getSpeed());
         stp.report();
         Sys::Clock::reCalculateTime();
 
-        stp.setTargetPosition(0.05 * t);
+        // stp.setTargetPosition(0.05 * t);
         // stp.setTargetCurrent(1.2 * sin(t));
 
         // stp.setTargetPosition(2.6 * sin(4 * t));
         // stp.setTargetPosition(20 * sign(sin(t)));
-        // stp.setTagretTrapezoid(70 * floor(t / 3));
+        // stp.setTargetTrapezoid(70 * floor(t / 3));
 
         // stp.setTargetPosition(0.2 * floor(t*10));
         // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
         // stp.setTargetPosition(sin(t));
-        // stp.setTargetPosition(t);
+        stp.setTargetPosition(2.5 * sin(3 * t));
         // stp.setTargetPosition(-t/8);
         // stp.setTargetPosition(4 * floor(fmod(t * 4,2)));
         // real_t temp = sin(2 * t);

@@ -36,6 +36,11 @@
 #define DEBUG_VALUE(value, ...) DEBUG_PRINT("[V]", #value, "is", value, ##__VA_ARGS__)
 #endif
 
+#ifdef __riscv
+#define CREATE_FAULT asm("csrrw zero, mstatus, zero");
+#else
+#error "Not supported architecture"
+#endif
 
 #define RUN_TIME_DEBUG
 
@@ -66,7 +71,7 @@ if(bool(condition) == false){\
 #define ASSERT_WITH_DOWN(condition, ...) \
 if(bool(condition) == false){\
     DEBUG_PRINT("[f]:", __LINE__, ':', ##__VA_ARGS__);\
-    while(true);\
+    CREATE_FAULT;\
 }
 
 extern "C"{

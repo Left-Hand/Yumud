@@ -176,7 +176,7 @@ constexpr __fast_inline Vector2_t<T> Vector2_t<T>::improduct(const Vector2_t<T> 
 
 template<typename T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::rotated(const T r) const{
-    return this->improduct(Vector2_t<T>(cos(r), sin(r)));
+    return this->improduct(Vector2_t<T>(::cos(r), ::sin(r)));
 }
 
 #define VECTOR2_COMPARE_IM_OPERATOR(op) \

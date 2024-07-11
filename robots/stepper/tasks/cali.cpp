@@ -96,7 +96,6 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     constexpr real_t cali_current = 1.2;
     constexpr real_t align_current = 1.2;
 
-
     static SubState sub_state = SubState::DONE;
     static uint32_t cnt = 0;
     static int openloop_pole = 0;
@@ -107,9 +106,13 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     static std::array<real_t, cogging_samples> forward_cogging_err;
     static std::array<real_t, cogging_samples> backward_cogging_err;
 
-    if(init_flag){
+    auto sw_state = [](const SubState & new_state){
+        sub_state = new_state;
         cnt = 0;
-        sub_state = SubState::ALIGN;
+    };
+
+    if(init_flag){
+        sw_state(SubState::ENTRY);
         openloop_pole = 0;
         forward_pole_err.fill(0);
         backward_pole_err.fill(0);
@@ -119,13 +122,17 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
         return RunStatus::NONE;
     }
 
-    auto sw_state = [](const SubState & new_state){
-        sub_state = new_state;
-        cnt = 0;
-    };
-
     {
         switch(sub_state){
+            case SubState::ENTRY:
+                // if(autoload(true)){
+                //     sw_state(SubState::EXAMINE);
+                // }else{
+                //     sw_state(SubState::ALIGN);
+                // }
+                sw_state(SubState::ALIGN);
+                break;
+
             case SubState::ALIGN:
                 setCurrent(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * 500)){
@@ -316,14 +323,15 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 break;
             case SubState::EXAMINE:
 
-                odo.locateRelatively(real_t(0));
-                setCurrent(real_t(0), real_t(0));
+
                 sw_state(SubState::DONE);
                 break;
 
             case SubState::DONE:
+                // odo.locateRelatively(real_t(0));
+                target = 0;
+                setCurrent(real_t(0), real_t(0));
                 return RunStatus::EXIT;
-                break;
             default:
                 break;
         }

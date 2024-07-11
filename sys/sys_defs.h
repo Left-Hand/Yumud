@@ -125,9 +125,15 @@
 #define BSWAP_64(x) ((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32))
 
 #define VAR_AND_SIZE(x) x,sizeof(x)
-#define PTR8_AND_SIZE(x) (uint8_t *)&x, sizeof(x)
+#define PTR8_AND_SIZE(x) (const uint8_t *)&x, sizeof(x)
+#define CHR8_AND_SIZE(x) (const char *)&x, sizeof(x)
 
+#define FOREACH(container,it) \
+    for(typeof((container).begin()) it = (container).begin();it!=(container).end();++it)
 
+#define FORRANGE(val,a,b)\
+    for(int val = a; val < b; val++) \
+    
 #ifdef __cplusplus
 #define DECLTYPE(...) decltype(__VA_ARGS__)
 #endif

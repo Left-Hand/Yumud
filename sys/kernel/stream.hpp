@@ -5,9 +5,17 @@
 #include "sys/platform.h"
 #include "types/buffer/buffer.hpp"
 #include "types/string/String.hpp"
+
+#include <vector>
+#include <array>
+
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <type_traits>
+#include <tuple>
+
+#include <utility>
 
 enum class SpecToken {
     Space,
@@ -59,10 +67,10 @@ protected:
     uint8_t eps = 2;
     bool skipSpec = false;
 
-    __fast_inline void printString(const String & str){write(str.c_str(), str.length());}
-    __fast_inline void printString(const std::string & str){write(str.c_str(), str.length());}
-    __fast_inline void printString(const std::string_view & str){write(str.data(), str.length());}
-    __fast_inline void printString(const char * str){write(str, strlen(str));}
+    void printString(const String & str){write(str.c_str(), str.length());}
+    void printString(const std::string & str){write(str.c_str(), str.length());}
+    void printString(const std::string_view & str){write(str.data(), str.length());}
+    void printString(const char * str){write(str, strlen(str));}
 public:
 
     virtual void write(const char data) = 0;
@@ -93,6 +101,7 @@ public:
     OutputStream & operator<<(double val){printString(String(val, eps)); return *this;}
 
     OutputStream & operator<<(const char chr){write(chr); return *this;}
+    OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
     OutputStream & operator<<(char* pStr){printString(String(pStr)); return *this;}
     OutputStream & operator<<(const char* pStr){printString(String(pStr)); return *this;}
     OutputStream & operator<<(const String & str){printString(str); return *this;}
@@ -101,8 +110,8 @@ public:
 
     OutputStream & operator<<(const SpecToken & spec);
 
-    template<typename real, size_t size>
-    OutputStream & operator<<(const real (&arr)[size]){
+    template<typename T, size_t size>
+    OutputStream & operator<<(const T (&arr)[size]){
         *this << '[';
         for(size_t i = 0; i < size - 1; ++i)
             *this << arr[i] << ',';
@@ -112,14 +121,57 @@ public:
         return *this;
     }
 
-    template<typename real>
-    requires (!std::is_pointer<real>::value)
-    OutputStream & operator<<(real misc){*this << misc.toString(eps); return *this;}
+    template<typename T, size_t size>
+    OutputStream & operator<<(const std::array<T, size> & arr){
+        *this << '[';
+        for(size_t i = 0; i < size - 1; ++i)
+            *this << arr[i] << ',';
+        if(size > 0)
+            *this << arr[size - 1];
+        *this << ']';
+        return *this;
+    }
+
+    template<typename T>
+    OutputStream & operator<<(const std::vector<T> & arr){
+        size_t size = arr.size();
+        *this << '[';
+        for(size_t i = 0; i < size - 1; ++i)
+            *this << arr[i] << ',';
+        if(size > 0)
+            *this << arr[size - 1];
+        *this << ']';
+        return *this;
+    }
+
+    template<typename T>
+    requires (!std::is_pointer_v<T>)
+    OutputStream & operator<<(const T & misc){*this << misc.toString(eps); return *this;}
+
+
+    template <typename... Args>
+    auto& operator<<(const std::tuple<Args...>& t) {
+        using TupleType = std::tuple<Args...>;
+        constexpr size_t tupleSize = std::tuple_size<TupleType>::value;
+        *this << '(';
+        std::apply(
+            [&](const auto&... args) {
+                ((tupleSize > 1 && &args != &std::get<tupleSize - 1>(t) ? (*this << args << ',') : (*this << args)), ...);
+            },
+            t
+        );
+        *this << ')';
+        return *this;
+    }
+
+    template<typename T>
+    requires std::is_enum_v<T>
+    OutputStream & operator<<(const T & misc){*this << int(misc); return *this;}
 
     void print(){}
 
-	template <typename real>
-	void print(const real& first) {
+	template <typename T>
+	void print(const T & first) {
 		*this << first;
 		print();
 	}
@@ -132,22 +184,38 @@ public:
         print(args...);
     }
 
+    void println(){*this << "\r\n";}
 
-    void println(){*this << "\n";}
-
-	template <typename real>
-	void println(const real& first) {
+	template <typename T>
+	void println(const T & first) {
 		*this << first;
         *this << "\r\n";
 	}
 
-    template <typename real, typename... Args>
-    void println(real first, Args... args) {
+    template <typename T, typename... Args>
+    void println(T first, Args... args) {
         *this << first;
         if(!skipSpec) *this << space;
         else skipSpec = false;
         println(args...);
     }
+
+    void prints(){*this << "\r\n";}
+
+	template <typename T>
+	void prints(const T & first) {
+		*this << first;
+        *this << "\r\n";
+	}
+
+    template <typename T, typename... Args>
+    void prints(T first, Args... args) {
+        *this << first;
+        if(!skipSpec) *this << space;
+        else skipSpec = false;
+        println(args...);
+    }
+private:
 };
 
 class IOStream:public OutputStream, public InputStream{

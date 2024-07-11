@@ -1,7 +1,9 @@
 #include "timer.hpp"
+#include "sys/system.hpp"
 
 static void TIM_RCC_ON(const TIM_TypeDef * instance){
     switch(uint32_t(instance)){
+        #ifdef HAVE_TIM1
         case TIM1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
             switch(TIM1_REMAP){
@@ -17,6 +19,9 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     break;
             }
             break;
+        #endif
+
+        #ifdef HAVE_TIM2
         case TIM2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
             switch(TIM2_REMAP){
@@ -32,8 +37,10 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     GPIO_PinRemapConfig(GPIO_FullRemap_TIM2, ENABLE);
                     break;
             }
-            
             break;
+        #endif
+
+        #ifdef HAVE_TIM3
         case TIM3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
             switch(TIM3_REMAP){
@@ -49,6 +56,9 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     break;
             }
             break;
+        #endif
+
+        #ifdef HAVE_TIM4
         case TIM4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
             switch(TIM4_REMAP){
@@ -59,38 +69,25 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
                     break;
             }
             break;
+        #endif
+
+        #ifdef HAVE_TIM8
+        case TIM8_BASE:
+            RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
+            switch(TIM8_REMAP){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_Remap_TIM8, ENABLE);
+                    break;
+            }
+            break;
+        #endif
     }
 }
 
 static uint32_t TIM_Get_BusFreq(const TIM_TypeDef * instance){
-    bool isAbp2 = false;
-    switch(uint32_t(instance)){
-        case TIM1_BASE:
-            isAbp2 = true;
-            break;
-        default:
-        case TIM2_BASE:
-            isAbp2 = false;
-            break;
-        case TIM3_BASE:
-            isAbp2 = false;
-            break;
-        case TIM4_BASE:
-            isAbp2 = false;
-            break;
-    }
-
-
-    RCC_ClocksTypeDef clock;
-    RCC_GetClocksFreq(&clock);
-
-    if (isAbp2) {
-        return clock.PCLK2_Frequency;
-        // return SystemCoreClock;
-    } else {
-        return clock.PCLK1_Frequency;
-        // return SystemCoreClock;
-    }
+    return TimerUtils::isAdvancedTimer(instance) ? Sys::Clock::getAPB2Freq() : Sys::Clock::getAPB1Freq();
 }
 
 
@@ -118,8 +115,8 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
-    TIM_TimeBaseStructure.TIM_Period = period - 1;
-    TIM_TimeBaseStructure.TIM_Prescaler = cycle - 1;
+    TIM_TimeBaseStructure.TIM_Period = MAX(period - 1, 0);
+    TIM_TimeBaseStructure.TIM_Prescaler = MAX(cycle - 1, 0);
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
@@ -135,8 +132,8 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 void BasicTimer::enable(const bool en){
     if(en){
         TIM_Cmd(instance, ENABLE);
-        if(instance == TIM1){
-            TIM_CtrlPWMOutputs(TIM1, ENABLE);
+        if(TimerUtils::isAdvancedTimer(instance)){
+            TIM_CtrlPWMOutputs(instance, ENABLE);
         }
     }else{
         TIM_Cmd(instance, DISABLE);
@@ -170,6 +167,8 @@ void GenericTimer::initAsEncoder(const Mode mode){
 void GenericTimer::enableSingle(const bool _single){
     TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
 }
+
+// void AdvancedTimer::init
 
 uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
 	RCC_ClocksTypeDef RCC_CLK;

@@ -147,7 +147,7 @@ public:
         return toString();
     }
 
-    __no_inline String toString(unsigned char decimalPlaces = 2){
+    __no_inline String toString(unsigned char decimalPlaces = 2) const {
         if constexpr(std::is_integral<T>::value){
             return ('(' + String(x) + ',' + String(y) + ')');
         }else{
@@ -169,6 +169,7 @@ public:
 
 typedef Vector2_t<float> Vector2f;
 typedef Vector2_t<int> Vector2i;
+using Point = Vector2i;
 typedef Vector2_t<real_t> Vector2;
 
 #endif

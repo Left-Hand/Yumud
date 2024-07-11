@@ -112,9 +112,8 @@ public:
         return(*this);
     }
 
-
-    constexpr Rect2_t<T> & operator-(const Vector2_t<auto> & other){
-        this->position += other;
+    [[deprecated]] constexpr Rect2_t<T> & operator-(const Vector2_t<auto> & other){
+        this->position -= other;
         return(*this);
     }
 
@@ -211,6 +210,14 @@ public:
 
     constexpr explicit operator T() const {
         return get_area();
+    }
+
+    constexpr  __no_inline explicit operator String() const{
+        return toString();
+    }
+
+    __no_inline String toString(unsigned char decimalPlaces = 2) const {
+        return ('(' + String(position) + ',' + String(size) + ')');
     }
 };
 

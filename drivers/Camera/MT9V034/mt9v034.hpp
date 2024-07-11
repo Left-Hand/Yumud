@@ -80,6 +80,7 @@ public:
     static constexpr Vector2i camera_size = {188, 120};
 public:
     MT9V034(SccbDrv & _bus_drv):ImageBasics<Grayscale>(camera_size), CameraWithSccb<Grayscale>(_bus_drv, camera_size){;}
+    MT9V034(SccbDrv && _bus_drv):ImageBasics<Grayscale>(camera_size), CameraWithSccb<Grayscale>(_bus_drv, camera_size){;}
     MT9V034(I2c & _i2c):ImageBasics<Grayscale>(camera_size), CameraWithSccb<Grayscale>(SccbDrv(_i2c, default_id), camera_size){;}
 
     bool init();
@@ -90,7 +91,7 @@ public:
         return (chip_version == chipIdReg);
     }
 
-    void setExposureValue(const uint16_t & value){
+    void setExposureValue(const uint16_t value){
         writeReg(0x0B, value);
     }
 };

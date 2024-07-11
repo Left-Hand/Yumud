@@ -16,17 +16,15 @@
 class Flash:public Storage{
 protected:
 
-    using Page = uint32_t;
+    using Page = size_t;
     using PageRange = Range_t<Page>;
-    using Address = uint32_t;
+    using Address = size_t;
     using AddressWindow = Range_t<Address>;
 
     static constexpr Page page_size = 256;
-    static constexpr Address base_address = 0x08000000;
+    static constexpr Address base_address = FLASH_WRProt_Sectors31to127;
 
     Page page_count;
-    // PageRange page_range;
-
     uint32_t pre_clock;
 
     void settleClock(){
@@ -38,10 +36,6 @@ protected:
         Sys::Clock::setAHBFreq(pre_clock);
     }
 
-    Page pageWarp(const int & index){
-        return index > 0 ? index : page_count + index;
-    }
-
     void entry_store() override{
         settleClock();
         Systick_Init();
@@ -49,7 +43,7 @@ protected:
     }
 
     void exit_store() override{
-
+        resetClock();
     }
 
     void entry_load() override{
@@ -64,11 +58,12 @@ protected:
     void lock(){
         FLASH_Lock_Fast();
         __enable_irq();
-
     }
 
     void unlock(){
         __disable_irq();
+        __disable_irq();
+        __nopn(4);
         FLASH_Unlock_Fast();
 
         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
@@ -84,10 +79,10 @@ protected:
         do{
             op_window = store_window.grid_forward(op_window, page_size);
             if(op_window){
-                auto phy_window = decltype(op_window)::grid(op_window.shift(base_address).start, page_size);
-                if(op_window.length() < page_size) load(buf, page_size, phy_window.start);
+                auto phy_window = AddressWindow::grid(op_window.shift(base_address).start, page_size);
+                // if(op_window.length() < page_size) load(buf, page_size, phy_window.start);
 
-                memcpy(buf, (uint8_t *)data + op_window.start, op_window.length());
+                // memcpy(buf, (uint8_t *)data + op_window.start, op_window.length());
                 FLASH_ErasePage_Fast(phy_window.start);
                 FLASH_ProgramPage_Fast(phy_window.start, (uint32_t *)&buf);
             }

@@ -10,7 +10,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     // run_leadangle = SIGN_AS(PI / 2, raw_current);
 
 
-    if(+ctrl_type != +CtrlType::VECTOR) run_elecrad = est_elecrad + run_leadangle;
+    if(ctrl_type != CtrlType::VECTOR) run_elecrad = est_elecrad + run_leadangle;
     else run_elecrad = odo.position2rad(target);
 
     setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
@@ -67,17 +67,17 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
 
     {
-        HighLayerCtrl::Result result;
+        Result result;
 
         switch(ctrl_type){
             case CtrlType::CURRENT:
                 result = {ABS(target), SIGN_AS(PI / 2, target)};
                 break;
             case CtrlType::VECTOR:
-                result = {openloop_current_limit, 0};
+                result = {openloop_current, 0};
                 break;
             case CtrlType::POSITION:
-                result = position_ctrl.update(target, est_pos, est_speed, est_elecrad);
+                result = position_ctrl.update(target_position_clamp.clamp(target), est_pos, est_speed, est_elecrad);
                 break;
             case CtrlType::TRAPEZOID:
                 result = trapezoid_ctrl.update(target, est_pos, est_speed, est_elecrad);

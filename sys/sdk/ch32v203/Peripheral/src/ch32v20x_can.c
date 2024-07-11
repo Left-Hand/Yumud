@@ -377,6 +377,8 @@ void CAN_TTComModeCmd(CAN_TypeDef* CANx, FunctionalState NewState)
  */
 uint8_t CAN_Transmit(CAN_TypeDef* CANx, const CanTxMsg* TxMessage)
 {
+  uint32_t data_l = 0;
+  uint32_t data_h = 0;
   uint8_t transmit_mailbox = 0;
 
   if ((CANx->TSTATR&CAN_TSTATR_TME0) == CAN_TSTATR_TME0)
@@ -414,15 +416,26 @@ uint8_t CAN_Transmit(CAN_TypeDef* CANx, const CanTxMsg* TxMessage)
     CANx->sTxMailBox[transmit_mailbox].TXMDTR &= (uint32_t)0xFFFFFFF0;
     CANx->sTxMailBox[transmit_mailbox].TXMDTR |= (TxMessage->RTR ? 0 : TxMessage->DLC & 0x0F);
 
-    CANx->sTxMailBox[transmit_mailbox].TXMDLR = (((uint32_t)TxMessage->Data[3] << 24) | 
-                                             ((uint32_t)TxMessage->Data[2] << 16) |
-                                             ((uint32_t)TxMessage->Data[1] << 8) | 
-                                             ((uint32_t)TxMessage->Data[0]));
-    CANx->sTxMailBox[transmit_mailbox].TXMDHR = (((uint32_t)TxMessage->Data[7] << 24) | 
-                                             ((uint32_t)TxMessage->Data[6] << 16) |
-                                             ((uint32_t)TxMessage->Data[5] << 8) |
-                                             ((uint32_t)TxMessage->Data[4]));
-    CANx->sTxMailBox[transmit_mailbox].TXMIR |= TMIDxR_TXRQ;
+        if(TxMessage->DLC && (TxMessage->RTR != CAN_RTR_Remote))
+        {
+            switch(TxMessage->DLC){
+                case 8: data_h |= (((uint32_t)TxMessage->Data[7] << 24));
+                case 7: data_h |= (((uint32_t)TxMessage->Data[6] << 16));
+                case 6: data_h |= (((uint32_t)TxMessage->Data[5] << 8));
+                case 5: data_h |= (((uint32_t)TxMessage->Data[4] << 0));
+                case 4: data_l |= (((uint32_t)TxMessage->Data[3] << 24));
+                case 3: data_l |= (((uint32_t)TxMessage->Data[2] << 16));
+                case 2: data_l |= (((uint32_t)TxMessage->Data[1] << 8));
+                case 1: data_l |= (((uint32_t)TxMessage->Data[0] << 0));
+                case 0:
+                default:
+                    break;
+            }
+        }
+
+        CANx->sTxMailBox[transmit_mailbox].TXMDHR = data_h;
+        CANx->sTxMailBox[transmit_mailbox].TXMDLR = data_l;
+        CANx->sTxMailBox[transmit_mailbox].TXMIR |= TMIDxR_TXRQ;
   }
 	
   return transmit_mailbox;

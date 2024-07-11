@@ -4,6 +4,8 @@
 
 #include "sys/system.hpp"
 #include "hal/flash/flash.hpp"
+// #include "hal/rng/rng.hpp"
+
 using Sys::t;
 // I2cSw i2cSw(i2cScl, i2cSda);
 
@@ -30,7 +32,7 @@ using Sys::t;
 // MPU6050 mpu(i2cDrvMpu);
 // SGM58031 ext_adc(i2cDrvAdc);
 // LT8920 radio(spiDrvRadio);
-// TCS34725 tcs(i2cDrvTcs);
+// 
 // VL53L0X vlx(i2cDrvVlx);
 // PCF8574 pcf(i2cDrvPcf);
 // AS5600 mags(i2cDrvAS);
@@ -143,7 +145,7 @@ using Sys::t;
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 #include "gpio/port_virtual.hpp"
 #include "drivers/VirtualIO/HC595/hc595.hpp"
-#include "drivers/IMU/Axis6/BMI270/bmi270.hpp"
+// #include "drivers/IMU/Axis6/BMI270/bmi270.hpp"
 #include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "hal/nvic/nvic.hpp"
 #include "dsp/lut.hpp"
@@ -155,10 +157,8 @@ using Sys::t;
 #include "hal/opa/opa.hpp"
 #include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/Encoder/Estimmator.hpp"
-#include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
+#include "drivers/Memory/EEPROM/AT24CXX/at24cxx.hpp"
 
-void eeprom_tb(OutputStream & logger);
-void flash_tb(IOStream & logger);
 void memory_tb(OutputStream & logger);
 
 void stepper_tb(IOStream & logger);
@@ -171,7 +171,6 @@ void temp_tb(OutputStream & logger);
 void temp_tb2(OutputStream & logger);
 void filter_tb(OutputStream & logger);
 
-void uart_tb(Uart & uart);
 void pmdc_tb();
 
 void lds14_tb(IOStream & logger,Uart & uart);
@@ -186,3 +185,15 @@ void dma_tb(OutputStream & logger, DmaChannel & channel);
 void ch9141_tb(IOStream & logger, Uart & uart);
 
 void can_tb(IOStream & logger, Can & can, bool tx_role = true);
+
+void usbcdc_tb();
+
+void at24cxx_tb(OutputStream & logger, I2c & i2c);
+
+void at24cxx_main();
+
+void eeprom_main();
+
+void qlz_main();
+
+void uart_main();

@@ -18,8 +18,8 @@ public:
     }
 
     virtual void setCurrent(const real_t _current, const real_t _elecrad) = 0;
-    virtual void setClamp(const real_t & _clamp) = 0;
-    virtual void enable(const bool & en = true) = 0;
+    virtual void setClamp(const real_t _clamp) = 0;
+    virtual void enable(const bool en = true) = 0;
 };
 
 
@@ -49,12 +49,10 @@ public:
         coil_b.init();
     }
 
-    void setClamp(const real_t & _clamp) override{
-        // coilA.setClamp(_clamp);
-        // coilB.setClamp(_clamp);
+    void setClamp(const real_t _clamp) override{
     }
 
-    void enable(const bool & en) override{
+    void enable(const bool en = true) override{
         coil_a.enable(en);
         coil_b.enable(en);
     }

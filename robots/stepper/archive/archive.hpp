@@ -55,12 +55,12 @@ namespace StepperUtils{
             mi = minute;
         }
 
-        bool broken(){
+        bool broken() const {
             return (y > 30) || (y < 24) || //no one will use this shit after 2030
             (m > 12) || (m == 0) || (d > 31) || (d == 0) || (h > 23) || (h == 0) || (mi > 59) || (mi == 0);
         }
 
-        bool empty(){
+        bool empty() const {
             uint8_t * ptr = (uint8_t *)this;
             for(size_t i = 0; i < sizeof(*this); i++){
                 if(ptr[i]!= 0){
@@ -70,11 +70,15 @@ namespace StepperUtils{
             return true;
         }
 
-        bool match(){
+        bool match() const {
             return (y == year && m == month && d == day && h == hour && mi == minute); 
         }
 
-        void printout(IOStream & logger){
+        bool errorless() const {
+            return not(broken() || empty());
+        }
+
+        void printout(IOStream & logger) const {
             logger << "build version:\t\t" << this->bver << "\r\n";
             logger << "build time:\t\t20" << 
                     this->y << '/' << this->m << '/' << 
@@ -119,20 +123,38 @@ namespace StepperUtils{
     };
 
     struct Archive{
+
         union{
             struct{
-                uint32_t hashcode;
-                BoardInfo board_info;
-                Switches switches;
-            };
-            uint8_t resv[256 - 100];
-        };
-        uint16_t cali_map[50];
+                struct alignas(128){
+                    struct alignas(16){
+                        uint32_t hashcode;
+                        BoardInfo board_info;
+                        Switches switches;
+                    };
 
-        uint32_t hash(){
-            return hash_impl((char *)this + sizeof(hashcode), sizeof(*this) - sizeof(hashcode));
+                    struct alignas(16){
+                        uint8_t node_id;
+                    };
+                
+                };
+
+                struct alignas(128){
+                    std::array<int16_t, 50> cali_map;
+                };
+            };
+
+            uint8_t data[256];
+        };
+
+
+        uint32_t hash() const {
+            return hash_djb(cali_map);
         }
 
+        auto & map() {return cali_map;}
+        const auto & map() const {return cali_map;}
+        
         void clear(){
             memset(this, 0, sizeof(*this));
         }

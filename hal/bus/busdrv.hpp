@@ -130,13 +130,13 @@ protected:
         BusDrv<BusType>(_bus, _index, _wait_time){};
 
 public:
-    void writePool(const uint8_t reg_address, const uint8_t * data_ptr, const size_t size, const size_t length, const bool msb = true){
+    void writePool(const uint8_t reg_address, const uint8_t * data_ptr, const size_t size, const size_t length, const Endian msb = MSB){
         if(length == 0) return;
         if(!bus.begin(index)){
             bus.write(reg_address);
 
             for(size_t i = 0; i < length; i += size){
-                if(msb){
+                if(bool(msb)){
                     for(size_t j = size; j > 0; j--){
                         bus.write(data_ptr[j-1 + i]);
                     }
@@ -151,13 +151,13 @@ public:
         }
     }
 
-    void readPool(const uint8_t reg_address, uint8_t * data_ptr, const size_t size, const size_t length, const bool msb = true){
+    void readPool(const uint8_t reg_address, uint8_t * data_ptr, const size_t size, const size_t length, const Endian msb = MSB){
         if(length == 0) return;
         if(!bus.begin(index)){
             bus.write(reg_address);
             if(!bus.begin(index | 0x01)){
                 for(size_t i = 0; i < length; i += size){
-                    if(msb){
+                    if(bool(msb)){
                         for(size_t j = size; j > 0; j--){
                             uint32_t temp = 0;
                             bus.read(temp, !((j == 1) && (i == length - size)));
@@ -176,7 +176,7 @@ public:
         }
     }
 
-    void readReg(const uint8_t reg_address,uint16_t & reg, bool msb = true){
+    void readReg(const uint8_t reg_address,uint16_t & reg, Endian msb = MSB){
         uint8_t buf[2] = {0};
         readPool(reg_address, buf, 2, 2, msb);
         reg = buf[1] << 8 | buf[0];
@@ -193,7 +193,7 @@ public:
         }
     }
 
-    void writeReg(const uint8_t reg_address,  const uint16_t reg_data, bool msb = true){
+    void writeReg(const uint8_t reg_address,  const uint16_t reg_data, Endian msb = MSB){
         writePool(reg_address, (uint8_t *)&reg_data, 2, 2, msb);
     }
 

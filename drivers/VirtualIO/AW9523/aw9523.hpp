@@ -54,7 +54,7 @@ protected:
     };
 
     void writeReg(const RegAddress & addr, const uint16_t & data){
-        bus_drv.writeReg((uint8_t)addr, data, false);
+        bus_drv.writeReg((uint8_t)addr, data, LSB);
     }
 
     void readReg(const RegAddress & addr, uint8_t & data){
@@ -62,7 +62,7 @@ protected:
     }
 
     void readReg(const RegAddress & addr, uint16_t & data){
-        bus_drv.readReg((uint8_t)addr, data, false);
+        bus_drv.readReg((uint8_t)addr, data, LSB);
     }
 
     void write(const uint16_t & data) override{

@@ -3,7 +3,7 @@
 String iq_t::toString(unsigned char eps) const{
 
     char str_int[16] = {0};
-    char str_frac[8] = {0};
+    char str_frac[16] = {0};
 
     uint32_t abs_value = abs(value);
     uint32_t int_part = abs_value >> GLOBAL_Q;

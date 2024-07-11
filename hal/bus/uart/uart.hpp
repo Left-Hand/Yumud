@@ -23,6 +23,9 @@ protected:
     RingBuf_t<char, uart_fifo_size> txBuf;
     RingBuf_t<char, uart_fifo_size> rxBuf;
 
+    Callback txPostCb;
+    Callback rxPostCb;
+
     Error read(uint32_t & data, const bool toack) override {char _;read(_);return ErrorType::OK;};
     Error write(const uint32_t data) override {write((char)data); return ErrorType::OK;};
 public:
@@ -34,11 +37,16 @@ public:
         const uint32_t baudRate, 
         const CommMethod _rxMethod = CommMethod::Interrupt,
         const CommMethod _txMethod = CommMethod::Blocking) = 0;
+
     size_t available() const {return rxBuf.available();}
     size_t pending() const {return txBuf.available();}
+    size_t remain() const {return txBuf.size - txBuf.available();}
     virtual void flush(){}//TODO
 
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
 
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
+    void bindTxPostCb(Callback && cb){txPostCb = cb;}
+
+    void bindRxPostCb(Callback && cb){rxPostCb = cb;}
 };

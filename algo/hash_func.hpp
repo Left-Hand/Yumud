@@ -12,6 +12,12 @@ constexpr uint32_t hash_impl(char const * str , size_t size){
     return hash;
 }
 
+template<typename T>
+constexpr uint32_t hash_djb(const T & obj){
+    return hash_impl(reinterpret_cast<const char*>(&obj), sizeof(obj));
+}
+
+
 constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
     return hash_impl(p, size);
 }

@@ -2,8 +2,8 @@
 
 #define __W25Qxx_HPP__
 
-#include "device_defs.h"
-#include "real.hpp"
+#include "drivers/device_defs.h"
+#include "../../memory.hpp"
 
 #ifdef W25QXX_DEBUG
 #define W25QXX_DEBUG(...) DEBUG_LOG(__VA_ARGS__)

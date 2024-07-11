@@ -5,6 +5,7 @@
 #include "sys/platform.h"
 #include "types/real.hpp"
 #include "sys/kernel/clock.h"
+#include "enums.hpp"
 
 __fast_inline uint64_t operator"" _KHz(uint64_t x){
     return x * 1000;

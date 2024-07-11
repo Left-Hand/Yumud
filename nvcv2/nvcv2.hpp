@@ -147,7 +147,4 @@ namespace NVCV2{
     using Histogram = std::array<int, 256>;
 }
 
-
-
-
 #endif

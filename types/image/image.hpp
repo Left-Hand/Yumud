@@ -259,7 +259,6 @@ public:
     Image(std::shared_ptr<DataType[]> _data, const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(_data) {;}
     Image(const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(std::make_shared<DataType[]>(size.x * size.y)) {;}
 
-
     // Move constructor
     Image(Image&& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(std::move(other.data)){}
 
@@ -303,6 +302,19 @@ public:
         return temp;
     }
 
+    Image<ColorType, DataType> clone(const Rect2i & rect) const {
+        auto temp = Image<ColorType, DataType>(rect.size);
+        for(int j = 0; j < rect.size.y; j++) {
+            for(int i = 0; i < rect.size.x; i++) {
+                temp[Vector2i{i,j}] = this->operator[](Vector2i{i + rect.position.x, j + rect.position.y});
+            }
+        }
+        return temp;
+    }
+
+    Image<ColorType, DataType> space() const {
+        return Image<ColorType, DataType>(this->get_size());
+    }
     void copy_from(const Image<ColorType, DataType> & src){
         auto size = ImageBasics<ColorType>::get_size();
         memcpy(this->data.get(), src.data.get(),size.x * size.y);

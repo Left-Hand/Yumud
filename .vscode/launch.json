@@ -1,10 +1,11 @@
 {
   "version": "0.2.0",
   "configurations": [
+
     {
       "cwd": "${workspaceRoot}",
-      "executable": "build\\CH32V30X\\LearnADC.elf",
-      "name": "Debug with OpenOCD",
+      "executable": "build\\CH32V20X\\LearnADC.elf",
+      "name": "Debug V20X",
       "request": "launch",
       "type": "cortex-debug",
       "servertype": "openocd",
@@ -12,6 +13,24 @@
       "runToEntryPoint": "main",
       "showDevDebugOutput": "none",
       "device": "CH32V203",
+      "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V203/NoneOS/CH32V203xx.svd",
+      "toolchainPrefix": "riscv-none-embed",
+      "configFiles": [
+        "${workspaceFolder}/tools/wch-interface.cfg",
+        "${workspaceFolder}/tools/wch-target.cfg"
+      ]
+    },
+    {
+      "cwd": "${workspaceRoot}",
+      "executable": "build\\CH32V30X\\LearnADC.elf",
+      "name": "Debug V30X",
+      "request": "launch",
+      "type": "cortex-debug",
+      "servertype": "openocd",
+      "searchDir": [],
+      "runToEntryPoint": "main",
+      "showDevDebugOutput": "none",
+      "device": "CH32V307",
       "svdFile": "D:/MounRiver/MounRiver_Studio/template/wizard/WCH/RISC-V/CH32V307/NoneOS/CH32V307xx.svd",
       "toolchainPrefix": "riscv-none-embed",
       "configFiles": [
@@ -26,8 +45,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/Yumud/robots/stepper/tasks",
-      "program": "d:/Yumud/robots/stepper/tasks/build/Debug/outDebug",
+      "cwd": "d:/Yumud/src",
+      "program": "d:/Yumud/src/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
