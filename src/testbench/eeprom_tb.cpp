@@ -10,6 +10,13 @@
 // #define EEPROM_TB_PIECES
 #define EEPROM_TB_CONTENT
 
+#ifdef AT24CXX_DEBUG
+#undef AT24CXX_DEBUG
+#define AT24CXX_DEBUG(...) DEBUG_PRINT(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#else
+#define AT24CXX_DEBUG(...)
+#endif
+
 struct Temp{
     uint8_t data[4] = {0,1,2,3};
     char name[8] = "Rstr1aN";
@@ -131,7 +138,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 // }
 
 
-static void flash_tb(IOStream & logger){
+[[maybe_unused]] static void flash_tb(IOStream & logger){
 
     Flash sto(-1);
     sto.init();
