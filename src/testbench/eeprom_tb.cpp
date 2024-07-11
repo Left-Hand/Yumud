@@ -1,23 +1,16 @@
 #include "tb.h"
+#include "drivers/Memory/EEprom/AT24CXX/at24c02.hpp"
+#include "drivers/Memory/Flash/W25QXX/w25qxx.hpp"
+// #include "drivers/"
 
-// #define EEPROM_TB_FIRSTBYTE
-// #define EEPROM_TB_SEVERLBYTES
+
+#define EEPROM_TB_FIRSTBYTE
+#define EEPROM_TB_SEVERLBYTES
 #define EEPROM_TB_WHOLECHIP
-// #define EEPROM_TB_PIECES
+#define EEPROM_TB_PIECES
 
-void eeprom_tb(OutputStream & logger){
+static void mem_tb(OutputStream & logger, Memory & mem){
 
-    logger.setEps(4);
-    logger.setRadix(10);
-    logger.setSpace("");
-
-    I2cSw i2csw = I2cSw(portD[1], portD[0]);
-    i2csw.init(400000);
-
-    AT24C02 at24{I2cDrv(i2csw, AT24C02::default_id)};
-    at24.init();
-
-    Memory mem = at24;
 
     #ifdef EEPROM_TB_FIRSTBYTE
     {
@@ -98,4 +91,26 @@ void eeprom_tb(OutputStream & logger){
         }
     }
     #endif
+}
+
+static void eeprom_tb(OutputStream & logger, I2c & i2c){
+    AT24C02 at24{i2c};
+    at24.init();
+    Memory mem = at24;
+    mem_tb(logger, mem);
+}
+
+
+
+void eeprom_main(){
+    uart1.init(921600);
+    auto & logger = uart1;
+    logger.setEps(4);
+    logger.setRadix(10);
+    logger.setSpace(",");
+
+    I2cSw i2csw = I2cSw(portD[1], portD[0]);
+    i2csw.init(400000);
+
+    eeprom_tb(logger, i2csw);
 }

@@ -2,6 +2,8 @@
 
 #define __RANGE_HPP__
 
+#include "real.hpp"
+
 #include "sys/platform.h"
 #include "types/string/String.hpp"
 #include "type_traits"
@@ -329,5 +331,7 @@ public:
     }
 };
 
-typedef Range_t<int> Rangei;
+using Rangei = Range_t<int>;
+using Range = Range_t<real_t>;
+
 #endif

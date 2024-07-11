@@ -37,7 +37,8 @@
     "nvcv2",
     "nvcv2/mnist",
     "thirdparty/lodepng",
-    "hal/bus/usb/usbfs"
+    "hal/bus/usb/usbfs",
+    "algo"
   ],
   "virtualFolder": {
     "name": "<virtual_root>",
@@ -62,7 +63,6 @@
         "thirdparty/lua/onelua.c",
         "src/testbench/adc_tb.cpp",
         "src/testbench/dma_tb.cpp",
-        "src/testbench/eeprom_tb.cpp",
         "src/testbench/flash_tb.cpp",
         "src/testbench/lua_tb.cpp",
         "src/testbench/memory_tb.cpp",

@@ -1,4 +1,4 @@
-#include "RandomGeneraor.hpp"
+#include "random_generator.hpp"
 
 RandomGenerator::RandomGenerator()
 {
