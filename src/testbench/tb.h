@@ -116,7 +116,7 @@ using Sys::t;
 // #include "SSD13XX/ssd1306.hpp"
 // #include "MPU6050/mpu6050.hpp"
 // #include "SGM58031/sgm58031.hpp"
-// #include "TCS34725/tcs34725.hpp"
+
 // #include "VL53L0X/vl53l0x.hpp"
 // #include "PCF8574/pcf8574.hpp"
 // #include "AS5600/as5600.hpp"
@@ -197,3 +197,10 @@ void eeprom_main();
 void qlz_main();
 
 void uart_main();
+void tcs34725_tb(OutputStream & logger, I2c & i2c);
+
+void tcs34725_main();
+
+void dshot_main();
+
+void at24cxx_tb(OutputStream & logger, I2c & i2c);
