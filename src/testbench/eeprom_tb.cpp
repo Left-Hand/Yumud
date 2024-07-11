@@ -3,10 +3,14 @@
 #include "drivers/Memory/Flash/W25QXX/w25qxx.hpp"
 #include "hal/flash/flash.hpp"
 
+#include "algo/random/random_generator.hpp"
+
 
 #define EEPROM_TB_FIRSTBYTE
 #define EEPROM_TB_SEVERLBYTES
 // #define EEPROM_TB_WHOLECHIP
+#define EEPROM_TB_RANDOM
+
 // #define EEPROM_TB_PIECES
 #define EEPROM_TB_CONTENT
 
@@ -26,6 +30,7 @@ struct Temp{
 
 static void mem_tb(OutputStream & logger, Memory & mem){
     [[maybe_unused]] bool passflag = true;
+    logger.println("mem size is", mem.size());
 
     #ifdef EEPROM_TB_FIRSTBYTE
     {
@@ -50,6 +55,27 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
         ASSERT_WITH_DOWN(before == after, "svbytes tb failed: ", toString(before,16), "->", toString(after, 16));
         DEBUG_PRINT("svbytes tb passed");
+    }
+    #endif
+
+    #ifdef EEPROM_TB_RANDOM
+    {
+        RandomGenerator rnd;
+        rnd.init();
+        for(size_t i = 0; i < mem.size(); i++){
+            mem.store((uint8_t)rnd.update(), i);
+        }
+
+        rnd.init();
+        for(size_t i = 0; i < mem.size(); i++){
+            passflag &= (mem.load<uint8_t>(i) == (uint8_t)rnd.update());
+        }
+
+        if(!passflag){
+            DEBUG_PRINT("random tb failed");
+        }else{
+            DEBUG_PRINT("random tb passed");
+        }
     }
     #endif
 
@@ -122,10 +148,17 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     logger.println("at24 tb done");
 }
 
-[[maybe_unused]] static void eeprom_tb(OutputStream & logger, I2c & i2c){
+[[maybe_unused]] static void eeprom02_tb(OutputStream & logger, I2c & i2c){
     AT24C02 at24{i2c};
     at24.init();
     Memory mem = at24;
+    mem_tb(logger, mem);
+}
+
+[[maybe_unused]] static void eeprom64_tb(OutputStream & logger, I2c & i2c){
+    AT24C64 at24{i2c};
+    at24.init();
+    Memory mem = at24.slice({256,512});
     mem_tb(logger, mem);
 }
 
@@ -224,6 +257,6 @@ void eeprom_main(){
     I2cSw i2csw = I2cSw(portD[1], portD[0]);
     i2csw.init(400000);
 
-    eeprom_tb(logger, i2csw);
+    eeprom64_tb(logger, i2csw);
     // flash_tb(logger);
 }

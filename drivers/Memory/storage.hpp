@@ -10,7 +10,7 @@
 class Memory;
 class Storage{
 protected:
-    using Address = uint32_t;
+    using Address = size_t;
     using AddressWindow = Range_t<Address>;
 
     const Address m_size;
@@ -85,6 +85,7 @@ public:
 
     operator Memory();
     Memory slice(const AddressWindow & _window);
+    Memory slice(const size_t from, const size_t to);
 };
 
 

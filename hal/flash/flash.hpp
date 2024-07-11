@@ -16,17 +16,15 @@
 class Flash:public Storage{
 protected:
 
-    using Page = uint32_t;
+    using Page = size_t;
     using PageRange = Range_t<Page>;
-    using Address = uint32_t;
+    using Address = size_t;
     using AddressWindow = Range_t<Address>;
 
     static constexpr Page page_size = 256;
-    static constexpr Address base_address = 0x08000000;
+    static constexpr Address base_address = FLASH_WRProt_Sectors31to127;
 
     Page page_count;
-    // PageRange page_range;
-
     uint32_t pre_clock;
 
     void settleClock(){

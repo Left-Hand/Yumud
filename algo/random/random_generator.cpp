@@ -1,23 +1,19 @@
 #include "random_generator.hpp"
 
-RandomGenerator::RandomGenerator()
-{
+RandomGenerator::RandomGenerator(){
     seed(0);
 }
 
-void RandomGenerator::setSeed(unsigned long seed_number)
-{
+void RandomGenerator::init(uint32_t seed_number){
     seed(seed_number);
 }
 
-float RandomGenerator::update()
-{
+uint32_t RandomGenerator::update(){
     generateNumbers();
-    unsigned long value = extractNumber();
-    return static_cast<float>(value) / 4294967295.0f;
+    return extractNumber();
 }
 
-void RandomGenerator::seed(unsigned long seed_number)
+void RandomGenerator::seed(uint32_t seed_number)
 {
     mt[0] = seed_number & 0xffffffffUL;
     for (mt_index = 1; mt_index < N; mt_index++) {
@@ -30,7 +26,7 @@ void RandomGenerator::seed(unsigned long seed_number)
 void RandomGenerator::generateNumbers()
 {
     for (int i = 0; i < N; i++) {
-        unsigned long y = (mt[i] & UPPER_MASK) | (mt[(i + 1) % N] & LOWER_MASK);
+        uint32_t y = (mt[i] & UPPER_MASK) | (mt[(i + 1) % N] & LOWER_MASK);
         mt[i] = mt[(i + M) % N] ^ (y >> 1);
         if (y % 2 != 0) {
             mt[i] ^= MATRIX_A;
@@ -38,13 +34,13 @@ void RandomGenerator::generateNumbers()
     }
 }
 
-unsigned long RandomGenerator::extractNumber()
+uint32_t RandomGenerator::extractNumber()
 {
     if (mt_index == 0) {
         generateNumbers();
     }
 
-    unsigned long y = mt[mt_index];
+    uint32_t y = mt[mt_index];
     y ^= (y >> 11);
     y ^= ((y << 7) & 0x9d2c5680UL);
     y ^= ((y << 15) & 0xefc60000UL);

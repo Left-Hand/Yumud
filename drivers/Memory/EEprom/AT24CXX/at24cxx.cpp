@@ -77,8 +77,8 @@ void AT24CXX::_store(const void * data, const Address data_size, const Address l
     do{
         op_window = store_window.grid_forward(op_window, m_pagesize);
         if(op_window){
-            uint8_t * ptr = ((uint8_t *)data + (op_window.start - store_window.start));
             wait_for_free();
+            uint8_t * ptr = ((uint8_t *)data + (op_window.start - store_window.start));
             WRITE_POOL(op_window.start, ptr, op_window.length());
             update_entry_ms();
         }
