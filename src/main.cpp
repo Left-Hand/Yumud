@@ -4,6 +4,8 @@
 
 int main(){
     Sys::Misc::prework();
+
+    tcs34725_main();
     #ifdef CH32V20X
     dshot_main();
     // eeprom_main();
@@ -28,7 +30,7 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
-    // usbcdc_tb();
+    dshot_main();
     embd_main();
     // UartHw & logger = uart2;
     // logger.init(115200);
