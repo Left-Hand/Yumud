@@ -157,10 +157,8 @@ using Sys::t;
 #include "hal/opa/opa.hpp"
 #include "drivers/Adc/INA226/ina226.hpp"
 #include "drivers/Encoder/Estimmator.hpp"
-#include "drivers/Memory/EEPROM/AT24CXX/at24c02.hpp"
+#include "drivers/Memory/EEPROM/AT24CXX/at24cxx.hpp"
 
-void eeprom_tb(OutputStream & logger);
-void flash_tb(IOStream & logger);
 void memory_tb(OutputStream & logger);
 
 void stepper_tb(IOStream & logger);
@@ -173,7 +171,6 @@ void temp_tb(OutputStream & logger);
 void temp_tb2(OutputStream & logger);
 void filter_tb(OutputStream & logger);
 
-void uart_tb(Uart & uart);
 void pmdc_tb();
 
 void lds14_tb(IOStream & logger,Uart & uart);
@@ -190,3 +187,13 @@ void ch9141_tb(IOStream & logger, Uart & uart);
 void can_tb(IOStream & logger, Can & can, bool tx_role = true);
 
 void usbcdc_tb();
+
+void at24cxx_tb(OutputStream & logger, I2c & i2c);
+
+void at24cxx_main();
+
+void eeprom_main();
+
+void qlz_main();
+
+void uart_main();

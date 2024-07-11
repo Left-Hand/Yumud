@@ -328,7 +328,8 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 break;
 
             case SubState::DONE:
-                odo.locateRelatively(real_t(0));
+                // odo.locateRelatively(real_t(0));
+                target = 0;
                 setCurrent(real_t(0), real_t(0));
                 return RunStatus::EXIT;
             default:

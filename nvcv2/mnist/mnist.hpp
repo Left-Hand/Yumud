@@ -3,7 +3,7 @@
 #include "stdio.h"
 
 #include "nvcv2/mnist/tinymaix.h"
-#include "nvcv2.hpp"
+#include "../nvcv2.hpp"
 
 class Mnist{
 public:
@@ -38,4 +38,5 @@ public:
     Mnist(){load();}
     ~Mnist(){unload();}
     Result update(const Image<Grayscale, Grayscale> & img, const Vector2i & pos);
+    Result update(const Image<Grayscale, Grayscale> & img);
 };

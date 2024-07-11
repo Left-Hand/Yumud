@@ -15,7 +15,7 @@ public:
         X1 = 0, X4, X16, X60 
     };
 
-    static constexpr uint8_t default_id = 0x29 << 1;
+    static constexpr uint8_t default_id = 0x52;
 protected:
     I2cDrv bus_drv;
 
@@ -100,11 +100,11 @@ protected:
     }
 
     void writeReg(const RegAddress & regAddress, const uint16_t regData){
-        bus_drv.writeReg(convRegAddress(regAddress), (uint16_t)regData, false);
+        bus_drv.writeReg(convRegAddress(regAddress), (uint16_t)regData, LSB);
     }
 
     void readReg(const RegAddress & regAddress, uint16_t & regData){
-        bus_drv.readReg(convRegAddress(regAddress), (uint16_t &)regData, false);
+        bus_drv.readReg(convRegAddress(regAddress), (uint16_t &)regData, LSB);
     }
 
     void writeReg(const RegAddress & regAddress, const uint8_t regData){
@@ -175,8 +175,9 @@ public:
         writeReg(RegAddress::Gain, gainReg.data);
     }
 
-    void getId(){
+    uint8_t getId(){
         readReg(RegAddress::DeviceId, deviceIdReg);
+        return deviceIdReg;
     }
 
     bool isIdle(){

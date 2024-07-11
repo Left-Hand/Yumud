@@ -65,7 +65,6 @@ public:
 
     void initBdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
     void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, (FunctionalState)_sync);}
-
     void setDeadZone(const uint32_t ns);
 
     TimerChannel & operator [](const int index) override{

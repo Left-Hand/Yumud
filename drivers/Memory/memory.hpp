@@ -10,7 +10,7 @@
 class Memory{
 
 protected:
-    using Address = uint32_t;
+    using Address = size_t;
     using AddressWindow = Range_t<Address>;
 
     Storage & storage;
@@ -22,11 +22,16 @@ public:
 public:
     AddressWindow window(){return m_window;}
 
+    size_t size(){return m_window.length();}
+
     template<typename T>
     void store(const T & data, const Address loc = 0);
 
     template<typename T>
     void load(T & data, const Address loc = 0);
+
+    template<typename T>
+    T load(const Address loc = 0);
 
 };
 

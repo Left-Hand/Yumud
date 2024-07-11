@@ -112,9 +112,8 @@ public:
         return(*this);
     }
 
-
-    constexpr Rect2_t<T> & operator-(const Vector2_t<auto> & other){
-        this->position += other;
+    [[deprecated]] constexpr Rect2_t<T> & operator-(const Vector2_t<auto> & other){
+        this->position -= other;
         return(*this);
     }
 

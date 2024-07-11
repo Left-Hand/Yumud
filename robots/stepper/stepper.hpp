@@ -3,16 +3,21 @@
 #define __STEPPER_HPP__
 
 #include "cli.hpp"
-#include "ctrls.hpp"
+#include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 #include "robots/stepper/concept.hpp"
 
 class Stepper:public StepperUtils::CliSTA, public StepperConcept{
-    volatile RunStatus run_status = RunStatus::INIT;
-    Switches switches;
 
+    using Archive = StepperUtils::Archive;
+    using Switches = StepperUtils::Switches;
+
+    Archive m_archive;
+    Switches & m_switches = m_archive.switches;
+
+    volatile RunStatus run_status = RunStatus::INIT;
     SVPWM2 & svpwm;
 
     OdometerPoles odo;
@@ -33,8 +38,10 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 
     Range target_position_clamp = Range{std::numeric_limits<iq_t>::min(), std::numeric_limits<iq_t>::max()};
 
-    CurrentCtrl curr_ctrl;
-    GeneralSpeedCtrl speed_ctrl{curr_ctrl};
+    CurrentCtrlConfig curr_config;
+    GeneralSpeedCtrlConfig spd_config;
+    CurrentCtrl curr_ctrl{curr_config};
+    GeneralSpeedCtrl speed_ctrl{curr_ctrl, spd_config};
     GeneralPositionCtrl position_ctrl{curr_ctrl};
     TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl};
 
@@ -127,7 +134,6 @@ public:
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);
     void removeArchive(const bool outen);
-    bool autoload(const bool outen);
 
     void tick();
 
@@ -243,7 +249,7 @@ public:
     }
 
     void setSpeedClamp(const real_t max_spd){
-        speed_ctrl.max_spd = max_spd;
+        speed_ctrl.config.max_spd = max_spd;
     }
 
     void setAccelClamp(const real_t max_acc){
@@ -252,6 +258,14 @@ public:
 
     void triggerCali(){
         cali_task(true);
+    }
+
+    void clear(){
+
+    }
+
+    void reset()override{
+        Sys::Misc::reset();
     }
 };
 

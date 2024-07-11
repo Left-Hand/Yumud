@@ -2,6 +2,8 @@
 
 #define __RANGE_HPP__
 
+#include "real.hpp"
+
 #include "sys/platform.h"
 #include "types/string/String.hpp"
 #include "type_traits"
@@ -320,7 +322,7 @@ public:
         return toString();
     }
 
-    __no_inline String toString(unsigned char decimalPlaces = 2){
+    __no_inline String toString(unsigned char decimalPlaces = 2) const{
         if constexpr(std::is_integral<T>::value){
             return ('[' + String(start) + ',' + String(end) + ')');
         }else{
@@ -329,5 +331,7 @@ public:
     }
 };
 
-typedef Range_t<int> Rangei;
+using Rangei = Range_t<int>;
+using Range = Range_t<real_t>;
+
 #endif

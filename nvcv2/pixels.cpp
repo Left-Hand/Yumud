@@ -92,7 +92,7 @@ namespace NVCV2::Pixels{
         return tmp;
     }
 
-    void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale& threshold){
+    void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold){
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
                 dst[Vector2i{x, y}] = src(Vector2i{x, y}).to_bina(threshold);
@@ -100,7 +100,7 @@ namespace NVCV2::Pixels{
         }
     }
 
-    Image <Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale& threshold){
+    Image <Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold){
         Image <Binary, Binary> dst{src.size};
         binarization(dst, src, threshold);
         return dst;
@@ -374,29 +374,7 @@ namespace NVCV2::Pixels{
         }
     }
 
-    void inverse(Image<Binary, Binary>& src) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
-            src[i] = uint8_t(~uint8_t(src[i]));
-        }
-    }
 
-    void and_with(Image<Binary, Binary> & src, Image<Binary, Binary>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
-            src[i] = (uint8_t)src[i] & (uint8_t)op[i];
-        }
-    }
-
-    void or_with(Image<Binary, Binary> & src, Image<Binary, Binary>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
-            src[i] = (uint8_t)src[i] | (uint8_t)op[i];
-        }
-    }
-
-    void xor_with(Image<Binary, Binary> & src, Image<Binary, Binary>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
-            src[i] = ((uint8_t)src[i] ^ (uint8_t)op[i]);
-        }
-    }
 
     void sum_with(Image<Grayscale, Grayscale> & src, Image<Grayscale, Grayscale>& op) {
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
@@ -411,7 +389,11 @@ namespace NVCV2::Pixels{
     }
 
 
-
+    void mask_with(Image<Grayscale, Grayscale> & src, const ImageReadable<Binary>& op) {
+        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+            src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
+        }
+    }
     void adaptive_threshold(ImageWritable<Binary> & dst, const ImageReadable<Grayscale> & src){
         for(auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++){
             for(auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++){

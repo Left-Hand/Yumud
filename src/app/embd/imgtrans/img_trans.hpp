@@ -47,6 +47,7 @@ protected:
 public:
 
     OutputStream & instance;
+    bool enabled = false;
     Uart & logger = uart2;
 
     // RingBuf<str_tx_buf_size> str_tx_buf;
@@ -87,5 +88,9 @@ public:
     requires std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>
     void transmit(const Image<T, T> & img, const uint8_t index){
         transmit((const uint8_t *)img.data.get(),img.get_size(), index); 
+    }
+
+    void enable(const bool en){
+        enabled = en;
     }
 };

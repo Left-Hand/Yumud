@@ -19,12 +19,12 @@ void host_main(){
     auto & logger = uart2;
     logger.init(921600, CommMethod::Blocking);
 
-
-    // can1.init(Can::BaudRate::Mbps1, Can::Mode::Internal);
     can1.init(Can::BaudRate::Mbps1);
-    EmbdHost host{logger, can1};
-
     usbfs.init();
+
+    uart7.init(115200);
+
+    EmbdHost host{uart7, can1};
 
     timer3.init(800);
     timer3.bindCb(IT::Update, [&](){host.run();});

@@ -50,8 +50,10 @@ public:
     void setNodeId(const uint8_t _id);
     void setSpeedClamp(const real_t max_spd);
     void setAccelClamp(const real_t max_acc);
-
+    void reset();
     void triggerCali();
+
+    void mt(const bool en);
 };
 
 struct RemoteSteppers{

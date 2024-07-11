@@ -6,12 +6,18 @@
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
 #include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
+#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
+
+#include "nvcv2/mnist/mnist.hpp"
+
 #include "remote.hpp"
+#include "imgtrans/img_trans.hpp"
 
 #include "stepper/constants.hpp"
 #include "stepper/cli.hpp"
 
+#ifdef CH32V30X
 using StepperUtils::CliAP;
 
 class EmbdHost:public CliAP{
@@ -40,15 +46,24 @@ class EmbdHost:public CliAP{
         // default:
         //     break;
         // }
-    // }
-
-    // struct{
     RemoteStepper stepper_w;
     RemoteStepper stepper_x;
     RemoteStepper stepper_y;
     RemoteStepper stepper_z;
-    // }
     RemoteSteppers steppers;
+    I2cSw       i2c{portD[2], portC[12]};
+    MT9V034     camera{i2c};
+    VL53L0X     vl{i2c};
+    TCS34725    tcs{i2c};
+    CH9141      ch9141{uart7, portC[1], portD[3]};
+    Transmitter trans{usbfs};
+
+
+    struct{
+        uint8_t bina_threshold = 200;
+        uint8_t diff_threshold = 200;
+        // uint8_t 
+    };
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),
@@ -64,13 +79,27 @@ public:
             ){;}
 
     void parse_command(const uint8_t id, const Command & cmd, const CanMsg & msg);
-
+    void parse_command(const String & _command,const std::vector<String> & args);
     void main();
     void run() override;
+    void reset();
+    void cali();
+
+    enum class ActMethod{
+        NONE = 0,
+        HUI,
+        LISA,
+        GRAB,
+        INTER,
+        REP
+    };
+    
+    ActMethod act_method = ActMethod::NONE;
+    void set_demo_method(const ActMethod new_method);
+    void act();
 };
 
-
-
+#endif
 
 
 void host_main();

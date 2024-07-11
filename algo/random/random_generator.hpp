@@ -1,25 +1,27 @@
 #ifndef RANDOMGENERATOR_H
 #define RANDOMGENERATOR_H
 
+// #include "sys/platform.h"
+#include <cstdint>
 class RandomGenerator {
 public:
     RandomGenerator();
-    void setSeed(unsigned long seed_number);
-    float update();
+    void init(uint32_t seed_number = 0);
+    uint32_t update();
 
 private:
-    static const int N = 624;
-    static const int M = 397;
-    static const unsigned long MATRIX_A = 0x9908b0dfUL;
-    static const unsigned long UPPER_MASK = 0x80000000UL;
-    static const unsigned long LOWER_MASK = 0x7fffffffUL;
+    static constexpr int N = 624;
+    static constexpr int M = 397;
+    static constexpr uint32_t MATRIX_A = 0x9908b0dfUL;
+    static constexpr uint32_t UPPER_MASK = 0x80000000UL;
+    static constexpr uint32_t LOWER_MASK = 0x7fffffffUL;
 
-    unsigned long mt[N];
+    uint32_t mt[N];
     int mt_index;
 
-    void seed(unsigned long seed_number);
+    void seed(uint32_t seed_number);
     void generateNumbers();
-    unsigned long extractNumber();
+    uint32_t extractNumber();
 };
 
-#endif  // RANDOMGENERATOR_H
+#endif

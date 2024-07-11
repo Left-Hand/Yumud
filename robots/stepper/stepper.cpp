@@ -1,5 +1,11 @@
 #include "stepper.hpp"
 
+static void set_motor_gpio(const bool en){
+    auto & gpio = portA[0];
+    gpio.outpp();
+    gpio = en;
+}
+
 void Stepper::parse_command(const String & _command, const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
@@ -20,6 +26,11 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
                 
                 loadArchive(outen);
             }
+            break;
+
+        case "mt"_ha:
+            portA[0].outpp();
+            portA = args.size() ? bool(int(args[0])) : false;
             break;
 
         case "remove"_ha:
@@ -67,6 +78,7 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
 
         case "tpz"_ha:
+        case "t"_ha:
             if(args.size()){
                 real_t val = real_t(args[0]);
                 setTargetTrapezoid(val);
@@ -92,21 +104,7 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
 
         case "crc"_ha:
-        case "cc"_ha:
             logger.println(Sys::Chip::getChipIdCrc());
-            break;
-
-        case "autoload"_ha:
-        case "ald"_ha:
-            {
-                bool outen = true;
-
-                if(args.size()){
-                    outen &= bool(int(args[0]));
-                }
-
-                autoload(outen);
-            }
             break;
 
         case "eleczero"_ha:
@@ -160,8 +158,12 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
 
         case "rd"_ha:
             if(args.size() == 1) run_debug_enabled = int(args[0]);
+            DEBUG_PRINT("rd", run_debug_enabled);
             break;
-    
+
+        case "clp"_ha:
+            if(args.size() == 1) setCurrentClamp(real_t(args[0]));
+            break;
         case "status"_ha:
         case "stat"_ha:
             DEBUG_PRINT("current status:", int(run_status));
@@ -234,9 +236,13 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_EXECUTE(Command::LOAD, loadArchive, false)
         SET_METHOD_BIND_EXECUTE(Command::RM, removeArchive, false)
 
+        SET_METHOD_BIND_EXECUTE(Command::SERVO_ON, set_motor_gpio, true)
+        SET_METHOD_BIND_EXECUTE(Command::SERVO_OFF, set_motor_gpio, false)
+
+        SET_METHOD_BIND_EXECUTE(Command::RST, reset)
+        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::INACTIVE, enable, false)
         SET_METHOD_BIND_EXECUTE(Command::ACTIVE, enable, true)
-        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
 
         default:
@@ -258,8 +264,7 @@ void Stepper::tick(){
     switch(run_status){
         case RunStatus::INIT:
             {
-                // static bool load_lock = false;
-                bool load_ok = autoload(false);
+                bool load_ok = loadArchive(false);
                 if(load_ok){
                     if(skip_tone){
                         panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
@@ -269,15 +274,6 @@ void Stepper::tick(){
                 }else{
                     cali_task(true);
                 }
-                // // bool load_ok = false;
-                // if(load_ok){
-                //     run_status = RunStatus::CALI;
-                //     new_status = RunStatus::EXIT;
-                //     logger.println("autoload ok");
-                // }else{
-                // check_task(true);
-                //     logger.println("autoload failed");
-                // }
                 break;
             }
 
@@ -389,7 +385,11 @@ void Stepper::report(){
     // target_pos = sign(frac(t) - 0.5);
     // target_pos = sin(t);
     // RUN_DEBUG(, est_pos, est_speed);
-    if(run_status == RunStatus::ACTIVE and logger.pending() == 0) RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+    if(run_status == RunStatus::ACTIVE and logger.pending() == 0 && run_debug_enabled){
+        // delayMicroseconds(200);   
+        delay(1); 
+        RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+    }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);
     // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;

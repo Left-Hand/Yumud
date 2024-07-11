@@ -67,7 +67,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
 
     {
-        HighLayerCtrl::Result result;
+        Result result;
 
         switch(ctrl_type){
             case CtrlType::CURRENT:

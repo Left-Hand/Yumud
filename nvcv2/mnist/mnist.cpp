@@ -82,9 +82,25 @@ void Mnist::parse_output(tm_mat_t* outs){
 
     output = {maxi, maxp};
     return;
+
+    // tm_mat_t out = outs[0];
+    // float* data  = out.dataf;
+    // float maxp = 0;
+    // int maxi = -1;
+    // for(int i=0; i<10; i++){
+    //     //TM_PRINTF("%d: %.3f\n", i, data[i]);
+    //     DEBUGGER.print(i);DEBUGGER.print(": ");DEBUGGER.print(int(data[i]*100));DEBUGGER.print("\n");
+    //     if(data[i] > maxp) {
+    //         maxi = i;
+    //         maxp = data[i];
+    //     }
+    // }
+    // DEBUGGER.print("### Predict output is: Number ");DEBUGGER.print(maxi);DEBUGGER.print(", prob=");DEBUGGER.print(int(maxp*100));
+    // DEBUGGER.print("\n");
 }
 
 void Mnist::load(){
+    memset(mdl_buf, 0, sizeof(mdl_buf));
     auto res = tm_load(&mdl, mdl_data, mdl_buf, layer_cb, &in);
     loaded = bool(res == TM_OK);
 
@@ -102,7 +118,11 @@ Mnist::Result Mnist::update(const Image<Grayscale, Grayscale> & img, const Vecto
 
     Image<Grayscale, Grayscale> img_view = img.clone({pos.x, pos.y, 28, 28});
     NVCV2::Pixels::inverse(img_view);
-    tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img_view.data.get()};
+    return update(img_view);
+}
+
+Mnist::Result Mnist::update(const Image<Grayscale, Grayscale> & img){
+    tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img.data.get()};
     auto err = tm_preprocess(&mdl, TMPP_UINT2INT, &in_uint8, &in); 
 
     err = tm_run(&mdl, &in, outs);

@@ -60,9 +60,9 @@ namespace NVCV2::Pixels{
         }
     }
 
-    void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale& threshold);
+    void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold);
 
-    Image<Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale& threshold);
+    Image<Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold);
     void ostu(Image<Binary, Binary>& dst, const Image<Grayscale, Grayscale>& src);
 
 
@@ -73,18 +73,43 @@ namespace NVCV2::Pixels{
 
     int huang(Image<Binary, Binary>& dst, const Image<Grayscale, Grayscale>& src);
 
-
-    void inverse(Image<Grayscale, Grayscale>& src);
-
     void gamma(Image<Grayscale, Grayscale>& src, const real_t ga);
 
-    void inverse(Image<Binary, Binary>& src);
 
-    void and_with(Image<Binary, Binary> & src, Image<Binary, Binary>& op);
+    template<typename T>
+    concept is_monocolour_v = std::same_as<T, Binary> || std::same_as<T, Grayscale>;
 
-    void or_with(Image<Binary, Binary> & src, Image<Binary, Binary>& op);
-    void xor_with(Image<Binary, Binary> & src, Image<Binary, Binary>& op);
 
+    template<is_monocolour_v T>
+    void inverse(Image<T, T>& src) {
+        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+            src[i] = uint8_t(~uint8_t(src[i]));
+        }
+    }
+
+    template<is_monocolour_v T>
+    void and_with(Image<T, T> & src, Image<T, T>& op) {
+        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+            src[i] = std::min((uint8_t)src[i], (uint8_t)op[i]);
+        }
+    }
+
+    template<is_monocolour_v T>
+    void or_with(Image<T, T> & src, Image<T, T>& op) {
+        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+            src[i] = std::max((uint8_t)src[i], (uint8_t)op[i]);
+        }
+    }
+
+    template<is_monocolour_v T>
+    void xor_with(Image<T, T> & src, Image<T, T>& op) {
+        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+            src[i] = ((uint8_t)src[i] ^ (uint8_t)op[i]);
+        }
+    }
+
+
+    void mask_with(Image<Grayscale, Grayscale> & src, const ImageReadable<Binary>& op);
     void sum_with(Image<Grayscale, Grayscale> & src, Image<Grayscale, Grayscale>& op);
     void sub_with(Image<Grayscale, Grayscale> & src, Image<Grayscale, Grayscale>& op);
 

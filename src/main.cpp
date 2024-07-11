@@ -5,7 +5,10 @@
 int main(){
     Sys::Misc::prework();
     #ifdef CH32V20X
-    embd_main();
+    eeprom_main();
+    // uart_main();
+    // qlz_main();
+    // embd_main();
 
     // delay(200);
     // pmdc_tb();

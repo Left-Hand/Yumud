@@ -11,7 +11,7 @@ void TCS34725::requestRegData(const RegAddress & regAddress, uint16_t * data_ptr
     uint8_t address = convRegAddress(regAddress);
     TCS34725_DEBUG("address", address)
 
-    bus_drv.readPool(address, data_ptr, len, false);
+    bus_drv.readPool(address, data_ptr, len, LSB);
 }
 void TCS34725::getCRGB(real_t & c, real_t & r, real_t & g, real_t & b){
     s16_to_uni(data[0], c);

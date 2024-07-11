@@ -1,4 +1,5 @@
 #include "timer.hpp"
+#include "sys/system.hpp"
 
 static void TIM_RCC_ON(const TIM_TypeDef * instance){
     switch(uint32_t(instance)){
@@ -86,31 +87,7 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
 }
 
 static uint32_t TIM_Get_BusFreq(const TIM_TypeDef * instance){
-    bool isAbp2 = false;
-    switch(uint32_t(instance)){
-        #ifdef HAVE_TIM8
-        case TIM8_BASE:
-        #endif
-
-        #ifdef HAVE_TIM1
-        case TIM1_BASE:
-        #endif
-
-            isAbp2 = true;
-            break;
-    }
-
-
-    RCC_ClocksTypeDef clock;
-    RCC_GetClocksFreq(&clock);
-
-    if (isAbp2) {
-        return clock.PCLK2_Frequency;
-        // return SystemCoreClock;
-    } else {
-        return clock.PCLK1_Frequency;
-        // return SystemCoreClock;
-    }
+    return TimerUtils::isAdvancedTimer(instance) ? Sys::Clock::getAPB2Freq() : Sys::Clock::getAPB1Freq();
 }
 
 
@@ -138,8 +115,8 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
-    TIM_TimeBaseStructure.TIM_Period = period - 1;
-    TIM_TimeBaseStructure.TIM_Prescaler = cycle - 1;
+    TIM_TimeBaseStructure.TIM_Period = MAX(period - 1, 0);
+    TIM_TimeBaseStructure.TIM_Prescaler = MAX(cycle - 1, 0);
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
@@ -155,8 +132,8 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 void BasicTimer::enable(const bool en){
     if(en){
         TIM_Cmd(instance, ENABLE);
-        if(instance == TIM1){
-            TIM_CtrlPWMOutputs(TIM1, ENABLE);
+        if(TimerUtils::isAdvancedTimer(instance)){
+            TIM_CtrlPWMOutputs(instance, ENABLE);
         }
     }else{
         TIM_Cmd(instance, DISABLE);
@@ -190,6 +167,8 @@ void GenericTimer::initAsEncoder(const Mode mode){
 void GenericTimer::enableSingle(const bool _single){
     TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
 }
+
+// void AdvancedTimer::init
 
 uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
 	RCC_ClocksTypeDef RCC_CLK;
