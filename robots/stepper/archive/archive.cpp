@@ -44,7 +44,8 @@ bool Stepper::loadArchive(const bool outen){
 
     if(!disabled){
         for(size_t i = 0; i < odo.map().size(); i++){
-            odo.map()[i] = real_t(archive.cali_map[i]) / 16384;
+            int16_t item_i = archive.cali_map[i];
+            odo.map()[i] = real_t(item_i) / 16384;
             elecrad_zerofix = 0;
         }
 
@@ -56,46 +57,6 @@ bool Stepper::loadArchive(const bool outen){
     ARCHIVE_LOG("======");
     return (!disabled);
 }
-
-bool Stepper::autoload(const bool outen){
-    return loadArchive(outen);
-    // using Archive = StepperUtils::Archive;
-
-    // Archive archive;
-    // memory.load(archive);
-
-    // bool en = true;
-
-    // const auto & board_info = archive.board_info;
-    // auto exp_hash = archive.hash();
-    // auto real_hash = archive.hashcode;
-
-    // // en &= (exp_hash == real_hash);
-    // en &= (!board_info.errorless());
-
-    // if(!en){
-    //     ARCHIVE_LOG("load aborted because data is corrupted");
-    //     ARCHIVE_LOG("hashcode shoud be: ", exp_hash);
-    //     ARCHIVE_LOG("but read: ", real_hash);
-    //     return false;
-    // }
-    // if(!en) return false;
-
-    // auto m_switches = archive.switches;
-    // en &= (m_switches.cali_done); // if cali done, continue
-    // en &= !(m_switches.cali_every_pwon);// if cali is forced when power on, break;
-    // en &= !(m_switches.cali_when_update && !archive.board_info.match());// if update cali enabled and version out, break; 
-
-
-    // for(size_t i = 0; i < odo.map().size(); i++){
-    //     odo.map()[i] = real_t(archive.cali_map[i]) / 16384;
-    //     elecrad_zerofix = 0;
-    // }
-
-    // ARCHIVE_LOG("load successfully!");
-    // return true;
-}
-
 
 void Stepper::saveArchive(const bool outen){
     using Archive = StepperUtils::Archive;
@@ -109,12 +70,13 @@ void Stepper::saveArchive(const bool outen){
     ARCHIVE_LOG("current board info:");
     if(outen) archive.board_info.printout(logger);
 
-    archive.switches = switches;
+    archive.switches = m_switches;
     uint32_t hashcode = archive.hash();
     archive.hashcode = hashcode;
 
     for(size_t i = 0; i < odo.map().size(); i++){
-        archive.cali_map[i] = int16_t((odo.map()[i] + (elecrad_zerofix / real_t(poles * TAU))) * 16384);
+        auto item_i = int16_t((odo.map()[i] - (elecrad_zerofix / real_t(poles * TAU))) * 16384);
+        archive.cali_map[i] = item_i;
     }
 
     archive.node_id = node_id;

@@ -1,26 +1,44 @@
 #pragma once
 
 #include "constants.hpp"
-struct LowerLayerCtrl{
-    virtual void reset() = 0;
-    virtual real_t update(const real_t target) = 0;
+#include "configs.hpp"
+
+#ifdef DEBUG
+#define CURR_SPEC protect
+#define POS_SPEC protect
+#define SPD_SPEC protect
+#else
+#define CURR_SPEC public
+#define POS_SPEC public
+#define SPD_SPEC public
+#endif
+
+struct CtrlResult{
+    real_t current;
+    real_t raddiff;
 };
 
+using Result = CtrlResult;
 struct CurrentCtrl{
-protected:
-    using Range = Range_t<real_t>;
+CURR_SPEC:
+    real_t current_output = 0;
 public:
+    CurrentCtrlConfig & config;
 
-    real_t current_slew_rate    = 20.0 / foc_freq;   //20A/S
-    real_t current_output       = 0;
-    real_t current_clamp        = 0.7;
+    real_t & current_slew_rate = config.current_slew_rate;
+    real_t & current_clamp = config.current_clamp;
+
+
+    CurrentCtrl(CurrentCtrlConfig & _config):config(_config){
+        config.init();
+    }
 
     void reset(){
         current_output = 0;
     }
 
-    void setCurrentClamp(const real_t maximum){
-        current_clamp = maximum;
+    void setCurrentClamp(const real_t clp){
+        current_clamp = clp;
     }
 
     real_t update(const real_t targ_current){
@@ -33,16 +51,8 @@ public:
 
 
 struct HighLayerCtrl{
-public:
-
-    struct Result{
-        real_t current;
-        real_t raddiff;
-    };
 protected:
-    using Range = Range_t<real_t>;
     CurrentCtrl & curr_ctrl;
-
 public:
 
     HighLayerCtrl(CurrentCtrl & _ctrl):curr_ctrl(_ctrl){;}
@@ -61,19 +71,22 @@ struct PositionCtrl:public HighLayerCtrl{
 };
 
 struct GeneralSpeedCtrl:public SpeedCtrl{
-    GeneralSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
+public:
+    GeneralSpeedCtrlConfig &config;
+SPD_SPEC:
+    const real_t & max_spd = config.max_spd;
+    const real_t & kp = config.kp;
+    const real_t & kp_clamp = config.kd_clamp;
 
-    real_t max_spd = 40;
-    real_t kp = 4;
-    real_t kp_clamp = 60;
-
-    real_t last_speed = 0;
-    real_t kd = 40;
-    real_t kd_active_radius = 1.2;
-    real_t kd_clamp = 2.4;
+    const real_t & kd = config.kd;
+    const real_t & kd_active_radius = config.kd_active_radius;
+    const real_t & kd_clamp = config.kd_clamp;
 
     real_t targ_current = 0;
+    real_t last_speed = 0;
 
+public:
+    GeneralSpeedCtrl(CurrentCtrl & ctrl, GeneralSpeedCtrlConfig & _config):SpeedCtrl(ctrl), config(_config){;}
     void reset() override {
         targ_current = 0;
     }
@@ -156,7 +169,6 @@ struct TrapezoidPosCtrl:public TopLayerCtrl{
     GeneralSpeedCtrl & speed_ctrl;
     GeneralPositionCtrl & position_ctrl;
 
-    // real_t max_spd = 40;
     real_t max_dec = 18.0;
 
     TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):speed_ctrl(_speed_ctrl), position_ctrl(_position_ctrl){;}
@@ -172,7 +184,6 @@ protected:
     Tstatus tstatus = Tstatus::STA;
     real_t goal_speed = 0;
     real_t last_pos_err = 0;
-    using Result = HighLayerCtrl::Result;
 public:
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
         // static constexpr real_t max_acc = 10.0;
@@ -249,22 +260,14 @@ struct OverloadSpeedCtrl:public SpeedCtrl{
     real_t elecrad_addition;
     real_t elecrad_addition_clamp = real_t(1.7);
 
-
-    bool inited = false;
-
     OverloadSpeedCtrl(CurrentCtrl & ctrl):SpeedCtrl(ctrl){;}
 
     void reset() override {
-        inited = false;
+        elecrad_addition = real_t(0);
     }
 
 
     Result update(const real_t targ_speed,const real_t real_speed) override{
-
-        if(!inited){
-            inited = true;
-            elecrad_addition = real_t(0);
-        }
 
         real_t error = SIGN_AS(targ_speed - real_speed, targ_speed);
         // real_t abs_error = abs(error);

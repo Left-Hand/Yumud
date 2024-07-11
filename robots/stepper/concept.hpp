@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cli.hpp"
-#include "ctrls.hpp"
+#include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -28,7 +28,6 @@ public:
     virtual bool loadArchive(const bool outen = false) = 0;
     virtual void saveArchive(const bool outen = false) = 0;
     virtual void removeArchive(const bool outen = false) = 0;
-    virtual bool autoload(const bool outen = false) = 0;
 
     virtual void setTargetCurrent(const real_t current) = 0;
     virtual void setTargetSpeed(const real_t speed) = 0;

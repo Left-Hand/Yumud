@@ -104,21 +104,7 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
 
         case "crc"_ha:
-        case "cc"_ha:
             logger.println(Sys::Chip::getChipIdCrc());
-            break;
-
-        case "autoload"_ha:
-        case "ald"_ha:
-            {
-                bool outen = true;
-
-                if(args.size()){
-                    outen &= bool(int(args[0]));
-                }
-
-                autoload(outen);
-            }
             break;
 
         case "eleczero"_ha:
@@ -278,8 +264,7 @@ void Stepper::tick(){
     switch(run_status){
         case RunStatus::INIT:
             {
-                // static bool load_lock = false;
-                bool load_ok = autoload(false);
+                bool load_ok = loadArchive(false);
                 if(load_ok){
                     if(skip_tone){
                         panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
@@ -289,15 +274,6 @@ void Stepper::tick(){
                 }else{
                     cali_task(true);
                 }
-                // // bool load_ok = false;
-                // if(load_ok){
-                //     run_status = RunStatus::CALI;
-                //     new_status = RunStatus::EXIT;
-                //     logger.println("autoload ok");
-                // }else{
-                // check_task(true);
-                //     logger.println("autoload failed");
-                // }
                 break;
             }
 
