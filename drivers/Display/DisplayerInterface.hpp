@@ -21,7 +21,7 @@ public:
 class DisplayInterfaceSpi:public DisplayerInterface{
 // protected:
 public:
-    SpiDrv bus_drv;
+    SpiDrv spi_drv;
     GpioConcept & dc_gpio;
     GpioConcept & res_gpio;
     GpioConcept & blk_gpio;
@@ -34,15 +34,15 @@ public:
             GpioConcept & _dc_gpio, 
             GpioConcept & _res_gpio = GpioNull,
             GpioConcept & _blk_gpio = GpioNull
-            ):bus_drv(_bus_drv),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
+            ):spi_drv(_bus_drv),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
 
     DisplayInterfaceSpi(
             Spi & _bus,
-            const uint8_t & index,
+            const uint8_t index,
             GpioConcept & _dc_gpio, 
             GpioConcept & _res_gpio = GpioNull,
             GpioConcept & _blk_gpio = GpioNull
-            ):bus_drv(_bus, index),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
+            ):spi_drv(_bus, index),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
 
     void init() override{
         dc_gpio.outpp();
@@ -65,45 +65,45 @@ public:
 
     __fast_inline void writeCommand(const uint8_t cmd) override{
         dc_gpio = command_level;
-        bus_drv.write(cmd);
+        spi_drv.write(cmd);
     }
 
     __fast_inline void writeData(const uint8_t data) override{
         dc_gpio = data_level;
-        bus_drv.write(data);
+        spi_drv.write(data);
     }
 
     void writePool(const uint8_t * data_ptr, const size_t len) override{
         dc_gpio = data_level;
-        bus_drv.write(data_ptr, len);
+        spi_drv.write(data_ptr, len);
     }
 
 
     void writePool(const uint8_t data, const size_t len) override{
         dc_gpio = data_level;
-        bus_drv.write(data, len);
+        spi_drv.write(data, len);
     }
 
     __fast_inline void writeData(const uint16_t data){
         dc_gpio = data_level;
-        bus_drv.write(data);
+        spi_drv.write(data);
     }
 
     void writePool(const uint16_t * data_ptr, const size_t len){
         dc_gpio = data_level;
-        bus_drv.write(data_ptr, len);
+        spi_drv.write(data_ptr, len);
     }
 
 
     void writePool(const uint16_t & data, const size_t len){
         dc_gpio = data_level;
-        bus_drv.write(data, len);
+        spi_drv.write(data, len);
     } 
 
     // template<>
     void writePixels(const Grayscale * data, const size_t len){
         dc_gpio = data_level;
-        auto & bus = bus_drv.bus;
+        auto & bus = spi_drv.bus;
         if(!bus.begin(0)){
             bus.configDataSize(16);
             for(size_t i = 0; i < len; i++) bus.write(RGB565(data[i]));
@@ -114,7 +114,7 @@ public:
 
     void writePixels(const RGB565 * data, const size_t len){
         dc_gpio = data_level;
-        bus_drv.write((uint16_t *)data, len);
+        spi_drv.write((uint16_t *)data, len);
     } 
 };
 

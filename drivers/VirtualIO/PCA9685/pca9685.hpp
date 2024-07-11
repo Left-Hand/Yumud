@@ -8,9 +8,6 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "drivers/device_defs.h"
 
-#define MSB 1
-#define LSB 0
-
 class PCA9685: public PortVirtualConcept<16>{
 public:
     enum class CurrentLimit{

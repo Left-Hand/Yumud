@@ -69,35 +69,12 @@ public:
                 bindCsPin(_cs_pin, 0);
             }
     Error write(const uint32_t data) override {
-        // delayDur();
-
-        // for(uint16_t mask = m_msb ? 1 << (data_bits - 1) : 0x01; mask; mask = m_msb ? (mask >> 1) : (mask << 1)){
-        //     mosi_gpio.write(mask & data);
-        //     clk();
-        // }
         uint32_t dummy;
         transfer(dummy, data, false);
         return Bus::ErrorType::OK;
     }
 
     Error read(uint32_t & data, bool toAck = true) {
-        // uint8_t ret = 0;
-        // delayDur();
-
-        // clk_up();
-
-        // ret |= m_msb ? miso_gpio.read() : miso_gpio.read() << (data_bits - 1);
-
-        // for(uint8_t i = 0; i < data_bits - 1; i++){
-        //     clk_down_then_up();
-        //     // ret <<= 1;
-        //     ret = m_msb ? (ret << 1) : (ret >> 1);
-        //     ret |= miso_gpio.read();
-        // }
-
-        // clk_down();
-
-        // data = ret;
         uint32_t ret;
         static constexpr uint32_t dummy = 0;
         transfer(ret, dummy, toAck); 
@@ -108,15 +85,6 @@ public:
         uint8_t ret = 0;
 
         sclk_gpio.set();
-
-        // if(m_msb)
-        //     mosi_gpio = data_tx & (1 << (data_bits - 1));
-        // else
-        //     mosi_gpio = data_tx & (0x01);
-
-
-        // if(m_msb) ret |= miso_gpio.read();
-        // else ret |= (miso_gpio.read() << (data_bits - 1)) ;
 
         for(uint8_t i = 0; i < data_bits; i++){
             if(m_msb){
@@ -168,8 +136,8 @@ public:
         miso_gpio.inpd();
     }
 
-    void configBitOrder(const bool en) override {
-        m_msb = en;
+    void configBitOrder(const Endian endian) override {
+        m_msb = bool(endian);
     }
 };
 

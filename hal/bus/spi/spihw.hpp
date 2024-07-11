@@ -31,7 +31,7 @@ public:
 
     void configDataSize(const uint8_t data_size) override;
     void configBaudRate(const uint32_t baudRate) override;
-    void configBitOrder(const bool msb) override ;
+    void configBitOrder(const Endian endian) override ;
 };
 
 #ifdef HAVE_SPI1

@@ -248,7 +248,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 void eeprom_main(){
-    uart1.init(921600, CommMethod::Blocking);
+    uart1.init(576000, CommMethod::Blocking);
     auto & logger = uart1;
     logger.setEps(4);
     logger.setRadix(10);
