@@ -88,6 +88,12 @@ public:
 };
 
 
-
+class StoragePaged:public Storage{
+protected:
+    const Address m_pagesize;
+public:
+    StoragePaged(const Address _size, const Address _pagesize):Storage(_size, {0, _size}), m_pagesize(_pagesize){;}
+    StoragePaged(const Address _size, const AddressWindow  & _window, const Address _pagesize):Storage(_size, _window), m_pagesize(_pagesize){;}
+};
 
 #endif

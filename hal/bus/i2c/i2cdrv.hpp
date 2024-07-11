@@ -30,9 +30,15 @@ protected:
 private:
     template<typename T>
     requires I2cUtils::ValidAddress<T>
-    void writeRegAddress(const T reg_address){
-        for(int i = sizeof(T) - 1; i >= 0; i--){
-            bus.write(((uint8_t *)&reg_address)[i]);
+    void writeRegAddress(const T reg_address, const Endian endian = MSB){
+        if(bool(endian)){
+            for(int i = sizeof(T) - 1; i >= 0; i--){
+                bus.write(((uint8_t *)&reg_address)[i]);
+            }
+        }else{
+            for(int i = 0; i < (int)sizeof(T); i++){
+                bus.write(((uint8_t *)&reg_address)[i]);
+            }
         }
     }
 
@@ -102,21 +108,12 @@ public:
         BusDrv<I2c>(_bus, _index, _wait_time){};
 
 
-    template<I2cUtils::ValidData T>
-    void writePool(const uint8_t reg_address, const T * data_ptr, const size_t length, const Endian msb = MSB){
-        writePool_impl<uint8_t, T>(reg_address, data_ptr, length, msb);
-    }
-
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
     void writePool(const U reg_address, const T * data_ptr, const size_t length, const Endian msb = MSB){
         writePool_impl<U, T>(reg_address, data_ptr, length, msb);
     }
 
-    template<I2cUtils::ValidData T>
-    void writeReg(const uint8_t reg_address, const T reg_data, Endian msb = MSB){
-        writePool(reg_address, &reg_data, 1, msb);
-    }
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
@@ -124,21 +121,10 @@ public:
         writePool<U, T>(reg_address, &reg_data, 1, msb);
     }
 
-
-    template<I2cUtils::ValidData T>
-    void readPool(const uint8_t reg_address, T * data_ptr, const size_t length, const Endian msb = MSB){
-        readPool_impl<uint8_t, T>(reg_address, data_ptr, length, msb);
-    }
-
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
     void readPool(const U reg_address, T * data_ptr, const size_t length, const Endian msb = MSB){
         readPool_impl<U, T>(reg_address, data_ptr, length, msb);
-    }
-
-    template<I2cUtils::ValidData T>
-    void readReg(const uint8_t reg_address,T & reg, Endian msb = MSB){
-        readPool_impl<uint8_t, T>(reg_address, &reg, 1, msb);
     }
 
     template<typename U, typename T>
