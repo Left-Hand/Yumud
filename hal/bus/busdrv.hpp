@@ -36,13 +36,22 @@ protected:
 public:
 
     template<typename T>
-    requires std::is_integral<T>::value && is_writable_bus
+    requires (std::is_integral_v<T> || std::is_enum_v<T>) && is_writable_bus
     void write(const T & data, bool discontinuous = true){
+        constexpr size_t size = sizeof(T);
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
-            bus.write(data);
+            if (size != 1) this->configDataBits(size * 8);
+            
+            if constexpr(size == 1){
+                bus.write((uint8_t)data);
+            }else if constexpr(size == 2){
+                bus.write((uint16_t)data);
+            }else{
+                bus.write((uint32_t)data);
+            }
+
             if(discontinuous) bus.end();
-            if (sizeof(T) != 1) this->configDataBits(8);
+            if (size != 1) this->configDataBits(8);
         }
 
     }
@@ -112,6 +121,22 @@ public:
             if (sizeof(T) != 1)this->configDataBits(8);
             if(discontinuous) bus.end();
         }
+    }
+
+    template<typename T>
+    requires std::is_integral<T>::value && is_fulldup_bus
+    T transfer(T datatx, bool discontinuous = true){
+        if(!bus.begin(index)){
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
+            T datarx;
+            uint32_t ret = 0;
+            bus.transfer(ret, datatx);
+            datarx = ret;
+            if (sizeof(T) != 1)this->configDataBits(8);
+            if(discontinuous) bus.end();
+            return datarx;
+        }
+        return T(0);
     }
 
     void end(){

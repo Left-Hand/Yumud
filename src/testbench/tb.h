@@ -2,8 +2,9 @@
 
 
 
-#include "../sys/core/platform.h"
-#include "../hal/flash/flash.hpp"
+#include "../../sys/core/platform.h"
+#include "../../hal/flash/flash.hpp"
+#include "../../hal/timer/instance/timer_hw.hpp"
 // #include "../hal/rng/rng.hpp"
 
 using Sys::t;

@@ -1,0 +1,74 @@
+#include "ad9854.hpp"
+
+#define PA1				0x00
+#define PA2				0x01
+#define FTW1			0x02
+#define FTW2			0x03
+#define DFW				0x04
+#define UC				0x05
+#define RRC				0x06
+#define CTRL			0x07
+#define OSKIM			0x08
+#define OSKQM			0x09
+#define OSKRR			0x0A
+#define QDAC			0x0B
+
+#define Freq_mult 1876499.84473770
+
+
+
+void AD9854::Init(void){
+
+    IO_RESET.outpp();
+    MRESET.outpp();
+    UD_CLK.outpp();
+    F_B_H.outpp();
+    OSK.outpp();
+
+	uint8_t data[4] = {0x00, 0x06, 0x00, 0x60};
+	uint8_t freq[6];
+	uint8_t shape[2] = {0x0F, 0xFF};
+	int i;
+	long long ftw;
+	ftw = (Freq_mult * 1000.0) + 0.5;
+	for(i = 5; i >= 0; i--)	freq[i] = ftw >> ((5 - i) * 8);
+	
+	
+	delay(10);
+	UD_CLK = 0;
+	MRESET = 1;
+	delayMicroseconds(10);
+	MRESET = 0;
+	
+	AD9854::SendData(CTRL, data, 4);
+	delay(50);
+	UD_CLK = 1;
+	UD_CLK = 0;	
+	AD9854::SendData(FTW1, freq, 6);
+	AD9854::SendData(OSKIM, shape, 2);
+	UD_CLK = 1;
+	UD_CLK = 0;
+}
+
+void AD9854::SendOneByte(uint8_t data){
+	bus_drv.write(data);
+}
+
+void AD9854::SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum){
+	int i;
+	IO_RESET = 1;
+	delayMicroseconds(1);
+	IO_RESET = 0;
+	SendOneByte(_register);
+	for(i = 0; i < ByteNum; i++)	SendOneByte(data[i]);
+}
+
+void AD9854::SetFreq(real_t fre){
+	uint8_t freq[6];
+	int i;
+	int64_t ftw = (Freq_mult * float(fre)) + 0.5;
+	for(i = 5; i >= 0; i--)	freq[i] = ftw >> ((5 - i) * 8);
+	AD9854::SendData(FTW1, freq, 6);
+	UD_CLK = 1;
+	UD_CLK = 0;	
+}

@@ -1,5 +1,5 @@
 #include "node.hpp"
-
+#include "hal/timer/instance/timer_hw.hpp"
 void node_main(){
     using TimerUtils::Mode;
     using TimerUtils::IT;
