@@ -134,11 +134,12 @@ void dshot_main(){
         // USART_Printf_Init(115200);
     // Delay_Init();
     // SystemCoreClockUpdate();
-
+    // UART1_TX_Gpio.
     auto & logger = uart1;
     logger.init(921600);
-    timer1.init(2340, 1);
-    timer8.init(2340, 1);
+    const uint32_t freq = 200;
+    timer1.init(freq);
+    timer8.init(freq);
     auto & oc = timer1.oc(1);
     auto & oc2 = timer8.oc(1);
     oc.init();

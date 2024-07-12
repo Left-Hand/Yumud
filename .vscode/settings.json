@@ -76,6 +76,10 @@
     "system_ch32v20x.h": "c",
     "ch32v20x_dbgmcu.h": "c",
     "ch32v30x_conf.h": "c",
-    "core_riscv.h": "c"
+    "core_riscv.h": "c",
+    "*.tcc": "cpp",
+    "unordered_map": "cpp",
+    "numeric": "cpp",
+    "ostream": "cpp"
   }
 }

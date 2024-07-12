@@ -51,7 +51,7 @@
 #include "sdk/n32g45x/CMSIS/device/n32g45x.h"
 #endif
 
-#include "defines/defs.h"
+#include "src/defines/defs.h"
 
 
 #if defined(USE_CH32V3_STD_LIB) || defined(USE_CH32V2_STD_LIB)
