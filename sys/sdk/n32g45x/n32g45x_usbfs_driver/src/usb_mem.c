@@ -32,7 +32,7 @@
  *
  * @copyright Copyright (c) 2019, Nations Technologies Inc. All rights reserved.
  */
-#include "usb_lib.h"
+#include "../inc/usb_lib.h"
 u8* EpOutDataPtrTmp;
 u8* EpInDataPtrTmp;
 

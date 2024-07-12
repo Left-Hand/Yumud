@@ -33,7 +33,7 @@
 * 2022-09-15        ¥ÛW            first version
 ********************************************************************************************************************/
 
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 #include "zf_driver_usb_cdc.h"
 
 #include "sys/kernel/clock.h"

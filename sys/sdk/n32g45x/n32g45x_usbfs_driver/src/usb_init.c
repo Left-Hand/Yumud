@@ -32,7 +32,7 @@
  *
  * @copyright Copyright (c) 2019, Nations Technologies Inc. All rights reserved.
  */
-#include "usb_lib.h"
+#include "../inc/usb_lib.h"
 
 /*  The number of current endpoint, it will be used to specify an endpoint */
 uint8_t EPindex;

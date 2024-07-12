@@ -2,7 +2,7 @@
 
 #define __NVCV2_HPP__
 
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 
 #include "types/color/color_t.hpp"
 #include "types/image/image.hpp"

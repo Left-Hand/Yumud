@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types/range/range_t.hpp"
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 
 #include "hal/gpio/port.hpp"
 #include "hal/nvic/nvic.hpp"

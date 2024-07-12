@@ -2,7 +2,7 @@
 #ifndef __BUS_HPP__
 #define __BUS_HPP__
 
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 #include "sys/kernel/clock.h"
 
 enum class CommMethod:uint8_t{

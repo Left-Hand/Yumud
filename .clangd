@@ -6,5 +6,5 @@ CompileFlags:
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\lib\gcc\riscv-none-elf\12.2.0\include
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\lib\gcc\riscv-none-elf\12.2.0\include-fixed
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\riscv-none-elf\include
-    CompilationDatabase: ./build/Debug
+    CompilationDatabase: ./build/N32G45X
     Compiler: C:\MounRiver\MRS_Community\toolchain\RISC-V Embedded GCC12\bin\riscv-none-elf-gcc.exe

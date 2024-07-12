@@ -2,7 +2,7 @@
 
 #define __MATH_DEFS_H__
 
-#include "sys/sys_defs.h"
+#include "core/sys_defs.h"
 
 #ifdef __cplusplus
 #include <type_traits>

@@ -8,7 +8,7 @@
 #include "stdio.h"
 
 #ifdef CH32V30X
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 #include "ch32v30x_usbotg_device.h"
 
 

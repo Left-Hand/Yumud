@@ -32,7 +32,7 @@
  *
  * @copyright Copyright (c) 2019, Nations Technologies Inc. All rights reserved.
  */
-#include "usb_lib.h"
+#include "../inc/usb_lib.h"
 
 __IO uint16_t SaveRState;
 __IO uint16_t SaveTState;

@@ -3,7 +3,7 @@
 #define __COLOR_H__
 
 #include "stdint.h"
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 
 #include "uint24_t.h"
 

@@ -4,7 +4,7 @@
 
 
 #include "stdint.h"
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 #include "extra_convs.hpp"
 
 #include <IQmath_RV32.h>

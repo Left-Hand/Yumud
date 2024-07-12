@@ -1,4 +1,5 @@
-#include "sys/system.hpp"
+#include "system.hpp"
+#include "system.h"
 #include "hal/crc/crc.hpp"
 
 
@@ -14,22 +15,7 @@ void Sys::Clock::delayUs(const uint32_t us){
 }
 
 void Sys::Misc::prework(){
-    RCC_PCLK1Config(RCC_HCLK_Div1);
-    RCC_PCLK2Config(RCC_HCLK_Div1);
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-    Systick_Init();
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
-
-    #ifdef HAVE_GPIOD
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
-    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
-    #endif
-    PWR_BackupAccessCmd( ENABLE );
-    RCC_LSEConfig( RCC_LSE_OFF );
-    BKP_TamperPinCmd(DISABLE);
-    PWR_BackupAccessCmd(DISABLE);
+    ::prework();
 }
 
 
@@ -37,8 +23,6 @@ void Sys::Misc::reset(){
     __disable_irq();
     __disable_irq();
     NVIC_SystemReset();
-    // __enable_irq();
-    // NVIC_SystemReset();
 }
 
 
@@ -83,74 +67,91 @@ uint32_t Sys::Chip::getChipIdCrc(){
 }
 
 
-static RCC_ClocksTypeDef RCC_CLK;
+static M_CLOCK_TYPEDEF RCC_CLK;
+
 static void ClockUpdate(){
-	RCC_GetClocksFreq(&RCC_CLK);//Get chip frequencies
+	M_RCC_CLK_GETTER(&RCC_CLK);//Get chip frequencies
 }
+
+#ifdef N32G45X
+#define M_RCC_SYSCLK(inst) inst.SysclkFreq;
+#define M_RCC_HCLK(inst) inst.HclkFreq;
+#define M_RCC_PCLK1(inst) inst.Pclk1Freq;
+#define M_RCC_PCLK2(inst) inst.Pclk2Freq;
+#define M_RCC_ADCPLL(inst) inst.AdcPllClkFreq;
+#define M_RCC_ADCHCLK(inst) inst.AdcHClkFreq;
+
+#else
+#define M_RCC_SYSCLK(inst) inst.PCLK1_Frequency;
+#endif
 
 uint32_t Sys::Clock::getSystemFreq(){
     ClockUpdate();
-    return RCC_CLK.SYSCLK_Frequency;
+    return M_RCC_SYSCLK(RCC_CLK);
 }
 
 
 uint32_t Sys::Clock::getAPB1Freq(){
     ClockUpdate();
-    return RCC_CLK.PCLK1_Frequency;
+    return M_RCC_PCLK1(RCC_CLK);
 }
 
 
 void Sys::Clock::setAHBDiv(const uint8_t _div){
+
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
-            RCC_HCLKConfig(RCC_SYSCLK_Div1);
+            M_RCC_CONFIGER(RCC_SYSCLK_Div1);
+            
             break;
         case 2:
-            RCC_HCLKConfig(RCC_SYSCLK_Div2);
+            M_RCC_CONFIGER(RCC_SYSCLK_Div2);
             break;
         default:return;
     }
+
 }
 
 void Sys::Clock::setAPB1Div(const uint8_t _div){
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
-            RCC_PCLK1Config(RCC_HCLK_Div1);
+            M_PCLK1_CONFIGER(RCC_HCLK_Div1);
             break;
         case 2:
-            RCC_PCLK1Config(RCC_HCLK_Div2);
+            M_PCLK1_CONFIGER(RCC_HCLK_Div2);
             break;
         case 4:
-            RCC_PCLK1Config(RCC_HCLK_Div4);
+            M_PCLK1_CONFIGER(RCC_HCLK_Div4);
             break;
         case 8:
-            RCC_PCLK1Config(RCC_HCLK_Div8);
+            M_PCLK1_CONFIGER(RCC_HCLK_Div8);
             break;
         case 16:
-            RCC_PCLK1Config(RCC_HCLK_Div16);
+            M_PCLK1_CONFIGER(RCC_HCLK_Div16);
             break;
     }
 }
 
 void Sys::Clock::setAPB2Div(const uint8_t _div){
+
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
-            RCC_PCLK2Config(RCC_HCLK_Div1);
+            M_PCLK2_CONFIGER(RCC_HCLK_Div1);
             break;
         case 2:
-            RCC_PCLK2Config(RCC_HCLK_Div2);
+            M_PCLK2_CONFIGER(RCC_HCLK_Div2);
             break;
         case 4:
-            RCC_PCLK2Config(RCC_HCLK_Div4);
+            M_PCLK2_CONFIGER(RCC_HCLK_Div4);
             break;
         case 8:
-            RCC_PCLK2Config(RCC_HCLK_Div8);
+            M_PCLK2_CONFIGER(RCC_HCLK_Div8);
             break;
         case 16:
-            RCC_PCLK2Config(RCC_HCLK_Div16);
+            M_PCLK2_CONFIGER(RCC_HCLK_Div16);
             break;
     }
 }
@@ -158,12 +159,12 @@ void Sys::Clock::setAPB2Div(const uint8_t _div){
 
 uint32_t Sys::Clock::getAPB2Freq(){
     ClockUpdate();
-    return RCC_CLK.PCLK2_Frequency;
+    return M_RCC_PCLK2(RCC_CLK);
 }
 
 uint32_t Sys::Clock::getAHBFreq(){
     ClockUpdate();
-    return RCC_CLK.HCLK_Frequency;
+    return M_RCC_HCLK(RCC_CLK);
 }
 
 void Sys::Clock::setAHBFreq(const uint32_t freq){

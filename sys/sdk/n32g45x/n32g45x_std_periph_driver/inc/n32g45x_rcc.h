@@ -175,6 +175,21 @@ typedef struct
 #define RCC_SYSCLK_DIV128 ((uint32_t)0x000000D0)
 #define RCC_SYSCLK_DIV256 ((uint32_t)0x000000E0)
 #define RCC_SYSCLK_DIV512 ((uint32_t)0x000000F0)
+
+#define RCC_SYSCLK_Div1 RCC_SYSCLK_DIV1
+#define RCC_SYSCLK_Div2 RCC_SYSCLK_DIV2
+#define RCC_SYSCLK_Div4 RCC_SYSCLK_DIV4
+#define RCC_SYSCLK_Div8 RCC_SYSCLK_DIV8
+#define RCC_SYSCLK_Div16 RCC_SYSCLK_DIV16
+#define RCC_SYSCLK_Div64 RCC_SYSCLK_DIV64
+#define RCC_SYSCLK_Div128 RCC_SYSCLK_DIV128
+#define RCC_SYSCLK_Div256 RCC_SYSCLK_DIV256
+#define RCC_SYSCLK_Div512 RCC_SYSCLK_DIV512
+
+#define IS_RCC_SYSCLK_DIV(HCLK)                                                                                        \
+    (((HCLK) == RCC_SYSCLK_DIV1) || ((HCLK) == RCC_SYSCLK_DIV2) || ((HCLK) == RCC_SYSCLK_DIV4)                         \
+     || ((HCLK) == RCC_SYSCLK_DIV8) || ((HCLK) == RCC_SYSCLK_DIV16) || ((HCLK) == RCC_SYSCLK_DIV64)                    \
+     || ((HCLK) == RCC_SYSCLK_DIV128) || ((HCLK) == RCC_SYSCLK_DIV256) || ((HCLK) == RCC_SYSCLK_DIV512))
 #define IS_RCC_SYSCLK_DIV(HCLK)                                                                                        \
     (((HCLK) == RCC_SYSCLK_DIV1) || ((HCLK) == RCC_SYSCLK_DIV2) || ((HCLK) == RCC_SYSCLK_DIV4)                         \
      || ((HCLK) == RCC_SYSCLK_DIV8) || ((HCLK) == RCC_SYSCLK_DIV16) || ((HCLK) == RCC_SYSCLK_DIV64)                    \
@@ -192,6 +207,13 @@ typedef struct
 #define RCC_HCLK_DIV4  ((uint32_t)0x00000500)
 #define RCC_HCLK_DIV8  ((uint32_t)0x00000600)
 #define RCC_HCLK_DIV16 ((uint32_t)0x00000700)
+
+#define RCC_HCLK_Div1 RCC_HCLK_DIV1
+#define RCC_HCLK_Div2 RCC_HCLK_DIV2
+#define RCC_HCLK_Div4 RCC_HCLK_DIV4
+#define RCC_HCLK_Div8 RCC_HCLK_DIV8
+#define RCC_HCLK_Div16 RCC_HCLK_DIV16
+
 #define IS_RCC_HCLK_DIV(PCLK)                                                                                          \
     (((PCLK) == RCC_HCLK_DIV1) || ((PCLK) == RCC_HCLK_DIV2) || ((PCLK) == RCC_HCLK_DIV4) || ((PCLK) == RCC_HCLK_DIV8)  \
      || ((PCLK) == RCC_HCLK_DIV16))

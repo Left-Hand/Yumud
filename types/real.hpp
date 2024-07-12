@@ -2,7 +2,11 @@
 
 #define __REAL_HPP__
 
-#include "sys/platform.h"
+#include "sys/core/platform.h"
+
+#if (!defined(USE_IQ)) &&  (!defined(USE_STD_MATH))
+#define USE_STD_MATH
+#endif
 
 #ifdef USE_IQ
 #include "iq/iqt.hpp"
@@ -58,10 +62,6 @@ __fast_inline int warp_mod(const int x, const int y){
     int ret = x % y;
     if(ret < 0) ret += y;
     return ret;
-}
-
-__fast_inline iq_t warp_mod(const iq_t a, const iq_t b){
-    return iq_t(_iq(_IQmpy(_IQfrac(_IQdiv(a.value, b.value)), b.value)));
 }
 
 #endif

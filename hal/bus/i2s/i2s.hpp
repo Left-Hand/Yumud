@@ -3,7 +3,7 @@
 #define __I2S_HPP__
 
 #include "hal/bus/bus.hpp"
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 
 
 class I2s:public WritableBus{

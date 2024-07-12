@@ -2,7 +2,7 @@
 
 #define __PRINTABLE_HPP__
 
-#include "sys/platform.h"
+#include "sys/core/platform.h"
 #include "types/buffer/buffer.hpp"
 #include "types/string/String.hpp"
 

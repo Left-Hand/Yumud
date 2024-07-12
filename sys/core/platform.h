@@ -23,6 +23,12 @@
 #endif
 
 
+#ifdef N32G45X
+#include "sdk/n32g45x/CMSIS/core/core_cm4.h"
+#include "sdk/n32g45x/CMSIS/device/n32g45x.h"
+#endif
+
+
 #if defined(USE_CH32V3_STD_LIB) || defined(USE_CH32V2_STD_LIB)
 #define USE_CH32_STD_LIB
 #endif
