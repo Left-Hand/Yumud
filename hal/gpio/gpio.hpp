@@ -6,6 +6,8 @@
 #include "port_concept.hpp"
 #include "gpio_enums.hpp"
 
+//platform specific
+
 class GpioConcept{
 public:
     const int8_t pin_index = 0;
@@ -42,17 +44,22 @@ class Exti;
 
 class Gpio:public GpioConcept{
 protected:
-    volatile GPIO_TypeDef * instance = GPIOA;
+    volatile GPIO_TypeDef * instance = nullptr;
     const uint16_t pin;
-    const uint32_t pin_mask = 0;
+    const uint32_t pin_mask;
     volatile uint32_t & pin_cfg;
 
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
         instance(_instance),
+
+        #if defined(USE_CH32_STD_LIB)
         pin(((_instance == GPIOC) && 
             (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
             ) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
+        #elif defined(USE_STM32_HAL_LIB)
+        pin((uint16_t)_pin),
+        #endif
 
         pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
         pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
@@ -68,25 +75,28 @@ public:
 
     ~Gpio(){};
 
-    __fast_inline void set()override{instance->BSHR = pin;}
-    __fast_inline void clr()override{instance->BCR = pin;}
-    __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
-    __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
-    __fast_inline Gpio & operator = (const bool _val) override {(_val) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
-    __fast_inline Gpio & operator = (const Gpio & other){(other.read()) ? instance->BSHR = pin : instance->BCR = pin; return *this;}
-    void setMode(const PinMode mode) override{
-        if(!isValid()) return;
-        uint32_t tempreg = pin_cfg;
-        tempreg &= pin_mask;
-        tempreg |= ((uint8_t)mode << ((pin_index % 8) * 4));
-        pin_cfg = tempreg;
-
-        if(mode == PinMode::InPullUP){
-            instance -> OUTDR |= pin;
-        }else if(mode == PinMode::InPullDN){
-            instance -> OUTDR &= ~pin;
-        }
+    __fast_inline void set()override{
+        instance->BSHR = pin;
     }
+    __fast_inline void clr()override{
+        instance->BCR = pin;
+    }
+    __fast_inline void write(const bool val) override {
+        (val) ? set() : clr();
+    }
+    __fast_inline bool read() const override{
+        return (bool)(instance->INDR & pin);
+    }
+    __fast_inline Gpio & operator = (const bool _val) override {
+        write(_val);
+        return *this;
+    }
+    __fast_inline Gpio & operator = (const Gpio & other){
+        write(other.read());
+        return *this;
+    }
+
+    void setMode(const PinMode mode) override;
 };
 
 class GpioVirtual:public GpioConcept{

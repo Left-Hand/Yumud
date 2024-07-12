@@ -2,7 +2,7 @@
 #define __MT6701_HPP__
 
 #include "bus/i2c/i2cdrv.hpp"
-#include "types/real.hpp"
+#include "../types/real.hpp"
 
 class MT6701{
 public:

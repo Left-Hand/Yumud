@@ -1,7 +1,7 @@
 #ifndef RANDOMGENERATOR_H
 #define RANDOMGENERATOR_H
 
-// #include "sys/platform.h"
+// #include "../sys/core/platform.h"
 #include <cstdint>
 class RandomGenerator {
 public:

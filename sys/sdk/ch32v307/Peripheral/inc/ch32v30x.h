@@ -180,8 +180,8 @@ typedef enum IRQn
 
 
 #include <stdint.h>
-#include "sys/sdk/ch32v307/Core/core_riscv.h"
-#include "sys/sdk/ch32v307/system_ch32v30x.h"
+#include "../sys/sdk/ch32v307/Core/core_riscv.h"
+#include "../sys/sdk/ch32v307/system_ch32v30x.h"
 
 
 /* Standard Peripheral Library old definitions (maintained for legacy purpose) */

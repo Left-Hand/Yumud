@@ -4,7 +4,7 @@
 #include "can_utils.hpp"
 #include "can_msg.hpp"
 #include "can_filter.hpp"
-#include "hal/bus/bus.hpp"
+#include "../hal/bus/bus.hpp"
 
 
 class Can: public PackedBus<CanMsg>{

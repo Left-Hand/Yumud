@@ -1,7 +1,7 @@
 #include "tb.h"
 
-#include "hal/bus/can/can.hpp"
-#include "sys/debug/debug_inc.h"
+#include "../hal/bus/can/can.hpp"
+#include "../sys/debug/debug_inc.h"
 
 void can_tb(IOStream & logger, Can & can, bool tx_role){
     can.init(Can::BaudRate::Mbps1, Can::Mode::Normal);

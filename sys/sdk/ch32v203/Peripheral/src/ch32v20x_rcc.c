@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/ 
 // #include "ch32v20x_rcc.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 
 /* RCC registers bit address in the alias region */
 #define RCC_OFFSET                (RCC_BASE - PERIPH_BASE)

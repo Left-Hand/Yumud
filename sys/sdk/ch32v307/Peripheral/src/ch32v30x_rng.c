@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 ********************************************************************************/
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rng.h"
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rng.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 /*********************************************************************
  * @fn      RNG_Cmd
@@ -117,7 +117,7 @@ void RNG_ClearFlag(uint8_t RNG_FLAG)
  *            RNG_IT_CEI - Clock Error Interrupt.
  *            RNG_IT_SEI - Seed Error Interrupt.
  *
- * @return  bitstatus£ºSET or RESET.
+ * @return  bitstatusï¿½ï¿½SET or RESET.
  */
 ITStatus RNG_GetITStatus(uint8_t RNG_IT)
 {

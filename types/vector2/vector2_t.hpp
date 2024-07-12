@@ -2,20 +2,18 @@
 
 #define __VECTOR2_HPP_
 
-#include "sys/platform.h"
-#include "types/string/String.hpp"
-#include "types/real.hpp"
+#include "../sys/core/platform.h"
+#include "../types/string/String.hpp"
+#include "../types/real.hpp"
 
 
 #include <type_traits>
 #include <tuple>
 
-template<typename T>
-requires std::is_arithmetic_v<T>
+template<arithmetic T>
 struct Rect2_t;
 
-template<typename T>
-requires std::is_arithmetic_v<T>
+template<arithmetic T>
 struct Vector2_t{
 public:
 
@@ -24,16 +22,13 @@ public:
 
     __fast_inline constexpr Vector2_t(){;}
 
-    template<typename U, typename V>
-    requires std::is_arithmetic_v<U> and std::is_arithmetic_v<V>
+    template<arithmetic U, arithmetic V>
     __fast_inline constexpr Vector2_t(const U & _x, const V & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
 
-    template<typename U, typename V>
-    requires std::is_arithmetic_v<U> and std::is_arithmetic_v<V>
+    template<arithmetic U, arithmetic V>
     __fast_inline constexpr Vector2_t(const std::tuple<U, V> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     __fast_inline constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
     static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);

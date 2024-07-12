@@ -1,8 +1,8 @@
 #include "usbfs.hpp"
 
 #ifdef CH32V30X
-#include "hal/bus/usb/usbfs/ch32v30x_usbotg_device.h"
-#include "hal/bus/usb/usbfs/zf_driver_usb_cdc.h"
+#include "../hal/bus/usb/usbfs/ch32v30x_usbotg_device.h"
+#include "../hal/bus/usb/usbfs/zf_driver_usb_cdc.h"
 
 void UsbFS::init(){
     usb_cdc_init();

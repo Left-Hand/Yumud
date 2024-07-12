@@ -2,10 +2,11 @@
 
 #define __STEPPER_CLI_HPP__
 
+#include "../sys/core/system.hpp"
 #include "constants.hpp"
 #include "statled.hpp"
 
-#include "hal/bus/can/can.hpp"
+#include "../hal/bus/can/can.hpp"
 
 namespace StepperUtils{
 

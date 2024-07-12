@@ -2,7 +2,7 @@
 // #ifndef __HX711_H
 // #define __HX711_H
  
-// #include "drivers/device_defs.h"
+// #include "../drivers/device_defs.h"
 
 // #ifdef __cplusplus
 // extern "C" {

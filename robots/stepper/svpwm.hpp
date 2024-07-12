@@ -2,8 +2,8 @@
 
 #define __SVPWM_HPP__
 
-#include "drivers/Actuator/Coil/coil.hpp"
-#include "types/vector2/vector2_t.hpp"
+#include "../drivers/Actuator/Coil/coil.hpp"
+#include "../types/vector2/vector2_t.hpp"
 
 class SVPWM{
 protected:

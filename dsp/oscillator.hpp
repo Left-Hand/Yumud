@@ -12,7 +12,7 @@ struct Osc{
     virtual real forward(const real & delta_ms) = 0;
 };
 
-#include "types/real.hpp"
+#include "../types/real.hpp"
 
 // template<typename real>
 struct SineOsc:public Osc<real_t>{

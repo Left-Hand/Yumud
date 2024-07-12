@@ -1,6 +1,6 @@
 #pragma once
 
-#include "src/testbench/tb.h"
+#include "../src/testbench/tb.h"
 
 namespace Interpolation{
     struct TurnSolver{

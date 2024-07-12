@@ -1,6 +1,6 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
+#include "../hal/gpio/gpio.hpp"
 #include "pwm_channel.hpp"
 
 class GpioPwm:public PwmChannel, public Countable{

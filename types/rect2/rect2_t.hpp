@@ -2,13 +2,12 @@
 
 #define __RECT2_HPP__
 
-#include "sys/platform.h"
-#include "types/real.hpp"
-#include "types/range/range_t.hpp"
-#include "types/vector2/vector2_t.hpp"
+#include "../sys/core/platform.h"
+#include "../types/real.hpp"
+#include "../types/range/range_t.hpp"
+#include "../types/vector2/vector2_t.hpp"
 
-template<typename T>
-requires std::is_arithmetic_v<T>
+template<arithmetic T>
 class Rect2_t{
 public:
 
@@ -35,19 +34,19 @@ public:
 
     __fast_inline constexpr Rect2_t(){;}
 
-    template<typename U>
+    template<arithmetic U>
     __fast_inline constexpr Rect2_t(const Rect2_t<U> other):position(other.position), size(other.size){;}
 
-    template<typename U>
+    template<arithmetic U>
     __fast_inline constexpr Rect2_t(const Vector2_t<U> & _position,const Vector2_t<U> & _size):position(_position), size(_size){;}
 
-    template<typename U>
+    template<arithmetic U>
     __fast_inline constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
-    template<typename U>
+    template<arithmetic U>
     __fast_inline constexpr Rect2_t(U x, U y, U width, U height):position(Vector2_t<U>(x,y)),size(Vector2_t<U>(width, height)){;}
 
-    template<typename U>
+    template<arithmetic U>
     static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & size){
         return Rect2_t<T>(center - size, size * 2);
     }
@@ -117,8 +116,7 @@ public:
         return(*this);
     }
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     constexpr bool intersects(const Rect2_t<U> other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
@@ -130,8 +128,7 @@ public:
     }
 
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     constexpr Rect2_t<T> intersection(const Rect2_t<U> & other) const{
         Rect2_t<T> regular = this -> abs();
         Rect2_t<T> other_regular = other.abs();
@@ -143,8 +140,7 @@ public:
         return Rect2_t<T>(range_x,range_y);
     }
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     constexpr Rect2_t<T> merge(const Rect2_t<U> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
@@ -155,8 +151,7 @@ public:
         return Rect2_t<T>(range_x, range_y);
     }
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     constexpr Rect2_t<T> merge(const Vector2_t<U> & point) const{
         Rect2_t<T> regular = this->abs();
         Rangei range_x = regular.get_x_range().merge(point.x);
@@ -164,8 +159,7 @@ public:
         return Rect2_t<T>(range_x, range_y);
     }
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     constexpr Vector2_t<U> constrain(const Vector2_t<U> & point) const{
         Rect2_t<T> regular = this->abs();
         Vector2_t<U> ret;
@@ -174,8 +168,7 @@ public:
         return ret;
     }
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     constexpr Rect2_t<T> scale(const U amount)const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.get_center(), regular.size * amount);
@@ -183,8 +176,7 @@ public:
         else return Rect2_t<T>();
     }
 
-    template<typename U>
-    requires std::is_arithmetic_v<U>
+    template<arithmetic U>
     constexpr Rect2_t<T> grow(const U amount)const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.position - amount * Vector2_t<T>(1,1), regular.size + amount * Vector2_t<T>(2,2));

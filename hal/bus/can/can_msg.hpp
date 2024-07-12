@@ -2,8 +2,8 @@
 
 #define __CAN_MSG_HPP__
 
-#include "sys/platform.h"
-#include "types/real.hpp"
+#include "../sys/core/platform.h"
+#include "../types/real.hpp"
 
 #include <memory.h>
 #include <initializer_list>

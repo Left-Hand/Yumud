@@ -1,4 +1,4 @@
-#include "robots/stepper/stepper.hpp"
+#include "../robots/stepper/stepper.hpp"
 
 Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
     static constexpr int subdivide_micros = 1024;

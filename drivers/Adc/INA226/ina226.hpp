@@ -1,8 +1,8 @@
 #ifndef __INA226_HPP__
 #define __INA226_HPP__
 
-#include "drivers/device_defs.h"
-#include "types/real.hpp"
+#include "../drivers/device_defs.h"
+#include "../types/real.hpp"
 
 #ifdef INA226_DEBUG
 #define INA226_DEBUG(...) DEBUG_LOG(...)

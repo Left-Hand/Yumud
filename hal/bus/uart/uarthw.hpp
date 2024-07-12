@@ -1,7 +1,7 @@
 #pragma once
 
 #include "uart.hpp"
-#include "hal/dma/dma.hpp"
+#include "../hal/dma/dma.hpp"
 
 
 class UartHw:public Uart{

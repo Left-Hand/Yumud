@@ -1,7 +1,7 @@
 #ifndef __PWM_SERVO_HPP__
 #define __PWM_SERVO_HPP__
 
-#include "drivers/Actuator/Actuator.hpp"
+#include "../drivers/Actuator/Actuator.hpp"
 
 
 class PwmServo:public ServoOpenLoop{

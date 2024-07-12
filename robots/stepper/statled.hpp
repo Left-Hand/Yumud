@@ -3,8 +3,8 @@
 #define __STEPPER_STATLED_HPP__
 
 #include "constants.hpp"
-#include "drivers/CommonIO/Led/rgbLed.hpp"
-#include "types/color/color_t.hpp"
+#include "../drivers/CommonIO/Led/rgbLed.hpp"
+#include "../types/color/color_t.hpp"
 
 using Sys::t;
 using Color = Color_t<real_t>;

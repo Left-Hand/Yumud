@@ -15,10 +15,10 @@
 #pragma once
 /* Includes ------------------------------------------------------------------*/
 
-#include "sys/platform.h"
+#include "../sys/core/platform.h"
 
 #ifdef __cplusplus
-#include "sys/system.hpp"
+#include "../sys/core/platform.h"
 #include <functional>
 void bindSystickCb(std::function<void(void)> && cb);
 extern "C" {
@@ -43,6 +43,12 @@ extern "C" {
 #define tick_per_ms (F_CPU / 1000)
 #define tick_per_us (tick_per_ms / 1000)
 
+#ifdef N32G45X
+#define M_SYSTICK_CNT SysTick->VAL
+#else
+#define M_SYSTICK_CNT SysTick->CNT
+#endif
+
 
 extern volatile uint32_t msTick;
 
@@ -51,7 +57,7 @@ __fast_inline uint32_t millis(void){return msTick;}
 __fast_inline static uint64_t micros(void){
     __disable_irq();
     uint64_t m = msTick;
-    __IO uint64_t ticks = SysTick->CNT;
+    __IO uint64_t ticks = M_SYSTICK_CNT;
     __enable_irq();
 
     return (m * 1000 + ticks / tick_per_us);
@@ -60,7 +66,7 @@ __fast_inline static uint64_t micros(void){
 __fast_inline static uint64_t nanos(){
     __disable_irq();
     uint64_t m = msTick;
-    __IO uint64_t ticks = SysTick->CNT;
+    __IO uint64_t ticks = M_SYSTICK_CNT;
     __enable_irq();
 
     return (m * 1000000 + NanoMut(ticks));

@@ -2,7 +2,7 @@
 
 #define __ADC_CHANNEL_HPP__
 
-#include "sys/platform.h"
+#include "../sys/core/platform.h"
 #include "adc_utils.hpp"
 
 #include "analog_channel.hpp"

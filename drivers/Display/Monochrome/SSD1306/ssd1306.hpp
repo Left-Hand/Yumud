@@ -2,7 +2,7 @@
 #define __SSD1306_HPP__
 
 #include "../../DisplayerInterface.hpp"
-#include "types/image/packed_image.hpp"
+#include "../types/image/packed_image.hpp"
 
 // class OldeDisplayer : public D
 class SSD13XX:public Displayer<Binary>{

@@ -5,12 +5,12 @@
 #include "image.hpp"
 #include "packed_image.hpp"
 
-#include "types/rect2/rect2_t.hpp"
-#include "types/color/color_t.hpp"
-#include "types/rgb.h"
+#include "../types/rect2/rect2_t.hpp"
+#include "../types/color/color_t.hpp"
+#include "../types/rgb.h"
 
 #include "font/font.hpp"
-#include "types/string/String.hpp"
+#include "../types/string/String.hpp"
 
 template<typename ColorType>
 class Painter{

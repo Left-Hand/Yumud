@@ -9,8 +9,8 @@
  *******************************************************************************/
 // #include "ch32v20x_i2c.h"
 // #include "ch32v20x_rcc.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_i2c.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_i2c.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 /* I2C SPE mask */
 #define CTLR1_PE_Set             ((uint16_t)0x0001)
 #define CTLR1_PE_Reset           ((uint16_t)0xFFFE)

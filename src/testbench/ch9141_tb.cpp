@@ -1,5 +1,5 @@
 #include "tb.h"
-#include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
+#include "../drivers/Wireless/Radio/CH9141/CH9141.hpp"
 
 void ch9141_tb(IOStream & logger, Uart & uart){
 

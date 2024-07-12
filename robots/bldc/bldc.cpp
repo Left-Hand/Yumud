@@ -1,8 +1,8 @@
-#include "sys/system.hpp"
-#include "real.hpp"
-#include "hal/bus/bus_inc.h"
-#include "hal/timer/timers/timer_hw.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "../sys/core/platform.h"
+#include "../types/real.hpp"
+#include "../hal/bus/bus_inc.h"
+#include "../hal/timer/instance/timer_hw.hpp"
+#include "../hal/adc/adcs/adc1.hpp"
 
 #define NOP_DELAY(N) asm volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)
 
@@ -228,8 +228,8 @@ void ADC1_Init(void)
 void ADC_IT_Init(){
     NVIC_InitTypeDef NVIC_InitStructure = {0};
     NVIC_InitStructure.NVIC_IRQChannel = ADC1_2_IRQn;  
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;//ÏÈÕ¼ÓÅÏÈ¼¶0¼¶
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;  	   //´ÓÓÅÏÈ¼¶0¼¶
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;//ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;  	   //ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure); 
 }
@@ -246,7 +246,7 @@ void TIM1_Init()
     TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_CenterAligned1;
-    TIM_TimeBaseInit( TIM1, &TIM_TimeBaseInitStructure);    //ÅäÖÃºËÐÄ¼ÆÊýÆ÷¹¤×÷Ä£Ê½
+    TIM_TimeBaseInit( TIM1, &TIM_TimeBaseInitStructure);    //ï¿½ï¿½ï¿½Ãºï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
  
     TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
     TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
@@ -262,10 +262,10 @@ void TIM1_Init()
     TIM_OC3PreloadConfig( TIM1, TIM_OCPreload_Enable);
     TIM_OC4PreloadConfig( TIM1, TIM_OCPreload_Disable);
  
-    TIM_ARRPreloadConfig( TIM1, ENABLE );           //¿ªÆôºËÐÄ¼ÆÊýÆ÷×Ô¶¯ÖØ×°ÔØ
+    TIM_ARRPreloadConfig( TIM1, ENABLE );           //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½×°ï¿½ï¿½
 
-    TIM_CtrlPWMOutputs(TIM1, ENABLE );          //¸ß¼¶¶¨Ê±Æ÷ÖÃÎ»MOE
-    TIM_Cmd( TIM1, ENABLE );       //¿ªÆôºËÐÄ¼ÆÊýÆ÷
+    TIM_CtrlPWMOutputs(TIM1, ENABLE );          //ï¿½ß¼ï¿½ï¿½ï¿½Ê±ï¿½ï¿½ï¿½ï¿½Î»MOE
+    TIM_Cmd( TIM1, ENABLE );       //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
 void TIM2_Init()
@@ -279,11 +279,11 @@ void TIM2_Init()
     TIM_TimeBaseInitStructure.TIM_Prescaler = psc;
     TIM_TimeBaseInitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseInitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseInitStructure);    //ÅäÖÃºËÐÄ¼ÆÊýÆ÷¹¤×÷Ä£Ê½
+    TIM_TimeBaseInit(TIM2, &TIM_TimeBaseInitStructure);    //ï¿½ï¿½ï¿½Ãºï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½
 
-    TIM_ARRPreloadConfig(TIM2, ENABLE );           //¿ªÆôºËÐÄ¼ÆÊýÆ÷×Ô¶¯ÖØ×°ÔØ
+    TIM_ARRPreloadConfig(TIM2, ENABLE );           //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¶ï¿½ï¿½ï¿½×°ï¿½ï¿½
 
-    TIM_Cmd( TIM2, ENABLE );       //¿ªÆôºËÐÄ¼ÆÊýÆ÷
+    TIM_Cmd( TIM2, ENABLE );       //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
 
@@ -293,8 +293,8 @@ void TIM1_UP_INT_Init(){
 
     NVIC_InitTypeDef NVIC_InitStructure = {0};
     NVIC_InitStructure.NVIC_IRQChannel = TIM1_UP_IRQn;  
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;//ÏÈÕ¼ÓÅÏÈ¼¶0¼¶
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;  	   //´ÓÓÅÏÈ¼¶0¼¶
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;//ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 2;  	   //ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure); 
 }
@@ -305,8 +305,8 @@ void TIM2_UP_INT_Init(){
 
     NVIC_InitTypeDef NVIC_InitStructure = {0};
     NVIC_InitStructure.NVIC_IRQChannel = TIM2_IRQn;  
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;//ÏÈÕ¼ÓÅÏÈ¼¶0¼¶
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;  	   //´ÓÓÅÏÈ¼¶0¼¶
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;//ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;  	   //ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure); 
 }
@@ -317,8 +317,8 @@ void TIM1_CC_INT_Init(){
 
     NVIC_InitTypeDef NVIC_InitStructure = {0};
     NVIC_InitStructure.NVIC_IRQChannel = TIM1_CC_IRQn;  
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;//ÏÈÕ¼ÓÅÏÈ¼¶0¼¶
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;  	   //´ÓÓÅÏÈ¼¶0¼¶
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;//ï¿½ï¿½Õ¼ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 3;  	   //ï¿½ï¿½ï¿½ï¿½ï¿½È¼ï¿½0ï¿½ï¿½
     NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&NVIC_InitStructure); 
 }
@@ -399,18 +399,18 @@ void SPI1_Init(){
 	
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
 
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;  //ÉèÖÃSPIµ¥Ïò»òÕßË«ÏòµÄÊý¾ÝÄ£Ê½:SPIÉèÖÃÎªË«ÏßË«ÏòÈ«Ë«¹¤
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;		//ÉèÖÃSPI¹¤×÷Ä£Ê½:ÉèÖÃÎªÖ÷SPI
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_16b;		//ÉèÖÃSPIµÄÊý¾Ý´óÐ¡:SPI·¢ËÍ½ÓÊÕ8Î»Ö¡½á¹¹
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;		//´®ÐÐÍ¬²½Ê±ÖÓµÄ¿ÕÏÐ×´Ì¬Îª¸ßµçÆ½
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;	//´®ÐÐÍ¬²½Ê±ÖÓµÄµÚ¶þ¸öÌø±äÑØ£¨ÉÏÉý»òÏÂ½µ£©Êý¾Ý±»²ÉÑù
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;		//NSSÐÅºÅÓÉÓ²¼þ£¨NSS¹Ü½Å£©»¹ÊÇÈí¼þ£¨Ê¹ÓÃSSIÎ»£©¹ÜÀí:ÄÚ²¿NSSÐÅºÅÓÐSSIÎ»¿ØÖÆ
-	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;		//¶¨Òå²¨ÌØÂÊÔ¤·ÖÆµµÄÖµ:²¨ÌØÂÊÔ¤·ÖÆµÖµÎª256
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;	//Ö¸¶¨Êý¾Ý´«Êä´ÓMSBÎ»»¹ÊÇLSBÎ»¿ªÊ¼:Êý¾Ý´«Êä´ÓMSBÎ»¿ªÊ¼
-	SPI_InitStructure.SPI_CRCPolynomial = 7;	//CRCÖµ¼ÆËãµÄ¶àÏîÊ½
-	SPI_Init(SPI1, &SPI_InitStructure);  //¸ù¾ÝSPI_InitStructÖÐÖ¸¶¨µÄ²ÎÊý³õÊ¼»¯ÍâÉèSPIx¼Ä´æÆ÷
+	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;  //ï¿½ï¿½ï¿½ï¿½SPIï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë«ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½:SPIï¿½ï¿½ï¿½ï¿½ÎªË«ï¿½ï¿½Ë«ï¿½ï¿½È«Ë«ï¿½ï¿½
+	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;		//ï¿½ï¿½ï¿½ï¿½SPIï¿½ï¿½ï¿½ï¿½Ä£Ê½:ï¿½ï¿½ï¿½ï¿½Îªï¿½ï¿½SPI
+	SPI_InitStructure.SPI_DataSize = SPI_DataSize_16b;		//ï¿½ï¿½ï¿½ï¿½SPIï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½Ð¡:SPIï¿½ï¿½ï¿½Í½ï¿½ï¿½ï¿½8Î»Ö¡ï¿½á¹¹
+	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;		//ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ê±ï¿½ÓµÄ¿ï¿½ï¿½ï¿½×´Ì¬Îªï¿½ßµï¿½Æ½
+	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;	//ï¿½ï¿½ï¿½ï¿½Í¬ï¿½ï¿½Ê±ï¿½ÓµÄµÚ¶ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý±ï¿½ï¿½ï¿½ï¿½ï¿½
+	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;		//NSSï¿½Åºï¿½ï¿½ï¿½Ó²ï¿½ï¿½ï¿½ï¿½NSSï¿½Ü½Å£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¹ï¿½ï¿½SSIÎ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½Ú²ï¿½NSSï¿½Åºï¿½ï¿½ï¿½SSIÎ»ï¿½ï¿½ï¿½ï¿½
+	SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8;		//ï¿½ï¿½ï¿½å²¨ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½Æµï¿½ï¿½Öµ:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô¤ï¿½ï¿½ÆµÖµÎª256
+	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;	//Ö¸ï¿½ï¿½ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½MSBÎ»ï¿½ï¿½ï¿½ï¿½LSBÎ»ï¿½ï¿½Ê¼:ï¿½ï¿½ï¿½Ý´ï¿½ï¿½ï¿½ï¿½MSBÎ»ï¿½ï¿½Ê¼
+	SPI_InitStructure.SPI_CRCPolynomial = 7;	//CRCÖµï¿½ï¿½ï¿½ï¿½Ä¶ï¿½ï¿½ï¿½Ê½
+	SPI_Init(SPI1, &SPI_InitStructure);  //ï¿½ï¿½ï¿½ï¿½SPI_InitStructï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Ä²ï¿½ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½SPIxï¿½Ä´ï¿½ï¿½ï¿½
 	
-	SPI_Cmd(SPI1, ENABLE); //Ê¹ÄÜSPIÍâÉè
+	SPI_Cmd(SPI1, ENABLE); //Ê¹ï¿½ï¿½SPIï¿½ï¿½ï¿½ï¿½
 
     GPIOA->BCR = GPIO_Pin_15;
     while (SPI_I2S_GetFlagStatus(SPI1, SPI_I2S_FLAG_TXE) == RESET);
@@ -975,10 +975,10 @@ int bldc_main(){
 	// RCC_GetClocksFreq(&RCC_CLK);//Get chip frequencies
 
     // printf("------------------------\r\n");
-	// printf("System Clock Source : %d\r\n", (int)RCC_GetSYSCLKSource());
+	// printf("../system Clock Source : %d\r\n", (int)RCC_GetSYSCLKSource());
 	// printf("APB1/PCLK1 : %dHZ\r\n", (int)RCC_CLK.PCLK1_Frequency);
 	// printf("APB2/PCLK2 : %dHZ\r\n", (int)RCC_CLK.PCLK2_Frequency);
-	// printf("SYSCLK     : %dHZ\r\n", (int)RCC_CLK.SYSCLK_Frequency);
+	// printf("../sysCLK     : %dHZ\r\n", (int)RCC_CLK.SYSCLK_Frequency);
 	// printf("HCLK       : %dHZ\r\n", (int)RCC_CLK.HCLK_Frequency);
 
     // focAlign();

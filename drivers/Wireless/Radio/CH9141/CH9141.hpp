@@ -5,8 +5,8 @@
 #include <type_traits>
 
 
-#include "hal/bus/uart/uart.hpp"
-#include "types/string/String.hpp"
+#include "../hal/bus/uart/uart.hpp"
+#include "../types/string/String.hpp"
 #include "../Radio.hpp"
 
 struct MacAddress{

@@ -1,7 +1,7 @@
 #ifndef __BASIS_T_HPP__
 #define __BASIS_T_HPP__
 
-#include "types/Vector3/vector3_t.hpp"
+#include "../types/Vector3/vector3_t.hpp"
 
 template <typename real>
 requires std::is_arithmetic_v<real>

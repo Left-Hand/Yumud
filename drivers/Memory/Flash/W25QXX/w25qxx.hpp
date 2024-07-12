@@ -2,7 +2,7 @@
 
 #define __W25Qxx_HPP__
 
-#include "drivers/device_defs.h"
+#include "../drivers/device_defs.h"
 #include "../../memory.hpp"
 
 #ifdef W25QXX_DEBUG

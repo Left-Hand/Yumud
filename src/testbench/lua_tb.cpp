@@ -1,9 +1,9 @@
 #include "tb.h"
 
 extern "C"{
-#include "thirdparty/lua/lauxlib.h"  
-#include "thirdparty/lua/lualib.h"  
-#include "thirdparty/lua/lua.h"
+#include "../thirdparty/lua/lauxlib.h"  
+#include "../thirdparty/lua/lualib.h"  
+#include "../thirdparty/lua/lua.h"
 }
 
 const char lua_test[] = {
@@ -29,28 +29,28 @@ void lua_tb(OutputStream & logger){
     // lua_close(L);
 
 	// lua_State *L;
-	// L = lua_newstate(); 			//	´´½¨Lua±àÒëÆ÷
-	// luaopen_base(L);				//	×¢²á»ù±¾º¯Êý
-	// lua_dostring(L, lua_test); 	//	Ö´ÐÐ½Å±¾Óï¾ä
+	// L = lua_newstate(); 			//	ï¿½ï¿½ï¿½ï¿½Luaï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	// luaopen_base(L);				//	×¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	// lua_dostring(L, lua_test); 	//	Ö´ï¿½Ð½Å±ï¿½ï¿½ï¿½ï¿½
 	// return 0;
 
 
-	//1.´´½¨Ò»¸östate  
-	// luaL_newstate·µ»ØÒ»¸öÖ¸Ïò¶ÑÕ»µÄÖ¸Õë
+	//1.ï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½state  
+	// luaL_newstateï¿½ï¿½ï¿½ï¿½Ò»ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Õ»ï¿½ï¿½Ö¸ï¿½ï¿½
 	lua_State *L = luaL_newstate();
  
-	//2.ÈëÕ»²Ù×÷  
+	//2.ï¿½ï¿½Õ»ï¿½ï¿½ï¿½ï¿½  
 	lua_pushstring(L, "I am so cool~");
 	lua_pushnumber(L, 20);
  
-	//3.È¡Öµ²Ù×÷  
-	if (lua_isstring(L, 1)) {             //ÅÐ¶ÏÊÇ·ñ¿ÉÒÔ×ªÎªstring  
-		logger.println(lua_tostring(L, 1));  //×ªÎªstring²¢·µ»Ø  
+	//3.È¡Öµï¿½ï¿½ï¿½ï¿½  
+	if (lua_isstring(L, 1)) {             //ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½ï¿½ï¿½×ªÎªstring  
+		logger.println(lua_tostring(L, 1));  //×ªÎªstringï¿½ï¿½ï¿½ï¿½ï¿½ï¿½  
 	}
 	if (lua_isnumber(L, 2)) {
 		logger.println(lua_tostring(L, 2));
 	}
 
-	//4.¹Ø±Õstate  
+	//4.ï¿½Ø±ï¿½state  
 	lua_close(L);
 }

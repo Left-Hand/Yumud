@@ -26,8 +26,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "sys/kernel/string_utils.hpp"
-#include "sys/platform.h"
+#include "../sys/kernel/string_utils.hpp"
+#include "../sys/core/platform.h"
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.

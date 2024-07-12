@@ -3,8 +3,8 @@
 #define __ST7789_HPP__
 
 #include "../../DisplayerInterface.hpp"
-#include "types/image/image.hpp"
-#include "hal/bus/spi/spi.hpp"
+#include "../types/image/image.hpp"
+#include "../hal/bus/spi/spi.hpp"
 
 class ST7789:public Displayer<RGB565>{
 private:

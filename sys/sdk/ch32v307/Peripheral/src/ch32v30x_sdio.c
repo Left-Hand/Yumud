@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_sdio.h"
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_sdio.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 #define SDIO_OFFSET         (SDIO_BASE - PERIPH_BASE)
 
@@ -625,7 +625,7 @@ void SDIO_ClearFlag(uint32_t SDIO_FLAG)
  *            SDIO_IT_SDIOIT - SD I/O interrupt received interrupt
  *            SDIO_IT_CEATAEND - CE-ATA command completion signal received for CMD61 interrupt
  *
- * @return  ITStatus£ºSET or RESET
+ * @return  ITStatusï¿½ï¿½SET or RESET
  */
 ITStatus SDIO_GetITStatus(uint32_t SDIO_IT)
 {

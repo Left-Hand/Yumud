@@ -2,9 +2,9 @@
 
 #define __DVP_HPP__
 
-#include "sys/platform.h"
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port.hpp"
+#include "../sys/core/platform.h"
+#include "../hal/gpio/gpio.hpp"
+#include "../hal/gpio/port.hpp"
 
 
 

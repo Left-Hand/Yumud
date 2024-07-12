@@ -2,8 +2,8 @@
 
 #define __QMC5883L_HPP__
 
-#include "drivers/device_defs.h"
-#include "drivers/IMU/IMU.hpp"
+#include "../drivers/device_defs.h"
+#include "../drivers/IMU/IMU.hpp"
 #include <tuple>
 
 class QMC5883L:public Magnetometer{

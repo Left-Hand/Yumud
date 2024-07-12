@@ -2,9 +2,9 @@
 
 #define __CAPTURE_CHANNEL_HPP__
 
-#include "sys/kernel/clock.h"
-#include "sys/kernel/time_stamp.hpp"
-#include "hal/exti/exti.hpp"
+#include "../sys/kernel/clock.h"
+#include "../sys/kernel/time_stamp.hpp"
+#include "../hal/exti/exti.hpp"
 #include "real.hpp"
 
 class CaptureChannelConcept{

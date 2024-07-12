@@ -1,0 +1,1674 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<package schemaVersion="1.4.0" 
+    xmlns:xs="http://www.w3.org/2001/XMLSchema-instance" xs:noNamespaceSchemaLocation="PACK.xsd">
+    <vendor>Nationstech</vendor>
+    <url>http://www.keil.com/pack/</url>
+    <name>N32G45x_DFP</name>
+
+    <description>Nationstech N32G45x Series Device Support, Drivers and Examples</description>
+
+    <releases>
+        <release version="1.0.5">
+            Add WWDG peripheral
+            Delete device N32G452CCT7.
+        </release>
+        <release version="1.0.4">
+            Add new device N32G455CEQ7.
+        </release>
+        <release version="1.0.3">
+            Add new device N32G452CCT7.
+            Modify some errors of device description.
+        </release>
+        <release version="1.0.2">
+            Add new device N32G452CEL7.
+            Delete firmware.
+        </release>
+        <release version="1.0.1">
+            Fix some bugs.
+        </release>
+        <release version="1.0.0">
+            Fix some bugs.
+        </release>
+        <release version="0.4.0">
+            Fix some bugs.
+        </release>
+        <release version="0.3.0">
+            Fix some bugs.
+        </release>
+        <release version="0.2.0">
+            Fix some bugs.
+        </release>
+        <release version="0.1.0">
+            Alpha version of N32G45x Device Family Pack.
+        </release>
+    </releases>
+
+    <keywords>
+        <keyword>Nationstech</keyword>
+        <keyword>Device Support</keyword>
+        <keyword>N32G45x</keyword>
+        <keyword>N32</keyword>
+    </keywords>
+
+
+    <devices>
+        <family Dfamily="N32G45x Series" Dvendor="Nationstech:927">
+            <processor Dcore="Cortex-M4" DcoreVersion="r0p1" Dfpu="1" Dmpu="0" Dendian="Little-endian"/>
+            <description>
+            </description>
+
+            <subFamily DsubFamily="N32G452">
+                <description>
+Up to 144MHz ARM Cortex-M4F, 512KB Flash, 144KB SRAM, 7xU(S)ART, 4xI2C, 3xSPI, 1xQSPI, USB 2.0 FS Device, RTC, 2x 12bit 5Msps ADC, 2x12bit DAC, Hardware Cryptographic Engine.
+                </description>
+                <processor Dclock="144000000"/>
+                <compile header="firmware/CMSIS/device/n32g45x.h" define="N32G45X N32G452 USE_STDPERIPH_DRIVER"/>
+
+<device Dname="N32G452CBL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP48&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  128KB&#xA;&#xD;
+- SRAM:   80KB&#xA;&#xD;
+- I/O:    37&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    23&#xA;&#xD;
+- ADC:    2x12bit with 10 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   3&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    3&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1*&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x14000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452CCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP48&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    37&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    23&#xA;&#xD;
+- ADC:    2x12bit with 10 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   3&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    3&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1*&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+<device Dname="N32G452CEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP48&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    37&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    23&#xA;&#xD;
+- ADC:    2x12bit with 10 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   3&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    3&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1*&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+<device Dname="N32G452RBL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  128KB&#xA;&#xD;
+- SRAM:   80KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x14000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452RCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+<device Dname="N32G452REL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452MBL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  128KB&#xA;&#xD;
+- SRAM:   80KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x14000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452MCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452MEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452VCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP100&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    80&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452VEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP100&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    80&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452QCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP128&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    97&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 18 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+
+<device Dname="N32G452QEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP128&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    97&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    2x12bit with 18 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G452.svd"/>
+</device>
+
+            </subFamily>
+            <subFamily DsubFamily="N32G455">
+                <description>
+Up to 144MHz ARM Cortex-M4F, 512KB Flash, 144KB SRAM, 7xU(S)ART, 4xI2C, 3xSPI, 1xQSPI, USB 2.0 FS Device, RTC, 4x 12bit 5Msps ADC, 2x12bit DAC, 4xOPAMP, 7xComp, up to 24 Channels TSC, Hardware Cryptographic Engine.
+                </description>
+                <processor Dclock="144000000"/>
+                <compile header="firmware/CMSIS/device/n32g45x.h" define="N32G45X N32G455 USE_STDPERIPH_DRIVER"/>
+
+<device Dname="N32G455CBL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP48&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  128KB&#xA;&#xD;
+- SRAM:   80KB&#xA;&#xD;
+- I/O:    37&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    23&#xA;&#xD;
+- ADC:    4x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   3&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    3&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   5&#xA;&#xD;
+- TSC:    8&#xA;&#xD;
+- QSPI:   1*&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x14000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455CCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP48&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    37&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    23&#xA;&#xD;
+- ADC:    4x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   3&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    3&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   5&#xA;&#xD;
+- TSC:    8&#xA;&#xD;
+- QSPI:   1*&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455RBL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  128KB&#xA;&#xD;
+- SRAM:   80KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 22 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    16&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x14000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455RCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 22 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    16&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+<device Dname="N32G455CEQ7">
+    <description>
+&#xA;&#xD;
+- Package:QFN48&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 16 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    3&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    10&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455REL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 22 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    16&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455MBL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  128KB&#xA;&#xD;
+- SRAM:   80KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 33 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    18&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x14000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455MCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 33 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    18&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455MEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 33 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    18&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455VBL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP100&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  128KB&#xA;&#xD;
+- SRAM:   80KB&#xA;&#xD;
+- I/O:    80&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 38 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    24&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x14000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x20000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455VCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP100&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    80&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 38 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    24&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+
+<device Dname="N32G455VEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP100&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    80&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 38 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    24&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G455.svd"/>
+</device>
+
+            </subFamily>
+            <subFamily DsubFamily="N32G457">
+                <description>
+Up to 144MHz ARM Cortex-M4F, 512KB Flash, 144KB SRAM, 7xU(S)ART, 4xI2C, 3xSPI, 1xQSPI, USB 2.0 FS Device, RTC, 4x 12bit 5Msps ADC, 2x12bit DAC, 4xOPAMP, 7xComp, up to 24 Channels TSC, ETH, DVP, Hardware Cryptographic Engine.
+                </description>
+                <processor Dclock="144000000"/>
+                <compile header="firmware/CMSIS/device/n32g45x.h" define="N32G45X N32G457 USE_STDPERIPH_DRIVER"/>
+
+<device Dname="N32G457RCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 22 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    16&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+- ETH:   1&#xA;&#xD;
+- DVP:   Y&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G457.svd"/>
+</device>
+
+
+<device Dname="N32G457REL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP64&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    51&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 22 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    16&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+- ETH:   1&#xA;&#xD;
+- DVP:   Y&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G457.svd"/>
+</device>
+
+
+<device Dname="N32G457MCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 33 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    18&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+- ETH:   1&#xA;&#xD;
+- DVP:   Y&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G457.svd"/>
+</device>
+
+
+<device Dname="N32G457MEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP80&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    67&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 33 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    18&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+- ETH:   1&#xA;&#xD;
+- DVP:   Y&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G457.svd"/>
+</device>
+
+
+<device Dname="N32G457VCL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP100&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  256KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    80&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 38 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    24&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+- ETH:   1&#xA;&#xD;
+- DVP:   Y&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x40000" default="1" startup="1" />
+    <debug svd="svd/N32G457.svd"/>
+</device>
+
+
+<device Dname="N32G457VEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP100&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    80&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 38 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    24&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+- ETH:   1&#xA;&#xD;
+- DVP:   Y&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G457.svd"/>
+</device>
+
+
+<device Dname="N32G457QEL7">
+    <description>
+&#xA;&#xD;
+- Package:LQFP128&#xA;&#xD;
+- Clock:  144MHz&#xA;&#xD;
+- Flash:  512KB&#xA;&#xD;
+- SRAM:   144KB&#xA;&#xD;
+- I/O:    97&#xA;&#xD;
+- Voltage: 1.8V~3.6V -40~+105°C&#xA;&#xD;
+- Timer:  8&#xA;&#xD;
+- RTC:    1&#xA;&#xD;
+- PWM:    24&#xA;&#xD;
+- ADC:    4x12bit with 40 channels&#xA;&#xD;
+- DAC:    2x12-bit&#xA;&#xD;
+- USART:  3&#xA;&#xD;
+- UART:   4&#xA;&#xD;
+- SPI/I2S:3/2&#xA;&#xD;
+- I2C:    4&#xA;&#xD;
+- USB Device: 1&#xA;&#xD;
+- CAN:    2&#xA;&#xD;
+- OPAMP:    4&#xA;&#xD;
+- COMP:   7&#xA;&#xD;
+- TSC:    24&#xA;&#xD;
+- QSPI:   1&#xA;&#xD;
+- SDIO:   1&#xA;&#xD;
+- ETH:   1&#xA;&#xD;
+- DVP:   Y&#xA;&#xD;
+&#xA;&#xD;
+Remark:&#xA;&#xD;
+[1*] Only Single Wire&#xA;&#xD;
+[Y*] Only LCD Mode&#xA;&#xD;
+
+    </description>
+    <memory id="IRAM1" access="rw" start="0x20000000" size="0x24000" default="1" init="0" />
+    <memory id="IROM1" access="rx" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <algorithm name="Flash/N32G45x.FLM" start="0x08000000" size="0x80000" default="1" startup="1" />
+    <debug svd="svd/N32G457.svd"/>
+</device>
+
+            </subFamily>
+        </family>
+    </devices>
+        
+
+    <conditions>
+        <condition id="Compiler ARM">            <!-- conditions selecting ARM Compiler -->
+            <require Tcompiler="ARMCC"/>
+        </condition>
+
+        <condition id="N32G45x CMSIS Device">            <!-- conditions selecting Devices -->
+            <description>Nationstech N32G45x Series devices</description>
+            <require Cclass ="CMSIS" Cgroup="CORE" Csub=""/>
+            <require Dvendor="Nationstech:927" Dname="N32*"/>
+        </condition>
+
+        <condition id="N32G45x STDPERIPH">
+            <description>Nationstech N32G45x Standard Peripherals Drivers</description>
+            <require condition="N32G45x CMSIS Device"/>
+            <require Cclass="Device" Cgroup="StdPeriph Drivers" Csub="Framework"/>
+        </condition>
+
+        <condition id="N32G45x STDPERIPH RCC">
+            <description>Nationstech N32G45x Standard Peripherals Drivers with RCC</description>
+            <require condition="N32G45x STDPERIPH"/>
+            <require Cclass="Device" Cgroup="StdPeriph Drivers" Csub="RCC"/>
+        </condition>
+
+        <condition id="N32G45x Algorithm Common" >
+            <description>Nationstech N32G45x Series Algorithm Libraries Common Functions.</description>
+            <require condition="N32G45x CMSIS Device"/>
+            <require Cclass ="Device" Cgroup="Algorithm Libs" Csub="Common"/>
+        </condition>
+
+    </conditions>
+
+    <components>
+        <component Cclass="Device" Cgroup="Startup" Cversion="1.0.0" condition="N32G45x CMSIS Device">
+            <description>Startup File for Nationstech N32G45x Series</description>
+            <files>
+                <!--  include folder -->
+                <file category="include" name="firmware/CMSIS/device/"/>
+                <file category="source" name="firmware/CMSIS/device/startup/startup_n32g45x.s" attr="config" condition="N32G45x CMSIS Device" version="1.0.0"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="../system_N32G45x" Cversion="1.0.0" condition="N32G45x CMSIS Device">
+            <description>System Clock Config File for Nationstech N32G45x</description>
+            <files>
+                <!--  include folder -->
+                <file category="include" name="firmware/CMSIS/device/"/>
+                <file category="source" name="firmware/CMSIS/device/system_n32g45x.c" attr="config" version="1.0.0"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="Framework" Cversion="1.0.0" condition="N32G45x STDPERIPH">
+            <description>Standard Peripherals Drivers Framework</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_FRAMEWORK
+            </RTE_Components_h>
+            <files>
+                <file category="include" name="firmware/n32g45x_std_periph_driver/inc/"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/misc.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="WWDG" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Window watchdog (WWDG) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_WWDG
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_wwdg.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_wwdg.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="USART" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Universal synchronous asynchronous receiver transmitter (USART) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_USART
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_usart.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_usart.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="TIMER" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Timers (TIMER) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_TIM
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_tim.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_tim.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="SPI" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Serial peripheral interface (SPI) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_SPI
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_spi.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_spi.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="SDIO" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Secure digital (SDIO) interface driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_SDIO
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_sdio.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_sdio.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="ADC" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Analog-to-digital converter (ADC) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_ADC
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_adc.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_adc.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="BKP" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Backup registers (BKPR) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_BKP
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_bkp.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_bkp.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="CAN" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Controller area network (CAN) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_CAN
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_can.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_can.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="CRC" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>CRC calculation unit (CRC) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_CRC
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_crc.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_crc.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="DAC" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Digital-to-analog converter (DAC) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_DAC
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_dac.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_dac.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="MCUDBG" Cversion="1.0.0" condition="N32G45x STDPERIPH">
+            <description>MCU debug component (MCUDBG) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_DBG
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_dbg.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_dbg.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="DMA" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>DMA controller (DMA) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_DMA
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_dma.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_dma.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="EXTI" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>External interrupt/event controller (EXTI) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_EXTI
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_exti.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_exti.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="FLASH" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Embedded Flash memory driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_FLASH
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_flash.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_flash.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="GPIO" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>General-purpose I/O (GPIO) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_GPIO
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_gpio.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_gpio.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="I2C" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Inter-integrated circuit (I2C) interface driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_I2C
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_i2c.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_i2c.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="IWDG" Cversion="1.0.0" condition="N32G45x STDPERIPH">
+            <description>Independent watchdog (IWDG) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_IWDG
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_iwdg.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_iwdg.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="PWR" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Power controller (PWR) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_PWR
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_pwr.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_pwr.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="RCC" Cversion="1.0.0" condition="N32G45x STDPERIPH">
+            <description>Reset and clock control (RCC) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_RCC
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_rcc.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_rcc.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="RTC" Cversion="1.0.0" condition="N32G45x STDPERIPH">
+            <description>Real-time clock (RTC) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_RTC
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_rtc.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_rtc.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="ETH" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Ethernet MAC (ETH) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_ETH
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_eth.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_eth.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="DVP" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Digital video port (DVP) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_DVP
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_dvp.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_dvp.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="COMP" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Comparator (COMP) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_COMP
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_comp.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_comp.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="OPAMP" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Operational amplifier (OPAMP) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_OPAMP
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_opamp.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_opamp.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="QSPI" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>Queued SPI (QSPI) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_QSPI
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_std_periph_driver/inc/n32g45x_qspi.h"/>
+                <file category="source" name="firmware/n32g45x_std_periph_driver/src/n32g45x_qspi.c"/>
+            </files>
+        </component>
+
+        <component Cclass="Device" Cgroup="StdPeriph Drivers" Csub="USBDEV" Cversion="1.0.0" condition="N32G45x STDPERIPH RCC">
+            <description>USB device (USBDEV) driver for N32G45x</description>
+            <RTE_Components_h>
+        #define RTE_DEVICE_STDPERIPH_USBDEV
+            </RTE_Components_h>
+            <files>
+                <file category="include" name="firmware/n32g45x_usbfs_driver/inc" />
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_core.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_def.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_init.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_int.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_lib.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_mem.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_regs.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_sil.h"/>
+                <file category="header" name="firmware/n32g45x_usbfs_driver/inc/usb_type.h"/>
+                <file category="source" name="firmware/n32g45x_usbfs_driver/src/usb_core.c"/>
+                <file category="source" name="firmware/n32g45x_usbfs_driver/src/usb_init.c"/>
+                <file category="source" name="firmware/n32g45x_usbfs_driver/src/usb_int.c"/>
+                <file category="source" name="firmware/n32g45x_usbfs_driver/src/usb_mem.c"/>
+                <file category="source" name="firmware/n32g45x_usbfs_driver/src/usb_regs.c"/>
+                <file category="source" name="firmware/n32g45x_usbfs_driver/src/usb_sil.c"/>
+            </files>
+        </component>
+        <component Cclass="Device" Cgroup="Algorithm Libs" Csub="Common" Cversion="1.0.0" condition="N32G45x CMSIS Device">
+            <RTE_Components_h>
+        #define RTE_DEVICE_ALGO_COMMON
+            </RTE_Components_h>
+            <files>
+                <file category="include" name="firmware/n32g45x_algo_lib/inc" />
+                <file category="header" name="firmware/n32g45x_algo_lib/inc/n32g45x_algo_common.h"/>
+                <file category="source" name="firmware/n32g45x_algo_lib/lib/n32g45x_algo_common.lib"/>
+            </files>
+        </component>
+        <component Cclass="Device" Cgroup="Algorithm Libs" Csub="AES" Cversion="1.0.0" condition="N32G45x Algorithm Common">
+            <RTE_Components_h>
+        #define RTE_DEVICE_ALGO_AES
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_algo_lib/inc/n32g45x_aes.h"/>
+                <file category="source" name="firmware/n32g45x_algo_lib/lib/n32g45x_aes.lib"/>
+            </files>
+        </component>
+        <component Cclass="Device" Cgroup="Algorithm Libs" Csub="DES" Cversion="1.0.0" condition="N32G45x Algorithm Common">
+            <RTE_Components_h>
+        #define RTE_DEVICE_ALGO_DES
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_algo_lib/inc/n32g45x_des.h"/>
+                <file category="source" name="firmware/n32g45x_algo_lib/lib/n32g45x_des.lib"/>
+            </files>
+        </component>
+        <component Cclass="Device" Cgroup="Algorithm Libs" Csub="RNG" Cversion="1.0.0" condition="N32G45x Algorithm Common">
+            <RTE_Components_h>
+        #define RTE_DEVICE_ALGO_RNG
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_algo_lib/inc/n32g45x_rng.h"/>
+                <file category="source" name="firmware/n32g45x_algo_lib/lib/n32g45x_rng.lib"/>
+            </files>
+        </component>
+        <component Cclass="Device" Cgroup="Algorithm Libs" Csub="HASH" Cversion="1.0.0" condition="N32G45x Algorithm Common">
+            <RTE_Components_h>
+        #define RTE_DEVICE_ALGO_HASH
+            </RTE_Components_h>
+            <files>
+                <file category="header" name="firmware/n32g45x_algo_lib/inc/n32g45x_hash.h"/>
+                <file category="source" name="firmware/n32g45x_algo_lib/lib/n32g45x_hash.lib"/>
+            </files>
+        </component>
+    </components>
+</package>

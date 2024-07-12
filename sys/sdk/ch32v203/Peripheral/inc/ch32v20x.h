@@ -127,9 +127,8 @@ typedef enum IRQn
 #define ADC1_2_IRQn       ADC_IRQn
 
 #include <stdint.h>
-#include "Core/core_riscv.h"
-// #include "sys/ system_ch32v20x.h"
-#include "sys/sdk/ch32v203/system_ch32v20x.h"
+#include "../sys/sdk/ch32v203/Core/core_riscv.h"
+#include "../sys/sdk/ch32v203/system_ch32v20x.h"
 
 /* Standard Peripheral Library old definitions (maintained for legacy purpose) */
 #define HSI_Value             HSI_VALUE

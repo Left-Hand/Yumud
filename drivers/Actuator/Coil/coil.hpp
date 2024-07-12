@@ -1,8 +1,8 @@
 #ifndef __COIL_HPP__
 #define __COIL_HPP__
 
-#include "drivers/Actuator/Actuator.hpp"
-#include "hal/gpio/gpio.hpp"
+#include "../drivers/Actuator/Actuator.hpp"
+#include "../hal/gpio/gpio.hpp"
 
 
 class CoilConcept: public Actuator{

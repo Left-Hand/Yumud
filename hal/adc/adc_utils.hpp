@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types/real.hpp"
-#include "hal/gpio/port.hpp"
+#include "../types/real.hpp"
+#include "../hal/gpio/port.hpp"
 #include <functional>
 
 namespace AdcUtils{

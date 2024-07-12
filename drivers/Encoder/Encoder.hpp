@@ -2,7 +2,7 @@
 
 #define __ENCODER_HPP__
 
-#include "types/real.hpp"
+#include "../types/real.hpp"
 
 
 class Encoder{

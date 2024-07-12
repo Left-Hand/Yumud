@@ -20,7 +20,6 @@ enum class Pin:uint16_t{
     _13 = 1 << 13,
     _14 = 1 << 14,
     _15 = 1 << 15,
-
 };
 
 
@@ -68,6 +67,7 @@ enum class PinName:uint8_t{
 
 
 enum class PinMode:uint8_t{
+#if defined(USE_CH32_STD_LIB)
     InAnalog = 0b0000,
     InFloating = 0b0100,
     InPullUP = 0b1000,
@@ -76,22 +76,31 @@ enum class PinMode:uint8_t{
     OutOD = 0b0111,
     OutAfPP = 0b1011,
     OutAfOD = 0b1111
+#elif defined(USE_STM32_HAL_LIB)
+    InAnalog = GPIO_MODE_ANALOG,
+    InFloating = GPIO_MODE_INPUT,
+    InPullUP = GPIO_MODE_INPUT,
+    InPullDN = GPIO_MODE_INPUT,
+    OutPP = GPIO_MODE_OUTPUT_PP,
+    OutOD = GPIO_MODE_OUTPUT_OD,
+    OutAfPP = GPIO_MODE_AF_PP,
+#endif
 };
 
 namespace PinModeUtils{
-    constexpr bool isIn(const PinMode & pinmode){
+    static constexpr bool isIn(const PinMode & pinmode){
         return pinmode == PinMode::InAnalog || pinmode == PinMode::InFloating || pinmode == PinMode::InPullUP || pinmode == PinMode::InPullDN;
     }
 
-    constexpr bool isOut(const PinMode & pinmode){
+    static constexpr bool isOut(const PinMode & pinmode){
         return pinmode == PinMode::OutPP || pinmode == PinMode::OutOD || pinmode == PinMode::OutAfPP || pinmode == PinMode::OutAfOD;
     }
 
-    constexpr bool isPP(const PinMode & pinmode){
+    static constexpr bool isPP(const PinMode & pinmode){
         return pinmode == PinMode::OutPP || pinmode == PinMode::OutAfPP;
     }
 
-    constexpr bool isOD(const PinMode & pinmode){
+    static constexpr bool isOD(const PinMode & pinmode){
         return pinmode == PinMode::OutOD || pinmode == PinMode::OutAfOD;
     }
 }

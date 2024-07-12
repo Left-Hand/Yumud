@@ -1,8 +1,8 @@
 #pragma once
 
-#include "sys/platform.h"
-#include "hal/nvic/nvic.hpp"
-#include "hal/gpio/gpio.hpp"
+#include "../sys/core/platform.h"
+#include "../hal/nvic/nvic.hpp"
+#include "../hal/gpio/gpio.hpp"
 
 #include <functional>
 

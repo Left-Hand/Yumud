@@ -2,7 +2,7 @@
 
 #define __LED_HPP__
 
-#include "hal/gpio/gpio.hpp"
+#include "../hal/gpio/gpio.hpp"
 
 template<bool com_anode>
 class Led{

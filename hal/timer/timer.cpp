@@ -1,5 +1,5 @@
 #include "timer.hpp"
-#include "sys/system.hpp"
+#include "../sys/core/system.hpp"
 
 static void TIM_RCC_ON(const TIM_TypeDef * instance){
     switch(uint32_t(instance)){

@@ -3,13 +3,13 @@
 #define __COLOR_H__
 
 #include "stdint.h"
-#include "sys/platform.h"
+#include "../sys/core/platform.h"
 
 #include "uint24_t.h"
 
 #ifdef __cplusplus
 #include "real.hpp"
-#include "types/string/String.hpp"
+#include "../types/string/String.hpp"
 #endif
 
 struct RGB332{

@@ -2,11 +2,11 @@
 
 #define __MPU6050_HPP__
 
-#include "drivers/device_defs.h"
-#include "drivers/IMU/IMU.hpp"
-#include "types/quat/Quat_t.hpp"
+#include "../drivers/device_defs.h"
+#include "../drivers/IMU/IMU.hpp"
+#include "../types/quat/Quat_t.hpp"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "../hal/bus/i2c/i2cdrv.hpp"
 
 class MPU6050:public Axis6{
 public:

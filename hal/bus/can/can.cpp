@@ -1,5 +1,5 @@
 #include "can.hpp"
-#include "hal/nvic/nvic.hpp"
+#include "../hal/nvic/nvic.hpp"
 
 using Callback = Can::Callback;
 

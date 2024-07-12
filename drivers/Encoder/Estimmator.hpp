@@ -3,8 +3,9 @@
 #define __ESTIMATOR_HPP__
 
 #include "odometer.hpp"
-#include "dsp/observer/LinearObserver.hpp"
-#include "sys/system.hpp"
+#include "../dsp/observer/LinearObserver.hpp"
+#include "../dsp/filter/LowpassFilter.hpp"
+#include "../sys/core/system.hpp"
 
 class Estimmator{
 // protected:

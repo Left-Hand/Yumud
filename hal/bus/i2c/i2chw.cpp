@@ -1,6 +1,6 @@
 #include "i2chw.hpp"
-#include "hal/gpio/port.hpp"
-#include "sys/debug/debug_inc.h"
+#include "../hal/gpio/port.hpp"
+#include "../sys/debug/debug_inc.h"
 
 void I2cHw::enableRcc(const bool en){
     switch((uint32_t)instance){

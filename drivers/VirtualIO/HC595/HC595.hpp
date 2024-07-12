@@ -2,8 +2,8 @@
 
 #define __HC595_HPP__
 
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port_virtual.hpp"
+#include "../hal/gpio/gpio.hpp"
+#include "../hal/gpio/port_virtual.hpp"
 #include <array>
 #include <initializer_list>
 

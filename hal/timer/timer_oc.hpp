@@ -1,8 +1,8 @@
 #pragma once
 
-#include "hal/timer/timer_channel.hpp"
-#include "hal/timer/timer_utils.hpp"
-#include "hal/gpio/gpio.hpp"
+#include "../hal/timer/timer_channel.hpp"
+#include "../hal/timer/timer_utils.hpp"
+#include "../hal/gpio/gpio.hpp"
 
 class TimerOut: public TimerChannel{
 protected:

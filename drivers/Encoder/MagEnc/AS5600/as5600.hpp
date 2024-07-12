@@ -3,7 +3,7 @@
 #define __AS5600_HPP__
 
 #include "device_defs.h"
-#include "types/real.hpp"
+#include "../types/real.hpp"
 
 class AS5600{
 public:

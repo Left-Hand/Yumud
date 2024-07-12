@@ -1,11 +1,11 @@
 #pragma once
 
-#include "types/range/range_t.hpp"
-#include "sys/platform.h"
+#include "../types/range/range_t.hpp"
+#include "../sys/core/platform.h"
 
-#include "hal/gpio/port.hpp"
-#include "hal/nvic/nvic.hpp"
-#include "hal/dma/dma.hpp"
+#include "../hal/gpio/port.hpp"
+#include "../hal/nvic/nvic.hpp"
+#include "../hal/dma/dma.hpp"
 
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"

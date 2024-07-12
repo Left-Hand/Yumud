@@ -1,5 +1,5 @@
 #include "tb.h"
-#include "hal/bus/usb/usbfs/usbfs.hpp"
+#include "../hal/bus/usb/usbfs/usbfs.hpp"
 
 void usbcdc_tb(UsbFS & fs){
     fs.init();

@@ -1,10 +1,10 @@
 #include "tb.h"
-#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "drivers/Memory/Flash/W25QXX/w25qxx.hpp"
-#include "hal/flash/flash.hpp"
+#include "../drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
+#include "../drivers/Memory/Flash/W25QXX/w25qxx.hpp"
+#include "../hal/flash/flash.hpp"
 
 #include "algo/random/random_generator.hpp"
-
+#include "hal/bkp/bkp.hpp"
 
 #define EEPROM_TB_FIRSTBYTE
 #define EEPROM_TB_SEVERLBYTES
@@ -182,7 +182,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     logger.setRadix(16);
 
     logger.println("Flash Size:", Sys::Chip::getFlashSize());
-    logger.println("Sys Clock:", Sys::Clock::getSystemFreq());
+    logger.println("../sys Clock:", Sys::Clock::getSystemFreq());
     logger.println("AHB Clock:", Sys::Clock::getAHBFreq());
     logger.println("APB1 Clock:", Sys::Clock::getAPB1Freq());
     logger.println("APB2 Clock:", Sys::Clock::getAPB2Freq());
