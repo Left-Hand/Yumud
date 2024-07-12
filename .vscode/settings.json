@@ -74,6 +74,8 @@
     "type_traits": "cpp",
     "core_cm4.h": "c",
     "system_ch32v20x.h": "c",
-    "ch32v20x_dbgmcu.h": "c"
+    "ch32v20x_dbgmcu.h": "c",
+    "ch32v30x_conf.h": "c",
+    "core_riscv.h": "c"
   }
 }
