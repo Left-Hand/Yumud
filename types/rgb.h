@@ -243,13 +243,13 @@ struct RGB565{
 
     __fast_inline constexpr RGB565 & operator = (const uint16_t & _data){data = _data; return *this;}
 
-    // __no_inline explicit operator String() const{
-    //     return this->toString();
-    // }
+    __no_inline explicit operator String() const{
+        return this->toString();
+    }
 
-    // __no_inline String toString(unsigned char decimalPlaces = 2)const{
-    //     return ::toString('(' + ::toString((uint8_t)r) + ',' + ::toString((uint8_t)g) + ',' + ::toString((uint8_t)b) + ')');
-    // }
+    __no_inline String toString(unsigned char decimalPlaces = 2)const{
+        return '(' + ::toString((uint8_t)r) + ',' + ::toString((uint8_t)g) + ',' + ::toString((uint8_t)b) + ')';
+    }
 #endif
 };
 

@@ -52,13 +52,13 @@ public:
 
 
 
-    // void drawImage(Image<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    // void drawImage(ImageWithData<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
     //     if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
     //     drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
     // }
 
     template<typename w_ColorType>
-    void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
         auto rect = Rect2i(pos, image.get_size());
         src_image->setarea_unsafe(rect);
@@ -69,7 +69,7 @@ public:
                 src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
     }
     // template<typename w_ColorType, w_ColorType>
-    // void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    // void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
     //     if(image.data == nullptr) return;
     //     bool unsafe = !src_image->get_window().contains(image.get_window());
 

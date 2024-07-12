@@ -87,7 +87,7 @@ namespace NVCV2::Pixels{
     }
 
     auto dyeing(const ImageReadable<Grayscale>& src){
-        Image<Grayscale, Grayscale> tmp{src.size};
+        ImageWithData<Grayscale, Grayscale> tmp{src.size};
         dyeing(tmp, src);
         return tmp;
     }
@@ -100,13 +100,13 @@ namespace NVCV2::Pixels{
         }
     }
 
-    Image <Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold){
-        Image <Binary, Binary> dst{src.size};
+    ImageWithData<Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold){
+        ImageWithData<Binary, Binary> dst{src.size};
         binarization(dst, src, threshold);
         return dst;
     }
 
-    void ostu(Image<Binary, Binary>& dst, const Image<Grayscale, Grayscale>& src){
+    void ostu(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src){
         const Vector2i size = src.size;
         std::array<int, 256> statics;
         statics.fill(0);
@@ -164,7 +164,7 @@ namespace NVCV2::Pixels{
     }
 
 
-    void iter_threshold(Image<Binary, Binary>& dst, const Image<Grayscale, Grayscale>& src, const real_t & k, const real_t & eps){
+    void iter_threshold(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src, const real_t & k, const real_t & eps){
         const Vector2i size = src.size;
         std::array<int, 256> statics;
         statics.fill(0);
@@ -217,7 +217,7 @@ namespace NVCV2::Pixels{
         binarization(dst, src, last_i);
     }
 
-    void max_entropy(const Image<Grayscale, Grayscale>& src, int thresh){
+    void max_entropy(const ImageWithData<Grayscale, Grayscale>& src, int thresh){
         const Vector2i size = src.size;
         float probability = 0.0; //概率
         float max_Entropy = 0.0; //最大熵
@@ -332,7 +332,7 @@ namespace NVCV2::Pixels{
         return Threshold;
     }
 
-    int huang(Image<Binary, Binary>& dst, const Image<Grayscale, Grayscale>& src){
+    int huang(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src){
         // DEBUG_PRINT("huang");
         Histogram hist;
         hist.fill(0);
@@ -349,13 +349,13 @@ namespace NVCV2::Pixels{
     }
 
 
-    void inverse(Image<Grayscale, Grayscale>& src) {
+    void inverse(ImageWithData<Grayscale, Grayscale>& src) {
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
             src[i] = ~uint8_t(src[i]);
         }
     }
 
-    void gamma(Image<Grayscale, Grayscale>& src, const real_t ga) {
+    void gamma(ImageWithData<Grayscale, Grayscale>& src, const real_t ga) {
         static real_t last_ga = 1.0;
         static std::array<Grayscale, 256> lut;
 
@@ -376,20 +376,20 @@ namespace NVCV2::Pixels{
 
 
 
-    void sum_with(Image<Grayscale, Grayscale> & src, Image<Grayscale, Grayscale>& op) {
+    void sum_with(ImageWithData<Grayscale, Grayscale> & src, ImageWithData<Grayscale, Grayscale>& op) {
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
             src[i] = MIN((uint8_t)src[i] + (uint8_t)op[i], 255);
         }
     }
 
-    void sub_with(Image<Grayscale, Grayscale> & src, Image<Grayscale, Grayscale>& op) {
+    void sub_with(ImageWithData<Grayscale, Grayscale> & src, ImageWithData<Grayscale, Grayscale>& op) {
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
             src[i] = MAX((uint8_t)src[i] - (uint8_t)op[i], 0);
         }
     }
 
 
-    void mask_with(Image<Grayscale, Grayscale> & src, const ImageReadable<Binary>& op) {
+    void mask_with(ImageWithData<Grayscale, Grayscale> & src, const ImageReadable<Binary>& op) {
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
             src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
         }

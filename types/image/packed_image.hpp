@@ -6,12 +6,12 @@
 
 using PackedBinary = uint8_t;
 
-class PackedBinaryImage:public Image<Binary, PackedBinary>{
+class PackedBinaryImage:public ImageWithData<Binary, PackedBinary>{
 public:
 
 protected:
-    PackedBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2i & _size): ImageBasics<Binary>(_size), Image<Binary, PackedBinary>(_data, _size){;}
-    PackedBinaryImage(const Vector2i & _size): ImageBasics<Binary>(_size), Image<Binary, PackedBinary>(std::make_shared<PackedBinary[]>(size.x * size.y / 8), _size){;}
+    PackedBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2i & _size): ImageBasics<Binary>(_size), ImageWithData<Binary, PackedBinary>(_data, _size){;}
+    PackedBinaryImage(const Vector2i & _size): ImageBasics<Binary>(_size), ImageWithData<Binary, PackedBinary>(std::make_shared<PackedBinary[]>(size.x * size.y / 8), _size){;}
 };
 
 class HorizonBinaryImage : public PackedBinaryImage{

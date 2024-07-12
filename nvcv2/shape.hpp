@@ -67,7 +67,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void gauss(Image<Grayscale, Grayscale> src){
+    void gauss(ImageWithData<Grayscale, Grayscale> src){
         auto temp = src.space();
         gauss(temp, src);
         Pixels::copy(src, temp);
@@ -77,7 +77,7 @@ namespace NVCV2::Shape{
     void scharr_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_x);}
     void scharr_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_y);}
 
-    void sobel_xy(Image<Grayscale, Grayscale> & dst, const ImageReadable<Grayscale> & src){
+    void sobel_xy(ImageWithData<Grayscale, Grayscale> & dst, const ImageReadable<Grayscale> & src){
         auto size = dst.get_size();
         {
             const auto & core = Cores::sobel_x;
@@ -140,7 +140,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void dilate(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
+    void dilate(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -166,7 +166,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void dilate_xy(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
+    void dilate_xy(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -230,7 +230,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void dilate_y(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
+    void dilate_y(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -251,7 +251,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void erosion(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
+    void erosion(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -282,7 +282,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void erosion_x(Image<Binary, Binary> & dst, Image<Binary, Binary> & src){
+    void erosion_x(ImageWithData<Binary, Binary> & dst, ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -306,7 +306,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void dilate_x(Image<Binary, Binary> & dst, Image<Binary, Binary> & src){
+    void dilate_x(ImageWithData<Binary, Binary> & dst, ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -328,7 +328,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void erosion_y(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
+    void erosion_y(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -349,7 +349,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void erosion_xy(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
+    void erosion_xy(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
         auto size = dst.get_size();
         if(src == dst){
             auto temp = src.clone();
@@ -410,12 +410,12 @@ namespace NVCV2::Shape{
     }
 
     auto x4(const ImageReadable<Grayscale> & src, const int m = 2){
-        Image<Grayscale, Grayscale> dst(src.size / m);
+        ImageWithData<Grayscale, Grayscale> dst(src.size / m);
         x4(dst, src, m);
         return dst;
     }
 
-    void x2(Image<Grayscale, Grayscale> & dst, const Image<Grayscale, Grayscale> & src){
+    void x2(ImageWithData<Grayscale, Grayscale> & dst, const ImageWithData<Grayscale, Grayscale> & src){
         const auto size = dst.size;
         for(int y = 0; y < size.y; y++){
             for(int x = 0; x < size.x; x++){
@@ -424,13 +424,13 @@ namespace NVCV2::Shape{
         }
     }
 
-    auto x2(const Image<Grayscale, Grayscale> & src){
-        Image<Grayscale, Grayscale> dst(src.size / 2);
+    auto x2(const ImageWithData<Grayscale, Grayscale> & src){
+        ImageWithData<Grayscale, Grayscale> dst(src.size / 2);
         x2(dst, src);
         return dst;
     }
 
-    void XN(Image<Binary, Binary> dst, const Image<Binary, Binary> & src, const int & m, const real_t & percent){
+    void XN(ImageWithData<Binary, Binary> dst, const ImageWithData<Binary, Binary> & src, const int & m, const real_t & percent){
         auto size = src.get_size();
         int n = int(m * m * percent);
 
@@ -450,7 +450,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void zhang_suen(Image<Binary, Binary> & dst,const Image<Binary, Binary> & src){
+    void zhang_suen(ImageWithData<Binary, Binary> & dst,const ImageWithData<Binary, Binary> & src){
 
         if(src == dst){
             auto temp = src.clone();
@@ -512,7 +512,7 @@ namespace NVCV2::Shape{
 
     }
 
-    void zhang_suen2(Image<Binary, Binary> & dst,const Image<Binary, Binary> & src){
+    void zhang_suen2(ImageWithData<Binary, Binary> & dst,const ImageWithData<Binary, Binary> & src){
 
         if(src == dst){
             auto temp = src.clone();
@@ -571,69 +571,69 @@ namespace NVCV2::Shape{
 
     }
 
-    void dilate(Image<Binary, Binary> & src){
+    void dilate(ImageWithData<Binary, Binary> & src){
         dilate(src, src);
     }
 
-    void dilate_xy(Image<Binary, Binary> & src){
+    void dilate_xy(ImageWithData<Binary, Binary> & src){
         dilate_xy(src, src);
     }
 
 
-    void erosion(Image<Binary, Binary> & src){
+    void erosion(ImageWithData<Binary, Binary> & src){
         erosion(src, src);
     }
 
-    void erosion_xy(Image<Binary, Binary> & src){
+    void erosion_xy(ImageWithData<Binary, Binary> & src){
         erosion_xy(src, src);
     }
 
-    void zhang_suen(Image<Binary, Binary> & src){
+    void zhang_suen(ImageWithData<Binary, Binary> & src){
         zhang_suen(src, src);
     }
 
-    void zhang_suen2(Image<Binary, Binary> & src){
+    void zhang_suen2(ImageWithData<Binary, Binary> & src){
         zhang_suen2(src, src);
     }
 
-    void erosion_x(Image<Binary, Binary> & src){
+    void erosion_x(ImageWithData<Binary, Binary> & src){
         erosion_x(src, src);
     }
     
-    void erosion_y(Image<Binary, Binary> & src){
+    void erosion_y(ImageWithData<Binary, Binary> & src){
         erosion_y(src, src);
     }
 
-    void dilate_x(Image<Binary, Binary> & src){
+    void dilate_x(ImageWithData<Binary, Binary> & src){
         dilate_x(src, src);
     }
 
 
-    void dilate_y(Image<Binary, Binary> & src){
+    void dilate_y(ImageWithData<Binary, Binary> & src){
         dilate_y(src, src);
     }
 
-    void morph_open(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
-        Image<Binary, Binary> temp(dst.get_size());        
+    void morph_open(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
+        ImageWithData<Binary, Binary> temp(dst.get_size());        
         erosion(temp, src);
         dilate(dst, temp);
     }
 
-    void morph_close(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
-        Image<Binary, Binary> temp(dst.get_size());        
+    void morph_close(ImageWithData<Binary, Binary> & dst, const ImageWithData<Binary, Binary> & src){
+        ImageWithData<Binary, Binary> temp(dst.get_size());        
         dilate(temp, src);
         erosion(dst, temp);
     }
 
-    void morph_close(Image<Binary, Binary> & src){
+    void morph_close(ImageWithData<Binary, Binary> & src){
         morph_close(src, src);
     }
 
-    void morph_open(Image<Binary, Binary> & src){
+    void morph_open(ImageWithData<Binary, Binary> & src){
         morph_open(src, src);
     }
 
-    void convo_roberts_x(Image<Grayscale, Grayscale> & dst, Image<Grayscale, Grayscale> & src){
+    void convo_roberts_x(ImageWithData<Grayscale, Grayscale> & dst, ImageWithData<Grayscale, Grayscale> & src){
         if(src == dst){
             auto temp = src.clone();
             convo_roberts_x(dst, temp);
@@ -653,7 +653,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void convo_roberts_xy(Image<Grayscale, Grayscale> & dst, Image<Grayscale, Grayscale> & src){
+    void convo_roberts_xy(ImageWithData<Grayscale, Grayscale> & dst, ImageWithData<Grayscale, Grayscale> & src){
         if(src == dst){
             auto temp = src.clone();
             convo_roberts_xy(dst, temp);

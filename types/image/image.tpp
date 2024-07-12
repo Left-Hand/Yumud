@@ -6,7 +6,7 @@
 // }
 
 // template<typename ColorType>
-// void Image<ColorType>::shade(PixelShaderCallback callback, const Rect2i & _shade_area){
+// void ImageWithData<ColorType>::shade(PixelShaderCallback callback, const Rect2i & _shade_area){
 //     Rect2i shade_area = _shade_area.intersection(area);
 //     if(!area) return;
 //     size_t buflen = shade_area.size.x;
@@ -23,7 +23,7 @@
 //     delete[] buf;
 // }
 // template<typename ColorType>
-// void Image<ColorType>::shade(UVShaderCallback callback, const Rect2i & _shade_area){
+// void ImageWithData<ColorType>::shade(UVShaderCallback callback, const Rect2i & _shade_area){
 //     Rect2i shade_area = _shade_area.intersection(area);
 //     if(!area) return;
 //     size_t buflen = shade_area.size.x;

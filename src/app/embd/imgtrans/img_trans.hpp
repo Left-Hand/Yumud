@@ -82,11 +82,11 @@ public:
     Transmitter(OutputStream & _instance):instance(_instance){;}
     void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 
-    std::vector<uint8_t> compress_png(const Image<Grayscale, Grayscale> & img);
+    std::vector<uint8_t> compress_png(const ImageWithData<Grayscale, Grayscale> & img);
 
     template<typename T>
     requires std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>
-    void transmit(const Image<T, T> & img, const uint8_t index){
+    void transmit(const ImageWithData<T, T> & img, const uint8_t index){
         transmit((const uint8_t *)img.data.get(),img.get_size(), index); 
     }
 

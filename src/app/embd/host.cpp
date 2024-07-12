@@ -64,11 +64,11 @@ void EmbdHost::main(){
     i2c.init(400000);
 
 
-    [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](ImageWithData<Grayscale, Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_bina = [&](Image<Binary, Binary> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_bina = [&](ImageWithData<Binary, Binary> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
@@ -107,7 +107,7 @@ void EmbdHost::main(){
         auto diff_bina = make_bina_mirror(diff);
         Pixels::binarization(diff_bina, diff, diff_threshold);
 
-        auto img_bina = Image<Binary, Binary>(img.get_size());
+        auto img_bina = ImageWithData<Binary, Binary>(img.get_size());
         Pixels::binarization(img_bina, img, bina_threshold);
         Pixels::or_with(img_bina, diff_bina);
 

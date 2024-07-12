@@ -3,8 +3,7 @@
 
 #include "vector3/vector3_t.hpp"
 
-template <typename real>
-requires std::is_arithmetic_v<real>
+template <arithmetic real>
 class Quat{
     public:
         real x = real(0);

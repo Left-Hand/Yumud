@@ -67,6 +67,12 @@
 template<typename T>
 concept arithmetic = std::is_arithmetic_v<T>;
 
+template<typename T>
+concept integral32 = std::is_integral_v<T> && sizeof(T) <= 4;
+
+template<typename T>
+concept integral64 = std::is_integral_v<T> && sizeof(T) <= 8;
+
 
 __fast_inline uint64_t operator"" _KHz(uint64_t x){
     return x * 1000;

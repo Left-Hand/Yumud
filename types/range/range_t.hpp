@@ -10,8 +10,7 @@
 
 #include <algorithm>
 
-template<typename T>
-requires std::is_arithmetic_v<T>
+template<arithmetic T>
 struct Range_t{
 public:
     union{

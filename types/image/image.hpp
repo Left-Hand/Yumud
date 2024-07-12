@@ -18,14 +18,6 @@ class ImageWR;
 template <typename ColorType>
 class PixelProxy;
 
-// template <typename ColorType, typename DataType>
-// class ImageWithData;
-
-
-
-
-
-
 template<typename ColorType>
 class ImageBasics{
 public:
@@ -244,7 +236,7 @@ public:
 
 
 template<typename ColorType, typename DataType>
-class Image : public ImageWR<ColorType> {
+class ImageWithData : public ImageWR<ColorType> {
 protected:
     Rect2i select_area;
 
@@ -256,15 +248,15 @@ public:
 
 public:
     std::shared_ptr<DataType[]> data;
-    Image(std::shared_ptr<DataType[]> _data, const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(_data) {;}
-    Image(const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(std::make_shared<DataType[]>(size.x * size.y)) {;}
+    ImageWithData(std::shared_ptr<DataType[]> _data, const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(_data) {;}
+    ImageWithData(const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(std::make_shared<DataType[]>(size.x * size.y)) {;}
 
     // Move constructor
-    Image(Image&& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(std::move(other.data)){}
+    ImageWithData(ImageWithData&& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(std::move(other.data)){}
 
-    Image(Image& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(other.data){}
+    ImageWithData(ImageWithData& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(other.data){}
     // Move assignment operator
-    Image& operator=(Image&& other) noexcept {
+    ImageWithData& operator=(ImageWithData&& other) noexcept {
         if (this != &other) {
             this->size = std::move(other.size);
             this->select_area = std::move(other.select_area);
@@ -292,18 +284,18 @@ public:
     __fast_inline ColorType & at(const int y, const int x){ return data[x + y * ImageBasics<ColorType>::w]; }
 
 
-    bool operator == (const Image<ColorType, DataType> & other) const {
+    bool operator == (const ImageWithData<ColorType, DataType> & other) const {
         return data == other.data;
     }
-    Image<ColorType, DataType> clone() const {
+    ImageWithData<ColorType, DataType> clone() const {
         auto size = ImageBasics<ColorType>::get_size();
-        auto temp = Image<ColorType, DataType>(size);
+        auto temp = ImageWithData<ColorType, DataType>(size);
         memcpy(temp.data.get(), this->data.get(), size.x * size.y * sizeof(DataType));
         return temp;
     }
 
-    Image<ColorType, DataType> clone(const Rect2i & rect) const {
-        auto temp = Image<ColorType, DataType>(rect.size);
+    ImageWithData<ColorType, DataType> clone(const Rect2i & rect) const {
+        auto temp = ImageWithData<ColorType, DataType>(rect.size);
         for(int j = 0; j < rect.size.y; j++) {
             for(int i = 0; i < rect.size.x; i++) {
                 temp[Vector2i{i,j}] = this->operator[](Vector2i{i + rect.position.x, j + rect.position.y});
@@ -312,23 +304,25 @@ public:
         return temp;
     }
 
-    Image<ColorType, DataType> space() const {
-        return Image<ColorType, DataType>(this->get_size());
+    ImageWithData<ColorType, DataType> space() const {
+        return ImageWithData<ColorType, DataType>(this->get_size());
     }
-    void copy_from(const Image<ColorType, DataType> & src){
+    void copy_from(const ImageWithData<ColorType, DataType> & src){
         auto size = ImageBasics<ColorType>::get_size();
         memcpy(this->data.get(), src.data.get(),size.x * size.y);
     }
 };
+
+
 template<typename ColorType>
-class ImageDataTypeSame:public Image<ColorType, ColorType>{
+class Image:public ImageWithData<ColorType, ColorType>{
     __fast_inline ColorType & operator[](const Vector2i & pos){
         return this->data[this->size.x * pos.y + pos.x];
     }
 };
 
 template<typename ColorType, typename DataType>
-class ImageDataTypeDiff:public Image<ColorType, DataType>{
+class ImageDataTypeDiff:public ImageWithData<ColorType, DataType>{
 
 };
 
@@ -349,12 +343,12 @@ public:
 };
 
 template<typename ColorType>
-class Camera:public Image<ColorType, ColorType>{
+class Camera:public ImageWithData<ColorType, ColorType>{
 protected:
     // std::unique_ptr<DataType[]> data;
     // std::unique_ptr<ColorType[]> data;
 public:
-    Camera(const Vector2i & size):ImageBasics<ColorType>(size), Image<ColorType, ColorType>(size){;}
+    Camera(const Vector2i & size):ImageBasics<ColorType>(size), ImageWithData<ColorType, ColorType>(size){;}
     // ColorType operator[](const size_t & index) const {return Image<ColorType, ColorType>::[index];}
     // ColorType operator[](const size_t & index) const {return data[index];}
     // __fast_inline ColorType& operator[](const size_t & index) { return this->operator[](index);}
@@ -389,7 +383,7 @@ public:
 
 #include "Image.tpp"
 
-class Image565 : public ImageDataTypeSame<RGB565>{
+class Image565 : public Image<RGB565>{
 
 };
 
@@ -397,21 +391,21 @@ class Image565 : public ImageDataTypeSame<RGB565>{
 
 template<typename ColorType>
 __fast_inline auto make_image(const Vector2i & size){
-    return Image<ColorType, ColorType>(size);
+    return ImageWithData<ColorType, ColorType>(size);
 }
 // template<typename ColorType>
 // auto make_image(const
 
 
-// #define make_bina_mirror(src) (Image<Binary, Binary>(std::reinterpret_pointer_cast<Image<Binary, Binary>>((src.data), src.get_size())))
-__fast_inline Image<Grayscale, Grayscale> make_gray_mirror(const Image<Binary, Binary>  &src){
-    return Image<Grayscale, Grayscale>(
+// #define make_bina_mirror(src) (ImageWithData<Binary, Binary>(std::reinterpret_pointer_cast<ImageWithData<Binary, Binary>>((src.data), src.get_size())))
+__fast_inline ImageWithData<Grayscale, Grayscale> make_gray_mirror(const ImageWithData<Binary, Binary>  &src){
+    return ImageWithData<Grayscale, Grayscale>(
         std::reinterpret_pointer_cast<Grayscale[]>(src.data), src.get_size()
     );
 }
 
-__fast_inline Image<Binary, Binary> make_bina_mirror(const Image<Grayscale, Grayscale>  &src){
-    return Image<Binary, Binary>(
+__fast_inline ImageWithData<Binary, Binary> make_bina_mirror(const ImageWithData<Grayscale, Grayscale>  &src){
+    return ImageWithData<Binary, Binary>(
         std::reinterpret_pointer_cast<Binary[]>(src.data), src.get_size()
     );
 }

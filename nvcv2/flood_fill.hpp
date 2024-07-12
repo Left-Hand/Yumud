@@ -26,8 +26,8 @@ protected:
     // static void found(ImageWritable<Binary> & map, Blob & blob);
 public:
 
-	// Image<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
-    Image<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
+	// ImageWithData<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
+    ImageWithData<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
     auto & blobs() const{return m_blobs;}
 };
 class SimilarRects{

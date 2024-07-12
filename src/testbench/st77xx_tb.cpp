@@ -108,14 +108,14 @@ public:
         instance.write((const char *)(data_from), len);
     }
 
-    auto compress_png(const Image<Grayscale, Grayscale> & img){
+    auto compress_png(const ImageWithData<Grayscale, Grayscale> & img){
         std::vector<uint8_t>buffer;
         lodepng::State state;
         lodepng::encode(buffer, (const uint8_t * )img.data.get(), img.get_size().x, img.get_size().y, state);
         return buffer;
     }
 
-    void transmit(const Image<Grayscale, Grayscale> & img, const uint8_t index){
+    void transmit(const ImageWithData<Grayscale, Grayscale> & img, const uint8_t index){
         constexpr size_t mtu = 180;
         const auto & img_size = img.get_size();
         size_t len = img_size.x * img_size.y;
@@ -190,11 +190,11 @@ void st77xx_tb(IOStream & logger, Spi & spi){
     SccbSw.init(400000);
     MT9V034 camera(SccbSw);
 
-    [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](ImageWithData<Grayscale, Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_bina = [&](Image<Binary, Binary> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_bina = [&](ImageWithData<Binary, Binary> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
