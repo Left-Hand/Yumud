@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_fsmc.h"
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_fsmc.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 /* FSMC BCRx Mask */
 #define BCR_MBKEN_Set          ((uint32_t)0x00000001)
@@ -249,7 +249,7 @@ void FSMC_NANDStructInit(FSMC_NANDInitTypeDef *FSMC_NANDInitStruct)
  *            FSMC_Bank1_NORSRAM2 - FSMC Bank1 NOR/SRAM2
  *            FSMC_Bank1_NORSRAM3 - FSMC Bank1 NOR/SRAM3
  *            FSMC_Bank1_NORSRAM4 - FSMC Bank1 NOR/SRAM4
- *          NewState£ºENABLE or DISABLE.
+ *          NewStateï¿½ï¿½ENABLE or DISABLE.
  *
  * @return  none
  */

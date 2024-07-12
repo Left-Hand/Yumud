@@ -2,7 +2,7 @@
 
 #define __REAL_HPP__
 
-#include "sys/core/platform.h"
+#include "../sys/core/platform.h"
 
 #if (!defined(USE_IQ)) &&  (!defined(USE_STD_MATH))
 #define USE_STD_MATH

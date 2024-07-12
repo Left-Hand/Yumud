@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 ********************************************************************************/
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rtc.h"
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rtc.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 /* RTC_Private_Defines */
 #define RTC_LSB_MASK     ((uint32_t)0x0000FFFF) /* RTC LSB Mask */

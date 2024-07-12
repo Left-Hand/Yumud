@@ -8,7 +8,7 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *********************************************************************************/
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x.h"
 
 /* 
 * Uncomment the line corresponding to the desired System clock (SYSCLK) frequency (after 

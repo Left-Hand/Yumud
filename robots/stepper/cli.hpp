@@ -5,7 +5,7 @@
 #include "constants.hpp"
 #include "statled.hpp"
 
-#include "hal/bus/can/can.hpp"
+#include "../hal/bus/can/can.hpp"
 
 namespace StepperUtils{
 

@@ -9,8 +9,8 @@
  *******************************************************************************/
 // #include "ch32v20x_can.h"
 // #include "ch32v20x_rcc.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_can.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_can.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 /* CAN CTLR Register bits */
 #define CTLR_DBF                     ((uint32_t)0x00010000) 
 

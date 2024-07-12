@@ -3,7 +3,7 @@
 #define __LT8920_HPP__
 
 #include "device_defs.h"
-#include "types/real.hpp"
+#include "../types/real.hpp"
 
 #ifdef LT8920_DEBUG
 #define LT8920_DEBUG(...) DEBUG_LOG(__VA_ARGS__)

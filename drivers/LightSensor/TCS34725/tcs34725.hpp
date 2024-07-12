@@ -4,9 +4,9 @@
 
 #define __TCS34725_HPP__
 
-#include "drivers/device_defs.h"
-#include "types/rgb.h"
-#include "hal/bus/i2c/i2cdrv.hpp"
+#include "../drivers/device_defs.h"
+#include "../types/rgb.h"
+#include "../hal/bus/i2c/i2cdrv.hpp"
 
 
 class TCS34725{

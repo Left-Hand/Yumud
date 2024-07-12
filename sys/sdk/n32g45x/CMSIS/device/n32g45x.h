@@ -41,7 +41,7 @@ extern "C" {
 
 #include "n32g45x_irqn.h" 
 #include "../../CMSIS/core/core_cm4.h"
-#include "system_n32g45x.h"
+#include "../system_n32g45x.h"
 #include <stdint.h>
 #include <stdbool.h>
 

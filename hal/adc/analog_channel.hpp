@@ -1,7 +1,7 @@
 #pragma once
 
 #include "adc_channel.hpp"
-#include "types/real.hpp"
+#include "../types/real.hpp"
 
 // class AdcChannelOnChip{
 

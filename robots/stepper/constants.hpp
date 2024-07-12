@@ -2,15 +2,15 @@
 
 #define __STEPPER_CONSTANTS_HPP__
 
-#include "sys/debug/debug_inc.h"
+#include "../sys/debug/debug_inc.h"
 #include "../thirdparty/enums/enum.h"
 #include "../hal/timer/instance/timer_hw.hpp"
 #include "../drivers/Memory/EEPROM/AT24CXX/at24cxx.hpp"
 #include "../drivers/Memory/memory.hpp"
 
-#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
-#include "drivers/Encoder/OdometerLines.hpp"
-#include "algo/hash_func.hpp"
+#include "../drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
+#include "../drivers/Encoder/OdometerLines.hpp"
+#include "../algo/hash_func.hpp"
 #include "svpwm.hpp"
 
 

@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *******************************************************************************/
 // #include "ch32v20x_crc.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_crc.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_crc.h"
 
 /*********************************************************************
  * @fn      CRC_ResetDR

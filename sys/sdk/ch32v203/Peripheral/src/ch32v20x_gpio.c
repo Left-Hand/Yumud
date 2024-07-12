@@ -9,8 +9,8 @@
  *******************************************************************************/
 // #include "ch32v20x_gpio.h"
 // #include "ch32v20x_rcc.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_gpio.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_gpio.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_rcc.h"
 /* MASK */
 #define ECR_PORTPINCONFIG_MASK    ((uint16_t)0xFF80)
 #define LSB_MASK                  ((uint16_t)0xFFFF)

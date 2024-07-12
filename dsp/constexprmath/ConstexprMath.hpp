@@ -4,6 +4,10 @@
 
 #include <math.h>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 struct ConstexprMath{
 #define constexpr_decl(return_type, function_name, ...) \
     static constexpr return_type function_name(__VA_ARGS__) noexcept

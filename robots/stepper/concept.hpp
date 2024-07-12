@@ -4,7 +4,7 @@
 #include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+#include "../hal/adc/adcs/adc1.hpp"
 
 class StepperConcept{ 
 public:

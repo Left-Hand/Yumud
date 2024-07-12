@@ -1,5 +1,5 @@
 #include "adc.hpp"
-#include "sys/debug/debug_inc.h"
+#include "../sys/debug/debug_inc.h"
 
 void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> regular_list,
         const std::initializer_list<AdcChannelConfig> injected_list, const Mode mode){
@@ -15,16 +15,16 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> regular_list
 
     ADC_InitTypeDef ADC_InitStructure; 
 	
-    ADC_DeInit(ADC1);  // 将外设ADC1的全部寄存器重设为缺省值
+    ADC_DeInit(ADC1);  // 锟斤拷锟斤拷锟斤拷ADC1锟斤拷全锟斤拷锟侥达拷锟斤拷锟斤拷锟斤拷为缺省值
 	
-    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;                   // ADC工作模式:ADC1和ADC2工作在独立模式
-    ADC_InitStructure.ADC_ScanConvMode = DISABLE;                        // 模数转换工作在单通道模式
-    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;                  // 模数转换工作在单次转换模式
-    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;  // 转换由软件而不是外部触发启动
-    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;               // ADC数据右对齐
-    ADC_InitStructure.ADC_NbrOfChannel = 1;                              // 顺序进行规则转换的ADC通道的数目
+    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;                   // ADC锟斤拷锟斤拷模式:ADC1锟斤拷ADC2锟斤拷锟斤拷锟节讹拷锟斤拷模式
+    ADC_InitStructure.ADC_ScanConvMode = DISABLE;                        // 模锟斤拷转锟斤拷锟斤拷锟斤拷锟节碉拷通锟斤拷模式
+    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;                  // 模锟斤拷转锟斤拷锟斤拷锟斤拷锟节碉拷锟斤拷转锟斤拷模式
+    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;  // 转锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟斤拷锟解部锟斤拷锟斤拷锟斤拷锟斤拷
+    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;               // ADC锟斤拷锟斤拷锟揭讹拷锟斤拷
+    ADC_InitStructure.ADC_NbrOfChannel = 1;                              // 顺锟斤拷锟斤拷泄锟斤拷锟阶拷锟斤拷锟紸DC通锟斤拷锟斤拷锟斤拷目
     ADC_InitStructure.ADC_Pga = ADC_Pga_1;
-    ADC_Init(ADC1, &ADC_InitStructure);    // 根据ADC_InitStruct中指定的参数初始化外设ADCx的寄存器
+    ADC_Init(ADC1, &ADC_InitStructure);    // 锟斤拷锟斤拷ADC_InitStruct锟斤拷指锟斤拷锟侥诧拷锟斤拷锟斤拷始锟斤拷锟斤拷锟斤拷ADCx锟侥寄达拷锟斤拷
 
 
     ADC_Cmd(instance, ENABLE);

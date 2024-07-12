@@ -1,4 +1,4 @@
-#include "system.hpp"
+#include "../sys/core/system.cpp"
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::abs() const{

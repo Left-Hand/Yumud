@@ -1,7 +1,7 @@
 #pragma once
 
-#include "constants.hpp"
-#include "configs.hpp"
+#include "../constants.hpp"
+#include "../configs.hpp"
 
 #ifdef DEBUG
 #define CURR_SPEC protect

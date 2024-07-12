@@ -1,12 +1,17 @@
 #include "tb.h"
 
-#include "dsp/filter/BurrFilter.hpp"
+#include "../sys/core/platform.h"
+
+#include "../dsp/filter/BurrFilter.hpp"
+#include "../dsp/filter/HighPassFilter.hpp"
+#include "../dsp/filter/LowPassFilter.hpp"
+#include "../dsp/filter/KalmanFilter.hpp"
 
 #include <iterator>
 #include <random>
 
-template<typename real>
-requires std::is_arithmetic_v<real>
+template<arithmetic real>
+
 struct GaussianNoiseGenerator_t{
 public:
     real m_mu;

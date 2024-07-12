@@ -2,11 +2,11 @@
 
 #define __PCA9685B_HPP__
 
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port_virtual.hpp"
-#include "drivers/CommonIO/Led/rgbLed.hpp"
-#include "hal/timer/pwm/pwm_channel.hpp"
-#include "drivers/device_defs.h"
+#include "../hal/gpio/gpio.hpp"
+#include "../hal/gpio/port_virtual.hpp"
+#include "../drivers/CommonIO/Led/rgbLed.hpp"
+#include "../hal/timer/pwm/pwm_channel.hpp"
+#include "../drivers/device_defs.h"
 
 #define MSB 1
 #define LSB 0

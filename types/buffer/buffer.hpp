@@ -2,7 +2,7 @@
 
 #define __BUFFER_HPP__
 
-#include "sys/core/platform.h"
+#include "../sys/core/platform.h"
 #include <cstdint>
 #include <string>
 #include <array>

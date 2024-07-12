@@ -1,15 +1,15 @@
 #pragma once
 
-#include "src/testbench/tb.h"
+#include "../src/testbench/tb.h"
 #include "embd.h"
 
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-#include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
-#include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
-#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
-#include "drivers/Camera/MT9V034/mt9v034.hpp"
+#include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "../drivers/Wireless/Radio/CH9141/CH9141.hpp"
+#include "../drivers/Proximeter/VL53L0X/vl53l0x.hpp"
+#include "../drivers/LightSensor/TCS34725/tcs34725.hpp"
+#include "../drivers/Camera/MT9V034/mt9v034.hpp"
 
-#include "nvcv2/mnist/mnist.hpp"
+#include "../nvcv2/mnist/mnist.hpp"
 
 #include "remote.hpp"
 #include "imgtrans/img_trans.hpp"

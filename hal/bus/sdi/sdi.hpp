@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../bus.hpp"
-#include "sys/kernel/stream.hpp"
+#include "../sys/kernel/stream.hpp"
 
 class Sdi:public OutputStream{
 

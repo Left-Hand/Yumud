@@ -3,7 +3,7 @@
 #define __SGM58031_HPP__
 
 #include "device_defs.h"
-#include "types/real.hpp"
+#include "../types/real.hpp"
 
 #ifndef SGM58031_DEBUG
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)

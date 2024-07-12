@@ -2,15 +2,15 @@
 
 #define __NVCV2_HPP__
 
-#include "sys/core/platform.h"
+#include "../sys/core/platform.h"
 
-#include "types/color/color_t.hpp"
-#include "types/image/image.hpp"
-#include "types/image/packed_image.hpp"
-#include "types/image/painter.hpp"
+#include "../types/color/color_t.hpp"
+#include "../types/image/image.hpp"
+#include "../types/image/packed_image.hpp"
+#include "../types/image/painter.hpp"
 
-#include "thirdparty/sstl/include/sstl/vector.h" 
-#include "thirdparty/sstl/include/sstl/function.h" 
+#include "../thirdparty/sstl/include/sstl/vector.h" 
+#include "../thirdparty/sstl/include/sstl/function.h" 
 
 
 #include <vector>

@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "sys/core/platform.h"
+#include "../sys/core/platform.h"
 
 	/** @addtogroup Utilities
   * @{
@@ -167,7 +167,7 @@ extern "C" {
 		uint32_t CardBlockSize; /*!< Card Block Size */
 	} SD_CardInfo;
 
-	extern SD_CardInfo SDCardInfo; //ÓÃÓÚ´æ´¢¿¨µÄÐÅÏ¢
+	extern SD_CardInfo SDCardInfo; //ï¿½ï¿½ï¿½Ú´æ´¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢
 
 /**
   * @}
@@ -233,12 +233,12 @@ extern "C" {
 #define SD_CMD_ERASE              38 /*!< CMD38 = 0x66 */
 
 #define SD_CMD_READ_OCR         58 /*!< CMD58 */
-#define SD_CMD_APP_CMD          55 /*!< CMD55 ·µ»Ø0x01*/
-#define SD_ACMD_SD_SEND_OP_COND 41 /*!< ACMD41  ·µ»Ø0x00*/
+#define SD_CMD_APP_CMD          55 /*!< CMD55 ï¿½ï¿½ï¿½ï¿½0x01*/
+#define SD_ACMD_SD_SEND_OP_COND 41 /*!< ACMD41  ï¿½ï¿½ï¿½ï¿½0x00*/
 
-//SD¿¨µÄÀàÐÍ
-#define SD_TYPE_NOT_SD 0 //·ÇSD¿¨
-#define SD_TYPE_V1     1 //V1.0µÄ¿¨
+//SDï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+#define SD_TYPE_NOT_SD 0 //ï¿½ï¿½SDï¿½ï¿½
+#define SD_TYPE_V1     1 //V1.0ï¿½Ä¿ï¿½
 #define SD_TYPE_V2     2 //SDSC
 #define SD_TYPE_V2HC   4 //SDHC
 

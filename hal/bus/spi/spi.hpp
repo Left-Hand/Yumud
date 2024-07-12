@@ -1,8 +1,8 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port_virtual.hpp"
-#include "hal/bus/bus.hpp"
+#include "../hal/gpio/gpio.hpp"
+#include "../hal/gpio/port_virtual.hpp"
+#include "../hal/bus/bus.hpp"
 
 class Spi:public FullDuplexBus{
 protected:

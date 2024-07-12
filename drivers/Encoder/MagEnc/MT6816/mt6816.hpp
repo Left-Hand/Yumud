@@ -6,8 +6,8 @@
 #ifndef __MT6816_HPP__
 #define __MT6816_HPP__
 
-#include "bus/spi/spidrv.hpp"
-#include "drivers/Encoder/MagEncoder.hpp"
+#include "../hal/bus/spi/spidrv.hpp"
+#include "../drivers/Encoder/MagEncoder.hpp"
 
 class MT6816:public MagEncoder{
 protected:

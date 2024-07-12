@@ -2,9 +2,9 @@
 
 #define __IMAGE_HPP__
 
-#include "types/rect2/rect2_t.hpp"
-#include "types/color/color_t.hpp"
-#include "types/rgb.h"
+#include "../types/rect2/rect2_t.hpp"
+#include "../types/color/color_t.hpp"
+#include "../types/rgb.h"
 #include <functional>
 #include <memory>
 

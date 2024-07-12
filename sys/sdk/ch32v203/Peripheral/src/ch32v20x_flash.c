@@ -8,7 +8,7 @@
  * SPDX-License-Identifier: Apache-2.0
  ***************************************************************************************/
 // #include "ch32v20x_flash.h"
-#include "sys/sdk/ch32v203/Peripheral/inc/ch32v20x_flash.h"
+#include "../sys/sdk/ch32v203/Peripheral/inc/ch32v20x_flash.h"
 /* Flash Control Register bits */
 #define CR_PG_Set                  ((uint32_t)0x00000001)
 #define CR_PG_Reset                ((uint32_t)0xFFFFFFFE)

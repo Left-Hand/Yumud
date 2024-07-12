@@ -2,7 +2,7 @@
 
 #define __TIMHW_HPP__
 
-#include "hal/timer/timer.hpp"
+#include "../hal/timer/timer.hpp"
 
 #define ADVANCED_TIMER_TEMPLATE(x)\
 class Timer##x:public AdvancedTimer{\

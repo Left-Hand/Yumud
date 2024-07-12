@@ -2,8 +2,8 @@
 
 #define __TINY_FOC_HPP__
 
-#include "robots/stepper/svpwm.hpp"
-#include "drivers/Encoder/Odometer.hpp"
+#include "../robots/stepper/svpwm.hpp"
+#include "../drivers/Encoder/Odometer.hpp"
 #include "dsp/controller/pid.hpp"
 
 class MotorWithFoc:public ServoCloseLoop{

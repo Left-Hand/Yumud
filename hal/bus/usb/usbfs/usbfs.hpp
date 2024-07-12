@@ -1,10 +1,10 @@
 #pragma once
 
 #include "../../bus.hpp"
-#include "sys/kernel/stream.hpp"
+#include "../sys/kernel/stream.hpp"
 
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port.hpp"
+#include "../hal/gpio/gpio.hpp"
+#include "../hal/gpio/port.hpp"
 
 #include <functional>
 

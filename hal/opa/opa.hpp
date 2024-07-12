@@ -2,10 +2,10 @@
 
 #define __OPA_HPP__
 
-#include "sys/core/platform.h"
+#include "../sys/core/platform.h"
 
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port.hpp"
+#include "../hal/gpio/gpio.hpp"
+#include "../hal/gpio/port.hpp"
 
 class Opa{
 protected:

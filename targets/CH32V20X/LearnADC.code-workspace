@@ -46,7 +46,7 @@
             "random": "cpp",
             "string": "cpp",
             "string_view": "cpp",
-            "system_error": "cpp",
+            "../system_error": "cpp",
             "tuple": "cpp",
             "type_traits": "cpp",
             "utility": "cpp",
@@ -129,7 +129,7 @@
             "Prescaler",
             "scramable",
             "STDMATH",
-            "Systick",
+            "../systick",
             "vref",
             "WRPR"
         ],

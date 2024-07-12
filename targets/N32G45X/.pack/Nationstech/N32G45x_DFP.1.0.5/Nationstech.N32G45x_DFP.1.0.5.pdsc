@@ -1305,7 +1305,7 @@ Remark:&#xA;&#xD;
             </files>
         </component>
 
-        <component Cclass="Device" Cgroup="System_N32G45x" Cversion="1.0.0" condition="N32G45x CMSIS Device">
+        <component Cclass="Device" Cgroup="../system_N32G45x" Cversion="1.0.0" condition="N32G45x CMSIS Device">
             <description>System Clock Config File for Nationstech N32G45x</description>
             <files>
                 <!--  include folder -->

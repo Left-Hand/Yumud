@@ -1,7 +1,40 @@
 #include "system.hpp"
-#include "system.h"
-#include "hal/crc/crc.hpp"
+#include "../sys/core/system.h"
+#include "../hal/crc/crc.hpp"
 
+
+#include "../sys/kernel/clock.h"
+#include "../sys/kernel/enums.hpp"
+
+#ifdef N32G45X
+#define M_RCC_CONFIGER RCC_ConfigHclk
+#else
+#define M_RCC_CONFIGER RCC_HCLKConfig
+#endif
+
+#ifdef N32G45X
+#define M_PCLK1_CONFIGER RCC_ConfigPclk1
+#else
+#define M_PCLK1_CONFIGER RCC_PCLK1Config
+#endif
+
+#ifdef N32G45X
+#define M_PCLK2_CONFIGER RCC_ConfigPclk2
+#else
+#define M_PCLK2_CONFIGER RCC_PCLK2Config
+#endif
+
+#ifdef N32G45X
+#define M_CLOCK_TYPEDEF RCC_ClocksType
+#else
+#define M_CLOCK_TYPEDEF RCC_ClocksTypeDef
+#endif
+
+#ifdef N32G45X
+#define M_RCC_CLK_GETTER RCC_GetClocksFreqValue
+#else
+#define M_RCC_CLK_GETTER RCC_GetClocksFreq
+#endif
 
 real_t Sys::t;
 
@@ -82,8 +115,16 @@ static void ClockUpdate(){
 #define M_RCC_ADCHCLK(inst) inst.AdcHClkFreq;
 
 #else
-#define M_RCC_SYSCLK(inst) inst.PCLK1_Frequency;
+#define M_RCC_SYSCLK(inst) inst.SYSCLK_Frequency;
+#define M_RCC_HCLK(inst) inst.HCLK_Frequency;
+#define M_RCC_PCLK1(inst) inst.PCLK1_Frequency;
+#define M_RCC_PCLK2(inst) inst.PCLK2_Frequency;
+// #define M_RCC_ADCPLL(inst) inst.AdcPllClkFreq;
+// #define M_RCC_ADCHCLK(inst) inst.AdcHClkFreq;
+#define M_RCC_ADC_CLK(inst) inst.ADCCLK_Frequency;
 #endif
+
+
 
 uint32_t Sys::Clock::getSystemFreq(){
     ClockUpdate();

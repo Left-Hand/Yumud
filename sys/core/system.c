@@ -1,5 +1,5 @@
-#include "system.h"
-#include "sys/kernel/clock.h"
+#include "../sys/core/system.h"
+#include "../sys/kernel/clock.h"
 
 void prework(void){
     #ifdef N32G45X

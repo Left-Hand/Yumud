@@ -1,8 +1,8 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "hal/gpio/port.hpp"
-#include "types/buffer/ringbuf/ringbuf_t.hpp"
+#include "../sys/core/platform.h"
+#include "../hal/gpio/port.hpp"
+#include "../types/buffer/ringbuf/ringbuf_t.hpp"
 
 #include <memory>
 #include <functional>

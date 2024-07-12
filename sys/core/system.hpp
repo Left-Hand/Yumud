@@ -1,38 +1,8 @@
-#ifndef __SYSTEM_HPP__
+#pragma once
 
-#define __SYSTEM_HPP__
+#include "../sys/core/platform.h"
+#include "../types/real.hpp"
 
-#include "core/platform.h"
-#include "../Yumud/types/real.hpp"
-#include "kernel/clock.h"
-#include "enums.hpp"
-
-__fast_inline uint64_t operator"" _KHz(uint64_t x){
-    return x * 1000;
-}
-
-__fast_inline uint64_t operator"" _MHz(uint64_t x){
-    return x * 1000000;
-}
-
-__fast_inline uint64_t operator"" _GHz(uint64_t x){
-    return x * 1000000000;
-}
-
-__fast_inline uint64_t operator"" _KB(uint64_t x){
-    return x << 10;
-}
-
-__fast_inline uint64_t operator"" _MB(uint64_t x){
-    return x << 20;
-}
-
-__fast_inline uint64_t operator"" _GB(uint64_t x){
-    return x << 30;
-}
-
-template<typename T>
-concept arithmetic = std::is_arithmetic_v<T>;
 
 namespace Sys{
     extern real_t t;
@@ -73,5 +43,3 @@ extern "C"{
     __interrupt void NMI_Handler(void);
     __interrupt void HardFault_Handler(void);
 }
-
-#endif // !__SYSTEM_HPP__

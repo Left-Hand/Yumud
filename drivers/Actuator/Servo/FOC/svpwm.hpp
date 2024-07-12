@@ -2,7 +2,7 @@
 
 #define __SVPWM_H__
 
-#include "drivers/Actuator/Coil/coil.hpp"
+#include "../drivers/Actuator/Coil/coil.hpp"
 
 class SVPWM{
 protected:

@@ -1,6 +1,6 @@
 #include "tb.h"
 
-#include "hal/timer/pwm/gpio_pwm.hpp"
+#include "../hal/timer/pwm/gpio_pwm.hpp"
 
 #define PWM_TB_GPIO
 // #define PWM_TB_TIMEROC

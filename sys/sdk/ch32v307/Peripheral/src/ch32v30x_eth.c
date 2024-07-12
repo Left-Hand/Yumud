@@ -7,8 +7,8 @@
 * Copyright (c) 2021 Nanjing Qinheng Microelectronics Co., Ltd.
 * SPDX-License-Identifier: Apache-2.0
 *******************************************************************************/
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_eth.h"
-#include "sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_eth.h"
+#include "../sys/sdk/ch32v307/Peripheral/inc/ch32v30x_rcc.h"
 
 ETH_DMADESCTypeDef *DMATxDescToSet;
 ETH_DMADESCTypeDef *DMARxDescToGet;
@@ -1431,7 +1431,7 @@ ITStatus ETH_GetDMAITStatus(uint32_t ETH_DMA_IT)
 /*********************************************************************
  * @fn      ETH_DMAClearITPendingBit
  *
- * @brief   Clears the ETHERNET’s DMA IT pending bit.
+ * @brief   Clears the ETHERNETï¿½s DMA IT pending bit.
  *
  * @param   ETH_DMA_IT - specifies the interrupt pending bit to clear.
  *            ETH_DMA_IT_NIS - Normal interrupt summary

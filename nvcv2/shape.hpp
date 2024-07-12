@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nvcv2/nvcv2.hpp"
+#include "../nvcv2/nvcv2.hpp"
 
 
 

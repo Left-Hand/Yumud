@@ -2,9 +2,9 @@
 
 #define __FLASH_HPP__
 
-#include "sys/core/platform.h"
-#include "drivers/Memory/storage.hpp"
-#include "drivers/Memory/memory.hpp"
+#include "../sys/core/platform.h"
+#include "../drivers/Memory/storage.hpp"
+#include "../drivers/Memory/memory.hpp"
 
 #ifdef FLASH_DEBUG
 #undef FLASH_DEBUG

@@ -2,7 +2,7 @@
 
 #define __BITBAND_H__
 
-#include "sys/core/platform.h"
+#include "../sys/core/platform.h"
 
 #ifdef PLAT_SUPPORT_BITBAND
 

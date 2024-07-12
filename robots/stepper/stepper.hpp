@@ -6,8 +6,8 @@
 #include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
-#include "hal/adc/adcs/adc1.hpp"
-#include "robots/stepper/concept.hpp"
+#include "../hal/adc/adcs/adc1.hpp"
+#include "../robots/stepper/concept.hpp"
 
 class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 

@@ -2,9 +2,9 @@
 
 #define __DEBUG_INC_H__
 
-#include "bus/bus_inc.h"
-#include "sys/kernel/clock.h"
-#include "src/defines/user_defs.h"
+#include "../hal/bus/bus_inc.h"
+#include "../sys/kernel/clock.h"
+#include "../src/defines/user_defs.h"
 
 #ifndef VOFA_PRINT
 #define VOFA_PRINT(...) LOGGER.println(__VA_ARGS__);

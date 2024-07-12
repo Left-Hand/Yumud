@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/device_defs.h"
+#include "../drivers/device_defs.h"
 #include "../../memory.hpp"
 
 class AT24CXX:public StoragePaged{

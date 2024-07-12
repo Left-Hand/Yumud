@@ -2,7 +2,7 @@
 
 #define __BH1750_HPP__
 
-#include "drivers/device_defs.h"
+#include "../drivers/device_defs.h"
 
 class BH1750{
 public:

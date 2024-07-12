@@ -1,11 +1,11 @@
 #pragma once
 
 #include "../bus.hpp"
-#include "sys/kernel/stream.hpp"
+#include "../sys/kernel/stream.hpp"
 
-#include "types/buffer/ringbuf/ringbuf_t.hpp"
-#include "hal/gpio/gpio.hpp"
-#include "hal/gpio/port.hpp"
+#include "../types/buffer/ringbuf/ringbuf_t.hpp"
+#include "../hal/gpio/gpio.hpp"
+#include "../hal/gpio/port.hpp"
 
 #include <functional>
 

@@ -3,14 +3,12 @@
 #define __VECTOR2_HPP_
 
 #include "../sys/core/system.hpp"
-#include "types/string/String.hpp"
-#include "types/real.hpp"
+#include "../types/string/String.hpp"
+#include "../types/real.hpp"
 
 
 #include <type_traits>
 #include <tuple>
-
-
 
 template<arithmetic T>
 struct Rect2_t;
