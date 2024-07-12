@@ -1,4 +1,4 @@
-#include "../sys/core/system.hpp"
+#include "../sys/core/platform.h"
 #include "../types/real.hpp"
 #include "../hal/bus/bus_inc.h"
 #include "../hal/timer/instance/timer_hw.hpp"

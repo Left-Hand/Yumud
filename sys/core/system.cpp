@@ -1,5 +1,6 @@
 #include "system.hpp"
-#include "../sys/core/system.h"
+
+#include "../sys/core/platform.h"
 #include "../hal/crc/crc.hpp"
 
 #include "../sys/kernel/clock.h"
@@ -37,7 +38,6 @@
 
 real_t Sys::t;
 
-
 void Sys::Clock::delayMs(const uint32_t ms){
     delay(ms);
 }
@@ -47,7 +47,43 @@ void Sys::Clock::delayUs(const uint32_t us){
 }
 
 void Sys::Misc::prework(){
-    ::prework();
+    #ifdef N32G45X
+    RCC_ConfigPclk1(RCC_HCLK_DIV1);
+    RCC_ConfigPclk2(RCC_HCLK_DIV1);
+
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+    Systick_Init();
+
+    RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOC, ENABLE);
+    RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOA | RCC_APB2_PERIPH_GPIOB | RCC_APB2_PERIPH_AFIO, ENABLE);
+
+    #ifdef HAVE_GPIOD
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
+    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+    #endif
+    PWR_BackupAccessEnable(ENABLE);
+    // RCC_LSEConfig(RCC_LSE_DISABLE);
+    //TODO
+    BKP_TPEnable(DISABLE);
+    PWR_BackupAccessEnable(DISABLE);
+    #else
+    RCC_PCLK1Config(RCC_HCLK_Div1);
+    RCC_PCLK2Config(RCC_HCLK_Div1);
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+    Systick_Init();
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
+
+    #ifdef HAVE_GPIOD
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
+    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+    #endif
+    PWR_BackupAccessCmd( ENABLE );
+    RCC_LSEConfig( RCC_LSE_OFF );
+    BKP_TamperPinCmd(DISABLE);
+    PWR_BackupAccessCmd(DISABLE);
+    #endif
 }
 
 

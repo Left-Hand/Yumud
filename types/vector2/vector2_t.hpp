@@ -2,7 +2,7 @@
 
 #define __VECTOR2_HPP_
 
-#include "../sys/core/system.hpp"
+#include "../sys/core/platform.h"
 #include "../types/string/String.hpp"
 #include "../types/real.hpp"
 

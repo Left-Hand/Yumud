@@ -2,7 +2,7 @@
 
 
 
-#include "../sys/core/system.hpp"
+#include "../sys/core/platform.h"
 #include "../hal/flash/flash.hpp"
 // #include "../hal/rng/rng.hpp"
 

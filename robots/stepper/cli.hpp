@@ -2,6 +2,7 @@
 
 #define __STEPPER_CLI_HPP__
 
+#include "../sys/core/system.hpp"
 #include "constants.hpp"
 #include "statled.hpp"
 

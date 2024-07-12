@@ -1,17 +1,17 @@
 {
   "configurations": [
     {
-      "name": "riscv-gcc",
+      "name": "windows-gcc-x64",
       "includePath": [
         "${workspaceFolder}/**"
       ],
-      "compilerPath": "C:/MounRiver/MRS_Community/toolchain/RISC-V Embedded GCC12/bin/riscv-none-elf-gcc.exe",
+      "compilerPath": "C:/mingw64/bin/gcc.exe",
       "cStandard": "${default}",
-      "cppStandard": "gnu++2b",
-      // "intelliSenseMode": "ris",
+      "cppStandard": "${default}",
       "compilerArgs": [
         ""
-      ]
+      ],
+      "intelliSenseMode": "windows-gcc-x64"
     }
   ],
   "version": 4

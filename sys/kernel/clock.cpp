@@ -1,4 +1,5 @@
 #include "clock.h"
+#include "../sys/core/system.hpp"
 
 static std::function<void(void)> cb;
 

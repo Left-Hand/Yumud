@@ -4,10 +4,10 @@
 
 
 #include "stdint.h"
-#include "../sys/core/platform.h"
+
 #include "extra_convs.hpp"
 #include "../../dsp/constexprmath/ConstexprMath.hpp"
-
+#include "../types/string/String.hpp"
 #include <IQmath_RV32.h>
 
 

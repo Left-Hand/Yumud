@@ -2,7 +2,7 @@
 
 #define __IQL_T_HPP__
 
-#include "iq_t.hpp"
+#include "iqt.hpp"
 
 struct iql_t{
     union{

@@ -1,5 +1,5 @@
 #include "uarthw.hpp"
-#include "../sys/core/system.hpp"
+#include "../sys/core/platform.h"
 
 #define UART_CB_TEMPLATE(name)\
 static UartHw::Callback name##_rxne_cb;\

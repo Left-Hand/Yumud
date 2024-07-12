@@ -85,6 +85,13 @@ __fast_inline uint64_t operator"" _GB(uint64_t x){
     return x << 30;
 }
 
+
+
+
+extern "C"{
+    __interrupt void NMI_Handler(void);
+    __interrupt void HardFault_Handler(void);
+}
 #endif
 
 #endif

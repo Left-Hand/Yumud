@@ -2,7 +2,7 @@
 
 #define __STORAGE_HPP__
 
-#include "../sys/core/system.hpp"
+#include "../sys/core/platform.h"
 #include "../types/range/range_t.hpp"
 #include "../sys/debug/debug_inc.h"
 // #include "memory.hpp"

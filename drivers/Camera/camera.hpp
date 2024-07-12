@@ -2,7 +2,6 @@
 
 #define __CAMERA_HPP__
 
-
 #include "../hal/bus/dvp/dvp.hpp"
 #include "../hal/bus/i2c/i2cdrv.hpp"
 #include "../hal/gpio/gpio.hpp"

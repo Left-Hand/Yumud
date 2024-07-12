@@ -18,7 +18,7 @@
 #include "../sys/core/platform.h"
 
 #ifdef __cplusplus
-#include "../sys/core/system.hpp"
+#include "../sys/core/platform.h"
 #include <functional>
 void bindSystickCb(std::function<void(void)> && cb);
 extern "C" {

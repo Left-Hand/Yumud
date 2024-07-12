@@ -71,6 +71,7 @@
   "files.associations": {
     "initializer_list": "cpp",
     "concepts": "cpp",
-    "type_traits": "cpp"
+    "type_traits": "cpp",
+    "core_cm4.h": "c"
   }
 }
