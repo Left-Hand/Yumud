@@ -1,5 +1,5 @@
 #include "testbench/tb.h"
-#include "app/embd/embd.h"
+#include "../src/app/embd/embd.h"
 
 
 int main(){

@@ -21,8 +21,14 @@
     "types/image/font",
     "robots",
     "drivers",
+    "sys/sdk/ch32v203",
+    "sys/sdk/ch32v203/Peripheral",
+    "sys/sdk/ch32v203/Peripheral/inc",
+    "sys/sdk/ch32v203/Peripheral/src",
     "sys/kernel",
     "hal",
+    "hal/bus/usb",
+    "hal/bus/usb/cdc",
     "src/testbench",
     "thirdparty/lua",
     "sys/sdk/ch32v307/Core",
@@ -52,11 +58,12 @@
     "uid": "f4c5dfddb63afac268be43c17b8925f4"
   },
   "targets": {
-    "CH32V20X": {
+    "Debug": {
       "excludeList": [
         "Startup/startup_ch32v30x_D8.S",
         "sdk/Startup/startup_ch32v20x_D8W.S",
         "sdk/Startup/startup_ch32v20x_D8.S",
+        "<virtual_root>/testVirtualFolder",
         "thirdparty/lua/manual",
         "thirdparty/lua/testes",
         "thirdparty/lua/lua.c",
@@ -111,7 +118,7 @@
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
-        "linkerScriptPath": "sys/sdk/ch32v203/Ld/C8T6.ld",
+        "linkerScriptPath": "",
         "options": "null"
       },
       "uploader": "OpenOCD",
@@ -196,12 +203,17 @@
         "defineList": [
           "WCH",
           "RISCV",
+          "CH32V203",
+          "CH32V203FXX",
+          "CH32V203GXX",
+          "CH32V203KXX",
+          "CH32V203CXX",
           "LUA_USE_C89",
           "CH32V20X"
         ]
       }
     },
-    "CH32V30X": {
+    "OS": {
       "excludeList": [
         "Startup/startup_ch32v30x_D8.S",
         "sdk/Startup/startup_ch32v20x_D8W.S",
@@ -261,7 +273,7 @@
       ],
       "toolchain": "RISCV_GCC",
       "compileConfig": {
-        "linkerScriptPath": "sys/sdk/ch32v307/Ld/VCT6.ld",
+        "linkerScriptPath": "",
         "options": "null"
       },
       "uploader": "OpenOCD",
@@ -323,7 +335,10 @@
           "robots",
           "robots/stepper/tasks",
           "robots/stepper",
+          "sys/sdk/ch32v203",
           "src/defines",
+          "sys/sdk/ch32v203/Peripheral/inc",
+          "sys/sdk/ch32v203/Peripheral/src",
           "hal",
           "hal/bus/usb/cdc",
           "sys/sdk/ch32v307",
@@ -339,19 +354,26 @@
           "robots",
           "robots/stepper/tasks",
           "robots/stepper",
-          "sys/sdk/ch32v307",
+          "sys/sdk/ch32v203",
           "src/defines",
+          "sys/sdk/ch32v203/Peripheral/inc",
+          "sys/sdk/ch32v203/Peripheral/src",
           "hal",
           "hal/bus/usb/cdc",
           "sys/sdk/ch32v307/Peripheral/inc",
           "sys/sdk/ch32v307/Peripheral/src",
           "hal/bus/usb/usbfs"
         ],
+        "sourceDirList": [],
         "defineList": [
           "WCH",
           "RISCV",
-          "LUA_USE_C89",
-          "CH32V30X"
+          "CH32V203",
+          "CH32V203FXX",
+          "CH32V203GXX",
+          "CH32V203KXX",
+          "CH32V203CXX",
+          "LUA_USE_C89"
         ]
       }
     }

@@ -136,7 +136,6 @@ namespace StepperUtils{
                     struct alignas(16){
                         uint8_t node_id;
                     };
-                
                 };
 
                 struct alignas(128){

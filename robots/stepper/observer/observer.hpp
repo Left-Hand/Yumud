@@ -4,15 +4,27 @@
 
 struct SpeedEstimator{
 public:
+    struct Config{
+        real_t err_threshold = inv_poles/4;
+        size_t max_cycles = foc_freq / 40;//att least 40Hz
+    };
+
+    Config & config;
+protected:
+    const real_t & err_threshold = config.err_threshold;
+    const size_t & max_cycles = config.max_cycles;
+
     real_t last_position = 0;
-    // real_t delta_speed_per_cycle = 0;
     real_t last_speed = 0;
     size_t cycles = 1;
-    static constexpr real_t err_threshold = inv_poles/4;
-    static constexpr size_t max_cycles = foc_freq / 40;
+public:
+    SpeedEstimator(Config & _config):config(_config){}
 
     void reset(){
-        *this = SpeedEstimator();
+        // *this = SpeedEstimator(config);
+        last_position = 0;
+        last_speed = 0;
+        cycles = 1;
     }
 
     real_t update(const real_t position){

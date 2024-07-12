@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../constants.hpp"
-#include "../configs.hpp"
 
 #ifdef DEBUG
 #define CURR_SPEC protect
@@ -18,19 +17,34 @@ struct CtrlResult{
     real_t raddiff;
 };
 
-using Result = CtrlResult;
+
 struct CurrentCtrl{
-CURR_SPEC:
-    real_t current_output = 0;
+using Result = CtrlResult;
 public:
-    CurrentCtrlConfig & config;
+    struct Config{
+        real_t current_slew_rate;   //20A/S
+        real_t current_clamp;
 
-    real_t & current_slew_rate = config.current_slew_rate;
-    real_t & current_clamp = config.current_clamp;
+        constexpr void reset(){
+            current_slew_rate = 20.0 / foc_freq;
+            current_clamp = 0.7;
+        }
+    };
 
+    Config & config;
 
-    CurrentCtrl(CurrentCtrlConfig & _config):config(_config){
-        config.init();
+protected:
+    const real_t & current_slew_rate = config.current_slew_rate;
+    const real_t & current_clamp = config.current_clamp;
+public:
+    real_t current_output = 0;
+
+    CurrentCtrl(Config & _config):config(_config){
+        config.reset();
+    }
+
+    void init(){
+        reset();
     }
 
     void reset(){
@@ -38,7 +52,7 @@ public:
     }
 
     void setCurrentClamp(const real_t clp){
-        current_clamp = clp;
+        config.current_clamp = clp;
     }
 
     real_t update(const real_t targ_current){
@@ -53,6 +67,7 @@ public:
 struct HighLayerCtrl{
 protected:
     CurrentCtrl & curr_ctrl;
+    using Result = CtrlResult;
 public:
 
     HighLayerCtrl(CurrentCtrl & _ctrl):curr_ctrl(_ctrl){;}
@@ -72,7 +87,17 @@ struct PositionCtrl:public HighLayerCtrl{
 
 struct GeneralSpeedCtrl:public SpeedCtrl{
 public:
-    GeneralSpeedCtrlConfig &config;
+    struct Config{
+        real_t max_spd = 40;
+        real_t kp = 4;
+        real_t kp_clamp = 60;
+
+        real_t kd = 40;
+        real_t kd_active_radius = 1.2;
+        real_t kd_clamp = 2.4;
+    };
+    
+    Config & config;
 SPD_SPEC:
     const real_t & max_spd = config.max_spd;
     const real_t & kp = config.kp;
@@ -86,96 +111,71 @@ SPD_SPEC:
     real_t last_speed = 0;
 
 public:
-    GeneralSpeedCtrl(CurrentCtrl & ctrl, GeneralSpeedCtrlConfig & _config):SpeedCtrl(ctrl), config(_config){;}
+    GeneralSpeedCtrl(CurrentCtrl & ctrl, Config & _config):SpeedCtrl(ctrl), config(_config){;}
     void reset() override {
         targ_current = 0;
     }
 
-    Result update(const real_t _targ_speed,const real_t real_speed) override{
-        const real_t targ_speed = CLAMP(_targ_speed, -max_spd, max_spd);
-        real_t error = (targ_speed - real_speed);
-
-        real_t speed_delta = real_speed - last_speed;
-        last_speed = real_speed; 
-
-        real_t kp_contribute = CLAMP(error * kp, -kp_clamp, kp_clamp);
-        real_t kd_contribute = CLAMP(kd * speed_delta, -kd_clamp, kd_clamp);
-
-        if((ABS(error) > kd_active_radius)) kd_contribute /= 3;
-
-        targ_current += (kp_contribute >> 16) - (kd_contribute >> 8); 
-
-        real_t abs_targ_current = MIN(ABS(targ_current), curr_ctrl.current_clamp);
-        targ_current = SIGN_AS(abs_targ_current, targ_speed);
-
-        if(real_speed * targ_speed > 0) return {abs_targ_current, SIGN_AS((PI / 2 * (1 + MIN(curr_ctrl.current_output, 1.2))), targ_speed)};
-        else return {abs_targ_current, SIGN_AS(PI / 2, targ_speed)};
-    }
+    Result update(const real_t _targ_speed,const real_t real_speed);
 };
 
 struct GeneralPositionCtrl:public PositionCtrl{
-    GeneralPositionCtrl(CurrentCtrl & ctrl):PositionCtrl(ctrl){;}
+public:
+    struct Config{
+        real_t kp = 60;
+        real_t kd = 5;
 
-    real_t kp = 60;
-    real_t kd = 5;
+        real_t kd_active_radius = 0.7;
 
-    real_t kd_active_radius = 0.7;
+        real_t ki = 0.0;
+        real_t ki_clamp = 25.6;
+    };
 
-    real_t ki = 0.0;
-    real_t intergalx256 = 0;
-    Range ki_clamp = {25.6, -25.6};
+    Config & config;
 
+protected:
+    real_t & kp = config.kp;
+    real_t & kd = config.kd;
+    real_t & kd_active_radius = config.kd_active_radius;
+
+    const real_t & ki = config.ki;
+    const real_t & ki_clamp = config.ki_clamp;
+
+    real_t intergalx256;
     real_t last_error;
     real_t last_current;
     real_t error;
-
+public:
+    GeneralPositionCtrl(CurrentCtrl & ctrl, Config & _config):PositionCtrl(ctrl), config(_config){;}
 
     void reset() override {
         intergalx256 = 0;
     }
 
     Result update(const real_t targ_position, const real_t real_position, 
-            const real_t real_speed, const real_t real_elecrad) override{
-
-        real_t error = targ_position - real_position;
-        real_t abs_err = ABS(error);
-
-
-        static constexpr double u = TAU;
-        static constexpr double pu = poles * u;
-        static constexpr double a = 2 / PI;
-        static constexpr double k = a * a * pu;
-
-        real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
-
-        real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.45)) , error);
-
-        real_t current = MIN(abs_err * kp, curr_ctrl.current_clamp); 
-        if(abs_err < kd_active_radius) current = MAX(current - (kd * ABS(real_speed) >> 8), 0);
-        
-        if(error * real_speed < 0){
-            return {current, SIGN_AS(PI / 2, error)};
-        }else{
-            return {current, raddiff};
-        }
-    }
+            const real_t real_speed, const real_t real_elecrad);
 };
 
 struct TopLayerCtrl{
+    GeneralSpeedCtrl & speed_ctrl;
+    GeneralPositionCtrl & position_ctrl;
 
 };
 
 struct TrapezoidPosCtrl:public TopLayerCtrl{
-    GeneralSpeedCtrl & speed_ctrl;
-    GeneralPositionCtrl & position_ctrl;
+public:
+    struct Config{
+        real_t max_dec = 18.0;
+        real_t pos_sw_radius = 0.6;
+    };
+    using Result = CtrlResult;
+    Config & config;
+protected:
+    const real_t & max_dec = config.max_dec;
+    const real_t & pos_sw_radius = config.pos_sw_radius;
 
-    real_t max_dec = 18.0;
-
-    TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):speed_ctrl(_speed_ctrl), position_ctrl(_position_ctrl){;}
-
-    enum Tstatus{
+    enum class Tstatus:uint8_t{
         ACC,
-        // SUS,
         DEC,
         STA,
     };
@@ -184,69 +184,11 @@ protected:
     Tstatus tstatus = Tstatus::STA;
     real_t goal_speed = 0;
     real_t last_pos_err = 0;
+
+
 public:
-    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
-        // static constexpr real_t max_acc = 10.0;
-
-        real_t spd_delta = max_dec/foc_freq;
-        real_t max_spd = speed_ctrl.max_spd;
-        // static constexpr real_t spd_delta = 0.01;
-
-        // static constexpr real_t hug_speed = 1;
-        // static constexpr real_t spd_sw_radius = 0.7;
-        static constexpr real_t pos_sw_radius = 0.6;
-
-        real_t pos_err = targ_position - real_position;
-        bool cross = pos_err * last_pos_err < 0;
-        last_pos_err = pos_err;
-        switch(tstatus){
-            case Tstatus::ACC:
-                if(real_speed * real_speed > 2 * max_dec* ABS(pos_err)){
-                    tstatus = Tstatus::DEC;
-                }
-
-                {
-                    goal_speed += SIGN_AS(spd_delta, pos_err);
-                    goal_speed = CLAMP(goal_speed, -max_spd, max_spd);
-                    return speed_ctrl.update(goal_speed, real_speed);
-                }
-                break;
-
-            case Tstatus::DEC:
-                // if((cross and (ABS(goal_speed) < hug_speed)) || abs(pos_err) < pos_sw_radius){
-                //     tstatus = Tstatus::STA;
-                // }
-                if(cross){
-                    tstatus = Tstatus::STA;
-                }
-
-                {
-                    // bool ovs = real_speed * real_speed > 2 * max_dec* ABS(pos_err);
-                    // goal_speed = SIGN_AS(sqrt(2 * max_dec* ABS(pos_err)), goal_speed);
-                    // if(ovs) goal_speed += SIGN_AS(-spd_delta, pos_err);
-                    // if(ovs) goal_speed += -spd_delta;
-                    // else goal_speed += SIGN_AS(spd_delta / 3, pos_err);
-
-                    // if(pos_err > 0) goal_speed = CLAMP(goal_speed, hug_speed, max_spd);
-                    // else goal_speed = CLAMP(goal_speed, -max_spd, -hug_speed);
-
-                    goal_speed = SIGN_AS(sqrt(2 * max_dec * ABS(pos_err)), pos_err);
-                    return speed_ctrl.update(goal_speed, real_speed);
-                }
-
-                break;
-            default:
-            case Tstatus::STA:
-                if(ABS(pos_err) > pos_sw_radius){
-                    goal_speed = 0;
-                    tstatus = Tstatus::ACC;
-                }
-                return position_ctrl.update(targ_position, real_position, real_speed, real_elecrad);
-
-                break;
-        }
-        
-    }
+    TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl, Config & _config):TopLayerCtrl(_speed_ctrl, _position_ctrl), config(_config){;}
+    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad);
 };
 
 
