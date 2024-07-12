@@ -158,3 +158,12 @@ void eeprom_main();
 void qlz_main();
 
 void uart_main();
+void tcs34725_tb(OutputStream & logger, I2c & i2c);
+
+void tcs34725_main();
+
+void dshot_main();
+
+void at24cxx_tb(OutputStream & logger, I2c & i2c);
+
+void dshot_main();
