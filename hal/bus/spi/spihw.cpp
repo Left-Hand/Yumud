@@ -218,9 +218,9 @@ void SpiHw::configBaudRate(const uint32_t baudRate){
     instance->CTLR1 |= calculatePrescaler(baudRate);
 }
 
-void SpiHw::configBitOrder(const bool msb){
+void SpiHw::configBitOrder(const Endian endian){
     instance->CTLR1 &= ~SPI_FirstBit_LSB;
-    instance->CTLR1 |= msb ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
+    instance->CTLR1 |= endian ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }
 #ifdef HAVE_SPI1
 SpiHw spi1{SPI1};

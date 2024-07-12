@@ -99,12 +99,8 @@ protected:
         return (*locker == (index >> 1));
     }
 
-    // void preinit(){
-    //     m_lock = -1;
-    //     locker = &m_lock;
-    // }
 public:
-    virtual void configBitOrder(const bool msb){};
+    virtual void configBitOrder(const Endian endian){};
     virtual void configDataSize(const uint8_t data_size){};
     virtual void configBaudRate(const uint32_t baudRate) = 0;
 
