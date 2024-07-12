@@ -5,13 +5,13 @@
 int main(){
     Sys::Misc::prework();
 
-    tcs34725_main();
+    // tcs34725_main();
     #ifdef CH32V20X
-    dshot_main();
+    // dshot_main();
     // eeprom_main();
     // uart_main();
     // qlz_main();
-    // embd_main();
+    embd_main();
 
     // delay(200);
     // pmdc_tb();
