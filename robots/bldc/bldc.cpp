@@ -1,7 +1,7 @@
 #include "sys/system.hpp"
 #include "real.hpp"
 #include "hal/bus/bus_inc.h"
-#include "hal/timer/timers/timer_hw.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 
 #define NOP_DELAY(N) asm volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)

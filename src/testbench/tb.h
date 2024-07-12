@@ -133,7 +133,7 @@ using Sys::t;
 
 #include "../types/image/painter.hpp"
 #include "stdlib.h"
-#include "timer/timers/timer_hw.hpp"
+#include "timer/instance/timer_hw.hpp"
 #include "timer/pwm/pwm_channel.hpp"
 #include "dsp/controller/PID.hpp"
 #include "hal/timer/capture/capture_channel.hpp"

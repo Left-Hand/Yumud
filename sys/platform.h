@@ -18,8 +18,14 @@
 #include "sdk/ch32v307/Peripheral/inc/ch32v30x.h"
 #endif
 
+#ifdef STM32F4XX
 
-#define HIGH true
-#define LOW false
+#endif
+
+
+#if defined(USE_CH32V3_STD_LIB) || defined(USE_CH32V2_STD_LIB)
+#define USE_CH32_STD_LIB
+#endif
+
 
 #endif

@@ -2,6 +2,7 @@
 
 #define __PORT_CONCEPT_HPP__
 
+
 #include "sys/platform.h"
 #include "gpio_enums.hpp"
 
