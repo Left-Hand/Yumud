@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+
 #if defined(CH32V203)
 
 #ifndef CH32V20X
@@ -52,6 +53,10 @@
 
 #if defined(__cplusplus)
 #include "../sys/kernel/enums.hpp"
+
+#include <type_traits>
+#include <limits>
+
 template<typename T>
 concept arithmetic = std::is_arithmetic_v<T>;
 

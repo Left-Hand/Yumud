@@ -2,7 +2,6 @@
 #include "../sys/core/system.h"
 #include "../hal/crc/crc.hpp"
 
-
 #include "../sys/kernel/clock.h"
 #include "../sys/kernel/enums.hpp"
 
@@ -119,8 +118,6 @@ static void ClockUpdate(){
 #define M_RCC_HCLK(inst) inst.HCLK_Frequency;
 #define M_RCC_PCLK1(inst) inst.PCLK1_Frequency;
 #define M_RCC_PCLK2(inst) inst.PCLK2_Frequency;
-// #define M_RCC_ADCPLL(inst) inst.AdcPllClkFreq;
-// #define M_RCC_ADCHCLK(inst) inst.AdcHClkFreq;
 #define M_RCC_ADC_CLK(inst) inst.ADCCLK_Frequency;
 #endif
 

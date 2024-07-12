@@ -6,9 +6,7 @@
 	],
 	"settings": {
 		"files.associations": {
-			"optional": "cpp",
-			"type_traits": "cpp",
-			"initializer_list": "cpp"
+			"defs.h": "c"
 		}
-	}
+	},
 }

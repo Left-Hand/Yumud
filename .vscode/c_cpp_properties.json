@@ -7,7 +7,7 @@
       ],
       "compilerPath": "C:/MounRiver/MRS_Community/toolchain/RISC-V Embedded GCC12/bin/riscv-none-elf-gcc.exe",
       "cStandard": "${default}",
-      // "cppStandard": "gnu++2b",
+      "cppStandard": "gnu++2b",
       // "intelliSenseMode": "ris",
       "compilerArgs": [
         ""

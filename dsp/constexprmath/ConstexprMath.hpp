@@ -4,13 +4,13 @@
 
 #include <math.h>
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
 
 struct ConstexprMath{
+    public:
+
 #define constexpr_decl(return_type, function_name, ...) \
-    static constexpr return_type function_name(__VA_ARGS__) noexcept
+    static constexpr return_type function_name(__VA_ARGS__) noexcept\
+
 #define constexpr_name(function_name) function_name##_constexpr
 
 constexpr_decl(double, sqrt, double x){

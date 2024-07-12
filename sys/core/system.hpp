@@ -3,7 +3,6 @@
 #include "../sys/core/platform.h"
 #include "../types/real.hpp"
 
-
 namespace Sys{
     extern real_t t;
 

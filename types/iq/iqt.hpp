@@ -6,12 +6,10 @@
 #include "stdint.h"
 #include "../sys/core/platform.h"
 #include "extra_convs.hpp"
+#include "../../dsp/constexprmath/ConstexprMath.hpp"
 
 #include <IQmath_RV32.h>
-#include <type_traits>
-#include <limits>
 
-#include "../dsp/constexprmath/ConstexprMath.hpp"
 
 
 struct _iq{
@@ -19,6 +17,8 @@ struct _iq{
     __fast_inline_constexpr explicit _iq(const _iq16 _value) : value(_value){;}
     __fast_inline_constexpr operator _iq16() const{return value;}
 };
+
+
 
 struct iq_t{
 public:
