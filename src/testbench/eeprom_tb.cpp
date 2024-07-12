@@ -4,7 +4,7 @@
 #include "../hal/flash/flash.hpp"
 
 #include "algo/random/random_generator.hpp"
-
+#include "hal/bkp/bkp.hpp"
 
 #define EEPROM_TB_FIRSTBYTE
 #define EEPROM_TB_SEVERLBYTES

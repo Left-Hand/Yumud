@@ -29,6 +29,7 @@
 #include "ch32v20x_usart.h"
 #include "ch32v20x_wwdg.h"
 #include "ch32v20x_misc.h"
+#include "ch32v20x_opa.h"
 
 
 #endif /* __CH32V20x_CONF_H */

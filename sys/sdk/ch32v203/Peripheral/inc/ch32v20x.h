@@ -128,7 +128,6 @@ typedef enum IRQn
 
 #include <stdint.h>
 #include "Core/core_riscv.h"
-// #include "../sys/ system_ch32v20x.h"
 #include "../sys/sdk/ch32v203/system_ch32v20x.h"
 
 /* Standard Peripheral Library old definitions (maintained for legacy purpose) */

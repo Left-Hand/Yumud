@@ -72,6 +72,8 @@
     "initializer_list": "cpp",
     "concepts": "cpp",
     "type_traits": "cpp",
-    "core_cm4.h": "c"
+    "core_cm4.h": "c",
+    "system_ch32v20x.h": "c",
+    "ch32v20x_dbgmcu.h": "c"
   }
 }

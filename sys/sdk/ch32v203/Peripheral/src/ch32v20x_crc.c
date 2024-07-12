@@ -48,7 +48,7 @@ uint32_t CRC_CalcCRC(uint32_t Data)
  *
  * @return  32-bit CRC.
  */
-uint32_t CRC_CalcBlockCRC(uint32_t pBuffer[], uint32_t BufferLength)
+uint32_t CRC_CalcBlockCRC(const uint32_t pBuffer[], uint32_t BufferLength)
 {
     uint32_t index = 0;
 
