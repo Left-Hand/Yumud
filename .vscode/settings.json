@@ -80,6 +80,8 @@
     "*.tcc": "cpp",
     "unordered_map": "cpp",
     "numeric": "cpp",
-    "ostream": "cpp"
+    "ostream": "cpp",
+    "compare": "cpp",
+    "cstdint": "cpp"
   }
 }
