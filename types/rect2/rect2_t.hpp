@@ -213,5 +213,13 @@ public:
     }
 };
 
-typedef Rect2_t<int> Rect2i;
+using Rect2i = Rect2_t<int>;
+using Window = Rect2i;
+using Rect2 = Rect2_t<real_t>;
+using Rect2f = Rect2_t<float>;
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const Rect2_t<auto> & value){
+    return os << '(' << value.postion << ',' << value.size << ')';
+}
+
 #endif

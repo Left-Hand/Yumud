@@ -28,6 +28,9 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
+    // uart_main();
+    // uart_tb();
+    // calc_main();
     dshot_main();
     // usbcdc_tb();
     embd_main();

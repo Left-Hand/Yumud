@@ -24,7 +24,7 @@ protected:
 public:
     TimerOC(TIM_TypeDef * _instance, const Channel _channel):TimerOut(_instance, _channel), m_cvr(from_channel_to_cvr(_channel)), m_arr(instance->ATRLR){;}
 
-    void init() override{init(Mode::UpValid);}
+    void init() override{init(Mode::UpValid, true);}
     void init(const Mode mode, const bool install = true);
     void setMode(const Mode _mode);
 

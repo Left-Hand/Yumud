@@ -402,6 +402,17 @@
         #define TIM8_CH3N_Gpio portB[1]
 
         #define TIM8_CH4_Gpio portC[9]
+    #elif TIM8_REMAP == 1
+        #define TIM8_CH1_Gpio portB[6]
+        #define TIM8_CH1N_Gpio portA[13]
+
+        #define TIM8_CH2_Gpio portB[7]
+        #define TIM8_CH2N_Gpio portA[14]
+
+        #define TIM8_CH3_Gpio portB[8]
+        #define TIM8_CH3N_Gpio portA[15]
+
+        #define TIM8_CH4_Gpio portC[13]
     #endif
 #endif
 

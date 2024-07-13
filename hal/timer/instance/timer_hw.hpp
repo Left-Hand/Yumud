@@ -33,6 +33,20 @@ __interrupt void TIM##x##_IRQHandler(void);\
 \
 extern Timer##x timer##x;\
 
+#define BASIC_TIMER_TEMPLATE(x)\
+class Timer##x:public BasicTimer{\
+public:\
+    Timer##x():BasicTimer(TIM##x){;}\
+    void bindCb(const IT ch, std::function<void(void)> && cb) override;\
+};\
+\
+extern "C"{\
+__interrupt void TIM##x##_IRQHandler(void);\
+}\
+\
+extern Timer##x timer##x;\
+
+
 #ifdef HAVE_TIM1
 ADVANCED_TIMER_TEMPLATE(1)
 #endif
@@ -51,6 +65,14 @@ GENERIC_TIMER_TEMPLATE(4)
 
 #ifdef HAVE_TIM5
 GENERIC_TIMER_TEMPLATE(5)
+#endif
+
+#ifdef HAVE_TIM6
+BASIC_TIMER_TEMPLATE(6)
+#endif
+
+#ifdef HAVE_TIM7
+BASIC_TIMER_TEMPLATE(7)
 #endif
 
 #ifdef HAVE_TIM8

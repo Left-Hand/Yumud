@@ -1,6 +1,33 @@
 #include "tb.h"
 
+#include <string>
+
 #define UART_TB_ECHO
+using std::string;
+
+static void getline(IOStream & logger, string & str){
+    String temp_str;
+    while(true){
+        if(logger.available()){
+            char chr;
+            logger.read(chr);
+            if(chr == '\n'){
+
+                if(temp_str.length()){
+                    str = temp_str.c_str();
+                    return;
+                }
+                temp_str = "";
+            }else{
+                temp_str.concat(chr);
+            }
+        }
+        else{
+            delay(400);
+            logger.print(' ');
+        }
+    }
+}
 
 static void uart_tb(Uart & uart){
     #ifdef UART_TB_ECHO
@@ -22,6 +49,11 @@ static void uart_tb(Uart & uart){
     });
 
     while(true){
+        std::string str;
+        getline(uart, str);
+        uart.println("you input", str);
+    }
+    while(true){
         size_t size = uart.available();
         if(uart.available()){
             delay(5);
@@ -37,7 +69,7 @@ static void uart_tb(Uart & uart){
 }
 
 void uart_main(){
-    Uart & uart = uart1;
-    uart1.init(115200 * 8);
-    uart_tb(uart);
+    auto & logger = uart2;
+    logger.init(576000, CommMethod::Blocking);
+    uart_tb(logger);
 }
