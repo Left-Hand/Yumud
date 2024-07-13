@@ -1,0 +1,174 @@
+#ifndef __SMC_FANS_HPP__
+
+#define __SMC_FANS_HPP__
+
+#include "src/timer/timers/timer_hw.hpp"
+#include "src/debug/debug_inc.h"
+
+namespace SMC{
+
+class SideFan{
+protected:
+    TimerOutChannelPosOnChip & instanceP;
+    TimerOutChannelPosOnChip & instanceN;
+    bool enabled = true;
+    Range_t<real_t>duty_clamp = {-0.7, 0.7};
+public:
+    SideFan(TimerOutChannelPosOnChip & _instanceP,TimerOutChannelPosOnChip & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
+
+    void init(){
+        instanceP.init();
+        instanceN.init();
+    }
+
+    void setClamp(const Range_t<real_t> & _duty_clamp){
+        duty_clamp = _duty_clamp;
+    }
+
+    void enable(const bool & en = true){
+        enabled = en;
+        if(!en) setDuty(real_t(0));
+    }
+
+    void setDuty(const real_t & _duty){
+        if(!enabled){
+            instanceP = (real_t(0));
+            instanceN = (real_t(0));
+            return;
+        }
+        real_t duty = duty_clamp.clamp(_duty);
+        if(duty > 0){
+            instanceP = (duty);
+            instanceN = (real_t(0));
+        }else{
+            instanceP = (real_t(0));
+            instanceN = (-duty);
+        }
+    }
+
+
+
+    void setForce(const real_t & force){
+
+        if(force > 0){
+            setDuty(force);
+        }else{
+            setDuty(force);
+        }
+    }
+
+    auto & operator = (const real_t & _force){
+        setForce(_force);
+        return *this;
+    }
+};
+
+
+class HriFanPair{
+protected:
+    SideFan & left_fan;
+    SideFan & right_fan;
+public:
+
+    HriFanPair(SideFan & _left_fan, SideFan & _right_fan):
+        left_fan(_left_fan), right_fan(_right_fan){;}
+    void setForce(const real_t & force){
+        left_fan.setForce(-force);
+        right_fan.setForce(force);
+    }
+
+    void enable(const bool & en = true){
+        left_fan.enable(en);
+        right_fan.enable(en);
+    }
+
+    void init(){
+        left_fan.init();
+        right_fan.init();
+    }
+
+
+    auto & operator = (const real_t & _force){
+        setForce(_force);
+        return *this;
+    }
+};
+
+
+class ChassisFan{
+protected:
+    TimerOutChannelPosOnChip & instance;
+    Range_t<real_t>duty_clamp = {0, 0.12};
+public:
+    ChassisFan(TimerOutChannelPosOnChip & _instance):instance(_instance){;}
+
+    void init(){
+        instance.init();
+    }
+
+    void enable(const bool & en = true){
+        instance.enable(en);
+    }
+
+    void setClamp(const Range_t<real_t> & _duty_clamp){
+        duty_clamp = _duty_clamp;
+    }
+
+    void setDuty(const real_t & _duty){
+        real_t duty = duty_clamp.clamp(_duty);
+        instance = duty;
+        // instance = real_t(0);
+    }
+
+    void setForce(const real_t & force){
+        setDuty(force);
+    }
+
+    auto & operator = (const real_t & _force){
+        setForce(_force);
+        return *this;
+    }
+};
+
+
+class ChassisFanPair{
+protected:
+    ChassisFan & left_fan;
+    ChassisFan & right_fan;
+
+    Range_t<real_t>duty_clamp = {-0.7, 0.7};
+public:
+    ChassisFanPair(ChassisFan & _left_fan, ChassisFan & _right_fan):
+        left_fan(_left_fan), right_fan(_right_fan){;}
+
+    void init(){
+        left_fan.init();
+        right_fan.init();
+    }
+
+    void enable(const bool & en = true){
+        left_fan.enable(en);
+        right_fan.enable(en);
+    }
+
+    void setDuty(const real_t & _duty){
+        real_t duty = duty_clamp.clamp(_duty);
+        left_fan = duty;
+        right_fan = duty;
+    }
+
+    void setForce(const real_t & force){
+        setDuty(force);
+    }
+
+    auto & operator = (const real_t & _force){
+        setForce(_force);
+        return *this;
+    }
+};
+
+
+
+};
+
+#endif
