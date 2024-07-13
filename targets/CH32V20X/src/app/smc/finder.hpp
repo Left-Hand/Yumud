@@ -170,7 +170,7 @@ namespace SMC{
             }
         }
 
-        // DEBUG_DEBUG_PRINT("efault sp");
+        // DEBUG_DEBUG_PRINTLN("efault sp");
 
         return std::make_tuple(Vector2i(), Rangei());
     }
@@ -387,7 +387,7 @@ namespace SMC{
         //     if(rect.get_area() < 60){
         //         Seed seed2 {src.get_window().constrain(Vector2i{is_right ? rect.get_x_range().end + 2 : rect.get_x_range().start - 2, seed_pos.y}),  is_right ? Direction::R : Direction::L, !is_right};
         //         CoastFinder finder2 {src, seed2};
-        //         DEBUG_PRINT("recoast done");
+        //         DEBUG_PRINTLN("recoast done");
         //         ret = finder2.find();
         //     }
         // }
@@ -413,7 +413,7 @@ namespace SMC{
     // Boundary get_coast(const ImageReadable<Grayscale> & src, Vector2i seed_pos, const bool & is_right){
     Piles get_x_piles(const ImageReadable<Binary> & src, Seed seed){
 
-        // DEBUG_PRINT("x_piles", Vector2i(seed));
+        // DEBUG_PRINTLN("x_piles", Vector2i(seed));
         Piles ret;
         while(src.has_point(seed) and bool(src[Vector2i(seed)]) == false){
             seed.forward();
@@ -430,7 +430,7 @@ namespace SMC{
     //     if(x_piles.size() == 0) return {};
 
     //     std::vector<int> outroad_y;
-    //     // DEBUG_PRINT("xp_size", x_piles.size());
+    //     // DEBUG_PRINTLN("xp_size", x_piles.size());
     //     for(auto [y, x_range] : x_piles){
     //         if(!x_range.inside(max_road)) outroad_y.push_back(y);
     //     }

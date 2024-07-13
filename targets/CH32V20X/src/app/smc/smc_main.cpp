@@ -115,14 +115,14 @@ auto powerOnTimesReg = bkp[2];
 void recordRunStatus(const RunStatus & status){
     runStatusReg = uint16_t(uint8_t(status));
     if(show_status){
-        DEBUG_PRINT("[s]:", status._to_string());
+        DEBUG_PRINTLN("[s]:", status._to_string());
     }
 }
 
 void printRecordedRunStatus(){
     uint16_t id = runStatusReg;
     auto temp = RunStatus::_from_integral_unchecked(id);
-    DEBUG_PRINT(temp._to_string(), id);
+    DEBUG_PRINTLN(temp._to_string(), id);
 }
 
 SideFan left_fan(timer4.oc(2), timer4.oc(1));
@@ -161,7 +161,7 @@ void ctrl(){
     // offs_err = offs_err * 0.8 + 0.2 * measured_offs_err;
     // turn_output += speed_ctrl.update();
     real_t new_x = (Vector2(seed_pos) + (Vector2(real_t(-15.0), real_t(0.0)).rotated(current_dir))).x;
-    DEBUG_PRINT(SpecToken::Comma, motor_strength.left, motor_strength.right, motor_strength.hri, seed_pos.x, new_x);
+    DEBUG_PRINTLN(SpecToken::Comma, motor_strength.left, motor_strength.right, motor_strength.hri, seed_pos.x, new_x);
     // real_t side_output = side_ctrl.update(0, -offs_err, -accel.y);
 
     motor_strength.left = turn_output;
@@ -177,18 +177,21 @@ void ctrl(){
 
 using namespace SMC;
 
-void smc_main(){
-    preinit();
-    
-    uart4.init(921600);
+void smc_main(){    
+    uart4.init(921600, CommMethod::Blocking);
     uart4.setEps(4);
 
-    uart7.init(115200);
+    uart7.init(115200, CommMethod::Blocking);
     uart7.setSpace(" ");
+
+    while(true){
+        DEBUG_PRINTLN(millis())
+    }
     bkp.init();
+    
     powerOnTimesReg = powerOnTimesReg + 1;
     printRecordedRunStatus();
-    DEBUG_PRINT("pwon", int(powerOnTimesReg));
+    DEBUG_PRINTLN("pwon", int(powerOnTimesReg));
 
     spi2.init(72000000);
     spi2.bindCsPin(portD[4], 0);
@@ -222,14 +225,14 @@ void smc_main(){
     Painter<RGB565> painter = Painter<RGB565>();
     painter.bindImage(tftDisplayer);
 
-    i2csw.init(1000000);
+    i2csw.init(100000);
 
     mpu.init();
     qml.init();
 
-    I2cSw i2c(portD[2], portC[12]);
-    i2c.init(10000);
-    MT9V034 camera(i2c);
+    I2cSw sccb(portD[2], portC[12]);
+    sccb.init(100000);
+    MT9V034 camera(sccb);
 
     auto & start_key = portE[2];
     start_key.inpu();
@@ -248,11 +251,12 @@ void smc_main(){
         }
     }
 
-    auto affine_gray_image = make_image<Grayscale>(Vector2i{188, 60});
-    auto affine_bina_image  = make_bina_mirror(affine_gray_image);
-    auto diff_bina_image = make_image<Binary>(Vector2i(188, 60));
-    auto diff_gray_image = make_gray_mirror(diff_bina_image);
-    auto show_image = make_image<RGB565>(Vector2i(188, 60));
+    const auto pic_size = camera.size / 2;
+    auto pers_gray_image = make_image<Grayscale>(pic_size);
+    auto pers_bina_image  = make_bina_mirror(pers_gray_image);
+    auto diff_gray_image = make_image<Grayscale>(pic_size);
+    auto diff_bina_image = make_bina_mirror(diff_gray_image);
+    auto show_image = make_image<RGB565>(pic_size);
 
     [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
@@ -356,10 +360,6 @@ void smc_main(){
         static constexpr auto y_unit = Vector2(0.5, -0.73);
         static constexpr auto z_unit = Vector2(0, -1);
 
-        // auto x_axis = Vector3(vec3.x, 0, 0);
-        // auto y_axis = Vector3(0, vec3.y, 0);
-        // auto z_axis = Vector3(0, 0, vec3.z);
-
         auto x_axis = Vector3(arm_length, 0, 0);
         auto y_axis = Vector3(0, arm_length, 0);
         auto z_axis = Vector3(0, 0, arm_length);
@@ -369,10 +369,8 @@ void smc_main(){
         static constexpr auto z_color = RGB565::BLUE;
         static constexpr auto bg_color = RGB565::BLACK;
 
-        // const auto scale = vec3.length();
         auto vec3n = vec3.normalized();
         const Quat rot = Quat(Vector3(0, 0, -1), vec3n);
-        // logger.println(vec3n, rot);
         const Vector2i center_point = pos + Vector2i(square_length, square_length) / 2;
 
         auto plot_vec3_to_plane = [&](const Vector3 & axis, const char & chr, const RGB565 & color){
@@ -436,17 +434,10 @@ void smc_main(){
     while(true){
         recordRunStatus(RunStatus::NEW_ROUND);
 
-        {
-            // auto[x1,y1,z1] = accel;
-            // auto[x2,y2,z2] = gyro;
-            // auto[x3,y3,z3] = magent;
-            // DEBUG_PRINT(SpecToken::Comma, x3, y3, z3);
-            // DEBUG_PRINT(SpecToken::Comma, x1, y1, z2, uint16_t(timer1));
-        }
-
         if(stop_key == false){
             body.enable(false);
         }
+
         else if(start_key == false){
             body.enable();
         }
@@ -456,37 +447,38 @@ void smc_main(){
         plot_vec3(magent.normalized() * 7, {190, 120});
         auto start = millis();
 
-    // DEBUG_PRINT("new turn");
         recordRunStatus(RunStatus::PROCESSING_IMG_BEGIN);
-        plot_gray(camera, Rect2i{Vector2i{0, 60}, Vector2i{188, 60}});
-        Geometry::perspective(affine_gray_image, camera);
-        plot_gray(affine_gray_image, Rect2i{Vector2i{0, 120}, Vector2i{188, 60}});
+
+        plot_gray(camera, Rect2i{Vector2i{0, 0}, Vector2i{188, 60}});
+        continue;
+        Geometry::perspective(pers_gray_image, camera);
+        plot_gray(pers_gray_image, Rect2i{Vector2i{0, 120}, Vector2i{188, 60}});
 
 
         // plot_points(Points{{0, 0}, {40,40}, {80, 50}}, {0, 0})
         // plot_gray(affine_gray_image, Rect2i{Vector2i{0, 120}, Vector2i{188, 60}});
         //从摄像头读取透视变换后的灰度图
 
-        Pixels::inverse(affine_gray_image);
+        Pixels::inverse(pers_gray_image);
         //对灰度图取反(边线为白色方便提取)
 
-        Shape::convo_roberts_x(diff_gray_image, affine_gray_image);
+        Shape::convo_roberts_x(diff_gray_image, pers_gray_image);
         //获取x方向上的差分图
 
         Pixels::binarization(diff_bina_image, diff_gray_image, edge_threshold);
         //将差分图二值化
 
 
-        Pixels::binarization(affine_bina_image, affine_gray_image, positive_threshold);
-        Pixels::or_with(affine_bina_image, diff_bina_image);
-        Shape::dilate_xy(affine_bina_image);
-        Shape::dilate_xy(affine_bina_image);
-        Shape::erosion_x(affine_bina_image);
-        Shape::erosion_y(affine_bina_image);
+        Pixels::binarization(pers_bina_image, pers_gray_image, positive_threshold);
+        Pixels::or_with(pers_bina_image, diff_bina_image);
+        Shape::dilate_xy(pers_bina_image);
+        Shape::dilate_xy(pers_bina_image);
+        Shape::erosion_x(pers_bina_image);
+        Shape::erosion_y(pers_bina_image);
 
         //获取差分图和灰度图的并集
         //差分图对边缘敏感 灰度图对色块敏感 两者合围可消除缺陷
-        plot_bina(affine_bina_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
+        plot_bina(pers_bina_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
         // continue;
 
         // Shape::erosion_xy(affine_bina_image);
@@ -495,8 +487,8 @@ void smc_main(){
 
         recordRunStatus(RunStatus::PROCESSING_IMG_END);
 
-        auto & img = affine_gray_image;
-        auto & img_bina = affine_bina_image;
+        auto & img = pers_gray_image;
+        auto & img_bina = pers_bina_image;
 
         // auto bottom_pile = get_h_pile(img_bina, true);
         // auto top_pile = get_h_pile(img_bina, false);
@@ -552,7 +544,7 @@ void smc_main(){
 
         // auto coast_left_temp = coast_left;
         // coast_left_temp.resize(1);
-        // DEBUG_PRINT("done coast");
+        // DEBUG_PRINTLN("done coast");
         auto track_left = SMC::douglas_peucker(coast_left, dpv);
         auto track_right = SMC::douglas_peucker(coast_right, dpv);
 
@@ -560,11 +552,11 @@ void smc_main(){
 
         // ASSERT_WITH_DOWN(track_left.size(), "left track size 0");
         // ASSERT_WITH_DOWN(track_right.size(), "right track size 0");
-        // DEBUG_PRINT("rw", road_window.grow(8));
+        // DEBUG_PRINTLN("rw", road_window.grow(8));
         // DEBUG_VALUE(seed_pos);
         // auto y_ranges = get_outroad_y_ranges(img_bina, road_window.grow(4), Seed(seed_pos, Direction::U));
         // DEBUG_VALUE(y_ranges.size());
-        // DEBUG_PRINT("done doug");
+        // DEBUG_PRINTLN("done doug");
         // bound_left = left_boundary(coast_left);
         // bound_right = right_boundary(coast_right);
 
@@ -607,7 +599,7 @@ void smc_main(){
 
         recordRunStatus(RunStatus::PROCESSING_DIR_END);
         // if(Vector2(segment_get_diff(follow_left)).cos())
-        // DEBUG_PRINT("done plot shrink");
+        // DEBUG_PRINTLN("done plot shrink");
 
         auto v_points = coast_get_v_points(track_left);
         auto a_points = coast_get_a_points(track_left);
@@ -620,20 +612,20 @@ void smc_main(){
         // auto track_right = SMC::get_main_coast(SMC::shrink_coast(coast_right, real_t(-15)));
         // plot_coast(track_left, {0, 0}, RGB565::RED);
         // plot_coast(track_right, {0, 0}, RGB565::BLUE);
-        // DEBUG_PRINT("done plot track");
+        // DEBUG_PRINTLN("done plot track");
 
         // static constexpr Vector2i shapes_offset = Vector2i(0, 0);
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
         plot_segment({seed_pos, seed_pos + Vector2(10.0, 0).rotated(-current_dir)}, {0, 0}, RGB565::GRAY);
-        // DEBUG_PRINT("done plot follow");
+        // DEBUG_PRINTLN("done plot follow");
 
-        // DEBUG_PRINT("a/v points", a_points.size(), v_points.size());
+        // DEBUG_PRINTLN("a/v points", a_points.size(), v_points.size());
         plot_points(v_points, {0, 0}, RGB565::YELLOW);
         plot_points(a_points, {0, 0}, RGB565::PINK);
         // plot_bound(bound_center, {0, 0}, RGB565::PINK);
-        // DEBUG_PRINT("!!");
+        // DEBUG_PRINTLN("!!");
         plot_update({0, 0});
 
         // plot_bound(bound_right, {0, 0}, RGB565::BLUE);
@@ -658,11 +650,11 @@ void smc_main(){
         // }
 
         frame_ms = millis() - start;
-        // DEBUG_PRINT(coast_left.size() + coast_right.size(), track_left.size() + track_right.size(), v_points.size() + a_points.size())
+        // DEBUG_PRINTLN(coast_left.size() + coast_right.size(), track_left.size() + track_right.size(), v_points.size() + a_points.size())
 
-        // DEBUG_PRINT(int(timer8[2]), int(timer8[1]));
+        // DEBUG_PRINTLN(int(timer8[2]), int(timer8[1]));
         recordRunStatus(RunStatus::END_ROUND);
-        // DEBUG_PRINT("end turn");
+        // DEBUG_PRINTLN("end turn");
         // logger.println(coast_left.size());
     }
 }

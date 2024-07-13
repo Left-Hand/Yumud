@@ -1,6 +1,10 @@
 #include "uarthw.hpp"
 #include "../sys/core/platform.h"
 
+
+#define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
+#define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
+
 #define UART_CB_TEMPLATE(name)\
 static UartHw::Callback name##_rxne_cb;\
 static UartHw::Callback name##_txe_cb;\
@@ -28,8 +32,6 @@ __interrupt void uname##_IRQHandler(void){\
 UART_CB_TEMPLATE(name)\
 UART_IT_TEMPLATE(name, (uname))\
 
-
-// UartHw name{uname, pname##_TX_DMA_CH, pname##_RX_DMA_CH};
 
 #ifdef HAVE_UART1
 UART_CB_TEMPLATE(uart1)
@@ -510,25 +512,25 @@ void UartHw::enableRxDma(const bool en){
         rxDma.enableHalfIt();
         rxDma.bindDoneCb([this](){
             this->invokeRxDma();
-            for(size_t i = rx_dma_buf_index; i < rx_dma_buf_size; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.addData(rx_dma_buf[i]); 
             rx_dma_buf_index = 0;
         });
 
         rxDma.bindHalfCb([this](){
-            for(size_t i = rx_dma_buf_index; i < rx_dma_buf_size / 2; i++) this->rxBuf.addData(rx_dma_buf[i]); 
-            rx_dma_buf_index = rx_dma_buf_size / 2;
+            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+            rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
         });
 
         this->bindIdleCb([this](){
-            size_t index = rx_dma_buf_size - rxDma.pending();
-            if(index != rx_dma_buf_size / 2 && index != rx_dma_buf_size){
+            size_t index = UART_RX_DMA_BUF_SIZE - rxDma.pending();
+            if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
                 for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.addData(rx_dma_buf[i]); 
             }
             rx_dma_buf_index = index;
             EXECUTE(rxPostCb);
         });
 
-        rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
+        rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
         rxDma.bindHalfCb(nullptr);
@@ -543,7 +545,7 @@ void UartHw::invokeTxDma(){
             size_t tx_amount = 0;
             while(txBuf.available()){
                 tx_dma_buf[tx_amount++] = txBuf.getData();
-                if(tx_amount >= tx_dma_buf_size){
+                if(tx_amount >= UART_TX_DMA_BUF_SIZE){
                     break;
                 }
             }

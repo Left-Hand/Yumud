@@ -27,7 +27,7 @@ namespace CLI{
 
     #define read_value(value)\
     {\
-        DEBUG_PRINT("get", VNAME(value), "\t\t is", value);\
+        DEBUG_PRINTLN("get", VNAME(value), "\t\t is", value);\
     }
 
     
@@ -38,7 +38,7 @@ namespace CLI{
             read_value(value);\
         }else if(args.size() == 1){\
             value = decltype(value)(args[0]);\
-            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", args[0]);\
+            DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", args[0]);\
         }\
     }
 
@@ -51,7 +51,7 @@ namespace CLI{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", value);\
         }\
     }
 
@@ -65,7 +65,7 @@ namespace CLI{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", value);\
         }\
     }
 
@@ -110,7 +110,7 @@ namespace CLI{
                             break;
                     }
                 }else{
-                    DEBUG_PRINT("affine: invalid syntax");
+                    DEBUG_PRINTLN("affine: invalid syntax");
                 }
                 break;
             case "turn"_ha:
@@ -147,7 +147,7 @@ namespace CLI{
                             break;
                     }
                 }else{
-                    DEBUG_PRINT("turnctrl: invalid syntax");
+                    DEBUG_PRINTLN("turnctrl: invalid syntax");
                 }
                 break;
             case "s"_ha:
@@ -184,7 +184,7 @@ namespace CLI{
                             break;
                     }
                 }else{
-                    DEBUG_PRINT("turnctrl: invalid syntax");
+                    DEBUG_PRINTLN("turnctrl: invalid syntax");
                 }
                 break;
             case "motor"_ha:
@@ -217,7 +217,7 @@ namespace CLI{
                             break;
                     }
                 }else{
-                    DEBUG_PRINT("affine: invalid syntax");
+                    DEBUG_PRINTLN("affine: invalid syntax");
                 }
                 break;
             case "ss"_ha:
@@ -247,7 +247,7 @@ namespace CLI{
                 break;
             case "help"_ha:
             case "h"_ha:
-                DEBUG_PRINT("no help available");
+                DEBUG_PRINTLN("no help available");
                 break;
             case "rst"_ha:
             case "r"_ha:
@@ -256,10 +256,10 @@ namespace CLI{
             case "en"_ha:
             case "e"_ha:
                 enable_flag = true;
-                DEBUG_PRINT("enabled");
+                DEBUG_PRINTLN("enabled");
                 break;
             default:
-                DEBUG_PRINT("no command available");
+                DEBUG_PRINTLN("no command available");
                 break;
         }
     }

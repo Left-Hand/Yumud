@@ -96,6 +96,8 @@ void Can::installGpio(){
 }
 void Can::enableRcc(){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+
+    #ifdef HAVE_CAN1
     uint8_t remap = CAN1_REMAP;
     switch(remap){
     case 0:
@@ -109,6 +111,7 @@ void Can::enableRcc(){
         GPIO_PinRemapConfig(GPIO_Remap2_CAN1, ENABLE);
         break;
     }
+    #endif
 }
 
 void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}

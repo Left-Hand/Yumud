@@ -386,26 +386,26 @@ class Image565 : public ImageDataTypeSame<RGB565>{
 
 };
 
-// #define make_image(type, size) (Image<type, type> (size));
-
 template<typename ColorType>
-__fast_inline auto make_image(const Vector2i & size){
+__inline auto make_image(const Vector2i & size){
     return Image<ColorType, ColorType>(size);
 }
-// template<typename ColorType>
-// auto make_image(const
+
+__inline auto make_gray(const Vector2i & size){return make_image<Grayscale>(size);};
+__inline auto make_bina(const Vector2i & size){return make_image<Binary>(size);};
 
 
-// #define make_bina_mirror(src) (Image<Binary, Binary>(std::reinterpret_pointer_cast<Image<Binary, Binary>>((src.data), src.get_size())))
-__fast_inline Image<Grayscale, Grayscale> make_gray_mirror(const Image<Binary, Binary> &src){
-    return Image<Grayscale, Grayscale>(
-        std::reinterpret_pointer_cast<Grayscale[]>(src.data), src.get_size()
-    );
+template<typename ColorType>
+__inline auto make_mirror(const Image<auto, auto> &src){
+    return Image<ColorType, ColorType>(std::reinterpret_pointer_cast<ColorType[]>(src.data),
+        src.get_size());
 }
 
-__fast_inline Image<Binary, Binary> make_bina_mirror(const Image<Grayscale, Grayscale> &src){
-    return Image<Binary, Binary>(
-        std::reinterpret_pointer_cast<Binary[]>(src.data), src.get_size()
-    );
-}
+
+template<typename ColorType>
+__inline auto make_gray_mirror(const Image<ColorType, ColorType> & src){return make_mirror<Grayscale>(src);};
+
+template<typename ColorType>
+__inline auto make_bina_mirror(const Image<ColorType, ColorType> & src){return make_mirror<Binary>(src);};
+
 #endif

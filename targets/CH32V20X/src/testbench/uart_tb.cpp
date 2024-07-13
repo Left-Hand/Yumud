@@ -5,7 +5,7 @@
 #define UART_TB_ECHO
 using std::string;
 
-static void getline(IOStream & logger, string & str){
+[[maybe_unused]] static void getline(IOStream & logger, string & str){
     String temp_str;
     while(true){
         if(logger.available()){
@@ -49,11 +49,6 @@ static void uart_tb(Uart & uart){
     });
 
     while(true){
-        std::string str;
-        getline(uart, str);
-        uart.println("you input", str);
-    }
-    while(true){
         size_t size = uart.available();
         if(uart.available()){
             delay(5);
@@ -69,7 +64,7 @@ static void uart_tb(Uart & uart){
 }
 
 void uart_main(){
-    auto & logger = uart2;
-    logger.init(576000, CommMethod::Blocking);
+    auto & logger = DEBUGGER;
+    logger.init(115200, CommMethod::Blocking);
     uart_tb(logger);
 }

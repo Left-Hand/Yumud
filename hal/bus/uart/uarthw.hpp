@@ -35,11 +35,8 @@ protected:
     size_t rx_dma_buf_index;
     size_t tx_dma_buf_index;
 
-    static constexpr size_t rx_dma_buf_size = 64;
-    static constexpr size_t tx_dma_buf_size = 64;
-
-    char tx_dma_buf[tx_dma_buf_size];
-    char rx_dma_buf[rx_dma_buf_size];
+    char tx_dma_buf[UART_DMA_BUF_SIZE];
+    char rx_dma_buf[UART_DMA_BUF_SIZE];
 
     DmaChannel & txDma;
     DmaChannel & rxDma;

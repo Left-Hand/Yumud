@@ -29,13 +29,12 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
-    // uart_main();
-    // uart_tb();
+    uart_main();
     // calc_main();
     // dshot_main();
     // usbcdc_tb();
     // embd_main();
-    smc_main();
+    // smc_main();
     // UartHw & logger = uart2;
     // logger.init(115200);
     // can_tb(logger, can1, true);
