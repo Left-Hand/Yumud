@@ -2,11 +2,19 @@
 #define __FINER_HPP__
 
 #include "../../types/image/image.hpp"
-#include "nvcv2.hpp"
+
+#include "../nvcv2/flood_fill.hpp"
+#include "../nvcv2/geometry/geometry.hpp"
+#include "../nvcv2/pixels/pixels.hpp"
+#include "../nvcv2/shape/shape.hpp"
+#include "../nvcv2/template.hpp"
+
 #include <vector>
 #include <map>
 #include <list>
 #include <unordered_set>
+
+using namespace NVCV2;
 
 namespace SMC{
     using Coast = sstl::vector<Vector2i, 80>;
@@ -20,15 +28,15 @@ namespace SMC{
     using Segment = std::pair<Point, Point>;
 
     
-    enum TB{
-        TOP = false,
-        BOTTOM = true
-    };
+    // enum TB{
+    //     TOP = false,
+    //     BOTTOM = true
+    // };
 
-    enum LR{
-        LEFT = false,
-        RIGHT = true
-    };
+    // enum LR{
+    //     LEFT = false,
+    //     RIGHT = true
+    // };
 
     enum CornerType{
         ACORNER = -1,
@@ -149,7 +157,7 @@ namespace SMC{
         // DEBUG_VALUE(x_range);
         Vector2i ret_pos;
         if(x_range.length()){
-            if(ret_pos == Vector2i({0,0})){
+            if(ret_pos == Vector2i{0,0}){
                 return std::make_tuple(Vector2i(x_range.get_center(), y), x_range);
             }
 

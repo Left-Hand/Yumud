@@ -2,9 +2,8 @@
 
 #define __ELEMENTS_HPP__
 
-#include "../src/enum.hpp"
+#include "../thirdparty/enums/enum.h"
 #include "finder.hpp"
-// #include "enum.hpp"
 
 namespace SMC{
 BETTER_ENUM(ElementType, uint8_t,

@@ -15,7 +15,7 @@ namespace NVCV2::Pixels{
     Grayscale bilinear_interpol(const ImageReadable<Grayscale> & img, const Vector2 & pos){
         Vector2i pos_i = {int(pos.x), int(pos.y)};
         // return img(pos_i);
-        if(!img.has_point(pos_i) || !img.has_point(pos_i + Vector2i(1,1))) return Grayscale();
+        if(!img.has_point(pos_i) || !img.has_point(pos_i + Vector2i{1,1})) return Grayscale();
         Vector2 pos_frac = {frac(pos.x), frac(pos.y)};
         
         if(pos_frac.x){

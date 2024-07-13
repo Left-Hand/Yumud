@@ -2,19 +2,18 @@
 
 #define __SMC_FANS_HPP__
 
-#include "src/timer/timers/timer_hw.hpp"
-#include "src/debug/debug_inc.h"
+#include "../hal/timer/timer.hpp"
 
 namespace SMC{
 
 class SideFan{
 protected:
-    TimerOutChannelPosOnChip & instanceP;
-    TimerOutChannelPosOnChip & instanceN;
+    TimerOC & instanceP;
+    TimerOC & instanceN;
     bool enabled = true;
     Range_t<real_t>duty_clamp = {-0.7, 0.7};
 public:
-    SideFan(TimerOutChannelPosOnChip & _instanceP,TimerOutChannelPosOnChip & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
+    SideFan(TimerOC & _instanceP,TimerOC & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
 
     void init(){
         instanceP.init();
@@ -97,10 +96,10 @@ public:
 
 class ChassisFan{
 protected:
-    TimerOutChannelPosOnChip & instance;
+    TimerOC & instance;
     Range_t<real_t>duty_clamp = {0, 0.12};
 public:
-    ChassisFan(TimerOutChannelPosOnChip & _instance):instance(_instance){;}
+    ChassisFan(TimerOC & _instance):instance(_instance){;}
 
     void init(){
         instance.init();

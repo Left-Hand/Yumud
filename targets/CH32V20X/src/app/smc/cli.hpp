@@ -2,7 +2,6 @@
 
 #define __CLI_HPP__
 
-#include "debug.h"
 #include "paraments.hpp"
 #include "finder.hpp"
 
@@ -26,15 +25,11 @@ namespace CLI{
         return hash_impl(p, size);
     }
 
-    // template<typename T>
-    // void read_value(T & value){
     #define read_value(value)\
     {\
         DEBUG_PRINT("get", VNAME(value), "\t\t is", value);\
     }
 
-    // template<typename T>
-    // void settle_value(T & value, const std::vector<String> & args)
     
     #define settle_value(value, args)\
     {\
@@ -75,48 +70,9 @@ namespace CLI{
     }
 
     void parse_command(String command, std::vector<String> args){
-        using NVCV2::Geometry::affine_config;
         using NVCV2::Geometry::perspective_config;
         command.toLowerCase();
         switch(hash_impl(command.c_str(), command.length())){
-            case "affine"_ha:
-                if(args.size() == 0){
-                    read_value(affine_config.a);
-                    read_value(affine_config.b);
-                    read_value(affine_config.c);
-                    read_value(affine_config.d);
-                    read_value(affine_config.e);
-                    read_value(affine_config.q);
-                }else if(args.size() <= 2){
-                    String vname = args.front();
-                    args.erase(args.begin());
-
-                    switch(hash_impl(vname.c_str(), vname.length())){
-                        case "a"_ha:
-                            settle_value(affine_config.a,args);
-                            break;
-                        case "b"_ha:
-                            settle_value(affine_config.b,args);
-                            break;
-                        case "c"_ha:
-                            settle_value(affine_config.c,args);
-                            break;
-                        case "d"_ha:
-                            settle_value(affine_config.d,args);
-                            break;
-                        case "e"_ha:
-                            settle_value(affine_config.e,args);
-                            break;
-                        case "q"_ha:
-                            settle_value(affine_config.q,args);
-                            break;
-                        default:
-                            break;
-                    }
-                }else{
-                    DEBUG_PRINT("affine: invalid syntax");
-                }
-                break;
             
                 case "perspective"_ha:
                 case "pers"_ha:

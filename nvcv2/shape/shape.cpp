@@ -1,23 +1,8 @@
-#pragma once
-
-#include "../nvcv2/nvcv2.hpp"
-
+#include "shape.hpp"
+#include "../pixels/pixels.hpp"
 
 
 namespace NVCV2::Shape{
-    namespace Cores{
-        const int roberts_x[2][2] = {{-1, 0}, {0, 1}};
-        const int roberts_y[2][2] = {{0, -1}, {1, 0}};
-        const int prewiit_x[3][3] = {{-1, 0, 1}, {-1, 0, 1}, {-1, 0, 1}};
-        const int prewiit_y[3][3] = {{-1, -1, -1}, {0, 0, 0}, {1, 1, 1}};
-        const int sobel_x[3][3] = {{-1, 0, 1}, {-2, 0, 2}, {-1, 0, 1}};
-        const int sobel_y[3][3] = {{-1, -2, -1}, {0, 0, 0}, {1, 2, 1}};
-        const int scharr_x[3][3] = {{-3, 0, 3}, {-10, 0, 10}, {-3, 0, 3}};
-        const int scharr_y[3][3] = {{-3, -10, -3}, {0, 0, 0}, {3, 10, 3}};
-        const int laplacian_4[3][3] = {{0, -1, 0}, {-1, 4, -1}, {0, -1, 0}};
-        const int laplacian_8[3][3] = {{-1, -1, -1}, {-1, 8, -1}, {-1, -1, -1}};
-        const int gauss[3][3] = {{1, 1, 1}, {1, 2, 1}, {1, 1, 1}};
-    }
 
 
     void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3]){
@@ -72,10 +57,6 @@ namespace NVCV2::Shape{
         gauss(temp, src);
         Pixels::copy(src, temp);
     }
-    void sobel_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_x);}
-    void sobel_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_y);}
-    void scharr_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_x);}
-    void scharr_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_y);}
 
     void sobel_xy(Image<Grayscale, Grayscale> & dst, const ImageReadable<Grayscale> & src){
         auto size = dst.get_size();
@@ -390,7 +371,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    void x4(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int m = 2){
+    void x4(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int m){
         // constexpr int m = 4;
         auto size = (Rect2i{{}, src.get_size()}.intersection(Rect2i{{}, dst.get_size() * m})).size;
 
@@ -409,7 +390,7 @@ namespace NVCV2::Shape{
         }
     }
 
-    auto x4(const ImageReadable<Grayscale> & src, const int m = 2){
+    auto x4(const ImageReadable<Grayscale> & src, const int m){
         Image<Grayscale, Grayscale> dst(src.size / m);
         x4(dst, src, m);
         return dst;
@@ -571,68 +552,6 @@ namespace NVCV2::Shape{
 
     }
 
-    void dilate(Image<Binary, Binary> & src){
-        dilate(src, src);
-    }
-
-    void dilate_xy(Image<Binary, Binary> & src){
-        dilate_xy(src, src);
-    }
-
-
-    void erosion(Image<Binary, Binary> & src){
-        erosion(src, src);
-    }
-
-    void erosion_xy(Image<Binary, Binary> & src){
-        erosion_xy(src, src);
-    }
-
-    void zhang_suen(Image<Binary, Binary> & src){
-        zhang_suen(src, src);
-    }
-
-    void zhang_suen2(Image<Binary, Binary> & src){
-        zhang_suen2(src, src);
-    }
-
-    void erosion_x(Image<Binary, Binary> & src){
-        erosion_x(src, src);
-    }
-    
-    void erosion_y(Image<Binary, Binary> & src){
-        erosion_y(src, src);
-    }
-
-    void dilate_x(Image<Binary, Binary> & src){
-        dilate_x(src, src);
-    }
-
-
-    void dilate_y(Image<Binary, Binary> & src){
-        dilate_y(src, src);
-    }
-
-    void morph_open(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
-        Image<Binary, Binary> temp(dst.get_size());        
-        erosion(temp, src);
-        dilate(dst, temp);
-    }
-
-    void morph_close(Image<Binary, Binary> & dst, const Image<Binary, Binary> & src){
-        Image<Binary, Binary> temp(dst.get_size());        
-        dilate(temp, src);
-        erosion(dst, temp);
-    }
-
-    void morph_close(Image<Binary, Binary> & src){
-        morph_close(src, src);
-    }
-
-    void morph_open(Image<Binary, Binary> & src){
-        morph_open(src, src);
-    }
-
     void convo_roberts_x(Image<Grayscale, Grayscale> & dst, Image<Grayscale, Grayscale> & src){
         if(src == dst){
             auto temp = src.clone();
@@ -686,115 +605,4 @@ namespace NVCV2::Shape{
         }
     }
 
-    void convo_roberts_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
-        convolution(dst, src, Cores::roberts_y);
-    }
-
-    class CoastFinder{
-    protected:
-        using m_Image = ImageReadable<Binary>;
-
-        const m_Image & src;
-        Seed m_seed;
-        uint32_t step_limit = 64;
-
-    public:
-        using Coast = sstl::vector<Vector2i, 80>;
-        CoastFinder(const m_Image & image, const Seed & seed): src(image), m_seed(seed){;}
-
-        Coast find(){
-            Coast coast;
-            Seed seed = m_seed;
-            Vector2i p0;
-            seed.reset();
-
-            enum class SubStatus{
-                APPROCH,
-                TRACK
-            };
-
-            SubStatus status = SubStatus::APPROCH;
-
-            while(seed.jounrey() < step_limit && src.has_point(seed)){
-                switch(status){
-                    case SubStatus::APPROCH:
-                        seed.forward();
-                        if(!src.has_point(seed)) break;
-
-                        if(is_positive(seed)){
-                            seed.backward();
-                            
-                            status = SubStatus::TRACK;
-                        }
-                        break;
-
-                    case SubStatus::TRACK:
-                        {
-                            // if(Vector2i(seed) == p0) break;
-                            static constexpr uint8_t spin_limit = 7;
-                            int spins = 0;
-                            if(is_edge(seed)){
-                                while(is_edge(seed) && (spins < spin_limit)){
-                                    seed.spin(true);
-                                    spins++;
-                                }
-                            }else{
-                                while((!is_edge(seed)) && (spins < spin_limit)){
-                                    seed.spin(false);
-                                    spins++;
-                                }
-                                seed.spin(true);
-                            }
-
-                            seed.forward();
-                            if(src.has_point(seed)){
-                                // if(coast.size() == 0) p0 = Vector2i(seed);
-                                coast.push_back(seed);
-                            }
-                            break;
-                        }
-                    }
-            }
-            Coast ret;
-
-            for(const auto & item : coast){
-                if(src.has_point(item)){
-                    ret.push_back(item);
-                }else{
-                    DEBUG_LOG("invalid point", item);
-                }
-            }
-
-            return ret;
-        }
-
-        bool is_positive(const Vector2i & pos){
-            return (uint8_t)src(pos);
-        }
-
-        bool is_edge(const Vector2i & pos, const Vector2i next_pos){
-            // return (uint8_t)src(next_pos) - (uint8_t)src(pos) > (uint8_t)(Grayscale)(edge_threshold);
-            return (!!src[next_pos]) && (!src[pos]); 
-            // return ((uint8_t)src(next_pos) > positive_threshold) && ((uint8_t)src(pos) < positive_threshold);
-        }
-
-        bool is_edge(const Seed & seed){
-            return is_edge(seed, seed.drop());
-        }
-    };
-
-    
 }
-
-
-// using namespace NVCV2;
-
-// void grayscaleimg_to_binary(const Grayscale * src, Binary * dst, const Vector2i & size, const Grayscale & threshold){
-// 	size_t cnt = 0;
-// 	for(int y = 0; y < size.y; y++){
-// 		for(int x = 0; x < size.x; x++){
-// 			dst[cnt] = src[cnt] > threshold;
-// 			cnt++;
-// 		}
-// 	}
-// }

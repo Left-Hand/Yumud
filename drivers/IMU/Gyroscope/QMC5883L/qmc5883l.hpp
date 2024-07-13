@@ -127,8 +127,8 @@ protected:
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void requestPool(const RegAddress & regAddress, uint8_t * datas, uint8_t size, uint8_t len){
-        bus_drv.readPool((uint8_t)regAddress, datas, size, len, false);
+    void requestPool(const RegAddress & regAddress, uint8_t * datas, uint8_t len){
+        bus_drv.readPool((uint8_t)regAddress, datas, len, LSB);
     }
 
     real_t From16BitToGauss(const uint16_t & data){
@@ -213,18 +213,12 @@ public:
     bool update(){
         bool done = isIdle();
         if(done){
-            requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 2, 6);
+            requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 3);
         }
         return done;
     }
 
-    void getMagnet(real_t & x, real_t & y, real_t & z) override{
-        x = From16BitToGauss(magXReg.data);
-        y = From16BitToGauss(magYReg.data);
-        z = From16BitToGauss(magZReg.data);
-    }
-
-    auto getMagnet(){
+    std::tuple<real_t, real_t, real_t> getMagnet() override {
         return std::make_tuple(
             From16BitToGauss(magXReg.data),
             From16BitToGauss(magYReg.data),

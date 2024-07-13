@@ -1,5 +1,6 @@
 #include "testbench/tb.h"
 #include "app/embd/embd.h"
+#include "app/smc/smc.h"
 
 
 int main(){
@@ -31,7 +32,7 @@ int main(){
     // uart_main();
     // uart_tb();
     // calc_main();
-    dshot_main();
+    // dshot_main();
     // usbcdc_tb();
     embd_main();
     // UartHw & logger = uart2;

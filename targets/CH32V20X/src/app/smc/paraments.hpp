@@ -2,14 +2,18 @@
 
 #define __PARAMENTS_HPP__
 
-#include "types/real.hpp"
-#include "types/rect2/rect2_t.hpp"
-#include "types/rgb.h"
-#include "body.hpp"
-#include "system.hpp"
 
+
+#include "../sys/kernel/clock.h"
+#include "../sys/core/system.hpp"
+
+#include "../types/real.hpp"
+#include "../types/rect2/rect2_t.hpp"
+#include "../types/rgb.h"
+#include "body.hpp"
 
 using namespace Sys;
+
 
 namespace SMC{
     struct Measurement{

@@ -1,34 +1,33 @@
-#include "misc.h"
-
-using Complex = Complex_t<real_t>;
-using Color = Color_t<real_t>;
-using Rect2 = Rect2_t<real_t>;
-#include "adc.hpp"
-#include "types/quat/Quat_t.hpp"
-#include "src/device/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
-#include "src/nameof.hpp"
-#include "SmartCar/body.hpp"
-#include "SmartCar/elements.hpp"
-#include "SmartCar/fans.hpp"
-
-#include "src/device/Camera/MT9V034/mt9v034.hpp"
 #include <unordered_set>
-#include "SmartCar/finder.hpp"
-#include "SmartCar/cli.hpp"
-#include "enum.hpp"
 #include <map>
-#include "src/bkp/bkp.hpp"
+#include "src/testbench/tb.h"
+
+#include "nvcv2.hpp"
+#include "../drivers/Camera/MT9V034/mt9v034.hpp"
+#include "../drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
+#include "../drivers/Display/DisplayerInterface.hpp"
+#include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
+
+#include "../targets/CH32V20X/src/testbench/tb.h"
+#include "../hal/bkp/bkp.hpp"
+
+#include "../types/quat/Quat_t.hpp"
+#include "../types/vector2/vector2_t.hpp"
+#include "../types/vector3/vector3_t.hpp"
+#include "body.hpp"
+#include "elements.hpp"
+#include "fans.hpp"
+
+#include "finder.hpp"
+#include "cli.hpp"
 
 
-// Gpio & i2cScl = Gpio(GPIOB, (Pin)I2C_SW_SCL);
-// Gpio & i2cSda = Gpio(GPIOB, (Pin)I2C_SW_SDA);
+
 
 constexpr uint32_t SPI1_BaudRate = (144000000/32);
 constexpr uint32_t SPI2_BaudRate = (144000000/8);
 
-    I2cSw i2csw(portB[3], portB[5]);
-
-
+I2cSw i2csw(portB[3], portB[5]);
 Quat accel_offs;
 Vector3 gyro_offs;
 Quat magent_offs;
@@ -105,9 +104,9 @@ using namespace SMC;
 using namespace NVCV2;
 using NVCV2::Shape::CoastFinder;
 using NVCV2::Shape::Seed;
-using NVCV2::Shape::Direction;
+// using NVCV2::Shape
 
-static Printer & logger = uart7;
+static IOStream & logger = uart7;
 real_t measured_offs_err;
 
 auto runStatusReg = bkp[1];
@@ -126,14 +125,14 @@ void printRecordedRunStatus(){
     DEBUG_PRINT(temp._to_string(), id);
 }
 
-SideFan left_fan(timer4[2], timer4[1]);
-SideFan right_fan(timer5[3], timer5[4]);
+SideFan left_fan(timer4.oc(2), timer4.oc(1));
+SideFan right_fan(timer5.oc(3), timer5.oc(4));
 
-SideFan vl_fan(timer4[3], timer4[4]);//pair ok
-SideFan vr_fan(timer5[2], timer5[1]);//pair ok
+SideFan vl_fan(timer4.oc(3), timer4.oc(4));//pair ok
+SideFan vr_fan(timer5.oc(2), timer5.oc(1));//pair ok
 
-ChassisFan chassis_left_fan(timer8[1]);
-ChassisFan chassis_right_fan(timer8[2]);
+ChassisFan chassis_left_fan(timer8.oc(1));
+ChassisFan chassis_right_fan(timer8.oc(2));
 
 HriFanPair hri_fan(vl_fan, vr_fan);
 ChassisFanPair chassis_fan(chassis_left_fan, chassis_right_fan);
@@ -161,7 +160,7 @@ void ctrl(){
     real_t speed_output = speed_ctrl.update();
     // offs_err = offs_err * 0.8 + 0.2 * measured_offs_err;
     // turn_output += speed_ctrl.update();
-    real_t new_x = (Vector2(seed_pos) + (Vector2(real_t(-15.0), real_t(0.0)).rotate(current_dir))).x;
+    real_t new_x = (Vector2(seed_pos) + (Vector2(real_t(-15.0), real_t(0.0)).rotated(current_dir))).x;
     DEBUG_PRINT(SpecToken::Comma, motor_strength.left, motor_strength.right, motor_strength.hri, seed_pos.x, new_x);
     // real_t side_output = side_ctrl.update(0, -offs_err, -accel.y);
 
@@ -178,7 +177,7 @@ void ctrl(){
 
 using namespace SMC;
 
-int main(){
+void smc_main(){
     preinit();
     
     uart4.init(921600);
@@ -220,7 +219,7 @@ int main(){
     tftDisplayer.setFlushDirV(false);
     tftDisplayer.setInversion(true);
 
-    Painter<RGB565> painter = Painter<RGB565>(font8x6);
+    Painter<RGB565> painter = Painter<RGB565>();
     painter.bindImage(tftDisplayer);
 
     i2csw.init(1000000);
@@ -228,15 +227,14 @@ int main(){
     mpu.init();
     qml.init();
 
-    I2cSw SccbSw(portD[2], portC[12]);
-    SccbSw.init(10000);
-    I2cDrv Sccbdrv(SccbSw, 0x5c << 1);
-    MT9V034 camera(Sccbdrv);
+    I2cSw i2c(portD[2], portC[12]);
+    i2c.init(10000);
+    MT9V034 camera(i2c);
 
     auto & start_key = portE[2];
-    start_key.InPullUP();
+    start_key.inpu();
     auto & stop_key = portE[3];
-    stop_key.InPullUP();
+    stop_key.inpu();
 
     {
         uint8_t camera_init_retry_times = 0;
@@ -250,18 +248,18 @@ int main(){
         }
     }
 
-    auto affine_gray_image = make_image(Grayscale, Vector2i(188, 60));
+    auto affine_gray_image = make_image<Grayscale>(Vector2i{188, 60});
     auto affine_bina_image  = make_bina_mirror(affine_gray_image);
-    auto diff_bina_image = make_image(Binary, Vector2i(188, 60));
+    auto diff_bina_image = make_image<Binary>(Vector2i(188, 60));
     auto diff_gray_image = make_gray_mirror(diff_bina_image);
-    auto show_image = make_image(RGB565, Vector2i(188, 60));
+    auto show_image = make_image<RGB565>(Vector2i(188, 60));
 
-    [[maybe_unused]] auto plot_gray = [&](ImageWithData<Grayscale, Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
 
     };
 
-    [[maybe_unused]] auto plot_bina = [&](ImageWithData<Binary, Binary> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_bina = [&](Image<Binary, Binary> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
@@ -432,10 +430,8 @@ int main(){
         gyro_offs = temp_gyro_offs / cali_times;
     }
 
-    while(frame_cnt < 100);
-
-    timer8.bindCb(Timer::IT::Update, std::bind(ctrl));
-    timer8.enableIt(Timer8::IT::Update, NvicPriority{0,0});
+    timer8.bindCb(TimerUtils::IT::Update, std::bind(ctrl));
+    timer8.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
 
     while(true){
         recordRunStatus(RunStatus::NEW_ROUND);
@@ -630,7 +626,7 @@ int main(){
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
-        plot_segment({seed_pos, seed_pos + Vector2(10.0, 0).rotate(-current_dir)}, {0, 0}, RGB565::GRAY);
+        plot_segment({seed_pos, seed_pos + Vector2(10.0, 0).rotated(-current_dir)}, {0, 0}, RGB565::GRAY);
         // DEBUG_PRINT("done plot follow");
 
         // DEBUG_PRINT("a/v points", a_points.size(), v_points.size());

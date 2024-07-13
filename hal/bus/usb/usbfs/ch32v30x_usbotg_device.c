@@ -37,9 +37,9 @@ __attribute__ ((aligned(4))) UINT8 EP1_DatabufHD[64+64];  //ep1_out(64)+ep1_in(6
 __attribute__ ((aligned(4))) UINT8 EP2_DatabufHD[64+64];  //ep2_out(64)+ep2_in(64)
 
 
-PUINT8  pEP0_RAM_Addr;                       //ep0(64)
-PUINT8  pEP1_RAM_Addr;                       //ep1_out(64)+ep1_in(64)
-PUINT8  pEP2_RAM_Addr;                       //ep2_out(64)+ep2_in(64)
+PUINT8  pEP0_RAM_Addr = EP0_DatabufHD;                       //ep0(64)
+PUINT8  pEP1_RAM_Addr = EP1_DatabufHD;                       //ep1_out(64)+ep1_in(64)
+PUINT8  pEP2_RAM_Addr = EP2_DatabufHD;                       //ep2_out(64)+ep2_in(64)
 
 
 const UINT8 *pDescr;

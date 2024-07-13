@@ -1,5 +1,5 @@
 #include "mnist.hpp"
-#include "../nvcv2/pixels.hpp"
+#include "../pixels/pixels.hpp"
 
 #define MDL_BUF_LEN (960)
 #define LBUF_LEN (360)
