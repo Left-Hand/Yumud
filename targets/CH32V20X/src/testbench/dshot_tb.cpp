@@ -1,7 +1,7 @@
 #include "tb.h"
 
 static constexpr size_t n = 40;
-static uint16_t data[40];
+static std::array<uint16_t, 40> data;
 
 
 [[maybe_unused]] static uint16_t m_crc(uint16_t data_in){
@@ -98,25 +98,51 @@ void TIM1_DMA_Init(DMA_Channel_TypeDef *DMA_CHx, u32 ppadr, u32 memadr, u16 bufs
 }
 
 void dshot_tb(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
+    TIM1_PWMOut_Init(2340-1, 0, 0);
 
-
-    // dma2Ch3.init(DmaChannel::Mode::toPeriphCircular, DmaChannel::Priority::ultra);
-    // dma2Ch3.begin((void *)&oc.cnt(), (const void *)data.begin(), data.size());
-    // dma2Ch3.configDataBytes(2);
-    // oc.enableDma();
+    const uint32_t addr1 = (u32)(void *)&(TIM8->CH1CVR);
+    const uint32_t addr2 =  (u32)(void *)&(TIM8->CH2CVR);
+    TIM1_DMA_Init(DMA2_Channel3, addr1, (u32)data.begin(), data.size());
+    TIM1_DMA_Init(DMA2_Channel5, addr2, (u32)data.begin(), data.size());
+    TIM_DMACmd(TIM8, TIM_DMA_CC1, ENABLE);
+    TIM_DMACmd(TIM8, TIM_DMA_CC2, ENABLE);
+    TIM_Cmd(TIM8, ENABLE);
+    TIM_CtrlPWMOutputs(TIM8, ENABLE);
 
     while(true){
+        transfer(m_crc(0));
+        delay(150);
+        transfer(m_crc(300));
+        delay(100);
+        transfer(m_crc(1500));
+        logger.println(millis());
+    }
+
+    auto setup = [](TimerOC & oc, DmaChannel & channel){
+        channel.init(DmaChannel::Mode::toPeriphCircular, DmaChannel::Priority::ultra);
+        oc.enableDma();
+        channel.begin((uint16_t *)&oc.cnt(), data.begin(), data.size());
+    };
+
+    setup(oc1, dma2Ch3);
+    setup(oc2, dma2Ch5);
+
+    while(true){
+        transfer(m_crc(300));
+        delay(100);
+        transfer(m_crc(1500));
+        delay(100);
         // transfer(m_crc(0));
         // oc.cvr() = int(220 * (sin(t) * 0.5 + 0.5));
         // oc1 = cos(t) * 0.5 + 0.5;
-        real_t a = 8 * t;
-        real_t c = cos(a);
-        real_t s = sin(a);
+        // real_t a = 8 * t;
+        // real_t c = cos(a);
+        // real_t s = sin(a);
         // oc1 = 0;
         // oc1.io() = (c * 0.5 + 0.5) > 0.5;
-        oc1 = (c * 0.5 + 0.5);
+        // oc1 = (c * 0.5 + 0.5);
         // oc1 = 0;
-        oc2 = s * 0.5 + 0.5;
+        // oc2 = s * 0.5 + 0.5;
         // oc1.io() = (s * 0.5 + 0.5) > 0.5;
         // oc2 = (0);
         // delay(1);
@@ -156,6 +182,7 @@ void dshot_main(){
     const uint32_t freq = 200;
     // timer1.init(freq);
     // TIM1_CH1_Gpio
+
     AdvancedTimer & timer = timer8;
     timer.init(freq);
     // auto & oc = timer1.oc(1);
@@ -201,23 +228,5 @@ void dshot_main(){
     // dshot_tb(logger, oc);
 
 
-    TIM1_PWMOut_Init(234-1, 0, 0);
 
-    const uint32_t addr1 = (u32)(void *)&(TIM8->CH1CVR);
-    const uint32_t addr2 =  (u32)(void *)&(TIM8->CH2CVR);
-    TIM1_DMA_Init(DMA2_Channel3, addr1, (u32)data, 40);
-    TIM1_DMA_Init(DMA2_Channel5, addr2, (u32)data, 40);
-    TIM_DMACmd(TIM8, TIM_DMA_CC1, ENABLE);
-    TIM_DMACmd(TIM8, TIM_DMA_CC2, ENABLE);
-    TIM_Cmd(TIM8, ENABLE);
-    TIM_CtrlPWMOutputs(TIM8, ENABLE);
-
-    while(true){
-        transfer(m_crc(0));
-        delay(150);
-        transfer(m_crc(300));
-        delay(100);
-        transfer(m_crc(1500));
-        logger.println(millis());
-    }
 }
