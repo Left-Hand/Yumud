@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../src/testbench/tb.h"
+#include "src/testbench/tb.h"
 
 #pragma pack(push, 1)
 struct TransType{

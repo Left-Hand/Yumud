@@ -20,18 +20,18 @@ protected:
             case 1:
                 switch(psel){
                     case 0:
-                        return OPA1_P0_Gpio;
+                        return OPA1_P0_GPIO;
                     case 1:
-                        return OPA1_P1_Gpio;
+                        return OPA1_P1_GPIO;
                 }
             #endif
             #ifdef HAVE_OPA2
             case 2:
                 switch(psel){
                     case 0:
-                        return OPA2_P0_Gpio;
+                        return OPA2_P0_GPIO;
                     case 1:
-                        return OPA2_P1_Gpio;
+                        return OPA2_P1_GPIO;
                 }
             #endif
             default:
@@ -45,18 +45,18 @@ protected:
             case 1:
                 switch(psel){
                     case 0:
-                        return OPA1_N0_Gpio;
+                        return OPA1_N0_GPIO;
                     case 1:
-                        return OPA1_N1_Gpio;
+                        return OPA1_N1_GPIO;
                 }
             #endif
             #ifdef HAVE_OPA2
             case 2:
                 switch(psel){
                     case 0:
-                        return OPA2_N0_Gpio;
+                        return OPA2_N0_GPIO;
                     case 1:
-                        return OPA2_N1_Gpio;
+                        return OPA2_N1_GPIO;
                 }
             #endif
             default:
@@ -71,18 +71,18 @@ protected:
             case 1:
                 switch(psel){
                     case 0:
-                        return OPA1_O0_Gpio;
+                        return OPA1_O0_GPIO;
                     case 1:
-                        return OPA1_O1_Gpio;
+                        return OPA1_O1_GPIO;
                 }
             #endif
             #ifdef HAVE_OPA2
             case 2:
                 switch(psel){
                     case 0:
-                        return OPA2_O0_Gpio;
+                        return OPA2_O0_GPIO;
                     case 1:
-                        return OPA2_O1_Gpio;
+                        return OPA2_O1_GPIO;
                 }
             #endif
             default:

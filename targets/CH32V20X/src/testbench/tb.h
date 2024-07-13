@@ -4,6 +4,7 @@
 
 #include "../../sys/core/platform.h"
 #include "../../hal/flash/flash.hpp"
+#include "../../hal/timer/timer.hpp"
 #include "../../hal/timer/instance/timer_hw.hpp"
 // #include "../hal/rng/rng.hpp"
 
@@ -167,3 +168,5 @@ void dshot_main();
 void at24cxx_tb(OutputStream & logger, I2c & i2c);
 
 void dshot_main();
+
+void calc_main();

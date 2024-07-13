@@ -21,10 +21,11 @@ public:
 protected:
     volatile uint16_t & m_cvr;
     volatile uint16_t & m_arr;
+    __fast_inline volatile uint16_t cnt() const {return instance->CNT;}
 public:
     TimerOC(TIM_TypeDef * _instance, const Channel _channel):TimerOut(_instance, _channel), m_cvr(from_channel_to_cvr(_channel)), m_arr(instance->ATRLR){;}
 
-    void init() override{init(Mode::UpValid);}
+    void init() override{init(Mode::UpValid, true);}
     void init(const Mode mode, const bool install = true);
     void setMode(const Mode _mode);
 
@@ -34,7 +35,6 @@ public:
     __fast_inline operator real_t(){return real_t(m_cvr) / real_t(m_arr);}
     __fast_inline volatile uint16_t & cnt() override {return instance->CNT;}
 
-    __fast_inline volatile uint16_t cnt() const {return instance->CNT;}
     __fast_inline volatile uint16_t & cvr() override {return m_cvr;}
     __fast_inline volatile uint16_t & arr() override {return m_arr;}
 };

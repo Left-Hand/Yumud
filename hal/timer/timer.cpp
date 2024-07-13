@@ -101,9 +101,11 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
     // TODO
 
     uint16_t cycle = 1;
-    while(raw_period / cycle > 16384){
+    while(raw_period > 16384 * cycle){
         cycle++;
     }
+
+    if(raw_period / cycle == 0) CREATE_FAULT;
 
     init(raw_period / cycle, cycle, mode, en);
 }

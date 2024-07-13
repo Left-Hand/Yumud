@@ -2,13 +2,13 @@
 
 #define __PRINTABLE_HPP__
 
-#include "../sys/core/platform.h"
+#include "../sys/core/system.hpp"
 #include "../types/buffer/buffer.hpp"
 #include "../types/string/String.hpp"
+#include "string_utils.hpp"
 
 #include <vector>
 #include <array>
-
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -61,16 +61,18 @@ public:
 };
 
 class OutputStream: virtual public BasicStream{
-protected:
-    String space = ", ";
+private:
+    void write(const char * data_ptr){
+        for(size_t i=0;data_ptr[i] != 0; i++) write(data_ptr[i]);
+	}
+public:
     uint8_t radix = 10;
     uint8_t eps = 2;
+protected:
+    String space = ", ";
+
     bool skipSpec = false;
 
-    void printString(const String & str){write(str.c_str(), str.length());}
-    void printString(const std::string & str){write(str.c_str(), str.length());}
-    void printString(const std::string_view & str){write(str.data(), str.length());}
-    void printString(const char * str){write(str, strlen(str));}
 public:
 
     virtual void write(const char data) = 0;
@@ -80,33 +82,37 @@ public:
 
     virtual size_t pending() const = 0;
 
-    void setSpace(const String & _space){space = _space;}
-    void setRadix(const uint8_t & _radix){radix = _radix;}
-    void setEps(const uint8_t & _eps){eps = _eps;}
+    void setSpace(const String _space){space = _space;}
+    void setRadix(const uint8_t _radix){radix = _radix;}
+    void setEps(const uint8_t _eps){eps = _eps;}
 
-    OutputStream & operator<<(uint8_t val){printString(String((unsigned long long)val, radix)); return *this;}
-    OutputStream & operator<<(uint16_t val){printString(String((unsigned long long)val, radix)); return *this;}
-    OutputStream & operator<<(uint32_t val){printString(String((unsigned long long)val, radix)); return *this;}
-    OutputStream & operator<<(uint64_t val){printString(String((unsigned long long)val, radix)); return *this;}
 
-    OutputStream & operator<<(int8_t val){printString(String((long long)val, radix)); return *this;}
-    OutputStream & operator<<(int16_t val){printString(String((long long)val, radix)); return *this;}
-    OutputStream & operator<<(int32_t val){printString(String((long long)val, radix)); return *this;}
-    OutputStream & operator<<(int64_t val){printString(String((long long)(val), radix)); return *this;}
+    template<typename T>
+    requires std::is_integral_v<T> && (sizeof(T) <= 4)
+    OutputStream & operator<<(const T val){
+        char str[12];
+        StringUtils::itoa(val, str, this->radix);
+        return *this << str;
+    }
 
+    template<integral_64 T>
+    OutputStream & operator<<(const T val){
+        char str[24];
+        StringUtils::iutoa(val, str, this->radix);
+        return *this << str;
+    }
+
+    // template<>
     OutputStream & operator<<(bool val){write(val ? '1' : '0'); return *this;}
-    OutputStream & operator<<(int val){printString(String(val, radix)); return *this;}
-    OutputStream & operator<<(unsigned int val){printString(String(val, radix)); return *this;}
-    OutputStream & operator<<(float val){printString(String(val, eps)); return *this;}
-    OutputStream & operator<<(double val){printString(String(val, eps)); return *this;}
-
+    // template<>
     OutputStream & operator<<(const char chr){write(chr); return *this;}
+    // template<>
     OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
-    OutputStream & operator<<(char* pStr){printString(String(pStr)); return *this;}
-    OutputStream & operator<<(const char* pStr){printString(String(pStr)); return *this;}
-    OutputStream & operator<<(const String & str){printString(str); return *this;}
-    OutputStream & operator<<(const std::string & str){printString(str); return *this;}
-    OutputStream & operator<<(const std::string_view & str){printString(str); return * this;}
+    OutputStream & operator<<(char* str){write(str); return *this;}
+    OutputStream & operator<<(const char* str){write(str); return *this;}
+    OutputStream & operator<<(const String & str){write(str.c_str()); return *this;}
+    OutputStream & operator<<(const std::string & str){write(str.c_str()); return *this;}
+    OutputStream & operator<<(const std::string_view & str){write(str.data(), str.length()); return * this;}
 
     OutputStream & operator<<(const SpecToken & spec);
 
@@ -144,8 +150,8 @@ public:
         return *this;
     }
 
-    template<typename T>
-    requires (!std::is_pointer_v<T>)
+
+    template<StringUtils::HasToString T>
     OutputStream & operator<<(const T & misc){*this << misc.toString(eps); return *this;}
 
 

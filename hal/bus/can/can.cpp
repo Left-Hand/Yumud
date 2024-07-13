@@ -74,14 +74,14 @@ __fast_inline static void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbo
 
 Gpio & Can::getTxGpio(){
     #ifdef HAVE_CAN1
-    return CAN1_TX_Gpio;
+    return CAN1_TX_GPIO;
     #endif
     return GpioNull;
 }
 
 Gpio & Can::getRxGpio(){
     #ifdef HAVE_CAN1
-    return CAN1_RX_Gpio;
+    return CAN1_RX_GPIO;
     #endif
     return GpioNull;
 }

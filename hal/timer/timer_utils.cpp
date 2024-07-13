@@ -143,19 +143,19 @@ Gpio & TimerUtils::getPin(const TIM_TypeDef * instance, const Channel channel){
         switch(channel){\
             default:\
             case Channel::CH1:\
-                return TIM##x##_CH1_Gpio;\
+                return TIM##x##_CH1_GPIO;\
             case Channel::CH1N:\
-                return TIM##x##_CH1N_Gpio;\
+                return TIM##x##_CH1N_GPIO;\
             case Channel::CH2:\
-                return TIM##x##_CH2_Gpio;\
+                return TIM##x##_CH2_GPIO;\
             case Channel::CH2N:\
-                return TIM##x##_CH2N_Gpio;\
+                return TIM##x##_CH2N_GPIO;\
             case Channel::CH3:\
-                return TIM##x##_CH3_Gpio;\
+                return TIM##x##_CH3_GPIO;\
             case Channel::CH3N:\
-                return TIM##x##_CH3N_Gpio;\
+                return TIM##x##_CH3N_GPIO;\
             case Channel::CH4:\
-                return TIM##x##_CH4_Gpio;\
+                return TIM##x##_CH4_GPIO;\
         }\
         break;\
 
@@ -164,13 +164,13 @@ Gpio & TimerUtils::getPin(const TIM_TypeDef * instance, const Channel channel){
         switch(channel){\
             default:\
             case Channel::CH1:\
-                return TIM##x##_CH1_Gpio;\
+                return TIM##x##_CH1_GPIO;\
             case Channel::CH2:\
-                return TIM##x##_CH2_Gpio;\
+                return TIM##x##_CH2_GPIO;\
             case Channel::CH3:\
-                return TIM##x##_CH3_Gpio;\
+                return TIM##x##_CH3_GPIO;\
             case Channel::CH4:\
-                return TIM##x##_CH4_Gpio;\
+                return TIM##x##_CH4_GPIO;\
         }\
         break;\
 

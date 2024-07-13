@@ -1,4 +1,5 @@
-#include "../sys/core/platform.h"
+#include "../sys/core/system.hpp"
+#include "../sys/kernel/clock.h"
 #include "../types/real.hpp"
 #include "../hal/bus/bus_inc.h"
 #include "../hal/timer/instance/timer_hw.hpp"
@@ -38,6 +39,7 @@ enum class CaliProgress:uint8_t{
 }caliProgress;
 int16_t Calibrattion_Val;
 
+using Sys::t;
 // constexpr int pwmFreq = 67000;
 // constexpr auto adc_sample_cycles = ADC_SampleTime_28Cycles5;
 // constexpr float sample_ticks = -14;
@@ -87,7 +89,6 @@ constexpr int window_cvr = (window_time / arr_time * pwmArr);
 constexpr float shunt_res = (0.03);
 constexpr float shunt_magnification = 100 * over_sample_times;
 
-real_t t = real_t(0);
 real_t cur = real_t(0);
 real_t uDuty, vDuty, wDuty;
 real_t dDuty = real_t(0);

@@ -7,6 +7,8 @@
 #include "string.h"
 #include "String.hpp"
 
+#include <concepts>
+
 class String;
 
 namespace StringUtils {
@@ -30,8 +32,12 @@ float stof(const char * str);
 
 template<typename real>
 String type_to_string();
-}
 
+template<typename T>
+concept HasToString = requires(T t, unsigned char eps) {
+    { t.toString(eps) } -> std::convertible_to<String>;
+};
+}
 template <typename T>
 String toString(const T & value, const uint8_t & eps);
 #endif

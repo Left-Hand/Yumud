@@ -3,7 +3,8 @@
 #define __IQT_HPP__
 
 
-#include "stdint.h"
+#include "../../sys/core/system.hpp"
+#include "../../sys/kernel/stream.hpp"
 
 #include "extra_convs.hpp"
 #include "../../dsp/constexprmath/ConstexprMath.hpp"
@@ -199,6 +200,8 @@ public:
         }
     }
 
+
+
     __no_inline explicit operator String() const;
     String toString(unsigned char eps = 3) const;
 };
@@ -226,6 +229,8 @@ IQ_OPS_TEMPLATE(double);
 // IQ_OPS_TEMPLATE(int16_t);
 // IQ_OPS_TEMPLATE(int32_t);
 
+
+OutputStream & operator<<(OutputStream & os, const iq_t value);
 
 #define IQ_BINA_TEMPLATE(type, op)\
 __fast_inline_constexpr bool operator op (const type val, const iq_t iq_v) {\
@@ -326,11 +331,11 @@ __fast_inline_constexpr iq_t sqrt(const iq_t iq){
 }
 
 __fast_inline_constexpr iq_t abs(const iq_t iq){
-        if(long(iq.value) > 0){
-            return iq;
-        }else{
-            return -iq;
-        }
+    if(long(iq.value) > 0){
+        return iq;
+    }else{
+        return -iq;
+    }
 }
 
 __fast_inline_constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
@@ -363,6 +368,7 @@ __fast_inline_constexpr iq_t frac(const iq_t iq){
 }
 
 __fast_inline_constexpr iq_t floor(const iq_t iq){return int(iq);}
+__fast_inline_constexpr iq_t ceil(const iq_t iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
 
 __fast_inline_constexpr iq_t round(const iq_t iq){return iq_t((int)_IQint(long(iq.value) + _IQ(0.5)));}
 
@@ -485,6 +491,7 @@ namespace std{
     __fast_inline_constexpr iq_t mean(const iq_t a, const iq_t b){return ::mean(a, b);}
     __fast_inline_constexpr iq_t frac(const iq_t iq){return ::frac(iq);}
     __fast_inline_constexpr iq_t floor(const iq_t iq){return ::floor(iq);}
+    __fast_inline_constexpr iq_t ceil(const iq_t iq){return ::ceil(iq);}
 
     #ifdef IQ_USE_LOG
     __fast_inline_constexpr iq_t log10(const iq_t iq){return ::log10(iq);}

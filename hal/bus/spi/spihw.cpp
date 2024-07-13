@@ -28,9 +28,9 @@ Gpio & SpiHw::get##name##Pin(){\
     switch((uint32_t)instance){\
         default:\
         case SPI1_BASE:\
-            return SPI1_##upper##_Gpio;\
+            return SPI1_##upper##_GPIO;\
         case SPI2_BASE:\
-            return SPI2_##upper##_Gpio;\
+            return SPI2_##upper##_GPIO;\
     }\
 }\
 
@@ -42,7 +42,7 @@ Gpio & SpiHw::get##name##Pin(){\
     switch((uint32_t)instance){\
         default:\
         case SPI1_BASE:\
-            return SPI1_##upper##_Gpio;\
+            return SPI1_##upper##_GPIO;\
     }\
 }\
 
@@ -54,7 +54,7 @@ Gpio & SpiHw::get##name##Pin(){\
     switch((uint32_t)instance){\
         default:\
         case SPI2_BASE:\
-            return SPI2_##upper##_Gpio;\
+            return SPI2_##upper##_GPIO;\
     }\
 }\
 

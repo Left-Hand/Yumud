@@ -4,7 +4,7 @@
 
 #include "../hal/bus/bus_inc.h"
 #include "../sys/kernel/clock.h"
-#include "../src/defines/user_defs.h"
+#include "src/defines/user_defs.h"
 
 #ifndef VOFA_PRINT
 #define VOFA_PRINT(...) LOGGER.println(__VA_ARGS__);
@@ -36,11 +36,7 @@
 #define DEBUG_VALUE(value, ...) DEBUG_PRINT("[V]", #value, "is", value, ##__VA_ARGS__)
 #endif
 
-#ifdef __riscv
-#define CREATE_FAULT asm("csrrw zero, mstatus, zero");
-#else
-#error "Not supported architecture"
-#endif
+
 
 #define RUN_TIME_DEBUG
 

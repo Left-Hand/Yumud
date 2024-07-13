@@ -133,6 +133,11 @@ public:
 
 };
 
-typedef Vector3_t<real_t> Vector3;
+using Vector3 = Vector3_t<real_t>;
+using Vector3i = Vector3_t<int>;
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const Vector3_t<auto> & value){
+    return os << '(' << value.x << ',' << value.y << ',' << value.z << ')';
+}
 
 #endif

@@ -36,8 +36,6 @@
 #define M_RCC_CLK_GETTER RCC_GetClocksFreq
 #endif
 
-real_t Sys::t;
-
 void Sys::Clock::delayMs(const uint32_t ms){
     delay(ms);
 }
@@ -96,19 +94,12 @@ void Sys::Misc::reset(){
 
 void Sys::Clock::reCalculateTime(){
         #ifdef USE_IQ
-        // t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
-        // t.value = (micros() / 100) * (int)(0.0001 * (1 << GLOBAL_Q));
         t.value = _iq((micros() * (1 << GLOBAL_Q)) / 1000000);
         #else
         t = msTick * (1 / 1000.0f);
         #endif
     }
 
-
-real_t Sys::Clock::getCurrentSeconds(){
-        // reCalculateTime();
-        return t;
-    }
 
 uint64_t Sys::Chip::getChipId(){
     static uint32_t chip_id[2] = {

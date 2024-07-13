@@ -40,7 +40,7 @@ public:
 
     real_t getPosition(){
         // return instance.getPosition();
-        return positionObserver.predict(Sys::Clock::getCurrentSeconds());
+        return positionObserver.predict(t);
     }
 
     real_t getSpeed(){

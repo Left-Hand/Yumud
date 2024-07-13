@@ -150,6 +150,8 @@ public:
         }
     }
 
+
+
     Rect2_t<T> form_rect() const {
         return Rect2_t<T>(Vector2_t<T>(), *this);
     }
@@ -162,9 +164,12 @@ public:
 
 #include "vector2_t.tpp"
 
-typedef Vector2_t<float> Vector2f;
-typedef Vector2_t<int> Vector2i;
+using Vector2f = Vector2_t<float>;
+using Vector2i = Vector2_t<int>;
 using Point = Vector2i;
-typedef Vector2_t<real_t> Vector2;
+using Vector2 = Vector2_t<real_t>;
 
+__fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
+    return os << '(' << value.x << ',' << value.y << ')';
+}
 #endif

@@ -51,7 +51,7 @@
 #include "sdk/n32g45x/CMSIS/device/n32g45x.h"
 #endif
 
-#include "defines/defs.h"
+#include "src/defines/defs.h"
 
 
 #if defined(USE_CH32V3_STD_LIB) || defined(USE_CH32V2_STD_LIB)
@@ -67,6 +67,27 @@
 template<typename T>
 concept arithmetic = std::is_arithmetic_v<T>;
 
+template<typename T>
+concept integral = std::is_integral_v<T>;
+
+template<typename T>
+concept integral_32 = std::is_integral_v<T> && sizeof(T) == 4;
+
+
+template<typename T>
+concept integral_s32 = integral_32<T> && std::is_signed_v<T>;
+
+template<typename T>
+concept integral_u32 = integral_32<T> && std::is_unsigned_v<T>;
+
+template<typename T>
+concept integral_64 = std::is_integral_v<T> && sizeof(T) == 8;
+
+template<typename T>
+concept integral_s64 = integral_64<T> && std::is_signed_v<T>;
+
+template<typename T>
+concept integral_u64 = integral_64<T> && std::is_unsigned_v<T>;
 
 __fast_inline uint64_t operator"" _KHz(uint64_t x){
     return x * 1000;
