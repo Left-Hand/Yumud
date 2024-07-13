@@ -8,7 +8,7 @@
 void ad9959_main(){
     auto & cs_gpio = portA[0];
 
-    SpiSw spisw{SPI1_SCLK_Gpio, SPI1_MOSI_Gpio, SPI1_MISO_Gpio, SPI1_CS_Gpio};
+    SpiSw spisw{SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO, SPI1_CS_GPIO};
     auto & spi = spisw;
     spi.init(100000);//maxium buad
     spi.configBitOrder(LSB);

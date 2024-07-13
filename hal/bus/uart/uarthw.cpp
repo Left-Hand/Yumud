@@ -344,35 +344,35 @@ Gpio & UartHw::getRxPin(){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            return UART1_RX_Gpio;
+            return UART1_RX_GPIO;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            return UART2_RX_Gpio;
+            return UART2_RX_GPIO;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-            return UART3_RX_Gpio;
+            return UART3_RX_GPIO;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            return UART4_RX_Gpio;
+            return UART4_RX_GPIO;
         #endif
         #ifdef HAVE_UART5
         case UART5_BASE:
-            return UART5_RX_Gpio;
+            return UART5_RX_GPIO;
         #endif
         #ifdef HAVE_UART6
         case UART6_BASE:
-            return UART6_RX_Gpio;
+            return UART6_RX_GPIO;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-            return UART7_RX_Gpio;
+            return UART7_RX_GPIO;
         #endif
         #ifdef HAVE_UART8
         case UART8_BASE:
-            return UART8_RX_Gpio;
+            return UART8_RX_GPIO;
         #endif
         default:
             return GpioNull;
@@ -383,35 +383,35 @@ Gpio & UartHw::getTxPin(){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            return UART1_TX_Gpio;
+            return UART1_TX_GPIO;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            return UART2_TX_Gpio;
+            return UART2_TX_GPIO;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-            return UART3_TX_Gpio;
+            return UART3_TX_GPIO;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            return UART4_TX_Gpio;
+            return UART4_TX_GPIO;
         #endif
         #ifdef HAVE_UART5
         case UART5_BASE:
-            return UART5_TX_Gpio;
+            return UART5_TX_GPIO;
         #endif
         #ifdef HAVE_UART6
         case UART6_BASE:
-            return UART6_TX_Gpio;
+            return UART6_TX_GPIO;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-            return UART7_TX_Gpio;
+            return UART7_TX_GPIO;
         #endif
         #ifdef HAVE_UART8
         case UART8_BASE:
-            return UART8_TX_Gpio;
+            return UART8_TX_GPIO;
         #endif
         default:
             return GpioNull;

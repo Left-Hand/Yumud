@@ -3,6 +3,7 @@
 #include "../hal/gpio/port.hpp"
 #include "../hal/timer/timer_utils.hpp"
 #include "../hal/timer/pwm/pwm_channel.hpp"
+#include "../hal/dma/dma.hpp"
 
 
 
@@ -11,6 +12,8 @@ public:
     using Channel = TimerUtils::Channel;
 
     void enableDma(const bool en = true);
+
+    DmaChannel & dma() const;
 protected:
     TIM_TypeDef * instance;
     const Channel channel;

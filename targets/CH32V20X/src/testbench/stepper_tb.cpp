@@ -120,8 +120,8 @@ void stepper_tb(IOStream & logger){
     using TimerUtils::IT;
     logger.setEps(4);
 
-    auto & ena_gpio = TIM3_CH3_Gpio;
-    auto & enb_gpio = TIM3_CH2_Gpio;
+    auto & ena_gpio = TIM3_CH3_GPIO;
+    auto & enb_gpio = TIM3_CH2_GPIO;
     AT8222 coilA{timer1.oc(3), timer1.oc(4), ena_gpio};
     AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio};
 

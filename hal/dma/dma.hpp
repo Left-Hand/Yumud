@@ -165,8 +165,6 @@ public:
         DMA_Cmd(instance, ENABLE);
     }
 
-    void test(u32 ppadr, u32 memadr, u16 bufsize);
-
     void begin(void * dst, const void * src, size_t size);
     template <typename T>
     void begin(T * dst, const T * src, size_t size){

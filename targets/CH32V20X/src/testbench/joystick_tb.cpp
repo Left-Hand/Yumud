@@ -11,7 +11,7 @@ void joystick_tb(OutputStream & logger){
 
     //  using [[maybe_unused]] Event = Ps2Joystick::JoyStickEvent;
 
-    SpiSw spisw{SPI1_SCLK_Gpio, SPI1_MOSI_Gpio, SPI1_MISO_Gpio, SPI1_CS_Gpio};
+    SpiSw spisw{SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO, SPI1_CS_GPIO};
     auto & spi = spisw;
     spi.init(100000);//maxium buad
     spi.configBitOrder(LSB);
@@ -21,7 +21,7 @@ void joystick_tb(OutputStream & logger){
     joystick.init();
 
     while(true){
-        // SPI1_MISO_Gpio = !SPI1_MISO_Gpio;
+        // SPI1_MISO_GPIO = !SPI1_MISO_GPIO;
         // logger.println("??");
         joystick.update();
         logger.println(joystick.getLeftJoystick(),joystick.getRightJoystick(), joystick.getLeftDirection(), (uint8_t)joystick.id());

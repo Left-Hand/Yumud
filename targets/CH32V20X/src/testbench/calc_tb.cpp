@@ -236,7 +236,7 @@ class
 			
 		bool
 			in_string(char c,string s){
-				for(int i = 0;i < s.size();i++)
+				for(int i = 0;i < (int)s.size();i++)
 					if (s[i] == c)
 						return
 							1;
@@ -269,7 +269,7 @@ class
 							if (registered_symbols[i].sym.size() > expr.size() - x)
 								continue;
 							cnt = 0;
-							for(int j = 0;j < registered_symbols[i].sym.size();j++)
+							for(int j = 0;j < (int)registered_symbols[i].sym.size();j++)
 								if (registered_symbols[i].sym[j] == expr[j + x])
 									cnt++;
 								else
@@ -436,7 +436,7 @@ class
 					(tokens[0].sym == "-" || tokens[0].sym == "+"))
 						tokens.insert(tokens.begin(),make_symb("$number",0,-1,-1,0));
 						
-				for(int i = 1;i < tokens.size();i++){
+				for(int i = 1;i < (int)tokens.size();i++){
 					if ((tokens[i - 1].sym == "(" || tokens[i - 1].sym == "="
 					  || tokens[i - 1].sym == "!=" || tokens[i - 1].sym == ">=" ||
 					  tokens[i - 1].sym == "<=" || tokens[i - 1].sym == "==" ||
@@ -520,7 +520,7 @@ class
 					return;
 				}
 					
-				for(int i = 0;i < tokens.size();i++){
+				for(int i = 0;i < (int)tokens.size();i++){
 					
 					if (test_mode){
 						logger << "Now token = " << i << endl;
@@ -635,8 +635,8 @@ class
 									}
 									c.clear();
 									
-									for(int j = 0;j < max(a.size(),b.size());j++){
-										if (j >= min(a.size(),b.size())
+									for(int j = 0;j < max((int)a.size(),(int)b.size());j++){
+										if (j >= min((int)a.size(),(int)b.size())
 										&& (a.size() != 1 && b.size() != 1))
 											break;
 										if (a.size() == 1)
@@ -819,7 +819,7 @@ class
 									if (temp.sym == "Sort"){
 										flag = 0;
 										tv.clear();
-										for(int j = 0;j < a.size();j++)
+										for(int j = 0;j < (int)a.size();j++)
 											if (a[j].typ == 0)
 												tv.push_back(a[j].val);
 											else{
@@ -829,7 +829,7 @@ class
 										a.clear();
 										if (!flag){
 											sort(tv.begin(),tv.end());
-											for(int j = 0;j < tv.size();j++)
+											for(int j = 0;j < (int)tv.size();j++)
 												a.push_back(make_symb("$number",0,-1,-1,tv[j]));
 										}else{
 											err_msg.push_back(make_pair(temp.pos,"Error : Mismatch object types."));
@@ -839,7 +839,7 @@ class
 									else if (temp.sym == "StringSort"){
 										flag = 0;
 										tsv.clear();
-										for(int j = 0;j < a.size();j++)
+										for(int j = 0;j < (int)a.size();j++)
 											if (a[j].typ == 6)
 												tsv.push_back(a[j].dat);
 											else{
@@ -849,7 +849,7 @@ class
 										a.clear();
 										if (!flag){
 											sort(tsv.begin(),tsv.end());
-											for(int j = 0;j < tsv.size();j++)
+											for(int j = 0;j < (int)tsv.size();j++)
 												a.push_back(make_symb(tsv[j],6,-1,-1,0));
 										}else{
 											err_msg.push_back(make_pair(temp.pos,"Error : Mismatch object types."));
@@ -862,7 +862,7 @@ class
 											flag = 1;
 										else
 											ta = a[0].val;
-										for(int j = 1;!flag && j < a.size();j++)
+										for(int j = 1;!flag && j < (int)a.size();j++)
 											if (a[j].typ == 0){
 												if (a[j].val > ta)
 													ta = a[j].val;
@@ -882,7 +882,7 @@ class
 											flag = 1;
 										else
 											ta = a[0].val;
-										for(int j = 1;!flag && j < a.size();j++)
+										for(int j = 1;!flag && j < (int)a.size();j++)
 											if (a[j].typ == 0){
 												if (a[j].val < ta)
 													ta = a[j].val;
@@ -1138,7 +1138,7 @@ class
 									}
 									else if (temp.sym == "Delete"){
 										flag = 1;
-										for(int j = 0;j < a.size();j++)
+										for(int j = 0;j < (int)a.size();j++)
 											if (a[j].typ == 5 || a[j].typ == 9){
 												vars[vars.size() - 1].erase(a[j].sym);
 											}else{
@@ -1218,11 +1218,11 @@ class
 									}
 									else if (temp.sym == "Reduce"){
 										d.clear();
-										for(int j = 0;j < a.size();j++)
+										for(int j = 0;j < (int)a.size();j++)
 											if (a[j].typ != 7)
 												d.push_back(a[j]);
 										a.clear();
-										for(int j = 0;j < d.size();j++)
+										for(int j = 0;j < (int)d.size();j++)
 											a.push_back(d[j]);
 									}
 									else if (temp.sym == "Sum"){
@@ -1402,14 +1402,14 @@ class
 										}
 									}
 									else if (temp.sym == "Print"){
-										for(int j = 0;j < a.size();j++)
+										for(int j = 0;j < (int)a.size();j++)
 											if (a[j].typ == 6 || a[j].typ == 9)
 												logger << a[j].dat;
 											else
 												logger << a[j].val;
 									}
 									else if (temp.sym == "Input"){
-										for(int j = 0;j < a.size();j++){
+										for(int j = 0;j < (int)a.size();j++){
 											if (a[j].typ != 9 && a[j].typ != 5)
 												err_msg.push_back(make_pair(temp.pos,"Error : Mismatch argument type."));
 											else{
@@ -1433,14 +1433,14 @@ class
 									}
 									else if (temp.sym == "Length"){
 										tv.clear();
-										for(int j = 0;j < a.size();j++){
+										for(int j = 0;j < (int)a.size();j++){
 											if (a[j].typ == 9 || a[j].typ == 6)
 												tv.push_back(a[j].dat.size());
 											else
 												err_msg.push_back(make_pair(temp.pos,"Error : Mismatch argument type."));
                                         }
 										a.clear();
-										for(int j = 0;j < tv.size();j++){
+										for(int j = 0;j < (int)tv.size();j++){
 											a.push_back(make_symb("$number",0,-1,-1,tv[j]));
                                         }
 									}
@@ -1473,14 +1473,14 @@ class
 										}
 									}
 									else if (temp.sym == "Type"){
-										for(int j = 0;j < a.size();j++){
+										for(int j = 0;j < (int)a.size();j++){
 											a[j].val = a[j].typ;
 											a[j].sym = "$number";
 											a[j].typ = 0;
 										}
 									}
 									else{
-										for(int j = 0;j < a.size();j++){
+										for(int j = 0;j < (int)a.size();j++){
 											if (!a[j].typ || a[j].typ == 4 || a[j].typ == 5){
 												ta = a[j].val;
 												if (temp.sym == "Sin")
