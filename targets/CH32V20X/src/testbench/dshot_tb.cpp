@@ -98,16 +98,16 @@ void TIM1_DMA_Init(DMA_Channel_TypeDef *DMA_CHx, u32 ppadr, u32 memadr, u16 bufs
 }
 
 void dshot_tb(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
-    TIM1_PWMOut_Init(2340-1, 0, 0);
+    auto setup = [](TimerOC & oc, DmaChannel & channel){
+        channel.init(DmaChannel::Mode::toPeriphCircular, DmaChannel::Priority::ultra);
+        channel.begin((void *)&oc.cvr(), (void *)data.begin(), data.size());
+        oc.init();
+        oc.enableDma();
+    };
 
-    const uint32_t addr1 = (u32)(void *)&(TIM8->CH1CVR);
-    const uint32_t addr2 =  (u32)(void *)&(TIM8->CH2CVR);
-    TIM1_DMA_Init(DMA2_Channel3, addr1, (u32)data.begin(), data.size());
-    TIM1_DMA_Init(DMA2_Channel5, addr2, (u32)data.begin(), data.size());
-    TIM_DMACmd(TIM8, TIM_DMA_CC1, ENABLE);
-    TIM_DMACmd(TIM8, TIM_DMA_CC2, ENABLE);
-    TIM_Cmd(TIM8, ENABLE);
-    TIM_CtrlPWMOutputs(TIM8, ENABLE);
+    setup(oc1, dma2Ch3);
+
+    setup(oc2, dma2Ch5);
 
     while(true){
         transfer(m_crc(0));
@@ -118,43 +118,14 @@ void dshot_tb(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
         logger.println(millis());
     }
 
-    auto setup = [](TimerOC & oc, DmaChannel & channel){
-        channel.init(DmaChannel::Mode::toPeriphCircular, DmaChannel::Priority::ultra);
-        oc.enableDma();
-        channel.begin((uint16_t *)&oc.cnt(), data.begin(), data.size());
-    };
 
-    setup(oc1, dma2Ch3);
-    setup(oc2, dma2Ch5);
 
     while(true){
         transfer(m_crc(300));
         delay(100);
         transfer(m_crc(1500));
         delay(100);
-        // transfer(m_crc(0));
-        // oc.cvr() = int(220 * (sin(t) * 0.5 + 0.5));
-        // oc1 = cos(t) * 0.5 + 0.5;
-        // real_t a = 8 * t;
-        // real_t c = cos(a);
-        // real_t s = sin(a);
-        // oc1 = 0;
-        // oc1.io() = (c * 0.5 + 0.5) > 0.5;
-        // oc1 = (c * 0.5 + 0.5);
-        // oc1 = 0;
-        // oc2 = s * 0.5 + 0.5;
-        // oc1.io() = (s * 0.5 + 0.5) > 0.5;
-        // oc2 = (0);
-        // delay(1);
         logger.println(oc1.cvr(), oc1.arr(), oc2.cvr(), oc2.arr(), oc1.cnt());
-        // logger.println(sin(t));
-        // // Delay_Ms(15000);
-        // delay(100);
-        // transfer(m_crc(300));
-        // Delay_Ms(1000);
-        // delay(100);
-        // transfer(m_crc(1500));
-        // delay(100);
     }
 }
 
@@ -167,66 +138,16 @@ void dshot_tb(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
 }
 
 void dshot_main(){
-        // USART_Printf_Init(115200);
-    // Delay_Init();
-    // SystemCoreClockUpdate();
+
     auto & logger = uart2;
     logger.init(576000, CommMethod::Blocking);
-    // logger.init(576000);
     logger.setRadix(10);
     logger.setEps(4);
-    // while(true){
-    //     static int i = 0;
-    //     logger.println(i++);
-    // }
-    const uint32_t freq = 200;
-    // timer1.init(freq);
-    // TIM1_CH1_Gpio
 
     AdvancedTimer & timer = timer8;
-    timer.init(freq);
-    // auto & oc = timer1.oc(1);
+    timer.init(234, 1);
     auto & oc = timer.oc(1);
     auto & oc2 = timer.oc(2);
 
-    // timer8.bindCb(BasicTimer::IT::Update, [&](){
-    //     // logger.println("?");
-    // });
-    // timer8.enableIt(BasicTimer::IT::Update, {0,0});
-    oc.init();
-    oc2.init();
     dshot_tb(logger,oc, oc2);
-
-
-
-
-    // TIM1_PWMOut_Init(234-1, 0, 0);
-    // TIM1_DMA_Init(DMA2_Channel3, (u32)&(TIM8->CH1CVR), (u32)data.begin(), 40);
-    // // TIM1_DMA_Init(DMA2_Channel5, (u32)  0x40013438, (u32)data, 40);
-    // TIM_DMACmd(TIM8, TIM_DMA_CC1, ENABLE);
-    // // TIM_DMACmd(TIM8, TIM_DMA_CC2, ENABLE);
-    // TIM_Cmd(TIM8, ENABLE);
-    // TIM_CtrlPWMOutputs(TIM8, ENABLE);
-    // TIM1_PWMOut_Init(234-1, 0, 0);
-    // TIM1_DMA_Init(DMA2_Channel3, (u32)&(TIM8->CH1CVR), (u32)data.begin(), 40);
-    // // TIM1_DMA_Init(DMA2_Channel5, (u32)&(TIM8->CH2CVR), (u32)data.begin(), 40);
-    // TIM_DMACmd(TIM8, TIM_DMA_CC1, ENABLE);
-    // TIM_DMACmd(TIM8, TIM_DMA_CC2, ENABLE);
-    // TIM_Cmd(TIM8, ENABLE);
-    // TIM_CtrlPWMOutputs(TIM8, ENABLE);
-    // 144000000/233
-
-    // logger.setEps(4);
-    // logger.setRadix(10);
-    // logger.setSpace(",");
-
-    // timer1.init(10000);
-
-    // auto & oc = timer1.oc(1);
-    // oc.init();
-
-    // dshot_tb(logger, oc);
-
-
-
 }
