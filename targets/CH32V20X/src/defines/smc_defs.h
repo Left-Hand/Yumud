@@ -37,5 +37,5 @@
 
 #define HAVE_USBFS
 
-#define DEBUGGER uart7
-#define LOGGER uart4
+#define DEBUGGER uart2
+#define LOGGER uart2

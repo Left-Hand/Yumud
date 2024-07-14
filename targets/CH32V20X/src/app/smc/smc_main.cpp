@@ -157,15 +157,13 @@ void ctrl(){
 using namespace SMC;
 
 void smc_main(){    
-    uart4.init(921600, CommMethod::Blocking);
-    uart4.setEps(4);
-
-    uart7.init(115200, CommMethod::Blocking);
-    uart7.setSpace(" ");
+    LOGGER.init(115200, CommMethod::Blocking);
+    LOGGER.setEps(4);
 
     while(true){
         DEBUG_PRINTLN(millis())
     }
+
     bkp.init();
     
     powerOnTimesReg = powerOnTimesReg + 1;

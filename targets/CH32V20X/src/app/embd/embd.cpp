@@ -23,6 +23,9 @@ void host_main(){
     usbfs.init();
 
     uart7.init(115200);
+    while(true){
+        uart7.println("csjck");
+    }
 
     EmbdHost host{uart7, can1};
 
