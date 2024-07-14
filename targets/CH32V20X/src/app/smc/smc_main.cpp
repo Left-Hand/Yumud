@@ -74,27 +74,6 @@ MPU6050 mpu(i2cdrv);
 
 I2cDrv i2cDrvQm(i2csw, 0x1a);
 QMC5883L qml(i2cDrvQm);
-// real_t t = real_t(0);
-
-
-// #define VNAME(value) (#value)
-
-void preinit(){
-    RCC_PCLK1Config(RCC_HCLK_Div1);
-    RCC_PCLK2Config(RCC_HCLK_Div1);
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-
-    Systick_Init();
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
-    PWR_BackupAccessCmd( ENABLE );
-    RCC_LSEConfig( RCC_LSE_OFF );
-    BKP_TamperPinCmd(DISABLE);
-    PWR_BackupAccessCmd(DISABLE);
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE | RCC_APB2Periph_GPIOD, ENABLE);
-}
 
 
 using namespace SMC;

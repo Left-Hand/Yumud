@@ -108,6 +108,7 @@ void Can::enableRcc(){
         GPIO_PinRemapConfig(GPIO_Remap1_CAN1, ENABLE);
         break;
     case 3:
+        GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);//for TEST
         GPIO_PinRemapConfig(GPIO_Remap2_CAN1, ENABLE);
         break;
     }

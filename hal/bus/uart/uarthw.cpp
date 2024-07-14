@@ -307,6 +307,7 @@ void UartHw::enableRcc(const bool en){
         #ifdef HAVE_UART7
         case UART7_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en);
+            
             switch (UART7_REMAP){
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART7, ENABLE);
@@ -650,6 +651,8 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const Com
     USART_InitStructure.USART_Mode = ((_txMethod != CommMethod::None) ? USART_Mode_Tx : 0) |
                                     ((_rxMethod != CommMethod::None) ? USART_Mode_Rx : 0);
 
+    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, true);
+    // GPIO_PinRemapConfig(GPIO_FullRemap_USART7, ENABLE);
     USART_Init(instance, &USART_InitStructure);
     USART_Cmd(instance, ENABLE);
 
