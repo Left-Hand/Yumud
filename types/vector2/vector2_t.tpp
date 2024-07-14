@@ -88,13 +88,13 @@ constexpr Vector2_t<T> Vector2_t<T>::bounce(const Vector2_t<T> & n) const {
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::lerp(const Vector2_t<T> & b, const T & t) const{
-    return *this * (1-t)+b * t;
+constexpr Vector2_t<T> Vector2_t<T>::lerp(const Vector2_t<T> & b, const T & _t) const{
+    return *this * (1-_t)+b * _t;
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const T & t) const{
-    return lerp(b, sinf(PI / 2 * t));
+constexpr Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const T & _t) const{
+    return lerp(b, sinf(PI / 2 * _t));
 }
 
 template<arithmetic T>

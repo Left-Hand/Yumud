@@ -67,7 +67,7 @@ static constexpr uint8_t mdl_data[920] PROGMEM={\
 
 static uint8_t mdl_buf[MDL_BUF_LEN];
 
-void Mnist::parse_output(tm_mat_t* outs){
+void Mnist::parse_output(){
     tm_mat_t out = outs[0];
     const float* data  = out.dataf;
     float maxp = 0;
@@ -128,7 +128,7 @@ Mnist::Result Mnist::update(const Image<Grayscale, Grayscale> & img){
     err = tm_run(&mdl, &in, outs);
 
     if(err==TM_OK){
-        parse_output(outs);        
+        parse_output();        
     }
 
     return output;

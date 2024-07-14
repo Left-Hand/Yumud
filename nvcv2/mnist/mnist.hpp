@@ -30,7 +30,7 @@ protected:
         return TM_OK;
     }
 
-    void parse_output(tm_mat_t* outs);
+    void parse_output();
 
     void load();
     void unload();

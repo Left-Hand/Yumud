@@ -87,6 +87,16 @@ namespace NVCV2::Pixels{
         }
     }
 
+
+    template<is_monocolour_v T>
+    void inverse(ImageWritable<T>& dst, const ImageReadable<T> & src) {
+        auto window = dst.get_window().intersection(src.get_window());
+        for (auto y = window.y; y < window.y + window.h; y++) {
+            for (auto x = window.x; x < window.x + window.w; x++) {
+                    dst[{x,y}] = uint8_t(~uint8_t(T(src[{x,y}])));
+            }
+        }
+    }
     template<is_monocolour_v T>
     void and_with(Image<T, T> & src, Image<T, T>& op) {
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {

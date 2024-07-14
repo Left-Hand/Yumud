@@ -118,7 +118,7 @@ void Can::enableRcc(){
 void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
 void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
 void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
-void Can::init(const BaudRate baudRate, const Mode mode, const CanFilter & filter){
+void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filter){
     installGpio();
     enableRcc();
 
@@ -146,7 +146,7 @@ void Can::init(const BaudRate baudRate, const Mode mode, const CanFilter & filte
 
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
-    config.CAN_Mode = (uint8_t)mode;
+    config.CAN_Mode = (uint8_t)_mode;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;

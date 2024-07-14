@@ -20,12 +20,12 @@
 #endif
 
 #ifndef DEBUG_LOG
-#define DEBUG_LOG(...) DEBUG_PRINTLN("[L]{", __FUNCTION__ ,',', '\t','\t',  __LINE__ , '}','\t', '\t', ##__VA_ARGS__)
+#define DEBUG_LOG(...) DEBUG_PRINTLN("[L]{", __FUNCTION__ ,',', __LINE__ , '}', ##__VA_ARGS__)
 #endif
 
 
 #ifndef DEBUG_ERROR
-#define DEBUG_ERROR(...) DEBUG_PRINTLN("[E]{", __FUNCTION__ ,',', '\t','\t',  __LINE__ , '}','\t', '\t', ##__VA_ARGS__)
+#define DEBUG_ERROR(...) DEBUG_PRINTLN("[E]{", __FUNCTION__ ,',',  __LINE__ , '}', ##__VA_ARGS__)
 #endif
 
 #ifndef DEBUG_WARN

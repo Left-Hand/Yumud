@@ -10,7 +10,7 @@ public:
 	~TwoPass();
 
 private:
-	int maxSize;
+	int M_maxsize;
 	uint16_t *parent;
 
 private:

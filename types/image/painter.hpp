@@ -36,12 +36,12 @@ public:
         src_image = &_source;
     }
 
-    void setChFont(Font * _chfont){
-        chfont = _chfont;
+    void setChFont(Font & _chfont){
+        chfont = &_chfont;
     }
 
-    void setEnFont(Font * _enfont){
-        enfont = _enfont;
+    void setEnFont(Font & _enfont){
+        enfont = &_enfont;
     }
 
 

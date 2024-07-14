@@ -61,6 +61,8 @@
 #define AGC_AEC_ENABLE_VALUE 0x02 // Enable AGC & disable AEC
 
 bool MT9V034::init(){
+    DEBUG_PRINTLN(size);
+
     if(!isChipValid()){
         return false;
     }
@@ -88,6 +90,7 @@ bool MT9V034::init(){
     #ifdef HAVE_DVP
     dvp.init((uint32_t *)data.get(), (uint32_t *)data.get(), size.x * size.y, size.y);
     #endif
-    
+
+
     return true;
 }

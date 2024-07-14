@@ -44,7 +44,7 @@ public:
     __fast_inline constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
     template<arithmetic U>
-    __fast_inline constexpr Rect2_t(U x, U y, U width, U height):position(Vector2_t<U>(x,y)),size(Vector2_t<U>(width, height)){;}
+    __fast_inline constexpr Rect2_t(U _x, U _y, U _width, U _height):position(Vector2_t<U>(_x,_y)),size(Vector2_t<U>(_width, _height)){;}
 
     template<arithmetic U>
     static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & size){

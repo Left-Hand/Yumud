@@ -27,15 +27,15 @@ public:
     virtual void init(){
         instance.init();
     }
-    void update(const real_t & t){
+    void update(const real_t pos){
         instance.update();
 
         cnt++;
         if(cnt == dur){
             cnt = 0;
-            positionObserver.update(instance.getPosition(), t);
+            positionObserver.update(instance.getPosition(), pos);
         }
-        speed = speed_lpf.update(positionObserver.getDerivative(), t);
+        speed = speed_lpf.update(positionObserver.getDerivative(), pos);
     }
 
     real_t getPosition(){

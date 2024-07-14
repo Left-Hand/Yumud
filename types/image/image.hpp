@@ -84,7 +84,7 @@ protected:
     uint8_t getseg_v8() const{return 0;}
     uint8_t getseg_h8() const{return 0;}
 public:
-    ImageReadable(const Vector2i & size):ImageBasics<ColorType>(size){;}
+    ImageReadable(const Vector2i & _size):ImageBasics<ColorType>(_size){;}
 
     __fast_inline ColorType operator()(const Vector2i & pos)const{
         ColorType color;
@@ -176,7 +176,7 @@ public:
         }
     }
 public:
-    ImageWritable(const Vector2i & size):ImageBasics<ColorType>(size){;}
+    ImageWritable(const Vector2i & _size):ImageBasics<ColorType>(_size){;}
 
     void fill(const ColorType & color){
         putrect_unsafe(Rect2i{{}, ImageBasics<ColorType>::get_size()}, color);
@@ -229,7 +229,7 @@ protected:
     friend class Painter<ColorType>;
     // friend class PixelProxy<ColorType>;
 public:
-    ImageWR(const Vector2i & size):ImageReadable<ColorType>(size), ImageWritable<ColorType>(size){;}
+    ImageWR(const Vector2i & _size):ImageReadable<ColorType>(_size), ImageWritable<ColorType>(_size){;}
     // void shade(PixelShaderCallback callback, const Rect2i & _shade_area);
     // void shade(UVShaderCallback callback, const Rect2i & _shade_area);
 };
@@ -249,8 +249,8 @@ public:
 
 public:
     std::shared_ptr<DataType[]> data;
-    Image(std::shared_ptr<DataType[]> _data, const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(_data) {;}
-    Image(const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(std::make_shared<DataType[]>(size.x * size.y)) {;}
+    Image(std::shared_ptr<DataType[]> _data, const Vector2i & _size) : ImageBasics<ColorType>(_size), ImageWR<ColorType>(_size), data(_data) {;}
+    Image(const Vector2i & _size) : ImageBasics<ColorType>(_size), ImageWR<ColorType>(_size), data(std::make_shared<DataType[]>(_size.x * _size.y)) {;}
 
     // Move constructor
     Image(Image&& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(std::move(other.data)){}
@@ -289,9 +289,9 @@ public:
         return data == other.data;
     }
     Image<ColorType, DataType> clone() const {
-        auto size = ImageBasics<ColorType>::get_size();
-        auto temp = Image<ColorType, DataType>(size);
-        memcpy(temp.data.get(), this->data.get(), size.x * size.y * sizeof(DataType));
+        auto _size = ImageBasics<ColorType>::get_size();
+        auto temp = Image<ColorType, DataType>(_size);
+        memcpy(temp.data.get(), this->data.get(), _size.x * _size.y * sizeof(DataType));
         return temp;
     }
 
@@ -305,12 +305,14 @@ public:
         return temp;
     }
 
+    auto clone(const Vector2i & _size) const{return clone(Rect2i(Vector2i{0,0}, _size));}
+
     Image<ColorType, DataType> space() const {
         return Image<ColorType, DataType>(this->get_size());
     }
     void copy_from(const Image<ColorType, DataType> & src){
-        auto size = ImageBasics<ColorType>::get_size();
-        memcpy(this->data.get(), src.data.get(),size.x * size.y);
+        auto _size = ImageBasics<ColorType>::get_size();
+        memcpy(this->data.get(), src.data.get(),_size.x * _size.y);
     }
 };
 template<typename ColorType>
@@ -347,7 +349,9 @@ protected:
     // std::unique_ptr<DataType[]> data;
     // std::unique_ptr<ColorType[]> data;
 public:
-    Camera(const Vector2i & size):ImageBasics<ColorType>(size), Image<ColorType, ColorType>(size){;}
+    Camera(const Vector2i & _size):ImageBasics<ColorType>(_size), Image<ColorType, ColorType>(_size){;}
+
+    using Image<ColorType, ColorType>::clone;
     // ColorType operator[](const size_t & index) const {return Image<ColorType, ColorType>::[index];}
     // ColorType operator[](const size_t & index) const {return data[index];}
     // __fast_inline ColorType& operator[](const size_t & index) { return this->operator[](index);}
@@ -357,7 +361,7 @@ public:
 template<typename ColorType>
 class Displayer:public ImageWritable<ColorType>{
 public:
-    Displayer(const Vector2i & size):ImageBasics<ColorType>(size), ImageWritable<ColorType>(size){;}
+    Displayer(const Vector2i & _size):ImageBasics<ColorType>(_size), ImageWritable<ColorType>(_size){;}
 };
 
 template<typename ColorType>
@@ -376,7 +380,6 @@ public:
     operator ColorType () const{
         return src.getpixel(pos);
     }
-
 };
 
 

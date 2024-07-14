@@ -15,28 +15,28 @@ public:
     real dx_dt = real(0);
 public:
     LinearObersver_t() = default;
-    real update(const real & x, const time & t) override{
-        time dt = t - last.t;
+    real update(const real & x, const time & tm) override{
+        time dt = tm - last.t;
         real dx = x - last.x;
 
         prev = last;
-        last = Point{.x = x,.t = t};
+        last = Point{.x = x,.t = tm};
 
         if(dt) dx_dt = dx / dt;
         return dx_dt;
     }
 
-    real update(const auto & x, const auto & t){
-        return update(static_cast<real>(x), static_cast<time>(t));
+    real update(const auto & x, const auto & tm){
+        return update(static_cast<real>(x), static_cast<time>(tm));
     }
 
-    real predict(const time & t) override{
+    real predict(const time & tm) override{
         time delta = t - last.t;
         return last.x + delta * dx_dt;
     }
 
-    real predict(const real & x, const time & t) {
-        time delta = t - last.t;
+    real predict(const real & x, const time & tm) {
+        time delta = tm - last.t;
         return x + delta * dx_dt;
     }
 

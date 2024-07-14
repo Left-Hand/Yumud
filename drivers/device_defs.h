@@ -27,7 +27,7 @@ struct Fraction {
 public:
     int numerator;
     int denominator;
-    Fraction(int numerator, int denominator) : numerator(numerator), denominator(denominator) {}
+    Fraction(const int _numerator,const int _denominator) : numerator(_numerator), denominator(_denominator) {}
 
     int operator * (const int & value){
         return numerator * value / denominator;

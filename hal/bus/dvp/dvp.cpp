@@ -33,11 +33,11 @@ void Dvp::init(uint32_t *image0_addr, uint32_t *image1_addr, uint16_t col_len, u
     DVP->DMA_BUF0 = (uint32_t)image0_addr;        // DMA addr0
     DVP->DMA_BUF1 = (uint32_t)image1_addr;        // DMA addr1
 
-    // // 使能中断
-    // DVP->IER = RB_DVP_IE_FRM_DONE;              // 开启帧接收完成中断
+    // 使能中断
+    DVP->IER = RB_DVP_IE_FRM_DONE;              // 开启帧接收完成中断
 
-    // NVIC_SetPriority(DVP_IRQn, 0);
-    // NVIC_EnableIRQ(DVP_IRQn);
+    NVIC_SetPriority(DVP_IRQn, 0);
+    NVIC_EnableIRQ(DVP_IRQn);
 }
 
 extern "C"{

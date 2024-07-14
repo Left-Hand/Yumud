@@ -7,8 +7,8 @@
 #endif
 
 #ifdef CH32V30X
-#define UART_FIFO_BUF_SIZE 256
-#define UART_DMA_BUF_SIZE 64
+#define UART_FIFO_BUF_SIZE 512
+#define UART_DMA_BUF_SIZE 256
 // #include "v3defs.h"
 #include "smc_defs.h"
 #endif

@@ -143,9 +143,9 @@ public:
             line(from_gpio_to_line(_gpio)), gpio(&_gpio),priority(_priority), trigger(_trigger),  mode(_mode){
             }
 
-    void setPinMode(const PinMode & mode){
-        gpio_mode = mode;
-        if(gpio) gpio->setMode(mode);
+    void setPinMode(const PinMode & _mode){
+        gpio_mode = _mode;
+        if(gpio) gpio->setMode(_mode);
     }
 
     void init(){

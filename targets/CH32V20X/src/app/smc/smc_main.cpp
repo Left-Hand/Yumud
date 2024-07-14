@@ -172,8 +172,8 @@ protected:
         real_t speed_output = speed_ctrl.update();
         // offs_err = offs_err * 0.8 + 0.2 * measured_offs_err;
         // turn_output += speed_ctrl.update();
-        real_t new_x = (Vector2(seed_pos) + (Vector2(real_t(-15.0), real_t(0.0)).rotated(current_dir))).x;
-        DEBUG_PRINTLN(SpecToken::Comma, motor_strength.left, motor_strength.right, motor_strength.hri, seed_pos.x, new_x);
+        // real_t new_x = (Vector2(seed_pos) + (Vector2(real_t(-15.0), real_t(0.0)).rotated(current_dir))).x;
+        // DEBUG_PRINTLN(SpecToken::Comma, motor_strength.left, motor_strength.right, motor_strength.hri, seed_pos.x, new_x);
         // real_t side_output = side_ctrl.update(0, -offs_err, -accel.y);
 
         motor_strength.left = turn_output;
@@ -241,6 +241,7 @@ protected:
     void init_sensor(){
 
         i2csw.init(100000);
+        sccb.init(10000);
 
         mpu.init();
         qml.init();
@@ -250,11 +251,9 @@ protected:
     }
 
     void init_camera(){
-        I2cSw sccb(portD[2], portC[12]);
-        MT9V034 camera(sccb);
-
         uint8_t camera_init_retry_times = 0;
         constexpr uint8_t camera_retry_timeout = 7;
+        sccb.init(10000);
         while(!camera.init()){
             camera_init_retry_times++;
             if(camera_init_retry_times >= camera_retry_timeout){
@@ -274,9 +273,9 @@ public:
     void main(){
         init_debugger();
         init_periphs();
-
-        init_lcd();
+        delay(200);
         init_sensor();
+        init_lcd();
         init_camera();
         init_it();
 
@@ -303,7 +302,7 @@ public:
             gyro_offs = temp_gyro_offs / cali_times;
         }
 
-        const auto pic_size = camera.size / 2;
+        constexpr auto pic_size = Vector2i(188, 60);
         auto pers_gray_image = make_image<Grayscale>(pic_size);
         auto pers_bina_image  = make_bina_mirror(pers_gray_image);
         auto diff_gray_image = make_image<Grayscale>(pic_size);
@@ -312,13 +311,15 @@ public:
 
         [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
             tftDisplayer.puttexture_unsafe(area, src.data.get());
-
         };
 
         [[maybe_unused]] auto plot_bina = [&](Image<Binary, Binary> & src, const Rect2i & area){
             tftDisplayer.puttexture_unsafe(area, src.data.get());
         };
 
+        [[maybe_unused]] auto plot_rgb = [&](Image<RGB565, RGB565> & src, const Rect2i & area){
+            tftDisplayer.puttexture_unsafe(area, src.data.get());
+        };
         [[maybe_unused]] auto plot_coast = [&](const Coast & coast,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
 
             if(coast.size() <= 1){
@@ -441,12 +442,12 @@ public:
             plot_vec3_to_plane(z_axis, 'Z', z_color);
         };
 
-
+        DEBUG_PRINTLN("last", (size_t)camera.data.get());
     
         while(true){
             recordRunStatus(RunStatus::NEW_ROUND);
             recordRunStatus(RunStatus::PROCESSING_CLI);
-            CLI::run();
+            // CLI::run();//TODO
 
             recordRunStatus(RunStatus::PROCESSING_EVENTS);
 
@@ -455,7 +456,7 @@ public:
             }
 
             else if(start_key == false){
-                body.enable();
+                body.enable(true);
             }
 
             recordRunStatus(RunStatus::PROCESSING_SENSORS);
@@ -466,11 +467,22 @@ public:
 
             recordRunStatus(RunStatus::PROCESSING_IMG_BEGIN);
 
-            plot_gray(camera, Rect2i{Vector2i{0, 0}, Vector2i{188, 60}});
-            Geometry::perspective(pers_gray_image, camera);
+            // auto pic = camera.clone({20,20});
+            // plot_gray(camera, Rect2i{Vector2i{0,0}, camera.get_size()});
+            // camera.fill(Grayscale(28));
+            // plot_gray(camera, Rect2i{Vector2i{0, 0}, Vector2i{188, 120}});
+            Pixels::inverse(pers_gray_image, camera);
+            // Geometry::perspective(pers_gray_image, camera);
             plot_gray(pers_gray_image, Rect2i{Vector2i{0, 60}, Vector2i{188, 60}});
+            // DEBUG_PRINTLN(pers_gray_image.get_size());
+            // plot_gray(pers_gray_image, Rect2i{Vector2i{0, 60}, Vector2i{188, 60}});
 
             continue;
+            // DEBUG_PRINTLN(pic.get_size());
+            // plot_gray(camera, Rect2i{Vector2i{0, 0}, Vector2i{188, 60}});
+            // Geometry::perspective(pers_gray_image, camera);
+            // plot_gray(pers_gray_image, Rect2i{Vector2i{0, 60}, Vector2i{188, 60}});
+
 
             // plot_points(Points{{0, 0}, {40,40}, {80, 50}}, {0, 0})
             // plot_gray(affine_gray_image, Rect2i{Vector2i{0, 120}, Vector2i{188, 60}});

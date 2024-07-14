@@ -11,13 +11,14 @@ private:
 
 protected:
     I2C_TypeDef * instance;
-    GpioConcept & getScl(const I2C_TypeDef * _instance);
-    GpioConcept & getSda(const I2C_TypeDef * _instance);
+    static GpioConcept & getScl(const I2C_TypeDef *);
+    static GpioConcept & getSda(const I2C_TypeDef *);
 public:
 
     I2cHw(I2C_TypeDef * _instance):
             I2c(getScl(_instance), getSda(_instance)),
             instance(_instance){;}
+    
 
     Error write(const uint32_t data) override final;
     Error read(uint32_t & data, const bool toAck = true) override final;
