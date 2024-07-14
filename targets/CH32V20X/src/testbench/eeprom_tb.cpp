@@ -16,7 +16,7 @@
 
 #ifdef AT24CXX_DEBUG
 #undef AT24CXX_DEBUG
-#define AT24CXX_DEBUG(...) DEBUG_PRINT(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#define AT24CXX_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
 #else
 #define AT24CXX_DEBUG(...)
 #endif
@@ -41,7 +41,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         uint8_t after;
         mem.load(after);
         ASSERT_WITH_DOWN(before + 1 == after, "firstbyte tb failed", before, "->", after);
-        DEBUG_PRINT("firstbyte tb passed", before, "->", after);
+        DEBUG_PRINTLN("firstbyte tb passed", before, "->", after);
     }
     #endif
 
@@ -54,7 +54,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         mem.load(after);
 
         ASSERT_WITH_DOWN(before == after, "svbytes tb failed: ", toString(before,16), "->", toString(after, 16));
-        DEBUG_PRINT("svbytes tb passed");
+        DEBUG_PRINTLN("svbytes tb passed");
     }
     #endif
 
@@ -72,9 +72,9 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         }
 
         if(!passflag){
-            DEBUG_PRINT("random tb failed");
+            DEBUG_PRINTLN("random tb failed");
         }else{
-            DEBUG_PRINT("random tb passed");
+            DEBUG_PRINTLN("random tb passed");
         }
     }
     #endif
@@ -97,27 +97,27 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         passflag &= (0 == memcmp(data_before, data_after, sizeof(data_before)));
 
         if(!passflag){
-            DEBUG_PRINT("wholechip tb failed:", "data not the same")
+            DEBUG_PRINTLN("wholechip tb failed:", "data not the same")
 
-            DEBUG_PRINT("data wrote");
+            DEBUG_PRINTLN("data wrote");
             for(auto & item : data_before){
-                DEBUG_PRINT("\t\t", item);
+                DEBUG_PRINTLN("\t\t", item);
             }
 
-            DEBUG_PRINT("data read");
+            DEBUG_PRINTLN("data read");
             for(auto & item : data_after){
-                DEBUG_PRINT("\t\t", item);
+                DEBUG_PRINTLN("\t\t", item);
             }
 
             ASSERT_WITH_DOWN(false, "wholechip tb terminated");
         };
-        DEBUG_PRINT("wholechip tb passed");
+        DEBUG_PRINTLN("wholechip tb passed");
     }
     #endif
 
     #ifdef EEPROM_TB_PIECES
     {
-        DEBUG_PRINT("muti store begin");
+        DEBUG_PRINTLN("muti store begin");
         constexpr auto begin_addr = 7;
         // constexpr auto end_addr = 15;
         uint8_t data[] = {3, 1, 2, 4};

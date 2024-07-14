@@ -20,7 +20,7 @@ void SpiHw::enableRcc(const bool en){
     }
 }
 
-#if (defined(HAVE_SPI1) & defined(HAVE_SPI2))
+#if (defined(HAVE_SPI1) && defined(HAVE_SPI2))
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
 Gpio & SpiHw::get##name##Pin(){\
@@ -46,7 +46,7 @@ Gpio & SpiHw::get##name##Pin(){\
     }\
 }\
 
-#elif defined(HAVE_SPI1)
+#elif defined(HAVE_SPI2)
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
 Gpio & SpiHw::get##name##Pin(){\

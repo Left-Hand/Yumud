@@ -190,8 +190,13 @@ constexpr __fast_inline bool operator op (const Vector2_t<T>& lhs, const U& rhs)
 template <arithmetic T, arithmetic U> \
 constexpr __fast_inline bool operator op (const U& lhs, const Vector2_t<T>& rhs) { \
     T abslhs = static_cast<T>(abs(lhs)); \
-    return abslhs * abslhs op rhs.length_squared(); \
-}
+    return (abslhs * abslhs) op rhs.length_squared(); \
+}\
+template <arithmetic T, arithmetic U> \
+constexpr __fast_inline bool operator op (const Vector2_t<T>& lhs, const Vector2_t<U>& rhs) { \
+    return (lhs.x == rhs.x) && (lhs.y == rhs.y);\
+}\
+
 
 VECTOR2_COMPARE_IM_OPERATOR(<)
 VECTOR2_COMPARE_IM_OPERATOR(<=)
@@ -200,40 +205,27 @@ VECTOR2_COMPARE_IM_OPERATOR(>=)
 VECTOR2_COMPARE_IM_OPERATOR(==)
 VECTOR2_COMPARE_IM_OPERATOR(!=)
 
-#define VECTOR2_ADD_SUB_MUL_OPERATOR(op) \
-template <arithmetic T> \
-constexpr __fast_inline Vector2_t<T> operator op(const Vector2_t<T> &p_vector2, const auto &rvalue){ \
-    Vector2_t<T> final = p_vector2; \
-    final op##= rvalue; \
-    return final; \
-}\
-\
-template <arithmetic T> \
-constexpr __fast_inline Vector2_t<T> operator op(const auto &lvalue, const Vector2_t<T> &p_vector2){ \
-    Vector2_t<T> final = p_vector2; \
-    final op##= lvalue; \
-    return final; \
-}\
-\
-template <arithmetic T> \
-constexpr __fast_inline Vector2_t<T> operator op(const Vector2_t<T> &p_vector2, const Vector2_t<auto> &d_vector2){ \
-    Vector2_t<T> final = p_vector2; \
-    final op##= d_vector2; \
-    return final; \
+template <arithmetic T, arithmetic U>
+constexpr __fast_inline Vector2_t<T> operator +(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
+    Vector2_t<T> ret = p_vector2;
+    ret += d_vector2;
+    return ret;
 }
 
-VECTOR2_ADD_SUB_MUL_OPERATOR(+) 
-VECTOR2_ADD_SUB_MUL_OPERATOR(-) 
-VECTOR2_ADD_SUB_MUL_OPERATOR(*) 
-
-#undef VECTOR2_ADD_SUB_MUL_OPERATOR
+template <arithmetic T, arithmetic U>
+constexpr __fast_inline Vector2_t<T> operator -(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
+    Vector2_t<T> ret = p_vector2;
+    ret -= d_vector2;
+    return ret;
+}
 
 template <arithmetic T>
-constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const auto &rvalue){
-    Vector2_t<T> final = p_vector2;
-    final /= rvalue;
-    return final;
+constexpr __fast_inline Vector2_t<T> operator *(const auto &lvalue, const Vector2_t<T> &p_vector2){
+    Vector2_t<T> ret = p_vector2;
+    ret *= lvalue;
+    return ret;
 }
+
 
 template <arithmetic T >
 constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<auto> &d_vector2){

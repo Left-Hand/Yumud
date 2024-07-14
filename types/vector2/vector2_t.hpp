@@ -23,7 +23,7 @@ public:
     __fast_inline constexpr Vector2_t(){;}
 
     template<arithmetic U, arithmetic V>
-    __fast_inline constexpr Vector2_t(const U & _x, const V & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
+    __fast_inline constexpr Vector2_t(const U & _x, const V & _y): x(_x), y(_y){;}
 
     template<arithmetic U, arithmetic V>
     __fast_inline constexpr Vector2_t(const std::tuple<U, V> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
@@ -131,7 +131,16 @@ public:
         return *this;
     }
 
-    __fast_inline_constexpr operator bool() const {
+    __fast_inline Vector2_t<T> operator*(const auto & n) const{
+        Vector2_t<T> ret = *this;
+        return ret *= n;
+    }
+    __fast_inline Vector2_t<T> operator/(const auto & n) const{
+        Vector2_t<T> ret = *this;
+        return ret /= n;
+    }
+
+    __fast_inline_constexpr explicit operator bool() const {
         if constexpr(std::is_integral<T>::value){
             return x != 0 || y != 0;
         }else{

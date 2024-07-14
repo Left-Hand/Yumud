@@ -1,9 +1,30 @@
 #include "testbench/tb.h"
 #include "app/embd/embd.h"
+#include "app/smc/smc.h"
+
+
+void preinit(){
+    RCC_PCLK1Config(RCC_HCLK_Div1);
+    RCC_PCLK2Config(RCC_HCLK_Div1);
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+
+    Systick_Init();
+
+    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
+    PWR_BackupAccessCmd( ENABLE );
+    RCC_LSEConfig( RCC_LSE_OFF );
+    BKP_TamperPinCmd(DISABLE);
+    PWR_BackupAccessCmd(DISABLE);
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE | RCC_APB2Periph_GPIOD, ENABLE);
+}
 
 
 int main(){
-    Sys::Misc::prework();
+    preinit();
+
     #ifdef CH32V20X
 
     // eeprom_main();
@@ -28,12 +49,14 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
+
+    // gpio_tb(UART7_TX_GPIO);
     // uart_main();
-    // uart_tb();
     // calc_main();
-    dshot_main();
+    // dshot_main();
     // usbcdc_tb();
-    embd_main();
+    // embd_main();
+    smc_main();
     // UartHw & logger = uart2;
     // logger.init(115200);
     // can_tb(logger, can1, true);

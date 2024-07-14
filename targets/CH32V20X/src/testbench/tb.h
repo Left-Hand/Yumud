@@ -6,69 +6,11 @@
 #include "../../hal/flash/flash.hpp"
 #include "../../hal/timer/timer.hpp"
 #include "../../hal/timer/instance/timer_hw.hpp"
-// #include "../hal/rng/rng.hpp"
+#include "../../hal/bus/can/can.hpp"
+
 
 using Sys::t;
-// I2cSw i2cSw(i2cScl, i2cSda);
 
-
-// SpiDrv SpiDrvLcd = SpiDrv(spi2_hs, 0);
-// SpiDrv spiDrvOled = SpiDrv(spi2, 0);
-// SpiDrv spiDrvFlash = SpiDrv(spi1, 0);
-
-// SpiDrv spiDrvRadio = SpiDrv(spi1, 0);
-// I2cDrv i2cDrvOled = I2cDrv(i2cSw,(uint8_t)0x78);
-// I2cDrv i2cDrvMpu = I2cDrv(i2cSw,(uint8_t)0xD0);
-// I2cDrv i2cDrvAdc = I2cDrv(i2c1, 0x90);
-// I2cDrv i2cDrvTcs = I2cDrv(i2cSw, 0x52);
-// I2cDrv i2cDrvVlx = I2cDrv(i2cSw, 0x52);
-// I2cDrv i2cDrvPcf = I2cDrv(i2cSw, 0x4e);
-// I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x6c);
-
-// I2cDrv i2cDrvAS = I2cDrv(i2cSw, 0x36 << 1);
-// I2cDrv i2cDrvQm = I2cDrv(i2cSw, 0x1a);
-// I2cDrv i2cDrvBm = I2cDrv(i2cSw, 0xec);
-// I2cDrv i2cDrvMt = I2cDrv(i2cSw, 0x0C);
-// ST7789 tftDisplayer(SpiDrvLcd);
-// SSD13XX oledDisPlayer(spiDrvOled);
-// MPU6050 mpu(i2cDrvMpu);
-// SGM58031 ext_adc(i2cDrvAdc);
-// LT8920 radio(spiDrvRadio);
-// 
-// VL53L0X vlx(i2cDrvVlx);
-// PCF8574 pcf(i2cDrvPcf);
-// AS5600 mags(i2cDrvAS);
-
-// W25QXX extern_flash(spiDrvFlash);
-
-// AS5600 mag_sensor(i2cDrvAS);
-// QMC5883L earth_sensor(i2cDrvQm);
-// BMP280 prs_sensor(i2cDrvBm);
-// MT6701 mt_sensor(i2cDrvMt);
-
-
-
-
-// static IOStream & logger = uart2;
-//     // flash.load(temp);
-//     while(true) __WFI;
-//     // while(true){
-//         // logger.println("Hi");
-//         // delay(100);
-//     // }
-
-// }
-
-
-// class Pmdc{
-// protected:
-//     PwmChannel & pwm_f;
-//     PwmChannel & pwm_b;
-// public:
-//     Pmdc(PwmChannel & _pwm_f, PwmChannel & _pwm_b):pwm_f(_pwm_f), pwm_b(_pwm_b){;}
-
-
-// }
 
 #include "../drivers/Encoder/ABEncoder.hpp"
 #include "../drivers/Encoder/OdometerLines.hpp"
@@ -81,7 +23,7 @@ using Sys::t;
 
 #include "../hal/bus/bus_inc.h"
 #include "../robots/buck.hpp"
-#include "../robots/stepper/stepper.hpp"
+// #include "../robots/stepper/stepper.hpp"
 
 #include "../types/real.hpp"
 #include "../types/string/String.hpp"

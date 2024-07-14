@@ -75,7 +75,13 @@ void Sys::Misc::prework(){
 
     #ifdef HAVE_GPIOD
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
-    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+
+    //ivalid for ch32v307vct6
+    // GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+    #endif
+
+    #ifdef HAVE_GPIOE
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE );
     #endif
     PWR_BackupAccessCmd( ENABLE );
     RCC_LSEConfig( RCC_LSE_OFF );

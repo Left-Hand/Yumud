@@ -43,7 +43,7 @@
       "type": "cppdbg",
       "request": "launch",
       "args": [],
-      "stopAtEntry": false,
+      "stopAtEntry": true,
       "externalConsole": true,
       "cwd": "d:/Yumud/src",
       "program": "d:/Yumud/src/build/Debug/outDebug",

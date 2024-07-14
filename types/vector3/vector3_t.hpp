@@ -7,102 +7,131 @@
 #include "../types/real.hpp"
 #include <type_traits>
 
-template <typename real>
-requires std::is_arithmetic_v<real>
+template <arithmetic T>
 struct Vector3_t{
 public:
-    real x = real(0);
-    real y = real(0);
-    real z = real(0);
+    T x = T(0);
+    T y = T(0);
+    T z = T(0);
 
     Vector3_t() = default;
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t(const Vector3_t<U>& v) : x(v.x), y(v.y), z(v.z) {;}
 
-    template<typename U>
-    Vector3_t(const U & _x, const U & _y, const U & _z): x(_x), y(_y), z(_z){;}
+    // template<arithmetic U>
+    Vector3_t(const auto _x, const auto _y, const auto _z): x(_x), y(_y), z(_z){;}
 
-    real & operator [](const int & index) { return *(&this->x + index); }
-    template<typename U>
+    template<arithmetic U, arithmetic V, arithmetic Z>
+    __fast_inline constexpr Vector3_t(const std::tuple<U, V, Z> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
+
+    T & operator [](const int & index) { return *(&this->x + index); }
+    template<arithmetic U>
     Vector3_t& operator=(const Vector3_t<U>& v) {
-        x = static_cast<real>(v.x);
-        y = static_cast<real>(v.y);
-        z = static_cast<real>(v.z);
+        x = static_cast<T>(v.x);
+        y = static_cast<T>(v.y);
+        z = static_cast<T>(v.z);
         return *this;
     };
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t & operator += (const Vector3_t<U>& v) {
-        x += static_cast<real>(v.x);
-        y += static_cast<real>(v.y);
-        z += static_cast<real>(v.z);
+        x += static_cast<T>(v.x);
+        y += static_cast<T>(v.y);
+        z += static_cast<T>(v.z);
         return *this;
     }
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t & operator -= (const Vector3_t<U>& v) {
-        x -= static_cast<real>(v.x);
-        y -= static_cast<real>(v.y);
-        z -= static_cast<real>(v.z);
+        x -= static_cast<T>(v.x);
+        y -= static_cast<T>(v.y);
+        z -= static_cast<T>(v.z);
         return *this;
     }
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t & operator *= (const Vector3_t<U>& v) {
-        x *= static_cast<real>(v.x);
-        y *= static_cast<real>(v.y);
-        z *= static_cast<real>(v.z);
+        x *= static_cast<T>(v.x);
+        y *= static_cast<T>(v.y);
+        z *= static_cast<T>(v.z);
         return *this;
     }
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t & operator *= (const U & _v){
-        real v = static_cast<real>(_v);
+        T v = static_cast<T>(_v);
         x *= v;
         y *= v;
         z *= v;
         return *this;
     }
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t & operator /= (const Vector3_t<U>& v) {
-        x /= static_cast<real>(v.x);
-        y /= static_cast<real>(v.y);
-        z /= static_cast<real>(v.z);
+        x /= static_cast<T>(v.x);
+        y /= static_cast<T>(v.y);
+        z /= static_cast<T>(v.z);
         return *this;
     }
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t & operator /= (const U & _v){
-        real v = static_cast<real>(_v);
+        T v = static_cast<T>(_v);
         x /= v;
         y /= v;
         z /= v;
         return *this;
     }
 
-    template<typename U>
-    real dot(const Vector3_t<U> &v) const{
-        real ret = real(0);
+    template<arithmetic U>
+    __fast_inline_constexpr Vector3_t operator *(const U & _v) const{
+        Vector3_t other = *this;
+        other *= _v;
+        return other;
+    }
+
+    template<arithmetic U>
+    __fast_inline_constexpr Vector3_t operator /(const U & _v) const{
+        Vector3_t other = *this;
+        other /= _v;
+        return other;
+    }
+
+    template<arithmetic U>
+    __fast_inline_constexpr Vector3_t operator +(const Vector3_t<U>& other) const {
+        Vector3_t ret = other;
+        return ret += *this;
+    }
+
+    template<arithmetic U>
+    __fast_inline_constexpr Vector3_t operator -(const Vector3_t<U>& other) const {
+        Vector3_t ret = other;
+        return ret -= *this;
+    }
+
+
+    template<arithmetic U>
+    T dot(const Vector3_t<U> &v) const{
+        T ret = T(0);
         ret += x * v.x;
         ret += y * v.y;
         ret += z * v.z;
         return ret;
     }
 
-    template<typename U>
+    template<arithmetic U>
     Vector3_t cross(const Vector3_t<U> &u) const{
         Vector3_t v = u;
         return Vector3_t(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
     }
 
 
-    real length() const{
+    T length() const{
         return sqrt(x * x + y * y + z * z);
     }
 
-    real length_squared() const{
+    T length_squared() const{
         return x * x + y * y + z * z;
     }
 
@@ -123,14 +152,6 @@ public:
         v.normalize();
         return v;
     }
-
-    // __no_inline String toString(unsigned char decimalPlaces = 2){
-    //     return (String('(') + toString(x, decimalPlaces) +
-    //             String(", ") + toString(y, decimalPlaces) +
-    //             String(", ") + toString(z, decimalPlaces) +
-    //             String(')'));
-    // }
-
 };
 
 using Vector3 = Vector3_t<real_t>;

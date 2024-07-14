@@ -9,7 +9,7 @@ void DShotChannel::update(uint16_t data){
     }
 }
 
-void DShotChannel::trigger(){
+void DShotChannel::invoke(){
     dma_channel.begin((void *)&oc.cvr(), (void *)buf.begin(), buf.size());
 }
 

@@ -29,17 +29,29 @@ public:
 
 extern Bkp & bkp;
 
+
 struct BkpItem{
 private:
     uint8_t index;
 public:
     BkpItem(uint8_t _index) : index(_index){;}
 
-    BkpItem & operator = (const uint16_t & data){
+    BkpItem & operator = (const uint16_t data){
         bkp.writeData(index, data);
         return *this;
     }
+
+    BkpItem & operator = (const int data){
+        this->operator=((uint16_t)data);
+        return *this;
+    }
+
+    operator uint16_t(){
+        return bkp.readData(index);
+    }
+
 };
+
 
 
 

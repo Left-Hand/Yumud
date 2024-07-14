@@ -106,13 +106,29 @@ public:
         return (this->position!= other.position || this->size!= other.size);
     }
 
-    constexpr Rect2_t<T> & operator+(const Vector2_t<auto> & other){
-        this->position += other;
+    constexpr Rect2_t<T> operator+(const Vector2_t<auto> & other) const{
+        Rect2_t<T> ret = (*this).abs();
+        ret.position += other;
+        return(ret);
+    }
+
+    constexpr Rect2_t<T> operator*(const auto & ratio) const{
+        Rect2_t<T> ret = (*this).abs();
+        ret.position *= ratio;
+        ret.size *= ratio;
+        return(*this);
+    }
+
+    constexpr Rect2_t<T> operator/(const auto & ratio) const{
+        Rect2_t<T> ret = (*this).abs();
+        ret.position /= ratio;
+        ret.size /= ratio;
         return(*this);
     }
 
     [[deprecated]] constexpr Rect2_t<T> & operator-(const Vector2_t<auto> & other){
-        this->position -= other;
+        Rect2_t<T> ret = (*this).abs();
+        ret.position -= other;
         return(*this);
     }
 

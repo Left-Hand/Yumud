@@ -5,7 +5,7 @@
 #define UART_TB_ECHO
 using std::string;
 
-static void getline(IOStream & logger, string & str){
+[[maybe_unused]] static void getline(IOStream & logger, string & str){
     String temp_str;
     while(true){
         if(logger.available()){
@@ -29,30 +29,28 @@ static void getline(IOStream & logger, string & str){
     }
 }
 
-static void uart_tb(Uart & uart){
+[[maybe_unused]] static void uart_tb(Uart & uart){
     #ifdef UART_TB_ECHO
 
     auto & tx_led = portC[13];
     auto & rx_led = portC[14];
     tx_led.outpp();
     rx_led.outpp();
-    uart.bindTxPostCb([&](){
-        tx_led.set();
-        delay(1);
-        tx_led.clr();
-    });
 
-    uart.bindRxPostCb([&](){
-        rx_led.set();
-        delay(1);
-        rx_led.clr();
-    });
+    auto & rxio = uart.rxio();
+    rxio.outpp();
+    // uart.bindTxPostCb([&](){
+    //     tx_led.set();
+    //     delay(1);
+    //     tx_led.clr();
+    // });
 
-    while(true){
-        std::string str;
-        getline(uart, str);
-        uart.println("you input", str);
-    }
+    // uart.bindRxPostCb([&](){
+    //     rx_led.set();
+    //     delay(1);
+    //     rx_led.clr();
+    // });
+
     while(true){
         size_t size = uart.available();
         if(uart.available()){
@@ -63,13 +61,64 @@ static void uart_tb(Uart & uart){
             uart.println(str, size);
         }
         delay(300);
-        uart.println("nothing", size);
+        // tx_led = false;
+        rxio = false;
+        uart.println("nothing", uart7.available());
+        // tx_led = true;
+        rxio = true;
     }
     #endif
 }
 
+[[maybe_unused]] static void uart_tb_old(){
+
+    USART_InitTypeDef USART_InitStructure = {0};
+    // UART7_TX_GPIO.outpp();
+    UART7_TX_GPIO.afpp();
+    UART7_RX_GPIO.inflt();
+
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, ENABLE);
+
+    GPIO_PinRemapConfig(GPIO_FullRemap_USART7, ENABLE);
+
+
+    USART_InitStructure.USART_BaudRate = 115200;
+    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
+    USART_InitStructure.USART_StopBits = USART_StopBits_1;
+    USART_InitStructure.USART_Parity = USART_Parity_No;
+    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+    USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
+
+    USART_Init(UART7, &USART_InitStructure);
+    
+    USART_Cmd(UART7, ENABLE);
+    [[maybe_unused]] auto write = [](const char * str){
+        for(size_t i=0;str[i];i++){
+            UART7->DATAR = (uint8_t)str[i];
+            while((UART7->STATR & USART_FLAG_TXE) == RESET);
+        }
+    };
+    
+    while(true){
+        write("hello\r\n");
+        // UART7_TX_GPIO.set();
+        // delay(200);
+        // UART7_TX_GPIO.clr();
+        // delay(200);
+    }
+
+
+}
 void uart_main(){
-    auto & logger = uart2;
-    logger.init(576000, CommMethod::Blocking);
+    // uart_tb_old();
+    //uart1 passed
+    //uart2 passed
+    //uart3 passed
+    //uart5 passed
+    //uart6 passed
+    //uart8 passed
+
+    auto & logger = uart8;
+    logger.init(115200, CommMethod::Blocking, CommMethod::Interrupt);
     uart_tb(logger);
 }

@@ -2,6 +2,7 @@
 
 #define __IMAGE_HPP__
 
+#include "../types/vector2/vector2_t.hpp"
 #include "../types/rect2/rect2_t.hpp"
 #include "../types/color/color_t.hpp"
 #include "../types/rgb.h"
@@ -17,14 +18,6 @@ class ImageWR;
 
 template <typename ColorType>
 class PixelProxy;
-
-// template <typename ColorType, typename DataType>
-// class ImageWithData;
-
-
-
-
-
 
 template<typename ColorType>
 class ImageBasics{
@@ -192,11 +185,11 @@ public:
         Rect2i area(pos, Vector2i(1, 8));
         if(Rect2i(this->size, Vector2i()).contains(area)){
             for(int i = 0; i < 8; i++){
-                if(mask & (1 << i)) putpixel_unsafe(pos + Vector2i(0, i), color);
+                if(mask & (1 << i)) putpixel_unsafe(pos + Vector2i{0,i}, color);
             }
         }else{
             for(int i = 0; i < 8; i++){
-                if(mask & (1 << i))putpixel(pos + Vector2i(0, i), color);
+                if(mask & (1 << i))putpixel(pos + Vector2i{0,i}, color);
             }
         }
     }
@@ -205,11 +198,11 @@ public:
         Rect2i area(pos, Vector2i(8, 1));
         if(Rect2i(this->size, Vector2i()).contains(area)){
             for(int i = 0; i < 8; i++){
-                if(mask & (0x80 >> i))putpixel_unsafe(pos + Vector2i(i, 0), color);
+                if(mask & (0x80 >> i))putpixel_unsafe(pos + Vector2i{i,0}, color);
             }
         }else{
             for(int i = 0; i < 8; i++){
-                if(mask & (1 << i))putpixel(pos + Vector2i(i, 0), color);
+                if(mask & (1 << i))putpixel(pos + Vector2i{i,0}, color);
             }
         }
     }
@@ -393,26 +386,26 @@ class Image565 : public ImageDataTypeSame<RGB565>{
 
 };
 
-// #define make_image(type, size) (ImageWithData<type, type> (size));
-
 template<typename ColorType>
-__fast_inline auto make_image(const Vector2i & size){
+__inline auto make_image(const Vector2i & size){
     return Image<ColorType, ColorType>(size);
 }
-// template<typename ColorType>
-// auto make_image(const
+
+__inline auto make_gray(const Vector2i & size){return make_image<Grayscale>(size);};
+__inline auto make_bina(const Vector2i & size){return make_image<Binary>(size);};
 
 
-// #define make_bina_mirror(src) (Image<Binary, Binary>(std::reinterpret_pointer_cast<Image<Binary, Binary>>((src.data), src.get_size())))
-__fast_inline Image<Grayscale, Grayscale> make_gray_mirror(const Image<Binary, Binary>  &src){
-    return Image<Grayscale, Grayscale>(
-        std::reinterpret_pointer_cast<Grayscale[]>(src.data), src.get_size()
-    );
+template<typename ColorType>
+__inline auto make_mirror(const Image<auto, auto> &src){
+    return Image<ColorType, ColorType>(std::reinterpret_pointer_cast<ColorType[]>(src.data),
+        src.get_size());
 }
 
-__fast_inline Image<Binary, Binary> make_bina_mirror(const Image<Grayscale, Grayscale>  &src){
-    return Image<Binary, Binary>(
-        std::reinterpret_pointer_cast<Binary[]>(src.data), src.get_size()
-    );
-}
+
+template<typename ColorType>
+__inline auto make_gray_mirror(const Image<ColorType, ColorType> & src){return make_mirror<Grayscale>(src);};
+
+template<typename ColorType>
+__inline auto make_bina_mirror(const Image<ColorType, ColorType> & src){return make_mirror<Binary>(src);};
+
 #endif

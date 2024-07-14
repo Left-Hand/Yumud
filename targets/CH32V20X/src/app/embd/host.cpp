@@ -1,9 +1,9 @@
 #include "host.hpp"
 #include "imgtrans/img_trans.hpp"
 
-#include "../nvcv2/pixels.hpp"
-#include "../nvcv2/shape.hpp"
-#include "../nvcv2/geometry.hpp"
+#include "../nvcv2/pixels/pixels.hpp"
+#include "../nvcv2/shape/shape.hpp"
+#include "../nvcv2/geometry/geometry.hpp"
 #include "../nvcv2/two_pass.hpp"
 #include "../nvcv2/flood_fill.hpp"
 #include "../nvcv2/mnist/mnist.hpp"
@@ -99,7 +99,8 @@ void EmbdHost::main(){
 
     while(true){
         led = !led;
-        auto img = Shape::x4(camera,2);
+        // auto img = Shape::x4(camera);
+        auto img = camera.clone(camera.get_window()/2);
         plot_gray(img, img.get_window());
 
         auto diff = img.space();
@@ -144,7 +145,7 @@ void EmbdHost::main(){
         Shape::FloodFill ff;
         auto map = ff.run(img_bina);
         Pixels::dyeing(map, map);
-        plot_gray(map, diff.get_window() + Vector2i{0, 2 * img.size.y});
+        // plot_gray(map, diff.get_window() + Vector2i{0, 2 * img.size.y});
 
         // plot_gray(map, map.get_window() + Vector2i{0, img.size.y * 2});
         // plot_gray(diff, map.get_window() + Vector2i{0, img.size.y * 3});
