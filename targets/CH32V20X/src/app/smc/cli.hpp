@@ -6,24 +6,26 @@
 #include "finder.hpp"
 
 namespace SMC{
-namespace CLI{
-    using namespace NVCV2;
+using namespace NVCV2;
+constexpr uint32_t hash_impl(char const * str , size_t size){
+    uint32_t hash = 5381;
+
+    for (size_t i = 0; i < size; i++) {
+        hash = ((hash << 5) + hash) ^ str[i]; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
+constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
+    return hash_impl(p, size);
+}
+
+class SmcCli{
 
     #define VNAME(x) #x
     
-    constexpr uint32_t hash_impl(char const * str , size_t size){
-        uint32_t hash = 5381;
 
-        for (size_t i = 0; i < size; i++) {
-            hash = ((hash << 5) + hash) ^ str[i]; /* hash * 33 + c */
-        }
-
-        return hash;
-    }
-
-    constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
-        return hash_impl(p, size);
-    }
 
     #define read_value(value)\
     {\
@@ -294,32 +296,26 @@ namespace CLI{
         tokens.erase(tokens.begin());
         parse_command(command, tokens);
     }
-
+public:
     void run(){
-        if(DEBUGGER.available()){
-            static String temp_str;
-            char chr = DEBUGGER.read();
-            if(chr == '\n'){
-                temp_str.trim();
-                if(temp_str.length()) parse_line(temp_str);
-                temp_str = "";
-            }else{
-                temp_str.concat(chr);
-            }
-        }
+        // if(DEBUGGER.available()){
+        //     static String temp_str;
+        //     temp_str.reserve(DEBUGGER.available() + 2);
+        //     while(DEBUGGER.available()){
+        //         char chr;
+        //         DEBUGGER.read(chr);
+                
+        //         if(chr == '\n'){
+        //             temp_str.alphanum();
 
-        if(LOGGER.available()){
-            static String temp_str;
-            char chr = LOGGER.read();
-            if(chr == '\n'){
-                temp_str.trim();
-                if(temp_str.length()) parse_line(temp_str);
-                temp_str = "";
-            }else{
-                temp_str.concat(chr);
-            }
-            // DEBUGGER.println(LOGGER.read());
-        }
+        //             if(temp_str.length()) parse_line(temp_str);
+
+        //             temp_str = "";
+        //         }else{
+        //             temp_str.concat(chr);
+        //         }
+        //     }
+        // }
     }
 };
 

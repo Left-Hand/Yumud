@@ -43,7 +43,7 @@ namespace NVCV2{
     };
 
     using Coast = sstl::vector<Vector2i, 80>;
-    using Boundary = std::map<int, int>;
+    using Boundry = std::map<int, int>;
     using Pile = std::pair<int, Rangei>;
     using Piles = std::map<int, Rangei>;
     using Point = Vector2i; 

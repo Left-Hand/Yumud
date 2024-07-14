@@ -9,14 +9,14 @@
 
 #define EXTRA_IQ
 
-#define HAVE_UART1
-#define HAVE_UART2
-#define HAVE_UART3
-#define HAVE_UART4
-#define HAVE_UART5
+// #define HAVE_UART1
+// #define HAVE_UART2
+// #define HAVE_UART3
+// #define HAVE_UART4
+// #define HAVE_UART5
 #define HAVE_UART6
-#define HAVE_UART7
-#define HAVE_UART8
+// #define HAVE_UART7
+// #define HAVE_UART8
 
 
 
