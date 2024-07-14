@@ -36,6 +36,9 @@ using std::string;
     auto & rx_led = portC[14];
     tx_led.outpp();
     rx_led.outpp();
+
+    auto & rxio = uart.rxio();
+    rxio.outpp();
     // uart.bindTxPostCb([&](){
     //     tx_led.set();
     //     delay(1);
@@ -58,9 +61,11 @@ using std::string;
             uart.println(str, size);
         }
         delay(300);
-        tx_led = false;
+        // tx_led = false;
+        rxio = false;
         uart.println("nothing", uart7.available());
-        tx_led = true;
+        // tx_led = true;
+        rxio = true;
     }
     #endif
 }
@@ -105,9 +110,15 @@ using std::string;
 
 }
 void uart_main(){
-    uart_tb_old();
-    // auto & logger = uart7;
-    // // uart7.init(115200);
-    // logger.init(115200, CommMethod::Blocking, CommMethod::Interrupt);
-    // uart_tb(logger);
+    // uart_tb_old();
+    //uart1 passed
+    //uart2 passed
+    //uart3 passed
+    //uart5 passed
+    //uart6 passed
+    //uart8 passed
+
+    auto & logger = uart8;
+    logger.init(115200, CommMethod::Blocking, CommMethod::Interrupt);
+    uart_tb(logger);
 }

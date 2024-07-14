@@ -48,6 +48,8 @@ protected:
     TimerOC & oc;
     DmaChannel & dma_channel;
 
+    bool enabled = false;
+
     static constexpr uint16_t m_crc(uint16_t data_in){
         uint16_t speed_data;
         speed_data = data_in << 5;
@@ -56,7 +58,7 @@ protected:
         return speed_data | data_in;
     }
     void update(uint16_t data);
-    void trigger();
+    void invoke();
 
 public:
     DShotChannel(TimerOC & _oc):
@@ -70,9 +72,19 @@ public:
     DShotChannel(DShotChannel && other) = delete;
 
     void init();
+
+    void enable(const bool en){
+        enabled = en;
+        if(enabled == false){
+            update(0);
+            invoke();
+        }
+    }
     auto & operator = (const real_t duty){
-        update(MAX(int(duty * 4096), 48));
-        trigger();
+        if(enabled){
+            update(MAX(int(duty * 4096), 48));
+            invoke();
+        }
         return *this;
     }
 };

@@ -3,6 +3,7 @@
 #define __SMC_FANS_HPP__
 
 #include "../hal/timer/timer.hpp"
+#include "../drivers/Modem/dshot/dshot.hpp"
 
 namespace SMC{
 
@@ -44,8 +45,6 @@ public:
             instanceN = (-duty);
         }
     }
-
-
 
     void setForce(const real_t & force){
 
@@ -96,35 +95,25 @@ public:
 
 class ChassisFan{
 protected:
-    TimerOC & instance;
-    Range_t<real_t>duty_clamp = {0, 0.12};
+    DShotChannel interface;
+    real_t duty_clamp = 0.12;
 public:
-    ChassisFan(TimerOC & _instance):instance(_instance){;}
+    ChassisFan(TimerOC & oc):interface(oc){;}
 
     void init(){
-        instance.init();
+        interface.init();
     }
 
-    void enable(const bool & en = true){
-        instance.enable(en);
+    void enable(const bool en = true){
+        interface.enable(en);
     }
 
-    void setClamp(const Range_t<real_t> & _duty_clamp){
+    void setClamp(const real_t _duty_clamp){
         duty_clamp = _duty_clamp;
     }
 
-    void setDuty(const real_t & _duty){
-        real_t duty = duty_clamp.clamp(_duty);
-        instance = duty;
-        // instance = real_t(0);
-    }
-
-    void setForce(const real_t & force){
-        setDuty(force);
-    }
-
-    auto & operator = (const real_t & _force){
-        setForce(_force);
+    auto & operator = (const real_t _force){
+        interface = _force;
         return *this;
     }
 };
