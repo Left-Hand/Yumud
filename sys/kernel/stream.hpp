@@ -51,9 +51,6 @@ public:
 
     char read(){char data; read(data); return data;};
 
-    char test(){return 'b';}
-
-
     String readString(const size_t & len);
     String readStringUntil(const char & chr);
     String readString(){return readString(available());}
@@ -62,9 +59,9 @@ public:
 
 class OutputStream: virtual public BasicStream{
 private:
-    void write(const char * data_ptr){
-        for(size_t i=0;data_ptr[i] != 0; i++) write(data_ptr[i]);
-	}
+    // void write(const char * data_ptr){
+    //     for(size_t i=0;data_ptr[i] != 0; i++) write(data_ptr[i]);
+	// }
 public:
     uint8_t radix = 10;
     uint8_t eps = 2;
@@ -108,10 +105,10 @@ public:
     OutputStream & operator<<(const char chr){write(chr); return *this;}
     // template<>
     OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
-    OutputStream & operator<<(char* str){write(str); return *this;}
-    OutputStream & operator<<(const char* str){write(str); return *this;}
-    OutputStream & operator<<(const String & str){write(str.c_str()); return *this;}
-    OutputStream & operator<<(const std::string & str){write(str.c_str()); return *this;}
+    OutputStream & operator<<(char* str){write(str, strlen(str)); return *this;}
+    OutputStream & operator<<(const char* str){write(str, strlen(str)); return *this;}
+    OutputStream & operator<<(const String & str){write(str.c_str(), str.length()); return *this;}
+    OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
     OutputStream & operator<<(const std::string_view & str){write(str.data(), str.length()); return * this;}
     OutputStream & operator<<(const float val){*this << String(val); return * this;}
     OutputStream & operator<<(const double val){*this << String(val); return * this;}
@@ -219,9 +216,7 @@ public:
     template <typename T, typename... Args>
     void prints(T first, Args... args) {
         *this << first;
-        if(!skipSpec) *this << space;
-        else skipSpec = false;
-        println(args...);
+        prints(args...);
     }
 private:
 };

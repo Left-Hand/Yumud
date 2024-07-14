@@ -142,7 +142,7 @@
 
 
 #ifdef HAVE_UART6
-    #define UART6_IT_PP 1
+    #define UART6_IT_PP 0
     #define UART6_IT_SP 1
 
     #define UART6_TX_DMA_CH dma2Ch6

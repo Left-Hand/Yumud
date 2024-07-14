@@ -16,13 +16,14 @@
 #include "../types/vector2/vector2_t.hpp"
 #include "../types/vector3/vector3_t.hpp"
 
+#include "ctrl.hpp"
 #include "body.hpp"
 #include "elements.hpp"
 #include "fans.hpp"
 
 #include "finder.hpp"
 #include "cli.hpp"
-
+#include "config.hpp"
 
 struct Key{
 protected:
@@ -78,9 +79,11 @@ using namespace SMC;
 
 class SmartCar:public SmcCli{
 protected:
-    static void recordRunStatus(const RunStatus & status);
+    void recordRunStatus(const RunStatus status);
+    void printRecordedRunStatus();
 
-    static void printRecordedRunStatus();
+    GlobalConfig config;
+    MotorStrength motor_strength;
 
     SideFan left_fan    {timer4.oc(2), timer4.oc(1)};
     SideFan right_fan  {timer5.oc(3), timer5.oc(4)};
@@ -95,26 +98,20 @@ protected:
     ChassisFanPair chassis_fan{chassis_left_fan, chassis_right_fan};
     RigidBody body{motor_strength, left_fan, right_fan, hri_fan, chassis_fan};
 
-    SpiDrv SpiDrvLcd = SpiDrv{spi2, 0};
-    DisplayInterfaceSpi SpiInterfaceLcd {SpiDrvLcd, portD[7], portB[7]};
+    TurnCtrl turn_ctrl;
+    SideCtrl side_ctrl;
+    SpeedCtrl speed_ctrl;
+    SideVelocityObserver side_velocity_observer;
+
+    DisplayInterfaceSpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
     ST7789 tftDisplayer {SpiInterfaceLcd, Vector2i(240, 240)};
     Painter<RGB565> painter = Painter<RGB565>{};
+
     I2cSw sccb      {portD[2], portC[12]};
-    I2cSw i2csw     {portB[3], portB[5]};
+    I2cSw i2c     {portB[3], portB[5]};
     MT9V034 camera  {sccb};
 
-    Quat accel_offs;
-    Vector3 gyro_offs;
-    Quat magent_offs;
 
-
-    Vector3 accel;
-    Vector3 gyro;
-    Vector3 magent;
-    real_t current_dir;
-
-    Vector2i seed_pos;
-    Rangei road_window;
 
     static constexpr RGB565 white = 0xffff;
     static constexpr RGB565 black = 0;
@@ -122,17 +119,24 @@ protected:
     static constexpr RGB565 green = RGB565(0,63,0);
     static constexpr RGB565 blue = RGB565(0,0,31);
 
+    static constexpr uint ctrl_freq = 240;
+    static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
+
     real_t delta = real_t(0);
     real_t fps = real_t(0);
+    real_t measured_offs_err;
 
-    MPU6050 mpu{i2csw};
+    BkpItem & runStatusReg = bkp[1];
+    BkpItem & powerOnTimesReg = bkp[2];
 
-    QMC5883L qml{i2csw};
 
+    MPU6050 mpu{i2c};
+    QMC5883L qml{i2c};
+
+    Measurement msm;
 
     Key start_key   {portE[2], true};
     Key stop_key    {portE[3], true};
-
 
     void ctrl();
     
@@ -145,6 +149,10 @@ protected:
     void init_camera();
 
     void init_it();
+
+    void update_sensors();
+protected:
+    void parse_command(String &, std::vector<String> & args) override;
 public:
     void main();
 };
