@@ -342,7 +342,7 @@ void UartHw::enableRcc(const bool en){
 }
 
 
-Gpio & UartHw::getRxPin(){
+Gpio & UartHw::rxio(){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
@@ -381,7 +381,7 @@ Gpio & UartHw::getRxPin(){
     }
 }
 
-Gpio & UartHw::getTxPin(){
+Gpio & UartHw::txio(){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
@@ -590,7 +590,7 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
     if(txMethod != _txMethod){
         txMethod = _txMethod;
         if(txMethod != CommMethod::None){
-            Gpio & tx_pin = getTxPin();
+            Gpio & tx_pin = txio();
             tx_pin.afpp();
         }
         switch(txMethod){
@@ -614,7 +614,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
     if(rxMethod != _rxMethod){
         rxMethod = _rxMethod;
         if(rxMethod != CommMethod::None){
-            Gpio & rx_pin = getRxPin();
+            Gpio & rx_pin = rxio();
             rx_pin.inpu();
         }
         switch(rxMethod){
@@ -651,11 +651,11 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const Com
                                     ((_rxMethod != CommMethod::None) ? USART_Mode_Rx : 0);
 
     USART_Init(instance, &USART_InitStructure);
+    USART_Cmd(instance, ENABLE);
 
     enableIt(true);
     setTxMethod(_txMethod);
     setRxMethod(_rxMethod);
-    USART_Cmd(instance, ENABLE);
 }
 
 UartHw::Error UartHw::lead(const uint8_t index){

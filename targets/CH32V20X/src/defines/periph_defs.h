@@ -178,7 +178,7 @@
     #define UART7_TX_GPIO portA[6]
     #define UART7_RX_GPIO portA[7]
 
-    #elif (UART7_REMAP == 2) || (UART_REMAP == 3)
+    #elif (UART7_REMAP == 2) || (UART7_REMAP == 3)
     #define UART7_TX_GPIO portE[12]
     #define UART7_RX_GPIO portE[13]
 

@@ -10,9 +10,11 @@
 #define EXTRA_IQ
 
 #define HAVE_UART4
+#define HAVE_UART2
 #define HAVE_UART7
 #define UART4_REMAP 3
-#define UART7_REMAP 2
+#define UART2_REMAP 0
+#define UART7_REMAP 3
 
 #define HAVE_SPI2
 #define SPI2_REMAP 1

@@ -9,9 +9,6 @@ public:
 protected:
     USART_TypeDef * instance;
 
-    Gpio & getTxPin();
-    Gpio & getRxPin();
-
     void enableRcc(const bool en = true);
 
     void enableIt(const bool en = true);
@@ -51,7 +48,6 @@ public:
     UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):
             instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
 
-
     void init(
         const uint32_t baudRate, 
         const CommMethod _txMethod = CommMethod::Dma,
@@ -63,7 +59,8 @@ public:
 
     void configBaudRate(const uint32_t baudRate) override{;}//TODO
 
-
+    Gpio & txio() override;
+    Gpio & rxio() override;
 };
 
 

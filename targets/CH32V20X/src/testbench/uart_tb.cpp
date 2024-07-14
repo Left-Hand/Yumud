@@ -36,17 +36,17 @@ static void uart_tb(Uart & uart){
     auto & rx_led = portC[14];
     tx_led.outpp();
     rx_led.outpp();
-    uart.bindTxPostCb([&](){
-        tx_led.set();
-        delay(1);
-        tx_led.clr();
-    });
+    // uart.bindTxPostCb([&](){
+    //     tx_led.set();
+    //     delay(1);
+    //     tx_led.clr();
+    // });
 
-    uart.bindRxPostCb([&](){
-        rx_led.set();
-        delay(1);
-        rx_led.clr();
-    });
+    // uart.bindRxPostCb([&](){
+    //     rx_led.set();
+    //     delay(1);
+    //     rx_led.clr();
+    // });
 
     while(true){
         size_t size = uart.available();
@@ -57,14 +57,16 @@ static void uart_tb(Uart & uart){
             str.toUpperCase();
             uart.println(str, size);
         }
-        delay(300);
-        uart.println("nothing", size);
+        // delay(300);
+        tx_led = false;
+        uart.println("nothing", uart7.available());
+        tx_led = true;
     }
     #endif
 }
 
 void uart_main(){
-    auto & logger = DEBUGGER;
-    logger.init(115200, CommMethod::Blocking);
+    auto & logger = uart2;
+    logger.init(115200, CommMethod::Blocking, CommMethod::Interrupt);
     uart_tb(logger);
 }
