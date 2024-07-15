@@ -13,19 +13,26 @@ private:
 protected:
     BkpItem(uint8_t _index) : index(_index){;}
     friend class Bkp;
+
+    void store(const uint16_t);
+    uint16_t load();
 public:
 
 
     BkpItem(const BkpItem & other) = delete;
     BkpItem(BkpItem && other) = delete;
 
-    BkpItem & operator = (const int data){
-        this->operator=((uint16_t)data);
+    template<typename T>
+    requires (sizeof(T) <= 2)
+    BkpItem & operator = (const T data){
+        store(*((uint16_t *)&(data)));
         return *this;
     }
 
-    BkpItem & operator = (const uint16_t data);
-    operator uint16_t();
+    template<typename T>
+    operator T(){
+        return static_cast<T>(load());
+    }
 };
 
 

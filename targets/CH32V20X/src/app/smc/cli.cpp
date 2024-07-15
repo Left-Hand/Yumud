@@ -1,10 +1,15 @@
 #include "smc.h"
 
+
+
+
 void SmartCar::parse_command(String & command,std::vector<String> &args){
     using NVCV2::Geometry::perspective_config;
     command.toLowerCase();
     command.alphanum();
-    DEBUGGER.prints("command is: ", command);
+
+    if(command.length() == 0) return;
+    DEBUG_PRINTS("command is: \t", command);
     switch(hash_impl(command.c_str(), command.length())){
         
             case "perspective"_ha:
@@ -110,6 +115,7 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
                 DEBUG_PRINTLN("turnctrl: invalid syntax");
             }
             break;
+
         case "motor"_ha:
         case "ms"_ha:
             if(args.size() == 0){
@@ -159,9 +165,22 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         case "awidth"_ha:
             settle_clamped_value(config.align_space_width,args, 0, 20);
             break;
-        case "fm"_ha:
-            read_value(config.frame_ms);
+
+        case "pde"_ha:
+            settle_value(flags.plot_de, args);
             break;
+
+        case "bench"_ha:
+        case "bm"_ha:
+            read_value(benchmark.cap)
+            read_value(benchmark.pers)
+            read_value(benchmark.gray)
+            read_value(benchmark.bina)
+            read_value(benchmark.frame_ms);
+
+            DEBUG_PRINTS("fps is:", 1000/benchmark.frame_ms);
+            break;
+
         case "pt"_ha:
             settle_value(config.positive_threshold,args);
             break;
@@ -176,12 +195,45 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         case "r"_ha:
             NVIC_SystemReset();
             break;
+        case "acc"_ha:
+            DEBUG_PRINTLN(mpu.getAccel());
+            break;
+        case "gyro"_ha:
+            DEBUG_PRINTLN(mpu.getGyro());
+            break;
+        case "mag"_ha:
+            DEBUG_PRINTLN(qml.getMagnet());
+            break;
         case "st"_ha:
-            DEBUG_PRINTLN()
+        case "stat"_ha:
+            DEBUG_PRINTLN(RunStatus::_from_integral_nothrow(int(runStatusReg)));
+            break;
+
         case "en"_ha:
         case "e"_ha:
-            config.enable_flag = true;
-            DEBUG_PRINTLN("enabled");
+            flags.enable_trig= true;
+            break;
+
+
+        case "de"_ha:
+        case "d"_ha:
+            flags.disable_trig = true;
+            break;
+
+        case "alive"_ha:
+        case "a"_ha:
+            DEBUG_PRINTLN("is alive");
+            break;
+
+        case "flag"_ha:
+            DEBUG_PRINTLN(toString(int(flags.data),2));
+            break;
+
+        case "int"_ha:
+            if(args.size()){
+                camera.setExposureValue(int(args[0]));
+                DEBUG_PRINTLN("set exposure value", args[0]);
+            }
             break;
         default:
             DEBUG_PRINTLN("no command available");

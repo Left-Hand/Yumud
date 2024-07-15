@@ -51,6 +51,7 @@ int main(){
     #elif defined(CH32V30X)
 
     // gpio_tb(UART7_TX_GPIO);
+    // eeprom_main();
     // uart_main();
     // calc_main();
     // dshot_main();

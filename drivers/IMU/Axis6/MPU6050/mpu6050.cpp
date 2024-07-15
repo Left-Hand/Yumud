@@ -15,6 +15,7 @@ void MPU6050::init(){
 void MPU6050::update(){
     requestData(RegAddress::AccelX, &accel.x, 7);
 }
+
 std::tuple<real_t, real_t, real_t> MPU6050::getAccel(){
     real_t x, y, z;
     s16_to_uni(accel.x, x); x *= accel_scaler;

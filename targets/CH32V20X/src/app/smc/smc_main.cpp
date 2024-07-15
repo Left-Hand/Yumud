@@ -5,6 +5,18 @@ using namespace NVCV2;
 using NVCV2::Shape::CoastFinder;
 using NVCV2::Shape::Seed;
 
+
+static void fast_bina_opera(Image<Binary, Binary>out, Image<Grayscale, Grayscale> & em, const uint8_t et, Image<Grayscale, Grayscale>& dm, const uint8_t dt) {
+    const auto size = (Rect2i(Vector2i(), em.size).intersection(Rect2i(Vector2i(), dm.size))).size;
+    const auto area = size.x * size.y;
+
+    for (auto i = 0; i < area; i++) {
+        out[i] = Binary(((uint8_t)em[i] > et) || ((uint8_t)dm[i] > dt));
+    }
+}
+
+
+
 void SmartCar::recordRunStatus(const RunStatus status){
     runStatusReg = uint16_t(uint8_t(status));
 }
@@ -20,23 +32,28 @@ void SmartCar::printRecordedRunStatus(){
 void SmartCar::ctrl(){
     Sys::Clock::reCalculateTime();
 
+    static constexpr real_t target_dir = real_t(PI / 2);
 
     mpu.update();
     qml.update();
 
+    // DEBUG_PRINTLN(mpu.getAccel());
+    // DEBUG_PRINTLN(bool(start_key), bool(stop_key));
     msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
     msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
     msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
 
-    static constexpr real_t target_dir = real_t(PI / 2);
 
     real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
-    real_t measured_acc = msm.accel.y;
 
-    real_t estimated_velocity = side_velocity_observer.update(measured_offs_err, measured_acc);
-    real_t side_output = side_ctrl.update(0, measured_offs_err, -estimated_velocity);
+    real_t side_acc = msm.accel.y;
+    real_t side_volocity = side_velocity_observer.update(side_offs_err, side_acc);
+    real_t side_output = side_ctrl.update(0, side_offs_err, -side_volocity);
 
     real_t speed_output = speed_ctrl.update();
+
+
+
     motor_strength.left = turn_output;
     motor_strength.right = -turn_output;
 
@@ -49,7 +66,7 @@ void SmartCar::ctrl(){
 }
 
 void SmartCar::init_debugger(){
-    LOGGER.init(576000, CommMethod::Blocking);
+    LOGGER.init(115200, CommMethod::Blocking);
     LOGGER.setEps(4);
     LOGGER.setRadix(10);
 
@@ -63,7 +80,7 @@ void SmartCar::init_periphs(){
         portD[4] = 1;
     }
 
-    powerOnTimesReg = powerOnTimesReg + 1;
+    powerOnTimesReg = uint16_t(int(powerOnTimesReg) + 1);
     printRecordedRunStatus();
     DEBUG_PRINTLN("pwon", int(powerOnTimesReg));
 
@@ -101,7 +118,7 @@ void SmartCar::init_lcd(){
 
 void SmartCar::init_sensor(){
 
-    i2c.init(100000);
+    i2c.init(400000);
     sccb.init(10000);
 
     mpu.init();
@@ -171,16 +188,30 @@ void SmartCar::main(){
     auto diff_bina_image = make_bina_mirror(diff_gray_image);
     auto sketch = make_image<RGB565>(pic_size);
 
+    #define CHECK_PLOTDE()\
+    if(flags.plot_de)\
+    return;\
+
     [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
+        CHECK_PLOTDE();
+        painter.bindImage(tftDisplayer);
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
     [[maybe_unused]] auto plot_bina = [&](Image<Binary, Binary> & src, const Rect2i & area){
+        CHECK_PLOTDE();
+        painter.bindImage(tftDisplayer);
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_coast = [&](const Coast & coast,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
+    
+    [[maybe_unused]] auto plot_sketch = [&](const Rect2i & area){
+        CHECK_PLOTDE();
+        painter.bindImage(tftDisplayer);
+        tftDisplayer.puttexture_unsafe(area, sketch.data.get());
+    };
 
+    [[maybe_unused]] auto plot_coast = [&](const Coast & coast,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
         if(coast.size() <= 1){
             return;
         }
@@ -252,10 +283,6 @@ void SmartCar::main(){
         painter.drawLine(Vector2i{bound.second.start, bound.first}, {bound.second.end, bound.first});
     }; 
 
-    [[maybe_unused]] auto plot_sketch = [&](const Rect2i & area){
-        painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture_unsafe(area, sketch.data.get());
-    };
 
     [[maybe_unused]] auto plot_vec3 = [&](const Vector3 & vec3,  const Vector2i & pos){
         static constexpr auto square_length = 50;
@@ -302,53 +329,59 @@ void SmartCar::main(){
     };
 
     [[maybe_unused]] auto process_eve = [&](){
-        if(stop_key == false){
+
+        //first write, preserve
+        flagReg = flags;
+
+        flags.enable_trig |= start_key;
+        flags.disable_trig |= stop_key;
+
+        if(flags.enable_trig){
             body.enable(false);
+            DEBUG_PRINTLN("enabled");
+            flags.enable_trig = false;
         }
 
-        else if(start_key == false){
+        if(flags.disable_trig){
             body.enable(true);
+            DEBUG_PRINTLN("disabled");
+            flags.disable_trig = false;
         }
+
+
+        flagReg = flags;
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
 
+    camera.setExposureValue(300);
     while(true){
-        // plot_sketch({0, 120,188, 60});
-        // delay(1);
+        plot_gui();
+        #define CREATE_BENCHMARK(val) val = millis() - current_ms;\
 
+        auto current_ms = millis();
+        {
+            static uint last_ms = current_ms;
+            benchmark.frame_ms = current_ms - last_ms;
+            last_ms = current_ms;
+        }
 
         recordRunStatus(RunStatus::NEW_ROUND);
 
-        recordRunStatus(RunStatus::PROCESSING_CLI);
-        // SmcCli::run();
-
-        // auto & logger = DEBUGGER;
-        // if(logger.available()){
-        //     delay(1);
-        //     auto str = logger.readString();
-        //     DEBUGGER << "you input:" << str;
-        //     // parse_line(str);
-        // }
-
-        // delay(200);
-        // logger.println(logger.available());
-
-
-        // SmcCli::run();
-        continue;
-
         recordRunStatus(RunStatus::PROCESSING_EVENTS);
         process_eve();
-
 
         recordRunStatus(RunStatus::PROCESSING_IMG_BEGIN);
 
 
         plot_gray(camera, Rect2i{0,0,188,60});
 
+        CREATE_BENCHMARK(benchmark.cap);
+
         Geometry::perspective(pers_gray_image, camera);
         plot_gray(pers_gray_image, Rect2i{0, 60, 188, 60});
+
+        CREATE_BENCHMARK(benchmark.pers);
 
 
         Pixels::inverse(pers_gray_image);
@@ -357,12 +390,18 @@ void SmartCar::main(){
         Shape::convo_roberts_x(diff_gray_image, pers_gray_image);
         //获取x方向上的差分图
 
-        Pixels::binarization(diff_bina_image, diff_gray_image, config.edge_threshold);
+        CREATE_BENCHMARK(benchmark.gray);
+
+        // Pixels::binarization(diff_bina_image, diff_gray_image, config.edge_threshold);
         //将差分图二值化
 
 
-        Pixels::binarization(pers_bina_image, pers_gray_image, config.positive_threshold);
-        Pixels::or_with(pers_bina_image, diff_bina_image);
+        // Pixels::binarization(pers_bina_image, pers_gray_image, config.positive_threshold);
+        // Pixels::or_with(pers_bina_image, diff_bina_image);
+
+        fast_bina_opera(pers_bina_image, diff_gray_image, config.edge_threshold, pers_gray_image, config.positive_threshold);
+        // Pixels::adaptive_threshold(pers_bina_image, diff_gray_image);
+        CREATE_BENCHMARK(benchmark.bina);
         // Shape::dilate_xy(pers_bina_image);
         // Shape::dilate_xy(pers_bina_image);
         // Shape::erosion_x(pers_bina_image);
@@ -379,6 +418,7 @@ void SmartCar::main(){
 
         recordRunStatus(RunStatus::PROCESSING_IMG_END);
 
+
         auto & img = pers_gray_image;
         auto & img_bina = pers_bina_image;
 
@@ -392,7 +432,7 @@ void SmartCar::main(){
         continue;
 
         if(!msm.seed_pos) continue;
-        measured_offs_err = -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
+        side_offs_err = -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
 
         plot_point(msm.seed_pos);
 
@@ -423,6 +463,11 @@ void SmartCar::main(){
         auto track_left = CoastUtils::douglas_peucker(coast_left, config.dpv);
         auto track_right = CoastUtils::douglas_peucker(coast_right, config.dpv);
 
+        plot_coast(track_left, {0, 0}, RGB565::RED);
+        plot_coast(track_right, {0, 0}, RGB565::BLUE);
+
+        continue;
+
         recordRunStatus(RunStatus::PROCESSING_DP_END);
 
         if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
@@ -444,7 +489,7 @@ void SmartCar::main(){
                     msm.current_dir = (diff_left * diff_right_l + diff_right * diff_left_l).angle();
                 }
             }else{
-                if(config.align_right and bool(diff_right)){
+                if(flags.align_right and bool(diff_right)){
                     msm.current_dir = diff_right.angle();
                 }else if(bool(diff_left)){
                     msm.current_dir = diff_left.angle();
@@ -470,8 +515,6 @@ void SmartCar::main(){
         // DEBUG_PRINTLN("done plot track");
 
         // static constexpr Vector2i shapes_offset = Vector2i(0, 0);
-        plot_coast(track_left, {0, 0}, RGB565::RED);
-        plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
         plot_segment({msm.seed_pos, msm.seed_pos + Vector2(10.0, 0).rotated(-msm.current_dir)}, {0, 0}, RGB565::GRAY);
 

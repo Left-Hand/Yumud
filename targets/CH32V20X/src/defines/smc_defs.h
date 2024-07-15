@@ -54,4 +54,6 @@
 #define HAVE_USBFS
 
 #define DEBUGGER uart6
+#define DEBUG_UART_BAUD 115200
+
 #define LOGGER uart6

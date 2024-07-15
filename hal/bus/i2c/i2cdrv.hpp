@@ -54,21 +54,21 @@ private:
         size_t bytes = length * size;
         uint8_t * u8_ptr = (uint8_t *)data_ptr;
 
-        if(!bus.begin(index)){
+        if(bus.begin(index) == Bus::ErrorType::OK){
             writeRegAddress(reg_address);
-
-            for(size_t i = 0; i < bytes; i += size){
-                if(msb){
-                    for(size_t j = size; j > 0; j--){
-                        bus.write(u8_ptr[j-1 + i]);
-                    }
-                }else{
-                    for(size_t j = 0; j < size; j++){
-                        bus.write(u8_ptr[j + i]);
+            if(bus.begin(index) == Bus::ErrorType::OK){
+                for(size_t i = 0; i < bytes; i += size){
+                    if(msb){
+                        for(size_t j = size; j > 0; j--){
+                            bus.write(u8_ptr[j-1 + i]);
+                        }
+                    }else{
+                        for(size_t j = 0; j < size; j++){
+                            bus.write(u8_ptr[j + i]);
+                        }
                     }
                 }
             }
-
             bus.end();
         }
     }
@@ -81,9 +81,9 @@ private:
         size_t bytes = length * size;
         uint8_t * u8_ptr = (uint8_t *)data_ptr;
     
-        if(!bus.begin(index)){
+        if(bus.begin(index) == Bus::ErrorType::OK){
             writeRegAddress(reg_address);
-            if(!bus.begin(index | 0x01)){
+            if(bus.begin(index | 0x01) == Bus::ErrorType::OK){
                 for(size_t i = 0; i < bytes; i += size){
                     if(msb){
                         for(size_t j = size; j > 0; j--){

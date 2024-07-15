@@ -23,11 +23,10 @@ BkpItem & Bkp::operator [] (uint8_t index) {
 }
 
 
-BkpItem & BkpItem::operator = (const uint16_t data){
+void BkpItem::store(const uint16_t data){
     bkp.writeData(index, data);
-    return *this;
 }
-BkpItem::operator uint16_t(){
+uint16_t BkpItem::load(){
     return bkp.readData(index);
 }
 

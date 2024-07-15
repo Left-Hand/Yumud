@@ -15,6 +15,11 @@
 #define DEBUG_PRINTLN(...) DEBUGGER.println(__VA_ARGS__);
 #endif
 
+#ifndef DEBUG_PRINTS
+#define DEBUG_PRINTS(...) DEBUGGER.prints(__VA_ARGS__);
+#endif
+
+
 #ifndef DEBUG_TRAP
 #define DEBUG_TRAP(...) DEBUG_PRINTLN("[T]", ##__VA_ARGS__);
 #endif

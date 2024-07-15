@@ -28,7 +28,7 @@ class SmcCli{
 
     #define read_value(value)\
     {\
-        DEBUG_PRINTLN("get", VNAME(value), "\t\t is", value);\
+        DEBUG_PRINTS("<", VNAME(value), "> \t->\t", value);\
     }
 
     
@@ -39,7 +39,7 @@ class SmcCli{
             read_value(value);\
         }else if(args.size() == 1){\
             value = decltype(value)(args[0]);\
-            DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", args[0]);\
+            DEBUG_PRINTS("[", VNAME(value), "] \t<-\t", args[0]);\
         }\
     }
 
@@ -52,7 +52,7 @@ class SmcCli{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTS("[", VNAME(value), "] \t<-\t", value);\
         }\
     }
 
@@ -96,77 +96,32 @@ class SmcCli{
 
 protected:
     virtual void parse_command(String & command, std::vector<String> & args) = 0;
-    void parse_line(const String & line){
-        if(line.length() == 0) return;
-        auto tokens = split_string(line, ' ');
-        auto command = tokens[0];
-        tokens.erase(tokens.begin());
-        parse_command(command, tokens);
+    void parse_line(const String & _line){
+        // if(line.length() == 0) return;
+        // auto tokens = split_string(line, ' ');
+        // auto command = tokens[0];
+        // tokens.erase(tokens.begin());
+        // parse_command(command, tokens);
+        if(_line.length() == 0) return;
+        bool ends = (_line.lastIndexOf('\n') > 0);
+
+        String line = _line;
+        line.alphanum();
+
+        static String temp;
+        temp += line;
+
+        if(ends){
+            if(temp.length() != 0){
+                auto tokens = split_string(temp, ' ');
+                auto command = tokens[0];
+                tokens.erase(tokens.begin());
+                parse_command(command, tokens);
+            }
+            temp = "";
+        }
     }
 public:
-    void run(){
-        // if(DEBUGGER.available()){
-        //     static String temp_str;
-        //     temp_str.reserve(DEBUGGER.available() + 2);
-        //     DEBUGGER.println("ava", DEBUGGER.available());
-        //     while(DEBUGGER.available()){
-        //         char chr;
-        //         DEBUGGER.read(chr);
-        //         DEBUGGER.println('c', int(chr));
-                
-        //         if(chr == '\n'){
-        //             temp_str.alphanum();
-        //             DEBUGGER << "you input:" << temp_str;
-        //             if(temp_str.length()) parse_line(temp_str);
-
-        //             temp_str = "";
-        //         }else{
-        //             temp_str.concat(chr);
-        //         }
-        //     }
-        //     DEBUGGER.println("temp", temp_str, DEBUGGER.available());
-        // }
-
-        // auto & logger = DEBUGGER;
-        // if(logger.available()){
-        //     delay(1);
-        //     auto str = logger.readString();
-        //     DEBUGGER << "you input:" << str;
-        //     parse_line(str);
-        // }
-        // {
-        //     static auto last_millis = millis();
-        //     if(millis() - last_millis > 20){
-        //         auto & debugger = DEBUGGER;
-        //         // auto ava = debugger.available();
-        //         if(debugger.available()){
-        //             delay(1);
-        //             auto str = debugger.readString();
-        //             str.alphanum();
-        //             debugger.println(str);
-        //         }
-        //         last_millis = millis();
-        //     }
-        // }
-        // auto & logger = DEBUGGER;
-        // if(logger.available()){
-        //     static String temp_str;
-        //     while(logger.available()){
-        //         char chr;
-        //         logger.read(chr);
-                
-        //         if(chr == '\n'){
-        //             temp_str.alphanum();
-
-        //             if(temp_str.length()) parse_line(temp_str);
-
-        //             temp_str = "";
-        //         }else{
-        //             temp_str.concat(chr);
-        //         }
-        //     }
-        // }
-    }
 };
 
 };

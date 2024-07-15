@@ -9,7 +9,7 @@
 #define EEPROM_TB_FIRSTBYTE
 #define EEPROM_TB_SEVERLBYTES
 // #define EEPROM_TB_WHOLECHIP
-#define EEPROM_TB_RANDOM
+// #define EEPROM_TB_RANDOM
 
 // #define EEPROM_TB_PIECES
 #define EEPROM_TB_CONTENT
@@ -22,7 +22,7 @@
 #endif
 
 struct Temp{
-    uint8_t data[4] = {0,1,2,3};
+    std::array<uint8_t, 4> data = {0x5a,0xa5,0x54,00};
     char name[8] = "Rstr1aN";
     real_t value = real_t(0.1);
     uint8_t crc = 0x08;
@@ -135,13 +135,18 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     #ifdef EEPROM_TB_CONTENT
     {
 
-        logger.println("struct tb");
+        logger.println("content tb");
         Temp temp;
+
+
+        logger.println("write", temp.value, temp.data);
         mem.store(temp);
         temp.value = 0.2;
-        logger.println(temp.value);
+        temp.data.fill(0x78);
+        logger.println("modi", temp.value, temp.data);
         mem.load(temp);
-        logger.println(temp.value);
+        logger.println("read", temp.value, temp.data);
+
     }
     #endif
 
@@ -158,7 +163,8 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 [[maybe_unused]] static void eeprom64_tb(OutputStream & logger, I2c & i2c){
     AT24C64 at24{i2c};
     at24.init();
-    Memory mem = at24.slice({256,512});
+    // Memory mem = at24.slice({256,512});
+    Memory mem = at24.slice({0,256});
     mem_tb(logger, mem);
 }
 
@@ -248,13 +254,13 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 void eeprom_main(){
-    uart1.init(576000, CommMethod::Blocking);
-    auto & logger = uart1;
-    logger.setEps(4);
+    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    auto logger = DEBUGGER;
+    logger.setEps(2);
     logger.setRadix(10);
-    logger.setSpace(",");
+    logger.setSpace("\t\t");
 
-    I2cSw i2csw = I2cSw(portD[1], portD[0]);
+    I2cSw i2csw = I2cSw(portB[3], portB[5]);
     i2csw.init(400000);
 
     eeprom64_tb(logger, i2csw);

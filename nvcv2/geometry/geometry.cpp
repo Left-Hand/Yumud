@@ -59,16 +59,20 @@ Vector2 inv_perspective_fast(const Vector2 & v){
 
 void perspective(ImageWritable<Grayscale> & dst,const ImageReadable<Grayscale> & src){
     auto size = dst.size;
-    for(uint8_t _y=0;_y < size.y;_y++){
+    for(int _y = 0; _y < size.y; _y++){
         auto [x,y] = inv_perspective_fast({0, _y});
         auto x_step = inv_perspective_fast({1,_y}).x - x;
 
-        for(auto _x=0;_x < size.x;_x++){
+        // real_t x_end = real_t(inv_perspective_fast(Vector2{size.x, y}).x);
+
+        // for(int _x = _x_begin; _x < _x_end; _x++){
+        // for(x < x_end; _x+=x_step){
+        for(int _x = 0; _x < size.x; _x++){
             x += x_step;
             if(size.has_point(Vector2i{x,y})){
                 dst[{_x,_y}]= src[{x,y}];
             }else{
-                dst[{_x,_y}]=128;
+                dst[{_x,_y}]=0;
             }
         }
     }

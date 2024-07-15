@@ -25,6 +25,7 @@
 #include "cli.hpp"
 #include "config.hpp"
 
+
 struct Key{
 protected:
     GpioConcept & m_gpio;
@@ -81,9 +82,14 @@ class SmartCar:public SmcCli{
 protected:
     void recordRunStatus(const RunStatus status);
     void printRecordedRunStatus();
+    BkpItem & runStatusReg = bkp[1];
+    BkpItem & powerOnTimesReg = bkp[2];
+    BkpItem & flagReg = bkp[3];
 
+    Flags flags;
     GlobalConfig config;
     MotorStrength motor_strength;
+    Benchmark benchmark;
 
     SideFan left_fan    {timer4.oc(2), timer4.oc(1)};
     SideFan right_fan  {timer5.oc(3), timer5.oc(4)};
@@ -109,6 +115,7 @@ protected:
 
     I2cSw sccb      {portD[2], portC[12]};
     I2cSw i2c     {portB[3], portB[5]};
+    
     MT9V034 camera  {sccb};
 
 
@@ -122,12 +129,9 @@ protected:
     static constexpr uint ctrl_freq = 240;
     static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
-    real_t delta = real_t(0);
-    real_t fps = real_t(0);
-    real_t measured_offs_err;
+    real_t side_offs_err;
 
-    BkpItem & runStatusReg = bkp[1];
-    BkpItem & powerOnTimesReg = bkp[2];
+
 
 
     MPU6050 mpu{i2c};
@@ -135,8 +139,8 @@ protected:
 
     Measurement msm;
 
-    Key start_key   {portE[2], true};
-    Key stop_key    {portE[3], true};
+    Key start_key   {portE[2], false};
+    Key stop_key    {portE[3], false};
 
     void ctrl();
     

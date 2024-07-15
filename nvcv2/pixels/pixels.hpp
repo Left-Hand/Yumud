@@ -111,6 +111,29 @@ namespace NVCV2::Pixels{
         }
     }
 
+    // template<is_monocolour_v T>
+    __inline void adapative_threshold(ImageWritable<Binary> & dst, const ImageReadable<Grayscale> & src) {
+        // if()
+        const auto size = (Rect2i(Vector2i(), dst.size).intersection(Rect2i(Vector2i(), src.size))).size;
+        // const auto area = size.x * size.y;
+
+        for(int y = 0; y < size.y; y++){
+            for(int x = 0; x < size.x; x++){
+
+                uint16_t average=0;
+                int i,j;
+                for(i=y-3;i<=y+3;i++)
+                {
+                    for(j=x-3;j<=x+3;j++)
+                    {
+                        average+=src[{i,j}];
+                    }
+                }
+                average=average/49-23;
+                dst[{x,y}] = Binary((((uint8_t)src[{x,y}]) > average) ? Binary(255):Binary(0));
+            }
+        }
+    }
     template<is_monocolour_v T>
     void xor_with(Image<T, T> & src, Image<T, T>& op) {
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {

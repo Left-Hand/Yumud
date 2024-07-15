@@ -63,29 +63,54 @@ I2cSw::Error I2cSw::write(const uint32_t data){
 }
 
 I2cSw::Error I2cSw::read(uint32_t & data, const bool toAck){
-    uint8_t ret = 0;
+    // uint8_t ret = 0;
 
-    sda_gpio.set();
-    sda_gpio.inpu();
-    delayDur();
+    // sda_gpio.set();
+    // sda_gpio.inpu();
+    // delayDur();
 
-    for(uint8_t i = 0; i < 8; i++){
+    // for(uint8_t i = 0; i < 8; i++){
+    //     scl_gpio.set();
+    //     ret <<= 1; ret |= sda_gpio.read();
+    //     delayDur();
+    //     scl_gpio.clr();
+    //     delayDur();
+    // }
+
+    // sda_gpio.write(!toAck);
+    // sda_gpio.outod();
+    // scl_gpio.set();
+    // delayDur();
+    // scl_gpio.clr();
+    // sda_gpio.inpu();
+
+    // data = ret;
+    // return I2cSw::ErrorType::OK;
+        uint8_t ret = 0;
+
+        sda_gpio.set();
+        // sda_gpio.InPullUP();
+        sda_gpio.outod();
+        delayDur();
+
+        for(uint8_t i = 0; i < 8; i++){
+            scl_gpio.set();
+            ret <<= 1; ret |= sda_gpio.read();
+            delayDur();
+            scl_gpio.clr();
+            delayDur();
+        }
+
+        sda_gpio.write(!toAck);
+        // sda_gpio.OutOD();
+        sda_gpio.outod();
         scl_gpio.set();
-        ret <<= 1; ret |= sda_gpio.read();
         delayDur();
         scl_gpio.clr();
-        delayDur();
-    }
+        // sda_gpio.InPullUP();
 
-    sda_gpio.write(!toAck);
-    sda_gpio.outod();
-    scl_gpio.set();
-    delayDur();
-    scl_gpio.clr();
-    sda_gpio.inpu();
-
-    data = ret;
-    return I2cSw::ErrorType::OK;
+        data = ret;
+        return Bus::ErrorType::OK;
 }
 
 void I2cSw::init(const uint32_t baudRate){

@@ -81,12 +81,9 @@ public:
     __fast_inline void clr()override{
         instance->BCR = pin;
     }
-    __fast_inline void write(const bool val) override {
-        (val) ? set() : clr();
-    }
-    __fast_inline bool read() const override{
-        return (bool)(instance->INDR & pin);
-    }
+    __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
+    __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
+
     __fast_inline Gpio & operator = (const bool _val) override {
         write(_val);
         return *this;
