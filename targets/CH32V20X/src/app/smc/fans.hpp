@@ -105,7 +105,7 @@ public:
     }
 
     void enable(const bool en = true){
-        interface.enable(en);
+        interface.enable();
     }
 
     void setClamp(const real_t _duty_clamp){

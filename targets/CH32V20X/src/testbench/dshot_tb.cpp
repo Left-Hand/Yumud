@@ -50,29 +50,36 @@ static std::array<uint16_t, 40> data;
     DShotChannel ch1{oc1};
     DShotChannel ch2{oc2};
 
-    ch1.init();
-    ch2.init();
+    // ch1.init();
+    // ch2.init();
+    // ch1.init();
+    // ch2.init();
+
+    oc1.init();
+    oc2.init();
 
     while(true){
-        ch2 = 0.2;
-        delay(15);
-        ch1 = 0.4;
-        delay(10);
-        ch1 = 0.6;
-        ch2 = 0.6;
-        logger.println(millis());
+        // ch2 = 0.2;
+        // delay(15);
+        // ch1 = 0.4;
+        // delay(10);
+        // ch1 = 0.6;
+        // ch2 = 0.6;
+        oc2 = 0.4;
+        logger.println(timer8.cnt(), oc1.arr(), oc1.cvr());
         delay(20);
     }
 }
 
 void dshot_main(){
 
-    auto & logger = uart2;
-    logger.init(576000, CommMethod::Blocking);
+    auto & logger = DEBUGGER;
+    logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
     logger.setRadix(10);
     logger.setEps(4);
-    data.fill(128);
     AdvancedTimer & timer = timer8;
+
+
     timer.init(234, 1);
     auto & oc = timer.oc(1);
     auto & oc2 = timer.oc(2);

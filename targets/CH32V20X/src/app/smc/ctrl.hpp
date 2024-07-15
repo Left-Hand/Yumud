@@ -20,14 +20,17 @@ struct Measurement{
     Vector3 gyro_offs;
     Quat magent_offs;
 
-
     Vector3 accel;
     Vector3 gyro;
     Vector3 magent;
+
     real_t current_dir;
 
     Vector2i seed_pos;
     Rangei road_window;
+
+    real_t front_spd;
+    real_t rot;
 };
 
 

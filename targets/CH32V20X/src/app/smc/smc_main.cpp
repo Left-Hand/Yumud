@@ -37,11 +37,37 @@ void SmartCar::ctrl(){
     mpu.update();
     qml.update();
 
-    // DEBUG_PRINTLN(mpu.getAccel());
-    // DEBUG_PRINTLN(bool(start_key), bool(stop_key));
+    unlock();
+
     msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
     msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
     msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
+
+
+    {
+        static constexpr real_t wheel_l = 0.182;
+        odo.update();
+
+        real_t now_pos = odo.getPosition() * wheel_l;
+        static real_t last_pos = now_pos;
+        
+        real_t pos_delta = now_pos - last_pos;
+        last_pos = now_pos;
+
+        real_t now_spd = pos_delta == 0 ? 0 : pos_delta * ctrl_freq;
+        
+        static LowpassFilterZ_t<real_t> lpf{0.8};
+        msm.front_spd = lpf.update(now_spd);
+        // DEBUG_PRINTLN(now_pos, front_spd);
+    }
+
+    // real_t rot;
+    {
+        // static LowpassFilterZ_t<real_t> lpf{0.8};
+        msm.rot = msm.gyro.z;
+    }
+
+
 
 
     real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
@@ -51,8 +77,6 @@ void SmartCar::ctrl(){
     real_t side_output = side_ctrl.update(0, side_offs_err, -side_volocity);
 
     real_t speed_output = speed_ctrl.update();
-
-
 
     motor_strength.left = turn_output;
     motor_strength.right = -turn_output;
@@ -89,15 +113,21 @@ void SmartCar::init_periphs(){
 
     timer4.init(24000);
     timer5.init(24000);
-    timer8.init(2880, 1000);
+    timer8.init(234, 1);
     timer8.initBdtr(0, AdvancedTimer::LockLevel::Off);
 
-    timer1.initAsEncoder();
+    // timer1.initAsEncoder();
+    enc.init();
+    odo.inverse(true);
 
     body.init();
     body.enable(false);
 
     delay(200);
+}
+
+void SmartCar::unlock(){
+    chassis_fan.enable();
 }
 
 void SmartCar::init_lcd(){
@@ -323,9 +353,9 @@ void SmartCar::main(){
     };
 
     [[maybe_unused]] auto plot_gui = [&](){
-        plot_vec3(msm.accel.normalized() * 7, {190, 0});
+        plot_vec3(msm.accel.normalized() * 15, {190, 0});
         plot_vec3(msm.gyro * 7, {190, 60});
-        plot_vec3(msm.magent.normalized() * 7, {190, 120});
+        plot_vec3(msm.magent.normalized() * 20, {190, 120});
     };
 
     [[maybe_unused]] auto process_eve = [&](){
@@ -429,7 +459,7 @@ void SmartCar::main(){
             body.enable(false);
             continue;
         }
-        continue;
+        // continue;
 
         if(!msm.seed_pos) continue;
         side_offs_err = -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
@@ -466,7 +496,7 @@ void SmartCar::main(){
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
-        continue;
+        // continue;
 
         recordRunStatus(RunStatus::PROCESSING_DP_END);
 
@@ -520,6 +550,11 @@ void SmartCar::main(){
 
         plot_points(v_points, {0, 0}, RGB565::YELLOW);
         plot_points(a_points, {0, 0}, RGB565::PINK);
+        
+        {
+            plot_sketch({0, 120, 188,60});
+            sketch.fill(RGB565::BLACK);
+        }
         // plot_bound(bound_center, {0, 0}, RGB565::PINK);
         // DEBUG_PRINTLN("!!");
  
@@ -532,18 +567,6 @@ void SmartCar::main(){
         // plot_grayscale(affine_image, {0, 0});
         // plot_binary(affine_bina_image, {0, 80});
 
-
-        // {
-        //     auto affine_plot_image = make_image(RGB565, affine_image.get_size());
-        //     NVCV2::Pixels::conv(affine_plot_image, affine_image);
-
-        //     painter.bindImage(affine_plot_image);
-        //     auto boud = finder.find();
-
-        //     constexpr Vector2i affine_offset = {0, 120};
-        //     painter.bindImage(tftDisplayer);
-        //     painter.drawImage(affine_plot_image, affine_offset);
-        // }
 
         // frame_ms = millis() - start;
         // DEBUG_PRINTLN(coast_left.size() + coast_right.size(), track_left.size() + track_right.size(), v_points.size() + a_points.size())

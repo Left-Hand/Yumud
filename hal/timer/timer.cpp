@@ -146,10 +146,12 @@ void GenericTimer::initAsEncoder(const Mode mode){
     TIM_RCC_ON(instance);
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
+
     TIM_TimeBaseStructure.TIM_Period = 65535;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
+    TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
 
 	TIM_ICInitTypeDef TIM_ICInitStruct;

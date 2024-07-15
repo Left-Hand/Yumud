@@ -59,7 +59,6 @@ protected:
     }
     void update(uint16_t data);
     void invoke();
-
 public:
     DShotChannel(TimerOC & _oc):
         high_cnt(_oc.arr() * 2 / 3),
@@ -73,7 +72,7 @@ public:
 
     void init();
 
-    void enable(const bool en){
+    void enable(const bool en = true){
         enabled = en;
         if(enabled == false){
             update(0);
@@ -82,7 +81,7 @@ public:
     }
     auto & operator = (const real_t duty){
         if(enabled){
-            update(MAX(int(duty * 4096), 48));
+            update(m_crc(MAX(int(duty * 2047), 48)));
             invoke();
         }
         return *this;

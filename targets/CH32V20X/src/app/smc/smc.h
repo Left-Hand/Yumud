@@ -8,6 +8,7 @@
 #include "../drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
 #include "../drivers/Display/DisplayerInterface.hpp"
 #include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "../drivers/Encoder/ABEncoder.hpp"
 
 #include "../targets/CH32V20X/src/testbench/tb.h"
 #include "../hal/bkp/bkp.hpp"
@@ -117,7 +118,8 @@ protected:
     I2cSw i2c     {portB[3], portB[5]};
     
     MT9V034 camera  {sccb};
-
+    ABEncoderTimer  enc     {timer1};
+    Odometer        odo     {enc};
 
 
     static constexpr RGB565 white = 0xffff;
@@ -155,6 +157,8 @@ protected:
     void init_it();
 
     void update_sensors();
+
+    void unlock();
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:
