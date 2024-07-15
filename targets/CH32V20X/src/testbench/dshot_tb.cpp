@@ -50,24 +50,48 @@ static std::array<uint16_t, 40> data;
     DShotChannel ch1{oc1};
     DShotChannel ch2{oc2};
 
-    // ch1.init();
-    // ch2.init();
+    ch1.init();
+    ch2.init();
+
+
+    auto entry = millis();
+    while(millis() - entry < 3000){
+        ch1.enable();
+        ch2.enable();
+
+        delay(20);
+    }
+
+    delay(200);
+    // delay(3000);
     // ch1.init();
     // ch2.init();
 
-    oc1.init();
-    oc2.init();
+    // oc1.init();
+    // oc2.init();
+    constexpr real_t base = 0.12;
+    constexpr real_t full = 0.95;
+    constexpr real_t delta = full-  base;
+    ch1 = base;
+    ch2 = base;
 
+    auto t0 = t;
+    real_t temp = base;
     while(true){
         // ch2 = 0.2;
         // delay(15);
-        // ch1 = 0.4;
+
+        temp = std::max(temp, base + (0.5 + 0.5 * sin((t - t0)/2)) * delta);
+        ch1 = temp;
+        ch2 = temp;
+        delay(20);
+
         // delay(10);
         // ch1 = 0.6;
         // ch2 = 0.6;
-        oc2 = 0.4;
-        logger.println(timer8.cnt(), oc1.arr(), oc1.cvr());
-        delay(20);
+        // oc2 = 0.4;
+        // logger.println(temp);
+        // delay(20);
     }
 }
 
@@ -78,6 +102,9 @@ void dshot_main(){
     logger.setRadix(10);
     logger.setEps(4);
     AdvancedTimer & timer = timer8;
+
+    // timer.enableArrSync();
+    // timer.enableCvrSync();
 
 
     timer.init(234, 1);

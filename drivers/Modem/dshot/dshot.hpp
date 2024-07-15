@@ -74,10 +74,10 @@ public:
 
     void enable(const bool en = true){
         enabled = en;
-        if(enabled == false){
-            update(0);
-            invoke();
-        }
+        update(0);
+        // if(enabled == false){
+        invoke();
+        // }
     }
     auto & operator = (const real_t duty){
         if(enabled){

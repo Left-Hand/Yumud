@@ -15,9 +15,10 @@ void DShotChannel::invoke(){
 
 
 void DShotChannel::init(){
-    dma_channel.init(DmaChannel::Mode::toPeriphCircular, DmaChannel::Priority::ultra);
+    dma_channel.init(DmaChannel::Mode::toPeriph, DmaChannel::Priority::ultra);
     dma_channel.configDataBytes(2);
     oc.init();
+    // oc.enableSync();
     oc.enableDma();
     buf.fill(0);
 }
