@@ -29,12 +29,12 @@ GpioConcept & I2cHw::getScl(const I2C_TypeDef * _instance){
     switch((uint32_t)_instance){
         #ifdef HAVE_I2C1
         case I2C1_BASE:
-            return I2C1_SCL_Gpio;
+            return I2C1_SCL_GPIO;
         #endif
 
         #ifdef HAVE_I2C2
         case I2C2_BASE:
-            return I2C2_Port[Pin(I2C1_SCL_Pin)];
+            return I2C2_SCL_GPIO;
         #endif
 
         default:
@@ -46,12 +46,12 @@ GpioConcept & I2cHw::getSda(const I2C_TypeDef * _instance){
     switch((uint32_t)_instance){
         #ifdef HAVE_I2C1
         case I2C1_BASE:
-            return I2C1_SDA_Gpio;
+            return I2C1_SDA_GPIO;
         #endif
 
         #ifdef HAVE_I2C2
         case I2C2_BASE:
-            return I2C2_Port[Pin(I2C1_SDA_Pin)];
+            return I2C2_SDA_GPIO;
         #endif
 
         default:

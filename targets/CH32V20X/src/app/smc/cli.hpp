@@ -2,32 +2,33 @@
 
 #define __CLI_HPP__
 
-#include "paraments.hpp"
 #include "finder.hpp"
 
 namespace SMC{
-namespace CLI{
-    using namespace NVCV2;
+using namespace NVCV2;
+constexpr uint32_t hash_impl(char const * str , size_t size){
+    uint32_t hash = 5381;
+
+    for (size_t i = 0; i < size; i++) {
+        hash = ((hash << 5) + hash) ^ str[i]; /* hash * 33 + c */
+    }
+
+    return hash;
+}
+
+constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
+    return hash_impl(p, size);
+}
+
+class SmcCli{
 
     #define VNAME(x) #x
     
-    constexpr uint32_t hash_impl(char const * str , size_t size){
-        uint32_t hash = 5381;
 
-        for (size_t i = 0; i < size; i++) {
-            hash = ((hash << 5) + hash) ^ str[i]; /* hash * 33 + c */
-        }
-
-        return hash;
-    }
-
-    constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
-        return hash_impl(p, size);
-    }
 
     #define read_value(value)\
     {\
-        DEBUG_PRINTLN("get", VNAME(value), "\t\t is", value);\
+        DEBUG_PRINTS("<", VNAME(value), "> \t->\t", value);\
     }
 
     
@@ -38,7 +39,7 @@ namespace CLI{
             read_value(value);\
         }else if(args.size() == 1){\
             value = decltype(value)(args[0]);\
-            DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", args[0]);\
+            DEBUG_PRINTS("[", VNAME(value), "] \t<-\t", args[0]);\
         }\
     }
 
@@ -51,7 +52,7 @@ namespace CLI{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTS("[", VNAME(value), "] \t<-\t", value);\
         }\
     }
 
@@ -68,201 +69,7 @@ namespace CLI{
             DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", value);\
         }\
     }
-
-    void parse_command(String command, std::vector<String> args){
-        using NVCV2::Geometry::perspective_config;
-        command.toLowerCase();
-        switch(hash_impl(command.c_str(), command.length())){
-            
-                case "perspective"_ha:
-                case "pers"_ha:
-                if(args.size() == 0){
-                    read_value(perspective_config.H1);
-                    read_value(perspective_config.H2);
-                    read_value(perspective_config.H3);
-                    read_value(perspective_config.H5);
-                    read_value(perspective_config.H6);                    
-                    read_value(perspective_config.H8);
-                }else if(args.size() <= 2){
-                    String vname = args.front();
-                    args.erase(args.begin());
-
-                    switch(hash_impl(vname.c_str(), vname.length())){
-                        case "h1"_ha:
-                            settle_value(perspective_config.H1,args);
-                            break;
-                        case "h2"_ha:
-                            settle_value(perspective_config.H2,args);
-                            break;
-                        case "h3"_ha:
-                            settle_value(perspective_config.H3,args);
-                            break;
-                        case "h5"_ha:
-                            settle_value(perspective_config.H5,args);
-                            break;
-                        case "h6"_ha:
-                            settle_value(perspective_config.H6,args);
-                            break;
-                        case "h8"_ha:
-                            settle_value(perspective_config.H8,args);
-                            break;
-                        default:
-                            break;
-                    }
-                }else{
-                    DEBUG_PRINTLN("affine: invalid syntax");
-                }
-                break;
-            case "turn"_ha:
-            case "t"_ha:
-            case "tc"_ha:
-                if(args.size() == 0){
-                    read_value(turn_ctrl.kp);
-                    read_value(turn_ctrl.ki);
-                    read_value(turn_ctrl.kd);
-                    read_value(turn_ctrl.intergal_clamp);
-
-                }else if(args.size() <= 2){
-                    String vname = args.front();
-                    args.erase(args.begin());
-
-                    switch(hash_impl(vname.c_str(), vname.length())){
-                        case "kp"_ha:
-                        case "p"_ha:
-                            settle_value(turn_ctrl.kp,args);
-                            break;
-                        case "ki"_ha:
-                        case "i"_ha:
-                            settle_value(turn_ctrl.ki,args);
-                            break;
-                        case "kd"_ha:
-                        case "d"_ha:
-                            settle_value(turn_ctrl.kd,args);
-                            break;
-                        case "cl"_ha:
-                        case "c"_ha:
-                            settle_value(turn_ctrl.intergal_clamp,args);
-                            break;
-                        default:
-                            break;
-                    }
-                }else{
-                    DEBUG_PRINTLN("turnctrl: invalid syntax");
-                }
-                break;
-            case "s"_ha:
-            case "side"_ha:
-            case "sc"_ha:
-                if(args.size() == 0){
-                    read_value(side_ctrl.kp);
-                    read_value(side_ctrl.ki);
-                    read_value(side_ctrl.kd);
-                    read_value(side_ctrl.intergal_clamp);
-
-                }else if(args.size() <= 2){
-                    String vname = args.front();
-                    args.erase(args.begin());
-
-                    switch(hash_impl(vname.c_str(), vname.length())){
-                        case "kp"_ha:
-                        case "p"_ha:
-                            settle_value(side_ctrl.kp,args);
-                            break;
-                        case "ki"_ha:
-                        case "i"_ha:
-                            settle_value(side_ctrl.ki,args);
-                            break;
-                        case "kd"_ha:
-                        case "d"_ha:
-                            settle_value(side_ctrl.kd,args);
-                            break;
-                        case "cl"_ha:
-                        case "c"_ha:
-                            settle_value(side_ctrl.intergal_clamp,args);
-                            break;
-                        default:
-                            break;
-                    }
-                }else{
-                    DEBUG_PRINTLN("turnctrl: invalid syntax");
-                }
-                break;
-            case "motor"_ha:
-            case "ms"_ha:
-                if(args.size() == 0){
-                    read_value(motor_strength.left);
-                    read_value(motor_strength.right);
-                    read_value(motor_strength.hri);
-                    read_value(motor_strength.chassis);
-                }else if(args.size() <= 2){
-                    String vname = args.front();
-                    args.erase(args.begin());
-
-                    switch(hash_impl(vname.c_str(), vname.length())){
-                        case "l"_ha:
-                        case "left"_ha:
-                            settle_value(motor_strength.left,args);
-                            break;
-                        case "r"_ha:
-                        case "right"_ha:
-                            settle_value(motor_strength.right,args);
-                            break;
-                        case "c"_ha:
-                        case "chassis"_ha:
-                            settle_value(motor_strength.chassis,args);
-                            break;
-                        case "hri"_ha:
-                        case "h"_ha:
-                            settle_value(motor_strength.hri,args);
-                            break;
-                    }
-                }else{
-                    DEBUG_PRINTLN("affine: invalid syntax");
-                }
-                break;
-            case "ss"_ha:
-            case "show"_ha:
-                settle_value(show_status, args);
-                break;
-            case "dpv"_ha:
-            case "dough"_ha:
-                settle_clamped_value(dpv, args, 0.0, 4.0);
-                break;
-            case "sh"_ha:
-            case "sfheight"_ha:
-                settle_clamped_value(safety_seed_height, args, 0, 20);
-                break;
-            case "asw"_ha:
-            case "awidth"_ha:
-                settle_clamped_value(align_space_width,args, 0, 20);
-                break;
-            case "fm"_ha:
-                read_value(frame_ms);
-                break;
-            case "pt"_ha:
-                settle_value(positive_threshold,args);
-                break;
-            case "et"_ha:
-                settle_value(edge_threshold,args);
-                break;
-            case "help"_ha:
-            case "h"_ha:
-                DEBUG_PRINTLN("no help available");
-                break;
-            case "rst"_ha:
-            case "r"_ha:
-                NVIC_SystemReset();
-                break;
-            case "en"_ha:
-            case "e"_ha:
-                enable_flag = true;
-                DEBUG_PRINTLN("enabled");
-                break;
-            default:
-                DEBUG_PRINTLN("no command available");
-                break;
-        }
-    }
+    
 
     std::vector<String> split_string(const String& input, char delimiter) {
         std::vector<String> result;
@@ -287,40 +94,34 @@ namespace CLI{
         return result;
     }
 
-    void parse_line(const String & line){
-        if(line.length() == 0) return;
-        auto tokens = split_string(line, ' ');
-        auto command = tokens[0];
-        tokens.erase(tokens.begin());
-        parse_command(command, tokens);
-    }
+protected:
+    virtual void parse_command(String & command, std::vector<String> & args) = 0;
+    void parse_line(const String & _line){
+        // if(line.length() == 0) return;
+        // auto tokens = split_string(line, ' ');
+        // auto command = tokens[0];
+        // tokens.erase(tokens.begin());
+        // parse_command(command, tokens);
+        if(_line.length() == 0) return;
+        bool ends = (_line.lastIndexOf('\n') > 0);
 
-    void run(){
-        if(DEBUGGER.available()){
-            static String temp_str;
-            char chr = DEBUGGER.read();
-            if(chr == '\n'){
-                temp_str.trim();
-                if(temp_str.length()) parse_line(temp_str);
-                temp_str = "";
-            }else{
-                temp_str.concat(chr);
-            }
-        }
+        String line = _line;
+        line.alphanum();
 
-        if(LOGGER.available()){
-            static String temp_str;
-            char chr = LOGGER.read();
-            if(chr == '\n'){
-                temp_str.trim();
-                if(temp_str.length()) parse_line(temp_str);
-                temp_str = "";
-            }else{
-                temp_str.concat(chr);
+        static String temp;
+        temp += line;
+
+        if(ends){
+            if(temp.length() != 0){
+                auto tokens = split_string(temp, ' ');
+                auto command = tokens[0];
+                tokens.erase(tokens.begin());
+                parse_command(command, tokens);
             }
-            // DEBUGGER.println(LOGGER.read());
+            temp = "";
         }
     }
+public:
 };
 
 };

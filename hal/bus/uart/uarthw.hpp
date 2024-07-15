@@ -91,7 +91,7 @@ extern "C" __interrupt void UART5_IRQHandler(void);
 
 #ifdef HAVE_UART6
 extern UartHw uart6;
-extern "C" __interrupt void USART6_IRQHandler(void);
+extern "C" __interrupt void UART6_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART7

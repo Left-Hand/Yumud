@@ -31,7 +31,7 @@ public:
     static constexpr bool data_level = true;
 public:
     DisplayInterfaceSpi(
-            SpiDrv & _bus_drv, 
+            SpiDrv && _bus_drv, 
             GpioConcept & _dc_gpio, 
             GpioConcept & _res_gpio = GpioNull,
             GpioConcept & _blk_gpio = GpioNull

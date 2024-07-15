@@ -500,6 +500,7 @@ void UartHw::enableTxDma(const bool en){
         txDma.init(DmaChannel::Mode::toPeriph);
         txDma.enableIt({1,1});
         txDma.enableDoneIt();
+        txDma.configDataBytes(1);
         txDma.bindDoneCb([this](){this->invokeTxDma();});
     }
 }
@@ -511,6 +512,7 @@ void UartHw::enableRxDma(const bool en){
         rxDma.enableIt({1,1});
         rxDma.enableDoneIt();
         rxDma.enableHalfIt();
+        rxDma.configDataBytes(1);
         rxDma.bindDoneCb([this](){
             this->invokeRxDma();
             for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.addData(rx_dma_buf[i]); 

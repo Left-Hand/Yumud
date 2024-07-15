@@ -24,8 +24,9 @@ public:
         Single,Continuous
     };
 
+    static constexpr uint8_t default_addr = 0x1a;
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
 
     real_t fs;
     uint8_t ovsfix = 0;
@@ -176,6 +177,8 @@ protected:
     }
 public:
     QMC5883L(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    QMC5883L(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
+    QMC5883L(I2c & _i2c):bus_drv(I2cDrv(_i2c, default_addr)){;}
     ~QMC5883L(){;}
 
     void init(){

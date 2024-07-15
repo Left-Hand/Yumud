@@ -93,8 +93,8 @@ namespace NVCV2::Pixels{
     }
 
     void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold){
-        for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
-            for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
+        for (auto x = 0; x < std::min(dst.get_size().x, src.get_size().x); x++) {
+            for (auto y = 0; y < std::min(dst.get_size().y, src.get_size().y); y++) {
                 dst[Vector2i{x, y}] = src(Vector2i{x, y}).to_bina(threshold);
             }
         }

@@ -82,6 +82,8 @@
     "numeric": "cpp",
     "ostream": "cpp",
     "compare": "cpp",
-    "cstdint": "cpp"
+    "cstdint": "cpp",
+    "*.tpp": "cpp",
+    "atomic": "cpp"
   }
 }
