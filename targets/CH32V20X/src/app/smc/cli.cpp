@@ -84,16 +84,35 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         case "sc.d"_ha:
             settle_value(side_ctrl.kd,args);
             break;
+    
+        case "vc.kp"_ha:
+        case "vc.p"_ha:
+            settle_value(velocity_ctrl.kp,args);
+            break;
+        case "vc.kd"_ha:
+        case "vc.d"_ha:
+            settle_value(velocity_ctrl.kd,args);
+            break;
+    
         case "sc.cl"_ha:
         case "sc.c"_ha:
             settle_value(side_ctrl.intergal_clamp,args);
             break;
+
+        case "ts"_ha:
+            settle_value(target_speed,args);
+            break;
+
         case "hm"_ha:
+            DEBUG_PRINTLN("handmode on");
             flags.hand_mode = true;
+            body.enable();
             motor_strength.reset();
             break;
         case "am"_ha:
+            DEBUG_PRINTLN("automode on");
             flags.hand_mode = false;
+            body.enable();
             motor_strength.reset();
             break;
             

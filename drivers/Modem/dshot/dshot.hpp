@@ -42,8 +42,8 @@ public:
         SIGNAL_LINE_TELEMETRY_ENABLE = 33, // Required 6 times. Enable commands 42 through
     };
 
+    std::array<uint16_t, 40> buf = {0};
 protected:
-    std::array<uint16_t, 40> buf;
     uint16_t high_cnt;
     uint16_t low_cnt;
     TimerOC & oc;
@@ -77,7 +77,7 @@ public:
     //     invoke();
     // }
     auto & operator = (const real_t duty){
-        DEBUG_PRINTLN(duty);
+        // DEBUG_PRINTLN(duty);
         if(duty != 0) update(m_crc(MAX(int(duty * 2047), 48)));
         else update(0);
         // DEBUG_PRINTLN(buf);

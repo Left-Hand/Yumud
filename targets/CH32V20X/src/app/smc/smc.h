@@ -99,16 +99,18 @@ protected:
     SideFan vl_fan      {timer4.oc(3), timer4.oc(4)};//pair ok
     SideFan vr_fan      {timer5.oc(2), timer5.oc(1)};//pair ok
 
-    ChassisFan chassis_left_fan {timer8.oc(1)};
-    ChassisFan chassis_right_fan{timer8.oc(2)};
+    // ChassisFan chassis_left_fan {timer8.oc(1)};
+    // ChassisFan chassis_right_fan{timer8.oc(2)};
 
-    ChassisFanPair chassis_fan{chassis_left_fan, chassis_right_fan};
-    RigidBody body{motor_strength, left_fan, right_fan, hri_fan, chassis_fan};
+    // ChassisFanPair chassis_fan{chassis_left_fan, chassis_right_fan};
+    RigidBody body{motor_strength, left_fan, right_fan, hri_fan};
 
     TurnCtrl turn_ctrl;
     SideCtrl side_ctrl;
-    SpeedCtrl speed_ctrl;
+    VelocityCtrl velocity_ctrl;
     SideVelocityObserver side_velocity_observer;
+
+    real_t target_speed = 0.4;
 
     DisplayInterfaceSpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
     ST7789 tftDisplayer {SpiInterfaceLcd, Vector2i(240, 240)};
@@ -133,9 +135,6 @@ protected:
 
     real_t side_offs_err;
 
-
-
-
     MPU6050 mpu{i2c};
     QMC5883L qml{i2c};
 
@@ -145,6 +144,11 @@ protected:
     Key stop_key    {portE[3], false};
 
     void ctrl();
+
+    void start();
+    void stop();
+
+    void reset();
     
     void init_debugger();
     void init_periphs();
@@ -159,8 +163,7 @@ protected:
     void init_fans();
 
     void update_sensors();
-    void process_eve();
-    void unlock();
+    void update();
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:

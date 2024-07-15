@@ -71,6 +71,12 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
             break;
         #endif
 
+        #ifdef HAVE_TIM5
+        case TIM5_BASE:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+            break;
+        #endif
+
         #ifdef HAVE_TIM8
         case TIM8_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);

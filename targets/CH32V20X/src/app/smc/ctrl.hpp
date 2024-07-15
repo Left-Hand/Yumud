@@ -30,7 +30,7 @@ struct Measurement{
     Rangei road_window;
 
     real_t front_spd;
-    real_t rot;
+    real_t omega;
 };
 
 
@@ -42,7 +42,12 @@ struct TurnCtrl{
     real_t last_output;
     real_t out_clamp = real_t(0.8);
 
-    real_t update(const real_t & target_dir, const real_t & current_dir, const real_t & current_omega){
+    void reset(){
+        last_t = 0;
+        last_output = 0;
+    }
+
+    real_t update(const real_t target_dir, const real_t current_dir, const real_t current_omega){
         real_t error_dir = target_dir - current_dir;
         real_t kp_contribute = kp * error_dir;
 
@@ -55,9 +60,26 @@ struct TurnCtrl{
     }
 };
 
-struct SpeedCtrl{
-    real_t update(){
-        return real_t(0.45);
+struct VelocityCtrl{
+    real_t kp = real_t(0.01);
+    real_t kd = real_t(0);
+
+    real_t last_output = real_t(0);
+    real_t output_clamp = 0.5;
+
+    void reset(){
+        last_output = 0;
+    }
+    real_t update(const real_t targ, const real_t now){
+
+        real_t error = targ - now;
+        real_t kp_contribute = kp * error;
+
+        real_t output = last_output;
+        
+        output += kp_contribute;
+        // DEBUG_PRINTL7N(output);
+        return last_output = CLAMP(output, 0, output_clamp);
     }
 };
 
@@ -90,6 +112,11 @@ struct SideCtrl{
         last_t = t;
         return output;
     }
+
+    void reset(){
+        intergal = 0;
+        last_t = 0;
+    }
 };
 
 struct SideVelocityObserver{
@@ -111,6 +138,13 @@ public:
         last_pos = pos;
         last_t = t;
         return v2;
+    }
+
+    void reset(){
+        v1 = 0;
+        v2 = 0;
+        last_pos = 0;
+        last_t = 0;
     }
 };
 

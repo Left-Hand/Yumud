@@ -9,12 +9,12 @@ void DShotChannel::update(uint16_t data){
     }
     // DEBUG_PRINTLN(data, buf);
 
+    // DEBUG_PRINTLN("data", data);
 }
 
 void DShotChannel::invoke(){
-    DEBUG_PRINTLN(buf);
     dma_channel.begin((void *)&oc.cvr(), (void *)buf.begin(), buf.size());
-
+    
 }
 
 
@@ -22,10 +22,9 @@ void DShotChannel::init(){
     dma_channel.init(DmaChannel::Mode::toPeriph, DmaChannel::Priority::ultra);
     dma_channel.configDataBytes(2);
     oc.init();
-    // oc.enableSync();
+    oc.enableSync();
     oc.enableDma();
-    buf.fill(0);
 
-    high_cnt = (oc.arr() * 2 / 3);
-    low_cnt = (oc.arr() * 1 / 3);
+    high_cnt = (234 * 2 / 3);
+    low_cnt = (234 * 1 / 3);
 }

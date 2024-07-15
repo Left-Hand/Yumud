@@ -12,7 +12,8 @@ protected:
     TimerOC & instanceP;
     TimerOC & instanceN;
     bool enabled = true;
-    Range_t<real_t>duty_clamp = {-0.7, 0.7};
+    Range_t<real_t>duty_clamp = {-0.78, 0.78};
+    real_t last_force = 0;
 public:
     SideFan(TimerOC & _instanceP,TimerOC & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
 
@@ -25,12 +26,12 @@ public:
         duty_clamp = _duty_clamp;
     }
 
-    void enable(const bool & en = true){
+    void enable(const bool en = true){
         enabled = en;
         if(!en) setDuty(real_t(0));
     }
 
-    void setDuty(const real_t & _duty){
+    void setDuty(const real_t _duty){
         if(!enabled){
             instanceP = (real_t(0));
             instanceN = (real_t(0));
@@ -46,7 +47,7 @@ public:
         }
     }
 
-    void setForce(const real_t & force){
+    void setForce(const real_t force){
 
         if(force > 0){
             setDuty(force);
@@ -55,8 +56,10 @@ public:
         }
     }
 
-    auto & operator = (const real_t & _force){
-        setForce(_force);
+    auto & operator = (const real_t _force){
+        static constexpr real_t step = 0.0002;
+        last_force = CLAMP(_force, last_force - step, last_force + step);
+        setForce(last_force);
         return *this;
     }
 };
@@ -93,70 +96,8 @@ public:
 };
 
 
-class ChassisFan{
-public:
-    DShotChannel interface;
-protected:
-    real_t duty_clamp = 0.85;
-public:
-    ChassisFan(TimerOC & oc):interface(oc){;}
-
-    void init(){
-        interface.init();
-    }
-
-    // void enable(const bool en = true){
-    //     interface.enable(en);
-    // }
-
-    void setClamp(const real_t _duty_clamp){
-        duty_clamp = _duty_clamp;
-    }
-
-    auto & operator = (const real_t _force){
-        interface = _force;
-        return *this;
-    }
-};
 
 
-class ChassisFanPair{
-public:
-    ChassisFan & left_fan;
-    ChassisFan & right_fan;
-protected:
-
-    Range_t<real_t>duty_clamp = {-0.7, 0.7};
-public:
-    ChassisFanPair(ChassisFan & _left_fan, ChassisFan & _right_fan):
-        left_fan(_left_fan), right_fan(_right_fan){;}
-
-    void init(){
-        left_fan.init();
-        right_fan.init();
-    }
-
-    void enable(const bool en = true){
-        // left_fan.enable(en);
-        // right_fan.enable(en);
-    }
-
-    void setDuty(const real_t _duty){
-        real_t duty = duty_clamp.clamp(_duty);
-        DEBUG_PRINTLN(duty);
-        left_fan = duty;
-        right_fan = duty;
-    }
-
-    void setForce(const real_t force){
-        setDuty(force);
-    }
-
-    auto & operator = (const real_t & _force){
-        setForce(_force);
-        return *this;
-    }
-};
 
 
 
