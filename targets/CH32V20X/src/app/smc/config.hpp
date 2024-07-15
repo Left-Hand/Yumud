@@ -33,6 +33,7 @@ union Flags{
         bool enable_trig:1;
         bool plot_de:1;
         bool align_right:1;
+        bool hand_mode:1;
     };
 
     uint16_t data = 0;

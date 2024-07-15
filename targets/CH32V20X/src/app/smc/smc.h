@@ -92,6 +92,7 @@ protected:
     MotorStrength motor_strength;
     Benchmark benchmark;
 
+    HriFanPair hri_fan{vl_fan, vr_fan};
     SideFan left_fan    {timer4.oc(2), timer4.oc(1)};
     SideFan right_fan  {timer5.oc(3), timer5.oc(4)};
 
@@ -101,7 +102,6 @@ protected:
     ChassisFan chassis_left_fan {timer8.oc(1)};
     ChassisFan chassis_right_fan{timer8.oc(2)};
 
-    HriFanPair hri_fan{vl_fan, vr_fan};
     ChassisFanPair chassis_fan{chassis_left_fan, chassis_right_fan};
     RigidBody body{motor_strength, left_fan, right_fan, hri_fan, chassis_fan};
 
@@ -156,8 +156,10 @@ protected:
 
     void init_it();
 
-    void update_sensors();
+    void init_fans();
 
+    void update_sensors();
+    void process_eve();
     void unlock();
 protected:
     void parse_command(String &, std::vector<String> & args) override;

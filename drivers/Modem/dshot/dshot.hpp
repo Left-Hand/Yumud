@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../../hal/timer/timer_oc.hpp"
+#include "../../sys/debug/debug_inc.h"
 
 class ServoChannel{
 
@@ -43,12 +44,12 @@ public:
 
 protected:
     std::array<uint16_t, 40> buf;
-    const uint16_t high_cnt;
-    const uint16_t low_cnt;
+    uint16_t high_cnt;
+    uint16_t low_cnt;
     TimerOC & oc;
     DmaChannel & dma_channel;
 
-    bool enabled = false;
+    // bool enabled = false;
 
     static constexpr uint16_t m_crc(uint16_t data_in){
         uint16_t speed_data;
@@ -61,8 +62,6 @@ protected:
     void invoke();
 public:
     DShotChannel(TimerOC & _oc):
-        high_cnt(_oc.arr() * 2 / 3),
-        low_cnt(_oc.arr() * 1 / 3),
         oc(_oc),
         dma_channel(_oc.dma())
         {;}
@@ -72,18 +71,17 @@ public:
 
     void init();
 
-    void enable(const bool en = true){
-        enabled = en;
-        update(0);
-        // if(enabled == false){
-        invoke();
-        // }
-    }
+    // void enable(const bool en = true){
+    //     enabled = en;
+    //     update(0);
+    //     invoke();
+    // }
     auto & operator = (const real_t duty){
-        if(enabled){
-            update(m_crc(MAX(int(duty * 2047), 48)));
-            invoke();
-        }
+        DEBUG_PRINTLN(duty);
+        if(duty != 0) update(m_crc(MAX(int(duty * 2047), 48)));
+        else update(0);
+        // DEBUG_PRINTLN(buf);
+        invoke();
         return *this;
     }
 };

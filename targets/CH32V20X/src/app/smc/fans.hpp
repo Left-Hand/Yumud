@@ -94,9 +94,10 @@ public:
 
 
 class ChassisFan{
-protected:
+public:
     DShotChannel interface;
-    real_t duty_clamp = 0.12;
+protected:
+    real_t duty_clamp = 0.85;
 public:
     ChassisFan(TimerOC & oc):interface(oc){;}
 
@@ -104,9 +105,9 @@ public:
         interface.init();
     }
 
-    void enable(const bool en = true){
-        interface.enable();
-    }
+    // void enable(const bool en = true){
+    //     interface.enable(en);
+    // }
 
     void setClamp(const real_t _duty_clamp){
         duty_clamp = _duty_clamp;
@@ -120,9 +121,10 @@ public:
 
 
 class ChassisFanPair{
-protected:
+public:
     ChassisFan & left_fan;
     ChassisFan & right_fan;
+protected:
 
     Range_t<real_t>duty_clamp = {-0.7, 0.7};
 public:
@@ -134,18 +136,19 @@ public:
         right_fan.init();
     }
 
-    void enable(const bool & en = true){
-        left_fan.enable(en);
-        right_fan.enable(en);
+    void enable(const bool en = true){
+        // left_fan.enable(en);
+        // right_fan.enable(en);
     }
 
-    void setDuty(const real_t & _duty){
+    void setDuty(const real_t _duty){
         real_t duty = duty_clamp.clamp(_duty);
+        DEBUG_PRINTLN(duty);
         left_fan = duty;
         right_fan = duty;
     }
 
-    void setForce(const real_t & force){
+    void setForce(const real_t force){
         setDuty(force);
     }
 

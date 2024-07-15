@@ -54,100 +54,74 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         case "turn"_ha:
         case "t"_ha:
         case "tc"_ha:
-            if(args.size() == 0){
-                read_value(turn_ctrl.kp);
-                read_value(turn_ctrl.kd);
-
-            }else if(args.size() <= 2){
-                String vname = args.front();
-                args.erase(args.begin());
-
-                switch(hash_impl(vname.c_str(), vname.length())){
-                    case "kp"_ha:
-                    case "p"_ha:
-                        settle_value(turn_ctrl.kp,args);
-                        break;
-                    case "kd"_ha:
-                    case "d"_ha:
-                        settle_value(turn_ctrl.kd,args);
-                        break;
-                    default:
-                        break;
-                }
-            }else{
-                DEBUG_PRINTLN("turnctrl: invalid syntax");
-            }
+            read_value(turn_ctrl.kp);
+            read_value(turn_ctrl.kd);
             break;
+        case "tc.p"_ha:
+            settle_value(turn_ctrl.kp,args);
+            break;
+        case "tc.d"_ha:
+            settle_value(turn_ctrl.kd,args);
+            break;
+
         case "s"_ha:
         case "side"_ha:
         case "sc"_ha:
-            if(args.size() == 0){
-                read_value(side_ctrl.kp);
-                read_value(side_ctrl.ki);
-                read_value(side_ctrl.kd);
-                read_value(side_ctrl.intergal_clamp);
-
-            }else if(args.size() <= 2){
-                String vname = args.front();
-                args.erase(args.begin());
-
-                switch(hash_impl(vname.c_str(), vname.length())){
-                    case "kp"_ha:
-                    case "p"_ha:
-                        settle_value(side_ctrl.kp,args);
-                        break;
-                    case "ki"_ha:
-                    case "i"_ha:
-                        settle_value(side_ctrl.ki,args);
-                        break;
-                    case "kd"_ha:
-                    case "d"_ha:
-                        settle_value(side_ctrl.kd,args);
-                        break;
-                    case "cl"_ha:
-                    case "c"_ha:
-                        settle_value(side_ctrl.intergal_clamp,args);
-                        break;
-                    default:
-                        break;
-                }
-            }else{
-                DEBUG_PRINTLN("turnctrl: invalid syntax");
-            }
+            read_value(side_ctrl.kp);
+            read_value(side_ctrl.ki);
+            read_value(side_ctrl.kd);
+            read_value(side_ctrl.intergal_clamp);
             break;
+        case "sc.kp"_ha:
+        case "sc.p"_ha:
+            settle_value(side_ctrl.kp,args);
+            break;
+        case "sc.ki"_ha:
+        case "sc.i"_ha:
+            settle_value(side_ctrl.ki,args);
+            break;
+        case "sc.kd"_ha:
+        case "sc.d"_ha:
+            settle_value(side_ctrl.kd,args);
+            break;
+        case "sc.cl"_ha:
+        case "sc.c"_ha:
+            settle_value(side_ctrl.intergal_clamp,args);
+            break;
+        case "hm"_ha:
+            flags.hand_mode = true;
+            motor_strength.reset();
+            break;
+        case "am"_ha:
+            flags.hand_mode = false;
+            motor_strength.reset();
+            break;
+            
 
         case "motor"_ha:
         case "ms"_ha:
-            if(args.size() == 0){
-                read_value(motor_strength.left);
-                read_value(motor_strength.right);
-                read_value(motor_strength.hri);
-                read_value(motor_strength.chassis);
-            }else if(args.size() <= 2){
-                String vname = args.front();
-                args.erase(args.begin());
+            read_value(motor_strength.left);
+            read_value(motor_strength.right);
+            read_value(motor_strength.hri);
+            read_value(motor_strength.chassis);
+            break;
 
-                switch(hash_impl(vname.c_str(), vname.length())){
-                    case "l"_ha:
-                    case "left"_ha:
-                        settle_value(motor_strength.left,args);
-                        break;
-                    case "r"_ha:
-                    case "right"_ha:
-                        settle_value(motor_strength.right,args);
-                        break;
-                    case "c"_ha:
-                    case "chassis"_ha:
-                        settle_value(motor_strength.chassis,args);
-                        break;
-                    case "hri"_ha:
-                    case "h"_ha:
-                        settle_value(motor_strength.hri,args);
-                        break;
-                }
-            }else{
-                DEBUG_PRINTLN("affine: invalid syntax");
-            }
+        case "ms.l"_ha:
+        case "left"_ha:
+            settle_value(motor_strength.left,args);
+            break;
+        case "ms.r"_ha:
+        case "right"_ha:
+            settle_value(motor_strength.right,args);
+            break;
+        case "ms.c"_ha:
+        case "chassis"_ha:
+        case "cha"_ha:
+            settle_value(motor_strength.chassis,args);
+            break;
+        case "ms.h"_ha:
+        case "hri"_ha:
+            settle_value(motor_strength.hri,args);
             break;
         // case "ss"_ha:
         // case "show"_ha:

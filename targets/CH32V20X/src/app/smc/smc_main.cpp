@@ -23,8 +23,10 @@ void SmartCar::recordRunStatus(const RunStatus status){
 
 void SmartCar::printRecordedRunStatus(){
     uint16_t id = runStatusReg;
-    auto temp = RunStatus::_from_integral_unchecked(id);
-    DEBUG_PRINTLN(temp._to_string(), id);
+    auto temp = RunStatus::_from_integral_unchecked(uint16_t(runStatusReg));
+    DEBUG_PRINTLN("last Stat:\t", temp._to_string(), id);
+    DEBUG_PRINTLN("last Flag:\t", toString(int(uint16_t(flagReg)), 2), id);
+    // DEBUG_PRINTLN(temp._to_string(), id);
 }
 
 
@@ -33,11 +35,10 @@ void SmartCar::ctrl(){
     Sys::Clock::reCalculateTime();
 
     static constexpr real_t target_dir = real_t(PI / 2);
+    body.update();
 
     mpu.update();
     qml.update();
-
-    unlock();
 
     msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
     msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
@@ -69,7 +70,6 @@ void SmartCar::ctrl(){
 
 
 
-
     real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
 
     real_t side_acc = msm.accel.y;
@@ -78,15 +78,16 @@ void SmartCar::ctrl(){
 
     real_t speed_output = speed_ctrl.update();
 
-    motor_strength.left = turn_output;
-    motor_strength.right = -turn_output;
+    if(flags.hand_mode == false){
+        motor_strength.left = turn_output;
+        motor_strength.right = -turn_output;
 
-    motor_strength.left += speed_output;
-    motor_strength.right += speed_output;
+        motor_strength.left += speed_output;
+        motor_strength.right += speed_output;
 
-    motor_strength.hri = side_output;
+        motor_strength.hri = side_output;
+    }
 
-    body.update();
 }
 
 void SmartCar::init_debugger(){
@@ -106,7 +107,7 @@ void SmartCar::init_periphs(){
 
     powerOnTimesReg = uint16_t(int(powerOnTimesReg) + 1);
     printRecordedRunStatus();
-    DEBUG_PRINTLN("pwon", int(powerOnTimesReg));
+    // DEBUG_PRINTLN("pwon", int(powerOnTimesReg));
 
     spi2.init(72000000);
     spi2.bindCsPin(portD[0], 0);
@@ -114,20 +115,56 @@ void SmartCar::init_periphs(){
     timer4.init(24000);
     timer5.init(24000);
     timer8.init(234, 1);
-    timer8.initBdtr(0, AdvancedTimer::LockLevel::Off);
+    timer8.oc(1).init();
+    timer8.oc(2).init();
+    // timer8.initBdtr(0, AdvancedTimer::LockLevel::Off);
 
     // timer1.initAsEncoder();
     enc.init();
     odo.inverse(true);
 
-    body.init();
-    body.enable(false);
 
     delay(200);
 }
 
+void SmartCar::init_fans(){
+    chassis_fan.init();
+    vl_fan.init();
+    vr_fan.init();
+    hri_fan.init();
+    
+    // body.init();
+    // body.enable(true);
+}
+
 void SmartCar::unlock(){
-    chassis_fan.enable();
+    // // chassis_fan.enable();p
+    // chassis_fan.left_fan.interface.init();
+    // chassis_fan.right_fan.interface.init();
+    // auto entry = millis();
+    // while(millis() - entry < 3000){
+    //     chassis_fan.left_fan.interface.enable();
+    //     chassis_fan.right_fan.interface.enable();
+    //     DEBUG_PRINTLN("???", millis());
+    //     delay(20);
+    // }
+
+    DShotChannel ch1{timer8.oc(1)};
+    DShotChannel ch2{timer8.oc(2)};
+
+    ch1.init();
+    ch2.init();
+
+
+    auto entry = millis();
+    while(millis() - entry < 3000){
+        // ch1.enable();
+        // ch2.enable();
+        ch1 = 0;
+        ch2 = 0;
+
+        delay(20);
+    }
 }
 
 void SmartCar::init_lcd(){
@@ -171,6 +208,29 @@ void SmartCar::init_camera(){
     }
 }
 
+void SmartCar::process_eve(){
+
+    flagReg = flags;
+
+    flags.enable_trig |= start_key;
+    flags.disable_trig |= stop_key;
+
+    if(flags.enable_trig){
+        body.enable(false);
+        DEBUG_PRINTLN("enabled");
+        flags.enable_trig = false;
+    }
+
+    if(flags.disable_trig){
+        body.enable(true);
+        DEBUG_PRINTLN("disabled");
+        flags.disable_trig = false;
+    }
+
+
+    flagReg = flags;
+};
+
 void SmartCar::init_it(){
     GenericTimer & timer = timer2;
     timer.init(ctrl_freq);
@@ -182,9 +242,12 @@ void SmartCar::main(){
     init_debugger();
     init_periphs();
     delay(200);
+    init_fans();
     init_sensor();
     init_lcd();
     init_camera();
+
+    unlock();
     init_it();
 
 
@@ -356,30 +419,6 @@ void SmartCar::main(){
         plot_vec3(msm.accel.normalized() * 15, {190, 0});
         plot_vec3(msm.gyro * 7, {190, 60});
         plot_vec3(msm.magent.normalized() * 20, {190, 120});
-    };
-
-    [[maybe_unused]] auto process_eve = [&](){
-
-        //first write, preserve
-        flagReg = flags;
-
-        flags.enable_trig |= start_key;
-        flags.disable_trig |= stop_key;
-
-        if(flags.enable_trig){
-            body.enable(false);
-            DEBUG_PRINTLN("enabled");
-            flags.enable_trig = false;
-        }
-
-        if(flags.disable_trig){
-            body.enable(true);
-            DEBUG_PRINTLN("disabled");
-            flags.disable_trig = false;
-        }
-
-
-        flagReg = flags;
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});

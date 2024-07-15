@@ -61,7 +61,7 @@
 #define AGC_AEC_ENABLE_VALUE 0x02 // Enable AGC & disable AEC
 
 bool MT9V034::init(){
-    DEBUG_PRINTLN(size);
+    // DEBUG_PRINTLN(size);
 
     if(!isChipValid()){
         return false;

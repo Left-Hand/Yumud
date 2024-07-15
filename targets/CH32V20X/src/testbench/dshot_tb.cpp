@@ -56,8 +56,10 @@ static std::array<uint16_t, 40> data;
 
     auto entry = millis();
     while(millis() - entry < 3000){
-        ch1.enable();
-        ch2.enable();
+        // ch1.enable();
+        // ch2.enable();
+        ch1 = 0;
+        ch2 = 0;
 
         delay(20);
     }
@@ -69,22 +71,22 @@ static std::array<uint16_t, 40> data;
 
     // oc1.init();
     // oc2.init();
-    constexpr real_t base = 0.12;
-    constexpr real_t full = 0.95;
-    constexpr real_t delta = full-  base;
-    ch1 = base;
-    ch2 = base;
+    // constexpr real_t base = 0.12;
+    // constexpr real_t full = 0.95;
+    // constexpr real_t delta = full-  base;
+    // ch1 = base;
+    // ch2 = base;
 
-    auto t0 = t;
-    real_t temp = base;
-    while(true){
+    // auto t0 = t;
+    // real_t temp = base;
+    // while(true){
         // ch2 = 0.2;
         // delay(15);
 
-        temp = std::max(temp, base + (0.5 + 0.5 * sin((t - t0)/2)) * delta);
-        ch1 = temp;
-        ch2 = temp;
-        delay(20);
+        // temp = std::max(temp, base + (0.5 + 0.5 * sin((t - t0)/2)) * delta);
+        // ch1 = temp;
+        // ch2 = temp;
+        // delay(20);
 
         // delay(10);
         // ch1 = 0.6;
@@ -92,7 +94,7 @@ static std::array<uint16_t, 40> data;
         // oc2 = 0.4;
         // logger.println(temp);
         // delay(20);
-    }
+    // }
 }
 
 void dshot_main(){
@@ -114,5 +116,5 @@ void dshot_main(){
     dshot_tb_new(logger,oc, oc2);
     // dshot_tb_old(logger,oc, oc2);
 
-    while(true);
+    // while(true);
 }
