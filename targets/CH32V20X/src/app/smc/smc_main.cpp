@@ -55,7 +55,7 @@ void SmartCar::ctrl(){
     real_t side_output = side_ctrl.update(0, msm.side_offs_err, -side_volocity);
 
     static constexpr real_t centri_k = 0.6;
-    real_t centripetal_output = CLAMP(-msm.omega * msm.front_spd * centri_k, -0.2, 0.2);
+    [[maybe_unused]] real_t centripetal_output = CLAMP(-msm.omega * msm.front_spd * centri_k, -0.2, 0.2);
 
     // DEBUG_VALUE(centripetal_output);
 
@@ -71,7 +71,7 @@ void SmartCar::ctrl(){
 
 
         motor_strength.hri = side_output;
-        motor_strength.hri += centripetal_output;
+        // motor_strength.hri += centripetal_output;
     }
 
 }
@@ -276,7 +276,7 @@ void SmartCar::init_camera(){
 void SmartCar::start(){
     switches.hand_mode = false;
     flags.enable_trig = true;
-    motor_strength.chassis = 0.8;
+    motor_strength.chassis = full_duty;
     parse();
 }
 
@@ -608,10 +608,14 @@ void SmartCar::main(){
         auto & img_bina = pers_bina_image;
 
         std::tie(msm.seed_pos, msm.road_window) = get_entry(img_bina);
+        // if(bool(msm.road_window))
+
 
         //如果找不到种子 跳过本次遍历
-        if(!msm.seed_pos) continue;
-        msm.side_offs_err = (msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
+        if(!msm.seed_pos){
+            DEBUG_PRINTLN("no seed");
+            stop();
+        }
 
         auto ccd_range = get_h_range(ccd_bina, Vector2i{msm.seed_pos.x, 0});
         
@@ -619,10 +623,10 @@ void SmartCar::main(){
         plot_pile({0, ccd_range}, RGB565::FUCHSIA);
         auto ccd_center_x = ccd_range.get_center();
 
-        auto offs = -0.005 * (ccd_center_x - 94);
-        msm.side_offs_err = -offs;
+        msm.side_offs_err = -0.005 * (ccd_center_x - 94);
         // -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
-        DEBUG_VALUE(offs);
+    
+        DEBUG_PRINTLN(msm.road_window.length(), msm.road_window, config.valid_width, msm.seed_pos);
         recordRunStatus(RunStatus::PROCESSING_SEED_END);
         //对种子的搜索结束
         /* #endregion */
@@ -688,6 +692,7 @@ void SmartCar::main(){
             }
             continue;
         }
+
         //元素识别结束
         /* #endregion */
         
@@ -752,6 +757,7 @@ void SmartCar::main(){
 
                 if (bool(root_vec)) {
                     msm.current_dir = root_vec.angle();
+                    // DEBUG_PRINTLN(msm.current_dir);
                 }
 
                 plot_segment({msm.seed_pos, msm.seed_pos + Vector2(10.0, 0).rotated(-msm.current_dir)}, {0, 0}, RGB565::PINK);

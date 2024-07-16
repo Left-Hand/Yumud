@@ -131,7 +131,7 @@ protected:
     ABEncoderTimer  enc     {timer1};
     Odometer        odo     {enc};
 
-
+    static constexpr real_t full_duty = 0.85;
     static constexpr RGB565 white = 0xffff;
     static constexpr RGB565 black = 0;
     static constexpr RGB565 red = RGB565(31,0,0);
