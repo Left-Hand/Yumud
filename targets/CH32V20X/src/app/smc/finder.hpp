@@ -44,7 +44,6 @@ namespace SMC{
 
     std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> &, const Vector2i &, const LR);
     Piles get_x_piles(const ImageReadable<Binary> & src, Seed seed);
-    // bool get_cross_point(const Point &p1,const Point &p2,const Point &q1,const Point &q2,Point & out);
     Rangei get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos);
     Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const LR);
 
@@ -132,21 +131,35 @@ namespace SMC{
     Circle calculate_cicular(const Coast &, const int, const int);
 
     namespace WorldUtils{
-        static constexpr uint8_t blind_rows = 15;
-        static constexpr real_t scale = 0.02;
+        static constexpr real_t scale = 0.014;
+        static constexpr int blind_rows = 15;
     
-        __inline Vector2 position(const Point & point){
-            Point centered = {point.x - 94, (-point.y + 45) + blind_rows};
+        __fast_inline Vector2 position(const Point & point){
+            Vector2i centered = {point.x - 94, (-point.y + 45) + blind_rows};
             return centered * scale;
         }
 
-        __inline real_t distance(const Point & p1, const Point & p2){
-            return ((p2 - p1) * scale).length();
+
+        __fast_inline Vector2 displacement(const Point & p1, const Point & p2 = {0,0}){
+            return ((p2 - p1) * scale);
+        }
+        __fast_inline real_t distance(const Point & p1, const Point & p2 = {0,0}){
+            return displacement(p1, p2).length();
         }
 
-        auto displacement(const Vector2_t<auto> & diff){
-            return diff * scale;
+        template<arithmetic T>
+        __fast_inline real_t distance(const T & val){
+            return val * scale;
         }
+
+        __fast_inline real_t pixels(const real_t l){
+            return l / scale;
+        }
+        
+        __fast_inline real_t pixels(const Vector2 & p1, const Vector2 & p2 = {0,0}){
+            return pixels((p2 - p1).length());
+        }
+
     }
 
 

@@ -40,13 +40,13 @@ struct Measurement{
 struct GlobalConfig{
     Grayscale positive_threshold = 255;
     Grayscale edge_threshold = 2;
-    int safety_seed_height = 5;
+    int seed_height_base = 5;
     real_t dpv = 1.8;
 
-    Rangei valid_width = Rangei(188 / 9, 188 / 4);
-    int align_space_width = 15;
+    real_t road_width = 0.4;
+    Range valid_road_meters = {0.2, 0.6};
 
-    real_t dir_merge_max_sin = real_t(0.17);
+    real_t dir_merge_max_sin = real_t(0.27);
 };
 
 
@@ -77,7 +77,7 @@ union Flags{
 };
 
 struct SetPoints{
-    real_t targ_spd;
+    real_t targ_spd = 0.26;
 };
 
 struct Benchmark{

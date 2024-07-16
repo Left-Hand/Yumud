@@ -41,18 +41,21 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
     auto last_seed_pos = msm.seed_pos;
-    auto road_minimal_length = config.valid_width.from;
+
+    Rangei road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
+                                WorldUtils::pixels(config.valid_road_meters.to)};
+
+    real_t road_align_pixels = {WorldUtils::pixels(config.road_width)};
     auto m_right_align = switches.align_right;
-    auto y = last_seed_pos.y ? last_seed_pos.y : src.size.y - config.safety_seed_height;
+    auto y = last_seed_pos.y ? last_seed_pos.y : src.size.y - config.seed_height_base;
 
     //本次找到的x窗口
     Rangei new_x_range;
 
-    // DEBUG_VALUE(last_seed_pos);
     if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗口
-        new_x_range = get_side_range(src, y, road_minimal_length, m_right_align);
+        new_x_range = get_side_range(src, y, road_valid_pixels.from, m_right_align);
 
-        if(new_x_range.length() < road_minimal_length){//如果最长的区域都小于路宽 那么就视为找不到种子
+        if(new_x_range.length() < road_valid_pixels.from){//如果最长的区域都小于路宽 那么就视为找不到种子
             return {Vector2i{}, Rangei{}};
         }
 
@@ -60,24 +63,22 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
         new_x_range = get_h_range(src,last_seed_pos);
         //在上次种子的基础上找新窗口
 
-        if(new_x_range.length() < road_minimal_length){//如果最长的区域都小于路宽 那么就视为找不到种子
+        if(new_x_range.length() < road_valid_pixels.from){//如果最长的区域都小于路宽 那么就视为找不到种子
             return {Vector2i{}, Rangei{}};
         }
     }
     
 
-    if(config.valid_width.has(new_x_range.length())){
-    // if(true){
-
+    // DEBUG_VALUE(road_valid_pixels);
+    // DEBUG_VALUE(new_x_range);
+    if(road_valid_pixels.has(new_x_range.length())){
         Point new_seed_pos;
 
         if(m_right_align){
-            new_seed_pos = Vector2i(new_x_range.to - config.align_space_width,y);
+            new_seed_pos = Vector2i(new_x_range.to - int(road_align_pixels/2),y);
         }else{
-            new_seed_pos = Vector2i(new_x_range.from + config.align_space_width, y);
+            new_seed_pos = Vector2i(new_x_range.from + int(road_align_pixels/2), y);
         }
-
-        // DEBUG_PRINTLN("found", new_seed_pos);
 
         if(last_seed_pos.x != 0)//如果上次有找到 那么进行简单的均值滤波 否则直接赋值
             return {(last_seed_pos + new_seed_pos) / 2, new_x_range};
@@ -618,7 +619,7 @@ void SmartCar::main(){
         //开始进行元素识别
         
         //在自动模式下 如果识别不到赛道 就关断小车 避免跑飞时撞墙
-        if(msm.road_window.length() < config.valid_width.from){
+        if(msm.road_window.length() < WorldUtils::pixels(config.valid_road_meters.length())){
             if(switches.hand_mode == false){
                 stop();
             }
@@ -637,197 +638,191 @@ void SmartCar::main(){
 
         /* #region */
         //进行引导修正
+        if(false){
+            auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
+                static constexpr auto k = 1;
 
-        auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
-            static constexpr auto k = 1;
+                auto coast_point_valid = [](const Point & host, const Point & other, const LR _is_right) -> bool{
+                    Vector2i delta = other - host;
 
-            auto coast_point_valid = [](const Point & host, const Point & other, const LR _is_right) -> bool{
-                Vector2i delta = other - host;
+                    //如果两个点坐标一致 那么通过
+                    if(bool(delta) == false) return true;
 
-                //如果两个点坐标一致 那么通过
-                if(bool(delta) == false) return true;
+                    auto abs_dx = std::abs(delta.x);
 
-                auto abs_dx = std::abs(delta.x);
+                    //快速排除不需要排除的区域
+                    if(delta.y < 0 ||
+                        ((_is_right == LR::RIGHT) && (delta.x < 0)) ||
+                        ((_is_right == LR::LEFT ) && (delta.x > 0))) return true;
 
-                //快速排除不需要排除的区域
-                if(delta.y < 0 ||
-                    ((_is_right == LR::RIGHT) && (delta.x < 0)) ||
-                    ((_is_right == LR::LEFT ) && (delta.x > 0))) return true;
+                    auto abs_dy = std::abs(delta.y);
+                    return (abs_dy > k * abs_dx);
+                };
 
-                auto abs_dy = std::abs(delta.y);
-                return (abs_dy > k * abs_dx);
-            };
+                if(coast.size() == 0) return {};
+                if(coast.size() == 1) return {coast.front()};
 
-            if(coast.size() == 0) return {};
-            if(coast.size() == 1) return {coast.front()};
+                std::array<bool, max_coast_size> remove_indexes;
+                remove_indexes.fill(false);
 
-            std::array<bool, max_coast_size> remove_indexes;
-            remove_indexes.fill(false);
+                for(auto it = coast.begin(); it!= coast.end(); ++it){
+                    const auto & host = *it;
+                    for(size_t j = 0; j < coast.size(); ++j){
+                        const auto & guest = coast[j];
 
-            for(auto it = coast.begin(); it!= coast.end(); ++it){
-                const auto & host = *it;
-                for(size_t j = 0; j < coast.size(); ++j){
-                    const auto & guest = coast[j];
+                        //已经加到列表 直接跳过
+                        if(remove_indexes[j] == true) continue;
+                        
+                        //还不在列表内 有待考证
+                        bool abandon = not coast_point_valid(host, guest, is_right);
+                        // bool abandon = false;
 
-                    //已经加到列表 直接跳过
-                    if(remove_indexes[j] == true) continue;
-                    
-                    //还不在列表内 有待考证
-                    bool abandon = not coast_point_valid(host, guest, is_right);
-                    // bool abandon = false;
-
-                    //如果需要丢弃 添加到列表
-                    remove_indexes[j] |= abandon;
-                }
-            };
-
-            Coast ret;
-
-
-            //对初点做特殊讨论
-            //此处以返回值的第二个点为参考
-
-            if(remove_indexes[0] == true){
-                size_t secondary_index = 0;
-                for(size_t i = 1; i < coast.size(); ++i){
-                    if(remove_indexes[i] == false){
-                        secondary_index = i;
-                        break;
+                        //如果需要丢弃 添加到列表
+                        remove_indexes[j] |= abandon;
                     }
-                }
+                };
 
-                DEBUG_VALUE(secondary_index);
-                if(secondary_index){
-                    const auto & secondary_point = coast[secondary_index];
-                    const auto & orignal_first_point = coast[0];
+                Coast ret;
 
-                    auto vec_go_until_y = [](const Point & start_p, const Vector2i vec, const int y) -> Point{
-                        return (start_p + vec * (y - start_p.y) / vec.y);
-                    };
 
-                    auto replaced_first_point = vec_go_until_y(secondary_point, is_right == RIGHT ? Vector2i{1, k} : Vector2i{-1, k}, orignal_first_point.y);
+                //对初点做特殊讨论
+                //此处以返回值的第二个点为参考
 
-                    ret.push_back(replaced_first_point);
+                if(remove_indexes[0] == true){
+                    size_t secondary_index = 0;
                     for(size_t i = 1; i < coast.size(); ++i){
                         if(remove_indexes[i] == false){
-                            ret.push_back(coast[i]);
+                            secondary_index = i;
+                            break;
                         }
                     }
 
-                    return ret;
-                }else{
-                    //第一个点不可取 后面也找不到可取点 等价与返回空
+                    DEBUG_VALUE(secondary_index);
+                    if(secondary_index){
+                        const auto & secondary_point = coast[secondary_index];
+                        const auto & orignal_first_point = coast[0];
 
-                    return {};
-                }
-            }else{
-                // for(size_t i = 1; i < coast.size(); ++i){
-                for(size_t i = 0; i < coast.size(); ++i){
-                    if(remove_indexes[i] == false){
-                    // if(true){
-                        ret.push_back(coast[i]);
+                        auto vec_go_until_y = [](const Point & start_p, const Vector2i vec, const int y) -> Point{
+                            return (start_p + vec * (y - start_p.y) / vec.y);
+                        };
+
+                        auto replaced_first_point = vec_go_until_y(secondary_point, is_right == RIGHT ? Vector2i{1, k} : Vector2i{-1, k}, orignal_first_point.y);
+
+                        ret.push_back(replaced_first_point);
+                        for(size_t i = 1; i < coast.size(); ++i){
+                            if(remove_indexes[i] == false){
+                                ret.push_back(coast[i]);
+                            }
+                        }
+
+                        return ret;
+                    }else{
+                        //第一个点不可取 后面也找不到可取点 等价与返回空
+
+                        return {};
                     }
+                }else{
+                    // for(size_t i = 1; i < coast.size(); ++i){
+                    for(size_t i = 0; i < coast.size(); ++i){
+                        if(remove_indexes[i] == false){
+                        // if(true){
+                            ret.push_back(coast[i]);
+                        }
+                    }
+                    DEBUG_PRINTLN(coast.size(),ret.size());
+                    return ret;
                 }
-                DEBUG_PRINTLN(coast.size(),ret.size());
-                return ret;
-            }
 
-            //should not reach here
-            return {};
-        };
+                //should not reach here
+                return {};
+            };
 
-        // track_left = coast_fix_lead(track_left, LR::LEFT);
-        track_right = coast_fix_lead(track_right, LR::RIGHT);
-
+            // track_left = coast_fix_lead(track_left, LR::LEFT);
+            track_right = coast_fix_lead(track_right, LR::RIGHT);
+        }
         //引导修正结束
         /* #endregion */
 
         /* #region */
         //开始提取轮廓主向量
         recordRunStatus(RunStatus::PROCESSING_VEC_BEG);
-        do{
-            if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
-                auto vec_valid = [](const Vector2 & vec){return bool(vec) && vec.length() > 5;}; 
 
-                Segment seg_left = SegmentUtils::shift({
-                        track_left.front(), *std::next(track_left.begin())}, 
-                        Vector2i(config.align_space_width, 0));
+        if(true){
+            do{
+                if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
+                    auto vec_valid = [](const Vector2 & vec){return bool(vec) && vec.length() > 5;}; 
+                    auto road_align_pixels = WorldUtils::pixels(config.road_width);
+                    Segment seg_left = SegmentUtils::shift({
+                            track_left.front(), *std::next(track_left.begin())}, 
+                            Vector2i(int(road_align_pixels/2), 0));
 
-                Segment seg_right = SegmentUtils::shift({
-                        track_right.front(), *std::next(track_right.begin())}, 
-                        Vector2i(-config.align_space_width, 0));
+                    Segment seg_right = SegmentUtils::shift({
+                            track_right.front(), *std::next(track_right.begin())}, 
+                            Vector2i(-int(road_align_pixels/2), 0));
 
-                plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
-                plot_segment(seg_right, {0, 0}, RGB565::GREEN);
+                    plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
+                    plot_segment(seg_right, {0, 0}, RGB565::GREEN);
 
-                //提取根向量
-                Vector2 left_root_vec = SegmentUtils::vec(seg_left);
-                Vector2 right_root_vec = SegmentUtils::vec(seg_right);
-                Vector2 root_vec;
+                    //提取根向量
+                    Vector2 left_root_vec = SegmentUtils::vec(seg_left);
+                    Vector2 right_root_vec = SegmentUtils::vec(seg_right);
+                    Vector2 root_vec;
 
-                //如果根向量相似且左右间隔是合法的赛道宽度(排除在识别元素时的干扰) 那么进行根向量合并 否则根据吸附的左右选择对应的根向量
-                bool left_valid = vec_valid(left_root_vec);
-                bool right_valid = vec_valid(right_root_vec);
+                    //如果根向量相似且左右间隔是合法的赛道宽度(排除在识别元素时的干扰) 那么进行根向量合并 否则根据吸附的左右选择对应的根向量
+                    bool left_valid = vec_valid(left_root_vec);
+                    bool right_valid = vec_valid(right_root_vec);
 
-                if(left_valid and right_valid and config.valid_width.has(msm.road_window.length())){
+                    auto est_road_width = WorldUtils::distance(msm.road_window.length());
+                    // DEBUG_VALUE(est_road_width);
 
-                    auto diff_left_l = left_root_vec.length();
-                    auto diff_right_l = right_root_vec.length();
+                    if(left_valid and right_valid and config.valid_road_meters.has(est_road_width)){
 
-                    auto vec_sin = (left_root_vec.cross(right_root_vec)) 
-                            / (diff_left_l * diff_right_l);
+                        auto diff_left_l = left_root_vec.length();
+                        auto diff_right_l = right_root_vec.length();
 
-                    if(vec_sin < abs(config.dir_merge_max_sin)){
-                        //计算两者按权重相加的向量（不需要考虑模长）
-                        root_vec = left_root_vec * diff_right_l + right_root_vec * diff_left_l;
-                    }else{
-                        if(switches.align_right){
-                            root_vec = right_root_vec;
+                        auto vec_sin = (left_root_vec.cross(right_root_vec)) 
+                                / (diff_left_l * diff_right_l);
+
+                        if(vec_sin < abs(config.dir_merge_max_sin)){
+                            //计算两者按权重相加的向量（不需要考虑模长）
+                            root_vec = left_root_vec * diff_right_l + right_root_vec * diff_left_l;
                         }else{
-                            root_vec = left_root_vec;
+                            if(switches.align_right){
+                                root_vec = right_root_vec;
+                            }else{
+                                root_vec = left_root_vec;
+                            }
                         }
-                    }
-                }else if(left_valid || right_valid){
-                    if(left_valid && switches.align_right == LR::LEFT){
-                        root_vec = left_root_vec;
+                    }else if(left_valid || right_valid){
+                        if(left_valid && switches.align_right == LR::LEFT){
+                            root_vec = left_root_vec;
+                            break;
+                        }
+
+                        if(right_valid && switches.align_right == LR::RIGHT){
+                            root_vec = right_root_vec;
+                            break;
+                        }
+                    }else{
                         break;
                     }
 
-                    if(right_valid && switches.align_right == LR::RIGHT){
-                        root_vec = right_root_vec;
-                        break;
+                    if (bool(root_vec)) {
+                        msm.current_dir = root_vec.angle();
+                        // DEBUG_PRINTLN(msm.current_dir);
                     }
-                }else{
-                    break;
-                }
 
-                if (bool(root_vec)) {
-                    msm.current_dir = root_vec.angle();
-                    // DEBUG_PRINTLN(msm.current_dir);
+                    plot_segment({msm.seed_pos, msm.seed_pos + Vector2(10.0, 0).rotated(-msm.current_dir)}, {0, 0}, RGB565::PINK);
                 }
-
-                plot_segment({msm.seed_pos, msm.seed_pos + Vector2(10.0, 0).rotated(-msm.current_dir)}, {0, 0}, RGB565::PINK);
-            }
-        }while(false);
+            }while(false);
+        }
         recordRunStatus(RunStatus::PROCESSING_VEC_END);
         //对轮廓的主向量提取结束
         /* #endregion */
     
 
-
-
-
-
-        // coast_right = douglas_peucker(coast_right, dpv);
-        // auto track_right = get_main_coast(CoastUtils::shrink(coast_right, real_t(-15)));
         // plot_coast(track_left, {0, 0}, RGB565::RED);
         // plot_coast(track_right, {0, 0}, RGB565::BLUE);
-        // DEBUG_PRINTLN("done plot track");
-
-        // static constexpr Vector2i shapes_offset = Vector2i(0, 0);
-
-
-
 
         
         {

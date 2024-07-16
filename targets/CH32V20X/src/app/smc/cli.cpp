@@ -168,12 +168,12 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             break;
         case "sh"_ha:
         case "sfheight"_ha:
-            settle_clamped_value(config.safety_seed_height, args, 0, 20);
+            settle_clamped_value(config.seed_height_base, args, 0, 20);
             break;
-        case "asw"_ha:
-        case "awidth"_ha:
-            settle_clamped_value(config.align_space_width,args, 0, 20);
-            break;
+        // case "asw"_ha:
+        // case "awidth"_ha:
+        //     settle_clamped_value(config.align_space_width,args, 0, 20);
+        //     break;
 
         case "pde"_ha:
             settle_value(switches.plot_de, args);

@@ -63,10 +63,8 @@ struct VelocityCtrl{
 };
 
 
-
-
 struct SideCtrl{
-    real_t kp = real_t(3.0);
+    real_t kp = real_t(3.4);
     real_t ki = real_t(0.0);
     real_t kd = real_t(0.3);
 
@@ -99,8 +97,8 @@ struct SideCtrl{
 };
 
 struct CentripetalCtrl{
-    real_t k = real_t(3.4);                    
-    real_t k_clamp = real_t(0.6);                        
+    real_t k = real_t(2.4);                    
+    real_t k_clamp = real_t(0.2);                        
                  
     real_t update(const real_t spd, const real_t omega){               
         return CLAMP(k * spd * omega, -k_clamp, k_clamp);
