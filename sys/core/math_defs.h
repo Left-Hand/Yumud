@@ -56,7 +56,7 @@
     #define MAX(a,b) __max_tmpl(a,b)
     template <typename T, typename U>
     requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
-    constexpr __fast_inline T __max_tmpl(const T & a, const U & _b){
+    constexpr __fast_inline T __max_tmpl(const T a, const U _b){
         T b = static_cast<T>(_b);
         return (a > b) ? a : b;
     }
@@ -70,7 +70,7 @@
     #define MIN(a,b) __min_tmpl(a,b)
     template <typename T, typename U>
     requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
-    constexpr __fast_inline T __min_tmpl(const T & a, const U & _b){
+    constexpr __fast_inline T __min_tmpl(const T a, const U _b){
         T b = static_cast<T>(_b);
         return (a < b) ? a : b;
     }
@@ -84,13 +84,15 @@
     #define ABS(a) __abs_tmpl(a)
     template <typename T>
     requires std::is_arithmetic_v<T>
-    constexpr __fast_inline T __abs_tmpl(const T & a){
+    constexpr __fast_inline T __abs_tmpl(const T a){
         return (a < 0) ? -a : a;
     }
 #else
 #define ABS(x) ((x < 0)? -(x) : x)
 #endif
 #endif
+
+
 
 #ifndef SIGN
 #define SIGN(x) ((x < 0) ? -1 : 1)
@@ -152,6 +154,20 @@
 #ifndef CLAMP
 #define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
 #endif
+
+#ifndef STEP_TO
+#ifdef __cplusplus
+    #define STEP_TO(x, y, s) __step_tmpl(x, y, s)
+    template <typename T>
+    requires std::is_arithmetic_v<T>
+    constexpr __fast_inline T __step_tmpl(const T x,const T y, const T s){
+        return CLAMP(y, x - s, x + s);
+    }
+#else
+#define STEP_TO(x, y, s) CLAMP(y, x - s, x + s)
+#endif
+#endif
+
 
 #ifndef SIGN_AS
 #define SIGN_AS(y,x) ((x > 0) ? y : -y)

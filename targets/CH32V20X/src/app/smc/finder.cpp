@@ -28,7 +28,7 @@ namespace SMC{
         return current_window;
     }
 
-    Rangei get_side_range(const ImageReadable<Binary> & src, const int & y, const int & minimal_length, const LR is_right_align){
+    Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const LR is_right_align){
 
         sstl::vector<Rangei, 8> windows;
         Rangei current_window = {0,0};
@@ -61,63 +61,24 @@ namespace SMC{
     Vector2i SegmentUtils::vec(const Segment & segment){
         return Vector2i(segment.second.x - segment.first.x, segment.first.y - segment.second.y);//inverse y
     }
+
+
+    Segment SegmentUtils::shift(const Segment & seg, const Point & offs){
+        return {seg.first + offs, seg.second + offs};
+    }
     // Pile get_h_pile(const ImageReadable<Binary> & src, const bool & from_bottom = true){
     //     return Pile{from_bottom ? src.get_size().y - 1 : 0, get_side_range(src, from_bottom)};
     // }
 
-    bool PileUtils::validity(const Pile & pile, const Rangei & valid_width){
-        return pile.second.length() > valid_width.start || pile.second.length() < valid_width.end;
+    bool PileUtils::invalidity(const Pile & pile, const Rangei & valid_width){
+        return pile.second.length() < valid_width.start || pile.second.length() > valid_width.end;
     }
 
-    bool PileUtils::validity(const Piles & piles, const Rangei & valid_width){
+    bool PileUtils::invalidity(const Piles & piles, const Rangei & valid_width){
         for(const auto & pile : piles){
-            if(PileUtils::validity(pile, valid_width)) return false;
+            if(PileUtils::invalidity(pile, valid_width)) return true;
         }
-        return true;
-    }
-
-
-    std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> & src, const Vector2i & last_seed_pos, const LR m_right_align){
-        auto y = last_seed_pos.y ? last_seed_pos.y : src.size.y - 1;
-        static constexpr int bounce_x_backward = 4;
-        static constexpr int road_minimal_length = 8;
-
-        Rangei x_range;
-        if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗口
-            x_range = get_side_range(src, y, road_minimal_length, m_right_align);
-            if(x_range.length() < road_minimal_length){//如果最长的区域都小于路宽 那么就视为找不到种子
-                return std::make_tuple(Vector2i{}, Rangei{});
-            }
-        }else{//如果上次有种子
-            x_range = get_h_range(src,last_seed_pos);
-            //在上次种子的基础上找新窗口
-            if(x_range.length() < road_minimal_length){//如果最长的区域都小于路宽 那么就视为找不到种子
-                return std::make_tuple(Vector2i{}, Rangei{});
-            }
-        }
-        
-        //如果上次找到种子 就在种子附近寻找窗口
-        
-
-        // DEBUG_VALUE(x_range);
-        Vector2i ret_pos;
-        if(x_range.length()){
-            if(ret_pos == Vector2i{0,0}){
-                return std::make_tuple(Vector2i(x_range.get_center(), y), x_range);
-            }
-
-            if(m_right_align){
-                Vector2i new_seed_pos = Vector2i(x_range.end - bounce_x_backward,y);
-                return std::make_tuple((last_seed_pos + new_seed_pos) / 2, x_range);
-            }else{
-                Vector2i new_seed_pos = Vector2i(x_range.start + bounce_x_backward, y);
-                return std::make_tuple((last_seed_pos + new_seed_pos) / 2, x_range);
-            }
-        }
-
-        // DEBUG_DEBUG_PRINTLN("efault sp");
-
-        return std::make_tuple(Vector2i(), Rangei());
+        return false;
     }
 
     bool CoastUtils::is_self_intersection(const Coast & coast){
@@ -153,7 +114,7 @@ namespace SMC{
 
 
 
-    Corners CoastUtils::corners(const Coast & coast, const real_t & threshold, const CornerType & default_ct){
+    Corners CoastUtils::corners(const Coast & coast, const real_t threshold, const CornerType default_ct){
         // if(corner_type == CornerType::NONE) return Corners{};
         if(coast.size() < 3) return Corners{};
 
@@ -180,7 +141,7 @@ namespace SMC{
         return ret;
     }
 
-    Points CoastUtils::acorners(const Coast & coast, const real_t & threshold){
+    Points CoastUtils::acorners(const Coast & coast, const real_t threshold){
         auto corners = CoastUtils::corners(coast, threshold, CornerType::ACORNER);
         Points ret;
 
@@ -191,7 +152,7 @@ namespace SMC{
         return ret;
     }
 
-    Points CoastUtils::vcorners(const Coast & coast, const real_t & threshold){
+    Points CoastUtils::vcorners(const Coast & coast, const real_t threshold){
         auto corners = CoastUtils::corners(coast, threshold, CornerType::VCORNER);
         Points ret;
 
@@ -215,18 +176,33 @@ namespace SMC{
         Coast ret;
 
         for(auto it = std::next(coast.begin()); it != coast.end(); ++it){
-            if(not window.has_point(*it)) break;
-            if(first == *it) break;
+            if(not window.has_point(*it)){
+                //out of bound exit
+                break;
+            }
+
+            if(*it == first){
+                // DEBUG_PRINTLN("trim find self isn");
+                break;
+            }
+
             ret.push_back(*it);
         }
-        // DEBUG_TRAP("fix end", ret.size(), ';');
         return ret;
     }
 
     Rect2i CoastUtils::bounding_box(const Coast & coast){
-        // auto it = coast.begin();
+        if(coast.size() == 0){
+            DEBUG_WARN("coast is empty");
+            return Rect2i{};
+        }
+
         auto first = coast.front();
         Rect2i ret = {first, Vector2i{}};
+
+        if(coast.size() < 2){
+            return ret;
+        }
 
         for(auto it = std::next(coast.begin()); it != coast.end(); ++it){
             ret = ret.merge(*it);
@@ -320,10 +296,14 @@ namespace SMC{
         return coast;
     }
 
-    Coasts split_to_coasts(const Coast & line, const real_t & break_angle){
+    Coasts split_to_coasts(const Coast & line, const real_t break_angle){
         const real_t MIN_shadow = cos(break_angle);
         Coasts coasts;
         Coast coast = {};
+
+        if(line.size() < 3){
+            return {line};
+        }
 
         for(auto it = std::next(line.begin()); it != std::prev(line.end()); ++it){
             auto & lastpoint = *std::prev(it); 
@@ -346,7 +326,7 @@ namespace SMC{
         return coasts;
     }
 
-    Coast get_main_coast(const Coast & line, const real_t & break_angle){
+    Coast get_main_coast(const Coast & line, const real_t break_angle){
         std::map<int, int> length_map;
 
         auto coasts = split_to_coasts(line, break_angle);
@@ -405,7 +385,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 
 
 
-Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
+Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
     // Points& _polyLine
     Points simplifiedPolyLine = {};
 	if (polyLine.size() < 2)
@@ -454,11 +434,12 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
 }
 
 
-    Coast CoastUtils::douglas_peucker(const Coast & line, const real_t & epsilon) {
+    Coast CoastUtils::douglas_peucker(const Coast & line, const real_t epsilon) {
         if(line.size() == 0){
             DEBUG_WARN("dp input size 0");
         }
         auto ret = douglas_peucker_vector(Points(line.begin(), line.end()), epsilon);
+
         if(ret.size() == 0){
             DEBUG_WARN("dp output size 0");
         }else if(ret.size() == 1){
@@ -469,7 +450,7 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
         return Coast(ret.begin(), ret.end());
     }
 
-    bool IsRectCross(const Point &p1,const Point &p2,const Point &q1,const Point &q2)
+    static bool IsRectCross(const Point &p1,const Point &p2,const Point &q1,const Point &q2)
     {
         bool ret = MIN(p1.x,p2.x) <= MAX(q1.x,q2.x)    &&
                     MIN(q1.x,q2.x) <= MAX(p1.x,p2.x) &&
@@ -480,7 +461,7 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
  
  
     //跨立判断
-    bool is_line_segment_cross(const Point &P1,const Point &P2,const Point & R1,const Point & R2){
+    static bool is_line_segment_cross(const Point &P1,const Point &P2,const Point & R1,const Point & R2){
         if(
             ((R1.x-P1.x)*(R1.y-R2.y)-(R1.y-P1.y)*( R1.x-R2.x)) * ((R1.x-P2.x)*(R1.y-R2.y)-(R1.y-P2.y)*(R1.x-R2.x)) < 0 ||
             ((P1.x-R1.x)*(P1.y-P2.y)-(P1.y-R1.y)*(P1.x-P2.x)) * ((P1.x-R2.x)*(P1.y-P2.y)-(P1.y-R2.y)*( P1.x-P2.x)) < 0
@@ -491,7 +472,7 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
     }
  
 
-    bool get_cross_point(const Point &p1,const Point &p2,const Point &q1,const Point &q2,Point & out)
+    static bool get_cross_point(const Point &p1,const Point &p2,const Point &q1,const Point &q2,Point & out)
     {
         if(IsRectCross(p1,p2,q1,q2))
         {
@@ -638,9 +619,9 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
         return ret;
     }
 
-    Coast CoastUtils::shrink(const Coast & line, const real_t & width, const Vector2i & window_size){
+    Coast CoastUtils::shrink(const Coast & line, const real_t width, const Vector2i & window_size){
         if(line.size() == 1){
-            DEBUG_LOG("only one point");
+            DEBUG_WARN("only one point");
         }else if(line.size() == 2){
             Rect2i window = Rect2i(Vector2i(), window_size);
 
@@ -651,6 +632,7 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
             SegmentUtils::constrain(seg, window);
             return {seg.first, seg.second};
         }
+
         Coast ret;
         auto it = line.begin();
         while(it != line.end()){
@@ -669,37 +651,107 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t & epsilon){
                 diff = nextpoint - lastpoint;
             } 
             Vector2i new_point = Vector2{diff.y, -diff.x}.normalized() * width + currpoint;
-            
-            // {
-                // Rect2i window = Rect2i(Vector2i(), window_size);
-                // bool addable = window.has_point(new_point);
-                // static constexpr real_t toler = 4;
-
-                // const real_t abs_w = ABS(width);
-                // const int MIN_ls = int((abs_w - toler) * (abs_w - toler));  
-                
-                // for(auto & item : line){
-                //     if(!addable){
-                //         break;
-                //     }
-
-                    // if((new_point - item).length_squared() < MIN_ls){
-                        // addable = false;
-                    // }
-                // }
-
-                // if(addable){
                 ret.push_back(new_point);
-                // }
-            // }
-
             ++it;
         }
-        // Rect2i window = Rect2i(Vector2i(), window_size);
 
-        // CoastUtils::which_in_window(ret, window);
         return ret;
     }
 
+    Circle calculate_cicular(const Vector2 & px1, const Vector2 & px2, const Vector2 & px3)
+    {
+        real_t x1, y1, x2, y2, x3, y3;
+        real_t a, b, c, g, e, f;
+        x1 = px1.x;
+        y1 = px1.y;
+        x2 = px2.x;
+        y2 = px2.y;
+        x3 = px3.x;
+        y3 = px3.y;
+        e = 2 * (x2 - x1);
+        f = 2 * (y2 - y1);
+        g = x2*x2 - x1*x1 + y2*y2 - y1*y1;
+        a = 2 * (x3 - x2);
+        b = 2 * (y3 - y2);
+        c = x3*x3 - x2*x2 + y3*y3 - y2*y2;
+        real_t X = (g*b - c*f) / (e*b - a*f);
+        real_t Y = (a*g - c*e) / (a*f - b*e);
+        real_t R = sqrt((X-x1)*(X-x1)+(Y-y1)*(Y-y1));
 
+        return {{X, Y}, R};
+    }
+
+
+
+    Circle calculate_cicular(const Coast & coast, const int begin_index, const int end_index){
+        int S = CLAMP(begin_index, 0, coast.size() - 1);
+        int End = CLAMP(end_index, 0, coast.size() - 1);
+        int N = End- S;
+
+        if (N < 3) {
+            return {Vector2{0, 0}, std::numeric_limits<real_t>::infinity()};
+        }
+
+        Vector2 center;
+        real_t r;
+        
+        real_t sumX = 0.0; 
+        real_t sumY = 0.0;
+        real_t sumX2 = 0.0;
+        real_t sumY2 = 0.0;
+        real_t sumX3 = 0.0;
+        real_t sumY3 = 0.0;
+        real_t sumXY = 0.0;
+        real_t sumXY2 = 0.0;
+        real_t sumX2Y = 0.0;
+
+        for (int pId = S; pId < End; ++pId) {
+            sumX += coast[pId].x;
+            sumY += coast[pId].y;
+
+            real_t x2 = coast[pId].x * coast[pId].x;
+            real_t y2 = coast[pId].y * coast[pId].y;
+            sumX2 += x2;
+            sumY2 += y2;
+
+            sumX3 += x2 * coast[pId].x;
+            sumY3 += y2 * coast[pId].y;
+            sumXY += coast[pId].x * coast[pId].y;
+            sumXY2 += coast[pId].x * y2;
+            sumX2Y += x2 * coast[pId].y;
+        }
+
+
+
+        real_t C, D, E, G, H;
+        real_t a, b, c;
+
+        C = N * sumX2 - sumX * sumX;
+        D = N * sumXY - sumX * sumY;
+        E = N * sumX3 + N * sumXY2 - (sumX2 + sumY2) * sumX;
+        G = N * sumY2 - sumY * sumY;
+        H = N * sumX2Y + N * sumY3 - (sumX2 + sumY2) * sumY;
+
+        a = (H * D - E * G) / (C * G - D * D);
+        b = (H * C - E * D) / (D * D - G * C);
+        c = -(a * sumX + b * sumY + sumX2 + sumY2) / N;
+
+        center.x = -a / 2.0;
+        center.y = -b / 2.0;
+        r = sqrt(a * a + b * b - 4 * c) / 2.0;
+
+        real_t err = 0.0;
+        real_t e;
+        real_t r2 = r * r;
+
+        for(int pId = S; pId < End; ++pId){
+            Vector2 point = coast[pId];
+            e = (point - center).length_squared() - r2;
+            if (e > err) {
+                err = e;
+            }
+        }
+
+        return {center, r};
+    }
 };

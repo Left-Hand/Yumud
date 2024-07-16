@@ -59,17 +59,22 @@ public:
 BETTER_ENUM(RunStatus, uint8_t,
     NEW_ROUND = 0,
     PROCESSING_CLI,
-    PROCESSING_SENSORS,
+    PROCESSING_INPUT,
     PROCESSING_EVENTS,
     PROCESSING_IMG_BEGIN,
     PROCESSING_IMG_END,
+    PROCESSING_SEED_BEG,
+    PROCESSING_SEED_END,
     PROCESSING_FINDER,
     PROCESSING_FINDER_END,
     PROCESSING_COAST,
     PROCESSING_COAST_END,
+    PROCESSING_DP_BEG,
     PROCESSING_DP_END,
-    PROCESSING_DIR_END,
-    PROCESSING_VA_END,
+    PROCESSING_VEC_BEG,
+    PROCESSING_VEC_END,
+    PROCESSING_CORNER_BEG,
+    PROCESSING_CORNER_END,
     PROCESSING_SEGMENT,
     PROCESSING_SEGMENT_END,
     PROCESSING_FANS,
@@ -80,13 +85,19 @@ BETTER_ENUM(RunStatus, uint8_t,
 using namespace SMC;
 
 class SmartCar:public SmcCli{
+public:
+    // static constexpr int road_minimal_length = 8;
 protected:
     void recordRunStatus(const RunStatus status);
     void printRecordedRunStatus();
+
+    std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> & src);
     BkpItem & runStatusReg = bkp[1];
     BkpItem & powerOnTimesReg = bkp[2];
     BkpItem & flagReg = bkp[3];
+    Gpio & beep_gpio = portB[2];
 
+    Switches switches;
     Flags flags;
     GlobalConfig config;
     MotorStrength motor_strength;
@@ -99,10 +110,7 @@ protected:
     SideFan vl_fan      {timer4.oc(3), timer4.oc(4)};//pair ok
     SideFan vr_fan      {timer5.oc(2), timer5.oc(1)};//pair ok
 
-    // ChassisFan chassis_left_fan {timer8.oc(1)};
-    // ChassisFan chassis_right_fan{timer8.oc(2)};
 
-    // ChassisFanPair chassis_fan{chassis_left_fan, chassis_right_fan};
     RigidBody body{motor_strength, left_fan, right_fan, hri_fan};
 
     TurnCtrl turn_ctrl;
@@ -110,7 +118,7 @@ protected:
     VelocityCtrl velocity_ctrl;
     SideVelocityObserver side_velocity_observer;
 
-    real_t target_speed = 0.4;
+    real_t target_speed = 0.16;
 
     DisplayInterfaceSpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
     ST7789 tftDisplayer {SpiInterfaceLcd, Vector2i(240, 240)};
@@ -130,7 +138,7 @@ protected:
     static constexpr RGB565 green = RGB565(0,63,0);
     static constexpr RGB565 blue = RGB565(0,0,31);
 
-    static constexpr uint ctrl_freq = 240;
+    static constexpr uint ctrl_freq = 50;
     static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
     MPU6050 mpu{i2c};
@@ -161,7 +169,9 @@ protected:
     void init_fans();
 
     void update_sensors();
-    void update();
+    void parse();
+
+    void update_beep(const bool);
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:

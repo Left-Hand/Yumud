@@ -12,30 +12,8 @@
 namespace SMC{
 
 
-struct Measurement{
-    real_t dir_error;
-    real_t neutral_offset;
-
-    Quat accel_offs;
-    Vector3 gyro_offs;
-    Quat magent_offs;
-
-    Vector3 accel;
-    Vector3 gyro;
-    Vector3 magent;
-
-    real_t current_dir;
-
-    Vector2i seed_pos;
-    Rangei road_window;
-
-    real_t front_spd;
-    real_t omega;
-};
-
-
 struct TurnCtrl{
-    real_t kp = real_t(1);
+    real_t kp = real_t(0.6);
     real_t kd = real_t(1);
 
     real_t last_t;
@@ -87,15 +65,15 @@ struct VelocityCtrl{
 
 
 struct SideCtrl{
-    real_t kp = real_t(6.0);
+    real_t kp = real_t(2.0);
     real_t ki = real_t(0.0);
-    real_t kd = real_t(0.7);
+    real_t kd = real_t(0.3);
 
     real_t intergal = real_t(0);
     real_t intergal_clamp = real_t(0.15);
 
     real_t last_t;
-    real_t update(const real_t & target_offs, const real_t & current_offs, const real_t & measured_velocity){
+    real_t update(const real_t target_offs, const real_t current_offs, const real_t measured_velocity){
         real_t error_dir = target_offs - current_offs;
         real_t kp_contribute = kp * error_dir;
 

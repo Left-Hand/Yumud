@@ -11,8 +11,9 @@ class SideFan{
 protected:
     TimerOC & instanceP;
     TimerOC & instanceN;
+    Range_t<real_t>duty_clamp = {-0.7, 0.7};
+
     bool enabled = true;
-    Range_t<real_t>duty_clamp = {-0.78, 0.78};
     real_t last_force = 0;
 public:
     SideFan(TimerOC & _instanceP,TimerOC & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
@@ -28,15 +29,17 @@ public:
 
     void enable(const bool en = true){
         enabled = en;
-        if(!en) setDuty(real_t(0));
+        if(!en){
+            instanceP = (real_t(0));
+            instanceN = (real_t(0));
+        }
     }
 
     void setDuty(const real_t _duty){
         if(!enabled){
-            instanceP = (real_t(0));
-            instanceN = (real_t(0));
             return;
         }
+
         real_t duty = duty_clamp.clamp(_duty);
         if(duty > 0){
             instanceP = (duty);
@@ -48,17 +51,12 @@ public:
     }
 
     void setForce(const real_t force){
-
-        if(force > 0){
-            setDuty(force);
-        }else{
-            setDuty(force);
-        }
+        setDuty(SIGN_AS(sqrt(ABS(force)), force));
     }
 
     auto & operator = (const real_t _force){
-        static constexpr real_t step = 0.0002;
-        last_force = CLAMP(_force, last_force - step, last_force + step);
+        static constexpr real_t step = 0.03;
+        last_force = STEP_TO(last_force, _force, step);
         setForce(last_force);
         return *this;
     }
@@ -73,7 +71,7 @@ public:
 
     HriFanPair(SideFan & _left_fan, SideFan & _right_fan):
         left_fan(_left_fan), right_fan(_right_fan){;}
-    void setForce(const real_t & force){
+    void setForce(const real_t force){
         left_fan.setForce(-force);
         right_fan.setForce(force);
     }
@@ -88,18 +86,11 @@ public:
         right_fan.init();
     }
 
-
-    auto & operator = (const real_t & _force){
+    auto & operator = (const real_t _force){
         setForce(_force);
         return *this;
     }
 };
-
-
-
-
-
-
 
 };
 

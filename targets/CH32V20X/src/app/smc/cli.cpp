@@ -105,17 +105,24 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
 
         case "hm"_ha:
             DEBUG_PRINTLN("handmode on");
-            flags.hand_mode = true;
+            switches.hand_mode = true;
             body.enable();
             motor_strength.reset();
             break;
         case "am"_ha:
             DEBUG_PRINTLN("automode on");
-            flags.hand_mode = false;
+            switches.hand_mode = false;
             body.enable();
             motor_strength.reset();
             break;
             
+        case "start"_ha:
+            start();
+            break;
+        
+        case "stop"_ha:
+            stop();
+            break;
 
         case "motor"_ha:
         case "ms"_ha:
@@ -142,10 +149,7 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         case "hri"_ha:
             settle_value(motor_strength.hri,args);
             break;
-        // case "ss"_ha:
-        // case "show"_ha:
-        //     settle_value(config.show_status, args);
-            // break;
+
         case "dpv"_ha:
         case "dough"_ha:
             settle_clamped_value(config.dpv, args, 0.0, 4.0);
@@ -160,7 +164,7 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             break;
 
         case "pde"_ha:
-            settle_value(flags.plot_de, args);
+            settle_value(switches.plot_de, args);
             break;
 
         case "bench"_ha:
@@ -189,17 +193,17 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             NVIC_SystemReset();
             break;
         case "acc"_ha:
-            DEBUG_PRINTLN(mpu.getAccel());
+            DEBUG_PRINTS("acc", mpu.getAccel());
             break;
         case "gyro"_ha:
-            DEBUG_PRINTLN(mpu.getGyro());
+            DEBUG_PRINTS("gyro", mpu.getGyro());
             break;
         case "mag"_ha:
-            DEBUG_PRINTLN(qml.getMagnet());
+            DEBUG_PRINTS("mag:", qml.getMagnet());
             break;
         case "st"_ha:
         case "stat"_ha:
-            DEBUG_PRINTLN(RunStatus::_from_integral_nothrow(int(runStatusReg)));
+            DEBUG_PRINTS("stats:", RunStatus::_from_integral_nothrow(int(runStatusReg)));
             break;
 
         case "en"_ha:
@@ -213,13 +217,18 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             flags.disable_trig = true;
             break;
 
+        case "res"_ha:
+            reset();
+            DEBUG_PRINTLN("cleared");
+            break;
+
         case "alive"_ha:
         case "a"_ha:
-            DEBUG_PRINTLN("is alive");
+            DEBUG_PRINTLN("aliving");
             break;
 
         case "flag"_ha:
-            DEBUG_PRINTLN(toString(int(flags.data),2));
+            DEBUG_PRINTLN("flags: ", toString(int(flags.data),2));
             break;
 
         case "int"_ha:

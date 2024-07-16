@@ -71,7 +71,7 @@ public:
     }
 
     void update(){
-        real_cha_output = MIN(real_cha_output + 0.0006, motor_strength.chassis);
+        real_cha_output = MIN(real_cha_output + 0.003, motor_strength.chassis);
 
         if(real_cha_output > 0.4 and enabled){
             left_fan = motor_strength.left;

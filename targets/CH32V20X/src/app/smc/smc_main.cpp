@@ -7,21 +7,159 @@ using NVCV2::Shape::Seed;
 
 
 
-void setDshot(){
+
+void SmartCar::ctrl(){
+    Sys::Clock::reCalculateTime();
+
+    static constexpr real_t target_dir = real_t(PI / 2);
+    body.update();
+
+    mpu.update();
+    qml.update();
+
+    msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
+    msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
+    msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
+
+
+    {
+        static constexpr real_t wheel_l = 0.182;
+        odo.update();
+
+        real_t now_pos = odo.getPosition() * wheel_l;
+        static real_t last_pos = now_pos;
+        
+        real_t pos_delta = now_pos - last_pos;
+        last_pos = now_pos;
+
+        real_t now_spd = pos_delta == 0 ? 0 : pos_delta * ctrl_freq;
+        
+        static LowpassFilterZ_t<real_t> lpf{0.8};
+        msm.front_spd = lpf.update(now_spd);
+        // DEBUG_PRINTLN(now_pos, front_spd);
+    }
+
+    // real_t rot;
+    {
+        // static LowpassFilterZ_t<real_t> lpf{0.8};
+        msm.omega = msm.gyro.z;
+    }
+
+    real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
+
+    real_t side_acc = msm.accel.y;
+    real_t side_volocity = side_velocity_observer.update(msm.side_offs_err, side_acc);
+
+    //-----------------
+    //控制器输出
+    real_t side_output = side_ctrl.update(0, msm.side_offs_err, -side_volocity);
+
+    static constexpr real_t centri_k = 0.6;
+    real_t centripetal_output = CLAMP(-msm.omega * msm.front_spd * centri_k, -0.2, 0.2);
+
+    // DEBUG_VALUE(centripetal_output);
+
+    real_t speed_output = velocity_ctrl.update(target_speed, msm.front_spd);
+    //-----------------
+
+    if(switches.hand_mode == false){
+        motor_strength.left = turn_output;
+        motor_strength.right = -turn_output;
+
+        motor_strength.left += speed_output;
+        motor_strength.right += speed_output;
+
+
+        motor_strength.hri = side_output;
+        motor_strength.hri += centripetal_output;
+    }
 
 }
 
-void updateDshot(){
 
+
+static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grayscale, Grayscale> & src) {
+    if((void *)&dst == (void *)&src){
+        auto temp = dst.clone();
+        fast_diff_opera(temp, src);
+        dst = std::move(temp);
+        return;
+    }
+
+    auto window = dst.get_window().intersection(src.get_window());
+    for (auto y = window.y; y < window.y + window.h; y++) {
+        for (auto x = window.x; x < window.x + window.w; x++) {
+            const int a = src(Vector2i{x,y});
+            const int b = src(Vector2i{x+1,y});
+            const int c = src(Vector2i{x,y+1});
+            dst[{x,y}] = uint8_t(CLAMP(std::max(
+                (ABS(a - c)) * 255 / (a + c),
+                (ABS(a - b) * 255 / (a + b))
+            ), 0, 255));
+        }
+    }
 }
 
-static void fast_bina_opera(Image<Binary, Binary>out, Image<Grayscale, Grayscale> & em, const uint8_t et, Image<Grayscale, Grayscale>& dm, const uint8_t dt) {
+[[maybe_unused]] static void fast_bina_opera(Image<Binary, Binary> & out,const Image<Grayscale, Grayscale> & em, const uint8_t et,const Image<Grayscale, Grayscale>& dm, const uint8_t dt) {
     const auto size = (Rect2i(Vector2i(), em.size).intersection(Rect2i(Vector2i(), dm.size))).size;
     const auto area = size.x * size.y;
 
     for (auto i = 0; i < area; i++) {
         out[i] = Binary(((uint8_t)em[i] > et) || ((uint8_t)dm[i] > dt));
     }
+}
+
+
+std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
+    auto last_seed_pos = msm.seed_pos;
+    auto road_minimal_length = config.valid_width.from;
+    auto m_right_align = switches.align_right;
+    auto y = last_seed_pos.y ? last_seed_pos.y : src.size.y - config.safety_seed_height;
+
+    //本次找到的x窗口
+    Rangei new_x_range;
+
+    // DEBUG_VALUE(last_seed_pos);
+    if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗口
+        new_x_range = get_side_range(src, y, road_minimal_length, m_right_align);
+
+        if(new_x_range.length() < road_minimal_length){//如果最长的区域都小于路宽 那么就视为找不到种子
+            return {Vector2i{}, Rangei{}};
+        }
+
+    }else{//如果上次有种子
+        new_x_range = get_h_range(src,last_seed_pos);
+        //在上次种子的基础上找新窗口
+
+        if(new_x_range.length() < road_minimal_length){//如果最长的区域都小于路宽 那么就视为找不到种子
+            return {Vector2i{}, Rangei{}};
+        }
+    }
+    
+
+    if(config.valid_width.has(new_x_range.length())){
+    // if(true){
+
+        Point new_seed_pos;
+
+        if(m_right_align){
+            new_seed_pos = Vector2i(new_x_range.to - config.align_space_width,y);
+        }else{
+            new_seed_pos = Vector2i(new_x_range.from + config.align_space_width, y);
+        }
+
+        // DEBUG_PRINTLN("found", new_seed_pos);
+
+        if(last_seed_pos.x != 0)//如果上次有找到 那么进行简单的均值滤波 否则直接赋值
+            return {(last_seed_pos + new_seed_pos) / 2, new_x_range};
+        else
+            return {new_seed_pos, new_x_range};
+    }
+
+    //不应该运行到这里
+    //如果找不到种子 就返回空
+    // ASSERT_WITH_DOWN(false, "should not run here");
+    return {Vector2i(), Rangei()};
 }
 
 void SmartCar::reset(){
@@ -38,80 +176,15 @@ void SmartCar::recordRunStatus(const RunStatus status){
 void SmartCar::printRecordedRunStatus(){
     uint16_t id = runStatusReg;
     auto temp = RunStatus::_from_integral_unchecked(uint16_t(runStatusReg));
+    
+    powerOnTimesReg = uint16_t(int(powerOnTimesReg) + 1);
+    DEBUG_PRINTLN("power on time:", int(powerOnTimesReg));
+
     DEBUG_PRINTS("last Stat:\t", temp._to_string(), id);
     DEBUG_PRINTS("last Flag:\t", toString(int(uint16_t(flagReg)), 2), id);
     // DEBUG_PRINTLN(temp._to_string(), id);
 }
 
-
-
-// void SmartCar::ctrl(){
-//     Sys::Clock::reCalculateTime();
-
-//     static constexpr real_t target_dir = real_t(PI / 2);
-//     body.update();
-
-//     mpu.update();
-//     qml.update();
-
-//     msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
-//     msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
-//     msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
-
-
-//     {
-//         static constexpr real_t wheel_l = 0.182;
-//         odo.update();
-
-//         real_t now_pos = odo.getPosition() * wheel_l;
-//         static real_t last_pos = now_pos;
-        
-//         real_t pos_delta = now_pos - last_pos;
-//         last_pos = now_pos;
-
-//         real_t now_spd = pos_delta == 0 ? 0 : pos_delta * ctrl_freq;
-        
-//         static LowpassFilterZ_t<real_t> lpf{0.8};
-//         msm.front_spd = lpf.update(now_spd);
-//         // DEBUG_PRINTLN(now_pos, front_spd);
-//     }
-
-//     // real_t rot;
-//     {
-//         // static LowpassFilterZ_t<real_t> lpf{0.8};
-//         msm.omega = msm.gyro.z;
-//     }
-
-//     real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
-
-//     real_t side_acc = msm.accel.y;
-//     real_t side_volocity = side_velocity_observer.update(, side_acc);
-
-//     //-----------------
-//     //控制器输出
-//     real_t side_output = side_ctrl.update(0, msm.neutral_offset, -side_volocity);
-
-//     static constexpr real_t centri_k = 0.6;
-//     real_t centripetal_output = CLAMP(-msm.omega * msm.front_spd * centri_k, -0.2, 0.2);
-
-//     // DEBUG_VALUE(centripetal_output);
-
-//     real_t speed_output = velocity_ctrl.update(target_speed, msm.front_spd);
-//     //-----------------
-
-//     if(flags.hand_mode == false){
-//         motor_strength.left = turn_output;
-//         motor_strength.right = -turn_output;
-
-//         motor_strength.left += speed_output;
-//         motor_strength.right += speed_output;
-
-
-//         motor_strength.hri = side_output;
-//         motor_strength.hri += centripetal_output;
-//     }
-
-// }
 
 void SmartCar::init_debugger(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
@@ -124,13 +197,11 @@ void SmartCar::init_periphs(){
     bkp.init();
     
     {
-        portD[4].outpp();
-        portD[4] = 1;
+        portD[4].outpp(1);
+        beep_gpio.outpp(0);
     }
 
-    powerOnTimesReg = uint16_t(int(powerOnTimesReg) + 1);
     printRecordedRunStatus();
-    // DEBUG_PRINTLN("pwon", int(powerOnTimesReg));
 
     spi2.init(72000000);
     spi2.bindCsPin(portD[0], 0);
@@ -203,38 +274,50 @@ void SmartCar::init_camera(){
 }
 
 void SmartCar::start(){
-    flags.hand_mode = false;
+    switches.hand_mode = false;
     flags.enable_trig = true;
     motor_strength.chassis = 0.8;
-    update();
+    parse();
 }
 
 
 void SmartCar::stop(){
-    flags.hand_mode = false;
+    switches.hand_mode = false;
     flags.disable_trig = true;
     motor_strength.chassis = 0;
-    update();
+    parse();
 }
 
-void SmartCar::update(){
+void SmartCar::update_beep(const bool en = true){
+    if(en){
+        beep_gpio.set();
+        delay(100);
+        return;
+    }
+
+    beep_gpio.clr();
+}
+
+void SmartCar::parse(){
 
     flagReg = flags;
+    if(flags.data != 0){//有标志位被置位
+        if(flags.enable_trig){
+            reset();
+            body.enable(true);
+            DEBUG_PRINTLN("enabled");
+            flags.enable_trig = false;
+        }
 
-    if(flags.enable_trig){
-        reset();
-        body.enable(true);
-        DEBUG_PRINTLN("enabled");
-        flags.enable_trig = false;
+        if(flags.disable_trig){
+            reset();
+            body.enable(false);
+            DEBUG_PRINTLN("disabled");
+            flags.disable_trig = false;
+        }
+
     }
-
-    if(flags.disable_trig){
-        reset();
-        body.enable(false);
-        DEBUG_PRINTLN("disabled");
-        flags.disable_trig = false;
-    }
-
+    update_beep(flags.data != 0);
     flagReg = flags;
 };
 
@@ -288,16 +371,16 @@ void SmartCar::main(){
     auto sketch = make_image<RGB565>(pic_size);
 
     #define CHECK_PLOTDE()\
-    if(flags.plot_de)\
+    if(switches.plot_de)\
     return;\
 
-    [[maybe_unused]] auto plot_gray = [&](Image<Grayscale, Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale, Grayscale> & src, const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture_unsafe(area.intersection(Rect2i(area.position, src.get_size())), src.data.get());
     };
 
-    [[maybe_unused]] auto plot_bina = [&](Image<Binary, Binary> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_bina = [&](const Image<Binary, Binary> & src, const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
         tftDisplayer.puttexture_unsafe(area, src.data.get());
@@ -357,8 +440,9 @@ void SmartCar::main(){
     [[maybe_unused]] auto plot_points = [&](const Points & pts,  const Vector2i & pos, const RGB565 & color = RGB565::PINK){
         painter.bindImage(sketch);
         painter.setColor(color);
-        for(auto && pt : pts){
-            painter.drawPixel(pt + pos);
+        for(const auto & pt : pts){
+            // painter.drawPixel(pt + pos);
+            painter.drawFilledCircle(pt + pos, 2);
         }
     };
 
@@ -425,98 +509,127 @@ void SmartCar::main(){
         plot_vec3(msm.accel.normalized() * 15, {190, 0});
         plot_vec3(msm.gyro * 7, {190, 60});
         plot_vec3(msm.magent.normalized() * 15, {190, 120});
+
+        painter.setColor(RGB565::WHITE);
+        
+        auto pos = Vector2i{190, 180};
+
+        #define DRAW_STR(str)\
+            painter.drawString(pos, str);\
+            pos += Vector2i(0, 9);
+        
+        painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
+        DRAW_STR("自转" + toString(msm.omega));
+        DRAW_STR("向差" + toString(msm.dir_error));
+        DRAW_STR("侧移" + toString(msm.side_offs_err));
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
 
+    
     camera.setExposureValue(300);
+
+    #define CREATE_BENCHMARK(val) val = millis() - current_ms;\
+
+    #define CREATE_START_TICK()\
+        auto current_ms = millis();\
+        {\
+            static auto last_ms = current_ms;\
+            benchmark.frame_ms = current_ms - last_ms;\
+            last_ms = current_ms;\
+        }\
+
     while(true){
         plot_gui();
-        #define CREATE_BENCHMARK(val) val = millis() - current_ms;\
+        CREATE_START_TICK();
 
-        auto current_ms = millis();
-        {
-            static uint last_ms = current_ms;
-            benchmark.frame_ms = current_ms - last_ms;
-            last_ms = current_ms;
-        }
 
         recordRunStatus(RunStatus::NEW_ROUND);
 
+        //----------------------
+        //对输入进行解析
+        recordRunStatus(RunStatus::PROCESSING_EVENTS);
         if(start_key) start();
         if(stop_key) stop();
+        //----------------------
 
+        //----------------------
+        //对事件进行解析
         recordRunStatus(RunStatus::PROCESSING_EVENTS);
-        update();
+        parse();
+        //----------------------
 
+
+
+        /* #region */
+        //开始进行图像处理
         recordRunStatus(RunStatus::PROCESSING_IMG_BEGIN);
 
-
-        plot_gray(camera, Rect2i{0,0,188,60});
-
         CREATE_BENCHMARK(benchmark.cap);
-
-        Geometry::perspective(pers_gray_image, camera);
+        Geometry::perspective(pers_gray_image, camera);//进行透视变换
         plot_gray(pers_gray_image, Rect2i{0, 60, 188, 60});
 
         CREATE_BENCHMARK(benchmark.pers);
+        Pixels::inverse(pers_gray_image);//对灰度图取反(边线为白色方便提取)
 
+        // fast_bina_opera(
+        fast_diff_opera(diff_gray_image, pers_gray_image);//进行加速后的差分算法
 
-        Pixels::inverse(pers_gray_image);
-        //对灰度图取反(边线为白色方便提取)
-
-        Shape::convo_roberts_x(diff_gray_image, pers_gray_image);
-        //获取x方向上的差分图
-
+        plot_gray(diff_gray_image, Rect2i{0, 0, 188, 60});
         CREATE_BENCHMARK(benchmark.gray);
-
-        // Pixels::binarization(diff_bina_image, diff_gray_image, config.edge_threshold);
-        //将差分图二值化
-
-
-        // Pixels::binarization(pers_bina_image, pers_gray_image, config.positive_threshold);
-        // Pixels::or_with(pers_bina_image, diff_bina_image);
-
-        fast_bina_opera(pers_bina_image, diff_gray_image, config.edge_threshold, pers_gray_image, config.positive_threshold);
-        // Pixels::adaptive_threshold(pers_bina_image, diff_gray_image);
+        Pixels::binarization(pers_bina_image, pers_gray_image, config.edge_threshold);
         CREATE_BENCHMARK(benchmark.bina);
-        // Shape::dilate_xy(pers_bina_image);
-        // Shape::dilate_xy(pers_bina_image);
-        // Shape::erosion_x(pers_bina_image);
-        // Shape::erosion_y(pers_bina_image);
 
-        //获取差分图和灰度图的并集
-        //差分图对边缘敏感 灰度图对色块敏感 两者合围可消除缺陷
-        plot_bina(pers_bina_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
-        // continue;
+        // plot_bina(pers_bina_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
 
-        // Shape::erosion_xy(affine_bina_image);
-        //腐蚀图像 用于去除赛道上可能存在的斑点
-        //可能会在寻斑马线时去除
+        auto ccd_image = camera.clone({0,73,188,6});
+        // Pixels::inverse(ccd_image, ccd_image);
+        auto ccd_diff = ccd_image.space();
+        auto ccd_bina = make_bina_mirror(ccd_image);
+
+        fast_diff_opera(ccd_diff, ccd_image);//进行加速后的差分算法
+        Pixels::binarization(ccd_bina, ccd_diff, config.edge_threshold);
+        Shape::dilate_x(ccd_bina, ccd_bina);
+        Shape::dilate_x(ccd_bina, ccd_bina);
+
+
+        plot_gray(ccd_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
 
         recordRunStatus(RunStatus::PROCESSING_IMG_END);
+        //图像处理结束
+        /* #endregion */
 
+
+        /* #region */
+        // 对种子进行搜索
+        recordRunStatus(RunStatus::PROCESSING_SEED_BEG);
 
         auto & img = pers_gray_image;
         auto & img_bina = pers_bina_image;
 
-        std::tie(msm.seed_pos, msm.road_window) = get_entry(img_bina, Vector2i{msm.seed_pos.x, img.size.y -1 - config.safety_seed_height}, RIGHT);
+        std::tie(msm.seed_pos, msm.road_window) = get_entry(img_bina);
 
-
-        if(msm.road_window.length() < 16){
-            stop();
-            continue;
-        }
-        // continue;
-
+        //如果找不到种子 跳过本次遍历
         if(!msm.seed_pos) continue;
-        msm.neutral_offset = (msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
+        msm.side_offs_err = (msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
 
+        auto ccd_range = get_h_range(ccd_bina, Vector2i{msm.seed_pos.x, 0});
+        
         plot_point(msm.seed_pos);
+        plot_pile({0, ccd_range}, RGB565::FUCHSIA);
+        auto ccd_center_x = ccd_range.get_center();
+
+        auto offs = -0.005 * (ccd_center_x - 94);
+        msm.side_offs_err = -offs;
+        // -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
+        DEBUG_VALUE(offs);
+        recordRunStatus(RunStatus::PROCESSING_SEED_END);
+        //对种子的搜索结束
+        /* #endregion */
 
 
-        //---------------------
-        //寻找两侧的赛道轮廓并修剪为非自交的形式
+        /* #region */
+        // 寻找两侧的赛道轮廓并修剪为非自交的形式
         recordRunStatus(RunStatus::PROCESSING_COAST);
         
         auto coast_left_unfixed =    CoastUtils::form(img_bina, msm.seed_pos, LEFT);
@@ -525,66 +638,133 @@ void SmartCar::main(){
         auto coast_left = CoastUtils::trim(coast_left_unfixed, img.size);
         auto coast_right = CoastUtils::trim(coast_right_unfixed, img.size);
     
-        ASSERT(!CoastUtils::is_self_intersection(coast_left), "left self ins");
-        ASSERT(!CoastUtils::is_self_intersection(coast_right), "right self ins");
-        //----------------------
+        ASSERT(CoastUtils::is_self_intersection(coast_left) == false, "left self ins");
+        ASSERT(CoastUtils::is_self_intersection(coast_right) == false, "right self ins");
 
-
-        ASSERT_WITH_DOWN(coast_left.size(), "left coast size 0");
-        ASSERT_WITH_DOWN(coast_right.size(), "right coast size 0");
-
-        if(!coast_left.size()) continue;
-        if(!coast_right.size()) continue;
-
+        ASSERT_WITH_DOWN(coast_left.size() != 0, "left coast size 0");
+        ASSERT_WITH_DOWN(coast_right.size() != 0, "right coast size 0");
         recordRunStatus(RunStatus::PROCESSING_COAST_END);
+        //修剪结束
+        /* #endregion */
+
+
+        /* #region */
+        //开始进行对轮廓进行抽稀
+        recordRunStatus(RunStatus::PROCESSING_DP_BEG);
 
         auto track_left = CoastUtils::douglas_peucker(coast_left, config.dpv);
         auto track_right = CoastUtils::douglas_peucker(coast_right, config.dpv);
 
+        // auto track_left = douglas_peucker(CoastUtils::shrink(coast_left, real_t(-align_space_width)), dpv);
+        // auto track_right = douglas_peucker(CoastUtils::shrink(coast_right, real_t(align_space_width)), dpv);
+
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
-        // continue;
-
         recordRunStatus(RunStatus::PROCESSING_DP_END);
+        //对轮廓的抽稀结束
+        /* #endregion */
 
-        if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
 
-            Segment follow_left = std::make_pair(track_left.front() + Vector2i(config.align_space_width, 0), *std::next(track_left.begin()) + Vector2i(config.align_space_width, 0));
-            Segment follow_right = std::make_pair(track_right.front() - Vector2i(config.align_space_width, 0), *std::next(track_right.begin()) - Vector2i(config.align_space_width, 0));
-            
-            plot_segment(follow_left, {0, 0}, RGB565::YELLOW);
-            plot_segment(follow_right, {0, 0}, RGB565::GREEN);
 
-            Vector2 diff_left = SegmentUtils::vec(follow_left);
-            Vector2 diff_right = SegmentUtils::vec(follow_right);
-            if(bool(diff_left) and bool(diff_right)){
-
-                auto diff_left_l = diff_left.length();
-                auto diff_right_l = diff_right.length();
-                auto vec_sin = diff_left.cross(diff_right) / diff_left_l / diff_right_l;
-                if(vec_sin < abs(config.dir_merge_max_sin)){
-                    msm.current_dir = (diff_left * diff_right_l + diff_right * diff_left_l).angle();
-                }
-            }else{
-                if(flags.align_right and bool(diff_right)){
-                    msm.current_dir = diff_right.angle();
-                }else if(bool(diff_left)){
-                    msm.current_dir = diff_left.angle();
-                }
-            }
-        }
-
-        recordRunStatus(RunStatus::PROCESSING_DIR_END);
-        // if(Vector2(SegmentUtils::vec(follow_left)).cos())
-        // DEBUG_PRINTLN("done plot shrink");
+        /* #region */
+        //进行角点检测
+        recordRunStatus(RunStatus::PROCESSING_CORNER_BEG);
 
         auto v_points = CoastUtils::vcorners(track_left);
         auto a_points = CoastUtils::acorners(track_left);
 
-        recordRunStatus(RunStatus::PROCESSING_VA_END);
-        // auto track_left = douglas_peucker(CoastUtils::shrink(coast_left, real_t(-align_space_width)), dpv);
-        // auto track_right = douglas_peucker(CoastUtils::shrink(coast_right, real_t(align_space_width)), dpv);
+        recordRunStatus(RunStatus::PROCESSING_CORNER_END);
+        //角点检测结束
+        /* #endregion */
+
+        /* #region */
+        //开始进行元素识别
+        
+        //在自动模式下 如果识别不到赛道 就关断小车 避免跑飞时撞墙
+        if(msm.road_window.length() < config.valid_width.from){
+            if(switches.hand_mode == false){
+                stop();
+            }
+            continue;
+        }
+        //元素识别结束
+        /* #endregion */
+        
+        /* #region */
+        //进行位置提取
+        // msm.side_offs_err = -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
+        
+        //位置提取结束
+        /* #endregion */
+
+        /* #region */
+        //开始提取轮廓主向量
+        recordRunStatus(RunStatus::PROCESSING_VEC_BEG);
+        do{
+            if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
+                auto vec_valid = [](const Vector2 & vec){return bool(vec) && vec.length() > 5;}; 
+
+                Segment seg_left = SegmentUtils::shift({
+                        track_left.front(), *std::next(track_left.begin())}, 
+                        Vector2i(config.align_space_width, 0));
+
+                Segment seg_right = SegmentUtils::shift({
+                        track_right.front(), *std::next(track_right.begin())}, 
+                        Vector2i(-config.align_space_width, 0));
+
+                plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
+                plot_segment(seg_right, {0, 0}, RGB565::GREEN);
+
+                // #define MODIFY_DIR(vec) if(vec) (msm.current_dir = vec.angle())
+                //提取根向量
+                Vector2 left_root_vec = SegmentUtils::vec(seg_left);
+                Vector2 right_root_vec = SegmentUtils::vec(seg_right);
+                Vector2 root_vec;
+
+                //如果根向量相似且左右间隔是合法的赛道宽度(排除在识别元素时的干扰) 那么进行根向量合并 否则根据吸附的左右选择对应的根向量
+                bool left_valid = vec_valid(left_root_vec);
+                bool right_valid = vec_valid(right_root_vec);
+
+                if(left_valid and right_valid and config.valid_width.has(msm.road_window.length())){
+
+                    auto diff_left_l = left_root_vec.length();
+                    auto diff_right_l = right_root_vec.length();
+
+                    auto vec_sin = (left_root_vec.cross(right_root_vec)) 
+                            / (diff_left_l * diff_right_l);
+
+                    if(vec_sin < abs(config.dir_merge_max_sin)){
+                        //计算两者按权重相加的向量（不需要考虑模长）
+                        root_vec = left_root_vec * diff_right_l + right_root_vec * diff_left_l;
+                    }else{
+                        if(switches.align_right){
+                            root_vec = right_root_vec;
+                        }else{
+                            root_vec = left_root_vec;
+                        }
+                    }
+                }else if(left_valid || right_valid){
+                    root_vec = left_valid ? left_root_vec : right_root_vec;
+                }else{
+                    break;
+                }
+
+                if (bool(root_vec)) {
+                    msm.current_dir = root_vec.angle();
+                }
+
+                plot_segment({msm.seed_pos, msm.seed_pos + Vector2(10.0, 0).rotated(-msm.current_dir)}, {0, 0}, RGB565::PINK);
+            }
+        }while(false);
+        recordRunStatus(RunStatus::PROCESSING_VEC_END);
+        //对轮廓的主向量提取结束
+        /* #endregion */
+    
+
+
+
+
 
         // coast_right = douglas_peucker(coast_right, dpv);
         // auto track_right = get_main_coast(CoastUtils::shrink(coast_right, real_t(-15)));
@@ -594,7 +774,7 @@ void SmartCar::main(){
 
         // static constexpr Vector2i shapes_offset = Vector2i(0, 0);
 
-        plot_segment({msm.seed_pos, msm.seed_pos + Vector2(10.0, 0).rotated(-msm.current_dir)}, {0, 0}, RGB565::GRAY);
+
 
         plot_points(v_points, {0, 0}, RGB565::YELLOW);
         plot_points(a_points, {0, 0}, RGB565::PINK);

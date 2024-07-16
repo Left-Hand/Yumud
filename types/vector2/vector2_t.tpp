@@ -99,12 +99,12 @@ constexpr Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const T & _t)
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::posmod(const T & mod) const{
-    return Vector2_t<T>(fmod(x, mod), fmod(y, mod));
+    return Vector2_t<T>(::fmod(x, mod), ::fmod(y, mod));
 }
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::posmodv(const Vector2_t<T> & b) const{
-    return Vector2_t<T>(fmod(x, b.x), fmod(y, b.y));
+    return Vector2_t<T>(::fmod(x, b.x), ::fmod(y, b.y));
 }
 
 template<arithmetic T>
@@ -146,7 +146,7 @@ constexpr Vector2_t<T> Vector2_t<T>::slide(const Vector2_t<T> & n) const {
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::sign() const{
-    return Vector2_t<T>(sgn(x), sgn(y));
+    return Vector2_t<T>(::sign(x), ::sign(y));
 }
 
 template<arithmetic T>

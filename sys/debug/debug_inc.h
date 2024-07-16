@@ -21,24 +21,24 @@
 
 
 #ifndef DEBUG_TRAP
-#define DEBUG_TRAP(...) DEBUG_PRINTLN("[T]", ##__VA_ARGS__);
+#define DEBUG_TRAP(...) DEBUG_PRINTS("[T]", ##__VA_ARGS__);
 #endif
 
 #ifndef DEBUG_LOG
-#define DEBUG_LOG(...) DEBUG_PRINTLN("[L]{", __FUNCTION__ ,',', __LINE__ , '}', ##__VA_ARGS__)
+#define DEBUG_LOG(...) DEBUG_PRINTS("[L]{", __FUNCTION__ ,',', __LINE__ , '}', ##__VA_ARGS__)
 #endif
 
 
 #ifndef DEBUG_ERROR
-#define DEBUG_ERROR(...) DEBUG_PRINTLN("[E]{", __FUNCTION__ ,',',  __LINE__ , '}', ##__VA_ARGS__)
+#define DEBUG_ERROR(...) DEBUG_PRINTS("[E]{", __FUNCTION__ ,',',  __LINE__ , '}', ##__VA_ARGS__)
 #endif
 
 #ifndef DEBUG_WARN
-#define DEBUG_WARN(...) DEBUG_PRINTLN("[W]{", __FUNCTION__ ,',', '\t','\t',  __LINE__ , '}','\t', '\t', ##__VA_ARGS__)
+#define DEBUG_WARN(...) DEBUG_PRINTS("[W]{", __FUNCTION__ ,',',  __LINE__ , '}', ##__VA_ARGS__)
 #endif
 
 #ifndef DEBUG_VALUE
-#define DEBUG_VALUE(value, ...) DEBUG_PRINTLN("[V]", #value, "is", value, ##__VA_ARGS__)
+#define DEBUG_VALUE(value, ...) DEBUG_PRINTS("<", #value, ">\tis:", value, ##__VA_ARGS__)
 #endif
 
 
