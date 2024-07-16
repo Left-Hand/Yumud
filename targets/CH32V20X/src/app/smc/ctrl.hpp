@@ -39,7 +39,7 @@ struct TurnCtrl{
 };
 
 struct VelocityCtrl{
-    real_t kp = real_t(0.01);
+    real_t kp = real_t(0.05);
     real_t kd = real_t(0);
 
     real_t last_output = real_t(0);
@@ -57,7 +57,8 @@ struct VelocityCtrl{
         
         output += kp_contribute;
         // DEBUG_PRINTL7N(output);
-        return last_output = CLAMP(output, 0, output_clamp);
+        // return last_output = CLAMP(output, 0, output_clamp);
+        return targ;
     }
 };
 
@@ -65,7 +66,7 @@ struct VelocityCtrl{
 
 
 struct SideCtrl{
-    real_t kp = real_t(2.0);
+    real_t kp = real_t(3.0);
     real_t ki = real_t(0.0);
     real_t kd = real_t(0.3);
 
@@ -90,12 +91,22 @@ struct SideCtrl{
         last_t = t;
         return output;
     }
-
+               
     void reset(){
         intergal = 0;
         last_t = 0;
     }
 };
+
+struct CentripetalCtrl{
+    real_t k = real_t(3.4);                    
+    real_t k_clamp = real_t(0.6);                        
+                 
+    real_t update(const real_t spd, const real_t omega){               
+        return CLAMP(k * spd * omega, -k_clamp, k_clamp);
+    };
+};
+
 
 struct SideVelocityObserver{
 protected:

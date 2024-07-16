@@ -80,7 +80,6 @@ struct Benchmark{
         uint frame_ms = 0;
     };
 
-    // uint traps[];
 };
 
 struct BkpReg{

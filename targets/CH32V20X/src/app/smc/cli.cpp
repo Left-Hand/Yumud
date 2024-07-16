@@ -99,8 +99,20 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             settle_value(side_ctrl.intergal_clamp,args);
             break;
 
+        case "cc.k"_ha:
+            settle_value(centripetal_ctrl.k, args);
+            break;
+        
+        case "cc.l"_ha:
+            settle_value(centripetal_ctrl.k_clamp, args);
+            break;
+
+        case "spd"_ha:
+            read_value(msm.front_spd);
+            break;
+    
         case "ts"_ha:
-            settle_value(target_speed,args);
+            settle_value(target_spd,args);
             break;
 
         case "hm"_ha:

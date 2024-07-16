@@ -7,77 +7,6 @@ using NVCV2::Shape::Seed;
 
 
 
-
-void SmartCar::ctrl(){
-    Sys::Clock::reCalculateTime();
-
-    static constexpr real_t target_dir = real_t(PI / 2);
-    body.update();
-
-    mpu.update();
-    qml.update();
-
-    msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
-    msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
-    msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
-
-
-    {
-        static constexpr real_t wheel_l = 0.182;
-        odo.update();
-
-        real_t now_pos = odo.getPosition() * wheel_l;
-        static real_t last_pos = now_pos;
-        
-        real_t pos_delta = now_pos - last_pos;
-        last_pos = now_pos;
-
-        real_t now_spd = pos_delta == 0 ? 0 : pos_delta * ctrl_freq;
-        
-        static LowpassFilterZ_t<real_t> lpf{0.8};
-        msm.front_spd = lpf.update(now_spd);
-        // DEBUG_PRINTLN(now_pos, front_spd);
-    }
-
-    // real_t rot;
-    {
-        // static LowpassFilterZ_t<real_t> lpf{0.8};
-        msm.omega = msm.gyro.z;
-    }
-
-    real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
-
-    real_t side_acc = msm.accel.y;
-    real_t side_volocity = side_velocity_observer.update(msm.side_offs_err, side_acc);
-
-    //-----------------
-    //控制器输出
-    real_t side_output = side_ctrl.update(0, msm.side_offs_err, -side_volocity);
-
-    static constexpr real_t centri_k = 0.6;
-    [[maybe_unused]] real_t centripetal_output = CLAMP(-msm.omega * msm.front_spd * centri_k, -0.2, 0.2);
-
-    // DEBUG_VALUE(centripetal_output);
-
-    real_t speed_output = velocity_ctrl.update(target_speed, msm.front_spd);
-    //-----------------
-
-    if(switches.hand_mode == false){
-        motor_strength.left = turn_output;
-        motor_strength.right = -turn_output;
-
-        motor_strength.left += speed_output;
-        motor_strength.right += speed_output;
-
-
-        motor_strength.hri = side_output;
-        // motor_strength.hri += centripetal_output;
-    }
-
-}
-
-
-
 static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grayscale, Grayscale> & src) {
     if((void *)&dst == (void *)&src){
         auto temp = dst.clone();
@@ -312,7 +241,7 @@ void SmartCar::parse(){
         if(flags.disable_trig){
             reset();
             body.enable(false);
-            DEBUG_PRINTLN("disabled");
+            // DEBUG_PRINTLN("disabled");
             flags.disable_trig = false;
         }
 
@@ -613,7 +542,7 @@ void SmartCar::main(){
 
         //如果找不到种子 跳过本次遍历
         if(!msm.seed_pos){
-            DEBUG_PRINTLN("no seed");
+            // DEBUG_PRINTLN("no seed");
             stop();
         }
 
@@ -626,7 +555,7 @@ void SmartCar::main(){
         msm.side_offs_err = -0.005 * (ccd_center_x - 94);
         // -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
     
-        DEBUG_PRINTLN(msm.road_window.length(), msm.road_window, config.valid_width, msm.seed_pos);
+        // DEBUG_PRINTLN(msm.road_window.length(), msm.road_window, config.valid_width, msm.seed_pos);
         recordRunStatus(RunStatus::PROCESSING_SEED_END);
         //对种子的搜索结束
         /* #endregion */

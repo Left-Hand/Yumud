@@ -117,8 +117,9 @@ protected:
     SideCtrl side_ctrl;
     VelocityCtrl velocity_ctrl;
     SideVelocityObserver side_velocity_observer;
-
-    real_t target_speed = 0.16;
+    CentripetalCtrl centripetal_ctrl;
+    
+    real_t target_spd = 0.26;
 
     DisplayInterfaceSpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
     ST7789 tftDisplayer {SpiInterfaceLcd, Vector2i(240, 240)};
