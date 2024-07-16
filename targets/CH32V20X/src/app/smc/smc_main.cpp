@@ -46,16 +46,28 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
                                 WorldUtils::pixels(config.valid_road_meters.to)};
 
     real_t road_align_pixels = {WorldUtils::pixels(config.road_width)};
-    auto m_right_align = switches.align_right;
+    auto align_mode = switches.align_mode;
+    auto align_right = (LR)align_mode;
     auto y = last_seed_pos.y ? last_seed_pos.y : src.size.y - config.seed_height_base;
 
-    //本次找到的x窗口
+    //定义本次找到的x窗口
     Rangei new_x_range;
 
     if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗口
-        new_x_range = get_side_range(src, y, road_valid_pixels.from, m_right_align);
 
-        if(new_x_range.length() < road_valid_pixels.from){//如果最长的区域都小于路宽 那么就视为找不到种子
+        switch(align_mode){
+            case AlignMode::LEFT:
+            case AlignMode::RIGHT:
+            case AlignMode::BOTH:
+                new_x_range = get_side_range(src, y, road_valid_pixels.from, align_right);
+                break;
+                break;
+            case AlignMode::BLIND:
+                break;
+        }
+
+        //如果最长的区域都小于路宽 那么就视为找不到种子
+        if(new_x_range.length() < road_valid_pixels.from){
             return {Vector2i{}, Rangei{}};
         }
 
@@ -63,18 +75,18 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
         new_x_range = get_h_range(src,last_seed_pos);
         //在上次种子的基础上找新窗口
 
-        if(new_x_range.length() < road_valid_pixels.from){//如果最长的区域都小于路宽 那么就视为找不到种子
+        //如果最长的区域都小于路宽 那么就视为找不到种子
+        if(new_x_range.length() < road_valid_pixels.from){
             return {Vector2i{}, Rangei{}};
         }
     }
-    
+    //能到这里 说明找到可行的区域了
 
-    // DEBUG_VALUE(road_valid_pixels);
-    // DEBUG_VALUE(new_x_range);
     if(road_valid_pixels.has(new_x_range.length())){
         Point new_seed_pos;
 
-        if(m_right_align){
+
+        if(align_right){
             new_seed_pos = Vector2i(new_x_range.to - int(road_align_pixels/2),y);
         }else{
             new_seed_pos = Vector2i(new_x_range.from + int(road_align_pixels/2), y);
@@ -775,6 +787,8 @@ void SmartCar::main(){
                     auto est_road_width = WorldUtils::distance(msm.road_window.length());
                     // DEBUG_VALUE(est_road_width);
 
+                    auto align_mode = switches.align_mode;
+                    LR align_right = (LR)align_mode;
                     if(left_valid and right_valid and config.valid_road_meters.has(est_road_width)){
 
                         auto diff_left_l = left_root_vec.length();
@@ -783,23 +797,24 @@ void SmartCar::main(){
                         auto vec_sin = (left_root_vec.cross(right_root_vec)) 
                                 / (diff_left_l * diff_right_l);
 
+
                         if(vec_sin < abs(config.dir_merge_max_sin)){
                             //计算两者按权重相加的向量（不需要考虑模长）
                             root_vec = left_root_vec * diff_right_l + right_root_vec * diff_left_l;
                         }else{
-                            if(switches.align_right){
+                            if(align_right){
                                 root_vec = right_root_vec;
                             }else{
                                 root_vec = left_root_vec;
                             }
                         }
                     }else if(left_valid || right_valid){
-                        if(left_valid && switches.align_right == LR::LEFT){
+                        if(left_valid && align_right == LR::LEFT){
                             root_vec = left_root_vec;
                             break;
                         }
 
-                        if(right_valid && switches.align_right == LR::RIGHT){
+                        if(right_valid && align_right == LR::RIGHT){
                             root_vec = right_root_vec;
                             break;
                         }

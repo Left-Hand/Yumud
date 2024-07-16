@@ -256,11 +256,11 @@ namespace SMC{
     }
 
     // Boundry CoastUtils::form(const ImageReadable<Grayscale> & src, Vector2i seed_pos, const bool & is_right){
-    Piles get_x_piles(const ImageReadable<Binary> & src, Seed seed){
+    Piles get_x_piles(const ImageReadable<Binary> & src, const Point & seed_pos){
 
-        // DEBUG_PRINTLN("x_piles", Vector2i(seed));
         Piles ret;
-        while(src.has_point(seed) and bool(src[Vector2i(seed)]) == false){
+        Seed seed{seed_pos};
+        while(src.has_point(seed_pos) and bool(src[Vector2i(seed_pos)]) == false){
             seed.forward();
             ret[Vector2i(seed).y] = get_h_range(src, Vector2i(seed));
         }

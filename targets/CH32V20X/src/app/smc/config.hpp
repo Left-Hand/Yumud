@@ -6,7 +6,11 @@
 #include "../types/real.hpp"
 #include "../types/rect2/rect2_t.hpp"
 #include "../types/rgb.h"
+
+
 #include "body.hpp"
+#include "elements.hpp"
+
 
 namespace SMC{
 
@@ -50,17 +54,13 @@ struct GlobalConfig{
 };
 
 
-enum class AlignMode{
-    BOTH,
-    LEFT,
-    RIGHT,
-};
 
 union Switches{
     struct{
-        bool plot_de:1;
-        bool hand_mode:1;
-        LR align_right:1 = LR::RIGHT;
+        bool plot_de:1 = false;
+        bool hand_mode:1 = false;
+        AlignMode align_mode:2 = AlignMode::BOTH;
+        ElementType element_type:3 = ElementType::ZEBRA;
     };
 
     uint16_t data;

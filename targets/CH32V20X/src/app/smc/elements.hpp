@@ -6,43 +6,84 @@
 #include "finder.hpp"
 
 namespace SMC{
-BETTER_ENUM(ElementType, uint8_t,
-    NONE,
-    RING,
-    CROSS,
-    STOP
-    );
-
-BETTER_ENUM(State, uint8_t,
-    MEET,
-    STRAIGHT,
-    ENTRY,
-    ONWAY,
-    EXIT,
-    RECOVER
-    );
-struct RingConfig{
-
-
-    State state;
+enum class AlignMode:uint8_t{
+    LEFT,
+    RIGHT,
+    BOTH,
+    BLIND
 };
 
-class CrossConfig{
+enum class ElementType:uint8_t{
+    NONE, 
 
-    
-    State state;
+    ZEBRA = 4,
+    CROSS,
+    RING,
+    BARRIER
 };
 
 
 class Element{};
-class Ring : public RingConfig, Element{
+
+#define CONFIG_CONSTRUCT(type)\
+Config * config;\
+type (Config * _config):config(_config){;}\
+
+class Zebra : public Element{
+public:
+    struct Config{
+
+    };
+
+    enum class Status:uint8_t{
+
+    };
+
+    CONFIG_CONSTRUCT(Zebra)
+
+};
+class Ring : public Element{
+public:
+    struct Config{
+
+    };
+
+    enum class Status:uint8_t{
+
+    };
+
+    CONFIG_CONSTRUCT(Ring)
+};
+
+
+class Cross :public Element{
+public:
+    struct Config{
+
+    };
+
+    enum class Status:uint8_t{
+
+    };
+
+    CONFIG_CONSTRUCT(Cross)
+};
+
+class Barrier :public Element{
+public:
+    struct Config{
+
+    };
+
+    enum class Status:uint8_t{
+
+    };
+
+    CONFIG_CONSTRUCT(Barrier)\
 
 };
 
 
-class Cross :public CrossConfig, Element{
-
-};
 };
 
 

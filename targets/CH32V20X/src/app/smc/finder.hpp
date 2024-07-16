@@ -43,7 +43,7 @@ namespace SMC{
 
 
     std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> &, const Vector2i &, const LR);
-    Piles get_x_piles(const ImageReadable<Binary> & src, Seed seed);
+    Piles get_x_piles(const ImageReadable<Binary> & src, const Point);
     Rangei get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos);
     Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const LR);
 
