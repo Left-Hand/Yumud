@@ -241,7 +241,6 @@ void SmartCar::parse(){
         if(flags.disable_trig){
             reset();
             body.enable(false);
-            // DEBUG_PRINTLN("disabled");
             flags.disable_trig = false;
         }
 
@@ -552,7 +551,6 @@ void SmartCar::main(){
         plot_pile({0, ccd_range}, RGB565::FUCHSIA);
         auto ccd_center_x = ccd_range.get_center();
 
-        msm.side_offs_err = -0.005 * (ccd_center_x - 94);
         // -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
     
         // DEBUG_PRINTLN(msm.road_window.length(), msm.road_window, config.valid_width, msm.seed_pos);
@@ -604,12 +602,17 @@ void SmartCar::main(){
         //进行角点检测
         recordRunStatus(RunStatus::PROCESSING_CORNER_BEG);
 
-        auto v_points = CoastUtils::vcorners(track_left);
-        auto a_points = CoastUtils::acorners(track_left);
-
+        // auto v_points = CoastUtils::vcorners(track_left);
+        // auto a_points = CoastUtils::acorners(track_left);
+        // plot_points(v_points, {0, 0}, RGB565::YELLOW);
+        // plot_points(a_points, {0, 0}, RGB565::PINK);
+    
         recordRunStatus(RunStatus::PROCESSING_CORNER_END);
         //角点检测结束
         /* #endregion */
+
+
+
 
         /* #region */
         //开始进行元素识别
@@ -627,9 +630,116 @@ void SmartCar::main(){
         
         /* #region */
         //进行位置提取
-        // msm.side_offs_err = -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
-        
+        msm.side_offs_err = -0.005 * (ccd_center_x - 94);
         //位置提取结束
+        /* #endregion */
+
+
+        /* #region */
+        //进行引导修正
+
+        auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
+            static constexpr auto k = 1;
+
+            auto coast_point_valid = [](const Point & host, const Point & other, const LR _is_right) -> bool{
+                Vector2i delta = other - host;
+
+                //如果两个点坐标一致 那么通过
+                if(bool(delta) == false) return true;
+
+                auto abs_dx = std::abs(delta.x);
+
+                //快速排除不需要排除的区域
+                if(delta.y < 0 ||
+                    ((_is_right == LR::RIGHT) && (delta.x < 0)) ||
+                    ((_is_right == LR::LEFT ) && (delta.x > 0))) return true;
+
+                auto abs_dy = std::abs(delta.y);
+                return (abs_dy > k * abs_dx);
+            };
+
+            if(coast.size() == 0) return {};
+            if(coast.size() == 1) return {coast.front()};
+
+            std::array<bool, max_coast_size> remove_indexes;
+            remove_indexes.fill(false);
+
+            for(auto it = coast.begin(); it!= coast.end(); ++it){
+                const auto & host = *it;
+                for(size_t j = 0; j < coast.size(); ++j){
+                    const auto & guest = coast[j];
+
+                    //已经加到列表 直接跳过
+                    if(remove_indexes[j] == true) continue;
+                    
+                    //还不在列表内 有待考证
+                    bool abandon = not coast_point_valid(host, guest, is_right);
+                    // bool abandon = false;
+
+                    //如果需要丢弃 添加到列表
+                    remove_indexes[j] |= abandon;
+                }
+            };
+
+            Coast ret;
+
+
+            //对初点做特殊讨论
+            //此处以返回值的第二个点为参考
+
+            if(remove_indexes[0] == true){
+                size_t secondary_index = 0;
+                for(size_t i = 1; i < coast.size(); ++i){
+                    if(remove_indexes[i] == false){
+                        secondary_index = i;
+                        break;
+                    }
+                }
+
+                DEBUG_VALUE(secondary_index);
+                if(secondary_index){
+                    const auto & secondary_point = coast[secondary_index];
+                    const auto & orignal_first_point = coast[0];
+
+                    auto vec_go_until_y = [](const Point & start_p, const Vector2i vec, const int y) -> Point{
+                        return (start_p + vec * (y - start_p.y) / vec.y);
+                    };
+
+                    auto replaced_first_point = vec_go_until_y(secondary_point, is_right == RIGHT ? Vector2i{1, k} : Vector2i{-1, k}, orignal_first_point.y);
+
+                    ret.push_back(replaced_first_point);
+                    for(size_t i = 1; i < coast.size(); ++i){
+                        if(remove_indexes[i] == false){
+                            ret.push_back(coast[i]);
+                        }
+                    }
+
+                    return ret;
+                }else{
+                    //第一个点不可取 后面也找不到可取点 等价与返回空
+
+                    return {};
+                }
+            }else{
+                // for(size_t i = 1; i < coast.size(); ++i){
+                for(size_t i = 0; i < coast.size(); ++i){
+                    if(remove_indexes[i] == false){
+                    // if(true){
+                        ret.push_back(coast[i]);
+                    }
+                }
+                DEBUG_PRINTLN(coast.size(),ret.size());
+                return ret;
+            }
+
+            //should not reach here
+            return {};
+        };
+
+        // track_left = coast_fix_lead(track_left, LR::LEFT);
+        track_right = coast_fix_lead(track_right, LR::RIGHT);
+
+        //引导修正结束
         /* #endregion */
 
         /* #region */
@@ -650,7 +760,6 @@ void SmartCar::main(){
                 plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
                 plot_segment(seg_right, {0, 0}, RGB565::GREEN);
 
-                // #define MODIFY_DIR(vec) if(vec) (msm.current_dir = vec.angle())
                 //提取根向量
                 Vector2 left_root_vec = SegmentUtils::vec(seg_left);
                 Vector2 right_root_vec = SegmentUtils::vec(seg_right);
@@ -679,7 +788,15 @@ void SmartCar::main(){
                         }
                     }
                 }else if(left_valid || right_valid){
-                    root_vec = left_valid ? left_root_vec : right_root_vec;
+                    if(left_valid && switches.align_right == LR::LEFT){
+                        root_vec = left_root_vec;
+                        break;
+                    }
+
+                    if(right_valid && switches.align_right == LR::RIGHT){
+                        root_vec = right_root_vec;
+                        break;
+                    }
                 }else{
                     break;
                 }
@@ -711,8 +828,7 @@ void SmartCar::main(){
 
 
 
-        plot_points(v_points, {0, 0}, RGB565::YELLOW);
-        plot_points(a_points, {0, 0}, RGB565::PINK);
+
         
         {
             plot_sketch({0, 120, 188,60});

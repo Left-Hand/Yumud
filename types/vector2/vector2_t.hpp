@@ -175,7 +175,6 @@ public:
 
 using Vector2f = Vector2_t<float>;
 using Vector2i = Vector2_t<int>;
-using Point = Vector2i;
 using Vector2 = Vector2_t<real_t>;
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){

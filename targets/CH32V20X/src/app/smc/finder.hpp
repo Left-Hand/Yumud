@@ -17,7 +17,6 @@
 using namespace NVCV2;
 
 namespace SMC{
-    using Coast = sstl::vector<Vector2i, 80>;
     using Boundry = std::map<int, int>;
     using Pile = std::pair<int, Rangei>;
     using Piles = std::map<int, Rangei>;
@@ -36,7 +35,11 @@ namespace SMC{
 
     using Corner = std::pair<CornerType,const Vector2i &>;
     using Corners = sstl::vector<Corner, 8>;
+
+    static constexpr int max_coast_size = 64;
+    using Coast = sstl::vector<Vector2i, max_coast_size>;
     using Coasts = sstl::vector<Coast, 4>;
+
 
 
     std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> &, const Vector2i &, const LR);

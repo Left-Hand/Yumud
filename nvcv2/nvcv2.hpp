@@ -42,7 +42,7 @@ namespace NVCV2{
         R, UR, U, UL, L, DL, D, DR
     };
 
-    using Coast = sstl::vector<Vector2i, 80>;
+
     using Boundry = std::map<int, int>;
     using Pile = std::pair<int, Rangei>;
     using Piles = std::map<int, Rangei>;
@@ -53,7 +53,6 @@ namespace NVCV2{
     using Segment = std::pair<Point, Point>;
     using Corner = std::pair<CornerType,Vector2i>;
     using Corners = sstl::vector<Corner, 8>;
-    using Coasts = sstl::vector<Coast, 4>;
 
     using Histogram = std::array<int, 256>;
 }
