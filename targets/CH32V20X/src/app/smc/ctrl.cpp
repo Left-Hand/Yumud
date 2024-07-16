@@ -50,7 +50,7 @@ void SmartCar::ctrl(){
 
     // DEBUG_VALUE(centripetal_output);
 
-    real_t speed_output = velocity_ctrl.update(target_spd, msm.front_spd);
+    real_t speed_output = velocity_ctrl.update(setp.targ_spd, msm.front_spd);
     //-----------------
 
     if(switches.hand_mode == false){

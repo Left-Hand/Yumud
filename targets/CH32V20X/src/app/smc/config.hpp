@@ -50,11 +50,17 @@ struct GlobalConfig{
 };
 
 
+enum class AlignMode{
+    BOTH,
+    LEFT,
+    RIGHT,
+};
+
 union Switches{
     struct{
         bool plot_de:1;
-        LR align_right:1 = LR::RIGHT;
         bool hand_mode:1;
+        LR align_right:1 = LR::RIGHT;
     };
 
     uint16_t data;
@@ -68,6 +74,10 @@ union Flags{
     };
 
     uint16_t data = 0;
+};
+
+struct SetPoints{
+    real_t targ_spd;
 };
 
 struct Benchmark{

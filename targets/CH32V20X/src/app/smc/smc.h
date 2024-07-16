@@ -100,6 +100,8 @@ protected:
     Switches switches;
     Flags flags;
     GlobalConfig config;
+    SetPoints setp;
+
     MotorStrength motor_strength;
     Benchmark benchmark;
 
@@ -118,8 +120,6 @@ protected:
     VelocityCtrl velocity_ctrl;
     SideVelocityObserver side_velocity_observer;
     CentripetalCtrl centripetal_ctrl;
-    
-    real_t target_spd = 0.26;
 
     DisplayInterfaceSpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
     ST7789 tftDisplayer {SpiInterfaceLcd, Vector2i(240, 240)};

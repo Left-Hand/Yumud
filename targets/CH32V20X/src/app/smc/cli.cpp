@@ -112,7 +112,7 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             break;
     
         case "ts"_ha:
-            settle_value(target_spd,args);
+            settle_value(setp.targ_spd,args);
             break;
 
         case "hm"_ha:
