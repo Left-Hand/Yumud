@@ -133,8 +133,6 @@ protected:
     static constexpr uint ctrl_freq = 240;
     static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
-    real_t side_offs_err;
-
     MPU6050 mpu{i2c};
     QMC5883L qml{i2c};
 

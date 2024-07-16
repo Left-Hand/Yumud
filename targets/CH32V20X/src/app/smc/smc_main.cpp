@@ -45,73 +45,73 @@ void SmartCar::printRecordedRunStatus(){
 
 
 
-void SmartCar::ctrl(){
-    Sys::Clock::reCalculateTime();
+// void SmartCar::ctrl(){
+//     Sys::Clock::reCalculateTime();
 
-    static constexpr real_t target_dir = real_t(PI / 2);
-    body.update();
+//     static constexpr real_t target_dir = real_t(PI / 2);
+//     body.update();
 
-    mpu.update();
-    qml.update();
+//     mpu.update();
+//     qml.update();
 
-    msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
-    msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
-    msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
+//     msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
+//     msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
+//     msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
 
 
-    {
-        static constexpr real_t wheel_l = 0.182;
-        odo.update();
+//     {
+//         static constexpr real_t wheel_l = 0.182;
+//         odo.update();
 
-        real_t now_pos = odo.getPosition() * wheel_l;
-        static real_t last_pos = now_pos;
+//         real_t now_pos = odo.getPosition() * wheel_l;
+//         static real_t last_pos = now_pos;
         
-        real_t pos_delta = now_pos - last_pos;
-        last_pos = now_pos;
+//         real_t pos_delta = now_pos - last_pos;
+//         last_pos = now_pos;
 
-        real_t now_spd = pos_delta == 0 ? 0 : pos_delta * ctrl_freq;
+//         real_t now_spd = pos_delta == 0 ? 0 : pos_delta * ctrl_freq;
         
-        static LowpassFilterZ_t<real_t> lpf{0.8};
-        msm.front_spd = lpf.update(now_spd);
-        // DEBUG_PRINTLN(now_pos, front_spd);
-    }
+//         static LowpassFilterZ_t<real_t> lpf{0.8};
+//         msm.front_spd = lpf.update(now_spd);
+//         // DEBUG_PRINTLN(now_pos, front_spd);
+//     }
 
-    // real_t rot;
-    {
-        // static LowpassFilterZ_t<real_t> lpf{0.8};
-        msm.omega = msm.gyro.z;
-    }
+//     // real_t rot;
+//     {
+//         // static LowpassFilterZ_t<real_t> lpf{0.8};
+//         msm.omega = msm.gyro.z;
+//     }
 
-    real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
+//     real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
 
-    real_t side_acc = msm.accel.y;
-    real_t side_volocity = side_velocity_observer.update(side_offs_err, side_acc);
+//     real_t side_acc = msm.accel.y;
+//     real_t side_volocity = side_velocity_observer.update(, side_acc);
 
-    //-----------------
-    //控制器输出
-    real_t side_output = side_ctrl.update(0, side_offs_err, -side_volocity);
+//     //-----------------
+//     //控制器输出
+//     real_t side_output = side_ctrl.update(0, msm.neutral_offset, -side_volocity);
 
-    static constexpr real_t centri_k = 0.6;
-    real_t centripetal_output = CLAMP(-msm.omega * msm.front_spd * centri_k, -0.2, 0.2);
+//     static constexpr real_t centri_k = 0.6;
+//     real_t centripetal_output = CLAMP(-msm.omega * msm.front_spd * centri_k, -0.2, 0.2);
 
-    // DEBUG_VALUE(centripetal_output);
+//     // DEBUG_VALUE(centripetal_output);
 
-    real_t speed_output = velocity_ctrl.update(target_speed, msm.front_spd);
-    //-----------------
+//     real_t speed_output = velocity_ctrl.update(target_speed, msm.front_spd);
+//     //-----------------
 
-    if(flags.hand_mode == false){
-        motor_strength.left = turn_output;
-        motor_strength.right = -turn_output;
+//     if(flags.hand_mode == false){
+//         motor_strength.left = turn_output;
+//         motor_strength.right = -turn_output;
 
-        motor_strength.left += speed_output;
-        motor_strength.right += speed_output;
+//         motor_strength.left += speed_output;
+//         motor_strength.right += speed_output;
 
 
-        motor_strength.hri = side_output;
-        motor_strength.hri += centripetal_output;
-    }
+//         motor_strength.hri = side_output;
+//         motor_strength.hri += centripetal_output;
+//     }
 
-}
+// }
 
 void SmartCar::init_debugger(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
@@ -510,7 +510,7 @@ void SmartCar::main(){
         // continue;
 
         if(!msm.seed_pos) continue;
-        side_offs_err = -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
+        msm.neutral_offset = (msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
 
         plot_point(msm.seed_pos);
 
