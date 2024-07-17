@@ -2,7 +2,7 @@
 
 using namespace SMC;
 using namespace NVCV2;
-using NVCV2::Shape::CoastFinder;
+using SMC::CoastFinder;
 using NVCV2::Shape::Seed;
 
 
@@ -116,14 +116,13 @@ void SmartCar::recordRunStatus(const RunStatus status){
 }
 
 void SmartCar::printRecordedRunStatus(){
-    uint16_t id = runStatusReg;
     auto temp = RunStatus::_from_integral_unchecked(uint16_t(runStatusReg));
     
     powerOnTimesReg = uint16_t(int(powerOnTimesReg) + 1);
     DEBUG_PRINTLN("power on time:", int(powerOnTimesReg));
 
-    DEBUG_PRINTS("last Stat:\t", temp._to_string(), id);
-    DEBUG_PRINTS("last Flag:\t", toString(int(uint16_t(flagReg)), 2), id);
+    DEBUG_PRINTS("last Stat:\t", temp._to_string());
+    DEBUG_PRINTS("last Flag:\t", toString(int(uint16_t(flagReg)), 2));
     // DEBUG_PRINTLN(temp._to_string(), id);
 }
 
@@ -247,7 +246,6 @@ void SmartCar::parse(){
         if(flags.enable_trig){
             reset();
             body.enable(true);
-            DEBUG_PRINTLN("enabled");
             flags.enable_trig = false;
         }
 
@@ -615,10 +613,10 @@ void SmartCar::main(){
         //进行角点检测
         recordRunStatus(RunStatus::PROCESSING_CORNER_BEG);
 
-        // auto v_points = CoastUtils::vcorners(track_left);
-        // auto a_points = CoastUtils::acorners(track_left);
-        // plot_points(v_points, {0, 0}, RGB565::YELLOW);
-        // plot_points(a_points, {0, 0}, RGB565::PINK);
+        auto v_points = CoastUtils::vcorners(track_left);
+        auto a_points = CoastUtils::acorners(track_left);
+        plot_points(v_points, {0, 0}, RGB565::YELLOW);
+        plot_points(a_points, {0, 0}, RGB565::AQUA);
     
         recordRunStatus(RunStatus::PROCESSING_CORNER_END);
         //角点检测结束
@@ -651,7 +649,7 @@ void SmartCar::main(){
         /* #region */
         //进行引导修正
         if(false){
-            auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
+            [[maybe_unused]]auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
                 static constexpr auto k = 1;
 
                 auto coast_point_valid = [](const Point & host, const Point & other, const LR _is_right) -> bool{
@@ -674,7 +672,7 @@ void SmartCar::main(){
                 if(coast.size() == 0) return {};
                 if(coast.size() == 1) return {coast.front()};
 
-                std::array<bool, max_coast_size> remove_indexes;
+                std::array<bool, max_item_size> remove_indexes;
                 remove_indexes.fill(false);
 
                 for(auto it = coast.begin(); it!= coast.end(); ++it){
@@ -734,31 +732,24 @@ void SmartCar::main(){
                         return {};
                     }
                 }else{
-                    // for(size_t i = 1; i < coast.size(); ++i){
                     for(size_t i = 0; i < coast.size(); ++i){
-                        if(remove_indexes[i] == false){
-                        // if(true){
-                            ret.push_back(coast[i]);
-                        }
+                        ret.push_back(coast[i]);
                     }
-                    DEBUG_PRINTLN(coast.size(),ret.size());
-                    return ret;
                 }
-
-                //should not reach here
-                return {};
+                return ret;
             };
 
+            //should not reach here
             // track_left = coast_fix_lead(track_left, LR::LEFT);
-            track_right = coast_fix_lead(track_right, LR::RIGHT);
-        }
+            // track_right = coast_fix_lead(track_right, LR::RIGHT);
+        };
+
         //引导修正结束
         /* #endregion */
 
         /* #region */
         //开始提取轮廓主向量
         recordRunStatus(RunStatus::PROCESSING_VEC_BEG);
-
         if(true){
             do{
                 if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
@@ -772,8 +763,8 @@ void SmartCar::main(){
                             track_right.front(), *std::next(track_right.begin())}, 
                             Vector2i(-int(road_align_pixels/2), 0));
 
-                    plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
-                    plot_segment(seg_right, {0, 0}, RGB565::GREEN);
+                    // plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
+                    // plot_segment(seg_right, {0, 0}, RGB565::GREEN);
 
                     //提取根向量
                     Vector2 left_root_vec = SegmentUtils::vec(seg_left);
@@ -844,24 +835,15 @@ void SmartCar::main(){
             plot_sketch({0, 120, 188,60});
             sketch.fill(RGB565::BLACK);
         }
-        // plot_bound(bound_center, {0, 0}, RGB565::PINK);
         // DEBUG_PRINTLN("!!");
  
 
+        // plot_bound(bound_center, {0, 0}, RGB565::PINK);
         // plot_bound(bound_right, {0, 0}, RGB565::BLUE);
         // plot_bound(bound_center, {0, 0}, RGB565::YELLOW);
-        // plot_gray(diff_gray_image, {0, 160});
 
-        // delay(200);
-        // plot_grayscale(affine_image, {0, 0});
-        // plot_binary(affine_bina_image, {0, 80});
-
-
-        // frame_ms = millis() - start;
-        // DEBUG_PRINTLN(coast_left.size() + coast_right.size(), track_left.size() + track_right.size(), v_points.size() + a_points.size())
         recordRunStatus(RunStatus::END_ROUND);
-        // DEBUG_PRINTLN("end turn");
-        // logger.println(coast_left.size());
+
     }
 }
 

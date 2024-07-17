@@ -21,24 +21,124 @@ namespace SMC{
     using Pile = std::pair<int, Rangei>;
     using Piles = std::map<int, Rangei>;
     using Point = Vector2i; 
-    using Points = sstl::vector<Point, 64>;
-    using Ranges = sstl::vector<Rangei, 64>;
     using NVCV2::Shape::Seed;
     using Segment = std::pair<Point, Point>;
 
 
-    enum CornerType{
-        ACORNER = -1,
-        ALL = 0,
-        VCORNER = 1
-    };
+    static constexpr int max_item_size = 96;
 
-    using Corner = std::pair<CornerType,const Vector2i &>;
+    using CoastItem = Vector2_t<uint8_t>;
+    using Coast = sstl::vector<CoastItem, max_item_size>;
+    using Points = sstl::vector<Point, max_item_size>;
+    using Coasts = sstl::vector<Coast, 4>;
+    using Ranges = sstl::vector<Rangei, max_item_size>;
+
+    using Corner = std::pair<CornerType, CoastItem>;
     using Corners = sstl::vector<Corner, 8>;
 
-    static constexpr int max_coast_size = 64;
-    using Coast = sstl::vector<Vector2i, max_coast_size>;
-    using Coasts = sstl::vector<Coast, 4>;
+    class CoastFinder{
+    protected:
+        using m_Image = ImageReadable<Binary>;
+
+        const m_Image & src;
+        Seed m_seed;
+        uint32_t step_limit = max_item_size;
+
+    public:
+        CoastFinder(const m_Image & image, const Seed & seed): src(image), m_seed(seed){;}
+
+        Coast find(){
+            Coast coast;
+            Seed seed = m_seed;
+            seed.reset();
+
+            enum class SubStatus{
+                APPROCH,
+                TRACK
+            };
+
+            SubStatus status = SubStatus::APPROCH;
+            
+            //定义上方的最高点 当回落超过阈值时停止寻找
+
+            static constexpr auto fallback_threshold = 3;
+            auto min_y = Vector2i(m_seed).y;
+
+            while(seed.jounrey() < step_limit && src.has_point(seed)){
+                switch(status){
+                    case SubStatus::APPROCH:
+                        seed.forward();
+                        if(!src.has_point(seed)) break;
+
+                        if(is_positive(seed)){
+                            seed.backward();
+                            
+                            status = SubStatus::TRACK;
+                        }
+                        break;
+
+                    case SubStatus::TRACK:{
+                            static constexpr uint8_t spin_limit = 7;
+                            int spins = 0;
+                            if(is_edge(seed)){
+                                while(is_edge(seed) && (spins < spin_limit)){
+                                    seed.spin(true);
+                                    spins++;
+                                }
+                            }else{
+                                while((!is_edge(seed)) && (spins < spin_limit)){
+                                    seed.spin(false);
+                                    spins++;
+                                }
+                                seed.spin(true);
+                            }
+
+                            seed.forward();
+                            if(src.has_point(seed)){
+                                coast.push_back(Vector2i(seed));
+                            }
+                            break;
+                        }
+                    }
+
+                auto now_y = Vector2i(seed).y;
+                min_y = std::min(min_y, now_y);
+                if(now_y - min_y > fallback_threshold){
+                    break;
+                }
+
+            }
+            Coast ret;
+
+            for(const auto & item : coast){
+                if(src.has_point(item)){
+                    ret.push_back(item);
+                }else{
+                    DEBUG_LOG("invalid point", item);
+                }
+            }
+
+            return ret;
+        }
+
+        bool is_positive(const Vector2i & pos){
+            return (uint8_t)src(pos);
+        }
+
+        bool is_edge(const Vector2i & pos, const Vector2i next_pos){
+            // return (uint8_t)src(next_pos) - (uint8_t)src(pos) > (uint8_t)(Grayscale)(edge_threshold);
+            // return ((uint8_t)src(next_pos) > positive_threshold) && ((uint8_t)src(pos) < positive_threshold);
+
+            //本点为赛道 但下一点为堤岸
+            return (bool(src[next_pos]) == true) && 
+                    (bool(src[pos]) == false); 
+        }
+
+        bool is_edge(const Seed & seed){
+            return is_edge(seed, seed.drop());
+        }
+    };
+
 
 
 
@@ -66,9 +166,9 @@ namespace SMC{
 
         Corners corners(const Coast & coast, const real_t threshold, const CornerType default_ct);
 
-        Points acorners(const Coast & coast, const real_t threshold = real_t(-0.2));
+        Points acorners(const Coast & coast, const real_t threshold = real_t(-0.6));//120 deg
 
-        Points vcorners(const Coast & coast, const real_t threshold = real_t(-0.2));
+        Points vcorners(const Coast & coast, const real_t threshold = real_t(-0.6));//120 deg
 
         Coast trim(const Coast & coast, const Vector2i & window_size);
         Coast form(const ImageReadable<Binary> &, const Vector2i &, const LR);

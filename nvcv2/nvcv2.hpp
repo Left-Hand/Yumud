@@ -31,28 +31,19 @@ namespace NVCV2{
         RIGHT = true
     };
 
-    enum CornerType{
-        ACORNER = -1,
-        ALL = 0,
-        VCORNER = 1
+    enum class CornerType:uint8_t{
+        NONE,
+        AC,
+        VC,
+        ALL
     };
+
 
 
     enum class Direction:uint8_t{
         R, UR, U, UL, L, DL, D, DR
     };
 
-
-    using Boundry = std::map<int, int>;
-    using Pile = std::pair<int, Rangei>;
-    using Piles = std::map<int, Rangei>;
-    using Point = Vector2i; 
-    using Points = sstl::vector<Point, 64>;
-    using Ranges = sstl::vector<Rangei, 64>;
-
-    using Segment = std::pair<Point, Point>;
-    using Corner = std::pair<CornerType,Vector2i>;
-    using Corners = sstl::vector<Corner, 8>;
 
     using Histogram = std::array<int, 256>;
 }

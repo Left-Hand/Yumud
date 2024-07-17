@@ -352,43 +352,43 @@ namespace NVCV2::Shape{
         }
     }
 
-    void x4(ImageWritable<bool> & dst, const ImageReadable<bool> & src){
-        constexpr int m = 4;
-        auto size = Rect2i{{}, src.get_size()}.intersection(Rect2i{{}, dst.get_size() * m});
+    // void x4(ImageWritable<bool> & dst, const ImageReadable<bool> & src){
+    //     constexpr int m = 4;
+    //     auto size = Rect2i{{}, src.get_size()}.intersection(Rect2i{Vector2i{}, Vector2i{dst.get_size() * m}});
 
-        for(int y = 0; y < size.y / m; y++){
-            for(int x = 0; x < size.x / m; x++){
-                Vector2i base = Vector2i(x, y)* m;
-                bool pixel = false;
-                for(int j = 0; j < m; j++){
-                    for(int i = 0; i < m; i++){
-                        Vector2i src_pos = base + Vector2i(i, j);
-                        pixel |= bool(src[src_pos]);
-                    }
-                }
-                dst[{x,y}] = pixel;
-            }
-        }
-    }
+    //     for(int y = 0; y < size.y / m; y++){
+    //         for(int x = 0; x < size.x / m; x++){
+    //             Vector2i base = Vector2i(x, y)* m;
+    //             bool pixel = false;
+    //             for(int j = 0; j < m; j++){
+    //                 for(int i = 0; i < m; i++){
+    //                     Vector2i src_pos = base + Vector2i(i, j);
+    //                     pixel |= bool(src[src_pos]);
+    //                 }
+    //             }
+    //             dst[{x,y}] = pixel;
+    //         }
+    //     }
+    // }
 
-    void x4(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int m){
-        // constexpr int m = 4;
-        auto size = (Rect2i{{}, src.get_size()}.intersection(Rect2i{{}, dst.get_size() * m})).size;
+    // void x4(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int m){
+    //     // constexpr int m = 4;
+    //     auto size = (Rect2i{{}, src.get_size()}.intersection(Rect2i{Vector2i{}, Vector2i{dst.get_size() * m}})).size;
 
-        for(int y = 0; y < size.y / m; y++){
-            for(int x = 0; x < size.x / m; x++){
-                Vector2i base = Vector2i(x, y)* m;
-                uint16_t pixel = 0;
-                for(int j = 0; j < m; j++){
-                    for(int i = 0; i < m; i++){
-                        Vector2i src_pos = base + Vector2i(i, j);
-                        pixel += uint8_t(src(src_pos));
-                    }
-                }
-                dst[{x,y}] = Grayscale(~uint8_t(pixel / (m * m)));
-            }
-        }
-    }
+    //     for(int y = 0; y < size.y / m; y++){
+    //         for(int x = 0; x < size.x / m; x++){
+    //             Vector2i base = Vector2i(x, y)* m;
+    //             uint16_t pixel = 0;
+    //             for(int j = 0; j < m; j++){
+    //                 for(int i = 0; i < m; i++){
+    //                     Vector2i src_pos = base + Vector2i(i, j);
+    //                     pixel += uint8_t(src(src_pos));
+    //                 }
+    //             }
+    //             dst[{x,y}] = Grayscale(~uint8_t(pixel / (m * m)));
+    //         }
+    //     }
+    // }
 
     auto x4(const ImageReadable<Grayscale> & src, const int m){
         Image<Grayscale, Grayscale> dst(src.size / m);

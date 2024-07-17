@@ -66,9 +66,6 @@ namespace SMC{
     Segment SegmentUtils::shift(const Segment & seg, const Point & offs){
         return {seg.first + offs, seg.second + offs};
     }
-    // Pile get_h_pile(const ImageReadable<Binary> & src, const bool & from_bottom = true){
-    //     return Pile{from_bottom ? src.get_size().y - 1 : 0, get_side_range(src, from_bottom)};
-    // }
 
     bool PileUtils::invalidity(const Pile & pile, const Rangei & valid_width){
         return pile.second.length() < valid_width.start || pile.second.length() > valid_width.end;
@@ -82,8 +79,6 @@ namespace SMC{
     }
 
     bool CoastUtils::is_self_intersection(const Coast & coast){
-        // auto it = coast.begin();
-
         if(coast.size() < 2){
             return false;
         }
@@ -112,11 +107,8 @@ namespace SMC{
         return CoastUtils::which_in_window(coast, window_size.form_rect());
     }
 
-
-
-    Corners CoastUtils::corners(const Coast & coast, const real_t threshold, const CornerType default_ct){
-        // if(corner_type == CornerType::NONE) return Corners{};
-        if(coast.size() < 3) return Corners{};
+    Corners CoastUtils::corners(const Coast & coast, const real_t threshold, const CornerType exp_ct){
+        if(coast.size() < 3) return {};
 
         Corners ret;
         for(auto it = std::next(coast.begin()); it != std::prev(coast.end()); it++){
@@ -133,8 +125,26 @@ namespace SMC{
             auto med = ((v1 * v2_l) + (v2 * v1_l)).y; 
 
             if(proj > threshold){
-                CornerType ct = sign(med) == 1 ? CornerType::ACORNER: CornerType::VCORNER;
-                if(default_ct == CornerType::ALL || ct == default_ct) ret.push_back({ct, *it});
+
+                CornerType ct = CornerType::NONE;
+                switch(int(sign(med))){
+                    case 0:
+                        ct = CornerType::ALL;
+                        break;
+                    case 1:
+                        ct = CornerType::AC;
+                        break;
+                    case -1:
+                        ct = CornerType::VC;
+                        break;
+                    default:
+                        ct = CornerType::NONE;
+                        break;
+                }
+
+                if(ct == exp_ct){
+                    // ret.push_back(Corner(ct, (*it)));
+                }
             }
         }
 
@@ -142,10 +152,10 @@ namespace SMC{
     }
 
     Points CoastUtils::acorners(const Coast & coast, const real_t threshold){
-        auto corners = CoastUtils::corners(coast, threshold, CornerType::ACORNER);
+        auto corners = CoastUtils::corners(coast, threshold, CornerType::AC);
         Points ret;
 
-        for(auto & [_, point]:corners){
+        for(const auto & [_, point]:corners){
             ret.push_back(point);
         }
         
@@ -153,7 +163,7 @@ namespace SMC{
     }
 
     Points CoastUtils::vcorners(const Coast & coast, const real_t threshold){
-        auto corners = CoastUtils::corners(coast, threshold, CornerType::VCORNER);
+        auto corners = CoastUtils::corners(coast, threshold, CornerType::VC);
         Points ret;
 
         for(auto & [_, point]:corners){
@@ -197,8 +207,7 @@ namespace SMC{
             return Rect2i{};
         }
 
-        auto first = coast.front();
-        Rect2i ret = {first, Vector2i{}};
+        Rect2i ret = {Vector2i(coast.front()), Vector2i{}};
 
         if(coast.size() < 2){
             return ret;
@@ -437,12 +446,15 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
     Coast CoastUtils::douglas_peucker(const Coast & line, const real_t epsilon) {
         if(line.size() == 0){
             DEBUG_WARN("dp input size 0");
+            return {};
         }
         auto ret = douglas_peucker_vector(Points(line.begin(), line.end()), epsilon);
 
         if(ret.size() == 0){
             DEBUG_WARN("dp output size 0");
+            return {};
         }else if(ret.size() == 1){
+            //如果只有一个点 那么添加首尾
             if(line.front() == ret.front()) ret.push_back(line.back());
             if(line.back() == ret.front()) ret.push_back(line.front());
         }

@@ -116,7 +116,7 @@ void Mnist::unload(){
 
 Mnist::Result Mnist::update(const Image<Grayscale, Grayscale> & img, const Vector2i & pos){
 
-    Image<Grayscale, Grayscale> img_view = img.clone({pos.x, pos.y, 28, 28});
+    Image<Grayscale, Grayscale> img_view = img.clone(Rect2i{pos.x, pos.y, 28, 28});
     NVCV2::Pixels::inverse(img_view);
     return update(img_view);
 }

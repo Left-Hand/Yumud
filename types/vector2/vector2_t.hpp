@@ -23,7 +23,7 @@ public:
     __fast_inline constexpr Vector2_t(){;}
 
     template<arithmetic U, arithmetic V>
-    __fast_inline constexpr Vector2_t(const U & _x, const V & _y): x(_x), y(_y){;}
+    __fast_inline constexpr Vector2_t(const U _x, const V _y): x(_x), y(_y){;}
 
     template<arithmetic U, arithmetic V>
     __fast_inline constexpr Vector2_t(const std::tuple<U, V> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
