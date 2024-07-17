@@ -185,7 +185,7 @@ namespace SMC{
         auto corners = CoastUtils::search_corners(coast, CornerType::AC, threshold);
         Points ret;
 
-        for(const auto & [_, point]:corners){
+        for(const auto & [_, point, __]:corners){
             ret.push_back(point);
         }
         
@@ -196,7 +196,7 @@ namespace SMC{
         auto corners = CoastUtils::search_corners(coast, CornerType::VC, threshold);
         Points ret;
 
-        for(auto & [_, point]:corners){
+        for(const auto & [_, point, __]:corners){
             ret.push_back(point);
         }
         
@@ -828,5 +828,40 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
     }
     const Corner * CornerUtils::find_v(const Corners & corners, const size_t from_index){
         return find_corner(corners, from_index, CornerType::VC);
+    }
+
+    static size_t cnt_of_corners(const Corners &corners, const size_t from_index, const CornerType ct){
+        if(ct == CornerType::NONE) return 0;
+        if(corners.size() < from_index) return 0;
+
+        size_t cnt;
+        for(size_t i = from_index; i < corners.size();++i){
+            const auto * it = &corners[i];
+            switch(ct){
+                case CornerType::AC:
+                case CornerType::VC:
+                    if(it->type == ct){
+                        cnt++;
+                    }
+                    break;
+                case CornerType::ALL:
+                    if(it->type != CornerType::NONE){
+                        cnt++;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return cnt;
+    }
+
+    size_t cnt_a(const Corners & corners, const size_t from_index = 0){
+        return cnt_of_corners(corners, from_index, CornerType::AC);
+    }
+
+    size_t cnt_v(const Corners & corners, const size_t from_index = 0){
+        return cnt_of_corners(corners, from_index, CornerType::VC);
     }
 };

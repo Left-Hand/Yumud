@@ -715,17 +715,92 @@ void SmartCar::main(){
             }
         };
 
+        auto straight_detect = [&]() -> DectctResult {
+            return {(coast_left.size() == 2) && (coast_left.size() == 2)};
+        };
+
+
+        auto none_detect = [&]() -> DectctResult {
+            return {(coast_left.size() <= 2) && (coast_left.size() <= 2)};
+        };
+
+        auto curve_detect = [&]() -> DectctResult {
+            return {false};//TODO
+        };
+
+        auto cross_entry_detect = [&]() -> DectctResult {
+            auto side_cross_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
+                switch(side){
+                    case LEFT:
+                        return (CornerUtils::find_a(_corners) == _corners.begin());
+                    case RIGHT:
+                        return (CornerUtils::find_a(_corners) == _corners.begin());
+                    default:
+                        return 0;
+                }
+            };
+
+            //FIXME
+
+            bool left_detected = side_cross_entry_detect(left_corners, LR::LEFT);
+            bool right_detected = side_cross_entry_detect(right_corners, LR::RIGHT);
+
+            return (left_detected && right_detected);
+        };
+
+        auto cross_leave_detect = [&]() -> DectctResult {
+            auto side_cross_leave_detect = [&](const Corners & _corners, const LR side) -> bool {
+                switch(side){
+                    case LEFT:
+                    case RIGHT:{
+                        const auto * first_corner_ptr = CornerUtils::find_corner(_corners);
+
+                        //没有拐点了 那就可以 
+                        if(first_corner_ptr == nullptr) return true;
+
+                        const auto & first_point = *first_corner_ptr;
+
+                        //十字后
+                        if(first_point.point.y < 30) return true;
+
+                        return false;
+                    }
+                    default:
+                        return false;
+                }
+            };
+
+            //FIXME 应该使用上点而不是下点
+            bool left_detected = side_cross_leave_detect(left_corners, LR::LEFT);
+            bool right_detected = side_cross_leave_detect(right_corners, LR::RIGHT);
+
+            return (left_detected && right_detected);
+        };
+
+        auto 
+
+
         switch(switches.element_type){
             case ElementType::NONE:
             case ElementType::STRAIGHT:{
 
 
+                // {
+                //     // DEBUG_VALUE(left_corners.size())
+                //     auto result = barrier_detect();
+                //     if(result){
+                //         sw_element(ElementType::BARRIER, result.side);
+                //     }
+                // }
+
                 {
-                    // DEBUG_VALUE(left_corners.size())
                     auto result = barrier_detect();
-                    if(result){
-                        sw_element(ElementType::BARRIER, result.side);
-                    }
+                    if(result){sw_element(ElementType::BARRIER, result.side);}
+                }
+
+                {
+                    auto result = cross_entry_detect();
+                    if(result){sw_element(ElementType::CROSS, result.side);}
                 }
             }
                 break;

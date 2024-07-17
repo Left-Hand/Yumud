@@ -53,6 +53,7 @@ namespace SMC{
     public:
         CornerType type;
         CoastItem point;
+        CoastItem orientation = CoastItem();//TODO
     public:
         Corner(const CornerType _type, const CoastItem & _point):type(_type), point(_point){;}
         operator CoastItem () const { return point; }
@@ -256,6 +257,8 @@ namespace SMC{
         const Corner * find_corner(const Corners & corners, const size_t from_index = 0, const CornerType ct = CornerType::NONE);
         const Corner * find_a(const Corners & corners, const size_t from_index = 0);
         const Corner * find_v(const Corners & corners, const size_t from_index = 0);
+        size_t cnt_a(const Corners & corners, const size_t from_index = 0);
+        size_t cnt_v(const Corners & corners, const size_t from_index = 0);
     };
 
     struct Circle{
