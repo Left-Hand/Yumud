@@ -1,8 +1,6 @@
 #ifndef __FINER_HPP__
 #define __FINER_HPP__
 
-#include "../../types/image/image.hpp"
-
 #include "../nvcv2/flood_fill.hpp"
 #include "../nvcv2/geometry/geometry.hpp"
 #include "../nvcv2/pixels/pixels.hpp"
@@ -14,9 +12,19 @@
 #include <list>
 #include <unordered_set>
 
+#include "elements.hpp"
+
 using namespace NVCV2;
 
 namespace SMC{
+    enum class AlignMode:uint8_t{
+        LEFT,
+        RIGHT,
+        BOTH,
+        BLIND
+    };
+
+
     using Boundry = std::map<int, int>;
     using Pile = std::pair<int, Rangei>;
     using Piles = std::map<int, Rangei>;
@@ -142,10 +150,10 @@ namespace SMC{
 
 
 
-    std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> &, const Vector2i &, const LR);
+    std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> &, const Vector2i &, const AlignMode);
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point);
     Rangei get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos);
-    Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const LR);
+    Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const AlignMode);
 
     namespace PileUtils{
         bool invalidity(const Pile & pile, const Rangei & valid_width);

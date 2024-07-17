@@ -21,7 +21,6 @@ void SmartCar::ctrl(){
         real_t now_spd = pos_delta * ctrl_freq;
         
         msm.front_spd = now_spd;
-        // DEBUG_PRINTLN(now_pos, front_spd);
     }
 
     real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, measurer.get_omega());
@@ -33,12 +32,12 @@ void SmartCar::ctrl(){
     //控制器输出
     real_t side_output = side_ctrl.update(0, msm.lane_offset, -side_volocity);
 
-    real_t centripetal_output = centripetal_ctrl.update(msm.front_spd, -msm.omega);
-
-    // DEBUG_VALUE(centripetal_output);
+    real_t centripetal_output = centripetal_ctrl.update(msm.front_spd, -measurer.get_omega());
 
     real_t speed_output = velocity_ctrl.update(setp.targ_spd, msm.front_spd);
     //-----------------
+
+    // real_t  min_strength = 0.04;
 
     if(switches.hand_mode == false){
         motor_strength.left = turn_output;
@@ -47,7 +46,8 @@ void SmartCar::ctrl(){
         motor_strength.left += speed_output;
         motor_strength.right += speed_output;
 
-        // DEBUG_PRINTLN(motor_strength.left, motor_strength.right);
+        // motor_strength.left = MAX(motor_strength.left, min_strength);
+        // motor_strength.right = MAX(motor_strength.right, min_strength);
 
         motor_strength.hri = side_output;
         motor_strength.hri += centripetal_output;

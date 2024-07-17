@@ -23,7 +23,6 @@ namespace SMC{
 struct Measurement{
 
     real_t front_spd;
-    real_t omega;
     real_t lane_offset;
 
     Vector2i seed_pos;

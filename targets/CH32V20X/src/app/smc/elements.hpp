@@ -6,12 +6,6 @@
 #include "finder.hpp"
 
 namespace SMC{
-enum class AlignMode:uint8_t{
-    LEFT,
-    RIGHT,
-    BOTH,
-    BLIND
-};
 
 enum class ElementType:uint8_t{
     NONE, 

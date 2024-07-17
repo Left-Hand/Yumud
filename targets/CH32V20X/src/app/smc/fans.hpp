@@ -11,7 +11,8 @@ class SideFan{
 protected:
     TimerOC & instanceP;
     TimerOC & instanceN;
-    real_t duty_clamp = 0.97;
+    static constexpr real_t duty_clamp = 0.97;
+    static constexpr real_t k = 2.5;
 
     bool enabled = true;
     real_t last_force = 0;
@@ -27,10 +28,6 @@ public:
     void reset(){
         last_force = 0;
         last_t = 0;
-    }
-
-    void setClamp(const real_t _duty_clamp){
-        duty_clamp = _duty_clamp;
     }
 
     void enable(const bool en = true){
@@ -61,7 +58,7 @@ public:
     }
 
     auto & operator = (const real_t _force){
-        static constexpr real_t k = 2.5;
+
         real_t step = k * (t - last_t);
 
         last_force = STEP_TO(last_force, _force, step);

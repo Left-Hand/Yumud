@@ -83,8 +83,6 @@ BETTER_ENUM(RunStatus, uint8_t,
 using namespace SMC;
 
 class SmartCar:public SmcCli{
-public:
-    // static constexpr int road_minimal_length = 8;
 protected:
     void recordRunStatus(const RunStatus status);
     void printRecordedRunStatus();
@@ -124,7 +122,7 @@ protected:
     Painter<RGB565> painter = Painter<RGB565>{};
 
     I2cSw sccb      {portD[2], portC[12]};
-    I2cSw i2c     {portB[3], portB[5]};
+    I2cSw i2c       {portB[3], portB[5]};
     
     MT9V034 camera  {sccb};
     ABEncoderTimer  enc     {timer1};
@@ -220,6 +218,10 @@ protected:
         auto get_omega() const{
             return msm.gyro.z;
         }
+
+        // auto get_centri_accel() const {
+            // return get_omega() * get_
+        // }
 
     };
 

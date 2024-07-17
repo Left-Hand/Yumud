@@ -41,6 +41,7 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
     auto last_seed_pos = msm.seed_pos;
+    // auto last_road_window = msm.road_window;
 
     Rangei road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
                                 WorldUtils::pixels(config.valid_road_meters.to)};
@@ -52,23 +53,24 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
 
     //定义本次找到的x窗口
     Rangei new_x_range;
-
     if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗口
 
-        switch(align_mode){
-            case AlignMode::LEFT:
-            case AlignMode::RIGHT:
-            case AlignMode::BOTH:
-                new_x_range = get_side_range(src, y, road_valid_pixels.from, align_right);
-                break;
-                break;
-            case AlignMode::BLIND:
-                break;
-        }
+        // switch(align_mode){
+        //     case AlignMode::LEFT:
+        //     case AlignMode::RIGHT:
+        //     case AlignMode::BOTH:
+        //         new_x_range = get_side_range(src, y, road_valid_pixels.from, align_mode);
+        //         break;
+        //     case AlignMode::BLIND:
+        //         break;
+        // }
+        new_x_range = get_side_range(src, y, road_valid_pixels.from, align_mode);
+
 
         //如果最长的区域都小于路宽 那么就视为找不到种子
         if(new_x_range.length() < road_valid_pixels.from){
             return {Vector2i{}, Rangei{}};
+            // return {last_seed_pos, last_road_window};
         }
 
     }else{//如果上次有种子
@@ -426,7 +428,7 @@ void SmartCar::main(){
 
     [[maybe_unused]] auto plot_gui = [&](){
         plot_vec3(measurer.get_accel().normalized() * 15, {190, 0});
-        plot_vec3((measurer.get_gyro() * 60).clampmax(15), {190, 60});
+        plot_vec3((measurer.get_gyro()).clampmax(15), {190, 60});
         plot_vec3(measurer.get_magent().normalized() * 15, {190, 120});
 
         painter.setColor(RGB565::WHITE);
@@ -438,9 +440,9 @@ void SmartCar::main(){
             pos += Vector2i(0, 9);
         
         painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
-        DRAW_STR("自转" + toString(msm.omega));
+        DRAW_STR("自转" + toString(measurer.get_omega()));
         DRAW_STR("向差" + toString(msm.dir_error));
-        DRAW_STR("侧移" + toString(msm.lane_offset));
+        DRAW_STR("侧移" + toString(msm.lane_offset * 100));
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
@@ -525,7 +527,7 @@ void SmartCar::main(){
         auto & img_bina = pers_bina_image;
 
         std::tie(msm.seed_pos, msm.road_window) = get_entry(img_bina);
-        // if(bool(msm.road_window))
+        // DEBUG_VALUE(msm.road_window);
 
 
         //如果找不到种子 跳过本次遍历
@@ -540,9 +542,6 @@ void SmartCar::main(){
         plot_pile({0, ccd_range}, RGB565::FUCHSIA);
         auto ccd_center_x = ccd_range.get_center();
 
-        // -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
-    
-        // DEBUG_PRINTLN(msm.road_window.length(), msm.road_window, config.valid_width, msm.seed_pos);
         recordRunStatus(RunStatus::SEED_B);
         //对种子的搜索结束
         /* #endregion */

@@ -1,45 +1,63 @@
 #include "finder.hpp"
 
+
 using namespace NVCV2;
 
 namespace SMC{
 
 
     Rangei get_h_range(const ImageReadable<Binary> & src, const Vector2i & pos){
-        Rangei current_window = {0,0};
-        int x = pos.x;
-        while(x > 0){
+        auto size = src.get_size();
+        Rangei current_window = {0,size.x - 1};
+
+        for(auto x = pos.x; x > 0; x--){
             if(bool(src({x, pos.y})) == true){
                 current_window.start = x;
                 break;
             }
-            x--;
         }
 
-        x = pos.x;
-        while(x < src.size.x - 1){
+        for(auto x = pos.x; x < size.x-1; x++){
             if(bool(src({x, pos.y})) == true){
                 current_window.end = x;
                 break;
             }
-            x++;
         }
 
         return current_window;
     }
 
-    Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const LR is_right_align){
+    Rangei get_side_range(const ImageReadable<Binary> & src, const int y, const int minimal_length, const AlignMode align_mode){
 
         sstl::vector<Rangei, 8> windows;
         Rangei current_window = {0,0};
-        for(int x = 0; x < src.get_size().x - 2; x++){
-            if(bool(src({x,y})) == true and bool(src({x + 1,y}) == false)){
-                current_window = {x,x};
-            }else if(bool(src({x,y})) == false and bool(src({x + 1,y}) == true)){
-                current_window.end = x;
-                if(minimal_length < current_window.length()){
-                    windows.push_back(current_window);
+
+        enum class SearchStatus{
+            SEEKING,
+            TRAVE,
+        }status = SearchStatus::SEEKING;
+    
+        auto size = src.get_size();
+        for(int x = 0; x < size.x - 1; x++){
+
+            switch(status){
+
+            case SearchStatus::SEEKING:
+                if(bool(src({x,y})) == true and bool(src({x + 1,y}) == false)){
+                    current_window.from = x;
+                    status = SearchStatus::TRAVE;
                 }
+                break;
+
+            case SearchStatus::TRAVE:
+                if(bool(src({x,y})) == false and bool(src({x + 1,y}) == true)){
+                    current_window.to = x;
+                    if(minimal_length < current_window.length()){
+                        windows.push_back(current_window);
+                    }
+                    status = SearchStatus::SEEKING;
+                }
+                break;
             }
         }
 
@@ -49,10 +67,29 @@ namespace SMC{
             case 1:
                 return windows.front();
             default:
-                std::sort(windows.begin(), windows.end(), 
-                is_right_align ? [](const Rangei & p1, const Rangei & p2){return p1.get_center() > p2.get_center();} :
-                [](const Rangei & p1, const Rangei & p2){return p1.get_center() < p2.get_center();}
-                );
+
+                switch(align_mode){
+
+                    case AlignMode::RIGHT:
+                        std::sort(windows.begin(), windows.end(), [](const Rangei & p1, const Rangei & p2){return p1.get_center() > p2.get_center();});
+                        break;
+                    case AlignMode::LEFT:
+                        std::sort(windows.begin(), windows.end(), [](const Rangei & p1, const Rangei & p2){return p1.get_center() < p2.get_center();});
+                        break;
+                    case AlignMode::BOTH:
+                        std::sort(windows.begin(), windows.end(), [&size](const Rangei & p1, const Rangei & p2){
+                            auto center_cmp = [](const int _p1, const int _p2, const int center) -> bool{
+                                return std::abs(_p1 - center) < std::abs(_p2 - center);
+                            };
+
+                            auto p1_center = p1.get_center();
+                            auto p2_center = p2.get_center();
+                            return center_cmp(p1_center, p2_center, size.x/2);
+                        });
+                        break;
+                    default:
+                        break;
+                }
 
                 return windows.front();
         }
