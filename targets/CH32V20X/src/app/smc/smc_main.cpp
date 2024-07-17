@@ -463,18 +463,18 @@ void SmartCar::main(){
         CREATE_START_TICK();
 
 
-        recordRunStatus(RunStatus::NEW_ROUND);
+        recordRunStatus(RunStatus::BEG);
 
         //----------------------
         //对输入进行解析
-        recordRunStatus(RunStatus::PROCESSING_EVENTS);
+        recordRunStatus(RunStatus::EVENTS);
         if(start_key) start();
         if(stop_key) stop();
         //----------------------
 
         //----------------------
         //对事件进行解析
-        recordRunStatus(RunStatus::PROCESSING_EVENTS);
+        recordRunStatus(RunStatus::EVENTS);
         parse();
         //----------------------
 
@@ -482,7 +482,7 @@ void SmartCar::main(){
 
         /* #region */
         //开始进行图像处理
-        recordRunStatus(RunStatus::PROCESSING_IMG_BEGIN);
+        recordRunStatus(RunStatus::IMG_B);
 
         CREATE_BENCHMARK(benchmark.cap);
         Geometry::perspective(pers_gray_image, camera);//进行透视变换
@@ -512,14 +512,14 @@ void SmartCar::main(){
 
         plot_gray(ccd_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
 
-        recordRunStatus(RunStatus::PROCESSING_IMG_END);
+        recordRunStatus(RunStatus::IMG_E);
         //图像处理结束
         /* #endregion */
 
 
         /* #region */
         // 对种子进行搜索
-        recordRunStatus(RunStatus::PROCESSING_SEED_BEG);
+        recordRunStatus(RunStatus::SEED_B);
 
         auto & img = pers_gray_image;
         auto & img_bina = pers_bina_image;
@@ -543,14 +543,14 @@ void SmartCar::main(){
         // -(msm.seed_pos.x - (img.get_size().x / 2) + 2) * 0.02;
     
         // DEBUG_PRINTLN(msm.road_window.length(), msm.road_window, config.valid_width, msm.seed_pos);
-        recordRunStatus(RunStatus::PROCESSING_SEED_END);
+        recordRunStatus(RunStatus::SEED_B);
         //对种子的搜索结束
         /* #endregion */
 
 
         /* #region */
         // 寻找两侧的赛道轮廓并修剪为非自交的形式
-        recordRunStatus(RunStatus::PROCESSING_COAST);
+        recordRunStatus(RunStatus::COAST_B);
         
         auto coast_left_unfixed =    CoastUtils::form(img_bina, msm.seed_pos, LEFT);
         auto coast_right_unfixed =   CoastUtils::form(img_bina, msm.seed_pos, RIGHT);
@@ -563,14 +563,14 @@ void SmartCar::main(){
 
         ASSERT_WITH_DOWN(coast_left.size() != 0, "left coast size 0");
         ASSERT_WITH_DOWN(coast_right.size() != 0, "right coast size 0");
-        recordRunStatus(RunStatus::PROCESSING_COAST_END);
+        recordRunStatus(RunStatus::COAST_E);
         //修剪结束
         /* #endregion */
 
 
         /* #region */
         //开始进行对轮廓进行抽稀
-        recordRunStatus(RunStatus::PROCESSING_DP_BEG);
+        recordRunStatus(RunStatus::DP_B);
 
         auto track_left = CoastUtils::douglas_peucker(coast_left, config.dpv);
         auto track_right = CoastUtils::douglas_peucker(coast_right, config.dpv);
@@ -581,7 +581,7 @@ void SmartCar::main(){
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
-        recordRunStatus(RunStatus::PROCESSING_DP_END);
+        recordRunStatus(RunStatus::DP_E);
         //对轮廓的抽稀结束
         /* #endregion */
 
@@ -589,14 +589,14 @@ void SmartCar::main(){
 
         /* #region */
         //进行角点检测
-        recordRunStatus(RunStatus::PROCESSING_CORNER_BEG);
+        recordRunStatus(RunStatus::CORNER_B);
 
         auto v_points = CoastUtils::vcorners(track_left);
         auto a_points = CoastUtils::acorners(track_left);
         plot_points(v_points, {0, 0}, RGB565::YELLOW);
         plot_points(a_points, {0, 0}, RGB565::AQUA);
     
-        recordRunStatus(RunStatus::PROCESSING_CORNER_END);
+        recordRunStatus(RunStatus::CORNER_E);
         //角点检测结束
         /* #endregion */
 
@@ -728,7 +728,7 @@ void SmartCar::main(){
 
         /* #region */
         //开始提取轮廓主向量
-        recordRunStatus(RunStatus::PROCESSING_VEC_BEG);
+        recordRunStatus(RunStatus::VEC_B);
         if(true){
             do{
                 if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
@@ -801,7 +801,7 @@ void SmartCar::main(){
                 }
             }while(false);
         }
-        recordRunStatus(RunStatus::PROCESSING_VEC_END);
+        recordRunStatus(RunStatus::VEC_E);
         //对轮廓的主向量提取结束
         /* #endregion */
     
@@ -821,7 +821,7 @@ void SmartCar::main(){
         // plot_bound(bound_right, {0, 0}, RGB565::BLUE);
         // plot_bound(bound_center, {0, 0}, RGB565::YELLOW);
 
-        recordRunStatus(RunStatus::END_ROUND);
+        recordRunStatus(RunStatus::END);
 
     }
 }
