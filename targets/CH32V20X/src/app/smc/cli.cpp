@@ -204,15 +204,15 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         case "r"_ha:
             NVIC_SystemReset();
             break;
-        case "acc"_ha:
-            DEBUG_PRINTS("acc", mpu.getAccel());
-            break;
-        case "gyro"_ha:
-            DEBUG_PRINTS("gyro", mpu.getGyro());
-            break;
-        case "mag"_ha:
-            DEBUG_PRINTS("mag:", qml.getMagnet());
-            break;
+        // case "acc"_ha:
+        //     DEBUG_PRINTS("acc", mpu.getAccel());
+        //     break;
+        // case "gyro"_ha:
+        //     DEBUG_PRINTS("gyro", mpu.getGyro());
+        //     break;
+        // case "mag"_ha:
+        //     DEBUG_PRINTS("mag:", qml.getMagnet());
+        //     break;
         case "st"_ha:
         case "stat"_ha:
             DEBUG_PRINTS("stats:", RunStatus::_from_integral_nothrow(int(runStatusReg)));

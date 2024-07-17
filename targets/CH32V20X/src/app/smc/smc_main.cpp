@@ -194,8 +194,7 @@ void SmartCar::init_sensor(){
     i2c.init(400000);
     sccb.init(10000);
 
-    mpu.init();
-    qml.init();
+    measurer.init();
 
     start_key.init();
     stop_key.init();
@@ -270,37 +269,18 @@ void SmartCar::init_it(){
 void SmartCar::main(){
     init_debugger();
     init_periphs();
+
     delay(200);
+
     init_fans();
     init_sensor();
     init_lcd();
     init_camera();
 
+    cali();
+
+
     init_it();
-
-
-    {
-        static constexpr int cali_times = 100;
-
-        Vector3 temp_gravity = Vector3();
-        Vector3 temp_gyro_offs = Vector3();
-        Vector3 temp_magent = Vector3();
-        
-        for(int i = 0; i < cali_times; ++i){
-            temp_gravity += Vector3(mpu.getAccel());
-            temp_gyro_offs += Vector3(mpu.getGyro());    
-            temp_magent += Vector3(qml.getMagnet());
-            delay(5);
-        }
-
-        Vector3 g = temp_gravity / cali_times;
-        msm.accel_offs = Quat(Vector3(0,0,-1),g/g.length()).inverse();
-
-        Vector3 m = temp_magent / cali_times;
-        msm.magent_offs = Quat(Vector3(0,0,-1), m/m.length()).inverse();
-
-        msm.gyro_offs = temp_gyro_offs / cali_times;
-    }
 
     constexpr auto pic_size = Vector2i(188, 60);
     auto pers_gray_image = make_image<Grayscale>(pic_size);
@@ -445,9 +425,9 @@ void SmartCar::main(){
     };
 
     [[maybe_unused]] auto plot_gui = [&](){
-        plot_vec3(msm.accel.normalized() * 15, {190, 0});
-        plot_vec3(msm.gyro * 7, {190, 60});
-        plot_vec3(msm.magent.normalized() * 15, {190, 120});
+        plot_vec3(measurer.get_accel().normalized() * 15, {190, 0});
+        plot_vec3(measurer.get_gyro() * 7, {190, 60});
+        plot_vec3(measurer.get_magent().normalized() * 15, {190, 120});
 
         painter.setColor(RGB565::WHITE);
         
@@ -460,7 +440,7 @@ void SmartCar::main(){
         painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
         DRAW_STR("自转" + toString(msm.omega));
         DRAW_STR("向差" + toString(msm.dir_error));
-        DRAW_STR("侧移" + toString(msm.side_offs_err));
+        DRAW_STR("侧移" + toString(msm.lane_offset));
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
@@ -641,7 +621,7 @@ void SmartCar::main(){
         
         /* #region */
         //进行位置提取
-        msm.side_offs_err = -0.005 * (ccd_center_x - 94);
+        msm.lane_offset = -0.005 * (ccd_center_x - 94);
         //位置提取结束
         /* #endregion */
 

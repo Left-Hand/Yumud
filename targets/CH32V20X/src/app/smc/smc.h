@@ -142,8 +142,92 @@ protected:
     static constexpr uint ctrl_freq = 50;
     static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
-    MPU6050 mpu{i2c};
-    QMC5883L qml{i2c};
+
+
+    struct Measurer{
+
+    public:
+        MPU6050 mpu;
+        QMC5883L qml;
+        struct{
+            Quat accel;
+            Vector3 gyro;
+            Quat magnet;
+        }drift;
+        
+        struct{
+            Vector3 accel;
+            Vector3 gyro;
+            Vector3 magnet;
+        }msm;
+
+    protected:
+        void set_drift(const Quat & _accel_drift, const Vector3 & _gyro_drift, const Quat & _magent_drift){
+            drift.accel = _accel_drift;
+            drift.gyro = _gyro_drift;
+            drift.magnet = _magent_drift;
+        }
+
+    public:
+        Measurer(I2c & i2c):mpu{i2c}, qml{i2c}{;}
+
+        void cali(){
+            static constexpr int cali_times = 100;
+
+            Vector3 temp_gravity = Vector3();
+            Vector3 temp_gyro_offs = Vector3();
+            Vector3 temp_magent = Vector3();
+            
+            for(int i = 0; i < cali_times; ++i){
+                temp_gravity += Vector3(mpu.getAccel());
+                temp_gyro_offs += Vector3(mpu.getGyro());    
+                temp_magent += Vector3(qml.getMagnet());
+                delay(5);
+            }
+
+            Vector3 g = temp_gravity / cali_times;
+            Vector3 m = temp_magent / cali_times;
+
+            set_drift(
+                    Quat(Vector3(0,0,-1),g/g.length()).inverse(),
+                    temp_gyro_offs / cali_times,
+                    Quat(Vector3(0,0,-1), m/m.length()).inverse()
+            );
+        }
+
+        void init(){
+            mpu.init();
+            qml.init();
+        }
+
+        void update(){
+            mpu.update();
+            qml.update();
+
+            msm.accel = drift.accel.xform(Vector3(mpu.getAccel()));
+            msm.gyro = (Vector3(mpu.getGyro()) - drift.gyro);
+            msm.magnet = drift.magnet.xform(Vector3(qml.getMagnet()));
+        }
+
+        auto get_accel() const{
+            return msm.accel;
+        }
+
+        auto get_gyro() const{
+            return msm.gyro;
+        }
+
+        auto get_magent() const{
+            return msm.magnet;
+        }
+
+        auto get_omega() const{
+            return msm.gyro.z;
+        }
+
+    };
+
+    Measurer measurer{i2c};
 
     Measurement msm;
 
@@ -166,6 +250,8 @@ protected:
     void init_camera();
 
     void init_it();
+
+    void cali(){measurer.cali();}
 
     void init_fans();
 

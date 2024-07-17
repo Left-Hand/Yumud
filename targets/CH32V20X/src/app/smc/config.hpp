@@ -18,26 +18,19 @@ namespace SMC{
 
 #pragma pack(push, 1)
 
+
+
 struct Measurement{
-    real_t dir_error;
-
-    Quat accel_offs;
-    Vector3 gyro_offs;
-    Quat magent_offs;
-
-    Vector3 accel;
-    Vector3 gyro;
-    Vector3 magent;
-
-    real_t current_dir;
-
-    Vector2i seed_pos;
-    Rangei road_window;
 
     real_t front_spd;
     real_t omega;
+    real_t lane_offset;
 
-    real_t side_offs_err;
+    Vector2i seed_pos;
+    real_t dir_error;
+
+    real_t current_dir;
+    Rangei road_window;
 };
 
 

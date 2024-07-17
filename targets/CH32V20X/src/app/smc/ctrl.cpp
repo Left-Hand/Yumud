@@ -6,14 +6,7 @@ void SmartCar::ctrl(){
 
     static constexpr real_t target_dir = real_t(PI / 2);
     body.update();
-
-    mpu.update();
-    qml.update();
-
-    msm.accel = msm.accel_offs.xform(Vector3(mpu.getAccel()));
-    msm.gyro = (Vector3(mpu.getGyro()) - msm.gyro_offs);
-    msm.magent = msm.magent_offs.xform(Vector3(qml.getMagnet()));
-
+    measurer.update();
 
     {
         static constexpr real_t wheel_l = 0.182;
@@ -31,20 +24,14 @@ void SmartCar::ctrl(){
         // DEBUG_PRINTLN(now_pos, front_spd);
     }
 
-    // real_t rot;
-    {
-        // static LowpassFilterZ_t<real_t> lpf{0.8};
-        msm.omega = msm.gyro.z;
-    }
+    real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, measurer.get_omega());
 
-    real_t turn_output = turn_ctrl.update(target_dir, msm.current_dir, msm.gyro.z);
-
-    real_t side_acc = msm.accel.y;
-    real_t side_volocity = side_velocity_observer.update(msm.side_offs_err, side_acc);
+    real_t side_acc = measurer.get_accel().y;
+    real_t side_volocity = side_velocity_observer.update(msm.lane_offset, side_acc);
 
     //-----------------
     //控制器输出
-    real_t side_output = side_ctrl.update(0, msm.side_offs_err, -side_volocity);
+    real_t side_output = side_ctrl.update(0, msm.lane_offset, -side_volocity);
 
     real_t centripetal_output = centripetal_ctrl.update(msm.front_spd, -msm.omega);
 
