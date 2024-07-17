@@ -109,6 +109,7 @@ void SmartCar::reset(){
     side_ctrl.reset();
     velocity_ctrl.reset();
     side_velocity_observer.reset();
+    // body.reset();
 }
 
 void SmartCar::recordRunStatus(const RunStatus status){

@@ -11,10 +11,11 @@ class SideFan{
 protected:
     TimerOC & instanceP;
     TimerOC & instanceN;
-    Range_t<real_t>duty_clamp = {-0.7, 0.7};
+    real_t duty_clamp = 0.97;
 
     bool enabled = true;
     real_t last_force = 0;
+    real_t last_t = 0;
 public:
     SideFan(TimerOC & _instanceP,TimerOC & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
 
@@ -23,7 +24,12 @@ public:
         instanceN.init();
     }
 
-    void setClamp(const Range_t<real_t> & _duty_clamp){
+    void reset(){
+        last_force = 0;
+        last_t = 0;
+    }
+
+    void setClamp(const real_t _duty_clamp){
         duty_clamp = _duty_clamp;
     }
 
@@ -40,7 +46,7 @@ public:
             return;
         }
 
-        real_t duty = duty_clamp.clamp(_duty);
+        real_t duty = CLAMP(_duty, -duty_clamp, duty_clamp);
         if(duty > 0){
             instanceP = (duty);
             instanceN = (real_t(0));
@@ -55,8 +61,12 @@ public:
     }
 
     auto & operator = (const real_t _force){
-        static constexpr real_t step = 0.03;
+        static constexpr real_t k = 2.5;
+        real_t step = k * (t - last_t);
+
         last_force = STEP_TO(last_force, _force, step);
+        last_t = t;
+
         setForce(last_force);
         return *this;
     }
@@ -84,6 +94,11 @@ public:
     void init(){
         left_fan.init();
         right_fan.init();
+    }
+
+    void reset(){
+        left_fan.reset();
+        right_fan.reset();
     }
 
     auto & operator = (const real_t _force){

@@ -30,8 +30,6 @@ protected:
     SideFan & right_fan;
     HriFanPair & hri_fan;
 
-    // DShotChannel ds1 {timer8.oc(1)};
-    // DShotChannel ds2 {timer8.oc(2)};
     real_t real_cha_output = 0;
 
     bool enabled = false;
@@ -68,6 +66,14 @@ public:
         left_fan.enable();
         right_fan.enable();
         hri_fan.enable();
+    }
+
+    void reset(){
+        motor_strength.reset();
+        left_fan.reset();
+        right_fan.reset();
+        hri_fan.reset();
+        setds(0);
     }
 
     void update(){

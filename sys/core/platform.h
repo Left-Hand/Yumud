@@ -68,6 +68,9 @@ template<typename T>
 concept arithmetic = std::is_arithmetic_v<T>;
 
 template<typename T>
+concept floating = std::is_floating_point_v<T>;
+
+template<typename T>
 concept integral = std::is_integral_v<T>;
 
 template<typename T>
