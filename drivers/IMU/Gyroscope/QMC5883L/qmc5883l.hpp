@@ -176,10 +176,7 @@ protected:
         return statusReg.ready;
     }
 public:
-    QMC5883L(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    QMC5883L(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    QMC5883L(I2c & _i2c):bus_drv(I2cDrv(_i2c, default_addr)){;}
-    ~QMC5883L(){;}
+    I2CDEV_CONTSRTUCTER(QMC5883L)
 
     void init(){
         if(isChipValid()){

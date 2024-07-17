@@ -27,8 +27,9 @@ public:
         Continuous, Single
     };
 
+    static constexpr uint8_t default_addr = 0x3d;
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
 
     real_t lsb;
 
@@ -56,21 +57,6 @@ protected:
         REG8_END
     };
 
-    struct MagXReg{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct MagYReg{
-        REG16_BEGIN
-        REG16_END
-    };
-
-    struct MagZReg{
-        REG16_BEGIN
-        REG16_END
-    };
-
     struct StatusReg{
         REG8_BEGIN
         uint8_t ready:1;
@@ -78,10 +64,6 @@ protected:
         uint8_t __resv__:6;
         REG8_END
     };
-
-    struct IDAReg{REG8_BEGIN REG8_END};
-    struct IDBReg{REG8_BEGIN REG8_END};
-    struct IDCReg{REG8_BEGIN REG8_END};
 
     enum class RegAddress:uint8_t{
         ConfigA = 0x00,
@@ -100,38 +82,36 @@ protected:
         ConfigAReg configAReg;
         ConfigBReg configBReg;
         ModeReg modeReg;
-        MagXReg magXReg;
-        MagYReg magYReg;
-        MagZReg magZReg;
+        int16_t magXReg;
+        int16_t magYReg;
+        int16_t magZReg;
         StatusReg statusReg;
-        IDAReg idAReg;
-        IDBReg idBReg;
-        IDCReg idCReg;
     };
 
-    void writeReg(const RegAddress & regAddress, const uint16_t & regData){
+    void writeReg(const RegAddress regAddress, const uint16_t regData){
         bus_drv.writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint16_t & regData){
+    void readReg(const RegAddress regAddress, uint16_t & regData){
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void writeReg(const RegAddress & regAddress, const uint8_t & regData){
+    void writeReg(const RegAddress regAddress, const uint8_t regData){
         bus_drv.writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint8_t & regData){
+    void readReg(const RegAddress regAddress, uint8_t & regData){
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void requestPool(const RegAddress & regAddress, uint8_t * datas, uint8_t size, uint8_t len){
-        bus_drv.readPool((uint8_t)regAddress, (uint8_t *)&datas, size, len);
+
+    void requestPool(const RegAddress &regAddress, auto * datas, size_t len){
+        bus_drv.readPool((uint8_t)regAddress, datas, len);
     }
 
-    real_t From12BitToGauss(const uint16_t & data){
+    real_t From12BitToGauss(const uint16_t data){
         real_t guass;
-        s16_to_uni(data, guass);
+        s16_to_uni(data & 0x8fff, guass);
         guass *= lsb;
         return guass;
     }
@@ -167,8 +147,7 @@ protected:
         }
     }
 public:
-    HMC5883L(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    ~HMC5883L(){;}
+    I2CDEV_CONTSRTUCTER(HMC5883L)
 
     void init(){
         enableHighSpeed();
@@ -201,6 +180,7 @@ public:
     void setGain(const Gain gain){
         configBReg.gain = (uint8_t)gain;
         writeReg(RegAddress::ConfigB, configBReg.data);
+        setLsb(gain);
     }
 
     void setMode(const Mode mode){
@@ -208,17 +188,24 @@ public:
         writeReg(RegAddress::Mode, modeReg.data);
     }
 
-    void getMagnet(real_t & x, real_t & y, real_t & z) override{
-        requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 2, 6);
-        x = From12BitToGauss(magXReg.data);
-        y = From12BitToGauss(magYReg.data);
-        z = From12BitToGauss(magZReg.data);
+    std::tuple<real_t, real_t, real_t> getMagnet() override{
+        real_t x = From12BitToGauss(magXReg);
+        real_t y = From12BitToGauss(magYReg);
+        real_t z = From12BitToGauss(magZReg);
+
+        return std::make_tuple(x,y,z);
     }
 
     bool isChipValid(){
-        requestPool(RegAddress::IDA, (uint8_t *)&idAReg, 1, 3);
-        return (idAReg.data == 'H' && idBReg.data == '4' && idCReg.data == '3');
+        uint8_t id[3] = {0};
+        requestPool(RegAddress::IDA, id, 3);
+        return (id[0] == 'H' && id[1] == '4' && id[2] == '3');
     }
+
+    void update() override{
+        requestPool(RegAddress::MagX, &magXReg, 3);
+    }
+
 
     bool isIdle(){
         readReg(RegAddress::Status, statusReg.data);

@@ -5,7 +5,7 @@
 #include "src/testbench/tb.h"
 
 #include "../drivers/Camera/MT9V034/mt9v034.hpp"
-#include "../drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
+#include "../drivers/IMU/Gyroscope/HMC5883L/hmc5883l.hpp"
 #include "../drivers/Display/DisplayerInterface.hpp"
 #include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "../drivers/Encoder/ABEncoder.hpp"
@@ -142,13 +142,11 @@ protected:
     static constexpr uint ctrl_freq = 50;
     static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
-
-
     struct Measurer{
 
     public:
         MPU6050 mpu;
-        QMC5883L qml;
+        HMC5883L qml;
         struct{
             Quat accel;
             Vector3 gyro;

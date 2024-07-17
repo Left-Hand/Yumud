@@ -58,11 +58,19 @@ public:
     constexpr Vector2_t<T> bounce(const Vector2_t<T> &n) const;
     constexpr Vector2_t<T> ceil() const;
 
-    template<typename U>
-    constexpr Vector2_t<T> clampmin(const U & length) const;
+    template<arithmetic U>
+    constexpr Vector2_t<T> clampmin(const U & _length) const{
+        T length = static_cast<T>(_length);
+        T l = this->length();
+        return (l < length ? *this * length / l : *this);
+    }
 
-    template<typename U>
-    constexpr Vector2_t<T> clampmax(const U & length) const;
+    template<arithmetic U>
+    constexpr Vector2_t<T> clampmax(const U & _length) const{
+        T length = static_cast<T>(_length);
+        T l = this->length();
+        return (l > length ? *this * length / l : *this);
+    }
 
     // template<typename U>
     constexpr Vector2_t<T> clamp(const auto & _min, const auto & _max) const;

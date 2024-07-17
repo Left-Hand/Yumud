@@ -426,7 +426,7 @@ void SmartCar::main(){
 
     [[maybe_unused]] auto plot_gui = [&](){
         plot_vec3(measurer.get_accel().normalized() * 15, {190, 0});
-        plot_vec3(measurer.get_gyro() * 7, {190, 60});
+        plot_vec3((measurer.get_gyro() * 60).clampmax(15), {190, 60});
         plot_vec3(measurer.get_magent().normalized() * 15, {190, 120});
 
         painter.setColor(RGB565::WHITE);

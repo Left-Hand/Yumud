@@ -112,6 +112,21 @@ public:
 
 
     template<arithmetic U>
+    constexpr Vector3_t<T> clampmin(const U & _length) const{
+        T length = static_cast<T>(_length);
+        T l = this->length();
+        return (l < length ? *this * length / l : *this);
+    }
+
+    template<arithmetic U>
+    constexpr Vector3_t<T> clampmax(const U & _length) const{
+        T length = static_cast<T>(_length);
+        T l = this->length();
+        return (l > length ? *this * length / l : *this);
+    }
+
+
+    template<arithmetic U>
     T dot(const Vector3_t<U> &v) const{
         T ret = T(0);
         ret += x * v.x;
@@ -153,6 +168,8 @@ public:
         return v;
     }
 };
+
+#include "vector3_t.tpp"
 
 using Vector3 = Vector3_t<real_t>;
 using Vector3i = Vector3_t<int>;

@@ -24,21 +24,6 @@ constexpr Vector2_t<T> Vector2_t<T>::round() const{
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::clampmin(const auto & _length) const{
-    T length = static_cast<T>(_length);
-    T l = this->length();
-    return (l < length ? *this * length / l : *this);
-}
-
-template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::clampmax(const auto & _length) const{
-    T length = static_cast<T>(_length);
-    T l = this->length();
-    return (l > length ? *this * length / l : *this);
-}
-
-
-template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::clamp(const auto & _min, const auto & _max) const {
     T min = static_cast<T>(_min);
     T max = static_cast<T>(_max);
