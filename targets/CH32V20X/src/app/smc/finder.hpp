@@ -174,9 +174,9 @@ namespace SMC{
 
         Corners corners(const Coast & coast, const real_t threshold, const CornerType default_ct);
 
-        Points acorners(const Coast & coast, const real_t threshold = real_t(-0.6));//120 deg
+        Points a_points(const Coast & coast, const real_t threshold = real_t(-0.4));//120 deg
 
-        Points vcorners(const Coast & coast, const real_t threshold = real_t(-0.6));//120 deg
+        Points v_points(const Coast & coast, const real_t threshold = real_t(-0.4));//120 deg
 
         Coast trim(const Coast & coast, const Vector2i & window_size);
         Coast form(const ImageReadable<Binary> &, const Vector2i &, const LR);

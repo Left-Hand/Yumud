@@ -97,8 +97,8 @@ struct SideCtrl{
 };
 
 struct CentripetalCtrl{
-    real_t k = real_t(0);                    
-    real_t k_clamp = real_t(0.5);                        
+    real_t k = real_t(1.8);                    
+    real_t k_clamp = real_t(0.66);                        
                  
     real_t update(const real_t spd, const real_t omega){               
         return CLAMP(k * spd * omega, -k_clamp, k_clamp);

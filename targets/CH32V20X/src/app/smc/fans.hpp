@@ -11,8 +11,8 @@ class SideFan{
 protected:
     TimerOC & instanceP;
     TimerOC & instanceN;
-    static constexpr real_t duty_clamp = 0.97;
-    static constexpr real_t k = 2.5;
+    static constexpr real_t duty_clamp = 0.83;
+    static constexpr real_t k = 4.5;
 
     bool enabled = true;
     real_t last_force = 0;

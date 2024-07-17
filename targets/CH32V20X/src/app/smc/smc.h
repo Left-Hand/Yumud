@@ -125,8 +125,7 @@ protected:
     I2cSw i2c       {portB[3], portB[5]};
     
     MT9V034 camera  {sccb};
-    ABEncoderTimer  enc     {timer1};
-    Odometer        odo     {enc};
+
 
     static constexpr real_t full_duty = 0.85;
     static constexpr RGB565 white = 0xffff;
@@ -143,6 +142,9 @@ protected:
     public:
         MPU6050 mpu;
         HMC5883L qml;
+        ABEncoderTimer  enc     {timer1};
+        Odometer        odo     {enc};
+
         struct{
             Quat accel;
             Vector3 gyro;
@@ -155,6 +157,13 @@ protected:
             Vector3 magnet;
         }msm;
 
+    Vector2i seed_pos;
+    real_t travel;
+    real_t dir_error;
+
+    real_t current_dir;
+    Rangei road_window;
+
     protected:
         void set_drift(const Quat & _accel_drift, const Vector3 & _gyro_drift, const Quat & _magent_drift){
             drift.accel = _accel_drift;
@@ -162,6 +171,31 @@ protected:
             drift.magnet = _magent_drift;
         }
 
+        real_t now_spd;
+        Rangei ccd_range;
+
+        void update_gesture(){
+            mpu.update();
+            qml.update();
+
+            msm.accel = drift.accel.xform(Vector3(mpu.getAccel()));
+            msm.gyro = (Vector3(mpu.getGyro()) - drift.gyro);
+            msm.magnet = drift.magnet.xform(Vector3(qml.getMagnet()));
+        }
+
+        void update_front_speed(){
+            static constexpr real_t wheel_l = 0.182;
+            odo.update();
+
+            travel = odo.getPosition() * wheel_l;
+            static real_t last_travel = travel;
+            
+            real_t pos_delta = travel - last_travel;
+            last_travel = travel;
+
+            now_spd = pos_delta * ctrl_freq;
+        }
+    
     public:
         Measurer(I2c & i2c):mpu{i2c}, qml{i2c}{;}
 
@@ -183,24 +217,33 @@ protected:
             Vector3 m = temp_magent / cali_times;
 
             set_drift(
-                    Quat(Vector3(0,0,-1),g/g.length()).inverse(),
-                    temp_gyro_offs / cali_times,
-                    Quat(Vector3(0,0,-1), m/m.length()).inverse()
+                Quat(Vector3(0,0,-1),g/g.length()).inverse(),
+                temp_gyro_offs / cali_times,
+                Quat(Vector3(0,0,-1), m/m.length()).inverse()
             );
         }
 
         void init(){
             mpu.init();
             qml.init();
+
+            enc.init();
+            odo.inverse(true);
         }
 
-        void update(){
-            mpu.update();
-            qml.update();
 
-            msm.accel = drift.accel.xform(Vector3(mpu.getAccel()));
-            msm.gyro = (Vector3(mpu.getGyro()) - drift.gyro);
-            msm.magnet = drift.magnet.xform(Vector3(qml.getMagnet()));
+
+        void update(){
+            update_gesture();
+            update_front_speed();
+        }
+
+        void update_ccd(const Rangei & _ccd_range){
+            ccd_range = _ccd_range;
+        }
+
+        auto get_front_speed() const {
+            return now_spd;
         }
 
         auto get_accel() const{
@@ -223,11 +266,40 @@ protected:
             // return get_omega() * get_
         // }
 
+        real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
+
+            //ccd 部分的比例和透视部分的比例不一样 将就用
+            static constexpr real_t k = 200;
+
+            auto conv = [&](const int pixel) -> real_t{
+                return -(1/k) * (pixel - 94);
+            };
+
+            int padding_pixels = int(k * padding_meters);
+
+            switch(align_mode){
+                case AlignMode::LEFT:
+                    return conv(ccd_range.from + padding_pixels);
+                case AlignMode::RIGHT:
+                    return conv(ccd_range.to - padding_pixels);
+                case AlignMode::BOTH:
+                    return conv(ccd_range.get_center());
+                default:
+                    return 0;
+            }
+        }
+
+        auto get_road_length_meters() const {
+            return WorldUtils::distance(road_window.length());
+        }
+
+        auto get_travel() const {
+            return travel;
+        }
+
     };
 
     Measurer measurer{i2c};
-
-    Measurement msm;
 
     Key start_key   {portE[2], false};
     Key stop_key    {portE[3], false};

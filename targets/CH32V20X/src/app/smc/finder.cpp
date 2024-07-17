@@ -120,7 +120,7 @@ namespace SMC{
             return false;
         }
 
-        auto first = coast.front();
+        const auto & first = coast.front();
 
         for(auto it = std::next(coast.begin()); it != coast.end(); ++it){
             if(*it == first) return true;
@@ -180,7 +180,7 @@ namespace SMC{
                 }
 
                 if(ct == exp_ct){
-                    // ret.push_back(Corner(ct, (*it)));
+                    ret.push_back(Corner(ct, (*it)));
                 }
             }
         }
@@ -188,7 +188,7 @@ namespace SMC{
         return ret;
     }
 
-    Points CoastUtils::acorners(const Coast & coast, const real_t threshold){
+    Points CoastUtils::a_points(const Coast & coast, const real_t threshold){
         auto corners = CoastUtils::corners(coast, threshold, CornerType::AC);
         Points ret;
 
@@ -199,7 +199,7 @@ namespace SMC{
         return ret;
     }
 
-    Points CoastUtils::vcorners(const Coast & coast, const real_t threshold){
+    Points CoastUtils::v_points(const Coast & coast, const real_t threshold){
         auto corners = CoastUtils::corners(coast, threshold, CornerType::VC);
         Points ret;
 
@@ -213,7 +213,7 @@ namespace SMC{
     Coast CoastUtils::trim(const Coast & coast, const Vector2i & window_size){
         if(!coast.size()) return {{}};
 
-        auto first = coast.front();
+        const auto & first = coast.front();
         auto window = window_size.form_rect();
         if(!window.has_point(first)){
             DEBUG_LOG("first not in window", first);
@@ -223,17 +223,17 @@ namespace SMC{
         Coast ret;
 
         for(auto it = std::next(coast.begin()); it != coast.end(); ++it){
-            if(not window.has_point(*it)){
+            const auto & point = *it;
+            if(point == first){
+                //self ins
+                break;
+            }else if(not window.has_point(point)){
                 //out of bound exit
                 break;
+            }else{
+                ret.push_back(point);
             }
 
-            if(*it == first){
-                // DEBUG_PRINTLN("trim find self isn");
-                break;
-            }
-
-            ret.push_back(*it);
         }
         return ret;
     }

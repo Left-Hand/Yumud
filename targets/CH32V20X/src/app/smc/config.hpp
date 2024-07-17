@@ -19,20 +19,6 @@ namespace SMC{
 #pragma pack(push, 1)
 
 
-
-struct Measurement{
-
-    real_t front_spd;
-    real_t lane_offset;
-
-    Vector2i seed_pos;
-    real_t dir_error;
-
-    real_t current_dir;
-    Rangei road_window;
-};
-
-
 struct GlobalConfig{
     Grayscale positive_threshold = 255;
     Grayscale edge_threshold = 2;
@@ -51,7 +37,7 @@ union Switches{
     struct{
         bool plot_de:1 = false;
         bool hand_mode:1 = false;
-        AlignMode align_mode:2 = AlignMode::BOTH;
+        AlignMode align_mode:2 = AlignMode::LEFT;
         ElementType element_type:3 = ElementType::ZEBRA;
     };
 
@@ -69,7 +55,7 @@ union Flags{
 };
 
 struct SetPoints{
-    real_t targ_spd = 0.26;
+    real_t targ_spd = 0.16;
 };
 
 struct Benchmark{

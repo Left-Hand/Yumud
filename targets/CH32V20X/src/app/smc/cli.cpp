@@ -108,7 +108,7 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             break;
 
         case "spd"_ha:
-            read_value(msm.front_spd);
+            read_value(measurer.get_front_speed());
             break;
     
         case "ts"_ha:
@@ -204,15 +204,15 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         case "r"_ha:
             NVIC_SystemReset();
             break;
-        // case "acc"_ha:
-        //     DEBUG_PRINTS("acc", mpu.getAccel());
-        //     break;
-        // case "gyro"_ha:
-        //     DEBUG_PRINTS("gyro", mpu.getGyro());
-        //     break;
+        case "acc"_ha:
+            DEBUG_PRINTS("acc", measurer.get_accel());
+            break;
+        case "gyro"_ha:
+            DEBUG_PRINTS("gyro", measurer.get_gyro());
+            break;
         // case "mag"_ha:
-        //     DEBUG_PRINTS("mag:", qml.getMagnet());
-        //     break;
+            // DEBUG_PRINTS("mag:", qml.getMagnet());
+            // break;
         case "st"_ha:
         case "stat"_ha:
             DEBUG_PRINTS("stats:", RunStatus::_from_integral_nothrow(int(runStatusReg)));

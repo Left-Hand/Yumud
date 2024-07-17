@@ -9,7 +9,9 @@ namespace SMC{
 
 enum class ElementType:uint8_t{
     NONE, 
-
+    STRAIGHT,
+    WAVE,
+    CURVE,
     ZEBRA = 4,
     CROSS,
     RING,

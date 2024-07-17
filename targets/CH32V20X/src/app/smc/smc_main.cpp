@@ -40,8 +40,8 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
 
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
-    auto last_seed_pos = msm.seed_pos;
-    // auto last_road_window = msm.road_window;
+    auto last_seed_pos = measurer.seed_pos;
+    // auto last_road_window = measurer.road_window;
 
     Rangei road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
                                 WorldUtils::pixels(config.valid_road_meters.to)};
@@ -144,12 +144,6 @@ void SmartCar::init_periphs(){
     timer8.init(234, 1);
     timer8.oc(1).init();
     timer8.oc(2).init();
-    // timer8.initBdtr(0, AdvancedTimer::LockLevel::Off);
-
-    // timer1.initAsEncoder();
-    enc.init();
-    odo.inverse(true);
-
 
     delay(200);
 }
@@ -430,9 +424,12 @@ void SmartCar::main(){
             pos += Vector2i(0, 9);
         
         painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
-        DRAW_STR("自转" + toString(measurer.get_omega()));
-        DRAW_STR("向差" + toString(msm.dir_error));
-        DRAW_STR("侧移" + toString(msm.lane_offset * 100));
+
+
+
+        // DRAW_STR("自转" + toString(measurer.get_omega()));
+        // DRAW_STR("向差" + toString(measurer.dir_error));
+        // DRAW_STR("侧移" + toString(measurer.lane_offset * 100));
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
@@ -502,7 +499,7 @@ void SmartCar::main(){
         Shape::dilate_x(ccd_bina, ccd_bina);
 
 
-        plot_gray(ccd_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
+        // plot_gray(ccd_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
 
         recordRunStatus(RunStatus::IMG_E);
         //图像处理结束
@@ -516,21 +513,20 @@ void SmartCar::main(){
         auto & img = pers_gray_image;
         auto & img_bina = pers_bina_image;
 
-        std::tie(msm.seed_pos, msm.road_window) = get_entry(img_bina);
-        // DEBUG_VALUE(msm.road_window);
+        std::tie(measurer.seed_pos, measurer.road_window) = get_entry(img_bina);
+        // DEBUG_VALUE(measurer.road_window);
 
 
         //如果找不到种子 跳过本次遍历
-        if(!msm.seed_pos){
+        if(!measurer.seed_pos){
             // DEBUG_PRINTLN("no seed");
             stop();
         }
 
-        auto ccd_range = get_h_range(ccd_bina, Vector2i{msm.seed_pos.x, 0});
+        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.seed_pos.x, 0});
         
-        plot_point(msm.seed_pos);
+        plot_point(measurer.seed_pos);
         plot_pile({0, ccd_range}, RGB565::FUCHSIA);
-        auto ccd_center_x = ccd_range.get_center();
 
         recordRunStatus(RunStatus::SEED_B);
         //对种子的搜索结束
@@ -541,8 +537,8 @@ void SmartCar::main(){
         // 寻找两侧的赛道轮廓并修剪为非自交的形式
         recordRunStatus(RunStatus::COAST_B);
         
-        auto coast_left_unfixed =    CoastUtils::form(img_bina, msm.seed_pos, LEFT);
-        auto coast_right_unfixed =   CoastUtils::form(img_bina, msm.seed_pos, RIGHT);
+        auto coast_left_unfixed =    CoastUtils::form(img_bina, measurer.seed_pos, LEFT);
+        auto coast_right_unfixed =   CoastUtils::form(img_bina, measurer.seed_pos, RIGHT);
 
         auto coast_left = CoastUtils::trim(coast_left_unfixed, img.size);
         auto coast_right = CoastUtils::trim(coast_right_unfixed, img.size);
@@ -580,10 +576,19 @@ void SmartCar::main(){
         //进行角点检测
         recordRunStatus(RunStatus::CORNER_B);
 
-        auto v_points = CoastUtils::vcorners(track_left);
-        auto a_points = CoastUtils::acorners(track_left);
-        plot_points(v_points, {0, 0}, RGB565::YELLOW);
-        plot_points(a_points, {0, 0}, RGB565::AQUA);
+        auto left_a_points = CoastUtils::a_points(track_left);
+        auto right_a_points = CoastUtils::a_points(track_right);
+
+        auto left_v_points = CoastUtils::v_points(track_left);
+        auto right_v_points = CoastUtils::v_points(track_right);
+
+        plot_points(left_a_points, {0, 0}, RGB565::AQUA);
+        plot_points(left_v_points, {0, 0}, RGB565::YELLOW);
+
+        plot_points(right_a_points, {0, 0}, RGB565::AQUA);
+        plot_points(right_v_points, {0, 0}, RGB565::YELLOW);
+
+        // DEBUG_PRINTLN(track_left.size(), left_a_points.size());
     
         recordRunStatus(RunStatus::CORNER_E);
         //角点检测结束
@@ -596,8 +601,8 @@ void SmartCar::main(){
         //开始进行元素识别
         
         //在自动模式下 如果识别不到赛道 就关断小车 避免跑飞时撞墙
-        // DEBUG_VALUE(msm.road_window.length())
-        if(msm.road_window.length() < WorldUtils::pixels(config.valid_road_meters.start)){
+        // DEBUG_VALUE(measurer.road_window.length())
+        if(measurer.get_road_length_meters() < config.valid_road_meters.start){
             if(switches.hand_mode == false){
                 stop();
             }
@@ -609,7 +614,7 @@ void SmartCar::main(){
         
         /* #region */
         //进行位置提取
-        msm.lane_offset = -0.005 * (ccd_center_x - 94);
+        measurer.update_ccd(ccd_range);
         //位置提取结束
         /* #endregion */
 
@@ -618,23 +623,25 @@ void SmartCar::main(){
         //进行引导修正
         if(false){
             [[maybe_unused]]auto coast_fix_lead = [](const Coast & coast, const LR is_right) -> Coast{
-                static constexpr auto k = 1;
+                static constexpr real_t k = 1.2;
 
-                auto coast_point_valid = [](const Point & host, const Point & other, const LR _is_right) -> bool{
-                    Vector2i delta = other - host;
+                auto coast_point_valid = [](const CoastItem & host, const CoastItem & guest, const LR _is_right) -> bool{
+                    Vector2i delta = Vector2i(guest) - Vector2i(host);
 
                     //如果两个点坐标一致 那么通过
-                    if(bool(delta) == false) return true;
+                    if(delta.x == 0 && delta.y == 0) return true;
 
-                    auto abs_dx = std::abs(delta.x);
+                    int abs_dx = std::abs(delta.x);
 
                     //快速排除不需要排除的区域
                     if(delta.y < 0 ||
                         ((_is_right == LR::RIGHT) && (delta.x < 0)) ||
                         ((_is_right == LR::LEFT ) && (delta.x > 0))) return true;
 
-                    auto abs_dy = std::abs(delta.y);
+                    [[maybe_unused]] int abs_dy = std::abs(delta.y);
+
                     return (abs_dy > k * abs_dx);
+
                 };
 
                 if(coast.size() == 0) return {};
@@ -652,7 +659,7 @@ void SmartCar::main(){
                         if(remove_indexes[j] == true) continue;
                         
                         //还不在列表内 有待考证
-                        bool abandon = not coast_point_valid(host, guest, is_right);
+                        bool abandon = coast_point_valid(host, guest, is_right) == false;
                         // bool abandon = false;
 
                         //如果需要丢弃 添加到列表
@@ -675,13 +682,14 @@ void SmartCar::main(){
                         }
                     }
 
-                    // DEBUG_VALUE(secondary_index);
                     if(secondary_index){
                         const auto & secondary_point = coast[secondary_index];
                         const auto & orignal_first_point = coast[0];
 
-                        auto vec_go_until_y = [](const Point & start_p, const Vector2i vec, const int y) -> Point{
-                            return (start_p + vec * (y - start_p.y) / vec.y);
+                        auto vec_go_until_y = [&](const Point & start_p, const Vector2i vec, const int y) -> Point{
+
+                            if(vec.y == 0) return start_p;
+                            else return (start_p + vec * (y - start_p.y) / vec.y);
                         };
 
                         auto replaced_first_point = vec_go_until_y(secondary_point, is_right == RIGHT ? Vector2i{1, k} : Vector2i{-1, k}, orignal_first_point.y);
@@ -692,6 +700,7 @@ void SmartCar::main(){
                                 ret.push_back(coast[i]);
                             }
                         }
+
 
                         return ret;
                     }else{
@@ -707,9 +716,11 @@ void SmartCar::main(){
                 return ret;
             };
 
-            //should not reach here
-            // track_left = coast_fix_lead(track_left, LR::LEFT);
-            // track_right = coast_fix_lead(track_right, LR::RIGHT);
+            track_left = coast_fix_lead(track_left, LR::LEFT);
+            track_right = coast_fix_lead(track_right, LR::RIGHT);
+
+            plot_coast(track_left, {0, 0}, RGB565::GREEN);
+            plot_coast(track_right, {0, 0}, RGB565::CORAL);
         };
 
         //引导修正结束
@@ -743,7 +754,7 @@ void SmartCar::main(){
                     bool left_valid = vec_valid(left_root_vec);
                     bool right_valid = vec_valid(right_root_vec);
 
-                    auto est_road_width = WorldUtils::distance(msm.road_window.length());
+                    auto est_road_width = WorldUtils::distance(measurer.road_window.length());
                     // DEBUG_VALUE(est_road_width);
 
                     auto align_mode = switches.align_mode;
@@ -782,11 +793,11 @@ void SmartCar::main(){
                     }
 
                     if (bool(root_vec)) {
-                        msm.current_dir = root_vec.angle();
-                        // DEBUG_PRINTLN(msm.current_dir);
+                        measurer.current_dir = root_vec.angle();
+                        // DEBUG_PRINTLN(measurer.current_dir);
                     }
 
-                    plot_segment({msm.seed_pos, msm.seed_pos + Vector2(10.0, 0).rotated(-msm.current_dir)}, {0, 0}, RGB565::PINK);
+                    plot_segment({measurer.seed_pos, measurer.seed_pos + Vector2(10.0, 0).rotated(-measurer.current_dir)}, {0, 0}, RGB565::PINK);
                 }
             }while(false);
         }

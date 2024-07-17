@@ -5,6 +5,7 @@
 #include "../sys/core/system.hpp"
 #include "../types/buffer/buffer.hpp"
 #include "../types/string/String.hpp"
+#include "../thirdparty/sstl/include/sstl/vector.h"
 #include "string_utils.hpp"
 
 #include <vector>
@@ -149,6 +150,17 @@ public:
         return *this;
     }
 
+    template<typename T, size_t arr_size>
+    OutputStream & operator<<(const sstl::vector<T, arr_size> & arr){
+        size_t size = arr.size();
+        *this << '[';
+        for(size_t i = 0; i < size - 1; ++i)
+            *this << arr[i] << ',';
+        if(size > 0)
+            *this << arr[size - 1];
+        *this << ']';
+        return *this;
+    }
 
     template<StringUtils::HasToString T>
     OutputStream & operator<<(const T & misc){*this << misc.toString(eps); return *this;}
