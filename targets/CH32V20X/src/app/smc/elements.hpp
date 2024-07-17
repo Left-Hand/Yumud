@@ -82,5 +82,24 @@ public:
 
 };
 
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::ElementType type){
+    using namespace SMC;
+
+    #define ELEMENT_TYPE_OUT(x) case ElementType::x: return os << #x;
+
+    switch(type){
+        ELEMENT_TYPE_OUT(NONE)
+        ELEMENT_TYPE_OUT(STRAIGHT)
+        ELEMENT_TYPE_OUT(CURVE)
+        ELEMENT_TYPE_OUT(ZEBRA)
+        ELEMENT_TYPE_OUT(CROSS)
+        ELEMENT_TYPE_OUT(RING)
+        ELEMENT_TYPE_OUT(BARRIER)
+        default: return os << '?';
+
+    };
+
+    #undef ELEMENT_TYPE_OUT
+}
 
 #endif

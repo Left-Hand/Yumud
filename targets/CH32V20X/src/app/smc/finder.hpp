@@ -41,7 +41,28 @@ namespace SMC{
     using Coasts = sstl::vector<Coast, 4>;
     using Ranges = sstl::vector<Rangei, max_item_size>;
 
-    using Corner = std::pair<CornerType, CoastItem>;
+    enum class CornerType:uint8_t{
+        NONE,
+        AC,
+        VC,
+        ALL
+    };
+
+    struct Corner{
+    // protected:
+    public:
+        CornerType type;
+        CoastItem point;
+    public:
+        Corner(const CornerType _type, const CoastItem & _point):type(_type), point(_point){;}
+        operator CoastItem () const { return point; }
+        operator Point () const { return point; }
+
+        // auto type() const { return m_type; }
+        // auto point() const { return m_point; }
+    };
+
+
     using Corners = sstl::vector<Corner, 8>;
 
     class CoastFinder{
@@ -172,11 +193,14 @@ namespace SMC{
 
         Point which_in_window(const Coast & coast, const Vector2i & window_size);
 
-        Corners corners(const Coast & coast, const real_t threshold, const CornerType default_ct);
 
-        Points a_points(const Coast & coast, const real_t threshold = real_t(-0.4));//120 deg
+        static constexpr real_t default_corner_threshold = -0.4;
 
-        Points v_points(const Coast & coast, const real_t threshold = real_t(-0.4));//120 deg
+        Corners search_corners(const Coast & coast, const CornerType default_ct = CornerType::ALL, const real_t threshold = default_corner_threshold);
+
+        Points a_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
+
+        Points v_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
 
         Coast trim(const Coast & coast, const Vector2i & window_size);
         Coast form(const ImageReadable<Binary> &, const Vector2i &, const LR);
@@ -228,6 +252,11 @@ namespace SMC{
         Coast to_coast(const Boundry & bound);
     };
 
+    namespace CornerUtils{
+        const Corner * find_corner(const Corners & corners, const size_t from_index = 0, const CornerType ct = CornerType::NONE);
+        const Corner * find_a(const Corners & corners, const size_t from_index = 0);
+        const Corner * find_v(const Corners & corners, const size_t from_index = 0);
+    };
 
     struct Circle{
             Vector2 pos;
@@ -269,9 +298,21 @@ namespace SMC{
         }
 
     }
-
-
-
 };
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::Corner & corner){
+    using namespace SMC;
+    return os << '(' << corner.type << ',' << corner.point << ')';
+}
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::CornerType type){
+    using namespace SMC;
+    switch(type){
+        case CornerType::AC: return os << 'A';break;
+        case CornerType::VC: return os << 'V';break;
+        case CornerType::ALL: return os << 'L';break;
+        default: return os << 'N';break;
+    };
+}
 
 #endif

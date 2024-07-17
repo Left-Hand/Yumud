@@ -38,6 +38,12 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
     }
 }
 
+void SmartCar::sw_element(const ElementType element_type, const LR element_side){
+    // switches.element_type = element_type;
+    // switches.element_side = element_side;
+    DEBUG_PRINTLN(element_type, element_side);
+};
+
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
     auto last_seed_pos = measurer.seed_pos;
@@ -435,7 +441,7 @@ void SmartCar::main(){
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
 
     
-    camera.setExposureValue(300);
+    camera.setExposureValue(800);
 
     #define CREATE_BENCHMARK(val) val = millis() - current_ms;\
 
@@ -588,7 +594,9 @@ void SmartCar::main(){
         plot_points(right_a_points, {0, 0}, RGB565::AQUA);
         plot_points(right_v_points, {0, 0}, RGB565::YELLOW);
 
-        // DEBUG_PRINTLN(track_left.size(), left_a_points.size());
+        const auto left_corners = CoastUtils::search_corners(track_left, CornerType::ALL);
+        const auto right_corners = CoastUtils::search_corners(track_right, CornerType::ALL);
+        // DEBUG_PRINTLN(left_corners.size(), right_corners.size());
     
         recordRunStatus(RunStatus::CORNER_E);
         //角点检测结束
@@ -599,7 +607,143 @@ void SmartCar::main(){
 
         /* #region */
         //开始进行元素识别
-        
+
+    
+        // static real_t element_remain_time = 0;
+
+        struct ElementHolder{
+        protected:
+            SmartCar & owner;
+            real_t remain_time;
+            real_t last_t;
+            real_t element_freeze_time;
+            
+            ElementType next_element_type = ElementType::NONE;
+            LR next_element_side = LR::LEFT;
+        public:
+
+            ElementHolder(SmartCar & _owner):owner(_owner){;}
+
+            auto get_remain_time() const {
+                return remain_time; 
+            }
+
+
+            void update(){
+                auto delta_t = t - last_t;
+                last_t = t;
+
+                remain_time = MAX(delta_t, 0);
+                if(remain_time == 0 and next_element_type != ElementType::NONE){
+                    owner.sw_element(next_element_type, next_element_side);
+                }
+            }
+
+            void request(const ElementType new_element_type, const LR new_element_side, const real_t _remain_time){
+                if(new_element_type != next_element_type){
+                    last_t = t;
+                    remain_time = _remain_time;
+                    next_element_type = new_element_type;
+                    next_element_side = new_element_side;
+
+                    if(_remain_time == 0){
+                        owner.sw_element(new_element_type, new_element_side);
+                    }
+                }
+            }
+        };
+
+        static ElementHolder element_holder{*this};
+        static real_t last_t;
+
+        struct DectctResult{
+            bool detected;
+            LR side = LR::LEFT;
+
+            DectctResult(const bool _detected, const LR _side = LR::LEFT):
+                detected(_detected), side(_side){;}    
+
+            operator bool() const {
+                return detected;
+            }        
+        };
+
+
+        auto barrier_detect = [&]() -> DectctResult {
+            auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> bool {
+                //少于两个拐点 没法判断有没有障碍
+                if(_corners.size() < 2) return false;
+
+                //从起点开始搜索首次出现的a角点和v角点
+                const auto * a_corner_ptr = CornerUtils::find_a(_corners);
+                // const Corner * a_corner_ptr = nullptr;
+                const auto * v_corner_ptr = CornerUtils::find_v(_corners);
+
+                //能够找到a角点和v角点
+                if(bool(a_corner_ptr) && bool(v_corner_ptr)){
+                    // DEBUG_PRINTLN("corners find", Vector2i(*a_corner_ptr), Vector2i(*v_corner_ptr));
+                    static constexpr int max_y_diff = 5;
+                    static constexpr int min_x_diff = 7;
+
+                    Vector2i diff = Vector2i(v_corner_ptr->point) - Vector2i(a_corner_ptr->point);
+                    // DEBUG_PRINTLN(diff);
+                    //A角点出现在V角点之前
+                    if(a_corner_ptr < v_corner_ptr){
+                        
+                        if((std::abs(diff.y) < max_y_diff)
+                            && (std::abs(diff.x) > min_x_diff)
+                            && (side == LR::LEFT ? diff.x > 0 : diff.x < 0)
+                        ){
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            };
+
+            bool left_detected = side_barrier_detect(left_corners, LR::LEFT);
+            bool right_detected = side_barrier_detect(right_corners, LR::RIGHT);
+            ASSERT_WITH_DOWN((left_detected && right_detected) == false, "detected dual barrier");
+
+            if(left_detected){
+                return {true, LR::LEFT};
+            }else if(right_detected){
+                return {true, LR::RIGHT};
+            }else{
+                return {false};
+            }
+        };
+
+        switch(switches.element_type){
+            case ElementType::NONE:
+            case ElementType::STRAIGHT:{
+
+
+                {
+                    // DEBUG_VALUE(left_corners.size())
+                    auto result = barrier_detect();
+                    if(result){
+                        sw_element(ElementType::BARRIER, result.side);
+                    }
+                }
+            }
+                break;
+            
+            case ElementType::BARRIER:{
+                // auto arise_barrier = [&](){
+
+                // };
+
+                // auto ret_detect = [&]() -> bool{
+
+                // };
+            }
+                break;
+
+            default:
+                break;
+        }
         //在自动模式下 如果识别不到赛道 就关断小车 避免跑飞时撞墙
         // DEBUG_VALUE(measurer.road_window.length())
         if(measurer.get_road_length_meters() < config.valid_road_meters.start){
@@ -731,7 +875,7 @@ void SmartCar::main(){
         recordRunStatus(RunStatus::VEC_B);
         if(true){
             do{
-                if(track_left.size() >= 2 and track_right.size() >= 2){//update current_dir
+                if(track_left.size() >= 2 and track_right.size() >= 2){
                     auto vec_valid = [](const Vector2 & vec){return bool(vec) && vec.length() > 5;}; 
                     auto road_align_pixels = WorldUtils::pixels(config.road_width);
                     Segment seg_left = SegmentUtils::shift({
@@ -753,51 +897,76 @@ void SmartCar::main(){
                     //如果根向量相似且左右间隔是合法的赛道宽度(排除在识别元素时的干扰) 那么进行根向量合并 否则根据吸附的左右选择对应的根向量
                     bool left_valid = vec_valid(left_root_vec);
                     bool right_valid = vec_valid(right_root_vec);
+                    bool road_valid = config.valid_road_meters.has(measurer.get_road_length_meters());
 
-                    auto est_road_width = WorldUtils::distance(measurer.road_window.length());
-                    // DEBUG_VALUE(est_road_width);
-
-                    auto align_mode = switches.align_mode;
-                    LR align_right = (LR)align_mode;
-                    if(left_valid and right_valid and config.valid_road_meters.has(est_road_width)){
-
-                        auto diff_left_l = left_root_vec.length();
-                        auto diff_right_l = right_root_vec.length();
-
-                        auto vec_sin = (left_root_vec.cross(right_root_vec)) 
-                                / (diff_left_l * diff_right_l);
-
-
-                        if(vec_sin < abs(config.dir_merge_max_sin)){
-                            //计算两者按权重相加的向量（不需要考虑模长）
-                            root_vec = left_root_vec * diff_right_l + right_root_vec * diff_left_l;
-                        }else{
-                            if(align_right){
-                                root_vec = right_root_vec;
+                    switch(switches.align_mode){
+                        case AlignMode::BOTH:
+                            if(left_valid and right_valid and road_valid){
+                                goto use_merged_vec;
                             }else{
-                                root_vec = left_root_vec;
+                                if(left_valid){
+                                    goto use_left_vec;
+                                }
+                                
+                                if(right_valid){
+                                    goto use_right_vec;
+                                }
+
+                                goto none_vec;
                             }
+                        case AlignMode::LEFT:
+                            if(left_valid){
+                                goto use_left_vec;
+                            }
+                        case AlignMode::RIGHT:
+                            if(right_valid){
+                                goto use_right_vec;
+                            }
+                        default:
+                            goto none_vec;
+                    }
+                    
+
+                    do{
+                        use_merged_vec:{
+                            auto diff_left_l = left_root_vec.length();
+                            auto diff_right_l = right_root_vec.length();
+
+                            auto vec_sin = (left_root_vec.cross(right_root_vec)) 
+                                    / (diff_left_l * diff_right_l);
+
+
+                            if(vec_sin < abs(config.dir_merge_max_sin)){
+                                //计算两者按权重相加的向量（不需要考虑模长）
+                                root_vec = left_root_vec * diff_right_l + right_root_vec * diff_left_l;
+                            }else{
+                                if(left_valid){
+                                    goto use_left_vec;
+                                }
+                                
+                                if(right_valid){
+                                    goto use_right_vec;
+                                }
+                            }
+                            break;
                         }
-                    }else if(left_valid || right_valid){
-                        if(left_valid && align_right == LR::LEFT){
+                        use_left_vec:{
                             root_vec = left_root_vec;
                             break;
                         }
-
-                        if(right_valid && align_right == LR::RIGHT){
+                        use_right_vec:{
                             root_vec = right_root_vec;
                             break;
                         }
-                    }else{
-                        break;
-                    }
+                        none_vec:
+                            break;
+                    }while(false);
 
                     if (bool(root_vec)) {
-                        measurer.current_dir = root_vec.angle();
-                        // DEBUG_PRINTLN(measurer.current_dir);
+                        measurer.update_dir(root_vec.angle());
                     }
 
-                    plot_segment({measurer.seed_pos, measurer.seed_pos + Vector2(10.0, 0).rotated(-measurer.current_dir)}, {0, 0}, RGB565::PINK);
+                    plot_segment({measurer.seed_pos, measurer.seed_pos + Vector2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
                 }
             }while(false);
         }

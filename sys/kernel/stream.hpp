@@ -116,50 +116,34 @@ public:
 
     OutputStream & operator<<(const SpecToken & spec);
 
+    #define PRINT_ARR_TEMPLATE\
+        size_t _size = arr.size();\
+        *this << '[';\
+        if(_size > 0){\
+            for(size_t i = 0; i < _size - 1; ++i) *this << arr[i] << ',';\
+            *this << arr[_size - 1];\
+        }\
+        *this << ']';\
+        return *this;\
+
     template<typename T, size_t size>
     OutputStream & operator<<(const T (&arr)[size]){
-        *this << '[';
-        for(size_t i = 0; i < size - 1; ++i)
-            *this << arr[i] << ',';
-        if(size > 0)
-            *this << arr[size - 1];
-        *this << ']';
-        return *this;
+        PRINT_ARR_TEMPLATE
     }
 
     template<typename T, size_t size>
     OutputStream & operator<<(const std::array<T, size> & arr){
-        *this << '[';
-        for(size_t i = 0; i < size - 1; ++i)
-            *this << arr[i] << ',';
-        if(size > 0)
-            *this << arr[size - 1];
-        *this << ']';
-        return *this;
+        PRINT_ARR_TEMPLATE
     }
 
     template<typename T>
     OutputStream & operator<<(const std::vector<T> & arr){
-        size_t size = arr.size();
-        *this << '[';
-        for(size_t i = 0; i < size - 1; ++i)
-            *this << arr[i] << ',';
-        if(size > 0)
-            *this << arr[size - 1];
-        *this << ']';
-        return *this;
+        PRINT_ARR_TEMPLATE
     }
 
     template<typename T, size_t arr_size>
     OutputStream & operator<<(const sstl::vector<T, arr_size> & arr){
-        size_t size = arr.size();
-        *this << '[';
-        for(size_t i = 0; i < size - 1; ++i)
-            *this << arr[i] << ',';
-        if(size > 0)
-            *this << arr[size - 1];
-        *this << ']';
-        return *this;
+        PRINT_ARR_TEMPLATE
     }
 
     template<StringUtils::HasToString T>

@@ -83,7 +83,9 @@ public:
 
     constexpr bool has_point(const Vector2_t<auto> & _v)const;
     constexpr bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
-    constexpr __fast_inline T length() const {return sqrt(x*x + y*y);}
+    constexpr __fast_inline T length() const {
+        auto c = length_squared();
+        return c ? sqrt(c) : 0;}
     constexpr __fast_inline T length_squared() const {return (x*x + y*y);}
     constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const T & t) const;
     constexpr Vector2_t<T> move_toward(const Vector2_t<T> & to, const T & delta) const;

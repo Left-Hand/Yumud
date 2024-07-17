@@ -144,7 +144,7 @@ namespace SMC{
         return CoastUtils::which_in_window(coast, window_size.form_rect());
     }
 
-    Corners CoastUtils::corners(const Coast & coast, const real_t threshold, const CornerType exp_ct){
+    Corners CoastUtils::search_corners(const Coast & coast, const CornerType exp_ct, const real_t threshold){
         if(coast.size() < 3) return {};
 
         Corners ret;
@@ -158,29 +158,22 @@ namespace SMC{
 
             auto v1_l = v1.length();
             auto v2_l = v2.length();
-            auto proj = v1.dot(v2) / v1_l / v2_l;
             auto med = ((v1 * v2_l) + (v2 * v1_l)).y; 
 
-            if(proj > threshold){
+            if(v1.dot(v2) > threshold * v1_l * v2_l){
 
-                CornerType ct = CornerType::NONE;
                 switch(int(sign(med))){
                     case 0:
-                        ct = CornerType::ALL;
+                        ret.push_back(Corner(CornerType::ALL, (*it)));
                         break;
                     case 1:
-                        ct = CornerType::AC;
+                        if(exp_ct == CornerType::AC || exp_ct == CornerType::ALL) ret.push_back(Corner{CornerType::AC, (*it)});
                         break;
                     case -1:
-                        ct = CornerType::VC;
+                        if(exp_ct == CornerType::VC || exp_ct == CornerType::ALL) ret.push_back(Corner{CornerType::VC, (*it)});
                         break;
                     default:
-                        ct = CornerType::NONE;
                         break;
-                }
-
-                if(ct == exp_ct){
-                    ret.push_back(Corner(ct, (*it)));
                 }
             }
         }
@@ -189,7 +182,7 @@ namespace SMC{
     }
 
     Points CoastUtils::a_points(const Coast & coast, const real_t threshold){
-        auto corners = CoastUtils::corners(coast, threshold, CornerType::AC);
+        auto corners = CoastUtils::search_corners(coast, CornerType::AC, threshold);
         Points ret;
 
         for(const auto & [_, point]:corners){
@@ -200,7 +193,7 @@ namespace SMC{
     }
 
     Points CoastUtils::v_points(const Coast & coast, const real_t threshold){
-        auto corners = CoastUtils::corners(coast, threshold, CornerType::VC);
+        auto corners = CoastUtils::search_corners(coast, CornerType::VC, threshold);
         Points ret;
 
         for(auto & [_, point]:corners){
@@ -802,5 +795,38 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
         }
 
         return {center, r};
+    }
+
+    const Corner * CornerUtils::find_corner(const Corners & corners, const size_t from_index, const CornerType ct){
+        if(ct == CornerType::NONE) return nullptr;
+        if(corners.size() < from_index) return nullptr;
+
+        for(size_t i = from_index; i < corners.size();++i){
+            const auto * it = &corners[i];
+            switch(ct){
+                case CornerType::AC:
+                case CornerType::VC:
+                    if(it->type == ct){
+                        return it;
+                    }
+                    break;
+                case CornerType::ALL:
+                    if(it->type != CornerType::NONE){
+                        return (const Corner *)it;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return nullptr;
+    }
+
+    const Corner * CornerUtils::find_a(const Corners & corners, const size_t from_index){
+        return find_corner(corners, from_index, CornerType::AC);
+    }
+    const Corner * CornerUtils::find_v(const Corners & corners, const size_t from_index){
+        return find_corner(corners, from_index, CornerType::VC);
     }
 };

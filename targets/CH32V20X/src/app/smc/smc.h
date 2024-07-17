@@ -161,7 +161,6 @@ protected:
     real_t travel;
     real_t dir_error;
 
-    real_t current_dir;
     Rangei road_window;
 
     protected:
@@ -173,6 +172,7 @@ protected:
 
         real_t now_spd;
         Rangei ccd_range;
+        real_t dir;
 
         void update_gesture(){
             mpu.update();
@@ -242,6 +242,14 @@ protected:
             ccd_range = _ccd_range;
         }
 
+        void update_dir(const real_t & _dir){
+            dir = _dir;
+        }
+
+        auto get_dir(){
+            return dir;
+        }
+
         auto get_front_speed() const {
             return now_spd;
         }
@@ -262,9 +270,6 @@ protected:
             return msm.gyro.z;
         }
 
-        // auto get_centri_accel() const {
-            // return get_omega() * get_
-        // }
 
         real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
 
@@ -329,9 +334,11 @@ protected:
     void parse();
 
     void update_beep(const bool);
+
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:
+    void sw_element(const ElementType element_type, const LR element_side);
     void main();
 };
 
