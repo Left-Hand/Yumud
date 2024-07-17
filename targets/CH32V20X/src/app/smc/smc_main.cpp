@@ -123,7 +123,6 @@ void SmartCar::printRecordedRunStatus(){
 
     DEBUG_PRINTS("last Stat:\t", temp._to_string());
     DEBUG_PRINTS("last Flag:\t", toString(int(uint16_t(flagReg)), 2));
-    // DEBUG_PRINTLN(temp._to_string(), id);
 }
 
 
@@ -499,10 +498,8 @@ void SmartCar::main(){
         Pixels::binarization(pers_bina_image, pers_gray_image, config.edge_threshold);
         CREATE_BENCHMARK(benchmark.bina);
 
-        // plot_bina(pers_bina_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
 
         auto ccd_image = camera.clone({0,73,188,6});
-        // Pixels::inverse(ccd_image, ccd_image);
         auto ccd_diff = ccd_image.space();
         auto ccd_bina = make_bina_mirror(ccd_image);
 
@@ -609,7 +606,8 @@ void SmartCar::main(){
         //开始进行元素识别
         
         //在自动模式下 如果识别不到赛道 就关断小车 避免跑飞时撞墙
-        if(msm.road_window.length() < WorldUtils::pixels(config.valid_road_meters.length())){
+        // DEBUG_VALUE(msm.road_window.length())
+        if(msm.road_window.length() < WorldUtils::pixels(config.valid_road_meters.start)){
             if(switches.hand_mode == false){
                 stop();
             }
@@ -687,7 +685,7 @@ void SmartCar::main(){
                         }
                     }
 
-                    DEBUG_VALUE(secondary_index);
+                    // DEBUG_VALUE(secondary_index);
                     if(secondary_index){
                         const auto & secondary_point = coast[secondary_index];
                         const auto & orignal_first_point = coast[0];

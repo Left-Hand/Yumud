@@ -47,7 +47,7 @@ void SmartCar::ctrl(){
         motor_strength.left += speed_output;
         motor_strength.right += speed_output;
 
-        DEBUG_PRINTLN(motor_strength.left, motor_strength.right);
+        // DEBUG_PRINTLN(motor_strength.left, motor_strength.right);
 
         motor_strength.hri = side_output;
         motor_strength.hri += centripetal_output;
