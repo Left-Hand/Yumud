@@ -55,18 +55,8 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
     Rangei new_x_range;
     if(last_seed_pos.x == 0){//如果上次没有找到种子 这次就选取最靠近吸附的区域作为种子窗口
 
-        // switch(align_mode){
-        //     case AlignMode::LEFT:
-        //     case AlignMode::RIGHT:
-        //     case AlignMode::BOTH:
-        //         new_x_range = get_side_range(src, y, road_valid_pixels.from, align_mode);
-        //         break;
-        //     case AlignMode::BLIND:
-        //         break;
-        // }
         new_x_range = get_side_range(src, y, road_valid_pixels.from, align_mode);
-
-
+        // DEBUG_PRINTLN(new_x_range, road_valid_pixels.from);
         //如果最长的区域都小于路宽 那么就视为找不到种子
         if(new_x_range.length() < road_valid_pixels.from){
             return {Vector2i{}, Rangei{}};
@@ -84,7 +74,7 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
     }
     //能到这里 说明找到可行的区域了
 
-    if(road_valid_pixels.has(new_x_range.length())){
+    if(new_x_range.length() >= road_valid_pixels.from){
         Point new_seed_pos;
 
 

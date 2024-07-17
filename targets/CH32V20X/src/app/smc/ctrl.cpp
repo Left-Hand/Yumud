@@ -37,7 +37,7 @@ void SmartCar::ctrl(){
     real_t speed_output = velocity_ctrl.update(setp.targ_spd, msm.front_spd);
     //-----------------
 
-    // real_t  min_strength = 0.04;
+    real_t  min_strength = 0.14;
 
     if(switches.hand_mode == false){
         motor_strength.left = turn_output;
@@ -46,11 +46,8 @@ void SmartCar::ctrl(){
         motor_strength.left += speed_output;
         motor_strength.right += speed_output;
 
-        // motor_strength.left = MAX(motor_strength.left, min_strength);
-        // motor_strength.right = MAX(motor_strength.right, min_strength);
-
-        motor_strength.hri = side_output;
-        motor_strength.hri += centripetal_output;
+        motor_strength.left = MAX(motor_strength.left, min_strength);
+        motor_strength.right = MAX(motor_strength.right, min_strength);        motor_strength.hri += centripetal_output;
     }
 
 }
