@@ -74,7 +74,7 @@ union Flags{
 };
 
 struct SetPoints{
-    real_t targ_spd = 0.16;
+    real_t targ_spd = 0.24;
 };
 
 struct Benchmark{

@@ -522,18 +522,6 @@ void SmartCar::main(){
         Shape::dilate_x(ccd_bina, ccd_bina);
         Shape::dilate_x(ccd_bina, ccd_bina);
 
-        auto ele_view = measurer.get_view(pers_bina_image);
-        Shape::dilate_x(ele_view);
-        Shape::dilate_x(ele_view);
-        Pixels::inverse(ele_view);
-
-        Shape::FloodFill ff;
-        auto dl_view = ff.run(ele_view);
-        auto blobs = ff.blobs();
-
-        Pixels::dyeing(dl_view, dl_view);
-        plot_bina(ele_view, Rect2i(Vector2i(188,120), ele_view.get_size()));
-        plot_gray(dl_view, Rect2i(Vector2i(188,180), dl_view.get_size()));
         recordRunStatus(RunStatus::IMG_E);
         //图像处理结束
         /* #endregion */
@@ -584,11 +572,11 @@ void SmartCar::main(){
         auto right_coast = get_coast(measurer.seed_pos, RIGHT);
         // auto right_coast = CoastUtils::trim(coast_right_unfixed, img.size);
     
-        ASSERT(CoastUtils::is_self_intersection(left_coast) == false, "left self ins");
-        ASSERT(CoastUtils::is_self_intersection(right_coast) == false, "right self ins");
+        // ASSERT(CoastUtils::is_self_intersection(left_coast) == false, "left self ins");
+        // ASSERT(CoastUtils::is_self_intersection(right_coast) == false, "right self ins");
 
-        ASSERT_WITH_DOWN(left_coast.size() != 0, "left coast size 0");
-        ASSERT_WITH_DOWN(right_coast.size() != 0, "right coast size 0");
+        // ASSERT_WITH_DOWN(left_coast.size() != 0, "left coast size 0");
+        // ASSERT_WITH_DOWN(right_coast.size() != 0, "right coast size 0");
         recordRunStatus(RunStatus::COAST_E);
         //修剪结束
         /* #endregion */
@@ -664,12 +652,11 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]] auto zebra_beg_detect = [&]() -> DetectResult {
-            // if(is_closed) return {true};
-            // DEBUG_PRINTLN(ccd_range);
             auto edges = get_x_edges(img_bina, 18);
-            auto edges2 = get_x_edges(img_bina, 15);
-            // DEBUG_PRINTLN(edges, edges2);
-            return(std::max(edges, edges2) > 13);
+            edges = std::max(get_x_edges(img_bina, 15), edges);
+            edges = std::max(get_x_edges(img_bina, 12), edges);
+            edges = std::max(get_x_edges(img_bina, 9), edges);
+            return(edges > 13);
         };
 
         [[maybe_unused]] auto zebra_end_detect = none_detect;
@@ -987,13 +974,6 @@ void SmartCar::main(){
                         case ZebraStatus::BEG:if((not is_startup())){
                             sw_element(ElementType::ZEBRA, (ZebraStatus::END), LR::LEFT, AlignMode::BOTH, {0, 0});
                         }break;
-                        // if(is_locked() == false && (not is_startup())){
-                            // auto result = RESULT_GETTER(zebra_end_detect());
-                            // if(result) {
-                            //     DEBUG_PRINTLN("Zebra!!!");
-                            //     sw_element(ElementType::ZEBRA, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
-                            // }
-                        // }break;
 
                         case ZebraStatus::END:{
                             stop();
