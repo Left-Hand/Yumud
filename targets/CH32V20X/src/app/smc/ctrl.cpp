@@ -1,5 +1,6 @@
 #include "smc.h"
 
+using namespace SMC;
 
 void SmartCar::ctrl(){
     Sys::Clock::reCalculateTime();

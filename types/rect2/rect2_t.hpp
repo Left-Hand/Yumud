@@ -47,8 +47,8 @@ public:
     __fast_inline constexpr Rect2_t(const auto _x,const auto _y,const auto _width,const auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
 
     template<arithmetic U>
-    static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & size){
-        return Rect2_t<T>(center - size, size * 2);
+    static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & half_size){
+        return Rect2_t<T>(center - half_size, half_size * 2);
     }
 
     constexpr T get_area() const {return ABS(size.x * size.y);}

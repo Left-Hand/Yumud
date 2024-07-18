@@ -32,7 +32,8 @@ public:
     };
 
     enum class Status:uint8_t{
-
+        BEG,
+        END
     };
 
     CONFIG_CONSTRUCT(Zebra)
@@ -41,11 +42,14 @@ public:
 class Ring : public Element{
 public:
     struct Config{
-
     };
 
     enum class Status:uint8_t{
-
+        BEG,
+        IN,
+        RUNNING,
+        OUT,
+        END
     };
 
     CONFIG_CONSTRUCT(Ring)
@@ -59,7 +63,8 @@ public:
     };
 
     enum class Status:uint8_t{
-
+        BEG,
+        END
     };
 
     CONFIG_CONSTRUCT(Cross)
@@ -72,10 +77,11 @@ public:
     };
 
     enum class Status:uint8_t{
-
+        BEG,
+        END
     };
 
-    CONFIG_CONSTRUCT(Barrier)\
+    CONFIG_CONSTRUCT(Barrier)
 
 };
 

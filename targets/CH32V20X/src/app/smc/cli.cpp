@@ -1,7 +1,6 @@
 #include "smc.h"
 
-
-
+using namespace SMC;
 
 void SmartCar::parse_command(String & command,std::vector<String> &args){
     using NVCV2::Geometry::perspective_config;

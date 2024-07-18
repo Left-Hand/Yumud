@@ -38,11 +38,6 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
     }
 }
 
-void SmartCar::sw_element(const ElementType element_type, const LR element_side){
-    // switches.element_type = element_type;
-    // switches.element_side = element_side;
-    DEBUG_PRINTLN(element_type, element_side);
-};
 
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
@@ -441,7 +436,7 @@ void SmartCar::main(){
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
 
     
-    camera.setExposureValue(800);
+    camera.setExposureValue(500);
 
     #define CREATE_BENCHMARK(val) val = millis() - current_ms;\
 
@@ -594,7 +589,9 @@ void SmartCar::main(){
         plot_points(right_a_points, {0, 0}, RGB565::AQUA);
         plot_points(right_v_points, {0, 0}, RGB565::YELLOW);
 
+        recordRunStatus(RunStatus::CORNER_L);
         const auto left_corners = CoastUtils::search_corners(track_left, CornerType::ALL);
+        recordRunStatus(RunStatus::CORNER_R);
         const auto right_corners = CoastUtils::search_corners(track_right, CornerType::ALL);
         // DEBUG_PRINTLN(left_corners.size(), right_corners.size());
     
@@ -608,69 +605,12 @@ void SmartCar::main(){
         /* #region */
         //开始进行元素识别
 
-    
-        // static real_t element_remain_time = 0;
-
-        struct ElementHolder{
-        protected:
-            SmartCar & owner;
-            real_t remain_time;
-            real_t last_t;
-            real_t element_freeze_time;
-            
-            ElementType next_element_type = ElementType::NONE;
-            LR next_element_side = LR::LEFT;
-        public:
-
-            ElementHolder(SmartCar & _owner):owner(_owner){;}
-
-            auto get_remain_time() const {
-                return remain_time; 
-            }
-
-
-            void update(){
-                auto delta_t = t - last_t;
-                last_t = t;
-
-                remain_time = MAX(delta_t, 0);
-                if(remain_time == 0 and next_element_type != ElementType::NONE){
-                    owner.sw_element(next_element_type, next_element_side);
-                }
-            }
-
-            void request(const ElementType new_element_type, const LR new_element_side, const real_t _remain_time){
-                if(new_element_type != next_element_type){
-                    last_t = t;
-                    remain_time = _remain_time;
-                    next_element_type = new_element_type;
-                    next_element_side = new_element_side;
-
-                    if(_remain_time == 0){
-                        owner.sw_element(new_element_type, new_element_side);
-                    }
-                }
-            }
+        [[maybe_unused]]auto zebra_beg_detect = [&]() -> DetectResult {
+            return {false};
         };
 
-        static ElementHolder element_holder{*this};
-        static real_t last_t;
-
-        struct DectctResult{
-            bool detected;
-            LR side = LR::LEFT;
-
-            DectctResult(const bool _detected, const LR _side = LR::LEFT):
-                detected(_detected), side(_side){;}    
-
-            operator bool() const {
-                return detected;
-            }        
-        };
-
-
-        auto barrier_detect = [&]() -> DectctResult {
-            auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> bool {
+        [[maybe_unused]]auto barrier_beg_detect = [&]() -> DetectResult {
+           [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> bool {
                 //少于两个拐点 没法判断有没有障碍
                 if(_corners.size() < 2) return false;
 
@@ -715,21 +655,25 @@ void SmartCar::main(){
             }
         };
 
-        auto straight_detect = [&]() -> DectctResult {
+        [[maybe_unused]]auto straight_detect = [&]() -> DetectResult {
             return {(coast_left.size() == 2) && (coast_left.size() == 2)};
         };
 
-
-        auto none_detect = [&]() -> DectctResult {
+        [[maybe_unused]]auto none_detect = [&]() -> DetectResult {
             return {(coast_left.size() <= 2) && (coast_left.size() <= 2)};
         };
 
-        auto curve_detect = [&]() -> DectctResult {
+        [[maybe_unused]]auto curve_detect = [&]() -> DetectResult {
+            [[maybe_unused]] auto side_curve_detect = [&](const Corners & _corners, const LR side) -> bool {
+                // auto sign =  CoastUtils::sigle(coast);
+                return true;
+            };
+
             return {false};//TODO
         };
 
-        auto cross_entry_detect = [&]() -> DectctResult {
-            auto side_cross_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
+        [[maybe_unused]]auto cross_beg_detect = [&]() -> DetectResult {
+            [[maybe_unused]] auto side_cross_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
                 switch(side){
                     case LEFT:
                         return (CornerUtils::find_a(_corners) == _corners.begin());
@@ -748,8 +692,8 @@ void SmartCar::main(){
             return (left_detected && right_detected);
         };
 
-        auto cross_leave_detect = [&]() -> DectctResult {
-            auto side_cross_leave_detect = [&](const Corners & _corners, const LR side) -> bool {
+        [[maybe_unused]]auto cross_end_detect = [&]() -> DetectResult {
+            [[maybe_unused]] auto side_cross_leave_detect = [&](const Corners & _corners, const LR side) -> bool {
                 switch(side){
                     case LEFT:
                     case RIGHT:{
@@ -777,43 +721,235 @@ void SmartCar::main(){
             return (left_detected && right_detected);
         };
 
-        auto 
+        [[maybe_unused]]auto ring_beg_detect = [&]() -> DetectResult {
+            [[maybe_unused]] auto side_ring_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
+                switch(side){
+                    case LEFT:
+                        return (CornerUtils::find_a(_corners) == _corners.begin());
+                    case RIGHT:
+                        return (CornerUtils::find_a(_corners) == _corners.begin());
+                    default:
+                        return 0;
+                }
+            };
+
+            bool left_detected = side_ring_entry_detect(left_corners, LR::LEFT);
+            bool right_detected = side_ring_entry_detect(right_corners, LR::RIGHT);
+
+            if(left_detected ^ right_detected){
+                //判断只有一边有A角点
+
+                return true;
+            }
+        };
+
+        [[maybe_unused]]auto ring_in_detect = [&](const LR known_side) -> DetectResult {
+            [[maybe_unused]] auto side_ring_in_detect = [&](const Corners & _corners, const LR _side, const bool is_expected_side) -> bool {
+                if(is_expected_side){
+                    return CoastUtils::is_single(_side == LR::RIGHT ? coast_right : coast_left, _side);
+                }else{
+                    //对立边应该是直道
+                    return _corners.size() == 0;
+                }
+            };
+
+            bool left_detected = side_ring_in_detect(left_corners, known_side, known_side == LR::LEFT);
+            bool right_detected = side_ring_in_detect(right_corners, known_side, known_side == LR::RIGHT);
+
+            return (left_detected && right_detected);
+        };
+
+        [[maybe_unused]]auto ring_running_detect = curve_detect;
+
+        [[maybe_unused]]auto ring_out_detect = [&](const LR known_side) -> DetectResult {
+            return ring_beg_detect().side != known_side;
+        };
+
+        [[maybe_unused]]auto ring_end_detect = [&](const LR known_side) -> DetectResult {
+            // return ring_beg_detect().side != known_side;
+            return true;
+        };
+    
+        [[maybe_unused]]auto ring_exit_detect = [&](const LR known_side) -> DetectResult {
+            // return ring_beg_detect().side != known_side;
+            return false;
+        };
+
+        #define RESULT_GETTER(x) update_detect(x)
 
 
+        [[maybe_unused]] auto side_to_align = [](const LR side) -> AlignMode{
+            return (side == LR::LEFT) ? AlignMode::LEFT : AlignMode::RIGHT;
+        };
+
+        [[maybe_unused]] auto co_side_to_align = [](const LR side) -> AlignMode{
+            return (side == LR::RIGHT) ? AlignMode::LEFT : AlignMode::RIGHT;
+        };
+
+        recordRunStatus(RunStatus::ELEMENT_B);
+    
         switch(switches.element_type){
             case ElementType::NONE:
-            case ElementType::STRAIGHT:{
-
-
-                // {
-                //     // DEBUG_VALUE(left_corners.size())
-                //     auto result = barrier_detect();
-                //     if(result){
-                //         sw_element(ElementType::BARRIER, result.side);
-                //     }
-                // }
-
+            case ElementType::STRAIGHT:
                 {
-                    auto result = barrier_detect();
-                    if(result){sw_element(ElementType::BARRIER, result.side);}
-                }
+                    //判断何时处理 状态机 of 斑马线
+                    if(false){
+                        auto result = RESULT_GETTER(zebra_beg_detect());
+                        if(result){
+                            sw_element(ElementType::CROSS, (uint8_t)Cross::Status::BEG, result.side);
+                            sw_align(AlignMode::UPPER);
+                        }
+                    }
 
-                {
-                    auto result = cross_entry_detect();
-                    if(result){sw_element(ElementType::CROSS, result.side);}
+                    //判断何时处理 状态机 of 障碍物
+                    if(true){
+                        auto result = RESULT_GETTER(barrier_beg_detect());
+                        if(result){
+                            sw_element(ElementType::BARRIER, (uint8_t)Barrier::Status::BEG, result.side);
+                            sw_align(co_side_to_align(result.side));
+                        }
+                    }
+
+                    //判断何时处理 状态机 of 十字
+                    if(false){
+                        auto result = RESULT_GETTER(cross_beg_detect());
+                        if(result){
+                            sw_element(ElementType::CROSS, (uint8_t)Cross::Status::BEG, result.side);
+                            sw_align(AlignMode::UPPER);
+                        }
+                    }
+
+                    //判断何时处理 状态机 of 圆环
+                    if(false){
+                        auto result = RESULT_GETTER(ring_beg_detect());
+                        if(result){
+                            sw_element(ElementType::RING, (uint8_t)Cross::Status::BEG, result.side);
+                            sw_align(co_side_to_align(result.side));
+                        }
+                    }
+
                 }
-            }
                 break;
             
-            case ElementType::BARRIER:{
-                // auto arise_barrier = [&](){
+            //已经处于斑马线元素状态
+            case ElementType::ZEBRA:
+                {
+                    using ZebraStatus = Zebra::Status;
+                    auto zebra_status = switches.zebra_status;
+                    switch(zebra_status) {
+                        //判断何时退出斑马线状态
 
-                // };
+                        case ZebraStatus::BEG: if(false){
+                            auto result = RESULT_GETTER(zebra_beg_detect());
+                            if(result){
+                                sw_element(ElementType::NONE, (uint8_t)(ZebraStatus::END), result.side);
+                                sw_align(AlignMode::BOTH);
+                            }
+                        }break;
 
-                // auto ret_detect = [&]() -> bool{
+                        default:
+                            break;
+                    }
+                }
+                break;
 
-                // };
-            }
+            //已经处于障碍物元素状态
+            case ElementType::BARRIER:
+                {
+                    using BarrierStatus = Barrier::Status;
+                    auto barrier_status = switches.barrier_status;
+                    switch(barrier_status) {
+                        // case BarrierStatus::BEG:if(false){
+                        //     auto result = RESULT_GETTER(barrier_detect());
+                        //     if(result){sw_element(ElementType::BARRIER, (uint8_t)BarrierStatus::, result.side);}
+                        // }break;
+
+                        //判断何时退出障碍物状态
+                        case BarrierStatus::END:if(true){
+                            auto result = RESULT_GETTER(barrier_beg_detect());
+                            if(result){
+                                sw_element(ElementType::NONE, (uint8_t)BarrierStatus::END, result.side);
+                                sw_align(AlignMode::BOTH);
+                            }
+                        }break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+
+            //已经处于十字元素状态
+            case ElementType::CROSS:
+                {
+                    using CrossStatus = Cross::Status;
+                    auto cross_status = switches.cross_status;
+                    switch(cross_status){
+                        //判断何时退出十字状态
+                        case CrossStatus::END:if(false){
+                            auto result = RESULT_GETTER(cross_beg_detect());
+                            if(result){
+                                sw_element(ElementType::NONE, (uint8_t)CrossStatus::END, result.side);
+                                sw_align(AlignMode::BOTH);
+                            }
+                        }break;
+                        default:
+                            break;
+                    }
+                }
+                break;
+
+            //已经处于圆环状态
+            case ElementType::RING:
+                {
+                    using RingStatus = Ring::Status;
+                    auto ring_status = switches.ring_status;
+                    auto ring_side = switches.element_side;
+                    switch(ring_status){
+                        //判断何时入环
+                        case RingStatus::BEG:if(false){
+                            auto result = RESULT_GETTER(ring_in_detect(ring_side));
+                            if(result){
+                                sw_element(ElementType::RING, (uint8_t)RingStatus::IN, result.side);
+                                sw_align(side_to_align(ring_side));
+                            }
+                        }break;
+
+                        //判断何时进环
+                        case RingStatus::IN: if(false){
+                            auto result = RESULT_GETTER(ring_running_detect());
+                            if(result){
+                                sw_element(ElementType::RING, (uint8_t)RingStatus::RUNNING, result.side);
+                                sw_align(co_side_to_align(ring_side));
+                            }
+                        }break;
+
+                        //判断何时出环
+                        case RingStatus::RUNNING: if(false){
+                            auto result = RESULT_GETTER(ring_out_detect(ring_side));
+                            if(result){
+                                sw_element(ElementType::RING, (uint8_t)RingStatus::OUT, result.side);
+                                sw_align(side_to_align(ring_side));
+                            }
+                        }break;
+
+                        //判断何时退出圆环
+                        case RingStatus::OUT: if(false){
+                            auto result = RESULT_GETTER(ring_end_detect(ring_side));
+                            if(result){
+                                sw_element(ElementType::RING, (uint8_t)RingStatus::END, result.side);
+                                sw_align(co_side_to_align(ring_side));
+                            }
+                        }break;
+
+                        case RingStatus::END: if(false){
+                            auto result = RESULT_GETTER(ring_exit_detect(ring_side));
+                            if(result){
+                                sw_element(ElementType::NONE, (uint8_t)RingStatus::END, result.side);
+                                sw_align(AlignMode::BOTH);
+                            }
+                        }break;
+                    }
+                }
                 break;
 
             default:
@@ -827,6 +963,8 @@ void SmartCar::main(){
             }
             continue;
         }
+
+        recordRunStatus(RunStatus::ELEMENT_E);
 
         //元素识别结束
         /* #endregion */

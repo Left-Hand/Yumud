@@ -27,6 +27,7 @@
 #include "config.hpp"
 
 
+
 struct Key{
 protected:
     GpioConcept & m_gpio;
@@ -55,27 +56,278 @@ public:
 };
 
 
+namespace SMC{
+
+static constexpr real_t full_duty = 0.85;
+static constexpr RGB565 white = 0xffff;
+static constexpr RGB565 black = 0;
+static constexpr RGB565 red = RGB565(31,0,0);
+static constexpr RGB565 green = RGB565(0,63,0);
+static constexpr RGB565 blue = RGB565(0,0,31);
+
+static constexpr uint ctrl_freq = 50;
+static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
+
+static constexpr uint window_y = 32;
+static constexpr Vector2i window_half_size = {20, 20};
+
+
+class SmartCar;
+
+struct ElementHolder{
+protected:
+    SmartCar & owner;
+    real_t remain_time;
+    real_t last_t;
+    real_t element_freeze_time;
+    
+    ElementType next_element_type = ElementType::NONE;
+    uint8_t next_element_status = 0;
+    LR next_element_side = LR::LEFT;
+public:
+
+    ElementHolder(SmartCar & _owner):owner(_owner){;}
+
+    auto get_remain_time() const {
+        return remain_time; 
+    }
+
+
+    void update();
+
+    void request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const real_t _remain_time);
+};
+
+
+struct Measurer{
+
+public:
+    MPU6050 mpu;
+    HMC5883L qml;
+    ABEncoderTimer  enc     {timer1};
+    Odometer        odo     {enc};
+
+    struct{
+        Quat accel;
+        Vector3 gyro;
+        Quat magnet;
+    }drift;
+    
+    struct{
+        Vector3 accel;
+        Vector3 gyro;
+        Vector3 magnet;
+    }msm;
+
+Vector2i seed_pos;
+real_t travel;
+real_t dir_error;
+
+Rangei road_window;
+
+protected:
+    void set_drift(const Quat & _accel_drift, const Vector3 & _gyro_drift, const Quat & _magent_drift){
+        drift.accel = _accel_drift;
+        drift.gyro = _gyro_drift;
+        drift.magnet = _magent_drift;
+    }
+
+    real_t now_spd;
+    Rangei ccd_range;
+    real_t dir;
+
+    void update_gesture(){
+        mpu.update();
+        qml.update();
+
+        msm.accel = drift.accel.xform(Vector3(mpu.getAccel()));
+        msm.gyro = (Vector3(mpu.getGyro()) - drift.gyro);
+        msm.magnet = drift.magnet.xform(Vector3(qml.getMagnet()));
+    }
+
+    void update_front_speed(){
+        static constexpr real_t wheel_l = 0.182;
+        odo.update();
+
+        travel = odo.getPosition() * wheel_l;
+        static real_t last_travel = travel;
+        
+        real_t pos_delta = travel - last_travel;
+        last_travel = travel;
+
+        now_spd = pos_delta * ctrl_freq;
+    }
+
+public:
+    Measurer(I2c & i2c):mpu{i2c}, qml{i2c}{;}
+
+    void cali(){
+        static constexpr int cali_times = 100;
+
+        Vector3 temp_gravity = Vector3();
+        Vector3 temp_gyro_offs = Vector3();
+        Vector3 temp_magent = Vector3();
+        
+        for(int i = 0; i < cali_times; ++i){
+            temp_gravity += Vector3(mpu.getAccel());
+            temp_gyro_offs += Vector3(mpu.getGyro());    
+            temp_magent += Vector3(qml.getMagnet());
+            delay(5);
+        }
+
+        Vector3 g = temp_gravity / cali_times;
+        Vector3 m = temp_magent / cali_times;
+
+        set_drift(
+            Quat(Vector3(0,0,-1),g/g.length()).inverse(),
+            temp_gyro_offs / cali_times,
+            Quat(Vector3(0,0,-1), m/m.length()).inverse()
+        );
+    }
+
+    void init(){
+        mpu.init();
+        qml.init();
+
+        enc.init();
+        odo.inverse(true);
+    }
+
+    void update(){
+        update_gesture();
+        update_front_speed();
+    }
+
+    void update_ccd(const Rangei & _ccd_range){
+        ccd_range = _ccd_range;
+    }
+
+    void update_dir(const real_t & _dir){
+        dir = _dir;
+    }
+
+    auto get_dir(){
+        return dir;
+    }
+
+    auto get_front_speed() const {
+        return now_spd;
+    }
+
+    auto get_accel() const{
+        return msm.accel;
+    }
+
+    auto get_gyro() const{
+        return msm.gyro;
+    }
+
+    auto get_magent() const{
+        return msm.magnet;
+    }
+
+    auto get_omega() const{
+        return msm.gyro.z;
+    }
+
+    auto view(const Image<Binary, Binary> & src){
+        auto window_center = Vector2i(seed_pos.x, window_y);
+        return src.clone(Rect2i::from_center(window_center, window_half_size));
+    }
+
+
+    real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
+
+        //ccd 部分的比例和透视部分的比例不一样 将就用
+        static constexpr real_t k = 200;
+
+        auto conv = [&](const int pixel) -> real_t{
+            return -(1/k) * (pixel - 94);
+        };
+
+        int padding_pixels = int(k * padding_meters);
+
+        switch(align_mode){
+            case AlignMode::LEFT:
+                return conv(ccd_range.from + padding_pixels);
+            case AlignMode::RIGHT:
+                return conv(ccd_range.to - padding_pixels);
+            case AlignMode::BOTH:
+                return conv(ccd_range.get_center());
+            default:
+                return 0;
+        }
+    }
+
+    auto get_road_length_meters() const {
+        return WorldUtils::distance(road_window.length());
+    }
+
+    auto get_travel() const {
+        return travel;
+    }
+
+};
+
+
+struct DetectResult{
+    bool detected;
+    LR side = LR::LEFT;
+
+    DetectResult(const bool _detected, const LR _side = LR::LEFT):
+        detected(_detected), side(_side){;}    
+
+    operator bool() const {
+        return detected;
+    }        
+};
+
 
 BETTER_ENUM(RunStatus, uint8_t,
     BEG = 0,
     CLI,
     INPUT,
     EVENTS,
+
     IMG_B,
     IMG_E,
+
     SEED_B,
     SEED_E,
+
     COAST_B,
     COAST_E,
+
     DP_B,
     DP_E,
+
     VEC_B,
     VEC_E,
+
     CORNER_B,
+    CORNER_L,
+    CORNER_R,
     CORNER_E,
+
+
+    ELEMENT_B,
+    ELEMENT_E,
+
+    BARRIER_B,
+    BARRIER_E,
+
+    CROSS_B,
+    CROSS_E,
+
+    RING_B,
+    RING_E,
+
+
+
     SEGMENT,
     SEGMENT_E,
     FANS_B,
+
     FANS_E,
     END
 )
@@ -126,185 +378,8 @@ protected:
     
     MT9V034 camera  {sccb};
 
-
-    static constexpr real_t full_duty = 0.85;
-    static constexpr RGB565 white = 0xffff;
-    static constexpr RGB565 black = 0;
-    static constexpr RGB565 red = RGB565(31,0,0);
-    static constexpr RGB565 green = RGB565(0,63,0);
-    static constexpr RGB565 blue = RGB565(0,0,31);
-
-    static constexpr uint ctrl_freq = 50;
-    static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
-
-    struct Measurer{
-
-    public:
-        MPU6050 mpu;
-        HMC5883L qml;
-        ABEncoderTimer  enc     {timer1};
-        Odometer        odo     {enc};
-
-        struct{
-            Quat accel;
-            Vector3 gyro;
-            Quat magnet;
-        }drift;
-        
-        struct{
-            Vector3 accel;
-            Vector3 gyro;
-            Vector3 magnet;
-        }msm;
-
-    Vector2i seed_pos;
-    real_t travel;
-    real_t dir_error;
-
-    Rangei road_window;
-
-    protected:
-        void set_drift(const Quat & _accel_drift, const Vector3 & _gyro_drift, const Quat & _magent_drift){
-            drift.accel = _accel_drift;
-            drift.gyro = _gyro_drift;
-            drift.magnet = _magent_drift;
-        }
-
-        real_t now_spd;
-        Rangei ccd_range;
-        real_t dir;
-
-        void update_gesture(){
-            mpu.update();
-            qml.update();
-
-            msm.accel = drift.accel.xform(Vector3(mpu.getAccel()));
-            msm.gyro = (Vector3(mpu.getGyro()) - drift.gyro);
-            msm.magnet = drift.magnet.xform(Vector3(qml.getMagnet()));
-        }
-
-        void update_front_speed(){
-            static constexpr real_t wheel_l = 0.182;
-            odo.update();
-
-            travel = odo.getPosition() * wheel_l;
-            static real_t last_travel = travel;
-            
-            real_t pos_delta = travel - last_travel;
-            last_travel = travel;
-
-            now_spd = pos_delta * ctrl_freq;
-        }
-    
-    public:
-        Measurer(I2c & i2c):mpu{i2c}, qml{i2c}{;}
-
-        void cali(){
-            static constexpr int cali_times = 100;
-
-            Vector3 temp_gravity = Vector3();
-            Vector3 temp_gyro_offs = Vector3();
-            Vector3 temp_magent = Vector3();
-            
-            for(int i = 0; i < cali_times; ++i){
-                temp_gravity += Vector3(mpu.getAccel());
-                temp_gyro_offs += Vector3(mpu.getGyro());    
-                temp_magent += Vector3(qml.getMagnet());
-                delay(5);
-            }
-
-            Vector3 g = temp_gravity / cali_times;
-            Vector3 m = temp_magent / cali_times;
-
-            set_drift(
-                Quat(Vector3(0,0,-1),g/g.length()).inverse(),
-                temp_gyro_offs / cali_times,
-                Quat(Vector3(0,0,-1), m/m.length()).inverse()
-            );
-        }
-
-        void init(){
-            mpu.init();
-            qml.init();
-
-            enc.init();
-            odo.inverse(true);
-        }
-
-
-
-        void update(){
-            update_gesture();
-            update_front_speed();
-        }
-
-        void update_ccd(const Rangei & _ccd_range){
-            ccd_range = _ccd_range;
-        }
-
-        void update_dir(const real_t & _dir){
-            dir = _dir;
-        }
-
-        auto get_dir(){
-            return dir;
-        }
-
-        auto get_front_speed() const {
-            return now_spd;
-        }
-
-        auto get_accel() const{
-            return msm.accel;
-        }
-
-        auto get_gyro() const{
-            return msm.gyro;
-        }
-
-        auto get_magent() const{
-            return msm.magnet;
-        }
-
-        auto get_omega() const{
-            return msm.gyro.z;
-        }
-
-
-        real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
-
-            //ccd 部分的比例和透视部分的比例不一样 将就用
-            static constexpr real_t k = 200;
-
-            auto conv = [&](const int pixel) -> real_t{
-                return -(1/k) * (pixel - 94);
-            };
-
-            int padding_pixels = int(k * padding_meters);
-
-            switch(align_mode){
-                case AlignMode::LEFT:
-                    return conv(ccd_range.from + padding_pixels);
-                case AlignMode::RIGHT:
-                    return conv(ccd_range.to - padding_pixels);
-                case AlignMode::BOTH:
-                    return conv(ccd_range.get_center());
-                default:
-                    return 0;
-            }
-        }
-
-        auto get_road_length_meters() const {
-            return WorldUtils::distance(road_window.length());
-        }
-
-        auto get_travel() const {
-            return travel;
-        }
-
-    };
-
     Measurer measurer{i2c};
+    ElementHolder element_holder{*this};
 
     Key start_key   {portE[2], false};
     Key stop_key    {portE[3], false};
@@ -338,8 +413,23 @@ protected:
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:
-    void sw_element(const ElementType element_type, const LR element_side);
+    DetectResult update_detect(const DetectResult & result){
+        return result;
+    }
+
+    void sw_element(const ElementType element_type, const auto element_status, const LR element_side, const real_t sustain_time = 0){
+        // switches.element_type = element_type;
+        // switches.element_side = element_side;
+        DEBUG_PRINTLN("sw ele", element_type, element_side, element_status);
+    };
+
+    void sw_align(const AlignMode align_mode){
+        DEBUG_PRINTLN("sw ali", align_mode);
+    }
+
     void main();
+};
+
 };
 
 void smc_main();

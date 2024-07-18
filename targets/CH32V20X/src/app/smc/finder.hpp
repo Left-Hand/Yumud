@@ -21,7 +21,7 @@ namespace SMC{
         LEFT,
         RIGHT,
         BOTH,
-        BLIND
+        UPPER
     };
 
 
@@ -184,6 +184,10 @@ namespace SMC{
     namespace CoastUtils{
         bool is_self_intersection(const Coast & coast);
         
+        bool is_single(const Coast &, const LR, const int fall_back = 4);
+
+        int sigle_sign(const Coast &);
+    
         Rect2i bounding_box(const Coast & coast);
 
         Piles ypiles(const Coast & coast);
@@ -240,6 +244,7 @@ namespace SMC{
             return dir_until(coast, point, Vector2i(1, 1));
         }
     }
+
 
 
     namespace SegmentUtils{
@@ -303,6 +308,11 @@ namespace SMC{
     }
 };
 
+using SMC::Corner;
+using SMC::Corners;
+using SMC::CornerType;
+using SMC::AlignMode;
+
 __fast_inline OutputStream & operator<<(OutputStream & os, const SMC::Corner & corner){
     using namespace SMC;
     return os << '(' << corner.type << ',' << corner.point << ')';
@@ -313,9 +323,20 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const SMC::CornerType
     switch(type){
         case CornerType::AC: return os << 'A';break;
         case CornerType::VC: return os << 'V';break;
-        case CornerType::ALL: return os << 'L';break;
-        default: return os << 'N';break;
+        case CornerType::ALL: return os << 'W';break;
+        default: return os << '?';break;
     };
 }
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::AlignMode mode){
+    using namespace SMC;
+    switch(mode){
+        case AlignMode::LEFT: return os << 'l';break;
+        case AlignMode::RIGHT: return os << 'r';break;
+        case AlignMode::BOTH: return os << 'b';break;
+        default: return os << '?';break;
+    };
+}
+
 
 #endif

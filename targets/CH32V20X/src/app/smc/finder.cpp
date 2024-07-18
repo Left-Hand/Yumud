@@ -864,4 +864,47 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
     size_t cnt_v(const Corners & corners, const size_t from_index = 0){
         return cnt_of_corners(corners, from_index, CornerType::VC);
     }
+
+    bool CoastUtils::is_single(const Coast & coast, const LR side, const int fall_back){
+        if(coast.size() < 2) return true;
+
+        int expected_sign = 0;
+        int inital_x = coast[0].x;
+
+        switch (side){
+        case LR::LEFT:
+            expected_sign = -1;
+            break;
+        
+        case LR::RIGHT:
+            expected_sign = 1;
+            break;
+
+        default:
+            break;
+        }
+
+        for(auto it = coast.begin(); it != std::prev(coast.end()); ++it){
+            int dx = std::next(it)->x - it->x;
+            int sgn = sign(dx);
+            if((sgn != expected_sign) && (std::abs(dx) > fall_back)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    
+    int CoastUtils::sigle_sign(const Coast & coast){
+        if(coast.size() < 2) return 0;
+
+        int initial_sgn = sign((coast[1] - coast[0]).x);
+        if(coast.size() < 3) return initial_sgn;
+        
+        for(auto it = std::next(coast.begin()); it != std::prev(coast.end()); ++it){
+            int sgn = sign(std::next(it)->x - it->x);
+            if(sgn != initial_sgn) return 0; 
+        }
+        return initial_sgn;
+    }
 };
