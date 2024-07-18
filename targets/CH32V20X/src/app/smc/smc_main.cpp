@@ -71,8 +71,8 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
         }
     }
     //能到这里 说明找到可行的区域了
-    // is_blind = (new_x_range.length() >= road_valid_pixels.to) && (switches.element_type == ElementType::CROSS);
-    is_blind = false;
+    is_blind = (new_x_range.length() >= road_valid_pixels.to) && (switches.element_type == ElementType::CROSS);
+    // is_blind = false;
     if(new_x_range.length() >= road_valid_pixels.from){
         Point new_seed_pos;
 
@@ -841,6 +841,8 @@ void SmartCar::main(){
                 switch(side){
                     case LEFT:
                     case RIGHT:{
+
+                        // if(measurer.get_road_length_meters() < max)
                         const auto * first_corner_ptr = CornerUtils::find_corner(_corners);
 
                         //没有拐点了 那就可以 
@@ -971,7 +973,7 @@ void SmartCar::main(){
                         auto cross_result = RESULT_GETTER(cross_beg_detect());
                         if(cross_result){
                             // DEBUG_PRINTLN("cross detected");
-                            sw_element(ElementType::CROSS, Cross::Status::BEG, cross_result.side, AlignMode::UPPER);
+                            sw_element(ElementType::CROSS, Cross::Status::BEG, cross_result.side, AlignMode::BOTH, {0,1.1});
                             break;
                         }
                     }
@@ -1056,7 +1058,7 @@ void SmartCar::main(){
                             // auto result = RESULT_GETTER(cross_beg_detect());
                             auto result = true;
                             if(result){
-                                sw_element(ElementType::NONE, CrossStatus::END, LEFT, AlignMode::BOTH, {0.7, 0.7});
+                                sw_element(ElementType::NONE, CrossStatus::END, LEFT, AlignMode::BOTH, {0, 0});
                             }
                         }break;
                         default:
@@ -1098,7 +1100,7 @@ void SmartCar::main(){
                         }break;
 
                         //判断何时退出圆环
-                        case RingStatus::OUT: if(std::abs(measurer.get_angle()) > 1.2){//判断何时回到圆起点
+                        case RingStatus::OUT: if(std::abs(measurer.get_angle()) > 1.42){//判断何时回到圆起点
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
                                 sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, ring_config.s2});
@@ -1347,6 +1349,7 @@ void SmartCar::main(){
                 }
             }while(false);
         }
+        // DEBUG_PRINTLN(measurer.get_dir());
         recordRunStatus(RunStatus::VEC_E);
         //对轮廓的主向量提取结束
         /* #endregion */
@@ -1355,7 +1358,7 @@ void SmartCar::main(){
         // plot_coast(track_left, {0, 0}, RGB565::RED);
         // plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
-        
+        // DEBUG_PRINTLN(measurer.get_angle());
 
         // DEBUG_PRINTLN("!!");
  
