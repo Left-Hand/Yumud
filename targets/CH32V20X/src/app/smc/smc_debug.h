@@ -8,7 +8,8 @@ namespace SMC{
 
 
 BETTER_ENUM(RunStatus, uint8_t,
-    BEG = 0,
+    NONE = 0,
+    BEG,
     CLI,
     INPUT,
     EVENTS,
@@ -56,11 +57,18 @@ BETTER_ENUM(RunStatus, uint8_t,
     END
 )
 
-
-extern BkpItem & runStatusReg;
+__inline auto getRunStatus() -> RunStatus{
+    uint16_t temp = (uint16_t)(bkp[1]);
+    return RunStatus::_from_integral_unchecked((int)temp);
+}
 
 __inline void recordRunStatus(const RunStatus status){
-    runStatusReg = uint16_t(uint8_t(status));
+    static auto & runStatusReg = bkp[1];
+    
+    runStatusReg = (uint8_t(status));
+    // DEBUG_PRINTLN(status._to_string(), getRunStatus()._to_string());
+    // DEBUG_PRINTLN((uint8_t)(status), (uint16_t)runStatusReg);
 }
+
 
 }

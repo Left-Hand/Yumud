@@ -24,6 +24,7 @@ public:
 
     template<typename T>
     requires (sizeof(T) <= 2)
+
     BkpItem & operator = (const T data){
         store(*((uint16_t *)&(data)));
         return *this;
@@ -53,7 +54,7 @@ private:
     }{;}
 public:
     Bkp(const Bkp&) = delete;
-    Bkp& operator=(const Bkp&) = delete;
+    Bkp& operator=(const Bkp &) = delete;
 
     static Bkp& getInstance() {
         static Bkp instance;
@@ -61,11 +62,11 @@ public:
     }
     void init();
 
-    static void writeData(uint8_t index, uint16_t data);
+    static void writeData(const uint8_t index,const uint16_t data);
 
-    static uint16_t readData(uint8_t index);
+    static uint16_t readData(const uint8_t index);
 
-    BkpItem & operator [] (uint8_t index);
+    BkpItem & operator [] (const uint8_t index);
 };
 
 

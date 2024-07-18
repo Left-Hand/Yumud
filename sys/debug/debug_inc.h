@@ -72,6 +72,9 @@ if(bool(condition) == false){\
 #define ASSERT_WITH_DOWN(condition, ...) \
 if(bool(condition) == false){\
     DEBUG_PRINTLN("[f]:", __LINE__, ':', ##__VA_ARGS__);\
+    __disable_irq();\
+    __disable_irq();\
+    delay(1);\
     CREATE_FAULT;\
 }
 

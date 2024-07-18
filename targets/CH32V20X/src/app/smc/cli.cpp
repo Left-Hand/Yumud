@@ -214,7 +214,7 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             // break;
         case "st"_ha:
         case "stat"_ha:
-            DEBUG_PRINTS("stats:", RunStatus::_from_integral_nothrow(int(runStatusReg)));
+            DEBUG_PRINTS("stats:", getRunStatus()._to_string());
             break;
 
         case "en"_ha:

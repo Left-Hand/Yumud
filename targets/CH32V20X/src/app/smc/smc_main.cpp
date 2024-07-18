@@ -107,7 +107,7 @@ void SmartCar::reset(){
 
 
 void SmartCar::printRecordedRunStatus(){
-    auto temp = RunStatus::_from_integral_unchecked(uint16_t(runStatusReg));
+    auto temp = getRunStatus();
     
     powerOnTimesReg = uint16_t(int(powerOnTimesReg) + 1);
     DEBUG_PRINTLN("power on time:", int(powerOnTimesReg));
