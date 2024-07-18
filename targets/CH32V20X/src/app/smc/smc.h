@@ -70,7 +70,7 @@ static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
 static constexpr uint window_y = 32;
 static constexpr Vector2i window_half_size = {20, 20};
-static constexpr real_t zebra_blind_startup_meters = 0.6;
+static constexpr real_t startup_meters = 0.6;
 
 class SmartCar;
 
@@ -220,7 +220,7 @@ public:
     }
 
     auto get_dir(){
-        if(travel < zebra_blind_startup_meters) return real_t(PI/2);
+        if(travel < startup_meters) return real_t(PI/2);
         return dir;
     }
 
@@ -251,7 +251,7 @@ public:
 
 
     real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
-        if(travel < zebra_blind_startup_meters) return 0;
+        if(travel < startup_meters) return 0;
         //ccd 部分的比例和透视部分的比例不一样 将就用
         static constexpr real_t k = 200;
 
@@ -351,8 +351,6 @@ protected:
     Key start_key   {portE[3], false};
     Key stop_key    {portE[2], false};
 
-    bool zebra_passed = false;
-
     void ctrl();
 
     void start();
@@ -382,7 +380,7 @@ protected:
     void update_holder();
 
     bool is_startup() const {
-        return measurer.get_travel() < zebra_blind_startup_meters;
+        return measurer.get_travel() < startup_meters;
     }
 protected:
     void parse_command(String &, std::vector<String> & args) override;
@@ -393,15 +391,6 @@ public:
 
 
     void sw_element(const ElementType element_type, const auto element_status, const LR element_side, const AlignMode align_mode, const ElementLocker & locker = {0,0}){
-        // if((element_type != switches.element_type 
-        //         || ((uint8_t)element_status != switches.element_status)
-        //         || (element_side != switches.element_side))
-        //         && ){
-        //     switches.element_type = element_type;
-        //     switches.element_status = (uint8_t)(element_status);
-        //     switches.element_side = element_side;
-
-        // }
         element_holder.request(element_type, (uint8_t)element_status, element_side, align_mode, locker);
     };
 

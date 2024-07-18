@@ -43,15 +43,12 @@ void ElementHolder::reset(){
 
 void ElementHolder::request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const AlignMode align_mode, const ElementLocker & locker){
     auto travel =  owner.measurer.get_travel();
-    // DEBUG_PRINTLN(t,unlock_t, travel, unlock_travel);
     if(is_locked()) return;
-    // DEBUG_PRINTLN("unlock passed", new_element_type, new_element_status, new_element_side,
-        // owner.switches.element_type, owner.switches.element_side, owner.switches.element_status);
+
     if(             ((new_element_type != owner.switches.element_type)
                 || ((uint8_t)new_element_status != owner.switches.element_status)
                 || (new_element_side != owner.switches.element_side))){
         
-        // DEBUG_PRINTLN("abled to change");
         unlock_t = t + locker.remain_time;
         unlock_travel = travel + locker.remain_travel;
     
@@ -60,7 +57,7 @@ void ElementHolder::request(const ElementType new_element_type, const uint8_t ne
         owner.switches.element_status = new_element_status;
         owner.switches.align_mode = align_mode;
 
-        DEBUG_PRINTLN("sw ele", new_element_type, new_element_side, align_mode, new_element_status);
+        DEBUG_PRINTLN("Ele!", new_element_type, new_element_side, align_mode, new_element_status);
         // invoked = false;
     }else{
         next_element_type = new_element_type;

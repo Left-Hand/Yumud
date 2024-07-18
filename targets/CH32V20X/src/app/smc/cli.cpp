@@ -175,7 +175,13 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
         //     break;
 
         case "pde"_ha:
-            settle_value(switches.plot_de, args);
+            // settle_value(switches.plot_de, args);
+            switches.plot_de = 1;
+            break;
+
+        case "pen"_ha:
+            // settle_value(switches.plot_de, args);
+            switches.plot_de = 0;
             break;
 
         case "bench"_ha:
