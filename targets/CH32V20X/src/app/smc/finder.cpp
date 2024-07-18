@@ -729,7 +729,26 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         return {{X, Y}, R};
     }
 
+    bool CoastUtils::is_ccw(const Coast & coast, const bool ccw){
+        if(coast.size() < 3) return false;
+        for(auto it = std::next(coast.begin()); it != std::prev(coast.end()); ++it){
+            Vector2i p1 = *std::prev(it);
+            Vector2i p2 = *it;
+            Vector2i p3 = *std::next(it);
 
+            Vector2i a = (p3 - p2);
+            a.y = -a.y;
+            Vector2i b = p2 - p1;
+            b.y = -b.y;
+
+            int product = a.cross(b);
+            if((ccw && (product > 0)) || ((!ccw) && (product < 0))){
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     Circle calculate_cicular(const Coast & coast, const int begin_index, const int end_index){
         int S = CLAMP(begin_index, 0, coast.size() - 1);
@@ -893,8 +912,8 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         for(auto it = coast.begin(); it != std::prev(coast.end()); ++it){
             int dx = std::next(it)->x - it->x;
             int sgn = sign(dx);
-            if((sgn != expected_sign) && (std::abs(dx) > fall_back)){
-                return false;
+            if((sgn != expected_sign)){
+                if(std::abs(dx) > fall_back) return false;
             }
         }
         return true;

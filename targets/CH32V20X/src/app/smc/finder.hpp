@@ -185,7 +185,7 @@ namespace SMC{
     namespace CoastUtils{
         bool is_self_intersection(const Coast & coast);
         
-        bool is_single(const Coast &, const LR, const int fall_back = 4);
+        bool is_single(const Coast &, const LR, const int fall_back = 6);
 
         int sigle_sign(const Coast &);
     
@@ -199,6 +199,7 @@ namespace SMC{
 
         Point which_in_window(const Coast & coast, const Vector2i & window_size);
 
+        bool is_ccw(const Coast & coast, const bool);
 
         static constexpr real_t default_corner_threshold = -0.4;
 

@@ -900,10 +900,17 @@ void SmartCar::main(){
         [[maybe_unused]] auto ring_in_detect = [&](const LR known_side) -> DetectResult {
             [[maybe_unused]] auto side_ring_in_detect = [&](const Corners & _corners, const LR _side, const bool is_expected_side) -> bool {
                 if(is_expected_side){
-                    return CoastUtils::is_single(_side == LR::RIGHT ? right_coast : left_coast, _side);
+                    // DEBUG_PRINTLN(known_side);
+                    const auto & track = _side == LR::RIGHT ? right_track : left_track;
+                    bool ret = CoastUtils::is_ccw(track, _side == LR::RIGHT ? false : true);
+                    ret &= (_corners.size() == 0);
+                    ret &= (track.size() > 3);
+                    return ret;
+                    // return Coast
                 }else{
                     //对立边应该是直道
-                    return _corners.size() == 2;
+                    // return (_side == LR::RIGHT ? right_track : left_track).size() == 2;
+                    return true;
                 }
             };
 
@@ -931,10 +938,7 @@ void SmartCar::main(){
             return side_is_curve_detect(left_corners) && side_is_curve_detect(right_corners);
         };
     
-        [[maybe_unused]] auto ring_exit_detect = [&](const LR known_side) -> DetectResult {
-            // return ring_beg_detect().side != known_side;
-            return true;
-        };
+        [[maybe_unused]] auto ring_exit_detect = none_detect;
 
         #define RESULT_GETTER(x) update_detect(x)
 
@@ -1100,7 +1104,7 @@ void SmartCar::main(){
                         case RingStatus::IN: if(true){//判断何时全曲
                             auto result = RESULT_GETTER(ring_running_detect());
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, co_side_to_align(ring_side), {0, 2.0});
+                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, co_side_to_align(ring_side), {0, 1.2});
                             }
                         }break;
 
@@ -1108,7 +1112,7 @@ void SmartCar::main(){
                         case RingStatus::RUNNING: if(true){//判断何时对立有拐点
                             auto result = RESULT_GETTER(ring_out_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, 0.4});
+                                sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, 0.6});
                             }
                         }break;
 
@@ -1116,12 +1120,12 @@ void SmartCar::main(){
                         case RingStatus::OUT: if(true){//判断何时回到圆起点
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, 0.8});
+                                sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, 1.0});
                             }
                         }break;
 
                         case RingStatus::END: if(true){//判断何时
-                            auto result = RESULT_GETTER(ring_exit_detect(ring_side));
+                            auto result = RESULT_GETTER(ring_exit_detect());
                             if(result){
                                 sw_element(ElementType::NONE, RingStatus::END, ring_side, AlignMode::BOTH);
                             }
@@ -1380,7 +1384,8 @@ void SmartCar::main(){
         // plot_bound(bound_center, {0, 0}, RGB565::YELLOW);
 
         recordRunStatus(RunStatus::END);
-
+        // DEBUG_PRINTLN("isccw", CoastUtils::is_ccw(left_track, true));
+        // DEBUG_PRINTLN("isccw", CoastUtils::is_ccw(right_track, false));
     }
 }
 
