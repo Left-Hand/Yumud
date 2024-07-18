@@ -140,6 +140,12 @@ public:
     constexpr bool has(const auto & value) const{return has_value(value);}
     constexpr bool has(const Range_t<auto> & _other) const{return contains(_other);}
 
+    constexpr T padding(const Range_t<T> other) const {
+        Range_t<T> regular = this -> abs();
+        Range_t<T> other_regular = other.abs();
+        if(regular.intersects(other_regular)) return 0;
+        return MIN((other_regular.to - regular.from), (other_regular.from - regular.to));
+    }
 
     constexpr Range_t<T> intersection(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();

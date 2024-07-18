@@ -282,7 +282,15 @@ namespace SMC{
         return ret;
     }
 
-    // get_outroad_y_range(const bou)
+    int get_x_edges(const ImageReadable<Binary> & src, const int y){
+        const auto & size = src.get_size();
+        if(y < 0 || y >= size.y) return 0;
+        int ret = 0;
+        for(int x = 0; x < size.x-1; x++){
+            if(bool(src(Vector2i{x,y})) ^ bool(src(Vector2i{x + 1, y}))) ret++;
+        }
+        return ret;
+    }
 
 
     Coast CoastUtils::form(const ImageReadable<Binary> & src, const Vector2i & _seed_pos, const LR is_right){

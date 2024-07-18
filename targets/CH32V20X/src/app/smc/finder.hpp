@@ -171,7 +171,7 @@ namespace SMC{
     };
 
 
-
+    int get_x_edges(const ImageReadable<Binary> & src, const int y);
 
     std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> &, const Vector2i &, const AlignMode);
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point);

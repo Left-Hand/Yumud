@@ -665,27 +665,11 @@ void SmartCar::main(){
 
         [[maybe_unused]] auto zebra_beg_detect = [&]() -> DetectResult {
             // if(is_closed) return {true};
-            if(ccd_range.length() < 54) return {true};
-            // return {false};
-
-            static constexpr int least_y_diff = 8;
-            static constexpr int least_height = 12;
-            //有两个色块
-            // DEBUG_VALUE(blobs.size());
-            if(blobs.size() < 2) return {false};
-            if(blobs.size() > 2) return {false};
-
-            const auto & rect_a = blobs[0].rect;
-            const auto & rect_b = blobs[1].rect;
-
-            if(rect_a.size.y < least_height || rect_b.size.y < least_height) return {false};
-
-            // if(rect_a.intersects(rect_b)) return {false};
-
-            auto y_diff = std::abs(rect_a.get_center().y - rect_b.get_center().y);
-            // DEBUG_PRINTLN(y_diff);
-            if(y_diff > least_y_diff) return {true};
-            return {false};
+            // DEBUG_PRINTLN(ccd_range);
+            auto edges = get_x_edges(img_bina, 18);
+            auto edges2 = get_x_edges(img_bina, 15);
+            // DEBUG_PRINTLN(edges, edges2);
+            return(std::max(edges, edges2) > 13);
         };
 
         [[maybe_unused]] auto zebra_end_detect = none_detect;
@@ -805,7 +789,7 @@ void SmartCar::main(){
                 switch(side){
                     case LEFT:
                     case RIGHT:
-                        if(point == _corners.begin()){
+                        if(point == _corners.begin() && point->point.y > 40){
                             return point;
                         }else{
                             return nullptr;
@@ -949,10 +933,11 @@ void SmartCar::main(){
                 {
                     if(is_startup()) break;
                     //判断何时处理 状态机 of 斑马线
-                    if(false){
+                    if(true){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
+                        // DEBUG_VALUE(bool(zebra_result));
                         if(zebra_result){
-                            sw_element(ElementType::ZEBRA, Cross::Status::BEG, zebra_result.side, AlignMode::BOTH, CREATE_LOCKER(0, 0.8));
+                            sw_element(ElementType::ZEBRA, Cross::Status::BEG, zebra_result.side, AlignMode::BOTH, CREATE_LOCKER(0, 1.5));
                             break;
                         }
                     }
@@ -1000,18 +985,19 @@ void SmartCar::main(){
                         //判断何时退出斑马线状态
 
                         case ZebraStatus::BEG:if((not is_startup())){
+                            sw_element(ElementType::ZEBRA, (ZebraStatus::END), LR::LEFT, AlignMode::BOTH, {0, 0});
+                        }break;
                         // if(is_locked() == false && (not is_startup())){
-                            // stop();
                             // auto result = RESULT_GETTER(zebra_end_detect());
                             // if(result) {
                             //     DEBUG_PRINTLN("Zebra!!!");
                             //     sw_element(ElementType::ZEBRA, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
                             // }
-                        }break;
-
-                        // case ZebraStatus::END: if(is_locked() == false){
-                            // stop();
                         // }break;
+
+                        case ZebraStatus::END:{
+                            stop();
+                        }break;
                         default:
                             break;
                     }
