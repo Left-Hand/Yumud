@@ -37,14 +37,6 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
     }
 }
 
-static constexpr real_t zebra_blind_startup = 1;
-// bool is_blind = false;
-bool is_closed = false;
-// bool is_blind_able(){
-    
-// }
-
-
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
     auto last_seed_pos = measurer.seed_pos;
     // auto last_road_window = measurer.road_window;
@@ -80,7 +72,6 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
     }
     //能到这里 说明找到可行的区域了
     is_blind = new_x_range.length() >= road_valid_pixels.to;
-    is_closed = new_x_range.length() < road_valid_pixels.from;
 
     if(new_x_range.length() >= road_valid_pixels.from){
         Point new_seed_pos;
@@ -932,7 +923,7 @@ void SmartCar::main(){
             case ElementType::STRAIGHT:
                 {
                     //判断何时处理 状态机 of 斑马线
-                    if((measurer.get_travel() > zebra_blind_startup)){
+                    if((measurer.get_travel() > zebra_blind_startup_meters)){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
                         // DEBUG_VALUE(zebra_result);
                         if(zebra_result){
@@ -985,7 +976,7 @@ void SmartCar::main(){
                         //判断何时退出斑马线状态
 
                         case ZebraStatus::BEG: 
-                        if(is_locked() == false && (measurer.get_travel() > zebra_blind_startup)){
+                        if(is_locked() == false && (measurer.get_travel() > zebra_blind_startup_meters)){
                             auto result = RESULT_GETTER(zebra_end_detect());
                             if(result) {
                                     //第二次过斑马线
