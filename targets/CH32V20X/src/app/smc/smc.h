@@ -135,8 +135,8 @@ public:
 
     Rangei road_window;
 
-protected:
     Vector2i seed_pos;
+protected:
     void set_drift(const Quat & _accel_drift, const Vector3 & _gyro_drift, const Quat & _magent_drift){
         drift.accel = _accel_drift;
         drift.gyro = _gyro_drift;
@@ -246,14 +246,6 @@ public:
         return src.clone(Rect2i::from_center(window_center, window_half_size));
     }
 
-    void update_seed_pos(const CoastItem & _seed_pos, const Rangei & _road_window){
-        seed_pos = _seed_pos;
-        road_window = _road_window;
-    }
-
-    auto get_seed_pos() const{
-        return seed_pos;
-    }
 
     real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
 

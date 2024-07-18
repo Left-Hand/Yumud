@@ -39,7 +39,7 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
 
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
-    auto last_seed_pos = measurer.get_seed_pos();
+    auto last_seed_pos = measurer.seed_pos;
     // auto last_road_window = measurer.road_window;
 
     Rangei road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
@@ -550,15 +550,15 @@ void SmartCar::main(){
 
         Vector2i new_seed_pos;
         Rangei new_road_window;
-        std::tie(new_seed_pos, new_road_window) = get_entry(img_bina);
+        std::tie(measurer.seed_pos, measurer.road_window) = get_entry(img_bina);
 
-        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.get_seed_pos().x, 0});
+        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.seed_pos.x, 0});
         // if(ccd_range){
         //     if(bool(new_seed_pos) == false || img_bina[new_seed_pos] == false){
         //         new_seed_pos = {ccd_range.get_center(), 60 - config.seed_height_base};
         //     }
         // }
-        if(new_seed_pos && new_road_window) measurer.update_seed_pos(new_seed_pos, new_road_window);
+        // if(new_seed_pos && new_road_window) measurer.update_seed_pos(new_seed_pos, new_road_window);
 
         DEBUG_PRINTLN(ccd_range);
         // plot_point(measurer.get_seed_pos);
@@ -573,8 +573,8 @@ void SmartCar::main(){
         // 寻找两侧的赛道轮廓并修剪为非自交的形式
         recordRunStatus(RunStatus::COAST_B);
         
-        auto coast_left_unfixed =    CoastUtils::form(img_bina, measurer.get_seed_pos(), LEFT);
-        auto coast_right_unfixed =   CoastUtils::form(img_bina, measurer.get_seed_pos(), RIGHT);
+        auto coast_left_unfixed =    CoastUtils::form(img_bina, measurer.seed_pos, LEFT);
+        auto coast_right_unfixed =   CoastUtils::form(img_bina, measurer.seed_pos, RIGHT);
 
         auto left_coast = CoastUtils::trim(coast_left_unfixed, img.size);
         auto right_coast = CoastUtils::trim(coast_right_unfixed, img.size);
@@ -1294,7 +1294,7 @@ void SmartCar::main(){
                         measurer.update_dir(root_vec.angle());
                     }
 
-                    plot_segment({measurer.get_seed_pos(), measurer.get_seed_pos() + Vector2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
+                    plot_segment({measurer.seed_pos, measurer.seed_pos + Vector2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
                 }
             }while(false);
         }
