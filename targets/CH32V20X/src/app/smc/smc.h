@@ -156,6 +156,10 @@ protected:
         msm.accel = drift.accel.xform(Vector3(mpu.getAccel()));
         msm.gyro = (Vector3(mpu.getGyro()) - drift.gyro);
         msm.magnet = drift.magnet.xform(Vector3(qml.getMagnet()));
+
+        real_t delta_t = t - last_t;
+        last_t = t;
+        angle = angle + (get_omega() * delta_t);
     }
 
     void update_front_speed(){
@@ -169,9 +173,22 @@ protected:
         last_travel = travel;
 
         now_spd = pos_delta * ctrl_freq;
+
     }
 
+    real_t angle;
+    real_t last_t;
 public:
+
+    void reset_angle(){
+        angle = 0;
+        last_t = t;
+    }
+
+    real_t get_angle() const {
+        return angle;
+    }
+    
     Measurer(I2c & i2c):mpu{i2c}, qml{i2c}{;}
 
     void cali(){
@@ -240,7 +257,7 @@ public:
         return msm.magnet;
     }
 
-    auto get_omega() const{
+    real_t get_omega() const{
         return msm.gyro.z;
     }
 

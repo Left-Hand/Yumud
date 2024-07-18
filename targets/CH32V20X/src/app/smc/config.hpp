@@ -34,10 +34,10 @@ struct GlobalConfig{
 
 
 struct RingConfig{
-    real_t s1 = 0.8;
-    real_t c1 = 0.8;
-    real_t o = 1.3;
-    real_t c2 = 0.45;
+    real_t s1 = 1.0;
+    real_t c1 = 0.3;
+    real_t o = 1.6;
+    real_t c2 = 0.4;
     real_t s2 = 1.0;
 };
 

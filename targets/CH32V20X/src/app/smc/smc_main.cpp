@@ -947,7 +947,7 @@ void SmartCar::main(){
                 {
                     if(is_startup()) break;
                     //判断何时处理 状态机 of 斑马线
-                    if(true){
+                    if(false){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
                         if(zebra_result){
                             sw_element(ElementType::ZEBRA, Cross::Status::BEG, zebra_result.side, AlignMode::BOTH, CREATE_LOCKER(0, 0.8));
@@ -999,7 +999,7 @@ void SmartCar::main(){
 
                         case ZebraStatus::BEG:if((not is_startup())){
                         // if(is_locked() == false && (not is_startup())){
-                            stop();
+                            // stop();
                             // auto result = RESULT_GETTER(zebra_end_detect());
                             // if(result) {
                             //     DEBUG_PRINTLN("Zebra!!!");
@@ -1076,6 +1076,7 @@ void SmartCar::main(){
                         case RingStatus::BEG:if(true){//判断何时单调
                             auto result = RESULT_GETTER(ring_in_detect(ring_side));
                             if(result){
+                                measurer.reset_angle();
                                 sw_element(ElementType::RING, RingStatus::IN, ring_side, side_to_align(ring_side), {0,ring_config.c1});
                             }
                         }break;
@@ -1084,7 +1085,7 @@ void SmartCar::main(){
                         case RingStatus::IN: if(true){//判断何时全曲
                             auto result = RESULT_GETTER(ring_running_detect());
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, AlignMode::BOTH, {0, ring_config.o});
+                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, side_to_align(ring_side), {0, ring_config.o});
                             }
                         }break;
 
@@ -1097,7 +1098,7 @@ void SmartCar::main(){
                         }break;
 
                         //判断何时退出圆环
-                        case RingStatus::OUT: if(true){//判断何时回到圆起点
+                        case RingStatus::OUT: if(std::abs(measurer.get_angle()) > 1.2){//判断何时回到圆起点
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
                                 sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, ring_config.s2});
@@ -1350,7 +1351,7 @@ void SmartCar::main(){
         //对轮廓的主向量提取结束
         /* #endregion */
     
-
+        // DEBUG_PRINTLN(measurer.get_angle());
         // plot_coast(track_left, {0, 0}, RGB565::RED);
         // plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
