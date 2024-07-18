@@ -38,9 +38,10 @@ void SmartCar::ctrl(){
         motor_strength.left = 0;
         motor_strength.right = 0;
 
-        motor_strength.left += turn_output;
-        motor_strength.right -= turn_output;
-
+        if(!is_blind){
+            motor_strength.left += turn_output;
+            motor_strength.right -= turn_output;
+        }
         motor_strength.left += speed_output;
         motor_strength.right += speed_output;
 
@@ -50,6 +51,10 @@ void SmartCar::ctrl(){
         motor_strength.hri = 0;
         motor_strength.hri += side_output;
         motor_strength.hri += centripetal_output;
+
+        if(is_blind){
+            motor_strength.hri = 0;
+        }
     }
 
 }

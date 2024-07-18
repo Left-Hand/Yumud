@@ -70,7 +70,7 @@ static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
 static constexpr uint window_y = 32;
 static constexpr Vector2i window_half_size = {20, 20};
-
+static constexpr real_t blind_meters = 0.6;
 
 class SmartCar;
 
@@ -117,6 +117,8 @@ public:
     HMC5883L qml;
     ABEncoderTimer  enc     {timer1};
     Odometer        odo     {enc};
+
+
 
     struct{
         Quat accel;
@@ -218,6 +220,7 @@ public:
     }
 
     auto get_dir(){
+        if(travel < blind_meters) return real_t(PI/2);
         return dir;
     }
 
@@ -248,7 +251,7 @@ public:
 
 
     real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
-
+        if(travel < blind_meters) return 0;
         //ccd 部分的比例和透视部分的比例不一样 将就用
         static constexpr real_t k = 200;
 
@@ -341,6 +344,7 @@ protected:
     ElementHolder element_holder{*this};
 
     bool started = false;
+    bool is_blind = false;
 
     Key start_key   {portE[2], false};
     Key stop_key    {portE[3], false};

@@ -37,6 +37,13 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
     }
 }
 
+static constexpr real_t zebra_blind_startup = 1;
+// bool is_blind = false;
+bool is_closed = false;
+// bool is_blind_able(){
+    
+// }
+
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
     auto last_seed_pos = measurer.seed_pos;
@@ -72,6 +79,8 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
         }
     }
     //能到这里 说明找到可行的区域了
+    is_blind = new_x_range.length() >= road_valid_pixels.to;
+    is_closed = new_x_range.length() < road_valid_pixels.from;
 
     if(new_x_range.length() >= road_valid_pixels.from){
         Point new_seed_pos;
@@ -560,7 +569,7 @@ void SmartCar::main(){
         // }
         // if(new_seed_pos && new_road_window) measurer.update_seed_pos(new_seed_pos, new_road_window);
 
-        DEBUG_PRINTLN(ccd_range);
+        // DEBUG_PRINTLN(ccd_range);
         // plot_point(measurer.get_seed_pos);
         plot_pile({0, ccd_range}, RGB565::FUCHSIA);
 
@@ -573,11 +582,19 @@ void SmartCar::main(){
         // 寻找两侧的赛道轮廓并修剪为非自交的形式
         recordRunStatus(RunStatus::COAST_B);
         
-        auto coast_left_unfixed =    CoastUtils::form(img_bina, measurer.seed_pos, LEFT);
-        auto coast_right_unfixed =   CoastUtils::form(img_bina, measurer.seed_pos, RIGHT);
+        // {
 
-        auto left_coast = CoastUtils::trim(coast_left_unfixed, img.size);
-        auto right_coast = CoastUtils::trim(coast_right_unfixed, img.size);
+        auto get_coast = [&](const Vector2i & seed_pos, const LR side) -> Coast{
+            auto ret = CoastUtils::form(img_bina, seed_pos, side);
+            ret = CoastUtils::trim(ret, img.size);
+            return ret;
+        };
+
+        auto left_coast = get_coast(measurer.seed_pos, LEFT);
+        auto upper_left_coast = get_coast(Vector2i(measurer.seed_pos.x, 20), LEFT);
+        auto right_coast = get_coast(measurer.seed_pos, RIGHT);
+        auto upper_right_coast = get_coast(Vector2i(measurer.seed_pos.x, 20), RIGHT);
+        // auto right_coast = CoastUtils::trim(coast_right_unfixed, img.size);
     
         ASSERT(CoastUtils::is_self_intersection(left_coast) == false, "left self ins");
         ASSERT(CoastUtils::is_self_intersection(right_coast) == false, "right self ins");
@@ -594,11 +611,16 @@ void SmartCar::main(){
         recordRunStatus(RunStatus::DP_B);
 
         auto track_left = CoastUtils::douglas_peucker(left_coast, config.dpv);
+        auto upper_track_left = CoastUtils::douglas_peucker(upper_left_coast, config.dpv);
+        auto upper_track_right = CoastUtils::douglas_peucker(upper_right_coast, config.dpv);
         auto track_right = CoastUtils::douglas_peucker(right_coast, config.dpv);
 
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
+        plot_coast(upper_track_right, {0, 0}, RGB565::YELLOW);
+        plot_coast(upper_track_right, {0, 0}, RGB565::GREEN);
 
+        // DEBUG_PRINTLN(measurer.get_dir(), is_blind);
         recordRunStatus(RunStatus::DP_E);
         //对轮廓的抽稀结束
         /* #endregion */
@@ -659,6 +681,10 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]] auto zebra_beg_detect = [&]() -> DetectResult {
+            // if(is_closed) return {true};
+            if(ccd_range.length() < 54) return {true};
+            // return {false};
+
             static constexpr int least_y_diff = 8;
             static constexpr int least_height = 12;
             //有两个色块
@@ -898,13 +924,15 @@ void SmartCar::main(){
 
         #define CREATE_LOCKER(time, travel) (ElementLocker(time, travel))
 
+
+
         auto element_type = switches.element_type;
         switch(element_type){
             case ElementType::NONE:
             case ElementType::STRAIGHT:
                 {
                     //判断何时处理 状态机 of 斑马线
-                    if(false){
+                    if((measurer.get_travel() > zebra_blind_startup)){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
                         // DEBUG_VALUE(zebra_result);
                         if(zebra_result){
@@ -914,7 +942,7 @@ void SmartCar::main(){
                     }
 
                     //判断何时处理 状态机 of 障碍物
-                    if(false){
+                    if(true){
                         auto result = RESULT_GETTER(barrier_beg_detect());
                         if(result){
                             // DEBUG_PRINTLN("detected");
@@ -950,16 +978,16 @@ void SmartCar::main(){
             case ElementType::ZEBRA:
                 {
                     static constexpr real_t zebra_blind_meters = 0.3;
-                    static constexpr real_t zebra_blind_startup = 3;
+
                     using ZebraStatus = Zebra::Status;
                     auto zebra_status = switches.zebra_status;
                     switch(zebra_status) {
                         //判断何时退出斑马线状态
 
                         case ZebraStatus::BEG: 
-                        if(is_locked() == false){
+                        if(is_locked() == false && (measurer.get_travel() > zebra_blind_startup)){
                             auto result = RESULT_GETTER(zebra_end_detect());
-                            if(result && measurer.get_travel() > zebra_blind_startup){
+                            if(result) {
                                     //第二次过斑马线
                                 DEBUG_PRINTLN("second zebra");
                                 sw_element(ElementType::ZEBRA, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
@@ -968,6 +996,7 @@ void SmartCar::main(){
 
                         case ZebraStatus::END: if(is_locked() == false){
                             stop();
+                            //FIXME
                         }break;
                         default:
                             break;
@@ -1290,9 +1319,15 @@ void SmartCar::main(){
                             break;
                     }while(false);
 
-                    if (bool(root_vec)) {
-                        measurer.update_dir(root_vec.angle());
+                    if(is_blind == false){
+                        if (bool(root_vec)) {
+                            measurer.update_dir(root_vec.angle());
+                        }
+                    }else{
+                        measurer.update_dir((PI/2));
                     }
+
+                    // DEBUG_PRINTLN(measurer.get_dir());
 
                     plot_segment({measurer.seed_pos, measurer.seed_pos + Vector2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
                 }
