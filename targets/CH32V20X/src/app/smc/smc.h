@@ -346,8 +346,8 @@ protected:
     bool started = false;
     bool is_blind = false;
 
-    Key start_key   {portE[2], false};
-    Key stop_key    {portE[3], false};
+    Key start_key   {portE[3], false};
+    Key stop_key    {portE[2], false};
 
     bool zebra_passed = false;
 
@@ -378,6 +378,10 @@ protected:
     void update_beep(const bool);
 
     void update_holder();
+
+    bool is_startup() const {
+        return measurer.get_travel() < zebra_blind_startup_meters;
+    }
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:

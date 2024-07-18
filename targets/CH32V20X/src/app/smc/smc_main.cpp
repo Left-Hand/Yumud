@@ -923,19 +923,27 @@ void SmartCar::main(){
         [[maybe_unused]] auto ring_running_detect = curve_detect;
 
         [[maybe_unused]] auto ring_out_detect = [&](const LR known_side) -> DetectResult {
-            // const auto & track = known_side ? left_track : right_track; 
+            const auto & track = (known_side == RIGHT) ? left_track : right_track; 
 
             //选取对立侧拐点
-            const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
+            // const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
+            // const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
+            if(track.size() < 3) return false;
 
+            static constexpr auto least_x_diff = 10;
+
+
+            if(known_side == LR::RIGHT) if((track[2] - track[1]) < -least_x_diff) return {true};
+            if(known_side == LR::LEFT) if((track[2] - track[1]) > least_x_diff) return {true};
             //判断有没有拐点
-            if(corners.size() < 1) return {false};
-            return {true};
+            // if(track.size() == 2) return {true};
+            return {false};
         };
 
         [[maybe_unused]] auto ring_end_detect = [&](const LR known_side) -> DetectResult {
             // return ring_beg_detect().side != known_side;
-            return side_is_curve_detect(left_corners) && side_is_curve_detect(right_corners);
+            const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
+            return side_is_curve_detect(corners);
         };
     
         [[maybe_unused]] auto ring_exit_detect = none_detect;
@@ -961,6 +969,7 @@ void SmartCar::main(){
             case ElementType::NONE:
             case ElementType::STRAIGHT:
                 {
+                    if(is_startup()) break;
                     //判断何时处理 状态机 of 斑马线
                     // if((measurer.get_travel() > zebra_blind_startup_meters)){
                     if(false){
@@ -1096,7 +1105,7 @@ void SmartCar::main(){
                         case RingStatus::BEG:if(true){//判断何时单调
                             auto result = RESULT_GETTER(ring_in_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::IN, ring_side, side_to_align(ring_side), {0,0.6});
+                                sw_element(ElementType::RING, RingStatus::IN, ring_side, side_to_align(ring_side), {0,0.8});
                             }
                         }break;
 
@@ -1104,7 +1113,7 @@ void SmartCar::main(){
                         case RingStatus::IN: if(true){//判断何时全曲
                             auto result = RESULT_GETTER(ring_running_detect());
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, co_side_to_align(ring_side), {0, 1.2});
+                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, AlignMode::BOTH, {0, 1.3});
                             }
                         }break;
 
@@ -1112,7 +1121,7 @@ void SmartCar::main(){
                         case RingStatus::RUNNING: if(true){//判断何时对立有拐点
                             auto result = RESULT_GETTER(ring_out_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, 0.6});
+                                sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, 0.45});
                             }
                         }break;
 
