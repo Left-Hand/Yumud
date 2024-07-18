@@ -221,8 +221,10 @@ void SmartCar::update_beep(const bool en = true){
     beep_gpio.clr();
 }
 
-void SmartCar::udpate(){
+void SmartCar::update_holder(){
+    // DEBUG_PRINTLN("update_holder");
     element_holder.update();
+    // DEBUG_PRINTLN("update_holder end");
 }
 
 void SmartCar::parse(){
@@ -609,7 +611,7 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]]auto none_detect = [&]() -> DetectResult {
-            DEBUG_PRINTLN(left_corners.size(), right_corners.size());
+            // DEBUG_PRINTLN(left_corners.size(), right_corners.size());
             return {(left_corners.size() <= 2) && (right_corners.size() <= 2)};
         };
 
@@ -814,7 +816,7 @@ void SmartCar::main(){
         #define CREATE_LOCKER(time, travel) (ElementLocker(*this, time, travel))
 
         auto element_type = switches.element_type;
-
+        DEBUG_VALUE(element_type);
         switch(element_type){
             case ElementType::NONE:
             case ElementType::STRAIGHT:
@@ -885,8 +887,9 @@ void SmartCar::main(){
                         //判断何时退出障碍物状态
                         case BarrierStatus::BEG:if(true){
                             auto result = RESULT_GETTER(barrier_end_detect());
-                            DEBUG_PRINTLN(result.detected);
+                            // DEBUG_PRINTLN(result.detected);
                             if(result){
+                                DEBUG_PRINTLN("barrier ended detected")
                                 sw_element(ElementType::BARRIER, BarrierStatus::END, switches.element_side, AlignMode::BOTH);
                             }
                         }break;
@@ -975,13 +978,15 @@ void SmartCar::main(){
                 break;
         }
         //在自动模式下 如果识别不到赛道 就关断小车 避免跑飞时撞墙
-        // DEBUG_VALUE(measurer.road_window.length())
+
         if(measurer.get_road_length_meters() < config.valid_road_meters.start){
             if(switches.hand_mode == false){
                 stop();
             }
             continue;
         }
+
+        update_holder();
 
         recordRunStatus(RunStatus::ELEMENT_E);
 

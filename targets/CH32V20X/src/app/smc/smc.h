@@ -94,13 +94,16 @@ public:
     void update();
 
     operator bool() const {
-        return remain_time == 0 && remain_travel == 0;
+        DEBUG_PRINTLN(bool(owner), remain_time, last_t, remain_travel);
+        // return not ((owner == nullptr) || (remain_time == 0 && remain_travel == 0));
+        return true;
     }
 };
 
 struct ElementHolder{
 protected:
     SmartCar & owner;
+    bool invoked = false;
     
     ElementType next_element_type = ElementType::NONE;
     uint8_t next_element_status = 0;
@@ -380,7 +383,7 @@ protected:
 
     void update_beep(const bool);
 
-    void udpate();
+    void update_holder();
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:

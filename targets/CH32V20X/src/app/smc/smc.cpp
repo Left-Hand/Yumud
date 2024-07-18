@@ -10,30 +10,37 @@ void ElementHolder::invoke(){
 
     __disable_irq();
     owner.switches.element_type = next_element_type;
-
+    owner.switches.element_status = next_element_status;
+    owner.switches.element_side = next_element_side;
+    owner.switches.align_mode = next_align_mode;
     __enable_irq();
+    invoked = true;
     DEBUG_PRINTLN("sw ele", next_element_type, next_element_side, next_element_status);
 }
 
 void ElementHolder::update(){
     m_locker.update();
-    if(bool(m_locker) == false){
+    if((bool(m_locker) == false) && (invoked == false)){
         invoke();
     }
+    m_locker = ElementLocker();
 }
 
 void ElementHolder::request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const AlignMode, const ElementLocker & locker){
-    if(new_element_type != next_element_type){
+    if(bool(m_locker) != false) return;
+    if(             ((new_element_type != next_element_type)
+                || ((uint8_t)new_element_status != next_element_status)
+                || (new_element_side != next_element_side))){
+
+        DEBUG_PRINTLN("locker updated");
         next_element_type = new_element_type;
         next_element_side = new_element_side;
         next_element_status = new_element_status;
 
-        if(bool(locker) == false){
-            invoke();
-        }else{
-            m_locker = locker;
-            m_locker.init();
-        }
+        DEBUG_PRINTLN("locker replaced");
+        m_locker = locker;
+        m_locker.init();
+        invoked = false;
     }
 }
 
@@ -49,15 +56,19 @@ void ElementLocker::update(){
     auto delta_t = t - last_t;
     last_t = t;
 
-    remain_time -= delta_t;
+    // remain_time = MAX(remain_time - delta_t, 0);
+    
+
+    // DEBUG_VALUE(remain_time)
 
     if(owner){
         auto now_travel = owner->measurer.get_travel();
         auto delta_travel = now_travel - last_travel;
         last_travel = now_travel;
 
-        remain_travel -= delta_travel;
+        remain_travel = MAX(remain_travel - delta_travel, 0);
     }
+        // DEBUG_PRINTLN("rm",remain_travel, remain_time)
 }
 
 
