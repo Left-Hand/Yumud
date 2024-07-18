@@ -74,28 +74,50 @@ static constexpr Vector2i window_half_size = {20, 20};
 
 class SmartCar;
 
+struct ElementLocker{
+protected:
+    SmartCar * owner = nullptr;
+
+    real_t last_t = 0;
+    real_t last_travel = 0;
+
+    real_t remain_time = 0;
+    real_t remain_travel = 0;
+public:
+    ElementLocker() = default;
+    ElementLocker(SmartCar & _owner);
+    ElementLocker(const ElementLocker & other);
+    ElementLocker(SmartCar & _owner, const real_t lasting_time, const real_t lasting_travel);
+
+    void init();
+
+    void update();
+
+    operator bool() const {
+        return remain_time == 0 && remain_travel == 0;
+    }
+};
+
 struct ElementHolder{
 protected:
     SmartCar & owner;
-    real_t remain_time;
-    real_t last_t;
-    real_t element_freeze_time;
     
     ElementType next_element_type = ElementType::NONE;
     uint8_t next_element_status = 0;
     LR next_element_side = LR::LEFT;
+
+    AlignMode next_align_mode = AlignMode::LEFT;
+
+    ElementLocker m_locker;
+    void invoke();
 public:
 
-    ElementHolder(SmartCar & _owner):owner(_owner){;}
-
-    auto get_remain_time() const {
-        return remain_time; 
-    }
-
+    ElementHolder(SmartCar & _owner);
 
     void update();
 
-    void request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const real_t _remain_time);
+    void request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const AlignMode, const ElementLocker & locker);
+
 };
 
 
@@ -294,7 +316,7 @@ protected:
 
     Gpio & beep_gpio = portB[2];
 
-    Switches switches;
+
     Flags flags;
     GlobalConfig config;
     SetPoints setp;
@@ -327,7 +349,6 @@ protected:
     
     MT9V034 camera  {sccb};
 
-    Measurer measurer{i2c};
     ElementHolder element_holder{*this};
 
     Key start_key   {portE[2], false};
@@ -359,6 +380,7 @@ protected:
 
     void update_beep(const bool);
 
+    void udpate();
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:
@@ -366,17 +388,29 @@ public:
         return result;
     }
 
-    void sw_element(const ElementType element_type, const auto element_status, const LR element_side, const real_t sustain_time = 0){
-        // switches.element_type = element_type;
-        // switches.element_status = (uint8_t)(element_status);
-        // switches.element_side = element_side;
-        DEBUG_PRINTLN("sw ele", element_type, element_side, element_status);
+
+    void sw_element(const ElementType element_type, const auto element_status, const LR element_side, const AlignMode align_mode, const ElementLocker & locker = ElementLocker()){
+        // if((element_type != switches.element_type 
+        //         || ((uint8_t)element_status != switches.element_status)
+        //         || (element_side != switches.element_side))
+        //         && ){
+        //     switches.element_type = element_type;
+        //     switches.element_status = (uint8_t)(element_status);
+        //     switches.element_side = element_side;
+
+        // }
+        element_holder.request(element_type, (uint8_t)element_status, element_side, align_mode, locker);
     };
 
-    void sw_align(const AlignMode align_mode){
-        DEBUG_PRINTLN("sw ali", align_mode);
-    }
+    // void sw_align(const AlignMode align_mode){
+    //     if(align_mode != switches.align_mode){
+    //         switches.align_mode = align_mode;
+    //         DEBUG_PRINTLN("sw ali", align_mode);
+    //     }
+    // }
 
+    Switches switches;
+    Measurer measurer{i2c};
     void main();
 };
 

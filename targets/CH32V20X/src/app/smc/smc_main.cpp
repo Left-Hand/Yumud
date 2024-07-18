@@ -1,11 +1,11 @@
 #include "smc.h"
 
-using namespace SMC;
 using namespace NVCV2;
 using SMC::CoastFinder;
 using NVCV2::Shape::Seed;
 
 
+namespace SMC{
 static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grayscale, Grayscale> & src) {
     if((void *)&dst == (void *)&src){
         auto temp = dst.clone();
@@ -36,7 +36,6 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
         out[i] = Binary(((uint8_t)em[i] > et) || ((uint8_t)dm[i] > dt));
     }
 }
-
 
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
@@ -220,6 +219,10 @@ void SmartCar::update_beep(const bool en = true){
     }
 
     beep_gpio.clr();
+}
+
+void SmartCar::udpate(){
+    element_holder.update();
 }
 
 void SmartCar::parse(){
@@ -535,14 +538,14 @@ void SmartCar::main(){
         auto coast_left_unfixed =    CoastUtils::form(img_bina, measurer.seed_pos, LEFT);
         auto coast_right_unfixed =   CoastUtils::form(img_bina, measurer.seed_pos, RIGHT);
 
-        auto coast_left = CoastUtils::trim(coast_left_unfixed, img.size);
-        auto coast_right = CoastUtils::trim(coast_right_unfixed, img.size);
+        auto left_coast = CoastUtils::trim(coast_left_unfixed, img.size);
+        auto right_coast = CoastUtils::trim(coast_right_unfixed, img.size);
     
-        ASSERT(CoastUtils::is_self_intersection(coast_left) == false, "left self ins");
-        ASSERT(CoastUtils::is_self_intersection(coast_right) == false, "right self ins");
+        ASSERT(CoastUtils::is_self_intersection(left_coast) == false, "left self ins");
+        ASSERT(CoastUtils::is_self_intersection(right_coast) == false, "right self ins");
 
-        ASSERT_WITH_DOWN(coast_left.size() != 0, "left coast size 0");
-        ASSERT_WITH_DOWN(coast_right.size() != 0, "right coast size 0");
+        ASSERT_WITH_DOWN(left_coast.size() != 0, "left coast size 0");
+        ASSERT_WITH_DOWN(right_coast.size() != 0, "right coast size 0");
         recordRunStatus(RunStatus::COAST_E);
         //修剪结束
         /* #endregion */
@@ -552,8 +555,8 @@ void SmartCar::main(){
         //开始进行对轮廓进行抽稀
         recordRunStatus(RunStatus::DP_B);
 
-        auto track_left = CoastUtils::douglas_peucker(coast_left, config.dpv);
-        auto track_right = CoastUtils::douglas_peucker(coast_right, config.dpv);
+        auto track_left = CoastUtils::douglas_peucker(left_coast, config.dpv);
+        auto track_right = CoastUtils::douglas_peucker(right_coast, config.dpv);
 
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
@@ -601,11 +604,20 @@ void SmartCar::main(){
             return sign(diff);
         };
 
+        [[maybe_unused]]auto straight_detect = [&]() -> DetectResult {
+            return {(left_corners.size() == 2) && (right_corners.size() == 2)};
+        };
+
+        [[maybe_unused]]auto none_detect = [&]() -> DetectResult {
+            DEBUG_PRINTLN(left_corners.size(), right_corners.size());
+            return {(left_corners.size() <= 2) && (right_corners.size() <= 2)};
+        };
+
         [[maybe_unused]] auto zebra_beg_detect = [&]() -> DetectResult {
             return {false};
         };
 
-        [[maybe_unused]]auto barrier_beg_detect = [&]() -> DetectResult {
+        [[maybe_unused]] auto barrier_beg_detect = [&]() -> DetectResult {
            [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> Vector2i {
                 //少于两个拐点 没法判断有没有障碍
                 if(_corners.size() < 2) return {0,0};
@@ -670,15 +682,10 @@ void SmartCar::main(){
                 return {true, LR::RIGHT};
         };
 
-        [[maybe_unused]]auto straight_detect = [&]() -> DetectResult {
-            return {(coast_left.size() == 2) && (coast_left.size() == 2)};
-        };
+        [[maybe_unused]] auto barrier_end_detect = none_detect;
 
-        [[maybe_unused]]auto none_detect = [&]() -> DetectResult {
-            return {(coast_left.size() <= 2) && (coast_left.size() <= 2)};
-        };
 
-        [[maybe_unused]]auto curve_detect = [&]() -> DetectResult {
+        [[maybe_unused]] auto curve_detect = [&]() -> DetectResult {
             [[maybe_unused]] auto side_curve_detect = [&](const Corners & _corners, const LR side) -> bool {
                 // auto sign =  CoastUtils::sigle(coast);
                 return true;
@@ -687,7 +694,7 @@ void SmartCar::main(){
             return {false};//TODO
         };
 
-        [[maybe_unused]]auto cross_beg_detect = [&]() -> DetectResult {
+        [[maybe_unused]] auto cross_beg_detect = [&]() -> DetectResult {
             [[maybe_unused]] auto side_cross_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
                 switch(side){
                     case LEFT:
@@ -707,7 +714,7 @@ void SmartCar::main(){
             return (left_detected && right_detected);
         };
 
-        [[maybe_unused]]auto cross_end_detect = [&]() -> DetectResult {
+        [[maybe_unused]] auto cross_end_detect = [&]() -> DetectResult {
             [[maybe_unused]] auto side_cross_leave_detect = [&](const Corners & _corners, const LR side) -> bool {
                 switch(side){
                     case LEFT:
@@ -736,7 +743,7 @@ void SmartCar::main(){
             return (left_detected && right_detected);
         };
 
-        [[maybe_unused]]auto ring_beg_detect = [&]() -> DetectResult {
+        [[maybe_unused]] auto ring_beg_detect = [&]() -> DetectResult {
             [[maybe_unused]] auto side_ring_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
                 switch(side){
                     case LEFT:
@@ -758,10 +765,10 @@ void SmartCar::main(){
             }
         };
 
-        [[maybe_unused]]auto ring_in_detect = [&](const LR known_side) -> DetectResult {
+        [[maybe_unused]] auto ring_in_detect = [&](const LR known_side) -> DetectResult {
             [[maybe_unused]] auto side_ring_in_detect = [&](const Corners & _corners, const LR _side, const bool is_expected_side) -> bool {
                 if(is_expected_side){
-                    return CoastUtils::is_single(_side == LR::RIGHT ? coast_right : coast_left, _side);
+                    return CoastUtils::is_single(_side == LR::RIGHT ? right_coast : left_coast, _side);
                 }else{
                     //对立边应该是直道
                     return _corners.size() == 0;
@@ -774,18 +781,18 @@ void SmartCar::main(){
             return (left_detected && right_detected);
         };
 
-        [[maybe_unused]]auto ring_running_detect = curve_detect;
+        [[maybe_unused]] auto ring_running_detect = curve_detect;
 
-        [[maybe_unused]]auto ring_out_detect = [&](const LR known_side) -> DetectResult {
+        [[maybe_unused]] auto ring_out_detect = [&](const LR known_side) -> DetectResult {
             return ring_beg_detect().side != known_side;
         };
 
-        [[maybe_unused]]auto ring_end_detect = [&](const LR known_side) -> DetectResult {
+        [[maybe_unused]] auto ring_end_detect = [&](const LR known_side) -> DetectResult {
             // return ring_beg_detect().side != known_side;
             return true;
         };
     
-        [[maybe_unused]]auto ring_exit_detect = [&](const LR known_side) -> DetectResult {
+        [[maybe_unused]] auto ring_exit_detect = [&](const LR known_side) -> DetectResult {
             // return ring_beg_detect().side != known_side;
             return false;
         };
@@ -802,8 +809,13 @@ void SmartCar::main(){
         };
 
         recordRunStatus(RunStatus::ELEMENT_B);
-    
-        switch(switches.element_type){
+
+
+        #define CREATE_LOCKER(time, travel) (ElementLocker(*this, time, travel))
+
+        auto element_type = switches.element_type;
+
+        switch(element_type){
             case ElementType::NONE:
             case ElementType::STRAIGHT:
                 {
@@ -811,8 +823,7 @@ void SmartCar::main(){
                     if(false){
                         auto result = RESULT_GETTER(zebra_beg_detect());
                         if(result){
-                            sw_element(ElementType::CROSS, Cross::Status::BEG, result.side);
-                            sw_align(AlignMode::UPPER);
+                            sw_element(ElementType::CROSS, Cross::Status::BEG, result.side, AlignMode::UPPER);
                         }
                     }
 
@@ -820,8 +831,7 @@ void SmartCar::main(){
                     if(true){
                         auto result = RESULT_GETTER(barrier_beg_detect());
                         if(result){
-                            sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side);
-                            sw_align(co_side_to_align(result.side));
+                            sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side, co_side_to_align(result.side), CREATE_LOCKER(1.2, 0));
                         }
                     }
 
@@ -829,8 +839,7 @@ void SmartCar::main(){
                     if(false){
                         auto result = RESULT_GETTER(cross_beg_detect());
                         if(result){
-                            sw_element(ElementType::CROSS, Cross::Status::BEG, result.side);
-                            sw_align(AlignMode::UPPER);
+                            sw_element(ElementType::CROSS, Cross::Status::BEG, result.side, AlignMode::UPPER);
                         }
                     }
 
@@ -838,8 +847,7 @@ void SmartCar::main(){
                     if(false){
                         auto result = RESULT_GETTER(ring_beg_detect());
                         if(result){
-                            sw_element(ElementType::RING, Cross::Status::BEG, result.side);
-                            sw_align(co_side_to_align(result.side));
+                            sw_element(ElementType::RING, Cross::Status::BEG, result.side, co_side_to_align(result.side));
                         }
                     }
 
@@ -857,8 +865,7 @@ void SmartCar::main(){
                         case ZebraStatus::BEG: if(false){
                             auto result = RESULT_GETTER(zebra_beg_detect());
                             if(result){
-                                sw_element(ElementType::NONE, (ZebraStatus::END), result.side);
-                                sw_align(AlignMode::BOTH);
+                                sw_element(ElementType::NONE, (ZebraStatus::END), result.side, AlignMode::BOTH);
                             }
                         }break;
 
@@ -873,13 +880,21 @@ void SmartCar::main(){
                 {
                     using BarrierStatus = Barrier::Status;
                     auto barrier_status = switches.barrier_status;
+                    DEBUG_PRINTLN(element_type, barrier_status);
                     switch(barrier_status) {
                         //判断何时退出障碍物状态
-                        case BarrierStatus::END:if(true){
-                            auto result = RESULT_GETTER(barrier_beg_detect());
+                        case BarrierStatus::BEG:if(true){
+                            auto result = RESULT_GETTER(barrier_end_detect());
+                            DEBUG_PRINTLN(result.detected);
                             if(result){
-                                sw_element(ElementType::NONE, BarrierStatus::END, result.side);
-                                sw_align(AlignMode::BOTH);
+                                sw_element(ElementType::BARRIER, BarrierStatus::END, switches.element_side, AlignMode::BOTH);
+                            }
+                        }break;
+                        case BarrierStatus::END:if(true){
+                            // auto result = RESULT_GETTER(barrier_beg_detect());
+                            auto result = true;
+                            if(result){
+                                sw_element(ElementType::NONE, BarrierStatus::END, switches.element_side, AlignMode::BOTH);
                             }
                         }break;
                         default:
@@ -898,8 +913,7 @@ void SmartCar::main(){
                         case CrossStatus::END:if(false){
                             auto result = RESULT_GETTER(cross_beg_detect());
                             if(result){
-                                sw_element(ElementType::NONE, CrossStatus::END, result.side);
-                                sw_align(AlignMode::BOTH);
+                                sw_element(ElementType::NONE, CrossStatus::END, result.side, AlignMode::BOTH);
                             }
                         }break;
                         default:
@@ -919,8 +933,7 @@ void SmartCar::main(){
                         case RingStatus::BEG:if(false){
                             auto result = RESULT_GETTER(ring_in_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::IN, result.side);
-                                sw_align(side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::IN, result.side, side_to_align(ring_side));
                             }
                         }break;
 
@@ -928,8 +941,7 @@ void SmartCar::main(){
                         case RingStatus::IN: if(false){
                             auto result = RESULT_GETTER(ring_running_detect());
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::RUNNING, result.side);
-                                sw_align(co_side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::RUNNING, result.side, co_side_to_align(ring_side));
                             }
                         }break;
 
@@ -937,8 +949,7 @@ void SmartCar::main(){
                         case RingStatus::RUNNING: if(false){
                             auto result = RESULT_GETTER(ring_out_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::OUT, result.side);
-                                sw_align(side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::OUT, result.side, side_to_align(ring_side));
                             }
                         }break;
 
@@ -946,16 +957,14 @@ void SmartCar::main(){
                         case RingStatus::OUT: if(false){
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::END, result.side);
-                                sw_align(co_side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::END, result.side, co_side_to_align(ring_side));
                             }
                         }break;
 
                         case RingStatus::END: if(false){
                             auto result = RESULT_GETTER(ring_exit_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::NONE, RingStatus::END, result.side);
-                                sw_align(AlignMode::BOTH);
+                                sw_element(ElementType::NONE, RingStatus::END, result.side, AlignMode::BOTH);
                             }
                         }break;
                     }
@@ -1218,9 +1227,10 @@ void SmartCar::main(){
     }
 }
 
+}
 
 
 void smc_main(){
-    SmartCar car;
+    SMC::SmartCar car;
     car.main();
 };
