@@ -1,7 +1,8 @@
 #include "finder.hpp"
-
+#include "smc_debug.h"
 
 using namespace NVCV2;
+
 
 namespace SMC{
 
@@ -148,10 +149,14 @@ namespace SMC{
         if(coast.size() < 3) return {};
 
         Corners ret;
+        recordRunStatus(RunStatus::ST_CO);
         for(auto it = std::next(coast.begin()); it != std::prev(coast.end()); it++){
+
+
             Vector2 lastpoint = *std::prev(it);
             Vector2 currpoint = *it;
             Vector2 nextpoint = *std::next(it);
+
 
             auto v1 = lastpoint - currpoint;
             auto v2 = nextpoint - currpoint;
@@ -159,49 +164,50 @@ namespace SMC{
             auto v1_l = v1.length();
             auto v2_l = v2.length();
             auto med = ((v1 * v2_l) + (v2 * v1_l)).y; 
-
             if(v1.dot(v2) > threshold * v1_l * v2_l){
-
-                switch(int(sign(med))){
-                    case 0:
-                        ret.push_back(Corner(CornerType::ALL, (*it)));
-                        break;
-                    case 1:
-                        if(exp_ct == CornerType::AC || exp_ct == CornerType::ALL) ret.push_back(Corner{CornerType::AC, (*it)});
-                        break;
-                    case -1:
-                        if(exp_ct == CornerType::VC || exp_ct == CornerType::ALL) ret.push_back(Corner{CornerType::VC, (*it)});
-                        break;
-                    default:
-                        break;
-                }
+            auto ss = sign(med);
+            if(ret.size() >= 7) break;
+            recordRunStatus(RunStatus::NT_CO);
+            if((ss > 0) && (exp_ct == CornerType::AC || exp_ct == CornerType::ALL)){
+                ret.push_back(Corner{CornerType::AC, (*it)});
             }
-        }
+            recordRunStatus(RunStatus::ND_CO);
+            if((ss < 0) && (exp_ct == CornerType::VC || exp_ct == CornerType::ALL)){
+                ret.push_back(Corner{CornerType::VC, (*it)});
+            }
+            recordRunStatus(RunStatus::NZ_CO);
 
+
+            }
+
+        }
+        recordRunStatus(RunStatus::ED_CO);
         return ret;
     }
 
-    Points CoastUtils::a_points(const Coast & coast, const real_t threshold){
-        auto corners = CoastUtils::search_corners(coast, CornerType::AC, threshold);
-        Points ret = {};
+    // Points CoastUtils::a_points(const Coast & coast, const real_t threshold){
+    //     recordRunStatus()
+    //     auto corners = CoastUtils::search_corners(coast, CornerType::AC, threshold);
+    //     Points ret = {};
 
-        for(const auto & [_, point, __]:corners){
-            ret.push_back(point);
-        }
+    //     for(const auto & [_, point, __]:corners){
+    //         ret.push_back(point);
+    //     }
         
-        return ret;
-    }
+    //     return ret;
+    // }
 
-    Points CoastUtils::v_points(const Coast & coast, const real_t threshold){
-        auto corners = CoastUtils::search_corners(coast, CornerType::VC, threshold);
-        Points ret;
-
-        for(const auto & [_, point, __]:corners){
-            ret.push_back(point);
-        }
+    // Points CoastUtils::v_points(const Coast & coast, const real_t threshold){
         
-        return ret;
-    }
+    //     auto corners = CoastUtils::search_corners(coast, CornerType::VC, threshold);
+    //     Points ret;
+
+    //     for(const auto & [_, point, __]:corners){
+    //         ret.push_back(point);
+    //     }
+        
+    //     return ret;
+    // }
 
     Coast CoastUtils::trim(const Coast & coast, const Vector2i & window_size){
         if(!coast.size()) return {{}};
@@ -424,7 +430,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
 
 
 
-Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
+    Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
     // Points& _polyLine
     Points simplifiedPolyLine = {};
 	if (polyLine.size() < 2)
@@ -906,5 +912,25 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
             if(sgn != initial_sgn) return 0; 
         }
         return initial_sgn;
+    }
+
+
+    Coast CornerUtils::a_points(const Corners & corners){
+        Coast result;
+        for(const auto & corner : corners){
+            if(corner.type == CornerType::AC){
+                result.push_back(corner.point);
+            }
+        }
+        return result;
+    }
+    Coast CornerUtils::v_points(const Corners & corners){
+        Coast result;
+        for(const auto & corner : corners){
+            if(corner.type == CornerType::VC){
+                result.push_back(corner.point);
+            }
+        }
+        return result;
     }
 };

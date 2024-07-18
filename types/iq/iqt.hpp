@@ -364,7 +364,7 @@ __fast_inline_constexpr bool signbit(const iq_t iq){return bool(long(iq.value) <
 
 
 __fast_inline_constexpr iq_t sign(const iq_t iq){
-    if(iq.value){
+    if(long(iq.value)){
         if(long(iq.value) > 0){
             return iq_t(1);
         }else{

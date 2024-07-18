@@ -37,7 +37,7 @@ union Switches{
     struct{
         bool plot_de:1 = false;
         bool hand_mode:1 = false;
-        AlignMode align_mode:2 = AlignMode::LEFT;
+        AlignMode align_mode:2 = AlignMode::BOTH;
         LR element_side:1 = LR::LEFT;
         ElementType element_type:3 = ElementType::NONE;    
         union{

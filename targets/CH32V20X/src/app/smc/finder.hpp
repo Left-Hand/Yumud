@@ -33,13 +33,14 @@ namespace SMC{
     using Segment = std::pair<Point, Point>;
 
 
-    static constexpr int max_item_size = 96;
+    static constexpr int max_item_size = 64;
+    static constexpr int max_ranges_size = 16;
 
     using CoastItem = Vector2_t<uint8_t>;
+    using Points = sstl::vector<Vector2_t<int16_t>, max_item_size>;
     using Coast = sstl::vector<CoastItem, max_item_size>;
-    using Points = sstl::vector<Point, max_item_size>;
     using Coasts = sstl::vector<Coast, 4>;
-    using Ranges = sstl::vector<Rangei, max_item_size>;
+    using Ranges = sstl::vector<Range_t<int16_t>, max_ranges_size>;
 
     enum class CornerType:uint8_t{
         NONE,
@@ -203,9 +204,9 @@ namespace SMC{
 
         Corners search_corners(const Coast & coast, const CornerType default_ct = CornerType::ALL, const real_t threshold = default_corner_threshold);
 
-        Points a_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
+        // Points a_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
 
-        Points v_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
+        // Points v_points(const Coast & coast, const real_t threshold = default_corner_threshold);//120 deg
 
         Coast trim(const Coast & coast, const Vector2i & window_size);
         Coast form(const ImageReadable<Binary> &, const Vector2i &, const LR);
@@ -264,6 +265,8 @@ namespace SMC{
         const Corner * find_v(const Corners & corners, const size_t from_index = 0);
         size_t cnt_a(const Corners & corners, const size_t from_index = 0);
         size_t cnt_v(const Corners & corners, const size_t from_index = 0);
+        Coast a_points(const Corners & corners);
+        Coast v_points(const Corners & corners);
     };
 
     struct Circle{

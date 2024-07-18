@@ -9,6 +9,7 @@ namespace SMC{
 
 BETTER_ENUM(RunStatus, uint8_t,
     NONE = 0,
+    GUI,
     BEG,
     CLI,
     INPUT,
@@ -52,6 +53,12 @@ BETTER_ENUM(RunStatus, uint8_t,
     SEGMENT,
     SEGMENT_E,
     FANS_B,
+
+    ST_CO,
+    ED_CO,
+    NT_CO,
+    ND_CO,
+    NZ_CO,
 
     FANS_E,
     END

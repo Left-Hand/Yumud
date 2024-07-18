@@ -75,29 +75,8 @@ static constexpr Vector2i window_half_size = {20, 20};
 class SmartCar;
 
 struct ElementLocker{
-protected:
-    SmartCar * owner = nullptr;
-
-    real_t last_t = 0;
-    real_t last_travel = 0;
-
     real_t remain_time = 0;
     real_t remain_travel = 0;
-public:
-    ElementLocker() = default;
-    ElementLocker(SmartCar & _owner);
-    ElementLocker(const ElementLocker & other);
-    ElementLocker(SmartCar & _owner, const real_t lasting_time, const real_t lasting_travel);
-
-    void init();
-
-    void update();
-
-    operator bool() const {
-        DEBUG_PRINTLN(bool(owner), remain_time, last_t, remain_travel);
-        // return not ((owner == nullptr) || (remain_time == 0 && remain_travel == 0));
-        return true;
-    }
 };
 
 struct ElementHolder{
@@ -112,12 +91,17 @@ protected:
     AlignMode next_align_mode = AlignMode::LEFT;
 
     ElementLocker m_locker;
+
+    real_t unlock_t = 0;
+    real_t unlock_travel = 0;
     void invoke();
 public:
 
     ElementHolder(SmartCar & _owner);
 
     void update();
+
+    void reset();
 
     void request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const AlignMode, const ElementLocker & locker);
 
@@ -392,7 +376,7 @@ public:
     }
 
 
-    void sw_element(const ElementType element_type, const auto element_status, const LR element_side, const AlignMode align_mode, const ElementLocker & locker = ElementLocker()){
+    void sw_element(const ElementType element_type, const auto element_status, const LR element_side, const AlignMode align_mode, const ElementLocker & locker = {0,0}){
         // if((element_type != switches.element_type 
         //         || ((uint8_t)element_status != switches.element_status)
         //         || (element_side != switches.element_side))
