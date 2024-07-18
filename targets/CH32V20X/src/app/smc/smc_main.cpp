@@ -39,7 +39,7 @@ static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grays
 
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
-    auto last_seed_pos = measurer.seed_pos;
+    auto last_seed_pos = measurer.get_seed_pos();
     // auto last_road_window = measurer.road_window;
 
     Rangei road_valid_pixels = {WorldUtils::pixels(config.valid_road_meters.from),
@@ -100,6 +100,8 @@ void SmartCar::reset(){
     side_ctrl.reset();
     velocity_ctrl.reset();
     side_velocity_observer.reset();
+    zebra_passed = false;
+    element_holder.reset();
     // body.reset();
 }
 
@@ -200,6 +202,7 @@ void SmartCar::start(){
     switches.hand_mode = false;
     flags.enable_trig = true;
     motor_strength.chassis = full_duty;
+    started = true;
     parse();
 }
 
@@ -208,6 +211,7 @@ void SmartCar::stop(){
     switches.hand_mode = false;
     flags.disable_trig = true;
     motor_strength.chassis = 0;
+    started = false;
     parse();
 }
 
@@ -445,7 +449,7 @@ void SmartCar::main(){
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
 
     
-    camera.setExposureValue(1200);
+    camera.setExposureValue(300);
 
     delay(500);
 
@@ -461,7 +465,13 @@ void SmartCar::main(){
 
     while(true){
         recordRunStatus(RunStatus::GUI);
+        {
+            plot_sketch({0, 120, 188,60});
+            sketch.fill(RGB565::BLACK);
+        }
+
         plot_gui();
+
 
         recordRunStatus(RunStatus::BEG);
 
@@ -514,10 +524,21 @@ void SmartCar::main(){
         Shape::dilate_x(ccd_bina, ccd_bina);
 
         auto ele_view = measurer.get_view(pers_bina_image);
+        Shape::dilate_x(ele_view);
+        Shape::dilate_x(ele_view);
+        Pixels::inverse(ele_view);
+
+        Shape::FloodFill ff;
+        auto dl_view = ff.run(ele_view);
+        auto blobs = ff.blobs();
+
+        Pixels::dyeing(dl_view, dl_view);
         plot_bina(ele_view, Rect2i(Vector2i(188,120), ele_view.get_size()));
+        plot_gray(dl_view, Rect2i(Vector2i(188,180), dl_view.get_size()));
         recordRunStatus(RunStatus::IMG_E);
         //图像处理结束
         /* #endregion */
+
 
 
         /* #region */
@@ -527,17 +548,15 @@ void SmartCar::main(){
         auto & img = pers_gray_image;
         auto & img_bina = pers_bina_image;
 
-        std::tie(measurer.seed_pos, measurer.road_window) = get_entry(img_bina);
+        Vector2i new_seed_pos;
+        Rangei new_road_window;
+        std::tie(new_seed_pos, new_road_window) = get_entry(img_bina);
 
-        //如果找不到种子 跳过本次遍历
-        if(!measurer.seed_pos){
-            // DEBUG_PRINTLN("no seed");
-            stop();
-        }
+        if(new_seed_pos && new_road_window) measurer.update_seed_pos(new_seed_pos, new_road_window);
 
-        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.seed_pos.x, 0});
+        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.get_seed_pos().x, 0});
         
-        plot_point(measurer.seed_pos);
+        // plot_point(measurer.get_seed_pos);
         plot_pile({0, ccd_range}, RGB565::FUCHSIA);
 
         recordRunStatus(RunStatus::SEED_B);
@@ -549,8 +568,8 @@ void SmartCar::main(){
         // 寻找两侧的赛道轮廓并修剪为非自交的形式
         recordRunStatus(RunStatus::COAST_B);
         
-        auto coast_left_unfixed =    CoastUtils::form(img_bina, measurer.seed_pos, LEFT);
-        auto coast_right_unfixed =   CoastUtils::form(img_bina, measurer.seed_pos, RIGHT);
+        auto coast_left_unfixed =    CoastUtils::form(img_bina, measurer.get_seed_pos(), LEFT);
+        auto coast_right_unfixed =   CoastUtils::form(img_bina, measurer.get_seed_pos(), RIGHT);
 
         auto left_coast = CoastUtils::trim(coast_left_unfixed, img.size);
         auto right_coast = CoastUtils::trim(coast_right_unfixed, img.size);
@@ -582,6 +601,7 @@ void SmartCar::main(){
 
 
         /* #region */
+
         //进行角点检测
         recordRunStatus(RunStatus::CORNER_B);
 
@@ -615,6 +635,10 @@ void SmartCar::main(){
 
 
         /* #region */
+
+
+        if(!started) continue;
+    
         //开始进行元素识别
         [[maybe_unused]]auto sign_with_dead_zone = [](const int a, const int b, const int zone){
             auto diff = a-b;
@@ -632,6 +656,23 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]] auto zebra_beg_detect = [&]() -> DetectResult {
+            static constexpr int least_y_diff = 8;
+            static constexpr int least_height = 12;
+            //有两个色块
+            // DEBUG_VALUE(blobs.size());
+            if(blobs.size() < 2) return {false};
+            if(blobs.size() > 2) return {false};
+
+            const auto & rect_a = blobs[0].rect;
+            const auto & rect_b = blobs[1].rect;
+
+            if(rect_a.size.y < least_height || rect_b.size.y < least_height) return {false};
+
+            // if(rect_a.intersects(rect_b)) return {false};
+
+            auto y_diff = std::abs(rect_a.get_center().y - rect_b.get_center().y);
+            // DEBUG_PRINTLN(y_diff);
+            if(y_diff > least_y_diff) return {true};
             return {false};
         };
 
@@ -642,6 +683,10 @@ void SmartCar::main(){
                 //少于两个拐点 没法判断有没有障碍
                 if(_corners.size() < 2) return {0,0};
 
+                auto box = CoastUtils::bounding_box(track_left);
+                box.merge(CoastUtils::bounding_box(track_right));
+
+                if(box.size.x > 30) return {0,0};
                 //从起点开始搜索首次出现的a角点和v角点
                 const auto * a_corner_ptr = CornerUtils::find_a(_corners);
                 // const Corner * a_corner_ptr = nullptr;
@@ -694,7 +739,7 @@ void SmartCar::main(){
             }
 
             unknown:
-                ASSERT_WITH_DOWN(false, "detected dual barrier");
+                // ASSERT_WITH_DOWN(false, "detected dual barrier");
                 return {false};
             use_left:
                 return {true, LR::LEFT};
@@ -841,9 +886,11 @@ void SmartCar::main(){
                 {
                     //判断何时处理 状态机 of 斑马线
                     if(true){
-                        auto result = RESULT_GETTER(zebra_beg_detect());
-                        if(result){
-                            sw_element(ElementType::ZEBRA, Cross::Status::BEG, result.side, AlignMode::BOTH, CREATE_LOCKER(1, 0.8));
+                        auto zebra_result = RESULT_GETTER(zebra_beg_detect());
+                        // DEBUG_VALUE(zebra_result);
+                        if(zebra_result){
+                            sw_element(ElementType::ZEBRA, Cross::Status::BEG, zebra_result.side, AlignMode::BOTH, CREATE_LOCKER(1, 0.8));
+                            break;
                         }
                     }
 
@@ -853,6 +900,7 @@ void SmartCar::main(){
                         if(result){
                             // DEBUG_PRINTLN("detected");
                             sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side, co_side_to_align(result.side), CREATE_LOCKER(1.2, 1.0));
+                            break;
                         }
                     }
 
@@ -861,6 +909,7 @@ void SmartCar::main(){
                         auto result = RESULT_GETTER(cross_beg_detect());
                         if(result){
                             sw_element(ElementType::CROSS, Cross::Status::BEG, result.side, AlignMode::UPPER);
+                            break;
                         }
                     }
 
@@ -869,6 +918,7 @@ void SmartCar::main(){
                         auto result = RESULT_GETTER(ring_beg_detect());
                         if(result){
                             sw_element(ElementType::RING, Cross::Status::BEG, result.side, co_side_to_align(result.side));
+                            break;
                         }
                     }
 
@@ -878,27 +928,31 @@ void SmartCar::main(){
             //已经处于斑马线元素状态
             case ElementType::ZEBRA:
                 {
+                    static constexpr real_t zebra_blind_meters = 0.3;
                     using ZebraStatus = Zebra::Status;
-                    static bool zebra_passed = false;
                     auto zebra_status = switches.zebra_status;
                     switch(zebra_status) {
                         //判断何时退出斑马线状态
 
-                        case ZebraStatus::BEG: if(true){
+                        case ZebraStatus::BEG: 
+                        if(is_locked() == false){
                             auto result = RESULT_GETTER(zebra_end_detect());
                             if(result){
                                 if(zebra_passed == false){
                                     //第一次过斑马线
-                                    sw_element(ElementType::NONE, (ZebraStatus::END), result.side, AlignMode::BOTH);
+                                    sw_element(ElementType::NONE, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
+                                    zebra_passed = true;
+                                    DEBUG_PRINTLN("first zebra");
                                 }else{
                                     //第二次过斑马线
-                                    sw_element(ElementType::ZEBRA, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, 0.8});
+                                    sw_element(ElementType::ZEBRA, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
+                                    DEBUG_PRINTLN("second zebra");
                                 }
                             }
                         }break;
 
-                        case ZebraStatus::END: if(true){
-                            stop();
+                        case ZebraStatus::END: if(is_locked() == false){
+                            if(zebra_passed) stop();
                         }break;
                         default:
                             break;
@@ -1225,7 +1279,7 @@ void SmartCar::main(){
                         measurer.update_dir(root_vec.angle());
                     }
 
-                    plot_segment({measurer.seed_pos, measurer.seed_pos + Vector2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
+                    plot_segment({measurer.get_seed_pos(), measurer.get_seed_pos() + Vector2(10.0, 0).rotated(-measurer.get_dir())}, {0, 0}, RGB565::PINK);
                 }
             }while(false);
         }
@@ -1238,10 +1292,7 @@ void SmartCar::main(){
         // plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
         
-        {
-            plot_sketch({0, 120, 188,60});
-            sketch.fill(RGB565::BLACK);
-        }
+
         // DEBUG_PRINTLN("!!");
  
 

@@ -26,8 +26,14 @@ void ElementHolder::update(){
     // }
 }
 
+
+bool ElementHolder::is_locked() const {
+    auto travel =  owner.measurer.get_travel();
+    return ((t < unlock_t) || (travel < unlock_travel));
+}
 void ElementHolder::reset(){
     invoked = false;
+
     unlock_t = 0;
     unlock_travel = 0;
     next_element_type = owner.switches.element_type;
@@ -38,7 +44,7 @@ void ElementHolder::reset(){
 void ElementHolder::request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const AlignMode align_mode, const ElementLocker & locker){
     auto travel =  owner.measurer.get_travel();
     // DEBUG_PRINTLN(t,unlock_t, travel, unlock_travel);
-    if(t < unlock_t || travel < unlock_travel) return;
+    if(is_locked()) return;
     // DEBUG_PRINTLN("unlock passed", new_element_type, new_element_status, new_element_side,
         // owner.switches.element_type, owner.switches.element_side, owner.switches.element_status);
     if(             ((new_element_type != owner.switches.element_type)
@@ -56,6 +62,11 @@ void ElementHolder::request(const ElementType new_element_type, const uint8_t ne
 
         DEBUG_PRINTLN("sw ele", new_element_type, new_element_side, new_element_status);
         // invoked = false;
+    }else{
+        next_element_type = new_element_type;
+        next_element_side = new_element_side;
+        next_element_status = new_element_status;
+        next_align_mode = align_mode;
     }
 }
 

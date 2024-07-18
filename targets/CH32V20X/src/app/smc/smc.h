@@ -94,6 +94,7 @@ protected:
 
     real_t unlock_t = 0;
     real_t unlock_travel = 0;
+
     void invoke();
 public:
 
@@ -105,6 +106,7 @@ public:
 
     void request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const AlignMode, const ElementLocker & locker);
 
+    bool is_locked() const;
 };
 
 
@@ -128,13 +130,13 @@ public:
         Vector3 magnet;
     }msm;
 
-Vector2i seed_pos;
-real_t travel;
-real_t dir_error;
+    real_t travel;
+    real_t dir_error;
 
-Rangei road_window;
+    Rangei road_window;
 
 protected:
+    Vector2i seed_pos;
     void set_drift(const Quat & _accel_drift, const Vector3 & _gyro_drift, const Quat & _magent_drift){
         drift.accel = _accel_drift;
         drift.gyro = _gyro_drift;
@@ -244,6 +246,14 @@ public:
         return src.clone(Rect2i::from_center(window_center, window_half_size));
     }
 
+    void update_seed_pos(const CoastItem & _seed_pos, const Rangei & _road_window){
+        seed_pos = _seed_pos;
+        road_window = _road_window;
+    }
+
+    auto get_seed_pos() const{
+        return seed_pos;
+    }
 
     real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
 
@@ -338,8 +348,12 @@ protected:
 
     ElementHolder element_holder{*this};
 
+    bool started = false;
+
     Key start_key   {portE[2], false};
     Key stop_key    {portE[3], false};
+
+    bool zebra_passed = false;
 
     void ctrl();
 
@@ -388,6 +402,10 @@ public:
         // }
         element_holder.request(element_type, (uint8_t)element_status, element_side, align_mode, locker);
     };
+
+    bool is_locked()const{
+        return element_holder.is_locked();
+    }
 
     // void sw_align(const AlignMode align_mode){
     //     if(align_mode != switches.align_mode){
