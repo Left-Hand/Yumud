@@ -618,13 +618,12 @@ void SmartCar::main(){
                 //能够找到a角点和v角点
                 if(bool(a_corner_ptr) && bool(v_corner_ptr)){
                     static constexpr int ignore_y = 40;
-                    if(Vector2i(*a_corner_ptr).y > ignore_y) return {0,0};
+                    if(Vector2i(*a_corner_ptr).y < ignore_y) return {0,0};
 
                     static constexpr int max_y_diff = 5;
                     static constexpr int min_x_diff = 7;
 
                     Vector2i diff = Vector2i(v_corner_ptr->point) - Vector2i(a_corner_ptr->point);
-                    // DEBUG_PRINTLN(diff);
                     //A角点出现在V角点之前
                     if(a_corner_ptr < v_corner_ptr){
                         
@@ -812,7 +811,7 @@ void SmartCar::main(){
                     if(false){
                         auto result = RESULT_GETTER(zebra_beg_detect());
                         if(result){
-                            sw_element(ElementType::CROSS, (uint8_t)Cross::Status::BEG, result.side);
+                            sw_element(ElementType::CROSS, Cross::Status::BEG, result.side);
                             sw_align(AlignMode::UPPER);
                         }
                     }
@@ -821,7 +820,7 @@ void SmartCar::main(){
                     if(true){
                         auto result = RESULT_GETTER(barrier_beg_detect());
                         if(result){
-                            sw_element(ElementType::BARRIER, (uint8_t)Barrier::Status::BEG, result.side);
+                            sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side);
                             sw_align(co_side_to_align(result.side));
                         }
                     }
@@ -830,7 +829,7 @@ void SmartCar::main(){
                     if(false){
                         auto result = RESULT_GETTER(cross_beg_detect());
                         if(result){
-                            sw_element(ElementType::CROSS, (uint8_t)Cross::Status::BEG, result.side);
+                            sw_element(ElementType::CROSS, Cross::Status::BEG, result.side);
                             sw_align(AlignMode::UPPER);
                         }
                     }
@@ -839,7 +838,7 @@ void SmartCar::main(){
                     if(false){
                         auto result = RESULT_GETTER(ring_beg_detect());
                         if(result){
-                            sw_element(ElementType::RING, (uint8_t)Cross::Status::BEG, result.side);
+                            sw_element(ElementType::RING, Cross::Status::BEG, result.side);
                             sw_align(co_side_to_align(result.side));
                         }
                     }
@@ -858,7 +857,7 @@ void SmartCar::main(){
                         case ZebraStatus::BEG: if(false){
                             auto result = RESULT_GETTER(zebra_beg_detect());
                             if(result){
-                                sw_element(ElementType::NONE, (uint8_t)(ZebraStatus::END), result.side);
+                                sw_element(ElementType::NONE, (ZebraStatus::END), result.side);
                                 sw_align(AlignMode::BOTH);
                             }
                         }break;
@@ -879,7 +878,7 @@ void SmartCar::main(){
                         case BarrierStatus::END:if(true){
                             auto result = RESULT_GETTER(barrier_beg_detect());
                             if(result){
-                                sw_element(ElementType::NONE, (uint8_t)BarrierStatus::END, result.side);
+                                sw_element(ElementType::NONE, BarrierStatus::END, result.side);
                                 sw_align(AlignMode::BOTH);
                             }
                         }break;
@@ -899,7 +898,7 @@ void SmartCar::main(){
                         case CrossStatus::END:if(false){
                             auto result = RESULT_GETTER(cross_beg_detect());
                             if(result){
-                                sw_element(ElementType::NONE, (uint8_t)CrossStatus::END, result.side);
+                                sw_element(ElementType::NONE, CrossStatus::END, result.side);
                                 sw_align(AlignMode::BOTH);
                             }
                         }break;
@@ -920,7 +919,7 @@ void SmartCar::main(){
                         case RingStatus::BEG:if(false){
                             auto result = RESULT_GETTER(ring_in_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, (uint8_t)RingStatus::IN, result.side);
+                                sw_element(ElementType::RING, RingStatus::IN, result.side);
                                 sw_align(side_to_align(ring_side));
                             }
                         }break;
@@ -929,7 +928,7 @@ void SmartCar::main(){
                         case RingStatus::IN: if(false){
                             auto result = RESULT_GETTER(ring_running_detect());
                             if(result){
-                                sw_element(ElementType::RING, (uint8_t)RingStatus::RUNNING, result.side);
+                                sw_element(ElementType::RING, RingStatus::RUNNING, result.side);
                                 sw_align(co_side_to_align(ring_side));
                             }
                         }break;
@@ -938,7 +937,7 @@ void SmartCar::main(){
                         case RingStatus::RUNNING: if(false){
                             auto result = RESULT_GETTER(ring_out_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, (uint8_t)RingStatus::OUT, result.side);
+                                sw_element(ElementType::RING, RingStatus::OUT, result.side);
                                 sw_align(side_to_align(ring_side));
                             }
                         }break;
@@ -947,7 +946,7 @@ void SmartCar::main(){
                         case RingStatus::OUT: if(false){
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, (uint8_t)RingStatus::END, result.side);
+                                sw_element(ElementType::RING, RingStatus::END, result.side);
                                 sw_align(co_side_to_align(ring_side));
                             }
                         }break;
@@ -955,7 +954,7 @@ void SmartCar::main(){
                         case RingStatus::END: if(false){
                             auto result = RESULT_GETTER(ring_exit_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::NONE, (uint8_t)RingStatus::END, result.side);
+                                sw_element(ElementType::NONE, RingStatus::END, result.side);
                                 sw_align(AlignMode::BOTH);
                             }
                         }break;

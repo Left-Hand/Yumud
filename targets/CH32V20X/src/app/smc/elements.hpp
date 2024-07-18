@@ -108,4 +108,72 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const SMC::ElementTyp
     #undef ELEMENT_TYPE_OUT
 }
 
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::Zebra::Status type){
+    using namespace SMC;
+
+    #define ELEMENT_STAT_OUT(x) case Zebra::Status::x: return os << #x;
+
+    switch(type){
+        ELEMENT_STAT_OUT(BEG)
+        ELEMENT_STAT_OUT(END)
+
+        default: return os << '?';
+
+    };
+
+    #undef ELEMENT_STAT_OUT
+}
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::Ring::Status type){
+    using namespace SMC;
+
+    #define ELEMENT_STAT_OUT(x) case Ring::Status::x: return os << #x;
+
+    switch(type){
+        ELEMENT_STAT_OUT(BEG)
+        ELEMENT_STAT_OUT(IN)
+        ELEMENT_STAT_OUT(OUT)
+        ELEMENT_STAT_OUT(RUNNING)
+        ELEMENT_STAT_OUT(END)
+
+        default: return os << '?';
+
+    };
+
+    #undef ELEMENT_STAT_OUT
+}
+
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::Cross::Status type){
+    using namespace SMC;
+
+    #define ELEMENT_STAT_OUT(x) case Cross::Status::x: return os << #x;
+
+    switch(type){
+        ELEMENT_STAT_OUT(BEG)
+        ELEMENT_STAT_OUT(END)
+
+        default: return os << '?';
+
+    };
+
+    #undef ELEMENT_STAT_OUT
+}
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const SMC::Barrier::Status type){
+    using namespace SMC;
+
+    #define ELEMENT_STAT_OUT(x) case Barrier::Status::x: return os << #x;
+
+    switch(type){
+        ELEMENT_STAT_OUT(BEG)
+        ELEMENT_STAT_OUT(END)
+
+        default: return os << '?';
+
+    };
+
+    #undef ELEMENT_STAT_OUT
+}
+
 #endif

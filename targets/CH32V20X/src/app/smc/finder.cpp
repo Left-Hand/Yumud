@@ -869,7 +869,7 @@ Points douglas_peucker_vector(const Points& polyLine, const real_t epsilon){
         if(coast.size() < 2) return true;
 
         int expected_sign = 0;
-        int inital_x = coast[0].x;
+        // int inital_x = coast[0].x;
 
         switch (side){
         case LR::LEFT:

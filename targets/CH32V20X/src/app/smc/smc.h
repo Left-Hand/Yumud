@@ -291,6 +291,7 @@ protected:
 
     BkpItem & powerOnTimesReg = bkp[2];
     BkpItem & flagReg = bkp[3];
+
     Gpio & beep_gpio = portB[2];
 
     Switches switches;
@@ -367,6 +368,7 @@ public:
 
     void sw_element(const ElementType element_type, const auto element_status, const LR element_side, const real_t sustain_time = 0){
         // switches.element_type = element_type;
+        // switches.element_status = (uint8_t)(element_status);
         // switches.element_side = element_side;
         DEBUG_PRINTLN("sw ele", element_type, element_side, element_status);
     };
