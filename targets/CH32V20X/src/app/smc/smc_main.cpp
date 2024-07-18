@@ -552,10 +552,15 @@ void SmartCar::main(){
         Rangei new_road_window;
         std::tie(new_seed_pos, new_road_window) = get_entry(img_bina);
 
+        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.get_seed_pos().x, 0});
+        // if(ccd_range){
+        //     if(bool(new_seed_pos) == false || img_bina[new_seed_pos] == false){
+        //         new_seed_pos = {ccd_range.get_center(), 60 - config.seed_height_base};
+        //     }
+        // }
         if(new_seed_pos && new_road_window) measurer.update_seed_pos(new_seed_pos, new_road_window);
 
-        auto ccd_range = get_h_range(ccd_bina, Vector2i{measurer.get_seed_pos().x, 0});
-        
+        DEBUG_PRINTLN(ccd_range);
         // plot_point(measurer.get_seed_pos);
         plot_pile({0, ccd_range}, RGB565::FUCHSIA);
 
@@ -636,8 +641,6 @@ void SmartCar::main(){
 
         /* #region */
 
-
-        if(!started) continue;
     
         //开始进行元素识别
         [[maybe_unused]]auto sign_with_dead_zone = [](const int a, const int b, const int zone){
@@ -760,23 +763,40 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]] auto cross_beg_detect = [&]() -> DetectResult {
-            [[maybe_unused]] auto side_cross_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
+            [[maybe_unused]] auto side_cross_entry_detect = [&](const Corners & _corners, const LR side) -> const Corner *{
+                const auto * point = CornerUtils::find_a(_corners);
                 switch(side){
                     case LEFT:
-                        return (CornerUtils::find_a(_corners) == _corners.begin());
                     case RIGHT:
-                        return (CornerUtils::find_a(_corners) == _corners.begin());
+                        if(point == _corners.begin()){
+                            return point;
+                        }else{
+                            return nullptr;
+                        }
                     default:
-                        return 0;
+                        return nullptr;
                 }
             };
 
             //FIXME
 
-            bool left_detected = side_cross_entry_detect(left_corners, LR::LEFT);
-            bool right_detected = side_cross_entry_detect(right_corners, LR::RIGHT);
+            const auto * left_detected = side_cross_entry_detect(left_corners, LR::LEFT);
+            const auto * right_detected = side_cross_entry_detect(right_corners, LR::RIGHT);
 
-            return (left_detected && right_detected);
+            //找不到左或右
+            if(left_detected == nullptr || right_detected == nullptr) return {false};   
+            
+            const auto & left_point = left_detected->point;
+            const auto & right_point = right_detected->point;
+
+            static constexpr int max_y_diff = 6;
+            static constexpr int min_x_diff = 20;
+            
+            if(std::abs(left_point.y - right_point.y) >= max_y_diff) return {false};
+            if(std::abs(left_point.x - right_point.x) <= min_x_diff) return {false};
+
+            return {true};
+
         };
 
         [[maybe_unused]] auto cross_end_detect = [&]() -> DetectResult {
@@ -879,13 +899,12 @@ void SmartCar::main(){
         #define CREATE_LOCKER(time, travel) (ElementLocker(time, travel))
 
         auto element_type = switches.element_type;
-        // DEBUG_VALUE(element_type);
         switch(element_type){
             case ElementType::NONE:
             case ElementType::STRAIGHT:
                 {
                     //判断何时处理 状态机 of 斑马线
-                    if(true){
+                    if(false){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
                         // DEBUG_VALUE(zebra_result);
                         if(zebra_result){
@@ -895,20 +914,22 @@ void SmartCar::main(){
                     }
 
                     //判断何时处理 状态机 of 障碍物
-                    if(true){
+                    if(false){
                         auto result = RESULT_GETTER(barrier_beg_detect());
                         if(result){
                             // DEBUG_PRINTLN("detected");
-                            sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side, co_side_to_align(result.side), CREATE_LOCKER(1.2, 1.0));
+                            sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side, co_side_to_align(result.side), CREATE_LOCKER(0.8, 1.0));
                             break;
                         }
                     }
 
                     //判断何时处理 状态机 of 十字
-                    if(false){
-                        auto result = RESULT_GETTER(cross_beg_detect());
-                        if(result){
-                            sw_element(ElementType::CROSS, Cross::Status::BEG, result.side, AlignMode::UPPER);
+                    if(true){
+                        auto cross_result = RESULT_GETTER(cross_beg_detect());
+                        DEBUG_VALUE(cross_result);
+                        if(cross_result){
+                            // DEBUG_PRINTLN("cross detected");
+                            // sw_element(ElementType::CROSS, Cross::Status::BEG, result.side, AlignMode::UPPER);
                             break;
                         }
                     }
@@ -929,6 +950,7 @@ void SmartCar::main(){
             case ElementType::ZEBRA:
                 {
                     static constexpr real_t zebra_blind_meters = 0.3;
+                    static constexpr real_t zebra_blind_startup = 3;
                     using ZebraStatus = Zebra::Status;
                     auto zebra_status = switches.zebra_status;
                     switch(zebra_status) {
@@ -937,22 +959,15 @@ void SmartCar::main(){
                         case ZebraStatus::BEG: 
                         if(is_locked() == false){
                             auto result = RESULT_GETTER(zebra_end_detect());
-                            if(result){
-                                if(zebra_passed == false){
-                                    //第一次过斑马线
-                                    sw_element(ElementType::NONE, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
-                                    zebra_passed = true;
-                                    DEBUG_PRINTLN("first zebra");
-                                }else{
+                            if(result && measurer.get_travel() > zebra_blind_startup){
                                     //第二次过斑马线
-                                    sw_element(ElementType::ZEBRA, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
-                                    DEBUG_PRINTLN("second zebra");
-                                }
+                                DEBUG_PRINTLN("second zebra");
+                                sw_element(ElementType::ZEBRA, (ZebraStatus::END), result.side, AlignMode::BOTH, {0, zebra_blind_meters});
                             }
                         }break;
 
                         case ZebraStatus::END: if(is_locked() == false){
-                            if(zebra_passed) stop();
+                            stop();
                         }break;
                         default:
                             break;
