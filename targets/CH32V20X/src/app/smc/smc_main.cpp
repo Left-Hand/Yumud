@@ -1008,7 +1008,7 @@ void SmartCar::main(){
                     if(true){
                         auto ring_result = RESULT_GETTER(ring_beg_detect());
                         if(ring_result){
-                            sw_element(ElementType::RING, Cross::Status::BEG, ring_result.side, co_side_to_align(ring_result.side), {0, 0.7});
+                            sw_element(ElementType::RING, Cross::Status::BEG, ring_result.side, co_side_to_align(ring_result.side), {0, ring_config.s1});
                             break;
                         }
                     }
@@ -1105,7 +1105,7 @@ void SmartCar::main(){
                         case RingStatus::BEG:if(true){//判断何时单调
                             auto result = RESULT_GETTER(ring_in_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::IN, ring_side, side_to_align(ring_side), {0,0.8});
+                                sw_element(ElementType::RING, RingStatus::IN, ring_side, side_to_align(ring_side), {0,ring_config.c1});
                             }
                         }break;
 
@@ -1113,7 +1113,7 @@ void SmartCar::main(){
                         case RingStatus::IN: if(true){//判断何时全曲
                             auto result = RESULT_GETTER(ring_running_detect());
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, AlignMode::BOTH, {0, 1.3});
+                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, AlignMode::BOTH, {0, ring_config.o});
                             }
                         }break;
 
@@ -1121,7 +1121,7 @@ void SmartCar::main(){
                         case RingStatus::RUNNING: if(true){//判断何时对立有拐点
                             auto result = RESULT_GETTER(ring_out_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, 0.45});
+                                sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, ring_config.c2});
                             }
                         }break;
 
@@ -1129,7 +1129,7 @@ void SmartCar::main(){
                         case RingStatus::OUT: if(true){//判断何时回到圆起点
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, 1.0});
+                                sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, ring_config.s2});
                             }
                         }break;
 

@@ -33,6 +33,16 @@ struct GlobalConfig{
 
 
 
+struct RingConfig{
+    real_t s1 = 0.8;
+    real_t c1 = 0.8;
+    real_t o = 1.3;
+    real_t c2 = 0.45;
+    real_t s2 = 1.0;
+};
+
+
+
 union Switches{
     struct{
         bool plot_de:1 = false;

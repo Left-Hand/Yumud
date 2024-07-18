@@ -189,6 +189,32 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             DEBUG_PRINTS("fps is:", 1000/benchmark.frame_ms);
             break;
 
+        case "ring"_ha:
+        case "rc"_ha:
+            read_value(ring_config.s1)
+            read_value(ring_config.c1)
+            read_value(ring_config.o)
+            read_value(ring_config.c2)
+            read_value(ring_config.s2);
+
+            break;
+
+        case "rc.s1"_ha:
+            settle_value(ring_config.s1, args); break;
+        
+        case "rc.s2"_ha:
+            settle_value(ring_config.s2, args); break;
+        
+        case "rc.o"_ha:
+            settle_value(ring_config.o, args); break;
+        
+        case "rc.c1"_ha:
+            settle_value(ring_config.c1, args); break;
+
+        case "rc.c2"_ha:
+            settle_value(ring_config.c2, args); break;
+
+
         case "pt"_ha:
             settle_value(config.positive_threshold,args);
             break;

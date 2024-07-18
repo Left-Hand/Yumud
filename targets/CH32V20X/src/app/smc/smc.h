@@ -315,10 +315,12 @@ protected:
 
     MotorStrength motor_strength;
     Benchmark benchmark;
+    RingConfig ring_config;
 
     HriFanPair hri_fan{vl_fan, vr_fan};
     SideFan left_fan    {timer4.oc(2), timer4.oc(1)};
     SideFan right_fan  {timer5.oc(3), timer5.oc(4)};
+
 
     SideFan vl_fan      {timer4.oc(3), timer4.oc(4)};//pair ok
     SideFan vr_fan      {timer5.oc(2), timer5.oc(1)};//pair ok
