@@ -183,7 +183,7 @@ namespace SMC{
 
     Points CoastUtils::a_points(const Coast & coast, const real_t threshold){
         auto corners = CoastUtils::search_corners(coast, CornerType::AC, threshold);
-        Points ret;
+        Points ret = {};
 
         for(const auto & [_, point, __]:corners){
             ret.push_back(point);

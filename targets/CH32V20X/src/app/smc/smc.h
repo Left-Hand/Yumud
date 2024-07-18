@@ -26,7 +26,7 @@
 #include "cli.hpp"
 #include "config.hpp"
 
-
+#include "smc_debug.h"
 
 struct Key{
 protected:
@@ -230,7 +230,7 @@ public:
         return msm.gyro.z;
     }
 
-    auto view(const Image<Binary, Binary> & src){
+    auto get_view(const Image<Binary, Binary> & src){
         auto window_center = Vector2i(seed_pos.x, window_y);
         return src.clone(Rect2i::from_center(window_center, window_half_size));
     }
@@ -283,64 +283,12 @@ struct DetectResult{
 };
 
 
-BETTER_ENUM(RunStatus, uint8_t,
-    BEG = 0,
-    CLI,
-    INPUT,
-    EVENTS,
-
-    IMG_B,
-    IMG_E,
-
-    SEED_B,
-    SEED_E,
-
-    COAST_B,
-    COAST_E,
-
-    DP_B,
-    DP_E,
-
-    VEC_B,
-    VEC_E,
-
-    CORNER_B,
-    CORNER_L,
-    CORNER_R,
-    CORNER_E,
-
-
-    ELEMENT_B,
-    ELEMENT_E,
-
-    BARRIER_B,
-    BARRIER_E,
-
-    CROSS_B,
-    CROSS_E,
-
-    RING_B,
-    RING_E,
-
-
-
-    SEGMENT,
-    SEGMENT_E,
-    FANS_B,
-
-    FANS_E,
-    END
-)
-
-using namespace SMC;
-
 class SmartCar:public SmcCli{
 protected:
-    void recordRunStatus(const RunStatus status);
     void printRecordedRunStatus();
 
     std::tuple<Point, Rangei> get_entry(const ImageReadable<Binary> & src);
-    BkpItem & runStatusReg = bkp[1];
+
     BkpItem & powerOnTimesReg = bkp[2];
     BkpItem & flagReg = bkp[3];
     Gpio & beep_gpio = portB[2];

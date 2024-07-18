@@ -6,7 +6,6 @@ using SMC::CoastFinder;
 using NVCV2::Shape::Seed;
 
 
-
 static void fast_diff_opera(Image<Grayscale, Grayscale> & dst, const Image<Grayscale, Grayscale> & src) {
     if((void *)&dst == (void *)&src){
         auto temp = dst.clone();
@@ -105,9 +104,7 @@ void SmartCar::reset(){
     // body.reset();
 }
 
-void SmartCar::recordRunStatus(const RunStatus status){
-    runStatusReg = uint16_t(uint8_t(status));
-}
+
 
 void SmartCar::printRecordedRunStatus(){
     auto temp = RunStatus::_from_integral_unchecked(uint16_t(runStatusReg));
@@ -414,17 +411,17 @@ void SmartCar::main(){
     [[maybe_unused]] auto plot_gui = [&](){
         plot_vec3(measurer.get_accel().normalized() * 15, {190, 0});
         plot_vec3((measurer.get_gyro()).clampmax(15), {190, 60});
-        plot_vec3(measurer.get_magent().normalized() * 15, {190, 120});
+        // plot_vec3(measurer.get_magent().normalized() * 15, {190, 120});
 
         painter.setColor(RGB565::WHITE);
         
-        auto pos = Vector2i{190, 180};
+        [[maybe_unused]] auto pos = Vector2i{190, 180};
 
         #define DRAW_STR(str)\
             painter.drawString(pos, str);\
             pos += Vector2i(0, 9);
         
-        painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
+        // painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
 
 
 
@@ -499,9 +496,8 @@ void SmartCar::main(){
         Shape::dilate_x(ccd_bina, ccd_bina);
         Shape::dilate_x(ccd_bina, ccd_bina);
 
-
-        // plot_gray(ccd_image,  Rect2i{Vector2i{0, 180}, Vector2i{188, 60}});
-
+        auto ele_view = measurer.get_view(pers_bina_image);
+        plot_bina(ele_view, Rect2i(Vector2i(188,120), ele_view.get_size()));
         recordRunStatus(RunStatus::IMG_E);
         //图像处理结束
         /* #endregion */
@@ -515,8 +511,6 @@ void SmartCar::main(){
         auto & img_bina = pers_bina_image;
 
         std::tie(measurer.seed_pos, measurer.road_window) = get_entry(img_bina);
-        // DEBUG_VALUE(measurer.road_window);
-
 
         //如果找不到种子 跳过本次遍历
         if(!measurer.seed_pos){
@@ -561,9 +555,6 @@ void SmartCar::main(){
         auto track_left = CoastUtils::douglas_peucker(coast_left, config.dpv);
         auto track_right = CoastUtils::douglas_peucker(coast_right, config.dpv);
 
-        // auto track_left = douglas_peucker(CoastUtils::shrink(coast_left, real_t(-align_space_width)), dpv);
-        // auto track_right = douglas_peucker(CoastUtils::shrink(coast_right, real_t(align_space_width)), dpv);
-
         plot_coast(track_left, {0, 0}, RGB565::RED);
         plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
@@ -604,15 +595,20 @@ void SmartCar::main(){
 
         /* #region */
         //开始进行元素识别
+        [[maybe_unused]]auto sign_with_dead_zone = [](const int a, const int b, const int zone){
+            auto diff = a-b;
+            if(std::abs(diff) < std::abs(zone)) return 0;
+            return sign(diff);
+        };
 
-        [[maybe_unused]]auto zebra_beg_detect = [&]() -> DetectResult {
+        [[maybe_unused]] auto zebra_beg_detect = [&]() -> DetectResult {
             return {false};
         };
 
         [[maybe_unused]]auto barrier_beg_detect = [&]() -> DetectResult {
-           [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> bool {
+           [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> Vector2i {
                 //少于两个拐点 没法判断有没有障碍
-                if(_corners.size() < 2) return false;
+                if(_corners.size() < 2) return {0,0};
 
                 //从起点开始搜索首次出现的a角点和v角点
                 const auto * a_corner_ptr = CornerUtils::find_a(_corners);
@@ -621,7 +617,9 @@ void SmartCar::main(){
 
                 //能够找到a角点和v角点
                 if(bool(a_corner_ptr) && bool(v_corner_ptr)){
-                    // DEBUG_PRINTLN("corners find", Vector2i(*a_corner_ptr), Vector2i(*v_corner_ptr));
+                    static constexpr int ignore_y = 40;
+                    if(Vector2i(*a_corner_ptr).y > ignore_y) return {0,0};
+
                     static constexpr int max_y_diff = 5;
                     static constexpr int min_x_diff = 7;
 
@@ -634,25 +632,43 @@ void SmartCar::main(){
                             && (std::abs(diff.x) > min_x_diff)
                             && (side == LR::LEFT ? diff.x > 0 : diff.x < 0)
                         ){
-                            return true;
+                            return *a_corner_ptr;
                         }
                     }
                 }
                 
-                return false;
+                return {0,0};
             };
 
-            bool left_detected = side_barrier_detect(left_corners, LR::LEFT);
-            bool right_detected = side_barrier_detect(right_corners, LR::RIGHT);
-            ASSERT_WITH_DOWN((left_detected && right_detected) == false, "detected dual barrier");
+            Vector2i left_detected = side_barrier_detect(left_corners, LR::LEFT);
+            Vector2i right_detected = side_barrier_detect(right_corners, LR::RIGHT);
 
-            if(left_detected){
-                return {true, LR::LEFT};
-            }else if(right_detected){
-                return {true, LR::RIGHT};
+            static constexpr int least_y_diff = 20;
+
+            if(left_detected && right_detected) {
+                switch(sign_with_dead_zone(left_detected.y, right_detected.y,least_y_diff)){
+                    case 1:
+                        goto use_left;
+                    case -1:
+                        goto use_right;
+                    default:
+                        goto unknown;
+                }
             }else{
+                if(left_detected) goto use_left;
+                if(right_detected) goto use_right;
+
+                //not detected
                 return {false};
             }
+
+            unknown:
+                ASSERT_WITH_DOWN(false, "detected dual barrier");
+                return {false};
+            use_left:
+                return {true, LR::LEFT};
+            use_right:
+                return {true, LR::RIGHT};
         };
 
         [[maybe_unused]]auto straight_detect = [&]() -> DetectResult {
@@ -859,11 +875,6 @@ void SmartCar::main(){
                     using BarrierStatus = Barrier::Status;
                     auto barrier_status = switches.barrier_status;
                     switch(barrier_status) {
-                        // case BarrierStatus::BEG:if(false){
-                        //     auto result = RESULT_GETTER(barrier_detect());
-                        //     if(result){sw_element(ElementType::BARRIER, (uint8_t)BarrierStatus::, result.side);}
-                        // }break;
-
                         //判断何时退出障碍物状态
                         case BarrierStatus::END:if(true){
                             auto result = RESULT_GETTER(barrier_beg_detect());
