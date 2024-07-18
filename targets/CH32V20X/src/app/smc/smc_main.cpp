@@ -582,9 +582,7 @@ void SmartCar::main(){
         };
 
         auto left_coast = get_coast(measurer.seed_pos, LEFT);
-        auto upper_left_coast = get_coast(Vector2i(measurer.seed_pos.x, 20), LEFT);
         auto right_coast = get_coast(measurer.seed_pos, RIGHT);
-        auto upper_right_coast = get_coast(Vector2i(measurer.seed_pos.x, 20), RIGHT);
         // auto right_coast = CoastUtils::trim(coast_right_unfixed, img.size);
     
         ASSERT(CoastUtils::is_self_intersection(left_coast) == false, "left self ins");
@@ -601,15 +599,11 @@ void SmartCar::main(){
         //开始进行对轮廓进行抽稀
         recordRunStatus(RunStatus::DP_B);
 
-        auto track_left = CoastUtils::douglas_peucker(left_coast, config.dpv);
-        auto upper_track_left = CoastUtils::douglas_peucker(upper_left_coast, config.dpv);
-        auto upper_track_right = CoastUtils::douglas_peucker(upper_right_coast, config.dpv);
-        auto track_right = CoastUtils::douglas_peucker(right_coast, config.dpv);
+        auto left_track = CoastUtils::douglas_peucker(left_coast, config.dpv);
+        auto right_track = CoastUtils::douglas_peucker(right_coast, config.dpv);
 
-        plot_coast(track_left, {0, 0}, RGB565::RED);
-        plot_coast(track_right, {0, 0}, RGB565::BLUE);
-        plot_coast(upper_track_right, {0, 0}, RGB565::YELLOW);
-        plot_coast(upper_track_right, {0, 0}, RGB565::GREEN);
+        plot_coast(left_track, {0, 0}, RGB565::RED);
+        plot_coast(right_track, {0, 0}, RGB565::BLUE);
 
         // DEBUG_PRINTLN(measurer.get_dir(), is_blind);
         recordRunStatus(RunStatus::DP_E);
@@ -624,9 +618,9 @@ void SmartCar::main(){
         recordRunStatus(RunStatus::CORNER_B);
 
         recordRunStatus(RunStatus::CORNER_L);
-        const auto left_corners = CoastUtils::search_corners(track_left, CornerType::ALL);
+        const auto left_corners = CoastUtils::search_corners(left_track, CornerType::ALL);
         recordRunStatus(RunStatus::CORNER_R);
-        const auto right_corners = CoastUtils::search_corners(track_right, CornerType::ALL);
+        const auto right_corners = CoastUtils::search_corners(right_track, CornerType::ALL);
 
         // DEBUG_PRINTLN(left_corners.size(), right_corners.size());
 
@@ -703,8 +697,8 @@ void SmartCar::main(){
                 //少于两个拐点 没法判断有没有障碍
                 if(_corners.size() < 2) return {0,0};
 
-                auto box = CoastUtils::bounding_box(track_left);
-                box.merge(CoastUtils::bounding_box(track_right));
+                auto box = CoastUtils::bounding_box(left_track);
+                box.merge(CoastUtils::bounding_box(right_track));
 
                 if(box.size.x > 30) return {0,0};
                 //从起点开始搜索首次出现的a角点和v角点
@@ -769,14 +763,42 @@ void SmartCar::main(){
 
         [[maybe_unused]] auto barrier_end_detect = none_detect;
 
+        [[maybe_unused]] auto side_is_curve_detect = [&](const Corners & _corners) -> bool {
+            return _corners.size() == 0;
+        };
 
         [[maybe_unused]] auto curve_detect = [&]() -> DetectResult {
-            [[maybe_unused]] auto side_curve_detect = [&](const Corners & _corners, const LR side) -> bool {
-                // auto sign =  CoastUtils::sigle(coast);
-                return true;
-            };
+            return side_is_curve_detect(left_corners) && side_is_curve_detect(right_corners);
+            // return {false};//TODO
+        };
 
-            return {false};//TODO
+        [[maybe_unused]] auto side_has_hook_detect = [&](const Corners & _corners, const Coast & track, LR side) -> const CoastItem *{
+            bool has_three_points = (track.size() >= 3);
+            if(has_three_points == false) {return nullptr;}
+
+            const auto * corner = CornerUtils::find_a(_corners);
+            bool first_is_a = bool(corner == _corners.begin());
+            // static constexpr int min_y_diff = 4;
+            static constexpr int min_x_diff = 6;
+            if(first_is_a){
+                const auto * ret = &(corner->point);
+                const Vector2i diff = Vector2i(track[2]) - Vector2i(track[1]);
+                // if(diff.y < min_y_diff) return nullptr;
+                switch(side){
+                    case LEFT:
+                        return diff.x < -min_x_diff ? ret : nullptr;
+                    case RIGHT:
+                        return diff.x > min_x_diff ? ret : nullptr;
+                    default:
+                        return nullptr;
+                }
+            }else{
+                return nullptr;
+            }
+        };
+
+        [[maybe_unused]] auto side_is_straight_detect = [&](const Coast & track) -> bool{
+            return track.size() == 2;
         };
 
         [[maybe_unused]] auto cross_beg_detect = [&]() -> DetectResult {
@@ -846,25 +868,33 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]] auto ring_beg_detect = [&]() -> DetectResult {
-            [[maybe_unused]] auto side_ring_entry_detect = [&](const Corners & _corners, const LR side) -> bool {
-                switch(side){
-                    case LEFT:
-                        return (CornerUtils::find_a(_corners) == _corners.begin());
-                    case RIGHT:
-                        return (CornerUtils::find_a(_corners) == _corners.begin());
-                    default:
-                        return 0;
-                }
-            };
 
-            bool left_detected = side_ring_entry_detect(left_corners, LR::LEFT);
-            bool right_detected = side_ring_entry_detect(right_corners, LR::RIGHT);
 
-            if(left_detected ^ right_detected){
-                //判断只有一边有A角点
 
-                return true;
-            }
+            // [[maybe_unused]] auto side_ring_on_detect = [&](const Corners & exp_corners, const Coast & co_track) -> {
+            //     return bool(side_is_curve_detect(exp_corners)) && bool(side_is_straight_detect)
+            // }
+
+            bool left_detected = bool(side_has_hook_detect(left_corners, left_track, LEFT)) && bool(side_is_straight_detect(right_track));
+            bool right_detected = bool(side_has_hook_detect(right_corners, right_track, RIGHT)) && bool(side_is_straight_detect(left_track));
+
+            return {bool(left_detected ^ right_detected), left_detected ? LR::LEFT : LR::RIGHT};
+                // static constexpr int min_y_diff = 20;
+                // const auto * left_detected = side_ring_entry_detect(left_corners, left_track, );
+                // const auto * right_detected = side_ring_entry_detect(right_corners, right_track, LR::RIGHT);
+
+                // if(bool(left_detected) ^ bool(right_detected)){
+                //     //判断只有一边有A角点
+
+                //     return {true};
+                // }else if(bool(left_detected) && bool(right_detected)){
+                //     const auto & left_point = *left_detected;
+                //     const auto & right_point = *right_detected;
+
+                //     return {std::abs(left_point.y - right_point.y) > min_y_diff};
+                // }else{
+                //     return {false};
+                // }
         };
 
         [[maybe_unused]] auto ring_in_detect = [&](const LR known_side) -> DetectResult {
@@ -873,7 +903,7 @@ void SmartCar::main(){
                     return CoastUtils::is_single(_side == LR::RIGHT ? right_coast : left_coast, _side);
                 }else{
                     //对立边应该是直道
-                    return _corners.size() == 0;
+                    return _corners.size() == 2;
                 }
             };
 
@@ -886,17 +916,24 @@ void SmartCar::main(){
         [[maybe_unused]] auto ring_running_detect = curve_detect;
 
         [[maybe_unused]] auto ring_out_detect = [&](const LR known_side) -> DetectResult {
-            return ring_beg_detect().side != known_side;
+            // const auto & track = known_side ? left_track : right_track; 
+
+            //选取对立侧拐点
+            const auto & corners = (known_side == LR::RIGHT)? left_corners : right_corners;
+
+            //判断有没有拐点
+            if(corners.size() < 1) return {false};
+            return {true};
         };
 
         [[maybe_unused]] auto ring_end_detect = [&](const LR known_side) -> DetectResult {
             // return ring_beg_detect().side != known_side;
-            return true;
+            return side_is_curve_detect(left_corners) && side_is_curve_detect(right_corners);
         };
     
         [[maybe_unused]] auto ring_exit_detect = [&](const LR known_side) -> DetectResult {
             // return ring_beg_detect().side != known_side;
-            return false;
+            return true;
         };
 
         #define RESULT_GETTER(x) update_detect(x)
@@ -915,15 +952,14 @@ void SmartCar::main(){
 
         #define CREATE_LOCKER(time, travel) (ElementLocker(time, travel))
 
-
-
         auto element_type = switches.element_type;
         switch(element_type){
             case ElementType::NONE:
             case ElementType::STRAIGHT:
                 {
                     //判断何时处理 状态机 of 斑马线
-                    if((measurer.get_travel() > zebra_blind_startup_meters)){
+                    // if((measurer.get_travel() > zebra_blind_startup_meters)){
+                    if(false){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
                         // DEBUG_VALUE(zebra_result);
                         if(zebra_result){
@@ -933,7 +969,8 @@ void SmartCar::main(){
                     }
 
                     //判断何时处理 状态机 of 障碍物
-                    if(true){
+                    // if(true){
+                    if(false){
                         auto result = RESULT_GETTER(barrier_beg_detect());
                         if(result){
                             // DEBUG_PRINTLN("detected");
@@ -943,7 +980,8 @@ void SmartCar::main(){
                     }
 
                     //判断何时处理 状态机 of 十字
-                    if(true){
+                    // if(true){
+                    if(false){
                         auto cross_result = RESULT_GETTER(cross_beg_detect());
                         DEBUG_VALUE(cross_result);
                         if(cross_result){
@@ -954,10 +992,10 @@ void SmartCar::main(){
                     }
 
                     //判断何时处理 状态机 of 圆环
-                    if(false){
-                        auto result = RESULT_GETTER(ring_beg_detect());
-                        if(result){
-                            sw_element(ElementType::RING, Cross::Status::BEG, result.side, co_side_to_align(result.side));
+                    if(true){
+                        auto ring_result = RESULT_GETTER(ring_beg_detect());
+                        if(ring_result){
+                            sw_element(ElementType::RING, Cross::Status::BEG, ring_result.side, co_side_to_align(ring_result.side), {0, 0.7});
                             break;
                         }
                     }
@@ -1051,41 +1089,41 @@ void SmartCar::main(){
                     auto ring_side = switches.element_side;
                     switch(ring_status){
                         //判断何时入环
-                        case RingStatus::BEG:if(false){
+                        case RingStatus::BEG:if(true){//判断何时单调
                             auto result = RESULT_GETTER(ring_in_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::IN, result.side, side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::IN, ring_side, side_to_align(ring_side), {0,0.6});
                             }
                         }break;
 
                         //判断何时进环
-                        case RingStatus::IN: if(false){
+                        case RingStatus::IN: if(true){//判断何时全曲
                             auto result = RESULT_GETTER(ring_running_detect());
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::RUNNING, result.side, co_side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::RUNNING, ring_side, co_side_to_align(ring_side), {0, 2.0});
                             }
                         }break;
 
                         //判断何时出环
-                        case RingStatus::RUNNING: if(false){
+                        case RingStatus::RUNNING: if(true){//判断何时对立有拐点
                             auto result = RESULT_GETTER(ring_out_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::OUT, result.side, side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::OUT, ring_side, side_to_align(ring_side), {0, 0.4});
                             }
                         }break;
 
                         //判断何时退出圆环
-                        case RingStatus::OUT: if(false){
+                        case RingStatus::OUT: if(true){//判断何时回到圆起点
                             auto result = RESULT_GETTER(ring_end_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::RING, RingStatus::END, result.side, co_side_to_align(ring_side));
+                                sw_element(ElementType::RING, RingStatus::END, ring_side, co_side_to_align(ring_side), {0, 0.8});
                             }
                         }break;
 
-                        case RingStatus::END: if(false){
+                        case RingStatus::END: if(true){//判断何时
                             auto result = RESULT_GETTER(ring_exit_detect(ring_side));
                             if(result){
-                                sw_element(ElementType::NONE, RingStatus::END, result.side, AlignMode::BOTH);
+                                sw_element(ElementType::NONE, RingStatus::END, ring_side, AlignMode::BOTH);
                             }
                         }break;
                     }
@@ -1208,11 +1246,11 @@ void SmartCar::main(){
                 return ret;
             };
 
-            track_left = coast_fix_lead(track_left, LR::LEFT);
-            track_right = coast_fix_lead(track_right, LR::RIGHT);
+            left_track = coast_fix_lead(left_track, LR::LEFT);
+            right_track = coast_fix_lead(right_track, LR::RIGHT);
 
-            plot_coast(track_left, {0, 0}, RGB565::GREEN);
-            plot_coast(track_right, {0, 0}, RGB565::CORAL);
+            plot_coast(left_track, {0, 0}, RGB565::GREEN);
+            plot_coast(right_track, {0, 0}, RGB565::CORAL);
         };
 
         //引导修正结束
@@ -1223,15 +1261,15 @@ void SmartCar::main(){
         recordRunStatus(RunStatus::VEC_B);
         if(true){
             do{
-                if(track_left.size() >= 2 and track_right.size() >= 2){
+                if(left_track.size() >= 2 and right_track.size() >= 2){
                     auto vec_valid = [](const Vector2 & vec){return bool(vec) && vec.length() > 5;}; 
                     auto road_align_pixels = WorldUtils::pixels(config.road_width);
                     Segment seg_left = SegmentUtils::shift({
-                            track_left.front(), *std::next(track_left.begin())}, 
+                            left_track.front(), *std::next(left_track.begin())}, 
                             Vector2i(int(road_align_pixels/2), 0));
 
                     Segment seg_right = SegmentUtils::shift({
-                            track_right.front(), *std::next(track_right.begin())}, 
+                            right_track.front(), *std::next(right_track.begin())}, 
                             Vector2i(-int(road_align_pixels/2), 0));
 
                     // plot_segment(seg_left, {0, 0}, RGB565::YELLOW);
