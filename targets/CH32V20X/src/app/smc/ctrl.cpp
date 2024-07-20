@@ -33,16 +33,17 @@ void SmartCar::ctrl(){
             measurer.get_front_speed());
     //-----------------
 
-    real_t min_strength = 0.1;
+    real_t min_strength = 0.14;
 
     if(switches.hand_mode == false){
         motor_strength.left = 0;
         motor_strength.right = 0;
 
         if(!is_blind){
-        motor_strength.left += turn_output;
-        motor_strength.right -= turn_output;
+                motor_strength.left += turn_output;
+                motor_strength.right -= turn_output;
         }
+
         motor_strength.left += speed_output;
         motor_strength.right += speed_output;
 

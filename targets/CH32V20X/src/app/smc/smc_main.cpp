@@ -413,7 +413,7 @@ void SmartCar::main(){
 
     [[maybe_unused]] auto plot_gui = [&](){
         plot_vec3(measurer.get_accel().normalized() * 15, {190, 0});
-        plot_vec3((measurer.get_gyro()).clampmax(15), {190, 60});
+        // plot_vec3((measurer.get_gyro()).clampmax(15), {190, 60});
         // plot_vec3(measurer.get_magent().normalized() * 15, {190, 120});
 
         painter.setColor(RGB565::WHITE);
@@ -432,6 +432,9 @@ void SmartCar::main(){
         DRAW_STR("子状" + toString(int(switches.element_status)));
         DRAW_STR("元侧" + toString(int(switches.element_side)));
         DRAW_STR("附模" + toString(int(switches.align_mode)));
+        DRAW_STR("左:" + toString(int(motor_strength.left * 99)));
+        DRAW_STR("右:" + toString(int(motor_strength.right * 99)));
+        DRAW_STR("侧:" + toString(int(motor_strength.hri * 99)));
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
