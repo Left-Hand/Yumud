@@ -424,13 +424,14 @@ void SmartCar::main(){
             painter.drawString(pos, str);\
             pos += Vector2i(0, 9);
         
-        // painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
+        painter.drawFilledRect(Rect2i(pos, Vector2i{60, 60}),RGB565::BLACK);
 
 
 
-        // DRAW_STR("自转" + toString(measurer.get_omega()));
-        // DRAW_STR("向差" + toString(measurer.dir_error));
-        // DRAW_STR("侧移" + toString(measurer.lane_offset * 100));
+        DRAW_STR("元素" + toString(int(switches.element_type)));
+        DRAW_STR("子状" + toString(int(switches.element_status)));
+        DRAW_STR("元侧" + toString(int(switches.element_side)));
+        DRAW_STR("附模" + toString(int(switches.align_mode)));
     };
 
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
