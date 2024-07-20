@@ -28,6 +28,9 @@
 
 #include "smc_debug.h"
 
+
+
+
 struct Key{
 protected:
     GpioConcept & m_gpio;
@@ -323,9 +326,6 @@ protected:
     BkpItem & powerOnTimesReg = bkp[2];
     BkpItem & flagReg = bkp[3];
 
-    Gpio & beep_gpio = portB[2];
-
-
     Flags flags;
     GlobalConfig config;
     SetPoints setp;
@@ -357,16 +357,15 @@ protected:
 
     I2cSw sccb      {portD[2], portC[12]};
     I2cSw i2c       {portB[3], portB[5]};
-    
-    MT9V034 camera  {sccb};
 
+    MT9V034 camera  {sccb};
+    Key start_key   {portE[3], false};
+    Key stop_key    {portE[2], false};
     ElementHolder element_holder{*this};
 
     bool started = false;
     bool is_blind = false;
-
-    Key start_key   {portE[3], false};
-    Key stop_key    {portE[2], false};
+    int zebra_threshold = 11;
 
     void ctrl();
 
@@ -389,16 +388,14 @@ protected:
 
     void init_fans();
 
-    void update_sensors();
     void parse();
-
-    void update_beep(const bool);
 
     void update_holder();
 
     bool is_startup() const {
         return measurer.get_travel() < startup_meters;
     }
+
 protected:
     void parse_command(String &, std::vector<String> & args) override;
 public:
@@ -414,13 +411,6 @@ public:
     bool is_locked()const{
         return element_holder.is_locked();
     }
-
-    // void sw_align(const AlignMode align_mode){
-    //     if(align_mode != switches.align_mode){
-    //         switches.align_mode = align_mode;
-    //         DEBUG_PRINTLN("sw ali", align_mode);
-    //     }
-    // }
 
     Switches switches;
     Measurer measurer{i2c};

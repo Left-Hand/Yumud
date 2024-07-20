@@ -103,7 +103,7 @@ namespace StepperUtils{
         }
 
         void parse_line(const String & _line){
-            if(line.length() == 0) return;
+            if(_line.length() == 0) return;
             bool ends = (_line.lastIndexOf('\n') > 0);
             String line = _line;
             line.alphanum();
@@ -112,7 +112,7 @@ namespace StepperUtils{
             temp += line;
 
             if(ends){
-                if(temp.alphanum()){
+                if(temp){
                     auto tokens = split_string(temp, ' ');
                     auto command = tokens[0];
                     tokens.erase(tokens.begin());

@@ -451,6 +451,18 @@ __fast_inline_constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 
 }
 
+
+__fast_inline_constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
+#if GLOBAL_Q > 16
+    qv.value = data << (GLOBAL_Q - 16);
+#elif(GLOBAL_Q < 16)
+    qv.value = data >> (16 - GLOBAL_Q);
+#else
+    qv.value = _iq(data);
+#endif
+
+}
+
 __fast_inline_constexpr void s16_to_uni(const int16_t data, iq_t & qv){
     qv.value = data > 0 ? _iq(data) : _iq(-(_iq(-data)));
 }

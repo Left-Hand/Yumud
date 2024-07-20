@@ -129,7 +129,6 @@ void SmartCar::init_periphs(){
     
     {
         portD[4].outpp(1);
-        beep_gpio.outpp(0);
     }
 
     printRecordedRunStatus();
@@ -214,16 +213,6 @@ void SmartCar::stop(){
     parse();
 }
 
-void SmartCar::update_beep(const bool en = true){
-    if(en){
-        beep_gpio.set();
-        delay(100);
-        return;
-    }
-
-    beep_gpio.clr();
-}
-
 void SmartCar::update_holder(){
     // DEBUG_PRINTLN("update_holder");
     element_holder.update();
@@ -247,7 +236,6 @@ void SmartCar::parse(){
         }
 
     }
-    update_beep(flags.data != 0);
     flagReg = flags;
 };
 
@@ -448,7 +436,7 @@ void SmartCar::main(){
     DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
 
     
-    camera.setExposureValue(300);
+    camera.setExposureValue(1000);
 
     delay(500);
 
@@ -507,10 +495,11 @@ void SmartCar::main(){
         // fast_bina_opera(
         fast_diff_opera(diff_gray_image, pers_gray_image);//进行加速后的差分算法
 
-        plot_gray(diff_gray_image, Rect2i{0, 0, 188, 60});
+        // plot_gray(diff_gray_image, Rect2i{0, 0, 188, 60});
         CREATE_BENCHMARK(benchmark.gray);
         Pixels::binarization(pers_bina_image, pers_gray_image, config.edge_threshold);
         CREATE_BENCHMARK(benchmark.bina);
+        plot_bina(pers_bina_image, Rect2i{0, 0, 188, 60});
 
 
         auto ccd_image = camera.clone({0,73,188,6});
@@ -656,10 +645,15 @@ void SmartCar::main(){
             edges = std::max(get_x_edges(img_bina, 15), edges);
             edges = std::max(get_x_edges(img_bina, 12), edges);
             edges = std::max(get_x_edges(img_bina, 9), edges);
-            return(edges > 13);
+            edges = std::max(get_x_edges(img_bina, 6), edges);
+            // DEBUG_PRINTLN(edges);
+            return(edges > zebra_threshold);
+            // auto edges = get_x_edges(img, 18);
+            // edges = std::max(get_x_edges(img, 15), edges);
+            // edges = std::max(get_x_edges(img, 12), edges);
+            // edges = std::max(get_x_edges(img, 9), edges);
+            // return(edges > 1500);
         };
-
-        [[maybe_unused]] auto zebra_end_detect = none_detect;
 
         [[maybe_unused]] auto barrier_beg_detect = [&]() -> DetectResult {
            [[maybe_unused]] auto side_barrier_detect = [&](const Corners & _corners, const LR side) -> Vector2i {
@@ -669,7 +663,7 @@ void SmartCar::main(){
                 auto box = CoastUtils::bounding_box(left_track);
                 box.merge(CoastUtils::bounding_box(right_track));
 
-                if(box.size.x > 30) return {0,0};
+                if(box.size.x > 33) return {0,0};
                 //从起点开始搜索首次出现的a角点和v角点
                 const auto * a_corner_ptr = CornerUtils::find_a(_corners);
                 // const Corner * a_corner_ptr = nullptr;
@@ -771,12 +765,24 @@ void SmartCar::main(){
         };
 
         [[maybe_unused]] auto cross_beg_detect = [&]() -> DetectResult {
-            [[maybe_unused]] auto side_cross_entry_detect = [&](const Corners & _corners, const LR side) -> const Corner *{
+            [[maybe_unused]] auto side_cross_entry_detect = [&](const Corners & _corners, const Coast & _track, const LR side) -> const Corner *{
+
                 const auto * point = CornerUtils::find_a(_corners);
                 switch(side){
                     case LEFT:
                     case RIGHT:
-                        if(point == _corners.begin() && point->point.y > 40){
+                        if(point == _corners.begin() && point->point.y > 38){
+                                static constexpr int _min_x_diff = 2;
+
+                                if(_track.size() < 3) return nullptr;
+
+                                auto vec_diff = Vector2i(_track[2]) - Vector2i(_track[1]);
+
+                                if(side == LR::LEFT){
+                                    if(vec_diff.x > -_min_x_diff) return nullptr;
+                                }else{
+                                    if(vec_diff.x < _min_x_diff) return nullptr;
+                                }
                             return point;
                         }else{
                             return nullptr;
@@ -788,8 +794,8 @@ void SmartCar::main(){
 
             //FIXME
 
-            const auto * left_detected = side_cross_entry_detect(left_corners, LR::LEFT);
-            const auto * right_detected = side_cross_entry_detect(right_corners, LR::RIGHT);
+            const auto * left_detected = side_cross_entry_detect(left_corners, left_track, LR::LEFT);
+            const auto * right_detected = side_cross_entry_detect(right_corners, right_track, LR::RIGHT);
 
             //找不到左或右
             if(left_detected == nullptr || right_detected == nullptr) return {false};   
@@ -797,46 +803,44 @@ void SmartCar::main(){
             const auto & left_point = left_detected->point;
             const auto & right_point = right_detected->point;
 
-            static constexpr int max_y_diff = 6;
-            static constexpr int min_x_diff = 20;
+            static constexpr int max_y_diff = 10;
+            static constexpr int min_x_diff = 17;
             
             if(std::abs(left_point.y - right_point.y) >= max_y_diff) return {false};
             if(std::abs(left_point.x - right_point.x) <= min_x_diff) return {false};
 
             return {true};
-
         };
 
-        [[maybe_unused]] auto cross_end_detect = [&]() -> DetectResult {
-            [[maybe_unused]] auto side_cross_leave_detect = [&](const Corners & _corners, const LR side) -> bool {
-                switch(side){
-                    case LEFT:
-                    case RIGHT:{
+        // [[maybe_unused]] auto cross_end_detect = [&]() -> DetectResult {
+        //     [[maybe_unused]] auto side_cross_leave_detect = [&](const Corners & _corners, const LR side) -> bool {
+        //         switch(side){
+        //             case LEFT:
+        //             case RIGHT:{
 
-                        // if(measurer.get_road_length_meters() < max)
-                        const auto * first_corner_ptr = CornerUtils::find_corner(_corners);
+        //                 // if(measurer.get_road_length_meters() < max)
+        //                 const auto * first_corner_ptr = CornerUtils::find_corner(_corners);
 
-                        //没有拐点了 那就可以 
-                        if(first_corner_ptr == nullptr) return true;
+        //                 //没有拐点了 那就可以 
+        //                 if(first_corner_ptr == nullptr) return true;
 
-                        const auto & first_point = *first_corner_ptr;
+        //                 const auto & first_point = *first_corner_ptr;
 
-                        //十字后
-                        if(first_point.point.y < 30) return true;
+        //                 //十字后
+        //                 if(first_point.point.y < 30) return true;
 
-                        return false;
-                    }
-                    default:
-                        return false;
-                }
-            };
+        //                 return false;
+        //             }
+        //             default:
+        //                 return false;
+        //         }
+        //     };
 
-            //FIXME 应该使用上点而不是下点
-            bool left_detected = side_cross_leave_detect(left_corners, LR::LEFT);
-            bool right_detected = side_cross_leave_detect(right_corners, LR::RIGHT);
+        //     bool left_detected = side_cross_leave_detect(left_corners, LR::LEFT);
+        //     bool right_detected = side_cross_leave_detect(right_corners, LR::RIGHT);
 
-            return (left_detected && right_detected);
-        };
+        //     return (left_detected && right_detected);
+        // };
 
         [[maybe_unused]] auto ring_beg_detect = [&]() -> DetectResult {
 
@@ -924,7 +928,7 @@ void SmartCar::main(){
                         auto zebra_result = RESULT_GETTER(zebra_beg_detect());
                         // DEBUG_VALUE(bool(zebra_result));
                         if(zebra_result){
-                            sw_element(ElementType::ZEBRA, Cross::Status::BEG, zebra_result.side, AlignMode::BOTH, CREATE_LOCKER(0, 1.5));
+                            sw_element(ElementType::ZEBRA, Cross::Status::BEG, zebra_result.side, AlignMode::BOTH, CREATE_LOCKER(0, 1.3));
                             break;
                         }
                     }
@@ -934,7 +938,7 @@ void SmartCar::main(){
                     // if(false){
                         auto result = RESULT_GETTER(barrier_beg_detect());
                         if(result){
-                            sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side, co_side_to_align(result.side), CREATE_LOCKER(0.8, 1.0));
+                            sw_element(ElementType::BARRIER, Barrier::Status::BEG, result.side, co_side_to_align(result.side), CREATE_LOCKER(0.8, 1.1));
                             break;
                         }
                     }
@@ -945,7 +949,7 @@ void SmartCar::main(){
                         auto cross_result = RESULT_GETTER(cross_beg_detect());
                         if(cross_result){
                             // DEBUG_PRINTLN("cross detected");
-                            sw_element(ElementType::CROSS, Cross::Status::BEG, cross_result.side, AlignMode::BOTH, {0,1.1});
+                            sw_element(ElementType::CROSS, Cross::Status::BEG, cross_result.side, AlignMode::BOTH, {0.5,1.1});
                             break;
                         }
                     }
@@ -971,8 +975,9 @@ void SmartCar::main(){
                     switch(zebra_status) {
                         //判断何时退出斑马线状态
 
-                        case ZebraStatus::BEG:if((not is_startup())){
-                            sw_element(ElementType::ZEBRA, (ZebraStatus::END), LR::LEFT, AlignMode::BOTH, {0, 0});
+                        case ZebraStatus::BEG:{
+                            // sw_element(ElementType::ZEBRA, (ZebraStatus::END), LR::LEFT, AlignMode::BOTH, {0, 1.2});
+                            stop();
                         }break;
 
                         case ZebraStatus::END:{
@@ -997,7 +1002,7 @@ void SmartCar::main(){
                             // DEBUG_PRINTLN(result.detected);
                             if(result){
                                 // DEBUG_PRINTLN("barrier ended detected")
-                                sw_element(ElementType::BARRIER, BarrierStatus::END, switches.element_side, AlignMode::BOTH);
+                                sw_element(ElementType::NONE, BarrierStatus::END, switches.element_side, AlignMode::BOTH);
                             }
                         }break;
                         case BarrierStatus::END:if(true){
@@ -1302,10 +1307,10 @@ void SmartCar::main(){
                     }while(false);
 
                     if(is_blind == false){
-                        if (bool(root_vec)) {
+                    if (bool(root_vec)) {
                             measurer.update_dir(root_vec.angle());
                         }
-                    }else{
+                        }else{
                         measurer.update_dir((PI/2));
                     }
 
@@ -1325,7 +1330,7 @@ void SmartCar::main(){
         // plot_coast(track_right, {0, 0}, RGB565::BLUE);
 
         // DEBUG_PRINTLN(measurer.get_angle());
-
+ 
         // DEBUG_PRINTLN("!!");
  
 

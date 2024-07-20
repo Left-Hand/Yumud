@@ -7,22 +7,20 @@ ElementHolder::ElementHolder(SmartCar & _owner):owner(_owner){;}
 
 
 void ElementHolder::invoke(){
-
+    if(invoked == true) return;
     __disable_irq();
     owner.switches.element_type = next_element_type;
     owner.switches.element_status = next_element_status;
     owner.switches.element_side = next_element_side;
     owner.switches.align_mode = next_align_mode;
+    invoked = true;
     __enable_irq();
 
 }
 
 void ElementHolder::update(){
-    // auto travel =  owner.measurer.get_travel();
-    // DEBUG_PRINTLN("updated");
-    // if((invoked = false) && t >= unlock_t && travel >= unlock_travel){
+    // if((invoked = false) && (not is_locked())){
     //     invoke();
-    //     invoked = true;
     // }
 }
 
@@ -42,7 +40,15 @@ void ElementHolder::reset(){
 }
 
 void ElementHolder::request(const ElementType new_element_type, const uint8_t new_element_status, const LR new_element_side, const AlignMode align_mode, const ElementLocker & locker){
-    auto travel =  owner.measurer.get_travel();
+
+    // if(is_locked()){
+    //     next_element_type = new_element_type;
+    //     next_element_side = new_element_side;
+    //     next_element_status = new_element_status;
+    //     next_align_mode = align_mode;
+
+    //     invoked = false;
+    // }
     if(is_locked()) return;
 
     if(             ((new_element_type != owner.switches.element_type)
@@ -50,20 +56,15 @@ void ElementHolder::request(const ElementType new_element_type, const uint8_t ne
                 || (new_element_side != owner.switches.element_side))){
         
         unlock_t = t + locker.remain_time;
-        unlock_travel = travel + locker.remain_travel;
+        unlock_travel = owner.measurer.get_travel() + locker.remain_travel;
     
+        __disable_irq();
         owner.switches.element_type = new_element_type;
         owner.switches.element_side = new_element_side;
         owner.switches.element_status = new_element_status;
         owner.switches.align_mode = align_mode;
 
         DEBUG_PRINTLN("Ele!", new_element_type, new_element_side, align_mode, new_element_status);
-        // invoked = false;
-    }else{
-        next_element_type = new_element_type;
-        next_element_side = new_element_side;
-        next_element_status = new_element_status;
-        next_align_mode = align_mode;
     }
 }
 

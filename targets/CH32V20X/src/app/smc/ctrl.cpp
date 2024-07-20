@@ -40,8 +40,8 @@ void SmartCar::ctrl(){
         motor_strength.right = 0;
 
         if(!is_blind){
-            motor_strength.left += turn_output;
-            motor_strength.right -= turn_output;
+        motor_strength.left += turn_output;
+        motor_strength.right -= turn_output;
         }
         motor_strength.left += speed_output;
         motor_strength.right += speed_output;

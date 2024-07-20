@@ -183,6 +183,9 @@ void SmartCar::parse_command(String & command,std::vector<String> &args){
             // settle_value(switches.plot_de, args);
             switches.plot_de = 0;
             break;
+        case "zh"_ha:
+            settle_value(zebra_threshold, args);
+            break;
 
         case "bench"_ha:
         case "bm"_ha:

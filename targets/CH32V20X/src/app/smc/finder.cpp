@@ -286,12 +286,23 @@ namespace SMC{
         const auto & size = src.get_size();
         if(y < 0 || y >= size.y) return 0;
         int ret = 0;
-        for(int x = 0; x < size.x-1; x++){
+        for(int x = ((size.x-1)/2)-35; x < ((size.x-1)/2+35); x++){
             if(bool(src(Vector2i{x,y})) ^ bool(src(Vector2i{x + 1, y}))) ret++;
         }
         return ret;
     }
 
+    int get_x_edges(const ImageReadable<Grayscale> & src, const int y){
+        const auto & size = src.get_size();
+        if(y < 0 || y >= size.y) return 0;
+        int cnt = 0;
+        for(int x = (size.x-1)/2-20; x < (size.x-1)/2+20; x++){
+            auto color = uint8_t(src(Vector2i{x,y}));
+            auto next_color = uint8_t(src(Vector2i{x+1,y}));
+            cnt += std::abs(next_color - color);
+        }
+        return cnt;
+    }
 
     Coast CoastUtils::form(const ImageReadable<Binary> & src, const Vector2i & _seed_pos, const LR is_right){
 
