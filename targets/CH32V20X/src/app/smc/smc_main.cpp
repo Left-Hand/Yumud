@@ -1311,10 +1311,10 @@ void SmartCar::main(){
                     }while(false);
 
                     if(is_blind == false){
-                    if (bool(root_vec)) {
+                        if (bool(root_vec)) {
                             measurer.update_dir(root_vec.angle());
                         }
-                        }else{
+                    }else{
                         measurer.update_dir((PI/2));
                     }
 

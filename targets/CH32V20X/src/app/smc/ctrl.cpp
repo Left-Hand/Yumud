@@ -13,7 +13,7 @@ void SmartCar::ctrl(){
             measurer.get_dir(),
             measurer.get_omega());
 
-        real_t padding = (switches.element_type == ElementType::BARRIER) ? 0.12 : 0.17;
+        real_t padding = (switches.element_type == ElementType::BARRIER) ? 0.12 : 0.19;
     real_t side_volocity = side_velocity_observer.update(
             measurer.get_lane_offset(switches.align_mode, padding),
             measurer.get_accel().y);
