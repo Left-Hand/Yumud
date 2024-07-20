@@ -63,6 +63,7 @@ void ElementHolder::request(const ElementType new_element_type, const uint8_t ne
         owner.switches.element_side = new_element_side;
         owner.switches.element_status = new_element_status;
         owner.switches.align_mode = align_mode;
+        __enable_irq();
 
         DEBUG_PRINTLN("Ele!", new_element_type, new_element_side, align_mode, new_element_status);
     }

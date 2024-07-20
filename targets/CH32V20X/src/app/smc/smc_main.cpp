@@ -663,7 +663,7 @@ void SmartCar::main(){
                 auto box = CoastUtils::bounding_box(left_track);
                 box.merge(CoastUtils::bounding_box(right_track));
 
-                if(box.size.x > 33) return {0,0};
+                if(box.size.x > 30) return {0,0};
                 //从起点开始搜索首次出现的a角点和v角点
                 const auto * a_corner_ptr = CornerUtils::find_a(_corners);
                 // const Corner * a_corner_ptr = nullptr;
@@ -671,7 +671,7 @@ void SmartCar::main(){
 
                 //能够找到a角点和v角点
                 if(bool(a_corner_ptr) && bool(v_corner_ptr)){
-                    static constexpr int ignore_y = 30;
+                    static constexpr int ignore_y = 28;
                     if(Vector2i(*a_corner_ptr).y < ignore_y) return {0,0};
 
                     static constexpr int max_y_diff = 5;
