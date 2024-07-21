@@ -58,7 +58,7 @@ void node_main(){
     while(!stp.isActive());
     stp.setTargetCurrent(0);
     stp.setCurrentClamp(1.2);
-    // logger.println(stp.getNodeId());
+    logger.bindRxPostCb([&](){stp.parseLine(logger.readString());});
     while(true){
         stp.run(); 
         stp.report();

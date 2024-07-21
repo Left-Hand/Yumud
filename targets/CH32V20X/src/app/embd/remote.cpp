@@ -36,14 +36,14 @@ void RemoteStepper::saveArchive(const bool outen){POST(Command::SAVE);}
 void RemoteStepper::removeArchive(const bool outen){POST(Command::RM);}
 bool RemoteStepper::autoload(const bool outen){return true;}
 
-void RemoteStepper::setTargetVector(const real_t pos){}
+void RemoteStepper::setTargetVector(const real_t _pos){}
 void RemoteStepper::setTargetCurrent(const real_t current){POST(Command::TRG_CURR, current);}
 void RemoteStepper::setTargetSpeed(const real_t speed){POST(Command::TRG_SPD, speed);}
-void RemoteStepper::setTargetPosition(const real_t pos){POST(Command::TRG_POS, pos);}
-void RemoteStepper::setTargetTrapezoid(const real_t pos){POST(Command::TRG_TPZ, pos);}
+void RemoteStepper::setTargetPosition(const real_t _pos){POST(Command::TRG_POS, _pos);}
+void RemoteStepper::setTargetTrapezoid(const real_t _pos){POST(Command::TRG_TPZ, _pos);}
 void RemoteStepper::setOpenLoopCurrent(const real_t current){POST(Command::SET_OLP_CURR, current);}
 void RemoteStepper::setCurrentClamp(const real_t max_current){POST(Command::CLAMP_CURRENT, max_current);}
-void RemoteStepper::locateRelatively(const real_t pos){POST(Command::LOCATE, pos);}
+void RemoteStepper::locateRelatively(const real_t _pos){POST(Command::LOCATE, _pos);}
 
 bool RemoteStepper::isActive() const{return true;}
 const volatile RunStatus & RemoteStepper::status(){REQUEST_VALUE(Command::STAT, run_status);}

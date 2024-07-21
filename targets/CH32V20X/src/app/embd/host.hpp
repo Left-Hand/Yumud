@@ -78,10 +78,10 @@ public:
                 stepper_z
             ){;}
 
-    void parse_command(const uint8_t id, const Command & cmd, const CanMsg & msg);
-    void parse_command(const String & _command,const std::vector<String> & args);
+    void parseCommand(const uint8_t id, const Command & cmd, const CanMsg & msg);
+    void parseTokens(const String & _command,const std::vector<String> & args);
     void main();
-    void run() override;
+    void run();
     void reset();
     void cali();
 

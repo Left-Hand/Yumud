@@ -123,9 +123,9 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     RunStatus check_task(const InitFlag init_flag = false);
 
 
-    void parse_command(const String & _command, const std::vector<String> & args) override;
+    void parseTokens(const String & _command, const std::vector<String> & args) override;
 
-    void parse_command(const Command command, const CanMsg & msg) override;
+    void parseCommand(const Command command, const CanMsg & msg) override;
     
     friend ShutdownFlag;
 
@@ -192,8 +192,7 @@ public:
         odo.locateRelatively(pos);
     }
 
-    void run() override{
-        Cli::run();
+    void run(){
         panel_led.run();
     }
 

@@ -84,6 +84,7 @@
     "compare": "cpp",
     "cstdint": "cpp",
     "*.tpp": "cpp",
-    "atomic": "cpp"
+    "atomic": "cpp",
+    "ch32v30x_usbotg_device.h": "c"
   }
 }

@@ -78,15 +78,14 @@ protected:
     uint8_t time_stamp = 0;
     void transmit(const uint8_t * img_buf, const Vector2i & img_size, const uint8_t index);
 
+    void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 public:
     Transmitter(OutputStream & _instance):instance(_instance){;}
-    void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len);
 
-    std::vector<uint8_t> compress_png(const ImageWithData<Grayscale, Grayscale> & img);
 
     template<typename T>
     requires std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>
-    void transmit(const ImageWithData<T, T> & img, const uint8_t index){
+    void transmit(const Image<T> & img, const uint8_t index){
         transmit((const uint8_t *)img.data.get(),img.get_size(), index); 
     }
 

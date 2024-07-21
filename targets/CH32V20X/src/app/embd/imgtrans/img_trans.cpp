@@ -21,14 +21,6 @@ void Transmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from
     instance.write((const char *)(data_from), len);
 }
 
-std::vector<uint8_t> Transmitter::compress_png(const ImageWithData<Grayscale, Grayscale> & img){
-    std::vector<uint8_t>buffer;
-    lodepng::State state;
-    lodepng::encode(buffer, (const uint8_t * )img.data.get(), img.get_size().x, img.get_size().y, state);
-    return buffer;
-}
-
-
 void Transmitter::transmit(const uint8_t *buf, const Vector2i &img_size, const uint8_t index){
     if(!enabled) return;
     size_t len = img_size.x * img_size.y;

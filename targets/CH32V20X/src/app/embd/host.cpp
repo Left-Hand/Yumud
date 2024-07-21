@@ -21,7 +21,6 @@ void EmbdHost::main(){
     auto & led = portC[14];
     auto & lcd_blk = portC[7];
     auto & spi = spi2;
-    // auto & light = portC[6];
     
     led.outpp();
     lcd_blk.outpp(1);
@@ -41,8 +40,7 @@ void EmbdHost::main(){
     spi.bindCsPin(lcd_cs, 0);
     spi.init(144000000);
     usbfs.init();
-    SpiDrv SpiDrvLcd = SpiDrv(spi, 0);
-    DisplayInterfaceSpi SpiInterfaceLcd{SpiDrvLcd, lcd_dc, dev_rst};
+    DisplayInterfaceSpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
 
     ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));
 
@@ -64,15 +62,15 @@ void EmbdHost::main(){
     i2c.init(400000);
 
 
-    [[maybe_unused]] auto plot_gray = [&](ImageWithData<Grayscale, Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](Image<Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_bina = [&](ImageWithData<Binary, Binary> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_bina = [&](Image<Binary> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_rgb = [&](Image<RGB565, RGB565> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_rgb = [&](Image<RGB565> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
@@ -92,6 +90,7 @@ void EmbdHost::main(){
     tcs.setGain(TCS34725::Gain::X60);
     ch9141.init();
 
+    uart7.bindRxPostCb([&](){parseLine(uart7.readString());});
     // Transmitter trans{ch9141};
     // Transmitter trans{logger};
     // Transmitter trans{usbfs};
@@ -99,21 +98,19 @@ void EmbdHost::main(){
 
     while(true){
         led = !led;
-        // auto img = Shape::x4(camera);
-        auto img = camera.clone(camera.get_window()/2);
+        auto cw = camera.get_window()/2;
+        auto img = camera.clone(cw);
         plot_gray(img, img.get_window());
-
         auto diff = img.space();
         Shape::sobel_xy(diff, img);
         auto diff_bina = make_bina_mirror(diff);
         Pixels::binarization(diff_bina, diff, diff_threshold);
 
-        auto img_bina = ImageWithData<Binary, Binary>(img.get_size());
+        auto img_bina = Image<Binary>(img.get_size());
         Pixels::binarization(img_bina, img, bina_threshold);
         Pixels::or_with(img_bina, diff_bina);
 
         plot_bina(img_bina, img.get_window() + Vector2i{0, img.size.y});
-
 
 
         // trans.transmit(img, 0);
@@ -242,13 +239,13 @@ void EmbdHost::main(){
     }
 }
 
-void EmbdHost::parse_command(const uint8_t id, const Command &cmd, const CanMsg &msg){
+void EmbdHost::parseCommand(const uint8_t id, const Command &cmd, const CanMsg &msg){
 
 
 }
 
 
-void EmbdHost::parse_command(const String & _command,const std::vector<String> & args){
+void EmbdHost::parseTokens(const String & _command,const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
     switch(hash_impl(command.c_str(), command.length())){
@@ -372,7 +369,7 @@ void EmbdHost::parse_command(const String & _command,const std::vector<String> &
         case "usboff"_ha:
             trigger_method(trans.enable, false);
         default:
-            CliAP::parse_command(_command, args);
+            CliAP::parseTokens(_command, args);
             break;
     }
 }
@@ -388,7 +385,7 @@ void EmbdHost::cali(){
 
 
 void EmbdHost::run() {
-    CliAP::run();
+    readCan();
     act();
     // const real_t ang1 = 4 * t;
     // const real_t ang2 = 3 * t;

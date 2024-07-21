@@ -67,15 +67,15 @@ real_t Interpolation::ss(){
     turnSolver.pb = posPoints[i + 1];
     real_t dp = turnSolver.pb - turnSolver.pa;
 
-    real_t t = ((real_t)(turnCnt  - turnSolver.ta) / (real_t)dt);
+    real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / (real_t)dt);
     real_t temp = (real_t)dt / 1000 / dp; 
 
     real_t yt = 0.0f;
 
     if((i == 0) || (i == 2) || (i == 4))
-        yt = cubicBezier(t, Vector2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vector2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
+        yt = cubicBezier(_t, Vector2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vector2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
     else
-        yt = t;
+        yt = _t;
 
     real_t new_pos =  real_t(turns) + turnSolver.pa + dp * yt;
     // turnSolver.pos = new_pos;

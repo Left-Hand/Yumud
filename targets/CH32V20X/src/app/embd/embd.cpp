@@ -16,16 +16,13 @@ void embd_main(){
 void host_main(){
     using TimerUtils::IT;
 
-    auto & logger = uart2;
-    logger.init(921600, CommMethod::Blocking);
+    auto & logger = DEBUGGER;
+    logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     can1.init(Can::BaudRate::Mbps1);
     usbfs.init();
 
     uart7.init(115200);
-    while(true){
-        uart7.println("csjck");
-    }
 
     EmbdHost host{uart7, can1};
 

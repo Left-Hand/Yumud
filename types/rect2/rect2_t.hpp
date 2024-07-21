@@ -127,7 +127,7 @@ public:
         Rect2_t<T> ret = (*this).abs();
         ret.position /= ratio;
         ret.size /= ratio;
-        return(*this);
+        return ret;
     }
 
     [[deprecated]] constexpr Rect2_t<T> & operator-(const Vector2_t<auto> & other){

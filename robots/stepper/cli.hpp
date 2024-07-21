@@ -102,25 +102,7 @@ namespace StepperUtils{
             return result;
         }
 
-        void parse_line(const String & _line){
-            if(_line.length() == 0) return;
-            bool ends = (_line.lastIndexOf('\n') > 0);
-            String line = _line;
-            line.alphanum();
 
-            static String temp;
-            temp += line;
-
-            if(ends){
-                if(temp){
-                    auto tokens = split_string(temp, ' ');
-                    auto command = tokens[0];
-                    tokens.erase(tokens.begin());
-                    parse_command(command, tokens);
-                }
-                temp = "";
-            }
-        }
     protected:
         IOStream & logger;
         Can & can;
@@ -129,7 +111,7 @@ namespace StepperUtils{
     public:
         Cli(IOStream & _logger, Can & _can, const uint8_t _node_id):logger(_logger), can(_can), node_id(_node_id){;}
 
-        virtual void parse_command(const String & _command,const std::vector<String> & args){
+        virtual void parseTokens(const String & _command,const std::vector<String> & args){
             auto command = _command;
             command.toLowerCase();
             switch(hash_impl(command.c_str(), command.length())){
@@ -149,40 +131,35 @@ namespace StepperUtils{
             }
         }
 
-        virtual void run(){
-            read_str();
-            read_can();
-        }
-    protected:
-        virtual void read_can() = 0;
-    private:
-        void read_str(){
-            if(logger.available()){
-                static String temp_str;
-                while(logger.available()){
-                    char chr;
-                    logger.read(chr);
-                    
-                    if(chr == '\n'){
-                        temp_str.alphanum();
+        void parseLine(const String & _line){
 
-                        if(temp_str.length()) parse_line(temp_str);
+            if(_line.length() == 0) return;
+            bool ends = (_line.lastIndexOf('\n') > 0);
 
-                        temp_str = "";
-                    }else{
-                        temp_str.concat(chr);
-                    }
+            String line = _line;
+            line.alphanum();
+
+            static String temp;
+            temp += line;
+
+            if(ends){
+                if(temp.length() != 0){
+                    auto tokens = split_string(temp, ' ');
+                    auto command = tokens[0];
+                    tokens.erase(tokens.begin());
+                    parseTokens(command, tokens);
                 }
+                temp = "";
             }
         }
+        virtual void readCan() = 0;
     };
 
     class CliSTA : public Cli{
-    private:
-        void read_can() override;
     public:
+        void readCan() override;
         CliSTA(IOStream & _logger, Can & _can, const uint8_t _node_id):Cli(_logger, _can, _node_id){;}
-        virtual void parse_command(const Command command, const CanMsg & msg){
+        virtual void parseCommand(const Command command, const CanMsg & msg){
             switch(command){
                 case Command::RST:
                     Sys::Misc::reset();
@@ -191,24 +168,20 @@ namespace StepperUtils{
                     break;
             }
         }
-
-        using Cli::parse_command;
     };
 
     class CliAP : public Cli{
-    private:
-        void read_can() override{
+    public:
+        void readCan() override{
             if(can.available()){
                 const CanMsg & msg = can.read();
                 uint8_t id = msg.id() & 0b1111;
                 Command cmd = (Command)(msg.id() >> 4);
-                parse_command(id, cmd, msg);
+                parseCommand(id, cmd, msg);
             }
         }
-    public:
         CliAP(IOStream & _logger, Can & _can):Cli(_logger, _can, 0x0f){;}
-        virtual void parse_command(const uint8_t id, const Command & cmd, const CanMsg & msg) = 0;
-        using Cli::parse_command;
+        virtual void parseCommand(const uint8_t id, const Command & cmd, const CanMsg & msg) = 0;
     };
 
 }

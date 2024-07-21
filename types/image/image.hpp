@@ -255,7 +255,7 @@ public:
     // Move constructor
     ImageWithData(ImageWithData&& other) noexcept : ImageBasics(other.size), ImageWR<ColorType>(other.size), data(std::move(other.data)){}
 
-    ImageWithData(ImageWithData& other) noexcept : ImageBasics(other.size), ImageWR<ColorType>(other.size), data(other.data){}
+    ImageWithData(const ImageWithData& other) noexcept : ImageBasics(other.size), ImageWR<ColorType>(other.size), data(other.data){}
     // Move assignment operator
     ImageWithData& operator=(ImageWithData&& other) noexcept {
         if (this != &other) {
@@ -325,9 +325,9 @@ public:
 
     Image<ColorType> clone(const Rect2i & rect) const {
         auto temp = Image<ColorType>(rect.size);
-        for(int j = 0; j < rect.size.y; j++) {
-            for(int i = 0; i < rect.size.x; i++) {
-                temp[Vector2i{i,j}] = this->operator[](Vector2i{i + rect.position.x, j + rect.position.y});
+        for(int j = 0; j < rect.h; j++) {
+            for(int i = 0; i < rect.w; i++) {
+                temp[Vector2i{i,j}] = this->operator[](Vector2i{i + rect.x, j + rect.y});
             }
         }
         return temp;
