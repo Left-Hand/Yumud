@@ -36,8 +36,6 @@
 #define M_RCC_CLK_GETTER RCC_GetClocksFreq
 #endif
 
-real_t Sys::t;
-
 void Sys::Clock::delayMs(const uint32_t ms){
     delay(ms);
 }
@@ -77,7 +75,13 @@ void Sys::Misc::prework(){
 
     #ifdef HAVE_GPIOD
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
-    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+
+    //ivalid for ch32v307vct6
+    // GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+    #endif
+
+    #ifdef HAVE_GPIOE
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE );
     #endif
     PWR_BackupAccessCmd( ENABLE );
     RCC_LSEConfig( RCC_LSE_OFF );
@@ -96,19 +100,12 @@ void Sys::Misc::reset(){
 
 void Sys::Clock::reCalculateTime(){
         #ifdef USE_IQ
-        // t.value = msTick * (int)(0.001 * (1 << GLOBAL_Q));
-        // t.value = (micros() / 100) * (int)(0.0001 * (1 << GLOBAL_Q));
         t.value = _iq((micros() * (1 << GLOBAL_Q)) / 1000000);
         #else
         t = msTick * (1 / 1000.0f);
         #endif
     }
 
-
-real_t Sys::Clock::getCurrentSeconds(){
-        // reCalculateTime();
-        return t;
-    }
 
 uint64_t Sys::Chip::getChipId(){
     static uint32_t chip_id[2] = {

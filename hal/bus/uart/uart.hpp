@@ -19,9 +19,8 @@ public:
     using DuplexBus::rxMethod;
     using InputStream::read;
 protected:
-    static constexpr size_t uart_fifo_size = 256;
-    RingBuf_t<char, uart_fifo_size> txBuf;
-    RingBuf_t<char, uart_fifo_size> rxBuf;
+    RingBuf_t<char, UART_FIFO_BUF_SIZE> txBuf;
+    RingBuf_t<char, UART_FIFO_BUF_SIZE> rxBuf;
 
     Callback txPostCb;
     Callback rxPostCb;
@@ -31,6 +30,9 @@ protected:
 public:
     void read(char & data) override;
     void read(char * data_ptr, const size_t len) override;
+
+    virtual Gpio & txio() = 0;
+    virtual Gpio & rxio() = 0;
     virtual void write(const char * data_ptr, const size_t len) = 0;
     virtual void write(const char data) = 0;
     virtual void init(

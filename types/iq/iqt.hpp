@@ -3,7 +3,8 @@
 #define __IQT_HPP__
 
 
-#include "stdint.h"
+#include "../../sys/core/system.hpp"
+#include "../../sys/kernel/stream.hpp"
 
 #include "extra_convs.hpp"
 #include "../../dsp/constexprmath/ConstexprMath.hpp"
@@ -19,6 +20,16 @@ struct _iq{
 };
 
 
+struct iq_t;
+
+namespace std{
+    template <>
+    struct is_arithmetic<iq_t> : std::true_type {};
+
+    template <>
+    struct is_floating_point<iq_t> : std::true_type {};
+    //sounds funny
+}
 
 struct iq_t{
 public:
@@ -50,23 +61,6 @@ public:
         return iq_t(_iq(-value));
     }
 
-    __fast_inline_constexpr iq_t operator*(const iq_t other) const {
-        if (std::is_constant_evaluated()) {
-            return iq_t((_iq)((int64_t)value * (int64_t)other.value >> GLOBAL_Q));
-        }else{
-            return iq_t(_iq(_IQmpy(value, other.value)));
-        }
-    }
-
-
-    __fast_inline_constexpr iq_t operator/(const iq_t other) const {
-        if (std::is_constant_evaluated()) {
-            return iq_t((_iq)((int64_t)value / (int64_t)other.value << GLOBAL_Q));
-        }else{
-            return iq_t(_iq(_IQdiv(value, other.value)));
-        }
-    }
-
     __fast_inline_constexpr iq_t& operator+=(const iq_t other) {
         value = _iq(value + other.value);
         return *this;
@@ -87,55 +81,79 @@ public:
         return *this;
     }
 
-    template<typename T>
-    requires std::is_integral_v<T>
+    template<integral T>
     __fast_inline_constexpr iq_t operator*(const T other) const {
         return iq_t(_iq(value * other));
     }
 
-    __fast_inline_constexpr iq_t operator*(const auto other) const {
+    template<floating U>
+    __fast_inline_constexpr iq_t operator*(const U other) const {
         return *this * iq_t(other);
     }
 
-    template<typename T>
-    requires std::is_integral_v<T>
+    template<integral T>
     __fast_inline_constexpr iq_t operator/(const T other) const {
         return iq_t(_iq((value / other)));
     }
 
-    __fast_inline_constexpr iq_t operator/(const auto other) const {
+    template<floating U>
+    __fast_inline_constexpr iq_t operator/(const U other) const {
         return *this / iq_t(other);
     }
 
-    __fast_inline_constexpr bool operator==(const auto other) const {
+    __fast_inline_constexpr iq_t operator*(const iq_t other) const {
+        if (std::is_constant_evaluated()) {
+            return iq_t((_iq)((int64_t)value * (int64_t)other.value >> GLOBAL_Q));
+        }else{
+            return iq_t(_iq(_IQmpy(value, other.value)));
+        }
+    }
+
+    __fast_inline_constexpr iq_t operator/(const iq_t other) const {
+        if (std::is_constant_evaluated()) {
+            return iq_t((_iq)((int64_t)value / (int64_t)other.value << GLOBAL_Q));
+        }else{
+            return iq_t(_iq(_IQdiv(value, other.value)));
+        }
+    }
+
+    template<arithmetic U>
+    __fast_inline_constexpr bool operator==(const U other) const {
         return value == static_cast<iq_t>(other).value;
     }
 
-    __fast_inline_constexpr bool operator!=(const auto other) const {
+    template<arithmetic U>
+    __fast_inline_constexpr bool operator!=(const U other) const {
         return value != static_cast<iq_t>(other).value;
     }
 
-    __fast_inline_constexpr bool operator>(const auto other) const {
+    template<arithmetic U>
+    __fast_inline_constexpr bool operator>(const U other) const {
         return value > static_cast<iq_t>(other).value;
     }
 
-    __fast_inline_constexpr bool operator<(const auto other) const {
+    template<arithmetic U>
+    __fast_inline_constexpr bool operator<(const U other) const {
         return value < iq_t(other).value;
     }
 
-    __fast_inline_constexpr bool operator>=(const auto other) const {
+    template<arithmetic U>
+    __fast_inline_constexpr bool operator>=(const U other) const {
         return value >= static_cast<iq_t>(other).value;
     }
 
-    __fast_inline_constexpr bool operator<=(const auto other) const {
+    template<arithmetic U>
+    __fast_inline_constexpr bool operator<=(const U other) const {
         return value <= static_cast<iq_t>(other).value;
     }
 
-    __fast_inline_constexpr iq_t operator+(const auto other) const {
+    template<arithmetic U>
+    __fast_inline_constexpr iq_t operator+(const U other) const {
         return iq_t(_iq(value + iq_t(other).value));
     }
 
-    __fast_inline_constexpr iq_t operator-(const auto other) const {
+    template<arithmetic U>
+    __fast_inline_constexpr iq_t operator-(const U other) const {
         return iq_t(_iq(value - iq_t(other).value));
     }
 
@@ -150,19 +168,22 @@ public:
         return iq_t(_iq(value >> shift));
     }
 
-    __fast_inline_constexpr iq_t& operator+=(const auto other) {
+    template<arithmetic U>
+    __fast_inline_constexpr iq_t& operator+=(const U other) {
         *this += iq_t(other);
         return *this;
     }
 
-    __fast_inline_constexpr iq_t& operator-=(const auto other) {
+    template<arithmetic U>
+    __fast_inline_constexpr iq_t& operator-=(const U other) {
         *this -= iq_t(other);
         return *this;
     }
 
     #undef IQ_OPERATOR_TEMPLATE
 
-    __fast_inline_constexpr iq_t& operator=(const auto other){
+    template<arithmetic U>
+    __fast_inline_constexpr iq_t& operator=(const U other){
         *this = iq_t(other);
         return *this;
     }
@@ -202,6 +223,8 @@ public:
         }
     }
 
+
+
     __no_inline explicit operator String() const;
     String toString(unsigned char eps = 3) const;
 };
@@ -229,6 +252,8 @@ IQ_OPS_TEMPLATE(double);
 // IQ_OPS_TEMPLATE(int16_t);
 // IQ_OPS_TEMPLATE(int32_t);
 
+
+OutputStream & operator<<(OutputStream & os, const iq_t value);
 
 #define IQ_BINA_TEMPLATE(type, op)\
 __fast_inline_constexpr bool operator op (const type val, const iq_t iq_v) {\
@@ -329,11 +354,11 @@ __fast_inline_constexpr iq_t sqrt(const iq_t iq){
 }
 
 __fast_inline_constexpr iq_t abs(const iq_t iq){
-        if(long(iq.value) > 0){
-            return iq;
-        }else{
-            return -iq;
-        }
+    if(long(iq.value) > 0){
+        return iq;
+    }else{
+        return -iq;
+    }
 }
 
 __fast_inline_constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
@@ -342,7 +367,7 @@ __fast_inline_constexpr bool signbit(const iq_t iq){return bool(long(iq.value) <
 
 
 __fast_inline_constexpr iq_t sign(const iq_t iq){
-    if(iq.value){
+    if(long(iq.value)){
         if(long(iq.value) > 0){
             return iq_t(1);
         }else{
@@ -366,6 +391,7 @@ __fast_inline_constexpr iq_t frac(const iq_t iq){
 }
 
 __fast_inline_constexpr iq_t floor(const iq_t iq){return int(iq);}
+__fast_inline_constexpr iq_t ceil(const iq_t iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
 
 __fast_inline_constexpr iq_t round(const iq_t iq){return iq_t((int)_IQint(long(iq.value) + _IQ(0.5)));}
 
@@ -428,6 +454,18 @@ __fast_inline_constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 
 }
 
+
+__fast_inline_constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
+#if GLOBAL_Q > 16
+    qv.value = data << (GLOBAL_Q - 16);
+#elif(GLOBAL_Q < 16)
+    qv.value = data >> (16 - GLOBAL_Q);
+#else
+    qv.value = _iq(data);
+#endif
+
+}
+
 __fast_inline_constexpr void s16_to_uni(const int16_t data, iq_t & qv){
     qv.value = data > 0 ? _iq(data) : _iq(-(_iq(-data)));
 }
@@ -453,20 +491,14 @@ namespace std{
         __fast_inline_constexpr static iq_t max() noexcept {return iq_t(_iq(0x7FFFFFFF));}
     };
 
-    template <>
-    struct is_arithmetic<iq_t> : std::true_type {};
 
-    template <>
-    struct is_floating_point<iq_t> : std::true_type {};
-    
+    typedef std::common_type<iq_t, float>::type iq_t;
+    typedef std::common_type<iq_t, double>::type iq_t;
+    typedef std::common_type<iq_t, int>::type iq_t;
 
-    typedef std::common_type<iq_t, float>::type real_t;
-    typedef std::common_type<iq_t, double>::type real_t;
-    typedef std::common_type<iq_t, int>::type real_t;
-
-    typedef std::common_type<float, iq_t>::type real_t;
-    typedef std::common_type<double, iq_t>::type real_t;
-    typedef std::common_type<int, iq_t>::type real_t;
+    typedef std::common_type<float, iq_t>::type iq_t;
+    typedef std::common_type<double, iq_t>::type iq_t;
+    typedef std::common_type<int, iq_t>::type iq_t;
 
     __fast_inline_constexpr iq_t sinf(const iq_t iq){return ::sinf(iq);}
     __fast_inline_constexpr iq_t cosf(const iq_t iq){return ::cosf(iq);}
@@ -488,6 +520,7 @@ namespace std{
     __fast_inline_constexpr iq_t mean(const iq_t a, const iq_t b){return ::mean(a, b);}
     __fast_inline_constexpr iq_t frac(const iq_t iq){return ::frac(iq);}
     __fast_inline_constexpr iq_t floor(const iq_t iq){return ::floor(iq);}
+    __fast_inline_constexpr iq_t ceil(const iq_t iq){return ::ceil(iq);}
 
     #ifdef IQ_USE_LOG
     __fast_inline_constexpr iq_t log10(const iq_t iq){return ::log10(iq);}

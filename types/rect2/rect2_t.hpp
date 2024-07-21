@@ -40,15 +40,19 @@ public:
     template<arithmetic U>
     __fast_inline constexpr Rect2_t(const Vector2_t<U> & _position,const Vector2_t<U> & _size):position(_position), size(_size){;}
 
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
-            position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(U x, U y, U width, U height):position(Vector2_t<U>(x,y)),size(Vector2_t<U>(width, height)){;}
 
     template<arithmetic U>
-    static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & size){
-        return Rect2_t<T>(center - size, size * 2);
+    __fast_inline constexpr Rect2_t(const Vector2_t<U> & _size):position(), size(_size){;}
+
+    template<arithmetic U>
+    __fast_inline explicit constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
+            position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
+
+    __fast_inline constexpr Rect2_t(const auto _x,const auto _y,const auto _width,const auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
+
+    template<arithmetic U>
+    static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & half_size){
+        return Rect2_t<T>(center - half_size, half_size * 2);
     }
 
     constexpr T get_area() const {return ABS(size.x * size.y);}
@@ -106,13 +110,29 @@ public:
         return (this->position!= other.position || this->size!= other.size);
     }
 
-    constexpr Rect2_t<T> & operator+(const Vector2_t<auto> & other){
-        this->position += other;
+    constexpr Rect2_t<T> operator+(const Vector2_t<auto> & other) const{
+        Rect2_t<T> ret = (*this).abs();
+        ret.position += other;
+        return(ret);
+    }
+
+    constexpr Rect2_t<T> operator*(const auto & ratio) const{
+        Rect2_t<T> ret = (*this).abs();
+        ret.position *= ratio;
+        ret.size *= ratio;
+        return(*this);
+    }
+
+    constexpr Rect2_t<T> operator/(const auto & ratio) const{
+        Rect2_t<T> ret = (*this).abs();
+        ret.position /= ratio;
+        ret.size /= ratio;
         return(*this);
     }
 
     [[deprecated]] constexpr Rect2_t<T> & operator-(const Vector2_t<auto> & other){
-        this->position -= other;
+        Rect2_t<T> ret = (*this).abs();
+        ret.position -= other;
         return(*this);
     }
 
@@ -213,5 +233,13 @@ public:
     }
 };
 
-typedef Rect2_t<int> Rect2i;
+using Rect2i = Rect2_t<int>;
+using Window = Rect2i;
+using Rect2 = Rect2_t<real_t>;
+using Rect2f = Rect2_t<float>;
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const Rect2_t<auto> & value){
+    return os << '(' << value.position << ',' << value.size << ')';
+}
+
 #endif

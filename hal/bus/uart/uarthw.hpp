@@ -9,9 +9,6 @@ public:
 protected:
     USART_TypeDef * instance;
 
-    Gpio & getTxPin();
-    Gpio & getRxPin();
-
     void enableRcc(const bool en = true);
 
     void enableIt(const bool en = true);
@@ -35,11 +32,8 @@ protected:
     size_t rx_dma_buf_index;
     size_t tx_dma_buf_index;
 
-    static constexpr size_t rx_dma_buf_size = 64;
-    static constexpr size_t tx_dma_buf_size = 64;
-
-    char tx_dma_buf[tx_dma_buf_size];
-    char rx_dma_buf[rx_dma_buf_size];
+    char tx_dma_buf[UART_DMA_BUF_SIZE];
+    char rx_dma_buf[UART_DMA_BUF_SIZE];
 
     DmaChannel & txDma;
     DmaChannel & rxDma;
@@ -54,7 +48,6 @@ public:
     UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):
             instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
 
-
     void init(
         const uint32_t baudRate, 
         const CommMethod _txMethod = CommMethod::Dma,
@@ -66,7 +59,8 @@ public:
 
     void configBaudRate(const uint32_t baudRate) override{;}//TODO
 
-
+    Gpio & txio() override;
+    Gpio & rxio() override;
 };
 
 
@@ -97,7 +91,7 @@ extern "C" __interrupt void UART5_IRQHandler(void);
 
 #ifdef HAVE_UART6
 extern UartHw uart6;
-extern "C" __interrupt void USART6_IRQHandler(void);
+extern "C" __interrupt void UART6_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART7

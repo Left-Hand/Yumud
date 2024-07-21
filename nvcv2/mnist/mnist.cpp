@@ -1,5 +1,5 @@
 #include "mnist.hpp"
-#include "../nvcv2/pixels.hpp"
+#include "../pixels/pixels.hpp"
 
 #define MDL_BUF_LEN (960)
 #define LBUF_LEN (360)
@@ -67,7 +67,7 @@ static constexpr uint8_t mdl_data[920] PROGMEM={\
 
 static uint8_t mdl_buf[MDL_BUF_LEN];
 
-void Mnist::parse_output(tm_mat_t* outs){
+void Mnist::parse_output(){
     tm_mat_t out = outs[0];
     const float* data  = out.dataf;
     float maxp = 0;
@@ -114,21 +114,21 @@ void Mnist::unload(){
     if(loaded) tm_unload(&mdl);   
 }
 
-Mnist::Result Mnist::update(const ImageWithData<Grayscale, Grayscale> & img, const Vector2i & pos){
+Mnist::Result Mnist::update(const Image<Grayscale> & img, const Vector2i & pos){
 
-    ImageWithData<Grayscale, Grayscale> img_view = img.clone({pos.x, pos.y, 28, 28});
+    Image<Grayscale> img_view = img.clone(Rect2i{pos.x, pos.y, 28, 28});
     NVCV2::Pixels::inverse(img_view);
     return update(img_view);
 }
 
-Mnist::Result Mnist::update(const ImageWithData<Grayscale, Grayscale> & img){
+Mnist::Result Mnist::update(const Image<Grayscale> & img){
     tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img.data.get()};
     auto err = tm_preprocess(&mdl, TMPP_UINT2INT, &in_uint8, &in); 
 
     err = tm_run(&mdl, &in, outs);
 
     if(err==TM_OK){
-        parse_output(outs);        
+        parse_output();        
     }
 
     return output;

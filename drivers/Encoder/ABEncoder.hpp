@@ -5,12 +5,14 @@
 #include "Encoder.hpp"
 #include "../hal/gpio/gpio.hpp"
 #include "../hal/exti/exti.hpp"
+#include "../hal/timer/timer.hpp"
 
-class ABEncoder:public AbsoluteEncoder{
+class ABEncoderConcept:public AbsoluteEncoder{
 protected:
     // real_t scale;
     uint16_t cnt = 0;
-
+public:
+    // virtual uint16_t update() = 0;
 //     virtual real_t getLapPositionPerUnit() = 0;
 // public:
 //     constexpr ABEncoder(const uint16_t lines):
@@ -21,7 +23,32 @@ protected:
 //     }
 };
 
-class ABEncoderExti:public ABEncoder{
+class ABEncoderTimer:public ABEncoderConcept{
+protected:
+    GenericTimer & inst;
+    const uint lines = 1 << 4;
+public:
+    ABEncoderTimer(GenericTimer & _inst):inst(_inst){;}
+    void init() override{
+        inst.initAsEncoder();
+    }
+
+    // uint16_t update() override{
+    //     return cnt = inst.cnt();
+    // }
+
+    real_t getLapPosition() override {
+        real_t ret;
+        u16_to_uni(inst.cnt() * lines, ret);
+        return ret;
+    }
+
+    bool stable() const override{
+        return true;
+    }
+};
+
+class ABEncoderExti:public ABEncoderConcept{
 protected:
     Gpio & trigGpioA;
     Gpio & trigGpioB;
@@ -72,7 +99,7 @@ public:
     }
 
 };
-class ABZEncoder:public ABEncoder{
+class ABZEncoder:public ABEncoderConcept{
 
 };
 

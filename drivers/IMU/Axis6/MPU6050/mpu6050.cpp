@@ -15,6 +15,7 @@ void MPU6050::init(){
 void MPU6050::update(){
     requestData(RegAddress::AccelX, &accel.x, 7);
 }
+
 std::tuple<real_t, real_t, real_t> MPU6050::getAccel(){
     real_t x, y, z;
     s16_to_uni(accel.x, x); x *= accel_scaler;
@@ -32,7 +33,9 @@ std::tuple<real_t, real_t, real_t> MPU6050::getGyro(){
 }
 
 void MPU6050::getTemperature(real_t &temp){
-    // temp = real_t(36.65f) + Reg16ToI16(temprature) / real_t(340);
+    real_t dummy;
+    s16_to_uni(temprature, dummy);
+    temp = real_t(36.65f) + dummy / real_t(340);
 }
 
 

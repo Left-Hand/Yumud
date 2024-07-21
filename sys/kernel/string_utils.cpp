@@ -58,8 +58,7 @@ void StringUtils::disassemble_fstr(const char * str, int & int_part, int & frac_
 	}
 }
 
-void StringUtils::itoa(int64_t value,char *str,uint8_t radix)
-{
+void StringUtils::itoa(int64_t value,char *str,uint8_t radix){
     int sign = 0;
     int i=0;
     if(value < 0){

@@ -114,14 +114,14 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
 
         case "error"_ha:
         case "err"_ha:
-            if(error_message) {DEBUG_PRINT(error_message)}
-            else {DEBUG_PRINT("no error")}
+            if(error_message) {DEBUG_PRINTLN(error_message)}
+            else {DEBUG_PRINTLN("no error")}
             break;
 
         case "warn"_ha:
         case "wa"_ha:
-            if(warn_message) {DEBUG_PRINT(warn_message)}
-            else {DEBUG_PRINT("no warn")}
+            if(warn_message) {DEBUG_PRINTLN(warn_message)}
+            else {DEBUG_PRINTLN("no warn")}
             break;
 
         case "enable"_ha:
@@ -158,7 +158,7 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
 
         case "rd"_ha:
             if(args.size() == 1) run_debug_enabled = int(args[0]);
-            DEBUG_PRINT("rd", run_debug_enabled);
+            DEBUG_PRINTLN("rd", run_debug_enabled);
             break;
 
         case "clp"_ha:
@@ -166,13 +166,13 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
         case "status"_ha:
         case "stat"_ha:
-            DEBUG_PRINT("current status:", int(run_status));
+            DEBUG_PRINTLN("current status:", int(run_status));
             break;
 
         case "shutdown"_ha:
         case "shut"_ha:
             shutdown();
-            DEBUG_PRINT("shutdown ok");
+            DEBUG_PRINTLN("shutdown ok");
             break;
 
         default:

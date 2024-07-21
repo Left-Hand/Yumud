@@ -8,7 +8,7 @@ private:
     constexpr bool is_small_chip(){return m_size <= 256;}
 protected:
     I2cDrv bus_drv;
-    static constexpr uint32_t min_duration_ms = 7;
+    static constexpr uint32_t min_duration_ms = 10;
     uint32_t last_entry_ms = 0;
     
     void _store(const uint8_t data, const Address loc) override;

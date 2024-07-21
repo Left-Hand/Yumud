@@ -7,9 +7,9 @@ namespace NVCV2::Shape{
 
 TwoPass::TwoPass(int size)
 {
-	int maxSize = size;
-	parent = (uint16_t*)malloc(maxSize * sizeof(uint16_t));
-	memset(parent, 0, maxSize * sizeof(uint16_t));
+	M_maxsize = size;
+	parent = (uint16_t*)malloc(M_maxsize * sizeof(uint16_t));
+	memset(parent, 0, M_maxsize * sizeof(uint16_t));
 }
 
 TwoPass::~TwoPass()

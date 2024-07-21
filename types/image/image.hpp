@@ -2,6 +2,7 @@
 
 #define __IMAGE_HPP__
 
+#include "../types/vector2/vector2_t.hpp"
 #include "../types/rect2/rect2_t.hpp"
 #include "../types/color/color_t.hpp"
 #include "../types/rgb.h"
@@ -18,7 +19,6 @@ class ImageWR;
 template <typename ColorType>
 class PixelProxy;
 
-template<typename ColorType>
 class ImageBasics{
 public:
     union{
@@ -71,7 +71,7 @@ public:
 };
 
 template<typename ColorType>
-class ImageReadable:virtual public ImageBasics<ColorType>{
+class ImageReadable:virtual public ImageBasics{
 protected:
     virtual void getpixel_unsafe(const Vector2i & pos, ColorType & color) const = 0;
     void getpixel(const Vector2i & pos, ColorType & color) const{
@@ -83,7 +83,7 @@ protected:
     uint8_t getseg_v8() const{return 0;}
     uint8_t getseg_h8() const{return 0;}
 public:
-    ImageReadable(const Vector2i & size):ImageBasics<ColorType>(size){;}
+    ImageReadable(const Vector2i & _size):ImageBasics(_size){;}
 
     __fast_inline ColorType operator()(const Vector2i & pos)const{
         ColorType color;
@@ -93,7 +93,7 @@ public:
 
     __fast_inline ColorType operator()(const size_t & index)const{
         ColorType color;
-        getpixel(Vector2i(index % ImageBasics<ColorType>::get_size().x, index / ImageBasics<ColorType>::get_size().x), color);
+        getpixel(Vector2i(index % ImageBasics::get_size().x, index / ImageBasics::get_size().x), color);
         return color;
     }
 
@@ -105,7 +105,7 @@ public:
 
     __fast_inline ColorType operator[](const size_t & index)const{
         ColorType color;
-        getpixel(Vector2i(index % ImageBasics<ColorType>::get_size().x, index / ImageBasics<ColorType>::get_size().x), color);
+        getpixel(Vector2i(index % ImageBasics::get_size().x, index / ImageBasics::get_size().x), color);
         return color;
     }
 
@@ -118,7 +118,7 @@ public:
 };
 
 template<typename ColorType>
-class ImageWritable:virtual public ImageBasics<ColorType>{
+class ImageWritable:virtual public ImageBasics{
 public:
     virtual void setpos_unsafe(const Vector2i & pos) = 0;
     virtual void setarea_unsafe(const Rect2i & rect) = 0;
@@ -167,7 +167,8 @@ public:
             puttexture_unsafe(rect, color_ptr);
         }else{
             auto area = rect.intersection(this->get_window());
-            setarea(area);
+            if(bool(area) == false) return;
+            setarea_unsafe(area);
             uint32_t i = 0;
             for(int x = area.position.x; x < area.position.x + area.size.x; x++)
                 for(int y = area.position.y; y < area.position.y + area.size.y; y++, i++)
@@ -175,20 +176,20 @@ public:
         }
     }
 public:
-    ImageWritable(const Vector2i & size):ImageBasics<ColorType>(size){;}
+    ImageWritable(const Vector2i & _size):ImageBasics(_size){;}
 
     void fill(const ColorType & color){
-        putrect_unsafe(Rect2i{{}, ImageBasics<ColorType>::get_size()}, color);
+        putrect_unsafe(Rect2i{{}, ImageBasics::get_size()}, color);
     }
     virtual void putseg_v8_unsafe(const Vector2i & pos, const uint8_t & mask, const ColorType & color){
         Rect2i area(pos, Vector2i(1, 8));
         if(Rect2i(this->size, Vector2i()).contains(area)){
             for(int i = 0; i < 8; i++){
-                if(mask & (1 << i)) putpixel_unsafe(pos + Vector2i(0, i), color);
+                if(mask & (1 << i)) putpixel_unsafe(pos + Vector2i{0,i}, color);
             }
         }else{
             for(int i = 0; i < 8; i++){
-                if(mask & (1 << i))putpixel(pos + Vector2i(0, i), color);
+                if(mask & (1 << i))putpixel(pos + Vector2i{0,i}, color);
             }
         }
     }
@@ -197,11 +198,11 @@ public:
         Rect2i area(pos, Vector2i(8, 1));
         if(Rect2i(this->size, Vector2i()).contains(area)){
             for(int i = 0; i < 8; i++){
-                if(mask & (0x80 >> i))putpixel_unsafe(pos + Vector2i(i, 0), color);
+                if(mask & (0x80 >> i))putpixel_unsafe(pos + Vector2i{i,0}, color);
             }
         }else{
             for(int i = 0; i < 8; i++){
-                if(mask & (1 << i))putpixel(pos + Vector2i(i, 0), color);
+                if(mask & (1 << i))putpixel(pos + Vector2i{i,0}, color);
             }
         }
     }
@@ -211,7 +212,7 @@ public:
     }
 
     __fast_inline PixelProxy<ColorType> operator[](const size_t & index){
-        return PixelProxy<ColorType>(*this,Vector2i(index % ImageBasics<ColorType>::get_size().x, index / ImageBasics<ColorType>::get_size().x));
+        return PixelProxy<ColorType>(*this,Vector2i(index % ImageBasics::get_size().x, index / ImageBasics::get_size().x));
     }
 };
 
@@ -228,7 +229,7 @@ protected:
     friend class Painter<ColorType>;
     // friend class PixelProxy<ColorType>;
 public:
-    ImageWR(const Vector2i & size):ImageReadable<ColorType>(size), ImageWritable<ColorType>(size){;}
+    ImageWR(const Vector2i & _size):ImageReadable<ColorType>(_size), ImageWritable<ColorType>(_size){;}
     // void shade(PixelShaderCallback callback, const Rect2i & _shade_area);
     // void shade(UVShaderCallback callback, const Rect2i & _shade_area);
 };
@@ -248,54 +249,82 @@ public:
 
 public:
     std::shared_ptr<DataType[]> data;
-    ImageWithData(std::shared_ptr<DataType[]> _data, const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(_data) {;}
-    ImageWithData(const Vector2i & size) : ImageBasics<ColorType>(size), ImageWR<ColorType>(size), data(std::make_shared<DataType[]>(size.x * size.y)) {;}
+    ImageWithData(std::shared_ptr<DataType[]> _data, const Vector2i & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data(_data) {;}
+    ImageWithData(const Vector2i & _size) : ImageBasics(_size), ImageWR<ColorType>(_size), data(std::make_shared<DataType[]>(_size.x * _size.y)) {;}
 
     // Move constructor
-    ImageWithData(ImageWithData&& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(std::move(other.data)){}
+    ImageWithData(ImageWithData&& other) noexcept : ImageBasics(other.size), ImageWR<ColorType>(other.size), data(std::move(other.data)){}
 
-    ImageWithData(ImageWithData& other) noexcept : ImageBasics<ColorType>(other.size), ImageWR<ColorType>(other.size), data(other.data){}
+    ImageWithData(ImageWithData& other) noexcept : ImageBasics(other.size), ImageWR<ColorType>(other.size), data(other.data){}
     // Move assignment operator
     ImageWithData& operator=(ImageWithData&& other) noexcept {
         if (this != &other) {
             this->size = std::move(other.size);
             this->select_area = std::move(other.select_area);
-            // this->removeable = other.removeable;
             this->data = std::move(other.data);
-            // other.removeable = false;
         }
         return *this;
     }
 
 
     __fast_inline const DataType operator()(const size_t & index) const {return data[index]; }
-    __fast_inline const ColorType operator()(const Vector2i & pos) const {return ImageBasics<ColorType>::get_size().has_point(pos) ? data[pos.x + pos.y * ImageBasics<ColorType>::get_size().x] : ColorType(0);}
+    __fast_inline const ColorType operator()(const Vector2i & pos) const {return ImageBasics::get_size().has_point(pos) ? data[pos.x + pos.y * ImageBasics::get_size().x] : ColorType(0);}
 
     __fast_inline const DataType& operator[](const size_t & index) const { return data[index]; }
-    __fast_inline const ColorType& operator[](const Vector2i & pos) const { return data[pos.x + pos.y * ImageBasics<ColorType>::w]; }
+    __fast_inline const ColorType& operator[](const Vector2i & pos) const { return data[pos.x + pos.y * ImageBasics::w]; }
 
     __fast_inline DataType& operator[](const size_t & index) { return data[index]; }
-    __fast_inline ColorType& operator[](const Vector2i & pos) { return data[pos.x + pos.y * ImageBasics<ColorType>::w]; }
+    __fast_inline ColorType& operator[](const Vector2i & pos) { return data[pos.x + pos.y * ImageBasics::w]; }
+
 
     template<typename ToColorType>
-    __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * ImageBasics<ColorType>::w]; }
+    __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * ImageBasics::w]; }
 
     // template<>
-    __fast_inline ColorType & at(const int y, const int x){ return data[x + y * ImageBasics<ColorType>::w]; }
+    __fast_inline ColorType & at(const int y, const int x){ return data[x + y * ImageBasics::w]; }
 
 
-    bool operator == (const ImageWithData<ColorType, DataType> & other) const {
+    bool operator == (const ImageWithData & other) const {
         return data == other.data;
     }
-    ImageWithData<ColorType, DataType> clone() const {
-        auto size = ImageBasics<ColorType>::get_size();
-        auto temp = ImageWithData<ColorType, DataType>(size);
-        memcpy(temp.data.get(), this->data.get(), size.x * size.y * sizeof(DataType));
+};
+
+
+template<typename ColorType>
+class Image:public ImageWithData<ColorType, ColorType>{
+public:
+    Image(std::shared_ptr<ColorType[]> _data, const Vector2i & _size):  ImageBasics(_size), ImageWithData<ColorType, ColorType>(_data, _size) {}
+
+    Image(const Vector2i & _size): ImageBasics(_size), ImageWithData<ColorType, ColorType>(_size) {}
+
+    Image(Image&& other) noexcept : ImageBasics(other.get_size()),  ImageWithData<ColorType, ColorType>(std::move(other)){;}
+
+    Image(const Image & other) noexcept: ImageBasics(other.get_size()),  ImageWithData<ColorType, ColorType>(other) {}
+
+    Image & operator=(Image && other) noexcept {
+        if (this != &other) {
+            this->size = std::move(other.size);
+            this->select_area = std::move(other.select_area);
+            this->data = std::move(other.data);
+        }
+        return *this;
+    }
+
+    Image<ColorType> clone() const {
+        auto _size = ImageBasics::get_size();
+        auto temp = Image<ColorType>(_size);
+        memcpy(temp.data.get(), this->data.get(), _size.x * _size.y * sizeof(ColorType));
         return temp;
     }
 
-    ImageWithData<ColorType, DataType> clone(const Rect2i & rect) const {
-        auto temp = ImageWithData<ColorType, DataType>(rect.size);
+    Image<ColorType> & clone(const Image<ColorType> & other){
+        auto _size = (Rect2i(ImageBasics::get_size())).intersection(Rect2i(other.get_size())).size;
+        memcpy(other.data.get(), this->data.get(), _size.x * _size.y * sizeof(ColorType));
+        return *this;
+    }
+
+    Image<ColorType> clone(const Rect2i & rect) const {
+        auto temp = Image<ColorType>(rect.size);
         for(int j = 0; j < rect.size.y; j++) {
             for(int i = 0; i < rect.size.x; i++) {
                 temp[Vector2i{i,j}] = this->operator[](Vector2i{i + rect.position.x, j + rect.position.y});
@@ -304,25 +333,17 @@ public:
         return temp;
     }
 
-    ImageWithData<ColorType, DataType> space() const {
-        return ImageWithData<ColorType, DataType>(this->get_size());
+    auto clone(const Vector2i & _size) const{return clone(Rect2i(Vector2i{0,0}, _size));}
+
+    Image<ColorType> space() const {
+        return Image<ColorType>(this->get_size());
     }
-    void copy_from(const ImageWithData<ColorType, DataType> & src){
-        auto size = ImageBasics<ColorType>::get_size();
-        memcpy(this->data.get(), src.data.get(),size.x * size.y);
-    }
-};
 
 
-template<typename ColorType>
-class Image:public ImageWithData<ColorType, ColorType>{
-    __fast_inline ColorType & operator[](const Vector2i & pos){
-        return this->data[this->size.x * pos.y + pos.x];
-    }
 };
 
 template<typename ColorType, typename DataType>
-class ImageDataTypeDiff:public ImageWithData<ColorType, DataType>{
+class ImageDataTypeDiff:public Image<ColorType>{
 
 };
 
@@ -343,22 +364,15 @@ public:
 };
 
 template<typename ColorType>
-class Camera:public ImageWithData<ColorType, ColorType>{
-protected:
-    // std::unique_ptr<DataType[]> data;
-    // std::unique_ptr<ColorType[]> data;
+class Camera:public Image<ColorType>{
 public:
-    Camera(const Vector2i & size):ImageBasics<ColorType>(size), ImageWithData<ColorType, ColorType>(size){;}
-    // ColorType operator[](const size_t & index) const {return Image<ColorType, ColorType>::[index];}
-    // ColorType operator[](const size_t & index) const {return data[index];}
-    // __fast_inline ColorType& operator[](const size_t & index) { return this->operator[](index);}
-    // __fast_inline ColorType& operator[](const Vector2i & pos) { return this->operator[](pos);}
+    Camera(const Vector2i & _size):ImageBasics(_size), Image<ColorType>(_size){;}
 };
 
 template<typename ColorType>
 class Displayer:public ImageWritable<ColorType>{
 public:
-    Displayer(const Vector2i & size):ImageBasics<ColorType>(size), ImageWritable<ColorType>(size){;}
+    Displayer(const Vector2i & _size):ImageBasics(_size), ImageWritable<ColorType>(_size){;}
 };
 
 template<typename ColorType>
@@ -377,36 +391,32 @@ public:
     operator ColorType () const{
         return src.getpixel(pos);
     }
-
 };
 
 
 #include "Image.tpp"
 
-class Image565 : public Image<RGB565>{
-
-};
-
-// #define make_image(type, size) (ImageWithData<type, type> (size));
 
 template<typename ColorType>
-__fast_inline auto make_image(const Vector2i & size){
-    return ImageWithData<ColorType, ColorType>(size);
-}
-// template<typename ColorType>
-// auto make_image(const
-
-
-// #define make_bina_mirror(src) (ImageWithData<Binary, Binary>(std::reinterpret_pointer_cast<ImageWithData<Binary, Binary>>((src.data), src.get_size())))
-__fast_inline ImageWithData<Grayscale, Grayscale> make_gray_mirror(const ImageWithData<Binary, Binary>  &src){
-    return ImageWithData<Grayscale, Grayscale>(
-        std::reinterpret_pointer_cast<Grayscale[]>(src.data), src.get_size()
-    );
+__inline auto make_image(const Vector2i & _size){
+    return Image<ColorType>(_size);
 }
 
-__fast_inline ImageWithData<Binary, Binary> make_bina_mirror(const ImageWithData<Grayscale, Grayscale>  &src){
-    return ImageWithData<Binary, Binary>(
-        std::reinterpret_pointer_cast<Binary[]>(src.data), src.get_size()
-    );
+__inline auto make_gray(const Vector2i & _size){return make_image<Grayscale>(_size);};
+__inline auto make_bina(const Vector2i & _size){return make_image<Binary>(_size);};
+
+
+template<typename ColorType>
+__inline auto make_mirror(const Image<auto> &src){
+    return Image<ColorType>(std::reinterpret_pointer_cast<ColorType[]>(src.data),
+        src.get_size());
 }
+
+
+template<typename ColorType>
+__inline auto make_gray_mirror(const Image<ColorType> & src){return make_mirror<Grayscale>(src);};
+
+template<typename ColorType>
+__inline auto make_bina_mirror(const Image<ColorType> & src){return make_mirror<Binary>(src);};
+
 #endif

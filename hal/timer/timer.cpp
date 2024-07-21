@@ -71,6 +71,12 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
             break;
         #endif
 
+        #ifdef HAVE_TIM5
+        case TIM5_BASE:
+            RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
+            break;
+        #endif
+
         #ifdef HAVE_TIM8
         case TIM8_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
@@ -101,9 +107,11 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
     // TODO
 
     uint16_t cycle = 1;
-    while(raw_period / cycle > 16384){
+    while(raw_period > 16384 * cycle){
         cycle++;
     }
+
+    if(raw_period / cycle == 0) CREATE_FAULT;
 
     init(raw_period / cycle, cycle, mode, en);
 }
@@ -144,10 +152,12 @@ void GenericTimer::initAsEncoder(const Mode mode){
     TIM_RCC_ON(instance);
     TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
 
+
     TIM_TimeBaseStructure.TIM_Period = 65535;
     TIM_TimeBaseStructure.TIM_Prescaler = 0;
     TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
     TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
+    TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
     TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
 
 	TIM_ICInitTypeDef TIM_ICInitStruct;

@@ -1,37 +1,37 @@
 #include "real.hpp"
 
-int constexpr mean(const int & a, const int & b){
+int mean(const int a, const int b){
     return ((a+b) >> 1);
 }
 
-float constexpr mean(const float & a, const float & b){
+float mean(const float a, const float b){
     return (a+b) / 2.0f;
 }
 
-double constexpr mean(const double & a, const double & b){
+double mean(const double a, const double b){
     return (a+b) / 2.0;
 }
 
-float constexpr frac(const float & fv){
+float frac(const float fv){
     return (fv - float(int(fv)));
 }
 
-double constexpr frac(const double & dv){
+double frac(const double dv){
     return (dv - double(int(dv)));
 }
 
-float constexpr round(const float & x)
+float round(const float x)
 {
     return (int)(x+0.5f);
 }
 
-double constexpr round(const double & x)
+double round(const double x)
 {
     return (int)(x+0.5);
 }
 
 
-bool constexpr is_equal_approx(const float & a, const float & b) {
+bool is_equal_approx(const float a, const float b) {
     // Check for exact equality first, required to handle "infinity" values.
     if (a == b) {
         return true;
@@ -44,7 +44,7 @@ bool constexpr is_equal_approx(const float & a, const float & b) {
     return abs(a - b) < tolerance;
 }
 
-bool constexpr is_equal_approx_ratio(const float a, const float & b, float epsilon, float min_epsilon){
+bool is_equal_approx_ratio(const float a, const float  b, float epsilon, float min_epsilon){
     float diff = abs(a - b);
     if (diff == 0.0 || diff < min_epsilon) {
         return true;
@@ -54,7 +54,7 @@ bool constexpr is_equal_approx_ratio(const float a, const float & b, float epsil
     return diff < epsilon;
 }
 
-bool constexpr is_equal_approx(const double & a, const double & b) {
+bool is_equal_approx(const double a, const double b) {
     // Check for exact equality first, required to handle "infinity" values.
     if (a == b) {
         return true;
@@ -67,7 +67,7 @@ bool constexpr is_equal_approx(const double & a, const double & b) {
     return abs(a - b) < tolerance;
 }
 
-bool constexpr is_equal_approx_ratio(const double a, const double & b, double epsilon, double min_epsilon){
+bool is_equal_approx_ratio(const double a, const double b, double epsilon, double min_epsilon){
     double diff = abs(a - b);
     if (diff == 0.0 || diff < min_epsilon) {
         return true;
@@ -77,13 +77,13 @@ bool constexpr is_equal_approx_ratio(const double a, const double & b, double ep
     return diff < epsilon;
 }
 
-__fast_inline constexpr float sign(const float & fv){
+__fast_inline float sign(const float fv){
     if(fv > 0.0f) return 1.0f;
     else if(fv < 0.0f) return -1.0f;
     return 0.0f;
 }
 
-__fast_inline constexpr double sign(const double & dv){
+__fast_inline double sign(const double dv){
     if(dv > 0.0) return 1.0;
     else if(dv < 0.0) return -1.0;
     return 0.0;

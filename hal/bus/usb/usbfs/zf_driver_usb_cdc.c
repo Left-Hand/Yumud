@@ -46,8 +46,7 @@
 // ???????     void
 // ??????
 //-------------------------------------------------------------------------------------------------------------------
-void usb_cdc_send_pack(const uint8_t *p, const size_t length)
-{
+void usb_cdc_send_pack(const uint8_t *p, const size_t length){
     if(length == 0) return;
     uint32_t i = 0;
 

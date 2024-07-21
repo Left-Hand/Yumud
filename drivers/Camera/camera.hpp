@@ -51,7 +51,7 @@ template<typename ColorType>
 class CameraWithSccb:public Camera<ColorType>{
 protected:
     SccbDrv bus_drv;
-    CameraWithSccb(const SccbDrv & _bus_drv, const Vector2i & size):ImageBasics<ColorType>(size), Camera<ColorType>(size), bus_drv(_bus_drv){;}
+    CameraWithSccb(const SccbDrv & _bus_drv, const Vector2i & _size):ImageBasics(_size), Camera<ColorType>(_size), bus_drv(_bus_drv){;}
 
     void writeReg(const uint8_t addr, const uint16_t data){
         bus_drv.writeSccbReg(addr, data);

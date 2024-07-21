@@ -340,9 +340,10 @@ ImageWithData<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> &
                 bool merge_flag = false;
                 Rect2i * merge_with = nullptr;
 
-                skip_flag |= (int(rect) > 650);
-                skip_flag |= (int(rect) < 300);
-                skip_flag |= rect.height > 40;
+                // skip_flag |= (int(rect) > 650);
+                // skip_flag |= (int(rect) < 300);
+                skip_flag |= rect.height > 50;
+                skip_flag |= rect.height < 5;
                 // skip_flag |= real_t(int(rect)) / blob.area < (1.0 / 0.7);
                 // skip_flag |= blob.area < 50;
                 // skip_flag |= blob.area > 20;

@@ -30,13 +30,13 @@ protected:
         return TM_OK;
     }
 
-    void parse_output(tm_mat_t* outs);
+    void parse_output();
 
     void load();
     void unload();
 public:
     Mnist(){load();}
     ~Mnist(){unload();}
-    Result update(const ImageWithData<Grayscale, Grayscale> & img, const Vector2i & pos);
-    Result update(const ImageWithData<Grayscale, Grayscale> & img);
+    Result update(const Image<Grayscale> & img, const Vector2i & pos);
+    Result update(const Image<Grayscale> & img);
 };

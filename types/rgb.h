@@ -217,7 +217,10 @@ struct RGB565{
         GREEN   = 0x07E0,  // Green color
         BLUE    = 0x001F,  // Blue color
         BLACK   = 0x0000,   // Black color
-        ORANGE = 0xFFA5
+        ORANGE = 0xFFA5,
+        CORAL = 0xf410,
+        AQUA = 0x67FC,
+        FUCHSIA = 0xf014
     };
 #ifdef __cplusplus
 

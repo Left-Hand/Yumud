@@ -18,8 +18,11 @@
 #include "../sys/core/platform.h"
 
 #ifdef __cplusplus
-#include "../sys/core/platform.h"
+#include "../../types/real.hpp"
 #include <functional>
+namespace Sys{
+extern real_t t;
+};
 void bindSystickCb(std::function<void(void)> && cb);
 extern "C" {
 #endif

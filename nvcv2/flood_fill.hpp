@@ -20,7 +20,7 @@ protected:
         }
     };
 
-    using Blobs = sstl::vector<Blob, 316>;
+    using Blobs = sstl::vector<Blob, 16>;
     Blobs m_blobs;
 
     // static void found(ImageWritable<Binary> & map, Blob & blob);

@@ -57,7 +57,7 @@ protected:
     }
 
 public:
-    W25QXX(SpiDrv & bus_drv):bus_drv(bus_drv){}
+    W25QXX(SpiDrv & _bus_drv):bus_drv(_bus_drv){}
     void enableWrite(const bool & en = true){
         if(en){
             writeByte(Commands::WriteEnable);

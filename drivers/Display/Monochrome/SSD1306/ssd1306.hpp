@@ -88,7 +88,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_72X40(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface){;}
+    SSD13XX_72X40(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -107,7 +107,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_128X64(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface){;}
+    SSD13XX_128X64(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -133,7 +133,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_128X32(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface){;}
+    SSD13XX_128X32(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -152,7 +152,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_88X48(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface){;}
+    SSD13XX_88X48(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -171,7 +171,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_64X48(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface){;}
+    SSD13XX_64X48(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -190,7 +190,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_128X80(DisplayerInterface & _interface):ImageBasics<Binary>(phy_size), SSD13XX(_interface){;}
+    SSD13XX_128X80(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 #endif

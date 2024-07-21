@@ -23,7 +23,7 @@ public:
     __fast_inline constexpr Vector2_t(){;}
 
     template<arithmetic U, arithmetic V>
-    __fast_inline constexpr Vector2_t(const U & _x, const V & _y) : x(static_cast<T>(_x)), y(static_cast<T>(_y)) {;}
+    __fast_inline constexpr Vector2_t(const U _x, const V _y): x(_x), y(_y){;}
 
     template<arithmetic U, arithmetic V>
     __fast_inline constexpr Vector2_t(const std::tuple<U, V> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
@@ -58,11 +58,19 @@ public:
     constexpr Vector2_t<T> bounce(const Vector2_t<T> &n) const;
     constexpr Vector2_t<T> ceil() const;
 
-    template<typename U>
-    constexpr Vector2_t<T> clampmin(const U & length) const;
+    template<arithmetic U>
+    constexpr Vector2_t<T> clampmin(const U & _length) const{
+        T length = static_cast<T>(_length);
+        T l = this->length();
+        return (l < length ? *this * length / l : *this);
+    }
 
-    template<typename U>
-    constexpr Vector2_t<T> clampmax(const U & length) const;
+    template<arithmetic U>
+    constexpr Vector2_t<T> clampmax(const U & _length) const{
+        T length = static_cast<T>(_length);
+        T l = this->length();
+        return (l > length ? *this * length / l : *this);
+    }
 
     // template<typename U>
     constexpr Vector2_t<T> clamp(const auto & _min, const auto & _max) const;
@@ -75,7 +83,9 @@ public:
 
     constexpr bool has_point(const Vector2_t<auto> & _v)const;
     constexpr bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
-    constexpr __fast_inline T length() const {return sqrt(x*x + y*y);}
+    constexpr __fast_inline T length() const {
+        auto c = length_squared();
+        return c ? sqrt(c) : 0;}
     constexpr __fast_inline T length_squared() const {return (x*x + y*y);}
     constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const T & t) const;
     constexpr Vector2_t<T> move_toward(const Vector2_t<T> & to, const T & delta) const;
@@ -131,7 +141,16 @@ public:
         return *this;
     }
 
-    __fast_inline_constexpr operator bool() const {
+    __fast_inline Vector2_t<T> operator*(const auto & n) const{
+        Vector2_t<T> ret = *this;
+        return ret *= n;
+    }
+    __fast_inline Vector2_t<T> operator/(const auto & n) const{
+        Vector2_t<T> ret = *this;
+        return ret /= n;
+    }
+
+    __fast_inline_constexpr explicit operator bool() const {
         if constexpr(std::is_integral<T>::value){
             return x != 0 || y != 0;
         }else{
@@ -150,6 +169,8 @@ public:
         }
     }
 
+
+
     Rect2_t<T> form_rect() const {
         return Rect2_t<T>(Vector2_t<T>(), *this);
     }
@@ -162,9 +183,11 @@ public:
 
 #include "vector2_t.tpp"
 
-typedef Vector2_t<float> Vector2f;
-typedef Vector2_t<int> Vector2i;
-using Point = Vector2i;
-typedef Vector2_t<real_t> Vector2;
+using Vector2f = Vector2_t<float>;
+using Vector2i = Vector2_t<int>;
+using Vector2 = Vector2_t<real_t>;
 
+__fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
+    return os << '(' << value.x << ',' << value.y << ')';
+}
 #endif

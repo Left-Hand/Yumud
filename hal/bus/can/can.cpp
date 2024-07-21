@@ -74,14 +74,14 @@ __fast_inline static void CAN_Mailbox_Clear(CAN_TypeDef* CANx, const uint8_t mbo
 
 Gpio & Can::getTxGpio(){
     #ifdef HAVE_CAN1
-    return CAN1_TX_Gpio;
+    return CAN1_TX_GPIO;
     #endif
     return GpioNull;
 }
 
 Gpio & Can::getRxGpio(){
     #ifdef HAVE_CAN1
-    return CAN1_RX_Gpio;
+    return CAN1_RX_GPIO;
     #endif
     return GpioNull;
 }
@@ -96,6 +96,8 @@ void Can::installGpio(){
 }
 void Can::enableRcc(){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
+
+    #ifdef HAVE_CAN1
     uint8_t remap = CAN1_REMAP;
     switch(remap){
     case 0:
@@ -106,15 +108,17 @@ void Can::enableRcc(){
         GPIO_PinRemapConfig(GPIO_Remap1_CAN1, ENABLE);
         break;
     case 3:
+        GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);//for TEST
         GPIO_PinRemapConfig(GPIO_Remap2_CAN1, ENABLE);
         break;
     }
+    #endif
 }
 
 void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
 void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
 void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
-void Can::init(const BaudRate baudRate, const Mode mode, const CanFilter & filter){
+void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filter){
     installGpio();
     enableRcc();
 
@@ -142,7 +146,7 @@ void Can::init(const BaudRate baudRate, const Mode mode, const CanFilter & filte
 
     CAN_InitTypeDef config;
     config.CAN_Prescaler = prescale;
-    config.CAN_Mode = (uint8_t)mode;
+    config.CAN_Mode = (uint8_t)_mode;
     config.CAN_SJW = swj;
     config.CAN_BS1 = bs1;
     config.CAN_BS2 = bs2;
