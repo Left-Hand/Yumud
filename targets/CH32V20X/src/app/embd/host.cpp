@@ -38,7 +38,7 @@ void EmbdHost::main(){
 
 
     spi.bindCsPin(lcd_cs, 0);
-    spi.init(144000000);
+    spi.init(144000000, CommMethod::Blocking, CommMethod::None);
     usbfs.init();
     DisplayInterfaceSpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
 
@@ -112,36 +112,10 @@ void EmbdHost::main(){
 
         plot_bina(img_bina, img.get_window() + Vector2i{0, img.size.y});
 
-
-        // trans.transmit(img, 0);
-        // continue;
-        // Pixels::inverse(img);
-        // auto piece = Shape::x4(img,2);
-        // auto diff2 = img.space();
-        // Shape::sobel_xy(diff, img);
-        
-        // Shape::sobel_y(diff2, img);
-        // Pixels::or_with(diff, diff2);
-        // auto diff_bina = make_bina_mirror(diff);
-        // Pixels::binarization(diff_bina, diff, 40);
-        // Pixels::or_with(bina, diff_bina);
-        // Shape::morph_close(new_bina);
-        // Pixels::copy(bina, new_bina);
-        // Shape::erosion(bina, bina);
-        // Pixels::and_with(bina, new_bina);
-        // real_t dist = vl.getDistance();
-
-        // logger.println(dist);
-        // Pixels::gamma(img, 0.1);
-
-        // plot_bina(bina, bina.get_window() + Vector2i{0, img.size.y});
-        // int dummy = 0;
-        // logger.println("rect", bina.get_window() + Vector2i{0, img.size.y});
-        // plot_bina(img_bina, img_bina.get_window() + Vector2i{0, img.size.y});
-
         Shape::FloodFill ff;
         auto map = ff.run(img_bina);
         Pixels::dyeing(map, map);
+        // continue;
         // plot_gray(map, diff.get_window() + Vector2i{0, 2 * img.size.y});
 
         // plot_gray(map, map.get_window() + Vector2i{0, img.size.y * 2});
@@ -170,9 +144,10 @@ void EmbdHost::main(){
         // painter.drawHollowRect({0,0,28,28});
 
 
-        const auto & blobs = ff.blobs();
         // for(const auto & blob : blobs){
-        if(blobs.size()){
+        // if(blobs.size()){
+        if(false){
+            const auto & blobs = ff.blobs();
             const auto & blob = blobs[0];
             painter.setColor(RGB565::RED);
             painter.drawRoi(blob.rect);

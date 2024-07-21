@@ -2,6 +2,7 @@
 
 #define __BODY_HPP__
 
+#ifdef CH32V30X
 #include "fans.hpp"
 
 namespace SMC{
@@ -20,7 +21,6 @@ struct MotorStrength{
         chassis = 0;
     }
 };
-
 
 class RigidBody{
 protected:
@@ -96,4 +96,5 @@ public:
 };
 
 
+#endif
 #endif

@@ -6,7 +6,7 @@ static void set_motor_gpio(const bool en){
     gpio = en;
 }
 
-void Stepper::parse_command(const String & _command, const std::vector<String> & args){
+void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
     switch(hash_impl(command.c_str(), command.length())){
@@ -176,13 +176,13 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
 
         default:
-            CliSTA::parse_command(command, args);
+            CliSTA::parseTokens(command, args);
             break;
     }
 }
 
 
-void Stepper::parse_command(const Command command, const CanMsg & msg){
+void Stepper::parseCommand(const Command command, const CanMsg & msg){
     const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
     using dual_real = std::tuple<real_t, real_t>;
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
@@ -246,7 +246,7 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
 
         default:
-            CliSTA::parse_command(command, msg);
+            CliSTA::parseCommand(command, msg);
             break;
     }
 

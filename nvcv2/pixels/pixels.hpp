@@ -1,6 +1,6 @@
 #pragma once
 
-#include "nvcv2.hpp"
+#include "../nvcv2.hpp"
 
 namespace NVCV2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src);

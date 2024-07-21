@@ -317,6 +317,8 @@ struct DetectResult{
 };
 
 
+#ifdef CH32V30X
+
 class SmartCar:public SmcCli{
 protected:
     void printRecordedRunStatus();
@@ -416,7 +418,9 @@ public:
     Measurer measurer{i2c};
     void main();
 };
+#endif
 
 };
+
 
 void smc_main();

@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "nvcv2.hpp"
+#include "../nvcv2.hpp"
 
 namespace NVCV2::Geometry{
 

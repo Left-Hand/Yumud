@@ -3,6 +3,12 @@
 #define __USER_DEFS_H__
 
 #ifdef CH32V20X
+#define UART_FIFO_BUF_SIZE 256
+#define UART_DMA_BUF_SIZE 128
+
+#define DEBUGGER uart2
+#define LOGGER uart2
+#define DEBUG_UART_BAUD 115200
 #include "v2defs.h"
 #endif
 

@@ -46,8 +46,3 @@
 
 #define HAVE_OPA1
 #define HAVE_OPA2
-
-
-#define DEBUGGER uart1
-// #define DEBUGGER sdi
-#define LOGGER uart1

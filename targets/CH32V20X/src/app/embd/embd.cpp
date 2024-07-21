@@ -23,7 +23,6 @@ void host_main(){
     usbfs.init();
 
     uart7.init(115200);
-
     EmbdHost host{uart7, can1};
 
     timer3.init(800);
