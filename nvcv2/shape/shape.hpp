@@ -169,6 +169,9 @@ namespace NVCV2::Shape{
         convolution(dst, src, Cores::roberts_y);
     }
 
+
+    void canny(Image<Binary> & dst,const Image<Grayscale> & src);
+
     class Seed{
         public:            
 

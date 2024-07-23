@@ -22,7 +22,7 @@ public:
 
     __fast_inline constexpr Vector2_t(){;}
 
-    template<arithmetic U, arithmetic V>
+    template<arithmetic U = T, arithmetic V = T>
     __fast_inline constexpr Vector2_t(const U _x, const V _y): x(_x), y(_y){;}
 
     template<arithmetic U, arithmetic V>
@@ -79,6 +79,9 @@ public:
     constexpr T dist_squared_to(const Vector2_t<T> & b) const;
     constexpr Vector2_t<T> floor() const;
     constexpr bool is_equal_approx(const Vector2_t<T> & v) const;
+    __inline constexpr T manhattan_distance()const{
+        return ABS(x) + ABS(y);
+    }
 
 
     constexpr bool has_point(const Vector2_t<auto> & _v)const;

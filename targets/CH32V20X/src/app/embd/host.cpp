@@ -8,6 +8,27 @@ using namespace NVCV2;
 
 #ifdef CH32V30X
 
+static void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src) {
+    if((void *)&dst == (void *)&src){
+        auto temp = dst.clone();
+        fast_diff_opera(temp, src);
+        dst = std::move(temp);
+        return;
+    }
+
+    auto window = dst.get_window().intersection(src.get_window());
+    for (auto y = window.y; y < window.y + window.h-1; y++) {
+        for (auto x = window.x; x < window.x + window.w-1; x++) {
+            const int a = src(Vector2i{x,y});
+            const int b = src(Vector2i{x+1,y});
+            const int c = src(Vector2i{x,y+1});
+            dst[{x,y}] = uint8_t(CLAMP(std::max(
+                (ABS(a - c)) * 255 / (a + c),
+                (ABS(a - b) * 255 / (a + b))
+            ), 0, 255));
+        }
+    }
+}
 
 void EmbdHost::main(){
     delay(200);
@@ -55,15 +76,15 @@ void EmbdHost::main(){
     i2c.init(400000);
 
 
-    [[maybe_unused]] auto plot_gray = [&](Image<Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_bina = [&](Image<Binary> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_rgb = [&](Image<RGB565> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Rect2i & area){
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
@@ -127,7 +148,7 @@ void EmbdHost::main(){
         // DEBUG_PRINTLN(result);
 
         if(true){
-            const Rect2i rect = Rect2i(20, 20, 28, 28);
+            const Rect2i rect = Rect2i(20, 10, 28, 28);
             painter.setColor(RGB565::RED);
             painter.drawRoi(rect);
             painter.setColor(RGB565::GREEN);

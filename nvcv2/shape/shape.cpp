@@ -389,7 +389,7 @@ namespace NVCV2::Shape{
         }
 
         for(int y = 0; y < size.y; y++){
-            auto * p_src = &src[y * size.x + 1];
+            const auto * p_src = &src[y * size.x + 1];
             auto * p_dst = &dst[y * size.x + 1];
             uint8_t last_two = false;
             for (int x = 1; x < size.x - 2; ++x) {
@@ -441,7 +441,7 @@ namespace NVCV2::Shape{
             uint8_t last_two = true;
             for (int x = 1; x < size.x - 1; ++x) {
                 uint8_t next = bool(*(p_src + 1));
-                *p_dst = ((last_two + next) > 1);
+                *p_dst = Binary((last_two + next) > 1);
                 last_two = uint8_t(bool((*p_src))) + next;
 
                 p_src++;
@@ -639,6 +639,153 @@ namespace NVCV2::Shape{
                 p_dst++; 
             }
         }
+    }
+
+
+    void canny(Image<Binary> &dst, const Image<Grayscale> &src){
+        auto size = src.get_size();
+        auto temp = src.space();
+        gauss(temp, src);
+
+        auto sx = src.space();
+        auto sy = src.space();
+        
+        sobel_x(sx, src);
+        sobel_y(sy, src);
+
+        static constexpr std::array<Vector2i,8> offsets_8 = {
+            Vector2i{-1, -1},
+            Vector2i{-1, 0}, 
+            Vector2i{-1, 1}, 
+            Vector2i{0, -1},
+            Vector2i{0, 1}, 
+            Vector2i{1, -1}, 
+            Vector2i{1, 0}, 
+            Vector2i{1, 1}};
+        // const std::array<Vector2i,4> offsets_4 = { {-1, 0}, {0, -1}, {0, 1}, {1, 0} };
+        static constexpr real_t k = 2.414f;
+        static constexpr real_t inv_k = 0.414f;
+
+
+        // int w = src->w;
+
+        // gvec_t *gm = fb_alloc0(roi->w * roi->h * sizeof *gm, FB_ALLOC_NO_HINT);
+
+        // typedef struct gvec {
+        //     uint16_t t;
+        //     uint16_t g;
+        // } gvec_t;
+
+        // //2. Finding Image Gradients
+        // for (int gy = 1, y = roi->y + 1; y < roi->y + roi->h - 1; y++, gy++) {
+        //     for (int gx = 1, x = roi->x + 1; x < roi->x + roi->w - 1; x++, gx++) {
+        //         int vx = 0, vy = 0;
+        //         // sobel kernel in the horizontal direction
+        //         vx = src->data [(y - 1) * w + x - 1]
+        //             - src->data [(y - 1) * w + x + 1]
+        //             + (src->data[(y + 0) * w + x - 1] << 1)
+        //             - (src->data[(y + 0) * w + x + 1] << 1)
+        //             + src->data [(y + 1) * w + x - 1]
+        //             - src->data [(y + 1) * w + x + 1];
+
+        //         // sobel kernel in the vertical direction
+        //         vy = src->data [(y - 1) * w + x - 1]
+        //             + (src->data[(y - 1) * w + x + 0] << 1)
+        //             + src->data [(y - 1) * w + x + 1]
+        //             - src->data [(y + 1) * w + x - 1]
+        //             - (src->data[(y + 1) * w + x + 0] << 1)
+        //             - src->data [(y + 1) * w + x + 1];
+
+        //         // Find magnitude
+        //         int g = (int) fast_sqrtf(vx * vx + vy * vy);
+        //         // Find the direction and round angle to 0, 45, 90 or 135
+        //         int t = (int) fast_fabsf((atan2f(vy, vx) * 180.0f / M_PI));
+        //         if (t < 22) {
+        //             t = 0;
+        //         } else if (t < 67) {
+        //             t = 45;
+        //         } else if (t < 112) {
+        //             t = 90;
+        //         } else if (t < 160) {
+        //             t = 135;
+        //         } else if (t <= 180) {
+        //             t = 0;
+        //         }
+
+        //         gm[gy * roi->w + gx].t = t;
+        //         gm[gy * roi->w + gx].g = g;
+        //     }
+        // }
+
+        // // 3. Hysteresis Thresholding
+        // // 4. Non-maximum Suppression and output
+        // for (int gy = 0, y = roi->y; y < roi->y + roi->h; y++, gy++) {
+        //     for (int gx = 0, x = roi->x; x < roi->x + roi->w; x++, gx++) {
+        //         int i = y * w + x;
+        //         gvec_t *va = NULL, *vb = NULL, *vc = &gm[gy * roi->w + gx];
+
+        //         // Clear the borders
+        //         if (y == (roi->y) || y == (roi->y + roi->h - 1) ||
+        //             x == (roi->x) || x == (roi->x + roi->w - 1)) {
+        //             src->data[i] = 0;
+        //             continue;
+        //         }
+
+        //         if (vc->g < low_thresh) {
+        //             // Not an edge
+        //             src->data[i] = 0;
+        //             continue;
+        //             // Check if strong or weak edge
+        //         } else if (vc->g >= high_thresh ||
+        //                 gm[(gy - 1) * roi->w + (gx - 1)].g >= high_thresh ||
+        //                 gm[(gy - 1) * roi->w + (gx + 0)].g >= high_thresh ||
+        //                 gm[(gy - 1) * roi->w + (gx + 1)].g >= high_thresh ||
+        //                 gm[(gy + 0) * roi->w + (gx - 1)].g >= high_thresh ||
+        //                 gm[(gy + 0) * roi->w + (gx + 1)].g >= high_thresh ||
+        //                 gm[(gy + 1) * roi->w + (gx - 1)].g >= high_thresh ||
+        //                 gm[(gy + 1) * roi->w + (gx + 0)].g >= high_thresh ||
+        //                 gm[(gy + 1) * roi->w + (gx + 1)].g >= high_thresh) {
+        //             vc->g = vc->g;
+        //         } else {
+        //             // Not an edge
+        //             src->data[i] = 0;
+        //             continue;
+        //         }
+
+        //         switch (vc->t) {
+        //             case 0: {
+        //                 va = &gm[(gy + 0) * roi->w + (gx - 1)];
+        //                 vb = &gm[(gy + 0) * roi->w + (gx + 1)];
+        //                 break;
+        //             }
+
+        //             case 45: {
+        //                 va = &gm[(gy + 1) * roi->w + (gx - 1)];
+        //                 vb = &gm[(gy - 1) * roi->w + (gx + 1)];
+        //                 break;
+        //             }
+
+        //             case 90: {
+        //                 va = &gm[(gy + 1) * roi->w + (gx + 0)];
+        //                 vb = &gm[(gy - 1) * roi->w + (gx + 0)];
+        //                 break;
+        //             }
+
+        //             case 135: {
+        //                 va = &gm[(gy + 1) * roi->w + (gx + 1)];
+        //                 vb = &gm[(gy - 1) * roi->w + (gx - 1)];
+        //                 break;
+        //             }
+        //         }
+
+        //         if (!(vc->g > va->g && vc->g > vb->g)) {
+        //             src->data[i] = 0;
+        //         } else {
+        //             src->data[i] = 255;
+        //         }
+        //     }
+        // }
+
     }
 
 }

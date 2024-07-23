@@ -17,6 +17,7 @@ public:
     real_t number(const Image<Grayscale> &, const Rect2i & roi);
     real_t number(const Image<Binary> &, const Rect2i & roi);
     real_t april(const Image<Grayscale> &, const Rect2i & roi);
+    real_t april(const Image<Binary> &, const Rect2i & roi);
 };
 
 

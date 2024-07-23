@@ -22,12 +22,12 @@ static auto stddev(const Itpair<auto> & src){
     return std::sqrt(std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0) / std::distance(src));
 }
 
-
-static uint64_t integer_sqrt(uint64_t n) {
+template<typename T>
+static T integer_sqrt(T n) {
 	if (n == 0 || n == 1) return n;
 	
-	uint64_t x = n;
-	uint64_t y = (x + 1) / 2;
+	T x = n;
+	T y = (x + 1) / 2;
 	while (y < x) {
 		x = y;
 		y = (x + n / x) / 2;
@@ -44,28 +44,54 @@ static uint64_t integer_sqrt(uint64_t n) {
 namespace NVCV2::Match{
 
 real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, const Vector2i & offs){
+    // auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_window());
+
+    // uint and_score = 0;
+    // uint or_score = 0;
+
+    // for(uint y = 0; y < (uint)rect.h; y++){
+    //     const auto * tmp_ptr = &tmp[Vector2i{0,y}];
+    //     const auto * src_ptr = &src[Vector2i{0,y} + offs];
+    //     for(uint x = 0; x < (uint)rect.w; x++){
+    //         and_score += int(bool(*tmp_ptr) && bool(*src_ptr));
+    //         or_score += int(bool(*src_ptr) || bool(*src_ptr));
+    //     }
+    // }
+
+    // real_t ret;
+    // uint16_t res = and_score * 65535 / or_score;
+    // u16_to_uni(res, ret);
+    // return ret;
+
     auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_window());
-    size_t cnt = 0;
-    size_t eff = 0;
-    for(auto y = 0; y < rect.h; y++){
-        for(auto x = 0; x < rect.w; x++){
-            if(tmp[{x,y}]){
-                cnt++;
-                if(src[offs + Vector2i{x,y}]){
-                    eff++;
-                }
-            }
+
+    uint score = 0;
+    uint base = tmp.sum() / 255;
+    // uint or_score = 0;
+
+    for(uint y = 0; y < (uint)rect.h; y++){
+        const auto * tmp_ptr = &tmp[Vector2i{0,y}];
+        const auto * src_ptr = &src[Vector2i{0,y} + offs];
+        for(uint x = 0; x < (uint)rect.w; x++){
+            score += int(bool(*tmp_ptr) ^ bool(*src_ptr));
+            // if(bool(*tmp_ptr) + bool(*src_ptr) == 1) score++;
+            tmp_ptr++;
+            src_ptr++;
         }
     }
-    if(cnt == 0) return 0;
 
-    real_t ret;
-    u16_to_uni(((eff * 0XFFFF) / cnt), ret);
-    return ret;
+    // real_t ret;
+    // uint16_t res = score * 65535 / base;
+    // u16_to_uni(res, ret);
+    // return 1-ret;
+
+    // return base - score;
+    return score;
 }
 
 real_t template_match(const Image<Grayscale> & src, const Image<Grayscale> & tmp, const Vector2i & offs){
-    static constexpr uint lossy_bits = 0;
+    static constexpr uint lossy_bits = 4;
+
     //boundary check 
     if(not src.get_window().contains(Rect2i{offs, tmp.get_size()})){
         // ASSERT_WITH_HALT(false, "template_match: out of bound");
@@ -76,7 +102,7 @@ real_t template_match(const Image<Grayscale> & src, const Image<Grayscale> & tmp
     static std::array<uint16_t, 256> q_map{[]{
         std::array<uint16_t, 256> temp = {};
         for(int i = 0; i < 256; ++i) {
-            temp[i] = (i * i) >> (lossy_bits * 2);
+            temp[i] = (i * i) >> lossy_bits;
         }
         return temp;
     }()};
@@ -88,18 +114,27 @@ real_t template_match(const Image<Grayscale> & src, const Image<Grayscale> & tmp
     int s_mean = int(src.mean(Rect2i(offs, tmp.get_size())));
 
     int64_t num = 0;
-    int64_t den_t = 0;
-    int64_t den_s = 0;
+    uint32_t den_t = 0;
+    uint32_t den_s = 0;
 
     for(auto y = 0; y < tmp.get_size().y; y++){
-        for(auto x = 0; x < tmp.get_size().x; x++){
-            int tmp_val = int(tmp[Vector2i{x,y}]) - t_mean;
-            int src_val = int(src[Vector2i{x,y} + offs]) - s_mean;
+        const auto * tmp_ptr = &tmp[Vector2i{0,y}];
+        const auto * src_ptr = &src[Vector2i{0,y} + offs];
 
-            num += ((tmp_val * src_val) >> (lossy_bits * 2));
+        int32_t line_num = 0;
+        for(auto x = 0; x < tmp.get_size().x; x++){
+            int32_t tmp_val = *tmp_ptr - t_mean;
+            int32_t src_val = *src_ptr - s_mean;
+
+            line_num += ((tmp_val * src_val));
             den_t += FAST_SQUARE(tmp_val);
             den_s += FAST_SQUARE(src_val);
+
+            tmp_ptr++;
+            src_ptr++;
         }
+
+        num += line_num;
     }
 
     
@@ -109,9 +144,9 @@ real_t template_match(const Image<Grayscale> & src, const Image<Grayscale> & tmp
     real_t ret;
 
     int64_t den = FAST_SQRT(den_t) * FAST_SQRT(den_s);
-    int64_t res = num * 65535 / den;
-    s16_to_uni(res, ret);
-    return std::abs(ret);
+    uint16_t res = std::abs(num >> lossy_bits) * 65535 / den;
+    u16_to_uni(res, ret);
+    return ret;
 
     #undef FAST_SQUARE
     #undef FAST_SQRT

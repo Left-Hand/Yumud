@@ -1,5 +1,6 @@
 #include "pixels.hpp"
 
+
 namespace NVCV2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
@@ -367,10 +368,8 @@ namespace NVCV2::Pixels{
             }
         }
 
-        // src[i] = lut[]
         for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
             src[i] = lut[uint8_t(src[i])];
-        //     src[i] = uint8_t(pow(real_t(uint8_t(src[i])) >> 8, ga) << 8);
         }
     }
 

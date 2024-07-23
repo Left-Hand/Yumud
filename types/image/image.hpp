@@ -337,9 +337,12 @@ public:
 
     auto clone(const Vector2i & _size) const{return clone(Rect2i(Vector2i{0,0}, _size));}
 
-    Grayscale mean() const{return mean(this->get_window());}
     Grayscale mean(const Rect2i & roi) const;
 
+    uint64_t sum(const Rect2i & roi) const;
+    uint64_t sum() const{return sum(this->get_window());}
+
+    Grayscale mean() const{return mean(this->get_window());}
     void load(const uint8_t * buf, const Vector2i & _size);
     static Image<ColorType> load_from_buf(const uint8_t * buf, const Vector2i & _size){
         Image<ColorType> img(_size);
@@ -347,8 +350,9 @@ public:
         return img;
     }
 
-    Image<ColorType> space() const {
-        return Image<ColorType>(this->get_size());
+    template<typename toColorType = ColorType>
+    Image<toColorType> space() const {
+        return Image<toColorType>(this->get_size());
     }
 };
 
