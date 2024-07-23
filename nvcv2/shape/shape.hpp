@@ -62,6 +62,10 @@ namespace NVCV2::Shape{
     void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src);
 
     void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src);
+
+    void anti_pepper_y(Image<Binary> & dst,const Image<Binary> & src);
+
+    void anti_pepper(Image<Binary> & dst,const Image<Binary> & src);
     __inline void dilate(Image<Binary> & src){
         dilate(src, src);
     }
@@ -128,6 +132,39 @@ namespace NVCV2::Shape{
 
     void convo_roberts_xy(Image<Grayscale> & dst, Image<Grayscale> & src);
 
+    __inline void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src, const int max_diff = INT_MAX) {
+        if(dst == src){
+            auto temp = dst.space();
+            adaptive_threshold(temp, src);
+            dst.clone(temp);
+            return;
+        }
+    
+        const auto size = (Rect2i(Vector2i(), dst.size).intersection(Rect2i(Vector2i(), src.size))).size;
+
+        static constexpr int wid = 3;
+        static constexpr int area = (2 * wid + 1) * (2 * wid + 1);
+
+        for(int y = wid; y < size.y - wid - 1; y++){
+            for(int x = wid; x < size.x - wid - 1; x++){
+
+                uint16_t average = 0;
+
+                for(int i=y-wid;i<=y+wid;i++){
+                    for(int j=x-wid;j<=x+wid;j++){
+                        average += uint8_t(src[{j,i}]);
+                    }
+                }
+
+                auto ave = average/area;
+                auto raw = src[{x,y}];
+
+                #define RELU(x) ((x) > 0 ? (x) : 0)
+
+                dst[{x,y}] = CLAMP(RELU(raw - ave - 5) * 8, 0, 255);
+            }
+        }
+    }
     __inline void convo_roberts_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         convolution(dst, src, Cores::roberts_y);
     }

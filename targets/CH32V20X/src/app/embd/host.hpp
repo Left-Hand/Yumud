@@ -60,7 +60,7 @@ class EmbdHost:public CliAP{
 
 
     struct{
-        uint8_t bina_threshold = 70;
+        uint8_t bina_threshold = 60;
         uint8_t diff_threshold = 170;
         // uint8_t 
     };

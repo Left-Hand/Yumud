@@ -69,7 +69,7 @@ void EmbdHost::main(){
 
 
     camera.init();
-    camera.setExposureValue(400);
+    camera.setExposureValue(2400);
 
 
     vl.init();
@@ -93,17 +93,31 @@ void EmbdHost::main(){
         led = !led;
         Image<Grayscale> img = Shape::x2(camera);
         plot_gray(img, img.get_window());
+
+
+        // Shape::gauss(img);
+        auto img_ada = img.space();
+        Shape::adaptive_threshold(img_ada, img, 0);
+        // Shape::convo_roberts_xy(img, img);
+        // Shape::gauss(img);
+
+        // Shape::gauss(img);
+        plot_gray(img, img.get_window() + Vector2i(0, img.h*2));
+        // plot_gray(img, img.get_window() + Vector2i{0, img.size.y * 2});
+        // continue;
         // auto diff = img.space();
         // Shape::sobel_xy(diff, img);
         // auto diff_bina = make_bina_mirror(diff);
         // Pixels::binarization(diff_bina, diff, diff_threshold);
 
         auto img_bina = Image<Binary>(img.get_size());
-        Pixels::binarization(img_bina, img, bina_threshold);
-        Shape::anti_pepper_x(img_bina, img_bina);
+        Pixels::binarization(img_bina, img, 200);
+        // Pixels::binarization(img_bina, img, 10);
         Pixels::inverse(img_bina);
+        // Shape::anti_pepper_y(img_bina, img_bina);
+        // Shape::anti_pepper_x(img_bina, img_bina);
         // Pixels::or_with(img_bina, diff_bina);
-
+        // Shape::erosion(img_bina);
         plot_bina(img_bina, img.get_window() + Vector2i{0, img.size.y});
 
 
@@ -119,7 +133,8 @@ void EmbdHost::main(){
             painter.setColor(RGB565::GREEN);
             Rect2i view = Rect2i::from_center(rect.get_center(), Vector2i(14,14));
             painter.drawRoi(view);
-            auto result = matcher.number(img, rect);
+            // [[maybe_unused]] auto result = matcher.number(img, rect);
+            [[maybe_unused]] auto result = matcher.number(img_bina, rect);
             // DEBUG_PRINTLN(result);
             // auto piece = img.clone(view);
 

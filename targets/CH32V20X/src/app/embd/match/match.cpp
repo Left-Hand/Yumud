@@ -21,6 +21,20 @@ real_t Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
     return 0;
 }
 
+real_t Matcher::number(const Image<Binary> & src, const Rect2i & roi){
+    for(size_t i = 0; i < N; i++){
+        Image<Binary> tmp = Image<Binary>::load_from_buf(digit_images[i], Vector2i(28,28));
+        result[i] = NVCV2::Match::template_match(src, tmp, roi.position);
+    }
+    // DEBUG_PRINTLN(result);
+    for(const auto & item : result){
+        DEBUGGER << item << ',';
+    }
+    DEBUGGER << "0\r\n";
+    return 0;
+}
+
+
 real_t Matcher::april(const Image<Grayscale> &, const Rect2i & roi){
     return real_t();
 }

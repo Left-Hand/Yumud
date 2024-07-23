@@ -284,7 +284,7 @@ public:
     __fast_inline ColorType & at(const int y, const int x){ return data[x + y * ImageBasics::w]; }
 
 
-    bool operator == (const ImageWithData & other) const {
+    bool operator == (const ImageWithData<auto, auto> & other) const {
         return data == other.data;
     }
 };
@@ -319,7 +319,9 @@ public:
 
     Image<ColorType> & clone(const Image<ColorType> & other){
         auto _size = (Rect2i(ImageBasics::get_size())).intersection(Rect2i(other.get_size())).size;
-        memcpy(other.data.get(), this->data.get(), _size.x * _size.y * sizeof(ColorType));
+        this->size = _size;
+        this->data = std::make_shared<ColorType[]>(_size.x * _size.y);
+        memcpy(this->data.get(), other.data.get(), _size.x * _size.y * sizeof(ColorType));
         return *this;
     }
 

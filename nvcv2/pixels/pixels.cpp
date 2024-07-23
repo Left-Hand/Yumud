@@ -394,22 +394,5 @@ namespace NVCV2::Pixels{
             src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
         }
     }
-    void adaptive_threshold(ImageWritable<Binary> & dst, const ImageReadable<Grayscale> & src){
-        for(auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++){
-            for(auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++){
-                uint16_t average=0;
-                int i,j;
-
-                for(i=y-3;i<=y+3;i++){
-                    for(j=x-3;j<=x+3;j++){
-                        average += uint8_t(src({j,i}));
-                    }
-                }
-
-                average=average/49-23;
-                dst[{x,y}] = Binary(uint8_t(src({x,y})) > average);
-            }
-        }
-    }
 }
 

@@ -27,9 +27,19 @@ namespace NVCV2::Shape{
         }
     }
 
+    static void clear_corners(ImageWritable<Grayscale> & dst){
+        auto size = dst.get_size();
+        static constexpr Grayscale targ_v = 255;
+        for(int y = 0; y < size.y; y++) dst[{0, y}] = targ_v;
+        for(int y = 0; y < size.y; y++) dst[{size.x-1, y}] = targ_v;
+        for(int x = 0; x < size.x; x++) dst[{x, 0}] = targ_v;
+        for(int x = 0; x < size.x; x++) dst[{x, size.y-1}] = targ_v;
+    }
+
     void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         auto size = dst.get_size();
         const auto & core = Cores::gauss;
+        clear_corners(dst);
         for(int y = 1; y < size.y-1; y++){
             for(int x = 1; x < size.x-1; x++){
                 int pixel = 0;
@@ -381,6 +391,53 @@ namespace NVCV2::Shape{
         for(int y = 0; y < size.y; y++){
             auto * p_src = &src[y * size.x + 1];
             auto * p_dst = &dst[y * size.x + 1];
+            uint8_t last_two = false;
+            for (int x = 1; x < size.x - 2; ++x) {
+                uint8_t next = bool(*(p_src + 1));
+                *p_dst = ((last_two + next) > 1);
+                last_two = uint8_t(bool((*p_src))) + next;
+
+                p_src++;
+                p_dst++; 
+            }
+        }
+    }
+
+    void anti_pepper_y(Image<Binary> & dst,const Image<Binary> & src){
+        auto size = dst.get_size();
+
+        if(src == dst){
+            auto temp = src.clone();
+            anti_pepper_y(dst, temp);
+            return;
+        }
+
+        for(int x = 0; x < size.x - 1; ++x){
+            auto * p_src = &src[x];
+            auto * p_dst = &dst[x];
+            uint8_t last_two = false;
+            for (int y = 1; y < size.y - 2; ++y) {
+                uint8_t next = bool(*(p_src + 1));
+                *p_dst = ((last_two + next) > 1);
+                last_two = uint8_t(bool((*p_src))) + next;
+
+                p_src += size.x;
+                p_dst += size.x;
+            }
+        }
+    }
+
+    void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
+        auto size = dst.get_size();
+        if(src == dst){
+            auto temp = src.clone();
+            anti_pepper(dst, temp);
+            return;
+        }
+
+        for(int y = 0; y < size.y; y++){
+            auto * p_src = &src[y * size.x + 1];
+            auto * p_dst = &dst[y * size.x + 1];
             uint8_t last_two = true;
             for (int x = 1; x < size.x - 1; ++x) {
                 uint8_t next = bool(*(p_src + 1));
@@ -392,6 +449,7 @@ namespace NVCV2::Shape{
             }
         }
     }
+
 
     void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t & percent){
         auto size = src.get_size();
@@ -551,8 +609,9 @@ namespace NVCV2::Shape{
 
     void convo_roberts_xy(Image<Grayscale> & dst, Image<Grayscale> & src){
         if(src == dst){
-            auto temp = src.clone();
-            convo_roberts_xy(dst, temp);
+            auto temp = src.space();
+            convo_roberts_xy(temp, src);
+            dst.clone(temp);
             return;
         }
 
