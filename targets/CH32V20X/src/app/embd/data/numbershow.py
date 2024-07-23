@@ -4,8 +4,8 @@ import fontTools.ttLib
 
 
 img_size = (280, 280)
-img_offset = (50, -50)
-font_size = 340
+img_offset = (40, 0)
+font_size = 200
 
 
 images = {}

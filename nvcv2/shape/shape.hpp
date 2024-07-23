@@ -22,6 +22,7 @@ namespace NVCV2::Shape{
 
     void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
     void gauss(Image<Grayscale> src);
+    void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
     __inline void sobel_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_x);}
     __inline void sobel_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_y);}
     __inline void scharr_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_x);}
@@ -170,7 +171,7 @@ namespace NVCV2::Shape{
     }
 
 
-    void canny(Image<Binary> & dst,const Image<Grayscale> & src);
+    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range_t<uint8_t> & threshold);
 
     class Seed{
         public:            

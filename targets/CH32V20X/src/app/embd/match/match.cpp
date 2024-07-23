@@ -9,10 +9,9 @@ void Matcher::init(){
 }
 
 real_t Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
-    const auto tmp_size = Vector2i(28,28);
+    const auto tmp_size = roi.size;
     auto fault = src.clone(Rect2i(roi.position, tmp_size));
     auto fault_bina = make_bina_mirror(fault);
-    // NVCV2::Pixels::ostu(fault_bina, fault);
 
     auto begin = millis();
     for(size_t i = 0; i < N; i++){
@@ -30,7 +29,7 @@ real_t Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
 
 
 real_t Matcher::number(const Image<Binary> & src, const Rect2i & roi){
-    const auto tmp_size = Vector2i(28,28);
+    const auto tmp_size = roi.size;
 
     auto begin = millis();
     for(size_t i = 0; i < N; i++){

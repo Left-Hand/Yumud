@@ -1,8 +1,18 @@
 #include "shape.hpp"
 #include "../pixels/pixels.hpp"
+#include "../dsp/fastmath/sqrt.hpp"
+#include "../dsp/fastmath/square.hpp"
 
 
 namespace NVCV2::Shape{
+    static void clear_corners(ImageWritable<Grayscale> & dst){
+        auto size = dst.get_size();
+        static constexpr Grayscale targ_v = 255;
+        for(int y = 0; y < size.y; y++) dst[{0, y}] = targ_v;
+        for(int y = 0; y < size.y; y++) dst[{size.x-1, y}] = targ_v;
+        for(int x = 0; x < size.x; x++) dst[{x, 0}] = targ_v;
+        for(int x = 0; x < size.x; x++) dst[{x, size.y-1}] = targ_v;
+    }
 
 
     void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3]){
@@ -27,14 +37,6 @@ namespace NVCV2::Shape{
         }
     }
 
-    static void clear_corners(ImageWritable<Grayscale> & dst){
-        auto size = dst.get_size();
-        static constexpr Grayscale targ_v = 255;
-        for(int y = 0; y < size.y; y++) dst[{0, y}] = targ_v;
-        for(int y = 0; y < size.y; y++) dst[{size.x-1, y}] = targ_v;
-        for(int x = 0; x < size.x; x++) dst[{x, 0}] = targ_v;
-        for(int x = 0; x < size.x; x++) dst[{x, size.y-1}] = targ_v;
-    }
 
     void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         auto size = dst.get_size();
@@ -58,6 +60,36 @@ namespace NVCV2::Shape{
                 pixel /= 10;
                 
                 dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+            }
+        }
+    }
+
+
+    void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
+        auto size = dst.get_size();
+        static constexpr auto core_radius = 2;
+        static constexpr auto core_sum = 256;
+    
+        static constexpr uint8_t core[5][5] ={
+            {1,     4,      6,      4,      1},
+            {4,     16,     24,     16,     4},
+            {6,     24,     36,     24,     6},
+            {4,     16,     24,     16,     4},
+            {1,     4,      6,      4,      1}
+        };
+
+        clear_corners(dst);
+        for(int y = core_radius; y < size.y - core_radius; ++y){
+            for(int x = core_radius; x < size.x - core_radius; ++x){
+                uint32_t sum = 0;
+
+                for(int dy = -core_radius; dy <= core_radius; ++dy){
+                    for(int dx = -core_radius; dx <= core_radius; ++dx){
+                        sum += src[Vector2i{x + dx, y + dy}] * core[dy + core_radius][dx + core_radius];
+                    }
+                }
+                
+                dst[{x,y}] = Grayscale(CLAMP(sum / core_sum, 0, 255));
             }
         }
     }
@@ -374,6 +406,16 @@ namespace NVCV2::Shape{
         const auto size = dst.size;
         for(int y = 0; y < size.y; y++){
             for(int x = 0; x < size.x; x++){
+                // uint16_t sum = 0;
+
+                // for(int j = 0; j < 2; j++){
+                //     for(int i = 0; i < 2; i++){
+                //         sum += src[{(x << 1) + i,(y << 1) + j}];
+                //     }
+                // }
+
+                // dst[{x,y}] = sum / 4;
+
                 dst[{x,y}] = src[{x << 1,y << 1}];
             }
         }
@@ -642,150 +684,149 @@ namespace NVCV2::Shape{
     }
 
 
-    void canny(Image<Binary> &dst, const Image<Grayscale> &src){
-        auto size = src.get_size();
+    static __fast_inline Direction xy_to_dir(const int16_t x, const int16_t y){
+        auto abs_x = std::abs(x);
+        auto abs_y = std::abs(y);
+
+        #define TWO_AND_HALF(x) ((x << 1) + (x >> 1))
+
+        if(abs_y > TWO_AND_HALF(abs_x)){
+            return Direction::U;
+        }else if(abs_x > TWO_AND_HALF(abs_y)){
+            return Direction::R;
+        }else{
+            if(x > 0 && y > 0){
+                return Direction::UR;
+            }else{
+                return Direction::UL;
+            }
+        }
+
+        #undef TWO_AND_HALF
+    } 
+
+    void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint8_t> & threshold){
         auto temp = src.space();
-        gauss(temp, src);
+        auto roi = src.get_window();
 
-        auto sx = src.space();
-        auto sy = src.space();
-        
-        sobel_x(sx, src);
-        sobel_y(sy, src);
+        const auto low_thresh = threshold.from;
+        const auto high_thresh = threshold.to;
 
-        static constexpr std::array<Vector2i,8> offsets_8 = {
-            Vector2i{-1, -1},
-            Vector2i{-1, 0}, 
-            Vector2i{-1, 1}, 
-            Vector2i{0, -1},
-            Vector2i{0, 1}, 
-            Vector2i{1, -1}, 
-            Vector2i{1, 0}, 
-            Vector2i{1, 1}};
-        // const std::array<Vector2i,4> offsets_4 = { {-1, 0}, {0, -1}, {0, 1}, {1, 0} };
-        static constexpr real_t k = 2.414f;
-        static constexpr real_t inv_k = 0.414f;
+        gauss5x5(temp, src);
 
 
-        // int w = src->w;
+        struct gvec_t{
+            uint16_t g:13;
+            Direction t:3;
+        }__packed;
 
-        // gvec_t *gm = fb_alloc0(roi->w * roi->h * sizeof *gm, FB_ALLOC_NO_HINT);
+        auto gm = new gvec_t[int(roi)];
 
-        // typedef struct gvec {
-        //     uint16_t t;
-        //     uint16_t g;
-        // } gvec_t;
+        const int w = roi.w;
 
-        // //2. Finding Image Gradients
-        // for (int gy = 1, y = roi->y + 1; y < roi->y + roi->h - 1; y++, gy++) {
-        //     for (int gx = 1, x = roi->x + 1; x < roi->x + roi->w - 1; x++, gx++) {
-        //         int vx = 0, vy = 0;
-        //         // sobel kernel in the horizontal direction
-        //         vx = src->data [(y - 1) * w + x - 1]
-        //             - src->data [(y - 1) * w + x + 1]
-        //             + (src->data[(y + 0) * w + x - 1] << 1)
-        //             - (src->data[(y + 0) * w + x + 1] << 1)
-        //             + src->data [(y + 1) * w + x - 1]
-        //             - src->data [(y + 1) * w + x + 1];
+        #define FAST_SQUARE(x) (x <= 255 ? fast_square8(x) : x * x)
+        #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
 
-        //         // sobel kernel in the vertical direction
-        //         vy = src->data [(y - 1) * w + x - 1]
-        //             + (src->data[(y - 1) * w + x + 0] << 1)
-        //             + src->data [(y - 1) * w + x + 1]
-        //             - src->data [(y + 1) * w + x - 1]
-        //             - (src->data[(y + 1) * w + x + 0] << 1)
-        //             - src->data [(y + 1) * w + x + 1];
+        //2. Finding Image Gradients
+        for (int gy = 1, y = roi.y + 1; y < roi.y + roi.h - 1; y++, gy++) {
+            for (int gx = 1, x = roi.x + 1; x < roi.x + roi.w - 1; x++, gx++) {
+                int16_t vx = 0, vy = 0;
+                // sobel kernel in the horizontal direction
+                vx = src.data [(y - 1) * w + x - 1]
+                    - src.data [(y - 1) * w + x + 1]
+                    + (src.data[(y + 0) * w + x - 1] << 1)
+                    - (src.data[(y + 0) * w + x + 1] << 1)
+                    + src.data [(y + 1) * w + x - 1]
+                    - src.data [(y + 1) * w + x + 1];
 
-        //         // Find magnitude
-        //         int g = (int) fast_sqrtf(vx * vx + vy * vy);
-        //         // Find the direction and round angle to 0, 45, 90 or 135
-        //         int t = (int) fast_fabsf((atan2f(vy, vx) * 180.0f / M_PI));
-        //         if (t < 22) {
-        //             t = 0;
-        //         } else if (t < 67) {
-        //             t = 45;
-        //         } else if (t < 112) {
-        //             t = 90;
-        //         } else if (t < 160) {
-        //             t = 135;
-        //         } else if (t <= 180) {
-        //             t = 0;
-        //         }
+                // sobel kernel in the vertical direction
+                vy = src.data [(y - 1) * w + x - 1]
+                    + (src.data[(y - 1) * w + x + 0] << 1)
+                    + src.data [(y - 1) * w + x + 1]
+                    - src.data [(y + 1) * w + x - 1]
+                    - (src.data[(y + 1) * w + x + 0] << 1)
+                    - src.data [(y + 1) * w + x + 1];
 
-        //         gm[gy * roi->w + gx].t = t;
-        //         gm[gy * roi->w + gx].g = g;
-        //     }
-        // }
+                // Find the direction and round angle to 0, 45, 90 or 135
+                gm[gy * roi.w + gx] = gvec_t{
+                    FAST_SQRT(FAST_SQUARE(vx) + FAST_SQUARE(vx)),
+                    xy_to_dir(vx, vy)};
+            }
+        }
 
-        // // 3. Hysteresis Thresholding
-        // // 4. Non-maximum Suppression and output
-        // for (int gy = 0, y = roi->y; y < roi->y + roi->h; y++, gy++) {
-        //     for (int gx = 0, x = roi->x; x < roi->x + roi->w; x++, gx++) {
-        //         int i = y * w + x;
-        //         gvec_t *va = NULL, *vb = NULL, *vc = &gm[gy * roi->w + gx];
+        // 3. Hysteresis Thresholding
+        // 4. Non-maximum Suppression and output
+        for (int gy = 0, y = roi.y; y < roi.y + roi.h; y++, gy++) {
+            for (int gx = 0, x = roi.x; x < roi.x + roi.w; x++, gx++) {
+                int i = y * w + x;
+                gvec_t *va = NULL, *vb = NULL, *vc = &gm[gy * roi.w + gx];
 
-        //         // Clear the borders
-        //         if (y == (roi->y) || y == (roi->y + roi->h - 1) ||
-        //             x == (roi->x) || x == (roi->x + roi->w - 1)) {
-        //             src->data[i] = 0;
-        //             continue;
-        //         }
+                // Clear the borders
+                if (y == (roi.y) || y == (roi.y + roi.h - 1) ||
+                    x == (roi.x) || x == (roi.x + roi.w - 1)) {
+                    src.data[i] = 0;
+                    continue;
+                }
 
-        //         if (vc->g < low_thresh) {
-        //             // Not an edge
-        //             src->data[i] = 0;
-        //             continue;
-        //             // Check if strong or weak edge
-        //         } else if (vc->g >= high_thresh ||
-        //                 gm[(gy - 1) * roi->w + (gx - 1)].g >= high_thresh ||
-        //                 gm[(gy - 1) * roi->w + (gx + 0)].g >= high_thresh ||
-        //                 gm[(gy - 1) * roi->w + (gx + 1)].g >= high_thresh ||
-        //                 gm[(gy + 0) * roi->w + (gx - 1)].g >= high_thresh ||
-        //                 gm[(gy + 0) * roi->w + (gx + 1)].g >= high_thresh ||
-        //                 gm[(gy + 1) * roi->w + (gx - 1)].g >= high_thresh ||
-        //                 gm[(gy + 1) * roi->w + (gx + 0)].g >= high_thresh ||
-        //                 gm[(gy + 1) * roi->w + (gx + 1)].g >= high_thresh) {
-        //             vc->g = vc->g;
-        //         } else {
-        //             // Not an edge
-        //             src->data[i] = 0;
-        //             continue;
-        //         }
+                if (vc->g < low_thresh) {
+                    // Not an edge
+                    src.data[i] = 0;
+                    continue;
+                    // Check if strong or weak edge
+                } else if (vc->g >= high_thresh ||
+                        gm[(gy - 1) * roi.w + (gx - 1)].g >= high_thresh ||
+                        gm[(gy - 1) * roi.w + (gx + 0)].g >= high_thresh ||
+                        gm[(gy - 1) * roi.w + (gx + 1)].g >= high_thresh ||
+                        gm[(gy + 0) * roi.w + (gx - 1)].g >= high_thresh ||
+                        gm[(gy + 0) * roi.w + (gx + 1)].g >= high_thresh ||
+                        gm[(gy + 1) * roi.w + (gx - 1)].g >= high_thresh ||
+                        gm[(gy + 1) * roi.w + (gx + 0)].g >= high_thresh ||
+                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_thresh) {
+                    vc->g = vc->g;
+                } else {
+                    // Not an edge
+                    src.data[i] = 0;
+                    continue;
+                }
 
-        //         switch (vc->t) {
-        //             case 0: {
-        //                 va = &gm[(gy + 0) * roi->w + (gx - 1)];
-        //                 vb = &gm[(gy + 0) * roi->w + (gx + 1)];
-        //                 break;
-        //             }
+                switch (vc->t) {
+                    default:
+                    case Direction::R: {
+                        va = &gm[(gy + 0) * roi.w + (gx - 1)];
+                        vb = &gm[(gy + 0) * roi.w + (gx + 1)];
+                        break;
+                    }
 
-        //             case 45: {
-        //                 va = &gm[(gy + 1) * roi->w + (gx - 1)];
-        //                 vb = &gm[(gy - 1) * roi->w + (gx + 1)];
-        //                 break;
-        //             }
+                    case Direction::UR: {
+                        va = &gm[(gy + 1) * roi.w + (gx - 1)];
+                        vb = &gm[(gy - 1) * roi.w + (gx + 1)];
+                        break;
+                    }
 
-        //             case 90: {
-        //                 va = &gm[(gy + 1) * roi->w + (gx + 0)];
-        //                 vb = &gm[(gy - 1) * roi->w + (gx + 0)];
-        //                 break;
-        //             }
+                    case Direction::U: {
+                        va = &gm[(gy + 1) * roi.w + (gx + 0)];
+                        vb = &gm[(gy - 1) * roi.w + (gx + 0)];
+                        break;
+                    }
 
-        //             case 135: {
-        //                 va = &gm[(gy + 1) * roi->w + (gx + 1)];
-        //                 vb = &gm[(gy - 1) * roi->w + (gx - 1)];
-        //                 break;
-        //             }
-        //         }
+                    case Direction::UL: {
+                        va = &gm[(gy + 1) * roi.w + (gx + 1)];
+                        vb = &gm[(gy - 1) * roi.w + (gx - 1)];
+                        break;
+                    }
+                }
 
-        //         if (!(vc->g > va->g && vc->g > vb->g)) {
-        //             src->data[i] = 0;
-        //         } else {
-        //             src->data[i] = 255;
-        //         }
-        //     }
-        // }
+                if (!(vc->g > va->g && vc->g > vb->g)) {
+                    src.data[i] = 0;
+                } else {
+                    src.data[i] = 255;
+                }
+            }
+        }
+        #undef FAST_SQRT
+        #undef FAST_SQUARE8
 
+        delete gm;
     }
 
 }

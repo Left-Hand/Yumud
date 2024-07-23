@@ -5,6 +5,11 @@
 #include "../nvcv2/mnist/tinymaix.h"
 #include "../nvcv2.hpp"
 
+class Classify{
+
+};
+
+
 class Mnist{
 public:
     static constexpr int N = 10; 

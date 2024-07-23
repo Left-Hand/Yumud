@@ -148,17 +148,23 @@ void EmbdHost::main(){
         // DEBUG_PRINTLN(result);
 
         if(true){
-            const Rect2i rect = Rect2i(20, 10, 28, 28);
+            const Vector2i tmp_size = {8, 12};
+            const Rect2i clip_window = Rect2i(Vector2i(20, 10), tmp_size * 2);
+            auto clipped = img.clone(clip_window);
+            auto tmp = Shape::x2(clipped);
+
             painter.setColor(RGB565::RED);
-            painter.drawRoi(rect);
-            painter.setColor(RGB565::GREEN);
-            Rect2i view = Rect2i::from_center(rect.get_center(), Vector2i(14,14));
-            painter.drawRoi(view);
+            painter.drawRoi(clip_window);
+            // painter.setColor(RGB565::GREEN);
+            // Rect2i view = Rect2i::from_center(rect.get_center(), Vector2i(14,14));
+            // painter.drawRoi(view);
             // [[maybe_unused]] auto result = matcher.number(img, rect);
-            [[maybe_unused]] auto result = matcher.number(img_bina, rect);
+
+            [[maybe_unused]] auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
             // DEBUG_PRINTLN(result);
             // auto piece = img.clone(view);
-
+            // Mnist mnist;
+            // mnist.update()
         }
         if(false){
             Shape::FloodFill ff;
@@ -179,7 +185,7 @@ void EmbdHost::main(){
             // Pixels::mask_with(piece, mask);
             Shape::gauss(piece);
             // Pixels::inverse(piece);
-            Mnist mnist;
+            
             // auto result = mnist.update(piece);
             // logger.println(mnist.outputs);
             // const auto & outputs = mnist.outputs;

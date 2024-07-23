@@ -3,10 +3,11 @@ import os
 import fontTools.ttLib
 
 
-img_size = (28, 28)
-img_offset = (5, -5)
-font_size = 34
+img_size = (8,12)
+img_offset = (0, -2)
+font_size = 14
 
+area = str(img_size[0] * img_size[1])
 
 images = {}
 arrs = {}
@@ -62,13 +63,14 @@ def convert_arr_to_c_code(arr) -> str:
 
 def convert_all_images_to_c_code(arrs):
     c_code = '/*this code is auto generated, DO NOT TOUCH */\r\n'
-    c_code += '#pragma once\r\n#include <cstdint>\r\nstatic constexpr uint8_t digit_images[10][784] = {\r\n'
+
+    c_code += '#pragma once\r\n#include <cstdint>\r\nstatic constexpr uint8_t digit_images[10]['+area +'] = {\r\n'
     for i in range(10):
         c_code += convert_arr_to_c_code(arrs[get_gs_name(i)])
 
     c_code += '};\n'
 
-    c_code += 'static constexpr uint8_t digit_bina_images[10][784] = {\r\n'
+    c_code += 'static constexpr uint8_t digit_bina_images[10]['+ area +'] = {\r\n'
     for i in range(10):
         c_code += convert_arr_to_c_code(arrs[get_bn_name(i)])
 
