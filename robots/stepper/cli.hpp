@@ -14,7 +14,7 @@ namespace StepperUtils{
 
     #define read_value(value)\
     {\
-        logger.println("get", VNAME(value), "\t\t is", value);\
+        DEBUG_PRINTS("get", VNAME(value), "\t\t is", value);\
         break;\
     }
 
@@ -28,10 +28,10 @@ namespace StepperUtils{
     {\
         ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
         if(args.size() == 0){\
-            logger.println("no arg");\
+            DEBUG_PRINTS("no arg");\
         }else if(args.size() == 1){\
             method(type(args[0]));\
-            logger.println("method", #method, "called");\
+            DEBUG_PRINTS("method", #method, "called");\
         }\
         break;\
     }
@@ -43,7 +43,7 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = decltype(value)(args[0]);\
-            logger.println("set: ", VNAME(value), "\t\t to", args[0]);\
+            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", args[0]);\
         }\
         break;\
     }
@@ -57,7 +57,7 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            logger.println("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
         }\
         break;\
     }
@@ -72,7 +72,7 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            logger.println("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
         }\
         break;\
     }
@@ -94,7 +94,7 @@ namespace StepperUtils{
                 endPos = input.indexOf(delimiter, startPos);
             }
 
-            if (startPos < input.length()) {
+            if (startPos < (int)input.length()) {
                 String lastToken = input.substring(startPos);
                 result.push_back(lastToken.c_str());
             }
@@ -118,15 +118,15 @@ namespace StepperUtils{
                 case "reset"_ha:
                 case "rst"_ha:
                 case "r"_ha:
-                    logger.println("rsting");
+                    DEBUG_PRINTS("rsting");
                     NVIC_SystemReset();
                     break;
                 case "alive"_ha:
                 case "a"_ha:
-                    logger.println("chip is alive");
+                    DEBUG_PRINTS("chip is alive");
                     break;
                 default:
-                    logger.println("no command available:", command);
+                    DEBUG_PRINTS("no command available:", command);
                     break;
             }
         }
@@ -134,22 +134,26 @@ namespace StepperUtils{
         void parseLine(const String & _line){
 
             if(_line.length() == 0) return;
-            bool ends = (_line.lastIndexOf('\n') > 0);
 
-            String line = _line;
-            line.alphanum();
 
-            static String temp;
-            temp += line;
+            for(size_t i = 0; i < _line.length(); i++){
+                char chr = _line[i];
 
-            if(ends){
-                if(temp.length() != 0){
-                    auto tokens = split_string(temp, ' ');
-                    auto command = tokens[0];
-                    tokens.erase(tokens.begin());
-                    parseTokens(command, tokens);
+                static String temp = "";
+                temp += chr;
+
+                bool ends = (chr == '\n');
+
+                if(ends){
+                    temp.alphanum();
+                    if(temp.length() != 0){
+                        auto tokens = split_string(temp, ' ');
+                        auto command = tokens[0];
+                        tokens.erase(tokens.begin());
+                        parseTokens(command, tokens);
+                    }
+                    temp = "";
                 }
-                temp = "";
             }
         }
         virtual void readCan() = 0;

@@ -293,6 +293,10 @@ struct sGrayscale{
 };
 
 #ifdef __cplusplus
+
+template<typename T>
+concept monochrome = std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>;
+
 namespace RGB{
 
     // template<typename T>
@@ -300,6 +304,8 @@ namespace RGB{
     
     __fast_inline constexpr void conv(RGB565 & rgb565,const Grayscale & gs){rgb565 = RGB565(gs);}
 }
+
+
 #endif
 
 #endif

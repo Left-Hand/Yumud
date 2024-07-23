@@ -53,9 +53,7 @@ namespace NVCV2::Shape{
 
     auto x4(const ImageReadable<Grayscale> & src, const int m = 2);
 
-    void x2(Image<Grayscale> & dst, const Image<Grayscale> & src);
-
-    auto x2(const Image<Grayscale> & src);
+    Image<Grayscale> x2(const Image<Grayscale> & src);
 
     void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t & percent);
 
@@ -63,6 +61,7 @@ namespace NVCV2::Shape{
 
     void zhang_suen2(Image<Binary> & dst,const Image<Binary> & src);
 
+    void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src);
     __inline void dilate(Image<Binary> & src){
         dilate(src, src);
     }

@@ -148,7 +148,7 @@ namespace StepperUtils{
 
 
         uint32_t hash() const {
-            return hash_djb(cali_map);
+            return hash_impl(cali_map);
         }
 
         auto & map() {return cali_map;}

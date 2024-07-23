@@ -69,7 +69,7 @@ if(bool(condition) == false){\
     return;\
 }
 
-#define ASSERT_WITH_DOWN(condition, ...) \
+#define ASSERT_WITH_HALT(condition, ...) \
 if(bool(condition) == false){\
     DEBUG_PRINTLN("[f]:", __LINE__, ':', ##__VA_ARGS__);\
     __disable_irq();\

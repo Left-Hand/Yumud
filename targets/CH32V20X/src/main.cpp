@@ -23,15 +23,14 @@ void preinit(){
 
 
 int main(){
-    preinit();
 
     #ifdef CH32V20X
-
+    Sys::Misc::prework();
     // eeprom_main();
     // uart_main();
     // qlz_main();
+    // embd_main();
     embd_main();
-
     // delay(200);
     // pmdc_tb();
     // uart_tb(uart1);
@@ -49,13 +48,14 @@ int main(){
     // eeprom_tb(uart1);
 
     #elif defined(CH32V30X)
+    preinit();
 
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();
     // calc_main();
     // dshot_main();
-// usbcdc_tb();
+    // usbcdc_tb();
     embd_main();
     // smc_main();
     // UartHw & logger = uart2;

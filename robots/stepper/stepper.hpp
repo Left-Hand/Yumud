@@ -193,6 +193,7 @@ public:
     }
 
     void run(){
+        readCan();
         panel_led.run();
     }
 

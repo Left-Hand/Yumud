@@ -48,8 +48,10 @@ __fast_inline bool is_equal_approx(const double a,const double b);
 __fast_inline bool is_equal_approx_ratio(const double a, const double b, double epsilon = double(CMP_EPSILON), double min_epsilon = double(CMP_EPSILON));
 
 __fast_inline float sign(const float fv);
-__fast_inline int sign(const int val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 __fast_inline double sign(const double dv);
+
+template<integral T>
+__fast_inline T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 
 __fast_inline void u16_to_uni(const uint16_t data, float & fv){
     fv = (float)data / 65535;

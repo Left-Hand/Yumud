@@ -61,6 +61,7 @@
 #if defined(__cplusplus)
 #include "../sys/kernel/enums.hpp"
 
+#include <bits/stl_iterator_base_funcs.h>
 #include <type_traits>
 #include <limits>
 
@@ -76,6 +77,11 @@ concept integral = std::is_integral_v<T>;
 template<typename T>
 concept integral_32 = std::is_integral_v<T> && sizeof(T) == 4;
 
+template<typename T>
+concept iterable = requires(T t) {
+    { std::next(t) } -> std::same_as<T>;
+    { std::prev(t) } -> std::same_as<T>;
+};
 
 template<typename T>
 concept integral_s32 = integral_32<T> && std::is_signed_v<T>;

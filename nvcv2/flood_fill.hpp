@@ -23,11 +23,10 @@ protected:
     using Blobs = sstl::vector<Blob, 16>;
     Blobs m_blobs;
 
-    // static void found(ImageWritable<Binary> & map, Blob & blob);
 public:
 
-	// ImageWithData<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
-    ImageWithData<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
+
+    Image<Grayscale> run(const ImageReadable<Binary> & src);
     auto & blobs() const{return m_blobs;}
 };
 class SimilarRects{

@@ -114,14 +114,14 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
 
         case "error"_ha:
         case "err"_ha:
-            if(error_message) {DEBUG_PRINTLN(error_message)}
-            else {DEBUG_PRINTLN("no error")}
+            if(error_message) {DEBUG_PRINTS(error_message)}
+            else {DEBUG_PRINTS("no error")}
             break;
 
         case "warn"_ha:
         case "wa"_ha:
-            if(warn_message) {DEBUG_PRINTLN(warn_message)}
-            else {DEBUG_PRINTLN("no warn")}
+            if(warn_message) {DEBUG_PRINTS(warn_message)}
+            else {DEBUG_PRINTS("no warn")}
             break;
 
         case "enable"_ha:
@@ -156,9 +156,13 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             beep_task(true);
             break;
 
+        case "id"_ha:
+            DEBUG_PRINTS("node id is: ", node_id);
+            break;
+
         case "rd"_ha:
             if(args.size() == 1) run_debug_enabled = int(args[0]);
-            DEBUG_PRINTLN("rd", run_debug_enabled);
+            DEBUG_PRINTS("rd", run_debug_enabled);
             break;
 
         case "clp"_ha:
@@ -166,13 +170,13 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             break;
         case "status"_ha:
         case "stat"_ha:
-            DEBUG_PRINTLN("current status:", int(run_status));
+            DEBUG_PRINTS("current status:", int(run_status));
             break;
 
         case "shutdown"_ha:
         case "shut"_ha:
             shutdown();
-            DEBUG_PRINTLN("shutdown ok");
+            DEBUG_PRINTS("shutdown ok");
             break;
 
         default:
@@ -184,6 +188,8 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
 
 void Stepper::parseCommand(const Command command, const CanMsg & msg){
     const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
+    DEBUG_PRINTS("can cmd recved", command);
+
     using dual_real = std::tuple<real_t, real_t>;
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
     case cmd:\

@@ -5,7 +5,6 @@
 #include "../nvcv2/geometry/geometry.hpp"
 #include "../nvcv2/pixels/pixels.hpp"
 #include "../nvcv2/shape/shape.hpp"
-#include "../nvcv2/template.hpp"
 
 #include <vector>
 #include <map>
@@ -30,7 +29,7 @@ namespace SMC{
     using Piles = std::map<int, Rangei>;
     using Point = Vector2i; 
     using NVCV2::Shape::Seed;
-    using Segment = std::pair<Point, Point>;
+    using Segment = std::pair<const Point & ,const Point &>;
 
 
     static constexpr int max_item_size = 64;

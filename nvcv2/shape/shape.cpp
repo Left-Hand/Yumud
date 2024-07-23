@@ -358,19 +358,39 @@ namespace NVCV2::Shape{
         return dst;
     }
 
-    void x2(Image<Grayscale> & dst, const Image<Grayscale> & src){
+
+    Image<Grayscale> x2(const Image<Grayscale> & src){
+        Image<Grayscale> dst(src.size / 2);
         const auto size = dst.size;
         for(int y = 0; y < size.y; y++){
             for(int x = 0; x < size.x; x++){
                 dst[{x,y}] = src[{x << 1,y << 1}];
             }
         }
+        return dst;
     }
 
-    auto x2(const Image<Grayscale> & src){
-        Image<Grayscale> dst(src.size / 2);
-        x2(dst, src);
-        return dst;
+    void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src){
+        auto size = dst.get_size();
+        if(src == dst){
+            auto temp = src.clone();
+            anti_pepper_x(dst, temp);
+            return;
+        }
+
+        for(int y = 0; y < size.y; y++){
+            auto * p_src = &src[y * size.x + 1];
+            auto * p_dst = &dst[y * size.x + 1];
+            uint8_t last_two = true;
+            for (int x = 1; x < size.x - 1; ++x) {
+                uint8_t next = bool(*(p_src + 1));
+                *p_dst = ((last_two + next) > 1);
+                last_two = uint8_t(bool((*p_src))) + next;
+
+                p_src++;
+                p_dst++; 
+            }
+        }
     }
 
     void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t & percent){

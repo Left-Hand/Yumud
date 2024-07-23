@@ -31,11 +31,11 @@ else bus_drv.readReg((uint16_t)loc, data);\
 
 #ifdef ACCESS_STRICT_PROTECT
 #define CHECK_ADDR(loc)\
-ASSERT_WITH_DOWN((loc < m_size), "invalid addr")
+ASSERT_WITH_HALT((loc <= m_size), "invalid addr", loc, m_size)
 #else
 
 #define CHECK_ADDR(loc)\
-if(loc >= m_size){\
+if(loc > m_size){\
     AT24CXX_DEBUG("invalid addr");\
     return;\
 }

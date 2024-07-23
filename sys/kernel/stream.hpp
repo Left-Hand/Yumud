@@ -93,10 +93,17 @@ public:
         return *this << str;
     }
 
-    template<integral_64 T>
+    template<integral_u64 T>
     OutputStream & operator<<(const T val){
         char str[24];
         StringUtils::iutoa(val, str, this->radix);
+        return *this << str;
+    }
+
+    template<integral_s64 T>
+    OutputStream & operator<<(const T val){
+        char str[24];
+        StringUtils::itoa(val, str, this->radix);
         return *this << str;
     }
 

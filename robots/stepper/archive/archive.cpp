@@ -12,6 +12,7 @@ bool Stepper::loadArchive(const bool outen){
     bool disabled = false;
 
     ARCHIVE_LOG("======");
+    ARCHIVE_LOG(sizeof(archive));
     {
         const auto & board_info = archive.board_info;
 

@@ -574,7 +574,7 @@ real_t PerpendicularDistance(const Point& pt, const Point& lineStart, const Poin
         switch((has_p1) + (has_p2)){
             case 2:return seg;
             case 1:{
-                auto & dst_point = has_p1 ? p2 : p1;
+                auto dst_point = has_p1 ? p2 : p1;
                 Point p1v = p1;
                 Point p2v = p2;
                 bool intersects = get_cross_point(p1v, p2v, rect_p1, rect_p2, intersection_point);

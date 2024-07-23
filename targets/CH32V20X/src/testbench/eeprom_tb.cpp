@@ -40,7 +40,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         mem.store(uint8_t(before + 1));
         uint8_t after;
         mem.load(after);
-        ASSERT_WITH_DOWN(before + 1 == after, "firstbyte tb failed", before, "->", after);
+        ASSERT_WITH_HALT(before + 1 == after, "firstbyte tb failed", before, "->", after);
         DEBUG_PRINTLN("firstbyte tb passed", before, "->", after);
     }
     #endif
@@ -53,7 +53,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         decltype(before) after;
         mem.load(after);
 
-        ASSERT_WITH_DOWN(before == after, "svbytes tb failed: ", toString(before,16), "->", toString(after, 16));
+        ASSERT_WITH_HALT(before == after, "svbytes tb failed: ", toString(before,16), "->", toString(after, 16));
         DEBUG_PRINTLN("svbytes tb passed");
     }
     #endif
@@ -89,7 +89,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         uint8_t data_after[sizeof(data_before)] = {0};
 
         passflag &= (0 != memcmp(data_before, data_after, sizeof(data_before)));
-        ASSERT_WITH_DOWN(passflag, "wholechip tb failed:", "initial data the same");
+        ASSERT_WITH_HALT(passflag, "wholechip tb failed:", "initial data the same");
 
         mem.store(data_before, begin_addr);
         mem.load(data_after, begin_addr);
@@ -109,7 +109,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
                 DEBUG_PRINTLN("\t\t", item);
             }
 
-            ASSERT_WITH_DOWN(false, "wholechip tb terminated");
+            ASSERT_WITH_HALT(false, "wholechip tb terminated");
         };
         DEBUG_PRINTLN("wholechip tb passed");
     }

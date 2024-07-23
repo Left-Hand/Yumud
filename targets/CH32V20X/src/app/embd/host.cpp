@@ -1,13 +1,6 @@
 #include "host.hpp"
 #include "imgtrans/img_trans.hpp"
-
-#include "../nvcv2/pixels/pixels.hpp"
-#include "../nvcv2/shape/shape.hpp"
-#include "../nvcv2/geometry/geometry.hpp"
-#include "../nvcv2/two_pass.hpp"
-#include "../nvcv2/flood_fill.hpp"
-#include "../nvcv2/mnist/mnist.hpp"
-
+#include "match/match.hpp"
 #include "interpolation/interpolation.hpp"
 
 using namespace Interpolation;
@@ -76,7 +69,7 @@ void EmbdHost::main(){
 
 
     camera.init();
-    camera.setExposureValue(800);
+    camera.setExposureValue(400);
 
 
     vl.init();
@@ -94,59 +87,50 @@ void EmbdHost::main(){
     // Transmitter trans{ch9141};
     // Transmitter trans{logger};
     // Transmitter trans{usbfs};
-
+    Matcher matcher;
 
     while(true){
         led = !led;
-        auto cw = camera.get_window()/2;
-        auto img = camera.clone(cw);
+        Image<Grayscale> img = Shape::x2(camera);
         plot_gray(img, img.get_window());
-        auto diff = img.space();
-        Shape::sobel_xy(diff, img);
-        auto diff_bina = make_bina_mirror(diff);
-        Pixels::binarization(diff_bina, diff, diff_threshold);
+        // auto diff = img.space();
+        // Shape::sobel_xy(diff, img);
+        // auto diff_bina = make_bina_mirror(diff);
+        // Pixels::binarization(diff_bina, diff, diff_threshold);
 
         auto img_bina = Image<Binary>(img.get_size());
         Pixels::binarization(img_bina, img, bina_threshold);
-        Pixels::or_with(img_bina, diff_bina);
+        Shape::anti_pepper_x(img_bina, img_bina);
+        Pixels::inverse(img_bina);
+        // Pixels::or_with(img_bina, diff_bina);
 
         plot_bina(img_bina, img.get_window() + Vector2i{0, img.size.y});
 
-        Shape::FloodFill ff;
-        auto map = ff.run(img_bina);
-        Pixels::dyeing(map, map);
-        // continue;
-        // plot_gray(map, diff.get_window() + Vector2i{0, 2 * img.size.y});
 
-        // plot_gray(map, map.get_window() + Vector2i{0, img.size.y * 2});
-        // plot_gray(diff, map.get_window() + Vector2i{0, img.size.y * 3});
-        // Shape::TwoPass tp(bina.w * bina.h);
-        // map = tp.run(bina);
+        // DEBUG_PRINTLN(img.mean());
+        // Match::template_match(img, )
 
-        // Pixels::dyeing(map, map);
-        // plot_gray(map, map.get_window() + Vector2i{img.size.x, 0});
-        // tp.run(img, bina, dummy);
+        // DEBUG_PRINTLN(result);
 
-        // tftDisplayer.puttexture_unsafe(img.get_window(), img.data.get());
-        // plot_gray(camera, Rect2i{Vector2i{188/4, 0}, Vector2i{188/4, 60}});
-        // painter.drawImage()
-        // tftDisplayer.fill(RGB565::BLACK);
-        // tftDisplayer.fill(RGB565::RED);
-        // tftDisplayer.fill(RGB565::BLUE);
-        // painter.drawString({0,0}, "Hello");
-        // delay(100);
-        // tftDisplayer.fill(RGB565::YELLOW);
+        if(true){
+            const Rect2i rect = Rect2i(20, 20, 28, 28);
+            painter.setColor(RGB565::RED);
+            painter.drawRoi(rect);
+            painter.setColor(RGB565::GREEN);
+            Rect2i view = Rect2i::from_center(rect.get_center(), Vector2i(14,14));
+            painter.drawRoi(view);
+            auto result = matcher.number(img, rect);
+            // DEBUG_PRINTLN(result);
+            // auto piece = img.clone(view);
 
-        painter.setColor(RGB565::GREEN);
-        // auto piece = img.clone({0, 0, 14, 28});
-
-
-        // painter.drawHollowRect({0,0,28,28});
-
-
-        // for(const auto & blob : blobs){
-        // if(blobs.size()){
+        }
         if(false){
+            Shape::FloodFill ff;
+            auto map = ff.run(img_bina);
+            Pixels::dyeing(map, map);
+            plot_gray(map, map.get_window() + Vector2i{0, map.get_size().y * 2});
+
+            painter.setColor(RGB565::GREEN);
             const auto & blobs = ff.blobs();
             const auto & blob = blobs[0];
             painter.setColor(RGB565::RED);

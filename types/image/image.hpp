@@ -335,12 +335,22 @@ public:
 
     auto clone(const Vector2i & _size) const{return clone(Rect2i(Vector2i{0,0}, _size));}
 
+    Grayscale mean() const{return mean(this->get_window());}
+    Grayscale mean(const Rect2i & roi) const;
+
+    void load(const uint8_t * buf, const Vector2i & _size);
+    static Image<ColorType> load_from_buf(const uint8_t * buf, const Vector2i & _size){
+        Image<ColorType> img(_size);
+        img.load(buf, _size);
+        return img;
+    }
+
     Image<ColorType> space() const {
         return Image<ColorType>(this->get_size());
     }
-
-
 };
+
+
 
 template<typename ColorType, typename DataType>
 class ImageDataTypeDiff:public Image<ColorType>{

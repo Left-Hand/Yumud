@@ -70,18 +70,18 @@ void Sys::Misc::prework(){
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
     Systick_Init();
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE );
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
 
     #ifdef HAVE_GPIOD
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
 
-    //ivalid for ch32v307vct6
-    // GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+    //invalid for ch32v307vct6
+    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
     #endif
 
     #ifdef HAVE_GPIOE
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE );
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
     #endif
     PWR_BackupAccessCmd( ENABLE );
     RCC_LSEConfig( RCC_LSE_OFF );

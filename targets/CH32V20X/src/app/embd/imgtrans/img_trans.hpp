@@ -48,7 +48,7 @@ public:
 
     OutputStream & instance;
     bool enabled = false;
-    Uart & logger = uart2;
+    Uart & logger = DEBUGGER;
 
     // RingBuf<str_tx_buf_size> str_tx_buf;
     // RingBuf<str_rx_buf_size> str_rx_buf;

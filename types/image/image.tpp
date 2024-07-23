@@ -1,12 +1,35 @@
+template<typename ColorType>
+Grayscale Image<ColorType>::mean(const Rect2i & roi) const{
+    uint sum = 0;
+    const Range_t<uint> x_range = roi.get_x_range();
+    const Range_t<uint> y_range = roi.get_y_range();
+
+    for(uint j = y_range.from; j < y_range.to; ++j){
+        const auto * ptr = &(this->operator[](Vector2i{x_range.from, j}));
+        for(uint i = 0; i < x_range.length(); ++i){
+            sum += uint8_t(ptr[i]);
+        }
+    }
+    return sum / (x_range.length() * y_range.length());
+}
+
+template<typename ColorType>
+void Image<ColorType>::load(const uint8_t * buf, const Vector2i & _size){
+    this->size = _size;
+    this->data = std::make_shared<ColorType[]>(_size.x * _size.y);
+    // *this = Image<ColorType>{_size};
+    auto area = this->size.x * this->size.y;
+    memcpy((uint8_t *)this->data.get(), buf, area);
+}
 
 
 // template<typename ColorType>
-// ColorType ImageWithData<ColorType>::operator()(const real_t & x, const real_t & y){
+// ColorType Image<ColorType>::operator()(const real_t & x, const real_t & y){
 //         return this -> operator()(Vector2(x,y));
 // }
 
 // template<typename ColorType>
-// void ImageWithData<ColorType>::shade(PixelShaderCallback callback, const Rect2i & _shade_area){
+// void Image<ColorType>::shade(PixelShaderCallback callback, const Rect2i & _shade_area){
 //     Rect2i shade_area = _shade_area.intersection(area);
 //     if(!area) return;
 //     size_t buflen = shade_area.size.x;
@@ -22,8 +45,10 @@
 
 //     delete[] buf;
 // }
+
+
 // template<typename ColorType>
-// void ImageWithData<ColorType>::shade(UVShaderCallback callback, const Rect2i & _shade_area){
+// void Image<ColorType>::shade(UVShaderCallback callback, const Rect2i & _shade_area){
 //     Rect2i shade_area = _shade_area.intersection(area);
 //     if(!area) return;
 //     size_t buflen = shade_area.size.x;

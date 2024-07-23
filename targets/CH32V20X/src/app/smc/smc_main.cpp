@@ -91,7 +91,7 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
 
     //不应该运行到这里
     //如果找不到种子 就返回空
-    // ASSERT_WITH_DOWN(false, "should not run here");
+    // ASSERT_WITH_HALT(false, "should not run here");
     return {Vector2i(), Rangei()};
 }
 
@@ -328,7 +328,7 @@ void SmartCar::main(){
         }
     };
 
-    [[maybe_unused]] auto plot_segment = [&](const std::pair<Vector2i, Vector2i> seg,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
+    [[maybe_unused]] auto plot_segment = [&](const Segment seg,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
 
 
         painter.bindImage(sketch);
@@ -512,8 +512,8 @@ void SmartCar::main(){
 
         fast_diff_opera(ccd_diff, ccd_image);//进行加速后的差分算法
         Pixels::binarization(ccd_bina, ccd_diff, config.edge_threshold);
-        Shape::dilate_x(ccd_bina, ccd_bina);
-        Shape::dilate_x(ccd_bina, ccd_bina);
+        Shape::anti_pepper_x(ccd_bina, ccd_bina);
+        Shape::anti_pepper_x(ccd_bina, ccd_bina);
 
         recordRunStatus(RunStatus::IMG_E);
         //图像处理结束
@@ -568,8 +568,8 @@ void SmartCar::main(){
         // ASSERT(CoastUtils::is_self_intersection(left_coast) == false, "left self ins");
         // ASSERT(CoastUtils::is_self_intersection(right_coast) == false, "right self ins");
 
-        // ASSERT_WITH_DOWN(left_coast.size() != 0, "left coast size 0");
-        // ASSERT_WITH_DOWN(right_coast.size() != 0, "right coast size 0");
+        // ASSERT_WITH_HALT(left_coast.size() != 0, "left coast size 0");
+        // ASSERT_WITH_HALT(right_coast.size() != 0, "right coast size 0");
         recordRunStatus(RunStatus::COAST_E);
         //修剪结束
         /* #endregion */
@@ -720,7 +720,7 @@ void SmartCar::main(){
             }
 
             unknown:
-                // ASSERT_WITH_DOWN(false, "detected dual barrier");
+                // ASSERT_WITH_HALT(false, "detected dual barrier");
                 return {false};
             use_left:
                 return {true, LR::LEFT};

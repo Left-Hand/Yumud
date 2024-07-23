@@ -86,7 +86,7 @@ class SmcCli{
             endPos = input.indexOf(delimiter, startPos);
         }
 
-        if (startPos < input.length()) {
+        if (startPos < (int)input.length()) {
             String lastToken = input.substring(startPos);
             result.push_back(lastToken.c_str());
         }

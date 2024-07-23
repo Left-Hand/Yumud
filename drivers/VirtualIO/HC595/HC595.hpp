@@ -69,7 +69,7 @@ protected:
 
     uint8_t buf = 0;
 
-    void write(const uint16_t & data) override{
+    void write(const uint16_t data) override{
         buf = data;
         latch_pin.clr();
         for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -95,19 +95,19 @@ public:
     }
 
 
-    void set(const Pin & pin) override{
+    void set(const Pin pin) override{
         if((uint8_t)pin == 0)return;
         write(buf | (uint8_t)pin);
     }
-    void clr(const Pin & pin) override{
+    void clr(const Pin pin) override{
         if((uint8_t)pin == 0)return;
         write(buf &= ~(uint8_t)(pin));
     }
 
-    void setBits(const uint16_t & data) override{
+    void setBits(const uint16_t data) override{
         write(buf | (uint8_t)data);
     }
-    void clrBits(const uint16_t & data) override{
+    void clrBits(const uint16_t data) override{
         write(buf & (~(uint8_t)(data)));
     }
 
@@ -125,8 +125,8 @@ public:
 
     void setModeByIndex(const int8_t & index, const PinMode & mode){}
 
-    HC595Single & operator << (const uint8_t & data){write(data); return *this;}
-    HC595Single & operator = (const uint16_t & data) override {write(data); return *this;}
+    HC595Single & operator << (const uint8_t data){write(data); return *this;}
+    HC595Single & operator = (const uint16_t data) override {write(data); return *this;}
 };
 
 

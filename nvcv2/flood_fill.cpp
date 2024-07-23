@@ -260,9 +260,9 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 }
 
 
-ImageWithData<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
+Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
     auto [nrow,ncol] = src.size;
-    ImageWithData<Grayscale, Grayscale> map({src.size});
+    Image<Grayscale> map({src.size});
     static constexpr Grayscale labelable = 255;
     m_blobs.clear();
 
@@ -301,7 +301,7 @@ ImageWithData<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> &
             }
 
             // Perform flood fill starting from (row, col)
-            std::vector<Vector2i> current_indices;
+            sstl::vector<Vector2_t<uint8_t>, 256> current_indices;
             map[{row,col}] = label;
             Blob blob{
                 .rect = Rect2i(Vector2i{row, col}, Vector2i{0,0}),
@@ -340,10 +340,10 @@ ImageWithData<Grayscale, Grayscale> FloodFill::run(const ImageReadable<Binary> &
                 bool merge_flag = false;
                 Rect2i * merge_with = nullptr;
 
-                // skip_flag |= (int(rect) > 650);
-                // skip_flag |= (int(rect) < 300);
-                skip_flag |= rect.height > 50;
-                skip_flag |= rect.height < 5;
+                skip_flag |= (int(rect) > 650);
+                skip_flag |= (int(rect) < 300);
+                // skip_flag |= rect.height > 50;
+                // skip_flag |= rect.height < 5;
                 // skip_flag |= real_t(int(rect)) / blob.area < (1.0 / 0.7);
                 // skip_flag |= blob.area < 50;
                 // skip_flag |= blob.area > 20;

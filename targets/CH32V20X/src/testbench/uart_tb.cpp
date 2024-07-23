@@ -50,16 +50,16 @@ using std::string;
     });
 
     while(true){
-        size_t size = uart.available();
-        if(uart.available()){
-            delay(1);
-            auto str = uart.readString();
-            str.toUpperCase();
-            uart.println(str, size);
-        }
+        // size_t size = uart.available();
+        // if(uart.available()){
+        //     delay(1);
+        //     auto str = uart.readString();
+        //     str.toUpperCase();
+        //     uart.println(str, size);
+        // }
         delay(300);
         tx_led = false;
-        uart.println("nothing", uart.available());
+        uart.println("noth", uart.available());
         tx_led = true;
     }
     #endif
@@ -113,7 +113,8 @@ void uart_main(){
     //uart6 passed
     //uart8 passed
 
-    auto & logger = uart6;
-    logger.init(576000, CommMethod::Blocking, CommMethod::Interrupt);
+    auto & logger = DEBUGGER;
+    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::Interrupt);
+    // DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::None);
     uart_tb(logger);
 }

@@ -6,14 +6,15 @@ void node_main(){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    uart1.init(921600);
-    auto & logger = uart1;
-    logger.setEps(4);
+    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER.setEps(4);
+
+    auto & logger = DEBUGGER;
 
     auto & ena_gpio = TIM3_CH3_GPIO;
     auto & enb_gpio = TIM3_CH2_GPIO;
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), ena_gpio};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio};
+    AT8222 coilA{timer1.oc(3), timer1.oc(4), TIM3_CH3_GPIO};
+    AT8222 coilB{timer1.oc(1), timer1.oc(2), TIM3_CH2_GPIO};
 
 
     SVPWM2 svpwm{coilA, coilB};
@@ -60,6 +61,7 @@ void node_main(){
     stp.setCurrentClamp(1.2);
     logger.bindRxPostCb([&](){stp.parseLine(logger.readString());});
     while(true){
+        // DEBUG_PRINTLN("r")
         stp.run(); 
         stp.report();
         Sys::Clock::reCalculateTime();
