@@ -117,13 +117,13 @@ void EmbdHost::main(){
 
 
         // Shape::gauss(img);
-        auto img_ada = img.space();
-        Shape::adaptive_threshold(img_ada, img, 0);
+        // auto img_ada = img.space();
+        // Shape::adaptive_threshold(img_ada, img, 0);
         // Shape::convo_roberts_xy(img, img);
         // Shape::gauss(img);
 
         // Shape::gauss(img);
-        plot_gray(img, img.get_window() + Vector2i(0, img.h*2));
+        // plot_gray(img, img.get_window() + Vector2i(0, img.h*2));
         // plot_gray(img, img.get_window() + Vector2i{0, img.size.y * 2});
         // continue;
         // auto diff = img.space();
@@ -132,9 +132,10 @@ void EmbdHost::main(){
         // Pixels::binarization(diff_bina, diff, diff_threshold);
 
         auto img_bina = Image<Binary>(img.get_size());
-        Pixels::binarization(img_bina, img, 200);
+        // Pixels::binarization(img_bina, img, 200);
         // Pixels::binarization(img_bina, img, 10);
-        Pixels::inverse(img_bina);
+        Shape::canny(img_bina, img, {240, 370});
+        // Pixels::inverse(img_bina);
         // Shape::anti_pepper_y(img_bina, img_bina);
         // Shape::anti_pepper_x(img_bina, img_bina);
         // Pixels::or_with(img_bina, diff_bina);

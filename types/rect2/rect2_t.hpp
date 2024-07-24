@@ -17,20 +17,20 @@ public:
             T x;
             T y;
         };
-    };
+    }__packed;
 
     union{
         Vector2_t<T> size;
         struct{
             T w;
             T h;
-        };
+        }__packed;
 
         struct{
             T width;
             T height;
-        };
-    };
+        }__packed;
+    }__packed;
 
     __fast_inline constexpr Rect2_t(){;}
 
@@ -231,7 +231,7 @@ public:
     __no_inline String toString(unsigned char decimalPlaces = 2) const {
         return ('(' + String(position) + ',' + String(size) + ')');
     }
-};
+}__packed;
 
 using Rect2i = Rect2_t<int>;
 using Window = Rect2i;

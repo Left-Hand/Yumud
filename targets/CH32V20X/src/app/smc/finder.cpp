@@ -13,14 +13,14 @@ namespace SMC{
 
         for(auto x = pos.x; x > 0; x--){
             if(bool(src({x, pos.y})) == true){
-                current_window.start = x;
+                current_window.from = x;
                 break;
             }
         }
 
         for(auto x = pos.x; x < size.x-1; x++){
             if(bool(src({x, pos.y})) == true){
-                current_window.end = x;
+                current_window.to = x;
                 break;
             }
         }
@@ -106,7 +106,7 @@ namespace SMC{
     }
 
     bool PileUtils::invalidity(const Pile & pile, const Rangei & valid_width){
-        return pile.second.length() < valid_width.start || pile.second.length() > valid_width.end;
+        return pile.second.length() < valid_width.from || pile.second.length() > valid_width.to;
     }
 
     bool PileUtils::invalidity(const Piles & piles, const Rangei & valid_width){

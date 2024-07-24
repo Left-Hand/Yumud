@@ -133,25 +133,27 @@ public:
         src_image -> putpixel(pos, m_color);
     }
 
-    void drawLine(const Vector2i & start, const Vector2i & end){
-        if(!src_image->has_point(start)){
+    void drawLine(const Vector2i & from, const Vector2i & to){
+        if(!src_image->has_point(from)){
             // DEBUG_PRINT("start point lost: ", start);
             return;
-        }else if(!src_image->has_point(end)){
+        }else if(!src_image->has_point(to)){
             // DEBUG_PRINT("end point lost: ", end);
             return;
         }
-        auto [x0, y0] = start;
-        auto [x1, y1] = end;
+        auto x0 = from.x;
+        auto y0 = from.x;
+        auto x1 = to.x;
+        auto y1 = to.y;
         bool steep = false;
         if (std::abs(x1 - x0) < std::abs(y1 - y0)) {
-            std::swap(x0, y0);
-            std::swap(x1, y1);
+            SWAP(x0, y0);
+            SWAP(x1, y1);
             steep = true;
         }
         if (x0 > x1) {
-            std::swap(x0, x1);
-            std::swap(y0, y1);
+            SWAP(x0, x1);
+            SWAP(y0, y1);
         }
         int dx = x1 - x0;
         int dy = y1 - y0;
@@ -181,11 +183,11 @@ public:
         Rangei y_range = regular.get_y_range();
 
         if(y_range.length() > 2){
-            drawHriLine(x_range, y_range.start);
-            drawHriLine(x_range, y_range.end - 1);
+            drawHriLine(x_range, y_range.from);
+            drawHriLine(x_range, y_range.to - 1);
             Rangei shrunk_y_range = y_range.grow(-1);
-            drawVerLine(shrunk_y_range, x_range.start);
-            drawVerLine(shrunk_y_range, x_range.end - 1);
+            drawVerLine(shrunk_y_range, x_range.from);
+            drawVerLine(shrunk_y_range, x_range.to - 1);
         }else{
             drawFilledRect(Rect2i(x_range, y_range), m_color);
         }

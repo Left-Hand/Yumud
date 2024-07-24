@@ -14,10 +14,12 @@
 
 
 struct _iq{
+public:
     _iq16 value = 0;
+
     __fast_inline_constexpr explicit _iq(const _iq16 _value) : value(_value){;}
     __fast_inline_constexpr operator _iq16() const{return value;}
-};
+}__packed;
 
 
 struct iq_t;
@@ -227,7 +229,7 @@ public:
 
     __no_inline explicit operator String() const;
     String toString(unsigned char eps = 3) const;
-};
+}__packed;
 
 #ifndef STRICT_IQ
 

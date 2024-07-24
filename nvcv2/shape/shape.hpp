@@ -171,7 +171,7 @@ namespace NVCV2::Shape{
     }
 
 
-    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range_t<uint8_t> & threshold);
+    void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range_t<uint16_t> & threshold);
 
     class Seed{
         public:            

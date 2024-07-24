@@ -641,7 +641,7 @@ void String::replace(char find, char replace)
 String& String::replace(const String& match, const String& replace)
 {
     int dst_len = match.length();
-    if(dst_len != replace.length()) return *this;
+    if(dst_len != (int)replace.length()) return *this;
 	StringUtils::str_replace(
             this->c_str(),this -> length(),
             match.c_str(),replace.c_str(),dst_len);

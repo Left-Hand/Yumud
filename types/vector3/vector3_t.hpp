@@ -167,7 +167,7 @@ public:
         v.normalize();
         return v;
     }
-};
+}__packed;
 
 #include "vector3_t.tpp"
 

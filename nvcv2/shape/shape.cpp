@@ -695,7 +695,7 @@ namespace NVCV2::Shape{
         }else if(abs_x > TWO_AND_HALF(abs_y)){
             return Direction::R;
         }else{
-            if(x > 0 && y > 0){
+            if(x * y > 0){
                 return Direction::UR;
             }else{
                 return Direction::UL;
@@ -705,14 +705,12 @@ namespace NVCV2::Shape{
         #undef TWO_AND_HALF
     } 
 
-    void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint8_t> & threshold){
-        auto temp = src.space();
+    void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
         auto roi = src.get_window();
 
         const auto low_thresh = threshold.from;
         const auto high_thresh = threshold.to;
 
-        gauss5x5(temp, src);
 
 
         struct gvec_t{
@@ -727,50 +725,64 @@ namespace NVCV2::Shape{
         #define FAST_SQUARE(x) (x <= 255 ? fast_square8(x) : x * x)
         #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
 
+
         //2. Finding Image Gradients
-        for (int gy = 1, y = roi.y + 1; y < roi.y + roi.h - 1; y++, gy++) {
-            for (int gx = 1, x = roi.x + 1; x < roi.x + roi.w - 1; x++, gx++) {
-                int16_t vx = 0, vy = 0;
-                // sobel kernel in the horizontal direction
-                vx = src.data [(y - 1) * w + x - 1]
-                    - src.data [(y - 1) * w + x + 1]
-                    + (src.data[(y + 0) * w + x - 1] << 1)
-                    - (src.data[(y + 0) * w + x + 1] << 1)
-                    + src.data [(y + 1) * w + x - 1]
-                    - src.data [(y + 1) * w + x + 1];
+        {
+            auto temp = src.space();
+            gauss5x5(temp, src);
+            for (int gy = 1, y = roi.y + 1; y < roi.y + roi.h - 1; y++, gy++) {
+                for (int gx = 1, x = roi.x + 1; x < roi.x + roi.w - 1; x++, gx++) {
+                    int16_t vx = 0, vy = 0;
 
-                // sobel kernel in the vertical direction
-                vy = src.data [(y - 1) * w + x - 1]
-                    + (src.data[(y - 1) * w + x + 0] << 1)
-                    + src.data [(y - 1) * w + x + 1]
-                    - src.data [(y + 1) * w + x - 1]
-                    - (src.data[(y + 1) * w + x + 0] << 1)
-                    - src.data [(y + 1) * w + x + 1];
+                    //  1   0   -1
+                    //  2   0   -2
+                    //  1   0   -1
 
-                // Find the direction and round angle to 0, 45, 90 or 135
-                gm[gy * roi.w + gx] = gvec_t{
-                    FAST_SQRT(FAST_SQUARE(vx) + FAST_SQUARE(vx)),
-                    xy_to_dir(vx, vy)};
+                    vx = temp.data [(y - 1) * w + x - 1]
+                        - temp.data [(y - 1) * w + x + 1]
+                        + (temp.data[(y + 0) * w + x - 1] << 1)
+                        - (temp.data[(y + 0) * w + x + 1] << 1)
+                        + temp.data [(y + 1) * w + x - 1]
+                        - temp.data [(y + 1) * w + x + 1];
+
+                    //  1   2   1
+                    //  0   0   0
+                    //  -1  2   -1
+                    vy = temp.data [(y - 1) * w + x - 1]
+                        + (temp.data[(y - 1) * w + x + 0] << 1)
+                        + temp.data [(y - 1) * w + x + 1]
+                        - temp.data [(y + 1) * w + x - 1]
+                        - (temp.data[(y + 1) * w + x + 0] << 1)
+                        - temp.data [(y + 1) * w + x + 1];
+
+                    // Find the direction and round angle to 0, 45, 90 or 135
+                    gm[gy * roi.w + gx] = gvec_t{
+                        FAST_SQRT(FAST_SQUARE(vx) + FAST_SQUARE(vx)),
+                        xy_to_dir(vx, vy)};
+                }
             }
         }
 
         // 3. Hysteresis Thresholding
         // 4. Non-maximum Suppression and output
+
+        gvec_t *va = nullptr, *vb = nullptr;
+
         for (int gy = 0, y = roi.y; y < roi.y + roi.h; y++, gy++) {
             for (int gx = 0, x = roi.x; x < roi.x + roi.w; x++, gx++) {
                 int i = y * w + x;
-                gvec_t *va = NULL, *vb = NULL, *vc = &gm[gy * roi.w + gx];
+                gvec_t *vc = &gm[gy * roi.w + gx];
 
                 // Clear the borders
-                if (y == (roi.y) || y == (roi.y + roi.h - 1) ||
-                    x == (roi.x) || x == (roi.x + roi.w - 1)) {
-                    src.data[i] = 0;
-                    continue;
-                }
+                // if (y == (roi.y) || y == (roi.y + roi.h - 1) ||
+                //     x == (roi.x) || x == (roi.x + roi.w - 1)) {
+                //     dst.data[i] = 0;
+                //     continue;
+                // }
 
                 if (vc->g < low_thresh) {
                     // Not an edge
-                    src.data[i] = 0;
+                    dst.data[i] = 0;
                     continue;
                     // Check if strong or weak edge
                 } else if (vc->g >= high_thresh ||
@@ -785,7 +797,7 @@ namespace NVCV2::Shape{
                     vc->g = vc->g;
                 } else {
                     // Not an edge
-                    src.data[i] = 0;
+                    dst.data[i] = 0;
                     continue;
                 }
 
@@ -798,8 +810,8 @@ namespace NVCV2::Shape{
                     }
 
                     case Direction::UR: {
-                        va = &gm[(gy + 1) * roi.w + (gx - 1)];
-                        vb = &gm[(gy - 1) * roi.w + (gx + 1)];
+                        va = &gm[(gy + 1) * roi.w + (gx + 1)];
+                        vb = &gm[(gy - 1) * roi.w + (gx - 1)];
                         break;
                     }
 
@@ -810,16 +822,16 @@ namespace NVCV2::Shape{
                     }
 
                     case Direction::UL: {
-                        va = &gm[(gy + 1) * roi.w + (gx + 1)];
-                        vb = &gm[(gy - 1) * roi.w + (gx - 1)];
+                        va = &gm[(gy + 1) * roi.w + (gx - 1)];
+                        vb = &gm[(gy - 1) * roi.w + (gx + 1)];
                         break;
                     }
                 }
 
                 if (!(vc->g > va->g && vc->g > vb->g)) {
-                    src.data[i] = 0;
+                    dst.data[i] = 0;
                 } else {
-                    src.data[i] = 255;
+                    dst.data[i] = 255;
                 }
             }
         }

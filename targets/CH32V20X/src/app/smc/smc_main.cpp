@@ -369,7 +369,7 @@ void SmartCar::main(){
 
     [[maybe_unused]] auto plot_pile = [&](const Pile & bound, const RGB565 & color = RGB565::RED){
         painter.bindImage(sketch);
-        painter.drawLine(Vector2i{bound.second.start, bound.first}, {bound.second.end, bound.first});
+        painter.drawLine(Vector2i{bound.second.from, bound.first}, {bound.second.to, bound.first});
     }; 
 
 

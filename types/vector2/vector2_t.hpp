@@ -182,7 +182,7 @@ public:
         auto rect = Rect2_t<T>(other, other - *this);
         return rect.abs();
     }
-};
+}__packed;
 
 #include "vector2_t.tpp"
 
