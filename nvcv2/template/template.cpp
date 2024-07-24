@@ -13,6 +13,8 @@ namespace std{
     }
 }
 
+#define FAST_SQUARE(x) (x * x)
+
 static auto mean(const Itpair<auto> & src){
     return std::accumulate(src.first, src.second, 0) / std::distance(src);
 }
@@ -100,8 +102,8 @@ real_t template_match_ncc(const Image<Grayscale> & src, const Image<Grayscale> &
             int32_t src_val = *src_ptr - s_mean;
 
             line_num += ((tmp_val * src_val));
-            den_t += FAST_SQUARE8(tmp_val);
-            den_s += FAST_SQUARE8(src_val);
+            den_t += FAST_SQUARE(tmp_val);
+            den_s += FAST_SQUARE(src_val);
 
             tmp_ptr++;
             src_ptr++;
@@ -158,7 +160,7 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
 
 }
 
-#undef FAST_SQUARE8
+#undef FAST_SQUARE
 #undef FAST_SQRT
 
 real_t template_match(const Image<Grayscale> & src, const Image<Grayscale> & tmp, const Vector2i & offs){

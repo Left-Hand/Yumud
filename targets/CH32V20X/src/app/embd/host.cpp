@@ -134,7 +134,7 @@ void EmbdHost::main(){
         auto img_bina = Image<Binary>(img.get_size());
         // Pixels::binarization(img_bina, img, 200);
         // Pixels::binarization(img_bina, img, 10);
-        Shape::canny(img_bina, img, {240, 370});
+        Shape::canny(img_bina, img, {80, 250});
         // Pixels::inverse(img_bina);
         // Shape::anti_pepper_y(img_bina, img_bina);
         // Shape::anti_pepper_x(img_bina, img_bina);

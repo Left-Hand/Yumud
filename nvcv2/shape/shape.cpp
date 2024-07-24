@@ -722,14 +722,15 @@ namespace NVCV2::Shape{
 
         const int w = roi.w;
 
-        #define FAST_SQUARE(x) (x <= 255 ? fast_square8(x) : x * x)
+        // #define FAST_SQUARE(x) (x <= 255 ? fast_square8(x) : x * x)
+        #define FAST_SQUARE(x) (x * x)
         #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
 
 
         //2. Finding Image Gradients
         {
-            auto temp = src.space();
-            gauss5x5(temp, src);
+            // auto temp = src.space();
+            // gauss5x5(temp, src);
             for (int gy = 1, y = roi.y + 1; y < roi.y + roi.h - 1; y++, gy++) {
                 for (int gx = 1, x = roi.x + 1; x < roi.x + roi.w - 1; x++, gx++) {
                     int16_t vx = 0, vy = 0;
@@ -738,22 +739,22 @@ namespace NVCV2::Shape{
                     //  2   0   -2
                     //  1   0   -1
 
-                    vx = temp.data [(y - 1) * w + x - 1]
-                        - temp.data [(y - 1) * w + x + 1]
-                        + (temp.data[(y + 0) * w + x - 1] << 1)
-                        - (temp.data[(y + 0) * w + x + 1] << 1)
-                        + temp.data [(y + 1) * w + x - 1]
-                        - temp.data [(y + 1) * w + x + 1];
+                    vx = int(src.data [(y - 1) * w + x - 1])
+                        - int(src.data [(y - 1) * w + x + 1])
+                        + int(src.data[(y + 0) * w + x - 1] << 1)
+                        - int(src.data[(y + 0) * w + x + 1] << 1)
+                        + int(src.data [(y + 1) * w + x - 1])
+                        - int(src.data [(y + 1) * w + x + 1]);
 
                     //  1   2   1
                     //  0   0   0
                     //  -1  2   -1
-                    vy = temp.data [(y - 1) * w + x - 1]
-                        + (temp.data[(y - 1) * w + x + 0] << 1)
-                        + temp.data [(y - 1) * w + x + 1]
-                        - temp.data [(y + 1) * w + x - 1]
-                        - (temp.data[(y + 1) * w + x + 0] << 1)
-                        - temp.data [(y + 1) * w + x + 1];
+                    vy = int(src.data [(y - 1) * w + x - 1])
+                        + int(src.data[(y - 1) * w + x + 0] << 1)
+                        + int(src.data [(y - 1) * w + x + 1])
+                        - int(src.data [(y + 1) * w + x - 1])
+                        - int(src.data[(y + 1) * w + x + 0] << 1)
+                        - int(src.data [(y + 1) * w + x + 1]);
 
                     // Find the direction and round angle to 0, 45, 90 or 135
                     gm[gy * roi.w + gx] = gvec_t{
@@ -785,53 +786,58 @@ namespace NVCV2::Shape{
                     dst.data[i] = 0;
                     continue;
                     // Check if strong or weak edge
-                } else if (vc->g >= high_thresh ||
-                        gm[(gy - 1) * roi.w + (gx - 1)].g >= high_thresh ||
+                } else if (vc->g >= high_thresh){
+                    dst.data[i] = 255;
+                } else{
+                    if( gm[(gy - 1) * roi.w + (gx - 1)].g >= high_thresh ||
                         gm[(gy - 1) * roi.w + (gx + 0)].g >= high_thresh ||
                         gm[(gy - 1) * roi.w + (gx + 1)].g >= high_thresh ||
                         gm[(gy + 0) * roi.w + (gx - 1)].g >= high_thresh ||
                         gm[(gy + 0) * roi.w + (gx + 1)].g >= high_thresh ||
                         gm[(gy + 1) * roi.w + (gx - 1)].g >= high_thresh ||
                         gm[(gy + 1) * roi.w + (gx + 0)].g >= high_thresh ||
-                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_thresh) {
-                    vc->g = vc->g;
-                } else {
-                    // Not an edge
-                    dst.data[i] = 0;
-                    continue;
-                }
+                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_thresh)
+                    {
 
-                switch (vc->t) {
-                    default:
-                    case Direction::R: {
-                        va = &gm[(gy + 0) * roi.w + (gx - 1)];
-                        vb = &gm[(gy + 0) * roi.w + (gx + 1)];
-                        break;
-                    }
-
-                    case Direction::UR: {
-                        va = &gm[(gy + 1) * roi.w + (gx + 1)];
-                        vb = &gm[(gy - 1) * roi.w + (gx - 1)];
-                        break;
-                    }
-
-                    case Direction::U: {
-                        va = &gm[(gy + 1) * roi.w + (gx + 0)];
-                        vb = &gm[(gy - 1) * roi.w + (gx + 0)];
-                        break;
-                    }
-
-                    case Direction::UL: {
-                        va = &gm[(gy + 1) * roi.w + (gx - 1)];
-                        vb = &gm[(gy - 1) * roi.w + (gx + 1)];
-                        break;
+                        dst.data[i] = 255;
+                    } else {
+                        // Not an edge
+                        dst.data[i] = 0;
+                        continue;
                     }
                 }
 
-                if (!(vc->g > va->g && vc->g > vb->g)) {
-                    dst.data[i] = 0;
-                } else {
-                    dst.data[i] = 255;
+                if(true){
+                    switch (vc->t) {
+                        default:
+                        case Direction::R: {
+                            va = &gm[(gy + 0) * roi.w + (gx - 1)];
+                            vb = &gm[(gy + 0) * roi.w + (gx + 1)];
+                            break;
+                        }
+
+                        case Direction::UR: {
+                            va = &gm[(gy + 1) * roi.w + (gx + 1)];
+                            vb = &gm[(gy - 1) * roi.w + (gx - 1)];
+                            break;
+                        }
+
+                        case Direction::U: {
+                            va = &gm[(gy + 1) * roi.w + (gx + 0)];
+                            vb = &gm[(gy - 1) * roi.w + (gx + 0)];
+                            break;
+                        }
+
+                        case Direction::UL: {
+                            va = &gm[(gy + 1) * roi.w + (gx - 1)];
+                            vb = &gm[(gy - 1) * roi.w + (gx + 1)];
+                            break;
+                        }
+                    }
+
+                    if ((vc->g < va->g || vc->g < vb->g)) {
+                        dst.data[i] = 0;
+                    }
                 }
             }
         }
