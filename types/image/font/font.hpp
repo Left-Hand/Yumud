@@ -41,7 +41,7 @@ private:
 	int currentIndex;
 	
 public:
-	GBKIterator(const char* gbkString) : gbkString(gbkString), currentIndex(0) {}
+	GBKIterator(const char* _gbkString) : gbkString(_gbkString), currentIndex(0) {}
 	
 	bool hasNext() {
 		return gbkString[currentIndex] != '\0';

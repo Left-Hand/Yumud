@@ -95,12 +95,12 @@ template <int Nrep = 65536, typename float_type = double>
                 auto N65536 = N > 65536 ? 65536 : N;
                 auto adder_e = [](size_t i) -> float_type
                 {
-                    float_type add = 1.0;
+                    float_type M_add = 1.0;
                     for (size_t j = 1; j <= i; ++j)
                     {
-                        add /= j;
+                        M_add /= j;
                     }
-                    return add;
+                    return M_add;
                 };
 
                 return sum_byhalf(0, N65536-1, adder_e);

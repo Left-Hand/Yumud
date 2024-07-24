@@ -11,14 +11,14 @@ public:
     virtual void writeByIndex(const int8_t index, const bool data);
     virtual bool readByIndex(const int8_t index);
 
-    virtual void setBits(const uint16_t & data) = 0;
-    virtual void set(const Pin & pin) = 0;
+    virtual void setBits(const uint16_t data) = 0;
+    virtual void set(const Pin pin) = 0;
     virtual void setByIndex(const int8_t index);
-    virtual void clrBits(const uint16_t & data) = 0;
-    virtual void clr(const Pin & pin) = 0;
+    virtual void clrBits(const uint16_t data) = 0;
+    virtual void clr(const Pin pin) = 0;
     virtual void clrByIndex(const int8_t index);
-    virtual void setModeByIndex(const int8_t & index, const PinMode & mode) = 0;
-    virtual PortConcept & operator = (const uint16_t & data) = 0;
+    virtual void setModeByIndex(const int8_t index, const PinMode mode) = 0;
+    virtual PortConcept & operator = (const uint16_t data) = 0;
 
     virtual operator uint16_t() = 0;
 };

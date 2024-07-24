@@ -132,7 +132,7 @@ constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const a
     T p_alpha = static_cast<T>(_p_alpha);
 
 	int i;
-	T f, p, q, t;
+	T f, p, q, _t;
 	a = p_alpha;
 
 	if (p_s == 0) {
@@ -147,12 +147,12 @@ constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const a
 	f = p_h - i;
 	p = p_v * (1 - p_s);
 	q = p_v * (1 - p_s * f);
-	t = p_v * (1 - p_s * (1 - f));
+	_t = p_v * (1 - p_s * (1 - f));
 
 	switch (i) {
 		case 0: // Red is the dominant Color_t<T>
 			r = p_v;
-			g = t;
+			g = _t;
 			b = p;
 			break;
 		case 1: // Green is the dominant Color_t<T>
@@ -163,7 +163,7 @@ constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const a
 		case 2:
 			r = p;
 			g = p_v;
-			b = t;
+			b = _t;
 			break;
 		case 3: // Blue is the dominant Color_t<T>
 			r = p;
@@ -171,7 +171,7 @@ constexpr void Color_t<T>::set_hsv(const auto & _p_h, const auto & _p_s, const a
 			b = p_v;
 			break;
 		case 4:
-			r = t;
+			r = _t;
 			g = p;
 			b = p_v;
 			break;
@@ -204,28 +204,28 @@ void Color_t<T>::contrast() {
 
 template <typename T> constexpr 
 Color_t<T> Color_t<T>::hex(uint32_t p_hex) {
-	T a = (T)((p_hex & 0xFF) / 255.0);
+	T _a = (T)((p_hex & 0xFF) / 255.0);
 	p_hex >>= 8;
-	T b = (T)((p_hex & 0xFF) / 255.0);
+	T _b = (T)((p_hex & 0xFF) / 255.0);
 	p_hex >>= 8;
-	T g = (T)((p_hex & 0xFF) / 255.0);
+	T _g = (T)((p_hex & 0xFF) / 255.0);
 	p_hex >>= 8;
-	T r = (T)((p_hex & 0xFF) / 255.0);
+	T _r = (T)((p_hex & 0xFF) / 255.0);
 
-	return Color_t<T>(r, g, b, a);
+	return Color_t<T>(_r, _g, _b, _a);
 }
 
 template <typename T> constexpr 
 Color_t<T> Color_t<T>::hex64(uint64_t p_hex) {
-	T a = (T)((p_hex & 0xFFFF) / 65535.0);
+	T _a = (T)((p_hex & 0xFFFF) / 65535.0);
 	p_hex >>= 16;
-	T b = (T)((p_hex & 0xFFFF) / 65535.0);
+	T _b = (T)((p_hex & 0xFFFF) / 65535.0);
 	p_hex >>= 16;
-	T g = (T)((p_hex & 0xFFFF) / 65535.0);
+	T _g = (T)((p_hex & 0xFFFF) / 65535.0);
 	p_hex >>= 16;
-	T r = (T)((p_hex & 0xFFFF) / 65535.0);
+	T _r = (T)((p_hex & 0xFFFF) / 65535.0);
 
-	return Color_t<T>(r, g, b, a);
+	return Color_t<T>(_r, _g, _b, _a);
 }
 
 template <typename T> constexpr 

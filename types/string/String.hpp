@@ -77,7 +77,7 @@ public:
 	// is left unchanged).  reserve(0), if successful, will validate an
 	// invalid string (i.e., "if (s)" will be true afterwards)
 	unsigned char reserve(unsigned int size);
-	inline int length(void) const {return len;}
+	inline size_t length(void) const {return len;}
 
 	// creates a copy of the assigned value.  if the value is null or
 	// invalid, or if the memory allocation fails, the string will be 
@@ -176,8 +176,8 @@ public:
 	String& replace(const String& find, const String& replace);
 	void remove(unsigned int index);
 	void remove(unsigned int index, unsigned int count);
-	void toLowerCase(void);
-	void toUpperCase(void);
+	String & toLowerCase(void);
+	String & toUpperCase(void);
 	void trim(void);
 	void alphanum(void);
 
@@ -186,6 +186,7 @@ public:
 	float toFloat(void) const;
 
 	explicit operator uint8_t(void) const {return toInt();}
+	explicit operator uint16_t(void) const {return toInt();}
     explicit operator int(void) const{return toInt();}
     explicit operator float(void) const{return toFloat();}
     bool isNumeric(void) const;

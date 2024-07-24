@@ -20,14 +20,13 @@ protected:
         }
     };
 
-    using Blobs = sstl::vector<Blob, 316>;
+    using Blobs = sstl::vector<Blob, 16>;
     Blobs m_blobs;
 
-    // static void found(ImageWritable<Binary> & map, Blob & blob);
 public:
 
-	// Image<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
-    Image<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
+
+    Image<Grayscale> run(const ImageReadable<Binary> & src);
     auto & blobs() const{return m_blobs;}
 };
 class SimilarRects{

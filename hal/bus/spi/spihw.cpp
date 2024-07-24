@@ -20,7 +20,7 @@ void SpiHw::enableRcc(const bool en){
     }
 }
 
-#if (defined(HAVE_SPI1) & defined(HAVE_SPI2))
+#if (defined(HAVE_SPI1) && defined(HAVE_SPI2))
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
 Gpio & SpiHw::get##name##Pin(){\
@@ -28,9 +28,9 @@ Gpio & SpiHw::get##name##Pin(){\
     switch((uint32_t)instance){\
         default:\
         case SPI1_BASE:\
-            return SPI1_##upper##_Gpio;\
+            return SPI1_##upper##_GPIO;\
         case SPI2_BASE:\
-            return SPI2_##upper##_Gpio;\
+            return SPI2_##upper##_GPIO;\
     }\
 }\
 
@@ -42,11 +42,11 @@ Gpio & SpiHw::get##name##Pin(){\
     switch((uint32_t)instance){\
         default:\
         case SPI1_BASE:\
-            return SPI1_##upper##_Gpio;\
+            return SPI1_##upper##_GPIO;\
     }\
 }\
 
-#elif defined(HAVE_SPI1)
+#elif defined(HAVE_SPI2)
 
 #define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
 Gpio & SpiHw::get##name##Pin(){\
@@ -54,7 +54,7 @@ Gpio & SpiHw::get##name##Pin(){\
     switch((uint32_t)instance){\
         default:\
         case SPI2_BASE:\
-            return SPI2_##upper##_Gpio;\
+            return SPI2_##upper##_GPIO;\
     }\
 }\
 

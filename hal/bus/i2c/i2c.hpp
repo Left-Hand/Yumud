@@ -17,4 +17,7 @@ protected:
 public:
     void setTimeout(const uint32_t _timeout){timeout = _timeout;}
     virtual void init(const uint32_t baudrate) = 0;
+
+    GpioConcept & scl(){return scl_gpio;};
+    GpioConcept & sda(){return sda_gpio;};
 };

@@ -1,11 +1,8 @@
 #pragma once
 
 #include "../sys/core/platform.h"
-#include "../types/real.hpp"
 
 namespace Sys{
-    extern real_t t;
-
     namespace Misc{
         void prework();
         void reset();
@@ -33,7 +30,6 @@ namespace Sys{
         void setAHBDiv(const uint8_t div);
 
         void reCalculateTime();
-        real_t getCurrentSeconds();
     };
 };
 

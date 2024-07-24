@@ -79,12 +79,12 @@ protected:
         do{
             op_window = store_window.grid_forward(op_window, page_size);
             if(op_window){
-                auto phy_window = AddressWindow::grid(op_window.shift(base_address).start, page_size);
-                // if(op_window.length() < page_size) load(buf, page_size, phy_window.start);
+                auto phy_window = AddressWindow::grid(op_window.shift(base_address).from, page_size);
+                // if(op_window.length() < page_size) load(buf, page_size, phy_window.from);
 
-                // memcpy(buf, (uint8_t *)data + op_window.start, op_window.length());
-                FLASH_ErasePage_Fast(phy_window.start);
-                FLASH_ProgramPage_Fast(phy_window.start, (uint32_t *)&buf);
+                // memcpy(buf, (uint8_t *)data + op_window.from, op_window.length());
+                FLASH_ErasePage_Fast(phy_window.from);
+                FLASH_ProgramPage_Fast(phy_window.from, (uint32_t *)&buf);
             }
 
         }while(op_window);
@@ -96,7 +96,7 @@ protected:
 
     void _load(void * data, const Address data_size, const Address loc) override{
         AddressWindow phy_window = AddressWindow{0, data_size}.shift(loc + base_address);
-        memcpy(data, (void *)phy_window.start, data_size);
+        memcpy(data, (void *)phy_window.from, data_size);
     };
 
 public:

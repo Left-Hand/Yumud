@@ -14,7 +14,7 @@ namespace StepperUtils{
 
     #define read_value(value)\
     {\
-        logger.println("get", VNAME(value), "\t\t is", value);\
+        DEBUG_PRINTS("get", VNAME(value), "\t\t is", value);\
         break;\
     }
 
@@ -28,10 +28,10 @@ namespace StepperUtils{
     {\
         ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
         if(args.size() == 0){\
-            logger.println("no arg");\
+            DEBUG_PRINTS("no arg");\
         }else if(args.size() == 1){\
             method(type(args[0]));\
-            logger.println("method", #method, "called");\
+            DEBUG_PRINTS("method", #method, "called");\
         }\
         break;\
     }
@@ -43,7 +43,7 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = decltype(value)(args[0]);\
-            logger.println("set: ", VNAME(value), "\t\t to", args[0]);\
+            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", args[0]);\
         }\
         break;\
     }
@@ -57,7 +57,7 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            logger.println("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
         }\
         break;\
     }
@@ -72,7 +72,7 @@ namespace StepperUtils{
             read_value(value);\
         }else if(args.size() == 1){\
             value = temp_value;\
-            logger.println("set: ", VNAME(value), "\t\t to", value);\
+            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
         }\
         break;\
     }
@@ -94,7 +94,7 @@ namespace StepperUtils{
                 endPos = input.indexOf(delimiter, startPos);
             }
 
-            if (startPos < input.length()) {
+            if (startPos < (int)input.length()) {
                 String lastToken = input.substring(startPos);
                 result.push_back(lastToken.c_str());
             }
@@ -102,13 +102,7 @@ namespace StepperUtils{
             return result;
         }
 
-        void parse_line(const String & line){
-            if(line.length() == 0) return;
-            auto tokens = split_string(line, ' ');
-            auto command = tokens[0];
-            tokens.erase(tokens.begin());
-            parse_command(command, tokens);
-        }
+
     protected:
         IOStream & logger;
         Can & can;
@@ -117,60 +111,69 @@ namespace StepperUtils{
     public:
         Cli(IOStream & _logger, Can & _can, const uint8_t _node_id):logger(_logger), can(_can), node_id(_node_id){;}
 
-        virtual void parse_command(const String & _command,const std::vector<String> & args){
+        virtual void parseTokens(const String & _command,const std::vector<String> & args){
             auto command = _command;
             command.toLowerCase();
+            // DEBUG_PRINTLN("command is:", command);
             switch(hash_impl(command.c_str(), command.length())){
                 case "reset"_ha:
                 case "rst"_ha:
                 case "r"_ha:
-                    logger.println("rsting");
+                    DEBUG_PRINTS("rsting");
                     NVIC_SystemReset();
                     break;
                 case "alive"_ha:
                 case "a"_ha:
-                    logger.println("chip is alive");
+                    DEBUG_PRINTS("chip is alive");
                     break;
                 default:
-                    logger.println("no command available:", command);
+                    DEBUG_PRINTS("no command available:", command);
                     break;
             }
         }
 
-        virtual void run(){
-            read_str();
-            read_can();
-        }
-    protected:
-        virtual void read_can() = 0;
-    private:
-        void read_str(){
-            if(logger.available()){
-                static String temp_str;
-                while(logger.available()){
-                    char chr;
-                    logger.read(chr);
-                    
-                    if(chr == '\n'){
-                        temp_str.alphanum();
+        void parseLine(const String & _line){
 
-                        if(temp_str.length()) parse_line(temp_str);
+            // if(_line.length() == 0) return;
 
-                        temp_str = "";
-                    }else{
-                        temp_str.concat(chr);
-                    }
-                }
-            }
+
+            // for(size_t i = 0; i < _line.length(); i++){
+            //     char chr = _line[i];
+
+            //     static String temp = "";
+            //     temp += chr;
+
+            //     bool ends = (chr == '\n');
+
+            //     if(ends){
+            //         temp.alphanum();
+            //         if(temp.length() != 0){
+                        auto tokens = split_string(_line, ' ');
+                        auto command = tokens[0];
+                        tokens.erase(tokens.begin());
+                        parseTokens(command, tokens);
+                    // }
+                    // temp = "";
+                // }
+            // }
         }
+        virtual void readCan() = 0;
     };
 
     class CliSTA : public Cli{
-    private:
-        void read_can() override;
     public:
+        void readCan() override{
+            if(can.available()){
+            const CanMsg & msg = can.read();
+            uint8_t id = msg.id() >> 7;
+            Command cmd = (Command)(msg.id() & 0x7F);
+            if(id == 0 || id == node_id){
+                parseCommand(cmd, msg);
+            }
+    }
+        }
         CliSTA(IOStream & _logger, Can & _can, const uint8_t _node_id):Cli(_logger, _can, _node_id){;}
-        virtual void parse_command(const Command command, const CanMsg & msg){
+        virtual void parseCommand(const Command command, const CanMsg & msg){
             switch(command){
                 case Command::RST:
                     Sys::Misc::reset();
@@ -179,24 +182,20 @@ namespace StepperUtils{
                     break;
             }
         }
-
-        using Cli::parse_command;
     };
 
     class CliAP : public Cli{
-    private:
-        void read_can() override{
+    public:
+        void readCan() override{
             if(can.available()){
                 const CanMsg & msg = can.read();
                 uint8_t id = msg.id() & 0b1111;
                 Command cmd = (Command)(msg.id() >> 4);
-                parse_command(id, cmd, msg);
+                parseCommand(id, cmd, msg);
             }
         }
-    public:
         CliAP(IOStream & _logger, Can & _can):Cli(_logger, _can, 0x0f){;}
-        virtual void parse_command(const uint8_t id, const Command & cmd, const CanMsg & msg) = 0;
-        using Cli::parse_command;
+        virtual void parseCommand(const uint8_t id, const Command & cmd, const CanMsg & msg) = 0;
     };
 
 }

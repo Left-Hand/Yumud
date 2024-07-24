@@ -49,23 +49,23 @@ protected:
 
     };
 
-    void writeReg(const RegAddress & addr, const uint8_t & data){
+    void writeReg(const RegAddress addr, const uint8_t data){
         bus_drv.writeReg((uint8_t)addr, data);
     };
 
-    void writeReg(const RegAddress & addr, const uint16_t & data){
+    void writeReg(const RegAddress addr, const uint16_t data){
         bus_drv.writeReg((uint8_t)addr, data, LSB);
     }
 
-    void readReg(const RegAddress & addr, uint8_t & data){
+    void readReg(const RegAddress addr, uint8_t & data){
         bus_drv.readReg((uint8_t)addr, data);
     }
 
-    void readReg(const RegAddress & addr, uint16_t & data){
+    void readReg(const RegAddress addr, uint16_t & data){
         bus_drv.readReg((uint8_t)addr, data, LSB);
     }
 
-    void write(const uint16_t & data) override{
+    void write(const uint16_t data) override{
         buf = data;
         writeReg(RegAddress::out, buf);
     }
@@ -91,21 +91,21 @@ public:
     void reset(){
         writeReg(RegAddress::swRst, (uint8_t)0x00);
     }
-    void set(const Pin & pin) override{
+    void set(const Pin pin) override{
         buf |= (uint16_t)pin;
         write(buf);
     }
-    void clr(const Pin & pin) override{
+    void clr(const Pin pin) override{
         buf &= ~(uint16_t)pin;
         write(buf);
     }
 
-    void setBits(const uint16_t & data) override{
+    void setBits(const uint16_t data) override{
         buf |= data;
         write(buf);
     }
 
-    void clrBits(const uint16_t & data) override{
+    void clrBits(const uint16_t data) override{
         buf &= ~data;
         write(buf);
     }
@@ -122,7 +122,7 @@ public:
         return (buf & (1 << index));
     }
 
-    void setModeByIndex(const int8_t & index, const PinMode & mode) override{
+    void setModeByIndex(const int8_t index, const PinMode mode) override{
         if(!isIndexValid(index))return;
         uint16_t mask = 1 << index;
         if(PinModeUtils::isIn(mode)) dir |= mask;
@@ -135,24 +135,24 @@ public:
         }
     }
 
-    void enableIrqByIndex(const int8_t & index, const bool & en = true){
+    void enableIrqByIndex(const int8_t index, const bool en = true){
         if(!isIndexValid(index))return;
         writeReg(RegAddress::inten, (uint8_t)(en << index));
     }
 
-    void enableLedMode(const Pin & pin, const bool & en = true){
+    void enableLedMode(const Pin pin, const bool en = true){
         uint8_t index = CTZ((uint16_t)pin);
         if(en) ledMode &= ~(1 << index);
         else ledMode |= (1 << index);
         writeReg(RegAddress::ledMode, ledMode);
     }
 
-    void setLedCurrentLimit(const CurrentLimit & limit){
+    void setLedCurrentLimit(const CurrentLimit limit){
         ctl.isel = (uint8_t)limit;
         writeReg(RegAddress::ctl, ctl.data);
     }
 
-    void setLedCurrent(const Pin & pin, const uint8_t current){
+    void setLedCurrent(const Pin pin, const uint8_t current){
         uint8_t index = CTZ((uint16_t)pin);
         if(index < 8) index += 4;
         else if(index < 12) index -= 8;
@@ -165,8 +165,8 @@ public:
         return (chipId == valid_chipid);
     }
 
-    AW9523 & operator << (const uint8_t & data){write(data); return *this;}
-    AW9523 & operator = (const uint16_t & data) override {write(data); return *this;}
+    AW9523 & operator << (const uint8_t data){write(data); return *this;}
+    AW9523 & operator = (const uint16_t data) override {write(data); return *this;}
 
 
 };

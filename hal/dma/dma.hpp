@@ -47,8 +47,13 @@ protected:
     }
 
     bool periphIsDst() const{
-        if(mode == Mode::toMem || mode == Mode::toMemCircular) return false;
-        else return true;
+        switch(mode){
+            case Mode::toPeriph:
+            case Mode::toPeriphCircular:
+                return true;
+            default:
+                return false;
+        }
     }
 
     void configDstMemDataBytes(const size_t bytes){
@@ -160,20 +165,7 @@ public:
         DMA_Cmd(instance, ENABLE);
     }
 
-    void begin(void * dst, const void * src, size_t size){
-
-        if(!periphIsDst()){
-            instance -> PADDR = (uint32_t)src;
-            instance -> MADDR = (uint32_t)dst;
-        }else{
-            instance -> PADDR = (uint32_t)dst;
-            instance -> MADDR = (uint32_t)src;
-        }
-
-        instance -> CNTR = size;
-        begin();
-    }
-
+    void begin(void * dst, const void * src, size_t size);
     template <typename T>
     void begin(T * dst, const T * src, size_t size){
         configDstMemDataBytes(sizeof(T));

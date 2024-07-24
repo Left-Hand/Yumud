@@ -1,6 +1,10 @@
 #include "uarthw.hpp"
 #include "../sys/core/platform.h"
 
+
+#define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
+#define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
+
 #define UART_CB_TEMPLATE(name)\
 static UartHw::Callback name##_rxne_cb;\
 static UartHw::Callback name##_txe_cb;\
@@ -28,8 +32,6 @@ __interrupt void uname##_IRQHandler(void){\
 UART_CB_TEMPLATE(name)\
 UART_IT_TEMPLATE(name, (uname))\
 
-
-// UartHw name{uname, pname##_TX_DMA_CH, pname##_RX_DMA_CH};
 
 #ifdef HAVE_UART1
 UART_CB_TEMPLATE(uart1)
@@ -305,6 +307,7 @@ void UartHw::enableRcc(const bool en){
         #ifdef HAVE_UART7
         case UART7_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, en);
+            
             switch (UART7_REMAP){
                 case 1:
                     GPIO_PinRemapConfig(GPIO_PartialRemap_USART7, ENABLE);
@@ -340,78 +343,78 @@ void UartHw::enableRcc(const bool en){
 }
 
 
-Gpio & UartHw::getRxPin(){
+Gpio & UartHw::rxio(){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            return UART1_RX_Gpio;
+            return UART1_RX_GPIO;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            return UART2_RX_Gpio;
+            return UART2_RX_GPIO;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-            return UART3_RX_Gpio;
+            return UART3_RX_GPIO;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            return UART4_RX_Gpio;
+            return UART4_RX_GPIO;
         #endif
         #ifdef HAVE_UART5
         case UART5_BASE:
-            return UART5_RX_Gpio;
+            return UART5_RX_GPIO;
         #endif
         #ifdef HAVE_UART6
         case UART6_BASE:
-            return UART6_RX_Gpio;
+            return UART6_RX_GPIO;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-            return UART7_RX_Gpio;
+            return UART7_RX_GPIO;
         #endif
         #ifdef HAVE_UART8
         case UART8_BASE:
-            return UART8_RX_Gpio;
+            return UART8_RX_GPIO;
         #endif
         default:
             return GpioNull;
     }
 }
 
-Gpio & UartHw::getTxPin(){
+Gpio & UartHw::txio(){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
         case USART1_BASE:
-            return UART1_TX_Gpio;
+            return UART1_TX_GPIO;
         #endif
         #ifdef HAVE_UART2
         case USART2_BASE:
-            return UART2_TX_Gpio;
+            return UART2_TX_GPIO;
         #endif
         #ifdef HAVE_UART3
         case USART3_BASE:
-            return UART3_TX_Gpio;
+            return UART3_TX_GPIO;
         #endif
         #ifdef HAVE_UART4
         case UART4_BASE:
-            return UART4_TX_Gpio;
+            return UART4_TX_GPIO;
         #endif
         #ifdef HAVE_UART5
         case UART5_BASE:
-            return UART5_TX_Gpio;
+            return UART5_TX_GPIO;
         #endif
         #ifdef HAVE_UART6
         case UART6_BASE:
-            return UART6_TX_Gpio;
+            return UART6_TX_GPIO;
         #endif
         #ifdef HAVE_UART7
         case UART7_BASE:
-            return UART7_TX_Gpio;
+            return UART7_TX_GPIO;
         #endif
         #ifdef HAVE_UART8
         case UART8_BASE:
-            return UART8_TX_Gpio;
+            return UART8_TX_GPIO;
         #endif
         default:
             return GpioNull;
@@ -497,6 +500,7 @@ void UartHw::enableTxDma(const bool en){
         txDma.init(DmaChannel::Mode::toPeriph);
         txDma.enableIt({1,1});
         txDma.enableDoneIt();
+        txDma.configDataBytes(1);
         txDma.bindDoneCb([this](){this->invokeTxDma();});
     }
 }
@@ -508,27 +512,28 @@ void UartHw::enableRxDma(const bool en){
         rxDma.enableIt({1,1});
         rxDma.enableDoneIt();
         rxDma.enableHalfIt();
+        rxDma.configDataBytes(1);
         rxDma.bindDoneCb([this](){
             this->invokeRxDma();
-            for(size_t i = rx_dma_buf_index; i < rx_dma_buf_size; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.addData(rx_dma_buf[i]); 
             rx_dma_buf_index = 0;
         });
 
         rxDma.bindHalfCb([this](){
-            for(size_t i = rx_dma_buf_index; i < rx_dma_buf_size / 2; i++) this->rxBuf.addData(rx_dma_buf[i]); 
-            rx_dma_buf_index = rx_dma_buf_size / 2;
+            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+            rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
         });
 
         this->bindIdleCb([this](){
-            size_t index = rx_dma_buf_size - rxDma.pending();
-            if(index != rx_dma_buf_size / 2 && index != rx_dma_buf_size){
+            size_t index = UART_RX_DMA_BUF_SIZE - rxDma.pending();
+            if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
                 for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.addData(rx_dma_buf[i]); 
             }
             rx_dma_buf_index = index;
             EXECUTE(rxPostCb);
         });
 
-        rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), rx_dma_buf_size);
+        rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
         rxDma.bindHalfCb(nullptr);
@@ -543,7 +548,7 @@ void UartHw::invokeTxDma(){
             size_t tx_amount = 0;
             while(txBuf.available()){
                 tx_dma_buf[tx_amount++] = txBuf.getData();
-                if(tx_amount >= tx_dma_buf_size){
+                if(tx_amount >= UART_TX_DMA_BUF_SIZE){
                     break;
                 }
             }
@@ -588,7 +593,7 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
     if(txMethod != _txMethod){
         txMethod = _txMethod;
         if(txMethod != CommMethod::None){
-            Gpio & tx_pin = getTxPin();
+            Gpio & tx_pin = txio();
             tx_pin.afpp();
         }
         switch(txMethod){
@@ -612,7 +617,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
     if(rxMethod != _rxMethod){
         rxMethod = _rxMethod;
         if(rxMethod != CommMethod::None){
-            Gpio & rx_pin = getRxPin();
+            Gpio & rx_pin = rxio();
             rx_pin.inpu();
         }
         switch(rxMethod){
@@ -649,11 +654,11 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const Com
                                     ((_rxMethod != CommMethod::None) ? USART_Mode_Rx : 0);
 
     USART_Init(instance, &USART_InitStructure);
+    USART_Cmd(instance, ENABLE);
 
     enableIt(true);
     setTxMethod(_txMethod);
     setRxMethod(_rxMethod);
-    USART_Cmd(instance, ENABLE);
 }
 
 UartHw::Error UartHw::lead(const uint8_t index){

@@ -19,35 +19,19 @@ void ST7789::init(){
 }
 
 void ST7789::setarea_unsafe(const Rect2i & rect){
-    int x = rect.position.x;
-    int y = rect.position.y;
-    int w = rect.size.x;
-    int h = rect.size.y;
-    // uint32_t this_point_index = getPointIndex(x, y);
-    // uint32_t last_point_index_temp = last_point_index;
-    last_point_index = getPointIndex(x + w - 1, y + h - 1);
-    // uart1.println(this_point_index, last_point_index, w, h);
 
-    // if((this_point_index == last_point_index_temp + 1) && (!area_locked)){
-    //     if(area_locked){
+    last_point_index = getPointIndex(rect.get_end().x-1, rect.get_end().y-1);
 
-    //     }
-    // }
-
-    uint16_t x_offset = offset.x;
-    uint16_t y_offset = offset.y;
-    uint16_t x1 = x + x_offset;
-    uint16_t x2 = x + w + x_offset - 1;
-    uint16_t y1 = y + y_offset;
-    uint16_t y2 = y + h + y_offset - 1;
+    Vector2_t<uint16_t> p1 = offset + rect.position;
+    Vector2_t<uint16_t> p2 = offset + rect.get_end() - Vector2i(1,1);
 
     writeCommand(0x2a);
-    writeData16(x1);
-    writeData16(x2);
+    writeData16(p1.x);
+    writeData16(p2.x);
 
     writeCommand(0x2b);
-    writeData16(y1);
-    writeData16(y2);
+    writeData16(p1.y);
+    writeData16(p2.y);
 
     writeCommand(0x2c);
     area_locked = true;

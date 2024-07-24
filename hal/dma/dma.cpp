@@ -155,6 +155,20 @@ void DmaChannel::enableRcc(){
 }
 
 
+void DmaChannel::begin(void * dst, const void * src, size_t size){
+
+    if(periphIsDst()){
+        instance -> PADDR = (uint32_t)dst;
+        instance -> MADDR = (uint32_t)src;
+    }else{
+        instance -> PADDR = (uint32_t)src;
+        instance -> MADDR = (uint32_t)dst;
+    }
+    instance -> CNTR = size;
+    begin();
+}
+
+
 void DmaChannel::init(const Mode _mode,const Priority priority){
     enableRcc();
     mode = _mode;
@@ -162,6 +176,7 @@ void DmaChannel::init(const Mode _mode,const Priority priority){
     DMA_DeInit(instance);
 
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
+
     switch(mode){
         case Mode::toMemCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
@@ -211,8 +226,8 @@ void DmaChannel::init(const Mode _mode,const Priority priority){
             break;
     }
 
-    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
-    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord;
+    DMA_InitStructure.DMA_MemoryDataSize = DMA_MemoryDataSize_HalfWord;
 
     DMA_InitStructure.DMA_Priority = (uint32_t)priority;
 

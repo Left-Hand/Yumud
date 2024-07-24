@@ -641,7 +641,7 @@ void String::replace(char find, char replace)
 String& String::replace(const String& match, const String& replace)
 {
     int dst_len = match.length();
-    if(dst_len != replace.length()) return *this;
+    if(dst_len != (int)replace.length()) return *this;
 	StringUtils::str_replace(
             this->c_str(),this -> length(),
             match.c_str(),replace.c_str(),dst_len);
@@ -670,20 +670,22 @@ void String::remove(unsigned int index, unsigned int count) {
     buffer[len] = '\0'; // È·±£×Ö·û´®ÒÔ¿Õ×Ö·û½áÎ²
 }
 
-void String::toLowerCase(void)
+String & String::toLowerCase(void)
 {
-	if (!buffer) return;
+	if (!buffer) return*this;
 	for (char *p = buffer; *p; p++) {
 		*p = tolower(*p);
 	}
+	return *this;
 }
 
-void String::toUpperCase(void)
+String & String::toUpperCase(void)
 {
-	if (!buffer) return;
+	if (!buffer) return*this;
 	for (char *p = buffer; *p; p++) {
 		*p = toupper(*p);
 	}
+	return *this;
 }
 
 void String::trim(void)
@@ -712,6 +714,7 @@ void String::alphanum(void){
 
 	memcpy(buffer, new_buf, len);
 	buffer[len] = 0;
+	free(new_buf);
 }
 /*********************************************/
 /*  Parsing / Conversion                     */

@@ -255,8 +255,8 @@ public:
 
     void setWdtThreshold(const Range_t<int> & _threshold){
         auto threshold = _threshold.intersection(Rangei(0, (int)getMaxValue()));
-        instance->WDHTR = threshold.end;
-        instance->WDLTR = threshold.start;
+        instance->WDHTR = threshold.to;
+        instance->WDLTR = threshold.from;
     }
 
     void bindWdtIt(Callback && cb){

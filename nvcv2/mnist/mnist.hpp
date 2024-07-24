@@ -5,6 +5,11 @@
 #include "../nvcv2/mnist/tinymaix.h"
 #include "../nvcv2.hpp"
 
+class Classify{
+
+};
+
+
 class Mnist{
 public:
     static constexpr int N = 10; 
@@ -30,13 +35,13 @@ protected:
         return TM_OK;
     }
 
-    void parse_output(tm_mat_t* outs);
+    void parse_output();
 
     void load();
     void unload();
 public:
     Mnist(){load();}
     ~Mnist(){unload();}
-    Result update(const Image<Grayscale, Grayscale> & img, const Vector2i & pos);
-    Result update(const Image<Grayscale, Grayscale> & img);
+    Result update(const Image<Grayscale> & img, const Vector2i & pos);
+    Result update(const Image<Grayscale> & img);
 };

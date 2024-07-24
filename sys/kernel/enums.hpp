@@ -7,7 +7,7 @@ private:
     bool value;
 
 public:
-    constexpr explicit Endian(bool value) : value(value) {}
+    constexpr explicit Endian(bool _value) : value(_value) {}
 
     constexpr operator bool() const { return value; }
 };

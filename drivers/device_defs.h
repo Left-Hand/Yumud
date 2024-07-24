@@ -27,7 +27,7 @@ struct Fraction {
 public:
     int numerator;
     int denominator;
-    Fraction(int numerator, int denominator) : numerator(numerator), denominator(denominator) {}
+    Fraction(const int _numerator,const int _denominator) : numerator(_numerator), denominator(_denominator) {}
 
     int operator * (const int & value){
         return numerator * value / denominator;
@@ -41,5 +41,12 @@ public:
         return Fraction(numerator * value.numerator, denominator * value.denominator);
     }
 };
+
+
+
+#define I2CDEV_CONTSRTUCTER(name)\
+    name(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}\
+    name(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}\
+    name(I2c & _i2c):bus_drv(I2cDrv(_i2c, name::default_addr)){;}\
 
 #endif

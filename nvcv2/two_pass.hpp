@@ -10,18 +10,18 @@ public:
 	~TwoPass();
 
 private:
-	int maxSize;
+	int M_maxsize;
 	uint16_t *parent;
 
 private:
 	int Find(int x);
 	void Union(int x, int y);
 
-	void findMaxLabel(const Image<Grayscale, Grayscale> & out, int &max);
+	void findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out, int &max);
 
-	void twoPassConnectComponent(Image<Grayscale, Grayscale> & out,const ImageReadable<Binary> &src);
+	void twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,const ImageReadable<Binary> &src);
 public:
-	// void run(Image<Grayscale, Grayscale> & out, const ImageReadable<Binary> & src, int &max);
-	Image<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
+	// void run(ImageWithData<Grayscale, Grayscale> & out, const ImageReadable<Binary> & src, int &max);
+	ImageWithData<Grayscale, Grayscale> run(const ImageReadable<Binary> & src);
 };
 }

@@ -7,19 +7,19 @@
 template<typename T, uint32_t _size>
 class RingBuf_t:public StaticBuffer_t<T, _size>{
 protected:
-    T* advancePointer(T* ptr, size_t step = 1) {
+    volatile T * advancePointer(volatile T * ptr, size_t step = 1) {
         return (ptr + step >=this->buf + this->size) ? ptr + step - this->size : ptr + step;
     }
 
 public:
-    T * read_ptr;
-    T * write_ptr;
+    volatile T * read_ptr;
+    volatile T * write_ptr;
 
     RingBuf_t():read_ptr(this->buf), write_ptr(this->buf){;}
 
 
     __fast_inline void addData(const T & data) override{
-        *write_ptr = data;
+        *(T *)write_ptr = data;
         write_ptr = advancePointer(write_ptr);
         if(write_ptr == read_ptr){
             read_ptr = advancePointer(read_ptr);
@@ -43,7 +43,7 @@ public:
     __fast_inline T & getData() override{
         auto ret_ptr = read_ptr;
         read_ptr = advancePointer(read_ptr);
-        return *ret_ptr;
+        return *(T *)ret_ptr;
     }
 
     size_t available() const override{
@@ -54,7 +54,7 @@ public:
         }
     }
 
-    size_t straight() const{
+    volatile size_t straight() const{
         if (write_ptr >= read_ptr) {
             return write_ptr - read_ptr;
         }else{

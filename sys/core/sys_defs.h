@@ -134,6 +134,19 @@
 #define FORRANGE(val,a,b)\
     for(int val = a; val < b; val++) \
     
+
+#if defined(__riscv)
+#define CREATE_FAULT asm("csrrw zero, mstatus, zero");
+#elif defined(__arm__)
+    #if defined(__thumb__)
+    #define CREATE_FAULT asm("bkpt 0x00000000");
+    #else
+    #define CREATE_FAULT asm("swi 0x00000000");
+    #endif
+#else
+#error "Not supported architecture"
+#endif
+
 #ifdef __cplusplus
 #define DECLTYPE(...) decltype(__VA_ARGS__)
 #endif

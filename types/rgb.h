@@ -217,7 +217,10 @@ struct RGB565{
         GREEN   = 0x07E0,  // Green color
         BLUE    = 0x001F,  // Blue color
         BLACK   = 0x0000,   // Black color
-        ORANGE = 0xFFA5
+        ORANGE = 0xFFA5,
+        CORAL = 0xf410,
+        AQUA = 0x67FC,
+        FUCHSIA = 0xf014
     };
 #ifdef __cplusplus
 
@@ -243,13 +246,13 @@ struct RGB565{
 
     __fast_inline constexpr RGB565 & operator = (const uint16_t & _data){data = _data; return *this;}
 
-    // __no_inline explicit operator String() const{
-    //     return this->toString();
-    // }
+    __no_inline explicit operator String() const{
+        return this->toString();
+    }
 
-    // __no_inline String toString(unsigned char decimalPlaces = 2)const{
-    //     return ::toString('(' + ::toString((uint8_t)r) + ',' + ::toString((uint8_t)g) + ',' + ::toString((uint8_t)b) + ')');
-    // }
+    __no_inline String toString(unsigned char decimalPlaces = 2)const{
+        return '(' + ::toString((uint8_t)r) + ',' + ::toString((uint8_t)g) + ',' + ::toString((uint8_t)b) + ')';
+    }
 #endif
 };
 
@@ -290,6 +293,10 @@ struct sGrayscale{
 };
 
 #ifdef __cplusplus
+
+template<typename T>
+concept monochrome = std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>;
+
 namespace RGB{
 
     // template<typename T>
@@ -297,6 +304,8 @@ namespace RGB{
     
     __fast_inline constexpr void conv(RGB565 & rgb565,const Grayscale & gs){rgb565 = RGB565(gs);}
 }
+
+
 #endif
 
 #endif

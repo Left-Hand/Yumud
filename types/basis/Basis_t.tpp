@@ -920,19 +920,19 @@ void Basis_t<real>::set_axis_angle(const Vector3_t<real> &p_axis, real p_phi) {
 	elements[2][2] = axis_sq.z + cosine * (1.0 - axis_sq.z);
 
 	real sine = sinf(p_phi);
-	real t = 1 - cosine;
+	real _t = 1 - cosine;
 
-	real xyzt = p_axis.x * p_axis.y * t;
+	real xyzt = p_axis.x * p_axis.y * _t;
 	real zyxs = p_axis.z * sine;
 	elements[0][1] = xyzt - zyxs;
 	elements[1][0] = xyzt + zyxs;
 
-	xyzt = p_axis.x * p_axis.z * t;
+	xyzt = p_axis.x * p_axis.z * _t;
 	zyxs = p_axis.y * sine;
 	elements[0][2] = xyzt + zyxs;
 	elements[2][0] = xyzt - zyxs;
 
-	xyzt = p_axis.y * p_axis.z * t;
+	xyzt = p_axis.y * p_axis.z * _t;
 	zyxs = p_axis.x * sine;
 	elements[1][2] = xyzt - zyxs;
 	elements[2][1] = xyzt + zyxs;

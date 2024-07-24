@@ -74,7 +74,7 @@ protected:
         GainReg gainReg;
         uint8_t deviceIdReg;
         StatusReg statusReg;
-        uint16_t data[4];
+        uint16_t data[4] = {0};
     };
     #pragma pack(pop)
 

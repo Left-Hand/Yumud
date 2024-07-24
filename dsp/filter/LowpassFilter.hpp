@@ -25,14 +25,14 @@ public:
     template<typename U>
     LowpassFilter_t(const U & cutoff_freq) : last(Point{real(0), time(0)}), inverse_tau(real(TAU * cutoff_freq)) {;}
 
-    real update(const real & x, const time & t) override {
+    real update(const real & x, const time & tm) override {
         if(!inited){
             init(x);
-            last.t = t;
+            last.t = tm;
             return x;
         }
-        real ret = forward(x, t - last.t);
-        last.t = t;
+        real ret = forward(x, tm - last.t);
+        last.t = tm;
         return ret;
     }
 

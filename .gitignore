@@ -7,6 +7,8 @@
 build
 node_modules
 
+autogen
+*.bmp
 
 # eide template
 *.ept
@@ -15,4 +17,4 @@ node_modules
 tools
 .VSCodeCounter
 hello
-**/.eide.usr.ctx.json
+*.json

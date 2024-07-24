@@ -1,7 +1,6 @@
 {
   "version": "0.2.0",
   "configurations": [
-
     {
       "cwd": "${workspaceRoot}",
       "executable": "build\\CH32V20X\\LearnADC.elf",
@@ -45,8 +44,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": true,
-      "cwd": "d:/Yumud/src",
-      "program": "d:/Yumud/src/build/Debug/outDebug",
+      "cwd": "d:/Yumud/targets/CH32V20X/src/app/embd/match",
+      "program": "d:/Yumud/targets/CH32V20X/src/app/embd/match/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

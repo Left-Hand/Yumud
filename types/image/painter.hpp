@@ -36,12 +36,12 @@ public:
         src_image = &_source;
     }
 
-    void setChFont(Font * _chfont){
-        chfont = _chfont;
+    void setChFont(Font & _chfont){
+        chfont = &_chfont;
     }
 
-    void setEnFont(Font * _enfont){
-        enfont = _enfont;
+    void setEnFont(Font & _enfont){
+        enfont = &_enfont;
     }
 
 
@@ -52,13 +52,13 @@ public:
 
 
 
-    // void drawImage(Image<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    // void drawImage(ImageWithData<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
     //     if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
     //     drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
     // }
 
     template<typename w_ColorType>
-    void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
         auto rect = Rect2i(pos, image.get_size());
         src_image->setarea_unsafe(rect);
@@ -69,7 +69,7 @@ public:
                 src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
     }
     // template<typename w_ColorType, w_ColorType>
-    // void drawImage(Image<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
+    // void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
     //     if(image.data == nullptr) return;
     //     bool unsafe = !src_image->get_window().contains(image.get_window());
 
@@ -89,7 +89,7 @@ public:
     // }
 
     void drawHriLine(const Rangei & x_range, const int & y){
-        if(!x_range ||!src_image->get_window().get_y_range().has_value(y)) return;
+        if(!x_range ||!src_image->get_window().get_y_range().has(y)) return;
 
         src_image -> putrect_unsafe(Rect2i(x_range, Rangei(y, y+1)), m_color);
     }
@@ -101,13 +101,13 @@ public:
 
     void drawVerLine(const Vector2i & pos,const int &l){
         Rangei y_range = src_image->get_window().get_y_range().intersection(Rangei(pos.y, pos.y + ABS(l)));
-        if(!y_range ||!src_image->get_window().get_x_range().has_value(pos.x)) return;
+        if(!y_range ||!src_image->get_window().get_x_range().has(pos.x)) return;
 
         src_image -> putrect_unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), m_color);
     }
 
     void drawVerLine(const Rangei & y_range, const int & x){
-        if(!y_range ||!src_image -> get_window().get_x_range().has_value(x)) return;
+        if(!y_range ||!src_image -> get_window().get_x_range().has(x)) return;
         src_image -> putrect_unsafe(Rect2i(Rangei(x,x+1), y_range), m_color);
     }
 
@@ -133,25 +133,27 @@ public:
         src_image -> putpixel(pos, m_color);
     }
 
-    void drawLine(const Vector2i & start, const Vector2i & end){
-        if(!src_image->has_point(start)){
+    void drawLine(const Vector2i & from, const Vector2i & to){
+        if(!src_image->has_point(from)){
             // DEBUG_PRINT("start point lost: ", start);
             return;
-        }else if(!src_image->has_point(end)){
+        }else if(!src_image->has_point(to)){
             // DEBUG_PRINT("end point lost: ", end);
             return;
         }
-        auto [x0, y0] = start;
-        auto [x1, y1] = end;
+        auto x0 = from.x;
+        auto y0 = from.x;
+        auto x1 = to.x;
+        auto y1 = to.y;
         bool steep = false;
         if (std::abs(x1 - x0) < std::abs(y1 - y0)) {
-            std::swap(x0, y0);
-            std::swap(x1, y1);
+            SWAP(x0, y0);
+            SWAP(x1, y1);
             steep = true;
         }
         if (x0 > x1) {
-            std::swap(x0, x1);
-            std::swap(y0, y1);
+            SWAP(x0, x1);
+            SWAP(y0, y1);
         }
         int dx = x1 - x0;
         int dy = y1 - y0;
@@ -181,11 +183,11 @@ public:
         Rangei y_range = regular.get_y_range();
 
         if(y_range.length() > 2){
-            drawHriLine(x_range, y_range.start);
-            drawHriLine(x_range, y_range.end - 1);
+            drawHriLine(x_range, y_range.from);
+            drawHriLine(x_range, y_range.to - 1);
             Rangei shrunk_y_range = y_range.grow(-1);
-            drawVerLine(shrunk_y_range, x_range.start);
-            drawVerLine(shrunk_y_range, x_range.end - 1);
+            drawVerLine(shrunk_y_range, x_range.from);
+            drawVerLine(shrunk_y_range, x_range.to - 1);
         }else{
             drawFilledRect(Rect2i(x_range, y_range), m_color);
         }

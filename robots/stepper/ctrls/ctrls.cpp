@@ -121,7 +121,7 @@ Result TrapezoidPosCtrl::update(const real_t targ_position,const real_t real_pos
 
     // static constexpr real_t hug_speed = 1;
     // static constexpr real_t spd_sw_radius = 0.7;
-    static constexpr real_t pos_sw_radius = 0.6;
+    static constexpr real_t pos_sw_radius = 0.05;
 
     real_t pos_err = targ_position - real_position;
     bool cross = pos_err * last_pos_err < 0;

@@ -1,12 +1,13 @@
 #include "stepper.hpp"
 
-static void set_motor_gpio(const bool en){
-    auto & gpio = portA[0];
-    gpio.outpp();
-    gpio = en;
+static auto & nozzle_en_gpio = portA[0];
+
+static void set_nozzle_gpio(const bool en){
+    nozzle_en_gpio.outpp();
+    nozzle_en_gpio = en;
 }
 
-void Stepper::parse_command(const String & _command, const std::vector<String> & args){
+void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
     switch(hash_impl(command.c_str(), command.length())){
@@ -28,9 +29,8 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             }
             break;
 
-        case "mt"_ha:
-            portA[0].outpp();
-            portA = args.size() ? bool(int(args[0])) : false;
+        case "nz"_ha:
+            set_nozzle_gpio(args.size() ? bool(int(args[0])) : false);
             break;
 
         case "remove"_ha:
@@ -114,21 +114,21 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
 
         case "error"_ha:
         case "err"_ha:
-            if(error_message) {DEBUG_PRINT(error_message)}
-            else {DEBUG_PRINT("no error")}
+            if(error_message) {DEBUG_PRINTS(error_message)}
+            else {DEBUG_PRINTS("no error")}
             break;
 
         case "warn"_ha:
         case "wa"_ha:
-            if(warn_message) {DEBUG_PRINT(warn_message)}
-            else {DEBUG_PRINT("no warn")}
+            if(warn_message) {DEBUG_PRINTS(warn_message)}
+            else {DEBUG_PRINTS("no warn")}
             break;
 
         case "enable"_ha:
         case "en"_ha:
         case "e"_ha:
             logger.println("enabled");
-            wakeup();
+            rework();
             break;
         
         case "exe"_ha:
@@ -156,9 +156,13 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             beep_task(true);
             break;
 
+        case "id"_ha:
+            DEBUG_PRINTS("node id is: ", node_id);
+            break;
+
         case "rd"_ha:
             if(args.size() == 1) run_debug_enabled = int(args[0]);
-            DEBUG_PRINT("rd", run_debug_enabled);
+            DEBUG_PRINTS("rd", run_debug_enabled);
             break;
 
         case "clp"_ha:
@@ -166,24 +170,26 @@ void Stepper::parse_command(const String & _command, const std::vector<String> &
             break;
         case "status"_ha:
         case "stat"_ha:
-            DEBUG_PRINT("current status:", int(run_status));
+            DEBUG_PRINTS("current status:", int(run_status));
             break;
 
         case "shutdown"_ha:
         case "shut"_ha:
             shutdown();
-            DEBUG_PRINT("shutdown ok");
+            DEBUG_PRINTS("shutdown ok");
             break;
 
         default:
-            CliSTA::parse_command(command, args);
+            CliSTA::parseTokens(command, args);
             break;
     }
 }
 
 
-void Stepper::parse_command(const Command command, const CanMsg & msg){
+void Stepper::parseCommand(const Command command, const CanMsg & msg){
     const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
+    DEBUG_PRINTS("can cmd recved", command);
+
     using dual_real = std::tuple<real_t, real_t>;
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
     case cmd:\
@@ -214,39 +220,41 @@ void Stepper::parse_command(const Command command, const CanMsg & msg){
 
         SET_VALUE_BIND(Command::SET_TARGET, target)
 
-        SET_METHOD_BIND_REAL(Command::TRG_VECT, setTargetVector)
-        SET_METHOD_BIND_REAL(Command::TRG_CURR, setTargetCurrent)
-        SET_METHOD_BIND_REAL(Command::TRG_POS, setTargetPosition)
-        SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTargetTrapezoid)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_VECT,  setTargetVector)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_CURR,  setTargetCurrent)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_POS,   setTargetPosition)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_SPD,   setTargetSpeed)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_TPZ,   setTargetTrapezoid)
+        SET_METHOD_BIND_EXECUTE(Command::FREEZE,        freeze)
 
-        SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)
-        SET_METHOD_BIND_REAL(Command::SET_OLP_CURR, setOpenLoopCurrent)
-        SET_METHOD_BIND_REAL(Command::CLAMP_CURRENT, setCurrentClamp)
-        SET_METHOD_BIND_TYPE(Command::CLAMP_POS, setTargetPositionClamp, dual_real)
-        SET_METHOD_BIND_REAL(Command::CLAMP_SPD, setSpeedClamp)
-        SET_METHOD_BIND_REAL(Command::CLAMP_ACC, setAccelClamp)
+        SET_METHOD_BIND_REAL(   Command::LOCATE,        locateRelatively)
+        SET_METHOD_BIND_REAL(   Command::SET_OPEN_CURR, setOpenLoopCurrent)
+        SET_METHOD_BIND_REAL(   Command::SET_CURR_CLP,  setCurrentClamp)
+        SET_METHOD_BIND_TYPE(   Command::SET_POS_CLP,   setPositionClamp, dual_real)
+        SET_METHOD_BIND_REAL(   Command::SET_SPD_CLP,   setSpeedClamp)
+        SET_METHOD_BIND_REAL(   Command::SET_ACC_CLP,   setAccelClamp)
 
-        GET_BIND_VALUE(Command::GET_POS, est_pos)
-        GET_BIND_VALUE(Command::GET_SPD, est_speed)
-        GET_BIND_VALUE(Command::GET_ACC, 0)
+        GET_BIND_VALUE(         Command::GET_POS,       est_pos)
+        GET_BIND_VALUE(         Command::GET_SPD,       est_speed)
+        GET_BIND_VALUE(         Command::GET_ACC,       0)//TODO
 
-        SET_METHOD_BIND_EXECUTE(Command::CALI, triggerCali)
+        SET_METHOD_BIND_EXECUTE(Command::CALI,          triggerCali)
 
-        SET_METHOD_BIND_EXECUTE(Command::SAVE, saveArchive, false)
-        SET_METHOD_BIND_EXECUTE(Command::LOAD, loadArchive, false)
-        SET_METHOD_BIND_EXECUTE(Command::RM, removeArchive, false)
+        SET_METHOD_BIND_EXECUTE(Command::SAVE,          saveArchive)
+        SET_METHOD_BIND_EXECUTE(Command::LOAD,          loadArchive)
+        SET_METHOD_BIND_EXECUTE(Command::CLEAR,         removeArchive)
 
-        SET_METHOD_BIND_EXECUTE(Command::SERVO_ON, set_motor_gpio, true)
-        SET_METHOD_BIND_EXECUTE(Command::SERVO_OFF, set_motor_gpio, false)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_ON,     set_nozzle_gpio, true)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_OFF,    set_nozzle_gpio, false)
 
-        SET_METHOD_BIND_EXECUTE(Command::RST, reset)
-        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
-        SET_METHOD_BIND_EXECUTE(Command::INACTIVE, enable, false)
-        SET_METHOD_BIND_EXECUTE(Command::ACTIVE, enable, true)
-        SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
+        SET_METHOD_BIND_EXECUTE(Command::RST,           reset)
+        GET_BIND_VALUE(         Command::STAT,          (uint8_t)run_status);
+        SET_METHOD_BIND_EXECUTE(Command::INACTIVE,      enable, false)
+        SET_METHOD_BIND_EXECUTE(Command::ACTIVE,        enable, true)
+        SET_METHOD_BIND_EXECUTE(Command::SET_NODEID,    setNodeId, msg.to<uint8_t>())
 
         default:
-            CliSTA::parse_command(command, msg);
+            CliSTA::parseCommand(command, msg);
             break;
     }
 

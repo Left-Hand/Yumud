@@ -16,7 +16,7 @@ protected:
 		real y;
 	};
 
-	std::array<_iq, size> sine{[]{
+	static constexpr std::array<_iq, size> sine{[]{
         std::array<_iq, size> temp = {};
         for(int i = 0; i < size; ++i) {
             temp[i] = _iq(cem::sin(PI / 4 * cem::pow(2.0, double(-i)))*(1 << GLOBAL_Q));
@@ -24,7 +24,7 @@ protected:
         return temp;
     }()};
 
-	std::array<_iq, size> cosine{[]{
+	static constexpr std::array<_iq, size> cosine{[]{
         std::array<_iq, size> temp = {};
         for(int i = 0; i < size; ++i) {
             temp[i] = _iq(cem::cos(PI / 4 * cem::pow(2.0, double(-i)))*(1 << GLOBAL_Q));
