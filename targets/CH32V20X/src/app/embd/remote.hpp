@@ -30,7 +30,6 @@ public:
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);
     void removeArchive(const bool outen);
-    virtual bool autoload(const bool outen);
 
     void setTargetCurrent(const real_t current);
     void setTargetSpeed(const real_t speed);
@@ -56,7 +55,7 @@ public:
     void reset();
     void triggerCali();
 
-    void mt(const bool en);
+    void set_nozzle(const bool en);
 };
 
 struct RemoteSteppers{

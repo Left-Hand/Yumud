@@ -1,9 +1,10 @@
 #include "stepper.hpp"
 
-static void set_motor_gpio(const bool en){
-    auto & gpio = portA[0];
-    gpio.outpp();
-    gpio = en;
+static auto & nozzle_en_gpio = portA[0];
+
+static void set_nozzle_gpio(const bool en){
+    nozzle_en_gpio.outpp();
+    nozzle_en_gpio = en;
 }
 
 void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
@@ -28,9 +29,8 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             }
             break;
 
-        case "mt"_ha:
-            portA[0].outpp();
-            portA = args.size() ? bool(int(args[0])) : false;
+        case "nz"_ha:
+            set_nozzle_gpio(args.size() ? bool(int(args[0])) : false);
             break;
 
         case "remove"_ha:
@@ -128,7 +128,7 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
         case "en"_ha:
         case "e"_ha:
             logger.println("enabled");
-            wakeup();
+            rework();
             break;
         
         case "exe"_ha:
@@ -220,37 +220,38 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 
         SET_VALUE_BIND(Command::SET_TARGET, target)
 
-        SET_METHOD_BIND_REAL(Command::TRG_VECT, setTargetVector)
-        SET_METHOD_BIND_REAL(Command::TRG_CURR, setTargetCurrent)
-        SET_METHOD_BIND_REAL(Command::TRG_POS, setTargetPosition)
-        SET_METHOD_BIND_REAL(Command::TRG_SPD, setTargetSpeed)
-        SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTargetTrapezoid)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_VECT,  setTargetVector)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_CURR,  setTargetCurrent)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_POS,   setTargetPosition)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_SPD,   setTargetSpeed)
+        SET_METHOD_BIND_REAL(   Command::SET_TRG_TPZ,   setTargetTrapezoid)
+        SET_METHOD_BIND_EXECUTE(Command::FREEZE,        freeze)
 
-        SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)
-        SET_METHOD_BIND_REAL(Command::SET_OLP_CURR, setOpenLoopCurrent)
-        SET_METHOD_BIND_REAL(Command::CLAMP_CURRENT, setCurrentClamp)
-        SET_METHOD_BIND_TYPE(Command::CLAMP_POS, setTargetPositionClamp, dual_real)
-        SET_METHOD_BIND_REAL(Command::CLAMP_SPD, setSpeedClamp)
-        SET_METHOD_BIND_REAL(Command::CLAMP_ACC, setAccelClamp)
+        SET_METHOD_BIND_REAL(   Command::LOCATE,        locateRelatively)
+        SET_METHOD_BIND_REAL(   Command::SET_OPEN_CURR, setOpenLoopCurrent)
+        SET_METHOD_BIND_REAL(   Command::SET_CURR_CLP,  setCurrentClamp)
+        SET_METHOD_BIND_TYPE(   Command::SET_POS_CLP,   setPositionClamp, dual_real)
+        SET_METHOD_BIND_REAL(   Command::SET_SPD_CLP,   setSpeedClamp)
+        SET_METHOD_BIND_REAL(   Command::SET_ACC_CLP,   setAccelClamp)
 
-        GET_BIND_VALUE(Command::GET_POS, est_pos)
-        GET_BIND_VALUE(Command::GET_SPD, est_speed)
-        GET_BIND_VALUE(Command::GET_ACC, 0)
+        GET_BIND_VALUE(         Command::GET_POS,       est_pos)
+        GET_BIND_VALUE(         Command::GET_SPD,       est_speed)
+        GET_BIND_VALUE(         Command::GET_ACC,       0)//TODO
 
-        SET_METHOD_BIND_EXECUTE(Command::CALI, triggerCali)
+        SET_METHOD_BIND_EXECUTE(Command::CALI,          triggerCali)
 
-        SET_METHOD_BIND_EXECUTE(Command::SAVE, saveArchive, false)
-        SET_METHOD_BIND_EXECUTE(Command::LOAD, loadArchive, false)
-        SET_METHOD_BIND_EXECUTE(Command::RM, removeArchive, false)
+        SET_METHOD_BIND_EXECUTE(Command::SAVE,          saveArchive)
+        SET_METHOD_BIND_EXECUTE(Command::LOAD,          loadArchive)
+        SET_METHOD_BIND_EXECUTE(Command::CLEAR,         removeArchive)
 
-        SET_METHOD_BIND_EXECUTE(Command::SERVO_ON, set_motor_gpio, true)
-        SET_METHOD_BIND_EXECUTE(Command::SERVO_OFF, set_motor_gpio, false)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_ON,     set_nozzle_gpio, true)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_OFF,    set_nozzle_gpio, false)
 
-        SET_METHOD_BIND_EXECUTE(Command::RST, reset)
-        GET_BIND_VALUE(Command::STAT, (uint8_t)run_status);
-        SET_METHOD_BIND_EXECUTE(Command::INACTIVE, enable, false)
-        SET_METHOD_BIND_EXECUTE(Command::ACTIVE, enable, true)
-        SET_METHOD_BIND_EXECUTE(Command::SET_NODEID, setNodeId, msg.to<uint8_t>())
+        SET_METHOD_BIND_EXECUTE(Command::RST,           reset)
+        GET_BIND_VALUE(         Command::STAT,          (uint8_t)run_status);
+        SET_METHOD_BIND_EXECUTE(Command::INACTIVE,      enable, false)
+        SET_METHOD_BIND_EXECUTE(Command::ACTIVE,        enable, true)
+        SET_METHOD_BIND_EXECUTE(Command::SET_NODEID,    setNodeId, msg.to<uint8_t>())
 
         default:
             CliSTA::parseCommand(command, msg);

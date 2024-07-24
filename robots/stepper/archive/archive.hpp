@@ -7,23 +7,6 @@
 
 //at24c02 can max contain 256 bytes
 
-#define YEAR (((__DATE__[9]-'0')) * 10 + (__DATE__[10]-'0'))
-#define MONTH (__DATE__[0] == 'J' && __DATE__[1] == 'a' && __DATE__[2] == 'n' ? 1 : \
-            __DATE__[0] == 'F' ? 2 : \
-            __DATE__[0] == 'M' && __DATE__[2] == 'r' ? 3 : \
-            __DATE__[0] == 'A' && __DATE__[1] == 'p' ? 4 : \
-            __DATE__[0] == 'M' ?  5 : \
-            __DATE__[0] == 'J' && __DATE__[1] == 'u' ? 6 : \
-            __DATE__[0] == 'J' ? 7 : \
-            __DATE__[0] == 'A' ? 8 : \
-            __DATE__[0] == 'S' ? 9 : \
-            __DATE__[0] == 'O' ? 10 : \
-            11)
-
-#define DAY ((__DATE__[4] == ' ' ? 0 : __DATE__[4]-'0') * 10 + (__DATE__[5]-'0'))
-#define HOUR ((__TIME__[0]-'0') * 10 + __TIME__[1]-'0')
-#define MINUTE ((__TIME__[3]-'0') * 10 + __TIME__[4]-'0')
-
 namespace StepperUtils{
     static constexpr uint8_t build_version = 10;
     static constexpr uint8_t drv_type = 42;
@@ -55,12 +38,12 @@ namespace StepperUtils{
             mi = minute;
         }
 
-        bool broken() const {
+        bool is_invalid() const {
             return (y > 30) || (y < 24) || //no one will use this shit after 2030
             (m > 12) || (m == 0) || (d > 31) || (d == 0) || (h > 23) || (h == 0) || (mi > 59) || (mi == 0);
         }
 
-        bool empty() const {
+        bool is_empty() const {
             uint8_t * ptr = (uint8_t *)this;
             for(size_t i = 0; i < sizeof(*this); i++){
                 if(ptr[i]!= 0){
@@ -70,22 +53,12 @@ namespace StepperUtils{
             return true;
         }
 
-        bool match() const {
+        bool is_latest() const {
             return (y == year && m == month && d == day && h == hour && mi == minute); 
         }
 
         bool errorless() const {
-            return not(broken() || empty());
-        }
-
-        void printout(OutputStream & logger) const {
-            logger << "build version:\t\t" << this->bver << "\r\n";
-            logger << "build time:\t\t20" << 
-                    this->y << '/' << this->m << '/' << 
-                    this->d << '\t' << this->h << ':' << this->mi << "\r\n";
-
-            logger << "driver type:\t\t" << this->dtype << "\r\n";
-            logger << "driver branch:\t\t" << this->dbranch << "\r\n";
+            return not(is_invalid() || is_empty());
         }
     };
 
@@ -160,5 +133,6 @@ namespace StepperUtils{
     };
 }
 
+OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi);
 
 #endif

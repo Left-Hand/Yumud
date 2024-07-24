@@ -75,28 +75,19 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 
     ShutdownFlag shutdown_flag{*this};
 
+
+    ErrorCode error_code = ErrorCode::OK;
+    const char * error_message = nullptr;
+    const char * warn_message = nullptr;
+
+    bool shutdown_when_error_occurred = true;
+    bool shutdown_when_warn_occurred = true;
+
+
     void setCurrent(const real_t _current, const real_t _elecrad){
         svpwm.setCurrent(_current, _elecrad);
     }
 
-    ErrorCode error_code = ErrorCode::OK;
-    String error_message;
-    String warn_message;
-
-    bool shutdown_when_error_occurred;
-    bool shutdown_when_warn_occurred;
-
-    void shutdown(){
-        svpwm.enable(false);
-    }
-
-    void wakeup(){
-        svpwm.enable(true);
-    }
-
-    bool on_exeception(){
-        return RunStatus::WARN == run_status || RunStatus::ERROR == run_status; 
-    }
 
     void throw_error(const ErrorCode & _error_code,const char * _error_message) {
         error_message = _error_message;
@@ -136,9 +127,9 @@ public:
     Stepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
             CliSTA(_logger, _can, getNodeId()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
-    bool loadArchive(const bool outen);
-    void saveArchive(const bool outen);
-    void removeArchive(const bool outen);
+    bool loadArchive(const bool outen = false);
+    void saveArchive(const bool outen = false);
+    void removeArchive(const bool outen = false);
 
     void tick();
 
@@ -184,6 +175,10 @@ public:
         ctrl_type = CtrlType::VECTOR;
     }
 
+    void freeze(){
+        setTargetPosition(getPosition());
+    }
+
     void setCurrentClamp(const real_t max_current){
         curr_ctrl.setCurrentClamp(max_current);
     }
@@ -220,13 +215,13 @@ public:
         return run_current;
     }
 
-    void setTargetPositionClamp(const Range & clamp){
+    void setPositionClamp(const Range & clamp){
         target_position_clamp = clamp;
     }
 
     void enable(const bool en = true){
         if(en){
-            wakeup();
+            rework();
         }else{
             shutdown();
         }
@@ -271,6 +266,16 @@ public:
 
     void reset()override{
         Sys::Misc::reset();
+    }
+
+    void shutdown(){
+        run_status = RunStatus::INACTIVE;
+        svpwm.enable(false);
+    }
+
+    void rework(){
+        run_status = RunStatus::ACTIVE;
+        svpwm.enable(true);
     }
 };
 
