@@ -310,6 +310,11 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
                 steppers.y.setTargetTrapezoid(real_t(args[1]));
             }
             break;
+    
+        case "dz"_ha:
+            if(args.size() == 1){
+                stepper_z.setTargetSpeed(real_t(args[0]));
+            }
 
         case "dxy"_ha:
             if(args.size() == 2){
@@ -395,6 +400,8 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             trigger_method(trans.enable, true);
         case "usboff"_ha:
             trigger_method(trans.enable, false);
+        case "frz"_ha:
+            trigger_method(stepper_w.freeze);
         default:
             CliAP::parseTokens(_command, args);
             break;
