@@ -76,9 +76,9 @@ public:
 
     constexpr bool has_point(const Vector2_t<auto> & point) const {
         Rect2_t<T> regular = this -> abs();
-        bool x_ins = regular.get_x_range().has_value(point.x);
+        bool x_ins = regular.get_x_range().has(point.x);
         if(!x_ins) return false;
-        bool y_ins = regular.get_y_range().has_value(point.y);
+        bool y_ins = regular.get_y_range().has(point.y);
         return(y_ins);
     }
 
