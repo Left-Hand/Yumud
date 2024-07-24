@@ -22,7 +22,8 @@ bool RemoteStepper::loadArchive(const bool outen){POST(Command::LOAD)return true
 void RemoteStepper::saveArchive(const bool outen){POST(Command::SAVE);}
 void RemoteStepper::removeArchive(const bool outen){POST(Command::CLEAR);}
 
-void RemoteStepper::setTargetVector(const real_t _pos){}
+void RemoteStepper::setTargetVector(const real_t _pos){POST(Command::SET_TRG_VECT, M_clamp.clamp(_pos));}
+void RemoteStepper::freeze(){POST(Command::FREEZE);}
 void RemoteStepper::setTargetCurrent(const real_t current){POST(Command::SET_TRG_CURR, current);}
 void RemoteStepper::setTargetSpeed(const real_t speed){POST(Command::SET_TRG_SPD, speed);}
 void RemoteStepper::setTargetPosition(const real_t _pos){POST(Command::SET_TRG_POS, M_clamp.clamp(_pos));}
@@ -38,10 +39,12 @@ real_t RemoteStepper::getSpeed() const{REQUEST_VALUE(Command::GET_SPD, spd);}
 real_t RemoteStepper::getPosition() const{REQUEST_VALUE(Command::GET_SPD, pos);}
 real_t RemoteStepper::getCurrent() const{REQUEST_VALUE(Command::GET_CURR, curr);}
 
-void RemoteStepper::setTargetPositionClamp(const Range & clamp){
+void RemoteStepper::setPositionClamp(const Range & clamp){
     M_clamp = clamp;
     POST(Command::SET_POS_CLP, clamp);
 }
+
+
 void RemoteStepper::enable(const bool en){POST(en ? Command::ACTIVE: Command::INACTIVE);}
 void RemoteStepper::setNodeId(const uint8_t _id){}
 void RemoteStepper::setSpeedClamp(const real_t max_spd){POST(Command::SET_SPD_CLP, max_spd);}
