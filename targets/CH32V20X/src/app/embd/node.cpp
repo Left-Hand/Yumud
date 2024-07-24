@@ -59,7 +59,23 @@ void node_main(){
     while(!stp.isActive());
     stp.setTargetCurrent(0);
     stp.setCurrentClamp(1.2);
-    logger.bindRxPostCb([&](){stp.parseLine(logger.readString());});
+
+    auto parseAscii = [&](InputStream & is){
+        static String temp;
+        // DEBUG_PRINTLN(is.available());
+        while(is.available()){
+            auto chr = is.read();
+            if(chr == 0) continue;
+            temp += chr;
+            if(chr == '\n'){
+                temp.alphanum();
+                // DEBUG_PRINTLN("tempis", temp, temp.length());
+                stp.parseLine(temp);
+                temp = "";
+            }
+        }
+    };
+    logger.bindRxPostCb([&](){parseAscii(logger);});
     while(true){
         // DEBUG_PRINTLN("r")
         stp.run(); 

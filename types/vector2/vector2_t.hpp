@@ -33,10 +33,13 @@ public:
 
     static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
     static constexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
+    static constexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);
+
     static constexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
     static constexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
     static constexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
     static constexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
+
     static constexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
     static constexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
     static constexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
@@ -49,11 +52,20 @@ public:
     __fast_inline_constexpr Vector2_t<T> improduct(const Vector2_t<T> & b) const;
     __fast_inline_constexpr Vector2_t<T> rotated(const T r)const;
     __fast_inline_constexpr Vector2_t<T> abs() const;
-    __fast_inline_constexpr T cos(const Vector2_t<auto> & b) const;
-    __fast_inline_constexpr T sin(const Vector2_t<auto> & b) const;
-    __fast_inline T angle() const {return atan2(y, x);}
-    constexpr T angle_to(const Vector2_t<T> & to) const;
-    constexpr T angle_to_point(const Vector2_t<T> & to) const;
+
+    template<arithmetic U>
+    constexpr T cos(const Vector2_t<U> & b) const{
+        return this->dot(b) / this->length() / b.length();
+    }
+
+    template<arithmetic U>
+    constexpr T sin(const Vector2_t<U> & b) const{
+        return this->cross(b) / this->length() / b.length();
+    }
+
+    constexpr T angle() const {return atan2(y, x);}
+	constexpr T angle_to(const Vector2_t<T> &p_vector2) const {return atan2(cross(p_vector2), dot(p_vector2));}
+	constexpr T angle_to_point(const Vector2_t<T> & p_vector2) const {return atan2(y - p_vector2.y, x - p_vector2.x);}
     constexpr T aspect() const {return (!!y) ? x/y : T(0);}
     constexpr Vector2_t<T> bounce(const Vector2_t<T> &n) const;
     constexpr Vector2_t<T> ceil() const;

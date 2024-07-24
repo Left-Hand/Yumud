@@ -53,16 +53,6 @@ constexpr T Vector2_t<T>::dist_squared_to(const Vector2_t<T> & b) const{
 }
 
 template<arithmetic T>
-constexpr T Vector2_t<T>::angle_to(const Vector2_t<T> & to) const {
-    return (to.angle() - angle());
-}
-
-template<arithmetic T>
-constexpr T Vector2_t<T>::angle_to_point(const Vector2_t<T> & to) const {
-    return (to - *this).angle();
-}
-
-template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::reflect(const Vector2_t<T> & n) const {
     return 2.0f * n * this->dot(n) - *this;
 }
@@ -153,6 +143,7 @@ template<arithmetic T>
 constexpr __fast_inline T Vector2_t<T>::cross(const Vector2_t<T> & with) const{
     return (x*with.y - y*with.x);
 }
+
 
 template<arithmetic T>
 constexpr __fast_inline Vector2_t<T> Vector2_t<T>::improduct(const Vector2_t<T> & b) const{

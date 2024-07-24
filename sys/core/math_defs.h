@@ -26,8 +26,16 @@
 #define PI 3.1415926535897932384626433833
 #endif
 
-#ifndef INF
-#define INF (__builtin_inff())
+#ifndef HUGE_VALL
+#define HUGE_VALL (__builtin_huge_vall())
+#endif
+
+#ifndef INFINITY
+#define INFINITY (__builtin_inff())
+#endif
+
+#ifndef NAN
+#define NAN (__builtin_nanf(""))
 #endif
 
 #ifndef NAN

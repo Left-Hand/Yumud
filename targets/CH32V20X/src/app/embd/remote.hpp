@@ -15,14 +15,17 @@ protected:
 
     IOStream & logger;
     Can & can;
-    volatile RunStatus run_status = RunStatus::NONE;
     uint8_t node_id;
+    volatile RunStatus run_status = RunStatus::NONE;
 
     real_t spd;
     real_t pos;
     real_t curr;
+
+    Range M_clamp{0,30};
 public:
-    RemoteStepper(IOStream & _logger, Can & _can, const uint8_t _node_id):logger(_logger), can(_can), node_id(_node_id){;}
+    RemoteStepper(IOStream & _logger, Can & _can, const uint8_t _node_id):
+            logger(_logger), can(_can), node_id(_node_id){;}
 
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);

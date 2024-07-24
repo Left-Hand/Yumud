@@ -17,7 +17,6 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     // setCurrent(2, est_elecrad + PI / 2);
 
 
-
     // coilB = 0.1 * sin(run_elecrad);
     // coilA = 0.1 * cos(run_elecrad);
     // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.02, run_elecrad + elecrad_zerofix);//n = 2

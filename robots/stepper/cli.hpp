@@ -114,6 +114,7 @@ namespace StepperUtils{
         virtual void parseTokens(const String & _command,const std::vector<String> & args){
             auto command = _command;
             command.toLowerCase();
+            // DEBUG_PRINTLN("command is:", command);
             switch(hash_impl(command.c_str(), command.length())){
                 case "reset"_ha:
                 case "rst"_ha:
@@ -133,28 +134,28 @@ namespace StepperUtils{
 
         void parseLine(const String & _line){
 
-            if(_line.length() == 0) return;
+            // if(_line.length() == 0) return;
 
 
-            for(size_t i = 0; i < _line.length(); i++){
-                char chr = _line[i];
+            // for(size_t i = 0; i < _line.length(); i++){
+            //     char chr = _line[i];
 
-                static String temp = "";
-                temp += chr;
+            //     static String temp = "";
+            //     temp += chr;
 
-                bool ends = (chr == '\n');
+            //     bool ends = (chr == '\n');
 
-                if(ends){
-                    temp.alphanum();
-                    if(temp.length() != 0){
-                        auto tokens = split_string(temp, ' ');
+            //     if(ends){
+            //         temp.alphanum();
+            //         if(temp.length() != 0){
+                        auto tokens = split_string(_line, ' ');
                         auto command = tokens[0];
                         tokens.erase(tokens.begin());
                         parseTokens(command, tokens);
-                    }
-                    temp = "";
-                }
-            }
+                    // }
+                    // temp = "";
+                // }
+            // }
         }
         virtual void readCan() = 0;
     };

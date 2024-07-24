@@ -52,7 +52,7 @@ real_t Matcher::april(const Image<Grayscale> &, const Rect2i & roi){
 }
 
 real_t Matcher::april(const Image<Binary> & src, const Rect2i & roi){
-    using Vertex = std::array<Vector2i, 4>;
+    // using Vertex = std::array<Vector2i, 4>;
 
     // Vertex vertex;
 

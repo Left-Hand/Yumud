@@ -38,13 +38,13 @@ public:
 
 
 template<typename T>
-__inline constexpr uint32_t hash_impl(T const * data, size_t size){
-    return Hasher::hash_djb((char const *)(data), sizeof(T) * size);
+__inline constexpr uint32_t hash_impl(T const * data,const size_t length){
+    return Hasher::hash_djb((char const *)(data), sizeof(T) * length);
 }
 
 template<typename T>
 __inline constexpr uint32_t hash_impl(const T & obj ){
-    return hash_impl((&obj), (size_t)sizeof(obj));
+    return hash_impl((&obj), 1);
 }
 
 

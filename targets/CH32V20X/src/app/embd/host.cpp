@@ -104,12 +104,36 @@ void EmbdHost::main(){
     tcs.setGain(TCS34725::Gain::X60);
     ch9141.init();
 
-    uart7.bindRxPostCb([&](){parseLine(uart7.readString());});
+    stepper_x.setTargetPositionClamp({0.2, 7.8});
+    stepper_y.setTargetPositionClamp({0.2, 4.8});
+    stepper_z.setTargetPositionClamp({0.2, 26.2});
+
+    auto parseAscii = [&](InputStream & is){
+        static String temp;
+        // DEBUG_PRINTLN(is.available());
+        while(is.available()){
+            auto chr = is.read();
+            if(chr == 0) continue;
+            temp += chr;
+            if(chr == '\n'){
+                temp.alphanum();
+                // DEBUG_PRINTLN("tempis", temp, temp.length());
+                parseLine(temp);
+                temp = "";
+            }
+        }
+    };
+    uart7.bindRxPostCb([&](){parseAscii(uart7);});
+    // DEBUGGER.bindRxPostCb([&](){parseAscii(DEBUGGER);});
+    DEBUGGER.bindRxPostCb([&](){
+        parseAscii(DEBUGGER);
+    });
     // Transmitter trans{ch9141};
     // Transmitter trans{logger};
     // Transmitter trans{usbfs};
     Matcher matcher;
 
+    DEBUG_PRINTLN("init done");
     while(true){
         led = !led;
         Image<Grayscale> img = Shape::x2(camera);
@@ -132,10 +156,10 @@ void EmbdHost::main(){
         // Pixels::binarization(diff_bina, diff, diff_threshold);
 
         auto img_bina = Image<Binary>(img.get_size());
-        // Pixels::binarization(img_bina, img, 200);
+        Pixels::binarization(img_bina, img, 200);
         // Pixels::binarization(img_bina, img, 10);
-        Shape::canny(img_bina, img, {80, 250});
-        // Pixels::inverse(img_bina);
+        // Shape::canny(img_bina, img, {80, 250});
+        Pixels::inverse(img_bina);
         // Shape::anti_pepper_y(img_bina, img_bina);
         // Shape::anti_pepper_x(img_bina, img_bina);
         // Pixels::or_with(img_bina, diff_bina);
@@ -148,7 +172,7 @@ void EmbdHost::main(){
 
         // DEBUG_PRINTLN(result);
 
-        if(true){
+        if(false){
             const Vector2i tmp_size = {8, 12};
             const Rect2i clip_window = Rect2i(Vector2i(20, 10), tmp_size * 2);
             auto clipped = img.clone(clip_window);
@@ -291,6 +315,7 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             if(args.size() == 2){
                 steppers.x.setTargetSpeed(real_t(args[0]));
                 steppers.y.setTargetSpeed(real_t(args[1]));
+                DEBUG_PRINTLN(args[0], args[1]);
             }
             break;
 
@@ -377,7 +402,10 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
 }
 
 void EmbdHost::reset(){
-    steppers.w.reset();
+    steppers.x.reset();
+    steppers.y.reset();
+    steppers.z.reset();
+    delay(10);
     Sys::Misc::reset();
 }
 
