@@ -192,25 +192,23 @@ void EmbdHost::main(){
                 };
 
 
-                auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vertexs{
-                    static constexpr real_t padding = 0.25;
+                auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
+                    // static constexpr real_t padding = 0.5;
                     // static constexpr Vector2 padding_vec = Vector2(padding, padding);
 
-                    return {
-                        get_vertex(__vertexs, __grid_pos + Vector2{padding,   padding}),
-                        get_vertex(__vertexs, __grid_pos + Vector2{1-padding, padding}),
-                        get_vertex(__vertexs, __grid_pos + Vector2{padding,   1-padding}),
-                        get_vertex(__vertexs, __grid_pos + Vector2{1-padding, 1-padding}),
-                    };
+                    return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
+                        // get_vertex(__vertexs, __grid_pos + Vector2{1-padding, padding}),
+                        // get_vertex(__vertexs, __grid_pos + Vector2{padding,   1-padding}),
+                        // get_vertex(__vertexs, __grid_pos + Vector2{1-padding, 1-padding}),
                 };
 
-                auto vertex_grid = get_vertex_grid(vertexs, _grid_pos);
-                uint16_t sum = 0;
-                for(const auto & item : vertex_grid){
-                    sum += uint8_t(gs[item]);
-                }
+                return gs[get_vertex_grid(vertexs, _grid_pos)];
+                // uint16_t sum = 0;
+                // for(const auto & item : vertex_grid){
+                //     sum += uint8_t(gs[item]);
+                // }
                 // DEBUG_PRINTLN(sum);
-                return (sum / 4);
+                // return (sum / 4);
 
                 // auto pos = get_vertex(_vertexs, _grid_pos) + Vector2{1.5, 1.5};
                 // painter.drawPixel(pos);
