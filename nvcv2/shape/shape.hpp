@@ -133,7 +133,7 @@ namespace NVCV2::Shape{
 
     void convo_roberts_xy(Image<Grayscale> & dst, Image<Grayscale> & src);
 
-    __inline void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src, const int max_diff = INT_MAX) {
+    __inline void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src) {
         if(dst == src){
             auto temp = dst.space();
             adaptive_threshold(temp, src);

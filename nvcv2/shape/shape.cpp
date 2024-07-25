@@ -5,9 +5,10 @@
 
 
 namespace NVCV2::Shape{
-    static void clear_corners(ImageWritable<Grayscale> & dst){
+
+    static void clear_corners(ImageWritable<monochrome auto> & dst){
         auto size = dst.get_size();
-        static constexpr Grayscale targ_v = 255;
+        static constexpr uint8_t targ_v = 0;
         for(int y = 0; y < size.y; y++) dst[{0, y}] = targ_v;
         for(int y = 0; y < size.y; y++) dst[{size.x-1, y}] = targ_v;
         for(int x = 0; x < size.x; x++) dst[{x, 0}] = targ_v;
@@ -406,17 +407,17 @@ namespace NVCV2::Shape{
         const auto size = dst.size;
         for(int y = 0; y < size.y; y++){
             for(int x = 0; x < size.x; x++){
-                // uint16_t sum = 0;
+                uint16_t sum = 0;
 
-                // for(int j = 0; j < 2; j++){
-                //     for(int i = 0; i < 2; i++){
-                //         sum += src[{(x << 1) + i,(y << 1) + j}];
-                //     }
-                // }
+                for(int j = 0; j < 2; j++){
+                    for(int i = 0; i < 2; i++){
+                        sum += src[{(x << 1) + i,(y << 1) + j}];
+                    }
+                }
 
-                // dst[{x,y}] = sum / 4;
+                dst[{x,y}] = sum / 4;
 
-                dst[{x,y}] = src[{x << 1,y << 1}];
+                // dst[{x,y}] = src[{x << 1,y << 1}];
             }
         }
         return dst;
@@ -685,8 +686,8 @@ namespace NVCV2::Shape{
 
 
     static __fast_inline Direction xy_to_dir(const int16_t x, const int16_t y){
-        auto abs_x = std::abs(x);
-        auto abs_y = std::abs(y);
+        auto abs_x = ABS(x);
+        auto abs_y = ABS(y);
 
         #define TWO_AND_HALF(x) ((x << 1) + (x >> 1))
 
@@ -722,7 +723,6 @@ namespace NVCV2::Shape{
 
         const int w = roi.w;
 
-        // #define FAST_SQUARE(x) (x <= 255 ? fast_square8(x) : x * x)
         #define FAST_SQUARE(x) (x * x)
         #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
 
@@ -731,8 +731,8 @@ namespace NVCV2::Shape{
         {
             // auto temp = src.space();
             // gauss5x5(temp, src);
-            for (int gy = 1, y = roi.y + 1; y < roi.y + roi.h - 1; y++, gy++) {
-                for (int gx = 1, x = roi.x + 1; x < roi.x + roi.w - 1; x++, gx++) {
+            for (int y = roi.y + 1; y < roi.y + roi.h - 1; y++) {
+                for (int x = roi.x + 1; x < roi.x + roi.w - 1; x++) {
                     int16_t vx = 0, vy = 0;
 
                     //  1   0   -1
@@ -757,8 +757,8 @@ namespace NVCV2::Shape{
                         - int(src.data [(y + 1) * w + x + 1]);
 
                     // Find the direction and round angle to 0, 45, 90 or 135
-                    gm[gy * roi.w + gx] = gvec_t{
-                        FAST_SQRT(FAST_SQUARE(vx) + FAST_SQUARE(vx)),
+                    gm[w * y + x] = gvec_t{
+                        FAST_SQRT(FAST_SQUARE(vx) + FAST_SQUARE(vy)),
                         xy_to_dir(vx, vy)};
                 }
             }
@@ -769,25 +769,22 @@ namespace NVCV2::Shape{
 
         gvec_t *va = nullptr, *vb = nullptr;
 
-        for (int gy = 0, y = roi.y; y < roi.y + roi.h; y++, gy++) {
-            for (int gx = 0, x = roi.x; x < roi.x + roi.w; x++, gx++) {
-                int i = y * w + x;
-                gvec_t *vc = &gm[gy * roi.w + gx];
+        clear_corners(dst);
 
-                // Clear the borders
-                // if (y == (roi.y) || y == (roi.y + roi.h - 1) ||
-                //     x == (roi.x) || x == (roi.x + roi.w - 1)) {
-                //     dst.data[i] = 0;
-                //     continue;
-                // }
+        for (int gy = 1; gy < roi.h-1; gy++) {
+            gvec_t * vc = &gm[gy * w];
+            auto * dp = &dst.data[gy * w];
+            for (int gx = 1; gx < roi.w-1; gx++) {
+                vc++;
+                dp++;
 
                 if (vc->g < low_thresh) {
                     // Not an edge
-                    dst.data[i] = 0;
+                    *dp = 0;
                     continue;
                     // Check if strong or weak edge
                 } else if (vc->g >= high_thresh){
-                    dst.data[i] = 255;
+                    *dp = 255;
                 } else{
                     if( gm[(gy - 1) * roi.w + (gx - 1)].g >= high_thresh ||
                         gm[(gy - 1) * roi.w + (gx + 0)].g >= high_thresh ||
@@ -799,10 +796,10 @@ namespace NVCV2::Shape{
                         gm[(gy + 1) * roi.w + (gx + 1)].g >= high_thresh)
                     {
 
-                        dst.data[i] = 255;
+                        *dp = 255;
                     } else {
                         // Not an edge
-                        dst.data[i] = 0;
+                        *dp = 0;
                         continue;
                     }
                 }
@@ -835,8 +832,8 @@ namespace NVCV2::Shape{
                         }
                     }
 
-                    if ((vc->g < va->g || vc->g < vb->g)) {
-                        dst.data[i] = 0;
+                    if (((vc->g < va->g) || (vc->g < vb->g))) {
+                        *dp = 0;
                     }
                 }
             }

@@ -76,15 +76,18 @@ void EmbdHost::main(){
     i2c.init(400000);
 
 
-    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
-    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Rect2i & area){
+    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
         tftDisplayer.puttexture_unsafe(area, src.data.get());
     };
 
@@ -124,26 +127,26 @@ void EmbdHost::main(){
         }
     };
     uart7.bindRxPostCb([&](){parseAscii(uart7);});
-    // DEBUGGER.bindRxPostCb([&](){parseAscii(DEBUGGER);});
-    DEBUGGER.bindRxPostCb([&](){
-        parseAscii(DEBUGGER);
-    });
-    // Transmitter trans{ch9141};
-    // Transmitter trans{logger};
-    // Transmitter trans{usbfs};
+    DEBUGGER.bindRxPostCb([&](){parseAscii(DEBUGGER);});
+
     Matcher matcher;
 
     DEBUG_PRINTLN("init done");
     while(true){
         led = !led;
         Image<Grayscale> img = Shape::x2(camera);
-        plot_gray(img, img.get_window());
-
-
+        plot_gray(img, {0,0});
+        auto img_canny = Image<Binary>(img.get_size());
+        auto img_bina = Image<Binary>(img.get_size());
+        Shape::canny(img_canny, img, {80, 180});
+        Pixels::binarization(img_bina, img, 100);
+        plot_bina(img_canny, Vector2i{0, img.size.y});
         // Shape::gauss(img);
         // auto img_ada = img.space();
-        // Shape::adaptive_threshold(img_ada, img, 0);
+        Shape::adaptive_threshold(img, img);
         // Shape::convo_roberts_xy(img, img);
+        plot_gray(img, {0, img.size.y * 2});
+        plot_bina(img_bina, {0, img.size.y * 3});
         // Shape::gauss(img);
 
         // Shape::gauss(img);
@@ -155,23 +158,7 @@ void EmbdHost::main(){
         // auto diff_bina = make_bina_mirror(diff);
         // Pixels::binarization(diff_bina, diff, diff_threshold);
 
-        auto img_bina = Image<Binary>(img.get_size());
-        // Pixels::binarization(img_bina, img, 200);
-        // Pixels::binarization(img_bina, img, 10);
-        Shape::canny(img_bina, img, {80, 250});
-        // Pixels::inverse(img_bina);
-        // Shape::anti_pepper_y(img_bina, img_bina);
-        // Shape::anti_pepper_x(img_bina, img_bina);
-        // Pixels::or_with(img_bina, diff_bina);
-        // Shape::erosion(img_bina);
-        plot_bina(img_bina, img.get_window() + Vector2i{0, img.size.y});
 
-
-        // DEBUG_PRINTLN(img.mean());
-        // Match::template_match(img, )
-
-        // DEBUG_PRINTLN(result);
-        painter.drawString({0,0}, String(t));
 
 
         // DEBUG_PRINTLN(img.mean());
@@ -179,9 +166,17 @@ void EmbdHost::main(){
 
         // DEBUG_PRINTLN(result);
 
-        if(true){
+
+
+        // DEBUG_PRINTLN(img.mean());
+        // Match::template_match(img, )
+
+        // DEBUG_PRINTLN(result);
+
+        auto char_pos = Vector2i(40, 30);
+        if(false){
             const Vector2i tmp_size = {8, 12};
-            const Rect2i clip_window = Rect2i(Vector2i(20, 10), tmp_size * 2);
+            const Rect2i clip_window = Rect2i(char_pos, tmp_size * 2);
             auto clipped = img.clone(clip_window);
             auto tmp = Shape::x2(clipped);
 
@@ -198,38 +193,39 @@ void EmbdHost::main(){
             // Mnist mnist;
             // mnist.update()
         }
-        if(false){
-            Shape::FloodFill ff;
-            auto map = ff.run(img_bina);
-            Pixels::dyeing(map, map);
-            plot_gray(map, map.get_window() + Vector2i{0, map.get_size().y * 2});
+
+        if(true){
+            // Shape::FloodFill ff;
+            // auto map = ff.run(img_canny);
+            // Pixels::dyeing(map, map);
+            // plot_gray(map, map.get_window() + Vector2i{0, map.get_size().y * 2});
 
             painter.setColor(RGB565::GREEN);
-            const auto & blobs = ff.blobs();
-            const auto & blob = blobs[0];
-            painter.setColor(RGB565::RED);
-            painter.drawRoi(blob.rect);
+            // const auto & blobs = ff.blobs();
+            // const auto & blob = blobs[0];
             painter.setColor(RGB565::GREEN);
-            Rect2i view = Rect2i::from_center(blob.rect.get_center(), Vector2i(14,14));
+            Rect2i view = Rect2i::from_center(char_pos, Vector2i(14,14));
             painter.drawRoi(view);
-            auto piece = img.clone(view);
+            // auto piece = img.clone(view);
             // auto mask = img_bina.clone(view);
             // Pixels::mask_with(piece, mask);
-            Shape::gauss(piece);
+            // Shape::gauss(piece);
             // Pixels::inverse(piece);
-            
-            // auto result = mnist.update(piece);
+            Mnist mnist;
+            mnist.update(img, char_pos);
             // logger.println(mnist.outputs);
-            // const auto & outputs = mnist.outputs;
-            // for(size_t i = 0; i < outputs.size(); i++){
-            //     logger << outputs[i];
-            //     if(i != outputs.size() - 1) logger << ',';
-            // };
-            // logger.println();
-            trans.transmit(piece, 1);
+            const auto & outputs = mnist.outputs;
+            for(size_t i = 0; i < outputs.size(); i++){
+                DEBUGGER << outputs[i];
+                if(i != outputs.size() - 1) DEBUGGER << ',';
+            };
+            DEBUGGER.println();
+            // trans.transmit(piece, 1);
             // painter.drawString(blob.rect.position, "2");
             // logger.println(blob.rect, int(blob.rect), blob.index, blob.area);
+            painter.drawString({0,0}, String(mnist.output.token));
         }
+
 
         // {
         //     painter.setColor(RGB565::YELLOW);
