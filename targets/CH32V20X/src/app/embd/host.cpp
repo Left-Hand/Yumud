@@ -147,7 +147,7 @@ void EmbdHost::main(){
         // Match::template_match(img, )
 
         // DEBUG_PRINTLN(result);
-
+        painter.drawString({0,0}, String(t));
         if(true){
             const Vector2i tmp_size = {8, 12};
             const Rect2i clip_window = Rect2i(Vector2i(20, 10), tmp_size * 2);
