@@ -8,11 +8,11 @@
 #include <type_traits>
 #endif
 
-#define CMP_EPSILON 0.00001
+#define CMP_EPSILON 0.001
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
 
-#define CMP_NORMALIZE_TOLERANCE 0.000001
-#define CMP_POINT_IN_PLANE_EPSILON 0.00001
+#define CMP_NORMALIZE_TOLERANCE 0.001
+#define CMP_POINT_IN_PLANE_EPSILON 0.001
 
 #ifndef LN2
 #define LN2 0.6931471805599453094172321215
@@ -38,9 +38,6 @@
 #define NAN (__builtin_nanf(""))
 #endif
 
-#ifndef NAN
-#define NAN (__builtin_nanf(""))
-#endif
 
 #ifndef SQRT3
 #define SQRT3 1.73205080757f
@@ -50,12 +47,12 @@
 #define SQRT2 1.41421356237f
 #endif
 
-#ifndef LOGE
-#define LOGE 0.434294481903
+#ifndef LOG_E
+#define LOG_E 0.434294481903
 #endif
 
-#ifndef LOG2
-#define LOG2 0.301029995664
+#ifndef LOG_2
+#define LOG_2 0.301029995664
 #endif
 
 
@@ -189,17 +186,33 @@
 #define RSHIFT(x,s) LSHIFT(x, -s)
 #endif
 
-#define PLAT_WIDTH (sizeof(size_t) * 8)
 #define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))
 #define PREV_POWER_OF_2(x) (1 << (31 - __builtin_clz(x)))
 
-
 #define CTZ(x) __builtin_ctz(x)
-#define BIT_WIDTH(x) (sizeof(x) * 8)
-#define CLZ(x) __builtin_clz(x << (PLAT_WIDTH - BIT_WIDTH(x)))
+#define BITS(x) (sizeof(x) * 8)
+#define PLAT_WIDTH (BITS(size_t))
+#define CLZ(x) __builtin_clz(x << (PLAT_WIDTH - BITS(x)))
 
-#define ANGLE2RAD(x) (x * TAU / 360)
-#define RAD2ANGLE(x) (x / TAU * 360)
+#define ANGLE2RAD(x) ((x) * TAU / 360)
+#define RAD2ANGLE(x) ((x) / TAU * 360)
+
+#define YEAR (((__DATE__[9]-'0')) * 10 + (__DATE__[10]-'0'))
+#define MONTH (__DATE__[0] == 'J' && __DATE__[1] == 'a' && __DATE__[2] == 'n' ? 1 : \
+            __DATE__[0] == 'F' ? 2 : \
+            __DATE__[0] == 'M' && __DATE__[2] == 'r' ? 3 : \
+            __DATE__[0] == 'A' && __DATE__[1] == 'p' ? 4 : \
+            __DATE__[0] == 'M' ?  5 : \
+            __DATE__[0] == 'J' && __DATE__[1] == 'u' ? 6 : \
+            __DATE__[0] == 'J' ? 7 : \
+            __DATE__[0] == 'A' ? 8 : \
+            __DATE__[0] == 'S' ? 9 : \
+            __DATE__[0] == 'O' ? 10 : \
+            11)
+
+#define DAY ((__DATE__[4] == ' ' ? 0 : __DATE__[4]-'0') * 10 + (__DATE__[5]-'0'))
+#define HOUR ((__TIME__[0]-'0') * 10 + __TIME__[1]-'0')
+#define MINUTE ((__TIME__[3]-'0') * 10 + __TIME__[4]-'0')
 
 
 #endif

@@ -439,7 +439,7 @@ __fast_inline_constexpr iq_t pow(const iq_t base, const iq_t exponent) {
     if(std::is_constant_evaluated()){
         return cem::pow(double(base), double(exponent));
     }else{
-        return iq_t(_iq(_IQexp(_IQmpy(exponent.value, _IQdiv(base.value, _IQlog10(_IQ(LOGE)))))));
+        return iq_t(_iq(_IQexp(_IQmpy(exponent.value, _IQdiv(base.value, _IQlog10(_IQ(LOG_E)))))));
     }
 }
 

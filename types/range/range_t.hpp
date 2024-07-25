@@ -13,14 +13,9 @@
 template<arithmetic T>
 struct Range_t{
 public:
-    union{
+    struct {
         T from;
-        T a;
-    }__packed;
-
-    union{
         T to;
-        T b;
     }__packed;
 
     __fast_inline_constexpr Range_t(): from(T(0)), to(T(0)) {;}
@@ -129,10 +124,9 @@ public:
         return _other.contains(*this);
     }
 
-    template<arithmetic U>
-    constexpr bool has(const U & value) const{
+    constexpr bool has(const arithmetic auto & value) const{
         Range_t<T> regular = this -> abs();
-        return (regular.from <= value && value < regular.to);
+        return (regular.from <= static_cast<T>(value) && static_cast<T>(value) < regular.to);
     }
 
     constexpr bool has(const Range_t<auto> & _other) const{return contains(_other);}
@@ -147,7 +141,7 @@ public:
     constexpr Range_t<T> intersection(const Range_t<auto> & _other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = _other.abs();
-        if(!regular.intersects(other_regular)) return Range_t<T>();
+        if(not regular.intersects(other_regular)) return Range_t<T>();
         return Range_t<T>(MAX(regular.from, other_regular.from), MIN(regular.to, other_regular.to));
     }
 
@@ -262,7 +256,7 @@ public:
     constexpr Range_t<T> merge(const Range_t<U> & other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = other.abs();
-        return Range_t<T>(std::min(regular.from, other_regular.from), std::max(regular.to, other_regular.to));
+        return Range_t<T>(MIN(regular.from, other_regular.from), MAX(regular.to, other_regular.to));
     }
 
     template<arithmetic U>

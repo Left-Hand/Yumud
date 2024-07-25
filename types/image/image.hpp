@@ -136,15 +136,8 @@ public:
                 putpixel_unsafe(Vector2i(x,y), color_ptr[i]);
     }
 
-    // virtual void puttexture_unsafe(const Rect2i & rect, const ColorType * color_ptr){
-    //     setarea_unsafe(rect);
-    //     uint32_t i = 0;
-    //     for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
-    //         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++)
-    //             putpixel_unsafe(Vector2i(x,y), color_ptr[i]);
-    // }
-
     virtual void putrect_unsafe(const Rect2i & rect, const ColorType & color){
+        
         setarea_unsafe(rect);
         for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
             for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++)

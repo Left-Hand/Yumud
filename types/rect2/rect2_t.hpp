@@ -16,7 +16,7 @@ public:
         struct{
             T x;
             T y;
-        };
+        }__packed;
     }__packed;
 
     union{
@@ -52,7 +52,12 @@ public:
 
     template<arithmetic U>
     static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & half_size){
-        return Rect2_t<T>(center - half_size, half_size * 2);
+        return Rect2_t<T>(center - half_size, half_size * 2).abs();
+    }
+
+    template<arithmetic U>
+    static constexpr Rect2_t from_cross(const Vector2_t<U> & a, const Vector2_t<U> & b){
+        return Rect2_t<T>(a, b-a).abs();
     }
 
     constexpr T get_area() const {return ABS(size.x * size.y);}
@@ -152,30 +157,35 @@ public:
     constexpr Rect2_t<T> intersection(const Rect2_t<U> & other) const{
         Rect2_t<T> regular = this -> abs();
         Rect2_t<T> other_regular = other.abs();
-        Rangei range_x = regular.get_x_range().intersection(other_regular.get_x_range());
-        if (!bool(range_x)) return Rect2_t<T>();
-        Rangei range_y = regular.get_y_range().intersection(other_regular.get_y_range());
-        if (!bool(range_y)) return Rect2_t<T>();
 
-        return Rect2_t<T>(range_x,range_y);
+        auto _position = Vector2_t<T>(
+            MAX(regular.x, other_regular.x),
+            MAX(regular.y, other_regular.y)
+        );
+
+        auto _size = Vector2_t<T>(
+            MIN(regular.x + regular.w, other_regular.x + other_regular.w) - _position.x,
+            MIN(regular.y + regular.h, other_regular.y + other_regular.h) - _position.y
+        );
+
+        if(_size.x < 0 || _size.y < 0) return Rect2_t<T>();
+        return Rect2_t<T>(_position, _size);
     }
 
     template<arithmetic U>
     constexpr Rect2_t<T> merge(const Rect2_t<U> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
-        Rangei range_x = regular.get_x_range().merge(other_regular.get_x_range());
-        // Rangei range_x = regular.get_x_range();
-        Rangei range_y = regular.get_y_range();
-        // .merge(other_regular.get_y_range());
+        Range_t<T> range_x = regular.get_x_range().merge(other_regular.get_x_range());
+        Range_t<T> range_y = regular.get_y_range().merge(other_regular.get_y_range());
         return Rect2_t<T>(range_x, range_y);
     }
 
     template<arithmetic U>
     constexpr Rect2_t<T> merge(const Vector2_t<U> & point) const{
         Rect2_t<T> regular = this->abs();
-        Rangei range_x = regular.get_x_range().merge(point.x);
-        Rangei range_y = regular.get_y_range().merge(point.y);
+        Range_t<T> range_x = regular.get_x_range().merge(point.x);
+        Range_t<T> range_y = regular.get_y_range().merge(point.y);
         return Rect2_t<T>(range_x, range_y);
     }
 
@@ -209,11 +219,11 @@ public:
     }
 
     constexpr Range_t<T> get_x_range() const{
-        return Range_t<T>(position.x, position.x + size.x);
+        return Range_t<T>(position.x, position.x + size.x).abs();
     }
 
     constexpr Range_t<T> get_y_range() const{
-        return Range_t<T>(position.y, position.y + size.y);
+        return Range_t<T>(position.y, position.y + size.y).abs();
     }
 
     constexpr explicit operator bool() const {

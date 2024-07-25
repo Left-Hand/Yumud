@@ -113,8 +113,8 @@ public:
     OutputStream & operator<<(const char chr){write(chr); return *this;}
     // template<>
     OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
-    OutputStream & operator<<(char* str){write(str, strlen(str)); return *this;}
-    OutputStream & operator<<(const char* str){write(str, strlen(str)); return *this;}
+    OutputStream & operator<<(char* str){if(str) write(str, strlen(str)); return *this;}
+    OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const String & str){write(str.c_str(), str.length()); return *this;}
     OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
     OutputStream & operator<<(const std::string_view & str){write(str.data(), str.length()); return * this;}

@@ -12,6 +12,9 @@
 #include "font/font.hpp"
 #include "../types/string/String.hpp"
 
+#include "../sys/debug/debug_inc.h"
+
+
 template<typename ColorType>
 class Painter{
 protected:
@@ -50,13 +53,6 @@ public:
         drawtexture_unsafe(rect, color_ptr);
     }
 
-
-
-    // void drawImage(ImageWithData<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-    //     if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
-    //     drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
-    // }
-
     template<typename w_ColorType>
     void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
@@ -68,48 +64,36 @@ public:
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
                 src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
     }
-    // template<typename w_ColorType, w_ColorType>
-    // void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-    //     if(image.data == nullptr) return;
-    //     bool unsafe = !src_image->get_window().contains(image.get_window());
 
-    //     auto rect = Rect2i(pos, image.get_size()).intersection(src_image->get_window());
-    //     src_image->setarea_unsafe(rect);
 
-    //     uint32_t i = 0;
-    //     w_ColorType * ptr = image.data.get();
 
-    //     for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++){
 
-    //         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++){
-    //             // putpixel_unsafe(Vector2i(x,y), ptr[i]);
-    //             drawtexture_unsafe(, &ptr[i]);
-    //         }
-    //     }
-    // }
-
-    void drawHriLine(const Rangei & x_range, const int & y){
-        if(!x_range ||!src_image->get_window().get_y_range().has(y)) return;
-
-        src_image -> putrect_unsafe(Rect2i(x_range, Rangei(y, y+1)), m_color);
+    void drawHriLine(const Vector2i & pos,const int l){
+        auto rect = Rect2i(pos, Vector2i(l, 1));
+        rect = src_image->get_window().intersection(rect);
+        if(bool(rect) == false) return;
+        src_image->putrect_unsafe(rect, m_color);
     }
 
-    void drawHriLine(const Vector2i & pos,const int &l){
-        Rangei x_range = src_image->get_window().get_x_range().intersection(Rangei(pos.x, pos.x + ABS(l)));
-        drawHriLine(x_range, pos.y);
+
+    void drawVerLine(const Vector2i & pos,const int l){
+        auto rect = Rect2i(pos, Vector2i(1, l));
+        rect = src_image->get_window().intersection(rect);
+        if(bool(rect) == false) return;
+        src_image->putrect_unsafe(rect, m_color);
     }
 
-    void drawVerLine(const Vector2i & pos,const int &l){
-        Rangei y_range = src_image->get_window().get_y_range().intersection(Rangei(pos.y, pos.y + ABS(l)));
-        if(!y_range ||!src_image->get_window().get_x_range().has(pos.x)) return;
 
-        src_image -> putrect_unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), m_color);
+    void drawVerLine(const Rangei & y_range, const int x){
+        auto y_range_regular = y_range.abs();
+        drawVerLine(Vector2i(x, y_range_regular.from), y_range_regular.length());
     }
 
-    void drawVerLine(const Rangei & y_range, const int & x){
-        if(!y_range ||!src_image -> get_window().get_x_range().has(x)) return;
-        src_image -> putrect_unsafe(Rect2i(Rangei(x,x+1), y_range), m_color);
+    void drawHriLine(const Rangei & x_range, const int y){
+        auto x_range_regular = x_range.abs();
+        drawHriLine(Vector2i(x_range_regular.from, y), x_range_regular.length());
     }
+
 
     void drawFilledRect(const Rect2i & rect, const ColorType & color){
         Rect2i rect_area = src_image->get_window().intersection(rect);
@@ -119,7 +103,6 @@ public:
 
     void flush(){
         flush(m_color);
-        // src_image -> putrect_unsafe(src_image->get_window(), m_color);
     }
 
     void flush(const ColorType & color){
@@ -200,7 +183,7 @@ public:
         drawVerLine(center+Vector2i(0,-2), 5);
     }
 
-    void drawHollowCircle(const Vector2i & pos, const int & radius){
+    void drawHollowCircle(const Vector2i & pos, const uint radius){
         if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(src_image->area))) || radius <= 0) return;
 
         int x0 = pos.x;
@@ -234,7 +217,7 @@ public:
         }
     }
 
-    void drawFilledCircle(const Vector2i & pos, const int & radius){
+    void drawFilledCircle(const Vector2i & pos, const uint radius){
         // if(src_image !)
         if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), src_image->size)))) || radius == 0) return;
         if(radius == 1){
@@ -270,7 +253,7 @@ public:
         }
     }
 
-    void drawChar(const Vector2i & pos,const wchar_t & chr){
+    void drawChar(const Vector2i & pos,const wchar_t chr){
         Rect2i image_area = Rect2i({}, src_image->size);
         const Font * font = chr > 0x80 ? chfont : enfont;
         const Vector2i font_size = font->getSize();
@@ -414,13 +397,13 @@ public:
         if(points.size() < 2) return drawLine(*points.begin(), *points.end());
     }
 
-    void drawHollowTriangle(Vector2i p0, Vector2i p1, Vector2i p2){
+    void drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
         drawLine(p0, p1);
         drawLine(p1, p2);
         drawLine(p0, p2);
     }
 
-    void drawFilledTriangle(Vector2i p0, Vector2i p1, Vector2i p2){
+    void drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
         int a, b, y, last;
         int x0 = p0.x;
         int y0 = p0.y;
