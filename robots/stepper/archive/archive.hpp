@@ -78,7 +78,7 @@ namespace StepperUtils{
             return not(broken() || empty());
         }
 
-        void printout(IOStream & logger) const {
+        void printout(OutputStream & logger) const {
             logger << "build version:\t\t" << this->bver << "\r\n";
             logger << "build time:\t\t20" << 
                     this->y << '/' << this->m << '/' << 

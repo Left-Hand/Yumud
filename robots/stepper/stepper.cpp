@@ -223,6 +223,7 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_REAL(Command::TRG_VECT, setTargetVector)
         SET_METHOD_BIND_REAL(Command::TRG_CURR, setTargetCurrent)
         SET_METHOD_BIND_REAL(Command::TRG_POS, setTargetPosition)
+        SET_METHOD_BIND_REAL(Command::TRG_SPD, setTargetSpeed)
         SET_METHOD_BIND_REAL(Command::TRG_TPZ, setTargetTrapezoid)
 
         SET_METHOD_BIND_REAL(Command::LOCATE, locateRelatively)

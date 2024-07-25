@@ -21,31 +21,7 @@
 using StepperUtils::CliAP;
 
 class EmbdHost:public CliAP{
-    // void parseCommand(const uint8_t & id, const Command cmd, const CanMsg & msg){
-        // logger.setSpace(" ");
-        // logger.setEps(10);
-        // switch(cmd){
-        // case Command::GET_HP:
-        //     logger.println("H", id, msg[0], msg[1]);
-        //     break;
-        // case Command::GET_WEIGHT:
-        //     logger.println("W", id, msg[0]);
-        //     break;
-        // case Command::ATTACK_GET_ID:
-        //     attack_id = msg[0];
-        //     logger.println("I A", msg[0]);
-        //     break;
-        // case Command::PEDESTRIAN_GET_ID:
-        //     pedestrian_id = msg[0];
-        //     logger.println("I C", msg[0]);
-        //     break;
-        // case Command::DEFENSE_GET_ID:
-        //     defense_id = msg[0];
-        //     logger.println("I D", msg[0]);
-        //     break;
-        // default:
-        //     break;
-        // }
+
     RemoteStepper stepper_w;
     RemoteStepper stepper_x;
     RemoteStepper stepper_y;
@@ -62,7 +38,6 @@ class EmbdHost:public CliAP{
     struct{
         uint8_t bina_threshold = 60;
         uint8_t diff_threshold = 170;
-        // uint8_t 
     };
 public:
     EmbdHost(IOStream & _logger, Can & _can):
