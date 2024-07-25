@@ -51,6 +51,31 @@ protected:
 
     static uint16_t reverse16Bits(uint16_t num) {
         uint16_t reversed = 0;
+
+        reversed |= (num & (1 << 12)) ? (1 << 15) : 0;
+        reversed |= (num & (1 << 8)) ? (1 << 14) : 0;
+        reversed |= (num & (1 << 4)) ? (1 << 13) : 0;
+        reversed |= (num & (1 << 0)) ? (1 << 12) : 0;
+
+        reversed |= (num & (1 << 13)) ? (1 << 11) : 0;
+        reversed |= (num & (1 << 9)) ? (1 << 10) : 0;
+        reversed |= (num & (1 << 5)) ? (1 << 9) : 0;
+        reversed |= (num & (1 << 1)) ? (1 << 8) : 0;
+
+        reversed |= (num & (1 << 14)) ? (1 << 7) : 0;
+        reversed |= (num & (1 << 10)) ? (1 << 6) : 0;
+        reversed |= (num & (1 << 6)) ? (1 << 5) : 0;
+        reversed |= (num & (1 << 2)) ? (1 << 4) : 0;
+
+        reversed |= (num & (1 << 15)) ? (1 << 3) : 0;
+        reversed |= (num & (1 << 11)) ? (1 << 2) : 0;
+        reversed |= (num & (1 << 7)) ? (1 << 1) : 0;
+        reversed |= (num & (1 << 3)) ? (1 << 0) : 0;
+        return reversed;
+    }
+
+    static uint16_t reverse4Bits(uint16_t num) {
+        uint16_t reversed = 0;
         for (int i = 0; i < 16; ++i) {
             reversed <<= 1; // Shift left by one bit
             reversed |= (num & 1); // Add the least significant bit of num to reversed
@@ -68,12 +93,13 @@ protected:
                 switch(times){
                     case 0:return code;
                     case 1:
+                        return reverse4Bits(code);
                     case 2:{
                         //bit reserve
                         return reverse16Bits(code);
                     }
                     case 3:
-                        return 0;
+                        return reverse16Bits(reverse4Bits(code));
                 }
                 return 0;
             };

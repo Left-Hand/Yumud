@@ -95,12 +95,49 @@ namespace NVCV2::Shape{
         }
     }
 
-    void gauss(Image<Grayscale> src){
+    void gauss(Image<Grayscale> & src){
         auto temp = src.space();
         gauss(temp, src);
         Pixels::copy(src, temp);
     }
 
+    Vector2i find_most(const Image<Grayscale> & src, const Vector2i & point, const Vector2i & vec){
+        const Grayscale initial_color = src[point];
+        auto eve = [](const Vector2i & _point, const Vector2i & _vec) -> int{
+            return _point.dot(_vec);
+        };
+
+        Vector2i current_point = point;
+        int current_eve = eve(current_point, vec);
+        while(true){
+            Vector2i next_x_vec = point + Vector2i(sign(vec.x), 0);
+            Vector2i next_y_vec = point + Vector2i(0, sign(vec.y));
+
+            Vector2i * next_point = &current_point;
+            current_eve = eve(point, vec);
+
+            if(src[next_x_vec] == initial_color){
+                auto x_eve = eve(next_x_vec, vec);
+                if(x_eve > current_eve){
+                    next_point = &next_x_vec;
+                    current_eve = x_eve;
+                }
+            }
+
+            if(src[next_y_vec] == initial_color){
+                auto y_eve = eve(next_y_vec, vec);
+                if(y_eve > current_eve){
+                    next_point = &next_y_vec;
+                    current_eve = y_eve;
+                }
+            }
+
+            if(next_point == &current_point){
+                break;
+            }
+        }
+        return current_point;
+    }
     void sobel_xy(Image<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         auto size = dst.get_size();
         {
