@@ -24,11 +24,11 @@ protected:
     static constexpr auto is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
 
     void configDataBits(const size_t _data_size){
-        if(_data_size == data_bits) return;
-        else{
-            data_bits = _data_size;
+        // if(_data_size == data_bits) return;
+        // else{
+        //     data_bits = _data_size;
             bus.configDataSize(_data_size);
-        }  
+        // }  
     }
 
     virtual void speclize(){;}                                                                                                                             
@@ -59,8 +59,10 @@ public:
     requires is_writable_bus
     void write(std::initializer_list<T> datas, bool discontinuous = true){
         if(!bus.begin(index)){
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
             for(auto data_item : datas) bus.write(data_item);
             if(discontinuous) bus.end();
+            if (sizeof(T) != 1) this->configDataBits(8);
         }
     }
 
@@ -68,10 +70,10 @@ public:
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T data, const size_t len, bool discontinuous = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
+            if (sizeof(T) != 1) bus.configDataSize(sizeof(T) * 8);
             for(size_t i = 0; i < len; i++) bus.write(data);
             if (discontinuous) bus.end();
-            if (sizeof(T) != 1) this->configDataBits(8);
+            if (sizeof(T) != 1) bus.configDataSize(8);
         }
     }
 
@@ -90,12 +92,14 @@ public:
     requires std::is_integral<T>::value && is_readable_bus
     void read(T * data_ptr, const size_t len, const bool discontinuous = true){
         if(!bus.begin(index)){
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
             for(size_t i = 0; i < len; i++){
                 uint32_t temp = 0;
                 bus.read(temp, (i != len - 1));
                 data_ptr[i] = temp;
             }
             if(discontinuous) bus.end();
+            if (sizeof(T) != 1)this->configDataBits(8);
         }
     }
 
@@ -103,10 +107,12 @@ public:
     requires std::is_integral<T>::value && is_readable_bus
     void read(T & data, const bool discontinuous = true){
         if(!bus.begin(index)){
+            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
             uint32_t temp;
             bus.read(temp);
             data = temp;
             if(discontinuous) bus.end();
+            if (sizeof(T) != 1)this->configDataBits(8);
         }
     }
 
