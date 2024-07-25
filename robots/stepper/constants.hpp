@@ -63,18 +63,19 @@ namespace StepperEnums{
 
     enum class Command:uint8_t{
         SET_TARGET = 0,
-        TRG_VECT,
-        TRG_CURR,
-        TRG_POS,
-        TRG_SPD,
-        TRG_TPZ,
+        SET_TRG_VECT,
+        SET_TRG_CURR,
+        SET_TRG_POS,
+        SET_TRG_SPD,
+        SET_TRG_TPZ,
+        FREEZE,
 
         LOCATE = 0x20,
-        SET_OLP_CURR,
-        CLAMP_CURRENT,
-        CLAMP_POS,
-        CLAMP_SPD,
-        CLAMP_ACC,
+        SET_OPEN_CURR,
+        SET_CURR_CLP,
+        SET_POS_CLP,
+        SET_SPD_CLP,
+        SET_ACC_CLP,
 
         GET_POS = 0x30,
         GET_SPD,
@@ -85,10 +86,10 @@ namespace StepperEnums{
 
         SAVE = 0X50,
         LOAD,
-        RM,
+        CLEAR,
 
-        SERVO_ON = 0x60,
-        SERVO_OFF,
+        NOZZLE_ON = 0x60,
+        NOZZLE_OFF,
 
         RST = 0x70,
         STAT,

@@ -9,26 +9,26 @@ bool Stepper::loadArchive(const bool outen){
     memory.load(archive);
 
     bool match = true;
-    bool disabled = false;
+    bool abort = false;
 
     ARCHIVE_LOG("======");
     {
         const auto & board_info = archive.board_info;
 
-        match = board_info.match();
+        match &= board_info.is_latest();
 
         ARCHIVE_LOG("reading board information...");
-        if(outen)board_info.printout(logger);
+        ARCHIVE_LOG(board_info);
 
         if(!match){
             ARCHIVE_LOG("!!!board does not match current build!!!");
             ARCHIVE_LOG("we suggest you to save data once to cover useless data by typing\r\n->save");
 
-            if(board_info.broken()){
-                disabled = true;
+            if(board_info.is_invalid()){
+                abort = true;
                 ARCHIVE_LOG("!!!board eeprom seems to be trash!!!\r\n");
-            }else if(board_info.empty()){
-                disabled = true;
+            }else if(board_info.is_empty()){
+                abort = true;
                 ARCHIVE_LOG("!!!board eeprom is empty!!!\r\n");
             }
 
@@ -36,13 +36,13 @@ bool Stepper::loadArchive(const bool outen){
             
             BoardInfo m_board_info;
             m_board_info.construct();
-            if(outen) m_board_info.printout(logger);
+            ARCHIVE_LOG(m_board_info);
         }else{
             ARCHIVE_LOG("\r\nboard matches current build");
         }
     }
 
-    if(!disabled){
+    if(!abort){
         for(size_t i = 0; i < odo.map().size(); i++){
             int16_t item_i = archive.cali_map[i];
             odo.map()[i] = real_t(item_i) / 16384;
@@ -55,7 +55,7 @@ bool Stepper::loadArchive(const bool outen){
         ARCHIVE_LOG("load aborted because data is corrupted");
     }
     ARCHIVE_LOG("======");
-    return (!disabled);
+    return (!abort);
 }
 
 void Stepper::saveArchive(const bool outen){
@@ -66,10 +66,10 @@ void Stepper::saveArchive(const bool outen){
 
     ARCHIVE_LOG("======");
     ARCHIVE_LOG("generating archive...");
-    archive.board_info.construct();
     ARCHIVE_LOG("current board info:");
-    if(outen) archive.board_info.printout(logger);
+    ARCHIVE_LOG(archive.board_info);
 
+    archive.board_info.construct();
     archive.switches = m_switches;
     uint32_t hashcode = archive.hash();
     archive.hashcode = hashcode;
@@ -112,3 +112,14 @@ void Stepper::removeArchive(const bool outen){
 }
 
 #undef ARCHIVE_LOG
+
+OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi){
+    os << "build version:\t\t" << bi.bver << "\r\n";
+    os << "build time:\t\t20" << 
+            bi.y << '/' << bi.m << '/' << 
+            bi.d << '\t' << bi.h << ':' << bi.mi << "\r\n";
+
+    os << "driver type:\t\t" << bi.dtype << "\r\n";
+    os << "driver branch:\t\t" << bi.dbranch << "\r\n";
+    return os;
+}

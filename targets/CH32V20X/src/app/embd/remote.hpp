@@ -30,10 +30,10 @@ public:
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);
     void removeArchive(const bool outen);
-    virtual bool autoload(const bool outen);
 
     void setTargetCurrent(const real_t current);
     void setTargetSpeed(const real_t speed);
+    void freeze();
     void setTargetPosition(const real_t pos);
     void setTargetTrapezoid(const real_t pos);
     void setOpenLoopCurrent(const real_t current);
@@ -48,7 +48,7 @@ public:
     real_t getPosition() const;
     real_t getCurrent() const;
 
-    void setTargetPositionClamp(const Range & clamp);
+    void setPositionClamp(const Range & clamp);
     void enable(const bool en = true);
     void setNodeId(const uint8_t _id);
     void setSpeedClamp(const real_t max_spd);
@@ -56,7 +56,7 @@ public:
     void reset();
     void triggerCali();
 
-    void mt(const bool en);
+    void set_nozzle(const bool en);
 };
 
 struct RemoteSteppers{

@@ -104,9 +104,9 @@ void EmbdHost::main(){
     tcs.setGain(TCS34725::Gain::X60);
     ch9141.init();
 
-    stepper_x.setTargetPositionClamp({0.2, 7.8});
-    stepper_y.setTargetPositionClamp({0.2, 4.8});
-    stepper_z.setTargetPositionClamp({0.2, 26.2});
+    stepper_x.setPositionClamp({0.2, 7.8});
+    stepper_y.setPositionClamp({0.2, 4.8});
+    stepper_z.setPositionClamp({0.2, 26.2});
 
     auto parseAscii = [&](InputStream & is){
         static String temp;
@@ -317,6 +317,11 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
                 steppers.y.setTargetTrapezoid(real_t(args[1]));
             }
             break;
+    
+        case "dz"_ha:
+            if(args.size() == 1){
+                stepper_z.setTargetSpeed(real_t(args[0]));
+            }
 
         case "dxy"_ha:
             if(args.size() == 2){
@@ -326,9 +331,9 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             }
             break;
 
-        case "mt"_ha:
+        case "nz"_ha:
             if(args.size() == 1){
-                steppers.y.mt(int(args[0]));
+                steppers.y.set_nozzle(int(args[0]));
             }
             break;
 
@@ -402,6 +407,8 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             trigger_method(trans.enable, true);
         case "usboff"_ha:
             trigger_method(trans.enable, false);
+        case "frz"_ha:
+            trigger_method(stepper_w.freeze);
         default:
             CliAP::parseTokens(_command, args);
             break;
