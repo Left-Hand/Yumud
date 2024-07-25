@@ -230,9 +230,16 @@ public:
         return (size.x != 0) && (size.y != 0);
     }
 
-    constexpr explicit operator T() const {
+    template<integral U>
+    constexpr explicit operator U() const {
         return get_area();
     }
+
+    // template<>
+    // requires std::is_floating_point_v<T>
+    // constexpr explicit operator T() const {
+    //     return get_area();
+    // }
 
     constexpr  __no_inline explicit operator String() const{
         return toString();

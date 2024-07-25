@@ -181,30 +181,30 @@ VECTOR2_COMPARE_IM_OPERATOR(>=)
 VECTOR2_COMPARE_IM_OPERATOR(==)
 VECTOR2_COMPARE_IM_OPERATOR(!=)
 
-template <arithmetic T, arithmetic U>
+template <arithmetic T, arithmetic U = T>
 constexpr __fast_inline Vector2_t<T> operator +(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
     Vector2_t<T> ret = p_vector2;
     ret += d_vector2;
     return ret;
 }
 
-template <arithmetic T, arithmetic U>
+template <arithmetic T, arithmetic U = T>
 constexpr __fast_inline Vector2_t<T> operator -(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
     Vector2_t<T> ret = p_vector2;
     ret -= d_vector2;
     return ret;
 }
 
-template <arithmetic T>
-constexpr __fast_inline Vector2_t<T> operator *(const auto &lvalue, const Vector2_t<T> &p_vector2){
+template <arithmetic T, arithmetic U = T>
+constexpr __fast_inline Vector2_t<T> operator *(const auto &lvalue, const Vector2_t<U> &p_vector2){
     Vector2_t<T> ret = p_vector2;
     ret *= lvalue;
     return ret;
 }
 
 
-template <arithmetic T >
-constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<auto> &d_vector2){
+template <arithmetic T,arithmetic U = T >
+constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
     Vector2_t<T> final = p_vector2;
     final /= d_vector2;
     return final;

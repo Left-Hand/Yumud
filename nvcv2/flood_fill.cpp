@@ -260,12 +260,12 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 }
 
 
-Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
-    // auto [nrow,ncol] = src.size;
+Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFilter & filter) {
+    static constexpr Grayscale labelable = 255;
+
     auto nrow = src.w;
     auto ncol = src.h;
     Image<Grayscale> map({src.size});
-    static constexpr Grayscale labelable = 255;
     m_blobs.clear();
 
     for(int y = 0; y < ncol; ++y){
@@ -303,7 +303,8 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
             }
 
             // Perform flood fill starting from (row, col)
-            sstl::vector<Vector2_t<uint8_t>, 256> current_indices;
+            // sstl::vector<Vector2_t<uint8_t>, 256> current_indices;
+            std::vector<Vector2_t<uint8_t>> current_indices;
             map[{row,col}] = label;
             Blob blob{
                 .rect = Rect2i(Vector2i{row, col}, Vector2i{0,0}),
@@ -339,11 +340,15 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
             {
                 const auto & rect = blob.rect;
                 bool skip_flag = false;
-                bool merge_flag = false;
-                Rect2i * merge_with = nullptr;
 
-                skip_flag |= (int(rect) > 650);
-                skip_flag |= (int(rect) < 300);
+                {
+                    skip_flag |= not filter.area_range.has(uint(rect));
+                }
+
+                {
+                    skip_flag |= not filter.width_range.has(rect.w);
+                    skip_flag |= not filter.height_range.has(rect.h);
+                }
                 // skip_flag |= rect.height > 50;
                 // skip_flag |= rect.height < 5;
                 // skip_flag |= real_t(int(rect)) / blob.area < (1.0 / 0.7);
@@ -353,29 +358,29 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src) {
 
                 if(skip_flag) goto choice;
 
-                for(auto & m_blob : m_blobs){
-                    auto & m_rect = m_blob.rect;
+                // for(auto & m_blob : m_blobs){
+                //     auto & m_rect = m_blob.rect;
                     
-                    // merge_flag |= ((iou(rect_a, rect_b) > 0.3));
+                //     // merge_flag |= ((iou(rect_a, rect_b) > 0.3));
 
-                    if(merge_flag){
-                        merge_with = &m_rect;
-                        break;
-                    }
-                }
+                //     if(merge_flag){
+                //         merge_with = &m_rect;
+                //         break;
+                //     }
+                // }
 
                 choice:
 
                 if(skip_flag){
 
                 }else{
-                    if(merge_flag){
-                        merge_with->merge(blob.rect);
-                    }else{
-                        m_blobs.push_back(blob);
-                        label++;
-                    }
+                    // if(merge_flag){
+                    //     merge_with->merge(blob.rect);
+                    // }else{
+                    m_blobs.push_back(blob);
+                    // }
                 }
+                label++;
             }
         }
     }

@@ -38,6 +38,7 @@ namespace NVCV2::Pixels{
                 used[x_next] = true;
                 data[i] = x_next;
             }
+            data[0] = 0;
         }
 
         uint8_t operator[](const uint8_t index) const{

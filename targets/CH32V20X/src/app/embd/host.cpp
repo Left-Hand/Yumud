@@ -3,6 +3,9 @@
 #include "match/match.hpp"
 #include "interpolation/interpolation.hpp"
 
+#include <algorithm>
+#include "match/apriltag.hpp"
+
 using namespace Interpolation;
 using namespace NVCV2;
 
@@ -93,7 +96,7 @@ void EmbdHost::main(){
 
 
     camera.init();
-    camera.setExposureValue(2400);
+    camera.setExposureValue(1400);
 
 
     vl.init();
@@ -135,18 +138,123 @@ void EmbdHost::main(){
     while(true){
         led = !led;
         Image<Grayscale> img = Shape::x2(camera);
-        plot_gray(img, {0,0});
-        auto img_canny = Image<Binary>(img.get_size());
-        auto img_bina = Image<Binary>(img.get_size());
-        Shape::canny(img_canny, img, {80, 180});
-        Pixels::binarization(img_bina, img, 100);
-        plot_bina(img_canny, Vector2i{0, img.size.y});
+        // plot_gray(img, {0,0});
+
+        // auto img_canny = img.space<Binary>();
+        // Shape::canny(img_canny, img, {80, 180});
+        // plot_bina(img_canny, Vector2i{0, img.size.y});
+        
+        auto img_ada = img.space();
+        Shape::adaptive_threshold(img_ada, img);
+        plot_gray(img_ada, {0, img.size.y * 1});
+
+        auto img_bina = img.space<Binary>();
+        Pixels::binarization(img_bina, img_ada, 220);
+        Pixels::inverse(img_bina);
+        // Shape::dilate(img_bina);
+        plot_bina(img_bina, {0, img.size.y * 2});
+
+        using Shape::FloodFill;
+        using Shape::BlobFilter;
+
+        FloodFill ff;
+        auto map = ff.run(img_bina, BlobFilter::clamp_area(200, 2000));
+        Pixels::dyeing(map, map);
+        plot_gray(map, Vector2i{0, map.get_size().y * 3});
+
+        if(ff.blobs().size()){
+            const auto & blob = ff.blobs()[0];
+            const auto & rect = blob.rect;
+
+            painter.setColor(RGB565::RED);
+            painter.drawRoi(rect);
+
+            using Vertexs = std::array<Vector2, 4>;
+            Vertexs vertexs;
+            {
+                vertexs[0] = rect.position;
+                vertexs[1] = rect.position + Vector2i(rect.w, 0);
+                vertexs[2] = rect.position + Vector2i(0, rect.h);
+                vertexs[3] = rect.get_end();
+            }
+
+            static constexpr uint apriltag_s = 4;
+
+            auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
+
+                auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
+                    Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
+
+                    Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+                    Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
+
+                    return upper_x.lerp(lower_x, grid_scale.y);
+                };
+
+
+                auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vertexs{
+                    static constexpr real_t padding = 0.25;
+                    // static constexpr Vector2 padding_vec = Vector2(padding, padding);
+
+                    return {
+                        get_vertex(__vertexs, __grid_pos + Vector2{padding,   padding}),
+                        get_vertex(__vertexs, __grid_pos + Vector2{1-padding, padding}),
+                        get_vertex(__vertexs, __grid_pos + Vector2{padding,   1-padding}),
+                        get_vertex(__vertexs, __grid_pos + Vector2{1-padding, 1-padding}),
+                    };
+                };
+
+                auto vertex_grid = get_vertex_grid(vertexs, _grid_pos);
+                uint16_t sum = 0;
+                for(const auto & item : vertex_grid){
+                    sum += uint8_t(gs[item]);
+                }
+                // DEBUG_PRINTLN(sum);
+                return (sum / 4);
+
+                // auto pos = get_vertex(_vertexs, _grid_pos) + Vector2{1.5, 1.5};
+                // painter.drawPixel(pos);
+                // return gs.lerp(pos);
+            };
+
+            // painter.drawPixel(get_vertex(vertexs, {0,0}));
+
+
+            uint16_t code = 0;
+            for(uint j = 0; j < apriltag_s; j++){
+                for(uint i = 0; i < apriltag_s; i++){
+                    uint16_t mask = (0x8000) >> (j * 4 + i);
+                    Grayscale val = get_vertex_val(vertexs, {i,j}, img);
+                    if((uint8_t)val > 173) code |= mask;
+                }
+            }
+
+
+
+            // for(uint16_t mask = 0x8000; mask; mask >>= 1){
+            //     DEBUGGER << bool(mask & code);
+            // }
+            // DEBUGGER.println();
+            // DEBUGGER.println(toString((int)code, 16));
+
+            static Apriltag16H5Decoder decoder;
+            decoder.update(code);
+            DEBUGGER.println(decoder.index(), toString((int)decoder.code(), 16), toString((int)code, 16));
+            // DEBUG_PRINTLN(, decoder.code());
+            // DEBUG_PRINTLN(toString((int)code, 2));
+
+            // DEBUG_PRINTLN(get_vertex_grid(vertexs, {0,0}));
+            // DEBUG_PRINTLN(get_vertex_val(vertexs, {0,0}, img_ada));
+            // DEBUG_PRINTLN(code);
+        }
+        // DEBUG_PRINTLN(ff.blobs());
+        // Shape::dilate(img_canny);
+        // Shape::erosion(img_canny);
+        // Shape::erosion(img_canny);
+        // Shape::zhang_suen(img_canny);
         // Shape::gauss(img);
         // auto img_ada = img.space();
-        Shape::adaptive_threshold(img, img);
         // Shape::convo_roberts_xy(img, img);
-        plot_gray(img, {0, img.size.y * 2});
-        plot_bina(img_bina, {0, img.size.y * 3});
         // Shape::gauss(img);
 
         // Shape::gauss(img);
@@ -174,9 +282,10 @@ void EmbdHost::main(){
         // DEBUG_PRINTLN(result);
 
         auto char_pos = Vector2i(40, 30);
+
         if(false){
             const Vector2i tmp_size = {8, 12};
-            const Rect2i clip_window = Rect2i(char_pos, tmp_size * 2);
+            const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
             auto clipped = img.clone(clip_window);
             auto tmp = Shape::x2(clipped);
 
@@ -194,11 +303,8 @@ void EmbdHost::main(){
             // mnist.update()
         }
 
-        if(true){
-            // Shape::FloodFill ff;
-            // auto map = ff.run(img_canny);
-            // Pixels::dyeing(map, map);
-            // plot_gray(map, map.get_window() + Vector2i{0, map.get_size().y * 2});
+        if(false){
+
 
             painter.setColor(RGB565::GREEN);
             // const auto & blobs = ff.blobs();
