@@ -26,7 +26,7 @@ namespace NVCV2::Shape{
     void gauss(Image<Grayscale> &src);
     void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
 
-    Vector2i find_most(const Image<Grayscale> & src, const Vector2i & point, const Vector2i & vec);
+    Vector2i find_most(const Image<Grayscale> & src,  const Grayscale & tg_color, const Vector2i & point, const Vector2i & vec);
     __inline void sobel_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_x);}
     __inline void sobel_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_y);}
     __inline void scharr_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_x);}

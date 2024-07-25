@@ -101,22 +101,38 @@ namespace NVCV2::Shape{
         Pixels::copy(src, temp);
     }
 
-    Vector2i find_most(const Image<Grayscale> & src, const Vector2i & point, const Vector2i & vec){
-        const Grayscale initial_color = src[point];
+    Vector2i find_most(const Image<Grayscale> & src, const Grayscale & tg_color,  const Vector2i & point, const Vector2i & vec){
+        Vector2i current_point = point;
+        Vector2i delta_point = Vector2i(sign(vec.x), sign(vec.y));
+
+        {
+            while(true){
+                if(not src.has_point(current_point)){
+                    return {0,0};//nothing
+                }
+                // DEBUG_PRINTLN(current_point, src[current_point]);
+
+                if(src[current_point] == tg_color){
+                    break;
+                }
+
+                current_point += delta_point;
+            }
+        }
+
         auto eve = [](const Vector2i & _point, const Vector2i & _vec) -> int{
             return _point.dot(_vec);
         };
 
-        Vector2i current_point = point;
         int current_eve = eve(current_point, vec);
         while(true){
-            Vector2i next_x_vec = point + Vector2i(sign(vec.x), 0);
-            Vector2i next_y_vec = point + Vector2i(0, sign(vec.y));
+            Vector2i next_x_vec = current_point + Vector2i(sign(vec.x), 0);
+            Vector2i next_y_vec = current_point + Vector2i(0, sign(vec.y));
 
             Vector2i * next_point = &current_point;
-            current_eve = eve(point, vec);
+            current_eve = eve(current_point, vec);
 
-            if(src[next_x_vec] == initial_color){
+            if(src[next_x_vec] == tg_color){
                 auto x_eve = eve(next_x_vec, vec);
                 if(x_eve > current_eve){
                     next_point = &next_x_vec;
@@ -124,7 +140,7 @@ namespace NVCV2::Shape{
                 }
             }
 
-            if(src[next_y_vec] == initial_color){
+            if(src[next_y_vec] == tg_color){
                 auto y_eve = eve(next_y_vec, vec);
                 if(y_eve > current_eve){
                     next_point = &next_y_vec;
@@ -133,10 +149,12 @@ namespace NVCV2::Shape{
             }
 
             if(next_point == &current_point){
-                break;
+                return current_point;
             }
+
+            current_point = *next_point;
         }
-        return current_point;
+        // return current_point;
     }
     void sobel_xy(Image<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         auto size = dst.get_size();

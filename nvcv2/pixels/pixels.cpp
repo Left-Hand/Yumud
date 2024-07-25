@@ -78,13 +78,18 @@ namespace NVCV2::Pixels{
     }
 
 
+    static UniqueRandomGenerator lcg;
+
     void dyeing(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src){
-        static UniqueRandomGenerator lcg;
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
                 dst[Vector2i{x, y}] = lcg[src(Vector2i{x, y})];
             }
         }
+    }
+
+    Grayscale dyeing(const Grayscale in){
+        return lcg[(uint8_t)in];
     }
 
     auto dyeing(const ImageReadable<Grayscale>& src){

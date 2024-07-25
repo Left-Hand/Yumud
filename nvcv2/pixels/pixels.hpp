@@ -51,6 +51,8 @@ namespace NVCV2::Pixels{
 
     auto dyeing(const ImageReadable<Grayscale>& src);
 
+    Grayscale dyeing(const Grayscale in);
+
     template<typename T>
     requires (std::is_same_v<T, Grayscale> || std::is_same_v<T, Binary>)
     void copy(ImageWritable<T>& dst, const ImageReadable<T>& src) {

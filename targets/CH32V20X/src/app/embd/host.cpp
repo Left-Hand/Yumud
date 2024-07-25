@@ -172,10 +172,20 @@ void EmbdHost::main(){
             using Vertexs = std::array<Vector2, 4>;
             Vertexs vertexs;
             {
+                // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
+                // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
+                // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
+                // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
+    
                 vertexs[0] = rect.position;
                 vertexs[1] = rect.position + Vector2i(rect.w, 0);
                 vertexs[2] = rect.position + Vector2i(0, rect.h);
                 vertexs[3] = rect.get_end();
+            }
+
+            painter.setColor(RGB565::YELLOW);
+            for(const auto & item : vertexs){
+                painter.drawPixel(item);
             }
 
             static constexpr uint apriltag_s = 4;
