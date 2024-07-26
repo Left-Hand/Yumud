@@ -206,7 +206,6 @@ void EmbdHost::main(){
 
                 // DEBUG_PRINTLN(rect);
 
-                trans.transmit(img_bina.clone(rect),1);
 
                 using Vertexs = std::array<Vector2, 4>;
                 Vertexs vertexs;
@@ -261,6 +260,13 @@ void EmbdHost::main(){
                 decoder.update(code);
 
                 plot_april(rect, decoder.index(), decoder.angle());
+
+                Painter<Grayscale> pt;
+                auto clipped = img.clone(rect);
+                pt.bindImage(clipped);
+                pt.drawString({0,0}, toString(decoder.index()));
+                pt.drawString({0,8}, toString(decoder.angle()));
+                trans.transmit(clipped,1);
                 // DEBUGGER.println(decoder.index(), toString((int)decoder.code(), 16), toString((int)code, 16));
             }
 
@@ -273,7 +279,6 @@ void EmbdHost::main(){
                 const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
                 auto clipped = img.clone(clip_window);
 
-                trans.transmit(clipped,2);
 
                 auto tmp = Shape::x2(clipped);
 
@@ -283,10 +288,13 @@ void EmbdHost::main(){
                 auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
 
                 plot_number(clip_window, result);
-                // DEBUG_PRINTLN(result);
-                // auto piece = img.clone(view);
-                // Mnist mnist;
-                // mnist.update()
+
+                Painter<Grayscale> pt;
+                pt.bindImage(clipped);
+                pt.drawString({0,0}, toString(result));
+
+                trans.transmit(clipped,2);
+
             }
 
             if(false){
