@@ -8,27 +8,31 @@ void Matcher::init(){
 
 }
 
-real_t Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
+int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
     const auto tmp_size = roi.size;
     auto fault = src.clone(Rect2i(roi.position, tmp_size));
     auto fault_bina = make_bina_mirror(fault);
 
-    auto begin = millis();
     for(size_t i = 0; i < N; i++){
         Image<Grayscale> tmp = Image<Grayscale>::load_from_buf(digit_images[i], tmp_size);
         result[i] = NVCV2::Match::template_match(fault, tmp);
     }
-    // DEBUG_PRINTLN(result);
-    auto elp = millis() - begin;
-    for(const auto & item : result){
-        DEBUGGER << item << ',';
+
+    uint maxi = 0;
+    real_t maxp = 0;
+
+    for(size_t i=0; i < result.size(); i++){
+        if(result[i] > maxp) {
+            maxi = i;
+            maxp = result[i];
+        }
     }
-    DEBUGGER << elp << "\r\n";
-    return 0;
+
+    return maxi;
 }
 
 
-real_t Matcher::number(const Image<Binary> & src, const Rect2i & roi){
+int Matcher::number(const Image<Binary> & src, const Rect2i & roi){
     const auto tmp_size = roi.size;
 
     auto begin = millis();
@@ -47,11 +51,11 @@ real_t Matcher::number(const Image<Binary> & src, const Rect2i & roi){
 }
 
 
-real_t Matcher::april(const Image<Grayscale> &, const Rect2i & roi){
+int Matcher::april(const Image<Grayscale> &, const Rect2i & roi){
     return 0;
 }
 
-real_t Matcher::april(const Image<Binary> & src, const Rect2i & roi){
+int Matcher::april(const Image<Binary> & src, const Rect2i & roi){
     // using Vertex = std::array<Vector2i, 4>;
 
     // Vertex vertex;

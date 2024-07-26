@@ -95,6 +95,7 @@ void EmbdHost::main(){
     };
 
 
+
     camera.init();
     camera.setExposureValue(1400);
 
@@ -116,235 +117,214 @@ void EmbdHost::main(){
 
     auto parseAscii = [&](InputStream & is){
         static String temp;
-        // DEBUG_PRINTLN(is.available());
         while(is.available()){
             auto chr = is.read();
             if(chr == 0) continue;
             temp += chr;
             if(chr == '\n'){
                 temp.alphanum();
-                // DEBUG_PRINTLN("tempis", temp, temp.length());
                 parseLine(temp);
                 temp = "";
             }
         }
     };
+
     uart7.bindRxPostCb([&](){parseAscii(uart7);});
     DEBUGGER.bindRxPostCb([&](){parseAscii(DEBUGGER);});
 
     Matcher matcher;
+    auto sketch = make_image<RGB565>(camera.size/2);
 
-    DEBUG_PRINTLN("init done");
+    [[maybe_unused]] auto plot_april = [&](const Rect2i & rect, const int index, const int dir){
+        painter.bindImage(sketch);
+        painter.setColor(RGB565::FUCHSIA);
+        painter.drawRoi(rect);
+        painter.setColor(RGB565::RED);
+        painter.drawString(rect.position + Vector2i{4,4}, toString(index));
+        // painter.drawString(rect.position + Vector2i{4, 12}, toString(dir));
+
+        painter.setColor(RGB565::BLUE);
+        static constexpr std::array<Vector2i, 4> vecs = {
+            Vector2i(12,0),
+            Vector2i(0,12),
+            Vector2i(-12,0),
+            Vector2i(0,-12)
+        };
+
+        painter.drawFilledCircle(rect.get_center() + vecs[dir], 3);
+        painter.bindImage(tftDisplayer);
+    };
+
+    [[maybe_unused]] auto plot_number = [&](const Rect2i & rect, const int index){
+        painter.bindImage(sketch);
+        painter.setColor(RGB565::GREEN);
+        painter.drawRoi(rect);
+        painter.setColor(RGB565::YELLOW);
+        painter.drawString(rect.position + Vector2i{4,4}, toString(index));
+        painter.bindImage(tftDisplayer);
+    };
+
     while(true){
         led = !led;
-        Image<Grayscale> img = Shape::x2(camera);
-        // plot_gray(img, {0,0});
+        sketch.fill(RGB565::BLACK);
+        // painter.drawFilledRect(Rect2i{Vector2i{0,0}, img.size}, RGB565::BLACK);
 
-        // auto img_canny = img.space<Binary>();
-        // Shape::canny(img_canny, img, {80, 180});
-        // plot_bina(img_canny, Vector2i{0, img.size.y});
-        
+
+        Image<Grayscale> img = Shape::x2(camera);
+        plot_gray(img, {0, img.size.y * 1});
+        trans.transmit(img, 0);
+    
         auto img_ada = img.space();
         Shape::adaptive_threshold(img_ada, img);
-        plot_gray(img_ada, {0, img.size.y * 1});
+        plot_gray(img_ada, {0, img.size.y * 2});
+        // trans.transmit(img_ada, 1);
 
         auto img_bina = img.space<Binary>();
         Pixels::binarization(img_bina, img_ada, 220);
         Pixels::inverse(img_bina);
         // Shape::dilate(img_bina);
-        plot_bina(img_bina, {0, img.size.y * 2});
+        // plot_bina(img_bina, {0, img.size.y * 2});
 
         using Shape::FloodFill;
         using Shape::BlobFilter;
 
         FloodFill ff;
-        auto map = ff.run(img_bina, BlobFilter::clamp_area(200, 2000));
+        auto map = ff.run(img_bina, BlobFilter::clamp_area(100, 600));
         Pixels::dyeing(map, map);
         plot_gray(map, Vector2i{0, map.get_size().y * 3});
 
-        if(ff.blobs().size()){
-            const auto & blob = ff.blobs()[0];
-            const auto & rect = blob.rect;
-
-            painter.setColor(RGB565::RED);
-            painter.drawRoi(rect);
-
-            using Vertexs = std::array<Vector2, 4>;
-            Vertexs vertexs;
-            {
-                // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
-                // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
-                // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
-                // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
-    
-                vertexs[0] = rect.position;
-                vertexs[1] = rect.position + Vector2i(rect.w, 0);
-                vertexs[2] = rect.position + Vector2i(0, rect.h);
-                vertexs[3] = rect.get_end();
-            }
-
-            painter.setColor(RGB565::YELLOW);
-            for(const auto & item : vertexs){
-                painter.drawPixel(item);
-            }
-
-            static constexpr uint apriltag_s = 4;
-
-            auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
-
-                auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
-                    Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
-
-                    Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-                    Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
-
-                    return upper_x.lerp(lower_x, grid_scale.y);
-                };
 
 
-                auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
-                    // static constexpr real_t padding = 0.5;
-                    // static constexpr Vector2 padding_vec = Vector2(padding, padding);
+        for(const auto & blob :ff.blobs()){
+            bool has_tag = false;
+            bool has_digit = false;
+            if(20 < blob.rect.w) has_tag = true;
+            else has_digit = true;
 
-                    return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
-                        // get_vertex(__vertexs, __grid_pos + Vector2{1-padding, padding}),
-                        // get_vertex(__vertexs, __grid_pos + Vector2{padding,   1-padding}),
-                        // get_vertex(__vertexs, __grid_pos + Vector2{1-padding, 1-padding}),
-                };
+            if(has_tag){
+                const auto & rect = blob.rect;
 
-                return gs[get_vertex_grid(vertexs, _grid_pos)];
-                // uint16_t sum = 0;
-                // for(const auto & item : vertex_grid){
-                //     sum += uint8_t(gs[item]);
-                // }
-                // DEBUG_PRINTLN(sum);
-                // return (sum / 4);
+                // DEBUG_PRINTLN(rect);
 
-                // auto pos = get_vertex(_vertexs, _grid_pos) + Vector2{1.5, 1.5};
-                // painter.drawPixel(pos);
-                // return gs.lerp(pos);
-            };
+                trans.transmit(img_bina.clone(rect),1);
 
-            // painter.drawPixel(get_vertex(vertexs, {0,0}));
-
-
-            uint16_t code = 0;
-            for(uint j = 0; j < apriltag_s; j++){
-                for(uint i = 0; i < apriltag_s; i++){
-                    uint16_t mask = (0x8000) >> (j * 4 + i);
-                    Grayscale val = get_vertex_val(vertexs, {i,j}, img);
-                    if((uint8_t)val > 173) code |= mask;
+                using Vertexs = std::array<Vector2, 4>;
+                Vertexs vertexs;
+                {
+                    // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
+                    // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
+                    // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
+                    // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
+        
+                    vertexs[0] = rect.position;
+                    vertexs[1] = rect.position + Vector2i(rect.w, 0);
+                    vertexs[2] = rect.position + Vector2i(0, rect.h);
+                    vertexs[3] = rect.get_end();
                 }
+
+                painter.setColor(RGB565::YELLOW);
+                for(const auto & item : vertexs){
+                    painter.drawPixel(item);
+                }
+
+                static constexpr uint apriltag_s = 4;
+
+                auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
+
+                    auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
+                        Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
+
+                        Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+                        Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
+
+                        return upper_x.lerp(lower_x, grid_scale.y);
+                    };
+
+
+                    auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
+                        return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
+                    };
+
+                    return gs[get_vertex_grid(vertexs, _grid_pos)];
+                };
+
+                uint16_t code = 0;
+                for(uint j = 0; j < apriltag_s; j++){
+                    for(uint i = 0; i < apriltag_s; i++){
+                        uint16_t mask = (0x8000) >> (j * 4 + i);
+                        Grayscale val = get_vertex_val(vertexs, {i,j}, img);
+                        if((uint8_t)val > 173) code |= mask;
+                    }
+                }
+
+                static Apriltag16H5Decoder decoder;
+                decoder.update(code);
+
+                plot_april(rect, decoder.index(), decoder.angle());
+                // DEBUGGER.println(decoder.index(), toString((int)decoder.code(), 16), toString((int)code, 16));
             }
 
 
+            if(has_digit){
+                const auto & rect = blob.rect;
 
-            // for(uint16_t mask = 0x8000; mask; mask >>= 1){
-            //     DEBUGGER << bool(mask & code);
+                auto char_pos = rect.get_center();
+                const Vector2i tmp_size = {8, 12};
+                const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
+                auto clipped = img.clone(clip_window);
+
+                trans.transmit(clipped,2);
+
+                auto tmp = Shape::x2(clipped);
+
+                painter.setColor(RGB565::BLUE);
+                painter.drawRoi(clip_window);
+
+                auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
+
+                plot_number(clip_window, result);
+                // DEBUG_PRINTLN(result);
+                // auto piece = img.clone(view);
+                // Mnist mnist;
+                // mnist.update()
+            }
+
+            if(false){
+
+
+                // painter.setColor(RGB565::GREEN);
+                // // const auto & blobs = ff.blobs();
+                // // const auto & blob = blobs[0];
+                // painter.setColor(RGB565::GREEN);
+                // Rect2i view = Rect2i::from_center(char_pos, Vector2i(14,14));
+                // painter.drawRoi(view);
+                // // auto piece = img.clone(view);
+                // // auto mask = img_bina.clone(view);
+                // // Pixels::mask_with(piece, mask);
+                // // Shape::gauss(piece);
+                // // Pixels::inverse(piece);
+                // Mnist mnist;
+                // mnist.update(img, char_pos);
+                // // logger.println(mnist.outputs);
+                // const auto & outputs = mnist.outputs;
+                // for(size_t i = 0; i < outputs.size(); i++){
+                //     DEBUGGER << outputs[i];
+                //     if(i != outputs.size() - 1) DEBUGGER << ',';
+                // };
+                // DEBUGGER.println();
+                // // trans.transmit(piece, 1);
+                // // painter.drawString(blob.rect.position, "2");
+                // // logger.println(blob.rect, int(blob.rect), blob.index, blob.area);
+                // painter.drawString({0,0}, String(mnist.output.token));
+            }
+
+
+            // {
+            //     painter.setColor(RGB565::YELLOW);
+            //     painter.drawRoi({0,0,28,28});
             // }
-            // DEBUGGER.println();
-            // DEBUGGER.println(toString((int)code, 16));
 
-            static Apriltag16H5Decoder decoder;
-            decoder.update(code);
-            DEBUGGER.println(decoder.index(), toString((int)decoder.code(), 16), toString((int)code, 16));
-            // DEBUG_PRINTLN(, decoder.code());
-            // DEBUG_PRINTLN(toString((int)code, 2));
-
-            // DEBUG_PRINTLN(get_vertex_grid(vertexs, {0,0}));
-            // DEBUG_PRINTLN(get_vertex_val(vertexs, {0,0}, img_ada));
-            // DEBUG_PRINTLN(code);
         }
-        // DEBUG_PRINTLN(ff.blobs());
-        // Shape::dilate(img_canny);
-        // Shape::erosion(img_canny);
-        // Shape::erosion(img_canny);
-        // Shape::zhang_suen(img_canny);
-        // Shape::gauss(img);
-        // auto img_ada = img.space();
-        // Shape::convo_roberts_xy(img, img);
-        // Shape::gauss(img);
-
-        // Shape::gauss(img);
-        // plot_gray(img, img.get_window() + Vector2i(0, img.h*2));
-        // plot_gray(img, img.get_window() + Vector2i{0, img.size.y * 2});
-        // continue;
-        // auto diff = img.space();
-        // Shape::sobel_xy(diff, img);
-        // auto diff_bina = make_bina_mirror(diff);
-        // Pixels::binarization(diff_bina, diff, diff_threshold);
-
-
-
-
-        // DEBUG_PRINTLN(img.mean());
-        // Match::template_match(img, )
-
-        // DEBUG_PRINTLN(result);
-
-
-
-        // DEBUG_PRINTLN(img.mean());
-        // Match::template_match(img, )
-
-        // DEBUG_PRINTLN(result);
-
-        auto char_pos = Vector2i(40, 30);
-
-        if(false){
-            const Vector2i tmp_size = {8, 12};
-            const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
-            auto clipped = img.clone(clip_window);
-            auto tmp = Shape::x2(clipped);
-
-            painter.setColor(RGB565::RED);
-            painter.drawRoi(clip_window);
-            // painter.setColor(RGB565::GREEN);
-            // Rect2i view = Rect2i::from_center(rect.get_center(), Vector2i(14,14));
-            // painter.drawRoi(view);
-            // [[maybe_unused]] auto result = matcher.number(img, rect);
-
-            [[maybe_unused]] auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
-            // DEBUG_PRINTLN(result);
-            // auto piece = img.clone(view);
-            // Mnist mnist;
-            // mnist.update()
-        }
-
-        if(false){
-
-
-            painter.setColor(RGB565::GREEN);
-            // const auto & blobs = ff.blobs();
-            // const auto & blob = blobs[0];
-            painter.setColor(RGB565::GREEN);
-            Rect2i view = Rect2i::from_center(char_pos, Vector2i(14,14));
-            painter.drawRoi(view);
-            // auto piece = img.clone(view);
-            // auto mask = img_bina.clone(view);
-            // Pixels::mask_with(piece, mask);
-            // Shape::gauss(piece);
-            // Pixels::inverse(piece);
-            Mnist mnist;
-            mnist.update(img, char_pos);
-            // logger.println(mnist.outputs);
-            const auto & outputs = mnist.outputs;
-            for(size_t i = 0; i < outputs.size(); i++){
-                DEBUGGER << outputs[i];
-                if(i != outputs.size() - 1) DEBUGGER << ',';
-            };
-            DEBUGGER.println();
-            // trans.transmit(piece, 1);
-            // painter.drawString(blob.rect.position, "2");
-            // logger.println(blob.rect, int(blob.rect), blob.index, blob.area);
-            painter.drawString({0,0}, String(mnist.output.token));
-        }
-
-
-        // {
-        //     painter.setColor(RGB565::YELLOW);
-        //     painter.drawRoi({0,0,28,28});
-        // }
 
         {
             
@@ -365,7 +345,7 @@ void EmbdHost::main(){
         }
         // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
         // 
-        trans.transmit(img, 0);
+
         // painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
         // logger.println(real_t(light_pwm));
         // painter.drawString(Vector2i{0,230-50}, toString(trans.compress_png(piece).size()));
@@ -379,6 +359,7 @@ void EmbdHost::main(){
         // f("%d, %d, %d, %d\r\n", blob.rect.x, blob.rect.w, blob.rect.h, blob.area);
         // printf("%d\r\n", blobs.size());
         // host.run();
+        plot_rgb(sketch, {0,0});
     }
 }
 

@@ -149,12 +149,10 @@ namespace NVCV2::Shape{
 
         static constexpr int wid = 3;
         static constexpr int least_size = 5;
-        // static constexpr int area = (2 * wid + 1) * (2 * wid + 1);
 
         for(int y = wid; y < size.y - wid - 1; y++){
             for(int x = wid; x < size.x - wid - 1; x++){
 
-                // uint16_t average = 0;
                 std::array<uint8_t, least_size> min_values;
                 std::fill(min_values.begin(), min_values.end(), 255);
                 for(int i=y-wid;i<=y+wid;i++){
@@ -175,6 +173,8 @@ namespace NVCV2::Shape{
                 #define RELU(x) ((x) > 0 ? (x) : 0)
 
                 dst[{x,y}] = CLAMP(RELU(raw - ave - 30) * 8, 0, 255);
+
+                #undef RELU
             }
         }
     }

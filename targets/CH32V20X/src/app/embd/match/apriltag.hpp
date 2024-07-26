@@ -92,13 +92,13 @@ protected:
                 // return (code << (4 * times) | (code >> (16 - 4 * times)));
                 switch(times){
                     case 0:return code;
-                    case 1:
+                    case 2:
                         return reverse4Bits(code);
-                    case 2:{
+                    case 3:{
                         //bit reserve
                         return reverse16Bits(code);
                     }
-                    case 3:
+                    case 1:
                         return reverse16Bits(reverse4Bits(code));
                 }
                 return 0;
@@ -115,10 +115,10 @@ protected:
 
         auto it = std::find(all_codes.begin(), all_codes.end(), new_code);
         if(it != all_codes.end()){
-            new_index = std::distance(all_codes.begin(), it) + 1;
-            new_angle = new_index / codes.size();
+            const auto id = (std::distance(all_codes.begin(), it) + 1);
+            new_index = id % codes.size();
+            new_angle = id / codes.size();
         }
-
         return {new_index, new_angle};
     }
 public:
@@ -129,6 +129,7 @@ public:
         if(new_index != 0){
             last_code = new_code;
             last_index = new_index;
+            last_angle = new_angle;
         }
 
         return last_index;
