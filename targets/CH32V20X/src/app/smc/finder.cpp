@@ -308,7 +308,7 @@ namespace SMC{
 
         using namespace NVCV2::Shape;
 
-        auto seed_pos = src.get_window().constrain(_seed_pos);
+        auto seed_pos = src.get_view().constrain(_seed_pos);
         Seed seed{seed_pos,  is_right ? Direction::R : Direction::L, !is_right};
         CoastFinder finder{src, seed};
         auto ret = finder.find();

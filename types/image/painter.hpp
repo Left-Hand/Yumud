@@ -55,7 +55,7 @@ public:
 
     template<typename w_ColorType>
     void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-        if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
+        if(!src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
         auto rect = Rect2i(pos, image.get_size());
         src_image->setarea_unsafe(rect);
         uint32_t i = 0;
@@ -70,7 +70,7 @@ public:
 
     void drawHriLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(l, 1));
-        rect = src_image->get_window().intersection(rect);
+        rect = src_image->get_view().intersection(rect);
         if(bool(rect) == false) return;
         src_image->putrect_unsafe(rect, m_color);
     }
@@ -78,7 +78,7 @@ public:
 
     void drawVerLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(1, l));
-        rect = src_image->get_window().intersection(rect);
+        rect = src_image->get_view().intersection(rect);
         if(bool(rect) == false) return;
         src_image->putrect_unsafe(rect, m_color);
     }
@@ -96,7 +96,7 @@ public:
 
 
     void drawFilledRect(const Rect2i & rect, const ColorType & color){
-        Rect2i rect_area = src_image->get_window().intersection(rect);
+        Rect2i rect_area = src_image->get_view().intersection(rect);
         if(!rect_area) return;
         src_image -> putrect_unsafe(rect_area, color);
     }
@@ -106,7 +106,7 @@ public:
     }
 
     void flush(const ColorType & color){
-        src_image -> putrect_unsafe(src_image->get_window(), color);
+        src_image -> putrect_unsafe(src_image->get_view(), color);
     }
     void drawPixel(const Vector2i & pos, const ColorType & color){
         src_image -> putpixel(pos, color);
@@ -160,7 +160,7 @@ public:
 
     void drawHollowRect(const Rect2i & rect){
         Rect2i regular = rect.abs();
-        if(!src_image -> get_window().intersects(regular)) return;
+        if(!src_image -> get_view().intersects(regular)) return;
 
         Rangei x_range = regular.get_x_range();
         Rangei y_range = regular.get_y_range();

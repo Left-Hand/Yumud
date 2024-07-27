@@ -93,7 +93,7 @@ namespace NVCV2::Pixels{
 
     template<is_monocolour_v T>
     void inverse(ImageWritable<T>& dst, const ImageReadable<T> & src) {
-        auto window = dst.get_window().intersection(src.get_window());
+        auto window = dst.get_view().intersection(src.get_view());
         for (auto y = window.y; y < window.y + window.h; y++) {
             for (auto x = window.x; x < window.x + window.w; x++) {
                     dst[{x,y}] = uint8_t(~uint8_t(T(src[{x,y}])));

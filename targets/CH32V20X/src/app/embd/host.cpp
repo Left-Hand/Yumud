@@ -19,7 +19,7 @@ static void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src
         return;
     }
 
-    auto window = dst.get_window().intersection(src.get_window());
+    auto window = dst.get_view().intersection(src.get_view());
     for (auto y = window.y; y < window.y + window.h-1; y++) {
         for (auto x = window.x; x < window.x + window.w-1; x++) {
             const int a = src(Vector2i{x,y});

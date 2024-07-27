@@ -762,7 +762,7 @@ namespace NVCV2::Shape{
     } 
 
     void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
-        auto roi = src.get_window();
+        auto roi = src.get_view();
 
         const auto low_thresh = threshold.from;
         const auto high_thresh = threshold.to;
