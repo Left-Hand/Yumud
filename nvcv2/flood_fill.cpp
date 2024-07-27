@@ -270,7 +270,7 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
 
     for(int y = 0; y < ncol; ++y){
         for(int x = 0; x < nrow; ++x){
-            if(src({x,y}) == Binary::BLACK){
+            if(src[{x,y}] == Binary::BLACK){
                 map[{x,y}] = Grayscale(0);
             }else{
                 map[{x,y}] = labelable;
@@ -298,7 +298,7 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
     for (int row = 0; row < nrow; ++row) {
         for (int col = 0; col < ncol; ++col) {
             // Skip background pixels and already labelled pixels
-            if (map({row,col}) != labelable) {
+            if (map[{row,col}] != labelable) {
                 continue;
             }
 
@@ -327,7 +327,7 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
                 current_indices.pop_back();
 
                 for (const auto& neighbor_pos : get_neighbor_indices(current_index.x, current_index.y)) {
-                    if (map(neighbor_pos) == labelable) {
+                    if (map[neighbor_pos] == labelable) {
                         map[neighbor_pos] = label;
                         current_indices.push_back(neighbor_pos);
 

@@ -16,23 +16,25 @@ namespace NVCV2::Shape{
     }
 
 
-    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3]){
+    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3], const int div){
         auto size = dst.get_size();
         for(int y = 1; y < size.y-1; y++){
             for(int x = 1; x < size.x-1; x++){
                 int pixel = 0;
-                pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
-                pixel += src(x +  (y - 1) * size.x)		* core[0][1];
-                pixel += src(x + 1 + (y - 1) * size.x)	* core[0][2];
+                pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
+                pixel += src[x +  (y - 1) * size.x]		* core[0][1];
+                pixel += src[x + 1 + (y - 1) * size.x]	* core[0][2];
                 
-                pixel += src(x - 1 + (y) * size.x)		* core[1][0];
-                pixel += src(x +  (y) * size.x)			* core[1][1];
-                pixel += src(x + 1 + (y) * size.x)		* core[1][2];
+                pixel += src[x - 1 + (y) * size.x]		* core[1][0];
+                pixel += src[x +  (y) * size.x]			* core[1][1];
+                pixel += src[x + 1 + (y) * size.x]		* core[1][2];
                 
-                pixel += src(x - 1 + (y + 1) * size.x) 	* core[2][0];
-                pixel += src(x +  (y + 1) * size.x)		* core[2][1];
-                pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
+                pixel += src[x - 1 + (y + 1) * size.x] 	* core[2][0];
+                pixel += src[x +  (y + 1) * size.x]		* core[2][1];
+                pixel += src[x + 1 + (y + 1) * size.x]	* core[2][2];
                 
+                if(div != 1) pixel /= div;
+
                 dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
             }
         }
@@ -40,29 +42,8 @@ namespace NVCV2::Shape{
 
 
     void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
-        auto size = dst.get_size();
-        const auto & core = Cores::gauss;
         clear_corners(dst);
-        for(int y = 1; y < size.y-1; y++){
-            for(int x = 1; x < size.x-1; x++){
-                int pixel = 0;
-                pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
-                pixel += src(x +  (y - 1) * size.x)		* core[0][1];
-                pixel += src(x + 1 + (y - 1) * size.x)	* core[0][2];
-                
-                pixel += src(x - 1 + (y) * size.x)		* core[1][0];
-                pixel += src(x +  (y) * size.x)			* core[1][1];
-                pixel += src(x + 1 + (y) * size.x)		* core[1][2];
-                
-                pixel += src(x - 1 + (y + 1) * size.x) 	* core[2][0];
-                pixel += src(x +  (y + 1) * size.x)		* core[2][1];
-                pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
-
-                pixel /= 10;
-                
-                dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
-            }
-        }
+        convolution(dst, src, Cores::gauss, 10);
     }
 
 
@@ -163,17 +144,17 @@ namespace NVCV2::Shape{
             for(int y = 1; y < size.y-1; y++){
                 for(int x = 1; x < size.x-1; x++){
                     int pixel = 0;
-                    pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
-                    pixel += src(x +  (y - 1) * size.x)		* core[0][1];
-                    pixel += src(x + 1 + (y - 1) * size.x)	* core[0][2];
+                    pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
+                    pixel += src[x +  (y - 1) * size.x]		* core[0][1];
+                    pixel += src[x + 1 + (y - 1) * size.x]	* core[0][2];
                     
-                    pixel += src(x - 1 + (y) * size.x)		* core[1][0];
-                    pixel += src(x +  (y) * size.x)			* core[1][1];
-                    pixel += src(x + 1 + (y) * size.x)		* core[1][2];
+                    pixel += src[x - 1 + (y) * size.x]		* core[1][0];
+                    pixel += src[x +  (y) * size.x]			* core[1][1];
+                    pixel += src[x + 1 + (y) * size.x]		* core[1][2];
                     
-                    pixel += src(x - 1 + (y + 1) * size.x) 	* core[2][0];
-                    pixel += src(x +  (y + 1) * size.x)		* core[2][1];
-                    pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
+                    pixel += src[x - 1 + (y + 1) * size.x] 	* core[2][0];
+                    pixel += src[x +  (y + 1) * size.x]		* core[2][1];
+                    pixel += src[x + 1 + (y + 1) * size.x]	* core[2][2];
                     
                     dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
                 }
@@ -184,17 +165,17 @@ namespace NVCV2::Shape{
             for(int y = 1; y < size.y-1; y++){
                 for(int x = 1; x < size.x-1; x++){
                     int pixel = 0;
-                    pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
-                    pixel += src(x +  (y - 1) * size.x)		* core[0][1];
-                    pixel += src(x + 1 + (y - 1) * size.x)	* core[0][2];
+                    pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
+                    pixel += src[x +  (y - 1) * size.x]		* core[0][1];
+                    pixel += src[x + 1 + (y - 1) * size.x]	* core[0][2];
                     
-                    pixel += src(x - 1 + (y) * size.x)		* core[1][0];
-                    pixel += src(x +  (y) * size.x)			* core[1][1];
-                    pixel += src(x + 1 + (y) * size.x)		* core[1][2];
+                    pixel += src[x - 1 + (y) * size.x]		* core[1][0];
+                    pixel += src[x +  (y) * size.x]			* core[1][1];
+                    pixel += src[x + 1 + (y) * size.x]		* core[1][2];
                     
-                    pixel += src(x - 1 + (y + 1) * size.x) 	* core[2][0];
-                    pixel += src(x +  (y + 1) * size.x)		* core[2][1];
-                    pixel += src(x + 1 + (y + 1) * size.x)	* core[2][2];
+                    pixel += src[x - 1 + (y + 1) * size.x] 	* core[2][0];
+                    pixel += src[x +  (y + 1) * size.x]		* core[2][1];
+                    pixel += src[x + 1 + (y + 1) * size.x]	* core[2][2];
                     
                     dst[x + y * size.x] = std::max((uint8_t)dst[x + y *size.x], (uint8_t)CLAMP(ABS(pixel), 0, 255));
                 }
@@ -208,11 +189,11 @@ namespace NVCV2::Shape{
             for(int x = 1; x < size.x-1; x++){
                 int pixel = 0;
 
-                pixel += src(x - 1 + (y - 1) * size.x)	* core[0][0];
-                pixel += src(x +  (y - 1) * size.x)		* core[0][1];
+                pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
+                pixel += src[x +  (y - 1) * size.x]		* core[0][1];
                 
-                pixel += src(x - 1 + (y) * size.x)		* core[1][0];
-                pixel += src(x +  (y) * size.x)			* core[1][1];
+                pixel += src[x - 1 + (y) * size.x]		* core[1][0];
+                pixel += src[x +  (y) * size.x]			* core[1][1];
                 
                 dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
             }
@@ -230,15 +211,15 @@ namespace NVCV2::Shape{
         for(int y = 1; y < size.y-1; y++){
             for(int x = 1; x < size.x-1; x++){
                 bool pixel = false;
-                pixel |= src(x - 1 + (y - 1) * size.x);
-                pixel |= src(x +  (y - 1) * size.x);
-                pixel |= src(x + 1 + (y - 1) * size.x);
-                pixel |= src(x - 1 + (y) * size.x);
-                pixel |= src(x +  (y) * size.x);
-                pixel |= src(x + 1 + (y) * size.x);
-                pixel |= src(x - 1 + (y + 1) * size.x);
-                pixel |= src(x +  (y + 1) * size.x);
-                pixel |= src(x + 1 + (y + 1) * size.x);
+                pixel |= src[x - 1 + (y - 1) * size.x];
+                pixel |= src[x +  (y - 1) * size.x];
+                pixel |= src[x + 1 + (y - 1) * size.x];
+                pixel |= src[x - 1 + (y) * size.x];
+                pixel |= src[x +  (y) * size.x];
+                pixel |= src[x + 1 + (y) * size.x];
+                pixel |= src[x - 1 + (y + 1) * size.x];
+                pixel |= src[x +  (y + 1) * size.x];
+                pixel |= src[x + 1 + (y + 1) * size.x];
                 
                 dst[x + y * size.x] = pixel;
             }
@@ -321,9 +302,9 @@ namespace NVCV2::Shape{
             for(int x = 0; x < size.x; x++){
                 bool pixel = false;
 
-                pixel |= src(x +  (y - 1) * size.x);
-                pixel |= src(x +  (y) * size.x);
-                pixel |= src(x +  (y + 1) * size.x);
+                pixel |= src[x +  (y - 1) * size.x];
+                pixel |= src[x +  (y) * size.x];
+                pixel |= src[x +  (y + 1) * size.x];
                 
                 dst[x + y * size.x] = pixel;
             }
@@ -346,15 +327,15 @@ namespace NVCV2::Shape{
             
             for(int x = 1; x < size.x-1; x++){
                 bool pixel = true;
-                pixel &= src(x - 1 + (y - 1) * size.x);
-                pixel &= src(x +  (y - 1) * size.x);
-                pixel &= src(x + 1 + (y - 1) * size.x);
-                pixel &= src(x - 1 + (y) * size.x);
-                pixel &= src(x +  (y) * size.x);
-                pixel &= src(x + 1 + (y) * size.x);
-                pixel &= src(x - 1 + (y + 1) * size.x);
-                pixel &= src(x +  (y + 1) * size.x);
-                pixel &= src(x + 1 + (y + 1) * size.x);
+                pixel &= src[x - 1 + (y - 1) * size.x];
+                pixel &= src[x +  (y - 1) * size.x];
+                pixel &= src[x + 1 + (y - 1) * size.x];
+                pixel &= src[x - 1 + (y) * size.x];
+                pixel &= src[x +  (y) * size.x];
+                pixel &= src[x + 1 + (y) * size.x];
+                pixel &= src[x - 1 + (y + 1) * size.x];
+                pixel &= src[x +  (y + 1) * size.x];
+                pixel &= src[x + 1 + (y + 1) * size.x];
                 
                 dst[x + y * size.x] = pixel;
             }
@@ -419,9 +400,9 @@ namespace NVCV2::Shape{
             for(int x = 0; x < size.x; x++){
                 bool pixel = true;
 
-                pixel &= src(x +  (y - 1) * size.x);
-                pixel &= src(x +  (y) * size.x);
-                pixel &= src(x +  (y + 1) * size.x);
+                pixel &= src[x +  (y - 1) * size.x];
+                pixel &= src[x +  (y) * size.x];
+                pixel &= src[x +  (y + 1) * size.x];
                 
                 dst[x + y * size.x] = pixel;
             }
@@ -439,11 +420,11 @@ namespace NVCV2::Shape{
         for(int y = 0; y < size.y; y++){
             for(int x = 1; x < size.x-1; x++){
                 bool pixel = true;
-                pixel &= src(x +  MAX((y - 1), 0) * size.x);
-                pixel &= src(x+  (y) * size.x);
-                pixel &= src(x +  (y) * size.x);
-                pixel &= src(x +  (y) * size.x);
-                pixel &= src(x +  MIN((y + 1), size.y-1) * size.x);
+                pixel &= src[x +  MAX((y - 1), 0) * size.x];
+                pixel &= src[x+  (y) * size.x];
+                pixel &= src[x +  (y) * size.x];
+                pixel &= src[x +  (y) * size.x];
+                pixel &= src[x +  MIN((y + 1), size.y-1) * size.x];
                 
                 dst[x + y * size.x] = pixel;
             }
@@ -592,16 +573,16 @@ namespace NVCV2::Shape{
                     const Vector2i p{x,y};
                     // const Binary * p = &temp[x + y * size.x];
                     
-                    if (temp(p) == 0) continue;
+                    if (temp[p] == 0) continue;
                     
-                    Binary p1 = temp(p + Vector2i{0, -1});
-                    Binary p2 = temp(p + Vector2i{1, -1});
-                    Binary p3 = temp(p + Vector2i{1, 0});
-                    Binary p4 = temp(p + Vector2i{1, 1});
-                    Binary p5 = temp(p + Vector2i{0, 1});
-                    Binary p6 = temp(p + Vector2i{-1, 1});
-                    Binary p7 = temp(p + Vector2i{-1, 0});
-                    Binary p8 = temp(p + Vector2i{-1, -1});
+                    Binary p1 = temp[p + Vector2i{0, -1}];
+                    Binary p2 = temp[p + Vector2i{1, -1}];
+                    Binary p3 = temp[p + Vector2i{1, 0}];
+                    Binary p4 = temp[p + Vector2i{1, 1}];
+                    Binary p5 = temp[p + Vector2i{0, 1}];
+                    Binary p6 = temp[p + Vector2i{-1, 1}];
+                    Binary p7 = temp[p + Vector2i{-1, 0}];
+                    Binary p8 = temp[p + Vector2i{-1, -1}];
 
 
                     int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
@@ -652,17 +633,17 @@ namespace NVCV2::Shape{
                     }
 
                     const Vector2i base = Vector2i(x, y);
-                    bool p1 = temp(base);
+                    bool p1 = temp[base];
                     if (p1 == 0) continue;
 
-                    bool p2 = temp(base + Vector2i(0, -1));
-                    bool p3 = temp(base + Vector2i(1, -1));
-                    bool p4 = temp(base + Vector2i(1, 0));
-                    bool p5 = temp(base + Vector2i(1, 1));
-                    bool p6 = temp(base + Vector2i(0, 1));
-                    bool p7 = temp(base + Vector2i(-1, 1));
-                    bool p8 = temp(base + Vector2i(-1, 0));
-                    bool p9 = temp(base + Vector2i(-1, -1));
+                    bool p2 = temp[base + Vector2i(0, -1)];
+                    bool p3 = temp[base + Vector2i(1, -1)];
+                    bool p4 = temp[base + Vector2i(1, 0)];
+                    bool p5 = temp[base + Vector2i(1, 1)];
+                    bool p6 = temp[base + Vector2i(0, 1)];
+                    bool p7 = temp[base + Vector2i(-1, 1)];
+                    bool p8 = temp[base + Vector2i(-1, 0)];
+                    bool p9 = temp[base + Vector2i(-1, -1)];
 
                     int B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
                     int C = ((!p2) && (p3 || p4)) + ((!p4) && (p5 || p6)) + ((!p6) && (p7 || p8)) + ((!p8) && (p9 || p2));
@@ -794,22 +775,22 @@ namespace NVCV2::Shape{
                     //  2   0   -2
                     //  1   0   -1
 
-                    vx = int(src.data [(y - 1) * w + x - 1])
-                        - int(src.data [(y - 1) * w + x + 1])
-                        + int(src.data[(y + 0) * w + x - 1] << 1)
-                        - int(src.data[(y + 0) * w + x + 1] << 1)
-                        + int(src.data [(y + 1) * w + x - 1])
-                        - int(src.data [(y + 1) * w + x + 1]);
+                    vx = int(src[(y - 1) * w + x - 1])
+                        - int(src[(y - 1) * w + x + 1])
+                        + int(src[(y + 0) * w + x - 1] << 1)
+                        - int(src[(y + 0) * w + x + 1] << 1)
+                        + int(src[(y + 1) * w + x - 1])
+                        - int(src[(y + 1) * w + x + 1]);
 
                     //  1   2   1
                     //  0   0   0
                     //  -1  2   -1
-                    vy = int(src.data [(y - 1) * w + x - 1])
-                        + int(src.data[(y - 1) * w + x + 0] << 1)
-                        + int(src.data [(y - 1) * w + x + 1])
-                        - int(src.data [(y + 1) * w + x - 1])
-                        - int(src.data[(y + 1) * w + x + 0] << 1)
-                        - int(src.data [(y + 1) * w + x + 1]);
+                    vy = int(src[(y - 1) * w + x - 1])
+                        + int(src[(y - 1) * w + x + 0] << 1)
+                        + int(src[(y - 1) * w + x + 1])
+                        - int(src[(y + 1) * w + x - 1])
+                        - int(src[(y + 1) * w + x + 0] << 1)
+                        - int(src[(y + 1) * w + x + 1]);
 
                     // Find the direction and round angle to 0, 45, 90 or 135
                     gm[w * y + x] = gvec_t{
@@ -828,7 +809,7 @@ namespace NVCV2::Shape{
 
         for (int gy = 1; gy < roi.h-1; gy++) {
             gvec_t * vc = &gm[gy * w];
-            auto * dp = &dst.data[gy * w];
+            auto * dp = &dst[gy * w];
             for (int gx = 1; gx < roi.w-1; gx++) {
                 vc++;
                 dp++;

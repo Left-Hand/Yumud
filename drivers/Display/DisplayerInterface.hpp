@@ -1,6 +1,4 @@
-#ifndef __DISPLAYERINTERFACE_HPP__
-#define __DISPLAYERINTERFACE_HPP__
-
+#pragma once
 
 #include "../drivers/device_defs.h"
 #include "../types/rgb.h"
@@ -17,7 +15,6 @@ public:
     virtual void writePool(const uint8_t * data_ptr, const size_t len) = 0;
     virtual void writePool(const uint8_t data, const size_t len) = 0;
 };
-
 
 class DisplayInterfaceSpi:public DisplayerInterface{
 // protected:
@@ -158,5 +155,3 @@ public:
     // }
 };
 
-
-#endif /* DISPLAYERINTERFACE_HPP */

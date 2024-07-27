@@ -82,11 +82,8 @@ protected:
 public:
     Transmitter(OutputStream & _instance):instance(_instance){;}
 
-
-    template<typename T>
-    requires std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>
-    void transmit(const Image<T> & img, const uint8_t index){
-        transmit((const uint8_t *)img.data.get(),img.get_size(), index); 
+    void transmit(const Image<monochrome auto> & img, const uint8_t index){
+        transmit((const uint8_t *)img.get_data(),img.get_size(), index); 
     }
 
     void enable(const bool en){

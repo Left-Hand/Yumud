@@ -8,6 +8,8 @@
 template<typename ColorType>
 class Image:public ImageWithData<ColorType, ColorType>{
 public:
+    auto get_data() const {return this->data.get();}
+    auto get_ptr() const {return this->data;}
     Image(std::shared_ptr<ColorType[]> _data, const Vector2i & _size):  ImageBasics(_size), ImageWithData<ColorType, ColorType>(_data, _size) {}
 
     Image(const Vector2i & _size): ImageBasics(_size), ImageWithData<ColorType, ColorType>(_size) {}
@@ -151,7 +153,7 @@ __inline auto make_bina(const Vector2i & _size){return make_image<Binary>(_size)
 
 template<typename ColorType>
 __inline auto make_mirror(const Image<auto> &src){
-    return Image<ColorType>(std::reinterpret_pointer_cast<ColorType[]>(src.data),
+    return Image<ColorType>(std::reinterpret_pointer_cast<ColorType[]>(src.get_ptr()),
         src.get_size());
 }
 

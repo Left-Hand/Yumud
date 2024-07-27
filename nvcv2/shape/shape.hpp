@@ -20,7 +20,7 @@ namespace NVCV2::Shape{
     }
 
 
-    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3]);
+    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3], const int div = 1);
 
     void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
     void gauss(Image<Grayscale> &src);

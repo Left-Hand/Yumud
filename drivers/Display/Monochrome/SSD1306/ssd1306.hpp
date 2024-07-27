@@ -1,10 +1,8 @@
-#ifndef __SSD1306_HPP__
-#define __SSD1306_HPP__
+#pragma once
 
 #include "../../DisplayerInterface.hpp"
 #include "../types/image/packed_image.hpp"
 
-// class OldeDisplayer : public D
 class SSD13XX:public Displayer<Binary>{
 protected:
     DisplayerInterface & interface;
@@ -21,7 +19,7 @@ protected:
 
     void setpos_unsafe(const Vector2i & pos) override{
         auto & frame = fetchFrame();
-        frame.setpos_unsafe(pos);
+        frame.setpos(pos);
     }
 
     virtual Vector2i getOffset() const = 0;
@@ -192,5 +190,3 @@ public:
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
     SSD13XX_128X80(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
-
-#endif

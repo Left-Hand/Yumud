@@ -58,11 +58,42 @@ namespace NVCV2::Pixels{
     void copy(ImageWritable<T>& dst, const ImageReadable<T>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
-                dst[Vector2i{x, y}] = src(Vector2i{x, y});
+                dst[Vector2i{x, y}] = src[Vector2i{x, y}];
             }
         }
     }
 
+    __inline void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src) {
+        if((void *)&dst == (void *)&src){
+            auto temp = dst.clone();
+            fast_diff_opera(temp, src);
+            dst = std::move(temp);
+            return;
+        }
+
+        auto window = dst.get_view().intersection(src.get_view());
+        for (auto y = window.y; y < window.y + window.h; y++) {
+            for (auto x = window.x; x < window.x + window.w; x++) {
+                const int a = src[Vector2i{x,y}];
+                const int b = src[Vector2i{x+1,y}];
+                const int c = src[Vector2i{x,y+1}];
+                dst[{x,y}] = uint8_t(CLAMP(std::max(
+                    (ABS(a - c)) * 255 / (a + c),
+                    (ABS(a - b) * 255 / (a + b))
+                ), 0, 255));
+            }
+        }
+    }
+
+    __inline void fast_bina_opera(Image<Binary> & out,const Image<Grayscale> & em, const uint8_t et,const Image<Grayscale>& dm, const uint8_t dt) {
+        const auto size = (Rect2i(Vector2i(), em.size).intersection(Rect2i(Vector2i(), dm.size))).size;
+        const auto area = size.x * size.y;
+
+        for (auto i = 0; i < area; i++) {
+            out[i] = Binary(((uint8_t)em[i] > et) || ((uint8_t)dm[i] > dt));
+        }
+    }
+    
     void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold);
 
     ImageWithData<Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold);

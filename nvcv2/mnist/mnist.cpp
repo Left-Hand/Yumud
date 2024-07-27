@@ -122,7 +122,7 @@ Mnist::Result Mnist::update(const Image<Grayscale> & img, const Vector2i & pos){
 }
 
 Mnist::Result Mnist::update(const Image<Grayscale> & img){
-    tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img.data.get()};
+    tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img.get_data()};
     auto err = tm_preprocess(&mdl, TMPP_UINT2INT, &in_uint8, &in); 
 
     err = tm_run(&mdl, &in, outs);

@@ -48,40 +48,43 @@ private:
 
 protected:
 
-    __fast_inline uint32_t getPointIndex(const uint16_t x, const uint16_t y){
+    uint32_t getPointIndex(const uint16_t x, const uint16_t y){
         return (x + y * size.x);
     }
     void setpos_unsafe(const Vector2i & pos) override;
     void setarea_unsafe(const Rect2i & rect) override;
 
-    __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
+    void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
         setpos_unsafe(pos);
         interface.writeData(color.data);
-    }
-public:
-    ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
-            ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
-    void init();
-
-    void setDisplayOffset(const Vector2i & _offset){
-        offset = _offset;
-    }
-
-    void puttexture_unsafe(const Rect2i & rect, const Grayscale * color_ptr){
-        setarea_unsafe(rect);
-        interface.writePixels(color_ptr, int(rect));
-    }
-
-    void puttexture_unsafe(const Rect2i & rect, const Binary * color_ptr){
-        setarea_unsafe(rect);
-        interface.writePixels((Grayscale *)color_ptr, int(rect));
     }
 
     void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
         setarea_unsafe(rect);
         interface.writePixels((color_ptr), int(rect));
     }
+public:
+    ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
+            ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
+    void init();
+    void puttexture(const Rect2i & rect, const Grayscale * color_ptr){
+        setarea_unsafe(rect);
+        interface.writePixels(color_ptr, int(rect));
+    }
 
+    void puttexture(const Rect2i & rect, const Binary * color_ptr){
+        setarea_unsafe(rect);
+        interface.writePixels((Grayscale *)color_ptr, int(rect));
+    }
+
+    void puttexture(const Rect2i & rect, const RGB565 * color_ptr){
+        setarea_unsafe(rect);
+        interface.writePixels((color_ptr), int(rect));
+    }
+
+    void setDisplayOffset(const Vector2i & _offset){
+        offset = _offset;
+    }
     void setFlipY(const bool flip){modifyCtrl(flip, 7);}
     void setFlipX(const bool flip){modifyCtrl(flip, 6);}
     void setSwapXY(const bool flip){modifyCtrl(flip, 5);}

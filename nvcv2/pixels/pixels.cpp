@@ -5,7 +5,7 @@ namespace NVCV2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
-                dst[Vector2i{x, y}] = src(Vector2i{x, y});
+                dst[Vector2i{x, y}] = src[Vector2i{x, y}];
             }
         }
     }
@@ -41,13 +41,13 @@ namespace NVCV2::Pixels{
             // int c1 =  int(img(pos_i));
             // int c2 = int(img(pos_i + Vector2i(1, 0)));
             // return int((real_t(1)-pos_frac.x) * c1 + pos_frac.x * c2);
-            int color_up = int(LERP(pos_frac.x, int(img(pos_i)), int(img(pos_i + Vector2i(1, 0)))));
+            int color_up = int(LERP(pos_frac.x, int(img[pos_i]), int(img[pos_i + Vector2i(1, 0)])));
             // return color_up;
             if(!pos_frac.y){
                 return color_up;
             }else{
                 // uint32_t color_dn = x_u16 * img(pos_i + Vector2i(0, 1)) + (~x_u16) * img(pos_i + Vector2i(1, 1));
-                int color_dn = int(LERP(pos_frac.x, int(img(pos_i + Vector2i(0, 1))), int(img(pos_i + Vector2i(1, 1)))));
+                int color_dn = int(LERP(pos_frac.x, int(img[pos_i + Vector2i(0, 1)]), int(img[pos_i + Vector2i(1, 1)])));
                 // uint16_t y_u16;
                 // uni_to_u16(pos_frac.y, y_u16);
                 // return ((color_up >> 16) * y_u16 + (color_dn >> 16) * (~y_u16)) >> 16;
@@ -60,7 +60,7 @@ namespace NVCV2::Pixels{
             //     // return (y_u16 * img(pos_i) + (~y_u16) * img(pos_i + Vector2i(0, 1))) >> 16;
             //     return LERP(pos_frac.y, img(pos_i), img(pos_i + Vector2i(0, 1)));
             // }else{
-                return img(pos_i);
+                return img[pos_i];
             // }
         }
         // return (ColorType)LERP(
@@ -72,7 +72,7 @@ namespace NVCV2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
-                dst[Vector2i{x, y}] = src(Vector2i{x, y});
+                dst[Vector2i{x, y}] = src[Vector2i{x, y}];
             }
         }
     }
@@ -83,7 +83,7 @@ namespace NVCV2::Pixels{
     void dyeing(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src){
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
-                dst[Vector2i{x, y}] = lcg[src(Vector2i{x, y})];
+                dst[Vector2i{x, y}] = lcg[src[Vector2i{x, y}]];
             }
         }
     }
@@ -101,7 +101,7 @@ namespace NVCV2::Pixels{
     void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold){
         for (auto x = 0; x < std::min(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < std::min(dst.get_size().y, src.get_size().y); y++) {
-                dst[Vector2i{x, y}] = src(Vector2i{x, y}).to_bina(threshold);
+                dst[Vector2i{x, y}] = src[Vector2i{x, y}].to_bina(threshold);
             }
         }
     }

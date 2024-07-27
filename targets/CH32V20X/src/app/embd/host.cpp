@@ -11,27 +11,6 @@ using namespace NVCV2;
 
 #ifdef CH32V30X
 
-static void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src) {
-    if((void *)&dst == (void *)&src){
-        auto temp = dst.clone();
-        fast_diff_opera(temp, src);
-        dst = std::move(temp);
-        return;
-    }
-
-    auto window = dst.get_view().intersection(src.get_view());
-    for (auto y = window.y; y < window.y + window.h-1; y++) {
-        for (auto x = window.x; x < window.x + window.w-1; x++) {
-            const int a = src(Vector2i{x,y});
-            const int b = src(Vector2i{x+1,y});
-            const int c = src(Vector2i{x,y+1});
-            dst[{x,y}] = uint8_t(CLAMP(std::max(
-                (ABS(a - c)) * 255 / (a + c),
-                (ABS(a - b) * 255 / (a + b))
-            ), 0, 255));
-        }
-    }
-}
 
 void EmbdHost::main(){
     delay(200);
@@ -81,17 +60,17 @@ void EmbdHost::main(){
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture(area, src.get_data());
     };
 
 

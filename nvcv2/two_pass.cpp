@@ -52,7 +52,7 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 	{
 		for (int x = 0; x < w; x++)
 		{
-			if (src({x,y}) != 0)
+			if (src[{x,y}] != 0)
 			{
 				//left and up labels
 				Grayscale left = (x - 1 < 0) ? Grayscale(0) : out.at(y, x - 1);
