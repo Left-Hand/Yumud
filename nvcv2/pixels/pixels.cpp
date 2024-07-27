@@ -93,7 +93,7 @@ namespace NVCV2::Pixels{
     }
 
     auto dyeing(const ImageReadable<Grayscale>& src){
-        ImageWithData<Grayscale, Grayscale> tmp{src.size};
+        ImageWithData<Grayscale, Grayscale> tmp{src.get_size()};
         dyeing(tmp, src);
         return tmp;
     }
@@ -107,13 +107,13 @@ namespace NVCV2::Pixels{
     }
 
     ImageWithData<Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold){
-        ImageWithData<Binary, Binary> dst{src.size};
+        ImageWithData<Binary, Binary> dst{src.get_size()};
         binarization(dst, src, threshold);
         return dst;
     }
 
     void ostu(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src){
-        const Vector2i size = src.size;
+        const Vector2i size = src.get_size();
         std::array<int, 256> statics;
         statics.fill(0);
 
@@ -171,7 +171,7 @@ namespace NVCV2::Pixels{
 
 
     void iter_threshold(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src, const real_t & k, const real_t & eps){
-        const Vector2i size = src.size;
+        const Vector2i size = src.get_size();
         std::array<int, 256> statics;
         statics.fill(0);
 
@@ -224,7 +224,7 @@ namespace NVCV2::Pixels{
     }
 
     void max_entropy(const ImageWithData<Grayscale, Grayscale>& src, int thresh){
-        const Vector2i size = src.size;
+        const Vector2i size = src.get_size();
         float probability = 0.0; //概率
         float max_Entropy = 0.0; //最大熵
         int totalpix = size.x * size.y;
@@ -342,7 +342,7 @@ namespace NVCV2::Pixels{
         // DEBUG_PRINT("huang");
         Histogram hist;
         hist.fill(0);
-        auto size = dst.size;
+        auto size = dst.get_size();
             // DEBUG_VALUE(size);
         for(int i = 0; i < size.x * size.y; i++){
             // DEBUG_VALUE(src[i]);

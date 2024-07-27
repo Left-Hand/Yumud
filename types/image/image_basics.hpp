@@ -20,18 +20,16 @@ template <typename ColorType>
 class PixelProxy;
 
 class ImageBasics{
-public:
+protected:
     union{
         Vector2i size;
-        struct{
-            int w; 
-            int h;
-        };
         struct{
             int width;
             int height;
         };
     };
+
+public:
 
     ImageBasics(const Vector2i & _size):size(_size){;}
 
@@ -247,17 +245,17 @@ public:
     }
 
 
-    __fast_inline const DataType& operator[](const size_t & index) const { return data[index]; }
-    __fast_inline const ColorType& operator[](const Vector2i & pos) const { return data[pos.x + pos.y * ImageBasics::w]; }
+    __fast_inline const DataType& operator[](const size_t index) const { return data[index]; }
+    __fast_inline const ColorType& operator[](const Vector2i & pos) const { return data[pos.x + pos.y * this->width]; }
 
-    __fast_inline DataType& operator[](const size_t & index) { return data[index]; }
-    __fast_inline ColorType& operator[](const Vector2i & pos) { return data[pos.x + pos.y * ImageBasics::w]; }
+    __fast_inline DataType& operator[](const size_t index) { return data[index]; }
+    __fast_inline ColorType& operator[](const Vector2i & pos) { return data[pos.x + pos.y * this->width]; }
 
 
     template<typename ToColorType>
-    __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * ImageBasics::w]; }
+    __fast_inline ToColorType at(const int y, const int x) const { return data[x + y * this->width]; }
 
-    __fast_inline ColorType & at(const int y, const int x){ return data[x + y * ImageBasics::w]; }
+    __fast_inline ColorType & at(const int y, const int x){ return data[x + y * this->width]; }
 
 
     bool operator == (const ImageWithData<auto, auto> & other) const {

@@ -432,15 +432,15 @@ namespace NVCV2::Shape{
     }
 
     auto x4(const ImageReadable<Grayscale> & src, const int m){
-        Image<Grayscale> dst(src.size / m);
+        Image<Grayscale> dst(src.get_size() / m);
         x4(dst, src, m);
         return dst;
     }
 
 
     Image<Grayscale> x2(const Image<Grayscale> & src){
-        Image<Grayscale> dst(src.size / 2);
-        const auto size = dst.size;
+        Image<Grayscale> dst(src.get_size() / 2);
+        const auto size = dst.get_size();
         for(int y = 0; y < size.y; y++){
             for(int x = 0; x < size.x; x++){
                 uint16_t sum = 0;

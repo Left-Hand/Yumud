@@ -112,7 +112,7 @@ void EmbdHost::main(){
     DEBUGGER.bindRxPostCb([&](){parseAscii(DEBUGGER);});
 
     Matcher matcher;
-    auto sketch = make_image<RGB565>(camera.size/2);
+    auto sketch = make_image<RGB565>(camera.get_size()/2);
 
     [[maybe_unused]] auto plot_april = [&](const Rect2i & rect, const int index, const int dir){
         painter.bindImage(sketch);
@@ -120,7 +120,6 @@ void EmbdHost::main(){
         painter.drawRoi(rect);
         painter.setColor(RGB565::RED);
         painter.drawString(rect.position + Vector2i{4,4}, toString(index));
-        // painter.drawString(rect.position + Vector2i{4, 12}, toString(dir));
 
         painter.setColor(RGB565::BLUE);
         static constexpr std::array<Vector2i, 4> vecs = {
@@ -146,23 +145,19 @@ void EmbdHost::main(){
     while(true){
         led = !led;
         sketch.fill(RGB565::BLACK);
-        // painter.drawFilledRect(Rect2i{Vector2i{0,0}, img.size}, RGB565::BLACK);
 
 
         Image<Grayscale> img = Shape::x2(camera);
-        plot_gray(img, {0, img.size.y * 1});
+        plot_gray(img, {0, img.get_size().y * 1});
         trans.transmit(img, 0);
     
         auto img_ada = img.space();
         Shape::adaptive_threshold(img_ada, img);
-        plot_gray(img_ada, {0, img.size.y * 2});
-        // trans.transmit(img_ada, 1);
+        plot_gray(img_ada, {0, img.get_size().y * 2});
 
         auto img_bina = img.space<Binary>();
         Pixels::binarization(img_bina, img_ada, 220);
         Pixels::inverse(img_bina);
-        // Shape::dilate(img_bina);
-        // plot_bina(img_bina, {0, img.size.y * 2});
 
         using Shape::FloodFill;
         using Shape::BlobFilter;
@@ -274,41 +269,6 @@ void EmbdHost::main(){
                 trans.transmit(clipped,2);
 
             }
-
-            if(false){
-
-
-                // painter.setColor(RGB565::GREEN);
-                // // const auto & blobs = ff.blobs();
-                // // const auto & blob = blobs[0];
-                // painter.setColor(RGB565::GREEN);
-                // Rect2i view = Rect2i::from_center(char_pos, Vector2i(14,14));
-                // painter.drawRoi(view);
-                // // auto piece = img.clone(view);
-                // // auto mask = img_bina.clone(view);
-                // // Pixels::mask_with(piece, mask);
-                // // Shape::gauss(piece);
-                // // Pixels::inverse(piece);
-                // Mnist mnist;
-                // mnist.update(img, char_pos);
-                // // logger.println(mnist.outputs);
-                // const auto & outputs = mnist.outputs;
-                // for(size_t i = 0; i < outputs.size(); i++){
-                //     DEBUGGER << outputs[i];
-                //     if(i != outputs.size() - 1) DEBUGGER << ',';
-                // };
-                // DEBUGGER.println();
-                // // trans.transmit(piece, 1);
-                // // painter.drawString(blob.rect.position, "2");
-                // // logger.println(blob.rect, int(blob.rect), blob.index, blob.area);
-                // painter.drawString({0,0}, String(mnist.output.token));
-            }
-
-
-            // {
-            //     painter.setColor(RGB565::YELLOW);
-            //     painter.drawRoi({0,0,28,28});
-            // }
 
         }
 

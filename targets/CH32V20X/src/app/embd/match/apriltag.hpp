@@ -7,7 +7,11 @@
 #include <algorithm>
 #include <tuple>
 
-class Apriltag16H5Decoder{
+class ApriltagDecoder{
+
+};
+
+class Apriltag16H5Decoder:public ApriltagDecoder{
 public:
     static constexpr std::array<uint16_t, 30> codes= {
         0x231b,

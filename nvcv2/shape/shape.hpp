@@ -145,7 +145,7 @@ namespace NVCV2::Shape{
             return;
         }
     
-        const auto size = (Rect2i(Vector2i(), dst.size).intersection(Rect2i(Vector2i(), src.size))).size;
+        const auto size = (Rect2i(Vector2i(), dst.get_size()).intersection(Rect2i(Vector2i(), src.get_size()))).size;
 
         static constexpr int wid = 3;
         static constexpr int least_size = 5;

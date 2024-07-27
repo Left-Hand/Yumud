@@ -263,9 +263,10 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFilter & filter) {
     static constexpr Grayscale labelable = 255;
 
-    auto nrow = src.w;
-    auto ncol = src.h;
-    Image<Grayscale> map({src.size});
+    auto size = src.get_size();
+    auto nrow = size.x;
+    auto ncol = size.y;
+    Image<Grayscale> map({nrow, ncol});
     m_blobs.clear();
 
     for(int y = 0; y < ncol; ++y){

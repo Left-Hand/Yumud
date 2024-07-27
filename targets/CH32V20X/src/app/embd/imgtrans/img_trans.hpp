@@ -2,7 +2,6 @@
 
 #include "src/testbench/tb.h"
 
-#pragma pack(push, 1)
 struct TransType{
     uint8_t index:4;
     uint8_t type:4;
@@ -19,13 +18,13 @@ struct TransType{
         RGB = 0x20,
         STR = 0x30
     };
-};
+}__packed;
 
 
 struct PieceHeader{
     uint16_t header;
     TransType trans_type;
-};
+}__packed;
 
 struct ImagePieceUnit:public PieceHeader{
     uint32_t hash;
@@ -33,8 +32,7 @@ struct ImagePieceUnit:public PieceHeader{
     uint8_t size_x;
     uint8_t size_y;
     uint16_t data_index;
-};
-#pragma pack(pop)
+}__packed;
 
 
 

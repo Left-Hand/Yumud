@@ -58,7 +58,7 @@ Vector2 inv_perspective_fast(const Vector2 & v){
 }
 
 void perspective(ImageWritable<Grayscale> & dst,const ImageReadable<Grayscale> & src){
-    auto size = dst.size;
+    auto size = dst.get_size();
     for(int _y = 0; _y < size.y; _y++){
         auto [x,y] = inv_perspective_fast({0, _y});
         auto x_step = inv_perspective_fast({1,_y}).x - x;

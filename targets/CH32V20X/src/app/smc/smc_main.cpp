@@ -17,7 +17,7 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
     real_t road_align_pixels = {WorldUtils::pixels(config.road_width)};
     auto align_mode = switches.align_mode;
     auto align_right = (LR)align_mode;
-    auto y = last_seed_pos.y ? last_seed_pos.y : src.size.y - config.seed_height_base;
+    auto y = last_seed_pos.y ? last_seed_pos.y : src.get_size().y - config.seed_height_base;
 
     //定义本次找到的x窗口
     Rangei new_x_range;
@@ -527,7 +527,7 @@ void SmartCar::main(){
 
         auto get_coast = [&](const Vector2i & seed_pos, const LR side) -> Coast{
             auto ret = CoastUtils::form(img_bina, seed_pos, side);
-            ret = CoastUtils::trim(ret, img.size);
+            ret = CoastUtils::trim(ret, img.get_size());
             return ret;
         };
 

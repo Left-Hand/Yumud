@@ -86,7 +86,7 @@ namespace NVCV2::Pixels{
     }
 
     __inline void fast_bina_opera(Image<Binary> & out,const Image<Grayscale> & em, const uint8_t et,const Image<Grayscale>& dm, const uint8_t dt) {
-        const auto size = (Rect2i(Vector2i(), em.size).intersection(Rect2i(Vector2i(), dm.size))).size;
+        const auto size = (Rect2i(Vector2i(), em.get_size()).intersection(Rect2i(Vector2i(), dm.get_size()))).size;
         const auto area = size.x * size.y;
 
         for (auto i = 0; i < area; i++) {
