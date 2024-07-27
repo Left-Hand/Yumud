@@ -5,9 +5,6 @@
 namespace NVCV2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src);
 
-    // template<typename ColorType>
-    Grayscale bilinear_interpol(const ImageReadable<Grayscale> & img, const Vector2 & pos);
-
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src);
 
     class UniqueRandomGenerator {
@@ -96,18 +93,19 @@ namespace NVCV2::Pixels{
     
     void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold);
 
-    ImageWithData<Binary, Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold);
-    void ostu(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src);
+    Image<Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold);
+    void ostu(Image<Binary>& dst, const Image<Grayscale>& src);
 
 
-    void iter_threshold(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src, const real_t & k = 0.5, const real_t & eps = 0.02);
+    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t & k = 0.5, const real_t & eps = 0.02);
 
-    void max_entropy(const ImageWithData<Grayscale, Grayscale>& src, int thresh);
+    void max_entropy(const Image<Grayscale>& src,const int thresh);
+
     int get_huang_fuzzy_threshold(Histogram hist);
 
-    int huang(ImageWithData<Binary, Binary>& dst, const ImageWithData<Grayscale, Grayscale>& src);
+    int huang(Image<Binary>& dst, const Image<Grayscale>& src);
 
-    void gamma(ImageWithData<Grayscale, Grayscale>& src, const real_t ga);
+    void gamma(Image<Grayscale>& src, const real_t ga);
 
 
     template<typename T>
@@ -154,8 +152,8 @@ namespace NVCV2::Pixels{
     }
 
 
-    void mask_with(ImageWithData<Grayscale, Grayscale> & src, const ImageReadable<Binary>& op);
-    void sum_with(ImageWithData<Grayscale, Grayscale> & src, ImageWithData<Grayscale, Grayscale>& op);
-    void sub_with(ImageWithData<Grayscale, Grayscale> & src, ImageWithData<Grayscale, Grayscale>& op);
+    void mask_with(Image<Grayscale> & src, const ImageReadable<Binary>& op);
+    void sum_with(Image<Grayscale> & src, Image<Grayscale>& op);
+    void sub_with(Image<Grayscale> & src, Image<Grayscale>& op);
 }
 

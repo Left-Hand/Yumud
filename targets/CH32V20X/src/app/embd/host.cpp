@@ -114,14 +114,24 @@ void EmbdHost::main(){
     Matcher matcher;
     auto sketch = make_image<RGB565>(camera.get_size()/2);
 
-    [[maybe_unused]] auto plot_april = [&](const Rect2i & rect, const int index, const int dir){
+    using Vertexs = std::array<Vector2, 4>;
+
+
+    [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
+        painter.bindImage(sketch);
+        painter.setColor(RGB565::CORAL);
+        painter.drawRoi(rect);
+    };
+
+    [[maybe_unused]] auto plot_april = [&](const Vertexs vertex, const int index, const int dir){
         painter.bindImage(sketch);
         painter.setColor(RGB565::FUCHSIA);
-        painter.drawRoi(rect);
+
+        painter.drawPolygon(vertex.begin(), vertex.size());
+        auto rect = Rect2i(vertex.begin(), vertex.size());
         painter.setColor(RGB565::RED);
         painter.drawString(rect.position + Vector2i{4,4}, toString(index));
 
-        painter.setColor(RGB565::BLUE);
         static constexpr std::array<Vector2i, 4> vecs = {
             Vector2i(12,0),
             Vector2i(0,12),
@@ -129,6 +139,7 @@ void EmbdHost::main(){
             Vector2i(0,-12)
         };
 
+        painter.setColor(RGB565::BLUE);
         painter.drawFilledCircle(rect.get_center() + vecs[dir], 3);
         painter.bindImage(tftDisplayer);
     };
@@ -146,7 +157,6 @@ void EmbdHost::main(){
         led = !led;
         sketch.fill(RGB565::BLACK);
 
-
         Image<Grayscale> img = Shape::x2(camera);
         plot_gray(img, {0, img.get_size().y * 1});
         trans.transmit(img, 0);
@@ -163,42 +173,23 @@ void EmbdHost::main(){
         using Shape::BlobFilter;
 
         FloodFill ff;
-        auto map = ff.run(img_bina, BlobFilter::clamp_area(100, 600));
+        auto map = ff.run(img_bina, BlobFilter::clamp_area(400, 1600));
         Pixels::dyeing(map, map);
         plot_gray(map, Vector2i{0, map.get_size().y * 3});
 
 
-
         for(const auto & blob :ff.blobs()){
-            bool has_tag = false;
-            bool has_digit = false;
-            if(20 < blob.rect.w) has_tag = true;
-            else has_digit = true;
+            bool is_tag = false;
+            bool is_digit = false;
+            if(20 < blob.rect.w) is_tag = true;
+            else is_digit = true;
 
-            if(has_tag){
-                const auto & rect = blob.rect;
+            const auto & rect = blob.rect;
+            // plot_roi(rect);
 
-                // DEBUG_PRINTLN(rect);
+            if(is_tag){
 
 
-                using Vertexs = std::array<Vector2, 4>;
-                Vertexs vertexs;
-                {
-                    // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
-                    // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
-                    // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
-                    // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
-        
-                    vertexs[0] = rect.position;
-                    vertexs[1] = rect.position + Vector2i(rect.w, 0);
-                    vertexs[2] = rect.position + Vector2i(0, rect.h);
-                    vertexs[3] = rect.get_end();
-                }
-
-                painter.setColor(RGB565::YELLOW);
-                for(const auto & item : vertexs){
-                    painter.drawPixel(item);
-                }
 
                 static constexpr uint apriltag_s = 4;
 
@@ -218,8 +209,57 @@ void EmbdHost::main(){
                         return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
                     };
 
-                    return gs[get_vertex_grid(vertexs, _grid_pos)];
+                    return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
                 };
+
+                auto find_vertex = [](const Image<Grayscale> & __map, const Grayscale & match, const Rect2i & roi) -> Vertexs{
+                    auto x_range = roi.get_x_range();
+                    auto y_range = roi.get_y_range();
+
+                    Vertexs ret;
+                    auto center = roi.get_center();
+            
+                    for(auto & item : ret){
+                        item = center;
+                    }
+    
+                    #define COMP(s1, s2, i)\
+                    if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
+                    ret[i] = Vector2i(x,y);\
+
+                    for(auto y = y_range.from; y < y_range.to; ++y){
+                        for(auto x = x_range.from; x < x_range.to; ++x){
+                            auto color = __map[{x,y}];
+                            if(color != match) continue;
+
+                            COMP(-1, -1, 0)
+                            COMP(+1, -1, 1)
+                            COMP(+1, +1, 2)
+                            COMP(+1, +1, 3)
+                        }
+                    }
+
+                    return ret;
+                };
+
+
+                Vertexs vertexs;
+                {
+                    // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
+                    // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
+                    // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
+                    // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
+        
+                    vertexs[0] = rect.position;
+                    vertexs[1] = rect.position + Vector2i(rect.w, 0);
+                    vertexs[2] = rect.position + Vector2i(0, rect.h);
+                    vertexs[3] = rect.get_end();
+                }
+
+                painter.setColor(RGB565::YELLOW);
+                for(const auto & item : vertexs){
+                    painter.drawPixel(item);
+                }
 
                 uint16_t code = 0;
                 for(uint j = 0; j < apriltag_s; j++){
@@ -233,7 +273,7 @@ void EmbdHost::main(){
                 static Apriltag16H5Decoder decoder;
                 decoder.update(code);
 
-                plot_april(rect, decoder.index(), decoder.angle());
+                plot_april(vertexs, decoder.index(), decoder.angle());
 
                 Painter<Grayscale> pt;
                 auto clipped = img.clone(rect);
@@ -244,8 +284,8 @@ void EmbdHost::main(){
             }
 
 
-            if(has_digit){
-                const auto & rect = blob.rect;
+            if(is_digit){
+
 
                 auto char_pos = rect.get_center();
                 const Vector2i tmp_size = {8, 12};

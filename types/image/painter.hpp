@@ -27,6 +27,32 @@ protected:
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
+    void drawHriLine(const Vector2i & pos,const int l){
+        auto rect = Rect2i(pos, Vector2i(l, 1));
+        rect = src_image->get_view().intersection(rect);
+        if(bool(rect) == false) return;
+        src_image->putrect_unsafe(rect, m_color);
+    }
+
+
+    void drawVerLine(const Vector2i & pos,const int l){
+        auto rect = Rect2i(pos, Vector2i(1, l));
+        rect = src_image->get_view().intersection(rect);
+        if(bool(rect) == false) return;
+        src_image->putrect_unsafe(rect, m_color);
+    }
+
+
+    void drawVerLine(const Rangei & y_range, const int x){
+        auto y_range_regular = y_range.abs();
+        drawVerLine(Vector2i(x, y_range_regular.from), y_range_regular.length());
+    }
+
+    void drawHriLine(const Rangei & x_range, const int y){
+        auto x_range_regular = x_range.abs();
+        drawHriLine(Vector2i(x_range_regular.from, y), x_range_regular.length());
+    }
+
 public:
     Painter(){;}
 
@@ -65,36 +91,6 @@ public:
                 src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
     }
 
-
-
-
-    void drawHriLine(const Vector2i & pos,const int l){
-        auto rect = Rect2i(pos, Vector2i(l, 1));
-        rect = src_image->get_view().intersection(rect);
-        if(bool(rect) == false) return;
-        src_image->putrect_unsafe(rect, m_color);
-    }
-
-
-    void drawVerLine(const Vector2i & pos,const int l){
-        auto rect = Rect2i(pos, Vector2i(1, l));
-        rect = src_image->get_view().intersection(rect);
-        if(bool(rect) == false) return;
-        src_image->putrect_unsafe(rect, m_color);
-    }
-
-
-    void drawVerLine(const Rangei & y_range, const int x){
-        auto y_range_regular = y_range.abs();
-        drawVerLine(Vector2i(x, y_range_regular.from), y_range_regular.length());
-    }
-
-    void drawHriLine(const Rangei & x_range, const int y){
-        auto x_range_regular = x_range.abs();
-        drawHriLine(Vector2i(x_range_regular.from, y), x_range_regular.length());
-    }
-
-
     void drawFilledRect(const Rect2i & rect, const ColorType & color){
         Rect2i rect_area = src_image->get_view().intersection(rect);
         if(!rect_area) return;
@@ -118,26 +114,32 @@ public:
 
     void drawLine(const Vector2i & from, const Vector2i & to){
         if(!src_image->has_point(from)){
-            // DEBUG_PRINT("start point lost: ", start);
+            ASSERT_WITH_HALT(false, "start point lost: ", from);
             return;
         }else if(!src_image->has_point(to)){
-            // DEBUG_PRINT("end point lost: ", end);
+            ASSERT_WITH_HALT(false, "end point lost: ", to);
             return;
         }
         auto x0 = from.x;
-        auto y0 = from.x;
+        auto y0 = from.y;
         auto x1 = to.x;
         auto y1 = to.y;
+
+        if(y0 == y1) return drawHriLine(from, x1 - x0);
+        if(x0 == x1) return drawHriLine(from, y1 - y0);
         bool steep = false;
-        if (std::abs(x1 - x0) < std::abs(y1 - y0)) {
+
+        if (ABS(x1 - x0) < ABS(y1 - y0)) {
             SWAP(x0, y0);
             SWAP(x1, y1);
             steep = true;
         }
+
         if (x0 > x1) {
             SWAP(x0, x1);
             SWAP(y0, y1);
         }
+
         int dx = x1 - x0;
         int dy = y1 - y0;
         int deltaY = ABS(dy << 1);
@@ -150,10 +152,10 @@ public:
             else {
                 drawPixel({x,y});
             }
-            deltaY += std::abs(dy << 1);
+            deltaY += ABS(dy << 1);
             if (deltaY >= middle) {
                 y += (y1 > y0 ? 1 : -1);
-                middle += std::abs(dx << 1);
+                middle += ABS(dx << 1);
             }
         }
     }
@@ -290,7 +292,7 @@ public:
 	GBKIterator iterator(str_ptr);
 	
     for(int x = pos.x; x < src_image->size.x;){
-        if(iterator.hasNext()){
+        if(iterator){
             auto chr = iterator.next();
             drawChar(Vector2i(x, pos.y), chr);
             x += ((chr > 0x80 ? chfont->getSize().x : enfont->getSize().x) + 1);
@@ -382,19 +384,19 @@ public:
         }
     }
 
-    void drawPolyLine(const std::initializer_list<Vector2i> &points){
-        if(points.size() < 2) return drawLine(*points.begin(), *points.end());
 
-        auto prev = points.begin();
-        for(auto it = points.begin() + 1; it!= points.end(); it++){
-            drawLine(*prev, *it);
-            prev = it;
-        }
-        drawLine(*prev, *points.begin());
+    void drawPolyline(const Vector2_t<auto> * points, const size_t count){
+        for(size_t i = 0; i < count-1; i++) drawLine(points[i], points[i + 1]);
     }
 
-    void drawPolyLine(const std::vector<Vector2i> &points){
-        if(points.size() < 2) return drawLine(*points.begin(), *points.end());
+
+    void drawPolygon(const Vector2_t<auto> * points, const size_t count){
+        drawPolyline(points, count);
+        drawLine(points[count - 2], points[count - 1]);
+
+        // for(size_t i = 0; i < count; i++){
+        //     drawPixel(points[i]);
+        // }
     }
 
     void drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){

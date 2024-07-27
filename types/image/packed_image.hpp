@@ -1,6 +1,4 @@
-#ifndef __PACKED_IMAGE_HPP__
-
-#define __PACKED_IMAGE_HPP__
+#pragma once
 
 #include "image.hpp"
 
@@ -103,5 +101,3 @@ public:
         }
     }
 };
-
-#endif

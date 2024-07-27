@@ -66,25 +66,25 @@ public:
         }
     }
 
-    template<typename T>
+    template<typename T, typename U = T>
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T data, const size_t len, bool discontinuous = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) bus.configDataSize(sizeof(T) * 8);
-            for(size_t i = 0; i < len; i++) bus.write(data);
+            if (sizeof(U) != 1) bus.configDataSize(sizeof(U) * 8);
+            for(size_t i = 0; i < len; i++) bus.write(U(data));
             if (discontinuous) bus.end();
-            if (sizeof(T) != 1) bus.configDataSize(8);
+            if (sizeof(U) != 1) bus.configDataSize(8);
         }
     }
 
-    template<typename T>
+    template<typename T, typename A = T, typename B = A>
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T * data_ptr, const size_t len, bool discontinuous = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
-            for(size_t i = 0; i < len; i++) bus.write(data_ptr[i]);
+            if (sizeof(B) != 1) this->configDataBits(sizeof(B) * 8);
+            for(size_t i = 0; i < len; i++) bus.write(B(A(data_ptr[i])));
             if (discontinuous) bus.end();
-            if (sizeof(T) != 1)this->configDataBits(8);
+            if (sizeof(B) != 1)this->configDataBits(8);
         }
     }
 

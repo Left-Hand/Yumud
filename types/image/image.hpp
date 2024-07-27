@@ -59,19 +59,7 @@ public:
 
     uint64_t sum(const Rect2i & roi) const;
     uint64_t sum() const{return sum(this->get_view());}
-
-    __inline ColorType lerp(const Vector2 & pos) const{
-        real_t vx = frac(pos.x);
-        real_t vy = frac(pos.y);
-        Vector2i ipos = pos;
-    
-        ColorType a = this->operator[](ipos);
-        ColorType b = this->operator[](ipos + Vector2i{1, 0});
-        ColorType c = this->operator[](ipos + Vector2i{0, 1});
-        ColorType d = this->operator[](ipos + Vector2i{1, 1});
-
-        return LERP(vy, LERP(vx, (uint8_t)a, (uint8_t)b), LERP(vx, (uint8_t)c, (uint8_t)d));
-    }
+    Grayscale bilinear_interpol(const Vector2 & pos) const;
 
     void load(const uint8_t * buf, const Vector2i & _size);
     static Image<ColorType> load_from_buf(const uint8_t * buf, const Vector2i & _size){

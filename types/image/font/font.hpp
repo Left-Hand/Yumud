@@ -43,13 +43,13 @@ private:
 public:
 	GBKIterator(const char* _gbkString) : gbkString(_gbkString), currentIndex(0) {}
 	
-	bool hasNext() {
+	operator bool() const {
 		return gbkString[currentIndex] != '\0';
 	}
 	
 	int next() {
-		if (!hasNext()) {
-			return -1; // 如果已经到达字符串末尾，则返回-1
+		if (this->operator bool() == false) {
+			return -1;
 		}
 		
 		unsigned char ch = gbkString[currentIndex];

@@ -32,19 +32,32 @@ public:
         }__packed;
     }__packed;
 
-    __fast_inline constexpr Rect2_t(){;}
+    constexpr Rect2_t(){;}
 
-    __fast_inline constexpr Rect2_t(const Rect2_t<arithmetic auto> other):position(other.position), size(other.size){;}
+    constexpr Rect2_t(const Rect2_t<arithmetic auto> other):position(other.position), size(other.size){;}
 
-    __fast_inline constexpr Rect2_t(const Vector2_t<arithmetic auto> & _position,const Vector2_t<arithmetic auto> & _size):position(_position), size(_size){;}
+    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _position,const Vector2_t<arithmetic auto> & _size):position(_position), size(_size){;}
 
 
-    __fast_inline constexpr Rect2_t(const Vector2_t<arithmetic auto> & _size):position(), size(_size){;}
+    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _size):position(), size(_size){;}
 
-    __fast_inline explicit constexpr Rect2_t(const Range_t<arithmetic auto> & x_range,const Range_t<arithmetic auto> & y_range):
+    explicit constexpr Rect2_t(const Vector2_t<auto> * points, const size_t cnt){
+        if(cnt < 1) return;
+        const auto & first_point = points[0];
+        Range_t<T> x_range = {first_point.x, first_point.x};
+        Range_t<T> y_range = {first_point.y, first_point.y};
+        for(size_t i = 1; i < cnt; i++){
+            x_range = x_range.merge(points[i].x);
+            y_range = y_range.merge(points[i].y);
+        }
+
+        *this = Rect2_t<T>(x_range, y_range);
+    }
+
+    explicit constexpr Rect2_t(const Range_t<auto> & x_range,const Range_t<auto> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
 
-    __fast_inline constexpr Rect2_t(const arithmetic auto _x,const arithmetic auto _y,const arithmetic auto _width,const arithmetic auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
+    constexpr Rect2_t(const arithmetic auto _x,const arithmetic auto _y,const arithmetic auto _width,const arithmetic auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
 
     static constexpr Rect2_t from_center(const Vector2_t<arithmetic auto> & center, const Vector2_t<arithmetic auto> & half_size){
         return Rect2_t<T>(center - half_size, half_size * 2).abs();

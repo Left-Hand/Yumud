@@ -93,7 +93,7 @@ public:
     }
 
 
-    void writePool(const uint16_t & data, const size_t len){
+    void writePool(const uint16_t data, const size_t len){
         dc_gpio = data_level;
         spi_drv.write(data, len);
     } 
@@ -101,18 +101,12 @@ public:
     // template<>
     void writePixels(const Grayscale * data, const size_t len){
         dc_gpio = data_level;
-        auto & bus = spi_drv.bus;
-        if(!bus.begin(0)){
-            bus.configDataSize(16);
-            for(size_t i = 0; i < len; i++) bus.write(RGB565(data[i]));
-            bus.end();
-            bus.configDataSize(8);
-        }
+        spi_drv.write<uint8_t, Grayscale, RGB565>((const uint8_t *)data, len);
     } 
 
     void writePixels(const RGB565 * data, const size_t len){
         dc_gpio = data_level;
-        spi_drv.write((uint16_t *)data, len);
+        spi_drv.write<uint16_t, RGB565>((const uint16_t *)data, len);
     } 
 };
 

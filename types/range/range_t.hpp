@@ -251,13 +251,13 @@ public:
         return Range_t<T>(MIN(regular.from, other_regular.from), MAX(regular.to, other_regular.to));
     }
 
-    constexpr Range_t<T> shift(const arithmetic auto & value){
+    constexpr Range_t<T> shift(const arithmetic auto & value) const{
         Range_t<T> regular = this -> abs();
         Range_t<T> ret = Range_t<T>(regular.from + value, regular.to + value);
         return ret;
     }
 
-    constexpr Range_t<T> merge(const arithmetic auto & value){
+    constexpr Range_t<T> merge(const arithmetic auto & value) const{
         Range_t<T> regular = this -> abs();
         return Range_t<T>(MIN(regular.from, value), MAX(regular.to, value));
     }
