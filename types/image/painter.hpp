@@ -126,7 +126,7 @@ public:
         auto y1 = to.y;
 
         if(y0 == y1) return drawHriLine(from, x1 - x0);
-        if(x0 == x1) return drawHriLine(from, y1 - y0);
+        if(x0 == x1) return drawVerLine(from, y1 - y0);
         bool steep = false;
 
         if (ABS(x1 - x0) < ABS(y1 - y0)) {
@@ -392,10 +392,7 @@ public:
 
     void drawPolygon(const Vector2_t<auto> * points, const size_t count){
         drawPolyline(points, count);
-        drawLine(points[count - 2], points[count - 1]);
-
-        // for(size_t i = 0; i < count; i++){
-        //     drawPixel(points[i]);
+        drawLine(points[0], points[count - 1]);
         // }
     }
 

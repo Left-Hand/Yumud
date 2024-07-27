@@ -49,7 +49,7 @@ public:
     static std::array<uint16_t, 120> all_codes;
 protected:
     uint16_t last_code = 0;
-    uint16_t last_angle = 0;
+    uint16_t last_direction = 0;
     int last_index = 0;
 
 
@@ -115,25 +115,25 @@ protected:
     }
     static std::tuple<uint16_t, uint16_t> find_code(const uint16_t new_code){
         uint16_t new_index = 0;
-        uint16_t new_angle = 0;
+        uint16_t new_direction = 0;
 
         auto it = std::find(all_codes.begin(), all_codes.end(), new_code);
         if(it != all_codes.end()){
             const auto id = (std::distance(all_codes.begin(), it) + 1);
             new_index = id % codes.size();
-            new_angle = id / codes.size();
+            new_direction = id / codes.size();
         }
-        return {new_index, new_angle};
+        return {new_index, new_direction};
     }
 public:
     Apriltag16H5Decoder(){generate_all_codes();}
     uint16_t update(const uint16_t new_code){
-        auto [new_index, new_angle] = find_code(new_code);
+        auto [new_index, new_direction] = find_code(new_code);
 
         if(new_index != 0){
             last_code = new_code;
             last_index = new_index;
-            last_angle = new_angle;
+            last_direction = new_direction;
         }
 
         return last_index;
@@ -147,8 +147,8 @@ public:
         return last_code;
     }
 
-    uint16_t angle() const{
-        return last_angle;
+    uint16_t direction() const{
+        return last_direction;
     }
 
     bool is_valid() const {

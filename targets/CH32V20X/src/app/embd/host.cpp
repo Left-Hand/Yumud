@@ -123,7 +123,7 @@ void EmbdHost::main(){
         painter.drawRoi(rect);
     };
 
-    [[maybe_unused]] auto plot_april = [&](const Vertexs vertex, const int index, const int dir){
+    [[maybe_unused]] auto plot_april = [&](const Vertexs vertex, const int index, const real_t dir){
         painter.bindImage(sketch);
         painter.setColor(RGB565::FUCHSIA);
 
@@ -132,15 +132,8 @@ void EmbdHost::main(){
         painter.setColor(RGB565::RED);
         painter.drawString(rect.position + Vector2i{4,4}, toString(index));
 
-        static constexpr std::array<Vector2i, 4> vecs = {
-            Vector2i(12,0),
-            Vector2i(0,12),
-            Vector2i(-12,0),
-            Vector2i(0,-12)
-        };
-
         painter.setColor(RGB565::BLUE);
-        painter.drawFilledCircle(rect.get_center() + vecs[dir], 3);
+        painter.drawFilledCircle(rect.get_center() + Vector2(12, 0).rotated(dir), 3);
         painter.bindImage(tftDisplayer);
     };
 
@@ -199,7 +192,7 @@ void EmbdHost::main(){
                         Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
 
                         Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-                        Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
+                        Vector2 lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
 
                         return upper_x.lerp(lower_x, grid_scale.y);
                     };
@@ -235,31 +228,14 @@ void EmbdHost::main(){
                             COMP(-1, -1, 0)
                             COMP(+1, -1, 1)
                             COMP(+1, +1, 2)
-                            COMP(+1, +1, 3)
+                            COMP(-1, +1, 3)
                         }
                     }
 
                     return ret;
                 };
 
-
-                Vertexs vertexs;
-                {
-                    // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
-                    // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
-                    // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
-                    // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
-        
-                    vertexs[0] = rect.position;
-                    vertexs[1] = rect.position + Vector2i(rect.w, 0);
-                    vertexs[2] = rect.position + Vector2i(0, rect.h);
-                    vertexs[3] = rect.get_end();
-                }
-
-                painter.setColor(RGB565::YELLOW);
-                for(const auto & item : vertexs){
-                    painter.drawPixel(item);
-                }
+                auto vertexs = find_vertex(map, Pixels::dyeing((Grayscale)blob.index), rect);
 
                 uint16_t code = 0;
                 for(uint j = 0; j < apriltag_s; j++){
@@ -273,13 +249,13 @@ void EmbdHost::main(){
                 static Apriltag16H5Decoder decoder;
                 decoder.update(code);
 
-                plot_april(vertexs, decoder.index(), decoder.angle());
+                plot_april(vertexs, decoder.index(), decoder.direction() * PI / 2 + (vertexs[1] - vertexs[0]).angle());
 
                 Painter<Grayscale> pt;
                 auto clipped = img.clone(rect);
                 pt.bindImage(clipped);
                 pt.drawString({0,0}, toString(decoder.index()));
-                pt.drawString({0,8}, toString(decoder.angle()));
+                pt.drawString({0,8}, toString(decoder.direction()));
                 trans.transmit(clipped,1);
             }
 
