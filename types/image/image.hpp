@@ -28,7 +28,7 @@ public:
     }
 
     Image<ColorType> clone() const {
-        auto _size = ImageBasics::get_size();
+        auto _size = this->size;
         auto temp = Image<ColorType>(_size);
         memcpy(temp.data.get(), this->data.get(), _size.x * _size.y * sizeof(ColorType));
         return temp;
@@ -42,11 +42,11 @@ public:
         return *this;
     }
 
-    Image<ColorType> clone(const Rect2i & rect) const {
-        auto temp = Image<ColorType>(rect.size);
-        for(int j = 0; j < rect.h; j++) {
-            for(int i = 0; i < rect.w; i++) {
-                temp[Vector2i{i,j}] = this->operator[](Vector2i{i + rect.x, j + rect.y});
+    Image<ColorType> clone(const Rect2i & view) const {
+        auto temp = Image<ColorType>(view.size);
+        for(int j = 0; j < view.h; j++) {
+            for(int i = 0; i < view.w; i++) {
+                temp[Vector2i{i,j}] = this->operator[](Vector2i{i + view.x, j + view.y});
             }
         }
         return temp;
@@ -54,7 +54,8 @@ public:
 
     auto clone(const Vector2i & _size) const{return clone(Rect2i(Vector2i{0,0}, _size));}
 
-    Grayscale mean(const Rect2i & roi) const;
+    Grayscale mean(const Rect2i & view) const;
+    Grayscale mean() const{return mean(this->get_view());}
 
     uint64_t sum(const Rect2i & roi) const;
     uint64_t sum() const{return sum(this->get_view());}
@@ -72,7 +73,6 @@ public:
         return LERP(vy, LERP(vx, (uint8_t)a, (uint8_t)b), LERP(vx, (uint8_t)c, (uint8_t)d));
     }
 
-    Grayscale mean() const{return mean(this->get_view());}
     void load(const uint8_t * buf, const Vector2i & _size);
     static Image<ColorType> load_from_buf(const uint8_t * buf, const Vector2i & _size){
         Image<ColorType> img(_size);

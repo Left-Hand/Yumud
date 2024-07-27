@@ -34,29 +34,23 @@ public:
 
     __fast_inline constexpr Rect2_t(){;}
 
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(const Rect2_t<U> other):position(other.position), size(other.size){;}
+    __fast_inline constexpr Rect2_t(const Rect2_t<arithmetic auto> other):position(other.position), size(other.size){;}
 
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(const Vector2_t<U> & _position,const Vector2_t<U> & _size):position(_position), size(_size){;}
+    __fast_inline constexpr Rect2_t(const Vector2_t<arithmetic auto> & _position,const Vector2_t<arithmetic auto> & _size):position(_position), size(_size){;}
 
 
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(const Vector2_t<U> & _size):position(), size(_size){;}
+    __fast_inline constexpr Rect2_t(const Vector2_t<arithmetic auto> & _size):position(), size(_size){;}
 
-    template<arithmetic U>
-    __fast_inline explicit constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
+    __fast_inline explicit constexpr Rect2_t(const Range_t<arithmetic auto> & x_range,const Range_t<arithmetic auto> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
 
-    __fast_inline constexpr Rect2_t(const auto _x,const auto _y,const auto _width,const auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
+    __fast_inline constexpr Rect2_t(const arithmetic auto _x,const arithmetic auto _y,const arithmetic auto _width,const arithmetic auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
 
-    template<arithmetic U>
-    static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & half_size){
+    static constexpr Rect2_t from_center(const Vector2_t<arithmetic auto> & center, const Vector2_t<arithmetic auto> & half_size){
         return Rect2_t<T>(center - half_size, half_size * 2).abs();
     }
 
-    template<arithmetic U>
-    static constexpr Rect2_t from_cross(const Vector2_t<U> & a, const Vector2_t<U> & b){
+    static constexpr Rect2_t from_cross(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b){
         return Rect2_t<T>(a, b-a).abs();
     }
 
@@ -121,14 +115,14 @@ public:
         return(ret);
     }
 
-    constexpr Rect2_t<T> operator*(const auto & ratio) const{
+    constexpr Rect2_t<T> operator*(const arithmetic auto & ratio) const{
         Rect2_t<T> ret = (*this).abs();
         ret.position *= ratio;
         ret.size *= ratio;
         return(*this);
     }
 
-    constexpr Rect2_t<T> operator/(const auto & ratio) const{
+    constexpr Rect2_t<T> operator/(const arithmetic auto & ratio) const{
         Rect2_t<T> ret = (*this).abs();
         ret.position /= ratio;
         ret.size /= ratio;
@@ -141,8 +135,7 @@ public:
         return(*this);
     }
 
-    template<arithmetic U>
-    constexpr bool intersects(const Rect2_t<U> other) const{
+    constexpr bool intersects(const Rect2_t<arithmetic auto> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
 
@@ -153,8 +146,7 @@ public:
     }
 
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> intersection(const Rect2_t<U> & other) const{
+    constexpr Rect2_t<T> intersection(const Rect2_t<arithmetic auto> & other) const{
         Rect2_t<T> regular = this -> abs();
         Rect2_t<T> other_regular = other.abs();
 
@@ -172,8 +164,7 @@ public:
         return Rect2_t<T>(_position, _size);
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> merge(const Rect2_t<U> & other) const{
+    constexpr Rect2_t<T> merge(const Rect2_t<arithmetic auto> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
         Range_t<T> range_x = regular.get_x_range().merge(other_regular.get_x_range());
@@ -181,40 +172,36 @@ public:
         return Rect2_t<T>(range_x, range_y);
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> merge(const Vector2_t<U> & point) const{
+    constexpr Rect2_t<T> merge(const Vector2_t<arithmetic auto> & point) const{
         Rect2_t<T> regular = this->abs();
         Range_t<T> range_x = regular.get_x_range().merge(point.x);
         Range_t<T> range_y = regular.get_y_range().merge(point.y);
         return Rect2_t<T>(range_x, range_y);
     }
 
-    template<arithmetic U>
-    constexpr Vector2_t<U> constrain(const Vector2_t<U> & point) const{
+    constexpr Vector2_t<arithmetic auto> constrain(const Vector2_t<arithmetic auto> & point) const{
         Rect2_t<T> regular = this->abs();
-        Vector2_t<U> ret;
+        std::remove_cvref_t<decltype(point)> ret;
         ret.x = regular.get_x_range().clamp(point.x);
         ret.y = regular.get_y_range().clamp(point.y);
         return ret;
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> scale(const U amount)const {
+    constexpr Rect2_t<T> scale(const arithmetic auto & amount)const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.get_center(), regular.size * amount);
         if(ret.is_regular())return ret;
         else return Rect2_t<T>();
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> grow(const U amount)const {
+    constexpr Rect2_t<T> grow(const arithmetic auto & amount)const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.position - amount * Vector2_t<T>(1,1), regular.size + amount * Vector2_t<T>(2,2));
         if(ret.is_regular())return ret;
         else return Rect2_t<T>();
     }
 
-    constexpr Rect2_t<T> move(const Vector2_t<auto> offset)const{
+    constexpr Rect2_t<T> move(const Vector2_t<auto> & offset)const{
         return Rect2_t<T>(position + offset, size);
     }
 
@@ -230,7 +217,7 @@ public:
         return (size.x != 0) && (size.y != 0);
     }
 
-    template<integral U>
+    template<arithmetic U>
     constexpr explicit operator U() const {
         return get_area();
     }

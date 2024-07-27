@@ -167,7 +167,7 @@ public:
     }}
 
     void fill(const ColorType color){
-        putrect_unsafe(Rect2i{{}, ImageBasics::get_size()}, color);
+        putrect_unsafe(Rect2i{Vector2i{}, ImageBasics::get_size()}, color);
     }
 
     void putrect(const Rect2i & rect, const ColorType color){

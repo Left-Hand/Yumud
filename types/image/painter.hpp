@@ -254,7 +254,7 @@ public:
     }
 
     void drawChar(const Vector2i & pos,const wchar_t chr){
-        Rect2i image_area = Rect2i({}, src_image->size);
+        Rect2i image_area = Rect2i(Vector2i{}, src_image->size);
         const Font * font = chr > 0x80 ? chfont : enfont;
         const Vector2i font_size = font->getSize();
         Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
