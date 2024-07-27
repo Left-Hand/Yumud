@@ -33,10 +33,6 @@ public:
         return numerator * value / denominator;
     }
 
-    // real_t operator * (const real_t & value){
-        // return numerator * value / denominator;
-    // }
-
     Fraction operator * (const Fraction & value){
         return Fraction(numerator * value.numerator, denominator * value.denominator);
     }
@@ -48,5 +44,9 @@ public:
     name(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}\
     name(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}\
     name(I2c & _i2c):bus_drv(I2cDrv(_i2c, name::default_addr)){;}\
+
+#define SPIDEV_CONTSRTUCTER(name)\
+    name(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}\
+    name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}\
 
 #endif

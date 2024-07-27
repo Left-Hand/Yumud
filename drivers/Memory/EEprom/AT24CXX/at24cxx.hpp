@@ -5,7 +5,7 @@
 
 class AT24CXX:public StoragePaged{
 private:
-    constexpr bool is_small_chip(){return m_size <= 256;}
+    constexpr bool is_small_chip(){return m_capacity <= 256;}
 protected:
     I2cDrv bus_drv;
     static constexpr uint32_t min_duration_ms = 10;

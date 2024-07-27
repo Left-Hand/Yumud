@@ -11,18 +11,18 @@ class Memory{
 
 protected:
     using Address = size_t;
-    using AddressWindow = Range_t<Address>;
+    using AddressView = Range_t<Address>;
 
     Storage & storage;
-    AddressWindow m_window;
+    AddressView m_view;
 public:
-    Memory(Storage & _storage, const AddressWindow & _window);
-    Memory(Memory & _memory, const AddressWindow & _window):storage(_memory.storage), m_window(_window.intersection(_memory.window())){;}
+    Memory(Storage & _storage, const AddressView & _window);
+    Memory(Memory & _memory, const AddressView & _window):storage(_memory.storage), m_view(_window.intersection(_memory.view())){;}
     ~Memory(){;}
 public:
-    AddressWindow window(){return m_window;}
+    AddressView view(){return m_view;}
 
-    size_t size(){return m_window.length();}
+    size_t size(){return m_view.length();}
 
     template<typename T>
     void store(const T & data, const Address loc = 0);
