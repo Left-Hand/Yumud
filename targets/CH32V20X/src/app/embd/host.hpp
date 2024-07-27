@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../sys/core/system.hpp"
-#include "embd.h"
 
 #include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "../drivers/Wireless/Radio/CH9141/CH9141.hpp"

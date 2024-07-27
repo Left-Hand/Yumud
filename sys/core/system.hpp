@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../sys/core/platform.h"
+#include "../../types/real.hpp"
 
 namespace Sys{
     namespace Misc{

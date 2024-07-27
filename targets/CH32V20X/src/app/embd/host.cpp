@@ -97,7 +97,7 @@ void EmbdHost::main(){
 
 
     camera.init();
-    camera.setExposureValue(1400);
+    camera.setExposureValue(600);
 
 
     vl.init();
@@ -267,7 +267,6 @@ void EmbdHost::main(){
                 pt.drawString({0,0}, toString(decoder.index()));
                 pt.drawString({0,8}, toString(decoder.angle()));
                 trans.transmit(clipped,1);
-                // DEBUGGER.println(decoder.index(), toString((int)decoder.code(), 16), toString((int)code, 16));
             }
 
 

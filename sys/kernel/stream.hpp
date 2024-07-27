@@ -2,7 +2,7 @@
 
 #define __PRINTABLE_HPP__
 
-#include "../sys/core/system.hpp"
+#include "../sys/core/platform.h"
 #include "../types/buffer/buffer.hpp"
 #include "../types/string/String.hpp"
 #include "../thirdparty/sstl/include/sstl/vector.h"

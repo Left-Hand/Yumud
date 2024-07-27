@@ -3,10 +3,8 @@
 #define __IQT_HPP__
 
 
-#include "../../sys/core/system.hpp"
-#include "../../sys/kernel/stream.hpp"
+#include "../../sys/core/platform.h"
 
-#include "extra_convs.hpp"
 #include "../../dsp/constexprmath/ConstexprMath.hpp"
 #include "../types/string/String.hpp"
 #include <IQmath_RV32.h>
@@ -255,7 +253,7 @@ IQ_OPS_TEMPLATE(double);
 // IQ_OPS_TEMPLATE(int32_t);
 
 
-OutputStream & operator<<(OutputStream & os, const iq_t value);
+
 
 #define IQ_BINA_TEMPLATE(type, op)\
 __fast_inline_constexpr bool operator op (const type val, const iq_t iq_v) {\
