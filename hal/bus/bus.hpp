@@ -101,7 +101,7 @@ protected:
 
 public:
     virtual void configBitOrder(const Endian endian){};
-    virtual void configDataSize(const uint8_t data_size){};
+    virtual void configDatabits(const uint8_t data_size){};
     virtual void configBaudRate(const uint32_t baudRate) = 0;
 
     Bus():locker(&m_lock){;}
@@ -146,7 +146,7 @@ protected:
 template<typename Packet>
 class PackedBus:public Bus{
 private:
-    using Bus::configDataSize;//disable this;
+    using Bus::configDatabits;//disable this;
 public:
     virtual bool write(const Packet & msg) = 0;
     virtual const Packet & read() = 0;

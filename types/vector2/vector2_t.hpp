@@ -26,6 +26,10 @@ public:
 
     constexpr Vector2_t(const Vector2_t<arithmetic auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
+    T & operator [](const size_t index) { return *(&this->x + index);}
+
+    const T & operator [](const size_t index) const {return *(&this->x + index);}
+
     static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
     static constexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
     static constexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);

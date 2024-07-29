@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../sys/core/platform.h"
+#include "../sys/kernel/clock.h"
+#include "../sys/kernel/stream.hpp"
 #include "../../types/real.hpp"
 
 namespace Sys{

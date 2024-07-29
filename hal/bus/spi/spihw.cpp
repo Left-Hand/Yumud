@@ -152,7 +152,7 @@ void SpiHw::enableRxIt(const bool en){
 
 }
 void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
-    // preinit();
+
     txMethod = tx_method;
     rxMethod = rx_method;
 	enableRcc();
@@ -202,7 +202,7 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
 }
 
 
-void SpiHw::configDataSize(const uint8_t data_size){
+void SpiHw::configDatabits(const uint8_t data_size){
     uint16_t tempreg =  instance->CTLR1;
     if(data_size == 16){
         if(tempreg & SPI_DataSize_16b) return;

@@ -1,6 +1,6 @@
 #include "../stepper.hpp"
 
-#define ARCHIVE_LOG(...) if(outen) logger.println(__VA_ARGS__);
+#define ARCHIVE_LOG(...) if(outen) logger.prints(__VA_ARGS__);
 
 bool Stepper::loadArchive(const bool outen){
     using Archive = StepperUtils::Archive;

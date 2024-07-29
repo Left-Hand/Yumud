@@ -19,13 +19,19 @@ public:
     }__packed;
 
     constexpr Range_t(): from(T(0)), to(T(0)) {;}
+
     constexpr Range_t(const arithmetic auto & _from, const arithmetic auto & _to): from(static_cast<T>(_from)), to(static_cast<T>(_to)) {;}
 
     constexpr Range_t(const Range_t<auto> & other): from(static_cast<T>(other.from)), to(static_cast<T>(other.to)) {;}
 
-    constexpr Range_t(std::pair<arithmetic auto, arithmetic auto> && other): from(static_cast<T>(other.first)), to(static_cast<T>(other.second)) {;}
+    constexpr Range_t(const std::pair<arithmetic auto, arithmetic auto> & other): from(static_cast<T>(other.first)), to(static_cast<T>(other.second)) {;}
 
-    constexpr Range_t(std::tuple<arithmetic auto, arithmetic auto> && other): from(static_cast<T>(std::get<0>(other))), to(static_cast<T>(std::get<1>(other))) {;}
+    constexpr Range_t(const std::tuple<arithmetic auto, arithmetic auto> & other): from(static_cast<T>(std::get<0>(other))), to(static_cast<T>(std::get<1>(other))) {;}
+
+    T & operator [](const size_t index) { return *(&this->from + index);}
+
+    const T & operator [](const size_t index) const {return *(&this->from + index);}
+
     constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
         this->from = static_cast<T>(other.from);
         this->to = static_cast<T>(other.to);

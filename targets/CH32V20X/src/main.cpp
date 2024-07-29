@@ -57,6 +57,7 @@ int main(){
     // dshot_main();
     // usbcdc_tb();
     embd_main();
+    // w25qxx_main();
     // smc_main();
     // UartHw & logger = uart2;
     // logger.init(115200);
