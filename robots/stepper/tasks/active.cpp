@@ -2,40 +2,16 @@
 
 
 Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
-    // auto target = sign(frac(t) - 0.5);
-    // auto target = floor(t);
-// auto target=sin(t);
-    // real_t raw_current = 0.1 * sin(t);
-    // run_current = abs(raw_current);
-    // run_leadangle = SIGN_AS(PI / 2, raw_current);
-
-
     if(ctrl_type != CtrlType::VECTOR) run_elecrad = est_elecrad + run_leadangle;
     else run_elecrad = odo.position2rad(target);
 
     setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
-    // setCurrent(2, est_elecrad + PI / 2);
 
-
-    // coilB = 0.1 * sin(run_elecrad);
-    // coilA = 0.1 * cos(run_elecrad);
-    // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.02, run_elecrad + elecrad_zerofix);//n = 2
-    // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.3, TAU * frac(t));//n = 2
-
-
-    // setCurrent(0.2, odo.position2rad(target));
-    // setCurrent(0.4, TAU * frac(t));
-    // setCurrent(0, 0);
-
-    // coilB = (0.2);
-    // coilA = 0.2 * sin(t);
-    // uint32_t foc_begin_micros = nanos();
     odo.update();
 
     raw_pos = odo.getPosition();
     est_pos = raw_pos;
     est_elecrad = odo.getElecRad();
-
     est_speed = (speed_estmator.update(raw_pos) + est_speed * 127) >> 7;
 
     if(init_flag){

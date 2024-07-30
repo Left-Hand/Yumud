@@ -386,7 +386,7 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
 
         case "nz"_ha:
             if(args.size() == 1){
-                steppers.y.set_nozzle(int(args[0]));
+                steppers.y.setNozzle(int(args[0]));
             }
             break;
 

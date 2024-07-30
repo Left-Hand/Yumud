@@ -2,9 +2,9 @@
 
 static auto & nozzle_en_gpio = portA[0];
 
-static void set_nozzle_gpio(const bool en){
+void Stepper::setNozzle(const real_t duty){
     nozzle_en_gpio.outpp();
-    nozzle_en_gpio = en;
+    nozzle_en_gpio = bool(duty);
 }
 
 void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
@@ -30,7 +30,7 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             break;
 
         case "nz"_ha:
-            set_nozzle_gpio(args.size() ? bool(int(args[0])) : false);
+            setNozzle(args.size() ? int(args[0]) : 0);
             break;
 
         case "remove"_ha:
@@ -44,13 +44,6 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
                 
                 removeArchive(outen);
             }
-            break;
-
-        case "pos.p"_ha:
-            settle_value(position_ctrl.config.kp, args);
-            break;
-        case "pos.d"_ha:
-            settle_value(position_ctrl.config.kd, args);
             break;
 
         case "speed"_ha:
@@ -242,23 +235,23 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 
         SET_METHOD_BIND_REAL(   Command::LOCATE,        locateRelatively)
         SET_METHOD_BIND_REAL(   Command::SET_OPEN_CURR, setOpenLoopCurrent)
-        SET_METHOD_BIND_REAL(   Command::SET_CURR_CLP,  setCurrentClamp)
-        SET_METHOD_BIND_TYPE(   Command::SET_POS_CLP,   setPositionClamp, dual_real)
-        SET_METHOD_BIND_REAL(   Command::SET_SPD_CLP,   setSpeedClamp)
-        SET_METHOD_BIND_REAL(   Command::SET_ACC_CLP,   setAccelClamp)
+        SET_METHOD_BIND_REAL(   Command::SET_CURR_LMT,  setCurrentClamp)
+        SET_METHOD_BIND_TYPE(   Command::SET_POS_LMT,   setPositionClamp, dual_real)
+        SET_METHOD_BIND_REAL(   Command::SET_SPD_LMT,   setSpeedClamp)
+        SET_METHOD_BIND_REAL(   Command::SET_ACC_LMT,   setAccelClamp)
 
         GET_BIND_VALUE(         Command::GET_POS,       est_pos)
         GET_BIND_VALUE(         Command::GET_SPD,       est_speed)
         GET_BIND_VALUE(         Command::GET_ACC,       0)//TODO
 
-        SET_METHOD_BIND_EXECUTE(Command::CALI,          triggerCali)
+        SET_METHOD_BIND_EXECUTE(Command::TRG_CALI,          triggerCali)
 
         SET_METHOD_BIND_EXECUTE(Command::SAVE,          saveArchive)
         SET_METHOD_BIND_EXECUTE(Command::LOAD,          loadArchive)
         SET_METHOD_BIND_EXECUTE(Command::CLEAR,         removeArchive)
 
-        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_ON,     set_nozzle_gpio, true)
-        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_OFF,    set_nozzle_gpio, false)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_ON,     setNozzle, 1)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_OFF,    setNozzle, 0)
 
         SET_METHOD_BIND_EXECUTE(Command::RST,           reset)
         GET_BIND_VALUE(         Command::STAT,          (uint8_t)run_status);

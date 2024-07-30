@@ -52,6 +52,7 @@ public:
     virtual void setSpeedClamp(const real_t max_spd) = 0;
     virtual void setAccelClamp(const real_t max_acc) = 0;
 
+    virtual void setNozzle(const real_t duty) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 };

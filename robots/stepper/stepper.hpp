@@ -33,7 +33,7 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     real_t run_elecrad;
     real_t run_leadangle;
 
-    Range target_position_clamp = Range{std::numeric_limits<iq_t>::min(), std::numeric_limits<iq_t>::max()};
+    Range target_position_clamp = Range::INF;
 
     CurrentCtrl::Config curr_config;
     CurrentCtrl curr_ctrl{curr_config};
@@ -44,8 +44,8 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     GeneralPositionCtrl::Config pos_config;
     GeneralPositionCtrl position_ctrl{curr_ctrl, pos_config};
 
-    TrapezoidPosCtrl::Config trape_config;
-    TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl, trape_config};
+    TrapezoidPosCtrl::Config tpz_config;
+    TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl, tpz_config};
 
     SpeedEstimator::Config spe_config;
     SpeedEstimator speed_estmator{spe_config};
@@ -131,6 +131,7 @@ public:
     void saveArchive(const bool outen = false);
     void removeArchive(const bool outen = false);
 
+    void setNozzle(const real_t duty);
     void tick();
 
 
@@ -167,7 +168,7 @@ public:
     }
 
     void setOpenLoopCurrent(const real_t current){
-        curr_ctrl.config.current_clamp = current;
+        curr_config.current_clamp = current;
     }
 
     void setTargetVector(const real_t pos){
@@ -180,7 +181,7 @@ public:
     }
 
     void setCurrentClamp(const real_t max_current){
-        curr_ctrl.setCurrentClamp(max_current);
+        curr_config.current_clamp = max_current;
     }
 
     void locateRelatively(const real_t pos = 0){
@@ -249,11 +250,11 @@ public:
     }
 
     void setSpeedClamp(const real_t max_spd){
-        speed_ctrl.config.max_spd = max_spd;
+        spd_config.max_spd = max_spd;
     }
 
     void setAccelClamp(const real_t max_acc){
-        trapezoid_ctrl.config.max_dec = max_acc;
+        tpz_config.max_dec = max_acc;
     }
 
     void triggerCali(){

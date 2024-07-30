@@ -56,7 +56,7 @@ public:
     void reset();
     void triggerCali();
 
-    void set_nozzle(const bool en);
+    void setNozzle(const real_t duty);
 };
 
 struct RemoteSteppers{
