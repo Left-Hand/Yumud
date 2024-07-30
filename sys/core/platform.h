@@ -2,13 +2,12 @@
 
 #define __PLATFORM_H__
 
-
-
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "src/defines/defs.h"
 
 #if defined(CH32V203)
 #ifndef CH32V20X
@@ -51,83 +50,33 @@
 #include "sdk/n32g45x/CMSIS/device/n32g45x.h"
 #endif
 
-#include "src/defines/defs.h"
-
 
 #if defined(USE_CH32V3_STD_LIB) || defined(USE_CH32V2_STD_LIB)
 #define USE_CH32_STD_LIB
 #endif
 
-#if defined(__cplusplus)
-#include "../sys/kernel/enums.hpp"
 
-#include <bits/stl_iterator_base_funcs.h>
+#if defined(__cplusplus)
+
+#include "../sys/kernel/enums.hpp"
+#include "../sys/kernel/concepts.hpp"
+#include "../sys/kernel/units.hpp"
+
 #include <type_traits>
 #include <limits>
-
-template<typename T>
-concept arithmetic = std::is_arithmetic_v<T>;
-
-template<typename T>
-concept floating = std::is_floating_point_v<T>;
-
-template<typename T>
-concept integral = std::is_integral_v<T>;
-
-template<typename T>
-concept integral_32 = std::is_integral_v<T> && sizeof(T) == 4;
-
-template<typename T>
-concept iterable = requires(T t) {
-    { std::next(t) } -> std::same_as<T>;
-    { std::prev(t) } -> std::same_as<T>;
-};
-
-template<typename T>
-concept integral_s32 = integral_32<T> && std::is_signed_v<T>;
-
-template<typename T>
-concept integral_u32 = integral_32<T> && std::is_unsigned_v<T>;
-
-template<typename T>
-concept integral_64 = std::is_integral_v<T> && sizeof(T) == 8;
-
-template<typename T>
-concept integral_s64 = integral_64<T> && std::is_signed_v<T>;
-
-template<typename T>
-concept integral_u64 = integral_64<T> && std::is_unsigned_v<T>;
-
-__fast_inline uint64_t operator"" _KHz(uint64_t x){
-    return x * 1000;
-}
-
-__fast_inline uint64_t operator"" _MHz(uint64_t x){
-    return x * 1000000;
-}
-
-__fast_inline uint64_t operator"" _GHz(uint64_t x){
-    return x * 1000000000;
-}
-
-__fast_inline uint64_t operator"" _KB(uint64_t x){
-    return x << 10;
-}
-
-__fast_inline uint64_t operator"" _MB(uint64_t x){
-    return x << 20;
-}
-
-__fast_inline uint64_t operator"" _GB(uint64_t x){
-    return x << 30;
-}
-
-
-
 
 extern "C"{
     __interrupt void NMI_Handler(void);
     __interrupt void HardFault_Handler(void);
+}
+#endif
+
+#ifdef __cplusplus 
+extern "C"{
+#endif
+    __interrupt void NMI_Handler(void);
+    __interrupt void HardFault_Handler(void);
+#ifdef __cplusplus
 }
 #endif
 

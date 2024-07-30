@@ -37,7 +37,3 @@ namespace Sys{
 };
 
 
-extern "C"{
-    __interrupt void NMI_Handler(void);
-    __interrupt void HardFault_Handler(void);
-}
