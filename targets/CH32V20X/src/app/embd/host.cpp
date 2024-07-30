@@ -4,7 +4,7 @@
 #include "interpolation/interpolation.hpp"
 
 #include <algorithm>
-#include "match/apriltag.hpp"
+#include "match/apriltag/dec16h5.hpp"
 
 using namespace Interpolation;
 using namespace NVCV2;
@@ -57,26 +57,8 @@ void EmbdHost::main(){
     tftDisplayer.fill(RGB565::BLACK);
     i2c.init(400000);
 
-
-    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture(area, src.get_data());
-    };
-
-    [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture(area, src.get_data());
-    };
-
-    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture(area, src.get_data());
-    };
-
-
-
     camera.init();
-    camera.setExposureValue(600);
+    camera.setExposureValue(1000);
 
 
     vl.init();
@@ -115,6 +97,21 @@ void EmbdHost::main(){
     auto sketch = make_image<RGB565>(camera.get_size()/2);
 
     using Vertexs = std::array<Vector2, 4>;
+
+    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
+    };
+
+    [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
+    };
+
+    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
+    };
 
 
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
@@ -564,4 +561,9 @@ void EmbdHost::act(){
 
 }
 
+
+
+void EmbdHost::point_mm(const Vector2 & pos){
+
+}
 #endif

@@ -16,6 +16,9 @@
 #include "stepper/constants.hpp"
 #include "stepper/cli.hpp"
 
+
+#include "actions/actions.hpp"
+
 #ifdef CH32V30X
 using StepperUtils::CliAP;
 
@@ -33,11 +36,15 @@ class EmbdHost:public CliAP{
     CH9141      ch9141{uart7, portC[1], portD[3]};
     Transmitter trans{usbfs};
 
-
+    static constexpr real_t x_scale = 1.0/40;
+    static constexpr real_t y_scale = 1.0/40;
+    static constexpr real_t z_scale = 1.0/2;
     struct{
         uint8_t bina_threshold = 60;
         uint8_t diff_threshold = 170;
     };
+
+    ActionQueue actions;
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),
@@ -58,6 +65,10 @@ public:
     void run();
     void reset();
     void cali();
+
+    void line_mm(const Line & _line);
+    void point_mm(const Vector2 & _point);
+    void z_mm(const real_t & _z);
 
     enum class ActMethod{
         NONE = 0,

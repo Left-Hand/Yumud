@@ -72,3 +72,29 @@ real_t number_match(const Image<Grayscale> &src, const uint index){
     return real_t();
 }
 
+
+            // if(is_digit){
+
+
+            //     auto char_pos = rect.get_center();
+            //     const Vector2i tmp_size = {8, 12};
+            //     const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
+            //     auto clipped = img.clone(clip_window);
+
+
+            //     auto tmp = Shape::x2(clipped);
+
+            //     painter.setColor(RGB565::BLUE);
+            //     painter.drawRoi(clip_window);
+
+            //     auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
+
+            //     plot_number(clip_window, result);
+
+            //     Painter<Grayscale> pt;
+            //     pt.bindImage(clipped);
+            //     pt.drawString({0,0}, toString(result));
+
+            //     trans.transmit(clipped,2);
+
+            // }

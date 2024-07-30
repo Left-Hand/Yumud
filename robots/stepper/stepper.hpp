@@ -136,6 +136,8 @@ public:
 
 
     void init(){
+        curr_config.reset();
+        
         odo.init();
 
         panel_led.init();

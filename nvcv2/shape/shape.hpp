@@ -137,47 +137,7 @@ namespace NVCV2::Shape{
 
     void convo_roberts_xy(Image<Grayscale> & dst, Image<Grayscale> & src);
 
-    __inline void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src) {
-        if(dst == src){
-            auto temp = dst.space();
-            adaptive_threshold(temp, src);
-            dst.clone(temp);
-            return;
-        }
-    
-        const auto size = (Rect2i(Vector2i(), dst.get_size()).intersection(Rect2i(Vector2i(), src.get_size()))).size;
-
-        static constexpr int wid = 3;
-        static constexpr int least_size = 5;
-
-        for(int y = wid; y < size.y - wid - 1; y++){
-            for(int x = wid; x < size.x - wid - 1; x++){
-
-                std::array<uint8_t, least_size> min_values;
-                std::fill(min_values.begin(), min_values.end(), 255);
-                for(int i=y-wid;i<=y+wid;i++){
-                    for(int j=x-wid;j<=x+wid;j++){
-                        auto current_value = uint8_t(src[{j,i}]);
-                        auto it = std::find_if(min_values.begin(), min_values.end(), [current_value](const uint8_t val){
-                            return val > current_value;
-                        });
-                        if (it != min_values.end()) {
-                            *it = current_value; // Replace the found value with the current value
-                        }
-                    }
-                }
-
-                auto ave = std::accumulate(min_values.begin(), min_values.end(), 0)/least_size;
-                auto raw = src[{x,y}];
-
-                #define RELU(x) ((x) > 0 ? (x) : 0)
-
-                dst[{x,y}] = CLAMP(RELU(raw - ave - 30) * 8, 0, 255);
-
-                #undef RELU
-            }
-        }
-    }
+    void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src);
     __inline void convo_roberts_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         convolution(dst, src, Cores::roberts_y);
     }

@@ -52,76 +52,12 @@ Result GeneralSpeedCtrl::update(const real_t _targ_speed,const real_t real_speed
     else return {abs_targ_current, SIGN_AS(PI / 2, targ_speed)};
 }
 
-// Result TrapezoidPosCtrl::update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
-//     // static constexpr real_t max_acc = 10.0;
-
-//     real_t spd_delta = max_dec/foc_freq;
-//     real_t max_spd = speed_ctrl.max_spd;
-//     real_t pos_err = targ_position - real_position;
-//     bool cross = bool(pos_err ^ last_pos_err);
-//     last_pos_err = pos_err;
-//     real_t abs_pos_err = abs(pos_err);
-//     real_t abs_spd_dec = sqrt(2 * max_dec * abs_pos_err);
-//     switch(tstatus){
-//         case Tstatus::ACC:
-//             if(abs(real_speed) > abs_spd_dec){
-//                 tstatus = Tstatus::DEC;
-//             }
-            
-//             {
-//                 goal_speed += SIGN_AS(spd_delta, pos_err);
-//                 goal_speed = CLAMP(goal_speed, -max_spd, max_spd);
-//                 return speed_ctrl.update(goal_speed, real_speed);
-//             }
-//             break;
-
-//         case Tstatus::DEC:
-//             // if((cross and (ABS(goal_speed) < hug_speed)) || abs(pos_err) < pos_sw_radius){
-//             //     tstatus = Tstatus::STA;
-//             // }
-//             if(cross){
-//                 tstatus = Tstatus::STA;
-//             }
-            
-//             {
-//                 // bool ovs = real_speed * real_speed > 2 * max_dec* ABS(pos_err);
-//                 // goal_speed = SIGN_AS(sqrt(2 * max_dec* ABS(pos_err)), goal_speed);
-//                 // if(ovs) goal_speed += SIGN_AS(-spd_delta, pos_err);
-//                 // if(ovs) goal_speed += -spd_delta;
-//                 // else goal_speed += SIGN_AS(spd_delta / 3, pos_err);
-
-//                 // if(pos_err > 0) goal_speed = CLAMP(goal_speed, hug_speed, max_spd);
-//                 // else goal_speed = CLAMP(goal_speed, -max_spd, -hug_speed);
-
-//                 // goal_speed = CLAMP(SIGN_AS(abs_spd_dec, pos_err), goal_speed - spd_delta, goal_speed + spd_delta);
-//                 goal_speed = -10;
-//                 return speed_ctrl.update(goal_speed, real_speed);
-//             }
-
-//             break;
-//         default:
-//         case Tstatus::STA:
-//             if(ABS(pos_err) > pos_sw_radius){
-//                 goal_speed = real_speed;
-//                 tstatus = Tstatus::ACC;
-//             }
-//             return position_ctrl.update(targ_position, real_position, real_speed, real_elecrad);
-
-//             break;
-//     }
-    
-// }
 
 Result TrapezoidPosCtrl::update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
-    // static constexpr real_t max_acc = 10.0;
-
     real_t spd_delta = max_dec/foc_freq;
     real_t max_spd = speed_ctrl.max_spd;
-    // static constexpr real_t spd_delta = 0.01;
 
-    // static constexpr real_t hug_speed = 1;
-    // static constexpr real_t spd_sw_radius = 0.7;
-    static constexpr real_t pos_sw_radius = 0.05;
+    static constexpr real_t pos_sw_radius = 0.01;
 
     real_t pos_err = targ_position - real_position;
     bool cross = pos_err * last_pos_err < 0;
