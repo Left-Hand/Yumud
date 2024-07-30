@@ -20,7 +20,7 @@ public:
 
     constexpr Vector2_t(){;}
 
-    constexpr Vector2_t(const arithmetic auto & _x, const arithmetic auto & _y): x(_x), y(_y){;}
+    constexpr Vector2_t(const auto & _x, const auto & _y): x(T(_x)), y(T(_y)){;}
 
     constexpr Vector2_t(const std::tuple<arithmetic auto, arithmetic auto> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
 

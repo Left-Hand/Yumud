@@ -21,12 +21,9 @@ void EmbdHost::main(){
     led.outpp();
     lcd_blk.outpp(1);
 
-    auto & light_pwm = timer8.oc(1);
-    timer8.init(2000);
-    light_pwm.init();
-    light_pwm = 0.9;
-    light_pwm.io().outpp(1);
-
+    timer8.init(1000);
+    timer8.enableIt(TimerUtils::IT::Update, {0,0});
+    timer8.bindCb(TimerUtils::IT::Update, [&](){this->tick();});
 
     auto & lcd_cs = portD[6];
     auto & lcd_dc = portD[7];
@@ -143,6 +140,10 @@ void EmbdHost::main(){
         painter.bindImage(tftDisplayer);
     };
 
+    actions += Action([&](){steppers.nz(false);}, 600, true);
+    actions += Action([&](){steppers.nz(true);}, 600, true);
+    actions += Action([&](){steppers.nz(false);}, 600, true);
+    actions += Action([&](){steppers.nz(true);}, 600, true);
     while(true){
         led = !led;
         sketch.fill(RGB565::BLACK);
@@ -157,6 +158,7 @@ void EmbdHost::main(){
 
         auto img_bina = img.space<Binary>();
         Pixels::binarization(img_bina, img_ada, 220);
+        Shape::canny(img_bina, img, {50,110});
         Pixels::inverse(img_bina);
 
         using Shape::FloodFill;
@@ -283,6 +285,8 @@ void EmbdHost::main(){
         }
 
         plot_rgb(sketch, {0,0});
+
+        DEBUG_VALUE(actions.pending());
     }
 }
 
@@ -302,6 +306,15 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             settle_value(bina_threshold, args)
         case "diff"_ha:
             settle_value(diff_threshold, args)
+        case "xymm"_ha:
+            if(args.size() == 2){
+                steppers.xy_mm(Vector2(args[0], args[1]));
+            }
+            break;
+        case "zmm"_ha:
+            if(args.size() == 1){
+                steppers.z_mm(real_t(args[0]));
+            }
         case "xyz"_ha:
             if(args.size() == 3){
                 steppers.x.setTargetPosition(real_t(args[0]));
@@ -522,11 +535,11 @@ void EmbdHost::act(){
         default:
             break;
     }
-
 }
 
 
-
-void EmbdHost::point_mm(const Vector2 & pos){
+void EmbdHost::tick(){
+    actions.update();
 }
+
 #endif

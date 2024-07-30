@@ -35,11 +35,15 @@ public:
     }
 
     void invoke(){
+
+        sustain--;
+
         if(sustain > 0){
             if(once == true && executed == true) return;
 
             EXECUTE(func);
             executed = true;
+
         }
     }
 };
@@ -65,6 +69,10 @@ public:
     // 返回队列中等待执行的动作数量
     size_t pending() const {
         return action_queue.size();
+    }
+
+    const auto & front(){
+        return action_queue.front();
     }
 
     // 更新队列，执行所有动作直到队列为空或动作的sustain为0

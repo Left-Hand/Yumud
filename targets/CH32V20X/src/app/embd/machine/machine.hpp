@@ -34,4 +34,25 @@ public:
                 return w;
         }
     }
+
+    void xy_mm(const Vector2 & v){
+        x_mm(v.x);
+        y_mm(v.y);
+    }
+
+    void x_mm(const real_t _x){
+        x.setTargetTrapezoid(_x*x_scale);
+    }
+
+    void y_mm(const real_t _y){
+        y.setTargetTrapezoid(_y*y_scale);
+    }
+
+    void z_mm(const real_t _z){
+        z.setTargetPosition(_z * z_scale);
+    }
+
+    void nz(const bool en){
+        w.setNozzle(en);
+    }
 };

@@ -65,9 +65,6 @@ public:
     void cali();
 
     void line_mm(const Line & _line);
-    void point_mm(const Vector2 & _point);
-    void z_mm(const real_t & _z);
-
     enum class ActMethod{
         NONE = 0,
         HUI,
@@ -80,6 +77,7 @@ public:
     ActMethod act_method = ActMethod::NONE;
     void set_demo_method(const ActMethod new_method);
     void act();
+    void tick();
 };
 
 #endif
