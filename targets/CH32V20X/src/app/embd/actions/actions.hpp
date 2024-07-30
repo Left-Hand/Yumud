@@ -26,7 +26,7 @@ protected:
 
 
 public:
-    Action(std::function<void()> &&f, const uint16_t s, const bool _once = true) : func(std::move(f)), sustain(s), once(_once) {}
+    Action(std::function<void()> &&f, const uint16_t s = 0, const bool _once = true) : func(std::move(f)), sustain(s), once(_once) {}
 
     // 前置减法运算符重载
 
@@ -36,9 +36,9 @@ public:
 
     void invoke(){
 
-        sustain--;
+        if(sustain > 0) sustain--;
 
-        if(sustain > 0){
+        if(sustain >= 0){
             if(once == true && executed == true) return;
 
             EXECUTE(func);
@@ -66,6 +66,16 @@ public:
         return *this;
     }
 
+    ActionQueue& operator<<(const Action &action) {
+        action_queue.push(action);
+        return *this;
+    }
+
+    // 重载前置+=运算符，接受右值引用，利用移动语义
+    ActionQueue& operator<<(Action &&action) {
+        action_queue.push(std::move(action));
+        return *this;
+    }
     // 返回队列中等待执行的动作数量
     size_t pending() const {
         return action_queue.size();
@@ -79,10 +89,9 @@ public:
     void update() {
         if(action_queue.size()){
             Action & current_action = action_queue.front();
+            current_action.invoke();
             if (bool(current_action) == false) {
                 action_queue.pop();
-            }else{
-                current_action.invoke();
             }
         }
     }

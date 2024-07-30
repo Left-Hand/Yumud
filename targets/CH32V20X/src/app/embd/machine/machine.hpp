@@ -8,6 +8,11 @@ protected:
     static constexpr real_t x_scale = 1.0/40;
     static constexpr real_t y_scale = 1.0/40;
     static constexpr real_t z_scale = 1.0/2;
+
+    static constexpr uint pick_z = 40;
+    static constexpr uint hold_z = 10;
+    static constexpr uint place_z = 40;
+    static constexpr uint idle_z = 10;
 public:
     RemoteStepper & w;
     RemoteStepper & x;
@@ -51,8 +56,24 @@ public:
     void z_mm(const real_t _z){
         z.setTargetPosition(_z * z_scale);
     }
+    void zt_mm(const real_t _z){
+        z.setTargetTrapezoid(_z * z_scale);
+    }
+    void z_pick(){
+        z_mm(pick_z);
+    }
+    void z_hold(){
+        zt_mm(hold_z);
+    }
+    void z_place(){
+        z_mm(place_z);
+    }
+    void z_idle(){
+        zt_mm(idle_z);
+    }
+
 
     void nz(const bool en){
-        w.setNozzle(en);
+        w.setNozzle(en ? real_t(1) : real_t(0));
     }
 };

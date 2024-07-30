@@ -42,6 +42,7 @@ class EmbdHost:public CliAP{
         uint8_t diff_threshold = 170;
     };
 
+    Line line;
     ActionQueue actions;
 public:
     EmbdHost(IOStream & _logger, Can & _can):
@@ -64,7 +65,13 @@ public:
     void reset();
     void cali();
 
-    void line_mm(const Line & _line);
+    void do_move(const Vector2 & from, const Vector2 & to);
+    void do_pick(const Vector2 & from);
+    void do_drop(const Vector2 & to);
+
+    void do_idle(const Vector2 & to);
+
+
     enum class ActMethod{
         NONE = 0,
         HUI,

@@ -12,6 +12,97 @@ using namespace NVCV2;
 #ifdef CH32V30X
 
 
+void EmbdHost::do_pick(const Vector2 & from){
+    line.from = from;
+
+    actions
+    << Action([&](){
+        steppers.xy_mm(line.from);
+    }, 2000)
+
+    << Action([&](){
+        steppers.nz(true);
+        steppers.z_pick();
+    }, 1500)
+    << Action([&](){
+        steppers.z_hold();
+    }, 1800)
+
+    ;
+}
+
+
+void EmbdHost::do_drop(const Vector2 & to){
+    line.to = to;
+
+    actions
+    << Action([&](){
+        steppers.xy_mm(line.to);
+    }, 2000)
+    << Action([&](){
+        steppers.z_place();
+    }, 1200)
+
+    << Action([&](){
+        steppers.nz(false);
+        steppers.z_idle();
+    }, 0)
+    
+    
+    ; 
+}
+
+
+void EmbdHost::do_idle(const Vector2 & to){
+    line.to = to;
+
+    actions
+
+    << Action([&](){
+        steppers.nz(false);
+        steppers.z_idle();
+    }, 0)
+    
+    << Action([&](){
+        steppers.xy_mm(line.to);
+    }, 2000)    
+    ; 
+}
+
+void EmbdHost::do_move(const Vector2 & from, const Vector2 & to){
+    // DEBUG_PRINTLN(from, to)
+    line.from = from;
+    line.to = to;
+
+    actions
+    
+    << Action([&](){
+        steppers.xy_mm(line.from);
+    }, 2000)
+
+    << Action([&](){
+        steppers.nz(true);
+        steppers.z_pick();
+    }, 1500)
+    << Action([&](){
+        steppers.z_hold();
+    }, 1800)
+
+    << Action([&](){
+        steppers.xy_mm(line.to);
+    }, 2000)
+    << Action([&](){
+        steppers.z_place();
+    }, 1200)
+
+    << Action([&](){
+        steppers.nz(false);
+        steppers.z_idle();
+    }, 0)
+    
+    
+    ;
+}
 void EmbdHost::main(){
     delay(200);
     auto & led = portC[14];
@@ -140,10 +231,29 @@ void EmbdHost::main(){
         painter.bindImage(tftDisplayer);
     };
 
-    actions += Action([&](){steppers.nz(false);}, 600, true);
-    actions += Action([&](){steppers.nz(true);}, 600, true);
-    actions += Action([&](){steppers.nz(false);}, 600, true);
-    actions += Action([&](){steppers.nz(true);}, 600, true);
+
+    auto do_home = [&](){
+        actions += Action([&](){steppers.nz(false);}, 600);
+        actions += Action([&](){
+            steppers.x.setTargetCurrent(-0.75);
+            steppers.y.setTargetCurrent(-0.75);
+            steppers.z.setTargetCurrent(-0.75);
+        }, 7000);
+
+        actions += Action([&](){
+            steppers.x.locateRelatively(0);
+            steppers.y.locateRelatively(0);
+            steppers.z.locateRelatively(0);
+        });
+
+        actions += Action([&](){
+            steppers.xy_mm(Vector2{150, 100});
+            steppers.z_idle();
+        }, 2000);
+    };
+
+    do_home();
+
     while(true){
         led = !led;
         sketch.fill(RGB565::BLACK);
@@ -152,13 +262,13 @@ void EmbdHost::main(){
         plot_gray(img, {0, img.get_size().y * 1});
         trans.transmit(img, 0);
     
-        auto img_ada = img.space();
-        Shape::adaptive_threshold(img_ada, img);
-        plot_gray(img_ada, {0, img.get_size().y * 2});
+        // auto img_ada = img.space();
+        // Shape::adaptive_threshold(img_ada, img);
+        // plot_gray(img_ada, {0, img.get_size().y * 2});
 
         auto img_bina = img.space<Binary>();
-        Pixels::binarization(img_bina, img_ada, 220);
-        Shape::canny(img_bina, img, {50,110});
+        // Pixels::binarization(img_bina, img_ada, 220);
+        Shape::canny(img_bina, img, {40,100});
         Pixels::inverse(img_bina);
 
         using Shape::FloodFill;
@@ -286,7 +396,7 @@ void EmbdHost::main(){
 
         plot_rgb(sketch, {0,0});
 
-        DEBUG_VALUE(actions.pending());
+        DEBUG_PRINTS("busy ", actions.pending());
     }
 }
 
@@ -436,6 +546,30 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             trigger_method(trans.enable, false);
         case "frz"_ha:
             trigger_method(stepper_w.freeze);
+
+        case "idle"_ha:
+            if(args.size() == 2){
+                do_idle({args[0], args[1]});
+            }
+            break;
+
+        case "move"_ha:
+            if(args.size() == 4){
+                do_move({args[0], args[1]}, {args[2], args[3]});
+            }
+            break;
+
+        case "drop"_ha:
+            if(args.size() == 2){
+                do_drop({args[0], args[1]});
+            }
+            break;
+
+        case "pick"_ha:
+            if(args.size() == 2){
+                do_pick({args[0], args[1]});
+            }
+            break;
         default:
             CliAP::parseTokens(_command, args);
             break;
