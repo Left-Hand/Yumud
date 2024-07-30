@@ -165,9 +165,10 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             DEBUG_PRINTS("rd", run_debug_enabled);
             break;
 
-        case "clp"_ha:
+        case "cl"_ha:
             if(args.size() == 1) setCurrentClamp(real_t(args[0]));
             break;
+
         case "status"_ha:
         case "stat"_ha:
             DEBUG_PRINTS("current status:", int(run_status));
@@ -179,6 +180,18 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             DEBUG_PRINTS("shutdown ok");
             break;
 
+        case "cd"_ha:
+            elecrad_zerofix = PI;
+            break;
+
+        case "map"_ha:
+            {
+                const auto & map = odo.map();
+                for(const auto & item : map){
+                    DEBUGGER.println(item * 50); 
+                }
+            }
+            break;
         default:
             CliSTA::parseTokens(command, args);
             break;

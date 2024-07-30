@@ -62,24 +62,22 @@ void node_main(){
 
     auto parseAscii = [&](InputStream & is){
         static String temp;
-        // DEBUG_PRINTLN(is.available());
         while(is.available()){
             auto chr = is.read();
             if(chr == 0) continue;
             temp += chr;
             if(chr == '\n'){
                 temp.alphanum();
-                // DEBUG_PRINTLN("tempis", temp, temp.length());
                 stp.parseLine(temp);
                 temp = "";
             }
         }
     };
+
     logger.bindRxPostCb([&](){parseAscii(logger);});
     while(true){
-        // DEBUG_PRINTLN("r")
         stp.run(); 
-        stp.report();
+        // stp.report();
         Sys::Clock::reCalculateTime();
         // stp.setTargetTrapezoid(4 * sin(t) + 3 * sign(sin(t)));
         // stp.setTargetPosition(15 * sin(t));
