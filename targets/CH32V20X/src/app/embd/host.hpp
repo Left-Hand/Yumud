@@ -10,14 +10,13 @@
 
 #include "../nvcv2/mnist/mnist.hpp"
 
-#include "remote.hpp"
 #include "imgtrans/img_trans.hpp"
 
 #include "stepper/constants.hpp"
 #include "stepper/cli.hpp"
 
-
 #include "actions/actions.hpp"
+#include "machine/machine.hpp"
 
 #ifdef CH32V30X
 using StepperUtils::CliAP;
@@ -28,7 +27,9 @@ class EmbdHost:public CliAP{
     RemoteStepper stepper_x;
     RemoteStepper stepper_y;
     RemoteStepper stepper_z;
-    RemoteSteppers steppers;
+
+    Machine steppers;
+
     I2cSw       i2c{portD[2], portC[12]};
     MT9V034     camera{i2c};
     VL53L0X     vl{i2c};
@@ -36,9 +37,6 @@ class EmbdHost:public CliAP{
     CH9141      ch9141{uart7, portC[1], portD[3]};
     Transmitter trans{usbfs};
 
-    static constexpr real_t x_scale = 1.0/40;
-    static constexpr real_t y_scale = 1.0/40;
-    static constexpr real_t z_scale = 1.0/2;
     struct{
         uint8_t bina_threshold = 60;
         uint8_t diff_threshold = 170;

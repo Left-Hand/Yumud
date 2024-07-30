@@ -171,15 +171,12 @@ void EmbdHost::main(){
         for(const auto & blob :ff.blobs()){
             bool is_tag = false;
             bool is_digit = false;
-            if(20 < blob.rect.w) is_tag = true;
-            else is_digit = true;
+            if(2000 < blob.rect.w) is_tag = true;//make it impossible
+            if(2000 < blob.rect.w) is_digit = true;//make it impossible
 
             const auto & rect = blob.rect;
-            // plot_roi(rect);
 
             if(is_tag){
-
-
 
                 static constexpr uint apriltag_s = 4;
 
@@ -285,39 +282,6 @@ void EmbdHost::main(){
 
         }
 
-        {
-            
-            // 
-        }
-
-        {
-            vl.update();
-        }
-
-        if(tcs.isIdle()){
-            tcs.update();
-            // RGB565 color = RGB888(tcs);
-            real_t r,g,b,c;
-            tcs.getCRGB(c,r,g,b);
-            // logger.println(c,r,g,b, tcs.getId(), vl.getDistance());
-            tcs.startConv();
-        }
-        // trans.transmit(img.clone(Rect2i(0,0,94/4,60/4)), 1);
-        // 
-
-        // painter.drawString(Vector2i{0,230-60}, toString(vl.getDistance()));
-        // logger.println(real_t(light_pwm));
-        // painter.drawString(Vector2i{0,230-50}, toString(trans.compress_png(piece).size()));
-
-        // delay(300);
-
-        // painter.drawHollowRect(Rect2i{12,12,60,30});
-
-        // delay(10);
-        // const auto & blob = blobs[0];
-        // f("%d, %d, %d, %d\r\n", blob.rect.x, blob.rect.w, blob.rect.h, blob.area);
-        // printf("%d\r\n", blobs.size());
-        // host.run();
         plot_rgb(sketch, {0,0});
     }
 }
@@ -564,6 +528,5 @@ void EmbdHost::act(){
 
 
 void EmbdHost::point_mm(const Vector2 & pos){
-
 }
 #endif

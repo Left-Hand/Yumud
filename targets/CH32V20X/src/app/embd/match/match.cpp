@@ -18,6 +18,7 @@ int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
         result[i] = NVCV2::Match::template_match(fault, tmp);
     }
 
+
     uint maxi = 0;
     real_t maxp = 0;
 
