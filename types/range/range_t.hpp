@@ -18,7 +18,10 @@ public:
         T to;
     }__packed;
 
-    constexpr Range_t(): from(T(0)), to(T(0)) {;}
+    static constexpr Range_t<T> INF = {std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
+    static constexpr Range_t<T> POS = {T(0), std::numeric_limits<T>::max()};
+    static constexpr Range_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
+    constexpr Range_t(): from(std::numeric_limits<T>::min()), to(std::numeric_limits<T>::max()) {;}
 
     constexpr Range_t(const arithmetic auto & _from, const arithmetic auto & _to): from(static_cast<T>(_from)), to(static_cast<T>(_to)) {;}
 

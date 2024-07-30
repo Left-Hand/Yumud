@@ -28,7 +28,21 @@ protected:
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
     void configBaudRate(const uint32_t baudRate) override;
+
+    void init(const uint baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
+
     void init(const BaudRate baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
+
+    /**
+     * @brief Writes a CAN message to the transmit buffer.
+     *
+     * This function attempts to write a CAN message to the transmit buffer.
+     * If the transmit buffer is full, the function will return false.
+     *
+     * @param msg The CAN message to be written.
+     * @return true if the CAN message was successfully written to the transmit buffer.
+     * @return false if the transmit buffer is full and the CAN message could not be written.
+     */
     bool write(const CanMsg & msg) override;
     const CanMsg & read() override;
     size_t pending();
