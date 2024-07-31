@@ -42,8 +42,10 @@ class EmbdHost:public CliAP{
         uint8_t diff_threshold = 170;
     };
 
-    Line line;
     ActionQueue actions;
+
+    Gpio & run_led = portC[14];
+    Gpio & busy_led = portC[15];
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),
@@ -70,6 +72,7 @@ public:
     void do_drop(const Vector2 & to);
 
     void do_idle(const Vector2 & to);
+    void do_blink(const uint dur);
 
 
     enum class ActMethod{

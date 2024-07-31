@@ -1,8 +1,9 @@
 #pragma once
 
 #include "remote/remote.hpp"
+#include "machine_concepts.hpp"
 
-struct Machine{
+struct Machine:public Cantilever{
 protected:
 
     static constexpr real_t x_scale = 1.0/40;
@@ -13,6 +14,15 @@ protected:
     static constexpr uint hold_z = 10;
     static constexpr uint place_z = 40;
     static constexpr uint idle_z = 10;
+
+    void x_mm(const real_t _x) override {
+        x.setTargetTrapezoid(_x*x_scale);
+    }
+
+    void y_mm(const real_t _y) override {
+        y.setTargetTrapezoid(_y*y_scale);
+    }
+
 public:
     RemoteStepper & w;
     RemoteStepper & x;
@@ -39,34 +49,22 @@ public:
                 return w;
         }
     }
-
-    void xy_mm(const Vector2 & v){
-        x_mm(v.x);
-        y_mm(v.y);
-    }
-
-    void x_mm(const real_t _x){
-        x.setTargetTrapezoid(_x*x_scale);
-    }
-
-    void y_mm(const real_t _y){
-        y.setTargetTrapezoid(_y*y_scale);
-    }
-
-    void z_mm(const real_t _z){
+    void z_mm(const real_t _z) override {
         z.setTargetPosition(_z * z_scale);
     }
+
+
     void zt_mm(const real_t _z){
         z.setTargetTrapezoid(_z * z_scale);
     }
     void z_pick(){
-        z_mm(pick_z);
+        zt_mm(pick_z);
     }
     void z_hold(){
         zt_mm(hold_z);
     }
     void z_place(){
-        z_mm(place_z);
+        zt_mm(place_z);
     }
     void z_idle(){
         zt_mm(idle_z);

@@ -2,6 +2,7 @@
 #include "imgtrans/img_trans.hpp"
 #include "match/match.hpp"
 #include "interpolation/interpolation.hpp"
+// #include "../../drivers/CommonIO"
 
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
@@ -13,11 +14,10 @@ using namespace NVCV2;
 
 
 void EmbdHost::do_pick(const Vector2 & from){
-    line.from = from;
-
     actions
     << Action([&](){
-        steppers.xy_mm(line.from);
+        // steppers.xy_mm(line.from);
+        //TODO
     }, 2000)
 
     << Action([&](){
@@ -33,11 +33,10 @@ void EmbdHost::do_pick(const Vector2 & from){
 
 
 void EmbdHost::do_drop(const Vector2 & to){
-    line.to = to;
-
     actions
     << Action([&](){
-        steppers.xy_mm(line.to);
+        // steppers.xy_mm(to);
+        //FIXME
     }, 2000)
     << Action([&](){
         steppers.z_place();
@@ -54,30 +53,47 @@ void EmbdHost::do_drop(const Vector2 & to){
 
 
 void EmbdHost::do_idle(const Vector2 & to){
-    line.to = to;
-
     actions
-
     << Action([&](){
         steppers.nz(false);
         steppers.z_idle();
-    }, 0)
+    }, 2000)
     
-    << Action([&](){
-        steppers.xy_mm(line.to);
+    << Action([this](){
+        // steppers.xy_mm();
     }, 2000)    
+    ; 
+
+}
+
+void EmbdHost::do_blink(const uint dur){
+    actions
+    << Action([&](){
+        busy_led = true;
+        DEBUG_PRINTLN("on")
+    }, 200)
+    
+    << Action([this](){
+        busy_led = false;
+        DEBUG_PRINTLN("off")
+    }, 200)
+
+    << Action([&](){
+        busy_led = true;
+    }, 200)
+    
+    << Action([this](){
+        busy_led = false;
+    }, 200)      
     ; 
 }
 
 void EmbdHost::do_move(const Vector2 & from, const Vector2 & to){
-    // DEBUG_PRINTLN(from, to)
-    line.from = from;
-    line.to = to;
 
     actions
-    
     << Action([&](){
-        steppers.xy_mm(line.from);
+        // const auto & first_line = lines.front();
+        // steppers.xy_mm(first_line.from);
     }, 2000)
 
     << Action([&](){
@@ -89,27 +105,31 @@ void EmbdHost::do_move(const Vector2 & from, const Vector2 & to){
     }, 1800)
 
     << Action([&](){
-        steppers.xy_mm(line.to);
+        // const auto & first_line = lines.front();
+        // steppers.xy_mm(first_line.to);
     }, 2000)
     << Action([&](){
         steppers.z_place();
     }, 1200)
 
     << Action([&](){
-        steppers.nz(false);
-        steppers.z_idle();
-    }, 0)
+        // steppers.nz(false);
+        // steppers.z_idle();
+        // lines.pop();
+        // DEBUG_PRINTLN(lines.size());
+    }, 1200)
     
     
     ;
 }
 void EmbdHost::main(){
     delay(200);
-    auto & led = portC[14];
+
     auto & lcd_blk = portC[7];
     auto & spi = spi2;
     
-    led.outpp();
+    run_led.outpp();
+    busy_led.outpp();
     lcd_blk.outpp(1);
 
     timer8.init(1000);
@@ -246,16 +266,15 @@ void EmbdHost::main(){
             steppers.z.locateRelatively(0);
         });
 
-        actions += Action([&](){
-            steppers.xy_mm(Vector2{150, 100});
-            steppers.z_idle();
-        }, 2000);
+
+        actions += GotoAction(steppers, Vector2{20, 160}, 2000);
     };
 
     do_home();
+    do_blink(200);
 
     while(true){
-        led = !led;
+        run_led = !run_led;
         sketch.fill(RGB565::BLACK);
 
         Image<Grayscale> img = Shape::x2(camera);
@@ -397,6 +416,7 @@ void EmbdHost::main(){
         plot_rgb(sketch, {0,0});
 
         DEBUG_PRINTS("busy ", actions.pending());
+        ch9141.prints("busy ", actions.pending());
     }
 }
 
@@ -550,6 +570,8 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
         case "idle"_ha:
             if(args.size() == 2){
                 do_idle({args[0], args[1]});
+            }else if(args.size() == 0){
+                do_idle({20, 100});
             }
             break;
 
