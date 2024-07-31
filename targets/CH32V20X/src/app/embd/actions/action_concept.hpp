@@ -34,16 +34,23 @@ public:
         }
         return *this;
     }
+
+    auto remain() const {
+        return sustain;
+    }
     virtual void execute(){
 
+        if(once == true && executed == true) return;
+
+        EXECUTE(func);
+        executed = true;
+    }
+
+    void invoke(){
         if(sustain > 0) sustain--;
 
         if(sustain >= 0){
-            if(once == true && executed == true) return;
-
-            EXECUTE(func);
-            executed = true;
-
+            execute();
         }
     }
 };

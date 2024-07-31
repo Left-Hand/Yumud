@@ -10,10 +10,12 @@ protected:
     Queue action_queue = {};
 
     void execute() override {
-        if(action_queue.empty() == false) {
+        if(action_queue.empty() == false){
             const auto & action = action_queue.front();
-            action_queue.pop();
-            action->execute();
+            action->invoke();
+            if (bool(*action) == false) {
+                action_queue.pop();
+            }
         }else{
             sustain = 0;
         }
@@ -22,7 +24,7 @@ public:
     // 使用变参模板的构造函数
     template<typename... Args,
              std::enable_if_t<(std::is_base_of_v<Action, Args> &&...), int> = 0>
-    CombinedAction(Args&&... actions) : Action([this]() { execute(); }, 0xffff) {
+    CombinedAction(Args&&... actions) : Action([this]() { execute(); }, 60000) {
         // 使用 fold expression 将所有传入的 actions 添加到队列中
         (action_queue.emplace(std::make_unique<Args>(std::forward<Args>(actions))), ...);
     }

@@ -15,112 +15,78 @@ using namespace NVCV2;
 
 void EmbdHost::do_pick(const Vector2 & from){
     actions
-    << Action([&](){
-        // steppers.xy_mm(line.from);
-        //TODO
-    }, 2000)
-
-    << Action([&](){
-        steppers.nz(true);
-        steppers.z_pick();
-    }, 1500)
-    << Action([&](){
-        steppers.z_hold();
-    }, 1800)
-
-    ;
+    << CombinedAction(
+        GotoAction(steppers, from, 2000)
+        , Action([&](){
+            steppers.nz(true);
+            steppers.z_pick();
+        }, 1500)
+        ,Action([&](){
+            steppers.z_hold();
+        }, 1800)
+    );
 }
 
 
 void EmbdHost::do_drop(const Vector2 & to){
     actions
-    << Action([&](){
-        // steppers.xy_mm(to);
-        //FIXME
-    }, 2000)
-    << Action([&](){
-        steppers.z_place();
-    }, 1200)
+    << CombinedAction(
+        GotoAction(steppers, to, 2000)
+        , Action([&](){
+            steppers.z_place();
+        }, 1200)
 
-    << Action([&](){
-        steppers.nz(false);
-        steppers.z_idle();
-    }, 0)
-    
-    
-    ; 
+        ,Action([&](){
+            steppers.nz(false);
+            steppers.z_idle();
+        }, 1500)
+    ); 
 }
 
 
 void EmbdHost::do_idle(const Vector2 & to){
-    actions
-    << Action([&](){
-        steppers.nz(false);
-        steppers.z_idle();
-    }, 2000)
-    
-    << Action([this](){
-        // steppers.xy_mm();
-    }, 2000)    
-    ; 
 
+    actions
+    << CombinedAction(
+        Action([&](){
+            steppers.nz(false);
+            steppers.z_idle();
+        }, 2000)
+        
+        ,GotoAction(steppers, to, 2000)
+    );
 }
 
-void EmbdHost::do_blink(const uint dur){
+void EmbdHost::do_blink(const uint dur){  
     actions
-    << Action([&](){
-        busy_led = true;
-        DEBUG_PRINTLN("on")
-    }, 200)
-    
-    << Action([this](){
-        busy_led = false;
-        DEBUG_PRINTLN("off")
-    }, 200)
 
-    << Action([&](){
-        busy_led = true;
-    }, 200)
-    
-    << Action([this](){
-        busy_led = false;
-    }, 200)      
+    << CombinedAction{
+        Action([this](){
+            busy_led = false;
+        }, 200),
+
+        Action([this](){
+            busy_led = true;
+        }, 200),
+
+        Action([this](){
+            busy_led = false;
+        }, 200),
+
+        Action([this](){
+            busy_led = true;
+        }, 200),
+
+        Action([this](){
+            busy_led = false;
+        }, 200),
+    }
     ; 
 }
 
 void EmbdHost::do_move(const Vector2 & from, const Vector2 & to){
-
-    actions
-    << Action([&](){
-        // const auto & first_line = lines.front();
-        // steppers.xy_mm(first_line.from);
-    }, 2000)
-
-    << Action([&](){
-        steppers.nz(true);
-        steppers.z_pick();
-    }, 1500)
-    << Action([&](){
-        steppers.z_hold();
-    }, 1800)
-
-    << Action([&](){
-        // const auto & first_line = lines.front();
-        // steppers.xy_mm(first_line.to);
-    }, 2000)
-    << Action([&](){
-        steppers.z_place();
-    }, 1200)
-
-    << Action([&](){
-        // steppers.nz(false);
-        // steppers.z_idle();
-        // lines.pop();
-        // DEBUG_PRINTLN(lines.size());
-    }, 1200)
-    
-    
-    ;
+    do_pick(from);
+    do_drop(to);
 }
 void EmbdHost::main(){
     delay(200);
@@ -182,7 +148,7 @@ void EmbdHost::main(){
 
     stepper_x.setPositionClamp({0.2, 7.8});
     stepper_y.setPositionClamp({0.2, 4.8});
-    stepper_z.setPositionClamp({0.2, 26.2});
+    stepper_z.setPositionClamp({0.2, 24.2});
 
     auto parseAscii = [&](InputStream & is){
         static String temp;
@@ -255,8 +221,8 @@ void EmbdHost::main(){
     auto do_home = [&](){
         actions += Action([&](){steppers.nz(false);}, 600);
         actions += Action([&](){
-            steppers.x.setTargetCurrent(-0.75);
-            steppers.y.setTargetCurrent(-0.75);
+            steppers.x.setTargetCurrent(-0.45);
+            steppers.y.setTargetCurrent(-0.45);
             steppers.z.setTargetCurrent(-0.75);
         }, 7000);
 
@@ -267,11 +233,10 @@ void EmbdHost::main(){
         });
 
 
-        actions += GotoAction(steppers, Vector2{20, 160}, 2000);
+        do_idle({20, 60});
     };
 
     do_home();
-    do_blink(200);
 
     while(true){
         run_led = !run_led;
@@ -453,6 +418,14 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             }
             break;
 
+        case "abort"_ha:
+            actions.abort();
+            break;
+
+        case "clear"_ha:
+            actions.clear();
+            break;
+        
         case "xyzt"_ha:
             if(args.size() == 3){
                 steppers.x.setTargetTrapezoid(real_t(args[0]));
@@ -571,7 +544,7 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             if(args.size() == 2){
                 do_idle({args[0], args[1]});
             }else if(args.size() == 0){
-                do_idle({20, 100});
+                do_idle({20, 60});
             }
             break;
 

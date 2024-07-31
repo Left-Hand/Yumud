@@ -64,7 +64,7 @@ public:
     void update() {
         if(action_queue.size()){
             const auto & action = action_queue.front();
-            action->execute();
+            action->invoke();
             if (bool(*action) == false) {
                 action_queue.pop();
             }
