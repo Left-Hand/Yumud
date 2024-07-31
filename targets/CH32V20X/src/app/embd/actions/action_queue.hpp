@@ -11,6 +11,7 @@ protected:
     using Queue = std::queue<std::unique_ptr<Action>>; 
     Queue action_queue = {};
 
+    bool clear_req = false;
 public:
     ActionQueue() = default;
 
@@ -58,10 +59,14 @@ public:
     }
 
     void clear(){
-        action_queue = Queue();
+        clear_req = true;
     }
 
     void update() {
+        if(clear_req){
+            action_queue = Queue();
+            clear_req = false;
+        }
         if(action_queue.size()){
             const auto & action = action_queue.front();
             action->invoke();
