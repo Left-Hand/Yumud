@@ -3,12 +3,16 @@
 #include "../../sys/core/platform.h"
 #include "../../types/vector2/vector2_t.hpp"
 
-
-struct XY_Machine{
+struct X_Machine{
     virtual void x_mm(const real_t x) = 0;
-    virtual void y_mm(const real_t y) = 0;
-public:
+};
 
+struct Y_Machine{
+    virtual void y_mm(const real_t y) = 0;
+};
+
+struct XY_Machine:public X_Machine, public Y_Machine{
+public:
     void xy_mm(const real_t x, const real_t y){
         x_mm(x);
         y_mm(y);

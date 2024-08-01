@@ -57,8 +57,6 @@ Result TrapezoidPosCtrl::update(const real_t targ_position,const real_t real_pos
     real_t spd_delta = max_dec/foc_freq;
     real_t max_spd = speed_ctrl.max_spd;
 
-    static constexpr real_t pos_sw_radius = 0.01;
-
     real_t pos_err = targ_position - real_position;
     bool cross = pos_err * last_pos_err < 0;
     last_pos_err = pos_err;

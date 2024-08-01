@@ -3,7 +3,6 @@
 #define ARCHIVE_LOG(...) if(outen) logger.prints(__VA_ARGS__);
 
 bool Stepper::loadArchive(const bool outen){
-    using Archive = StepperUtils::Archive;
     using BoardInfo = StepperUtils::BoardInfo;
     Archive archive;
     memory.load(archive);
@@ -59,7 +58,6 @@ bool Stepper::loadArchive(const bool outen){
 }
 
 void Stepper::saveArchive(const bool outen){
-    using Archive = StepperUtils::Archive;
     Archive archive;
 
     static_assert(sizeof(Archive) <= 256, "archive size overflow");
@@ -99,7 +97,6 @@ void Stepper::saveArchive(const bool outen){
 
 
 void Stepper::removeArchive(const bool outen){
-    using Archive = StepperUtils::Archive;
     Archive archive;
     archive.clear();
     ARCHIVE_LOG("======");

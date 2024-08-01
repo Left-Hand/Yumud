@@ -3,17 +3,17 @@
 #include "remote/remote.hpp"
 #include "machine_concepts.hpp"
 
-struct Machine:public Cantilever{
+struct Machine:public Cantilever, public Nozzle_Machine{
 protected:
 
     static constexpr real_t x_scale = 1.0/40;
     static constexpr real_t y_scale = 1.0/40;
     static constexpr real_t z_scale = 1.0/2;
 
-    static constexpr uint pick_z = 40;
-    static constexpr uint hold_z = 10;
-    static constexpr uint place_z = 40;
-    static constexpr uint idle_z = 10;
+    static constexpr uint pick_z = 46;
+    static constexpr uint hold_z = 25;
+    static constexpr uint place_z = 48;
+    static constexpr uint idle_z = 25;
 
     void x_mm(const real_t _x) override {
         x.setTargetTrapezoid(_x*x_scale);
@@ -54,8 +54,11 @@ public:
     }
 
 
+    real_t last_z_mm;
     void zt_mm(const real_t _z){
         z.setTargetTrapezoid(_z * z_scale);
+        last_z_mm = _z;
+        
     }
     void z_pick(){
         zt_mm(pick_z);

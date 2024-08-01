@@ -12,13 +12,29 @@ protected:
     std::function<void()> func = nullptr;
 
     struct{
-        uint16_t sustain = 0;
+        uint sustain = 0;
         bool once = true;
         bool executed = false;
-    }__packed;
+    };
+
+    virtual void execute(){
+
+        if(once == true && executed == true) return;
+
+        EXECUTE(func);
+        executed = true;
+    }
+
+    enum class SpecialActionType{
+        NONE,
+        CLEAR,
+        ABORT
+    };
+    
+    virtual SpecialActionType special() const {return SpecialActionType::NONE;}
 
 public:
-    Action(std::function<void()> &&f, const uint16_t s = 0, const bool _once = true) : func(std::move(f)), sustain(s), once(_once) {}
+    Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), once(_once) {}
 
     bool is_valid() const {
         return sustain > 0;
@@ -37,13 +53,6 @@ public:
 
     auto remain() const {
         return sustain;
-    }
-    virtual void execute(){
-
-        if(once == true && executed == true) return;
-
-        EXECUTE(func);
-        executed = true;
     }
 
     void invoke(){

@@ -132,31 +132,7 @@ namespace StepperUtils{
             }
         }
 
-        void parseLine(const String & _line){
-
-            // if(_line.length() == 0) return;
-
-
-            // for(size_t i = 0; i < _line.length(); i++){
-            //     char chr = _line[i];
-
-            //     static String temp = "";
-            //     temp += chr;
-
-            //     bool ends = (chr == '\n');
-
-            //     if(ends){
-            //         temp.alphanum();
-            //         if(temp.length() != 0){
-                        auto tokens = split_string(_line, ' ');
-                        auto command = tokens[0];
-                        tokens.erase(tokens.begin());
-                        parseTokens(command, tokens);
-                    // }
-                    // temp = "";
-                // }
-            // }
-        }
+        void parseLine(const String & _line);
         virtual void readCan() = 0;
     };
 

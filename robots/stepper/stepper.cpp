@@ -217,8 +217,8 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
     #define GET_BIND_VALUE(cmd, value)\
         case cmd:\
             if(msg.isRemote()){\
-                CanMsg msg {tx_id};\
-                can.write(msg.load(value));\
+                CanMsg _msg {tx_id};\
+                can.write(_msg.load(value));\
             }\
             break;\
     

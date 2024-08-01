@@ -160,7 +160,7 @@ struct TrapezoidPosCtrl:public TopLayerCtrl{
 public:
     struct Config{
         real_t max_dec = 18.0;
-        real_t pos_sw_radius = 0.6;
+        real_t pos_sw_radius = 0.02;
     };
 
     using Result = CtrlResult;
