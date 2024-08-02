@@ -5,18 +5,15 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     if(ctrl_type != CtrlType::VECTOR) run_elecrad = est_elecrad + run_leadangle;
     else run_elecrad = odo.position2rad(target);
 
-    setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
+    setCurrent(curr_ctrl.update(measurements.curr), run_elecrad + elecrad_zerofix);
 
     odo.update();
 
-    raw_pos = odo.getPosition();
-    est_pos = raw_pos;
+    measurements.pos = odo.getPosition();
     est_elecrad = odo.getElecRad();
-    est_speed = (speed_estmator.update(raw_pos) + est_speed * 127) >> 7;
+    measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
 
     if(init_flag){
-        est_pos = raw_pos;
-        est_speed = real_t();
 
         run_status = RunStatus::ACTIVE;
 
@@ -25,7 +22,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     }
 
     // if(auto_shutdown_activation){
-    //     if(run_current){
+    //     if(est_current){
     //         auto_shutdown_actived = false;
     //         wakeup();
     //         auto_shutdown_last_wake_ms = millis();
@@ -45,6 +42,9 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         using Result = CtrlResult;
         Result result;
 
+        const auto & est_pos = measurements.pos;
+        const auto & est_spd = measurements.spd;
+
         switch(ctrl_type){
             case CtrlType::CURRENT:
                 result = {ABS(target), SIGN_AS(PI / 2, target)};
@@ -53,17 +53,17 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
                 result = {curr_ctrl.config.current_clamp, 0};
                 break;
             case CtrlType::POSITION:
-                result = position_ctrl.update(target_position_clamp.clamp(target), est_pos, est_speed, est_elecrad);
+                result = position_ctrl.update(target_position_clamp.clamp(target), est_pos, est_spd, est_elecrad);
                 break;
             case CtrlType::TRAPEZOID:
-                result = trapezoid_ctrl.update(target, est_pos, est_speed, est_elecrad);
+                result = trapezoid_ctrl.update(target, est_pos, est_spd, est_elecrad);
                 break;
             case CtrlType::SPEED:
-                result = speed_ctrl.update(target, est_speed);
+                result = speed_ctrl.update(target, est_spd);
                 break;
         } 
 
-        run_current = result.current;
+        measurements.curr = result.current;
         run_leadangle = result.raddiff;
     }
 

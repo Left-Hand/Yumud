@@ -114,7 +114,6 @@ namespace StepperUtils{
         virtual void parseTokens(const String & _command,const std::vector<String> & args){
             auto command = _command;
             command.toLowerCase();
-            // DEBUG_PRINTLN("command is:", command);
             switch(hash_impl(command.c_str(), command.length())){
                 case "reset"_ha:
                 case "rst"_ha:

@@ -3,7 +3,7 @@
 
 namespace StepperUtils{
 void Cli::parseLine(const String & _line){
-    if(_line.length() <= 1) return;
+    if(_line.length() < 1) return;
 
     auto tokens = split_string(_line, ' ');
     if(tokens.size()){

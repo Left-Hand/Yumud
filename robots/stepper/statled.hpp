@@ -19,7 +19,7 @@ public:
         Tri
     };
 protected:
-    RgbLedConcept<true> & led;
+    RgbLedConcept & led;
 
     Color color_a;
     Color color_b;
@@ -27,7 +27,7 @@ protected:
 
     Method method;
 public:
-    StatLed(RgbLedConcept<true> & _led) : led(_led){;}
+    StatLed(RgbLedConcept & _led) : led(_led){;}
 
     void init(){
         led.init();
@@ -63,6 +63,10 @@ public:
 
         Color color_mux = color_a.linear_interpolate(color_b, ratio);
         led = color_mux;
+    }
+
+    void update(const Color & color){
+        
     }
 };
 

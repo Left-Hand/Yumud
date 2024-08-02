@@ -23,14 +23,13 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     OdometerPoles odo;
     Memory & memory;
 
-    RgbLedDigital<true> led_instance{portC[14], portC[15], portC[13]};
-    StatLed panel_led = StatLed{led_instance};
+    RgbLedDigital rgb_led{portC[14], portC[15], portC[13]};
+    StatLed panel_led = StatLed{rgb_led};
 
-    real_t raw_pos;
-    real_t est_elecrad;
     real_t elecrad_zerofix;
 
     real_t run_elecrad;
+    real_t est_elecrad;
     real_t run_leadangle;
 
     Range target_position_clamp = Range::INF;
@@ -207,15 +206,15 @@ public:
 
 
     real_t getSpeed() const{
-        return est_speed;
+        return measurements.spd;
     }
 
     real_t getPosition() const {
-        return est_pos;
+        return measurements.pos;
     }
 
     real_t getCurrent() const {
-        return run_current;
+        return measurements.curr;
     }
 
     void setPositionClamp(const Range & clamp){

@@ -19,9 +19,14 @@ protected:
 
     using Switches = StepperUtils::Switches;
 
-    real_t est_speed;
-    real_t est_pos;
-    real_t run_current;
+    struct Measurements{
+        real_t curr;
+        real_t spd;
+        real_t pos;
+    };
+
+    Measurements measurements;
+
     real_t target;
 
 public:
