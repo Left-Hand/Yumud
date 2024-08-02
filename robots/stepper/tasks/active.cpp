@@ -21,23 +21,6 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         return RunStatus::NONE;
     }
 
-    // if(auto_shutdown_activation){
-    //     if(est_current){
-    //         auto_shutdown_actived = false;
-    //         wakeup();
-    //         auto_shutdown_last_wake_ms = millis();
-    //     }else{
-    //         if(millis() - auto_shutdown_last_wake_ms > auto_shutdown_timeout_ms){
-    //             auto_shutdown_actived = true;
-    //             shutdown();
-    //             auto_shutdown_last_wake_ms = millis();
-                
-    //         }
-    //     }
-    // }
-
-
-
     {
         using Result = CtrlResult;
         Result result;

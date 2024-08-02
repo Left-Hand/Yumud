@@ -58,18 +58,6 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     bool cali_debug_enabled = true;
     bool command_debug_enabled = false;
     bool run_debug_enabled = false;
-
-    #define CALI_DEBUG(...)\
-    if(cali_debug_enabled){\
-    logger.println(__VA_ARGS__);};
-
-    #define COMMAND_DEBUG(...)\
-    if(command_debug_enabled){\
-    logger.println(__VA_ARGS__);};
-
-    #define RUN_DEBUG(...)\
-    if(run_debug_enabled){\
-    logger.println(__VA_ARGS__);};
     
     CtrlType ctrl_type = CtrlType::POSITION;
 
@@ -100,7 +88,7 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
         if(shutdown_when_error_occurred){
             shutdown_flag = true;
         }
-        logger.println(error_message);
+        CLI_PRINTS(error_message);
     }
 
     void throw_warn(const ErrorCode & ecode, const char * _warn_message){
@@ -109,9 +97,11 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
         if(shutdown_when_warn_occurred){
             shutdown_flag = true;
         }
-        logger.println(warn_message);
+        CLI_PRINTS(warn_message);
     }
 
+    #define THROW_ERROR(code, msg) throw_error(code,msg)
+    #define THROW_WARN(code, msg) throw_warn(code,msg)
 
     RunStatus cali_task(const InitFlag init_flag = false);
     RunStatus active_task(const InitFlag init_flag = false);

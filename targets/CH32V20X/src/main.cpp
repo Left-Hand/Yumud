@@ -1,6 +1,5 @@
 #include "testbench/tb.h"
 #include "app/embd/embd.h"
-#include "app/smc/smc.h"
 
 
 void preinit(){

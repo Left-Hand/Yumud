@@ -85,10 +85,10 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
         DONE
     };
 
-    constexpr int forwardpreturns = 15;
-    constexpr int forwardturns = 100;
-    constexpr int backwardpreturns = forwardpreturns;
-    constexpr int backwardturns = forwardturns;
+    constexpr int forward_precycles = 15;
+    constexpr int forward_cycles = 100;
+    constexpr int backward_precycles = forward_precycles;
+    constexpr int backward_cycles = forward_cycles;
 
     constexpr int subdivide_micros = 256;
     constexpr int cogging_samples = 16;
@@ -107,7 +107,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     static std::array<real_t, cogging_samples> forward_cogging_err;
     static std::array<real_t, cogging_samples> backward_cogging_err;
 
-    auto sw_state = [](const SubState & new_state){
+    auto sw_state = [](const SubState new_state){
         sub_state = new_state;
         cnt = 0;
     };
@@ -147,7 +147,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
                 setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU + PI / 2);
 
-                if(cnt >= forwardpreturns * subdivide_micros){
+                if(cnt >= forward_precycles * subdivide_micros){
                     odo.update();
                     openloop_pole = odo.getRawPole();
 
@@ -162,26 +162,15 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 if(cnt % subdivide_micros == 0){
                     openloop_pole++;
 
-                    const uint8_t cali_index =warp_mod(openloop_pole, 50);
+                    const uint8_t cali_index = warp_mod(openloop_pole, 50);
 
-                    // static real_t last_err = 0;
-
-                    // real_t err_a = fmod(odo.getRawLapPosition(), 0.02);
-                    // real_t err_a = odo.getRawLapPosition();
-                    // real_t err_b = err_a - 0.02;
                     static CircularTracker tracker;
                     real_t last_err = tracker.update(odo.getRawLapPosition());
-                    // last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
-                    // last_err = err_a;
 
-                    forward_pole_err[cali_index] += last_err / (forwardturns / 50);
-                    
-                    // if(cnt % (subdivide_micros / cogging_samples) == 0){
-                    //     forward_cogging_err[cnt / (subdivide_micros / cogging_samples)]
-                    // }
+                    forward_pole_err[cali_index] += last_err / (forward_cycles / 50);
                 }
 
-                if(cnt >= forwardturns * subdivide_micros){
+                if(cnt >= forward_cycles * subdivide_micros){
                     sw_state(SubState::REALIGN);
                 }
                 break;
@@ -197,7 +186,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
                 setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU - PI / 2);
 
-                if(cnt >= backwardpreturns * subdivide_micros){
+                if(cnt >= backward_precycles * subdivide_micros){
                     odo.update();
                     openloop_pole = odo.getRawPole();
 
@@ -225,11 +214,11 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                     // last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
                     // last_err = err_a;
 
-                    backward_pole_err[cali_index] += last_err / (backwardturns / 50);
+                    backward_pole_err[cali_index] += last_err / (backward_cycles / 50);
                     // backward_err[cali_index] = odo.getRawLapPosition();
                 }
 
-                if(cnt >= backwardturns * subdivide_micros){
+                if(cnt >= backward_cycles * subdivide_micros){
                     sw_state(SubState::STOP);
                     openloop_pole = 0;
                 }
@@ -363,7 +352,7 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
 
             svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU + PI / 2);
 
-            if(cnt >= forwardpreturns * subdivide_micros){
+            if(cnt >= forward_precycles * subdivide_micros){
                 odo.update();
                 openloop_pole = odo.getRawPole();
 
@@ -387,10 +376,10 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
 
                 last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
 
-                forward_pole_err[cali_index] += last_err / (forwardturns / 50);
+                forward_pole_err[cali_index] += last_err / (forward_cycles / 50);
             }
 
-            if(cnt >= forwardturns * subdivide_micros){
+            if(cnt >= forward_cycles * subdivide_micros){
                 sw_state(SubState::REALIGN);
             }
             break;
@@ -406,7 +395,7 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
 
             svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU - PI / 2);
 
-            if(cnt >= backwardpreturns * subdivide_micros){
+            if(cnt >= backward_precycles * subdivide_micros){
                 odo.update();
                 openloop_pole = odo.getRawPole();
 
@@ -432,10 +421,10 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
                 last_err = ((ABS(err_b - last_err) > ABS(err_a - last_err))) ? err_a : err_b;
                 // last_err = err_a;
 
-                backward_pole_err[cali_index] += last_err / (backwardturns / 50);
+                backward_pole_err[cali_index] += last_err / (backward_cycles / 50);
             }
 
-            if(cnt >= backwardturns * subdivide_micros){
+            if(cnt >= backward_cycles * subdivide_micros){
                 sw_state(SubState::STOP);
                 openloop_pole = 0;
             }

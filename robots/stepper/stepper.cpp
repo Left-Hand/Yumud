@@ -9,9 +9,6 @@ void Stepper::setNozzle(const real_t duty){
 
 void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
     auto command = _command;
-    command.toLowerCase();
-
-    #define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
 
     switch(hash_impl(command.c_str(), command.length())){
         case "save"_ha:
@@ -92,8 +89,10 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             break;
 
         case "eleczero"_ha:
-        case "ez"_ha:
-            settle_value(elecrad_zerofix, args);
+        case "ez"_ha:{
+            if(args.size() == 0) break;
+            elecrad_zerofix = real_t(args[0]);
+        }
             break;
 
         case "error"_ha:
@@ -174,19 +173,12 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             break;
 
         case "map"_ha:
-            {
-                const auto & map = odo.map();
-                for(const auto & item : map){
-                    CLI_PRINTS(item * 50); 
-                }
-            }
+            CLI_PRINTS(odo.map());
             break;
         default:
             CliSTA::parseTokens(command, args);
             break;
     }
-
-    #undef CLI_PRINTS
 }
 
 
@@ -317,10 +309,6 @@ void Stepper::tick(){
     if(not (exe_status == (RunStatus::NONE))){//execution meet sth.
 
         if((exe_status == RunStatus::ERROR)){
-            // CLI_PRINTS("exit");
-            // CLI_PRINTS(RunStatus.to_name());
-            // logger.
-            // shutdown_flag = true;
         }
 
         else if((exe_status == RunStatus::EXIT)){
@@ -382,6 +370,8 @@ void Stepper::run(){
     readCan();
     panel_led.run();
 
+
+    #ifndef STEPPER_NO_PRINT
     {
         static String temp;
         while(logger.available()){
@@ -395,6 +385,8 @@ void Stepper::run(){
             }
         }
     }
+    #endif
+
     red_pwm.tick();
     green_pwm.tick();
     blue_pwm.tick();

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../core/system.hpp"
+#include "../../sys/core/system.hpp"
 
 #include <variant>
 #include <type_traits>
