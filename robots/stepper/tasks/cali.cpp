@@ -145,7 +145,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
             case SubState::PRE_FORWARD:
 
-                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU + PI / 2);
+                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI / 2);
 
                 if(cnt >= forward_precycles * subdivide_micros){
                     odo.update();
@@ -157,7 +157,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             case SubState::FORWARD:
                 odo.update();
 
-                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU + PI/2);
+                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI/2);
 
                 if(cnt % subdivide_micros == 0){
                     openloop_pole++;
@@ -184,7 +184,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
             case SubState::PRE_BACKWARD:
 
-                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU - PI / 2);
+                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI / 2);
 
                 if(cnt >= backward_precycles * subdivide_micros){
                     odo.update();
@@ -197,7 +197,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             case SubState::BACKWARD:
                 odo.update();
 
-                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU - PI/2);
+                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI/2);
 
                 if(cnt % subdivide_micros == 0){
                     openloop_pole--;
@@ -227,7 +227,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             // case SubState::PRE_LANDING:
             //     odo.update();
 
-            //     setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+            //     setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU);
             //     if(cnt >= landingpreturns * subdivide_micros){
             //         openloop_pole = 0;
 
@@ -238,7 +238,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             // case SubState::LANDING:
             //     odo.update();
 
-            //     setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU);
+            //     setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU);
             //     if(cnt % subdivide_micros == 0){
             //         elecrad_test_data[openloop_pole].first = odo.getLapPosition();
             //         elecrad_test_data[openloop_pole].second = odo.getElecRad();
@@ -350,7 +350,7 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
 
         case SubState::PRE_FORWARD:
 
-            svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU + PI / 2);
+            svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI / 2);
 
             if(cnt >= forward_precycles * subdivide_micros){
                 odo.update();
@@ -362,7 +362,7 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
         case SubState::FORWARD:
             odo.update();
 
-            svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU + PI/2);
+            svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI/2);
 
             if(cnt % subdivide_micros == 0){
                 openloop_pole++;
@@ -393,7 +393,7 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
 
         case SubState::PRE_BACKWARD:
 
-            svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU - PI / 2);
+            svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI / 2);
 
             if(cnt >= backward_precycles * subdivide_micros){
                 odo.update();
@@ -406,7 +406,7 @@ CaliTasker::RunStatus CaliTasker::run(const InitFlag init_flag){
         case SubState::BACKWARD:
             odo.update();
 
-            svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / real_t(subdivide_micros) * TAU - PI/2);
+            svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI/2);
 
             if(cnt % subdivide_micros == 0){
                 openloop_pole--;

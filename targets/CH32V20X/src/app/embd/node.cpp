@@ -6,7 +6,7 @@ void node_main(){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER.init(DEBUG_UART_BAUD);
     DEBUGGER.setEps(4);
 
     auto & logger = DEBUGGER;
@@ -62,10 +62,11 @@ void node_main(){
 
     while(true){
         stp.run(); 
-        // stp.report();
+        stp.report();
         Sys::Clock::reCalculateTime();
         // stp.setTargetTrapezoid(4 * sin(t) + 3 * sign(sin(t)));
-        // stp.setTargetPosition(15 * sin(t));
+        // stp.setTargetPosition(MIN(3 * sin(t), 0));
+        // stp.setTargetPosition(0);
         // stp.setTargetVector(15 * sin(t));
         // stp.setTargetSpeed(26 * sin(t));
     }

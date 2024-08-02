@@ -48,6 +48,8 @@ bool Stepper::loadArchive(const bool outen){
         }
 
         setNodeId(archive.node_id);
+        
+        memcpy(&m_archive, &archive, sizeof(archive));
         ARCHIVE_PRINTS("load successfully!");
     }else{
         ARCHIVE_PRINTS("load aborted because data is corrupted");
@@ -72,7 +74,8 @@ void Stepper::saveArchive(const bool outen){
     archive.hashcode = hashcode;
 
     for(size_t i = 0; i < odo.map().size(); i++){
-        auto item_i = int16_t((odo.map()[i] - (elecrad_zerofix / real_t(poles * TAU))) * 16384);
+        static constexpr auto ratio = real_t(1 / TAU);
+        auto item_i = int16_t((odo.map()[i] - (elecrad_zerofix / poles * ratio)) * 16384);
         archive.cali_map[i] = item_i;
     }
 
@@ -110,6 +113,7 @@ void Stepper::removeArchive(const bool outen){
 #undef ARCHIVE_PRINTS
 
 OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi){
+    os << "======\r\n";
     os << "build version:\t\t" << bi.bver << "\r\n";
     os << "build time:\t\t20" << 
             bi.y << '/' << bi.m << '/' << 
@@ -117,5 +121,6 @@ OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi)
 
     os << "driver type:\t\t" << bi.dtype << "\r\n";
     os << "driver branch:\t\t" << bi.dbranch << "\r\n";
+    os << "======\r\n";
     return os;
 }

@@ -26,7 +26,7 @@ public:
         real_t current_clamp;
 
         constexpr void reset(){
-            current_slew_rate = 20.0 / foc_freq;
+            current_slew_rate = 30.0 / foc_freq;
             current_clamp = 0.7;
         }
     };
@@ -49,12 +49,7 @@ public:
         current_output = 0;
     }
 
-
-    real_t update(const real_t targ_current){
-        real_t current_delta = CLAMP(targ_current - current_output, -current_slew_rate, current_slew_rate);
-        current_output = MIN(current_output + current_delta, current_clamp);
-        return current_output;
-    }
+    real_t update(const real_t targ_current);
 };
 
 
@@ -118,9 +113,9 @@ struct GeneralPositionCtrl:public PositionCtrl{
 public:
     struct Config{
         real_t kp = 60;
-        real_t kd = 5;
+        real_t kd = 30;
 
-        real_t kd_active_radius = 0.7;
+        real_t kd_active_radius = 1.7;
 
         real_t ki = 0.0;
         real_t ki_clamp = 25.6;

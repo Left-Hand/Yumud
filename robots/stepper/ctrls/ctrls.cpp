@@ -2,6 +2,13 @@
 
 using Result = CtrlResult;
 
+
+real_t CurrentCtrl::update(const real_t targ_current){
+    real_t current_delta = CLAMP(targ_current - current_output, -current_slew_rate, current_slew_rate);
+    current_output = MIN(current_output + current_delta, current_clamp);
+    return current_output;
+}
+
 Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos, 
         const real_t real_spd, const real_t real_elecrad){
 
@@ -11,11 +18,11 @@ Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos,
     static constexpr double u = TAU;
     static constexpr double pu = poles * u;
     static constexpr double a = 2 / PI;
-    static constexpr double k = a * a * pu;
 
-    real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
+    // real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
 
-    real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.45)) , err);
+    // real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.45)) , err);
+    real_t raddiff = sin(CLAMP(abs_err, -inv_poles / 4, inv_poles / 4) * pu) * (PI/2) * SIGN_AS((1.2 + CLAMP(45 * abs_err, 0, MIN(curr_ctrl.current_output , 1.5))) , err);
 
     real_t current = MIN(abs_err * kp, curr_ctrl.config.current_clamp); 
 
@@ -48,7 +55,7 @@ Result GeneralSpeedCtrl::update(const real_t _targ_speed,const real_t real_speed
     real_t abs_targ_current = MIN(ABS(targ_current), curr_ctrl.config.current_clamp);
     targ_current = SIGN_AS(abs_targ_current, targ_speed);
 
-    if(real_speed * targ_speed > 0) return {abs_targ_current, SIGN_AS((PI / 2 * (1 + MIN(curr_ctrl.current_output, 1.2))), targ_speed)};
+    if(real_speed * targ_speed > 0) return {abs_targ_current, SIGN_AS(((PI / 2) * (1 + MIN(curr_ctrl.current_output, 1.2))), targ_speed)};
     else return {abs_targ_current, SIGN_AS(PI / 2, targ_speed)};
 }
 

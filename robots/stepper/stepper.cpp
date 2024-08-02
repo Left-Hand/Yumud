@@ -84,6 +84,15 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             }
             break;
 
+        case "vect"_ha:
+        case "v"_ha:
+            if(args.size()){
+                auto v = real_t(args[0]);
+                setTargetVector(v);
+                CLI_PRINTS("targ vector\t", v, " n");
+            }
+            break;
+
         case "crc"_ha:
             CLI_PRINTS(Sys::Chip::getChipIdCrc());
             break;
@@ -149,12 +158,14 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             break;
 
         case "rd"_ha:
-            if(args.size() == 1) run_debug_enabled = int(args[0]);
-            CLI_PRINTS("rd", run_debug_enabled);
+            run_debug_enabled = args.size() ? int(args[0]) : true;
+            CLI_PRINTS("run debug enabled:", run_debug_enabled);
             break;
 
-        case "cl"_ha:
-            if(args.size() == 1) setCurrentClamp(real_t(args[0]));
+        case "cl"_ha:{
+            auto cl = args.size() ? real_t(args[0]) : 0;
+            CLI_PRINTS("current clamp:", cl);
+        }
             break;
 
         case "status"_ha:
@@ -174,6 +185,13 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
 
         case "map"_ha:
             CLI_PRINTS(odo.map());
+            break;
+
+        case "version"_ha:
+        case "ver"_ha:
+            break;
+        case "info"_ha:
+            CLI_PRINTS(m_archive.board_info);
             break;
         default:
             CliSTA::parseTokens(command, args);
@@ -410,10 +428,10 @@ void Stepper::report(){
     // target_pos = sign(frac(t) - 0.5);
     // target_pos = sin(t);
     // RUN_DEBUG(, est_pos, est_speed);
-    if(run_status == RunStatus::ACTIVE and logger.pending() == 0 && run_debug_enabled){
+    if(logger.pending()==0){
         // delayMicroseconds(200);   
-        delay(1); 
-        // RUN_DEBUG(target, est_speed, est_pos, est_current, run_leadangle);
+        // delay(1); 
+        RUN_DEBUG(target, getSpeed(), getPosition(), getCurrent(), (getPosition() - target) * 360);
     }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);
