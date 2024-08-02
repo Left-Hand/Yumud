@@ -60,21 +60,6 @@ void node_main(){
     stp.setTargetCurrent(0);
     stp.setCurrentClamp(1.2);
 
-    auto parseAscii = [&](InputStream & is){
-        static String temp;
-        while(is.available()){
-            auto chr = is.read();
-            if(chr == 0) continue;
-            temp += chr;
-            if(chr == '\n'){
-                temp.alphanum();
-                stp.parseLine(temp);
-                temp = "";
-            }
-        }
-    };
-
-    logger.bindRxPostCb([&](){parseAscii(logger);});
     while(true){
         stp.run(); 
         // stp.report();

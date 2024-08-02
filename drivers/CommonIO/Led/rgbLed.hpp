@@ -10,9 +10,8 @@
 class RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
+
     real_t brightness = real_t(1);
-    const bool com_anode = false;
-    virtual void update(const Color &color) = 0;
 public:
 
     virtual void init() = 0;
@@ -21,64 +20,56 @@ public:
         brightness = _brightness;
     }
 
-    void setColor(const Color& color){
-        if(com_anode) update(color * brightness);
-        else update((color.inverted()) * brightness);
-    }
-
     virtual RgbLedConcept & operator = (const Color & color) = 0;
 };
 
 class RgbLedDigital:public RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
-    GpioConcept & red_pin;
-    GpioConcept & green_pin;
-    GpioConcept & blue_pin;
-    void update(const Color &color) override{
-        red_pin = (color.r > real_t(0.5));
-        green_pin = (color.g > real_t(0.5));
-        blue_pin = (color.b > real_t(0.5));
-    }
+    GpioConcept & red_gpio;
+    GpioConcept & green_gpio;
+    GpioConcept & blue_gpio;
 public:
-    RgbLedDigital(GpioConcept & _red_pin, GpioConcept & _green_pin, GpioConcept & _blue_pin):
-            red_pin(_red_pin), green_pin(_green_pin), blue_pin(_blue_pin){;}
+    RgbLedDigital(GpioConcept & _red_gpio, GpioConcept & _green_gpio, GpioConcept & _blue_gpio):
+            red_gpio(_red_gpio), green_gpio(_green_gpio), blue_gpio(_blue_gpio){;}
     
     void init() override{
-        red_pin.outpp();
-        green_pin.outpp();
-        blue_pin.outpp();
+        red_gpio.outpp();
+        green_gpio.outpp();
+        blue_gpio.outpp();
     }
 
-    RgbLedDigital & operator = (const Color & color) override{update(color); return *this;}
-};
-
-template<bool com_anode>
-class RgbLedPwm:public RgbLedConcept{
-protected:
-    using Color = Color_t<real_t>;
-    PwmChannel & red_channel;
-    PwmChannel & green_channel;
-    PwmChannel & blue_channel;
-    void update(const Color &color) override{
-        red_channel = color.r / real_t(1);
-        green_channel = color.g / real_t(1);
-        blue_channel = color.b / real_t(1);
+    RgbLedDigital & operator = (const Color & color) override{
+        red_gpio = (color.r > real_t(0.5));
+        green_gpio = (color.g > real_t(0.5));
+        blue_gpio = (color.b > real_t(0.5));
+        return *this;
     }
-public:
-    RgbLedPwm(PwmChannel & _red_channel, PwmChannel & _green_channel, PwmChannel & _blue_channel):
-            red_channel(_red_channel), green_channel(_green_channel), blue_channel(_blue_channel){;}
 };
 
 
-
-class RgbLedAnalog{
+class RgbLedAnalog:public RgbLedConcept{
 public:
     LedAnalog red;
     LedAnalog green;
     LedAnalog blue;
 
-    // RgbLedAnalog()
+    //template
+    RgbLedAnalog(gpio_or_pwm auto & _red_ch, gpio_or_pwm auto & _green_ch, gpio_or_pwm auto & _blue_ch):
+        red(_red_ch), green(_green_ch), blue(_blue_ch){;}
+
+    void init() override{
+        red.init();
+        green.init();
+        blue.init();
+    }
+
+    RgbLedAnalog & operator = (const Color & color) override{
+        red = color.r;    
+        green = color.g;    
+        blue = color.b;    
+        return *this;
+    }
 };
 
 

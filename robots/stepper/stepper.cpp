@@ -378,6 +378,28 @@ void Stepper::tick(){
     exe_micros = micros() - begin_micros;
 }
 
+void Stepper::run(){
+    readCan();
+    panel_led.run();
+
+    {
+        static String temp;
+        while(logger.available()){
+            auto chr = logger.read();
+            if(chr == 0) continue;
+            temp += chr;
+            if(chr == '\n'){
+                temp.alphanum();
+                parseLine(temp);
+                temp = "";
+            }
+        }
+    }
+    red_pwm.tick();
+    green_pwm.tick();
+    blue_pwm.tick();
+}
+
 void Stepper::report(){
     // real_t total = real_t(3);
     // static real_t freq = real_t(10);

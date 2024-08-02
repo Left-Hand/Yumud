@@ -6,8 +6,11 @@
 #include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
+
 #include "../hal/adc/adcs/adc1.hpp"
 #include "../robots/stepper/concept.hpp"
+#include "hal/timer/pwm/gpio_pwm.hpp"
+
 
 class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 
@@ -23,7 +26,10 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     OdometerPoles odo;
     Memory & memory;
 
-    RgbLedDigital rgb_led{portC[14], portC[15], portC[13]};
+    GpioPwm red_pwm{portC[14]};
+    GpioPwm green_pwm{portC[15]};
+    GpioPwm blue_pwm{portC[13]};
+    RgbLedAnalog rgb_led{red_pwm, green_pwm, blue_pwm};
     StatLed panel_led = StatLed{rgb_led};
 
     real_t elecrad_zerofix;
@@ -141,30 +147,34 @@ public:
 
         panel_led.init();
         panel_led.setPeriod(400);
-        panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Squ);
+        panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Sine);
+
+        red_pwm.setPeriod(25);
+        green_pwm.setPeriod(25);
+        blue_pwm.setPeriod(25);
     }
 
     void setTargetCurrent(const real_t current){
         target = current;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
         target = speed;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::SPEED;
     }
 
     void setTargetPosition(const real_t pos){
         target = pos;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::POSITION;
     }
 
     void setTargetTrapezoid(const real_t pos){
         target = pos;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Squ);
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::TRAPEZOID;
     }
 
@@ -189,10 +199,7 @@ public:
         odo.locateRelatively(pos);
     }
 
-    void run(){
-        readCan();
-        panel_led.run();
-    }
+    void run();
 
     void report();
 
@@ -234,9 +241,7 @@ public:
     }
 
     uint8_t getNodeId(){
-        // return 0;
         auto chip_id = Sys::Chip::getChipIdCrc();
-        // logger.println("chip_id:", chip_id);
         switch(chip_id){
             case 3273134334:
                 return node_id = 3;
@@ -263,7 +268,7 @@ public:
     }
 
     void clear(){
-
+        removeArchive();
     }
 
     void reset()override{

@@ -40,18 +40,24 @@ protected:
     real_t last_duty_ = 0;
     bool inversed = false;
 
+
+public:
+
+    LedAnalog(gpio_or_pwm auto & _inst, const bool inv = false):inst(_inst), inversed(inv){;}
+
+    void init(){
+        inst.init();
+    }
+
+    void toggle() override {
+        last_duty_ = 1 - last_duty_;
+        *this = (last_duty_);
+    }
+
     LedAnalog & operator = (const real_t duty) override{
         last_duty_ = inversed ? 1 - duty : duty;
         inst = last_duty_;
 
         return *this;
-    }
-public:
-
-    LedAnalog(gpio_or_pwm auto & _inst, const bool inv = false):inst(_inst), inversed(inv){;}
-
-    void toggle() override {
-        last_duty_ = 1 - last_duty_;
-        *this = (last_duty_);
     }
 };
