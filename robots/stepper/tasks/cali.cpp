@@ -6,63 +6,39 @@
 
 struct CircularTracker{
 protected:
-
-    static constexpr real_t circ = inv_poles;
-
-    real_t last_output;
-    
-    real_t findClosest(const real_t * arr, const real_t * arr_end, const real_t target){
-        //Corner cases
-        const size_t n = std::distance(arr, arr_end);
-        // 如果目标值小于等于数组第一个元素，直接返回第一个元素
-        if (target <= arr[0])
-            return arr[0];
-        // 如果目标值大于等于数组最后一个元素，直接返回最后一个元素
-        if (target >= arr[n - 1])
-            return arr[n - 1];
-        //Doing binary search
-        size_t i = 0, j = n, mid = 0;
-        while (i < j) {
-            mid = (i + j) / 2;
-    
-            if (arr[mid] == target)
-                return arr[mid];
-            if (target < arr[mid]) {
-                // 如果目标值在当前元素和前一个元素之间，返回前一个元素
-                if (mid > 0 && target > arr[mid - 1])
-                    return getClosest(arr[mid - 1],arr[mid], target);
-                j = mid;
-            }
-            else {
-                // 如果目标值在当前元素和下一个元素之间，返回下一个元素
-                if (mid < (n - 1) && target < arr[mid + 1])
-                    return getClosest(arr[mid],arr[mid + 1], target);
-                i = mid + 1;
-            }
-        }
-        return arr[mid];
-    }
-    real_t getClosest(const real_t val1,const real_t val2,const real_t target)
-    {
-        if (target - val1 >= val2 - target)
-            return val2;
-        else
-            return val1;
-    }
+    static constexpr auto circ = inv_poles;
+    real_t last_err;
 public:
     void reset(){
-        last_output = 0;
+        last_err = 0;
     }
 
+    static constexpr real_t h_fmod(const real_t x, const real_t b){
+        return fmod(x + b/2, b) - b/2;
+    }
+    static constexpr real_t calculate_err(const real_t input){
+        real_t ret = h_fmod(input, circ);
+        return ret;
+    }
     real_t update(const real_t input){
-        std::array<real_t, 3> choice;
+        std::array<real_t, 3> errs;
         // 准备三个可能的选择，考虑输入值的正负和循环周期
-        choice[1] = fmod(input, circ);
-        choice[0] = choice[1] - circ;
-        choice[2] = choice[1] + circ;
+        errs[0] = calculate_err(input);
+        errs[1] = errs[0] - circ;
+        errs[2] = errs[0] + circ;
 
+        real_t min_diff = std::numeric_limits<real_t>::max();
+        uint index = 0;
+
+        for(uint i = 0; i < 3; i++){
+            real_t diff = std::abs(errs[i] - last_err);
+            if(diff < min_diff){
+                min_diff = diff;
+                index = i;
+            }
+        }
         // 找到这三个选择中最接近上一次输出的值，并更新最后输出
-        return last_output = findClosest(choice.begin(), choice.end(), last_output);
+        return last_err = errs[index];
     }
 };
 

@@ -169,7 +169,7 @@ public:
     }
 
     void setOpenLoopCurrent(const real_t current){
-        curr_config.current_clamp = current;
+        curr_config.curr_limit = current;
     }
 
     void setTargetVector(const real_t pos){
@@ -182,7 +182,7 @@ public:
     }
 
     void setCurrentClamp(const real_t max_current){
-        curr_config.current_clamp = max_current;
+        curr_config.curr_limit = max_current;
     }
 
     void locateRelatively(const real_t pos = 0){

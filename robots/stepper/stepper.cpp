@@ -431,7 +431,7 @@ void Stepper::report(){
     if(logger.pending()==0){
         // delayMicroseconds(200);   
         // delay(1); 
-        RUN_DEBUG(target, getSpeed(), getPosition(), getCurrent(), (getPosition() - target) * 360);
+        RUN_DEBUG(target, getSpeed(), getPosition(), getCurrent(), run_leadangle);
     }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);

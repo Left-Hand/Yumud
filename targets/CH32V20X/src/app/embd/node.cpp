@@ -65,7 +65,9 @@ void node_main(){
         stp.report();
         Sys::Clock::reCalculateTime();
         // stp.setTargetTrapezoid(4 * sin(t) + 3 * sign(sin(t)));
-        // stp.setTargetPosition(MIN(3 * sin(t), 0));
+        // stp.setTargetPosition(14 * sin(t));
+        // stp.setTargetPosition(15 *sin(t/3) * sin(t*3));
+        stp.setTargetPosition(30 * int(7 * sin(t /6)));
         // stp.setTargetPosition(0);
         // stp.setTargetVector(15 * sin(t));
         // stp.setTargetSpeed(26 * sin(t));

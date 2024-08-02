@@ -33,10 +33,10 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
                 result = {ABS(target), SIGN_AS(PI / 2, target)};
                 break;
             case CtrlType::VECTOR:
-                result = {curr_ctrl.config.current_clamp, 0};
+                result = {curr_ctrl.config.curr_limit, 0};
                 break;
             case CtrlType::POSITION:
-                result = position_ctrl.update(target_position_clamp.clamp(target), est_pos, est_spd, est_elecrad);
+                result = position_ctrl.update(target, est_pos, est_spd, est_elecrad);
                 break;
             case CtrlType::TRAPEZOID:
                 result = trapezoid_ctrl.update(target, est_pos, est_spd, est_elecrad);

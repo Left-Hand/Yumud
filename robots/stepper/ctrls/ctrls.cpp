@@ -14,24 +14,26 @@ Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos,
 
     real_t err = targ_pos - real_pos;
     real_t abs_err = ABS(err);
+    real_t abs_spd = ABS(real_spd);
 
-    static constexpr double u = TAU;
-    static constexpr double pu = poles * u;
-    static constexpr double a = 2 / PI;
+    static constexpr real_t basic_raddiff = 1.2;
 
-    // real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
+    real_t clamped_abs_err = MIN(abs_err, inv_poles / 4);
+    real_t smoothed_raw_abs_raddiff = sin(clamped_abs_err * poles * TAU) * (PI/2);
 
-    // real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, 0.45)) , err);
-    real_t raddiff = sin(CLAMP(abs_err, -inv_poles / 4, inv_poles / 4) * pu) * (PI/2) * SIGN_AS((1.2 + CLAMP(45 * abs_err, 0, MIN(curr_ctrl.current_output , 1.5))) , err);
+    #define SAFE_OVERLOAD_RAD(curr, spd) MIN(curr * 1.4, spd * 0.17)
+    real_t raddiff = smoothed_raw_abs_raddiff * SIGN_AS((basic_raddiff + MIN(25 * abs_err, SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd))), err);
 
-    real_t current = MIN(abs_err * kp, curr_ctrl.config.current_clamp); 
+    real_t current = MIN(abs_err * kp, curr_ctrl.config.curr_limit); 
 
-    if(abs_err < kd_active_radius){
-        current = MAX(current - (kd * ABS(real_spd) >> 8), 0);
-    }
+    //w = mv^2/2 - fx
+    real_t overflow_energy = MAX(kd * abs_spd - kd2 * sqrt(abs_err) - 0.7, 0); 
     
-    if(((err > 0) && (real_spd < -1)) || ((err < 0) && (real_spd > 1))){
-        return {0, 0};
+    real_t least_current = current * 0.23;
+    current = MAX(current - overflow_energy, least_current);
+    
+    if(err * real_spd < -0.1){
+        return {curr_ctrl.config.curr_limit, SIGN_AS(basic_raddiff, err)};
     }else{
         return {current, raddiff};
     }
@@ -52,7 +54,7 @@ Result GeneralSpeedCtrl::update(const real_t _targ_speed,const real_t real_speed
     targ_current += (kp_contribute >> 16);
     targ_current -= (kd_contribute >> 8); 
 
-    real_t abs_targ_current = MIN(ABS(targ_current), curr_ctrl.config.current_clamp);
+    real_t abs_targ_current = MIN(ABS(targ_current), curr_ctrl.config.curr_limit);
     targ_current = SIGN_AS(abs_targ_current, targ_speed);
 
     if(real_speed * targ_speed > 0) return {abs_targ_current, SIGN_AS(((PI / 2) * (1 + MIN(curr_ctrl.current_output, 1.2))), targ_speed)};
