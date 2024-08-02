@@ -6,36 +6,6 @@ using NVCV2::Shape::Seed;
 
 
 namespace SMC{
-static void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src) {
-    if((void *)&dst == (void *)&src){
-        auto temp = dst.clone();
-        fast_diff_opera(temp, src);
-        dst = std::move(temp);
-        return;
-    }
-
-    auto window = dst.get_window().intersection(src.get_window());
-    for (auto y = window.y; y < window.y + window.h; y++) {
-        for (auto x = window.x; x < window.x + window.w; x++) {
-            const int a = src(Vector2i{x,y});
-            const int b = src(Vector2i{x+1,y});
-            const int c = src(Vector2i{x,y+1});
-            dst[{x,y}] = uint8_t(CLAMP(std::max(
-                (ABS(a - c)) * 255 / (a + c),
-                (ABS(a - b) * 255 / (a + b))
-            ), 0, 255));
-        }
-    }
-}
-
-[[maybe_unused]] static void fast_bina_opera(Image<Binary> & out,const Image<Grayscale> & em, const uint8_t et,const Image<Grayscale>& dm, const uint8_t dt) {
-    const auto size = (Rect2i(Vector2i(), em.size).intersection(Rect2i(Vector2i(), dm.size))).size;
-    const auto area = size.x * size.y;
-
-    for (auto i = 0; i < area; i++) {
-        out[i] = Binary(((uint8_t)em[i] > et) || ((uint8_t)dm[i] > dt));
-    }
-}
 
 std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src){
     auto last_seed_pos = measurer.seed_pos;
@@ -47,7 +17,7 @@ std::tuple<Point, Rangei> SmartCar::get_entry(const ImageReadable<Binary> & src)
     real_t road_align_pixels = {WorldUtils::pixels(config.road_width)};
     auto align_mode = switches.align_mode;
     auto align_right = (LR)align_mode;
-    auto y = last_seed_pos.y ? last_seed_pos.y : src.size.y - config.seed_height_base;
+    auto y = last_seed_pos.y ? last_seed_pos.y : src.get_size().y - config.seed_height_base;
 
     //定义本次找到的x窗口
     Rangei new_x_range;
@@ -277,20 +247,20 @@ void SmartCar::main(){
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture_unsafe(area.intersection(Rect2i(area.position, src.get_size())), src.data.get());
+        tftDisplayer.puttexture(area.intersection(Rect2i(area.position, src.get_size())), src.get_data());
     };
 
     [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture_unsafe(area, src.data.get());
+        tftDisplayer.puttexture(area, src.get_data());
     };
 
     
     [[maybe_unused]] auto plot_sketch = [&](const Rect2i & area){
         CHECK_PLOTDE();
         painter.bindImage(tftDisplayer);
-        tftDisplayer.puttexture_unsafe(area, sketch.data.get());
+        tftDisplayer.puttexture(area, sketch.get_data());
     };
 
     [[maybe_unused]] auto plot_coast = [&](const Coast & coast,  const Vector2i & pos, const RGB565 & color = RGB565::RED){
@@ -497,7 +467,7 @@ void SmartCar::main(){
         Pixels::inverse(pers_gray_image);//对灰度图取反(边线为白色方便提取)
 
         // fast_bina_opera(
-        fast_diff_opera(diff_gray_image, pers_gray_image);//进行加速后的差分算法
+        Pixels::fast_diff_opera(diff_gray_image, pers_gray_image);//进行加速后的差分算法
 
         // plot_gray(diff_gray_image, Rect2i{0, 0, 188, 60});
         CREATE_BENCHMARK(benchmark.gray);
@@ -510,7 +480,7 @@ void SmartCar::main(){
         auto ccd_diff = ccd_image.space();
         auto ccd_bina = make_bina_mirror(ccd_image);
 
-        fast_diff_opera(ccd_diff, ccd_image);//进行加速后的差分算法
+        Pixels::fast_diff_opera(ccd_diff, ccd_image);//进行加速后的差分算法
         Pixels::binarization(ccd_bina, ccd_diff, config.edge_threshold);
         Shape::anti_pepper_x(ccd_bina, ccd_bina);
         Shape::anti_pepper_x(ccd_bina, ccd_bina);
@@ -557,7 +527,7 @@ void SmartCar::main(){
 
         auto get_coast = [&](const Vector2i & seed_pos, const LR side) -> Coast{
             auto ret = CoastUtils::form(img_bina, seed_pos, side);
-            ret = CoastUtils::trim(ret, img.size);
+            ret = CoastUtils::trim(ret, img.get_size());
             return ret;
         };
 

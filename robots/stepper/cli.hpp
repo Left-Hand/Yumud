@@ -2,81 +2,13 @@
 
 #define __STEPPER_CLI_HPP__
 
-#include "../sys/core/system.hpp"
+#include "sys/core/system.hpp"
 #include "constants.hpp"
 #include "statled.hpp"
 
-#include "../hal/bus/can/can.hpp"
+#include "hal/bus/can/can.hpp"
 
 namespace StepperUtils{
-
-    #define VNAME(x) #x
-
-    #define read_value(value)\
-    {\
-        DEBUG_PRINTS("get", VNAME(value), "\t\t is", value);\
-        break;\
-    }
-
-    #define trigger_method(method, ...)\
-    {\
-        method(__VA_ARGS__);\
-        break;\
-    }
-
-    #define settle_method(method, args, type)\
-    {\
-        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
-        if(args.size() == 0){\
-            DEBUG_PRINTS("no arg");\
-        }else if(args.size() == 1){\
-            method(type(args[0]));\
-            DEBUG_PRINTS("method", #method, "called");\
-        }\
-        break;\
-    }
-
-    #define settle_value(value, args)\
-    {\
-        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
-        if(args.size() == 0){\
-            read_value(value);\
-        }else if(args.size() == 1){\
-            value = decltype(value)(args[0]);\
-            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", args[0]);\
-        }\
-        break;\
-    }
-
-    #define settle_positive_value(value, args)\
-    {\
-        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
-        auto temp_value = decltype(value)(args[0]);\
-        ASSERT_WITH_RETURN((temp_value >= 0), "arg max should be greater than zero");\
-        if(args.size() == 0){\
-            read_value(value);\
-        }else if(args.size() == 1){\
-            value = temp_value;\
-            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
-        }\
-        break;\
-    }
-
-    #define settle_clamped_value(value, args, mi, ma)\
-    {\
-        ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
-        auto temp_value = decltype(value)(args[0]);\
-        ASSERT_WITH_RETURN((temp_value >= mi), "arg < ", mi, "\t failed to settle");\
-        ASSERT_WITH_RETURN((temp_value < ma), "arg >= ", ma, "\t failed to settle");\
-        if(args.size() == 0){\
-            read_value(value);\
-        }else if(args.size() == 1){\
-            value = temp_value;\
-            DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
-        }\
-        break;\
-    }
-
     class Cli{
     private:
         std::vector<String> split_string(const String& input, char delimiter) {
@@ -111,53 +43,100 @@ namespace StepperUtils{
     public:
         Cli(IOStream & _logger, Can & _can, const uint8_t _node_id):logger(_logger), can(_can), node_id(_node_id){;}
 
+        #define VNAME(x) #x
+
         virtual void parseTokens(const String & _command,const std::vector<String> & args){
             auto command = _command;
-            command.toLowerCase();
-            // DEBUG_PRINTLN("command is:", command);
             switch(hash_impl(command.c_str(), command.length())){
                 case "reset"_ha:
                 case "rst"_ha:
                 case "r"_ha:
-                    DEBUG_PRINTS("rsting");
+                    CLI_PRINTS("rsting");
                     NVIC_SystemReset();
                     break;
                 case "alive"_ha:
                 case "a"_ha:
-                    DEBUG_PRINTS("chip is alive");
+                    CLI_PRINTS("chip is alive");
                     break;
                 default:
-                    DEBUG_PRINTS("no command available:", command);
+                    CLI_PRINTS("no command available:", command);
                     break;
             }
         }
 
-        void parseLine(const String & _line){
-
-            // if(_line.length() == 0) return;
-
-
-            // for(size_t i = 0; i < _line.length(); i++){
-            //     char chr = _line[i];
-
-            //     static String temp = "";
-            //     temp += chr;
-
-            //     bool ends = (chr == '\n');
-
-            //     if(ends){
-            //         temp.alphanum();
-            //         if(temp.length() != 0){
-                        auto tokens = split_string(_line, ' ');
-                        auto command = tokens[0];
-                        tokens.erase(tokens.begin());
-                        parseTokens(command, tokens);
-                    // }
-                    // temp = "";
-                // }
-            // }
-        }
+        void parseLine(const String & _line);
         virtual void readCan() = 0;
+
+
+
+        template<typename T>
+        void read_value_impl(const char * name , const T & val){
+            CLI_PRINTS("get", name, "\t\t is", val);
+        }
+
+        #define read_value(value)\
+        {\
+            read_value_impl(#value, value);\
+            break;\
+        }
+
+
+
+        #define trigger_method(method, ...)\
+        {\
+            method(__VA_ARGS__);\
+            break;\
+        }
+
+        #define settle_method(method, args, type)\
+        {\
+            if(args.size() == 0){\
+                DEBUG_PRINTS("no arg");\
+            }else if(args.size() == 1){\
+                method(type(args[0]));\
+                DEBUG_PRINTS("method", #method, "called");\
+            }\
+            break;\
+        }
+
+        #define settle_value(value, args)\
+        {\
+            ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
+            if(args.size() == 0){\
+                read_value(value);\
+            }else if(args.size() == 1){\
+                value = decltype(value)(args[0]);\
+                DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", args[0]);\
+            }\
+            break;\
+        }
+
+        #define settle_positive_value(value, args)\
+        {\
+            auto temp_value = decltype(value)(args[0]);\
+            ASSERT_WITH_RETURN((temp_value >= 0), "arg max should be greater than zero");\
+            if(args.size() == 0){\
+                read_value(value);\
+            }else if(args.size() == 1){\
+                value = temp_value;\
+                DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
+            }\
+            break;\
+        }
+
+        #define settle_clamped_value(value, args, mi, ma)\
+        {\
+            auto temp_value = decltype(value)(args[0]);\
+            ASSERT_WITH_RETURN((temp_value >= mi), "arg < ", mi, "\t failed to settle");\
+            ASSERT_WITH_RETURN((temp_value < ma), "arg >= ", ma, "\t failed to settle");\
+            if(args.size() == 0){\
+                read_value(value);\
+            }else if(args.size() == 1){\
+                value = temp_value;\
+                DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
+            }\
+            break;\
+        }
     };
 
     class CliSTA : public Cli{

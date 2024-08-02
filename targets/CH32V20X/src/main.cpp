@@ -1,6 +1,5 @@
 #include "testbench/tb.h"
 #include "app/embd/embd.h"
-#include "app/smc/smc.h"
 
 
 void preinit(){
@@ -57,6 +56,7 @@ int main(){
     // dshot_main();
     // usbcdc_tb();
     embd_main();
+    // w25qxx_main();
     // smc_main();
     // UartHw & logger = uart2;
     // logger.init(115200);

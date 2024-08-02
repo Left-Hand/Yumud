@@ -1,6 +1,9 @@
 #pragma once
 
-#include "src/testbench/tb.h"
+#include "../sys/core/system.hpp"
+#include "../sys/kernel/clock.h"
+
+#include "../types/vector2/vector2_t.hpp"
 
 namespace Interpolation{
     struct TurnSolver{

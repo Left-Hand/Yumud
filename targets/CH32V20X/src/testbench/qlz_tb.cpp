@@ -14,8 +14,8 @@ void qlz_tb(OutputStream & logger){
 }
 
 void qlz_main(){
-	uart1.init(921600, CommMethod::Blocking);
-	auto & logger = uart1;
+	DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+	auto & logger = DEBUGGER;
 	logger.setSpace(" ");
 	qlz_tb(logger);
 }

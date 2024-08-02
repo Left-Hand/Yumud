@@ -12,7 +12,7 @@ void SSD13XX::init(){
 
 void SSD13XX::flush(const Binary & color){
     auto & frame = fetchFrame();
-    frame.putrect_unsafe(Rect2i(Vector2i(), this->size), color);
+    frame.putrect(Rect2i(Vector2i(), this->size), color);
 
     for(auto i=0xb0;i<0xb5;i++){  
         interface.writeCommand(i);

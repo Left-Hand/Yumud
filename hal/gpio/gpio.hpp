@@ -17,6 +17,7 @@ public:
     virtual void clr() = 0;
     virtual void write(const bool val) = 0;
     virtual bool read() const = 0;
+    bool toggle() {bool val = !this->read(); write(val); return val;}
 
     virtual GpioConcept & operator = (const bool _val) = 0;
     operator bool() const {return(this->read());}

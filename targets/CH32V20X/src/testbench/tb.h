@@ -53,7 +53,6 @@ using Sys::t;
 #include "../drivers/Wireless/Radio/HC12/HC12.hpp"
 
 #include "../drivers/VirtualIO/HC595/hc595.hpp"
-// #include "../drivers/IMU/Axis6/BMI270/bmi270.hpp"
 #include "../drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
 #include "../hal/nvic/nvic.hpp"
 #include "../drivers/Encoder/odometer.hpp"
@@ -95,6 +94,8 @@ void usbcdc_tb();
 void at24cxx_tb(OutputStream & logger, I2c & i2c);
 
 void at24cxx_main();
+
+void w25qxx_main();
 
 void eeprom_main();
 

@@ -11,15 +11,15 @@ class Memory;
 class Storage{
 protected:
     using Address = size_t;
-    using AddressWindow = Range_t<Address>;
+    using AddressView = Range_t<Address>;
 
-    const Address m_size;
-    const AddressWindow m_window;
+    const Address m_capacity;
+    const AddressView m_view;
 
     friend class Memory;
 protected:
-    Storage(const Address _size):m_size(_size), m_window({0, _size}){;}
-    Storage(const Address _size, const AddressWindow  & _window):m_size(_size), m_window(_window){;}
+    Storage(const Address _capacity):m_capacity(_capacity), m_view({0, _capacity}){;}
+    Storage(const Address _capacity, const AddressView & _view):m_capacity(_capacity), m_view(_view){;}
     friend class Memory;
 
     virtual void entry_store() = 0;
@@ -27,32 +27,27 @@ protected:
 
     virtual void entry_load() = 0;
     virtual void exit_load() = 0;
+
     virtual void _store(const uint8_t data, const Address loc){
-        _store(&data, sizeof(data), loc);
-    }
-    virtual void _load(uint8_t & data, const Address loc){
-        _load(&data, sizeof(data), loc);
+        _store(&data, 1, loc);
     }
 
-    virtual void _store(const void * data, const Address data_size, const Address loc){
-        for(Address addr = loc; addr < loc + data_size; addr++){
-            _store(*((const uint8_t *)data + addr - loc), addr);
-        }
+    virtual void _load(uint8_t & data, const Address loc){
+        _load(&data, 1, loc);
     }
-    virtual void _load(void * data, const Address data_size, const Address loc) {
-        for(Address addr = loc; addr < loc + data_size; addr++){
-            _load(*((uint8_t *)data + addr - loc), addr);
-        }
-    }
+
+    virtual void _store(const void * data, const Address data_size, const Address loc) = 0;
+
+    virtual void _load(void * data, const Address data_size, const Address loc) = 0;
 
 public:
     virtual void init() = 0;
 
     virtual bool busy() = 0;
-    Address size() const {return m_size;}
-    AddressWindow window() const {return {0, m_size};}
+    Address size() const {return m_capacity;}
+    AddressView view() const {return {0, m_capacity};}
     void store(const void * data, const Address & data_size, const Address & loc){
-        if(window().has(loc)){
+        if(view().has(loc)){
             entry_store();
             _store(data, data_size, loc);
             exit_store();
@@ -84,7 +79,7 @@ public:
     }
 
     operator Memory();
-    Memory slice(const AddressWindow & _window);
+    Memory slice(const AddressView & _view);
     Memory slice(const size_t from, const size_t to);
 };
 
@@ -93,8 +88,8 @@ class StoragePaged:public Storage{
 protected:
     const Address m_pagesize;
 public:
-    StoragePaged(const Address _size, const Address _pagesize):Storage(_size, {0, _size}), m_pagesize(_pagesize){;}
-    StoragePaged(const Address _size, const AddressWindow  & _window, const Address _pagesize):Storage(_size, _window), m_pagesize(_pagesize){;}
+    StoragePaged(const Address _capacity, const Address _pagesize):Storage(_capacity, {0, _capacity}), m_pagesize(_pagesize){;}
+    StoragePaged(const Address _capacity, const AddressView  & _view, const Address _pagesize):Storage(_capacity, _view), m_pagesize(_pagesize){;}
 };
 
 #endif

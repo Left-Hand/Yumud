@@ -1,5 +1,4 @@
 #include "mnist.hpp"
-#include "../pixels/pixels.hpp"
 
 #define MDL_BUF_LEN (960)
 #define LBUF_LEN (360)
@@ -117,12 +116,13 @@ void Mnist::unload(){
 Mnist::Result Mnist::update(const Image<Grayscale> & img, const Vector2i & pos){
 
     Image<Grayscale> img_view = img.clone(Rect2i{pos.x, pos.y, 28, 28});
-    NVCV2::Pixels::inverse(img_view);
+    // NVCV2::Pixels::inverse(img_view);
+    // DEBUG_PRINTLN(img_view.mean());
     return update(img_view);
 }
 
 Mnist::Result Mnist::update(const Image<Grayscale> & img){
-    tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img.data.get()};
+    tm_mat_t in_uint8 = {3,img_size.x,img_size.y,img_channels, (mtype_t*)img.get_data()};
     auto err = tm_preprocess(&mdl, TMPP_UINT2INT, &in_uint8, &in); 
 
     err = tm_run(&mdl, &in, outs);

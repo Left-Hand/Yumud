@@ -12,8 +12,8 @@ void tcs34725_tb(OutputStream & logger, I2c & i2c){
 }
 
 void tcs34725_main(){
-    auto & logger = uart1;
-    logger.init(115200);
+    auto & logger = DEBUGGER;
+    logger.init(DEBUG_UART_BAUD);
     I2cSw i2c{portD[0], portD[1]};
     i2c.init(100000);
     tcs34725_tb(logger, i2c);

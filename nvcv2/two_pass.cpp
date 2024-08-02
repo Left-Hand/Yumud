@@ -42,8 +42,7 @@ void TwoPass::Union(int x, int y)
 }
 
 void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,const ImageReadable<Binary> &src){
-	int w = src.size.x;
-	int h = src.size.y;
+	auto [w,h] = src.get_size();
 
 	int label = 1;
 
@@ -52,7 +51,7 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 	{
 		for (int x = 0; x < w; x++)
 		{
-			if (src({x,y}) != 0)
+			if (src[{x,y}] != 0)
 			{
 				//left and up labels
 				Grayscale left = (x - 1 < 0) ? Grayscale(0) : out.at(y, x - 1);
@@ -97,8 +96,7 @@ void TwoPass::twoPassConnectComponent(ImageWithData<Grayscale, Grayscale> & out,
 //find the max label value
 void TwoPass::findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out, int &max)
 {
-	int imgH = out.size.y;
-	int imgW = out.size.x;
+	auto [imgH, imgW] = out.get_size();
 
 	for (int i = 0; i < imgH; i++)
 	{
@@ -113,7 +111,7 @@ void TwoPass::findMaxLabel(const ImageWithData<Grayscale, Grayscale> & out, int 
 ImageWithData<Grayscale, Grayscale> TwoPass::run(const ImageReadable<Binary> & src)
 {
 	//detect connected-region using two Pass method
-	auto ret = ImageWithData<Grayscale, Grayscale>(src.size);
+	auto ret = ImageWithData<Grayscale, Grayscale>(src.get_size());
 	twoPassConnectComponent(ret, src);
 	return ret;
 	//find the largest label

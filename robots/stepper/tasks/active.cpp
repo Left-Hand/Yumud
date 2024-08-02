@@ -2,45 +2,18 @@
 
 
 Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
-    // auto target = sign(frac(t) - 0.5);
-    // auto target = floor(t);
-// auto target=sin(t);
-    // real_t raw_current = 0.1 * sin(t);
-    // run_current = abs(raw_current);
-    // run_leadangle = SIGN_AS(PI / 2, raw_current);
-
-
     if(ctrl_type != CtrlType::VECTOR) run_elecrad = est_elecrad + run_leadangle;
     else run_elecrad = odo.position2rad(target);
 
-    setCurrent(curr_ctrl.update(run_current), run_elecrad + elecrad_zerofix);
-    // setCurrent(2, est_elecrad + PI / 2);
+    setCurrent(curr_ctrl.update(measurements.curr), run_elecrad + elecrad_zerofix);
 
-
-    // coilB = 0.1 * sin(run_elecrad);
-    // coilA = 0.1 * cos(run_elecrad);
-    // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.02, run_elecrad + elecrad_zerofix);//n = 2
-    // run_elecrad = est_elecrad + PI * 0.5; setCurrent(0.3, TAU * frac(t));//n = 2
-
-
-    // setCurrent(0.2, odo.position2rad(target));
-    // setCurrent(0.4, TAU * frac(t));
-    // setCurrent(0, 0);
-
-    // coilB = (0.2);
-    // coilA = 0.2 * sin(t);
-    // uint32_t foc_begin_micros = nanos();
     odo.update();
 
-    raw_pos = odo.getPosition();
-    est_pos = raw_pos;
+    measurements.pos = odo.getPosition();
     est_elecrad = odo.getElecRad();
-
-    est_speed = (speed_estmator.update(raw_pos) + est_speed * 127) >> 7;
+    measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
 
     if(init_flag){
-        est_pos = raw_pos;
-        est_speed = real_t();
 
         run_status = RunStatus::ACTIVE;
 
@@ -48,46 +21,32 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
         return RunStatus::NONE;
     }
 
-    // if(auto_shutdown_activation){
-    //     if(run_current){
-    //         auto_shutdown_actived = false;
-    //         wakeup();
-    //         auto_shutdown_last_wake_ms = millis();
-    //     }else{
-    //         if(millis() - auto_shutdown_last_wake_ms > auto_shutdown_timeout_ms){
-    //             auto_shutdown_actived = true;
-    //             shutdown();
-    //             auto_shutdown_last_wake_ms = millis();
-                
-    //         }
-    //     }
-    // }
-
-
-
     {
         using Result = CtrlResult;
         Result result;
+
+        const auto & est_pos = measurements.pos;
+        const auto & est_spd = measurements.spd;
 
         switch(ctrl_type){
             case CtrlType::CURRENT:
                 result = {ABS(target), SIGN_AS(PI / 2, target)};
                 break;
             case CtrlType::VECTOR:
-                result = {curr_ctrl.config.current_clamp, 0};
+                result = {curr_ctrl.config.curr_limit, 0};
                 break;
             case CtrlType::POSITION:
-                result = position_ctrl.update(target_position_clamp.clamp(target), est_pos, est_speed, est_elecrad);
+                result = position_ctrl.update(target, est_pos, est_spd, est_elecrad);
                 break;
             case CtrlType::TRAPEZOID:
-                result = trapezoid_ctrl.update(target, est_pos, est_speed, est_elecrad);
+                result = trapezoid_ctrl.update(target, est_pos, est_spd, est_elecrad);
                 break;
             case CtrlType::SPEED:
-                result = speed_ctrl.update(target, est_speed);
+                result = speed_ctrl.update(target, est_spd);
                 break;
         } 
 
-        run_current = result.current;
+        measurements.curr = result.current;
         run_leadangle = result.raddiff;
     }
 

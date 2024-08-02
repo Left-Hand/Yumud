@@ -7,10 +7,10 @@ protected:
     SPI_TypeDef * instance;
     bool hw_cs_enabled = false;
 
-    Gpio & getMosiPin();
-    Gpio & getMisoPin();
-    Gpio & getSclkPin();
-    Gpio & getCsPin();
+    Gpio & getMosiGpio();
+    Gpio & getMisoGpio();
+    Gpio & getSclkGpio();
+    Gpio & getCsGpio();
 
     void enableRcc(const bool en = true);
     uint16_t calculatePrescaler(const uint32_t baudRate);
@@ -29,7 +29,7 @@ public:
     Error read(uint32_t & data, bool toAck = true) override;
     Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override;
 
-    void configDataSize(const uint8_t data_size) override;
+    void configDatabits(const uint8_t data_size) override;
     void configBaudRate(const uint32_t baudRate) override;
     void configBitOrder(const Endian endian) override ;
 };

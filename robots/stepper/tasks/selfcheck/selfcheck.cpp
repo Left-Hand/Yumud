@@ -61,7 +61,7 @@ Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
                 
                 if(cnt > subdivide_micros * check_times){
                     if(move_range.length() < minimal_motion){
-                        throw_error(ErrorCode::COIL_A_DISCONNECTED, ("coil a connection failed" + (move_range).toString()).c_str());
+                        THROW_ERROR(ErrorCode::COIL_A_DISCONNECTED, ("coil a connection failed" + String(move_range)).c_str());
                         return RunStatus::ERROR;
                     }else{
                         move_range = Range::from_center(odo.getPosition(), 0);
@@ -78,7 +78,7 @@ Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
 
                 if(cnt > subdivide_micros * check_times){
                     if(move_range.length() < minimal_motion){
-                        throw_error(ErrorCode::COIL_B_DISCONNECTED, ("coil b connection failed" + (move_range).toString()).c_str());
+                        THROW_ERROR(ErrorCode::COIL_B_DISCONNECTED, ("coil b connection failed" + (move_range).toString()).c_str());
                         return RunStatus::ERROR;
                     }else{
                         move_range = Rangei::from_center(odo.getPosition(), 0);

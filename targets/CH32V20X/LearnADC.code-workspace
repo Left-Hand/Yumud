@@ -107,7 +107,8 @@
             "semaphore": "cpp",
             "stop_token": "cpp",
             "variant": "cpp",
-            "system_error": "cpp"
+            "system_error": "cpp",
+            "coroutine": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

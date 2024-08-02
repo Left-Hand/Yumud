@@ -14,18 +14,18 @@ public:
     T y = T(0);
     T z = T(0);
 
-    Vector3_t() = default;
+    constexpr Vector3_t() = default;
 
-    template<arithmetic U>
-    Vector3_t(const Vector3_t<U>& v) : x(v.x), y(v.y), z(v.z) {;}
+    constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) : x(v.x), y(v.y), z(v.z) {;}
 
-    // template<arithmetic U>
-    Vector3_t(const auto _x, const auto _y, const auto _z): x(_x), y(_y), z(_z){;}
+    constexpr Vector3_t(const auto _x, const auto _y, const auto _z): x(_x), y(_y), z(_z){;}
 
-    template<arithmetic U, arithmetic V, arithmetic Z>
-    __fast_inline constexpr Vector3_t(const std::tuple<U, V, Z> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
+    constexpr Vector3_t(const std::tuple<arithmetic auto, arithmetic auto, arithmetic auto> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
 
-    T & operator [](const int & index) { return *(&this->x + index); }
+    T & operator [](const size_t index) { return *(&this->x + index);}
+
+    const T & operator [](const size_t index) const {return *(&this->x + index);}
+
     template<arithmetic U>
     Vector3_t& operator=(const Vector3_t<U>& v) {
         x = static_cast<T>(v.x);

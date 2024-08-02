@@ -48,7 +48,7 @@
 
 
 #ifdef HAVE_UART2
-    #define UART2_IT_PP 1
+    #define UART2_IT_PP 0
     #define UART2_IT_SP 1
 
     #define UART2_TX_DMA_CH dma1Ch7
@@ -164,7 +164,7 @@
 #endif
 
 #ifdef HAVE_UART7
-    #define UART7_IT_PP 1
+    #define UART7_IT_PP 0
     #define UART7_IT_SP 1
 
     #define UART7_TX_DMA_CH dma2Ch8

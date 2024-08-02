@@ -24,7 +24,7 @@ constexpr Vector2_t<T> Vector2_t<T>::round() const{
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::clamp(const auto & _min, const auto & _max) const {
+constexpr Vector2_t<T> Vector2_t<T>::clamp(const arithmetic auto & _min, const arithmetic auto & _max) const {
     T min = static_cast<T>(_min);
     T max = static_cast<T>(_max);
     T l = this->length();
@@ -63,17 +63,17 @@ constexpr Vector2_t<T> Vector2_t<T>::bounce(const Vector2_t<T> & n) const {
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::lerp(const Vector2_t<T> & b, const T & _t) const{
+constexpr Vector2_t<T> Vector2_t<T>::lerp(const Vector2_t<T> & b, const arithmetic auto & _t) const{
     return *this * (1-_t)+b * _t;
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const T & _t) const{
+constexpr Vector2_t<T> Vector2_t<T>::slerp(const Vector2_t<T> & b, const arithmetic auto & _t) const{
     return lerp(b, sinf(PI / 2 * _t));
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::posmod(const T & mod) const{
+constexpr Vector2_t<T> Vector2_t<T>::posmod(const arithmetic auto & mod) const{
     return Vector2_t<T>(::fmod(x, mod), ::fmod(y, mod));
 }
 
@@ -106,7 +106,7 @@ constexpr bool Vector2_t<T>::has_point(const Vector2_t<auto> & _v) const{
 }
 
 template<arithmetic T>
-constexpr Vector2_t<T> Vector2_t<T>::move_toward(const Vector2_t<T> & b, const T & delta) const{
+constexpr Vector2_t<T> Vector2_t<T>::move_toward(const Vector2_t<T> & b, const arithmetic auto & delta) const{
     if (!is_equal_approx(b)){
         Vector2_t<T> d = b - *this;
         return *this + d.clampmax(delta);
@@ -181,30 +181,30 @@ VECTOR2_COMPARE_IM_OPERATOR(>=)
 VECTOR2_COMPARE_IM_OPERATOR(==)
 VECTOR2_COMPARE_IM_OPERATOR(!=)
 
-template <arithmetic T, arithmetic U>
+template <arithmetic T, arithmetic U = T>
 constexpr __fast_inline Vector2_t<T> operator +(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
     Vector2_t<T> ret = p_vector2;
     ret += d_vector2;
     return ret;
 }
 
-template <arithmetic T, arithmetic U>
+template <arithmetic T, arithmetic U = T>
 constexpr __fast_inline Vector2_t<T> operator -(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
     Vector2_t<T> ret = p_vector2;
     ret -= d_vector2;
     return ret;
 }
 
-template <arithmetic T>
-constexpr __fast_inline Vector2_t<T> operator *(const auto &lvalue, const Vector2_t<T> &p_vector2){
+template <arithmetic T, arithmetic U = T>
+constexpr __fast_inline Vector2_t<T> operator *(const arithmetic auto &lvalue, const Vector2_t<U> &p_vector2){
     Vector2_t<T> ret = p_vector2;
     ret *= lvalue;
     return ret;
 }
 
 
-template <arithmetic T >
-constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<auto> &d_vector2){
+template <arithmetic T,arithmetic U = T >
+constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<U> &d_vector2){
     Vector2_t<T> final = p_vector2;
     final /= d_vector2;
     return final;

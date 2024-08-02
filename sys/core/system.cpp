@@ -251,13 +251,3 @@ void Sys::Clock::setAPB2Freq(const uint32_t freq){
 }
 
 
-void NMI_Handler(void)
-{
-}
-
-void HardFault_Handler(void)
-{
-    while (1)
-    {
-    }
-}

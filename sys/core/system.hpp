@@ -1,6 +1,9 @@
 #pragma once
 
 #include "../sys/core/platform.h"
+#include "../sys/kernel/clock.h"
+#include "../sys/kernel/stream.hpp"
+#include "../../types/real.hpp"
 
 namespace Sys{
     namespace Misc{
@@ -34,7 +37,3 @@ namespace Sys{
 };
 
 
-extern "C"{
-    __interrupt void NMI_Handler(void);
-    __interrupt void HardFault_Handler(void);
-}

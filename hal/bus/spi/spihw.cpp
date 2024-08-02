@@ -20,56 +20,90 @@ void SpiHw::enableRcc(const bool en){
     }
 }
 
-#if (defined(HAVE_SPI1) && defined(HAVE_SPI2))
 
-#define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
-Gpio & SpiHw::get##name##Pin(){\
-\
-    switch((uint32_t)instance){\
-        default:\
-        case SPI1_BASE:\
-            return SPI1_##upper##_GPIO;\
-        case SPI2_BASE:\
-            return SPI2_##upper##_GPIO;\
-    }\
-}\
+Gpio & SpiHw::getMosiGpio(){
+    switch((uint32_t)instance){
+        default:
 
-#elif defined(HAVE_SPI1)
+        #ifdef HAVE_SPI1
+        case SPI1_BASE:
+            return SPI1_MOSI_GPIO;
+        #endif
 
-#define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
-Gpio & SpiHw::get##name##Pin(){\
-\
-    switch((uint32_t)instance){\
-        default:\
-        case SPI1_BASE:\
-            return SPI1_##upper##_GPIO;\
-    }\
-}\
+        #ifdef HAVE_SPI2
+        case SPI2_BASE:
+            return SPI2_MOSI_GPIO;
+        #endif
 
-#elif defined(HAVE_SPI2)
+        #ifdef HAVE_SPI3
+        case SPI3_BASE:
+            return SPI3_MOSI_GPIO;
+        #endif
+    }
+}
 
-#define SPI_HW_GET_PIN_TEMPLATE(name, upper)\
-Gpio & SpiHw::get##name##Pin(){\
-\
-    switch((uint32_t)instance){\
-        default:\
-        case SPI2_BASE:\
-            return SPI2_##upper##_GPIO;\
-    }\
-}\
+Gpio & SpiHw::getMisoGpio(){
+    switch((uint32_t)instance){
+        default:
 
-#endif
+        #ifdef HAVE_SPI1
+        case SPI1_BASE:
+            return SPI1_MISO_GPIO;
+        #endif
 
-#if (defined(HAVE_SPI1) || defined(HAVE_SPI2))
+        #ifdef HAVE_SPI2
+        case SPI2_BASE:
+            return SPI2_MISO_GPIO;
+        #endif
 
-SPI_HW_GET_PIN_TEMPLATE(Mosi, MOSI)
-SPI_HW_GET_PIN_TEMPLATE(Miso, MISO)
-SPI_HW_GET_PIN_TEMPLATE(Sclk, SCLK)
-SPI_HW_GET_PIN_TEMPLATE(Cs, CS)
+        #ifdef HAVE_SPI3
+        case SPI3_BASE:
+            return SPI3_MISO_GPIO;
+        #endif
+    }
+}
 
-#endif
+Gpio & SpiHw::getSclkGpio(){
+    switch((uint32_t)instance){
+        default:
 
-#undef SPI_HW_GET_PIN_TEMPLATE
+        #ifdef HAVE_SPI1
+        case SPI1_BASE:
+            return SPI1_SCLK_GPIO;
+        #endif
+
+        #ifdef HAVE_SPI2
+        case SPI2_BASE:
+            return SPI2_SCLK_GPIO;
+        #endif
+
+        #ifdef HAVE_SPI3
+        case SPI3_BASE:
+            return SPI3_SCLK_GPIO;
+        #endif
+    }
+}
+
+Gpio & SpiHw::getCsGpio(){
+    switch((uint32_t)instance){
+        default:
+
+        #ifdef HAVE_SPI1
+        case SPI1_BASE:
+            return SPI1_CS_GPIO;
+        #endif
+
+        #ifdef HAVE_SPI2
+        case SPI2_BASE:
+            return SPI2_CS_GPIO;
+        #endif
+
+        #ifdef HAVE_SPI3
+        case SPI3_BASE:
+            return SPI3_CS_GPIO;
+        #endif
+    }
+}
 
 uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
 	RCC_ClocksTypeDef RCC_CLK;
@@ -107,20 +141,20 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
 
 void SpiHw::installGpios(){
     if(txMethod != CommMethod::None){
-        Gpio & mosi_pin = getMosiPin();
+        Gpio & mosi_pin = getMosiGpio();
         mosi_pin.afpp();
     }
 
     if(rxMethod != CommMethod::None){
-        Gpio & miso_pin = getMisoPin();
+        Gpio & miso_pin = getMisoGpio();
         miso_pin.inflt();
     }
 
-    Gpio & sclk_pin = getSclkPin();
+    Gpio & sclk_pin = getSclkGpio();
     sclk_pin.afpp();
 
     if(!cs_port.isIndexValid(0)){
-        Gpio & cs_pin = getCsPin();
+        Gpio & cs_pin = getCsGpio();
         cs_pin.set();
         if(hw_cs_enabled){
             cs_pin.afpp();
@@ -136,7 +170,7 @@ void SpiHw::installGpios(){
 }
 
 void SpiHw::enableHwCs(const bool en){
-    Gpio & _cs_pin = getCsPin();
+    Gpio & _cs_pin = getCsGpio();
     _cs_pin = true;
 
     if(en){
@@ -152,7 +186,7 @@ void SpiHw::enableRxIt(const bool en){
 
 }
 void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
-    // preinit();
+
     txMethod = tx_method;
     rxMethod = rx_method;
 	enableRcc();
@@ -202,7 +236,7 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
 }
 
 
-void SpiHw::configDataSize(const uint8_t data_size){
+void SpiHw::configDatabits(const uint8_t data_size){
     uint16_t tempreg =  instance->CTLR1;
     if(data_size == 16){
         if(tempreg & SPI_DataSize_16b) return;

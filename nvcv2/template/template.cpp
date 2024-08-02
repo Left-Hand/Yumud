@@ -28,7 +28,7 @@ static auto stddev(const Itpair<auto> & src){
 namespace NVCV2::Match{
 
 real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, const Vector2i & offs){
-    // auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_window());
+    // auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_view());
 
     // uint and_score = 0;
     // uint or_score = 0;
@@ -47,7 +47,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
     // u16_to_uni(res, ret);
     // return ret;
 
-    auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_window());
+    auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_view());
 
     uint score = 0;
     // uint base = tmp.sum() / 255;
@@ -74,7 +74,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
 }
 
 #define BOUNDARY_CHECK()\
-if(not src.get_window().contains(Rect2i{offs, tmp.get_size()})){\
+if(not src.get_view().contains(Rect2i{offs, tmp.get_size()})){\
     ASSERT_WITH_HALT(false, "template_match: out of bound");\
     return 0;\
 }\

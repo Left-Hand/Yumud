@@ -56,34 +56,5 @@ public:
     void reset();
     void triggerCali();
 
-    void set_nozzle(const bool en);
-};
-
-struct RemoteSteppers{
-public:
-    RemoteStepper & w;
-    RemoteStepper & x;
-    RemoteStepper & y;
-    RemoteStepper & z;
-    RemoteSteppers(
-        RemoteStepper & _w,
-        RemoteStepper & _x,
-        RemoteStepper & _y,
-        RemoteStepper & _z
-    ):w(_w), x(_x), y(_y), z(_z){;}
-
-    RemoteStepper & operator [](const uint8_t index){
-        switch(index){
-            case 0:
-                return w;
-            case 1:
-                return x;
-            case 2:
-                return y;
-            case 3:
-                return z;
-            default:
-                return w;
-        }
-    }
+    void setNozzle(const real_t duty);
 };

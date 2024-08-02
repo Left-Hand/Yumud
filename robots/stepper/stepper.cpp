@@ -2,55 +2,36 @@
 
 static auto & nozzle_en_gpio = portA[0];
 
-static void set_nozzle_gpio(const bool en){
+void Stepper::setNozzle(const real_t duty){
     nozzle_en_gpio.outpp();
-    nozzle_en_gpio = en;
+    nozzle_en_gpio = bool(duty);
 }
 
 void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
     auto command = _command;
-    command.toLowerCase();
+
     switch(hash_impl(command.c_str(), command.length())){
         case "save"_ha:
         case "sv"_ha:
-            saveArchive(true);
+            saveArchive(args.size() ? bool(int(args[0])) : false);
             break;
 
         case "load"_ha:
         case "ld"_ha:
-            {
-                bool outen = true;
-
-                if(args.size()){
-                    outen &= bool(int(args[0]));
-                }
-                
-                loadArchive(outen);
-            }
+            loadArchive(args.size() ? bool(int(args[0])) : true);
             break;
 
         case "nz"_ha:
-            set_nozzle_gpio(args.size() ? bool(int(args[0])) : false);
+            {
+                real_t val = args.size() ? int(args[0]) : 0;
+                setNozzle(val);
+                CLI_PRINTS("set nozzle to:",val);
+            }
             break;
 
         case "remove"_ha:
         case "rm"_ha:
-            {
-                bool outen = true;
-
-                if(args.size()){
-                    outen &= bool(int(args[0]));
-                }
-                
-                removeArchive(outen);
-            }
-            break;
-
-        case "pos.p"_ha:
-            settle_value(position_ctrl.config.kp, args);
-            break;
-        case "pos.d"_ha:
-            settle_value(position_ctrl.config.kd, args);
+            removeArchive(args.size() ? bool(int(args[0])) : true);
             break;
 
         case "speed"_ha:
@@ -59,9 +40,9 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             if(args.size()){
                 real_t spd = real_t(args[0]);
                 setTargetSpeed(spd);
-                logger << "targ speed\t" << toString(spd,3) << " n/s\r\n";
+                CLI_PRINTS("targ speed\t", spd, " n/s");
             }else{
-                logger << "curr speed\t" << toString(getSpeed(),4) << " n/s\r\n";
+                CLI_PRINTS("curr speed\t", getSpeed(), " n/s");
             }
             break;
 
@@ -69,11 +50,11 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
         case "pos"_ha:
         case "p"_ha:
             if(args.size()){
-                real_t pos = real_t(args[0]);
-                setTargetPosition(pos);
-                logger << "targ position\t" << toString(pos,3) << " n\r\n";
+                real_t val = real_t(args[0]);
+                setTargetPosition(val);
+                CLI_PRINTS("targ position\t", val, " n");
             }else{
-                logger << "now pos\t" << toString(getPosition(),4) << " n\r\n";
+                CLI_PRINTS("now position", getPosition(), " n");
             }
             break;
 
@@ -82,14 +63,14 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             if(args.size()){
                 real_t val = real_t(args[0]);
                 setTargetTrapezoid(val);
-                logger << "targ position\t" << toString(val,3) << " n\r\n";
+                CLI_PRINTS("targ position\t", val, " n");
             }else{
-                logger << "now position\t" << toString(getPosition(),4) << " n\r\n";
+                CLI_PRINTS("now position\t", getPosition(), " n");
             }
             break;
 
         case "stable"_ha:
-            logger.println(odo.encoder.stable());
+            CLI_PRINTS(odo.encoder.stable());
             break;
 
         case "curr"_ha:
@@ -97,59 +78,75 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             if(args.size()){
                 real_t val = real_t(args[0]);
                 setTargetCurrent(val);
-                logger << "targ current\t" << toString(val,3) << " n\r\n";
+                CLI_PRINTS("targ current\t", val, " n");
             }else{
-                logger << "now current\t" << toString(getCurrent(),4) << " n\r\n";
+                CLI_PRINTS("now current\t", getCurrent(), " n");
+            }
+            break;
+
+        case "vect"_ha:
+        case "v"_ha:
+            if(args.size()){
+                auto v = real_t(args[0]);
+                setTargetVector(v);
+                CLI_PRINTS("targ vector\t", v, " n");
             }
             break;
 
         case "crc"_ha:
-            logger.println(Sys::Chip::getChipIdCrc());
+            CLI_PRINTS(Sys::Chip::getChipIdCrc());
             break;
 
         case "eleczero"_ha:
-        case "ez"_ha:
-            settle_value(elecrad_zerofix, args);
+        case "ez"_ha:{
+            if(args.size() == 0) break;
+            elecrad_zerofix = real_t(args[0]);
+        }
             break;
 
         case "error"_ha:
         case "err"_ha:
-            if(error_message) {DEBUG_PRINTS(error_message)}
-            else {DEBUG_PRINTS("no error")}
+            if(error_message) {CLI_PRINTS(error_message)}
+            else {CLI_PRINTS("no error")}
             break;
 
         case "warn"_ha:
         case "wa"_ha:
-            if(warn_message) {DEBUG_PRINTS(warn_message)}
-            else {DEBUG_PRINTS("no warn")}
+            if(warn_message) {CLI_PRINTS(warn_message)}
+            else {CLI_PRINTS("no warn")}
             break;
 
         case "enable"_ha:
         case "en"_ha:
         case "e"_ha:
-            logger.println("enabled");
             rework();
+            CLI_PRINTS("enabled");
             break;
         
         case "exe"_ha:
-            logger << "exe" << exe_micros << "us\r\n";
+            CLI_PRINTS("exe", exe_micros, "us");
             break;
 
         case "disable"_ha:
         case "dis"_ha:
         case "de"_ha:
         case "d"_ha:
-            logger.println("disabled");
             shutdown();
+            CLI_PRINTS("disabled");
             break;
 
         case "cali"_ha:
             cali_task(true);
+            CLI_PRINTS("cali started");
             break;
 
         case "locate"_ha:
         case "loc"_ha:
-            locateRelatively(args.size() ? real_t(args[0]) : 0);
+        {
+            real_t loc = args.size() ? real_t(args[0]) : 0;
+            locateRelatively(loc);
+            CLI_PRINTS("located to", loc);
+        }
             break;
 
         case "beep"_ha:
@@ -157,28 +154,45 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             break;
 
         case "id"_ha:
-            DEBUG_PRINTS("node id is: ", node_id);
+            CLI_PRINTS("node id is: ", node_id);
             break;
 
         case "rd"_ha:
-            if(args.size() == 1) run_debug_enabled = int(args[0]);
-            DEBUG_PRINTS("rd", run_debug_enabled);
+            run_debug_enabled = args.size() ? int(args[0]) : true;
+            CLI_PRINTS("run debug enabled:", run_debug_enabled);
             break;
 
-        case "clp"_ha:
-            if(args.size() == 1) setCurrentClamp(real_t(args[0]));
+        case "cl"_ha:{
+            auto cl = args.size() ? real_t(args[0]) : 0;
+            CLI_PRINTS("current clamp:", cl);
+        }
             break;
+
         case "status"_ha:
         case "stat"_ha:
-            DEBUG_PRINTS("current status:", int(run_status));
+            CLI_PRINTS("current status:", int(run_status));
             break;
 
         case "shutdown"_ha:
         case "shut"_ha:
             shutdown();
-            DEBUG_PRINTS("shutdown ok");
+            CLI_PRINTS("shutdown ok");
             break;
 
+        case "cd"_ha:
+            elecrad_zerofix = PI;
+            break;
+
+        case "map"_ha:
+            CLI_PRINTS(odo.map());
+            break;
+
+        case "version"_ha:
+        case "ver"_ha:
+            break;
+        case "info"_ha:
+            CLI_PRINTS(m_archive.board_info);
+            break;
         default:
             CliSTA::parseTokens(command, args);
             break;
@@ -188,7 +202,6 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
 
 void Stepper::parseCommand(const Command command, const CanMsg & msg){
     const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
-    DEBUG_PRINTS("can cmd recved", command);
 
     using dual_real = std::tuple<real_t, real_t>;
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
@@ -211,8 +224,8 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
     #define GET_BIND_VALUE(cmd, value)\
         case cmd:\
             if(msg.isRemote()){\
-                CanMsg msg {tx_id};\
-                can.write(msg.load(value));\
+                CanMsg _msg {tx_id};\
+                can.write(_msg.load(value));\
             }\
             break;\
     
@@ -229,23 +242,23 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 
         SET_METHOD_BIND_REAL(   Command::LOCATE,        locateRelatively)
         SET_METHOD_BIND_REAL(   Command::SET_OPEN_CURR, setOpenLoopCurrent)
-        SET_METHOD_BIND_REAL(   Command::SET_CURR_CLP,  setCurrentClamp)
-        SET_METHOD_BIND_TYPE(   Command::SET_POS_CLP,   setPositionClamp, dual_real)
-        SET_METHOD_BIND_REAL(   Command::SET_SPD_CLP,   setSpeedClamp)
-        SET_METHOD_BIND_REAL(   Command::SET_ACC_CLP,   setAccelClamp)
+        SET_METHOD_BIND_REAL(   Command::SET_CURR_LMT,  setCurrentClamp)
+        SET_METHOD_BIND_TYPE(   Command::SET_POS_LMT,   setPositionClamp, dual_real)
+        SET_METHOD_BIND_REAL(   Command::SET_SPD_LMT,   setSpeedClamp)
+        SET_METHOD_BIND_REAL(   Command::SET_ACC_LMT,   setAccelClamp)
 
-        GET_BIND_VALUE(         Command::GET_POS,       est_pos)
-        GET_BIND_VALUE(         Command::GET_SPD,       est_speed)
+        GET_BIND_VALUE(         Command::GET_POS,       measurements.pos)
+        GET_BIND_VALUE(         Command::GET_SPD,       measurements.spd)
         GET_BIND_VALUE(         Command::GET_ACC,       0)//TODO
 
-        SET_METHOD_BIND_EXECUTE(Command::CALI,          triggerCali)
+        SET_METHOD_BIND_EXECUTE(Command::TRG_CALI,          triggerCali)
 
         SET_METHOD_BIND_EXECUTE(Command::SAVE,          saveArchive)
         SET_METHOD_BIND_EXECUTE(Command::LOAD,          loadArchive)
         SET_METHOD_BIND_EXECUTE(Command::CLEAR,         removeArchive)
 
-        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_ON,     set_nozzle_gpio, true)
-        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_OFF,    set_nozzle_gpio, false)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_ON,     setNozzle, 1)
+        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_OFF,    setNozzle, 0)
 
         SET_METHOD_BIND_EXECUTE(Command::RST,           reset)
         GET_BIND_VALUE(         Command::STAT,          (uint8_t)run_status);
@@ -314,10 +327,6 @@ void Stepper::tick(){
     if(not (exe_status == (RunStatus::NONE))){//execution meet sth.
 
         if((exe_status == RunStatus::ERROR)){
-            // logger.println("exit");
-            // logger.println(RunStatus.to_name());
-            // logger.
-            // shutdown_flag = true;
         }
 
         else if((exe_status == RunStatus::EXIT)){
@@ -375,6 +384,32 @@ void Stepper::tick(){
     exe_micros = micros() - begin_micros;
 }
 
+void Stepper::run(){
+    readCan();
+    panel_led.run();
+
+
+    #ifndef STEPPER_NO_PRINT
+    {
+        static String temp;
+        while(logger.available()){
+            auto chr = logger.read();
+            if(chr == 0) continue;
+            temp += chr;
+            if(chr == '\n'){
+                temp.alphanum();
+                parseLine(temp);
+                temp = "";
+            }
+        }
+    }
+    #endif
+
+    red_pwm.tick();
+    green_pwm.tick();
+    blue_pwm.tick();
+}
+
 void Stepper::report(){
     // real_t total = real_t(3);
     // static real_t freq = real_t(10);
@@ -393,10 +428,10 @@ void Stepper::report(){
     // target_pos = sign(frac(t) - 0.5);
     // target_pos = sin(t);
     // RUN_DEBUG(, est_pos, est_speed);
-    if(run_status == RunStatus::ACTIVE and logger.pending() == 0 && run_debug_enabled){
+    if(logger.pending()==0){
         // delayMicroseconds(200);   
-        delay(1); 
-        RUN_DEBUG(target, est_speed, est_pos, run_current, run_leadangle);
+        // delay(1); 
+        RUN_DEBUG(target, getSpeed(), getPosition(), getCurrent(), run_leadangle);
     }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);

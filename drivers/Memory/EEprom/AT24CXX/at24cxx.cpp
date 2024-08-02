@@ -31,11 +31,11 @@ else bus_drv.readReg((uint16_t)loc, data);\
 
 #ifdef ACCESS_STRICT_PROTECT
 #define CHECK_ADDR(loc)\
-ASSERT_WITH_HALT((loc <= m_size), "invalid addr", loc, m_size)
+ASSERT_WITH_HALT((loc <= m_capacity), "invalid addr", loc, m_capacity)
 #else
 
 #define CHECK_ADDR(loc)\
-if(loc > m_size){\
+if(loc > m_capacity){\
     AT24CXX_DEBUG("invalid addr");\
     return;\
 }
@@ -71,8 +71,8 @@ void AT24CXX::_store(const void * data, const Address data_size, const Address l
     auto full_end = loc + data_size; 
     CHECK_ADDR(full_end);
 
-    AddressWindow store_window = AddressWindow{loc,loc + data_size};
-    AddressWindow op_window = {0,0};
+    AddressView store_window = AddressView{loc,loc + data_size};
+    AddressView op_window = {0,0};
     AT24CXX_DEBUG("multi store entry", store_window);
     do{
         op_window = store_window.grid_forward(op_window, m_pagesize);

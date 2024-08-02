@@ -6,7 +6,7 @@ void node_main(){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER.init(DEBUG_UART_BAUD);
     DEBUGGER.setEps(4);
 
     auto & logger = DEBUGGER;
@@ -60,29 +60,15 @@ void node_main(){
     stp.setTargetCurrent(0);
     stp.setCurrentClamp(1.2);
 
-    auto parseAscii = [&](InputStream & is){
-        static String temp;
-        // DEBUG_PRINTLN(is.available());
-        while(is.available()){
-            auto chr = is.read();
-            if(chr == 0) continue;
-            temp += chr;
-            if(chr == '\n'){
-                temp.alphanum();
-                // DEBUG_PRINTLN("tempis", temp, temp.length());
-                stp.parseLine(temp);
-                temp = "";
-            }
-        }
-    };
-    logger.bindRxPostCb([&](){parseAscii(logger);});
     while(true){
-        // DEBUG_PRINTLN("r")
         stp.run(); 
         stp.report();
         Sys::Clock::reCalculateTime();
         // stp.setTargetTrapezoid(4 * sin(t) + 3 * sign(sin(t)));
-        // stp.setTargetPosition(15 * sin(t));
+        // stp.setTargetPosition(14 * sin(t));
+        // stp.setTargetPosition(15 *sin(t/3) * sin(t*3));
+        stp.setTargetPosition(30 * int(7 * sin(t /6)));
+        // stp.setTargetPosition(0);
         // stp.setTargetVector(15 * sin(t));
         // stp.setTargetSpeed(26 * sin(t));
     }

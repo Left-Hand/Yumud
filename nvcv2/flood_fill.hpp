@@ -3,22 +3,44 @@
 #include "nvcv2.hpp"
 
 namespace NVCV2::Shape{
+
+struct Blob{
+    Rect2i rect;
+    int area;
+    int index;
+
+    constexpr operator int() const {
+        return area;
+    }
+
+    constexpr operator bool() const {
+        return area;
+    }
+};
+
+struct BlobFilter{
+    Range_t<uint> area_range = {0, UINT_MAX};
+    Range_t<uint> width_range = {0, UINT_MAX};
+    Range_t<uint> height_range = {0, UINT_MAX};
+
+    static BlobFilter clamp_width(const uint min_width, const uint max_width = UINT_MAX){
+        BlobFilter filter;
+        filter.width_range = {min_width, max_width};
+        return filter;
+    }
+
+    static BlobFilter clamp_area(const uint min_area, const uint max_area = UINT_MAX){
+        BlobFilter filter;
+        filter.area_range = {min_area, max_area};
+        return filter;
+    }
+};
+
+
 class FloodFill{
 // public:
 protected:
-    struct Blob{
-        Rect2i rect;
-        int area;
-        int index;
 
-        constexpr operator int() const {
-            return area;
-        }
-
-        constexpr operator bool() const {
-            return area;
-        }
-    };
 
     using Blobs = sstl::vector<Blob, 16>;
     Blobs m_blobs;
@@ -26,7 +48,7 @@ protected:
 public:
 
 
-    Image<Grayscale> run(const ImageReadable<Binary> & src);
+    Image<Grayscale> run(const ImageReadable<Binary> & src, const BlobFilter & filter = BlobFilter());
     auto & blobs() const{return m_blobs;}
 };
 class SimilarRects{
@@ -45,3 +67,9 @@ public:
 
 
 }
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const NVCV2::Shape::Blob & blob){
+    using namespace NVCV2;
+    return os << '<' << blob.index << '>' << blob.rect;
+}
+

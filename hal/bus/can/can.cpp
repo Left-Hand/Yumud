@@ -118,6 +118,29 @@ void Can::enableRcc(){
 void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
 void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
 void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
+
+void Can::init(const uint baudRate, const Mode _mode, const CanFilter & filter){
+    BaudRate baud;
+    switch(baudRate){
+        case 125_KHz:
+            baud = BaudRate::Kbps125;
+            break;
+        case 250_KHz:
+            baud = BaudRate::Kbps250;
+            break;
+        case 500_KHz:
+            baud = BaudRate::Kbps500;
+            break;
+        case 1_MHz:
+            baud = BaudRate::Mbps1;
+            break;
+        default:
+            baud = BaudRate::Kbps250;
+    }
+    init(baud, _mode, filter);
+}
+
+
 void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filter){
     installGpio();
     enableRcc();

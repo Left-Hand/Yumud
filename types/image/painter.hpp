@@ -12,6 +12,9 @@
 #include "font/font.hpp"
 #include "../types/string/String.hpp"
 
+#include "../sys/debug/debug_inc.h"
+
+
 template<typename ColorType>
 class Painter{
 protected:
@@ -22,6 +25,32 @@ protected:
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
+    }
+
+    void drawHriLine(const Vector2i & pos,const int l){
+        auto rect = Rect2i(pos, Vector2i(l, 1));
+        rect = src_image->get_view().intersection(rect);
+        if(bool(rect) == false) return;
+        src_image->putrect_unsafe(rect, m_color);
+    }
+
+
+    void drawVerLine(const Vector2i & pos,const int l){
+        auto rect = Rect2i(pos, Vector2i(1, l));
+        rect = src_image->get_view().intersection(rect);
+        if(bool(rect) == false) return;
+        src_image->putrect_unsafe(rect, m_color);
+    }
+
+
+    void drawVerLine(const Rangei & y_range, const int x){
+        auto y_range_regular = y_range.abs();
+        drawVerLine(Vector2i(x, y_range_regular.from), y_range_regular.length());
+    }
+
+    void drawHriLine(const Rangei & x_range, const int y){
+        auto x_range_regular = x_range.abs();
+        drawHriLine(Vector2i(x_range_regular.from, y), x_range_regular.length());
     }
 
 public:
@@ -50,16 +79,9 @@ public:
         drawtexture_unsafe(rect, color_ptr);
     }
 
-
-
-    // void drawImage(ImageWithData<ColorType, ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-    //     if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
-    //     drawtexture_unsafe(Rect2i(pos, image.get_size()), image.data.get());
-    // }
-
     template<typename w_ColorType>
     void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-        if(!src_image->get_window().contains(image.get_window()) || image.data == nullptr) return;
+        if(!src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
         auto rect = Rect2i(pos, image.get_size());
         src_image->setarea_unsafe(rect);
         uint32_t i = 0;
@@ -68,62 +90,19 @@ public:
             for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++, i++)
                 src_image->putpixel_unsafe(Vector2i(x,y), ptr[i]);
     }
-    // template<typename w_ColorType, w_ColorType>
-    // void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
-    //     if(image.data == nullptr) return;
-    //     bool unsafe = !src_image->get_window().contains(image.get_window());
-
-    //     auto rect = Rect2i(pos, image.get_size()).intersection(src_image->get_window());
-    //     src_image->setarea_unsafe(rect);
-
-    //     uint32_t i = 0;
-    //     w_ColorType * ptr = image.data.get();
-
-    //     for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++){
-
-    //         for(int y = rect.position.y; y < rect.position.y + rect.size.y; y++, i++){
-    //             // putpixel_unsafe(Vector2i(x,y), ptr[i]);
-    //             drawtexture_unsafe(, &ptr[i]);
-    //         }
-    //     }
-    // }
-
-    void drawHriLine(const Rangei & x_range, const int & y){
-        if(!x_range ||!src_image->get_window().get_y_range().has(y)) return;
-
-        src_image -> putrect_unsafe(Rect2i(x_range, Rangei(y, y+1)), m_color);
-    }
-
-    void drawHriLine(const Vector2i & pos,const int &l){
-        Rangei x_range = src_image->get_window().get_x_range().intersection(Rangei(pos.x, pos.x + ABS(l)));
-        drawHriLine(x_range, pos.y);
-    }
-
-    void drawVerLine(const Vector2i & pos,const int &l){
-        Rangei y_range = src_image->get_window().get_y_range().intersection(Rangei(pos.y, pos.y + ABS(l)));
-        if(!y_range ||!src_image->get_window().get_x_range().has(pos.x)) return;
-
-        src_image -> putrect_unsafe(Rect2i(Rangei(pos.x,pos.x+1), y_range), m_color);
-    }
-
-    void drawVerLine(const Rangei & y_range, const int & x){
-        if(!y_range ||!src_image -> get_window().get_x_range().has(x)) return;
-        src_image -> putrect_unsafe(Rect2i(Rangei(x,x+1), y_range), m_color);
-    }
 
     void drawFilledRect(const Rect2i & rect, const ColorType & color){
-        Rect2i rect_area = src_image->get_window().intersection(rect);
+        Rect2i rect_area = src_image->get_view().intersection(rect);
         if(!rect_area) return;
         src_image -> putrect_unsafe(rect_area, color);
     }
 
     void flush(){
         flush(m_color);
-        // src_image -> putrect_unsafe(src_image->get_window(), m_color);
     }
 
     void flush(const ColorType & color){
-        src_image -> putrect_unsafe(src_image->get_window(), color);
+        src_image -> putrect_unsafe(src_image->get_view(), color);
     }
     void drawPixel(const Vector2i & pos, const ColorType & color){
         src_image -> putpixel(pos, color);
@@ -135,26 +114,32 @@ public:
 
     void drawLine(const Vector2i & from, const Vector2i & to){
         if(!src_image->has_point(from)){
-            // DEBUG_PRINT("start point lost: ", start);
+            ASSERT_WITH_HALT(false, "start point lost: ", from);
             return;
         }else if(!src_image->has_point(to)){
-            // DEBUG_PRINT("end point lost: ", end);
+            ASSERT_WITH_HALT(false, "end point lost: ", to);
             return;
         }
         auto x0 = from.x;
-        auto y0 = from.x;
+        auto y0 = from.y;
         auto x1 = to.x;
         auto y1 = to.y;
+
+        if(y0 == y1) return drawHriLine(from, x1 - x0);
+        if(x0 == x1) return drawVerLine(from, y1 - y0);
         bool steep = false;
-        if (std::abs(x1 - x0) < std::abs(y1 - y0)) {
+
+        if (ABS(x1 - x0) < ABS(y1 - y0)) {
             SWAP(x0, y0);
             SWAP(x1, y1);
             steep = true;
         }
+
         if (x0 > x1) {
             SWAP(x0, x1);
             SWAP(y0, y1);
         }
+
         int dx = x1 - x0;
         int dy = y1 - y0;
         int deltaY = ABS(dy << 1);
@@ -167,17 +152,17 @@ public:
             else {
                 drawPixel({x,y});
             }
-            deltaY += std::abs(dy << 1);
+            deltaY += ABS(dy << 1);
             if (deltaY >= middle) {
                 y += (y1 > y0 ? 1 : -1);
-                middle += std::abs(dx << 1);
+                middle += ABS(dx << 1);
             }
         }
     }
 
     void drawHollowRect(const Rect2i & rect){
         Rect2i regular = rect.abs();
-        if(!src_image -> get_window().intersects(regular)) return;
+        if(!src_image -> get_view().intersects(regular)) return;
 
         Rangei x_range = regular.get_x_range();
         Rangei y_range = regular.get_y_range();
@@ -200,7 +185,7 @@ public:
         drawVerLine(center+Vector2i(0,-2), 5);
     }
 
-    void drawHollowCircle(const Vector2i & pos, const int & radius){
+    void drawHollowCircle(const Vector2i & pos, const uint radius){
         if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(src_image->area))) || radius <= 0) return;
 
         int x0 = pos.x;
@@ -234,7 +219,7 @@ public:
         }
     }
 
-    void drawFilledCircle(const Vector2i & pos, const int & radius){
+    void drawFilledCircle(const Vector2i & pos, const uint radius){
         // if(src_image !)
         if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), src_image->size)))) || radius == 0) return;
         if(radius == 1){
@@ -270,8 +255,8 @@ public:
         }
     }
 
-    void drawChar(const Vector2i & pos,const wchar_t & chr){
-        Rect2i image_area = Rect2i({}, src_image->size);
+    void drawChar(const Vector2i & pos,const wchar_t chr){
+        Rect2i image_area = Rect2i(Vector2i{}, src_image->size);
         const Font * font = chr > 0x80 ? chfont : enfont;
         const Vector2i font_size = font->getSize();
         Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
@@ -307,7 +292,7 @@ public:
 	GBKIterator iterator(str_ptr);
 	
     for(int x = pos.x; x < src_image->size.x;){
-        if(iterator.hasNext()){
+        if(iterator){
             auto chr = iterator.next();
             drawChar(Vector2i(x, pos.y), chr);
             x += ((chr > 0x80 ? chfont->getSize().x : enfont->getSize().x) + 1);
@@ -399,28 +384,25 @@ public:
         }
     }
 
-    void drawPolyLine(const std::initializer_list<Vector2i> &points){
-        if(points.size() < 2) return drawLine(*points.begin(), *points.end());
 
-        auto prev = points.begin();
-        for(auto it = points.begin() + 1; it!= points.end(); it++){
-            drawLine(*prev, *it);
-            prev = it;
-        }
-        drawLine(*prev, *points.begin());
+    void drawPolyline(const Vector2_t<auto> * points, const size_t count){
+        for(size_t i = 0; i < count-1; i++) drawLine(points[i], points[i + 1]);
     }
 
-    void drawPolyLine(const std::vector<Vector2i> &points){
-        if(points.size() < 2) return drawLine(*points.begin(), *points.end());
+
+    void drawPolygon(const Vector2_t<auto> * points, const size_t count){
+        drawPolyline(points, count);
+        drawLine(points[0], points[count - 1]);
+        // }
     }
 
-    void drawHollowTriangle(Vector2i p0, Vector2i p1, Vector2i p2){
+    void drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
         drawLine(p0, p1);
         drawLine(p1, p2);
         drawLine(p0, p2);
     }
 
-    void drawFilledTriangle(Vector2i p0, Vector2i p1, Vector2i p2){
+    void drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
         int a, b, y, last;
         int x0 = p0.x;
         int y0 = p0.y;

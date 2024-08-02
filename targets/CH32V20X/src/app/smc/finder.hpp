@@ -152,7 +152,7 @@ namespace SMC{
         }
 
         bool is_positive(const Vector2i & pos){
-            return (uint8_t)src(pos);
+            return (uint8_t)src[pos];
         }
 
         bool is_edge(const Vector2i & pos, const Vector2i next_pos){

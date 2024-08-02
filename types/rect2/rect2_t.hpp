@@ -16,7 +16,7 @@ public:
         struct{
             T x;
             T y;
-        };
+        }__packed;
     }__packed;
 
     union{
@@ -32,27 +32,39 @@ public:
         }__packed;
     }__packed;
 
-    __fast_inline constexpr Rect2_t(){;}
+    constexpr Rect2_t(){;}
 
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(const Rect2_t<U> other):position(other.position), size(other.size){;}
+    constexpr Rect2_t(const Rect2_t<arithmetic auto> other):position(other.position), size(other.size){;}
 
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(const Vector2_t<U> & _position,const Vector2_t<U> & _size):position(_position), size(_size){;}
+    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _position,const Vector2_t<arithmetic auto> & _size):position(_position), size(_size){;}
 
 
-    template<arithmetic U>
-    __fast_inline constexpr Rect2_t(const Vector2_t<U> & _size):position(), size(_size){;}
+    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _size):position(), size(_size){;}
 
-    template<arithmetic U>
-    __fast_inline explicit constexpr Rect2_t(const Range_t<U> & x_range,const Range_t<U> & y_range):
+    explicit constexpr Rect2_t(const Vector2_t<auto> * points, const size_t cnt){
+        if(cnt < 1) return;
+        const auto & first_point = points[0];
+        Range_t<T> x_range = {first_point.x, first_point.x};
+        Range_t<T> y_range = {first_point.y, first_point.y};
+        for(size_t i = 1; i < cnt; i++){
+            x_range = x_range.merge(points[i].x);
+            y_range = y_range.merge(points[i].y);
+        }
+
+        *this = Rect2_t<T>(x_range, y_range);
+    }
+
+    explicit constexpr Rect2_t(const Range_t<auto> & x_range,const Range_t<auto> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
 
-    __fast_inline constexpr Rect2_t(const auto _x,const auto _y,const auto _width,const auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
+    constexpr Rect2_t(const arithmetic auto _x,const arithmetic auto _y,const arithmetic auto _width,const arithmetic auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
 
-    template<arithmetic U>
-    static constexpr Rect2_t from_center(const Vector2_t<U> & center, const Vector2_t<U> & half_size){
-        return Rect2_t<T>(center - half_size, half_size * 2);
+    static constexpr Rect2_t from_center(const Vector2_t<arithmetic auto> & center, const Vector2_t<arithmetic auto> & half_size){
+        return Rect2_t<T>(center - half_size, half_size * 2).abs();
+    }
+
+    static constexpr Rect2_t from_cross(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b){
+        return Rect2_t<T>(a, b-a).abs();
     }
 
     constexpr T get_area() const {return ABS(size.x * size.y);}
@@ -116,14 +128,14 @@ public:
         return(ret);
     }
 
-    constexpr Rect2_t<T> operator*(const auto & ratio) const{
+    constexpr Rect2_t<T> operator*(const arithmetic auto & ratio) const{
         Rect2_t<T> ret = (*this).abs();
         ret.position *= ratio;
         ret.size *= ratio;
         return(*this);
     }
 
-    constexpr Rect2_t<T> operator/(const auto & ratio) const{
+    constexpr Rect2_t<T> operator/(const arithmetic auto & ratio) const{
         Rect2_t<T> ret = (*this).abs();
         ret.position /= ratio;
         ret.size /= ratio;
@@ -136,8 +148,7 @@ public:
         return(*this);
     }
 
-    template<arithmetic U>
-    constexpr bool intersects(const Rect2_t<U> other) const{
+    constexpr bool intersects(const Rect2_t<arithmetic auto> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
 
@@ -148,81 +159,87 @@ public:
     }
 
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> intersection(const Rect2_t<U> & other) const{
+    constexpr Rect2_t<T> intersection(const Rect2_t<arithmetic auto> & other) const{
         Rect2_t<T> regular = this -> abs();
         Rect2_t<T> other_regular = other.abs();
-        Rangei range_x = regular.get_x_range().intersection(other_regular.get_x_range());
-        if (!bool(range_x)) return Rect2_t<T>();
-        Rangei range_y = regular.get_y_range().intersection(other_regular.get_y_range());
-        if (!bool(range_y)) return Rect2_t<T>();
 
-        return Rect2_t<T>(range_x,range_y);
+        auto _position = Vector2_t<T>(
+            MAX(regular.x, other_regular.x),
+            MAX(regular.y, other_regular.y)
+        );
+
+        auto _size = Vector2_t<T>(
+            MIN(regular.x + regular.w, other_regular.x + other_regular.w) - _position.x,
+            MIN(regular.y + regular.h, other_regular.y + other_regular.h) - _position.y
+        );
+
+        if(_size.x < 0 || _size.y < 0) return Rect2_t<T>();
+        return Rect2_t<T>(_position, _size);
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> merge(const Rect2_t<U> & other) const{
+    constexpr Rect2_t<T> merge(const Rect2_t<arithmetic auto> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
-        Rangei range_x = regular.get_x_range().merge(other_regular.get_x_range());
-        // Rangei range_x = regular.get_x_range();
-        Rangei range_y = regular.get_y_range();
-        // .merge(other_regular.get_y_range());
+        Range_t<T> range_x = regular.get_x_range().merge(other_regular.get_x_range());
+        Range_t<T> range_y = regular.get_y_range().merge(other_regular.get_y_range());
         return Rect2_t<T>(range_x, range_y);
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> merge(const Vector2_t<U> & point) const{
+    constexpr Rect2_t<T> merge(const Vector2_t<arithmetic auto> & point) const{
         Rect2_t<T> regular = this->abs();
-        Rangei range_x = regular.get_x_range().merge(point.x);
-        Rangei range_y = regular.get_y_range().merge(point.y);
+        Range_t<T> range_x = regular.get_x_range().merge(point.x);
+        Range_t<T> range_y = regular.get_y_range().merge(point.y);
         return Rect2_t<T>(range_x, range_y);
     }
 
-    template<arithmetic U>
-    constexpr Vector2_t<U> constrain(const Vector2_t<U> & point) const{
+    constexpr Vector2_t<arithmetic auto> constrain(const Vector2_t<arithmetic auto> & point) const{
         Rect2_t<T> regular = this->abs();
-        Vector2_t<U> ret;
+        std::remove_cvref_t<decltype(point)> ret;
         ret.x = regular.get_x_range().clamp(point.x);
         ret.y = regular.get_y_range().clamp(point.y);
         return ret;
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> scale(const U amount)const {
+    constexpr Rect2_t<T> scale(const arithmetic auto & amount)const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.get_center(), regular.size * amount);
         if(ret.is_regular())return ret;
         else return Rect2_t<T>();
     }
 
-    template<arithmetic U>
-    constexpr Rect2_t<T> grow(const U amount)const {
+    constexpr Rect2_t<T> grow(const arithmetic auto & amount)const {
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> ret = Rect2_t<T>(regular.position - amount * Vector2_t<T>(1,1), regular.size + amount * Vector2_t<T>(2,2));
         if(ret.is_regular())return ret;
         else return Rect2_t<T>();
     }
 
-    constexpr Rect2_t<T> move(const Vector2_t<auto> offset)const{
+    constexpr Rect2_t<T> move(const Vector2_t<auto> & offset)const{
         return Rect2_t<T>(position + offset, size);
     }
 
     constexpr Range_t<T> get_x_range() const{
-        return Range_t<T>(position.x, position.x + size.x);
+        return Range_t<T>(position.x, position.x + size.x).abs();
     }
 
     constexpr Range_t<T> get_y_range() const{
-        return Range_t<T>(position.y, position.y + size.y);
+        return Range_t<T>(position.y, position.y + size.y).abs();
     }
 
     constexpr explicit operator bool() const {
         return (size.x != 0) && (size.y != 0);
     }
 
-    constexpr explicit operator T() const {
+    template<arithmetic U>
+    constexpr explicit operator U() const {
         return get_area();
     }
+
+    // template<>
+    // requires std::is_floating_point_v<T>
+    // constexpr explicit operator T() const {
+    //     return get_area();
+    // }
 
     constexpr  __no_inline explicit operator String() const{
         return toString();

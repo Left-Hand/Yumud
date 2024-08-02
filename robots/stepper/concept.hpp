@@ -19,9 +19,14 @@ protected:
 
     using Switches = StepperUtils::Switches;
 
-    real_t est_speed;
-    real_t est_pos;
-    real_t run_current;
+    struct Measurements{
+        real_t curr;
+        real_t spd;
+        real_t pos;
+    };
+
+    Measurements measurements;
+
     real_t target;
 
 public:
@@ -52,6 +57,7 @@ public:
     virtual void setSpeedClamp(const real_t max_spd) = 0;
     virtual void setAccelClamp(const real_t max_acc) = 0;
 
+    virtual void setNozzle(const real_t duty) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 };

@@ -25,10 +25,10 @@ protected:
         DONE
     };
 
-    static constexpr int forwardpreturns = 15;
-    static constexpr int forwardturns = 100;
-    static constexpr int backwardpreturns = forwardpreturns;
-    static constexpr int backwardturns = forwardturns;
+    static constexpr int forward_precycles = 15;
+    static constexpr int forward_cycles = 100;
+    static constexpr int backward_precycles = forward_precycles;
+    static constexpr int backward_cycles = forward_cycles;
 
     static constexpr int subdivide_micros = 256;
     static constexpr int cogging_samples = 16;
@@ -44,9 +44,6 @@ protected:
 
     std::array<real_t, poles> forward_pole_err;
     std::array<real_t, poles> backward_pole_err;
-
-    std::array<real_t, cogging_samples> forward_cogging_err;
-    std::array<real_t, cogging_samples> backward_cogging_err;
 
     SVPWM2 & svpwm;
     OdometerPoles & odo;
@@ -65,7 +62,5 @@ public:
 
         forward_pole_err.fill(0);
         backward_pole_err.fill(0);
-        forward_cogging_err.fill(0);
-        backward_cogging_err.fill(0);
     }
 };

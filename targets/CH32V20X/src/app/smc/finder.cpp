@@ -12,14 +12,14 @@ namespace SMC{
         Rangei current_window = {0,size.x - 1};
 
         for(auto x = pos.x; x > 0; x--){
-            if(bool(src({x, pos.y})) == true){
+            if(bool(src[{x, pos.y}]) == true){
                 current_window.from = x;
                 break;
             }
         }
 
         for(auto x = pos.x; x < size.x-1; x++){
-            if(bool(src({x, pos.y})) == true){
+            if(bool(src[{x, pos.y}]) == true){
                 current_window.to = x;
                 break;
             }
@@ -44,14 +44,14 @@ namespace SMC{
             switch(status){
 
             case SearchStatus::SEEKING:
-                if(bool(src({x,y})) == true and bool(src({x + 1,y}) == false)){
+                if(bool(src[{x,y}]) == true and bool(src[{x + 1,y}] == false)){
                     current_window.from = x;
                     status = SearchStatus::TRAVE;
                 }
                 break;
 
             case SearchStatus::TRAVE:
-                if(bool(src({x,y})) == false and bool(src({x + 1,y}) == true)){
+                if(bool(src[{x,y}]) == false and bool(src[{x + 1,y}] == true)){
                     current_window.to = x;
                     if(minimal_length < current_window.length()){
                         windows.push_back(current_window);
@@ -287,7 +287,7 @@ namespace SMC{
         if(y < 0 || y >= size.y) return 0;
         int ret = 0;
         for(int x = ((size.x-1)/2)-35; x < ((size.x-1)/2+35); x++){
-            if(bool(src(Vector2i{x,y})) ^ bool(src(Vector2i{x + 1, y}))) ret++;
+            if(bool(src[Vector2i{x,y}]) ^ bool(src[Vector2i{x + 1, y}])) ret++;
         }
         return ret;
     }
@@ -297,8 +297,8 @@ namespace SMC{
         if(y < 0 || y >= size.y) return 0;
         int cnt = 0;
         for(int x = (size.x-1)/2-20; x < (size.x-1)/2+20; x++){
-            auto color = uint8_t(src(Vector2i{x,y}));
-            auto next_color = uint8_t(src(Vector2i{x+1,y}));
+            auto color = uint8_t(src[Vector2i{x,y}]);
+            auto next_color = uint8_t(src[Vector2i{x+1,y}]);
             cnt += std::abs(next_color - color);
         }
         return cnt;
@@ -308,7 +308,7 @@ namespace SMC{
 
         using namespace NVCV2::Shape;
 
-        auto seed_pos = src.get_window().constrain(_seed_pos);
+        auto seed_pos = src.get_view().constrain(_seed_pos);
         Seed seed{seed_pos,  is_right ? Direction::R : Direction::L, !is_right};
         CoastFinder finder{src, seed};
         auto ret = finder.find();

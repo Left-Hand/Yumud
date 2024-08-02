@@ -169,7 +169,6 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 // static void flash_tb(OutputStream & logger){
-//     // AT24C02 at24{i2c};
 //     Flash flash{0};
 //     flash.init();
 //     Memory mem = flash;

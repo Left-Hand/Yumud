@@ -1,6 +1,8 @@
 #pragma once
 
 #include "../nvcv2/nvcv2.hpp"
+#include <algorithm>
+#include <bits/stl_numeric.h>
 
 namespace NVCV2::Shape{
     namespace Cores{
@@ -18,11 +20,13 @@ namespace NVCV2::Shape{
     }
 
 
-    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3]);
+    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3], const int div = 1);
 
     void gauss(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
-    void gauss(Image<Grayscale> src);
+    void gauss(Image<Grayscale> &src);
     void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src);
+
+    Vector2i find_most(const Image<Grayscale> & src,  const Grayscale & tg_color, const Vector2i & point, const Vector2i & vec);
     __inline void sobel_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_x);}
     __inline void sobel_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::sobel_y);}
     __inline void scharr_x(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){convolution(dst, src, Cores::scharr_x);}
@@ -133,39 +137,7 @@ namespace NVCV2::Shape{
 
     void convo_roberts_xy(Image<Grayscale> & dst, Image<Grayscale> & src);
 
-    __inline void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src, const int max_diff = INT_MAX) {
-        if(dst == src){
-            auto temp = dst.space();
-            adaptive_threshold(temp, src);
-            dst.clone(temp);
-            return;
-        }
-    
-        const auto size = (Rect2i(Vector2i(), dst.size).intersection(Rect2i(Vector2i(), src.size))).size;
-
-        static constexpr int wid = 3;
-        static constexpr int area = (2 * wid + 1) * (2 * wid + 1);
-
-        for(int y = wid; y < size.y - wid - 1; y++){
-            for(int x = wid; x < size.x - wid - 1; x++){
-
-                uint16_t average = 0;
-
-                for(int i=y-wid;i<=y+wid;i++){
-                    for(int j=x-wid;j<=x+wid;j++){
-                        average += uint8_t(src[{j,i}]);
-                    }
-                }
-
-                auto ave = average/area;
-                auto raw = src[{x,y}];
-
-                #define RELU(x) ((x) > 0 ? (x) : 0)
-
-                dst[{x,y}] = CLAMP(RELU(raw - ave - 5) * 8, 0, 255);
-            }
-        }
-    }
+    void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src);
     __inline void convo_roberts_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         convolution(dst, src, Cores::roberts_y);
     }

@@ -1,14 +1,14 @@
 #include "storage.hpp"
 #include "memory.hpp"
 
-Memory Storage::slice(const AddressWindow & _window){
-    return Memory(*this, _window.intersection(window()));
+Memory Storage::slice(const Storage::AddressView & _view){
+    return Memory(*this, _view.intersection(view()));
 }
 
-Memory Storage::slice(const size_t from, const size_t to){
-    return Memory(*this, window().intersection(AddressWindow{from, to}));
+Memory Storage::slice(const Storage::Address from, const Storage::Address to){
+    return Memory(*this, view().intersection(Storage::AddressView{from, to}));
 }
 
 Storage::operator Memory(){
-    return Memory(*this, window());
+    return Memory(*this, view());
 }

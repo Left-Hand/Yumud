@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../sys/core/system.hpp"
-#include "embd.h"
 
 #include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "../drivers/Wireless/Radio/CH9141/CH9141.hpp"
@@ -11,11 +10,13 @@
 
 #include "../nvcv2/mnist/mnist.hpp"
 
-#include "remote.hpp"
 #include "imgtrans/img_trans.hpp"
 
 #include "stepper/constants.hpp"
 #include "stepper/cli.hpp"
+
+#include "actions/actions.hpp"
+#include "machine/machine.hpp"
 
 #ifdef CH32V30X
 using StepperUtils::CliAP;
@@ -26,7 +27,9 @@ class EmbdHost:public CliAP{
     RemoteStepper stepper_x;
     RemoteStepper stepper_y;
     RemoteStepper stepper_z;
-    RemoteSteppers steppers;
+
+    Machine steppers;
+
     I2cSw       i2c{portD[2], portC[12]};
     MT9V034     camera{i2c};
     VL53L0X     vl{i2c};
@@ -34,11 +37,15 @@ class EmbdHost:public CliAP{
     CH9141      ch9141{uart7, portC[1], portD[3]};
     Transmitter trans{usbfs};
 
-
     struct{
         uint8_t bina_threshold = 60;
         uint8_t diff_threshold = 170;
     };
+
+    ActionQueue actions;
+
+    Gpio & run_led = portC[14];
+    Gpio & busy_led = portC[15];
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),
@@ -60,6 +67,14 @@ public:
     void reset();
     void cali();
 
+    void do_move(const Vector2 & from, const Vector2 & to);
+    void do_pick(const Vector2 & from);
+    void do_drop(const Vector2 & to);
+
+    void do_idle(const Vector2 & to);
+    void do_blink(const uint dur);
+
+
     enum class ActMethod{
         NONE = 0,
         HUI,
@@ -72,6 +87,7 @@ public:
     ActMethod act_method = ActMethod::NONE;
     void set_demo_method(const ActMethod new_method);
     void act();
+    void tick();
 };
 
 #endif
