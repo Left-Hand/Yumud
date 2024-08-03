@@ -20,7 +20,8 @@ class Painter{
 protected:
     ImageWritable<ColorType> * src_image = nullptr;
     Font * enfont = &font8x5;
-    Font * chfont = &font7x7;
+    Font * chfont = &font8x5;
+    // Font * chfont = &font7x7;
     ColorType m_color;
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
@@ -287,8 +288,7 @@ public:
         enfont->setScale(scale);
     }
 
-    void drawString(const Vector2i & pos, const String & str){
-    const char * str_ptr = str.c_str();
+    void drawString(const Vector2i & pos, const char * str_ptr){
 	GBKIterator iterator(str_ptr);
 	
     for(int x = pos.x; x < src_image->size.x;){
@@ -301,6 +301,9 @@ public:
         }
     }
 }
+    void drawString(const Vector2i & pos, const String & str){
+        drawString(pos, str.c_str());
+    }
 
     void drawHollowEllipse(const Vector2i & pos, const Vector2i & r) {
         int rx = r.x;

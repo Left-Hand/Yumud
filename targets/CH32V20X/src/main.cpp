@@ -29,9 +29,10 @@ int main(){
     // uart_main();
     // qlz_main();
     // embd_main();
-    embd_main();
+    // embd_main();
     // delay(200);
     // pmdc_tb();
+    oled_main();
     // uart_tb(uart1);
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);

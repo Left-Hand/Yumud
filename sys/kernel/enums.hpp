@@ -14,3 +14,4 @@ public:
 
 static constexpr Endian MSB{true};
 static constexpr Endian LSB{false};
+

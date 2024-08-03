@@ -115,6 +115,10 @@ public:
 
 class AdcPrimary: public AdcOnChip{
 protected:
+    Callback jeoc_cb;
+    Callback eoc_cb;
+    Callback awd_cb;
+
     using Channel = AdcUtils::Channel;
     using SampleCycles = AdcUtils::SampleCycles;
     using Mode = AdcUtils::Mode;

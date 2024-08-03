@@ -6,16 +6,17 @@
 
 struct Key{
 protected:
+    using Level = GpioUtils::Level;
     GpioConcept & m_gpio;
-    const bool m_valid_level = false;
+    const Level level_= GpioUtils::LOW;
 public:
-    Key(GpioConcept & gpio, const bool valid_level):m_gpio(gpio), m_valid_level(valid_level){;}
+    Key(GpioConcept & gpio, const Level _level):m_gpio(gpio), level_(_level){;}
 
     void init(){
-        init(m_valid_level);
+        init(level_);
     }
-    void init(const bool valid_level){
-        if(valid_level == true){
+    void init(const Level level){
+        if(level){
             m_gpio.inpd();
         }else{
             m_gpio.inpu();
@@ -23,7 +24,7 @@ public:
     }
 
     operator bool()const{
-        return m_gpio.read() == m_valid_level;
+        return m_gpio.read() == level_;
     }
 
     auto & io(){
