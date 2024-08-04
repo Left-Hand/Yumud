@@ -5,19 +5,15 @@
 #include <array>
 using namespace GpioUtils;
 
-// auto funcs = std::to_array({
-//     "cali",
-//     "cd",
-//     "save",
-// });
-
 class Menu{
 protected:
     enum class Func:uint8_t{
         NONE,
         CALI,
-        CD,
-        SAVE
+        EZ,
+        CF,
+        SAVE,
+        RST
     };
 
     Func func_ = Func::NONE;
@@ -26,6 +22,8 @@ protected:
     OutputStream & os_;
     Painter<Binary> painter_;
 
+    String send_str;
+    real_t para = 0;
 public:
     Menu(VerticalBinaryImage & _frame, OutputStream & _os):frame_(_frame), os_(_os){
         painter_.bindImage(frame_);
@@ -34,7 +32,7 @@ public:
 
     void render(){
         frame_.fill(0);
-        painter_.drawString({0,0}, "func");
+        painter_.drawString({0,0}, String(millis()));
 
         String str;
 
@@ -45,32 +43,26 @@ public:
             case Func::CALI:
                 str = "cali";
                 break;
-            case Func::CD:
-                str = "cd";
+            case Func::EZ:
+                str = "ez";
+                break;
+            case Func::CF:
+                str = "c 0.6";
                 break;
             case Func::SAVE:
                 str = "save";
                 break;
+            case Func::RST:
+                str = "reset";
+                break;
         }
 
-        painter_.drawString({0,8}, str);
+        painter_.drawString({0,8}, "func:" + str);
+        painter_.drawString({0,16}, send_str);
     }
 
     void next(){
-        switch(func_){
-            case Func::NONE:
-                func_ = Func::CALI;
-                break;
-            case Func::CALI:
-                func_ = Func::CD;
-                break;
-            case Func::CD:
-                func_ = Func::SAVE;
-                break;
-            case Func::SAVE:
-                func_ = Func::NONE;
-               break;
-        }
+        func_ = (func_ == Func::RST) ? Func::NONE : Func(uint8_t(func_) + 1);
     }
 
     void invoke(){
@@ -83,15 +75,23 @@ public:
             case Func::CALI:
                 str = "cali";
                 break;
-            case Func::CD:
-                str = "cd";
+            case Func::EZ:
+                str = "ez " + toString(para);
+                para += 0.3;
+                break;
+            case Func::CF:
+                str = "c 0.6";
                 break;
             case Func::SAVE:
                 str = "save";
                 break;
+            case Func::RST:
+                str = "reset";
+                break;
         }
 
-        os_.println(str);
+        send_str = str;
+        os_.println(send_str);
     }
 };
 
@@ -127,12 +127,14 @@ static void oled_tb(){
         menu.render();
         oled.update();
 
-        if(key_right){
+        key_left.update();
+        key_right.update();
+
+        if(key_right.pressed()){
             menu.invoke();
         }
 
-
-        if(key_left){
+        if(key_left.pressed()){
             menu.next();
         }
     }
