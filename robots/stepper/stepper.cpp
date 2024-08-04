@@ -191,7 +191,7 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
         case "ver"_ha:
             break;
         case "info"_ha:
-            CLI_PRINTS(m_archive.board_info);
+            CLI_PRINTS(archive_.board_info);
             break;
         default:
             CliSTA::parseTokens(command, args);

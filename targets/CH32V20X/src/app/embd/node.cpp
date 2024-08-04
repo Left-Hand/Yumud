@@ -1,6 +1,5 @@
 #include "node.hpp"
-#include "../../hal/timer/instance/timer_hw.hpp"
-#include "../robots/stepper/stepper.hpp"
+#include "robots/stepper/stepper.hpp"
 
 void node_main(){
     using TimerUtils::Mode;

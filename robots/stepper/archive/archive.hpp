@@ -27,7 +27,7 @@ namespace StepperUtils{
         uint8_t h;
         uint8_t mi;
 
-        void construct(){
+        void reset(){
             bver = build_version;
             dtype = drv_type;
             dbranch = drv_branch;
@@ -90,7 +90,7 @@ namespace StepperUtils{
             uint32_t data;
         };
 
-        void construct(){
+        void reset(){
 
         }
     };

@@ -32,9 +32,9 @@ bool Stepper::loadArchive(const bool outen){
 
             ARCHIVE_PRINTS("current build is:");
             
-            BoardInfo m_board_info;
-            m_board_info.construct();
-            ARCHIVE_PRINTS(m_board_info);
+            BoardInfo temp_board_info;
+            temp_board_info.reset();
+            ARCHIVE_PRINTS(temp_board_info);
         }else{
             ARCHIVE_PRINTS("board matches current build");
         }
@@ -49,7 +49,7 @@ bool Stepper::loadArchive(const bool outen){
 
         setNodeId(archive.node_id);
         
-        memcpy(&m_archive, &archive, sizeof(archive));
+        memcpy(&archive_, &archive, sizeof(archive));
         ARCHIVE_PRINTS("load successfully!");
     }else{
         ARCHIVE_PRINTS("load aborted because data is corrupted");
@@ -68,8 +68,7 @@ void Stepper::saveArchive(const bool outen){
     ARCHIVE_PRINTS("current board info:");
     ARCHIVE_PRINTS(archive.board_info);
 
-    archive.board_info.construct();
-    archive.switches = m_switches;
+    memcpy(&archive, &archive_, sizeof(Archive));
     uint32_t hashcode = archive.hash();
     archive.hashcode = hashcode;
 
@@ -101,6 +100,7 @@ void Stepper::saveArchive(const bool outen){
 void Stepper::removeArchive(const bool outen){
     Archive archive;
     archive.clear();
+
     ARCHIVE_PRINTS("======");
     ARCHIVE_PRINTS("removing archive...");
 
@@ -110,9 +110,9 @@ void Stepper::removeArchive(const bool outen){
     ARCHIVE_PRINTS("======");
 }
 
-#undef ARCHIVE_PRINTS
 
 OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi){
+    #ifdef ARCHIVE_PRINTS
     os << "======\r\n";
     os << "build version:\t\t" << bi.bver << "\r\n";
     os << "build time:\t\t20" << 
@@ -122,5 +122,8 @@ OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi)
     os << "driver type:\t\t" << bi.dtype << "\r\n";
     os << "driver branch:\t\t" << bi.dbranch << "\r\n";
     os << "======\r\n";
+    #endif
     return os;
 }
+
+#undef ARCHIVE_PRINTS

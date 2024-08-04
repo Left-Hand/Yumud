@@ -1,7 +1,10 @@
 #include "embd.h"
 
-#include "host.hpp"
+#ifdef CH32V20X
 #include "node.hpp"
+#else
+#include "host.hpp"
+#endif
 
 void embd_main(){
     #ifdef CH32V20X

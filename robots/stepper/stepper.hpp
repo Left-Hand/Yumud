@@ -7,8 +7,7 @@
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 
-#include "../hal/adc/adcs/adc1.hpp"
-#include "../robots/stepper/concept.hpp"
+#include "robots/stepper/concept.hpp"
 #include "hal/timer/pwm/gpio_pwm.hpp"
 
 
@@ -17,8 +16,8 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     using Archive = StepperUtils::Archive;
     using Switches = StepperUtils::Switches;
 
-    Archive m_archive;
-    Switches & m_switches = m_archive.switches;
+    Archive archive_;
+    Switches & switches_ = archive_.switches;
 
     volatile RunStatus run_status = RunStatus::INIT;
     SVPWM2 & svpwm;
@@ -66,9 +65,6 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     bool skip_tone = false;
     bool cmd_mode = false;
 
-    ShutdownFlag shutdown_flag{*this};
-
-
     ErrorCode error_code = ErrorCode::OK;
     const char * error_message = nullptr;
     const char * warn_message = nullptr;
@@ -82,20 +78,20 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     }
 
 
-    void throw_error(const ErrorCode & _error_code,const char * _error_message) {
+    void throw_error(const ErrorCode _error_code,const char * _error_message) {
         error_message = _error_message;
         run_status = RunStatus::ERROR;
         if(shutdown_when_error_occurred){
-            shutdown_flag = true;
+            shutdown();
         }
         CLI_PRINTS(error_message);
     }
 
-    void throw_warn(const ErrorCode & ecode, const char * _warn_message){
+    void throw_warn(const ErrorCode ecode, const char * _warn_message){
         warn_message = _warn_message;
         run_status = RunStatus::WARN;
         if(shutdown_when_warn_occurred){
-            shutdown_flag = true;
+            shutdown();
         }
         CLI_PRINTS(warn_message);
     }
@@ -112,9 +108,6 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     void parseTokens(const String & _command, const std::vector<String> & args) override;
 
     void parseCommand(const Command command, const CanMsg & msg) override;
-    
-    friend ShutdownFlag;
-
 
 public:
 
