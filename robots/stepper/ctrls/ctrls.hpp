@@ -26,7 +26,7 @@ public:
         real_t curr_limit;
 
         constexpr void reset(){
-            curr_slew_rate = 30.0 / foc_freq;
+            curr_slew_rate = 50.0 / foc_freq;
             curr_limit = 0.7;
         }
     };
@@ -113,8 +113,8 @@ struct GeneralPositionCtrl:public PositionCtrl{
 public:
     struct Config{
         real_t kp = 20;
-        real_t kd = 0.12;
-        real_t kd2 = 1.8;
+        real_t kd = 0.10;
+        real_t kd2 = 2.5;
 
     };
 

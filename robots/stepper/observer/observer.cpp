@@ -2,11 +2,11 @@
 #include "../stepper.hpp"
 
 
-ShutdownFlag & ShutdownFlag::operator = (const bool _state){
-    state = _state;
+// ShutdownFlag & ShutdownFlag::operator = (const bool _state){
+//     state = _state;
 
-    if(state) m_stp.shutdown();
-    else m_stp.rework();
+//     if(state) m_stp.shutdown();
+//     else m_stp.rework();
 
-    return *this;
-}
+//     return *this;
+// }

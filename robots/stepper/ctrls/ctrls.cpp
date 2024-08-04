@@ -5,8 +5,7 @@ using Result = CtrlResult;
 
 real_t CurrentCtrl::update(const real_t targ_current){
     real_t current_delta = CLAMP(targ_current - current_output, -current_slew_rate, current_slew_rate);
-    current_output = MIN(current_output + current_delta, current_clamp);
-    return current_output;
+    return current_output = MIN(current_output + current_delta, current_clamp);
 }
 
 Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos, 
@@ -16,23 +15,30 @@ Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos,
     real_t abs_err = ABS(err);
     real_t abs_spd = ABS(real_spd);
 
-    static constexpr real_t basic_raddiff = 1.2;
+    static constexpr real_t basic_raddiff = 1.0;
 
     real_t clamped_abs_err = MIN(abs_err, inv_poles / 4);
     real_t smoothed_raw_abs_raddiff = sin(clamped_abs_err * poles * TAU) * (PI/2);
 
-    #define SAFE_OVERLOAD_RAD(curr, spd) MIN(curr * 1.4, spd * 0.17)
-    real_t raddiff = smoothed_raw_abs_raddiff * SIGN_AS((basic_raddiff + MIN(25 * abs_err, SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd))), err);
+    #define SAFE_OVERLOAD_RAD(__curr, __spd, __pos_abs_err)\
+        MIN(\
+        MIN(\
+        MIN(__curr * __curr\
+        , __spd * 0.12),\
+        \
+        __pos_abs_err * 12)\
+        ,1.4)
+    real_t raddiff = smoothed_raw_abs_raddiff * SIGN_AS((basic_raddiff + SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd, abs_err)), err);
 
     real_t current = MIN(abs_err * kp, curr_ctrl.config.curr_limit); 
 
     //w = mv^2/2 - fx
-    real_t overflow_energy = MAX(kd * abs_spd - kd2 * sqrt(abs_err) - 0.7, 0); 
+    real_t overflow_energy = MAX(kd * abs_spd - kd2 * sqrt(abs_err), 0); 
     
     real_t least_current = current * 0.23;
     current = MAX(current - overflow_energy, least_current);
     
-    if(err * real_spd < -0.1){
+    if(err * real_spd < -1){
         return {curr_ctrl.config.curr_limit, SIGN_AS(basic_raddiff, err)};
     }else{
         return {current, raddiff};

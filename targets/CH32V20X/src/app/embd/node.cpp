@@ -46,7 +46,7 @@ void node_main(){
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
     timer3.bindCb(IT::Update, [&](){stp.tick();});
-    timer3.enableIt(IT::Update, NvicPriority(0, 0));
+    timer3.enableIt(IT::Update,{0,0});
 
     can1.init(Can::BaudRate::Mbps1);
  
@@ -57,18 +57,22 @@ void node_main(){
 
     while(!stp.isActive());
     stp.setTargetCurrent(0);
-    stp.setCurrentClamp(1.2);
+    stp.setCurrentClamp(1.4);
 
     while(true){
         stp.run(); 
         stp.report();
         Sys::Clock::reCalculateTime();
         // stp.setTargetTrapezoid(4 * sin(t) + 3 * sign(sin(t)));
-        // stp.setTargetPosition(14 * sin(t));
+        // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
         // stp.setTargetPosition(15 *sin(t/3) * sin(t*3));
-        stp.setTargetPosition(30 * int(7 * sin(t /6)));
+        // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
         // stp.setTargetPosition(0);
+        // stp.setTargetPosition(10 * sign(sin(t * 3)));
         // stp.setTargetVector(15 * sin(t));
-        // stp.setTargetSpeed(26 * sin(t));
+        // stp.setTargetSpeed(30 * sin(t));
+        // stp.setTargetPosition(40 * sin(t));
+        stp.setTargetPosition(2 * sin(t));
+        // stp.setTargetPosition(4 * sign(sin(4 * t)));
     }
 }
