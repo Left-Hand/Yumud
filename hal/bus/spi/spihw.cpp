@@ -164,8 +164,8 @@ void SpiHw::installGpios(){
         bindCsPin(cs_pin, 0);
     }
 
-    for(uint8_t i = 0; i < cs_port.length(); i++){
-        cs_port[i].outpp();
+    for(auto & item : cs_port){
+        item.outpp();
     }
 }
 

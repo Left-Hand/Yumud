@@ -126,9 +126,8 @@ public:
         mosi_gpio.outpp();
         sclk_gpio.outpp(1);
 
-        for(uint8_t i = 0; i < cs_port.length(); i++){
-            if(cs_port.isIndexValid(i)){
-                auto & cs_gpio = cs_port[i];
+        for(auto & cs_gpio:cs_port){
+            if(cs_gpio.isValid()){
                 cs_gpio.outpp(1);
             }
         }

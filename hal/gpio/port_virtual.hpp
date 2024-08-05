@@ -7,10 +7,10 @@
 #include <memory>
 #include <array>
 
-template<int size>
+template<size_t N>
 class PortVirtualConcept : public PortConcept{
 protected:
-    bool isIndexValid(const uint8_t index){return (index >= 0 && index < size);}
+    bool isIndexValid(const uint8_t index){return (index >= 0 && index < N);}
 
     virtual void write(const uint16_t data) = 0;
     virtual uint16_t read() = 0;
@@ -18,18 +18,19 @@ public:
 
     operator uint16_t(){return read();}
 
-    constexpr uint8_t length(){
-        return size;
+    constexpr size_t size(){
+        return N;
     }
 
     PortVirtualConcept & operator = (const uint16_t data) override {write(data); return *this;}
     virtual void setModeByIndex(const int8_t index, const PinMode mode) = 0;
 };
 
-template<int size>
-class PortVirtual : public PortVirtualConcept<size>{
+template<size_t N>
+class PortVirtual : public PortVirtualConcept<N>{
 protected:
-    std::array<GpioConcept *, size> pin_ptrs = {nullptr};
+    using E = GpioConcept;
+    std::array<GpioConcept *, N> pin_ptrs = {nullptr};
 
     void write(const uint16_t data) override {
         for(uint8_t i = 0; i < 16; i++){
@@ -48,7 +49,7 @@ public:
     void init(){;}
 
     void bindPin(GpioConcept & gpio, const uint8_t index){
-        if(index < 0 && index >= size)return;
+        if(index < 0 && index >= N)return;
         pin_ptrs[index] = &gpio;
     }
 
@@ -79,8 +80,15 @@ public:
         pin_ptrs[CTZ((uint16_t)pin)]->clr();
     }
 
+    E * begin(){
+        return *pin_ptrs.begin();
+    }
 
-    bool isIndexValid(const uint8_t index){return (index >= 0 && index < size && pin_ptrs[index] != nullptr);}
+    E * end(){
+        return *pin_ptrs.end();
+    }
+
+    bool isIndexValid(const uint8_t index){return (index >= 0 && index < N && pin_ptrs[index] != nullptr);}
 
     GpioConcept & operator [](const uint8_t index){return isIndexValid(index) ? *pin_ptrs[index] : GpioNull;}
 
@@ -90,10 +98,11 @@ public:
     }
 };
 
-template<int size>
-class PortVirtualLocal : public PortVirtualConcept<size>{
+template<size_t N>
+class PortVirtualLocal : public PortVirtualConcept<N>{
 protected:
-    std::array<Gpio *, size> pin_ptrs = {nullptr};
+    using E = Gpio;
+    std::array<Gpio *, N> pin_ptrs = {nullptr};
 
     void write(const uint16_t & data) override {
         for(uint8_t i = 0; i < 16; i++){
@@ -111,9 +120,17 @@ public:
     PortVirtualLocal(){;}
     void init(){;}
 
+    E * begin(){
+        return *pin_ptrs.begin();
+    }
+
+    E * end(){
+        return *pin_ptrs.end();
+    }
+
 
     void bindPin(Gpio & gpio, const uint8_t index){
-        if(index < 0 && index >= size)return;
+        if(index < 0 && index >= N)return;
         pin_ptrs[index] = &(gpio);
     }
 
@@ -145,7 +162,7 @@ public:
     }
 
 
-    bool isIndexValid(const uint8_t & index){return (index >= 0 && index < size && pin_ptrs[index] != nullptr);}
+    bool isIndexValid(const uint8_t & index){return (index >= 0 && index < N && pin_ptrs[index] != nullptr);}
 
     Gpio * operator [](const uint8_t index){return isIndexValid(index) ? pin_ptrs[index].get() : nullptr;}
 

@@ -183,6 +183,10 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             elecrad_zerofix = PI;
             break;
 
+        case "hlt"_ha:
+            CREATE_FAULT;
+            break;
+
         case "map"_ha:
             CLI_PRINTS(odo.map());
             break;
