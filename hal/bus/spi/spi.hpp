@@ -5,9 +5,16 @@
 #include "../hal/bus/bus.hpp"
 
 class Spi:public FullDuplexBus{
+public:
+    #ifndef SPI_MAX_PINS
+    #define SPI_MAX_PINS 4
+    #endif
+    PortVirtual <SPI_MAX_PINS> cs_port = PortVirtual<SPI_MAX_PINS>();
+
+    #ifdef SPI_MAX_PINS
+    #undef SPI_MAX_PINS
+    #endif
 protected:
-    static constexpr uint8_t spi_max_cs_pins = 4;
-    PortVirtual <spi_max_cs_pins> cs_port = PortVirtual<spi_max_cs_pins>();
 
     Error lead(const uint8_t index) override{
         cs_port[wholock()].clr();

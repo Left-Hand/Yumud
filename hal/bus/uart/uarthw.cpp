@@ -1,5 +1,6 @@
+#include "sys/core/platform.h"
+
 #include "uarthw.hpp"
-#include "../sys/core/platform.h"
 
 
 #define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE

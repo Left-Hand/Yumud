@@ -156,9 +156,10 @@ public:
     }
 
     void setTargetTrapezoid(const real_t pos){
-        target = pos;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
-        ctrl_type = CtrlType::TRAPEZOID;
+        // target = pos;
+        // panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
+        // ctrl_type = CtrlType::TRAPEZOID;
+        setTargetPosition(pos);
     }
 
     void setOpenLoopCurrent(const real_t current){

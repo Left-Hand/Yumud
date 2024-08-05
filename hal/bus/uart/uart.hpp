@@ -19,6 +19,11 @@ public:
     using DuplexBus::rxMethod;
     using InputStream::read;
 protected:
+
+    #ifndef UART_FIFO_BUF_SIZE
+    #define UART_FIFO_BUF_SIZE 256
+    #endif
+
     RingBuf_t<char, UART_FIFO_BUF_SIZE> txBuf;
     RingBuf_t<char, UART_FIFO_BUF_SIZE> rxBuf;
 

@@ -2,11 +2,16 @@
 
 #define __PRINTABLE_HPP__
 
-#include "../sys/core/platform.h"
-#include "../types/buffer/buffer.hpp"
-#include "../types/string/String.hpp"
-#include "../thirdparty/sstl/include/sstl/vector.h"
+#include "sys/core/platform.h"
+#include "types/buffer/buffer.hpp"
+#include "types/string/String.hpp"
+#include "thirdparty/sstl/include/sstl/vector.h"
 #include "string_utils.hpp"
+
+
+#include <bits/ios_base.h>
+#include <iomanip>
+
 
 #include <vector>
 #include <array>
@@ -59,18 +64,33 @@ public:
 };
 
 class OutputStream: virtual public BasicStream{
-private:
-    // void write(const char * data_ptr){
-    //     for(size_t i=0;data_ptr[i] != 0; i++) write(data_ptr[i]);
-	// }
-public:
-    uint8_t radix = 10;
-    uint8_t eps = 2;
 protected:
-    String space = ", ";
+    uint8_t radix = 10;
+    uint8_t eps_ = 2;
 
-    bool skipSpec = false;
+    const char * splitter = ", ";
+    volatile bool skip_split = false;
 
+    template<typename T>
+    void print_arr(const T * _begin, const T * _end){
+        if(_end <= _begin) return;
+        const size_t _size = std::distance(_begin, _end);
+        *this << '[';
+        if(_size > 0){
+            for(size_t i = 0; i < _size - 1; ++i) *this << _begin[i] << ',';
+            *this << _begin[_size - 1];
+        }
+        *this << ']';
+    }
+
+
+    void print_entity(auto && any){
+        if(skip_split == false){
+            *this << splitter;
+        }
+        skip_split = false;
+        *this << any;
+    }
 public:
 
     virtual void write(const char data) = 0;
@@ -80,9 +100,9 @@ public:
 
     virtual size_t pending() const = 0;
 
-    void setSpace(const String _space){space = _space;}
+    void setSpace(const String _space){splitter= _space.c_str();}
     void setRadix(const uint8_t _radix){radix = _radix;}
-    void setEps(const uint8_t _eps){eps = _eps;}
+    void setEps(const uint8_t _eps){eps_ = _eps;}
 
 
     template<typename T>
@@ -106,12 +126,8 @@ public:
         StringUtils::itoa(val, str, this->radix);
         return *this << str;
     }
-
-    // template<>
-    OutputStream & operator<<(bool val){write(val ? '1' : '0'); return *this;}
-    // template<>
+    OutputStream & operator<<(const bool val){write(val ? '1' : '0'); return *this;}
     OutputStream & operator<<(const char chr){write(chr); return *this;}
-    // template<>
     OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
     OutputStream & operator<<(char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
@@ -123,39 +139,35 @@ public:
 
     OutputStream & operator<<(const SpecToken & spec);
 
-    #define PRINT_ARR_TEMPLATE\
-        size_t _size = arr.size();\
-        *this << '[';\
-        if(_size > 0){\
-            for(size_t i = 0; i < _size - 1; ++i) *this << arr[i] << ',';\
-            *this << arr[_size - 1];\
-        }\
-        *this << ']';\
-        return *this;\
+    OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
+    OutputStream& operator<<(const std::_Setprecision & n){setEps(n._M_n); return *this;}
 
     template<typename T, size_t size>
     OutputStream & operator<<(const T (&arr)[size]){
-        PRINT_ARR_TEMPLATE
+        print_arr(&arr[0], &arr[size]);
+        return *this;
     }
 
     template<typename T, size_t size>
     OutputStream & operator<<(const std::array<T, size> & arr){
-        PRINT_ARR_TEMPLATE
+        print_arr(arr.begin(), arr.end());
+        return *this;
     }
 
     template<typename T>
     OutputStream & operator<<(const std::vector<T> & arr){
-        PRINT_ARR_TEMPLATE
+        print_arr(arr.begin(), arr.end());
+        return *this;
     }
 
     template<typename T, size_t arr_size>
     OutputStream & operator<<(const sstl::vector<T, arr_size> & arr){
-        PRINT_ARR_TEMPLATE
+        print_arr(arr.begin(), arr.end());
+        return *this;
     }
 
     template<StringUtils::HasToString T>
-    OutputStream & operator<<(const T & misc){*this << misc.toString(eps); return *this;}
-
+    OutputStream & operator<<(const T & misc){*this << misc.toString(eps_); return *this;}
 
     template <typename... Args>
     auto& operator<<(const std::tuple<Args...>& t) {
@@ -176,52 +188,27 @@ public:
     requires std::is_enum_v<T>
     OutputStream & operator<<(const T & misc){*this << int(misc); return *this;}
 
-    void print(){}
 
-	template <typename T>
-	void print(const T & first) {
-		*this << first;
-		print();
-	}
-
-    template <typename real, typename... Args>
-    void print(real first, Args... args) {
-        *this << first;
-        if(!skipSpec) *this << space;
-        else skipSpec = false;
-        print(args...);
-    }
-
-    void println(){*this << "\r\n";}
-
-	template <typename T>
-	void println(const T & first) {
-		*this << first;
+    template <class... Args>
+    void println(Args&&... args){
+        skip_split = true;
+        (..., print_entity(args));
         *this << "\r\n";
-	}
-
-    template <typename T, typename... Args>
-    void println(T first, Args... args) {
-        *this << first;
-        if(!skipSpec) *this << space;
-        else skipSpec = false;
-        println(args...);
     }
 
-    void prints(){*this << "\r\n";}
-
-	template <typename T>
-	void prints(const T & first) {
-		*this << first;
-        *this << "\r\n";
-	}
-
-    template <typename T, typename... Args>
-    void prints(T first, Args... args) {
-        *this << first;
-        prints(args...);
+    template <class... Args>
+    void prints(Args&&... args){
+        (*this << ... << args) << "\r\n";
     }
-private:
+
+    template <class... Args>
+    void print(Args&&... args){
+        (*this << ... << args);
+    }
+
+
+    auto eps() const {return eps_;}
+    // auto radix() const {return radix_;}
 };
 
 class IOStream:public OutputStream, public InputStream{

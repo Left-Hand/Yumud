@@ -15,7 +15,6 @@ void StringUtils::reverse_str(char * str, size_t len){
 
 void StringUtils::disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale){
     char * p = const_cast<char *>(str);
-    // char * const p = const_cast<char * const>(str);
 
     scale = 1;
     bool minus = false;
@@ -139,24 +138,26 @@ void StringUtils::ftoa(float number,char *buf, uint8_t eps)
     strcpy(buf,str_int);
 }
 
-bool StringUtils::is_digit(const char & chr){
+bool StringUtils::is_digit(const char chr){
     return chr >= '0' && chr <= '9';
 }
+
 bool StringUtils::is_numeric(const char* str) {
 	bool hasDigit = false;
 	bool hasDot = false;
 	bool hasSign = false;
 
 	for (int i = 0; str[i] != '\0'; i++) {
-		if (is_digit(str[i])) {
+		char chr = str[i];
+		if (is_digit(chr)) {
 			hasDigit = true;
-		} else if (str[i] == '.') {
+		} else if (chr == '.') {
 			if (hasDot || !hasDigit) {
 				return false; // 多个小数点或者小数点前没有数字，返回 false
 			}
 			hasDot = true;
-		} else if (str[i] == '+' || str[i] == '-') {
-			if (hasSign || hasDigit) {
+		} else if (chr == '+' || chr == '-') {
+			if (hasSign || hasDigit || hasDot) {
 				return false; // 多个正负号或者正负号出现在数字之后，返回 false
 			}
 			hasSign = true;

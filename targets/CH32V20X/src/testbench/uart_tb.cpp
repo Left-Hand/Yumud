@@ -65,45 +65,6 @@ using std::string;
     #endif
 }
 
-[[maybe_unused]] static void uart_tb_old(){
-
-    // USART_InitTypeDef USART_InitStructure = {0};
-    // // UART7_TX_GPIO.outpp();
-    // UART7_TX_GPIO.afpp();
-    // UART7_RX_GPIO.inflt();
-
-    // RCC_APB1PeriphClockCmd(RCC_APB1Periph_UART7, ENABLE);
-
-    // GPIO_PinRemapConfig(GPIO_FullRemap_USART7, ENABLE);
-
-
-    // USART_InitStructure.USART_BaudRate = 115200;
-    // USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    // USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    // USART_InitStructure.USART_Parity = USART_Parity_No;
-    // USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    // USART_InitStructure.USART_Mode = USART_Mode_Tx | USART_Mode_Rx;
-
-    // USART_Init(UART7, &USART_InitStructure);
-    
-    // USART_Cmd(UART7, ENABLE);
-    // [[maybe_unused]] auto write = [](const char * str){
-    //     for(size_t i=0;str[i];i++){
-    //         UART7->DATAR = (uint8_t)str[i];
-    //         while((UART7->STATR & USART_FLAG_TXE) == RESET);
-    //     }
-    // };
-    
-    // while(true){
-    //     write("hello\r\n");
-    //     // UART7_TX_GPIO.set();
-    //     // delay(200);
-    //     // UART7_TX_GPIO.clr();
-    //     // delay(200);
-    // }
-
-
-}
 void uart_main(){
     // uart_tb_old();
     //uart1 passed

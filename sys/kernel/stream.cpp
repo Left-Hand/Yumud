@@ -1,25 +1,26 @@
 #include "stream.hpp"
 
+
 OutputStream& OutputStream::operator<<(const SpecToken & spec){
     switch(spec){
     
     case SpecToken::NoSpace:
-        space = '\0';
+        splitter = "\0";
         break;
     case SpecToken::Space:
-        space = " ";
+        splitter = " ";
         break;
     case SpecToken::Comma:
-        space = ",";
+        splitter = ",";
         break;
     case SpecToken::CommaWithSpace:
-        space = ", ";
+        splitter = ", ";
         break;
     case SpecToken::Tab:
-        space = "\t";
+        splitter = "\t";
         break;
     case SpecToken::End:
-        space = "\r\n";
+        splitter = "\r\n";
         break;
     
     case SpecToken::Bin:
@@ -36,28 +37,47 @@ OutputStream& OutputStream::operator<<(const SpecToken & spec){
         break;
 
     case SpecToken::Eps1:
-        eps = 1;
+        eps_ = 1;
         break;
     case SpecToken::Eps2:
-        eps = 2;
+        eps_ = 2;
         break;
     case SpecToken::Eps3:
-        eps = 3;
+        eps_ = 3;
         break;
     case SpecToken::Eps4:
-        eps = 4;
+        eps_ = 4;
         break;
     case SpecToken::Eps5:
-        eps = 5;
+        eps_ = 5;
         break;
     case SpecToken::Eps6:
-        eps = 6;
+        eps_ = 6;
         break;
     }
 
-    skipSpec = true;
+    skip_split = true;
     return *this;
 }
+
+
+OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
+    do{
+        if (func == &std::oct) {setRadix(8);break;}
+        if (func == &std::dec) {setRadix(10);break;}
+        if (func == &std::hex) {setRadix(16);break;}
+        if (func == &std::fixed) {
+            //TODO
+            break;}
+        if (func == &std::scientific) {
+            //TODO
+            break;}
+    }while(false);
+
+    skip_split = true;
+    return *this;
+}
+
 
 String InputStream::readString(const size_t & len){
     String str;

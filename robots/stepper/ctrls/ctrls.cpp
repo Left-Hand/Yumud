@@ -24,16 +24,16 @@ Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos,
         MIN(\
         MIN(\
         MIN(__curr * __curr\
-        , __spd * 0.10),\
+        , __spd * 0.20),\
         \
-        __pos_abs_err * 5)\
+        __pos_abs_err * 12)\
         ,1.7)
     real_t raddiff = smoothed_raw_abs_raddiff * SIGN_AS((basic_raddiff + SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd, abs_err)), err);
 
     real_t abs_curr = MIN(abs_err * kp, curr_ctrl.config.curr_limit); 
 
     //w = mv^2/2 - fx
-    real_t overflow_energy = MAX(kd * abs_spd - kd2 * sqrt(abs_err), 0); 
+    real_t overflow_energy = MAX(kd * abs_spd - kd2 * sqrt(abs_err) - 0.2, 0); 
     
     abs_curr = MAX(abs_curr - overflow_energy, 0);
     

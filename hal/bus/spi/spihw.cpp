@@ -1,4 +1,5 @@
 #include "spihw.hpp"
+#include "sys/debug/debug_inc.h"
 
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
@@ -164,8 +165,14 @@ void SpiHw::installGpios(){
         bindCsPin(cs_pin, 0);
     }
 
-    for(auto & item : cs_port){
-        item.outpp();
+    // for(auto & cs_gpio : cs_port){
+        // if(cs_gpio.isValid()){
+        //     cs_gpio.outpp(1);
+        // }
+    // }
+
+    for(uint8_t i = 0; i < cs_port.size(); i++){
+        cs_port[i].outpp();
     }
 }
 

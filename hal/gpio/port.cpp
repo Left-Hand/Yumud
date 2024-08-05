@@ -3,7 +3,7 @@
 
 Gpio Port::channel_none = Gpio(GPIOD, Pin::None);
 
-void Port::setModeByIndex(const int8_t index, const PinMode mode){
+void Port::setMode(const int index, const PinMode mode){
     Gpio gpio = Gpio(instance, (Pin)(1 << index));
     gpio.setMode(mode);
 }

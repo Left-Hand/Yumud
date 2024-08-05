@@ -16,7 +16,7 @@ void reverse_str(char * str, size_t len);
 void disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale);
 bool is_numeric(const char* str);
 bool is_digit(const char * str);
-bool is_digit(const char & chr);
+bool is_digit(const char chr);
 
 void ftoa(float value, char *str, uint8_t eps);
 

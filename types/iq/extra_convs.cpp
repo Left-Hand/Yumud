@@ -62,6 +62,6 @@ String toString(const iq_t iq, unsigned char eps){
 OutputStream & operator<<(OutputStream & os, const iq_t value){
     char str_int[str_int_size] = {0};
     char str_frac[str_float_size] = {0};
-    conv(str_int, str_frac, value.value, os.eps);
+    conv(str_int, str_frac, value.value, os.eps());
     return os << str_int << str_frac;
 }

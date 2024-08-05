@@ -1,7 +1,8 @@
 #pragma once
 
 #include "uart.hpp"
-#include "../hal/dma/dma.hpp"
+
+#include "hal/dma/dma.hpp"
 
 
 class UartHw:public Uart{
@@ -10,9 +11,7 @@ protected:
     USART_TypeDef * instance;
 
     void enableRcc(const bool en = true);
-
     void enableIt(const bool en = true);
-
     void enableRxneIt(const bool en = true);
     void enableTxeIt(const bool en = true);
     void enableIdleIt(const bool en = true);
@@ -31,6 +30,10 @@ protected:
 
     size_t rx_dma_buf_index;
     size_t tx_dma_buf_index;
+
+    #ifndef UART_DMA_BUF_SIZE
+    #define UART_DMA_BUF_SIZE 64
+    #endif
 
     char tx_dma_buf[UART_DMA_BUF_SIZE];
     char rx_dma_buf[UART_DMA_BUF_SIZE];

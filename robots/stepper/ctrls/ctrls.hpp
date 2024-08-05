@@ -113,7 +113,7 @@ struct GeneralPositionCtrl:public PositionCtrl{
 public:
     struct Config{
         real_t kp = 8;
-        real_t kd = 0.12;
+        real_t kd = 0.15;
         real_t kd2 = 2.2;
 
     };

@@ -2,11 +2,11 @@
 
 
 
-#include "../../sys/core/platform.h"
-#include "../../hal/flash/flash.hpp"
-#include "../../hal/timer/timer.hpp"
-#include "../../hal/timer/instance/timer_hw.hpp"
-#include "../../hal/bus/can/can.hpp"
+#include "sys/core/platform.h"
+#include "hal/flash/flash.hpp"
+#include "hal/timer/timer.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/bus/can/can.hpp"
 
 
 using Sys::t;
