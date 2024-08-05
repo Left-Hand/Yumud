@@ -17,31 +17,30 @@ Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos,
 
     static constexpr real_t basic_raddiff = 1.0;
 
-    real_t clamped_abs_err = MIN(abs_err, inv_poles / 4);
-    real_t smoothed_raw_abs_raddiff = sin(clamped_abs_err * poles * TAU) * (PI/2);
+    real_t clamped_abs_err = MIN(abs_err, (inv_poles / 4) * PI / 2);
+    real_t smoothed_raw_abs_raddiff = sin(clamped_abs_err * poles * 4) * (PI/2);
 
     #define SAFE_OVERLOAD_RAD(__curr, __spd, __pos_abs_err)\
         MIN(\
         MIN(\
         MIN(__curr * __curr\
-        , __spd * 0.12),\
+        , __spd * 0.10),\
         \
-        __pos_abs_err * 12)\
-        ,1.4)
+        __pos_abs_err * 5)\
+        ,1.7)
     real_t raddiff = smoothed_raw_abs_raddiff * SIGN_AS((basic_raddiff + SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd, abs_err)), err);
 
-    real_t current = MIN(abs_err * kp, curr_ctrl.config.curr_limit); 
+    real_t abs_curr = MIN(abs_err * kp, curr_ctrl.config.curr_limit); 
 
     //w = mv^2/2 - fx
     real_t overflow_energy = MAX(kd * abs_spd - kd2 * sqrt(abs_err), 0); 
     
-    real_t least_current = current * 0.23;
-    current = MAX(current - overflow_energy, least_current);
+    abs_curr = MAX(abs_curr - overflow_energy, 0);
     
-    if(err * real_spd < -1){
+    if(err * real_spd < -2){
         return {curr_ctrl.config.curr_limit, SIGN_AS(basic_raddiff, err)};
     }else{
-        return {current, raddiff};
+        return {abs_curr, raddiff};
     }
 }
 
@@ -68,33 +67,39 @@ Result GeneralSpeedCtrl::update(const real_t _targ_speed,const real_t real_speed
 }
 
 
-Result TrapezoidPosCtrl::update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad){
-    real_t spd_delta = max_dec/foc_freq;
-    real_t max_spd = speed_ctrl.max_spd;
+Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, const real_t real_spd, const real_t real_elecrad){
+    static constexpr real_t hug_speed = 1.3;
 
-    real_t pos_err = targ_position - real_position;
+    const real_t spd_delta = max_dec / foc_freq;
+    const real_t max_spd = speed_ctrl.max_spd;
+
+    const real_t pos_err = targ_pos - real_pos;
+    const real_t abs_pos_err = ABS(pos_err);
     bool cross = pos_err * last_pos_err < 0;
     last_pos_err = pos_err;
+    
     switch(tstatus){
         case Tstatus::ACC:
-            if(real_speed * real_speed > 2 * max_dec* ABS(pos_err)){
+            if(real_spd * real_spd > 2 * max_dec * abs_pos_err){
                 tstatus = Tstatus::DEC;
             }
 
             {
                 goal_speed += SIGN_AS(spd_delta, pos_err);
                 goal_speed = CLAMP(goal_speed, -max_spd, max_spd);
-                return speed_ctrl.update(goal_speed, real_speed);
+                return speed_ctrl.update(goal_speed, real_spd);
             }
             break;
 
         case Tstatus::DEC:
-            // if((cross and (ABS(goal_speed) < hug_speed)) || abs(pos_err) < pos_sw_radius){
-            //     tstatus = Tstatus::STA;
-            // }
-            if(cross){
+            goal_speed = SIGN_AS(sqrt(2 * max_dec * ABS(pos_err)), pos_err);
+
+            if((cross and (ABS(real_spd) < hug_speed)) and abs_pos_err < pos_sw_radius){
                 tstatus = Tstatus::STA;
             }
+            // if(cross){
+            //     tstatus = Tstatus::STA;
+            // }
 
             {
                 // bool ovs = real_speed * real_speed > 2 * max_dec* ABS(pos_err);
@@ -106,18 +111,18 @@ Result TrapezoidPosCtrl::update(const real_t targ_position,const real_t real_pos
                 // if(pos_err > 0) goal_speed = CLAMP(goal_speed, hug_speed, max_spd);
                 // else goal_speed = CLAMP(goal_speed, -max_spd, -hug_speed);
 
-                goal_speed = SIGN_AS(sqrt(2 * max_dec * ABS(pos_err)), pos_err);
-                return speed_ctrl.update(goal_speed, real_speed);
+                
+                return speed_ctrl.update(goal_speed, real_spd);
             }
 
             break;
         default:
         case Tstatus::STA:
             if(ABS(pos_err) > pos_sw_radius){
-                goal_speed = real_speed;
+                goal_speed = real_spd;
                 tstatus = Tstatus::ACC;
             }
-            return position_ctrl.update(targ_position, real_position, real_speed, real_elecrad);
+            return position_ctrl.update(targ_pos, real_pos, real_spd, real_elecrad);
 
             break;
     }

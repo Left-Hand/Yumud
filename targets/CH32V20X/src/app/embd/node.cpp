@@ -57,22 +57,25 @@ void node_main(){
 
     while(!stp.isActive());
     stp.setTargetCurrent(0);
-    stp.setCurrentClamp(1.4);
+    stp.setCurrentClamp(1.6);
 
     while(true){
         stp.run(); 
         stp.report();
-        Sys::Clock::reCalculateTime();
-        // stp.setTargetTrapezoid(4 * sin(t) + 3 * sign(sin(t)));
+        // Sys::Clock::reCalculateTime();
+        // stp.setTargetPosition(4 * sin(t * 2) + sign(sin(t * 2)));
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
         // stp.setTargetPosition(15 *sin(t/3) * sin(t*3));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
-        // stp.setTargetPosition(0);
+        // stp.setTargetPosition(23 * sin(t));
+        // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
         // stp.setTargetPosition(10 * sign(sin(t * 3)));
-        // stp.setTargetVector(15 * sin(t));
-        // stp.setTargetSpeed(30 * sin(t));
+        // stp.setTargetVector(23 * sin(t));
+        // stp.setTargetSpeed(17 * sin(t));
+        // stp.setTargetTrapezoid(7 * sin(t));
+        // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(40 * sin(t));
-        stp.setTargetPosition(2 * sin(t));
+        // stp.setTargetPosition(2 * sin(t));
         // stp.setTargetPosition(4 * sign(sin(4 * t)));
     }
 }

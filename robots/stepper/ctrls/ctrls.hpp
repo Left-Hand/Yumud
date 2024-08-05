@@ -112,9 +112,9 @@ public:
 struct GeneralPositionCtrl:public PositionCtrl{
 public:
     struct Config{
-        real_t kp = 20;
-        real_t kd = 0.10;
-        real_t kd2 = 2.5;
+        real_t kp = 8;
+        real_t kd = 0.12;
+        real_t kd2 = 2.2;
 
     };
 
@@ -143,7 +143,7 @@ struct TopLayerCtrl{
 struct TrapezoidPosCtrl:public TopLayerCtrl{
 public:
     struct Config{
-        real_t max_dec = 18.0;
+        real_t max_dec = 36.0;
         real_t pos_sw_radius = 0.02;
     };
 
