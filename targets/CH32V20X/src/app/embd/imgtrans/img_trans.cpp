@@ -1,5 +1,5 @@
 #include "img_trans.hpp"
-#include "../../algo/hash_func.hpp"
+#include "algo/hash_func.hpp"
 
 void Transmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
 

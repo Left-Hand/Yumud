@@ -1,6 +1,9 @@
 #pragma once
 
-#include "src/testbench/tb.h"
+#include "sys/core/system.hpp"
+#include "sys/debug/debug_inc.h"
+
+#include "types/image/image.hpp"
 
 struct TransType{
     uint8_t index:4;
@@ -35,40 +38,16 @@ struct ImagePieceUnit:public PieceHeader{
 }__packed;
 
 
+struct OutputStream;
+struct Uart;
+
 
 class Transmitter{
-protected:
-    // static constexpr size_t str_tx_buf_size = 512;
-    // static constexpr size_t str_rx_buf_size = 512;
-    // static constexpr size_t img_tx_buf_size = 1024;
-
 public:
 
     OutputStream & instance;
     bool enabled = false;
     Uart & logger = DEBUGGER;
-
-    // RingBuf<str_tx_buf_size> str_tx_buf;
-    // RingBuf<str_rx_buf_size> str_rx_buf;
-    // RingBuf<img_tx_buf_size> img_buf;
-
-    // void write(const char data) override{
-    //     str_rx_buf.addData(data);
-    // }
-
-    // void read(char & data) override{
-    //     data = str_rx_buf.getData();
-    // }
-
-    // using InputStream::read;
-
-    // size_t available() const override{
-    //     return str_rx_buf.available();
-    // }
-
-    // size_t pending() const override{
-    //     return str_tx_buf.available();
-    // }
 
 protected:
     static constexpr uint16_t header = 0x54A8;
