@@ -207,7 +207,7 @@ public:
 
     #undef IQ_TOINT_TEMPLATE
 
-    __fast_inline_constexpr explicit operator float() const{
+    __inline constexpr explicit operator float() const{
         if(std::is_constant_evaluated()){
             return float(this->value) / (1 << GLOBAL_Q);
         }else{
@@ -215,7 +215,7 @@ public:
         }
     }
 
-    __fast_inline_constexpr explicit operator double() const{
+    __inline constexpr explicit operator double() const{
         if(std::is_constant_evaluated()){
             return double(this->value) / (1 << GLOBAL_Q);
         }else{

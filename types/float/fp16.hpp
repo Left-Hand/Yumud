@@ -1,6 +1,9 @@
 #pragma once
 
-struct float16{
+#include "../real.hpp"
+#include <cstdint>
+
+struct fp16{
     union{
         uint16_t raw;
         struct{
@@ -10,9 +13,10 @@ struct float16{
         }__packed;
     }__packed;
 
-    // 构造函数，从float类型转换
-    constexpr float16(float value) {
-        // 这里简化处理，实际转换需要更复杂的逻辑
+    constexpr fp16(iq_t qv):fp16(float(qv)){;}
+    constexpr fp16(const fp16& other):raw(other.raw){;}
+    constexpr fp16(float value) {
+
         // 下面的代码仅做示例，不保证正确性
         union {
             float input;
@@ -28,7 +32,7 @@ struct float16{
         int exponent = ((conversion.bits >> 23) & 0xFF) - 127;
         uint32_t mantissa = conversion.bits & 0x007FFFFF;
 
-        // 转换到float16格式
+        // 转换到fp16格式
         if (exponent > 30) { // 溢出处理
             exp = 0x1F;
             frac = 0;
@@ -45,7 +49,7 @@ struct float16{
 
         raw = (sign << 15) | (exp << 10) | frac;
     }
-    constexpr float16(const int value){
+    constexpr fp16(const int value){
         // 确保值在可表示的范围内
         if (value == 0) {
             exp = 0;
@@ -58,8 +62,8 @@ struct float16{
             sign = 0;
         }
 
-        // float16的指数范围是-14 ~ 15, 对于int值，我们假设它在[-32768, 32767]范围内
-        // 这意味着我们最多有15位有效数字，这可以通过右移来适应float16的10位小数部分
+        // fp16的指数范围是-14 ~ 15, 对于int值，我们假设它在[-32768, 32767]范围内
+        // 这意味着我们最多有15位有效数字，这可以通过右移来适应fp16的10位小数部分
 
         // 计算指数
         int shift = 0;
@@ -68,7 +72,7 @@ struct float16{
             shift++;
         }
 
-        // 确保指数在float16的范围内
+        // 确保指数在fp16的范围内
         if (shift > 15) {
             exp = 0x1F; // 溢出
             frac = 0;
@@ -83,7 +87,7 @@ struct float16{
         raw = (sign << 15) | (exp << 10) | frac;
     }
 
-    constexpr float16(const double val):float16((float)val){};
+    constexpr fp16(const double val):fp16((float)val){};
 
     explicit constexpr operator float() const {
         union {
@@ -95,7 +99,7 @@ struct float16{
             } __attribute__((__packed__));
         } conversion;
 
-        // 从float16的内部表示中提取符号、指数和尾数
+        // 从fp16的内部表示中提取符号、指数和尾数
         conversion.sign = sign;
         conversion.exp = exp + (127 - 15); // 调整指数偏移量
         conversion.frac = (frac << (23 - 10)); // 左移以填充更高位的0
@@ -138,5 +142,9 @@ struct float16{
         }
 
         return value;
+    }
+
+    constexpr operator iq_t() const{
+        return iq_t(float(*this));
     }
 }__packed;
