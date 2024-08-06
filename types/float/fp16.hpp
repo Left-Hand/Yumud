@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../real.hpp"
 #include <cstdint>
 
 struct fp16{
@@ -12,9 +13,10 @@ struct fp16{
         }__packed;
     }__packed;
 
-    // 构造函数，从float类型转换
+    constexpr fp16(iq_t qv):fp16(float(qv)){;}
+    constexpr fp16(const fp16& other):raw(other.raw){;}
     constexpr fp16(float value) {
-        // 这里简化处理，实际转换需要更复杂的逻辑
+
         // 下面的代码仅做示例，不保证正确性
         union {
             float input;
@@ -140,5 +142,9 @@ struct fp16{
         }
 
         return value;
+    }
+
+    constexpr operator iq_t() const{
+        return iq_t(float(*this));
     }
 }__packed;

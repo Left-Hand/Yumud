@@ -1,6 +1,7 @@
 #pragma once
 
 #include "fp32.hpp"
+#include "../real.hpp"
 #include <cstdint>
 
 
@@ -13,15 +14,17 @@ struct fp8_e4m3{
 			uint8_t sign:1;
 		};
 	};
-	
-	explicit constexpr fp8_e4m3(int iv){
+
+	constexpr fp8_e4m3(iq_t qv):fp8_e4m3(float(qv)){;}
+	constexpr fp8_e4m3(const fp8_e4m3 & other):raw(other.raw){;}
+	constexpr fp8_e4m3(int iv){
 		sign = iv < 0;
 		iv = abs(iv);
 		exp = (iv >> 4) - 1;
 		frac = (iv & 0xF) << 1;
 	}
 	
-	explicit constexpr fp8_e4m3(float fv){
+	constexpr fp8_e4m3(float fv){
 
 		fp32 conversion;
 		conversion.raw = *reinterpret_cast<uint32_t*>(&fv);
@@ -43,7 +46,7 @@ struct fp8_e4m3{
 		}
 	}
 	
-	explicit constexpr fp8_e4m3(double dv):fp8_e4m3(float(dv)){}
+	constexpr fp8_e4m3(double dv):fp8_e4m3(float(dv)){}
 	
 	explicit constexpr operator int() const{
 		return 0;
@@ -61,7 +64,22 @@ struct fp8_e4m3{
 		
 		return *reinterpret_cast<const float*>(&conversion.raw);
 	}
+
+	explicit constexpr operator iq_t() const {
+		return iq_t(float(*this));
+	}
 };
+
+struct fp8_e5m2{
+	union{
+		uint8_t raw;
+		struct{
+			uint8_t frac:2;
+			uint8_t exp:5;
+			uint8_t sign:1;
+		};
+	};
+}
 
 
 #ifdef FP8_USE_E4M3
