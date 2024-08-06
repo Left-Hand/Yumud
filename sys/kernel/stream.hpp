@@ -65,7 +65,7 @@ public:
 
 class OutputStream: virtual public BasicStream{
 protected:
-    uint8_t radix = 10;
+    uint8_t radix_ = 10;
     uint8_t eps_ = 2;
 
     const char * splitter = ", ";
@@ -101,7 +101,7 @@ public:
     virtual size_t pending() const = 0;
 
     void setSpace(const String _space){splitter= _space.c_str();}
-    void setRadix(const uint8_t _radix){radix = _radix;}
+    void setRadix(const uint8_t _radix){radix_ = _radix;}
     void setEps(const uint8_t _eps){eps_ = _eps;}
 
 
@@ -109,21 +109,21 @@ public:
     requires std::is_integral_v<T> && (sizeof(T) <= 4)
     OutputStream & operator<<(const T val){
         char str[12];
-        StringUtils::itoa(val, str, this->radix);
+        StringUtils::itoa(val, str, this->radix_);
         return *this << str;
     }
 
     template<integral_u64 T>
     OutputStream & operator<<(const T val){
         char str[24];
-        StringUtils::iutoa(val, str, this->radix);
+        StringUtils::iutoa(val, str, this->radix_);
         return *this << str;
     }
 
     template<integral_s64 T>
     OutputStream & operator<<(const T val){
         char str[24];
-        StringUtils::itoa(val, str, this->radix);
+        StringUtils::itoa(val, str, this->radix_);
         return *this << str;
     }
     OutputStream & operator<<(const bool val){write(val ? '1' : '0'); return *this;}
@@ -140,7 +140,7 @@ public:
     OutputStream & operator<<(const SpecToken & spec);
 
     OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
-    OutputStream& operator<<(const std::_Setprecision & n){setEps(n._M_n); return *this;}
+    OutputStream& operator<<(const std::_Setprecision & n){setEps(n._M_n); skip_split = true; return *this;}
 
     template<typename T, size_t size>
     OutputStream & operator<<(const T (&arr)[size]){
@@ -208,7 +208,7 @@ public:
 
 
     auto eps() const {return eps_;}
-    // auto radix() const {return radix_;}
+    auto radix() const {return radix_;}
 };
 
 class IOStream:public OutputStream, public InputStream{

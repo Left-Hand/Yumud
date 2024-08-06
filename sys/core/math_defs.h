@@ -2,10 +2,11 @@
 
 #define __MATH_DEFS_H__
 
-#include "../sys/core/sys_defs.h"
+#include "sys/core/sys_defs.h"
 
 #ifdef __cplusplus
 #include <type_traits>
+#include "bits/move.h"
 #endif
 
 #define CMP_EPSILON 0.001
@@ -72,12 +73,26 @@
 
 #ifndef MIN
 #ifdef __cplusplus
-    #define MIN(a,b) __min_tmpl(a,b)
-    template <typename T, typename U>
-    requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
-    constexpr __fast_inline T __min_tmpl(const T a, const U _b){
-        T b = static_cast<T>(_b);
-        return (a < b) ? a : b;
+    #define MIN(a,...) __min_helper(a,__VA_ARGS__)
+
+    template<typename First, typename Second>
+    constexpr First __min_2(First first,Second second) {
+        return first < First(second) ? first : First(second);
+    }
+
+    template<typename First>  
+    constexpr First __min_helper(First value){  
+        return value;  
+    }
+
+    template<typename First, typename Second>
+    constexpr First __min_helper(First first,Second second) {
+        return __min_2(first, second);
+    }
+
+    template<typename First, typename Second, typename... Rest>
+    constexpr First __min_helper(First first,Second second,Rest ... rest) {
+        return __min_helper(__min_2(first, second), std::forward<Rest>(rest)...);
     }
 #else
     #define MIN(x,y) ((x < y) ? x : y)
@@ -131,14 +146,14 @@
 
 #ifndef LERP
 #ifdef __cplusplus
-    #define LERP(x,a,b) __lerp_tmpl(x,a,b)
+    #define LERP(a,b,x) __lerp_tmpl(a,b, x)
     template <typename T, typename U, typename V>
     requires std::is_arithmetic_v<V>
-    constexpr __fast_inline T __lerp_tmpl(const T & x, const U & a, const V & b){
-        return a * (T(1) - x) + b * x;
+    constexpr __fast_inline T __lerp_tmpl(const U & a, const V & b, const T & x){
+        return T(a) * (T(1) - x) + T(b) * x;
     }
 #else
-#define LERP(x,a,b) (a * (1 - x) + b * x)
+#define LERP(a,b, x) (a * (1 - x) + b * x)
 #endif
 #endif
 

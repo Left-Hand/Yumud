@@ -145,7 +145,7 @@ public:
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = other.abs();
         if(not regular.intersects(other_regular)) return Range_t<T>();
-        return Range_t<T>(MAX(regular.from, other_regular.from), MIN(regular.to, other_regular.to));
+        return Range_t<T>(MAX(regular.from, other_regular.from), MIN(T(regular.to), T(other_regular.to)));
     }
 
     constexpr T get_center()const{
@@ -268,7 +268,7 @@ public:
 
     constexpr Range_t<T> merge(const arithmetic auto & value) const{
         Range_t<T> regular = this -> abs();
-        return Range_t<T>(MIN(regular.from, value), MAX(regular.to, value));
+        return Range_t<T>(MIN(T(regular.from), T(value)), MAX(regular.to, value));
     }
 
     constexpr T invlerp(const arithmetic auto & value) const{

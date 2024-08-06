@@ -22,24 +22,21 @@ struct CurrentCtrl{
 using Result = CtrlResult;
 public:
     struct Config{
-        real_t curr_slew_rate;   //20A/S
+        real_t curr_slew_rate;
+        real_t rad_slew_rate;
         real_t curr_limit;
+        real_t openloop_curr;
 
-        constexpr void reset(){
-            curr_slew_rate = 50.0 / foc_freq;
-            curr_limit = 0.7;
-        }
+        void reset();
     };
 
-    const Config & config;
+    Config & config;
 
 CURR_SPEC:
-    const real_t & current_slew_rate = config.curr_slew_rate;
-    const real_t & current_clamp = config.curr_limit;
 public:
     real_t current_output = 0;
-
-    CurrentCtrl(const Config & _config):config(_config){}
+    real_t raddiff_output = 0;
+    CurrentCtrl(Config & _config):config(_config){}
 
     void init(){
         reset();
@@ -47,9 +44,11 @@ public:
 
     void reset(){
         current_output = 0;
+        raddiff_output = 0;
     }
 
-    real_t update(const real_t targ_current);
+    CtrlResult update(CtrlResult result);
+    CtrlResult output() const {return {current_output, raddiff_output};}
 };
 
 
@@ -78,16 +77,18 @@ struct PositionCtrl:public HighLayerCtrl{
 struct GeneralSpeedCtrl:public SpeedCtrl{
 public:
     struct Config{
-        real_t max_spd = 40;
-        real_t kp = 4;
-        real_t kp_clamp = 60;
+        real_t max_spd;
+        real_t kp;
+        real_t kp_clamp;
 
-        real_t kd = 40;
-        real_t kd_active_radius = 1.2;
-        real_t kd_clamp = 2.4;
+        real_t kd;
+        real_t kd_active_radius;
+        real_t kd_clamp;
+
+        void reset();
     };
     
-    const Config & config;
+    Config & config;
 SPD_SPEC:
     const real_t & kp = config.kp;
     const real_t & kp_clamp = config.kd_clamp;
@@ -101,7 +102,9 @@ SPD_SPEC:
 
 public:
     const real_t & max_spd = config.max_spd;
-    GeneralSpeedCtrl(CurrentCtrl & ctrl, const Config & _config):SpeedCtrl(ctrl), config(_config){;}
+    GeneralSpeedCtrl(CurrentCtrl & ctrl, Config & _config):SpeedCtrl(ctrl), config(_config){
+        config.reset();
+    }
     void reset() override {
         targ_current = 0;
     }
@@ -112,9 +115,9 @@ public:
 struct GeneralPositionCtrl:public PositionCtrl{
 public:
     struct Config{
-        real_t kp = 8;
+        real_t kp = 20;
         real_t kd = 0.15;
-        real_t kd2 = 2.2;
+        real_t kd2 = 2.8;
 
     };
 

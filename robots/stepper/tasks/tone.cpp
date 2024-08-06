@@ -5,14 +5,14 @@ Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
         uint32_t sustain_ms;
     };
 
-    constexpr int freq_G4 = 392;
-    constexpr int freq_A4 = 440;
-    constexpr int freq_B4 = 494;
-    constexpr int freq_C5 = 523;
-    constexpr int freq_D5 = 587;
-    constexpr int freq_E5 = 659;
-    constexpr int freq_F5 = 698;
-    constexpr int freq_G5 = 784;
+    [[maybe_unused]] constexpr int freq_G4 = 392;
+    [[maybe_unused]] constexpr int freq_A4 = 440;
+    [[maybe_unused]] constexpr int freq_B4 = 494;
+    [[maybe_unused]] constexpr int freq_C5 = 523;
+    [[maybe_unused]] constexpr int freq_D5 = 587;
+    [[maybe_unused]] constexpr int freq_E5 = 659;
+    [[maybe_unused]] constexpr int freq_F5 = 698;
+    [[maybe_unused]] constexpr int freq_G5 = 784;
 
     static const auto tones = std::to_array<Tone>({
         {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
@@ -34,10 +34,9 @@ Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
         {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
         {.freq_hz = freq_G4,.sustain_ms = 100},  // 5
 
-        {.freq_hz = freq_F5,.sustain_ms = 100}   // 6
     });
 
-    static constexpr real_t tone_current = 0.4;
+    static constexpr real_t tone_current = 0.7;
 
     static uint32_t cnt;
     static uint32_t tone_index;
@@ -61,9 +60,9 @@ Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
     
     {
         const auto & tone = tones[tone_index];
-        auto tone_cnt = foc_freq / tone.freq_hz / 2;
-        bool phase = (cnt / tone_cnt) % 2;
-        setCurrent(tone_current, phase ? PI/2 : 0);
+        const auto tone_period = foc_freq / tone.freq_hz;
+        auto phase = sin(real_t(cnt % tone_period) / (tone_period) * TAU);
+        setCurrent(tone_current, phase * PI/2);
         cnt++;
     }
 

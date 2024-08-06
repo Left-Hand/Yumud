@@ -18,7 +18,6 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 
     Archive archive_;
     Switches & switches_ = archive_.switches;
-
     volatile RunStatus run_status = RunStatus::INIT;
     SVPWM2 & svpwm;
 
@@ -163,7 +162,7 @@ public:
     }
 
     void setOpenLoopCurrent(const real_t current){
-        curr_config.curr_limit = current;
+        curr_config.openloop_curr = current;
     }
 
     void setTargetVector(const real_t pos){
@@ -175,8 +174,8 @@ public:
         setTargetPosition(getPosition());
     }
 
-    void setCurrentClamp(const real_t max_current){
-        curr_config.curr_limit = max_current;
+    void setCurrentClamp(const real_t current){
+        curr_config.curr_limit = current;
     }
 
     void locateRelatively(const real_t pos = 0){
@@ -224,6 +223,13 @@ public:
         node_id = _id;
     }
 
+    real_t getPositionErr(){
+        return getPosition() - target;
+    }
+
+    real_t getSpeedErr(){
+        return getSpeed() - target;
+    }
     uint8_t getNodeId(){
         auto chip_id = Sys::Chip::getChipIdCrc();
         switch(chip_id){

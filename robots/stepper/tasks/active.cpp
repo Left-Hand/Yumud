@@ -2,10 +2,12 @@
 
 
 Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
-    if(ctrl_type != CtrlType::VECTOR) run_elecrad = est_elecrad + run_leadangle;
-    else run_elecrad = odo.position2rad(target);
-
-    setCurrent(curr_ctrl.update(measurements.curr), run_elecrad + elecrad_zerofix);
+    if(ctrl_type == CtrlType::VECTOR){
+        run_elecrad = odo.position2rad(target);
+    }else{
+        run_elecrad = est_elecrad + curr_ctrl.raddiff_output;
+    }
+    setCurrent(curr_ctrl.current_output, run_elecrad + elecrad_zerofix);
 
     odo.update();
 
@@ -46,8 +48,9 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
                 break;
         } 
 
-        measurements.curr = result.current;
-        run_leadangle = result.raddiff;
+        curr_ctrl.update(result);
+        measurements.curr = curr_ctrl.current_output;
+        run_leadangle = curr_ctrl.raddiff_output;
     }
 
 

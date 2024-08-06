@@ -180,15 +180,20 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
             break;
 
         case "cd"_ha:
+            CLI_PRINTS("dir changed");
             elecrad_zerofix = PI;
             break;
 
         case "hlt"_ha:
+            CLI_PRINTS("halt");
             CREATE_FAULT;
             break;
 
         case "map"_ha:
-            CLI_PRINTS(odo.map());
+            for(const auto & item : odo.map()){
+                CLI_PRINTS(item);
+                delay(1);
+            }
             break;
 
         case "version"_ha:
@@ -294,8 +299,9 @@ void Stepper::tick(){
                     if(skip_tone){
                         panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
                         active_task(true);
+                    }else{
+                        beep_task(true);
                     }
-                    else beep_task(true);
                 }else{
                     cali_task(true);
                 }
@@ -435,7 +441,7 @@ void Stepper::report(){
     if(logger.pending()==0){
         // delayMicroseconds(200);   
         // delay(1); 
-        RUN_DEBUG(target, getSpeed(), getPosition(), getCurrent(), run_leadangle);
+        RUN_DEBUG(std::setprecision(2), target, getSpeed(), getPosition(), getCurrent(), run_leadangle,std::setprecision(4), getPositionErr());
     }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);

@@ -24,16 +24,16 @@ OutputStream& OutputStream::operator<<(const SpecToken & spec){
         break;
     
     case SpecToken::Bin:
-        radix = 2;
+        radix_ = 2;
         break;
     case SpecToken::Oct:
-        radix = 8;
+        radix_ = 8;
         break;
     case SpecToken::Dec:
-        radix = 10;
+        radix_ = 10;
         break;
     case SpecToken::Hex:
-        radix = 16;
+        radix_ = 16;
         break;
 
     case SpecToken::Eps1:

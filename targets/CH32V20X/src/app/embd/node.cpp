@@ -52,7 +52,7 @@ void node_main(){
  
     stp.init();
 
-    stp.setOpenLoopCurrent(0.6);
+    stp.setOpenLoopCurrent(0.5);
     stp.setCurrentClamp(0.4);
 
     while(!stp.isActive());
@@ -65,7 +65,7 @@ void node_main(){
         // Sys::Clock::reCalculateTime();
         // stp.setTargetPosition(4 * sin(t * 2) + sign(sin(t * 2)));
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
-        // stp.setTargetPosition(15 *sin(t/3) * sin(t*3));
+        // stp.setTargetPosition(10 *sin(t/3) * sin(t*3));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
         // stp.setTargetPosition(23 * sin(t));
         // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
@@ -76,7 +76,8 @@ void node_main(){
         // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(40 * sin(t));
-        // stp.setTargetPosition(4 * sin(t));
+        // stp.setTargetPosition(0.03 * sin(t));
+        // stp.setTargetVector(sin(t) * 0.5);
         // stp.setTargetPosition(4 * sign(sin(4 * t)));
     }
 }

@@ -2,7 +2,7 @@
 
 #define __ODOMETER_HPP__
 
-#include "../types/real.hpp"
+#include "types/real.hpp"
 #include "Encoder.hpp"
 #include <array>
 
@@ -45,13 +45,14 @@ public:
 
     void init(){
         encoder.init();
+        locate(0);
     }
 
-    void locateRelatively(const real_t offset = real_t(0)){
+    void locateRelatively(const real_t offset = 0){
         locate(offset);
     }
 
-    void locateAbsolutely(const real_t offset = real_t(0)){
+    void locateAbsolutely(const real_t offset = 0){
         locate(getLapPosition() + offset);
     }
 
@@ -68,25 +69,7 @@ public:
         rsv = en;
     }
 
-    void update(){
-        {
-            real_t undiredRawLapPostion = encoder.getLapPosition();
-            if (rsv) rawLapPosition = real_t(1) - undiredRawLapPostion;
-            else rawLapPosition = undiredRawLapPostion;
-        }
-
-        lapPosition = correctPosition(rawLapPosition);
-        deltaLapPosition = lapPosition - lapPositionLast;
-
-        if(deltaLapPosition > real_t(0.5f)){
-            deltaLapPosition -= real_t(1);
-        }else if (deltaLapPosition < real_t(-0.5f)){
-            deltaLapPosition += real_t(1);
-        }
-
-        lapPositionLast = lapPosition;
-        accPosition += deltaLapPosition;
-    }
+    void update();
 
     virtual real_t getPosition(){
         return accPosition;
@@ -109,10 +92,7 @@ protected:
 
     std::array<real_t, poles>cali_map;
 
-    real_t correctPosition(const real_t rawPosition) override{
-        return (rawPosition - cali_map[position2pole(rawPosition)]);
-    }
-
+    real_t correctPosition(const real_t rawPosition) override;
 public:
     OdometerPoles(Encoder & _encoder):Odometer(_encoder){;}
 
@@ -144,8 +124,8 @@ public:
     }
 
     int position2pole(const iq_t position){
-        real_t pole = frac(position) * real_t(poles);
-        return MIN(int(pole), poles - 1);
+        int pole = int(frac(position) * poles);
+        return MIN(pole, poles - 1);
     }
 
     real_t pole2position(const int pole){
