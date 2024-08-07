@@ -5,6 +5,11 @@ using Result = CtrlResult;
 static constexpr real_t basic_raddiff = 1.0;
 static constexpr real_t max_raddiff = 2.3;
 
+void CtrlLimits::reset(){
+    max_spd = 60;
+    max_acc = 18;
+    max_dec = 36;
+}
 
 void GeneralPositionCtrl::Config::reset(){
     kp = 20;
@@ -13,7 +18,6 @@ void GeneralPositionCtrl::Config::reset(){
 }
 
 void GeneralSpeedCtrl::Config::reset(){
-    max_spd = 60;
     kp = 8;
     kp_limit = 40;
 
@@ -23,8 +27,7 @@ void GeneralSpeedCtrl::Config::reset(){
 }
 
 void TrapezoidPosCtrl::Config::reset(){
-    max_acc = 18;
-    max_dec = 36;
+
     pos_sw_radius = 0.04;
 }
 
@@ -92,15 +95,15 @@ Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos,
 
 Result GeneralSpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
 
-    const real_t targ_spd = CLAMP(_targ_spd, -max_spd, max_spd);
+    const real_t targ_spd = CLAMP2(_targ_spd, limits.max_spd);
     const real_t err = (targ_spd - real_spd);
     const real_t abs_err = ABS(err);
 
     const real_t spd_delta = real_spd - last_speed;
     last_speed = real_spd;
 
-    const real_t kp_contribute = CLAMP(err * config.kp, -config.kp_limit, config.kp_limit);
-    const real_t kd_contribute = (abs_err < config.kd_active_radius) ? CLAMP(config.kd * spd_delta, -config.kd_limit, config.kd_limit) : 0;
+    const real_t kp_contribute = CLAMP2(err * config.kp, config.kp_limit);
+    const real_t kd_contribute = (abs_err < config.kd_active_radius) ? CLAMP2(config.kd * spd_delta, config.kd_limit) : 0;
 
     real_t delta_targ_curr = 0 
             + (kp_contribute >> 16)
@@ -141,14 +144,14 @@ Result GeneralSpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
 
 Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, const real_t real_spd, const real_t real_elecrad){
 
-    const real_t spd_acc_delta = real_t(config.max_dec) / foc_freq;
+    const real_t spd_acc_delta = real_t(limits.max_dec) / foc_freq;
     // const real_t spd_dec_delta = real_t(config.max_dec) / foc_freq;
-    const real_t max_spd = speed_ctrl.max_spd;
+    const real_t max_spd = limits.max_spd;
 
     const real_t pos_err = targ_pos - real_pos;
     const real_t abs_pos_err = ABS(pos_err);
     
-    real_t into_dec_radius = real_spd * real_spd / (2 * config.max_dec);
+    real_t into_dec_radius = real_spd * real_spd / (2 * limits.max_dec);
     bool cross = last_pos_err * pos_err < 0;
     last_pos_err = pos_err;
 
@@ -180,7 +183,7 @@ Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, con
                 // goal_speed = CLAMP(goal_speed, -max_exp_spd, max_exp_spd);
 
                 // goal_speed = STEP_TO(goal_speed, SIGN_AS(sqrt(2 * config.max_dec * abs_pos_err), pos_err), spd_dec_delta);
-                goal_speed = SIGN_AS(sqrt(2 * config.max_dec * abs_pos_err), pos_err);
+                goal_speed = SIGN_AS(sqrt(2 * limits.max_dec * abs_pos_err), pos_err);
                 return speed_ctrl.update(goal_speed, real_spd);
             }
         

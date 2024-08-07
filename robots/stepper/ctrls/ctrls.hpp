@@ -17,6 +17,14 @@ struct CtrlResult{
     real_t raddiff;
 };
 
+struct CtrlLimits{
+    real_t max_spd;
+    int max_acc;
+    int max_dec;
+
+    void reset();
+};
+
 
 struct CurrentCtrl{
 using Result = CtrlResult;
@@ -52,29 +60,17 @@ public:
 
 struct HighLayerCtrl{
 protected:
+    CtrlLimits & limits;
     CurrentCtrl & curr_ctrl;
     using Result = CtrlResult;
 public:
-
-    HighLayerCtrl(CurrentCtrl & _ctrl):curr_ctrl(_ctrl){;}
+    HighLayerCtrl(CtrlLimits & _limits, CurrentCtrl & _ctrl):limits(_limits), curr_ctrl(_ctrl){;}
     virtual void reset() = 0;
 };
 
-struct SpeedCtrl:public HighLayerCtrl{
-    SpeedCtrl(CurrentCtrl & ctrl):HighLayerCtrl(ctrl){;}
-    virtual Result update(const real_t targ_speed,const real_t real_speed) = 0;
-};
-
-struct PositionCtrl:public HighLayerCtrl{
-    PositionCtrl(CurrentCtrl & ctrl):HighLayerCtrl(ctrl){;}
-
-    virtual Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad) = 0;
-};
-
-struct GeneralSpeedCtrl:public SpeedCtrl{
+struct GeneralSpeedCtrl:public HighLayerCtrl{
 public:
     struct Config{
-        real_t max_spd;
         real_t kp;
         real_t kp_limit;
 
@@ -92,9 +88,8 @@ SPD_SPEC:
     real_t last_speed = 0;
 
 public:
-    const real_t & max_spd = config.max_spd;
-    GeneralSpeedCtrl(CurrentCtrl & ctrl, Config & _config):
-        SpeedCtrl(ctrl), config(_config){reset();}
+    GeneralSpeedCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
+        HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
 
     void reset() override {
         config.reset();
@@ -104,7 +99,7 @@ public:
     Result update(const real_t _targ_speed,const real_t real_speed);
 };
 
-struct GeneralPositionCtrl:public PositionCtrl{
+struct GeneralPositionCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
@@ -117,9 +112,8 @@ public:
     Config & config;
 
 public:
-    GeneralPositionCtrl(CurrentCtrl & ctrl, Config & _config):PositionCtrl(ctrl), config(_config){
-        reset();
-    }
+    GeneralPositionCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
+        HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
 
     void reset() override {
         config.reset();
@@ -130,6 +124,7 @@ public:
 };
 
 struct TopLayerCtrl{
+    CtrlLimits & limits;
     GeneralSpeedCtrl & speed_ctrl;
     GeneralPositionCtrl & position_ctrl;
 };
@@ -137,10 +132,7 @@ struct TopLayerCtrl{
 struct TrapezoidPosCtrl:public TopLayerCtrl{
 public:
     struct Config{
-        int max_acc;
-        int max_dec;
         real_t pos_sw_radius;
-
         void reset();
     };
 
@@ -161,8 +153,8 @@ protected:
 
 
 public:
-    TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl, Config & _config):
-            TopLayerCtrl(_speed_ctrl, _position_ctrl), config(_config){
+    TrapezoidPosCtrl(CtrlLimits & _limits, Config & _config, GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):
+            TopLayerCtrl(_limits, _speed_ctrl, _position_ctrl), config(_config){
                 reset();
             }
     

@@ -38,17 +38,19 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 
     Range target_position_clamp = Range::INF;
 
+    CtrlLimits ctrl_limits;
+
     CurrentCtrl::Config curr_config;
     CurrentCtrl curr_ctrl{curr_config};
     
     GeneralSpeedCtrl::Config spd_config;
-    GeneralSpeedCtrl speed_ctrl{curr_ctrl, spd_config};
+    GeneralSpeedCtrl speed_ctrl{ctrl_limits, spd_config, curr_ctrl};
     
     GeneralPositionCtrl::Config pos_config;
-    GeneralPositionCtrl position_ctrl{curr_ctrl, pos_config};
+    GeneralPositionCtrl position_ctrl{ctrl_limits, pos_config, curr_ctrl};
 
     TrapezoidPosCtrl::Config tpz_config;
-    TrapezoidPosCtrl trapezoid_ctrl{speed_ctrl, position_ctrl, tpz_config};
+    TrapezoidPosCtrl trapezoid_ctrl{ctrl_limits, tpz_config, speed_ctrl, position_ctrl};
 
     SpeedEstimator::Config spe_config;
     SpeedEstimator speed_estmator{spe_config};
@@ -123,6 +125,7 @@ public:
 
 
     void init(){
+        ctrl_limits.reset();
         curr_config.reset();
         
         odo.init();
@@ -246,11 +249,11 @@ public:
     }
 
     void setSpeedClamp(const real_t max_spd){
-        spd_config.max_spd = max_spd;
+        ctrl_limits.max_spd = max_spd;
     }
 
     void setAccelClamp(const real_t max_acc){
-        tpz_config.max_dec = int(max_acc);
+        ctrl_limits.max_dec = int(max_acc);
     }
 
     void triggerCali(){

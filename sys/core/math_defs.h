@@ -173,6 +173,7 @@
 
 #ifndef CLAMP
 #define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
+#define CLAMP2(x, ma) CLAMP(x, -ma, ma)
 #endif
 
 #ifndef STEP_TO
