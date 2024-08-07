@@ -36,13 +36,10 @@ CURR_SPEC:
 public:
     real_t current_output = 0;
     real_t raddiff_output = 0;
-    CurrentCtrl(Config & _config):config(_config){}
-
-    void init(){
-        reset();
-    }
+    CurrentCtrl(Config & _config):config(_config){reset();}
 
     void reset(){
+        config.reset();
         current_output = 0;
         raddiff_output = 0;
     }
@@ -79,33 +76,28 @@ public:
     struct Config{
         real_t max_spd;
         real_t kp;
-        real_t kp_clamp;
+        real_t kp_limit;
 
         real_t kd;
         real_t kd_active_radius;
-        real_t kd_clamp;
+        real_t kd_limit;
 
         void reset();
     };
     
     Config & config;
 SPD_SPEC:
-    const real_t & kp = config.kp;
-    const real_t & kp_clamp = config.kd_clamp;
-
-    const real_t & kd = config.kd;
-    const real_t & kd_active_radius = config.kd_active_radius;
-    const real_t & kd_clamp = config.kd_clamp;
 
     real_t targ_current = 0;
     real_t last_speed = 0;
 
 public:
     const real_t & max_spd = config.max_spd;
-    GeneralSpeedCtrl(CurrentCtrl & ctrl, Config & _config):SpeedCtrl(ctrl), config(_config){
-        config.reset();
-    }
+    GeneralSpeedCtrl(CurrentCtrl & ctrl, Config & _config):
+        SpeedCtrl(ctrl), config(_config){reset();}
+
     void reset() override {
+        config.reset();
         targ_current = 0;
     }
 
@@ -115,23 +107,22 @@ public:
 struct GeneralPositionCtrl:public PositionCtrl{
 public:
     struct Config{
-        real_t kp = 20;
-        real_t kd = 0.15;
-        real_t kd2 = 2.8;
+        real_t kp;
+        real_t kd;
+        real_t kd2;
 
+        void reset();
     };
 
-    const Config & config;
-
-POS_SPEC:
-    const real_t & kp = config.kp;
-    const real_t & kd = config.kd;
-    const real_t & kd2 = config.kd2;
+    Config & config;
 
 public:
-    GeneralPositionCtrl(CurrentCtrl & ctrl, const Config & _config):PositionCtrl(ctrl), config(_config){;}
+    GeneralPositionCtrl(CurrentCtrl & ctrl, Config & _config):PositionCtrl(ctrl), config(_config){
+        reset();
+    }
 
     void reset() override {
+        config.reset();
     }
 
     Result update(const real_t targ_position, const real_t real_position, 
@@ -146,16 +137,17 @@ struct TopLayerCtrl{
 struct TrapezoidPosCtrl:public TopLayerCtrl{
 public:
     struct Config{
-        real_t max_dec = 36.0;
-        real_t pos_sw_radius = 0.02;
+        int max_acc;
+        int max_dec;
+        real_t pos_sw_radius;
+
+        void reset();
     };
 
     using Result = CtrlResult;
 
-    const Config & config;
+    Config & config;
 protected:
-    const real_t & max_dec = config.max_dec;
-    const real_t & pos_sw_radius = config.pos_sw_radius;
 
     enum class Tstatus:uint8_t{
         ACC,
@@ -165,10 +157,19 @@ protected:
 
     Tstatus tstatus = Tstatus::STA;
     real_t goal_speed = 0;
-    real_t last_pos_err = 0;
+    // real_t last_pos_err = 0;
 
 
 public:
-    TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl, const Config & _config):TopLayerCtrl(_speed_ctrl, _position_ctrl), config(_config){;}
+    TrapezoidPosCtrl(GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl, Config & _config):
+            TopLayerCtrl(_speed_ctrl, _position_ctrl), config(_config){
+                reset();
+            }
+    
+    void reset(){
+        config.reset();
+        goal_speed = 0;
+        // last_pos_err = 0;    
+    }
     Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad);
 };

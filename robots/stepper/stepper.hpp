@@ -155,10 +155,10 @@ public:
     }
 
     void setTargetTrapezoid(const real_t pos){
-        // target = pos;
-        // panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
-        // ctrl_type = CtrlType::TRAPEZOID;
-        setTargetPosition(pos);
+        target = pos;
+        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
+        ctrl_type = CtrlType::TRAPEZOID;
+        // setTargetPosition(pos);
     }
 
     void setOpenLoopCurrent(const real_t current){
@@ -250,7 +250,7 @@ public:
     }
 
     void setAccelClamp(const real_t max_acc){
-        tpz_config.max_dec = max_acc;
+        tpz_config.max_dec = int(max_acc);
     }
 
     void triggerCali(){
