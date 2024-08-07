@@ -1,5 +1,6 @@
 #include "node.hpp"
 #include "robots/stepper/stepper.hpp"
+#include "drivers/Actuator/Driver/AT8222/at8222.hpp"
 
 void node_main(){
     using TimerUtils::Mode;
@@ -10,10 +11,11 @@ void node_main(){
 
     auto & logger = DEBUGGER;
 
-    auto & ena_gpio = TIM3_CH3_GPIO;
-    auto & enb_gpio = TIM3_CH2_GPIO;
-    AT8222 coilA{timer1.oc(3), timer1.oc(4), TIM3_CH3_GPIO};
-    AT8222 coilB{timer1.oc(1), timer1.oc(2), TIM3_CH2_GPIO};
+    auto & ena_gpio = portB[0];
+    auto & enb_gpio = portA[7];
+
+    AT8222 coilA{timer1.oc(3), timer1.oc(4), ena_gpio};
+    AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio};
 
 
     SVPWM2 svpwm{coilA, coilB};
@@ -67,10 +69,10 @@ void node_main(){
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
         // stp.setTargetPosition(5 *sin(t) * sin(t*9));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
-        // stp.setTargetPosition(23 * sin(t));
+        // stp.setTargetPosition(500 * abs(frac(t/2) - 0.5));
         // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
         // stp.setTargetPosition(10 * sign(sin(t * 3)));
-        // stp.setTargetVector(0.07 * sin(4 * t));
+        // stp.setTargetPosition(0.07 * sin(4 * t));
         // stp.setTargetSpeed(CLAMP(60 * sin(t * 3), 0, 30));
         // stp.setTargetTrapezoid(7 * sin(t));
         // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));

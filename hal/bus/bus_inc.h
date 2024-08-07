@@ -14,7 +14,7 @@
 #include "spi/spihw.hpp"
 #include "spi/spidrv.hpp"
 
-// #include "can/can.hpp"
+#include "can/can.hpp"
 #include "dvp/dvp.hpp"
 #include "usb/usbfs/usbfs.hpp"
 

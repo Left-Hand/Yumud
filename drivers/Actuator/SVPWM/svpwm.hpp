@@ -2,8 +2,8 @@
 
 #define __SVPWM_HPP__
 
-#include "../drivers/Actuator/Coil/coil.hpp"
-#include "../types/vector2/vector2_t.hpp"
+#include "drivers/Actuator/driver/CoilDriver.hpp"
+#include "types/vector2/vector2_t.hpp"
 
 class SVPWM{
 protected:
@@ -26,12 +26,13 @@ public:
 
 class SVPWM2:public SVPWM{
 public:
-    Coil2PConcept & coil_a;
-    Coil2PConcept & coil_b;
+    using Driver = Coil2Driver;
+    Driver & coil_a;
+    Driver & coil_b;
 
 
 public:
-    SVPWM2(Coil2PConcept & _coilA, Coil2PConcept & _coilB):coil_a(_coilA), coil_b(_coilB){;}
+    SVPWM2(Driver & _coilA, Driver & _coilB):coil_a(_coilA), coil_b(_coilB){;}
 
     void setCurrent(const real_t current, const real_t _elecrad) override {
         real_t elecrad = rsv ? -_elecrad : _elecrad;

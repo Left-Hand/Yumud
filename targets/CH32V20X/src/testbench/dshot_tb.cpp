@@ -1,4 +1,5 @@
 #include "tb.h"
+#include "hal/timer/instance/timer_hw.hpp"
 #include "../drivers/Modem/dshot/dshot.hpp"
 
 static constexpr size_t n = 40;

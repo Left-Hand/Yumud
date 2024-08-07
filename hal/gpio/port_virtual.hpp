@@ -46,6 +46,14 @@ protected:
     }
 public:
     PortVirtual(){;}
+
+    PortVirtual(const PortVirtual<N> & other){
+        pin_ptrs = other.pin_ptrs;
+    }
+
+    PortVirtual(PortVirtual<N> && other){
+        pin_ptrs = std::move(other.pin_ptrs);
+    }
     void init(){;}
 
     void bindPin(GpioConcept & gpio, const size_t index){
