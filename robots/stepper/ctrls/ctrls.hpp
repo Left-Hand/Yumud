@@ -157,7 +157,7 @@ protected:
 
     Tstatus tstatus = Tstatus::STA;
     real_t goal_speed = 0;
-    // real_t last_pos_err = 0;
+    real_t last_pos_err = 0;
 
 
 public:

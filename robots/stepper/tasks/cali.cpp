@@ -69,7 +69,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
     constexpr int backward_cycles = forward_cycles;
 
     // constexpr int subdivide_micros = 256;
-    constexpr int subdivide_micros = 1024;
+    constexpr int subdivide_micros = 256;
     constexpr int cogging_samples = 16;
     constexpr int align_ms = 200;
 

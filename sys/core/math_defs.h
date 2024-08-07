@@ -190,7 +190,18 @@
 
 
 #ifndef SIGN_AS
-#define SIGN_AS(y,x) ((x > 0) ? y : -y)
+#ifdef __cplusplus
+#define SIGN_AS(x,s) __sign_as_impl(x, s)
+
+template<typename T>
+constexpr __fast_inline T __sign_as_impl(const T x, const auto s){
+    if(s){
+        return s > 0 ? x : -x;
+    }else{
+        return T(0);
+    }
+}
+#endif
 #endif
 
 #ifndef LSHIFT

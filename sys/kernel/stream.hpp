@@ -73,12 +73,13 @@ protected:
 
     template<typename T>
     void print_arr(const T * _begin, const T * _end){
-        if(_end <= _begin) return;
-        const size_t _size = std::distance(_begin, _end);
+        const int _size = _end - _begin;
         *this << '[';
         if(_size > 0){
-            for(size_t i = 0; i < _size - 1; ++i) *this << _begin[i] << ',';
+            for(size_t i = 0; i < size_t(_size - 1); ++i) *this << _begin[i] << ',';
             *this << _begin[_size - 1];
+        }else{
+            *this << '\\';
         }
         *this << ']';
     }
@@ -95,7 +96,7 @@ public:
 
     virtual void write(const char data) = 0;
     virtual void write(const char * data_ptr, const size_t len){
-        for(size_t i=0;i<len;i++) write(data_ptr[i]);
+        for(size_t i = 0; i<len; i++) write(data_ptr[i]);
 	}
 
     virtual size_t pending() const = 0;
@@ -186,7 +187,7 @@ public:
 
     template<typename T>
     requires std::is_enum_v<T>
-    OutputStream & operator<<(const T & misc){*this << int(misc); return *this;}
+    OutputStream & operator<<(T && misc){*this << int(misc); return *this;}
 
 
     template <class... Args>

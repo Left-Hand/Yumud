@@ -10,7 +10,6 @@ void Stepper::setNozzle(const real_t duty){
 
 void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
     auto command = _command;
-
     switch(hash_impl(command.c_str(), command.length())){
         case "save"_ha:
         case "sv"_ha:
@@ -211,10 +210,9 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
 
 
 void Stepper::parseCommand(const Command command, const CanMsg & msg){
-    using E = bf16;
-
     const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
 
+    using E = bf16;
     using E_2 = std::tuple<E, E>;
 
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
@@ -224,12 +222,12 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 
     #define SET_METHOD_BIND_TYPE(cmd, method, type)\
     case cmd:\
-        method((msg).to<type>());\
+        method(type(msg));\
         break;\
     
     #define SET_VALUE_BIND(cmd, value)\
     case cmd:\
-        value = ((msg).to<decltype(value)>());\
+        value = (decltype(value)(msg));\
         break;\
 
     #define SET_METHOD_BIND_ONE(cmd, method) SET_METHOD_BIND_TYPE(cmd, method, E)
@@ -237,8 +235,7 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
     #define GET_BIND_VALUE(cmd, value)\
         case cmd:\
             if(msg.isRemote()){\
-                CanMsg _msg {tx_id};\
-                can.write(_msg.load(value));\
+                can.write(CanMsg(tx_id, value));\
             }\
             break;\
     
@@ -277,7 +274,7 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
         GET_BIND_VALUE(         Command::STAT,          (uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::INACTIVE,      enable, false)
         SET_METHOD_BIND_EXECUTE(Command::ACTIVE,        enable, true)
-        SET_METHOD_BIND_EXECUTE(Command::SET_NODEID,    setNodeId, msg.to<uint8_t>())
+        SET_METHOD_BIND_EXECUTE(Command::SET_NODEID,    setNodeId, uint8_t(msg))
 
         default:
             CliSTA::parseCommand(command, msg);
@@ -336,7 +333,7 @@ void Stepper::tick(){
             break;
     }
 
-    //decide next status from execution result 
+    //decide next status by execution result 
 
     if(not (exe_status == (RunStatus::NONE))){//execution meet sth.
 

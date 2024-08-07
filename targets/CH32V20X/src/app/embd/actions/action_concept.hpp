@@ -8,21 +8,15 @@
 
 struct Action {
 protected:
-
     std::function<void()> func = nullptr;
-
     struct{
         uint sustain = 0;
         bool once = true;
-        bool executed = false;
+        volatile bool executed = false;
     };
 
     virtual void execute(){
-
-        if(once == true && executed == true) return;
-
         EXECUTE(func);
-        executed = true;
     }
 
     enum class SpecialActionType{
@@ -41,7 +35,7 @@ public:
     }
 
     operator bool() const {
-        return sustain > 0;
+        return is_valid();
     }
 
     Action& operator--() {
@@ -57,9 +51,10 @@ public:
 
     void invoke(){
         if(sustain > 0) sustain--;
-
+        if(once and executed) return;
         if(sustain >= 0){
             execute();
+            executed = true;
         }
     }
 };

@@ -26,7 +26,7 @@ void host_main(){
     usbfs.init();
 
     uart7.init(115200);
-    EmbdHost host{uart7, can1};
+    EmbdHost host{logger, can1};
 
     timer3.init(800);
     timer3.bindCb(IT::Update, [&](){host.run();});

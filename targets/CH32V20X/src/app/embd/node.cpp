@@ -71,7 +71,7 @@ void node_main(){
         // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
         // stp.setTargetPosition(10 * sign(sin(t * 3)));
         // stp.setTargetVector(0.07 * sin(4 * t));
-        // stp.setTargetSpeed(47 * sin(t));
+        // stp.setTargetSpeed(CLAMP(47 * sin(t), 0, 20));
         // stp.setTargetTrapezoid(7 * sin(t));
         // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(10 * sign(sin(1.5 * t)));

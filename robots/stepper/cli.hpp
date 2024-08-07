@@ -11,29 +11,7 @@
 namespace StepperUtils{
     class Cli{
     private:
-        std::vector<String> split_string(const String& input, char delimiter) {
-            std::vector<String> result;
-
-            int startPos = 0;
-            int endPos = input.indexOf(delimiter, startPos);
-
-            while (endPos != -1) {
-                if(not(endPos - startPos <= 1 and input[startPos] == delimiter)){
-                    String token = input.substring(startPos, endPos);
-                    result.push_back(token.c_str());
-                }
-                startPos = endPos + 1;
-                endPos = input.indexOf(delimiter, startPos);
-            }
-
-            if (startPos < (int)input.length()) {
-                String lastToken = input.substring(startPos);
-                result.push_back(lastToken.c_str());
-            }
-
-            return result;
-        }
-
+        std::vector<String> split_string(const String& input, char delimiter);
 
     protected:
         IOStream & logger;
@@ -45,29 +23,10 @@ namespace StepperUtils{
 
         #define VNAME(x) #x
 
-        virtual void parseTokens(const String & _command,const std::vector<String> & args){
-            auto command = _command;
-            switch(hash_impl(command.c_str(), command.length())){
-                case "reset"_ha:
-                case "rst"_ha:
-                case "r"_ha:
-                    CLI_PRINTS("rsting");
-                    NVIC_SystemReset();
-                    break;
-                case "alive"_ha:
-                case "a"_ha:
-                    CLI_PRINTS("chip is alive");
-                    break;
-                default:
-                    CLI_PRINTS("no command available:", command);
-                    break;
-            }
-        }
-
+        virtual void parseTokens(const String & _command,const std::vector<String> & args);
         void parseLine(const String & _line);
+
         virtual void readCan() = 0;
-
-
 
         template<typename T>
         void read_value_impl(const char * name , const T & val){
@@ -94,7 +53,7 @@ namespace StepperUtils{
                 DEBUG_PRINTS("no arg");\
             }else if(args.size() == 1){\
                 method(type(args[0]));\
-                DEBUG_PRINTS("method", #method, "called");\
+                DEBUG_PRINTS("method: ", #method);\
             }\
             break;\
         }

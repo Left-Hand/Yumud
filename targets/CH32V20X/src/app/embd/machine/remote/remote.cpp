@@ -9,16 +9,13 @@ using RunStatus = StepperEnums::RunStatus;
 #define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
 
 #define DEBUG_MSG(msg)
+// #define DEBUG_MSG(msg) DEBUG_PRINTS(msg)
 
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, __VA_ARGS__);\
 DEBUG_MSG(msg);\
 can.write(msg);\
 
-
-#define REQUEST_VALUE(cmd, value)\
-can.write(MSG(cmd));\
-return value;\
 
 
 bool RemoteStepper::loadArchive(const bool outen){POST(Command::LOAD)return true;}
@@ -36,11 +33,11 @@ void RemoteStepper::setCurrentClamp(const real_t max_current){POST(Command::SET_
 void RemoteStepper::locateRelatively(const real_t _pos){POST(Command::LOCATE, E(_pos));}
 
 bool RemoteStepper::isActive() const{return true;}
-const volatile RunStatus & RemoteStepper::status(){REQUEST_VALUE(Command::STAT, run_status);}
+const volatile RunStatus & RemoteStepper::status(){POST(Command::STAT); return run_status;}
 
-real_t RemoteStepper::getSpeed() const{E _spd; REQUEST_VALUE(Command::GET_SPD, _spd);spd = _spd;}
-real_t RemoteStepper::getPosition() const{E _pos; REQUEST_VALUE(Command::GET_SPD, _pos); pos = _pos;}
-real_t RemoteStepper::getCurrent() const{E _curr; REQUEST_VALUE(Command::GET_CURR, curr); curr = _curr;}
+real_t RemoteStepper::getSpeed() const{POST(Command::GET_SPD); return spd;}
+real_t RemoteStepper::getPosition() const{POST(Command::GET_SPD); return pos;}
+real_t RemoteStepper::getCurrent() const{POST(Command::GET_CURR); return curr;}
 
 void RemoteStepper::setPositionClamp(const Range & clamp){
     M_clamp = clamp;

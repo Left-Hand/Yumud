@@ -14,7 +14,7 @@ void GeneralPositionCtrl::Config::reset(){
 
 void GeneralSpeedCtrl::Config::reset(){
     max_spd = 60;
-    kp = 3;
+    kp = 8;
     kp_limit = 40;
 
     kd = 18;
@@ -25,7 +25,7 @@ void GeneralSpeedCtrl::Config::reset(){
 void TrapezoidPosCtrl::Config::reset(){
     max_acc = 18;
     max_dec = 36;
-    pos_sw_radius = 0.12;
+    pos_sw_radius = 0.04;
 }
 
 CtrlResult CurrentCtrl::update(CtrlResult res){
@@ -117,11 +117,11 @@ Result GeneralSpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
     targ_current = SIGN_AS(abs_targ_current, targ_spd);
 
     #define SAFE_OVERLOAD_RAD(__curr, __spd)\
-        MIN(__curr * __curr * 0.6, __spd * 0.07, max_raddiff - basic_raddiff)\
+        MIN(__spd * 0.27 , max_raddiff - basic_raddiff)\
 
 
     const real_t abs_spd = ABS(real_spd);
-    real_t raddiff = SIGN_AS((PI / 2) * (basic_raddiff + (SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd))), real_spd);
+    real_t raddiff = SIGN_AS((PI / 2) * (basic_raddiff + (SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd))), targ_spd);
 
     bool is_inverse = false;
     is_inverse |= real_spd * targ_spd < -1;
@@ -147,9 +147,11 @@ Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, con
 
     const real_t pos_err = targ_pos - real_pos;
     const real_t abs_pos_err = ABS(pos_err);
-    // last_pos_err = pos_err;
     
     real_t into_dec_radius = real_spd * real_spd / (2 * config.max_dec);
+    bool cross = last_pos_err * pos_err < 0;
+    last_pos_err = pos_err;
+
     switch(tstatus){
         case Tstatus::ACC:
             if(abs_pos_err < into_dec_radius){
@@ -164,10 +166,11 @@ Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, con
             break;
 
         case Tstatus::DEC:
-            if(abs_pos_err > into_dec_radius){
-                tstatus = Tstatus::ACC;
-            }
-            if(abs_pos_err < config.pos_sw_radius){
+            // if(abs_pos_err > into_dec_radius){
+            //     tstatus = Tstatus::ACC;
+            // }
+            if(abs_pos_err < config.pos_sw_radius or cross){
+            // if(cross){
                 tstatus = Tstatus::STA;
             }
 

@@ -2,7 +2,8 @@
 #include "imgtrans/img_trans.hpp"
 #include "match/match.hpp"
 #include "interpolation/interpolation.hpp"
-// #include "../../drivers/CommonIO"
+
+#include "types/float/bf16.hpp"
 
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
@@ -63,8 +64,8 @@ void EmbdHost::do_idle(const Vector2 & to){
             this->busy_led.set();
         }, 0)
 
-        ,RapidMoveAction(steppers, to, 1600)
-        ,Action([&](){
+        , RapidMoveAction(steppers, to, 1600)
+        , Action([&](){
             this->busy_led.clr();
         }, 0)
     );
@@ -172,7 +173,6 @@ void EmbdHost::main(){
             temp += chr;
             if(chr == '\n'){
                 temp.alphanum();
-                DEBUG_PRINTLN("line is", temp);
                 parseLine(temp);
                 temp = "";
             }
@@ -201,7 +201,6 @@ void EmbdHost::main(){
         auto area = Rect2i(pos, src.get_size());
         tftDisplayer.puttexture(area, src.get_data());
     };
-
 
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
         painter.bindImage(sketch);
@@ -252,6 +251,7 @@ void EmbdHost::main(){
     };
 
     do_home();
+    // do_idle({0,0});
 
     while(true){
         // run_led = (millis() / 200) % 2 == 0;
@@ -401,10 +401,13 @@ void EmbdHost::main(){
         uint this_turn = millis() / 100;
         if(last_turn != this_turn){
             DEBUG_PRINTS("busy ", actions.pending());
-            ch9141.prints("busy ", actions.pending());
+            // ch9141.prints("busy ", actions.pending());
             last_turn = this_turn;
             run_led = !run_led;
         }
+            // DEBUG_PRINTLN(t);
+
+        readCan();
     }
 }
 
@@ -504,24 +507,32 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             settle_method(steppers.y.setTargetPosition, args, real_t);
         case "zp"_ha:
             settle_method(steppers.z.setTargetPosition, args, real_t);
+        case "wp"_ha:
+            settle_method(steppers.w.setTargetPosition, args, real_t);
         case "xc"_ha:
             settle_method(steppers.x.setTargetCurrent, args, real_t);
         case "yc"_ha:
             settle_method(steppers.y.setTargetCurrent, args, real_t);
         case "zc"_ha:
             settle_method(steppers.z.setTargetCurrent, args, real_t);
+        case "wc"_ha:
+            settle_method(steppers.w.setTargetCurrent, args, real_t);  
         case "xs"_ha:
             settle_method(steppers.x.setTargetSpeed, args, real_t);
         case "ys"_ha:
             settle_method(steppers.y.setTargetSpeed, args, real_t);
         case "zs"_ha:
             settle_method(steppers.z.setTargetSpeed, args, real_t);
+        case "ws"_ha:
+            settle_method(steppers.w.setTargetSpeed, args, real_t);
         case "xt"_ha:
             settle_method(steppers.x.setTargetTrapezoid, args, real_t);
         case "yt"_ha:
             settle_method(steppers.y.setTargetTrapezoid, args, real_t);
         case "zt"_ha:
             settle_method(steppers.z.setTargetTrapezoid, args, real_t);
+        case "wt"_ha:
+            settle_method(steppers.w.setTargetTrapezoid, args, real_t);
         case "xh"_ha:
             settle_method(steppers.x.locateRelatively, args, real_t);
         case "yh"_ha:

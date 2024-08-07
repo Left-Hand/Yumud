@@ -11,9 +11,9 @@ protected:
 
     void execute() override {
         if(action_queue.empty() == false){
-            const auto & action = action_queue.front();
-            action->invoke();
-            if (bool(*action) == false) {
+            Action & action = *action_queue.front();
+            action.invoke();
+            if (bool(action) == false) {
                 action_queue.pop();
             }
         }else{
@@ -23,7 +23,7 @@ protected:
 public:
     template<typename... Args,
              std::enable_if_t<(std::is_base_of_v<Action, Args> &&...), int> = 0>
-    CombinedAction(Args&&... actions) : Action([this]() { execute(); }, UINT_MAX) {
+    CombinedAction(Args&&... actions) : Action([this]() { execute(); }, UINT_MAX, false) {
         (action_queue.emplace(std::make_unique<Args>(std::forward<Args>(actions))), ...);
     }
 
