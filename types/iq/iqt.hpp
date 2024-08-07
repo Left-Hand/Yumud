@@ -43,8 +43,13 @@ public:
     requires std::is_integral_v<T>
     __fast_inline_constexpr iq_t(const T intValue) : value(_IQ(intValue)) {;}
 
+    #ifdef STRICT_IQ
     __fast_inline consteval iq_t(const float fv) : value(_IQ(fv)) {;}
     __fast_inline consteval iq_t(const double dv) : value(_IQ(dv)) {;}
+    #else
+    __fast_inline constexpr iq_t(const float fv) : value(_IQ(fv)) {;}
+    __fast_inline constexpr iq_t(const double dv) : value(_IQ(dv)) {;}
+    #endif
 
     static __fast_inline constexpr iq_t form (const floating auto fv){iq_t ret; ret.value = _iq(_IQ(fv)); return ret;}
   
@@ -179,8 +184,6 @@ public:
     String toString(unsigned char eps = 3) const;
 }__packed;
 
-#ifndef STRICT_IQ
-
 #define IQ_OP_TEMPLATE(type, op)\
 __fast_inline_constexpr iq_t operator op (const type val, const iq_t iq_v) {\
 	return iq_t(val) op iq_v;\
@@ -214,9 +217,6 @@ IQ_BINAS_TEMPLATE(int)
 #undef IQ_OPS_TEMPLATE
 #undef IQ_BINA_TEMPLATE
 #undef IQ_BINAS_TEMPLATE
-
-
-#endif
 
 using cem = ConstexprMath;
 

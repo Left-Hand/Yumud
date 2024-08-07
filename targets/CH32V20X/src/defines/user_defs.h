@@ -3,6 +3,7 @@
 #define __USER_DEFS_H__
 
 #ifdef CH32V20X
+#define STRICT_IQ
 #define UART_FIFO_BUF_SIZE 256
 #define UART_DMA_BUF_SIZE 256
 
@@ -23,6 +24,5 @@
 #include "v3defs.h"
 // #include "smc_defs.h"
 #endif
-
 
 #endif

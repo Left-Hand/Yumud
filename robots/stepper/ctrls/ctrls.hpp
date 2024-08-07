@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../constants.hpp"
-#include "observer/observer.hpp"
+#include "../observer/observer.hpp"
 
 #ifdef DEBUG
 #define CURR_SPEC public
