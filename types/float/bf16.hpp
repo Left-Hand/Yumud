@@ -30,6 +30,6 @@ struct bf16 {
     }
 
     constexpr operator real_t() const {
-        return real_t(float(*this));
+        return real_t::form(float(*this));
     }
 } __attribute__((__packed__));

@@ -1,5 +1,5 @@
 #include "iqt.hpp"
-
+#include "sys/debug/debug_inc.h"
 
 bool is_equal_approx(const iq_t a, const iq_t b) {
     // Check for exact equality first, required to handle "infinity" values.
@@ -7,8 +7,8 @@ bool is_equal_approx(const iq_t a, const iq_t b) {
         return true;
     }
     // Then check for approximate equality.
-    iq_t tolerance = CMP_EPSILON * abs(a);
-    if (tolerance < CMP_EPSILON) {
+    iq_t tolerance = iq_t(CMP_EPSILON) * abs(a);
+    if (tolerance < iq_t(CMP_EPSILON)) {
         tolerance = CMP_EPSILON;
     }
     return abs(a - b) < tolerance;

@@ -4,10 +4,10 @@
 Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     if(ctrl_type == CtrlType::VECTOR){
         run_elecrad = odo.position2rad(target);
-        setCurrent(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
+        svpwm.setCurrent(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
     }else{
         run_elecrad = est_elecrad + curr_ctrl.raddiff_output;
-        setCurrent(curr_ctrl.current_output, run_elecrad + elecrad_zerofix);
+        svpwm.setCurrent(curr_ctrl.current_output, run_elecrad + elecrad_zerofix);
     }
 
     odo.update();
@@ -17,10 +17,8 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
 
     if(init_flag){
-
         run_status = RunStatus::ACTIVE;
-
-        setCurrent(real_t(0), real_t(0));
+        svpwm.setCurrent(real_t(0), real_t(0));
         return RunStatus::NONE;
     }
 
@@ -33,7 +31,7 @@ Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
 
         switch(ctrl_type){
             case CtrlType::CURRENT:
-                result = {ABS(target), SIGN_AS(PI / 2, target)};
+                result = {ABS(target), SIGN_AS(real_t(PI / 2), target)};
                 break;
             case CtrlType::VECTOR:
                 result = {curr_ctrl.config.curr_limit, 0};

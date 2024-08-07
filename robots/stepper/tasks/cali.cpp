@@ -114,7 +114,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 break;
 
             case SubState::ALIGN:
-                setCurrent(real_t(align_current), real_t(0));
+                svpwm.setCurrent(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * align_ms)){
                     sw_state(SubState::PRE_FORWARD);
                     odo.reset();
@@ -124,7 +124,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
             case SubState::PRE_FORWARD:
 
-                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI / 2);
+                svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * real_t(TAU) + real_t(PI/2));
 
                 if(cnt >= forward_precycles * subdivide_micros){
                     odo.update();
@@ -136,7 +136,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             case SubState::FORWARD:
                 odo.update();
 
-                setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI/2);
+                svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * real_t(TAU) + real_t(PI/2));
 
                 if(cnt % subdivide_micros == 0){
 
@@ -154,7 +154,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
                 break;
 
             case SubState::REALIGN:
-                setCurrent(real_t(align_current), real_t(0));
+                svpwm.setCurrent(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * align_ms)){
                     sw_state(SubState::PRE_BACKWARD);
                 }
@@ -162,7 +162,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
             case SubState::PRE_BACKWARD:
 
-                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI / 2);
+                svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * real_t(TAU) - real_t(PI / 2));
 
                 if(cnt >= backward_precycles * subdivide_micros){
                     odo.update();
@@ -175,7 +175,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             case SubState::BACKWARD:
                 odo.update();
 
-                setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI/2);
+                svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * real_t(TAU) - real_t(PI / 2));
 
                 if(cnt % subdivide_micros == 0){
                     const uint cali_index = warp_mod(openloop_pole--, poles);
@@ -194,7 +194,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             case SubState::STOP:
                 odo.update();
 
-                setCurrent(real_t(align_current), real_t(0));
+                svpwm.setCurrent(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * align_ms)){
                     sw_state(SubState::ANALYSIS);
                 }
@@ -241,7 +241,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
             case SubState::DONE:
                 // odo.locateRelatively(real_t(0));
                 target = 0;
-                setCurrent(real_t(0), real_t(0));
+                svpwm.setCurrent(real_t(0), real_t(0));
                 return RunStatus::EXIT;
             default:
                 break;
@@ -260,7 +260,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
 //     switch(sub_state){
 //         case SubState::ALIGN:
-//             svpwm.setCurrent(real_t(align_current), real_t(0));
+//             svpwm.svpwm.setCurrent(real_t(align_current), real_t(0));
 //             if(cnt >= (int)((foc_freq / 1000) * align_ms)){
 //                 sw_state(SubState::PRE_FORWARD);
 //                 odo.reset();
@@ -271,7 +271,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
 //         case SubState::PRE_FORWARD:
 
-//             svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI / 2);
+//             svpwm.svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI / 2);
 
 //             if(cnt >= forward_precycles * subdivide_micros){
 //                 odo.update();
@@ -283,7 +283,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 //         case SubState::FORWARD:
 //             odo.update();
 
-//             svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI/2);
+//             svpwm.svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI/2);
 
 //             if(cnt % subdivide_micros == 0){
 //                 openloop_pole++;
@@ -306,7 +306,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 //             break;
 
 //         case SubState::REALIGN:
-//             svpwm.setCurrent(real_t(align_current), real_t(0));
+//             svpwm.svpwm.setCurrent(real_t(align_current), real_t(0));
 //             if(cnt >= (int)((foc_freq / 1000) * align_ms)){
 //                 sw_state(SubState::PRE_BACKWARD);
 //             }
@@ -314,7 +314,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 
 //         case SubState::PRE_BACKWARD:
 
-//             svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI / 2);
+//             svpwm.svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI / 2);
 
 //             if(cnt >= backward_precycles * subdivide_micros){
 //                 odo.update();
@@ -327,7 +327,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 //         case SubState::BACKWARD:
 //             odo.update();
 
-//             svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI/2);
+//             svpwm.svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI/2);
 
 //             if(cnt % subdivide_micros == 0){
 //                 openloop_pole--;
@@ -354,7 +354,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 //         case SubState::STOP:
 //             odo.update();
 
-//             svpwm.setCurrent(real_t(align_current), real_t(0));
+//             svpwm.svpwm.setCurrent(real_t(align_current), real_t(0));
 //             if(cnt >= (int)((foc_freq / 1000) * align_ms)){
 //                 sw_state(SubState::ANALYSIS);
 //             }
@@ -380,7 +380,7 @@ Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
 //         case SubState::EXAMINE:
 
 //             odo.locateRelatively(real_t(0));
-//             svpwm.setCurrent(real_t(0), real_t(0));
+//             svpwm.svpwm.setCurrent(real_t(0), real_t(0));
 //             sw_state(SubState::DONE);
 //             break;
 

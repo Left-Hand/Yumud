@@ -2,8 +2,7 @@
 
 #define __DEBUG_INC_H__
 
-#include "../hal/bus/bus_inc.h"
-#include "../sys/kernel/clock.h"
+#include "hal/bus/bus_inc.h"
 #include "src/defines/user_defs.h"
 
 #ifndef VOFA_PRINT

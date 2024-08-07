@@ -115,7 +115,7 @@ public:
     }
 
 
-    void init(const real_t & ohms, const real_t & max_current_a){
+    void init(const real_t ohms, const real_t max_current_a){
         configReg.rst = 0b0;
         configReg.__resv__ = 0b100;
 
@@ -127,7 +127,7 @@ public:
         enableShuntVoltageMeasure();
 
         currentLsb = max_current_a * real_t(1/32768.0);
-        calibrationReg = (uint16_t)real_t((0.00512 * 32768) / (ohms * max_current_a));
+        calibrationReg = (uint16_t)real_t(real_t(0.00512 * 32768) / (ohms * max_current_a));
         writeReg(RegAddress::calibration, calibrationReg);
 
         delay(10);

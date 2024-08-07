@@ -210,9 +210,9 @@ real_t AD5933::getTemperature() {
             // datasheet. There is a different formula depending on the sign
             // bit, which is the 5th bit of the uint8_t in TEMP_DATA_1.
             if ((rawTemp[0] & (1<<5)) == 0) {
-                return rawTempVal / 32.0;
+                return real_t(rawTempVal) / 32;
             } else {
-                return (rawTempVal - 16384) / 32.0;
+                return real_t(rawTempVal - 16384) / 32;
             }
         }
     }
@@ -589,7 +589,7 @@ bool AD5933::calibrate(real_t gain[], int phase[], int ref, int n) {
 
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
-        gain[i] = (real_t)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
+        gain[i] = (real_t(1)/ref)/sqrt(pow(real_t(real[i]), 2) + pow(real_t(imag[i]), 2));
         // TODO: phase
     }
 
@@ -619,7 +619,7 @@ bool AD5933::calibrate(real_t gain[], int phase[], int real[], int imag[],
 
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
-        gain[i] = (real_t)(1.0/ref)/sqrt(pow(real[i], 2) + pow(imag[i], 2));
+        gain[i] = (real_t(1)/ref)/sqrt(pow(real_t(real[i]), 2) + pow(real_t(imag[i]), 2));
         // TODO: phase
     }
 

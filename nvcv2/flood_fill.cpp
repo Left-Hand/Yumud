@@ -189,7 +189,7 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
     for( i = 0; i < nclasses; i++ )
     {
         Rect2i r = rrects[i];
-        real_t s = 1.f/rweights[i];
+        real_t s = real_t(1)/rweights[i];
         rrects[i] = Rect2i(
             saturate_cast<int>(r.x*s),
             saturate_cast<int>(r.y*s),

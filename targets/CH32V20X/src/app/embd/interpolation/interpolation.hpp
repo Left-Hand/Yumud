@@ -15,7 +15,7 @@ namespace Interpolation{
         real_t vb = 0.0f;
     };
     __inline real_t slopeFromT (real_t t, real_t A, real_t B, real_t C){
-        real_t dtdx = 1.0/(3.0*A*t*t + 2.0*B*t + C); 
+        real_t dtdx = real_t(1.0)/(3*A*t*t + 2*B*t + C); 
         return dtdx;
     }
 

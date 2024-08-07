@@ -10,10 +10,12 @@ void Odometer::update(){
     lapPosition = correctPosition(rawLapPosition);
     deltaLapPosition = lapPosition - lapPositionLast;
 
-    if(deltaLapPosition > real_t(0.5f)){
-        deltaLapPosition -= real_t(1);
-    }else if (deltaLapPosition < real_t(-0.5f)){
-        deltaLapPosition += real_t(1);
+    static constexpr auto one = real_t(1);
+    static constexpr auto half_one = real_t(0.5);
+    if(deltaLapPosition > half_one){
+        deltaLapPosition -= one;
+    }else if (deltaLapPosition < -half_one){
+        deltaLapPosition += one;
     }
 
     lapPositionLast = lapPosition;

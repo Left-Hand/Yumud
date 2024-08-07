@@ -120,7 +120,7 @@ public:
 
     real_t position2rad(const real_t position){
         real_t frac1 = poles * frac(position);
-        return TAU * (frac(frac1));
+        return real_t(TAU) * (frac(frac1));
     }
 
     int position2pole(const iq_t position){

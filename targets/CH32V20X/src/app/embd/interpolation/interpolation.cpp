@@ -13,14 +13,14 @@ real_t Interpolation::cubicBezier(const real_t x, const Vector2 & a,const Vector
     real_t y3a = 1.0; // final y 
     real_t x3a = 1.0; // final x 
 
-    real_t A =   x3a - 3.0*x2a + 3.0*x1a - x0a;
-    real_t B = 3.0*x2a - 6.0*x1a + 3.0*x0a;
-    real_t C = 3.0*x1a - 3.0*x0a;   
+    real_t A =   x3a - 3 * x2a + 3 *x1a - x0a;
+    real_t B = 3*x2a - 6*x1a + 3 *x0a;
+    real_t C = 3*x1a - 3*x0a;   
     real_t D =   x0a;
 
-    real_t E =   y3a - 3.0*y2a + 3.0*y1a - y0a;    
-    real_t F = 3.0*y2a - 6.0*y1a + 3.0*y0a;             
-    real_t G = 3.0*y1a - 3.0*y0a;             
+    real_t E =   y3a - 3*y2a + 3*y1a - y0a;    
+    real_t F = 3*y2a - 6*y1a + 3*y0a;             
+    real_t G = 3*y1a - 3*y0a;             
     real_t H =   y0a;
 
     real_t currentt = x;
