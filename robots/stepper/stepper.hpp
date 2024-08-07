@@ -36,18 +36,16 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     real_t est_elecrad;
     real_t run_leadangle;
 
-    Range target_position_clamp = Range::INF;
-
     CtrlLimits ctrl_limits;
 
     CurrentCtrl::Config curr_config;
     CurrentCtrl curr_ctrl{curr_config};
     
-    GeneralSpeedCtrl::Config spd_config;
-    GeneralSpeedCtrl speed_ctrl{ctrl_limits, spd_config, curr_ctrl};
+    SpeedCtrl::Config spd_config;
+    SpeedCtrl speed_ctrl{ctrl_limits, spd_config, curr_ctrl};
     
-    GeneralPositionCtrl::Config pos_config;
-    GeneralPositionCtrl position_ctrl{ctrl_limits, pos_config, curr_ctrl};
+    PositionCtrl::Config pos_config;
+    PositionCtrl position_ctrl{ctrl_limits, pos_config, curr_ctrl};
 
     TrapezoidPosCtrl::Config tpz_config;
     TrapezoidPosCtrl trapezoid_ctrl{ctrl_limits, tpz_config, speed_ctrl, position_ctrl};
@@ -72,12 +70,6 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 
     bool shutdown_when_error_occurred = true;
     bool shutdown_when_warn_occurred = true;
-
-
-    void setCurrent(const real_t _current, const real_t _elecrad){
-        svpwm.setCurrent(_current, _elecrad);
-    }
-
 
     void throw_error(const ErrorCode _error_code,const char * _error_message) {
         error_message = _error_message;
@@ -177,7 +169,7 @@ public:
         setTargetPosition(getPosition());
     }
 
-    void setCurrentClamp(const real_t current){
+    void setCurrentLimit(const real_t current){
         curr_config.curr_limit = current;
     }
 
@@ -210,8 +202,8 @@ public:
         return measurements.curr;
     }
 
-    void setPositionClamp(const Range & clamp){
-        target_position_clamp = clamp;
+    void setPositionLimit(const Range & clamp){
+        ctrl_limits.pos_limit = clamp;
     }
 
     void enable(const bool en = true){
@@ -248,11 +240,11 @@ public:
         }
     }
 
-    void setSpeedClamp(const real_t max_spd){
+    void setSpeedLimit(const real_t max_spd){
         ctrl_limits.max_spd = max_spd;
     }
 
-    void setAccelClamp(const real_t max_acc){
+    void setAccelLimit(const real_t max_acc){
         ctrl_limits.max_dec = int(max_acc);
     }
 

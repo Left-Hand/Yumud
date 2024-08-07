@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../constants.hpp"
+#include "observer/observer.hpp"
 
 #ifdef DEBUG
 #define CURR_SPEC public
@@ -18,6 +19,7 @@ struct CtrlResult{
 };
 
 struct CtrlLimits{
+    Range pos_limit;
     real_t max_spd;
     int max_acc;
     int max_dec;
@@ -68,7 +70,7 @@ public:
     virtual void reset() = 0;
 };
 
-struct GeneralSpeedCtrl:public HighLayerCtrl{
+struct SpeedCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
@@ -88,7 +90,7 @@ SPD_SPEC:
     real_t last_speed = 0;
 
 public:
-    GeneralSpeedCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
+    SpeedCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
         HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
 
     void reset() override {
@@ -99,24 +101,26 @@ public:
     Result update(const real_t _targ_speed,const real_t real_speed);
 };
 
-struct GeneralPositionCtrl:public HighLayerCtrl{
+struct PositionCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
         real_t kd;
-        real_t kd2;
 
         void reset();
     };
 
     Config & config;
-
+protected:
+    SpeedEstimator::Config spe_config;
+    SpeedEstimator targ_spd_est{spe_config};
 public:
-    GeneralPositionCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
+    PositionCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
         HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
 
     void reset() override {
         config.reset();
+        targ_spd_est.reset();
     }
 
     Result update(const real_t targ_position, const real_t real_position, 
@@ -125,8 +129,8 @@ public:
 
 struct TopLayerCtrl{
     CtrlLimits & limits;
-    GeneralSpeedCtrl & speed_ctrl;
-    GeneralPositionCtrl & position_ctrl;
+    SpeedCtrl & speed_ctrl;
+    PositionCtrl & position_ctrl;
 };
 
 struct TrapezoidPosCtrl:public TopLayerCtrl{
@@ -153,7 +157,7 @@ protected:
 
 
 public:
-    TrapezoidPosCtrl(CtrlLimits & _limits, Config & _config, GeneralSpeedCtrl & _speed_ctrl, GeneralPositionCtrl & _position_ctrl):
+    TrapezoidPosCtrl(CtrlLimits & _limits, Config & _config, SpeedCtrl & _speed_ctrl, PositionCtrl & _position_ctrl):
             TopLayerCtrl(_limits, _speed_ctrl, _position_ctrl), config(_config){
                 reset();
             }

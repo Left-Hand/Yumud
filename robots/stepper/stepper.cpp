@@ -13,7 +13,7 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
     switch(hash_impl(command.c_str(), command.length())){
         case "save"_ha:
         case "sv"_ha:
-            saveArchive(args.size() ? bool(int(args[0])) : false);
+            saveArchive(args.size() ? bool(int(args[0])) : true);
             break;
 
         case "load"_ha:
@@ -252,10 +252,10 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 
         SET_METHOD_BIND_ONE(   Command::LOCATE,        locateRelatively)
         SET_METHOD_BIND_ONE(   Command::SET_OPEN_CURR, setOpenLoopCurrent)
-        SET_METHOD_BIND_ONE(   Command::SET_CURR_LMT,  setCurrentClamp)
-        SET_METHOD_BIND_TYPE(   Command::SET_POS_LMT,   setPositionClamp, E_2)
-        SET_METHOD_BIND_ONE(   Command::SET_SPD_LMT,   setSpeedClamp)
-        SET_METHOD_BIND_ONE(   Command::SET_ACC_LMT,   setAccelClamp)
+        SET_METHOD_BIND_ONE(   Command::SET_CURR_LMT,  setCurrentLimit)
+        SET_METHOD_BIND_TYPE(   Command::SET_POS_LMT,   setPositionLimit, E_2)
+        SET_METHOD_BIND_ONE(   Command::SET_SPD_LMT,   setSpeedLimit)
+        SET_METHOD_BIND_ONE(   Command::SET_ACC_LMT,   setAccelLimit)
 
         GET_BIND_VALUE(         Command::GET_POS,       measurements.pos)
         GET_BIND_VALUE(         Command::GET_SPD,       measurements.spd)

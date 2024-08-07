@@ -161,9 +161,9 @@ void EmbdHost::main(){
     tcs.setGain(TCS34725::Gain::X60);
     ch9141.init();
 
-    stepper_x.setPositionClamp({0.2, 7.8});
-    stepper_y.setPositionClamp({0.2, 4.8});
-    stepper_z.setPositionClamp({0.2, 24.2});
+    stepper_x.setPositionLimit({0.2, 7.8});
+    stepper_y.setPositionLimit({0.2, 4.8});
+    stepper_z.setPositionLimit({0.2, 24.2});
 
     auto parseAscii = [&](InputStream & is){
         static String temp;
@@ -540,11 +540,11 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
         case "zh"_ha:
             settle_method(steppers.z.locateRelatively, args, real_t);
         case "xm"_ha:
-            settle_method(steppers.x.setCurrentClamp, args, real_t);
+            settle_method(steppers.x.setCurrentLimit, args, real_t);
         case "ym"_ha:
-            settle_method(steppers.y.setCurrentClamp, args, real_t);
+            settle_method(steppers.y.setCurrentLimit, args, real_t);
         case "zm"_ha:
-            settle_method(steppers.z.setCurrentClamp, args, real_t);
+            settle_method(steppers.z.setCurrentLimit, args, real_t);
         case "cali"_ha:
             trigger_method(steppers.w.triggerCali);
         case "ld"_ha:

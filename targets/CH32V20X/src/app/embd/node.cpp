@@ -51,13 +51,13 @@ void node_main(){
     can1.init(Can::BaudRate::Mbps1);
  
     stp.init();
-
+    stp.setSpeedLimit(60);
     stp.setOpenLoopCurrent(0.5);
-    stp.setCurrentClamp(0.4);
+    stp.setCurrentLimit(0.4);
 
     while(!stp.isActive());
     stp.setTargetCurrent(0);
-    stp.setCurrentClamp(1.6);
+    stp.setCurrentLimit(1.6);
 
     while(true){
         stp.run(); 
@@ -65,17 +65,17 @@ void node_main(){
         // Sys::Clock::reCalculateTime();
         // stp.setTargetPosition(4 * sin(t * 2) + sign(sin(t * 2)));
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
-        // stp.setTargetPosition(15 *sin(t/3) * sin(t*3));
+        // stp.setTargetPosition(5 *sin(t) * sin(t*9));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
         // stp.setTargetPosition(23 * sin(t));
         // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
         // stp.setTargetPosition(10 * sign(sin(t * 3)));
         // stp.setTargetVector(0.07 * sin(4 * t));
-        // stp.setTargetSpeed(CLAMP(47 * sin(t), 0, 20));
+        // stp.setTargetSpeed(CLAMP(60 * sin(t * 3), 0, 30));
         // stp.setTargetTrapezoid(7 * sin(t));
         // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(10 * sign(sin(1.5 * t)));
-        // stp.setTargetPosition(40 * sin(t));
+        // stp.setTargetPosition(40 * sin(t/2) + 20 * sign(sin(t/2)));
         // stp.setTargetPosition(0.3 * sin(t));
         // stp.setTargetVector(sin(t) * 0.5);
         // stp.setTargetPosition(4 * sign(sin(4 * t)));

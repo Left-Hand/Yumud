@@ -2,8 +2,8 @@
 #include "../stepper.hpp"
 
 void SpeedEstimator::Config::reset(){
-    err_threshold = inv_poles / 4;
-    max_cycles = foc_freq / 20;
+    err_threshold = inv_poles / 16;
+    max_cycles = foc_freq / 80;
 }
 
 real_t SpeedEstimator::update(const real_t position){

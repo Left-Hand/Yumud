@@ -38,7 +38,7 @@ public:
     void setTargetTrapezoid(const real_t pos);
     void setOpenLoopCurrent(const real_t current);
     void setTargetVector(const real_t pos);
-    void setCurrentClamp(const real_t max_current);
+    void setCurrentLimit(const real_t max_current);
     void locateRelatively(const real_t pos = 0);
 
     bool isActive() const;
@@ -48,11 +48,11 @@ public:
     real_t getPosition() const;
     real_t getCurrent() const;
 
-    void setPositionClamp(const Range & clamp);
+    void setPositionLimit(const Range & clamp);
     void enable(const bool en = true);
     void setNodeId(const uint8_t _id);
-    void setSpeedClamp(const real_t max_spd);
-    void setAccelClamp(const real_t max_acc);
+    void setSpeedLimit(const real_t max_spd);
+    void setAccelLimit(const real_t max_acc);
     void reset();
     void triggerCali();
 

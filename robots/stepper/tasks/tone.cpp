@@ -1,39 +1,39 @@
-#include "../robots/stepper/stepper.hpp"
+#include "robots/stepper/stepper.hpp"
+
 Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
     struct Tone{
-        uint32_t freq_hz;
-        uint32_t sustain_ms;
+        uint freq_hz;
+        uint sustain_ms;
     };
 
-    [[maybe_unused]] constexpr int freq_G4 = 392;
-    [[maybe_unused]] constexpr int freq_A4 = 440;
-    [[maybe_unused]] constexpr int freq_B4 = 494;
-    [[maybe_unused]] constexpr int freq_C5 = 523;
-    [[maybe_unused]] constexpr int freq_D5 = 587;
-    [[maybe_unused]] constexpr int freq_E5 = 659;
-    [[maybe_unused]] constexpr int freq_F5 = 698;
-    [[maybe_unused]] constexpr int freq_G5 = 784;
+    [[maybe_unused]] constexpr uint G4 = 392;
+    [[maybe_unused]] constexpr uint A4 = 440;
+    [[maybe_unused]] constexpr uint B4 = 494;
+    [[maybe_unused]] constexpr uint C5 = 523;
+    [[maybe_unused]] constexpr uint D5 = 587;
+    [[maybe_unused]] constexpr uint E5 = 659;
+    [[maybe_unused]] constexpr uint F5 = 698;
+    [[maybe_unused]] constexpr uint G5 = 784;
 
     static const auto tones = std::to_array<Tone>({
-        {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
-        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
-        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-        {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
-        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+        {A4, 100},  // 6
+        {D5, 100},  // 2
+        {E5, 100},  // 3
+        {G5, 100},  // 5
+        {E5, 100},  // 3
+        {D5, 100},  // 2
         
-        {.freq_hz = freq_A4,.sustain_ms = 100},  // 6
-        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
-        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-        {.freq_hz = freq_G5,.sustain_ms = 100},  // 5
-        {.freq_hz = freq_E5,.sustain_ms = 100},  // 3
-        {.freq_hz = freq_D5,.sustain_ms = 100},  // 2
+        {A4, 100},  // 6
+        {D5, 100},  // 2
+        {E5, 100},  // 3
+        {G5, 100},  // 5
+        {E5, 100},  // 3
+        {D5, 100},  // 2
         
-        {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
-        {.freq_hz = freq_C5,.sustain_ms = 100},  // 1
-        {.freq_hz = freq_B4,.sustain_ms = 100},  // 7
-        {.freq_hz = freq_G4,.sustain_ms = 100},  // 5
-
+        {B4, 100},  // 7
+        {C5, 100},  // 1
+        {B4, 100},  // 7
+        {G4, 100},  // 5
     });
 
     static constexpr real_t tone_current = 0.7;
@@ -61,8 +61,8 @@ Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
     {
         const auto & tone = tones[tone_index];
         const auto tone_period = foc_freq / tone.freq_hz;
-        auto phase = sin(real_t(cnt % tone_period) / (tone_period) * TAU);
-        setCurrent(tone_current, phase * PI/2);
+        auto phase = sin(real_t(cnt % tone_period) / (tone_period) * TAU) * (PI/2);
+        svpwm.setCurrent(tone_current, phase);
         cnt++;
     }
 
