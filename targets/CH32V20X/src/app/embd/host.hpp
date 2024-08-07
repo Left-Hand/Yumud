@@ -23,10 +23,10 @@ using StepperUtils::CliAP;
 
 class EmbdHost:public CliAP{
 
-    RemoteStepper stepper_w;
-    RemoteStepper stepper_x;
-    RemoteStepper stepper_y;
-    RemoteStepper stepper_z;
+    RemoteFOCMotor stepper_w;
+    RemoteFOCMotor stepper_x;
+    RemoteFOCMotor stepper_y;
+    RemoteFOCMotor stepper_z;
 
     Machine steppers;
 

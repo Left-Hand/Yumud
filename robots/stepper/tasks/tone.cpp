@@ -1,6 +1,6 @@
 #include "robots/stepper/stepper.hpp"
 
-Stepper::RunStatus Stepper::beep_task(const Stepper::InitFlag init_flag){
+FOCStepper::RunStatus FOCStepper::beep_task(const FOCStepper::InitFlag init_flag){
     struct Tone{
         uint freq_hz;
         uint sustain_ms;

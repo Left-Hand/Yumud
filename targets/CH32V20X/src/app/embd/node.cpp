@@ -43,7 +43,7 @@ void node_main(){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    Stepper stp{logger, can1, svpwm, mt6816, mem};
+    FOCStepper stp{logger, can1, svpwm, mt6816, mem};
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();

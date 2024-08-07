@@ -1,7 +1,7 @@
 #include "../robots/stepper/stepper.hpp"
 
 
-Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
+FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_flag){
     if(ctrl_type == CtrlType::VECTOR){
         run_elecrad = odo.position2rad(target);
         svpwm.setCurrent(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);

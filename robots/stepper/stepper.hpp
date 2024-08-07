@@ -7,11 +7,12 @@
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 
-#include "robots/stepper/concept.hpp"
+#include "robots/stepper/focmotor.hpp"
 #include "hal/timer/pwm/gpio_pwm.hpp"
 
 
-class Stepper:public StepperUtils::CliSTA, public StepperConcept{
+class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
+    using StatLed = StepperComponents::StatLed;
 
     using Archive = StepperUtils::Archive;
     using Switches = StepperUtils::Switches;
@@ -19,8 +20,9 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     Archive archive_;
     Switches & switches_ = archive_.switches;
     volatile RunStatus run_status = RunStatus::INIT;
-    SVPWM2 & svpwm;
+    volatile CtrlType ctrl_type = CtrlType::POSITION;
 
+    SVPWM2 & svpwm;
     OdometerPoles odo;
     Memory & memory;
 
@@ -28,10 +30,9 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     GpioPwm green_pwm{portC[15]};
     GpioPwm blue_pwm{portC[13]};
     RgbLedAnalog rgb_led{red_pwm, green_pwm, blue_pwm};
-    StatLed panel_led = StatLed{rgb_led};
+    StatLed panel_led = StatLed{rgb_led, run_status, ctrl_type};
 
     real_t elecrad_zerofix;
-
     real_t run_elecrad;
     real_t est_elecrad;
     real_t run_leadangle;
@@ -57,7 +58,7 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
     bool command_debug_enabled = false;
     bool run_debug_enabled = false;
     
-    CtrlType ctrl_type = CtrlType::POSITION;
+
 
     uint64_t exe_micros = 0;
 
@@ -105,7 +106,7 @@ class Stepper:public StepperUtils::CliSTA, public StepperConcept{
 public:
 
 
-    Stepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
+    FOCStepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
             CliSTA(_logger, _can, getNodeId()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
     bool loadArchive(const bool outen = false);
@@ -123,8 +124,6 @@ public:
         odo.init();
 
         panel_led.init();
-        panel_led.setPeriod(400);
-        panel_led.setTranstit(Color(), Color(1,0,0,0), StatLed::Method::Sine);
 
         red_pwm.setPeriod(25);
         green_pwm.setPeriod(25);
@@ -133,27 +132,22 @@ public:
 
     void setTargetCurrent(const real_t current){
         target = current;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
         target = speed;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::SPEED;
     }
 
     void setTargetPosition(const real_t pos){
         target = pos;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::POSITION;
     }
 
     void setTargetTrapezoid(const real_t pos){
         target = pos;
-        panel_led.setTranstit(Color(), Color(0,1,0,0), StatLed::Method::Sine);
         ctrl_type = CtrlType::TRAPEZOID;
-        // setTargetPosition(pos);
     }
 
     void setOpenLoopCurrent(const real_t current){

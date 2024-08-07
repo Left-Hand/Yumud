@@ -107,15 +107,15 @@ class StallOberserver{
 //     }
 // };
 
-// class Stepper;
+// class FOCStepper;
 
 // struct ShutdownFlag{
 // protected:
-//     Stepper & m_stp;
+//     FOCStepper & m_stp;
 //     bool state = false;
 
 // public:
-//     ShutdownFlag(Stepper & stp):m_stp(stp){;}
+//     ShutdownFlag(FOCStepper & stp):m_stp(stp){;}
 
 //     ShutdownFlag & operator = (const bool _state);
 //     operator bool() const{

@@ -44,7 +44,7 @@ public:
     }
 };
 
-Stepper::RunStatus Stepper::cali_task(const Stepper::InitFlag init_flag){
+FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag){
     enum class SubState{
         ENTRY,
         ALIGN,

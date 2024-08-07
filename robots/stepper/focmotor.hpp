@@ -6,7 +6,7 @@
 #include "archive/archive.hpp"
 #include "../hal/adc/adcs/adc1.hpp"
 
-class StepperConcept{ 
+class FOCMotor{ 
 public:
     using ErrorCode = StepperEnums::ErrorCode;
     using RunStatus = StepperEnums::RunStatus;

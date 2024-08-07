@@ -303,11 +303,7 @@ __fast_inline_constexpr iq_t lerp(const iq_t x, const iq_t a, const iq_t b){retu
 __fast_inline_constexpr iq_t mean(const iq_t a, const iq_t b){return iq_t(_iq((a.value + b.value) >> 1));}
 
 __fast_inline_constexpr iq_t frac(const iq_t iq){
-    if(std::is_constant_evaluated()) {
-            return iq - int(iq);
-    }else{
-        return iq_t(_iq(_IQfrac(iq.value)));
-    }
+    return iq_t(_iq((iq.value) & ((1 << GLOBAL_Q) - 1)));
 }
 
 __fast_inline_constexpr iq_t floor(const iq_t iq){return int(iq);}

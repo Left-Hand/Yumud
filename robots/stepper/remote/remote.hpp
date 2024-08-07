@@ -1,10 +1,10 @@
 #pragma once
 
-#include "stepper/concept.hpp"
+#include "stepper/focmotor.hpp"
 #include "stepper/constants.hpp"
 #include "stepper/cli.hpp"
 
-class RemoteStepper:public StepperConcept{
+class RemoteFOCMotor:public FOCMotor{
 protected:
     using ExitFlag = StepperEnums::ExitFlag;
     using InitFlag = StepperEnums::InitFlag;
@@ -24,7 +24,7 @@ protected:
 
     Range M_clamp{0,30};
 public:
-    RemoteStepper(IOStream & _logger, Can & _can, const uint8_t _node_id):
+    RemoteFOCMotor(IOStream & _logger, Can & _can, const uint8_t _node_id):
             logger(_logger), can(_can), node_id(_node_id){;}
 
     bool loadArchive(const bool outen);

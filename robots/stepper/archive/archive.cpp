@@ -1,7 +1,7 @@
 #include "../stepper.hpp"
 
 
-bool Stepper::loadArchive(const bool outen){
+bool FOCStepper::loadArchive(const bool outen){
     using BoardInfo = StepperUtils::BoardInfo;
     Archive archive;
     memory.load(archive);
@@ -58,7 +58,7 @@ bool Stepper::loadArchive(const bool outen){
     return (!abort);
 }
 
-void Stepper::saveArchive(const bool outen){
+void FOCStepper::saveArchive(const bool outen){
     Archive archive;
 
     static_assert(sizeof(Archive) <= 256, "archive size overflow");
@@ -97,7 +97,7 @@ void Stepper::saveArchive(const bool outen){
 }
 
 
-void Stepper::removeArchive(const bool outen){
+void FOCStepper::removeArchive(const bool outen){
     Archive archive;
     archive.clear();
 

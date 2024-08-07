@@ -3,12 +3,12 @@
 
 static auto & nozzle_en_gpio = portA[0];
 
-void Stepper::setNozzle(const real_t duty){
+void FOCStepper::setNozzle(const real_t duty){
     nozzle_en_gpio.outpp();
     nozzle_en_gpio = bool(duty);
 }
 
-void Stepper::parseTokens(const String & _command, const std::vector<String> & args){
+void FOCStepper::parseTokens(const String & _command, const std::vector<String> & args){
     auto command = _command;
     switch(hash_impl(command.c_str(), command.length())){
         case "save"_ha:
@@ -209,7 +209,7 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
 }
 
 
-void Stepper::parseCommand(const Command command, const CanMsg & msg){
+void FOCStepper::parseCommand(const Command command, const CanMsg & msg){
     const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
 
     using E = bf16;
@@ -288,7 +288,7 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 }
 
 
-void Stepper::tick(){
+void FOCStepper::tick(){
     auto begin_micros = micros();
     RunStatus exe_status = RunStatus::NONE;
 
@@ -298,7 +298,6 @@ void Stepper::tick(){
                 bool load_ok = loadArchive(false);
                 if(load_ok){
                     if(skip_tone){
-                        panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
                         active_task(true);
                     }else{
                         beep_task(true);
@@ -343,12 +342,10 @@ void Stepper::tick(){
         else if((exe_status == RunStatus::EXIT)){
             switch(run_status){
                 case RunStatus::CHECK:
-                    panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
                     cali_task(true);
                     break;
                 case RunStatus::CALI:
                     if(skip_tone){
-                        panel_led.setTranstit(Color(), Color(0,0,1,0), StatLed::Method::Squ);
                         active_task(true);
                     }
                     else beep_task(true);
@@ -395,7 +392,7 @@ void Stepper::tick(){
     exe_micros = micros() - begin_micros;
 }
 
-void Stepper::run(){
+void FOCStepper::run(){
     readCan();
     panel_led.run();
 
@@ -421,7 +418,7 @@ void Stepper::run(){
     blue_pwm.tick();
 }
 
-void Stepper::report(){
+void FOCStepper::report(){
     // real_t total = real_t(3);
     // static real_t freq = real_t(10);
     // static real_t freq_dir = real_t(1);

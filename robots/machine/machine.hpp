@@ -1,6 +1,6 @@
 #pragma once
 
-#include "remote/remote.hpp"
+#include "../../robots/stepper/remote/remote.hpp"
 #include "machine_concepts.hpp"
 
 struct Joint{
@@ -31,18 +31,18 @@ protected:
     }
 
 public:
-    RemoteStepper & w;
-    RemoteStepper & x;
-    RemoteStepper & y;
-    RemoteStepper & z;
+    RemoteFOCMotor & w;
+    RemoteFOCMotor & x;
+    RemoteFOCMotor & y;
+    RemoteFOCMotor & z;
     Machine(
-        RemoteStepper & _w,
-        RemoteStepper & _x,
-        RemoteStepper & _y,
-        RemoteStepper & _z
+        RemoteFOCMotor & _w,
+        RemoteFOCMotor & _x,
+        RemoteFOCMotor & _y,
+        RemoteFOCMotor & _z
     ):w(_w), x(_x), y(_y), z(_z){;}
 
-    RemoteStepper & operator [](const uint8_t index){
+    RemoteFOCMotor & operator [](const uint8_t index){
         switch(index){
             case 0:
                 return w;

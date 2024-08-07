@@ -1,6 +1,6 @@
 #include "../robots/stepper/stepper.hpp"
 
-Stepper::RunStatus Stepper::check_task(const Stepper::InitFlag init_flag){
+FOCStepper::RunStatus FOCStepper::check_task(const FOCStepper::InitFlag init_flag){
     static constexpr int subdivide_micros = 1024;
     static constexpr int check_times = 2;
     static constexpr real_t minimal_motion = inv_poles / 8 * 0.9;
