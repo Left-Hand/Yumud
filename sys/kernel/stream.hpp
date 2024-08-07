@@ -156,7 +156,7 @@ public:
 
     template<typename T>
     OutputStream & operator<<(const std::vector<T> & arr){
-        print_arr(arr.begin(), arr.end());
+        print_arr((const T *)&arr[0],(const T *)&arr[arr.size()]);
         return *this;
     }
 

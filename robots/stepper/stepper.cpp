@@ -1,4 +1,5 @@
 #include "stepper.hpp"
+#include "types/float/bf16.hpp"
 
 static auto & nozzle_en_gpio = portA[0];
 
@@ -210,9 +211,12 @@ void Stepper::parseTokens(const String & _command, const std::vector<String> & a
 
 
 void Stepper::parseCommand(const Command command, const CanMsg & msg){
+    using E = bf16;
+
     const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
 
-    using dual_real = std::tuple<real_t, real_t>;
+    using E_2 = std::tuple<E, E>;
+
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
     case cmd:\
         method(__VA_ARGS__);\
@@ -228,7 +232,7 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
         value = ((msg).to<decltype(value)>());\
         break;\
 
-    #define SET_METHOD_BIND_REAL(cmd, method) SET_METHOD_BIND_TYPE(cmd, method, real_t)
+    #define SET_METHOD_BIND_ONE(cmd, method) SET_METHOD_BIND_TYPE(cmd, method, E)
 
     #define GET_BIND_VALUE(cmd, value)\
         case cmd:\
@@ -242,19 +246,19 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 
         SET_VALUE_BIND(Command::SET_TARGET, target)
 
-        SET_METHOD_BIND_REAL(   Command::SET_TRG_VECT,  setTargetVector)
-        SET_METHOD_BIND_REAL(   Command::SET_TRG_CURR,  setTargetCurrent)
-        SET_METHOD_BIND_REAL(   Command::SET_TRG_POS,   setTargetPosition)
-        SET_METHOD_BIND_REAL(   Command::SET_TRG_SPD,   setTargetSpeed)
-        SET_METHOD_BIND_REAL(   Command::SET_TRG_TPZ,   setTargetTrapezoid)
+        SET_METHOD_BIND_ONE(   Command::SET_TRG_VECT,  setTargetVector)
+        SET_METHOD_BIND_ONE(   Command::SET_TRG_CURR,  setTargetCurrent)
+        SET_METHOD_BIND_ONE(   Command::SET_TRG_POS,   setTargetPosition)
+        SET_METHOD_BIND_ONE(   Command::SET_TRG_SPD,   setTargetSpeed)
+        SET_METHOD_BIND_ONE(   Command::SET_TRG_TPZ,   setTargetTrapezoid)
         SET_METHOD_BIND_EXECUTE(Command::FREEZE,        freeze)
 
-        SET_METHOD_BIND_REAL(   Command::LOCATE,        locateRelatively)
-        SET_METHOD_BIND_REAL(   Command::SET_OPEN_CURR, setOpenLoopCurrent)
-        SET_METHOD_BIND_REAL(   Command::SET_CURR_LMT,  setCurrentClamp)
-        SET_METHOD_BIND_TYPE(   Command::SET_POS_LMT,   setPositionClamp, dual_real)
-        SET_METHOD_BIND_REAL(   Command::SET_SPD_LMT,   setSpeedClamp)
-        SET_METHOD_BIND_REAL(   Command::SET_ACC_LMT,   setAccelClamp)
+        SET_METHOD_BIND_ONE(   Command::LOCATE,        locateRelatively)
+        SET_METHOD_BIND_ONE(   Command::SET_OPEN_CURR, setOpenLoopCurrent)
+        SET_METHOD_BIND_ONE(   Command::SET_CURR_LMT,  setCurrentClamp)
+        SET_METHOD_BIND_TYPE(   Command::SET_POS_LMT,   setPositionClamp, E_2)
+        SET_METHOD_BIND_ONE(   Command::SET_SPD_LMT,   setSpeedClamp)
+        SET_METHOD_BIND_ONE(   Command::SET_ACC_LMT,   setAccelClamp)
 
         GET_BIND_VALUE(         Command::GET_POS,       measurements.pos)
         GET_BIND_VALUE(         Command::GET_SPD,       measurements.spd)
@@ -282,7 +286,7 @@ void Stepper::parseCommand(const Command command, const CanMsg & msg){
 
     #undef SET_METHOD_BIND
     #undef SET_VALUE_BIND
-    #undef SET_METHOD_BIND_REAL
+    #undef SET_METHOD_BIND_ONE
     #undef SET_VALUE_BIND_REAL
 }
 
@@ -441,7 +445,7 @@ void Stepper::report(){
     if(logger.pending()==0){
         // delayMicroseconds(200);   
         // delay(1); 
-        RUN_DEBUG(std::setprecision(2), target, getSpeed(), getPosition(), getCurrent(), run_leadangle,std::setprecision(4), getPositionErr());
+        RUN_DEBUG(std::setprecision(4), target, getSpeed(), getPosition(), getCurrent(), run_leadangle,std::setprecision(4), getPositionErr());
     }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);

@@ -18,9 +18,9 @@ protected:
     uint8_t node_id;
     volatile RunStatus run_status = RunStatus::NONE;
 
-    real_t spd;
-    real_t pos;
-    real_t curr;
+    mutable real_t spd;
+    mutable real_t pos;
+    mutable real_t curr;
 
     Range M_clamp{0,30};
 public:

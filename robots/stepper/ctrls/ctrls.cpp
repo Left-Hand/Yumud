@@ -35,6 +35,7 @@ Result GeneralPositionCtrl::update(const real_t targ_pos, const real_t real_pos,
 
 
         if(abs_err < inquater_radius){
+            // real_t raddiff = (PI/2) * basic_raddiff * (frac(frac(targ_pos) * poles) * 4) - real_elecrad;
             real_t raddiff = (PI/2) * basic_raddiff * (err * poles * 4);
             real_t abs_curr = kp * inquater_radius;
 

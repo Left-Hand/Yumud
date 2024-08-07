@@ -2,7 +2,7 @@
 #include "../stepper.hpp"
 
 void SpeedEstimator::Config::reset(){
-    err_threshold = inv_poles/2;
+    err_threshold = inv_poles / 4;
     max_cycles = foc_freq / 20;
 }
 

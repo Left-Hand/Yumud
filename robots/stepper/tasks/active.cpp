@@ -4,10 +4,11 @@
 Stepper::RunStatus Stepper::active_task(const Stepper::InitFlag init_flag){
     if(ctrl_type == CtrlType::VECTOR){
         run_elecrad = odo.position2rad(target);
+        setCurrent(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
     }else{
         run_elecrad = est_elecrad + curr_ctrl.raddiff_output;
+        setCurrent(curr_ctrl.current_output, run_elecrad + elecrad_zerofix);
     }
-    setCurrent(curr_ctrl.current_output, run_elecrad + elecrad_zerofix);
 
     odo.update();
 
