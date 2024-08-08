@@ -13,9 +13,9 @@ struct Axis{
 struct Machine:public Cantilever, public Nozzle_Machine{
 protected:
 
-    static constexpr real_t x_scale = 1.0/40;
-    static constexpr real_t y_scale = 1.0/40;
-    static constexpr real_t z_scale = 1.0/2;
+    static constexpr real_t x_scale = real_t(1.0)/40;
+    static constexpr real_t y_scale = real_t(1.0)/40;
+    static constexpr real_t z_scale = real_t(1.0)/2;
 
     static constexpr uint pick_z = 49;
     static constexpr uint hold_z = 25;
@@ -23,11 +23,11 @@ protected:
     static constexpr uint idle_z = 25;
 
     void x_mm(const real_t _x) override {
-        x.setTargetPosition(_x*x_scale);
+        x.setTargetTrapezoid(_x*x_scale);
     }
 
     void y_mm(const real_t _y) override {
-        y.setTargetPosition(_y*y_scale);
+        y.setTargetTrapezoid(_y*y_scale);
     }
 
 public:

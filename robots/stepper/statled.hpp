@@ -93,10 +93,10 @@ public:
                 ratio = frac(uni);
                 break;
             case Method::Sine:
-                ratio = abs(0.5 * sin(uni * TAU) + 0.5);
+                ratio = abs(real_t(0.5) * sin(uni * real_t(TAU)) + real_t(0.5));
                 break;
             case Method::Square:
-                ratio = sign(2 * frac(uni) - 1) * 0.5 + 0.5;
+                ratio = sign(2 * frac(uni) - 1) * real_t(0.5) + real_t(0.5);
                 break;
             case Method::Triangle:
                 ratio = abs(2 * frac(uni) - 1);

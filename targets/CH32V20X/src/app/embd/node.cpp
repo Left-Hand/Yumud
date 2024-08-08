@@ -53,13 +53,14 @@ void node_main(){
     can1.init(Can::BaudRate::Mbps1);
  
     stp.init();
-    stp.setSpeedLimit(60);
-    stp.setOpenLoopCurrent(0.5);
-    stp.setCurrentLimit(0.4);
+    stp.setSpeedLimit(30);
+    stp.setAccelLimit(20);
+    stp.setOpenLoopCurrent(real_t(0.5));
+    stp.setCurrentLimit(real_t(0.4));
 
     while(!stp.isActive());
-    stp.setTargetCurrent(0);
-    stp.setCurrentLimit(1.6);
+    stp.setTargetCurrent(real_t(0));
+    stp.setCurrentLimit(real_t(1.6));
 
     while(true){
         stp.run(); 

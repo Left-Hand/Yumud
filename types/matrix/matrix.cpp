@@ -131,7 +131,7 @@ int Matrix::Invert(mat_real_t* A, int n)
 		pivrows[k] = pivrow;	// record row swap (even if no swap happened)
 
 		tmp = 1.0f / A[k * n + k];	// invert pivot element
-		A[k * n + k] = 1.0f;		// This element of input matrix becomes result matrix
+		A[k * n + k] = mat_real_t(1);		// This element of input matrix becomes result matrix
 
 		// Perform row reduction (divide every element by pivot)
 		for (j = 0; j < n; j++)
@@ -145,7 +145,7 @@ int Matrix::Invert(mat_real_t* A, int n)
 			if (i != k)
 			{
 				tmp = A[i * n + k];
-				A[i * n + k] = 0.0f; // The other place where in matrix becomes result mat
+				A[i * n + k] = mat_real_t(0); // The other place where in matrix becomes result mat
 				for (j = 0; j < n; j++)
 				{
 					A[i * n + j] = A[i * n + j] - A[k * n + j] * tmp;

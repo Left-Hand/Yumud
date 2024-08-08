@@ -181,7 +181,7 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
 
         case "cd"_ha:
             CLI_PRINTS("dir changed");
-            elecrad_zerofix = PI;
+            elecrad_zerofix = real_t(PI);
             break;
 
         case "hlt"_ha:

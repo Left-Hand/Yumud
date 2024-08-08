@@ -12,12 +12,12 @@ void CtrlLimits::reset(){
     pos_limit = Range::INF;
     max_spd = 30;
     max_acc = 100;
-    max_dec = 100;
+    max_acc = 100;
 }
 
 void PositionCtrl::Config::reset(){
     kp = 20;
-    kd = 1.4;
+    kd = real_t(1.4);
 }
 
 void SpeedCtrl::Config::reset(){
@@ -25,12 +25,11 @@ void SpeedCtrl::Config::reset(){
     kp_limit = 40;
 
     kd = 20;
-    kd_active_radius = 2.7;
-    kd_limit = 14.4;
+    kd_limit = real_t(14.4);
 }
 
 void TrapezoidPosCtrl::Config::reset(){
-    pos_sw_radius = 0.12;
+    pos_sw_radius = real_t(0.12);
 }
 
 CtrlResult CurrentCtrl::update(CtrlResult res){
@@ -40,10 +39,10 @@ CtrlResult CurrentCtrl::update(CtrlResult res){
 }
 
 void CurrentCtrl::Config::reset(){
-    curr_slew_rate = 60.0 / foc_freq;
-    rad_slew_rate = 70.0 / foc_freq;
-    curr_limit = 0.7;
-    openloop_curr = 0.7;
+    curr_slew_rate = real_t(60) / foc_freq;
+    rad_slew_rate = real_t(70) / foc_freq;
+    curr_limit = real_t(0.7);
+    openloop_curr = real_t(0.7);
 }
 
 Result PositionCtrl::update(const real_t targ_pos, const real_t real_pos, 
@@ -67,8 +66,8 @@ Result PositionCtrl::update(const real_t targ_pos, const real_t real_pos,
         }else{
             auto SAFE_OVERLOAD_RAD = [](const real_t __curr,const real_t __spd,const real_t __pos_abs_err){
                 return MIN(
-                    __spd * 0.07,
-                    __pos_abs_err * 6,
+                    __spd * real_t(0.07),
+                    __pos_abs_err * real_t(6),
                     max_raddiff - basic_raddiff
                 );
             };
@@ -78,7 +77,7 @@ Result PositionCtrl::update(const real_t targ_pos, const real_t real_pos,
             real_t abs_curr = MIN(abs_pos_err * config.kp, curr_ctrl.config.curr_limit); 
 
             // w = mv^2/2 - fx
-            real_t overflow_energy = MAX((config.kd >> 8)* (
+            real_t overflow_energy = MAX((config.kd >> 8) * (
                     abs_spd * abs_spd
                     - MIN(targ_spd * targ_spd, limits.max_spd * limits.max_spd) 
                     - 2 * limits.max_acc * MIN(abs_pos_err, 100)), 0); 
@@ -120,7 +119,7 @@ Result SpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
     targ_current = SIGN_AS(abs_targ_current, targ_spd);
 
     #define SAFE_OVERLOAD_RAD(__curr, __spd)\
-        MIN(__spd * 0.27 , max_raddiff - basic_raddiff)\
+        MIN(__curr * __curr * real_t(0.4), __spd * real_t(0.17) , max_raddiff - basic_raddiff)
 
 
     const real_t abs_spd = ABS(real_spd);
@@ -145,14 +144,13 @@ Result SpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
 
 Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, const real_t real_spd, const real_t real_elecrad){
 
-    const real_t spd_acc_delta = real_t(limits.max_dec) / foc_freq;
-    // const real_t spd_dec_delta = real_t(config.max_dec) / foc_freq;
+    const real_t spd_acc_delta = real_t(limits.max_acc) / foc_freq;
     const real_t max_spd = limits.max_spd;
 
     const real_t pos_err = targ_pos - real_pos;
     const real_t abs_pos_err = ABS(pos_err);
     
-    real_t into_dec_radius = real_spd * real_spd / (2 * limits.max_dec);
+    real_t into_dec_radius = real_spd * real_spd / (2 * limits.max_acc);
     bool cross = last_pos_err * pos_err < 0;
     last_pos_err = pos_err;
 
@@ -178,13 +176,13 @@ Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, con
                 tstatus = Tstatus::STA;
             }
 
-                // real_t max_exp_spd = sqrt(2 * config.max_dec * abs_pos_err);
+                // real_t max_exp_spd = sqrt(2 * config.max_acc * abs_pos_err);
             {
                 // goal_speed -= SIGN_AS(spd_dec_delta, pos_err);
                 // goal_speed = CLAMP(goal_speed, -max_exp_spd, max_exp_spd);
 
-                // goal_speed = STEP_TO(goal_speed, SIGN_AS(sqrt(2 * config.max_dec * abs_pos_err), pos_err), spd_dec_delta);
-                goal_speed = SIGN_AS(sqrt(2 * limits.max_dec * abs_pos_err), pos_err);
+                // goal_speed = STEP_TO(goal_speed, SIGN_AS(sqrt(2 * config.max_acc * abs_pos_err), pos_err), spd_dec_delta);
+                goal_speed = SIGN_AS(sqrt(2 * limits.max_acc * abs_pos_err), pos_err);
                 return speed_ctrl.update(goal_speed, real_spd);
             }
         

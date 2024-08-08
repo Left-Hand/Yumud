@@ -23,9 +23,7 @@ static constexpr uint32_t est_freq = foc_freq / 16;
 static constexpr uint32_t est_devider = foc_freq / est_freq;
 
 static constexpr int poles = 50;
-static constexpr float inv_poles = 1.0 / poles;
-static constexpr float openloop_current_limit = 0.3;
-
+static constexpr real_t inv_poles = real_t(1) / poles;
 
 static constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 

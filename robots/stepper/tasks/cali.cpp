@@ -73,8 +73,8 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
     constexpr int cogging_samples = 16;
     constexpr int align_ms = 200;
 
-    constexpr real_t cali_current = 1.7;
-    constexpr real_t align_current = 1.7;
+    constexpr real_t cali_current = real_t(1.4);
+    constexpr real_t align_current = real_t(1.4);
 
     static SubState sub_state = SubState::DONE;
     static uint32_t cnt = 0;

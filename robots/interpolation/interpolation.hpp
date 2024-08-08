@@ -7,15 +7,15 @@
 
 namespace Interpolation{
     struct TurnSolver{
-        uint16_t ta = 0.0f;
-        uint16_t tb = 0.0f;
-        real_t pa = 0.0f;
-        real_t pb = 0.0f;
-        real_t va = 0.0f;
-        real_t vb = 0.0f;
+        uint16_t ta;
+        uint16_t tb;
+        real_t pa;
+        real_t pb;
+        real_t va;
+        real_t vb;
     };
     __inline real_t slopeFromT (real_t t, real_t A, real_t B, real_t C){
-        real_t dtdx = real_t(1.0)/(3*A*t*t + 2*B*t + C); 
+        real_t dtdx = real_t(1)/(3*A*t*t + 2*B*t + C); 
         return dtdx;
     }
 
@@ -30,7 +30,7 @@ namespace Interpolation{
     }
 
     __inline real_t liner(real_t t, real_t A, real_t B){
-        return t * B + (1.0f - t) * A;
+        return t * B + (1 - t) * A;
     }
 
     real_t cubicBezier(const real_t x, const Vector2 & a,const Vector2 & b);

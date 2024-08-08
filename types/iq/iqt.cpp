@@ -9,7 +9,7 @@ bool is_equal_approx(const iq_t a, const iq_t b) {
     // Then check for approximate equality.
     iq_t tolerance = iq_t(CMP_EPSILON) * abs(a);
     if (tolerance < iq_t(CMP_EPSILON)) {
-        tolerance = CMP_EPSILON;
+        tolerance = iq_t(CMP_EPSILON);
     }
     return abs(a - b) < tolerance;
 }
@@ -20,7 +20,7 @@ bool is_equal_approx_ratio(const iq_t a, const iq_t b, iq_t epsilon, iq_t min_ep
     if (diff == 0.0 || diff < min_epsilon) {
         return true;
     }
-    iq_t avg_size = (abs(a) + abs(b)) / 2.0;
+    iq_t avg_size = (abs(a) + abs(b)) >> 1;
     diff /= avg_size;
     return diff < epsilon;
 }

@@ -239,7 +239,7 @@ public:
     }
 
     void setAccelLimit(const real_t max_acc){
-        ctrl_limits.max_dec = int(max_acc);
+        ctrl_limits.max_acc = int(max_acc);
     }
 
     void triggerCali(){

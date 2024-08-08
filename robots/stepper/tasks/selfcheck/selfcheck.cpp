@@ -3,8 +3,8 @@
 FOCStepper::RunStatus FOCStepper::check_task(const FOCStepper::InitFlag init_flag){
     static constexpr int subdivide_micros = 1024;
     static constexpr int check_times = 2;
-    static constexpr real_t minimal_motion = inv_poles / 8 * 0.9;
-    static constexpr real_t check_current = 1.2;
+    static constexpr real_t minimal_motion = inv_poles / 8 * real_t(0.9);
+    static constexpr real_t check_current = real_t(1.2);
     static constexpr real_t idle_current = 0;
 
     enum class SubState{

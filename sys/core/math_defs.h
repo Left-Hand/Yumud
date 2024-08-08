@@ -59,12 +59,17 @@
 
 #ifndef MAX
 #ifdef __cplusplus
-    #define MAX(a,b) __max_tmpl(a,b)
-    template <typename T, typename U>
-    requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
-    constexpr __fast_inline T __max_tmpl(const T a, const U _b){
-        T b = static_cast<T>(_b);
-        return (a > b) ? a : b;
+    #define MAX(a,...) __max_helper(a,__VA_ARGS__)
+
+    template<typename First>
+    constexpr First __max_helper(First value) {
+        return value;
+    }
+
+    template<typename First, typename Second, typename... Rest>
+    constexpr First __max_helper(First first, Second second, Rest... rest) 
+        First min_value = first > First(second) ? first : First(second);
+        return __max_helper(min_value, rest...);
     }
 #else
     #define MAX(x,y) ((x > y) ? x : y)
@@ -75,24 +80,16 @@
 #ifdef __cplusplus
     #define MIN(a,...) __min_helper(a,__VA_ARGS__)
 
-    template<typename First, typename Second>
-    constexpr First __min_2(First first,Second second) {
-        return first < First(second) ? first : First(second);
-    }
 
-    template<typename First>  
-    constexpr First __min_helper(First value){  
-        return value;  
-    }
-
-    template<typename First, typename Second>
-    constexpr First __min_helper(First first,Second second) {
-        return __min_2(first, second);
+    template<typename First>
+    constexpr First __min_helper(First value) {
+        return value;
     }
 
     template<typename First, typename Second, typename... Rest>
-    constexpr First __min_helper(First first,Second second,Rest ... rest) {
-        return __min_helper(__min_2(first, second), std::forward<Rest>(rest)...);
+    constexpr First __min_helper(First first, Second second, Rest... rest) {
+        First min_value = first < First(second) ? first : First(second);
+        return __min_helper(min_value, rest...);
     }
 #else
     #define MIN(x,y) ((x < y) ? x : y)
@@ -206,11 +203,11 @@ constexpr __fast_inline T __sign_as_impl(const T x, const auto s){
 #endif
 
 #ifndef LSHIFT
-#define LSHIFT(x,s) (s >= 0 ? x << s : x >> -s)
+#define LSHIFT(x,s) ((s) >= 0 ? ((x) << (s)) : ((x) >> (-(s))))
 #endif
 
 #ifndef RSHIFT
-#define RSHIFT(x,s) LSHIFT(x, -s)
+#define RSHIFT(x,s) LSHIFT(x, (-(s)))
 #endif
 
 #define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))

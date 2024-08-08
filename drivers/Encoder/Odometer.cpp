@@ -11,7 +11,8 @@ void Odometer::update(){
     deltaLapPosition = lapPosition - lapPositionLast;
 
     static constexpr auto one = real_t(1);
-    static constexpr auto half_one = real_t(0.5);
+    static constexpr auto half_one = real_t(1)/2;
+
     if(deltaLapPosition > half_one){
         deltaLapPosition -= one;
     }else if (deltaLapPosition < -half_one){

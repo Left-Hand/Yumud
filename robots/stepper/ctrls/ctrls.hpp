@@ -22,7 +22,6 @@ struct CtrlLimits{
     Range pos_limit;
     real_t max_spd;
     int max_acc;
-    int max_dec;
 
     void reset();
 };
@@ -77,7 +76,6 @@ public:
         real_t kp_limit;
 
         real_t kd;
-        real_t kd_active_radius;
         real_t kd_limit;
 
         void reset();

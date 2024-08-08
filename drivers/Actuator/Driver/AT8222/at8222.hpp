@@ -7,7 +7,7 @@ protected:
     TimerOC & forward_pwm;
     TimerOC & backward_pwm;
     GpioConcept * p_enable_gpio;
-    real_t inv_fullscale = 0.5;
+    real_t inv_fullscale = real_t(0.5);
 
     AT8222(TimerOC & _forward_pwm, TimerOC & _backward_pwm, GpioConcept * _p_en_gpio = nullptr):
         forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), p_enable_gpio(_p_en_gpio){;}

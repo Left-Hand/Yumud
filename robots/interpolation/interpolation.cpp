@@ -4,14 +4,14 @@ static Interpolation::TurnSolver turnSolver;
 
 real_t Interpolation::cubicBezier(const real_t x, const Vector2 & a,const Vector2 & b){
 
-    real_t y0a = 0.0; // initial y
-    real_t x0a = 0.0; // initial x 
+    static constexpr real_t y0a = 0; // initial y
+    static constexpr real_t x0a = 0; // initial x 
     real_t y1a = a.y;    // 1st influence y   
     real_t x1a = a.x;    // 1st influence x 
     real_t y2a = b.y;    // 2nd influence y
     real_t x2a = b.x;    // 2nd influence x
-    real_t y3a = 1.0; // final y 
-    real_t x3a = 1.0; // final x 
+    static constexpr real_t y3a = 1; // final y 
+    static constexpr real_t x3a = 1; // final x 
 
     real_t A =   x3a - 3 * x2a + 3 *x1a - x0a;
     real_t B = 3*x2a - 6*x1a + 3 *x0a;
@@ -39,12 +39,12 @@ real_t Interpolation::ss(){
     auto turnCnt = millis() % 2667;
     uint32_t turns = millis() / 2667;
     
-    real_t velPoints[7] = {
-        20.0f/360, 20.0f/360, 62.4f/360, 62.4f/360, 20.0f/360, 20.0f/360, 20.0f/360
+    static constexpr real_t velPoints[7] = {
+        real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
     };
     
-    real_t posPoints[7] = {
-        1.0f/360, 106.1f/360, 108.1f/360, 126.65f/360, 233.35f/360, 359.0f/360, 361.0f/360
+    static constexpr real_t posPoints[7] = {
+        real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
     };
 
     uint16_t tickPoints[7] = {
@@ -70,7 +70,7 @@ real_t Interpolation::ss(){
     real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / (real_t)dt);
     real_t temp = (real_t)dt / 1000 / dp; 
 
-    real_t yt = 0.0f;
+    real_t yt = 0;
 
     if((i == 0) || (i == 2) || (i == 4))
         yt = cubicBezier(_t, Vector2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vector2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));

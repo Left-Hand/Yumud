@@ -4,7 +4,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 
 LedGpio &  LedGpio::operator =(const real_t duty){
-    inst = (duty > 0.5) ^ inversed;
+    inst = (duty > real_t(0.5)) ^ inversed;
     return *this;
 }
 

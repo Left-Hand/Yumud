@@ -6,14 +6,16 @@
 #include "sys/core/platform.h"
 
 #include "dsp/constexprmath/ConstexprMath.hpp"
+
 #include "types/string/String.hpp"
+#include "types/float/fp32.hpp"
 
 #include <IQmath_RV32.h>
+#include <bit>
 
 
 
 struct _iq{
-public:
     _iq16 value = 0;
 
     __fast_inline_constexpr explicit _iq(const _iq16 _value) : value(_value){;}
@@ -28,11 +30,39 @@ namespace std{
     struct is_arithmetic<iq_t> : std::true_type {};
 
     template <>
-    struct is_floating_point<iq_t> : std::true_type {};
+    struct is_floating_point<iq_t> : std::false_type {};
     //sounds funny
 }
 
 struct iq_t{
+private:
+    __fast_inline static constexpr _iq float_to_iq(const float fv){
+        int32_t d = std::bit_cast<int32_t>(fv);
+        int32_t exponent = ((d >> 23) & 0xff);
+        uint64_t mantissa = (exponent == 0) ? (0) : ((d & ((1 << 23) - 1)) | (1 << 23));
+
+        uint64_t temp;
+        if(exponent == 0 or exponent == 0xff){
+            temp = 0;
+        }else{
+            temp = LSHIFT(mantissa, exponent - 127);
+        }
+
+        uint64_t  uresult = RSHIFT(temp, (23 - GLOBAL_Q));
+        int32_t result = d > 0 ? uresult : -uresult;
+
+        if((bool(d > 0) ^ bool(result > 0)) or (uresult > (uint64_t)0x80000000)){//OVERFLOW
+            if(d > 0){
+                result = std::bit_cast<_iq>(0x7FFFFFFF);
+            }else{
+                result = std::bit_cast<_iq>(0x80000000);
+            }
+        }
+
+        {
+            return std::bit_cast<_iq>(result);
+        }
+    }
 public:
     _iq value = _iq(0);
 
@@ -44,14 +74,12 @@ public:
     __fast_inline_constexpr iq_t(const T intValue) : value(_IQ(intValue)) {;}
 
     #ifdef STRICT_IQ
-    __fast_inline consteval iq_t(const float fv) : value(_IQ(fv)) {;}
-    __fast_inline consteval iq_t(const double dv) : value(_IQ(dv)) {;}
+    __fast_inline consteval explicit iq_t(const float fv):value(float_to_iq(fv)){};
     #else
-    __fast_inline constexpr iq_t(const float fv) : value(_IQ(fv)) {;}
-    __fast_inline constexpr iq_t(const double dv) : value(_IQ(dv)) {;}
+    __fast_inline constexpr iq_t(const float fv):value(float_to_iq(fv)){};
     #endif
 
-    static __fast_inline constexpr iq_t form (const floating auto fv){iq_t ret; ret.value = _iq(_IQ(fv)); return ret;}
+    static __fast_inline constexpr iq_t form (const floating auto fv){iq_t ret; ret.value = float_to_iq(fv); return ret;}
   
     __no_inline explicit iq_t(const String & str);
 
@@ -68,7 +96,7 @@ public:
     }
 
     __fast_inline_constexpr iq_t& operator+=(const iq_t other) {
-        value = _iq(value + other.value);
+        value = _iq((int32_t)value + (int32_t)other.value);
         return *this;
     }
 
@@ -166,16 +194,53 @@ public:
         if(std::is_constant_evaluated()){
             return float(this->value) / (1 << GLOBAL_Q);
         }else{
-            return _IQtoF(value);
+            uint_fast32_t iqNInput = (uint32_t)this->value;
+            uint_fast16_t ui16Exp;
+            uint_fast32_t uiq23Result;
+            uint_fast32_t uiq31Input;
+
+            /* Initialize exponent to the offset iq value. */
+            ui16Exp = 0x3f80 + ((31 - GLOBAL_Q) * ((uint_fast32_t) 1 << (23 - 16)));
+
+            /* Save the sign of the iqN input to the exponent construction. */
+            if (iqNInput < 0) {
+                ui16Exp |= 0x8000;
+                uiq31Input = -iqNInput;
+            } else if (iqNInput == 0) {
+                return (0);
+            } else {
+                uiq31Input = iqNInput;
+            }
+
+            /* Scale the iqN input to uiq31 by keeping track of the exponent. */
+            while ((uint_fast16_t)(uiq31Input >> 16) < 0x8000) {
+                uiq31Input <<= 1;
+                ui16Exp -= 0x0080;
+            }
+
+            /* Round the uiq31 result and and shift to uiq23 */
+            uiq23Result = (uiq31Input + 0x0080) >> 8;
+
+            /* Remove the implied MSB bit of the mantissa. */
+            uiq23Result &= ~0x00800000;
+
+            /*
+            * Add the constructed exponent and sign bit to the mantissa. We must use
+            * an add in the case where rounding would cause the mantissa to overflow.
+            * When this happens the mantissa result is two where the MSB is zero and
+            * the LSB of the exp is set to 1 instead. Adding one to the exponent is the
+            * correct handling for a mantissa of two. It is not required to scale the
+            * mantissa since it will always be equal to zero in this scenario.
+            */
+            uiq23Result += (uint_fast32_t) ui16Exp << 16;
+
+            /* Return the mantissa + exp + sign result as a floating point type. */
+            return std::bit_cast<float>(uiq23Result);
         }
     }
 
     __inline constexpr explicit operator double() const{
-        if(std::is_constant_evaluated()){
-            return double(this->value) / (1 << GLOBAL_Q);
-        }else{
-            return _IQtoD(value);
-        }
+        return float(*this);
     }
 
 
@@ -412,13 +477,15 @@ namespace std{
         __fast_inline_constexpr static iq_t max() noexcept {return iq_t(_iq(0x7FFFFFFF));}
     };
 
-
+    #ifndef STRICT_IQ
     typedef std::common_type<iq_t, float>::type iq_t;
     typedef std::common_type<iq_t, double>::type iq_t;
-    typedef std::common_type<iq_t, int>::type iq_t;
 
     typedef std::common_type<float, iq_t>::type iq_t;
     typedef std::common_type<double, iq_t>::type iq_t;
+    #endif
+
+    typedef std::common_type<iq_t, int>::type iq_t;
     typedef std::common_type<int, iq_t>::type iq_t;
 
     __fast_inline iq_t sinf(const iq_t iq){return ::sinf(iq);}
