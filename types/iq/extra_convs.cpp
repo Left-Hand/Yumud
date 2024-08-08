@@ -5,7 +5,7 @@ static constexpr size_t str_float_size = 16;
 
 
 static void conv(char * str_int, char * str_frac, const _iq value, const uint8_t eps = 3){
-    uint32_t abs_value = abs(value);
+    uint32_t abs_value = value > 0 ? value : -value;
     uint32_t int_part = abs_value >> GLOBAL_Q;
     uint32_t float_part = abs_value & ((1 << GLOBAL_Q )- 1);
 
@@ -37,7 +37,7 @@ String iq_t::toString(unsigned char eps) const{
 };
 
 
-iq_t::iq_t(const String & str){
+iq_t::iq_t(const String & str):value(0){
     int int_part = 0;
     int frac_part = 0;
     int scale = 1;
@@ -48,7 +48,8 @@ iq_t::iq_t(const String & str){
         frac_part /= 10;
         scale /= 10;
     }
-    *this = int_part + iq_t(frac_part) / scale;
+    iq_t ret = iq_t(int_part) + iq_t(frac_part) / scale;
+    *this = ret;
 }
 
 iq_t::operator String() const{

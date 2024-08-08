@@ -15,10 +15,10 @@ template<arithmetic T>
 struct Vector2_t{
 public:
 
-    T x = T(0);
-    T y = T(0);
+    T x;
+    T y;
 
-    constexpr Vector2_t(){;}
+    constexpr Vector2_t():x(T(0)), y(T(0)){;}
 
     constexpr Vector2_t(const auto & _x, const auto & _y): x(T(_x)), y(T(_y)){;}
 
@@ -194,7 +194,7 @@ public:
             return ('(' + ::toString(x, decimalPlaces) + ',' + ::toString(y, decimalPlaces) + ')');
         }
     }
-}__packed;
+};
 
 #include "vector2_t.tpp"
 

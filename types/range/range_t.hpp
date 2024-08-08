@@ -13,10 +13,8 @@
 template<arithmetic T>
 struct Range_t{
 public:
-    struct {
-        T from;
-        T to;
-    }__packed;
+    T from;
+    T to;
 
     static constexpr Range_t<T> INF = {std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
     static constexpr Range_t<T> POS = {T(0), std::numeric_limits<T>::max()};
@@ -145,7 +143,7 @@ public:
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = other.abs();
         if(not regular.intersects(other_regular)) return Range_t<T>();
-        return Range_t<T>(MAX(regular.from, other_regular.from), MIN(T(regular.to), T(other_regular.to)));
+        return Range_t<T>(MAX(T(regular.from), T(other_regular.from)), MIN(T(regular.to), T(other_regular.to)));
     }
 
     constexpr T get_center()const{
@@ -268,7 +266,7 @@ public:
 
     constexpr Range_t<T> merge(const arithmetic auto & value) const{
         Range_t<T> regular = this -> abs();
-        return Range_t<T>(MIN(T(regular.from), T(value)), MAX(regular.to, value));
+        return Range_t<T>(MIN(T(regular.from), T(value)), MAX(T(regular.to), T(value)));
     }
 
     constexpr T invlerp(const arithmetic auto & value) const{
@@ -319,7 +317,7 @@ public:
             return ('[' + ::toString(from, decimalPlaces) + ',' + ::toString(to, decimalPlaces) + ')');
         }
     }
-}__packed;
+};
 
 using Rangei = Range_t<int>;
 using Range = Range_t<real_t>;

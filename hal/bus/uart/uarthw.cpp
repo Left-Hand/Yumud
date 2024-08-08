@@ -423,9 +423,9 @@ Gpio & UartHw::txio(){
 }
 
 void UartHw::enableIt(const bool en){
-    IRQn irq;
-    uint8_t pp;
-    uint8_t sp;
+    IRQn irq = IRQn::Software_IRQn;
+    uint8_t pp = 1;
+    uint8_t sp = 7;
 
     switch((uint32_t)instance){
         #ifdef HAVE_UART1

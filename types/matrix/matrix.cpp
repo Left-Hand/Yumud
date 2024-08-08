@@ -112,7 +112,7 @@ int Matrix::Invert(mat_real_t* A, int n)
 		}
 
 		// check for singular matrix
-		if (A[pivrow * n + k] == 0.0f)
+		if (A[pivrow * n + k] == real_t(0))
 		{
 			return 0;
 		}
@@ -130,7 +130,7 @@ int Matrix::Invert(mat_real_t* A, int n)
 		}
 		pivrows[k] = pivrow;	// record row swap (even if no swap happened)
 
-		tmp = 1.0f / A[k * n + k];	// invert pivot element
+		tmp = real_t(1) / A[k * n + k];	// invert pivot element
 		A[k * n + k] = mat_real_t(1);		// This element of input matrix becomes result matrix
 
 		// Perform row reduction (divide every element by pivot)

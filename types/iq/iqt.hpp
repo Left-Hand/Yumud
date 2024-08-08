@@ -17,10 +17,9 @@
 
 struct _iq{
     _iq16 value = 0;
-
-    __fast_inline_constexpr explicit _iq(const _iq16 _value) : value(_value){;}
-    __fast_inline_constexpr operator _iq16() const{return value;}
-}__packed;
+    __fast_inline constexpr explicit _iq(const _iq16 _value) : value(_value){;}
+    __fast_inline constexpr operator _iq16() const{return value;}
+};
 
 
 struct iq_t;
@@ -64,14 +63,16 @@ private:
         }
     }
 public:
-    _iq value = _iq(0);
+    _iq value;
 
-    __fast_inline_constexpr iq_t():value(0){;}
-    __fast_inline_constexpr explicit iq_t(const _iq iqValue): value(iqValue.value){;}
+    __fast_inline constexpr iq_t():value(0){;}
+
+    __fast_inline constexpr iq_t(const _iq & other) : value(other){;}
+    __fast_inline constexpr iq_t(_iq && other) : value(other){;}
 
     template<typename T>
     requires std::is_integral_v<T>
-    __fast_inline_constexpr iq_t(const T intValue) : value(_IQ(intValue)) {;}
+    __fast_inline constexpr iq_t(const T intValue) : value(_IQ(intValue)) {;}
 
     #ifdef STRICT_IQ
     __fast_inline consteval explicit iq_t(const float fv):value(float_to_iq(fv)){};
@@ -247,7 +248,7 @@ public:
 
     __no_inline explicit operator String() const;
     String toString(unsigned char eps = 3) const;
-}__packed;
+};
 
 #define IQ_OP_TEMPLATE(type, op)\
 __fast_inline_constexpr iq_t operator op (const type val, const iq_t iq_v) {\
@@ -261,6 +262,19 @@ IQ_OP_TEMPLATE(type, *)\
 IQ_OP_TEMPLATE(type, /)\
 
 IQ_OPS_TEMPLATE(int);
+#ifndef STRICT_IQ
+#else
+#define IQ_OP_DELETE(op)\
+iq_t operator op (const float val, const iq_t iq_v) = delete;\
+
+IQ_OP_DELETE(+)
+IQ_OP_DELETE(-)
+IQ_OP_DELETE(*)
+IQ_OP_DELETE(/)
+
+#undef IQ_OP_DELETE
+
+#endif
 
 
 #define IQ_BINA_TEMPLATE(type, op)\
@@ -277,6 +291,18 @@ IQ_BINA_TEMPLATE(type, <)\
 IQ_BINA_TEMPLATE(type, <=)\
 
 IQ_BINAS_TEMPLATE(int)
+#ifndef STRICT_IQ
+#else
+#define IQ_BINA_DELETE(op)\
+bool operator op (const float val, const iq_t iq_v) = delete;\
+
+IQ_BINA_DELETE(==)
+IQ_BINA_DELETE(!=)
+IQ_BINA_DELETE(>)
+IQ_BINA_DELETE(>=)
+
+#undef IQ_BINA_DELETE
+#endif
 
 #undef IQ_OP_TEMPLATE
 #undef IQ_OPS_TEMPLATE

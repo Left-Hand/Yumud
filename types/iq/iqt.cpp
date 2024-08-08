@@ -17,7 +17,7 @@ bool is_equal_approx(const iq_t a, const iq_t b) {
 bool is_equal_approx_ratio(const iq_t a, const iq_t b, iq_t epsilon, iq_t min_epsilon){
 
     iq_t diff = abs(a - b);
-    if (diff == 0.0 || diff < min_epsilon) {
+    if (diff == 0 || diff < min_epsilon) {
         return true;
     }
     iq_t avg_size = (abs(a) + abs(b)) >> 1;
