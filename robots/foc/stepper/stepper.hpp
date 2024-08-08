@@ -11,30 +11,7 @@
 #include "hal/timer/pwm/gpio_pwm.hpp"
 
 
-#ifdef STEPPER_NO_PRINT
-#define CLI_PRINTS(...)
-#define ARCHIVE_PRINTS(...)
-#define CLI_DEBUG(...)
-#define COMMAND_DEBUG(...)
-#define RUN_DEBUG(...)
 
-#else
-#define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
-#define ARCHIVE_PRINTS(...) if(outen) logger.prints(__VA_ARGS__);
-
-#define CALI_DEBUG(...)\
-if(cali_debug_enabled){\
-logger.println(__VA_ARGS__);};
-
-#define COMMAND_DEBUG(...)\
-if(command_debug_enabled){\
-logger.println(__VA_ARGS__);};
-
-#define RUN_DEBUG(...)\
-if(run_debug_enabled){\
-logger.println(__VA_ARGS__);};
-
-#endif
 
 class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     using StatLed = StepperComponents::StatLed;
@@ -42,6 +19,31 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     using Archive = StepperUtils::Archive;
     using Switches = StepperUtils::Switches;
 
+    #ifdef STEPPER_NO_PRINT
+    #define CLI_PRINTS(...)
+    #define ARCHIVE_PRINTS(...)
+    #define CLI_DEBUG(...)
+    #define COMMAND_DEBUG(...)
+    #define RUN_DEBUG(...)
+
+    #else
+    #define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
+    #define ARCHIVE_PRINTS(...) if(outen) logger.prints(__VA_ARGS__);
+
+    #define CALI_DEBUG(...)\
+    if(cali_debug_enabled){\
+    logger.println(__VA_ARGS__);};
+
+    #define COMMAND_DEBUG(...)\
+    if(command_debug_enabled){\
+    logger.println(__VA_ARGS__);};
+
+    #define RUN_DEBUG(...)\
+    if(run_debug_enabled){\
+    logger.println(__VA_ARGS__);};
+
+    #endif
+    
     Archive archive_;
     Switches & switches_ = archive_.switches;
     volatile RunStatus run_status = RunStatus::INIT;
@@ -61,8 +63,6 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     real_t run_elecrad;
     real_t est_elecrad;
     real_t run_leadangle;
-
-    CtrlLimits ctrl_limits;
 
     CurrentCtrl::Config curr_config;
     CurrentCtrl curr_ctrl{curr_config};
@@ -127,6 +127,8 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     void parseTokens(const String & _command, const std::vector<String> & args) override;
 
     void parseCommand(const Command command, const CanMsg & msg) override;
+
+
 
 public:
 

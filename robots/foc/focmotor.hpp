@@ -1,6 +1,7 @@
 #pragma once
 
 #include "stepper/archive/archive.hpp"
+#include "stepper/ctrls/ctrls.hpp"
 
 class FOCMotor{ 
 public:
@@ -22,7 +23,7 @@ protected:
     };
 
     Measurements measurements;
-
+    CtrlLimits ctrl_limits;
     real_t target;
 
 public:

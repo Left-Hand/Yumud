@@ -2,6 +2,7 @@
 #include "imgtrans/img_trans.hpp"
 #include "match/match.hpp"
 #include "algo/interpolation/interpolation.hpp"
+#include "robots/foc/stepper/protocol/ascii_protocol.hpp"
 
 #include "types/float/bf16.hpp"
 

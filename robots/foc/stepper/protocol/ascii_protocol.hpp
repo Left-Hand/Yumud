@@ -1,0 +1,69 @@
+#pragma once
+
+#include "../stepper.hpp"
+
+#define read_value(value)\
+{\
+    CLI_PRINTS("get", #value, "\t\t is", value);\
+    break;\
+}
+
+
+
+#define trigger_method(method, ...)\
+{\
+    method(__VA_ARGS__);\
+    break;\
+}
+
+#define settle_method(method, args, type)\
+{\
+    if(args.size() == 0){\
+        DEBUG_PRINTS("no arg");\
+    }else if(args.size() == 1){\
+        method(type(args[0]));\
+        DEBUG_PRINTS("method: ", #method);\
+    }\
+    break;\
+}
+
+#define settle_value(value, args)\
+{\
+    ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
+    if(args.size() == 0){\
+        read_value(value);\
+    }else if(args.size() == 1){\
+        value = decltype(value)(args[0]);\
+        DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", args[0]);\
+    }\
+    break;\
+}\
+
+#define settle_positive_value(value, args)\
+{\
+    auto temp_value = decltype(value)(args[0]);\
+    ASSERT_WITH_RETURN((temp_value >= 0), "arg max should be greater than zero");\
+    if(args.size() == 0){\
+        read_value(value);\
+    }else if(args.size() == 1){\
+        value = temp_value;\
+        DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
+    }\
+    break;\
+}\
+
+
+#define settle_clamped_value(value, args, mi, ma)\
+{\
+    auto temp_value = decltype(value)(args[0]);\
+    ASSERT_WITH_RETURN((temp_value >= mi), "arg < ", mi, "\t failed to settle");\
+    ASSERT_WITH_RETURN((temp_value < ma), "arg >= ", ma, "\t failed to settle");\
+    if(args.size() == 0){\
+        read_value(value);\
+    }else if(args.size() == 1){\
+        value = temp_value;\
+        DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
+    }\
+    break;\
+}\
+

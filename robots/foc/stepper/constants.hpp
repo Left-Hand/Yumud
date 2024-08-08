@@ -27,34 +27,6 @@ static constexpr real_t inv_poles = real_t(1) / poles;
 
 static constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 
-
-// #define STEPPER_NO_PRINT
-
-#ifdef STEPPER_NO_PRINT
-#define CLI_PRINTS(...)
-#define ARCHIVE_PRINTS(...)
-#define CLI_DEBUG(...)
-#define COMMAND_DEBUG(...)
-#define RUN_DEBUG(...)
-
-#else
-#define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
-#define ARCHIVE_PRINTS(...) if(outen) logger.prints(__VA_ARGS__);
-
-#define CALI_DEBUG(...)\
-if(cali_debug_enabled){\
-logger.println(__VA_ARGS__);};
-
-#define COMMAND_DEBUG(...)\
-if(command_debug_enabled){\
-logger.println(__VA_ARGS__);};
-
-#define RUN_DEBUG(...)\
-if(run_debug_enabled){\
-logger.println(__VA_ARGS__);};
-
-#endif
-
 namespace StepperEnums{
 
     enum class RunStatus:uint8_t{

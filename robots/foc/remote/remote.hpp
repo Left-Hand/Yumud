@@ -21,8 +21,6 @@ protected:
     mutable real_t spd;
     mutable real_t pos;
     mutable real_t curr;
-
-    Range M_clamp{0,30};
 public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, const uint8_t _node_id):
             logger(_logger), can(_can), node_id(_node_id){;}
@@ -57,4 +55,5 @@ public:
     void triggerCali();
 
     void setNozzle(const real_t duty);
+    void readCan();
 };

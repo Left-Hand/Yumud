@@ -1,5 +1,5 @@
 #include "cli.hpp"
-
+#include "protocol/ascii_protocol.hpp"
 
 namespace StepperUtils{
 

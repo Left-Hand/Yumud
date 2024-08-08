@@ -9,7 +9,6 @@ using RunStatus = StepperEnums::RunStatus;
 #define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
 
 #define DEBUG_MSG(msg)
-// #define DEBUG_MSG(msg) DEBUG_PRINTS(msg)
 
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, __VA_ARGS__);\
@@ -22,12 +21,12 @@ bool RemoteFOCMotor::loadArchive(const bool outen){POST(Command::LOAD)return tru
 void RemoteFOCMotor::saveArchive(const bool outen){POST(Command::SAVE);}
 void RemoteFOCMotor::removeArchive(const bool outen){POST(Command::CLEAR);}
 
-void RemoteFOCMotor::setTargetVector(const real_t _pos){POST(Command::SET_TRG_VECT, E(M_clamp.clamp(_pos)));}
+void RemoteFOCMotor::setTargetVector(const real_t _pos){POST(Command::SET_TRG_VECT, E(ctrl_limits.pos_limit.clamp(_pos)));}
 void RemoteFOCMotor::freeze(){POST(Command::FREEZE);}
 void RemoteFOCMotor::setTargetCurrent(const real_t current){POST(Command::SET_TRG_CURR, E(current));}
 void RemoteFOCMotor::setTargetSpeed(const real_t speed){POST(Command::SET_TRG_SPD, E(speed));}
-void RemoteFOCMotor::setTargetPosition(const real_t _pos){POST(Command::SET_TRG_POS, E(M_clamp.clamp(_pos)));}
-void RemoteFOCMotor::setTargetTrapezoid(const real_t _pos){POST(Command::SET_TRG_TPZ, E(M_clamp.clamp(_pos)));}
+void RemoteFOCMotor::setTargetPosition(const real_t _pos){POST(Command::SET_TRG_POS, E(ctrl_limits.pos_limit.clamp(_pos)));}
+void RemoteFOCMotor::setTargetTrapezoid(const real_t _pos){POST(Command::SET_TRG_TPZ, E(ctrl_limits.pos_limit.clamp(_pos)));}
 void RemoteFOCMotor::setOpenLoopCurrent(const real_t current){POST(Command::SET_OPEN_CURR, E(current));}
 void RemoteFOCMotor::setCurrentLimit(const real_t max_current){POST(Command::SET_CURR_LMT, E(max_current));}
 void RemoteFOCMotor::locateRelatively(const real_t _pos){POST(Command::LOCATE, E(_pos));}
@@ -40,8 +39,7 @@ real_t RemoteFOCMotor::getPosition() const{POST(Command::GET_SPD); return pos;}
 real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return curr;}
 
 void RemoteFOCMotor::setPositionLimit(const Range & clamp){
-    M_clamp = clamp;
-    
+    ctrl_limits.pos_limit = clamp;
     POST(Command::SET_POS_LMT, std::pair<E,E>{clamp.from, clamp.to});
 }
 
@@ -53,3 +51,7 @@ void RemoteFOCMotor::setAccelLimit(const real_t max_acc){POST(Command::SET_ACC_L
 void RemoteFOCMotor::triggerCali(){POST(Command::TRG_CALI);}
 void RemoteFOCMotor::reset(){POST(Command::RST);}
 void RemoteFOCMotor::setNozzle(const real_t duty){POST(duty ? Command::NOZZLE_ON : Command::NOZZLE_OFF);}
+
+void RemoteFOCMotor::readCan(){
+
+}
