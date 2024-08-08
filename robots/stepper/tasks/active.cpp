@@ -14,8 +14,11 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
 
     measurements.pos = odo.getPosition();
     est_elecrad = odo.getElecRad();
+    static real_t temp;
+    // temp = (speed_estmator.update(measurements.pos) + temp * 1023) >> 10;
+    // measurements.spd = (temp + measurements.spd * 1023) >> 10;
     measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
-
+    
     if(init_flag){
         run_status = RunStatus::ACTIVE;
         svpwm.setCurrent(real_t(0), real_t(0));

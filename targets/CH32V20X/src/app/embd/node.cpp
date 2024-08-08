@@ -1,6 +1,6 @@
 #include "node.hpp"
 #include "robots/stepper/stepper.hpp"
-#include "robots/interpolation/interpolation.hpp"
+#include "robots/interpolation/cubic.hpp"
 #include "drivers/Actuator/Driver/AT8222/at8222.hpp"
 
 void node_main(){
@@ -61,8 +61,10 @@ void node_main(){
 
     while(!stp.isActive());
     stp.setTargetCurrent(real_t(0));
-    stp.setCurrentLimit(real_t(1.6));
+    stp.setCurrentLimit(real_t(1.5));
 
+    // CubicInterpolation cubic;
+    // cubic.mapping
     while(true){
         stp.run(); 
         stp.report();
@@ -73,12 +75,13 @@ void node_main(){
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
         // stp.setTargetPosition(5 *sin(t) * sin(t*9));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
-        // stp.setTargetPosition(500 * abs(frac(t/2) - 0.5));
+        // stp.setTargetPosition(3 * abs(frac(t*2) - real_t(0.5)));
+
         // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
         // stp.setTargetPosition(10 * sign(sin(t * 3)));
-        // stp.setTargetPosition(0.07 * sin(4 * t));
+        // stp.setTargetPosition(real_t(1.5) * sin(3 * t));
         // stp.setTargetSpeed(CLAMP(60 * sin(t * 3), 0, 30));
-        // stp.setTargetTrapezoid(7 * sin(t));
+        stp.setTargetTrapezoid(10 * sign(sin(3* t)));
         // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(40 * sin(t/2) + 20 * sign(sin(t/2)));

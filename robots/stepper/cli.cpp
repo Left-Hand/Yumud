@@ -28,7 +28,6 @@ std::vector<String> Cli::split_string(const String& input, char delimiter) {
 
 void Cli::parseTokens(const String & _command,const std::vector<String> & args){
     auto command = _command;
-    DEBUG_PRINTLN("cliparse", command, command.length());
     switch(hash_impl(command.c_str(), command.length())){
         case "reset"_ha:
         case "rst"_ha:

@@ -112,6 +112,8 @@ public:
 protected:
     SpeedEstimator::Config spe_config;
     SpeedEstimator targ_spd_est{spe_config};
+
+    real_t targ_spd = 0;
 public:
     PositionCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
         HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
@@ -119,6 +121,7 @@ public:
     void reset() override {
         config.reset();
         targ_spd_est.reset();
+        targ_spd = 0;
     }
 
     Result update(const real_t targ_position, const real_t real_position, 

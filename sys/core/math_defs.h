@@ -62,14 +62,14 @@
     #define MAX(a,...) __max_helper(a,__VA_ARGS__)
 
     template<typename First>
-    constexpr First __max_helper(First value) {
+    constexpr First __max_helper(const First & value) {
         return value;
     }
 
     template<typename First, typename Second, typename... Rest>
-    constexpr First __max_helper(First first, Second second, Rest... rest) 
-        First min_value = first > First(second) ? first : First(second);
-        return __max_helper(min_value, rest...);
+    constexpr First __max_helper(const First & first,const Second & second,const Rest & ... rest){
+        First max_value = first > First(second) ? first : First(second);
+        return __max_helper(max_value, rest...);
     }
 #else
     #define MAX(x,y) ((x > y) ? x : y)
@@ -82,12 +82,12 @@
 
 
     template<typename First>
-    constexpr First __min_helper(First value) {
+    constexpr First __min_helper(const First & value) {
         return value;
     }
 
     template<typename First, typename Second, typename... Rest>
-    constexpr First __min_helper(First first, Second second, Rest... rest) {
+    constexpr First __min_helper(const First & first,const Second & second,const Rest &... rest) {
         First min_value = first < First(second) ? first : First(second);
         return __min_helper(min_value, rest...);
     }
