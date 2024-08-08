@@ -29,7 +29,7 @@ real_t yFromT (real_t t, real_t E, real_t F, real_t G, real_t H){
 real_t liner(real_t t, real_t A, real_t B){
     return t * B + (1.0f - t) * A;
 }
-real_t cubicBezier(real_t x, const Vector2 & a,const Vector2 & b){
+real_t mapping(real_t x, const Vector2 & a,const Vector2 & b){
 
   real_t y0a = 0.0; // initial y
   real_t x0a = 0.0; // initial x 
@@ -102,7 +102,7 @@ real_t ss(){
     real_t yt = 0.0f;
 
     if((i == 0) || (i == 2) || (i == 4))
-        yt = cubicBezier(t, Vector2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vector2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
+        yt = mapping(t, Vector2{real_t(0.4f), 0.4f * turnSolver.va * temp}, Vector2(real_t(0.6f), 1.0f - 0.4f * turnSolver.vb * temp));
     else
         yt = t;
 

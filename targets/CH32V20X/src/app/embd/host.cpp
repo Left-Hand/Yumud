@@ -8,7 +8,6 @@
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
 
-using namespace Interpolation;
 using namespace NVCV2;
 
 #ifdef CH32V30X
@@ -251,7 +250,6 @@ void EmbdHost::main(){
     };
 
     do_home();
-    // do_idle({0,0});
 
     while(true){
         // run_led = (millis() / 200) % 2 == 0;
@@ -420,6 +418,7 @@ void EmbdHost::parseCommand(const uint8_t id, const Command &cmd, const CanMsg &
 void EmbdHost::parseTokens(const String & _command,const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
+    ch9141.println(_command, args);
     switch(hash_impl(command.c_str(), command.length())){
         case "exp"_ha:
             settle_method(camera.setExposureValue, args, int)

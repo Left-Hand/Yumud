@@ -1,5 +1,6 @@
 #include "node.hpp"
 #include "robots/stepper/stepper.hpp"
+#include "robots/interpolation/interpolation.hpp"
 #include "drivers/Actuator/Driver/AT8222/at8222.hpp"
 
 void node_main(){
@@ -53,8 +54,8 @@ void node_main(){
     can1.init(Can::BaudRate::Mbps1);
  
     stp.init();
-    stp.setSpeedLimit(30);
-    stp.setAccelLimit(20);
+    stp.setSpeedLimit(36);
+    stp.setAccelLimit(25);
     stp.setOpenLoopCurrent(real_t(0.5));
     stp.setCurrentLimit(real_t(0.4));
 
@@ -65,6 +66,8 @@ void node_main(){
     while(true){
         stp.run(); 
         stp.report();
+        // stp.setTargetPosition(Interpolation::demo() * 10);
+        // stp.setTargetPosition(17 * sin(2 * t));
         // Sys::Clock::reCalculateTime();
         // stp.setTargetPosition(4 * sin(t * 2) + sign(sin(t * 2)));
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
@@ -79,7 +82,7 @@ void node_main(){
         // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(40 * sin(t/2) + 20 * sign(sin(t/2)));
-        // stp.setTargetPosition(0.3 * sin(t));
+        // stp.setTargetPosition(real_t(0.3) * sin(t));
         // stp.setTargetVector(sin(t) * 0.5);
         // stp.setTargetPosition(4 * sign(sin(4 * t)));
     }
