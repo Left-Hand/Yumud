@@ -12,8 +12,8 @@
 
 #include "imgtrans/img_trans.hpp"
 
-#include "stepper/constants.hpp"
-#include "stepper/cli.hpp"
+#include "robots/foc/stepper/constants.hpp"
+#include "robots/foc/stepper/cli.hpp"
 
 #include "actions/actions.hpp"
 #include "machine/machine.hpp"

@@ -7,7 +7,7 @@
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 
-#include "robots/stepper/focmotor.hpp"
+#include "robots/foc/focmotor.hpp"
 #include "hal/timer/pwm/gpio_pwm.hpp"
 
 

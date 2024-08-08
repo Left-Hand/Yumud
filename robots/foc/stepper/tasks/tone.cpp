@@ -1,4 +1,4 @@
-#include "robots/stepper/stepper.hpp"
+#include "robots/foc/stepper/stepper.hpp"
 
 FOCStepper::RunStatus FOCStepper::beep_task(const FOCStepper::InitFlag init_flag){
     struct Tone{

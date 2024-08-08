@@ -2,7 +2,7 @@
 
 #include "action_concept.hpp"
 #include "action_queue.hpp"
-#include "../machine/machine_concepts.hpp"
+#include "robots/machine/machine_concepts.hpp"
 
 struct CombinedAction:public Action{
 protected:

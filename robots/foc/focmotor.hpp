@@ -1,10 +1,6 @@
 #pragma once
 
-#include "cli.hpp"
-#include "ctrls/ctrls.hpp"
-#include "observer/observer.hpp"
-#include "archive/archive.hpp"
-#include "../hal/adc/adcs/adc1.hpp"
+#include "stepper/archive/archive.hpp"
 
 class FOCMotor{ 
 public:

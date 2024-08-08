@@ -1,8 +1,8 @@
 #pragma once
 
-#include "stepper/focmotor.hpp"
-#include "stepper/constants.hpp"
-#include "stepper/cli.hpp"
+#include "robots/foc/focmotor.hpp"
+#include "robots/foc/stepper/constants.hpp"
+#include "robots/foc/stepper/cli.hpp"
 
 class RemoteFOCMotor:public FOCMotor{
 protected:

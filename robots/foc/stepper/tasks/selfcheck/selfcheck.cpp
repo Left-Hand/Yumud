@@ -1,4 +1,4 @@
-#include "../robots/stepper/stepper.hpp"
+#include "robots/foc/stepper/stepper.hpp"
 
 FOCStepper::RunStatus FOCStepper::check_task(const FOCStepper::InitFlag init_flag){
     static constexpr int subdivide_micros = 1024;

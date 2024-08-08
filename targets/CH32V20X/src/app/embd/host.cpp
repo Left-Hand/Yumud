@@ -1,7 +1,7 @@
 #include "host.hpp"
 #include "imgtrans/img_trans.hpp"
 #include "match/match.hpp"
-#include "interpolation/interpolation.hpp"
+#include "algo/interpolation/interpolation.hpp"
 
 #include "types/float/bf16.hpp"
 

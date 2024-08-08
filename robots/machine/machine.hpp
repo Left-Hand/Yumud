@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../robots/stepper/remote/remote.hpp"
+#include "robots/foc/remote/remote.hpp"
 #include "machine_concepts.hpp"
 
 struct Joint{

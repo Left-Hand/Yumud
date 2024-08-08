@@ -1,6 +1,6 @@
 #include "node.hpp"
-#include "robots/stepper/stepper.hpp"
-#include "robots/interpolation/cubic.hpp"
+#include "robots/foc/stepper/stepper.hpp"
+#include "algo/interpolation/cubic.hpp"
 #include "drivers/Actuator/Driver/AT8222/at8222.hpp"
 
 void node_main(){
@@ -81,7 +81,7 @@ void node_main(){
         // stp.setTargetPosition(10 * sign(sin(t * 3)));
         // stp.setTargetPosition(real_t(1.5) * sin(3 * t));
         // stp.setTargetSpeed(CLAMP(60 * sin(t * 3), 0, 30));
-        stp.setTargetTrapezoid(10 * sign(sin(3* t)));
+        // stp.setTargetTrapezoid(10 * sign(sin(3* t)));
         // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(40 * sin(t/2) + 20 * sign(sin(t/2)));
