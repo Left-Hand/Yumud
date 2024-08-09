@@ -4,7 +4,8 @@ static constexpr size_t str_int_size = 16;
 static constexpr size_t str_float_size = 16;
 
 
-static void conv(char * str_int, char * str_frac, const _iq value, const uint8_t eps = 3){
+static void conv(char * str_int, char * str_frac, const _iq value, uint8_t eps = 3){
+    eps = MIN(eps, 5);
     uint32_t abs_value = value > 0 ? value : -value;
     uint32_t int_part = abs_value >> GLOBAL_Q;
     uint32_t float_part = abs_value & ((1 << GLOBAL_Q )- 1);

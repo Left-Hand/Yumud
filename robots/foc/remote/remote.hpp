@@ -61,4 +61,11 @@ public:
     void setNozzle(const real_t duty);
     void parseCan(const CanMsg & msg);
     void parseCommand(const NodeId id, const Command cmd, const CanMsg &msg);
+
+    bool stable() const {
+        return ABS(readSpeed()) < real_t(0.07);
+    }
+    bool reached(const real_t targ_pos) const {
+        return (ABS(readPosition() - targ_pos) < real_t(0.2)) and stable();
+    }
 };

@@ -13,7 +13,7 @@
 
 #ifdef CH32V30X
 #define CLI_REPLY(cmd, ...) ch9141.prints(cmd, ##__VA_ARGS__)
-#define CLI_PRINTS(...) CLI_DEBUG(__VA_ARGS__)
+#define CLI_PRINTS(...) CLI_DEBUG(__VA_ARGS__) ch91
 #elif defined(CH32V203)
 #define CLI_REPLY(cmd, ...) logger.prints(cmd, ##__VA_ARGS__)
 #define CLI_PRINTS(...) CLI_DEBUG(__VA_ARGS__)

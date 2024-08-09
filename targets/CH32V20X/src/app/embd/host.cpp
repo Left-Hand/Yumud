@@ -9,7 +9,9 @@
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
 
-#include "actions/move_actions.hpp"
+#include "motions/move.hpp"
+#include "motions/pickdrop.hpp"
+
 using namespace NVCV2;
 
 #ifdef CH32V30X
@@ -18,99 +20,44 @@ using namespace NVCV2;
 void EmbdHost::do_pick(const Vector2 & from){
     actions
     << CombinedAction(
-        RapidMoveAction(steppers, from, 1600)
-        , Action([&](){
-            steppers.nz(true);
-            steppers.z_pick();
-        }, 1300)
-        ,Action([&](){
-            steppers.z_hold();
-        }, 1500)
+        TrapezoidMoveAction(steppers, from)
+        , PickAction(steppers)
+        , HoldAction(steppers)
     );
 }
 
 
-void EmbdHost::do_drop(const Vector2 & to){
+void EmbdHost::do_place(const Vector2 & to){
     actions
     << CombinedAction(
-        RapidMoveAction(steppers, to, 1200)
-        , Action([&](){
-            steppers.z_place();
-        }, 1200)
-
-        ,Action([&](){
-            steppers.nz(false);
-        }, 350)
-
-        ,Action([&](){
-            steppers.z_idle();
-        }, 1400)
+        TrapezoidMoveAction(steppers, to)
+        , PlaceAction(steppers)
+        , FloatAction(steppers)
     ); 
 }
 
 
 void EmbdHost::do_idle(const Vector2 & to){
 
-    if(steppers.last_z_mm > 30 || steppers.last_z_mm < 10){
-        actions << Action([&](){
-            steppers.nz(false);
-            steppers.z_idle();
-        }, 1400);
-    }
-
     actions
-    << CombinedAction(
-        Action([&](){
-            steppers.nz(false);
-            this->busy_led.set();
-        }, 0)
-
-        , RapidMoveAction(steppers, to, 1600)
-        , Action([&](){
-            this->busy_led.clr();
-        }, 0)
-    );
+    << TrapezoidMoveAction(steppers, to);
 }
 
-void EmbdHost::do_blink(const uint dur){  
-    actions
-
-    << CombinedAction{
-        Action([this](){
-            busy_led = false;
-        }, 200),
-
-        Action([this](){
-            busy_led = true;
-        }, 200),
-
-        Action([this](){
-            busy_led = false;
-        }, 200),
-
-        Action([this](){
-            busy_led = true;
-        }, 200),
-
-        Action([this](){
-            busy_led = false;
-        }, 200),
-    }
-    ; 
-}
 
 void EmbdHost::do_move(const Vector2 & from, const Vector2 & to){
     do_pick(from);
-    do_drop(to);
+    do_place(to);
 }
 
 void EmbdHost::main(){
-    delay(200);
+    resetSlave();
+    delay(900);
 
     auto & lcd_blk = portC[7];
     auto & spi = spi2;
     
     run_led.outpp();
+    empty_led.outpp();
     busy_led.outpp();
     lcd_blk.outpp(1);
 
@@ -219,24 +166,47 @@ void EmbdHost::main(){
 
 
     auto do_home = [&](){
-        actions += Action([&](){steppers.nz(false);}, 600);
+        // actions += PickAction(steppers);
+        // actions += Action([&](){
+        //     steppers.x.setTargetCurrent(real_t(-0.45));
+        //     steppers.y.setTargetCurrent(real_t(-0.45));
+        //     steppers.z.setTargetCurrent(real_t(-0.75));
+        // }, 7000);
+
+        // actions += Action([&](){
+        //     steppers.x.locateRelatively(0);
+        //     steppers.y.locateRelatively(0);
+        //     steppers.z.locateRelatively(0);
+        // });
+
+        // do_idle({20, 60});
         actions += Action([&](){
             steppers.x.setTargetCurrent(real_t(-0.45));
             steppers.y.setTargetCurrent(real_t(-0.45));
-            steppers.z.setTargetCurrent(real_t(-0.75));
-        }, 7000);
+            steppers.z.setTargetCurrent(real_t(-0.95));
+        }, 4400);
 
         actions += Action([&](){
             steppers.x.locateRelatively(0);
             steppers.y.locateRelatively(0);
             steppers.z.locateRelatively(0);
         });
+        actions += FloatAction(steppers);
+        // do_idle()
 
-
-        do_idle({20, 60});
     };
 
     do_home();
+    // actions << TrapezoidInterpolationAction(steppers, {100, 0});
+    // actions << RapidMoveAction(steppers, {100, 0});
+    // actions << LineMoveAction(steppers, {100, 0});
+    // actions << TrapezoidMoveAction(steppers, {100, 0});
+    // actions << TrapezoidMoveAction(steppers, {400, 0});
+    // actions << TrapezoidMoveAction(steppers, {100, 0});
+    // actions << TrapezoidMoveAction(steppers, {180, 0});
+    // actions << TrapezoidMoveAction(steppers, {160, 0});
+
+
 
     while(true){
 
@@ -383,7 +353,7 @@ void EmbdHost::main(){
 
         // plot_rgb(sketch, {0,0});
 
-        DEBUG_PRINTLN(steppers.x.readPosition(), steppers.y.readPosition(), steppers.z.readPosition());
+        DEBUG_PRINTLN(steppers.x_axis.readMM(), steppers.y_axis.readMM(), steppers.z_axis.readMM());
         static uint last_turn = 0;
         uint this_turn = millis() / 100;
         if(last_turn != this_turn){
@@ -392,7 +362,7 @@ void EmbdHost::main(){
             last_turn = this_turn;
             run_led = !run_led;
         }
-
+        busy_led = actions.pending();
 
     }
 }
@@ -404,10 +374,13 @@ void EmbdHost::parseCommand(const NodeId id, const Command cmd, const CanMsg &ms
 }
 
 
-void EmbdHost::reset(){
+void EmbdHost::resetSlave(){
     steppers.x.reset();
     steppers.y.reset();
     steppers.z.reset();
+}
+void EmbdHost::resetAll(){
+    resetSlave();
     delay(10);
     Sys::Misc::reset();
 }
@@ -418,22 +391,7 @@ void EmbdHost::cali(){
 
 
 void EmbdHost::run() {
-
     act();
-    // const real_t ang1 = 4 * t;
-    // const real_t ang2 = 3 * t;
-    // const real_t amp = 2;
-    // steppers.x.setTargetPosition(amp * sin(ang1));
-    // steppers.y.setTargetPosition(amp * cos(ang2));
-    // steppers.z.setTargetPosition(4 + sin(t));
-    // logger.println("why");
-    // steppers.y.setTargetCurrent(sign(sin(8 * t)));
-    // logger.println(steppers.y.getSpeed());
-    
-    // steppers.z.setTargetPosition(ss());
-    // logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
-    // can.write(CanMsg{0x70});
-
 }
 
 void EmbdHost::set_demo_method(const ActMethod new_method){

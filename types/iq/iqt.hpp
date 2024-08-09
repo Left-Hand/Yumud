@@ -139,11 +139,11 @@ public:
     }
 
     __fast_inline constexpr bool operator==(const iq_t other) const {
-        return value == static_cast<iq_t>(other).value;
+        return value == other.value;
     }
 
     __fast_inline constexpr bool operator!=(const iq_t other) const {
-        return value != static_cast<iq_t>(other).value;
+        return value != other.value;
     }
 
     __fast_inline constexpr bool operator>(const iq_t other) const {
@@ -151,15 +151,15 @@ public:
     }
 
     __fast_inline constexpr bool operator<(const iq_t other) const {
-        return value < iq_t(other).value;
+        return value < other.value;
     }
 
     __fast_inline constexpr bool operator>=(const iq_t other) const {
-        return value >= static_cast<iq_t>(other).value;
+        return value >= other.value;
     }
 
     __fast_inline constexpr bool operator<=(const iq_t other) const {
-        return value <= static_cast<iq_t>(other).value;
+        return value <= other.value;
     }
 
     __fast_inline_constexpr iq_t operator<<(int shift) const {

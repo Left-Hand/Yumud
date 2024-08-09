@@ -4,7 +4,6 @@
 void EmbdHost::parseTokens(const String & _command,const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
-    ch9141.println(_command, args);
     switch(hash_impl(command.c_str(), command.length())){
         case "exp"_ha:
             settle_method(camera.setExposureValue, args, int)
@@ -139,7 +138,7 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
         case "sv"_ha:
             trigger_method(steppers.w.saveArchive, true);
         case "rst"_ha:
-            trigger_method(reset);
+            trigger_method(resetAll);
         case "nne"_ha:
             trigger_method(set_demo_method, ActMethod::NONE);
         case "hui"_ha:
@@ -159,6 +158,8 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
         case "frz"_ha:
             trigger_method(stepper_w.freeze);
 
+        case "busy"_ha:
+            
         case "idle"_ha:
             if(args.size() == 2){
                 do_idle({args[0], args[1]});
@@ -175,7 +176,7 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
 
         case "drop"_ha:
             if(args.size() == 2){
-                do_drop({args[0], args[1]});
+                do_place({args[0], args[1]});
             }
             break;
 

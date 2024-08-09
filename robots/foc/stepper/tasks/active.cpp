@@ -32,7 +32,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
 
         switch(ctrl_type){
             case CtrlType::CURRENT:
-                result = {ABS(target), SIGN_AS(real_t(PI / 2), target)};
+                result = {ABS(target), SIGN_AS(real_t(PI / 2) *real_t(1.3), target)};
                 break;
             case CtrlType::VECTOR:
                 result = {ctrl_limits.max_curr, 0};

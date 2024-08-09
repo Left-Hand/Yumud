@@ -18,7 +18,7 @@ uint8_t FOCStepper::getDefaultNodeId(){
         case 4079188777:
             return 1;
         case 0x551C4DEA:
-            return  1;
+            return  3;
         default:
             return 0;
     }

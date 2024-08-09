@@ -90,7 +90,7 @@ void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)
 			str[i] = value%radix +'0';
 		i++;
 	}while((value/=radix)>0 && i < size);
-	for(;i<= size; i++)str[i] = '0';
+	for(;i< size; i++)str[i] = '0';
 	reverse_str(str, size);
 }
 

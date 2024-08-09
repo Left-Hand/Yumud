@@ -54,6 +54,20 @@ public:
     size_t pending() const {return action_queue.size();}
 };
 
+struct ClearAction:public Action{
+protected:
+    using M_Queue = ActionQueue;
+
+    M_Queue & queue;
+    void execute() override {}
+    SpecialActionType special() const override {
+        return SpecialActionType::ABORT;
+    }
+public:
+    ClearAction(M_Queue & _queue):Action(nullptr, 0), queue(_queue){}
+};
+
+
 struct AbortAction:public Action{
 protected:
     using M_Queue = ActionQueue;
@@ -66,4 +80,18 @@ protected:
     }
 public:
     AbortAction(M_Queue & _queue):Action(nullptr, 0), queue(_queue){}
+};
+
+struct DelayAction:public Action{
+protected:
+    using M_Queue = ActionQueue;
+
+    M_Queue & queue;
+
+    void execute() override {}
+    SpecialActionType special() const override {
+        return SpecialActionType::DELAY;
+    }
+public:
+    DelayAction(M_Queue & _queue, const uint dur):Action(nullptr, dur), queue(_queue){}
 };

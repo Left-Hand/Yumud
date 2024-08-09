@@ -47,6 +47,7 @@ class EmbdHost:public CliAP{
 
     Gpio & run_led = portC[14];
     Gpio & busy_led = portC[15];
+    Gpio & empty_led = portC[13];
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),
@@ -65,15 +66,14 @@ public:
     void parseTokens(const String & _command,const std::vector<String> & args);
     void main();
     void run();
-    void reset();
+    void resetSlave();
+    void resetAll();
     void cali();
 
     void do_move(const Vector2 & from, const Vector2 & to);
     void do_pick(const Vector2 & from);
-    void do_drop(const Vector2 & to);
-
+    void do_place(const Vector2 & to);
     void do_idle(const Vector2 & to);
-    void do_blink(const uint dur);
 
 
     enum class ActMethod{

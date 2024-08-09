@@ -141,7 +141,7 @@ public:
     OutputStream & operator<<(const SpecToken & spec);
 
     OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
-    OutputStream& operator<<(const std::_Setprecision & n){setEps(n._M_n); skip_split = true; return *this;}
+    OutputStream& operator<<(const std::_Setprecision & n){eps_ = n._M_n; skip_split = true; return *this;}
 
     template<typename T, size_t size>
     OutputStream & operator<<(const T (&arr)[size]){

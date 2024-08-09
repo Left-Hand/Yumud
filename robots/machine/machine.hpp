@@ -3,33 +3,8 @@
 #include "robots/foc/remote/remote.hpp"
 #include "machine_concepts.hpp"
 
-struct Joint{
-};
 
-struct Axis{
-
-};
-
-struct Machine:public Cantilever, public Nozzle_Machine{
-protected:
-
-    static constexpr real_t x_scale = real_t(1.0)/40;
-    static constexpr real_t y_scale = real_t(1.0)/40;
-    static constexpr real_t z_scale = real_t(1.0)/2;
-
-    static constexpr uint pick_z = 49;
-    static constexpr uint hold_z = 25;
-    static constexpr uint place_z = 49;
-    static constexpr uint idle_z = 25;
-
-    void x_mm(const real_t _x) override {
-        x.setTargetTrapezoid(_x*x_scale);
-    }
-
-    void y_mm(const real_t _y) override {
-        y.setTargetTrapezoid(_y*y_scale);
-    }
-
+struct Machine:public XY_Machine, public Nozzle_Machine{
 public:
     RemoteFOCMotor & w;
     RemoteFOCMotor & x;
@@ -40,7 +15,15 @@ public:
         RemoteFOCMotor & _x,
         RemoteFOCMotor & _y,
         RemoteFOCMotor & _z
-    ):w(_w), x(_x), y(_y), z(_z){;}
+    ):
+    XY_Machine(
+        Axis(_x, real_t(1.0/40), {0, 230}),
+        Axis(_y, real_t(1.0/40), {0, 180})),
+
+    Nozzle_Machine(
+        Axis(_z, real_t(1.0/2), {0, 50}))
+        
+    ,w(_w), x(_x), y(_y), z(_z){;}
 
     RemoteFOCMotor & operator [](const uint8_t index){
         switch(index){
@@ -56,32 +39,20 @@ public:
                 return w;
         }
     }
-    void z_mm(const real_t _z) override {
-        z.setTargetPosition(_z * z_scale);
-    }
-
-
-    real_t last_z_mm;
-    void zt_mm(const real_t _z){
-        z.setTargetTrapezoid(_z * z_scale);
-        last_z_mm = _z;
-        
-    }
     void z_pick(){
-        zt_mm(pick_z);
+        z_mm(pick_z);
     }
     void z_hold(){
-        zt_mm(hold_z);
+        z_mm(hold_z);
     }
     void z_place(){
-        zt_mm(place_z);
+        z_mm(place_z);
     }
     void z_idle(){
-        zt_mm(idle_z);
+        z_mm(idle_z);
     }
 
-
-    void nz(const bool en){
-        w.setNozzle(en ? real_t(1) : real_t(0));
+    void nz(const real_t duty) override {
+        w.setNozzle(duty);
     }
 };

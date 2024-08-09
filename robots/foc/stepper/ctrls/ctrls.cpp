@@ -18,8 +18,8 @@ void CtrlLimits::reset(){
 void PositionCtrl::Config::reset(){
     // kp = 5;
     // kd = real_t(0.57);
-    kp = 3;
-    kd = real_t(0.17);
+    kp = real_t(5.6);
+    kd = real_t(0.22);
 }
 
 void SpeedCtrl::Config::reset(){
@@ -70,7 +70,7 @@ Result PositionCtrl::update(const real_t targ_pos, const real_t real_pos,
         }else{
             #define SAFE_OVERLOAD_RAD(__curr,__spd,__pos_abs_err)\
                     MIN(\
-                    __curr * __curr + real_t(0.2)\
+                    __curr * __curr * real_t(0.4) + real_t(0.2)\
                     ,max_raddiff - basic_raddiff)\
 
             real_t abs_raddiff = (basic_raddiff + SAFE_OVERLOAD_RAD(curr_ctrl.current_output, abs_spd, abs_pos_err)) * hpi;

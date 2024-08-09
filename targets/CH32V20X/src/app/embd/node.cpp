@@ -76,6 +76,7 @@ void node_main(){
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
         // stp.setTargetPosition(5 *sin(t) * sin(t*5));
         // stp.setTargetPosition(frac(t));
+        // stp.setTargetPosition(7*sin(t));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
         // stp.setTargetPosition(3 * abs(frac(t*2) - real_t(0.5)));
 
