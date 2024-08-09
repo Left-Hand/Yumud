@@ -1,13 +1,11 @@
 #include "../stepper.hpp"
 #include "can_protocol.hpp"
-#include "types/float/bf16.hpp"
 
 
 void FOCStepper::parseCommand(const Command command, const CanMsg & msg){
-    const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
+    using namespace CANProtocolUtils;
 
-    using E = bf16;
-    using E_2 = std::tuple<E, E>;
+    const uint16_t tx_id = (((uint16_t)(node_id) << 7) | (uint8_t)(command));
 
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
     case cmd:\
@@ -26,12 +24,12 @@ void FOCStepper::parseCommand(const Command command, const CanMsg & msg){
 
     #define SET_METHOD_BIND_ONE(cmd, method) SET_METHOD_BIND_TYPE(cmd, method, E)
 
-    #define GET_BIND_VALUE(cmd, value)\
-        case cmd:\
-            if(msg.isRemote()){\
-                can.write(CanMsg(tx_id, value));\
-            }\
-            break;\
+    #define GET_BIND_VALUE(cmd, ...)\
+    case cmd:\
+        if(msg.isRemote()){\
+            can.write(CanMsg(tx_id, __VA_ARGS__));\
+        }\
+        break;\
     
     switch(command){
 
@@ -51,9 +49,10 @@ void FOCStepper::parseCommand(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_ONE(   Command::SET_SPD_LMT,   setSpeedLimit)
         SET_METHOD_BIND_ONE(   Command::SET_ACC_LMT,   setAccelLimit)
 
-        GET_BIND_VALUE(         Command::GET_POS,       measurements.pos)
-        GET_BIND_VALUE(         Command::GET_SPD,       measurements.spd)
+        GET_BIND_VALUE(         Command::GET_POS,       getPosition())
+        GET_BIND_VALUE(         Command::GET_SPD,       getSpeed())
         GET_BIND_VALUE(         Command::GET_ACC,       0)//TODO
+        GET_BIND_VALUE(         Command::GET_CURR,       getCurrent())
 
         SET_METHOD_BIND_EXECUTE(Command::TRG_CALI,          triggerCali)
 

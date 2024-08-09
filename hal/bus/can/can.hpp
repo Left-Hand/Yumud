@@ -45,8 +45,11 @@ public:
      */
     bool write(const CanMsg & msg) override;
     const CanMsg & read() override;
+    const CanMsg & front();
     size_t pending();
     size_t available();
+
+    void clear(){while(this->available()){this->read();}}
 
     bool isTranmitting();
     bool isReceiving();

@@ -15,8 +15,8 @@
 #include "robots/foc/stepper/constants.hpp"
 #include "robots/foc/stepper/cli.hpp"
 
-#include "actions/actions.hpp"
 #include "machine/machine.hpp"
+#include "actions/action_queue.hpp"
 
 #ifdef CH32V30X
 using StepperUtils::CliAP;

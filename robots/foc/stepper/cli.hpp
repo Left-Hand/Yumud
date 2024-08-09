@@ -5,10 +5,20 @@
 #include "sys/core/system.hpp"
 #include "constants.hpp"
 #include "statled.hpp"
-
 #include "hal/bus/can/can.hpp"
 
 namespace StepperUtils{
+
+    template<integral T>
+    struct NodeId_t{
+        T id_;
+
+        NodeId_t(const T _id):id_(_id){
+        }
+        operator T() const{return id_;}
+    };
+
+    using NodeId =  NodeId_t<uint8_t>;
     class Cli{
     private:
         std::vector<String> split_string(const String& input, char delimiter);
@@ -16,10 +26,10 @@ namespace StepperUtils{
     protected:
         IOStream & logger;
         Can & can;
-        uint8_t node_id;
+        NodeId node_id;
         using Command = StepperEnums::Command;
     public:
-        Cli(IOStream & _logger, Can & _can, const uint8_t _node_id):logger(_logger), can(_can), node_id(_node_id){;}
+        Cli(IOStream & _logger, Can & _can, const NodeId _node_id):logger(_logger), can(_can), node_id(_node_id){;}
 
         #define VNAME(x) #x
 
@@ -36,12 +46,12 @@ namespace StepperUtils{
             const CanMsg & msg = can.read();
             uint8_t id = msg.id() >> 7;
             Command cmd = (Command)(msg.id() & 0x7F);
-            if(id == 0 || id == node_id){
+            if(id == 0 || id == uint8_t(node_id)){
                 parseCommand(cmd, msg);
             }
     }
         }
-        CliSTA(IOStream & _logger, Can & _can, const uint8_t _node_id):Cli(_logger, _can, _node_id){;}
+        CliSTA(IOStream & _logger, Can & _can, const NodeId _node_id):Cli(_logger, _can, _node_id){;}
         virtual void parseCommand(const Command command, const CanMsg & msg){
             switch(command){
                 case Command::RST:

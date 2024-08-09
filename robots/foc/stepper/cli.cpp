@@ -32,15 +32,15 @@ void Cli::parseTokens(const String & _command,const std::vector<String> & args){
         case "reset"_ha:
         case "rst"_ha:
         case "r"_ha:
-            CLI_PRINTS("rsting");
+            CLI_DEBUG("rsting");
             NVIC_SystemReset();
             break;
         case "alive"_ha:
         case "a"_ha:
-            CLI_PRINTS("chip is alive");
+            CLI_DEBUG("chip is alive");
             break;
         default:
-            CLI_PRINTS("no command available:", command);
+            CLI_DEBUG("no command available:", command);
             break;
     }
 }

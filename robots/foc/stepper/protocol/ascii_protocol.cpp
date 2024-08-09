@@ -21,7 +21,7 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             {
                 real_t val = args.size() ? int(args[0]) : 0;
                 setNozzle(val);
-                CLI_PRINTS("set nozzle to:",val);
+                CLI_DEBUG("set nozzle to:",val);
             }
             break;
 
@@ -36,9 +36,9 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             if(args.size()){
                 real_t spd = real_t(args[0]);
                 setTargetSpeed(spd);
-                CLI_PRINTS("targ speed\t", spd, " n/s");
+                CLI_DEBUG("targ speed\t", spd, " n/s");
             }else{
-                CLI_PRINTS("curr speed\t", getSpeed(), " n/s");
+                CLI_DEBUG("curr speed\t", getSpeed(), " n/s");
             }
             break;
 
@@ -48,9 +48,9 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             if(args.size()){
                 real_t val = real_t(args[0]);
                 setTargetPosition(val);
-                CLI_PRINTS("targ position\t", val, " n");
+                CLI_DEBUG("targ position\t", val, " n");
             }else{
-                CLI_PRINTS("now position", getPosition(), " n");
+                CLI_DEBUG("now position", getPosition(), " n");
             }
             break;
 
@@ -59,14 +59,14 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             if(args.size()){
                 real_t val = real_t(args[0]);
                 setTargetTrapezoid(val);
-                CLI_PRINTS("targ position\t", val, " n");
+                CLI_DEBUG("targ position\t", val, " n");
             }else{
-                CLI_PRINTS("now position\t", getPosition(), " n");
+                CLI_DEBUG("now position\t", getPosition(), " n");
             }
             break;
 
         case "stable"_ha:
-            CLI_PRINTS(odo.encoder.stable());
+            CLI_DEBUG(odo.encoder.stable());
             break;
 
         case "curr"_ha:
@@ -74,9 +74,9 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             if(args.size()){
                 real_t val = real_t(args[0]);
                 setTargetCurrent(val);
-                CLI_PRINTS("targ current\t", val, " n");
+                CLI_DEBUG("targ current\t", val, " n");
             }else{
-                CLI_PRINTS("now current\t", getCurrent(), " n");
+                CLI_DEBUG("now current\t", getCurrent(), " n");
             }
             break;
 
@@ -85,12 +85,12 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             if(args.size()){
                 auto v = real_t(args[0]);
                 setTargetVector(v);
-                CLI_PRINTS("targ vector\t", v, " n");
+                CLI_DEBUG("targ vector\t", v, " n");
             }
             break;
 
         case "crc"_ha:
-            CLI_PRINTS(Sys::Chip::getChipIdCrc());
+            CLI_DEBUG(std::hex, Sys::Chip::getChipIdCrc());
             break;
 
         case "eleczero"_ha:
@@ -102,25 +102,25 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
 
         case "error"_ha:
         case "err"_ha:
-            if(error_message) {CLI_PRINTS(error_message)}
-            else {CLI_PRINTS("no error")}
+            if(error_message) {CLI_DEBUG(error_message)}
+            else {CLI_DEBUG("no error")}
             break;
 
         case "warn"_ha:
         case "wa"_ha:
-            if(warn_message) {CLI_PRINTS(warn_message)}
-            else {CLI_PRINTS("no warn")}
+            if(warn_message) {CLI_DEBUG(warn_message)}
+            else {CLI_DEBUG("no warn")}
             break;
 
         case "enable"_ha:
         case "en"_ha:
         case "e"_ha:
             rework();
-            CLI_PRINTS("enabled");
+            CLI_DEBUG("enabled");
             break;
         
         case "exe"_ha:
-            CLI_PRINTS("exe", exe_micros, "us");
+            CLI_DEBUG("exe", exe_micros, "us");
             break;
 
         case "disable"_ha:
@@ -128,12 +128,12 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
         case "de"_ha:
         case "d"_ha:
             shutdown();
-            CLI_PRINTS("disabled");
+            CLI_DEBUG("disabled");
             break;
 
         case "cali"_ha:
             cali_task(true);
-            CLI_PRINTS("cali started");
+            CLI_DEBUG("cali started");
             break;
 
         case "locate"_ha:
@@ -141,7 +141,7 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
         {
             real_t loc = args.size() ? real_t(args[0]) : 0;
             locateRelatively(loc);
-            CLI_PRINTS("located to", loc);
+            CLI_DEBUG("located to", loc);
         }
             break;
 
@@ -150,44 +150,44 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             break;
 
         case "id"_ha:
-            CLI_PRINTS("node id is: ", node_id);
+            CLI_DEBUG("node id is: ", uint8_t(node_id));
             break;
 
         case "rd"_ha:
             run_debug_enabled = args.size() ? int(args[0]) : true;
-            CLI_PRINTS("run debug enabled:", run_debug_enabled);
+            CLI_DEBUG("run debug enabled:", run_debug_enabled);
             break;
 
         case "cl"_ha:{
             auto cl = args.size() ? real_t(args[0]) : 0;
-            CLI_PRINTS("current clamp:", cl);
+            CLI_DEBUG("current clamp:", cl);
         }
             break;
 
         case "status"_ha:
         case "stat"_ha:
-            CLI_PRINTS("current status:", int(run_status));
+            CLI_DEBUG("current status:", int(run_status));
             break;
 
         case "shutdown"_ha:
         case "shut"_ha:
             shutdown();
-            CLI_PRINTS("shutdown ok");
+            CLI_DEBUG("shutdown ok");
             break;
 
         case "cd"_ha:
-            CLI_PRINTS("dir changed");
+            CLI_DEBUG("dir changed");
             elecrad_zerofix = real_t(PI);
             break;
 
         case "hlt"_ha:
-            CLI_PRINTS("halt");
+            CLI_DEBUG("halt");
             CREATE_FAULT;
             break;
 
         case "map"_ha:
             for(const auto & item : odo.map()){
-                CLI_PRINTS(item);
+                CLI_DEBUG(item);
                 delay(1);
             }
             break;
@@ -196,7 +196,7 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
         case "ver"_ha:
             break;
         case "info"_ha:
-            CLI_PRINTS(archive_.board_info);
+            CLI_DEBUG(archive_.board_info);
             break;
         default:
             CliSTA::parseTokens(command, args);

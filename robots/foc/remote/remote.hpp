@@ -6,10 +6,10 @@
 
 class RemoteFOCMotor:public FOCMotor{
 protected:
+
     using ExitFlag = StepperEnums::ExitFlag;
     using InitFlag = StepperEnums::InitFlag;
-
-    using Range = Range_t<real_t>;
+    using NodeId = StepperUtils::NodeId;
 
     using RunStatus = StepperEnums::RunStatus;
 
@@ -22,7 +22,7 @@ protected:
     mutable real_t pos;
     mutable real_t curr;
 public:
-    RemoteFOCMotor(IOStream & _logger, Can & _can, const uint8_t _node_id):
+    RemoteFOCMotor(IOStream & _logger, Can & _can, const NodeId _node_id):
             logger(_logger), can(_can), node_id(_node_id){;}
 
     bool loadArchive(const bool outen);

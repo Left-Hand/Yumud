@@ -20,6 +20,7 @@ struct CtrlResult{
 
 struct CtrlLimits{
     Range pos_limit;
+    real_t max_curr;
     real_t max_spd;
     int max_acc;
 
@@ -33,19 +34,19 @@ public:
     struct Config{
         real_t curr_slew_rate;
         real_t rad_slew_rate;
-        real_t curr_limit;
         real_t openloop_curr;
 
         void reset();
     };
 
+    CtrlLimits & limits;
     Config & config;
 
 CURR_SPEC:
 public:
     real_t current_output = 0;
     real_t raddiff_output = 0;
-    CurrentCtrl(Config & _config):config(_config){reset();}
+    CurrentCtrl(CtrlLimits & _limits, Config & _config):limits(_limits), config(_config){reset();}
 
     void reset(){
         config.reset();

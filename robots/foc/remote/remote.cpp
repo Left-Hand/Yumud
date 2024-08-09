@@ -8,14 +8,13 @@ using RunStatus = StepperEnums::RunStatus;
 
 #define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
 
-#define DEBUG_MSG(msg)
+// #define DEBUG_MSG(msg)
+#define DEBUG_MSG(msg) DEBUG_PRINTLN(msg)
 
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, __VA_ARGS__);\
 DEBUG_MSG(msg);\
 can.write(msg);\
-
-
 
 bool RemoteFOCMotor::loadArchive(const bool outen){POST(Command::LOAD)return true;}
 void RemoteFOCMotor::saveArchive(const bool outen){POST(Command::SAVE);}

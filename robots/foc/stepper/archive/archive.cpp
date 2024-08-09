@@ -47,7 +47,7 @@ bool FOCStepper::loadArchive(const bool outen){
             elecrad_zerofix = 0;
         }
 
-        setNodeId(archive.node_id);
+        // setNodeId(archive.node_id);
         
         memcpy(&archive_, &archive, sizeof(archive));
         ARCHIVE_PRINTS("load successfully!");
@@ -78,7 +78,7 @@ void FOCStepper::saveArchive(const bool outen){
         archive.cali_map[i] = item_i;
     }
 
-    archive.node_id = node_id;
+    archive.node_id = uint8_t(node_id);
 
     ARCHIVE_PRINTS("generate done");
     ARCHIVE_PRINTS("hash of archive is ", hashcode);

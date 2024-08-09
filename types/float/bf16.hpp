@@ -12,8 +12,8 @@ struct bf16 {
 			uint16_t frac:7;
 			uint16_t exp:8;
 			uint16_t sign:1;
-        }__packed;
-	}__packed;
+        };
+	};
 
     constexpr bf16(){;}
     constexpr bf16(const bf16 & other):raw(other.raw){;}
@@ -32,4 +32,4 @@ struct bf16 {
     constexpr operator real_t() const {
         return real_t::form(float(*this));
     }
-} __attribute__((__packed__));
+};

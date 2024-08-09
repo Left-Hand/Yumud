@@ -1,14 +1,29 @@
 #pragma once
 
-#include "../stepper.hpp"
+#include "sys/core/platform.h"
+
+#define CLI_DEBUG
+
+#ifdef CLI_DEBUG
+#undef CLI_DEBUG
+#define CLI_DEBUG(...) DEBUG_PRINTS(__VA_ARGS__)
+#else
+#define CLI_DEBUG(...)
+#endif
+
+#ifdef CH32V30X
+#define CLI_REPLY(cmd, ...) ch9141.prints(cmd, ##__VA_ARGS__)
+#define CLI_PRINTS(...) CLI_DEBUG(__VA_ARGS__)
+#elif defined(CH32V203)
+#define CLI_REPLY(cmd, ...) logger.prints(cmd, ##__VA_ARGS__)
+#define CLI_PRINTS(...) CLI_DEBUG(__VA_ARGS__)
+#endif
 
 #define read_value(value)\
 {\
-    CLI_PRINTS("get", #value, "\t\t is", value);\
+    CLI_DEBUG("get", #value, "\t\t is", value);\
     break;\
 }
-
-
 
 #define trigger_method(method, ...)\
 {\
@@ -19,10 +34,10 @@
 #define settle_method(method, args, type)\
 {\
     if(args.size() == 0){\
-        DEBUG_PRINTS("no arg");\
+        CLI_DEBUG("no arg");\
     }else if(args.size() == 1){\
         method(type(args[0]));\
-        DEBUG_PRINTS("method: ", #method);\
+        CLI_DEBUG("method: ", #method);\
     }\
     break;\
 }
@@ -34,7 +49,7 @@
         read_value(value);\
     }else if(args.size() == 1){\
         value = decltype(value)(args[0]);\
-        DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", args[0]);\
+        CLI_DEBUG("set: ", VNAME(value), "\t\t to", args[0]);\
     }\
     break;\
 }\
@@ -47,7 +62,7 @@
         read_value(value);\
     }else if(args.size() == 1){\
         value = temp_value;\
-        DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
+        CLI_DEBUG("set: ", VNAME(value), "\t\t to", value);\
     }\
     break;\
 }\
@@ -62,7 +77,7 @@
         read_value(value);\
     }else if(args.size() == 1){\
         value = temp_value;\
-        DEBUG_PRINTS("set: ", VNAME(value), "\t\t to", value);\
+        CLI_DEBUG("set: ", VNAME(value), "\t\t to", value);\
     }\
     break;\
 }\

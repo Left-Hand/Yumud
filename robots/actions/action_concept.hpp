@@ -11,6 +11,7 @@ protected:
     std::function<void()> func = nullptr;
     struct{
         uint sustain = 0;
+        const uint full;
         bool once = true;
         volatile bool executed = false;
     };
@@ -27,8 +28,15 @@ protected:
     
     virtual SpecialActionType special() const {return SpecialActionType::NONE;}
 
+    bool first() const {
+        return executed == false;
+    }
+
+    real_t ratio() const {
+        return real_t(1) - real_t(sustain) / full;
+    }
 public:
-    Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), once(_once) {}
+    Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
 
     bool is_valid() const {
         return sustain > 0;

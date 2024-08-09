@@ -15,8 +15,6 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
     measurements.pos = odo.getPosition();
     est_elecrad = odo.getElecRad();
     static real_t temp;
-    // temp = (speed_estmator.update(measurements.pos) + temp * 1023) >> 10;
-    // measurements.spd = (temp + measurements.spd * 1023) >> 10;
     measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
     
     if(init_flag){
@@ -37,7 +35,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
                 result = {ABS(target), SIGN_AS(real_t(PI / 2), target)};
                 break;
             case CtrlType::VECTOR:
-                result = {curr_ctrl.config.curr_limit, 0};
+                result = {ctrl_limits.max_curr, 0};
                 break;
             case CtrlType::POSITION:
                 result = position_ctrl.update(target, est_pos, est_spd, est_elecrad);

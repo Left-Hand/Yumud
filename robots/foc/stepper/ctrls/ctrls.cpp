@@ -10,12 +10,15 @@ static constexpr real_t hpi = real_t(PI/2);
 
 void CtrlLimits::reset(){
     pos_limit = Range::INF;
+    max_curr = real_t(1.2);
     max_spd = 30;
     max_acc = 100;
     max_acc = 100;
 }
 
 void PositionCtrl::Config::reset(){
+    // kp = 5;
+    // kd = real_t(0.57);
     kp = 3;
     kd = real_t(0.17);
 }
@@ -41,7 +44,6 @@ CtrlResult CurrentCtrl::update(CtrlResult res){
 void CurrentCtrl::Config::reset(){
     curr_slew_rate = real_t(60) / foc_freq;
     rad_slew_rate = real_t(70) / foc_freq;
-    curr_limit = real_t(0.7);
     openloop_curr = real_t(0.7);
 }
 
@@ -49,11 +51,12 @@ Result PositionCtrl::update(const real_t targ_pos, const real_t real_pos,
     const real_t real_spd, const real_t real_elecrad){
 
     targ_spd = (targ_spd * 127 + targ_spd_est.update(targ_pos)) >> 7;
-    // real_t targ_spd = targ_spd_est.update(targ_pos);
+    real_t abs_targ_spd = ABS(targ_spd);
+
     real_t pos_err = targ_pos - real_pos;
     
     if(pos_err * real_spd < -2){//inverse run
-        return {curr_ctrl.config.curr_limit, SIGN_AS(basic_raddiff * hpi, pos_err)};
+        return {limits.max_curr, SIGN_AS(basic_raddiff * hpi, pos_err)};
     }else{
         real_t abs_pos_err = ABS(pos_err);
         real_t abs_spd = ABS(real_spd);
@@ -76,16 +79,14 @@ Result PositionCtrl::update(const real_t targ_pos, const real_t real_pos,
 
             real_t abs_curr = MIN(
                 abs_pos_err * config.kp
-                ,curr_ctrl.config.curr_limit
+                ,limits.max_curr
                 ,abs_raddiff
                 ); 
 
             // w = mv^2/2 - fx
 
             real_t overflow_energy = MAX((config.kd >> 8) * (
-                    abs_spd * abs_spd
-                    // - MIN(targ_spd * targ_spd, limits.max_spd * limits.max_spd) 
-                    - targ_spd * targ_spd 
+                    (abs_spd + targ_spd) * (abs_spd - targ_spd) * SIGN(abs_spd - abs_targ_spd)
                     - 2 * limits.max_acc * MIN(abs_pos_err, 100)), 0);
                     // - 2 * limits.max_acc * abs_pos_err, 0);
 
@@ -100,25 +101,6 @@ Result PositionCtrl::update(const real_t targ_pos, const real_t real_pos,
     }
 
 
-    // real_t err = targ_pos - real_pos;
-    // real_t abs_err = ABS(err);
-
-    // static constexpr real_t u =  real_t(TAU);
-    // static constexpr real_t pu = real_t(poles * u);
-    // static constexpr real_t a =  real_t(2 / PI);
-    // static constexpr real_t k =  real_t(a * a * pu);
-
-    // real_t abs_uni_raddiff = real_t(PI/2) - 1/(real_t(k) * abs_err + a);
-
-    // real_t raddiff = abs_uni_raddiff * SIGN_AS((1 + MIN(curr_ctrl.current_output, real_t(0.45))) , err);
-
-    // real_t current = MIN(abs_err * config.kp, curr_ctrl.config.curr_limit); 
-
-    // if(abs_err < real_t(1.2)){
-    //     current = MAX(current - (config.kd * ABS(real_spd) >> 8), 0);
-    // }
-    
-    // if(((err > 0) && (real_spd < -1)) || ((err < 0) && (real_spd > 1))){
     //     return {0, 0};
     // }else{
     //     return {current, raddiff};
@@ -147,7 +129,7 @@ Result SpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
     }
 
     targ_current += delta_targ_curr;
-    real_t abs_targ_current = MIN(ABS(targ_current), curr_ctrl.config.curr_limit);
+    real_t abs_targ_current = MIN(ABS(targ_current), limits.max_curr);
     targ_current = SIGN_AS(abs_targ_current, targ_spd);
 
     #define SAFE_OVERLOAD_RAD(__curr, __spd)\
@@ -162,7 +144,7 @@ Result SpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
     is_inversed |= (abs_spd > ABS(targ_spd) * 2);
 
     if(is_inversed){
-        // return {curr_ctrl.config.curr_limit, SIGN_AS(basic_raddiff * PI / 2, targ_spd)};
+        // return {ctrl_limits.max_curr, SIGN_AS(basic_raddiff * PI / 2, targ_spd)};
         return {0, SIGN_AS(basic_raddiff * hpi, targ_spd)};
     }else{
         return {abs_targ_current, raddiff};

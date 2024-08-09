@@ -210,6 +210,10 @@ const CanMsg & Can::read(){
     return pending_rx_msgs.getData();
 }
 
+const CanMsg & Can::front(){
+    return pending_rx_msgs.front();
+}
+
 size_t Can::available(){
     return pending_rx_msgs.available();
 }

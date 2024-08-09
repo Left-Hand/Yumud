@@ -10,8 +10,7 @@
 #include "robots/foc/focmotor.hpp"
 #include "hal/timer/pwm/gpio_pwm.hpp"
 
-
-
+#include "protocol/ascii_protocol.hpp"
 
 class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     using StatLed = StepperComponents::StatLed;
@@ -20,14 +19,15 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     using Switches = StepperUtils::Switches;
 
     #ifdef STEPPER_NO_PRINT
-    #define CLI_PRINTS(...)
+    // #define CLI_PRINTS(...)
     #define ARCHIVE_PRINTS(...)
     #define CLI_DEBUG(...)
     #define COMMAND_DEBUG(...)
     #define RUN_DEBUG(...)
 
     #else
-    #define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
+    // #define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
+
     #define ARCHIVE_PRINTS(...) if(outen) logger.prints(__VA_ARGS__);
 
     #define CALI_DEBUG(...)\
@@ -43,7 +43,7 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     logger.println(__VA_ARGS__);};
 
     #endif
-    
+
     Archive archive_;
     Switches & switches_ = archive_.switches;
     volatile RunStatus run_status = RunStatus::INIT;
@@ -65,7 +65,7 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     real_t run_leadangle;
 
     CurrentCtrl::Config curr_config;
-    CurrentCtrl curr_ctrl{curr_config};
+    CurrentCtrl curr_ctrl{ctrl_limits, curr_config};
     
     SpeedCtrl::Config spd_config;
     SpeedCtrl speed_ctrl{ctrl_limits, spd_config, curr_ctrl};
@@ -103,7 +103,7 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
         if(shutdown_when_error_occurred){
             shutdown();
         }
-        CLI_PRINTS(error_message);
+        CLI_DEBUG(error_message);
     }
 
     void throw_warn(const ErrorCode ecode, const char * _warn_message){
@@ -112,7 +112,7 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
         if(shutdown_when_warn_occurred){
             shutdown();
         }
-        CLI_PRINTS(warn_message);
+        CLI_DEBUG(warn_message);
     }
 
     #define THROW_ERROR(code, msg) throw_error(code,msg)
@@ -122,19 +122,14 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     RunStatus active_task(const InitFlag init_flag = false);
     RunStatus beep_task(const InitFlag init_flag = false);
     RunStatus check_task(const InitFlag init_flag = false);
-
-
     void parseTokens(const String & _command, const std::vector<String> & args) override;
-
     void parseCommand(const Command command, const CanMsg & msg) override;
-
-
 
 public:
 
 
     FOCStepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
-            CliSTA(_logger, _can, getNodeId()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
+            CliSTA(_logger, _can, getDefaultNodeId()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
     bool loadArchive(const bool outen = false);
     void saveArchive(const bool outen = false);
@@ -157,23 +152,23 @@ public:
         blue_pwm.setPeriod(25);
     }
 
-    void setTargetCurrent(const real_t current){
-        target = current;
+    void setTargetCurrent(const real_t curr){
+        target = MIN(ctrl_limits.max_curr, curr);
         ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
-        target = speed;
+        target = MIN(ctrl_limits.max_spd, speed);
         ctrl_type = CtrlType::SPEED;
     }
 
     void setTargetPosition(const real_t pos){
-        target = pos;
+        target = ctrl_limits.pos_limit.clamp(pos);
         ctrl_type = CtrlType::POSITION;
     }
 
     void setTargetTrapezoid(const real_t pos){
-        target = pos;
+        target = ctrl_limits.pos_limit.clamp(pos);
         ctrl_type = CtrlType::TRAPEZOID;
     }
 
@@ -191,7 +186,7 @@ public:
     }
 
     void setCurrentLimit(const real_t current){
-        curr_config.curr_limit = current;
+        ctrl_limits.max_curr = current;
     }
 
     void locateRelatively(const real_t pos = 0){
@@ -246,20 +241,7 @@ public:
     real_t getSpeedErr(){
         return getSpeed() - target;
     }
-    uint8_t getNodeId(){
-        auto chip_id = Sys::Chip::getChipIdCrc();
-        switch(chip_id){
-            case 3273134334:
-                return node_id = 3;
-            case 341554774:
-                return node_id = 2;
-            case 4079188777:
-                return node_id = 1;
-            case 0:
-            default:
-                return node_id = 0;
-        }
-    }
+    uint8_t getDefaultNodeId();
 
     void setSpeedLimit(const real_t max_spd){
         ctrl_limits.max_spd = max_spd;

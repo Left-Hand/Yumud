@@ -9,6 +9,7 @@
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
 
+#include "actions/move_actions.hpp"
 using namespace NVCV2;
 
 #ifdef CH32V30X
@@ -179,9 +180,6 @@ void EmbdHost::main(){
         }
     };
 
-    uart7.bindRxPostCb([&](){parseAscii(uart7);});
-    DEBUGGER.bindRxPostCb([&](){parseAscii(DEBUGGER);});
-
     Matcher matcher;
     auto sketch = make_image<RGB565>(camera.get_size()/2);
 
@@ -208,7 +206,7 @@ void EmbdHost::main(){
         painter.drawRoi(rect);
     };
 
-    [[maybe_unused]] auto plot_april = [&](const Vertexs vertex, const int index, const real_t dir){
+    [[maybe_unused]] auto plot_april = [&](const Vertexs & vertex, const int index, const real_t dir){
         painter.bindImage(sketch);
         painter.setColor(RGB565::FUCHSIA);
 
@@ -235,9 +233,9 @@ void EmbdHost::main(){
     auto do_home = [&](){
         actions += Action([&](){steppers.nz(false);}, 600);
         actions += Action([&](){
-            steppers.x.setTargetCurrent(-0.45);
-            steppers.y.setTargetCurrent(-0.45);
-            steppers.z.setTargetCurrent(-0.75);
+            steppers.x.setTargetCurrent(real_t(-0.45));
+            steppers.y.setTargetCurrent(real_t(-0.45));
+            steppers.z.setTargetCurrent(real_t(-0.75));
         }, 7000);
 
         actions += Action([&](){
@@ -253,6 +251,8 @@ void EmbdHost::main(){
     do_home();
 
     while(true){
+        parseAscii(uart7);
+        parseAscii(uart2);
         // run_led = (millis() / 200) % 2 == 0;
         // sketch.fill(RGB565::BLACK);
 

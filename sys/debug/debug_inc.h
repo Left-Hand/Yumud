@@ -84,5 +84,7 @@ __attribute__((used)) void *_sbrk(ptrdiff_t incr);
 
 }
 
+#define BREAKPOINT __nopn(1);
+
 
 #endif // __DEBUG_INC_H__

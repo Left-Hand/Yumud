@@ -73,7 +73,8 @@ void node_main(){
         // Sys::Clock::reCalculateTime();
         // stp.setTargetPosition(4 * sin(t * 2) + sign(sin(t * 2)));
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
-        // stp.setTargetPosition(5 *sin(t) * sin(t*9));
+        // stp.setTargetPosition(5 *sin(t) * sin(t*5));
+        // stp.setTargetPosition(frac(t));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
         // stp.setTargetPosition(3 * abs(frac(t*2) - real_t(0.5)));
 
