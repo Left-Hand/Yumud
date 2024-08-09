@@ -22,6 +22,7 @@
 using StepperUtils::CliAP;
 
 class EmbdHost:public CliAP{
+    using NodeId = StepperUtils::NodeId;
 
     RemoteFOCMotor stepper_w;
     RemoteFOCMotor stepper_x;
@@ -60,7 +61,7 @@ public:
                 stepper_z
             ){;}
 
-    void parseCommand(const uint8_t id, const Command & cmd, const CanMsg & msg);
+    void parseCommand(const NodeId id, const Command cmd, const CanMsg & msg);
     void parseTokens(const String & _command,const std::vector<String> & args);
     void main();
     void run();

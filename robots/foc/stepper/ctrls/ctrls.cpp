@@ -12,8 +12,7 @@ void CtrlLimits::reset(){
     pos_limit = Range::INF;
     max_curr = real_t(1.2);
     max_spd = 30;
-    max_acc = 100;
-    max_acc = 100;
+    max_acc = 30;
 }
 
 void PositionCtrl::Config::reset(){

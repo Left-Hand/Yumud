@@ -8,8 +8,8 @@ using RunStatus = StepperEnums::RunStatus;
 
 #define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
 
-// #define DEBUG_MSG(msg)
-#define DEBUG_MSG(msg) DEBUG_PRINTLN(msg)
+#define DEBUG_MSG(msg)
+// #define DEBUG_MSG(msg) DEBUG_PRINTLN(msg)
 
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, __VA_ARGS__);\
@@ -33,9 +33,10 @@ void RemoteFOCMotor::locateRelatively(const real_t _pos){POST(Command::LOCATE, E
 bool RemoteFOCMotor::isActive() const{return true;}
 const volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_status;}
 
-real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return spd;}
-real_t RemoteFOCMotor::getPosition() const{POST(Command::GET_SPD); return pos;}
-real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return curr;}
+real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return measurements.spd;}
+real_t RemoteFOCMotor::getPosition() const{POST(Command::GET_POS); return measurements.pos;}
+real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return measurements.curr;}
+real_t RemoteFOCMotor::getAccel() const{POST(Command::GET_ACC); return measurements.accel;}
 
 void RemoteFOCMotor::setPositionLimit(const Range & clamp){
     ctrl_limits.pos_limit = clamp;
@@ -44,13 +45,36 @@ void RemoteFOCMotor::setPositionLimit(const Range & clamp){
 
 
 void RemoteFOCMotor::enable(const bool en){POST(en ? Command::ACTIVE: Command::INACTIVE);}
-void RemoteFOCMotor::setNodeId(const uint8_t _id){}
+void RemoteFOCMotor::setNodeId(const NodeId _id){}
 void RemoteFOCMotor::setSpeedLimit(const real_t max_spd){POST(Command::SET_SPD_LMT,E(max_spd));}
 void RemoteFOCMotor::setAccelLimit(const real_t max_acc){POST(Command::SET_ACC_LMT, E(max_acc));}
 void RemoteFOCMotor::triggerCali(){POST(Command::TRG_CALI);}
 void RemoteFOCMotor::reset(){POST(Command::RST);}
 void RemoteFOCMotor::setNozzle(const real_t duty){POST(duty ? Command::NOZZLE_ON : Command::NOZZLE_OFF);}
 
-void RemoteFOCMotor::readCan(){
+void RemoteFOCMotor::parseCan(const CanMsg & msg){
+    NodeId id = msg.id() >> 7;
+    if(id != node_id) return;
+    Command cmd = Command(msg.id() & 0x7f);
 
+    parseCommand(id, cmd, msg);
+}
+
+void RemoteFOCMotor::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
+    switch(cmd){
+        case Command::GET_POS:
+            measurements.pos = E(msg);
+            break;
+        case Command::GET_SPD:
+            measurements.spd = E(msg);
+            break;
+        case Command::GET_ACC:
+            measurements.accel = E(msg);
+            break;
+        case Command::GET_CURR:
+            measurements.curr = E(msg);
+            break;
+        default:
+            break;
+    }
 }

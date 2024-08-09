@@ -9,16 +9,6 @@
 
 namespace StepperUtils{
 
-    template<integral T>
-    struct NodeId_t{
-        T id_;
-
-        NodeId_t(const T _id):id_(_id){
-        }
-        operator T() const{return id_;}
-    };
-
-    using NodeId =  NodeId_t<uint8_t>;
     class Cli{
     private:
         std::vector<String> split_string(const String& input, char delimiter);
@@ -68,13 +58,13 @@ namespace StepperUtils{
         void readCan() override{
             if(can.available()){
                 const CanMsg & msg = can.read();
-                uint8_t id = msg.id() & 0b1111;
-                Command cmd = (Command)(msg.id() >> 4);
+                uint8_t id = msg.id() >> 7;
+                Command cmd = (Command)(msg.id() & 0x7f);
                 parseCommand(id, cmd, msg);
             }
         }
         CliAP(IOStream & _logger, Can & _can):Cli(_logger, _can, 0x0f){;}
-        virtual void parseCommand(const uint8_t id, const Command & cmd, const CanMsg & msg) = 0;
+        virtual void parseCommand(const NodeId id, const Command cmd, const CanMsg & msg) = 0;
     };
 
 }

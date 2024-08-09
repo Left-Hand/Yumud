@@ -15,11 +15,13 @@ protected:
     using Range = Range_t<real_t>;
 
     using Switches = StepperUtils::Switches;
+    using NodeId = StepperUtils::NodeId;
 
     struct Measurements{
-        real_t curr;
-        real_t spd;
-        real_t pos;
+        real_t accel = 0;
+        real_t curr = 0;
+        real_t spd = 0;
+        real_t pos = 0;
     };
 
     Measurements measurements;
@@ -46,13 +48,14 @@ public:
     virtual real_t getSpeed() const = 0;
     virtual real_t getPosition() const = 0;
     virtual real_t getCurrent() const = 0;
+    virtual real_t getAccel() const = 0;
 
     virtual void setCurrentLimit(const real_t max_current) = 0;
     virtual void setPositionLimit(const Range & clamp) = 0;
     virtual void setSpeedLimit(const real_t max_spd) = 0;
     virtual void setAccelLimit(const real_t max_acc) = 0;
     virtual void enable(const bool en = true) = 0;
-    virtual void setNodeId(const uint8_t _id) = 0;
+    virtual void setNodeId(const NodeId _id) = 0;
 
 
     virtual void setNozzle(const real_t duty) = 0;

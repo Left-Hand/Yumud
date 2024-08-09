@@ -49,10 +49,10 @@ void FOCStepper::parseCommand(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_ONE(   Command::SET_SPD_LMT,   setSpeedLimit)
         SET_METHOD_BIND_ONE(   Command::SET_ACC_LMT,   setAccelLimit)
 
-        GET_BIND_VALUE(         Command::GET_POS,       getPosition())
-        GET_BIND_VALUE(         Command::GET_SPD,       getSpeed())
-        GET_BIND_VALUE(         Command::GET_ACC,       0)//TODO
-        GET_BIND_VALUE(         Command::GET_CURR,       getCurrent())
+        GET_BIND_VALUE(         Command::GET_POS,       E(getPosition()))
+        GET_BIND_VALUE(         Command::GET_SPD,       E(getSpeed()))
+        GET_BIND_VALUE(         Command::GET_ACC,       E(0))//TODO
+        GET_BIND_VALUE(         Command::GET_CURR,      E(getCurrent()))
 
         SET_METHOD_BIND_EXECUTE(Command::TRG_CALI,          triggerCali)
 

@@ -35,6 +35,10 @@ protected:
     real_t ratio() const {
         return real_t(1) - real_t(sustain) / full;
     }
+
+    void abort(){
+        sustain = 0;
+    }
 public:
     Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
 

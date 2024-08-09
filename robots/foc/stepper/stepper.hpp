@@ -218,6 +218,10 @@ public:
         return measurements.curr;
     }
 
+    real_t getAccel() const{
+        return measurements.accel;
+    }
+
     void setPositionLimit(const Range & clamp){
         ctrl_limits.pos_limit = clamp;
     }
@@ -230,7 +234,7 @@ public:
         }
     }
 
-    void setNodeId(const uint8_t _id){
+    void setNodeId(const NodeId _id){
         node_id = _id;
     }
 

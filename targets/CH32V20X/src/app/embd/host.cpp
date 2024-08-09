@@ -251,8 +251,10 @@ void EmbdHost::main(){
     do_home();
 
     while(true){
+        readCan();
         parseAscii(uart7);
         parseAscii(uart2);
+        DEBUG_PRINTLN(steppers.x.getSpeed());
         // run_led = (millis() / 200) % 2 == 0;
         // sketch.fill(RGB565::BLACK);
 
@@ -404,15 +406,15 @@ void EmbdHost::main(){
             last_turn = this_turn;
             run_led = !run_led;
         }
-            // DEBUG_PRINTLN(t);
 
-        readCan();
+
     }
 }
 
-void EmbdHost::parseCommand(const uint8_t id, const Command &cmd, const CanMsg &msg){
-
-
+void EmbdHost::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
+    steppers.x.parseCommand(id, cmd, msg);
+    steppers.y.parseCommand(id, cmd, msg);
+    steppers.z.parseCommand(id, cmd, msg);
 }
 
 

@@ -6,21 +6,16 @@
 
 class RemoteFOCMotor:public FOCMotor{
 protected:
-
     using ExitFlag = StepperEnums::ExitFlag;
     using InitFlag = StepperEnums::InitFlag;
     using NodeId = StepperUtils::NodeId;
-
     using RunStatus = StepperEnums::RunStatus;
 
+    using Command = StepperEnums::Command;
     IOStream & logger;
     Can & can;
     uint8_t node_id;
     volatile RunStatus run_status = RunStatus::NONE;
-
-    mutable real_t spd;
-    mutable real_t pos;
-    mutable real_t curr;
 public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, const NodeId _node_id):
             logger(_logger), can(_can), node_id(_node_id){;}
@@ -45,15 +40,17 @@ public:
     real_t getSpeed() const;
     real_t getPosition() const;
     real_t getCurrent() const;
+    real_t getAccel() const;
 
     void setPositionLimit(const Range & clamp);
     void enable(const bool en = true);
-    void setNodeId(const uint8_t _id);
+    void setNodeId(const NodeId _id);
     void setSpeedLimit(const real_t max_spd);
     void setAccelLimit(const real_t max_acc);
     void reset();
     void triggerCali();
 
     void setNozzle(const real_t duty);
-    void readCan();
+    void parseCan(const CanMsg & msg);
+    void parseCommand(const NodeId id, const Command cmd, const CanMsg &msg);
 };
