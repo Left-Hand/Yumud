@@ -88,6 +88,7 @@ namespace StepperEnums{
         GET_SPD,//              get speed
         GET_ACC,//              get accelration
         GET_CURR,//             get current
+        GET_ALL = 0x3f,         // get all
 
         TRG_CALI = 0X40,//          trig cali
 

@@ -114,9 +114,10 @@ void EmbdHost::main(){
     busy_led.outpp();
     lcd_blk.outpp(1);
 
-    timer8.init(1000);
-    timer8.enableIt(TimerUtils::IT::Update, {0,0});
-    timer8.bindCb(TimerUtils::IT::Update, [&](){this->tick();});
+    // timer8.init(250);
+    // timer8.enableIt(TimerUtils::IT::Update, {0,0});
+    // timer8.bindCb(TimerUtils::IT::Update, [&](){this->tick();});
+    bindSystickCb([&](){this->tick();});
 
     auto & lcd_cs = portD[6];
     auto & lcd_dc = portD[7];
@@ -166,19 +167,6 @@ void EmbdHost::main(){
     stepper_y.setPositionLimit({0.2, 4.8});
     stepper_z.setPositionLimit({0.2, 24.2});
 
-    auto parseAscii = [&](InputStream & is){
-        static String temp;
-        while(is.available()){
-            auto chr = is.read();
-            if(chr == 0) continue;
-            temp += chr;
-            if(chr == '\n'){
-                temp.alphanum();
-                parseLine(temp);
-                temp = "";
-            }
-        }
-    };
 
     Matcher matcher;
     auto sketch = make_image<RGB565>(camera.get_size()/2);
@@ -251,10 +239,7 @@ void EmbdHost::main(){
     do_home();
 
     while(true){
-        readCan();
-        parseAscii(uart7);
-        parseAscii(uart2);
-        DEBUG_PRINTLN(steppers.x.getSpeed());
+
         // run_led = (millis() / 200) % 2 == 0;
         // sketch.fill(RGB565::BLACK);
 
@@ -398,10 +383,11 @@ void EmbdHost::main(){
 
         // plot_rgb(sketch, {0,0});
 
+        DEBUG_PRINTLN(steppers.x.readPosition(), steppers.y.readPosition(), steppers.z.readPosition());
         static uint last_turn = 0;
         uint this_turn = millis() / 100;
         if(last_turn != this_turn){
-            DEBUG_PRINTS("busy ", actions.pending());
+            // DEBUG_PRINTS("busy ", actions.pending());
             // ch9141.prints("busy ", actions.pending());
             last_turn = this_turn;
             run_led = !run_led;
@@ -418,195 +404,6 @@ void EmbdHost::parseCommand(const NodeId id, const Command cmd, const CanMsg &ms
 }
 
 
-void EmbdHost::parseTokens(const String & _command,const std::vector<String> & args){
-    auto command = _command;
-    command.toLowerCase();
-    ch9141.println(_command, args);
-    switch(hash_impl(command.c_str(), command.length())){
-        case "exp"_ha:
-            settle_method(camera.setExposureValue, args, int)
-        case "bina"_ha:
-            settle_value(bina_threshold, args)
-        case "diff"_ha:
-            settle_value(diff_threshold, args)
-        case "xymm"_ha:
-            if(args.size() == 2){
-                steppers.xy_mm(Vector2(args[0], args[1]));
-            }
-            break;
-        case "zmm"_ha:
-            if(args.size() == 1){
-                steppers.z_mm(real_t(args[0]));
-            }
-        case "xyz"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetPosition(real_t(args[0]));
-                steppers.y.setTargetPosition(real_t(args[1]));
-                steppers.z.setTargetPosition(real_t(args[2]));
-            }
-            break;
-
-        case "abort"_ha:
-            actions.abort();
-            break;
-
-        case "clear"_ha:
-            actions.clear();
-            break;
-        
-        case "xyzt"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetTrapezoid(real_t(args[0]));
-                steppers.y.setTargetTrapezoid(real_t(args[1]));
-                steppers.z.setTargetTrapezoid(real_t(args[2]));
-            }
-            break;
-
-        case "xy"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetPosition(real_t(args[0]));
-                steppers.y.setTargetPosition(real_t(args[1]));
-            }
-            break;
-
-        case "xyt"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetTrapezoid(real_t(args[0]));
-                steppers.y.setTargetTrapezoid(real_t(args[1]));
-            }
-            break;
-    
-        case "dz"_ha:
-            if(args.size() == 1){
-                stepper_z.setTargetSpeed(real_t(args[0]));
-            }
-
-        case "dxy"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetSpeed(real_t(args[0]));
-                steppers.y.setTargetSpeed(real_t(args[1]));
-                DEBUG_PRINTLN(args[0], args[1]);
-            }
-            break;
-
-        case "nz"_ha:
-            if(args.size() == 1){
-                steppers.y.setNozzle(int(args[0]));
-            }
-            break;
-
-        case "dxyz"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetSpeed(real_t(args[0]));
-                steppers.y.setTargetSpeed(real_t(args[1]));
-                steppers.z.setTargetSpeed(real_t(args[2]));
-            }
-            break;
-
-        case "xp"_ha:
-            settle_method(steppers.x.setTargetPosition, args, real_t)
-        case "yp"_ha:
-            settle_method(steppers.y.setTargetPosition, args, real_t);
-        case "zp"_ha:
-            settle_method(steppers.z.setTargetPosition, args, real_t);
-        case "wp"_ha:
-            settle_method(steppers.w.setTargetPosition, args, real_t);
-        case "xc"_ha:
-            settle_method(steppers.x.setTargetCurrent, args, real_t);
-        case "yc"_ha:
-            settle_method(steppers.y.setTargetCurrent, args, real_t);
-        case "zc"_ha:
-            settle_method(steppers.z.setTargetCurrent, args, real_t);
-        case "wc"_ha:
-            settle_method(steppers.w.setTargetCurrent, args, real_t);  
-        case "xs"_ha:
-            settle_method(steppers.x.setTargetSpeed, args, real_t);
-        case "ys"_ha:
-            settle_method(steppers.y.setTargetSpeed, args, real_t);
-        case "zs"_ha:
-            settle_method(steppers.z.setTargetSpeed, args, real_t);
-        case "ws"_ha:
-            settle_method(steppers.w.setTargetSpeed, args, real_t);
-        case "xt"_ha:
-            settle_method(steppers.x.setTargetTrapezoid, args, real_t);
-        case "yt"_ha:
-            settle_method(steppers.y.setTargetTrapezoid, args, real_t);
-        case "zt"_ha:
-            settle_method(steppers.z.setTargetTrapezoid, args, real_t);
-        case "wt"_ha:
-            settle_method(steppers.w.setTargetTrapezoid, args, real_t);
-        case "xh"_ha:
-            settle_method(steppers.x.locateRelatively, args, real_t);
-        case "yh"_ha:
-            settle_method(steppers.y.locateRelatively, args, real_t);
-        case "zh"_ha:
-            settle_method(steppers.z.locateRelatively, args, real_t);
-        case "xm"_ha:
-            settle_method(steppers.x.setCurrentLimit, args, real_t);
-        case "ym"_ha:
-            settle_method(steppers.y.setCurrentLimit, args, real_t);
-        case "zm"_ha:
-            settle_method(steppers.z.setCurrentLimit, args, real_t);
-        case "cali"_ha:
-            trigger_method(steppers.w.triggerCali);
-        case "ld"_ha:
-            trigger_method(steppers.w.loadArchive, true);
-        case "rm"_ha:
-            trigger_method(steppers.w.removeArchive, true);
-        case "sv"_ha:
-            trigger_method(steppers.w.saveArchive, true);
-        case "rst"_ha:
-            trigger_method(reset);
-        case "nne"_ha:
-            trigger_method(set_demo_method, ActMethod::NONE);
-        case "hui"_ha:
-            trigger_method(set_demo_method, ActMethod::HUI);
-        case "lisa"_ha:
-            trigger_method(set_demo_method, ActMethod::LISA);
-        case "grab"_ha:
-            trigger_method(set_demo_method, ActMethod::GRAB);
-        case "inte"_ha:
-            trigger_method(set_demo_method, ActMethod::INTER);
-        case "rep"_ha:
-            trigger_method(set_demo_method, ActMethod::REP);
-        case "usbon"_ha:
-            trigger_method(trans.enable, true);
-        case "usboff"_ha:
-            trigger_method(trans.enable, false);
-        case "frz"_ha:
-            trigger_method(stepper_w.freeze);
-
-        case "idle"_ha:
-            if(args.size() == 2){
-                do_idle({args[0], args[1]});
-            }else if(args.size() == 0){
-                do_idle({20, 60});
-            }
-            break;
-
-        case "move"_ha:
-            if(args.size() == 4){
-                do_move({args[0], args[1]}, {args[2], args[3]});
-            }
-            break;
-
-        case "drop"_ha:
-            if(args.size() == 2){
-                do_drop({args[0], args[1]});
-            }
-            break;
-
-        case "pick"_ha:
-            if(args.size() == 2){
-                do_pick({args[0], args[1]});
-            }
-            break;
-        default:
-            CliAP::parseTokens(_command, args);
-            break;
-    }
-}
-
 void EmbdHost::reset(){
     steppers.x.reset();
     steppers.y.reset();
@@ -621,7 +418,7 @@ void EmbdHost::cali(){
 
 
 void EmbdHost::run() {
-    readCan();
+
     act();
     // const real_t ang1 = 4 * t;
     // const real_t ang2 = 3 * t;
@@ -705,6 +502,28 @@ void EmbdHost::act(){
 
 void EmbdHost::tick(){
     actions.update();
+
+    auto parseAscii = [&](InputStream & is){
+        static String temp;
+        while(is.available()){
+            auto chr = is.read();
+            if(chr == 0) continue;
+            temp += chr;
+            if(chr == '\n'){
+                temp.alphanum();
+                parseLine(temp);
+                temp = "";
+            }
+        }
+    };
+
+    parseAscii(uart7);
+    parseAscii(uart2);
+
+    auto index = (millis() % 3);
+    steppers[index].updateAll();
+    // steppers.z.updateAll();
+    readCan();
 }
 
 #endif

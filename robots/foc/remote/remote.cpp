@@ -1,7 +1,7 @@
 #include "remote.hpp"
 #include "types/float/bf16.hpp"
 
-using E = bf16;
+using namespace CANProtocolUtils;
 
 using Command = StepperEnums::Command;
 using RunStatus = StepperEnums::RunStatus;
@@ -33,10 +33,11 @@ void RemoteFOCMotor::locateRelatively(const real_t _pos){POST(Command::LOCATE, E
 bool RemoteFOCMotor::isActive() const{return true;}
 const volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_status;}
 
-real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return measurements.spd;}
-real_t RemoteFOCMotor::getPosition() const{POST(Command::GET_POS); return measurements.pos;}
-real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return measurements.curr;}
-real_t RemoteFOCMotor::getAccel() const{POST(Command::GET_ACC); return measurements.accel;}
+real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return readCurrent();}
+real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return readSpeed();}
+real_t RemoteFOCMotor::getPosition() const{POST(Command::GET_POS); return readPosition();}
+real_t RemoteFOCMotor::getAccel() const{POST(Command::GET_ACC); return readAccel();}
+void RemoteFOCMotor::updateAll() const{POST(Command::GET_ALL);}
 
 void RemoteFOCMotor::setPositionLimit(const Range & clamp){
     ctrl_limits.pos_limit = clamp;
@@ -61,6 +62,7 @@ void RemoteFOCMotor::parseCan(const CanMsg & msg){
 }
 
 void RemoteFOCMotor::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
+    if(id != node_id) return;
     switch(cmd){
         case Command::GET_POS:
             measurements.pos = E(msg);
@@ -74,6 +76,14 @@ void RemoteFOCMotor::parseCommand(const NodeId id, const Command cmd, const CanM
         case Command::GET_CURR:
             measurements.curr = E(msg);
             break;
+        case Command::GET_ALL:{
+            auto res = E_4(msg);
+            measurements.curr =     std::get<0>(res);
+            measurements.spd =      std::get<1>(res);
+            measurements.pos =      std::get<2>(res);
+            measurements.accel =    std::get<3>(res);
+            break;
+        }
         default:
             break;
     }

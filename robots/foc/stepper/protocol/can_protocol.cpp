@@ -53,6 +53,7 @@ void FOCStepper::parseCommand(const Command command, const CanMsg & msg){
         GET_BIND_VALUE(         Command::GET_SPD,       E(getSpeed()))
         GET_BIND_VALUE(         Command::GET_ACC,       E(0))//TODO
         GET_BIND_VALUE(         Command::GET_CURR,      E(getCurrent()))
+        GET_BIND_VALUE(         Command::GET_ALL,       E_4(getCurrent(), getSpeed(), getPosition(), getAccel()))
 
         SET_METHOD_BIND_EXECUTE(Command::TRG_CALI,          triggerCali)
 

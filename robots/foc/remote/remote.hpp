@@ -4,6 +4,8 @@
 #include "robots/foc/stepper/constants.hpp"
 #include "robots/foc/stepper/cli.hpp"
 
+#include "robots/foc/stepper/protocol/can_protocol.hpp"
+
 class RemoteFOCMotor:public FOCMotor{
 protected:
     using ExitFlag = StepperEnums::ExitFlag;
@@ -41,6 +43,11 @@ public:
     real_t getPosition() const;
     real_t getCurrent() const;
     real_t getAccel() const;
+    real_t readSpeed() const{return measurements.spd;}
+    real_t readPosition() const{return measurements.pos;}
+    real_t readCurrent() const{return measurements.curr;}
+    real_t readAccel() const{return measurements.accel;}
+    void updateAll() const;
 
     void setPositionLimit(const Range & clamp);
     void enable(const bool en = true);
@@ -49,6 +56,7 @@ public:
     void setAccelLimit(const real_t max_acc);
     void reset();
     void triggerCali();
+
 
     void setNozzle(const real_t duty);
     void parseCan(const CanMsg & msg);
