@@ -164,27 +164,27 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             
         case "idle"_ha:
             if(args.size() == 2){
-                do_idle({args[0], args[1]});
+                steppers.do_idle({args[0], args[1]});
             }else if(args.size() == 0){
-                do_idle({20, 60});
+                steppers.do_idle();
             }
             break;
 
         case "move"_ha:
             if(args.size() == 4){
-                do_move({args[0], args[1]}, {args[2], args[3]});
+                steppers.do_move({args[0], args[1]}, {args[2], args[3]});
             }
             break;
 
         case "drop"_ha:
             if(args.size() == 2){
-                do_place({args[0], args[1]});
+                steppers.do_place({args[0], args[1]});
             }
             break;
 
         case "pick"_ha:
             if(args.size() == 2){
-                do_pick({args[0], args[1]});
+                steppers.do_pick({args[0], args[1]});
             }
             break;
         default:

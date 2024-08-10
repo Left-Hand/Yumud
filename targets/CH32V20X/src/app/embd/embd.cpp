@@ -31,10 +31,6 @@ void host_main(){
     uart7.init(115200);
     EmbdHost host{logger, can1};
 
-    timer3.init(800);
-    timer3.bindCb(IT::Update, [&](){host.run();});
-    timer3.enableIt(IT::Update, NvicPriority(0, 0));
-
     host.main();
 }
 #endif

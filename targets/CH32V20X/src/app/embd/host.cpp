@@ -17,41 +17,6 @@ using namespace NVCV2;
 #ifdef CH32V30X
 
 
-void EmbdHost::do_pick(const Vector2 & from){
-    actions
-    << CombinedAction(
-        TrapezoidMoveAction(steppers, from)
-        , PickAction(steppers)
-        , HoldAction(steppers)
-    );
-}
-
-
-void EmbdHost::do_place(const Vector2 & to){
-    actions
-    << CombinedAction(
-        TrapezoidMoveAction(steppers, to)
-        , PlaceAction(steppers)
-        , DelayAction(200)
-        , ReleaseAction(steppers)
-        , DelayAction(500)
-        , FloatAction(steppers)
-    ); 
-}
-
-
-void EmbdHost::do_idle(const Vector2 & to){
-
-    actions
-    << TrapezoidMoveAction(steppers, to);
-}
-
-
-void EmbdHost::do_move(const Vector2 & from, const Vector2 & to){
-    do_pick(from);
-    do_place(to);
-}
-
 void EmbdHost::main(){
     resetSlave();
     delay(900);
@@ -64,9 +29,6 @@ void EmbdHost::main(){
     busy_led.outpp();
     lcd_blk.outpp(1);
 
-    // timer8.init(250);
-    // timer8.enableIt(TimerUtils::IT::Update, {0,0});
-    // timer8.bindCb(TimerUtils::IT::Update, [&](){this->tick();});
     bindSystickCb([&](){this->tick();});
 
     auto & lcd_cs = portD[6];
@@ -167,26 +129,7 @@ void EmbdHost::main(){
         painter.bindImage(tftDisplayer);
     };
 
-    auto do_home = [&](){
-        actions += Action([&](){
-            steppers.x.setTargetCurrent(real_t(-0.45));
-            steppers.y.setTargetCurrent(real_t(-0.45));
-            steppers.z.setTargetCurrent(real_t(-0.95));
-        }, 4400);
-
-        actions += Action([&](){
-            steppers.x.locateRelatively(0);
-            steppers.y.locateRelatively(0);
-            steppers.z.locateRelatively(0);
-            steppers.x.setTargetCurrent(real_t(-0.));
-            steppers.y.setTargetCurrent(real_t(-0.));
-            steppers.z.setTargetCurrent(real_t(-0.));
-        });
-        actions += FloatAction(steppers);
-        do_idle();
-    };
-
-    do_home();
+    steppers.do_home();
     // actions << TrapezoidInterpolationAction(steppers, {100, 0});
     // actions << RapidMoveAction(steppers, {100, 0});
     // actions << LineMoveAction(steppers, {100, 0});
@@ -347,7 +290,7 @@ void EmbdHost::main(){
         static uint last_turn = 0;
         uint this_turn = millis() / 100;
         if(last_turn != this_turn){
-            // DEBUG_PRINTS("busy ", actions.pending());
+            DEBUG_PRINTS("busy ", actions.pending());
             // ch9141.prints("busy ", actions.pending());
             last_turn = this_turn;
             run_led = !run_led;
@@ -380,9 +323,6 @@ void EmbdHost::cali(){
 }
 
 
-void EmbdHost::run() {
-    act();
-}
 
 void EmbdHost::set_demo_method(const ActMethod new_method){
     act_method = new_method;
@@ -397,7 +337,6 @@ void EmbdHost::act(){
                 real_t _t = t * 3;
                 real_t r = sin(_t) + sin(_t / 5) + 1.2;
                 pos = Vector2(r,0).rotated(_t) + Vector2(5,1.8);
-                // logger.println(pos.x,);
             }
             break;
         case ActMethod::GRAB:
