@@ -21,7 +21,7 @@ void Machine::do_place(const Vector2 & to){
         , PlaceAction(*this)
         , DelayAction(200)
         , ReleaseAction(*this)
-        , DelayAction(500)
+        , DelayAction(600)
         , FloatAction(*this)
     ); 
 }
@@ -51,6 +51,8 @@ void Machine::do_home(){
         y.locateRelatively(0);
         z.locateRelatively(0);
     });
+
     actions += FloatAction(*this);
+    actions += DelayAction(200);
     do_idle();
 }

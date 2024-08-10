@@ -7,15 +7,25 @@
 
 struct Machine:public XY_Machine, public Nozzle_Machine{
 protected:
+    static constexpr uint pick_z = 47;
+    static constexpr uint hold_z = 25;
+    static constexpr uint place_z = 47;
+    static constexpr uint release_z = place_z - 15;
+    static constexpr uint idle_z = 25;
+    static constexpr uint inspect_z = 5;
+
     void z_pick(){
         z_mm(pick_z);
     }
+
     void z_hold(){
         z_mm(hold_z);
     }
+
     void z_place(){
         z_mm(place_z);
     }
+
     void z_idle(){
         z_mm(idle_z);
     }
@@ -23,6 +33,9 @@ protected:
     void z_release(){
         z_mm(release_z);
     }
+
+    void z_inspect(){
+        z_mm(inspect_z);
 
 public:
     ActionQueue &actions;
@@ -65,7 +78,7 @@ public:
     void do_move(const Vector2 & from, const Vector2 & to);
     void do_pick(const Vector2 & from);
     void do_place(const Vector2 & to);
-    void do_idle(const Vector2 & to = Vector2(20, 60));
+    void do_idle(const Vector2 & to = Vector2(25, 155));
     void do_home();
     void nz(const real_t duty) override {
         w.setNozzle(duty);

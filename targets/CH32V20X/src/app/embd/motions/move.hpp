@@ -13,8 +13,8 @@ protected:
     const Vector2 end;
     Vector2 begin;
 
-    static constexpr real_t max_spd = real_t(0.4);
-    static constexpr real_t max_acc = real_t(1);
+    static constexpr real_t max_spd = real_t(0.5);
+    static constexpr real_t max_acc = real_t(2.2);
 
     void move_to(const Vector2 & pos){
         machine.xy_mm(pos * 1000);
@@ -123,8 +123,9 @@ protected:
 
         #define SD (max_acc * time * time / 2)
         #define TRANS(v) ((norm * (v)) + begin)
+
         if(time < t1) return move_to(TRANS(SD));
-        if(time < t2){
+        else if(time < t2){
             time -= t1;
             return move_to(TRANS(s1 + (time) * max_spd));
         } 

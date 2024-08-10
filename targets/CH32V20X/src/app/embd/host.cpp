@@ -130,161 +130,151 @@ void EmbdHost::main(){
     };
 
     steppers.do_home();
-    // actions << TrapezoidInterpolationAction(steppers, {100, 0});
-    // actions << RapidMoveAction(steppers, {100, 0});
-    // actions << LineMoveAction(steppers, {100, 0});
-    // actions << TrapezoidMoveAction(steppers, {100, 0});
-    // actions << TrapezoidMoveAction(steppers, {400, 0});
-    // actions << TrapezoidMoveAction(steppers, {100, 0});
-    // actions << TrapezoidMoveAction(steppers, {180, 0});
-    // actions << TrapezoidMoveAction(steppers, {160, 0});
-
-
 
     while(true){
 
-        // run_led = (millis() / 200) % 2 == 0;
-        // sketch.fill(RGB565::BLACK);
+        sketch.fill(RGB565::BLACK);
 
-        // Image<Grayscale> img = Shape::x2(camera);
-        // plot_gray(img, {0, img.get_size().y * 1});
-        // trans.transmit(img, 0);
+        Image<Grayscale> img = Shape::x2(camera);
+        plot_gray(img, {0, img.get_size().y * 1});
+        trans.transmit(img, 0);
     
-        // auto img_ada = img.space();
-        // Shape::adaptive_threshold(img_ada, img);
-        // plot_gray(img_ada, {0, img.get_size().y * 2});
+        auto img_ada = img.space();
+        Shape::adaptive_threshold(img_ada, img);
+        plot_gray(img_ada, {0, img.get_size().y * 2});
 
-        // auto img_bina = img.space<Binary>();
-        // Pixels::binarization(img_bina, img_ada, 220);
-        // Shape::canny(img_bina, img, {40,100});
-        // Pixels::inverse(img_bina);
+        auto img_bina = img.space<Binary>();
+        Pixels::binarization(img_bina, img_ada, 220);
+        Shape::canny(img_bina, img, {40,100});
+        Pixels::inverse(img_bina);
 
         using Shape::FloodFill;
         using Shape::BlobFilter;
 
-        // FloodFill ff;
-        // auto map = ff.run(img_bina, BlobFilter::clamp_area(400, 1600));
-        // Pixels::dyeing(map, map);
-        // plot_gray(map, Vector2i{0, map.get_size().y * 3});
+        FloodFill ff;
+        auto map = ff.run(img_bina, BlobFilter::clamp_area(400, 1600));
+        Pixels::dyeing(map, map);
+        plot_gray(map, Vector2i{0, map.get_size().y * 3});
 
 
-        // for(const auto & blob :ff.blobs()){
-        // if(false){
-    
-        //     bool is_tag = false;
-        //     bool is_digit = false;
-        //     if(2000 < blob.rect.w) is_tag = true;//make it impossible
-        //     if(2000 < blob.rect.w) is_digit = true;//make it impossible
+        for(const auto & blob :ff.blobs()){
+            if(true){
+        
+                bool is_tag = false;
+                bool is_digit = false;
+                if(2000 < blob.rect.w) is_tag = true;//make it impossible
+                if(2000 < blob.rect.w) is_digit = true;//make it impossible
 
-        //     const auto & rect = blob.rect;
+                const auto & rect = blob.rect;
 
-        //     if(is_tag){
+                if(is_tag){
 
-        //         static constexpr uint apriltag_s = 4;
+                    static constexpr uint apriltag_s = 4;
 
-        //         auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
+                    auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
 
-        //             auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
-        //                 Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
+                        auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
+                            Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
 
-        //                 Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-        //                 Vector2 lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
+                            Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+                            Vector2 lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
 
-        //                 return upper_x.lerp(lower_x, grid_scale.y);
-        //             };
-
-
-        //             auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
-        //                 return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
-        //             };
-
-        //             return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
-        //         };
-
-        //         auto find_vertex = [](const Image<Grayscale> & __map, const Grayscale & match, const Rect2i & roi) -> Vertexs{
-        //             auto x_range = roi.get_x_range();
-        //             auto y_range = roi.get_y_range();
-
-        //             Vertexs ret;
-        //             auto center = roi.get_center();
-            
-        //             for(auto & item : ret){
-        //                 item = center;
-        //             }
-    
-        //             #define COMP(s1, s2, i)
-        //             if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))
-        //             ret[i] = Vector2i(x,y);
-
-        //             for(auto y = y_range.from; y < y_range.to; ++y){
-        //                 for(auto x = x_range.from; x < x_range.to; ++x){
-        //                     auto color = __map[{x,y}];
-        //                     if(color != match) continue;
-
-        //                     COMP(-1, -1, 0)
-        //                     COMP(+1, -1, 1)
-        //                     COMP(+1, +1, 2)
-        //                     COMP(-1, +1, 3)
-        //                 }
-        //             }
-
-        //             return ret;
-        //         };
-
-        //         auto vertexs = find_vertex(map, Pixels::dyeing((Grayscale)blob.index), rect);
-
-        //         uint16_t code = 0;
-        //         for(uint j = 0; j < apriltag_s; j++){
-        //             for(uint i = 0; i < apriltag_s; i++){
-        //                 uint16_t mask = (0x8000) >> (j * 4 + i);
-        //                 Grayscale val = get_vertex_val(vertexs, {i,j}, img);
-        //                 if((uint8_t)val > 173) code |= mask;
-        //             }
-        //         }
-
-        //         static Apriltag16H5Decoder decoder;
-        //         decoder.update(code);
-
-        //         plot_april(vertexs, decoder.index(), decoder.direction() * PI / 2 + (vertexs[1] - vertexs[0]).angle());
-
-        //         Painter<Grayscale> pt;
-        //         auto clipped = img.clone(rect);
-        //         pt.bindImage(clipped);
-        //         pt.drawString({0,0}, toString(decoder.index()));
-        //         pt.drawString({0,8}, toString(decoder.direction()));
-        //         trans.transmit(clipped,1);
-        //     }
+                            return upper_x.lerp(lower_x, grid_scale.y);
+                        };
 
 
-        //     if(is_digit){
+                        auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
+                            return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
+                        };
+
+                        return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
+                    };
+
+                    auto find_vertex = [](const Image<Grayscale> & __map, const Grayscale & match, const Rect2i & roi) -> Vertexs{
+                        auto x_range = roi.get_x_range();
+                        auto y_range = roi.get_y_range();
+
+                        Vertexs ret;
+                        auto center = roi.get_center();
+                
+                        for(auto & item : ret){
+                            item = center;
+                        }
+        
+                        #define COMP(s1, s2, i)\
+                        if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
+                        ret[i] = Vector2i(x,y);
+
+                        for(auto y = y_range.from; y < y_range.to; ++y){
+                            for(auto x = x_range.from; x < x_range.to; ++x){
+                                auto color = __map[{x,y}];
+                                if(color != match) continue;
+
+                                COMP(-1, -1, 0)
+                                COMP(+1, -1, 1)
+                                COMP(+1, +1, 2)
+                                COMP(-1, +1, 3)
+                            }
+                        }
+
+                        return ret;
+                    };
+
+                    auto vertexs = find_vertex(map, Pixels::dyeing((Grayscale)blob.index), rect);
+
+                    uint16_t code = 0;
+                    for(uint j = 0; j < apriltag_s; j++){
+                        for(uint i = 0; i < apriltag_s; i++){
+                            uint16_t mask = (0x8000) >> (j * 4 + i);
+                            Grayscale val = get_vertex_val(vertexs, {i,j}, img);
+                            if((uint8_t)val > 173) code |= mask;
+                        }
+                    }
+
+                    static Apriltag16H5Decoder decoder;
+                    decoder.update(code);
+
+                    plot_april(vertexs, decoder.index(), decoder.direction() * PI / 2 + (vertexs[1] - vertexs[0]).angle());
+
+                    Painter<Grayscale> pt;
+                    auto clipped = img.clone(rect);
+                    pt.bindImage(clipped);
+                    pt.drawString({0,0}, toString(decoder.index()));
+                    pt.drawString({0,8}, toString(decoder.direction()));
+                    trans.transmit(clipped,1);
+                }
 
 
-        //         auto char_pos = rect.get_center();
-        //         const Vector2i tmp_size = {8, 12};
-        //         const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
-        //         auto clipped = img.clone(clip_window);
+                if(is_digit){
 
 
-        //         auto tmp = Shape::x2(clipped);
+                    auto char_pos = rect.get_center();
+                    const Vector2i tmp_size = {8, 12};
+                    const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
+                    auto clipped = img.clone(clip_window);
 
-        //         painter.setColor(RGB565::BLUE);
-        //         painter.drawRoi(clip_window);
 
-        //         auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
+                    auto tmp = Shape::x2(clipped);
 
-        //         plot_number(clip_window, result);
+                    painter.setColor(RGB565::BLUE);
+                    painter.drawRoi(clip_window);
 
-        //         Painter<Grayscale> pt;
-        //         pt.bindImage(clipped);
-        //         pt.drawString({0,0}, toString(result));
+                    auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
 
-        //         trans.transmit(clipped,2);
+                    plot_number(clip_window, result);
 
-        //     }
+                    Painter<Grayscale> pt;
+                    pt.bindImage(clipped);
+                    pt.drawString({0,0}, toString(result));
 
-        // }
+                    trans.transmit(clipped,2);
 
-        // plot_rgb(sketch, {0,0});
+                }
+
+            }
+        }
+
+        plot_rgb(sketch, {0,0});
 
         // DEBUG_PRINTLN(steppers.x_axis.readMM(), steppers.y_axis.readMM(), steppers.z_axis.readMM());
         static uint last_turn = 0;

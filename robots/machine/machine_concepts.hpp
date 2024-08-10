@@ -134,18 +134,13 @@ class Nozzle_Machine:public Z_Machine{
 protected:
     static constexpr real_t z_scale = real_t(1.0)/2;
 
-    static constexpr uint pick_z = 47;
-    static constexpr uint hold_z = 25;
-    static constexpr uint place_z = 47;
-    static constexpr uint release_z = place_z - 15;
-    static constexpr uint idle_z = 25;
-
 public:
     Nozzle_Machine(const Axis & _z_axis):Z_Machine(_z_axis){;}
     virtual void z_pick() = 0;
     virtual void z_hold() = 0;
     virtual void z_place() = 0;
     virtual void z_idle() = 0;
+    virtual void z_inspect() = 0;
 
     virtual void z_release() = 0;
 
