@@ -32,7 +32,6 @@ Vector2 perspective(const Vector2 & v){
     real_t _x = (perspective_config.H1 * x + perspective_config.H2 * y + perspective_config.H3)*inv_s;
     real_t _y = (perspective_config.H4 * x + perspective_config.H5 * y + perspective_config.H6)*inv_s;
     Vector2 ret = {_x,_y};
-    // DEBUG_PRINT(ret);
     return ret;
 }
 
@@ -43,14 +42,13 @@ Vector2 inv_perspective(const Vector2 & v){
     real_t _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y + inv_perspective_config.H3)*inv_s;
     real_t _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y + inv_perspective_config.H6)*inv_s;
     Vector2 ret = {_x,_y};
-    // DEBUG_PRINT(ret);
     return ret;
 }
 
 Vector2 inv_perspective_fast(const Vector2 & v){
     auto [x,y] = v;
     real_t inv_s = real_t(1) / (inv_perspective_config.H8*y+real_t(1));
-    real_t _x = (inv_perspective_config.H1 * x + inv_perspective_config.H2 * y)*inv_s;
+    real_t _x = (x + inv_perspective_config.H2 * y)*inv_s;
     real_t _y = (inv_perspective_config.H4 * x + inv_perspective_config.H5 * y)*inv_s;
     Vector2 ret = {_x,_y};
 
@@ -63,10 +61,6 @@ void perspective(ImageWritable<Grayscale> & dst,const ImageReadable<Grayscale> &
         auto [x,y] = inv_perspective_fast({0, _y});
         auto x_step = inv_perspective_fast({1,_y}).x - x;
 
-        // real_t x_end = real_t(inv_perspective_fast(Vector2{size.x, y}).x);
-
-        // for(int _x = _x_begin; _x < _x_end; _x++){
-        // for(x < x_end; _x+=x_step){
         for(int _x = 0; _x < size.x; _x++){
             x += x_step;
             if(size.has_point(Vector2i{x,y})){

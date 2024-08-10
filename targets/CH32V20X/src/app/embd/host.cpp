@@ -42,8 +42,8 @@ void EmbdHost::main(){
     {//init tft
         tftDisplayer.init();
         tftDisplayer.setDisplayOffset({53, 40}); 
-        tftDisplayer.setFlipX(true);
-        tftDisplayer.setFlipY(true);
+        tftDisplayer.setFlipX(false);
+        tftDisplayer.setFlipY(false);
         tftDisplayer.setSwapXY(false);
         tftDisplayer.setFormatRGB(true);
         tftDisplayer.setFlushDirH(false);
@@ -138,7 +138,10 @@ void EmbdHost::main(){
 
         sketch.fill(RGB565::BLACK);
 
-        Image<Grayscale> img = Shape::x2(camera);
+        Image<Grayscale> raw_img = Shape::x2(camera);
+        auto img = raw_img.space();
+        Geometry::perspective(img, raw_img);
+        // img = img.clone(Rect2i(14, 0, 80-14, 60));
         plot_gray(img, {0, img.get_size().y * 1});
         trans.transmit(img, 0);
     

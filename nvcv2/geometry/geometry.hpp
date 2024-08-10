@@ -17,14 +17,14 @@ struct PerspectiveConfig{
 };
 
 struct InvPerspectiveConfig{
-    real_t H1 = real_t(0.9999999999999999);
-    real_t H2 = real_t(-1.0757777777777775);
-    real_t H3 = real_t(-8.934101195471293e-15);//0
-    real_t H4 = real_t(2.2602713083400805e-17);//0
-    real_t H5 = real_t(0.3133333333333332);
-    real_t H6 = real_t(2.602165396739211e-15);//0
-    real_t H7 = real_t(-8.25560087797973e-19);//0
-    real_t H8 = real_t(-0.011444444444444443);
+    real_t H1 = real_t(1.00000);
+    real_t H2 = real_t(-0.28200);
+    real_t H3 = real_t(0.00000);
+    real_t H4 = real_t(0.00000);
+    real_t H5 = real_t(0.64000);
+    real_t H6 = real_t(0.00000);
+    real_t H7 = real_t(0.00000);
+    real_t H8 = real_t(-0.00600);
 };
 
 extern PerspectiveConfig perspective_config;
