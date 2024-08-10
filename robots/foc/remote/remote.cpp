@@ -14,6 +14,7 @@ using RunStatus = StepperEnums::RunStatus;
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, __VA_ARGS__);\
 DEBUG_MSG(msg);\
+while(can.pending()){;};\
 can.write(msg);\
 
 bool RemoteFOCMotor::loadArchive(const bool outen){POST(Command::LOAD)return true;}

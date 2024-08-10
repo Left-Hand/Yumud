@@ -167,22 +167,7 @@ void EmbdHost::main(){
         painter.bindImage(tftDisplayer);
     };
 
-
     auto do_home = [&](){
-        // actions += PickAction(steppers);
-        // actions += Action([&](){
-        //     steppers.x.setTargetCurrent(real_t(-0.45));
-        //     steppers.y.setTargetCurrent(real_t(-0.45));
-        //     steppers.z.setTargetCurrent(real_t(-0.75));
-        // }, 7000);
-
-        // actions += Action([&](){
-        //     steppers.x.locateRelatively(0);
-        //     steppers.y.locateRelatively(0);
-        //     steppers.z.locateRelatively(0);
-        // });
-
-        // do_idle({20, 60});
         actions += Action([&](){
             steppers.x.setTargetCurrent(real_t(-0.45));
             steppers.y.setTargetCurrent(real_t(-0.45));
@@ -193,10 +178,12 @@ void EmbdHost::main(){
             steppers.x.locateRelatively(0);
             steppers.y.locateRelatively(0);
             steppers.z.locateRelatively(0);
+            steppers.x.setTargetCurrent(real_t(-0.));
+            steppers.y.setTargetCurrent(real_t(-0.));
+            steppers.z.setTargetCurrent(real_t(-0.));
         });
         actions += FloatAction(steppers);
-        // do_idle()
-
+        do_idle();
     };
 
     do_home();

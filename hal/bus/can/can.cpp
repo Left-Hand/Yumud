@@ -3,7 +3,7 @@
 
 using Callback = Can::Callback;
 
-static bool pending_tx_msg_exist[3] = {};
+static volatile bool pending_tx_msg_exist[3] = {false, false, false};
 static RingBuf_t<CanMsg, 8> pending_rx_msgs;
 static Callback cb_txok;
 static Callback cb_txfail;
@@ -187,9 +187,22 @@ void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filt
 }
 
 size_t Can::pending(){
-    size_t cnt = 0;
-    for(uint8_t i = 0; i < 3; i++) cnt += bool(pending_tx_msg_exist[i]);
-    return cnt;
+    if((instance->TSTATR & CAN_TSTATR_TME0) == CAN_TSTATR_TME0)
+    {
+        return 0;
+    }
+    else if((instance->TSTATR & CAN_TSTATR_TME1) == CAN_TSTATR_TME1)
+    {
+        return 1;
+    }
+    else if((instance->TSTATR & CAN_TSTATR_TME2) == CAN_TSTATR_TME2)
+    {
+        return 2;
+    }
+    else
+    {
+        return 3;
+    }
 }
 
 void Can::enableHwReTransmit(const bool en){
@@ -200,7 +213,10 @@ void Can::enableHwReTransmit(const bool en){
 bool Can::write(const CanMsg & msg){
 
     uint8_t mbox = CAN_Transmit(instance, (const CanTxMsg *)&msg);
-    if(mbox == CAN_TxStatus_NoMailBox) return false;
+    if(mbox == CAN_TxStatus_NoMailBox){
+        return false;
+        pending_tx_msg_exist[mbox] = false;
+    }
 
     pending_tx_msg_exist[mbox] = true;
     return true;
@@ -245,6 +261,7 @@ void Can::cancelTransmit(const uint8_t mbox){
 }
 
 void Can::cancelAllTransmit(){
+    for(uint8_t i = 0; i < 3; i++)    CAN_CancelTransmit(instance, i);
     instance->TSTATR |= (CAN_TSTATR_ABRQ0 | CAN_TSTATR_ABRQ1 | CAN_TSTATR_ABRQ2);
 }
 
@@ -267,7 +284,7 @@ void Can::configBaudRate(const uint32_t baudRate){
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void){
     for(uint8_t mbox = 0; mbox < 3; mbox++){
-        if(pending_tx_msg_exist[mbox] && CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
+        if(CAN_Mailbox_Done(CAN1, mbox)){ // if existing message done
             uint8_t tx_status = CAN_TransmitStatus(CAN1, mbox);
 
             switch (tx_status){

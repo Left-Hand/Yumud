@@ -73,7 +73,7 @@ public:
     void do_move(const Vector2 & from, const Vector2 & to);
     void do_pick(const Vector2 & from);
     void do_place(const Vector2 & to);
-    void do_idle(const Vector2 & to);
+    void do_idle(const Vector2 & to = Vector2(20, 60));
 
 
     enum class ActMethod{
