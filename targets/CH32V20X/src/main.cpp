@@ -1,5 +1,8 @@
 #include "sys/core/system.hpp"
 #include "app/embd/embd.h"
+#include "hal/gpio/port_virtual.hpp"
+#include "sys/debug/debug_inc.h"
+
 
 
 void preinit(){

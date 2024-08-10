@@ -18,8 +18,6 @@ using namespace NVCV2;
 
 
 void EmbdHost::main(){
-    resetSlave();
-    delay(900);
 
     auto & lcd_blk = portC[7];
     auto & spi = spi2;
@@ -28,8 +26,6 @@ void EmbdHost::main(){
     empty_led.outpp();
     busy_led.outpp();
     lcd_blk.outpp(1);
-
-    bindSystickCb([&](){this->tick();});
 
     auto & lcd_cs = portD[6];
     auto & lcd_dc = portD[7];
@@ -62,6 +58,8 @@ void EmbdHost::main(){
 
     camera.init();
     camera.setExposureValue(1000);
+
+    toggle_key.init();
 
 
     vl.init();
@@ -129,9 +127,13 @@ void EmbdHost::main(){
         painter.bindImage(tftDisplayer);
     };
 
+
+    resetSlave();
+    delay(900);
+    bindSystickCb([&](){this->tick();});
     steppers.do_home();
 
-    DEBUG_PRINTLN("init done");
+
     while(true){
 
         sketch.fill(RGB565::BLACK);
@@ -283,6 +285,7 @@ void EmbdHost::main(){
         if(last_turn != this_turn){
             // DEBUG_PRINTS("busy ", actions.pending());
             // ch9141.prints("busy ", actions.pending());
+            DEBUG_PRINTLN(bool(toggle_key));
             last_turn = this_turn;
             run_led = !run_led;
         }
@@ -380,6 +383,11 @@ void EmbdHost::act(){
 
 void EmbdHost::tick(){
     actions.update();
+
+    toggle_key.update();
+    if(toggle_key.pressed()){
+        steppers.toggle_nz();
+    }
 
     auto parseAscii = [&](InputStream & is){
         static String temp;

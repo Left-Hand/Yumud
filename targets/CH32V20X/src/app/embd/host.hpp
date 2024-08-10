@@ -13,11 +13,12 @@
 #include "../nvcv2/mnist/mnist.hpp"
 
 #include "robots/foc/remote/remote.hpp"
-
+#include "drivers/CommonIO/Key/Key.hpp"
 #include "machine/machine.hpp"
 
 #ifdef CH32V30X
 using StepperUtils::CliAP;
+using namespace GpioUtils;
 
 class EmbdHost:public CliAP{
     using NodeId = StepperUtils::NodeId;
@@ -42,11 +43,10 @@ class EmbdHost:public CliAP{
         uint8_t diff_threshold = 170;
     };
 
-
-
     Gpio & run_led = portC[14];
     Gpio & busy_led = portC[15];
     Gpio & empty_led = portC[13];
+    Key toggle_key {portA[0], HIGH};
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),

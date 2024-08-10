@@ -14,7 +14,7 @@ protected:
     Vector2 begin;
 
     static constexpr real_t max_spd = real_t(0.5);
-    static constexpr real_t max_acc = real_t(2.2);
+    static constexpr real_t max_acc = real_t(1.7);
 
     void move_to(const Vector2 & pos){
         machine.xy_mm(pos * 1000);
