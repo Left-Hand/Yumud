@@ -13,6 +13,12 @@ void Machine::do_pick(const Vector2 & from){
     );
 }
 
+void Machine::soft_mm(const Vector2 & to){
+    actions
+    << TrapezoidMoveAction(*this, to)
+    ;
+}
+
 
 void Machine::do_place(const Vector2 & to){
     actions

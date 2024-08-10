@@ -96,10 +96,12 @@ public:
     void do_move(const Vector2 & from, const Vector2 & to);
     void do_pick(const Vector2 & from);
     void do_place(const Vector2 & to);
+    void soft_mm(const Vector2 & to);
     void do_idle(const Vector2 & to = Vector2(25, 155));
     void do_home();
     void do_free();
     void toggle_nz();
+    void do_inspect(){z_inspect();}
     void nz(const real_t duty) override {
         last_nz = duty;
         w.setNozzle(duty);

@@ -17,6 +17,7 @@ using namespace NVCV2;
 #ifdef CH32V30X
 
 
+
 void EmbdHost::main(){
 
     auto & lcd_blk = portC[7];
@@ -240,8 +241,10 @@ void EmbdHost::main(){
                     static Apriltag16H5Decoder decoder;
                     decoder.update(code);
 
-                    plot_april(vertexs, decoder.index(), decoder.direction() * PI / 2 + (vertexs[1] - vertexs[0]).angle());
+                    // plot_april(vertexs, decoder.index(), );
 
+                    april_result = decoder.index() % 30;
+                    april_dir = decoder.direction() * PI / 2 + (vertexs[1] - vertexs[0]).angle();
                     Painter<Grayscale> pt;
                     auto clipped = img.clone(rect);
                     pt.bindImage(clipped);
@@ -268,6 +271,8 @@ void EmbdHost::main(){
                     auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
 
                     plot_number(clip_window, result);
+
+                    num_result = result;
 
                     Painter<Grayscale> pt;
                     pt.bindImage(clipped);

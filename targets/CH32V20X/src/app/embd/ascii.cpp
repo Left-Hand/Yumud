@@ -1,6 +1,31 @@
 #include "host.hpp"
 #include "robots/foc/stepper/protocol/ascii_protocol.hpp"
 
+static constexpr real_t squ_len = 96;
+static constexpr Vector2 pos_begin = {111, 46};
+static constexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
+static constexpr Vector2 pos_center = Vector2(pos_begin) + Vector2(squ_len / 2, squ_len / 2);
+static constexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
+static constexpr real_t pi_4 = real_t(PI/4);
+static constexpr real_t pi_2 = real_t(PI/2);
+
+static Vector2 get_predefined_positions(uint8_t index){
+    // xymm 110.5 30
+    // xymm 208.5 126
+    index = index - 1;
+    const auto x_i = 1 - (real_t(index % 3) / 2);
+    const auto y_i = real_t(index / 3) / 2;
+
+    return Vector2(pos_begin.x + (pos_end.x - pos_begin.x) * x_i, pos_begin.y + (pos_end.y - pos_begin.y) * y_i);
+}
+
+
+static Vector2 get_predefined_positions(real_t rad){
+    auto rad_90 = fmod(rad + pi_4, pi_2) - pi_4;
+    auto distance = (squ_len / 2) / cos(rad_90);
+    return pos_center + Vector2{-distance, 0}.rotated(rad);
+}
+
 void EmbdHost::parseTokens(const String & _command,const std::vector<String> & args){
     auto command = _command;
     command.toLowerCase();
@@ -13,7 +38,7 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             settle_value(diff_threshold, args)
         case "xymm"_ha:
             if(args.size() == 2){
-                steppers.xy_mm(Vector2(args[0], args[1]));
+                steppers.soft_mm(Vector2(args[0], args[1]));
             }
             break;
         case "zmm"_ha:
@@ -84,7 +109,15 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
                 steppers.z.setTargetSpeed(real_t(args[2]));
             }
             break;
-
+    
+        case "gon"_ha:
+            trigger_method(steppers.do_place, get_predefined_positions(args.size() ? int(args[0]) : 0));
+        case "goa"_ha:
+            trigger_method(steppers.do_place, get_predefined_positions(args.size() ? real_t(args[0]) : 0));
+        case "gbn"_ha:
+            trigger_method(steppers.do_move, pos_pending, get_predefined_positions(num_result));
+        case "gba"_ha:
+            trigger_method(steppers.do_move, pos_pending, get_predefined_positions(april_dir));
         case "xp"_ha:
             settle_method(steppers.x.setTargetPosition, args, real_t)
         case "yp"_ha:
@@ -157,6 +190,8 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             trigger_method(trans.enable, false);
         case "frz"_ha:
             trigger_method(stepper_w.freeze);
+        case "inspect"_ha:
+            trigger_method(steppers.do_inspect);
 
         case "teach"_ha:{
             const bool sw = args.size() ? bool(args[0].toInt()) : true;

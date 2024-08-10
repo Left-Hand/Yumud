@@ -8,7 +8,7 @@ void Matcher::init(){
 
 }
 
-int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
+int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi, const real_t threshold){
     const auto tmp_size = roi.size;
     auto fault = src.clone(Rect2i(roi.position, tmp_size));
     auto fault_bina = make_bina_mirror(fault);
@@ -19,8 +19,8 @@ int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi){
     }
 
 
-    uint maxi = 0;
-    real_t maxp = 0;
+    uint maxi = -1;
+    real_t maxp = threshold;
 
     for(size_t i=0; i < result.size(); i++){
         if(result[i] > maxp) {
