@@ -4,6 +4,8 @@
 #include "../../robots/machine/machine_concepts.hpp"
 #include "../../robots/actions/action_queue.hpp"
 
+#include "../teach/teach.hpp"
+
 
 struct Machine:public XY_Machine, public Nozzle_Machine{
 protected:
@@ -39,14 +41,27 @@ protected:
     }
 
     real_t last_nz = 0;
+
+    enum class MachineState{
+        NONE,
+        TEACH,
+        REPLAY
+    };
+
+    volatile MachineState machine_state = MachineState::NONE;
+    uint play_index = 0;
+    bool record();
+    bool replay();
 public:
-    ActionQueue &actions;
+    ActionQueue & actions;
+    Trajectory & trajectory;
     RemoteFOCMotor & w;
     RemoteFOCMotor & x;
     RemoteFOCMotor & y;
     RemoteFOCMotor & z;
     Machine(
         ActionQueue & _actions,
+        Trajectory & _trajectory,
         RemoteFOCMotor & _w,
         RemoteFOCMotor & _x,
         RemoteFOCMotor & _y,
@@ -59,7 +74,8 @@ public:
     Nozzle_Machine(
         Axis(_z, real_t(1.0/2), {0, 50}))
         
-    ,actions(_actions), w(_w), x(_x), y(_y), z(_z){;}
+    ,actions(_actions), trajectory(_trajectory),
+    w(_w), x(_x), y(_y), z(_z){;}
 
     RemoteFOCMotor & operator [](const uint8_t index){
         switch(index){
@@ -82,10 +98,17 @@ public:
     void do_place(const Vector2 & to);
     void do_idle(const Vector2 & to = Vector2(25, 155));
     void do_home();
-    void entry_teach();
+    void do_free();
     void toggle_nz();
     void nz(const real_t duty) override {
         last_nz = duty;
         w.setNozzle(duty);
     }
+
+    void tick();
+    void entry_teach();
+    void exit_teach();
+    void entry_replay();
+    void exit_replay();
+    void look();
 };

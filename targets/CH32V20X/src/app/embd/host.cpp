@@ -285,7 +285,7 @@ void EmbdHost::main(){
         if(last_turn != this_turn){
             // DEBUG_PRINTS("busy ", actions.pending());
             // ch9141.prints("busy ", actions.pending());
-            DEBUG_PRINTLN(bool(toggle_key));
+            // DEBUG_PRINTLN(bool(toggle_key));
             last_turn = this_turn;
             run_led = !run_led;
         }
@@ -382,11 +382,13 @@ void EmbdHost::act(){
 
 
 void EmbdHost::tick(){
-    actions.update();
+
+    steppers.tick();
 
     toggle_key.update();
     if(toggle_key.pressed()){
         steppers.toggle_nz();
+
     }
 
     auto parseAscii = [&](InputStream & is){

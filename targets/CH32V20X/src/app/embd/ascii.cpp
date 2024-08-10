@@ -158,8 +158,22 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
         case "frz"_ha:
             trigger_method(stepper_w.freeze);
 
-        case "teach"_ha:
-            trigger_method(steppers.entry_teach);
+        case "teach"_ha:{
+            const bool sw = args.size() ? bool(args[0].toInt()) : true;
+            if(sw){trigger_method(steppers.entry_teach)}
+            else{trigger_method(steppers.exit_teach)}
+        }
+
+        case "replay"_ha:{
+            const bool sw = args.size() ? bool(args[0].toInt()) : true;
+            if(sw) {trigger_method(steppers.entry_replay)}
+            else {trigger_method(steppers.exit_replay)}
+        }
+
+        case "look"_ha:{
+            trigger_method(steppers.look);
+        }
+
         case "busy"_ha:
             DEBUG_PRINTLN(actions.pending());
             break;

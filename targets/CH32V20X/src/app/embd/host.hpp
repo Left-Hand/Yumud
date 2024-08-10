@@ -22,6 +22,7 @@ using namespace GpioUtils;
 
 class EmbdHost:public CliAP{
     using NodeId = StepperUtils::NodeId;
+    Trajectory trajectory;
 
     RemoteFOCMotor stepper_w;
     RemoteFOCMotor stepper_x;
@@ -54,8 +55,10 @@ public:
             stepper_x{_logger, _can, 1},
             stepper_y{_logger, _can, 2},
             stepper_z{_logger, _can, 3},
+
             steppers(
                 actions,
+                trajectory,
                 stepper_w,
                 stepper_x,
                 stepper_y,
