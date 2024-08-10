@@ -35,6 +35,10 @@ void Machine::do_idle(const Vector2 & to){
     ;
 }
 
+void Machine::toggle_nz(){
+    nz(1 - last_nz);
+}
+
 
 void Machine::do_move(const Vector2 & from, const Vector2 & to){
     do_pick(from);

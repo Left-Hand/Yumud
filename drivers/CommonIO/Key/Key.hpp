@@ -14,6 +14,7 @@ public:
     void init(){
         init(m_valid_level);
     }
+
     void init(const bool valid_level){
         if(valid_level == true){
             m_gpio.inpd();

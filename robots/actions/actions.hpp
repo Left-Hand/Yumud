@@ -85,7 +85,6 @@ public:
 struct DelayAction:public Action{
 protected:
 
-
     void execute() override {}
     SpecialActionType special() const override {
         return SpecialActionType::DELAY;

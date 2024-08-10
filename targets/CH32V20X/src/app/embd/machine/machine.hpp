@@ -38,6 +38,7 @@ protected:
         z_mm(inspect_z);
     }
 
+    real_t last_nz = 0;
 public:
     ActionQueue &actions;
     RemoteFOCMotor & w;
@@ -82,7 +83,9 @@ public:
     void do_idle(const Vector2 & to = Vector2(25, 155));
     void do_home();
     void entry_teach();
+    void toggle_nz();
     void nz(const real_t duty) override {
+        last_nz = duty;
         w.setNozzle(duty);
     }
 };
