@@ -280,7 +280,7 @@ void EmbdHost::main(){
         static uint last_turn = 0;
         uint this_turn = millis() / 100;
         if(last_turn != this_turn){
-            DEBUG_PRINTS("busy ", actions.pending());
+            // DEBUG_PRINTS("busy ", actions.pending());
             // ch9141.prints("busy ", actions.pending());
             last_turn = this_turn;
             run_led = !run_led;

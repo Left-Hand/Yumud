@@ -40,6 +40,7 @@ void FOCStepper::parseCommand(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_ONE(   Command::SET_TRG_POS,   setTargetPosition)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_SPD,   setTargetSpeed)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_TPZ,   setTargetTrapezoid)
+        SET_METHOD_BIND_ONE(   Command::SET_TRG_TEACH,   setTargetTeach)
         SET_METHOD_BIND_EXECUTE(Command::FREEZE,        freeze)
 
         SET_METHOD_BIND_ONE(   Command::LOCATE,        locateRelatively)

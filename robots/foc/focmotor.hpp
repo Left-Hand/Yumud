@@ -40,6 +40,7 @@ public:
     virtual void setTargetTrapezoid(const real_t pos) = 0;
     virtual void setOpenLoopCurrent(const real_t current) = 0;
     virtual void setTargetVector(const real_t pos) = 0;
+    virtual void setTargetTeach(const real_t max_curr) = 0;
     virtual void locateRelatively(const real_t pos = 0) = 0;
 
     virtual bool isActive() const = 0;

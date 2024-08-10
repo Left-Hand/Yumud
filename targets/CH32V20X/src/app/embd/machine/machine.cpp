@@ -30,7 +30,9 @@ void Machine::do_place(const Vector2 & to){
 void Machine::do_idle(const Vector2 & to){
 
     actions
-    << TrapezoidMoveAction(*this, to);
+    << TrapezoidMoveAction(*this, to)
+    << FloatAction(*this)
+    ;
 }
 
 
@@ -55,4 +57,12 @@ void Machine::do_home(){
     actions += FloatAction(*this);
     actions += DelayAction(200);
     do_idle();
+}
+
+void Machine::entry_teach(){
+    actions << Action([&](){
+        x.setTargetTeach(real_t(0.3));
+        y.setTargetTeach(real_t(0.3));
+        z.setTargetTeach(real_t(0.6));
+    });
 }

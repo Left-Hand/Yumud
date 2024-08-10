@@ -46,6 +46,19 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
             case CtrlType::SPEED:
                 result = speed_ctrl.update(target, est_spd);
                 break;
+            case CtrlType::TEACH:{
+                real_t max_current = target;
+                real_t spd = getSpeed();
+                real_t abs_spd = ABS(spd);
+                static constexpr real_t deadzone = real_t(0.23);
+                if(abs_spd < deadzone){
+                    result = {0, 0}; 
+                }else{
+                    real_t expect_current = MIN(abs_spd * real_t(0.27), max_current);
+                    result = {expect_current, SIGN_AS(real_t(PI / 2) *real_t(1.3), spd)};
+                }
+                break;
+            }
         } 
 
         curr_ctrl.update(result);

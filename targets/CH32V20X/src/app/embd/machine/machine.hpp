@@ -36,6 +36,7 @@ protected:
 
     void z_inspect(){
         z_mm(inspect_z);
+    }
 
 public:
     ActionQueue &actions;
@@ -80,6 +81,7 @@ public:
     void do_place(const Vector2 & to);
     void do_idle(const Vector2 & to = Vector2(25, 155));
     void do_home();
+    void entry_teach();
     void nz(const real_t duty) override {
         w.setNozzle(duty);
     }

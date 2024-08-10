@@ -54,6 +54,17 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
             }
             break;
 
+
+        case "teach"_ha:
+        case "tch"_ha:
+        case "th"_ha:
+            if(args.size()){
+                real_t val = real_t(args[0]);
+                setTargetTeach(val);
+                CLI_DEBUG("targ teach\t", val);
+            }
+            break;
+
         case "tpz"_ha:
         case "t"_ha:
             if(args.size()){
@@ -76,7 +87,7 @@ void FOCStepper::parseTokens(const String & _command, const std::vector<String> 
                 setTargetCurrent(val);
                 CLI_DEBUG("targ current\t", val, " n");
             }else{
-                CLI_DEBUG("now current\t", getCurrent(), " n");
+                CLI_DEBUG("now current\t", getCurrent(), " A");
             }
             break;
 

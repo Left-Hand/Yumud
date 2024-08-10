@@ -27,6 +27,7 @@ void RemoteFOCMotor::setTargetCurrent(const real_t current){POST(Command::SET_TR
 void RemoteFOCMotor::setTargetSpeed(const real_t speed){POST(Command::SET_TRG_SPD, E(speed));}
 void RemoteFOCMotor::setTargetPosition(const real_t _pos){POST(Command::SET_TRG_POS, E(ctrl_limits.pos_limit.clamp(_pos)));}
 void RemoteFOCMotor::setTargetTrapezoid(const real_t _pos){POST(Command::SET_TRG_TPZ, E(ctrl_limits.pos_limit.clamp(_pos)));}
+void RemoteFOCMotor::setTargetTeach(const real_t _max_curr){POST(Command::SET_TRG_TEACH, E(_max_curr));}
 void RemoteFOCMotor::setOpenLoopCurrent(const real_t current){POST(Command::SET_OPEN_CURR, E(current));}
 void RemoteFOCMotor::setCurrentLimit(const real_t max_current){POST(Command::SET_CURR_LMT, E(max_current));}
 void RemoteFOCMotor::locateRelatively(const real_t _pos){POST(Command::LOCATE, E(_pos));}

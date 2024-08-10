@@ -32,6 +32,7 @@ public:
     void setTargetPosition(const real_t pos);
     void setTargetTrapezoid(const real_t pos);
     void setOpenLoopCurrent(const real_t current);
+    void setTargetTeach(const real_t current);
     void setTargetVector(const real_t pos);
     void setCurrentLimit(const real_t max_current);
     void locateRelatively(const real_t pos = 0);

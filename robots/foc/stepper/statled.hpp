@@ -57,14 +57,18 @@ public:
                         setTranstit(Color(0,1,0), Color(0,0,0), Method::Triangle, 400);
                         break;
                     case CtrlType::POSITION:
-                        setTranstit(Color(1,0,0), Color(0,0,0), Method::Triangle, 400);
+                        setTranstit(Color(1,0,0), Color(0,1,0), Method::Triangle, 400);
                         break;
                     case CtrlType::SPEED:
-                        setTranstit(Color(0,0,1), Color(0,0,0), Method::Triangle, 400);
+                        setTranstit(Color(0,0,1), Color(0,1,0), Method::Triangle, 400);
                         break;
                     case CtrlType::TRAPEZOID:
-                        setTranstit(Color(1,0,1), Color(0,0,0), Method::Triangle, 400);
+                        setTranstit(Color(1,0,1), Color(1,0,0), Method::Triangle, 400);
                         break;
+                    case CtrlType::TEACH:
+                        setTranstit(Color(1,1,1), Color(0,0,1), Method::Triangle, 400);
+                        break;
+
                     default:
                         break;
                 }

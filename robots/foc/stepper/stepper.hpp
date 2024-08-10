@@ -172,6 +172,11 @@ public:
         ctrl_type = CtrlType::TRAPEZOID;
     }
 
+    void setTargetTeach(const real_t max_curr){
+        target = CLAMP(max_curr, 0, ctrl_limits.max_curr);
+        ctrl_type = CtrlType::TEACH;
+    }
+
     void setOpenLoopCurrent(const real_t current){
         curr_config.openloop_curr = current;
     }

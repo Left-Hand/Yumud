@@ -48,7 +48,8 @@ namespace StepperEnums{
         CURRENT,
         POSITION,
         TRAPEZOID,
-        SPEED
+        SPEED,
+        TEACH
     };
     
     enum class ErrorCode:uint8_t{
@@ -68,6 +69,7 @@ namespace StepperEnums{
         SET_TRG_POS,//          set target position and switch to position-closeloop mode
         SET_TRG_SPD,//          set target speed and switch to speed-closeloop mode
         SET_TRG_TPZ,//          set target position and switch to position-trapzoid mode
+        SET_TRG_TEACH,//        set max current and switch to teach mode
         FREEZE = 0x0F,//        freeze stepper, lock position
 
         CFG_CURR_CTL = 0x10,//  config current controller
