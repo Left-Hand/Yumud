@@ -23,7 +23,7 @@ void host_main(){
     logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     can1.init(Can::BaudRate::Mbps1);
-    can1.enableHwReTransmit();
+    // can1.enableHwReTransmit();
 
     usbfs.init();
 

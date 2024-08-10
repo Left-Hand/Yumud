@@ -32,6 +32,9 @@ void EmbdHost::do_place(const Vector2 & to){
     << CombinedAction(
         TrapezoidMoveAction(steppers, to)
         , PlaceAction(steppers)
+        , DelayAction(200)
+        , ReleaseAction(steppers)
+        , DelayAction(500)
         , FloatAction(steppers)
     ); 
 }
@@ -353,7 +356,7 @@ void EmbdHost::main(){
 
         // plot_rgb(sketch, {0,0});
 
-        DEBUG_PRINTLN(steppers.x_axis.readMM(), steppers.y_axis.readMM(), steppers.z_axis.readMM());
+        // DEBUG_PRINTLN(steppers.x_axis.readMM(), steppers.y_axis.readMM(), steppers.z_axis.readMM());
         static uint last_turn = 0;
         uint this_turn = millis() / 100;
         if(last_turn != this_turn){

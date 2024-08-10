@@ -51,11 +51,22 @@ public:
     HoldAction(Machine & _machine):PickDropAction(_machine){}
 };
 
-struct FloatAction:public PickDropAction{
+struct ReleaseAction:public PickDropAction{
 protected:
 
     void first_do() override {
         machine.nz(0);
+        machine.z_release();
+    }
+public:
+    ReleaseAction(Machine & _machine):PickDropAction(_machine){}
+};
+
+struct FloatAction:public PickDropAction{
+protected:
+
+    void first_do() override {
+
         machine.z_idle();
     }
 public:

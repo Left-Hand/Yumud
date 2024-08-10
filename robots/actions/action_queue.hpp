@@ -67,10 +67,12 @@ public:
             action_queue = Queue();
             clear_req = false;
         }
+
+        // DEBUG_PRINTLN(action_queue.size())
         if(action_queue.size()){
-            const auto & action = action_queue.front();
-            action->invoke();
-            if (bool(*action) == false) {
+            auto & action = *action_queue.front();
+            action.invoke();
+            if (bool(action) == false) {
                 action_queue.pop();
             }
         }

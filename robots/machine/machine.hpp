@@ -17,8 +17,8 @@ public:
         RemoteFOCMotor & _z
     ):
     XY_Machine(
-        Axis(_x, real_t(1.0/40), {0, 230}),
-        Axis(_y, real_t(1.0/40), {0, 180})),
+        Axis(_x, real_t(1.0/40), {0, 300}),
+        Axis(_y, real_t(1.0/40), {0, 200})),
 
     Nozzle_Machine(
         Axis(_z, real_t(1.0/2), {0, 50}))
@@ -50,6 +50,10 @@ public:
     }
     void z_idle(){
         z_mm(idle_z);
+    }
+
+    void z_release(){
+        z_mm(release_z);
     }
 
     void nz(const real_t duty) override {

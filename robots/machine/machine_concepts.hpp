@@ -130,21 +130,14 @@ public:
     }
 };
 
-// struct XYZ_Machine:public XY_Machine, public Z_Machine{
-// public:
-//     XYZ_Machine(const Axis & _x_axis, const Axis & _y_axis, const Axis & _z_axis):
-//             X_Machine(_x_axis), Y_Machine(_y_axis), Z_Machine(_z_axis){;}
-// };
-
-
-
 class Nozzle_Machine:public Z_Machine{
 protected:
     static constexpr real_t z_scale = real_t(1.0)/2;
 
     static constexpr uint pick_z = 47;
     static constexpr uint hold_z = 25;
-    static constexpr uint place_z = 46;
+    static constexpr uint place_z = 47;
+    static constexpr uint release_z = place_z - 15;
     static constexpr uint idle_z = 25;
 
 public:
@@ -153,6 +146,8 @@ public:
     virtual void z_hold() = 0;
     virtual void z_place() = 0;
     virtual void z_idle() = 0;
+
+    virtual void z_release() = 0;
 
     virtual void nz(const real_t duty) = 0;
 };

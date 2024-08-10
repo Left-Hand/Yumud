@@ -21,7 +21,8 @@ protected:
     }
 
     void abort_until_done(){
-        if (machine.reached(end * 1000)) abort();
+        // if (machine.reached(end * 1000))
+        abort();
     }
 
     virtual void do_move() = 0;

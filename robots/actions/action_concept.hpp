@@ -37,16 +37,12 @@ protected:
         return real_t(1) - real_t(sustain) / full;
     }
 
-    void reset(){
-        sustain = full;
-    }
-
     void abort(){
         sustain = 0;
     }
 
     real_t since() const {
-        return real_t(MAX(int(full - sustain), ((1 << GLOBAL_Q )- 5))) / 1000;
+        return real_t(CLAMP(int(full - sustain),0 , ((1 << GLOBAL_Q )- 5))) / 1000;
     }
 public:
     Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}

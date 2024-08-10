@@ -84,14 +84,12 @@ public:
 
 struct DelayAction:public Action{
 protected:
-    using M_Queue = ActionQueue;
 
-    M_Queue & queue;
 
     void execute() override {}
     SpecialActionType special() const override {
         return SpecialActionType::DELAY;
     }
 public:
-    DelayAction(M_Queue & _queue, const uint dur):Action(nullptr, dur), queue(_queue){}
+    DelayAction( const uint dur):Action(nullptr, dur){}
 };
