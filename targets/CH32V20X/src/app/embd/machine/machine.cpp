@@ -75,8 +75,8 @@ void Machine::do_home(){
 
 
 bool Machine::record(){
-    if(not trajectory.is_full()){
-        trajectory.push(int(x_axis.readMM()), int(y_axis.readMM()), int(z_axis.readMM()), bool(last_nz));
+    if((not trajectory.is_full())){
+        if((millis() % trajectory.record_dur == 0)) trajectory.push(int(x_axis.readMM()), int(y_axis.readMM()), int(z_axis.readMM()), bool(last_nz));
         return true;
     }else{
         return false;
@@ -87,30 +87,41 @@ void Machine::tick(){
     actions.update();
 
     using enum MachineState;
-
-    if(millis() % (1000 / trajectory.record_fps) == 0){
-        switch(machine_state){
-            case TEACH:
-                if(not record()) exit_teach();
-                break;
-            case REPLAY:
-                if(not replay()) exit_replay();
-                break;
-            case NONE:
-            default:
-                break;
-        }
+    if(actions.pending()) return;
+    switch(machine_state){
+        case TEACH:
+            if(not record()) exit_teach();
+            break;
+        case REPLAY:
+            if(not replay()) exit_replay();
+            break;
+        case NONE:
+        default:
+            break;
     }
 }
 
 bool Machine::replay(){
-    const auto & item = trajectory[play_index];
-    x_axis.setTargetMM(item.x);
-    y_axis.setTargetMM(item.y);
-    z_axis.setTargetMM(item.z);
+    const auto max_index = trajectory.size() - 2;
+    const auto index = MIN(play_index, max_index);
+    const auto & item = trajectory[index];
+    const auto & next_item = trajectory[index + 1];
+    const auto dur = trajectory.record_dur;
+    const auto reminder = millis() % dur;
+    const auto inv_rem = dur - reminder; 
+
+    auto x_mm = (item.x * inv_rem + next_item.x * reminder) / dur;
+    auto y_mm = (item.y * inv_rem + next_item.y * reminder) / dur;
+    auto z_mm = (item.z * inv_rem + next_item.z * reminder) / dur; 
+
+    if(reminder % 5){
+        x_axis.setTargetMM(x_mm);
+        y_axis.setTargetMM(y_mm);
+        z_axis.setTargetMM(z_mm);
+    }
     nz(item.nz);
-    play_index++;
-    return (play_index < trajectory.size());
+    if(reminder == 0) play_index++;
+    return (play_index < max_index);
 }
 
 void Machine::entry_teach(){
@@ -118,7 +129,7 @@ void Machine::entry_teach(){
         x.setTargetTeach(real_t(0.3));
         y.setTargetTeach(real_t(0.3));
         z.setTargetTeach(real_t(0.6));
-    });
+    }, 200);
 
     trajectory.clear();
     machine_state = MachineState::TEACH;
@@ -130,8 +141,20 @@ void Machine::exit_teach(){
 }
 
 void Machine::entry_replay(){
-    machine_state = MachineState::REPLAY;
-    play_index = 0;
+    if(trajectory.size()){
+        machine_state = MachineState::REPLAY;
+        const auto & first = trajectory[0];
+        actions += TrapezoidMoveAction(*this, Vector2(first.x, first.y));
+        
+
+        actions += Action([&](){
+            z_axis.setTargetMM(first.z);
+            nz(first.nz);
+        });
+
+        actions += DelayAction(400);
+        play_index = 0;
+    }
 }
 
 void Machine::exit_replay(){

@@ -16,6 +16,7 @@ public:
 
 
     static constexpr uint record_fps = 50;
+    static constexpr uint record_dur = 1000 / record_fps;
     static constexpr uint record_seconds = 60;
     static constexpr uint record_len = (record_fps * record_seconds);
 
@@ -70,6 +71,9 @@ public:
         data.clear();
     }
 
+    auto capacity() const {
+        return data.capacity();
+    }
     void push(const uint x, const uint y, const uint z, const bool nz){
         TrajectoryItem item;
         item.x = x;
