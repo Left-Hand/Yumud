@@ -131,6 +131,7 @@ void EmbdHost::main(){
 
     steppers.do_home();
 
+    DEBUG_PRINTLN("init done");
     while(true){
 
         sketch.fill(RGB565::BLACK);

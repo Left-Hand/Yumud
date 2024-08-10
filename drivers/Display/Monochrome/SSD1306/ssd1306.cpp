@@ -4,22 +4,8 @@
 void SSD13XX::init(){   
     interface.init(); 
     preinitByCmds();
-    flush(false);
     enable();
     setOffset();
-}
-
-
-void SSD13XX::flush(const Binary & color){
-    auto & frame = fetchFrame();
-    frame.putrect(Rect2i(Vector2i(), this->size), color);
-
-    for(auto i=0xb0;i<0xb5;i++){  
-        interface.writeCommand(i);
-        interface.writeCommand(0x00);
-        interface.writeCommand(0x10);    
-        for(auto n=0;n<size.x;n++) interface.writeCommand(color); 
-    }
 }
 
 void SSD13XX::update(){

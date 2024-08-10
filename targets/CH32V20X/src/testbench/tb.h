@@ -58,3 +58,4 @@ void dshot_main();
 void calc_main();
 
 void float_main();
+void oled_main();

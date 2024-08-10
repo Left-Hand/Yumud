@@ -2,6 +2,8 @@
 
 #include "../drivers/device_defs.h"
 #include "../types/rgb.h"
+
+#include "drivers/Display/DisplayerInterface.hpp"
 #include <stdlib.h>
 #include <optional>
 
@@ -61,12 +63,12 @@ public:
 
     }
 
-    __fast_inline void writeCommand(const uint8_t cmd) override{
+    void writeCommand(const uint8_t cmd) override{
         dc_gpio = command_level;
         spi_drv.write(cmd);
     }
 
-    __fast_inline void writeData(const uint8_t data) override{
+    void writeData(const uint8_t data) override{
         dc_gpio = data_level;
         spi_drv.write(data);
     }
@@ -82,7 +84,7 @@ public:
         spi_drv.write(data, len);
     }
 
-    __fast_inline void writeData(const uint16_t data){
+    void writeData(const uint16_t data){
         dc_gpio = data_level;
         spi_drv.write(data);
     }
@@ -121,17 +123,17 @@ class OledInterfaceI2c:public DisplayInterfaceI2c{
 protected:
     static constexpr uint8_t cmd_token = 0x00;
     static constexpr uint8_t data_token = 0x40;
-
+    static constexpr uint8_t oled_default_addr = 0x78;
 public:
-    OledInterfaceI2c(I2c & i2c_bus, const uint8_t i2c_id):DisplayInterfaceI2c(i2c_bus, i2c_id){};
+    OledInterfaceI2c(I2c & i2c_bus, const uint8_t i2c_id = oled_default_addr):DisplayInterfaceI2c(i2c_bus, i2c_id){};
 
     void init()override{;}
 
-    __fast_inline void writeCommand(const uint8_t cmd) override{
+    void writeCommand(const uint8_t cmd) override{
         bus_drv.writeReg(cmd_token, cmd);
     }
 
-    __fast_inline void writeData(const uint8_t data) override{
+    void writeData(const uint8_t data) override{
         bus_drv.writeReg(data_token, data);
     }
 
@@ -139,13 +141,8 @@ public:
         bus_drv.writePool(data_token, data_ptr, len, LSB);
     }
 
-    // void writePool(const uint8_t & data, const size_t & len) override{
-    //     // bus_drv.write(data_token, false);
-    //     auto data_ptr = new uint8_t[len];
-    //     memset(data_ptr, data, len);
-    //     bus_drv.writePool(data_token, data_ptr, len, false);
-    //     // bus_drv.write(data, len);
-    //     delete data_ptr;
-    // }
+    void writePool(const uint8_t data, const size_t len) override{
+        bus_drv.writePool(data_token, data, len, LSB);
+    }
 };
 
