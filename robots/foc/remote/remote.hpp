@@ -4,7 +4,7 @@
 #include "robots/foc/stepper/constants.hpp"
 #include "robots/foc/stepper/cli.hpp"
 
-#include "robots/foc/stepper/protocol/can_protocol.hpp"
+#include "robots/foc/protocol/can_protocol.hpp"
 
 class RemoteFOCMotor:public FOCMotor{
 protected:
@@ -63,6 +63,7 @@ public:
     void parseCan(const CanMsg & msg);
     void parseCommand(const NodeId id, const Command cmd, const CanMsg &msg);
 
+    uint8_t getNodeId() {return 0;}
     bool stable() const {
         return ABS(readSpeed()) < real_t(0.07);
     }

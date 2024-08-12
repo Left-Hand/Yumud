@@ -2,6 +2,11 @@
 
 #include "stepper/archive/archive.hpp"
 #include "stepper/ctrls/ctrls.hpp"
+#include "protocol/can_protocol.hpp"
+#include "protocol/ascii_protocol.hpp"
+
+class AsciiProtocol;
+class CanProtocol;
 
 class FOCMotor{ 
 public:
@@ -28,6 +33,11 @@ protected:
     CtrlLimits ctrl_limits;
     real_t target;
 
+    friend class AsciiProtocol;
+    friend class CanProtocol;
+
+    std::optional<AsciiProtocol> ascii_protocol;
+    std::optional<CanProtocol> can_protocol;
 public:
     virtual bool loadArchive(const bool outen = false) = 0;
     virtual void saveArchive(const bool outen = false) = 0;
@@ -62,4 +72,6 @@ public:
     virtual void setNozzle(const real_t duty) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
+
+    virtual uint8_t getNodeId() = 0;
 };

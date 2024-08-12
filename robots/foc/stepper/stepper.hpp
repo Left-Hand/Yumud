@@ -8,15 +8,19 @@
 #include "archive/archive.hpp"
 
 #include "robots/foc/focmotor.hpp"
+#include "robots/foc/protocol/ascii_protocol.hpp"
+#include "robots/foc/protocol/can_protocol.hpp"
+
 #include "hal/timer/pwm/gpio_pwm.hpp"
 
-#include "protocol/ascii_protocol.hpp"
-
-class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
+class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
-
     using Archive = StepperUtils::Archive;
     using Switches = StepperUtils::Switches;
+
+    using NodeId = StepperUtils::NodeId;
+
+    NodeId node_id = 0;
 
     #ifdef STEPPER_NO_PRINT
     // #define CLI_PRINTS(...)
@@ -28,7 +32,7 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     #else
     // #define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
 
-    #define ARCHIVE_PRINTS(...) if(outen) logger.prints(__VA_ARGS__);
+    #define ARCHIVE_PRINTS(...) if(outen) DEBUGGER.prints(__VA_ARGS__);
 
     #define CALI_DEBUG(...)\
     if(cali_debug_enabled){\
@@ -122,15 +126,24 @@ class FOCStepper:public StepperUtils::CliSTA, public FOCMotor{
     RunStatus active_task(const InitFlag init_flag = false);
     RunStatus beep_task(const InitFlag init_flag = false);
     RunStatus check_task(const InitFlag init_flag = false);
-    void parseTokens(const String & _command, const std::vector<String> & args) override;
-    void parseCommand(const Command command, const CanMsg & msg) override;
 
+    friend class AsciiProtocol;
+    friend class CanProtocol;
 public:
 
 
-    FOCStepper(IOStream & _logger, Can & _can, SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
-            CliSTA(_logger, _can, getDefaultNodeId()) ,svpwm(_svpwm), odo(encoder), memory(_memory){;}
+    FOCStepper(SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
+            svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
+    void bindProtocol(AsciiProtocol & _ascii_protocol){
+        ascii_protocol.emplace(_ascii_protocol);
+    }
+
+    void bindProtocol(CanProtocol & _can_protocol){
+        can_protocol.emplace(_can_protocol);
+    }
+
+    uint8_t getNodeId() {return node_id;}
     bool loadArchive(const bool outen = false);
     void saveArchive(const bool outen = false);
     void removeArchive(const bool outen = false);

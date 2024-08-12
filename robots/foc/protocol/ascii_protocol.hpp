@@ -1,6 +1,14 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/kernel/stream.hpp"
+
+#include "robots/foc/stepper/constants.hpp"
+
+#include "types/string/String.hpp"
+
+#include <vector>
+
 
 #define CLI_DEBUG
 
@@ -81,4 +89,24 @@
     }\
     break;\
 }\
+
+class FOCMotor;
+
+class AsciiProtocol{
+private:
+    std::vector<String> split_string(const String& input, char delimiter);
+
+protected:
+    FOCMotor & motor;
+    IOStream & logger;
+
+    using Command = StepperEnums::Command;
+public:
+    AsciiProtocol(FOCMotor & _motor, IOStream & _logger):motor(_motor), logger(_logger){;}
+
+    virtual void parseTokens(const String & _command,const std::vector<String> & args);
+    void parseLine(const String & _line);
+    void readString();
+};
+
 

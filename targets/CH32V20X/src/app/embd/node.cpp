@@ -10,8 +10,6 @@ void node_main(){
     DEBUGGER.init(DEBUG_UART_BAUD);
     DEBUGGER.setEps(4);
 
-    auto & logger = DEBUGGER;
-
     auto & ena_gpio = portB[0];
     auto & enb_gpio = portA[7];
 
@@ -44,7 +42,13 @@ void node_main(){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    FOCStepper stp{logger, can1, svpwm, mt6816, mem};
+
+    FOCStepper stp{svpwm, mt6816, mem};
+    AsciiProtocol ascii_p{stp, DEBUGGER};
+    CanProtocol can_p{stp, can1};
+
+    stp.bindProtocol(ascii_p);
+    stp.bindProtocol(can_p);
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
