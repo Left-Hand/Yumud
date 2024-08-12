@@ -49,9 +49,8 @@ class EmbdHost:public CliAP{
     Gpio & empty_led = portC[13];
     Key toggle_key {portA[0], HIGH};
 
-    uint num_result = 0;
+    uint num_result = 1;
     uint april_result = 0;
-    real_t april_dir = 0;
 public:
     EmbdHost(IOStream & _logger, Can & _can):
             CliAP(_logger, _can),

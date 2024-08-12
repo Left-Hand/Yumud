@@ -67,7 +67,7 @@ protected:
 
     void first_do() override {
 
-        machine.z_idle();
+        machine.z_inspect();
     }
 public:
     FloatAction(Machine & _machine):PickDropAction(_machine){}

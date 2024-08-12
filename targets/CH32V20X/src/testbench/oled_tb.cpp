@@ -78,7 +78,7 @@ public:
                 break;
             case Func::EZ:
                 str = "ez " + toString(para);
-                para += 0.3;
+                para += real_t(0.3);
                 break;
             case Func::CF:
                 str = "c 0.6";

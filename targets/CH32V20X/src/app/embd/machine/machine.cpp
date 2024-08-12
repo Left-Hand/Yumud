@@ -49,6 +49,11 @@ void Machine::do_idle(const Vector2 & to){
     ;
 }
 
+void Machine::do_inspect(){
+    z_inspect();
+    nz(0);
+}
+
 void Machine::toggle_nz(){
     nz(1 - last_nz);
 }
@@ -82,7 +87,7 @@ void Machine::do_home(){
 
 bool Machine::record(){
     if((not trajectory.is_full())){
-        if((millis() % trajectory.record_dur == 0)) trajectory.push(int(x_axis.readMM()), int(y_axis.readMM()), int(z_axis.readMM()), bool(last_nz));
+        if((millis() % trajectory.record_dur == 0)) trajectory.push(int(x_axis.readMM()), int(y_axis.readMM()), int(z_axis.readMM() * 4), bool(last_nz));
         return true;
     }else{
         return false;
@@ -123,7 +128,7 @@ bool Machine::replay(){
     if(reminder % 5){
         x_axis.setTargetMM(x_mm);
         y_axis.setTargetMM(y_mm);
-        z_axis.setTargetMM(z_mm);
+        z_axis.setTargetMM(z_mm / 4);
     }
     nz(item.nz);
     if(reminder == 0) play_index++;

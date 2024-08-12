@@ -18,8 +18,8 @@ void CtrlLimits::reset(){
 void PositionCtrl::Config::reset(){
     // kp = 5;
     // kd = real_t(0.57);
-    kp = real_t(5.6);
-    kd = real_t(0.22);
+    kp = real_t(3.6);
+    kd = real_t(0.47);
 }
 
 void SpeedCtrl::Config::reset(){

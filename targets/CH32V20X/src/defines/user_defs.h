@@ -10,8 +10,7 @@
 #define DEBUGGER uart1
 #define LOGGER uart1
 #define DEBUG_UART_BAUD 115200
-// #include "v2defs.h"
-#include "oled_defs.h"
+#include "embd_defs.h"
 #endif
 
 #ifdef CH32V30X

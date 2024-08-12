@@ -111,13 +111,13 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             break;
     
         case "gon"_ha:
-            trigger_method(steppers.do_place, get_predefined_positions(args.size() ? int(args[0]) : 0));
+            trigger_method(steppers.soft_mm, get_predefined_positions(args.size() ? int(args[0]) : 0));
         case "goa"_ha:
-            trigger_method(steppers.do_place, get_predefined_positions(args.size() ? real_t(args[0]) : 0));
+            trigger_method(steppers.soft_mm, get_predefined_positions(args.size() ? real_t(args[0]) : 0));
         case "gbn"_ha:
             trigger_method(steppers.do_move, pos_pending, get_predefined_positions(num_result));
         case "gba"_ha:
-            trigger_method(steppers.do_move, pos_pending, get_predefined_positions(april_dir));
+            trigger_method(steppers.do_move, pos_pending, get_predefined_positions(april_result));
         case "xp"_ha:
             settle_method(steppers.x.setTargetPosition, args, real_t)
         case "yp"_ha:
@@ -192,6 +192,9 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             trigger_method(stepper_w.freeze);
         case "inspect"_ha:
             trigger_method(steppers.do_inspect);
+        case "center"_ha:
+            trigger_method(steppers.soft_mm, pos_center
+            );
 
         case "teach"_ha:{
             const bool sw = args.size() ? bool(args[0].toInt()) : true;
@@ -230,6 +233,8 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
         case "drop"_ha:
             if(args.size() == 2){
                 steppers.do_place({args[0], args[1]});
+            }else if(args.size() == 0){
+                steppers.do_place({steppers.x_axis.readMM(), steppers.y_axis.readMM()});
             }
             break;
 

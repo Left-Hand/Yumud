@@ -14,30 +14,30 @@ protected:
     static constexpr uint place_z = 47;
     static constexpr uint release_z = place_z - 15;
     static constexpr uint idle_z = 25;
-    static constexpr uint inspect_z = 5;
+    static constexpr uint inspect_z = 15;
 
     void z_pick(){
-        z_mm(pick_z);
+        z_mm(pick_z + z_base);
     }
 
     void z_hold(){
-        z_mm(hold_z);
+        z_mm(hold_z + z_base);
     }
 
     void z_place(){
-        z_mm(place_z);
+        z_mm(place_z + z_base);
     }
 
     void z_idle(){
-        z_mm(idle_z);
+        z_mm(idle_z + z_base);
     }
 
     void z_release(){
-        z_mm(release_z);
+        z_mm(release_z + z_base);
     }
 
     void z_inspect(){
-        z_mm(inspect_z);
+        z_mm(inspect_z + z_base);
     }
 
     real_t last_nz = 0;
@@ -92,6 +92,7 @@ public:
         }
     }
 
+    static constexpr int z_base = 0;
 
     void do_move(const Vector2 & from, const Vector2 & to);
     void do_pick(const Vector2 & from);
@@ -101,7 +102,7 @@ public:
     void do_home();
     void do_free();
     void toggle_nz();
-    void do_inspect(){z_inspect();}
+    void do_inspect();
     void nz(const real_t duty) override {
         last_nz = duty;
         w.setNozzle(duty);
