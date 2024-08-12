@@ -77,7 +77,7 @@ public:
                 str = "cali";
                 break;
             case Func::EZ:
-                str = "ez " + toString(para);
+                // str = "ez " + toString(para);
                 para += real_t(0.3);
                 break;
             case Func::CF:

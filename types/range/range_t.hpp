@@ -305,18 +305,6 @@ public:
     constexpr explicit operator bool() const{
         return from != to;
     }
-
-    constexpr  explicit operator String() const{
-        return toString();
-    }
-
-    String toString(unsigned char decimalPlaces = 2) const{
-        if constexpr(std::is_integral<T>::value){
-            return ('[' + String(from) + ',' + String(to) + ')');
-        }else{
-            return ('[' + ::toString(from, decimalPlaces) + ',' + ::toString(to, decimalPlaces) + ')');
-        }
-    }
 };
 
 using Rangei = Range_t<int>;
