@@ -109,6 +109,8 @@ void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix)
     reverse_str(str, i);
 }
 
+
+
 void StringUtils::ftoa(float number,char *buf, uint8_t eps)
 {
     char str_int[12] = {0};
@@ -234,35 +236,31 @@ void StringUtils::str_replace(const char *src, const size_t src_len, const char 
 }
 
 
-int StringUtils::stoi(const char * str) {
-	int s=0;
-	bool flag=false;
+int StringUtils::atoi(const char * str, const size_t len) {
+	int ret = 0;
+	bool minus = false;
 
-	while(*str==' '){
-		str++;
-	}
+	for(size_t i = 0; i < len; i++){
+		char chr = str[i];
+	
+		if(chr=='-'){
+			minus = true;
+		}
 
-	if(*str=='-'||*str=='+'){
-		if(*str=='-')
-            flag=true;
-		str++;
-	}
-
-	while(*str>='0'&&*str<='9'){
-		s *= 10;
-        s += *str-'0';
-		str++;
-		if(s<0){
-			s=2147483647;
-			break;
+		while(chr>='0' and chr<='9'){
+			ret *= 10;
+			ret += chr - '0';
+			if(ret < 0){
+				ret= __INT_MAX__;
+				break;
+			}
 		}
 	}
-	if(flag) return -s;
-    else return s;
+
+	return minus ? (-ret) : ret;
 }
 
-float StringUtils::stof(const char * str) {
-
+float StringUtils::atof(const char * str, const size_t len) {
     int int_part = 0;
     int frac_part = 0;
     int scale = 1;
@@ -270,17 +268,53 @@ float StringUtils::stof(const char * str) {
     return(int_part + (float)frac_part / scale);
 }
 
+[[maybe_unused]] static void mystof(const char * str, const size_t len, int & int_part, int & frac_part, int & scale){
+    scale = 1;
+    bool minus = false;
 
-// template<typename real>
-// String StringUtils::type_to_string() {
-//     String type_name = __PRETTY_FUNCTION__;
-//     auto start_pos = type_name.indexOf('=') + 1;
-//     auto end_pos = type_name.indexOf(';', start_pos);
-//     return type_name.substring(start_pos, end_pos - start_pos);
-// }
+	const size_t default_begin_index = len; 
+	const size_t default_point_index = len;
+	size_t begin_index = default_begin_index;
+	size_t point_index = default_point_index;
+
+	for(size_t i = 0; i < len; i++){
+		char chr = str[i];
+		
+		if(begin_index == default_begin_index){
+			if(StringUtils::is_digit(chr)){
+				begin_index = i;
+			}
+		}
+	
+		if(chr=='\0'){
+			int_part = 0;
+			frac_part = 0;
+			return;
+		}
+
+		if(chr == '.'){
+			point_index = i + 1;
+            break;
+		}
+
+		if(chr=='-'){
+			minus = true;
+		}
+	}
+
+	if(point_index < len){
+		frac_part = StringUtils::atoi(str + point_index , len - (point_index));
+	}
+
+	int_part = StringUtils::atoi(str + begin_index, len - (point_index + 1));
 
 
-// template <typename T>
-// String toString(const T & value, const uint8_t & eps){
-//     return String(value, eps);
-// }
+	for(size_t i = 0; i < len - point_index; i++){
+		scale *= 10;
+	}
+
+	if(minus){
+		int_part = -int_part;
+		frac_part = -frac_part;
+	}
+}

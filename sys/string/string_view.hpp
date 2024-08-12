@@ -37,12 +37,12 @@ public:
     const char* data() const { return data_; }
 
     template<integral T>
-    operator T() const {return StringUtils::stoi(this->data());}
+    operator T() const {return StringUtils::atoi(this->data(), this->length());}
 
-    operator float() const {return StringUtils::stof(this->data());}
+    operator float() const {return StringUtils::atof(this->data(), this->length());}
 
     operator double() const {return float(*this);}
 private:
-    const char* data_;
+    const char * data_;
     size_t size_;
 };
