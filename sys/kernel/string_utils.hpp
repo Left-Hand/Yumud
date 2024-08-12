@@ -5,11 +5,9 @@
 #include "stdint.h"
 #include "stdlib.h"
 #include "string.h"
-#include "String.hpp"
 
 #include <concepts>
 
-class String;
 
 namespace StringUtils {
 void reverse_str(char * str, size_t len);
@@ -30,14 +28,17 @@ void str_replace(const char *src, const size_t src_len, const char *match, const
 int stoi(const char * str);
 float stof(const char * str);
 
-template<typename real>
-String type_to_string();
+// template<typename real>
+// String type_to_string();
+
+}
+
+class String;
 
 template<typename T>
 concept HasToString = requires(T t, unsigned char eps) {
     { t.toString(eps) } -> std::convertible_to<String>;
 };
-}
-template <typename T>
-String toString(const T & value, const uint8_t & eps);
+// template <typename T>
+// String toString(const T & value, const uint8_t & eps);
 #endif

@@ -9,7 +9,7 @@ class Encoder{
 public:
     virtual real_t getLapPosition() = 0;
     virtual void init() = 0;
-    virtual bool stable() const = 0;
+    virtual bool stable() = 0;
 };
 
 class IncrementalEncoder: public Encoder{

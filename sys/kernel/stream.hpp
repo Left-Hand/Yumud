@@ -134,7 +134,7 @@ public:
     OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const String & str){write(str.c_str(), str.length()); return *this;}
     OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
-    OutputStream & operator<<(const std::string_view & str){write(str.data(), str.length()); return * this;}
+    OutputStream & operator<<(const StringView & str){write(str.data(), str.length()); return * this;}
     OutputStream & operator<<(const float val){*this << String(val); return * this;}
     OutputStream & operator<<(const double val){*this << String(val); return * this;}
 
@@ -167,7 +167,7 @@ public:
         return *this;
     }
 
-    template<StringUtils::HasToString T>
+    template<HasToString T>
     OutputStream & operator<<(const T & misc){*this << misc.toString(eps_); return *this;}
 
     template <typename... Args>

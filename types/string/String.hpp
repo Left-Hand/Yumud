@@ -26,8 +26,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "../sys/kernel/string_utils.hpp"
-#include "../sys/core/platform.h"
+
+#include "string_view.hpp"
+
+#include "sys/kernel/string_utils.hpp"
+#include "sys/core/platform.h"
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
@@ -57,6 +60,8 @@ public:
 	explicit String(char c);
     explicit String(char * c);
     explicit String(char * c, const size_t size);
+	String(const std::string & str):String(str.c_str(), str.length()){};
+	String(const StringView & str):String(str.data(), str.length()){};
     explicit String(const char * c, const size_t size);
 
 	explicit String(unsigned char value, unsigned char base=10);
@@ -167,13 +172,13 @@ public:
 	int lastIndexOf( char ch, unsigned int fromIndex ) const;
 	int lastIndexOf( const String &str ) const;
 	int lastIndexOf( const String &str, unsigned int fromIndex ) const;
-	String substring( unsigned int beginIndex ) const { return substring(beginIndex, len); };
-	String substring( unsigned int beginIndex, unsigned int endIndex ) const;
+	StringView substring( unsigned int beginIndex ) const { return substring(beginIndex, len); };
+	StringView substring( unsigned int beginIndex, unsigned int endIndex ) const;
 
 	// modification
 	void replace(char find, char replace);
 	// String& replace(const String& replace);
-	String& replace(const String& find, const String& replace);
+	String& replace(const String & find, const String & replace);
 	void remove(unsigned int index);
 	void remove(unsigned int index, unsigned int count);
 	String & toLowerCase(void);
@@ -185,10 +190,15 @@ public:
 	long toInt(void) const;
 	float toFloat(void) const;
 
-	explicit operator uint8_t(void) const {return toInt();}
-	explicit operator uint16_t(void) const {return toInt();}
-    explicit operator int(void) const{return toInt();}
+
+	template<integral T>
+    explicit operator T(void) const{return toInt();}
+
     explicit operator float(void) const{return toFloat();}
+
+	explicit operator std::string(void) const {return std::string(this->c_str(), this->length());}
+	explicit operator std::string_view(void) const {return std::string(this->c_str(), this->length());}
+	explicit operator StringView(void) const {return StringView(this->c_str(), this->length());}
     bool isNumeric(void) const;
     bool isDigit(void) const;
 

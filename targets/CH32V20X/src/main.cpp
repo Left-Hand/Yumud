@@ -2,7 +2,7 @@
 #include "app/embd/embd.h"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
-
+#include "robots/foc/bldc/bldc.hpp"
 
 
 void preinit(){
@@ -33,6 +33,7 @@ int main(){
     // qlz_main();
     // embd_main();
     embd_main();
+    // bldc_main();
     // delay(200);
     // pmdc_tb();
     // uart_tb(uart1);

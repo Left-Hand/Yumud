@@ -3,3 +3,5 @@
 class BLDC{
 
 };
+
+void bldc_main();

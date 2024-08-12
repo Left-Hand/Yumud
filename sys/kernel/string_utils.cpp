@@ -262,26 +262,25 @@ int StringUtils::stoi(const char * str) {
 }
 
 float StringUtils::stof(const char * str) {
-    char * p = const_cast<char *>(str);
 
     int int_part = 0;
     int frac_part = 0;
     int scale = 1;
-    disassemble_fstr(p, int_part, frac_part, scale);
+    disassemble_fstr(str, int_part, frac_part, scale);
     return(int_part + (float)frac_part / scale);
 }
 
 
-template<typename real>
-String StringUtils::type_to_string() {
-    String type_name = __PRETTY_FUNCTION__;
-    auto start_pos = type_name.indexOf('=') + 1;
-    auto end_pos = type_name.indexOf(';', start_pos);
-    return type_name.substring(start_pos, end_pos - start_pos);
-}
+// template<typename real>
+// String StringUtils::type_to_string() {
+//     String type_name = __PRETTY_FUNCTION__;
+//     auto start_pos = type_name.indexOf('=') + 1;
+//     auto end_pos = type_name.indexOf(';', start_pos);
+//     return type_name.substring(start_pos, end_pos - start_pos);
+// }
 
 
-template <typename T>
-String toString(const T & value, const uint8_t & eps){
-    return String(value, eps);
-}
+// template <typename T>
+// String toString(const T & value, const uint8_t & eps){
+//     return String(value, eps);
+// }

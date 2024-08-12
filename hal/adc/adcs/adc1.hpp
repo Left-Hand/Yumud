@@ -27,10 +27,6 @@ extern Adc1 adc1;
 #endif
 
 
-#if defined(HAVE_ADC1) || defined(HAVE_ADC2)
-extern "C"{
-__interrupt void ADC1_2_IRQHandler(void);
-}
-#endif
+
 
 #endif

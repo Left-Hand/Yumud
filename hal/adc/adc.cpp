@@ -9,22 +9,18 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> regular_list
 
     ADC_DeInit(instance);
 
-    // setMode(mode);
-    // setRegularTrigger(RegularTrigger::SW);
-    // setInjectedTrigger(InjectedTrigger::SW);
-
     ADC_InitTypeDef ADC_InitStructure; 
 	
-    ADC_DeInit(ADC1);  // ������ADC1��ȫ���Ĵ�������Ϊȱʡֵ
+    ADC_DeInit(ADC1);
 	
-    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;                   // ADC����ģʽ:ADC1��ADC2�����ڶ���ģʽ
-    ADC_InitStructure.ADC_ScanConvMode = DISABLE;                        // ģ��ת�������ڵ�ͨ��ģʽ
-    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;                  // ģ��ת�������ڵ���ת��ģʽ
-    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;  // ת���������������ⲿ��������
-    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;               // ADC�����Ҷ���
-    ADC_InitStructure.ADC_NbrOfChannel = 1;                              // ˳����й���ת����ADCͨ������Ŀ
+    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
+    ADC_InitStructure.ADC_ScanConvMode = DISABLE;
+    ADC_InitStructure.ADC_ContinuousConvMode = DISABLE;
+    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
+    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
+    ADC_InitStructure.ADC_NbrOfChannel = 1;
     ADC_InitStructure.ADC_Pga = ADC_Pga_1;
-    ADC_Init(ADC1, &ADC_InitStructure);    // ����ADC_InitStruct��ָ���Ĳ�����ʼ������ADCx�ļĴ���
+    ADC_Init(ADC1, &ADC_InitStructure);
 
 
     ADC_Cmd(instance, ENABLE);

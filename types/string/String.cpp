@@ -608,7 +608,7 @@ int String::lastIndexOf(const String &s2, unsigned int fromIndex) const
 	return found;
 }
 
-String String::substring(unsigned int left, unsigned int right) const
+StringView String::substring(unsigned int left, unsigned int right) const
 {
 
 	if (left > right) {
@@ -616,14 +616,10 @@ String String::substring(unsigned int left, unsigned int right) const
 		right = left;
 		left = temp;
 	}
-	String out;
-	if (left >= len) return out;
+	if (left >= len) return StringView(this->buffer, 0);
 	if (right > len) right = len;
-	char temp = buffer[right];  // save the replaced character
-	buffer[right] = '\0';	
-	out = buffer + left;  // pointer arithmetic
-	buffer[right] = temp;  //restore character
-	return out;
+
+	return StringView(this->buffer + left, right - left);
 }
 
 /*********************************************/
@@ -667,7 +663,7 @@ void String::remove(unsigned int index, unsigned int count) {
     len = len - count;
 
     memmove(writeTo, buffer + index + count, len - index);
-    buffer[len] = '\0'; // È·±£×Ö·û´®ÒÔ¿Õ×Ö·û½áÎ²
+    buffer[len] = '\0'; // È·ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½Ô¿ï¿½ï¿½Ö·ï¿½ï¿½ï¿½Î²
 }
 
 String & String::toLowerCase(void)
