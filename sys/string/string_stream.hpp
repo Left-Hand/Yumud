@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../kernel/stream.hpp"
+#include "../kernel/ostream.hpp"
 
 class StringStream:public OutputStream{
 

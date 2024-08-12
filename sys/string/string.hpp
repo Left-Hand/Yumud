@@ -28,6 +28,7 @@
 #include <ctype.h>
 
 #include "string_view.hpp"
+#include "string_stream.hpp"
 
 #include "sys/string/string_utils.hpp"
 #include "sys/core/platform.h"

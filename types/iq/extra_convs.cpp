@@ -27,13 +27,6 @@ static void qtoa(char * str_int, char * str_frac, const _iq value, uint8_t eps =
     str_frac[eps] = 0;
 }
 
-// String iq_t::toString(unsigned char eps) const{
-//     char str_int[str_int_size] = {0};
-//     char str_frac[str_float_size] = {0};
-//     qtoa(str_int, str_frac, value, eps);
-//     return String(str_int) + String(str_frac);
-// };
-
 
 iq_t::iq_t(const char * str, const size_t len):value(0){
     int int_part = 0;

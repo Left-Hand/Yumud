@@ -8,7 +8,6 @@
 
 struct iq_t;
 
-// String toString(const iq_t iq, unsigned char eps = 3);
 OutputStream & operator<<(OutputStream & os, const iq_t value);
 
 #endif

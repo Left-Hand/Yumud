@@ -183,17 +183,6 @@ public:
         auto rect = Rect2_t<T>(other, other - *this);
         return rect.abs();
     }
-    constexpr  __no_inline explicit operator String() const{
-        return toString();
-    }
-
-    __no_inline String toString(unsigned char decimalPlaces = 2) const {
-        if constexpr(std::is_integral<T>::value){
-            return ('(' + String(x) + ',' + String(y) + ')');
-        }else{
-            return ('(' + ::toString(x, decimalPlaces) + ',' + ::toString(y, decimalPlaces) + ')');
-        }
-    }
 };
 
 #include "vector2_t.tpp"
