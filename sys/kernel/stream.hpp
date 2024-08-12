@@ -4,14 +4,12 @@
 
 #include "sys/core/platform.h"
 #include "types/buffer/buffer.hpp"
-#include "types/string/String.hpp"
+#include "sys/string/string.hpp"
 #include "thirdparty/sstl/include/sstl/vector.h"
-#include "string_utils.hpp"
-
+#include "sys/string/string.hpp"
 
 #include <bits/ios_base.h>
 #include <iomanip>
-
 
 #include <vector>
 #include <array>

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../sys/core/platform.h"
-#include "../types/string/String.hpp"
+#include "sys/string/string.hpp"
 #include "../types/real.hpp"
 
 

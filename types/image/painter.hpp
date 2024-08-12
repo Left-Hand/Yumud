@@ -10,7 +10,7 @@
 #include "../types/rgb.h"
 
 #include "font/font.hpp"
-#include "../types/string/String.hpp"
+#include "sys/string/string.hpp"
 
 #include "../sys/debug/debug_inc.h"
 

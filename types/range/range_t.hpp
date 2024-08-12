@@ -5,7 +5,7 @@
 #include "real.hpp"
 
 #include "../sys/core/platform.h"
-#include "../types/string/String.hpp"
+#include "sys/string/string.hpp"
 #include "type_traits"
 
 #include <algorithm>

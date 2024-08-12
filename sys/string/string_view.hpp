@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sys/core/platform.h"
-#include "sys/kernel/string_utils.hpp"
+#include "sys/string/string_utils.hpp"
 
 #include <cstdint>
 #include <memory.h>

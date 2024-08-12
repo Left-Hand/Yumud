@@ -29,7 +29,7 @@
 
 #include "string_view.hpp"
 
-#include "sys/kernel/string_utils.hpp"
+#include "sys/string/string_utils.hpp"
 #include "sys/core/platform.h"
 
 // An inherited class for holding the result of a concatenation.  These

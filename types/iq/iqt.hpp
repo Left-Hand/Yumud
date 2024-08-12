@@ -7,7 +7,7 @@
 
 #include "dsp/constexprmath/ConstexprMath.hpp"
 
-#include "types/string/String.hpp"
+#include "sys/string/string.hpp"
 #include "types/float/fp32.hpp"
 
 #include <IQmath_RV32.h>
