@@ -15,8 +15,7 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             motor.loadArchive(args.size() ? bool(int(args[0])) : true);
             break;
 
-        case "nz"_ha:
-            {
+        case "nz"_ha:{
                 real_t val = args.size() ? int(args[0]) : 0;
                 motor.setNozzle(val);
                 CLI_DEBUG("set nozzle to:",val);
@@ -34,9 +33,9 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size()){
                 real_t spd = real_t(args[0]);
                 motor.setTargetSpeed(spd);
-                CLI_DEBUG("targ speed\t", spd, " n/s");
+                CLI_DEBUG("target speed:", spd, " n/s");
             }else{
-                CLI_DEBUG("curr speed\t", motor.getSpeed(), " n/s");
+                CLI_DEBUG("speed:", motor.getSpeed(), " n/s");
             }
             break;
 
@@ -46,9 +45,9 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size()){
                 real_t val = real_t(args[0]);
                 motor.setTargetPosition(val);
-                CLI_DEBUG("targ position\t", val, " n");
+                CLI_DEBUG("target position:", val, " n");
             }else{
-                CLI_DEBUG("now position", motor.getPosition(), " n");
+                CLI_DEBUG("position:", motor.getPosition(), " n");
             }
             break;
 
@@ -59,7 +58,7 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size()){
                 real_t val = real_t(args[0]);
                 motor.setTargetTeach(val);
-                CLI_DEBUG("targ teach\t", val);
+                CLI_DEBUG("target teach:", val);
             }
             break;
 
@@ -68,9 +67,9 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size()){
                 real_t val = real_t(args[0]);
                 motor.setTargetTrapezoid(val);
-                CLI_DEBUG("targ position\t", val, " n");
+                CLI_DEBUG("target trapezoid:", val, " n");
             }else{
-                CLI_DEBUG("now position\t", motor.getPosition(), " n");
+                CLI_DEBUG("position:", motor.getPosition(), " n");
             }
             break;
 
@@ -79,9 +78,9 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size()){
                 real_t val = real_t(args[0]);
                 motor.setTargetCurrent(val);
-                CLI_DEBUG("targ current\t", val, " n");
+                CLI_DEBUG("target current:", val, " n");
             }else{
-                CLI_DEBUG("now current\t", motor.getCurrent(), " A");
+                CLI_DEBUG("current:", motor.getCurrent(), " A");
             }
             break;
 
@@ -90,7 +89,7 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size()){
                 auto v = real_t(args[0]);
                 motor.setTargetVector(v);
-                CLI_DEBUG("targ vector\t", v, " n");
+                CLI_DEBUG("target vector:", v, " n");
             }
             break;
 
@@ -105,58 +104,58 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
         // }
         //     break;
 
-        // case "error"_ha:
-        // case "err"_ha:
-        //     if(motor.error_message) {CLI_DEBUG(error_message)}
-        //     else {CLI_DEBUG("no error")}
-        //     break;
+        case "error"_ha:
+        case "err"_ha:
+            if(motor.getErrMsg()) {CLI_DEBUG(motor.getErrMsg())}
+            else {CLI_DEBUG("no error")}
+            break;
 
-        // case "warn"_ha:
-        // case "wa"_ha:
-        //     if(motor.warn_message) {CLI_DEBUG(warn_message)}
-        //     else {CLI_DEBUG("no warn")}
-        //     break;
+        case "warn"_ha:
+        case "wa"_ha:
+            if(motor.getWarnMsg()) {CLI_DEBUG(motor.getWarnMsg())}
+            else {CLI_DEBUG("no warn")}
+            break;
 
-        // case "enable"_ha:
-        // case "en"_ha:
-        // case "e"_ha:
-        //     motor.rework();
-        //     CLI_DEBUG("enabled");
-        //     break;
+        case "enable"_ha:
+        case "en"_ha:
+        case "e"_ha:
+            motor.enable();
+            CLI_DEBUG("enabled");
+            break;
         
         // case "exe"_ha:
         //     CLI_DEBUG("exe", motor.exe_micros, "us");
         //     break;
 
-        // case "disable"_ha:
-        // case "dis"_ha:
-        // case "de"_ha:
-        // case "d"_ha:
-        //     motor.shutdown();
-        //     CLI_DEBUG("disabled");
-        //     break;
+        case "disable"_ha:
+        case "dis"_ha:
+        case "de"_ha:
+        case "d"_ha:
+            motor.enable(false);
+            CLI_DEBUG("disabled");
+            break;
 
-        // case "cali"_ha:
-        //     motor.cali_task(true);
-        //     CLI_DEBUG("cali started");
-        //     break;
+        case "cali"_ha:
+            motor.triggerCali();
+            CLI_DEBUG("cali started");
+            break;
 
-        // case "locate"_ha:
-        // case "loc"_ha:
-        // {
-        //     real_t loc = args.size() ? real_t(args[0]) : 0;
-        //     locateRelatively(loc);
-        //     CLI_DEBUG("located to", loc);
-        // }
-        //     break;
+        case "locate"_ha:
+        case "loc"_ha:
+        {
+            real_t loc = args.size() ? real_t(args[0]) : 0;
+            motor.locateRelatively(loc);
+            CLI_DEBUG("located to", loc);
+        }
+            break;
 
         // case "beep"_ha:
         //     motor.beep_task(true);
         //     break;
 
-        // case "id"_ha:
-        //     CLI_DEBUG("node id is: ", uint8_t(motor.node_id));
-        //     break;
+        case "id"_ha:
+            CLI_DEBUG("node id is: ", uint8_t(motor.getNodeId()));
+            break;
 
         // case "rd"_ha:
         //     motor.run_debug_enabled = args.size() ? int(args[0]) : true;
@@ -174,28 +173,26 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
         //     CLI_DEBUG("current status:", int(motor.run_status));
         //     break;
 
-        // case "shutdown"_ha:
-        // case "shut"_ha:
-        //     motor.shutdown();
-        //     CLI_DEBUG("shutdown ok");
-        //     break;
-
         // case "cd"_ha:
         //     CLI_DEBUG("dir changed");
         //     motor.elecrad_zerofix = real_t(PI);
         //     break;
 
-        // case "hlt"_ha:
-        //     CLI_DEBUG("halt");
-        //     CREATE_FAULT;
-        //     break;
+        case "hlt"_ha:
+            CLI_DEBUG("halt");
+            CREATE_FAULT;
+            break;
 
-        // case "map"_ha:
-        //     for(const auto & item : motor.odo.map()){
-        //         CLI_DEBUG(item);
-        //         delay(1);
-        //     }
-        //     break;
+        case "map"_ha:
+            for(const auto & item : motor.odo.map()){
+                CLI_DEBUG(item);
+                delay(1);
+            }
+            break;
+
+        case "cm"_ha:
+            motor.odo.map().fill(0);
+            break;
 
         // case "version"_ha:
         // case "ver"_ha:
@@ -203,6 +200,19 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
         // case "info"_ha:
         //     CLI_DEBUG(motor.archive_.board_info);
         //     break;
+        case "reset"_ha:
+        case "rst"_ha:
+        case "r"_ha:
+            CLI_DEBUG("rsting");
+            NVIC_SystemReset();
+            break;
+        case "alive"_ha:
+        case "a"_ha:
+            CLI_DEBUG("chip is alive");
+            break;
+        default:
+            CLI_DEBUG("no command available:", command);
+            break;
     }
 }
 

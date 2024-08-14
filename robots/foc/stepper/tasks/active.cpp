@@ -7,7 +7,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
         svpwm.setCurrent(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
     }else{
         run_elecrad = est_elecrad + curr_ctrl.raddiff_output;
-        svpwm.setCurrent(curr_ctrl.current_output, run_elecrad + elecrad_zerofix);
+        svpwm.setCurrent(curr_ctrl.curr_output, run_elecrad + elecrad_zerofix);
     }
 
     odo.update();
@@ -62,7 +62,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
         } 
 
         curr_ctrl.update(result);
-        measurements.curr = curr_ctrl.current_output;
+        measurements.curr = curr_ctrl.curr_output;
         run_leadangle = curr_ctrl.raddiff_output;
     }
 

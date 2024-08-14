@@ -33,7 +33,7 @@ void RemoteFOCMotor::setCurrentLimit(const real_t max_current){POST(Command::SET
 void RemoteFOCMotor::locateRelatively(const real_t _pos){POST(Command::LOCATE, E(_pos));}
 
 bool RemoteFOCMotor::isActive() const{return true;}
-const volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_status;}
+volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_status;}
 
 real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return readCurrent();}
 real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return readSpeed();}

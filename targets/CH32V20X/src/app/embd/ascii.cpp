@@ -6,8 +6,7 @@ static constexpr Vector2 pos_begin = {111, 46};
 static constexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
 static constexpr Vector2 pos_center = Vector2(pos_begin) + Vector2(squ_len / 2, squ_len / 2);
 static constexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
-static constexpr real_t pi_4 = real_t(PI/4);
-static constexpr real_t pi_2 = real_t(PI/2);
+
 
 static Vector2 get_predefined_positions(uint8_t index){
     // xymm 110.5 30

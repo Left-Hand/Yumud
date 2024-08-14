@@ -60,7 +60,7 @@ void node_main(){
     stp.init();
     stp.setSpeedLimit(36);
     stp.setAccelLimit(25);
-    stp.setOpenLoopCurrent(real_t(0.5));
+    stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
 
     while(!stp.isActive());
@@ -68,10 +68,24 @@ void node_main(){
     stp.setCurrentLimit(real_t(1.5));
 
     // CubicInterpolation cubic;
+
+
     // cubic.mapping
+    // t = 0;
     while(true){
         stp.run(); 
         stp.report();
+
+        auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
+        real_t target = f(t-2);
+        // real_t target = t * 0;
+        // stp.setTargetPosition(target);
+        // stp.setTargetSpeed(5);
+        // stp.setTargetVector(target);
+
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(stp.getPositionErr(),fmod(t, real_t(1.00)), target, stp.getPosition());
+        // Sys::Clock::reCalculateTime();
+
         // stp.setTargetPosition(Interpolation::demo() * 10);
         // stp.setTargetPosition(17 * sin(2 * t));
         // Sys::Clock::reCalculateTime();

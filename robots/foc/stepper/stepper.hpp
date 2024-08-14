@@ -20,7 +20,10 @@ class FOCStepper:public FOCMotor{
 
     using NodeId = StepperUtils::NodeId;
 
-    NodeId node_id = 0;
+
+    #define THROW_ERROR(code, msg) throw_error(code,msg)
+    #define THROW_WARN(code, msg) throw_warn(code,msg)
+
 
     #ifdef STEPPER_NO_PRINT
     // #define CLI_PRINTS(...)
@@ -50,12 +53,8 @@ class FOCStepper:public FOCMotor{
 
     Archive archive_;
     Switches & switches_ = archive_.switches;
-    volatile RunStatus run_status = RunStatus::INIT;
-    volatile CtrlType ctrl_type = CtrlType::POSITION;
 
-    SVPWM2 & svpwm;
-    OdometerPoles odo;
-    Memory & memory;
+    volatile CtrlType ctrl_type = CtrlType::POSITION;
 
     GpioPwm red_pwm{portC[14]};
     GpioPwm green_pwm{portC[15]};
@@ -87,40 +86,10 @@ class FOCStepper:public FOCMotor{
     bool command_debug_enabled = false;
     bool run_debug_enabled = false;
     
-
-
     uint64_t exe_micros = 0;
 
     bool skip_tone = false;
     bool cmd_mode = false;
-
-    ErrorCode error_code = ErrorCode::OK;
-    const char * error_message = nullptr;
-    const char * warn_message = nullptr;
-
-    bool shutdown_when_error_occurred = true;
-    bool shutdown_when_warn_occurred = true;
-
-    void throw_error(const ErrorCode _error_code,const char * _error_message) {
-        error_message = _error_message;
-        run_status = RunStatus::ERROR;
-        if(shutdown_when_error_occurred){
-            shutdown();
-        }
-        CLI_DEBUG(error_message);
-    }
-
-    void throw_warn(const ErrorCode ecode, const char * _warn_message){
-        warn_message = _warn_message;
-        run_status = RunStatus::WARN;
-        if(shutdown_when_warn_occurred){
-            shutdown();
-        }
-        CLI_DEBUG(warn_message);
-    }
-
-    #define THROW_ERROR(code, msg) throw_error(code,msg)
-    #define THROW_WARN(code, msg) throw_warn(code,msg)
 
     RunStatus cali_task(const InitFlag init_flag = false);
     RunStatus active_task(const InitFlag init_flag = false);
@@ -130,20 +99,17 @@ class FOCStepper:public FOCMotor{
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
+    FOCStepper(SVPWM2 & _svpwm, Encoder & _encoder, Memory & _memory):
+            FOCMotor(_svpwm, _encoder, _memory){;}
 
-
-    FOCStepper(SVPWM2 & _svpwm, Encoder & encoder, Memory & _memory):
-            svpwm(_svpwm), odo(encoder), memory(_memory){;}
-
-    void bindProtocol(AsciiProtocol & _ascii_protocol){
-        ascii_protocol.emplace(_ascii_protocol);
+    bool isActive() const {
+        return (RunStatus::ACTIVE) == run_status;
     }
 
-    void bindProtocol(CanProtocol & _can_protocol){
-        can_protocol.emplace(_can_protocol);
+    volatile RunStatus & status(){
+        return run_status;
     }
 
-    uint8_t getNodeId() {return node_id;}
     bool loadArchive(const bool outen = false);
     void saveArchive(const bool outen = false);
     void removeArchive(const bool outen = false);
@@ -215,30 +181,9 @@ public:
 
     void report();
 
-    bool isActive() const {
-        return (RunStatus::ACTIVE) == run_status;
-    }
-
-    const volatile RunStatus & status(){
-        return run_status;
-    }
 
 
-    real_t getSpeed() const{
-        return measurements.spd;
-    }
 
-    real_t getPosition() const {
-        return measurements.pos;
-    }
-
-    real_t getCurrent() const {
-        return measurements.curr;
-    }
-
-    real_t getAccel() const{
-        return measurements.accel;
-    }
 
     void setPositionLimit(const Range & clamp){
         ctrl_limits.pos_limit = clamp;
@@ -252,9 +197,7 @@ public:
         }
     }
 
-    void setNodeId(const NodeId _id){
-        node_id = _id;
-    }
+
 
     real_t getPositionErr(){
         return getPosition() - target;
@@ -263,7 +206,7 @@ public:
     real_t getSpeedErr(){
         return getSpeed() - target;
     }
-    uint8_t getDefaultNodeId();
+
 
     void setSpeedLimit(const real_t max_spd){
         ctrl_limits.max_spd = max_spd;

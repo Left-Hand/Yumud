@@ -4,8 +4,8 @@ FOCStepper::RunStatus FOCStepper::check_task(const FOCStepper::InitFlag init_fla
     static constexpr int subdivide_micros = 1024;
     static constexpr int check_times = 2;
     static constexpr real_t minimal_motion = inv_poles / 8 * real_t(0.9);
-    static constexpr real_t check_current = real_t(1.2);
-    static constexpr real_t idle_current = 0;
+    // static constexpr real_t check_current = real_t(1.2);
+    // static constexpr real_t idle_current = 0;
 
     enum class SubState{
         INIT,
@@ -54,7 +54,7 @@ FOCStepper::RunStatus FOCStepper::check_task(const FOCStepper::InitFlag init_fla
                 break;
 
             case SubState::TEST_A:
-                svpwm.setABCurrent(sin(cnt * real_t((PI / subdivide_micros))) * check_current, idle_current);
+                // svpwm.setABCurrent(sin(cnt * real_t((PI / subdivide_micros))) * check_current, idle_current);
 
                 odo.update();
                 move_range = move_range.merge(odo.getPosition());
@@ -71,7 +71,7 @@ FOCStepper::RunStatus FOCStepper::check_task(const FOCStepper::InitFlag init_fla
                 break;
 
             case SubState::TEST_B:
-                svpwm.setABCurrent(idle_current, sin(cnt * real_t(PI / subdivide_micros)) * check_current);
+                // svpwm.setABCurrent(idle_current, sin(cnt * real_t(PI / subdivide_micros)) * check_current);
 
                 odo.update();
                 move_range = move_range.merge(odo.getPosition());

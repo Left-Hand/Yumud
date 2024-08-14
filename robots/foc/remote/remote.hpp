@@ -6,7 +6,7 @@
 
 #include "robots/foc/protocol/can_protocol.hpp"
 
-class RemoteFOCMotor:public FOCMotor{
+class RemoteFOCMotor:public FOCMotorConcept{
 protected:
     using ExitFlag = StepperEnums::ExitFlag;
     using InitFlag = StepperEnums::InitFlag;
@@ -16,11 +16,11 @@ protected:
     using Command = StepperEnums::Command;
     IOStream & logger;
     Can & can;
-    uint8_t node_id;
     volatile RunStatus run_status = RunStatus::NONE;
 public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, const NodeId _node_id):
-            logger(_logger), can(_can), node_id(_node_id){;}
+            FOCMotorConcept(_node_id),
+            logger(_logger), can(_can){;}
 
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);
@@ -38,7 +38,7 @@ public:
     void locateRelatively(const real_t pos = 0);
 
     bool isActive() const;
-    const volatile RunStatus & status();
+    volatile RunStatus & status();
 
     real_t getSpeed() const;
     real_t getPosition() const;

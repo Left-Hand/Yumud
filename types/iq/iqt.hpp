@@ -126,6 +126,13 @@ public:
         return iq_t(_iq((value / other)));
     }
 
+
+    #ifdef  STRICT_IQ
+    
+    iq_t operator*(const floating auto other) = delete;
+    iq_t operator/(const floating auto other) = delete;
+    #endif
+    
     __fast_inline_constexpr iq_t operator*(const iq_t other) const {
         return iq_t((_iq)((int64_t)value * (int64_t)other.value >> GLOBAL_Q));
     }

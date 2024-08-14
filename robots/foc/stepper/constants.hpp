@@ -17,10 +17,16 @@
 #include "drivers/Encoder/OdometerLines.hpp"
 
 
-static constexpr uint32_t foc_freq = 36000;
-static constexpr uint32_t chopper_freq = 36000;
+static constexpr uint32_t foc_freq = 32768;
+static constexpr uint32_t chopper_freq = 32768;
 static constexpr uint32_t est_freq = foc_freq / 16;
 static constexpr uint32_t est_devider = foc_freq / est_freq;
+
+static constexpr real_t pi_4 = real_t(PI/4);
+static constexpr real_t pi_2 = real_t(PI/2);
+static constexpr real_t tau = real_t(TAU);
+static constexpr real_t pi = real_t(PI);
+static constexpr real_t hpi = real_t(PI/2); 
 
 static constexpr int poles = 50;
 static constexpr real_t inv_poles = real_t(1) / poles;

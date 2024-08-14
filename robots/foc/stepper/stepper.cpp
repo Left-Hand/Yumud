@@ -8,21 +8,7 @@ void FOCStepper::setNozzle(const real_t duty){
     nozzle_en_gpio = bool(duty);
 }
 
-uint8_t FOCStepper::getDefaultNodeId(){
-    auto chip_id = Sys::Chip::getChipIdCrc();
-    switch(chip_id){
-        case 3273134334:
-            return 3;
-        case 341554774:
-            return 2;
-        case 4079188777:
-            return 1;
-        case 0x551C4DEA:
-            return  3;
-        default:
-            return 0;
-    }
-}
+
 
 void FOCStepper::tick(){
     auto begin_micros = micros();
@@ -159,11 +145,11 @@ void FOCStepper::report(){
     // target_pos = sign(frac(t) - 0.5);
     // target_pos = sin(t);
     // RUN_DEBUG(, est_pos, est_speed);
-    // if(logger.pending()==0){
+    if(DEBUGGER.pending()==0){
     //     // delayMicroseconds(200);   
     //     // delay(1); 
-    //     RUN_DEBUG(std::setprecision(4), target, getSpeed(), getPosition(), getCurrent(), run_leadangle,std::setprecision(4), getPositionErr());
-    // }
+        DEBUG_PRINTLN(std::setprecision(3), target, getSpeed(), getPosition(), getCurrent(), run_leadangle, std::setprecision(4), getPositionErr());
+    }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);
     // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;

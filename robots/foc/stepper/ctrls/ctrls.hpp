@@ -43,19 +43,27 @@ public:
     Config & config;
 
 CURR_SPEC:
+    bool ctrl_done = false;
 public:
-    real_t current_output = 0;
+    real_t curr_output = 0;
     real_t raddiff_output = 0;
     CurrentCtrl(CtrlLimits & _limits, Config & _config):limits(_limits), config(_config){reset();}
 
     void reset(){
         config.reset();
-        current_output = 0;
+        curr_output = 0;
         raddiff_output = 0;
     }
 
-    CtrlResult update(CtrlResult result);
-    CtrlResult output() const {return {current_output, raddiff_output};}
+    operator bool() const {
+        return ctrl_done; 
+    }
+    
+    CtrlResult update(const CtrlResult & result);
+    CtrlResult output() const {return {curr_output, raddiff_output};}
+
+    real_t getLastCurrent() const {return curr_output; }
+    real_t getLastRaddiff() const {return raddiff_output;}
 };
 
 
@@ -84,17 +92,17 @@ public:
     
     Config & config;
 SPD_SPEC:
-
-    real_t targ_current = 0;
-    real_t last_speed = 0;
-
+    real_t last_real_spd = 0;
+    real_t soft_targ_spd = 0;
+    real_t filt_real_spd = 0;
 public:
     SpeedCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
         HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
 
     void reset() override {
         config.reset();
-        targ_current = 0;
+        last_real_spd = 0;
+        soft_targ_spd = 0;
     }
 
     Result update(const real_t _targ_speed,const real_t real_speed);
@@ -104,6 +112,7 @@ struct PositionCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
+        real_t ki;
         real_t kd;
 
         void reset();
@@ -114,6 +123,7 @@ protected:
     SpeedEstimator::Config spe_config;
     SpeedEstimator targ_spd_est{spe_config};
 
+    real_t ki_integral = 0;
     real_t targ_spd = 0;
 public:
     PositionCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
@@ -122,7 +132,12 @@ public:
     void reset() override {
         config.reset();
         targ_spd_est.reset();
+        ki_integral = 0;
         targ_spd = 0;
+    }
+
+    operator bool () const {
+        return ki_integral == 0;
     }
 
     Result update(const real_t targ_position, const real_t real_position, 
