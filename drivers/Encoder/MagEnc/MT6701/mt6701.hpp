@@ -1,8 +1,9 @@
 #ifndef __MT6701_HPP__
 #define __MT6701_HPP__
 
-#include "bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 #include "../types/real.hpp"
+#include <optional>
 
 class MT6701{
 public:
@@ -20,7 +21,10 @@ public:
     };
 
 protected:
-    I2cDrv & bus_drv;
+    static constexpr uint8_t default_i2c_addr = 0b000'110'0;
+
+    std::optional<I2cDrv> i2c_drv;
+    std::optional<SpiDrv> spi_drv;
 
     struct UVWMuxReg{
         REG8_BEGIN
@@ -105,23 +109,25 @@ protected:
         uint8_t stopData;
     };
 
-    void writeReg(const RegAddress & regAddress, const uint16_t & regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+    void writeReg(const RegAddress regAddress, const uint16_t regData){
+        if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+    void readReg(const RegAddress regAddress, uint16_t & regData){
+        if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData);
     }
 
-    void writeReg(const RegAddress & regAddress, const uint8_t & regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+    void writeReg(const RegAddress regAddress, const uint8_t regData){
+        if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+    void readReg(const RegAddress regAddress, uint8_t & regData){
+        if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData);
     }
 public:
-    MT6701(I2cDrv & _bus_drv):bus_drv(_bus_drv){};
+    MT6701(I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
+    MT6701(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){};
+    MT6701(I2c & _i2c):i2c_drv(I2cDrv(_i2c, default_i2c_addr)){};
     ~MT6701(){};
 
     real_t getRawPosition(){
@@ -188,7 +194,7 @@ public:
         writeReg(RegAddress::WireConfig, wireConfigReg.data);
     }
 
-    void setStart(const real_t & start){
+    void setStart(const real_t start){
         uint16_t _startData;
         uni_to_u16(start, _startData);
         _startData >>= 4;
@@ -198,7 +204,7 @@ public:
         writeReg(RegAddress::StartStop, startStopReg.data);
     }
 
-    void setStop(const real_t & stop){
+    void setStop(const real_t stop){
         uint16_t _stopData;
         uni_to_u16(stop, _stopData);
         _stopData >>= 4;

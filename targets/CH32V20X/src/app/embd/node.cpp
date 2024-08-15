@@ -2,6 +2,70 @@
 #include "robots/foc/stepper/stepper.hpp"
 #include "algo/interpolation/cubic.hpp"
 #include "drivers/Actuator/Driver/AT8222/at8222.hpp"
+#include "algo/interpolation/cubic.hpp"
+
+
+#include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
+#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp" 
+struct TurnSolver{
+    uint16_t ta = 0;
+    uint16_t tb = 0;
+    real_t pa = 0;
+    real_t pb = 0;
+    real_t va = 0;
+    real_t vb = 0;
+};
+
+TurnSolver turnSolver;
+
+real_t demo(){
+    auto turnCnt = millis() % 2667;
+    uint32_t turns = millis() / 2667;
+    
+    static constexpr real_t velPoints[7] = {
+        real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
+    };
+    
+    static constexpr real_t posPoints[7] = {
+        real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
+    };
+
+    uint16_t tickPoints[7] = {
+        0, 300, 400, 500, 2210, 2567, 2667 
+    };
+
+    int8_t i = 6;
+
+    while((turnCnt < tickPoints[i]) && (i > -1))
+        i--;
+    
+    turnSolver.ta = tickPoints[i];
+    turnSolver.tb = tickPoints[i + 1];
+    uint16_t dt = turnSolver.tb - turnSolver.ta;
+
+    turnSolver.va = velPoints[i];
+    turnSolver.vb = velPoints[i + 1];
+    
+    turnSolver.pa = posPoints[i];
+    turnSolver.pb = posPoints[i + 1];
+    real_t dp = turnSolver.pb - turnSolver.pa;
+
+    real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / (real_t)dt);
+    real_t temp = (real_t)dt / 1000 / dp; 
+
+    real_t yt = 0;
+
+    if((i == 0) || (i == 2) || (i == 4))
+        yt = CubicInterpolation::mapping(Vector2{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, Vector2(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+    else
+        yt = _t;
+
+    real_t new_pos =  real_t(turns) + turnSolver.pa + dp * yt;
+
+    return new_pos;
+}
+
 
 void node_main(){
     using TimerUtils::Mode;
@@ -59,7 +123,7 @@ void node_main(){
  
     stp.init();
     stp.setSpeedLimit(36);
-    stp.setAccelLimit(25);
+    stp.setAccelLimit(100);
     stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
 
@@ -87,7 +151,15 @@ void node_main(){
         // Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(Interpolation::demo() * 10);
-        // stp.setTargetPosition(17 * sin(2 * t));
+        // stp.setTargetPosition(5 * sin(7 * t));
+        stp.setTargetPosition(demo() * 7);
+        // stp.setTargetPosition(17* sin(2 * t));
+        // stp.setTargetPosition(17* sin(2 * t));
+        // stp.setTargetPosition(7 * frac(t));
+
+        // stp.setTargetPosition(0);
+        // stp.setTargetPosition(abs(frac(t)-real_t(0.5)));
+        // stp.setTargetPosition(CLAMP(sin(3 * t), real_t(-0.5), real_t(0.5)));
         // Sys::Clock::reCalculateTime();
         // stp.setTargetPosition(4 * sin(t * 2) + sign(sin(t * 2)));
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
