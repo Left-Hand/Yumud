@@ -1,15 +1,15 @@
-#ifndef __LT8920_HPP__
+#ifndef __LT8960_HPP__
 
-#define __LT8920_HPP__
+#define __LT8960_HPP__
 
 #include "../../hal/bus/spi/spidrv.hpp"
-#include "../../hal/bus/i2c/i2cdrv.hpp"
 #include <optional>
+#include "types/real.hpp"
 
-#ifdef LT8920_DEBUG
-#define LT8920_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#ifdef LT8960_DEBUG
+#define LT8960_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
 #else
-#define LT8920_DEBUG(...)
+#define LT8960_DEBUG(...)
 #endif
 
 #pragma GCC diagnostic push
@@ -19,9 +19,8 @@
 #define REG8R(x) (*reinterpret_cast<uint8_t *>(&x))
 
 
-class LT8920{
+class LT8960{
 public:
-
     enum class PacketType:uint8_t{
         NRZLaw = 0,Manchester,Line8_10,Interleave
     };
@@ -47,16 +46,19 @@ public:
         Mbps1 = 0, Kbps250, Kbps125, Kbps62_5
     };
 
+
 protected:
-    std::optional<SpiDrv> spi_drv;
-    std::optional<I2cDrv> i2c_drv;
+    I2cDrv i2c_drv;
     GpioConcept * packet_status_gpio = nullptr;
     GpioConcept * fifo_status_gpio = nullptr;
 
     struct RfSynthLockReg{
-        uint16_t __resv1__ :12;
+        bool i2c_soft_rstn:1;//软件复位标志
+        uint16_t __resv1__ :8;
+        bool fifo_flag_txrx:1;//fifo状态指示
         bool synthLocked:1;//RF 频率综合器锁定标志位
-        uint16_t __resv2__ :3;
+        bool pkt_flag_txrx:1;//包状态指示
+        uint16_t __resv2__ :2;
     };
 
     struct RawRssiReg{
@@ -146,7 +148,7 @@ protected:
         uint16_t __resv1__ :2;
         bool pktFifoPolarity:1; //PKT flag, FIFO flag 低有效.
         bool autoAck:1;//当接收到数据，自动回 ACK 或者 NACK
-        bool fwTermTx :1;//1: 当 FIFO 的读指针和写指针相等时，LT8920 将关闭发射。
+        bool fwTermTx :1;//1: 当 FIFO 的读指针和写指针相等时，LT8960 将关闭发射。
         bool packLengthEN:1;//1: 第一字节表示 payload 的长度 如要写 8 个 byte 有效字节，那第一个字节应写 8，总长 9
         bool __resv2__ :1;
         bool crcOn:1;//开启 CRC
@@ -199,11 +201,8 @@ protected:
         //REG3 RO
         RfSynthLockReg rfSynthLockReg;
 
-        //REG6 RO
-        RawRssiReg rawRssiReg;
-
-        //REG7 
-        RfConfigReg rfConfigReg;
+        //REG7
+        FuncConfReg funcConfReg;
 
         //REG9
         PaConfigReg paConfigReg;
@@ -211,8 +210,17 @@ protected:
         //REG10
         OscEnableReg oscEnableReg;
 
+        //REG15
+        FuncConfReg funcConfReg;
+
+        //REG28
+        FreqOffsReg freqOffsReg;
+
         //REG11
         RssiPdnReg rssiPdnReg;
+
+        //REG32 
+        RfConfigReg rfConfigReg;
 
         //REG23
         AutoCaliReg autoCaliReg;
@@ -264,13 +272,16 @@ protected:
         //REG44
         DataRateReg dataRateReg;
 
+        //REG46
+        ChannelReg channelReg;
+    
         //REG48 RO
         FlagReg flagReg;
 
         //REG50
         uint16_t fifoReg;
 
-        //REG51
+        //REG52
         FifoPtrReg fifoPtrReg;
     };
 
@@ -301,60 +312,23 @@ protected:
         FifoPtr = 52
     };
 
-    void delayT3(){
-        delayMicroseconds(1);
-    }
-
-    void delayT5(){
-        delayMicroseconds(1);
-    }
 
     void writeReg(const RegAddress address, const uint16_t reg){
-        if(spi_drv){
-            spi_drv->write((uint8_t)((uint8_t)address & 0x80), false);
-            delayT3();
-
-            uint8_t * reg_ptr = (uint8_t *)&reg;
-            spi_drv->write(reg_ptr[1], false);
-            delayT5();
-            spi_drv->write(reg_ptr[0]);
-        }else if(i2c_drv){
+        if(i2c_drv){
             i2c_drv->writeReg((uint8_t)address, reg);
         }
-        LT8920_DEBUG("write",*(uint16_t *)&reg, "at", (uint8_t)address);
+        LT8960_DEBUG("write",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
 
     void readReg(const RegAddress address, uint16_t & reg){
-        if(spi_drv){
-            uint8_t temp = 0;
-            spi_drv->transfer(temp, (uint8_t)((uint8_t)address & 0x80), false);
-
-            uint16_t * rawFlagReg = reinterpret_cast<uint16_t *>(&flagReg);
-
-            *rawFlagReg &= 0x00ff;
-            *rawFlagReg |= temp << 8;
-
-            delayT3();
-
-            uint8_t buf[2];
-            spi_drv->read(buf, 2);
-
-            uint8_t * reg_ptr = (uint8_t *)&reg;
-            reg_ptr[0] = buf[0];
-            reg_ptr[1] = buf[1];
-        }else if(i2c_drv){
+        if(i2c_drv){
             i2c_drv->readReg((uint8_t)address, reg);
         }
-        LT8920_DEBUG("read",*(uint16_t *)&reg, "at", (uint8_t)address);
+        LT8960_DEBUG("read",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
 
     void writeByte(const RegAddress address, const uint8_t data){
-        if(spi_drv){
-            spi_drv->write((uint8_t)((uint8_t)address & 0x80), false);
-            delayT3();
-
-            spi_drv->write(data);
-        }else if(i2c_drv){
+        if(i2c_drv){
             i2c_drv->writeReg((uint8_t)address, data);
         }
     }
@@ -369,7 +343,7 @@ protected:
         }
     }
 public:
-    LT8920(SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
+    LT8960(SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
 
     bool isRfSynthLocked(){
         readReg(RegAddress::RfSynthLock, REG16(rfSynthLockReg));
@@ -398,8 +372,6 @@ public:
         }
         writeReg(RegAddress::RfConfig, REG16(rfConfigReg));
     }
-
-    void read(uint8_t *buffer, size_t maxBuffer);
 
     void setPaCurrent(const uint8_t current){
         paConfigReg.paCurrent = current;
@@ -473,7 +445,7 @@ public:
 
 #pragma GCC diagnostic pop
 
-#ifdef LT8920_DEBUG
-#undef LT8920_DEBUG
+#ifdef LT8960_DEBUG
+#undef LT8960_DEBUG
 #endif
 #endif

@@ -7,7 +7,10 @@
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
-#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp" 
+#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
+#include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
+#include "drivers/Wireless/Radio/XL2400/xl2400.hpp"
+
 struct TurnSolver{
     uint16_t ta = 0;
     uint16_t tb = 0;
