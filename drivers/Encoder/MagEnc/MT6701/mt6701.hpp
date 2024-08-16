@@ -156,8 +156,8 @@ public:
         writeReg(RegAddress::ABZMux, abzMuxReg.data);
     }
 
-    void setPoles(const uint8_t poles){
-        resolutionReg.poles = poles;
+    void setPoles(const uint8_t _poles){
+        resolutionReg.poles = _poles;
         writeReg(RegAddress::Resolution, resolutionReg.data);
     }
 

@@ -6,6 +6,41 @@
 #include "can_filter.hpp"
 #include "../hal/bus/bus.hpp"
 
+#ifdef HAVE_CAN1
+extern "C"{
+__interrupt
+void USB_HP_CAN1_TX_IRQHandler(void);
+
+__interrupt
+void USB_LP_CAN1_RX0_IRQHandler(void);
+
+__interrupt
+void CAN1_RX1_IRQHandler(void);
+
+__interrupt
+void CAN1_SCE_IRQHandler(void);
+}
+#endif
+
+#ifdef HAVE_CAN2
+extern "C"{
+__interrupt
+void CAN2_TX_IRQHandler(void);
+
+__interrupt
+void CAN2_RX0_IRQHandler(void);
+
+__interrupt
+void CAN2_RX1_IRQHandler(void);
+
+__interrupt
+void CAN2_SCE_IRQHandler(void);
+}
+#endif
+
+#ifndef CAN_FIFO_SIZE
+#define CAN_FIFO_SIZE 8
+#endif
 
 class Can: public PackedBus<CanMsg>{
 public:
@@ -18,6 +53,11 @@ public:
 protected:
     CAN_TypeDef * instance;
 
+    RingBuf_t<CanMsg, CAN_FIFO_SIZE> pending_rx_msgs;
+    Callback cb_txok = nullptr;
+    Callback cb_txfail = nullptr;
+    Callback cb_rx = nullptr;
+
     Gpio & getTxGpio();
     Gpio & getRxGpio();
     Error lead(const uint8_t index) override{return ErrorType::OK;};
@@ -25,6 +65,12 @@ protected:
 
     void installGpio();
     void enableRcc();
+    bool isMailBoxDone(const uint8_t mbox);
+    void clearMailbox(const uint8_t mbox);
+    void initIt();
+    void handleTx();
+    void handleRx(const uint8_t fifo_num);
+    void handleSce();
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
     void configBaudRate(const uint32_t baudRate) override;
@@ -33,16 +79,6 @@ public:
 
     void init(const BaudRate baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
 
-    /**
-     * @brief Writes a CAN message to the transmit buffer.
-     *
-     * This function attempts to write a CAN message to the transmit buffer.
-     * If the transmit buffer is full, the function will return false.
-     *
-     * @param msg The CAN message to be written.
-     * @return true if the CAN message was successfully written to the transmit buffer.
-     * @return false if the transmit buffer is full and the CAN message could not be written.
-     */
     bool write(const CanMsg & msg) override;
     const CanMsg & read() override;
     const CanMsg & front();
@@ -67,25 +103,35 @@ public:
     void bindCbTxOk(Callback && _cb);
     void bindCbTxFail(Callback && _cb);
     void bindCbRx(Callback && _cb);
-};
+
+
+    #ifdef HAVE_CAN1
+    friend void USB_HP_CAN1_TX_IRQHandler(void);
+
+    friend void USB_LP_CAN1_RX0_IRQHandler(void);
+
+    friend void CAN1_RX1_IRQHandler(void);
+
+    friend void CAN1_SCE_IRQHandler(void);
+    #endif
+
+    #ifdef HAVE_CAN2
+    friend void CAN2_TX_IRQHandler(void);
+
+    friend void CAN2_RX0_IRQHandler(void);
+
+    friend void CAN2_RX1_IRQHandler(void);
+
+    friend void CAN2_SCE_IRQHandler(void);
+    #endif
+    };
 
 #ifdef HAVE_CAN1
 extern Can can1;
+#endif
 
-
-extern "C"{
-__interrupt
-void USB_HP_CAN1_TX_IRQHandler(void);
-
-__interrupt
-void USB_LP_CAN1_RX0_IRQHandler(void);
-
-__interrupt
-void CAN1_RX1_IRQHandler(void);
-
-__interrupt
-void CAN1_SCE_IRQHandler(void);
-}
+#ifdef HAVE_CAN2
+extern Can can2;
 #endif
 
 #endif

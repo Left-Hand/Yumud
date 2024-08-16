@@ -1,7 +1,11 @@
 #pragma once
 
 #include "sys/core/system.hpp"
-#include "hal/bus/bus_inc.h"
+
+#include "hal/bus/spi/spi.hpp"
+#include "hal/bus/can/can.hpp"
+#include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/i2c/i2c.hpp"
 
 using Sys::t;
 

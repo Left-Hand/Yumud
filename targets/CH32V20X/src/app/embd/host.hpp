@@ -8,6 +8,7 @@
 #include "../drivers/LightSensor/TCS34725/tcs34725.hpp"
 #include "../drivers/Camera/MT9V034/mt9v034.hpp"
 
+#include "hal/bus/usb/usbfs/usbfs.hpp"
 
 #include "imgtrans/img_trans.hpp"
 #include "../nvcv2/mnist/mnist.hpp"

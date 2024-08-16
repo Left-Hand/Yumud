@@ -4,6 +4,9 @@
 #include "drivers/Actuator/Driver/AT8222/at8222.hpp"
 #include "algo/interpolation/cubic.hpp"
 
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/can/can.hpp"
+
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 

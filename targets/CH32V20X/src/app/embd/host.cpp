@@ -11,6 +11,8 @@
 #include "motions/move.hpp"
 #include "motions/pickdrop.hpp"
 
+#include "hal/bus/spi/spihw.hpp"
+
 using namespace NVCV2;
 
 #ifdef CH32V30X

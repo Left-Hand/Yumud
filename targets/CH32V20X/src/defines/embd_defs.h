@@ -38,6 +38,9 @@
 #define HAVE_CAN1
 #define CAN1_REMAP 1
 
+#define HAVE_CAN2
+#define CAN2_REMAP 1
+
 // #define HAVE_I2C1
 #define I2C1_REMAP 0
 // #define HAVE_I2C2
