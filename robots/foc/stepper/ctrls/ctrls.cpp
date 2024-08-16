@@ -24,7 +24,7 @@ void PositionCtrl::Config::reset(){
 }
 
 void SpeedCtrl::Config::reset(){
-    kp = 2;
+    kp = 5;
     kp_limit = 4;
 
     kd = 10;
@@ -163,12 +163,12 @@ Result SpeedCtrl::update(const real_t _targ_spd,const real_t real_spd){
     real_t abs_targ_current = MIN(ABS(targ_current), limits.max_curr);
     targ_current = SIGN_AS(abs_targ_current, soft_targ_spd);
 
-    #define SAFE_OVERLOAD_RAD(__curr, __spd)\
+    #define SAFE_OVERLOAD_RAD(__curr)\
         MIN(__curr * __curr * real_t(0.4) + real_t(0.2), max_raddiff - basic_raddiff)
 
 
     const real_t abs_spd = ABS(filt_real_spd);
-    real_t raddiff = SIGN_AS(hpi * (basic_raddiff + (SAFE_OVERLOAD_RAD(curr_ctrl.curr_output, abs_spd))), soft_targ_spd);
+    real_t raddiff = SIGN_AS(hpi * (basic_raddiff + (SAFE_OVERLOAD_RAD(curr_ctrl.curr_output))), soft_targ_spd);
 
     bool is_inversed = false;
     is_inversed |= filt_real_spd * soft_targ_spd < -1;

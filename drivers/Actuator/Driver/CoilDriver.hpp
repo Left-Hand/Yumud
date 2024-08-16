@@ -42,22 +42,22 @@ public:
 
         switch (modu_sect){
             case 1:
-                *this = std::make_tuple(t2, t1, t0);
+                *this = UVW_Duty(t2, t1, t0);
                 break;
             case 2:
-                *this = std::make_tuple(t1, t2, t0);
+                *this = UVW_Duty(t1, t2, t0);
                 break;
             case 3:
-                *this = std::make_tuple(t0, t2, t1);
+                *this = UVW_Duty(t0, t2, t1);
                 break;
             case 4:
-                *this = std::make_tuple(t0, t1, t2);
+                *this = UVW_Duty(t0, t1, t2);
                 break;
             case 5:
-                *this = std::make_tuple(t1, t0, t2);
+                *this = UVW_Duty(t1, t0, t2);
                 break;
             case 6:
-                *this = std::make_tuple(t2, t0, t1);
+                *this = UVW_Duty(t2, t0, t1);
                 break;
             default:
                 break;

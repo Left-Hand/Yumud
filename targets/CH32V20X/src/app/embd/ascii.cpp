@@ -1,5 +1,5 @@
 #include "host.hpp"
-#include "robots/foc/stepper/protocol/ascii_protocol.hpp"
+#include "../../robots/foc/protocol/ascii_protocol.hpp"
 
 static constexpr real_t squ_len = 96;
 static constexpr Vector2 pos_begin = {111, 46};

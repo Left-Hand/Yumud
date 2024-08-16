@@ -8,8 +8,6 @@ void FOCStepper::setNozzle(const real_t duty){
     nozzle_en_gpio = bool(duty);
 }
 
-
-
 void FOCStepper::tick(){
     auto begin_micros = micros();
     RunStatus exe_status = RunStatus::NONE;

@@ -11,6 +11,8 @@ uint8_t FOCMotorConcept::getDefaultNodeId(){
             return 1;
         case 0x551C4DEA:
             return  3;
+        case 0x8E268D66:
+            return 1;
         default:
             return 0;
     }

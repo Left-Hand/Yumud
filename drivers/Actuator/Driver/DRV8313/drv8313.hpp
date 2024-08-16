@@ -2,12 +2,13 @@
 
 #include "../CoilDriver.hpp"
 
-using OptionlGpio = std::optional<GpioConcept &>;
+
 
 class DRV8313:public Coil3Driver{
 protected:
     using PWM3 = std::array<PwmChannel &, 3>;
     using EnablePort = PortVirtual<3>;
+    using OptionlGpio = std::optional<GpioConcept &>;
 
     PWM3 pwms_;
     EnablePort en_gpios_;
@@ -29,7 +30,7 @@ public:
         }
     }
 
-    DRV8313 & operator=(const UVW_Duty & duty){
+    DRV8313 & operator=(const UVW_Duty & duty) override{
         auto [u, v, w] = duty;
 
         pwms_[0] = u;

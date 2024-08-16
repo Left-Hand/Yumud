@@ -141,10 +141,10 @@ void node_main(){
     // t = 0;
     while(true){
         stp.run(); 
-        stp.report();
+        // stp.report();
 
-        auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
-        real_t target = f(t-2);
+        // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
+        // real_t target = f(t-2);
         // real_t target = t * 0;
         // stp.setTargetPosition(target);
         // stp.setTargetSpeed(5);
@@ -155,7 +155,7 @@ void node_main(){
 
         // stp.setTargetPosition(Interpolation::demo() * 10);
         // stp.setTargetPosition(5 * sin(7 * t));
-        stp.setTargetPosition(demo() * 7);
+        // stp.setTargetPosition(demo() * 17);
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(7 * frac(t));
