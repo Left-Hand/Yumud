@@ -309,7 +309,7 @@ public:
     };
 protected:
     SpiDrv spi_drv;
-
+public:
     XL2400(const SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
     XL2400(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
 };
