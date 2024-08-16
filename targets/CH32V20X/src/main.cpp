@@ -5,6 +5,7 @@
 #include "robots/foc/bldc/bldc.hpp"
 #include "drivers/Adc/ADS112C04/ads112c04.hpp"
 #include "drivers/Adc/FDC2X1X/fdc2x1x.hpp"
+#include "drivers/Adc/ADS1115/ads1115.hpp"
 
 
 void preinit(){

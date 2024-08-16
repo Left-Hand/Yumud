@@ -1,8 +1,6 @@
 #pragma once
 
 #include "../../hal/bus/i2c/i2cdrv.hpp"
-#include <optional>
-#include "types/real.hpp"
 
 #ifdef FDC2X1X_DEBUG
 #define FDC2X1X_DEBUG(...) DEBUG_LOG(__VA_ARGS__)

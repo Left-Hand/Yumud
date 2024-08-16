@@ -1,8 +1,7 @@
 #pragma once
 
 #include "../../hal/bus/i2c/i2cdrv.hpp"
-#include <optional>
-#include "types/real.hpp"
+
 
 #ifdef ADS112C04_DEBUG
 #define ADS112C04_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
