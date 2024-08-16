@@ -14,7 +14,7 @@
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8R(x) (*reinterpret_cast<uint8_t *>(&x))
+#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
 
 class Si24R1{
@@ -105,7 +105,7 @@ protected:
 
         uint8_t rf_channel:7;
         uint8_t __resv__:1;
-    }
+    };
 
     struct RFConfigReg{
         static constexpr RegAddress address = 0x06;
@@ -207,15 +207,15 @@ protected:
 
 
     void writeReg(RegAddress addr, const auto & value){
-        addr &= Command::__RW_MASK;
-        addr |= Command::W_REGISTER;
+        addr &= ~uint8_t(Command::__RW_MASK);
+        addr |= uint8_t(Command::W_REGISTER);
         spi_drv.transfer(REG8(status_reg), REG8(addr), false);
         spi_drv.write(&REG8(value), sizeof(value));
     }
 
     void readReg(RegAddress addr, auto & value){
-        addr &= Command::__RW_MASK;
-        addr |= Command::R_REGISTER;
+        addr &= ~uint8_t(Command::__RW_MASK);
+        addr |= uint8_t(Command::R_REGISTER);
         spi_drv.transfer(REG8(status_reg), REG8(addr), false);
         spi_drv.read(&REG8(value), sizeof(value));
     }
@@ -223,7 +223,7 @@ protected:
     void readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(REG8(status_reg), REG8(Command::R_RX_PAYLOAD), false);
+            spi_drv.transfer(REG8(status_reg), uint8_t(Command::R_RX_PAYLOAD), false);
             spi_drv.read(buffer, size);
         }
     }
@@ -231,29 +231,29 @@ protected:
     void writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(REG8(status_reg), REG8(Command::W_TX_PAYLOAD), false);
-            spi_drv.read(buffer, size);
+            spi_drv.transfer(REG8(status_reg), uint8_t(Command::W_TX_PAYLOAD), false);
+            spi_drv.write(buffer, size);
         }
     }
 
     void writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(REG8(status_reg), REG8(Command::W_TX_PAYLOAD_NO_ACK), false);
-            spi_drv.read(buffer, size);
+            spi_drv.transfer(REG8(status_reg), uint8_t(Command::W_TX_PAYLOAD_NO_ACK), false);
+            spi_drv.write(buffer, size);
         }
     }
 
     void clearTxFifo(){
-        spi_drv.transfer(REG8(status_reg), REG8(Command::FLUSH_TX), false);
+        spi_drv.transfer(REG8(status_reg), uint8_t(Command::FLUSH_TX), false);
     }
 
     void clearRxFifo(){
-        spi_drv.transfer(REG8(status_reg), REG8(Command::FLUSH_RX), false);
+        spi_drv.transfer(REG8(status_reg), uint8_t(Command::FLUSH_RX), false);
     }
 
     void updateStatus(){
-        spi_drv.transfer(REG8(status_reg), REG8(Command::NOP), false);
+        spi_drv.transfer(REG8(status_reg), uint8_t(Command::NOP), false);
     }
 protected:
     SpiDrv spi_drv;
@@ -263,7 +263,7 @@ public:
 
     size_t available(){
         uint8_t size;
-        spi_drv.transfer(REG8(status_reg), REG8(Command::R_RX_PL_WID), false);
+        spi_drv.transfer(REG8(status_reg), uint8_t(Command::R_RX_PL_WID), false);
         spi_drv.read(REG8(size));
         return size;
     }
