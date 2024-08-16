@@ -3,6 +3,8 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
+#include "drivers/Adc/ADS112C04/ads112c04.hpp"
+#include "drivers/Adc/FDC2X1X/fdc2x1x.hpp"
 
 
 void preinit(){
