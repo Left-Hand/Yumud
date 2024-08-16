@@ -1,12 +1,11 @@
 #include "../sys/core/system.hpp"
 #include "../sys/kernel/clock.h"
 #include "../types/real.hpp"
-#include "../hal/bus/bus_inc.h"
 #include "../hal/timer/instance/timer_hw.hpp"
 #include "../hal/adc/adcs/adc1.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
-
+#include "hal/bus/spi/spihw.hpp"
 SpiDrv ma730_drv{spi1, 0};
 MA730 ma730{ma730_drv};
 
@@ -858,7 +857,6 @@ int bldc_main(){
     adc1.enableAutoInject();
 
     focMain();
-    can1.init(1000000);
     while(true){
         // printf("%.3f, %d\r\n", float(theta), modu_sect);/
         // printf("%.3f, %.3f, %.3f\r\n",float(motorPosition.elecRad), float(target), float(motorPosition.accPosition));
@@ -887,6 +885,5 @@ int bldc_main(){
         // Delay_Ms(2);
         // uart1.println(t);
         delay(2);
-        if(can1.available()) can1.read();
     }
 }

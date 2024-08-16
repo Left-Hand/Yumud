@@ -32,6 +32,7 @@ void Can::initIt(){
     CAN_ITConfig(instance, it_mask, ENABLE);
 
     switch(uint32_t(instance)){
+        #ifdef HAVE_CAN1
         case CAN1_BASE:
             //tx interrupt
             NvicRequest{{1, 6}, USB_HP_CAN1_TX_IRQn}.enable();
@@ -42,6 +43,9 @@ void Can::initIt(){
             //sce interrupt
             NvicRequest{{1, 2}, CAN1_SCE_IRQn}.enable();
             break;
+        #endif
+
+        #ifdef HAVE_CAN2
         case CAN2_BASE:
             //tx interrupt
             NvicRequest{{1, 6}, CAN2_TX_IRQn}.enable();
@@ -52,6 +56,8 @@ void Can::initIt(){
             //sce interrupt
             NvicRequest{{1, 2}, CAN2_SCE_IRQn}.enable();
             break;
+        #endif
+        
         default:
             break;
     }

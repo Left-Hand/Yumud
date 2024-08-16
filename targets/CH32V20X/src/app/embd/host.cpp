@@ -130,7 +130,7 @@ void EmbdHost::main(){
     };
 
 
-    resetSlave();
+    // resetSlave();
     delay(900);
     bindSystickCb([&](){this->tick();});
     steppers.do_home();
@@ -502,7 +502,7 @@ void EmbdHost::tick(){
     parseAscii(uart2);
 
     auto index = (millis() % 3);
-    steppers[index].updateAll();
+    // steppers[index].updateAll();
     // steppers.z.updateAll();
     readCan();
     act();
