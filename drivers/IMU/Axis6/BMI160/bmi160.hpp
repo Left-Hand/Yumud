@@ -45,7 +45,7 @@ protected:
 
     struct RhallReg{
         static constexpr RegAddress address = 0x0A;
-    }
+    };
 
     struct Vector3i16Reg{
         static constexpr RegAddress mag_address = 0x04;
@@ -70,7 +70,7 @@ protected:
 
     struct SensorTimeReg{
         static constexpr RegAddress address = 0x18; // SENSOR_TIME_2
-        uint24_t time: 24; // Assuming 8 bits for sensor time
+        uint32_t time: 24; // Assuming 8 bits for sensor time
     };
 
     struct StatusReg{
@@ -137,7 +137,7 @@ protected:
 
     struct TemperatureReg{
         static constexpr RegAddress address = 0x21; // TEMPERATURE_1
-        unt16_t temperature: 16; // Assuming 8 bits for temperature
+        uint16_t temperature: 16; // Assuming 8 bits for temperature
     };
 
     struct FifoLengthReg{
@@ -357,7 +357,7 @@ protected:
         static constexpr uint8_t address = 0x5C;
         uint8_t int_low_hy:2;
         uint8_t :4;
-        uint8_t int_low_hy:2;
+        uint8_t int_high_hy:2;
     };
 
     struct IntLowHigh3Reg{
@@ -391,21 +391,12 @@ protected:
 
     struct{
         ChipIdReg chip_id_reg;
-        
+
     };
 
     real_t accel_scaler = real_t(9.8 * 4);
     real_t gyro_scaler = real_t(0.001064f * 16384);
 
-    enum class RegAddress:uint8_t{
-        AccelX = 0x3b,
-        AccelY = 0x3d,
-        AccelZ = 0x3f,
-        Temp = 0x41,
-        GyroX = 0x43,
-        GyroY = 0x45,
-        GyroZ = 0x47,
-    };
 
     void writeReg(const uint8_t addr, const uint8_t data){
         if(i2c_drv) i2c_drv->writeReg(addr, data);
