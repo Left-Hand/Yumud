@@ -42,11 +42,10 @@ public:
     static constexpr uint8_t default_id = 0x78;
 
     void init();
-    void flush(const Binary & color);
 
     void update();
 
-    void enable(const bool & en = true){
+    void enable(const bool en = true){
         if(en){
             interface.writeCommand(0x8D);
             interface.writeCommand(0x14);
@@ -58,14 +57,14 @@ public:
         }
     }
 
-    void turnDisplay(const bool & i){
+    void turnDisplay(const bool i){
         interface.writeCommand(0xC8 - 8*i);//正常显示
         interface.writeCommand(0xA1 - i);
     }
 
-    void enableFlipY(const bool & flip = true){interface.writeCommand(0xA0 | flip);}
-    void enableFlipX(const bool & flip = true){interface.writeCommand(0xC0 | (flip << 3));}
-    void enableInversion(const bool & inv = true){interface.writeCommand(0xA7 - inv);}  
+    void enableFlipY(const bool flip = true){interface.writeCommand(0xA0 | flip);}
+    void enableFlipX(const bool flip = true){interface.writeCommand(0xC0 | (flip << 3));}
+    void enableInversion(const bool inv = true){interface.writeCommand(0xA7 - inv);}  
 
     virtual VerticalBinaryImage & fetchFrame() = 0;
 

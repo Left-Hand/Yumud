@@ -36,6 +36,19 @@ namespace AdcUtils{
         T239_5 = ADC_SampleTime_239Cycles5
     };
 
+    enum class Pga:uint8_t{
+        X1, X4, X16, X64
+    };
+
+    enum class RegularTrigger:uint8_t{
+        T1CC1, T1CC2, T1CC3, T2CC2, T3TRGO, T4CC4, EXTI11_T8TRGO, SW
+    };
+
+    enum class InjectedTrigger:uint8_t{
+        T1TRGO, T1CC4, T2TRGO, T2CC1, T3CC4, T4TRGO, EXTI1515_T8CC4, SW
+    };
+
+
     enum class IT:uint16_t{
         EOC = ADC_IT_EOC,
         JEOC = ADC_IT_JEOC,

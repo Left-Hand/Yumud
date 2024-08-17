@@ -490,6 +490,24 @@
     #endif
 #endif
 
+#ifdef HAVE_CAN2
+    #define CAN2_RM0_TX_GPIO portB[13]
+    #define CAN2_RM0_RX_GPIO portB[12]
+
+    #define CAN2_RM1_TX_GPIO portB[6]
+    #define CAN2_RM1_RX_GPIO portB[5]
+    
+    #if CAN2_REMAP == 0
+        #define CAN2_TX_GPIO CAN2_RM0_TX_GPIO
+        #define CAN2_RX_GPIO CAN2_RM0_RX_GPIO
+
+    #elif CAN2_REMAP == 1
+        #define CAN2_TX_GPIO CAN2_RM1_TX_GPIO
+        #define CAN2_RX_GPIO CAN2_RM1_RX_GPIO
+
+    #endif
+#endif
+
 #ifdef HAVE_OPA2
     #define OPA2_N0_GPIO portB[10]
     #define OPA2_P0_GPIO portB[14]

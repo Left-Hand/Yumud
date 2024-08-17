@@ -6,8 +6,6 @@
 #include "port_concept.hpp"
 #include "gpio_enums.hpp"
 
-//platform specific
-
 class GpioConcept{
 public:
     const int8_t pin_index = 0;
@@ -27,10 +25,10 @@ public:
     void afpp(){setMode(PinMode::OutAfPP);}
     void afod(){setMode(PinMode::OutAfOD);}
 
-    void outpp(const bool & initial_state){setMode(PinMode::OutPP);write(initial_state);}
-    void outod(const bool & initial_state){setMode(PinMode::OutOD);write(initial_state);}
-    void afpp(const bool & initial_state){setMode(PinMode::OutAfPP);write(initial_state);}
-    void afod(const bool & initial_state){setMode(PinMode::OutAfOD);write(initial_state);}
+    void outpp(const bool initial_state){setMode(PinMode::OutPP);write(initial_state);}
+    void outod(const bool initial_state){setMode(PinMode::OutOD);write(initial_state);}
+    void afpp(const bool initial_state){setMode(PinMode::OutAfPP);write(initial_state);}
+    void afod(const bool initial_state){setMode(PinMode::OutAfOD);write(initial_state);}
 
     void inana(){setMode(PinMode::InAnalog);}
     void inflt(){setMode(PinMode::InFloating);}
@@ -48,7 +46,8 @@ protected:
     volatile GPIO_TypeDef * instance = nullptr;
     const uint16_t pin;
     const uint32_t pin_mask;
-    volatile uint32_t & pin_cfg;
+
+    volatile uint32_t * pin_cfg;
 
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
@@ -63,7 +62,7 @@ protected:
         #endif
 
         pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
-        pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
+        pin_cfg(CTZ(pin) >= 8 ? &((instance -> CFGHR)) : &((instance -> CFGLR))){
     }
 
     friend class GpioVirtual;
@@ -113,7 +112,7 @@ public:
 
     __fast_inline GpioVirtual & operator = (const bool _val) override {write(_val); return *this;}
     __fast_inline GpioVirtual & operator = (GpioConcept & other) {write(other.read()); return *this;}
-    void setMode(const PinMode mode) override{instance.setModeByIndex(pin_index, mode);}
+    void setMode(const PinMode mode) override{instance.setMode(pin_index, mode);}
 };
 
 #endif

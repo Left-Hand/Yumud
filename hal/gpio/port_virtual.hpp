@@ -7,10 +7,10 @@
 #include <memory>
 #include <array>
 
-template<int size>
+template<size_t N>
 class PortVirtualConcept : public PortConcept{
 protected:
-    bool isIndexValid(const uint8_t index){return (index >= 0 && index < size);}
+    bool isIndexValid(const size_t index){return (index < N);}
 
     virtual void write(const uint16_t data) = 0;
     virtual uint16_t read() = 0;
@@ -18,18 +18,19 @@ public:
 
     operator uint16_t(){return read();}
 
-    constexpr uint8_t length(){
-        return size;
+    constexpr size_t size(){
+        return N;
     }
 
     PortVirtualConcept & operator = (const uint16_t data) override {write(data); return *this;}
-    virtual void setModeByIndex(const int8_t index, const PinMode mode) = 0;
+    virtual void setMode(const int index, const PinMode mode) = 0;
 };
 
-template<int size>
-class PortVirtual : public PortVirtualConcept<size>{
+template<size_t N>
+class PortVirtual : public PortVirtualConcept<N>{
 protected:
-    std::array<GpioConcept *, size> pin_ptrs = {nullptr};
+    using E = GpioConcept;
+    std::array<E *, N> pin_ptrs = {nullptr};
 
     void write(const uint16_t data) override {
         for(uint8_t i = 0; i < 16; i++){
@@ -45,28 +46,38 @@ protected:
     }
 public:
     PortVirtual(){;}
+
+    PortVirtual(const PortVirtual<N> & other){
+        pin_ptrs = other.pin_ptrs;
+    }
+
+    PortVirtual(PortVirtual<N> && other){
+        pin_ptrs = std::move(other.pin_ptrs);
+    }
     void init(){;}
 
-    void bindPin(GpioConcept & gpio, const uint8_t index){
-        if(index < 0 && index >= size)return;
+    void bindPin(GpioConcept & gpio, const size_t index){
+        if(index >= N)return;
         pin_ptrs[index] = &gpio;
     }
 
-    void writeByIndex(const int8_t index, const bool data) override{
+    void writeByIndex(const int index, const bool data) override{
         if(!isIndexValid(index)) return;
         pin_ptrs[index]->write(data);
     }
-    bool readByIndex(const int8_t index) override{
+
+    bool readByIndex(const int index) override{
         if(!isIndexValid(index))return false;
         return bool(*(pin_ptrs[index]));
     }
 
-    void setBits(const uint16_t data) override{
+    void set(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
             if(data & (1 << i)) pin_ptrs[i]->set();
         }
     }
-    void clrBits(const uint16_t data) override{
+
+    void clr(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
             if(data & (1 << i)) pin_ptrs[i]->clr();
         }
@@ -75,25 +86,35 @@ public:
     void set(const Pin pin) override{
         pin_ptrs[CTZ((uint16_t)pin)]->set();
     }
+
     void clr(const Pin pin) override{
         pin_ptrs[CTZ((uint16_t)pin)]->clr();
     }
 
+    E * begin(){
+        return pin_ptrs.front();
+    }
 
-    bool isIndexValid(const uint8_t index){return (index >= 0 && index < size && pin_ptrs[index] != nullptr);}
+    E * end(){
+        return begin() + N;
+    }
 
-    GpioConcept & operator [](const uint8_t index){return isIndexValid(index) ? *pin_ptrs[index] : GpioNull;}
+    bool isIndexValid(const size_t index){return (index < N and pin_ptrs[index] != nullptr);}
 
-    void setModeByIndex(const int8_t index, const PinMode mode) override{
+    E & operator [](const size_t index){return isIndexValid(index) ? *pin_ptrs[index] : GpioNull;}
+
+    void setMode(const int index, const PinMode mode) override{
+        if(index < 0) return;
         if(!isIndexValid(index))return;
         pin_ptrs[index]->setMode(mode);
     }
 };
 
-template<int size>
-class PortVirtualLocal : public PortVirtualConcept<size>{
+template<size_t N>
+class PortVirtualLocal : public PortVirtualConcept<N>{
 protected:
-    std::array<Gpio *, size> pin_ptrs = {nullptr};
+    using E = Gpio;
+    std::array<E *, N> pin_ptrs = {nullptr};
 
     void write(const uint16_t & data) override {
         for(uint8_t i = 0; i < 16; i++){
@@ -111,45 +132,55 @@ public:
     PortVirtualLocal(){;}
     void init(){;}
 
+    E * begin(){
+        return pin_ptrs.front();
+    }
 
-    void bindPin(Gpio & gpio, const uint8_t index){
-        if(index < 0 && index >= size)return;
+    E * end(){
+        return this->begin() + N;
+    }
+
+    void bindPin(Gpio & gpio, const size_t index){
+        if(index >= N)return;
         pin_ptrs[index] = &(gpio);
     }
 
-    void writeByIndex(const int8_t index, const bool data) override{
+    void writeByIndex(const int index, const bool data) override{
         if(!isIndexValid(index)) return;
         pin_ptrs[index]->write(data);
     }
-    bool readByIndex(const int8_t index) override{
+
+    bool readByIndex(const int index) override{
         if(!isIndexValid(index))return false;
-        return bool(*(pin_ptrs[index]));
+        return pin_ptrs[index]->read();
     }
 
-    void setBits(const uint16_t & data) override{
+    void set(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
-            if(data & (1 << i)) pin_ptrs[i]->set();
+            if(pin_ptrs[i]->isValid() and (data & (1 << i))) pin_ptrs[i]->set();
         }
     }
-    void clrBits(const uint16_t & data) override{
+    void clr(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
-            if(data & (1 << i)) pin_ptrs[i]->clr();
+            if(pin_ptrs[i]->isValid() and data & (1 << i)) pin_ptrs[i]->clr();
         }
     }
 
-    void set(const Pin & pin) override{
-        pin_ptrs[CTZ((uint16_t)pin)]->set();
+    void set(const Pin pin) override{
+        const auto i = CTZ((uint16_t)pin);
+        if(isIndexValid(i)) pin_ptrs[]->set();
     }
-    void clr(const Pin & pin) override{
-        pin_ptrs[CTZ((uint16_t)pin)]->clr();
+    void clr(const Pin pin) override{
+        const auto i = CTZ((uint16_t)pin);
+        if(isIndexValid(i)) pin_ptrs[i]->clr();
     }
 
 
-    bool isIndexValid(const uint8_t & index){return (index >= 0 && index < size && pin_ptrs[index] != nullptr);}
+    bool isIndexValid(const size_t index){return (index < N and pin_ptrs[index]->isValid());}
 
-    Gpio * operator [](const uint8_t index){return isIndexValid(index) ? pin_ptrs[index].get() : nullptr;}
+    E & operator [](const size_t index){return isIndexValid(index) ? *pin_ptrs[index] : GpioNull;}
 
-    void setModeByIndex(const int8_t & index, const PinMode & mode) override{
+    void setMode(const int8_t & index, const PinMode & mode) override{
         if(!isIndexValid(index))return;
         pin_ptrs[index]->setMode(mode);
     }

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../types/range/range_t.hpp"
 #include "../sys/core/platform.h"
 
 #include "../hal/gpio/port.hpp"
@@ -11,6 +10,12 @@
 #include "injected_channel.hpp"
 #include "adc_utils.hpp"
 #include <initializer_list>
+
+#if defined(HAVE_ADC1) || defined(HAVE_ADC2)
+extern "C"{
+__interrupt void ADC1_2_IRQHandler(void);
+}
+#endif
 
 class AdcConcept{
 protected:
@@ -34,17 +39,10 @@ public:
 
 class AdcOnChip:AdcConcept{
 public:
-    enum class Pga:uint8_t{
-        X1, X4, X16, X64
-    };
 
-    enum class RegularTrigger:uint8_t{
-        T1CC1, T1CC2, T1CC3, T2CC2, T3TRGO, T4CC4, EXTI11_T8TRGO, SW
-    };
-
-    enum class InjectedTrigger:uint8_t{
-        T1TRGO, T1CC4, T2TRGO, T2CC1, T3CC4, T4TRGO, EXTI1515_T8CC4, SW
-    };
+    using Pga = AdcUtils::Pga;
+    using RegularTrigger = AdcUtils::RegularTrigger;
+    using InjectedTrigger = AdcUtils::InjectedTrigger;
 
 protected:
     ADC_TypeDef * instance;
@@ -115,6 +113,10 @@ public:
 
 class AdcPrimary: public AdcOnChip{
 protected:
+    Callback jeoc_cb;
+    Callback eoc_cb;
+    Callback awd_cb;
+
     using Channel = AdcUtils::Channel;
     using SampleCycles = AdcUtils::SampleCycles;
     using Mode = AdcUtils::Mode;
@@ -191,7 +193,7 @@ protected:
         instance->CTLR2 = tempreg.data;
     }
 
-
+    friend void ADC1_2_IRQHandler(void);
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
 
@@ -253,10 +255,9 @@ public:
         instance->CTLR2 = tempreg.data;
     }
 
-    void setWdtThreshold(const Range_t<int> & _threshold){
-        auto threshold = _threshold.intersection(Rangei(0, (int)getMaxValue()));
-        instance->WDHTR = threshold.to;
-        instance->WDLTR = threshold.from;
+    void setWdtThreshold(const int low,const int high){
+        instance->WDHTR = CLAMP(low, 0, getMaxValue());
+        instance->WDLTR = CLAMP(high, 0, getMaxValue());
     }
 
     void bindWdtIt(Callback && cb){

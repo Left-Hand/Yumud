@@ -1,26 +1,22 @@
+#include "sys/core/platform.h"
+
 #include "uarthw.hpp"
-#include "../sys/core/platform.h"
 
 
 #define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
 #define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
 
-#define UART_CB_TEMPLATE(name)\
-static UartHw::Callback name##_rxne_cb;\
-static UartHw::Callback name##_txe_cb;\
-static UartHw::Callback name##_idle_cb;\
-
 #define UART_IT_TEMPLATE(name, uname)\
 __interrupt void uname##_IRQHandler(void){\
     if(USART_GetITStatus(uname,USART_IT_RXNE)){\
-        EXECUTE(name##_rxne_cb);\
+        name.rxneHandle();\
         USART_ClearITPendingBit(uname,USART_IT_RXNE);\
     }else if(USART_GetITStatus(uname,USART_IT_IDLE)){\
-        EXECUTE(name##_idle_cb);\
+        name.idleHandle();\
         uname->STATR;\
         uname->DATAR;\
     }else if(USART_GetITStatus(uname,USART_IT_TXE)){\
-        EXECUTE(name##_txe_cb);\
+        name.txeHandle();\
         USART_ClearITPendingBit(uname,USART_IT_TXE);\
     }else if(USART_GetFlagStatus(uname,USART_FLAG_ORE)){\
         USART_ReceiveData(uname);\
@@ -28,197 +24,51 @@ __interrupt void uname##_IRQHandler(void){\
     }\
 }\
 
-#define UART_TEMPLATE(name, pname, uname)\
-UART_CB_TEMPLATE(name)\
-UART_IT_TEMPLATE(name, (uname))\
-
 
 #ifdef HAVE_UART1
-UART_CB_TEMPLATE(uart1)
 UART_IT_TEMPLATE(uart1, USART1)
 UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
 #endif
 
 
 #ifdef HAVE_UART2
-UART_CB_TEMPLATE(uart2)
 UART_IT_TEMPLATE(uart2, USART2)
 UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
 #endif
 
 #ifdef HAVE_UART3
-UART_CB_TEMPLATE(uart3)
 UART_IT_TEMPLATE(uart3, USART3)
 UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
 #endif
 
 
 #ifdef HAVE_UART4
-UART_CB_TEMPLATE(uart4)
 UART_IT_TEMPLATE(uart4, UART4)
 UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
 #endif
 
 #ifdef HAVE_UART5
-UART_CB_TEMPLATE(uart5)
 UART_IT_TEMPLATE(uart5, UART5)
 UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
 #endif
 
 
 #ifdef HAVE_UART6
-UART_CB_TEMPLATE(uart6)
 UART_IT_TEMPLATE(uart6, UART6)
 UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
 #endif
 
 #ifdef HAVE_UART7
-UART_CB_TEMPLATE(uart7)
 UART_IT_TEMPLATE(uart7, UART7)
 UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
 #endif
 
 
 #ifdef HAVE_UART8
-UART_CB_TEMPLATE(uart8)
 UART_IT_TEMPLATE(uart8, UART8)
 UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
 #endif
 
-void UartHw::bindRxneCb(Callback && cb){
-    switch((uint32_t)instance){
-        #ifdef HAVE_UART1
-        case USART1_BASE:
-            uart1_rxne_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART2
-        case USART2_BASE:
-            uart2_rxne_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART3
-        case USART3_BASE:
-            uart3_rxne_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART4
-        case UART4_BASE:
-            uart4_rxne_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART5
-        case UART5_BASE:
-            uart5_rxne_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART6
-        case UART6_BASE:
-            uart6_rxne_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART7
-        case UART7_BASE:
-            uart7_rxne_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART8
-        case UART8_BASE:
-            uart8_rxne_cb = cb;
-            break;
-        #endif
-    }
-}
-
-void UartHw::bindTxeCb(Callback && cb){
-    switch((uint32_t)instance){
-        #ifdef HAVE_UART1
-        case USART1_BASE:
-            uart1_txe_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART2
-        case USART2_BASE:
-            uart2_txe_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART3
-        case USART3_BASE:
-            uart3_txe_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART4
-        case UART4_BASE:
-            uart4_txe_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART5
-        case UART5_BASE:
-            uart5_txe_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART6
-        case UART6_BASE:
-            uart6_txe_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART7
-        case UART7_BASE:
-            uart7_txe_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART8
-        case UART8_BASE:
-            uart8_txe_cb = cb;
-            break;
-        #endif
-    }
-}
-
-void UartHw::bindIdleCb(Callback && cb){
-    switch((uint32_t)instance){
-        #ifdef HAVE_UART1
-        case USART1_BASE:
-            uart1_idle_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART2
-        case USART2_BASE:
-            uart2_idle_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART3
-        case USART3_BASE:
-            uart3_idle_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART4
-        case UART4_BASE:
-            uart4_idle_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART5
-        case UART5_BASE:
-            uart5_idle_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART6
-        case UART6_BASE:
-            uart6_idle_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART7
-        case UART7_BASE:
-            uart7_idle_cb = cb;
-            break;
-        #endif
-        #ifdef HAVE_UART8
-        case UART8_BASE:
-            uart8_idle_cb = cb;
-            break;
-        #endif
-    }
-}
 
 void UartHw::enableRcc(const bool en){
     switch((uint32_t)instance){
@@ -343,6 +193,24 @@ void UartHw::enableRcc(const bool en){
 }
 
 
+void UartHw::rxneHandle(){
+    this->rxBuf.addData(USART_ReceiveData(instance));
+}
+void UartHw::txeHandle(){
+
+}
+
+void UartHw::idleHandle(){
+    if(rxMethod == CommMethod::Dma){
+        size_t index = UART_RX_DMA_BUF_SIZE - rxDma.pending();
+        if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
+            for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+        }
+        rx_dma_buf_index = index;
+        EXECUTE(rxPostCb);
+    }
+}
+
 Gpio & UartHw::rxio(){
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
@@ -422,9 +290,9 @@ Gpio & UartHw::txio(){
 }
 
 void UartHw::enableIt(const bool en){
-    IRQn irq;
-    uint8_t pp;
-    uint8_t sp;
+    IRQn irq = IRQn::Software_IRQn;
+    uint8_t pp = 1;
+    uint8_t sp = 7;
 
     switch((uint32_t)instance){
         #ifdef HAVE_UART1
@@ -524,21 +392,10 @@ void UartHw::enableRxDma(const bool en){
             rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
         });
 
-        this->bindIdleCb([this](){
-            size_t index = UART_RX_DMA_BUF_SIZE - rxDma.pending();
-            if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
-                for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.addData(rx_dma_buf[i]); 
-            }
-            rx_dma_buf_index = index;
-            EXECUTE(rxPostCb);
-        });
-
         rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
         rxDma.bindHalfCb(nullptr);
-        this->bindIdleCb(nullptr);
-
     }
 }
 
@@ -567,11 +424,6 @@ void UartHw::invokeRxDma(){
 void UartHw::enableRxneIt(const bool en){
     USART_ClearITPendingBit(instance, USART_IT_RXNE);
     USART_ITConfig(instance, USART_IT_RXNE, en);
-    if(en){
-        this->bindRxneCb([this](){
-            this->rxBuf.addData(USART_ReceiveData(instance));
-        });
-    }
 }
 
 void UartHw::enableIdleIt(const bool en){
@@ -579,16 +431,6 @@ void UartHw::enableIdleIt(const bool en){
     USART_ITConfig(instance, USART_IT_IDLE, en);
 }
 
-void UartHw::enableTxeIt(const bool en){
-    if(en){
-        this->bindTxeCb([this](){
-            if(this->txBuf.available()) instance->DATAR = this->txBuf.getData();
-            else USART_ITConfig(instance, USART_IT_TXE, false);
-        });
-    }else{
-        this->bindTxeCb(nullptr);
-    }
-}
 void UartHw::setTxMethod(const CommMethod _txMethod){
     if(txMethod != _txMethod){
         txMethod = _txMethod;

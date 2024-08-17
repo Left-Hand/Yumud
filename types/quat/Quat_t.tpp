@@ -20,9 +20,9 @@ T Quat_t<T>::length_squared() const{
 // This implementation uses XYZ convention (Z is the first rotation).
 template<typename T>
 void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
-	T half_a1 = p_euler.x * 0.5;
-	T half_a2 = p_euler.y * 0.5;
-	T half_a3 = p_euler.z * 0.5;
+	T half_a1 = p_euler.x / 2;
+	T half_a2 = p_euler.y / 2;
+	T half_a3 = p_euler.z / 2;
 
 	// R = X(a1).Y(a2).Z(a3) convention for Euler angles.
 	// Conversion to Quat_t<T>ernion as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-2)
@@ -56,9 +56,9 @@ void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
 // This implementation uses YXZ convention (Z is the first rotation).
 template<typename T>
 void Quat_t<T>::set_euler_yxz(const Vector3 &p_euler) {
-	T half_a1 = p_euler.y * 0.5;
-	T half_a2 = p_euler.x * 0.5;
-	T half_a3 = p_euler.z * 0.5;
+	T half_a1 = p_euler.y / 2;
+	T half_a2 = p_euler.x / 2;
+	T half_a3 = p_euler.z / 2;
 
 	// R = Y(a1).X(a2).Z(a3) convention for Euler angles.
 	// Conversion to Quat_t<T>ernion as listed in https://ntrs.nasa.gov/archive/nasa/casi.ntrs.nasa.gov/19770024290.pdf (page A-6)

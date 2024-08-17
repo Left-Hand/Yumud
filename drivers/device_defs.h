@@ -2,7 +2,9 @@
 #define __DEVICE_INC_H__
 
 #include "../sys/core/system.hpp"
-#include "../sys/debug/debug_inc.h"
+#include "../hal/bus/i2c/i2cdrv.hpp"
+#include "../hal/bus/spi/spidrv.hpp"
+#include "../hal/bus/uart/uart.hpp"
 
 #ifndef REG8_BEGIN
 #define REG8_BEGIN union{struct{

@@ -1,10 +1,19 @@
 #include "img_trans.hpp"
-#include "../../algo/hash_func.hpp"
+
+static constexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p_prev = 5381) {
+	uint32_t hash = p_prev;
+
+	for (int i = 0; i < p_len; i++) {
+		hash = ((hash << 5) + hash) + p_buff[i]; /* hash * 33 + c */
+	}
+
+	return hash;
+}
 
 void Transmitter::sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
 
     unit.header = header;
-    unit.hash = hash_impl(data_from, len);
+    unit.hash = hash_djb2_buffer(data_from, len);
     unit.time_stamp = time_stamp;
 
     instance.write((const char *)&unit, sizeof(unit));

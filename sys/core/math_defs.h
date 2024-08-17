@@ -2,10 +2,11 @@
 
 #define __MATH_DEFS_H__
 
-#include "../sys/core/sys_defs.h"
+#include "sys/core/sys_defs.h"
 
 #ifdef __cplusplus
 #include <type_traits>
+#include "bits/move.h"
 #endif
 
 #define CMP_EPSILON 0.001
@@ -58,12 +59,17 @@
 
 #ifndef MAX
 #ifdef __cplusplus
-    #define MAX(a,b) __max_tmpl(a,b)
-    template <typename T, typename U>
-    requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
-    constexpr __fast_inline T __max_tmpl(const T a, const U _b){
-        T b = static_cast<T>(_b);
-        return (a > b) ? a : b;
+    #define MAX(a,...) __max_helper(a,__VA_ARGS__)
+
+    template<typename First>
+    constexpr First __max_helper(const First & value) {
+        return value;
+    }
+
+    template<typename First, typename Second, typename... Rest>
+    constexpr First __max_helper(const First & first,const Second & second,const Rest & ... rest){
+        First max_value = first > First(second) ? first : First(second);
+        return __max_helper(max_value, rest...);
     }
 #else
     #define MAX(x,y) ((x > y) ? x : y)
@@ -72,12 +78,18 @@
 
 #ifndef MIN
 #ifdef __cplusplus
-    #define MIN(a,b) __min_tmpl(a,b)
-    template <typename T, typename U>
-    requires std::is_arithmetic_v<T> && std::is_arithmetic_v<U>
-    constexpr __fast_inline T __min_tmpl(const T a, const U _b){
-        T b = static_cast<T>(_b);
-        return (a < b) ? a : b;
+    #define MIN(a,...) __min_helper(a,__VA_ARGS__)
+
+
+    template<typename First>
+    constexpr First __min_helper(const First & value) {
+        return value;
+    }
+
+    template<typename First, typename Second, typename... Rest>
+    constexpr First __min_helper(const First & first,const Second & second,const Rest &... rest) {
+        First min_value = first < First(second) ? first : First(second);
+        return __min_helper(min_value, rest...);
     }
 #else
     #define MIN(x,y) ((x < y) ? x : y)
@@ -131,14 +143,14 @@
 
 #ifndef LERP
 #ifdef __cplusplus
-    #define LERP(x,a,b) __lerp_tmpl(x,a,b)
+    #define LERP(a,b,x) __lerp_tmpl(a,b, x)
     template <typename T, typename U, typename V>
     requires std::is_arithmetic_v<V>
-    constexpr __fast_inline T __lerp_tmpl(const T & x, const U & a, const V & b){
-        return a * (T(1) - x) + b * x;
+    constexpr __fast_inline T __lerp_tmpl(const U & a, const V & b, const T & x){
+        return T(a) * (T(1) - x) + T(b) * x;
     }
 #else
-#define LERP(x,a,b) (a * (1 - x) + b * x)
+#define LERP(a,b, x) (a * (1 - x) + b * x)
 #endif
 #endif
 
@@ -158,6 +170,7 @@
 
 #ifndef CLAMP
 #define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
+#define CLAMP2(x, ma) CLAMP((x), -ma, ma)
 #endif
 
 #ifndef STEP_TO
@@ -175,15 +188,26 @@
 
 
 #ifndef SIGN_AS
-#define SIGN_AS(y,x) ((x > 0) ? y : -y)
+#ifdef __cplusplus
+#define SIGN_AS(x,s) __sign_as_impl(x, s)
+
+template<typename T>
+constexpr __fast_inline T __sign_as_impl(const T x, const auto s){
+    if(s){
+        return s > 0 ? x : -x;
+    }else{
+        return T(0);
+    }
+}
+#endif
 #endif
 
 #ifndef LSHIFT
-#define LSHIFT(x,s) (s >= 0 ? x << s : x >> -s)
+#define LSHIFT(x,s) ((s) >= 0 ? ((x) << (s)) : ((x) >> (-(s))))
 #endif
 
 #ifndef RSHIFT
-#define RSHIFT(x,s) LSHIFT(x, -s)
+#define RSHIFT(x,s) LSHIFT(x, (-(s)))
 #endif
 
 #define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))

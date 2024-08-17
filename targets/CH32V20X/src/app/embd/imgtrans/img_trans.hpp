@@ -1,7 +1,9 @@
 #pragma once
 
 #include "src/testbench/tb.h"
+#include "types/image/image.hpp"
 
+#pragma pack(push, 1)
 struct TransType{
     uint8_t index:4;
     uint8_t type:4;
@@ -18,13 +20,13 @@ struct TransType{
         RGB = 0x20,
         STR = 0x30
     };
-}__packed;
+};
 
 
 struct PieceHeader{
     uint16_t header;
     TransType trans_type;
-}__packed;
+};
 
 struct ImagePieceUnit:public PieceHeader{
     uint32_t hash;
@@ -32,7 +34,8 @@ struct ImagePieceUnit:public PieceHeader{
     uint8_t size_x;
     uint8_t size_y;
     uint16_t data_index;
-}__packed;
+};
+#pragma pack(pop)
 
 
 
@@ -80,7 +83,10 @@ protected:
 public:
     Transmitter(OutputStream & _instance):instance(_instance){;}
 
-    void transmit(const Image<monochrome auto> & img, const uint8_t index){
+
+    template<typename T>
+    requires std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>
+    void transmit(const Image<T> & img, const uint8_t index){
         transmit((const uint8_t *)img.get_data(),img.get_size(), index); 
     }
 

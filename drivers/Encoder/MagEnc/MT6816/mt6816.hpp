@@ -75,8 +75,8 @@ public:
         return errcnt;
     }
 
-    bool stable() const override {
-        return not last_semantic.no_mag;
+    bool stable() override {
+        return last_semantic.no_mag == false;
     }
 };
 

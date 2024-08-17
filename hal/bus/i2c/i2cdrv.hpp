@@ -52,7 +52,7 @@ private:
         if(length == 0) return;
 
         size_t bytes = length * size;
-        uint8_t * u8_ptr = (uint8_t *)data_ptr;
+        const uint8_t * u8_ptr = (const uint8_t *)data_ptr;
 
         if(bus.begin(index) == Bus::ErrorType::OK){
             writeRegAddress(reg_address);
@@ -64,6 +64,36 @@ private:
                 }else{
                     for(size_t j = 0; j < size; j++){
                         bus.write(u8_ptr[j + i]);
+                    }
+                }
+            }
+
+            bus.end();
+        }
+    }
+
+
+    template<typename U, typename T>
+    requires I2cUtils::ValidTypes<U, T>
+    void writePool_impl(const U reg_address, const T data, const size_t length, const Endian msb = MSB){
+        constexpr size_t size = sizeof(T);
+
+        if constexpr(size == 0)   return;
+        if(length == 0) return;
+
+        size_t bytes = length * size;
+        const uint8_t * u8_ptr = (const uint8_t *)&data;
+
+        if(bus.begin(index) == Bus::ErrorType::OK){
+            writeRegAddress(reg_address);
+            for(size_t i = 0; i < bytes; i += size){
+                if(msb){
+                    for(size_t j = size; j > 0; j--){
+                        bus.write(u8_ptr[j-1]);
+                    }
+                }else{
+                    for(size_t j = 0; j < size; j++){
+                        bus.write(u8_ptr[j]);
                     }
                 }
             }
@@ -104,7 +134,7 @@ private:
     }
 
 public:
-    I2cDrv(I2c & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):
+    I2cDrv(I2c & _bus, const uint8_t _index, const uint32_t _wait_time = 320):
         BusDrv<I2c>(_bus, _index, _wait_time){};
 
 
@@ -112,6 +142,13 @@ public:
     requires I2cUtils::ValidTypes<U, T>
     void writePool(const U reg_address, const T * data_ptr, const size_t length, const Endian msb = MSB){
         writePool_impl<U, T>(reg_address, data_ptr, length, msb);
+    }
+
+
+    template<typename U, typename T>
+    requires I2cUtils::ValidTypes<U, T>
+    void writePool(const U reg_address, const T data, const size_t length, const Endian msb = MSB){
+        writePool_impl<U, T>(reg_address, data, length, msb);
     }
 
 

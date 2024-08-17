@@ -1,120 +1,33 @@
 #include "host.hpp"
 #include "imgtrans/img_trans.hpp"
 #include "match/match.hpp"
-#include "interpolation/interpolation.hpp"
-// #include "../../drivers/CommonIO"
+#include "algo/interpolation/interpolation.hpp"
+
+#include "types/float/bf16.hpp"
 
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
 
-using namespace Interpolation;
+#include "motions/move.hpp"
+#include "motions/pickdrop.hpp"
+
+#include "hal/bus/spi/spihw.hpp"
+
 using namespace NVCV2;
 
 #ifdef CH32V30X
 
 
-void EmbdHost::do_pick(const Vector2 & from){
-    actions
-    << CombinedAction(
-        RapidMoveAction(steppers, from, 1600)
-        , Action([&](){
-            steppers.nz(true);
-            steppers.z_pick();
-        }, 1300)
-        ,Action([&](){
-            steppers.z_hold();
-        }, 1500)
-    );
-}
-
-
-void EmbdHost::do_drop(const Vector2 & to){
-    actions
-    << CombinedAction(
-        RapidMoveAction(steppers, to, 1200)
-        , Action([&](){
-            steppers.z_place();
-        }, 1200)
-
-        ,Action([&](){
-            steppers.nz(false);
-        }, 350)
-
-        ,Action([&](){
-            steppers.z_idle();
-        }, 1400)
-    ); 
-}
-
-
-void EmbdHost::do_idle(const Vector2 & to){
-
-    if(steppers.last_z_mm > 30 || steppers.last_z_mm < 10){
-        actions << Action([&](){
-            steppers.nz(false);
-            steppers.z_idle();
-        }, 1400);
-    }
-
-    actions
-    << CombinedAction(
-        Action([&](){
-            steppers.nz(false);
-            this->busy_led.set();
-        }, 0)
-
-        ,RapidMoveAction(steppers, to, 1600)
-        ,Action([&](){
-            this->busy_led.clr();
-        }, 0)
-    );
-}
-
-void EmbdHost::do_blink(const uint dur){  
-    actions
-
-    << CombinedAction{
-        Action([this](){
-            busy_led = false;
-        }, 200),
-
-        Action([this](){
-            busy_led = true;
-        }, 200),
-
-        Action([this](){
-            busy_led = false;
-        }, 200),
-
-        Action([this](){
-            busy_led = true;
-        }, 200),
-
-        Action([this](){
-            busy_led = false;
-        }, 200),
-    }
-    ; 
-}
-
-void EmbdHost::do_move(const Vector2 & from, const Vector2 & to){
-    do_pick(from);
-    do_drop(to);
-}
 
 void EmbdHost::main(){
-    delay(200);
 
     auto & lcd_blk = portC[7];
     auto & spi = spi2;
     
     run_led.outpp();
+    empty_led.outpp();
     busy_led.outpp();
     lcd_blk.outpp(1);
-
-    timer8.init(1000);
-    timer8.enableIt(TimerUtils::IT::Update, {0,0});
-    timer8.bindCb(TimerUtils::IT::Update, [&](){this->tick();});
 
     auto & lcd_cs = portD[6];
     auto & lcd_dc = portD[7];
@@ -131,8 +44,8 @@ void EmbdHost::main(){
     {//init tft
         tftDisplayer.init();
         tftDisplayer.setDisplayOffset({53, 40}); 
-        tftDisplayer.setFlipX(true);
-        tftDisplayer.setFlipY(true);
+        tftDisplayer.setFlipX(false);
+        tftDisplayer.setFlipY(false);
         tftDisplayer.setSwapXY(false);
         tftDisplayer.setFormatRGB(true);
         tftDisplayer.setFlushDirH(false);
@@ -146,7 +59,9 @@ void EmbdHost::main(){
     i2c.init(400000);
 
     camera.init();
-    camera.setExposureValue(1000);
+    camera.setExposureValue(300);
+
+    toggle_key.init();
 
 
     vl.init();
@@ -160,27 +75,10 @@ void EmbdHost::main(){
     tcs.setGain(TCS34725::Gain::X60);
     ch9141.init();
 
-    stepper_x.setPositionClamp({0.2, 7.8});
-    stepper_y.setPositionClamp({0.2, 4.8});
-    stepper_z.setPositionClamp({0.2, 24.2});
+    stepper_x.setPositionLimit({0.2, 7.8});
+    stepper_y.setPositionLimit({0.2, 4.8});
+    stepper_z.setPositionLimit({0.2, 24.2});
 
-    auto parseAscii = [&](InputStream & is){
-        static String temp;
-        while(is.available()){
-            auto chr = is.read();
-            if(chr == 0) continue;
-            temp += chr;
-            if(chr == '\n'){
-                temp.alphanum();
-                DEBUG_PRINTLN("line is", temp);
-                parseLine(temp);
-                temp = "";
-            }
-        }
-    };
-
-    uart7.bindRxPostCb([&](){parseAscii(uart7);});
-    DEBUGGER.bindRxPostCb([&](){parseAscii(DEBUGGER);});
 
     Matcher matcher;
     auto sketch = make_image<RGB565>(camera.get_size()/2);
@@ -202,14 +100,13 @@ void EmbdHost::main(){
         tftDisplayer.puttexture(area, src.get_data());
     };
 
-
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
         painter.bindImage(sketch);
         painter.setColor(RGB565::CORAL);
         painter.drawRoi(rect);
     };
 
-    [[maybe_unused]] auto plot_april = [&](const Vertexs vertex, const int index, const real_t dir){
+    [[maybe_unused]] auto plot_april = [&](const Vertexs & vertex, const int index, const real_t dir){
         painter.bindImage(sketch);
         painter.setColor(RGB565::FUCHSIA);
 
@@ -233,372 +130,277 @@ void EmbdHost::main(){
     };
 
 
-    auto do_home = [&](){
-        actions += Action([&](){steppers.nz(false);}, 600);
-        actions += Action([&](){
-            steppers.x.setTargetCurrent(-0.45);
-            steppers.y.setTargetCurrent(-0.45);
-            steppers.z.setTargetCurrent(-0.75);
-        }, 7000);
+    // resetSlave();
+    delay(900);
+    bindSystickCb([&](){this->tick();});
+    steppers.do_home();
 
-        actions += Action([&](){
-            steppers.x.locateRelatively(0);
-            steppers.y.locateRelatively(0);
-            steppers.z.locateRelatively(0);
-        });
-
-
-        do_idle({20, 60});
-    };
-
-    do_home();
-
-    DEBUG_PRINTLN("init done");
     while(true){
-        // run_led = (millis() / 200) % 2 == 0;
-        // sketch.fill(RGB565::BLACK);
 
-        // Image<Grayscale> img = Shape::x2(camera);
-        // plot_gray(img, {0, img.get_size().y * 1});
-        // trans.transmit(img, 0);
+        sketch.fill(RGB565::BLACK);
+
+        Image<Grayscale> raw_img = Shape::x2(camera);
+        auto img = raw_img.space();
+        Geometry::perspective(img, raw_img);
+        // img = img.clone(Rect2i(14, 0, 80-14, 60));
+        plot_gray(img, {0, img.get_size().y * 1});
+        trans.transmit(img, 0);
     
-        // auto img_ada = img.space();
-        // Shape::adaptive_threshold(img_ada, img);
-        // plot_gray(img_ada, {0, img.get_size().y * 2});
+        auto img_ada = img.space();
+        Shape::adaptive_threshold(img_ada, img);
+        plot_gray(img_ada, {0, img.get_size().y * 2});
 
-        // auto img_bina = img.space<Binary>();
-        // Pixels::binarization(img_bina, img_ada, 220);
-        // Shape::canny(img_bina, img, {40,100});
-        // Pixels::inverse(img_bina);
+        auto img_bina = img.space<Binary>();
+        Pixels::binarization(img_bina, img_ada, 220);
+        Pixels::inverse(img_bina);
 
         using Shape::FloodFill;
         using Shape::BlobFilter;
 
-        // FloodFill ff;
-        // auto map = ff.run(img_bina, BlobFilter::clamp_area(400, 1600));
-        // Pixels::dyeing(map, map);
-        // plot_gray(map, Vector2i{0, map.get_size().y * 3});
+        FloodFill ff;
+        auto map = ff.run(img_bina, BlobFilter::clamp_area(100, 1200));
+        Pixels::dyeing(map, map);
+        plot_gray(map, Vector2i{0, map.get_size().y * 3});
 
 
-        // for(const auto & blob :ff.blobs()){
-        // if(false){
-    
-        //     bool is_tag = false;
-        //     bool is_digit = false;
-        //     if(2000 < blob.rect.w) is_tag = true;//make it impossible
-        //     if(2000 < blob.rect.w) is_digit = true;//make it impossible
+        for(const auto & blob :ff.blobs()){
+            if(true){
+                // DEBUG_PRINTLN(blob)
+                bool is_tag = false;
+                bool is_digit = false;
+                if(16 < blob.rect.h){
+                    if(blob.rect.h > 18 and blob.rect.w > 18) is_tag = true;
+                    else if(ABS(blob.rect.h - blob.rect.w) > 4)is_digit = true;
+                }
 
-        //     const auto & rect = blob.rect;
+                const auto & rect = blob.rect;
 
-        //     if(is_tag){
+                if(is_tag){
 
-        //         static constexpr uint apriltag_s = 4;
-
-        //         auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
-
-        //             auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
-        //                 Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
-
-        //                 Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-        //                 Vector2 lower_x = __vertexs[3].lerp(__vertexs[2], grid_scale.x);
-
-        //                 return upper_x.lerp(lower_x, grid_scale.y);
-        //             };
+                    static constexpr uint apriltag_s = 4;
+                // DEBUG_PRINTLN(rect);
 
 
-        //             auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
-        //                 return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
-        //             };
-
-        //             return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
-        //         };
-
-        //         auto find_vertex = [](const Image<Grayscale> & __map, const Grayscale & match, const Rect2i & roi) -> Vertexs{
-        //             auto x_range = roi.get_x_range();
-        //             auto y_range = roi.get_y_range();
-
-        //             Vertexs ret;
-        //             auto center = roi.get_center();
+                    Vertexs vertexs;
+                    {
+                        // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
+                        // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
+                        // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
+                        // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
             
-        //             for(auto & item : ret){
-        //                 item = center;
-        //             }
-    
-        //             #define COMP(s1, s2, i)
-        //             if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))
-        //             ret[i] = Vector2i(x,y);
+                        vertexs[0] = rect.position;
+                        vertexs[1] = rect.position + Vector2i(rect.w, 0);
+                        vertexs[2] = rect.position + Vector2i(0, rect.h);
+                        vertexs[3] = rect.get_end();
+                    }
 
-        //             for(auto y = y_range.from; y < y_range.to; ++y){
-        //                 for(auto x = x_range.from; x < x_range.to; ++x){
-        //                     auto color = __map[{x,y}];
-        //                     if(color != match) continue;
-
-        //                     COMP(-1, -1, 0)
-        //                     COMP(+1, -1, 1)
-        //                     COMP(+1, +1, 2)
-        //                     COMP(-1, +1, 3)
-        //                 }
-        //             }
-
-        //             return ret;
-        //         };
-
-        //         auto vertexs = find_vertex(map, Pixels::dyeing((Grayscale)blob.index), rect);
-
-        //         uint16_t code = 0;
-        //         for(uint j = 0; j < apriltag_s; j++){
-        //             for(uint i = 0; i < apriltag_s; i++){
-        //                 uint16_t mask = (0x8000) >> (j * 4 + i);
-        //                 Grayscale val = get_vertex_val(vertexs, {i,j}, img);
-        //                 if((uint8_t)val > 173) code |= mask;
-        //             }
-        //         }
-
-        //         static Apriltag16H5Decoder decoder;
-        //         decoder.update(code);
-
-        //         plot_april(vertexs, decoder.index(), decoder.direction() * PI / 2 + (vertexs[1] - vertexs[0]).angle());
-
-        //         Painter<Grayscale> pt;
-        //         auto clipped = img.clone(rect);
-        //         pt.bindImage(clipped);
-        //         pt.drawString({0,0}, toString(decoder.index()));
-        //         pt.drawString({0,8}, toString(decoder.direction()));
-        //         trans.transmit(clipped,1);
-        //     }
+                    painter.setColor(RGB565::YELLOW);
+                    for(const auto & item : vertexs){
+                        painter.drawPixel(item);
+                    }
 
 
-        //     if(is_digit){
+                    auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
+
+                        auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
+                            Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
+
+                            Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+                            Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
+
+                            return upper_x.lerp(lower_x, grid_scale.y);
+                        };
 
 
-        //         auto char_pos = rect.get_center();
-        //         const Vector2i tmp_size = {8, 12};
-        //         const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
-        //         auto clipped = img.clone(clip_window);
+                        auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
+                            return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
+                        };
+
+                        return gs[get_vertex_grid(vertexs, _grid_pos)];
+                    };
+
+                    uint16_t code = 0;
+                    for(uint j = 0; j < apriltag_s; j++){
+                        for(uint i = 0; i < apriltag_s; i++){
+                            uint16_t mask = (0x8000) >> (j * 4 + i);
+                            Grayscale val = get_vertex_val(vertexs, {i,j}, img);
+                            if((uint8_t)val > 173) code |= mask;
+                        }
+                    }
+
+                    static Apriltag16H5Decoder decoder;
+                    decoder.update(code);
 
 
-        //         auto tmp = Shape::x2(clipped);
+                    april_result = decoder.index() % 30;
 
-        //         painter.setColor(RGB565::BLUE);
-        //         painter.drawRoi(clip_window);
+                    std::swap(vertexs[3], vertexs[2]);
+                    plot_april(vertexs, decoder.index(), real_t(PI / 2) * decoder.direction());
 
-        //         auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
+                    Painter<Grayscale> pt;
+                    auto clipped = img.clone(rect);
+                    pt.bindImage(clipped);
+                    pt.drawString({0,0}, toString(decoder.index()));
+                    pt.drawString({0,8}, toString(decoder.direction()));
+                    trans.transmit(clipped,1);
 
-        //         plot_number(clip_window, result);
+                    // static constexpr uint apriltag_s = 4;
 
-        //         Painter<Grayscale> pt;
-        //         pt.bindImage(clipped);
-        //         pt.drawString({0,0}, toString(result));
+                    // auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
 
-        //         trans.transmit(clipped,2);
+                    //     auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
+                    //         Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
 
-        //     }
+                    //         Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
+                    //         Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
 
-        // }
+                    //         return upper_x.lerp(lower_x, grid_scale.y);
+                    //     };
 
-        // plot_rgb(sketch, {0,0});
 
+                    //     auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
+                    //         return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
+                    //     };
+
+                    //     return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
+                    // };
+
+                    // auto find_vertex = [](const Image<Grayscale> & __map, const Grayscale & match, const Rect2i & roi) -> Vertexs{
+                    //     auto x_range = roi.get_x_range();
+                    //     auto y_range = roi.get_y_range();
+
+                    //     Vertexs ret;
+                    //     auto center = roi.get_center();
+                
+                    //     for(auto & item : ret){
+                    //         item = center;
+                    //     }
+        
+                    //     #define COMP(s1, s2, i)\
+                    //     if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
+                    //     ret[i] = Vector2i(x,y);\
+
+                    //     for(auto y = y_range.from; y < y_range.to; ++y){
+                    //         for(auto x = x_range.from; x < x_range.to; ++x){
+                    //             auto color = __map[{x,y}];
+                    //             if(color != match) continue;
+
+                    //             COMP(-1, -1, 0)
+                    //             COMP(+1, -1, 1)
+                    //             COMP(+1, +1, 2)
+                    //             COMP(-1, +1, 3)
+                    //         }
+                    //     }
+
+                    //     return ret;
+                    // };
+
+
+                    // Vertexs vertexs;
+                    // {
+                    //     // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
+                    //     // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
+                    //     // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
+                    //     // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
+            
+                    //     vertexs[0] = rect.position;
+                    //     vertexs[1] = rect.position + Vector2i(rect.w, 0);
+                    //     vertexs[2] = rect.position + Vector2i(0, rect.h);
+                    //     vertexs[3] = rect.get_end();
+                    // }
+
+                    // painter.setColor(RGB565::YELLOW);
+                    // for(const auto & item : vertexs){
+                    //     painter.drawPixel(item);
+                    // }
+
+                    // uint16_t code = 0;
+                    // for(uint j = 0; j < apriltag_s; j++){
+                    //     for(uint i = 0; i < apriltag_s; i++){
+                    //         uint16_t mask = (0x8000) >> (j * 4 + i);
+                    //         Grayscale val = get_vertex_val(vertexs, {i,j}, img);
+                    //         if((uint8_t)val > 173) code |= mask;
+                    //     }
+                    // }
+
+                    // static Apriltag16H5Decoder decoder;
+                    // decoder.update(code);
+
+                    // plot_april(vertexs, decoder.index(), decoder.direction());
+
+                    // Painter<Grayscale> pt;
+                    // auto clipped = img.clone(rect);
+                    // pt.bindImage(clipped);
+                    // pt.drawString({0,0}, toString(decoder.index()));
+                    // pt.drawString({0,8}, toString(decoder.direction()));
+                    // trans.transmit(clipped,1);
+                }
+
+
+                if(is_digit){
+
+
+                    auto char_pos = rect.get_center();
+                    const Vector2i tmp_size = {8, 12};
+                    const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
+                    auto clipped = img.clone(clip_window);
+
+
+                    auto tmp = Shape::x2(clipped);
+
+                    painter.setColor(RGB565::BLUE);
+                    painter.drawRoi(clip_window);
+
+                    auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
+
+                    plot_number(clip_window, result);
+
+                    num_result = result;
+
+                    Painter<Grayscale> pt;
+                    pt.bindImage(clipped);
+                    pt.drawString({0,0}, toString(result));
+
+                    trans.transmit(clipped,2);
+
+                }
+
+            }
+        }
+
+        plot_rgb(sketch, {0,0});
+
+        // DEBUG_PRINTLN(steppers.x_axis.readMM(), steppers.y_axis.readMM(), steppers.z_axis.readMM());
         static uint last_turn = 0;
         uint this_turn = millis() / 100;
         if(last_turn != this_turn){
-            DEBUG_PRINTS("busy ", actions.pending());
-            ch9141.prints("busy ", actions.pending());
+            // DEBUG_PRINTS("busy ", actions.pending());
+            // ch9141.prints("busy ", actions.pending());
+            // DEBUG_PRINTLN(bool(toggle_key));
             last_turn = this_turn;
-            run_led = !run_led;
+
         }
+
+        run_led = !run_led;
+        busy_led = actions.pending();
+
     }
 }
 
-void EmbdHost::parseCommand(const uint8_t id, const Command &cmd, const CanMsg &msg){
-
-
+void EmbdHost::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
+    steppers.x.parseCommand(id, cmd, msg);
+    steppers.y.parseCommand(id, cmd, msg);
+    steppers.z.parseCommand(id, cmd, msg);
 }
 
 
-void EmbdHost::parseTokens(const String & _command,const std::vector<String> & args){
-    auto command = _command;
-    command.toLowerCase();
-    switch(hash_impl(command.c_str(), command.length())){
-        case "exp"_ha:
-            settle_method(camera.setExposureValue, args, int)
-        case "bina"_ha:
-            settle_value(bina_threshold, args)
-        case "diff"_ha:
-            settle_value(diff_threshold, args)
-        case "xymm"_ha:
-            if(args.size() == 2){
-                steppers.xy_mm(Vector2(args[0], args[1]));
-            }
-            break;
-        case "zmm"_ha:
-            if(args.size() == 1){
-                steppers.z_mm(real_t(args[0]));
-            }
-        case "xyz"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetPosition(real_t(args[0]));
-                steppers.y.setTargetPosition(real_t(args[1]));
-                steppers.z.setTargetPosition(real_t(args[2]));
-            }
-            break;
-
-        case "abort"_ha:
-            actions.abort();
-            break;
-
-        case "clear"_ha:
-            actions.clear();
-            break;
-        
-        case "xyzt"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetTrapezoid(real_t(args[0]));
-                steppers.y.setTargetTrapezoid(real_t(args[1]));
-                steppers.z.setTargetTrapezoid(real_t(args[2]));
-            }
-            break;
-
-        case "xy"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetPosition(real_t(args[0]));
-                steppers.y.setTargetPosition(real_t(args[1]));
-            }
-            break;
-
-        case "xyt"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetTrapezoid(real_t(args[0]));
-                steppers.y.setTargetTrapezoid(real_t(args[1]));
-            }
-            break;
-    
-        case "dz"_ha:
-            if(args.size() == 1){
-                stepper_z.setTargetSpeed(real_t(args[0]));
-            }
-
-        case "dxy"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetSpeed(real_t(args[0]));
-                steppers.y.setTargetSpeed(real_t(args[1]));
-                DEBUG_PRINTLN(args[0], args[1]);
-            }
-            break;
-
-        case "nz"_ha:
-            if(args.size() == 1){
-                steppers.y.setNozzle(int(args[0]));
-            }
-            break;
-
-        case "dxyz"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetSpeed(real_t(args[0]));
-                steppers.y.setTargetSpeed(real_t(args[1]));
-                steppers.z.setTargetSpeed(real_t(args[2]));
-            }
-            break;
-
-        case "xp"_ha:
-            settle_method(steppers.x.setTargetPosition, args, real_t)
-        case "yp"_ha:
-            settle_method(steppers.y.setTargetPosition, args, real_t);
-        case "zp"_ha:
-            settle_method(steppers.z.setTargetPosition, args, real_t);
-        case "xc"_ha:
-            settle_method(steppers.x.setTargetCurrent, args, real_t);
-        case "yc"_ha:
-            settle_method(steppers.y.setTargetCurrent, args, real_t);
-        case "zc"_ha:
-            settle_method(steppers.z.setTargetCurrent, args, real_t);
-        case "xs"_ha:
-            settle_method(steppers.x.setTargetSpeed, args, real_t);
-        case "ys"_ha:
-            settle_method(steppers.y.setTargetSpeed, args, real_t);
-        case "zs"_ha:
-            settle_method(steppers.z.setTargetSpeed, args, real_t);
-        case "xt"_ha:
-            settle_method(steppers.x.setTargetTrapezoid, args, real_t);
-        case "yt"_ha:
-            settle_method(steppers.y.setTargetTrapezoid, args, real_t);
-        case "zt"_ha:
-            settle_method(steppers.z.setTargetTrapezoid, args, real_t);
-        case "xh"_ha:
-            settle_method(steppers.x.locateRelatively, args, real_t);
-        case "yh"_ha:
-            settle_method(steppers.y.locateRelatively, args, real_t);
-        case "zh"_ha:
-            settle_method(steppers.z.locateRelatively, args, real_t);
-        case "xm"_ha:
-            settle_method(steppers.x.setCurrentClamp, args, real_t);
-        case "ym"_ha:
-            settle_method(steppers.y.setCurrentClamp, args, real_t);
-        case "zm"_ha:
-            settle_method(steppers.z.setCurrentClamp, args, real_t);
-        case "cali"_ha:
-            trigger_method(steppers.w.triggerCali);
-        case "ld"_ha:
-            trigger_method(steppers.w.loadArchive, true);
-        case "rm"_ha:
-            trigger_method(steppers.w.removeArchive, true);
-        case "sv"_ha:
-            trigger_method(steppers.w.saveArchive, true);
-        case "rst"_ha:
-            trigger_method(reset);
-        case "nne"_ha:
-            trigger_method(set_demo_method, ActMethod::NONE);
-        case "hui"_ha:
-            trigger_method(set_demo_method, ActMethod::HUI);
-        case "lisa"_ha:
-            trigger_method(set_demo_method, ActMethod::LISA);
-        case "grab"_ha:
-            trigger_method(set_demo_method, ActMethod::GRAB);
-        case "inte"_ha:
-            trigger_method(set_demo_method, ActMethod::INTER);
-        case "rep"_ha:
-            trigger_method(set_demo_method, ActMethod::REP);
-        case "usbon"_ha:
-            trigger_method(trans.enable, true);
-        case "usboff"_ha:
-            trigger_method(trans.enable, false);
-        case "frz"_ha:
-            trigger_method(stepper_w.freeze);
-
-        case "idle"_ha:
-            if(args.size() == 2){
-                do_idle({args[0], args[1]});
-            }else if(args.size() == 0){
-                do_idle({20, 60});
-            }
-            break;
-
-        case "move"_ha:
-            if(args.size() == 4){
-                do_move({args[0], args[1]}, {args[2], args[3]});
-            }
-            break;
-
-        case "drop"_ha:
-            if(args.size() == 2){
-                do_drop({args[0], args[1]});
-            }
-            break;
-
-        case "pick"_ha:
-            if(args.size() == 2){
-                do_pick({args[0], args[1]});
-            }
-            break;
-        default:
-            CliAP::parseTokens(_command, args);
-            break;
-    }
-}
-
-void EmbdHost::reset(){
+void EmbdHost::resetSlave(){
     steppers.x.reset();
     steppers.y.reset();
     steppers.z.reset();
+}
+void EmbdHost::resetAll(){
+    resetSlave();
     delay(10);
     Sys::Misc::reset();
 }
@@ -608,24 +410,6 @@ void EmbdHost::cali(){
 }
 
 
-void EmbdHost::run() {
-    readCan();
-    act();
-    // const real_t ang1 = 4 * t;
-    // const real_t ang2 = 3 * t;
-    // const real_t amp = 2;
-    // steppers.x.setTargetPosition(amp * sin(ang1));
-    // steppers.y.setTargetPosition(amp * cos(ang2));
-    // steppers.z.setTargetPosition(4 + sin(t));
-    // logger.println("why");
-    // steppers.y.setTargetCurrent(sign(sin(8 * t)));
-    // logger.println(steppers.y.getSpeed());
-    
-    // steppers.z.setTargetPosition(ss());
-    // logger.println(can1.getTxErrCnt(), can1.getRxErrCnt(), can1.getErrCode());
-    // can.write(CanMsg{0x70});
-
-}
 
 void EmbdHost::set_demo_method(const ActMethod new_method){
     act_method = new_method;
@@ -640,7 +424,6 @@ void EmbdHost::act(){
                 real_t _t = t * 3;
                 real_t r = sin(_t) + sin(_t / 5) + 1.2;
                 pos = Vector2(r,0).rotated(_t) + Vector2(5,1.8);
-                // logger.println(pos.x,);
             }
             break;
         case ActMethod::GRAB:
@@ -692,7 +475,37 @@ void EmbdHost::act(){
 
 
 void EmbdHost::tick(){
-    actions.update();
+
+    steppers.tick();
+
+    toggle_key.update();
+    if(toggle_key.pressed()){
+        steppers.toggle_nz();
+
+    }
+
+    auto parseAscii = [&](InputStream & is){
+        static String temp;
+        while(is.available()){
+            auto chr = is.read();
+            if(chr == 0) continue;
+            temp += chr;
+            if(chr == '\n'){
+                temp.alphanum();
+                parseLine(temp);
+                temp = "";
+            }
+        }
+    };
+
+    parseAscii(uart7);
+    parseAscii(uart2);
+
+    auto index = (millis() % 3);
+    // steppers[index].updateAll();
+    // steppers.z.updateAll();
+    readCan();
+    act();
 }
 
 #endif

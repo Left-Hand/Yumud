@@ -12,10 +12,12 @@ struct NvicPriority;
 class NvicRequest;
 
 struct NvicPriority{
+protected:
     const uint8_t pre;
     const uint8_t sub;
-
-    NvicPriority(const uint8_t _pre, const uint8_t _sub):pre(MIN(_pre,1)), sub(MIN(_sub, 7)){;}
+public:
+    NvicPriority() = delete;
+    NvicPriority(const uint8_t _pre, const uint8_t _sub):pre(CLAMP(_pre,0,1)), sub(CLAMP(_sub, 0,7)){;}
 
     static void enable(const NvicPriority request, const IRQn _irq, const bool en = true){
         NVIC_InitTypeDef NVIC_InitStructure = {0};

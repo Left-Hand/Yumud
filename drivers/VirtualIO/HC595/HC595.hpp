@@ -104,26 +104,25 @@ public:
         write(buf &= ~(uint8_t)(pin));
     }
 
-    void setBits(const uint16_t data) override{
+    void set(const uint16_t data) override{
         write(buf | (uint8_t)data);
     }
-    void clrBits(const uint16_t data) override{
+    void clr(const uint16_t data) override{
         write(buf & (~(uint8_t)(data)));
     }
 
-    void writeByIndex(const int8_t index, const bool data) override{
+    void writeByIndex(const int index, const bool data) override{
         if(index < 0 || index >= 8) return;
         uint8_t last_buf = buf;
         buf &= ~(uint8_t)(1 << index);
         buf |= (uint8_t)(data << index);
         if(last_buf != buf) write(buf);
     }
-    bool readByIndex(const int8_t index) override{
+    bool readByIndex(const int index) override{
         if(index < 0 || index >= 8) return false;
         return buf & (1 << index);
     }
 
-    void setModeByIndex(const int8_t & index, const PinMode & mode){}
 
     HC595Single & operator << (const uint8_t data){write(data); return *this;}
     HC595Single & operator = (const uint16_t data) override {write(data); return *this;}

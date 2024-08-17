@@ -1,7 +1,41 @@
 #pragma once
 
 #include "uart.hpp"
-#include "../hal/dma/dma.hpp"
+
+#include "hal/dma/dma.hpp"
+
+
+#ifdef HAVE_UART1
+extern "C" __interrupt void USART1_IRQHandler();
+#endif
+
+#ifdef HAVE_UART2
+extern "C" __interrupt void USART2_IRQHandler(void);
+#endif
+
+#ifdef HAVE_UART3
+extern "C" __interrupt void USART3_IRQHandler(void);
+#endif
+
+#ifdef HAVE_UART4
+extern "C" __interrupt void UART4_IRQHandler(void);
+#endif
+
+#ifdef HAVE_UART5
+extern "C" __interrupt void UART5_IRQHandler(void);
+#endif
+
+#ifdef HAVE_UART6
+extern "C" __interrupt void UART6_IRQHandler(void);
+#endif
+
+#ifdef HAVE_UART7
+extern "C" __interrupt void UART7_IRQHandler(void);
+#endif
+
+#ifdef HAVE_UART8
+extern "C" __interrupt void UART8_IRQHandler(void);
+#endif
 
 
 class UartHw:public Uart{
@@ -10,11 +44,8 @@ protected:
     USART_TypeDef * instance;
 
     void enableRcc(const bool en = true);
-
     void enableIt(const bool en = true);
-
     void enableRxneIt(const bool en = true);
-    void enableTxeIt(const bool en = true);
     void enableIdleIt(const bool en = true);
     void invokeTxIt();
 
@@ -25,12 +56,16 @@ protected:
     void invokeTxDma();
     void invokeRxDma();
 
-    void bindRxneCb(Callback && cb);
-    void bindTxeCb(Callback && cb);
-    void bindIdleCb(Callback && cb);
+    void rxneHandle();
+    void txeHandle();
+    void idleHandle();
 
     size_t rx_dma_buf_index;
     size_t tx_dma_buf_index;
+
+    #ifndef UART_DMA_BUF_SIZE
+    #define UART_DMA_BUF_SIZE 64
+    #endif
 
     char tx_dma_buf[UART_DMA_BUF_SIZE];
     char rx_dma_buf[UART_DMA_BUF_SIZE];
@@ -61,45 +96,70 @@ public:
 
     Gpio & txio() override;
     Gpio & rxio() override;
+
+    #ifdef HAVE_UART1
+    friend void USART1_IRQHandler();
+    #endif
+
+    #ifdef HAVE_UART2
+    friend void USART2_IRQHandler(void);
+    #endif
+
+    #ifdef HAVE_UART3
+    friend void USART3_IRQHandler(void);
+    #endif
+
+    #ifdef HAVE_UART4
+    friend void UART4_IRQHandler(void);
+    #endif
+
+    #ifdef HAVE_UART5
+    friend void UART5_IRQHandler(void);
+    #endif
+
+    #ifdef HAVE_UART6
+    friend void UART6_IRQHandler(void);
+    #endif
+
+    #ifdef HAVE_UART7
+    friend void UART7_IRQHandler(void);
+    #endif
+
+    #ifdef HAVE_UART8
+    friend void UART8_IRQHandler(void);
+    #endif
+
 };
 
 
 #ifdef HAVE_UART1
 extern UartHw uart1;
-extern "C" __interrupt void USART1_IRQHandler();
 #endif
 
 #ifdef HAVE_UART2
 extern UartHw uart2;
-extern "C" __interrupt void USART2_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART3
 extern UartHw uart3;
-extern "C" __interrupt void USART3_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART4
 extern UartHw uart4;
-extern "C" __interrupt void UART4_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART5
 extern UartHw uart5;
-extern "C" __interrupt void UART5_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART6
 extern UartHw uart6;
-extern "C" __interrupt void UART6_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART7
 extern UartHw uart7;
-extern "C" __interrupt void UART7_IRQHandler(void);
 #endif
 
 #ifdef HAVE_UART8
 extern UartHw uart8;
-extern "C" __interrupt void UART8_IRQHandler(void);
 #endif

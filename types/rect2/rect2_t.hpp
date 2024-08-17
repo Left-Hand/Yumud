@@ -16,27 +16,27 @@ public:
         struct{
             T x;
             T y;
-        }__packed;
-    }__packed;
+        };
+    };
 
     union{
         Vector2_t<T> size;
         struct{
             T w;
             T h;
-        }__packed;
+        };
 
         struct{
             T width;
             T height;
-        }__packed;
-    }__packed;
+        };
+    };
 
-    constexpr Rect2_t(){;}
+    constexpr Rect2_t():position(Vector2_t<T>()), size(Vector2_t<T>()){;}
 
-    constexpr Rect2_t(const Rect2_t<arithmetic auto> other):position(other.position), size(other.size){;}
+    constexpr Rect2_t(const Rect2_t<arithmetic auto> other):position(static_cast<Vector2_t<T>>(other.position)), size(static_cast<Vector2_t<T>>(other.size)){;}
 
-    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _position,const Vector2_t<arithmetic auto> & _size):position(_position), size(_size){;}
+    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _position,const Vector2_t<arithmetic auto> & _size):position(static_cast<Vector2_t<T>>(_position)), size(static_cast<Vector2_t<T>>(_size)){;}
 
 
     constexpr Rect2_t(const Vector2_t<arithmetic auto> & _size):position(), size(_size){;}
@@ -164,13 +164,13 @@ public:
         Rect2_t<T> other_regular = other.abs();
 
         auto _position = Vector2_t<T>(
-            MAX(regular.x, other_regular.x),
-            MAX(regular.y, other_regular.y)
+            MAX(T(regular.x), T(other_regular.x)),
+            MAX(T(regular.y), T(other_regular.y))
         );
 
         auto _size = Vector2_t<T>(
-            MIN(regular.x + regular.w, other_regular.x + other_regular.w) - _position.x,
-            MIN(regular.y + regular.h, other_regular.y + other_regular.h) - _position.y
+            MIN(T(regular.x + regular.w), T(other_regular.x + other_regular.w)) - _position.x,
+            MIN(T(regular.y + regular.h), T(other_regular.y + other_regular.h)) - _position.y
         );
 
         if(_size.x < 0 || _size.y < 0) return Rect2_t<T>();
@@ -248,7 +248,7 @@ public:
     __no_inline String toString(unsigned char decimalPlaces = 2) const {
         return ('(' + String(position) + ',' + String(size) + ')');
     }
-}__packed;
+};
 
 using Rect2i = Rect2_t<int>;
 using Window = Rect2i;

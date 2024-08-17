@@ -1,14 +1,15 @@
 #pragma once
 
-#include "../drivers/device_defs.h"
-#include "../../memory.hpp"
+#include "drivers/device_defs.h"
+#include "drivers/Memory/memory.hpp"
 
 class AT24CXX:public StoragePaged{
 private:
     constexpr bool is_small_chip(){return m_capacity <= 256;}
 protected:
+    static constexpr uint32_t min_duration_ms = 6;
+
     I2cDrv bus_drv;
-    static constexpr uint32_t min_duration_ms = 10;
     uint32_t last_entry_ms = 0;
     
     void _store(const uint8_t data, const Address loc) override;

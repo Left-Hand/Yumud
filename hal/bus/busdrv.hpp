@@ -18,7 +18,6 @@ protected:
     uint8_t data_bits = 8;
     uint32_t wait_time;
 
-
     static constexpr auto is_writable_bus = std::is_base_of_v<WritableBus, BusType>;
     static constexpr auto is_readable_bus = std::is_base_of_v<ReadableBus, BusType>;
     static constexpr auto is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
@@ -32,7 +31,7 @@ protected:
     }
 
     virtual void speclize(){;}                                                                                                                             
-    BusDrv(BusType & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):bus(_bus), index(_index), wait_time(_wait_time){;}
+    BusDrv(BusType & _bus, const uint8_t _index, const uint32_t _wait_time = 320):bus(_bus), index(_index), wait_time(_wait_time){;}
 public:
 
     template<typename T>

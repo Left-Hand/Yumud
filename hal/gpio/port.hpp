@@ -39,14 +39,11 @@ public:
         }{;}
     void init();
     void enableRcc(const bool en = true);
-    __fast_inline void writeByIndex(const int8_t index, const bool data) override;
-    // __fast_inline bool readByIndex(const int8_t index) override;
-    __fast_inline void setBits(const uint16_t data) override;
-    // __fast_inline void setByIndex(const int8_t index) override;
-    __fast_inline void set(const Pin pin) override;
-    __fast_inline void clrBits(const uint16_t data) override;
-    __fast_inline void clr(const Pin pin) override;
-    // __fast_inline void clrByIndex(const int8_t index) override;
+    __inline void writeByIndex(const int index, const bool data) override;
+    __inline void set(const uint16_t data) override;
+    __inline void set(const Pin pin) override;
+    __inline void clr(const uint16_t data) override;
+    __inline void clr(const Pin pin) override;
     Port & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
 
     operator uint16_t(){return instance->INDR;}
@@ -58,34 +55,33 @@ public:
         if(pin != Pin::None) return channels[CLAMP(CTZ((uint16_t)pin), 0, 15)];
         else return channel_none;
     };
-    void setModeByIndex(const int8_t index, const PinMode mode) override;
+    void setMode(const int index, const PinMode mode) override;
 
-    // GPIO_TypeDef * getInstance(){return instance;}
 };
 
-__fast_inline void Port::writeByIndex(const int8_t index, const bool data){
+__inline void Port::writeByIndex(const int index, const bool data){
     if(index < 0) return;
     uint16_t mask = 1 << index;
     if(data){
-        setBits(mask);
+        set(mask);
     }else{
-        clrBits(mask);
+        clr(mask);
     }
 }
 
-__fast_inline void Port::setBits(const uint16_t data){
+__inline void Port::set(const uint16_t data){
     instance->BSHR = data;
 }
 
-__fast_inline void Port::set(const Pin pin){
+__inline void Port::set(const Pin pin){
     instance->BSHR = (uint16_t)pin;
 }
 
-__fast_inline void Port::clrBits(const uint16_t data){
+__inline void Port::clr(const uint16_t data){
     instance->BCR = data;
 }
 
-__fast_inline void Port::clr(const Pin pin){
+__inline void Port::clr(const Pin pin){
     instance->BCR = (uint16_t)pin;
 }
 

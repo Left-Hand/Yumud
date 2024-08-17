@@ -54,8 +54,10 @@
 #define HAVE_CAN1
 #define CAN1_REMAP 3
 
+#define HAVE_CAN2
+#define CAN2_REMAP 0
+
 #define HAVE_DVP
-#define CAN_REMAP 3
 
 #define HAVE_OPA1
 #define HAVE_OPA2

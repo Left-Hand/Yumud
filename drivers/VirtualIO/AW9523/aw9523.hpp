@@ -100,29 +100,29 @@ public:
         write(buf);
     }
 
-    void setBits(const uint16_t data) override{
+    void set(const uint16_t data) override{
         buf |= data;
         write(buf);
     }
 
-    void clrBits(const uint16_t data) override{
+    void clr(const uint16_t data) override{
         buf &= ~data;
         write(buf);
     }
 
-    void writeByIndex(const int8_t index, const bool data) override{
+    void writeByIndex(const int index, const bool data) override{
         if(!isIndexValid(index))return;
         if(data) buf |= 1 << index;
         else buf &= ~(1 << index);
         write(buf);
     }
-    bool readByIndex(const int8_t index) override{
+    bool readByIndex(const int index) override{
         if(!isIndexValid(index)) return false;
         read();
         return (buf & (1 << index));
     }
 
-    void setModeByIndex(const int8_t index, const PinMode mode) override{
+    void setMode(const int index, const PinMode mode) override{
         if(!isIndexValid(index))return;
         uint16_t mask = 1 << index;
         if(PinModeUtils::isIn(mode)) dir |= mask;
@@ -135,13 +135,13 @@ public:
         }
     }
 
-    void enableIrqByIndex(const int8_t index, const bool en = true){
+    void enableIrqByIndex(const int index, const bool en = true){
         if(!isIndexValid(index))return;
         writeReg(RegAddress::inten, (uint8_t)(en << index));
     }
 
     void enableLedMode(const Pin pin, const bool en = true){
-        uint8_t index = CTZ((uint16_t)pin);
+        uint index = CTZ((uint16_t)pin);
         if(en) ledMode &= ~(1 << index);
         else ledMode |= (1 << index);
         writeReg(RegAddress::ledMode, ledMode);
@@ -153,7 +153,7 @@ public:
     }
 
     void setLedCurrent(const Pin pin, const uint8_t current){
-        uint8_t index = CTZ((uint16_t)pin);
+        uint index = CTZ((uint16_t)pin);
         if(index < 8) index += 4;
         else if(index < 12) index -= 8;
         writeReg((RegAddress)((uint8_t)RegAddress::dim + index), current);

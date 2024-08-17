@@ -303,7 +303,7 @@ namespace NVCV2::Pixels{
     }
 
     void gamma(Image<Grayscale>& src, const real_t ga) {
-        static real_t last_ga = 1.0;
+        static real_t last_ga = 1;
         static std::array<Grayscale, 256> lut;
 
         if(ga != last_ga){

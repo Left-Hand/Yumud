@@ -5,6 +5,12 @@
 #include "../adc.hpp"
 
 class Adc1:public AdcPrimary{
+protected:
+    volatile uint8_t regular_conv_index = 0;
+    volatile uint8_t injected_conv_index = 0;
+    volatile uint16_t regular_datas[16];
+    volatile uint16_t injected_datas[4];
+    volatile int16_t cali_data;
 public:
     Adc1():AdcPrimary(ADC1){;}
 
@@ -13,17 +19,14 @@ public:
 
     uint16_t getRegularDataByRank(const uint8_t & rank) override;
     uint16_t getInjectedDataByRank(const uint8_t & rank) override;
-};
 
-#define HAVE_ADC1
+};
 
 #ifdef HAVE_ADC1
 extern Adc1 adc1;
 #endif
 
 
-extern "C"{
-__interrupt void ADC1_2_IRQHandler(void);
 
-}
+
 #endif

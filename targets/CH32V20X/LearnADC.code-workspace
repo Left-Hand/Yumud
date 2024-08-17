@@ -136,7 +136,8 @@
             "WRPR"
         ],
         "C_Cpp.default.enableConfigurationSquiggles": false,
-        "C_Cpp.default.cppStandard": "gnu++23"
+        "C_Cpp.default.cppStandard": "gnu++23",
+        "cortex-debug.variableUseNaturalFormat": false
     },
     "extensions": {
         "recommendations": [

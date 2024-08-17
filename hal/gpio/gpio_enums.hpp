@@ -105,4 +105,18 @@ namespace PinModeUtils{
     }
 }
 
+namespace GpioUtils{
+    struct Level{
+    private:
+        bool value;
+
+    public:
+        constexpr explicit Level(bool _value) : value(_value) {}
+
+        constexpr operator bool() const { return value; }
+    };
+
+    static constexpr Level HIGH{true};
+    static constexpr Level LOW{false};
+}
 #endif

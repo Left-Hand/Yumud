@@ -15,7 +15,6 @@ void StringUtils::reverse_str(char * str, size_t len){
 
 void StringUtils::disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale){
     char * p = const_cast<char *>(str);
-    // char * const p = const_cast<char * const>(str);
 
     scale = 1;
     bool minus = false;
@@ -91,7 +90,7 @@ void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)
 			str[i] = value%radix +'0';
 		i++;
 	}while((value/=radix)>0 && i < size);
-	for(;i<= size; i++)str[i] = '0';
+	for(;i< size; i++)str[i] = '0';
 	reverse_str(str, size);
 }
 
@@ -139,24 +138,26 @@ void StringUtils::ftoa(float number,char *buf, uint8_t eps)
     strcpy(buf,str_int);
 }
 
-bool StringUtils::is_digit(const char & chr){
+bool StringUtils::is_digit(const char chr){
     return chr >= '0' && chr <= '9';
 }
+
 bool StringUtils::is_numeric(const char* str) {
 	bool hasDigit = false;
 	bool hasDot = false;
 	bool hasSign = false;
 
 	for (int i = 0; str[i] != '\0'; i++) {
-		if (is_digit(str[i])) {
+		char chr = str[i];
+		if (is_digit(chr)) {
 			hasDigit = true;
-		} else if (str[i] == '.') {
+		} else if (chr == '.') {
 			if (hasDot || !hasDigit) {
 				return false; // 多个小数点或者小数点前没有数字，返回 false
 			}
 			hasDot = true;
-		} else if (str[i] == '+' || str[i] == '-') {
-			if (hasSign || hasDigit) {
+		} else if (chr == '+' || chr == '-') {
+			if (hasSign || hasDigit || hasDot) {
 				return false; // 多个正负号或者正负号出现在数字之后，返回 false
 			}
 			hasSign = true;
@@ -261,26 +262,25 @@ int StringUtils::stoi(const char * str) {
 }
 
 float StringUtils::stof(const char * str) {
-    char * p = const_cast<char *>(str);
 
     int int_part = 0;
     int frac_part = 0;
     int scale = 1;
-    disassemble_fstr(p, int_part, frac_part, scale);
+    disassemble_fstr(str, int_part, frac_part, scale);
     return(int_part + (float)frac_part / scale);
 }
 
 
-template<typename real>
-String StringUtils::type_to_string() {
-    String type_name = __PRETTY_FUNCTION__;
-    auto start_pos = type_name.indexOf('=') + 1;
-    auto end_pos = type_name.indexOf(';', start_pos);
-    return type_name.substring(start_pos, end_pos - start_pos);
-}
+// template<typename real>
+// String StringUtils::type_to_string() {
+//     String type_name = __PRETTY_FUNCTION__;
+//     auto start_pos = type_name.indexOf('=') + 1;
+//     auto end_pos = type_name.indexOf(';', start_pos);
+//     return type_name.substring(start_pos, end_pos - start_pos);
+// }
 
 
-template <typename T>
-String toString(const T & value, const uint8_t & eps){
-    return String(value, eps);
-}
+// template <typename T>
+// String toString(const T & value, const uint8_t & eps){
+//     return String(value, eps);
+// }

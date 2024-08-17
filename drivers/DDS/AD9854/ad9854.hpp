@@ -16,19 +16,20 @@
 
 class AD9854{
 public:
+    struct Ports{
+        GpioConcept & IO_RESET;
+        GpioConcept & MRESET;
+        GpioConcept & UD_CLK;
+        GpioConcept & F_B_H;
+        GpioConcept & OSK;
+    };
 
 protected:
     SpiDrv & bus_drv;
-    struct{
-        Gpio & IO_RESET = portD[2];
-        Gpio & MRESET = portD[6];
-        Gpio & UD_CLK = portD[7];
-        Gpio & F_B_H = portE[5];
-        Gpio & OSK = portE[6];
-    };
+    Ports ports;
 
 public:
-    AD9854(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
+    AD9854(SpiDrv & _bus_drv, const Ports & _ports):bus_drv(_bus_drv), ports(_ports){;}
     
     void Init(void);
     void SendOneByte(uint8_t data);

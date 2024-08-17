@@ -40,10 +40,14 @@ public:
     //     }
     // }
 
-    __fast_inline T & getData() override{
+    __fast_inline const T & getData() override{
         auto ret_ptr = read_ptr;
         read_ptr = advancePointer(read_ptr);
-        return *(T *)ret_ptr;
+        return *(const T *)ret_ptr;
+    }
+
+    __fast_inline const T & front() {
+        return *(const T *)read_ptr;
     }
 
     size_t available() const override{

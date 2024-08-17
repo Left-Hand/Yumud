@@ -17,8 +17,8 @@ protected:
 
 public:
 
-	DigitalFilter(const uint8_t & _size = 8, const uint8_t & _threshold = 2,
-			const bool & _polarity = true):size(_size), threshold(_threshold), polarity(_polarity){
+	DigitalFilter(const uint8_t _size = 8, const uint8_t _threshold = 2,
+			const bool _polarity = true):size(_size), threshold(_threshold), polarity(_polarity){
 	}
 
 	bool update(const bool & input){

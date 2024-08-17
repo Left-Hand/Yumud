@@ -2,8 +2,7 @@
 
 #define __DEBUG_INC_H__
 
-#include "../hal/bus/bus_inc.h"
-#include "../sys/kernel/clock.h"
+#include "hal/bus/uart/uarthw.hpp"
 #include "src/defines/user_defs.h"
 
 #ifndef VOFA_PRINT
@@ -84,6 +83,8 @@ __attribute__((used)) int _write(int fd, char *buf, int size);
 __attribute__((used)) void *_sbrk(ptrdiff_t incr);
 
 }
+
+#define BREAKPOINT __nopn(1);
 
 
 #endif // __DEBUG_INC_H__

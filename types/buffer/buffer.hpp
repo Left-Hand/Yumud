@@ -11,7 +11,7 @@ template<typename T>
 class BufferConcept_t{
 public:
     virtual void addData(const T & data) = 0;
-    virtual T & getData() = 0;
+    virtual const T & getData() = 0;
     virtual size_t available() const = 0;
     virtual void addDatas(const T * data_ptr, const size_t & len, bool msb = false) = 0;
     virtual void getDatas(T * data_ptr, const size_t & len, bool msb = false) = 0;
@@ -37,15 +37,13 @@ public:
 
 template<typename T, uint32_t _size>
 class StaticBuffer_t:public BufferConcept_t<T>{
-protected:
-    // std::array<T, _size> buf;
 public:
     T buf[_size]; 
     size_t size = _size;
     StaticBuffer_t() = default;
     ~StaticBuffer_t() = default;
 
-    T & operator[](const size_t & index){
+    T & operator[](const size_t index){
         return buf[index];
     }
 

@@ -13,39 +13,10 @@ protected:
     uint8_t data_bits = 8;
     bool m_msb = true;
 
-    __fast_inline void delayDur(){
+    void delayDur(){
         delayMicroseconds(delays);
     }
 
-    void clk(){
-        delayDur();
-        sclk_gpio.set();
-        delayDur();
-        sclk_gpio.clr();
-        delayDur();
-    }
-
-    void clk_up(){
-        // delayDur();
-        sclk_gpio.clr();
-        delayDur();
-        sclk_gpio.set();
-        delayDur();
-    }
-
-    void clk_down(){
-        delayDur();
-        sclk_gpio.clr();
-        delayDur();
-    }
-
-    void clk_down_then_up(){
-        delayDur();
-        sclk_gpio.clr();
-        delayDur();
-        sclk_gpio.set();
-        delayDur();
-    }
 
     Error lead(const uint8_t index) override{
         auto ret = Spi::lead(index);
@@ -81,35 +52,7 @@ public:
         return Bus::ErrorType::OK;
     }
 
-    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true){
-        uint8_t ret = 0;
-
-        sclk_gpio.set();
-
-        for(uint8_t i = 0; i < data_bits; i++){
-            if(m_msb){
-                mosi_gpio = bool(data_tx & (1 << (data_bits - 2 - i)));
-                // clk_down_then_up();
-                ret <<= 1; ret |= miso_gpio.read();
-                delayDur();
-            }else{
-                sclk_gpio = true;
-                delayDur();
-                mosi_gpio = bool(data_tx & (1 << (i)));
-                delayDur();
-                sclk_gpio = false;
-                delayDur();
-                // clk_down_then_up();
-                ret >>= 1; ret |= (miso_gpio.read() << (data_bits - 1)) ;
-                delayDur();
-            }
-        }
-
-        sclk_gpio.set();
-
-        data_rx = ret;
-        return Bus::ErrorType::OK;
-    }
+    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override ;
 
     void configBaudRate(const uint32_t baudRate) {
         if(baudRate == 0){
@@ -120,20 +63,10 @@ public:
         }
     }
 
-    void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) override{
-        configBaudRate(baudRate);
+    void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) override;
 
-        mosi_gpio.outpp();
-        sclk_gpio.outpp(1);
-
-        for(uint8_t i = 0; i < cs_port.length(); i++){
-            if(cs_port.isIndexValid(i)){
-                auto & cs_gpio = cs_port[i];
-                cs_gpio.outpp(1);
-            }
-        }
-
-        miso_gpio.inpd();
+    void configDatabits(const uint8_t bits) override {
+        data_bits = bits;
     }
 
     void configBitOrder(const Endian endian) override {

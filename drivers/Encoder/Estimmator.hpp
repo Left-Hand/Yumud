@@ -15,7 +15,7 @@ public:
     Odometer & instance;
     // real_t lastPosition;
     PositionObserver positionObserver;
-    LowpassFilter_t<real_t, real_t>speed_lpf = LowpassFilter_t<real_t, real_t>(30.0);
+    LowpassFilter_t<real_t, real_t>speed_lpf = LowpassFilter_t<real_t, real_t>(real_t(30.0));
     real_t speed;
     uint32_t dur;
     uint32_t cnt = 0;

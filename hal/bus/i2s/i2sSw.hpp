@@ -46,7 +46,7 @@ void stop() {
 
 
 protected :
-    Error begin_use(const uint8_t & index = 0) override {
+    Error begin_use(const uint8_t index = 0) override {
         return start(index);
     }
     void end_use() override {stop();}
@@ -55,7 +55,7 @@ protected :
         return (occupied >= 0 ? false : true);
     }
 
-    bool owned_by(const uint8_t & index = 0) override{
+    bool owned_by(const uint8_t index = 0) override{
         return (index == occupied);
     }
 

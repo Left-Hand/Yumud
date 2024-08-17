@@ -1,4 +1,5 @@
 #include "spihw.hpp"
+#include "sys/debug/debug_inc.h"
 
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
@@ -24,7 +25,7 @@ void SpiHw::enableRcc(const bool en){
 Gpio & SpiHw::getMosiGpio(){
     switch((uint32_t)instance){
         default:
-
+            return GpioNull;
         #ifdef HAVE_SPI1
         case SPI1_BASE:
             return SPI1_MOSI_GPIO;
@@ -45,7 +46,7 @@ Gpio & SpiHw::getMosiGpio(){
 Gpio & SpiHw::getMisoGpio(){
     switch((uint32_t)instance){
         default:
-
+            return GpioNull;
         #ifdef HAVE_SPI1
         case SPI1_BASE:
             return SPI1_MISO_GPIO;
@@ -66,7 +67,7 @@ Gpio & SpiHw::getMisoGpio(){
 Gpio & SpiHw::getSclkGpio(){
     switch((uint32_t)instance){
         default:
-
+            return GpioNull;
         #ifdef HAVE_SPI1
         case SPI1_BASE:
             return SPI1_SCLK_GPIO;
@@ -87,7 +88,7 @@ Gpio & SpiHw::getSclkGpio(){
 Gpio & SpiHw::getCsGpio(){
     switch((uint32_t)instance){
         default:
-
+            return GpioNull;
         #ifdef HAVE_SPI1
         case SPI1_BASE:
             return SPI1_CS_GPIO;
@@ -164,7 +165,13 @@ void SpiHw::installGpios(){
         bindCsPin(cs_pin, 0);
     }
 
-    for(uint8_t i = 0; i < cs_port.length(); i++){
+    // for(auto & cs_gpio : cs_port){
+        // if(cs_gpio.isValid()){
+        //     cs_gpio.outpp(1);
+        // }
+    // }
+
+    for(uint8_t i = 0; i < cs_port.size(); i++){
         cs_port[i].outpp();
     }
 }

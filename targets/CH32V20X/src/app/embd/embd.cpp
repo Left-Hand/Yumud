@@ -1,7 +1,10 @@
 #include "embd.h"
 
-#include "host.hpp"
+#ifdef CH32V20X
 #include "node.hpp"
+#else
+#include "host.hpp"
+#endif
 
 void embd_main(){
     #ifdef CH32V20X
@@ -20,14 +23,13 @@ void host_main(){
     logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     can1.init(Can::BaudRate::Mbps1);
+    can1.enableHwReTransmit();
+    can1.cancelAllTransmit();
+
     usbfs.init();
 
     uart7.init(115200);
-    EmbdHost host{uart7, can1};
-
-    timer3.init(800);
-    timer3.bindCb(IT::Update, [&](){host.run();});
-    timer3.enableIt(IT::Update, NvicPriority(0, 0));
+    EmbdHost host{logger, can1};
 
     host.main();
 }

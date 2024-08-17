@@ -137,21 +137,21 @@ I2cHw::Error I2cHw::lead(const uint8_t _address){
     bool is_read = (_address & 0x01);
     // while(I2C_GetFlagStatus(instance, I2C_FLAG_BUSY));
     I2C_GenerateSTART(instance, ENABLE);
-    while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_MODE_SELECT) );
+    while(I2C_CheckEvent(instance, I2C_EVENT_MASTER_MODE_SELECT) == ErrorStatus::NoREADY);
     I2C_Send7bitAddress(instance, _address & 0xFE, is_read ? I2C_Direction_Receiver : I2C_Direction_Transmitter);
-    while(!I2C_CheckEvent(instance, is_read ? I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED :  I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED));
+    while(I2C_CheckEvent(instance, is_read ? I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED :  I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) == ErrorStatus::NoREADY);
     return ErrorType::OK;
 }
 
 I2cHw::Error I2cHw::write(const uint32_t data){
     I2C_SendData(instance, data);
-    while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_TRANSMITTED));
+    while(I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_TRANSMITTED) == ErrorStatus::NoREADY);
     return Bus::ErrorType::OK;
 }
 
 I2cHw::Error I2cHw::read(uint32_t & data, const bool toAck){
     I2C_AcknowledgeConfig(instance, toAck);
-    while(I2C_GetFlagStatus(instance, I2C_FLAG_RXNE) == RESET);
+    while(I2C_GetFlagStatus(instance, I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
     // while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_RECEIVED));
     data = I2C_ReceiveData(instance);
     return ErrorType::OK;

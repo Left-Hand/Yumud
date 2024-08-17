@@ -7,30 +7,23 @@ Adc1 adc1;
 #if defined(HAVE_ADC1) || defined(HAVE_ADC2)
 using Callback = AdcUtils::Callback;
 
-static Callback jeoc_cb;
-static Callback eoc_cb;
-static Callback awd_cb;
 
+extern "C"{
 __interrupt void ADC1_2_IRQHandler(void){
     if(ADC_GetITStatus(ADC1,ADC_IT_JEOC)){
-        EXECUTE(jeoc_cb);
+        EXECUTE(adc1.jeoc_cb);
         ADC_ClearITPendingBit(ADC1,ADC_IT_JEOC);
     }else if(ADC_GetITStatus(ADC1, ADC_IT_EOC)){
-        EXECUTE(eoc_cb);
+        EXECUTE(adc1.eoc_cb);
         ADC_ClearITPendingBit(ADC1,ADC_IT_EOC);
     }else if(ADC_GetITStatus(ADC1,ADC_IT_AWD)){
-        EXECUTE(awd_cb);
+        EXECUTE(adc1.awd_cb);
         ADC_ClearITPendingBit(ADC1,ADC_IT_AWD);
     }
 }
-
+}
 #endif
 
-static volatile uint8_t regular_conv_index = 0;
-static volatile uint8_t injected_conv_index = 0;
-static volatile uint16_t regular_datas[16];
-static volatile uint16_t injected_datas[4];
-static volatile int16_t cali_data;
 
 void AdcPrimary::bindCb(const IT it,Callback && cb){
     switch(it){

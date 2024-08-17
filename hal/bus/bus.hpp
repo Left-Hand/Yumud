@@ -78,7 +78,7 @@ protected:
         return *locker;
     }
 
-    virtual Error begin_use(const uint8_t & index = 0){
+    virtual Error begin_use(const uint8_t index = 0){
         if(locker == nullptr) exit(1);
         *locker = index >> 1;
         return lead(index);
@@ -94,7 +94,7 @@ protected:
         return (*locker >= 0 ? false : true);
     }
 
-    virtual bool owned_by(const uint8_t & index = 0){
+    virtual bool owned_by(const uint8_t index = 0){
         if(locker == nullptr) exit(1);
         return (*locker == (index >> 1));
     }

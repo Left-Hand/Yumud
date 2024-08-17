@@ -2,28 +2,45 @@
 
 #define __KEY_HPP__
 
-#include "../../hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "dsp/filter/DigitalFilter.hpp"
 
 struct Key{
 protected:
+    using Level = GpioUtils::Level;
+
+    DigitalFilter filter;
     GpioConcept & m_gpio;
-    const bool m_valid_level = false;
+    const Level level_= GpioUtils::LOW;
+
+    bool last_state = false;
+    bool now_state = false;
 public:
-    Key(GpioConcept & gpio, const bool valid_level):m_gpio(gpio), m_valid_level(valid_level){;}
+    Key(GpioConcept & gpio, const Level _level):m_gpio(gpio), level_(_level){;}
 
     void init(){
-        init(m_valid_level);
+        init(level_);
     }
-    void init(const bool valid_level){
-        if(valid_level == true){
+
+    void init(const Level level){
+        if(level){
             m_gpio.inpd();
         }else{
             m_gpio.inpu();
         }
     }
 
+    void update(){
+        last_state = now_state;
+        now_state = filter.update(bool(*this));
+    }
+
+    bool pressed(){
+        return last_state == false and now_state == true;
+    }
+
     operator bool()const{
-        return m_gpio.read() == m_valid_level;
+        return m_gpio.read() == level_;
     }
 
     auto & io(){

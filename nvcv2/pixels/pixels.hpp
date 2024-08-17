@@ -97,7 +97,7 @@ namespace NVCV2::Pixels{
     void ostu(Image<Binary>& dst, const Image<Grayscale>& src);
 
 
-    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t & k = 0.5, const real_t & eps = 0.02);
+    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t & k = real_t(0.5), const real_t & eps = real_t(0.02));
 
     void max_entropy(const Image<Grayscale>& src,const int thresh);
 

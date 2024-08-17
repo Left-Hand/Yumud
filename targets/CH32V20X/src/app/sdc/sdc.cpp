@@ -1,6 +1,7 @@
 #include "../../testbench/tb.h"
 #include "sdc.hpp"
 
+#include "../hal/bus/spi/spihw.hpp"
 #include "../hal/bus/spi/spisw.hpp"
 
 void w25qxx_main(){

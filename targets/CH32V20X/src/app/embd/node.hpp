@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stepper/constants.hpp"
-#include "stepper/cli.hpp"
+#include "robots/foc/stepper/constants.hpp"
+#include "robots/foc/stepper/cli.hpp"
 
 void node_main();
