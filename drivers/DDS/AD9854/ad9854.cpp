@@ -19,11 +19,11 @@
 
 void AD9854::Init(void){
 
-    IO_RESET.outpp();
-    MRESET.outpp();
-    UD_CLK.outpp();
-    F_B_H.outpp();
-    OSK.outpp();
+    ports.IO_RESET.outpp();
+    ports.MRESET.outpp();
+    ports.UD_CLK.outpp();
+    ports.F_B_H.outpp();
+    ports.OSK.outpp();
 
 	uint8_t data[4] = {0x00, 0x06, 0x00, 0x60};
 	uint8_t freq[6];
@@ -35,19 +35,19 @@ void AD9854::Init(void){
 	
 	
 	delay(10);
-	UD_CLK = 0;
-	MRESET = 1;
+	ports.UD_CLK = 0;
+	ports.MRESET = 1;
 	delayMicroseconds(10);
-	MRESET = 0;
+	ports.MRESET = 0;
 	
 	AD9854::SendData(CTRL, data, 4);
 	delay(50);
-	UD_CLK = 1;
-	UD_CLK = 0;	
+	ports.UD_CLK = 1;
+	ports.UD_CLK = 0;	
 	AD9854::SendData(FTW1, freq, 6);
 	AD9854::SendData(OSKIM, shape, 2);
-	UD_CLK = 1;
-	UD_CLK = 0;
+	ports.UD_CLK = 1;
+	ports.UD_CLK = 0;
 }
 
 void AD9854::SendOneByte(uint8_t data){
@@ -56,9 +56,9 @@ void AD9854::SendOneByte(uint8_t data){
 
 void AD9854::SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum){
 	int i;
-	IO_RESET = 1;
+	ports.IO_RESET = 1;
 	delayMicroseconds(1);
-	IO_RESET = 0;
+	ports.IO_RESET = 0;
 	SendOneByte(_register);
 	for(i = 0; i < ByteNum; i++)	SendOneByte(data[i]);
 }
@@ -69,6 +69,6 @@ void AD9854::SetFreq(real_t fre){
 	int64_t ftw = (Freq_mult * float(fre)) + 0.5;
 	for(i = 5; i >= 0; i--)	freq[i] = ftw >> ((5 - i) * 8);
 	AD9854::SendData(FTW1, freq, 6);
-	UD_CLK = 1;
-	UD_CLK = 0;	
+	ports.UD_CLK = 1;
+	ports.UD_CLK = 0;	
 }
