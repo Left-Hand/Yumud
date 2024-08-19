@@ -24,8 +24,8 @@ public:
     }
 
     constexpr CanMsg(const CanMsg & other) = default;
-    constexpr CanMsg & operator = (const CanMsg & other) = default;
     constexpr CanMsg(CanMsg && other) noexcept = default;
+    constexpr CanMsg & operator = (const CanMsg & other) = default;
 
     constexpr CanMsg(const uint32_t id, const bool remote = true){
         StdId = id;
@@ -44,6 +44,25 @@ public:
         RTR = CAN_RTR_Data;
         return *this;
     }
+
+    // 输入流运算符重载
+    template<typename T>
+    requires (sizeof(T) <= 8)
+    constexpr CanMsg & operator>>(T && val) {
+        if (DLC < sizeof(T)-1) {
+            return *this;
+        }
+        for (size_t i = 0; i < sizeof(T); i++) {
+            ((uint8_t *)&val)[i] = Data[i];
+        }
+        // 更新 DLC，假设读取后清空数据
+        DLC -= sizeof(T);
+        for (size_t i = 0; i < DLC; i++) {
+            Data[i] = Data[i + sizeof(T)];  // 移动剩余数据
+        }
+        return *this;
+    }
+
 
     template <class... Args>
     requires (sizeof(std::tuple<Args...>) <= 8)
@@ -98,8 +117,16 @@ public:
         else if(isExt()) return ExtId;
         else return 0; 
     }
-    constexpr const uint8_t & operator[](const uint8_t index) const {return *(Data + index);};
-    constexpr uint8_t & operator[](const uint8_t index) {return *(Data + index);};
+    constexpr const uint8_t & operator[](const int index) const {return *(Data + index);};
+    constexpr uint8_t & operator[](const int index) {return *(Data + index);};
+
+    constexpr const uint8_t & at(const int index) const {
+        if(IN_RANGE(index, 0, (DLC-1))){
+            return Data[index];
+        }else{
+            return null_data;
+        }
+    };
 
     template<typename T>
     requires (sizeof(T) <= 8)
@@ -108,6 +135,9 @@ public:
         memcpy((void *)&ret, (void *)&Data, MIN(sizeof(ret), size()));
         return ret;
     }
+
+private:
+    static constexpr uint8_t null_data = 0;
 };
 
 struct OutputStream;

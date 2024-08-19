@@ -197,8 +197,8 @@ protected:
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
 
-    void init(const std::initializer_list<AdcChannelConfig> regular_list,
-            const std::initializer_list<AdcChannelConfig> injected_list, 
+    void init(const std::initializer_list<AdcChannelConfig> & regular_list,
+            const std::initializer_list<AdcChannelConfig> & injected_list, 
             const Mode mode = Mode::Independent);
 
     void bindCb(const IT it,Callback && cb);

@@ -1,8 +1,8 @@
 #include "adc.hpp"
 #include "../sys/debug/debug_inc.h"
 
-void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> regular_list,
-        const std::initializer_list<AdcChannelConfig> injected_list, const Mode mode){
+void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_list,
+        const std::initializer_list<AdcChannelConfig> & injected_list, const Mode mode){
 
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
     RCC_ADCCLKConfig(RCC_PCLK2_Div8);

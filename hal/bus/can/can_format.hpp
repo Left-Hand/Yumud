@@ -2,137 +2,137 @@
 
 #include <cstdint>
 
-#pragma packed(push, 1)
+#pragma pack(push, 1)
 namespace CanExperimental{
 struct CtrlReg{
-    bool INRQ:1;
-    bool SLEEP:1;
-    bool TXFP:1;
-    bool RFLM:1;
-    bool NART:1;
-    bool AWUM:1;
-    bool ABOM:1;
-    bool TTCM:1;
+    uint32_t INRQ:1;
+    uint32_t SLEEP:1;
+    uint32_t TXFP:1;
+    uint32_t RFLM:1;
+    uint32_t NART:1;
+    uint32_t AWUM:1;
+    uint32_t ABOM:1;
+    uint32_t TTCM:1;
     uint32_t:7;
-    bool RST:1;
-    bool DBF:1;
+    uint32_t RST:1;
+    uint32_t DBF:1;
     uint32_t:15;
 };
 
 struct StatReg{
-    bool INAK:1;
-    bool SLAK:1;
-    bool ERRI:1;
-    bool WKUI:1;
-    bool SKAKI:1;
+    uint32_t INAK:1;
+    uint32_t SLAK:1;
+    uint32_t ERRI:1;
+    uint32_t WKUI:1;
+    uint32_t SKAKI:1;
     uint32_t :3;
-    bool TXM:1;
-    bool RXM:1;
-    bool SAMP:1;
-    bool RX:1;
+    uint32_t TXM:1;
+    uint32_t RXM:1;
+    uint32_t SAMP:1;
+    uint32_t RX:1;
     uint32_t:20;
 };
 
 struct TxStatReg{
-    bool RQCP0:1;
-    bool TXOK0:1;
-    bool ALST0:1;
-    bool TERR0:1;
+    uint32_t RQCP0:1;
+    uint32_t TXOK0:1;
+    uint32_t ALST0:1;
+    uint32_t TERR0:1;
     uint32_t :3;
-    bool ABRQ0:1;
+    uint32_t ABRQ0:1;
 
-    bool RQCP1:1;
-    bool TXOK1:1;
-    bool ALST1:1;
-    bool TERR1:1;
+    uint32_t RQCP1:1;
+    uint32_t TXOK1:1;
+    uint32_t ALST1:1;
+    uint32_t TERR1:1;
     uint32_t :3;
-    bool ABRQ1:1;
+    uint32_t ABRQ1:1;
 
-    bool RQCP2:1;
-    bool TXOK2:1;
-    bool ALST2:1;
-    bool TERR2:1;
+    uint32_t RQCP2:1;
+    uint32_t TXOK2:1;
+    uint32_t ALST2:1;
+    uint32_t TERR2:1;
     uint32_t :3;
-    bool ABRQ2:1
+    uint32_t ABRQ2:1
 
     uint32_t CODE:2;
-    bool TME0:1;
-    bool TME1:1;
-    bool TME2:1;
-    bool LOW0:1;
-    bool LOW1:1;
-    bool LOW2:1;
+    uint32_t TME0:1;
+    uint32_t TME1:1;
+    uint32_t TME2:1;
+    uint32_t LOW0:1;
+    uint32_t LOW1:1;
+    uint32_t LOW2:1;
 };
 
 struct FifoReg{
     uint32_t FMP:2;
     uint32_t :1;
-    bool FULL:1;
-    bool FOVR:1;
-    bool RFOM:1;
+    uint32_t FULL:1;
+    uint32_t FOVR:1;
+    uint32_t RFOM:1;
     uint32_t:26;
 };
 
 struct IntEnReg{
-    bool TMEIE:1;
+    uint32_t TMEIE:1;
     
-    bool FMPIE0:1;
-    bool FFIE0:1;
-    bool FOVIE0:1;
+    uint32_t FMPIE0:1;
+    uint32_t FFIE0:1;
+    uint32_t FOVIE0:1;
     
-    bool FMPIE1:1;
-    bool FFIE1:1;
-    bool FOVIE1:1;
+    uint32_t FMPIE1:1;
+    uint32_t FFIE1:1;
+    uint32_t FOVIE1:1;
 
     uint32_t:1;
-    bool EWGIE:1;
-    bool EPVIE:1;
-    bool BOFIE:1;
-    bool LEDIE:1;
+    uint32_t EWGIE:1;
+    uint32_t EPVIE:1;
+    uint32_t BOFIE:1;
+    uint32_t LEDIE:1;
     uint32_t :3;
 
-    bool ERRIE:1;
-    bool WKUIE:1;
-    bool SLKIE:1;
+    uint32_t ERRIE:1;
+    uint32_t WKUIE:1;
+    uint32_t SLKIE:1;
 
     uint32_t:14;
 };
 
 struct ErrReg{
-    bool EWGF:1;
-    bool EPVF:1;
-    bool BOFF:1;
+    uint32_t EWGF:1;
+    uint32_t EPVF:1;
+    uint32_t BOFF:1;
     uint32_t:1;
 
     uint32_t LEC:3;
     uint32_t:9;
-    uint8_t TEC:8;
-    uint8_t REC:8;
+    uint32_t TEC:8;
+    uint32_t REC:8;
 };
 
 struct BitTimReg{
-    bool BRP:10;
+    uint32_t BRP:10;
     uint32_t:6;
     uint32_t TS1:4;
     uint32_t TS2:3;
     uint32_t :1;
-    bool SJW:2;
+    uint32_t SJW:2;
     uint32_t :3;
-    bool LBKM:1;
-    bool SILM:1;
+    uint32_t LBKM:1;
+    uint32_t SILM:1;
 };
 
 struct TTCReg{
-    uint16_t TIMCMV:16;
-    bool TIMRST:1;
-    bool TTCEN:1;
+    uint32_t TIMCMV:16;
+    uint32_t TIMRST:1;
+    uint32_t TTCEN:1;
     uint32_t :14;
 };
 
 struct TxInfoReg{
-    bool TXRQ:1;
-    bool RTR:1;
-    bool IDE:1;
+    uint32_t TXRQ:1;
+    uint32_t RTR:1;
+    uint32_t IDE:1;
     uint32_t EXID:18;
     uint32_t STID:11;
 };
@@ -140,23 +140,23 @@ struct TxInfoReg{
 struct TxLenReg{
     uint32_t DLC:4;
     uint32_t :4;
-    bool TGT:1;
+    uint32_t TGT:1;
     uint32_t :7;
     uint32_t TIME:16;
 };
 
 struct DataLowReg{
-    uint8_t data[4];
+    uint32_t data[4];
 };
 
 struct DataHighReg{
-    uint8_t data[4];
+    uint32_t data[4];
 };
 
 struct RxInfoReg{
     uint32_t:1;
-    bool RTR:1;
-    bool IDE:1;
+    uint32_t RTR:1;
+    uint32_t IDE:1;
     uint32_t EXID:18;
     uint32_t STID:11;
 };
@@ -164,12 +164,12 @@ struct RxInfoReg{
 struct RxLenReg{
     uint32_t DLC:4;
     uint32_t :4;
-    bool FMI:8;
+    uint32_t FMI:8;
     uint32_t TIME:16;
 };
 
 struct FilterCtrlReg{
-    bool FINIT:1;
+    uint32_t FINIT:1;
     uint32_t:7;
     uint32_t CAN2SB:6;
     uint32_t :18;
@@ -248,4 +248,4 @@ struct CanDef{
 };
 }
 
-#pragma packed(pop)
+#pragma pack(pop)
