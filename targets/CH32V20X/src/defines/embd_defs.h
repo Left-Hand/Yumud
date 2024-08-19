@@ -15,7 +15,7 @@
 
 
 #define UART1_REMAP 1
-#define UART2_REMAP 1
+#define UART2_REMAP 0
 
 #define HAVE_SPI1
 #define SPI1_REMAP 1

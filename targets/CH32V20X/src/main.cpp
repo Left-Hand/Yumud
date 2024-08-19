@@ -36,8 +36,8 @@ int main(){
     // uart_main();
     // qlz_main();
     // embd_main();
-    embd_main();
-    // bldc_main();
+    // embd_main();
+    bldc_main();
     // delay(200);
     // pmdc_tb();
     // uart_tb(uart1);

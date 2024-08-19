@@ -241,13 +241,6 @@ public:
     //     return get_area();
     // }
 
-    constexpr  __no_inline explicit operator String() const{
-        return toString();
-    }
-
-    __no_inline String toString(unsigned char decimalPlaces = 2) const {
-        return ('(' + String(position) + ',' + String(size) + ')');
-    }
 };
 
 using Rect2i = Rect2_t<int>;

@@ -221,19 +221,28 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 }
 
 SpiHw::Error SpiHw::write(const uint32_t data){
-    uint32_t dummy = 0;
-    transfer(dummy, data);
+    if(txMethod != CommMethod::None){
+        while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
+        instance->DATAR = data;
+    }
     return ErrorType::OK;
 }
+
 SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
-    transfer(data, 0);
+    if(rxMethod != CommMethod::None){
+        instance->DATAR = 0;
+        while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
+        data = instance->DATAR;
+    }
     return ErrorType::OK;
 }
+
 SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
     if(txMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
     }
+
     if(rxMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
         data_rx = instance->DATAR;

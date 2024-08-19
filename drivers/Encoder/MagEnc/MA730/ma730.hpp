@@ -96,7 +96,9 @@ protected:
         bus_drv.read(data);
     }
 public:
-    MA730(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
+    MA730(const SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
+    MA730(SpiDrv && _bus_drv):bus_drv(_bus_drv){;}
+    MA730(Spi & _bus, const uint8_t index):bus_drv(SpiDrv(_bus, index)){;}
     void init() override { }
     bool stable() override {return isMagnitudeProper();}
 
