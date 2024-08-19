@@ -7,6 +7,7 @@
 #ifdef __cplusplus
 #include <type_traits>
 #include "bits/move.h"
+#include <bit>
 #endif
 
 #define CMP_EPSILON 0.001
@@ -179,7 +180,14 @@
     template <typename T>
     requires std::is_arithmetic_v<T>
     constexpr __fast_inline T __step_tmpl(const T x,const T y, const T s){
-        return CLAMP(y, x - s, x + s);
+        T err = y-x;
+        if(err > s){
+            return x + s;
+        }else if(err < -s){
+            return x - s;
+        }else{
+            return y;
+        }
     }
 #else
 #define STEP_TO(x, y, s) CLAMP(y, x - s, x + s)
@@ -201,6 +209,18 @@ constexpr __fast_inline T __sign_as_impl(const T x, const auto s){
 }
 #endif
 #endif
+
+#ifndef SIGN_DIFF
+#ifdef __cplusplus
+#define SIGN_DIFF(x,y) __sign_diff_impl(x, y)
+
+template<typename T>
+constexpr __fast_inline bool __sign_diff_impl(const T x, const auto y){
+    return (std::bit_cast<uint32_t>(x) ^ std::bit_cast<uint32_t>(y)) & 0x80000000;
+}
+#endif
+#endif
+
 
 #ifndef LSHIFT
 #define LSHIFT(x,s) ((s) >= 0 ? ((x) << (s)) : ((x) >> (-(s))))

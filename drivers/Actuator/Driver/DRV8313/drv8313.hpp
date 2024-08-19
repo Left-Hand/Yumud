@@ -51,7 +51,7 @@ public:
     }
 
     DRV8313 & operator=(const UVW_Duty & duty) override{
-        auto [u, v, w] = duty;
+        // auto [u, v, w] = duty;
 
         // pwms_[0] = u;
         // pwms_[1] = v;

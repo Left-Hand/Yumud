@@ -10,7 +10,8 @@
 #else
 #define CURR_SPEC protected
 #define POS_SPEC protected
-#define SPD_SPEC protected
+// #define SPD_SPEC protected
+#define SPD_SPEC public
 #endif
 
 struct CtrlResult{

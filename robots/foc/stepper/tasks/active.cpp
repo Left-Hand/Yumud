@@ -37,15 +37,29 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
             case CtrlType::VECTOR:
                 result = {ctrl_limits.max_curr, 0};
                 break;
+
             case CtrlType::POSITION:
                 result = position_ctrl.update(target, est_pos, est_spd, est_elecrad);
                 break;
             case CtrlType::TRAPEZOID:
                 result = trapezoid_ctrl.update(target, est_pos, est_spd, est_elecrad);
                 break;
-            case CtrlType::SPEED:
-                result = speed_ctrl.update(target, est_spd);
-                break;
+    
+            case CtrlType::SPEED:{
+                static constexpr real_t dead_zone = real_t(0.003);
+                //超限检测
+                if((est_pos >= ctrl_limits.pos_limit.to - dead_zone and target > 0)
+                     or (est_pos <= ctrl_limits.pos_limit.from + dead_zone and target < 0)){
+                    result = position_ctrl.update((target > 0 ? ctrl_limits.pos_limit.to : ctrl_limits.pos_limit.from)
+                            , est_pos, est_spd, est_elecrad);
+                    break;
+                }
+                
+                {
+                    result = speed_ctrl.update(target, est_spd);
+                    break;
+                }
+            }
             case CtrlType::TEACH:{
                 real_t max_current = target;
                 real_t spd = getSpeed();

@@ -319,6 +319,23 @@ public:
     }
 };
 
+constexpr bool operator<(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() > value;
+}
+
+constexpr bool operator<=(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() >= value;
+}
+
+constexpr bool operator>(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() < value;
+}
+
+constexpr bool operator>=(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() <= value; 
+}
+
+
 using Rangei = Range_t<int>;
 using Range = Range_t<real_t>;
 

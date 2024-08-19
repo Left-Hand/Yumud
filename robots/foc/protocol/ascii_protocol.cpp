@@ -15,6 +15,23 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             motor.loadArchive(args.size() ? bool(int(args[0])) : true);
             break;
 
+        case "lp"_ha:
+            if(args.size() == 2)motor.setPositionLimit(Range{args[0], args[1]});
+            // else CLI_DEBUG(motor.get)
+            break;
+        
+        case "lc"_ha:
+            if(args.size() == 1) motor.setCurrentLimit(real_t(args[0]));
+            break;
+
+        case "ls"_ha:
+            if(args.size() == 1) motor.setSpeedLimit(real_t(args[0]));
+            break;
+
+        case "la"_ha:
+            if(args.size() == 1) motor.setAccelLimit(real_t(args[0]));
+            break;
+
         case "nz"_ha:{
                 real_t val = args.size() ? int(args[0]) : 0;
                 motor.setNozzle(val);
