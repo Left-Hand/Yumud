@@ -3,8 +3,6 @@
 
 using Callback = Can::Callback;
 
-
-
 #ifdef HAVE_CAN1
 Can can1{CAN1};
 #endif
