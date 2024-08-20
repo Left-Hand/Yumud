@@ -7,7 +7,10 @@
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+#include "drivers/Encoder/odometer.hpp"
 #include "hal/bus/spi/spihw.hpp"
+
+
 SpiDrv ma730_drv{spi1, 0};
 MA730 ma730{ma730_drv};
 
@@ -71,7 +74,7 @@ using Sys::t;
 constexpr int pwmFreq = 73000;
 constexpr auto adc_sample_cycles = ADC_SampleTime_28Cycles5;
 constexpr float sample_ticks = -10.5;
-constexpr real_t dutyScale = real_t(0.3f);
+constexpr real_t dutyScale = real_t(0.57f);
 
 constexpr int focFreq = 10000;
 constexpr float focDelta = (1.0f / float(focFreq));
@@ -195,10 +198,11 @@ void ADC1_Init(void)
 
     ADC_RegularChannelConfig(ADC1, ADC_Channel_TempSensor, 1, adc_sample_cycles);
     
-    ADC_InjectedSequencerLengthConfig(ADC1, 3);
+    ADC_InjectedSequencerLengthConfig(ADC1, 4);
     ADC_InjectedChannelConfig(ADC1,ADC_Channel_1,1,adc_sample_cycles);
     ADC_InjectedChannelConfig(ADC1,ADC_Channel_4,2,adc_sample_cycles);
     ADC_InjectedChannelConfig(ADC1,ADC_Channel_5,3,adc_sample_cycles);
+    ADC_InjectedChannelConfig(ADC1,ADC_Channel_7,4,adc_sample_cycles);
 
     ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T1_CC4);
     // ADC_ExternalTrigInjectedConvEdgeConfig(ADC1,adcexternaltriginjeced);
@@ -825,7 +829,7 @@ void caliMain(){
 }
 
 static constexpr uint foc_freq = 32768;
-static constexpr uint chopper_freq = foc_freq;
+static constexpr uint chopper_freq = foc_freq * 2;
 
 int bldc_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
@@ -836,7 +840,7 @@ int bldc_main(){
     en_gpio.outpp(1);
     slp_gpio.outpp(1);
 
-    timer1.init(chopper_freq, TimerUtils::Mode::CenterAlignedDownTrig);
+    timer1.init(chopper_freq, TimerUtils::Mode::CenterAlignedUpTrig);
     timer1.enableArrSync();
 
     auto & pwm_u = timer1.oc(1); 
@@ -849,16 +853,21 @@ int bldc_main(){
     pwm_v.init();
     pwm_w.init();
 
-    spi1.init(18000000);
-    spi1.bindCsPin(portA[15], 0);
-    spi1.bindCsPin(portA[0], 1);
+    spi1.init(9000000);
+    spi1.bindCsPin(portA[15], 2);
+    spi1.bindCsPin(portA[0], 0);
     can1.init(1000000);
 
-    MA730 ma730{spi1, 0};
+    MA730 ma730{spi1, 2};
     ma730.init();
 
-    BMI160 bmi{spi1, 1};
-    bmi.init();
+    Odometer odo{ma730};
+    odo.init();
+
+    // ma730.setDirection(false);
+
+    // BMI160 bmi{spi1, 0};
+    // bmi.init();
 
 
     // using AdcChannelEnum = AdcUtils::Channel;
@@ -883,25 +892,44 @@ int bldc_main(){
     real_t data[4];
 
     #define LPF(x,y,a) x = real_t(x * a + y * (1-a));
-    adc1.bindCb(AdcUtils::IT::JEOC, [&](){
-        static constexpr auto alaph = real_t(0.97);
+
+    real_t rad = 0;
+    real_t open_rad = 0;
+    auto cb = [&](){
+        static constexpr auto alaph = real_t(0.99);
         LPF(data[0], uint16_t(ADC1->IDATAR1), alaph);
         LPF(data[1], uint16_t(ADC1->IDATAR2), alaph);
         LPF(data[2], uint16_t(ADC1->IDATAR3), alaph);
+        LPF(data[3], uint16_t(ADC1->IDATAR4), alaph);
 
-        auto _t = t * 70;
-        setDQDuty(0, real_t(0.01), _t);
+        odo.update();
+        auto pos = ma730.getLapPosition();
+        rad = real_t(TAU + PI / 2) + real_t(PI / 2) + real_t(0.7)  - frac(pos * 7) * real_t(TAU);
+        real_t open_pos = t / 10;
+        open_rad = frac(open_pos * 7) * real_t(TAU);
+        setDQDuty(0, real_t(0.01), rad);
         // static constexpr auto scale = real_t(0.07);
         // static constexpr auto offset = real_t(0.01);
         // pwm_u = scale * sin(_t) + scale + offset;
         // pwm_v = scale * sin(_t + real_t(PI * 2 / 3)) + scale + offset;
         // pwm_w = scale * sin(_t - real_t(PI * 2 / 3)) + scale + offset;
-    });
+    };
+    adc1.bindCb(AdcUtils::IT::JEOC, cb);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
+    auto & ledr = portC[13];
+    auto & ledb = portC[14];
+    auto & ledg = portC[15];
+    ledr.outpp(); 
+    ledb.outpp(); 
+    ledg.outpp();
+    portA[7].inana();
     while(true){
         // auto pos = ma730.getLapPosition();
 
+        ledr = (millis() % 200) > 100;
+        ledb = (millis() % 400) > 200;
+        ledg = (millis() % 800) > 400;
 
         // auto _t = real_t(0);
 
@@ -911,10 +939,12 @@ int bldc_main(){
         // CanMsg msg = {0x11, uint8_t(0x57)};
         // if(can1.pending() == 0) can1.write(msg);
         // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(ma730.getLapPosition(), std::setprecision(4), real_t(pwm_u), real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12, bmi.getAccel());
-
-        delay(20);
+        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(rad, open_rad, odo.getPosition(), std::setprecision(3), std::dec, data[0]>>10, data[1] >>10, data[2]>>10, (data[3] * real_t(33.3/4) >> 10), ADC1->IDATAR4);
+        // cb();
+        // delay(20);
+        // DEBUG_PRINTLN(spi1.cs_port.isIndexValid(0), spi1.cs_port.isIndexValid(1), spi1.cs_port.isIndexValid(2))
         // bmi.check();
+        // delay(20);
     }
 
     // GPIO_Init();

@@ -424,6 +424,7 @@ protected:
         if(spi_drv){
             SpiDrv & drv = spi_drv.value();
             drv.write(uint8_t(addr), false);
+            BMI160_DEBUG(bool(portA[0]), bool(portA[15]));
             drv.read(data);
             BMI160_DEBUG("Rspi", addr, data);
         }
@@ -434,6 +435,7 @@ protected:
         if(spi_drv){
             SpiDrv & drv = spi_drv.value();
             drv.write(uint8_t(addr), false);
+            
             drv.read(datas, len * sizeof(datas[0]));
         }
     }

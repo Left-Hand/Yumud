@@ -43,68 +43,72 @@ public:
         explicit operator ErrorType() {return errorType;}
     };
 
-    __fast_inline Error begin(const uint8_t index = 0){
-        if(is_idle()){
-            return begin_use(index);
-            // return ErrorType::OK;
-        }
-        else if(owned_by(index)){
-            return begin_use(index);
-            // return ErrorType::OK;
-        }
-        else{
-            return ErrorType::OCCUPIED;
-        }
-    }
-
-    __fast_inline void end(){
-        end_use();
-    }
 
 
 protected:
     Mode mode = TxRx;
+
+private:
     int8_t m_lock = -1;
     int8_t * locker = nullptr;
 
     virtual Error lead(const uint8_t _address) = 0;
     virtual void trail() = 0;
 
-    void lock(const uint8_t & index){*locker = index >> 1;}
-    void unlock(){*locker = -1;}
+    void lock(const uint8_t index){
+        if(locker == nullptr) exit(1);
+        *locker = index >> 1;
+    }
 
-    uint8_t wholock(){
+    void unlock(){
+        if(locker == nullptr) exit(1);
+        *locker = -1;
+    }
+
+    int8_t wholock(){
         if(locker == nullptr) exit(1);
         return *locker;
     }
 
-    virtual Error begin_use(const uint8_t index = 0){
-        if(locker == nullptr) exit(1);
-        *locker = index >> 1;
-        return lead(index);
-    }
-
-    virtual void end_use(){
-        trail();
-        unlock();
-    }
-
-    virtual bool is_idle(){
+    bool is_idle(){
         if(locker == nullptr) exit(1);
         return (*locker >= 0 ? false : true);
     }
 
-    virtual bool owned_by(const uint8_t index = 0){
+    bool owned_by(const uint8_t index = 0){
         if(locker == nullptr) exit(1);
-        return (*locker == (index >> 1));
+        return (*locker == index >> 1);
     }
 
+
+
 public:
+    Bus():locker(&m_lock){;}
     virtual void configBitOrder(const Endian endian){};
     virtual void configDatabits(const uint8_t data_size){};
     virtual void configBaudRate(const uint32_t baudRate) = 0;
 
-    Bus():locker(&m_lock){;}
+    Error begin(const uint8_t index){
+        if(is_idle()){
+            lock(index);
+            return lead(index);
+        }
+
+        else if(owned_by(index)){
+            lock(index);
+            return lead(index);
+        }
+        else{
+            return ErrorType::OCCUPIED;
+        }
+    }
+
+
+    void end(){
+        trail();
+        unlock();
+    }
+
 };
 
 

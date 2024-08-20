@@ -28,7 +28,7 @@ void BMI160::update(){
 bool BMI160::check(){
     uint8_t dummy;
     readReg(0x00, dummy);
-    BMI160_DEBUG(bool(portA[0]), bool(portA[15]));
+
     return false;
 }
 
