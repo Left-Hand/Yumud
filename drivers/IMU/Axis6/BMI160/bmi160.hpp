@@ -12,7 +12,7 @@
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
 #define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
-#define BMI160_DEBUG
+// #define BMI160_DEBUG
 
 #ifdef BMI160_DEBUG
 #undef BMI160_DEBUG
@@ -32,6 +32,30 @@ public:
         _2, _4, _8, _16
     };
 
+    enum class Command:uint8_t{
+        START_FOC = 0x04,
+        ACC_SET_PMU = 0b0001'0000,
+        GYRO_SET_PMU = 0b0001'0100,
+        MAG_SET_PMU = 0b0001'1000,
+        FIFO_FLUSH = 0xB0,
+        RESET_INTERRUPT =0xB1,
+        SOFT_RESET = 0xB1,
+        STEP_CNT_CLR = 0xB2
+    };
+
+    enum class PmuType{
+        ACC,
+        GYRO,
+        MAG
+    };
+
+    enum class PmuMode{
+        SUSPEND,
+        NORMAL,
+        LOW_POWER,
+        FAST_SETUP
+    };
+
 protected:
     std::optional<I2cDrv> i2c_drv;
     std::optional<SpiDrv> spi_drv;
@@ -39,7 +63,7 @@ protected:
     using RegAddress = uint8_t;
     struct ChipIdReg{
         static constexpr RegAddress address = 0x00;
-        static constexpr uint8_t correct = 0x00;
+        static constexpr uint8_t correct = 0xD1;
         uint8_t data;
     };
 
@@ -52,9 +76,18 @@ protected:
         uint8_t mag_drdy_err:1;
     };
 
+    struct PmuStatusReg{
+        static constexpr RegAddress address = 0x03;
+        uint8_t mag_pmu_status:2;
+        uint8_t gyr_pmu_status:2;
+        uint8_t acc_pmu_status:2;
+        uint8_t:2;
+    };
+
     struct RhallReg{
         static constexpr RegAddress address = 0x0A;
     };
+
 
     struct Vector3i16Reg{
         static constexpr RegAddress mag_address = 0x04;
@@ -62,15 +95,15 @@ protected:
         static constexpr RegAddress mag_y_address = 0x06;
         static constexpr RegAddress mag_z_address = 0x08;
         
-        static constexpr RegAddress gyro_address = 0x04;
-        static constexpr RegAddress gyro_x_address = 0x04;
-        static constexpr RegAddress gyro_y_address = 0x06;
-        static constexpr RegAddress gyro_z_address = 0x08;
+        static constexpr RegAddress gyro_address = 0x0c;
+        static constexpr RegAddress gyro_x_address = 0x0c;
+        static constexpr RegAddress gyro_y_address = 0x0e;
+        static constexpr RegAddress gyro_z_address = 0x10;
 
-        static constexpr RegAddress acc_address = 0x04;
-        static constexpr RegAddress acc_x_address = 0x04;
-        static constexpr RegAddress acc_y_address = 0x06;
-        static constexpr RegAddress acc_z_address = 0x08;
+        static constexpr RegAddress acc_address = 0x12;
+        static constexpr RegAddress acc_x_address = 0x12;
+        static constexpr RegAddress acc_y_address = 0x14;
+        static constexpr RegAddress acc_z_address = 0x16;
         
         int16_t x;
         int16_t y;
@@ -402,8 +435,12 @@ protected:
         ChipIdReg chip_id_reg;
         uint8_t __resv1__;
         ErrReg err_reg;
+        PmuStatusReg pmu_status_reg;
         StatusReg status_reg;
-        
+        Vector3i16Reg mag_reg;
+        RhallReg rhall_reg;
+        Vector3i16Reg gyro_reg;
+        Vector3i16Reg accel_reg;
     };
 
 
@@ -423,23 +460,28 @@ protected:
         if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data);
         if(spi_drv){
             SpiDrv & drv = spi_drv.value();
-            drv.write(uint8_t(addr), false);
-            BMI160_DEBUG(bool(portA[0]), bool(portA[15]));
+            drv.write(uint8_t(uint8_t(addr) | 0x80), false);
             drv.read(data);
-            BMI160_DEBUG("Rspi", addr, data);
         }
+
+        BMI160_DEBUG("Rspi", addr, data);
     }
 
-    void requestData(const RegAddress addr, auto * datas, const size_t len){
-        if(i2c_drv) i2c_drv->readPool(uint8_t(addr), datas, len);
+    void requestData(const RegAddress addr, void * datas, const size_t len){
+        if(i2c_drv) i2c_drv->readPool(uint8_t(addr), (uint8_t *)datas, len);
         if(spi_drv){
             SpiDrv & drv = spi_drv.value();
-            drv.write(uint8_t(addr), false);
+            drv.write(uint8_t(uint8_t(addr) | 0x80), false);
             
-            drv.read(datas, len * sizeof(datas[0]));
+            drv.read((uint8_t *)(datas), len);
         }
+
+        BMI160_DEBUG("Rspi", addr, len);
     }
 
+    void writeCommand(const uint8_t cmd){
+        writeReg(0x7e, cmd);
+    }
 public:
 
     BMI160(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
@@ -452,9 +494,12 @@ public:
     void init();
     void update();
 
-    bool check();
+    bool verify();
 
+    void reset();
 
+    void setPmuMode(const PmuType pum, const PmuMode mode);
+    PmuMode getPmuMode(const PmuType pum);
     std::tuple<real_t, real_t, real_t> getAccel() override;
     std::tuple<real_t, real_t, real_t> getGyro() override;
 };

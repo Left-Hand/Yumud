@@ -110,7 +110,7 @@ class Quat_t{
             Vector3 c = v0.cross(v1);
             T d = v0.dot(v1);
 
-            if (d < -1.0 + CMP_EPSILON) {
+            if (d < real_t(-1) + real_t(CMP_EPSILON)) {
                 x = 0;
                 y = 1;
                 z = 0;
@@ -122,7 +122,7 @@ class Quat_t{
                 x = c.x * rs;
                 y = c.y * rs;
                 z = c.z * rs;
-                w = s * 0.5;
+                w = s * real_t(0.5);
             }
         }
 };
