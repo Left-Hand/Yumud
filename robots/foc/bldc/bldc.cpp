@@ -835,47 +835,9 @@ void caliMain(){
 static constexpr uint foc_freq = 32768;
 static constexpr uint chopper_freq = foc_freq * 2;
 
-void bmi160_dev(){
-    spi1.init(18000000);
-    spi1.bindCsPin(portA[0], 0);
-    BMI160 bmi{spi1, 0};
-    bmi.init();
-
-    auto & ledr = portC[13];
-    auto & ledb = portC[14];
-    auto & ledg = portC[15];
-    ledr.outpp(); 
-    ledb.outpp(); 
-    ledg.outpp();
-    portA[7].inana();
-
-    bmi.init();
-    while(true){
-        // auto pos = ma730.getLapPosition();
-
-        ledr = (millis() % 200) > 100;
-        ledb = (millis() % 400) > 200;
-        ledg = (millis() % 800) > 400;
-
-        delay(20);
-        bmi.update();
-        Vector3 acc = bmi.getAccel();
-        acc.x = acc.x >> 10;
-        acc.y = acc.y >> 10;
-        acc.z = acc.z >> 10;
-        acc.normalize();
-        Quat gest = {{0,0,1}, acc};
-
-        DEBUG_PRINTLN(gest.x, gest.y, gest.z, gest.w);
-    }
-}
 
 int bldc_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-
-
-    bmi160_dev();
-    while(true);
 
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
