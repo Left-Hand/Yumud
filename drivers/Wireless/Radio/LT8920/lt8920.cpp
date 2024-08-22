@@ -15,6 +15,10 @@
 // #define CHANGE_STATE(x) state = x; LT8920_DEBUG("state = ", (uint8_t)state)
 #define CHANGE_STATE(x) state = x;
 
+#define CRCERR_FLAG flag_reg.crcErrorFlag
+#define PKT_FLAG flag_reg.pktFlag
+#define FIFO_FLAG flag_reg.fifoFlag
+
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 bool LT8920::verify(){
@@ -43,15 +47,24 @@ void LT8920::setRfFreqMHz(const uint freq) {
     setRfChannel(freq - 2402);
 }
 
-void LT8920::setRadioMode(const uint16_t isRx) {
-    if (isRx) {
-        rf_config_reg.txEn = false;
-        rf_config_reg.rxEn = true;
-    } else {
-        rf_config_reg.rxEn = false;
-        rf_config_reg.txEn = true;
+void LT8920::setRole(const Role _role) {
+    switch(_role){
+        case Role::IDLE:
+            rf_config_reg.rxEn = false;
+            rf_config_reg.txEn = false;
+            break;
+        case Role::BROADCASTER:
+            rf_config_reg.rxEn = false;
+            rf_config_reg.txEn = true;
+            break;
+        case Role::LISTENER:
+            rf_config_reg.txEn = false;
+            rf_config_reg.rxEn = true;
+            break;
     }
-    writeReg(rf_config_reg.address, REG16(rf_config_reg));
+
+    role = _role;
+    WRITE_REG16(rf_config_reg);
 }
 
 void LT8920::setPaCurrent(const uint8_t current) {
@@ -99,16 +112,6 @@ void LT8920::clearFifoPtr() {
     fifo_ptr_reg.clearWritePtr = 0;
 }
 
-void LT8920::enableTx(bool en){
-    rf_config_reg.txEn = en;
-    WRITE_REG16(rf_config_reg);
-}
-
-void LT8920::enableRx(bool en){
-    rf_config_reg.rxEn = en;
-    WRITE_REG16(rf_config_reg);
-}
-
 void LT8920::setSyncWordBitsgth(const SyncWordBits len) {
     config1_reg.syncWordLen = (uint16_t)len;
     writeReg(config1_reg.address, REG16(config1_reg));
@@ -133,50 +136,7 @@ void LT8920::setErrBitsTolerance(uint8_t errbits){
     errbits = MIN(errbits, 6);
     threshold_reg.errbits = errbits + 1;
     WRITE_REG16(threshold_reg);
-    // WRITE_REG16(threshold_reg);
-    // LT8920_DEBUG("why", threshold_reg.address);
-    // LT8920_DEBUG((u32)&threshold_reg);
-    // auto pt = (u32)&threshold_reg;
-    // LT8920_DEBUG("nmb", sizeof(threshold_reg));
-    // auto d = (uint16_t *)pt;
-    // LT8920_DEBUG("??");
-    // LT8920_DEBUG((u32)d);
-    // BREAKPOINT
-    // // auto da = *d;
-    // LT8920_DEBUG("??");
-    // // LT8920_DEBUG(";", std::bit_cast<uint16_t>(config3_reg));
-    // uint16_t temp = std::bit_cast<uint16_t>(threshold_reg);
-    // writeReg(40, std::bit_cast<uint16_t>(threshold_reg));
-    // LT8920_DEBUG("go");
 }
-// void LT8920::read(uint8_t *buffer, size_t maxBuffer){
-//     uint16_t value = readRegister(R_STATUS);
-//     if (bitRead(value, STATUS_CRC_BIT) == 0){
-//         //CRC ok
-
-//         uint16_t data = readRegister(R_FIFO);
-//         uint8_t packetSize = data >> 8;
-//         if(maxBuffer < packetSize+1)
-//         {
-//             //BUFFER TOO SMALL
-//             return -2;
-//         }
-
-//         uint8_t pos;
-//         buffer[pos++] = (data & 0xFF);
-//         while (pos < packetSize)
-//         {
-//         data = readRegister(R_FIFO);
-//         buffer[pos++] = data >> 8;
-//         buffer[pos++] = data & 0xFF;
-//         }
-
-//         return packetSize;
-//     }else{
-//             //CRC error
-//             return -1;
-//     }
-// }
 
 bool LT8920::receivedAck(){
     if(auto_ack_en){
@@ -213,13 +173,14 @@ void LT8920::setDataRate(const uint32_t dr){
 
 void LT8920::writeBlock(const uint8_t *data, uint8_t len){
     if(state != State::IDLE) return;
+    if(role == Role::LISTENER) return;
     if(len == 0) return;
 
     len = MIN(len, 32);
 
     CHANGE_STATE(State::TX_PKT);
     
-    enableTx(false);
+    setRole(Role::IDLE);
     clearFifoPtr();
 
     {
@@ -231,20 +192,42 @@ void LT8920::writeBlock(const uint8_t *data, uint8_t len){
         writeFifo(data, len);
     }
 
-    enableTx(true);
+    setRole(Role::BROADCASTER);
     CHANGE_STATE(State::TX_WAIT_ACK);
 }
 
 void LT8920::tick(){
-    switch(state){
-        case State::TX_WAIT_ACK:
-            if(getPktStatus() == true){
-                CHANGE_STATE(State::IDLE);
+    updateFifoStatus();
+    switch(role){
+        case Role::BROADCASTER:
+            switch(state){
+                case State::TX_WAIT_ACK:
+                    if(PKT_FLAG == true){
+                        CHANGE_STATE(State::IDLE);
+                    }
+                    break;
+                case State::IDLE:
+                    break;
+                    // CHANGE_STATE(State::tx)
+                default:
+                    break;
             }
             break;
-        case State::RX_WAIT_ACK:
-            break;
-        case State::IDLE:
+
+        case Role::LISTENER:
+            switch(state){
+                case State::IDLE:
+                    CHANGE_STATE(State::RX_WAIT_ACK)
+                    break;
+                
+                case State::RX_WAIT_ACK:
+                    if(PKT_FLAG == true){
+                            //pass
+                    }
+                    break;
+                default:
+                    break;
+            }
             break;
         default:
             break;
@@ -253,21 +236,38 @@ void LT8920::tick(){
 
 void LT8920::readBlock(uint8_t * data, uint8_t len){
     if(len == 0) return;
+    if(role != Role::LISTENER) return;
+    
+    if(PKT_FLAG == false) return;
+    if(CRCERR_FLAG == true) return;
+
     len = MIN(len, 32);
+
+    if(first_as_len_en){
+        readFifo(&len, 1);
+    }
+
+    readFifo(data, len);
+    clearFifoPtr();
+
+    setRole(Role::LISTENER);
+    CHANGE_STATE(State::RX_WAIT_ACK);
 }
 
-void LT8920::init(){
-
+void LT8920::reset(){
     if(nrst_gpio){
-        nrst_gpio->clr();
+        nrst_gpio->outpp(0);
         delay(20);
         nrst_gpio->set();
         delay(20);
     }
+}
+
+void LT8920::init(){
+    reset();
 
     rf_config_reg.__resv__ = 0;
-    enableTx(0);
-    enableRx(0);
+    setRole(Role::IDLE);
     setRfChannel(0);
 
     REG16(fifo_ptr_reg) = 0;

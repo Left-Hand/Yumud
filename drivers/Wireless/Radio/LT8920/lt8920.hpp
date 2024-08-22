@@ -13,7 +13,7 @@
 #define LT8920_DEBUG(...)
 #endif
 
-#pragma pack(push, 1)
+
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 
@@ -44,8 +44,8 @@ public:
         Mbps1 = 0x01, Kbps250 = 0x04, Kbps125 = 0x08, Kbps62_5 = 0x10
     };
 
-    enum class State{
-        OFF,
+    enum class State:uint8_t{
+        OFF = 0,
         IDLE,
         SLEEP,
         VCO_WAIT,
@@ -54,21 +54,30 @@ public:
         TX_WAIT_ACK,
         RX_PKT,
         RX_WAIT_ACK
-    } state = State::OFF;
+    };
+
+    enum class Role:uint8_t{
+        IDLE,
+        BROADCASTER,
+        LISTENER
+    };
 
 public:
     LT8920(const SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
     LT8920(SpiDrv && _spi_drv) : spi_drv(_spi_drv) {;}
     LT8920(Spi & _spi, const uint8_t _index) : spi_drv(SpiDrv(_spi, _index)) {;}
 
+    void bindNrstGpio(GpioConcept & gpio){nrst_gpio = &gpio;}
+    void bindPktGpio(GpioConcept & gpio){pkt_status_gpio = &gpio;}
     uint16_t isRfSynthLocked();
     uint8_t getRssi();
     void setRfChannel(const uint8_t ch);
     void setRfFreqMHz(const uint freq);
-    void setRadioMode(const uint16_t isRx);
+    void startListen(){setRole(Role::LISTENER);}
     void setPaCurrent(const uint8_t current);
     void setPaGain(const uint8_t gain);
     void enableRssi(const uint16_t open = true);
+    void reset();
 
     void setBrclkSel(const BrclkSel brclkSel);
 
@@ -86,6 +95,7 @@ public:
     void setDataRate(const uint32_t dr);
     bool receivedAck();
 
+
     void writeBlock(const uint8_t * data, const uint8_t len);
     void readBlock(uint8_t * data, const uint8_t len);
 
@@ -93,9 +103,7 @@ public:
 
     bool isIdle(){return State::IDLE == state;}
 protected:
-
-    void enableTx(bool en);
-    void enableRx(bool en);
+    void setRole(const Role _role);
     void clearFifoWritePtr();
     void clearFifoReadPtr();
     void clearFifoPtr();
@@ -113,12 +121,15 @@ protected:
     GpioConcept * fifo_status_gpio = nullptr;
     GpioConcept * nrst_gpio = nullptr;
 
+    State state = State::OFF;
+    Role role = Role::IDLE;
+
     bool first_as_len_en = true;
     bool auto_ack_en = true;
 
     #include "lt8920_regs.hpp"
 
-    struct{
+    struct {
         uint16_t __resv1__[2];
         // REG3 RO
         RfSynthLockReg rf_synth_lock_reg;
@@ -190,5 +201,4 @@ protected:
     void updateFifoStatus();
 };
 
-#pragma pack(pop)
 #pragma GCC diagnostic pop

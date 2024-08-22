@@ -1,5 +1,7 @@
     #include <cstdint>
     
+    #pragma pack(push, 1)
+
     using RegAddress = uint8_t;
     struct RfSynthLockReg{
         static constexpr RegAddress address = 3;
@@ -167,3 +169,5 @@
         uint16_t __resv2__:1;
         uint16_t clearWritePtr:1;//清空 TX FIFO 指针为 0，但不清空 TX FIFO 中的数据
     };
+
+ #pragma pack(pop)

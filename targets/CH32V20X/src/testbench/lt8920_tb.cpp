@@ -20,7 +20,7 @@ void lt8920_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
 
-    SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
+    // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
 
     auto & spi = spi1;
     // auto & spi = spisw;
@@ -32,7 +32,6 @@ void lt8920_main(){
     LT8920 lt{spi, 0};
     bindSystickCb([&](){
         lt.tick();
-        // DEBUG_PRINTLN("??");
     });
 
     if(lt.verify()){
@@ -42,15 +41,28 @@ void lt8920_main(){
         exit(1);
     }
 
+    lt.bindNrstGpio(portB[0]);
     lt.init();
     lt.setDataRate(1_MHz);
-    // lt.setDataRate(250_KHz);
 
-    auto src = String("Hello World!!!");
-    while(true){
-        // lt.verify();
-        // lt.setDataRate(LT8920::DataRate::Kbps125);
-        // DEBUG_PRINTLN(lt.isRfSynthLocked());
-        lt.writeBlock((const uint8_t *)src.c_str(), src.length());
+    // LT8920::Role role = LT8920::Role::BROADCASTER;
+    // lt.setRole(role);
+    bool is_rx = (Sys::Chip::getChipIdCrc() != 0x5E0799D2);
+    
+    if(is_rx) lt.startListen();
+
+    if(is_rx){
+
+    }else{
+        auto src = String("Hello World!!!");
+        while(true){
+            // lt.verify();
+            // lt.setDataRate(LT8920::DataRate::Kbps125);
+            // DEBUG_PRINTLN(lt.isRfSynthLocked());
+
+            lt.writeBlock((const uint8_t *)src.c_str(), src.length());
+            delay(200);
+            // DEBUG_PRINTLN(src, lt.receivedAck());
+        }
     }
 }
