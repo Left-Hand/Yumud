@@ -7,6 +7,14 @@
 #define WRITE_REG16(reg) writeReg(reg.address, REG16(reg));
 #define READ_REG16(reg) readReg(reg.address, REG16(reg));
 
+
+
+// #define LT8920_REG_DEBUG(...) LT8920_DEBUG(__VA_ARGS__)
+#define LT8920_REG_DEBUG(...)
+
+// #define CHANGE_STATE(x) state = x; LT8920_DEBUG("state = ", (uint8_t)state)
+#define CHANGE_STATE(x) state = x;
+
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 bool LT8920::verify(){
@@ -170,24 +178,24 @@ void LT8920::setErrBitsTolerance(uint8_t errbits){
 //     }
 // }
 
-// void LT8920::startListening()
-// {
-//   writeReg(R_CHANNEL, _channel & CHANNEL_MASK);   //turn off rx/tx
-//   delay(3);
-//   writeReg(R_FIFO_CONTROL, 0x0080);  //flush rx
-//   writeReg(R_CHANNEL,  (_channel & CHANNEL_MASK) | _BV(CHANNEL_RX_BIT));   //enable RX
-//   delay(5);
-// }
+bool LT8920::receivedAck(){
+    if(auto_ack_en){
+        READ_REG16(fifo_ptr_reg);
+        return fifo_ptr_reg.fifoReadPtr == 0;
+    }else{
+        return false;
+    }
+}
 
 void LT8920::setDataRate(const DataRate dr){
     data_rate_reg.dataRate = (uint16_t)dr;
     WRITE_REG16(data_rate_reg);
-    READ_REG16(data_rate_reg);
 }
 
 void LT8920::setDataRate(const uint32_t dr){
     switch(dr){
         default:
+            LT8920_DEBUG("unknown data rate, default to 62.5kbps")
         case 62500:
             setDataRate(DataRate::Kbps62_5);
             break;
@@ -204,9 +212,13 @@ void LT8920::setDataRate(const uint32_t dr){
 }
 
 void LT8920::writeBlock(const uint8_t *data, uint8_t len){
+    if(state != State::IDLE) return;
     if(len == 0) return;
+
     len = MIN(len, 32);
 
+    CHANGE_STATE(State::TX_PKT);
+    
     enableTx(false);
     clearFifoPtr();
 
@@ -220,11 +232,23 @@ void LT8920::writeBlock(const uint8_t *data, uint8_t len){
     }
 
     enableTx(true);
+    CHANGE_STATE(State::TX_WAIT_ACK);
+}
 
-    // while(getPktStatus() == false){
-    //     LT8920_DEBUG(getPktStatus());
-    //     delay(10);
-    // }
+void LT8920::tick(){
+    switch(state){
+        case State::TX_WAIT_ACK:
+            if(getPktStatus() == true){
+                CHANGE_STATE(State::IDLE);
+            }
+            break;
+        case State::RX_WAIT_ACK:
+            break;
+        case State::IDLE:
+            break;
+        default:
+            break;
+    }
 }
 
 void LT8920::readBlock(uint8_t * data, uint8_t len){
@@ -299,7 +323,7 @@ void LT8920::init(){
     writeReg(52, 0x8080);
     writeReg(50, 0x0000);
 
-
+    CHANGE_STATE(State::IDLE);
 }
 
 void LT8920::setSyncWord(const uint64_t syncword){
@@ -313,7 +337,7 @@ void LT8920::setSyncWord(const uint64_t syncword){
 
 
 void LT8920::writeReg(const RegAddress address, const uint16_t reg){
-    LT8920_DEBUG("W", std::hex, reg, "at", std::dec, (uint8_t)address);
+    LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
         spi_drv->transfer(REG8(flag_reg), (uint8_t)address, false);
         delayT3();
@@ -325,38 +349,42 @@ void LT8920::writeReg(const RegAddress address, const uint16_t reg){
 }
 
 void LT8920::readReg(const RegAddress address, uint16_t & reg){
-    LT8920_DEBUG("R", std::hex, reg, "at", std::dec, (uint8_t)address);
+    LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
         spi_drv->transfer(REG8(flag_reg), uint8_t(address | 0x80), false);
         spi_drv->read(reg);
     }else if(i2c_drv){
         i2c_drv->readReg((uint8_t)address, reg);
     }
-
 }
 
 
 void LT8920::writeFifo(const uint8_t * data, const size_t len){
-    LT8920_DEBUG("Wfifo", std::dec, len);
+    LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv){
-        for(size_t i=0; i<len; i++){
-            spi_drv->write(uint8_t(50), false);
-            spi_drv->write(data[i]);
-        }
+        spi_drv->write(uint8_t(50), false);
+        spi_drv->write(data, len);
     }else if(i2c_drv){
         i2c_drv->writePool(uint8_t(50) , data, len, LSB);
     }
 }
 
 void LT8920::readFifo(uint8_t * data, const size_t len){
-    LT8920_DEBUG("Rfifo", std::dec, len);
+    LT8920_REG_DEBUG("Rfifo", std::dec, len);
     if(spi_drv){
-        for(size_t i=0; i<len; i++){
-            spi_drv->write(uint8_t(50 | 0x80), false);
-            spi_drv->read(data[i]);
-        }
+        spi_drv->write(uint8_t(50 | 0x80), false);
+        spi_drv->read(data, len);
     }else if(i2c_drv){
         i2c_drv->readPool(uint8_t(50), data, len, LSB);
+    }
+}
+
+void LT8920::updateFifoStatus(){
+    if(spi_drv){
+        // spi_drv->transfer(REG8(flag_reg), flag_reg.address);
+        READ_REG16(flag_reg);
+    } else if(i2c_drv){
+        i2c_drv->readReg(flag_reg.address, REG8(flag_reg));
     }
 }
 
@@ -364,7 +392,7 @@ bool LT8920::getFifoStatus(){
     if(fifo_status_gpio){
         return fifo_status_gpio->read();
     }else{
-        READ_REG16(flag_reg);
+        updateFifoStatus();
         return flag_reg.fifoFlag;
     }
 }
@@ -373,9 +401,11 @@ bool LT8920::getPktStatus(){
     if(pkt_status_gpio){
         return pkt_status_gpio->read();
     }else{
-        READ_REG16(flag_reg);
+        updateFifoStatus();
         return flag_reg.pktFlag;
     }
 }
+
+
 
 #pragma GCC diagnostic pop

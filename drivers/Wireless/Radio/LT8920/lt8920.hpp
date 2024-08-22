@@ -44,6 +44,18 @@ public:
         Mbps1 = 0x01, Kbps250 = 0x04, Kbps125 = 0x08, Kbps62_5 = 0x10
     };
 
+    enum class State{
+        OFF,
+        IDLE,
+        SLEEP,
+        VCO_WAIT,
+        VCO_SEL,
+        TX_PKT,
+        TX_WAIT_ACK,
+        RX_PKT,
+        RX_WAIT_ACK
+    } state = State::OFF;
+
 public:
     LT8920(const SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
     LT8920(SpiDrv && _spi_drv) : spi_drv(_spi_drv) {;}
@@ -77,6 +89,9 @@ public:
     void writeBlock(const uint8_t * data, const uint8_t len);
     void readBlock(uint8_t * data, const uint8_t len);
 
+    void tick();
+
+    bool isIdle(){return State::IDLE == state;}
 protected:
 
     void enableTx(bool en);
@@ -171,6 +186,8 @@ protected:
     void readReg(const RegAddress address, uint16_t & reg);
     void writeFifo(const uint8_t * data, const size_t len);
     void readFifo(uint8_t * data, const size_t len);
+
+    void updateFifoStatus();
 };
 
 #pragma pack(pop)
