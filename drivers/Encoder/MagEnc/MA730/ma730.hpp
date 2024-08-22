@@ -89,7 +89,7 @@ protected:
         uint16_t ret;
         bus_drv.write((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
         bus_drv.read(ret);
-        *(uint8_t *)&reg_data = ret  >> 8;
+        *(uint8_t *)&reg_data = ret >> 8;
     }
 
     void directRead(uint16_t & data){

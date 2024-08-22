@@ -41,7 +41,7 @@ public:
     };
 
     enum class DataRate:uint8_t{
-        Mbps1 = 0, Kbps250, Kbps125, Kbps62_5
+        Mbps1 = 0x01, Kbps250 = 0x04, Kbps125 = 0x08, Kbps62_5 = 0x10
     };
 
 public:
@@ -58,8 +58,6 @@ public:
     void setPaGain(const uint8_t gain);
     void enableRssi(const uint16_t open = true);
 
-    uint8_t getDigiVersion();
-    uint8_t getRfVersion();
     void setBrclkSel(const BrclkSel brclkSel);
 
     void setSyncWordBitsgth(const SyncWordBits len);
@@ -69,14 +67,18 @@ public:
     void enableAutoAck(const bool en = true);
     void enableCrc(const bool en = true);
     void init();
-    void verify();
+    bool verify();
     void setSyncWord(const uint64_t syncword);
-    void setErrBitsTolerance(const uint8_t errbits);
+    void setErrBitsTolerance(uint8_t errbits);
     void setDataRate(const DataRate dr);
+    void setDataRate(const uint32_t dr);
     bool receivedAck();
-protected:
-    void readBlock(uint8_t * data, const uint8_t len);
+
     void writeBlock(const uint8_t * data, const uint8_t len);
+    void readBlock(uint8_t * data, const uint8_t len);
+
+protected:
+
     void enableTx(bool en);
     void enableRx(bool en);
     void clearFifoWritePtr();
@@ -108,7 +110,6 @@ protected:
         uint16_t __resv2__[2];
         // REG6 RO
         RawRssiReg raw_rssi_reg;
-
         // REG7 
         RfConfigReg rf_config_reg;
         uint16_t __resv3__;
@@ -122,10 +123,11 @@ protected:
         RssiPdnReg rssi_pdn_reg;
         uint16_t __resv4__[11];
         // REG23
-        AutoCaliReg auto_cali_reg;
+        DeviceIDReg device_id_reg;
         uint16_t __resv5__[5];
         // REG29 RO
-        DeviceIDReg device_id_reg;
+
+        AutoCaliReg auto_cali_reg;
         uint16_t __resv6__[2];
         // REG32 RO
         Config1Reg config1_reg;

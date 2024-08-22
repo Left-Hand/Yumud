@@ -9,10 +9,10 @@
 
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
-void LT8920::verify(){
-    READ_REG16(device_id_reg);
-    LT8920_DEBUG("digi ver", uint8_t(device_id_reg.digiVersion));
-    LT8920_DEBUG("RF ver", uint8_t(device_id_reg.rfVersion));
+bool LT8920::verify(){
+    uint16_t reg;
+    readReg(30, reg);
+    return (reg == 0xf413);
 }
 
 uint16_t LT8920::isRfSynthLocked() {
@@ -32,6 +32,7 @@ void LT8920::setRfChannel(const uint8_t ch) {
 
 void LT8920::setRfFreqMHz(const uint freq) {
     // Implementation for setRfFreqMHz
+    setRfChannel(freq - 2402);
 }
 
 void LT8920::setRadioMode(const uint16_t isRx) {
@@ -63,16 +64,6 @@ void LT8920::enableRssi(const uint16_t open) {
 void LT8920::enableAutoCali(const uint16_t open) {
     auto_cali_reg.autoCali = open;
     writeReg(auto_cali_reg.address, REG16(auto_cali_reg));
-}
-
-uint8_t LT8920::getDigiVersion() {
-    readReg(device_id_reg.address, REG16(device_id_reg));
-    return device_id_reg.digiVersion;
-}
-
-uint8_t LT8920::getRfVersion() {
-    readReg(device_id_reg.address, REG16(device_id_reg));
-    return device_id_reg.rfVersion;
 }
 
 void LT8920::setBrclkSel(const BrclkSel brclkSel) {
@@ -134,6 +125,21 @@ void LT8920::setErrBitsTolerance(uint8_t errbits){
     errbits = MIN(errbits, 6);
     threshold_reg.errbits = errbits + 1;
     WRITE_REG16(threshold_reg);
+    // WRITE_REG16(threshold_reg);
+    // LT8920_DEBUG("why", threshold_reg.address);
+    // LT8920_DEBUG((u32)&threshold_reg);
+    // auto pt = (u32)&threshold_reg;
+    // LT8920_DEBUG("nmb", sizeof(threshold_reg));
+    // auto d = (uint16_t *)pt;
+    // LT8920_DEBUG("??");
+    // LT8920_DEBUG((u32)d);
+    // BREAKPOINT
+    // // auto da = *d;
+    // LT8920_DEBUG("??");
+    // // LT8920_DEBUG(";", std::bit_cast<uint16_t>(config3_reg));
+    // uint16_t temp = std::bit_cast<uint16_t>(threshold_reg);
+    // writeReg(40, std::bit_cast<uint16_t>(threshold_reg));
+    // LT8920_DEBUG("go");
 }
 // void LT8920::read(uint8_t *buffer, size_t maxBuffer){
 //     uint16_t value = readRegister(R_STATUS);
@@ -176,6 +182,25 @@ void LT8920::setErrBitsTolerance(uint8_t errbits){
 void LT8920::setDataRate(const DataRate dr){
     data_rate_reg.dataRate = (uint16_t)dr;
     WRITE_REG16(data_rate_reg);
+    READ_REG16(data_rate_reg);
+}
+
+void LT8920::setDataRate(const uint32_t dr){
+    switch(dr){
+        default:
+        case 62500:
+            setDataRate(DataRate::Kbps62_5);
+            break;
+        case 125000:
+            setDataRate(DataRate::Kbps125);
+            break;
+        case 250000:
+            setDataRate(DataRate::Kbps250);
+            break;
+        case 1000000:
+            setDataRate(DataRate::Mbps1);
+            break;
+    }
 }
 
 void LT8920::writeBlock(const uint8_t *data, uint8_t len){
@@ -195,6 +220,11 @@ void LT8920::writeBlock(const uint8_t *data, uint8_t len){
     }
 
     enableTx(true);
+
+    // while(getPktStatus() == false){
+    //     LT8920_DEBUG(getPktStatus());
+    //     delay(10);
+    // }
 }
 
 void LT8920::readBlock(uint8_t * data, uint8_t len){
@@ -210,6 +240,13 @@ void LT8920::init(){
         nrst_gpio->set();
         delay(20);
     }
+
+    rf_config_reg.__resv__ = 0;
+    enableTx(0);
+    enableRx(0);
+    setRfChannel(0);
+
+    REG16(fifo_ptr_reg) = 0;
 
     // delay(5);
     // setBrclkSel(BrclkSel::Mhz12);
@@ -248,7 +285,7 @@ void LT8920::init(){
     writeReg(34, 0x2000);  //
     writeReg(35, 0x0300);  //POWER mode,  bit 8/9 on = retransmit = 3x (default)
 
-    setSyncWord(0x03805a5a03800380);
+    setSyncWord(0x0380'5a5a'0380'0380);
     setErrBitsTolerance(1);
 
     // enableAutoAck();
@@ -261,68 +298,66 @@ void LT8920::init(){
     writeReg(45, 0x0552);
     writeReg(52, 0x8080);
     writeReg(50, 0x0000);
+
+
 }
 
 void LT8920::setSyncWord(const uint64_t syncword){
-    const uint16_t * p = reinterpret_cast<const uint16_t *>(&syncword);
+    uint16_t words[4] = {0};
+    memcpy(words, &syncword, 8);
     for(uint8_t i = 0; i < 4; i++){
-        sync_word_regs[i].data = p[i];
+        sync_word_regs[i].data = words[i];
         writeReg(sync_word_regs[i].head_address + i, REG16(sync_word_regs[i]));
     }
 }
 
 
 void LT8920::writeReg(const RegAddress address, const uint16_t reg){
+    LT8920_DEBUG("W", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
-        {
-            spi_drv->write((uint8_t)((uint8_t)address), false);
-            delayT3();
-        }
+        spi_drv->transfer(REG8(flag_reg), (uint8_t)address, false);
+        delayT3();
 
         spi_drv->write(REG16(reg));
     }else if(i2c_drv){
         i2c_drv->writeReg((uint8_t)address, reg);
     }
-    LT8920_DEBUG("W",*(uint16_t *)&reg, "at", (uint8_t)address);
 }
 
 void LT8920::readReg(const RegAddress address, uint16_t & reg){
+    LT8920_DEBUG("R", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
-        // spi_drv->transfer(REG8(flag_reg), (uint8_t)((uint8_t)address | 0x80), false);
-        // delayT3();
-
-        spi_drv->read(REG16(reg));
-
+        spi_drv->transfer(REG8(flag_reg), uint8_t(address | 0x80), false);
+        spi_drv->read(reg);
     }else if(i2c_drv){
         i2c_drv->readReg((uint8_t)address, reg);
     }
 
-    LT8920_DEBUG("R",*(uint16_t *)&reg, "at", (uint8_t)address);
 }
 
 
 void LT8920::writeFifo(const uint8_t * data, const size_t len){
+    LT8920_DEBUG("Wfifo", std::dec, len);
     if(spi_drv){
         for(size_t i=0; i<len; i++){
-            spi_drv->write(uint16_t(uint16_t(0x80 | 50) << 8 | data[i]));
+            spi_drv->write(uint8_t(50), false);
+            spi_drv->write(data[i]);
         }
     }else if(i2c_drv){
-        i2c_drv->writePool(uint8_t(0x80 | 50) , data, len, LSB);
+        i2c_drv->writePool(uint8_t(50) , data, len, LSB);
     }
-    LT8920_DEBUG("W", len);
 }
 
 void LT8920::readFifo(uint8_t * data, const size_t len){
+    LT8920_DEBUG("Rfifo", std::dec, len);
     if(spi_drv){
         for(size_t i=0; i<len; i++){
-            uint16_t temp = 0;
-            spi_drv->transfer(temp, uint16_t(uint8_t(0x80 | 50) << 8), true);
-            data[i] = temp & 0xff;
+            spi_drv->write(uint8_t(50 | 0x80), false);
+            spi_drv->read(data[i]);
         }
     }else if(i2c_drv){
         i2c_drv->readPool(uint8_t(50), data, len, LSB);
     }
-    LT8920_DEBUG("R", len);
 }
 
 bool LT8920::getFifoStatus(){

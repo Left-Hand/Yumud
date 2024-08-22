@@ -16,10 +16,10 @@
 
     struct RfConfigReg{
         static constexpr RegAddress address = 7;
-        uint16_t rfChannelNo :6;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
+        uint16_t rfChannelNo :7;//设定 RF 频道，空中频率为：f=2402+ RF_PLL_CH_NO
         uint16_t rxEn:1;//使芯片进入 TX 状态，1 有效
         uint16_t txEn:1;//使芯片进入 RX 状态，1 有效
-        uint16_t __resv__ :8;
+        uint16_t __resv__ :7;
     };
 
     struct PaConfigReg{
@@ -47,7 +47,7 @@
         static constexpr RegAddress address = 23;
         uint16_t __resv__ :2;
         uint16_t autoCali:1;//在 TX/RX 开启前重新校准 VCO
-        uint16_t __resv1__ :14;
+        uint16_t __resv1__ :13;
     };
 
     struct DeviceIDReg{
@@ -106,6 +106,7 @@
         uint16_t errbits:6;//认为 SYNCWORD 为正确的阈值 07 表示可以错 6bits，01 表示 0bit 可以错 0bits
         uint16_t fifoFullThreshold:4;//认为 FIFO 为满的阈值
         uint16_t fifoEmptyThreshold:4;//认为 FIFO 为空的阈值
+        uint16_t __resv__:2;
     };
 
     struct Config3Reg{

@@ -41,6 +41,7 @@ int main(){
     // embd_main();
     // bldc_main();
     lt8920_main();
+    // ma730_main();
     // bmi160_main();
     // delay(200);
     // pmdc_tb();
