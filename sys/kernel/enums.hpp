@@ -2,16 +2,17 @@
 
 #include <type_traits>
 
-struct Endian {
-private:
-    bool value;
+#define MAKE_BINA_ENUM(name, u, l)\
+struct name {\
+private:\
+    bool value;\
+public:\
+    constexpr explicit name(bool _value) : value(_value) {}\
+    constexpr operator bool() const { return value; }\
+};\
+static constexpr name u {true};\
+static constexpr name l{false};\
 
-public:
-    constexpr explicit Endian(bool _value) : value(_value) {}
-
-    constexpr operator bool() const { return value; }
-};
-
-static constexpr Endian MSB{true};
-static constexpr Endian LSB{false};
-
+MAKE_BINA_ENUM(Endian, MSB, LSB)
+MAKE_BINA_ENUM(Continuous, CONT, DISC)
+MAKE_BINA_ENUM(Ack, ACK, NACK)

@@ -22,22 +22,17 @@
 #endif 
 
 #ifdef CH32V20X
-#include "sdk/ch32v203/Peripheral/inc/ch32v20x_conf.h"
-#include "sdk/ch32v203/system_ch32v20x.h"
-#include "sdk/ch32v203/Core/core_riscv.h"
 #ifndef USE_CH32V2_STD_LIB
 #define  USE_CH32V2_STD_LIB
 #endif
+#define ARCH_QKV4
 #endif
 
 #ifdef CH32V30X
-#include "sdk/ch32v307/Peripheral/inc/ch32v30x_conf.h"
-#include "sdk/ch32v307/Peripheral/inc/ch32v30x.h"
-#include "sdk/ch32v307/system_ch32v30x.h"
-#include "sdk/ch32v307/Core/core_riscv.h"
 #ifndef USE_CH32V3_STD_LIB
 #define  USE_CH32V3_STD_LIB
 #endif
+#define ARCH_QKV4
 #endif
 
 #ifdef STM32F4XX
@@ -55,6 +50,19 @@
 #define USE_CH32_STD_LIB
 #endif
 
+#ifdef USE_CH32V3_STD_LIB
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x_conf.h"
+#include "sdk/ch32v307/Peripheral/inc/ch32v30x.h"
+#include "sdk/ch32v307/system_ch32v30x.h"
+#include "sdk/ch32v307/Core/core_riscv.h"
+#endif
+
+#ifdef USE_CH32V2_STD_LIB
+#include "sdk/ch32v203/Peripheral/inc/ch32v20x_conf.h"
+#include "sdk/ch32v203/system_ch32v20x.h"
+#include "sdk/ch32v203/Core/core_riscv.h"
+#endif
+
 
 #if defined(__cplusplus)
 
@@ -65,17 +73,19 @@
 #include <type_traits>
 #include <limits>
 
-extern "C"{
-    __interrupt void NMI_Handler(void);
-    __interrupt void HardFault_Handler(void);
-}
+#ifdef ARCH_QKV4
+#include "arch/riscv/qkv4.hpp"
+#endif
+
 #endif
 
 #ifdef __cplusplus 
 extern "C"{
 #endif
+
     __interrupt void NMI_Handler(void);
     __interrupt void HardFault_Handler(void);
+
 #ifdef __cplusplus
 }
 #endif

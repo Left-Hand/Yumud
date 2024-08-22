@@ -11,7 +11,7 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
 
     ADC_InitTypeDef ADC_InitStructure; 
 	
-    ADC_DeInit(ADC1);
+    ADC_DeInit(instance);
 	
     ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
     ADC_InitStructure.ADC_ScanConvMode = DISABLE;
@@ -20,7 +20,7 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
     ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
     ADC_InitStructure.ADC_NbrOfChannel = 1;
     ADC_InitStructure.ADC_Pga = ADC_Pga_1;
-    ADC_Init(ADC1, &ADC_InitStructure);
+    ADC_Init(instance, &ADC_InitStructure);
 
 
     ADC_Cmd(instance, ENABLE);

@@ -8,6 +8,8 @@
 #include "drivers/Adc/ADS1115/ads1115.hpp"
 #include "drivers/Actuator/Driver/DRV8313/drv8313.hpp"
 
+#include "testbench/tb.h"
+
 
 void preinit(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -36,8 +38,11 @@ int main(){
     // uart_main();
     // qlz_main();
     // embd_main();
-    embd_main();
+    // embd_main();
     // bldc_main();
+    lt8920_main();
+    // ma730_main();
+    // bmi160_main();
     // delay(200);
     // pmdc_tb();
     // uart_tb(uart1);

@@ -63,3 +63,9 @@ void calc_main();
 
 void float_main();
 void oled_main();
+
+void lt8920_main();
+
+void bmi160_main();
+
+void ma730_main();
