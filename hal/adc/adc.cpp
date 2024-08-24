@@ -22,29 +22,10 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
     ADC_InitStructure.ADC_Pga = ADC_Pga_1;
     ADC_Init(instance, &ADC_InitStructure);
 
-
-    ADC_Cmd(instance, ENABLE);
-
-    ADC_BufferCmd(instance, DISABLE);
-
-    ADC_ResetCalibration(instance);
-
-    while(ADC_GetResetCalibrationStatus(instance));
-    ADC_StartCalibration(instance);
-
-    while(ADC_GetCalibrationStatus(instance));
-    cali_data = Get_CalibrationValue(instance);
-
-    ADC_BufferCmd(instance, ENABLE);
-
-
-    ADC_ExternalTrigConvCmd(instance, ENABLE);
-    ADC_ExternalTrigInjectedConvCmd(instance, ENABLE);
-
     bool temp_verf_activation = false;
 
-    {
-        
+    { 
+        setRegularCount(regular_list.size());
         uint8_t i = 0;
         for(auto config : regular_list){
             i++;
@@ -77,4 +58,26 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
     if(MAX(injected_list.size(), regular_list.size()) > 1) enableScan();
     else enableSingleshot();
 
+
+    ADC_ExternalTrigConvCmd(instance, ENABLE);
+    ADC_ExternalTrigInjectedConvCmd(instance, ENABLE);
+
+    ADC_DMACmd(instance, DISABLE);
+    
+    ADC_ClearITPendingBit(instance, ADC_IT_JEOC | ADC_IT_AWD | ADC_IT_EOC);
+    
+    ADC_AutoInjectedConvCmd(instance, ENABLE);
+
+    ADC_Cmd(instance, ENABLE);
+
+    {
+        ADC_BufferCmd(instance, DISABLE);
+        ADC_ResetCalibration(instance);
+        while(ADC_GetResetCalibrationStatus(instance));
+        ADC_StartCalibration(instance);
+        while(ADC_GetCalibrationStatus(instance));
+        cali_data = Get_CalibrationValue(instance);
+    }
+
+    ADC_BufferCmd(instance, ENABLE);
 }

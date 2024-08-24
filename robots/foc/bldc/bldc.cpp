@@ -15,6 +15,8 @@
 #include "hal/bus/spi/spihw.hpp"
 
 
+
+
 SpiDrv ma730_drv{spi1, 0};
 MA730 ma730{ma730_drv};
 
@@ -46,66 +48,12 @@ using Sys::t;
 constexpr int pwmFreq = 73000;
 constexpr auto adc_sample_cycles = ADC_SampleTime_28Cycles5;
 constexpr float sample_ticks = -10.5;
-constexpr real_t dutyScale = real_t(0.17f);
+constexpr real_t dutyScale = real_t(0.27f);
 
 
 constexpr int fsector(const real_t x, const real_t inv_step, int sectors){
     return int((x * inv_step) / sectors);
 }
-
-
-void ADC1_Init(void)
-{
-    ADC_InitTypeDef  ADC_InitStructure = {0};
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
-    RCC_ADCCLKConfig(RCC_PCLK2_Div8);
-
-    ADC_DeInit(ADC1);
-    ADC_InitStructure.ADC_Mode = ADC_Mode_Independent;
-    ADC_InitStructure.ADC_ScanConvMode = ENABLE;
-    ADC_InitStructure.ADC_ContinuousConvMode = ENABLE;
-    // ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC3;
-    ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
-    ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-    ADC_InitStructure.ADC_NbrOfChannel = 1;
-    // ADC_InitStructure.ADC_Pga = ADC_Pga_4;
-    ADC_Init(ADC1, &ADC_InitStructure);
-
-    ADC_RegularChannelConfig(ADC1, ADC_Channel_TempSensor, 1, adc_sample_cycles);
-    
-    ADC_InjectedSequencerLengthConfig(ADC1, 4);
-    ADC_InjectedChannelConfig(ADC1,ADC_Channel_1,1,adc_sample_cycles);
-    ADC_InjectedChannelConfig(ADC1,ADC_Channel_4,2,adc_sample_cycles);
-    ADC_InjectedChannelConfig(ADC1,ADC_Channel_5,3,adc_sample_cycles);
-    ADC_InjectedChannelConfig(ADC1,ADC_Channel_7,4,adc_sample_cycles);
-
-    ADC_ExternalTrigInjectedConvConfig(ADC1, ADC_ExternalTrigInjecConv_T1_CC4);
-    // ADC_ExternalTrigInjectedConvEdgeConfig(ADC1,adcexternaltriginjeced);
-    ADC_ExternalTrigInjectedConvCmd(ADC1, ENABLE);
-
-    ADC_DMACmd(ADC1, DISABLE);
-    
-    // ADC_ClearITPendingBit(ADC1, ADC_IT_EOC);
-    ADC_ClearITPendingBit(ADC1, ADC_IT_JEOC);
-    // ADC_ITConfig(ADC1,ADC_IT_EOC, ENABLE);
-    ADC_ITConfig(ADC1,ADC_IT_JEOC,ENABLE);//ENABLE INJECTED INTERRUPT
-    
-    ADC_AutoInjectedConvCmd(ADC1, ENABLE);
-
-    ADC_Cmd(ADC1, ENABLE);
-
-    ADC_BufferCmd(ADC1, DISABLE); //disable buffer
-    ADC_ResetCalibration(ADC1);
-    while(ADC_GetResetCalibrationStatus(ADC1));
-    ADC_StartCalibration(ADC1);
-    while(ADC_GetCalibrationStatus(ADC1));
-    // Calibrattion_Val = Get_CalibrationValue(ADC1);
-
-    ADC_BufferCmd(ADC1, ENABLE); //enable buffer
-
-}
-
 
 
 void setUVWDuty(const real_t uDutyTarget,const real_t vDutyTarget,const real_t wDutyTarget){
@@ -230,8 +178,8 @@ int bldc_main(){
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
 
-    en_gpio.outpp(1);
-    slp_gpio.outpp(1);
+    en_gpio.outpp(0);
+    slp_gpio.outpp(0);
 
     timer1.init(chopper_freq, TimerUtils::Mode::CenterAlignedUpTrig);
     timer1.enableArrSync();
@@ -240,7 +188,7 @@ int bldc_main(){
     auto & pwm_v = timer1.oc(2); 
     auto & pwm_w = timer1.oc(3); 
     timer1.oc(4).init(TimerUtils::OcMode::UpValid, false);
-    timer1.oc(4) = real_t(0.001);
+    timer1.oc(4).cnt() = 0;
 
     pwm_u.init();
     pwm_v.init();
@@ -260,37 +208,96 @@ int bldc_main(){
 
     // ma730.setDirection(false);
 
-    // using AdcChannelEnum = AdcUtils::Channel;
-    // using AdcCycleEnum = AdcUtils::SampleCycles;
+    using AdcChannelEnum = AdcUtils::Channel;
+    using AdcCycleEnum = AdcUtils::SampleCycles;
 
-    // adc1.init(
-    //     {
-    //         AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T239_5}
-    //     },{
-    //         AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T239_5},
-    //         AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T239_5},
-    //         AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T239_5},
-    //         AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T239_5},
-    //     }
-    // );
+    adc1.init(
+        {
+            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
+        },{
+            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T41_5},
+            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T41_5},
+            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T41_5},
+            AdcChannelConfig{AdcChannelEnum::CH7, AdcCycleEnum::T41_5},
+        }
+    );
 
-    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1CC4);
-    // adc1.enableContinous();
-    // adc1.enableAutoInject();
-    ADC1_Init();
+    adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1CC4);
+    adc1.enableContinous();
+    adc1.enableAutoInject();
 
-    real_t data[4];
 
-    #define LPF(x,y,a) x = real_t(x * a + y * (1-a));
 
     real_t rad = 0;
     real_t open_rad = 0;
+
+    using Current = real_t;
+    using Current3 = std::array<Current, 3>;
+    using Current2 = std::array<Current, 2>;
+    using Voltage = real_t;
+
+    Current3 uvw_curr = {0,0,0};
+    Current3 uvw_curr_drift = {0,0,0};
+
+    Current2 ab_curr = {0,0};
+    Current2 dq_curr = {0,0};
+
+    Voltage bus_volt = 0;
+    real_t adc_data[4];
+    uint16_t adc_data_cache[4];
+
+    auto data_to_curr = [](const real_t data) -> real_t{
+        static constexpr real_t mul = real_t((3.3 * 9800 / 1000));
+        return ((real_t(data) >> 4) * mul) >> 8;
+        // return data;
+    };
+
+    auto uvw_to_ab = [](const Current3 & uvw) -> Current2{
+        return {uvw[0] - ((uvw[1] + uvw[2]) >> 1), (uvw[2] - uvw[1]) * real_t(1.73 / 2)};
+    };
+
+    auto ab_to_dq = [](const Current2 & ab, const real_t rad) -> Current2{
+        return {cos(rad) * ab[1] - sin(rad) * ab[0], sin(rad) * ab[1] + cos(rad) * ab[0]};
+    };
+
+    auto update_curr = [&](){
+        // #define LPF(x,y) x = (x * 1023 + y) >> 10;
+        // #define LPF(x,y) x = ((x* 31 + (y)) / 32);
+        #define LPF(x,y) x = (((x >> 4) * 31 + (y >> 4))) >> 1;
+        // #define LPF(x,y) x = (y * 64) >> 6;
+        adc_data_cache[0] = int(ADC1->IDATAR1);
+        adc_data_cache[1] = int(ADC1->IDATAR2);
+        adc_data_cache[2] = int(ADC1->IDATAR3);
+
+        static real_t temp_adc_data[4];
+        LPF(temp_adc_data[0], int(ADC1->IDATAR1));
+        LPF(temp_adc_data[1], int(ADC1->IDATAR2));
+        LPF(temp_adc_data[2], int(ADC1->IDATAR3));
+        LPF(temp_adc_data[3], int(ADC1->IDATAR4));
+
+        LPF(adc_data[0], temp_adc_data[0]);
+        LPF(adc_data[1], temp_adc_data[1]);
+        LPF(adc_data[2], temp_adc_data[2]);
+        LPF(adc_data[3], temp_adc_data[3]);
+
+        auto data_to_volt = [](const real_t data) -> real_t{
+            return (data * real_t(33.3/4) >> 10);
+        };
+
+        for(size_t i = 0; i < 3; i++){
+            uvw_curr[i] = data_to_curr(adc_data[i]) - uvw_curr_drift[i];
+        }
+
+        ab_curr = uvw_to_ab(uvw_curr);
+
+
+        bus_volt = data_to_volt(adc_data[3]);
+    };
+
+
     auto cb = [&](){
-        static constexpr auto alaph = real_t(0.99);
-        LPF(data[0], uint16_t(ADC1->IDATAR1), alaph);
-        LPF(data[1], uint16_t(ADC1->IDATAR2), alaph);
-        LPF(data[2], uint16_t(ADC1->IDATAR3), alaph);
-        LPF(data[3], uint16_t(ADC1->IDATAR4), alaph);
+
+        update_curr();
 
         odo.update();
         auto pos = ma730.getLapPosition();
@@ -298,14 +305,17 @@ int bldc_main(){
         real_t open_pos = t / 10;
         open_rad = frac(open_pos * 7) * real_t(TAU);
         setDQDuty(0, real_t(0.01), rad);
-        // static constexpr auto scale = real_t(0.07);
-        // static constexpr auto offset = real_t(0.01);
-        // pwm_u = scale * sin(_t) + scale + offset;
-        // pwm_v = scale * sin(_t + real_t(PI * 2 / 3)) + scale + offset;
-        // pwm_w = scale * sin(_t - real_t(PI * 2 / 3)) + scale + offset;
+        // auto temp_dq_curr = ab_to_dq(ab_curr, rad);
+        dq_curr = ab_to_dq(ab_curr, rad);
+        // LPF(dq_curr[0], temp_dq_curr[0])
+        // LPF(dq_curr[1], temp_dq_curr[1])
+
+
     };
+
+
     adc1.bindCb(AdcUtils::IT::JEOC, cb);
-    adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
+
 
     auto & ledr = portC[13];
     auto & ledb = portC[14];
@@ -314,6 +324,18 @@ int bldc_main(){
     ledb.outpp(); 
     ledg.outpp();
     portA[7].inana();
+
+    for(size_t i = 0; i < 40000; ++i){
+        update_curr();
+    }
+    std::swap(uvw_curr, uvw_curr_drift);
+
+    adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
+
+    // DEBUG_PRINTLN(uvw_curr_drift);
+
+    en_gpio = true;
+    slp_gpio = true;
     while(true){
         // auto pos = ma730.getLapPosition();
 
@@ -323,13 +345,16 @@ int bldc_main(){
 
         // auto _t = real_t(0);
 
-        
-
+        // DEBUG_PRINTLN(uvw_curr);
 
         // CanMsg msg = {0x11, uint8_t(0x57)};
         // if(can1.pending() == 0) can1.write(msg);
         // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(rad, open_rad, odo.getPosition(), std::setprecision(3), std::dec, data[0]>>10, data[1] >>10, data[2]>>10, (data[3] * real_t(33.3/4) >> 10), ADC1->IDATAR4);
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(rad, open_rad, odo.getPosition(), std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], bus_volt);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data_cache[0], adc_data_cache[1], adc_data_cache[2], (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
+        DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
+
         // cb();
         // delay(20);
         // DEBUG_PRINTLN(spi1.cs_port.isIndexValid(0), spi1.cs_port.isIndexValid(1), spi1.cs_port.isIndexValid(2))

@@ -70,9 +70,8 @@ typedef int8_t  s8;
 #define ENABLE (true)
 
 typedef bool FunctionalState;
-#define NoREADY (false)
-#define READY (true) 
-typedef bool ErrorStatus;
+
+typedef enum {NoREADY = 0, READY = !NoREADY} ErrorStatus;
 // typedef enum {DISABLE = 0, ENABLE = 1} FunctionalState;
 #define RESET (false)
 #define SET (true)

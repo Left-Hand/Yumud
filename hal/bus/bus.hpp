@@ -25,7 +25,7 @@ public:
         OCCUPIED,
         TIMEOUT,
         OVERLOAD,
-        NACK,
+        NO_ACK,
         NO_CS_PIN
     };
 
