@@ -105,6 +105,7 @@ void TimerOut::enableSync(const bool _sync){
     }
 }
 
+
 void TimerOut::setIdleState(const bool state){
     if(TimerUtils::isAdvancedTimer(instance)){
         auto tmpcr2 = instance->CTLR2;

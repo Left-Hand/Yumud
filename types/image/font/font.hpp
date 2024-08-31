@@ -11,20 +11,20 @@ class Font{
 protected:
     Vector2i size;
     uint8_t scale;
-    virtual bool _getpixel(const wchar_t & chr, const Vector2i & offset) const = 0;
+    virtual bool _getpixel(const wchar_t chr, const Vector2i & offset) const = 0;
 public:
     Font(Vector2i _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
-    bool getpixel(const wchar_t & chr, const Vector2i & offset) const{
+    bool getpixel(const wchar_t chr, const Vector2i & offset) const{
         return _getpixel(chr, {offset.x / scale, offset.y / scale});
     }
 
-    void setScale(const uint8_t & _scale){scale = _scale;}
+    void setScale(const uint8_t _scale){scale = _scale;}
     Vector2i getSize() const { return size * scale; }
 };
 
 
 class Font8x5:public Font{
-    bool _getpixel(const wchar_t & chr, const Vector2i & offset) const override{
+    bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
         if (!size.has_point(offset)) return false;
         return font8x5_enc[MAX(chr - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
@@ -72,37 +72,6 @@ protected:
     const font_item_t * find_font_item(uint16_t code)const {
         size_t left = 0;
         size_t right = ARRSIZE(font_items) - 1;
-
-        // if(code < 256){
-        //     if(code >= 0x61) return &font_items[code - (0x61 - 44)];
-        //     else if(code >= 0x30) return &font_items[code - (0x30 - 6)];
-        //     else {
-        //         uint8_t index = 0;
-        //         switch(code){
-        //         case 0x20:
-        //             index = 0;
-        //             break;
-        //         case 0x21:
-        //             index = 1;
-        //             break;
-        //         case 0x24:
-        //             index = 2;
-        //             break;
-        //         case 0x26:
-        //             index = 3;
-        //             break;
-        //         case 0x2c:
-        //             index = 4;
-        //             break;
-        //         case 0x2E:
-        //             index = 5;
-        //             break;
-        //         }
-        //         return &font_items[index];
-        //     }
-        // }else{
-        //     right = ARRSIZE(font_items) - 1;
-        // }
         
         while (left <= right) {
             size_t mid = left + (right - left) / 2;
@@ -120,7 +89,7 @@ protected:
     }
 public:
 	Font7x7():Font(Vector2i{7,7}){;}
-	bool _getpixel(const wchar_t & chr, const Vector2i & offset) const override{
+	bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
         // if(!size.has_point(offset)) return false;
         if(offset.y > 6) return false;
 		static wchar_t last_chr = 0;
