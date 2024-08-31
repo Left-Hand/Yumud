@@ -49,30 +49,28 @@ protected:
     using AdcConcept::Callback;
 
     struct CTLR1{
-        union{
-            struct{
-                uint32_t AWDCH:5;
-                uint32_t EOCIE:1;
-                uint32_t AWDIE:1;
-                uint32_t JEOCIE:1;
-                uint32_t SCAN:1;
-                uint32_t AWDSGL:1;
-                uint32_t JAUTO:1;
-                uint32_t DISCEN:1;
-                uint32_t JDISCEN:1;
-                uint32_t DISCNUM:3;
-                uint32_t DUALMOD:4;
-                uint32_t __RESV1__:2;
-                uint32_t JAWDEN:1;
-                uint32_t AWDEN:1;
-                uint32_t TKENABLE:1;
-                uint32_t TKITUNE:1;
-                uint32_t BUFEN:1;
-                uint32_t PGA:2;
-                uint32_t __RESV2__:3;
-            };
-            uint32_t data;
-        };
+        uint32_t AWDCH:5;
+        uint32_t EOCIE:1;
+        uint32_t AWDIE:1;
+        uint32_t JEOCIE:1;
+
+        uint32_t SCAN:1;
+        uint32_t AWDSGL:1;
+        uint32_t JAUTO:1;
+        uint32_t DISCEN:1;
+        uint32_t JDISCEN:1;
+        uint32_t DISCNUM:3;
+
+        uint32_t DUALMOD:4;
+        uint32_t __RESV1__:2;
+        uint32_t JAWDEN:1;
+        uint32_t AWDEN:1;
+
+        uint32_t TKENABLE:1;
+        uint32_t TKITUNE:1;
+        uint32_t BUFEN:1;
+        uint32_t PGA:2;
+        uint32_t __RESV2__:3;
     };
 
 
@@ -84,6 +82,7 @@ protected:
                 uint32_t CAL:1;
                 uint32_t RSTCAL:1;
                 uint32_t __RESV1__:4;
+
                 uint32_t DMA:1;
                 uint32_t __RESV2__:2;
                 uint32_t ALIGN:1;
@@ -96,12 +95,13 @@ protected:
                 uint32_t JSWSTART:1;
                 uint32_t SWSTART:1;
                 uint32_t TSVREFE:1;
+
                 uint32_t __RESV4__:8;
             };
             uint32_t data;
         };
     };
-    // static constexpr int u = sizeof(CTLR2);
+
 public:
     AdcOnChip(ADC_TypeDef * _instance):instance(_instance){;}
 };
@@ -141,10 +141,9 @@ protected:
     }
 
     void setRegularCount(const uint8_t cnt){
-        CTLR1 tempreg;
-        tempreg.data = instance->CTLR1;
+        auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DISCNUM = cnt;
-        instance->CTLR1 = tempreg.data;
+        instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
         regular_cnt = cnt;
     }
 
@@ -173,17 +172,15 @@ protected:
     }
 
     void enableSingleshot(const bool en = true){
-        CTLR1 tempreg;
-        tempreg.data = instance->CTLR1;
+        auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DISCEN = en;
-        instance->CTLR1 = tempreg.data;
+        instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
     void enableScan(const bool en = true){
-        CTLR1 tempreg;
-        tempreg.data = instance->CTLR1;
+        auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.SCAN = en;
-        instance->CTLR1 = tempreg.data;
+        instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
     void enableTempVref(const bool en = true){
@@ -209,24 +206,21 @@ public:
     }
 
     void setMode(const Mode mode){
-        CTLR1 tempreg;
-        tempreg.data = instance->CTLR1;
+        auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DUALMOD = (uint8_t)mode;
-        instance->CTLR1 = tempreg.data;
+        instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     };
 
     void setPga(const Pga pga){
-        CTLR1 tempreg;
-        tempreg.data = instance->CTLR1;
+        auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.PGA = (uint8_t)pga;
-        instance->CTLR1 = tempreg.data;
+        instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
     void enableContinous(const bool en = true){
-        CTLR2 tempreg;
-        tempreg.data = instance->CTLR2;
+        auto tempreg = std::bit_cast<CTLR2>(instance->CTLR2);
         tempreg.CONT = en;
-        instance->CTLR2 = tempreg.data;
+        instance->CTLR2 = std::bit_cast<uint32_t>(tempreg);
     }
 
     void enableAutoInject(const bool en = true){
@@ -245,6 +239,7 @@ public:
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.EXTSEL = static_cast<uint8_t>(trigger);
+        tempreg.EXTTRIG = (trigger != RegularTrigger::SW);
         instance->CTLR2 = tempreg.data;
     }
 
@@ -252,6 +247,7 @@ public:
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.JEXTSEL = static_cast<uint8_t>(trigger);
+        tempreg.JEXTTRIG = (trigger != InjectedTrigger::SW);
         instance->CTLR2 = tempreg.data;
     }
 
