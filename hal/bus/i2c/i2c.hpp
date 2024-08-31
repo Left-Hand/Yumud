@@ -2,7 +2,6 @@
 
 #include "../hal/bus/bus.hpp"
 #include "../hal/gpio/gpio.hpp"
-#include "../sys/kernel/time_stamp.hpp"
 
 class I2c:public ProtocolBus{
 protected:

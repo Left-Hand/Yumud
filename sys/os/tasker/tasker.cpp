@@ -1,6 +1,5 @@
 
 #include "Tasker.hpp"
-#include "../sys/kernel/clock.h"
 
 uint32_t Tasker::getTick(void) {
     return millis();

@@ -1,5 +1,4 @@
 #include "../sys/core/system.hpp"
-#include "../sys/kernel/clock.h"
 
 #include "../types/vector3/vector3_t.hpp"
 #include "../types/quat/Quat_t.hpp"

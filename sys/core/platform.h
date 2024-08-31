@@ -66,9 +66,9 @@
 
 #if defined(__cplusplus)
 
-#include "../sys/kernel/enums.hpp"
-#include "../sys/kernel/concepts.hpp"
-#include "../sys/kernel/units.hpp"
+#include "../sys/constants/enums.hpp"
+#include "../sys/constants/concepts.hpp"
+#include "../sys/constants/units.hpp"
 
 #include <type_traits>
 #include <limits>

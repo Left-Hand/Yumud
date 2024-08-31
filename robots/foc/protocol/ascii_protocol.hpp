@@ -1,7 +1,6 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "sys/kernel/stream.hpp"
+#include "sys/core/system.hpp"
 
 #include "robots/foc/stepper/constants.hpp"
 

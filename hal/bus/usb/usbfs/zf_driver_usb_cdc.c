@@ -36,7 +36,7 @@
 #include "../sys/core/platform.h"
 #include "zf_driver_usb_cdc.h"
 
-#include "../sys/kernel/clock.h"
+#include "../sys/clock/clock.h"
 
 #ifdef CH32V30X
 //-------------------------------------------------------------------------------------------------------------------

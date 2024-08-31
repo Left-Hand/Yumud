@@ -3,7 +3,6 @@
 #define __BUS_HPP__
 
 #include "../sys/core/system.hpp"
-#include "../sys/kernel/clock.h"
 
 enum class CommMethod:uint8_t{
     None = 0,

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../sys/core/system.hpp"
-#include "../sys/kernel/clock.h"
 
 #include "../types/vector2/vector2_t.hpp"
 #include "../types/real.hpp"

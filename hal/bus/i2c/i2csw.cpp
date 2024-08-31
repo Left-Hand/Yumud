@@ -1,5 +1,5 @@
 #include "i2csw.hpp"
-
+#include "sys/clock/time_stamp.hpp"
 
 I2cSw::Error I2cSw::wait_ack(){
     sda_gpio.set();
@@ -7,17 +7,27 @@ I2cSw::Error I2cSw::wait_ack(){
     delayDur();
     scl_gpio.set();
     TimeStamp stamp;
+
+    bool overtime = false;
     while(sda_gpio.read()){
         if(stamp >= timeout){
-            delayDur();
-            scl_gpio.clr();
-            return ErrorType::TIMEOUT;
+            overtime = true;
+            break;
         }
     }
-    delayDur();
-    scl_gpio.clr();
-    delayDur();
-    return ErrorType::OK;
+
+    if(overtime){
+        delayDur();
+        scl_gpio.clr();
+        delayDur();
+        return ErrorType::TIMEOUT;
+    }else{
+        delayDur();
+        scl_gpio.clr();
+        delayDur();
+        return ErrorType::OK;
+    }
+
 }
 
 I2cSw::Error I2cSw::lead(const uint8_t _address){
