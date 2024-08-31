@@ -5,7 +5,7 @@
 
 #include "robots/foc/stepper/constants.hpp"
 
-#include "types/string/String.hpp"
+#include "sys/string/string.hpp"
 
 #include <vector>
 

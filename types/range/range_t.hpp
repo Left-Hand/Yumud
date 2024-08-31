@@ -5,6 +5,7 @@
 #include "real.hpp"
 
 #include "../sys/core/platform.h"
+#include "sys/string/string.hpp"
 #include "type_traits"
 
 #include <algorithm>
@@ -304,7 +305,6 @@ public:
     constexpr explicit operator bool() const{
         return from != to;
     }
-
 };
 
 constexpr bool operator<(const arithmetic auto & value, const Range_t<auto> & range){

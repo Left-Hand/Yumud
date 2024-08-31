@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../sys/core/platform.h"
+#include "sys/string/string.hpp"
 #include "../types/real.hpp"
 
 
@@ -182,7 +183,6 @@ public:
         auto rect = Rect2_t<T>(other, other - *this);
         return rect.abs();
     }
-
 };
 
 #include "vector2_t.tpp"

@@ -6,7 +6,7 @@
 
 
 #include "../hal/bus/uart/uart.hpp"
-#include "../types/string/String.hpp"
+#include "sys/string/string.hpp"
 #include "../Radio.hpp"
 
 struct MacAddress{

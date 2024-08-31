@@ -5,7 +5,6 @@
 #include <cstdint>
 
 #include "../real.hpp"
-#include "../string/String.hpp"
 #include "../rgb.h"
 
 

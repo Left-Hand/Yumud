@@ -28,8 +28,9 @@
 #include <ctype.h>
 
 #include "string_view.hpp"
+#include "string_stream.hpp"
 
-#include "sys/kernel/string_utils.hpp"
+#include "sys/string/string_utils.hpp"
 #include "sys/core/platform.h"
 
 // An inherited class for holding the result of a concatenation.  These
