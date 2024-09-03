@@ -6,7 +6,6 @@
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
 
-
 #include "testbench/tb.h"
 
 
