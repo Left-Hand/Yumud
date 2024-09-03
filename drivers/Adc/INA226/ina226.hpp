@@ -150,6 +150,7 @@ public:
     int getShuntVoltageuV(){
         return((shuntVoltageReg << 1) + (shuntVoltageReg >> 1));
     }
+
     real_t getShuntVoltage(){
         auto uv = getShuntVoltageuV();
         return real_t(uv / 100) / 10000;
