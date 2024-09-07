@@ -114,10 +114,14 @@ void wlsy_main(){
     using namespace WLSY;
 
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    // DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::Interrupt);
+
     auto & led_gpio = portA[7];
     led_gpio.outpp(1);
 
+    auto &              trig_gpio(portA[0]);
+    trig_gpio.inpu();
+    ExtiChannel         trig_ecti_ch(trig_gpio, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
+    CaptureChannelExti  cap(trig_ecti_ch, trig_gpio);
 
     auto & scl_gpio = portB[15];
     auto & sda_gpio = portB[14];
@@ -133,15 +137,42 @@ void wlsy_main(){
     timer1.init(240'000);
     timer1.initBdtr(20);
 
+
+    timer1.oc(4).init(TimerUtils::OcMode::UpValid, false);
+
+    TIM_OCInitTypeDef  TIM_OCInitStructure;
+
+    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
+    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
+    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
+
+    TIM_OC4Init(TIM1, &TIM_OCInitStructure);
+
+    timer1.oc(4).cvr() = timer1.arr()-1;
+
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
     auto  & en_gpio = portB[0];
 
-    // while(true){
-    //     DEBUG_PRINTLN(t, ina226.getVoltage(), ina226.getCurrent());
-    //     delay(100);
-    //     led_gpio = !led_gpio;
-    // }
+    using AdcChannelEnum = AdcUtils::Channel;
+    using AdcCycleEnum = AdcUtils::SampleCycles;
+
+    adc1.init(
+        {
+            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
+        },{
+            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
+            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
+        }
+    );
+
+    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
+    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
+    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1CC4);
+    // adc1.enableContinous();
+    adc1.enableAutoInject(false);
+
+
 
     en_gpio.outpp(0);
     ch.setIdleState(true);
@@ -152,33 +183,27 @@ void wlsy_main(){
     en_gpio.set();
     ch = real_t(0.1);
 
+
+    HX711 hx711(portA[6], portA[1]);
+    hx711.init();
+    hx711.compensate();
+
     while(true){
         ch = real_t(0.8) + sin(8 * t) * real_t(0.05);
         ina226.update();
+        hx711.update();
         DEBUG_PRINTLN( std::setprecision(4),
-            ina226.getVoltage(), ina226.getCurrent());
+            hx711.getNewton(),
+            ina226.getVoltage(), ina226.getCurrent(), ADC1->IDATAR1, bool(trig_gpio));
+
         // DEBUG_PRINTLN(bool(portA[8]), bool(portB[13]), bool(en_gpio), TIM1->CH1CVR, TIM1->ATRLR);
     }
 
 
-    // adc1.init(
-    //     {
-    //         AdcChannelConfig{.channel = AdcChannels::TEMP, .sample_cycles = AdcSampleCycles::T55_5}
-    //     },
-    //     {
-    //         AdcChannelConfig{.channel = AdcChannels::CH0, .sample_cycles = AdcSampleCycles::T55_5}
-    //     }
-    // );
-
-    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
-    // adc1.enableCont();
-    // adc1.enableAutoInject();
 
 
 
-    auto &              trigGpioA(portA[0]);
-    ExtiChannel         trigExtiCHA(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
-    CaptureChannelExti  capA(trigExtiCHA, trigGpioA);
+
 
     NTC ntc;
     Heater heater{portB[0], ntc};
@@ -186,16 +211,8 @@ void wlsy_main(){
 
     InputModule inputMachine{ina226, heater};
 
-    HX711 hx711(portA[6], portA[1]);
 
-    // hx711.init();
-    // hx711.compensate();
-
-    // while(true){
-    //     hx711.update();
-    //     DEBUG_PRINT(hx711.getWeightGram());
-    // }
-    SpeedCapture speedCapture{capA};
+    SpeedCapture speedCapture{cap};
 
     OutputModule outputMachine{speedCapture, hx711};
 

@@ -14,6 +14,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/timer/capture/capture_channel.hpp"
 #include "hal/timer/timer_oc.hpp"
+
 #include "hal/adc/adcs/adc1.hpp"
 
 #include "drivers/Adc/INA226/ina226.hpp"
