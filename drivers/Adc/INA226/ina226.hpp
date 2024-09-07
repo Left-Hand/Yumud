@@ -30,12 +30,12 @@ public:
         us140 = 0, us204, us332, us588, ms1_1, ms2_116, ms4_156, ms8_244
     };
 
-    static constexpr uint8_t default_id = 0x80; 
+
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv i2c_drv;
     
-    real_t currentLsb = 0.0002;
-    real_t voltageLsb = 0.00125;
+    real_t currentLsb = real_t(0.0002);
+    real_t voltageLsb = real_t(0.00125);
 
     enum class RegAddress:uint8_t{
         Config = 0x00,
@@ -94,19 +94,22 @@ protected:
     };
 
     void writeReg(const RegAddress & regAddress, const uint16_t & regData){
-        bus_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
+        i2c_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
     }
 
     void readReg(const RegAddress & regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
+        i2c_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
     }
 
     void requestPool(const RegAddress & regAddress, void * data_ptr, const size_t len){
-        bus_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len);
+        i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len);
     }
 public:
-    INA226(I2cDrv & _i2c_drv):bus_drv(_i2c_drv){};
+    static constexpr uint8_t default_i2c_addr = 0x80;
 
+    INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
+    INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
+    INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)){};
     void update(){
         // requestPool(RegAddress::shuntVoltage, &shuntVoltageReg, 2 * 4);
         readReg(RegAddress::busVoltage, busVoltageReg);

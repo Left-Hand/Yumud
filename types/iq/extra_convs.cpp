@@ -59,3 +59,10 @@ OutputStream & operator<<(OutputStream & os, const iq_t value){
     if(value < 0) os << '-';
     return os << str_int << '.' << str_frac;
 }
+
+String iq_t::toString(unsigned char eps) const{
+    char str_int[str_int_size] = {0};
+    char str_frac[str_float_size] = {0};
+    qtoa(str_int, str_frac, value, eps);
+    return String(str_int) + String(str_frac);
+};

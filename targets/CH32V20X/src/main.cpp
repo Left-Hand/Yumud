@@ -1,5 +1,6 @@
 #include "sys/core/system.hpp"
 #include "app/embd/embd.h"
+#include "app/wlsy/wlsy_inc.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
@@ -39,7 +40,8 @@ int main(){
     // qlz_main();
     // embd_main();
     // embd_main();
-    bldc_main();
+    // bldc_main();
+    wlsy_main();
     // lt8920_main();
     // ma730_main();
     // bmi160_main();
