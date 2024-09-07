@@ -117,20 +117,31 @@ void wlsy_main(){
     // DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::Interrupt);
     auto & led_gpio = portA[7];
     led_gpio.outpp(1);
-    while(true){
-        DEBUG_PRINTLN(t, millis(), micros());
-        delay(10);
-        led_gpio = !led_gpio;
-    }
 
-    timer1.init(72000);
-    timer1.initBdtr(160);
+
+    auto & scl_gpio = portB[15];
+    auto & sda_gpio = portB[14];
+
+    I2cSw               i2csw{scl_gpio, sda_gpio};
+    i2csw.init(100000);
+
+
+    INA226 ina226{i2csw};
+    ina226.init(real_t(0.009), real_t(5));
+    ina226.update();
+
+    timer1.init(240'000);
+    timer1.initBdtr(20);
 
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
     auto  & en_gpio = portB[0];
 
-
+    // while(true){
+    //     DEBUG_PRINTLN(t, ina226.getVoltage(), ina226.getCurrent());
+    //     delay(100);
+    //     led_gpio = !led_gpio;
+    // }
 
     en_gpio.outpp(0);
     ch.setIdleState(true);
@@ -142,14 +153,12 @@ void wlsy_main(){
     ch = real_t(0.1);
 
     while(true){
-        DEBUG_PRINTLN(t, millis());
+        ch = real_t(0.8) + sin(8 * t) * real_t(0.05);
+        ina226.update();
+        DEBUG_PRINTLN( std::setprecision(4),
+            ina226.getVoltage(), ina226.getCurrent());
+        // DEBUG_PRINTLN(bool(portA[8]), bool(portB[13]), bool(en_gpio), TIM1->CH1CVR, TIM1->ATRLR);
     }
-
-    auto & scl_gpio = portB[15];
-    auto & sda_gpio = portB[14];
-
-    I2cSw               i2csw{scl_gpio, sda_gpio};
-    i2csw.init(100000);
 
 
     // adc1.init(
@@ -165,7 +174,7 @@ void wlsy_main(){
     // adc1.enableCont();
     // adc1.enableAutoInject();
 
-    INA226 ina226{i2csw};
+
 
     auto &              trigGpioA(portA[0]);
     ExtiChannel         trigExtiCHA(trigGpioA, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);

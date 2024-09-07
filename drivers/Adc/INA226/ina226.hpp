@@ -123,8 +123,8 @@ public:
         configReg.__resv__ = 0b100;
 
         setAverageTimes(16);
-        setBusConversionTime(BusVoltageConversionTime::ms1_1);
-        setShuntConversionTime(ShuntVoltageConversionTime::ms1_1);
+        setBusConversionTime(BusVoltageConversionTime::us140);
+        setShuntConversionTime(ShuntVoltageConversionTime::us140);
         enableBusVoltageMeasure();
         enableContinuousMeasure();
         enableShuntVoltageMeasure();
