@@ -4,6 +4,7 @@
 
 #include "wlsy_inc.hpp"
 #include "types/buffer/ringbuf/ringbuf_t.hpp"
+#include "buck.hpp"
 
 namespace WLSY{
 class TempSensor{
@@ -16,14 +17,17 @@ public:
 class NTC:public TempSensor{
 protected:
     static constexpr real_t B = 3950;
-    static constexpr real_t R_kOhms = 51;
-    static constexpr real_t R0_kOhms = 100;
+    static constexpr real_t R_kOhms = 27;
+    static constexpr real_t R0_kOhms = 10;
 
-    real_t get_uniV(){
-        return real_t(uint16_t(ADC1->IDATAR1)) / real_t(4096);
-    }
+    uint8_t index;
+
+
 
 public:
+
+    NTC(const uint8_t & _index):index(_index){;}
+
     void init() override{
 
     };
@@ -31,6 +35,29 @@ public:
     void update() override{
 
     };
+
+    real_t get_uniV(){
+        uint16_t data;
+
+        switch(index){
+            case 0:
+                data = ADC1->IDATAR1;
+                break;
+            case 1:
+                data = ADC1->IDATAR2;
+                break;
+            default:
+                data = 0;
+                break;
+        }
+
+        return real_t(data) / real_t(4096);
+    }
+
+    real_t getRes(){
+        real_t VR = get_uniV();
+        return VR/(1-VR) * R_kOhms;
+    }
 
     real_t getTemp(){
         
@@ -44,36 +71,30 @@ public:
 
 class Heater{
 protected:
-    Gpio & heat_gpio;
+    Gpio & sw_gpio;
     TempSensor & temp_sensor;
-    real_t target_temp;
-    real_t ripple_temp = 5;
+    Buck & buck;
 
-    void on(){heat_gpio.set();}
 
-    void off(){heat_gpio.clr();}
 public:
-    Heater(Gpio & _heat_gpio, TempSensor & _temp_sensor):heat_gpio(_heat_gpio), temp_sensor(_temp_sensor){;}
+    Heater(Gpio & _heat_gpio, TempSensor & _temp_sensor, Buck & _buck):sw_gpio(_heat_gpio), temp_sensor(_temp_sensor), buck(_buck){;}
 
     void init(){
-        heat_gpio.outpp(0);
-        setTargetTemp(50);
+        sw_gpio.outpp();
+        setTargetWatt(0);
     }
 
     void run(){
         temp_sensor.update();
-        on();
-        // const real_t temp = temp_sensor.getTemp();
-        // if(temp > target_temp + ripple_temp){
-        //     off();
-        // }else if(temp < target_temp - ripple_temp){
-        //     on();
-        // }
     }
 
-    void setTargetTemp(const real_t temp){
-        target_temp = temp;
+    void setTargetWatt(const real_t & watt){
+        buck.setTargetWatt(watt);
+        sw_gpio = bool(watt > 5);
     }
+
+    void on(){sw_gpio.set();}
+    void off(){sw_gpio.clr();}
 };
 
 }

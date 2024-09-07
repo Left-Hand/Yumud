@@ -203,13 +203,14 @@ void wlsy_main(){
 
 
 
+    NTC ntc_h{1};
+    NTC ntc_l{0};
+
+    Buck buck{ina226, ch};
+    Heater heater{portB[0], ntc_h, buck};
 
 
-    NTC ntc;
-    Heater heater{portB[0], ntc};
-
-
-    InputModule inputMachine{ina226, heater};
+    InputModule inputMachine{ina226, heater, ntc_l, ntc_h};
 
 
     SpeedCapture speedCapture{cap};
@@ -249,24 +250,60 @@ void wlsy_main(){
     //     painter.flush(RGB565::BLUE);
     // }
     BackModule machine{inputMachine, outputMachine};
+
+    TJC tjc{uart1};
+    tjc.init();
+
+    TJC::WaveWindow input_wavewindow{tjc, 4};
+    TJC::WaveWindow output_wavewindow{tjc, 4};
+
+    PowerInScene input_scene = PowerInScene{
+        machine,{
+        new TJC::Label {tjc, "input", "current"},
+        new TJC::Label {tjc, "input", "voltage"},
+        new TJC::Label {tjc, "input", "power"},
+        new TJC::Label {tjc, "input", "TL"},
+        new TJC::Label {tjc, "input", "TH"},
+
+        new TJC::Waveform {input_wavewindow, 0, {0, 4}},
+        new TJC::Waveform {input_wavewindow, 1, {0, 100}},
+        new TJC::Waveform {input_wavewindow, 2, {0, 100}}
+        }
+    };
+
+
+    PowerOutScene output_scene{
+        machine,{
+        new TJC::Label {tjc, "output", "speed"},
+        new TJC::Label {tjc, "output", "force"},
+        new TJC::Label {tjc, "output", "power"},
+        new TJC::Waveform {output_wavewindow, 0, {0, 16}},
+        new TJC::Waveform {output_wavewindow, 1, {0, real_t(0.4)}},
+        new TJC::Waveform {output_wavewindow, 2, {0, 1}}
+        }
+    };
+
+
+    ExamScene exam_scene{
+        machine,{
+        new TJC::Label {tjc, "result", "spower"},
+        new TJC::Label {tjc, "result", "inputpower"},
+        new TJC::Label {tjc, "result", "outpower"},
+        new TJC::Label {tjc, "result", "efficiency"},
+        }
+    };
+
+    MainScene main_scene{machine, {&input_scene, &output_scene, &exam_scene}};
+
     FrontModule interact{machine};
-
-
     machine.init();
     interact.init();
-
 
     while(true){
         // DEBUG_PRINT(speedCapture.getSpeed(), speedCapture.rad, speedCapture.dur, hx711.getWeightGram(), hx711.getNewton());
         machine.run();
         interact.run();
 
-        // static LowpassFilter lpf(1.0);
-        // auto s = machine.getOutputModuleInfos().speed;
-        // auto n = lpf.update(machine.getOutputModuleInfos().force, t);
-        adc1.swStartInjected();
-        DEBUG_PRINTLN(hx711.getWeightGram(),speedCapture.getSpeed());
-        // hx711.update();
         // if(speedCapture.getSpeed() < 1){
         //     heater.on();
         // }else{

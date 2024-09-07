@@ -6,40 +6,29 @@
 
 namespace WLSY{
 
+using Sys::t;
 using Range = Range_t<real_t>;
 
 class Buck{
+public:
+    real_t output;
 protected:
     INA226 & ina;
-    TimerOutChannelPosOnChip & pwm;
+    PwmChannel & pwm;
 
-    struct PowerController{
+    real_t target_watt;
 
-
-
-        real_t current_range;
-
-        real_t update(const ){
-
-        }
-    }
+    Range  output_range{real_t(0.1), real_t(0.9)};
 
     struct CurrentController{
     public:
-        real_t current = 0.0;
+        real_t kp = real_t(0.007);
 
+        real_t & output;
+        Range  & output_range;
 
-
-        real_t kp = 1.0;
-        // real_t ki = 0.0;
-    
-        // real_t intergal = 0.0;
-        // real_t intergal_clamp = 0.0;
-
-        real_t output = 0.0;
-        Range output_range;
-    
-        real_t update(const real_t targ_current, const real_t & real_current){
+        CurrentController(real_t & _output, Range & _output_range):output(_output), output_range(_output_range){;}
+        void update(const real_t targ_current, const real_t & real_current){
             auto error = targ_current - real_current;
             real_t kp_contribute = error * kp;
 
@@ -47,20 +36,75 @@ protected:
 
             output += delta;
             output = output_range.clamp(output);
-
-            return output;
         }
     };
+
+    class PowerController{
+    protected:
+        real_t targ_current = 0;
+        Range range_current{0, 4};
+    public:
+        real_t kp = real_t(0.00032);
+
+        CurrentController & curr_ctrl;
+
+        PowerController(CurrentController & _curr_ctrl):curr_ctrl(_curr_ctrl){;}
+        void update(const real_t targ_power, const real_t real_power, const real_t real_current){
+            auto error = targ_power - real_power;
+            real_t kp_contribute = error * kp;
+
+            real_t delta = kp_contribute;
+
+            targ_current += delta;
+            targ_current = range_current.clamp(targ_current);
+
+            curr_ctrl.update(targ_current, real_current);
+        }
+    };
+
+    // class VoltageController{
+    // protected:
+    //     real_t targ_current = 0;
+    //     Range range_current{0, 4};
+    // public:
+    //     real_t kp = 0.00032;
+
+    //     CurrentController & curr_ctrl;
+
+    //     PowerController(CurrentController & _curr_ctrl):curr_ctrl(_curr_ctrl){;}
+    //     void update(const real_t targ_voltage, const real_t real_voltage, const real_t real_current){
+    //         auto error = targ_voltage - real_voltage;
+    //         real_t kp_contribute = error * kp;
+
+    //         real_t delta = kp_contribute;
+
+    //         targ_current += delta;
+    //         targ_current = range_current.clamp(targ_current);
+
+    //         curr_ctrl.update(targ_current, real_current);
+    //     }
+    // };
+
+    CurrentController curr_ctrl{output, output_range};
+    PowerController power_ctrl{curr_ctrl};
+
+    bool isNc(){
+        return ina.getVoltage() < 1;
+    }
 public:
-    Buck(INA226 & _ina, TimerOutChannelOnChip & _pwm):ina(_ina), pwm(_pwm){;}
-    void init(){
-        pwm.init();
+    Buck(INA226 & _ina, PwmChannel & _pwm):ina(_ina), pwm(_pwm){;}
+
+    void setTargetWatt(const real_t watt){
+        target_watt = watt;
     }
 
     void run(){
-
+        ina.update();
+        
+        power_ctrl.update(target_watt, ina.getPower(), ina.getCurrent());
+        pwm = output;
     }
-}
+};
 
 }
 #endif
