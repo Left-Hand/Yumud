@@ -17,24 +17,12 @@ public:
 class NTC:public TempSensor{
 protected:
     static constexpr real_t B = 3950;
-    static constexpr real_t R_kOhms = 27;
+    static constexpr real_t R_kOhms = 100;
     static constexpr real_t R0_kOhms = 10;
 
     uint8_t index;
 
-
-
-public:
-
-    NTC(const uint8_t & _index):index(_index){;}
-
-    void init() override{
-
-    };
-
-    void update() override{
-
-    };
+    real_t last_temp = 0;
 
     real_t get_uniV(){
         uint16_t data;
@@ -51,8 +39,27 @@ public:
                 break;
         }
 
-        return real_t(data) / real_t(4096);
+        return real_t(data) >> 12;
     }
+
+public:
+
+    NTC(const uint8_t _index):index(_index){;}
+
+    void init() override{
+
+    };
+
+    void update() override{
+        static constexpr real_t T0= real_t(273.15+25);
+        static constexpr real_t Ka= real_t(273.15);
+        real_t VR = get_uniV();
+        real_t Rt_kOhms = (VR)/(1-VR) * R_kOhms;
+        auto this_temp = real_t(B/(B/T0+log(Rt_kOhms/R0_kOhms))) - Ka + real_t(0.5);
+        last_temp = (last_temp * 15 + this_temp) >> 4;
+    };
+
+
 
     real_t getRes(){
         real_t VR = get_uniV();
@@ -60,12 +67,7 @@ public:
     }
 
     real_t getTemp(){
-        
-        static constexpr real_t T0= real_t(273.15+25);
-        static constexpr real_t Ka= real_t(273.15);
-        real_t VR = get_uniV();
-        real_t Rt_kOhms = (1-VR)/VR * R_kOhms;
-        return real_t(1/(1/T0+log(Rt_kOhms/R0_kOhms)/B)) - Ka + real_t(0.5);
+        return last_temp;
     }
 };
 
@@ -88,9 +90,9 @@ public:
         temp_sensor.update();
     }
 
-    void setTargetWatt(const real_t & watt){
+    void setTargetWatt(const real_t watt){
         buck.setTargetWatt(watt);
-        sw_gpio = bool(watt > 5);
+        sw_gpio = watt > real_t(0.1);
     }
 
     void on(){sw_gpio.set();}

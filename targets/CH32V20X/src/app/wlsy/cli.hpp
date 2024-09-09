@@ -2,7 +2,7 @@
 
 #define __CLI_HPP__
 
-#include "debug.h"
+#define TJCER uart1
 #include "wlsy_inc.hpp"
 
 namespace WLSY{
@@ -25,7 +25,7 @@ constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
 
 #define read_value(value)\
 {\
-    DEBUG_PRINT("get", VNAME(value), "\t\t is", value);\
+    DEBUG_PRINTLN("get", VNAME(value), "\t\t is", value);\
 }
 
 #define settle_value(value, args)\
@@ -35,7 +35,7 @@ constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
         read_value(value);\
     }else if(args.size() == 1){\
         value = decltype(value)(args[0]);\
-        DEBUG_PRINT("set: ", VNAME(value), "\t\t to", args[0]);\
+        DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", args[0]);\
     }\
 }
 
@@ -48,7 +48,7 @@ constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
         read_value(value);\
     }else if(args.size() == 1){\
         value = temp_value;\
-        DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+        DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", value);\
     }\
 }
 
@@ -62,7 +62,7 @@ constexpr uint32_t operator "" _ha(char const* p, size_t size)  {
         read_value(value);\
     }else if(args.size() == 1){\
         value = temp_value;\
-        DEBUG_PRINT("set: ", VNAME(value), "\t\t to", value);\
+        DEBUG_PRINTLN("set: ", VNAME(value), "\t\t to", value);\
     }\
 }
 
@@ -85,7 +85,7 @@ private:
             endPos = input.indexOf(delimiter, startPos);
         }
 
-        if (startPos < input.length()) {
+        if (startPos < int(input.length())) {
             String lastToken = input.substring(startPos);
             result.push_back(lastToken.c_str());
         }
@@ -110,15 +110,15 @@ public:
             case "reset"_ha:
             case "rst"_ha:
             case "r"_ha:
-                DEBUG_PRINT("rsting");
+                DEBUG_PRINTLN("rsting");
                 NVIC_SystemReset();
                 break;
             case "alive"_ha:
             case "a"_ha:
-                DEBUG_PRINT("chip is alive");
+                DEBUG_PRINTLN("chip is alive");
                 break;
             default:
-                DEBUG_PRINT("no command available:", command);
+                DEBUG_PRINTLN("no command available:", command);
                 break;
         }
     }
@@ -130,7 +130,7 @@ public:
                 auto chr = DEBUGGER.read();
                 if(chr == '\n'){
                     temp_str.alphanum();
-                    DEBUG_PRINT("cli cmd:", temp_str);
+                    DEBUG_PRINTS("cli cmd:", temp_str);
                     if(temp_str.length()) parse_line(temp_str);
 
                     temp_str = "";
@@ -146,7 +146,7 @@ public:
                 auto chr = TJCER.read();
                 if(chr == 0){
                     temp_str.alphanum();
-                    DEBUG_PRINT("tjc cmd:", temp_str);
+                    DEBUG_PRINTS("tjc cmd:", temp_str);
                     if(temp_str.length()) parse_line(temp_str);
                     temp_str = "";
                 }else{

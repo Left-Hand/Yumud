@@ -31,7 +31,7 @@ public:
     void print(const String & str){
         uart.print(str);
         end();
-        // DEBUG_PRINT(str);
+        DEBUG_PRINTLN(str);
         // delay(1);
     }
 
@@ -85,8 +85,8 @@ public:
         Label(TJC & _instance, const String & _scene_name, const String & _tag_name):instance(_instance), scene_name(_scene_name), tag_name(_tag_name){;}
 
 
-        void setValue(const real_t & value){
-            text = String(value);
+        void setValue(const real_t value){
+            text = String(float(value));
             setText(text);
         }
 

@@ -71,10 +71,10 @@ public:
         context.volt_label->setValue(im_info.volt);
         context.watt_label->setValue(im_info.watt);
 
-        context.heat_l_label->setText(String(im_info.tmp_l) + "℃");
-        context.heat_h_label->setText(String(im_info.tmp_h) + "℃");
+        context.heat_l_label->setText(String(float(im_info.tmp_l)) + "℃");
+        context.heat_h_label->setText(String(float(im_info.tmp_h)) + "℃");
 
-        DEBUG_PRINTLN(im_info.amps, im_info.volt, im_info.watt);
+        // DEBUG_PRINTLN(im_info.amps, im_info.volt, im_info.watt);
     }
 };
 
@@ -104,7 +104,7 @@ public:
         context.force_label->setValue(om_info.force);
         context.power_label->setValue(om_info.watt);
 
-        DEBUG_PRINTLN(om_info.speed, om_info.force, om_info.watt);
+        // DEBUG_PRINTLN(om_info.speed, om_info.force, om_info.watt);
     }
 };
 

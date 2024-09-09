@@ -52,7 +52,7 @@ public:
     }
 
     void init(){
-        ina.init(real_t(0.009), real_t(5.0));
+        ina.init(real_t(0.00512), real_t(5.0));
         ht.init();
     }
 

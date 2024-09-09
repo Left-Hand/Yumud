@@ -30,8 +30,12 @@ public:
         im.run();
         om.run();
 
-        ipower_intergrator.update(im.getWatt());
-        opower_intergrator.update(om.getWatt());
+        auto iw = im.getWatt();
+        auto ow = om.getWatt();
+
+        // DEBUG_PRINTLN("wa", iw, ow);
+        ipower_intergrator.update(iw);
+        opower_intergrator.update(ow);
     }
 
     auto getInputModuleInfos(){

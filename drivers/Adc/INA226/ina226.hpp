@@ -177,7 +177,6 @@ public:
         }
 
         configReg.averageMode = temp2;
-        DEBUG_VALUE(temp2);
         writeReg(RegAddress::Config, configReg.data);
     }
 

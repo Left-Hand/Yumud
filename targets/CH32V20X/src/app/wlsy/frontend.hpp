@@ -36,7 +36,7 @@ public:
                 {
                     switch(args.size()){
                         case 0:
-                            DEBUG_PRINT(bm.getInputWatt());
+                            DEBUG_PRINTLN(bm.getInputWatt());
                             break;
                         case 1:
                             bm.setInputWatt(real_t(args[0]));
@@ -73,7 +73,11 @@ public:
                 targ_power = power_range.clamp(targ_power - 5);
                 bm.setInputWatt(targ_power);
                 break;
-
+            case "temp"_ha:{
+                auto info = bm.getInputModuleInfos();
+                DEBUG_PRINTS(info.tmp_h, info.tmp_l);
+                break;
+            }
             default:
                 Cli::parse_command(command, args);
                 break;

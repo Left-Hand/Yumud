@@ -18,17 +18,17 @@ protected:
 
     real_t target_watt;
 
-    Range  output_range{real_t(0.1), real_t(0.9)};
+    Range  output_range{real_t(0.02), real_t(0.9)};
 
     struct CurrentController{
     public:
-        real_t kp = real_t(0.007);
+        real_t kp = real_t(0.057);
 
         real_t & output;
         Range  & output_range;
 
         CurrentController(real_t & _output, Range & _output_range):output(_output), output_range(_output_range){;}
-        void update(const real_t targ_current, const real_t & real_current){
+        void update(const real_t targ_current, const real_t real_current){
             auto error = targ_current - real_current;
             real_t kp_contribute = error * kp;
 
@@ -44,7 +44,7 @@ protected:
         real_t targ_current = 0;
         Range range_current{0, 4};
     public:
-        real_t kp = real_t(0.00032);
+        real_t kp = real_t(0.00282);
 
         CurrentController & curr_ctrl;
 
@@ -56,7 +56,7 @@ protected:
             real_t delta = kp_contribute;
 
             targ_current += delta;
-            targ_current = range_current.clamp(targ_current);
+        targ_current = range_current.clamp(targ_current);
 
             curr_ctrl.update(targ_current, real_current);
         }
