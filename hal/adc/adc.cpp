@@ -19,6 +19,7 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
     ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_None;
     ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
     ADC_InitStructure.ADC_NbrOfChannel = 1;
+    ADC_InitStructure.ADC_OutputBuffer = ADC_OutputBuffer_Disable;
     ADC_InitStructure.ADC_Pga = ADC_Pga_1;
     ADC_Init(instance, &ADC_InitStructure);
 

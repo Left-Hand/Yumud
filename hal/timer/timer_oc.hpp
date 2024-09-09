@@ -11,6 +11,7 @@ public:
     void installToPin(const bool en = true);
     void enableSync(const bool _sync = true);
     void setPolarity(const bool pol);
+    void setOutputState(const bool s);
     void setIdleState(const bool state);
     void enable(const bool en = true);
 };

@@ -86,6 +86,11 @@ void TimerOut::setPolarity(const bool pol){
     else instance->CCER &= (~(1 << (((uint8_t)channel) * 2 + 1)));
 }
 
+void TimerOut::setOutputState(const bool s){
+    if(s) instance->CCER |= (1 << ((uint8_t)channel * 2));
+    else instance->CCER &= (~(1 << (((uint8_t)channel) * 2)));
+}
+
 void TimerOut::enableSync(const bool _sync){
     switch(channel){
         case Channel::CH1:

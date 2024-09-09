@@ -42,24 +42,17 @@ void wlsy_main(){
 
 
     INA226 ina226{i2csw};
-    // ina226.init(real_t(0.009), real_t(5));
-    // ina226.update();
 
     timer1.init(120'000);
     timer1.initBdtr(100);
 
 
     timer1.oc(4).init(TimerUtils::OcMode::UpValid, false);
+    timer1.oc(4).setOutputState(true);
 
-    TIM_OCInitTypeDef  TIM_OCInitStructure;
-
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-
-    TIM_OC4Init(TIM1, &TIM_OCInitStructure);
 
     timer1.oc(4).cvr() = timer1.arr()-1;
+    timer1.oc(4).setIdleState(false);
 
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
@@ -77,10 +70,7 @@ void wlsy_main(){
         }
     );
 
-    // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
-    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
     adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1CC4);
-    // adc1.enableContinous();
     adc1.enableAutoInject(false);
 
     HX711 hx711(portA[6], portA[1]);
