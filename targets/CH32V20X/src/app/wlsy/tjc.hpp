@@ -41,7 +41,7 @@ public:
         TJC & instance;
         uint8_t ctrl_id;
 
-        Ctrl(TJC & _instance, const uint8_t & _ctrl_id):instance(_instance), ctrl_id(_ctrl_id){;}
+        Ctrl(TJC & _instance, const uint8_t _ctrl_id):instance(_instance), ctrl_id(_ctrl_id){;}
     };
 
     class Waveform;
@@ -53,7 +53,7 @@ public:
 
         WaveWindow(TJC & _instance, const uint8_t & _ctrl_id):Ctrl(_instance, _ctrl_id){;}
 
-        void addChData(const uint8_t & channel_id,const uint8_t & data){
+        void addChData(const uint8_t & channel_id,const uint8_t data){
             instance.print(String("add " + String(ctrl_id) + ',' + String(channel_id) + ',' + String(data)));
         }
 
@@ -66,7 +66,7 @@ public:
         const uint8_t channel_id;
         const Range range;
     public:
-        Waveform(WaveWindow & _parent, const uint8_t _channel_id, const Range _range):parent(_parent), channel_id(_channel_id), range(_range){;}
+        Waveform(WaveWindow & _parent, const uint8_t _channel_id, Range && _range):parent(_parent), channel_id(_channel_id), range(_range){;}
 
         void addData(const auto & data){
             real_t value = data;
@@ -86,7 +86,7 @@ public:
 
 
         void setValue(const real_t value){
-            text = String(float(value));
+            text = String(float(value), 2);
             setText(text);
         }
 

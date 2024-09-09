@@ -21,6 +21,7 @@ enum class SubSceneIndex:uint8_t{
     OUTPUT, 
     EXAM
 };
+
 class Scene{
 
 
@@ -71,10 +72,9 @@ public:
         context.volt_label->setValue(im_info.volt);
         context.watt_label->setValue(im_info.watt);
 
-        context.heat_l_label->setText(String(float(im_info.tmp_l)) + "℃");
-        context.heat_h_label->setText(String(float(im_info.tmp_h)) + "℃");
+        context.heat_l_label->setText(String(float(im_info.tmp_l),1) + "℃");
+        context.heat_h_label->setText(String(float(im_info.tmp_h),1) + "℃");
 
-        // DEBUG_PRINTLN(im_info.amps, im_info.volt, im_info.watt);
     }
 };
 
