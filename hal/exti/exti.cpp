@@ -1,7 +1,7 @@
 #include "exti.hpp"
 
 static std::array<std::function<void(void)>, 21> funcs;
-void ExtiChannel::bindCb(const std::function<void(void)> & func){
+void ExtiChannel::bindCb(std::function<void(void)> && func){
     funcs[CTZ((uint32_t)line)] = func;
 }
 

@@ -26,10 +26,7 @@ void wlsy_main(){
     led_gpio.outpp(1);
 
 
-    auto &              trig_gpio(portA[0]);
-    trig_gpio.inpu();
-    ExtiChannel         trig_ecti_ch(trig_gpio, NvicPriority(1, 0), ExtiChannel::Trigger::RisingFalling);
-    CaptureChannelExti  cap(trig_ecti_ch, trig_gpio);
+    CaptureChannelExti  cap({portA[0], {1, 0}, ExtiChannel::Trigger::RisingFalling});
     SpeedCapture speedCapture{cap};
 
     speedCapture.init();
