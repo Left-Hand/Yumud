@@ -3,33 +3,33 @@
 
 #include "../drivers/device_defs.h"
 #include "../types/real.hpp"
+#include <bit>
 
 #ifdef INA226_DEBUG
+#undef INA226_DEBUG
 #define INA226_DEBUG(...) DEBUG_LOG(...)
+#else 
+#define INA226_DEBUG(...)
 #endif
 
 
 class INA226 {
 public:
+
     enum class AverageTimes:uint8_t{
-        Sample1 = 0,
-        Sample4 = 1,
-        Sample16 = 2,
-        Sample64 = 3,
-        Sample128 = 4,
-        Sample256 = 5,
-        Sample512 = 6,
-        Sample1024 = 7
+        _1 = 0,
+        _4 = 1,
+        _16 = 2,
+        _64 = 3,
+        _128 = 4,
+        _256 = 5,
+        _512 = 6,
+        _1024 = 7
     };
 
-    enum class BusVoltageConversionTime:uint8_t{
-        us140 = 0, us204, us332, us588, ms1_1, ms2_116, ms4_156, ms8_244
+    enum class ConversionTime:uint8_t{
+        _140us = 0, _204us, _332us, _588us, _1_1ms, _2_116_ms, _4_156ms, _8_244ms
     };
-
-    enum class ShuntVoltageConversionTime:uint8_t{
-        us140 = 0, us204, us332, us588, ms1_1, ms2_116, ms4_156, ms8_244
-    };
-
 
 protected:
     I2cDrv i2c_drv;
@@ -51,7 +51,6 @@ protected:
     };
 
     struct ConfigReg{
-        REG16_BEGIN
         uint16_t shuntVoltageEnable :1;
         uint16_t busVoltageEnable :1;
         uint16_t continuos :1;
@@ -60,11 +59,9 @@ protected:
         uint16_t averageMode:3;
         uint16_t __resv__:3;
         uint16_t rst:1;
-        REG16_END
     };
 
     struct MaskReg{
-        REG16_BEGIN
         uint16_t alertLatchEnable:1;
         uint16_t alertPolarity:1;
         uint16_t mathOverflow:1;
@@ -77,7 +74,6 @@ protected:
         uint16_t busOverVoltage:1;
         uint16_t shuntUnderVoltage:1;
         uint16_t shuntOverVoltage:1;
-        REG16_END
     };
 
     struct{
@@ -93,16 +89,16 @@ protected:
         uint16_t chipIDReg;
     };
 
-    void writeReg(const RegAddress & regAddress, const uint16_t & regData){
+    void writeReg(const RegAddress regAddress, const uint16_t regData){
         i2c_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint16_t & regData){
+    void readReg(const RegAddress regAddress, uint16_t & regData){
         i2c_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
     }
 
-    void requestPool(const RegAddress & regAddress, void * data_ptr, const size_t len){
-        i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len);
+    void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
+        i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
     }
 public:
     static constexpr uint8_t default_i2c_addr = 0x80;
@@ -110,41 +106,16 @@ public:
     INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
     INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
     INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)){};
-    void update(){
-        // requestPool(RegAddress::shuntVoltage, &shuntVoltageReg, 2 * 4);
-        readReg(RegAddress::busVoltage, busVoltageReg);
-        readReg(RegAddress::current, *(uint16_t *)&currentReg);
-        readReg(RegAddress::power, powerReg);
-    }
 
 
-    void init(const real_t ohms, const real_t max_current_a){
-        configReg.rst = 0b0;
-        configReg.__resv__ = 0b100;
+    void update();
 
-        setAverageTimes(16);
-        setBusConversionTime(BusVoltageConversionTime::us140);
-        setShuntConversionTime(ShuntVoltageConversionTime::us140);
-        enableBusVoltageMeasure();
-        enableContinuousMeasure();
-        enableShuntVoltageMeasure();
 
-        currentLsb = max_current_a * real_t(1/32768.0);
-        calibrationReg = (uint16_t)real_t(real_t(0.00512 * 32768) / (ohms * max_current_a));
-        writeReg(RegAddress::calibration, calibrationReg);
+    void init(const real_t ohms, const real_t max_current_a);
 
-        delay(10);
-    }
+    void setAverageTimes(const uint16_t times);
 
-    uint16_t isValid(){
-        static constexpr uint16_t valid_manu_id = 0x5449;
-        static constexpr uint16_t valid_chip_id = 0x2260;
-
-        readReg(RegAddress::chipID, chipIDReg);
-        readReg(RegAddress::manufactureID, manufactureIDReg);
-
-        return chipIDReg == valid_chip_id && manufactureIDReg == valid_manu_id;
-    }
+    bool verify();
 
     real_t getVoltage(){
         return busVoltageReg * voltageLsb;
@@ -167,59 +138,47 @@ public:
         return powerReg * currentLsb * 25;
     }
 
-    void setAverageTimes(const uint16_t & times){
-        uint8_t temp = CTZ(times);
-        uint8_t temp2;
 
-        if(times <= 64){
-            temp2 = temp / 2;
-        }else{
-            temp2 = 4 + (temp - 7); 
-        }
 
-        configReg.averageMode = temp2;
-        writeReg(RegAddress::Config, configReg.data);
-    }
-
-    void setAverageTimes(const AverageTimes & times){
+    void setAverageTimes(const AverageTimes times){
         configReg.averageMode = uint8_t(times);
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void setBusConversionTime(const BusVoltageConversionTime & time){
+    void setBusConversionTime(const ConversionTime &time){
         configReg.busVoltageConversionTime = uint8_t(time);
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void setShuntConversionTime(const ShuntVoltageConversionTime & time){
+    void setShuntConversionTime(const ConversionTime &time){
         configReg.shuntVoltageConversionTime = uint8_t(time);
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
     void reset(){
         configReg.rst = 1;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
         configReg.rst = 0;
     }
 
-    void enableShuntVoltageMeasure(const bool & en = true){
+    void enableShuntVoltageMeasure(const bool en = true){
         configReg.shuntVoltageEnable = en;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void enableBusVoltageMeasure(const bool & en = true){
+    void enableBusVoltageMeasure(const bool en = true){
         configReg.busVoltageEnable = en;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void enableContinuousMeasure(const bool & en = true){
+    void enableContinuousMeasure(const bool en = true){
         configReg.continuos = en;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void enableAlertLatch(const bool & en = true){
+    void enableAlertLatch(const bool en = true){
         maskReg.alertLatchEnable = en;
-        writeReg(RegAddress::mask, maskReg.data);
+        writeReg(RegAddress::mask, std::bit_cast<uint16_t>(maskReg));
     }
 };
 
