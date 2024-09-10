@@ -53,7 +53,7 @@ void wlsy_main(){
 
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
-    auto  & en_gpio = portB[0];
+    auto & en_gpio = portB[0];
 
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
@@ -75,7 +75,6 @@ void wlsy_main(){
     hx711.compensate();
 
 
-
     en_gpio.outpp(0);
     ch.setIdleState(true);
     ch.init();
@@ -91,9 +90,7 @@ void wlsy_main(){
 
 
     InputModule inputMachine{ina226, heater, ntc_l, ntc_h};
-
     OutputModule outputMachine{speedCapture, hx711};
-
     BackModule machine{inputMachine, outputMachine};
 
     TJC tjc{uart1};
@@ -139,7 +136,6 @@ void wlsy_main(){
     };
 
     MainScene main_scene{machine, {&input_scene, &output_scene, &exam_scene}};
-
     FrontModule interact{machine, main_scene};
 
 
@@ -149,7 +145,7 @@ void wlsy_main(){
         ntc_h.update();
         buck.run();
     });
-    timer2.enableIt(TimerUtils::IT::Update, {1,1});
+    timer2.enableIt(TimerUtils::IT::Update, {0,0});
 
     machine.init();
     interact.init();

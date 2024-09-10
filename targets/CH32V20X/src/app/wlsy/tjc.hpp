@@ -22,17 +22,13 @@ protected:
 public:
     TJC(Uart & _uart):uart(_uart){;}
     void init(){
-        // uart.init(921600);
         uart.setSpace("");
     }
-
 
 
     void print(const String & str){
         uart.print(str);
         end();
-        DEBUG_PRINTLN(str);
-        // delay(1);
     }
 
 
@@ -54,7 +50,9 @@ public:
         WaveWindow(TJC & _instance, const uint8_t & _ctrl_id):Ctrl(_instance, _ctrl_id){;}
 
         void addChData(const uint8_t & channel_id,const uint8_t data){
-            instance.print(String("add " + String(ctrl_id) + ',' + String(channel_id) + ',' + String(data)));
+            auto str = String("add " + String(ctrl_id) + ',' + String(channel_id) + ',' + String(data));
+            instance.print(str);
+            // DEBUG_PRINTLN(str);
         }
 
         // Waveform getChannel(const uint8_t & channel_id){return Waveform(*this, channel_id);}
@@ -70,8 +68,8 @@ public:
 
         void addData(const auto & data){
             real_t value = data;
-            auto ratio = INVLERP(value, range.from, range.to);
-            parent.addChData(channel_id, uint8_t(LERP(ratio, real_t(0), real_t(255))));
+            auto ratio = range.invlerp(value);
+            parent.addChData(channel_id, uint8_t((255 * ratio)));
         }
     };
 
