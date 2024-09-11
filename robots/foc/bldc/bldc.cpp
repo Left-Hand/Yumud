@@ -182,28 +182,16 @@ int bldc_main(){
     slp_gpio.outpp(0);
 
     timer1.init(chopper_freq, TimerUtils::Mode::CenterAlignedUpTrig);
-    // timer1.init(100, TimerUtils::Mode::CenterAlignedUpTrig);
-    // timer1.enableArrSync();
 
     auto & pwm_u = timer1.oc(1); 
     auto & pwm_v = timer1.oc(2); 
     auto & pwm_w = timer1.oc(3); 
+
     timer1.oc(4).init(TimerUtils::OcMode::UpValid, false);
+    timer1.oc(4).setOutputState(true);
 
-    TIM_OCInitTypeDef  TIM_OCInitStructure;
-
-    TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-    TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-
-    // TIM_OC1Init(TIM1, &TIM_OCInitStructure);
-    // TIM_OC2Init(TIM1, &TIM_OCInitStructure);
-    // TIM_OC3Init(TIM1, &TIM_OCInitStructure);
-    TIM_OC4Init(TIM1, &TIM_OCInitStructure);
-
-    // TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
-
-    // timer1.oc(4).cnt() = ;
+    timer1.oc(4).cvr() = timer1.arr()-1;
+    timer1.oc(4).setIdleState(false);
 
     pwm_u.init();
     pwm_v.init();
@@ -220,9 +208,8 @@ int bldc_main(){
 
     Odometer odo{ma730};
     odo.init();
-    timer1.oc(4).cvr() = timer1.arr()-1;
 
-    // ma730.setDirection(false);
+
 
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
@@ -231,9 +218,9 @@ int bldc_main(){
         {
             AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
         },{
-            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T1_5},
-            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T1_5},
-            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T1_5},
+            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T28_5},
+            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
+            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
             // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T28_5},
             // AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
             // AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
@@ -266,7 +253,6 @@ int bldc_main(){
     Voltage bus_volt = 0;
     real_t adc_data[4];
     real_t est_rad;
-    uint16_t adc_data_cache[4];
 
     auto data_to_curr = [](const real_t data) -> real_t{
         static constexpr real_t mul = real_t((3.3 * 9800 / 1000));
@@ -363,8 +349,6 @@ int bldc_main(){
 
     adc1.bindCb(AdcUtils::IT::JEOC, cb);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
-
-    // DEBUG_PRINTLN(uvw_curr_drift);
 
     en_gpio = true;
     slp_gpio = true;

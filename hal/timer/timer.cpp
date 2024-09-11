@@ -1,7 +1,7 @@
 #include "timer.hpp"
 #include "../sys/core/system.hpp"
 
-static void TIM_RCC_ON(const TIM_TypeDef * instance){
+void BasicTimer::enableRcc(){
     switch(uint32_t(instance)){
         #ifdef HAVE_TIM1
         case TIM1_BASE:
@@ -92,14 +92,15 @@ static void TIM_RCC_ON(const TIM_TypeDef * instance){
     }
 }
 
-static uint32_t TIM_Get_BusFreq(const TIM_TypeDef * instance){
+uint BasicTimer::getClk(){
     return TimerUtils::isAdvancedTimer(instance) ? Sys::Clock::getAPB2Freq() : Sys::Clock::getAPB1Freq();
 }
 
 
 void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
-    TIM_RCC_ON(instance);
-    uint32_t raw_period = TIM_Get_BusFreq(instance) / freq;
+    this->enableRcc();
+    uint32_t raw_period = this->getClk() / freq;
+
     // TIM_Get_BusFreq(instance);
     // uint32_t raw_period = 144000000 / freq;
 
@@ -117,24 +118,24 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
 }
 
 void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mode, const bool en){
-    TIM_RCC_ON(instance);
+    this->enableRcc();
+
     TIM_InternalClockConfig(instance);
-    TIM_DeInit(instance);
 
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
+        .TIM_Prescaler = uint16_t(MAX(cycle - 1, 0)),
+        .TIM_CounterMode = (uint16_t)mode,
+        .TIM_Period = uint16_t(MAX(period - 1, 0)),
+        .TIM_ClockDivision = TIM_CKD_DIV1,
+        .TIM_RepetitionCounter = 0,
+    };
 
-    TIM_TimeBaseStructure.TIM_Period = MAX(period - 1, 0);
-    TIM_TimeBaseStructure.TIM_Prescaler = MAX(cycle - 1, 0);
-    TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-    TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
-    TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
-    TIM_Get_BusFreq(instance);
+    TIM_TimeBaseInit(instance, &TIM_TimeBaseStructure);
+    this->getClk();
     TIM_ClearFlag(instance, 0x1e7f);
     TIM_ClearITPendingBit(instance, 0x00ff);
     enable(en);
 }
-
 
 
 void BasicTimer::enable(const bool en){
@@ -149,27 +150,37 @@ void BasicTimer::enable(const bool en){
 }
 
 void GenericTimer::initAsEncoder(const Mode mode){
-    TIM_RCC_ON(instance);
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
+    this->enableRcc();
 
 
-    TIM_TimeBaseStructure.TIM_Period = 65535;
-    TIM_TimeBaseStructure.TIM_Prescaler = 0;
-    TIM_TimeBaseStructure.TIM_ClockDivision = TIM_CKD_DIV1;
-    TIM_TimeBaseStructure.TIM_CounterMode = (uint16_t)mode;
-    TIM_TimeBaseStructure.TIM_RepetitionCounter = 0;
-    TIM_TimeBaseInit(instance,&TIM_TimeBaseStructure);
+    {
+        TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
+            .TIM_Prescaler = 0,
+            .TIM_CounterMode = (uint16_t)mode,
+            .TIM_Period = 65535,
+            .TIM_ClockDivision = TIM_CKD_DIV1,
+            .TIM_RepetitionCounter = 0,
+        };
 
-	TIM_ICInitTypeDef TIM_ICInitStruct;
-    TIM_ICStructInit(&TIM_ICInitStruct);
-
-	TIM_ICInitStruct.TIM_Channel = TIM_Channel_1;
-	TIM_ICInitStruct.TIM_ICFilter = 0xF;
+        TIM_TimeBaseInit(instance, &TIM_TimeBaseStructure);
+    }
 
 
-	TIM_ICInit(instance,&TIM_ICInitStruct);
-	TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;
-	TIM_ICInit(instance,&TIM_ICInitStruct);
+    {
+        TIM_ICInitTypeDef TIM_ICInitStruct = {
+            .TIM_Channel = TIM_Channel_1,
+            .TIM_ICPolarity = TIM_ICPolarity_Rising,
+            .TIM_ICSelection = TIM_ICSelection_DirectTI,
+            .TIM_ICPrescaler = TIM_ICPSC_DIV1,
+            .TIM_ICFilter = 0x0F
+        };
+
+        TIM_ICInit(instance,&TIM_ICInitStruct);
+
+        TIM_ICInitStruct.TIM_Channel = TIM_Channel_2;
+        TIM_ICInit(instance,&TIM_ICInitStruct);
+    }
+
 	TIM_EncoderInterfaceConfig(instance,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
     TIM_Cmd(instance, ENABLE);
 }
@@ -178,38 +189,58 @@ void GenericTimer::enableSingle(const bool _single){
     TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
 }
 
-// void AdvancedTimer::init
 
-uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
-	RCC_ClocksTypeDef RCC_CLK;
-    RCC_GetClocksFreq(&RCC_CLK);
-	uint64_t busFreq = RCC_CLK.PCLK2_Frequency;
+
+void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
+
+    TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
+        .TIM_OSSRState = TIM_OSSRState_Disable,
+        .TIM_OSSIState = TIM_OSSIState_Disable,
+        .TIM_LOCKLevel = (uint16_t)level,
+        .TIM_DeadTime = this->calculateDeadzone(ns),
+        .TIM_Break = TIM_Break_Disable,
+        .TIM_BreakPolarity = TIM_BreakPolarity_Low,
+        .TIM_AutomaticOutput = TIM_AutomaticOutput_Enable
+    };
+
+    TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
+}
+
+void AdvancedTimer::setDeadZone(const uint32_t ns){
+    uint8_t dead = this->calculateDeadzone(ns);
+
+    uint16_t tempreg = instance->BDTR;
+    tempreg &= 0xff00;
+    tempreg |= dead;
+    instance->BDTR = tempreg;
+}
+
+uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
+	const uint64_t busFreq = this->getClk();
 
     uint8_t dead = (ns * (busFreq / 1000000) / 1000);
-    uint8_t head = 0;
-    uint8_t mask = 0xff;
 
     if(dead < 128){
 
     }else if(dead < 256){
-        head = 0b10000000;
-        mask = 0b00111111;
+        uint8_t head = 0b10000000;
+        uint8_t mask = 0b00111111;
 
         dead = MIN(dead, 254) / 2;
         dead -= 64;
         dead &= mask;
         dead |= head;
     }else if(dead < 509){
-        head = 0b11000000;
-        mask = 0b00011111;
+        uint8_t head = 0b11000000;
+        uint8_t mask = 0b00011111;
 
         dead = MIN(dead, 504) / 8;
         dead -= 32;
         dead &= mask;
         dead |= head;
     }else if(dead < 1009){
-        head = 0b11100000;
-        mask = 0b00011111;
+        uint8_t head = 0b11100000;
+        uint8_t mask = 0b00011111;
 
         dead = MIN(dead, 1008) / 16;
         dead -= 32;
@@ -218,27 +249,6 @@ uint8_t AdvancedTimer::caculate_dead_zone(uint32_t ns){
     }else{
         dead = 0xff;
     }
+
     return dead;
-}
-
-void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
-
-    TIM_BDTRInitTypeDef TIM_BDTRInitStructure;
-    TIM_BDTRInitStructure.TIM_OSSIState = TIM_OSSIState_Disable;
-    TIM_BDTRInitStructure.TIM_OSSRState = TIM_OSSRState_Disable;
-    TIM_BDTRInitStructure.TIM_LOCKLevel = (uint16_t)level;
-    TIM_BDTRInitStructure.TIM_DeadTime = caculate_dead_zone(ns);
-    TIM_BDTRInitStructure.TIM_Break = TIM_Break_Disable;
-    TIM_BDTRInitStructure.TIM_BreakPolarity = TIM_BreakPolarity_Low;
-    TIM_BDTRInitStructure.TIM_AutomaticOutput = TIM_AutomaticOutput_Enable;
-    TIM_BDTRConfig(instance, &TIM_BDTRInitStructure);
-}
-
-void AdvancedTimer::setDeadZone(const uint32_t ns){
-    uint8_t dead = caculate_dead_zone(ns);
-
-    uint16_t tempreg = instance->BDTR;
-    tempreg &= 0xff00;
-    tempreg |= dead;
-    instance->BDTR = tempreg;
 }
