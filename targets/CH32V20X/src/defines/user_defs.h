@@ -9,7 +9,7 @@
 
 #define DEBUGGER uart2
 #define LOGGER uart2
-#define DEBUG_UART_BAUD 115200
+#define DEBUG_UART_BAUD 576000
 #include "embd_defs.h"
 #endif
 

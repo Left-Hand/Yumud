@@ -3,7 +3,7 @@
 #include "../hal/gpio/gpio.hpp"
 #include "pwm_channel.hpp"
 
-class GpioPwm:public PwmChannel, public Countable{
+class GpioPwm:public PwmChannel, public Countable<uint16_t>{
 protected:
     Gpio & gpio_;
     volatile uint16_t cnt_ = 0;
@@ -22,8 +22,6 @@ public:
         init();
         arr_ = _arr;
     }
-
-
 
     __fast_inline volatile uint16_t & cnt() override {return cnt_;}
     __fast_inline volatile uint16_t & cvr() override {return cvr_;}
