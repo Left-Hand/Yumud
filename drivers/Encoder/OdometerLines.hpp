@@ -1,17 +1,20 @@
-#ifndef __ODOMETER_LINES_HPP__
-
-#define __ODOMETER_LINES_HPP__
+#pragma once
 
 #include "Odometer.hpp"
 
+class OdometerScaled:public Odometer{
+protected:
+    real_t scale;
+public:
+    OdometerScaled(Encoder & _encoder, const real_t _scale):
+        Odometer(_encoder),scale(_scale){;}
+};
+
 class OdometerLines:public OdometerScaled{
 public:
-    OdometerLines(Encoder & _encoder, const int & _lines):
-            // OdometerScaled(_encoder, real_t((uint32_t)(16384  << 16) / _lines) >> 16){;}
-                OdometerScaled(_encoder, real_t(real_t(16384) / real_t(_lines))){;}
+    OdometerLines(Encoder & _encoder, const int _lines):
+        OdometerScaled(_encoder, real_t(real_t(16384) / real_t(_lines))){;}
     real_t getPosition() override{
         return Odometer::getPosition() * scale;
     }
 };
-
-#endif

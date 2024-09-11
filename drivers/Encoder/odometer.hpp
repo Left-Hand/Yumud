@@ -77,13 +77,7 @@ public:
 };
 
 
-class OdometerScaled:public Odometer{
-protected:
-    real_t scale;
-public:
-    OdometerScaled(Encoder & _encoder, const real_t _scale):
-        Odometer(_encoder),scale(_scale){;}
-};
+
 
 class OdometerPoles:public Odometer{
 protected:

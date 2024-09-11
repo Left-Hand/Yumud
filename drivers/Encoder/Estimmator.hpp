@@ -8,12 +8,9 @@
 #include "../sys/core/system.hpp"
 
 class Estimmator{
-// protected:
 public:
-
     using PositionObserver =  LinearObersver_t<real_t, real_t>;
     Odometer & instance;
-    // real_t lastPosition;
     PositionObserver positionObserver;
     LowpassFilter_t<real_t, real_t>speed_lpf = LowpassFilter_t<real_t, real_t>(real_t(30.0));
     real_t speed;
@@ -27,6 +24,7 @@ public:
     virtual void init(){
         instance.init();
     }
+
     void update(const real_t pos){
         instance.update();
 
