@@ -53,7 +53,7 @@ protected:
         GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
         instance(_instance),
 
-        #if defined(USE_CH32_STD_LIB)
+        #if defined(CH32V20X) || defined(CH32V30X)
         pin(((_instance == GPIOC) && 
             (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
             ) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),

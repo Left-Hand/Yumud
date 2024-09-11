@@ -40,8 +40,8 @@ int main(){
     // qlz_main();
     // embd_main();
     // embd_main();
-    // bldc_main();
-    wlsy_main();
+    bldc_main();
+    // wlsy_main();
     // lt8920_main();
     // ma730_main();
     // bmi160_main();

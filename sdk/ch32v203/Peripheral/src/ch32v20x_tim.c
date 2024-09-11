@@ -78,7 +78,7 @@ void TIM_DeInit(TIM_TypeDef *TIMx)
  *
  * @return  none
  */
-void TIM_TimeBaseInit(TIM_TypeDef *TIMx, TIM_TimeBaseInitTypeDef *TIM_TimeBaseInitStruct)
+void TIM_TimeBaseInit(TIM_TypeDef *TIMx, const TIM_TimeBaseInitTypeDef * TIM_TimeBaseInitStruct)
 {
     uint16_t tmpcr1 = 0;
 
@@ -116,7 +116,7 @@ void TIM_TimeBaseInit(TIM_TypeDef *TIMx, TIM_TimeBaseInitTypeDef *TIM_TimeBaseIn
  *
  * @return  none
  */
-void TIM_OC1Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC1Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef * TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
@@ -163,7 +163,7 @@ void TIM_OC1Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
  *
  * @return  none
  */
-void TIM_OC2Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC2Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef *TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
@@ -208,7 +208,7 @@ void TIM_OC2Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
  *
  * @return  none
  */
-void TIM_OC3Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC3Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef *TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
@@ -252,7 +252,7 @@ void TIM_OC3Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
  *
  * @return  none
  */
-void TIM_OC4Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
+void TIM_OC4Init(TIM_TypeDef *TIMx, const TIM_OCInitTypeDef *TIM_OCInitStruct)
 {
     uint16_t tmpccmrx = 0, tmpccer = 0, tmpcr2 = 0;
 
@@ -289,7 +289,7 @@ void TIM_OC4Init(TIM_TypeDef *TIMx, TIM_OCInitTypeDef *TIM_OCInitStruct)
  *
  * @return  none
  */
-void TIM_ICInit(TIM_TypeDef *TIMx, TIM_ICInitTypeDef *TIM_ICInitStruct)
+void TIM_ICInit(TIM_TypeDef *TIMx, const TIM_ICInitTypeDef *TIM_ICInitStruct)
 {
     if(TIM_ICInitStruct->TIM_Channel == TIM_Channel_1)
     {
@@ -333,7 +333,7 @@ void TIM_ICInit(TIM_TypeDef *TIMx, TIM_ICInitTypeDef *TIM_ICInitStruct)
  *
  * @return  none
  */
-void TIM_PWMIConfig(TIM_TypeDef *TIMx, TIM_ICInitTypeDef *TIM_ICInitStruct)
+void TIM_PWMIConfig(TIM_TypeDef *TIMx, const TIM_ICInitTypeDef *TIM_ICInitStruct)
 {
     uint16_t icoppositepolarity = TIM_ICPolarity_Rising;
     uint16_t icoppositeselection = TIM_ICSelection_DirectTI;
@@ -385,7 +385,7 @@ void TIM_PWMIConfig(TIM_TypeDef *TIMx, TIM_ICInitTypeDef *TIM_ICInitStruct)
  *
  * @return  none
  */
-void TIM_BDTRConfig(TIM_TypeDef *TIMx, TIM_BDTRInitTypeDef *TIM_BDTRInitStruct)
+void TIM_BDTRConfig(TIM_TypeDef *TIMx, const TIM_BDTRInitTypeDef *TIM_BDTRInitStruct)
 {
     TIMx->BDTR = (uint32_t)TIM_BDTRInitStruct->TIM_OSSRState | TIM_BDTRInitStruct->TIM_OSSIState |
                  TIM_BDTRInitStruct->TIM_LOCKLevel | TIM_BDTRInitStruct->TIM_DeadTime |
