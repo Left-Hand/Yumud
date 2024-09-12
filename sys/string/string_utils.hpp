@@ -19,6 +19,8 @@ namespace StringUtils {
 
 void reverse_str(char * str,const size_t len);
 std::tuple<int,int,int> disassemble_fstr(const char * str, const size_t len = UINT_MAX);
+int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len);
+void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len);
 
 bool is_numeric(const char * str, const size_t len = UINT_MAX);
 bool is_digit(const char * str, const size_t len = UINT_MAX);
@@ -33,11 +35,10 @@ void ftoa(float value, char * str, uint8_t eps);
 void qtoa(const iq_t value, char * str, uint8_t eps);
 
 
-int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len);
-void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len);
-
 int atoi(const char * str, const size_t len);
 float atof(const char * str, const size_t len);
+iq_t atoq(const char * str, const size_t len);
+
 __inline int atoi(const char * str){return atoi(str, strlen(str));}
 __inline float atof(const char * str){return atof(str, strlen(str));};
 }

@@ -191,18 +191,15 @@ public:
 	void trim(void);
 	void alphanum(void);
 
-	// parsing/conversion
-	long toInt(void) const;
-	float toFloat(void) const;
-
     bool isNumeric(void) const;
     bool isDigit(void) const;
 
 
 	template<integral T>
-    explicit operator T(void) const{return toInt();}
+    explicit operator T(void) const{return (StringView(*this));}
 
-    explicit operator float(void) const{return toFloat();}
+	template<floating T>
+    explicit operator T(void) const{return T(StringView(*this));}
 
 	explicit operator iq_t() const {return iq_t(StringView(*this));}
 

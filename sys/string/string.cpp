@@ -718,21 +718,6 @@ void String::alphanum(void){
 	buffer[len] = 0;
 	free(new_buf);
 }
-/*********************************************/
-/*  Parsing / Conversion                     */
-/*********************************************/
-
-long String::toInt(void) const
-{
-	if (buffer) return atol(buffer);
-	return 0;
-}
-
-float String::toFloat(void) const
-{
-	if (buffer) return float(atof(buffer));
-	return 0;
-}
 
 bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str());}
 bool String::isDigit(void) const {return StringUtils::is_digit(c_str());}

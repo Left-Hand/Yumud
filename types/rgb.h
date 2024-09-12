@@ -169,7 +169,7 @@ struct Grayscale{
 
     __fast_inline constexpr operator uint8_t() const {return data;}
 
-    __no_inline Grayscale(const String & str): Grayscale(str.toInt()){;}
+    __no_inline Grayscale(const String & str): Grayscale(int(str)){;}
 
     __fast_inline constexpr explicit operator bool() const {return data;}
 
