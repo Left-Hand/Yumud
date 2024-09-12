@@ -30,6 +30,22 @@ using Sys::t;
 void digipw_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
+    /*-----------------------*/
+
+    auto & scl_gpio = portB[15];
+    auto & sda_gpio = portB[14];
+
+    I2cSw i2csw{scl_gpio, sda_gpio};
+    i2csw.init(100000);
+
+    INA226 ina226{i2csw};
+    ina226.init(real_t(0.006), 5);
+
+    auto curr_ch = ina226.ch(INA226::Index::CURRENT);
+    auto volt_ch = ina226.ch(INA226::Index::BUS_VOLT);
+
+    /*-----------------------*/
+
     timer1.init(120'000);
     timer1.initBdtr(100);
 
@@ -43,5 +59,8 @@ void digipw_main(){
 
     while(true){
         mp1907 = real_t(0.5) + real_t(0.5) * sin(t);
+
+        ina226.update();
+        DEBUG_PRINTLN(real_t(curr_ch), real_t(volt_ch));
     }
 }

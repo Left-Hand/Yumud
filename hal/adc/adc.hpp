@@ -24,16 +24,12 @@ public:
 };
 
 struct AdcChannelConfig{
-// protected:
 public:
     using Channel = AdcUtils::Channel;
     using SampleCycles = AdcUtils::SampleCycles;
 
     Channel channel;
-    SampleCycles cycles;
-public:
-    AdcChannelConfig(const Channel _channel, const SampleCycles _cycles = SampleCycles::T41_5):
-            channel(_channel), cycles(_cycles){;}
+    SampleCycles cycles = SampleCycles::T41_5;
 };
 
 

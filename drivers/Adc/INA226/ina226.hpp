@@ -3,6 +3,7 @@
 
 #include "../drivers/device_defs.h"
 #include "../types/real.hpp"
+#include "hal/adc/analog_channel.hpp"
 #include <bit>
 
 #ifdef INA226_DEBUG
@@ -100,18 +101,70 @@ protected:
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
         i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
     }
+
+    class CurrentChannel;
+    class VoltageChannel;
+
+    friend class CurrentChannel;
+    friend class VoltageChannel;
+
+    struct INA226Channel:public AnalogInChannel{
+    public:
+        enum class Index:uint8_t{
+            SHUNT_VOLT,
+            BUS_VOLT,
+            CURRENT,
+            POWER
+        };
+
+    protected:
+        INA226 & parent_;
+        Index ch_;
+    public:
+        INA226Channel(INA226 & _parent, const Index _ch):parent_(_parent), ch_(_ch){}
+
+        operator real_t() override{
+            switch(ch_){
+                case Index::SHUNT_VOLT:
+                    return parent_.getShuntVoltage();
+                case Index::BUS_VOLT:
+                    return parent_.getVoltage();
+                case Index::CURRENT:
+                    return parent_.getCurrent();
+                case Index::POWER:
+                    return parent_.getPower();
+                default:
+                    return 0;
+            }
+        }
+    };
+
+
+    std::array<INA226Channel, 4> channels;
 public:
+    using Index = INA226Channel::Index;
+    
     static constexpr uint8_t default_i2c_addr = 0x80;
 
-    INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)){};
+    #define CHANNEL_CONTEX\
+        INA226Channel{*this, INA226Channel::Index::SHUNT_VOLT},\
+        INA226Channel{*this, INA226Channel::Index::BUS_VOLT},\
+        INA226Channel{*this, INA226Channel::Index::CURRENT},\
+        INA226Channel{*this, INA226Channel::Index::POWER}\
 
+    INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
+    INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
+    INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTEX}{};
+
+    auto ch(const Index index){
+        return channels[uint8_t(index)];
+    }
 
     void update();
 
-
     void init(const real_t ohms, const real_t max_current_a);
+
+    void config(const real_t ohms, const real_t max_current_a);
 
     void setAverageTimes(const uint16_t times);
 
@@ -137,8 +190,6 @@ public:
     real_t getPower(){
         return powerReg * currentLsb * 25;
     }
-
-
 
     void setAverageTimes(const AverageTimes times){
         configReg.averageMode = uint8_t(times);

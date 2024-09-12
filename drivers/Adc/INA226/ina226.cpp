@@ -20,11 +20,15 @@ void INA226::init(const real_t ohms, const real_t max_current_a){
     enableContinuousMeasure();
     enableShuntVoltageMeasure();
 
+    config(ohms, max_current_a);
+
+    delay(10);
+}
+
+void INA226::config(const real_t ohms, const real_t max_current_a){
     currentLsb = max_current_a * real_t(1/32768.0);
     calibrationReg = (uint16_t)real_t(real_t(0.00512 * 32768) / (ohms * max_current_a));
     writeReg(RegAddress::calibration, calibrationReg);
-
-    delay(10);
 }
 
 void INA226::setAverageTimes(const uint16_t times){
