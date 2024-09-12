@@ -2,7 +2,6 @@
 // #include <sstl/queue.h>
 // #include <sstl/deque.h>
 
-#include "types/real.hpp"
 
 #include "dsp/filter/LowpassFilter.hpp"
 

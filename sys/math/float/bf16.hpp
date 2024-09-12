@@ -1,8 +1,7 @@
 #pragma once
 
 #include "fp32.hpp"
-
-#include "types/real.hpp"
+#include "math/real.hpp"
 
 #include <cstdint>
 #include <bit>

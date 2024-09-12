@@ -3,7 +3,7 @@
 #include "../sys/core/system.hpp"
 
 #include "../types/vector2/vector2_t.hpp"
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 class Mapping{
     // virtual real_t mapping(const Vector2 & from,const Vector2 & to, const real_t x) = 0;

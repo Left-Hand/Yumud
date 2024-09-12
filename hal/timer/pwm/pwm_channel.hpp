@@ -2,7 +2,7 @@
 
 #define __PWMCHANNEL_HPP__
 
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 class PwmChannel{
 public:

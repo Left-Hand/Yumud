@@ -3,7 +3,7 @@
 #define __CORDIC_HPP__
 
 #include "../constexprmath/ConstexprMath.hpp"
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 
 template<typename real, int size>

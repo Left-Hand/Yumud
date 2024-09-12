@@ -4,7 +4,7 @@
 
 #include "../sys/stream/stream.hpp"
 #include "../sys/string/string.hpp"
-#include "../types/iq/iqt.hpp"
+#include "../sys/math/iq/iqt.hpp"
 
 struct iq_t;
 

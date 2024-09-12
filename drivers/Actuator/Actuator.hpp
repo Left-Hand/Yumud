@@ -3,7 +3,7 @@
 #define __ACTUATOR_HPP__
 
 #include "../hal/timer/pwm/pwm_channel.hpp"
-#include "real.hpp"
+#include "sys/math/real.hpp"
 
 class Actuator{
 protected:

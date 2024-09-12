@@ -3,7 +3,7 @@
 #define __HMC5883L_HPP__
 
 #include "../drivers/device_defs.h"
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 class HMC5883L:public Magnetometer{
 public:

@@ -8,7 +8,7 @@
 #include "uint24_t.h"
 
 #ifdef __cplusplus
-#include "real.hpp"
+#include "sys/math/real.hpp"
 #include "sys/string/string.hpp"
 #endif
 

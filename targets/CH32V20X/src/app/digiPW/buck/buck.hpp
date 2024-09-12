@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 #include "../hal/adc/analog_channel.hpp"
 #include "../drivers/Actuator/Driver/CoilDriver.hpp"
 #include <bit>

@@ -3,7 +3,6 @@
 #include "../../hal/bus/spi/spidrv.hpp"
 #include "../../hal/bus/i2c/i2cdrv.hpp"
 #include <optional>
-#include "types/real.hpp"
 // #include "types/uint128_t.h"
 
 #ifdef XL2400_DEBUG

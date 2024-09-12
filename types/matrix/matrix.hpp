@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <cstdint>
 
-#include "../real.hpp"
+#include "sys/math/real.hpp"
 
 typedef real_t mat_real_t;
 

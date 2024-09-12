@@ -15,7 +15,7 @@ limitations under the License.
 
 #include "../sys/core/platform.h"
 #include "../sys/debug/debug_inc.h"
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 #define TM_ARCH_OPT0        (0) //default
 #define TM_ARCH_OPT1        (1)

@@ -3,7 +3,7 @@
 #define __TM8211_HPP__
 
 #include "../drivers/device_defs.h"
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 class TM8211{
 // private:

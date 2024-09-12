@@ -7,11 +7,14 @@
 
 #include "dsp/constexprmath/ConstexprMath.hpp"
 
+#if defined(RISCV)
+#include "riscv/IQmath_RV32.h"
+#endif
+
 #include "sys/string/string.hpp"
 #include "sys/string/string_view.hpp"
-#include "types/float/fp32.hpp"
+#include "sys/math/float/fp32.hpp"
 
-#include <IQmath_RV32.h>
 #include <bit>
 
 

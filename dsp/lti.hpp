@@ -2,6 +2,8 @@
 
 #define __LTI_HPP__
 
+#include "sys/math/real.hpp"
+
 #ifndef PI
 #define PI (3.141592653589793)
 #endif

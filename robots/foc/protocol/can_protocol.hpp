@@ -1,6 +1,6 @@
 #pragma once
 
-#include "types/float/bf16.hpp"
+#include "sys/math/float/bf16.hpp"
 #include "hal/bus/can/can.hpp"
 
 #include "robots/foc/stepper/constants.hpp"
