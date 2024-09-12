@@ -19,8 +19,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef String_class_h
-#define String_class_h
+#pragma once
 #ifdef __cplusplus
 
 #include <stdlib.h>
@@ -32,6 +31,9 @@
 
 #include "sys/string/string_utils.hpp"
 #include "sys/core/platform.h"
+
+static constexpr size_t str_int_size = 16;
+static constexpr size_t str_float_size = 16;
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
@@ -61,9 +63,10 @@ public:
 	explicit String(char c);
     explicit String(char * c);
     explicit String(char * c, const size_t size);
-	String(const std::string & str):String(str.c_str(), str.length()){};
-	String(const StringView & str):String(str.data(), str.length()){};
     explicit String(const char * c, const size_t size);
+	String(const std::string & str):String(str.c_str(), str.length()){};
+	String(const std::string_view & str):String(str.data(), str.length()){};
+	String(const StringView & str):String(str.data(), str.length()){};
 
 	explicit String(unsigned char value, unsigned char base=10);
 	explicit String(int value, unsigned char base=10);
@@ -76,6 +79,7 @@ public:
 
 	explicit String(float value, unsigned char decimalPlaces = 3);
 	explicit String(double value, unsigned char decimalPlaces = 3);
+	explicit String(const iq_t value, unsigned char decimalPlaces = 3);
 	~String(void);
 
 	// memory management
@@ -191,22 +195,27 @@ public:
 	long toInt(void) const;
 	float toFloat(void) const;
 
+    bool isNumeric(void) const;
+    bool isDigit(void) const;
+
 
 	template<integral T>
     explicit operator T(void) const{return toInt();}
 
     explicit operator float(void) const{return toFloat();}
 
+	explicit operator iq_t() const {return iq_t(StringView(*this));}
+
 	explicit operator std::string(void) const {return std::string(this->c_str(), this->length());}
 	explicit operator std::string_view(void) const {return std::string(this->c_str(), this->length());}
-	explicit operator StringView(void) const {return StringView(this->c_str(), this->length());}
-    bool isNumeric(void) const;
-    bool isDigit(void) const;
+
+	operator StringView(void) const {return StringView(this->c_str(), this->length());}
+
 
 protected:
 	char *buffer;	        // the actual char array
-	unsigned int capacity;  // the array length minus one (for the '\0')
-	unsigned int len;       // the String length (not counting the '\0')
+	size_t capacity;  // the array length minus one (for the '\0')
+	size_t len;       // the String length (not counting the '\0')
 protected:
 	void init(void);
 	void invalidate(void);
@@ -249,4 +258,3 @@ String toString(float value, unsigned char decimalPlaces = 3);
 String toString(double value, unsigned char decimalPlaces = 3);
 
 #endif  // __cplusplus
-#endif  // String_class_h

@@ -42,6 +42,8 @@ public:
     operator float() const {return StringUtils::atof(this->data(), this->length());}
 
     operator double() const {return float(*this);}
+
+    operator iq_t() const;
 private:
     const char * data_;
     size_t size_;

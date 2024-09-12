@@ -2,7 +2,8 @@
 #ifndef __BUS_HPP__
 #define __BUS_HPP__
 
-#include "../sys/core/system.hpp"
+#include "sys/core/system.hpp"
+#include "sys/stream/stream.hpp"
 
 enum class CommMethod:uint8_t{
     None = 0,

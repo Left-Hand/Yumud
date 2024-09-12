@@ -1,6 +1,30 @@
 #include "string_utils.hpp"
 
 
+void StringUtils::qtoa(char * str_int, char * str_frac, const _iq value, uint8_t eps){
+    eps = MIN(eps, 5);
+    uint32_t abs_value = value > 0 ? value : -value;
+    uint32_t int_part = abs_value >> GLOBAL_Q;
+    uint32_t float_part = abs_value & ((1 << GLOBAL_Q )- 1);
+
+    StringUtils::itoa(int_part,str_int,10);
+
+    if(eps){
+        int32_t scale = 1;
+
+        for(uint8_t i = 0; i < eps; i++){
+            scale *= 10;
+        }
+
+        float_part *= scale;
+        float_part >>= GLOBAL_Q;
+        StringUtils::itoas(float_part,str_frac, 10, eps);
+    }
+
+    str_frac[eps] = 0;
+}
+
+
 void StringUtils::reverse_str(char * str, size_t len){
 	if(len == 0) return;
 

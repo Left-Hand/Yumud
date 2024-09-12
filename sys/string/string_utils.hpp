@@ -9,6 +9,9 @@
 #include <concepts>
 
 
+#include "sys/math/iq/iqt.hpp"
+
+
 class String;
 class StringView;
 
@@ -24,6 +27,8 @@ bool is_digit(const char chr);
 void ftoa(float value, char *str, uint8_t eps);
 
 void itoa(int64_t value, char *str, uint8_t radix);
+void qtoa(char * str_int, char * str_frac, const _iq value, uint8_t eps = 3);
+
 void itoas(int value, char *str, uint8_t radix, uint8_t size);
 void iutoa(uint64_t value, char *str, uint8_t radix);
 

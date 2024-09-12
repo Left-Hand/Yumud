@@ -11,8 +11,6 @@
 #include "riscv/IQmath_RV32.h"
 #endif
 
-#include "sys/string/string.hpp"
-#include "sys/string/string_view.hpp"
 #include "sys/math/float/fp32.hpp"
 
 #include <bit>
@@ -86,11 +84,6 @@ public:
     #endif
 
     static __fast_inline constexpr iq_t form (const floating auto fv){iq_t ret; ret.value = float_to_iq(fv); return ret;}
-  
-    __no_inline explicit iq_t(const String & str):iq_t(str.c_str(), str.length()){;}
-    __no_inline explicit iq_t(const StringView & str):iq_t(str.data(), str.length()){;}
-    __no_inline explicit iq_t(const char * str):iq_t(str, strlen(str)){;}
-    __no_inline explicit iq_t(const char * str, const size_t len);
 
     __fast_inline_constexpr iq_t operator+(const iq_t other) const {
         return iq_t(_iq(value + other.value));
@@ -218,8 +211,6 @@ public:
         return float(*this);
     }
 
-    __no_inline explicit operator String() const;
-    String toString(unsigned char eps = 3) const;
 };
 
 #define IQ_OP_TEMPLATE(type, op)\

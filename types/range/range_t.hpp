@@ -1,12 +1,10 @@
-#ifndef __RANGE_HPP__
-
-#define __RANGE_HPP__
+#pragma once
 
 #include "sys/math/real.hpp"
+#include "sys/core/platform.h"
+#include "sys/stream/ostream.hpp"
 
-#include "../sys/core/platform.h"
 #include "type_traits"
-
 #include <algorithm>
 
 template<arithmetic T>
@@ -330,4 +328,3 @@ __inline OutputStream & operator<<(OutputStream & os, const Range_t<auto> & valu
     return os << '[' << value.from << ',' << value.to << ')';
 }
 
-#endif

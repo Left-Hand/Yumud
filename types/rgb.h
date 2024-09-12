@@ -86,13 +86,13 @@ public:
 
     __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)data;}
 
-    explicit operator String() const{
-        return this->toString();
-    }
+    // explicit operator String() const{
+    //     return this->toString();
+    // }
 
-    String toString(unsigned char decimalPlaces = 2) const {
-        return ('(' + String(r) + ',' + String(g) + ',' + String(b) + ')');
-    }
+    // String toString(unsigned char decimalPlaces = 2) const {
+    //     return ('(' + String(r) + ',' + String(g) + ',' + String(b) + ')');
+    // }
 #endif
 };
 
@@ -246,13 +246,13 @@ struct RGB565{
 
     __fast_inline constexpr RGB565 & operator = (const uint16_t & _data){data = _data; return *this;}
 
-    __no_inline explicit operator String() const{
-        return this->toString();
-    }
+    // __no_inline explicit operator String() const{
+    //     return this->toString();
+    // }
 
-    __no_inline String toString(unsigned char decimalPlaces = 2)const{
-        return '(' + ::toString((uint8_t)r) + ',' + ::toString((uint8_t)g) + ',' + ::toString((uint8_t)b) + ')';
-    }
+    // __no_inline String toString(unsigned char decimalPlaces = 2)const{
+    //     return '(' + ::toString((uint8_t)r) + ',' + ::toString((uint8_t)g) + ',' + ::toString((uint8_t)b) + ')';
+    // }
 #endif
 };
 
@@ -296,14 +296,6 @@ struct sGrayscale{
 
 template<typename T>
 concept monochrome = std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>;
-
-namespace RGB{
-
-    // template<typename T>
-    // __fast_inline constexpr conv(Grayscale & gs, const RGB565 & rgb565){return RGB888(rgb565.r, rgb565.g, rgb565.b);}
-    
-    __fast_inline constexpr void conv(RGB565 & rgb565,const Grayscale & gs){rgb565 = RGB565(gs);}
-}
 
 
 #endif
