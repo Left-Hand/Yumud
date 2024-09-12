@@ -1,4 +1,5 @@
 #include "current_ctrl.hpp"
+#include "types/range/range_t.hpp"
 
 real_t CurrentController::update(const real_t targ_current, const real_t real_current){
     static constexpr Range duty_range = {0,1};
