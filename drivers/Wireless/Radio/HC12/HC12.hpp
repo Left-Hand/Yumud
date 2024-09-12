@@ -3,7 +3,7 @@
 #define __HC12_HPP__
 
 #include "../hal/bus/uart/uart.hpp"
-#include "../types/string/String.hpp"
+#include "sys/string/string.hpp"
 #include "../Radio.hpp"
 
 class HC12:public IOStream, public Radio{

@@ -14,7 +14,12 @@ class AdcCompanion;
 
 
 class AdcChannelConcept:public AnalogInChannel{
+public:
+    virtual real_t uni() = 0;
 
+    operator real_t() override{
+        return real_t(3.3f) * uni();
+    }
 };
 
 class AdcChannelOnChip: public AdcChannelConcept{

@@ -2,8 +2,7 @@
 #ifndef __BUS_HPP__
 #define __BUS_HPP__
 
-#include "../sys/core/platform.h"
-#include "../sys/kernel/clock.h"
+#include "../sys/core/system.hpp"
 
 enum class CommMethod:uint8_t{
     None = 0,
@@ -25,7 +24,7 @@ public:
         OCCUPIED,
         TIMEOUT,
         OVERLOAD,
-        NACK,
+        NO_ACK,
         NO_CS_PIN
     };
 
@@ -43,68 +42,97 @@ public:
         explicit operator ErrorType() {return errorType;}
     };
 
-    __fast_inline Error begin(const uint8_t index = 0){
+
+
+protected:
+    Mode mode = TxRx;
+
+private:
+    class Lock{
+        protected:
+            uint16_t req:8 = 0;
+            uint16_t on_int:1 = false;
+            uint16_t locked:1 = false;
+        public:
+            void lock(const uint8_t index){
+                Sys::Exception::disableInterrupt();
+                on_int = Sys::Exception::isIntrruptActing();
+                req = index >> 1;
+                locked = true;
+                Sys::Exception::enableInterrupt();
+            }
+
+            void unlock(){
+                locked = false;
+            }
+
+            bool owned_by(const uint8_t index = 0) const {
+                return (req == index >> 1) and (Sys::Exception::isIntrruptActing() == on_int);
+            }
+
+            bool is_idle() const {
+                return locked == false;
+            }
+    };
+
+    Lock __m_lock__;
+    Lock * locker = nullptr;
+
+    virtual Error lead(const uint8_t _address) = 0;
+    virtual void trail() = 0;
+
+    void lock(const uint8_t index){
+        if(locker == nullptr) exit(1);
+        locker->lock(index);
+    }
+
+    void unlock(){
+        if(locker == nullptr) exit(1);
+        locker->unlock();
+    }
+
+    bool is_idle(){
+        if(locker == nullptr) exit(1);
+        return locker->is_idle();
+    }
+
+    bool owned_by(const uint8_t index = 0){
+        if(locker == nullptr) exit(1);
+        return locker->owned_by(index);
+    }
+
+
+
+public:
+    Bus():locker(&__m_lock__){;}
+    virtual void configBitOrder(const Endian endian){};
+    virtual void configDatabits(const uint8_t data_size){};
+    virtual void configBaudRate(const uint32_t baudRate) = 0;
+
+    Error begin(const uint8_t index){
         if(is_idle()){
-            return begin_use(index);
-            // return ErrorType::OK;
+            lock(index);
+            return lead(index);
         }
+
         else if(owned_by(index)){
-            return begin_use(index);
-            // return ErrorType::OK;
+            lock(index);
+            return lead(index);
         }
         else{
             return ErrorType::OCCUPIED;
         }
     }
 
-    __fast_inline void end(){
-        end_use();
-    }
 
-
-protected:
-    Mode mode = TxRx;
-    int8_t m_lock = -1;
-    int8_t * locker = nullptr;
-
-    virtual Error lead(const uint8_t _address) = 0;
-    virtual void trail() = 0;
-
-    void lock(const uint8_t & index){*locker = index >> 1;}
-    void unlock(){*locker = -1;}
-
-    uint8_t wholock(){
-        if(locker == nullptr) exit(1);
-        return *locker;
-    }
-
-    virtual Error begin_use(const uint8_t index = 0){
-        if(locker == nullptr) exit(1);
-        *locker = index >> 1;
-        return lead(index);
-    }
-
-    virtual void end_use(){
+    void end(){
         trail();
         unlock();
     }
 
-    virtual bool is_idle(){
-        if(locker == nullptr) exit(1);
-        return (*locker >= 0 ? false : true);
+    bool isOccupied(){
+        return locker->is_idle() == false;
     }
-
-    virtual bool owned_by(const uint8_t index = 0){
-        if(locker == nullptr) exit(1);
-        return (*locker == (index >> 1));
-    }
-
-public:
-    virtual void configBitOrder(const Endian endian){};
-    virtual void configDatabits(const uint8_t data_size){};
-    virtual void configBaudRate(const uint32_t baudRate) = 0;
-
-    Bus():locker(&m_lock){;}
 };
 
 

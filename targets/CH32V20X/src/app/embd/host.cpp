@@ -135,20 +135,24 @@ void EmbdHost::main(){
     bindSystickCb([&](){this->tick();});
     steppers.do_home();
 
+    painter.setChFont(font7x7);
     while(true){
-
+        painter.setColor(RGB565::WHITE);
+        painter.drawString({0, 0}, "进入 设置 启动");
+        painter.drawString({0, 8}, "开始 时间 设定 确认");
+        painter.drawString({0, 16}, "选中 缩放 打开 关闭");
         sketch.fill(RGB565::BLACK);
 
         Image<Grayscale> raw_img = Shape::x2(camera);
         auto img = raw_img.space();
         Geometry::perspective(img, raw_img);
         // img = img.clone(Rect2i(14, 0, 80-14, 60));
-        plot_gray(img, {0, img.get_size().y * 1});
+        // plot_gray(img, {0, img.get_size().y * 1});
         trans.transmit(img, 0);
     
         auto img_ada = img.space();
         Shape::adaptive_threshold(img_ada, img);
-        plot_gray(img_ada, {0, img.get_size().y * 2});
+        // plot_gray(img_ada, {0, img.get_size().y * 2});
 
         auto img_bina = img.space<Binary>();
         Pixels::binarization(img_bina, img_ada, 220);
@@ -160,10 +164,11 @@ void EmbdHost::main(){
         FloodFill ff;
         auto map = ff.run(img_bina, BlobFilter::clamp_area(100, 1200));
         Pixels::dyeing(map, map);
-        plot_gray(map, Vector2i{0, map.get_size().y * 3});
+        // plot_gray(map, Vector2i{0, map.get_size().y * 3});
 
 
         for(const auto & blob :ff.blobs()){
+
             if(true){
                 // DEBUG_PRINTLN(blob)
                 bool is_tag = false;

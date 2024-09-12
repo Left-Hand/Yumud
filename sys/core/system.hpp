@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../sys/core/platform.h"
-#include "../sys/kernel/clock.h"
+#include "../sys/clock/clock.h"
 #include "../../types/real.hpp"
 
 namespace Sys{
@@ -9,11 +9,20 @@ namespace Sys{
         void prework();
         void reset();
     };
+
     namespace Chip{
         uint64_t getChipId();
         uint32_t getChipIdCrc();
         uint32_t getFlashSize();
     };
+
+    namespace Exception{
+        __inline void disableInterrupt(){__disable_irq();}
+        __inline void enableInterrupt(){__enable_irq();}
+        bool isInterruptPending();
+        bool isIntrruptActing();
+        uint8_t getInterruptDepth();
+    }
 
     namespace Clock{
         void delayMs(const uint32_t ms);

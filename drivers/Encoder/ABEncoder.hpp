@@ -1,6 +1,5 @@
-#ifndef __AB_ENCODER_HPP__
 
-#define __AB_ENCODER_HPP__
+#pragma once
 
 #include "Encoder.hpp"
 #include "../hal/gpio/gpio.hpp"
@@ -33,10 +32,6 @@ public:
         inst.initAsEncoder();
     }
 
-    // uint16_t update() override{
-    //     return cnt = inst.cnt();
-    // }
-
     real_t getLapPosition() override {
         real_t ret;
         u16_to_uni(inst.cnt() * lines, ret);
@@ -55,8 +50,6 @@ protected:
 
     ExtiChannel trigExtiCHA;
     ExtiChannel trigExtiCHB;
-
-
 
     void a_pulse(){
         if(bool(trigGpioA)){
@@ -99,6 +92,8 @@ public:
     }
 
 };
+
+
 class ABZEncoder:public ABEncoderConcept{
 
 };
@@ -134,6 +129,3 @@ class ABZEncoder:public ABEncoderConcept{
 
     // trigExtiCHA.init();
     // trigExtiCHB.init();
-
-
-#endif

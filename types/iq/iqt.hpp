@@ -7,7 +7,8 @@
 
 #include "dsp/constexprmath/ConstexprMath.hpp"
 
-#include "types/string/String.hpp"
+#include "sys/string/string.hpp"
+#include "sys/string/string_view.hpp"
 #include "types/float/fp32.hpp"
 
 #include <IQmath_RV32.h>
@@ -75,14 +76,18 @@ public:
     __fast_inline constexpr iq_t(const T intValue) : value(_IQ(intValue)) {;}
 
     #ifdef STRICT_IQ
-    __fast_inline consteval explicit iq_t(const float fv):value(float_to_iq(fv)){};
+    __fast_inline consteval explicit iq_t(const float fv):value((std::is_constant_evaluated()) ? float_to_iq(fv) : float_to_iq(fv)){};
+    // __fast_inline consteval iq_t(const float fv):value((std::is_constant_evaluated()) ? float_to_iq(fv) : float_to_iq(fv)){};
     #else
-    __fast_inline constexpr iq_t(const float fv):value(float_to_iq(fv)){};
+    __fast_inline constexpr iq_t(const float fv):value((std::is_constant_evaluated()) ? float_to_iq(fv) : float_to_iq(fv)){};
     #endif
 
     static __fast_inline constexpr iq_t form (const floating auto fv){iq_t ret; ret.value = float_to_iq(fv); return ret;}
   
-    __no_inline explicit iq_t(const String & str);
+    __no_inline explicit iq_t(const String & str):iq_t(str.c_str(), str.length()){;}
+    __no_inline explicit iq_t(const StringView & str):iq_t(str.data(), str.length()){;}
+    __no_inline explicit iq_t(const char * str):iq_t(str, strlen(str)){;}
+    __no_inline explicit iq_t(const char * str, const size_t len);
 
     __fast_inline_constexpr iq_t operator+(const iq_t other) const {
         return iq_t(_iq(value + other.value));
@@ -209,8 +214,6 @@ public:
     __inline constexpr explicit operator double() const{
         return float(*this);
     }
-
-
 
     __no_inline explicit operator String() const;
     String toString(unsigned char eps = 3) const;

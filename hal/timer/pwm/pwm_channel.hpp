@@ -11,10 +11,11 @@ public:
     virtual PwmChannel & operator = (const real_t duty) = 0;
 };
 
+template <typename T>
 class Countable{
 public:
-    virtual volatile uint16_t & cnt() = 0;
-    virtual volatile uint16_t & cvr() = 0;
-    virtual volatile uint16_t & arr() = 0;
+    virtual volatile T & cnt() = 0;
+    virtual volatile T & cvr() = 0;
+    virtual volatile T & arr() = 0;
 };
 #endif

@@ -9,7 +9,7 @@
 
 #ifdef __cplusplus
 #include "real.hpp"
-#include "../types/string/String.hpp"
+#include "sys/string/string.hpp"
 #endif
 
 struct RGB332{

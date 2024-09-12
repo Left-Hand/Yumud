@@ -5,10 +5,17 @@
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
 
+#ifdef HDW_SXX32
+
 class TimerHw{};
 class BasicTimer:public TimerHw{
 protected:
     TIM_TypeDef * instance;
+
+    uint getClk();
+    void enableRcc();
+
+
 public:
     using IT = TimerUtils::IT;
     using Mode = TimerUtils::Mode;
@@ -23,11 +30,12 @@ public:
         NvicPriority::enable(request, ItToIrq(instance, it), en);
         TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
     }
-
     void enableArrSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
-    virtual void bindCb(const IT ch, std::function<void(void)> && cb) = 0;
+
     volatile uint16_t & cnt(){return instance->CNT;}
     volatile uint16_t & arr(){return instance->ATRLR;}
+
+    virtual void bindCb(const IT ch, std::function<void(void)> && cb) = 0;
 
     BasicTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
@@ -57,7 +65,7 @@ public:
 
 class AdvancedTimer:public GenericTimer{
 protected:
-    uint8_t caculate_dead_zone(uint32_t ns);
+    uint8_t calculateDeadzone(const uint deadzone_ns);
 
     TimerOCN n_channels[3];
 public:
@@ -92,5 +100,8 @@ public:
 
     AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
+
+#endif
+
 
 #endif

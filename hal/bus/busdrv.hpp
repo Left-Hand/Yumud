@@ -36,7 +36,7 @@ public:
 
     template<typename T>
     requires (std::is_integral_v<T> || std::is_enum_v<T>) && is_writable_bus
-    void write(const T & data, bool ends = true){
+    void write(const T data, bool ends = true){
         constexpr size_t size = sizeof(T);
         if(!bus.begin(index)){
             if (size != 1) this->configDataBits(size * 8);

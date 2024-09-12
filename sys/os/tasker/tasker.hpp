@@ -1,6 +1,7 @@
 #ifndef __TASKER_HPP__
 #define __TASKER_HPP__
 
+#include "sys/clock/clock.h"
 #include <cstdint>
 #include <functional>
 #include <vector>

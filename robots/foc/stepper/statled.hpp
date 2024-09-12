@@ -6,7 +6,6 @@
 
 #include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "types/color/color_t.hpp"
-#include "sys/kernel/clock.h"
 
 using Sys::t;
 using Color = Color_t<real_t>;

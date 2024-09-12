@@ -3,8 +3,8 @@
 #include "../sys/core/platform.h"
 #include "../hal/crc/crc.hpp"
 
-#include "../sys/kernel/clock.h"
-#include "../sys/kernel/enums.hpp"
+#include "../sys/clock/clock.h"
+#include "../sys/constants/enums.hpp"
 
 #ifdef N32G45X
 #define M_RCC_CONFIGER RCC_ConfigHclk
@@ -251,3 +251,26 @@ void Sys::Clock::setAPB2Freq(const uint32_t freq){
 }
 
 
+bool Sys::Exception::isInterruptPending(){
+    #ifdef ARCH_QKV4
+    return QingKeV4::isInterruptPending();
+    #else
+    return false;
+    #endif
+}
+
+bool Sys::Exception::isIntrruptActing(){
+    #ifdef ARCH_QKV4
+    return QingKeV4::isIntrruptActing();
+    #else
+    return false;
+    #endif
+}
+
+uint8_t Sys::Exception::getInterruptDepth(){
+    #ifdef ARCH_QKV4
+    return QingKeV4::getInterruptDepth();
+    #else
+    return 0;
+    #endif
+}

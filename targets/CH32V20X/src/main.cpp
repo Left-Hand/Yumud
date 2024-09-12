@@ -1,5 +1,6 @@
 #include "sys/core/system.hpp"
 #include "app/embd/embd.h"
+#include "app/wlsy/wlsy_inc.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
@@ -7,6 +8,8 @@
 #include "drivers/Adc/FDC2X1X/fdc2x1x.hpp"
 #include "drivers/Adc/ADS1115/ads1115.hpp"
 #include "drivers/Actuator/Driver/DRV8313/drv8313.hpp"
+
+#include "testbench/tb.h"
 
 
 void preinit(){
@@ -36,8 +39,12 @@ int main(){
     // uart_main();
     // qlz_main();
     // embd_main();
-    embd_main();
-    // bldc_main();
+    // embd_main();
+    bldc_main();
+    // wlsy_main();
+    // lt8920_main();
+    // ma730_main();
+    // bmi160_main();
     // delay(200);
     // pmdc_tb();
     // uart_tb(uart1);

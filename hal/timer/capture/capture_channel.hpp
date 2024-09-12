@@ -2,8 +2,8 @@
 
 #define __CAPTURE_CHANNEL_HPP__
 
-#include "../sys/kernel/clock.h"
-#include "../sys/kernel/time_stamp.hpp"
+#include "../sys/clock/clock.h"
+#include "../sys/clock/time_stamp.hpp"
 #include "../hal/exti/exti.hpp"
 #include "real.hpp"
 
@@ -58,14 +58,16 @@ class CaptureChannel:public CaptureChannelConcept{
 
 class CaptureChannelExti:public CaptureChannelConcept{
 protected:
-    ExtiChannel & instance;
-    Gpio & gpio;
+    ExtiChannel instance;
     uint32_t last_t;
     std::function<void(void)> cb;
 
     void update(){
         if(double_edge){
-            if(!gpio.read()){
+            if(instance.gpio == nullptr) return;
+            bool val = instance.gpio->read();
+
+            if(val == false){
                 uint32_t current_t = micros();
                 pulse = current_t - last_t;
                 last_t = current_t;
@@ -73,26 +75,30 @@ protected:
                 uint32_t current_t = micros();
                 period = current_t - last_t + pulse;
                 last_t = current_t;
-                if(cb) cb();
+                EXECUTE(cb);
             }
         }else{
             uint32_t current_t = micros();
             period = current_t - last_t;
             last_t = current_t;
-            if(cb) cb();
+            EXECUTE(cb);
         }
     }
 public:
-    CaptureChannelExti(ExtiChannel & _instance, Gpio & _gpio):CaptureChannelConcept(1000000, _instance.trigger == ExtiChannel::Trigger::RisingFalling), instance(_instance), gpio(_gpio){;}
+    CaptureChannelExti(const ExtiChannel && _instance):
+        CaptureChannelConcept(1000000, 
+                _instance.trigger == ExtiChannel::Trigger::RisingFalling), 
+        instance(_instance){;}
+
+    CaptureChannelExti(const ExtiChannel & _instance):CaptureChannelExti(std::move(_instance)){;}
 
     void init() override{
-        instance.setPinMode(PinMode::InPullDN);
         instance.init();
         instance.bindCb([this](){this->update();});
         instance.enableIt();
     }
 
-    void bindCb(const std::function<void(void)>& _cb){
+    void bindCb(std::function<void(void)> && _cb){
         cb = _cb;
     }
 

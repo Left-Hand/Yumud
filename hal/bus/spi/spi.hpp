@@ -16,13 +16,15 @@ public:
     #endif
 protected:
 
+    uint8_t last_index;
     Error lead(const uint8_t index) override{
-        cs_port[wholock()].clr();
+        last_index = index;
+        cs_port[last_index].clr();
         return ErrorType::OK;
     }
 
     void trail() override{
-        cs_port[wholock()].set();
+        cs_port[last_index].set();
     }
 public:
     virtual void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) = 0;

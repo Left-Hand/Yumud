@@ -3,7 +3,6 @@
 #define __STEPPER_ARCHIVE_HPP__
 
 #include "../constants.hpp"
-#include "../sys/kernel/stream.hpp"
 
 //at24c02 can max contain 256 bytes
 

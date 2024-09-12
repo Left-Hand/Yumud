@@ -5,7 +5,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "dsp/filter/DigitalFilter.hpp"
 
-struct Key{
+class Key{
 protected:
     using Level = GpioUtils::Level;
 
@@ -47,4 +47,6 @@ public:
         return m_gpio;
     }
 };
+
+
 #endif

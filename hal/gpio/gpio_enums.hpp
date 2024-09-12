@@ -67,7 +67,7 @@ enum class PinName:uint8_t{
 
 
 enum class PinMode:uint8_t{
-#if defined(USE_CH32_STD_LIB)
+#if defined(HDW_SXX32)
     InAnalog = 0b0000,
     InFloating = 0b0100,
     InPullUP = 0b1000,

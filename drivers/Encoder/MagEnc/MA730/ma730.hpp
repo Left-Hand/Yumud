@@ -89,14 +89,16 @@ protected:
         uint16_t ret;
         bus_drv.write((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
         bus_drv.read(ret);
-        *(uint8_t *)&reg_data = ret  >> 8;
+        *(uint8_t *)&reg_data = ret >> 8;
     }
 
     void directRead(uint16_t & data){
         bus_drv.read(data);
     }
 public:
-    MA730(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
+    MA730(const SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
+    MA730(SpiDrv && _bus_drv):bus_drv(_bus_drv){;}
+    MA730(Spi & _bus, const uint8_t index):bus_drv(SpiDrv(_bus, index)){;}
     void init() override { }
     bool stable() override {return isMagnitudeProper();}
 

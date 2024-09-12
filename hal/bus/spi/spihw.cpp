@@ -229,11 +229,13 @@ SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
     transfer(data, 0);
     return ErrorType::OK;
 }
+
 SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
     if(txMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
     }
+
     if(rxMethod != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
         data_rx = instance->DATAR;

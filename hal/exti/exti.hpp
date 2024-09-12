@@ -53,15 +53,10 @@ protected:
 
 
     enum class Source:uint8_t{
-        PA=0,
-        PB=1,
-        PC=2,
-        PD=3,
-        PE=4,
-        PF=5
+        PA,PB,PC,PD,PE,PF
     };
 
-    static Source from_gpio_to_source(const Gpio & gpio){
+    static constexpr Source from_gpio_to_source(const Gpio & gpio){
         switch((uint32_t)gpio.instance){
             default:
             #ifdef HAVE_GPIOA
@@ -95,7 +90,7 @@ protected:
         return gpio.isValid() ? (Line)(1 << gpio.getIndex()):Line::_None;
     }
     
-    static IRQn from_line_to_irqn(const Line & line){
+    static constexpr IRQn from_line_to_irqn(const Line & line){
         switch(line){
             case Line::_0:
                 return EXTI0_IRQn;
@@ -127,26 +122,36 @@ protected:
 
     const Line line;
 
-    Gpio * gpio;
-    PinMode gpio_mode = PinMode::InPullDN;
+    Gpio * const gpio;
+    const PinMode gpio_mode;
     const NvicPriority priority;
     const Trigger trigger;
     const Mode mode;
 
     friend class CaptureChannelExti;
 public:
-    ExtiChannel(const Line & _line, const NvicPriority & _priority,
-            const Trigger & _trigger = Trigger::Rising, const Mode & _mode = Mode::Interrupt):
-            line(_line), gpio(nullptr), priority(_priority), trigger(_trigger), mode(_mode){;}
-    ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
-            const Trigger & _trigger = Trigger::Rising,  const Mode & _mode = Mode::Interrupt):
-            line(from_gpio_to_line(_gpio)), gpio(&_gpio),priority(_priority), trigger(_trigger),  mode(_mode){
-            }
+    ExtiChannel(const Line _line, const NvicPriority & _priority,
+            const Trigger _trigger = Trigger::Rising, const Mode _mode = Mode::Interrupt):
+            line(_line), 
+            gpio(nullptr), 
+            gpio_mode(PinMode::InAnalog),
+            priority(_priority), 
+            trigger(_trigger), 
+            mode(_mode){;}
 
-    void setPinMode(const PinMode & _mode){
-        gpio_mode = _mode;
-        if(gpio) gpio->setMode(_mode);
-    }
+
+    ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
+            const Trigger _trigger = Trigger::Rising,  const Mode _mode = Mode::Interrupt):
+            line(from_gpio_to_line(_gpio)), 
+            gpio(&_gpio),
+            gpio_mode(
+                (trigger == Trigger::RisingFalling)? PinMode::InFloating : 
+                ((trigger == Trigger::Rising)? PinMode::InPullDN : PinMode::InPullUP)
+            ),
+            priority(_priority), 
+            trigger(_trigger),
+            mode(_mode){;}
+
 
     void init(){
         if(gpio){
@@ -168,7 +173,7 @@ public:
     }
 
 
-    void bindCb(const std::function<void(void)> & func);
+    void bindCb(std::function<void(void)> && func);
 
     void enableIt(const bool en = true){
         NvicPriority::enable(priority, from_line_to_irqn(line));

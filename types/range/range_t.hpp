@@ -5,7 +5,6 @@
 #include "real.hpp"
 
 #include "../sys/core/platform.h"
-#include "../types/string/String.hpp"
 #include "type_traits"
 
 #include <algorithm>
@@ -305,19 +304,24 @@ public:
     constexpr explicit operator bool() const{
         return from != to;
     }
-
-    constexpr  explicit operator String() const{
-        return toString();
-    }
-
-    String toString(unsigned char decimalPlaces = 2) const{
-        if constexpr(std::is_integral<T>::value){
-            return ('[' + String(from) + ',' + String(to) + ')');
-        }else{
-            return ('[' + ::toString(from, decimalPlaces) + ',' + ::toString(to, decimalPlaces) + ')');
-        }
-    }
 };
+
+constexpr bool operator<(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() > value;
+}
+
+constexpr bool operator<=(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() >= value;
+}
+
+constexpr bool operator>(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() < value;
+}
+
+constexpr bool operator>=(const arithmetic auto & value, const Range_t<auto> & range){
+    return range.abs() <= value; 
+}
+
 
 using Rangei = Range_t<int>;
 using Range = Range_t<real_t>;

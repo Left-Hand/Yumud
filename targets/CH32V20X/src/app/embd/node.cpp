@@ -128,8 +128,8 @@ void node_main(){
     can1.init(Can::BaudRate::Mbps1);
  
     stp.init();
-    stp.setSpeedLimit(36);
-    stp.setAccelLimit(100);
+    stp.setSpeedLimit(46);
+    stp.setAccelLimit(72);
     stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
 
@@ -144,7 +144,7 @@ void node_main(){
     // t = 0;
     while(true){
         stp.run(); 
-        // stp.report();
+        stp.report();
 
         // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
         // real_t target = f(t-2);
@@ -171,7 +171,8 @@ void node_main(){
         // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
         // stp.setTargetPosition(5 *sin(t) * sin(t*5));
         // stp.setTargetPosition(frac(t));
-        // stp.setTargetPosition(7*sin(t));
+        // stp.setTargetPosition(24 * sin(2 * t));
+        // stp.setTargetSpeed(24 * sin(7 * t));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
         // stp.setTargetPosition(3 * abs(frac(t*2) - real_t(0.5)));
 

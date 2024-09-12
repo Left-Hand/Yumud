@@ -1,4 +1,5 @@
 #include "can_filter.hpp"
+#include "core/platform.h"
 
 [[maybe_unused]]static void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id2){
     CAN_FilterInitTypeDef	CAN_FilterInitStructure;
@@ -32,7 +33,7 @@ static void CAN_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t
     // CAN_FilterInitSturcture.CAN_FilterMaskIdLow = mask2 << 5;
     // CAN_FilterInitSturcture.CAN_FilterIdHigh = id2 << 5;
     // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = mask2 << 5;
-    CAN_FilterInitSturcture.CAN_FilterIdLow  = 0;
+    CAN_FilterInitSturcture.CAN_FilterIdLow = 0;
     CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;
     CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;
     CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;
@@ -47,6 +48,16 @@ static void CAN_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t
     CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO1;
     CAN_FilterInit(&CAN_FilterInitSturcture);
 }
+
+// CanFilter::CanFilter(const std::initializer_list<uint16_t> & list){
+//     switch(list.size()){
+//         case 4:
+
+//             break;
+//         default:
+//             break;
+//     }
+// }
 
 void CanFilter::init(){
     init(*this);
