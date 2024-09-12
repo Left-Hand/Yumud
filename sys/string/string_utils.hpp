@@ -7,7 +7,7 @@
 #include "string.h"
 
 #include <concepts>
-
+#include <tuple>
 
 #include "sys/math/iq/iqt.hpp"
 
@@ -17,20 +17,21 @@ class StringView;
 
 namespace StringUtils {
 
-void reverse_str(char * str, size_t len);
+void reverse_str(char * str,const size_t len);
+std::tuple<int,int,int> disassemble_fstr(const char * str, const size_t len = UINT_MAX);
 
-void disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale);
-bool is_numeric(const char* str);
-bool is_digit(const char * str);
+bool is_numeric(const char * str, const size_t len = UINT_MAX);
+bool is_digit(const char * str, const size_t len = UINT_MAX);
 bool is_digit(const char chr);
 
-void ftoa(float value, char *str, uint8_t eps);
+void itoa(int64_t value, char * str, uint8_t radix);
+void iutoa(uint64_t value, char * str, uint8_t radix);
+void itoas(int value, char * str, uint8_t radix, uint8_t size);
 
-void itoa(int64_t value, char *str, uint8_t radix);
-void qtoa(char * str_int, char * str_frac, const _iq value, uint8_t eps = 3);
 
-void itoas(int value, char *str, uint8_t radix, uint8_t size);
-void iutoa(uint64_t value, char *str, uint8_t radix);
+void ftoa(float value, char * str, uint8_t eps);
+void qtoa(const iq_t value, char * str, uint8_t eps);
+
 
 int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len);
 void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len);

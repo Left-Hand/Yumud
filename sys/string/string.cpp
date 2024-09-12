@@ -154,11 +154,9 @@ String::String(double value, unsigned char decimalPlaces)
 }
 
 String::String(const iq_t value, unsigned char decimalPlaces){
-	char str_int[str_int_size] = {0};
-    char str_frac[str_float_size] = {0};
-    StringUtils::qtoa(str_int, str_frac, value.value, decimalPlaces);
-    *this = str_int;
-	this->concat(str_frac);
+	char str[str_int_size] = {0};
+    StringUtils::qtoa(value, str, decimalPlaces);
+	*this = str;
 }
 
 String::~String()
@@ -754,8 +752,7 @@ String toString(double value, unsigned char decimalPlaces) {return String(value,
 
 
 String toString(const iq_t iq, const uint8_t eps) {
-    char str_int[str_int_size] = {0};
-    char str_frac[str_float_size] = {0};
-    StringUtils::qtoa(str_int, str_frac, iq.value, eps);
-    return String(str_int) + String(str_frac);
+    char str[str_int_size] = {0};
+    StringUtils::qtoa(iq, str, eps);
+    return String(str);
 }

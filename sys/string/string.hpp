@@ -128,16 +128,16 @@ public:
 	String & operator += (float num)		{concat(num); return (*this);}
 	String & operator += (double num)		{concat(num); return (*this);}
 
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, const String &rhs);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, const char *cstr);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, char c);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned char num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, int num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned int num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, long num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned long num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, float num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, double num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, const String &rhs);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, const char *cstr);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, char c);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned char num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, int num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned int num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, long num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned long num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, float num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, double num);
 
 	// comparison (only works w/ Strings and "strings")
 	operator StringIfHelperType() const { return buffer ? &String::StringIfHelper : 0; }

@@ -1,27 +1,42 @@
 #include "string_utils.hpp"
 
 
-void StringUtils::qtoa(char * str_int, char * str_frac, const _iq value, uint8_t eps){
-    eps = MIN(eps, 5);
-    uint32_t abs_value = value > 0 ? value : -value;
-    uint32_t int_part = abs_value >> GLOBAL_Q;
-    uint32_t float_part = abs_value & ((1 << GLOBAL_Q )- 1);
+void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 
-    StringUtils::itoa(int_part,str_int,10);
+	bool minus = value < 0;
+    eps = MIN(eps, 5);
+    auto abs_value = ABS((int32_t)value.value);
+
+    uint32_t int_part = uint32_t(abs_value) >> GLOBAL_Q;
+    uint32_t frac_part = uint32_t(abs_value) & ((1 << GLOBAL_Q )- 1);
+
+    if(minus){
+		str[0] = '-';
+		StringUtils::itoa(int_part, str + 1, 10);
+	}else{
+		StringUtils::itoa(int_part, str, 10);
+
+	}
+
+	size_t end = strlen(str);
 
     if(eps){
+		str[end] = '.';//add dot to seprate
+		end += 1;//move to \0
+		
+
         int32_t scale = 1;
 
         for(uint8_t i = 0; i < eps; i++){
             scale *= 10;
         }
 
-        float_part *= scale;
-        float_part >>= GLOBAL_Q;
-        StringUtils::itoas(float_part,str_frac, 10, eps);
+        frac_part *= scale;
+        frac_part >>= GLOBAL_Q;
+
+        StringUtils::itoas(frac_part,str + end, 10, eps);
     }
 
-    str_frac[eps] = 0;
 }
 
 
@@ -37,10 +52,12 @@ void StringUtils::reverse_str(char * str, size_t len){
 	str[len + 1] = '\0';
 }
 
-void StringUtils::disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale){
+std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const size_t len){
     char * p = const_cast<char *>(str);
 
-    scale = 1;
+    int int_part = 0;
+	int frac_part = 0;
+	int scale = 1;
     bool minus = false;
 
     while(!((*p>='0'&& *p<='9')||*p=='+'||*p=='-'||*p=='.')&&*p!='\0'){
@@ -73,12 +90,15 @@ void StringUtils::disassemble_fstr(const char * str, int & int_part, int & frac_
                 p++;
 			}
 		}
-
-        if(minus){
-            int_part = -int_part;
-            frac_part = -frac_part;
-        }
 	}
+
+ret:
+	if(minus){
+		int_part = -int_part;
+		frac_part = -frac_part;
+	}
+
+	return {int_part, frac_part, scale};
 }
 
 void StringUtils::itoa(int64_t value,char *str,uint8_t radix){
@@ -106,7 +126,7 @@ void StringUtils::itoa(int64_t value,char *str,uint8_t radix){
 void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)  
 {
 	uint8_t i = 0;
-    value = abs(value);
+    value = ABS(value);
 	do{
 		if(value%radix>9)
 			str[i] = value%radix +'0'+7;
@@ -168,12 +188,12 @@ bool StringUtils::is_digit(const char chr){
     return chr >= '0' && chr <= '9';
 }
 
-bool StringUtils::is_numeric(const char* str) {
+bool StringUtils::is_numeric(const char* str, const size_t len) {
 	bool hasDigit = false;
 	bool hasDot = false;
 	bool hasSign = false;
 
-	for (int i = 0; str[i] != '\0'; i++) {
+	for (size_t i = 0; str[i] != '\0'; i++) {
 		char chr = str[i];
 		if (is_digit(chr)) {
 			hasDigit = true;
@@ -194,7 +214,7 @@ bool StringUtils::is_numeric(const char* str) {
 	return hasDigit; // 至少包含一个数字才认为是合法数字
 }
 
-bool StringUtils::is_digit(const char * str){
+bool StringUtils::is_digit(const char * str, const size_t len){
     for(int i = 0; str[i]!= '\0'; i++){
         if(!is_digit(str[i])) return false;
     }
@@ -285,10 +305,7 @@ int StringUtils::atoi(const char * str, const size_t len) {
 }
 
 float StringUtils::atof(const char * str, const size_t len) {
-    int int_part = 0;
-    int frac_part = 0;
-    int scale = 1;
-    disassemble_fstr(str, int_part, frac_part, scale);
+    auto [int_part, frac_part, scale] = disassemble_fstr(str, len);
     return(int_part + (float)frac_part / scale);
 }
 

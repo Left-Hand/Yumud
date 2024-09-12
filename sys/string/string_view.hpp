@@ -22,10 +22,17 @@ public:
     StringView(const char* str, size_t size) : data_(str), size_(size) {}
 
     StringView(const StringView & other): data_(other.data_), size_(other.size_){;}
-    StringView(StringView && other): data_(other.data_), size_(other.size_){;}
-    StringView& operator=(const StringView& other) {
+    StringView(StringView && other): data_(std::move(other.data_)), size_(std::move(other.size_)){;}
+
+    StringView& operator=(const StringView & other) {
         data_ = other.data_;
         size_ = other.size_;
+        return *this;
+    }
+
+    StringView& operator=(StringView && other) {
+        data_ = std::move(other.data_);
+        size_ = std::move(other.size_);
         return *this;
     }
 
