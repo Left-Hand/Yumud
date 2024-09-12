@@ -25,6 +25,9 @@
 #include "dsp/controller/PID.hpp"
 #include "types/image/painter.hpp"
 
+
+#include "buck/buck.hpp"
+
 using Sys::t;
 
 void digipw_main(){
@@ -57,6 +60,10 @@ void digipw_main(){
 
     mp1907.init();
 
+    /*-----------------------*/
+
+    Buck buck{curr_ch, volt_ch, mp1907};
+    buck.init();
     while(true){
         mp1907 = real_t(0.5) + real_t(0.5) * sin(t);
 
