@@ -20,10 +20,12 @@
 #include "drivers/Adc/HX711/HX711.hpp"
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 
+#include "drivers/Actuator/Driver/MP1907/mp1907.hpp"
+
 #include "dsp/controller/PID.hpp"
 #include "types/image/painter.hpp"
 
-
+using Sys::t;
 
 void digipw_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
@@ -34,4 +36,12 @@ void digipw_main(){
     auto & ch = timer1.oc(1);
     auto & chn = timer1.ocn(1);
     auto & en_gpio = portB[0];
+
+    MP1907 mp1907{ch, chn, en_gpio};
+
+    mp1907.init();
+
+    while(true){
+        mp1907 = real_t(0.5) + real_t(0.5) * sin(t);
+    }
 }

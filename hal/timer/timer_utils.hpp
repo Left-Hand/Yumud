@@ -29,7 +29,6 @@ namespace TimerUtils{
         Break = TIM_IT_Break,
     };
 
-    
     enum class BdtrLockLevel:uint16_t{
         Off = TIM_LOCKLevel_OFF,
         Low = TIM_LOCKLevel_1,
