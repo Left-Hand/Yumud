@@ -1,11 +1,9 @@
 #pragma once
 
-#include "../hal/gpio/port.hpp"
-#include "../hal/timer/timer_utils.hpp"
-#include "../hal/timer/pwm/pwm_channel.hpp"
-#include "../hal/dma/dma.hpp"
-
-
+#include "hal/gpio/port.hpp"
+#include "hal/timer/timer_utils.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/dma/dma.hpp"
 
 class TimerChannel{
 public:

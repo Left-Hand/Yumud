@@ -7,14 +7,17 @@
 
 #ifdef HDW_SXX32
 
+
+
+
 class TimerHw{};
 class BasicTimer:public TimerHw{
 protected:
     TIM_TypeDef * instance;
+    // std::array<std::function<void(void)>, 8> cbs;
 
     uint getClk();
     void enableRcc();
-
 
 public:
     using IT = TimerUtils::IT;

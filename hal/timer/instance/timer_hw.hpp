@@ -1,8 +1,6 @@
-#ifndef __TIMHW_HPP__
+#pragma once
 
-#define __TIMHW_HPP__
-
-#include "../hal/timer/timer.hpp"
+#include "hal/timer/timer.hpp"
 
 #define ADVANCED_TIMER_TEMPLATE(x)\
 class Timer##x:public AdvancedTimer{\
@@ -85,5 +83,4 @@ ADVANCED_TIMER_TEMPLATE(9)
 
 #ifdef HAVE_TIM10
 ADVANCED_TIMER_TEMPLATE(10)
-#endif
 #endif
