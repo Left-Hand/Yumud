@@ -16,13 +16,12 @@ public:
     void enable(const bool en = true);
 };
 
-class TimerOC:public TimerOut, public PwmChannel, public Countable<uint16_t>{
+class TimerOC:public TimerOut, public PwmChannel{
 public:
     using Mode = TimerUtils::OcMode;
 protected:
     volatile uint16_t & cvr_;
     volatile uint16_t & arr_;
-    __fast_inline volatile uint16_t & cnt() override {return instance->CNT;}
 public:
     TimerOC(TIM_TypeDef * _instance, const Channel _channel):TimerOut(_instance, _channel), cvr_(from_channel_to_cvr(_channel)), arr_(instance->ATRLR){;}
 
@@ -31,12 +30,11 @@ public:
     void setMode(const Mode _mode);
 
     auto & io(){return TimerUtils::getPin(instance, channel);}
+    __fast_inline volatile uint16_t & cvr(){return cvr_;}
+    __fast_inline volatile uint16_t & arr(){return arr_;}
 
     __fast_inline TimerOC & operator = (const real_t duty) override{cvr_ = int(duty * arr_);return *this;}
     __fast_inline operator real_t(){return real_t(cvr_) / real_t(arr_);}
-
-    __fast_inline volatile uint16_t & cvr() override {return cvr_;}
-    __fast_inline volatile uint16_t & arr() override {return arr_;}
 };
 
 class TimerOCN:public TimerOut{
