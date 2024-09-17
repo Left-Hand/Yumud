@@ -183,7 +183,7 @@ public:
 	// modification
 	void replace(char find, char replace);
 	// String& replace(const String& replace);
-	String& replace(const String & find, const String & replace);
+	// String& replace(const String & find, const String & replace);
 	void remove(unsigned int index);
 	void remove(unsigned int index, unsigned int count);
 	String & toLowerCase(void);

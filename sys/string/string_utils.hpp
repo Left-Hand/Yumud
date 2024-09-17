@@ -18,12 +18,12 @@ class StringView;
 namespace StringUtils {
 
 void reverse_str(char * str,const size_t len);
-std::tuple<int,int,int> disassemble_fstr(const char * str, const size_t len = UINT_MAX);
-int kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len);
-void str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len);
+std::tuple<int,int,int> disassemble_fstr(const char * str, const size_t len);
+int kmp_find(char *src, const size_t src_len, const char *match, const size_t match_len);
+void str_replace(char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len);
 
-bool is_numeric(const char * str, const size_t len = UINT_MAX);
-bool is_digit(const char * str, const size_t len = UINT_MAX);
+bool is_numeric(const char * str, const size_t len);
+bool is_digit(const char * str, const size_t len);
 bool is_digit(const char chr);
 
 void itoa(int64_t value, char * str, uint8_t radix);

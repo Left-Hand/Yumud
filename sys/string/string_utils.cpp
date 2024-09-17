@@ -1,55 +1,75 @@
 #include "string_utils.hpp"
 
+static inline void swap_char(char & a, char & b){
+	char temp = a;
+	a = b;
+	b = temp;
+}
 
 void StringUtils::reverse_str(char * str, size_t len){
 	if(len == 0) return;
 
 	len -= 1;
 	for(size_t i = 0; i < len / 2 + (len % 2); i++){
-		char temp = str[i];
-		str[i] = str[len - i];
-		str[len - i] = temp;
+		swap_char(str[i],str[len - i]);
 	}
+
 	str[len + 1] = '\0';
 }
 
 std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const size_t len){
-    char * p = const_cast<char *>(str);
 
     int int_part = 0;
 	int frac_part = 0;
 	int scale = 1;
+
+	bool into_f = false;
     bool minus = false;
 
-    while(!((*p>='0'&& *p<='9')||*p=='+'||*p=='-'||*p=='.')&&*p!='\0'){
-        p++;
-    }
+	size_t base = 0;
 
-    if(*p=='\0'){
-        int_part = 0;
-        frac_part = 0;
-	}else{
-        if(*p=='-'){
-            minus = true;
-            p++;
-        }
+	for(;base < len; base++){
+		char chr = str[base];
 
-        if(*p=='+'){
-            p++;
-        }
+		switch(chr){
+			case '\0':
+				goto ret;
+			case '.':
+				into_f = true;
+				break;
+			case '-':
+				minus = true;
+				break;
+			case '+':
+			default:
+				break;
+		}
+	}
 
-        while(*p>='0'&&*p<='9'){
-            int_part = int_part * 10 + (*p-'0');
-            p++;
-        }
+	for(;base < len; base++){
+		char chr = str[base];
 
-        if(*p=='.'){
-            p++;
-            while(*p>='0'&&*p<='9'){
-                frac_part = frac_part * 10 + (*p-'0');
-                scale *= 10;
-                p++;
-			}
+		switch(chr){
+			case '\0':
+				goto ret;
+			case '.':
+				into_f = true;
+				break;
+			case '-':
+			case '+':
+				break;
+			default:
+				if(is_digit(chr)){
+					if(into_f){
+						frac_part = frac_part * 10 + (chr - '0');
+						scale *= 10;
+					}else{
+						int_part = int_part * 10 + (chr - '0');
+					}
+				}else{
+					goto ret;
+				}
+				break;
 		}
 	}
 
@@ -64,7 +84,7 @@ ret:
 
 
 bool StringUtils::is_digit(const char chr){
-    return chr >= '0' && chr <= '9';
+    return chr >= '0' and chr <= '9';
 }
 
 bool StringUtils::is_numeric(const char* str, const size_t len) {
@@ -72,9 +92,11 @@ bool StringUtils::is_numeric(const char* str, const size_t len) {
 	bool hasDot = false;
 	bool hasSign = false;
 
-	for (size_t i = 0; str[i] != '\0'; i++) {
+	for (size_t i = 0; i < len; i++) {
 		char chr = str[i];
-		if (is_digit(chr)) {
+		if(chr == '\0'){
+			break;
+		} else if (is_digit(chr)) {
 			hasDigit = true;
 		} else if (chr == '.') {
 			if (hasDot || !hasDigit) {
@@ -94,12 +116,14 @@ bool StringUtils::is_numeric(const char* str, const size_t len) {
 }
 
 bool StringUtils::is_digit(const char * str, const size_t len){
-    for(int i = 0; str[i]!= '\0'; i++){
-        if(!is_digit(str[i])) return false;
+    for(size_t i = 0; i < len; i++){
+		char chr = str[i];
+        if(!is_digit(chr)) return false;
+		if(chr == '\0') break;
     }
     return true;
 }
-int StringUtils::kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len) {
+int StringUtils::kmp_find(char *src, const size_t src_len, const char *match, const size_t match_len) {
 	size_t *table = (size_t *)malloc(match_len * sizeof(size_t));
 	size_t i = 0, j = 1;
 	table[0] = 0;
@@ -140,10 +164,10 @@ int StringUtils::kmp_find(const char *src, const size_t src_len, const char *mat
 	}
 }
 
-void StringUtils::str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
-	char * find_ptr = (char *)src;
+void StringUtils::str_replace(char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
+	char * find_ptr = src;
 	size_t find_len = src_len;
-	char * replace_ptr = (char *)match;
+	const char * replace_ptr = match;
 	
 	while(1){
 		int pos = kmp_find(find_ptr, find_len, replace_ptr, dst_len);

@@ -70,6 +70,7 @@ public:
     __fast_inline constexpr iq_t():value(0){;}
 
     __fast_inline constexpr iq_t(const _iq & other) : value(other){;}
+    __fast_inline explicit constexpr operator _iq() const {return value;}
     __fast_inline constexpr iq_t(_iq && other) : value(other){;}
 
     template<typename T>

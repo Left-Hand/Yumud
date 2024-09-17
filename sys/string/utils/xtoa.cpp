@@ -4,39 +4,31 @@ void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 
 	bool minus = value < 0;
     eps = MIN(eps, 5);
-    auto abs_value = ABS((int32_t)value.value);
+    auto abs_value = ABS(int32_t(_iq(value)));
 
     uint32_t int_part = uint32_t(abs_value) >> GLOBAL_Q;
     uint32_t frac_part = uint32_t(abs_value) & ((1 << GLOBAL_Q )- 1);
 
-    if(minus){
-		str[0] = '-';
-		StringUtils::itoa(int_part, str + 1, 10);
-	}else{
-		StringUtils::itoa(int_part, str, 10);
+    {
+        if(minus){
+            str[0] = '-';
+        }
 
-	}
-
+        StringUtils::itoa(int_part, str + minus, 10);
+    }
 	size_t end = strlen(str);
 
     if(eps){
 		str[end] = '.';//add dot to seprate
 		end += 1;//move to \0
-		
-
-        int32_t scale = 1;
 
         for(uint8_t i = 0; i < eps; i++){
-            scale *= 10;
+            frac_part *= 10;
         }
 
-        frac_part *= scale;
-        frac_part >>= GLOBAL_Q;
-
-        StringUtils::itoas(frac_part,str + end, 10, eps);
+        StringUtils::itoas(frac_part >> GLOBAL_Q,str + end, 10, eps);
     }
 }
-
 
 void StringUtils::itoa(int64_t value,char *str,uint8_t radix){
     int sign = 0;
@@ -72,6 +64,7 @@ void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)
 		i++;
 	}while((value/=radix)>0 && i < size);
 	for(;i< size; i++)str[i] = '0';
+
 	reverse_str(str, size);
 }
 

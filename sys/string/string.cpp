@@ -640,15 +640,15 @@ void String::replace(char find, char replace)
 	}
 }
 
-String& String::replace(const String& match, const String& replace)
-{
-    int dst_len = match.length();
-    if(dst_len != (int)replace.length()) return *this;
-	StringUtils::str_replace(
-            this->c_str(),this -> length(),
-            match.c_str(),replace.c_str(),dst_len);
-    return *this;
-}
+// String& String::replace(const String& match, const String& replace)
+// {
+//     int dst_len = match.length();
+//     if(dst_len != (int)replace.length()) return *this;
+// 	StringUtils::str_replace(
+//             this->c_str(),this -> length(),
+//             match.c_str(),replace.c_str(),dst_len);
+//     return *this;
+// }
 
 // void String::replace(const String& find, const String& replace){
 
@@ -719,8 +719,8 @@ void String::alphanum(void){
 	free(new_buf);
 }
 
-bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str());}
-bool String::isDigit(void) const {return StringUtils::is_digit(c_str());}
+bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str(), len);}
+bool String::isDigit(void) const {return StringUtils::is_digit(c_str(), len);}
 String toString(char c) { return String(c); }
 String toString(const char * c) { return String(c); }
 
