@@ -1,7 +1,6 @@
 #pragma once
 
 #include "stream_base.hpp"
-
 #include "sys/string/string_utils.hpp"
 
 class String;
