@@ -209,6 +209,9 @@ int bldc_main(){
     Odometer odo{ma730};
     odo.init();
 
+    auto & u_ch = adc1.inj(1);
+    auto & v_ch = adc1.inj(2);
+    auto & w_ch = adc1.inj(3);
 
 
     using AdcChannelEnum = AdcUtils::Channel;
@@ -281,10 +284,10 @@ int bldc_main(){
         // adc_data_cache[2] = int(ADC1->IDATAR3);
 
         // static real_t temp_adc_data[4];
-        LPF(adc_data[0], real_t(ADC1->IDATAR1));
-        LPF(adc_data[1], real_t(ADC1->IDATAR2));
-        LPF(adc_data[2], real_t(ADC1->IDATAR3));
-        LPF(adc_data[3], real_t(ADC1->IDATAR4));
+        LPF(adc_data[0], real_t(uint16_t(u_ch)));
+        LPF(adc_data[1], real_t(uint16_t(v_ch)));
+        LPF(adc_data[2], real_t(uint16_t(w_ch)));
+        // LPF(adc_data[3], real_t(ADC1->IDATAR4));
 
         // LPF(adc_data[0], temp_adc_data[0]);
         // LPF(adc_data[1], temp_adc_data[1]);
@@ -375,7 +378,9 @@ int bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100), int(uvw_curr[1]*100), int(uvw_curr[2]*100));
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2]);
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100));
-        DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
+        DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data[0], adc_data[1], adc_data[2]);
+        
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;
         // cb();

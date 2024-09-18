@@ -14,17 +14,14 @@ protected:
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
-            AdcChannelOnChip(_instance, _channel, _rank),
-            mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}
+    InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank);
 
-    void setSampleCycles(const SampleCycles cycles) override{
-        ADC_InjectedChannelConfig(instance, mask, rank, (uint8_t)cycles);
-    }
+    InjectedChannel(const InjectedChannel & other) = delete;
+    InjectedChannel(InjectedChannel && other) = delete;
 
-    real_t uni() override{
-        real_t result;
-        u16_to_uni(ADC_GetInjectedConversionValue(instance, mask), result);
-        return result;
-    }
+    void setSampleCycles(const SampleCycles cycles) override;
+    
+
+    uint16_t data() override;
+    real_t uni() override;
 };
