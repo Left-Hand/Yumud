@@ -83,7 +83,7 @@ public:
     }
     __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
     __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
-
+    __fast_inline volatile GPIO_TypeDef * inst() {return instance;} 
     __fast_inline Gpio & operator = (const bool _val) override {
         write(_val);
         return *this;

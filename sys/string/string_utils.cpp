@@ -53,7 +53,6 @@ std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const 
 		}
 	}
 
-ret:
 	if(minus){
 		int_part = -int_part;
 		frac_part = -frac_part;
