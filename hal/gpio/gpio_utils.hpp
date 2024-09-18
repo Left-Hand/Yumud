@@ -1,6 +1,4 @@
-#ifndef __GPIO_ENUMS_H__
-
-#define __GPIO_ENUMS_H__
+#pragma once
 
 enum class Pin:uint16_t{
     None,
@@ -112,11 +110,9 @@ namespace GpioUtils{
 
     public:
         constexpr explicit Level(bool _value) : value(_value) {}
-
         constexpr operator bool() const { return value; }
     };
 
     static constexpr Level HIGH{true};
     static constexpr Level LOW{false};
 }
-#endif

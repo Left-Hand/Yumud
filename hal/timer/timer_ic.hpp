@@ -1,6 +1,4 @@
-
-#ifndef __TIMER_IC_HPP__
-#define __TIMER_IC_HPP__
+#pragma once
 
 #include "timer_channel.hpp"
 
@@ -19,4 +17,3 @@ protected:
 public:
     
 };
-#endif

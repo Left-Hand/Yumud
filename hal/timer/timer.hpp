@@ -1,20 +1,18 @@
-#ifndef __TIMER_HPP__
-
-#define __TIMER_HPP__
+#pragma once
 
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
 
 #ifdef HDW_SXX32
-
 class TimerHw{};
+
 class BasicTimer:public TimerHw{
 protected:
     TIM_TypeDef * instance;
+    // std::array<std::function<void(void)>, 8> cbs;
 
     uint getClk();
     void enableRcc();
-
 
 public:
     using IT = TimerUtils::IT;
@@ -100,8 +98,5 @@ public:
 
     AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
-
-#endif
-
 
 #endif

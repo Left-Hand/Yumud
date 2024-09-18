@@ -1,7 +1,5 @@
 #include "timer_oc.hpp"
-#include "../hal/gpio/port.hpp"
-
-
+#include "hal/gpio/port.hpp"
 
 void TimerOut::installToPin(const bool en){
     Gpio & io = TimerUtils::getPin(instance, channel);
