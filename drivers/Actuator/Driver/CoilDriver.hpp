@@ -25,7 +25,7 @@ class Coil3Driver: public Actuator{
 public:
     using UVW_Duty = std::tuple<real_t, real_t, real_t>;
     using AlphaBeta_Duty = std::tuple<real_t, real_t>;
-    Coil3Driver& operator= (const AlphaBeta_Duty & duty){
+    Coil3Driver & operator= (const AlphaBeta_Duty & duty){
         auto [alpha, beta] = duty;
 
         real_t modu_rad = std::atan2(alpha, beta);
@@ -33,6 +33,7 @@ public:
 
         int modu_sect = (int(modu_rad / real_t(TAU / 6))) % 6 + (modu_rad > 0 ? 1 : 6);
         real_t sixtant_theta = std::fmod(modu_rad, real_t(TAU / 6));
+
         real_t ta = modu_amp * std::sin(sixtant_theta);
         real_t tb = modu_amp * std::sin(real_t(TAU / 6) - sixtant_theta);
         

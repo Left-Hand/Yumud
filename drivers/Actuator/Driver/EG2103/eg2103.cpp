@@ -1,6 +1,6 @@
 #include "eg2103.hpp"
 
-#include "../../hal/timer/timer_oc.hpp"
+#include "hal/timer/timer_oc.hpp"
 
 void EG2103::init(){
     inst_.init();

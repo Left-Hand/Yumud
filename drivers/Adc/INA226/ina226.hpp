@@ -123,6 +123,8 @@ protected:
     public:
         INA226Channel(INA226 & _parent, const Index _ch):parent_(_parent), ch_(_ch){}
 
+        INA226Channel(const INA226Channel & other) = delete;
+        INA226Channel(INA226Channel && other) = delete;
         operator real_t() override{
             switch(ch_){
                 case Index::SHUNT_VOLT:
@@ -156,7 +158,7 @@ public:
     INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
     INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTEX}{};
 
-    auto ch(const Index index){
+    auto & ch(const Index index){
         return channels[uint8_t(index)];
     }
 
