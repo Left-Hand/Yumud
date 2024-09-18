@@ -1,8 +1,6 @@
-#ifndef __CAPTURE_CHANNEL_HPP__
+#pragma once
 
-#define __CAPTURE_CHANNEL_HPP__
-
-#include "../sys/clock/clock.h"
+#include "sys/clock/clock.h"
 #include "../sys/clock/time_stamp.hpp"
 #include "../hal/exti/exti.hpp"
 #include "sys/math/real.hpp"
@@ -110,4 +108,3 @@ public:
         return period;
     }
 };
-#endif

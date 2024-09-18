@@ -1,10 +1,7 @@
-#ifndef __PORT_CONCEPT_HPP__
+#pragma once
 
-#define __PORT_CONCEPT_HPP__
-
-
-#include "../sys/core/platform.h"
-#include "gpio_enums.hpp"
+#include "sys/core/platform.h"
+#include "gpio_utils.hpp"
 
 class PortConcept{
 public:
@@ -47,4 +44,3 @@ __fast_inline bool PortConcept::readByIndex(const int index){
     if(index < 0) return false;
     return uint16_t(*this) & (1 << index);
 };
-#endif

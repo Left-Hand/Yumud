@@ -55,9 +55,11 @@ ExtiChannel::Source ExtiChannel::from_gpio_to_source(const Gpio & gpio){
     }
 }
 
+
 ExtiChannel::Line ExtiChannel::from_gpio_to_line(const Gpio & gpio){
     return gpio.isValid() ? (Line)(1 << gpio.getIndex()) : (Line::_None);
 }
+
 
 IRQn ExtiChannel::from_line_to_irqn(const Line line){
     switch(line){
@@ -71,6 +73,7 @@ IRQn ExtiChannel::from_line_to_irqn(const Line line){
         default: return IRQn(0);
     }
 }
+
 
 void ExtiChannel::init(){
     if(gpio){
