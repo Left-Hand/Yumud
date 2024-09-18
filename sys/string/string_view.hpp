@@ -44,11 +44,11 @@ public:
     const char* data() const { return data_; }
 
     template<integral T>
-    operator T() const {return StringUtils::atoi(this->data(), this->length());}
+    explicit operator T() const {return StringUtils::atoi(this->data(), this->length());}
 
-    operator float() const {return StringUtils::atof(this->data(), this->length());}
+    template<floating T>
+    explicit operator T() const {return StringUtils::atof(this->data(), this->length());}
 
-    operator double() const {return float(*this);}
 
     operator iq_t() const;
 private:

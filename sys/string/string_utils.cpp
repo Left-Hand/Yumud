@@ -18,7 +18,7 @@ void StringUtils::reverse_str(char * str, size_t len){
 }
 
 std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const size_t len){
-
+	
     int int_part = 0;
 	int frac_part = 0;
 	int scale = 1;
@@ -42,10 +42,11 @@ std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const 
 				break;
 			case '+':
 			default:
-				break;
+				goto conv;
 		}
 	}
 
+conv:
 	for(;base < len; base++){
 		char chr = str[base];
 
@@ -73,12 +74,12 @@ std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const 
 		}
 	}
 
-ret:
 	if(minus){
 		int_part = -int_part;
 		frac_part = -frac_part;
 	}
 
+ret:
 	return {int_part, frac_part, scale};
 }
 

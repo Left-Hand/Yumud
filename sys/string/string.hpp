@@ -196,7 +196,7 @@ public:
 
 
 	template<integral T>
-    explicit operator T(void) const{return (StringView(*this));}
+    explicit operator T(void) const{return T(StringView(*this));}
 
 	template<floating T>
     explicit operator T(void) const{return T(StringView(*this));}

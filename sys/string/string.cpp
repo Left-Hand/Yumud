@@ -154,6 +154,7 @@ String::String(double value, unsigned char decimalPlaces)
 }
 
 String::String(const iq_t value, unsigned char decimalPlaces){
+	init();
 	char str[str_int_size] = {0};
     StringUtils::qtoa(value, str, decimalPlaces);
 	*this = str;
