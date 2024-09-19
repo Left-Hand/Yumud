@@ -13,7 +13,7 @@
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 
-
+#include "tasks/tone.hpp"
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
     using Archive = StepperUtils::Archive;
@@ -92,7 +92,10 @@ class FOCStepper:public FOCMotor{
 
     RunStatus cali_task(const InitFlag init_flag = false);
     RunStatus active_task(const InitFlag init_flag = false);
-    RunStatus beep_task(const InitFlag init_flag = false);
+
+    ToneTasker tone_tasker{svpwm};
+    void invoke_tone_task();
+    
     RunStatus check_task(const InitFlag init_flag = false);
 
     friend class AsciiProtocol;
@@ -179,9 +182,6 @@ public:
     void run();
 
     void report();
-
-
-
 
 
     void setPositionLimit(const Range & clamp){
