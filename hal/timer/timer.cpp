@@ -188,6 +188,9 @@ void GenericTimer::enableSingle(const bool _single){
     TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
 }
 
+void GenericTimer::setTrgoSource(const TrgoSource source){
+    TIM_SelectOutputTrigger(instance, (uint8_t)source);
+}
 
 
 void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){

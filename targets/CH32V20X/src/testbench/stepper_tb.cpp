@@ -1,32 +1,73 @@
 #include "tb.h"
+#include "robots/foc/stepper/stepper.hpp"
+#include "algo/interpolation/cubic.hpp"
+#include "drivers/Actuator/Driver/AT8222/at8222.hpp"
+#include "algo/interpolation/cubic.hpp"
+
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/can/can.hpp"
+
+#include "drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
+#include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
+#include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
+#include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
+#include "drivers/Wireless/Radio/XL2400/xl2400.hpp"
+
+#include "hal/adc/adcs/adc1.hpp"
 
 
-
-
-void stepper_tb(IOStream & logger){
+void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
     using TimerUtils::IT;
+
+    logger.init(576000);
     logger.setEps(4);
 
-    auto & ena_gpio = TIM3_CH3_GPIO;
-    auto & enb_gpio = TIM3_CH2_GPIO;
+
+    auto & ena_gpio = portB[0];
+    auto & enb_gpio = portA[7];
+
     AT8222 coilA{timer1.oc(3), timer1.oc(4), ena_gpio};
     AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio};
 
-
     SVPWM2 svpwm{coilA, coilB};
+    
     svpwm.inverse(false);
+    
     timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
     timer1.enableArrSync();
     timer1.oc(1).init();
     timer1.oc(2).init();
     timer1.oc(3).init();
     timer1.oc(4).init();
+    
 
+    using AdcChannelEnum = AdcUtils::Channel;
+    using AdcCycleEnum = AdcUtils::SampleCycles;
+
+    adc1.init(
+        {
+            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
+        },{
+            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T7_5},
+            AdcChannelConfig{AdcChannelEnum::CH3, AdcCycleEnum::T7_5},
+        }
+    );
+
+    timer1.setTrgoSource(TimerUtils::TrgoSource::Update);
+    timer1.setRepeatTimes(1);
+    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
+    adc1.enableAutoInject(false);
+    
+    
+
+    
     ena_gpio.outpp(1);
     enb_gpio.outpp(1);
 
     svpwm.init();
+    svpwm.enable();
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
@@ -39,72 +80,82 @@ void stepper_tb(IOStream & logger){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
-    Stepper stp{logger, can1, svpwm, mt6816, mem};
+
+    FOCStepper stp{svpwm, mt6816, mem};
+    AsciiProtocol ascii_p{stp, logger};
+    CanProtocol can_p{stp, can1};
+
+    stp.bindProtocol(ascii_p);
+    stp.bindProtocol(can_p);
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
     timer3.bindCb(IT::Update, [&](){stp.tick();});
-    timer3.enableIt(IT::Update, NvicPriority(0, 0));
+    timer3.enableIt(IT::Update,{0,0});
 
     can1.init(Can::BaudRate::Mbps1);
  
     stp.init();
-    // logger.println("stat is", stp.status()._to_string());
-    // while(+stp.status() == +Stepper::RunStatus::ACTIVE);
+    stp.setSpeedLimit(46);
+    stp.setAccelLimit(72);
+    stp.setOpenLoopCurrent(real_t(0.7));
+    stp.setCurrentLimit(real_t(0.4));
 
-    stp.setOpenLoopCurrent(0.8);
-    stp.setCurrentClamp(1.4);
-    stp.setTargetCurrent(-0.9);
+    while(!stp.isActive());
+    stp.setTargetCurrent(real_t(0));
+    stp.setCurrentLimit(real_t(1.5));
 
-    while(stp.isActive() == false);
-    
-    delay(3400);
+    // CubicInterpolation cubic;
 
-    stp.locateRelatively(-3);
-    stp.setCurrentClamp(1.4);
-
+    // cubic.mapping
+    // t = 0;
     while(true){
         stp.run(); 
-        // stp.setTargetVector(sin(t));
-        // stp.setTargetVector(2 * t);
-        // logger.println(stp.getSpeed());
         stp.report();
-        Sys::Clock::reCalculateTime();
 
-        // stp.setTargetPosition(0.05 * t);
-        // stp.setTargetCurrent(1.2 * sin(t));
-
-        // stp.setTargetPosition(2.6 * sin(4 * t));
-        // stp.setTargetPosition(20 * sign(sin(t)));
-        // stp.setTargetTrapezoid(70 * floor(t / 3));
-
-        // stp.setTargetPosition(0.2 * floor(t*10));
-        // stp.setTargetPosition(sin(t) + sign(sin(t)) + 4);
-        // stp.setTargetPosition(sin(t));
-        stp.setTargetPosition(2.5 * sin(3 * t));
-        // stp.setTargetPosition(-t/8);
-        // stp.setTargetPosition(4 * floor(fmod(t * 4,2)));
-        // real_t temp = sin(2 * t);
-        // temp += 10 * sign(temp);
-        // stp.setTargetSpeed(20 + temp);
-        // stp.setTargetSpeed(20 * sin(t));
+        // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
+        // real_t target = f(t-2);
+        real_t target = real_t(0.01) * t;
+        stp.setTargetPosition(target);
+        // stp.setTargetVector(target);
         // stp.setTargetSpeed(5);
-        // stp.setTargetSpeed(sin(t));
-        // stp.setTargetPosition(ss());
-        // stp.setTargetSpeed(CLAMP(60 * sin(2 * t), 10, 35));
-        // stp.setTargetSpeed((5 << (int(2 * t) % 4)));
-        // stp.setTargetSpeed(5 * sin(2*t));
-        // switch(int(t)){
+        // stp.setTargetVector(target);
 
-        // real_t _t = fmod(t * 3, 6);
-        // // stp.setTargetSpeed(CLAMP(40 * sin(PI / 2 * t), -20, 20));
-        // if(IN_RANGE(_t, 1, 3))stp.setTargetSpeed(40);
-        // else if(IN_RANGE(_t, 4, 6)) stp.setTargetSpeed(0);
-        // else{
-        //     real_t temp = sin(PI / 2 * _t);
-        //     stp.setTargetSpeed(40 * temp * temp);
-        // }
-        // }
+        // if(logger.pending() == 0) logger.println(stp.getPositionErr(),fmod(t, real_t(1.00)), target, stp.getPosition());
+        if(logger.pending() == 0) logger.println(real_t(adc1.inj(1)), real_t(adc1.inj(2)));
+        // Sys::Clock::reCalculateTime();
 
+        // stp.setTargetPosition(Interpolation::demo() * 10);
+        // stp.setTargetPosition(5 * sin(7 * t));
+        // stp.setTargetPosition(demo() * 17);
+        // stp.setTargetPosition(17* sin(2 * t));
+        // stp.setTargetPosition(17* sin(2 * t));
+        // stp.setTargetPosition(7 * frac(t));
+
+        // stp.setTargetPosition(0);
+        // stp.setTargetPosition(abs(frac(t)-real_t(0.5)));
+        // stp.setTargetPosition(CLAMP(sin(3 * t), real_t(-0.5), real_t(0.5)));
+        // Sys::Clock::reCalculateTime();
+        // stp.setTargetPosition(4 * sin(t * 2) + sign(sin(t * 2)));
+        // stp.setTargetPosition(3 * sin(10*t)*(cos(t/2)));
+        // stp.setTargetPosition(5 *sin(t) * sin(t*5));
+        // stp.setTargetPosition(frac(t));
+        // stp.setTargetPosition(24 * sin(2 * t));
+        // stp.setTargetSpeed(24 * sin(7 * t));
+        // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
+        // stp.setTargetPosition(3 * abs(frac(t*2) - real_t(0.5)));
+
+        // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
+        // stp.setTargetPosition(10 * sign(sin(t * 3)));
+        // stp.setTargetPosition(real_t(1.5) * sin(3 * t));
+        // stp.setTargetSpeed(CLAMP(60 * sin(t * 3), 0, 30));
+        // stp.setTargetTrapezoid(10 * sign(sin(3* t)));
+        // stp.setTargetTrapezoid(10 * sign(sin(1.5 * t)));
+        // stp.setTargetPosition(10 * sign(sin(1.5 * t)));
+        // stp.setTargetPosition(40 * sin(t/2) + 20 * sign(sin(t/2)));
+        // stp.setTargetPosition(real_t(0.3) * sin(t));
+        // stp.setTargetVector(sin(t) * 0.5);
+        // stp.setTargetPosition(4 * sign(sin(4 * t)));
+        Sys::Clock::reCalculateTime();
     }
 }

@@ -279,7 +279,7 @@ int bldc_main(){
         est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) - real_t(PI);
         // setDQDuty(0, real_t(0.01), rad);
         // setDQDuty(0, real_t(0.01), open_rad);
-        svpwm.setDuty(real_t(0.2), rad);
+        svpwm.setDuty(real_t(-0.3), rad);
         // svpwm.setDQDuty(Vector2(0,real_t(0.2)), open_rad);
         
         // setDQDuty(0, real_t(0.01), est_rad);
