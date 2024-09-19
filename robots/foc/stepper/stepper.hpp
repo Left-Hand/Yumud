@@ -18,6 +18,7 @@
 #include "tasks/selfcheck.hpp"
 
 
+
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
     using Archive = StepperUtils::Archive;
@@ -193,7 +194,6 @@ public:
     void run();
 
     void report();
-
 
     void setPositionLimit(const Range & clamp){
         ctrl_limits.pos_limit = clamp;

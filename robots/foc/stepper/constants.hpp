@@ -14,7 +14,7 @@
 #include "drivers/Memory/memory.hpp"
 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
-#include "drivers/Encoder/OdometerLines.hpp"
+#include "drivers/Encoder/odometer_poles.hpp"
 
 #define scexpr static constexpr
 

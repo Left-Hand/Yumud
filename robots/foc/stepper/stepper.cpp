@@ -1,6 +1,7 @@
 #include "stepper.hpp"
 #include "sys/math/float/bf16.hpp"
 
+
 static auto & nozzle_en_gpio = portA[0];
 
 void FOCStepper::setNozzle(const real_t duty){

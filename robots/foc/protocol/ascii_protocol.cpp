@@ -208,7 +208,7 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             break;
 
         case "cm"_ha:
-            motor.odo.map().fill(0);
+            // motor.odo.map().fill(0);
             break;
 
         // case "version"_ha:

@@ -2,8 +2,11 @@
 
 #include "stepper/archive/archive.hpp"
 #include "stepper/ctrls/ctrls.hpp"
+#include "drivers/Encoder/odometer_poles.hpp"
+
 #include "protocol/can_protocol.hpp"
 #include "protocol/ascii_protocol.hpp"
+
 
 class AsciiProtocol;
 class CanProtocol;
@@ -102,7 +105,7 @@ protected:
         if(shutdown_when_error_occurred){
             enable(false);
         }
-        CLI_DEBUG(error_message);
+        // CLI_DEBUG(error_message);
     }
 
     void throw_warn(const ErrorCode ecode, const char * _warn_message){
@@ -111,7 +114,7 @@ protected:
         if(shutdown_when_warn_occurred){
             enable(false);
         }
-        CLI_DEBUG(warn_message);
+        // CLI_DEBUG(warn_message);
     }
 
     SVPWM & svpwm;

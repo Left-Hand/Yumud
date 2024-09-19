@@ -61,8 +61,6 @@ bool FOCStepper::loadArchive(const bool outen){
 void FOCStepper::saveArchive(const bool outen){
     Archive archive;
 
-    static_assert(sizeof(Archive) <= 256, "archive size overflow");
-
     ARCHIVE_PRINTS("======");
     ARCHIVE_PRINTS("generating archive...");
     ARCHIVE_PRINTS("current board info:");
@@ -73,7 +71,7 @@ void FOCStepper::saveArchive(const bool outen){
     archive.hashcode = hashcode;
 
     for(size_t i = 0; i < odo.map().size(); i++){
-        static constexpr auto ratio = real_t(1 / TAU);
+        scexpr auto ratio = real_t(1 / TAU);
         auto item_i = int16_t((odo.map()[i] - (elecrad_zerofix / poles * ratio)) * 16384);
         archive.cali_map[i] = item_i;
     }

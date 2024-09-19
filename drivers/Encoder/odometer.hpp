@@ -5,6 +5,7 @@
 #include "sys/math/real.hpp"
 #include "Encoder.hpp"
 #include <array>
+#include "thirdparty/sstl/include/sstl/vector.h"
 
 class Odometer{
 public:
@@ -76,55 +77,5 @@ public:
     }
 };
 
-
-
-
-class OdometerPoles:public Odometer{
-protected:
-    static constexpr int poles = 50;
-    real_t elecrad_cache = real_t(0);
-
-    std::array<real_t, poles>cali_map;
-
-    real_t correctPosition(const real_t rawPosition) override;
-public:
-    OdometerPoles(Encoder & _encoder):Odometer(_encoder){;}
-
-    void reset() override{
-        Odometer::reset();
-        elecrad_cache = real_t(0);
-        cali_map.fill(real_t(0));
-    }
-
-    real_t getElecRad(){
-        return position2rad(getLapPosition());
-    }
-
-    real_t getElecRadFixed(){
-        return position2rad(getLapPosition() + deltaLapPosition);
-    }
-
-    int getRawPole(){
-        return position2pole(getRawLapPosition());
-    }
-
-    auto & map(){
-        return cali_map;
-    }
-
-    real_t position2rad(const real_t position){
-        real_t frac1 = poles * frac(position);
-        return real_t(TAU) * (frac(frac1));
-    }
-
-    int position2pole(const iq_t position){
-        int pole = int(frac(position) * poles);
-        return MIN(pole, poles - 1);
-    }
-
-    real_t pole2position(const int pole){
-        return real_t(pole) / 50;
-    }
-};
 
 #endif
