@@ -13,7 +13,6 @@ protected:
         INIT,
         PRE_FORWARD,
         FORWARD,
-        BREAK,
         REALIGN,
         PRE_BACKWARD,
         BACKWARD,
