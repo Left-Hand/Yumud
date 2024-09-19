@@ -91,7 +91,8 @@ class FOCStepper:public FOCMotor{
     bool cmd_mode = false;
 
     RunStatus cali_task(const InitFlag init_flag = false);
-    RunStatus active_task(const InitFlag init_flag = false);
+    void active_task();
+    void invoke_active_task();
     RunStatus beep_task(const InitFlag init_flag = false);
     RunStatus check_task(const InitFlag init_flag = false);
 
