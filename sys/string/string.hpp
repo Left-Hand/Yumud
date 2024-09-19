@@ -19,8 +19,7 @@
   Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-#ifndef String_class_h
-#define String_class_h
+#pragma once
 #ifdef __cplusplus
 
 #include <stdlib.h>
@@ -28,10 +27,12 @@
 #include <ctype.h>
 
 #include "string_view.hpp"
-#include "string_stream.hpp"
 
 #include "sys/string/string_utils.hpp"
 #include "sys/core/platform.h"
+
+static constexpr size_t str_int_size = 16;
+static constexpr size_t str_float_size = 16;
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
@@ -61,9 +62,10 @@ public:
 	explicit String(char c);
     explicit String(char * c);
     explicit String(char * c, const size_t size);
-	String(const std::string & str):String(str.c_str(), str.length()){};
-	String(const StringView & str):String(str.data(), str.length()){};
     explicit String(const char * c, const size_t size);
+	String(const std::string & str):String(str.c_str(), str.length()){};
+	String(const std::string_view & str):String(str.data(), str.length()){};
+	String(const StringView & str):String(str.data(), str.length()){};
 
 	explicit String(unsigned char value, unsigned char base=10);
 	explicit String(int value, unsigned char base=10);
@@ -76,6 +78,7 @@ public:
 
 	explicit String(float value, unsigned char decimalPlaces = 3);
 	explicit String(double value, unsigned char decimalPlaces = 3);
+	explicit String(const iq_t value, unsigned char decimalPlaces = 3);
 	~String(void);
 
 	// memory management
@@ -102,6 +105,7 @@ public:
 	// concatenation is considered unsucessful.  
 	unsigned char concat(const String &str);
 	unsigned char concat(const char *cstr);
+	unsigned char concat(const char *cstr, unsigned int length);
 	unsigned char concat(char c);
 	unsigned char concat(unsigned char c);
 	unsigned char concat(int num);
@@ -124,16 +128,16 @@ public:
 	String & operator += (float num)		{concat(num); return (*this);}
 	String & operator += (double num)		{concat(num); return (*this);}
 
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, const String &rhs);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, const char *cstr);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, char c);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned char num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, int num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned int num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, long num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, unsigned long num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, float num);
-	friend StringSumHelper & operator + (const StringSumHelper &lhs, double num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, const String &rhs);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, const char *cstr);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, char c);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned char num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, int num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned int num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, long num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned long num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, float num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, double num);
 
 	// comparison (only works w/ Strings and "strings")
 	operator StringIfHelperType() const { return buffer ? &String::StringIfHelper : 0; }
@@ -179,7 +183,7 @@ public:
 	// modification
 	void replace(char find, char replace);
 	// String& replace(const String& replace);
-	String& replace(const String & find, const String & replace);
+	// String& replace(const String & find, const String & replace);
 	void remove(unsigned int index);
 	void remove(unsigned int index, unsigned int count);
 	String & toLowerCase(void);
@@ -187,31 +191,33 @@ public:
 	void trim(void);
 	void alphanum(void);
 
-	// parsing/conversion
-	long toInt(void) const;
-	float toFloat(void) const;
-
-
-	template<integral T>
-    explicit operator T(void) const{return toInt();}
-
-    explicit operator float(void) const{return toFloat();}
-
-	explicit operator std::string(void) const {return std::string(this->c_str(), this->length());}
-	explicit operator std::string_view(void) const {return std::string(this->c_str(), this->length());}
-	explicit operator StringView(void) const {return StringView(this->c_str(), this->length());}
     bool isNumeric(void) const;
     bool isDigit(void) const;
 
+
+	template<integral T>
+    explicit operator T(void) const{return T(StringView(*this));}
+
+	template<floating T>
+    explicit operator T(void) const{return T(StringView(*this));}
+
+	explicit operator iq_t() const {return iq_t(StringView(*this));}
+
+	explicit operator std::string(void) const {return std::string(this->c_str(), this->length());}
+	explicit operator std::string_view(void) const {return std::string(this->c_str(), this->length());}
+
+	operator StringView(void) const {return StringView(this->c_str(), this->length());}
+
+
 protected:
 	char *buffer;	        // the actual char array
-	unsigned int capacity;  // the array length minus one (for the '\0')
-	unsigned int len;       // the String length (not counting the '\0')
+	size_t capacity;  // the array length minus one (for the '\0')
+	size_t len;       // the String length (not counting the '\0')
 protected:
 	void init(void);
 	void invalidate(void);
 	unsigned char changeBuffer(unsigned int maxStrLen);
-	unsigned char concat(const char *cstr, unsigned int length);
+
 
 	// copy and move
 	String & copy(const char *cstr, unsigned int length);
@@ -249,4 +255,3 @@ String toString(float value, unsigned char decimalPlaces = 3);
 String toString(double value, unsigned char decimalPlaces = 3);
 
 #endif  // __cplusplus
-#endif  // String_class_h

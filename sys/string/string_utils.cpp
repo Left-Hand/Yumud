@@ -1,157 +1,103 @@
 #include "string_utils.hpp"
 
+static inline void swap_char(char & a, char & b){
+	char temp = a;
+	a = b;
+	b = temp;
+}
 
 void StringUtils::reverse_str(char * str, size_t len){
 	if(len == 0) return;
 
 	len -= 1;
 	for(size_t i = 0; i < len / 2 + (len % 2); i++){
-		char temp = str[i];
-		str[i] = str[len - i];
-		str[len - i] = temp;
+		swap_char(str[i],str[len - i]);
 	}
+
 	str[len + 1] = '\0';
 }
 
-void StringUtils::disassemble_fstr(const char * str, int & int_part, int & frac_part, int & scale){
-    char * p = const_cast<char *>(str);
+std::tuple<int, int, int> StringUtils::disassemble_fstr(const char * str, const size_t len){
+	
+    int int_part = 0;
+	int frac_part = 0;
+	int scale = 1;
 
-    scale = 1;
+	bool into_f = false;
     bool minus = false;
 
-    while(!((*p>='0'&& *p<='9')||*p=='+'||*p=='-'||*p=='.')&&*p!='\0'){
-        p++;
-    }
+	size_t base = 0;
 
-    if(*p=='\0'){
-        int_part = 0;
-        frac_part = 0;
-	}else{
-        if(*p=='-'){
-            minus = true;
-            p++;
-        }
+	for(;base < len; base++){
+		char chr = str[base];
 
-        if(*p=='+'){
-            p++;
-        }
-
-        while(*p>='0'&&*p<='9'){
-            int_part = int_part * 10 + (*p-'0');
-            p++;
-        }
-
-        if(*p=='.'){
-            p++;
-            while(*p>='0'&&*p<='9'){
-                frac_part = frac_part * 10 + (*p-'0');
-                scale *= 10;
-                p++;
-			}
+		switch(chr){
+			case '\0':
+				goto ret;
+			case '.':
+				into_f = true;
+				break;
+			case '-':
+				minus = true;
+				break;
+			case '+':
+			default:
+				goto conv;
 		}
-
-        if(minus){
-            int_part = -int_part;
-            frac_part = -frac_part;
-        }
 	}
-}
 
-void StringUtils::itoa(int64_t value,char *str,uint8_t radix){
-    int sign = 0;
-    int i=0;
-    if(value < 0){
-        sign = -1;
-        value = -value;  
-    }
-    do {
-        if(value%radix>9)
-            str[i] = value%radix +'0'+7;
-        else
-            str[i] = value%radix +'0';
-        i++;
-    } while((value/=radix)>0);
-    if(sign<0) {
-        str[i] = '-';
-        i++;
-    }
+conv:
+	for(;base < len; base++){
+		char chr = str[base];
 
-    reverse_str(str, i);
-}
-
-void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)  
-{
-	uint8_t i = 0;
-    value = abs(value);
-	do{
-		if(value%radix>9)
-			str[i] = value%radix +'0'+7;
-		else
-			str[i] = value%radix +'0';
-		i++;
-	}while((value/=radix)>0 && i < size);
-	for(;i< size; i++)str[i] = '0';
-	reverse_str(str, size);
-}
-
-void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix)
-{
-    int i=0;
-
-    do {
-        if(value%radix>9)
-            str[i] = value%radix +'0'+7;
-        else
-            str[i] = value%radix +'0';
-        i++;
-    } while((value/=radix)>0);
-
-    reverse_str(str, i);
-}
-
-
-
-void StringUtils::ftoa(float number,char *buf, uint8_t eps)
-{
-    char str_int[12] = {0};
-    char str_float[eps+1] = {0};
-
-    long int_part = (long)number;
-    float float_part = number - (float)int_part;
-
-	if(number < 0 && int_part == 0){
-		str_int[0] = '-';
-		itoa(int_part,str_int + 1,10);
+		switch(chr){
+			case '\0':
+				goto ret;
+			case '.':
+				into_f = true;
+				break;
+			case '-':
+			case '+':
+				break;
+			default:
+				if(is_digit(chr)){
+					if(into_f){
+						frac_part = frac_part * 10 + (chr - '0');
+						scale *= 10;
+					}else{
+						int_part = int_part * 10 + (chr - '0');
+					}
+				}else{
+					goto ret;
+				}
+				break;
+		}
 	}
-	else itoa(int_part,str_int,10);
 
-    if(eps){
-        float scale = 1;
-        for(uint8_t i = 0; i < eps; i++)
-            scale *= 10;
+	if(minus){
+		int_part = -int_part;
+		frac_part = -frac_part;
+	}
 
-        float_part *= scale;
-        itoas((int)(float_part),str_float, 10, eps);
-    }
-
-    int i = strlen(str_int);
-    str_int[i] = '.';
-    strcat(str_int,str_float);
-    strcpy(buf,str_int);
+ret:
+	return {int_part, frac_part, scale};
 }
+
 
 bool StringUtils::is_digit(const char chr){
-    return chr >= '0' && chr <= '9';
+    return chr >= '0' and chr <= '9';
 }
 
-bool StringUtils::is_numeric(const char* str) {
+bool StringUtils::is_numeric(const char* str, const size_t len) {
 	bool hasDigit = false;
 	bool hasDot = false;
 	bool hasSign = false;
 
-	for (int i = 0; str[i] != '\0'; i++) {
+	for (size_t i = 0; i < len; i++) {
 		char chr = str[i];
-		if (is_digit(chr)) {
+		if(chr == '\0'){
+			break;
+		} else if (is_digit(chr)) {
 			hasDigit = true;
 		} else if (chr == '.') {
 			if (hasDot || !hasDigit) {
@@ -170,13 +116,15 @@ bool StringUtils::is_numeric(const char* str) {
 	return hasDigit; // 至少包含一个数字才认为是合法数字
 }
 
-bool StringUtils::is_digit(const char * str){
-    for(int i = 0; str[i]!= '\0'; i++){
-        if(!is_digit(str[i])) return false;
+bool StringUtils::is_digit(const char * str, const size_t len){
+    for(size_t i = 0; i < len; i++){
+		char chr = str[i];
+        if(!is_digit(chr)) return false;
+		if(chr == '\0') break;
     }
     return true;
 }
-int StringUtils::kmp_find(const char *src, const size_t src_len, const char *match, const size_t match_len) {
+int StringUtils::kmp_find(char *src, const size_t src_len, const char *match, const size_t match_len) {
 	size_t *table = (size_t *)malloc(match_len * sizeof(size_t));
 	size_t i = 0, j = 1;
 	table[0] = 0;
@@ -217,10 +165,10 @@ int StringUtils::kmp_find(const char *src, const size_t src_len, const char *mat
 	}
 }
 
-void StringUtils::str_replace(const char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
-	char * find_ptr = (char *)src;
+void StringUtils::str_replace(char *src, const size_t src_len, const char *match, const char *replace, const size_t dst_len){
+	char * find_ptr = src;
 	size_t find_len = src_len;
-	char * replace_ptr = (char *)match;
+	const char * replace_ptr = match;
 	
 	while(1){
 		int pos = kmp_find(find_ptr, find_len, replace_ptr, dst_len);
@@ -236,37 +184,7 @@ void StringUtils::str_replace(const char *src, const size_t src_len, const char 
 }
 
 
-int StringUtils::atoi(const char * str, const size_t len) {
-	int ret = 0;
-	bool minus = false;
 
-	for(size_t i = 0; i < len; i++){
-		char chr = str[i];
-	
-		if(chr=='-'){
-			minus = true;
-		}
-
-		while(chr>='0' and chr<='9'){
-			ret *= 10;
-			ret += chr - '0';
-			if(ret < 0){
-				ret= __INT_MAX__;
-				break;
-			}
-		}
-	}
-
-	return minus ? (-ret) : ret;
-}
-
-float StringUtils::atof(const char * str, const size_t len) {
-    int int_part = 0;
-    int frac_part = 0;
-    int scale = 1;
-    disassemble_fstr(str, int_part, frac_part, scale);
-    return(int_part + (float)frac_part / scale);
-}
 
 [[maybe_unused]] static void mystof(const char * str, const size_t len, int & int_part, int & frac_part, int & scale){
     scale = 1;

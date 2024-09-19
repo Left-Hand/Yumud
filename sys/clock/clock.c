@@ -17,16 +17,12 @@
 extern "C" {
 #endif
 
-
-
 volatile uint32_t msTick = 0;
 
 void delay(const uint32_t ms)
 {
   delayMicroseconds(ms * 1000);
 }
-
-
 
 void delayMicroseconds(const uint32_t us)
 {

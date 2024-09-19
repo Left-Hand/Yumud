@@ -3,7 +3,7 @@
 #define __SGM58031_HPP__
 
 #include "../drivers/device_defs.h"
-#include "real.hpp"
+#include "sys/math/real.hpp"
 
 #define AD9854_DEBUG
 

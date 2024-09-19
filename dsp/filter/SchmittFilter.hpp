@@ -1,7 +1,7 @@
 #ifndef __SCHMITT_FILTER_H__
 #define __SCHMITT_FILTER_H__
 
-#include "real.hpp"
+#include "sys/math/real.hpp"
 
 template<typename real>
 class SchmittFilter{

@@ -1,20 +1,18 @@
-#ifndef __TIMER_HPP__
-
-#define __TIMER_HPP__
+#pragma once
 
 #include "timer_oc.hpp"
 #include "timer_utils.hpp"
 
 #ifdef HDW_SXX32
-
 class TimerHw{};
+
 class BasicTimer:public TimerHw{
 protected:
     TIM_TypeDef * instance;
+    // std::array<std::function<void(void)>, 8> cbs;
 
     uint getClk();
     void enableRcc();
-
 
 public:
     using IT = TimerUtils::IT;
@@ -71,6 +69,13 @@ protected:
 public:
     using LockLevel = TimerUtils::BdtrLockLevel;
 
+    AdvancedTimer(TIM_TypeDef * _base):GenericTimer(_base),
+            n_channels{
+                TimerOCN(instance, TimerChannel::Channel::CH1N),
+                TimerOCN(instance, TimerChannel::Channel::CH2N),
+                TimerOCN(instance, TimerChannel::Channel::CH3N),
+            }{;}
+
     void initBdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
     void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, (FunctionalState)_sync);}
     void setDeadZone(const uint32_t ns);
@@ -91,17 +96,9 @@ public:
     }
 
     TimerOCN & ocn(const int index){return n_channels[CLAMP(index, 1, 3) - 1];}
-    AdvancedTimer(TIM_TypeDef * _base):GenericTimer(_base),
-            n_channels{
-                TimerOCN(instance, TimerChannel::Channel::CH1N),
-                TimerOCN(instance, TimerChannel::Channel::CH2N),
-                TimerOCN(instance, TimerChannel::Channel::CH3N),
-            }{;}
+
 
     AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
-
-#endif
-
 
 #endif

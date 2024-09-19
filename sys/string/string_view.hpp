@@ -22,10 +22,17 @@ public:
     StringView(const char* str, size_t size) : data_(str), size_(size) {}
 
     StringView(const StringView & other): data_(other.data_), size_(other.size_){;}
-    StringView(StringView && other): data_(other.data_), size_(other.size_){;}
-    StringView& operator=(const StringView& other) {
+    StringView(StringView && other): data_(std::move(other.data_)), size_(std::move(other.size_)){;}
+
+    StringView& operator=(const StringView & other) {
         data_ = other.data_;
         size_ = other.size_;
+        return *this;
+    }
+
+    StringView& operator=(StringView && other) {
+        data_ = std::move(other.data_);
+        size_ = std::move(other.size_);
         return *this;
     }
 
@@ -37,11 +44,13 @@ public:
     const char* data() const { return data_; }
 
     template<integral T>
-    operator T() const {return StringUtils::atoi(this->data(), this->length());}
+    explicit operator T() const {return StringUtils::atoi(this->data(), this->length());}
 
-    operator float() const {return StringUtils::atof(this->data(), this->length());}
+    template<floating T>
+    explicit operator T() const {return StringUtils::atof(this->data(), this->length());}
 
-    operator double() const {return float(*this);}
+
+    operator iq_t() const;
 private:
     const char * data_;
     size_t size_;

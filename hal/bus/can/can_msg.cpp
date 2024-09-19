@@ -1,4 +1,5 @@
 #include "can_msg.hpp"
+#include "sys/stream/ostream.hpp"
 OutputStream & operator<<(OutputStream & os, const CanRxMsg & msg){
     return os << '{' << 
         std::dec << msg.StdId

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../sys/core/system.hpp"
-#include "../hal/gpio/port.hpp"
-#include "../hal/nvic/nvic.hpp"
+#include "sys/core/system.hpp"
+#include "hal/gpio/port.hpp"
+#include "hal/nvic/nvic.hpp"
 #include <functional>
 
 namespace TimerUtils{

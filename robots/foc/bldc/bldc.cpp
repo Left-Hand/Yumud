@@ -11,7 +11,10 @@
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
+#include "drivers/Actuator/Driver/MP6540/mp6540.hpp"
+#include "drivers/Actuator/SVPWM/svpwm.hpp"
 #include "hal/bus/spi/spihw.hpp"
+#include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
 
 
@@ -48,58 +51,6 @@ constexpr int pwmFreq = 73000;
 constexpr auto adc_sample_cycles = ADC_SampleTime_28Cycles5;
 constexpr float sample_ticks = -10.5;
 constexpr real_t dutyScale = real_t(0.17f);
-
-
-constexpr int fsector(const real_t x, const real_t inv_step, int sectors){
-    return int((x * inv_step) / sectors);
-}
-
-
-void setUVWDuty(const real_t uDutyTarget,const real_t vDutyTarget,const real_t wDutyTarget){
-    timer1.oc(1) = uDutyTarget;
-    timer1.oc(2) = vDutyTarget;
-    timer1.oc(3) = wDutyTarget;
-}
-
-
-
-void setDQDuty(const real_t dDutyTarget,const real_t qDutyTarget,const real_t radTarget){
-
-    auto modu_sect = (int(radTarget / real_t(TAU / 6)) % 6) + 1;
-    auto sixtant_theta = fmod(radTarget, real_t(TAU / 6));
-    
-
-    real_t ta = std::sin(sixtant_theta) * real_t(dutyScale);
-    real_t tb = std::sin(real_t(TAU / 6) - sixtant_theta) * real_t(dutyScale);
-    
-    real_t t0 = (real_t(1) - ta - tb) / 2;
-    real_t t1 = (real_t(1) + ((modu_sect % 2 == 0 )? (tb - ta) : (ta - tb))) / 2;
-    real_t t2 = (real_t(1) + ta + tb) / 2;
-
-    switch (modu_sect){
-        case 1:
-            setUVWDuty(t2, t1, t0);
-            break;
-        case 2:
-            setUVWDuty(t1, t2, t0);
-            break;
-        case 3:
-            setUVWDuty(t0, t2, t1);
-            break;
-        case 4:
-            setUVWDuty(t0, t1, t2);
-            break;
-        case 5:
-            setUVWDuty(t1, t0, t2);
-            break;
-        case 6:
-            setUVWDuty(t2, t0, t1);
-            break;
-        default:
-            break;
-    }
-}
-
 
 // void processCurrentSensing(){
 
@@ -169,7 +120,30 @@ void setDQDuty(const real_t dDutyTarget,const real_t qDutyTarget,const real_t ra
 
 // static constexpr uint foc_freq = 32768;
 // static constexpr uint chopper_freq = 32768;
+
+
 static constexpr uint chopper_freq = 32768;
+
+using Current = real_t;
+using Current3 = std::array<Current, 3>;
+using Current2 = std::array<Current, 2>;
+using Voltage = real_t;
+
+
+__inline auto data_to_curr(const real_t data) -> real_t{
+    static constexpr int res = 1000;
+    static constexpr real_t mul = real_t((3.3 * 9800 / res));
+    return ((real_t(data) >> 4) * mul) >> 8;
+};
+
+__inline auto uvw_to_ab(const Current3 & uvw) -> Current2{
+    return {uvw[0] - ((uvw[1] + uvw[2]) >> 1), (uvw[2] - uvw[1]) * real_t(1.73 / 2)};
+};
+
+__inline auto ab_to_dq(const Current2 & ab, const real_t rad) -> Current2{
+    return {cos(rad) * ab[1] - sin(rad) * ab[0], sin(rad) * ab[1] + cos(rad) * ab[0]};
+};
+
 
 
 int bldc_main(){
@@ -210,7 +184,21 @@ int bldc_main(){
     odo.init();
 
 
+    MP6540 mp6540{
+        {pwm_u, pwm_v, pwm_w},
+        {adc1.inj(1), adc1.inj(2), adc1.inj(3)}
+    };
 
+    mp6540.init();
+    mp6540.setSoRes(1_K);
+    
+    SVPWM3 svpwm {mp6540};
+    
+
+    auto & u_ch = mp6540.ch(1);
+    auto & v_ch = mp6540.ch(2);
+    auto & w_ch = mp6540.ch(3);
+    
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
@@ -218,10 +206,10 @@ int bldc_main(){
         {
             AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
         },{
-            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T28_5},
-            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
-            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
-            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T28_5},
+            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T7_5},
+            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T7_5},
+            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T7_5},
+            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T7_5},
             // AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
             // AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
             // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T41_5},
@@ -239,71 +227,41 @@ int bldc_main(){
     real_t rad = 0;
     real_t open_rad = 0;
 
-    using Current = real_t;
-    using Current3 = std::array<Current, 3>;
-    using Current2 = std::array<Current, 2>;
-    using Voltage = real_t;
-
     Current3 uvw_curr = {0,0,0};
     Current3 uvw_curr_drift = {0,0,0};
 
     Current2 ab_curr = {0,0};
     Current2 dq_curr = {0,0};
 
-    Voltage bus_volt = 0;
-    real_t adc_data[4];
+    // Voltage bus_volt = 0;
     real_t est_rad;
 
-    auto data_to_curr = [](const real_t data) -> real_t{
-        static constexpr real_t mul = real_t((3.3 * 9800 / 1000));
-        return ((real_t(data) >> 4) * mul) >> 8;
-        // return data;
-    };
+    // real_t s_lpf_u_curr = 0;
 
-    auto uvw_to_ab = [](const Current3 & uvw) -> Current2{
-        return {uvw[0] - ((uvw[1] + uvw[2]) >> 1), (uvw[2] - uvw[1]) * real_t(1.73 / 2)};
-    };
 
-    auto ab_to_dq = [](const Current2 & ab, const real_t rad) -> Current2{
-        return {cos(rad) * ab[1] - sin(rad) * ab[0], sin(rad) * ab[1] + cos(rad) * ab[0]};
-    };
+    #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
+    // #define SLPF(x,y) x = (((x >> 2) * ((1 << 16) - 1) + (y >> 2)) >> 14);
+    #define SLPF(x,y) x = ((x * ((1 << 14) - 1) + y) >> 14);
 
     auto update_curr = [&](){
-        // #define LPF(x,y) x = (x * 1023 + y) >> 10;
-        // #define LPF(x,y) x = ((x* 31 + (y)) / 32);
-        #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
-        // #define LPF(x,y) x = y;
         // #define LPF(x,y) x = (((x >> 4) * 15 + (y >> 4)));
-        // #define LPF(x,y) x = (((x >> 3) * 7 + (y >> 3)));
-        // #define LPF(x,y) x = (y * 64) >> 6;
-        // adc_data_cache[0] = int(ADC1->IDATAR1);
-        // adc_data_cache[1] = int(ADC1->IDATAR2);
-        // adc_data_cache[2] = int(ADC1->IDATAR3);
 
-        // static real_t temp_adc_data[4];
-        LPF(adc_data[0], real_t(ADC1->IDATAR1));
-        LPF(adc_data[1], real_t(ADC1->IDATAR2));
-        LPF(adc_data[2], real_t(ADC1->IDATAR3));
-        LPF(adc_data[3], real_t(ADC1->IDATAR4));
 
-        // LPF(adc_data[0], temp_adc_data[0]);
-        // LPF(adc_data[1], temp_adc_data[1]);
-        // LPF(adc_data[2], temp_adc_data[2]);
-        // LPF(adc_data[3], temp_adc_data[3]);
+        static Current3 uvw_curr_raw;
+                
+        LPF(uvw_curr_raw[0], real_t(u_ch));
+        LPF(uvw_curr_raw[1], real_t(v_ch));
+        LPF(uvw_curr_raw[2], real_t(w_ch));
 
-        auto data_to_volt = [](const real_t data) -> real_t{
-            return (data * real_t(33.3/4) >> 10);
-        };
-
+        // SLPF(s_lpf_u_curr, uvw_curr_raw[0]);
+        
         for(size_t i = 0; i < 3; i++){
-            uvw_curr[i] = data_to_curr(adc_data[i]) - uvw_curr_drift[i];
+            uvw_curr[i] = uvw_curr_raw[i] - uvw_curr_drift[i];
         }
 
         ab_curr = uvw_to_ab(uvw_curr);
 
-
-
-        bus_volt = data_to_volt(adc_data[3]);
+        // bus_volt = data_to_volt(adc_data[3]);
     };
 
 
@@ -319,20 +277,15 @@ int bldc_main(){
         open_rad = frac(open_pos * 7) * real_t(TAU);
         // est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) + real_t(PI/2);
         est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) - real_t(PI);
-        setDQDuty(0, real_t(0.01), rad);
+        // setDQDuty(0, real_t(0.01), rad);
+        // setDQDuty(0, real_t(0.01), open_rad);
+        svpwm.setDuty(real_t(0.2), rad);
+        // svpwm.setDQDuty(Vector2(0,real_t(0.2)), open_rad);
+        
         // setDQDuty(0, real_t(0.01), est_rad);
         // auto temp_dq_curr = ab_to_dq(ab_curr, rad);
         dq_curr = ab_to_dq(ab_curr, rad);
-        // LPF(dq_curr[0], temp_dq_curr[0])
-        // LPF(dq_curr[1], temp_dq_curr[1])
-
-        // adc1.enableContinous(false);
-        // DEBUG_PRINTLN("?");
     };
-
-
-
-
 
     auto & ledr = portC[13];
     auto & ledb = portC[14];
@@ -342,16 +295,23 @@ int bldc_main(){
     ledg.outpp();
     portA[7].inana();
 
-    for(size_t i = 0; i < 40000; ++i){
+    for(size_t i = 0; i < 4000; ++i){
         update_curr();
     }
-    std::swap(uvw_curr, uvw_curr_drift);
+    
+    u_ch.setBasis(uvw_curr[0]);
+    v_ch.setBasis(uvw_curr[1]);
+    w_ch.setBasis(uvw_curr[2]);
+
+    // DEBUG_PRINTLN(real_t(u_ch), real_t(v_ch), real_t(w_ch));
 
     adc1.bindCb(AdcUtils::IT::JEOC, cb);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
     en_gpio = true;
     slp_gpio = true;
+
+
     while(true){
         // auto pos = ma730.getLapPosition();
 
@@ -375,7 +335,15 @@ int bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100), int(uvw_curr[1]*100), int(uvw_curr[2]*100));
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2]);
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100));
-        DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1]);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), real_t(adc1.inj(2)), real_t(adc1.inj(3)));
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), real_t(v_ch), real_t(w_ch));
+        DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), s_lpf_u_curr);
+        // auto [a,b] = Vector2{real_t(0), real_t(0.2)}.rotated(open_rad);
+        // DEBUG_PRINTLN(a,b);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;
         // cb();

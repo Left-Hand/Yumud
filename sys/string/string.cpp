@@ -52,11 +52,11 @@ String::String(StringSumHelper &&rval)
 String::String(char c)
 {
 	init();
-	char buf[2];
-	buf[0] = c;
-	buf[1] = 0;
-	*this = buf;
-}
+		char buf[2];
+		buf[0] = c;
+		buf[1] = 0;
+		*this = buf;
+	}
 
 String::String(char * c){
     init();
@@ -64,7 +64,7 @@ String::String(char * c){
 }
 
 String::String(char * c, const size_t size){
-    init();
+	init();
     char * cop = new char[size + 1];
     cop[size] = '\0';
     memcpy(cop, c, size);
@@ -151,6 +151,13 @@ String::String(double value, unsigned char decimalPlaces)
 	char buf[12] = {0};
 	StringUtils::ftoa(value, buf, decimalPlaces);
     *this = buf;
+}
+
+String::String(const iq_t value, unsigned char decimalPlaces){
+	init();
+	char str[str_int_size] = {0};
+    StringUtils::qtoa(value, str, decimalPlaces);
+	*this = str;
 }
 
 String::~String()
@@ -634,15 +641,15 @@ void String::replace(char find, char replace)
 	}
 }
 
-String& String::replace(const String& match, const String& replace)
-{
-    int dst_len = match.length();
-    if(dst_len != (int)replace.length()) return *this;
-	StringUtils::str_replace(
-            this->c_str(),this -> length(),
-            match.c_str(),replace.c_str(),dst_len);
-    return *this;
-}
+// String& String::replace(const String& match, const String& replace)
+// {
+//     int dst_len = match.length();
+//     if(dst_len != (int)replace.length()) return *this;
+// 	StringUtils::str_replace(
+//             this->c_str(),this -> length(),
+//             match.c_str(),replace.c_str(),dst_len);
+//     return *this;
+// }
 
 // void String::replace(const String& find, const String& replace){
 
@@ -663,7 +670,7 @@ void String::remove(unsigned int index, unsigned int count) {
     len = len - count;
 
     memmove(writeTo, buffer + index + count, len - index);
-    buffer[len] = '\0'; // ȷ���ַ����Կ��ַ���β
+    buffer[len] = '\0';
 }
 
 String & String::toLowerCase(void)
@@ -712,26 +719,12 @@ void String::alphanum(void){
 	buffer[len] = 0;
 	free(new_buf);
 }
-/*********************************************/
-/*  Parsing / Conversion                     */
-/*********************************************/
 
-long String::toInt(void) const
-{
-	if (buffer) return atol(buffer);
-	return 0;
-}
-
-float String::toFloat(void) const
-{
-	if (buffer) return float(atof(buffer));
-	return 0;
-}
-
-bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str());}
-bool String::isDigit(void) const {return StringUtils::is_digit(c_str());}
+bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str(), len);}
+bool String::isDigit(void) const {return StringUtils::is_digit(c_str(), len);}
 String toString(char c) { return String(c); }
 String toString(const char * c) { return String(c); }
+
 String toString(unsigned char value, unsigned char base) { return String(value, base); }
 String toString(int value, unsigned char base) { return String(value, base); }
 String toString(unsigned int value, unsigned char base) { return String(value, base); }
@@ -742,3 +735,10 @@ String toString(unsigned long long value, unsigned char base) { return String(va
 
 String toString(float value, unsigned char decimalPlaces) {return String(value, decimalPlaces);}
 String toString(double value, unsigned char decimalPlaces) {return String(value, decimalPlaces);}
+
+
+String toString(const iq_t iq, const uint8_t eps) {
+    char str[str_int_size] = {0};
+    StringUtils::qtoa(iq, str, eps);
+    return String(str);
+}

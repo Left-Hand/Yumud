@@ -4,22 +4,21 @@
 FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_flag){
     if(ctrl_type == CtrlType::VECTOR){
         run_elecrad = odo.position2rad(target);
-        svpwm.setCurrent(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
+        svpwm.setDuty(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
     }else{
         run_elecrad = est_elecrad + curr_ctrl.raddiff_output;
-        svpwm.setCurrent(curr_ctrl.curr_output, run_elecrad + elecrad_zerofix);
+        svpwm.setDuty(curr_ctrl.curr_output, run_elecrad + elecrad_zerofix);
     }
 
     odo.update();
 
     measurements.pos = odo.getPosition();
     est_elecrad = odo.getElecRad();
-    static real_t temp;
     measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
     
     if(init_flag){
         run_status = RunStatus::ACTIVE;
-        svpwm.setCurrent(real_t(0), real_t(0));
+        svpwm.setDuty(real_t(0), real_t(0));
         return RunStatus::NONE;
     }
 
@@ -47,7 +46,6 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
     
             case CtrlType::SPEED:{
                 static constexpr real_t dead_zone = real_t(0.003);
-                //超限检测
                 if((est_pos >= ctrl_limits.pos_limit.to - dead_zone and target > 0)
                      or (est_pos <= ctrl_limits.pos_limit.from + dead_zone and target < 0)){
                     result = position_ctrl.update((target > 0 ? ctrl_limits.pos_limit.to : ctrl_limits.pos_limit.from)

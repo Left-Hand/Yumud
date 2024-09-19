@@ -79,6 +79,12 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     return *this;
 }
 
+OutputStream & OutputStream::operator<<(const iq_t value){
+    char str[str_int_size] = {0};
+    StringUtils::qtoa(value, str, this->eps());
+    return *this << str;
+}
+
 void OutputStream::setSpace(const String & _space){splitter= _space.c_str();}
 
 OutputStream & OutputStream::operator<<(const String & str){write(str.c_str(), str.length()); return *this;}

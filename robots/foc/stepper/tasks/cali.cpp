@@ -109,7 +109,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
                 break;
 
             case SubState::ALIGN:
-                svpwm.setCurrent(real_t(align_current), real_t(0));
+                svpwm.setDuty(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * align_ms)){
                     sw_state(SubState::PRE_FORWARD);
                     odo.reset();
@@ -119,7 +119,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 
             case SubState::PRE_FORWARD:
 
-                svpwm.setCurrent(cali_current, real_t(cnt % subdivide_micros) * tau / subdivide_micros + pi_2);
+                svpwm.setDuty(cali_current, real_t(cnt % subdivide_micros) * tau / subdivide_micros + pi_2);
 
                 if(cnt >= forward_precycles * subdivide_micros){
                     odo.update();
@@ -131,7 +131,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
             case SubState::FORWARD:
                 odo.update();
 
-                svpwm.setCurrent(cali_current, real_t(cnt % subdivide_micros) * tau / subdivide_micros + pi_2);
+                svpwm.setDuty(cali_current, real_t(cnt % subdivide_micros) * tau / subdivide_micros + pi_2);
 
                 if(cnt % subdivide_micros == 0){
 
@@ -149,7 +149,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
                 break;
 
             case SubState::REALIGN:
-                svpwm.setCurrent(real_t(align_current), real_t(0));
+                svpwm.setDuty(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * align_ms)){
                     sw_state(SubState::PRE_BACKWARD);
                 }
@@ -157,7 +157,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 
             case SubState::PRE_BACKWARD:
 
-                svpwm.setCurrent(cali_current, -real_t(cnt % subdivide_micros) * tau / subdivide_micros - pi_2);
+                svpwm.setDuty(cali_current, -real_t(cnt % subdivide_micros) * tau / subdivide_micros - pi_2);
 
                 if(cnt >= backward_precycles * subdivide_micros){
                     odo.update();
@@ -170,7 +170,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
             case SubState::BACKWARD:
                 odo.update();
 
-                svpwm.setCurrent(cali_current, -real_t(cnt % subdivide_micros) * tau / subdivide_micros - pi_2);
+                svpwm.setDuty(cali_current, -real_t(cnt % subdivide_micros) * tau / subdivide_micros - pi_2);
 
                 if(cnt % subdivide_micros == 0){
                     const uint cali_index = warp_mod(openloop_pole--, poles);
@@ -189,7 +189,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
             case SubState::STOP:
                 odo.update();
 
-                svpwm.setCurrent(real_t(align_current), real_t(0));
+                svpwm.setDuty(real_t(align_current), real_t(0));
                 if(cnt >= (int)((foc_freq / 1000) * align_ms)){
                     sw_state(SubState::ANALYSIS);
                 }
@@ -236,7 +236,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
             case SubState::DONE:
                 // odo.locateRelatively(real_t(0));
                 target = 0;
-                svpwm.setCurrent(real_t(0), real_t(0));
+                svpwm.setDuty(real_t(0), real_t(0));
                 return RunStatus::EXIT;
             default:
                 break;
@@ -255,7 +255,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 
 //     switch(sub_state){
 //         case SubState::ALIGN:
-//             svpwm.svpwm.setCurrent(real_t(align_current), real_t(0));
+//             svpwm.svpwm.setDuty(real_t(align_current), real_t(0));
 //             if(cnt >= (int)((foc_freq / 1000) * align_ms)){
 //                 sw_state(SubState::PRE_FORWARD);
 //                 odo.reset();
@@ -266,7 +266,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 
 //         case SubState::PRE_FORWARD:
 
-//             svpwm.svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI / 2);
+//             svpwm.svpwm.setDuty(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI / 2);
 
 //             if(cnt >= forward_precycles * subdivide_micros){
 //                 odo.update();
@@ -278,7 +278,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 //         case SubState::FORWARD:
 //             odo.update();
 
-//             svpwm.svpwm.setCurrent(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI/2);
+//             svpwm.svpwm.setDuty(real_t(cali_current), real_t(cnt % subdivide_micros) / subdivide_micros * TAU + PI/2);
 
 //             if(cnt % subdivide_micros == 0){
 //                 openloop_pole++;
@@ -301,7 +301,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 //             break;
 
 //         case SubState::REALIGN:
-//             svpwm.svpwm.setCurrent(real_t(align_current), real_t(0));
+//             svpwm.svpwm.setDuty(real_t(align_current), real_t(0));
 //             if(cnt >= (int)((foc_freq / 1000) * align_ms)){
 //                 sw_state(SubState::PRE_BACKWARD);
 //             }
@@ -309,7 +309,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 
 //         case SubState::PRE_BACKWARD:
 
-//             svpwm.svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI / 2);
+//             svpwm.svpwm.setDuty(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI / 2);
 
 //             if(cnt >= backward_precycles * subdivide_micros){
 //                 odo.update();
@@ -322,7 +322,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 //         case SubState::BACKWARD:
 //             odo.update();
 
-//             svpwm.svpwm.setCurrent(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI/2);
+//             svpwm.svpwm.setDuty(real_t(cali_current), -real_t(cnt % subdivide_micros) / subdivide_micros * TAU - PI/2);
 
 //             if(cnt % subdivide_micros == 0){
 //                 openloop_pole--;
@@ -349,7 +349,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 //         case SubState::STOP:
 //             odo.update();
 
-//             svpwm.svpwm.setCurrent(real_t(align_current), real_t(0));
+//             svpwm.svpwm.setDuty(real_t(align_current), real_t(0));
 //             if(cnt >= (int)((foc_freq / 1000) * align_ms)){
 //                 sw_state(SubState::ANALYSIS);
 //             }
@@ -375,7 +375,7 @@ FOCStepper::RunStatus FOCStepper::cali_task(const FOCStepper::InitFlag init_flag
 //         case SubState::EXAMINE:
 
 //             odo.locateRelatively(real_t(0));
-//             svpwm.svpwm.setCurrent(real_t(0), real_t(0));
+//             svpwm.svpwm.setDuty(real_t(0), real_t(0));
 //             sw_state(SubState::DONE);
 //             break;
 

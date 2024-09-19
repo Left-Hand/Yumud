@@ -16,9 +16,14 @@ class AdcCompanion;
 class AdcChannelConcept:public AnalogInChannel{
 public:
     virtual real_t uni() = 0;
+    virtual uint16_t data() = 0;
 
     operator real_t() override{
         return real_t(3.3f) * uni();
+    }
+
+    operator uint16_t(){
+        return data();
     }
 };
 

@@ -55,12 +55,9 @@ class Tasker{
     public:
         uint32_t task_cnt;
         uint32_t getTick(void);
-        // void update(uint32_t period);
         void handle(void);
         TaskerStatus addTask(Task & task);
         TaskerStatus addTasks(std::vector<Task>& tasks);
-        // TaskerStatus addTasks(const std::array<Task>& tasks);
-        // taskerStatus removeTask(Task & task);
         TaskerStatus delay(uint32_t ms);
 
 };

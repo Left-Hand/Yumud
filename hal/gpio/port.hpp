@@ -1,11 +1,8 @@
-#ifndef __PORT_HPP__
+#pragma once
 
-#define __PORT_HPP__
-
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 #include "gpio.hpp"
 #include "port_concept.hpp"
-#include "gpio_enums.hpp"
 
 class Gpio;
 
@@ -108,5 +105,3 @@ extern Port portE;
 
 
 #define GpioNull portD[Pin::None]
-
-#endif

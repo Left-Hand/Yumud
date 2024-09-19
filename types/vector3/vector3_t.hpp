@@ -2,8 +2,10 @@
 
 #define __VECTOR3_HPP__
 
-#include "../sys/core/platform.h"
-#include "../types/real.hpp"
+#include "sys/core/platform.h"
+#include "sys/math/real.hpp"
+#include "sys/stream/ostream.hpp"
+
 #include <type_traits>
 
 template <arithmetic T>

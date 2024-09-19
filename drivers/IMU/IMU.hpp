@@ -3,7 +3,7 @@
 #define __IMU_HPP__
 
 #include "../sys/core/platform.h"
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 class Accelerometer{
 public:

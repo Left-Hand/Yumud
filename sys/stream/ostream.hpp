@@ -80,6 +80,7 @@ public:
     OutputStream & operator<<(const StringView & str);
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
+    OutputStream & operator<<(const iq_t val);
     OutputStream & operator<<(const SpecToken & spec);
 
     OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));

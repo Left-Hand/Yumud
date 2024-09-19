@@ -2,7 +2,6 @@
 
 
 
-#include "types/real.hpp"
 #include "dsp/filter/LowpassFilter.hpp"
 
 #include "hal/gpio/port_virtual.hpp"
@@ -44,8 +43,8 @@ void digipw_main(){
     INA226 ina226{i2csw};
     ina226.init(real_t(0.006), 5);
 
-    auto curr_ch = ina226.ch(INA226::Index::CURRENT);
-    auto volt_ch = ina226.ch(INA226::Index::BUS_VOLT);
+    auto & curr_ch = ina226.ch(INA226::Index::CURRENT);
+    auto & volt_ch = ina226.ch(INA226::Index::BUS_VOLT);
 
     /*-----------------------*/
 

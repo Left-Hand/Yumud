@@ -1,11 +1,9 @@
-#ifndef __CAPTURE_CHANNEL_HPP__
+#pragma once
 
-#define __CAPTURE_CHANNEL_HPP__
-
-#include "../sys/clock/clock.h"
+#include "sys/clock/clock.h"
 #include "../sys/clock/time_stamp.hpp"
 #include "../hal/exti/exti.hpp"
-#include "real.hpp"
+#include "sys/math/real.hpp"
 
 class CaptureChannelConcept{
 protected:
@@ -87,7 +85,7 @@ protected:
 public:
     CaptureChannelExti(const ExtiChannel && _instance):
         CaptureChannelConcept(1000000, 
-                _instance.trigger == ExtiChannel::Trigger::RisingFalling), 
+                _instance.trigger == ExtiChannel::Trigger::Dual), 
         instance(_instance){;}
 
     CaptureChannelExti(const ExtiChannel & _instance):CaptureChannelExti(std::move(_instance)){;}
@@ -110,4 +108,3 @@ public:
         return period;
     }
 };
-#endif

@@ -1,10 +1,7 @@
-#ifndef __GPIO_HPP__
+#pragma once
 
-#define __GPIO_HPP__
-
-#include "bitband.h"
 #include "port_concept.hpp"
-#include "gpio_enums.hpp"
+#include "gpio_utils.hpp"
 
 class GpioConcept{
 public:
@@ -83,7 +80,7 @@ public:
     }
     __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
     __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
-
+    __fast_inline volatile GPIO_TypeDef * inst() {return instance;} 
     __fast_inline Gpio & operator = (const bool _val) override {
         write(_val);
         return *this;
@@ -114,5 +111,3 @@ public:
     __fast_inline GpioVirtual & operator = (GpioConcept & other) {write(other.read()); return *this;}
     void setMode(const PinMode mode) override{instance.setMode(pin_index, mode);}
 };
-
-#endif

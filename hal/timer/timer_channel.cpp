@@ -1,5 +1,5 @@
 #include "timer_channel.hpp"
-#include "../../hal/dma/dma.hpp"
+#include "hal/dma/dma.hpp"
 
 volatile uint16_t & TimerChannel::from_channel_to_cvr(const Channel _channel){
     switch(_channel){

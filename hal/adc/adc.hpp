@@ -129,7 +129,7 @@ protected:
     uint16_t regular_data_cache[16] = {0};
 
     // RegularChannel regular_channels[16];
-    // InjectedChannel injected_channels[4];
+    InjectedChannel injected_channels[4];
 
 
     uint32_t getMaxValue() const {
@@ -188,11 +188,22 @@ protected:
 
     friend void ADC1_2_IRQHandler(void);
 public:
-    AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
+    AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance),
+        injected_channels{
+            InjectedChannel(instance, Channel::VREF, 1),
+            InjectedChannel(instance, Channel::VREF, 2),
+            InjectedChannel(instance, Channel::VREF, 3),
+            InjectedChannel(instance, Channel::VREF, 4)
+        }{;}
 
     void init(const std::initializer_list<AdcChannelConfig> & regular_list,
             const std::initializer_list<AdcChannelConfig> & injected_list, 
             const Mode mode = Mode::Independent);
+
+    auto & inj(const uint8_t index){
+        if(index == 0 or index > 4) CREATE_FAULT;
+        return injected_channels[index - 1];
+    }
 
     void bindCb(const IT it,Callback && cb);
 

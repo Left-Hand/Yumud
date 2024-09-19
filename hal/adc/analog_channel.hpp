@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../types/real.hpp"
+#include "sys/math/real.hpp"
 
 struct AnalogChannel{
 public:
