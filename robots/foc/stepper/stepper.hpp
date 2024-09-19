@@ -15,6 +15,8 @@
 
 #include "tasks/cali.hpp"
 #include "tasks/tone.hpp"
+#include "tasks/selfcheck.hpp"
+
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
@@ -103,8 +105,10 @@ class FOCStepper:public FOCMotor{
     void invoke_active_task();
     
     void active_task();
-    RunStatus check_task(const InitFlag init_flag = false);
 
+    SelfCheckTasker selfcheck_tasker{svpwm, odo};
+    void invoke_selfcheck_task();
+    
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
