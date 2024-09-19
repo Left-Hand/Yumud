@@ -34,7 +34,7 @@ protected:
     struct MP6540CurrentChannel:public AnalogInChannel{
         AnalogInChannel & ain_;
         const real_t & ratio_;
-        real_t basis_ = real_t(1.65);
+        real_t basis_ = real_t(0);
         size_t index_;
 
         MP6540CurrentChannel(AnalogInChannel & _ain, const real_t & _ratio, const uint8_t _index):
@@ -43,9 +43,9 @@ protected:
         MP6540CurrentChannel(MP6540CurrentChannel && other) = delete;
 
         real_t getRawVoltage() {return real_t(ain_);}
-        void setBasis(const real_t & _basis) {basis_ = _basis;}
+        void setBasis(const real_t _basis) {basis_ = _basis;}
         operator real_t() override{
-            return (real_t(ain_) - basis_) * ratio_;
+            return real_t(ain_) * ratio_ - basis_;
         }
     };
 

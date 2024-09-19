@@ -233,13 +233,14 @@ int bldc_main(){
     Odometer odo{ma730};
     odo.init();
 
+
     MP6540 mp6540{
         {pwm_u, pwm_v, pwm_w},
         {adc1.inj(1), adc1.inj(2), adc1.inj(3)}
     };
 
     mp6540.init();
-    mp6540.setSoRes(10_K);
+    mp6540.setSoRes(1_K);
 
     auto & u_ch = mp6540.ch(1);
     auto & v_ch = mp6540.ch(2);
@@ -282,18 +283,25 @@ int bldc_main(){
     // Voltage bus_volt = 0;
     real_t est_rad;
 
+    real_t s_lpf_u_curr = 0;
+
+
+    #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
+    // #define SLPF(x,y) x = (((x >> 2) * ((1 << 16) - 1) + (y >> 2)) >> 14);
+    #define SLPF(x,y) x = ((x * ((1 << 14) - 1) + y) >> 14);
 
     auto update_curr = [&](){
         // #define LPF(x,y) x = (((x >> 4) * 15 + (y >> 4)));
-        #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
+
 
         static Current3 uvw_curr_raw;
-        
+                
         LPF(uvw_curr_raw[0], real_t(u_ch));
         LPF(uvw_curr_raw[1], real_t(v_ch));
         LPF(uvw_curr_raw[2], real_t(w_ch));
 
-
+        // SLPF(s_lpf_u_curr, uvw_curr_raw[0]);
+        
         for(size_t i = 0; i < 3; i++){
             uvw_curr[i] = uvw_curr_raw[i] - uvw_curr_drift[i];
         }
@@ -331,16 +339,23 @@ int bldc_main(){
     ledg.outpp();
     portA[7].inana();
 
-    for(size_t i = 0; i < 40000; ++i){
+    for(size_t i = 0; i < 4000; ++i){
         update_curr();
     }
-    std::swap(uvw_curr, uvw_curr_drift);
+    
+    u_ch.setBasis(uvw_curr[0]);
+    v_ch.setBasis(uvw_curr[1]);
+    w_ch.setBasis(uvw_curr[2]);
+
+    // DEBUG_PRINTLN(real_t(u_ch), real_t(v_ch), real_t(w_ch));
 
     adc1.bindCb(AdcUtils::IT::JEOC, cb);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
     en_gpio = true;
     slp_gpio = true;
+
+
     while(true){
         // auto pos = ma730.getLapPosition();
 
@@ -365,7 +380,11 @@ int bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2]);
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100));
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
-        DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1]);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1]);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), real_t(adc1.inj(2)), real_t(adc1.inj(3)));
+        DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), real_t(v_ch), real_t(w_ch));
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), s_lpf_u_curr);
         
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;

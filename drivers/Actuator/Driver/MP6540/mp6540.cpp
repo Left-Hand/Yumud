@@ -63,8 +63,8 @@ void MP6540::enable(const bool en){
 }
 
 void MP6540::setSoRes(const real_t so_res_ohms){
-    static constexpr real_t curr_mirror_ratio = real_t(9800.0);
-    volt_to_curr_ratio = so_res_ohms * curr_mirror_ratio;
+    static constexpr real_t curr_mirror_ratio = real_t(9200.0);
+    volt_to_curr_ratio = curr_mirror_ratio / so_res_ohms;
 }
 
 MP6540::MP6540CurrentChannel & MP6540::ch(const size_t index){
@@ -72,7 +72,7 @@ MP6540::MP6540CurrentChannel & MP6540::ch(const size_t index){
         MP6540_DEBUG("Channel index out of range:", index);
         CREATE_FAULT;
     }
-    return chs[index];
+    return chs[index - 1];
 }
 
 MP6540 & MP6540::operator= (const UVW_Duty & duty){
