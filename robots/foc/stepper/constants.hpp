@@ -16,22 +16,23 @@
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 #include "drivers/Encoder/OdometerLines.hpp"
 
+#define scexpr static constexpr
 
-static constexpr uint32_t foc_freq = 32768;
-static constexpr uint32_t chopper_freq = 32768;
-static constexpr uint32_t est_freq = foc_freq / 16;
-static constexpr uint32_t est_devider = foc_freq / est_freq;
+scexpr uint32_t foc_freq = 32768;
+scexpr uint32_t chopper_freq = 32768;
+scexpr uint32_t est_freq = foc_freq / 16;
+scexpr uint32_t est_devider = foc_freq / est_freq;
 
-static constexpr real_t pi_4 = real_t(PI/4);
-static constexpr real_t pi_2 = real_t(PI/2);
-static constexpr real_t tau = real_t(TAU);
-static constexpr real_t pi = real_t(PI);
-static constexpr real_t hpi = real_t(PI/2); 
+scexpr real_t pi_4 = real_t(PI/4);
+scexpr real_t pi_2 = real_t(PI/2);
+scexpr real_t tau = real_t(TAU);
+scexpr real_t pi = real_t(PI);
+scexpr real_t hpi = real_t(PI/2); 
 
-static constexpr int poles = 50;
-static constexpr real_t inv_poles = real_t(1) / poles;
+scexpr int poles = 50;
+scexpr real_t inv_poles = real_t(1) / poles;
 
-static constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
+scexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 
 namespace StepperEnums{
 
