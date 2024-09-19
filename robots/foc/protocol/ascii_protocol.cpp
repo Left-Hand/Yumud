@@ -270,7 +270,6 @@ std::vector<String> AsciiProtocol::split_string(const String& input, char delimi
 
 
 void AsciiProtocol::readString(){
-    static String temp;
     while(logger.available()){
         auto chr = logger.read();
         if(chr == 0) continue;

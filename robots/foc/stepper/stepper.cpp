@@ -2,11 +2,8 @@
 #include "sys/math/float/bf16.hpp"
 
 
-static auto & nozzle_en_gpio = portA[0];
-
 void FOCStepper::setNozzle(const real_t duty){
-    nozzle_en_gpio.outpp();
-    nozzle_en_gpio = bool(duty);
+
 }
 
 void FOCStepper::invoke_cali(){
@@ -152,16 +149,12 @@ void FOCStepper::run(){
 
 void FOCStepper::report(){
     // real_t total = real_t(3);
-    // static real_t freq = real_t(10);
-    // static real_t freq_dir = real_t(1);
     // const real_t freq_delta = real_t(20);
     // if(freq > real_t(300)) freq_dir = real_t(-1);
     // else if(freq < real_t(4)) freq_dir = real_t(1);
-    // static real_t last_t = t;
     // real_t delta = (t - last_t);
     // freq += delta * freq_dir * freq_delta;
     // last_t = t;
-    // static real_t ang = real_t(0);
     // ang += freq * delta;
     // real_t target = (total / freq) * sin(ang);
 

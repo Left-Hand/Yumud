@@ -94,7 +94,7 @@ class FOCMotor;
 class AsciiProtocol{
 private:
     std::vector<String> split_string(const String& input, char delimiter);
-
+    String temp;
 protected:
     FOCMotor & motor;
     IOStream & logger;

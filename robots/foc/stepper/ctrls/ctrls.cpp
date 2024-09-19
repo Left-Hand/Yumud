@@ -2,10 +2,10 @@
 
 using Result = CtrlResult;
 
-static constexpr real_t basic_raddiff = real_t(1.0);
-static constexpr real_t max_raddiff = real_t(2.3);
-static constexpr real_t POS_ERR_LIMIT = real_t(100);
-static constexpr real_t still_spd_radius = real_t(0.7);
+scexpr real_t basic_raddiff = real_t(1.0);
+scexpr real_t max_raddiff = real_t(2.3);
+scexpr real_t POS_ERR_LIMIT = real_t(100);
+scexpr real_t still_spd_radius = real_t(0.7);
 
 
 void CtrlLimits::reset(){
@@ -62,8 +62,8 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
     real_t abs_real_spd = ABS(real_spd);
     real_t min_curr = limits.max_curr * real_t(0.2);
     
-    static constexpr real_t inverse_spd_thd = real_t(0.8);
-    static constexpr real_t stray_pos_thd = real_t(0.04);
+    scexpr real_t inverse_spd_thd = real_t(0.8);
+    scexpr real_t stray_pos_thd = real_t(0.04);
 
     if(pos_err > 0 and real_spd < - inverse_spd_thd){//inverse run
         return {STEP_TO(curr_ctrl.getLastCurrent(), min_curr, curr_ctrl.config.curr_slew_rate), 0};
@@ -78,7 +78,7 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
     }
 
     {
-        static constexpr real_t inquater_radius = (inv_poles / 4);
+        scexpr real_t inquater_radius = (inv_poles / 4);
 
         #define SAFE_OVERLOAD_RAD(__curr,__spd,__pos_abs_err)\
                 MIN(\
@@ -94,7 +94,7 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
         real_t overflow_energy;
         
         {
-            static constexpr auto ratio = 2;
+            scexpr auto ratio = 2;
             const real_t fixed_self_spd = (abs_real_spd + 12);
             // const real_t fixed_self_spd = (abs_real_spd);
             const real_t self_energy = fixed_self_spd * fixed_self_spd;
