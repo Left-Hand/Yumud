@@ -11,6 +11,7 @@
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
+#include "drivers/Actuator/Driver/MP6540/mp6540.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
 
@@ -169,7 +170,30 @@ void setDQDuty(const real_t dDutyTarget,const real_t qDutyTarget,const real_t ra
 
 // static constexpr uint foc_freq = 32768;
 // static constexpr uint chopper_freq = 32768;
+
+
 static constexpr uint chopper_freq = 32768;
+
+using Current = real_t;
+using Current3 = std::array<Current, 3>;
+using Current2 = std::array<Current, 2>;
+using Voltage = real_t;
+
+
+__inline auto data_to_curr(const real_t data) -> real_t{
+    static constexpr int res = 1000;
+    static constexpr real_t mul = real_t((3.3 * 9800 / res));
+    return ((real_t(data) >> 4) * mul) >> 8;
+};
+
+__inline auto uvw_to_ab(const Current3 & uvw) -> Current2{
+    return {uvw[0] - ((uvw[1] + uvw[2]) >> 1), (uvw[2] - uvw[1]) * real_t(1.73 / 2)};
+};
+
+__inline auto ab_to_dq(const Current2 & ab, const real_t rad) -> Current2{
+    return {cos(rad) * ab[1] - sin(rad) * ab[0], sin(rad) * ab[1] + cos(rad) * ab[0]};
+};
+
 
 
 int bldc_main(){
@@ -209,11 +233,18 @@ int bldc_main(){
     Odometer odo{ma730};
     odo.init();
 
-    auto & u_ch = adc1.inj(1);
-    auto & v_ch = adc1.inj(2);
-    auto & w_ch = adc1.inj(3);
+    MP6540 mp6540{
+        {pwm_u, pwm_v, pwm_w},
+        {adc1.inj(1), adc1.inj(2), adc1.inj(3)}
+    };
 
+    mp6540.init();
+    mp6540.setSoRes(10_K);
 
+    auto & u_ch = mp6540.ch(1);
+    auto & v_ch = mp6540.ch(2);
+    auto & w_ch = mp6540.ch(3);
+    
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
@@ -221,10 +252,10 @@ int bldc_main(){
         {
             AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
         },{
-            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T28_5},
-            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
-            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
-            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T28_5},
+            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T7_5},
+            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T7_5},
+            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T7_5},
+            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T7_5},
             // AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
             // AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
             // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T41_5},
@@ -242,71 +273,34 @@ int bldc_main(){
     real_t rad = 0;
     real_t open_rad = 0;
 
-    using Current = real_t;
-    using Current3 = std::array<Current, 3>;
-    using Current2 = std::array<Current, 2>;
-    using Voltage = real_t;
-
     Current3 uvw_curr = {0,0,0};
     Current3 uvw_curr_drift = {0,0,0};
 
     Current2 ab_curr = {0,0};
     Current2 dq_curr = {0,0};
 
-    Voltage bus_volt = 0;
-    real_t adc_data[4];
+    // Voltage bus_volt = 0;
     real_t est_rad;
 
-    auto data_to_curr = [](const real_t data) -> real_t{
-        static constexpr real_t mul = real_t((3.3 * 9800 / 1000));
-        return ((real_t(data) >> 4) * mul) >> 8;
-        // return data;
-    };
-
-    auto uvw_to_ab = [](const Current3 & uvw) -> Current2{
-        return {uvw[0] - ((uvw[1] + uvw[2]) >> 1), (uvw[2] - uvw[1]) * real_t(1.73 / 2)};
-    };
-
-    auto ab_to_dq = [](const Current2 & ab, const real_t rad) -> Current2{
-        return {cos(rad) * ab[1] - sin(rad) * ab[0], sin(rad) * ab[1] + cos(rad) * ab[0]};
-    };
 
     auto update_curr = [&](){
-        // #define LPF(x,y) x = (x * 1023 + y) >> 10;
-        // #define LPF(x,y) x = ((x* 31 + (y)) / 32);
-        #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
-        // #define LPF(x,y) x = y;
         // #define LPF(x,y) x = (((x >> 4) * 15 + (y >> 4)));
-        // #define LPF(x,y) x = (((x >> 3) * 7 + (y >> 3)));
-        // #define LPF(x,y) x = (y * 64) >> 6;
-        // adc_data_cache[0] = int(ADC1->IDATAR1);
-        // adc_data_cache[1] = int(ADC1->IDATAR2);
-        // adc_data_cache[2] = int(ADC1->IDATAR3);
+        #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
 
-        // static real_t temp_adc_data[4];
-        LPF(adc_data[0], real_t(uint16_t(u_ch)));
-        LPF(adc_data[1], real_t(uint16_t(v_ch)));
-        LPF(adc_data[2], real_t(uint16_t(w_ch)));
-        // LPF(adc_data[3], real_t(ADC1->IDATAR4));
+        static Current3 uvw_curr_raw;
+        
+        LPF(uvw_curr_raw[0], real_t(u_ch));
+        LPF(uvw_curr_raw[1], real_t(v_ch));
+        LPF(uvw_curr_raw[2], real_t(w_ch));
 
-        // LPF(adc_data[0], temp_adc_data[0]);
-        // LPF(adc_data[1], temp_adc_data[1]);
-        // LPF(adc_data[2], temp_adc_data[2]);
-        // LPF(adc_data[3], temp_adc_data[3]);
-
-        auto data_to_volt = [](const real_t data) -> real_t{
-            return (data * real_t(33.3/4) >> 10);
-        };
 
         for(size_t i = 0; i < 3; i++){
-            uvw_curr[i] = data_to_curr(adc_data[i]) - uvw_curr_drift[i];
+            uvw_curr[i] = uvw_curr_raw[i] - uvw_curr_drift[i];
         }
 
         ab_curr = uvw_to_ab(uvw_curr);
 
-
-
-        bus_volt = data_to_volt(adc_data[3]);
+        // bus_volt = data_to_volt(adc_data[3]);
     };
 
 
@@ -322,20 +316,12 @@ int bldc_main(){
         open_rad = frac(open_pos * 7) * real_t(TAU);
         // est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) + real_t(PI/2);
         est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) - real_t(PI);
-        setDQDuty(0, real_t(0.01), rad);
+        // setDQDuty(0, real_t(0.01), rad);
+        setDQDuty(0, real_t(0.01), open_rad);
         // setDQDuty(0, real_t(0.01), est_rad);
         // auto temp_dq_curr = ab_to_dq(ab_curr, rad);
         dq_curr = ab_to_dq(ab_curr, rad);
-        // LPF(dq_curr[0], temp_dq_curr[0])
-        // LPF(dq_curr[1], temp_dq_curr[1])
-
-        // adc1.enableContinous(false);
-        // DEBUG_PRINTLN("?");
     };
-
-
-
-
 
     auto & ledr = portC[13];
     auto & ledb = portC[14];
@@ -379,7 +365,7 @@ int bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2]);
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100));
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
-        DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data[0], adc_data[1], adc_data[2]);
+        DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1]);
         
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;

@@ -12,6 +12,18 @@ __inline constexpr uint64_t operator"" _GHz(uint64_t x){
     return x * 1000000000;
 }
 
+__inline constexpr uint64_t operator"" _K(uint64_t x){
+    return x * 1000;
+}
+
+__inline constexpr uint64_t operator"" _M(uint64_t x){
+    return x * 1000000;
+}
+
+__inline constexpr uint64_t operator"" _G(uint64_t x){
+    return x * 1000000000;
+}
+
 __inline constexpr uint64_t operator"" _KB(uint64_t x){
     return x << 10;
 }
