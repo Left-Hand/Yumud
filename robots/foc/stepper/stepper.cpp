@@ -37,6 +37,7 @@ void FOCStepper::tick(){
             break;
 
         case RunStatus::CALI:
+            cali_tasker.run();
             exe_status = cali_tasker.done() ? RunStatus::EXIT : RunStatus::NONE;
             break;
 

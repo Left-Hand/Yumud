@@ -115,14 +115,14 @@ void stepper_tb(UartHw & logger){
 
         // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
         // real_t target = f(t-2);
-        real_t target = real_t(0.01) * t;
-        stp.setTargetPosition(target);
+        // real_t target = real_t(0.01) * t;
+        // stp.setTargetPosition(target);
         // stp.setTargetVector(target);
         // stp.setTargetSpeed(5);
         // stp.setTargetVector(target);
 
         // if(logger.pending() == 0) logger.println(stp.getPositionErr(),fmod(t, real_t(1.00)), target, stp.getPosition());
-        if(logger.pending() == 0) logger.println(real_t(adc1.inj(1)), real_t(adc1.inj(2)));
+        // if(logger.pending() == 0) logger.println(real_t(adc1.inj(1)), real_t(adc1.inj(2)));
         // Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(Interpolation::demo() * 10);

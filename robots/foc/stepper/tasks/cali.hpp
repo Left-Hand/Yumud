@@ -28,13 +28,13 @@ protected:
     struct CircularTracker{
     protected:
         scexpr auto circ = inv_poles;
-        real_t last_err;
+        real_t last_err = 0;
     public:
+        CircularTracker(){;}
+        
         void reset(){
             last_err = 0;
         }
-
-        CircularTracker(){reset();}
 
         scexpr real_t h_fmod(const real_t x, const real_t b){
             return fmod(x + b/2, b) - b/2;
@@ -70,7 +70,7 @@ protected:
     scexpr int backward_precycles = forward_precycles;
     scexpr int backward_cycles = forward_cycles;
 
-    scexpr int subdivide_micros = 256;
+    scexpr int subdivide_micros = 512;
     scexpr int cogging_samples = 16;
     scexpr int align_ms = 200;
 
