@@ -17,6 +17,11 @@ void FOCStepper::invoke_tone_task(){
     run_status = RunStatus::BEEP;
 }
 
+void FOCStepper::invoke_active_task(){
+    run_status = RunStatus::ACTIVE;
+    svpwm.setDuty(real_t(0), real_t(0));
+}
+
 void FOCStepper::tick(){
     auto begin_micros = micros();
     RunStatus exe_status = RunStatus::NONE;
@@ -27,7 +32,7 @@ void FOCStepper::tick(){
                 bool load_ok = loadArchive(false);
                 if(load_ok){
                     if(skip_tone){
-                        active_task(true);
+                        invoke_active_task();
                     }else{
                         invoke_tone_task();
                     }
@@ -47,7 +52,8 @@ void FOCStepper::tick(){
             break;
 
         case RunStatus::ACTIVE:
-            exe_status = active_task();
+            active_task();
+            exe_status = RunStatus::NONE;
             break;
 
         case RunStatus::BEEP:
@@ -77,14 +83,14 @@ void FOCStepper::tick(){
                     break;
                 case RunStatus::CALI:
                     if(skip_tone){
-                        active_task(true);
+                        invoke_active_task();
                     }
                     else{
                         invoke_tone_task();
                     }
                     break;
                 case RunStatus::BEEP:
-                    active_task(true);
+                    invoke_active_task();
                     break;
                 case RunStatus::ACTIVE:
                     break;
@@ -106,7 +112,7 @@ void FOCStepper::tick(){
                     invoke_cali();
                     break;
                 case RunStatus::ACTIVE:
-                    active_task(true);
+                    invoke_active_task();
                     break;
                 case RunStatus::BEEP:
                     invoke_tone_task();

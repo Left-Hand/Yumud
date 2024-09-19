@@ -1,7 +1,7 @@
 #include "robots/foc/stepper/stepper.hpp"
 
 
-FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_flag){
+void FOCStepper::active_task(){
     if(ctrl_type == CtrlType::VECTOR){
         run_elecrad = odo.position2rad(target);
         svpwm.setDuty(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
@@ -15,12 +15,6 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
     measurements.pos = odo.getPosition();
     est_elecrad = odo.getElecRad();
     measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
-    
-    if(init_flag){
-        run_status = RunStatus::ACTIVE;
-        svpwm.setDuty(real_t(0), real_t(0));
-        return RunStatus::NONE;
-    }
 
     {
         using Result = CtrlResult;
@@ -45,7 +39,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
                 break;
     
             case CtrlType::SPEED:{
-                static constexpr real_t dead_zone = real_t(0.003);
+                scexpr real_t dead_zone = real_t(0.003);
                 if((est_pos >= ctrl_limits.pos_limit.to - dead_zone and target > 0)
                      or (est_pos <= ctrl_limits.pos_limit.from + dead_zone and target < 0)){
                     result = position_ctrl.update((target > 0 ? ctrl_limits.pos_limit.to : ctrl_limits.pos_limit.from)
@@ -62,7 +56,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
                 real_t max_current = target;
                 real_t spd = getSpeed();
                 real_t abs_spd = ABS(spd);
-                static constexpr real_t deadzone = real_t(0.23);
+                scexpr real_t deadzone = real_t(0.23);
                 if(abs_spd < deadzone){
                     result = {0, 0}; 
                 }else{
@@ -77,8 +71,4 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
         measurements.curr = curr_ctrl.curr_output;
         run_leadangle = curr_ctrl.raddiff_output;
     }
-
-
-
-    return RunStatus::NONE;
 }

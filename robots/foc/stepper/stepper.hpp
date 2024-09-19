@@ -83,8 +83,8 @@ class FOCStepper:public FOCMotor{
     SpeedEstimator::Config spe_config;
     SpeedEstimator speed_estmator{spe_config};
 
-    CaliTasker cali_tasker = {svpwm, odo};
-    void invoke_cali();
+
+
 
     bool cali_debug_enabled = true;
     bool command_debug_enabled = false;
@@ -95,11 +95,14 @@ class FOCStepper:public FOCMotor{
     bool skip_tone = false;
     bool cmd_mode = false;
 
-    RunStatus active_task(const InitFlag init_flag = false);
-
+    CaliTasker cali_tasker = {svpwm, odo};
     ToneTasker tone_tasker{svpwm};
+
+    void invoke_cali();
     void invoke_tone_task();
+    void invoke_active_task();
     
+    void active_task();
     RunStatus check_task(const InitFlag init_flag = false);
 
     friend class AsciiProtocol;
