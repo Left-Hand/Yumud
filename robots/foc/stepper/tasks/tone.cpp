@@ -62,7 +62,7 @@ FOCStepper::RunStatus FOCStepper::beep_task(const FOCStepper::InitFlag init_flag
         const auto & tone = tones[tone_index];
         const auto tone_period = foc_freq / tone.freq_hz;
         auto phase = sin(real_t(cnt % tone_period) / (tone_period) * real_t(TAU)) * real_t(PI/2);
-        svpwm.setCurrent(tone_current, phase);
+        svpwm.setDuty(tone_current, phase);
         cnt++;
     }
 

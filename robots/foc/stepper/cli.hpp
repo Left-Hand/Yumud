@@ -8,7 +8,6 @@
 #include "hal/bus/can/can.hpp"
 
 namespace StepperUtils{
-
     class Cli{
     private:
         std::vector<String> split_string(const String& input, char delimiter);

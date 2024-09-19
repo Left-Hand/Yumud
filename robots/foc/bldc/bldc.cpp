@@ -12,7 +12,9 @@
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/Actuator/Driver/MP6540/mp6540.hpp"
+#include "drivers/Actuator/SVPWM/svpwm.hpp"
 #include "hal/bus/spi/spihw.hpp"
+#include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
 
 
@@ -49,58 +51,6 @@ constexpr int pwmFreq = 73000;
 constexpr auto adc_sample_cycles = ADC_SampleTime_28Cycles5;
 constexpr float sample_ticks = -10.5;
 constexpr real_t dutyScale = real_t(0.17f);
-
-
-constexpr int fsector(const real_t x, const real_t inv_step, int sectors){
-    return int((x * inv_step) / sectors);
-}
-
-
-void setUVWDuty(const real_t uDutyTarget,const real_t vDutyTarget,const real_t wDutyTarget){
-    timer1.oc(1) = uDutyTarget;
-    timer1.oc(2) = vDutyTarget;
-    timer1.oc(3) = wDutyTarget;
-}
-
-
-
-void setDQDuty(const real_t dDutyTarget,const real_t qDutyTarget,const real_t radTarget){
-
-    auto modu_sect = (int(radTarget / real_t(TAU / 6)) % 6) + 1;
-    auto sixtant_theta = fmod(radTarget, real_t(TAU / 6));
-    
-
-    real_t ta = std::sin(sixtant_theta) * real_t(dutyScale);
-    real_t tb = std::sin(real_t(TAU / 6) - sixtant_theta) * real_t(dutyScale);
-    
-    real_t t0 = (real_t(1) - ta - tb) / 2;
-    real_t t1 = (real_t(1) + ((modu_sect % 2 == 0 )? (tb - ta) : (ta - tb))) / 2;
-    real_t t2 = (real_t(1) + ta + tb) / 2;
-
-    switch (modu_sect){
-        case 1:
-            setUVWDuty(t2, t1, t0);
-            break;
-        case 2:
-            setUVWDuty(t1, t2, t0);
-            break;
-        case 3:
-            setUVWDuty(t0, t2, t1);
-            break;
-        case 4:
-            setUVWDuty(t0, t1, t2);
-            break;
-        case 5:
-            setUVWDuty(t1, t0, t2);
-            break;
-        case 6:
-            setUVWDuty(t2, t0, t1);
-            break;
-        default:
-            break;
-    }
-}
-
 
 // void processCurrentSensing(){
 
@@ -241,6 +191,9 @@ int bldc_main(){
 
     mp6540.init();
     mp6540.setSoRes(1_K);
+    
+    SVPWM3 svpwm {mp6540};
+    
 
     auto & u_ch = mp6540.ch(1);
     auto & v_ch = mp6540.ch(2);
@@ -283,7 +236,7 @@ int bldc_main(){
     // Voltage bus_volt = 0;
     real_t est_rad;
 
-    real_t s_lpf_u_curr = 0;
+    // real_t s_lpf_u_curr = 0;
 
 
     #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
@@ -325,7 +278,10 @@ int bldc_main(){
         // est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) + real_t(PI/2);
         est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) - real_t(PI);
         // setDQDuty(0, real_t(0.01), rad);
-        setDQDuty(0, real_t(0.01), open_rad);
+        // setDQDuty(0, real_t(0.01), open_rad);
+        svpwm.setDuty(real_t(0.2), rad);
+        // svpwm.setDQDuty(Vector2(0,real_t(0.2)), open_rad);
+        
         // setDQDuty(0, real_t(0.01), est_rad);
         // auto temp_dq_curr = ab_to_dq(ab_curr, rad);
         dq_curr = ab_to_dq(ab_curr, rad);
@@ -382,10 +338,12 @@ int bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1]);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), real_t(adc1.inj(2)), real_t(adc1.inj(3)));
-        DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), real_t(v_ch), real_t(w_ch));
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), real_t(v_ch), real_t(w_ch));
+        DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), s_lpf_u_curr);
-        
+        // auto [a,b] = Vector2{real_t(0), real_t(0.2)}.rotated(open_rad);
+        // DEBUG_PRINTLN(a,b);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);
         // TIM1->CH4CVR = 1000;
         // cb();
