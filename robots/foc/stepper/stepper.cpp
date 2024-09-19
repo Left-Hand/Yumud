@@ -8,6 +8,10 @@ void FOCStepper::setNozzle(const real_t duty){
     nozzle_en_gpio = bool(duty);
 }
 
+void FOCStepper::invoke_cali(){
+    cali_tasker.reset();
+    run_status = RunStatus::CALI;
+}
 void FOCStepper::tick(){
     auto begin_micros = micros();
     RunStatus exe_status = RunStatus::NONE;
@@ -23,7 +27,7 @@ void FOCStepper::tick(){
                         beep_task(true);
                     }
                 }else{
-                    cali_task(true);
+                    invoke_cali();
                 }
                 break;
             }
@@ -33,7 +37,7 @@ void FOCStepper::tick(){
             break;
 
         case RunStatus::CALI:
-            exe_status = cali_task();
+            exe_status = cali_tasker.done() ? RunStatus::EXIT : RunStatus::NONE;
             break;
 
         case RunStatus::ACTIVE:
@@ -62,7 +66,7 @@ void FOCStepper::tick(){
         else if((exe_status == RunStatus::EXIT)){
             switch(run_status){
                 case RunStatus::CHECK:
-                    cali_task(true);
+                    invoke_cali();
                     break;
                 case RunStatus::CALI:
                     if(skip_tone){
@@ -90,7 +94,7 @@ void FOCStepper::tick(){
                     check_task(true);
                     break;
                 case RunStatus::CALI:
-                    cali_task(true);
+                    invoke_cali();
                     break;
                 case RunStatus::ACTIVE:
                     active_task(true);

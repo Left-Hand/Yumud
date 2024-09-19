@@ -13,6 +13,8 @@
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 
+#include "tasks/cali.hpp"
+
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
@@ -81,6 +83,9 @@ class FOCStepper:public FOCMotor{
     SpeedEstimator::Config spe_config;
     SpeedEstimator speed_estmator{spe_config};
 
+    CaliTasker cali_tasker = {svpwm, odo};
+    void invoke_cali();
+
     bool cali_debug_enabled = true;
     bool command_debug_enabled = false;
     bool run_debug_enabled = false;
@@ -90,7 +95,6 @@ class FOCStepper:public FOCMotor{
     bool skip_tone = false;
     bool cmd_mode = false;
 
-    RunStatus cali_task(const InitFlag init_flag = false);
     RunStatus active_task(const InitFlag init_flag = false);
     RunStatus beep_task(const InitFlag init_flag = false);
     RunStatus check_task(const InitFlag init_flag = false);
@@ -216,7 +220,7 @@ public:
     }
 
     void triggerCali(){
-        cali_task(true);
+        invoke_cali();
     }
 
     void clear(){
