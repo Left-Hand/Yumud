@@ -14,7 +14,7 @@
 #include "archive/archive.hpp"
 
 #include "tasks/cali.hpp"
-
+#include "tasks/tone.hpp"
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
@@ -96,7 +96,10 @@ class FOCStepper:public FOCMotor{
     bool cmd_mode = false;
 
     RunStatus active_task(const InitFlag init_flag = false);
-    RunStatus beep_task(const InitFlag init_flag = false);
+
+    ToneTasker tone_tasker{svpwm};
+    void invoke_tone_task();
+    
     RunStatus check_task(const InitFlag init_flag = false);
 
     friend class AsciiProtocol;
@@ -183,9 +186,6 @@ public:
     void run();
 
     void report();
-
-
-
 
 
     void setPositionLimit(const Range & clamp){

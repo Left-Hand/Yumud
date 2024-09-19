@@ -12,6 +12,11 @@ void FOCStepper::invoke_cali(){
     cali_tasker.reset();
     run_status = RunStatus::CALI;
 }
+void FOCStepper::invoke_tone_task(){
+    tone_tasker.reset();
+    run_status = RunStatus::BEEP;
+}
+
 void FOCStepper::tick(){
     auto begin_micros = micros();
     RunStatus exe_status = RunStatus::NONE;
@@ -24,7 +29,7 @@ void FOCStepper::tick(){
                     if(skip_tone){
                         active_task(true);
                     }else{
-                        beep_task(true);
+                        invoke_tone_task();
                     }
                 }else{
                     invoke_cali();
@@ -46,7 +51,8 @@ void FOCStepper::tick(){
             break;
 
         case RunStatus::BEEP:
-            exe_status = beep_task();
+            tone_tasker.run();
+            exe_status = tone_tasker.done() ? RunStatus::EXIT : RunStatus::NONE;
             break;
 
         case RunStatus::INACTIVE:
@@ -73,7 +79,9 @@ void FOCStepper::tick(){
                     if(skip_tone){
                         active_task(true);
                     }
-                    else beep_task(true);
+                    else{
+                        invoke_tone_task();
+                    }
                     break;
                 case RunStatus::BEEP:
                     active_task(true);
@@ -101,7 +109,7 @@ void FOCStepper::tick(){
                     active_task(true);
                     break;
                 case RunStatus::BEEP:
-                    beep_task(true);
+                    invoke_tone_task();
                     break;
                 case RunStatus::INACTIVE:
                     break;
