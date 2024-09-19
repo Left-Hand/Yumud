@@ -8,6 +8,10 @@ void FOCStepper::setNozzle(const real_t duty){
     nozzle_en_gpio = bool(duty);
 }
 
+void FOCStepper::invoke_selfcheck_task(){
+    selfcheck_tasker.reset();
+    run_status = RunStatus::CHECK;
+}
 void FOCStepper::tick(){
     auto begin_micros = micros();
     RunStatus exe_status = RunStatus::NONE;
@@ -29,7 +33,8 @@ void FOCStepper::tick(){
             }
 
         case RunStatus::CHECK:
-            exe_status = check_task();
+            selfcheck_tasker.run();
+            exe_status = selfcheck_tasker.done() ? RunStatus::EXIT : RunStatus::NONE;
             break;
 
         case RunStatus::CALI:
@@ -87,7 +92,7 @@ void FOCStepper::tick(){
         }else{
             switch(run_status){
                 case RunStatus::CHECK:
-                    check_task(true);
+                    invoke_selfcheck_task();
                     break;
                 case RunStatus::CALI:
                     cali_task(true);

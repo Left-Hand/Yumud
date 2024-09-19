@@ -13,6 +13,8 @@
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
 
+#include "tasks/selfcheck.hpp"
+
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
@@ -93,8 +95,10 @@ class FOCStepper:public FOCMotor{
     RunStatus cali_task(const InitFlag init_flag = false);
     RunStatus active_task(const InitFlag init_flag = false);
     RunStatus beep_task(const InitFlag init_flag = false);
-    RunStatus check_task(const InitFlag init_flag = false);
-
+    
+    SelfCheckTasker selfcheck_tasker{svpwm, odo};
+    void invoke_selfcheck_task();
+    
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
