@@ -140,9 +140,9 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             CLI_DEBUG("enabled");
             break;
         
-        // case "exe"_ha:
-        //     CLI_DEBUG("exe", motor.exe_micros, "us");
-        //     break;
+        case "exe"_ha:
+            CLI_DEBUG("exe", motor.exe(), "us");
+            break;
 
         case "disable"_ha:
         case "dis"_ha:

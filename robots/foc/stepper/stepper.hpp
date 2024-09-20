@@ -207,6 +207,9 @@ public:
         }
     }
 
+    uint32_t exe() const override {
+        return exe_micros;
+    }
 
 
     real_t getPositionErr(){

@@ -164,7 +164,7 @@ void FOCStepper::report(){
     if(DEBUGGER.pending()==0){
     //     // delayMicroseconds(200);   
     //     // delay(1); 
-        DEBUG_PRINTLN(std::setprecision(3), target, getSpeed(), getPosition(), getCurrent(), run_leadangle, speed_ctrl.soft_targ_spd);
+        // DEBUG_PRINTLN(std::setprecision(3), target, getSpeed(), getPosition(), getCurrent(), run_leadangle, speed_ctrl.soft_targ_spd);
     }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);

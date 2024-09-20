@@ -147,4 +147,5 @@ public:
         return warn_message;
     }
 
+    virtual uint32_t exe() const = 0;
 };

@@ -7,8 +7,8 @@
 #define UART_FIFO_BUF_SIZE 256
 #define UART_DMA_BUF_SIZE 256
 
-#define DEBUGGER uart2
-#define LOGGER uart2
+#define DEBUGGER uart1
+#define LOGGER uart1
 #define DEBUG_UART_BAUD 576000
 #include "embd_defs.h"
 #endif
