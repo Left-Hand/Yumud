@@ -126,13 +126,14 @@ struct MetaData{
 
     Range pos_limit;
     real_t max_curr;
-    real_t max_spd;
-    real_t max_acc;
+    int max_spd;
+    int max_acc;
     
     real_t max_leadrad = real_t(1);
     
     void reset();
-    real_t get_max_leadrad();
+    real_t get_max_leadrad(){return curr;}
+    real_t get_max_raddiff(){return get_max_leadrad() + real_t(PI / 2);}
 };
 
 

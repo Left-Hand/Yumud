@@ -83,22 +83,22 @@ private:
     virtual void trail() = 0;
 
     void lock(const uint8_t index){
-        if(locker == nullptr) exit(1);
+        if(locker == nullptr) CREATE_FAULT;
         locker->lock(index);
     }
 
     void unlock(){
-        if(locker == nullptr) exit(1);
+        if(locker == nullptr) CREATE_FAULT;
         locker->unlock();
     }
 
     bool is_idle(){
-        if(locker == nullptr) exit(1);
+        if(locker == nullptr) CREATE_FAULT;
         return locker->is_idle();
     }
 
     bool owned_by(const uint8_t index = 0){
-        if(locker == nullptr) exit(1);
+        if(locker == nullptr) CREATE_FAULT;
         return locker->owned_by(index);
     }
 

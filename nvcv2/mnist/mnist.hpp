@@ -1,6 +1,5 @@
 #pragma once
 
-#include "stdio.h"
 
 #include "../nvcv2/mnist/tinymaix.h"
 #include "../nvcv2.hpp"

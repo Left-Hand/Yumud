@@ -18,4 +18,8 @@ __attribute__((used)) void *_sbrk(ptrdiff_t incr)
     curbrk += incr;
     return curbrk - incr;
 }
+
+__attribute__((used)) void _exit(int status){
+    while(true);
+}
 }

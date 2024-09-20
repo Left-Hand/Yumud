@@ -82,6 +82,7 @@ extern "C"{
 __attribute__((used)) int _write(int fd, char *buf, int size);
 __attribute__((used)) void *_sbrk(ptrdiff_t incr);
 
+__attribute__((used)) void _exit(int status);
 }
 
 #define BREAKPOINT __nopn(1);

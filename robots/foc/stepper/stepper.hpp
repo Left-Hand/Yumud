@@ -217,7 +217,7 @@ public:
 
 
     void setSpeedLimit(const real_t max_spd){
-        meta.max_spd = max_spd;
+        meta.max_spd = int(max_spd);
     }
 
     void setAccelLimit(const real_t max_acc){

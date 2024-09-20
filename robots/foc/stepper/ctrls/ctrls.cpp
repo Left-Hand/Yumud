@@ -20,7 +20,6 @@ void PositionCtrl::Config::reset(){
     kp = real_t(6.6);
     ki = real_t(100);
     kd = real_t(0.27);
-    // kd = real_t(7);
 }
 
 void SpeedCtrl::Config::reset(){
@@ -45,7 +44,7 @@ void CurrentCtrl::Config::reset(){
 CtrlResult CurrentCtrl::update(const CtrlResult res){
     last_curr = STEP_TO(last_curr, res.current, config.curr_slew_rate);
     last_raddiff = STEP_TO(last_raddiff, res.raddiff, config.rad_slew_rate);
-    // ctrl_done = ( == res.current);
+
     return {last_curr, last_raddiff};
 }
 
