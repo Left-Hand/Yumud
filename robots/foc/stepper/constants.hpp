@@ -16,8 +16,6 @@
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 #include "drivers/Encoder/odometer_poles.hpp"
 
-#define scexpr static constexpr
-
 scexpr uint32_t foc_freq = 32768;
 scexpr uint32_t chopper_freq = 32768;
 scexpr uint32_t est_freq = foc_freq / 16;
@@ -119,6 +117,24 @@ namespace StepperEnums{
     using ExitFlag = bool;
     using InitFlag = bool;
 };
+
+struct MetaData{
+    real_t accel = 0;
+    real_t curr = 0;
+    real_t spd = 0;
+    real_t pos = 0;
+
+    Range pos_limit;
+    real_t max_curr;
+    real_t max_spd;
+    real_t max_acc;
+    
+    real_t max_leadrad = real_t(1);
+    
+    void reset();
+    real_t get_max_leadrad();
+};
+
 
 namespace StepperUtils{
     template<integral T>

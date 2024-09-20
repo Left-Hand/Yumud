@@ -26,18 +26,10 @@ protected:
     using NodeId = StepperUtils::NodeId;
 
 
+    volatile RunStatus run_status = RunStatus::INIT;
     NodeId node_id = 0;
 
-    struct Measurements{
-        real_t accel = 0;
-        real_t curr = 0;
-        real_t spd = 0;
-        real_t pos = 0;
-    };
-
-    volatile RunStatus run_status = RunStatus::INIT;
-    Measurements measurements;
-    CtrlLimits ctrl_limits;
+    MetaData meta;
     real_t target;
 
     friend class AsciiProtocol;
@@ -66,13 +58,13 @@ public:
     virtual bool isActive() const = 0;
     virtual volatile RunStatus & status() = 0;
 
-    real_t getSpeed() const{return measurements.spd;}
+    real_t getSpeed() const{return meta.spd;}
 
-    real_t getPosition() const {return measurements.pos;}
+    real_t getPosition() const {return meta.pos;}
 
-    real_t getCurrent() const {return measurements.curr;}
+    real_t getCurrent() const {return meta.curr;}
 
-    real_t getAccel() const{return measurements.accel;}
+    real_t getAccel() const{return meta.accel;}
 
     virtual void setCurrentLimit(const real_t max_current) = 0;
     virtual void setPositionLimit(const Range & clamp) = 0;

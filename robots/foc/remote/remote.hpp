@@ -44,10 +44,10 @@ public:
     real_t getPosition() const;
     real_t getCurrent() const;
     real_t getAccel() const;
-    real_t readSpeed() const{return measurements.spd;}
-    real_t readPosition() const{return measurements.pos;}
-    real_t readCurrent() const{return measurements.curr;}
-    real_t readAccel() const{return measurements.accel;}
+    real_t readSpeed() const{return meta.spd;}
+    real_t readPosition() const{return meta.pos;}
+    real_t readCurrent() const{return meta.curr;}
+    real_t readAccel() const{return meta.accel;}
     void updateAll() const;
 
     void setPositionLimit(const Range & clamp);

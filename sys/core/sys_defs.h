@@ -86,6 +86,9 @@
 #define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
 #define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
 
+#ifdef __cplusplus
+#define scexpr static constexpr
+#endif
 
 #ifndef __nopn
 #define __nopn(N) __asm__ volatile(".rept " #N "\n\t nop \n\t .endr \n\t":::)

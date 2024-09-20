@@ -72,16 +72,16 @@ class FOCStepper:public FOCMotor{
     real_t run_leadangle;
 
     CurrentCtrl::Config curr_config;
-    CurrentCtrl curr_ctrl{ctrl_limits, curr_config};
+    CurrentCtrl curr_ctrl{meta, curr_config};
     
     SpeedCtrl::Config spd_config;
-    SpeedCtrl speed_ctrl{ctrl_limits, spd_config, curr_ctrl};
+    SpeedCtrl speed_ctrl{meta, spd_config, curr_ctrl};
     
     PositionCtrl::Config pos_config;
-    PositionCtrl position_ctrl{ctrl_limits, pos_config, curr_ctrl};
+    PositionCtrl position_ctrl{meta, pos_config, curr_ctrl};
 
     TrapezoidPosCtrl::Config tpz_config;
-    TrapezoidPosCtrl trapezoid_ctrl{ctrl_limits, tpz_config, speed_ctrl, position_ctrl};
+    TrapezoidPosCtrl trapezoid_ctrl{meta, tpz_config, speed_ctrl, position_ctrl};
 
     SpeedEstimator::Config spe_config;
     SpeedEstimator speed_estmator{spe_config};
@@ -128,7 +128,7 @@ public:
     void tick();
 
     void init(){
-        ctrl_limits.reset();
+        meta.reset();
         curr_config.reset();
         
         odo.init();
@@ -141,27 +141,27 @@ public:
     }
 
     void setTargetCurrent(const real_t curr){
-        target = MIN(ctrl_limits.max_curr, curr);
+        target = MIN(meta.max_curr, curr);
         ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
-        target = MIN(ctrl_limits.max_spd, speed);
+        target = MIN(meta.max_spd, speed);
         ctrl_type = CtrlType::SPEED;
     }
 
     void setTargetPosition(const real_t pos){
-        target = ctrl_limits.pos_limit.clamp(pos);
+        target = meta.pos_limit.clamp(pos);
         ctrl_type = CtrlType::POSITION;
     }
 
     void setTargetTrapezoid(const real_t pos){
-        target = ctrl_limits.pos_limit.clamp(pos);
+        target = meta.pos_limit.clamp(pos);
         ctrl_type = CtrlType::TRAPEZOID;
     }
 
     void setTargetTeach(const real_t max_curr){
-        target = CLAMP(max_curr, 0, ctrl_limits.max_curr);
+        target = CLAMP(max_curr, 0, meta.max_curr);
         ctrl_type = CtrlType::TEACH;
     }
 
@@ -179,7 +179,7 @@ public:
     }
 
     void setCurrentLimit(const real_t current){
-        ctrl_limits.max_curr = current;
+        meta.max_curr = current;
     }
 
     void locateRelatively(const real_t pos = 0){
@@ -191,7 +191,7 @@ public:
     void report();
 
     void setPositionLimit(const Range & clamp){
-        ctrl_limits.pos_limit = clamp;
+        meta.pos_limit = clamp;
     }
 
     void enable(const bool en = true){
@@ -217,11 +217,11 @@ public:
 
 
     void setSpeedLimit(const real_t max_spd){
-        ctrl_limits.max_spd = max_spd;
+        meta.max_spd = max_spd;
     }
 
     void setAccelLimit(const real_t max_acc){
-        ctrl_limits.max_acc = int(max_acc);
+        meta.max_acc = int(max_acc);
     }
 
     void triggerCali(){

@@ -19,15 +19,6 @@ struct CtrlResult{
     real_t raddiff;
 };
 
-struct CtrlLimits{
-    Range pos_limit;
-    real_t max_curr;
-    real_t max_spd;
-    int max_acc;
-
-    void reset();
-};
-
 
 struct CurrentCtrl{
 using Result = CtrlResult;
@@ -40,42 +31,40 @@ public:
         void reset();
     };
 
-    CtrlLimits & limits;
+    MetaData & meta;
     Config & config;
 
-CURR_SPEC:
-    bool ctrl_done = false;
+protected:
+    real_t last_curr = 0;
+    real_t last_raddiff = 0;
 public:
-    real_t curr_output = 0;
-    real_t raddiff_output = 0;
-    CurrentCtrl(CtrlLimits & _limits, Config & _config):limits(_limits), config(_config){reset();}
+
+    CurrentCtrl(MetaData & _meta, Config & _config):meta(_meta), config(_config){reset();}
 
     void reset(){
         config.reset();
-        curr_output = 0;
-        raddiff_output = 0;
-    }
-
-    operator bool() const {
-        return ctrl_done; 
+        last_curr = 0;
+        last_raddiff = 0;
     }
     
-    CtrlResult update(const CtrlResult & result);
-    CtrlResult output() const {return {curr_output, raddiff_output};}
+    CtrlResult update(const CtrlResult result);
+    // CtrlResult output() const {return {curr_output, raddiff_output};}
 
-    real_t getLastCurrent() const {return curr_output; }
-    real_t getLastRaddiff() const {return raddiff_output;}
+    // real_t getLastCurrent() const {return curr_output; }
+    real_t curr() const {return last_curr;}
+    real_t raddiff() const {return last_raddiff;}
+    // real_t getLastRaddiff() const {return raddiff_output;}
 };
 
 
 
 struct HighLayerCtrl{
 protected:
-    CtrlLimits & limits;
+    MetaData & meta;
     CurrentCtrl & curr_ctrl;
     using Result = CtrlResult;
 public:
-    HighLayerCtrl(CtrlLimits & _limits, CurrentCtrl & _ctrl):limits(_limits), curr_ctrl(_ctrl){;}
+    HighLayerCtrl(MetaData & _meta, CurrentCtrl & _ctrl):meta(_meta), curr_ctrl(_ctrl){;}
     virtual void reset() = 0;
 };
 
@@ -97,8 +86,8 @@ SPD_SPEC:
     real_t soft_targ_spd = 0;
     real_t filt_real_spd = 0;
 public:
-    SpeedCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
-        HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
+    SpeedCtrl(MetaData & _meta, Config & _config, CurrentCtrl & _curr_ctrl):
+        HighLayerCtrl(_meta, _curr_ctrl), config(_config){reset();}
 
     void reset() override {
         config.reset();
@@ -127,8 +116,8 @@ protected:
     real_t ki_integral = 0;
     real_t targ_spd = 0;
 public:
-    PositionCtrl(CtrlLimits & _limits, Config & _config, CurrentCtrl & _curr_ctrl):
-        HighLayerCtrl(_limits, _curr_ctrl), config(_config){reset();}
+    PositionCtrl(MetaData & _meta, Config & _config, CurrentCtrl & _curr_ctrl):
+        HighLayerCtrl(_meta, _curr_ctrl), config(_config){reset();}
 
     void reset() override {
         config.reset();
@@ -146,7 +135,7 @@ public:
 };
 
 struct TopLayerCtrl{
-    CtrlLimits & limits;
+    MetaData & meta;
     SpeedCtrl & speed_ctrl;
     PositionCtrl & position_ctrl;
 };
@@ -175,8 +164,8 @@ protected:
 
 
 public:
-    TrapezoidPosCtrl(CtrlLimits & _limits, Config & _config, SpeedCtrl & _speed_ctrl, PositionCtrl & _position_ctrl):
-            TopLayerCtrl(_limits, _speed_ctrl, _position_ctrl), config(_config){
+    TrapezoidPosCtrl(MetaData & _meta, Config & _config, SpeedCtrl & _speed_ctrl, PositionCtrl & _position_ctrl):
+            TopLayerCtrl(_meta, _speed_ctrl, _position_ctrl), config(_config){
                 reset();
             }
     
