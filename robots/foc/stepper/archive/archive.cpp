@@ -1,5 +1,6 @@
 #include "../stepper.hpp"
 
+#define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
 bool FOCStepper::loadArchive(const bool outen){
     using BoardInfo = StepperUtils::BoardInfo;

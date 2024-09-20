@@ -22,4 +22,9 @@ __attribute__((used)) void *_sbrk(ptrdiff_t incr)
 __attribute__((used)) void _exit(int status){
     while(true);
 }
+
+__attribute__((used)) ssize_t _read(int fd, void *buf, size_t count){
+    return 0;
+}
+
 }

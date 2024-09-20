@@ -26,35 +26,6 @@ class FOCStepper:public FOCMotor{
 
     using NodeId = StepperUtils::NodeId;
 
-    #define THROW_ERROR(code, msg) throw_error(code,msg)
-    #define THROW_WARN(code, msg) throw_warn(code,msg)
-
-    #ifdef STEPPER_NO_PRINT
-    // #define CLI_PRINTS(...)
-    #define ARCHIVE_PRINTS(...)
-    #define CLI_DEBUG(...)
-    #define COMMAND_DEBUG(...)
-    #define RUN_DEBUG(...)
-
-    #else
-    // #define CLI_PRINTS(...) logger.prints(__VA_ARGS__);
-
-    #define ARCHIVE_PRINTS(...) if(outen) DEBUGGER.prints(__VA_ARGS__);
-
-    #define CALI_DEBUG(...)\
-    if(cali_debug_enabled){\
-    logger.println(__VA_ARGS__);};
-
-    #define COMMAND_DEBUG(...)\
-    if(command_debug_enabled){\
-    logger.println(__VA_ARGS__);};
-
-    #define RUN_DEBUG(...)\
-    if(run_debug_enabled){\
-    logger.println(__VA_ARGS__);};
-
-    #endif
-
     Archive archive_;
     Switches & switches_ = archive_.switches;
 

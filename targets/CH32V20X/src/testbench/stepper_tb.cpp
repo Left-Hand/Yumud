@@ -83,7 +83,7 @@ void stepper_tb(UartHw & logger){
     timer1.setRepeatTimes(1);
     adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
     adc1.enableAutoInject(false);
-    
+
 
     svpwm.init();
     svpwm.enable();
