@@ -3,7 +3,7 @@
 #include "sys/math/float/bf16.hpp"
 #include "hal/bus/can/can.hpp"
 
-#include "robots/foc/stepper/constants.hpp"
+#include "robots/foc/stepper/motor_utils.hpp"
 #include <tuple>
 
 namespace CANProtocolUtils{
@@ -18,7 +18,7 @@ class FOCMotor;
 
 class CanProtocol{
 protected:
-    using Command = StepperEnums::Command;
+    using Command = MotorUtils::Command;
 
     FOCMotor & motor;
     Can & can;

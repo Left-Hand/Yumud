@@ -13,17 +13,17 @@ class CanProtocol;
 
 class FOCMotorConcept{ 
 public:
-    using ErrorCode = StepperEnums::ErrorCode;
-    using RunStatus = StepperEnums::RunStatus;
-    using CtrlType = StepperEnums::CtrlType;
+    using ErrorCode = MotorUtils::ErrorCode;
+    using RunStatus = MotorUtils::RunStatus;
+    using CtrlType = MotorUtils::CtrlType;
 protected:
-    using ExitFlag = StepperEnums::ExitFlag;
-    using InitFlag = StepperEnums::InitFlag;
+    using ExitFlag = MotorUtils::ExitFlag;
+    using InitFlag = MotorUtils::InitFlag;
 
     using Range = Range_t<real_t>;
 
-    using Switches = StepperUtils::Switches;
-    using NodeId = StepperUtils::NodeId;
+    using Switches = MotorUtils::Switches;
+    using NodeId = MotorUtils::NodeId;
 
 
     volatile RunStatus run_status = RunStatus::INIT;

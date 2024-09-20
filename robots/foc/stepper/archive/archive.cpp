@@ -3,7 +3,7 @@
 #define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
 bool FOCStepper::loadArchive(const bool outen){
-    using BoardInfo = StepperUtils::BoardInfo;
+    using BoardInfo = MotorUtils::BoardInfo;
     Archive archive;
     memory.load(archive);
 
@@ -110,7 +110,7 @@ void FOCStepper::removeArchive(const bool outen){
 }
 
 
-OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi){
+OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi){
     #ifdef ARCHIVE_PRINTS
     os << "======\r\n";
     os << "build version:\t\t" << bi.bver << "\r\n";

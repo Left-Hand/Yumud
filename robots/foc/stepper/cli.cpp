@@ -2,7 +2,7 @@
 #include "robots/foc/protocol/can_protocol.hpp"
 #include "robots/foc/protocol/ascii_protocol.hpp"
 
-namespace StepperUtils{
+namespace MotorUtils{
 
 std::vector<String> Cli::split_string(const String& input, char delimiter) {
     std::vector<String> result;

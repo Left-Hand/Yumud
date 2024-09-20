@@ -3,8 +3,8 @@
 
 using namespace CANProtocolUtils;
 
-using Command = StepperEnums::Command;
-using RunStatus = StepperEnums::RunStatus;
+using Command = MotorUtils::Command;
+using RunStatus = MotorUtils::RunStatus;
 
 #define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
 

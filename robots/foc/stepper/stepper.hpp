@@ -21,10 +21,10 @@
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
-    using Archive = StepperUtils::Archive;
-    using Switches = StepperUtils::Switches;
+    using Archive = MotorUtils::Archive;
+    using Switches = MotorUtils::Switches;
 
-    using NodeId = StepperUtils::NodeId;
+    using NodeId = MotorUtils::NodeId;
 
     Archive archive_;
     Switches & switches_ = archive_.switches;

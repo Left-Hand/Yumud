@@ -32,7 +32,27 @@ scexpr real_t inv_poles = real_t(1) / poles;
 
 scexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 
-namespace StepperEnums{
+
+struct MetaData{
+    real_t accel = 0;
+    real_t curr = 0;
+    real_t spd = 0;
+    real_t pos = 0;
+
+    Range pos_limit;
+    real_t max_curr;
+    int max_spd;
+    int max_acc;
+    
+    real_t max_leadrad = real_t(1);
+    
+    void reset();
+    real_t get_max_leadrad();
+    real_t get_max_raddiff();
+};
+
+
+namespace MotorUtils{
 
     enum class RunStatus:uint8_t{
         NONE,
@@ -116,28 +136,6 @@ namespace StepperEnums{
 
     using ExitFlag = bool;
     using InitFlag = bool;
-};
-
-struct MetaData{
-    real_t accel = 0;
-    real_t curr = 0;
-    real_t spd = 0;
-    real_t pos = 0;
-
-    Range pos_limit;
-    real_t max_curr;
-    int max_spd;
-    int max_acc;
-    
-    real_t max_leadrad = real_t(1);
-    
-    void reset();
-    real_t get_max_leadrad(){return curr;}
-    real_t get_max_raddiff(){return get_max_leadrad() + real_t(PI / 2);}
-};
-
-
-namespace StepperUtils{
     template<integral T>
     struct NodeId_t{
         T id_;

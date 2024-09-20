@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../constants.hpp"
+#include "../motor_utils.hpp"
 
 class CaliTasker{
 protected:
-    using RunStatus = StepperEnums::RunStatus;
-    using InitFlag = StepperEnums::InitFlag;
+    using RunStatus = MotorUtils::RunStatus;
+    using InitFlag = MotorUtils::InitFlag;
 
     enum class SubState{
         ENTRY,

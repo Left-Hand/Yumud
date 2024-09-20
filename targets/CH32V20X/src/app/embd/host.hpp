@@ -18,11 +18,11 @@
 #include "machine/machine.hpp"
 
 #ifdef CH32V30X
-using StepperUtils::CliAP;
+using MotorUtils::CliAP;
 using namespace GpioUtils;
 
 class EmbdHost:public CliAP{
-    using NodeId = StepperUtils::NodeId;
+    using NodeId = MotorUtils::NodeId;
     Trajectory trajectory;
 
     RemoteFOCMotor stepper_w;

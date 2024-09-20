@@ -2,9 +2,9 @@
 
 #define __STEPPER_ARCHIVE_HPP__
 
-#include "../constants.hpp"
+#include "../motor_utils.hpp"
 
-namespace StepperUtils{
+namespace MotorUtils{
     scexpr uint8_t build_version = 10;
     scexpr uint8_t drv_type = 42;
     scexpr char drv_branch = 'm';
@@ -130,6 +130,6 @@ namespace StepperUtils{
     };
 }
 
-OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi);
+OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi);
 
 #endif

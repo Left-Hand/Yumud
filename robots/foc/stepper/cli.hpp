@@ -3,11 +3,11 @@
 #define __STEPPER_CLI_HPP__
 
 #include "sys/core/system.hpp"
-#include "constants.hpp"
+#include "motor_utils.hpp"
 #include "statled.hpp"
 #include "hal/bus/can/can.hpp"
 
-namespace StepperUtils{
+namespace MotorUtils{
     class Cli{
     private:
         std::vector<String> split_string(const String& input, char delimiter);
@@ -16,7 +16,7 @@ namespace StepperUtils{
         IOStream & logger;
         Can & can;
         NodeId node_id;
-        using Command = StepperEnums::Command;
+        using Command = MotorUtils::Command;
     public:
         Cli(IOStream & _logger, Can & _can, const NodeId _node_id):logger(_logger), can(_can), node_id(_node_id){;}
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../constants.hpp"
+#include "../motor_utils.hpp"
 
 class SelfCheckTasker{
 protected:
@@ -25,7 +25,7 @@ protected:
     SVPWM & svpwm_;
     OdometerPoles & odo_;
 
-    using ErrorCode = StepperEnums::ErrorCode;
+    using ErrorCode = MotorUtils::ErrorCode;
     
     void sw_state (const SubState new_state){
         sub_state = new_state;

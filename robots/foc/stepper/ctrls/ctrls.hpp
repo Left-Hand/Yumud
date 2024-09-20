@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../constants.hpp"
+#include "../motor_utils.hpp"
 #include "../observer/observer.hpp"
 
 #ifdef DEBUG

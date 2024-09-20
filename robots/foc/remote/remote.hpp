@@ -1,19 +1,19 @@
 #pragma once
 
 #include "robots/foc/focmotor.hpp"
-#include "robots/foc/stepper/constants.hpp"
+#include "robots/foc/stepper/motor_utils.hpp"
 #include "robots/foc/stepper/cli.hpp"
 
 #include "robots/foc/protocol/can_protocol.hpp"
 
 class RemoteFOCMotor:public FOCMotorConcept{
 protected:
-    using ExitFlag = StepperEnums::ExitFlag;
-    using InitFlag = StepperEnums::InitFlag;
-    using NodeId = StepperUtils::NodeId;
-    using RunStatus = StepperEnums::RunStatus;
+    using ExitFlag = MotorUtils::ExitFlag;
+    using InitFlag = MotorUtils::InitFlag;
+    using NodeId = MotorUtils::NodeId;
+    using RunStatus = MotorUtils::RunStatus;
 
-    using Command = StepperEnums::Command;
+    using Command = MotorUtils::Command;
     IOStream & logger;
     Can & can;
     volatile RunStatus run_status = RunStatus::NONE;
