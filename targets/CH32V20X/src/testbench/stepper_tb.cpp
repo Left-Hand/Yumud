@@ -112,7 +112,7 @@ void stepper_tb(UartHw & logger){
     timer3.bindCb(IT::Update, [&](){stp.tick();});
     timer3.enableIt(IT::Update,{0,0});
 
-    can1.init(Can::BaudRate::Mbps1);
+    can1.init(Can::BaudRate::_1M);
  
     stp.init();
     stp.setSpeedLimit(46);

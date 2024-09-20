@@ -127,11 +127,11 @@ public:
     };
 
 #ifdef HAVE_CAN1
-extern Can can1;
+inline Can can1{CAN1};
 #endif
 
 #ifdef HAVE_CAN2
-extern Can can2;
+inline Can can2{CAN2};
 #endif
 
 #endif
