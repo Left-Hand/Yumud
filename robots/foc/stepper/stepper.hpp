@@ -86,9 +86,6 @@ class FOCStepper:public FOCMotor{
     SpeedEstimator::Config spe_config;
     SpeedEstimator speed_estmator{spe_config};
 
-
-
-
     bool cali_debug_enabled = true;
     bool command_debug_enabled = false;
     bool run_debug_enabled = false;
@@ -113,7 +110,7 @@ class FOCStepper:public FOCMotor{
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
-    FOCStepper(SVPWM2 & _svpwm, Encoder & _encoder, Memory & _memory):
+    FOCStepper(SVPWM & _svpwm, Encoder & _encoder, Memory & _memory):
             FOCMotor(_svpwm, _encoder, _memory){;}
 
     bool isActive() const {
@@ -128,9 +125,7 @@ public:
     void saveArchive(const bool outen = false);
     void removeArchive(const bool outen = false);
 
-    void setNozzle(const real_t duty);
     void tick();
-
 
     void init(){
         ctrl_limits.reset();

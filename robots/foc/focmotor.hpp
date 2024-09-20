@@ -79,7 +79,6 @@ public:
     virtual void setSpeedLimit(const real_t max_spd) = 0;
     virtual void setAccelLimit(const real_t max_acc) = 0;
     virtual void enable(const bool en = true) = 0;
-    virtual void setNozzle(const real_t duty) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 

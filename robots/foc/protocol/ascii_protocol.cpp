@@ -32,13 +32,6 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size() == 1) motor.setAccelLimit(real_t(args[0]));
             break;
 
-        case "nz"_ha:{
-                real_t val = args.size() ? int(args[0]) : 0;
-                motor.setNozzle(val);
-                CLI_DEBUG("set nozzle to:",val);
-            }
-            break;
-
         case "remove"_ha:
         case "rm"_ha:
             motor.removeArchive(args.size() ? bool(int(args[0])) : true);

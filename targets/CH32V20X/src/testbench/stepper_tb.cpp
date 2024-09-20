@@ -1,21 +1,26 @@
 #include "tb.h"
-#include "robots/foc/stepper/stepper.hpp"
-#include "algo/interpolation/cubic.hpp"
-#include "drivers/Actuator/Driver/AT8222/at8222.hpp"
-#include "algo/interpolation/cubic.hpp"
-
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/can/can.hpp"
+#include "hal/adc/adcs/adc1.hpp"
+
+#include "robots/foc/stepper/stepper.hpp"
+#include "algo/interpolation/cubic.hpp"
+#include "algo/interpolation/cubic.hpp"
 
 #include "drivers/Encoder/MagEncoder.hpp"
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
-#include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
-#include "drivers/Wireless/Radio/XL2400/xl2400.hpp"
 
-#include "hal/adc/adcs/adc1.hpp"
+#include "drivers/Actuator/Driver/AT8222/at8222.hpp"
+#include "drivers/Actuator/Driver/MP6540/mp6540.hpp"
 
+#include "drivers/Actuator/SVPWM/svpwm2.hpp"
+#include "drivers/Actuator/SVPWM/svpwm3.hpp"
+
+#define MOTOR_TYPE_STEPPER 0
+#define MOTOR_TYPE_BLDC 1
+#define MOTOR_TYPE MOTOR_TYPE_STEPPER
 
 void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
@@ -24,7 +29,7 @@ void stepper_tb(UartHw & logger){
     logger.init(576000);
     logger.setEps(4);
 
-
+    #if(MOTOR_TYPE == MOTOR_TYPE_STEPPER)
     auto & ena_gpio = portB[0];
     auto & enb_gpio = portA[7];
 
@@ -32,6 +37,25 @@ void stepper_tb(UartHw & logger){
     AT8222 coilB{timer1.oc(1), timer1.oc(2), enb_gpio};
 
     SVPWM2 svpwm{coilA, coilB};
+
+    ena_gpio.outpp(1);
+    enb_gpio.outpp(1);
+
+    #endif
+
+
+    #if(MOTOR_TYPE == MOTOR_TYPE_BLDC)
+
+    MP6540 mp6540{
+        {timer1.oc(1), timer1.oc(2), timer1.oc(3)},
+        {adc1.inj(1), adc1.inj(2), adc1.inj(3)}
+    };
+
+    mp6540.init();
+    mp6540.setSoRes(1_K);
+    
+    SVPWM3 svpwm {mp6540};
+    #endif
     
     svpwm.inverse(false);
     
@@ -60,11 +84,6 @@ void stepper_tb(UartHw & logger){
     adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
     adc1.enableAutoInject(false);
     
-    
-
-    
-    ena_gpio.outpp(1);
-    enb_gpio.outpp(1);
 
     svpwm.init();
     svpwm.enable();

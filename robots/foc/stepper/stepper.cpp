@@ -2,10 +2,6 @@
 #include "sys/math/float/bf16.hpp"
 
 
-void FOCStepper::setNozzle(const real_t duty){
-
-}
-
 void FOCStepper::invoke_cali(){
     cali_tasker.reset();
     run_status = RunStatus::CALI;
