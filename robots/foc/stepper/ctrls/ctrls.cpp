@@ -12,6 +12,15 @@ void MetaData::reset(){
     max_curr = real_t(1.4);
     max_spd = 30;
     max_acc = 30;
+    spd_to_leadrad_ratio = real_t(0.3);
+    curr_to_leadrad_ratio = real_t(1.7);
+    max_leadrad = real_t(PI * 0.7);
+}
+
+void CurrentCtrl::Config::reset(){
+    curr_slew_rate = real_t(60) / foc_freq;
+    rad_slew_rate = real_t(420) / foc_freq;
+    openloop_curr = real_t(0.7);
 }
 
 void PositionCtrl::Config::reset(){
@@ -32,12 +41,6 @@ void SpeedCtrl::Config::reset(){
 
 void TrapezoidPosCtrl::Config::reset(){
     pos_sw_radius = real_t(0.12);
-}
-
-void CurrentCtrl::Config::reset(){
-    curr_slew_rate = real_t(60) / foc_freq;
-    rad_slew_rate = real_t(420) / foc_freq;
-    openloop_curr = real_t(0.7);
 }
 
 
@@ -78,10 +81,7 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
     {
         scexpr real_t inquater_radius = (inv_poles / 4);
 
-        #define SAFE_OVERLOAD_RAD(__curr,__spd,__pos_abs_err)\
-                MIN(\
-                __curr * real_t(0.7) + real_t(0.3)\
-                ,meta.max_leadrad)\
+        
 
         real_t kp_contribute = abs_pos_err * config.kp;
         ki_integral = MIN(ki_integral + ((abs_pos_err * config.ki) >> 16), min_curr);
@@ -118,11 +118,10 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
         if(abs_pos_err < inquater_radius){
             return {abs_curr, pos_err * (poles * tau)};
         }else{
-            real_t abs_raddiff = (1 + SAFE_OVERLOAD_RAD(meta.curr, abs_real_spd, abs_pos_err)) * hpi;
+            real_t abs_raddiff = meta.get_max_raddiff();
             real_t raddiff = SIGN_AS(abs_raddiff, pos_err);
             return {abs_curr, raddiff};
         }
-        #undef SAFE_OVERLOAD_RAD
     }
 
 
@@ -159,12 +158,9 @@ Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
     real_t abs_targ_current = MIN(ABS(targ_current), meta.max_curr);
     targ_current = SIGN_AS(abs_targ_current, soft_targ_spd);
 
-    #define SAFE_OVERLOAD_RAD(__curr)\
-        MIN(__curr * real_t(0.7) + real_t(0.3), meta.max_leadrad)
-
 
     const real_t abs_spd = ABS(filt_real_spd);
-    real_t raddiff = SIGN_AS(hpi * (1 + (SAFE_OVERLOAD_RAD(meta.curr))), soft_targ_spd);
+    real_t raddiff = SIGN_AS(meta.get_max_raddiff(), soft_targ_spd);
 
     bool is_inversed = false;
     is_inversed |= filt_real_spd * soft_targ_spd < -1;
@@ -177,7 +173,6 @@ Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
         return {abs_targ_current, raddiff};
     }
 
-    #undef SAFE_OVERLOAD_RAD
 }
 
 

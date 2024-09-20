@@ -39,7 +39,6 @@ class FOCStepper:public FOCMotor{
 
     real_t elecrad_zerofix;
     real_t run_elecrad;
-    real_t est_elecrad;
     real_t run_leadangle;
 
     CurrentCtrl::Config curr_config;

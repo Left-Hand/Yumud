@@ -147,7 +147,7 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetPosition(Interpolation::demo() * 10);
         // stp.setTargetPosition(5 * sin(7 * t));
         // stp.setTargetPosition(demo() * 17);
-        // stp.setTargetPosition(17* sin(2 * t));
+
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(7 * frac(t));
 

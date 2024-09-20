@@ -38,13 +38,16 @@ struct MetaData{
     real_t curr = 0;
     real_t spd = 0;
     real_t pos = 0;
+    real_t elecrad = 0;
 
-    Range pos_limit;
-    real_t max_curr;
-    int max_spd;
-    int max_acc;
+    Range pos_limit = Range::INF;
+    real_t max_curr = real_t(0.7);
+    int max_spd = 30;
+    int max_acc = 30;
     
-    real_t max_leadrad = real_t(1);
+    real_t curr_to_leadrad_ratio = real_t(1);
+    real_t spd_to_leadrad_ratio = real_t(0.1);
+    real_t max_leadrad = real_t(0.2);
     
     void reset();
     real_t get_max_leadrad();
