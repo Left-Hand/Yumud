@@ -2,9 +2,14 @@
 
 #define POS_ERR_LIMIT 100
 
+#define SPD_CTRL_TYPE_ORG 0
+#define SPD_CTRL_TYPE_BANGBANG 1
+
+#define SPD_CTRL_TYPE SPD_CTRL_TYPE_ORG
+
 using Result = CtrlResult;
 
-scexpr real_t still_spd_radius = real_t(0.7);
+// scexpr real_t still_spd_radius = real_t(0.7);
 
 
 void MetaData::reset(){
@@ -13,7 +18,7 @@ void MetaData::reset(){
     max_spd = 30;
     max_acc = 30;
     spd_to_leadrad_ratio = real_t(0.3);
-    curr_to_leadrad_ratio = real_t(1.7);
+    curr_to_leadrad_ratio = real_t(1.4);
     max_leadrad = real_t(PI * 0.7);
 }
 
@@ -29,14 +34,15 @@ void PositionCtrl::Config::reset(){
     kp = real_t(6.6);
     ki = real_t(100);
     kd = real_t(0.27);
+    // kd = real_t(0);
 }
 
 void SpeedCtrl::Config::reset(){
-    kp = 10;
+    kp = 26;
     kp_limit = 40;
 
-    kd = 10;
-    kd_limit = real_t(7.4);
+    kd = 16;
+    kd_limit = real_t(14.4);
 }
 
 void TrapezoidPosCtrl::Config::reset(){
@@ -81,8 +87,6 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
     {
         scexpr real_t inquater_radius = (inv_poles / 4);
 
-        
-
         real_t kp_contribute = abs_pos_err * config.kp;
         ki_integral = MIN(ki_integral + ((abs_pos_err * config.ki) >> 16), min_curr);
 
@@ -113,6 +117,7 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
             }
         }
 
+
         abs_curr = MAX(abs_curr * MAX((1 - ((config.kd * overflow_energy) >> 8)), 0), min_curr);
 
         if(abs_pos_err < inquater_radius){
@@ -132,46 +137,52 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
 }
 
 Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
-
     const real_t clamped_targ_spd = CLAMP2(_targ_spd, meta.max_spd);
     
     soft_targ_spd = STEP_TO(soft_targ_spd, clamped_targ_spd, real_t(meta.max_acc) / foc_freq);
-    if(ABS(soft_targ_spd) > 5 and ABS(real_spd) < real_t(0.5)) soft_targ_spd = 0;
-    filt_real_spd = real_spd;
 
-    const real_t spd_err = (soft_targ_spd - filt_real_spd);
+    #if (SPD_CTRL_TYPE == SPD_CTRL_TYPE_ORG)
 
-    const real_t spd_delta = (filt_real_spd - last_real_spd);
-    last_real_spd = filt_real_spd;
+    const real_t spd_err = (soft_targ_spd - real_spd);
+    const real_t spd_delta = (real_spd - last_real_spd);
+    last_real_spd = real_spd;
 
     const real_t kp_contribute = CLAMP2(spd_err * config.kp, config.kp_limit);
-    const real_t kd_contribute = CLAMP2(config.kd * spd_delta, config.kd_limit);
+    const real_t kd_contribute = CLAMP2(spd_delta * config.kd, config.kd_limit);
 
     real_t delta_targ_curr = 0 
             + (kp_contribute >> 16)
             - (kd_contribute >> 8)
             ;
 
-    delta_targ_curr = CLAMP2(delta_targ_curr, curr_ctrl.config.curr_slew_rate);
+    // delta_targ_curr = CLAMP2(delta_targ_curr, curr_ctrl.config.curr_slew_rate);
 
-    real_t targ_current = SIGN_AS(meta.curr, soft_targ_spd) + delta_targ_curr;
-    real_t abs_targ_current = MIN(ABS(targ_current), meta.max_curr);
-    targ_current = SIGN_AS(abs_targ_current, soft_targ_spd);
+    real_t targ_curr = SIGN_AS(meta.curr, soft_targ_spd) + delta_targ_curr;
+    // real_t abs_targ_curr = MIN(ABS(targ_curr), meta.max_curr);
+    // targ_curr = SIGN_AS(abs_targ_curr, soft_targ_spd);
 
-
-    const real_t abs_spd = ABS(filt_real_spd);
     real_t raddiff = SIGN_AS(meta.get_max_raddiff(), soft_targ_spd);
 
-    bool is_inversed = false;
-    is_inversed |= filt_real_spd * soft_targ_spd < -1;
-    is_inversed |= (abs_spd > ABS(soft_targ_spd) * 2);
+    // bool is_inversed = false;
+    // is_inversed |= filt_real_spd * soft_targ_spd < -1;
+    // is_inversed |= (abs_spd > ABS(soft_targ_spd) * 2);
 
-    if(is_inversed){
-        // return {ctrl_meta.max_curr, SIGN_AS(basic_raddiff * PI / 2, targ_spd)};
-        return {0, SIGN_AS(hpi, soft_targ_spd)};
-    }else{
-        return {abs_targ_current, raddiff};
-    }
+    // if(is_inversed){
+    //     // return {ctrl_meta.max_curr, SIGN_AS(basic_raddiff * PI / 2, targ_spd)};
+    //     return {0, SIGN_AS(hpi, soft_targ_spd)};
+    // }else{
+    return {ABS(targ_curr), raddiff};
+    // }
+    #elif (SPD_CTRL_TYPE == SPD_CTRL_TYPE_BANGBANG)
+
+    scexpr real_t bangbang_step = real_t(0.001); 
+
+    real_t delta_targ_curr = CLAMP2(SIGN_AS(bangbang_step, soft_targ_spd - real_spd), curr_ctrl.config.curr_slew_rate);
+
+    real_t raddiff = SIGN_AS(meta.get_max_raddiff(), soft_targ_spd);
+
+    return {meta.curr + delta_targ_curr, raddiff};
+    #endif
 
 }
 

@@ -58,6 +58,10 @@ public:
     virtual bool isActive() const = 0;
     virtual volatile RunStatus & status() = 0;
 
+    virtual real_t getTarget() = 0;
+
+    const auto & getMeta() const {return meta;}
+
     real_t getSpeed() const{return meta.spd;}
 
     real_t getPosition() const {return meta.pos;}

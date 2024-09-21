@@ -116,13 +116,13 @@ void stepper_tb(UartHw & logger){
  
     stp.init();
     stp.setSpeedLimit(46);
-    stp.setAccelLimit(72);
+    stp.setAccelLimit(172);
     stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
 
     while(!stp.isActive());
     stp.setTargetCurrent(real_t(0));
-    stp.setCurrentLimit(real_t(1.5));
+    stp.setCurrentLimit(real_t(1.8));
 
     // CubicInterpolation cubic;
 
@@ -151,6 +151,18 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(7 * frac(t));
 
+        // real_t target = real_t(0.7) * sin(t);
+        // stp.setTargetPosition(target);
+        // stp.setTargetCurrent(target);
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getPosition(), target);
+
+        // real_t target = real_t(20.4) * sin(7 * t);
+        real_t target = real_t(30.4) * sign(sin(5 * t));
+        // real_t target = real_t(0.8) * sign(sin(5 * t));
+        stp.setTargetSpeed(target);
+        // stp.setTargetCurrent(target);
+        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getSpeed(), stp.getTarget());
+        
         // stp.setTargetPosition(0);
         // stp.setTargetPosition(abs(frac(t)-real_t(0.5)));
         // stp.setTargetPosition(CLAMP(sin(3 * t), real_t(-0.5), real_t(0.5)));

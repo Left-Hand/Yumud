@@ -69,18 +69,17 @@ protected:
     scexpr int backward_precycles = forward_precycles;
     scexpr int backward_cycles = forward_cycles;
 
-    scexpr int subdivide_micros = 512;
+    scexpr int subdivide_micros = 256;
     scexpr int cogging_samples = 16;
     scexpr int align_ms = 200;
 
     scexpr real_t cali_current = real_t(0.6);
     scexpr real_t align_current = real_t(0.6);
 
-
     SubState sub_state = SubState::DONE;
     CircularTracker tracker;
 
-    uint32_t cnt = 0;
+    uint cnt = 0;
     int openloop_pole = 0;
 
     std::array<real_t, poles> forward_pole_err;

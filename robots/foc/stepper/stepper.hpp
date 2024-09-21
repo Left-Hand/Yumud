@@ -95,6 +95,8 @@ public:
     void saveArchive(const bool outen = false);
     void removeArchive(const bool outen = false);
 
+    virtual real_t getTarget(){return target;}
+
     void tick();
 
     void init(){
@@ -111,12 +113,12 @@ public:
     }
 
     void setTargetCurrent(const real_t curr){
-        target = MIN(meta.max_curr, curr);
+    target = MIN(curr, meta.max_curr);
         ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
-        target = MIN(meta.max_spd, speed);
+        target = MIN(speed, meta.max_spd);
         ctrl_type = CtrlType::SPEED;
     }
 
