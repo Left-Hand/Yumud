@@ -6,7 +6,6 @@
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
 
-
 #include "testbench/tb.h"
 
 
@@ -38,7 +37,7 @@ int main(){
     // qlz_main();
     // embd_main();
     // embd_main();
-    bldc_main();
+    // bldc_main();
     // uart_main();
     // wlsy_main();
     // lt8920_main();
@@ -50,7 +49,8 @@ int main(){
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
-    // stepper_tb(uart1);
+    stepper_tb(uart1);
+    while(true);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);p

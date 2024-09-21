@@ -2,39 +2,34 @@
 
 #include "stepper/archive/archive.hpp"
 #include "stepper/ctrls/ctrls.hpp"
+#include "drivers/Encoder/odometer_poles.hpp"
+
 #include "protocol/can_protocol.hpp"
 #include "protocol/ascii_protocol.hpp"
+
 
 class AsciiProtocol;
 class CanProtocol;
 
 class FOCMotorConcept{ 
 public:
-    using ErrorCode = StepperEnums::ErrorCode;
-    using RunStatus = StepperEnums::RunStatus;
-    using CtrlType = StepperEnums::CtrlType;
+    using ErrorCode = MotorUtils::ErrorCode;
+    using RunStatus = MotorUtils::RunStatus;
+    using CtrlType = MotorUtils::CtrlType;
 protected:
-    using ExitFlag = StepperEnums::ExitFlag;
-    using InitFlag = StepperEnums::InitFlag;
+    using ExitFlag = MotorUtils::ExitFlag;
+    using InitFlag = MotorUtils::InitFlag;
 
     using Range = Range_t<real_t>;
 
-    using Switches = StepperUtils::Switches;
-    using NodeId = StepperUtils::NodeId;
+    using Switches = MotorUtils::Switches;
+    using NodeId = MotorUtils::NodeId;
 
-
-    NodeId node_id = 0;
-
-    struct Measurements{
-        real_t accel = 0;
-        real_t curr = 0;
-        real_t spd = 0;
-        real_t pos = 0;
-    };
 
     volatile RunStatus run_status = RunStatus::INIT;
-    Measurements measurements;
-    CtrlLimits ctrl_limits;
+    NodeId node_id = 0;
+
+    MetaData meta;
     real_t target;
 
     friend class AsciiProtocol;
@@ -63,20 +58,23 @@ public:
     virtual bool isActive() const = 0;
     virtual volatile RunStatus & status() = 0;
 
-    real_t getSpeed() const{return measurements.spd;}
+    virtual real_t getTarget() = 0;
 
-    real_t getPosition() const {return measurements.pos;}
+    const auto & getMeta() const {return meta;}
 
-    real_t getCurrent() const {return measurements.curr;}
+    real_t getSpeed() const{return meta.spd;}
 
-    real_t getAccel() const{return measurements.accel;}
+    real_t getPosition() const {return meta.pos;}
+
+    real_t getCurrent() const {return meta.curr;}
+
+    real_t getAccel() const{return meta.accel;}
 
     virtual void setCurrentLimit(const real_t max_current) = 0;
     virtual void setPositionLimit(const Range & clamp) = 0;
     virtual void setSpeedLimit(const real_t max_spd) = 0;
     virtual void setAccelLimit(const real_t max_acc) = 0;
     virtual void enable(const bool en = true) = 0;
-    virtual void setNozzle(const real_t duty) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 
@@ -102,7 +100,7 @@ protected:
         if(shutdown_when_error_occurred){
             enable(false);
         }
-        CLI_DEBUG(error_message);
+        // CLI_DEBUG(error_message);
     }
 
     void throw_warn(const ErrorCode ecode, const char * _warn_message){
@@ -111,7 +109,7 @@ protected:
         if(shutdown_when_warn_occurred){
             enable(false);
         }
-        CLI_DEBUG(warn_message);
+        // CLI_DEBUG(warn_message);
     }
 
     SVPWM & svpwm;
@@ -144,4 +142,5 @@ public:
         return warn_message;
     }
 
+    virtual uint32_t exe() const = 0;
 };

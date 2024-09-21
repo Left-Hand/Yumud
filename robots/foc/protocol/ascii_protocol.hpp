@@ -2,7 +2,7 @@
 
 #include "sys/core/system.hpp"
 
-#include "robots/foc/stepper/constants.hpp"
+#include "robots/foc/stepper/motor_utils.hpp"
 
 #include "sys/string/string.hpp"
 
@@ -94,12 +94,12 @@ class FOCMotor;
 class AsciiProtocol{
 private:
     std::vector<String> split_string(const String& input, char delimiter);
-
+    String temp;
 protected:
     FOCMotor & motor;
     IOStream & logger;
 
-    using Command = StepperEnums::Command;
+    using Command = MotorUtils::Command;
 public:
     AsciiProtocol(FOCMotor & _motor, IOStream & _logger):motor(_motor), logger(_logger){;}
 

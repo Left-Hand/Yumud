@@ -74,9 +74,6 @@ void CanProtocol::parseCommand(const Command command, const CanMsg & msg){
         SET_METHOD_BIND_EXECUTE(Command::LOAD,          motor.loadArchive)
         SET_METHOD_BIND_EXECUTE(Command::CLEAR,         motor.removeArchive)
 
-        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_ON,     motor.setNozzle, 1)
-        SET_METHOD_BIND_EXECUTE(Command::NOZZLE_OFF,    motor.setNozzle, 0)
-
         SET_METHOD_BIND_EXECUTE(Command::RST,           motor.reset)
         // GET_BIND_VALUE(         Command::STAT,          motor.(uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::INACTIVE,      motor.enable, false)

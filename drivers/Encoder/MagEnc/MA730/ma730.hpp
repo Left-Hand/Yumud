@@ -20,6 +20,7 @@ public:
 
 protected:
     SpiDrv bus_drv;
+    real_t lap_position;
 
     enum class RegAddress:uint8_t{
         ZeroDataLow,
@@ -119,12 +120,15 @@ public:
         uni_to_u16(frac(position), data);
         setZeroData(data);
     }
-    real_t getLapPosition() override{
+    
+    void update() override{
         uint16_t data = 0;
         directRead(data);
-        real_t ret;
-        u16_to_uni(data, ret);
-        return ret;
+        u16_to_uni(data, lap_position);
+    }
+
+    real_t getLapPosition() override{
+        return lap_position;
     }
 
     void setTrimX(const real_t k){
@@ -179,7 +183,6 @@ public:
         bool proper = !((!(magnitudeReg.mgl1 | magnitudeReg.mgl2)) | magnitudeReg.magnitudeHigh);
         return proper;
     }
-
 
     void setZparameters(const Width width, const Phase phase){
         zParametersReg.zWidth = (uint8_t)width;

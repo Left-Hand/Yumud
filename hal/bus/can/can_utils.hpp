@@ -9,10 +9,10 @@
 
 namespace CanUtils{
     enum class BaudRate{
-        Kbps125,
-        Kbps250,
-        Kbps500,
-        Mbps1
+        _125K,
+        _250K,
+        _500K,
+        _1M
     };
 
     enum class Mode{

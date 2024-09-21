@@ -12,7 +12,7 @@
 class MT6816:public MagEncoder{
 protected:
     SpiDrv bus_drv;
-    real_t last_position;
+    real_t lap_position;
     uint32_t errcnt = 0;
 
     struct Semantic{
@@ -29,15 +29,17 @@ protected:
 
     Semantic last_semantic{0};
 public:
-    MT6816(SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
+    MT6816(const SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
+    MT6816(SpiDrv && _bus_drv):bus_drv(_bus_drv){;}
+    MT6816(Spi & _bus, const uint8_t index):bus_drv(SpiDrv{_bus, index}){;}
 
     void init() override{
-        last_position = real_t(-1); // not possible before init done;
+        lap_position = real_t(-1); // not possible before init done;
         while(getLapPosition() < 0); // while reading before get correct position
     }
 
-    real_t getLapPosition() override{
 
+    void update() override{
         uint16_t raw = getPositionData();
         last_semantic = Semantic(raw);
 
@@ -50,12 +52,15 @@ public:
         }
 
         if(count % 2 == last_semantic.pc){
-            u16_to_uni(last_semantic.data_14bit << 2, last_position);
+            u16_to_uni(last_semantic.data_14bit << 2, lap_position);
         }else{
             errcnt++;
         }
+    }
 
-        return last_position;
+
+    real_t getLapPosition() override{
+        return lap_position;
     }
 
     uint16_t getPositionData(){

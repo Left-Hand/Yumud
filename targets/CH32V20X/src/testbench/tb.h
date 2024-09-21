@@ -11,7 +11,7 @@ using Sys::t;
 
 void memory_tb(OutputStream & logger);
 
-void stepper_tb(IOStream & logger);
+void stepper_tb(UartHw & logger);
 
 void lua_tb(OutputStream & logger);
 void pwm_tb(OutputStream & logger);

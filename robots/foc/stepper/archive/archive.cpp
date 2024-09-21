@@ -1,8 +1,9 @@
 #include "../stepper.hpp"
 
+#define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
 bool FOCStepper::loadArchive(const bool outen){
-    using BoardInfo = StepperUtils::BoardInfo;
+    using BoardInfo = MotorUtils::BoardInfo;
     Archive archive;
     memory.load(archive);
 
@@ -44,7 +45,7 @@ bool FOCStepper::loadArchive(const bool outen){
         for(size_t i = 0; i < odo.map().size(); i++){
             int16_t item_i = archive.cali_map[i];
             odo.map()[i] = real_t(item_i) / 16384;
-            elecrad_zerofix = 0;
+            meta.radfix = 0;
         }
 
         // setNodeId(archive.node_id);
@@ -61,8 +62,6 @@ bool FOCStepper::loadArchive(const bool outen){
 void FOCStepper::saveArchive(const bool outen){
     Archive archive;
 
-    static_assert(sizeof(Archive) <= 256, "archive size overflow");
-
     ARCHIVE_PRINTS("======");
     ARCHIVE_PRINTS("generating archive...");
     ARCHIVE_PRINTS("current board info:");
@@ -73,8 +72,8 @@ void FOCStepper::saveArchive(const bool outen){
     archive.hashcode = hashcode;
 
     for(size_t i = 0; i < odo.map().size(); i++){
-        static constexpr auto ratio = real_t(1 / TAU);
-        auto item_i = int16_t((odo.map()[i] - (elecrad_zerofix / poles * ratio)) * 16384);
+        scexpr auto ratio = real_t(1 / TAU);
+        auto item_i = int16_t((odo.map()[i] - (meta.radfix / poles * ratio)) * 16384);
         archive.cali_map[i] = item_i;
     }
 
@@ -111,7 +110,7 @@ void FOCStepper::removeArchive(const bool outen){
 }
 
 
-OutputStream & operator<<(OutputStream & os, const StepperUtils::BoardInfo & bi){
+OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi){
     #ifdef ARCHIVE_PRINTS
     os << "======\r\n";
     os << "build version:\t\t" << bi.bver << "\r\n";

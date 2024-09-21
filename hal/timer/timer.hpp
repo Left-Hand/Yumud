@@ -17,6 +17,7 @@ protected:
 public:
     using IT = TimerUtils::IT;
     using Mode = TimerUtils::Mode;
+    using TrgoSource = TimerUtils::TrgoSource;
     
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}
 
@@ -52,8 +53,17 @@ public:
 
     void initAsEncoder(const Mode mode = Mode::Up);
     void enableSingle(const bool _single = true);
-    TimerChannel & ch(const int index){return channels[CLAMP(index, 1, 4) - 1];}
-    TimerOC & oc(const int index){return channels[CLAMP(index, 1, 4) - 1];}
+    void setTrgoSource(const TrgoSource source);
+    
+    TimerChannel & ch(const int index){
+        if(index == 0 or index > 4) CREATE_FAULT
+        return channels[index - 1];
+    }
+    
+    TimerOC & oc(const int index){
+        if(index == 0 or index > 4) CREATE_FAULT
+        return channels[index - 1];
+    }
 
     virtual TimerChannel & operator [](const int index){return ch(index);}
     virtual TimerChannel & operator [](const TimerChannel::Channel channel){return channels[(uint8_t)channel >> 1];}
@@ -79,6 +89,7 @@ public:
     void initBdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
     void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, (FunctionalState)_sync);}
     void setDeadZone(const uint32_t ns);
+    void setRepeatTimes(const uint8_t rep){instance->RPTCR = rep;}
 
     TimerChannel & operator [](const int index) override{
         bool is_co = index < 0;

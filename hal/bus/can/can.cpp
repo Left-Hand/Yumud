@@ -3,14 +3,7 @@
 
 using Callback = Can::Callback;
 
-#ifdef HAVE_CAN1
-Can can1{CAN1};
-#endif
-
-#ifdef HAVE_CAN2
-Can can2{CAN2};
-#endif
-
+#define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x * 8))
 
 void Can::initIt(){
     uint32_t it_mask = 
@@ -61,7 +54,7 @@ void Can::initIt(){
     }
 }
 
-#define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x * 8))
+
 
 bool Can::isMailBoxDone(const uint8_t mbox){
     const uint32_t TSTATR_FLAG = Mailbox_Index_To_TSTATR(mbox);
@@ -166,20 +159,21 @@ void Can::init(const uint baudRate, const Mode _mode, const CanFilter & filter){
     BaudRate baud;
     switch(baudRate){
         case 125_KHz:
-            baud = BaudRate::Kbps125;
+            baud = BaudRate::_125K;
             break;
         case 250_KHz:
-            baud = BaudRate::Kbps250;
+            baud = BaudRate::_250K;
             break;
         case 500_KHz:
-            baud = BaudRate::Kbps500;
+            baud = BaudRate::_500K;
             break;
-        case 1_MHz:
-            baud = BaudRate::Mbps1;
-            break;
+
         default:
-            baud = BaudRate::Kbps250;
+        case 1_MHz:
+            baud = BaudRate::_1M;
+            break;
     }
+
     init(baud, _mode, filter);
 }
 
@@ -196,16 +190,16 @@ void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filt
     bs2 = CAN_BS2_5tq;
 
     switch(baudRate){
-    case BaudRate::Kbps125:
+    case BaudRate::_125K:
         prescale = 96;
         break;
-    case BaudRate::Kbps250:
+    case BaudRate::_250K:
         prescale = 48;
         break;
-    case BaudRate::Kbps500:
+    case BaudRate::_500K:
         prescale = 24;
         break;
-    case BaudRate::Mbps1:
+    case BaudRate::_1M:
         prescale = 12;
         break;
     };

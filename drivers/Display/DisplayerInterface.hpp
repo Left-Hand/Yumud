@@ -4,7 +4,6 @@
 #include "../types/rgb.h"
 
 #include "drivers/Display/DisplayerInterface.hpp"
-#include <stdlib.h>
 #include <optional>
 
 class DisplayerInterface{

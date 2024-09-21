@@ -2,7 +2,7 @@
 
 #define __STEPPER_STATLED_HPP__
 
-#include "constants.hpp"
+#include "motor_utils.hpp"
 
 #include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "types/color/color_t.hpp"
@@ -21,8 +21,8 @@ public:
     };
 protected:
 
-    using RunStatus = StepperEnums::RunStatus;
-    using CtrlType = StepperEnums::CtrlType;
+    using RunStatus = MotorUtils::RunStatus;
+    using CtrlType = MotorUtils::CtrlType;
 
     RgbLedConcept & led;
 

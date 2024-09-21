@@ -14,26 +14,50 @@
 #include "drivers/Memory/memory.hpp"
 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
-#include "drivers/Encoder/OdometerLines.hpp"
+#include "drivers/Encoder/odometer_poles.hpp"
+
+scexpr uint32_t foc_freq = 32768;
+scexpr uint32_t chopper_freq = 32768;
+scexpr uint32_t est_freq = foc_freq / 16;
+scexpr uint32_t est_devider = foc_freq / est_freq;
+
+scexpr real_t pi_4 = real_t(PI/4);
+scexpr real_t pi_2 = real_t(PI/2);
+scexpr real_t tau = real_t(TAU);
+scexpr real_t pi = real_t(PI);
+scexpr real_t hpi = real_t(PI/2); 
+
+scexpr int poles = 50;
+scexpr real_t inv_poles = real_t(1) / poles;
+
+scexpr uint32_t foc_period_micros = 1000000 / foc_freq;
 
 
-static constexpr uint32_t foc_freq = 32768;
-static constexpr uint32_t chopper_freq = 32768;
-static constexpr uint32_t est_freq = foc_freq / 16;
-static constexpr uint32_t est_devider = foc_freq / est_freq;
+struct MetaData{
+    real_t accel = 0;
+    real_t curr = 0;
+    real_t spd = 0;
+    real_t pos = 0;
+    real_t elecrad = 0;
+    real_t raddiff = 0;
+    real_t radfix = 0;
 
-static constexpr real_t pi_4 = real_t(PI/4);
-static constexpr real_t pi_2 = real_t(PI/2);
-static constexpr real_t tau = real_t(TAU);
-static constexpr real_t pi = real_t(PI);
-static constexpr real_t hpi = real_t(PI/2); 
+    Range pos_limit = Range::INF;
+    real_t max_curr = real_t(0.7);
+    int max_spd = 30;
+    int max_acc = 30;
+    
+    real_t curr_to_leadrad_ratio = real_t(1);
+    real_t spd_to_leadrad_ratio = real_t(0.1);
+    real_t max_leadrad = real_t(0.2);
+    
+    void reset();
+    real_t get_max_leadrad();
+    real_t get_max_raddiff();
+};
 
-static constexpr int poles = 50;
-static constexpr real_t inv_poles = real_t(1) / poles;
 
-static constexpr uint32_t foc_period_micros = 1000000 / foc_freq;
-
-namespace StepperEnums{
+namespace MotorUtils{
 
     enum class RunStatus:uint8_t{
         NONE,
@@ -117,9 +141,6 @@ namespace StepperEnums{
 
     using ExitFlag = bool;
     using InitFlag = bool;
-};
-
-namespace StepperUtils{
     template<integral T>
     struct NodeId_t{
         T id_;

@@ -5,7 +5,6 @@
 * Date               : 2021/06/06
 * Description        : This file provides all the USBOTG firmware functions.
 *******************************************************************************/
-#include "stdio.h"
 
 #ifdef CH32V30X
 #include "../sys/core/platform.h"

@@ -1,19 +1,19 @@
 #pragma once
 
 #include "robots/foc/focmotor.hpp"
-#include "robots/foc/stepper/constants.hpp"
+#include "robots/foc/stepper/motor_utils.hpp"
 #include "robots/foc/stepper/cli.hpp"
 
 #include "robots/foc/protocol/can_protocol.hpp"
 
 class RemoteFOCMotor:public FOCMotorConcept{
 protected:
-    using ExitFlag = StepperEnums::ExitFlag;
-    using InitFlag = StepperEnums::InitFlag;
-    using NodeId = StepperUtils::NodeId;
-    using RunStatus = StepperEnums::RunStatus;
+    using ExitFlag = MotorUtils::ExitFlag;
+    using InitFlag = MotorUtils::InitFlag;
+    using NodeId = MotorUtils::NodeId;
+    using RunStatus = MotorUtils::RunStatus;
 
-    using Command = StepperEnums::Command;
+    using Command = MotorUtils::Command;
     IOStream & logger;
     Can & can;
     volatile RunStatus run_status = RunStatus::NONE;
@@ -44,10 +44,10 @@ public:
     real_t getPosition() const;
     real_t getCurrent() const;
     real_t getAccel() const;
-    real_t readSpeed() const{return measurements.spd;}
-    real_t readPosition() const{return measurements.pos;}
-    real_t readCurrent() const{return measurements.curr;}
-    real_t readAccel() const{return measurements.accel;}
+    real_t readSpeed() const{return meta.spd;}
+    real_t readPosition() const{return meta.pos;}
+    real_t readCurrent() const{return meta.curr;}
+    real_t readAccel() const{return meta.accel;}
     void updateAll() const;
 
     void setPositionLimit(const Range & clamp);

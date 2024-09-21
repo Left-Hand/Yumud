@@ -1,60 +1,59 @@
 #include "robots/foc/stepper/stepper.hpp"
 
 
-FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_flag){
+void FOCStepper::active_task(){
+    scexpr auto ratio = real_t(0.5);
+
     if(ctrl_type == CtrlType::VECTOR){
-        run_elecrad = odo.position2rad(target);
-        svpwm.setDuty(curr_ctrl.config.openloop_curr, run_elecrad + elecrad_zerofix);
+        svpwm.setDuty(curr_ctrl.config.openloop_curr * ratio, odo.position2rad(target) + meta.radfix);
     }else{
-        run_elecrad = est_elecrad + curr_ctrl.raddiff_output;
-        svpwm.setDuty(curr_ctrl.curr_output, run_elecrad + elecrad_zerofix);
+        svpwm.setDuty(meta.curr * ratio, meta.elecrad + meta.raddiff + meta.radfix);
     }
 
     odo.update();
 
-    measurements.pos = odo.getPosition();
-    est_elecrad = odo.getElecRad();
-    measurements.spd = (speed_estmator.update(measurements.pos) + measurements.spd * 127) >> 7;
-    
-    if(init_flag){
-        run_status = RunStatus::ACTIVE;
-        svpwm.setDuty(real_t(0), real_t(0));
-        return RunStatus::NONE;
-    }
+    meta.pos = odo.getPosition();
+    meta.elecrad = odo.getElecRad();
+    meta.spd = (speed_estmator.update(meta.pos) + meta.spd * 127) >> 7;
 
     {
         using Result = CtrlResult;
         Result result;
 
-        const auto & est_pos = measurements.pos;
-        const auto & est_spd = measurements.spd;
-
         switch(ctrl_type){
-            case CtrlType::CURRENT:
-                result = {ABS(target), SIGN_AS(real_t(PI / 2) *real_t(1.3), target)};
+            case CtrlType::CURRENT:{
+                bool dir_correct = meta.spd * target >= 0; 
+                real_t targ_curr = target;
+                
+                if(dir_correct){
+                    result = {ABS(targ_curr), SIGN_AS(meta.get_max_raddiff(), targ_curr)};   
+                }else{
+                    result = {ABS(targ_curr) * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), targ_curr)};
+                }
                 break;
+            }
             case CtrlType::VECTOR:
-                result = {ctrl_limits.max_curr, 0};
+                result = {meta.max_curr, 0};
                 break;
 
             case CtrlType::POSITION:
-                result = position_ctrl.update(target, est_pos, est_spd, est_elecrad);
+                result = position_ctrl.update(target, meta.pos, meta.spd, meta.elecrad);
                 break;
             case CtrlType::TRAPEZOID:
-                result = trapezoid_ctrl.update(target, est_pos, est_spd, est_elecrad);
+                result = trapezoid_ctrl.update(target, meta.pos, meta.spd, meta.elecrad);
                 break;
     
             case CtrlType::SPEED:{
-                static constexpr real_t dead_zone = real_t(0.003);
-                if((est_pos >= ctrl_limits.pos_limit.to - dead_zone and target > 0)
-                     or (est_pos <= ctrl_limits.pos_limit.from + dead_zone and target < 0)){
-                    result = position_ctrl.update((target > 0 ? ctrl_limits.pos_limit.to : ctrl_limits.pos_limit.from)
-                            , est_pos, est_spd, est_elecrad);
+                scexpr real_t dead_zone = real_t(0.003);
+                if((meta.pos >= meta.pos_limit.to - dead_zone and target > 0)
+                     or (meta.pos <= meta.pos_limit.from + dead_zone and target < 0)){
+                    result = position_ctrl.update((target > 0 ? meta.pos_limit.to : meta.pos_limit.from)
+                            , meta.pos, meta.spd, meta.elecrad);
                     break;
                 }
                 
                 {
-                    result = speed_ctrl.update(target, est_spd);
+                    result = speed_ctrl.update(target, meta.spd);
                     break;
                 }
             }
@@ -62,7 +61,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
                 real_t max_current = target;
                 real_t spd = getSpeed();
                 real_t abs_spd = ABS(spd);
-                static constexpr real_t deadzone = real_t(0.23);
+                scexpr real_t deadzone = real_t(0.23);
                 if(abs_spd < deadzone){
                     result = {0, 0}; 
                 }else{
@@ -74,11 +73,7 @@ FOCStepper::RunStatus FOCStepper::active_task(const FOCStepper::InitFlag init_fl
         } 
 
         curr_ctrl.update(result);
-        measurements.curr = curr_ctrl.curr_output;
-        run_leadangle = curr_ctrl.raddiff_output;
+        meta.curr = curr_ctrl.curr();
+        meta.raddiff = curr_ctrl.raddiff();
     }
-
-
-
-    return RunStatus::NONE;
 }

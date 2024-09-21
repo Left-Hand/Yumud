@@ -18,6 +18,17 @@ namespace TimerUtils{
         CH1, CH1N, CH2, CH2N, CH3, CH3N, CH4
     };
 
+    enum class TrgoSource:uint8_t{
+        Reset   =  TIM_TRGOSource_Reset,             
+        Enable  = TIM_TRGOSource_Enable,           
+        Update  = TIM_TRGOSource_Update,           
+        OC1     = TIM_TRGOSource_OC1   ,            
+        OC1R    = TIM_TRGOSource_OC1Ref,            
+        OC2R    = TIM_TRGOSource_OC2Ref,            
+        OC3R    = TIM_TRGOSource_OC3Ref,            
+        OC4R    = TIM_TRGOSource_OC4Ref            
+    };
+
     enum class IT:uint8_t{
         Update = TIM_IT_Update,
         CC1 = TIM_IT_CC1,

@@ -38,7 +38,7 @@ void lt8920_main(){
         DEBUG_PRINTLN("LT8920 founded");
     }else{
         DEBUG_PRINTLN("LT8920 not founded, please check your physical connection");
-        exit(1);
+        CREATE_FAULT;
     }
 
     lt.bindNrstGpio(portB[0]);

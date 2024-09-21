@@ -32,13 +32,6 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             if(args.size() == 1) motor.setAccelLimit(real_t(args[0]));
             break;
 
-        case "nz"_ha:{
-                real_t val = args.size() ? int(args[0]) : 0;
-                motor.setNozzle(val);
-                CLI_DEBUG("set nozzle to:",val);
-            }
-            break;
-
         case "remove"_ha:
         case "rm"_ha:
             motor.removeArchive(args.size() ? bool(int(args[0])) : true);
@@ -140,9 +133,9 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             CLI_DEBUG("enabled");
             break;
         
-        // case "exe"_ha:
-        //     CLI_DEBUG("exe", motor.exe_micros, "us");
-        //     break;
+        case "exe"_ha:
+            CLI_DEBUG("exe", motor.exe(), "us");
+            break;
 
         case "disable"_ha:
         case "dis"_ha:
@@ -208,7 +201,7 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
             break;
 
         case "cm"_ha:
-            motor.odo.map().fill(0);
+            // motor.odo.map().fill(0);
             break;
 
         // case "version"_ha:
@@ -270,7 +263,6 @@ std::vector<String> AsciiProtocol::split_string(const String& input, char delimi
 
 
 void AsciiProtocol::readString(){
-    static String temp;
     while(logger.available()){
         auto chr = logger.read();
         if(chr == 0) continue;
