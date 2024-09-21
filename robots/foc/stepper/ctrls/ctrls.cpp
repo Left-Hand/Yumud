@@ -62,22 +62,22 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
     const real_t real_spd, const real_t real_elecrad){
 
     targ_pos = meta.pos_limit.clamp(targ_pos);
-    targ_spd = (targ_spd * 127 + targ_spd_est.update(targ_pos)) >> 7;
+    targ_spd = (targ_spd * 31 + targ_spd_est.update(targ_pos)) >> 5;
 
     real_t pos_err = CLAMP2(targ_pos - real_pos, POS_ERR_LIMIT);
     real_t abs_pos_err = ABS(pos_err);
     real_t abs_real_spd = ABS(real_spd);
-    real_t min_curr = meta.max_curr * real_t(0.2);
+    real_t abs_min_curr = meta.max_curr * real_t(0.2);
     
     scexpr real_t inverse_spd_thd = real_t(0.8);
     scexpr real_t stray_pos_thd = real_t(0.04);
 
     if(pos_err > 0 and real_spd < - inverse_spd_thd){//inverse run
-        return {STEP_TO(meta.curr, min_curr, curr_ctrl.config.curr_slew_rate), 0};
+        return {STEP_TO(meta.curr, abs_min_curr, curr_ctrl.config.curr_slew_rate), 0};
     }
 
     if(pos_err < 0 and real_spd > inverse_spd_thd){//inverse run
-        return {STEP_TO(meta.curr, min_curr, curr_ctrl.config.curr_slew_rate), 0};
+        return {STEP_TO(meta.curr, abs_min_curr, curr_ctrl.config.curr_slew_rate), 0};
     }
 
     if((abs_real_spd < inverse_spd_thd) and (abs_pos_err > stray_pos_thd)){
@@ -85,40 +85,30 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
     }
 
     {
-        scexpr real_t inquater_radius = (inv_poles / 4);
+        scexpr auto inquater_radius = real_t(inv_poles / 4);
 
-        real_t kp_contribute = abs_pos_err * config.kp;
-        ki_integral = MIN(ki_integral + ((abs_pos_err * config.ki) >> 16), min_curr);
+        scexpr auto kd1 = real_t(0.001);
+        scexpr auto kd2 = real_t(3.0);
+        // scexpr auto ext_e = real_t(0.2);
 
-        real_t abs_curr = MIN(kp_contribute + ki_integral,meta.max_curr);
+        real_t w_k_change = 0;
+        // if(real_spd * targ_spd < 0){
+        //     w_k_change = kd1 * (real_spd * real_spd + targ_spd * targ_spd);
+        // }else{
+            w_k_change = kd1 * (targ_spd * targ_spd - real_spd * real_spd);
+        // }
 
-        // w = mv^2/2 - fx
-        real_t overflow_energy;
-        
-        {
-            scexpr auto ratio = 2;
-            const real_t fixed_self_spd = (abs_real_spd + 12);
-            // const real_t fixed_self_spd = (abs_real_spd);
-            const real_t self_energy = fixed_self_spd * fixed_self_spd;
-            // const real_t fixed_targ_spd = MAX(ABS(targ_spd) - 8, real_t(0));
-            const real_t fixed_targ_spd =ABS(targ_spd);
-            const real_t targ_energy = fixed_targ_spd * fixed_targ_spd;
-            if(SIGN_DIFF(real_spd, targ_spd)){
-                overflow_energy = MAX(
-                        self_energy + targ_energy
-                        - ratio * meta.max_acc * abs_pos_err
-                        , 0);
+        real_t w_elapsed = CLAMP2(kd2 * ABS(pos_err), meta.max_curr);
 
-            }else{
-                overflow_energy = MAX(
-                         self_energy - targ_energy
-                        - ratio * meta.max_acc * abs_pos_err
-                        , 0);
-            }
-        }
+        real_t w = CLAMP2(w_elapsed + w_k_change, meta.max_curr);
 
+        // real_t min_curr = meta.max_curr * real_t(0.2);
+        // ki_integral = CLAMP2(ki_integral + ((pos_err * config.ki) >> 16), min_curr);
 
-        abs_curr = MAX(abs_curr * MAX((1 - ((config.kd * overflow_energy) >> 8)), 0), min_curr);
+        // real_t abs_curr = MAX(w, min_curr);
+        // real_t abs_curr = w + min_curr;
+        real_t abs_curr = ABS(w);
+        // + ki_integral;
 
         if(abs_pos_err < inquater_radius){
             return {abs_curr, pos_err * (poles * tau)};
@@ -128,12 +118,6 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
             return {abs_curr, raddiff};
         }
     }
-
-
-    //     return {0, 0};
-    // }else{
-    //     return {current, raddiff};
-    // }
 }
 
 Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){

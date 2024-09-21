@@ -157,11 +157,11 @@ void stepper_tb(UartHw & logger){
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getPosition(), target);
 
         // real_t target = real_t(20.4) * sin(7 * t);
-        real_t target = real_t(30.4) * sign(sin(5 * t));
+        // real_t target = real_t(30.4) * sign(sin(5 * t));
         // real_t target = real_t(0.8) * sign(sin(5 * t));
-        stp.setTargetSpeed(target);
+        // stp.setTargetSpeed(target);
         // stp.setTargetCurrent(target);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getSpeed(), stp.getTarget());
+        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getPosition(), stp.getTarget(), stp.getSpeed());
         
         // stp.setTargetPosition(0);
         // stp.setTargetPosition(abs(frac(t)-real_t(0.5)));
@@ -172,12 +172,12 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetPosition(5 *sin(t) * sin(t*5));
         // stp.setTargetPosition(frac(t));
         // stp.setTargetPosition(24 * sin(2 * t));
-        // stp.setTargetSpeed(24 * sin(7 * t));
+        // stp.setTargetPosition(2 * sin(24 * t));
         // stp.setTargetPosition(10 * int(7 * 6sin(t / 2)));
         // stp.setTargetPosition(3 * abs(frac(t*2) - real_t(0.5)));
 
         // stp.setTargetPosition(round(stp.getPosition() * 100)/100);
-        // stp.setTargetPosition(10 * sign(sin(t * 3)));
+        // stp.setTargetPosition(3 * (sin(t * 2)));
         // stp.setTargetPosition(real_t(1.5) * sin(3 * t));
         // stp.setTargetSpeed(CLAMP(60 * sin(t * 3), 0, 30));
         // stp.setTargetTrapezoid(10 * sign(sin(3* t)));
@@ -185,7 +185,7 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetPosition(10 * sign(sin(1.5 * t)));
         // stp.setTargetPosition(40 * sin(t/2) + 20 * sign(sin(t/2)));
         // stp.setTargetPosition(real_t(0.3) * sin(t));
-        // stp.setTargetVector(sin(t) * 0.5);
+        // stp.setTargetPosition(sin(t) / 4);
         // stp.setTargetPosition(4 * sign(sin(4 * t)));
         Sys::Clock::reCalculateTime();
     }
