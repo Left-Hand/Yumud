@@ -91,8 +91,8 @@ void stepper_tb(UartHw & logger){
     spi1.init(18000000);
     spi1.bindCsPin(portA[15], 0);
 
-    SpiDrv mt6816_drv{spi1, 0};
-    MT6816 mt6816{mt6816_drv};
+    MT6816 encoder{{spi1, 0}};
+    // MT6701 encoder{{spi1, 0}};
 
     I2cSw i2cSw{portD[1], portD[0]};
     i2cSw.init(400000);
@@ -100,7 +100,7 @@ void stepper_tb(UartHw & logger){
     Memory mem{at24};
 
 
-    FOCStepper stp{svpwm, mt6816, mem};
+    FOCStepper stp{svpwm, encoder, mem};
     AsciiProtocol ascii_p{stp, logger};
     CanProtocol can_p{stp, can1};
 

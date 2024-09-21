@@ -13,6 +13,7 @@ void ma730_main(){
     ma730.init();
 
     while(true){
+        ma730.update();
         DEBUG_PRINTLN(ma730.getLapPosition());
     }
 }

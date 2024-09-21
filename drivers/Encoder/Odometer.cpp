@@ -1,7 +1,9 @@
 #include "odometer.hpp"
 
 void Odometer::update(){
+
     {
+        encoder.update();
         real_t undiredRawLapPostion = encoder.getLapPosition();
         if (rsv) rawLapPosition = real_t(1) - undiredRawLapPostion;
         else rawLapPosition = undiredRawLapPostion;
