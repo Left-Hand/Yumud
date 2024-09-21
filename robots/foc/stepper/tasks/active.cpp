@@ -5,11 +5,9 @@ void FOCStepper::active_task(){
     scexpr auto ratio = real_t(0.5);
 
     if(ctrl_type == CtrlType::VECTOR){
-        run_elecrad = odo.position2rad(target);
-        svpwm.setDuty(curr_ctrl.config.openloop_curr * ratio, run_elecrad + elecrad_zerofix);
+        svpwm.setDuty(curr_ctrl.config.openloop_curr * ratio, odo.position2rad(target) + meta.radfix);
     }else{
-        run_elecrad = meta.elecrad + curr_ctrl.raddiff();
-        svpwm.setDuty(curr_ctrl.curr() * ratio, run_elecrad + elecrad_zerofix);
+        svpwm.setDuty(meta.curr * ratio, meta.elecrad + meta.raddiff + meta.radfix);
     }
 
     odo.update();
@@ -76,6 +74,6 @@ void FOCStepper::active_task(){
 
         curr_ctrl.update(result);
         meta.curr = curr_ctrl.curr();
-        run_leadangle = curr_ctrl.raddiff();
+        meta.raddiff = curr_ctrl.raddiff();
     }
 }

@@ -38,7 +38,7 @@ void PositionCtrl::Config::reset(){
 }
 
 void SpeedCtrl::Config::reset(){
-    kp = 26;
+    kp = 16;
     kp_limit = 40;
 
     kd = 16;
@@ -88,27 +88,16 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
         scexpr auto inquater_radius = real_t(inv_poles / 4);
 
         scexpr auto kd1 = real_t(0.001);
-        scexpr auto kd2 = real_t(3.0);
-        // scexpr auto ext_e = real_t(0.2);
+        scexpr auto kd2 = real_t(5.0);
 
-        real_t w_k_change = 0;
-        // if(real_spd * targ_spd < 0){
-        //     w_k_change = kd1 * (real_spd * real_spd + targ_spd * targ_spd);
-        // }else{
-            w_k_change = kd1 * (targ_spd * targ_spd - real_spd * real_spd);
-        // }
+        real_t w_k_change =  kd1 * (targ_spd * targ_spd - real_spd * real_spd);
 
-        real_t w_elapsed = CLAMP2(kd2 * ABS(pos_err), meta.max_curr);
+        real_t w_elapsed = CLAMP2(kd2 * abs_pos_err, meta.max_curr);
+        // real_t w_elapsed = kd2 * abs_pos_err;
 
         real_t w = CLAMP2(w_elapsed + w_k_change, meta.max_curr);
 
-        // real_t min_curr = meta.max_curr * real_t(0.2);
-        // ki_integral = CLAMP2(ki_integral + ((pos_err * config.ki) >> 16), min_curr);
-
-        // real_t abs_curr = MAX(w, min_curr);
-        // real_t abs_curr = w + min_curr;
         real_t abs_curr = ABS(w);
-        // + ki_integral;
 
         if(abs_pos_err < inquater_radius){
             return {abs_curr, pos_err * (poles * tau)};
@@ -134,29 +123,18 @@ Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
     const real_t kp_contribute = CLAMP2(spd_err * config.kp, config.kp_limit);
     const real_t kd_contribute = CLAMP2(spd_delta * config.kd, config.kd_limit);
 
-    real_t delta_targ_curr = 0 
-            + (kp_contribute >> 16)
-            - (kd_contribute >> 8)
-            ;
+    real_t delta_targ_curr = (kp_contribute >> 16) - (kd_contribute >> 8);
 
-    // delta_targ_curr = CLAMP2(delta_targ_curr, curr_ctrl.config.curr_slew_rate);
+    real_t targ_curr = CLAMP2(SIGN_AS(meta.curr, soft_targ_spd) + delta_targ_curr, meta.max_curr);
 
-    real_t targ_curr = SIGN_AS(meta.curr, soft_targ_spd) + delta_targ_curr;
-    // real_t abs_targ_curr = MIN(ABS(targ_curr), meta.max_curr);
-    // targ_curr = SIGN_AS(abs_targ_curr, soft_targ_spd);
+    bool dir_correct = meta.spd * soft_targ_spd >= 0; 
 
-    real_t raddiff = SIGN_AS(meta.get_max_raddiff(), soft_targ_spd);
-
-    // bool is_inversed = false;
-    // is_inversed |= filt_real_spd * soft_targ_spd < -1;
-    // is_inversed |= (abs_spd > ABS(soft_targ_spd) * 2);
-
-    // if(is_inversed){
-    //     // return {ctrl_meta.max_curr, SIGN_AS(basic_raddiff * PI / 2, targ_spd)};
-    //     return {0, SIGN_AS(hpi, soft_targ_spd)};
-    // }else{
-    return {ABS(targ_curr), raddiff};
-    // }
+    if(dir_correct){
+        return {ABS(targ_curr), SIGN_AS(meta.get_max_raddiff(), targ_curr)};   
+    }else{
+        return {ABS(targ_curr) * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), targ_curr)};
+    }
+    
     #elif (SPD_CTRL_TYPE == SPD_CTRL_TYPE_BANGBANG)
 
     scexpr real_t bangbang_step = real_t(0.001); 

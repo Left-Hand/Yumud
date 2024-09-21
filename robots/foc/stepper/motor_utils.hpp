@@ -39,6 +39,8 @@ struct MetaData{
     real_t spd = 0;
     real_t pos = 0;
     real_t elecrad = 0;
+    real_t raddiff = 0;
+    real_t radfix = 0;
 
     Range pos_limit = Range::INF;
     real_t max_curr = real_t(0.7);

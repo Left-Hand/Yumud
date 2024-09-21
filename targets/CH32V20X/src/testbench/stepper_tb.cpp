@@ -115,7 +115,7 @@ void stepper_tb(UartHw & logger){
     can1.init(Can::BaudRate::_1M);
  
     stp.init();
-    stp.setSpeedLimit(46);
+    stp.setSpeedLimit(60);
     stp.setAccelLimit(172);
     stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
@@ -161,7 +161,7 @@ void stepper_tb(UartHw & logger){
         // real_t target = real_t(0.8) * sign(sin(5 * t));
         // stp.setTargetSpeed(target);
         // stp.setTargetCurrent(target);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getPosition(), stp.getTarget(), stp.getSpeed());
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getPosition(), stp.getTarget(), stp.getSpeed(), stp.getCurrent());
         
         // stp.setTargetPosition(0);
         // stp.setTargetPosition(abs(frac(t)-real_t(0.5)));

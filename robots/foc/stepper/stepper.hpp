@@ -37,10 +37,6 @@ class FOCStepper:public FOCMotor{
     RgbLedAnalog rgb_led{red_pwm, green_pwm, blue_pwm};
     StatLed panel_led = StatLed{rgb_led, run_status, ctrl_type};
 
-    real_t elecrad_zerofix;
-    real_t run_elecrad;
-    real_t run_leadangle;
-
     CurrentCtrl::Config curr_config;
     CurrentCtrl curr_ctrl{meta, curr_config};
     

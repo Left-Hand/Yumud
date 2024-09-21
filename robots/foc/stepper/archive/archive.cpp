@@ -45,7 +45,7 @@ bool FOCStepper::loadArchive(const bool outen){
         for(size_t i = 0; i < odo.map().size(); i++){
             int16_t item_i = archive.cali_map[i];
             odo.map()[i] = real_t(item_i) / 16384;
-            elecrad_zerofix = 0;
+            meta.radfix = 0;
         }
 
         // setNodeId(archive.node_id);
@@ -73,7 +73,7 @@ void FOCStepper::saveArchive(const bool outen){
 
     for(size_t i = 0; i < odo.map().size(); i++){
         scexpr auto ratio = real_t(1 / TAU);
-        auto item_i = int16_t((odo.map()[i] - (elecrad_zerofix / poles * ratio)) * 16384);
+        auto item_i = int16_t((odo.map()[i] - (meta.radfix / poles * ratio)) * 16384);
         archive.cali_map[i] = item_i;
     }
 
