@@ -77,7 +77,6 @@ public:
     void cali();
 
 
-
     enum class ActMethod{
         NONE = 0,
         HUI,

@@ -6,11 +6,11 @@
 * Description        : This file provides all the USBOTG firmware functions.
 *******************************************************************************/
 
-#ifdef CH32V30X
-#include "../sys/core/platform.h"
+
+#include "sys/core/platform.h"
 #include "ch32v30x_usbotg_device.h"
 
-
+#ifdef CH32V30X
 /* Global define */
 /* OTH */
 #define pMySetupReqPakHD        ((PUSB_SETUP_REQ)EP0_DatabufHD)
@@ -287,9 +287,6 @@ void USBOTG_RCC_Init( void )
     RCC_USBHSPHYPLLALIVEcmd( ENABLE );
     RCC_AHBPeriphClockCmd( RCC_AHBPeriph_USBHS, ENABLE );
     RCC_AHBPeriphClockCmd( RCC_AHBPeriph_OTG_FS, ENABLE );
-
-
-
 }
 
 

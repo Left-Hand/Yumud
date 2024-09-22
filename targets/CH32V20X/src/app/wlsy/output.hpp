@@ -25,7 +25,7 @@ public:
     uint32_t min_update_dur_ms = 160;
     uint32_t last_update_ms = 0;
 
-    SpeedCapture(CaptureChannelExti & cap):cap(cap){};
+    SpeedCapture(CaptureChannelExti & _cap):cap(_cap){};
 
     void init(){
         dur_ms = 0;

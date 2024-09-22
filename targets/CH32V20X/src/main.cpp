@@ -68,7 +68,7 @@ int main(){
 
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
-    uart_main();
+    // uart_main();
     // calc_main();
     // dshot_main();
     // usbcdc_tb();
@@ -96,7 +96,7 @@ int main(){
     // uart7.init(57600);
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
-    // embd_main();
+    embd_main();
     // can_tb(logger, can1);
     #endif
     while(true);

@@ -196,13 +196,13 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             );
 
         case "teach"_ha:{
-            const bool sw = args.size() ? bool(args[0].toInt()) : true;
+            const bool sw = args.size() ? bool(int(args[0])) : true;
             if(sw){trigger_method(steppers.entry_teach)}
             else{trigger_method(steppers.exit_teach)}
         }
 
         case "replay"_ha:{
-            const bool sw = args.size() ? bool(args[0].toInt()) : true;
+            const bool sw = args.size() ? bool(int(args[0])) : true;
             if(sw) {trigger_method(steppers.entry_replay)}
             else {trigger_method(steppers.exit_replay)}
         }

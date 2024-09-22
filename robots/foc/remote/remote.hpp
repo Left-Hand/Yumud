@@ -36,7 +36,7 @@ public:
     void setTargetVector(const real_t pos);
     void setCurrentLimit(const real_t max_current);
     void locateRelatively(const real_t pos = 0);
-
+    real_t getTarget() override {return 0;}
     bool isActive() const;
     volatile RunStatus & status();
 

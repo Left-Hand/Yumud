@@ -3,7 +3,7 @@
 #include "match/match.hpp"
 #include "algo/interpolation/interpolation.hpp"
 
-#include "types/float/bf16.hpp"
+#include "sys/math/float/bf16.hpp"
 
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
@@ -43,7 +43,7 @@ void EmbdHost::main(){
 
     {//init tft
         tftDisplayer.init();
-        tftDisplayer.setDisplayOffset({53, 40}); 
+        tftDisplayer.setDisplayOffset({51, 40}); 
         tftDisplayer.setFlipX(false);
         tftDisplayer.setFlipY(false);
         tftDisplayer.setSwapXY(false);
@@ -59,10 +59,9 @@ void EmbdHost::main(){
     i2c.init(400000);
 
     camera.init();
-    camera.setExposureValue(300);
+    camera.setExposureValue(1200);
 
     toggle_key.init();
-
 
     vl.init();
     vl.enableContMode();
@@ -131,32 +130,35 @@ void EmbdHost::main(){
 
 
     // resetSlave();
-    delay(900);
+    // delay(900);
     bindSystickCb([&](){this->tick();});
-    steppers.do_home();
+    // steppers.do_home();
 
     painter.setChFont(font7x7);
     while(true){
-        painter.setColor(RGB565::WHITE);
-        painter.drawString({0, 0}, "进入 设置 启动");
-        painter.drawString({0, 8}, "开始 时间 设定 确认");
-        painter.drawString({0, 16}, "选中 缩放 打开 关闭");
+        // painter.setColor(RGB565::WHITE);
+        // painter.drawString({0, 0}, "进入 设置 启动");
+        // painter.drawString({0, 8}, "开始 时间 设定 确认");
+        // painter.drawString({0, 16}, "选中 缩放 打开 关闭");
         sketch.fill(RGB565::BLACK);
 
-        Image<Grayscale> raw_img = Shape::x2(camera);
-        auto img = raw_img.space();
-        Geometry::perspective(img, raw_img);
-        // img = img.clone(Rect2i(14, 0, 80-14, 60));
-        // plot_gray(img, {0, img.get_size().y * 1});
+        Image<Grayscale> img = Shape::x2(camera);
+        // auto img = raw_img.space();
+        // Geometry::perspective(img, raw_img);
+        plot_gray(img, {0, img.get_size().y * 1});
         trans.transmit(img, 0);
     
         auto img_ada = img.space();
-        Shape::adaptive_threshold(img_ada, img);
-        // plot_gray(img_ada, {0, img.get_size().y * 2});
+        // Shape::adaptive_threshold(img_ada, img);
+        plot_gray(img_ada, {0, img.get_size().y * 2});
 
         auto img_bina = img.space<Binary>();
-        Pixels::binarization(img_bina, img_ada, 220);
-        Pixels::inverse(img_bina);
+        Shape::canny(img_bina, img, {30, 60});
+        // Pixels::binarization(img_bina, img_ada, 220);
+        // Pixels::inverse(img_bina);
+        plot_bina(img_bina, {0, img.get_size().y * 3});
+
+        continue;
 
         using Shape::FloodFill;
         using Shape::BlobFilter;
@@ -164,7 +166,8 @@ void EmbdHost::main(){
         FloodFill ff;
         auto map = ff.run(img_bina, BlobFilter::clamp_area(100, 1200));
         Pixels::dyeing(map, map);
-        // plot_gray(map, Vector2i{0, map.get_size().y * 3});
+        plot_gray(map, Vector2i{0, map.get_size().y * 3});
+
 
 
         for(const auto & blob :ff.blobs()){
@@ -183,7 +186,6 @@ void EmbdHost::main(){
                 if(is_tag){
 
                     static constexpr uint apriltag_s = 4;
-                // DEBUG_PRINTLN(rect);
 
 
                     Vertexs vertexs;
@@ -281,9 +283,9 @@ void EmbdHost::main(){
                     //         item = center;
                     //     }
         
-                    //     #define COMP(s1, s2, i)\
-                    //     if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
-                    //     ret[i] = Vector2i(x,y);\
+                    //     #define COMP(s1, s2, i)
+                    //     if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))
+                    //     ret[i] = Vector2i(x,y);
 
                     //     for(auto y = y_range.from; y < y_range.to; ++y){
                     //         for(auto x = x_range.from; x < x_range.to; ++x){
@@ -393,16 +395,16 @@ void EmbdHost::main(){
 }
 
 void EmbdHost::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
-    steppers.x.parseCommand(id, cmd, msg);
-    steppers.y.parseCommand(id, cmd, msg);
-    steppers.z.parseCommand(id, cmd, msg);
+    // steppers.x.parseCommand(id, cmd, msg);
+    // steppers.y.parseCommand(id, cmd, msg);
+    // steppers.z.parseCommand(id, cmd, msg);
 }
 
 
 void EmbdHost::resetSlave(){
-    steppers.x.reset();
-    steppers.y.reset();
-    steppers.z.reset();
+    // steppers.x.reset();
+    // steppers.y.reset();
+    // steppers.z.reset();
 }
 void EmbdHost::resetAll(){
     resetSlave();
@@ -411,7 +413,7 @@ void EmbdHost::resetAll(){
 }
 
 void EmbdHost::cali(){
-    steppers.w.triggerCali();
+    // steppers.w.triggerCali();
 }
 
 
@@ -481,13 +483,13 @@ void EmbdHost::act(){
 
 void EmbdHost::tick(){
 
-    steppers.tick();
+    // steppers.tick();
 
-    toggle_key.update();
-    if(toggle_key.pressed()){
-        steppers.toggle_nz();
+    // toggle_key.update();
+    // if(toggle_key.pressed()){
+    //     steppers.toggle_nz();
 
-    }
+    // }
 
     auto parseAscii = [&](InputStream & is){
         static String temp;
@@ -506,7 +508,7 @@ void EmbdHost::tick(){
     parseAscii(uart7);
     parseAscii(uart2);
 
-    auto index = (millis() % 3);
+    // auto index = (millis() % 3);
     // steppers[index].updateAll();
     // steppers.z.updateAll();
     readCan();

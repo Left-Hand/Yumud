@@ -747,10 +747,154 @@ namespace NVCV2::Shape{
     void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
         auto roi = src.get_view();
 
-        const auto low_thresh = threshold.from;
-        const auto high_thresh = threshold.to;
+        const auto [low_thresh, high_thresh] = threshold;
+
+        enum class gcmp_t:uint8_t{
+            LESS,
+            MED,
+            MORE
+        };
+        
+        struct gvec_t{
+            uint8_t g;
+            Direction t;
+        }__packed;
+
+        auto gm = new gvec_t[int(roi)];
+
+        const int w = roi.w;
+
+        #define FAST_SQUARE(x) (x * x)
+        #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
+        
+        scexpr uint shift_bits = 9;
+        
+        const uint8_t low_squ = FAST_SQUARE(low_thresh) >> shift_bits;
+        const uint8_t high_squ = FAST_SQUARE(high_thresh) >> shift_bits;
+        
+
+        //2. Finding Image Gradients
+        {
+            for (int y = roi.y + 1; y < roi.y + roi.h - 1; y++) {
+                for (int x = roi.x + 1; x < roi.x + roi.w - 1; x++) {
+                    int16_t vx = 0, vy = 0;
+
+                    //  1   0   -1
+                    //  2   0   -2
+                    //  1   0   -1
+
+                    vx = int(src[(y - 1) * w + x - 1])
+                        - int(src[(y - 1) * w + x + 1])
+                        + int(src[(y + 0) * w + x - 1] << 1)
+                        - int(src[(y + 0) * w + x + 1] << 1)
+                        + int(src[(y + 1) * w + x - 1])
+                        - int(src[(y + 1) * w + x + 1]);
+
+                    //  1   2   1
+                    //  0   0   0
+                    //  -1  2   -1
+
+                    vy = int(src[(y - 1) * w + x - 1])
+                        + int(src[(y - 1) * w + x + 0] << 1)
+                        + int(src[(y - 1) * w + x + 1])
+                        - int(src[(y + 1) * w + x - 1])
+                        - int(src[(y + 1) * w + x + 0] << 1)
+                        - int(src[(y + 1) * w + x + 1]);
+
+                    // Find the direction and round angle to 0, 45, 90 or 135
+
+                    gm[w * y + x] = gvec_t{
+                        .g = uint8_t((FAST_SQUARE(vx) + FAST_SQUARE(vy)) >> shift_bits),
+                        .t = xy_to_dir(vx, vy)};
+                }
+            }
+        }
+
+        // 3. Hysteresis Thresholding
+        // 4. Non-maximum Suppression and output
+
+        gvec_t *va = nullptr, *vb = nullptr;
+
+        clear_corners(dst);
+
+        for (int gy = 1; gy < roi.h-1; gy++) {
+            gvec_t * vc = &gm[gy * w];
+            auto * dp = &dst[gy * w];
+            for (int gx = 1; gx < roi.w-1; gx++) {
+                vc++;
+                dp++;
 
 
+                if (vc->g < low_squ) {
+                    // Not an edge
+                    *dp = 0;
+                    continue;
+                    // Check if strong or weak edge
+                } else if (vc->g >= high_squ){
+                    *dp = 255;
+                } else{
+                    if( gm[(gy - 1) * roi.w + (gx - 1)].g >= high_squ ||
+                        gm[(gy - 1) * roi.w + (gx + 0)].g >= high_squ ||
+                        gm[(gy - 1) * roi.w + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 0) * roi.w + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 0) * roi.w + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 1) * roi.w + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 1) * roi.w + (gx + 0)].g >= high_squ ||
+                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_squ)
+                    {
+
+                        *dp = 255;
+                    } else {
+                        // Not an edge
+                        *dp = 0;
+                        continue;
+                    }
+                }
+
+                if(true){
+                    switch (Direction(vc->t)) {
+                        default:
+                        case Direction::R: {
+                            va = &gm[(gy + 0) * roi.w + (gx - 1)];
+                            vb = &gm[(gy + 0) * roi.w + (gx + 1)];
+                            break;
+                        }
+
+                        case Direction::UR: {
+                            va = &gm[(gy + 1) * roi.w + (gx + 1)];
+                            vb = &gm[(gy - 1) * roi.w + (gx - 1)];
+                            break;
+                        }
+
+                        case Direction::U: {
+                            va = &gm[(gy + 1) * roi.w + (gx + 0)];
+                            vb = &gm[(gy - 1) * roi.w + (gx + 0)];
+                            break;
+                        }
+
+                        case Direction::UL: {
+                            va = &gm[(gy + 1) * roi.w + (gx - 1)];
+                            vb = &gm[(gy - 1) * roi.w + (gx + 1)];
+                            break;
+                        }
+                    }
+
+                    if (((vc->g < va->g) || (vc->g < vb->g))) {
+                        *dp = 0;
+                    }
+                }
+            }
+        }
+        #undef FAST_SQRT
+        #undef FAST_SQUARE8
+
+        delete gm;
+    }
+
+    void eye(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
+        auto roi = src.get_view();
+
+        const auto [low_thresh, high_thresh] = threshold;
 
         struct gvec_t{
             uint16_t g:13;
@@ -767,8 +911,6 @@ namespace NVCV2::Shape{
 
         //2. Finding Image Gradients
         {
-            // auto temp = src.space();
-            // gauss5x5(temp, src);
             for (int y = roi.y + 1; y < roi.y + roi.h - 1; y++) {
                 for (int x = roi.x + 1; x < roi.x + roi.w - 1; x++) {
                     int16_t vx = 0, vy = 0;
