@@ -749,12 +749,6 @@ namespace NVCV2::Shape{
 
         const auto [low_thresh, high_thresh] = threshold;
 
-        enum class gcmp_t:uint8_t{
-            LESS,
-            MED,
-            MORE
-        };
-        
         struct gvec_t{
             uint8_t g;
             Direction t;
@@ -765,7 +759,6 @@ namespace NVCV2::Shape{
         const int w = roi.w;
 
         #define FAST_SQUARE(x) (x * x)
-        #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
         
         scexpr uint shift_bits = 9;
         
@@ -891,23 +884,16 @@ namespace NVCV2::Shape{
         delete gm;
     }
 
-    void eye(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
-        auto roi = src.get_view();
+    void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
 
-        const auto [low_thresh, high_thresh] = threshold;
-
-        struct gvec_t{
-            uint16_t g:13;
-            Direction t:3;
-        }__packed;
-
-        auto gm = new gvec_t[int(roi)];
-
-        const int w = roi.w;
-
+        using vec_t = Vector2_t<int8_t>;
         #define FAST_SQUARE(x) (x * x)
-        #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
-
+        scexpr uint shift_bits = 3;
+    
+        auto roi = src.get_view();
+        auto gm = new vec_t[int(roi)];
+        
+        const int w = roi.w;
 
         //2. Finding Image Gradients
         {
@@ -929,6 +915,7 @@ namespace NVCV2::Shape{
                     //  1   2   1
                     //  0   0   0
                     //  -1  2   -1
+
                     vy = int(src[(y - 1) * w + x - 1])
                         + int(src[(y - 1) * w + x + 0] << 1)
                         + int(src[(y - 1) * w + x + 1])
@@ -937,89 +924,65 @@ namespace NVCV2::Shape{
                         - int(src[(y + 1) * w + x + 1]);
 
                     // Find the direction and round angle to 0, 45, 90 or 135
-                    gm[w * y + x] = gvec_t{
-                        FAST_SQRT(FAST_SQUARE(vx) + FAST_SQUARE(vy)),
-                        xy_to_dir(vx, vy)};
+
+                    gm[w * y + x] = vec_t{vx >> shift_bits, vy >> shift_bits};
                 }
             }
         }
-
-        // 3. Hysteresis Thresholding
-        // 4. Non-maximum Suppression and output
-
-        gvec_t *va = nullptr, *vb = nullptr;
 
         clear_corners(dst);
 
-        for (int gy = 1; gy < roi.h-1; gy++) {
-            gvec_t * vc = &gm[gy * w];
+        scexpr int wid = 4;
+        scexpr int scale = 127;
+
+        using template_t = std::array<std::array<vec_t, wid * 2 + 1>, wid * 2 + 1>;
+
+        auto generate_template = []() -> template_t{
+            template_t ret;
+            for(int y = -wid; y <= wid; y++){
+                for(int x = -wid; x <= wid; x++){
+                    real_t rad = atan2(real_t(y), real_t(x));
+                    vec_t vec = vec_t{cos(rad) * scale, sin(rad) * scale};
+                    // vec_t vec = vec_t{scale, 0};
+                    ret[y + wid][x + wid] = vec;
+                }
+            }
+            return ret;
+        };
+
+        auto temp = generate_template();
+              
+        for (int gy = wid; gy < roi.h - wid; gy++) {
+            vec_t * vc = &gm[gy * w];
             auto * dp = &dst[gy * w];
-            for (int gx = 1; gx < roi.w-1; gx++) {
+            for (int gx = wid; gx < roi.w - wid; gx++) {
                 vc++;
                 dp++;
 
-                if (vc->g < low_thresh) {
-                    // Not an edge
-                    *dp = 0;
-                    continue;
-                    // Check if strong or weak edge
-                } else if (vc->g >= high_thresh){
-                    *dp = 255;
-                } else{
-                    if( gm[(gy - 1) * roi.w + (gx - 1)].g >= high_thresh ||
-                        gm[(gy - 1) * roi.w + (gx + 0)].g >= high_thresh ||
-                        gm[(gy - 1) * roi.w + (gx + 1)].g >= high_thresh ||
-                        gm[(gy + 0) * roi.w + (gx - 1)].g >= high_thresh ||
-                        gm[(gy + 0) * roi.w + (gx + 1)].g >= high_thresh ||
-                        gm[(gy + 1) * roi.w + (gx - 1)].g >= high_thresh ||
-                        gm[(gy + 1) * roi.w + (gx + 0)].g >= high_thresh ||
-                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_thresh)
-                    {
+                // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
 
-                        *dp = 255;
-                    } else {
-                        // Not an edge
-                        *dp = 0;
-                        continue;
+                // int x_sum = 0;
+                // int y_sum = 0;
+                int sum = 0;
+                for(int y = -wid; y <= wid; y++){
+                    for(int x = -wid; x <= wid; x++){
+                        const auto & vec = gm[(gy + y) * w + (gx + x)];
+                        const auto & tvec = temp[y + wid][x + wid];
+                        // x_sum += ABS(vec.x * tvec.x);
+                        // y_sum += ABS(vec.y * tvec.y);
+                        // sum += temp[3][3].length_squared();
+                        // sum += tvec.length_squared();
+                        sum += vec.x * tvec.x + vec.y * tvec.y;
                     }
                 }
-
-                if(true){
-                    switch (vc->t) {
-                        default:
-                        case Direction::R: {
-                            va = &gm[(gy + 0) * roi.w + (gx - 1)];
-                            vb = &gm[(gy + 0) * roi.w + (gx + 1)];
-                            break;
-                        }
-
-                        case Direction::UR: {
-                            va = &gm[(gy + 1) * roi.w + (gx + 1)];
-                            vb = &gm[(gy - 1) * roi.w + (gx - 1)];
-                            break;
-                        }
-
-                        case Direction::U: {
-                            va = &gm[(gy + 1) * roi.w + (gx + 0)];
-                            vb = &gm[(gy - 1) * roi.w + (gx + 0)];
-                            break;
-                        }
-
-                        case Direction::UL: {
-                            va = &gm[(gy + 1) * roi.w + (gx - 1)];
-                            vb = &gm[(gy - 1) * roi.w + (gx + 1)];
-                            break;
-                        }
-                    }
-
-                    if (((vc->g < va->g) || (vc->g < vb->g))) {
-                        *dp = 0;
-                    }
-                }
+                // int sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
+                // int sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
+                // int sum = MAX(x_sum, y_sum);
+                // int sum =  x_sum * x_sum + y_sum * y_sum;
+                *dp = (ABS(sum) / ((wid * 2 + 1) * (wid * 2 + 1))) >> 4; 
             }
         }
         #undef FAST_SQRT
-        #undef FAST_SQUARE8
 
         delete gm;
     }
