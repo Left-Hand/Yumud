@@ -2,6 +2,7 @@
 
 
 void FOCStepper::active_task(){
+    using Result = CtrlResult;
     scexpr auto ratio = real_t(0.5);
 
     if(ctrl_type == CtrlType::VECTOR){
@@ -17,9 +18,8 @@ void FOCStepper::active_task(){
     meta.spd = (speed_estmator.update(meta.pos) + meta.spd * 127) >> 7;
 
     {
-        using Result = CtrlResult;
-        Result result;
 
+        Result result;
         switch(ctrl_type){
             case CtrlType::CURRENT:{
                 bool dir_correct = meta.spd * target >= 0; 

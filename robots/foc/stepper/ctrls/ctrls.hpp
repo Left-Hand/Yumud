@@ -113,7 +113,6 @@ protected:
     SpeedEstimator::Config spe_config;
     SpeedEstimator targ_spd_est{spe_config};
 
-    real_t ki_integral = 0;
     real_t targ_spd = 0;
 public:
     PositionCtrl(MetaData & _meta, Config & _config, CurrentCtrl & _curr_ctrl):
@@ -122,12 +121,7 @@ public:
     void reset() override {
         config.reset();
         targ_spd_est.reset();
-        ki_integral = 0;
         targ_spd = 0;
-    }
-
-    operator bool () const {
-        return ki_integral == 0;
     }
 
     Result update(const real_t targ_position, const real_t real_position, 
