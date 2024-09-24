@@ -47,7 +47,7 @@ public:
         last_raddiff = 0;
     }
     
-    CtrlResult update(const CtrlResult result);
+    __fast_inline CtrlResult update(const CtrlResult result);
     // CtrlResult output() const {return {curr_output, raddiff_output};}
 
     // real_t getLastCurrent() const {return curr_output; }
@@ -56,6 +56,12 @@ public:
     // real_t getLastRaddiff() const {return raddiff_output;}
 };
 
+CtrlResult CurrentCtrl::update(const CtrlResult res){
+    last_curr = STEP_TO(last_curr, res.current, config.curr_slew_rate);
+    last_raddiff = STEP_TO(last_raddiff, res.raddiff, config.rad_slew_rate);
+
+    return {last_curr, last_raddiff};
+}
 
 
 struct HighLayerCtrl{
@@ -125,7 +131,7 @@ public:
     }
 
     Result update(const real_t targ_position, const real_t real_position, 
-            const real_t real_speed, const real_t real_elecrad);
+            const real_t real_speed);
 };
 
 struct TopLayerCtrl{
@@ -168,5 +174,5 @@ public:
         goal_speed = 0;
         // last_pos_err = 0;    
     }
-    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed, const real_t real_elecrad);
+    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed);
 };

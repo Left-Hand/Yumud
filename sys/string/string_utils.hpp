@@ -23,7 +23,10 @@ void str_replace(char *src, const size_t src_len, const char *match, const char 
 
 bool is_numeric(const char * str, const size_t len);
 bool is_digit(const char * str, const size_t len);
-bool is_digit(const char chr);
+__fast_inline bool is_digit(const char chr){return chr >= '0' && chr <= '9';}
+__fast_inline bool is_alpha(const char chr) {
+    return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
+}
 
 void itoa(int64_t value, char * str, uint8_t radix);
 void iutoa(uint64_t value, char * str, uint8_t radix);

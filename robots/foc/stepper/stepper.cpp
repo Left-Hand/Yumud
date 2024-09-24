@@ -22,7 +22,7 @@ void FOCStepper::invoke_selfcheck_task(){
 }
 void FOCStepper::tick(){
     auto begin_micros = micros();
-    RunStatus exe_status = RunStatus::NONE;
+    RunStatus exe_status;
 
     switch(run_status){
         case RunStatus::INIT:
@@ -50,11 +50,11 @@ void FOCStepper::tick(){
             exe_status = cali_tasker.done() ? RunStatus::EXIT : RunStatus::NONE;
             break;
 
-        case RunStatus::ACTIVE:
+        case RunStatus::ACTIVE:{
             active_task();
             exe_status = RunStatus::NONE;
             break;
-
+        }
         case RunStatus::BEEP:
             tone_tasker.run();
             exe_status = tone_tasker.done() ? RunStatus::EXIT : RunStatus::NONE;

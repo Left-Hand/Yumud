@@ -9,6 +9,7 @@ void FOCStepper::active_task(){
         svpwm.setDuty(curr_ctrl.config.openloop_curr * ratio, odo.position2rad(target) + meta.radfix);
     }else{
         svpwm.setDuty(meta.curr * ratio, meta.elecrad + meta.raddiff + meta.radfix);
+        // svpwm.setDuty(meta.curr * ratio, meta.elecrad + real_t(PI / 2  + meta.radfix);
     }
 
     odo.update();
@@ -27,6 +28,7 @@ void FOCStepper::active_task(){
                 
                 if(dir_correct){
                     result = {ABS(targ_curr), SIGN_AS(meta.get_max_raddiff(), targ_curr)};   
+                    // result = {ABS(targ_curr), SIGN_AS(real_t(PI/2 * 1.8), targ_curr)};   
                 }else{
                     result = {ABS(targ_curr) * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), targ_curr)};
                 }
@@ -37,10 +39,10 @@ void FOCStepper::active_task(){
                 break;
 
             case CtrlType::POSITION:
-                result = position_ctrl.update(target, meta.pos, meta.spd, meta.elecrad);
+                result = position_ctrl.update(target, meta.pos, meta.spd);
                 break;
             case CtrlType::TRAPEZOID:
-                result = trapezoid_ctrl.update(target, meta.pos, meta.spd, meta.elecrad);
+                result = trapezoid_ctrl.update(target, meta.pos, meta.spd);
                 break;
     
             case CtrlType::SPEED:{
@@ -48,7 +50,7 @@ void FOCStepper::active_task(){
                 if((meta.pos >= meta.pos_limit.to - dead_zone and target > 0)
                      or (meta.pos <= meta.pos_limit.from + dead_zone and target < 0)){
                     result = position_ctrl.update((target > 0 ? meta.pos_limit.to : meta.pos_limit.from)
-                            , meta.pos, meta.spd, meta.elecrad);
+                            , meta.pos, meta.spd);
                     break;
                 }
                 

@@ -69,7 +69,7 @@ protected:
     scexpr int backward_precycles = forward_precycles;
     scexpr int backward_cycles = forward_cycles;
 
-    scexpr int subdivide_micros = 256;
+    scexpr int subdivide_micros = 256 * foc_freq / 32768;
     scexpr int cogging_samples = 16;
     scexpr int align_ms = 200;
 

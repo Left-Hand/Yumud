@@ -22,5 +22,19 @@ public:
     void init();
     void enable(const bool en = true);
 
-    AT8222 & operator = (const real_t duty);
+    __fast_inline AT8222 & operator = (const real_t duty);
 };
+
+AT8222 & AT8222::operator = (const real_t duty){
+    if(duty > 0){
+        forward_pwm = 0;
+        backward_pwm = duty;
+    }else if(duty < 0){
+        forward_pwm = -duty;
+        backward_pwm = 0;
+    }else{
+        forward_pwm = 0;
+        backward_pwm = 0;
+    }
+    return *this;
+}

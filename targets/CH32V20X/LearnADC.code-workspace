@@ -108,7 +108,8 @@
             "stop_token": "cpp",
             "variant": "cpp",
             "system_error": "cpp",
-            "coroutine": "cpp"
+            "coroutine": "cpp",
+            "cassert": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,
