@@ -31,17 +31,8 @@
 #define PRECISION_DOUBLE    2
 #define FPU_PRECISION       (PRECISION_SINGLE)
 
-#if (FPU_PRECISION == PRECISION_SINGLE)
-    #define float_prec          float
-    #define float_prec_ZERO     (1e-7)
-    #define float_prec_ZERO_ECO (1e-5)      /* 'Economical' zero, for noisy calculation where 'somewhat zero' is good enough */
-#elif (FPU_PRECISION == PRECISION_DOUBLE)
-    #define float_prec          double
-    #define float_prec_ZERO     (1e-13)
-    #define float_prec_ZERO_ECO (1e-8)      /* 'Economical' zero, for noisy calculation where 'somewhat zero' is good enough */
-#else
-    #error("FPU_PRECISION has not been defined!");
-#endif
+#define float_prec_ZERO     (1e-7)
+#define float_prec_ZERO_ECO (1e-5)      /* 'Economical' zero, for noisy calculation where 'somewhat zero' is good enough */
 
 
 
