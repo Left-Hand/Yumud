@@ -4,13 +4,6 @@
 
 #include "../drivers/device_defs.h"
 #include "../drivers/IMU/IMU.hpp"
-#include "types/uint24_t.h"
-
-#pragma pack(push, 1)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
 // #define AK8975_DEBUG
 
@@ -23,7 +16,12 @@
 
 class AK8975:public Magnetometer{
 public:
-
+    enum class Mode:uint8_t{
+        PowerDown = 0b0000,
+        SingleMeasurement = 0b0001,
+        SelfTest = 0b1000,
+        FuseRomAccess = 0b1111,
+    };
 
 protected:
     std::optional<I2cDrv> i2c_drv;
@@ -34,48 +32,21 @@ protected:
     static constexpr uint8_t default_i2c_addr = 0x68;
 
     struct{
+        int16_t x;
+        int16_t y;
+        int16_t z;
 
+        uint8_t x_adj;
+        uint8_t y_adj;
+        uint8_t z_adj;
     };
 
 
-    void writeReg(const uint8_t addr, const uint8_t data){
-        if(i2c_drv) i2c_drv->writeReg(addr, data);
-        if(spi_drv){
-            SpiDrv & drv = spi_drv.value();
-            drv.write(uint8_t(addr), false);
-            drv.write(data);
+    void writeReg(const uint8_t addr, const uint8_t data);
+    void readReg(const RegAddress addr, uint8_t & data);
 
-            AK8975_DEBUG("Wspi", addr, data);
-
-        }
-    }
-
-    void readReg(const RegAddress addr, uint8_t & data){
-        if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data);
-        if(spi_drv){
-            SpiDrv & drv = spi_drv.value();
-            drv.write(uint8_t(uint8_t(addr) | 0x80), false);
-            drv.read(data);
-        }
-
-        AK8975_DEBUG("Rspi", addr, data);
-    }
-
-    void requestData(const RegAddress addr, void * datas, const size_t len){
-        if(i2c_drv) i2c_drv->readPool(uint8_t(addr), (uint8_t *)datas, len);
-        if(spi_drv){
-            SpiDrv & drv = spi_drv.value();
-            drv.write(uint8_t(uint8_t(addr) | 0x80), false);
-            
-            drv.read((uint8_t *)(datas), len);
-        }
-
-        AK8975_DEBUG("Rspi", addr, len);
-    }
-
-    void writeCommand(const uint8_t cmd){
-        writeReg(0x7e, cmd);
-    }
+    void readPool(const RegAddress addr, void * datas, const size_t len);
+    void readAdj();
 public:
 
     AK8975(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
@@ -87,13 +58,10 @@ public:
 
     void init();
     void update();
-
     bool verify();
-
-    void reset();
-
+    bool isIdle();
+    bool stable();
+    void setMode(const Mode mode);
+    void disableI2c();
     std::tuple<real_t, real_t, real_t> getMagnet() override;
 };
-
-
-#pragma pack(pop)
