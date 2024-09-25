@@ -142,5 +142,5 @@ private:
 
 struct OutputStream;
 
-OutputStream & operator<<(OutputStream & os, const CanRxMsg & msg);
+OutputStream & operator<<(OutputStream & os, const CanMsg & msg);
 #endif
