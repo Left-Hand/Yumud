@@ -73,7 +73,7 @@ protected:
     void handleSce();
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
-    void configBaudRate(const uint32_t baudRate) override;
+    void setBaudRate(const uint32_t baudRate) override;
 
     void init(const uint baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
 

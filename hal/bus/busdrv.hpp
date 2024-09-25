@@ -22,11 +22,11 @@ protected:
     static constexpr auto is_readable_bus = std::is_base_of_v<ReadableBus, BusType>;
     static constexpr auto is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
 
-    void configDataBits(const size_t _data_bits){
+    void setDataBits(const size_t _data_bits){
         // if(_data_bits == data_bits) return;
         // else{
         //     data_bits = _data_bits;
-            bus.configDatabits(_data_bits);
+            bus.setDataBits(_data_bits);
         // }  
     }
 
@@ -39,7 +39,7 @@ public:
     void write(const T data, bool ends = true){
         constexpr size_t size = sizeof(T);
         if(!bus.begin(index)){
-            if (size != 1) this->configDataBits(size * 8);
+            if (size != 1) this->setDataBits(size * 8);
             
             if constexpr(size == 1){
                 bus.write((uint8_t)data);
@@ -50,7 +50,7 @@ public:
             }
 
             if(ends) bus.end();
-            if (size != 1) this->configDataBits(8);
+            if (size != 1) this->setDataBits(8);
         }
 
     }
@@ -58,10 +58,10 @@ public:
     requires is_writable_bus
     void write(std::initializer_list<T> datas, bool ends = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             for(auto data_item : datas) bus.write(data_item);
             if(ends) bus.end();
-            if (sizeof(T) != 1) this->configDataBits(8);
+            if (sizeof(T) != 1) this->setDataBits(8);
         }
     }
 
@@ -69,10 +69,10 @@ public:
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T data, const size_t len, bool ends = true){
         if(!bus.begin(index)){
-            if (sizeof(U) != 1) this->configDataBits(sizeof(U) * 8);
+            if (sizeof(U) != 1) this->setDataBits(sizeof(U) * 8);
             for(size_t i = 0; i < len; i++) bus.write(U(data));
             if (ends) bus.end();
-            if (sizeof(U) != 1) this->configDataBits(8);
+            if (sizeof(U) != 1) this->setDataBits(8);
         }
     }
 
@@ -80,10 +80,10 @@ public:
     requires std::is_integral<T>::value && is_writable_bus
     void write(const T * data_ptr, const size_t len, bool ends = true){
         if(!bus.begin(index)){
-            if (sizeof(B) != 1) this->configDataBits(sizeof(B) * 8);
+            if (sizeof(B) != 1) this->setDataBits(sizeof(B) * 8);
             for(size_t i = 0; i < len; i++) bus.write(B(A(data_ptr[i])));
             if (ends) bus.end();
-            if (sizeof(B) != 1) this->configDataBits(8);
+            if (sizeof(B) != 1) this->setDataBits(8);
         }
     }
 
@@ -91,14 +91,14 @@ public:
     requires std::is_integral<T>::value && is_readable_bus
     void read(T * data_ptr, const size_t len, const bool ends = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             for(size_t i = 0; i < len; i++){
                 uint32_t temp = 0;
                 bus.read(temp, (i != len - 1));
                 data_ptr[i] = temp;
             }
             if(ends) bus.end();
-            if (sizeof(T) != 1)this->configDataBits(8);
+            if (sizeof(T) != 1)this->setDataBits(8);
         }
     }
 
@@ -106,12 +106,12 @@ public:
     requires std::is_integral<T>::value && is_readable_bus
     void read(T & data, const bool ends = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             uint32_t temp;
             bus.read(temp);
             data = temp;
             if(ends) bus.end();
-            if (sizeof(T) != 1)this->configDataBits(8);
+            if (sizeof(T) != 1)this->setDataBits(8);
         }
     }
 
@@ -119,11 +119,11 @@ public:
     requires std::is_integral<T>::value && is_fulldup_bus
     void transfer(T & datarx, T datatx, bool ends = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             uint32_t ret = 0;
             bus.transfer(ret, datatx);
             datarx = ret;
-            if (sizeof(T) != 1)this->configDataBits(8);
+            if (sizeof(T) != 1)this->setDataBits(8);
             if(ends) bus.end();
         }
     }
@@ -132,12 +132,12 @@ public:
     requires std::is_integral<T>::value && is_fulldup_bus
     T transfer(T datatx, bool ends = true){
         if(!bus.begin(index)){
-            if (sizeof(T) != 1) this->configDataBits(sizeof(T) * 8);
+            if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             T datarx;
             uint32_t ret = 0;
             bus.transfer(ret, datatx);
             datarx = ret;
-            if (sizeof(T) != 1)this->configDataBits(8);
+            if (sizeof(T) != 1)this->setDataBits(8);
             if(ends) bus.end();
             return datarx;
         }

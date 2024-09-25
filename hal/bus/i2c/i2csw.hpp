@@ -25,5 +25,5 @@ public:
     Error write(const uint32_t data) final override;
     Error read(uint32_t & data, bool toAck = true) final override;
     void init(const uint32_t baudRate);
-    void configBaudRate(const uint32_t baudRate) final override;
+    void setBaudRate(const uint32_t baudRate) final override;
 };

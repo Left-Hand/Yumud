@@ -221,7 +221,8 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 }
 
 
-void SpiHw::configDatabits(const uint8_t data_size){
+
+void SpiHw::setDataBits(const uint8_t data_size){
     uint16_t tempreg =  instance->CTLR1;
     if(data_size == 16){
         if(tempreg & SPI_DataSize_16b) return;
@@ -232,12 +233,12 @@ void SpiHw::configDatabits(const uint8_t data_size){
     instance->CTLR1 = tempreg;
 }
 
-void SpiHw::configBaudRate(const uint32_t baudRate){
+void SpiHw::setBaudRate(const uint32_t baudRate){
     instance->CTLR1 &= ~SPI_BaudRatePrescaler_256;
     instance->CTLR1 |= calculatePrescaler(baudRate);
 }
 
-void SpiHw::configBitOrder(const Endian endian){
+void SpiHw::setBitOrder(const Endian endian){
     instance->CTLR1 &= ~SPI_FirstBit_LSB;
     instance->CTLR1 |= endian ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }

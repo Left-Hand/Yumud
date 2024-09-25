@@ -54,7 +54,7 @@ public:
 
     Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override ;
 
-    void configBaudRate(const uint32_t baudRate) {
+    void setBaudRate(const uint32_t baudRate) {
         if(baudRate == 0){
             delays = 0;
         }else{
@@ -65,11 +65,11 @@ public:
 
     void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) override;
 
-    void configDatabits(const uint8_t bits) override {
+    void setDataBits(const uint8_t bits) override {
         data_bits = bits;
     }
 
-    void configBitOrder(const Endian endian) override {
+    void setBitOrder(const Endian endian) override {
         m_msb = bool(endian);
     }
 };

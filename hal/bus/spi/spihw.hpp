@@ -28,9 +28,9 @@ public:
     __fast_inline Error write(const uint32_t data) override;
     __fast_inline Error read(uint32_t & data, bool toAck = true) override;
     __fast_inline Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override;
-    void configDatabits(const uint8_t data_size) override;
-    void configBaudRate(const uint32_t baudRate) override;
-    void configBitOrder(const Endian endian) override ;
+    void setDataBits(const uint8_t data_size) override;
+    void setBaudRate(const uint32_t baudRate) override;
+    void setBitOrder(const Endian endian) override ;
 };
 
 SpiHw::Error SpiHw::write(const uint32_t data){

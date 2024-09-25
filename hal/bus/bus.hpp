@@ -106,9 +106,9 @@ private:
 
 public:
     Bus():locker(&__m_lock__){;}
-    virtual void configBitOrder(const Endian endian){};
-    virtual void configDatabits(const uint8_t data_size){};
-    virtual void configBaudRate(const uint32_t baudRate) = 0;
+    virtual void setBitOrder(const Endian endian){};
+    virtual void setDataBits(const uint8_t data_size){};
+    virtual void setBaudRate(const uint32_t baudRate) = 0;
 
     Error begin(const uint8_t index){
         if(is_idle()){
@@ -175,7 +175,7 @@ protected:
 template<typename Packet>
 class PackedBus:public Bus{
 private:
-    using Bus::configDatabits;//disable this;
+    using Bus::setDataBits;//disable this;
 public:
     virtual bool write(const Packet & msg) = 0;
     virtual const Packet & read() = 0;

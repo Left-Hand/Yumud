@@ -17,6 +17,13 @@ public:
     using DuplexBus::txMethod;
     using DuplexBus::rxMethod;
     using InputStream::read;
+
+    enum class Parity{
+        None = USART_Parity_No,
+        Even = USART_Parity_Even,
+        Odd = USART_Parity_Odd
+    };
+
 protected:
 
     #ifndef UART_FIFO_BUF_SIZE
@@ -48,10 +55,9 @@ public:
     size_t pending() const {return txBuf.available();}
     size_t remain() const {return txBuf.size - txBuf.available();}
     virtual void flush(){}//TODO
-
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
-
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
+    virtual void setParity(const Parity parity) = 0;
     void bindTxPostCb(Callback && cb){txPostCb = cb;}
 
     void bindRxPostCb(Callback && cb){rxPostCb = cb;}
