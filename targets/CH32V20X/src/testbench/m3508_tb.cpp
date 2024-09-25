@@ -1,6 +1,6 @@
 #include "tb.h"
 
-#include "drivers/Actuator/DJI/M3508/m3508.hpp"
+#include "robots/DJI/M3508/m3508.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
 void m3508_main(){
