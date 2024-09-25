@@ -44,9 +44,9 @@
  *         -> A[0][3] = access 1st row, 4th column of matrix data.
  *         -> A(2,0)  = access 3rd row, 1st column of matrix data. < this is the way.
  *       - Remove (bug) a remnant of ancient code where we haven't implemented NoInitMatZero:
- *          real_t floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE] = {{0}};
+ *          T floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE] = {{0}};
  *         Into:
- *          real_t floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
+ *          T floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
  *         We can get very nice speed up (MPC benchmark @2020-04-27) from 698 us to 414 us!
  *       - Implement copy constructor               (more sweet speed up, 414 us -> 382 us!).
  *       - Implement assignment operator       (more more sweet speed up, 382 us -> 327 us!).
@@ -55,7 +55,7 @@
  *  
  *    v0.8 (2020-03-26), {PNb}:
  *      - Change indexing from int32_t to int16_t.
- *      - Add way to initialize matrix with existing real_t array.
+ *      - Add way to initialize matrix with existing T array.
  *      - Add enum InitZero.
  *      - Make temporary matrix initialization inside almost all method with 
  *          NoInitMatZero argument.
@@ -108,7 +108,7 @@
  *          dengan float_prec_ZERO.
  *      - Menambahkan function overloading operasi InsertSubMatrix, untuk
  *          operasi insert dari SubMatrix ke SubMatrix.
- *      - Saat inisialisasi, matrix diisi nol (melalui vIsiHomogen(real_t(0))).
+ *      - Saat inisialisasi, matrix diisi nol (melalui vIsiHomogen(T(0))).
  *      - Menambahkan function overloading operator '/' dengan scalar.
  * 
  *    v0.2 (2019-11-30), {PNb}:
@@ -133,30 +133,28 @@
 #include "kconfig.h"
 #include "memory.h"
 
-#include "sys/core/system.hpp"
+#include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
 
 template<arithmetic T>
 class Matrix_t
 {
 public:
-    typedef enum {
-        InitMatWithZero,    /* Initialize matrix with zero data */
-        NoInitMatZero
-    } InitZero;
-    
-    
+
     /* --------------------------------------------- Basic Matrix_t Class functions --------------------------------------------- */
     /* Init empty matrix size _i16row x _i16col */
-    Matrix_t(const int16_t _i16row, const int16_t _i16col, const InitZero _init = InitMatWithZero);
+    constexpr Matrix_t(const int16_t _i16row, const int16_t _i16col);
+
     /* Init matrix size _i16row x _i16col with entries initData */
-    Matrix_t(const int16_t _i16row, const int16_t _i16col, const real_t* initData, const InitZero _init = InitMatWithZero);
+    constexpr Matrix_t(const int16_t _i16row, const int16_t _i16col, const T* initData);
+
     /* Copy constructor (for this operation --> A(B)) (copy B into A) */
-    Matrix_t(const Matrix_t& old_obj);
+    constexpr Matrix_t(const Matrix_t& old_obj);
+
+    
     /* Assignment operator (for this operation --> A = B) (copy B into A) */
-    Matrix_t& operator = (const Matrix_t& obj);
-    /* Destructor */
-    ~Matrix_t(void);
+    constexpr Matrix_t& operator = (const Matrix_t & other);
+
     /* Get internal state */
     __fast_inline constexpr int16_t rows(void) const { return this->i16row; }
     __fast_inline constexpr int16_t cols(void) const { return this->i16col; }
@@ -164,22 +162,24 @@ public:
     
     /* ------------------------------------------- Matrix_t entry accessing functions ------------------------------------------- */
     /* For example: A(1,2) access the 1st row and 2nd column data of matrix A <--- The preferred way to access the matrix */
-    real_t& operator () (const int16_t _row, const int16_t _col);
-    real_t operator () (const int16_t _row, const int16_t _col) const;
+    T & operator () (const int16_t _row, const int16_t _col);
+    const T & operator () (const int16_t _row, const int16_t _col) const;
     
     /* For example: A[1][2] access the 1st row and 2nd column data of matrix A <-- The awesome way */
     class Proxy {
         public:
-            Proxy(real_t* _inpArr, const int16_t _maxCol) { _array.ptr = _inpArr; this->_maxCol = _maxCol; }
-            Proxy(const real_t* _inpArr, const int16_t _maxCol) { _array.cptr = _inpArr; this->_maxCol = _maxCol; }
-            real_t & operator [] (const int16_t _col);
-            real_t operator [] (const int16_t _col) const;
+            T & operator [] (const int16_t _col);
+            T operator [] (const int16_t _col) const;
         private:
+            Proxy(T* _inpArr, const int16_t _maxCol) { _array.ptr = _inpArr; this->_maxCol = _maxCol; }
+            Proxy(const T* _inpArr, const int16_t _maxCol) { _array.cptr = _inpArr; this->_maxCol = _maxCol; }
             union { /* teehee xp */
-                const real_t* cptr;
-                real_t* ptr;
+                const T* cptr;
+                T* ptr;
             } _array;
             int16_t _maxCol;
+
+            friend class Matrix_t;
     };
     Proxy operator [] (const int16_t _row);
     const Proxy operator [] (const int16_t _row) const;
@@ -192,24 +192,24 @@ public:
     bool operator == (const Matrix_t& _compare) const;
     bool operator != (const Matrix_t& _compare) const;
     Matrix_t operator - (void) const;
-    Matrix_t operator + (const real_t _scalar) const;
-    Matrix_t operator - (const real_t _scalar) const;
-    Matrix_t operator * (const real_t _scalar) const;
-    Matrix_t operator / (const real_t _scalar) const;
+    Matrix_t operator + (const T _scalar) const;
+    Matrix_t operator - (const T _scalar) const;
+    Matrix_t operator * (const T _scalar) const;
+    Matrix_t operator / (const T _scalar) const;
     Matrix_t operator + (const Matrix_t& _matAdd) const;
     Matrix_t operator - (const Matrix_t& _matSub) const;
     Matrix_t operator * (const Matrix_t& _matMul) const;
     /* Declared outside class below */
-    /* inline Matrix_t operator + (const real_t _scalar, Matrix_t _mat); */
-    /* inline Matrix_t operator - (const real_t _scalar, Matrix_t _mat); */
-    /* inline Matrix_t operator * (const real_t _scalar, Matrix_t _mat); */
+    /* inline Matrix_t operator + (const T _scalar, Matrix_t _mat); */
+    /* inline Matrix_t operator - (const T _scalar, Matrix_t _mat); */
+    /* inline Matrix_t operator * (const T _scalar, Matrix_t _mat); */
     /* ----------------------------------------------- Simple Matrix_t operations ----------------------------------------------- */
     void vRoundingElementToZero(const int16_t _i, const int16_t _j);
     Matrix_t RoundingMatrixToZero(void);
-    void vSetHomogen(const real_t _val);
+    void vSetHomogen(const T _val);
     void vSetToZero(void);
     void vSetRandom(const int32_t _maxRand, const int32_t _minRand);
-    void vSetDiag(const real_t _val);
+    void vSetDiag(const T _val);
     void vSetIdentity(void);
     Matrix_t transpose(void);
     bool bNormVector(void);
@@ -243,6 +243,9 @@ public:
      */
     Matrix_t ForwardSubtitution(const Matrix_t& A, const Matrix_t& B) const;
     /* ----------------------------------------------- Matrix_t printing function ----------------------------------------------- */
+
+    T & at(const int16_t _row, const int16_t _col) { return this->floatData[_row][_col]; }
+    const T & at(const int16_t _row, const int16_t _col) const { return this->floatData[_row][_col]; }
     
 private:
     /* Data structure of Matrix_t class:
@@ -267,48 +270,39 @@ private:
      */
     int16_t i16row;
     int16_t i16col;
-    real_t floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
+    T floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
     
     /* Private way to access floatData without bound checking.
      *  TODO: For Matrix_t member function we could do the bound checking once at the beginning of the function, and use this
      *          to access the floatData instead of (i,j) operator. From preliminary experiment doing this only on elementary
      *          operation (experiment @2020-04-27), we can get up to 45% computation boost!!! (MPC benchmark 414 us -> 226 us)!
      */
-    real_t& _at(const int16_t _row, const int16_t _col) { return this->floatData[_row][_col]; }
-    real_t _at(const int16_t _row, const int16_t _col) const { return this->floatData[_row][_col]; }
 };
 
 template<arithmetic T>
-inline Matrix_t<T> operator + (const real_t _scalar, const Matrix_t<T>& _mat);
+inline Matrix_t<T> operator + (const T _scalar, const Matrix_t<T>& _mat);
 
 template<arithmetic T>
-inline Matrix_t<T> operator - (const real_t _scalar, const Matrix_t<T>& _mat);
+inline Matrix_t<T> operator - (const T _scalar, const Matrix_t<T>& _mat);
 
 template<arithmetic T>
-inline Matrix_t<T> operator * (const real_t _scalar, const Matrix_t<T>& _mat);
+inline Matrix_t<T> operator * (const T _scalar, const Matrix_t<T>& _mat);
 
 template<arithmetic T>
 inline Matrix_t<T> MatIdentity(const int16_t _i16size);
 
 template<arithmetic T>
-inline Matrix_t<T>::Matrix_t(const int16_t _i16row, const int16_t _i16col, const InitZero _init) {
+constexpr Matrix_t<T>::Matrix_t(const int16_t _i16row, const int16_t _i16col) {
     this->i16row = _i16row;
     this->i16col = _i16col;
-    
-    if (_init == InitMatWithZero) {
-        this->vSetHomogen(real_t(0));
-    }
 }
 
 
 template<arithmetic T>
-inline Matrix_t<T>::Matrix_t(const int16_t _i16row, const int16_t _i16col, const real_t* initData, const InitZero _init) {
+constexpr Matrix_t<T>::Matrix_t(const int16_t _i16row, const int16_t _i16col, const T* initData) {
     this->i16row = _i16row;
     this->i16col = _i16col;
     
-    if (_init == InitMatWithZero) {
-        this->vSetHomogen(real_t(0));
-    }
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             (*this)(_i,_j) = *initData;
@@ -318,34 +312,34 @@ inline Matrix_t<T>::Matrix_t(const int16_t _i16row, const int16_t _i16col, const
 }
 
 template<arithmetic T>
-inline Matrix_t<T>::Matrix_t(const Matrix_t<T>& old_obj) {
+constexpr Matrix_t<T>::Matrix_t(const Matrix_t<T>& old_obj) {
     /* For copy contructor, we only need to copy (_i16row x _i16col) submatrix, there's no need to copy all data */
     this->i16row = old_obj.i16row;
     this->i16col = old_obj.i16col;
     
-    const real_t *sourc = old_obj.floatData[0];
-    real_t *desti = this->floatData[0];
+    const T *sourc = old_obj.floatData[0];
+    T *desti = this->floatData[0];
 
     for (int16_t _i = 0; _i < i16row; _i++) {
         /* Still valid with invalid matrix ((i16row == -1) or (i16col == -1)) */
-        memcpy(desti, sourc, sizeof(real_t)*size_t((this->i16col)));
+        memcpy(desti, sourc, sizeof(T)*size_t((this->i16col)));
         sourc += (MATRIX_MAXIMUM_SIZE);
         desti += (MATRIX_MAXIMUM_SIZE);
     }
 }
 
 template<arithmetic T>
-inline Matrix_t<T>& Matrix_t<T>::operator = (const Matrix_t<T>& obj) {
+constexpr Matrix_t<T>& Matrix_t<T>::operator = (const Matrix_t<T>& obj) {
     /* For assignment operator, we only need to copy (_i16row x _i16col) submatrix, there's no need to copy all data */
     this->i16row = obj.i16row;
     this->i16col = obj.i16col;
     
-    const real_t *sourc = obj.floatData[0];
-    real_t *desti = this->floatData[0];
+    const T *sourc = obj.floatData[0];
+    T *desti = this->floatData[0];
 
     for (int16_t _i = 0; _i < i16row; _i++) {
         /* Still valid with invalid matrix ((i16row == -1) or (i16col == -1)) */
-        memcpy(desti, sourc, sizeof(real_t)*size_t((this->i16col)));
+        memcpy(desti, sourc, sizeof(T)*size_t((this->i16col)));
         sourc += (MATRIX_MAXIMUM_SIZE);
         desti += (MATRIX_MAXIMUM_SIZE);
     }
@@ -353,40 +347,29 @@ inline Matrix_t<T>& Matrix_t<T>::operator = (const Matrix_t<T>& obj) {
     return *this;
 }
 
-template<arithmetic T>
-inline Matrix_t<T>::~Matrix_t(void) {
-    /* haven't implemented anything here, definition needed for the rule of three */
-    /* (´・ω・`) */
-}
-
-
 /* ---------------------------------------- Matrix_t entry accessing functions ---------------------------------------- */
 /* ---------------------------------------- Matrix_t entry accessing functions ---------------------------------------- */
 
 /* The preferred method to access the matrix data (boring code) */
 
 template<arithmetic T>
-inline real_t& Matrix_t<T>::operator () (const int16_t _row, const int16_t _col) {
+inline T& Matrix_t<T>::operator () (const int16_t _row, const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
                "Matrix_t index out-of-bounds (at row evaluation)");
         MATRIX_ASSERT((_col >= 0) && (_col < this->i16col) && (_col < MATRIX_MAXIMUM_SIZE),
                "Matrix_t index out-of-bounds (at column _column)");
-    #else
-        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return this->floatData[_row][_col];
 }
 
 template<arithmetic T>
-inline real_t Matrix_t<T>::operator () (const int16_t _row, const int16_t _col) const {
+inline const T & Matrix_t<T>::operator () (const int16_t _row, const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
                "Matrix_t index out-of-bounds (at row evaluation)");
         MATRIX_ASSERT((_col >= 0) && (_col < this->i16col) && (_col < MATRIX_MAXIMUM_SIZE),
                "Matrix_t index out-of-bounds (at column _column)");
-    #else
-        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return this->floatData[_row][_col];
 }
@@ -396,23 +379,19 @@ inline real_t Matrix_t<T>::operator () (const int16_t _row, const int16_t _col) 
  */
 
 template<arithmetic T>
-inline real_t & Matrix_t<T>::Proxy::operator [] (const int16_t _col) {
+inline T & Matrix_t<T>::Proxy::operator [] (const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
                 "Matrix_t index out-of-bounds (at column evaluation)");
-    #else
-        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return _array.ptr[_col];
 }
 
 template<arithmetic T>
-inline real_t Matrix_t<T>::Proxy::operator [] (const int16_t _col) const {
+inline T Matrix_t<T>::Proxy::operator [] (const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
                 "Matrix_t index out-of-bounds (at column evaluation)");
-    #else
-        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return _array.cptr[_col];
 }
@@ -422,8 +401,6 @@ inline Matrix_t<T>::Proxy Matrix_t<T>::operator [] (const int16_t _row) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
                "Matrix_t index out-of-bounds (at row evaluation)");
-    #else
-        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return Proxy(floatData[_row], this->i16col);  /* Parsing column index for bound checking */
 }
@@ -434,8 +411,6 @@ inline const Matrix_t<T>::Proxy Matrix_t<T>::operator [] (const int16_t _row) co
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
                "Matrix_t index out-of-bounds (at row evaluation)");
-    #else
-        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return Proxy(floatData[_row], this->i16col);  /* Parsing column index for bound checking */
 }
@@ -477,7 +452,7 @@ inline bool Matrix_t<T>::operator == (const Matrix_t<T> & _compare) const {
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            if (ABS((*this)(_i,_j) - _compare(_i,_j)) > real_t(float_prec_ZERO_ECO)) {
+            if (ABS((*this)(_i,_j) - _compare(_i,_j)) > T(float_prec_ZERO_ECO)) {
                 return false;
             }
         }
@@ -503,7 +478,7 @@ inline Matrix_t<T> Matrix_t<T>::operator - (void) const {
 }
 
 template<arithmetic T>
-inline Matrix_t<T> Matrix_t<T>::operator + (const real_t _scalar) const {
+inline Matrix_t<T> Matrix_t<T>::operator + (const T _scalar) const {
     Matrix_t _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -515,7 +490,7 @@ inline Matrix_t<T> Matrix_t<T>::operator + (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix_t<T> Matrix_t<T>::operator - (const real_t _scalar) const {
+inline Matrix_t<T> Matrix_t<T>::operator - (const T _scalar) const {
     Matrix_t<T> _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -527,7 +502,7 @@ inline Matrix_t<T> Matrix_t<T>::operator - (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix_t<T> Matrix_t<T>::operator * (const real_t _scalar) const {
+inline Matrix_t<T> Matrix_t<T>::operator * (const T _scalar) const {
     Matrix_t<T> _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -539,10 +514,10 @@ inline Matrix_t<T> Matrix_t<T>::operator * (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix_t<T> Matrix_t<T>::operator / (const real_t _scalar) const {
+inline Matrix_t<T> Matrix_t<T>::operator / (const T _scalar) const {
     Matrix_t<T> _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
-    if (ABS(_scalar) < real_t(float_prec_ZERO_ECO)) {
+    if (ABS(_scalar) < T(float_prec_ZERO_ECO)) {
         _outp.invalid();
         return _outp;
     }
@@ -555,7 +530,7 @@ inline Matrix_t<T> Matrix_t<T>::operator / (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix_t<T> operator + (const real_t _scalar, const Matrix_t<T>& _mat) {
+inline Matrix_t<T> operator + (const T _scalar, const Matrix_t<T>& _mat) {
     Matrix_t<T> _outp(_mat.rows()(), _mat.cols()(), Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
@@ -567,7 +542,7 @@ inline Matrix_t<T> operator + (const real_t _scalar, const Matrix_t<T>& _mat) {
 }
 
 template<arithmetic T>
-inline Matrix_t<T> operator - (const real_t _scalar, const Matrix_t<T>& _mat) {
+inline Matrix_t<T> operator - (const T _scalar, const Matrix_t<T>& _mat) {
     Matrix_t<T> _outp(_mat.rows()(), _mat.cols()(), Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
@@ -579,7 +554,7 @@ inline Matrix_t<T> operator - (const real_t _scalar, const Matrix_t<T>& _mat) {
 }
 
 template<arithmetic T>
-inline Matrix_t<T> operator * (const real_t _scalar, const Matrix_t<T>& _mat) {
+inline Matrix_t<T> operator * (const T _scalar, const Matrix_t<T>& _mat) {
     Matrix_t<T> _outp(_mat.rows()(), _mat.cols()(), Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
@@ -592,7 +567,7 @@ inline Matrix_t<T> operator * (const real_t _scalar, const Matrix_t<T>& _mat) {
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::operator + (const Matrix_t<T>& _matAdd) const {
-    Matrix_t<T> _outp(this->i16row, this->i16col, NoInitMatZero);
+    Matrix_t<T> _outp(this->i16row, this->i16col);
     if ((this->i16row != _matAdd.i16row) || (this->i16col != _matAdd.i16col)) {
         _outp.invalid();
         return _outp;
@@ -608,7 +583,7 @@ inline Matrix_t<T> Matrix_t<T>::operator + (const Matrix_t<T>& _matAdd) const {
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::operator - (const Matrix_t<T>& _matSub) const {
-    Matrix_t<T> _outp(this->i16row, this->i16col, NoInitMatZero);
+    Matrix_t<T> _outp(this->i16row, this->i16col);
     if ((this->i16row != _matSub.i16row) || (this->i16col != _matSub.i16col)) {
         _outp.invalid();
         return _outp;
@@ -624,7 +599,7 @@ inline Matrix_t<T> Matrix_t<T>::operator - (const Matrix_t<T>& _matSub) const {
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::operator * (const Matrix_t<T>& _matMul) const {
-    Matrix_t<T> _outp(this->i16row, _matMul.i16col, NoInitMatZero);
+    Matrix_t<T> _outp(this->i16row, _matMul.i16col);
     if ((this->i16col != _matMul.i16row)) {
         _outp.invalid();
         return _outp;
@@ -632,7 +607,7 @@ inline Matrix_t<T> Matrix_t<T>::operator * (const Matrix_t<T>& _matMul) const {
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < _matMul.i16col; _j++) {
-            _outp(_i,_j) = real_t(0);
+            _outp(_i,_j) = T(0);
             for (int16_t _k = 0; _k < this->i16col; _k++) {
                 _outp(_i,_j) += ((*this)(_i,_k) * _matMul(_k,_j));
             }
@@ -647,8 +622,8 @@ inline Matrix_t<T> Matrix_t<T>::operator * (const Matrix_t<T>& _matMul) const {
 
 template<arithmetic T>
 inline void Matrix_t<T>::vRoundingElementToZero(const int16_t _i, const int16_t _j) {
-    if (ABS((*this)(_i,_j)) < real_t(float_prec_ZERO_ECO)) {
-        (*this)(_i,_j) = real_t(0);
+    if (ABS((*this)(_i,_j)) < T(float_prec_ZERO_ECO)) {
+        (*this)(_i,_j) = T(0);
     }
 }
 
@@ -656,8 +631,8 @@ template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::RoundingMatrixToZero(void) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            if (ABS((*this)(_i,_j)) < real_t(float_prec_ZERO_ECO)) {
-                (*this)(_i,_j) = real_t(0);
+            if (ABS((*this)(_i,_j)) < T(float_prec_ZERO_ECO)) {
+                (*this)(_i,_j) = T(0);
             }
         }
     }
@@ -665,7 +640,7 @@ inline Matrix_t<T> Matrix_t<T>::RoundingMatrixToZero(void) {
 }
 
 template<arithmetic T>
-inline void Matrix_t<T>::vSetHomogen(const real_t _val) {
+inline void Matrix_t<T>::vSetHomogen(const T _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             (*this)(_i,_j) = _val;
@@ -675,26 +650,26 @@ inline void Matrix_t<T>::vSetHomogen(const real_t _val) {
 
 template<typename T>
 inline void Matrix_t<T>::vSetToZero(void) {
-    this->vSetHomogen(real_t(0));
+    this->vSetHomogen(T(0));
 }
 
 template<arithmetic T>
 inline void Matrix_t<T>::vSetRandom(const int32_t _maxRand, const int32_t _minRand) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
-            (*this)(_i,_j) = real_t((rand() % (_maxRand - _minRand + 1)) + _minRand);
+            (*this)(_i,_j) = T((rand() % (_maxRand - _minRand + 1)) + _minRand);
         }
     }
 }
 
 template<arithmetic T>
-inline void Matrix_t<T>::vSetDiag(const real_t _val) {
+inline void Matrix_t<T>::vSetDiag(const T _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             if (_i == _j) {
                 (*this)(_i,_j) = _val;
             } else {
-                (*this)(_i,_j) = real_t(0);
+                (*this)(_i,_j) = T(0);
             }
         }
     }
@@ -702,13 +677,13 @@ inline void Matrix_t<T>::vSetDiag(const real_t _val) {
 
 template<arithmetic T>
 inline void Matrix_t<T>::vSetIdentity(void) {
-    this->vSetDiag(real_t(1));
+    this->vSetDiag(T(1));
 }
 
 template<arithmetic T>
 inline Matrix_t<T> MatIdentity(const int16_t _i16size) {
     Matrix_t _outp(_i16size, _i16size, Matrix_t<T>::NoInitMatZero);
-    _outp.vSetDiag(real_t(1));   
+    _outp.vSetDiag(T(1));   
     return _outp;
 }
 
@@ -716,7 +691,7 @@ inline Matrix_t<T> MatIdentity(const int16_t _i16size) {
 /* Return the transpose of the matrix */
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::transpose(void) {
-    Matrix_t<T> _outp(this->i16col, this->i16row, NoInitMatZero);
+    Matrix_t<T> _outp(this->i16col, this->i16row);
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             _outp(_j,_i) = (*this)(_i,_j);
@@ -728,7 +703,7 @@ inline Matrix_t<T> Matrix_t<T>::transpose(void) {
 /* Normalize the vector */
 template<arithmetic T>
 inline bool Matrix_t<T>::bNormVector(void) {
-    real_t _normM = real_t(0);
+    T _normM = T(0);
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             _normM = _normM + ((*this)(_i,_j) * (*this)(_i,_j));
@@ -736,7 +711,7 @@ inline bool Matrix_t<T>::bNormVector(void) {
     }
 
     /* Rounding to zero to avoid case where sqrt(0-), and _normM always positive */
-    if (_normM < real_t(float_prec_ZERO)) {
+    if (_normM < T(float_prec_ZERO)) {
         return false;
     }
     _normM = sqrt(_normM);
@@ -896,20 +871,20 @@ inline Matrix_t<T> Matrix_t<T>::InsertSubMatrix(const Matrix_t<T>& _subMatrix, c
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::inverse(void) const {
-    Matrix_t _outp(this->i16row, this->i16col, NoInitMatZero);
+    Matrix_t _outp(this->i16row, this->i16col);
     Matrix_t _temp(*this);
     _outp.vSetIdentity();
     
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
-            if (ABS(_temp(_j,_j)) < real_t(float_prec_ZERO)) {
+            if (ABS(_temp(_j,_j)) < T(float_prec_ZERO)) {
                 /* Matrix_t is non-invertible */
                 _outp.invalid();
                 return _outp;
             }
 
-            real_t _tempfloat = _temp(_i,_j) / _temp(_j,_j);
+            T _tempfloat = _temp(_i,_j) / _temp(_j,_j);
 
             for (int16_t _k = 0; _k < _temp.i16col; _k++) {
                 _temp(_i,_k) -= (_temp(_j,_k) * _tempfloat);
@@ -928,7 +903,7 @@ inline Matrix_t<T> Matrix_t<T>::inverse(void) const {
          */
         for (int16_t _i = 1; _i < _temp.i16row; _i++) {
             for (int16_t _j = 0; _j < _i; _j++) {
-                _temp(_i,_j) = real_t(0);
+                _temp(_i,_j) = T(0);
             }
         }
     #endif
@@ -937,13 +912,13 @@ inline Matrix_t<T> Matrix_t<T>::inverse(void) const {
     /* Jordan... */
     for (int16_t _j = (_temp.i16row)-1; _j > 0; _j--) {
         for (int16_t _i = _j-1; _i >= 0; _i--) {
-            if (ABS(_temp(_j,_j)) < real_t(float_prec_ZERO)) {
+            if (ABS(_temp(_j,_j)) < T(float_prec_ZERO)) {
                 /* Matrix_t is non-invertible */
                 _outp.invalid();
                 return _outp;
             }
 
-            real_t _tempfloat = _temp(_i,_j) / _temp(_j,_j);
+            T _tempfloat = _temp(_i,_j) / _temp(_j,_j);
             _temp(_i,_j) -= (_temp(_j,_j) * _tempfloat);
             _temp.vRoundingElementToZero(_i, _j);
 
@@ -957,14 +932,14 @@ inline Matrix_t<T> Matrix_t<T>::inverse(void) const {
 
     /* Normalization */
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
-        if (ABS(_temp(_i,_i)) < real_t(float_prec_ZERO)) {
+        if (ABS(_temp(_i,_i)) < T(float_prec_ZERO)) {
             /* Matrix_t is non-invertible */
             _outp.invalid();
             return _outp;
         }
 
-        real_t _tempfloat = _temp(_i,_i);
-        _temp(_i,_i) = real_t(1);
+        T _tempfloat = _temp(_i,_i);
+        _temp(_i,_i) = T(1);
 
         for (int16_t _j = 0; _j < _temp.i16row; _j++) {
             _outp(_i,_j) /= _tempfloat;
@@ -988,7 +963,7 @@ inline bool Matrix_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefini
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
-            if (ABS(_temp(_j,_j)) < real_t(float_prec_ZERO)) {
+            if (ABS(_temp(_j,_j)) < T(float_prec_ZERO)) {
                 /* Q: Do we still need to check this?
                  * A: idk, it's 3 AM. I need sleep :<
                  * 
@@ -997,7 +972,7 @@ inline bool Matrix_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefini
                 return false;
             }
             
-            real_t _tempfloat = _temp(_i,_j) / _temp(_j,_j);
+            T _tempfloat = _temp(_i,_j) / _temp(_j,_j);
             
             for (int16_t _k = 0; _k < _temp.i16col; _k++) {
                 _temp(_i,_k) -= (_temp(_j,_k) * _tempfloat);
@@ -1010,11 +985,11 @@ inline bool Matrix_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefini
     _posDef = true;
     _posSemiDef = true;
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
-        if (_temp(_i,_i) < real_t(float_prec_ZERO)) {
+        if (_temp(_i,_i) < T(float_prec_ZERO)) {
             /* false if less than 0+ (zero included) */
             _posDef = false;
         }
-        if (_temp(_i,_i) < -real_t(float_prec_ZERO)) {
+        if (_temp(_i,_i) < -T(float_prec_ZERO)) {
             /* false if less than 0- (zero is not included) */
             _posSemiDef = false;
         }
@@ -1041,7 +1016,7 @@ inline bool Matrix_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefini
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::GetDiagonalEntries(void) const {
-    Matrix_t _temp(this->i16row, 1, NoInitMatZero);
+    Matrix_t _temp(this->i16row, 1);
     
     if (this->i16row != this->i16col) {
         _temp.invalid();
@@ -1070,11 +1045,11 @@ inline Matrix_t<T> Matrix_t<T>::GetDiagonalEntries(void) const {
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::CholeskyDec(void) const {
-    real_t _tempFloat;
+    T _tempFloat;
 
     /* Note that _outp need to be initialized as zero matrix */
-    Matrix_t _outp(this->i16row, this->i16col, InitMatWithZero);
-    
+    Matrix_t _outp(this->i16row, this->i16col);
+    _outp.vSetToZero();
     if (this->i16row != this->i16col) {
         _outp.invalid();
         return _outp;
@@ -1086,21 +1061,21 @@ inline Matrix_t<T> Matrix_t<T>::CholeskyDec(void) const {
                 for (int16_t _k = 0; _k < _j; _k++) {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_i,_k));
                 }
-                if (_tempFloat < -real_t(float_prec_ZERO)) {
+                if (_tempFloat < -T(float_prec_ZERO)) {
                     /* Matrix_t is not positif (semi)definit */
                     _outp.invalid();
                     return _outp;
                 }
                 /* Rounding to zero to avoid case where sqrt(0-) */
-                if (ABS(_tempFloat) < real_t(float_prec_ZERO)) {
-                    _tempFloat = real_t(0);
+                if (ABS(_tempFloat) < T(float_prec_ZERO)) {
+                    _tempFloat = T(0);
                 }
                 _outp(_i,_i) = sqrt(_tempFloat);
             } else {
                 for (int16_t _k = 0; _k < _j; _k++) {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_j,_k));
                 }
-                if (ABS(_outp(_j,_j)) < real_t(float_prec_ZERO)) {
+                if (ABS(_outp(_j,_j)) < T(float_prec_ZERO)) {
                     /* Matrix_t is not positif definit */
                     _outp.invalid();
                     return _outp;
@@ -1118,15 +1093,17 @@ inline Matrix_t<T> Matrix_t<T>::CholeskyDec(void) const {
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
-    real_t _tempFloat;
-    real_t _xLen;
-    real_t _x1;
-    real_t _u1;
-    real_t _vLen2;
+    T _tempFloat;
+    T _xLen;
+    T _x1;
+    T _u1;
+    T _vLen2;
     
     /* Note that _outp & _vectTemp need to be initialized as zero matrix */
-    Matrix_t _outp(this->i16row, this->i16row, InitMatWithZero);
-    Matrix_t _vectTemp(this->i16row, 1, InitMatWithZero);
+    Matrix_t _outp(this->i16row, this->i16row);
+    _outp.vSetToZero();
+    Matrix_t _vectTemp(this->i16row, 1);
+    _vectTemp.vSetToZero();
     
     if ((_rowTransform >= this->i16row) || (_colTransform >= this->i16col)) {
         _outp.invalid();
@@ -1141,7 +1118,7 @@ inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransfo
      */
     _x1 = (*this)(_rowTransform,_colTransform);
     _xLen = _x1*_x1;
-    _vLen2 = real_t(0);
+    _vLen2 = T(0);
     for (int16_t _i = _rowTransform+1; _i < this->i16row; _i++) {
         _vectTemp(_i,0) = (*this)(_i,_colTransform);
 
@@ -1152,7 +1129,7 @@ inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransfo
     _xLen = sqrt(_xLen);
     
     /* u1    = x1+(-sign(x1))*xLen */
-    if (_x1 < real_t(0)) {
+    if (_x1 < T(0)) {
         _u1 = _x1+_xLen;
     } else {
         _u1 = _x1-_xLen;
@@ -1162,7 +1139,7 @@ inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransfo
     _vLen2 += (_u1*_u1);
     _vectTemp(_rowTransform,0) = _u1;
     
-    if (ABS(_vLen2) < real_t(float_prec_ZERO_ECO)) {
+    if (ABS(_vLen2) < T(float_prec_ZERO_ECO)) {
         /* x vector is collinear with basis vector e, return result = I */
         _outp.vSetIdentity();
     } else {
@@ -1170,16 +1147,16 @@ inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransfo
         /* PR TODO: We need to investigate more on this */
         for (int16_t _i = 0; _i < this->i16row; _i++) {
             _tempFloat = _vectTemp(_i,0);
-            if (ABS(_tempFloat) > real_t(float_prec_ZERO)) {
+            if (ABS(_tempFloat) > T(float_prec_ZERO)) {
                 for (int16_t _j = 0; _j < this->i16row; _j++) {
-                    if (ABS(_vectTemp(_j,0)) > real_t(float_prec_ZERO)) {
+                    if (ABS(_vectTemp(_j,0)) > T(float_prec_ZERO)) {
                         _outp(_i,_j) = _vectTemp(_j,0);
                         _outp(_i,_j) = _outp(_i,_j) * _tempFloat;
-                        _outp(_i,_j) = _outp(_i,_j) * (real_t(-2)/_vLen2);
+                        _outp(_i,_j) = _outp(_i,_j) * (T(-2)/_vLen2);
                     }
                 }
             }
-            _outp(_i,_i) = _outp(_i,_i) + real_t(1);
+            _outp(_i,_i) = _outp(_i,_i) + T(1);
         }
     }
     return _outp;
@@ -1201,7 +1178,7 @@ inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransfo
 
 template<arithmetic T>
 inline bool Matrix_t<T>::QRDec(Matrix_t<T>& Qt, Matrix_t<T>& R) const {
-    Matrix_t Qn(Qt.i16row, Qt.i16col, NoInitMatZero);
+    Matrix_t Qn(Qt.i16row, Qt.i16col);
     if ((this->i16row < this->i16col) || (Qt.i16roow != Qt.i16col) || (Qt.i16row != this->i16row) ||
         (R.i16row != this->i16row) || (R.i16col != this->i16col))
     {
@@ -1228,7 +1205,7 @@ inline bool Matrix_t<T>::QRDec(Matrix_t<T>& Qt, Matrix_t<T>& R) const {
     Qt.RoundingMatrixToZero();
     for (int16_t _i = 1; ((_i < R.i16row) && (_i < R.i16col)); _i++) {
         for (int16_t _j = 0; _j < _i; _j++) {
-            R(_i, _j) = real_t(0);
+            R(_i, _j) = T(0);
         }
     }
 #endif
@@ -1248,7 +1225,7 @@ inline bool Matrix_t<T>::QRDec(Matrix_t<T>& Qt, Matrix_t<T>& R) const {
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::BackSubtitution(const Matrix_t<T>& A, const Matrix_t<T>& B) const {
-    Matrix_t _outp(A.i16row, 1, NoInitMatZero);
+    Matrix_t _outp(A.i16row, 1);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
         _outp.invalid();
         return _outp;
@@ -1259,7 +1236,7 @@ inline Matrix_t<T> Matrix_t<T>::BackSubtitution(const Matrix_t<T>& A, const Matr
         for (int16_t _j = _i + 1; _j < A.i16col; _j++) {
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
-        if (ABS(A(_i,_i)) < real_t(float_prec_ZERO)) {
+        if (ABS(A(_i,_i)) < T(float_prec_ZERO)) {
             _outp.invalid();
             return _outp;
         }
@@ -1280,7 +1257,7 @@ inline Matrix_t<T> Matrix_t<T>::BackSubtitution(const Matrix_t<T>& A, const Matr
 
 template<arithmetic T>
 inline Matrix_t<T> Matrix_t<T>::ForwardSubtitution(const Matrix_t<T> & A, const Matrix_t<T> & B) const {
-    Matrix_t _outp(A.i16row, 1, NoInitMatZero);
+    Matrix_t _outp(A.i16row, 1);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
         _outp.invalid();
         return _outp;
@@ -1291,7 +1268,7 @@ inline Matrix_t<T> Matrix_t<T>::ForwardSubtitution(const Matrix_t<T> & A, const 
         for (int16_t _j = 0; _j < _i; _j++) {
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
-        if (ABS(A(_i,_i)) < real_t(float_prec_ZERO)) {
+        if (ABS(A(_i,_i)) < T(float_prec_ZERO)) {
             _outp.invalid();
             return _outp;
         }

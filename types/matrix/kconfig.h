@@ -23,7 +23,7 @@
 #define MATRIX_MAXIMUM_SIZE     (6)
 
 /* Define this to enable matrix bound checking */
-#define MATRIX_USE_BOUNDS_CHECKING
+// #define MATRIX_USE_BOUNDS_CHECKING
 
 /* Set this define to choose math precision of the system */
 #define PRECISION_SINGLE    1
