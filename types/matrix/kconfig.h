@@ -36,7 +36,7 @@
 
 
 
-/* Set this define to choose system implementation (mainly used to define how you print the matrix via the Matrix::vPrint() & Matrix::vPrintFull() function) */
+/* Set this define to choose system implementation (mainly used to define how you print the matrix via the Matrix_t::vPrint() & Matrix_t::vPrintFull() function) */
 #define SYSTEM_IMPLEMENTATION_PC                    1
 #define SYSTEM_IMPLEMENTATION_EMBEDDED_CUSTOM       2
 #define SYSTEM_IMPLEMENTATION_EMBEDDED_ARDUINO      3

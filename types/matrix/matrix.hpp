@@ -1,5 +1,5 @@
 /*************************************************************************************************************
- * Matrix Class
+ * Matrix_t Class
  *  Contain the matrix class definition and operation.
  * 
  *  Notes:
@@ -18,10 +18,10 @@
  *       Accessing index start from 0 until i16row/i16col, that is:
  *          (0 <= idxRow < i16row)     and     (0 <= idxRow < i16col).
  * 
- *    See below at "Data structure of Matrix class" at private member class definition for more information!
+ *    See below at "Data structure of Matrix_t class" at private member class definition for more information!
  * 
  * 
- * Class Matrix Versioning:
+ * Class Matrix_t Versioning:
  *    v0.10 (2020-04-29), {PNb}:
  *      - Add NoInitMatZero for _outp matrix initialization in ForwardSubtitution.
  *      - Fixing bug in HouseholderTransformQR function where _outp & _vectTemp need to be initialized
@@ -137,7 +137,7 @@
 #include "sys/stream/ostream.hpp"
 
 template<arithmetic T>
-class Matrix
+class Matrix_t
 {
 public:
     typedef enum {
@@ -146,23 +146,23 @@ public:
     } InitZero;
     
     
-    /* --------------------------------------------- Basic Matrix Class functions --------------------------------------------- */
+    /* --------------------------------------------- Basic Matrix_t Class functions --------------------------------------------- */
     /* Init empty matrix size _i16row x _i16col */
-    Matrix(const int16_t _i16row, const int16_t _i16col, const InitZero _init = InitMatWithZero);
+    Matrix_t(const int16_t _i16row, const int16_t _i16col, const InitZero _init = InitMatWithZero);
     /* Init matrix size _i16row x _i16col with entries initData */
-    Matrix(const int16_t _i16row, const int16_t _i16col, const real_t* initData, const InitZero _init = InitMatWithZero);
+    Matrix_t(const int16_t _i16row, const int16_t _i16col, const real_t* initData, const InitZero _init = InitMatWithZero);
     /* Copy constructor (for this operation --> A(B)) (copy B into A) */
-    Matrix(const Matrix& old_obj);
+    Matrix_t(const Matrix_t& old_obj);
     /* Assignment operator (for this operation --> A = B) (copy B into A) */
-    Matrix& operator = (const Matrix& obj);
+    Matrix_t& operator = (const Matrix_t& obj);
     /* Destructor */
-    ~Matrix(void);
+    ~Matrix_t(void);
     /* Get internal state */
     inline int16_t i16getRow(void) const { return this->i16row; }
     inline int16_t i16getCol(void) const { return this->i16col; }
     
     
-    /* ------------------------------------------- Matrix entry accessing functions ------------------------------------------- */
+    /* ------------------------------------------- Matrix_t entry accessing functions ------------------------------------------- */
     /* For example: A(1,2) access the 1st row and 2nd column data of matrix A <--- The preferred way to access the matrix */
     real_t& operator () (const int16_t _row, const int16_t _col);
     real_t operator () (const int16_t _row, const int16_t _col) const;
@@ -185,68 +185,68 @@ public:
     const Proxy operator [] (const int16_t _row) const;
     
     
-    /* ----------------------------------------- Matrix checking function declaration ----------------------------------------- */
+    /* ----------------------------------------- Matrix_t checking function declaration ----------------------------------------- */
     bool bMatrixIsValid(void);
-    void vSetMatrixInvalid(void);
+    void invalid(void);
     bool bMatrixIsSquare();
-    /* --------------------------------------------- Matrix elementary operations --------------------------------------------- */
-    bool operator == (const Matrix& _compare) const;
-    bool operator != (const Matrix& _compare) const;
-    Matrix operator - (void) const;
-    Matrix operator + (const real_t _scalar) const;
-    Matrix operator - (const real_t _scalar) const;
-    Matrix operator * (const real_t _scalar) const;
-    Matrix operator / (const real_t _scalar) const;
-    Matrix operator + (const Matrix& _matAdd) const;
-    Matrix operator - (const Matrix& _matSub) const;
-    Matrix operator * (const Matrix& _matMul) const;
+    /* --------------------------------------------- Matrix_t elementary operations --------------------------------------------- */
+    bool operator == (const Matrix_t& _compare) const;
+    bool operator != (const Matrix_t& _compare) const;
+    Matrix_t operator - (void) const;
+    Matrix_t operator + (const real_t _scalar) const;
+    Matrix_t operator - (const real_t _scalar) const;
+    Matrix_t operator * (const real_t _scalar) const;
+    Matrix_t operator / (const real_t _scalar) const;
+    Matrix_t operator + (const Matrix_t& _matAdd) const;
+    Matrix_t operator - (const Matrix_t& _matSub) const;
+    Matrix_t operator * (const Matrix_t& _matMul) const;
     /* Declared outside class below */
-    /* inline Matrix operator + (const real_t _scalar, Matrix _mat); */
-    /* inline Matrix operator - (const real_t _scalar, Matrix _mat); */
-    /* inline Matrix operator * (const real_t _scalar, Matrix _mat); */
-    /* ----------------------------------------------- Simple Matrix operations ----------------------------------------------- */
+    /* inline Matrix_t operator + (const real_t _scalar, Matrix_t _mat); */
+    /* inline Matrix_t operator - (const real_t _scalar, Matrix_t _mat); */
+    /* inline Matrix_t operator * (const real_t _scalar, Matrix_t _mat); */
+    /* ----------------------------------------------- Simple Matrix_t operations ----------------------------------------------- */
     void vRoundingElementToZero(const int16_t _i, const int16_t _j);
-    Matrix RoundingMatrixToZero(void);
+    Matrix_t RoundingMatrixToZero(void);
     void vSetHomogen(const real_t _val);
     void vSetToZero(void);
     void vSetRandom(const int32_t _maxRand, const int32_t _minRand);
     void vSetDiag(const real_t _val);
     void vSetIdentity(void);
-    Matrix Transpose(void);
+    Matrix_t Transpose(void);
     bool bNormVector(void);
-    /* ------------------------------------------ Matrix/Vector insertion operations ------------------------------------------ */
-    Matrix InsertVector(const Matrix& _Vector, const int16_t _posCol);
-    Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol);
-    Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+    /* ------------------------------------------ Matrix_t/Vector insertion operations ------------------------------------------ */
+    Matrix_t InsertVector(const Matrix_t& _Vector, const int16_t _posCol);
+    Matrix_t InsertSubMatrix(const Matrix_t& _subMatrix, const int16_t _posRow, const int16_t _posCol);
+    Matrix_t InsertSubMatrix(const Matrix_t& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                            const int16_t _lenRow, const int16_t _lenColumn);
-    Matrix InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+    Matrix_t InsertSubMatrix(const Matrix_t& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                            const int16_t _posRowSub, const int16_t _posColSub,
                            const int16_t _lenRow, const int16_t _lenColumn);
     /* ---------------------------------------------------- Big operations ---------------------------------------------------- */
-    /* Matrix invertion using Gauss-Jordan algorithm */
-    Matrix Invers(void) const;
+    /* Matrix_t invertion using Gauss-Jordan algorithm */
+    Matrix_t Invers(void) const;
     /* Check the definiteness of a matrix */
     bool bMatrixIsPositiveDefinite(const bool checkPosSemidefinite = false) const;
     /* Return the vector (Mx1 matrix) correspond with the diagonal entries of 'this' */
-    Matrix GetDiagonalEntries(void) const;
+    Matrix_t GetDiagonalEntries(void) const;
     /* Do the Cholesky Decomposition using Cholesky-Crout algorithm, return 'L' matrix */
-    Matrix CholeskyDec(void) const;
+    Matrix_t CholeskyDec(void) const;
     /* Do Householder Transformation for QR Decomposition operation */
-    Matrix HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform);
+    Matrix_t HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform);
     /* Do QR Decomposition for matrix using Householder Transformation */
-    bool QRDec(Matrix& Qt, Matrix& R) const;
+    bool QRDec(Matrix_t& Qt, Matrix_t& R) const;
     /* Do back-subtitution for upper triangular matrix A & column matrix B:
      * x = BackSubtitution(&A, &B)          ; for Ax = B
      */
-    Matrix BackSubtitution(const Matrix& A, const Matrix& B) const;
+    Matrix_t BackSubtitution(const Matrix_t& A, const Matrix_t& B) const;
     /* Do forward-subtitution for lower triangular matrix A & column matrix B:
      * x = ForwardSubtitution(&A, &B)       ; for Ax = B
      */
-    Matrix ForwardSubtitution(const Matrix& A, const Matrix& B) const;
-    /* ----------------------------------------------- Matrix printing function ----------------------------------------------- */
+    Matrix_t ForwardSubtitution(const Matrix_t& A, const Matrix_t& B) const;
+    /* ----------------------------------------------- Matrix_t printing function ----------------------------------------------- */
     
 private:
-    /* Data structure of Matrix class:
+    /* Data structure of Matrix_t class:
      *  0 <= i16row <= MATRIX_MAXIMUM_SIZE      ; i16row is the row of the matrix. i16row is invalid if (i16row == -1)
      *  0 <= i16col <= MATRIX_MAXIMUM_SIZE      ; i16col is the column of the matrix. i16col is invalid if (i16col == -1)
      * 
@@ -271,7 +271,7 @@ private:
     real_t floatData[MATRIX_MAXIMUM_SIZE][MATRIX_MAXIMUM_SIZE];
     
     /* Private way to access floatData without bound checking.
-     *  TODO: For Matrix member function we could do the bound checking once at the beginning of the function, and use this
+     *  TODO: For Matrix_t member function we could do the bound checking once at the beginning of the function, and use this
      *          to access the floatData instead of (i,j) operator. From preliminary experiment doing this only on elementary
      *          operation (experiment @2020-04-27), we can get up to 45% computation boost!!! (MPC benchmark 414 us -> 226 us)!
      */
@@ -280,19 +280,19 @@ private:
 };
 
 template<arithmetic T>
-inline Matrix<T> operator + (const real_t _scalar, const Matrix<T>& _mat);
+inline Matrix_t<T> operator + (const real_t _scalar, const Matrix_t<T>& _mat);
 
 template<arithmetic T>
-inline Matrix<T> operator - (const real_t _scalar, const Matrix<T>& _mat);
+inline Matrix_t<T> operator - (const real_t _scalar, const Matrix_t<T>& _mat);
 
 template<arithmetic T>
-inline Matrix<T> operator * (const real_t _scalar, const Matrix<T>& _mat);
+inline Matrix_t<T> operator * (const real_t _scalar, const Matrix_t<T>& _mat);
 
 template<arithmetic T>
-inline Matrix<T> MatIdentity(const int16_t _i16size);
+inline Matrix_t<T> MatIdentity(const int16_t _i16size);
 
 template<arithmetic T>
-inline Matrix<T>::Matrix(const int16_t _i16row, const int16_t _i16col, const InitZero _init) {
+inline Matrix_t<T>::Matrix_t(const int16_t _i16row, const int16_t _i16col, const InitZero _init) {
     this->i16row = _i16row;
     this->i16col = _i16col;
     
@@ -303,7 +303,7 @@ inline Matrix<T>::Matrix(const int16_t _i16row, const int16_t _i16col, const Ini
 
 
 template<arithmetic T>
-inline Matrix<T>::Matrix(const int16_t _i16row, const int16_t _i16col, const real_t* initData, const InitZero _init) {
+inline Matrix_t<T>::Matrix_t(const int16_t _i16row, const int16_t _i16col, const real_t* initData, const InitZero _init) {
     this->i16row = _i16row;
     this->i16col = _i16col;
     
@@ -319,7 +319,7 @@ inline Matrix<T>::Matrix(const int16_t _i16row, const int16_t _i16col, const rea
 }
 
 template<arithmetic T>
-inline Matrix<T>::Matrix(const Matrix<T>& old_obj) {
+inline Matrix_t<T>::Matrix_t(const Matrix_t<T>& old_obj) {
     /* For copy contructor, we only need to copy (_i16row x _i16col) submatrix, there's no need to copy all data */
     this->i16row = old_obj.i16row;
     this->i16col = old_obj.i16col;
@@ -336,7 +336,7 @@ inline Matrix<T>::Matrix(const Matrix<T>& old_obj) {
 }
 
 template<arithmetic T>
-inline Matrix<T>& Matrix<T>::operator = (const Matrix<T>& obj) {
+inline Matrix_t<T>& Matrix_t<T>::operator = (const Matrix_t<T>& obj) {
     /* For assignment operator, we only need to copy (_i16row x _i16col) submatrix, there's no need to copy all data */
     this->i16row = obj.i16row;
     this->i16col = obj.i16col;
@@ -355,39 +355,39 @@ inline Matrix<T>& Matrix<T>::operator = (const Matrix<T>& obj) {
 }
 
 template<arithmetic T>
-inline Matrix<T>::~Matrix(void) {
+inline Matrix_t<T>::~Matrix_t(void) {
     /* haven't implemented anything here, definition needed for the rule of three */
     /* (´・ω・`) */
 }
 
 
-/* ---------------------------------------- Matrix entry accessing functions ---------------------------------------- */
-/* ---------------------------------------- Matrix entry accessing functions ---------------------------------------- */
+/* ---------------------------------------- Matrix_t entry accessing functions ---------------------------------------- */
+/* ---------------------------------------- Matrix_t entry accessing functions ---------------------------------------- */
 
 /* The preferred method to access the matrix data (boring code) */
 
 template<arithmetic T>
-inline real_t& Matrix<T>::operator () (const int16_t _row, const int16_t _col) {
+inline real_t& Matrix_t<T>::operator () (const int16_t _row, const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "Matrix index out-of-bounds (at row evaluation)");
+               "Matrix_t index out-of-bounds (at row evaluation)");
         MATRIX_ASSERT((_col >= 0) && (_col < this->i16col) && (_col < MATRIX_MAXIMUM_SIZE),
-               "Matrix index out-of-bounds (at column _column)");
+               "Matrix_t index out-of-bounds (at column _column)");
     #else
-        #warning("Matrix bounds checking is disabled... good luck >:3");
+        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return this->floatData[_row][_col];
 }
 
 template<arithmetic T>
-inline real_t Matrix<T>::operator () (const int16_t _row, const int16_t _col) const {
+inline real_t Matrix_t<T>::operator () (const int16_t _row, const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "Matrix index out-of-bounds (at row evaluation)");
+               "Matrix_t index out-of-bounds (at row evaluation)");
         MATRIX_ASSERT((_col >= 0) && (_col < this->i16col) && (_col < MATRIX_MAXIMUM_SIZE),
-               "Matrix index out-of-bounds (at column _column)");
+               "Matrix_t index out-of-bounds (at column _column)");
     #else
-        #warning("Matrix bounds checking is disabled... good luck >:3");
+        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return this->floatData[_row][_col];
 }
@@ -397,56 +397,56 @@ inline real_t Matrix<T>::operator () (const int16_t _row, const int16_t _col) co
  */
 
 template<arithmetic T>
-inline real_t & Matrix<T>::Proxy::operator [] (const int16_t _col) {
+inline real_t & Matrix_t<T>::Proxy::operator [] (const int16_t _col) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
-                "Matrix index out-of-bounds (at column evaluation)");
+                "Matrix_t index out-of-bounds (at column evaluation)");
     #else
-        #warning("Matrix bounds checking is disabled... good luck >:3");
+        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return _array.ptr[_col];
 }
 
 template<arithmetic T>
-inline real_t Matrix<T>::Proxy::operator [] (const int16_t _col) const {
+inline real_t Matrix_t<T>::Proxy::operator [] (const int16_t _col) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_col >= 0) && (_col < this->_maxCol) && (_col < MATRIX_MAXIMUM_SIZE),
-                "Matrix index out-of-bounds (at column evaluation)");
+                "Matrix_t index out-of-bounds (at column evaluation)");
     #else
-        #warning("Matrix bounds checking is disabled... good luck >:3");
+        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return _array.cptr[_col];
 }
 
 template<arithmetic T>
-inline Matrix<T>::Proxy Matrix<T>::operator [] (const int16_t _row) {
+inline Matrix_t<T>::Proxy Matrix_t<T>::operator [] (const int16_t _row) {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "Matrix index out-of-bounds (at row evaluation)");
+               "Matrix_t index out-of-bounds (at row evaluation)");
     #else
-        #warning("Matrix bounds checking is disabled... good luck >:3");
+        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return Proxy(floatData[_row], this->i16col);  /* Parsing column index for bound checking */
 }
 
 template<arithmetic T>
 
-inline const Matrix<T>::Proxy Matrix<T>::operator [] (const int16_t _row) const {
+inline const Matrix_t<T>::Proxy Matrix_t<T>::operator [] (const int16_t _row) const {
     #if (defined(MATRIX_USE_BOUNDS_CHECKING))
         MATRIX_ASSERT((_row >= 0) && (_row < this->i16row) && (_row < MATRIX_MAXIMUM_SIZE),
-               "Matrix index out-of-bounds (at row evaluation)");
+               "Matrix_t index out-of-bounds (at row evaluation)");
     #else
-        #warning("Matrix bounds checking is disabled... good luck >:3");
+        #warning("Matrix_t bounds checking is disabled... good luck >:3");
     #endif
     return Proxy(floatData[_row], this->i16col);  /* Parsing column index for bound checking */
 }
 
 
-/* -------------------------------------- Matrix checking function declaration -------------------------------------- */
-/* -------------------------------------- Matrix checking function declaration -------------------------------------- */
+/* -------------------------------------- Matrix_t checking function declaration -------------------------------------- */
+/* -------------------------------------- Matrix_t checking function declaration -------------------------------------- */
 
 template<arithmetic T>
-inline bool Matrix<T>::bMatrixIsValid(void) {
+inline bool Matrix_t<T>::bMatrixIsValid(void) {
     /* Check whether the matrix is valid or not */
     if ((this->i16row > 0) && (this->i16row <= MATRIX_MAXIMUM_SIZE) &&
         (this->i16col > 0) && (this->i16col <= MATRIX_MAXIMUM_SIZE))
@@ -458,26 +458,26 @@ inline bool Matrix<T>::bMatrixIsValid(void) {
 }
 
 template<arithmetic T>
-inline void Matrix<T>::vSetMatrixInvalid(void) {
+inline void Matrix_t<T>::invalid(void) {
     this->i16row = -1;
     this->i16col = -1;
 }
 
 template<arithmetic T>
-inline bool Matrix<T>::bMatrixIsSquare(void) {
+inline bool Matrix_t<T>::bMatrixIsSquare(void) {
     return (this->i16row == this->i16col);
 }
 
 
-/* ------------------------------------------ Matrix elementary operations ------------------------------------------ */
-/* ------------------------------------------ Matrix elementary operations ------------------------------------------ */
+/* ------------------------------------------ Matrix_t elementary operations ------------------------------------------ */
+/* ------------------------------------------ Matrix_t elementary operations ------------------------------------------ */
 /* TODO: We could do loop unrolling here for elementary, simple, and matrix insertion operations. It *might* speed up
  *        the computation time up to 20-30% for processor with FMAC and cached CPU (I still mull on this because
  *        the code will be awful).
  */
 
 template<arithmetic T>
-inline bool Matrix<T>::operator == (const Matrix<T> & _compare) const {
+inline bool Matrix_t<T>::operator == (const Matrix_t<T> & _compare) const {
     if ((this->i16row != _compare.i16row) || (this->i16col != _compare.i16col)) {
         return false;
     }
@@ -493,13 +493,13 @@ inline bool Matrix<T>::operator == (const Matrix<T> & _compare) const {
 }
 
 template<arithmetic T>
-inline bool Matrix<T>::operator != (const Matrix<T> & _compare) const {
+inline bool Matrix_t<T>::operator != (const Matrix_t<T> & _compare) const {
     return (!(*this == _compare));
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator - (void) const {
-    Matrix<T> _outp(this->i16row, this->i16col, Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator - (void) const {
+    Matrix_t<T> _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -510,8 +510,8 @@ inline Matrix<T> Matrix<T>::operator - (void) const {
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator + (const real_t _scalar) const {
-    Matrix _outp(this->i16row, this->i16col, Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator + (const real_t _scalar) const {
+    Matrix_t _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -522,8 +522,8 @@ inline Matrix<T> Matrix<T>::operator + (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator - (const real_t _scalar) const {
-    Matrix<T> _outp(this->i16row, this->i16col, Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator - (const real_t _scalar) const {
+    Matrix_t<T> _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -534,8 +534,8 @@ inline Matrix<T> Matrix<T>::operator - (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator * (const real_t _scalar) const {
-    Matrix<T> _outp(this->i16row, this->i16col, Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator * (const real_t _scalar) const {
+    Matrix_t<T> _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -546,11 +546,11 @@ inline Matrix<T> Matrix<T>::operator * (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator / (const real_t _scalar) const {
-    Matrix<T> _outp(this->i16row, this->i16col, Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator / (const real_t _scalar) const {
+    Matrix_t<T> _outp(this->i16row, this->i16col, Matrix_t<T>::NoInitMatZero);
 
     if (ABS(_scalar) < real_t(float_prec_ZERO_ECO)) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -562,8 +562,8 @@ inline Matrix<T> Matrix<T>::operator / (const real_t _scalar) const {
 }
 
 template<arithmetic T>
-inline Matrix<T> operator + (const real_t _scalar, const Matrix<T>& _mat) {
-    Matrix<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> operator + (const real_t _scalar, const Matrix_t<T>& _mat) {
+    Matrix_t<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
         for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
@@ -574,8 +574,8 @@ inline Matrix<T> operator + (const real_t _scalar, const Matrix<T>& _mat) {
 }
 
 template<arithmetic T>
-inline Matrix<T> operator - (const real_t _scalar, const Matrix<T>& _mat) {
-    Matrix<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> operator - (const real_t _scalar, const Matrix_t<T>& _mat) {
+    Matrix_t<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
         for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
@@ -586,8 +586,8 @@ inline Matrix<T> operator - (const real_t _scalar, const Matrix<T>& _mat) {
 }
 
 template<arithmetic T>
-inline Matrix<T> operator * (const real_t _scalar, const Matrix<T>& _mat) {
-    Matrix<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> operator * (const real_t _scalar, const Matrix_t<T>& _mat) {
+    Matrix_t<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix_t<T>::NoInitMatZero);
 
     for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
         for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
@@ -598,10 +598,10 @@ inline Matrix<T> operator * (const real_t _scalar, const Matrix<T>& _mat) {
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator + (const Matrix<T>& _matAdd) const {
-    Matrix<T> _outp(this->i16row, this->i16col, NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator + (const Matrix_t<T>& _matAdd) const {
+    Matrix_t<T> _outp(this->i16row, this->i16col, NoInitMatZero);
     if ((this->i16row != _matAdd.i16row) || (this->i16col != _matAdd.i16col)) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
 
@@ -614,10 +614,10 @@ inline Matrix<T> Matrix<T>::operator + (const Matrix<T>& _matAdd) const {
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator - (const Matrix<T>& _matSub) const {
-    Matrix<T> _outp(this->i16row, this->i16col, NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator - (const Matrix_t<T>& _matSub) const {
+    Matrix_t<T> _outp(this->i16row, this->i16col, NoInitMatZero);
     if ((this->i16row != _matSub.i16row) || (this->i16col != _matSub.i16col)) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
 
@@ -630,10 +630,10 @@ inline Matrix<T> Matrix<T>::operator - (const Matrix<T>& _matSub) const {
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::operator * (const Matrix<T>& _matMul) const {
-    Matrix<T> _outp(this->i16row, _matMul.i16col, NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::operator * (const Matrix_t<T>& _matMul) const {
+    Matrix_t<T> _outp(this->i16row, _matMul.i16col, NoInitMatZero);
     if ((this->i16col != _matMul.i16row)) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
 
@@ -649,18 +649,18 @@ inline Matrix<T> Matrix<T>::operator * (const Matrix<T>& _matMul) const {
 }
 
 
-/* -------------------------------------------- Simple Matrix operations -------------------------------------------- */
-/* -------------------------------------------- Simple Matrix operations -------------------------------------------- */
+/* -------------------------------------------- Simple Matrix_t operations -------------------------------------------- */
+/* -------------------------------------------- Simple Matrix_t operations -------------------------------------------- */
 
 template<arithmetic T>
-inline void Matrix<T>::vRoundingElementToZero(const int16_t _i, const int16_t _j) {
+inline void Matrix_t<T>::vRoundingElementToZero(const int16_t _i, const int16_t _j) {
     if (ABS((*this)(_i,_j)) < real_t(float_prec_ZERO_ECO)) {
         (*this)(_i,_j) = real_t(0);
     }
 }
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::RoundingMatrixToZero(void) {
+inline Matrix_t<T> Matrix_t<T>::RoundingMatrixToZero(void) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             if (ABS((*this)(_i,_j)) < real_t(float_prec_ZERO_ECO)) {
@@ -672,7 +672,7 @@ inline Matrix<T> Matrix<T>::RoundingMatrixToZero(void) {
 }
 
 template<arithmetic T>
-inline void Matrix<T>::vSetHomogen(const real_t _val) {
+inline void Matrix_t<T>::vSetHomogen(const real_t _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             (*this)(_i,_j) = _val;
@@ -681,12 +681,12 @@ inline void Matrix<T>::vSetHomogen(const real_t _val) {
 }
 
 template<typename T>
-inline void Matrix<T>::vSetToZero(void) {
+inline void Matrix_t<T>::vSetToZero(void) {
     this->vSetHomogen(real_t(0));
 }
 
 template<arithmetic T>
-inline void Matrix<T>::vSetRandom(const int32_t _maxRand, const int32_t _minRand) {
+inline void Matrix_t<T>::vSetRandom(const int32_t _maxRand, const int32_t _minRand) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             (*this)(_i,_j) = real_t((rand() % (_maxRand - _minRand + 1)) + _minRand);
@@ -695,7 +695,7 @@ inline void Matrix<T>::vSetRandom(const int32_t _maxRand, const int32_t _minRand
 }
 
 template<arithmetic T>
-inline void Matrix<T>::vSetDiag(const real_t _val) {
+inline void Matrix_t<T>::vSetDiag(const real_t _val) {
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             if (_i == _j) {
@@ -708,13 +708,13 @@ inline void Matrix<T>::vSetDiag(const real_t _val) {
 }
 
 template<arithmetic T>
-inline void Matrix<T>::vSetIdentity(void) {
+inline void Matrix_t<T>::vSetIdentity(void) {
     this->vSetDiag(real_t(1));
 }
 
 template<arithmetic T>
-inline Matrix<T> MatIdentity(const int16_t _i16size) {
-    Matrix _outp(_i16size, _i16size, Matrix<T>::NoInitMatZero);
+inline Matrix_t<T> MatIdentity(const int16_t _i16size) {
+    Matrix_t _outp(_i16size, _i16size, Matrix_t<T>::NoInitMatZero);
     _outp.vSetDiag(real_t(1));   
     return _outp;
 }
@@ -722,8 +722,8 @@ inline Matrix<T> MatIdentity(const int16_t _i16size) {
 
 /* Return the transpose of the matrix */
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::Transpose(void) {
-    Matrix<T> _outp(this->i16col, this->i16row, NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::Transpose(void) {
+    Matrix_t<T> _outp(this->i16col, this->i16row, NoInitMatZero);
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
             _outp(_j,_i) = (*this)(_i,_j);
@@ -734,7 +734,7 @@ inline Matrix<T> Matrix<T>::Transpose(void) {
 
 /* Normalize the vector */
 template<arithmetic T>
-inline bool Matrix<T>::bNormVector(void) {
+inline bool Matrix_t<T>::bNormVector(void) {
     real_t _normM = real_t(0);
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -756,11 +756,11 @@ inline bool Matrix<T>::bNormVector(void) {
 }
 
 
-/* --------------------------------------- Matrix/Vector insertion operations --------------------------------------- */
-/* --------------------------------------- Matrix/Vector insertion operations --------------------------------------- */
+/* --------------------------------------- Matrix_t/Vector insertion operations --------------------------------------- */
+/* --------------------------------------- Matrix_t/Vector insertion operations --------------------------------------- */
 
 /* Insert vector into matrix at _posCol position
- * Example: A = Matrix 3x3, B = Vector 3x1
+ * Example: A = Matrix_t 3x3, B = Vector 3x1
  *
  *  C = A.InsertVector(B, 1);
  *
@@ -773,11 +773,11 @@ inline bool Matrix<T>::bNormVector(void) {
  *      [A20  B20  A22]
  */
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::InsertVector(const Matrix& _Vector, const int16_t _posCol) {
-    Matrix<T> _outp(*this);
+inline Matrix_t<T> Matrix_t<T>::InsertVector(const Matrix_t& _Vector, const int16_t _posCol) {
+    Matrix_t<T> _outp(*this);
     if ((_Vector.i16row > this->i16row) || (_Vector.i16col+_posCol > this->i16col)) {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _Vector.i16row; _i++) {
@@ -787,7 +787,7 @@ inline Matrix<T> Matrix<T>::InsertVector(const Matrix& _Vector, const int16_t _p
 }
 
 /* Insert submatrix into matrix at _posRow & _posCol position
- * Example: A = Matrix 4x4, B = Matrix 2x3
+ * Example: A = Matrix_t 4x4, B = Matrix_t 2x3
  *
  *  C = A.InsertSubMatrix(B, 1, 1);
  *
@@ -804,11 +804,11 @@ inline Matrix<T> Matrix<T>::InsertVector(const Matrix& _Vector, const int16_t _p
  */
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix& _subMatrix, const int16_t _posRow, const int16_t _posCol) {
-    Matrix<T> _outp(*this);
+inline Matrix_t<T> Matrix_t<T>::InsertSubMatrix(const Matrix_t& _subMatrix, const int16_t _posRow, const int16_t _posCol) {
+    Matrix_t<T> _outp(*this);
     if (((_subMatrix.i16row+_posRow) > this->i16row) || ((_subMatrix.i16col+_posCol) > this->i16col)) {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _subMatrix.i16row; _i++) {
@@ -822,7 +822,7 @@ inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix& _subMatrix, const int1
 /* Insert the first _lenRow-th and first _lenColumn-th submatrix into matrix;
  *  at the matrix's _posRow and _posCol position.
  * 
- * Example: A = Matrix 4x4, B = Matrix 2x3
+ * Example: A = Matrix_t 4x4, B = Matrix_t 2x3
  *
  *  C = A.InsertSubMatrix(B, 1, 1, 2, 2);
  *
@@ -838,15 +838,15 @@ inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix& _subMatrix, const int1
  *      [A30  A31  A32  A33]
  */
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+inline Matrix_t<T> Matrix_t<T>::InsertSubMatrix(const Matrix_t<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                                       const int16_t _lenRow, const int16_t _lenColumn)
 {
-    Matrix _outp(*this);
+    Matrix_t _outp(*this);
     if (((_lenRow+_posRow) > this->i16row) || ((_lenColumn+_posCol) > this->i16col) ||
         (_lenRow > _subMatrix.i16row) || (_lenColumn > _subMatrix.i16col))
     {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _lenRow; _i++) {
@@ -860,7 +860,7 @@ inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix<T>& _subMatrix, const i
 /* Insert the _lenRow & _lenColumn submatrix, start from _posRowSub & _posColSub submatrix;
  *  into matrix at the matrix's _posRow and _posCol position.
  * 
- * Example: A = Matrix 4x4, B = Matrix 2x3
+ * Example: A = Matrix_t 4x4, B = Matrix_t 2x3
  *
  *  C = A.InsertSubMatrix(B, 1, 1, 0, 1, 1, 2);
  *
@@ -875,16 +875,16 @@ inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix<T>& _subMatrix, const i
  *      [A30  A31  A32  A33]
  */
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
+inline Matrix_t<T> Matrix_t<T>::InsertSubMatrix(const Matrix_t<T>& _subMatrix, const int16_t _posRow, const int16_t _posCol,
                         const int16_t _posRowSub, const int16_t _posColSub,
                         const int16_t _lenRow, const int16_t _lenColumn)
 {
-    Matrix _outp(*this);
+    Matrix_t _outp(*this);
     if (((_lenRow+_posRow) > this->i16row) || ((_lenColumn+_posCol) > this->i16col) ||
         ((_posRowSub+_lenRow) > _subMatrix.i16row) || ((_posColSub+_lenColumn) > _subMatrix.i16col))
     {
         /* Return false */
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
     for (int16_t _i = 0; _i < _lenRow; _i++) {
@@ -902,17 +902,17 @@ inline Matrix<T> Matrix<T>::InsertSubMatrix(const Matrix<T>& _subMatrix, const i
 /* Invers operation using Gauss-Jordan algorithm */
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::Invers(void) const {
-    Matrix _outp(this->i16row, this->i16col, NoInitMatZero);
-    Matrix _temp(*this);
+inline Matrix_t<T> Matrix_t<T>::Invers(void) const {
+    Matrix_t _outp(this->i16row, this->i16col, NoInitMatZero);
+    Matrix_t _temp(*this);
     _outp.vSetIdentity();
     
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
         for (int16_t _i = _j+1; _i < _temp.i16row; _i++) {
             if (ABS(_temp(_j,_j)) < real_t(float_prec_ZERO)) {
-                /* Matrix is non-invertible */
-                _outp.vSetMatrixInvalid();
+                /* Matrix_t is non-invertible */
+                _outp.invalid();
                 return _outp;
             }
 
@@ -945,8 +945,8 @@ inline Matrix<T> Matrix<T>::Invers(void) const {
     for (int16_t _j = (_temp.i16row)-1; _j > 0; _j--) {
         for (int16_t _i = _j-1; _i >= 0; _i--) {
             if (ABS(_temp(_j,_j)) < real_t(float_prec_ZERO)) {
-                /* Matrix is non-invertible */
-                _outp.vSetMatrixInvalid();
+                /* Matrix_t is non-invertible */
+                _outp.invalid();
                 return _outp;
             }
 
@@ -965,8 +965,8 @@ inline Matrix<T> Matrix<T>::Invers(void) const {
     /* Normalization */
     for (int16_t _i = 0; _i < _temp.i16row; _i++) {
         if (ABS(_temp(_i,_i)) < real_t(float_prec_ZERO)) {
-            /* Matrix is non-invertible */
-            _outp.vSetMatrixInvalid();
+            /* Matrix_t is non-invertible */
+            _outp.invalid();
             return _outp;
         }
 
@@ -988,9 +988,9 @@ inline Matrix<T> Matrix<T>::Invers(void) const {
  */
 
 template<arithmetic T>
-inline bool Matrix<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) const {
+inline bool Matrix_t<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite) const {
     bool _posDef, _posSemiDef;
-    Matrix _temp(*this);
+    Matrix_t _temp(*this);
     
     /* Gauss Elimination... */
     for (int16_t _j = 0; _j < (_temp.i16row)-1; _j++) {
@@ -1047,11 +1047,11 @@ inline bool Matrix<T>::bMatrixIsPositiveDefinite(const bool checkPosSemidefinite
  */
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::GetDiagonalEntries(void) const {
-    Matrix _temp(this->i16row, 1, NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::GetDiagonalEntries(void) const {
+    Matrix_t _temp(this->i16row, 1, NoInitMatZero);
     
     if (this->i16row != this->i16col) {
-        _temp.vSetMatrixInvalid();
+        _temp.invalid();
         return _temp;
     }
     for (int16_t _i = 0; _i < this->i16row; _i++) {
@@ -1076,14 +1076,14 @@ inline Matrix<T> Matrix<T>::GetDiagonalEntries(void) const {
  */
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::CholeskyDec(void) const {
+inline Matrix_t<T> Matrix_t<T>::CholeskyDec(void) const {
     real_t _tempFloat;
 
     /* Note that _outp need to be initialized as zero matrix */
-    Matrix _outp(this->i16row, this->i16col, InitMatWithZero);
+    Matrix_t _outp(this->i16row, this->i16col, InitMatWithZero);
     
     if (this->i16row != this->i16col) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
     for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -1094,8 +1094,8 @@ inline Matrix<T> Matrix<T>::CholeskyDec(void) const {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_i,_k));
                 }
                 if (_tempFloat < -real_t(float_prec_ZERO)) {
-                    /* Matrix is not positif (semi)definit */
-                    _outp.vSetMatrixInvalid();
+                    /* Matrix_t is not positif (semi)definit */
+                    _outp.invalid();
                     return _outp;
                 }
                 /* Rounding to zero to avoid case where sqrt(0-) */
@@ -1108,8 +1108,8 @@ inline Matrix<T> Matrix<T>::CholeskyDec(void) const {
                     _tempFloat = _tempFloat - (_outp(_i,_k) * _outp(_j,_k));
                 }
                 if (ABS(_outp(_j,_j)) < real_t(float_prec_ZERO)) {
-                    /* Matrix is not positif definit */
-                    _outp.vSetMatrixInvalid();
+                    /* Matrix_t is not positif definit */
+                    _outp.invalid();
                     return _outp;
                 }
                 _outp(_i,_j) = _tempFloat / _outp(_j,_j);
@@ -1124,7 +1124,7 @@ inline Matrix<T> Matrix<T>::CholeskyDec(void) const {
  */
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
+inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransform, const int16_t _colTransform) {
     real_t _tempFloat;
     real_t _xLen;
     real_t _x1;
@@ -1132,11 +1132,11 @@ inline Matrix<T> Matrix<T>::HouseholderTransformQR(const int16_t _rowTransform, 
     real_t _vLen2;
     
     /* Note that _outp & _vectTemp need to be initialized as zero matrix */
-    Matrix _outp(this->i16row, this->i16row, InitMatWithZero);
-    Matrix _vectTemp(this->i16row, 1, InitMatWithZero);
+    Matrix_t _outp(this->i16row, this->i16row, InitMatWithZero);
+    Matrix_t _vectTemp(this->i16row, 1, InitMatWithZero);
     
     if ((_rowTransform >= this->i16row) || (_colTransform >= this->i16col)) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
     
@@ -1207,13 +1207,13 @@ inline Matrix<T> Matrix<T>::HouseholderTransformQR(const int16_t _rowTransform, 
  */
 
 template<arithmetic T>
-inline bool Matrix<T>::QRDec(Matrix<T>& Qt, Matrix<T>& R) const {
-    Matrix Qn(Qt.i16row, Qt.i16col, NoInitMatZero);
+inline bool Matrix_t<T>::QRDec(Matrix_t<T>& Qt, Matrix_t<T>& R) const {
+    Matrix_t Qn(Qt.i16row, Qt.i16col, NoInitMatZero);
     if ((this->i16row < this->i16col) || (!Qt.bMatrixIsSquare()) || (Qt.i16row != this->i16row) ||
         (R.i16row != this->i16row) || (R.i16col != this->i16col))
     {
-        Qt.vSetMatrixInvalid();
-        R.vSetMatrixInvalid();
+        Qt.invalid();
+        R.invalid();
         return false;
     }
     R = (*this);
@@ -1221,8 +1221,8 @@ inline bool Matrix<T>::QRDec(Matrix<T>& Qt, Matrix<T>& R) const {
     for (int16_t _i = 0; (_i < (this->i16row - 1)) && (_i < this->i16col-1); _i++) {
         Qn  = R.HouseholderTransformQR(_i, _i);
         if (!Qn.bMatrixIsValid()) {
-            Qt.vSetMatrixInvalid();
-            R.vSetMatrixInvalid();
+            Qt.invalid();
+            R.invalid();
             return false;
         }
         Qt = Qn * Qt;
@@ -1254,10 +1254,10 @@ inline bool Matrix<T>::QRDec(Matrix<T>& Qt, Matrix<T>& R) const {
  */
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::BackSubtitution(const Matrix<T>& A, const Matrix<T>& B) const {
-    Matrix _outp(A.i16row, 1, NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::BackSubtitution(const Matrix_t<T>& A, const Matrix_t<T>& B) const {
+    Matrix_t _outp(A.i16row, 1, NoInitMatZero);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
 
@@ -1267,7 +1267,7 @@ inline Matrix<T> Matrix<T>::BackSubtitution(const Matrix<T>& A, const Matrix<T>&
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
         if (ABS(A(_i,_i)) < real_t(float_prec_ZERO)) {
-            _outp.vSetMatrixInvalid();
+            _outp.invalid();
             return _outp;
         }
         _outp(_i,0) = _outp(_i,0) / A(_i,_i);
@@ -1286,10 +1286,10 @@ inline Matrix<T> Matrix<T>::BackSubtitution(const Matrix<T>& A, const Matrix<T>&
  */
 
 template<arithmetic T>
-inline Matrix<T> Matrix<T>::ForwardSubtitution(const Matrix<T> & A, const Matrix<T> & B) const {
-    Matrix _outp(A.i16row, 1, NoInitMatZero);
+inline Matrix_t<T> Matrix_t<T>::ForwardSubtitution(const Matrix_t<T> & A, const Matrix_t<T> & B) const {
+    Matrix_t _outp(A.i16row, 1, NoInitMatZero);
     if ((A.i16row != A.i16col) || (A.i16row != B.i16row)) {
-        _outp.vSetMatrixInvalid();
+        _outp.invalid();
         return _outp;
     }
 
@@ -1299,7 +1299,7 @@ inline Matrix<T> Matrix<T>::ForwardSubtitution(const Matrix<T> & A, const Matrix
             _outp(_i,0) = _outp(_i,0) - A(_i,_j)*_outp(_j,0);
         }
         if (ABS(A(_i,_i)) < real_t(float_prec_ZERO)) {
-            _outp.vSetMatrixInvalid();
+            _outp.invalid();
             return _outp;
         }
         _outp(_i,0) = _outp(_i,0) / A(_i,_i);
@@ -1308,7 +1308,7 @@ inline Matrix<T> Matrix<T>::ForwardSubtitution(const Matrix<T> & A, const Matrix
 }
 
 template<arithmetic T>
-__inline OutputStream & operator<<(OutputStream & os, const Matrix<T> & mat){
+__inline OutputStream & operator<<(OutputStream & os, const Matrix_t<T> & mat){
 	for (int16_t _i = 0; _i < mat.i16row; _i++) {
 		os << "[ ";
 		for (int16_t _j = 0; _j < mat.i16col; _j++) {
@@ -1319,5 +1319,9 @@ __inline OutputStream & operator<<(OutputStream & os, const Matrix<T> & mat){
 	}
 	return os << "\r\n";
 }
+
+using Matrix = Matrix_t<real_t>;
+using MatrixF = Matrix_t<float>;
+using MatrixD = Matrix_t<float>;
     
 #endif // MATRIX_H
