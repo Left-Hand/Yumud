@@ -12,16 +12,16 @@
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
 #define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
-// #define BMI150_DEBUG
+// #define BMM150_DEBUG
 
-#ifdef BMI150_DEBUG
-#undef BMI150_DEBUG
-#define BMI150_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#ifdef BMM150_DEBUG
+#undef BMM150_DEBUG
+#define BMM150_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
 #else
-#define BMI150_DEBUG(...)
+#define BMM150_DEBUG(...)
 #endif
 
-class BMI150:public Magnetometer{
+class BMM150:public Magnetometer{
 public:
 
 
@@ -45,7 +45,7 @@ protected:
             drv.write(uint8_t(addr), false);
             drv.write(data);
 
-            BMI150_DEBUG("Wspi", addr, data);
+            BMM150_DEBUG("Wspi", addr, data);
 
         }
     }
@@ -58,7 +58,7 @@ protected:
             drv.read(data);
         }
 
-        BMI150_DEBUG("Rspi", addr, data);
+        BMM150_DEBUG("Rspi", addr, data);
     }
 
     void requestData(const RegAddress addr, void * datas, const size_t len){
@@ -70,7 +70,7 @@ protected:
             drv.read((uint8_t *)(datas), len);
         }
 
-        BMI150_DEBUG("Rspi", addr, len);
+        BMM150_DEBUG("Rspi", addr, len);
     }
 
     void writeCommand(const uint8_t cmd){
@@ -78,12 +78,12 @@ protected:
     }
 public:
 
-    BMI150(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
-    BMI150(I2cDrv && _bus_drv):i2c_drv(_bus_drv){;}
-    BMI150(I2c & bus):i2c_drv(I2cDrv(bus, default_i2c_addr)){;}
-    BMI150(const SpiDrv & _bus_drv):spi_drv(_bus_drv){;}
-    BMI150(SpiDrv && _bus_drv):spi_drv(_bus_drv){;}
-    BMI150(Spi & bus, const uint8_t index):spi_drv(SpiDrv(bus, index)){;}
+    BMM150(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
+    BMM150(I2cDrv && _bus_drv):i2c_drv(_bus_drv){;}
+    BMM150(I2c & bus):i2c_drv(I2cDrv(bus, default_i2c_addr)){;}
+    BMM150(const SpiDrv & _bus_drv):spi_drv(_bus_drv){;}
+    BMM150(SpiDrv && _bus_drv):spi_drv(_bus_drv){;}
+    BMM150(Spi & bus, const uint8_t index):spi_drv(SpiDrv(bus, index)){;}
 
     void init();
     void update();
