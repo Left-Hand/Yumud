@@ -7,7 +7,6 @@
 #ifndef KONFIG_H
 #define KONFIG_H
 
-#include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
 

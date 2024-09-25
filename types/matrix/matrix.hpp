@@ -122,7 +122,7 @@
  *    v0.1 (2019-11-29), {PNb}: 
  *      - Fungsi yang disupport:
  *          - Operasi matrix dasar
- *          - Invers
+ *          - inverse
  *          - Cetak
  * 
  * See https://github.com/pronenewbits for more!
@@ -158,8 +158,8 @@ public:
     /* Destructor */
     ~Matrix_t(void);
     /* Get internal state */
-    inline int16_t i16getRow(void) const { return this->i16row; }
-    inline int16_t i16getCol(void) const { return this->i16col; }
+    __fast_inline constexpr int16_t rows(void) const { return this->i16row; }
+    __fast_inline constexpr int16_t cols(void) const { return this->i16col; }
     
     
     /* ------------------------------------------- Matrix_t entry accessing functions ------------------------------------------- */
@@ -186,9 +186,8 @@ public:
     
     
     /* ----------------------------------------- Matrix_t checking function declaration ----------------------------------------- */
-    bool bMatrixIsValid(void);
+    operator bool(void) const;
     void invalid(void);
-    bool bMatrixIsSquare();
     /* --------------------------------------------- Matrix_t elementary operations --------------------------------------------- */
     bool operator == (const Matrix_t& _compare) const;
     bool operator != (const Matrix_t& _compare) const;
@@ -212,7 +211,7 @@ public:
     void vSetRandom(const int32_t _maxRand, const int32_t _minRand);
     void vSetDiag(const real_t _val);
     void vSetIdentity(void);
-    Matrix_t Transpose(void);
+    Matrix_t transpose(void);
     bool bNormVector(void);
     /* ------------------------------------------ Matrix_t/Vector insertion operations ------------------------------------------ */
     Matrix_t InsertVector(const Matrix_t& _Vector, const int16_t _posCol);
@@ -224,7 +223,7 @@ public:
                            const int16_t _lenRow, const int16_t _lenColumn);
     /* ---------------------------------------------------- Big operations ---------------------------------------------------- */
     /* Matrix_t invertion using Gauss-Jordan algorithm */
-    Matrix_t Invers(void) const;
+    Matrix_t inverse(void) const;
     /* Check the definiteness of a matrix */
     bool bMatrixIsPositiveDefinite(const bool checkPosSemidefinite = false) const;
     /* Return the vector (Mx1 matrix) correspond with the diagonal entries of 'this' */
@@ -446,7 +445,7 @@ inline const Matrix_t<T>::Proxy Matrix_t<T>::operator [] (const int16_t _row) co
 /* -------------------------------------- Matrix_t checking function declaration -------------------------------------- */
 
 template<arithmetic T>
-inline bool Matrix_t<T>::bMatrixIsValid(void) {
+inline Matrix_t<T>::operator bool(void) const{
     /* Check whether the matrix is valid or not */
     if ((this->i16row > 0) && (this->i16row <= MATRIX_MAXIMUM_SIZE) &&
         (this->i16col > 0) && (this->i16col <= MATRIX_MAXIMUM_SIZE))
@@ -462,12 +461,6 @@ inline void Matrix_t<T>::invalid(void) {
     this->i16row = -1;
     this->i16col = -1;
 }
-
-template<arithmetic T>
-inline bool Matrix_t<T>::bMatrixIsSquare(void) {
-    return (this->i16row == this->i16col);
-}
-
 
 /* ------------------------------------------ Matrix_t elementary operations ------------------------------------------ */
 /* ------------------------------------------ Matrix_t elementary operations ------------------------------------------ */
@@ -563,10 +556,10 @@ inline Matrix_t<T> Matrix_t<T>::operator / (const real_t _scalar) const {
 
 template<arithmetic T>
 inline Matrix_t<T> operator + (const real_t _scalar, const Matrix_t<T>& _mat) {
-    Matrix_t<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix_t<T>::NoInitMatZero);
+    Matrix_t<T> _outp(_mat.rows()(), _mat.cols()(), Matrix_t<T>::NoInitMatZero);
 
-    for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
-        for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
+    for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
+        for (int16_t _j = 0; _j < _mat.cols()(); _j++) {
             _outp(_i,_j) = _scalar + _mat(_i,_j);
         }
     }
@@ -575,10 +568,10 @@ inline Matrix_t<T> operator + (const real_t _scalar, const Matrix_t<T>& _mat) {
 
 template<arithmetic T>
 inline Matrix_t<T> operator - (const real_t _scalar, const Matrix_t<T>& _mat) {
-    Matrix_t<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix_t<T>::NoInitMatZero);
+    Matrix_t<T> _outp(_mat.rows()(), _mat.cols()(), Matrix_t<T>::NoInitMatZero);
 
-    for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
-        for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
+    for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
+        for (int16_t _j = 0; _j < _mat.cols()(); _j++) {
             _outp(_i,_j) = _scalar - _mat(_i,_j);
         }
     }
@@ -587,10 +580,10 @@ inline Matrix_t<T> operator - (const real_t _scalar, const Matrix_t<T>& _mat) {
 
 template<arithmetic T>
 inline Matrix_t<T> operator * (const real_t _scalar, const Matrix_t<T>& _mat) {
-    Matrix_t<T> _outp(_mat.i16getRow(), _mat.i16getCol(), Matrix_t<T>::NoInitMatZero);
+    Matrix_t<T> _outp(_mat.rows()(), _mat.cols()(), Matrix_t<T>::NoInitMatZero);
 
-    for (int16_t _i = 0; _i < _mat.i16getRow(); _i++) {
-        for (int16_t _j = 0; _j < _mat.i16getCol(); _j++) {
+    for (int16_t _i = 0; _i < _mat.rows()(); _i++) {
+        for (int16_t _j = 0; _j < _mat.cols()(); _j++) {
             _outp(_i,_j) = _scalar * _mat(_i,_j);
         }
     }
@@ -722,7 +715,7 @@ inline Matrix_t<T> MatIdentity(const int16_t _i16size) {
 
 /* Return the transpose of the matrix */
 template<arithmetic T>
-inline Matrix_t<T> Matrix_t<T>::Transpose(void) {
+inline Matrix_t<T> Matrix_t<T>::transpose(void) {
     Matrix_t<T> _outp(this->i16col, this->i16row, NoInitMatZero);
     for (int16_t _i = 0; _i < this->i16row; _i++) {
         for (int16_t _j = 0; _j < this->i16col; _j++) {
@@ -899,10 +892,10 @@ inline Matrix_t<T> Matrix_t<T>::InsertSubMatrix(const Matrix_t<T>& _subMatrix, c
 /* ------------------------------------------------- Big operations ------------------------------------------------- */
 /* ------------------------------------------------- Big operations ------------------------------------------------- */
 
-/* Invers operation using Gauss-Jordan algorithm */
+/* inverse operation using Gauss-Jordan algorithm */
 
 template<arithmetic T>
-inline Matrix_t<T> Matrix_t<T>::Invers(void) const {
+inline Matrix_t<T> Matrix_t<T>::inverse(void) const {
     Matrix_t _outp(this->i16row, this->i16col, NoInitMatZero);
     Matrix_t _temp(*this);
     _outp.vSetIdentity();
@@ -1209,7 +1202,7 @@ inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransfo
 template<arithmetic T>
 inline bool Matrix_t<T>::QRDec(Matrix_t<T>& Qt, Matrix_t<T>& R) const {
     Matrix_t Qn(Qt.i16row, Qt.i16col, NoInitMatZero);
-    if ((this->i16row < this->i16col) || (!Qt.bMatrixIsSquare()) || (Qt.i16row != this->i16row) ||
+    if ((this->i16row < this->i16col) || (Qt.i16roow != Qt.i16col) || (Qt.i16row != this->i16row) ||
         (R.i16row != this->i16row) || (R.i16col != this->i16col))
     {
         Qt.invalid();
@@ -1240,7 +1233,7 @@ inline bool Matrix_t<T>::QRDec(Matrix_t<T>& Qt, Matrix_t<T>& R) const {
     }
 #endif
     
-    /* Q = Qt.Transpose */
+    /* Q = Qt.transpose */
     return true;
 }
 
@@ -1309,15 +1302,21 @@ inline Matrix_t<T> Matrix_t<T>::ForwardSubtitution(const Matrix_t<T> & A, const 
 
 template<arithmetic T>
 __inline OutputStream & operator<<(OutputStream & os, const Matrix_t<T> & mat){
-	for (int16_t _i = 0; _i < mat.i16row; _i++) {
+    os << "[ ";
+	for (int16_t _i = 0; _i < mat.rows(); _i++) {
+        if(_i != 0) os << "  ";
 		os << "[ ";
-		for (int16_t _j = 0; _j < mat.i16col; _j++) {
-			os << std::fixed << std::setprecision(3) << mat(_i,_j) << " ";
+		for (int16_t _j = 0; _j < mat.cols(); _j++) {
+			os << mat(_i,_j);
+            if(_j == mat.cols() - 1) break;
+            os << ", ";
 		}
-		os << "]";
-		os << "\r\n";
+		os << " ]";
+        if(_i == mat.rows() - 1) break;
+        os << ",\r\n";
 	}
-	return os << "\r\n";
+    os << " ]";
+    return os;
 }
 
 using Matrix = Matrix_t<real_t>;

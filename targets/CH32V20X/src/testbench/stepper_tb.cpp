@@ -18,6 +18,8 @@
 #include "drivers/Actuator/SVPWM/svpwm2.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
+#include "types/matrix/matrix.hpp"
+
 #define MOTOR_TYPE_STEPPER 0
 #define MOTOR_TYPE_BLDC 1
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
@@ -197,6 +199,15 @@ void stepper_tb(UartHw & logger){
     while(true){
         stp.run();
         stp.report();
+
+        Matrix a = Matrix{2,2};
+        a(0, 0) = 0;
+        a(0, 1) = 2;
+        
+        Matrix b = Matrix{2,2};
+        b(0, 0) = 1;
+        b(0, 1) = 0;
+        DEBUG_PRINTLN(std::setprecision(2), (a + b).transpose());
 
         // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
         // real_t target = f(t-2);
