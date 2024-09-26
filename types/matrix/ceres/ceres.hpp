@@ -2,24 +2,32 @@
 
 #include "types/matrix/matrix.hpp"
 
-template <int N>
-struct jet
+template <arithmetic T, size_t N>
+struct Jet_t
 {
-  Matrix_t<real_t> v;
-  real_t a;
-  jet() : a(0.0) {}
-  jet(const real_t value) : a(value) { v.setZero(); }
-  __fast_inline jet(const real_t value, const Matrix_t<real_t>& v_)
+  Matrix_t<T> v{N, 1};
+  T a;
+  Jet_t() : a(0.0) {}
+  Jet_t(const T value) : a(value) { v.setZero(); }
+  __fast_inline Jet_t(const T value, const Matrix_t<T>& v_)
       : a(value), v(v_)
   {
   }
-  jet(const real_t value, const int index)
+
+  __fast_inline constexpr T & operator [](const size_t n){
+    return v(n, 0);
+  }
+
+  __fast_inline constexpr const T & operator [](const size_t n) const {
+    return v(n, 0);
+  } 
+  Jet_t(const T value, const int index)
   {
     v.setZero();
     a = value;
     v(index, 0) = 1.0;
   }
-  void init(const real_t value, const int index)
+  void init(const T value, const int index)
   {
     v.setZero();
     a = value;
@@ -30,74 +38,74 @@ struct jet
 // for the camera BA,the autodiff only need overload the operator :jet+jet
 // number+jet -jet jet-number jet*jet number/jet jet/jet sqrt(jet) cos(jet)
 // sin(jet)  +=(jet) overload jet + jet
-template <int N>
-inline jet<N> operator+(const jet<N>& A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator+(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 {
-  return jet<N>(A.a + B.a, A.v + B.v);
+  return Jet_t<T, N>(A.a + B.a, A.v + B.v);
 }  // end jet+jet
 
 // overload number + jet
-template <int N>
-inline jet<N> operator+(real_t A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator+(T A, const Jet_t<T, N>& B)
 {
-  return jet<N>(A + B.a, B.v);
+  return Jet_t<T, N>(A + B.a, B.v);
 }  // end number+jet
 
-template <int N>
-inline jet<N> operator+(const jet<N>& B, real_t A)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator+(const Jet_t<T, N>& B, T A)
 {
-  return jet<N>(A + B.a, B.v);
+  return Jet_t<T, N>(A + B.a, B.v);
 }  // end number+jet
 
 // overload jet-number
-template <int N>
-inline jet<N> operator-(const jet<N>& A, real_t B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator-(const Jet_t<T, N>& A, T B)
 {
-  return jet<N>(A.a - B, A.v);
+  return Jet_t<T, N>(A.a - B, A.v);
 }
 // overload number * jet because jet *jet need A.a *B.v+B.a*A.v.So the number
 // *jet is required
-template <int N>
-inline jet<N> operator*(real_t A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator*(T A, const Jet_t<T, N>& B)
 {
-  return jet<N>(A * B.a, A * B.v);
+  return Jet_t<T, N>(A * B.a, A * B.v);
 }
-template <int N>
-inline jet<N> operator*(const jet<N>& A, real_t B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator*(const Jet_t<T, N>& A, T B)
 {
-  return jet<N>(B * A.a, B * A.v);
+  return Jet_t<T, N>(B * A.a, B * A.v);
 }
 // overload -jet
-template <int N>
-inline jet<N> operator-(const jet<N>& A)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator-(const Jet_t<T, N>& A)
 {
-  return jet<N>(-A.a, -A.v);
+  return Jet_t<T, N>(-A.a, -A.v);
 }
-template <int N>
-inline jet<N> operator-(real_t A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator-(T A, const Jet_t<T, N>& B)
 {
-  return jet<N>(A - B.a, -B.v);
+  return Jet_t<T, N>(A - B.a, -B.v);
 }
-template <int N>
-inline jet<N> operator-(const jet<N>& A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator-(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 {
-  return jet<N>(A.a - B.a, A.v - B.v);
+  return Jet_t<T, N>(A.a - B.a, A.v - B.v);
 }
 // overload jet*jet
-template <int N>
-inline jet<N> operator*(const jet<N>& A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator*(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 {
-  return jet<N>(A.a * B.a, B.a * A.v + A.a * B.v);
+  return Jet_t<T, N>(A.a * B.a, B.a * A.v + A.a * B.v);
 }
 // overload number/jet
-template <int N>
-inline jet<N> operator/(real_t A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator/(T A, const Jet_t<T, N>& B)
 {
-  return jet<N>(A / B.a, -A * B.v / (B.a * B.a));
+  return Jet_t<T, N>(A / B.a, -A * B.v / (B.a * B.a));
 }
 // overload jet/jet
-template <int N>
-inline jet<N> operator/(const jet<N>& A, const jet<N>& B)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> operator/(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 {
   // This uses:
   //
@@ -106,31 +114,52 @@ inline jet<N> operator/(const jet<N>& A, const jet<N>& B)
   //   b + v   (b + v)(b - v)        b^2
   //
   // which holds because v*v = 0.
-  const real_t a_inverse = 1.0 / B.a;
-  const real_t abyb = A.a * a_inverse;
-  return jet<N>(abyb, (A.v - abyb * B.v) * a_inverse);
+  const T a_inverse = 1.0 / B.a;
+  const T abyb = A.a * a_inverse;
+  return Jet_t<T, N>(abyb, (A.v - abyb * B.v) * a_inverse);
 }
 // sqrt(jet)
-template <int N>
-inline jet<N> sqrt(const jet<N>& A)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A)
 {
-  real_t t = std::sqrt(A.a);
+  T t = std::sqrt(A.a);
 
-  return jet<N>(t, real_t(1) / (real_t(2) * t) * A.v);
+  return Jet_t<T, N>(t, T(1) / (T(2) * t) * A.v);
 }
 // cos(jet)
-template <int N>
-inline jet<N> cos(const jet<N>& A)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> cos(const Jet_t<T, N>& A)
 {
-  return jet<N>(std::cos(A.a), -std::sin(A.a) * A.v);
+  return Jet_t<T, N>(std::cos(A.a), -std::sin(A.a) * A.v);
 }
-template <int N>
-inline jet<N> sin(const jet<N>& A)
+template <arithmetic T, size_t N>
+inline Jet_t<T, N> sin(const Jet_t<T, N>& A)
 {
-  return jet<N>(std::sin(A.a), std::cos(A.a) * A.v);
+  return Jet_t<T, N>(std::sin(A.a), std::cos(A.a) * A.v);
 }
-template <int N>
-inline bool operator>(const jet<N>& f, const jet<N>& g)
+template <arithmetic T, size_t N>
+inline bool operator>(const Jet_t<T, N>& f, const Jet_t<T, N>& g)
 {
   return f.a > g.a;
 }
+
+template<arithmetic T, size_t N>
+__inline OutputStream & operator<<(OutputStream & os, const Jet_t<T, N> & jet){
+    os << "[ ";
+    for (size_t _j = 0; _j < N; _j++) {
+        os << jet[_j];
+        if(_j == N - 1) break;
+        os << ", ";
+    }
+    os << " ]";
+    return os;
+}
+
+// template<size_t N>
+// using Jet<N> = Jet_t<real_t, N>;
+
+// template<size_t N>
+// using JetF<N> = Jet_t<float, N>;
+
+// template<size_t N>
+// using JetD<N> = Jet_t<double, N>;
