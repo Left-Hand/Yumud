@@ -179,7 +179,7 @@ public:
 	StringView substring( size_t beginIndex ) const { return substring(beginIndex, len); };
 	StringView substring( size_t beginIndex, size_t endIndex ) const;
 
-	Strings split(const char chr, const size_t times) const {return StringView(*this).split(chr, times);}
+	Strings split(const char chr, const size_t times = 0) const;
 
 	// modification
 	void replace(char find, char replace);

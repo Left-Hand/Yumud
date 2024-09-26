@@ -204,14 +204,14 @@ void stepper_tb(UartHw & logger){
         stp.run();
         stp.report();
 
-        Matrix_t<real_t, 2, 2> a;
-        a.at(0, 0) = 1;
-        a.at(0, 1) = 0;
+        // Matrix_t<real_t, 2, 2> a;
+        // a.at(0, 0) = 1;
+        // a.at(0, 1) = 0;
 
         
-        Matrix_t<real_t, 2, 2> b;
-        b.at(1, 0) = 0;
-        b.at(1, 1) = 1;
+        // Matrix_t<real_t, 2, 2> b;
+        // b.at(1, 0) = 0;
+        // b.at(1, 1) = 1;
 
         // Jet_t<real_t, 3> jet = {1};
 

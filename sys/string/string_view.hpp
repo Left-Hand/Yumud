@@ -54,7 +54,7 @@ public:
     operator iq_t() const;
     char operator [](const size_t index) const {return data_[index];}
 
-	Strings split(const char chr, const size_t times) const;
+	Strings split(const char chr, const size_t times = 0) const;
 
 	StringView substring( size_t beginIndex ) const { return substring(beginIndex, size_);};
 	StringView substring( size_t beginIndex, size_t endIndex ) const;

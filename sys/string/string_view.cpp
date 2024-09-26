@@ -11,32 +11,28 @@ StringView::operator iq_t() const {
 }
 
 
-Strings StringView::split(const char chr, const size_t times) const{
+Strings StringView::split(const char delimiter, const size_t times) const{
     Strings result;
-    
+
     int startPos = 0;
-    int endPos = indexOf(chr, startPos);
+    int endPos = indexOf(delimiter, startPos);
 
     while (endPos != -1) {
-        if((not (endPos - startPos <= 1)) and this->operator[](startPos) == chr){
-            auto token = substring(startPos, endPos);
-            result.push_back(token);
+        if(not(endPos - startPos <= 1 and this->operator[](startPos) == delimiter)){
+            result.push_back(substring(startPos, endPos));
         }
         startPos = endPos + 1;
-        endPos = indexOf(chr, startPos);
+        endPos = indexOf(delimiter, startPos);
     }
 
     if (startPos < (int)length()) {
-        auto lastToken = substring(startPos);
-        result.push_back(lastToken);
+        result.push_back(substring(startPos));
     }
 
     return result;
 }
 
-StringView StringView::substring(size_t left, size_t right) const
-{
-
+StringView StringView::substring(size_t left, size_t right) const{
 	if (left > right) {
 		size_t temp = right;
 		right = left;
@@ -54,8 +50,7 @@ int StringView::indexOf(char c) const
 	return indexOf(c, 0);
 }
 
-int StringView::indexOf( char ch, size_t fromIndex ) const
-{
+int StringView::indexOf( char ch, size_t fromIndex ) const{
 	if (fromIndex >= size_) return -1;
 	const char* temp = strchr(data_ + fromIndex, ch);
 	if (temp == NULL) return -1;
