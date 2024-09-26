@@ -1,25 +1,25 @@
 #pragma once
 
-#include "types/matrix/matrix.hpp"
+#include "types/matrix/matrix_static.hpp"
 
 template <arithmetic T, size_t N>
 struct Jet_t
 {
-  Matrix_t<T> v{N, 1};
+  Matrix_t<T, N, 1> v;
   T a;
   Jet_t() : a(0.0) {}
   Jet_t(const T value) : a(value) { v.setZero(); }
-  __fast_inline Jet_t(const T value, const Matrix_t<T>& v_)
+  __fast_inline Jet_t(const T value, const Matrix_t<T, N, 1>& v_)
       : a(value), v(v_)
   {
   }
 
   __fast_inline constexpr T & operator [](const size_t n){
-    return v(n, 0);
+    return v.at(n, 0);
   }
 
   __fast_inline constexpr const T & operator [](const size_t n) const {
-    return v(n, 0);
+    return v.at(n, 0);
   } 
   Jet_t(const T value, const int index)
   {

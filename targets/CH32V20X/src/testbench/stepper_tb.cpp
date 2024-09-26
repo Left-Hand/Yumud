@@ -25,6 +25,9 @@
 #define MOTOR_TYPE_BLDC 1
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
 
+// #include "dsp/filter/EKF.hpp"
+
+
 struct TurnSolver{
     uint16_t ta = 0;
     uint16_t tb = 0;
@@ -88,7 +91,7 @@ void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    logger.init(576000);
+    logger.init(576000, CommMethod::Dma);
     logger.setEps(4);
 
     #if(MOTOR_TYPE == MOTOR_TYPE_STEPPER)
@@ -201,17 +204,18 @@ void stepper_tb(UartHw & logger){
         stp.run();
         stp.report();
 
-        Matrix a = Matrix{2,2};
-        a(0, 0) = 0;
-        a(0, 1) = 2;
+        Matrix_t<real_t, 2, 2> a;
+        a.at(0, 0) = 1;
+        a.at(0, 1) = 0;
+
         
-        Matrix b = Matrix{2,2};
-        b(0, 0) = 1;
-        b(0, 1) = 0;
+        Matrix_t<real_t, 2, 2> b;
+        b.at(1, 0) = 0;
+        b.at(1, 1) = 1;
 
-        Jet_t<real_t, 3> jet = {1};
+        // Jet_t<real_t, 3> jet = {1};
 
-        DEBUG_PRINTLN(std::setprecision(2), (a + b).transpose(), jet);
+        // DEBUG_PRINTLN(std::setprecision(2), a, b, a + b, (a + b).inverse());
 
         // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
         // real_t target = f(t-2);
