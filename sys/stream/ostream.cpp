@@ -80,7 +80,7 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
 }
 
 OutputStream & OutputStream::operator<<(const iq_t value){
-    char str[str_int_size] = {0};
+    char str[12] = {0};
     StringUtils::qtoa(value, str, this->eps());
     return *this << str;
 }

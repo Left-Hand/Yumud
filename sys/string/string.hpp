@@ -30,12 +30,11 @@
 #include "sys/string/string_utils.hpp"
 #include "sys/core/platform.h"
 
-static constexpr size_t str_int_size = 16;
-static constexpr size_t str_float_size = 16;
-
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
 class StringSumHelper;
+
+using Strings = StringView::Strings;
 
 // The string class
 class String
@@ -45,6 +44,7 @@ class String
 	// http://www.artima.com/cppsource/safebool.html
 	typedef void (String::*StringIfHelperType)() const;
 	void StringIfHelper() const {}
+
 
 public:
 	// constructors
@@ -66,25 +66,25 @@ public:
 	String(const std::string_view & str):String(str.data(), str.length()){};
 	String(const StringView & str):String(str.data(), str.length()){};
 
-	explicit String(unsigned char value, unsigned char base=10);
-	explicit String(int value, unsigned char base=10);
-	explicit String(unsigned int value, unsigned char base=10);
-	explicit String(long value, unsigned char base=10);
-	explicit String(unsigned long value, unsigned char base=10);
-	explicit String(unsigned long long value, unsigned char base=10);
-	explicit String(long long value, unsigned char base=10);
+	explicit String(uint8_t value, uint8_t base=10);
+	explicit String(int value, uint8_t base=10);
+	explicit String(size_t value, uint8_t base=10);
+	explicit String(long value, uint8_t base=10);
+	explicit String(unsigned long value, uint8_t base=10);
+	explicit String(unsigned long long value, uint8_t base=10);
+	explicit String(long long value, uint8_t base=10);
 
 
-	explicit String(float value, unsigned char decimalPlaces = 3);
-	explicit String(double value, unsigned char decimalPlaces = 3);
-	explicit String(const iq_t value, unsigned char decimalPlaces = 3);
+	explicit String(float value, uint8_t decimalPlaces = 3);
+	explicit String(double value, uint8_t decimalPlaces = 3);
+	explicit String(const iq_t value, uint8_t decimalPlaces = 3);
 	~String(void);
 
 	// memory management
 	// return true on success, false on failure (in which case, the string
 	// is left unchanged).  reserve(0), if successful, will validate an
 	// invalid string (i.e., "if (s)" will be true afterwards)
-	unsigned char reserve(unsigned int size);
+	uint8_t reserve(size_t size);
 	inline size_t length(void) const {return len;}
 
 	// creates a copy of the assigned value.  if the value is null or
@@ -102,24 +102,24 @@ public:
 	// returns true on success, false on failure (in which case, the string
 	// is left unchanged).  if the argument is null or invalid, the 
 	// concatenation is considered unsucessful.  
-	unsigned char concat(const String &str);
-	unsigned char concat(const char *cstr);
-	unsigned char concat(const char *cstr, unsigned int length);
-	unsigned char concat(char c);
-	unsigned char concat(unsigned char c);
-	unsigned char concat(int num);
-	unsigned char concat(unsigned int num);
-	unsigned char concat(long num);
-	unsigned char concat(unsigned long num);
-	unsigned char concat(float num);
-	unsigned char concat(double num);
+	uint8_t concat(const String &str);
+	uint8_t concat(const char *cstr);
+	uint8_t concat(const char *cstr, size_t length);
+	uint8_t concat(char c);
+	uint8_t concat(uint8_t c);
+	uint8_t concat(int num);
+	uint8_t concat(size_t num);
+	uint8_t concat(long num);
+	uint8_t concat(unsigned long num);
+	uint8_t concat(float num);
+	uint8_t concat(double num);
 	
 	// if there's not enough memory for the concatenated value, the string
 	// will be left unchanged (but this isn't signalled in any way)
 	String & operator += (const String &rhs)	{concat(rhs); return (*this);}
 	String & operator += (const char *cstr)		{concat(cstr); return (*this);}
 	String & operator += (char c)			{concat(c); return (*this);}
-	String & operator += (unsigned char num)		{concat(num); return (*this);}
+	String & operator += (uint8_t num)		{concat(num); return (*this);}
 	String & operator += (int num)			{concat(num); return (*this);}
 	String & operator += (unsigned int num)		{concat(num); return (*this);}
 	String & operator += (long num)			{concat(num); return (*this);}
@@ -130,9 +130,9 @@ public:
 	friend StringSumHelper & operator + (const StringSumHelper & lhs, const String &rhs);
 	friend StringSumHelper & operator + (const StringSumHelper & lhs, const char *cstr);
 	friend StringSumHelper & operator + (const StringSumHelper & lhs, char c);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned char num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, uint8_t num);
 	friend StringSumHelper & operator + (const StringSumHelper & lhs, int num);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned int num);
+	friend StringSumHelper & operator + (const StringSumHelper & lhs, size_t num);
 	friend StringSumHelper & operator + (const StringSumHelper & lhs, long num);
 	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned long num);
 	friend StringSumHelper & operator + (const StringSumHelper & lhs, float num);
@@ -141,50 +141,52 @@ public:
 	// comparison (only works w/ Strings and "strings")
 	operator StringIfHelperType() const { return buffer ? &String::StringIfHelper : 0; }
 	int compareTo(const String &s) const;
-	unsigned char equals(const String &s) const;
-	unsigned char equals(const char *cstr) const;
-	unsigned char operator == (const String &rhs) const {return equals(rhs);}
-	unsigned char operator == (const char *cstr) const {return equals(cstr);}
-	unsigned char operator != (const String &rhs) const {return !equals(rhs);}
-	unsigned char operator != (const char *cstr) const {return !equals(cstr);}
-	unsigned char operator <  (const String &rhs) const;
-	unsigned char operator >  (const String &rhs) const;
-	unsigned char operator <= (const String &rhs) const;
-	unsigned char operator >= (const String &rhs) const;
-	unsigned char equalsIgnoreCase(const String &s) const;
-	unsigned char startsWith( const String &prefix) const;
-	unsigned char startsWith(const String &prefix, unsigned int offset) const;
-	unsigned char endsWith(const String &suffix) const;
+	uint8_t equals(const String &s) const;
+	uint8_t equals(const char *cstr) const;
+	uint8_t operator == (const String &rhs) const {return equals(rhs);}
+	uint8_t operator == (const char *cstr) const {return equals(cstr);}
+	uint8_t operator != (const String &rhs) const {return !equals(rhs);}
+	uint8_t operator != (const char *cstr) const {return !equals(cstr);}
+	uint8_t operator <  (const String &rhs) const;
+	uint8_t operator >  (const String &rhs) const;
+	uint8_t operator <= (const String &rhs) const;
+	uint8_t operator >= (const String &rhs) const;
+	uint8_t equalsIgnoreCase(const String &s) const;
+	uint8_t startsWith( const String &prefix) const;
+	uint8_t startsWith(const String &prefix, size_t offset) const;
+	uint8_t endsWith(const String &suffix) const;
 
 	// character acccess
-	char charAt(unsigned int index) const;
-	void setCharAt(unsigned int index, char c);
-	char operator [] (unsigned int index) const;
-	char& operator [] (unsigned int index);
-	void getBytes(unsigned char *buf, unsigned int bufsize, unsigned int index=0) const;
-	void toCharArray(char *buf, unsigned int bufsize, unsigned int index=0) const
-		{getBytes((unsigned char *)buf, bufsize, index);}
+	char charAt(size_t index) const;
+	void setCharAt(size_t index, char c);
+	char operator [] (size_t index) const;
+	char& operator [] (size_t index);
+	void getBytes(uint8_t *buf, size_t bufsize, size_t index=0) const;
+	void toCharArray(char *buf, size_t bufsize, size_t index=0) const
+		{getBytes((uint8_t *)buf, bufsize, index);}
     char * getBuffer() const {return buffer;}
 	const char * c_str() const { return buffer; }
 
 	// search
 	int indexOf( char ch ) const;
-	int indexOf( char ch, unsigned int fromIndex ) const;
+	int indexOf( char ch, size_t fromIndex ) const;
 	int indexOf( const String &str ) const;
-	int indexOf( const String &str, unsigned int fromIndex ) const;
+	int indexOf( const String &str, size_t fromIndex ) const;
 	int lastIndexOf( char ch ) const;
-	int lastIndexOf( char ch, unsigned int fromIndex ) const;
+	int lastIndexOf( char ch, size_t fromIndex ) const;
 	int lastIndexOf( const String &str ) const;
-	int lastIndexOf( const String &str, unsigned int fromIndex ) const;
-	StringView substring( unsigned int beginIndex ) const { return substring(beginIndex, len); };
-	StringView substring( unsigned int beginIndex, unsigned int endIndex ) const;
+	int lastIndexOf( const String &str, size_t fromIndex ) const;
+	StringView substring( size_t beginIndex ) const { return substring(beginIndex, len); };
+	StringView substring( size_t beginIndex, size_t endIndex ) const;
+
+	Strings split(const char chr, const size_t times) const {return StringView(*this).split(chr, times);}
 
 	// modification
 	void replace(char find, char replace);
 	// String& replace(const String& replace);
 	// String& replace(const String & find, const String & replace);
-	void remove(unsigned int index);
-	void remove(unsigned int index, unsigned int count);
+	void remove(size_t index);
+	void remove(size_t index, size_t count);
 	String & toLowerCase(void);
 	String & toUpperCase(void);
 	void trim(void);
@@ -215,11 +217,11 @@ protected:
 protected:
 	void init(void);
 	void invalidate(void);
-	unsigned char changeBuffer(unsigned int maxStrLen);
+	uint8_t changeBuffer(size_t maxStrLen);
 
 
 	// copy and move
-	String & copy(const char *cstr, unsigned int length);
+	String & copy(const char *cstr, size_t length);
 	#ifdef __GXX_EXPERIMENTAL_CXX0X__
 	void move(String &rhs);
 	#endif
@@ -231,9 +233,9 @@ public:
 	StringSumHelper(const String &s) : String(s) {}
 	StringSumHelper(const char *p) : String(p) {}
 	StringSumHelper(char c) : String(c) {}
-	StringSumHelper(unsigned char num) : String(num) {}
+	StringSumHelper(uint8_t num) : String(num) {}
 	StringSumHelper(int num) : String(num) {}
-	StringSumHelper(unsigned int num) : String(num) {}
+	StringSumHelper(size_t num) : String(num) {}
 	StringSumHelper(long num) : String(num) {}
 	StringSumHelper(unsigned long num) : String(num) {}
 	StringSumHelper(float num) : String(num) {}
@@ -243,14 +245,14 @@ public:
 
 String toString(char c);
 String toString(const char * c);
-String toString(unsigned char value, unsigned char base = 10);
-String toString(int value, unsigned char base = 10);
-String toString(unsigned int value, unsigned char base = 10);
-String toString(long value, unsigned char base = 10);
-String toString(unsigned long value, unsigned char base = 10);
-String toString(long long value, unsigned char base = 10);
-String toString(unsigned long long value, unsigned char base = 10);
-String toString(float value, unsigned char decimalPlaces = 3);
-String toString(double value, unsigned char decimalPlaces = 3);
+String toString(uint8_t value, uint8_t base = 10);
+String toString(int value, uint8_t base = 10);
+String toString(size_t value, uint8_t base = 10);
+String toString(long value, uint8_t base = 10);
+String toString(unsigned long value, uint8_t base = 10);
+String toString(long long value, uint8_t base = 10);
+String toString(unsigned long long value, uint8_t base = 10);
+String toString(float value, uint8_t decimalPlaces = 3);
+String toString(double value, uint8_t decimalPlaces = 3);
 
 #endif  // __cplusplus

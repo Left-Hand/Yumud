@@ -81,7 +81,7 @@ String::String(const char * c, const size_t size){
     delete cop;
 }
 
-String::String(unsigned char value, unsigned char base)
+String::String(uint8_t value, uint8_t base)
 {
 	init();
 	char buf[12] = {0};
@@ -89,7 +89,7 @@ String::String(unsigned char value, unsigned char base)
 	*this = buf;
 }
 
-String::String(int value, unsigned char base)
+String::String(int value, uint8_t base)
 {
 	init();
 	char buf[12] = {0};
@@ -97,7 +97,7 @@ String::String(int value, unsigned char base)
 	*this = buf;
 }
 
-String::String(unsigned int value, unsigned char base)
+String::String(size_t value, uint8_t base)
 {
 	init();
 	char buf[12] = {0};
@@ -105,7 +105,7 @@ String::String(unsigned int value, unsigned char base)
 	*this = buf;
 }
 
-String::String(long value, unsigned char base)
+String::String(long value, uint8_t base)
 {
 	init();
 	char buf[12] = {0};
@@ -113,7 +113,7 @@ String::String(long value, unsigned char base)
 	*this = buf;
 }
 
-String::String(unsigned long value, unsigned char base)
+String::String(unsigned long value, uint8_t base)
 {
 	init();
 	char buf[12] = {0};
@@ -121,7 +121,7 @@ String::String(unsigned long value, unsigned char base)
 	*this = buf;
 }
 
-String::String(long long value, unsigned char base)
+String::String(long long value, uint8_t base)
 {
 	init();
 	char buf[24] = {0};
@@ -129,7 +129,7 @@ String::String(long long value, unsigned char base)
 	*this = buf;
 }
 
-String::String(unsigned long long value, unsigned char base)
+String::String(unsigned long long value, uint8_t base)
 {
 	init();
 	char buf[24] = {0};
@@ -137,7 +137,7 @@ String::String(unsigned long long value, unsigned char base)
 	*this = buf;
 }
 
-String::String(float value, unsigned char decimalPlaces)
+String::String(float value, uint8_t decimalPlaces)
 {
 	init();
 	char buf[12] = {0};
@@ -145,7 +145,7 @@ String::String(float value, unsigned char decimalPlaces)
     *this = buf;
 }
 
-String::String(double value, unsigned char decimalPlaces)
+String::String(double value, uint8_t decimalPlaces)
 {
 	init();
 	char buf[12] = {0};
@@ -153,9 +153,9 @@ String::String(double value, unsigned char decimalPlaces)
     *this = buf;
 }
 
-String::String(const iq_t value, unsigned char decimalPlaces){
+String::String(const iq_t value, uint8_t decimalPlaces){
 	init();
-	char str[str_int_size] = {0};
+	char str[12] = {0};
     StringUtils::qtoa(value, str, decimalPlaces);
 	*this = str;
 }
@@ -183,7 +183,7 @@ void String::invalidate(void)
 	capacity = len = 0;
 }
 
-unsigned char String::reserve(unsigned int size)
+uint8_t String::reserve(size_t size)
 {
 	if (buffer && capacity >= size) return 1;
 	if (changeBuffer(size)) {
@@ -193,7 +193,7 @@ unsigned char String::reserve(unsigned int size)
 	return 0;
 }
 
-unsigned char String::changeBuffer(unsigned int maxStrLen)
+uint8_t String::changeBuffer(size_t maxStrLen)
 {
 	char *newbuffer = (char *)realloc(buffer, maxStrLen + 1);
 	if (newbuffer) {
@@ -208,7 +208,7 @@ unsigned char String::changeBuffer(unsigned int maxStrLen)
 /*  Copy and Move                            */
 /*********************************************/
 
-String & String::copy(const char *cstr, unsigned int length)
+String & String::copy(const char *cstr, size_t length)
 {
 	if (!reserve(length)) {
 		invalidate();
@@ -278,14 +278,14 @@ String & String::operator = (const char *cstr)
 /*  concat                                   */
 /*********************************************/
 
-unsigned char String::concat(const String &s)
+uint8_t String::concat(const String &s)
 {
 	return concat(s.buffer, s.len);
 }
 
-unsigned char String::concat(const char *cstr, unsigned int length)
+uint8_t String::concat(const char *cstr, size_t length)
 {
-	unsigned int newlen = len + length;
+	size_t newlen = len + length;
 	if (!cstr) return 0;
 	if (length == 0) return 1;
 	if (!reserve(newlen)) return 0;
@@ -294,13 +294,13 @@ unsigned char String::concat(const char *cstr, unsigned int length)
 	return 1;
 }
 
-unsigned char String::concat(const char *cstr)
+uint8_t String::concat(const char *cstr)
 {
 	if (!cstr) return 0;
 	return concat(cstr, strlen(cstr));
 }
 
-unsigned char String::concat(char c)
+uint8_t String::concat(char c)
 {
 	char buf[2];
 	buf[0] = c;
@@ -308,49 +308,49 @@ unsigned char String::concat(char c)
 	return concat(buf, 1);
 }
 
-unsigned char String::concat(unsigned char num)
+uint8_t String::concat(uint8_t num)
 {
 	char buf[12];
 	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
-unsigned char String::concat(int num)
+uint8_t String::concat(int num)
 {
 	char buf[12];
 	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
-unsigned char String::concat(unsigned int num)
+uint8_t String::concat(size_t num)
 {
 	char buf[12];
 	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
-unsigned char String::concat(long num)
+uint8_t String::concat(long num)
 {
 	char buf[12];
 	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
-unsigned char String::concat(unsigned long num)
+uint8_t String::concat(unsigned long num)
 {
 	char buf[12];
 	StringUtils::itoa(num, buf, 10);
 	return concat(buf, strlen(buf));
 }
 
-unsigned char String::concat(float num)
+uint8_t String::concat(float num)
 {
 	char buf[12];
 	StringUtils::ftoa(num, buf, 6);
 	return concat(buf, strlen(buf));
 }
 
-unsigned char String::concat(double num)
+uint8_t String::concat(double num)
 {
 	char buf[12];
 	StringUtils::ftoa(num, buf, 6);
@@ -382,7 +382,7 @@ StringSumHelper & operator + (const StringSumHelper &lhs, char c)
 	return a;
 }
 
-StringSumHelper & operator + (const StringSumHelper &lhs, unsigned char num)
+StringSumHelper & operator + (const StringSumHelper &lhs, uint8_t num)
 {
 	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
 	if (!a.concat(num)) a.invalidate();
@@ -396,7 +396,7 @@ StringSumHelper & operator + (const StringSumHelper &lhs, int num)
 	return a;
 }
 
-StringSumHelper & operator + (const StringSumHelper &lhs, unsigned int num)
+StringSumHelper & operator + (const StringSumHelper &lhs, size_t num)
 {
 	StringSumHelper &a = const_cast<StringSumHelper&>(lhs);
 	if (!a.concat(num)) a.invalidate();
@@ -438,46 +438,46 @@ StringSumHelper & operator + (const StringSumHelper &lhs, double num)
 int String::compareTo(const String &s) const
 {
 	if (!buffer || !s.buffer) {
-		if (s.buffer && s.len > 0) return 0 - *(unsigned char *)s.buffer;
-		if (buffer && len > 0) return *(unsigned char *)buffer;
+		if (s.buffer && s.len > 0) return 0 - *(uint8_t *)s.buffer;
+		if (buffer && len > 0) return *(uint8_t *)buffer;
 		return 0;
 	}
 	return strcmp(buffer, s.buffer);
 }
 
-unsigned char String::equals(const String &s2) const
+uint8_t String::equals(const String &s2) const
 {
 	return (len == s2.len && compareTo(s2) == 0);
 }
 
-unsigned char String::equals(const char *cstr) const
+uint8_t String::equals(const char *cstr) const
 {
 	if (len == 0) return (cstr == NULL || *cstr == 0);
 	if (cstr == NULL) return buffer[0] == 0;
 	return strcmp(buffer, cstr) == 0;
 }
 
-unsigned char String::operator<(const String &rhs) const
+uint8_t String::operator<(const String &rhs) const
 {
 	return compareTo(rhs) < 0;
 }
 
-unsigned char String::operator>(const String &rhs) const
+uint8_t String::operator>(const String &rhs) const
 {
 	return compareTo(rhs) > 0;
 }
 
-unsigned char String::operator<=(const String &rhs) const
+uint8_t String::operator<=(const String &rhs) const
 {
 	return compareTo(rhs) <= 0;
 }
 
-unsigned char String::operator>=(const String &rhs) const
+uint8_t String::operator>=(const String &rhs) const
 {
 	return compareTo(rhs) >= 0;
 }
 
-unsigned char String::equalsIgnoreCase( const String &s2 ) const
+uint8_t String::equalsIgnoreCase( const String &s2 ) const
 {
 	if (this == &s2) return 1;
 	if (len != s2.len) return 0;
@@ -490,19 +490,19 @@ unsigned char String::equalsIgnoreCase( const String &s2 ) const
 	return 1;
 }
 
-unsigned char String::startsWith( const String &s2 ) const
+uint8_t String::startsWith( const String &s2 ) const
 {
 	if (len < s2.len) return 0;
 	return startsWith(s2, 0);
 }
 
-unsigned char String::startsWith( const String &s2, unsigned int offset ) const
+uint8_t String::startsWith( const String &s2, size_t offset ) const
 {
 	if (offset > len - s2.len || !buffer || !s2.buffer) return 0;
 	return strncmp( &buffer[offset], s2.buffer, s2.len ) == 0;
 }
 
-unsigned char String::endsWith( const String &s2 ) const
+uint8_t String::endsWith( const String &s2 ) const
 {
 	if ( len < s2.len || !buffer || !s2.buffer) return 0;
 	return strcmp(&buffer[len - s2.len], s2.buffer) == 0;
@@ -512,17 +512,17 @@ unsigned char String::endsWith( const String &s2 ) const
 /*  Character Access                         */
 /*********************************************/
 
-char String::charAt(unsigned int loc) const
+char String::charAt(size_t loc) const
 {
 	return operator[](loc);
 }
 
-void String::setCharAt(unsigned int loc, char c) 
+void String::setCharAt(size_t loc, char c) 
 {
 	if (loc < len) buffer[loc] = c;
 }
 
-char & String::operator[](unsigned int index)
+char & String::operator[](size_t index)
 {
 	static char dummy_writable_char;
 	if (index >= len || !buffer) {
@@ -532,20 +532,20 @@ char & String::operator[](unsigned int index)
 	return buffer[index];
 }
 
-char String::operator[]( unsigned int index ) const
+char String::operator[]( size_t index ) const
 {
 	if (index >= len || !buffer) return 0;
 	return buffer[index];
 }
 
-void String::getBytes(unsigned char *buf, unsigned int bufsize, unsigned int index) const
+void String::getBytes(uint8_t *buf, size_t bufsize, size_t index) const
 {
 	if (!bufsize || !buf) return;
 	if (index >= len) {
 		buf[0] = 0;
 		return;
 	}
-	unsigned int n = bufsize - 1;
+	size_t n = bufsize - 1;
 	if (n > len - index) n = len - index;
 	strncpy((char *)buf, buffer + index, n);
 	buf[n] = 0;
@@ -560,7 +560,7 @@ int String::indexOf(char c) const
 	return indexOf(c, 0);
 }
 
-int String::indexOf( char ch, unsigned int fromIndex ) const
+int String::indexOf( char ch, size_t fromIndex ) const
 {
 	if (fromIndex >= len) return -1;
 	const char* temp = strchr(buffer + fromIndex, ch);
@@ -573,7 +573,7 @@ int String::indexOf(const String &s2) const
 	return indexOf(s2, 0);
 }
 
-int String::indexOf(const String &s2, unsigned int fromIndex) const
+int String::indexOf(const String &s2, size_t fromIndex) const
 {
 	if (fromIndex >= len) return -1;
 	const char *found = strstr(buffer + fromIndex, s2.buffer);
@@ -586,7 +586,7 @@ int String::lastIndexOf( char theChar ) const
 	return lastIndexOf(theChar, len - 1);
 }
 
-int String::lastIndexOf(char ch, unsigned int fromIndex) const
+int String::lastIndexOf(char ch, size_t fromIndex) const
 {
 	if (fromIndex >= len) return -1;
 	char tempchar = buffer[fromIndex + 1];
@@ -602,7 +602,7 @@ int String::lastIndexOf(const String &s2) const
 	return lastIndexOf(s2, len - s2.len);
 }
 
-int String::lastIndexOf(const String &s2, unsigned int fromIndex) const
+int String::lastIndexOf(const String &s2, size_t fromIndex) const
 {
   	if (s2.len == 0 || len == 0 || s2.len > len) return -1;
 	if (fromIndex >= len) fromIndex = len - 1;
@@ -610,23 +610,14 @@ int String::lastIndexOf(const String &s2, unsigned int fromIndex) const
 	for (char *p = buffer; p <= buffer + fromIndex; p++) {
 		p = strstr(p, s2.buffer);
 		if (!p) break;
-		if ((unsigned int)(p - buffer) <= fromIndex) found = p - buffer;
+		if ((size_t)(p - buffer) <= fromIndex) found = p - buffer;
 	}
 	return found;
 }
 
-StringView String::substring(unsigned int left, unsigned int right) const
-{
+StringView String::substring(size_t left, size_t right) const{
+	return StringView(*this).substring(left, right);
 
-	if (left > right) {
-		unsigned int temp = right;
-		right = left;
-		left = temp;
-	}
-	if (left >= len) return StringView(this->buffer, 0);
-	if (right > len) right = len;
-
-	return StringView(this->buffer + left, right - left);
 }
 
 /*********************************************/
@@ -655,14 +646,14 @@ void String::replace(char find, char replace)
 
 // }
 
-void String::remove(unsigned int index){
+void String::remove(size_t index){
 	// Pass the biggest integer as the count. The remove method
 	// below will take care of truncating it at the end of the
 	// string.
-	remove(index, (unsigned int)-1);
+	remove(index, (size_t)-1);
 }
 
-void String::remove(unsigned int index, unsigned int count) {
+void String::remove(size_t index, size_t count) {
     if (index >= len) { return; }
     if (count <= 0) { return; }
     if (count > len - index) { count = len - index; }
@@ -725,20 +716,20 @@ bool String::isDigit(void) const {return StringUtils::is_digit(c_str(), len);}
 String toString(char c) { return String(c); }
 String toString(const char * c) { return String(c); }
 
-String toString(unsigned char value, unsigned char base) { return String(value, base); }
-String toString(int value, unsigned char base) { return String(value, base); }
-String toString(unsigned int value, unsigned char base) { return String(value, base); }
-String toString(long value, unsigned char base) { return String(value, base); }
-String toString(unsigned long value, unsigned char base) { return String(value, base); }
-String toString(long long value, unsigned char base) { return String(value, base); }
-String toString(unsigned long long value, unsigned char base) { return String(value, base); }
+String toString(uint8_t value, uint8_t base) { return String(value, base); }
+String toString(int value, uint8_t base) { return String(value, base); }
+String toString(size_t value, uint8_t base) { return String(value, base); }
+String toString(long value, uint8_t base) { return String(value, base); }
+String toString(unsigned long value, uint8_t base) { return String(value, base); }
+String toString(long long value, uint8_t base) { return String(value, base); }
+String toString(unsigned long long value, uint8_t base) { return String(value, base); }
 
-String toString(float value, unsigned char decimalPlaces) {return String(value, decimalPlaces);}
-String toString(double value, unsigned char decimalPlaces) {return String(value, decimalPlaces);}
+String toString(float value, uint8_t decimalPlaces) {return String(value, decimalPlaces);}
+String toString(double value, uint8_t decimalPlaces) {return String(value, decimalPlaces);}
 
 
 String toString(const iq_t iq, const uint8_t eps) {
-    char str[str_int_size] = {0};
+    char str[12] = {0};
     StringUtils::qtoa(iq, str, eps);
     return String(str);
 }
