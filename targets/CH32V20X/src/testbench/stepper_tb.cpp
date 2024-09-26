@@ -18,9 +18,15 @@
 #include "drivers/Actuator/SVPWM/svpwm2.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
+#include "types/matrix/matrix.hpp"
+#include "types/matrix/ceres/ceres.hpp"
+
 #define MOTOR_TYPE_STEPPER 0
 #define MOTOR_TYPE_BLDC 1
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
+
+// #include "dsp/filter/EKF.hpp"
+
 
 struct TurnSolver{
     uint16_t ta = 0;
@@ -85,7 +91,7 @@ void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    logger.init(576000);
+    logger.init(576000, CommMethod::Dma);
     logger.setEps(4);
 
     #if(MOTOR_TYPE == MOTOR_TYPE_STEPPER)
@@ -197,6 +203,19 @@ void stepper_tb(UartHw & logger){
     while(true){
         stp.run();
         stp.report();
+
+        Matrix_t<real_t, 2, 2> a;
+        a.at(0, 0) = 1;
+        a.at(0, 1) = 0;
+
+        
+        Matrix_t<real_t, 2, 2> b;
+        b.at(1, 0) = 0;
+        b.at(1, 1) = 1;
+
+        // Jet_t<real_t, 3> jet = {1};
+
+        // DEBUG_PRINTLN(std::setprecision(2), a, b, a + b, (a + b).inverse());
 
         // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
         // real_t target = f(t-2);
