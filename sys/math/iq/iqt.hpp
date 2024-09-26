@@ -75,7 +75,7 @@ public:
 
     template<typename T>
     requires std::is_integral_v<T>
-    __fast_inline constexpr iq_t(const T intValue) : value(_IQ(intValue)) {;}
+    __fast_inline constexpr iq_t(const T intValue) : value(intValue << GLOBAL_Q) {;}
 
     #ifdef STRICT_IQ
     __fast_inline consteval explicit iq_t(const float fv):value((std::is_constant_evaluated()) ? float_to_iq(fv) : float_to_iq(fv)){};

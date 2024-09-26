@@ -38,41 +38,39 @@ extern "C" {
             __time_current_t__ + (__time_current_t__ ^ __time_begin_t__) & 0x8000 ?  __time_begin_t__ : -__time_begin_t__)
 #endif
 
-#define NanoMut(x) ( x * 1000 / 144)
-
-#define MicroTrim 0
-#define NanoTrim 300
-
-#define tick_per_ms (F_CPU / 1000)
-#define tick_per_us (tick_per_ms / 1000)
+#define TICKS_PER_MS (F_CPU / 1000)
+#define TICKS_PER_US (TICKS_PER_MS / 1000)
 
 #ifdef N32G45X
 #define M_SYSTICK_CNT SysTick->VAL
 #else
 #define M_SYSTICK_CNT SysTick->CNT
+#define M_SYSTICK_DISER    NVIC_DisableIRQ(SysTicK_IRQn);
+#define M_SYSTICK_ENER    NVIC_EnableIRQ(SysTicK_IRQn);
 #endif
 
+#define NANO_MUT(x) ( x * 1000 / (F_CPU / 1000000))
 
 extern volatile uint32_t msTick;
 
 __fast_inline uint32_t millis(void){return msTick;}
 
 __fast_inline static uint64_t micros(void){
-    __disable_irq();
-    uint64_t m = msTick;
+    M_SYSTICK_DISER;
+    __IO uint64_t m = msTick;
     __IO uint64_t ticks = M_SYSTICK_CNT;
-    __enable_irq();
+    M_SYSTICK_ENER;
 
-    return (m * 1000 + ticks / tick_per_us);
+    return (m * 1000 + ticks / TICKS_PER_US);
 }
 
 __fast_inline static uint64_t nanos(){
-    __disable_irq();
-    uint64_t m = msTick;
+    M_SYSTICK_DISER;
+    __IO uint64_t m = msTick;
     __IO uint64_t ticks = M_SYSTICK_CNT;
-    __enable_irq();
+    M_SYSTICK_ENER;
 
-    return (m * 1000000 + NanoMut(ticks));
+    return (m * 1000000 + NANO_MUT(ticks));
 }
 
 void delay(uint32_t ms);
@@ -83,6 +81,18 @@ void delayNanoseconds(const uint32_t ns);
 
 void Systick_Init(void);
 __interrupt void SysTick_Handler(void);
+
+
+#undef TIMESTAMP_BEGIN
+#undef TIMESTAMP_SINCE
+
+#undef TICKS_PER_MS
+#undef TICKS_PER_US
+
+#undef M_SYSTICK_CNT
+#undef M_SYSTICK_DISER
+#undef M_SYSTICK_ENER
+
 
 #ifdef __cplusplus
 }

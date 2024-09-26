@@ -42,10 +42,10 @@ class FOCStepper:public FOCMotor{
     
     SpeedCtrl::Config spd_config;
     SpeedCtrl speed_ctrl{meta, spd_config, curr_ctrl};
-    
+
     PositionCtrl::Config pos_config;
     PositionCtrl position_ctrl{meta, pos_config, curr_ctrl};
-
+    
     TrapezoidPosCtrl::Config tpz_config;
     TrapezoidPosCtrl trapezoid_ctrl{meta, tpz_config, speed_ctrl, position_ctrl};
 

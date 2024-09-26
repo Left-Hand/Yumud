@@ -170,8 +170,20 @@
 #endif
 
 #ifndef CLAMP
-#define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
-#define CLAMP2(x, ma) CLAMP((x), -ma, ma)
+#if defined(__cplusplus)
+    #define CLAMP(x, mi, ma) __clamp_tmpl(x, mi, ma)
+    #define CLAMP2(x, ma) __clamp_tmpl(x, -ma, ma)
+
+    template<typename T>
+    constexpr __fast_inline T __clamp_tmpl(const T x, const auto mi, const auto ma) {
+        if(unlikely(x > static_cast<T>(ma))) return static_cast<T>(ma);
+        if(unlikely(x < static_cast<T>(mi))) return static_cast<T>(mi);
+        return x;
+    }
+#else
+    #define CLAMP(x, mi, ma) MIN(MAX(x, mi), ma)
+    #define CLAMP2(x, ma) CLAMP(x, -ma, ma)
+#endif
 #endif
 
 #ifndef STEP_TO

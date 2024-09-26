@@ -16,16 +16,20 @@
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 #include "drivers/Encoder/odometer_poles.hpp"
 
-scexpr uint32_t foc_freq = 32768;
+// scexpr uint32_t foc_freq = 32768;
+// scexpr uint32_t chopper_freq = 32768;
+// scexpr uint32_t foc_freq = 8192 * 4;
+scexpr uint32_t foc_freq = 20000;
+// scexpr uint32_t foc_freq = 18000;
+// scexpr uint32_t foc_freq = 15000;
+// scexpr uint32_t foc_freq = 12000;
 scexpr uint32_t chopper_freq = 32768;
-scexpr uint32_t est_freq = foc_freq / 16;
-scexpr uint32_t est_devider = foc_freq / est_freq;
+
 
 scexpr real_t pi_4 = real_t(PI/4);
 scexpr real_t pi_2 = real_t(PI/2);
-scexpr real_t tau = real_t(TAU);
 scexpr real_t pi = real_t(PI);
-scexpr real_t hpi = real_t(PI/2); 
+scexpr real_t tau = real_t(TAU);
 
 scexpr int poles = 50;
 scexpr real_t inv_poles = real_t(1) / poles;
@@ -52,9 +56,19 @@ struct MetaData{
     real_t max_leadrad = real_t(0.2);
     
     void reset();
-    real_t get_max_leadrad();
-    real_t get_max_raddiff();
+    __fast_inline constexpr real_t get_max_leadrad();
+    __fast_inline constexpr real_t get_max_raddiff();
 };
+
+constexpr real_t MetaData::get_max_leadrad(){
+    return MIN( ABS(curr) * curr_to_leadrad_ratio, 
+                ABS(spd) * spd_to_leadrad_ratio,
+                max_leadrad);
+}
+
+constexpr real_t MetaData::get_max_raddiff(){
+    return get_max_leadrad() + pi_2;
+}
 
 
 namespace MotorUtils{

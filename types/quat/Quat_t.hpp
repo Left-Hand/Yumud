@@ -5,25 +5,30 @@
 
 template <arithmetic T>
 
-class Quat_t{
+struct Quat_t{
     public:
-        T x = T(0);
-        T y = T(0);
-        T z = T(0);
-        T w = T(0);
+        struct{
+            struct{
+                T x;
+                T y;
+                T z;
+                T w;                
+            };
+            T raw[4];
+        };
 
-        inline Quat_t() :
+        __fast_inline constexpr Quat_t() :
                 x(0),
                 y(0),
                 z(0),
                 w(1) {
         }
     
-        inline Quat_t(T p_x, T p_y, T p_z, T p_w) :
-                x(p_x),
-                y(p_y),
-                z(p_z),
-                w(p_w) {
+        __fast_inline constexpr Quat_t(const auto p_x, const auto p_y, const auto p_z, const auto p_w) :
+                x(static_cast<T>(p_x)),
+                y(static_cast<T>(p_y)),
+                z(static_cast<T>(p_z)),
+                w(static_cast<T>(p_w)) {
         }
 
 
@@ -97,7 +102,7 @@ class Quat_t{
                 w(p_q.w) {
         }
 
-        Quat_t operator=(const Quat_t &p_q) {
+        __fast_inline constexpr  Quat_t operator=(const Quat_t &p_q) {
             x = p_q.x;
             y = p_q.y;
             z = p_q.z;
@@ -125,6 +130,9 @@ class Quat_t{
                 w = s * real_t(0.5);
             }
         }
+
+        __fast_inline constexpr  T & operator [](const size_t idx){return raw[idx];}
+        __fast_inline constexpr const T & operator [](const size_t idx) const {return raw[idx];}
 };
 
 using Quat = Quat_t<real_t>;

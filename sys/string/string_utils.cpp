@@ -83,11 +83,6 @@ ret:
 	return {int_part, frac_part, scale};
 }
 
-
-bool StringUtils::is_digit(const char chr){
-    return chr >= '0' and chr <= '9';
-}
-
 bool StringUtils::is_numeric(const char* str, const size_t len) {
 	bool hasDigit = false;
 	bool hasDot = false;

@@ -26,7 +26,7 @@ public:
     void reset();
     bool locked();
     void unlock_bus();
-    void configBaudRate(const uint32_t baudRate) override{;}//TODO
+    void setBaudRate(const uint32_t baudRate) override{;}//TODO
     void enableHwTimeout(const bool en = true);
 };
 

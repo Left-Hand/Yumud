@@ -11,9 +11,14 @@
 template <arithmetic T>
 struct Vector3_t{
 public:
-    T x;
-    T y;
-    T z;
+    struct{
+        struct{
+            T x;
+            T y;
+            T z;
+        };
+        T raw[3];
+    };
 
     constexpr Vector3_t():x(static_cast<T>(0)), y(static_cast<T>(0)), z(static_cast<T>(0)){;}
 
@@ -167,6 +172,10 @@ public:
         Vector3_t v = *this;
         v.normalize();
         return v;
+    }
+
+    constexpr operator bool() const {
+        return bool(x) or bool(y) or bool(z);
     }
 };
 

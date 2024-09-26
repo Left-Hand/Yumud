@@ -18,15 +18,80 @@
 #include "drivers/Actuator/SVPWM/svpwm2.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
+#include "types/matrix/matrix.hpp"
+#include "types/matrix/ceres/ceres.hpp"
+
 #define MOTOR_TYPE_STEPPER 0
 #define MOTOR_TYPE_BLDC 1
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
+
+// #include "dsp/filter/EKF.hpp"
+
+
+struct TurnSolver{
+    uint16_t ta = 0;
+    uint16_t tb = 0;
+    real_t pa = 0;
+    real_t pb = 0;
+    real_t va = 0;
+    real_t vb = 0;
+};
+
+TurnSolver turnSolver;
+
+real_t demo(uint milliseconds){
+    uint32_t turnCnt = milliseconds % 2667;
+    uint32_t turns = milliseconds / 2667;
+    
+    static constexpr real_t velPoints[7] = {
+        real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
+    };
+    
+    static constexpr real_t posPoints[7] = {
+        real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
+    };
+
+    uint16_t tickPoints[7] = {
+        0, 300, 400, 500, 2210, 2567, 2667 
+    };
+
+    int8_t i = 6;
+
+    while((turnCnt < tickPoints[i]) && (i > -1))
+        i--;
+    
+    turnSolver.ta = tickPoints[i];
+    turnSolver.tb = tickPoints[i + 1];
+    uint16_t dt = turnSolver.tb - turnSolver.ta;
+
+    turnSolver.va = velPoints[i];
+    turnSolver.vb = velPoints[i + 1];
+    
+    turnSolver.pa = posPoints[i];
+    turnSolver.pb = posPoints[i + 1];
+    real_t dp = turnSolver.pb - turnSolver.pa;
+
+    real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / (real_t)dt);
+    real_t temp = (real_t)dt / 1000 / dp; 
+
+    real_t yt = 0;
+
+    if((i == 0) || (i == 2) || (i == 4))
+        yt = CubicInterpolation::mapping(Vector2{real_t(0.4f), real_t(0.4f) * turnSolver.va * temp}, Vector2(real_t(0.6f), real_t(1.0f) - real_t(0.4f)  * turnSolver.vb * temp), _t);
+    else
+        yt = _t;
+
+    real_t new_pos =  real_t(turns) + turnSolver.pa + dp * yt;
+
+    return new_pos;
+}
+
 
 void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    logger.init(576000);
+    logger.init(576000, CommMethod::Dma);
     logger.setEps(4);
 
     #if(MOTOR_TYPE == MOTOR_TYPE_STEPPER)
@@ -88,14 +153,14 @@ void stepper_tb(UartHw & logger){
     svpwm.init();
     svpwm.enable();
 
-    spi1.init(18000000);
+    spi1.init(18_M);
     spi1.bindCsPin(portA[15], 0);
 
     MT6816 encoder{{spi1, 0}};
     // MT6701 encoder{{spi1, 0}};
 
     I2cSw i2cSw{portD[1], portD[0]};
-    i2cSw.init(400000);
+    i2cSw.init(400_K);
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
@@ -109,13 +174,20 @@ void stepper_tb(UartHw & logger){
 
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
-    timer3.bindCb(IT::Update, [&](){stp.tick();});
+    timer3.bindCb(IT::Update, [&](){
+        static int cnt = 0;
+        cnt++;
+        // if(cnt == chopper_freq / foc_freq){
+        stp.tick();
+            // cnt = 0;
+        // }
+    });
     timer3.enableIt(IT::Update,{0,0});
 
     can1.init(Can::BaudRate::_1M);
  
     stp.init();
-    stp.setSpeedLimit(60);
+    stp.setSpeedLimit(80);
     stp.setAccelLimit(172);
     stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
@@ -129,29 +201,49 @@ void stepper_tb(UartHw & logger){
     // cubic.mapping
     // t = 0;
     while(true){
-        stp.run(); 
+        stp.run();
         stp.report();
+
+        // Matrix_t<real_t, 2, 2> a;
+        // a.at(0, 0) = 1;
+        // a.at(0, 1) = 0;
+
+        
+        // Matrix_t<real_t, 2, 2> b;
+        // b.at(1, 0) = 0;
+        // b.at(1, 1) = 1;
+
+        // Jet_t<real_t, 3> jet = {1};
+
+        // DEBUG_PRINTLN(std::setprecision(2), a, b, a + b, (a + b).inverse());
 
         // auto f = [](const real_t x){return (x > 0) ? (x > real_t(0.2)) ? real_t(0.2) * x - real_t(0.04) : x * x : 0;};
         // real_t target = f(t-2);
-        // real_t target = real_t(0.01) * t;
+        // real_t target = real_t(0.02) * sin(3 * t);
+        // real_t target = real_t(0.02) * t;
+        // real_t target = real_t(40.01) * CLAMP2((sin(t) * sign(fmod(t, real_t(PI)) - real_t(PI/2))), real_t(0.5));
+        // real_t target = 
+        // real_t target = real_t(1.01) * sin(16 *t);
+        // target = 
+        // static real_t target_filtered = 0;
+        // target_filtered = ((target >> 8) * 1 + (target_filtered >> 8) *8191) >> 5;
         // stp.setTargetPosition(target);
         // stp.setTargetVector(target);
         // stp.setTargetSpeed(5);
         // stp.setTargetVector(target);
 
-        // if(logger.pending() == 0) logger.println(stp.getPositionErr(),fmod(t, real_t(1.00)), target, stp.getPosition());
+        // if(logger.pending() == 0) logger.println(stp.getTarget(), stp.getPosition(), stp.getSpeed(), stp.getCurrent(), real_t(adc1.inj(1)), real_t(adc1.inj(2)));
         // if(logger.pending() == 0) logger.println(real_t(adc1.inj(1)), real_t(adc1.inj(2)));
         // Sys::Clock::reCalculateTime();
 
-        // stp.setTargetPosition(Interpolation::demo() * 10);
+        // stp.setTargetPosition(demo() * 10);
         // stp.setTargetPosition(5 * sin(7 * t));
-        // stp.setTargetPosition(demo() * 17);
+        // stp.setTargetPosition(demo(millis() * 7));
 
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(7 * frac(t));
 
-        // real_t target = real_t(0.7) * sin(t);
+        // real_t target = real_t(0.7) * sin(t)
         // stp.setTargetPosition(target);
         // stp.setTargetCurrent(target);
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getPosition(), target);

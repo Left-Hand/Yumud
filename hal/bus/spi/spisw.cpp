@@ -1,7 +1,7 @@
 #include "spisw.hpp"
 
 void SpiSw::init(const uint32_t baudRate, const CommMethod tx_method , const CommMethod rx_method ){
-    configBaudRate(baudRate);
+    setBaudRate(baudRate);
 
     mosi_gpio.outpp();
     sclk_gpio.outpp(1);

@@ -17,6 +17,13 @@
 extern "C" {
 #endif
 
+#define TICKS_PER_MS (F_CPU / 1000)
+#define TICKS_PER_US (TICKS_PER_MS / 1000)
+
+#define MICRO_TRIM 0
+#define NANO_TRIM 300
+
+
 volatile uint32_t msTick = 0;
 
 void delay(const uint32_t ms)
@@ -30,7 +37,7 @@ void delayMicroseconds(const uint32_t us)
   /* Number of ticks per millisecond */
   uint64_t tickPerMs = SysTick->CMP + 1;
   /* Number of ticks to count */
-  uint64_t nbTicks = MAX(us - MicroTrim, 0) * tick_per_us;
+  uint64_t nbTicks = MAX(us - MICRO_TRIM, 0) * TICKS_PER_US;
   /* Number of elapsed ticks */
   uint64_t elapsedTicks = 0;
   __IO uint64_t oldTicks = currentTicks;
@@ -52,7 +59,7 @@ volatile void delayNanoseconds(uint32_t ns) {
     /* Number of ticks per millisecond */
     uint64_t tickPerMs = SysTick->CMP + 1;
     /* Number of ticks to count */
-    uint64_t nbTicks = NanoMut(MAX(ns - NanoTrim, 0));
+    uint64_t nbTicks = NANO_MUT(MAX(ns - NANO_TRIM, 0));
     /* Number of elapsed ticks */
     uint64_t elapsedTicks = 0;
     __IO uint64_t oldTicks = currentTicks;
@@ -76,7 +83,7 @@ void Systick_Init(){
     SysTick->SR  = 0;
     SysTick->CTLR= 0;
     SysTick->CNT = 0;
-    SysTick->CMP = tick_per_ms - 1;
+    SysTick->CMP = TICKS_PER_MS - 1;
     SysTick->CTLR= 0xF;
 
     NVIC_SetPriority(SysTicK_IRQn,0xFF);

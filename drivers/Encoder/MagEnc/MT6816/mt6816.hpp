@@ -14,6 +14,7 @@ protected:
     SpiDrv bus_drv;
     real_t lap_position;
     uint32_t errcnt = 0;
+    bool fast_mode = true;
 
     struct Semantic{
         union{
@@ -41,20 +42,24 @@ public:
 
     void update() override{
         uint16_t raw = getPositionData();
-        last_semantic = Semantic(raw);
+        if(fast_mode == false){
+            last_semantic = Semantic(raw);
 
-        uint8_t count = 0;
+            uint8_t count = 0;
 
-        raw -= last_semantic.pc;
-        while(raw){//Brian Kernighan algorithm
-            raw &= raw - 1;
-            ++count;
-        }
+            raw -= last_semantic.pc;
+            while(raw){//Brian Kernighan algorithm
+                raw &= raw - 1;
+                ++count;
+            }
 
-        if(count % 2 == last_semantic.pc){
-            u16_to_uni(last_semantic.data_14bit << 2, lap_position);
+            if(count % 2 == last_semantic.pc){
+                u16_to_uni(last_semantic.data_14bit << 2, lap_position);
+            }else{
+                errcnt++;
+            }
         }else{
-            errcnt++;
+            u16_to_uni(raw, lap_position);
         }
     }
 

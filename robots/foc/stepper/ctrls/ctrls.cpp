@@ -1,6 +1,6 @@
 #include "ctrls.hpp"
 
-#define POS_ERR_LIMIT 100
+#define ERR_LIMIT 200
 
 #define SPD_CTRL_TYPE_ORG 0
 #define SPD_CTRL_TYPE_BANGBANG 1
@@ -9,8 +9,6 @@
 
 using Result = CtrlResult;
 
-// scexpr real_t still_spd_radius = real_t(0.7);
-
 
 void MetaData::reset(){
     pos_limit = Range::INF;
@@ -18,22 +16,23 @@ void MetaData::reset(){
     max_spd = 30;
     max_acc = 30;
     spd_to_leadrad_ratio = real_t(0.3);
-    curr_to_leadrad_ratio = real_t(1.4);
-    max_leadrad = real_t(PI * 0.7);
+    curr_to_leadrad_ratio = real_t(1.9);
+    // max_leadrad = real_t(PI * 0.7);
+    max_leadrad = real_t(PI * 1.9);
+    // max_leadrad = real_t(PI * 0.3);
 }
 
 void CurrentCtrl::Config::reset(){
     curr_slew_rate = real_t(60) / foc_freq;
-    rad_slew_rate = real_t(420) / foc_freq;
+    rad_slew_rate = real_t(30) / foc_freq;
     openloop_curr = real_t(0.7);
 }
 
 void PositionCtrl::Config::reset(){
     // kp = 5;
     // kd = real_t(0.57);
-    kp = real_t(6.6);
-    ki = real_t(100);
-    kd = real_t(0.27);
+    kp = real_t(1.5);
+    kd = real_t(9.2);
     // kd = real_t(0);
 }
 
@@ -50,63 +49,88 @@ void TrapezoidPosCtrl::Config::reset(){
 }
 
 
-CtrlResult CurrentCtrl::update(const CtrlResult res){
-    last_curr = STEP_TO(last_curr, res.current, config.curr_slew_rate);
-    last_raddiff = STEP_TO(last_raddiff, res.raddiff, config.rad_slew_rate);
-
-    return {last_curr, last_raddiff};
-}
 
 
 Result PositionCtrl::update(real_t targ_pos, const real_t real_pos, 
-    const real_t real_spd, const real_t real_elecrad){
+    const real_t real_spd){
 
-    targ_pos = meta.pos_limit.clamp(targ_pos);
-    targ_spd = (targ_spd * 31 + targ_spd_est.update(targ_pos)) >> 5;
+    scexpr real_t inquater_radius = real_t(inv_poles / 4);
+    scexpr real_t min_curr = real_t(0.01);
+        
+    // targ_pos = meta.pos_limit.clamp(targ_pos);
+    targ_spd = (targ_spd * 127 + targ_spd_est.update(targ_pos)) >> 7;
 
-    real_t pos_err = CLAMP2(targ_pos - real_pos, POS_ERR_LIMIT);
+    real_t pos_err = CLAMP2(targ_pos - real_pos, ERR_LIMIT);
+    // real_t spd_err = CLAMP2(targ_spd - real_spd, ERR_LIMIT);
+    // real_t spd_err = CLAMP2((ABS(targ_spd) - ABS(real_spd)) * sign(targ_spd - real_spd), ERR_LIMIT);
+    // real_t spd_err = CLAMP2(SIGN_DIFF(targ_spd, real_spd) ? sign(targ_spd) * (ABS(real_spd) - ABS(targ_spd)) : targ_spd - real_spd, ERR_LIMIT);
+    real_t spd_err = CLAMP2(targ_spd - real_spd, ERR_LIMIT);
     real_t abs_pos_err = ABS(pos_err);
-    real_t abs_real_spd = ABS(real_spd);
-    real_t abs_min_curr = meta.max_curr * real_t(0.2);
+    // real_t abs_real_spd = ABS(real_spd);/
+    // real_t abs_min_curr = meta.max_curr * real_t(0.2);
     
-    scexpr real_t inverse_spd_thd = real_t(0.8);
-    scexpr real_t stray_pos_thd = real_t(0.04);
+    // scexpr real_t inverse_spd_thd = real_t(0.8);
+    // scexpr real_t stray_pos_thd = real_t(0.04);
 
-    if(pos_err > 0 and real_spd < - inverse_spd_thd){//inverse run
-        return {STEP_TO(meta.curr, abs_min_curr, curr_ctrl.config.curr_slew_rate), 0};
+    // if(pos_err > 0 and real_spd < - inverse_spd_thd){//inverse run
+    //     return {STEP_TO(meta.curr, abs_min_curr, curr_ctrl.config.curr_slew_rate), 0};
+    // }
+
+    // if(pos_err < 0 and real_spd > inverse_spd_thd){//inverse run
+    //     return {STEP_TO(meta.curr, abs_min_curr, curr_ctrl.config.curr_slew_rate), 0};
+    // }
+
+    // if((abs_real_spd < inverse_spd_thd) and (abs_pos_err > stray_pos_thd)){
+    //     return {meta.max_curr, SIGN_AS(pi_2, pos_err)};
+    // }
+
+
+
+    // scexpr auto kd1 = real_t(0.01);
+    // scexpr auto kd1 = real_t(0.004);
+    // scexpr auto kd1 = real_t(0.006);
+    // scexpr auto kd1 = real_t(0.02);
+    // scexpr auto kd1 = real_t(0.0001);
+    // scexpr auto kd1 = real_t(0.000);
+    // scexpr auto kd1 = real_t(0.1);
+
+
+    // real_t w_k_change =  kd1 * (targ_spd * targ_spd - real_spd * real_spd);
+    // real_t w_k_change =  kd1 * (targ_spd - real_spd);
+    // real_t w_k_change =  kd1 * spd_err * spd_err * sign(spd_err);
+    real_t w_k_change =  (config.kd * spd_err) >> 8;
+    // real_t w_k_change =  0;
+
+    // real_t w_elapsed = CLAMP2(kd2 * abs_pos_err, meta.max_curr);
+    // real_t w_elapsed = kd2 * pos_err * pos_err * sign(pos_err);
+    // real_t w_elapsed = kd2 * pos_err;
+    real_t w_elapsed = config.kp * SIGN_AS(sqrt(ABS(pos_err)), pos_err);
+    // real_t w_elapsed = CLAMP2(kd2 * pos_err, meta.max_curr * 2);
+
+    // real_t w = CLAMP2(w_raw, meta.max_curr);
+    // real_t w = CLAMP(w_raw, 0, meta.max_curr);
+    real_t w = CLAMP2(w_elapsed + w_k_change, meta.max_curr);
+    real_t curr = MAX(ABS(w), min_curr);
+    // real_t abs_curr = ;
+
+    if(unlikely(abs_pos_err < inquater_radius)){
+        return {curr, pos_err * (poles * tau)};
+    }else{
+    // bool dir_correct = meta.spd * pos_err > 0; 
+
+    // if(dir_correct){
+        // return {ABS(targ_curr), SIGN_AS(meta.get_max_raddiff(), targ_curr)};
+        // if(SIGN_DIFF(pos_err, w) == false){
+        return {curr, SIGN_AS(meta.get_max_raddiff(), w)};
     }
-
-    if(pos_err < 0 and real_spd > inverse_spd_thd){//inverse run
-        return {STEP_TO(meta.curr, abs_min_curr, curr_ctrl.config.curr_slew_rate), 0};
-    }
-
-    if((abs_real_spd < inverse_spd_thd) and (abs_pos_err > stray_pos_thd)){
-        return {meta.max_curr, SIGN_AS(pi_2, pos_err)};
-    }
-
-    {
-        scexpr auto inquater_radius = real_t(inv_poles / 4);
-
-        scexpr auto kd1 = real_t(0.001);
-        scexpr auto kd2 = real_t(5.0);
-
-        real_t w_k_change =  kd1 * (targ_spd * targ_spd - real_spd * real_spd);
-
-        real_t w_elapsed = CLAMP2(kd2 * abs_pos_err, meta.max_curr);
-        // real_t w_elapsed = kd2 * abs_pos_err;
-
-        real_t w = CLAMP2(w_elapsed + w_k_change, meta.max_curr);
-
-        real_t abs_curr = ABS(w);
-
-        if(abs_pos_err < inquater_radius){
-            return {abs_curr, pos_err * (poles * tau)};
-        }else{
-            real_t abs_raddiff = meta.get_max_raddiff();
-            real_t raddiff = SIGN_AS(abs_raddiff, pos_err);
-            return {abs_curr, raddiff};
-        }
-    }
+        // }else{
+            // return {0,0};
+        // }
+    // }else{
+        // return{0,0};
+        // return {curr * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), w)};
+    // }
+    // }
 }
 
 Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
@@ -149,7 +173,7 @@ Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
 }
 
 
-Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, const real_t real_spd, const real_t real_elecrad){
+Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, const real_t real_spd){
 
     const real_t max_spd = meta.max_spd;
 
@@ -192,14 +216,14 @@ Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, con
                 tstatus = Tstatus::ACC;
             }
 
-            return position_ctrl.update(targ_pos, real_pos, real_spd, real_elecrad);
+            return position_ctrl.update(targ_pos, real_pos, real_spd);
 
             break;
     }
     
 }
 
-// Result TrapezoidPosCtrl::update(real_t targ_pos, const real_t real_pos, const real_t real_spd, const real_t real_elecrad){
+// Result TrapezoidPosCtrl::update(real_t targ_pos, const real_t real_pos, const real_t real_spd){
 
 //     const real_t spd_acc_delta = meta.max_acc / foc_freq;
 //     const real_t max_spd = meta.max_spd;
@@ -243,7 +267,7 @@ Result TrapezoidPosCtrl::update(const real_t targ_pos,const real_t real_pos, con
 //                 tstatus = Tstatus::ACC;
 //             }
 
-//             return position_ctrl.update(targ_pos, real_pos, real_spd, real_elecrad);
+//             return position_ctrl.update(targ_pos, real_pos, real_spd);
 
 //             break;
 //     }

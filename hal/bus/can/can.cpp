@@ -298,9 +298,8 @@ void Can::enableIndexPriority(const bool en){
     else instance->CTLR &= ~CAN_CTLR_TXFP;
 }
 
-void Can::configBaudRate(const uint32_t baudRate){
+void Can::setBaudRate(const uint32_t baudRate){
     //TODO
-    // static_assert(false,"configBaudRate is not supported currently");
 }
 
 void Can::handleTx(){

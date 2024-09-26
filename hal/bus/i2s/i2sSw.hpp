@@ -105,7 +105,7 @@ public:
         sda.outpp();
         ws.outpp();
     }
-    void configBaudRate(const uint32_t baudRate) override {;}
+    void setBaudRate(const uint32_t baudRate) override {;}
 };
 
 #endif 

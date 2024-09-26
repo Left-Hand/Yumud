@@ -106,10 +106,10 @@ void I2cSw::init(const uint32_t baudRate){
     scl_gpio.set();
     scl_gpio.outod();
 
-    configBaudRate(baudRate);
+    setBaudRate(baudRate);
 }
 
-void I2cSw::configBaudRate(const uint32_t baudRate) {
+void I2cSw::setBaudRate(const uint32_t baudRate) {
     if(baudRate == 0){
         delays = 0;
     }else{

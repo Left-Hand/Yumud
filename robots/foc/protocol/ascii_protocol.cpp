@@ -2,9 +2,9 @@
 #include "robots/foc/focmotor.hpp"
 
 
-void AsciiProtocol::parseTokens(const String & _command, const std::vector<String> & args){
+void AsciiProtocol::parseTokens(const StringView _command, const Strings & args){
     auto command = _command;
-    switch(hash_impl(command.c_str(), command.length())){
+    switch(hash_impl(command.data(), command.length())){
         case "save"_ha:
         case "sv"_ha:
             motor.saveArchive(args.size() ? bool(int(args[0])) : true);
@@ -226,41 +226,14 @@ void AsciiProtocol::parseTokens(const String & _command, const std::vector<Strin
     }
 }
 
-void AsciiProtocol::parseLine(const String & _line){
-    if(_line.length() < 1) return;
-
-    auto tokens = split_string(_line, ' ');
+void AsciiProtocol::parseLine(const StringView _line){
+    auto tokens = _line.split(' ');
     if(tokens.size()){
         auto command = tokens[0];
         tokens.erase(tokens.begin());
         parseTokens(command, tokens);
     }
 }
-
-
-std::vector<String> AsciiProtocol::split_string(const String& input, char delimiter) {
-    std::vector<String> result;
-
-    int startPos = 0;
-    int endPos = input.indexOf(delimiter, startPos);
-
-    while (endPos != -1) {
-        if(not(endPos - startPos <= 1 and input[startPos] == delimiter)){
-            String token = input.substring(startPos, endPos);
-            result.push_back(token.c_str());
-        }
-        startPos = endPos + 1;
-        endPos = input.indexOf(delimiter, startPos);
-    }
-
-    if (startPos < (int)input.length()) {
-        String lastToken = input.substring(startPos);
-        result.push_back(lastToken.c_str());
-    }
-
-    return result;
-}
-
 
 void AsciiProtocol::readString(){
     while(logger.available()){

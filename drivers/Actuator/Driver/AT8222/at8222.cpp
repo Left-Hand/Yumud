@@ -15,15 +15,3 @@ void AT8222::enable(const bool en){
     }
 }
 
-AT8222 & AT8222::operator = (const real_t duty){
-    if(duty > 0){
-        forward_pwm = 0;
-        backward_pwm = duty;
-    }else if(duty < 0){
-        forward_pwm = -duty;
-        backward_pwm = 0;
-    }else{
-        forward_pwm = 0;
-        backward_pwm = 0;
-    }
-    return *this;}

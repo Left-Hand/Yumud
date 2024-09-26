@@ -93,7 +93,6 @@ class FOCMotor;
 
 class AsciiProtocol{
 private:
-    std::vector<String> split_string(const String& input, char delimiter);
     String temp;
 protected:
     FOCMotor & motor;
@@ -103,8 +102,8 @@ protected:
 public:
     AsciiProtocol(FOCMotor & _motor, IOStream & _logger):motor(_motor), logger(_logger){;}
 
-    virtual void parseTokens(const String & _command,const std::vector<String> & args);
-    void parseLine(const String & _line);
+    virtual void parseTokens(const StringView _command,const Strings & args);
+    void parseLine(const StringView _line);
     void readString();
 };
 
