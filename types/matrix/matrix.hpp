@@ -207,7 +207,7 @@ public:
     void vRoundingElementToZero(const int16_t _i, const int16_t _j);
     Matrix_t RoundingMatrixToZero(void);
     void vSetHomogen(const T _val);
-    void vSetToZero(void);
+    void setZero(void);
     void vSetRandom(const int32_t _maxRand, const int32_t _minRand);
     void vSetDiag(const T _val);
     void vSetIdentity(void);
@@ -649,7 +649,7 @@ inline void Matrix_t<T>::vSetHomogen(const T _val) {
 }
 
 template<typename T>
-inline void Matrix_t<T>::vSetToZero(void) {
+inline void Matrix_t<T>::setZero(void) {
     this->vSetHomogen(T(0));
 }
 
@@ -1049,7 +1049,7 @@ inline Matrix_t<T> Matrix_t<T>::CholeskyDec(void) const {
 
     /* Note that _outp need to be initialized as zero matrix */
     Matrix_t _outp(this->i16row, this->i16col);
-    _outp.vSetToZero();
+    _outp.setZero();
     if (this->i16row != this->i16col) {
         _outp.invalid();
         return _outp;
@@ -1101,9 +1101,9 @@ inline Matrix_t<T> Matrix_t<T>::HouseholderTransformQR(const int16_t _rowTransfo
     
     /* Note that _outp & _vectTemp need to be initialized as zero matrix */
     Matrix_t _outp(this->i16row, this->i16row);
-    _outp.vSetToZero();
+    _outp.setZero();
     Matrix_t _vectTemp(this->i16row, 1);
-    _vectTemp.vSetToZero();
+    _vectTemp.setZero();
     
     if ((_rowTransform >= this->i16row) || (_colTransform >= this->i16col)) {
         _outp.invalid();
