@@ -37,8 +37,15 @@ protected:
     static constexpr uint8_t default_chip_id = 0;//TODO
     static constexpr uint8_t default_i2c_addr = 0x68;
 
+    struct Vec3i16{
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    };
+    
     struct{
-
+        Vec3i16 accel_data;
+        Vec3i16 gyro_data;
     };
 
 

@@ -18,10 +18,11 @@ void BMI160::init(){
     delay(200);
 	uint8_t ch = 0;
 	readReg(0x03,ch);
+    
 	if (ch == 0x14){
-		DEBUG_PRINTLN("sensor is Normal \r\n");
+		DEBUG_PRINTLN("sensor init succeed");
 	}else{
-		DEBUG_PRINTLN("sensor is bad \r\n");
+		DEBUG_PRINTLN("sensor init failed");
     }
 }
 
@@ -36,9 +37,9 @@ bool BMI160::verify(){
     readReg(chip_id_reg.address, chip_id_reg.data);
     bool passed = chip_id_reg.data == chip_id_reg.correct;
     if(passed){
-        DEBUG_PRINTLN("sensor verify passed\r\n");
+        DEBUG_PRINTLN("sensor verify passed");
     }else{
-        DEBUG_PRINTLN("sensor verify failed\r\n");
+        DEBUG_PRINTLN("sensor verify failed");
     }
     return passed;
 }
