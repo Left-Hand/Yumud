@@ -29,6 +29,9 @@ void math_tb(UartHw & logger){
     logger.setEps(4);
 
     using Vector3 = Vector3_t<real_t>;
+    using Plane = Plane_t<real_t>;
+    using Basis = Basis_t<real_t>;
+    using Transform3D = Transform3D_t<real_t>;
 
     EQUAL_ASSERT(Plane(Vector3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
 
@@ -46,7 +49,7 @@ void math_tb(UartHw & logger){
     print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)));
 	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
     print(Vector3(0,0,0)- Vector3(10,10,10));
-	// print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_ray(Vector3(0,0,0), Vector3(1,1,1)));
+    print(Transform3D(Basis(), Vector3(0,0,0)))
 
     var a = AABB_t<float>(Vector3(0,0,0), Vector3(1,1,1));
 

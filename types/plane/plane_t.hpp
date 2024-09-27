@@ -141,9 +141,9 @@ bool Plane_t<T>::operator!=(const Plane_t<T> &p_plane) const {
 
 #include "plane_t.tpp"
 
-using Plane = Plane_t<real_t>;
-using PlaneF = Plane_t<float>;
-using PlaneD = Plane_t<double>;
+// using Plane = Plane_t<real_t>;
+// using PlaneF = Plane_t<float>;
+// using PlaneD = Plane_t<double>;
 
 template<arithmetic T>
 __fast_inline OutputStream & operator<<(OutputStream & os, const Plane_t<T> & value){

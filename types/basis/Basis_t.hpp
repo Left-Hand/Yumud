@@ -32,6 +32,7 @@
 /**************************************************************************/
 
 #include "types/Vector3/vector3_t.hpp"
+#include "types/quat/Quat_t.hpp"
 
 template <arithmetic T>
 class Basis_t {
@@ -43,10 +44,10 @@ public:
 		Vector3_t<T>(static_cast<T>(0), static_cast<T>(0), static_cast<T>(1))
 	};
 
-	__fast_inline constexpr const Vector3_t<T> & operator[](int axis) const {
+	__fast_inline constexpr const Vector3_t<T> & operator[](size_t axis) const {
 		return elements[axis];
 	}
-	__fast_inline constexpr Vector3_t<T> & operator[](int axis) {
+	__fast_inline constexpr Vector3_t<T> & operator[](size_t axis) {
 		return elements[axis];
 	}
 
@@ -66,11 +67,11 @@ public:
 
 	void from_z(const Vector3_t<T>&p_z);
 
-	inline Vector3_t<T>get_axis(int p_axis) const {
+	inline Vector3_t<T>get_axis(size_t p_axis) const {
 		// get actual Basis_t<T> axis (elements is transposed for performance)
 		return Vector3_t<T>(elements[0][p_axis], elements[1][p_axis], elements[2][p_axis]);
 	}
-	inline void set_axis(int p_axis, const Vector3_t<T>&p_value) {
+	inline void set_axis(size_t p_axis, const Vector3_t<T>&p_value) {
 		// get actual Basis_t<T> axis (elements is transposed for performance)
 		elements[0][p_axis] = p_value.x;
 		elements[1][p_axis] = p_value.y;
@@ -86,13 +87,13 @@ public:
 	void rotate(const Vector3_t<T>&p_euler);
 	Basis_t<T> rotated(const Vector3_t<T>&p_euler) const;
 
-	// void rotate(const Quat &p_quat);
-	// Basis_t<T> rotated(const Quat &p_quat) const;
+	void rotate(const Quat_t<T> &p_quat);
+	Basis_t<T> rotated(const Quat_t<T> &p_quat) const;
 
 	Vector3_t<T>get_rotation_euler() const;
 	void get_rotation_axis_angle(Vector3_t<T>&p_axis, T &p_angle) const;
 	void get_rotation_axis_angle_local(Vector3_t<T>&p_axis, T &p_angle) const;
-	// Quat get_rotation_quat() const;
+	Quat_t<T> get_rotation_quat() const;
 	Vector3_t<T>get_rotation() const { return get_rotation_euler(); };
 
 	Vector3_t<T>rotref_posscale_decomposition(Basis_t<T> &rotref) const;
@@ -115,8 +116,8 @@ public:
 	Vector3_t<T>get_euler_zyx() const;
 	void set_euler_zyx(const Vector3_t<T>&p_euler);
 
-	// Quat get_quat() const;
-	// void set_quat(const Quat &p_quat);
+	Quat_t<T> get_quat() const;
+	void set_quat(const Quat_t<T> &p_quat);
 
 	Vector3_t<T>get_euler() const { return get_euler_yxz(); }
 	void set_euler(const Vector3_t<T>&p_euler) { set_euler_yxz(p_euler); }
@@ -136,7 +137,7 @@ public:
 
 	void set_axis_angle_scale(const Vector3_t<T>&p_axis, T p_phi, const Vector3_t<T>&p_scale);
 	void set_euler_scale(const Vector3_t<T>&p_euler, const Vector3_t<T>&p_scale);
-	// void set_quat_scale(const Quat &p_quat, const Vector3_t<T>&p_scale);
+	void set_quat_scale(const Quat_t<T> &p_quat, const Vector3_t<T>&p_scale);
 
 	// transposed dot products
 	inline T tdotx(const Vector3_t<T>&v) const {
@@ -168,8 +169,8 @@ public:
 	inline void operator*=(T p_val);
 	inline Basis_t<T> operator*(T p_val) const;
 
-	int get_orthogonal_index() const;
-	void set_orthogonal_index(int p_index);
+	size_t get_orthogonal_index() const;
+	void set_orthogonal_index(size_t p_index);
 
 	void set_diagonal(const Vector3_t<T>&p_diag);
 
@@ -177,7 +178,7 @@ public:
 	bool is_diagonal() const;
 	bool is_rotation() const;
 
-	Basis_t<T> slerp(const Basis_t<T> &p_to, const T &p_weight) const;
+	Basis_t<T> slerp(const Basis_t<T> &p_to, const T p_weight) const;
 
 	/* create / set */
 
@@ -197,18 +198,18 @@ public:
 		set_axis(1, p_y);
 		set_axis(2, p_z);
 	}
-	inline Vector3_t<T>get_column(int i) const {
+	inline Vector3_t<T>get_column(size_t i) const {
 		return Vector3_t<T>(elements[0][i], elements[1][i], elements[2][i]);
 	}
 
-	inline Vector3_t<T>get_row(int i) const {
+	inline Vector3_t<T>get_row(size_t i) const {
 		return Vector3_t<T>(elements[i][0], elements[i][1], elements[i][2]);
 	}
 	inline Vector3_t<T>get_main_diagonal() const {
 		return Vector3_t<T>(elements[0][0], elements[1][1], elements[2][2]);
 	}
 
-	inline void set_row(int i, const Vector3_t<T>&p_row) {
+	inline void set_row(size_t i, const Vector3_t<T>&p_row) {
 		elements[i][0] = p_row.x;
 		elements[i][1] = p_row.y;
 		elements[i][2] = p_row.z;
@@ -239,16 +240,16 @@ public:
 	bool is_symmetric() const;
 	Basis_t<T> diagonalize();
 
-	// operator Quat() const { return get_quat(); }
+	operator Quat_t<T>() const { return get_quat(); }
 
-	// Basis_t<T>(const Quat &p_quat) { set_quat(p_quat); };
-	// Basis_t<T>(const Quat &p_quat, const Vector3_t<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
+	Basis_t(const Quat_t<T> &p_quat) { set_quat(p_quat); };
+	Basis_t(const Quat_t<T> &p_quat, const Vector3_t<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
 
-	// Basis_t<T>(const Vector3_t<T>&p_euler) { set_euler(p_euler); }
-	// Basis_t<T>(const Vector3_t<T>&p_euler, const Vector3_t<T>&p_scale) { set_euler_scale(p_euler, p_scale); }
+	Basis_t(const Vector3_t<T>&p_euler) { set_euler(p_euler); }
+	Basis_t(const Vector3_t<T>&p_euler, const Vector3_t<T>&p_scale) { set_euler_scale(p_euler, p_scale); }
 
-	// Basis_t<T>(const Vector3_t<T>&p_axis, T p_phi) { set_axis_angle(p_axis, p_phi); }
-	// Basis_t<T>(const Vector3_t<T>&p_axis, T p_phi, const Vector3_t<T>&p_scale) { set_axis_angle_scale(p_axis, p_phi, p_scale); }
+	Basis_t(const Vector3_t<T>&p_axis, T p_phi) { set_axis_angle(p_axis, p_phi); }
+	Basis_t(const Vector3_t<T>&p_axis, T p_phi, const Vector3_t<T>&p_scale) { set_axis_angle_scale(p_axis, p_phi, p_scale); }
 
 
 
