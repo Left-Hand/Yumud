@@ -1,12 +1,6 @@
 #include "observer.hpp"
 #include "../stepper.hpp"
 
-void SpeedEstimator::Config::reset(){
-    err_threshold = inv_poles / 16;
-    max_cycles = foc_freq >> 7;
-}
-
-
 
 void InverseObserver::count(){
 

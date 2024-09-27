@@ -4,8 +4,9 @@ OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
     os << "{0x" << 
         std::hex << msg.StdId << '<'
         << ((msg.isStd()) ? "Std" : "Ext")
-        << ((msg.RTR == CAN_RTR_Remote) ? "Rmt" : "Dat")
-        << ">,";
+        << ((msg.RTR == CAN_RTR_Remote) ? "Rmt" : "Dat");
+        
+    os << "> ";
     
     for(size_t i = 0; i < msg.size(); i++){
         os << msg[i];
