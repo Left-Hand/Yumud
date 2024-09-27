@@ -186,11 +186,11 @@ public:
     }
 
     void normalize() {
-        real_t lengthsq = length_squared();
+        T lengthsq = length_squared();
         if (lengthsq == 0) {
             x = y = z = 0;
-        } else {
-            real_t length = sqrt(lengthsq);
+        } else if(not is_equal_approx(lengthsq, 1)){
+            T length = sqrt(lengthsq);
             x /= length;
             y /= length;
             z /= length;

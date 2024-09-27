@@ -50,7 +50,8 @@ int main(){
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
     // stepper_tb(uart1);
-    m3508_main();
+    math_tb(uart1);
+    // m3508_main();
     while(true);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);

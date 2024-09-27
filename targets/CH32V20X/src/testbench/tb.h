@@ -73,3 +73,5 @@ void ma730_main();
 void uart_main();
 
 void m3508_main();
+
+void math_tb(UartHw & logger);

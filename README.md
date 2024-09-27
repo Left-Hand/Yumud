@@ -263,7 +263,7 @@ int main(){
     - [x] fifo 环形缓冲
     - [x] lifo 栈
 
-- [x] color RGBA颜色表述
+- [x] color RGBA颜色表述(godot)
 - [x] complex 复数
 - [x] image 图像类
     - [x] font 字体类
@@ -281,6 +281,9 @@ int main(){
 
 - [x] vector2 二维向量类(godot)
 - [x] vector3 三维向量类(godot)
+
+- [x] plane 三维平面类(godot)
+
 - [x] rgb 各类颜色结构体
 - [x] uint24_t 24位数据
 
@@ -457,7 +460,7 @@ int main(){
         - [x] 直接将类型格式化输出
         - [x] 将各输出类型重载输出
         - [x] 重载了容器的输出
-        - [x] 添加对std::hex, std::setpos, std::setprecsion等函数的支持
+        - [x] 添加对std::hex, std::setpos, std::setprecision等函数的支持
     - [ ] `format` (字符串格式化) 
 
 - [x] string 字符串类(arduino)

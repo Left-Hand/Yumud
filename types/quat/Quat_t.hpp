@@ -153,7 +153,7 @@ struct Quat_t{
             Vector3_t<T> c = v0.cross(v1);
             T d = v0.dot(v1);
 
-            if (d < real_t(-1) + real_t(CMP_EPSILON)) {
+            if (d < T(-1) + T(CMP_EPSILON)) {
                 x = 0;
                 y = 1;
                 z = 0;
@@ -165,7 +165,7 @@ struct Quat_t{
                 x = c.x * rs;
                 y = c.y * rs;
                 z = c.z * rs;
-                w = s * real_t(0.5);
+                w = s / 2;
             }
         }
 
