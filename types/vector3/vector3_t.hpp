@@ -141,8 +141,11 @@ public:
 
     template<arithmetic U>
     __fast_inline_constexpr Vector3_t operator -(const Vector3_t<U>& other) const {
-        Vector3_t ret = other;
-        return ret -= *this;
+        return Vector3_t{
+            x - static_cast<T>(other.x),
+            y - static_cast<T>(other.y),
+            z - static_cast<T>(other.z)
+        };
     }
 
 
@@ -163,17 +166,14 @@ public:
 
     template<arithmetic U>
     T dot(const Vector3_t<U> &v) const{
-        T ret = T(0);
-        ret += x * v.x;
-        ret += y * v.y;
-        ret += z * v.z;
-        return ret;
+        return x * static_cast<T>(v.x) + y * static_cast<T>(v.y) + z * static_cast<T>(v.z);
     }
 
     template<arithmetic U>
     Vector3_t cross(const Vector3_t<U> &u) const{
-        Vector3_t v = u;
-        return Vector3_t(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
+        return Vector3_t(y * static_cast<T>(u.z) - z * static_cast<T>(u.y),
+                         z * static_cast<T>(u.x) - x * static_cast<T>(u.z), 
+                         x * static_cast<T>(u.y) - y * static_cast<T>(u.x));
     }
 
 
