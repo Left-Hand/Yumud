@@ -1,7 +1,7 @@
 #pragma once
 
 #include "stream_base.hpp"
-#include "sys/string/string_utils.hpp"
+#include "sys/string/string.hpp"
 
 class String;
 class StringStream;
@@ -11,9 +11,13 @@ protected:
     uint8_t radix_ = 10;
     uint8_t eps_ = 2;
 
-    const char * splitter = ", ";
-    volatile bool skip_split = false;
-
+    String splitter = ", ";
+    
+    bool skip_split = false;
+    bool b_boolalpha = false;
+    bool b_showpos = false;
+    bool b_showbase = false;
+    
     template<typename T>
     void print_arr(const T * _begin, const T * _end){
         const int _size = _end - _begin;
@@ -35,6 +39,20 @@ protected:
         skip_split = false;
         *this << any;
     }
+
+    static constexpr const char * get_basealpha(const size_t _radix){
+        switch(_radix){
+            default:
+            case 10:
+                return "\0";
+            case 2:
+                return "0b";
+            case 8:
+                return "0";
+            case 16:
+                return "0x";
+        }
+    }
 public:
 
     virtual void write(const char data) = 0;
@@ -44,48 +62,52 @@ public:
 
     virtual size_t pending() const = 0;
 
-    void setSpace(const String & _space);
+    void setSplitter(const StringView _sp){splitter = _sp;}
     void setRadix(const uint8_t _radix){radix_ = _radix;}
     void setEps(const uint8_t _eps){eps_ = _eps;}
 
 
-    template<typename T>
-    requires std::is_integral_v<T> && (sizeof(T) <= 4)
-    OutputStream & operator<<(const T val){
-        char str[12];
-        StringUtils::itoa(val, str, this->radix_);
-        return *this << str;
-    }
-
-    template<integral_u64 T>
-    OutputStream & operator<<(const T val){
-        char str[24];
-        StringUtils::iutoa(val, str, this->radix_);
-        return *this << str;
-    }
-
-    template<integral_s64 T>
-    OutputStream & operator<<(const T val){
-        char str[24];
-        StringUtils::itoa(val, str, this->radix_);
-        return *this << str;
-    }
-    OutputStream & operator<<(const bool val){write(val ? '1' : '0'); return *this;}
+    OutputStream & operator<<(const bool val);
     OutputStream & operator<<(const char chr){write(chr); return *this;}
     OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
     OutputStream & operator<<(char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
+    OutputStream & operator<<(const std::string_view str){write(str.data(),str.length()); return *this;}
     OutputStream & operator<<(const String & str);
-    OutputStream & operator<<(const StringView & str);
+    OutputStream & operator<<(const StringView str);
+    
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
     OutputStream & operator<<(const iq_t val);
-    OutputStream & operator<<(const SpecToken & spec);
 
     OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
     OutputStream& operator<<(const std::_Setprecision & n){eps_ = n._M_n; skip_split = true; return *this;}
 
+
+    #define PUT_INT_CONTEXT_TEMPLATE(len, convfunc)\
+        if(b_showpos and val >= 0) *this << '+';\
+        if(b_showbase and (radix() != 10)){*this << get_basealpha(radix());}\
+        char str[len];\
+        convfunc(val, str, this->radix_);\
+        return *this << str;\
+
+    template<typename T>
+    requires std::is_integral_v<T> && (sizeof(T) <= 4)
+    OutputStream & operator<<(const T val){
+        PUT_INT_CONTEXT_TEMPLATE(12, StringUtils::itoa)
+    }
+
+    template<integral_u64 T>
+    OutputStream & operator<<(const T val){
+        PUT_INT_CONTEXT_TEMPLATE(24, StringUtils::iutoa)
+    }
+
+    template<integral_s64 T>
+    OutputStream & operator<<(const T val){
+        PUT_INT_CONTEXT_TEMPLATE(24, StringUtils::iutoa)
+    }
+    
     template<typename T, size_t size>
     OutputStream & operator<<(const T (&arr)[size]){
         print_arr(&arr[0], &arr[size]);

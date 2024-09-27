@@ -6,7 +6,6 @@
 #include "hal/timer/instance/timer_hw.hpp"
 
 void m3508_main(){
-    scexpr real_t max_curr = real_t(0.9);
     scexpr size_t cb_freq = 200;
 
     auto & led = portC[14];
@@ -36,12 +35,12 @@ void m3508_main(){
     while(true){
         // port.setTargetCurrent();
         // real_t targ_curr = real_t(1.5) * sin(real_t(TAU/4) * t);
-        real_t targ_curr = 3 * sin(t);
+        real_t target = 3 * sin(t);
         // real_t targ_curr = 4 * sin( t*real_t(1.7));
         // real_t targ_curr = 0;
         // motor.setTargetCurrent(targ_curr);
-        motor.setTargetPosition(3*sin(t));   
-        motor2.setTargetPosition(3*cos(t));   
+        motor.setTargetPosition(target);   
+        motor2.setTargetPosition(target);   
         // motor.setTargetCurrent(0);   
         // port[2].setTargetCurrent(max_curr * cos(t));   
         // port[3].setTargetCurrent(max_curr * -sin(t));   
@@ -56,7 +55,8 @@ void m3508_main(){
         // delay(3);
         led = (millis() % 400) > 200;
         // static real_t last_pos = 0;
-        DEBUG_PRINTLN(std::setprecision(3), targ_curr, motor.getPosition(), motor.getSpeed(), motor.getCurrent(), motor.delta());
+        // DEBUG_PRINTLN(std::setprecision(3), target, motor.getPosition(), motor.getSpeed(), motor.getCurrent(), motor.delta());
+        DEBUG_PRINTLN(std::setprecision(3), real_t(1.2), std::hex, std::showbase, 0x23);
         // delay(10);
         // last_pos = motor.getPosition();
     }
