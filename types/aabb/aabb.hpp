@@ -29,8 +29,7 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#ifndef AABB_H
-#define AABB_H
+#pragma once
 
 #include "types/plane/plane_t.hpp"
 #include "types/vector3/vector3_t.hpp"
@@ -110,8 +109,8 @@ struct AABB_t{
 		return AABB_t(position + size.minf(0), size.abs());
 	}
 
-	// Variant intersects_segment_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_to) const;
-	// Variant intersects_ray_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_dir) const;
+	std::optional<Vector3_t<T>> intersects_segment_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_to) const;
+	std::optional<Vector3_t<T>> intersects_ray_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_dir) const;
 
 	__fast_inline void quantize(T p_unit);
 	__fast_inline AABB_t quantized(T p_unit) const;
@@ -490,5 +489,3 @@ __inline OutputStream & operator<<(OutputStream & os, const AABB_t<T> & aabb){
 }
 
 #include "aabb.tpp"
-
-#endif // AABB_H

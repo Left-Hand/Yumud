@@ -7,6 +7,9 @@
 #include "shape.hpp"
 
 struct Action {
+public:
+    using Vector2 = Vector2_t<real_t>;
+    using Vector2i = Vector2_t<int>;
 protected:
     std::function<void()> func = nullptr;
     struct{

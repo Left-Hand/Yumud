@@ -2,13 +2,17 @@
 
 #define __FONT_HPP__
 
-#include "../../vector2/vector2_t.hpp"
+#include "types/vector2/vector2_t.hpp"
+#include "types/image/image.hpp"
+
 #include "font8x5.h"
 #include "font16x8.h"
 #include "chfont7x7.h"
 
 class Font{
 protected:
+    using Vector2i = ImageBasics::Vector2i;
+
     Vector2i size;
     uint8_t scale;
     virtual bool _getpixel(const wchar_t chr, const Vector2i & offset) const = 0;

@@ -41,6 +41,8 @@ struct TurnSolver{
 TurnSolver turnSolver;
 
 real_t demo(uint milliseconds){
+    using Vector2 = CubicInterpolation::Vector2;
+    
     uint32_t turnCnt = milliseconds % 2667;
     uint32_t turns = milliseconds / 2667;
     

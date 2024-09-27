@@ -44,7 +44,8 @@ protected:
     // static constexpr size_t str_tx_buf_size = 512;
     // static constexpr size_t str_rx_buf_size = 512;
     // static constexpr size_t img_tx_buf_size = 1024;
-
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 public:
 
     OutputStream & instance;

@@ -49,6 +49,9 @@ public:
 
 template<typename ColorType>
 class CameraWithSccb:public Camera<ColorType>{
+public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 protected:
     SccbDrv bus_drv;
     CameraWithSccb(const SccbDrv & _bus_drv, const Vector2i & _size):ImageBasics(_size), Camera<ColorType>(_size), bus_drv(_bus_drv){;}

@@ -232,9 +232,6 @@ public:
 				elements[0].z * m[0].y + elements[1].z * m[1].y + elements[2].z * m[2].y,
 				elements[0].z * m[0].z + elements[1].z * m[1].z + elements[2].z * m[2].z);
 	}
-	// Basis_t<T>(T xx, T xy, T xz, T yx, T yy, T yz, T zx, T zy, T zz) {
-	// 	set(xx, xy, xz, yx, yy, yz, zx, zy, zz);
-	// }
 
 	void orthonormalize();
 	Basis_t<T> orthonormalized() const;
@@ -253,13 +250,19 @@ public:
 	// Basis_t<T>(const Vector3_t<T>&p_axis, T p_phi) { set_axis_angle(p_axis, p_phi); }
 	// Basis_t<T>(const Vector3_t<T>&p_axis, T p_phi, const Vector3_t<T>&p_scale) { set_axis_angle_scale(p_axis, p_phi, p_scale); }
 
-	inline Basis_t<T>(const Vector3_t<T>&row0, const Vector3_t<T>&row1, const Vector3_t<T>&row2) {
+
+
+	__fast_inline constexpr Basis_t<T>() {}
+
+	__fast_inline constexpr Basis_t<T>(const T xx, const T xy,const T xz,const T yx,const T yy,const T yz,const T zx,const T zy,const T zz) {
+		set(xx, xy, xz, yx, yy, yz, zx, zy, zz);
+	}
+
+	__fast_inline constexpr  Basis_t<T>(const Vector3_t<T>&row0, const Vector3_t<T>&row1, const Vector3_t<T>&row2) {
 		elements[0] = row0;
 		elements[1] = row1;
 		elements[2] = row2;
 	}
-
-	inline Basis_t<T>() {}
 };
 
 template<arithmetic T>

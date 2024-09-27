@@ -8,6 +8,9 @@ void bmi160_main(){
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[0], 0);
+
+    using Quat = Quat_t<real_t>;
+    
     BMI160 bmi{spi1, 0};
     bmi.init();
 

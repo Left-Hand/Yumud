@@ -220,9 +220,6 @@ public:
 
 #include "vector2_t.tpp"
 
-using Vector2f = Vector2_t<float>;
-using Vector2i = Vector2_t<int>;
-using Vector2 = Vector2_t<real_t>;
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ')';

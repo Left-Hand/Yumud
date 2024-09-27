@@ -435,31 +435,31 @@ void AABB_t<T>::get_edge(int p_edge, Vector3_t<T> &r_from, Vector3_t<T> &r_to) c
 	}
 }
 
-// Variant template<arithmetic T>
-// AABB_t<T>::intersects_segment_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_to) const {
-// 	Vector3 inters;
-// 	if (intersects_segment(p_from, p_to, &inters)) {
-// 		return inters;
-// 	}
-// 	return Variant();
-// }
+template<arithmetic T>
+std::optional<Vector3_t<T>> AABB_t<T>::intersects_segment_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_to) const {
+	Vector3_t<T> inters;
+	if (intersects_segment(p_from, p_to, &inters)) {
+		return inters;
+	}
+	return std::nullopt;
+}
 
-// Variant template<arithmetic T>
-// AABB_t<T>::intersects_ray_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_dir) const {
-// 	Vector3 inters;
-// 	bool inside = false;
+template<arithmetic T>
+std::optional<Vector3_t<T>> AABB_t<T>::intersects_ray_bind(const Vector3_t<T> & p_from, const Vector3_t<T> & p_dir) const {
+	Vector3_t<T> inters;
+	bool inside = false;
 
-// 	if (find_intersects_ray(p_from, p_dir, inside, &inters)) {
-// 		// When inside the intersection point may be BEHIND the ray,
-// 		// so for general use we return the ray origin.
-// 		if (inside) {
-// 			return p_from;
-// 		}
+	if (find_intersects_ray(p_from, p_dir, inside, &inters)) {
+		// When inside the intersection point may be BEHIND the ray,
+		// so for general use we return the ray origin.
+		if (inside) {
+			return p_from;
+		}
 
-// 		return inters;
-// 	}
-// 	return Variant();
-// }
+		return inters;
+	}
+	return std::nullopt;
+}
 
 template<arithmetic T>
 AABB_t<T>::operator String() const {

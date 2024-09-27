@@ -6,6 +6,7 @@
 #include "types/matrix/ceres/ceres.hpp"
 #include "types/plane/plane_t.hpp"
 #include "types/aabb/aabb.hpp"
+#include "types/transform3d/transform3d_t.hpp"
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
@@ -26,6 +27,8 @@ void math_tb(UartHw & logger){
 
     logger.init(576000, CommMethod::Blocking);
     logger.setEps(4);
+
+    using Vector3 = Vector3_t<real_t>;
 
     EQUAL_ASSERT(Plane(Vector3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
 

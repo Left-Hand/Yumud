@@ -18,6 +18,9 @@
 template<typename ColorType>
 class Painter{
 protected:
+    using Vector2 = Image<ColorType>::Vector2;
+    using Vector2i = Image<ColorType>::Vector2i;
+
     ImageWritable<ColorType> * src_image = nullptr;
     Font * enfont = &font8x5;
     Font * chfont = &font8x5;

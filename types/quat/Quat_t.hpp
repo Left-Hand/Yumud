@@ -172,8 +172,4 @@ struct Quat_t{
 
 };
 
-using Quat = Quat_t<real_t>;
-using Quatf = Quat_t<float>;
-
-
 #include "Quat_t.tpp"

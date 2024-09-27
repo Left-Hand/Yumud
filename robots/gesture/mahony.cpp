@@ -1,6 +1,6 @@
 #include "mahony.hpp"
 
-Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
+Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 	Quat q;
 	Vector3 gyro = _gyro;
 	Vector3 accel = _accel;
