@@ -29,7 +29,7 @@ void bmi160_main(){
 
         delay(20);
         bmi.update();
-        Vector3 acc = bmi.getAccel();
+        Vector3_t<real_t> acc = bmi.getAccel();
         acc.x = acc.x >> 10;
         acc.y = acc.y >> 10;
         acc.z = acc.z >> 10;

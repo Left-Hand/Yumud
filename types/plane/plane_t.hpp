@@ -32,109 +32,120 @@
 /**************************************************************************/
 
 
-#include "vector3/vector3_t.hpp"
+#include "types/vector3/vector3_t.hpp"
 #include <optional>
 
-struct Plane {
-	Vector3 normal;
-	real_t d = 0;
+template<arithmetic T>
+struct Plane_t {
+	Vector3_t<T> normal;
+	T d = 0;
 
-	void set_normal(const Vector3 &p_normal);
-	__fast_inline Vector3 get_normal() const { return normal; };
+
+	__fast_inline constexpr Plane_t(const Vector3_t<auto> & p_normal, const arithmetic auto p_d) :
+			normal(p_normal),
+			d(p_d) {
+	}
+
+	__fast_inline constexpr Plane_t(const Vector3_t<auto> & p_normal, const Vector3_t<auto> & p_point) :
+			normal(p_normal),
+			d(p_normal.dot(p_point)) {
+	}
+
+	__fast_inline constexpr Plane_t(const Vector3_t<auto> &p_point1, const Vector3_t<auto> &p_point2, const Vector3_t<auto> &p_point3,const ClockDirection p_dir = CLOCKWISE) {
+		if (p_dir == CLOCKWISE) {
+			normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
+		} else {
+			normal = (p_point1 - p_point2).cross(p_point1 - p_point3);
+		}
+
+		normal.normalize();
+		d = normal.dot(p_point1);
+	}
+	
+	void set_normal(const Vector3_t<auto> &p_normal);
+	__fast_inline Vector3_t<T> get_normal() const { return normal; };
 
 	void normalize();
-	Plane normalized() const;
+	Plane_t normalized() const;
 
 	/* Plane-Point operations */
 
-	__fast_inline Vector3 get_center() const { return normal * d; }
-	Vector3 get_any_perpendicular_normal() const;
+	__fast_inline Vector3_t<T> get_center() const { return normal * d; }
+	Vector3_t<T> get_any_perpendicular_normal() const;
 
-	__fast_inline bool is_point_over(const Vector3 &p_point) const; ///< Point is over plane
-	__fast_inline real_t distance_to(const Vector3 &p_point) const;
-	__fast_inline bool has_point(const Vector3 &p_point, real_t p_tolerance = real_t(CMP_EPSILON)) const;
+	__fast_inline bool is_point_over(const Vector3_t<T> &p_point) const; ///< Point is over plane
+	__fast_inline T distance_to(const Vector3_t<T> &p_point) const;
+	__fast_inline bool has_point(const Vector3_t<T> &p_point,const T p_tolerance = static_cast<T>(CMP_EPSILON)) const;
 
 	/* intersections */
 
-	bool intersect_3(const Plane &p_plane1, const Plane &p_plane2, Vector3 *r_result = nullptr) const;
-	bool intersects_ray(const Vector3 &p_from, const Vector3 &p_dir, Vector3 *p_intersection) const;
-	bool intersects_segment(const Vector3 &p_begin, const Vector3 &p_end, Vector3 *p_intersection) const;
+	bool intersect_3(const Plane_t & p_plane1, const Plane_t & p_plane2, Vector3_t<T> & r_result) const;
+	bool intersects_ray(const Vector3_t<T> &p_from, const Vector3_t<T> &p_dir, Vector3_t<T> & p_intersection) const;
+	bool intersects_segment(const Vector3_t<T> &p_begin, const Vector3_t<T> &p_end, Vector3_t<T> & p_intersection) const;
 
 	// For Variant bindings.
-	std::optional<Vector3> intersect_3_bind(const Plane &p_plane1, const Plane &p_plane2) const;
-	std::optional<Vector3> intersects_ray_bind(const Vector3 &p_from, const Vector3 &p_dir) const;
-	std::optional<Vector3> intersects_segment_bind(const Vector3 &p_begin, const Vector3 &p_end) const;
+	std::optional<Vector3_t<T>> intersect_3(const Plane_t & p_plane1, const Plane_t & p_plane2) const;
+	std::optional<Vector3_t<T>> intersects_ray(const Vector3_t<T> &p_from, const Vector3_t<T> &p_dir) const;
+	std::optional<Vector3_t<T>> intersects_segment(const Vector3_t<T> &p_begin, const Vector3_t<T> &p_end) const;
 
-	__fast_inline Vector3 project(const Vector3 &p_point) const {
+	__fast_inline Vector3_t<T> project(const Vector3_t<T> &p_point) const {
 		return p_point - normal * distance_to(p_point);
 	}
 
 	/* misc */
 
-	// Plane operator-() const { return Plane(Vector3(-normal), real_t(-d));}
-	bool is_equal_approx(const Plane &p_plane) const;
-	bool is_equal_approx_any_side(const Plane &p_plane) const;
+	// Plane operator-() const { return Plane(Vector3_t<T>(-normal), static_cast<T>(-d));}
+	bool is_equal_approx(const Plane_t & p_plane) const;
+	bool is_equal_approx_any_side(const Plane_t & p_plane) const;
 	bool is_finite() const;
 
-	__fast_inline bool operator==(const Plane &p_plane) const;
-	__fast_inline bool operator!=(const Plane &p_plane) const;
+	__fast_inline bool operator==(const Plane_t & p_plane) const;
+	__fast_inline bool operator!=(const Plane_t & p_plane) const;
 
-	__fast_inline Plane() {}
-	__fast_inline Plane(real_t p_a, real_t p_b, real_t p_c, real_t p_d) :
-			normal(p_a, p_b, p_c),
-			d(p_d) {}
+	__fast_inline Plane_t() {}
+	__fast_inline Plane_t(const auto & p_a, const auto & p_b, const auto & p_c, const auto & p_d) :
+			normal(Vector3_t<T>{p_a, p_b, p_c}),
+			d(static_cast<T>(p_d)) {}
 
-	__fast_inline Plane(const Vector3 &p_normal, real_t p_d = real_t(0));
-	__fast_inline Plane(const Vector3 &p_normal, const Vector3 &p_point);
-	__fast_inline Plane(const Vector3 &p_point1, const Vector3 &p_point2, const Vector3 &p_point3, ClockDirection p_dir = CLOCKWISE);
 };
 
-bool Plane::is_point_over(const Vector3 &p_point) const {
+template<arithmetic T>
+bool Plane_t<T>::is_point_over(const Vector3_t<T> &p_point) const {
 	return (normal.dot(p_point) > d);
 }
 
-real_t Plane::distance_to(const Vector3 &p_point) const {
+template<arithmetic T>
+T Plane_t<T>::distance_to(const Vector3_t<T> &p_point) const {
 	return (normal.dot(p_point) - d);
 }
 
-bool Plane::has_point(const Vector3 &p_point, real_t p_tolerance) const {
-	real_t dist = normal.normalized().dot(p_point) - d;
+template<arithmetic T>
+bool Plane_t<T>::has_point(const Vector3_t<T> &p_point, const T p_tolerance) const {
+	T dist = normal.normalized().dot(p_point) - d;
 	dist = ABS(dist);
 	return (dist <= p_tolerance);
 }
 
-Plane::Plane(const Vector3 &p_normal, real_t p_d) :
-		normal(p_normal.normalized()),
-		d(p_d) {
-}
 
-Plane::Plane(const Vector3 &p_normal, const Vector3 &p_point) :
-		normal(p_normal.normalized()),
-		d(p_normal.dot(p_point)) {
-}
 
-Plane::Plane(const Vector3 &p_point1, const Vector3 &p_point2, const Vector3 &p_point3, ClockDirection p_dir) {
-	if (p_dir == CLOCKWISE) {
-		normal = (p_point1 - p_point3).cross(p_point1 - p_point2);
-	} else {
-		normal = (p_point1 - p_point2).cross(p_point1 - p_point3);
-	}
-
-	normal.normalize();
-	d = normal.dot(p_point1);
-}
-
-bool Plane::operator==(const Plane &p_plane) const {
+template<arithmetic T>
+bool Plane_t<T>::operator==(const Plane_t<T> &p_plane) const {
 	return normal == p_plane.normal && d == p_plane.d;
 }
 
-bool Plane::operator!=(const Plane &p_plane) const {
+template<arithmetic T>
+bool Plane_t<T>::operator!=(const Plane_t<T> &p_plane) const {
 	return normal != p_plane.normal || d != p_plane.d;
 }
 
+
 #include "plane_t.tpp"
 
+using Plane = Plane_t<real_t>;
+using PlaneF = Plane_t<float>;
+using PlaneD = Plane_t<double>;
 
-__fast_inline OutputStream & operator<<(OutputStream & os, const Plane & value){
+template<arithmetic T>
+__fast_inline OutputStream & operator<<(OutputStream & os, const Plane_t<T> & value){
     return os << '(' << value.normal << ',' << value.d << ')';
 }

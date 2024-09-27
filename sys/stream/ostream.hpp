@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include "stream_base.hpp"
 #include "sys/string/string.hpp"
 
@@ -83,6 +85,16 @@ public:
 
     OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
     OutputStream& operator<<(const std::_Setprecision & n){eps_ = n._M_n; skip_split = true; return *this;}
+    OutputStream& operator<<(const std::nullopt_t n){return *this << '/';}
+    
+    template<typename T>
+    OutputStream& operator<<(const std::optional<T> v){
+        if(bool(v)){
+            return *this << v.value();
+        }else{
+            return *this << std::nullopt;        
+        }
+    }
 
 
     #define PUT_INT_CONTEXT_TEMPLATE(len, convfunc)\

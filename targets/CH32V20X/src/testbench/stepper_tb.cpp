@@ -21,6 +21,7 @@
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
 
+
 #define MOTOR_TYPE_STEPPER 0
 #define MOTOR_TYPE_BLDC 1
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
@@ -200,6 +201,8 @@ void stepper_tb(UartHw & logger){
 
     // cubic.mapping
     // t = 0;
+
+    
     while(true){
         stp.run();
         stp.report();

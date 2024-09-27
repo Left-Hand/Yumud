@@ -35,20 +35,94 @@ typedef float real_t;
 #endif
 
 
-__fast_inline int mean(const int a, const int b);
-__fast_inline float mean(const float a, const float b);
-__fast_inline double mean(const double a, const double b);
+__fast_inline constexpr int mean(const int a, const int b){
+    return ((a+b) >> 1);
+}
 
-__fast_inline float frac(const float fv);
-__fast_inline double frac(const double dv);
+__fast_inline constexpr float mean(const float a, const float b){
+    return (a+b) / 2.0f;
+}
 
-__fast_inline bool is_equal_approx(const float a,const float b);
-__fast_inline bool is_equal_approx_ratio(const float a, const float b, float epsilon = float(CMP_EPSILON), float min_epsilon = float(CMP_EPSILON));
-__fast_inline bool is_equal_approx(const double a,const double b);
-__fast_inline bool is_equal_approx_ratio(const double a, const double b, double epsilon = double(CMP_EPSILON), double min_epsilon = double(CMP_EPSILON));
+__fast_inline constexpr double mean(const double a, const double b){
+    return (a+b) / 2.0;
+}
 
-__fast_inline float sign(const float fv);
-__fast_inline double sign(const double dv);
+__fast_inline constexpr float frac(const float fv){
+    return (fv - float(int(fv)));
+}
+
+__fast_inline constexpr double frac(const double dv){
+    return (dv - double(int(dv)));
+}
+
+__fast_inline constexpr float round(const float x)
+{
+    return (int)(x+0.5f);
+}
+
+__fast_inline constexpr double round(const double x)
+{
+    return (int)(x+0.5);
+}
+
+
+__fast_inline constexpr bool is_equal_approx(const float a, const float b) {
+    // Check for exact equality first, required to handle "infinity" values.
+    if (a == b) {
+        return true;
+    }
+    // Then check for approximate equality.
+    float tolerance = CMP_EPSILON * abs(a);
+    if (tolerance < CMP_EPSILON) {
+        tolerance = CMP_EPSILON;
+    }
+    return abs(a - b) < tolerance;
+}
+
+__fast_inline constexpr bool is_equal_approx_ratio(const float a, const float  b, float epsilon, float min_epsilon){
+    float diff = abs(a - b);
+    if (diff == 0.0 || diff < min_epsilon) {
+        return true;
+    }
+    float avg_size = (abs(a) + abs(b)) / 2.0;
+    diff /= avg_size;
+    return diff < epsilon;
+}
+
+__fast_inline constexpr bool is_equal_approx(const double a, const double b) {
+    // Check for exact equality first, required to handle "infinity" values.
+    if (a == b) {
+        return true;
+    }
+    // Then check for approximate equality.
+    double tolerance = CMP_EPSILON * abs(a);
+    if (tolerance < CMP_EPSILON) {
+        tolerance = CMP_EPSILON;
+    }
+    return abs(a - b) < tolerance;
+}
+
+__fast_inline constexpr bool is_equal_approx_ratio(const double a, const double b, double epsilon, double min_epsilon){
+    double diff = abs(a - b);
+    if (diff == 0.0 || diff < min_epsilon) {
+        return true;
+    }
+    double avg_size = (abs(a) + abs(b)) / 2.0;
+    diff /= avg_size;
+    return diff < epsilon;
+}
+
+__fast_inline constexpr float sign(const float fv){
+    if(fv > 0.0f) return 1.0f;
+    else if(fv < 0.0f) return -1.0f;
+    return 0.0f;
+}
+
+__fast_inline constexpr double sign(const double dv){
+    if(dv > 0.0) return 1.0;
+    else if(dv < 0.0) return -1.0;
+    return 0.0;
+}
 
 template<integral T>
 __fast_inline T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
@@ -66,5 +140,7 @@ __fast_inline constexpr int warp_mod(const int x, const int y){
     if(ret < 0) ret += y;
     return ret;
 }
+
+#include "real.ipp"
 
 #endif
