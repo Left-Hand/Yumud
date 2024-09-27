@@ -54,8 +54,8 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
     // uint or_score = 0;
 
     for(uint y = 0; y < (uint)rect.h; y++){
-        const auto * tmp_ptr = &tmp[Vector2i{0,y}];
-        const auto * src_ptr = &src[Vector2i{0,y} + offs];
+        const auto * tmp_ptr = &tmp[Vector2i(0,y)];
+        const auto * src_ptr = &src[Vector2i(0,y) + offs];
         for(uint x = 0; x < (uint)rect.w; x++){
             score += int(bool(*tmp_ptr) ^ bool(*src_ptr));
             // if(bool(*tmp_ptr) + bool(*src_ptr) == 1) score++;

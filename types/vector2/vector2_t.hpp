@@ -47,17 +47,18 @@ struct Rect2_t;
 template<arithmetic T>
 struct Vector2_t{
 public:
-
     T x;
     T y;
-
+    
     constexpr Vector2_t(){;}
 
     constexpr Vector2_t(const auto & _x, const auto & _y): x(T(_x)), y(T(_y)){;}
 
-    constexpr Vector2_t(const std::tuple<arithmetic auto, arithmetic auto> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
+    template<arithmetic U = T>
+    constexpr Vector2_t(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
 
-    constexpr Vector2_t(const Vector2_t<arithmetic auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    template<arithmetic U = T>
+    constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
     T & operator [](const size_t index) { return *(&this->x + index);}
 

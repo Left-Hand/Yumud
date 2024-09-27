@@ -52,7 +52,7 @@ void math_tb(UartHw & logger){
     print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)));
 	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
     print(Vector3(0,0,0)- Vector3(10,10,10));
-    print(Transform3D(Basis(), Vector3(0,0,0)))
+    // print(Transform3D(Basis(), Vector3(0,0,0)))
 
     var a = AABB_t<float>(Vector3(0,0,0), Vector3(1,1,1));
 
@@ -66,6 +66,7 @@ void math_tb(UartHw & logger){
     transform.origin = Vector3(5, 5, 5);
 
     // transform.basis = 
+    // var b = Basis().rotated(Vector3(0, 1, 0), float(PI / 4));
     var b = Basis().rotated(Vector3(0, 1, 0), float(PI / 4));
     print(b)
     // transform.basis.scale(Vector3(2, 2, 2));

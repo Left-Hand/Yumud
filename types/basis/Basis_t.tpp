@@ -30,7 +30,7 @@
 /**************************************************************************/
 
 #define SQRT12 static_cast<T>(3.464101615137754f)
-#define cofac(row1, col1, row2, col2) (elements[row1][col1] * elements[row2][col2] - elements[row1][col2] * elements[row2][col1])
+#define cofac(row1, col1, row2, col2) ((*this)[row1][col1] * (*this)[row2][col2] - (*this)[row1][col2] * (*this)[row2][col1])
 
 template<arithmetic T>
 void Basis_t<T>::from_z(const Vector3_t<T> &p_z) {
@@ -38,25 +38,25 @@ void Basis_t<T>::from_z(const Vector3_t<T> &p_z) {
 		// choose p in y-z plane
 		T a = p_z[1] * p_z[1] + p_z[2] * p_z[2];
 		T k = 1 / sqrtf(a);
-		elements[0] = Vector3_t<T>(0, -p_z[2] * k, p_z[1] * k);
-		elements[1] = Vector3_t<T>(a * k, -p_z[0] * elements[0][2], p_z[0] * elements[0][1]);
+		(*this)[0] = Vector3_t<T>(0, -p_z[2] * k, p_z[1] * k);
+		(*this)[1] = Vector3_t<T>(a * k, -p_z[0] * (*this)[0][2], p_z[0] * (*this)[0][1]);
 	} else {
 		// choose p in x-y plane
 		T a = p_z.x * p_z.x + p_z.y * p_z.y;
 		T k = 1 / sqrtf(a);
-		elements[0] = Vector3_t<T>(-p_z.y * k, p_z.x * k, 0);
-		elements[1] = Vector3_t<T>(-p_z.z * elements[0].y, p_z.z * elements[0].x, a * k);
+		(*this)[0] = Vector3_t<T>(-p_z.y * k, p_z.x * k, 0);
+		(*this)[1] = Vector3_t<T>(-p_z.z * (*this)[0].y, p_z.z * (*this)[0].x, a * k);
 	}
-	elements[2] = p_z;
+	(*this)[2] = p_z;
 }
 template<arithmetic T>
 void Basis_t<T>::invert() {
 	T co[3] = {
 		cofac(1, 1, 2, 2), cofac(1, 2, 2, 0), cofac(1, 0, 2, 1)
 	};
-	T det = elements[0][0] * co[0] +
-			elements[0][1] * co[1] +
-			elements[0][2] * co[2];
+	T det = (*this)[0][0] * co[0] +
+			(*this)[0][1] * co[1] +
+			(*this)[0][2] * co[2];
 	T s = 1 / det;
 
 	set(co[0] * s, cofac(0, 2, 2, 1) * s, cofac(0, 1, 1, 2) * s,
@@ -83,23 +83,23 @@ void Basis_t<T>::orthonormalize() {
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::orthonormalized() const {
-	Basis_t<T> c = *this;
+	Basis_t<T> c = (*this);
 	c.orthonormalize();
 	return c;
 }
 template<arithmetic T>
 bool Basis_t<T>::is_orthogonal() const {
 	Basis_t<T> identity;
-	Basis_t<T> m = (*this) * transposed();
+	Basis_t<T> m = ((*this)) * transposed();
 
 	return m.is_equal_approx(identity);
 }
 template<arithmetic T>
 bool Basis_t<T>::is_diagonal() const {
 	return (
-			is_zero_approx(elements[0][1]) && is_zero_approx(elements[0][2]) &&
-			is_zero_approx(elements[1][0]) && is_zero_approx(elements[1][2]) &&
-			is_zero_approx(elements[2][0]) && is_zero_approx(elements[2][1]));
+			is_zero_approx((*this)[0][1]) && is_zero_approx((*this)[0][2]) &&
+			is_zero_approx((*this)[1][0]) && is_zero_approx((*this)[1][2]) &&
+			is_zero_approx((*this)[2][0]) && is_zero_approx((*this)[2][1]));
 }
 template<arithmetic T>
 bool Basis_t<T>::is_rotation() const {
@@ -107,13 +107,13 @@ bool Basis_t<T>::is_rotation() const {
 }
 template<arithmetic T>
 bool Basis_t<T>::is_symmetric() const {
-	if (!is_equal_approx_f(elements[0][1], elements[1][0])) {
+	if (!is_equal_approx_f((*this)[0][1], (*this)[1][0])) {
 		return false;
 	}
-	if (!is_equal_approx_f(elements[0][2], elements[2][0])) {
+	if (!is_equal_approx_f((*this)[0][2], (*this)[2][0])) {
 		return false;
 	}
-	if (!is_equal_approx_f(elements[1][2], elements[2][1])) {
+	if (!is_equal_approx_f((*this)[1][2], (*this)[2][1])) {
 		return false;
 	}
 
@@ -126,14 +126,14 @@ Basis_t<T> Basis_t<T>::diagonalize() {
 
 	const size_t ite_max = 1024;
 
-	T off_matrix_norm_2 = elements[0][1] * elements[0][1] + elements[0][2] * elements[0][2] + elements[1][2] * elements[1][2];
+	T off_matrix_norm_2 = (*this)[0][1] * (*this)[0][1] + (*this)[0][2] * (*this)[0][2] + (*this)[1][2] * (*this)[1][2];
 
 	size_t ite = 0;
 	Basis_t<T> acc_rot;
 	while (off_matrix_norm_2 > CMP_EPSILON && ite++ < ite_max) {
-		T el01_2 = elements[0][1] * elements[0][1];
-		T el02_2 = elements[0][2] * elements[0][2];
-		T el12_2 = elements[1][2] * elements[1][2];
+		T el01_2 = (*this)[0][1] * (*this)[0][1];
+		T el02_2 = (*this)[0][2] * (*this)[0][2];
+		T el12_2 = (*this)[1][2] * (*this)[1][2];
 		// Find the pivot element
 		size_t i, j;
 		if (el01_2 > el02_2) {
@@ -156,22 +156,22 @@ Basis_t<T> Basis_t<T>::diagonalize() {
 
 		// Compute the rotation angle
 		T angle;
-		if (is_equal_approx_f(elements[j][j], elements[i][i])) {
+		if (is_equal_approx_f((*this)[j][j], (*this)[i][i])) {
 			angle = PI / 4;
 		} else {
-			angle = 0.5 * atanf(2 * elements[i][j] / (elements[j][j] - elements[i][i]));
+			angle = 0.5 * atanf(2 * (*this)[i][j] / ((*this)[j][j] - (*this)[i][i]));
 		}
 
 		// Compute the rotation matrix
 		Basis_t<T> rot;
-		rot.elements[i][i] = rot.elements[j][j] = cosf(angle);
-		rot.elements[i][j] = -(rot.elements[j][i] = sinf(angle));
+		rot*(*this)[i][i] = rot * (*this)[j][j] = cosf(angle);
+		rot*(*this)[i][j] = -(rot * (*this)[j][i] = sinf(angle));
 
 		// Update the off matrix norm
-		off_matrix_norm_2 -= elements[i][j] * elements[i][j];
+		off_matrix_norm_2 -= (*this)[i][j] * (*this)[i][j];
 
 		// Apply the rotation
-		*this = rot * *this * rot.transposed();
+		(*this) = rot * (*this) * rot.transposed();
 		acc_rot = rot * acc_rot;
 	}
 
@@ -179,19 +179,19 @@ Basis_t<T> Basis_t<T>::diagonalize() {
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::inverse() const {
-	Basis_t<T> inv = *this;
+	Basis_t<T> inv = (*this);
 	inv.invert();
 	return inv;
 }
 template<arithmetic T>
 void Basis_t<T>::transpose() {
-	std::swap(elements[0][1], elements[1][0]);
-	std::swap(elements[0][2], elements[2][0]);
-	std::swap(elements[1][2], elements[2][1]);
+	std::swap((*this)[0][1], (*this)[1][0]);
+	std::swap((*this)[0][2], (*this)[2][0]);
+	std::swap((*this)[1][2], (*this)[2][1]);
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::transposed() const {
-	Basis_t<T> tr = *this;
+	Basis_t<T> tr = (*this);
 	tr.transpose();
 	return tr;
 }
@@ -200,19 +200,19 @@ Basis_t<T> Basis_t<T>::transposed() const {
 // See the comment for Basis_t<T>::rotated for further explanation.
 template<arithmetic T>
 void Basis_t<T>::scale(const Vector3_t<T> &p_scale) {
-	elements[0][0] *= p_scale.x;
-	elements[0][1] *= p_scale.x;
-	elements[0][2] *= p_scale.x;
-	elements[1][0] *= p_scale.y;
-	elements[1][1] *= p_scale.y;
-	elements[1][2] *= p_scale.y;
-	elements[2][0] *= p_scale.z;
-	elements[2][1] *= p_scale.z;
-	elements[2][2] *= p_scale.z;
+	(*this)[0][0] *= p_scale.x;
+	(*this)[0][1] *= p_scale.x;
+	(*this)[0][2] *= p_scale.x;
+	(*this)[1][0] *= p_scale.y;
+	(*this)[1][1] *= p_scale.y;
+	(*this)[1][2] *= p_scale.y;
+	(*this)[2][0] *= p_scale.z;
+	(*this)[2][1] *= p_scale.z;
+	(*this)[2][2] *= p_scale.z;
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::scaled(const Vector3_t<T> &p_scale) const {
-	Basis_t<T> m = *this;
+	Basis_t<T> m = (*this);
 	m.scale(p_scale);
 	return m;
 }
@@ -220,26 +220,26 @@ template<arithmetic T>
 void Basis_t<T>::scale_local(const Vector3_t<T> &p_scale) {
 	// performs a scaling in object-local coordinate system:
 	// M -> (M.S.Minv).M = M.S.
-	*this = scaled_local(p_scale);
+	(*this) = scaled_local(p_scale);
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::scaled_local(const Vector3_t<T> &p_scale) const {
 	Basis_t<T> b;
 	b.set_diagonal(p_scale);
 
-	return (*this) * b;
+	return ((*this)) * b;
 }
 template<arithmetic T>
 Vector3_t<T> Basis_t<T>::get_scale_abs() const {
 	return Vector3_t<T>(
-			Vector3_t<T>(elements[0][0], elements[1][0], elements[2][0]).length(),
-			Vector3_t<T>(elements[0][1], elements[1][1], elements[2][1]).length(),
-			Vector3_t<T>(elements[0][2], elements[1][2], elements[2][2]).length());
+			Vector3_t<T>((*this)[0][0], (*this)[1][0], (*this)[2][0]).length(),
+			Vector3_t<T>((*this)[0][1], (*this)[1][1], (*this)[2][1]).length(),
+			Vector3_t<T>((*this)[0][2], (*this)[1][2], (*this)[2][2]).length());
 }
 template<arithmetic T>
 Vector3_t<T> Basis_t<T>::get_scale_local() const {
 	T det_sign = SGN(determinant());
-	return Vector3_t<T>(elements[0].length(), elements[1].length(), elements[2].length()) * det_sign;
+	return Vector3_t<T>((*this)[0].length(), (*this)[1].length(), (*this)[2].length()) * det_sign;
 }
 
 // get_scale works with get_rotation, use get_scale_abs if you need to enforce positive signature.
@@ -262,7 +262,7 @@ Vector3_t<T> Basis_t<T>::get_scale() const {
 	//
 	// A proper way to get rid of this issue would be to store the scaling values (or at least their signs)
 	// as a part of Basis_t<T>. However, if we go that path, we need to disable direct (write) access to the
-	// matrix elements.
+	// matrix (*this).
 	//
 	// The rotation part of this decomposition is returned by get_rotation* functions.
 	T det_sign = SGN(determinant());
@@ -277,12 +277,12 @@ Vector3_t<T> Basis_t<T>::rotref_posscale_decomposition(Basis_t<T> &rotref) const
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V(determinant() == 0, Vector3_t<T>());
 
-	Basis_t<T> m = transposed() * (*this);
+	Basis_t<T> m = transposed() * ((*this));
 	ERR_FAIL_COND_V(!m.is_diagonal(), Vector3_t<T>());
 #endif
 	Vector3_t<T> scale = get_scale();
 	Basis_t<T> inv_scale = Basis_t<T>().scaled(scale.inverse()); // this will also absorb the sign of scale
-	rotref = (*this) * inv_scale;
+	rotref = ((*this)) * inv_scale;
 
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V(!rotref.is_orthogonal(), Vector3_t<T>());
@@ -294,33 +294,33 @@ Vector3_t<T> Basis_t<T>::rotref_posscale_decomposition(Basis_t<T> &rotref) const
 
 template<arithmetic T>
 void Basis_t<T>::rotate(const Vector3_t<T> &p_axis, T p_phi) {
-	*this = rotated(p_axis, p_phi);
+	(*this) = rotated(p_axis, p_phi);
 }
 template<arithmetic T>
 void Basis_t<T>::rotate_local(const Vector3_t<T> &p_axis, T p_phi) {
 	// performs a rotation in object-local coordinate system:
 	// M -> (M.R.Minv).M = M.R.
-	*this = rotated_local(p_axis, p_phi);
+	(*this) = rotated_local(p_axis, p_phi);
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::rotated_local(const Vector3_t<T> &p_axis, T p_phi) const {
-	return (*this) * Basis_t<T>(p_axis, p_phi);
+	return ((*this)) * Basis_t<T>(p_axis, p_phi);
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::rotated(const Vector3_t<T> &p_euler) const {
-	return Basis_t<T>(p_euler) * (*this);
+	return Basis_t<T>(p_euler) * ((*this));
 }
 template<arithmetic T>
 void Basis_t<T>::rotate(const Vector3_t<T> &p_euler) {
-	*this = rotated(p_euler);
+	(*this) = rotated(p_euler);
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::rotated(const Quat_t<T> &p_quat) const {
-	return Basis_t<T>(p_quat) * (*this);
+	return Basis_t<T>(p_quat) * ((*this));
 }
 template<arithmetic T>
 void Basis_t<T>::rotate(const Quat_t<T> &p_quat) {
-	*this = rotated(p_quat);
+	(*this) = rotated(p_quat);
 }
 template<arithmetic T>
 Vector3_t<T> Basis_t<T>::get_rotation_euler() const {
@@ -401,27 +401,27 @@ Vector3_t<T> Basis_t<T>::get_euler_xyz() const {
 	//       -cx*cz*sy+sx*sz  cz*sx+cx*sy*sz  cx*cy
 
 	Vector3_t<T> euler;
-	T sy = elements[0][2];
+	T sy = (*this)[0][2];
 	if (sy < (1 - CMP_EPSILON)) {
 		if (sy > -(1 - CMP_EPSILON)) {
 			// is this a pure Y rotation?
-			if (elements[1][0] == 0 && elements[0][1] == 0 && elements[1][2] == 0 && elements[2][1] == 0 && elements[1][1] == 1) {
+			if ((*this)[1][0] == 0 && (*this)[0][1] == 0 && (*this)[1][2] == 0 && (*this)[2][1] == 0 && (*this)[1][1] == 1) {
 				// return the simplest form (human friendlier in editor and scripts)
 				euler.x = 0;
-				euler.y = atan2(elements[0][2], elements[0][0]);
+				euler.y = atan2((*this)[0][2], (*this)[0][0]);
 				euler.z = 0;
 			} else {
-				euler.x = atan2f(-elements[1][2], elements[2][2]);
+				euler.x = atan2f(-(*this)[1][2], (*this)[2][2]);
 				euler.y = asinf(sy);
-				euler.z = atan2f(-elements[0][1], elements[0][0]);
+				euler.z = atan2f(-(*this)[0][1], (*this)[0][0]);
 			}
 		} else {
-			euler.x = atan2f(elements[2][1], elements[1][1]);
+			euler.x = atan2f((*this)[2][1], (*this)[1][1]);
 			euler.y = -PI / 2.0;
 			euler.z = 0;
 		}
 	} else {
-		euler.x = atan2f(elements[2][1], elements[1][1]);
+		euler.x = atan2f((*this)[2][1], (*this)[1][1]);
 		euler.y = PI / 2.0;
 		euler.z = 0;
 	}
@@ -449,7 +449,7 @@ void Basis_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
 	//optimizer will optimize away all this anyway
-	*this = xmat * (ymat * zmat);
+	(*this) = xmat * (ymat * zmat);
 }
 template<arithmetic T>
 Vector3_t<T> Basis_t<T>::get_euler_xzy() const {
@@ -461,21 +461,21 @@ Vector3_t<T> Basis_t<T>::get_euler_xzy() const {
 	//        cy*sx*sz          cz*sx           cx*cy+sx*sz*sy
 
 	Vector3_t<T> euler;
-	T sz = elements[0][1];
+	T sz = (*this)[0][1];
 	if (sz < (1 - CMP_EPSILON)) {
 		if (sz > -(1 - CMP_EPSILON)) {
-			euler.x = atan2f(elements[2][1], elements[1][1]);
-			euler.y = atan2f(elements[0][2], elements[0][0]);
+			euler.x = atan2f((*this)[2][1], (*this)[1][1]);
+			euler.y = atan2f((*this)[0][2], (*this)[0][0]);
 			euler.z = asinf(-sz);
 		} else {
 			// It's -1
-			euler.x = -atan2f(elements[1][2], elements[2][2]);
+			euler.x = -atan2f((*this)[1][2], (*this)[2][2]);
 			euler.y = 0;
 			euler.z = PI / 2.0;
 		}
 	} else {
 		// It's 1
-		euler.x = -atan2f(elements[1][2], elements[2][2]);
+		euler.x = -atan2f((*this)[1][2], (*this)[2][2]);
 		euler.y = 0;
 		euler.z = -PI / 2.0;
 	}
@@ -497,7 +497,7 @@ void Basis_t<T>::set_euler_xzy(const Vector3_t<T> &p_euler) {
 	s = sinf(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
-	*this = xmat * zmat * ymat;
+	(*this) = xmat * zmat * ymat;
 }
 template<arithmetic T>
 Vector3_t<T> Basis_t<T>::get_euler_yzx() const {
@@ -509,21 +509,21 @@ Vector3_t<T> Basis_t<T>::get_euler_yzx() const {
 	//        -cz*sy            cy*sx+cx*sy*sz     cy*cx-sy*sz*sx
 
 	Vector3_t<T> euler;
-	T sz = elements[1][0];
+	T sz = (*this)[1][0];
 	if (sz < (1 - CMP_EPSILON)) {
 		if (sz > -(1 - CMP_EPSILON)) {
-			euler.x = atan2f(-elements[1][2], elements[1][1]);
-			euler.y = atan2f(-elements[2][0], elements[0][0]);
+			euler.x = atan2f(-(*this)[1][2], (*this)[1][1]);
+			euler.y = atan2f(-(*this)[2][0], (*this)[0][0]);
 			euler.z = asinf(sz);
 		} else {
 			// It's -1
-			euler.x = atan2f(elements[2][1], elements[2][2]);
+			euler.x = atan2f((*this)[2][1], (*this)[2][2]);
 			euler.y = 0;
 			euler.z = -PI / 2.0;
 		}
 	} else {
 		// It's 1
-		euler.x = atan2f(elements[2][1], elements[2][2]);
+		euler.x = atan2f((*this)[2][1], (*this)[2][2]);
 		euler.y = 0;
 		euler.z = PI / 2.0;
 	}
@@ -545,7 +545,7 @@ void Basis_t<T>::set_euler_yzx(const Vector3_t<T> &p_euler) {
 	s = sinf(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
-	*this = ymat * zmat * xmat;
+	(*this) = ymat * zmat * xmat;
 }
 
 // get_euler_yxz returns a vector containing the Euler angles in the YXZ convention,
@@ -562,29 +562,29 @@ Vector3_t<T> Basis_t<T>::get_euler_yxz() const {
 
 	Vector3_t<T> euler;
 
-	T m12 = elements[1][2];
+	T m12 = (*this)[1][2];
 
 	if (m12 < (1 - CMP_EPSILON)) {
 		if (m12 > -(1 - CMP_EPSILON)) {
 			// is this a pure X rotation?
-			if (elements[1][0] == 0 && elements[0][1] == 0 && elements[0][2] == 0 && elements[2][0] == 0 && elements[0][0] == 1) {
+			if ((*this)[1][0] == 0 && (*this)[0][1] == 0 && (*this)[0][2] == 0 && (*this)[2][0] == 0 && (*this)[0][0] == 1) {
 				// return the simplest form (human friendlier in editor and scripts)
-				euler.x = atan2(-m12, elements[1][1]);
+				euler.x = atan2(-m12, (*this)[1][1]);
 				euler.y = 0;
 				euler.z = 0;
 			} else {
 				euler.x = asin(-m12);
-				euler.y = atan2(elements[0][2], elements[2][2]);
-				euler.z = atan2(elements[1][0], elements[1][1]);
+				euler.y = atan2((*this)[0][2], (*this)[2][2]);
+				euler.z = atan2((*this)[1][0], (*this)[1][1]);
 			}
 		} else { // m12 == -1
 			euler.x = PI * 0.5;
-			euler.y = atan2(elements[0][1], elements[0][0]);
+			euler.y = atan2((*this)[0][1], (*this)[0][0]);
 			euler.z = 0;
 		}
 	} else { // m12 == 1
 		euler.x = -PI * 0.5;
-		euler.y = -atan2(elements[0][1], elements[0][0]);
+		euler.y = -atan2((*this)[0][1], (*this)[0][0]);
 		euler.z = 0;
 	}
 
@@ -612,7 +612,7 @@ void Basis_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
 	//optimizer will optimize away all this anyway
-	*this = ymat * xmat * zmat;
+	(*this) = ymat * xmat * zmat;
 }
 template<arithmetic T>
 Vector3_t<T> Basis_t<T>::get_euler_zxy() const {
@@ -623,22 +623,22 @@ Vector3_t<T> Basis_t<T>::get_euler_zxy() const {
 	//        cy*sz+cz*sx*sy    cz*cx                 sz*sy-cz*cy*sx
 	//        -cx*sy            sx                    cx*cy
 	Vector3_t<T> euler;
-	T sx = elements[2][1];
+	T sx = (*this)[2][1];
 	if (sx < (1 - CMP_EPSILON)) {
 		if (sx > -(1 - CMP_EPSILON)) {
 			euler.x = asinf(sx);
-			euler.y = atan2f(-elements[2][0], elements[2][2]);
-			euler.z = atan2f(-elements[0][1], elements[1][1]);
+			euler.y = atan2f(-(*this)[2][0], (*this)[2][2]);
+			euler.z = atan2f(-(*this)[0][1], (*this)[1][1]);
 		} else {
 			// It's -1
 			euler.x = -PI / 2.0;
-			euler.y = atan2f(elements[0][2], elements[0][0]);
+			euler.y = atan2f((*this)[0][2], (*this)[0][0]);
 			euler.z = 0;
 		}
 	} else {
 		// It's 1
 		euler.x = PI / 2.0;
-		euler.y = atan2f(elements[0][2], elements[0][0]);
+		euler.y = atan2f((*this)[0][2], (*this)[0][0]);
 		euler.z = 0;
 	}
 	return euler;
@@ -659,7 +659,7 @@ void Basis_t<T>::set_euler_zxy(const Vector3_t<T> &p_euler) {
 	s = sinf(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
-	*this = zmat * xmat * ymat;
+	(*this) = zmat * xmat * ymat;
 }
 template<arithmetic T>
 Vector3_t<T> Basis_t<T>::get_euler_zyx() const {
@@ -670,23 +670,23 @@ Vector3_t<T> Basis_t<T>::get_euler_zyx() const {
 	//        cy*sz             cz*cx+sz*sy*sx        cx*sz*sy-cz*sx
 	//        -sy               cy*sx                 cy*cx
 	Vector3_t<T> euler;
-	T sy = elements[2][0];
+	T sy = (*this)[2][0];
 	if (sy < (1 - CMP_EPSILON)) {
 		if (sy > -(1 - CMP_EPSILON)) {
-			euler.x = atan2f(elements[2][1], elements[2][2]);
+			euler.x = atan2f((*this)[2][1], (*this)[2][2]);
 			euler.y = asinf(-sy);
-			euler.z = atan2f(elements[1][0], elements[0][0]);
+			euler.z = atan2f((*this)[1][0], (*this)[0][0]);
 		} else {
 			// It's -1
 			euler.x = 0;
 			euler.y = PI / 2.0;
-			euler.z = -atan2f(elements[0][1], elements[1][1]);
+			euler.z = -atan2f((*this)[0][1], (*this)[1][1]);
 		}
 	} else {
 		// It's 1
 		euler.x = 0;
 		euler.y = -PI / 2.0;
-		euler.z = -atan2f(elements[0][1], elements[1][1]);
+		euler.z = -atan2f((*this)[0][1], (*this)[1][1]);
 	}
 	return euler;
 }
@@ -706,17 +706,17 @@ void Basis_t<T>::set_euler_zyx(const Vector3_t<T> &p_euler) {
 	s = sinf(p_euler.z);
 	Basis_t<T> zmat(c, -s, 0, s, c, 0, 0, 0, 1);
 
-	*this = zmat * ymat * xmat;
+	(*this) = zmat * ymat * xmat;
 }
 template<arithmetic T>
 bool Basis_t<T>::is_equal_approx(const Basis_t<T> &other) const {
-	return elements[0].is_equal_approx(other.elements[0]) && elements[1].is_equal_approx(other.elements[1]) && elements[2].is_equal_approx(other.elements[2]);
+	return (*this)[0].is_equal_approx(other*(*this)[0]) && (*this)[1].is_equal_approx(other*(*this)[1]) && (*this)[2].is_equal_approx(other*(*this)[2]);
 }
 template<arithmetic T>
 bool Basis_t<T>::is_equal_approx_ratio(const Basis_t<T> &a, const Basis_t<T> &b, T p_epsilon) const {
 	for (size_t i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
-			if (!is_equal_approx_f(a.elements[i][j], b.elements[i][j])) {
+			if (!is_equal_approx_f(a*(*this)[i][j], b*(*this)[i][j])) {
 				return false;
 			}
 		}
@@ -728,7 +728,7 @@ template<arithmetic T>
 bool Basis_t<T>::operator==(const Basis_t<T> &p_matrix) const {
 	for (size_t i = 0; i < 3; i++) {
 		for (int j = 0; j < 3; j++) {
-			if (elements[i][j] != p_matrix.elements[i][j]) {
+			if ((*this)[i][j] != p_matrix*(*this)[i][j]) {
 				return false;
 			}
 		}
@@ -738,7 +738,7 @@ bool Basis_t<T>::operator==(const Basis_t<T> &p_matrix) const {
 }
 template<arithmetic T>
 bool Basis_t<T>::operator!=(const Basis_t<T> &p_matrix) const {
-	return (!(*this == p_matrix));
+	return (!((*this) == p_matrix));
 }
 template<arithmetic T>
 Quat_t<T> Basis_t<T>::get_quat() const {
@@ -746,8 +746,8 @@ Quat_t<T> Basis_t<T>::get_quat() const {
 	ERR_FAIL_COND_V_MSG(!is_rotation(), Quat(), "Basis_t<T> must be normalized in order to be casted to a Quaternion. Use get_rotation_quat() or call orthonormalized() if the Basis_t<T> contains linearly independent vectors.");
 #endif
 	/* Allow getting a quaternion from an unnormalized transform */
-	Basis_t<T> m = *this;
-	T trace = m.elements[0][0] + m.elements[1][1] + m.elements[2][2];
+	Basis_t<T> m = (*this);
+	T trace = m*(*this)[0][0] + m*(*this)[1][1] + m*(*this)[2][2];
 	T temp[4];
 
 	if (trace > 0) {
@@ -755,23 +755,23 @@ Quat_t<T> Basis_t<T>::get_quat() const {
 		temp[3] = (s * 0.5);
 		s = 0.5 / s;
 
-		temp[0] = ((m.elements[2][1] - m.elements[1][2]) * s);
-		temp[1] = ((m.elements[0][2] - m.elements[2][0]) * s);
-		temp[2] = ((m.elements[1][0] - m.elements[0][1]) * s);
+		temp[0] = ((m*(*this)[2][1] - m*(*this)[1][2]) * s);
+		temp[1] = ((m*(*this)[0][2] - m*(*this)[2][0]) * s);
+		temp[2] = ((m*(*this)[1][0] - m*(*this)[0][1]) * s);
 	} else {
-		size_t i = m.elements[0][0] < m.elements[1][1]
-				? (m.elements[1][1] < m.elements[2][2] ? 2 : 1)
-				: (m.elements[0][0] < m.elements[2][2] ? 2 : 0);
+		size_t i = m*(*this)[0][0] < m*(*this)[1][1]
+				? (m*(*this)[1][1] < m*(*this)[2][2] ? 2 : 1)
+				: (m*(*this)[0][0] < m*(*this)[2][2] ? 2 : 0);
 		int j = (i + 1) % 3;
 		int k = (i + 2) % 3;
 
-		T s = sqrtf(m.elements[i][i] - m.elements[j][j] - m.elements[k][k] + 1);
+		T s = sqrtf(m*(*this)[i][i] - m*(*this)[j][j] - m*(*this)[k][k] + 1);
 		temp[i] = s * 0.5;
 		s = 0.5 / s;
 
-		temp[3] = (m.elements[k][j] - m.elements[j][k]) * s;
-		temp[j] = (m.elements[j][i] + m.elements[i][j]) * s;
-		temp[k] = (m.elements[k][i] + m.elements[i][k]) * s;
+		temp[3] = (m*(*this)[k][j] - m*(*this)[j][k]) * s;
+		temp[j] = (m*(*this)[j][i] + m*(*this)[i][j]) * s;
+		temp[k] = (m*(*this)[k][i] + m*(*this)[i][k]) * s;
 	}
 
 	return Quat_t<T>(temp[0], temp[1], temp[2], temp[3]);
@@ -810,7 +810,7 @@ static Basis_t<T> get_ortho_bases(const size_t index) {
 template<arithmetic T>
 size_t Basis_t<T>::get_orthogonal_index() const {
 	//could be sped up if i come up with a way
-	Basis_t<T> orth = *this;
+	Basis_t<T> orth = (*this);
 	for (size_t i = 0; i < 3; i++) {
 		for (size_t j = 0; j < 3; j++) {
 			T v = orth[i][j];
@@ -837,7 +837,7 @@ size_t Basis_t<T>::get_orthogonal_index() const {
 
 template<arithmetic T>
 void Basis_t<T>::set_orthogonal_index(size_t p_index) {
-	*this = get_ortho_bases<T>(p_index);
+	(*this) = get_ortho_bases<T>(p_index);
 }
 
 template<arithmetic T>
@@ -851,11 +851,11 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 	T epsilon = 01; // margin to allow for rounding errors
 	T epsilon2 = 0.1; // margin to distinguish between 0 and 180 degrees
 
-	if ((fabs(elements[1][0] - elements[0][1]) < epsilon) && (fabs(elements[2][0] - elements[0][2]) < epsilon) && (fabs(elements[2][1] - elements[1][2]) < epsilon)) {
+	if ((fabs((*this)[1][0] - (*this)[0][1]) < epsilon) && (fabs((*this)[2][0] - (*this)[0][2]) < epsilon) && (fabs((*this)[2][1] - (*this)[1][2]) < epsilon)) {
 		// singularity found
 		// first check for identity matrix which must have +1 for all terms
 		//  in leading diagonaland zero in other terms
-		if ((fabs(elements[1][0] + elements[0][1]) < epsilon2) && (fabs(elements[2][0] + elements[0][2]) < epsilon2) && (fabs(elements[2][1] + elements[1][2]) < epsilon2) && (fabs(elements[0][0] + elements[1][1] + elements[2][2] - 3) < epsilon2)) {
+		if ((fabs((*this)[1][0] + (*this)[0][1]) < epsilon2) && (fabs((*this)[2][0] + (*this)[0][2]) < epsilon2) && (fabs((*this)[2][1] + (*this)[1][2]) < epsilon2) && (fabs((*this)[0][0] + (*this)[1][1] + (*this)[2][2] - 3) < epsilon2)) {
 			// this singularity is identity matrix so angle = 0
 			r_axis = Vector3_t<T>(0, 1, 0);
 			r_angle = 0;
@@ -863,13 +863,13 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 		}
 		// otherwise this singularity is angle = 180
 		angle = PI;
-		T xx = (elements[0][0] + 1) / 2;
-		T yy = (elements[1][1] + 1) / 2;
-		T zz = (elements[2][2] + 1) / 2;
-		T xy = (elements[1][0] + elements[0][1]) / 4;
-		T xz = (elements[2][0] + elements[0][2]) / 4;
-		T yz = (elements[2][1] + elements[1][2]) / 4;
-		if ((xx > yy) && (xx > zz)) { // elements[0][0] is the largest diagonal term
+		T xx = ((*this)[0][0] + 1) / 2;
+		T yy = ((*this)[1][1] + 1) / 2;
+		T zz = ((*this)[2][2] + 1) / 2;
+		T xy = ((*this)[1][0] + (*this)[0][1]) / 4;
+		T xz = ((*this)[2][0] + (*this)[0][2]) / 4;
+		T yz = ((*this)[2][1] + (*this)[1][2]) / 4;
+		if ((xx > yy) && (xx > zz)) { // (*this)[0][0] is the largest diagonal term
 			if (xx < epsilon) {
 				x = 0;
 				y = SQRT12;
@@ -879,7 +879,7 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 				y = xy / x;
 				z = xz / x;
 			}
-		} else if (yy > zz) { // elements[1][1] is the largest diagonal term
+		} else if (yy > zz) { // (*this)[1][1] is the largest diagonal term
 			if (yy < epsilon) {
 				x = SQRT12;
 				y = 0;
@@ -889,7 +889,7 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 				x = xy / y;
 				z = yz / y;
 			}
-		} else { // elements[2][2] is the largest diagonal term so base result on this
+		} else { // (*this)[2][2] is the largest diagonal term so base result on this
 			if (zz < epsilon) {
 				x = SQRT12;
 				y = SQRT12;
@@ -905,15 +905,15 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 		return;
 	}
 	// as we have reached here there are no singularities so we can handle normally
-	T s = sqrtf((elements[1][2] - elements[2][1]) * (elements[1][2] - elements[2][1]) + (elements[2][0] - elements[0][2]) * (elements[2][0] - elements[0][2]) + (elements[0][1] - elements[1][0]) * (elements[0][1] - elements[1][0])); // s=|axis||sin(angle)|, used to normalise
+	T s = sqrtf(((*this)[1][2] - (*this)[2][1]) * ((*this)[1][2] - (*this)[2][1]) + ((*this)[2][0] - (*this)[0][2]) * ((*this)[2][0] - (*this)[0][2]) + ((*this)[0][1] - (*this)[1][0]) * ((*this)[0][1] - (*this)[1][0])); // s=|axis||sin(angle)|, used to normalise
 
-	angle = acosf((elements[0][0] + elements[1][1] + elements[2][2] - 1) / 2);
+	angle = acosf(((*this)[0][0] + (*this)[1][1] + (*this)[2][2] - 1) / 2);
 	if (angle < 0) {
 		s = -s;
 	}
-	x = (elements[2][1] - elements[1][2]) / s;
-	y = (elements[0][2] - elements[2][0]) / s;
-	z = (elements[1][0] - elements[0][1]) / s;
+	x = ((*this)[2][1] - (*this)[1][2]) / s;
+	y = ((*this)[0][2] - (*this)[2][0]) / s;
+	z = ((*this)[1][0] - (*this)[0][1]) / s;
 
 	r_axis = Vector3_t<T>(x, y, z);
 	r_angle = angle;
@@ -940,27 +940,27 @@ void Basis_t<T>::set_axis_angle(const Vector3_t<T> &p_axis, T p_phi) {
 #endif
 	Vector3_t<T> axis_sq(p_axis.x * p_axis.x, p_axis.y * p_axis.y, p_axis.z * p_axis.z);
 	T cosine = cosf(p_phi);
-	elements[0][0] = axis_sq.x + cosine * (1 - axis_sq.x);
-	elements[1][1] = axis_sq.y + cosine * (1 - axis_sq.y);
-	elements[2][2] = axis_sq.z + cosine * (1 - axis_sq.z);
+	(*this)[0][0] = axis_sq.x + cosine * (1 - axis_sq.x);
+	(*this)[1][1] = axis_sq.y + cosine * (1 - axis_sq.y);
+	(*this)[2][2] = axis_sq.z + cosine * (1 - axis_sq.z);
 
 	T sine = sinf(p_phi);
 	T _t = 1 - cosine;
 
 	T xyzt = p_axis.x * p_axis.y * _t;
 	T zyxs = p_axis.z * sine;
-	elements[0][1] = xyzt - zyxs;
-	elements[1][0] = xyzt + zyxs;
+	(*this)[0][1] = xyzt - zyxs;
+	(*this)[1][0] = xyzt + zyxs;
 
 	xyzt = p_axis.x * p_axis.z * _t;
 	zyxs = p_axis.y * sine;
-	elements[0][2] = xyzt + zyxs;
-	elements[2][0] = xyzt - zyxs;
+	(*this)[0][2] = xyzt + zyxs;
+	(*this)[2][0] = xyzt - zyxs;
 
 	xyzt = p_axis.y * p_axis.z * _t;
 	zyxs = p_axis.x * sine;
-	elements[1][2] = xyzt - zyxs;
-	elements[2][1] = xyzt + zyxs;
+	(*this)[1][2] = xyzt - zyxs;
+	(*this)[2][1] = xyzt + zyxs;
 }
 template<arithmetic T>
 void Basis_t<T>::set_axis_angle_scale(const Vector3_t<T> &p_axis, T p_phi, const Vector3_t<T> &p_scale) {
@@ -979,29 +979,29 @@ void Basis_t<T>::set_quat_scale(const Quat_t<T> &p_quat, const Vector3_t<T> &p_s
 }
 template<arithmetic T>
 void Basis_t<T>::set_diagonal(const Vector3_t<T> &p_diag) {
-	elements[0][0] = p_diag.x;
-	elements[0][1] = 0;
-	elements[0][2] = 0;
+	(*this)[0][0] = p_diag.x;
+	(*this)[0][1] = 0;
+	(*this)[0][2] = 0;
 
-	elements[1][0] = 0;
-	elements[1][1] = p_diag.y;
-	elements[1][2] = 0;
+	(*this)[1][0] = 0;
+	(*this)[1][1] = p_diag.y;
+	(*this)[1][2] = 0;
 
-	elements[2][0] = 0;
-	elements[2][1] = 0;
-	elements[2][2] = p_diag.z;
+	(*this)[2][0] = 0;
+	(*this)[2][1] = 0;
+	(*this)[2][2] = p_diag.z;
 }
 
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::slerp(const Basis_t<T> &p_to, const T p_weight) const {
 	//consider scale
-	Quat_t<T> from(*this);
+	Quat_t<T> from((*this));
 	Quat_t<T> to(p_to);
 
 	Basis_t<T> b(from.slerp(to, p_weight));
-	b.elements[0] *= lerp(elements[0].length(), p_to.elements[0].length(), p_weight);
-	b.elements[1] *= lerp(elements[1].length(), p_to.elements[1].length(), p_weight);
-	b.elements[2] *= lerp(elements[2].length(), p_to.elements[2].length(), p_weight);
+	b*(*this)[0] *= lerp((*this)[0].length(), p_to*(*this)[0].length(), p_weight);
+	b*(*this)[1] *= lerp((*this)[1].length(), p_to*(*this)[1].length(), p_weight);
+	b*(*this)[2] *= lerp((*this)[2].length(), p_to*(*this)[2].length(), p_weight);
 
 	return b;
 }
