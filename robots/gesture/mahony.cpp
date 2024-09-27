@@ -1,7 +1,9 @@
 #include "mahony.hpp"
 
-Quat Mahony::update(Vector3 gyro,Vector3 accel){
+Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 	Quat q;
+	Vector3 gyro = _gyro;
+	Vector3 accel = _accel;
 	
 	real_t halfvx, halfvy, halfvz;	// 估计的重力加速度矢量，half表示半值
 	real_t halfex, halfey, halfez; // 误差向量

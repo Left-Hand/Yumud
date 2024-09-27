@@ -19,7 +19,7 @@ T Quat_t<T>::length_squared() const{
 // and similar for other axes.
 // This implementation uses XYZ convention (Z is the first rotation).
 template<typename T>
-void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
+void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 	T half_a1 = p_euler.x / 2;
 	T half_a2 = p_euler.y / 2;
 	T half_a3 = p_euler.z / 2;
@@ -45,7 +45,7 @@ void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
 // (ax,ay,az), where ax is the angle of rotation around x axis,
 // and similar for other axes.
 // This implementation uses XYZ convention (Z is the first rotation).
-// Vector3 Quat_t<T>::get_euler_xyz() const {
+// Vector3_t<T> Quat_t<T>::get_euler_xyz() const {
 // 	Basis m(*this);
 // 	return m.get_euler_xyz();
 // }
@@ -55,7 +55,7 @@ void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
 // and similar for other axes.
 // This implementation uses YXZ convention (Z is the first rotation).
 template<typename T>
-void Quat_t<T>::set_euler_yxz(const Vector3 &p_euler) {
+void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 	T half_a1 = p_euler.y / 2;
 	T half_a2 = p_euler.x / 2;
 	T half_a3 = p_euler.z / 2;
@@ -81,7 +81,7 @@ void Quat_t<T>::set_euler_yxz(const Vector3 &p_euler) {
 // (ax,ay,az), where ax is the angle of rotation around x axis,
 // and similar for other axes.
 // This implementation uses YXZ convention (Z is the first rotation).
-// Vector3 Quat_t<T>::get_euler_yxz() const {
+// Vector3_t<T> Quat_t<T>::get_euler_yxz() const {
 // 	Basis m(*this);
 // 	return m.get_euler_yxz();
 // }
@@ -201,7 +201,7 @@ Quat_t<T> Quat_t<T>::cubic_slerp(const Quat_t<T> &p_b, const Quat_t<T> &p_pre_a,
 	return sp.slerpni(sq, t2);
 }
 template<typename T>
-void Quat_t<T>::set_axis_angle(const Vector3 &axis, const T &angle) {
+void Quat_t<T>::set_axis_angle(const Vector3_t<T> &axis, const T &angle) {
 
 	T d = axis.length();
 	if (d == 0) {

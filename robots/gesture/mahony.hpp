@@ -12,5 +12,7 @@ protected:
     real_t integralFBy = 0; 
     real_t integralFBz = 0;	// 积分误差
 public:
-    Quat update(const Vector3 gyro,const Vector3 accel);
+    using Quat = Quat_t<real_t>;
+    using Vector3 = Vector3_t<real_t>;
+    Quat update(const Vector3 & gyro,const Vector3 & accel);
 };

@@ -1,5 +1,4 @@
-#ifndef __QUAT_HPP__
-#define __QUAT_HPP__
+#pragma once
 
 #include "vector3/vector3_t.hpp"
 
@@ -31,6 +30,13 @@ struct Quat_t{
                 w(static_cast<T>(p_w)) {
         }
 
+        consteval size_t size() const {return 4;}
+        __fast_inline constexpr T * begin(){return raw;}
+        __fast_inline constexpr const T * begin() const {return raw;}
+        __fast_inline constexpr T * end(){return raw + size();}
+        __fast_inline constexpr const T * end() const {return raw + size();}
+        __fast_inline constexpr  T & operator [](const size_t idx){return raw[idx];}
+        __fast_inline constexpr const T & operator [](const size_t idx) const {return raw[idx];}
 
         T length_squared() const;
         bool is_equal_approx(const Quat_t & other) const;
@@ -42,20 +48,20 @@ struct Quat_t{
         T dot(const Quat_t &p_q) const;
         T angle_to(const Quat_t &p_to) const;
 
-        void set_euler_xyz(const Vector3 &p_euler);
-        // Vector3 get_euler_xyz() const;
-        void set_euler_yxz(const Vector3 &p_euler);
-        // Vector3 get_euler_yxz() const;
+        void set_euler_xyz(const Vector3_t<T> &p_euler);
+        // Vector3_t<T> get_euler_xyz() const;
+        void set_euler_yxz(const Vector3_t<T> &p_euler);
+        // Vector3_t<T> get_euler_yxz() const;
 
-        void set_euler(const Vector3 &p_euler) { set_euler_yxz(p_euler); };
-        // Vector3 get_euler() const { return get_euler_yxz(); };
+        void set_euler(const Vector3_t<T> &p_euler) { set_euler_yxz(p_euler); };
+        // Vector3_t<T> get_euler() const { return get_euler_yxz(); };
 
         Quat_t slerp(const Quat_t &p_to, const T &p_weight) const;
         Quat_t slerpni(const Quat_t &p_to, const T &p_weight) const;
         Quat_t cubic_slerp(const Quat_t &p_b, const Quat_t &p_pre_a, const Quat_t &p_post_b, const T &p_weight) const;
 
-        void set_axis_angle(const Vector3 &axis, const T &angle);
-        void get_axis_angle(Vector3 &r_axis, T &r_angle) const {
+        void set_axis_angle(const Vector3_t<T> &axis, const T &angle);
+        void get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
             r_angle = 2.0f * acos(w);
             T r = (1.0f) / sqrt(1 - w * w);
             r_axis.x = x * r;
@@ -66,16 +72,16 @@ struct Quat_t{
         void operator*=(const Quat_t &p_q);
         Quat_t operator*(const Quat_t &p_q) const;
 
-        Quat_t operator*(const Vector3 &v) const {
+        Quat_t operator*(const Vector3_t<T> &v) const {
             return Quat_t(w * v.x + y * v.z - z * v.y,
                     w * v.y + z * v.x - x * v.z,
                     w * v.z + x * v.y - y * v.x,
                     -x * v.x - y * v.y - z * v.z);
         }
 
-        Vector3 xform(const Vector3 &v) const {
-            Vector3 u(x, y, z);
-            Vector3 uv = u.cross(v);
+        Vector3_t<T> xform(const Vector3_t<T> &v) const {
+            Vector3_t<T> u(x, y, z);
+            Vector3_t<T> uv = u.cross(v);
             return v + ((uv * w) + u.cross(uv)) * ((T)2);
         }
 
@@ -92,9 +98,9 @@ struct Quat_t{
         }
 
 
-        Quat_t(const Vector3_t<auto> &axis, const T &angle) { set_axis_angle(axis, angle); }
+        Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 
-        Quat_t(const Vector3_t<auto> &euler) { set_euler(euler); }
+        Quat_t(const Vector3_t<T> &euler) { set_euler(euler); }
         Quat_t(const Quat_t &p_q) :
                 x(p_q.x),
                 y(p_q.y),
@@ -110,9 +116,9 @@ struct Quat_t{
             return *this;
         }
 
-        Quat_t(const Vector3 &v0, const Vector3 &v1) // shortest arc
+        Quat_t(const Vector3_t<T> &v0, const Vector3_t<T> &v1) // shortest arc
         {
-            Vector3 c = v0.cross(v1);
+            Vector3_t<T> c = v0.cross(v1);
             T d = v0.dot(v1);
 
             if (d < real_t(-1) + real_t(CMP_EPSILON)) {
@@ -131,8 +137,7 @@ struct Quat_t{
             }
         }
 
-        __fast_inline constexpr  T & operator [](const size_t idx){return raw[idx];}
-        __fast_inline constexpr const T & operator [](const size_t idx) const {return raw[idx];}
+
 };
 
 using Quat = Quat_t<real_t>;
@@ -140,5 +145,3 @@ using Quatf = Quat_t<float>;
 
 
 #include "Quat_t.tpp"
-
-#endif
