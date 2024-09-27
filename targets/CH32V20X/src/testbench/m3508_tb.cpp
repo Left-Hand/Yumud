@@ -33,11 +33,6 @@ void m3508_main(){
     motor.init();
     motor2.init();
 
-    Basis_t<real_t> basis = {
-        {1, 0, 0},
-        {1, 0, 0},
-        {1, 0, 0},
-    };
     while(true){
         // port.setTargetCurrent();
         // real_t targ_curr = real_t(1.5) * sin(real_t(TAU/4) * t);
@@ -62,7 +57,7 @@ void m3508_main(){
         led = (millis() % 400) > 200;
         // static real_t last_pos = 0;
         // DEBUG_PRINTLN(std::setprecision(3), target, motor.getPosition(), motor.getSpeed(), motor.getCurrent(), motor.delta());
-        DEBUG_PRINTLN(std::setprecision(3), real_t(1.2), std::hex, std::showbase, std::setprecision(2) ,0x23, basis);
+        // DEBUG_PRINTLN(std::setprecision(3), real_t(1.2), std::hex, std::showbase, std::setprecision(2) ,0x23, basis);
         // delay(10);
         // last_pos = motor.getPosition();
     }

@@ -29,6 +29,13 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
+#define set(p_x, p_y, p_z, p_w)\
+	x = p_x;\
+	y = p_y;\
+	z = p_z;\
+	w = p_w;\
+
+
 template<typename T>
 T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
 	T d = dot(p_to);
@@ -215,7 +222,7 @@ Quat_t<T> Quat_t<T>::slerpni(const Quat_t<T> &p_to, const T &p_weight) const {
 	T theta = acos(dot),
             sinT = 1.0 / sinf(theta),
 		    newFactor = sinf(p_weight * theta) * sinT,
-		    invFactor = sinf((1.0 - p_weight) * theta) * sinT;
+		    invFactor = sinf((1 - p_weight) * theta) * sinT;
 
 	return Quat_t<T>(invFactor * from.x + newFactor * p_to.x,
 			invFactor * from.y + newFactor * p_to.y,
@@ -237,10 +244,12 @@ void Quat_t<T>::set_axis_angle(const Vector3_t<T> &axis, const T &angle) {
 	if (d == 0) {
 		set(T(0), T(0), T(0), T(0));
 	} else {
-		T sin_angle = sinf(angle * 0.5);
-		T cos_angle = cosf(angle * 0.5);
+		T sin_angle = sinf(angle * static_cast<T>(0.5));
+		T cos_angle = cosf(angle * static_cast<T>(0.5));
 		T s = sin_angle / d;
 		set(axis.x * s, axis.y * s, axis.z * s,
 				cos_angle);
 	}
 }
+
+#undef set

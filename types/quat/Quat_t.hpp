@@ -122,13 +122,6 @@ struct Quat_t{
 
         Quat_t operator/(const T &s) const;
 
-        inline void set(T p_x, T p_y, T p_z, T p_w) {
-            x = p_x;
-            y = p_y;
-            z = p_z;
-            w = p_w;
-        }
-
 
         Quat_t(const Vector3_t<T> &axis, const T &angle) { set_axis_angle(axis, angle); }
 

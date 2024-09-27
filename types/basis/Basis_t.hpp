@@ -79,7 +79,16 @@ public:
 	}
 
 	void rotate(const Vector3_t<T>&p_axis, T p_phi);
-	Basis_t<T> rotated(const Vector3_t<T>&p_axis, T p_phi) const;
+
+	// Multiplies the matrix from left by the rotation matrix: M -> R.M
+	// Note that this does *not* rotate the matrix itself.
+	//
+	// The main use of Basis_t<T> is as Transform.Basis_t<T>, which is used a the transformation matrix
+	// of 3D object. Rotate here refers to rotation of the object (which is R * (*this)),
+	// not the matrix itself (which is R * (*this) * R.transposed()).
+	Basis_t<T> rotated(const Vector3_t<arithmetic auto> &p_axis, arithmetic auto p_phi) const {
+		return Basis_t<T>(static_cast<Vector3_t<T>>(p_axis), static_cast<T>(p_phi)) * (*this);
+	}
 
 	void rotate_local(const Vector3_t<T>&p_axis, T p_phi);
 	Basis_t<T> rotated_local(const Vector3_t<T>&p_axis, T p_phi) const;
@@ -242,24 +251,27 @@ public:
 
 	operator Quat_t<T>() const { return get_quat(); }
 
-	Basis_t(const Quat_t<T> &p_quat) { set_quat(p_quat); };
-	Basis_t(const Quat_t<T> &p_quat, const Vector3_t<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
+	Basis_t(const Quat_t<auto> &p_quat) { set_quat(p_quat); };
+	Basis_t(const Quat_t<auto> &p_quat, const Vector3_t<T>&p_scale) { set_quat_scale(p_quat, p_scale); }
 
-	Basis_t(const Vector3_t<T>&p_euler) { set_euler(p_euler); }
-	Basis_t(const Vector3_t<T>&p_euler, const Vector3_t<T>&p_scale) { set_euler_scale(p_euler, p_scale); }
+	Basis_t(const Vector3_t<auto>&p_euler) { 
+		set_euler(static_cast<T>(p_euler)); }
+	Basis_t(const Vector3_t<auto>&p_euler, const Vector3_t<T>&p_scale){ 
+		set_euler_scale(static_cast<T>(p_euler), static_cast<T>(p_scale)); }
 
-	Basis_t(const Vector3_t<T>&p_axis, T p_phi) { set_axis_angle(p_axis, p_phi); }
-	Basis_t(const Vector3_t<T>&p_axis, T p_phi, const Vector3_t<T>&p_scale) { set_axis_angle_scale(p_axis, p_phi, p_scale); }
+	Basis_t(const Vector3_t<auto>&p_axis, arithmetic auto p_phi) { 
+		set_axis_angle(static_cast<Vector3_t<T>>(p_axis), static_cast<T>(p_phi)); }
 
+	Basis_t(const Vector3_t<auto>&p_axis, arithmetic auto p_phi, const Vector3_t<auto>&p_scale) { 
+		set_axis_angle_scale(static_cast<Vector3_t<T>>(p_axis), static_cast<T>(p_phi), static_cast<T>(p_scale));}
 
+	__fast_inline constexpr Basis_t<T>(){}
 
-	__fast_inline constexpr Basis_t<T>() {}
-
-	__fast_inline constexpr Basis_t<T>(const T xx, const T xy,const T xz,const T yx,const T yy,const T yz,const T zx,const T zy,const T zz) {
+	__fast_inline constexpr Basis_t<T>(const arithmetic auto xx, const arithmetic auto xy,const arithmetic auto xz,const arithmetic auto yx,const arithmetic auto yy,const arithmetic auto yz,const arithmetic auto zx,const arithmetic auto zy,const arithmetic auto zz) {
 		set(xx, xy, xz, yx, yy, yz, zx, zy, zz);
 	}
 
-	__fast_inline constexpr  Basis_t<T>(const Vector3_t<T>&row0, const Vector3_t<T>&row1, const Vector3_t<T>&row2) {
+	__fast_inline constexpr  Basis_t<T>(const Vector3_t<arithmetic auto>&row0, const Vector3_t<arithmetic auto>&row1, const Vector3_t<arithmetic auto>&row2) {
 		elements[0] = row0;
 		elements[1] = row1;
 		elements[2] = row2;
@@ -278,6 +290,7 @@ inline Basis_t<T> Basis_t<T>::operator*(const Basis_t<T> &p_matrix) const {
 	return Basis_t<T>(
 			p_matrix.tdotx(elements[0]), p_matrix.tdoty(elements[0]), p_matrix.tdotz(elements[0]),
 			p_matrix.tdotx(elements[1]), p_matrix.tdoty(elements[1]), p_matrix.tdotz(elements[1]),
+			// real_t(0), real_t(0), real_t(0),
 			p_matrix.tdotx(elements[2]), p_matrix.tdoty(elements[2]), p_matrix.tdotz(elements[2]));
 }
 template<arithmetic T>

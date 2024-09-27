@@ -23,6 +23,8 @@ do{\
 #define print(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define float real_t
 #define var auto
+
+
 void math_tb(UartHw & logger){
 
     logger.init(576000, CommMethod::Blocking);
@@ -31,6 +33,7 @@ void math_tb(UartHw & logger){
     using Vector3 = Vector3_t<real_t>;
     using Plane = Plane_t<real_t>;
     using Basis = Basis_t<real_t>;
+    // using Quat = Quat_t<real_t>;
     using Transform3D = Transform3D_t<real_t>;
 
     EQUAL_ASSERT(Plane(Vector3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
@@ -57,6 +60,18 @@ void math_tb(UartHw & logger){
     for (auto i : std::ranges::iota_view(0, 8)) {
         print(a.get_endpoint(i))
     }
+
+    var transform = Transform3D();
+
+    transform.origin = Vector3(5, 5, 5);
+
+    // transform.basis = 
+    var b = Basis().rotated(Vector3(0, 1, 0), float(PI / 4));
+    print(b)
+    // transform.basis.scale(Vector3(2, 2, 2));
+
+    // DEBUG_PRINTLN(transform);
+
     while(true){
         
         // auto a = plane.intersects_segment({0,0,0}, {10,10,10});

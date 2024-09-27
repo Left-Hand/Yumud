@@ -290,16 +290,8 @@ Vector3_t<T> Basis_t<T>::rotref_posscale_decomposition(Basis_t<T> &rotref) const
 	return scale.abs();
 }
 
-// Multiplies the matrix from left by the rotation matrix: M -> R.M
-// Note that this does *not* rotate the matrix itself.
-//
-// The main use of Basis_t<T> is as Transform.Basis_t<T>, which is used a the transformation matrix
-// of 3D object. Rotate here refers to rotation of the object (which is R * (*this)),
-// not the matrix itself (which is R * (*this) * R.transposed()).
-template<arithmetic T>
-Basis_t<T> Basis_t<T>::rotated(const Vector3_t<T> &p_axis, T p_phi) const {
-	return Basis_t<T>(p_axis, p_phi) * (*this);
-}
+
+
 template<arithmetic T>
 void Basis_t<T>::rotate(const Vector3_t<T> &p_axis, T p_phi) {
 	*this = rotated(p_axis, p_phi);
@@ -930,7 +922,7 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 template<arithmetic T>
 void Basis_t<T>::set_quat(const Quat_t<T> &p_quat) {
 	T d = p_quat.length_squared();
-	T s = 2.0 / d;
+	T s = static_cast<T>(2) / d;
 	T xs = p_quat.x * s, ys = p_quat.y * s, zs = p_quat.z * s;
 	T wx = p_quat.w * xs, wy = p_quat.w * ys, wz = p_quat.w * zs;
 	T xx = p_quat.x * xs, xy = p_quat.x * ys, xz = p_quat.x * zs;
