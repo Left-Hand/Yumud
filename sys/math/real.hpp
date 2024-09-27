@@ -124,6 +124,15 @@ __fast_inline constexpr double sign(const double dv){
     return 0.0;
 }
 
+template<arithmetic T>
+__fast_inline T fposmodp(T p_x, T p_y) {
+    T value = fmod(p_x, p_y);
+    if (value < 0) {
+        value += p_y;
+    }
+    return value;
+}
+
 template<integral T>
 __fast_inline T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 

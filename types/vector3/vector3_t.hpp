@@ -93,6 +93,7 @@ public:
         return *this;
     }
 
+
     template<arithmetic U>
     Vector3_t & operator *= (const U & _v){
         T v = static_cast<T>(_v);
@@ -120,27 +121,39 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline_constexpr Vector3_t operator *(const U & _v) const{
+    __fast_inline constexpr Vector3_t operator *(const U & _v) const{
         Vector3_t other = *this;
         other *= _v;
         return other;
     }
 
     template<arithmetic U>
-    __fast_inline_constexpr Vector3_t operator /(const U & _v) const{
+    __fast_inline constexpr Vector3_t operator /(const U & _v) const{
         Vector3_t other = *this;
         other /= _v;
         return other;
     }
 
     template<arithmetic U>
-    __fast_inline_constexpr Vector3_t operator +(const Vector3_t<U>& other) const {
+    __fast_inline constexpr Vector3_t operator +(const Vector3_t<U>& other) const {
         Vector3_t ret = other;
         return ret += *this;
     }
 
+    __fast_inline constexpr Vector3_t abs() const{
+        return Vector3_t{
+            ABS(x),
+            ABS(y),
+            ABS(z)
+        };
+    }
+
+	Vector3_t minf(arithmetic auto p_scalar) const {
+		return Vector3_t(MIN(x, static_cast<T>(p_scalar)), MIN(y, static_cast<T>(p_scalar)), MIN(z, static_cast<T>(p_scalar)));
+	}
+
     template<arithmetic U>
-    __fast_inline_constexpr Vector3_t operator -(const Vector3_t<U>& other) const {
+    __fast_inline constexpr Vector3_t operator -(const Vector3_t<U>& other) const {
         return Vector3_t{
             x - static_cast<T>(other.x),
             y - static_cast<T>(other.y),

@@ -5,6 +5,8 @@
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
 #include "types/plane/plane_t.hpp"
+#include "types/aabb/aabb.hpp"
+#include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
 do{\
@@ -19,7 +21,7 @@ do{\
 //for directly test in godot
 #define print(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define float real_t
-
+#define var auto
 void math_tb(UartHw & logger){
 
     logger.init(576000, CommMethod::Blocking);
@@ -42,6 +44,13 @@ void math_tb(UartHw & logger){
 	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
     print(Vector3(0,0,0)- Vector3(10,10,10));
 	// print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_ray(Vector3(0,0,0), Vector3(1,1,1)));
+
+    var a = AABB(Vector3(0,0,0), Vector3(1,1,1));
+
+    // 遍历整数序列
+    for (auto i : std::ranges::iota_view(0, 8)) {
+        print(a.get_endpoint(i))
+    }
     while(true){
         
         // auto a = plane.intersects_segment({0,0,0}, {10,10,10});
