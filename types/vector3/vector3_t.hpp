@@ -49,7 +49,7 @@ public:
         T raw[3];
     };
 
-    __fast_inline constexpr Vector3_t():x(static_cast<T>(0)), y(static_cast<T>(0)), z(static_cast<T>(0)){;}
+    __fast_inline constexpr Vector3_t(){;}
 
     __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) : x(v.x), y(v.y), z(v.z) {;}
 

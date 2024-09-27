@@ -45,7 +45,7 @@ void math_tb(UartHw & logger){
     print(Vector3(0,0,0)- Vector3(10,10,10));
 	// print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_ray(Vector3(0,0,0), Vector3(1,1,1)));
 
-    var a = AABB(Vector3(0,0,0), Vector3(1,1,1));
+    var a = AABB_t<float>(Vector3(0,0,0), Vector3(1,1,1));
 
     // 遍历整数序列
     for (auto i : std::ranges::iota_view(0, 8)) {

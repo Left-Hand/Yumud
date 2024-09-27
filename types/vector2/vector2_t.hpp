@@ -51,7 +51,7 @@ public:
     T x;
     T y;
 
-    constexpr Vector2_t():x(T(0)), y(T(0)){;}
+    constexpr Vector2_t(){;}
 
     constexpr Vector2_t(const auto & _x, const auto & _y): x(T(_x)), y(T(_y)){;}
 
