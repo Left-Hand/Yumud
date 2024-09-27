@@ -163,12 +163,12 @@ void M3508Port::tick(){
     
     if((occupation & std::bitset<8>(0x0f)).any()){
         // while(can.pending() >= 3);
-        can.write(CanMsg{0x200, tx_datas[0]});
+        can.write(CanMsg{0x200, std::make_tuple(tx_datas[0])});
     }
 
     if((occupation & std::bitset<8>(0xf0)).any()){
         // while(can.pending() >= 3);
-        can.write(CanMsg{0x1FF, tx_datas[1]});
+        can.write(CanMsg{0x1FF, std::make_tuple(tx_datas[1])});
     }
 
     for(size_t i = 0; i < size; i++){

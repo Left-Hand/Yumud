@@ -39,7 +39,7 @@ void CanProtocol::parseCommand(const Command command, const CanMsg & msg){
     #define GET_BIND_VALUE(cmd, ...)\
     case cmd:\
         if(msg.isRemote()){\
-            can.write(CanMsg(tx_id, __VA_ARGS__));\
+            can.write(CanMsg(tx_id, std::make_tuple(__VA_ARGS__)));\
         }\
         break;\
     

@@ -36,7 +36,7 @@ public:
     }
 
     template<typename T>
-    requires (sizeof(T) <= 8)
+    requires (sizeof(T) <= 8) and (!std::is_pointer_v<T>)
     constexpr CanMsg & operator << (T && val){
         for(size_t i = 0; i < sizeof(T) and DLC < 8; i++){
             Data[DLC++] = ((uint8_t *)&val)[i];
@@ -64,20 +64,22 @@ public:
     }
 
 
-    template <class... Args>
-    requires (sizeof(std::tuple<Args...>) <= 8)
-    constexpr CanMsg(const uint32_t id, Args&&... args):CanMsg(id){
-        (*this << ... << args);
-    }
+    template <typename... Args>
+    requires (sizeof(std::tuple<Args...>) <= 8) and (!std::disjunction_v<std::is_pointer<Args>...>)
+    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& t):CanMsg(id) {
+        std::apply(
+            [&](auto&&... args) {
+                ((*this << args), ...);
+            }, t
+        );
 
-    template<typename T = uint8_t>
-    constexpr CanMsg(const uint32_t id, const std::initializer_list<T> & args):CanMsg(id){
-        (*this << args);
     }
 
     constexpr CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id) {
-        for(uint8_t i = 0; i < MIN(len, 8); i++){
-            *this << buf[i];
+        setSize(MIN(len, 8));
+
+        for(uint8_t i = 0; i < size(); i++){
+            this->operator[](i) = buf[i];
         }
     }
 
@@ -136,6 +138,12 @@ public:
         return ret;
     }
 
+    
+    void setExt(const bool en){
+        IDE = (en ? CAN_ID_EXT : CAN_ID_STD);
+    }
+    
+    constexpr void setSize(const size_t size) {DLC = size;}
 private:
     static constexpr uint8_t null_data = 0;
 };
