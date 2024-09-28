@@ -49,8 +49,8 @@ int main(){
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
-    stepper_tb(uart1);
-    // math_tb(uart1);
+    // stepper_tb(uart1);
+    math_tb(uart1);
     // zdt_main(uart1);
     // m3508_main();
     while(true);

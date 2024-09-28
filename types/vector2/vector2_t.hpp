@@ -148,53 +148,55 @@ public:
     constexpr Vector2_t<T> slerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
     constexpr Vector2_t<T> slide(const Vector2_t<T>  & n) const;
     constexpr Vector2_t<T> snapped(const Vector2_t<T> & by) const;
+    constexpr Vector2_t<T> cw() const {return Vector2_t<T>(-y, x);}
+    constexpr Vector2_t<T> ccw() const {return Vector2_t<T>(y, -x);}
 
 
-    constexpr __fast_inline Vector2_t<T> & operator=(const Vector2_t<auto> & b){
+    __fast_inline constexpr Vector2_t<T> & operator=(const Vector2_t<auto> & b){
         x = static_cast<T>(b.x);
         y = static_cast<T>(b.y);
         return *this;
     }
 
 
-    constexpr __fast_inline Vector2_t<T> & operator+=(const Vector2_t<auto> & b){
+    __fast_inline constexpr Vector2_t<T> & operator+=(const Vector2_t<auto> & b){
         x += static_cast<T>(b.x);
         y += static_cast<T>(b.y);
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator-=(const Vector2_t<auto> & b){
+    __fast_inline constexpr Vector2_t<T> & operator-=(const Vector2_t<auto> & b){
         x -= static_cast<T>(b.x);
         y -= static_cast<T>(b.y);
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> operator-() const{
+    __fast_inline constexpr Vector2_t<T> operator-() const{
         Vector2_t<T> ret;
         ret.x = -x;
         ret.y = -y;
         return ret;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator*=(const arithmetic auto & n){
+    __fast_inline constexpr Vector2_t<T> & operator*=(const arithmetic auto & n){
         using CommonType = typename std::common_type<T, decltype(n)>::type;
         x = static_cast<T>(static_cast<CommonType>(x) * n);
         y = static_cast<T>(static_cast<CommonType>(y) * n);
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator/=(const arithmetic auto & n){
+    __fast_inline constexpr Vector2_t<T> & operator/=(const arithmetic auto & n){
         using CommonType = typename std::common_type<T, decltype(n)>::type;
         x = static_cast<T>(static_cast<CommonType>(x) / n);
         y = static_cast<T>(static_cast<CommonType>(y) / n);
         return *this;
     }
 
-    __fast_inline Vector2_t<T> operator*(const arithmetic auto & n) const{
+    __fast_inline constexpr Vector2_t<T> operator*(const arithmetic auto & n) const{
         Vector2_t<T> ret = *this;
         return ret *= n;
     }
-    __fast_inline Vector2_t<T> operator/(const arithmetic auto & n) const{
+    __fast_inline constexpr Vector2_t<T> operator/(const arithmetic auto & n) const{
         Vector2_t<T> ret = *this;
         return ret /= n;
     }

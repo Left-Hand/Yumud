@@ -12,6 +12,8 @@ protected:
     Can & can_;
     NodeId id = 0x01;
 
+    bool b_extid = false;
+
     template<typename T>
     void write_data(const T & obj){
         const uint8_t * data = reinterpret_cast<const uint8_t *>(&obj);
@@ -19,10 +21,13 @@ protected:
 
         Range_t<size_t> store_window = Rangei{0,len};
         Range_t<size_t> op_window = {0,0};
+        
         do{
             op_window = store_window.grid_forward(op_window, 8);
             if(op_window){
-                CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), data + op_window.from, op_window.length()};
+                CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), 
+                                    data + op_window.from, op_window.length()};
+                msg.setExt(b_extid);
                 DEBUG_PRINTLN(msg);
                 can_.write(msg);
             }

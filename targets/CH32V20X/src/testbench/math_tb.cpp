@@ -7,6 +7,9 @@
 #include "types/plane/plane_t.hpp"
 #include "types/aabb/aabb.hpp"
 #include "types/transform3d/transform3d_t.hpp"
+
+#include "robots/kinematics/Scara5/scara5_solver.hpp"
+#include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
@@ -73,10 +76,33 @@ void math_tb(UartHw & logger){
 
     // DEBUG_PRINTLN(transform);
 
+    using Vector2 = Vector2_t<real_t>;
+    using Scara5Solver = Scara5Solver_t<real_t>;
+    using Mecanum4Solver = Mecanum4Solver_t<real_t>;
+
+    auto config_s5s = Scara5Solver::Config{
+        .should_length_meter = real_t(0.06),
+        .forearm_length_meter = real_t(0.18),
+        .upperarm_length_meter = real_t(0.12)
+    };
+
+    auto config_m4s = Mecanum4Solver::Config{
+        .chassis_width_meter = real_t(0.26),  
+        .chassis_height_meter = real_t(0.26)
+    };
+
+    Scara5Solver s5s{config_s5s};
+    Mecanum4Solver m4s{config_m4s};
+    
     while(true){
         
         // auto a = plane.intersects_segment({0,0,0}, {10,10,10});
         // DEBUG_PRINTLN(plane.distance_to({2,2,2}))
+        auto targ_pos = Vector2(real_t(0), real_t(0.12)) + Vector2(real_t(0.06), real_t(0)).rotated(t);
+        auto [l, r] = s5s.invrese(targ_pos);
+        auto est_pos = s5s.forward(l, r);
+        DEBUG_PRINTLN(targ_pos - est_pos);
+        DEBUG_PRINTLN(m4s.inverse({0,1}, 1));
         Sys::Clock::reCalculateTime();
     }
 }
