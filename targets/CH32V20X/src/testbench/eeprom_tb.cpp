@@ -183,7 +183,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     Memory flash = sto;
     Sys::Misc::prework();
 
-    logger.setSpace(" ");
+    logger.setSplitter(" ");
     logger.setRadix(16);
 
     logger.println("Flash Size:", Sys::Chip::getFlashSize());
@@ -257,7 +257,7 @@ void eeprom_main(){
     auto logger = DEBUGGER;
     logger.setEps(2);
     logger.setRadix(10);
-    logger.setSpace("\t\t");
+    logger.setSplitter("\t\t");
 
     I2cSw i2csw = I2cSw(portB[3], portB[5]);
     i2csw.init(400000);

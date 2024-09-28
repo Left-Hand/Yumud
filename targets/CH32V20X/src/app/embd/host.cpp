@@ -133,13 +133,14 @@ void EmbdHost::main(){
     // delay(900);
     bindSystickCb([&](){this->tick();});
     // steppers.do_home();
-
+    tftDisplayer.fill(RGB565::BLACK);
     painter.setChFont(font7x7);
     while(true){
-        // painter.setColor(RGB565::WHITE);
-        // painter.drawString({0, 0}, "进入 设置 启动");
-        // painter.drawString({0, 8}, "开始 时间 设定 确认");
-        // painter.drawString({0, 16}, "选中 缩放 打开 关闭");
+        painter.setColor(RGB565::WHITE);
+        painter.drawString({0, 0}, "进入 设置 启动");
+        painter.drawString({0, 8}, "开始 时间 设定 确认");
+        painter.drawString({0, 16}, "选中 缩放 打开 关闭");
+        continue;
         sketch.fill(RGB565::BLACK);
 
         Image<Grayscale> img = Shape::x2(camera);

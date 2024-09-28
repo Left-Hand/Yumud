@@ -1,6 +1,7 @@
 #include "host.hpp"
 #include "../../robots/foc/protocol/ascii_protocol.hpp"
 
+using Vector2 = Vector2_t<real_t>;
 static constexpr real_t squ_len = 96;
 static constexpr Vector2 pos_begin = {111, 46};
 static constexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};

@@ -67,19 +67,19 @@ template<arithmetic T>
 void Basis_t<T>::orthonormalize() {
 	// Gram-Schmidt Process
 
-	Vector3_t<T> x = get_axis(0);
-	Vector3_t<T> y = get_axis(1);
-	Vector3_t<T> z = get_axis(2);
+	Vector3_t<T> _x = get_axis(0);
+	Vector3_t<T> _y = get_axis(1);
+	Vector3_t<T> _z = get_axis(2);
 
-	x.normalize();
-	y = (y - x * (x.dot(y)));
-	y.normalize();
-	z = (z - x * (x.dot(z)) - y * (y.dot(z)));
-	z.normalize();
+	_x.normalize();
+	_y = (_y - _x * (_x.dot(_y)));
+	_y.normalize();
+	_z = (_z - _x * (_x.dot(_z)) - _y * (_y.dot(_z)));
+	_z.normalize();
 
-	set_axis(0, x);
-	set_axis(1, y);
-	set_axis(2, z);
+	set_axis(0, _x);
+	set_axis(1, _y);
+	set_axis(2, _z);
 }
 template<arithmetic T>
 Basis_t<T> Basis_t<T>::orthonormalized() const {
@@ -847,7 +847,10 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 	ERR_FAIL_COND(!is_rotation());
 #endif
 */
-	T angle, x, y, z; // variables for result
+	T angle;
+	T _x;
+	T _y;
+	T _z; // variables for result
 	T epsilon = 01; // margin to allow for rounding errors
 	T epsilon2 = 0.1; // margin to distinguish between 0 and 180 degrees
 
@@ -871,51 +874,55 @@ void Basis_t<T>::get_axis_angle(Vector3_t<T> &r_axis, T &r_angle) const {
 		T yz = ((*this)[2][1] + (*this)[1][2]) / 4;
 		if ((xx > yy) && (xx > zz)) { // (*this)[0][0] is the largest diagonal term
 			if (xx < epsilon) {
-				x = 0;
-				y = SQRT12;
-				z = SQRT12;
+				_x = 0;
+				_y = SQRT12;
+				_z = SQRT12;
 			} else {
-				x = sqrtf(xx);
-				y = xy / x;
-				z = xz / x;
+				_x = sqrtf(xx);
+				_y = xy / _x;
+				_z = xz / _x;
 			}
 		} else if (yy > zz) { // (*this)[1][1] is the largest diagonal term
 			if (yy < epsilon) {
-				x = SQRT12;
-				y = 0;
-				z = SQRT12;
+				_x = SQRT12;
+				_y = 0;
+				_z = SQRT12;
 			} else {
-				y = sqrtf(yy);
-				x = xy / y;
-				z = yz / y;
+				_y = sqrtf(yy);
+				_x = xy / _y;
+				_z = yz / _y;
 			}
 		} else { // (*this)[2][2] is the largest diagonal term so base result on this
 			if (zz < epsilon) {
-				x = SQRT12;
-				y = SQRT12;
-				z = 0;
+				_x = SQRT12;
+				_y = SQRT12;
+				_z = 0;
 			} else {
-				z = sqrtf(zz);
-				x = xz / z;
-				y = yz / z;
+				_z = sqrtf(zz);
+				_x = xz / _z;
+				_y = yz / _z;
 			}
 		}
-		r_axis = Vector3_t<T>(x, y, z);
+		r_axis = Vector3_t<T>(_x, _y, _z);
 		r_angle = angle;
 		return;
 	}
 	// as we have reached here there are no singularities so we can handle normally
-	T s = sqrtf(((*this)[1][2] - (*this)[2][1]) * ((*this)[1][2] - (*this)[2][1]) + ((*this)[2][0] - (*this)[0][2]) * ((*this)[2][0] - (*this)[0][2]) + ((*this)[0][1] - (*this)[1][0]) * ((*this)[0][1] - (*this)[1][0])); // s=|axis||sin(angle)|, used to normalise
+	T s = sqrtf(((*this)[1][2] - (*this)[2][1]) * ((*this)[1][2] - 
+				(*this)[2][1]) + ((*this)[2][0] - (*this)[0][2]) * 
+				((*this)[2][0] - (*this)[0][2]) + ((*this)[0][1] - 
+				(*this)[1][0]) * ((*this)[0][1] - (*this)[1][0])); // s=|axis||sin(angle)|, used to normalise
 
 	angle = acosf(((*this)[0][0] + (*this)[1][1] + (*this)[2][2] - 1) / 2);
 	if (angle < 0) {
 		s = -s;
 	}
-	x = ((*this)[2][1] - (*this)[1][2]) / s;
-	y = ((*this)[0][2] - (*this)[2][0]) / s;
-	z = ((*this)[1][0] - (*this)[0][1]) / s;
 
-	r_axis = Vector3_t<T>(x, y, z);
+	_x = ((*this)[2][1] - (*this)[1][2]) / s;
+	_y = ((*this)[0][2] - (*this)[2][0]) / s;
+	_z = ((*this)[1][0] - (*this)[0][1]) / s;
+
+	r_axis = Vector3_t<T>(_x, _y, _z);
 	r_angle = angle;
 }
 

@@ -51,7 +51,7 @@ int main(){
     // can_tb(logger, can1, false);
     // stepper_tb(uart1);
     math_tb(uart1);
-    // zdt_main();
+    // zdt_main(uart1);
     // m3508_main();
     while(true);
     // lds14_tb(logger, uart2);

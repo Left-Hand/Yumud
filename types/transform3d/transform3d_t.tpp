@@ -87,9 +87,9 @@ Transform3D_t<T> Transform3D_t<T>::looking_at(const Vector3_t<T> &p_target, cons
 #ifdef MATH_CHECKS
 	ERR_FAIL_COND_V_MSG(origin.is_equal_approx(p_target), Transform3D_t<T>(), "The transform's origin and target can't be equal.");
 #endif
-	Transform3D_t<T> t = *this;
-	t.basis = Basis_t<T>::looking_at(p_target - origin, p_up, p_use_model_front);
-	return t;
+	Transform3D_t<T> _t = *this;
+	_t.basis = Basis_t<T>::looking_at(p_target - origin, p_up, p_use_model_front);
+	return _t;
 }
 
 template<arithmetic T>
@@ -218,9 +218,9 @@ void Transform3D_t<T>::operator*=(const Transform3D_t<T> &p_transform) {
 
 template<arithmetic T>
 Transform3D_t<T> Transform3D_t<T>::operator*(const Transform3D_t<T> &p_transform) const {
-	Transform3D_t<T> t = *this;
-	t *= p_transform;
-	return t;
+	Transform3D_t<T> other = *this;
+	other *= p_transform;
+	return other;
 }
 
 template<arithmetic T>

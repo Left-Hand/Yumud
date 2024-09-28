@@ -123,8 +123,7 @@ public:
 };
 
 
-void zdt_main(){
-    auto & logger = uart1;
+void zdt_main(UartHw & logger){
     logger.init(576000, CommMethod::Blocking);
     logger.setEps(4);
     

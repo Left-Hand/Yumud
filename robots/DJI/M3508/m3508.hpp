@@ -87,7 +87,7 @@ public:
         friend class M3508Port;
         friend class M3508Encoder;
 
-        void applyTargetCurrent(const real_t curr){port.setTargetCurrent(curr, index);}
+        void applyTargetCurrent(const real_t _curr){port.setTargetCurrent(_curr, index);}
 
         void updateMeasurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t _temp);
     public:
