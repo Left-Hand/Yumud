@@ -20,9 +20,9 @@ void host_main(){
     using TimerUtils::IT;
 
     auto & logger = DEBUGGER;
-    logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    logger.init(576000, CommMethod::Blocking);
 
-    can1.init(Can::BaudRate::Mbps1);
+    can1.init(Can::BaudRate::_1M);
     can1.enableHwReTransmit();
     can1.cancelAllTransmit();
 

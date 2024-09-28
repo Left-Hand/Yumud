@@ -24,11 +24,11 @@
 
 #include <string.h>
 #include <ctype.h>
+#include "sys/core/platform.h"
+
 
 #include "string_view.hpp"
-
 #include "sys/string/string_utils.hpp"
-#include "sys/core/platform.h"
 
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
@@ -80,6 +80,8 @@ public:
 	explicit String(const iq_t value, uint8_t decimalPlaces = 3);
 	~String(void);
 
+    uint32_t hash() const {return StringView(*this).hash();}
+	
 	// memory management
 	// return true on success, false on failure (in which case, the string
 	// is left unchanged).  reserve(0), if successful, will validate an

@@ -56,8 +56,8 @@ void node_main(){
 
 
     FOCStepper stp{svpwm, mt6816, mem};
-    AsciiProtocol ascii_p{stp, DEBUGGER};
-    CanProtocol can_p{stp, can1};
+    FOCMotor::AsciiProtocol ascii_p{DEBUGGER, stp};
+    FOCMotor::CanProtocol can_p{can1, stp};
 
     stp.bindProtocol(ascii_p);
     stp.bindProtocol(can_p);

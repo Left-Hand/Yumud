@@ -20,7 +20,11 @@ template <typename ColorType>
 class PixelProxy;
 
 class ImageBasics{
+public:
+    using Vector2 = Vector2_t<real_t>;
+    using Vector2i = Vector2_t<int>;
 protected:
+
     union{
         Vector2i size;
         struct{
@@ -200,6 +204,9 @@ public:
 
 template<typename ColorType>
 class ImageWR:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
+public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 protected:
     using PixelShaderCallback = ColorType(*)(const Vector2i &);
     using UVShaderCallback = ColorType(*)(const Vector2 &);
@@ -212,6 +219,9 @@ public:
 
 template<typename ColorType, typename DataType>
 class ImageWithData : public ImageWR<ColorType> {
+public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 protected:
     Rect2i select_area;
 

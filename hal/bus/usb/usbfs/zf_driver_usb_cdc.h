@@ -40,8 +40,6 @@
 extern "C" {
 #endif
 
-#include "ch32v30x_usbotg_device.h"
-
 void usb_cdc_send_pack(const uint8_t *p, const size_t length);
 void usb_cdc_init( void );
 

@@ -21,6 +21,7 @@
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
 
+
 #define MOTOR_TYPE_STEPPER 0
 #define MOTOR_TYPE_BLDC 1
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
@@ -40,6 +41,8 @@ struct TurnSolver{
 TurnSolver turnSolver;
 
 real_t demo(uint milliseconds){
+    using Vector2 = CubicInterpolation::Vector2;
+    
     uint32_t turnCnt = milliseconds % 2667;
     uint32_t turns = milliseconds / 2667;
     
@@ -166,8 +169,8 @@ void stepper_tb(UartHw & logger){
 
 
     FOCStepper stp{svpwm, encoder, mem};
-    AsciiProtocol ascii_p{stp, logger};
-    CanProtocol can_p{stp, can1};
+    FOCMotor::AsciiProtocol ascii_p{logger, stp};
+    FOCMotor::CanProtocol can_p{can1, stp};
 
     stp.bindProtocol(ascii_p);
     stp.bindProtocol(can_p);
@@ -200,6 +203,8 @@ void stepper_tb(UartHw & logger){
 
     // cubic.mapping
     // t = 0;
+
+    
     while(true){
         stp.run();
         stp.report();

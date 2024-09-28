@@ -77,7 +77,7 @@ void FOCStepper::saveArchive(const bool outen){
         archive.cali_map[i] = item_i;
     }
 
-    archive.node_id = uint8_t(node_id);
+    archive.node_id = uint8_t(can_protocol ? uint8_t(can_protocol->node_id) : 0);
 
     ARCHIVE_PRINTS("generate done");
     ARCHIVE_PRINTS("hash of archive is ", hashcode);

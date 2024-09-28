@@ -155,16 +155,7 @@ namespace MotorUtils{
 
     using ExitFlag = bool;
     using InitFlag = bool;
-    template<integral T>
-    struct NodeId_t{
-        T id_;
 
-        NodeId_t(const T _id):id_(_id){
-        }
-        operator T() const{return id_;}
-    };
-
-    using NodeId =  NodeId_t<uint8_t>;
 }
 
 #endif

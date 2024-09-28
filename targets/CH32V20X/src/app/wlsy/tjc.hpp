@@ -22,7 +22,7 @@ protected:
 public:
     TJC(Uart & _uart):uart(_uart){;}
     void init(){
-        uart.setSpace("");
+        uart.setSplitter("");
     }
 
 

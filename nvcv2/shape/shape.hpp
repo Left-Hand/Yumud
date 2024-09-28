@@ -144,7 +144,7 @@ namespace NVCV2::Shape{
 
 
     void canny(Image<Binary> & dst,const Image<Grayscale> & src, const Range_t<uint16_t> & threshold);
-
+    void eye(Image<Grayscale> &dst, const Image<Grayscale> &src);
     class Seed{
         public:            
 

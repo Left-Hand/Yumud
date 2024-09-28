@@ -16,3 +16,4 @@ static constexpr name l{false};\
 MAKE_BINA_ENUM(Endian, MSB, LSB)
 MAKE_BINA_ENUM(Continuous, CONT, DISC)
 MAKE_BINA_ENUM(Ack, ACK, NACK)
+MAKE_BINA_ENUM(ClockDirection, CLOCKWISE,COUNTERCLOCKWISE)

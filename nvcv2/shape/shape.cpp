@@ -5,6 +5,8 @@
 
 
 namespace NVCV2::Shape{
+    using Vector2 = Vector2_t<real_t>;
+    using Vector2i = Vector2_t<int>;
 
     static void clear_corners(ImageWritable<monochrome auto> & dst){
         auto size = dst.get_size();
@@ -745,14 +747,11 @@ namespace NVCV2::Shape{
     void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
         auto roi = src.get_view();
 
-        const auto low_thresh = threshold.from;
-        const auto high_thresh = threshold.to;
-
-
+        const auto [low_thresh, high_thresh] = threshold;
 
         struct gvec_t{
-            uint16_t g:13;
-            Direction t:3;
+            uint8_t g;
+            Direction t;
         }__packed;
 
         auto gm = new gvec_t[int(roi)];
@@ -760,13 +759,15 @@ namespace NVCV2::Shape{
         const int w = roi.w;
 
         #define FAST_SQUARE(x) (x * x)
-        #define FAST_SQRT(x) ((uint16_t)fast_sqrt_i((uint16_t)x))
-
+        
+        scexpr uint shift_bits = 9;
+        
+        const uint8_t low_squ = FAST_SQUARE(low_thresh) >> shift_bits;
+        const uint8_t high_squ = FAST_SQUARE(high_thresh) >> shift_bits;
+        
 
         //2. Finding Image Gradients
         {
-            // auto temp = src.space();
-            // gauss5x5(temp, src);
             for (int y = roi.y + 1; y < roi.y + roi.h - 1; y++) {
                 for (int x = roi.x + 1; x < roi.x + roi.w - 1; x++) {
                     int16_t vx = 0, vy = 0;
@@ -785,6 +786,7 @@ namespace NVCV2::Shape{
                     //  1   2   1
                     //  0   0   0
                     //  -1  2   -1
+
                     vy = int(src[(y - 1) * w + x - 1])
                         + int(src[(y - 1) * w + x + 0] << 1)
                         + int(src[(y - 1) * w + x + 1])
@@ -793,9 +795,10 @@ namespace NVCV2::Shape{
                         - int(src[(y + 1) * w + x + 1]);
 
                     // Find the direction and round angle to 0, 45, 90 or 135
+
                     gm[w * y + x] = gvec_t{
-                        FAST_SQRT(FAST_SQUARE(vx) + FAST_SQUARE(vy)),
-                        xy_to_dir(vx, vy)};
+                        .g = uint8_t((FAST_SQUARE(vx) + FAST_SQUARE(vy)) >> shift_bits),
+                        .t = xy_to_dir(vx, vy)};
                 }
             }
         }
@@ -814,22 +817,23 @@ namespace NVCV2::Shape{
                 vc++;
                 dp++;
 
-                if (vc->g < low_thresh) {
+
+                if (vc->g < low_squ) {
                     // Not an edge
                     *dp = 0;
                     continue;
                     // Check if strong or weak edge
-                } else if (vc->g >= high_thresh){
+                } else if (vc->g >= high_squ){
                     *dp = 255;
                 } else{
-                    if( gm[(gy - 1) * roi.w + (gx - 1)].g >= high_thresh ||
-                        gm[(gy - 1) * roi.w + (gx + 0)].g >= high_thresh ||
-                        gm[(gy - 1) * roi.w + (gx + 1)].g >= high_thresh ||
-                        gm[(gy + 0) * roi.w + (gx - 1)].g >= high_thresh ||
-                        gm[(gy + 0) * roi.w + (gx + 1)].g >= high_thresh ||
-                        gm[(gy + 1) * roi.w + (gx - 1)].g >= high_thresh ||
-                        gm[(gy + 1) * roi.w + (gx + 0)].g >= high_thresh ||
-                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_thresh)
+                    if( gm[(gy - 1) * roi.w + (gx - 1)].g >= high_squ ||
+                        gm[(gy - 1) * roi.w + (gx + 0)].g >= high_squ ||
+                        gm[(gy - 1) * roi.w + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 0) * roi.w + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 0) * roi.w + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 1) * roi.w + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 1) * roi.w + (gx + 0)].g >= high_squ ||
+                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_squ)
                     {
 
                         *dp = 255;
@@ -841,7 +845,7 @@ namespace NVCV2::Shape{
                 }
 
                 if(true){
-                    switch (vc->t) {
+                    switch (Direction(vc->t)) {
                         default:
                         case Direction::R: {
                             va = &gm[(gy + 0) * roi.w + (gx - 1)];
@@ -876,6 +880,109 @@ namespace NVCV2::Shape{
         }
         #undef FAST_SQRT
         #undef FAST_SQUARE8
+
+        delete gm;
+    }
+
+    void eye(Image<Grayscale> &dst, const Image<Grayscale> &src){
+
+        using vec_t = Vector2_t<int8_t>;
+        #define FAST_SQUARE(x) (x * x)
+        scexpr uint shift_bits = 3;
+    
+        auto roi = src.get_view();
+        auto gm = new vec_t[int(roi)];
+        
+        const int w = roi.w;
+
+        //2. Finding Image Gradients
+        {
+            for (int y = roi.y + 1; y < roi.y + roi.h - 1; y++) {
+                for (int x = roi.x + 1; x < roi.x + roi.w - 1; x++) {
+                    int16_t vx = 0, vy = 0;
+
+                    //  1   0   -1
+                    //  2   0   -2
+                    //  1   0   -1
+
+                    vx = int(src[(y - 1) * w + x - 1])
+                        - int(src[(y - 1) * w + x + 1])
+                        + int(src[(y + 0) * w + x - 1] << 1)
+                        - int(src[(y + 0) * w + x + 1] << 1)
+                        + int(src[(y + 1) * w + x - 1])
+                        - int(src[(y + 1) * w + x + 1]);
+
+                    //  1   2   1
+                    //  0   0   0
+                    //  -1  2   -1
+
+                    vy = int(src[(y - 1) * w + x - 1])
+                        + int(src[(y - 1) * w + x + 0] << 1)
+                        + int(src[(y - 1) * w + x + 1])
+                        - int(src[(y + 1) * w + x - 1])
+                        - int(src[(y + 1) * w + x + 0] << 1)
+                        - int(src[(y + 1) * w + x + 1]);
+
+                    // Find the direction and round angle to 0, 45, 90 or 135
+
+                    gm[w * y + x] = vec_t{vx >> shift_bits, vy >> shift_bits};
+                }
+            }
+        }
+
+        clear_corners(dst);
+
+        scexpr int wid = 4;
+        scexpr int scale = 127;
+
+        using template_t = std::array<std::array<vec_t, wid * 2 + 1>, wid * 2 + 1>;
+
+        auto generate_template = []() -> template_t{
+            template_t ret;
+            for(int y = -wid; y <= wid; y++){
+                for(int x = -wid; x <= wid; x++){
+                    real_t rad = atan2(real_t(y), real_t(x));
+                    vec_t vec = vec_t{cos(rad) * scale, sin(rad) * scale};
+                    // vec_t vec = vec_t{scale, 0};
+                    ret[y + wid][x + wid] = vec;
+                }
+            }
+            return ret;
+        };
+
+        auto temp = generate_template();
+              
+        for (int gy = wid; gy < roi.h - wid; gy++) {
+            vec_t * vc = &gm[gy * w];
+            auto * dp = &dst[gy * w];
+            for (int gx = wid; gx < roi.w - wid; gx++) {
+                vc++;
+                dp++;
+
+                // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
+
+                // int x_sum = 0;
+                // int y_sum = 0;
+                int sum = 0;
+                for(int y = -wid; y <= wid; y++){
+                    for(int x = -wid; x <= wid; x++){
+                        const auto & vec = gm[(gy + y) * w + (gx + x)];
+                        const auto & tvec = temp[y + wid][x + wid];
+                        // x_sum += ABS(vec.x * tvec.x);
+                        // y_sum += ABS(vec.y * tvec.y);
+                        // sum += temp[3][3].length_squared();
+                        // sum += tvec.length_squared();
+                        sum += vec.x * tvec.x + vec.y * tvec.y;
+                    }
+                }
+                // int sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
+                // int sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
+                // int sum = MAX(x_sum, y_sum);
+                // int sum =  x_sum * x_sum + y_sum * y_sum;
+                *dp = (ABS(sum) / ((wid * 2 + 1) * (wid * 2 + 1))) >> 4; 
+            }
+        }
+        #undef FAST_SQRT
 
         delete gm;
     }

@@ -8,6 +8,9 @@ void bmi160_main(){
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[0], 0);
+
+    using Quat = Quat_t<real_t>;
+    
     BMI160 bmi{spi1, 0};
     bmi.init();
 
@@ -29,7 +32,7 @@ void bmi160_main(){
 
         delay(20);
         bmi.update();
-        Vector3 acc = bmi.getAccel();
+        Vector3_t<real_t> acc = bmi.getAccel();
         acc.x = acc.x >> 10;
         acc.y = acc.y >> 10;
         acc.z = acc.z >> 10;

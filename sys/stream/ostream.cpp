@@ -2,65 +2,6 @@
 #include "sys/string/string.hpp"
 #include "sys/string/string_view.hpp"
 
-OutputStream& OutputStream::operator<<(const SpecToken & spec){
-    switch(spec){
-    
-    case SpecToken::NoSpace:
-        splitter = "\0";
-        break;
-    case SpecToken::Space:
-        splitter = " ";
-        break;
-    case SpecToken::Comma:
-        splitter = ",";
-        break;
-    case SpecToken::CommaWithSpace:
-        splitter = ", ";
-        break;
-    case SpecToken::Tab:
-        splitter = "\t";
-        break;
-    case SpecToken::End:
-        splitter = "\r\n";
-        break;
-    
-    case SpecToken::Bin:
-        radix_ = 2;
-        break;
-    case SpecToken::Oct:
-        radix_ = 8;
-        break;
-    case SpecToken::Dec:
-        radix_ = 10;
-        break;
-    case SpecToken::Hex:
-        radix_ = 16;
-        break;
-
-    case SpecToken::Eps1:
-        eps_ = 1;
-        break;
-    case SpecToken::Eps2:
-        eps_ = 2;
-        break;
-    case SpecToken::Eps3:
-        eps_ = 3;
-        break;
-    case SpecToken::Eps4:
-        eps_ = 4;
-        break;
-    case SpecToken::Eps5:
-        eps_ = 5;
-        break;
-    case SpecToken::Eps6:
-        eps_ = 6;
-        break;
-    }
-
-    skip_split = true;
-    return *this;
-}
-
 
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{
@@ -73,21 +14,62 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         if (func == &std::scientific) {
             //TODO
             break;}
+        if (func == &std::boolalpha){
+            b_boolalpha = true;
+            break;
+        }
+
+        if (func == &std::noboolalpha){
+            b_boolalpha = false;
+            break;
+        }
+
+        if (func == &std::showpos){
+            b_showpos = true;
+            break;
+        }
+        
+        if (func == &std::noshowpos){
+            b_showpos = false;
+            break;
+        }
+
+        if (func == &std::showbase){
+            b_showbase = true;
+            break;
+        }
+        
+        if (func == &std::noshowbase){
+            b_showbase = false;
+            break;
+        }
     }while(false);
 
     skip_split = true;
     return *this;
 }
 
-OutputStream & OutputStream::operator<<(const iq_t value){
-    char str[12] = {0};
-    StringUtils::qtoa(value, str, this->eps());
-    return *this << str;
+#define PUT_FLOAT_TEMPLATE(type, convfunc)\
+OutputStream & OutputStream::operator<<(const type value){\
+    char str[12] = {0};\
+    convfunc(value, str, this->eps());\
+    if(b_showpos and value >= 0) *this << '+';\
+    return *this << str;\
+}\
+
+PUT_FLOAT_TEMPLATE(iq_t, StringUtils::qtoa)
+PUT_FLOAT_TEMPLATE(float, StringUtils::ftoa)
+PUT_FLOAT_TEMPLATE(double, StringUtils::ftoa)
+
+#undef PUT_FLOAT_TEMPLATE
+OutputStream & OutputStream::operator<<(const String & str){write(str.c_str(), str.length()); return * this;}
+OutputStream & OutputStream::operator<<(const StringView str){write(str.data(), str.length()); return * this;}
+
+OutputStream & OutputStream::operator<<(const bool val){
+    if(b_boolalpha == false){
+        write(val ? '1' : '0');
+        return *this;
+    }else{
+        return *this << ((val) ? "true" : "false"); 
+    }
 }
-
-void OutputStream::setSpace(const String & _space){splitter= _space.c_str();}
-
-OutputStream & OutputStream::operator<<(const String & str){write(str.c_str(), str.length()); return *this;}
-OutputStream & OutputStream::operator<<(const StringView & str){write(str.data(), str.length()); return * this;}
-OutputStream & OutputStream::operator<<(const float val){*this << String(val); return * this;}
-OutputStream & OutputStream::operator<<(const double val){*this << String(val); return * this;}

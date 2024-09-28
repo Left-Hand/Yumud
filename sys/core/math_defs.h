@@ -130,13 +130,14 @@
 
 #ifndef SWAP
 #ifdef __cplusplus
-    #define SWAP(m_x, m_y) __swap_tmpl((m_x), (m_y))
-    template <class T>
-    constexpr __fast_inline void __swap_tmpl(T &x, T &y) {
-        T aux = x;
-        x = y;
-        y = aux;
-    }
+    #define SWAP(m_x, m_y) std::swap((m_x), (m_y))
+    // template <class T>
+    // constexpr __fast_inline void __swap_tmpl(T &x, T &y) {
+    //     T aux = x;
+    //     x = y;
+    //     y = aux;
+    // }
+    
 #else
     #define SWAP(x,y)   do{typeof(x) t;t=x;x=y;y=t;}while(0)
 #endif

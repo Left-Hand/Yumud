@@ -8,6 +8,9 @@
 template<typename ColorType>
 class Image:public ImageWithData<ColorType, ColorType>{
 public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
+public:
     auto get_data() const {return this->data.get();}
     auto get_ptr() const {return this->data;}
     Image(std::shared_ptr<ColorType[]> _data, const Vector2i & _size):  ImageBasics(_size), ImageWithData<ColorType, ColorType>(_data, _size) {}
@@ -83,6 +86,9 @@ class ImageDataTypeDiff:public Image<ColorType>{
 
 template<typename ColorType>
 class ImageView:public ImageReadable<ColorType>, public ImageWritable<ColorType>{
+public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 protected:
     using m_Image = ImageWR<ColorType>;
     m_Image & instance;
@@ -99,11 +105,16 @@ public:
 template<typename ColorType>
 class Camera:public Image<ColorType>{
 public:
+    using Vector2 = Image<ColorType>::Vector2;
+    using Vector2i = Image<ColorType>::Vector2i;
     Camera(const Vector2i & _size):ImageBasics(_size), Image<ColorType>(_size){;}
 };
 
 template<typename ColorType>
 class Displayer:public ImageWritable<ColorType>{
+public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 public:
     Displayer(const Vector2i & _size):ImageBasics(_size), ImageWritable<ColorType>(_size){;}
 };
@@ -111,6 +122,9 @@ public:
 template<typename ColorType>
 struct PixelProxy{
 public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
+    
     ImageWritable<ColorType> & src;
     Vector2i pos;
 
@@ -131,12 +145,12 @@ public:
 
 
 template<typename ColorType>
-__inline auto make_image(const Vector2i & _size){
+__inline auto make_image(const ImageBasics::Vector2i & _size){
     return Image<ColorType>(_size);
 }
 
-__inline auto make_gray(const Vector2i & _size){return make_image<Grayscale>(_size);};
-__inline auto make_bina(const Vector2i & _size){return make_image<Binary>(_size);};
+__inline auto make_gray(const ImageBasics::Vector2i & _size){return make_image<Grayscale>(_size);};
+__inline auto make_bina(const ImageBasics::Vector2i & _size){return make_image<Binary>(_size);};
 
 
 template<typename ColorType>

@@ -1,6 +1,7 @@
 #include "host.hpp"
 #include "../../robots/foc/protocol/ascii_protocol.hpp"
 
+using Vector2 = Vector2_t<real_t>;
 static constexpr real_t squ_len = 96;
 static constexpr Vector2 pos_begin = {111, 46};
 static constexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
@@ -25,10 +26,8 @@ static Vector2 get_predefined_positions(real_t rad){
     return pos_center + Vector2{-distance, 0}.rotated(rad);
 }
 
-void EmbdHost::parseTokens(const String & _command,const std::vector<String> & args){
-    auto command = _command;
-    command.toLowerCase();
-    switch(hash_impl(command.c_str(), command.length())){
+void EmbdHost::parseArgs(const Strings & args){
+    switch(args[0].hash()){
         case "exp"_ha:
             settle_method(camera.setExposureValue, args, int)
         case "bina"_ha:
@@ -36,19 +35,19 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
         case "diff"_ha:
             settle_value(diff_threshold, args)
         case "xymm"_ha:
-            if(args.size() == 2){
-                steppers.soft_mm(Vector2(args[0], args[1]));
+            if(args.size() == 3){
+                steppers.soft_mm(Vector2(args[1], args[2]));
             }
             break;
         case "zmm"_ha:
-            if(args.size() == 1){
-                steppers.z_mm(real_t(args[0]));
+            if(args.size() == 2){
+                steppers.z_mm(real_t(args[1]));
             }
         case "xyz"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetPosition(real_t(args[0]));
-                steppers.y.setTargetPosition(real_t(args[1]));
-                steppers.z.setTargetPosition(real_t(args[2]));
+            if(args.size() == 4){
+                steppers.x.setTargetPosition(real_t(args[1]));
+                steppers.y.setTargetPosition(real_t(args[2]));
+                steppers.z.setTargetPosition(real_t(args[3]));
             }
             break;
 
@@ -61,58 +60,58 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             break;
         
         case "xyzt"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetTrapezoid(real_t(args[0]));
-                steppers.y.setTargetTrapezoid(real_t(args[1]));
-                steppers.z.setTargetTrapezoid(real_t(args[2]));
+            if(args.size() == 4){
+                steppers.x.setTargetTrapezoid(real_t(args[1]));
+                steppers.y.setTargetTrapezoid(real_t(args[2]));
+                steppers.z.setTargetTrapezoid(real_t(args[3]));
             }
             break;
 
         case "xy"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetPosition(real_t(args[0]));
-                steppers.y.setTargetPosition(real_t(args[1]));
+            if(args.size() == 3){
+                steppers.x.setTargetPosition(real_t(args[1]));
+                steppers.y.setTargetPosition(real_t(args[2]));
             }
             break;
 
         case "xyt"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetTrapezoid(real_t(args[0]));
-                steppers.y.setTargetTrapezoid(real_t(args[1]));
+            if(args.size() == 3){
+                steppers.x.setTargetTrapezoid(real_t(args[1]));
+                steppers.y.setTargetTrapezoid(real_t(args[2]));
             }
             break;
     
         case "dz"_ha:
-            if(args.size() == 1){
-                stepper_z.setTargetSpeed(real_t(args[0]));
+            if(args.size() == 2){
+                stepper_z.setTargetSpeed(real_t(args[1]));
             }
 
         case "dxy"_ha:
-            if(args.size() == 2){
-                steppers.x.setTargetSpeed(real_t(args[0]));
-                steppers.y.setTargetSpeed(real_t(args[1]));
-                DEBUG_PRINTLN(args[0], args[1]);
+            if(args.size() == 3){
+                steppers.x.setTargetSpeed(real_t(args[1]));
+                steppers.y.setTargetSpeed(real_t(args[2]));
+                DEBUG_PRINTLN(args[1], args[2]);
             }
             break;
 
         case "nz"_ha:
-            if(args.size() == 1){
-                steppers.y.setNozzle(int(args[0]));
+            if(args.size() == 2){
+                steppers.y.setNozzle(int(args[1]));
             }
             break;
 
         case "dxyz"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetSpeed(real_t(args[0]));
-                steppers.y.setTargetSpeed(real_t(args[1]));
-                steppers.z.setTargetSpeed(real_t(args[2]));
+            if(args.size() == 4){
+                steppers.x.setTargetSpeed(real_t(args[1]));
+                steppers.y.setTargetSpeed(real_t(args[2]));
+                steppers.z.setTargetSpeed(real_t(args[3]));
             }
             break;
     
         case "gon"_ha:
-            trigger_method(steppers.soft_mm, get_predefined_positions(args.size() ? int(args[0]) : 0));
+            trigger_method(steppers.soft_mm, get_predefined_positions(args.size() ? int(args[1]) : 0));
         case "goa"_ha:
-            trigger_method(steppers.soft_mm, get_predefined_positions(args.size() ? real_t(args[0]) : 0));
+            trigger_method(steppers.soft_mm, get_predefined_positions(args.size() ? real_t(args[1]) : 0));
         case "gbn"_ha:
             trigger_method(steppers.do_move, pos_pending, get_predefined_positions(num_result));
         case "gba"_ha:
@@ -196,13 +195,13 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             );
 
         case "teach"_ha:{
-            const bool sw = args.size() ? bool(args[0].toInt()) : true;
+            const bool sw = args.size() ? bool(int(args[1])) : true;
             if(sw){trigger_method(steppers.entry_teach)}
             else{trigger_method(steppers.exit_teach)}
         }
 
         case "replay"_ha:{
-            const bool sw = args.size() ? bool(args[0].toInt()) : true;
+            const bool sw = args.size() ? bool(int(args[1])) : true;
             if(sw) {trigger_method(steppers.entry_replay)}
             else {trigger_method(steppers.exit_replay)}
         }
@@ -216,34 +215,34 @@ void EmbdHost::parseTokens(const String & _command,const std::vector<String> & a
             break;
             
         case "idle"_ha:
-            if(args.size() == 2){
-                steppers.do_idle({args[0], args[1]});
-            }else if(args.size() == 0){
+            if(args.size() == 3){
+                steppers.do_idle({args[1], args[2]});
+            }else if(args.size() == 1){
                 steppers.do_idle();
             }
             break;
 
         case "move"_ha:
-            if(args.size() == 4){
-                steppers.do_move({args[0], args[1]}, {args[2], args[3]});
+            if(args.size() == 5){
+                steppers.do_move({args[1], args[2]}, {args[3], args[4]});
             }
             break;
 
         case "drop"_ha:
-            if(args.size() == 2){
-                steppers.do_place({args[0], args[1]});
-            }else if(args.size() == 0){
+            if(args.size() == 3){
+                steppers.do_place({args[1], args[2]});
+            }else if(args.size() == 1){
                 steppers.do_place({steppers.x_axis.readMM(), steppers.y_axis.readMM()});
             }
             break;
 
         case "pick"_ha:
-            if(args.size() == 2){
-                steppers.do_pick({args[0], args[1]});
+            if(args.size() == 3){
+                steppers.do_pick({args[1], args[2]});
             }
             break;
         default:
-            CliAP::parseTokens(_command, args);
+            AsciiProtocolConcept::parseArgs(args);
             break;
     }
 }

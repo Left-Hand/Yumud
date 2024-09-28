@@ -4,37 +4,61 @@
 #include "robots/DJI/M3508/m3508.hpp"
 #include "robots/DJI/DR16/DR16.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
+#include "types/basis/Basis_t.hpp"
 
 void m3508_main(){
-    scexpr real_t max_curr = real_t(1.8);
-    scexpr size_t cb_freq = 50;
+    scexpr size_t cb_freq = 200;
 
     auto & led = portC[14];
     led.outpp(1);
 
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    can1.init(1_M);
+    // can1.init(1_M, Can::Mode::Silent);
+    // can1.init(1_M, Can::Mode::Internal);
+    can1.init(1_M, Can::Mode::Normal);
+    // can1.init(1_M);
 
     M3508Port port{can1};
     
     timer3.init(cb_freq);
+
     timer3.bindCb(TimerUtils::IT::Update, [&](){
         port.tick();
     });
+    timer3.enableIt(TimerUtils::IT::Update, {0,0});
+
+    auto & motor = port[4];
+    auto & motor2 = port[1];
+
+    motor.init();
+    motor2.init();
 
     while(true){
-        port[1].setTargetCurrent(max_curr * sin(t));   
-        port[2].setTargetCurrent(max_curr * cos(t));   
-        port[3].setTargetCurrent(max_curr * -sin(t));   
-        port[4].setTargetCurrent(max_curr * -cos(t));
+        // port.setTargetCurrent();
+        // real_t targ_curr = real_t(1.5) * sin(real_t(TAU/4) * t);
+        real_t target = 3 * sin(t);
+        // real_t targ_curr = 4 * sin( t*real_t(1.7));
+        // real_t targ_curr = 0;
+        // motor.setTargetCurrent(targ_curr);
+        motor.setTargetPosition(target);   
+        motor2.setTargetPosition(target);   
+        // motor.setTargetCurrent(0);   
+        // port[2].setTargetCurrent(max_curr * cos(t));   
+        // port[3].setTargetCurrent(max_curr * -sin(t));   
+        // port[4].setTargetCurrent(max_curr * -cos(t));
 
-        DEBUGGER.println(port[1].getCurrent(), port[2].getCurrent(), port[3].getCurrent(), port[4].getCurrent()); 
-        // auto msg = CanMsg{0x1fe, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
+        // port.tick();
+
+        // DEBUGGER.println(port[1].getCurrent(), port[2].getCurrent(), port[3].getCurrent(), port[4].getCurrent(), can1.read()); 
+        // auto msg = CanMsg{0x1ff, std::tuple<int16_t, int16_t, int16_t, int16_t>(data, data, data, data)};
         // can1.write(msg);
-        // delay(1);
         // can1.write({0x2fe, std::tuple<int16_t, int16_t, int16_t, int16_t>(5000, 5000, 5000, 5000)});
+        // delay(3);
+        led = (millis() % 400) > 200;
+        // static real_t last_pos = 0;
+        // DEBUG_PRINTLN(std::setprecision(3), target, motor.getPosition(), motor.getSpeed(), motor.getCurrent(), motor.delta());
+        // DEBUG_PRINTLN(std::setprecision(3), real_t(1.2), std::hex, std::showbase, std::setprecision(2) ,0x23, basis);
         // delay(10);
-        // led = (millis() % 400) > 200;
-        // DEBUG_PRINTLN(can1.pending(), can1.available(), msg, can1.read());
+        // last_pos = motor.getPosition();
     }
 }

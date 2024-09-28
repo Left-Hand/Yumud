@@ -1,5 +1,36 @@
 #pragma once
 
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                             GODOT ENGINE                               */
+/*                        https://godotengine.org                         */
+/**************************************************************************/
+/* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
+/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
+/* Copyright (c) 2024  Rstr1aN / Yumud                                    */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/*                                                                        */
+/* Note: This file has been modified by Rstr1aN / Yumud.                  */
+/**************************************************************************/
+
 #include "sys/core/platform.h"
 
 #include "sys/string/string.hpp"
@@ -16,17 +47,18 @@ struct Rect2_t;
 template<arithmetic T>
 struct Vector2_t{
 public:
-
     T x;
     T y;
-
-    constexpr Vector2_t():x(T(0)), y(T(0)){;}
+    
+    constexpr Vector2_t(){;}
 
     constexpr Vector2_t(const auto & _x, const auto & _y): x(T(_x)), y(T(_y)){;}
 
-    constexpr Vector2_t(const std::tuple<arithmetic auto, arithmetic auto> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
+    template<arithmetic U = T>
+    constexpr Vector2_t(const std::tuple<U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)){;}
 
-    constexpr Vector2_t(const Vector2_t<arithmetic auto> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
+    template<arithmetic U = T>
+    constexpr Vector2_t(const Vector2_t<U> & _v) : x(static_cast<T>(_v.x)), y(static_cast<T>(_v.y)) {;}
 
     T & operator [](const size_t index) { return *(&this->x + index);}
 
@@ -189,9 +221,6 @@ public:
 
 #include "vector2_t.tpp"
 
-using Vector2f = Vector2_t<float>;
-using Vector2i = Vector2_t<int>;
-using Vector2 = Vector2_t<real_t>;
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ')';

@@ -1,3 +1,40 @@
+/**************************************************************************/
+/*                         This file is part of:                          */
+/*                             GODOT ENGINE                               */
+/*                        https://godotengine.org                         */
+/**************************************************************************/
+/* Copyright (c) 2014-present Godot Engine contributors (see AUTHORS.md). */
+/* Copyright (c) 2007-2014 Juan Linietsky, Ariel Manzur.                  */
+/* Copyright (c) 2024  Rstr1aN / Yumud                                    */
+/*                                                                        */
+/* Permission is hereby granted, free of charge, to any person obtaining  */
+/* a copy of this software and associated documentation files (the        */
+/* "Software"), to deal in the Software without restriction, including    */
+/* without limitation the rights to use, copy, modify, merge, publish,    */
+/* distribute, sublicense, and/or sell copies of the Software, and to     */
+/* permit persons to whom the Software is furnished to do so, subject to  */
+/* the following conditions:                                              */
+/*                                                                        */
+/* The above copyright notice and this permission notice shall be         */
+/* included in all copies or substantial portions of the Software.        */
+/*                                                                        */
+/* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,        */
+/* EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF     */
+/* MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. */
+/* IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY   */
+/* CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,   */
+/* TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE      */
+/* SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.                 */
+/*                                                                        */
+/* Note: This file has been modified by Rstr1aN / Yumud.                  */
+/**************************************************************************/
+
+#define set(p_x, p_y, p_z, p_w)\
+	x = p_x;\
+	y = p_y;\
+	z = p_z;\
+	w = p_w;\
+
 
 template<typename T>
 T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
@@ -19,7 +56,7 @@ T Quat_t<T>::length_squared() const{
 // and similar for other axes.
 // This implementation uses XYZ convention (Z is the first rotation).
 template<typename T>
-void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
+void Quat_t<T>::set_euler_xyz(const Vector3_t<T> &p_euler) {
 	T half_a1 = p_euler.x / 2;
 	T half_a2 = p_euler.y / 2;
 	T half_a3 = p_euler.z / 2;
@@ -45,7 +82,7 @@ void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
 // (ax,ay,az), where ax is the angle of rotation around x axis,
 // and similar for other axes.
 // This implementation uses XYZ convention (Z is the first rotation).
-// Vector3 Quat_t<T>::get_euler_xyz() const {
+// Vector3_t<T> Quat_t<T>::get_euler_xyz() const {
 // 	Basis m(*this);
 // 	return m.get_euler_xyz();
 // }
@@ -55,7 +92,7 @@ void Quat_t<T>::set_euler_xyz(const Vector3 &p_euler) {
 // and similar for other axes.
 // This implementation uses YXZ convention (Z is the first rotation).
 template<typename T>
-void Quat_t<T>::set_euler_yxz(const Vector3 &p_euler) {
+void Quat_t<T>::set_euler_yxz(const Vector3_t<T> &p_euler) {
 	T half_a1 = p_euler.y / 2;
 	T half_a2 = p_euler.x / 2;
 	T half_a3 = p_euler.z / 2;
@@ -81,7 +118,7 @@ void Quat_t<T>::set_euler_yxz(const Vector3 &p_euler) {
 // (ax,ay,az), where ax is the angle of rotation around x axis,
 // and similar for other axes.
 // This implementation uses YXZ convention (Z is the first rotation).
-// Vector3 Quat_t<T>::get_euler_yxz() const {
+// Vector3_t<T> Quat_t<T>::get_euler_yxz() const {
 // 	Basis m(*this);
 // 	return m.get_euler_yxz();
 // }
@@ -185,7 +222,7 @@ Quat_t<T> Quat_t<T>::slerpni(const Quat_t<T> &p_to, const T &p_weight) const {
 	T theta = acos(dot),
             sinT = 1.0 / sinf(theta),
 		    newFactor = sinf(p_weight * theta) * sinT,
-		    invFactor = sinf((1.0 - p_weight) * theta) * sinT;
+		    invFactor = sinf((1 - p_weight) * theta) * sinT;
 
 	return Quat_t<T>(invFactor * from.x + newFactor * p_to.x,
 			invFactor * from.y + newFactor * p_to.y,
@@ -201,16 +238,18 @@ Quat_t<T> Quat_t<T>::cubic_slerp(const Quat_t<T> &p_b, const Quat_t<T> &p_pre_a,
 	return sp.slerpni(sq, t2);
 }
 template<typename T>
-void Quat_t<T>::set_axis_angle(const Vector3 &axis, const T &angle) {
+void Quat_t<T>::set_axis_angle(const Vector3_t<T> &axis, const T &angle) {
 
 	T d = axis.length();
 	if (d == 0) {
 		set(T(0), T(0), T(0), T(0));
 	} else {
-		T sin_angle = sinf(angle * 0.5);
-		T cos_angle = cosf(angle * 0.5);
+		T sin_angle = sinf(angle * static_cast<T>(0.5));
+		T cos_angle = cosf(angle * static_cast<T>(0.5));
 		T s = sin_angle / d;
 		set(axis.x * s, axis.y * s, axis.z * s,
 				cos_angle);
 	}
 }
+
+#undef set

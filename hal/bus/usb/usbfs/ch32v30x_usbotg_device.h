@@ -746,9 +746,9 @@ extern UINT8 EP0_DatabufHD[8];      //ep0(64)
 extern UINT8 EP1_DatabufHD[64+64];  //ep1_out(64)+ep1_in(64)
 extern UINT8 EP2_DatabufHD[64+64];  //ep2_out(64)+ep2_in(64) 批量传输端点
 
-extern void DevEP2_IN_Deal( UINT8 l );
-extern void USBOTG_RCC_Init( void );
-extern void USBDeviceInit( void );
+void DevEP2_IN_Deal( UINT8 l );
+void USBOTG_RCC_Init( void );
+void USBDeviceInit( void );
 
 #ifdef __cplusplus
 }

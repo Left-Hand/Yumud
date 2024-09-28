@@ -3,7 +3,7 @@
 #include "match/match.hpp"
 #include "algo/interpolation/interpolation.hpp"
 
-#include "types/float/bf16.hpp"
+#include "sys/math/float/bf16.hpp"
 
 #include <algorithm>
 #include "match/apriltag/dec16h5.hpp"
@@ -43,7 +43,7 @@ void EmbdHost::main(){
 
     {//init tft
         tftDisplayer.init();
-        tftDisplayer.setDisplayOffset({53, 40}); 
+        tftDisplayer.setDisplayOffset({51, 40}); 
         tftDisplayer.setFlipX(false);
         tftDisplayer.setFlipY(false);
         tftDisplayer.setSwapXY(false);
@@ -59,10 +59,9 @@ void EmbdHost::main(){
     i2c.init(400000);
 
     camera.init();
-    camera.setExposureValue(300);
+    camera.setExposureValue(1200);
 
     toggle_key.init();
-
 
     vl.init();
     vl.enableContMode();
@@ -131,278 +130,52 @@ void EmbdHost::main(){
 
 
     // resetSlave();
-    delay(900);
+    // delay(900);
     bindSystickCb([&](){this->tick();});
-    steppers.do_home();
-
+    // steppers.do_home();
+    tftDisplayer.fill(RGB565::BLACK);
     painter.setChFont(font7x7);
     while(true){
         painter.setColor(RGB565::WHITE);
         painter.drawString({0, 0}, "进入 设置 启动");
         painter.drawString({0, 8}, "开始 时间 设定 确认");
         painter.drawString({0, 16}, "选中 缩放 打开 关闭");
+        continue;
         sketch.fill(RGB565::BLACK);
 
-        Image<Grayscale> raw_img = Shape::x2(camera);
-        auto img = raw_img.space();
-        Geometry::perspective(img, raw_img);
-        // img = img.clone(Rect2i(14, 0, 80-14, 60));
-        // plot_gray(img, {0, img.get_size().y * 1});
+        Image<Grayscale> img = Shape::x2(camera);
+        // auto img = raw_img.space();
+        // Geometry::perspective(img, raw_img);
+        plot_gray(img, {0, img.get_size().y * 1});
         trans.transmit(img, 0);
     
         auto img_ada = img.space();
-        Shape::adaptive_threshold(img_ada, img);
+        // Shape::adaptive_threshold(img_ada, img);
         // plot_gray(img_ada, {0, img.get_size().y * 2});
 
-        auto img_bina = img.space<Binary>();
-        Pixels::binarization(img_bina, img_ada, 220);
-        Pixels::inverse(img_bina);
-
-        using Shape::FloodFill;
-        using Shape::BlobFilter;
-
-        FloodFill ff;
-        auto map = ff.run(img_bina, BlobFilter::clamp_area(100, 1200));
-        Pixels::dyeing(map, map);
-        // plot_gray(map, Vector2i{0, map.get_size().y * 3});
-
-
-        for(const auto & blob :ff.blobs()){
-
-            if(true){
-                // DEBUG_PRINTLN(blob)
-                bool is_tag = false;
-                bool is_digit = false;
-                if(16 < blob.rect.h){
-                    if(blob.rect.h > 18 and blob.rect.w > 18) is_tag = true;
-                    else if(ABS(blob.rect.h - blob.rect.w) > 4)is_digit = true;
-                }
-
-                const auto & rect = blob.rect;
-
-                if(is_tag){
-
-                    static constexpr uint apriltag_s = 4;
-                // DEBUG_PRINTLN(rect);
-
-
-                    Vertexs vertexs;
-                    {
-                        // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
-                        // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
-                        // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
-                        // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
-            
-                        vertexs[0] = rect.position;
-                        vertexs[1] = rect.position + Vector2i(rect.w, 0);
-                        vertexs[2] = rect.position + Vector2i(0, rect.h);
-                        vertexs[3] = rect.get_end();
-                    }
-
-                    painter.setColor(RGB565::YELLOW);
-                    for(const auto & item : vertexs){
-                        painter.drawPixel(item);
-                    }
-
-
-                    auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
-
-                        auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
-                            Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
-
-                            Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-                            Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
-
-                            return upper_x.lerp(lower_x, grid_scale.y);
-                        };
-
-
-                        auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
-                            return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
-                        };
-
-                        return gs[get_vertex_grid(vertexs, _grid_pos)];
-                    };
-
-                    uint16_t code = 0;
-                    for(uint j = 0; j < apriltag_s; j++){
-                        for(uint i = 0; i < apriltag_s; i++){
-                            uint16_t mask = (0x8000) >> (j * 4 + i);
-                            Grayscale val = get_vertex_val(vertexs, {i,j}, img);
-                            if((uint8_t)val > 173) code |= mask;
-                        }
-                    }
-
-                    static Apriltag16H5Decoder decoder;
-                    decoder.update(code);
-
-
-                    april_result = decoder.index() % 30;
-
-                    std::swap(vertexs[3], vertexs[2]);
-                    plot_april(vertexs, decoder.index(), real_t(PI / 2) * decoder.direction());
-
-                    Painter<Grayscale> pt;
-                    auto clipped = img.clone(rect);
-                    pt.bindImage(clipped);
-                    pt.drawString({0,0}, toString(decoder.index()));
-                    pt.drawString({0,8}, toString(decoder.direction()));
-                    trans.transmit(clipped,1);
-
-                    // static constexpr uint apriltag_s = 4;
-
-                    // auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
-
-                    //     auto get_vertex = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2 {
-                    //         Vector2 grid_scale = (__grid_pos + Vector2{1,1}) / (apriltag_s + 2);
-
-                    //         Vector2 upper_x = __vertexs[0].lerp(__vertexs[1], grid_scale.x);
-                    //         Vector2 lower_x = __vertexs[2].lerp(__vertexs[3], grid_scale.x);
-
-                    //         return upper_x.lerp(lower_x, grid_scale.y);
-                    //     };
-
-
-                    //     auto get_vertex_grid = [&](const Vertexs & __vertexs, const Vector2 & __grid_pos) -> Vector2{
-                    //         return get_vertex(__vertexs, __grid_pos + Vector2{0.5, 0.5});
-                    //     };
-
-                    //     return gs.bilinear_interpol(get_vertex_grid(_vertexs, _grid_pos));
-                    // };
-
-                    // auto find_vertex = [](const Image<Grayscale> & __map, const Grayscale & match, const Rect2i & roi) -> Vertexs{
-                    //     auto x_range = roi.get_x_range();
-                    //     auto y_range = roi.get_y_range();
-
-                    //     Vertexs ret;
-                    //     auto center = roi.get_center();
-                
-                    //     for(auto & item : ret){
-                    //         item = center;
-                    //     }
-        
-                    //     #define COMP(s1, s2, i)\
-                    //     if((0 s1*x) + (0 s2*y) < (0 s1*ret[i].x) + (0 s2*ret[i].y))\
-                    //     ret[i] = Vector2i(x,y);\
-
-                    //     for(auto y = y_range.from; y < y_range.to; ++y){
-                    //         for(auto x = x_range.from; x < x_range.to; ++x){
-                    //             auto color = __map[{x,y}];
-                    //             if(color != match) continue;
-
-                    //             COMP(-1, -1, 0)
-                    //             COMP(+1, -1, 1)
-                    //             COMP(+1, +1, 2)
-                    //             COMP(-1, +1, 3)
-                    //         }
-                    //     }
-
-                    //     return ret;
-                    // };
-
-
-                    // Vertexs vertexs;
-                    // {
-                    //     // vertexs[0] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,-1});
-                    //     // vertexs[1] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,-1});
-                    //     // vertexs[2] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {-1,1});
-                    //     // vertexs[3] = Shape::find_most(map, Pixels::dyeing((Grayscale)blob.index), rect.get_center(), {1,1});
-            
-                    //     vertexs[0] = rect.position;
-                    //     vertexs[1] = rect.position + Vector2i(rect.w, 0);
-                    //     vertexs[2] = rect.position + Vector2i(0, rect.h);
-                    //     vertexs[3] = rect.get_end();
-                    // }
-
-                    // painter.setColor(RGB565::YELLOW);
-                    // for(const auto & item : vertexs){
-                    //     painter.drawPixel(item);
-                    // }
-
-                    // uint16_t code = 0;
-                    // for(uint j = 0; j < apriltag_s; j++){
-                    //     for(uint i = 0; i < apriltag_s; i++){
-                    //         uint16_t mask = (0x8000) >> (j * 4 + i);
-                    //         Grayscale val = get_vertex_val(vertexs, {i,j}, img);
-                    //         if((uint8_t)val > 173) code |= mask;
-                    //     }
-                    // }
-
-                    // static Apriltag16H5Decoder decoder;
-                    // decoder.update(code);
-
-                    // plot_april(vertexs, decoder.index(), decoder.direction());
-
-                    // Painter<Grayscale> pt;
-                    // auto clipped = img.clone(rect);
-                    // pt.bindImage(clipped);
-                    // pt.drawString({0,0}, toString(decoder.index()));
-                    // pt.drawString({0,8}, toString(decoder.direction()));
-                    // trans.transmit(clipped,1);
-                }
-
-
-                if(is_digit){
-
-
-                    auto char_pos = rect.get_center();
-                    const Vector2i tmp_size = {8, 12};
-                    const Rect2i clip_window = Rect2i::from_center(char_pos, tmp_size);
-                    auto clipped = img.clone(clip_window);
-
-
-                    auto tmp = Shape::x2(clipped);
-
-                    painter.setColor(RGB565::BLUE);
-                    painter.drawRoi(clip_window);
-
-                    auto result = matcher.number(tmp, Rect2i(Vector2i(0,0), tmp_size));
-
-                    plot_number(clip_window, result);
-
-                    num_result = result;
-
-                    Painter<Grayscale> pt;
-                    pt.bindImage(clipped);
-                    pt.drawString({0,0}, toString(result));
-
-                    trans.transmit(clipped,2);
-
-                }
-
-            }
-        }
-
-        plot_rgb(sketch, {0,0});
-
-        // DEBUG_PRINTLN(steppers.x_axis.readMM(), steppers.y_axis.readMM(), steppers.z_axis.readMM());
-        static uint last_turn = 0;
-        uint this_turn = millis() / 100;
-        if(last_turn != this_turn){
-            // DEBUG_PRINTS("busy ", actions.pending());
-            // ch9141.prints("busy ", actions.pending());
-            // DEBUG_PRINTLN(bool(toggle_key));
-            last_turn = this_turn;
-
-        }
-
-        run_led = !run_led;
-        busy_led = actions.pending();
-
+        auto img_processed = img.space<Grayscale>();
+        // Shape::canny(img_bina, img, {60, 120});
+        Shape::eye(img_processed, img);
+        auto img_processed2 = img.space<Grayscale>();
+        Shape::eye(img_processed2, img_processed);
+        // Pixels::binarization(img_bina, img_ada, 220);
+        // Pixels::inverse(img_bina);
+        plot_gray(img_processed, {0, img.get_size().y * 2});
+        plot_gray(img_processed2, {0, img.get_size().y * 3});
     }
 }
 
-void EmbdHost::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
-    steppers.x.parseCommand(id, cmd, msg);
-    steppers.y.parseCommand(id, cmd, msg);
-    steppers.z.parseCommand(id, cmd, msg);
-}
+// void EmbdHost::parseArgs(CanMsg &msg){
+    // steppers.x.parseCommand(id, cmd, msg);
+    // steppers.y.parseCommand(id, cmd, msg);
+    // steppers.z.parseCommand(id, cmd, msg);
+// }
 
 
 void EmbdHost::resetSlave(){
-    steppers.x.reset();
-    steppers.y.reset();
-    steppers.z.reset();
+    // steppers.x.reset();
+    // steppers.y.reset();
+    // steppers.z.reset();
 }
 void EmbdHost::resetAll(){
     resetSlave();
@@ -411,7 +184,7 @@ void EmbdHost::resetAll(){
 }
 
 void EmbdHost::cali(){
-    steppers.w.triggerCali();
+    // steppers.w.triggerCali();
 }
 
 
@@ -481,35 +254,24 @@ void EmbdHost::act(){
 
 void EmbdHost::tick(){
 
-    steppers.tick();
+    // steppers.tick();
 
-    toggle_key.update();
-    if(toggle_key.pressed()){
-        steppers.toggle_nz();
+    // toggle_key.update();
+    // if(toggle_key.pressed()){
+    //     steppers.toggle_nz();
 
-    }
+    // }
 
-    auto parseAscii = [&](InputStream & is){
-        static String temp;
-        while(is.available()){
-            auto chr = is.read();
-            if(chr == 0) continue;
-            temp += chr;
-            if(chr == '\n'){
-                temp.alphanum();
-                parseLine(temp);
-                temp = "";
-            }
-        }
-    };
+    AsciiProtocolConcept::update();
 
-    parseAscii(uart7);
-    parseAscii(uart2);
+    // parseAscii(uart7);
+    // parseAscii(uart2);
 
-    auto index = (millis() % 3);
+    // auto index = (millis() % 3);
     // steppers[index].updateAll();
     // steppers.z.updateAll();
-    readCan();
+    // readCan();
+
     act();
 }
 

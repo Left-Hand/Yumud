@@ -1,47 +1,45 @@
-#include "ascii_protocol.hpp"
 #include "robots/foc/focmotor.hpp"
 
 
-void AsciiProtocol::parseTokens(const StringView _command, const Strings & args){
-    auto command = _command;
-    switch(hash_impl(command.data(), command.length())){
+void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
+    switch(args[0].hash()){
         case "save"_ha:
         case "sv"_ha:
-            motor.saveArchive(args.size() ? bool(int(args[0])) : true);
+            motor.saveArchive((args.size() > 1)? bool(int(args[1])) : true);
             break;
 
         case "load"_ha:
         case "ld"_ha:
-            motor.loadArchive(args.size() ? bool(int(args[0])) : true);
+            motor.loadArchive((args.size() > 1)? bool(int(args[1])) : true);
             break;
 
         case "lp"_ha:
-            if(args.size() == 2)motor.setPositionLimit(Range{args[0], args[1]});
+            if(args.size() == 2)motor.setPositionLimit(Range{args[1], args[2]});
             // else CLI_DEBUG(motor.get)
             break;
         
         case "lc"_ha:
-            if(args.size() == 1) motor.setCurrentLimit(real_t(args[0]));
+            if(args.size() == 1) motor.setCurrentLimit(real_t(args[1]));
             break;
 
         case "ls"_ha:
-            if(args.size() == 1) motor.setSpeedLimit(real_t(args[0]));
+            if(args.size() == 1) motor.setSpeedLimit(real_t(args[1]));
             break;
 
         case "la"_ha:
-            if(args.size() == 1) motor.setAccelLimit(real_t(args[0]));
+            if(args.size() == 1) motor.setAccelLimit(real_t(args[1]));
             break;
 
         case "remove"_ha:
         case "rm"_ha:
-            motor.removeArchive(args.size() ? bool(int(args[0])) : true);
+            motor.removeArchive((args.size() > 1)? bool(int(args[1])) : true);
             break;
 
         case "speed"_ha:
         case "spd"_ha:
         case "s"_ha:
-            if(args.size()){
-                real_t spd = real_t(args[0]);
+            if(args.size() > 1){
+                real_t spd = real_t(args[1]);
                 motor.setTargetSpeed(spd);
                 CLI_DEBUG("target speed:", spd, " n/s");
             }else{
@@ -52,8 +50,8 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
         case "position"_ha:
         case "pos"_ha:
         case "p"_ha:
-            if(args.size()){
-                real_t val = real_t(args[0]);
+            if(args.size() > 1){
+                real_t val = real_t(args[1]);
                 motor.setTargetPosition(val);
                 CLI_DEBUG("target position:", val, " n");
             }else{
@@ -65,8 +63,8 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
         case "teach"_ha:
         case "tch"_ha:
         case "th"_ha:
-            if(args.size()){
-                real_t val = real_t(args[0]);
+            if(args.size() > 1){
+                real_t val = real_t(args[1]);
                 motor.setTargetTeach(val);
                 CLI_DEBUG("target teach:", val);
             }
@@ -74,8 +72,8 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
 
         case "tpz"_ha:
         case "t"_ha:
-            if(args.size()){
-                real_t val = real_t(args[0]);
+            if(args.size() > 1){
+                real_t val = real_t(args[1]);
                 motor.setTargetTrapezoid(val);
                 CLI_DEBUG("target trapezoid:", val, " n");
             }else{
@@ -85,8 +83,8 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
 
         case "curr"_ha:
         case "c"_ha:
-            if(args.size()){
-                real_t val = real_t(args[0]);
+            if(args.size() > 1){
+                real_t val = real_t(args[1]);
                 motor.setTargetCurrent(val);
                 CLI_DEBUG("target current:", val, " n");
             }else{
@@ -96,8 +94,8 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
 
         case "vect"_ha:
         case "v"_ha:
-            if(args.size()){
-                auto v = real_t(args[0]);
+            if(args.size() > 1){
+                auto v = real_t(args[1]);
                 motor.setTargetVector(v);
                 CLI_DEBUG("target vector:", v, " n");
             }
@@ -110,7 +108,7 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
         // case "eleczero"_ha:
         // case "ez"_ha:{
         //     if(args.size() == 0) break;
-        //     motor.elecrad_zerofix = real_t(args[0]);
+        //     motor.elecrad_zerofix = real_t(args[1]);
         // }
         //     break;
 
@@ -153,7 +151,7 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
         case "locate"_ha:
         case "loc"_ha:
         {
-            real_t loc = args.size() ? real_t(args[0]) : 0;
+            real_t loc = (args.size() > 1)? real_t(args[1]) : 0;
             motor.locateRelatively(loc);
             CLI_DEBUG("located to", loc);
         }
@@ -168,12 +166,12 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
             break;
 
         // case "rd"_ha:
-        //     motor.run_debug_enabled = args.size() ? int(args[0]) : true;
+        //     motor.run_debug_enabled = (args.size() > 1)? int(args[1]) : true;
         //     CLI_DEBUG("run debug enabled:", run_debug_enabled);
         //     break;
 
         // case "cl"_ha:{
-        //     auto cl = args.size() ? real_t(args[0]) : 0;
+        //     auto cl = (args.size() > 1)? real_t(args[1]) : 0;
         //     CLI_DEBUG("current clamp:", cl);
         // }
         //     break;
@@ -210,40 +208,10 @@ void AsciiProtocol::parseTokens(const StringView _command, const Strings & args)
         // case "info"_ha:
         //     CLI_DEBUG(motor.archive_.board_info);
         //     break;
-        case "reset"_ha:
-        case "rst"_ha:
-        case "r"_ha:
-            CLI_DEBUG("rsting");
-            NVIC_SystemReset();
-            break;
-        case "alive"_ha:
-        case "a"_ha:
-            CLI_DEBUG("chip is alive");
-            break;
+
         default:
-            CLI_DEBUG("no command available:", command);
+            AsciiProtocolConcept::parseArgs(args);
             break;
     }
 }
 
-void AsciiProtocol::parseLine(const StringView _line){
-    auto tokens = _line.split(' ');
-    if(tokens.size()){
-        auto command = tokens[0];
-        tokens.erase(tokens.begin());
-        parseTokens(command, tokens);
-    }
-}
-
-void AsciiProtocol::readString(){
-    while(logger.available()){
-        auto chr = logger.read();
-        if(chr == 0) continue;
-        temp += chr;
-        if(chr == '\n'){
-            temp.alphanum();
-            parseLine(temp);
-            temp = "";
-        }
-    }
-}

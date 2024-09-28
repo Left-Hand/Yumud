@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/string/string_utils.hpp"
+#include "algo/hash_func.hpp"
 
 #include <cstdint>
 #include <memory.h>
@@ -24,7 +25,7 @@ public:
     StringView(const char* str, size_t size) : data_(str), size_(size) {}
 
     StringView(const StringView & other): data_(other.data_), size_(other.size_){;}
-    StringView(StringView && other): data_(std::move(other.data_)), size_(std::move(other.size_)){;}
+    StringView(StringView && other): data_(other.data_), size_(other.size_){;}
 
     StringView& operator=(const StringView & other) {
         data_ = other.data_;
@@ -56,11 +57,14 @@ public:
 
 	Strings split(const char chr, const size_t times = 0) const;
 
-	StringView substring( size_t beginIndex ) const { return substring(beginIndex, size_);};
+	StringView substring( size_t beginIndex ) const { return substring(beginIndex, size_ - beginIndex);};
 	StringView substring( size_t beginIndex, size_t endIndex ) const;
     
 	int indexOf( char ch ) const;
 	int indexOf( char ch, size_t fromIndex ) const;
+
+    uint32_t hash() const {return hash_impl(data_, size_);}
+    
 	// int indexOf( const String &str ) const;
 	// int indexOf( const String &str, size_t fromIndex ) const;
 	// int lastIndexOf( char ch ) const;

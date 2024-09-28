@@ -122,9 +122,9 @@ inline Jet_t<T, N> operator/(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 template <arithmetic T, size_t N>
 inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A)
 {
-  T t = std::sqrt(A.a);
+  T temp = std::sqrt(A.a);
 
-  return Jet_t<T, N>(t, T(1) / (T(2) * t) * A.v);
+  return Jet_t<T, N>(temp, T(1) / (T(2) * temp) * A.v);
 }
 // cos(jet)
 template <arithmetic T, size_t N>

@@ -8,6 +8,8 @@
 
 
 struct Machine:public XY_Machine, public Nozzle_Machine{
+public:
+    using Vector2 = Vector2_t<real_t>;
 protected:
     static constexpr uint pick_z = 47;
     static constexpr uint hold_z = 25;

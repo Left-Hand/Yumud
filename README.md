@@ -22,7 +22,7 @@ vs arduino：
 4. C++化程度更高，减少四不像写法的糟糕体验
 5. 大量使用模板与泛型，以实现代码的复用与泛化
 6. 大量使用stl(参考odrive)
-   
+
 vs HAL：
 
 1. 做到了真正的硬件抽象
@@ -41,7 +41,7 @@ int main(){
     //...prework()
 
     //通过引用获取GPIO
-    //端口使用工厂模式返回GPIO，确保GPIO不会被随意狗仔
+    //端口使用工厂模式返回GPIO，确保GPIO不会被随意构造
     auto & led = portC[13];
 
     //将led设置为输出模式，并以高电平初始化
@@ -155,7 +155,7 @@ int main(){
 
 参考了HAL和arduino 但使用了抽象开销成本更小与更安全的方式编写
 
-使用cpp20编写 请使用gcc12+进行编译
+使用cpp20编写 请使用gcc12及以上的版本进行编译
 使用vscode下的eide搭建开发环境
 
 厂方sdk库已改动
@@ -180,7 +180,7 @@ int main(){
 需要安装[MounRiver Studio](http://www.mounriver.com/)以获取我们所需要的厂家魔改版riscv-none-elf-gcc(买椟还珠属于是了)
 
 #### VSCODE 
-为了提供插件EIDE的宿主以及获得宇宙第一的编码体验(本人认为是的) 我们需要下载vscode并安装
+为了提供插件EIDE的宿主以及获得宇宙第一的编码体验(本人认为是的) 需要下载vscode并安装
 
 #### EIDE
 
@@ -192,7 +192,7 @@ int main(){
 为了支持WCH-Link基于OPENOCD进行了定制化开发故需要安装WCH提供的OpenOCD(同样在MounRiver Studio的安装目录中可以找到)
 
 #### 编译选项
-请使用Os/O3/Ofast进行编译，以确保代码的尺寸和运行速度被尽可能优化
+请使用Os/O3/Ofast进行编译，以确保代码的尺寸和运行速度被尽可能优化, 否则FLASH占用不足以支持使用
 
 
 ## 🍴目录
@@ -263,7 +263,7 @@ int main(){
     - [x] fifo 环形缓冲
     - [x] lifo 栈
 
-- [x] color RGBA颜色表述
+- [x] color RGBA颜色表述(godot)
 - [x] complex 复数
 - [x] image 图像类
     - [x] font 字体类
@@ -273,29 +273,22 @@ int main(){
     - [x] packedImage 压缩二值化图片
     - [x] painter 绘图算法驱动
 
-- [x] IQ(IQMATH)
-    - [x] 支持四则运算 大小比较 类型转换
-    - [x] 支持超越函数
-    - [x] 支持std::超越函数
-    - [x] 支持concept
-    - [ ] 使用模板重构
-    - [x] 可选的浮点数杜绝机制
 
 - [ ] polar 极坐标类
-- [ ] float 各类浮点数
-    - [x] fp32 
-    - [x] bf16
-    - [ ] fp16
-    - [ ] fp8
-        - [ ] fp8e4m3
-        - [ ] fp8e5m2
-
 - [x] quat 四元数类(godot)
+- [x] transform3d 三维位姿矩阵(godot)
+- [x] aabb 三维包围盒(godot)
+
+- [ ] dh 连接件DH参数
+
 - [x] range 区间类
 - [x] rect2 矩形区域类
 
 - [x] vector2 二维向量类(godot)
 - [x] vector3 三维向量类(godot)
+
+- [x] plane 三维平面类(godot)
+
 - [x] rgb 各类颜色结构体
 - [x] uint24_t 24位数据
 
@@ -333,7 +326,7 @@ int main(){
         - [x] EG2103
         - [x] EG2104
         - [ ] EG2133
-        - [ ] MP6540
+        - [x] MP6540
         - [x] MP1907
         - [x] TB67H450
 
@@ -447,21 +440,57 @@ int main(){
 ##### concept 外设的抽象基类
 
 ##### sys 系统
+- [ ] arch 架构
+    - [ ] arm
+        - [ ] cm3
+        - [ ] cm4
+    - [ ] riscv
+        - [ ] qingkeV3 
+        - [ ] qingkeV4 
+
+- [x] constants 编译期常量
+    - [x] concepts c++20概念约束拓展 
+    - [x] enums 内置枚举类型
+    - [x] uints 单位转换
+
 - [x] clock 时钟
+    - [x] 毫秒 微秒 纳秒级时间戳
+    - [x] Systick回调函数
+    
 - [x] tasker 非抢占式任务驱动器
-- [x] IOStream(输入输出流)
-    - [ ] `printf` `cout`(内建输出流操作) 
+- [x] Stream(输入输出流)
+    - [x] `printf` `cout`(内建输出流操作) 
     - [ ] `scanf` `cin`(内建输入流操作) 
     - [x] `println` `print` `prints`  `<<` (基本输出流操作)
         - [x] 直接将类型格式化输出
         - [x] 将各输出类型重载输出
         - [x] 重载了容器的输出
+        - [x] 添加对std::hex, std::setpos, std::setprecision等函数的支持
     - [ ] `format` (字符串格式化) 
+
 - [x] string 字符串类(arduino)
     - [x] string (字符串主体)
     - [x] string_view (字符串视图)
     - [x] string_ref (字符串引用)
     - [x] string_utils (字符串工具)
+
+- [x] math 数学类型库
+    - [x] IQ(IQMATH)
+        - [x] 支持四则运算 大小比较 类型转换
+        - [x] 支持超越函数
+        - [x] 支持std::超越函数
+        - [x] 支持concept
+        - [ ] 使用模板重构
+        - [x] 可选的浮点数杜绝机制
+
+
+    - [ ] float 各类浮点数
+        - [x] fp32 
+        - [x] bf16
+        - [ ] fp16
+        - [ ] fp8
+            - [ ] fp8e4m3
+            - [ ] fp8e5m2
 
 ##### src 主要源代码
 
@@ -564,17 +593,16 @@ int main(){
         - [x] 位置环
             - [x] 高精度位置环
             - [x] 常规位置环
-            - [x] 梯形加减速速度环
 
         - [x] 自校准算法
         - [ ] 自检查算法
 
-        - [x] 串口驱动
-        - [x] CAN驱动
+        - [x] 基于串口的RPC
+        - [x] 基于CAN的RPC
         - [x] 数据存档
 
         - [x] 高级插值规划
-            - [x]    直线规划
+            - [x] 直线规划
             - [x] 正弦规划
             - [x] S形规划
 

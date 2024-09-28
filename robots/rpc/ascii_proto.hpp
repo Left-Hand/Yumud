@@ -1,13 +1,11 @@
 #pragma once
 
+#include "arg_parser.hpp"
 #include "sys/core/system.hpp"
-
-#include "robots/foc/stepper/motor_utils.hpp"
-
 #include "sys/string/string.hpp"
+#include "sys/debug/debug_inc.h"
 
 #include <vector>
-
 
 #define CLI_DEBUG
 
@@ -26,6 +24,8 @@
 #define CLI_PRINTS(...) CLI_DEBUG(__VA_ARGS__)
 #endif
 
+#define VNAME(x) #x
+
 #define read_value(value)\
 {\
     CLI_DEBUG("get", #value, "\t\t is", value);\
@@ -40,10 +40,10 @@
 
 #define settle_method(method, args, type)\
 {\
-    if(args.size() == 0){\
+    if(args.size() == 1){\
         CLI_DEBUG("no arg");\
-    }else if(args.size() == 1){\
-        method(type(args[0]));\
+    }else if(args.size() == 2){\
+        method(type(args[1]));\
         CLI_DEBUG("method: ", #method);\
     }\
     break;\
@@ -52,10 +52,10 @@
 #define settle_value(value, args)\
 {\
     ASSERT_WITH_RETURN(bool(args.size() <= 1), "invalid syntax");\
-    if(args.size() == 0){\
+    if(args.size() == 1){\
         read_value(value);\
-    }else if(args.size() == 1){\
-        value = decltype(value)(args[0]);\
+    }else if(args.size() == 2){\
+        value = decltype(value)(args[1]);\
         CLI_DEBUG("set: ", VNAME(value), "\t\t to", args[0]);\
     }\
     break;\
@@ -63,11 +63,11 @@
 
 #define settle_positive_value(value, args)\
 {\
-    auto temp_value = decltype(value)(args[0]);\
-    ASSERT_WITH_RETURN((temp_value >= 0), "arg max should be greater than zero");\
-    if(args.size() == 0){\
+    auto temp_value = decltype(value)(args[1]);\
+    ASSERT_WITH_RETURN((temp_value >= 1), "arg max should be greater than zero");\
+    if(args.size() == 1){\
         read_value(value);\
-    }else if(args.size() == 1){\
+    }else if(args.size() == 2){\
         value = temp_value;\
         CLI_DEBUG("set: ", VNAME(value), "\t\t to", value);\
     }\
@@ -77,34 +77,34 @@
 
 #define settle_clamped_value(value, args, mi, ma)\
 {\
-    auto temp_value = decltype(value)(args[0]);\
+    auto temp_value = decltype(value)(args[1]);\
     ASSERT_WITH_RETURN((temp_value >= mi), "arg < ", mi, "\t failed to settle");\
     ASSERT_WITH_RETURN((temp_value < ma), "arg >= ", ma, "\t failed to settle");\
-    if(args.size() == 0){\
+    if(args.size() == 1){\
         read_value(value);\
-    }else if(args.size() == 1){\
+    }else if(args.size() == 2){\
         value = temp_value;\
         CLI_DEBUG("set: ", VNAME(value), "\t\t to", value);\
     }\
     break;\
 }\
 
-class FOCMotor;
 
-class AsciiProtocol{
-private:
-    String temp;
+
+class AsciiProtocolConcept{
 protected:
-    FOCMotor & motor;
-    IOStream & logger;
-
-    using Command = MotorUtils::Command;
+    ArgParser parser;
+    IOStream & ios;
+    virtual void parseArgs(const Strings & args);
 public:
-    AsciiProtocol(FOCMotor & _motor, IOStream & _logger):motor(_motor), logger(_logger){;}
+    AsciiProtocolConcept(IOStream & _logger):ios(_logger){}
 
-    virtual void parseTokens(const StringView _command,const Strings & args);
-    void parseLine(const StringView _line);
-    void readString();
+    void update(){
+        auto args = parser.update(ios);
+        if(args.size()){
+            parseArgs(args);
+            parser.clear();
+        }
+    }
 };
-
 

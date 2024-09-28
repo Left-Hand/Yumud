@@ -1,24 +1,27 @@
-
-#include "can_protocol.hpp"
 #include "robots/foc/focmotor.hpp"
 
-void CanProtocol::readCan(){
-    if(can.available()){
-        const CanMsg & msg = can.read();
-        uint8_t id = msg.id() >> 7;
-        Command cmd = (Command)(msg.id() & 0x7F);
-        if(id == 0 || id == uint8_t(motor.getNodeId())){
-            parseCommand(cmd, msg);
-        }
+
+CanProtocolConcept::NodeId CanProtocolConcept::getDefaultNodeId(){
+    auto chip_id = Sys::Chip::getChipIdCrc();
+    switch(chip_id){
+        case 3273134334:
+            return 3;
+        case 341554774:
+            return 2;
+        case 4079188777:
+            return 1;
+        case 0x551C4DEA:
+            return  3;
+        case 0x8E268D66:
+            return 1;
+        default:
+            return 0;
     }
 }
 
 
-void CanProtocol::parseCommand(const Command command, const CanMsg & msg){
-    using namespace CANProtocolUtils;
 
-    const uint16_t tx_id = (((uint16_t)(motor.getNodeId()) << 7) | (uint8_t)(command));
-
+void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
     case cmd:\
         method(__VA_ARGS__);\
@@ -39,10 +42,13 @@ void CanProtocol::parseCommand(const Command command, const CanMsg & msg){
     #define GET_BIND_VALUE(cmd, ...)\
     case cmd:\
         if(msg.isRemote()){\
-            can.write(CanMsg(tx_id, __VA_ARGS__));\
+            can.write(CanMsg(tx_id, std::make_tuple(__VA_ARGS__)));\
         }\
         break;\
     
+    Command command = (Command)(msg.id() & 0x7F);
+    const uint16_t tx_id = (((uint16_t)(motor.getNodeId()) << 7) | (uint8_t)(command));
+
     switch(command){
 
         SET_VALUE_BIND(Command::SET_TARGET, motor.target)

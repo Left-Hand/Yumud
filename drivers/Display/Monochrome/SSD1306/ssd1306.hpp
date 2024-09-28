@@ -4,6 +4,9 @@
 #include "../types/image/packed_image.hpp"
 
 class SSD13XX:public Displayer<Binary>{
+public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 protected:
     DisplayerInterface & interface;
     SSD13XX(DisplayerInterface & _interface):Displayer(size), interface(_interface){;}
@@ -71,6 +74,9 @@ public:
 };
 
 class SSD13XX_72X40:public SSD13XX{
+public:
+    using Vector2 = ImageBasics::Vector2;
+    using Vector2i = ImageBasics::Vector2i;
 protected:
     static constexpr Vector2i phy_size = Vector2i(72, 40);
     VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);

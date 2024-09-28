@@ -5,10 +5,9 @@
 struct SpeedEstimator{
 public:
     struct Config{
-        real_t err_threshold;
-        size_t max_cycles;
-
-        void reset();
+        real_t err_threshold = inv_poles / 16;
+        size_t est_freq = foc_freq;
+        size_t max_cycles = foc_freq >> 7;
     };
 
     Config & config;
@@ -32,18 +31,19 @@ public:
     }
 
     void reset(){
-        config.reset();
         vars.reset();
     }
 
 
     __fast_inline real_t update(const real_t position);
+
+    __fast_inline real_t get() const {return vars.last_speed;} 
 };
 
 real_t SpeedEstimator::update(const real_t position){
     real_t delta_pos = position - vars.last_position;
     real_t abs_delta_pos = ABS(delta_pos);
-    real_t this_speed = (delta_pos * int(foc_freq) / int(vars.cycles));
+    real_t this_speed = (delta_pos * int(config.est_freq) / int(vars.cycles));
 
     if(abs_delta_pos > config.err_threshold){
     

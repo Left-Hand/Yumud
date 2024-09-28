@@ -3,12 +3,9 @@
 #include "hal/timer/pwm/gpio_pwm.hpp"
 
 #include "robots/foc/focmotor.hpp"
-#include "robots/foc/protocol/ascii_protocol.hpp"
-#include "robots/foc/protocol/can_protocol.hpp"
 
 #include "drivers/Actuator/SVPWM/svpwm2.hpp"
 
-#include "cli.hpp"
 #include "ctrls/ctrls.hpp"
 #include "observer/observer.hpp"
 #include "archive/archive.hpp"
@@ -17,6 +14,8 @@
 #include "tasks/tone.hpp"
 #include "tasks/selfcheck.hpp"
 
+#include "statled.hpp"
+
 
 
 class FOCStepper:public FOCMotor{
@@ -24,7 +23,7 @@ class FOCStepper:public FOCMotor{
     using Archive = MotorUtils::Archive;
     using Switches = MotorUtils::Switches;
 
-    using NodeId = MotorUtils::NodeId;
+    // using NodeId = MotorUtils::NodeId;
 
     Archive archive_;
     Switches & switches_ = archive_.switches;

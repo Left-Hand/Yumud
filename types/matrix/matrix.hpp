@@ -171,13 +171,14 @@ public:
             T & operator [] (const int16_t _col);
             T operator [] (const int16_t _col) const;
         private:
-            Proxy(T* _inpArr, const int16_t _maxCol) { _array.ptr = _inpArr; this->_maxCol = _maxCol; }
-            Proxy(const T* _inpArr, const int16_t _maxCol) { _array.cptr = _inpArr; this->_maxCol = _maxCol; }
+            Proxy(T* _inpArr, const int16_t _maxCol) { _array.ptr = _inpArr; this->maxCol = _maxCol; }
+            Proxy(const T* _inpArr, const int16_t _maxCol) { _array.cptr = _inpArr; this->maxCol = _maxCol; }
             union { /* teehee xp */
                 const T* cptr;
                 T* ptr;
             } _array;
-            int16_t _maxCol;
+
+            int16_t maxCol;
 
             friend class MatrixX_t;
     };

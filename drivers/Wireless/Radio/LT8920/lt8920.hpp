@@ -8,7 +8,7 @@
 
 #ifdef LT8920_DEBUG
 #undef LT8920_DEBUG
-#define LT8920_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#define LT8920_DEBUG(...) DEBUG_PRINTLN(std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
 #else
 #define LT8920_DEBUG(...)
 #endif
