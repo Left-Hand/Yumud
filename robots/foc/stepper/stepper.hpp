@@ -24,7 +24,7 @@ class FOCStepper:public FOCMotor{
     using Archive = MotorUtils::Archive;
     using Switches = MotorUtils::Switches;
 
-    using NodeId = MotorUtils::NodeId;
+    // using NodeId = MotorUtils::NodeId;
 
     Archive archive_;
     Switches & switches_ = archive_.switches;

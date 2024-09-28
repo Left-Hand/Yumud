@@ -169,8 +169,8 @@ void stepper_tb(UartHw & logger){
 
 
     FOCStepper stp{svpwm, encoder, mem};
-    AsciiProtocol ascii_p{stp, logger};
-    CanProtocol can_p{stp, can1};
+    FOCMotor::AsciiProtocol ascii_p{logger, stp};
+    FOCMotor::CanProtocol can_p{can1, stp};
 
     stp.bindProtocol(ascii_p);
     stp.bindProtocol(can_p);

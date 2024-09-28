@@ -110,20 +110,20 @@ void M3508::tick(){
     }
 }
 
-void M3508::setTargetCurrent(const real_t curr){
+void M3508::setTargetCurrent(const real_t _curr){
     ctrl_method = CtrlMethod::CURR;
-    targ_curr = curr;
+    targ_curr = _curr;
 }
 
 
-void M3508::setTargetSpeed(const real_t spd){
+void M3508::setTargetSpeed(const real_t _spd){
     ctrl_method = CtrlMethod::SPD;
-    targ_spd = spd;
+    targ_spd = _spd;
 }
 
-void M3508::setTargetPosition(const real_t pos){
+void M3508::setTargetPosition(const real_t _pos){
     ctrl_method = CtrlMethod::POS;
-    targ_pos = pos;
+    targ_pos = _pos;
 }
 
 void M3508::updateMeasurements(const real_t _lap_position, const real_t _curr, const real_t _spd, const real_t temp){

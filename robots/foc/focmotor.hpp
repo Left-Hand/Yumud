@@ -7,10 +7,6 @@
 #include "protocol/can_protocol.hpp"
 #include "protocol/ascii_protocol.hpp"
 
-
-class AsciiProtocol;
-class CanProtocol;
-
 class FOCMotorConcept{ 
 public:
     using ErrorCode = MotorUtils::ErrorCode;
@@ -23,11 +19,9 @@ protected:
     using Range = Range_t<real_t>;
 
     using Switches = MotorUtils::Switches;
-    using NodeId = MotorUtils::NodeId;
 
 
     volatile RunStatus run_status = RunStatus::INIT;
-    NodeId node_id = 0;
 
     MetaData meta;
     real_t target;
@@ -35,12 +29,8 @@ protected:
     friend class AsciiProtocol;
     friend class CanProtocol;
 
-    std::optional<AsciiProtocol> ascii_protocol;
-    std::optional<CanProtocol> can_protocol;
-public:
-    FOCMotorConcept() : node_id(getDefaultNodeId()) {}
-    FOCMotorConcept(NodeId _id) : node_id(_id) {}
 
+public:
     virtual bool loadArchive(const bool outen = false) = 0;
     virtual void saveArchive(const bool outen = false) = 0;
     virtual void removeArchive(const bool outen = false) = 0;
@@ -78,8 +68,9 @@ public:
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 
-    virtual uint8_t getNodeId() {return node_id;}
-    virtual void setNodeId(const NodeId _id){node_id = _id;}
+    virtual uint8_t getNodeId() {return 0;}
+    virtual void setNodeId(const uint8_t _id){}
+    auto & getMeta(){return meta;}
 private:
     uint8_t getDefaultNodeId();
 };
@@ -117,21 +108,46 @@ protected:
     Memory & memory;
 
 
-    friend class AsciiProtocol;
-    friend class CanProtocol;
 
 public:
+    class AsciiProtocol:public AsciiProtocolConcept{
+    protected:
+        FOCMotor & motor;
+        using Command = MotorUtils::Command;
+        void parseArgs(const Strings & args) override;
+    public:
+        AsciiProtocol(IOStream & _logger, FOCMotor & _motor):AsciiProtocolConcept(_logger), motor(_motor){;}
+    };
+
+    friend class AsciiProtocol;
+    class CanProtocol:public CanProtocolConcept{
+    protected:
+        using Command = MotorUtils::Command;
+        FOCMotor & motor;
+
+    public:
+        CanProtocol(Can & _can, FOCMotor & _motor):
+            CanProtocolConcept(_can),
+            motor(_motor){;}
+
+        void parseCanmsg(const CanMsg & msg) override;
+    };
+    friend class CanProtocol;
+
+    AsciiProtocol * ascii_protocol;
+    CanProtocol * can_protocol;
+
     FOCMotor(SVPWM & _svpwm, Encoder & encoder, Memory & _memory):
             FOCMotorConcept(),
             svpwm(_svpwm), odo(encoder), memory(_memory){;}
 
 
     void bindProtocol(AsciiProtocol & _ascii_protocol){
-        ascii_protocol.emplace(_ascii_protocol);
+        ascii_protocol = &_ascii_protocol;
     }
 
     void bindProtocol(CanProtocol & _can_protocol){
-        can_protocol.emplace(_can_protocol);
+        can_protocol = &_can_protocol;
     }
 
     const char * getErrMsg() const {

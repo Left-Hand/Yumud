@@ -683,24 +683,6 @@ String & String::toUpperCase(void)
 }
 
 Strings String::split(const char delimiter, const size_t times) const{
-    // Strings result;
-
-    // int startPos = 0;
-    // int endPos = indexOf(delimiter, startPos);
-
-    // while (endPos != -1) {
-    //     if(not(endPos - startPos <= 1 and this->operator[](startPos) == delimiter)){
-    //         result.push_back(substring(startPos, endPos));
-    //     }
-    //     startPos = endPos + 1;
-    //     endPos = indexOf(delimiter, startPos);
-    // }
-
-    // if (startPos < (int)length()) {
-    //     result.push_back(substring(startPos));
-    // }
-
-    // return result;
 	return StringView(*this).split(delimiter, times);
 }
 	

@@ -18,19 +18,18 @@
 #include "machine/machine.hpp"
 
 #ifdef CH32V30X
-using MotorUtils::CliAP;
 using namespace GpioUtils;
 
-class EmbdHost:public CliAP{
-    using NodeId = MotorUtils::NodeId;
-    Trajectory trajectory;
+class EmbdHost:public AsciiProtocolConcept{
+    // using NodeId = MotorUtils::NodeId;
 
+    ActionQueue actions;
+    Trajectory trajectory;
     RemoteFOCMotor stepper_w;
     RemoteFOCMotor stepper_x;
     RemoteFOCMotor stepper_y;
     RemoteFOCMotor stepper_z;
 
-    ActionQueue actions;
     Machine steppers;
 
     I2cSw       i2c{portD[2], portC[12]};
@@ -54,7 +53,7 @@ class EmbdHost:public CliAP{
     uint april_result = 0;
 public:
     EmbdHost(IOStream & _logger, Can & _can):
-            CliAP(_logger, _can),
+            AsciiProtocolConcept(_logger),
             stepper_w{_logger, _can, 0}, 
             stepper_x{_logger, _can, 1},
             stepper_y{_logger, _can, 2},
@@ -69,8 +68,8 @@ public:
                 stepper_z
             ){;}
 
-    void parseCommand(const NodeId id, const Command cmd, const CanMsg & msg);
-    void parseTokens(const String & _command,const std::vector<String> & args);
+    void parseCanmsg(const CanMsg & msg);
+    void parseArgs(const Strings & args);
     void main();
     void resetSlave();
     void resetAll();

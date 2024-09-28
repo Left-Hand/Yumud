@@ -131,11 +131,11 @@ void FOCStepper::tick(){
 }
 
 void FOCStepper::run(){
-    if(can_protocol) can_protocol->readCan();
+    if(can_protocol) can_protocol->update();
     panel_led.run();
 
     #ifndef STEPPER_NO_PRINT
-    if(ascii_protocol) ascii_protocol->readString();
+    if(ascii_protocol) ascii_protocol->update();
     #endif
 
     red_pwm.tick();

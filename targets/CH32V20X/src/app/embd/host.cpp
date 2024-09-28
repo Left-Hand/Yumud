@@ -165,11 +165,11 @@ void EmbdHost::main(){
     }
 }
 
-void EmbdHost::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
+// void EmbdHost::parseArgs(CanMsg &msg){
     // steppers.x.parseCommand(id, cmd, msg);
     // steppers.y.parseCommand(id, cmd, msg);
     // steppers.z.parseCommand(id, cmd, msg);
-}
+// }
 
 
 void EmbdHost::resetSlave(){
@@ -262,27 +262,16 @@ void EmbdHost::tick(){
 
     // }
 
-    auto parseAscii = [&](InputStream & is){
-        static String temp;
-        while(is.available()){
-            auto chr = is.read();
-            if(chr == 0) continue;
-            temp += chr;
-            if(chr == '\n'){
-                temp.alphanum();
-                parseLine(temp);
-                temp = "";
-            }
-        }
-    };
+    AsciiProtocolConcept::update();
 
-    parseAscii(uart7);
-    parseAscii(uart2);
+    // parseAscii(uart7);
+    // parseAscii(uart2);
 
     // auto index = (millis() % 3);
     // steppers[index].updateAll();
     // steppers.z.updateAll();
-    readCan();
+    // readCan();
+
     act();
 }
 

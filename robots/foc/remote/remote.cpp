@@ -1,15 +1,12 @@
 #include "remote.hpp"
 #include "sys/math/float/bf16.hpp"
 
-using namespace CANProtocolUtils;
-
 using Command = MotorUtils::Command;
 using RunStatus = MotorUtils::RunStatus;
 
 #define MSG(cmd, ...) CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(cmd)), __VA_ARGS__}
 
 #define DEBUG_MSG(msg)
-// #define DEBUG_MSG(msg) DEBUG_PRINTLN(msg)
 
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, std::make_tuple(__VA_ARGS__));\
@@ -19,6 +16,7 @@ can.write(msg);\
 // while(can.pending()){;};
 
 bool RemoteFOCMotor::loadArchive(const bool outen){POST(Command::LOAD)return true;}
+// bool RemoteFOCMotor::loadArchive(const bool outen){auto msg = CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(Command::LOAD)), std::make_tuple()};;can_pro.can.write(msg);; return true;}
 void RemoteFOCMotor::saveArchive(const bool outen){POST(Command::SAVE);}
 void RemoteFOCMotor::removeArchive(const bool outen){POST(Command::CLEAR);}
 
@@ -49,23 +47,15 @@ void RemoteFOCMotor::setPositionLimit(const Range & clamp){
 
 
 void RemoteFOCMotor::enable(const bool en){POST(en ? Command::ACTIVE: Command::INACTIVE);}
-void RemoteFOCMotor::setNodeId(const NodeId _id){}
+// void RemoteFOCMotor::setNodeId(const NodeId _id){}
 void RemoteFOCMotor::setSpeedLimit(const real_t max_spd){POST(Command::SET_SPD_LMT,E(max_spd));}
 void RemoteFOCMotor::setAccelLimit(const real_t max_acc){POST(Command::SET_ACC_LMT, E(max_acc));}
 void RemoteFOCMotor::triggerCali(){POST(Command::TRG_CALI);}
 void RemoteFOCMotor::reset(){POST(Command::RST);}
 void RemoteFOCMotor::setNozzle(const real_t duty){POST(duty ? Command::NOZZLE_ON : Command::NOZZLE_OFF);}
 
-void RemoteFOCMotor::parseCan(const CanMsg & msg){
-    NodeId id = msg.id() >> 7;
-    if(id != node_id) return;
-    Command cmd = Command(msg.id() & 0x7f);
-
-    parseCommand(id, cmd, msg);
-}
-
-void RemoteFOCMotor::parseCommand(const NodeId id, const Command cmd, const CanMsg &msg){
-    if(id != node_id) return;
+void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
+    Command cmd = (Command)(msg.id() & 0x7F);
     switch(cmd){
         case Command::GET_POS:
             meta.pos = E(msg);

@@ -16,31 +16,15 @@ protected:
     void write_data(const T & obj){
         const uint8_t * data = reinterpret_cast<const uint8_t *>(&obj);
         size_t len = sizeof(obj);
-        // size_t i = 0;
-        // while(len - i > 0){
-        //     auto msg = CanMsg(id << 8, data + i, CLAMP((len - i),0, 8));
-        //     msg.setExt(true);
-        //     DEBUG_PRINTLN(msg);
-        //     i += 8;
-        // }
 
         Range_t<size_t> store_window = Rangei{0,len};
         Range_t<size_t> op_window = {0,0};
         do{
             op_window = store_window.grid_forward(op_window, 8);
             if(op_window){
-                // const uint8_t * ptr = data + (op_window.from);
-                // DEBUG_PRINTLN(op_window.from, op_window.length());
-                // CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), false};
                 CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), data + op_window.from, op_window.length()};
-                // msg.setSize(op_window.length());
-                // for(size_t i = 0; i < op_window.length(); i++){
-                //     msg[i] = data[i + op_window.from];
-                // }
-                // msg.setExt(true);
-                // WRITE_POOL(op_window.from, ptr, op_window.length());
                 DEBUG_PRINTLN(msg);
-                // DEBUG_PRINTLN("\r\n");
+                can_.write(msg);
             }
         }while(op_window);
     

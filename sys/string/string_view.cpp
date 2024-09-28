@@ -12,32 +12,28 @@ StringView::operator iq_t() const {
 
 
 Strings StringView::split(const char delimiter, const size_t times) const{
-    Strings result;
-
-    int startPos = 0;
-    int endPos = indexOf(delimiter, startPos);
-
-    while (endPos != -1) {
-        if(not(endPos - startPos <= 1 and this->operator[](startPos) == delimiter)){
-            result.push_back(substring(startPos, endPos));
+    Strings strs;
+    
+    size_t from = 0;
+    for(size_t i = 0; i < this->length(); i++){
+        if((i == 0 || data_[i - 1] == delimiter) and data_[i] != delimiter){
+            from = i;
         }
-        startPos = endPos + 1;
-        endPos = indexOf(delimiter, startPos);
+
+        if(data_[i] != delimiter and (i + 1 == length() or data_[i + 1] == delimiter or data_[i + 1] == '\0')){
+            strs.push_back(this->substring(from, i+1));
+        }
+
+        if((times != 0) and (strs.size() == times)) break;
     }
 
-    if (startPos < (int)length()) {
-        result.push_back(substring(startPos));
-    }
-
-    return result;
+    return strs;
 }
 
+
 StringView StringView::substring(size_t left, size_t right) const{
-	if (left > right) {
-		size_t temp = right;
-		right = left;
-		left = temp;
-	}
+	if (left > right) std::swap(left, right);
+    
 	if (left >= size_) return StringView(this->data_, 0);
 	if (right > size_) right = size_;
 

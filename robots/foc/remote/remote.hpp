@@ -6,21 +6,37 @@
 
 #include "robots/foc/protocol/can_protocol.hpp"
 
-class RemoteFOCMotor:public FOCMotorConcept{
+class RemoteFOCMotor:public FOCMotorConcept, public CanProtocolConcept{
+
 protected:
     using ExitFlag = MotorUtils::ExitFlag;
     using InitFlag = MotorUtils::InitFlag;
-    using NodeId = MotorUtils::NodeId;
     using RunStatus = MotorUtils::RunStatus;
-
+    
     using Command = MotorUtils::Command;
-    IOStream & logger;
-    Can & can;
     volatile RunStatus run_status = RunStatus::NONE;
+
 public:
-    RemoteFOCMotor(IOStream & _logger, Can & _can, const NodeId _node_id):
-            FOCMotorConcept(_node_id),
-            logger(_logger), can(_can){;}
+    // class CanProtocolRemote:CanProtocolConcept{
+    // protected:
+    //     using Command = MotorUtils::Command;
+    //     RemoteFOCMotor & motor;
+    // public:
+    //     CanProtocolRemote(Can & _can, RemoteFOCMotor & _motor):
+    //         CanProtocolConcept(_can), motor(_motor){;}
+
+    void parseCanmsg(const CanMsg & msg) override;
+    // };
+
+    IOStream & logger;
+
+    using E = CanProtocolConcept::E;
+    using E_2 = std::tuple<E, E>;
+    using E_3 = std::tuple<E, E, E>;
+    using E_4 = std::tuple<E, E, E, E>;
+public:
+    RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
+            CanProtocolConcept(_can, _id), logger(_logger){;}
 
     bool loadArchive(const bool outen);
     void saveArchive(const bool outen);
@@ -52,7 +68,7 @@ public:
 
     void setPositionLimit(const Range & clamp);
     void enable(const bool en = true);
-    void setNodeId(const NodeId _id);
+    // void setNodeId(const NodeId _id);
     void setSpeedLimit(const real_t max_spd);
     void setAccelLimit(const real_t max_acc);
     void reset();
@@ -60,8 +76,8 @@ public:
 
 
     void setNozzle(const real_t duty);
-    void parseCan(const CanMsg & msg);
-    void parseCommand(const NodeId id, const Command cmd, const CanMsg &msg);
+    // void parseCan(const CanMsg & msg);
+    // void parseCommand(const NodeId id, const Command cmd, const CanMsg &msg);
 
     uint8_t getNodeId() {return 0;}
     bool stable() const {

@@ -66,11 +66,11 @@ public:
 
     template <typename... Args>
     requires (sizeof(std::tuple<Args...>) <= 8) and (!std::disjunction_v<std::is_pointer<Args>...>)
-    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& t):CanMsg(id) {
+    constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& tup):CanMsg(id) {
         std::apply(
             [&](auto&&... args) {
                 ((*this << args), ...);
-            }, t
+            }, tup
         );
 
     }
