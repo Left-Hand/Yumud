@@ -1,17 +1,11 @@
 #pragma once
 
+#include "arg_parser.hpp"
 #include "sys/core/system.hpp"
-
-#include "robots/foc/stepper/motor_utils.hpp"
-
 #include "sys/string/string.hpp"
+#include "sys/debug/debug_inc.h"
 
 #include <vector>
-
-
-
-class FOCMotor;
-
 
 #define CLI_DEBUG
 
@@ -96,14 +90,6 @@ class FOCMotor;
 }\
 
 
-class ArgParser{
-private:
-    String temp = "";
-public:
-    ArgParser(){;}
-    Strings update(InputStream & _input);
-    void clear(){temp = "";}
-};
 
 class AsciiProtocolConcept{
 protected:

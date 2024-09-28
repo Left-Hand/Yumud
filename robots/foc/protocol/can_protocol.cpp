@@ -1,5 +1,3 @@
-
-#include "can_protocol.hpp"
 #include "robots/foc/focmotor.hpp"
 
 

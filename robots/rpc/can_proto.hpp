@@ -3,7 +3,6 @@
 #include "sys/math/float/bf16.hpp"
 #include "hal/bus/can/can.hpp"
 
-#include "robots/foc/stepper/motor_utils.hpp"
 #include <tuple>
 
 class FOCMotor;

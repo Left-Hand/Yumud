@@ -2,9 +2,6 @@
 
 #include "robots/foc/focmotor.hpp"
 #include "robots/foc/stepper/motor_utils.hpp"
-#include "robots/foc/stepper/cli.hpp"
-
-#include "robots/foc/protocol/can_protocol.hpp"
 
 class RemoteFOCMotor:public FOCMotorConcept, public CanProtocolConcept{
 

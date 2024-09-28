@@ -1,11 +1,11 @@
 #pragma once
 
+#include "robots/rpc/ascii_proto.hpp"
+#include "robots/rpc/can_proto.hpp"
+
 #include "stepper/archive/archive.hpp"
 #include "stepper/ctrls/ctrls.hpp"
 #include "drivers/Encoder/odometer_poles.hpp"
-
-#include "protocol/can_protocol.hpp"
-#include "protocol/ascii_protocol.hpp"
 
 class FOCMotorConcept{ 
 public:
