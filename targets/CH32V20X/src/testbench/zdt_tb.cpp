@@ -9,30 +9,89 @@ class ZdtMotor{
 protected:
     using NodeId = uint8_t;
 
-    Can & can_;
+    Uart * uart_;
+    Can * can_;
+
+    
     NodeId id = 0x01;
 
     bool b_extid = false;
+    uint8_t sync_flag = 0x00;
+
+    enum class VerifyType:uint8_t{
+        X6B,
+        XOR,
+        CRC8
+    };
+    VerifyType verify_type = VerifyType::X6B;
+    
+    using Buf = sstl::vector<uint8_t, 16>;
+
+    static inline uint8_t get_verify_code(const VerifyType type, const uint8_t * src, const size_t len){
+        switch(type){
+            default:
+                CREATE_FAULT;
+            case VerifyType::X6B:
+                return 0x6b;
+            case VerifyType::XOR:{
+                uint8_t code = 0;
+                for(size_t i = 0; i < len; i++){
+                    code ^= src[i];
+                };
+                return code;
+            }
+            case VerifyType::CRC8:{
+                uint16_t crc = 0xffff;
+                for(size_t i = 0; i < len; i++){
+                    crc ^= (uint16_t)(src[i]) << 8;
+                    for(uint8_t j = 0; j < 8; j++){
+                        if(crc & 0x8000) crc ^= 0x1021;
+                        crc <<= 1;
+                    }
+                }
+                return (uint8_t)(crc >> 8);
+            }
+        }
+    }
+
+    static inline void array_append(Buf & dst, const uint8_t * src, const size_t len){
+        for(size_t i = 0; i < len; i++){
+            dst.push_back(src[i]);
+        }
+    }
+    
+    static inline void array_append(Buf & dst, const uint8_t data){
+        array_append(dst, &data, 1);
+    }
 
     template<typename T>
     void write_data(const T & obj){
-        const uint8_t * data = reinterpret_cast<const uint8_t *>(&obj);
-        size_t len = sizeof(obj);
 
-        Range_t<size_t> store_window = Rangei{0,len};
-        Range_t<size_t> op_window = {0,0};
+        Buf buf;
+        array_append(buf, reinterpret_cast<const uint8_t *>(&obj), sizeof(T));
+        // array_append(buf, sync_flag);
+        array_append(buf, get_verify_code(verify_type, reinterpret_cast<const uint8_t *>(&obj), sizeof(T)));
+
+        if(uart_){
+            uart_->write((char)id);
+            uart_->write((char *)buf.begin(), (size_t)buf.size());
+        }
         
-        do{
-            op_window = store_window.grid_forward(op_window, 8);
-            if(op_window){
-                CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), 
-                                    data + op_window.from, op_window.length()};
-                msg.setExt(b_extid);
-                DEBUG_PRINTLN(msg);
-                can_.write(msg);
-            }
-        }while(op_window);
-    
+        else if(can_){
+            Range_t<size_t> store_window = Rangei{0,buf.size()};
+            Range_t<size_t> op_window = {0,0};
+        
+            do{
+                op_window = store_window.grid_forward(op_window, 8);
+                if(op_window){
+                    CanMsg msg = CanMsg{uint32_t(id << 8) | (uint32_t(op_window.from) / 8), 
+                                        buf.begin() + op_window.from, op_window.length()};
+                    msg.setExt(b_extid);
+                    DEBUG_PRINTLN(msg);
+                    if(can_)can_->write(msg);
+                }
+            }while(op_window);
+        }
     }
 
     static constexpr uint16_t speed_to_speed_data_msb(const real_t & speed){
@@ -45,41 +104,49 @@ protected:
         return BSWAP_32(position_deg);
     }
 public:
-    ZdtMotor(Can & _can) : can_(_can){
+    ZdtMotor(Can & _can) : 
+        uart_(nullptr),
+        can_(&_can)
+        {}
+
+    ZdtMotor(Uart & _uart) : 
+        uart_(&_uart),
+        can_(nullptr)
+        {}
+
+    void init(){
         
     }
 
     void setTargetPosition(const real_t pos){
         struct Frame{
-            uint8_t head = 0xfb;//1
+            const uint8_t head = 0xfb;//1
             uint8_t is_neg;//2
             uint16_t spd_data;//3-4
             uint32_t pos_data;//5-8
             uint8_t is_relative; //9
-            uint8_t sync = 0; //10
-            uint8_t tail = 0x6b;//11
+            uint8_t sync_flag; //10
         }__packed;
 
-        Frame frame;
-        frame.is_neg = pos < 0;
-        frame.spd_data = speed_to_speed_data_msb(real_t(2000) / 60);
-        frame.pos_data = position_to_position_data_msb(pos);
-        frame.is_relative = false;
-        write_data(frame);        
+        write_data(Frame{
+            .is_neg = pos < 0,
+            .spd_data = speed_to_speed_data_msb(real_t(2000) / 60),
+            .pos_data = position_to_position_data_msb(pos),
+            .is_relative = false,
+            .sync_flag = sync_flag
+        });        
     }
 
     void enable(const bool en = true){
         struct Frame{
-            uint8_t head = 0xf3;//1
-            uint8_t head2 = 0xab;
+            const uint8_t head = 0xf3;//1
+            const uint8_t head2 = 0xab;
             uint8_t en;
-            uint8_t sync = 0; //10
-            uint8_t tail = 0x6b;//11
         }__packed;
 
-        Frame frame;
-        frame.en = en;
-        write_data(frame);
+        write_data(Frame{
+            .en = en
+        });
     }
 
     void setTargetSpeed(const real_t spd){
