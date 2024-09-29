@@ -20,6 +20,7 @@
 // scexpr uint32_t chopper_freq = 32768;
 // scexpr uint32_t foc_freq = 8192 * 4;
 scexpr uint32_t foc_freq = 20000;
+// scexpr uint32_t foc_freq = 38000;
 // scexpr uint32_t foc_freq = 18000;
 // scexpr uint32_t foc_freq = 15000;
 // scexpr uint32_t foc_freq = 12000;
@@ -45,6 +46,8 @@ struct MetaData{
     real_t elecrad = 0;
     real_t raddiff = 0;
     real_t radfix = 0;
+
+    real_t openloop_curr;
 
     Range pos_limit = Range::INF;
     real_t max_curr = real_t(0.7);
@@ -91,7 +94,6 @@ namespace MotorUtils{
         VECTOR,
         CURRENT,
         POSITION,
-        TRAPEZOID,
         SPEED,
         TEACH
     };

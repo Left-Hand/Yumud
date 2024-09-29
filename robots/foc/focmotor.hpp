@@ -31,15 +31,14 @@ protected:
 
 
 public:
-    virtual bool loadArchive(const bool outen = false) = 0;
-    virtual void saveArchive(const bool outen = false) = 0;
-    virtual void removeArchive(const bool outen = false) = 0;
+    virtual bool loadArchive() = 0;
+    virtual void saveArchive() = 0;
+    virtual void removeArchive() = 0;
 
     virtual void freeze() = 0;
     virtual void setTargetCurrent(const real_t current) = 0;
     virtual void setTargetSpeed(const real_t speed) = 0;
     virtual void setTargetPosition(const real_t pos) = 0;
-    virtual void setTargetTrapezoid(const real_t pos) = 0;
     virtual void setOpenLoopCurrent(const real_t current) = 0;
     virtual void setTargetVector(const real_t pos) = 0;
     virtual void setTargetTeach(const real_t max_curr) = 0;
@@ -137,9 +136,9 @@ public:
     AsciiProtocol * ascii_protocol;
     CanProtocol * can_protocol;
 
-    FOCMotor(SVPWM & _svpwm, Encoder & encoder, Memory & _memory):
+    FOCMotor(SVPWM & _svpwm, Encoder & encoder, const size_t poles, Memory & _memory):
             FOCMotorConcept(),
-            svpwm(_svpwm), odo(encoder), memory(_memory){;}
+            svpwm(_svpwm), odo(encoder, poles), memory(_memory){;}
 
 
     void bindProtocol(AsciiProtocol & _ascii_protocol){

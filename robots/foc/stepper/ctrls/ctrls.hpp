@@ -26,8 +26,6 @@ public:
     struct Config{
         real_t curr_slew_rate;
         real_t rad_slew_rate;
-        real_t openloop_curr;
-
         void reset();
     };
 
@@ -67,10 +65,9 @@ CtrlResult CurrentCtrl::update(const CtrlResult res){
 struct HighLayerCtrl{
 protected:
     MetaData & meta;
-    CurrentCtrl & curr_ctrl;
     using Result = CtrlResult;
 public:
-    HighLayerCtrl(MetaData & _meta, CurrentCtrl & _ctrl):meta(_meta), curr_ctrl(_ctrl){;}
+    HighLayerCtrl(MetaData & _meta):meta(_meta){;}
     virtual void reset() = 0;
 };
 
@@ -92,8 +89,8 @@ SPD_SPEC:
     real_t soft_targ_spd = 0;
     real_t filt_real_spd = 0;
 public:
-    SpeedCtrl(MetaData & _meta, Config & _config, CurrentCtrl & _curr_ctrl):
-        HighLayerCtrl(_meta, _curr_ctrl), config(_config){reset();}
+    SpeedCtrl(MetaData & _meta, Config & _config):
+        HighLayerCtrl(_meta), config(_config){reset();}
 
     void reset() override {
         config.reset();
@@ -116,13 +113,15 @@ public:
 
     Config & config;
 protected:
-    SpeedEstimator::Config spe_config;
-    SpeedEstimator targ_spd_est{spe_config};
+    SpeedEstimator targ_spd_est;
 
     real_t targ_spd = 0;
 public:
-    PositionCtrl(MetaData & _meta, Config & _config, CurrentCtrl & _curr_ctrl):
-        HighLayerCtrl(_meta, _curr_ctrl), config(_config){reset();}
+    PositionCtrl(MetaData & _meta, Config & _config, const SpeedEstimator::Config & _tspe_config):
+        HighLayerCtrl(_meta),
+        config(_config),
+        targ_spd_est(_tspe_config)
+        {reset();}
 
     void reset() override {
         config.reset();
@@ -132,47 +131,4 @@ public:
 
     Result update(const real_t targ_position, const real_t real_position, 
             const real_t real_speed);
-};
-
-struct TopLayerCtrl{
-    MetaData & meta;
-    SpeedCtrl & speed_ctrl;
-    PositionCtrl & position_ctrl;
-};
-
-struct TrapezoidPosCtrl:public TopLayerCtrl{
-public:
-    struct Config{
-        real_t pos_sw_radius;
-        void reset();
-    };
-
-    using Result = CtrlResult;
-
-    Config & config;
-protected:
-
-    enum class Tstatus:uint8_t{
-        ACC,
-        DEC,
-        STA,
-    };
-
-    Tstatus tstatus = Tstatus::STA;
-    real_t goal_speed = 0;
-    real_t last_pos_err = 0;
-
-
-public:
-    TrapezoidPosCtrl(MetaData & _meta, Config & _config, SpeedCtrl & _speed_ctrl, PositionCtrl & _position_ctrl):
-            TopLayerCtrl(_meta, _speed_ctrl, _position_ctrl), config(_config){
-                reset();
-            }
-    
-    void reset(){
-        config.reset();
-        goal_speed = 0;
-        // last_pos_err = 0;    
-    }
-    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed);
 };

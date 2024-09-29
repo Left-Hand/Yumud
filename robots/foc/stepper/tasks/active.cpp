@@ -6,7 +6,7 @@ void FOCStepper::active_task(){
     scexpr auto ratio = real_t(0.5);
 
     if(ctrl_type == CtrlType::VECTOR){
-        svpwm.setDuty(curr_ctrl.config.openloop_curr * ratio, odo.position2rad(target) + meta.radfix);
+        svpwm.setDuty(meta.openloop_curr * ratio, odo.position2rad(target) + meta.radfix);
     }else{
         svpwm.setDuty(meta.curr * ratio, meta.elecrad + meta.raddiff + meta.radfix);
         // svpwm.setDuty(meta.curr * ratio, meta.elecrad + real_t(PI / 2  + meta.radfix);
@@ -40,9 +40,6 @@ void FOCStepper::active_task(){
 
             case CtrlType::POSITION:
                 result = position_ctrl.update(target, meta.pos, meta.spd);
-                break;
-            case CtrlType::TRAPEZOID:
-                result = trapezoid_ctrl.update(target, meta.pos, meta.spd);
                 break;
     
             case CtrlType::SPEED:{

@@ -8,9 +8,11 @@ public:
         real_t err_threshold = inv_poles / 16;
         size_t est_freq = foc_freq;
         size_t max_cycles = foc_freq >> 7;
+
+        void reset();
     };
 
-    Config & config;
+    const Config & config;
 protected:
 
     struct Vars{
@@ -26,7 +28,7 @@ protected:
 
     Vars vars;
 public:
-    SpeedEstimator(Config & _config):config(_config){
+    SpeedEstimator(const Config & _config):config(_config){
         reset();
     }
 

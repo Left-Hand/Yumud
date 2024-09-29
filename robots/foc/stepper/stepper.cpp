@@ -27,7 +27,7 @@ void FOCStepper::tick(){
     switch(run_status){
         case RunStatus::INIT:
             {
-                bool load_ok = loadArchive(false);
+                bool load_ok = loadArchive();
                 if(load_ok){
                     if(skip_tone){
                         invoke_active_task();
@@ -131,12 +131,10 @@ void FOCStepper::tick(){
 }
 
 void FOCStepper::run(){
-    if(can_protocol) can_protocol->update();
     panel_led.run();
-
-    #ifndef STEPPER_NO_PRINT
+    
+    if(can_protocol) can_protocol->update();
     if(ascii_protocol) ascii_protocol->update();
-    #endif
 
     red_pwm.tick();
     green_pwm.tick();

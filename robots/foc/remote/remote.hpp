@@ -35,9 +35,9 @@ public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
             CanProtocolConcept(_can, _id), logger(_logger){;}
 
-    bool loadArchive(const bool outen);
-    void saveArchive(const bool outen);
-    void removeArchive(const bool outen);
+    bool loadArchive();
+    void saveArchive();
+    void removeArchive();
 
     void setTargetCurrent(const real_t current);
     void setTargetSpeed(const real_t speed);

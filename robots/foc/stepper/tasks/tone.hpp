@@ -21,7 +21,7 @@ protected:
     };
 
 
-    scexpr real_t tone_current = real_t(0.55);
+    scexpr real_t tone_current = real_t(0.15);
     
 
 

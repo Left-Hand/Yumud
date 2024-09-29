@@ -46,6 +46,7 @@ public:
     virtual bool busy() = 0;
     Address size() const {return m_capacity;}
     AddressView view() const {return {0, m_capacity};}
+
     void store(const void * data, const Address & data_size, const Address & loc){
         if(view().has(loc)){
             entry_store();

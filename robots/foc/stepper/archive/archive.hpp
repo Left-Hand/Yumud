@@ -3,6 +3,7 @@
 #define __STEPPER_ARCHIVE_HPP__
 
 #include "../motor_utils.hpp"
+#include "../ctrls/ctrls.hpp"
 
 namespace MotorUtils{
     scexpr uint8_t build_version = 10;
@@ -92,41 +93,34 @@ namespace MotorUtils{
         }
     };
 
-    struct Archive{
-
-        union{
-            struct{
-                struct alignas(128){
-                    struct alignas(16){
-                        uint32_t hashcode;
-                        BoardInfo board_info;
-                        Switches switches;
-                    };
-
-                    struct alignas(16){
-                        uint8_t node_id;
-                    };
-                };
-
-                struct alignas(128){
-                    std::array<int16_t, 50> cali_map;
-                };
+    struct alignas(256) Archive{
+        struct alignas(128){
+            std::array<int16_t, 50> cali_map;
+            struct alignas(16){
+                uint8_t node_id;
+                uint32_t hashcode;
+                BoardInfo board_info;
+                Switches switches;
             };
-
-            uint8_t data[256];
         };
 
-
+        alignas(16) CurrentCtrl::Config curr_config;
+        alignas(16) SpeedCtrl::Config spd_config;
+        alignas(16) PositionCtrl::Config pos_config;
+        alignas(16) SpeedEstimator::Config spe_config;
+        
+        Archive(){
+            curr_config.reset();
+            spd_config.reset();
+            pos_config.reset();
+            spe_config.reset();
+        }
         uint32_t hash() const {
             return hash_impl(cali_map);
         }
 
         auto & map() {return cali_map;}
         const auto & map() const {return cali_map;}
-        
-        void clear(){
-            memset(this, 0, sizeof(*this));
-        }
     };
 }
 

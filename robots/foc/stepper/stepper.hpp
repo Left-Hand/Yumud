@@ -23,8 +23,6 @@ class FOCStepper:public FOCMotor{
     using Archive = MotorUtils::Archive;
     using Switches = MotorUtils::Switches;
 
-    // using NodeId = MotorUtils::NodeId;
-
     Archive archive_;
     Switches & switches_ = archive_.switches;
 
@@ -36,20 +34,13 @@ class FOCStepper:public FOCMotor{
     RgbLedAnalog rgb_led{red_pwm, green_pwm, blue_pwm};
     StatLed panel_led = StatLed{rgb_led, run_status, ctrl_type};
 
-    CurrentCtrl::Config curr_config;
-    CurrentCtrl curr_ctrl{meta, curr_config};
+    CurrentCtrl curr_ctrl{meta, archive_.curr_config};
     
-    SpeedCtrl::Config spd_config;
-    SpeedCtrl speed_ctrl{meta, spd_config, curr_ctrl};
+    SpeedCtrl speed_ctrl{meta, archive_.spd_config};
 
-    PositionCtrl::Config pos_config;
-    PositionCtrl position_ctrl{meta, pos_config, curr_ctrl};
-    
-    TrapezoidPosCtrl::Config tpz_config;
-    TrapezoidPosCtrl trapezoid_ctrl{meta, tpz_config, speed_ctrl, position_ctrl};
+    PositionCtrl position_ctrl{meta, archive_.pos_config, archive_.spe_config};
 
-    SpeedEstimator::Config spe_config;
-    SpeedEstimator speed_estmator{spe_config};
+    SpeedEstimator speed_estmator{archive_.spe_config};
 
     bool cali_debug_enabled = true;
     bool command_debug_enabled = false;
@@ -76,7 +67,7 @@ class FOCStepper:public FOCMotor{
     friend class CanProtocol;
 public:
     FOCStepper(SVPWM & _svpwm, Encoder & _encoder, Memory & _memory):
-            FOCMotor(_svpwm, _encoder, _memory){;}
+            FOCMotor(_svpwm, _encoder, 50, _memory){;}
 
     bool isActive() const {
         return (RunStatus::ACTIVE) == run_status;
@@ -86,9 +77,9 @@ public:
         return run_status;
     }
 
-    bool loadArchive(const bool outen = false);
-    void saveArchive(const bool outen = false);
-    void removeArchive(const bool outen = false);
+    bool loadArchive();
+    void saveArchive();
+    void removeArchive();
 
     virtual real_t getTarget(){return target;}
 
@@ -96,7 +87,6 @@ public:
 
     void init(){
         meta.reset();
-        curr_config.reset();
         
         odo.init();
 
@@ -122,18 +112,13 @@ public:
         ctrl_type = CtrlType::POSITION;
     }
 
-    void setTargetTrapezoid(const real_t pos){
-        target = meta.pos_limit.clamp(pos);
-        ctrl_type = CtrlType::TRAPEZOID;
-    }
-
     void setTargetTeach(const real_t max_curr){
         target = CLAMP(max_curr, 0, meta.max_curr);
         ctrl_type = CtrlType::TEACH;
     }
 
     void setOpenLoopCurrent(const real_t current){
-        curr_config.openloop_curr = current;
+        meta.max_curr = current;
     }
 
     void setTargetVector(const real_t pos){

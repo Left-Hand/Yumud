@@ -94,13 +94,16 @@
 class AsciiProtocolConcept{
 protected:
     ArgParser parser;
-    IOStream & ios;
+
+    InputStream & is;
+    OutputStream & os;
     virtual void parseArgs(const Strings & args);
 public:
-    AsciiProtocolConcept(IOStream & _logger):ios(_logger){}
+    AsciiProtocolConcept(IOStream & _logger):is(_logger), os(_logger){}
+    AsciiProtocolConcept(InputStream & _is, OutputStream & _os):is(_is), os(_os){}
 
     void update(){
-        auto args = parser.update(ios);
+        auto args = parser.update(is);
         if(args.size()){
             parseArgs(args);
             parser.clear();

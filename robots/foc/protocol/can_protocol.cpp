@@ -57,7 +57,6 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         SET_METHOD_BIND_ONE(   Command::SET_TRG_CURR,   motor.setTargetCurrent)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_POS,    motor.setTargetPosition)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_SPD,    motor.setTargetSpeed)
-        SET_METHOD_BIND_ONE(   Command::SET_TRG_TPZ,    motor.setTargetTrapezoid)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_TEACH,  motor.setTargetTeach)
         SET_METHOD_BIND_EXECUTE(Command::FREEZE,        motor.freeze)
 
