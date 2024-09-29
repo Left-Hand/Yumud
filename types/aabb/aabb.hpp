@@ -102,6 +102,15 @@ struct AABB_t{
 	__fast_inline Vector3_t<T> get_endpoint(int p_point) const;
 
 	AABB_t expand(const Vector3_t<T> & p_vector) const;
+
+	template<typename... Args>
+	requires std::conjunction_v<std::is_same_v<Vector3_t<T>, Args>...>
+	AABB_t<T> expand(const Args&... points) const {
+		AABB_t<T> aabb = *this;
+		(aabb.expand_to(points), ...);
+		return aabb;
+	}
+
 	__fast_inline void project_range_in_plane(const Plane_t<T> &p_plane, T &r_min, T &r_max) const;
 	__fast_inline void expand_to(const Vector3_t<T> & p_vector); /** expand to contain a point if necessary */
 

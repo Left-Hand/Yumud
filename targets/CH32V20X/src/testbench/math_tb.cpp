@@ -10,6 +10,7 @@
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
+#include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
@@ -30,7 +31,8 @@ do{\
 
 void math_tb(UartHw & logger){
 
-    logger.init(576000, CommMethod::Blocking);
+    // logger.init(576000, CommMethod::Blocking);
+    logger.init(576000, CommMethod::Dma);
     logger.setEps(4);
 
     using Vector3 = Vector3_t<real_t>;
@@ -93,16 +95,34 @@ void math_tb(UartHw & logger){
 
     Scara5Solver s5s{config_s5s};
     Mecanum4Solver m4s{config_m4s};
+
+    // using ws_real = double;
+    using ws_real = real_t;
+    WheelLegSolver_t<ws_real> wls{WheelLegSolver_t<ws_real>::Config{
+        .pelvis_length_meter = ws_real(0.12),
+        .thigh_length_meter = ws_real(0.12),
+        .shin_length_meter = ws_real(0.12),
+    }};
     
     while(true){
         
         // auto a = plane.intersects_segment({0,0,0}, {10,10,10});
         // DEBUG_PRINTLN(plane.distance_to({2,2,2}))
-        auto targ_pos = Vector2(real_t(0), real_t(0.12)) + Vector2(real_t(0.06), real_t(0)).rotated(t);
-        auto [l, r] = s5s.invrese(targ_pos);
-        auto est_pos = s5s.forward(l, r);
-        DEBUG_PRINTLN(targ_pos - est_pos);
-        DEBUG_PRINTLN(m4s.inverse({0,1}, 1));
+        // auto targ_pos = Vector2(real_t(0), real_t(0.12)) + Vector2(real_t(0.06), real_t(0)).rotated(t);
+        // auto [l, r] = s5s.invrese(targ_pos);
+        // auto est_pos = s5s.forward(l, r);
+        // DEBUG_PRINTLN(targ_pos - est_pos);
+        // DEBUG_PRINTLN(m4s.inverse({0,1}, 1));
+
+        auto left_pos = Vector3_t<ws_real>(ws_real(-0.1), ws_real(-0.2), 0);
+        auto right_pos = Vector3_t<ws_real>(ws_real(0.1), ws_real(-0.1), ws_real(0.02));
+        auto pitch_rad = ws_real(0.143);
+        // DEBUG_PRINTLN(wls.foot_plane(left_pos, right_pos, pitch_rad));
+
+        auto begin_micros = micros();
+        auto transform = wls.get_ground_viewer().get_pelvis_transform(left_pos, right_pos, pitch_rad);
+        auto delta_micros = micros() - begin_micros;
+        DEBUG_PRINTLN(delta_micros, transform);
         Sys::Clock::reCalculateTime();
     }
 }
