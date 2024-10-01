@@ -10,10 +10,14 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         if (func == &std::hex) {setRadix(16);break;}
         if (func == &std::fixed) {
             //TODO
-            break;}
+            break;
+        }
+        
         if (func == &std::scientific) {
             //TODO
-            break;}
+            break;
+        }
+        
         if (func == &std::boolalpha){
             b_boolalpha = true;
             break;

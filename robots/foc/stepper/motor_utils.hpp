@@ -113,8 +113,8 @@ namespace MotorUtils{
         SET_TRG_VECT,//         set target position and switch to position-openloop mode
         SET_TRG_CURR,//         set target current and switch to current-closeloop mode
         SET_TRG_POS,//          set target position and switch to position-closeloop mode
+        SET_TRG_DELTA,       //delta target position and switch to position-closeloop mode
         SET_TRG_SPD,//          set target speed and switch to speed-closeloop mode
-        SET_TRG_TPZ,//          set target position and switch to position-trapzoid mode
         SET_TRG_TEACH,//        set max current and switch to teach mode
         FREEZE = 0x0F,//        freeze stepper, lock position
 
@@ -138,14 +138,11 @@ namespace MotorUtils{
         GET_CURR,//             get current
         GET_ALL = 0x3f,         // get all
 
-        TRG_CALI = 0X40,//          trig cali
+        TRIG_CALI = 0X40,//          trig cali
 
         SAVE = 0X50,//          save archive
         LOAD,//                 load archive
         CLEAR,//                clear archive
-
-        NOZZLE_ON = 0x60,//     turn on nozzle
-        NOZZLE_OFF,//           turn off nozzle
 
         RST = 0x70,//           chip reset
         STAT,//                 get stat

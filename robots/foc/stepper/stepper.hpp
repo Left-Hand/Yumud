@@ -112,6 +112,11 @@ public:
         ctrl_type = CtrlType::POSITION;
     }
 
+    void setTargetPositionDelta(const real_t delta){
+        target = meta.pos_limit.clamp(this->getPosition() + delta);
+        ctrl_type = CtrlType::POSITION;
+    }
+
     void setTargetTeach(const real_t max_curr){
         target = CLAMP(max_curr, 0, meta.max_curr);
         ctrl_type = CtrlType::TEACH;

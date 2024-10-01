@@ -43,7 +43,7 @@ public:
     void setTargetSpeed(const real_t speed);
     void freeze();
     void setTargetPosition(const real_t pos);
-    void setTargetTrapezoid(const real_t pos);
+    void setTargetPositionDelta(const real_t delta);
     void setOpenLoopCurrent(const real_t current);
     void setTargetTeach(const real_t current);
     void setTargetVector(const real_t pos);

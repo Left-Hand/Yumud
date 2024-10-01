@@ -56,6 +56,7 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         SET_METHOD_BIND_ONE(   Command::SET_TRG_VECT,   motor.setTargetVector)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_CURR,   motor.setTargetCurrent)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_POS,    motor.setTargetPosition)
+        SET_METHOD_BIND_ONE(   Command::SET_TRG_DELTA,    motor.setTargetPosition)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_SPD,    motor.setTargetSpeed)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_TEACH,  motor.setTargetTeach)
         SET_METHOD_BIND_EXECUTE(Command::FREEZE,        motor.freeze)
@@ -73,14 +74,13 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         GET_BIND_VALUE(         Command::GET_CURR,      E(motor.getCurrent()))
         GET_BIND_VALUE(         Command::GET_ALL,       E_4(motor.getCurrent(), motor.getSpeed(), motor.getPosition(), motor.getAccel()))
 
-        SET_METHOD_BIND_EXECUTE(Command::TRG_CALI,      motor.triggerCali)
+        SET_METHOD_BIND_EXECUTE(Command::TRIG_CALI,      motor.triggerCali)
 
         SET_METHOD_BIND_EXECUTE(Command::SAVE,          motor.saveArchive)
         SET_METHOD_BIND_EXECUTE(Command::LOAD,          motor.loadArchive)
         SET_METHOD_BIND_EXECUTE(Command::CLEAR,         motor.removeArchive)
 
         SET_METHOD_BIND_EXECUTE(Command::RST,           motor.reset)
-        // GET_BIND_VALUE(         Command::STAT,          motor.(uint8_t)run_status);
         SET_METHOD_BIND_EXECUTE(Command::INACTIVE,      motor.enable, false)
         SET_METHOD_BIND_EXECUTE(Command::ACTIVE,        motor.enable, true)
         SET_METHOD_BIND_EXECUTE(Command::SET_NODEID,    motor.setNodeId, uint8_t(msg))

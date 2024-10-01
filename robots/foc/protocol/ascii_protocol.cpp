@@ -2,17 +2,28 @@
 
 
 void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
+
+    auto targ_pos_setter = [&](const real_t & arg, const real_t & offset){
+        if(args.size() > 1){
+            auto val = arg + offset;
+            motor.setTargetPosition(val);
+            os.prints("target position:", val, " n");
+        }else{
+            os.prints("position:", motor.getPosition(), " n");
+        }
+    };
+
     switch(args[0].hash()){
         case "save"_ha:
         case "sv"_ha:
 
-            os.println("======");
-            os.println("saving archive...");
+            os.prints("======");
+            os.prints("saving archive...");
 
             motor.saveArchive();
 
-            os.println("done");
-            os.println("======");
+            os.prints("done");
+            os.prints("======");
             break;
 
         case "load"_ha:
@@ -39,13 +50,13 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
         case "remove"_ha:
         case "rm"_ha:
 
-            os.println("======");
-            os.println("removing archive...");
+            os.prints("======");
+            os.prints("removing archive...");
 
             motor.removeArchive();
 
-            os.println("done");
-            os.println("======");
+            os.prints("done");
+            os.prints("======");
             break;
 
         case "speed"_ha:
@@ -54,32 +65,30 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             if(args.size() > 1){
                 real_t spd = real_t(args[1]);
                 motor.setTargetSpeed(spd);
-                os.println("target speed:", spd, " n/s");
+                os.prints("target speed:", spd, " n/s");
             }else{
-                os.println("speed:", motor.getSpeed(), " n/s");
+                os.prints("speed:", motor.getSpeed(), " n/s");
             }
             break;
 
         case "position"_ha:
         case "pos"_ha:
         case "p"_ha:
-            if(args.size() > 1){
-                real_t val = real_t(args[1]);
-                motor.setTargetPosition(val);
-                os.println("target position:", val, " n");
-            }else{
-                os.println("position:", motor.getPosition(), " n");
-            }
+            targ_pos_setter(real_t(args[1]), real_t(0));
             break;
-
-
+        case "f"_ha:
+            targ_pos_setter(real_t(args[1]), motor.getPosition());
+            break;
+        case "b"_ha:
+            targ_pos_setter(-real_t(args[1]), motor.getPosition());
+            break;
         case "teach"_ha:
         case "tch"_ha:
         case "th"_ha:
             if(args.size() > 1){
                 real_t val = real_t(args[1]);
                 motor.setTargetTeach(val);
-                os.println("target teach:", val);
+                os.prints("target teach:", val);
             }
             break;
 
@@ -88,9 +97,9 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             if(args.size() > 1){
                 real_t val = real_t(args[1]);
                 motor.setTargetCurrent(val);
-                os.println("target current:", val, " n");
+                os.prints("target current:", val, " n");
             }else{
-                os.println("current:", motor.getCurrent(), " A");
+                os.prints("current:", motor.getCurrent(), " A");
             }
             break;
 
@@ -99,12 +108,12 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             if(args.size() > 1){
                 auto v = real_t(args[1]);
                 motor.setTargetVector(v);
-                os.println("target vector:", v, " n");
+                os.prints("target vector:", v, " n");
             }
             break;
 
         case "crc"_ha:
-            os.println(std::hex, Sys::Chip::getChipIdCrc());
+            os.prints(std::hex, std::showbase, Sys::Chip::getChipIdCrc());
             break;
 
         // case "eleczero"_ha:
@@ -116,25 +125,25 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
 
         case "error"_ha:
         case "err"_ha:
-            if(motor.getErrMsg()) {os.println(motor.getErrMsg());}
-            else {os.println("no error");}
+            if(motor.getErrMsg()) {os.prints(motor.getErrMsg());}
+            else {os.prints("no error");}
             break;
 
         case "warn"_ha:
         case "wa"_ha:
-            if(motor.getWarnMsg()) {os.println(motor.getWarnMsg());}
-            else {os.println("no warn");}
+            if(motor.getWarnMsg()) {os.prints(motor.getWarnMsg());}
+            else {os.prints("no warn");}
             break;
 
         case "enable"_ha:
         case "en"_ha:
         case "e"_ha:
             motor.enable();
-            os.println("enabled");
+            os.prints("enabled");
             break;
         
         case "exe"_ha:
-            os.println("exe", motor.exe(), "us");
+            os.prints("exe", motor.exe(), "us");
             break;
 
         case "disable"_ha:
@@ -142,12 +151,12 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
         case "de"_ha:
         case "d"_ha:
             motor.enable(false);
-            os.println("disabled");
+            os.prints("disabled");
             break;
 
         case "cali"_ha:
             motor.triggerCali();
-            os.println("cali started");
+            os.prints("cali started");
             break;
 
         case "locate"_ha:
@@ -155,7 +164,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
         {
             real_t loc = (args.size() > 1)? real_t(args[1]) : 0;
             motor.locateRelatively(loc);
-            os.println("located to", loc);
+            os.prints("located to", loc);
         }
             break;
 
@@ -164,40 +173,41 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
         //     break;
 
         case "id"_ha:
-            os.println("node id is: ", uint8_t(motor.getNodeId()));
+            os.prints("node id is: ", uint8_t(motor.getNodeId()));
             break;
 
         // case "rd"_ha:
         //     motor.run_debug_enabled = (args.size() > 1)? int(args[1]) : true;
-        //     os.println("run debug enabled:", run_debug_enabled);
+        //     os.prints("run debug enabled:", run_debug_enabled);
         //     break;
 
         // case "cl"_ha:{
         //     auto cl = (args.size() > 1)? real_t(args[1]) : 0;
-        //     os.println("current clamp:", cl);
+        //     os.prints("current clamp:", cl);
         // }
         //     break;
 
         // case "status"_ha:
         // case "stat"_ha:
-        //     os.println("current status:", int(motor.run_status));
+        //     os.prints("current status:", int(motor.run_status));
         //     break;
 
         // case "cd"_ha:
-        //     os.println("dir changed");
+        //     os.prints("dir changed");
         //     motor.elecrad_zerofix = real_t(PI);
         //     break;
 
         case "hlt"_ha:
-            os.println("halt");
+            os.prints("halt");
             CREATE_FAULT;
             break;
 
         case "map"_ha:
-            for(const auto & item : motor.odo.map()){
-                os.println(item);
-                delay(1);
-            }
+            // for(const auto & item : motor.odo.map()){
+            //     os.prints(item);
+            //     delay(1);
+            // }
+            
             break;
 
         case "cm"_ha:
@@ -208,7 +218,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
         // case "ver"_ha:
         //     break;
         // case "info"_ha:
-        //     os.println(motor.archive_.board_info);
+        //     os.prints(motor.archive_.board_info);
         //     break;
 
         default:
