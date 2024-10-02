@@ -32,19 +32,20 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             break;
 
         case "lp"_ha:
-            if(args.size() == 2)motor.setPositionLimit(Range{args[1], args[2]});
+            if(args.size() == 3)motor.setPositionLimit(Range{real_t(args[1]), real_t(args[2])});
+            if(args.size() == 2)motor.setPositionLimit(Range{-real_t(args[1]), real_t(args[1])});
             break;
         
         case "lc"_ha:
-            if(args.size() == 1) motor.setCurrentLimit(real_t(args[1]));
+            if(args.size() == 2) motor.setCurrentLimit(real_t(args[1]));
             break;
 
         case "ls"_ha:
-            if(args.size() == 1) motor.setSpeedLimit(real_t(args[1]));
+            if(args.size() == 2) motor.setSpeedLimit(real_t(args[1]));
             break;
 
         case "la"_ha:
-            if(args.size() == 1) motor.setAccelLimit(real_t(args[1]));
+            if(args.size() == 2) motor.setAccelLimit(real_t(args[1]));
             break;
 
         case "remove"_ha:
@@ -116,12 +117,12 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             os.prints(std::hex, std::showbase, Sys::Chip::getChipIdCrc());
             break;
 
-        // case "eleczero"_ha:
-        // case "ez"_ha:{
-        //     if(args.size() == 0) break;
-        //     motor.elecrad_zerofix = real_t(args[1]);
-        // }
-        //     break;
+        case "eleczero"_ha:
+        case "ez"_ha:{
+            if(args.size() <= 1) break;
+            motor.elecrad_zerofix = real_t(args[2]);
+            break;
+        }
 
         case "error"_ha:
         case "err"_ha:

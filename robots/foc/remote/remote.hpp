@@ -9,6 +9,7 @@ protected:
     using ExitFlag = MotorUtils::ExitFlag;
     using InitFlag = MotorUtils::InitFlag;
     using RunStatus = MotorUtils::RunStatus;
+    using NodeId = MotorUtils::NodeId;
     
     using Command = MotorUtils::Command;
     volatile RunStatus run_status = RunStatus::NONE;
@@ -33,7 +34,7 @@ public:
     using E_4 = std::tuple<E, E, E, E>;
 public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
-            CanProtocolConcept(_can, _id), logger(_logger){;}
+            FOCMotorConcept(_id), CanProtocolConcept(_can), logger(_logger){;}
 
     bool loadArchive();
     void saveArchive();
@@ -49,7 +50,6 @@ public:
     void setTargetVector(const real_t pos);
     void setCurrentLimit(const real_t max_current);
     void locateRelatively(const real_t pos = 0);
-    real_t getTarget() override {return 0;}
     bool isActive() const;
     volatile RunStatus & status();
 

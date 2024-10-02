@@ -53,7 +53,7 @@ int main(){
     // math_tb(uart1);
     // zdt_main(uart1);
     // m3508_main();
-    while(true);
+    // while(true);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);p
@@ -62,6 +62,7 @@ int main(){
     // temp_tb(logger);
     // temp_tb2(logger);
     // eeprom_tb(uart1);
+    // eeprom_main();
 
     #elif defined(CH32V30X)
     preinit();

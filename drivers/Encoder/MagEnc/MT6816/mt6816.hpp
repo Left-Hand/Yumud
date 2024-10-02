@@ -36,7 +36,7 @@ public:
 
     void init() override{
         lap_position = real_t(-1); // not possible before init done;
-        while(getLapPosition() < 0); // while reading before get correct position
+        while(getLapPosition() < 0){this->update();} // while reading before get correct position
     }
 
 

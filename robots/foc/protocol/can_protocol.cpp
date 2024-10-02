@@ -1,24 +1,6 @@
 #include "robots/foc/focmotor.hpp"
 
 
-CanProtocolConcept::NodeId CanProtocolConcept::getDefaultNodeId(){
-    auto chip_id = Sys::Chip::getChipIdCrc();
-    switch(chip_id){
-        case 3273134334:
-            return 3;
-        case 341554774:
-            return 2;
-        case 4079188777:
-            return 1;
-        case 0x551C4DEA:
-            return  3;
-        case 0x8E268D66:
-            return 1;
-        default:
-            return 0;
-    }
-}
-
 
 
 void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
@@ -50,9 +32,6 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     const uint16_t tx_id = (((uint16_t)(motor.getNodeId()) << 7) | (uint8_t)(command));
 
     switch(command){
-
-        SET_VALUE_BIND(Command::SET_TARGET, motor.target)
-
         SET_METHOD_BIND_ONE(   Command::SET_TRG_VECT,   motor.setTargetVector)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_CURR,   motor.setTargetCurrent)
         SET_METHOD_BIND_ONE(   Command::SET_TRG_POS,    motor.setTargetPosition)

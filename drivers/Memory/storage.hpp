@@ -67,7 +67,7 @@ public:
         exit_load();
     }
 
-    void load(void * data, const Address & data_size, const Address loc){
+    void load(void * data, const Address data_size, const Address loc){
         entry_load();
         _load(data, data_size, loc);
         exit_load();

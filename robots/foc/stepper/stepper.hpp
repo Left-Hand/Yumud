@@ -66,8 +66,8 @@ class FOCStepper:public FOCMotor{
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
-    FOCStepper(SVPWM & _svpwm, Encoder & _encoder, Memory & _memory):
-            FOCMotor(_svpwm, _encoder, 50, _memory){;}
+    FOCStepper(const NodeId _id, SVPWM & _svpwm, Encoder & _encoder, Memory & _memory):
+            FOCMotor(_id, _svpwm, _encoder, 50, _memory){;}
 
     bool isActive() const {
         return (RunStatus::ACTIVE) == run_status;
@@ -81,7 +81,6 @@ public:
     void saveArchive();
     void removeArchive();
 
-    virtual real_t getTarget(){return target;}
 
     void tick();
 
@@ -98,27 +97,27 @@ public:
     }
 
     void setTargetCurrent(const real_t curr){
-    target = MIN(curr, meta.max_curr);
+        meta.targ_curr = MIN(curr, meta.max_curr);
         ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
-        target = MIN(speed, meta.max_spd);
+        meta.targ_spd = MIN(speed, meta.max_spd);
         ctrl_type = CtrlType::SPEED;
     }
 
     void setTargetPosition(const real_t pos){
-        target = meta.pos_limit.clamp(pos);
+        meta.targ_pos = meta.pos_limit.clamp(pos);
         ctrl_type = CtrlType::POSITION;
     }
 
     void setTargetPositionDelta(const real_t delta){
-        target = meta.pos_limit.clamp(this->getPosition() + delta);
+        meta.targ_pos = meta.pos_limit.clamp(this->getPosition() + delta);
         ctrl_type = CtrlType::POSITION;
     }
 
     void setTargetTeach(const real_t max_curr){
-        target = CLAMP(max_curr, 0, meta.max_curr);
+        meta.targ_curr = CLAMP(max_curr, 0, meta.max_curr);
         ctrl_type = CtrlType::TEACH;
     }
 
@@ -127,7 +126,7 @@ public:
     }
 
     void setTargetVector(const real_t pos){
-        target = pos;
+        meta.targ_pos = pos;
         ctrl_type = CtrlType::VECTOR;
     }
 
@@ -161,15 +160,6 @@ public:
 
     uint32_t exe() const override {
         return exe_micros;
-    }
-
-
-    real_t getPositionErr(){
-        return getPosition() - target;
-    }
-
-    real_t getSpeedErr(){
-        return getSpeed() - target;
     }
 
 

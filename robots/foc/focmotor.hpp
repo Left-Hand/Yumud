@@ -12,6 +12,7 @@ public:
     using ErrorCode = MotorUtils::ErrorCode;
     using RunStatus = MotorUtils::RunStatus;
     using CtrlType = MotorUtils::CtrlType;
+    using NodeId = MotorUtils::NodeId;
 protected:
     using ExitFlag = MotorUtils::ExitFlag;
     using InitFlag = MotorUtils::InitFlag;
@@ -24,13 +25,16 @@ protected:
     volatile RunStatus run_status = RunStatus::INIT;
 
     MetaData meta;
-    real_t target;
+    uint8_t node_id;
+    real_t elecrad_zerofix;
 
     friend class AsciiProtocol;
     friend class CanProtocol;
 
-
+    // NodeId getDefaultNodeId();
 public:
+    FOCMotorConcept(const NodeId _id):node_id(_id){;}
+    
     virtual bool loadArchive() = 0;
     virtual void saveArchive() = 0;
     virtual void removeArchive() = 0;
@@ -47,8 +51,6 @@ public:
 
     virtual bool isActive() const = 0;
     virtual volatile RunStatus & status() = 0;
-
-    virtual real_t getTarget() = 0;
 
     const auto & getMeta() const {return meta;}
 
@@ -68,11 +70,10 @@ public:
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 
-    virtual uint8_t getNodeId() {return 0;}
-    virtual void setNodeId(const uint8_t _id){}
+    virtual uint8_t getNodeId() {return node_id;}
+    virtual void setNodeId(const uint8_t _id){node_id = _id;}
     auto & getMeta(){return meta;}
-private:
-    uint8_t getDefaultNodeId();
+
 };
 
 class FOCMotor:public FOCMotorConcept {
@@ -137,8 +138,8 @@ public:
     AsciiProtocol * ascii_protocol;
     CanProtocol * can_protocol;
 
-    FOCMotor(SVPWM & _svpwm, Encoder & encoder, const size_t poles, Memory & _memory):
-            FOCMotorConcept(),
+    FOCMotor(const NodeId _id, SVPWM & _svpwm, Encoder & encoder, const size_t poles, Memory & _memory):
+            FOCMotorConcept(_id),
             svpwm(_svpwm), odo(encoder, poles), memory(_memory){;}
 
 

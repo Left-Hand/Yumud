@@ -114,8 +114,6 @@ public:
     Config & config;
 protected:
     SpeedEstimator targ_spd_est;
-
-    real_t targ_spd = 0;
 public:
     PositionCtrl(MetaData & _meta, Config & _config, const SpeedEstimator::Config & _tspe_config):
         HighLayerCtrl(_meta),
@@ -126,7 +124,6 @@ public:
     void reset() override {
         config.reset();
         targ_spd_est.reset();
-        targ_spd = 0;
     }
 
     Result update(const real_t targ_position, const real_t real_position, 

@@ -4,9 +4,10 @@
 
 class OdometerPoles:public Odometer{
 protected:
-    static constexpr int max_poles = 50;
+    scexpr int max_poles = 100;
+    scexpr size_t shift_bits = 12;
     using Map = sstl::vector<real_t, max_poles>;
-    using CompressedMap = sstl::vector<int16_t, max_poles>;
+    using CompressedMap = sstl::vector<int8_t, max_poles>;
     
     const size_t poles;
     real_t elecrad_cache = real_t(0);
@@ -20,6 +21,7 @@ public:
             poles(_poles)
         {
             cali_map.clear();
+            for(size_t i = 0; i < poles; i++) cali_map.push_back(0);
         }
 
     void reset() override;
@@ -41,18 +43,17 @@ public:
     }
 
     template<size_t N>
-    void decompress(const std::array<int16_t, N> & data){
-        if(N != poles) CREATE_FAULT
-        for(size_t i = 0; i < N;i++){
-            cali_map[i] = real_t(data[i]) / 16384;
+    void decompress(const std::array<int8_t, N> & data){
+        for(size_t i = 0; i < poles;i++){
+            cali_map[i] = real_t(data[i]) >> shift_bits;
         }
     }
 
     auto compress(const real_t radfix) const{
         CompressedMap ret;
-        for(const auto & item : cali_map){
+        for(const auto item : cali_map){
             scexpr auto ratio = real_t(1 / TAU);
-            ret.push_back(int16_t((item - (radfix / poles * ratio)) * 16384));
+            ret.push_back(int8_t((item - (radfix / poles * ratio)) << shift_bits));
         }
         return ret;
     }
@@ -62,7 +63,7 @@ public:
         return real_t(TAU) * (frac(frac1));
     }
 
-    int position2pole(const iq_t position){
+    int position2pole(const real_t position){
         int pole = int(frac(position) * int(poles));
         return MIN(pole, poles - 1);
     }

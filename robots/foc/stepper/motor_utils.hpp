@@ -58,7 +58,15 @@ struct MetaData{
     real_t spd_to_leadrad_ratio = real_t(0.1);
     real_t max_leadrad = real_t(0.2);
     
+    real_t targ_curr;
+    
+    real_t targ_est_spd;
+    real_t targ_pos;
+    
+    real_t targ_spd;
+    
     void reset();
+    
     __fast_inline constexpr real_t get_max_leadrad();
     __fast_inline constexpr real_t get_max_raddiff();
 };
@@ -155,6 +163,15 @@ namespace MotorUtils{
     using ExitFlag = bool;
     using InitFlag = bool;
 
+    template<integral T>
+    struct NodeId_t{
+        T id_;
+
+        NodeId_t(const T _id):id_(_id){}
+        operator T() const{return id_;}
+    };
+
+    using NodeId =  NodeId_t<uint8_t>;
 }
 
 #endif

@@ -95,13 +95,12 @@ namespace MotorUtils{
 
     struct alignas(256) Archive{
         struct alignas(128){
-            std::array<int16_t, 50> cali_map;
-            struct alignas(16){
-                uint8_t node_id;
-                uint32_t hashcode;
-                BoardInfo board_info;
-                Switches switches;
-            };
+            std::array<int8_t, 100> cali_map;
+
+            uint8_t node_id;
+            uint32_t hashcode;
+            BoardInfo board_info;
+            Switches switches;
         };
 
         alignas(16) CurrentCtrl::Config curr_config;
@@ -116,6 +115,7 @@ namespace MotorUtils{
             spe_config.reset();
         }
         uint32_t hash() const {
+            // sizeof(Archive);
             return hash_impl(cali_map);
         }
 

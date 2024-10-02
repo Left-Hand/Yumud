@@ -60,12 +60,10 @@ bool FOCStepper::loadArchive(){
 }
 
 void FOCStepper::saveArchive(){
-
     Archive archive;
-    std::memcpy(&archive, &archive_, sizeof(Archive));
+    archive.board_info.reset();
 
-    uint32_t hashcode = archive.hash();
-    archive.hashcode = hashcode;
+    archive.hashcode = archive.hash();
 
     {
         auto map = odo.compress(meta.radfix);
@@ -74,7 +72,7 @@ void FOCStepper::saveArchive(){
         }
     }
 
-    archive.node_id = uint8_t(can_protocol ? uint8_t(can_protocol->node_id) : 0);
+    archive.node_id = uint8_t(node_id);
     memory.store(archive);
 }
 

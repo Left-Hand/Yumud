@@ -138,6 +138,24 @@ void stepper_tb(UartHw & logger){
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
+    auto get_default_id = []() -> uint8_t {
+        auto chip_id = Sys::Chip::getChipIdCrc();
+        switch(chip_id){
+            case 3273134334:
+                return 3;
+            case 341554774:
+                return 2;
+            case 4079188777:
+                return 1;
+            case 0x551C4DEA:
+                return  3;
+            case 0x8E268D66:
+                return 1;
+            default:
+                return 0;
+        }
+    };
+
     adc1.init(
         {
             AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
@@ -168,7 +186,7 @@ void stepper_tb(UartHw & logger){
     Memory mem{at24};
 
 
-    FOCStepper stp{svpwm, encoder, mem};
+    FOCStepper stp{get_default_id(), svpwm, encoder, mem};
     FOCMotor::AsciiProtocol ascii_p{logger, stp};
     FOCMotor::CanProtocol can_p{can1, stp};
 

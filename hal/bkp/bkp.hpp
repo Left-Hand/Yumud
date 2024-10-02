@@ -30,9 +30,18 @@ public:
         return *this;
     }
 
+    BkpItem & operator = (const uint16_t data){
+        store(data);
+        return *this;
+    }
+
     template<typename T>
     operator T(){
         return static_cast<T>(load());
+    }
+
+    operator uint16_t(){
+        return static_cast<uint16_t>(load());
     }
 };
 
@@ -53,7 +62,7 @@ private:
         BkpItem(10),
     }{;}
 public:
-    Bkp(const Bkp&) = delete;
+    Bkp(const Bkp &) = delete;
     Bkp& operator=(const Bkp &) = delete;
 
     static Bkp& getInstance() {
@@ -71,10 +80,6 @@ public:
 
 
 extern Bkp & bkp;
-
-
-
-
 
 
 #endif

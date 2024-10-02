@@ -228,9 +228,24 @@ constexpr __fast_inline T __sign_as_impl(const T x, const auto s){
 #define SIGN_DIFF(x,y) __sign_diff_impl(x, y)
 
 template<typename T>
+requires (sizeof(T) <= 4) 
 constexpr __fast_inline bool __sign_diff_impl(const T x, const auto y){
     return (std::bit_cast<uint32_t>(x) ^ std::bit_cast<uint32_t>(y)) & 0x80000000;
 }
+
+#endif
+#endif
+
+#ifndef SIGN_SAME
+#ifdef __cplusplus
+#define SIGN_SAME(x,y) __sign_same_impl(x, y)
+
+template<typename T>
+requires (sizeof(T) <= 4) 
+constexpr __fast_inline bool __sign_same_impl(const T x, const auto y){
+    return (std::bit_cast<uint32_t>(x) ^ std::bit_cast<uint32_t>(y)) == 0;
+}
+
 #endif
 #endif
 
