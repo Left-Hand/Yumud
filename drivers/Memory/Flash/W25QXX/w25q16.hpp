@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../drivers/device_defs.h"
-#include "../../memory.hpp"
+#include "drivers/device_defs.h"
+#include "drivers/Memory/memory.hpp"
+
+// #define W25Q16_DEBUG
 
 #ifdef W25Q16_DEBUG
 #define W25Q16_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
@@ -12,6 +14,7 @@
 class W25Q16:public StoragePaged{
 protected:
     SpiDrv bus_drv;
+
     scexpr size_t _m_size = 16 * 1024 * 1024;
     scexpr size_t _pagesize = 4 * 1024;
     
@@ -32,7 +35,10 @@ protected:
         JedecId = 0x9F
     };
 
+
     struct StatusReg:public Reg8{
+        using Reg8::operator=;
+
         uint8_t busy:1;
         uint8_t write_enable_latch:1;
         uint8_t block_protect_bits:3;
@@ -61,17 +67,16 @@ public:
 
     void enableWrite(const bool en = true);
     uint8_t getDeviceManufacturer();
-
     uint8_t getDeviceStorageType();
-
     uint8_t getDeviceCapacity();
 
-    void eraseBlock(const uint32_t addr);
-    void eraseSector(const uint32_t addr);
+    void eraseBlock(const Address addr);
+    void eraseSector(const Address addr);
     void eraseChip();
 
     bool isIdle();
     bool isWriteable();
+
 private:
     void writeByte(const uint8_t & data){
         bus_drv.write(data);

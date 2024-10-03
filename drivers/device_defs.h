@@ -30,18 +30,24 @@ struct Reg_t{
     // Reg_t(){};
     // Reg_t(T && other) = delete;
     // Reg_t(const T & other) = delete;
-    // Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
-    const auto & data() const {return (*reinterpret_cast<const T *>(this));}  
-    auto & data() {return (*reinterpret_cast<T *>(this));}  
+    Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
+    operator T() const {return (*reinterpret_cast<const T *>(this));}
+    operator T & () {return (*reinterpret_cast<T *>(this));}
 };
 
-struct Reg8:public Reg_t<uint8_t>{
-    // using Reg_t::Reg_t;
-    // Reg8 & operator = (const uint8_t data){*reinterpret_cast<uint8_t *>(this) = data;return *this;}
-};
+#define REG_TEMPLATE(name, T)\
+struct name:public Reg_t<T>{\
+    using Reg_t<T>::operator T;\
+    using Reg_t<T>::operator T &;\
+    using Reg_t<T>::operator =;\
+};\
 
+REG_TEMPLATE(Reg8, uint8_t)
+REG_TEMPLATE(Reg16, uint16_t)
 
-struct Reg16:public Reg_t<uint16_t>{};
+REG_TEMPLATE(Reg8i, int8_t)
+REG_TEMPLATE(Reg16i, int16_t)
+
 
 struct Fraction {
 public:

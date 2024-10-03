@@ -114,7 +114,7 @@ uint8_t W25Q16::getDeviceCapacity(){
 }
 
 
-void W25Q16::eraseBlock(const uint32_t addr){
+void W25Q16::eraseBlock(const Address addr){
     enableWrite();
     writeByte(Commands::SectorErase);
     writeByte(addr >> 16);
@@ -123,7 +123,7 @@ void W25Q16::eraseBlock(const uint32_t addr){
 }
 
 
-void W25Q16::eraseSector(const uint32_t addr){
+void W25Q16::eraseSector(const Address addr){
     enableWrite();
     writeByte(Commands::SectorErase);
     writeByte(addr >> 16);
@@ -141,7 +141,7 @@ bool W25Q16::isIdle(){
     writeByte(Commands::ReadStatusRegister);
     uint8_t temp = 0;
     readByte(temp);
-    statusReg.data() = temp;
+    statusReg = temp;
     return statusReg.busy;
 }
 
@@ -150,6 +150,6 @@ bool W25Q16::isWriteable(){
     writeByte(Commands::ReadStatusRegister);
     uint8_t temp = 0;
     readByte(temp);
-    statusReg.data() = temp;
+    statusReg = temp;
     return statusReg.write_enable_latch;
 }
