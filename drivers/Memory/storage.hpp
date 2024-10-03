@@ -28,17 +28,17 @@ protected:
     virtual void entry_load() = 0;
     virtual void exit_load() = 0;
 
-    virtual void _store(const uint8_t data, const Address loc){
-        _store(&data, 1, loc);
+    virtual void storeBytes(const uint8_t data, const Address loc){
+        storeBytes(&data, 1, loc);
     }
 
-    virtual void _load(uint8_t & data, const Address loc){
-        _load(&data, 1, loc);
+    virtual void loadBytes(uint8_t & data, const Address loc){
+        loadBytes(&data, 1, loc);
     }
 
-    virtual void _store(const void * data, const Address data_size, const Address loc) = 0;
+    virtual void storeBytes(const void * data, const Address data_size, const Address loc) = 0;
 
-    virtual void _load(void * data, const Address data_size, const Address loc) = 0;
+    virtual void loadBytes(void * data, const Address data_size, const Address loc) = 0;
 
 public:
     virtual void init() = 0;
@@ -50,26 +50,26 @@ public:
     void store(const void * data, const Address & data_size, const Address & loc){
         if(view().has(loc)){
             entry_store();
-            _store(data, data_size, loc);
+            storeBytes(data, data_size, loc);
             exit_store();
         }
     }
 
     void store(const uint8_t & data, const Address loc){
         entry_store();
-        _store(data, loc);
+        storeBytes(data, loc);
         exit_store();
     }
 
     void load(uint8_t & data, const Address loc){
         entry_load();
-        _load(data, loc);
+        loadBytes(data, loc);
         exit_load();
     }
 
     void load(void * data, const Address data_size, const Address loc){
         entry_load();
-        _load(data, data_size, loc);
+        loadBytes(data, data_size, loc);
         exit_load();
     }
 

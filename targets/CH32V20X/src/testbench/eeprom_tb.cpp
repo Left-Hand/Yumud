@@ -1,6 +1,6 @@
 #include "tb.h"
 #include "../drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "../drivers/Memory/Flash/W25QXX/w25qxx.hpp"
+#include "../drivers/Memory/Flash/W25QXX/w25q16.hpp"
 #include "../hal/flash/flash.hpp"
 
 #include "../algo/random/random_generator.hpp"

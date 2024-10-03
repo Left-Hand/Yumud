@@ -69,7 +69,7 @@ protected:
         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
     }
 
-    void _store(const void * data, const Address data_size, const Address loc) override{
+    void storeBytes(const void * data, const Address data_size, const Address loc) override{
 
         unlock();
         uint32_t buf[page_size / sizeof(uint32_t)] = {0};
@@ -94,7 +94,7 @@ protected:
 
     };
 
-    void _load(void * data, const Address data_size, const Address loc) override{
+    void loadBytes(void * data, const Address data_size, const Address loc) override{
         AddressWindow phy_window = AddressWindow{0, data_size}.shift(loc + base_address);
         memcpy(data, (void *)phy_window.from, data_size);
     };

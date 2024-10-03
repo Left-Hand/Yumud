@@ -12,16 +12,16 @@ protected:
     I2cDrv bus_drv;
     uint32_t last_entry_ms = 0;
     
-    void _store(const uint8_t data, const Address loc) override;
-    void _load(uint8_t & data, const Address loc) override;
 
     void wait_for_free();
 
     void update_entry_ms(){last_entry_ms = millis();}
+    void storeBytes(const uint8_t data, const Address loc) override;
+    void loadBytes(uint8_t & data, const Address loc) override;
 
-    void _store(const void * data, const Address data_size, const Address loc) override;
+    void storeBytes(const void * data, const Address data_size, const Address loc) override;
 
-    void _load(void * data, const Address data_size, const Address loc) override;
+    void loadBytes(void * data, const Address data_size, const Address loc) override;
 
     void entry_store() override{
         update_entry_ms();

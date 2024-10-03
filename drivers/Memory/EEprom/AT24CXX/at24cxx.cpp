@@ -43,12 +43,12 @@ if(loc > m_capacity){\
 #endif
 
 
-void AT24CXX::_store(const uint8_t data, const Address loc){
+void AT24CXX::storeBytes(const uint8_t data, const Address loc){
     CHECK_ADDR(loc);
     AT24CXX_DEBUG("store", data, "at", loc);
     WRITE_REG(loc, data);
 }
-void AT24CXX::_load(uint8_t & data, const Address loc){
+void AT24CXX::loadBytes(uint8_t & data, const Address loc){
     CHECK_ADDR(loc);
     AT24CXX_DEBUG("load", data, "at", loc);
     READ_REG(loc, data);
@@ -67,7 +67,7 @@ void AT24CXX::wait_for_free(){
     delay(delays);
 }
 
-void AT24CXX::_store(const void * data, const Address data_size, const Address loc){
+void AT24CXX::storeBytes(const void * data, const Address data_size, const Address loc){
     auto full_end = loc + data_size; 
     CHECK_ADDR(full_end);
 
@@ -86,7 +86,7 @@ void AT24CXX::_store(const void * data, const Address data_size, const Address l
 }
 
 
-void AT24CXX::_load(void * data, const Address data_size, const Address loc){
+void AT24CXX::loadBytes(void * data, const Address data_size, const Address loc){
     auto full_end = loc + data_size; 
     CHECK_ADDR(full_end);
     READ_POOL(loc, (uint8_t *)data, data_size);
