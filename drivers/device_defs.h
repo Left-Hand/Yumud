@@ -6,6 +6,7 @@
 #include "../hal/bus/spi/spidrv.hpp"
 #include "../hal/bus/uart/uart.hpp"
 
+
 #ifndef REG8_BEGIN
 #define REG8_BEGIN union{struct{
 #endif
@@ -22,8 +23,25 @@
 #define REG16_END };uint16_t data;};
 #endif
 
-struct Reg8{};
-struct Reg16{};
+template<typename T>
+struct Reg_t{
+    Reg_t<T> & operator = (const Reg_t<T> & other) = delete;
+    Reg_t<T> & operator = (Reg_t<T> && other) = delete;
+    // Reg_t(){};
+    // Reg_t(T && other) = delete;
+    // Reg_t(const T & other) = delete;
+    // Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
+    const auto & data() const {return (*reinterpret_cast<const T *>(this));}  
+    auto & data() {return (*reinterpret_cast<T *>(this));}  
+};
+
+struct Reg8:public Reg_t<uint8_t>{
+    // using Reg_t::Reg_t;
+    // Reg8 & operator = (const uint8_t data){*reinterpret_cast<uint8_t *>(this) = data;return *this;}
+};
+
+
+struct Reg16:public Reg_t<uint16_t>{};
 
 struct Fraction {
 public:

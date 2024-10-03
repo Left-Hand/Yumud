@@ -33,67 +33,18 @@ protected:
     };
 
     struct StatusReg:public Reg8{
-        REG8_BEGIN
         uint8_t busy:1;
         uint8_t write_enable_latch:1;
         uint8_t block_protect_bits:3;
         uint8_t top_or_bottom_protect:1;
         uint8_t sector_or_block_protect:1;
         uint8_t __resv__:1;
-        REG8_END
     };
 
     StatusReg statusReg;
 
-    void writeByte(const uint8_t & data){
-        bus_drv.write(data);
-    }
 
-    void writeByte(const Commands & data){
-        bus_drv.write((uint8_t)data);
-    }
-
-    void readByte(uint8_t & data){
-        bus_drv.read(data);
-    }
-
-    void writePage(const uint32_t & addr, const uint8_t * data, size_t len){
-        enableWrite();
-        if(len > 256){
-            W25Q16_DEBUG("page too large", len);
-            len = 256;
-        }
-        writeByte(Commands::PageProgram);
-        writeByte(addr >> 16);
-        writeByte(addr >> 8);
-        writeByte(addr);
-        for(size_t i = 0; i < len; i++){
-            writeByte(data[i]);
-        }
-    }
-
-    void writeData(const uint32_t _addr, const uint8_t * _data, const size_t len){
-        enableWrite();
-        uint16_t pages = _addr / 256;
-        uint32_t addr = _addr;
-        uint8_t * data = (uint8_t *)_data;
-        for(uint16_t i = 0; i < pages; i++){
-            writePage(addr, data, 256);
-            addr += 256;
-            data += 256;
-        }
-        uint8_t remains = addr % 256;
-        writePage(addr, data, remains);
-    }
-    void readData(const uint32_t addr, uint8_t * data, const size_t len){
-        writeByte(Commands::ReadData);
-        writeByte(addr >> 16);
-        writeByte(addr >> 8);
-        writeByte(addr);
-        for(size_t i = 0; i < len; i++){
-            readByte(data[i]);
-        }
-    }
+    void writePage(const void * data, const Address len, const size_t addr);
 
     void storeBytes(const uint8_t data, const Address loc) override;
     void loadBytes(uint8_t & data, const Address loc) override;
@@ -121,5 +72,17 @@ public:
 
     bool isIdle();
     bool isWriteable();
+private:
+    void writeByte(const uint8_t & data){
+        bus_drv.write(data);
+    }
+
+    void writeByte(const Commands & data){
+        bus_drv.write((uint8_t)data);
+    }
+
+    void readByte(uint8_t & data){
+        bus_drv.read(data);
+    }
 
 };
