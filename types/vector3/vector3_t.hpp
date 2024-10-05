@@ -48,8 +48,7 @@ public:
 
     __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) : x(v.x), y(v.y), z(v.z) {;}
 
-    template<arithmetic U = T>
-    __fast_inline constexpr Vector3_t(const U & _x, const U & _y, const U & _z): x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
+    __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
 
     template<arithmetic U = T>
     __fast_inline constexpr Vector3_t(const std::tuple<U, U, U> & v) : x(std::get<0>(v)), y(std::get<1>(v)), z(std::get<2>(v)){;}
@@ -156,6 +155,10 @@ public:
             y - static_cast<T>(other.y),
             z - static_cast<T>(other.z)
         };
+    }
+    
+    __fast_inline constexpr Vector3_t operator -() const {
+        return Vector3_t{-x,-y,-z};
     }
 
 

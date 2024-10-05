@@ -34,6 +34,7 @@
 #include "types/aabb/aabb.hpp"
 #include "types/basis/basis_t.hpp"
 #include "types/quat/Quat_t.hpp"
+#include "types/vector3/vector3_t.hpp"
 
 
 template<arithmetic T>
