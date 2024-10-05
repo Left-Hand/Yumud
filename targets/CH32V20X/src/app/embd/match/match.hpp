@@ -10,7 +10,7 @@
 
 class Matcher{
 protected:
-    static constexpr size_t N = 10;
+    scexpr size_t N = 10;
     std::array<real_t, N> result;
 public:
     void init();

@@ -61,19 +61,19 @@ public:
 
 namespace SMC{
 
-static constexpr real_t full_duty = 0.85;
-static constexpr RGB565 white = 0xffff;
-static constexpr RGB565 black = 0;
-static constexpr RGB565 red = RGB565(31,0,0);
-static constexpr RGB565 green = RGB565(0,63,0);
-static constexpr RGB565 blue = RGB565(0,0,31);
+scexpr real_t full_duty = 0.85;
+scexpr RGB565 white = 0xffff;
+scexpr RGB565 black = 0;
+scexpr RGB565 red = RGB565(31,0,0);
+scexpr RGB565 green = RGB565(0,63,0);
+scexpr RGB565 blue = RGB565(0,0,31);
 
-static constexpr uint ctrl_freq = 50;
-static constexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
+scexpr uint ctrl_freq = 50;
+scexpr real_t inv_ctrl_ferq = 1.0 / ctrl_freq;
 
-static constexpr uint window_y = 32;
-static constexpr Vector2i window_half_size = {20, 20};
-static constexpr real_t startup_meters = 0.6;
+scexpr uint window_y = 32;
+scexpr Vector2i window_half_size = {20, 20};
+scexpr real_t startup_meters = 0.6;
 
 class SmartCar;
 
@@ -166,7 +166,7 @@ protected:
     }
 
     void update_front_speed(){
-        static constexpr real_t wheel_l = 0.182;
+        scexpr real_t wheel_l = 0.182;
         odo.update();
 
         travel = odo.getPosition() * wheel_l;
@@ -195,7 +195,7 @@ public:
     Measurer(I2c & i2c):mpu{i2c}, qml{i2c}{;}
 
     void cali(){
-        static constexpr int cali_times = 100;
+        scexpr int cali_times = 100;
 
         Vector3 temp_gravity = Vector3();
         Vector3 temp_gyro_offs = Vector3();
@@ -273,7 +273,7 @@ public:
     real_t get_lane_offset(const AlignMode align_mode, const real_t padding_meters = 0.12) const{
         if(travel < startup_meters) return 0;
         //ccd 部分的比例和透视部分的比例不一样 将就用
-        static constexpr real_t k = 200;
+        scexpr real_t k = 200;
 
         auto conv = [&](const int pixel) -> real_t{
             return -(1/k) * (pixel - 94);

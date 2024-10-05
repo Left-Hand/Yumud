@@ -17,7 +17,7 @@
 
 class MMC5603:public Magnetometer{
 public:
-    static constexpr uint8_t default_i2c_addr = 0b01100000;
+    scexpr uint8_t default_i2c_addr = 0b01100000;
     enum class DataRate:uint8_t{
 
     };
@@ -49,33 +49,33 @@ protected:
     using RegAddress = uint8_t;
 
     struct AxisReg:public Reg16{
-        static constexpr uint8_t address_x = 0x00;
-        static constexpr uint8_t address_y = 0x02;
-        static constexpr uint8_t address_z = 0x04;
+        scexpr uint8_t address_x = 0x00;
+        scexpr uint8_t address_y = 0x02;
+        scexpr uint8_t address_z = 0x04;
 
         uint8_t data_h;
         uint8_t data_l;
     };
 
     struct ExtAxisReg:public Reg8{
-        static constexpr uint8_t address_x = 0x06;
-        static constexpr uint8_t address_y = 0x07;
-        static constexpr uint8_t address_z = 0x08;
+        scexpr uint8_t address_x = 0x06;
+        scexpr uint8_t address_y = 0x07;
+        scexpr uint8_t address_z = 0x08;
 
         uint8_t :4;
         uint8_t data:4;
     };
 
     struct TempReg:public Reg8{
-        static constexpr uint8_t address = 0x09;
-        uint8_t data;
+        scexpr uint8_t address = 0x09;
+        uint8_t :8;
         operator int() const {
-            return ((data * int(0.8 * 65536) >> 16) - 75);
+            return ((uint8_t(*this) * int(0.8 * 65536) >> 16) - 75);
         }
     };
 
     struct Status1Reg:public Reg8{
-        static constexpr uint8_t address = 0x18;
+        scexpr uint8_t address = 0x18;
 
         uint8_t:4;
 
@@ -88,12 +88,13 @@ protected:
 
 
     struct OdrReg:public Reg8{
-        static constexpr uint8_t address = 0x1a;
+        scexpr uint8_t address = 0x1a;
+        uint8_t :8;
     };
 
 
     struct Ctrl0Reg:public Reg8{
-        static constexpr uint8_t address = 0x1B;
+        scexpr uint8_t address = 0x1B;
 
         uint8_t do_mag_measure:1;
         uint8_t do_temp_measure:1;
@@ -109,7 +110,7 @@ protected:
 
 
     struct Ctrl1Reg:public Reg8{
-        static constexpr uint8_t address = 0x1C;
+        scexpr uint8_t address = 0x1C;
 
         uint8_t bandwidth:2;
         uint8_t x_inhibit:1;
@@ -122,7 +123,7 @@ protected:
     };
 
     struct Ctrl2Reg:public Reg8{
-        static constexpr uint8_t address = 0x1D;
+        scexpr uint8_t address = 0x1D;
 
         //These bits determine how many measurements are done before a set is executed, when the 
         // part is in continuous mode and the automatic set/reset is enabled. From 000 to 111, the sensor 
@@ -139,14 +140,18 @@ protected:
 
 
     struct AxisSelfTestReg:public Reg8{
-        static constexpr uint8_t address_x = 0x1e;
-        static constexpr uint8_t address_y = 0x1f;
-        static constexpr uint8_t address_z = 0x20;
+        scexpr uint8_t address_x = 0x1e;
+        scexpr uint8_t address_y = 0x1f;
+        scexpr uint8_t address_z = 0x20;
+
+        uint8_t :8;
     };
 
     struct ProductIdReg:public Reg8{
-        static constexpr uint8_t address = 0x39;
-        static constexpr uint8_t correct_id = 0b00010000;
+        scexpr uint8_t address = 0x39;
+        scexpr uint8_t correct_id = 0b00010000;
+        
+        uint8_t :8;
     };
 
     struct {

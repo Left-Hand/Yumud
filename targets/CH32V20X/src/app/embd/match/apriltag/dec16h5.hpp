@@ -5,7 +5,7 @@
 
 class Apriltag16H5Decoder:public ApriltagDecoder{
 public:
-    static constexpr std::array<uint16_t, 30> codes= {
+    scexpr std::array<uint16_t, 30> codes= {
         0x231b,
         0x2ea5,
         0x346a,

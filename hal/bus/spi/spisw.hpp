@@ -47,7 +47,7 @@ public:
 
     Error read(uint32_t & data, bool toAck = true) {
         uint32_t ret;
-        static constexpr uint32_t dummy = 0;
+        scexpr uint32_t dummy = 0;
         transfer(ret, dummy, toAck); 
         return Bus::ErrorType::OK;
     }

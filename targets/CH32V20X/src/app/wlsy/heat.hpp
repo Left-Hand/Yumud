@@ -16,9 +16,9 @@ public:
 
 class NTC:public TempSensor{
 protected:
-    static constexpr real_t B = 3950;
-    static constexpr real_t R_kOhms = 100;
-    static constexpr real_t R0_kOhms = 10;
+    scexpr real_t B = 3950;
+    scexpr real_t R_kOhms = 100;
+    scexpr real_t R0_kOhms = 10;
 
     uint8_t index;
 
@@ -51,8 +51,8 @@ public:
     };
 
     void update() override{
-        static constexpr real_t T0= real_t(273.15+25);
-        static constexpr real_t Ka= real_t(273.15);
+        scexpr real_t T0= real_t(273.15+25);
+        scexpr real_t Ka= real_t(273.15);
         real_t VR = get_uniV();
         real_t Rt_kOhms = (VR)/(1-VR) * R_kOhms;
         auto this_temp = real_t(B/(B/T0+log(Rt_kOhms/R0_kOhms))) - Ka + real_t(0.5);

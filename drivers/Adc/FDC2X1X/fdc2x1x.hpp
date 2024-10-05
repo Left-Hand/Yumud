@@ -33,7 +33,7 @@ protected:
     using RegAddress =uint8_t;
 
     struct ConversionDataHighReg{
-        static constexpr RegAddress address =0x00;
+        scexpr RegAddress address =0x00;
         uint16_t data_msb:12;
         bool err_aw:1;
         bool err_wd:1;
@@ -41,7 +41,7 @@ protected:
     };
 
     struct ConversionDataLowReg{
-        static constexpr RegAddress address =0x01;
+        scexpr RegAddress address =0x01;
         uint16_t data_lsb:16;
     };
 
@@ -51,22 +51,22 @@ protected:
     };
 
     struct ReferenceCountReg{
-        static constexpr RegAddress address =0x08;
+        scexpr RegAddress address =0x08;
         uint8_t count;
     };
 
     struct OffsetReg{
-        static constexpr RegAddress address =0x0C;
+        scexpr RegAddress address =0x0C;
         uint8_t offset;
     };
 
     struct SettleCountReg{
-        static constexpr RegAddress address =0x10;
+        scexpr RegAddress address =0x10;
         uint8_t settle_count;
     };
 
     struct ClockDividerReg{
-        static constexpr RegAddress address =0x14;
+        scexpr RegAddress address =0x14;
         uint16_t fref_divider:10;
         uint16_t __resv1__:2;
         uint16_t fin_sel:2;
@@ -74,7 +74,7 @@ protected:
     };
 
     struct StatusReg{
-        static constexpr RegAddress address =0x18;
+        scexpr RegAddress address =0x18;
         bool ch3_unread_conv:1;
         bool ch2_unread_conv:1;
         bool ch1_unread_conv:1;
@@ -89,7 +89,7 @@ protected:
     };
 
     struct StatusConfigReg{
-        static constexpr RegAddress address =0x19;
+        scexpr RegAddress address =0x19;
         bool data_ready_to_int:1;
         uint16_t __resv__:4;
         uint16_t wtd_timeout_error_to_int:1;
@@ -100,7 +100,7 @@ protected:
     };
 
     struct ConfigReg{
-        static constexpr RegAddress address =0x1a;
+        scexpr RegAddress address =0x1a;
         uint16_t __resv1__:6;
         bool high_current_drive:1;
         bool intb_disen:1;
@@ -125,7 +125,7 @@ protected:
     };
 
     struct MuxConfigReg{
-        static constexpr RegAddress address =0x1b;
+        scexpr RegAddress address =0x1b;
         BandWidth bandwidth:3;
         uint16_t __resv__:10;
         AutoScanConfig auto_scan_config:2;
@@ -141,7 +141,7 @@ protected:
     };
 
     struct ResetDevReg{
-        static constexpr RegAddress address =0x1c;
+        scexpr RegAddress address =0x1c;
         uint16_t __resv1__:9;
         Gain gain:2;
         uint16_t __resv2__:4; 
@@ -184,20 +184,20 @@ protected:
     };
 
     struct DriveCurrentReg{
-        static constexpr RegAddress address =0x1e;
+        scexpr RegAddress address =0x1e;
         uint16_t __resv__:11;
         DriveCurrent drive_current:5;
     };
 
     struct ManufacturerIdReg{
-        static constexpr RegAddress address =0x7E;
-        static constexpr uint16_t correct = 0x5449;
+        scexpr RegAddress address =0x7E;
+        scexpr uint16_t correct = 0x5449;
         uint16_t id;
     };
 
     struct DeviceIdReg{
-        static constexpr RegAddress address =0x7F;
-        static constexpr uint16_t correct = 03054;
+        scexpr RegAddress address =0x7F;
+        scexpr uint16_t correct = 03054;
         uint16_t id;
     };
 
@@ -225,7 +225,7 @@ protected:
         i2c_drv.writeReg(uint8_t(addr), data);
     }
 public:
-    static constexpr uint8_t default_i2c_addr = 0x54;
+    scexpr uint8_t default_i2c_addr = 0x54;
 
     FDC2X1X(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
     FDC2X1X(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}

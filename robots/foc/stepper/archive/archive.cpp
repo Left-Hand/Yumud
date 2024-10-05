@@ -6,10 +6,13 @@
 static void getDefaultArchive(MotorUtils::Archive & archive){
     archive.pos_config = {
         // .kp = 2,
+        // .kd = 15
+
+        // .kp = 2,
         // .kd = 46
 
         .kp = 3,
-        .kd = 79
+        .kd = 70
         
         // .kp = 5,
         // .kd = 23*7

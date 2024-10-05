@@ -21,8 +21,8 @@ protected:
     using Address = size_t;
     using AddressWindow = Range_t<Address>;
 
-    static constexpr Page page_size = 256;
-    static constexpr Address base_address = FLASH_WRProt_Sectors31to127;
+    scexpr Page page_size = 256;
+    scexpr Address base_address = FLASH_WRProt_Sectors31to127;
 
     Page page_count;
     uint32_t pre_clock;

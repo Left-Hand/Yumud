@@ -9,7 +9,7 @@ struct ConstexprMath{
     public:
 
 #define constexpr_decl(return_type, function_name, ...) \
-    static constexpr return_type function_name(__VA_ARGS__) noexcept\
+    scexpr return_type function_name(__VA_ARGS__) noexcept\
 
 #define constexpr_name(function_name) function_name##_constexpr
 
@@ -255,7 +255,7 @@ template <int Nrep = 65536, typename float_type = double>
         // }
 
         template <int Nrep = 65536, typename float_type>
-        static constexpr double why(float_type _x){
+        scexpr double why(float_type _x){
             return static_cast<double>(_x);
         }
 

@@ -15,7 +15,7 @@ public:
         X1 = 0, X4, X16, X60 
     };
 
-    static constexpr uint8_t default_id = 0x52;
+    scexpr uint8_t default_id = 0x52;
 protected:
     I2cDrv bus_drv;
 

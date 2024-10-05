@@ -10,8 +10,8 @@ public:\
     constexpr explicit name(bool _value) : value(_value) {}\
     constexpr operator bool() const { return value; }\
 };\
-static constexpr name u {true};\
-static constexpr name l{false};\
+scexpr name u {true};\
+scexpr name l{false};\
 
 MAKE_BINA_ENUM(Endian, MSB, LSB)
 MAKE_BINA_ENUM(Continuous, CONT, DISC)

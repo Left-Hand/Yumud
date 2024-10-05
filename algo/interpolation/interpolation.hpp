@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../sys/core/system.hpp"
+#include "sys/core/system.hpp"
 
-#include "../types/vector2/vector2_t.hpp"
+#include "types/vector2/vector2_t.hpp"
 #include "sys/math/real.hpp"
 
 class Mapping{

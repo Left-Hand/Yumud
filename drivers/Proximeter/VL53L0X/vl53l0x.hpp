@@ -7,7 +7,7 @@ class VL53L0X{
 protected:
     I2cDrv bus_drv;
 public:
-    static constexpr uint8_t default_id = 0x52;
+    scexpr uint8_t default_id = 0x52;
     VL53L0X(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     VL53L0X(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
     VL53L0X(I2c & bus):bus_drv(bus, default_id){;}

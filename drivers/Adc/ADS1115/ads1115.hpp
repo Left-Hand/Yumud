@@ -41,12 +41,12 @@ protected:
     using RegAddress = uint8_t;
 
     struct ConversionReg{
-        static constexpr RegAddress address = 0b00; 
+        scexpr RegAddress address = 0b00; 
         uint16_t data;
     };
 
     struct ConfigReg{
-        static constexpr RegAddress address = 0b01; 
+        scexpr RegAddress address = 0b01; 
         uint16_t comp_que:2;
         bool comp_latch:1;
         bool comp_pol:1;
@@ -59,12 +59,12 @@ protected:
     };
 
     struct LowThreshReg{
-        static constexpr RegAddress address = 0b10;
+        scexpr RegAddress address = 0b10;
         int16_t data;
     };
 
     struct HighThreshReg{
-        static constexpr RegAddress address = 0b11; 
+        scexpr RegAddress address = 0b11; 
         int16_t data;
     };
 
@@ -88,7 +88,7 @@ public:
     // VDD 1001001
     // SDA 1001010
     // SCL 1001011
-    static constexpr uint8_t default_i2c_addr = 0b10010000;
+    scexpr uint8_t default_i2c_addr = 0b10010000;
     ADS111X(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
     ADS111X(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
     ADS111X(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)){};

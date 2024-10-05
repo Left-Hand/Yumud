@@ -10,7 +10,7 @@
 
 class MPU6050:public Axis6{
 public:
-    static constexpr uint8_t default_id = 0xd0;
+    scexpr uint8_t default_id = 0xd0;
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000

@@ -14,7 +14,7 @@ bool ArcInterpolation::IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,c
     real_t xDelta_a = pt2x - pt1x;
     real_t yDelta_b = pt3y - pt2y;
     real_t xDelta_b = pt3x - pt2x;
-    static constexpr real_t epsilon = real_t(0.001);
+    scexpr real_t epsilon = real_t(0.001);
 
     // checking whether the line of the two pts are vertical
     if (abs(xDelta_a) <= epsilon && abs(yDelta_b) <= epsilon){
@@ -44,7 +44,7 @@ void ArcInterpolation::calcCircleFrom3Points (const Vector2 & pt1,const Vector2 
     real_t xDelta_a = pt2x - pt1x;
     real_t yDelta_b = pt3y - pt2y;
     real_t xDelta_b = pt3x - pt2x;
-    static constexpr real_t epsilon = real_t(0.001);
+    scexpr real_t epsilon = real_t(0.001);
 
     if (abs(xDelta_a) <= epsilon && abs(yDelta_b) <= epsilon){
         m_Centerx = (pt2x + pt3x) / 2;
@@ -74,11 +74,11 @@ void ArcInterpolation::calcCircleFrom3Points (const Vector2 & pt1,const Vector2 
 
 
 real_t ArcInterpolation::mapping(const Vector2 handle, real_t x){
-    static constexpr real_t epsilon = real_t(0.001);
-    static constexpr real_t min_param_a = real_t(0 + epsilon);
-    static constexpr real_t max_param_a = real_t(1 - epsilon);
-    static constexpr real_t min_param_b = real_t(0 + epsilon);
-    static constexpr real_t max_param_b = real_t(1 - epsilon);
+    scexpr real_t epsilon = real_t(0.001);
+    scexpr real_t min_param_a = real_t(0 + epsilon);
+    scexpr real_t max_param_a = real_t(1 - epsilon);
+    scexpr real_t min_param_b = real_t(0 + epsilon);
+    scexpr real_t max_param_b = real_t(1 - epsilon);
 
     auto [a,b] = handle;
     a = MIN(max_param_a, MAX(min_param_a, a));
@@ -266,11 +266,11 @@ real_t arcRadius;
 //--------------------------------------------------------
 real_t CircularFilletInterpoation::mapping(const Vector2 & handle, real_t R, real_t x){
   
-  static constexpr real_t epsilon = real_t(0.001);
-  static constexpr real_t min_param_a = real_t(0 + epsilon);
-  static constexpr real_t max_param_a = real_t(1 - epsilon);
-  static constexpr real_t min_param_b = real_t(0 + epsilon);
-  static constexpr real_t max_param_b = real_t(1 - epsilon);
+  scexpr real_t epsilon = real_t(0.001);
+  scexpr real_t min_param_a = real_t(0 + epsilon);
+  scexpr real_t max_param_a = real_t(1 - epsilon);
+  scexpr real_t min_param_b = real_t(0 + epsilon);
+  scexpr real_t max_param_b = real_t(1 - epsilon);
 
   auto [a,b] = handle;
 

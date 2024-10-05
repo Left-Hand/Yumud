@@ -14,13 +14,13 @@ public:
         Max, High, Medium, Low
     };
 
-    static constexpr uint8_t default_id = 0b10110000;
+    scexpr uint8_t default_id = 0b10110000;
 protected:
     I2cDrv bus_drv;
     uint16_t buf;
 
 
-    static constexpr uint8_t valid_chipid = 0x23;
+    scexpr uint8_t valid_chipid = 0x23;
 
 
     struct Mode1Reg{
@@ -113,7 +113,7 @@ public:
     PCA9685(I2c & _bus):bus_drv{_bus, default_id}{;}
 
     void setFrequency(uint32_t freq){
-        static constexpr uint32_t osc_freq = 25000000;
+        scexpr uint32_t osc_freq = 25000000;
         prescale = osc_freq / 4096 / freq - 1;
         writeReg(RegAddress::Prescale, prescale);
     }

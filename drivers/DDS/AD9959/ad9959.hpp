@@ -153,7 +153,7 @@ protected:
     uint8_t               shift;                  // (2<<shift) < core_clock, but just (28 or less)
     #endif
     uint8_t               last_channels;
-    static constexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
+    scexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
     SpiDrv & bus_drv;
     Gpio &         reset_gpio;               // Reset pin (active = high)
     Gpio &         update_gpio;              // I/O_UPDATE: Apply config changes
@@ -211,7 +211,7 @@ protected:
   uint32_t write(uint8_t reg, uint32_t value)
   {
     // The indices of this array match the values of the Register enum:
-    static constexpr uint8_t register_length[8] = { 1, 3, 2, 3, 4, 2, 3, 2 };  // And 4 beyond that
+    scexpr uint8_t register_length[8] = { 1, 3, 2, 3, 4, 2, 3, 2 };  // And 4 beyond that
 
     uint32_t    rval = 0;
     int         len = (reg&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[reg&0x07] : 4;

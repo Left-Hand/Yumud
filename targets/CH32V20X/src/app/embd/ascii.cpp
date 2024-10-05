@@ -2,11 +2,11 @@
 // #include "../../robots/foc/protocol/ascii_protocol.hpp"
 
 using Vector2 = Vector2_t<real_t>;
-static constexpr real_t squ_len = 96;
-static constexpr Vector2 pos_begin = {111, 46};
-static constexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
-static constexpr Vector2 pos_center = Vector2(pos_begin) + Vector2(squ_len / 2, squ_len / 2);
-static constexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
+scexpr real_t squ_len = 96;
+scexpr Vector2 pos_begin = {111, 46};
+scexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
+scexpr Vector2 pos_center = Vector2(pos_begin) + Vector2(squ_len / 2, squ_len / 2);
+scexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
 
 
 static Vector2 get_predefined_positions(uint8_t index){

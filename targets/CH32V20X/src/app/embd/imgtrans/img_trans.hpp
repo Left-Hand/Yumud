@@ -41,9 +41,9 @@ struct ImagePieceUnit:public PieceHeader{
 
 class Transmitter{
 protected:
-    // static constexpr size_t str_tx_buf_size = 512;
-    // static constexpr size_t str_rx_buf_size = 512;
-    // static constexpr size_t img_tx_buf_size = 1024;
+    // scexpr size_t str_tx_buf_size = 512;
+    // scexpr size_t str_rx_buf_size = 512;
+    // scexpr size_t img_tx_buf_size = 1024;
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
 public:
@@ -75,8 +75,8 @@ public:
     // }
 
 protected:
-    static constexpr uint16_t header = 0x54A8;
-    static constexpr size_t mtu = 320;
+    scexpr uint16_t header = 0x54A8;
+    scexpr size_t mtu = 320;
     uint8_t time_stamp = 0;
     void transmit(const uint8_t * img_buf, const Vector2i & img_size, const uint8_t index);
 

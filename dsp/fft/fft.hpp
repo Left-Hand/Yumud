@@ -22,6 +22,7 @@
 #ifndef ArduinoFFT_h /* Prevent loading library twice */
 #define ArduinoFFT_h
 
+#include "sys/core/platform.h"
 #include <math.h>
 #include <cstdint>
 
@@ -74,9 +75,9 @@ public:
   double MajorPeakParabola();
 
 private:
-    static constexpr double twoPi = 6.28318531;
-    static constexpr double fourPi = 12.56637061;
-    static constexpr double sixPi = 18.84955593;
+    scexpr double twoPi = 6.28318531;
+    scexpr double fourPi = 12.56637061;
+    scexpr double sixPi = 18.84955593;
   /* Variables */
   uint16_t _samples;
   double _samplingFrequency;

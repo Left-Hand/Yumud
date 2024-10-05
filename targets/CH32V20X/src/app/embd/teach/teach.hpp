@@ -15,10 +15,10 @@ class Trajectory{
 public:
 
 
-    static constexpr uint record_fps = 50;
-    static constexpr uint record_dur = 1000 / record_fps;
-    static constexpr uint record_seconds = 60;
-    static constexpr uint record_len = (record_fps * record_seconds);
+    scexpr uint record_fps = 50;
+    scexpr uint record_dur = 1000 / record_fps;
+    scexpr uint record_seconds = 60;
+    scexpr uint record_len = (record_fps * record_seconds);
 
     using E = TrajectoryItem;
     using Container = sstl::vector<E, record_len>;

@@ -145,7 +145,7 @@ public:
     
     constexpr void setSize(const size_t size) {DLC = size;}
 private:
-    static constexpr uint8_t null_data = 0;
+    scexpr uint8_t null_data = 0;
 };
 
 struct OutputStream;

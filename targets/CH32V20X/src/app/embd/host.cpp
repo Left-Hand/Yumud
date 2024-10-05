@@ -213,8 +213,8 @@ void EmbdHost::act(){
             break;
         case ActMethod::INTER:
             {
-                static constexpr int dur = 1500;
-                static constexpr int n = 4;
+                scexpr int dur = 1500;
+                scexpr int n = 4;
                 uint8_t index = (millis() / dur) % n;
                 // pos = Vector2(1.5,0).rotated(index * TAU / n) + Vector2(5,2.5);
                 switch(index){

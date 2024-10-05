@@ -71,7 +71,7 @@ protected:
         }
     };
     
-    static constexpr uint8_t default_i2c_addr = 0b000'110'0;
+    scexpr uint8_t default_i2c_addr = 0b000'110'0;
 
     std::optional<I2cDrv> i2c_drv;
     std::optional<SpiDrv> spi_drv;

@@ -59,11 +59,11 @@ public:
 
     constexpr Rect2_t(const arithmetic auto _x,const arithmetic auto _y,const arithmetic auto _width,const arithmetic auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
 
-    static constexpr Rect2_t from_center(const Vector2_t<arithmetic auto> & center, const Vector2_t<arithmetic auto> & half_size){
+    scexpr Rect2_t from_center(const Vector2_t<arithmetic auto> & center, const Vector2_t<arithmetic auto> & half_size){
         return Rect2_t<T>(center - half_size, half_size * 2).abs();
     }
 
-    static constexpr Rect2_t from_cross(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b){
+    scexpr Rect2_t from_cross(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b){
         return Rect2_t<T>(a, b-a).abs();
     }
 

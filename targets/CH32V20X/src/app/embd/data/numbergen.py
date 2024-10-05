@@ -64,13 +64,13 @@ def convert_arr_to_c_code(arr) -> str:
 def convert_all_images_to_c_code(arrs):
     c_code = '/*this code is auto generated, DO NOT TOUCH */\r\n'
 
-    c_code += '#pragma once\r\n#include <cstdint>\r\nstatic constexpr uint8_t digit_images[10]['+area +'] = {\r\n'
+    c_code += '#pragma once\r\n#include <cstdint>\r\nscexpr uint8_t digit_images[10]['+area +'] = {\r\n'
     for i in range(10):
         c_code += convert_arr_to_c_code(arrs[get_gs_name(i)])
 
     c_code += '};\n'
 
-    c_code += 'static constexpr uint8_t digit_bina_images[10]['+ area +'] = {\r\n'
+    c_code += 'scexpr uint8_t digit_bina_images[10]['+ area +'] = {\r\n'
     for i in range(10):
         c_code += convert_arr_to_c_code(arrs[get_bn_name(i)])
 

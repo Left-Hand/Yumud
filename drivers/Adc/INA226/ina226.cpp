@@ -46,8 +46,8 @@ void INA226::setAverageTimes(const uint16_t times){
 }
 
 bool INA226::verify(){
-    static constexpr uint16_t valid_manu_id = 0x5449;
-    static constexpr uint16_t valid_chip_id = 0x2260;
+    scexpr uint16_t valid_manu_id = 0x5449;
+    scexpr uint16_t valid_chip_id = 0x2260;
 
     readReg(RegAddress::chipID, chipIDReg);
     readReg(RegAddress::manufactureID, manufactureIDReg);

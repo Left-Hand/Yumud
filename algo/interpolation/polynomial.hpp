@@ -9,9 +9,9 @@ public:
         real_t x4 = x2*x2;
         real_t x6 = x4*x2;
         
-        static constexpr real_t fa = real_t( 4.0/9.0);
-        static constexpr real_t fb = real_t(17.0/9.0);
-        static constexpr real_t fc = real_t(22.0/9.0);
+        scexpr real_t fa = real_t( 4.0/9.0);
+        scexpr real_t fb = real_t(17.0/9.0);
+        scexpr real_t fc = real_t(22.0/9.0);
         
         real_t y = fa*x6 - fb*x4 + fc*x2;
         return y;
@@ -23,11 +23,11 @@ class SeatInterpolation:public Interpolation{
 protected:
     static std::tuple<real_t, real_t> get_ab(const Vector2 & handle){
 
-        static constexpr real_t epsilon = real_t(0.001);
-        static constexpr real_t min_param_a = real_t(0.0 + epsilon);
-        static constexpr real_t max_param_a = real_t(1.0 - epsilon);
-        static constexpr real_t min_param_b = real_t(0.0);
-        static constexpr real_t max_param_b = real_t(1.0);
+        scexpr real_t epsilon = real_t(0.001);
+        scexpr real_t min_param_a = real_t(0.0 + epsilon);
+        scexpr real_t max_param_a = real_t(1.0 - epsilon);
+        scexpr real_t min_param_b = real_t(0.0);
+        scexpr real_t max_param_b = real_t(1.0);
 
         auto [a,b] = handle;
 

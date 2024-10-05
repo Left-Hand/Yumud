@@ -9,7 +9,7 @@ std::vector<uint8_t> quicklz_compress(const std::vector<uint8_t> & src)
 	// memset(&state, 0, sizeof(qlz_state_compress));
 	std::vector<uint8_t> dst;
 
-	static constexpr size_t n = 128;
+	scexpr size_t n = 128;
 	char buffer[n + n/4];
 	for(size_t pos = 0;pos<src.size();pos+=n) {
 		size_t len = MIN(src.size() - pos, n);

@@ -86,19 +86,19 @@ enum class PinMode:uint8_t{
 };
 
 namespace PinModeUtils{
-    static constexpr bool isIn(const PinMode & pinmode){
+    scexpr bool isIn(const PinMode & pinmode){
         return pinmode == PinMode::InAnalog || pinmode == PinMode::InFloating || pinmode == PinMode::InPullUP || pinmode == PinMode::InPullDN;
     }
 
-    static constexpr bool isOut(const PinMode & pinmode){
+    scexpr bool isOut(const PinMode & pinmode){
         return pinmode == PinMode::OutPP || pinmode == PinMode::OutOD || pinmode == PinMode::OutAfPP || pinmode == PinMode::OutAfOD;
     }
 
-    static constexpr bool isPP(const PinMode & pinmode){
+    scexpr bool isPP(const PinMode & pinmode){
         return pinmode == PinMode::OutPP || pinmode == PinMode::OutAfPP;
     }
 
-    static constexpr bool isOD(const PinMode & pinmode){
+    scexpr bool isOD(const PinMode & pinmode){
         return pinmode == PinMode::OutOD || pinmode == PinMode::OutAfOD;
     }
 }
@@ -113,6 +113,6 @@ namespace GpioUtils{
         constexpr operator bool() const { return value; }
     };
 
-    static constexpr Level HIGH{true};
-    static constexpr Level LOW{false};
+    scexpr Level HIGH{true};
+    scexpr Level LOW{false};
 }

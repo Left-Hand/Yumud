@@ -27,7 +27,7 @@ public:
         Continuous, Single
     };
 
-    static constexpr uint8_t default_addr = 0x3d;
+    scexpr uint8_t default_addr = 0x3d;
 protected:
     I2cDrv bus_drv;
 

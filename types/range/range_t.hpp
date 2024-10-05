@@ -13,9 +13,9 @@ public:
     T from;
     T to;
 
-    static constexpr Range_t<T> INF = {std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
-    static constexpr Range_t<T> POS = {T(0), std::numeric_limits<T>::max()};
-    static constexpr Range_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
+    scexpr Range_t<T> INF = {std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
+    scexpr Range_t<T> POS = {T(0), std::numeric_limits<T>::max()};
+    scexpr Range_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
     constexpr Range_t(): from(std::numeric_limits<T>::min()), to(std::numeric_limits<T>::max()) {;}
 
     constexpr Range_t(const auto & _from, const auto & _to): from(static_cast<T>(_from)), to(static_cast<T>(_to)) {;}
@@ -147,7 +147,7 @@ public:
         return (from + to) / 2;
     }
 
-    static constexpr Range_t<T> grid(const arithmetic auto & value, const auto & grid_size){
+    scexpr Range_t<T> grid(const arithmetic auto & value, const auto & grid_size){
         T ret_from;
         if constexpr(std::is_integral_v<T>){
             ret_from = (value / grid_size) * grid_size;
@@ -157,15 +157,15 @@ public:
         return Range_t<T>(ret_from, ret_from + grid_size);
     }
 
-    static constexpr Range_t<T> grid_next(const arithmetic auto & value, const arithmetic auto & grid_size, const bool right = true){
+    scexpr Range_t<T> grid_next(const arithmetic auto & value, const arithmetic auto & grid_size, const bool right = true){
         return grid(right ? (value + grid_size) : (value-grid_size), grid_size);
     }
 
-    static constexpr Range_t<T> grid_next_right(const arithmetic auto & value, const arithmetic auto & grid_size){
+    scexpr Range_t<T> grid_next_right(const arithmetic auto & value, const arithmetic auto & grid_size){
         return grid_next(value, grid_size, true);
     }
 
-    static constexpr Range_t<T> grid_next_left(const arithmetic auto & value, const arithmetic auto & grid_size){
+    scexpr Range_t<T> grid_next_left(const arithmetic auto & value, const arithmetic auto & grid_size){
         return grid_next(value, grid_size, false);
     }
 
@@ -173,7 +173,7 @@ public:
         return Range_t<T>(grid(from, grid_size), grid(to, grid_size));
     }
 
-    static constexpr Range_t<T> part_in_grid(const arithmetic auto & value, const arithmetic auto & grid_size, const bool right_part = true){
+    scexpr Range_t<T> part_in_grid(const arithmetic auto & value, const arithmetic auto & grid_size, const bool right_part = true){
         if constexpr(std::is_integral<T>::value){
             if(value % grid_size == 0) return {value, value};
             auto gridfied = grid(value, grid_size);

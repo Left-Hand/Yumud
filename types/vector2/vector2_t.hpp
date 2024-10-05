@@ -64,19 +64,19 @@ public:
 
     const T & operator [](const size_t index) const {return *(&this->x + index);}
 
-    static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
-    static constexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
-    static constexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);
+    scexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
+    scexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
+    scexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);
 
-    static constexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
-    static constexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
-    static constexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
-    static constexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
+    scexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
+    scexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
+    scexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
+    scexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
 
-    static constexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
-    static constexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
-    static constexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
-    static constexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
+    scexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
+    scexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
+    scexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
+    scexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
 
     constexpr Vector2_t<T> normalize(){*this /= this->length();}
     constexpr Vector2_t<T> normalized() const;

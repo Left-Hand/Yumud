@@ -2,14 +2,14 @@
 
 real_t CubicInterpolation::forward(const Vector2 & a,const Vector2 & b, const real_t x){
 
-    static constexpr real_t y0a = 0; // initial y
-    static constexpr real_t x0a = 0; // initial x 
+    scexpr real_t y0a = 0; // initial y
+    scexpr real_t x0a = 0; // initial x 
     real_t y1a = a.y;    // 1st influence y   
     real_t x1a = a.x;    // 1st influence x 
     real_t y2a = b.y;    // 2nd influence y
     real_t x2a = b.x;    // 2nd influence x
-    static constexpr real_t y3a = 1; // final y 
-    static constexpr real_t x3a = 1; // final x 
+    scexpr real_t y3a = 1; // final y 
+    scexpr real_t x3a = 1; // final x 
 
     real_t A =   x3a - 3 * x2a + 3 *x1a - x0a;
     real_t B = 3*x2a - 6*x1a + 3 *x0a;
@@ -37,7 +37,7 @@ real_t NearCubicInterpolation::forward(const Vector2 & from,const Vector2 & to, 
     auto [a,b] = from;
     auto [c,d] = to;
     real_t y = 0;
-    static constexpr real_t epsilon = real_t(0.001);
+    scexpr real_t epsilon = real_t(0.001);
     real_t min_param_a = 0 + epsilon;
     real_t max_param_a = 1 - epsilon;
     real_t min_param_b = 0 + epsilon;

@@ -75,8 +75,8 @@ protected:
     };
 
 public:
-    static constexpr uint8_t default_id = 0x5c << 1;
-    static constexpr Vector2i camera_size = {188, 120};
+    scexpr uint8_t default_id = 0x5c << 1;
+    scexpr Vector2i camera_size = {188, 120};
 public:
     MT9V034(SccbDrv & _bus_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(_bus_drv, camera_size){;}
     MT9V034(SccbDrv && _bus_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(_bus_drv, camera_size){;}
@@ -86,7 +86,7 @@ public:
 
     bool isChipValid(){
         uint16_t chip_version = 0;
-        [[maybe_unused]]static constexpr uint16_t valid_version = 0x1324;
+        [[maybe_unused]]scexpr uint16_t valid_version = 0x1324;
         readReg(RegAddress::ChipId, chip_version);
         // DEBUG_PRINTLN("mt9v id is", chip_version);
         // return (chip_version == valid_version);

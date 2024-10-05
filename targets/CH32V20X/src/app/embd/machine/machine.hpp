@@ -11,12 +11,12 @@ struct Machine:public XY_Machine, public Nozzle_Machine{
 public:
     using Vector2 = Vector2_t<real_t>;
 protected:
-    static constexpr uint pick_z = 47;
-    static constexpr uint hold_z = 25;
-    static constexpr uint place_z = 47;
-    static constexpr uint release_z = place_z - 15;
-    static constexpr uint idle_z = 25;
-    static constexpr uint inspect_z = 15;
+    scexpr uint pick_z = 47;
+    scexpr uint hold_z = 25;
+    scexpr uint place_z = 47;
+    scexpr uint release_z = place_z - 15;
+    scexpr uint idle_z = 25;
+    scexpr uint inspect_z = 15;
 
     void z_pick(){
         z_mm(pick_z + z_base);
@@ -94,7 +94,7 @@ public:
         }
     }
 
-    static constexpr int z_base = 0;
+    scexpr int z_base = 0;
 
     void do_move(const Vector2 & from, const Vector2 & to);
     void do_pick(const Vector2 & from);

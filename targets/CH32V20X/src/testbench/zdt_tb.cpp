@@ -94,12 +94,12 @@ protected:
         }
     }
 
-    static constexpr uint16_t speed_to_speed_data_msb(const real_t & speed){
+    scexpr uint16_t speed_to_speed_data_msb(const real_t & speed){
         uint16_t speed_data = (uint16_t)(speed * 600);
         return BSWAP_16(speed_data);
     }
 
-    static constexpr uint32_t position_to_position_data_msb(const real_t & position){
+    scexpr uint32_t position_to_position_data_msb(const real_t & position){
         uint32_t position_deg = uint32_t(position * 3600);
         return BSWAP_32(position_deg);
     }

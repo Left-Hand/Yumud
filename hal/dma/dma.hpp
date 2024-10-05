@@ -72,7 +72,7 @@ protected:
         }
     }
 
-    static constexpr uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
+    scexpr uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
         #ifdef HAVE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
@@ -80,7 +80,7 @@ protected:
         #endif
     }
 
-    static constexpr uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
+    scexpr uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
         uint8_t dma_index = getDmaIndex(_instance);
         switch(dma_index){
             #ifdef HAVE_DMA1
@@ -101,7 +101,7 @@ protected:
         }
     }
 
-    static constexpr uint32_t getDoneMask(const DMA_Channel_TypeDef * _instance){
+    scexpr uint32_t getDoneMask(const DMA_Channel_TypeDef * _instance){
         uint8_t dma_index = getDmaIndex(_instance);
         uint8_t channel_index = getChannelIndex(_instance);
         switch(dma_index){
@@ -124,7 +124,7 @@ protected:
     }
 
 
-    static constexpr uint32_t getHalfMask(const DMA_Channel_TypeDef * _instance){
+    scexpr uint32_t getHalfMask(const DMA_Channel_TypeDef * _instance){
         uint8_t dma_index = getDmaIndex(_instance);
         uint8_t channel_index = getChannelIndex(_instance);
         switch(dma_index){

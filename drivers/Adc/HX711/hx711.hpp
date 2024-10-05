@@ -18,8 +18,8 @@ protected:
     uint32_t zero_offset;
     bool inversed = false;
 
-    static constexpr real_t G = real_t(9.8);
-    // static constexpr real_t k = real_t(9.8 / 1000);
+    scexpr real_t G = real_t(9.8);
+    // scexpr real_t k = real_t(9.8 / 1000);
 
     uint32_t read_data(void){
         uint32_t data=0;

@@ -9,12 +9,12 @@ namespace NVCV2::Pixels{
 
     class UniqueRandomGenerator {
     private:
-        static constexpr uint8_t m = 251;
-        static constexpr uint8_t a = 37;
-        static constexpr uint8_t c = 71;
+        scexpr uint8_t m = 251;
+        scexpr uint8_t a = 37;
+        scexpr uint8_t c = 71;
         std::array<uint8_t, 256> data;
 
-        static constexpr uint8_t iter(const uint8_t x){
+        scexpr uint8_t iter(const uint8_t x){
             return (a * x + c) % m;
         }
     public:

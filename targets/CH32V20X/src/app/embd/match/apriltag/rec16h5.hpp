@@ -11,7 +11,7 @@ protected:
 public:
 
     void update(const Image<Grayscale> src, const Rect2i roi) override {
-        static constexpr uint apriltag_s = 4;
+        scexpr uint apriltag_s = 4;
 
         auto get_vertex_val = [&](const Vertexs & _vertexs, const Vector2 & _grid_pos, const Image<Grayscale> & gs) -> Grayscale{
 

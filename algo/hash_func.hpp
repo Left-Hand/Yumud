@@ -1,10 +1,10 @@
-#ifndef __HASH_FUNCS__
+#pragma once
 
-#define __HASH_FUNCS__
+#include "sys/core/platform.h"
 
 struct Hasher{
 public:
-    __inline static constexpr uint32_t hash_uiml32(char const*data, size_t length){
+    __inline scexpr uint32_t hash_uiml32(char const*data, size_t length){
         uint32_t h = 0;  
         uint16_t strLength = length, alignedLen = strLength / sizeof(uint32_t);
         for(uint16_t i = 0; i < alignedLen; ++i)  
@@ -14,7 +14,7 @@ public:
         return h; 
     }
 
-    __inline static constexpr uint32_t hash_fnv1a(char const*data, size_t length){
+    __inline scexpr uint32_t hash_fnv1a(char const*data, size_t length){
         uint32_t prime = 16777619U;
         uint32_t ret = 2166136261U;
         for (size_t i = 0; i < length; i++) {
@@ -25,7 +25,7 @@ public:
     }
 
 
-    __inline static constexpr uint32_t hash_djb(char const* str , size_t size){
+    __inline scexpr uint32_t hash_djb(char const* str , size_t size){
         uint32_t hash = 5381;
 
         for (size_t i = 0; i < size; i++) {
@@ -51,5 +51,3 @@ __inline constexpr uint32_t hash_impl(const T & obj ){
 __inline constexpr uint32_t operator "" _ha(char const* p, const size_t size)  {
     return hash_impl(p, size);
 }
-
-#endif

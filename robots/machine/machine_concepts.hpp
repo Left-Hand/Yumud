@@ -49,7 +49,7 @@ class X_Machine:public MachineConcept{
 public:
     Axis x_axis;
 protected:
-    static constexpr real_t x_scale = real_t(1.0)/40;
+    scexpr real_t x_scale = real_t(1.0)/40;
 
 public:
     X_Machine(const Axis & _x_axis):x_axis(_x_axis){;}
@@ -68,7 +68,7 @@ class Y_Machine:public MachineConcept{
 public:
     Axis y_axis;
 protected:
-    static constexpr real_t y_scale = real_t(1.0)/40;
+    scexpr real_t y_scale = real_t(1.0)/40;
 
 public:
     Y_Machine(const Axis & _y_axis):y_axis(_y_axis){;}
@@ -133,7 +133,7 @@ public:
 
 class Nozzle_Machine:public Z_Machine{
 protected:
-    static constexpr real_t z_scale = real_t(1.0)/2;
+    scexpr real_t z_scale = real_t(1.0)/2;
 
 public:
     Nozzle_Machine(const Axis & _z_axis):Z_Machine(_z_axis){;}

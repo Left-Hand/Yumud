@@ -256,12 +256,13 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetVector(target);
 
         // if(logger.pending() == 0) logger.println(stp.getTarget(), stp.getPosition(), stp.getSpeed(), stp.getCurrent(), real_t(adc1.inj(1)), real_t(adc1.inj(2)));
-        if(logger.pending() == 0) logger.println(stp.getPosition(), stp.getSpeed(), stp.getCurrent(), stp.getRaddiff());
+        auto target = demo(millis() * 2);
+        if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getCurrent(), stp.getRaddiff());
         // Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(demo() * 10);
         // stp.setTargetPosition(5 * sin(7 * t));
-        // stp.setTargetPosition(demo(millis() * 2));
+        stp.setTargetPosition(target);
 
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(7 * frac(t));

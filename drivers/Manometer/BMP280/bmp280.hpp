@@ -60,10 +60,10 @@ protected:
         uint8_t t_sb:3;
     };
 
-    struct PressureReg:public Reg16{};
-    struct PressureXReg:public Reg8{};
-    struct TemperatureReg:public Reg16{};
-    struct TemperatureXReg:public Reg8{};
+    struct PressureReg:public Reg16{uint16_t:16;};
+    struct PressureXReg:public Reg8{uint8_t:8;};
+    struct TemperatureReg:public Reg16{uint16_t:16;};
+    struct TemperatureXReg:public Reg8{uint8_t:8;};
 
     enum class RegAddress:uint8_t{
         DigT1 = 0x88,

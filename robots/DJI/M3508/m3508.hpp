@@ -130,12 +130,12 @@ protected:
         uint8_t __resv__;
     }__packed;
 
-    static constexpr uint16_t curr_to_currdata(const real_t curr){
+    scexpr uint16_t curr_to_currdata(const real_t curr){
         int16_t temp = int16_t((curr / 20)* 16384);
         return BSWAP_16(temp);
     }
 
-    static constexpr real_t currdata_to_curr(const uint16_t currdata_msb){
+    scexpr real_t currdata_to_curr(const uint16_t currdata_msb){
         int16_t currdata = BSWAP_16(currdata_msb);
         return (real_t(currdata) / 16384) * 20;
     };

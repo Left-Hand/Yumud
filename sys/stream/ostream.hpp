@@ -42,7 +42,7 @@ protected:
         *this << any;
     }
 
-    static constexpr const char * get_basealpha(const size_t _radix){
+    scexpr const char * get_basealpha(const size_t _radix){
         switch(_radix){
             default:
             case 10:

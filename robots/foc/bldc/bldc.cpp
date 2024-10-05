@@ -118,11 +118,11 @@ constexpr real_t dutyScale = real_t(0.17f);
 // }
 
 
-// static constexpr uint foc_freq = 32768;
-// static constexpr uint chopper_freq = 32768;
+// scexpr uint foc_freq = 32768;
+// scexpr uint chopper_freq = 32768;
 
 
-static constexpr uint chopper_freq = 32768;
+scexpr uint chopper_freq = 32768;
 
 using Current = real_t;
 using Current3 = std::array<Current, 3>;
@@ -131,8 +131,8 @@ using Voltage = real_t;
 
 
 __inline auto data_to_curr(const real_t data) -> real_t{
-    static constexpr int res = 1000;
-    static constexpr real_t mul = real_t((3.3 * 9800 / res));
+    scexpr int res = 1000;
+    scexpr real_t mul = real_t((3.3 * 9800 / res));
     return ((real_t(data) >> 4) * mul) >> 8;
 };
 

@@ -15,8 +15,8 @@ public:
     SVPWM3(Driver & _driver):driver_(_driver){;}
 
     __inline void setDuty(const real_t modu_amp, const real_t modu_rad) override{
-        static constexpr real_t _30_deg = real_t(TAU / 6);
-        static constexpr real_t inv_30deg = real_t(6 / TAU);
+        scexpr real_t _30_deg = real_t(TAU / 6);
+        scexpr real_t inv_30deg = real_t(6 / TAU);
 
         int modu_sect = (int(modu_rad * inv_30deg) % 6) + 1;
         real_t sixtant_theta = fmod(modu_rad, _30_deg);

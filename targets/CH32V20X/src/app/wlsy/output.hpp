@@ -14,9 +14,9 @@ public:
     CaptureChannelExti & cap;
     real_t dur_ms;//ms
     
-    static constexpr uint poles = 9;
-    static constexpr real_t rad_delta = real_t(TAU / poles);
-    static constexpr real_t radius = real_t(0.05);
+    scexpr uint poles = 9;
+    scexpr real_t rad_delta = real_t(TAU / poles);
+    scexpr real_t radius = real_t(0.05);
 public:
     real_t rad;
     real_t omega;

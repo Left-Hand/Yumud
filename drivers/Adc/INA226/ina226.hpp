@@ -95,7 +95,7 @@ protected:
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        i2c_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
+        i2c_drv.readReg((uint8_t)regAddress, regData);
     }
 
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
@@ -108,7 +108,7 @@ protected:
     friend class CurrentChannel;
     friend class VoltageChannel;
 
-    struct INA226Channel:public AnalogInChannel{
+    class INA226Channel:public AnalogInChannel{
     public:
         enum class Index:uint8_t{
             SHUNT_VOLT,
@@ -146,7 +146,7 @@ protected:
 public:
     using Index = INA226Channel::Index;
     
-    static constexpr uint8_t default_i2c_addr = 0x80;
+    scexpr uint8_t default_i2c_addr = 0x80;
 
     #define CHANNEL_CONTEX\
         INA226Channel{*this, INA226Channel::Index::SHUNT_VOLT},\

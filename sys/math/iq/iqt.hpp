@@ -37,7 +37,7 @@ namespace std{
 
 struct iq_t{
 private:
-    __fast_inline static constexpr _iq float_to_iq(const float fv){
+    __fast_inline scexpr _iq float_to_iq(const float fv){
         int32_t d = std::bit_cast<int32_t>(fv);
         int32_t exponent = ((d >> 23) & 0xff);
         uint64_t mantissa = (exponent == 0) ? (0) : ((d & ((1 << 23) - 1)) | (1 << 23));
