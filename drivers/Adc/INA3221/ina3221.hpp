@@ -41,6 +41,8 @@ protected:
     using RegAddress = uint8_t;
 
     struct ConfigReg:public Reg16{
+        scexpr RegAddress address = 0x00;
+
         uint16_t shunt_measure_en :1;
         uint16_t bus_measure_en :1;
         uint16_t continuos :1;
@@ -54,31 +56,55 @@ protected:
     };
 
     struct ShuntVoltReg:public Reg16i{
-        scexpr uint16_t address1 = 0x01;
-        scexpr uint16_t address2 = 0x03;
-        scexpr uint16_t address3 = 0x05;
+        scexpr RegAddress address1 = 0x01;
+        scexpr RegAddress address2 = 0x03;
+        scexpr RegAddress address3 = 0x05;
         int16_t : 16;
+
+        constexpr real_t to_volt() const {
+            return real_t((int16_t(*this) >> 3) * 40 / 100) / 1000;
+        }
+
+        constexpr int to_uv() const {
+            return ((int16_t(*this) >> 3) * 40);
+        }
+
+        static constexpr int16_t to_i16(const real_t volt){
+            return int16_t(volt * 100000) & 0xfff8;
+        }
     };
 
     struct BusVoltReg:public Reg16i{
-        scexpr uint16_t address1 = 0x02;
-        scexpr uint16_t address2 = 0x04;
-        scexpr uint16_t address3 = 0x06;
+        scexpr RegAddress address1 = 0x02;
+        scexpr RegAddress address2 = 0x04;
+        scexpr RegAddress address3 = 0x06;
         int16_t : 16;
+
+        constexpr real_t to_volt() const {
+            return real_t((int16_t(*this) >> 3) * 8) / 1000;
+        }
+
+        constexpr int to_mv() const {
+            return int16_t((int16_t(*this) >> 3) * 8);
+        }
+
+        static constexpr int16_t to_i16(const real_t volt){
+            return int16_t(volt * 1000) & 0xfff8;
+        }
     };
 
     struct InstantOVCReg:public Reg16i{
-        scexpr uint16_t address1 = 0x07;
-        scexpr uint16_t address2 = 0x09;
-        scexpr uint16_t address3 = 0x0b;
+        scexpr RegAddress address1 = 0x07;
+        scexpr RegAddress address2 = 0x09;
+        scexpr RegAddress address3 = 0x0b;
 
         int16_t :16;
     };
 
     struct ConstantOVCReg:public Reg16i{
-        scexpr uint16_t address1 = 0x07;
-        scexpr uint16_t address2 = 0x09;
-        scexpr uint16_t address3 = 0x0b;
+        scexpr RegAddress address1 = 0x07;
+        scexpr RegAddress address2 = 0x09;
+        scexpr RegAddress address3 = 0x0b;
 
         int16_t :16;
     };
@@ -101,12 +127,12 @@ protected:
     };
 
     struct PowerHoReg:public Reg16i{
-        scexpr uint16_t address = 0x10;
+        scexpr RegAddress address = 0x10;
         int16_t :16;
     };
 
     struct PowerLoReg:public Reg16i{
-        scexpr uint16_t address = 0x11;
+        scexpr RegAddress address = 0x11;
         int16_t :16;
     };
 
@@ -123,16 +149,20 @@ protected:
     };
 
     __inline void readReg(const RegAddress addr, auto & data){
-        if constexpr(sizeof(data == 1)) i2c_drv.readReg(uint8_t(addr), *reinterpret_cast<uint8_t *>(&data));
+        static_assert(sizeof(data) == 2);
+        // if constexpr(sizeof(data == 1)) i2c_drv.readReg(uint8_t(addr), *reinterpret_cast<uint8_t *>(&data));
         if constexpr(sizeof(data == 2)) i2c_drv.readReg(uint8_t(addr), *reinterpret_cast<uint16_t *>(&data));
     }
 
     __inline void writeReg(const RegAddress addr, const auto & data){
-        if constexpr(sizeof(data == 1)) i2c_drv.writeReg(uint8_t(addr), *reinterpret_cast<const uint8_t *>(&data));
+        static_assert(sizeof(data) == 2);
+        // if constexpr(sizeof(data == 1)) i2c_drv.writeReg(uint8_t(addr), *reinterpret_cast<const uint8_t *>(&data));
         if constexpr(sizeof(data == 2)) i2c_drv.writeReg(uint8_t(addr), *reinterpret_cast<const uint16_t *>(&data));
     }
 
-
+    void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
+        i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
+    }
     // struct INA3221Channel:public AnalogInChannel{
     // public:
     //     enum class Index:uint8_t{
@@ -201,7 +231,25 @@ public:
     
     void init();
     void update();
+    void update(const size_t index);
     bool verify();
+    bool ready();
+    void reset();
     void setAverageTimes(const uint16_t times);
     
+    void enableChannel(const size_t index, const bool en = true);
+
+    void setBusConversionTime(const ConversionTime time);
+
+    void setShuntConversionTime(const ConversionTime time);
+
+    int getShuntVoltageuV(const size_t index);
+
+    int getBusVoltagemV(const size_t index);
+
+    real_t getShuntVoltage(const size_t index);
+    real_t getBusVoltage(const size_t index);
+
+    void setInstantOVC(const size_t index, const real_t volt);
+    void setConstantOVC(const size_t index, const real_t volt);
 };

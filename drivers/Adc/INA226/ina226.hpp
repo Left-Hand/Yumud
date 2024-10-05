@@ -158,6 +158,8 @@ public:
     INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
     INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTEX}{};
 
+    #undef CHANNEL_CONTEX
+
     auto & ch(const Index index){
         return channels[uint8_t(index)];
     }
@@ -198,12 +200,12 @@ public:
         writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void setBusConversionTime(const ConversionTime &time){
+    void setBusConversionTime(const ConversionTime time){
         configReg.busVoltageConversionTime = uint8_t(time);
         writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void setShuntConversionTime(const ConversionTime &time){
+    void setShuntConversionTime(const ConversionTime time){
         configReg.shuntVoltageConversionTime = uint8_t(time);
         writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
