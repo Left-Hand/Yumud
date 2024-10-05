@@ -8,8 +8,6 @@ public:
         real_t err_threshold = inv_poles / 16;
         size_t est_freq = foc_freq;
         size_t max_cycles = foc_freq >> 7;
-
-        void reset();
     };
 
     const Config & config;

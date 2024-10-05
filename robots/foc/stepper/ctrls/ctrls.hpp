@@ -24,9 +24,8 @@ struct CurrentCtrl{
 using Result = CtrlResult;
 public:
     struct Config{
-        real_t curr_slew_rate;
-        real_t rad_slew_rate;
-        void reset();
+        real_t curr_slew_rate = real_t(60) / foc_freq;
+        real_t rad_slew_rate = real_t(30) / foc_freq;
     };
 
     MetaData & meta;
@@ -40,7 +39,6 @@ public:
     CurrentCtrl(MetaData & _meta, Config & _config):meta(_meta), config(_config){reset();}
 
     void reset(){
-        config.reset();
         last_curr = 0;
         last_raddiff = 0;
     }
@@ -75,12 +73,8 @@ struct SpeedCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
-        real_t kp_limit;
 
         real_t kd;
-        real_t kd_limit;
-
-        void reset();
     };
     
     Config & config;
@@ -88,14 +82,16 @@ SPD_SPEC:
     real_t last_real_spd = 0;
     real_t soft_targ_spd = 0;
     real_t filt_real_spd = 0;
+    real_t spd_delta = 0;
 public:
     SpeedCtrl(MetaData & _meta, Config & _config):
         HighLayerCtrl(_meta), config(_config){reset();}
 
     void reset() override {
-        config.reset();
         last_real_spd = 0;
         soft_targ_spd = 0;
+        filt_real_spd = 0;
+        spd_delta = 0;
     }
 
     Result update(const real_t _targ_speed,const real_t real_speed);
@@ -105,10 +101,7 @@ struct PositionCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
-        real_t ki;
         real_t kd;
-
-        void reset();
     };
 
     Config & config;
@@ -122,7 +115,6 @@ public:
         {reset();}
 
     void reset() override {
-        config.reset();
         targ_spd_est.reset();
     }
 

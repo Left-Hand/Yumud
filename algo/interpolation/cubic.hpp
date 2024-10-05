@@ -24,7 +24,7 @@ protected:
     }
 
 public:
-    static real_t mapping(const Vector2 & a,const Vector2 & b, const real_t x);
+    static real_t forward(const Vector2 & a,const Vector2 & b, const real_t x);
 };
 
 class NearCubicInterpolation : public CubicInterpolation{
@@ -59,5 +59,5 @@ protected:
         return y0*B0(k) + y1*B1(k) + y2*B2(k) + y3*B3(k);
     }
 public:
-    static real_t mapping(const Vector2 & from,const Vector2 & to, const real_t x);
+    static real_t forward(const Vector2 & from,const Vector2 & to, const real_t x);
 };

@@ -1,6 +1,6 @@
 #include "cubic.hpp"
 
-real_t CubicInterpolation::mapping(const Vector2 & a,const Vector2 & b, const real_t x){
+real_t CubicInterpolation::forward(const Vector2 & a,const Vector2 & b, const real_t x){
 
     static constexpr real_t y0a = 0; // initial y
     static constexpr real_t x0a = 0; // initial x 
@@ -33,7 +33,7 @@ real_t CubicInterpolation::mapping(const Vector2 & a,const Vector2 & b, const re
     return y;
 }
 
-real_t NearCubicInterpolation::mapping(const Vector2 & from,const Vector2 & to, const real_t x){
+real_t NearCubicInterpolation::forward(const Vector2 & from,const Vector2 & to, const real_t x){
     auto [a,b] = from;
     auto [c,d] = to;
     real_t y = 0;
@@ -83,7 +83,7 @@ real_t NearCubicInterpolation::mapping(const Vector2 & from,const Vector2 & to, 
     x2 = MAX(0+epsilon, MIN(1-epsilon, x2));
 
     // Note that this function also requires cubicBezier()!
-    y = CubicInterpolation::mapping({x1,y1}, {x2,y2}, x);
+    y = CubicInterpolation::forward({x1,y1}, {x2,y2}, x);
     y = MAX(0, MIN(1, y));
     return y;
 }

@@ -51,11 +51,11 @@ void Machine::do_idle(const Vector2 & to){
 
 void Machine::do_inspect(){
     z_inspect();
-    nz(0);
+    // nz(0);
 }
 
 void Machine::toggle_nz(){
-    nz(1 - last_nz);
+    // nz(1 - last_nz);
 }
 
 
@@ -130,7 +130,7 @@ bool Machine::replay(){
         y_axis.setTargetMM(y_mm);
         z_axis.setTargetMM(z_mm / 4);
     }
-    nz(item.nz);
+    // nz(item.nz);
     if(reminder == 0) play_index++;
     return (play_index < max_index);
 }
@@ -160,7 +160,7 @@ void Machine::entry_replay(){
 
         actions += Action([&](){
             z_axis.setTargetMM(first.z);
-            nz(first.nz);
+            // nz(first.nz);
         });
 
         actions += DelayAction(400);

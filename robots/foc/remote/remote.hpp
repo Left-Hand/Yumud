@@ -35,11 +35,6 @@ public:
 public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
             FOCMotorConcept(_id), CanProtocolConcept(_can), logger(_logger){;}
-
-    bool loadArchive();
-    void saveArchive();
-    void removeArchive();
-
     void setTargetCurrent(const real_t current);
     void setTargetSpeed(const real_t speed);
     void freeze();
@@ -70,9 +65,6 @@ public:
     void setAccelLimit(const real_t max_acc);
     void reset();
     void triggerCali();
-
-
-    void setNozzle(const real_t duty);
     // void parseCan(const CanMsg & msg);
     // void parseCommand(const NodeId id, const Command cmd, const CanMsg &msg);
 

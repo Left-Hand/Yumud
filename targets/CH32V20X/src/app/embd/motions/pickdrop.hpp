@@ -24,7 +24,7 @@ struct PickAction:public PickDropAction{
 protected:
 
     void first_do() override {
-        machine.nz(1);
+        // machine.nz(1);
         machine.z_pick();
     }
 public:
@@ -55,7 +55,7 @@ struct ReleaseAction:public PickDropAction{
 protected:
 
     void first_do() override {
-        machine.nz(0);
+        // machine.nz(0);
         machine.z_release();
     }
 public:

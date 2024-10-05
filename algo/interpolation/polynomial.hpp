@@ -4,7 +4,7 @@
 
 class CosineInterpolation:public Interpolation{
 public:
-    static real_t mapping(real_t x){
+    static real_t forward(real_t x){
         real_t x2 = x*x;
         real_t x4 = x2*x2;
         real_t x6 = x4*x2;
@@ -36,7 +36,7 @@ protected:
         return std::make_tuple(a,b);
     }
 public:
-    static real_t mapping(const Vector2 & handle,const real_t x){
+    static real_t forward(const Vector2 & handle,const real_t x){
         auto [a,b] = get_ab(handle);
         real_t y = 0;
         if (x <= a){
@@ -50,7 +50,7 @@ public:
 
 class SeatLineInterpolation:public SeatInterpolation{
 public:
-    static real_t mapping(const Vector2 & handle,const real_t x){
+    static real_t forward(const Vector2 & handle,const real_t x){
         auto [a,b] = get_ab(handle);
         real_t y = 0;
         if (x<=a){
@@ -64,7 +64,7 @@ public:
 
 class SeatOddInterpolation:public SeatInterpolation{
 public:
-    static real_t mapping(const Vector2 & handle, const int n, const real_t x){
+    static real_t forward(const Vector2 & handle, const int n, const real_t x){
         auto [a,b] = get_ab(handle);
         int p = 2*n + 1;
         real_t y = 0;
@@ -80,7 +80,7 @@ public:
 
 class SymmetricInterpolation:public SeatInterpolation{
 public:
-    static real_t mapping(const Vector2 & handle, const int n, const real_t x){
+    static real_t forward(const Vector2 & handle, const int n, const real_t x){
         auto [a,b] = get_ab(handle);
         real_t y = 0;
         if (n%2 == 0){ 

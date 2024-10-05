@@ -4,5 +4,5 @@
 
 class QuadraticInterpolation:public Interpolation{
 public:
-    static real_t mapping(const Vector2 & handle, const real_t x);
+    static real_t forward(const Vector2 & handle, const real_t x);
 };

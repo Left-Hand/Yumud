@@ -1,6 +1,6 @@
 #include "quadratic.hpp"
 
-real_t QuadraticInterpolation::mapping(const Vector2 & handle, const real_t x){
+real_t QuadraticInterpolation::forward(const Vector2 & handle, const real_t x){
   // adapted from BEZMATH.PS (1993)
   // by Don Lancaster, SYNERGETICS Inc. 
   // http://www.tinaja.com/text/bezmath.html

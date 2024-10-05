@@ -142,10 +142,7 @@ public:
     virtual void z_place() = 0;
     virtual void z_idle() = 0;
     virtual void z_inspect() = 0;
-
     virtual void z_release() = 0;
-
-    virtual void nz(const real_t duty) = 0;
 };
 
 struct CoreXY{

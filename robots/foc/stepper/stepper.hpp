@@ -192,4 +192,8 @@ public:
         run_status = RunStatus::ACTIVE;
         svpwm.enable(true);
     }
+
+    real_t getRaddiff() const {
+        return meta.raddiff;
+    }
 };

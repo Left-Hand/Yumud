@@ -61,12 +61,12 @@ void FOCStepper::active_task(){
                 }
                 break;
             }
-
-            if(SIGN_DIFF(result.current, meta.spd)){
-                // result = {ABS(meta.max_curr) * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), result.current)};
-                result = {ABS(result.current), SIGN_AS(real_t(PI/2), result.current)};
-            }
         } 
+
+        if(SIGN_DIFF(result.raddiff, meta.spd) and ABS(meta.spd) > 1){
+            // result = {ABS(meta.max_curr) * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), result.current)};
+            result = {0, SIGN_AS(real_t(PI/2), result.raddiff)};
+        }
         
         curr_ctrl.update(result);
         meta.curr = curr_ctrl.curr();

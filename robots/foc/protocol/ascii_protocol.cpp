@@ -26,6 +26,8 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             os.prints("======");
             break;
 
+        case "pos.kp"_ha:
+            
         case "load"_ha:
         case "ld"_ha:
             motor.loadArchive();
@@ -120,7 +122,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
         case "eleczero"_ha:
         case "ez"_ha:{
             if(args.size() <= 1) break;
-            motor.elecrad_zerofix = real_t(args[2]);
+            motor.elecrad_zerofix = real_t(args[1]);
             break;
         }
 

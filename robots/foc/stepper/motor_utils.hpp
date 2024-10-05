@@ -54,9 +54,9 @@ struct MetaData{
     int max_spd = 30;
     int max_acc = 30;
     
-    real_t curr_to_leadrad_ratio = real_t(1);
-    real_t spd_to_leadrad_ratio = real_t(0.1);
-    real_t max_leadrad = real_t(0.2);
+    real_t curr_to_leadrad_ratio = 0;
+    real_t spd_to_leadrad_ratio = 0;
+    real_t max_leadrad = 0;
     
     real_t targ_curr;
     

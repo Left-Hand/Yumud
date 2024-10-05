@@ -105,10 +105,6 @@ public:
     void do_free();
     void toggle_nz();
     void do_inspect();
-    void nz(const real_t duty) override {
-        last_nz = duty;
-        w.setNozzle(duty);
-    }
 
     void tick();
     void entry_teach();

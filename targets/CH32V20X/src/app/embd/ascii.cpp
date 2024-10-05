@@ -1,5 +1,5 @@
 #include "host.hpp"
-#include "../../robots/foc/protocol/ascii_protocol.hpp"
+// #include "../../robots/foc/protocol/ascii_protocol.hpp"
 
 using Vector2 = Vector2_t<real_t>;
 static constexpr real_t squ_len = 96;
@@ -59,13 +59,6 @@ void EmbdHost::parseArgs(const Strings & args){
             actions.clear();
             break;
         
-        case "xyzt"_ha:
-            if(args.size() == 4){
-                steppers.x.setTargetTrapezoid(real_t(args[1]));
-                steppers.y.setTargetTrapezoid(real_t(args[2]));
-                steppers.z.setTargetTrapezoid(real_t(args[3]));
-            }
-            break;
 
         case "xy"_ha:
             if(args.size() == 3){
@@ -74,12 +67,6 @@ void EmbdHost::parseArgs(const Strings & args){
             }
             break;
 
-        case "xyt"_ha:
-            if(args.size() == 3){
-                steppers.x.setTargetTrapezoid(real_t(args[1]));
-                steppers.y.setTargetTrapezoid(real_t(args[2]));
-            }
-            break;
     
         case "dz"_ha:
             if(args.size() == 2){
@@ -94,11 +81,6 @@ void EmbdHost::parseArgs(const Strings & args){
             }
             break;
 
-        case "nz"_ha:
-            if(args.size() == 2){
-                steppers.y.setNozzle(int(args[1]));
-            }
-            break;
 
         case "dxyz"_ha:
             if(args.size() == 4){
@@ -140,14 +122,6 @@ void EmbdHost::parseArgs(const Strings & args){
             settle_method(steppers.z.setTargetSpeed, args, real_t);
         case "ws"_ha:
             settle_method(steppers.w.setTargetSpeed, args, real_t);
-        case "xt"_ha:
-            settle_method(steppers.x.setTargetTrapezoid, args, real_t);
-        case "yt"_ha:
-            settle_method(steppers.y.setTargetTrapezoid, args, real_t);
-        case "zt"_ha:
-            settle_method(steppers.z.setTargetTrapezoid, args, real_t);
-        case "wt"_ha:
-            settle_method(steppers.w.setTargetTrapezoid, args, real_t);
         case "xh"_ha:
             settle_method(steppers.x.locateRelatively, args, real_t);
         case "yh"_ha:
@@ -162,12 +136,6 @@ void EmbdHost::parseArgs(const Strings & args){
             settle_method(steppers.z.setCurrentLimit, args, real_t);
         case "cali"_ha:
             trigger_method(steppers.w.triggerCali);
-        case "ld"_ha:
-            trigger_method(steppers.w.loadArchive, true);
-        case "rm"_ha:
-            trigger_method(steppers.w.removeArchive, true);
-        case "sv"_ha:
-            trigger_method(steppers.w.saveArchive, true);
         case "rst"_ha:
             trigger_method(resetAll);
         case "nne"_ha:

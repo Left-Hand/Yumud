@@ -55,7 +55,7 @@ void node_main(){
     Memory mem{at24};
 
 
-    FOCStepper stp{svpwm, mt6816, mem};
+    FOCStepper stp{0, svpwm, mt6816, mem};
     FOCMotor::AsciiProtocol ascii_p{DEBUGGER, stp};
     FOCMotor::CanProtocol can_p{can1, stp};
 

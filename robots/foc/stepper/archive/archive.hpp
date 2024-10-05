@@ -108,12 +108,6 @@ namespace MotorUtils{
         alignas(16) PositionCtrl::Config pos_config;
         alignas(16) SpeedEstimator::Config spe_config;
         
-        Archive(){
-            curr_config.reset();
-            spd_config.reset();
-            pos_config.reset();
-            spe_config.reset();
-        }
         uint32_t hash() const {
             // sizeof(Archive);
             return hash_impl(cali_map);

@@ -15,11 +15,6 @@ can.write(msg);\
 
 // while(can.pending()){;};
 
-bool RemoteFOCMotor::loadArchive(){POST(Command::LOAD)return true;}
-// bool RemoteFOCMotor::loadArchive(const bool outen){auto msg = CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(Command::LOAD)), std::make_tuple()};;can_pro.can.write(msg);; return true;}
-void RemoteFOCMotor::saveArchive(){POST(Command::SAVE);}
-void RemoteFOCMotor::removeArchive(){POST(Command::CLEAR);}
-
 void RemoteFOCMotor::setTargetVector(const real_t _pos){POST(Command::SET_TRG_VECT, E(meta.pos_limit.clamp(_pos)));}
 void RemoteFOCMotor::setTargetCurrent(const real_t current){POST(Command::SET_TRG_CURR, E(current));}
 void RemoteFOCMotor::setTargetSpeed(const real_t speed){POST(Command::SET_TRG_SPD, E(speed));}

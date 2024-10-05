@@ -35,9 +35,7 @@ protected:
 public:
     FOCMotorConcept(const NodeId _id):node_id(_id){;}
     
-    virtual bool loadArchive() = 0;
-    virtual void saveArchive() = 0;
-    virtual void removeArchive() = 0;
+
 
     virtual void freeze() = 0;
     virtual void setTargetCurrent(const real_t current) = 0;
@@ -138,10 +136,13 @@ public:
     AsciiProtocol * ascii_protocol;
     CanProtocol * can_protocol;
 
-    FOCMotor(const NodeId _id, SVPWM & _svpwm, Encoder & encoder, const size_t poles, Memory & _memory):
+    FOCMotor(const NodeId _id, SVPWM & _svpwm, Encoder & encoder, const size_t _poles, Memory & _memory):
             FOCMotorConcept(_id),
-            svpwm(_svpwm), odo(encoder, poles), memory(_memory){;}
+            svpwm(_svpwm), odo(encoder, _poles), memory(_memory){;}
 
+    virtual bool loadArchive() = 0;
+    virtual void saveArchive() = 0;
+    virtual void removeArchive() = 0;
 
     void bindProtocol(AsciiProtocol & _ascii_protocol){
         ascii_protocol = &_ascii_protocol;

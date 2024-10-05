@@ -2,6 +2,27 @@
 
 #define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
+
+static void getDefaultArchive(MotorUtils::Archive & archive){
+    archive.pos_config = {
+        // .kp = 2,
+        // .kd = 46
+
+        .kp = 3,
+        .kd = 79
+        
+        // .kp = 5,
+        // .kd = 23*7
+    };
+
+    archive.spd_config = {
+        // .kp = real_t(205.0/256),
+        .kp = 5,
+        // .kp = 20,
+        .kd = 70,
+    };
+}
+
 bool FOCStepper::loadArchive(){
     using BoardInfo = MotorUtils::BoardInfo;
     Archive archive;
@@ -40,19 +61,19 @@ bool FOCStepper::loadArchive(){
             ARCHIVE_PRINTS("board matches current build");
         }
     }
+    
 
+    
     if(!abort){
-        // for(size_t i = 0; i < odo.map().size(); i++){
-        //     int16_t item_i = archive.cali_map[i];
-        //     odo.map()[i] = real_t(item_i) / 16384;
-        //     meta.radfix = 0;
-        // }
         odo.decompress(archive.cali_map);
         setNodeId(archive.node_id);
-        
+
+        getDefaultArchive(archive);
         std::swap(archive_, archive);
         ARCHIVE_PRINTS("load successfully!");
     }else{
+        // std::swap(archive_, getDefaultArchive());
+        getDefaultArchive(archive_);
         ARCHIVE_PRINTS("load aborted because data is corrupted");
     }
     ARCHIVE_PRINTS("======");
