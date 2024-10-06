@@ -14,6 +14,7 @@ namespace Sys{
         uint64_t getChipId();
         uint32_t getChipIdCrc();
         uint32_t getFlashSize();
+        uint64_t getMacAddress();
     };
 
     namespace Exception{

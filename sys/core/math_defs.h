@@ -116,10 +116,6 @@
 #define SIGN(x) ((x < 0) ? -1 : 1)
 #endif
 
-#ifndef IS_ALIGNED
-#define IS_ALIGNED(x, a) (((x) & ((typeof(x))(a) - 1)) == 0)
-#endif
-
 #ifndef TYPE_CHECK
 #define TYPE_CHECK(a,b) (typeof(a) == typeof(b))
 #endif

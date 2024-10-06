@@ -1,10 +1,8 @@
-#ifndef __FLASH_HPP__
+#pragma once
 
-#define __FLASH_HPP__
-
-#include "../sys/core/system.hpp"
-#include "../drivers/Memory/storage.hpp"
-#include "../drivers/Memory/memory.hpp"
+#include "sys/core/system.hpp"
+#include "drivers/Memory/storage.hpp"
+#include "drivers/Memory/memory.hpp"
 
 #ifdef FLASH_DEBUG
 #undef FLASH_DEBUG
@@ -23,27 +21,28 @@ protected:
 
     scexpr Page page_size = 256;
     scexpr Address base_address = FLASH_WRProt_Sectors31to127;
+    scexpr uint max_clock = 72000000;
 
     Page page_count;
-    uint32_t pre_clock;
+    uint32_t orginal_clock;
 
-    void settleClock(){
-        pre_clock = Sys::Clock::getAHBFreq();
-        Sys::Clock::setAHBFreq(72000000);
+    void configClock(){
+        orginal_clock = Sys::Clock::getAHBFreq();
+        if(orginal_clock > max_clock) Sys::Clock::setAHBFreq(max_clock);
     }
 
-    void resetClock(){
-        Sys::Clock::setAHBFreq(pre_clock);
+    void revertClock(){
+        Sys::Clock::setAHBFreq(orginal_clock);
     }
 
     void entry_store() override{
-        settleClock();
+        configClock();
         Systick_Init();
-        delay(10);
+        delay(1);
     }
 
     void exit_store() override{
-        resetClock();
+        revertClock();
     }
 
     void entry_load() override{
@@ -51,7 +50,7 @@ protected:
     }
 
     void exit_load() override{
-        resetClock();
+        revertClock();
     }
 
 
@@ -69,36 +68,12 @@ protected:
         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
     }
 
-    void storeBytes(const void * data, const Address data_size, const Address loc) override{
+    void storeBytes(const void * data, const Address len, const Address loc) override;
 
-        unlock();
-        uint32_t buf[page_size / sizeof(uint32_t)] = {0};
+    void loadBytes(void * data, const Address len, const Address loc) override;
 
-        AddressWindow store_window = AddressWindow{loc,loc + data_size};
-        AddressWindow op_window = {0,0};
-        do{
-            op_window = store_window.grid_forward(op_window, page_size);
-            if(op_window){
-                auto phy_window = AddressWindow::grid(op_window.shift(base_address).from, page_size);
-                // if(op_window.length() < page_size) load(buf, page_size, phy_window.from);
-
-                // memcpy(buf, (uint8_t *)data + op_window.from, op_window.length());
-                FLASH_ErasePage_Fast(phy_window.from);
-                FLASH_ProgramPage_Fast(phy_window.from, (uint32_t *)&buf);
-            }
-
-        }while(op_window);
-    
-
-        lock();
-
-    };
-
-    void loadBytes(void * data, const Address data_size, const Address loc) override{
-        AddressWindow phy_window = AddressWindow{0, data_size}.shift(loc + base_address);
-        memcpy(data, (void *)phy_window.from, data_size);
-    };
-
+    void erasePage(const Address vaddr);
+    void programPage(const Address vaddr, const void * buf);
 public:
     Flash(Address _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
     Flash(Address _page_begin, Address _page_end):Storage((_page_end - _page_begin) * page_size),
@@ -114,5 +89,3 @@ public:
         return false;
     }
 };
-
-#endif

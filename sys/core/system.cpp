@@ -131,6 +131,14 @@ uint32_t Sys::Chip::getChipIdCrc(){
     return chip_id_crc;
 }
 
+uint64_t Sys::Chip::getMacAddress(){
+    uint64_t ret = 0;
+    #ifdef CHIP_HAS_RF
+    FLASH_GetMACAddress(reinterpret_cast<uint8_t *>(&ret));
+    #endif
+    return ret;
+}
+
 
 static M_CLOCK_TYPEDEF RCC_CLK;
 

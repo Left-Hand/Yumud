@@ -85,6 +85,11 @@
 #define ISRAM(ptr) ((!ISSFR(ptr)) && (((uint32_t)(ptr)) > 0x20000000))
 #define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
 #define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
+#define FAULT_IF(x)\
+do{\
+    if(x) CREATE_FAULT\
+}while(false);\
+
 
 #ifdef __cplusplus
 #define scexpr static constexpr

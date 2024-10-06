@@ -877,7 +877,7 @@ void FLASH_EraseBlock_64K_Fast(uint32_t Block_Address)
  *
  * @return  none
  */
-void FLASH_ProgramPage_Fast(uint32_t Page_Address, uint32_t *pbuf)
+void FLASH_ProgramPage_Fast(uint32_t Page_Address, const uint32_t *pbuf)
 {
     uint8_t size = 64;
 
@@ -889,7 +889,7 @@ void FLASH_ProgramPage_Fast(uint32_t Page_Address, uint32_t *pbuf)
 
     while(size)
     {
-        *(uint32_t *)Page_Address = *(uint32_t *)pbuf;
+        *(uint32_t *)Page_Address = *pbuf;
         Page_Address += 4;
         pbuf += 1;
         size -= 1;
