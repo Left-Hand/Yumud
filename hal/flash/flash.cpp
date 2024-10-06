@@ -1,5 +1,11 @@
 #include "flash.hpp"
 
+
+#define CLOCK_CONFIG_BY_AHB 0
+#define CLOCK_CONFIG_BY_REG 1
+
+#define CLOCK_CONFIG CLOCK_CONFIG_BY_REG
+
 void Flash::storeBytes(const void * data, const Address len, const Address loc){
 
     unlock();
@@ -72,4 +78,30 @@ void Flash::programPage(const Address vaddr, const void * buf){
     auto phyaddr = base_address + vaddr;
     FAULT_IF(!ISALIGNED(phyaddr));
     FLASH_ProgramPage_Fast(phyaddr, reinterpret_cast<const uint32_t *>(buf));
+}
+
+void Flash::configClock(){
+    #if (CLOCK_CONFIG == CLOCK_CONFIG_BY_AHB)
+
+    orginal_clock = Sys::Clock::getAHBFreq();
+    if(orginal_clock > max_clock) Sys::Clock::setAHBFreq(max_clock);
+
+    #elif (CLOCK_CONFIG == CLOCK_CONFIG_BY_REG)
+
+    FLASH_Access_Clock_Cfg(FLASH_Access_SYSTEM_HALF);
+
+    #endif
+}
+
+void Flash::revertClock(){
+
+    #if (CLOCK_CONFIG == CLOCK_CONFIG_BY_AHB)
+
+    Sys::Clock::setAHBFreq(orginal_clock);
+    
+    #elif (CLOCK_CONFIG == CLOCK_CONFIG_BY_REG)
+
+    FLASH_Access_Clock_Cfg(FLASH_Access_SYSTEM);
+
+    #endif
 }

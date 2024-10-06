@@ -26,19 +26,14 @@ protected:
     Page page_count;
     uint32_t orginal_clock;
 
-    void configClock(){
-        orginal_clock = Sys::Clock::getAHBFreq();
-        if(orginal_clock > max_clock) Sys::Clock::setAHBFreq(max_clock);
-    }
+    void configClock();
 
-    void revertClock(){
-        Sys::Clock::setAHBFreq(orginal_clock);
-    }
+    void revertClock();
 
     void entry_store() override{
         configClock();
-        Systick_Init();
-        delay(1);
+        // Systick_Init();
+        // delay(1);
     }
 
     void exit_store() override{
