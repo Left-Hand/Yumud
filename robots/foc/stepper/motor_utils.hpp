@@ -51,8 +51,8 @@ struct MetaData{
 
     Range pos_limit = Range::INF;
     real_t max_curr = real_t(0.7);
-    int max_spd = 30;
-    int max_acc = 30;
+    real_t max_spd = 30;
+    real_t max_acc = 30;
     
     real_t curr_to_leadrad_ratio = 0;
     real_t spd_to_leadrad_ratio = 0;

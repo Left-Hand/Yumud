@@ -74,7 +74,7 @@ real_t demo(uint milliseconds, uint microseconds = 0){
     turnSolver.pb = posPoints[i + 1];
     real_t dp = turnSolver.pb - turnSolver.pa;
 
-    real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / (real_t)dt);
+    real_t _t = ((real_t)(turnCnt  - turnSolver.ta) / dt);
     real_t temp = (real_t)dt / 1000 / dp; 
 
     real_t yt = 0;
@@ -256,7 +256,7 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetVector(target);
 
         // if(logger.pending() == 0) logger.println(stp.getTarget(), stp.getPosition(), stp.getSpeed(), stp.getCurrent(), real_t(adc1.inj(1)), real_t(adc1.inj(2)));
-        auto target = demo(millis() * 2);
+        auto target = demo(millis()) * 7;
         if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getCurrent(), stp.getRaddiff());
         // Sys::Clock::reCalculateTime();
 

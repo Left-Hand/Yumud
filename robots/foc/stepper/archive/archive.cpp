@@ -8,11 +8,11 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
         // .kp = 2,
         // .kd = 15
 
-        // .kp = 2,
-        // .kd = 46
-
         .kp = 3,
         .kd = 70
+
+        // .kp = 6,
+        // .kd = 116
         
         // .kp = 5,
         // .kd = 23*7

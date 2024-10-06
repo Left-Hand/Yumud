@@ -57,8 +57,8 @@ real_t NearCubicInterpolation::forward(const Vector2 & from,const Vector2 & to, 
 
     // arbitrary but reasonable 
     // t-values for interior control points
-    real_t t1 = real_t(0.3);
-    real_t t2 = real_t(0.7);
+    scexpr real_t t1 = real_t(0.3);
+    scexpr real_t t2 = 1 - t1;
 
     real_t B0t1 = B0(t1);
     real_t B1t1 = B1(t1);
