@@ -59,26 +59,26 @@ Transform3D_t<T> Transform3D_t<T>::inverse() const {
 }
 
 template<arithmetic T>
-void Transform3D_t<T>::rotate(const Vector3_t<T> &p_axis, real_t p_angle) {
+void Transform3D_t<T>::rotate(const Vector3_t<T> &p_axis, T p_angle) {
 	*this = rotated(p_axis, p_angle);
 }
 
 template<arithmetic T>
-Transform3D_t<T> Transform3D_t<T>::rotated(const Vector3_t<T> &p_axis, real_t p_angle) const {
+Transform3D_t<T> Transform3D_t<T>::rotated(const Vector3_t<T> &p_axis, T p_angle) const {
 	// Equivalent to left multiplication
 	Basis_t<T> p_basis(p_axis, p_angle);
 	return Transform3D_t<T>(p_basis * basis, p_basis.xform(origin));
 }
 
 template<arithmetic T>
-Transform3D_t<T> Transform3D_t<T>::rotated_local(const Vector3_t<T> &p_axis, real_t p_angle) const {
+Transform3D_t<T> Transform3D_t<T>::rotated_local(const Vector3_t<T> &p_axis, T p_angle) const {
 	// Equivalent to right multiplication
 	Basis_t<T> p_basis(p_axis, p_angle);
 	return Transform3D_t<T>(basis * p_basis, origin);
 }
 
 template<arithmetic T>
-void Transform3D_t<T>::rotate_basis(const Vector3_t<T> &p_axis, real_t p_angle) {
+void Transform3D_t<T>::rotate_basis(const Vector3_t<T> &p_axis, T p_angle) {
 	basis.rotate(p_axis, p_angle);
 }
 
@@ -102,7 +102,7 @@ void Transform3D_t<T>::set_look_at(const Vector3_t<T> &p_eye, const Vector3_t<T>
 }
 
 template<arithmetic T>
-Transform3D_t<T> Transform3D_t<T>::interpolate_with(const Transform3D_t<T> &p_transform, real_t p_c) const {
+Transform3D_t<T> Transform3D_t<T>::interpolate_with(const Transform3D_t<T> &p_transform, T p_c) const {
 	Transform3D_t<T> interp;
 
 	Vector3_t<T> src_scale = basis.get_scale();
@@ -143,7 +143,7 @@ void Transform3D_t<T>::scale_basis(const Vector3_t<T> &p_scale) {
 }
 
 template<arithmetic T>
-void Transform3D_t<T>::translate_local(real_t p_tx, real_t p_ty, real_t p_tz) {
+void Transform3D_t<T>::translate_local(T p_tx, T p_ty, T p_tz) {
 	translate_local(Vector3_t<T>(p_tx, p_ty, p_tz));
 }
 
@@ -224,26 +224,26 @@ Transform3D_t<T> Transform3D_t<T>::operator*(const Transform3D_t<T> &p_transform
 }
 
 template<arithmetic T>
-void Transform3D_t<T>::operator*=(real_t p_val) {
+void Transform3D_t<T>::operator*=(T p_val) {
 	origin *= p_val;
 	basis *= p_val;
 }
 
 template<arithmetic T>
-Transform3D_t<T> Transform3D_t<T>::operator*(real_t p_val) const {
+Transform3D_t<T> Transform3D_t<T>::operator*(T p_val) const {
 	Transform3D_t<T> ret(*this);
 	ret *= p_val;
 	return ret;
 }
 
 template<arithmetic T>
-void Transform3D_t<T>::operator/=(real_t p_val) {
+void Transform3D_t<T>::operator/=(T p_val) {
 	basis /= p_val;
 	origin /= p_val;
 }
 
 template<arithmetic T>
-Transform3D_t<T> Transform3D_t<T>::operator/(real_t p_val) const {
+Transform3D_t<T> Transform3D_t<T>::operator/(T p_val) const {
 	Transform3D_t<T> ret(*this);
 	ret /= p_val;
 	return ret;
@@ -264,7 +264,7 @@ Transform3D_t<T>::Transform3D_t(const Vector3_t<T> &p_x, const Vector3_t<T> &p_y
 }
 
 template<arithmetic T>
-Transform3D_t<T>::Transform3D_t(real_t p_xx, real_t p_xy, real_t p_xz, real_t p_yx, real_t p_yy, real_t p_yz, real_t p_zx, real_t p_zy, real_t p_zz, real_t p_ox, real_t p_oy, real_t p_oz) {
+Transform3D_t<T>::Transform3D_t(T p_xx, T p_xy, T p_xz, T p_yx, T p_yy, T p_yz, T p_zx, T p_zy, T p_zz, T p_ox, T p_oy, T p_oz) {
 	basis = Basis_t<T>(p_xx, p_xy, p_xz, p_yx, p_yy, p_yz, p_zx, p_zy, p_zz);
 	origin = Vector3_t<T>(p_ox, p_oy, p_oz);
 }

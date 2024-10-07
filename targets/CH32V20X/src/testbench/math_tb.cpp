@@ -7,6 +7,7 @@
 #include "types/plane/plane_t.hpp"
 #include "types/aabb/aabb.hpp"
 #include "types/transform3d/transform3d_t.hpp"
+#include "types/transform2d/transform2d.hpp"
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
@@ -61,6 +62,8 @@ void math_tb(UartHw & logger){
 
     var a = AABB_t<float>(Vector3(0,0,0), Vector3(1,1,1));
 
+    Transform2D_t<real_t> transform2d;
+
     // 遍历整数序列
     for (auto i : std::ranges::iota_view(0, 8)) {
         print(a.get_endpoint(i))
@@ -78,7 +81,7 @@ void math_tb(UartHw & logger){
 
     // DEBUG_PRINTLN(transform);
 
-    using Vector2 = Vector2_t<real_t>;
+    // [[maybe_unused]] using Vector2 = Vector2_t<real_t>;
     using Scara5Solver = Scara5Solver_t<real_t>;
     using Mecanum4Solver = Mecanum4Solver_t<real_t>;
 

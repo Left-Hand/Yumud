@@ -48,11 +48,11 @@ struct Transform3D_t{
 	void affine_invert();
 	Transform3D_t<T> affine_inverse() const;
 
-	Transform3D_t<T> rotated(const Vector3_t<T> &p_axis, real_t p_angle) const;
-	Transform3D_t<T> rotated_local(const Vector3_t<T> &p_axis, real_t p_angle) const;
+	Transform3D_t<T> rotated(const Vector3_t<T> &p_axis, T p_angle) const;
+	Transform3D_t<T> rotated_local(const Vector3_t<T> &p_axis, T p_angle) const;
 
-	void rotate(const Vector3_t<T> &p_axis, real_t p_angle);
-	void rotate_basis(const Vector3_t<T> &p_axis, real_t p_angle);
+	void rotate(const Vector3_t<T> &p_axis, T p_angle);
+	void rotate_basis(const Vector3_t<T> &p_axis, T p_angle);
 
 	void set_look_at(const Vector3_t<T> &p_eye, const Vector3_t<T> &p_target, const Vector3_t<T> &p_up = Vector3_t<T>(0, 1, 0), bool p_use_model_front = false);
 	Transform3D_t<T> looking_at(const Vector3_t<T> &p_target, const Vector3_t<T> &p_up = Vector3_t<T>(0, 1, 0), bool p_use_model_front = false) const;
@@ -61,7 +61,7 @@ struct Transform3D_t{
 	Transform3D_t<T> scaled(const Vector3_t<T> &p_scale) const;
 	Transform3D_t<T> scaled_local(const Vector3_t<T> &p_scale) const;
 	void scale_basis(const Vector3_t<T> &p_scale);
-	void translate_local(real_t p_tx, real_t p_ty, real_t p_tz);
+	void translate_local(T p_tx, T p_ty, T p_tz);
 	void translate_local(const Vector3_t<T> &p_translation);
 	Transform3D_t<T> translated(const Vector3_t<T> &p_translation) const;
 	Transform3D_t<T> translated_local(const Vector3_t<T> &p_translation) const;
@@ -104,12 +104,12 @@ struct Transform3D_t{
 
 	void operator*=(const Transform3D_t<T> &p_transform);
 	Transform3D_t<T> operator*(const Transform3D_t<T> &p_transform) const;
-	void operator*=(real_t p_val);
-	Transform3D_t<T> operator*(real_t p_val) const;
-	void operator/=(real_t p_val);
-	Transform3D_t<T> operator/(real_t p_val) const;
+	void operator*=(T p_val);
+	Transform3D_t<T> operator*(T p_val) const;
+	void operator/=(T p_val);
+	Transform3D_t<T> operator/(T p_val) const;
 
-	Transform3D_t<T> interpolate_with(const Transform3D_t<T> &p_transform, real_t p_c) const;
+	Transform3D_t<T> interpolate_with(const Transform3D_t<T> &p_transform, T p_c) const;
 
 	__fast_inline Transform3D_t<T> inverse_xform(const Transform3D_t<T> & other) const {
 		Vector3_t<T> v = other.origin - origin;
@@ -117,19 +117,17 @@ struct Transform3D_t{
 				basis.xform(v));
 	}
 
-	void set(real_t p_xx, real_t p_xy, real_t p_xz, real_t p_yx, real_t p_yy, real_t p_yz, real_t p_zx, real_t p_zy, real_t p_zz, real_t p_tx, real_t p_ty, real_t p_tz) {
+	void set(T p_xx, T p_xy, T p_xz, T p_yx, T p_yy, T p_yz, T p_zx, T p_zy, T p_zz, T p_tx, T p_ty, T p_tz) {
 		basis.set(p_xx, p_xy, p_xz, p_yx, p_yy, p_yz, p_zx, p_zy, p_zz);
 		origin.x = p_tx;
 		origin.y = p_ty;
 		origin.z = p_tz;
 	}
 
-	operator String() const;
-
 	Transform3D_t() {}
 	Transform3D_t(const Basis_t<T> &p_basis, const Vector3_t<T> &p_origin = Vector3_t<T>());
 	Transform3D_t(const Vector3_t<T> &p_x, const Vector3_t<T> &p_y, const Vector3_t<T> &p_z, const Vector3_t<T> &p_origin);
-	Transform3D_t(real_t p_xx, real_t p_xy, real_t p_xz, real_t p_yx, real_t p_yy, real_t p_yz, real_t p_zx, real_t p_zy, real_t p_zz, real_t p_ox, real_t p_oy, real_t p_oz);
+	Transform3D_t(T p_xx, T p_xy, T p_xz, T p_yx, T p_yy, T p_yz, T p_zx, T p_zy, T p_zz, T p_ox, T p_oy, T p_oz);
 };
 
 template<arithmetic T>
@@ -181,8 +179,8 @@ __fast_inline AABB_t<T> Transform3D_t<T>::xform(const AABB_t<T> &p_aabb) const {
 	for (int i = 0; i < 3; i++) {
 		tmin[i] = tmax[i] = origin[i];
 		for (int j = 0; j < 3; j++) {
-			real_t e = basis[i][j] * min[j];
-			real_t f = basis[i][j] * max[j];
+			T e = basis[i][j] * min[j];
+			T f = basis[i][j] * max[j];
 			if (e < f) {
 				tmin[i] += e;
 				tmax[i] += f;
@@ -261,7 +259,7 @@ __fast_inline Plane_t<T> Transform3D_t<T>::xform_fast(const Plane_t<T> &p_plane,
 	Vector3_t<T> normal = p_basis_inverse_transpose.xform(p_plane.normal);
 	normal.normalize();
 
-	real_t d = normal.dot(point);
+	T d = normal.dot(point);
 	return Plane_t<T>(normal, d);
 }
 
@@ -283,7 +281,7 @@ __fast_inline Plane_t<T> Transform3D_t<T>::xform_inv_fast(const Plane_t<T> &p_pl
 	Vector3_t<T> normal = p_basis_transpose.xform(p_plane.normal);
 	normal.normalize();
 
-	real_t d = normal.dot(point);
+	T d = normal.dot(point);
 	return Plane_t<T>(normal, d);
 }
 
