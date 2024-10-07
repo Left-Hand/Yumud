@@ -35,35 +35,35 @@ protected:
     };
 
 
-    struct TrimConfigReg{
+    struct TrimConfigReg:public Reg8{
         uint8_t enableX:1;
         uint8_t enableY:1;
-        uint8_t __resv__:6;
+        uint8_t :6;
     };
 
-    struct ZParametersReg{
-        uint8_t __resv__ :2;
+    struct ZParametersReg:public Reg8{
+        uint8_t :2;
         uint8_t zPhase :2;
         uint8_t zWidth :2;
         uint8_t ppt:2;
     };
 
-    struct ThresholdReg{
-        uint8_t __resv__ :2;
+    struct ThresholdReg:public Reg8{
+        uint8_t :2;
         uint8_t thresholdHigh :3;
         uint8_t thresholdLow :3;
     };
 
-    struct DirectionReg{
-        uint8_t __resv__ :7;
+    struct DirectionReg:public Reg8{
+        uint8_t :7;
         uint8_t direction :1;
     };
 
-    struct MagnitudeReg{
-        uint8_t __resv1__ :2;
+    struct MagnitudeReg:public Reg8{
+        uint8_t :2;
         uint8_t mgl1:1;
         uint8_t mgl2:1;
-        uint8_t __resv2__ :2;
+        uint8_t :2;
         uint8_t magnitudeLow :1;
         uint8_t magnitudeHigh :1;
     };
@@ -79,23 +79,24 @@ protected:
         MagnitudeReg magnitudeReg;
     };
 
-    void writeReg(const RegAddress reg_addr, uint8_t reg_data){
-        uint16_t ret;
-        bus_drv.write((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | *(uint8_t *)&reg_data));
-        bus_drv.read(ret);
-        *(uint8_t *)&reg_data = ret  >> 8;
+    void writeReg(const RegAddress reg_addr, uint8_t data){
+        bus_drv.write((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
     }
 
-    void readReg(const RegAddress reg_addr, uint8_t & reg_data){
-        uint16_t ret;
+    void readReg(const RegAddress reg_addr, uint8_t & reg){
+        uint16_t dummy;
         bus_drv.write((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
-        bus_drv.read(ret);
-        *(uint8_t *)&reg_data = ret >> 8;
+        bus_drv.read(dummy);
+        reg = dummy >> 8;
     }
 
     void directRead(uint16_t & data){
         bus_drv.read(data);
     }
+
+    uint16_t getRawData();
+
+    void setZeroData(const uint16_t data);
 public:
     MA730(const SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
     MA730(SpiDrv && _bus_drv):bus_drv(_bus_drv){;}
@@ -106,9 +107,7 @@ public:
     void update();
     bool stable() override {return isMagnitudeProper();}
 
-    uint16_t getRawData();
 
-    void setZeroData(const uint16_t data);
     void setZeroPosition(const real_t position);
     
 
@@ -131,6 +130,11 @@ public:
     void setZparameters(const Width width, const Phase phase);
     void setPulsePerTurn(const uint16_t _ppt);
 
+};
+
+class MA732:public MA730{
+public:
+    using MA730::MA730; 
 };
 
 #endif
