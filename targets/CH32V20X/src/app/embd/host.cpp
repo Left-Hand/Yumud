@@ -162,6 +162,7 @@ void EmbdHost::main(){
         // Pixels::inverse(img_bina);
         plot_gray(img_processed, {0, img.get_size().y * 2});
         plot_gray(img_processed2, {0, img.get_size().y * 3});
+        DEBUG_PRINTLN(millis());
     }
 }
 

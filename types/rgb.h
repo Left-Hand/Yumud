@@ -10,7 +10,26 @@
 #ifdef __cplusplus
 #include "sys/math/real.hpp"
 #include "sys/string/string.hpp"
+
+enum class Colors:uint32_t{
+    WHITE   = 0xFFFFFF,    // White color
+    YELLOW  = 0xFFFF00,    // Yellow color
+    BRRED   = 0xFF4500,    // Brown-red color
+    PINK    = 0xFFC0CB,    // Pink color
+    RED     = 0xFF0000,    // Red color
+    BROWN   = 0xA52A2A,    // Brown color
+    GRAY    = 0x808080,    // Gray color
+    GBLUE   = 0xADD8E6,    // Light blue color
+    GREEN   = 0x008000,    // Green color
+    BLUE    = 0x0000FF,    // Blue color
+    BLACK   = 0x000000     // Black color
+};
+
+
 #endif
+
+
+
 
 struct RGB332{
     union{
@@ -77,6 +96,8 @@ struct RGB888 {
 #ifdef __cplusplus
 public:
     __fast_inline constexpr RGB888() : data(0){;}
+
+    __fast_inline constexpr RGB888(const Colors color): data(static_cast<uint32_t>(color)){;}
 
     __fast_inline constexpr RGB888(const int _data): data((uint24_t)_data){;}
 
@@ -225,6 +246,8 @@ struct RGB565{
 #ifdef __cplusplus
 
     __fast_inline constexpr RGB565() : data(0){;}
+
+    __fast_inline constexpr RGB565(const Colors color):RGB565(RGB888(color)){;}
 
     __fast_inline constexpr RGB565(const int _data): data((uint16_t)_data){;}
 

@@ -31,71 +31,23 @@ do{\
 
 
 void math_tb(UartHw & logger){
-    
-    // logger.init(576000, CommMethod::Blocking);
     logger.init(576000, CommMethod::Dma);
     logger.setEps(4);
-
-    #ifdef DEBUG_IQ_BASICS
-    DEBUG_VALUE((iq_t(M_PI)));
-    DEBUG_VALUE((iq_t(M_PI)/iq_t(2)));
-    DEBUG_VALUE((iq_t(M_PI)/2));
-    DEBUG_VALUE((iq_t(M_PI)*iq_t(2)));
-    DEBUG_VALUE((iq_t(M_PI)*2));
-    DEBUG_VALUE(sqrt(iq_t(3))/2);
-    DEBUG_VALUE(sqrt(3)/2);
-    DEBUG_VALUE(fmod(iq_t(0.3), iq_t(0.2)));
-
-    #endif
-
-    // #define DEBUG_IQ_SINCOS
-    #ifdef DEBUG_IQ_SINCOS
-    DEBUG_VALUE(sin(iq_t(M_PI/3)));
-    DEBUG_VALUE(sin(iq_t(M_PI/3)));
-    
-    DEBUG_VALUE(acos(iq_t(sqrt(iq_t(3))/2)) / M_PI);
-    DEBUG_VALUE(acos(iq_t(sqrt(iq_t(2))/2)) / M_PI);
-    #endif
-    
-    // #define DEBUG_IQ_TAN
-    #ifdef DEBUG_IQ_TAN
-    DEBUG_VALUE(atan(iq_t(sqrt(iq_t(3)))) / M_PI);
-    #endif
-
-    #define DEBUG_IQ_LOG
-    //FIXME
-    #ifdef DEBUG_IQ_LOG
-    DEBUG_VALUE(log(iq_t(1)));
-    DEBUG_VALUE(log(iq_t(1.29)));
-    DEBUG_VALUE(log(iq_t(1.49)));
-    DEBUG_VALUE(log(iq_t(1.51)));
-    DEBUG_VALUE(log(iq_t(2)));
-    DEBUG_VALUE(log(iq_t(6)));
-
-    #endif
-    
-    #define DEBUG_IQ_EXP
-    #ifdef DEBUG_IQ_EXP
-    DEBUG_VALUE(exp(iq_t(1)));
-    DEBUG_VALUE(exp(iq_t(1.5)));
-    DEBUG_VALUE(exp(iq_t(2)));
-    DEBUG_VALUE(exp(iq_t(6)));
-
-    #endif
-    while(true);
-    
 
 
     using Vector3 = Vector3_t<real_t>;
     using Plane = Plane_t<real_t>;
     using Basis = Basis_t<real_t>;
-    // using Quat = Quat_t<real_t>;
     using Transform3D = Transform3D_t<real_t>;
 
-    EQUAL_ASSERT(Plane(Vector3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
 
-    DEBUG_PRINTLN(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center())
-    DEBUG_PRINTLN(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center())
+    #define  WHEELLEG_TB
+
+
+    #ifdef PLANE_TB
+    EQUAL_ASSERT(Plane(Vector3(1,1,1), -sqrt(real_t(3))).distance_to({0,0,0}), sqrt(real_t(3)))
+    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center())
+    print(Plane(Vector3(1,1,1), sqrt(real_t(3))).get_center())
     // EQUAL_ASSERT(real_t(0.2), real_t(0.1));
     
     print(Plane(Vector3(1,1,1), sqrt(float(3))).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
@@ -109,7 +61,10 @@ void math_tb(UartHw & logger){
 	print(Plane(Vector3(3,0,0), Vector3(0,3,0), Vector3(0,0,3)).intersects_segment(Vector3(0,0,0), Vector3(10,10,10)));
     print(Vector3(0,0,0)- Vector3(10,10,10));
     // print(Transform3D(Basis(), Vector3(0,0,0)))
+    #endif
 
+    
+    #ifdef TRANFORM_TB
     var a = AABB_t<float>(Vector3(0,0,0), Vector3(1,1,1));
 
     Transform2D_t<real_t> transform2d;
@@ -122,60 +77,65 @@ void math_tb(UartHw & logger){
     var transform = Transform3D();
 
     transform.origin = Vector3(5, 5, 5);
-
-    // transform.basis = 
-    // var b = Basis().rotated(Vector3(0, 1, 0), float(PI / 4));
     var b = Basis().rotated(Vector3(0, 1, 0), float(PI / 4));
     print(b)
-    // transform.basis.scale(Vector3(2, 2, 2));
+    #endif
+    
 
-    // DEBUG_PRINTLN(transform);
-
-    // [[maybe_unused]] using Vector2 = Vector2_t<real_t>;
+    #ifdef SCARA_TB
     using Scara5Solver = Scara5Solver_t<real_t>;
-    using Mecanum4Solver = Mecanum4Solver_t<real_t>;
-
     auto config_s5s = Scara5Solver::Config{
         .should_length_meter = real_t(0.06),
         .forearm_length_meter = real_t(0.18),
         .upperarm_length_meter = real_t(0.12)
     };
+    Scara5Solver s5s{config_s5s};
+    while(true){
+        
+        // auto [l, r] = s5s.invrese(targ_pos);
+        // auto est_pos = s5s.forward(l, r);
+    }
 
+    #endif
+
+    #ifdef  MECANUM_TB
+
+    using Mecanum4Solver = Mecanum4Solver_t<real_t>;
     auto config_m4s = Mecanum4Solver::Config{
         .chassis_width_meter = real_t(0.26),  
         .chassis_height_meter = real_t(0.26)
     };
 
-    Scara5Solver s5s{config_s5s};
-    Mecanum4Solver m4s{config_m4s};
 
-    // using ws_real = double;
-    using ws_real = real_t;
-    WheelLegSolver_t<ws_real> wls{WheelLegSolver_t<ws_real>::Config{
-        .pelvis_length_meter = ws_real(0.12),
-        .thigh_length_meter = ws_real(0.12),
-        .shin_length_meter = ws_real(0.12),
+    Mecanum4Solver m4s{config_m4s};
+    while(true){
+        
+        // print(targ_pos - est_pos);
+        // print(m4s.inverse({0,1}, 1));
+    }
+    #endif
+
+
+    #ifdef WHEELLEG_TB
+    // using WheelLegSolver_t = WheelLegSolver_t<real_t>;
+    WheelLegSolver_t<real_t> wls{WheelLegSolver_t<real_t>::Config{
+        .pelvis_length_meter = real_t(0.12),
+        .thigh_length_meter = real_t(0.12),
+        .shin_length_meter = real_t(0.12),
     }};
     
     while(true){
-        
-        // auto a = plane.intersects_segment({0,0,0}, {10,10,10});
-        // DEBUG_PRINTLN(plane.distance_to({2,2,2}))
-        // auto targ_pos = Vector2(real_t(0), real_t(0.12)) + Vector2(real_t(0.06), real_t(0)).rotated(t);
-        // auto [l, r] = s5s.invrese(targ_pos);
-        // auto est_pos = s5s.forward(l, r);
-        // DEBUG_PRINTLN(targ_pos - est_pos);
-        // DEBUG_PRINTLN(m4s.inverse({0,1}, 1));
 
-        // auto left_pos = Vector3_t<ws_real>(ws_real(-0.1), ws_real(-0.2), 0);
-        // auto right_pos = Vector3_t<ws_real>(ws_real(0.1), ws_real(-0.1), ws_real(0.02));
-        // auto pitch_rad = ws_real(0.143);
-        // DEBUG_PRINTLN(wls.foot_plane(left_pos, right_pos, pitch_rad));
+        auto left_pos = Vector3_t<real_t>(real_t(-0.1), real_t(-0.2), 0);
+        auto right_pos = Vector3_t<real_t>(real_t(0.1), real_t(-0.1), real_t(0.02));
+        auto pitch_rad = real_t(0.143);
+        // print(wls.foot_plane(left_pos, right_pos, pitch_rad));
 
         auto begin_micros = micros();
-        // auto transform = wls.get_ground_viewer().get_pelvis_transform(left_pos, right_pos, pitch_rad);
+        auto transform = wls.get_ground_viewer().get_pelvis_transform(left_pos, right_pos, pitch_rad);
         auto delta_micros = micros() - begin_micros;
-        DEBUG_PRINTLN(delta_micros, transform);
+        print(delta_micros, transform);
         Sys::Clock::reCalculateTime();
     }
+    #endif
 }
