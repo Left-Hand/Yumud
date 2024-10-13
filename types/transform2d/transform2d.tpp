@@ -281,9 +281,9 @@ void Transform2D_t<T>::operator*=(const Transform2D_t &p_transform) {
 
 template<arithmetic T>
 Transform2D_t<T> Transform2D_t<T>::operator*(const Transform2D_t &p_transform) const {
-	Transform2D_t t = *this;
-	t *= p_transform;
-	return t;
+	Transform2D_t _t = *this;
+	_t *= p_transform;
+	return _t;
 }
 
 template<arithmetic T>

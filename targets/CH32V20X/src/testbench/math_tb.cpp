@@ -19,22 +19,72 @@ do{\
     auto _a = (a);\
     auto _b = (b);\
     if(is_equal_approx(a,b) == false) \
-        DEBUG_PRINTS("!!!assert failed:", #a, "\r\n\r\n\t", _a, "!=", _b, "\r\n")\
-    else DEBUG_PRINTS(__LINE__, "passed\r\n");\
+        logger.prints("!!!assert failed:", #a, "\r\n\r\n\t", _a, "!=", _b, "\r\n");\
+    else logger.prints(__LINE__, "passed\r\n");\
 }while(false);\
 
 
 //for directly test in godot
-#define print(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define print(...) logger.println(__VA_ARGS__);
 #define float real_t
 #define var auto
 
 
 void math_tb(UartHw & logger){
-
+    
     // logger.init(576000, CommMethod::Blocking);
     logger.init(576000, CommMethod::Dma);
     logger.setEps(4);
+
+    #ifdef DEBUG_IQ_BASICS
+    DEBUG_VALUE((iq_t(M_PI)));
+    DEBUG_VALUE((iq_t(M_PI)/iq_t(2)));
+    DEBUG_VALUE((iq_t(M_PI)/2));
+    DEBUG_VALUE((iq_t(M_PI)*iq_t(2)));
+    DEBUG_VALUE((iq_t(M_PI)*2));
+    DEBUG_VALUE(sqrt(iq_t(3))/2);
+    DEBUG_VALUE(sqrt(3)/2);
+    DEBUG_VALUE(fmod(iq_t(0.3), iq_t(0.2)));
+
+    #endif
+
+    // #define DEBUG_IQ_SINCOS
+    #ifdef DEBUG_IQ_SINCOS
+    DEBUG_VALUE(sin(iq_t(M_PI/3)));
+    DEBUG_VALUE(sin(iq_t(M_PI/3)));
+    
+    DEBUG_VALUE(acos(iq_t(sqrt(iq_t(3))/2)) / M_PI);
+    DEBUG_VALUE(acos(iq_t(sqrt(iq_t(2))/2)) / M_PI);
+    #endif
+    
+    // #define DEBUG_IQ_TAN
+    #ifdef DEBUG_IQ_TAN
+    DEBUG_VALUE(atan(iq_t(sqrt(iq_t(3)))) / M_PI);
+    #endif
+
+    #define DEBUG_IQ_LOG
+    //FIXME
+    #ifdef DEBUG_IQ_LOG
+    DEBUG_VALUE(log(iq_t(1)));
+    DEBUG_VALUE(log(iq_t(1.29)));
+    DEBUG_VALUE(log(iq_t(1.49)));
+    DEBUG_VALUE(log(iq_t(1.51)));
+    DEBUG_VALUE(log(iq_t(2)));
+    DEBUG_VALUE(log(iq_t(6)));
+
+    #endif
+    
+    #define DEBUG_IQ_EXP
+    #ifdef DEBUG_IQ_EXP
+    DEBUG_VALUE(exp(iq_t(1)));
+    DEBUG_VALUE(exp(iq_t(1.5)));
+    DEBUG_VALUE(exp(iq_t(2)));
+    DEBUG_VALUE(exp(iq_t(6)));
+
+    #endif
+    while(true);
+    
+
 
     using Vector3 = Vector3_t<real_t>;
     using Plane = Plane_t<real_t>;
@@ -117,13 +167,13 @@ void math_tb(UartHw & logger){
         // DEBUG_PRINTLN(targ_pos - est_pos);
         // DEBUG_PRINTLN(m4s.inverse({0,1}, 1));
 
-        auto left_pos = Vector3_t<ws_real>(ws_real(-0.1), ws_real(-0.2), 0);
-        auto right_pos = Vector3_t<ws_real>(ws_real(0.1), ws_real(-0.1), ws_real(0.02));
-        auto pitch_rad = ws_real(0.143);
+        // auto left_pos = Vector3_t<ws_real>(ws_real(-0.1), ws_real(-0.2), 0);
+        // auto right_pos = Vector3_t<ws_real>(ws_real(0.1), ws_real(-0.1), ws_real(0.02));
+        // auto pitch_rad = ws_real(0.143);
         // DEBUG_PRINTLN(wls.foot_plane(left_pos, right_pos, pitch_rad));
 
         auto begin_micros = micros();
-        auto transform = wls.get_ground_viewer().get_pelvis_transform(left_pos, right_pos, pitch_rad);
+        // auto transform = wls.get_ground_viewer().get_pelvis_transform(left_pos, right_pos, pitch_rad);
         auto delta_micros = micros() - begin_micros;
         DEBUG_PRINTLN(delta_micros, transform);
         Sys::Clock::reCalculateTime();

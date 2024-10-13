@@ -1,10 +1,11 @@
 CompileFlags:
     Add:
+        - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\riscv-none-elf\include\newlib-nano
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\riscv-none-elf\include\c++\12.2.0
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\riscv-none-elf\include\c++\12.2.0\riscv-none-elf
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\riscv-none-elf\include\c++\12.2.0\backward
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\lib\gcc\riscv-none-elf\12.2.0\include
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\lib\gcc\riscv-none-elf\12.2.0\include-fixed
         - -Ic:\mounriver\mrs_community\toolchain\risc-v embedded gcc12\riscv-none-elf\include
-    CompilationDatabase: ./build/CH32V30X
-    Compiler: C:\MounRiver\MRS_Community\toolchain\RISC-V Embedded GCC12\bin\riscv-none-elf-gcc.exe
+    CompilationDatabase: ./build/CH32V203C8T6
+    Compiler: C:\MounRiver\MRS_Community\toolchain\RISC-V Embedded GCC12\bin\riscv-none-elf-g++.exe

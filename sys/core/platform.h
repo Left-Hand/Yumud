@@ -6,7 +6,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "src/defines/defs.h"
+// #include "src/defines/defs.h"
+#include "targets/CH32V20X/src/defines/defs.h"
 
 #if defined(CH32V203)
 #ifndef CH32V20X

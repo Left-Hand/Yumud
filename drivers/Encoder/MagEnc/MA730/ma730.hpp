@@ -1,8 +1,8 @@
 #ifndef __MA730_HPP__
 #define __MA730_HPP__
 
-#include "../drivers/device_defs.h"
-#include "../drivers/Encoder/MagEncoder.hpp"
+#include "drivers/device_defs.h"
+#include "drivers/Encoder/MagEncoder.hpp"
 
 class MA730:public MagEncoder{
 public:

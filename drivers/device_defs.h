@@ -1,10 +1,10 @@
 #ifndef __DEVICE_INC_H__
 #define __DEVICE_INC_H__
 
-#include "../sys/core/system.hpp"
-#include "../hal/bus/i2c/i2cdrv.hpp"
-#include "../hal/bus/spi/spidrv.hpp"
-#include "../hal/bus/uart/uart.hpp"
+#include "sys/core/system.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
+#include "hal/bus/uart/uart.hpp"
 
 
 #ifndef REG8_BEGIN
