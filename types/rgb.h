@@ -103,7 +103,7 @@ public:
 
     __fast_inline constexpr RGB888(const int _data): data((uint24_t)_data){;}
 
-    __fast_inline constexpr explicit RGB888(const uint8_t _r, const uint8_t _g, const uint8_t _b):r(_r), g(_g), b(_b){;}
+    __fast_inline constexpr RGB888(const uint8_t _r, const uint8_t _g, const uint8_t _b):r(_r), g(_g), b(_b){;}
 
     __fast_inline constexpr explicit RGB888(const uint24_t _data): data(_data){;}
 

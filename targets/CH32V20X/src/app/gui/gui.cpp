@@ -33,35 +33,109 @@ public:
 };
 
 
+struct Theme{
+    RGB888 stoke_color;
+    RGB888 bg_color;
+    RGB888 text_color;
+};
+
+// scexpr auto a = sizeof(Theme);
+
 class CanvasItem{
 public:
     // struct Config{
-        Rect2i rect;
+    Rect2i rect = Rect2i();
     // };  
     // auto config() const{return config_;}
 protected:
     // Config & config_;
+    const Theme & theme_;
 public:
-    // CanvasItem(const Config & _config): config_(_config){;}
-
-    virtual void render(const PainterConcept & painter) = 0;
+    CanvasItem(const Theme & _theme): theme_(_theme){;}
+    virtual void render(PainterConcept & painter) = 0;
 };
 
-class Control{
-    
+#define PASS_THEME(derived, base)\
+derived(const Theme & _theme): base(_theme){;}
+
+class Control:public CanvasItem{
+public:
+    // CanvasItem(const Theme & _theme): CanvasItem(_theme){;}
+    PASS_THEME(Control, CanvasItem)
 };
 
 class Label:public Control{
-    
+public:
+    String text;
+    PASS_THEME(Label, Control)
+
+    void render(PainterConcept & painter) override{
+        painter.setColor(theme_.bg_color);
+        painter.drawFilledRect(rect);
+
+        painter.setColor(theme_.stoke_color);
+        painter.drawHollowRect(rect);
+
+        painter.setColor(theme_.text_color);
+        painter.drawString(rect.position + Vector2i(10,7), text);
+    }
 };
 
-class ButtonBase:public Control{
+// class ButtonBase:public Control{
     
+// };
+
+
+class Slider:public Control{
+public:
+    PASS_THEME(Slider, Control)
+
+    Range range;
+    
+    void render(PainterConcept & painter) override{
+        painter.setColor(theme_.bg_color);
+        painter.drawFilledRect(rect);
+
+        painter.setColor(theme_.stoke_color);
+        painter.drawHollowRect(rect);
+        
+        scexpr auto sp = 3;
+        auto sb = rect.position + Vector2i{sp, rect.size.y/2};
+        auto sw = rect.size.x - 2 * sp;
+
+        painter.setColor(theme_.stoke_color);
+        painter.drawFilledRect(Rect2i{sb, Vector2i{sw, 2}});
+
+        scexpr auto h = 6;
+        scexpr auto w = 6;
+        painter.setColor(theme_.text_color);
+        painter.drawFilledRect(Rect2i{sb + Vector2i{5, - h / 2}, Vector2i{w, h}});
+    }
 };
 
 
-class Button{
+class OptionButton:public Control{
+public:
+    PASS_THEME(OptionButton, Control)
+    
+    void render(PainterConcept & painter) override{
+        painter.setColor(theme_.bg_color);
+        painter.drawFilledRect(rect);
 
+        painter.setColor(theme_.stoke_color);
+        painter.drawHollowRect(rect);
+
+        painter.setColor(theme_.stoke_color);
+        painter.drawFilledRect(Rect2i{rect.position + Vector2i(3,6), Vector2i(22,10)});
+
+        painter.setColor(theme_.text_color);
+        painter.drawFilledCircle(rect.position + Vector2i(10,10), 5);
+
+        painter.setColor(theme_.text_color);
+        painter.drawString(rect.position + Vector2i(30,7), "选择");
+
+        
+    }
 };
 
 void gui_main(){
@@ -100,9 +174,30 @@ void gui_main(){
     painter.bindImage(tftDisplayer);
     // tftDisplayer.fill(RGB565::BLACK);
 
-    // painter.setChFont(font7x7);
+    painter.setChFont(font7x7);
     painter.setEnFont(font8x5);
+
+    Theme theme{
+        .stoke_color =  {70,70,70},
+        .bg_color =     {10,10,10},
+        .text_color =   Colors::PINK
+    };
+    
+    Label label{theme};
+    label.text = "hello world";
+
+
+    Label label2{theme};
+    label2.text = String("你好世界");
+ 
+    Slider slider{theme};
+
+    OptionButton opt{theme};
+    // label.rect = Rect2i{20 + 10,20,100,20};
+    // label2.rect = Rect2i{20,60 + 20,100,20};
     while(true){
+
+        #ifdef DRAW_TB
         painter.setColor(RGB565::WHITE);
         
         // painter.drawString({20,20 + 10 * sin(t)}, String(millis()));
@@ -125,7 +220,22 @@ void gui_main(){
         logger.println(rect, tftDisplayer.get_view().intersection(rect));
 
         // logger.println(millis());
+        #endif
+
+        label.rect = Rect2i{15 + 10 * sin(t),20,100,20};
+        label2.rect = Rect2i{15,80 + 20 * sin(t),100,20};
+        slider.rect = Rect2i{15,120,100,20};
+        opt.rect = Rect2i{15,160,100,20};
+
+        label.render(painter);
+        label2.render(painter);
+        slider.render(painter);
+        opt.render(painter);
+
         delay(10);
         tftDisplayer.fill(RGB565::BLACK);
+
+
+        logger.println(label.rect, label2.rect);
     }
 }

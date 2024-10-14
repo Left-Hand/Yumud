@@ -21,8 +21,8 @@ void PainterConcept::drawHollowRect(const Rect2i & rect){
     auto p4 = rect.position + Vector2i{0, rect.size.y};
     drawLine(p1,p2);
     drawLine(p2,p3);
-    drawLine(p3,p4);
-    drawLine(p4,p1);
+    drawLine(p4,p3);
+    drawLine(p1,p4);
 }
 void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
     if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(this->getCanvasWindow()))) || radius <= 0) return;
