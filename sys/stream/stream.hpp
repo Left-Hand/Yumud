@@ -5,5 +5,6 @@
 
 class IOStream:public OutputStream, public InputStream{
 public:
+    IOStream(){;}
     using InputStream::read;
 };

@@ -11,11 +11,13 @@ using Vector2i = Vector2_t<int>;
 
 
 void gui_main(){
-    auto logger = uart2;
+
+    // auto
+    auto & logger = uart2;
+    auto & spi = spi1;
     logger.init(921600/2);
 
     auto & lcd_blk = portC[7];
-    auto & spi = spi2;
     
     lcd_blk.outpp(1);
 

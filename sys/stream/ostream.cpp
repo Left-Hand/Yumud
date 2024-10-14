@@ -47,6 +47,16 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
             b_showbase = false;
             break;
         }
+
+        // if (func == &std::flush){
+        //     this->flush();
+        //     break;
+        // }
+
+        // if (func == &std::endl){
+        //     this->write();
+        //     break;
+        // }
     }while(false);
 
     skip_split = true;

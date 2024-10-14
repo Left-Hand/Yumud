@@ -257,7 +257,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
 void eeprom_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    auto logger = DEBUGGER;
+    auto & logger = DEBUGGER;
     logger.setEps(2);
     logger.setRadix(10);
     logger.setSplitter("\t\t");

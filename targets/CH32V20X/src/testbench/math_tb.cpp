@@ -2,6 +2,8 @@
 
 #include "sys/debug/debug_inc.h"
 
+#include "hal/bus/sdi/sdi.hpp"
+
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
 #include "types/plane/plane_t.hpp"
@@ -25,7 +27,11 @@ do{\
 
 
 //for directly test in godot
-#define print(...) logger.println(__VA_ARGS__);
+
+
+#define print(...)\
+logger.println(__VA_ARGS__);\
+
 #define float real_t
 #define var auto
 
@@ -33,15 +39,43 @@ do{\
 void math_tb(UartHw & logger){
     logger.init(576000, CommMethod::Dma);
     logger.setEps(4);
-
+    
 
     using Vector3 = Vector3_t<real_t>;
     using Plane = Plane_t<real_t>;
     using Basis = Basis_t<real_t>;
     using Transform3D = Transform3D_t<real_t>;
 
+    // sdi.init();
 
-    #define  WHEELLEG_TB
+    scexpr auto cnt = 200;
+    // sstl::vector<int, cnt> cnts;
+    // while(true){
+    //     // sdi.println(millis());
+    //     cnts.clear();
+    //     print(millis());
+        
+    //     for(size_t i = 0; i < cnt; i++){
+    //         cnts.push_back(logger.pending());
+    //         delay(1);
+    //     }
+        
+    //     print(cnts);
+
+    //     delay(200);
+    // }
+    logger.println("/?");
+    while(true){
+        // if(logger.pending() == 0) logger.println(millis());
+        while(logger.pending());
+        logger.println(millis());
+        // else{
+            // logger.println(logger.pending());
+            // delay(1);
+        // }
+        delay(10);
+    }
+    // #define  WHEELLEG_TB
 
 
     #ifdef PLANE_TB
@@ -138,4 +172,6 @@ void math_tb(UartHw & logger){
         Sys::Clock::reCalculateTime();
     }
     #endif
+
+    while(true);
 }

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../bus.hpp"
+#include "hal/bus/bus.hpp"
 
-#include "../types/buffer/ringbuf/ringbuf_t.hpp"
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port.hpp"
+#include "types/buffer/ringbuf/ringbuf_t.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
 
 #include <functional>
 
@@ -38,7 +38,13 @@ protected:
 
     Error read(uint32_t & data, const bool toack) override {char _;read(_);return ErrorType::OK;};
     Error write(const uint32_t data) override {write((char)data); return ErrorType::OK;};
+
+    Uart(){;}
 public:
+
+    DELETE_COPY_AND_MOVE(Uart)
+    
+
     void read(char & data) override;
     void read(char * data_ptr, const size_t len) override;
 

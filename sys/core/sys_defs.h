@@ -157,5 +157,11 @@ do{\
 
 #ifdef __cplusplus
 #define DECLTYPE(...) decltype(__VA_ARGS__)
+
+#define DELETE_COPY_AND_MOVE(type)\
+type(const type & other) = delete;\
+type(type && other) = delete;\
+
+
 #endif
 #endif
