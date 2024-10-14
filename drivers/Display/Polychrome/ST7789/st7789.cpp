@@ -45,6 +45,7 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
     if((this_point_index == last_point_index_temp + 1) && (!area_locked)){
         return;
     }
+
     writeCommand(0x2a);
     writeData16(pos.x + offset.x);
 

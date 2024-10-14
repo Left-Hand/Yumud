@@ -1,4 +1,6 @@
 #include "gui.hpp"
+
+
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "types/image/image.hpp"
@@ -8,15 +10,34 @@
 
 using Vector2i = Vector2_t<int>;
 
+#define WHARE_OK while(true){DEBUGGER.println(millis());};
 
+
+using Sys::t;
+
+class CanvasItem{
+public:
+    struct Config{
+        Rect2i rect;
+    };  
+    auto config() const{return config_;}
+protected:
+    Config config_;
+public:
+    // virtual void render(const Paint){}
+
+    CanvasItem(const Config & _config): config_(_config){;}
+};
+
+class Label:public CanvasItem{
+    
+};
 
 void gui_main(){
 
-    // auto
     auto & logger = uart2;
-    auto & spi = spi1;
-    logger.init(921600/2);
-
+    auto & spi = spi2;
+    logger.init(576000);
     auto & lcd_blk = portC[7];
     
     lcd_blk.outpp(1);
@@ -33,9 +54,10 @@ void gui_main(){
 
     {//init tft
         tftDisplayer.init();
-        tftDisplayer.setDisplayOffset({51, 40}); 
-        tftDisplayer.setFlipX(false);
-        tftDisplayer.setFlipY(false);
+        // tftDisplayer.setDisplayOffset({51, 40}); 
+        tftDisplayer.setDisplayOffset({53, 40}); 
+        tftDisplayer.setFlipX(true);
+        tftDisplayer.setFlipY(true);
         tftDisplayer.setSwapXY(false);
         tftDisplayer.setFormatRGB(true);
         tftDisplayer.setFlushDirH(false);
@@ -47,14 +69,32 @@ void gui_main(){
     painter.bindImage(tftDisplayer);
     // tftDisplayer.fill(RGB565::BLACK);
 
-    painter.setChFont(font7x7);
+    // painter.setChFont(font7x7);
     painter.setEnFont(font8x5);
-    // StringView str = "Hello!!!";
     while(true){
+        painter.setColor(RGB565::WHITE);
+        
+        // painter.drawString({20,20 + 10 * sin(t)}, String(millis()));
         // painter.drawString({20,20}, String(millis()));
-        painter.drawFilledRect({0,0,60,60}, RGB565::RED);
-        logger.println(millis());
-        // logger << millis();
-        delay(1);
+
+        painter.setColor(RGB565::RED);
+        // painter.drawFilledRect({60,60 + 10 * sin(t),20,20});
+        Rect2i rect = {30,7,12,20};
+        // painter.drawFilledRect(rect);
+        // painter.drawHollowRect(rect);
+        painter.drawPixel(rect.position);
+        painter.drawLine(rect.position, rect.get_end());
+        painter.setColor(Colors::BLUE);
+        // painter.drawHollowRect(rect);
+        // painter.drawFilledRect(rect);
+        painter.drawFilledCircle(rect.position, 5);
+
+        // painter.drawString({0,0}, "hello");
+        // painter.drawFilledRect(rect);
+        logger.println(rect, tftDisplayer.get_view().intersection(rect));
+
+        // logger.println(millis());
+        delay(10);
+        tftDisplayer.fill(RGB565::BLACK);
     }
 }

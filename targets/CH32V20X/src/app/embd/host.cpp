@@ -18,7 +18,7 @@ using namespace NVCV2;
 #ifdef CH32V30X
 
 
-
+#define WHARE_OK while(true){DEBUGGER.println(millis());};
 void EmbdHost::main(){
 
     auto & lcd_blk = portC[7];
@@ -74,9 +74,10 @@ void EmbdHost::main(){
     tcs.setGain(TCS34725::Gain::X60);
     ch9141.init();
 
-    stepper_x.setPositionLimit({0.2, 7.8});
-    stepper_y.setPositionLimit({0.2, 4.8});
-    stepper_z.setPositionLimit({0.2, 24.2});
+    WHARE_OK
+    // stepper_x.setPositionLimit({0.2, 7.8});
+    // stepper_y.setPositionLimit({0.2, 4.8});
+    // stepper_z.setPositionLimit({0.2, 24.2});
 
 
     Matcher matcher;
@@ -102,7 +103,7 @@ void EmbdHost::main(){
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
         painter.bindImage(sketch);
         painter.setColor(RGB565::CORAL);
-        painter.drawRoi(rect);
+        // painter.drawRoi(rect);
     };
 
     [[maybe_unused]] auto plot_april = [&](const Vertexs & vertex, const int index, const real_t dir){
@@ -136,11 +137,11 @@ void EmbdHost::main(){
     tftDisplayer.fill(RGB565::BLACK);
     painter.setChFont(font7x7);
     while(true){
-        // painter.setColor(RGB565::WHITE);
-        // painter.drawString({0, 0}, "进入 设置 启动");
-        // painter.drawString({0, 8}, "开始 时间 设定 确认");
-        // painter.drawString({0, 16}, "选中 缩放 打开 关闭");
-        // continue;
+        painter.setColor(RGB565::WHITE);
+        painter.drawString(Vector2i{0, 0}, "进入 设置 启动");
+        painter.drawString(Vector2i{0, 8}, "开始 时间 设定 确认");
+        painter.drawString(Vector2i{0, 16}, "选中 缩放 打开 关闭");
+        continue;
         sketch.fill(RGB565::BLACK);
 
         Image<Grayscale> img = Shape::x2(camera);
