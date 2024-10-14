@@ -15,22 +15,53 @@ using Vector2i = Vector2_t<int>;
 
 using Sys::t;
 
-class CanvasItem{
-public:
-    struct Config{
-        Rect2i rect;
-    };  
-    auto config() const{return config_;}
-protected:
-    Config config_;
-public:
-    // virtual void render(const Paint){}
 
-    CanvasItem(const Config & _config): config_(_config){;}
+class Node{
+protected:
+    using Nodes = std::vector<std::reference_wrapper<Node>>;
+    Nodes children_;
+
+public:
+
+    void addChild(Node & node){
+        children_.push_back(node);
+    }
+
+    auto getChildren(){
+        return children_;
+    }
 };
 
-class Label:public CanvasItem{
+
+class CanvasItem{
+public:
+    // struct Config{
+        Rect2i rect;
+    // };  
+    // auto config() const{return config_;}
+protected:
+    // Config & config_;
+public:
+    // CanvasItem(const Config & _config): config_(_config){;}
+
+    virtual void render(const PainterConcept & painter) = 0;
+};
+
+class Control{
     
+};
+
+class Label:public Control{
+    
+};
+
+class ButtonBase:public Control{
+    
+};
+
+
+class Button{
+
 };
 
 void gui_main(){
