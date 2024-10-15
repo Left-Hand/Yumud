@@ -180,7 +180,7 @@ void gui_main(){
     Theme theme{
         .stoke_color =  {70,70,70},
         .bg_color =     {10,10,10},
-        .text_color =   Colors::PINK
+        .text_color =   ColorEnum::PINK
     };
     
     Label label{theme};
@@ -210,7 +210,7 @@ void gui_main(){
         // painter.drawHollowRect(rect);
         painter.drawPixel(rect.position);
         painter.drawLine(rect.position, rect.get_end());
-        painter.setColor(Colors::BLUE);
+        painter.setColor(ColorEnum::BLUE);
         // painter.drawHollowRect(rect);
         // painter.drawFilledRect(rect);
         painter.drawFilledCircle(rect.position, 5);

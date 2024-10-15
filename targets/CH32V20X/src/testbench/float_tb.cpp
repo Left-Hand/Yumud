@@ -12,7 +12,7 @@ void float_main(){
 
         auto mic = micros();
         for(size_t _ = 0; _ < 10000; _++){
-            o = bf16(float(sin(real_t::form(float(o)))));
+            o = bf16(float(sin(real_t::from(float(o)))));
         }
         auto dur = micros() - mic;
         DEBUG_PRINTLN(real_t(i), real_t(o), dur);

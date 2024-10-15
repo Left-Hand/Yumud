@@ -48,7 +48,7 @@ void math_tb(UartHw & logger){
 
     // sdi.init();
 
-    scexpr auto cnt = 200;
+    // scexpr auto cnt = 200;
     // sstl::vector<int, cnt> cnts;
     // while(true){
     //     // sdi.println(millis());

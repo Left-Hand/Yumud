@@ -1,9 +1,6 @@
-#ifndef __COLOR_H__
+#pragma once
 
-#define __COLOR_H__
-
-#include "stdint.h"
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
 #include "uint24_t.h"
 
@@ -11,7 +8,7 @@
 #include "sys/math/real.hpp"
 #include "sys/string/string.hpp"
 
-enum class Colors:uint32_t{
+enum class ColorEnum:uint32_t{
     WHITE   = 0xFFFFFF,    // White color
     YELLOW  = 0xFFFF00,    // Yellow color
     BRRED   = 0xFF4500,    // Brown-red color
@@ -97,7 +94,7 @@ struct RGB888 {
 public:
     __fast_inline constexpr RGB888() : data(0){;}
 
-    __fast_inline constexpr RGB888(const Colors color): data(static_cast<uint32_t>(color)){;}
+    __fast_inline constexpr RGB888(const ColorEnum & color): data(static_cast<uint32_t>(color)){;}
 
     __fast_inline constexpr RGB888(const RGB888 & other): data(other.data){;}
 
@@ -236,7 +233,7 @@ struct RGB565{
 
     __fast_inline constexpr RGB565() : data(0){;}
 
-    __fast_inline constexpr RGB565(const Colors color):RGB565(RGB888(color)){;}
+    __fast_inline constexpr RGB565(const ColorEnum & color):RGB565(RGB888(color)){;}
 
     __fast_inline constexpr RGB565(const int _data): data((uint16_t)_data){;}
 
@@ -279,7 +276,7 @@ struct sGrayscale{
 
     __fast_inline constexpr operator uint8_t() const {return data;}
 
-    __fast_inline explicit operator bool() const {return data;}
+    __fast_inline constexpr explicit operator bool() const {return data;}
 
     __fast_inline constexpr bool operator > (const auto & other){return data > other.data;}
 
@@ -295,12 +292,12 @@ struct sGrayscale{
 #endif
 };
 
+
+
 #ifdef __cplusplus
 
 template<typename T>
 concept monochrome = std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>;
 
-
-#endif
 
 #endif

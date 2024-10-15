@@ -72,10 +72,10 @@ void Mnist::parse_output(){
     real_t maxp = 0;
     int maxi = -1;
     for(int i=0; i<N; i++){
-        outputs[i] = real_t::form(data[i]);
-        if(real_t::form(data[i]) > maxp) {
+        outputs[i] = real_t::from(data[i]);
+        if(real_t::from(data[i]) > maxp) {
             maxi = i;
-            maxp = real_t::form(data[i]);
+            maxp = real_t::from(data[i]);
         }
     }
 

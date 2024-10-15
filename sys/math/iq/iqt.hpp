@@ -84,7 +84,7 @@ public:
     __fast_inline constexpr iq_t(const float fv):value((std::is_constant_evaluated()) ? float_to_iq(fv) : float_to_iq(fv)){};
     #endif
 
-    static __fast_inline constexpr iq_t form (const floating auto fv){iq_t ret; ret.value = float_to_iq(fv); return ret;}
+    static __fast_inline constexpr iq_t from (const floating auto fv){iq_t ret; ret.value = float_to_iq(fv); return ret;}
 
     __fast_inline_constexpr iq_t operator+(const iq_t other) const {
         return iq_t(_iq(value + other.value));

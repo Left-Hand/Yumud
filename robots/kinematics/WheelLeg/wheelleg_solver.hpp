@@ -126,3 +126,5 @@ public:
         return PelvisViewer(*this);
     }
 };
+
+#undef SQU
