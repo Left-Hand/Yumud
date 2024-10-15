@@ -1,8 +1,6 @@
-#ifndef __STEPPER_ARCHIVE_HPP__
+#pragma once
 
-#define __STEPPER_ARCHIVE_HPP__
-
-#include "../motor_utils.hpp"
+#include "robots/foc/motor_utils.hpp"
 #include "../ctrls/ctrls.hpp"
 
 namespace MotorUtils{
@@ -119,5 +117,3 @@ namespace MotorUtils{
 }
 
 OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi);
-
-#endif

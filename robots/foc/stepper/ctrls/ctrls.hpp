@@ -1,6 +1,5 @@
 #pragma once
-
-#include "../motor_utils.hpp"
+#include "robots/foc/motor_utils.hpp"
 #include "../observer/observer.hpp"
 
 #ifdef DEBUG
@@ -21,6 +20,7 @@ struct CtrlResult{
 
 
 struct CurrentCtrl{
+using MetaData = MotorUtils::MetaData;
 using Result = CtrlResult;
 public:
     struct Config{
@@ -62,6 +62,7 @@ CtrlResult CurrentCtrl::update(const CtrlResult res){
 
 struct HighLayerCtrl{
 protected:
+    using MetaData = MotorUtils::MetaData;
     MetaData & meta;
     using Result = CtrlResult;
 public:

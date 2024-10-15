@@ -1,6 +1,7 @@
 #include "ctrls.hpp"
 
 using Result = CtrlResult;
+using MetaData = MotorUtils::MetaData;
 
 #define ERR_LIMIT 100
 

@@ -13,6 +13,7 @@ public:
     using RunStatus = MotorUtils::RunStatus;
     using CtrlType = MotorUtils::CtrlType;
     using NodeId = MotorUtils::NodeId;
+    using MetaData = MotorUtils::MetaData;
 protected:
     using ExitFlag = MotorUtils::ExitFlag;
     using InitFlag = MotorUtils::InitFlag;

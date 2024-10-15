@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../motor_utils.hpp"
+#include "robots/foc/motor_utils.hpp"
 
 class CaliTasker{
 protected:

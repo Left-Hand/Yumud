@@ -1,7 +1,7 @@
 #pragma once
 
 #include "robots/foc/focmotor.hpp"
-#include "robots/foc/stepper/motor_utils.hpp"
+#include "robots/foc/motor_utils.hpp"
 
 class RemoteFOCMotor:public FOCMotorConcept, public CanProtocolConcept{
 
