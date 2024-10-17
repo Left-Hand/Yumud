@@ -11,15 +11,17 @@ class FOCMotorConcept{
 public:
     using ErrorCode = MotorUtils::ErrorCode;
     using RunStatus = MotorUtils::RunStatus;
+    
     using CtrlType = MotorUtils::CtrlType;
+    
     using NodeId = MotorUtils::NodeId;
     using MetaData = MotorUtils::MetaData;
+    
 protected:
     using ExitFlag = MotorUtils::ExitFlag;
     using InitFlag = MotorUtils::InitFlag;
 
     using Range = Range_t<real_t>;
-
     using Switches = MotorUtils::Switches;
 
 
@@ -162,4 +164,5 @@ public:
     }
 
     virtual uint32_t exe() const = 0;
+    virtual void setRadfix(const real_t _radfix) = 0;
 };

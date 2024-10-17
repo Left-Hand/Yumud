@@ -38,9 +38,10 @@ class FOCStepper:public FOCMotor{
     
     SpeedCtrl speed_ctrl{meta, archive_.spd_config};
 
-    PositionCtrl position_ctrl{meta, archive_.pos_config, archive_.spe_config};
+    PositionCtrl position_ctrl{meta, archive_.pos_config};
 
     SpeedEstimator speed_estmator{archive_.spe_config};
+    SpeedEstimator targ_spd_est{archive_.spe_config};
 
     // bool cali_debug_enabled = true;
     // bool command_debug_enabled = false;
@@ -195,5 +196,9 @@ public:
 
     real_t getRaddiff() const {
         return meta.raddiff;
+    }
+
+    void setRadfix(const real_t rf){
+        meta.radfix = rf;
     }
 };

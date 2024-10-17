@@ -27,7 +27,8 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             break;
 
         case "pos.kp"_ha:
-            
+            break;
+        
         case "load"_ha:
         case "ld"_ha:
             motor.loadArchive();
@@ -62,6 +63,10 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             os.prints("======");
             break;
 
+        case "rf"_ha:
+            motor.setRadfix(real_t(args[1]));
+            break;
+        
         case "speed"_ha:
         case "spd"_ha:
         case "s"_ha:

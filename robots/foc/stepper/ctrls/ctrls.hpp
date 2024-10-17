@@ -107,23 +107,19 @@ public:
 
     Config & config;
 protected:
-    SpeedEstimator targ_spd_est;
     real_t last_targ_pos;
     bool locked;
 public:
-    PositionCtrl(MetaData & _meta, Config & _config, const SpeedEstimator::Config & _tspe_config):
+    PositionCtrl(MetaData & _meta, Config & _config):
         HighLayerCtrl(_meta),
-        config(_config),
-        targ_spd_est(_tspe_config)
+        config(_config)
         
         {
             reset();
         }
 
-    void reset() override {
-        targ_spd_est.reset();
-    }
-
+    void reset(){}
+    
     Result update(
         const real_t targ_position, 
         const real_t real_position, 

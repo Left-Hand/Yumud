@@ -16,7 +16,7 @@ void FOCStepper::active_task(){
 
     meta.pos = odo.getPosition();
     meta.elecrad = odo.getElecRad();
-    meta.spd = (speed_estmator.update(meta.pos) + meta.spd * 127) >> 7;
+    meta.spd = speed_estmator.update(meta.pos);
 
     {
         auto is_pos_outrange = [&]() -> bool{
@@ -36,6 +36,7 @@ void FOCStepper::active_task(){
                 break;
 
             case CtrlType::POSITION:
+                meta.targ_est_spd = targ_spd_est.update(meta.targ_pos);
                 result = position_ctrl.update(meta.pos_limit.clamp(meta.targ_pos), meta.pos, meta.spd);
                 break;
     

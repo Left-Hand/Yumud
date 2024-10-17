@@ -27,30 +27,25 @@ Result PositionCtrl::update(
     {
 
     scexpr real_t inquater_radius = real_t(inv_poles / 4);
-        
-    meta.targ_est_spd = (meta.targ_spd * 127 + targ_spd_est.update(targ_pos)) >> 7;
 
-    // real_t pos_err = targ_pos - real_pos;
+
     real_t pos_err = CLAMP2(targ_pos - real_pos, ERR_LIMIT);
 
-    // real_t spd_err = meta.targ_est_spd - real_spd;
     real_t spd_err = CLAMP2(meta.targ_spd - real_spd, ERR_LIMIT);
     real_t abs_pos_err = ABS(pos_err);
 
     real_t w_k_change =  (config.kd * spd_err) >> 8;
 
-    // scexpr auto kp = real_t(2);
     real_t w_elapsed = config.kp * SIGN_AS(sqrt(abs_pos_err), pos_err);
-    // real_t w_elapsed = config.kp * pos_err;
-    // real_t w_elapsed = 0;
 
-    real_t w = CLAMP2(w_elapsed + w_k_change, meta.max_curr);
-    real_t curr = ABS(w);
+    scexpr auto ki = real_t(0.01);
+    real_t signed_curr = CLAMP2(w_elapsed + w_k_change, meta.max_curr) + ki * pos_err;
+    real_t curr = ABS(signed_curr);
 
     if(unlikely(abs_pos_err < inquater_radius)){
         return {curr, pos_err * (poles * tau)};
     }else{
-        return {curr, SIGN_AS(meta.get_max_raddiff(), w)};
+        return {curr, SIGN_AS(meta.get_max_raddiff(), signed_curr)};
     }
 }
 

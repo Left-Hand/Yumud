@@ -20,9 +20,7 @@ protected:
         int sustain_ms;
     };
 
-
     scexpr real_t tone_current = real_t(0.15);
-    
 
 
     using enum Tones;

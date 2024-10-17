@@ -20,8 +20,9 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
 
     archive.spd_config = {
         // .kp = real_t(205.0/256),
-        .kp = 5,
+        .kp = 7,
         .kd = 70,
+        // .kd = 0,
 
         // .kp = 8,
         // .kd = 30,
