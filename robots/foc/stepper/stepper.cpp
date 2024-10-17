@@ -20,6 +20,7 @@ void FOCStepper::invoke_selfcheck_task(){
     selfcheck_tasker.reset();
     run_status = RunStatus::CHECK;
 }
+
 void FOCStepper::tick(){
     auto begin_micros = micros();
     RunStatus exe_status;

@@ -101,7 +101,7 @@ namespace MotorUtils{
             Switches switches;
         };
 
-        alignas(16) CurrentCtrl::Config curr_config;
+        alignas(16) CurrentFilter::Config curr_config;
         alignas(16) SpeedCtrl::Config spd_config;
         alignas(16) PositionCtrl::Config pos_config;
         alignas(16) SpeedEstimator::Config spe_config;

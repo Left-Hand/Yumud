@@ -7,6 +7,9 @@
 #include "algo/interpolation/cubic.hpp"
 #include "algo/interpolation/cubic.hpp"
 
+#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
+
+
 #include "drivers/Encoder/MagEncoder.hpp"
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
@@ -133,8 +136,12 @@ void stepper_tb(UartHw & logger){
     timer1.oc(2).init();
     timer1.oc(3).init();
     timer1.oc(4).init();
-    
 
+    timer1.oc(1).setPolarity(false);
+    timer1.oc(2).setPolarity(false);
+    timer1.oc(3).setPolarity(false);
+    timer1.oc(4).setPolarity(false);
+    
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
@@ -262,7 +269,7 @@ void stepper_tb(UartHw & logger){
 
         // stp.setTargetPosition(demo() * 10);
         // stp.setTargetPosition(5 * sin(7 * t));
-        stp.setTargetPosition(target);
+        // stp.setTargetPosition(target);
 
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(7 * frac(t));

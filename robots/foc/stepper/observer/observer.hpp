@@ -5,7 +5,7 @@
 struct SpeedEstimator{
 public:
     struct Config{
-        real_t err_threshold = inv_poles / 16;
+        real_t err_threshold = inv_poles / 4;
         size_t est_freq = foc_freq;
         size_t max_cycles = foc_freq >> 7;
     };

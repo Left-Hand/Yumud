@@ -1,15 +1,15 @@
 #include "../stepper.hpp"
-
+//FIXME need to remove
 #define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
 
 static void getDefaultArchive(MotorUtils::Archive & archive){
     archive.pos_config = {
-        // .kp = 2,
-        // .kd = 15
-
-        .kp = 3,
+        .kp = real_t(2),
         .kd = 70
+
+        // .kp = 3,
+        // .kd = 70
 
         // .kp = 6,
         // .kd = 116
@@ -21,8 +21,10 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
     archive.spd_config = {
         // .kp = real_t(205.0/256),
         .kp = 5,
-        // .kp = 20,
         .kd = 70,
+
+        // .kp = 8,
+        // .kd = 30,
     };
 }
 

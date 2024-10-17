@@ -34,7 +34,7 @@ class FOCStepper:public FOCMotor{
     RgbLedAnalog rgb_led{red_pwm, green_pwm, blue_pwm};
     StatLed panel_led = StatLed{rgb_led, run_status, ctrl_type};
 
-    CurrentCtrl curr_ctrl{meta, archive_.curr_config};
+    CurrentFilter curr_ctrl{meta, archive_.curr_config};
     
     SpeedCtrl speed_ctrl{meta, archive_.spd_config};
 
@@ -42,9 +42,9 @@ class FOCStepper:public FOCMotor{
 
     SpeedEstimator speed_estmator{archive_.spe_config};
 
-    bool cali_debug_enabled = true;
-    bool command_debug_enabled = false;
-    bool run_debug_enabled = false;
+    // bool cali_debug_enabled = true;
+    // bool command_debug_enabled = false;
+    // bool run_debug_enabled = false;
     
     uint64_t exe_micros = 0;
 

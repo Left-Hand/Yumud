@@ -1,10 +1,7 @@
 #include "AT8222.hpp"
 
 void AT8222::init(){
-    forward_pwm.setPolarity(false);
-    backward_pwm.setPolarity(false);
-
-    if(p_enable_gpio) p_enable_gpio->set();
+    enable();
 }
 
 void AT8222::enable(const bool en){

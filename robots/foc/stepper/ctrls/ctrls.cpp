@@ -20,8 +20,11 @@ void MetaData::reset(){
     openloop_curr = real_t(0.7);
 }
 
-Result PositionCtrl::update(real_t targ_pos, const real_t real_pos, 
-    const real_t real_spd){
+Result PositionCtrl::update(
+        real_t targ_pos, 
+        const real_t real_pos, 
+        const real_t real_spd)
+    {
 
     scexpr real_t inquater_radius = real_t(inv_poles / 4);
         
@@ -52,17 +55,17 @@ Result PositionCtrl::update(real_t targ_pos, const real_t real_pos,
 }
 
 Result SpeedCtrl::update(real_t _targ_spd, real_t real_spd){
-    const real_t clamped_targ_spd = CLAMP2(_targ_spd, meta.max_spd);
+    // const real_t clamped_targ_spd = CLAMP2(_targ_spd, meta.max_spd);
     
-    soft_targ_spd = STEP_TO(soft_targ_spd, clamped_targ_spd, real_t(meta.max_acc) / foc_freq);
+    // soft_targ_spd = STEP_TO(soft_targ_spd, clamped_targ_spd, real_t(meta.max_acc) / foc_freq);
+    soft_targ_spd = _targ_spd;
 
     const real_t spd_err = (soft_targ_spd - real_spd);
-    spd_delta = (spd_delta * 31 + (real_spd - last_real_spd)) >> 5;
+    spd_delta = real_spd - last_real_spd;
+    // spd_delta = (spd_delta * 31 + (real_spd - last_real_spd)) >> 5;
     
     last_real_spd = real_spd;
 
-    // const real_t kp_contribute = CLAMP2(spd_err * config.kp, ERR_LIMIT);
-    // const real_t kd_contribute = CLAMP2(spd_delta * config.kd, ERR_LIMIT);
     const real_t kp_contribute = spd_err * config.kp;
     const real_t kd_contribute = spd_delta * config.kd;
 

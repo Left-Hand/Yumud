@@ -33,6 +33,8 @@ namespace MotorUtils{
         COIL_A_NO_SIGNAL,
         COIL_B_DISCONNECTED,
         COIL_B_NO_SIGNAL,
+        COIL_C_DISCONNECTED,
+        COIL_C_NO_SIGNAL,
     };
 
     enum class Command:uint8_t{

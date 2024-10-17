@@ -19,7 +19,7 @@ struct CtrlResult{
 };
 
 
-struct CurrentCtrl{
+struct CurrentFilter{
 using MetaData = MotorUtils::MetaData;
 using Result = CtrlResult;
 public:
@@ -36,7 +36,7 @@ protected:
     real_t last_raddiff = 0;
 public:
 
-    CurrentCtrl(MetaData & _meta, Config & _config):meta(_meta), config(_config){reset();}
+    CurrentFilter(MetaData & _meta, Config & _config):meta(_meta), config(_config){reset();}
 
     void reset(){
         last_curr = 0;
@@ -52,7 +52,7 @@ public:
     // real_t getLastRaddiff() const {return raddiff_output;}
 };
 
-CtrlResult CurrentCtrl::update(const CtrlResult res){
+CtrlResult CurrentFilter::update(const CtrlResult res){
     last_curr = STEP_TO(last_curr, res.current, config.curr_slew_rate);
     last_raddiff = STEP_TO(last_raddiff, res.raddiff, config.rad_slew_rate);
 
@@ -108,17 +108,25 @@ public:
     Config & config;
 protected:
     SpeedEstimator targ_spd_est;
+    real_t last_targ_pos;
+    bool locked;
 public:
     PositionCtrl(MetaData & _meta, Config & _config, const SpeedEstimator::Config & _tspe_config):
         HighLayerCtrl(_meta),
         config(_config),
         targ_spd_est(_tspe_config)
-        {reset();}
+        
+        {
+            reset();
+        }
 
     void reset() override {
         targ_spd_est.reset();
     }
 
-    Result update(const real_t targ_position, const real_t real_position, 
-            const real_t real_speed);
+    Result update(
+        const real_t targ_position, 
+        const real_t real_position, 
+        const real_t real_speed
+    );
 };

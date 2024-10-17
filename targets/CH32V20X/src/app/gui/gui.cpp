@@ -141,7 +141,12 @@ public:
 void gui_main(){
 
     auto & logger = uart2;
+
+    #ifdef CH32V30X
     auto & spi = spi2;
+    #else
+    auto & spi = spi1;
+    #endif
     logger.init(576000);
     auto & lcd_blk = portC[7];
     
