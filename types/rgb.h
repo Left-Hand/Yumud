@@ -166,6 +166,8 @@ struct Binary{
 
 typedef struct Binary Binary;
 
+struct RGB565;
+
 struct Grayscale{
     uint8_t data;
 
@@ -180,7 +182,9 @@ struct Grayscale{
 
     __fast_inline constexpr Grayscale(const real_t & _data): data(int(_data * 256)){;}
 
+    __fast_inline constexpr Grayscale(const RGB565 & rgb);
     __fast_inline constexpr Grayscale & operator = (const uint8_t & _data){data = _data; return *this;}
+
 
     __fast_inline constexpr operator uint8_t() const {return data;}
 
@@ -199,6 +203,8 @@ struct Grayscale{
     __fast_inline constexpr Binary to_bina(const Grayscale & threshold = 128){return Binary(data > (uint8_t)threshold);}
 #endif
 };
+
+
 
 typedef struct Grayscale Grayscale;
 
@@ -292,6 +298,9 @@ struct sGrayscale{
 #endif
 };
 
+#ifdef __cpluscplus
+__fast_inline constexpr GrayScale::Grayscale(const RGB565 & rgb):data(((rgb.r*77 + rgb.g*150 + rgb.b*29+128) >> 8)){;}
+#endif
 
 
 #ifdef __cplusplus
