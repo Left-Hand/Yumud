@@ -40,14 +40,9 @@ protected:
     real_t last_duty_ = 0;
     bool inversed = false;
 
-
 public:
 
     LedAnalog(gpio_or_pwm auto & _inst, const bool inv = false):inst(_inst), inversed(inv){;}
-
-    void init(){
-        inst.init();
-    }
 
     void toggle() override {
         last_duty_ = 1 - last_duty_;

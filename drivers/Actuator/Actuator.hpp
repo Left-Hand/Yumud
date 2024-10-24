@@ -14,24 +14,4 @@ public:
 };
 
 
-class Servo:public Actuator{
-public:
-
-};
-
-
-class ServoOpenLoop:public Servo{
-
-};
-
-class PwmBaseServo:public ServoOpenLoop{
-
-};
-
-
-class ServoCloseLoop:public Servo{
-public:
-    virtual real_t getPosition() = 0;
-};
-
 #endif

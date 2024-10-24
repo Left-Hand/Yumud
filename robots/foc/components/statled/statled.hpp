@@ -35,9 +35,9 @@ protected:
 public:
     StatLed(RgbLedConcept & _led, volatile RunStatus & _run_status, volatile CtrlType & _ctrl_type) : led(_led), run_status(_run_status), ctrl_type(_ctrl_type) {;}
 
-    void init(){
-        led.init();
-    }
+    // void init(){
+    //     led.init();
+    // }
 
     void setTranstit(const Color & _color_a, const Color & _color_b, const Method _method, const uint _period){
         color_a = _color_a;

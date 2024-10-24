@@ -29,7 +29,7 @@ void MP6540::init(){
             MP6540_DEBUG("pwm[", i, "]: is null");
             error();
         }else{
-            item->init();
+            // item->init();
         } 
     }
 

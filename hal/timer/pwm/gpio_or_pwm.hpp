@@ -19,7 +19,7 @@ public:
     GpioOrPwm(gpio_or_pwm auto & _inst):inst_(_inst){}
 
 
-    void init() override;
+    // void init();
 
     bool hasPwm() const;
     bool hasGpio() const;
