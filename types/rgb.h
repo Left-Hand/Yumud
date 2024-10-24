@@ -6,7 +6,6 @@
 
 #ifdef __cplusplus
 #include "sys/math/real.hpp"
-#include "sys/string/string.hpp"
 
 enum class ColorEnum:uint32_t{
     WHITE   = 0xFFFFFF,    // White color

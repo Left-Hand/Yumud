@@ -1,9 +1,7 @@
-#ifndef __UINT24_T_H__
-
-#define __UINT24_T_H__
+#pragma once
 
 #include "stdint.h"
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
 #pragma pack(push, 1)
 struct uint24_t{
@@ -37,5 +35,3 @@ struct uint24_t{
 typedef struct uint24_t uint24_t;
 
 #pragma pack(pop)
-
-#endif

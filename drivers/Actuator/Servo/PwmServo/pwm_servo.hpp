@@ -1,7 +1,7 @@
-#ifndef __PWM_SERVO_HPP__
-#define __PWM_SERVO_HPP__
+#pragma once
 
-#include "../drivers/Actuator/Actuator.hpp"
+#include "drivers/Actuator/Actuator.hpp"
+#include "types/range/range_t.hpp"
 
 
 class PwmServo:public ServoOpenLoop{
@@ -81,5 +81,3 @@ public:
     Servo360(PwmChannel & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), 270){;}
 };
 
-
-#endif
