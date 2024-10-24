@@ -2,6 +2,7 @@
 
 #include "actuator/jointlr.hpp"
 #include "actuator/zaxis.hpp"
+#include "actuator/claw.hpp"
 #include "nozzle/nozzle.hpp"
 
 #include "../common/inc.hpp"

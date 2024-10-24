@@ -14,7 +14,7 @@ class Axis:public Actuator{
 };
 
 class Joint:public Actuator{
-    virtual void setRad(const real_t rad) = 0;
+    virtual void setRadian(const real_t rad) = 0;
 };
 
 }

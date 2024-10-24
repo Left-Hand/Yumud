@@ -4,11 +4,12 @@ namespace gxm{
     
 
 bool JointLR::reached(){
-    return false;
+    return servo.getRadian() == last_radian_;
 }
 
-void JointLR::setRad(const real_t rad){
-
+void JointLR::setRadian(const real_t rad){
+    servo.setRadian(rad);
+    last_radian_ = rad;
 }
 
 void JointLR::tick(){

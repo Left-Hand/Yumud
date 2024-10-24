@@ -7,13 +7,51 @@
 
 namespace gxm{
 
-class ChassisModule{
+void GrabModule::goHome(){
+    
+}
 
-protected:
-    // Vector3
-public:
-    bool done();
-};
+void GrabModule::moveZ(const real_t pos){
+    zaxis.setDistance(pos);
+}
 
+void GrabModule::moveXY(const Vector2 & pos){
+    auto [a,b] = solver_.invrese(pos);
+    joint_l.setRadian(a);
+    joint_r.setRadian(b);
+}
+
+
+void GrabModule::moveTo(const Vector3 & pos){
+    moveXY({pos.x, pos.y});
+    moveZ(pos.z);
+}
+
+void GrabModule::pickUp(){
+    claw.press();
+    nozzle.press();
+}
+
+void GrabModule::putDown(){
+    claw.release();
+    nozzle.release();
+}
+
+
+void GrabModule::take(){
+    
+}
+
+void GrabModule::give(){
+    
+}
+
+bool GrabModule::done(){
+    return true;
+}
+
+void GrabModule::begin(){
+    
+}
 
 }
