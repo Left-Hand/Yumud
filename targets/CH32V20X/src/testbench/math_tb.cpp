@@ -41,10 +41,10 @@ void math_tb(UartHw & logger){
     logger.setEps(4);
     
 
-    using Vector3 = Vector3_t<real_t>;
-    using Plane = Plane_t<real_t>;
-    using Basis = Basis_t<real_t>;
-    using Transform3D = Transform3D_t<real_t>;
+    // using Vector3 = Vector3_t<real_t>;
+    // using Plane = Plane_t<real_t>;
+    // using Basis = Basis_t<real_t>;
+    // using Transform3D = Transform3D_t<real_t>;
 
     // sdi.init();
 

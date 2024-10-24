@@ -34,6 +34,7 @@
 #include <cstdint>
 
 #include "sys/math/real.hpp"
+#include "sys/stream/ostream.hpp"
 #include "../rgb.h"
 
 
@@ -215,22 +216,6 @@ public:
 		a = static_cast<T>(p_a);
 	}
 
-    __no_inline explicit operator String() const{
-        return (String('(')     + String(static_cast<float>(r)) + String(", ")
-                                + String(static_cast<float>(g)) + String(", ")
-                                + String(static_cast<float>(b)) + String(", ")
-                                + String(static_cast<float>(a)) + String(')')
-                                );
-    }
-
-    __no_inline String toString(unsigned char decimalPlaces = 2){
-        return (String('(')     + String(static_cast<float>(r), decimalPlaces) + String(", ")
-                                + String(static_cast<float>(g), decimalPlaces) + String(", ")
-                                + String(static_cast<float>(b), decimalPlaces) + String(", ")
-                                + String(static_cast<float>(a), decimalPlaces) + String(')')
-                                );
-    }
-
     __fast_inline_constexpr operator RGB565() const {
         return RGB565(
             (uint8_t)(r * 31),
@@ -245,5 +230,10 @@ public:
             (uint8_t)(b * 255));
     }
 };
+
+__fast_inline OutputStream & operator<<(OutputStream & os, const Color_t<auto> & value){
+    return os << '(' << value.r << ',' << value.g << ',' << value.b << ',' << value.a << ')';
+}
+
 
 #include "color_t.tpp"

@@ -10,10 +10,12 @@ public:
     virtual void setByIndex(const int index);
     virtual void clrByIndex(const int index);
 
-    virtual void set(const uint16_t mask) = 0;
     virtual void set(const Pin pin){set((uint16_t)pin);}
-    virtual void clr(const uint16_t mask) = 0;
     virtual void clr(const Pin pin){clr((uint16_t)pin);}
+    
+    virtual void set(const uint16_t mask) = 0;
+    virtual void clr(const uint16_t mask) = 0;
+    
     virtual void setMode(const int index, const PinMode mode) = 0;
     virtual PortConcept & operator = (const uint16_t data) = 0;
 
