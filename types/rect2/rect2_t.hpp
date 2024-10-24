@@ -1,6 +1,4 @@
-#ifndef __RECT2_HPP__
-
-#define __RECT2_HPP__
+#pragma once
 
 #include "sys/core/platform.h"
 #include "sys/math/real.hpp"
@@ -34,12 +32,12 @@ public:
 
     constexpr Rect2_t():position(Vector2_t<T>()), size(Vector2_t<T>()){;}
 
-    constexpr Rect2_t(const Rect2_t<arithmetic auto> other):position(static_cast<Vector2_t<T>>(other.position)), size(static_cast<Vector2_t<T>>(other.size)){;}
+    constexpr Rect2_t(const Rect2_t<auto> other):position(static_cast<Vector2_t<T>>(other.position)), size(static_cast<Vector2_t<T>>(other.size)){;}
 
-    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _position,const Vector2_t<arithmetic auto> & _size):position(static_cast<Vector2_t<T>>(_position)), size(static_cast<Vector2_t<T>>(_size)){;}
+    constexpr Rect2_t(const Vector2_t<auto> & _position,const Vector2_t<auto> & _size):position(static_cast<Vector2_t<T>>(_position)), size(static_cast<Vector2_t<T>>(_size)){;}
 
 
-    constexpr Rect2_t(const Vector2_t<arithmetic auto> & _size):position(), size(_size){;}
+    constexpr Rect2_t(const Vector2_t<auto> & _size):position(), size(_size){;}
 
     explicit constexpr Rect2_t(const Vector2_t<auto> * points, const size_t cnt){
         if(cnt < 1) return;
@@ -57,13 +55,13 @@ public:
     explicit constexpr Rect2_t(const Range_t<auto> & x_range,const Range_t<auto> & y_range):
             position(Vector2_t<T>(x_range.from, y_range.from)), size(Vector2_t<T>(x_range.length(), y_range.length())){;}
 
-    constexpr Rect2_t(const arithmetic auto _x,const arithmetic auto _y,const arithmetic auto _width,const arithmetic auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
+    constexpr Rect2_t(const auto _x,const auto _y,const auto _width,const auto _height):position(Vector2_t<T>(_x,_y)),size(Vector2_t<T>(_width, _height)){;}
 
-    scexpr Rect2_t from_center(const Vector2_t<arithmetic auto> & center, const Vector2_t<arithmetic auto> & half_size){
+    scexpr Rect2_t from_center(const Vector2_t<auto> & center, const Vector2_t<auto> & half_size){
         return Rect2_t<T>(center - half_size, half_size * 2).abs();
     }
 
-    scexpr Rect2_t from_cross(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b){
+    scexpr Rect2_t from_cross(const Vector2_t<auto> & a, const Vector2_t<auto> & b){
         return Rect2_t<T>(a, b-a).abs();
     }
 
@@ -98,7 +96,7 @@ public:
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
         bool x_ins = regular.get_x_range().contains(other_regular.get_x_range());
-        if(!x_ins)return false;
+        if(false == x_ins) return false;
         bool y_ins = regular.get_y_range().contains(other_regular.get_y_range());
         return y_ins;
     }
@@ -148,7 +146,7 @@ public:
         return(*this);
     }
 
-    constexpr bool intersects(const Rect2_t<arithmetic auto> & other) const{
+    constexpr bool intersects(const Rect2_t<auto> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
 
@@ -157,9 +155,7 @@ public:
         bool y_ins = regular.get_y_range().intersects(other_regular.get_y_range());
         return y_ins;
     }
-
-
-    constexpr Rect2_t<T> intersection(const Rect2_t<arithmetic auto> & other) const{
+    constexpr Rect2_t<T> intersection(const Rect2_t<auto> & other) const{
         Rect2_t<T> regular = this -> abs();
         Rect2_t<T> other_regular = other.abs();
 
@@ -177,7 +173,7 @@ public:
         return Rect2_t<T>(_position, _size);
     }
 
-    constexpr Rect2_t<T> merge(const Rect2_t<arithmetic auto> & other) const{
+    constexpr Rect2_t<T> merge(const Rect2_t<auto> & other) const{
         Rect2_t<T> regular = this->abs();
         Rect2_t<T> other_regular = other.abs();
         Range_t<T> range_x = regular.get_x_range().merge(other_regular.get_x_range());
@@ -185,14 +181,14 @@ public:
         return Rect2_t<T>(range_x, range_y);
     }
 
-    constexpr Rect2_t<T> merge(const Vector2_t<arithmetic auto> & point) const{
+    constexpr Rect2_t<T> merge(const Vector2_t<auto> & point) const{
         Rect2_t<T> regular = this->abs();
         Range_t<T> range_x = regular.get_x_range().merge(point.x);
         Range_t<T> range_y = regular.get_y_range().merge(point.y);
         return Rect2_t<T>(range_x, range_y);
     }
 
-    constexpr Vector2_t<arithmetic auto> constrain(const Vector2_t<arithmetic auto> & point) const{
+    constexpr auto constrain(const Vector2_t<auto> & point) const{
         Rect2_t<T> regular = this->abs();
         std::remove_cvref_t<decltype(point)> ret;
         ret.x = regular.get_x_range().clamp(point.x);
@@ -251,5 +247,3 @@ using Rect2f = Rect2_t<float>;
 __fast_inline OutputStream & operator<<(OutputStream & os, const Rect2_t<auto> & value){
     return os << '(' << value.position << ',' << value.size << ')';
 }
-
-#endif

@@ -239,15 +239,15 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
     }
 
 
-    int
-    dx01 = x1 - x0,
-    dy01 = y1 - y0,
-    dx02 = x2 - x0,
-    dy02 = y2 - y0,
-    dx12 = x2 - x1,
-    dy12 = y2 - y1,
-    sa   = 0,
-    sb   = 0;
+
+    int dx01 = x1 - x0;
+    int dy01 = y1 - y0;
+    int dx02 = x2 - x0;
+    int dy02 = y2 - y0;
+    int dx12 = x2 - x1;
+    int dy12 = y2 - y1;
+    int sa   = 0;
+    int sb   = 0;
 
     if (y1 == y2) last = y1;  // Include y1 scanline
     else         last = y1 - 1; // Skip it

@@ -36,7 +36,7 @@ protected:
         }
     }
 public:
-    Painter(){;}
+    Painter():PainterConcept(){;}
 
     Rect2i getCanvasWindow() override {
         return src_image->get_view();

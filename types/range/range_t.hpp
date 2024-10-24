@@ -30,6 +30,12 @@ public:
 
     const T & operator [](const size_t index) const {return *(&this->from + index);}
 
+    const T * begin() const { return &this->from;}
+
+    const T * end() const { return &this->to;}
+
+    constexpr size_t size() const {return 2;}
+
     constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
         this->from = static_cast<T>(other.from);
         this->to = static_cast<T>(other.to);
@@ -139,7 +145,7 @@ public:
     constexpr Range_t<T> intersection(const Range_t<auto> & other) const {
         Range_t<T> regular = this -> abs();
         Range_t<T> other_regular = other.abs();
-        if(not regular.intersects(other_regular)) return Range_t<T>();
+        if(false == regular.intersects(other_regular)) return Range_t<T>();
         return Range_t<T>(MAX(T(regular.from), T(other_regular.from)), MIN(T(regular.to), T(other_regular.to)));
     }
 

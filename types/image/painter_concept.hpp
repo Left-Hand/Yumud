@@ -17,6 +17,7 @@ class PainterConcept{
 protected:
 
     RGB888 m_color;
+    Rect2i crop_rect;
     
     void drawHriLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(l, 1));
@@ -46,6 +47,10 @@ protected:
     virtual void drawStr(const Vector2i & pos, const char * str_ptr, const size_t str_len) = 0;
 
 public:
+    DELETE_COPY_AND_MOVE(PainterConcept)
+
+    PainterConcept() = default;
+
     template<typename U>
     void setColor(U _color){
         m_color = _color;

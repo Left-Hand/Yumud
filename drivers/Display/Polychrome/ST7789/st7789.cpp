@@ -55,3 +55,15 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
     writeCommand(0x2c);
     area_locked = false;
 }
+
+
+
+void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 & color){
+    setarea_unsafe(rect);
+    interface.writePool((uint16_t)color, int(rect));
+}
+
+void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
+    setarea_unsafe(rect);
+    interface.writePixels((color_ptr), int(rect));
+}
