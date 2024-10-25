@@ -15,10 +15,11 @@ void ChassisModule::forwardMove(const Vector2 & pos, const real_t rad){
     
 }
 
-void ChassisModule::calibrateRotation(){
+void ChassisModule::calibrateRotation(const real_t rad){
     
 }
-void ChassisModule::calibratePosition(){
+
+void ChassisModule::calibratePosition(const Vector2 & pos){
     
 }
 

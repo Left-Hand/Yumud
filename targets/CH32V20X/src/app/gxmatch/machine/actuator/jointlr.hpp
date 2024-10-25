@@ -6,7 +6,7 @@
 namespace gxm{
     
 class JointLR:public Joint{
-    RadianServo & servo;
+    RadianServo & servo_;
     real_t last_radian_;
 
     struct Refs{
@@ -14,7 +14,7 @@ class JointLR:public Joint{
         
     };
 public:
-    JointLR(const Refs & refs):servo(refs._servo){}
+    JointLR(const Refs & refs):servo_(refs._servo){}
     bool reached() override;
     void setRadian(const real_t dist) override;  
     void tick() override; 
