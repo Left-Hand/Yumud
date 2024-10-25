@@ -10,15 +10,15 @@ void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
     // channel -= 1;
     if(channel > 15) CREATE_FAULT;
     
-    if(sub_channels[channel].on.cvr != on){
+    // if(sub_channels[channel].on.cvr != on){
         writeReg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on);
-        sub_channels[channel].on.cvr = on;
-    }
+        // sub_channels[channel].on.cvr = on;
+    // }
 
-    if(sub_channels[channel].off.cvr != off){
+    // if(sub_channels[channel].off.cvr != off){
         writeReg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), off);
-        sub_channels[channel].off.cvr = off;
-    }
+        // sub_channels[channel].off.cvr = off;
+    // }
 }
 
 void PCA9685::init(){

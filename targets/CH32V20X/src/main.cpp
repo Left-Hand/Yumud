@@ -8,6 +8,7 @@
 
 #include "testbench/tb.h"
 #include "app/gui/gui.hpp"
+#include "app/gxmatch/gxmatch.hpp"
 
 void preinit(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -102,7 +103,8 @@ int main(){
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
     // embd_main();
-    gui_main();
+    // gui_main();
+    gxm::host_main();
     // can_tb(logger, can1);
     #endif
     while(true);

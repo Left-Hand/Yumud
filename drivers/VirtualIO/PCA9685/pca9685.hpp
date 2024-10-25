@@ -6,12 +6,12 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "drivers/device_defs.h"
 
+
 class PCA9685: public PortVirtualConcept<16>{
 public:
-    scexpr uint8_t default_id = 0b10110000;
+    scexpr uint8_t default_i2c_addr = 0b10110000;
 protected:
     I2cDrv bus_drv;
-    uint16_t buf;
 
     scexpr uint8_t valid_chipid = 0x23;
 
@@ -38,9 +38,9 @@ protected:
     };
 
     struct LedOnOffReg:public Reg16{
-        uint16_t cvr:12;
-        uint16_t full:1;
-        uint16_t __resv__:3;
+        uint16_t cvr:12 = 0;
+        uint16_t full:1 = 0;
+        uint16_t __resv__:3 = 0;
     };
 
     struct LedRegs{
@@ -59,14 +59,50 @@ protected:
         Prescale = 0x7f
     };
 
-    struct{
-        Mode1Reg mode1_reg;
-        Mode2Reg mode2_reg;
-        std::array<uint8_t,3> sub_addr_regs;
-        uint8_t all_addr_reg;
-        std::array<LedRegs,16> sub_channels;
-        LedRegs all_channel;
-        uint8_t prescale_reg;
+    Mode1Reg mode1_reg;
+    Mode2Reg mode2_reg;
+    std::array<uint8_t,3> sub_addr_regs;
+    uint8_t all_addr_reg;
+    std::array<LedRegs,16> sub_channels;
+    LedRegs all_channel;
+    uint8_t prescale_reg;
+
+    class PCA8975Pwm:public PwmChannel{
+    protected:
+        PCA9685 & pca;
+        uint8_t channel;
+
+        PCA8975Pwm(PCA9685 & _pca, const uint8_t _channel):pca(_pca), channel(_channel){;}
+        
+        DELETE_COPY_AND_MOVE(PCA8975Pwm)
+        
+        friend class PCA9685;
+    public:
+
+        PCA8975Pwm & operator = (const real_t duty) override{
+            pca.setPwm(channel, 0, (uint16_t)(duty << 12));
+            return *this;
+        }
+    };
+
+
+    std::array<PCA8975Pwm,16> channels{
+        PCA8975Pwm{*this, 0},
+        PCA8975Pwm{*this, 1},
+        PCA8975Pwm{*this, 2},
+        PCA8975Pwm{*this, 3},
+        PCA8975Pwm{*this, 4},
+        PCA8975Pwm{*this, 5},
+        PCA8975Pwm{*this, 6},
+        PCA8975Pwm{*this, 7},
+        PCA8975Pwm{*this, 8},
+        PCA8975Pwm{*this, 9},
+        PCA8975Pwm{*this, 10},
+        PCA8975Pwm{*this, 11},
+        PCA8975Pwm{*this, 12},
+        PCA8975Pwm{*this, 13},
+        PCA8975Pwm{*this, 14},
+        PCA8975Pwm{*this, 15}
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
@@ -105,11 +141,10 @@ protected:
 public:
     PCA9685(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     PCA9685(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    PCA9685(I2c & _bus):bus_drv{_bus, default_id}{;}
+    PCA9685(I2c & _bus):bus_drv{_bus, default_i2c_addr}{;}
 
     void setFrequency(uint32_t freq);
 
-    // void setPwm(const uint8_t channel, const uint16_t on);
     void setPwm(const uint8_t channel, const uint16_t on, const uint16_t off);
 
     void setSubAddr(const uint8_t index, const uint8_t addr);
@@ -137,4 +172,8 @@ public:
     void setMode(const int index, const PinMode mode) override;
 
     PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
+
+    PCA8975Pwm & operator [](const size_t index){
+        return channels[index];
+    }
 };

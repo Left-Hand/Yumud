@@ -1,12 +1,10 @@
-#ifndef __AW9523B_HPP__
+#pragma once
 
-#define __AW9523B_HPP__
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port_virtual.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
 
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port_virtual.hpp"
-#include "../drivers/CommonIO/Led/rgbLed.hpp"
-#include "../hal/timer/pwm/pwm_channel.hpp"
-#include "../drivers/device_defs.h"
+#include "drivers/device_defs.h"
 
 class AW9523: public PortVirtualConcept<16>{
 public:
@@ -14,9 +12,9 @@ public:
         Max, High, Medium, Low
     };
 
-    scexpr uint8_t default_id = 0b10110000;
+    scexpr uint8_t default_i2c_addr = 0b10110000;
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
     uint16_t buf;
     scexpr uint8_t valid_chipid = 0x23;
 
@@ -46,7 +44,6 @@ protected:
         uint16_t inten;
         CtlReg ctl;
         uint16_t ledMode;
-
     };
 
     void writeReg(const RegAddress addr, const uint8_t data){
@@ -75,8 +72,52 @@ protected:
         return buf;
     }
 
+
+    class AW9523Pwm:public PwmChannel{
+    protected:
+        AW9523 & aw9523;
+        Pin pin;
+
+        AW9523Pwm(AW9523 & _aw9523, const Pin _pin):aw9523(_aw9523), pin(_pin){;}
+
+        DELETE_COPY_AND_MOVE(AW9523Pwm)
+        
+        friend class AW9523;
+    public:
+
+        void init(){
+            aw9523.enableLedMode(pin);
+        }
+
+        AW9523Pwm & operator = (const real_t duty) override{
+            aw9523.setLedCurrent(pin,int(255 * duty));
+            return *this;
+        }
+    };
+
+    std::array<AW9523Pwm, 16> channels = {
+        AW9523Pwm(*this, Pin::_0),
+        AW9523Pwm(*this, Pin::_1),
+        AW9523Pwm(*this, Pin::_2),
+        AW9523Pwm(*this, Pin::_3),
+        AW9523Pwm(*this, Pin::_4),
+        AW9523Pwm(*this, Pin::_5),
+        AW9523Pwm(*this, Pin::_6),
+        AW9523Pwm(*this, Pin::_7),
+        AW9523Pwm(*this, Pin::_8),
+        AW9523Pwm(*this, Pin::_9),
+        AW9523Pwm(*this, Pin::_10),
+        AW9523Pwm(*this, Pin::_11),
+        AW9523Pwm(*this, Pin::_12),
+        AW9523Pwm(*this, Pin::_13),
+        AW9523Pwm(*this, Pin::_14),
+        AW9523Pwm(*this, Pin::_15),
+    };
+
 public:
-    AW9523(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    AW9523(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    AW9523(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
+    AW9523(I2c & bus):bus_drv(I2cDrv(bus, default_i2c_addr)){;}
 
     void init(){
         reset();
@@ -91,10 +132,12 @@ public:
     void reset(){
         writeReg(RegAddress::swRst, (uint8_t)0x00);
     }
+    
     void set(const Pin pin) override{
         buf |= (uint16_t)pin;
         write(buf);
     }
+    
     void clr(const Pin pin) override{
         buf &= ~(uint16_t)pin;
         write(buf);
@@ -116,6 +159,7 @@ public:
         else buf &= ~(1 << index);
         write(buf);
     }
+    
     bool readByIndex(const int index) override{
         if(!isIndexValid(index)) return false;
         read();
@@ -147,47 +191,22 @@ public:
         writeReg(RegAddress::ledMode, ledMode);
     }
 
-    void setLedCurrentLimit(const CurrentLimit limit){
-        ctl.isel = (uint8_t)limit;
-        writeReg(RegAddress::ctl, ctl.data);
-    }
+    void setLedCurrentLimit(const CurrentLimit limit);
 
-    void setLedCurrent(const Pin pin, const uint8_t current){
-        uint index = CTZ((uint16_t)pin);
-        if(index < 8) index += 4;
-        else if(index < 12) index -= 8;
-        writeReg((RegAddress)((uint8_t)RegAddress::dim + index), current);
-    }
-
-    bool isChipValid(){
+    void setLedCurrent(const Pin pin, const uint8_t current);
+    
+    bool verify(){
         uint8_t chipId;
         readReg(RegAddress::chipId, chipId);
         return (chipId == valid_chipid);
     }
 
-    AW9523 & operator << (const uint8_t data){write(data); return *this;}
+    // AW9523 & operator << (const uint8_t data){write(data); return *this;}
+    
     AW9523 & operator = (const uint16_t data) override {write(data); return *this;}
 
-
-};
-
-class AW9523Pwm:public PwmChannel{
-protected:
-    AW9523 & aw9523;
-    Pin pin;
-public:
-    AW9523Pwm(AW9523 & _aw9523, const Pin _pin):aw9523(_aw9523), pin(_pin){;}
-
-    void init() override{
-        aw9523.enableLedMode(pin);
-    }
-
-    AW9523Pwm & operator = (const real_t duty) override{
-        aw9523.setLedCurrent(pin,int(255 * duty));
-        return *this;
+    AW9523Pwm & operator [](const size_t index){
+        return channels[index];
     }
 };
 
-
-
-#endif
