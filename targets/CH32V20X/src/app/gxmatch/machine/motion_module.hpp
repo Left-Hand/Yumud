@@ -3,6 +3,7 @@
 #include "actuator/jointlr.hpp"
 #include "actuator/zaxis.hpp"
 #include "actuator/claw.hpp"
+#include "wheel/wheel.hpp"
 #include "nozzle/nozzle.hpp"
 
 #include "../common/inc.hpp"
