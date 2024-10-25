@@ -7,6 +7,11 @@
 #include "types/image/font/font.hpp"
 #include "types/image/painter.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/Camera/MT9V034/mt9v034.hpp"
+
+#include "nvcv2/shape/shape.hpp"
+
+using namespace NVCV2;
 
 using Vector2i = Vector2_t<int>;
 
@@ -198,6 +203,13 @@ void gui_main(){
     Slider slider{theme};
 
     OptionButton opt{theme};
+    
+    I2cSw       i2c{portD[2], portC[12]};
+    i2c.init(1000000);
+    
+    MT9V034 camera{i2c};
+    camera.init();
+    camera.setExposureValue(1200);
     // label.rect = Rect2i{20 + 10,20,100,20};
     // label2.rect = Rect2i{20,60 + 20,100,20};
     while(true){
@@ -227,6 +239,17 @@ void gui_main(){
         // logger.println(millis());
         #endif
 
+
+        // #define CAMERA_TB
+        #ifdef CAMERA_TB
+        auto sketch = make_image<Grayscale>(camera.get_size()/2);
+        auto img = Shape::x2(camera);
+        tftDisplayer.puttexture(img.get_view(), img.get_data());
+        delay(10);
+        #endif
+
+        #define GUI_TB
+        #ifdef GUI_TB
         label.rect = Rect2i{15 + 10 * sin(t),20,100,20};
         label2.rect = Rect2i{15,80 + 20 * sin(t),100,20};
         slider.rect = Rect2i{15,120,100,20};
@@ -239,8 +262,8 @@ void gui_main(){
 
         delay(10);
         tftDisplayer.fill(RGB565::BLACK);
-
-
+    
         logger.println(label.rect, label2.rect);
+        #endif
     }
 }

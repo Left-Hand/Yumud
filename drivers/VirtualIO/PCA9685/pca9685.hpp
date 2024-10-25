@@ -1,29 +1,24 @@
-#ifndef __PCA9685B_HPP__
+#pragma once
 
-#define __PCA9685B_HPP__
-
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port_virtual.hpp"
-#include "../drivers/CommonIO/Led/rgbLed.hpp"
-#include "../hal/timer/pwm/pwm_channel.hpp"
-#include "../drivers/device_defs.h"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port_virtual.hpp"
+#include "drivers/CommonIO/Led/rgbLed.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "drivers/device_defs.h"
 
 class PCA9685: public PortVirtualConcept<16>{
 public:
-    enum class CurrentLimit{
-        Max, High, Medium, Low
-    };
-
     scexpr uint8_t default_id = 0b10110000;
 protected:
     I2cDrv bus_drv;
     uint16_t buf;
 
-
     scexpr uint8_t valid_chipid = 0x23;
 
 
     struct Mode1Reg:public Reg8{
+        using Reg8::operator=;
+        
         uint8_t allcall:1;
         uint8_t sub:3;
         uint8_t sleep:1;
@@ -33,6 +28,8 @@ protected:
     };
 
     struct Mode2Reg:public Reg8{
+        using Reg8::operator=;
+
         uint8_t outne:2;
         uint8_t outdrv:1;
         uint8_t och:1;
@@ -40,48 +37,52 @@ protected:
         uint8_t __resv__:3;
     };
 
-    struct LedOnOffRegs{
+    struct LedOnOffReg:public Reg16{
         uint16_t cvr:12;
         uint16_t full:1;
         uint16_t __resv__:3;
     };
 
     struct LedRegs{
-        LedOnOffRegs on;
-        LedOnOffRegs off;
+        LedOnOffReg  on;
+        LedOnOffReg off;
     };
 
     enum class RegAddress:uint8_t{
         Mode1,
         Mode2,
+        LED0_ON_L = 0x06,
+        LED0_ON_H,
+        LED0_OFF_L,
+        LED0_OFF_H,
         SubAddr = 0x02,
         Prescale = 0x7f
     };
 
     struct{
-        Mode1Reg mode1;
-        Mode2Reg mode2;
-        uint8_t sub_addr[3];
-        uint8_t all_addr;
-        LedRegs sub_channels[16];
+        Mode1Reg mode1_reg;
+        Mode2Reg mode2_reg;
+        std::array<uint8_t,3> sub_addr_regs;
+        uint8_t all_addr_reg;
+        std::array<LedRegs,16> sub_channels;
         LedRegs all_channel;
-        uint8_t prescale;
+        uint8_t prescale_reg;
     };
 
-    void writeReg(const RegAddress addr, const uint8_t data){
-        bus_drv.writeReg((uint8_t)addr, data);
+    __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
+        bus_drv.writeReg((uint8_t)addr, reg);
     };
 
-    void writeReg(const RegAddress addr, const uint16_t data){
-        bus_drv.writeReg((uint8_t)addr, data);
+    __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
+        bus_drv.writeReg((uint8_t)addr, reg, LSB);
     }
 
-    void readReg(const RegAddress addr, uint8_t & data){
-        bus_drv.readReg((uint8_t)addr, data);
+    __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
+        bus_drv.readReg((uint8_t)addr, reg);
     }
 
-    void readReg(const RegAddress addr, uint16_t & data){
-        bus_drv.readReg((uint8_t)addr, data);
+    __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
+        bus_drv.readReg((uint8_t)addr, reg, LSB);
     }
 
     uint8_t readReg(const RegAddress addr){
@@ -108,12 +109,14 @@ public:
 
     void setFrequency(uint32_t freq);
 
+    // void setPwm(const uint8_t channel, const uint16_t on);
     void setPwm(const uint8_t channel, const uint16_t on, const uint16_t off);
 
-    void setSubAddr(const uint8_t index, const uint8_t addr){
-        sub_addr[index] = addr;
-        writeReg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr[index]);
-    }
+    void setSubAddr(const uint8_t index, const uint8_t addr);
+
+    void enableExtClk(const bool en = true);
+
+    void enableSleep(const bool en = true);
 
     void init();
 
@@ -135,7 +138,3 @@ public:
 
     PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
 };
-
-
-
-#endif
