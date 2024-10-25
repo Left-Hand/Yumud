@@ -1,19 +1,34 @@
 #pragma once
 
 #include "drivers/Actuator/Actuator.hpp"
+#include "types/range/range_t.hpp"
 
 
 class RadianServo{
+private:
+    Range rad_range_ = {0, PI};
+    real_t basis_ = 0;
+protected:
+    
     virtual void setGLobalRadian(const real_t rad) = 0;
     virtual real_t getGlobalRadian() = 0;
 public:
+    void setRange(const Range & range){
+        rad_range_ = range;
+    }
+    
+    void setBasis(const real_t rad){
+        basis_ = rad;
+    }
+    
     void setRadian(const real_t rad){
-        setGLobalRadian(rad);    
+        setGLobalRadian(rad_range_.clamp(rad + basis_));
     }
 
     real_t getRadian(){
         return getGlobalRadian();
     }
+
 };
 
 

@@ -9,7 +9,7 @@
 
 class PCA9685: public PortVirtualConcept<16>{
 public:
-    scexpr uint8_t default_i2c_addr = 0b10110000;
+    scexpr uint8_t default_i2c_addr = 0b10000000;
 protected:
     I2cDrv bus_drv;
 
@@ -56,7 +56,7 @@ protected:
         LED0_OFF_L,
         LED0_OFF_H,
         SubAddr = 0x02,
-        Prescale = 0x7f
+        Prescale = 0xfe
     };
 
     Mode1Reg mode1_reg;
@@ -138,12 +138,16 @@ protected:
         return true;
     }
 
+    void test(){
+        static_assert(sizeof(mode1_reg) == 1);
+        static_assert(sizeof(mode2_reg) == 1);
+    }
 public:
     PCA9685(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     PCA9685(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
     PCA9685(I2c & _bus):bus_drv{_bus, default_i2c_addr}{;}
 
-    void setFrequency(uint32_t freq);
+    void setFrequency(const uint freq, const real_t trim = real_t(1));
 
     void setPwm(const uint8_t channel, const uint16_t on, const uint16_t off);
 

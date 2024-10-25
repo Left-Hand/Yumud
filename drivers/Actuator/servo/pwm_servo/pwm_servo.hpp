@@ -28,24 +28,22 @@ public:
 class PwmRadianServo:public RadianServo{
 protected:
     ScaledPwm instance_;
-    Range_t<real_t> angle_elec_range;
+    real_t last_rad;
 
     void setGLobalRadian(const real_t rad) override{
-        
+        instance_ = (rad) * real_t(1 / PI);
+        last_rad = rad;
     }
 
     real_t getGlobalRadian() override{
-        return 0;
+        return last_rad;
     }
-    PwmRadianServo(PwmChannel & _instance, 
-        const int _angle_scale, 
-        const Range & _duty_range = {real_t(0.025), real_t(0.125)}
-        ):
-        
-            instance_(_instance, _duty_range), 
-            angle_elec_range(real_t(_angle_scale < 0  ?  - _angle_scale:0),real_t( _angle_scale < 0 ? 0 : _angle_scale))
-            
+    
+public:
+    PwmRadianServo(PwmChannel & _instance):
+            instance_(_instance, {real_t(0.025), real_t(0.125)})
             {;}
+
 };
 
 // class PwmSpeedServo:public PwmServo{
@@ -69,16 +67,16 @@ protected:
 
 
 
-class Servo180: public PwmRadianServo{
-public:
-    Servo180(PwmChannel & _instance):PwmRadianServo(_instance, 180){;}
-};
+// class Servo180: public PwmRadianServo{
+// public:
+//     Servo180(PwmChannel & _instance):PwmRadianServo(_instance, 180){;}
+// };
 
 
-class Servo270: public PwmRadianServo{
-public:
-    Servo270(PwmChannel & _instance):PwmRadianServo(_instance, 270){;}
-};
+// class Servo270: public PwmRadianServo{
+// public:
+//     Servo270(PwmChannel & _instance):PwmRadianServo(_instance, 270){;}
+// };
 
 
 // class Servo360: public PwmSpeedServo{

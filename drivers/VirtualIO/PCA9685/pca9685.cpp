@@ -1,8 +1,21 @@
 #include "pca9685.hpp"
 
-void PCA9685::setFrequency(uint32_t freq){
-        prescale_reg = int(real_t(25000000.0 / 4096) / freq - 1);
+void PCA9685::setFrequency(uint freq, real_t trim){
+        readReg(RegAddress::Mode1, mode1_reg);
+        
+        prescale_reg = int((real_t(25000000.0 / 4096) / freq - 1) * trim);
+        // prescale_reg = 121;
+        // enableSleep();
+        mode1_reg.sleep = true;
+        writeReg(RegAddress::Mode1, mode1_reg);
         writeReg(RegAddress::Prescale, prescale_reg);
+        mode1_reg.sleep = false;
+        
+        writeReg(RegAddress::Mode1, mode1_reg);
+        // enableSleep(false);
+        delay(5);
+        mode1_reg |= 0xa1;
+        writeReg(RegAddress::Mode1, mode1_reg);
     }
 
 void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
@@ -22,9 +35,9 @@ void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
 }
 
 void PCA9685::init(){
-    delay(10);
     mode1_reg = 0;
     writeReg(RegAddress::Mode1, mode1_reg);
+    delay(10);
     // DEBUG_PRINT("m1", readReg(RegAddress::Mode1));
     // DEBUG_PRINT("m2", readReg(RegAddress::Mode2));
 }
@@ -50,6 +63,7 @@ void PCA9685::enableExtClk(const bool en){
 void PCA9685::enableSleep(const bool en){
     mode1_reg.sleep = en;
     writeReg(RegAddress::Mode1, mode1_reg);
+    mode1_reg.sleep = 0;
 }
     
 void PCA9685::set(const Pin pin){
