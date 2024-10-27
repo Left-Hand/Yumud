@@ -24,5 +24,5 @@ public:
     void press();
     void release();
 };
-    
+
 }

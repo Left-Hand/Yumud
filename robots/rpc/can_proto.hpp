@@ -10,12 +10,12 @@ class FOCMotor;
 
 class CanProtocolConcept{
 public:
-    using E = bf16;
-    using E_2 = std::tuple<E, E>;
-    using E_3 = std::tuple<E, E, E>;
-    using E_4 = std::tuple<E, E, E, E>;
-    
 
+    using E = real_t;
+    using E_1 = std::tuple<E>;
+    using E_2 = std::tuple<E, E>;
+    using E_3 = std::tuple<bf16, bf16, bf16>;
+    using E_4 = std::tuple<bf16, bf16, bf16, bf16>;
 public:
     Can & can;
     

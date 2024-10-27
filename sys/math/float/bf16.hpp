@@ -23,6 +23,7 @@ struct bf16 {
         raw = other.raw;
         return *this;
     }
+
     constexpr bf16(const bf16 & other):raw(other.raw){;}
     constexpr bf16(bf16 && other):raw(other.raw){;}
     constexpr bf16(float fv) : raw(std::bit_cast<uint32_t>(fv) >> 16) {}

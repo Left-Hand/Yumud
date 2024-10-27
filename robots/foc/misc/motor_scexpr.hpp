@@ -6,7 +6,7 @@
 // scexpr uint32_t foc_freq = 32768;
 // scexpr uint32_t chopper_freq = 32768;
 // scexpr uint32_t foc_freq = 8192 * 4;
-scexpr uint32_t foc_freq = 20000;
+scexpr uint32_t foc_freq = 32768;
 // scexpr uint32_t foc_freq = 38000;
 // scexpr uint32_t foc_freq = 18000;
 // scexpr uint32_t foc_freq = 15000;

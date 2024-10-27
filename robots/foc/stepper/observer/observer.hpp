@@ -42,6 +42,7 @@ public:
     real_t update(const real_t position){
         auto this_spd = update_raw(position);
         return vars.last_speed = (vars.last_speed * 127 + this_spd) >> 7;
+        // return vars.last_speed = (vars.last_speed * 255 + this_spd) >> 8;
     }
     real_t get() const {return vars.last_speed;} 
 };

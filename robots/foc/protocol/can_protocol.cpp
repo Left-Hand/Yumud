@@ -4,24 +4,29 @@
 
 
 void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
-    #define SET_METHOD_BIND_EXECUTE(cmd, method, ...)\
+    #define EXECUTER_BIND(cmd, method, ...)\
     case cmd:\
         method(__VA_ARGS__);\
         break;\
 
-    #define SET_METHOD_BIND_TYPE(cmd, method, type)\
+    #define VERIFIED_BIND(cmd, method, x, ...)\
+    case cmd:\
+        if(static_cast<decltype(x)>(msg) == x) method(__VA_ARGS__);\
+        break;\
+
+    #define SETTER_BIND_TYPE(cmd, method, type)\
     case cmd:\
         method(type(msg));\
         break;\
     
-    #define SET_VALUE_BIND(cmd, value)\
+    #define SETTER_BIND_VALUE(cmd, value)\
     case cmd:\
         value = (decltype(value)(msg));\
         break;\
 
-    #define SET_METHOD_BIND_ONE(cmd, method) SET_METHOD_BIND_TYPE(cmd, method, E)
+    #define SETTER_BIND_ONE(cmd, method) SETTER_BIND_TYPE(cmd, method, E)
 
-    #define GET_BIND_VALUE(cmd, ...)\
+    #define GETTER_BIND(cmd, ...)\
     case cmd:\
         if(msg.isRemote()){\
             can.write(CanMsg(tx_id, std::make_tuple(__VA_ARGS__)));\
@@ -32,44 +37,45 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     const uint16_t tx_id = (((uint16_t)(motor.getNodeId()) << 7) | (uint8_t)(command));
 
     switch(command){
-        SET_METHOD_BIND_ONE(   Command::SET_TRG_VECT,   motor.setTargetVector)
-        SET_METHOD_BIND_ONE(   Command::SET_TRG_CURR,   motor.setTargetCurrent)
-        SET_METHOD_BIND_ONE(   Command::SET_TRG_POS,    motor.setTargetPosition)
-        SET_METHOD_BIND_ONE(   Command::SET_TRG_DELTA,    motor.setTargetPosition)
-        SET_METHOD_BIND_ONE(   Command::SET_TRG_SPD,    motor.setTargetSpeed)
-        SET_METHOD_BIND_ONE(   Command::SET_TRG_TEACH,  motor.setTargetTeach)
-        SET_METHOD_BIND_EXECUTE(Command::FREEZE,        motor.freeze)
+        SETTER_BIND_ONE(   Command::SET_TRG_VECT,   motor.setTargetVector)
+        SETTER_BIND_ONE(   Command::SET_TRG_CURR,   motor.setTargetCurrent)
+        SETTER_BIND_ONE(   Command::SET_TRG_POS,    motor.setTargetPosition)
+        SETTER_BIND_ONE(   Command::SET_TRG_DELTA,    motor.setTargetPosition)
+        SETTER_BIND_ONE(   Command::SET_TRG_SPD,    motor.setTargetSpeed)
+        SETTER_BIND_ONE(   Command::SET_TRG_TEACH,  motor.setTargetTeach)
+        EXECUTER_BIND(Command::FREEZE,        motor.freeze)
 
-        SET_METHOD_BIND_ONE(   Command::LOCATE,         motor.locateRelatively)
-        SET_METHOD_BIND_ONE(   Command::SET_OPEN_CURR,  motor.setOpenLoopCurrent)
-        SET_METHOD_BIND_ONE(   Command::SET_CURR_LMT,   motor.setCurrentLimit)
-        SET_METHOD_BIND_TYPE(   Command::SET_POS_LMT,   motor.setPositionLimit, E_2)
-        SET_METHOD_BIND_ONE(   Command::SET_SPD_LMT,    motor.setSpeedLimit)
-        SET_METHOD_BIND_ONE(   Command::SET_ACC_LMT,    motor.setAccelLimit)
+        SETTER_BIND_ONE(   Command::LOCATE,         motor.locateRelatively)
+        SETTER_BIND_ONE(   Command::SET_OPEN_CURR,  motor.setOpenLoopCurrent)
+        SETTER_BIND_ONE(   Command::SET_CURR_LMT,   motor.setCurrentLimit)
+        SETTER_BIND_TYPE(   Command::SET_POS_LMT,   motor.setPositionLimit, E_2)
+        SETTER_BIND_ONE(   Command::SET_SPD_LMT,    motor.setSpeedLimit)
+        SETTER_BIND_ONE(   Command::SET_ACC_LMT,    motor.setAccelLimit)
 
-        GET_BIND_VALUE(         Command::GET_POS,       E(motor.getPosition()))
-        GET_BIND_VALUE(         Command::GET_SPD,       E(motor.getSpeed()))
-        GET_BIND_VALUE(         Command::GET_ACC,       E(0))//TODO
-        GET_BIND_VALUE(         Command::GET_CURR,      E(motor.getCurrent()))
-        GET_BIND_VALUE(         Command::GET_ALL,       E_4(motor.getCurrent(), motor.getSpeed(), motor.getPosition(), motor.getAccel()))
+        GETTER_BIND(         Command::GET_POS,       E(motor.getPosition()))
+        GETTER_BIND(         Command::GET_SPD,       E(motor.getSpeed()))
+        GETTER_BIND(         Command::GET_ACC,       E(0))//TODO
+        GETTER_BIND(         Command::GET_CURR,      E(motor.getCurrent()))
+        GETTER_BIND(         Command::GET_ALL,       E_4(motor.getCurrent(), motor.getSpeed(), motor.getPosition(), motor.getAccel()))
 
-        SET_METHOD_BIND_EXECUTE(Command::TRIG_CALI,      motor.triggerCali)
+        EXECUTER_BIND(Command::TRIG_CALI,      motor.triggerCali)
 
-        SET_METHOD_BIND_EXECUTE(Command::SAVE,          motor.saveArchive)
-        SET_METHOD_BIND_EXECUTE(Command::LOAD,          motor.loadArchive)
-        SET_METHOD_BIND_EXECUTE(Command::CLEAR,         motor.removeArchive)
+        EXECUTER_BIND(Command::SAVE,          motor.saveArchive)
+        EXECUTER_BIND(Command::LOAD,          motor.loadArchive)
+        EXECUTER_BIND(Command::CLEAR,         motor.removeArchive)
 
-        SET_METHOD_BIND_EXECUTE(Command::RST,           motor.reset)
-        SET_METHOD_BIND_EXECUTE(Command::INACTIVE,      motor.enable, false)
-        SET_METHOD_BIND_EXECUTE(Command::ACTIVE,        motor.enable, true)
-        SET_METHOD_BIND_EXECUTE(Command::SET_NODEID,    motor.setNodeId, uint8_t(msg))
+        // EXECUTER_BIND(Command::RST,           motor.reset)
+        VERIFIED_BIND(Command::RST,           motor.reset, uint8_t(0xff))
+        EXECUTER_BIND(Command::INACTIVE,      motor.enable, false)
+        EXECUTER_BIND(Command::ACTIVE,        motor.enable, true)
+        EXECUTER_BIND(Command::SET_NODEID,    motor.setNodeId, uint8_t(msg))
 
         default:
             break;
     }
 
-    #undef SET_METHOD_BIND
-    #undef SET_VALUE_BIND
-    #undef SET_METHOD_BIND_ONE
-    #undef SET_VALUE_BIND_REAL
+    #undef SETTER_BIND
+    #undef SETTER_BIND_VALUE
+    #undef SETTER_BIND_ONE
+    #undef SETTER_BIND_VALUE_REAL
 }

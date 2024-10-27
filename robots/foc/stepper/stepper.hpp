@@ -20,11 +20,7 @@
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
-    using Archive = MotorUtils::Archive;
     using Switches = MotorUtils::Switches;
-
-    Archive archive_;
-    Switches & switches_ = archive_.switches;
 
     volatile CtrlType ctrl_type = CtrlType::POSITION;
 
@@ -204,4 +200,5 @@ public:
     void setRadfix(const real_t rf){
         meta.radfix = rf;
     }
+
 };

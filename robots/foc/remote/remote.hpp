@@ -29,10 +29,15 @@ protected:
 
     IOStream & logger;
 
-    using E = CanProtocolConcept::E;
-    using E_2 = std::tuple<E, E>;
-    using E_3 = std::tuple<E, E, E>;
-    using E_4 = std::tuple<E, E, E, E>;
+    // using E = CanProtocolConcept::E;
+    // using E_2 = CanProtocolConcept::E_2;
+    // using E_3 = CanProtocolConcept::E_3;
+    // using E_4 = CanProtocolConcept::E_4;
+
+    using CanProtocolConcept::E;
+    using CanProtocolConcept::E_2;
+    using CanProtocolConcept::E_3;
+    using CanProtocolConcept::E_4;
 public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
             FOCMotorConcept(_id), CanProtocolConcept(_can), logger(_logger){;}

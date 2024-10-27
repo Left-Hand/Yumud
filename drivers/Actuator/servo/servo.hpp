@@ -6,7 +6,7 @@
 
 class RadianServo{
 private:
-    Range rad_range_ = {0, PI};
+    Range rad_range_ = {0, real_t(PI)};
     real_t basis_ = 0;
 protected:
     

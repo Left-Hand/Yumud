@@ -73,8 +73,8 @@ protected:
     scexpr int cogging_samples = 16;
     scexpr int align_ms = 200;
 
-    scexpr real_t cali_duty= real_t(0.8);
-    scexpr real_t align_duty= real_t(0.8);
+    scexpr real_t cali_duty= real_t(0.6);
+    scexpr real_t align_duty= real_t(0.6);
 
     SubState sub_state = SubState::DONE;
     CircularTracker tracker;

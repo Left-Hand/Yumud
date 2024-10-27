@@ -63,6 +63,21 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             os.prints("======");
             break;
 
+
+        case "pkp"_ha:
+            motor.archive().pos_config.kp = real_t(args[1]);
+            break;
+        case "pkd"_ha:
+            motor.archive().pos_config.kd = real_t(args[1]);
+            break;
+
+        case "skp"_ha:
+            motor.archive().spd_config.kp = real_t(args[1]);
+            break;
+        case "skd"_ha:
+            motor.archive().spd_config.kd = real_t(args[1]);
+            break;
+
         case "rf"_ha:
             motor.setRadfix(real_t(args[1]));
             break;

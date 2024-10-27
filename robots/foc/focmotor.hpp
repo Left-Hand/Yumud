@@ -79,6 +79,9 @@ public:
 
 class FOCMotor:public FOCMotorConcept {
 protected:
+    using Archive = MotorUtils::Archive;
+    Archive archive_;
+    
     ErrorCode error_code = ErrorCode::OK;
 
     const char * error_message = nullptr;
@@ -165,4 +168,9 @@ public:
 
     virtual uint32_t exe() const = 0;
     virtual void setRadfix(const real_t _radfix) = 0;
+
+
+    auto & archive(){
+        return archive_;
+    }
 };
