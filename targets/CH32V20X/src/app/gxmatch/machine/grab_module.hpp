@@ -50,8 +50,10 @@ public:
 
     void take();
     void give();
-    bool done();
     void begin();
+    
+    bool reached();
+    // bool done();
 };
     
 }

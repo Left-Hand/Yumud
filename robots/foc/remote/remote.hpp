@@ -14,7 +14,8 @@ protected:
     using Command = MotorUtils::Command;
     volatile RunStatus run_status = RunStatus::NONE;
 
-public:
+// public:
+protected:
     // class CanProtocolRemote:CanProtocolConcept{
     // protected:
     //     using Command = MotorUtils::Command;
@@ -35,6 +36,8 @@ public:
 public:
     RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
             FOCMotorConcept(_id), CanProtocolConcept(_can), logger(_logger){;}
+
+            
     void setTargetCurrent(const real_t current);
     void setTargetSpeed(const real_t speed);
     void freeze();

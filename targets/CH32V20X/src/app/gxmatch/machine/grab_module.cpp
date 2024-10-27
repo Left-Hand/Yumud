@@ -42,11 +42,16 @@ void GrabModule::give(){
     
 }
 
-bool GrabModule::done(){
-    return zaxis.reached();
-    //  and joint_l.reached() and joint_r.reached();
 
+bool GrabModule::reached(){
+    return scara.reached() and zaxis.reached();
 }
+
+// bool GrabModule::done(){
+//     return zaxis.reached();
+//     //  and joint_l.reached() and joint_r.reached();
+
+// }
 
 void GrabModule::begin(){
     

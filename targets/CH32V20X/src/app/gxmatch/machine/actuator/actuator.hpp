@@ -5,6 +5,7 @@
 
 namespace gxm{
 class Actuator{
+public:
     virtual bool reached() = 0;  
     virtual void tick() = 0;
 };
