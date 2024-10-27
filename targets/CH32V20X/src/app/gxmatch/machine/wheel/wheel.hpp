@@ -2,8 +2,6 @@
 
 #include "../../common/inc.hpp"
 
-
-
 namespace gxm{
 
 class Wheel{
@@ -16,6 +14,11 @@ public:
     
 protected:
     const Config & config_;
+
+    virtual void setMotorSpeed(const real_t spd) = 0;
+    virtual void setMotorPosition(const real_t pos) = 0;
+    virtual real_t getMotorSpeed() = 0;
+    virtual real_t getMotorPosition() = 0;
 public:
     Wheel(const Config & _config):config_(_config){;}
 

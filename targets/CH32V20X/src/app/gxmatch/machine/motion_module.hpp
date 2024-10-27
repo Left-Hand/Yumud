@@ -2,9 +2,9 @@
 
 #include "actuator/jointlr.hpp"
 #include "actuator/zaxis.hpp"
-#include "actuator/claw.hpp"
+#include "scara/claw.hpp"
+#include "scara/nozzle.hpp"
 #include "wheel/wheel.hpp"
-#include "nozzle/nozzle.hpp"
 
 #include "../common/inc.hpp"
 

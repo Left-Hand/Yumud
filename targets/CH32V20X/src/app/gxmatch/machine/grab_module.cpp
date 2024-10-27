@@ -1,7 +1,7 @@
 #include "grab_module.hpp"
 #include "actuator/jointlr.hpp"
 #include "actuator/zaxis.hpp"
-#include "nozzle/nozzle.hpp"
+#include "scara/nozzle.hpp"
 
 #include "../common/inc.hpp"
 
