@@ -1,7 +1,7 @@
 #include "gxmatch.hpp"
 #include "host/host.hpp"
 
-
+#include "machine/scara/scara.hpp"
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/gpio/port_virtual.hpp"
@@ -15,9 +15,25 @@ namespace gxm{
 auto create_default_config(){
     return GrabModule::Config{
         .scara_config = {
-            .should_length_meter = real_t(0.072),
-            .forearm_length_meter = real_t(0.225),
-            .upperarm_length_meter = real_t(0.185),
+            .solver_config = {
+                .should_length_meter = real_t(0.072),
+                .forearm_length_meter = real_t(0.225),
+                .upperarm_length_meter = real_t(0.185),
+            },
+            
+            .joint_config = {
+                .max_rad_delta = real_t(0.02),
+                // .left_radian_clamp = {0,0},
+                // .right_radian_clamp = {0,0},
+                .left_basis_radian = real_t(-PI/2 + 0.154),
+                .right_basis_radian = real_t(PI/2 - 0.15),
+            },
+            .claw_config = {
+                
+            },
+            .nozzle_config = {
+                
+            },
         },
         
         .zaxis_config = {
@@ -25,23 +41,6 @@ auto create_default_config(){
             .free_height_mm = 0,
             .ground_height_mm = 0,
         },
-        
-        .joint_config = {
-            .max_rad_delta = real_t(0.02),
-            // .left_radian_clamp = {0,0},
-            // .right_radian_clamp = {0,0},
-            .left_basis_radian = real_t(-PI/2 + 0.154),
-            .right_basis_radian = real_t(PI/2 - 0.15),
-        },
-        .claw_config = {
-            
-        },
-        .nozzle_config = {
-            
-        },
-
-
-
     };
 }
     
@@ -66,12 +65,12 @@ void host_main(){
     auto config = create_default_config();
     
     JointLR joint_left{
-        config.joint_config,
+        config.scara_config.joint_config,
         servo_left
     };
 
     JointLR joint_right{
-        config.joint_config,
+        config.scara_config.joint_config,
         servo_right
     };
 
@@ -80,21 +79,27 @@ void host_main(){
     };
     
     Claw claw = {
-        config.claw_config
+        config.scara_config.claw_config
     };
     
-    Nozzle nozzle = {config.nozzle_config, GpioNull, GpioNull};
+    Nozzle nozzle = {config.scara_config.nozzle_config, GpioNull, GpioNull};
 
-    
-    GrabModule grab_module{
-        config, {
-            zaxis,
+    Scara scara{
+        config.scara_config, {
             joint_left,
             joint_right,
             claw,
             nozzle
         }
     };
+    
+    GrabModule grab_module{
+        config, {
+            zaxis,
+            scara
+        }
+    };
+
 
     
     auto & timer = timer2;

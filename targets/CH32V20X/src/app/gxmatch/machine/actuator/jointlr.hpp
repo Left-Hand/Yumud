@@ -22,6 +22,8 @@ protected:
 
 public:
     JointLR(const Config & config, RadianServo & servo):config_(config), servo_(servo){}
+    DELETE_COPY_AND_MOVE(JointLR)
+    
     bool reached() override;
     void setRadian(const real_t dist) override; 
     real_t getRadian(){return std::bit_cast<real_t>(last_radian_);}

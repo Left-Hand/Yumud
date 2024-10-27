@@ -20,7 +20,7 @@ protected:
     virtual real_t getMotorSpeed() = 0;
     virtual real_t getMotorPosition() = 0;
 public:
-    Wheel(const Config & _config):config_(_config){;}
+    Wheel(const Config & config):config_(config){;}
 
     void setSpeed(const real_t spd);
     void setPosition(const real_t pos);

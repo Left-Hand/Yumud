@@ -17,7 +17,8 @@ protected:
     const Config & config_;
 public:
     ZAxis(const Config & config):config_(config){}
-
+    DELETE_COPY_AND_MOVE(ZAxis)
+    
     bool reached() override;
     void setDistance(const real_t dist) override;  
     void tick() override;

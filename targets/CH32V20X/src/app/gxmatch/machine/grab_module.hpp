@@ -2,19 +2,21 @@
 
 #include "motion_module.hpp"
 
+#include "actuator/jointlr.hpp"
+#include "actuator/zaxis.hpp"
+#include "scara/claw.hpp"
+#include "scara/nozzle.hpp"
+#include "scara/scara.hpp"
+
+
 namespace gxm{
 
 class GrabModule:public MotionModule{
 public:
     struct Config{
 
-        Scara5Solver::Config scara_config;
+        Scara::Config scara_config;
         ZAxis::Config zaxis_config;
-        JointLR::Config joint_config;
-        Claw::Config claw_config;
-        Nozzle::Config nozzle_config;
-
-
     };
 
 protected:
@@ -22,20 +24,13 @@ protected:
 
     struct Refs{
         std::reference_wrapper<ZAxis> zaxis;
-        std::reference_wrapper<JointLR> joint_l;
-        std::reference_wrapper<JointLR> joint_r;
-        std::reference_wrapper<Claw> claw;
-        std::reference_wrapper<Nozzle> nozzle;
+        std::reference_wrapper<Scara> scara;
     };
         
     Config config_;
-    Scara5Solver solver_{config_.scara_config};
-
     ZAxis & zaxis;
-    JointLR & joint_l;
-    JointLR & joint_r;
-    Claw & claw;
-    Nozzle & nozzle;
+    Scara & scara;
+    
 public:
     void goHome();//进行坐标归位
     void moveZ(const real_t pos);//只改变Z轴坐标
@@ -50,10 +45,8 @@ public:
     GrabModule(const Config & config, const Refs & refs):
         config_(config),
         zaxis(refs.zaxis),
-        joint_l(refs.joint_l),
-        joint_r(refs.joint_r),
-        claw(refs.claw),
-        nozzle(refs.nozzle){}
+        scara(refs.scara)
+        {}
 
     void take();
     void give();

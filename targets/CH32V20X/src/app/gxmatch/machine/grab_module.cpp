@@ -8,10 +8,7 @@
 namespace gxm{
 
 void GrabModule::goHome(){
-    // joint_l.setRadian(config_.joint_config.right_basis_radian);
-    // joint_r.setRadian(real_t(PI) + config_.joint_config.right_basis_radian);
-    joint_l.setRadian(real_t(PI/2) + config_.joint_config.left_basis_radian);
-    joint_r.setRadian(real_t(PI/2) + config_.joint_config.right_basis_radian);
+    scara.goHome();
 }
 
 void GrabModule::moveZ(const real_t pos){
@@ -19,10 +16,7 @@ void GrabModule::moveZ(const real_t pos){
 }
 
 void GrabModule::moveXY(const Vector2 & pos){
-    auto [a,b] = solver_.invrese(pos);
-    // uart2.println(a,b);
-    joint_l.setRadian(a + config_.joint_config.left_basis_radian);
-    joint_r.setRadian(b + config_.joint_config.right_basis_radian);
+    scara.moveXY(pos);
 }
 
 
@@ -32,13 +26,11 @@ void GrabModule::moveTo(const Vector3 & pos){
 }
 
 void GrabModule::pickUp(){
-    claw.press();
-    nozzle.press();
+    scara.pickUp();
 }
 
 void GrabModule::putDown(){
-    claw.release();
-    nozzle.release();
+    scara.putDown();
 }
 
 
@@ -51,7 +43,9 @@ void GrabModule::give(){
 }
 
 bool GrabModule::done(){
-    return zaxis.reached() and joint_l.reached() and joint_r.reached();
+    return zaxis.reached();
+    //  and joint_l.reached() and joint_r.reached();
+
 }
 
 void GrabModule::begin(){

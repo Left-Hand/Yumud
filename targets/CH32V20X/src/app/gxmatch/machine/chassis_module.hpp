@@ -1,17 +1,14 @@
 #pragma once
 
 #include "motion_module.hpp"
-
+#include "wheel/wheel.hpp"
 
 namespace gxm{
 class ChassisModule:public MotionModule{
 public:
-    struct Config:
-            public Mecanum4Solver::Config,
-            public Wheel::Config
-            
-    {
-        
+    struct Config{
+        Mecanum4Solver::Config solver_config;
+        Wheel::Config wheel_config;
     };
     
 
@@ -19,7 +16,7 @@ public:
     const Config & config_;
     Wheels wheels_;
 
-    Mecanum4Solver solver_{config_};
+    Mecanum4Solver solver_{config_.solver_config};
     
 public:
     ChassisModule(const Config & config, const Wheels & wheels):config_(config), wheels_(wheels) {}
