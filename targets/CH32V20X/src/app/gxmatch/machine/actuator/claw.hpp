@@ -6,8 +6,15 @@
 namespace gxm{
 
 class Claw{
-
 public:
+    struct Config{
+        
+    };
+protected:
+    const Config & config_;
+public:
+    Claw(const Config & config):config_(config){;}
+
     void press();
     void release();
 };

@@ -5,14 +5,26 @@
 namespace gxm{
 
 class GrabModule:public MotionModule{
+public:
+    struct Config
+            // public Scara5Solver::Config, 
+            // public ZAxis::Config,
+            // public JointLR::Config,
+            // public Claw::Config,
+            // public Nozzle::Config
+    {
 
+        Scara5Solver::Config scara_config;
+        ZAxis::Config zaxis_config;
+        JointLR::Config joint_config;
+        Claw::Config claw_config;
+        Nozzle::Config nozzle_config;
+
+
+    };
 
 protected:
-    struct Config:public Scara5Solver::Config{
-        uint8_t tray_height_mm;
-        uint8_t free_height_mm;
-        uint8_t ground_height_mm;
-    };
+
 
     struct Refs{
         std::reference_wrapper<ZAxis> zaxis;
@@ -21,18 +33,16 @@ protected:
         std::reference_wrapper<Claw> claw;
         std::reference_wrapper<Nozzle> nozzle;
     };
-
-
         
     Config config_;
-    Scara5Solver solver_{config_};
+    Scara5Solver solver_{config_.scara_config};
 
     ZAxis & zaxis;
     JointLR & joint_l;
     JointLR & joint_r;
     Claw & claw;
     Nozzle & nozzle;
-    
+public:
     void goHome();//进行坐标归位
     void moveZ(const real_t pos);//只改变Z轴坐标
     void moveXY(const Vector2 & pos);//只改变XY坐标

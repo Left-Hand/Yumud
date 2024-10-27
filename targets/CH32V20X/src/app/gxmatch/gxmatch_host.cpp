@@ -4,45 +4,107 @@
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
+#include "hal/gpio/port_virtual.hpp"
 
 
 using Sys::t;
 
 namespace gxm{
+
+
+auto create_default_config(){
+    return GrabModule::Config{
+        .scara_config = {
+            .should_length_meter = real_t(0.072),
+            .forearm_length_meter = real_t(0.225),
+            .upperarm_length_meter = real_t(0.185),
+        },
+        
+        .zaxis_config = {
+            .tray_height_mm = 0,
+            .free_height_mm = 0,
+            .ground_height_mm = 0,
+        },
+        
+        .joint_config = {
+            .max_rad_delta = real_t(0.02),
+            // .left_radian_clamp = {0,0},
+            // .right_radian_clamp = {0,0},
+            .left_basis_radian = real_t(-PI/2 + 0.154),
+            .right_basis_radian = real_t(PI/2 - 0.15),
+        },
+        .claw_config = {
+            
+        },
+        .nozzle_config = {
+            
+        },
+
+
+
+    };
+}
+    
 void host_main(){
     uart2.init(576000);
     auto & logger = uart2;
 
     auto i2c = I2cSw{portD[2], portC[12]};
-    i2c.init(250_KHz);
+    i2c.init(1250_KHz);
     // i2c.init(0);//ok
     
     PCA9685 pca{i2c};
     pca.init();
     
-    pca.setFrequency(50, real_t(1.09));
-    // pca.setPwm(0, 0, 10);
-    auto & pwm = pca[0];
+    pca.setFrequency(servo_freq, real_t(1.09));
 
     using MG995 = PwmRadianServo;
     
-    MG995 servo{pwm};
+    MG995 servo_left{pca[0]};
+    MG995 servo_right{pca[1]};
 
-    auto config = JointLR::Config{
-        .max_rad_delta = real_t(0.01),
-        .left_radian_clamp = {0,0},
-        .right_radian_clamp = {0,0},
+    auto config = create_default_config();
+    
+    JointLR joint_left{
+        config.joint_config,
+        servo_left
+    };
+
+    JointLR joint_right{
+        config.joint_config,
+        servo_right
+    };
+
+    ZAxis zaxis = {
+        config.zaxis_config
     };
     
-    JointLR joint{
-        servo, 
-        config
+    Claw claw = {
+        config.claw_config
+    };
+    
+    Nozzle nozzle = {config.nozzle_config, GpioNull, GpioNull};
+
+    
+    GrabModule grab_module{
+        config, {
+            zaxis,
+            joint_left,
+            joint_right,
+            claw,
+            nozzle
+        }
     };
 
     
     auto & timer = timer2;
-    timer.init(50);
-    timer.bindCb(TimerUtils::IT::Update, [&](){joint.tick();});
+    timer.init(servo_freq);
+
+    timer.bindCb(TimerUtils::IT::Update, [&](){
+        joint_left.tick();
+        joint_right.tick();
+    });
+    
     timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
      
     while(true){
@@ -54,8 +116,14 @@ void host_main(){
         // pwm = duty;
         // pwm2 = duty;
 
-        joint.setRadian(real_t(PI/2) * (1 + sin(t)));
-        // logger.println(joint.getRadian());
+        // joint_left.setRadian(real_t(PI/2) * (1 + sin(t)));
+        // grab_module.moveXY(Vector2(real_t(0.12), 0).rotated(t/2) + Vector2(0, real_t(0.24)));
+        // grab_module.moveXY(Vector2(real_t(0.12), 0).rotated(t) + Vector2(0, real_t(0.24)));
+        // grab_module.moveXY(Vector2(real_t(0.12) * sign(sin(t)), 0) + Vector2(0, real_t(0.24)));
+        grab_module.moveXY(Vector2(real_t(0.02), 0).rotated(t) + Vector2(0, real_t(0.24)));
+        // grab_module.moveXY(Vector2(0, real_t(0.24)));
+        // grab_module.goHome();
+        logger.println(joint_left.getRadian(), joint_right.getRadian());
         // pwm = real_t(0.5);
         // logger.println(duty);
         delay(20);

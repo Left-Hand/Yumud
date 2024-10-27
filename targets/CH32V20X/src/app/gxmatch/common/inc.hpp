@@ -25,3 +25,5 @@ namespace gxm{
 #include "decl/rowinfo.hpp"
 
 #include "enum/index.hpp"
+
+#include "hal/bus/uart/uarthw.hpp"
