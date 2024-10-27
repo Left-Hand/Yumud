@@ -1,12 +1,12 @@
 #include "wheel.hpp"
 
-class RemoteFOCMotor;
+class FOCMotorConcept;
 
 namespace gxm{
 
 class WheelStepper:public Wheel{
 protected:
-    using Motor = RemoteFOCMotor;
+    using Motor = FOCMotorConcept;
     Motor & motor_;
 public:
     WheelStepper(const Config & config, Motor & motor):Wheel(config), motor_(motor) {;}

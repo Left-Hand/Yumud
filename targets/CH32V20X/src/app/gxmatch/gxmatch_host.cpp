@@ -2,6 +2,7 @@
 #include "host/host.hpp"
 
 #include "machine/scara/scara.hpp"
+#include "machine/actuator/zaxis_stp.hpp"
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/gpio/port_virtual.hpp"
@@ -29,7 +30,8 @@ auto create_default_config(){
                 .right_basis_radian = real_t(PI/2 - 0.15),
             },
             .claw_config = {
-                
+                .press_radian = real_t(PI/2),
+                .release_radian = 0
             },
             .nozzle_config = {
                 
@@ -57,10 +59,11 @@ void host_main(){
     
     pca.setFrequency(servo_freq, real_t(1.09));
 
-    using MG995 = PwmRadianServo;
-    
+
     MG995 servo_left{pca[0]};
     MG995 servo_right{pca[1]};
+
+    SG90 claw_servo{pca[2]};
 
     auto config = create_default_config();
     
@@ -74,15 +77,19 @@ void host_main(){
         servo_right
     };
 
-    ZAxis zaxis = {
+    ZAxisStepper zaxis{
         config.zaxis_config
     };
     
-    Claw claw = {
-        config.scara_config.claw_config
+    Claw claw{
+        config.scara_config.claw_config,
+        claw_servo
     };
     
-    Nozzle nozzle = {config.scara_config.nozzle_config, GpioNull, GpioNull};
+    Nozzle nozzle{
+        config.scara_config.nozzle_config, 
+        GpioNull, GpioNull
+    };
 
     Scara scara{
         config.scara_config, {
@@ -125,9 +132,15 @@ void host_main(){
         // grab_module.moveXY(Vector2(real_t(0.12), 0).rotated(t/2) + Vector2(0, real_t(0.24)));
         // grab_module.moveXY(Vector2(real_t(0.12), 0).rotated(t) + Vector2(0, real_t(0.24)));
         // grab_module.moveXY(Vector2(real_t(0.12) * sign(sin(t)), 0) + Vector2(0, real_t(0.24)));
-        grab_module.moveXY(Vector2(real_t(0.02), 0).rotated(t) + Vector2(0, real_t(0.24)));
         // grab_module.moveXY(Vector2(0, real_t(0.24)));
         // grab_module.goHome();
+
+        // #ifdef 
+        scara.moveXY(Vector2(real_t(0.09), 0).rotated(t) + Vector2(0, real_t(0.24)));
+        {
+            bool c = (millis() % 2000 > 1000);
+            c ? scara.pickUp() : scara.putDown();
+        }
         logger.println(joint_left.getRadian(), joint_right.getRadian());
         // pwm = real_t(0.5);
         // logger.println(duty);

@@ -15,6 +15,14 @@ public:
 protected:
     const Config & config_;
 
+    __fast_inline constexpr real_t World2Motor(const real_t x){
+        return x / (real_t(TAU) * config_.wheel_radius);
+    }
+
+    __fast_inline constexpr real_t Motor2World(const real_t x){
+        return x * (real_t(TAU) * config_.wheel_radius);
+    }
+    
     virtual void setMotorSpeed(const real_t spd) = 0;
     virtual void setMotorPosition(const real_t pos) = 0;
     virtual real_t getMotorSpeed() = 0;

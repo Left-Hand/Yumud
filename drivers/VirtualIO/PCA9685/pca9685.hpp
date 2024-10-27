@@ -67,42 +67,49 @@ protected:
     LedRegs all_channel;
     uint8_t prescale_reg;
 
-    class PCA8975Pwm:public PwmChannel{
+    class PCA8975Channel:public PwmChannel, GpioConcept{
     protected:
         PCA9685 & pca;
         uint8_t channel;
 
-        PCA8975Pwm(PCA9685 & _pca, const uint8_t _channel):pca(_pca), channel(_channel){;}
+        PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):GpioConcept(_channel), pca(_pca), channel(_channel){;}
         
-        DELETE_COPY_AND_MOVE(PCA8975Pwm)
+        DELETE_COPY_AND_MOVE(PCA8975Channel)
         
         friend class PCA9685;
     public:
 
-        PCA8975Pwm & operator = (const real_t duty) override{
+        PCA8975Channel & operator = (const real_t duty) override{
             pca.setPwm(channel, 0, (uint16_t)(duty << 12));
             return *this;
         }
+
+        __fast_inline void set() override {*this = real_t(1);}
+        __fast_inline void clr() override {*this = real_t(0);}
+        __fast_inline void write(const bool val){*this = real_t(val);}
+        __fast_inline bool read() const override {return 0;}
+
+        void setMode(const PinMode mode) override{}
     };
 
 
-    std::array<PCA8975Pwm,16> channels{
-        PCA8975Pwm{*this, 0},
-        PCA8975Pwm{*this, 1},
-        PCA8975Pwm{*this, 2},
-        PCA8975Pwm{*this, 3},
-        PCA8975Pwm{*this, 4},
-        PCA8975Pwm{*this, 5},
-        PCA8975Pwm{*this, 6},
-        PCA8975Pwm{*this, 7},
-        PCA8975Pwm{*this, 8},
-        PCA8975Pwm{*this, 9},
-        PCA8975Pwm{*this, 10},
-        PCA8975Pwm{*this, 11},
-        PCA8975Pwm{*this, 12},
-        PCA8975Pwm{*this, 13},
-        PCA8975Pwm{*this, 14},
-        PCA8975Pwm{*this, 15}
+    std::array<PCA8975Channel,16> channels{
+        PCA8975Channel{*this, 0},
+        PCA8975Channel{*this, 1},
+        PCA8975Channel{*this, 2},
+        PCA8975Channel{*this, 3},
+        PCA8975Channel{*this, 4},
+        PCA8975Channel{*this, 5},
+        PCA8975Channel{*this, 6},
+        PCA8975Channel{*this, 7},
+        PCA8975Channel{*this, 8},
+        PCA8975Channel{*this, 9},
+        PCA8975Channel{*this, 10},
+        PCA8975Channel{*this, 11},
+        PCA8975Channel{*this, 12},
+        PCA8975Channel{*this, 13},
+        PCA8975Channel{*this, 14},
+        PCA8975Channel{*this, 15}
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
@@ -177,7 +184,7 @@ public:
 
     PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
 
-    PCA8975Pwm & operator [](const size_t index){
+    PCA8975Channel & operator [](const size_t index){
         return channels[index];
     }
 };
