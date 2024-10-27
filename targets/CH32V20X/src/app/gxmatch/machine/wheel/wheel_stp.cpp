@@ -1,5 +1,5 @@
 #include "wheel_stp.hpp"
-#include "robots/foc/remote/remote.hpp"
+#include "robots/foc/focmotor.hpp"
 
 namespace gxm{
 

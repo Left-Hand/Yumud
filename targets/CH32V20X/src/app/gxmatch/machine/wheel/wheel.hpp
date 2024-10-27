@@ -32,6 +32,7 @@ public:
 
     void setSpeed(const real_t spd);
     void setPosition(const real_t pos);
+    void forwardPosition(const real_t step);
 
     real_t getSpeed();
     real_t getPosition();

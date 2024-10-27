@@ -14,26 +14,12 @@ protected:
     using Command = MotorUtils::Command;
     volatile RunStatus run_status = RunStatus::NONE;
 
-// public:
 protected:
-    // class CanProtocolRemote:CanProtocolConcept{
-    // protected:
-    //     using Command = MotorUtils::Command;
-    //     RemoteFOCMotor & motor;
-    // public:
-    //     CanProtocolRemote(Can & _can, RemoteFOCMotor & _motor):
-    //         CanProtocolConcept(_can), motor(_motor){;}
 
     void parseCanmsg(const CanMsg & msg) override;
-    // };
 
     IOStream & logger;
-
-    // using E = CanProtocolConcept::E;
-    // using E_2 = CanProtocolConcept::E_2;
-    // using E_3 = CanProtocolConcept::E_3;
-    // using E_4 = CanProtocolConcept::E_4;
-
+    
     using CanProtocolConcept::E;
     using CanProtocolConcept::E_2;
     using CanProtocolConcept::E_3;

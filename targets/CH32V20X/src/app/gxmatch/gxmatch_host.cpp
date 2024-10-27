@@ -6,6 +6,7 @@
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/gpio/port_virtual.hpp"
+#include "robots/foc/remote/remote.hpp"
 
 
 using Sys::t;
@@ -64,6 +65,8 @@ void host_main(){
     MG995 servo_right{pca[1]};
 
     SG90 claw_servo{pca[2]};
+    RemoteFOCMotor z_motor{logger, can1, 1};
+    
 
     auto config = create_default_config();
     
@@ -78,7 +81,8 @@ void host_main(){
     };
 
     ZAxisStepper zaxis{
-        config.zaxis_config
+        config.zaxis_config,
+        z_motor
     };
     
     Claw claw{

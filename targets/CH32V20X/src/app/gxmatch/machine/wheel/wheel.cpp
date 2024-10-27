@@ -10,6 +10,10 @@ void Wheel::setPosition(const real_t pos){
     setMotorPosition(World2Motor(pos));
 }
 
+void Wheel::forwardPosition(const real_t step){
+    setMotorPosition(getMotorPosition() + World2Motor(step));
+}
+
 real_t Wheel::getSpeed(){
     return Motor2World(getMotorSpeed());
 }
