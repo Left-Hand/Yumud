@@ -34,6 +34,10 @@ typedef double real_t;
 typedef float real_t;
 #endif
 
+scexpr real_t pi_4 = real_t(PI/4);
+scexpr real_t pi_2 = real_t(PI/2);
+scexpr real_t pi = real_t(PI);
+scexpr real_t tau = real_t(TAU);
 
 __fast_inline constexpr int mean(const int a, const int b){
     return ((a+b) >> 1);

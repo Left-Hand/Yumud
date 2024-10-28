@@ -1,10 +1,8 @@
 #include "match.hpp"
-#include "../data/autogen/digit_images.hpp"
+#include "data/autogen/digit_images.hpp"
 
 
 void Matcher::init(){
-
-
 
 }
 

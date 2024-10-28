@@ -52,28 +52,6 @@ public:
     bool enabled = false;
     Uart & logger = DEBUGGER;
 
-    // RingBuf<str_tx_buf_size> str_tx_buf;
-    // RingBuf<str_rx_buf_size> str_rx_buf;
-    // RingBuf<img_tx_buf_size> img_buf;
-
-    // void write(const char data) override{
-    //     str_rx_buf.addData(data);
-    // }
-
-    // void read(char & data) override{
-    //     data = str_rx_buf.getData();
-    // }
-
-    // using InputStream::read;
-
-    // size_t available() const override{
-    //     return str_rx_buf.available();
-    // }
-
-    // size_t pending() const override{
-    //     return str_tx_buf.available();
-    // }
-
 protected:
     scexpr uint16_t header = 0x54A8;
     scexpr size_t mtu = 320;

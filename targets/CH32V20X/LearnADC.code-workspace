@@ -109,7 +109,8 @@
             "variant": "cpp",
             "system_error": "cpp",
             "coroutine": "cpp",
-            "cassert": "cpp"
+            "cassert": "cpp",
+            "*.ipp": "cpp"
         },
         "[yaml]": {
             "editor.insertSpaces": true,

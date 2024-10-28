@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../sys/core/platform.h"
-#include "../../types/vector2/vector2_t.hpp"
+#include "sys/core/platform.h"
+#include "types/vector2/vector2_t.hpp"
 #include "robots/foc/remote/remote.hpp"
 #include "machine_concepts.hpp"
 
@@ -149,6 +149,6 @@ struct CoreXY{
 
 };
 
-// struct Cantilever:public XY_Machine{
+struct Cantilever{
 
-// };
+};

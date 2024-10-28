@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../thirdparty/sstl/include/sstl/vector.h"
-#include "../../sys/core/platform.h"
+#include "sys/core/platform.h"
+#include "thirdparty/sstl/include/sstl/vector.h"
 
 struct TrajectoryItem{
     uint32_t x:10;
@@ -13,8 +13,6 @@ struct TrajectoryItem{
 
 class Trajectory{
 public:
-
-
     scexpr uint record_fps = 50;
     scexpr uint record_dur = 1000 / record_fps;
     scexpr uint record_seconds = 60;

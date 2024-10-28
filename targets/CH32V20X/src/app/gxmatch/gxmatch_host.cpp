@@ -14,6 +14,31 @@ using Sys::t;
 namespace gxm{
 
 
+using Vector2 = Vector2_t<real_t>;
+scexpr real_t squ_len = 96;
+scexpr Vector2 pos_begin = {111, 46};
+scexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
+scexpr Vector2 pos_center = Vector2(pos_begin) + Vector2(squ_len / 2, squ_len / 2);
+scexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
+
+
+[[maybe_unused]] static Vector2 get_square_rounded_position(uint8_t index){
+    // xymm 110.5 30
+    // xymm 208.5 126
+    index = index - 1;
+    const auto x_i = 1 - (real_t(index % 3) / 2);
+    const auto y_i = real_t(index / 3) / 2;
+
+    return Vector2(pos_begin.x + (pos_end.x - pos_begin.x) * x_i, pos_begin.y + (pos_end.y - pos_begin.y) * y_i);
+}
+
+
+[[maybe_unused]] static Vector2 get_square_rounded_position(real_t rad){
+    auto rad_90 = fmod(rad + pi_4, pi_2) - pi_4;
+    auto distance = (squ_len / 2) / cos(rad_90);
+    return pos_center + Vector2{-distance, 0}.rotated(rad);
+}
+
 auto create_default_config(){
     return GrabModule::Config{
         .scara_config = {

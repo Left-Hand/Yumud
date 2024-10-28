@@ -1,4 +1,4 @@
-#include "teach.hpp"
+#include "trajectory.hpp"
 #include "sys/stream/ostream.hpp"
 
 OutputStream & operator<<(OutputStream & os, const TrajectoryItem item){

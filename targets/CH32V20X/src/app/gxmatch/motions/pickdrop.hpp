@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../robots/actions/actions.hpp"
+#include "robots/actions/actions.hpp"
 
 struct PickDropAction: public Action{
 protected:

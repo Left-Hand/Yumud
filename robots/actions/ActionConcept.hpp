@@ -1,10 +1,11 @@
 #pragma once
 
-#include "../../sys/core/platform.h"
-
+#include "sys/core/platform.h"
+#include <functional>
 #include <queue>
 
-#include "shape.hpp"
+#include "sys/math/real.hpp"
+#include "types/vector2/vector2_t.hpp"
 
 struct Action {
 public:

@@ -1,5 +1,4 @@
 #include "sys/core/system.hpp"
-#include "app/embd/embd.h"
 
 #include "app/wlsy/wlsy_inc.hpp"
 #include "hal/gpio/port_virtual.hpp"

@@ -212,6 +212,51 @@ void gui_main(){
     camera.setExposureValue(1200);
     // label.rect = Rect2i{20 + 10,20,100,20};
     // label2.rect = Rect2i{20,60 + 20,100,20};
+
+    [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
+    };
+
+    [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
+    };
+
+    [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
+    };
+
+    [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
+        // painter.bindImage(sketch);
+        painter.setColor(RGB565::CORAL);
+        // painter.drawRoi(rect);
+    };
+
+    // [[maybe_unused]] auto plot_april = [&](const Vertexs & vertex, const int index, const real_t dir){
+    //     painter.bindImage(sketch);
+    //     painter.setColor(RGB565::FUCHSIA);
+
+    //     painter.drawPolygon(vertex.begin(), vertex.size());
+    //     auto rect = Rect2i(vertex.begin(), vertex.size());
+    //     painter.setColor(RGB565::RED);
+    //     painter.drawString(rect.position + Vector2i{4,4}, toString(index));
+
+    //     painter.setColor(RGB565::BLUE);
+    //     painter.drawFilledCircle(rect.get_center() + Vector2(12, 0).rotated(dir), 3);
+    //     painter.bindImage(tftDisplayer);
+    // };
+
+    [[maybe_unused]] auto plot_number = [&](const Rect2i & rect, const int index){
+        // painter.bindImage(sketch);
+        painter.setColor(RGB565::GREEN);
+        painter.drawRoi(rect);
+        painter.setColor(RGB565::YELLOW);
+        painter.drawString(rect.position + Vector2i{4,4}, toString(index));
+        painter.bindImage(tftDisplayer);
+    };
+
     while(true){
 
         #ifdef DRAW_TB

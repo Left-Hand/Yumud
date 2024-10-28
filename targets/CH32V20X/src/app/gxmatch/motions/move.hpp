@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../robots/actions/actions.hpp"
+#include "robots/actions/actions.hpp"
 
 struct MoveAction:public Action{
 protected:
@@ -133,6 +133,9 @@ protected:
             time = t_all - time;
             return move_to(TRANS(s_all - SD));
         }
+
+        #undef SD
+        #undef TRANS
 
     }
 public:
