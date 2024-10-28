@@ -1,6 +1,4 @@
-#ifndef __ODOMETER_HPP__
-
-#define __ODOMETER_HPP__
+#pragma once
 
 #include "sys/math/real.hpp"
 #include "Encoder.hpp"
@@ -76,6 +74,3 @@ public:
         return accPosition;
     }
 };
-
-
-#endif

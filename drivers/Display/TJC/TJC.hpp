@@ -1,11 +1,5 @@
-#ifndef __TJC_HPP__
+#pragma once
 
-#define __TJC_HPP__
-
-#include "sys/string/string.hpp"
-
-namespace WLSY{
-    using Range = Range_t<real_t>;
 class HMI{
 
 };
@@ -94,8 +88,3 @@ public:
     };
 
 };
-
-}
-
-
-#endif
