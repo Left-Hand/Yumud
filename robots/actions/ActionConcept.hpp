@@ -12,11 +12,11 @@ public:
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;
 protected:
-    std::function<void()> func = nullptr;
+    std::function<void(void)> func = nullptr;
     struct{
         uint sustain = 0;
         const uint full;
-        bool once = true;
+        // bool once = true;
         volatile bool executed = false;
     };
 
@@ -49,7 +49,8 @@ protected:
         return real_t(CLAMP(int(full - sustain),0 , ((1 << GLOBAL_Q )- 5))) / 1000;
     }
 public:
-    Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
+    // Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
+    Action(std::function<void()> &&f, const uint s = 1) : func(std::move(f)), sustain(s), full(s){}
 
     bool is_valid() const {
         return sustain > 0;
@@ -71,10 +72,11 @@ public:
     }
 
     void invoke(){
-        if(sustain > 0) sustain--;
-        if(once and executed) return;
-        if(sustain >= 0){
+        // if(sustain > 0) sustain--;
+        // if(once and executed) return;
+        if(sustain > 0){
             execute();
+            sustain --;
             executed = true;
         }
     }

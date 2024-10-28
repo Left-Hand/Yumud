@@ -53,7 +53,7 @@ auto create_default_config(){
                 // .left_radian_clamp = {0,0},
                 // .right_radian_clamp = {0,0},
                 .left_basis_radian = real_t(-PI/2 + 0.154),
-                .right_basis_radian = real_t(PI/2 - 0.15),
+                .right_basis_radian = real_t(PI/2 - 0.3),
             },
             .claw_config = {
                 .press_radian = real_t(PI/2),
@@ -81,7 +81,11 @@ auto create_default_config(){
             .kd = 1
         },
 
-        
+        .tray_pos = {
+            Vector2{-0.12   , 0.20},
+            Vector2{0       , 0.20},
+            Vector2{0.12    , 0.20}
+        }
     };
 }
     
@@ -179,6 +183,7 @@ void host_main(){
 
         // #ifdef 
         scara.moveXY(Vector2(real_t(0.09), 0).rotated(t) + Vector2(0, real_t(0.24)));
+        // scara.goHome();
         {
             bool c = (millis() % 2000 > 1000);
             c ? scara.pickUp() : scara.putDown();

@@ -6,6 +6,32 @@
 namespace gxm{
 class ChassisModule:public MotionModule{
 public:
+    class RotationCtrl{
+    public:
+        struct Config{
+            
+        };
+
+    protected:
+        const Config & config_;
+    public:
+        RotationCtrl(const Config & config):config_(config){;}
+        DELETE_COPY_AND_MOVE(RotationCtrl)
+    };
+
+    class PositionCtrl{
+    public:
+        struct Config{
+            
+        };
+
+    protected:
+        const Config & config_;
+    public:
+        PositionCtrl(const Config & config):config_(config){;}
+        DELETE_COPY_AND_MOVE(PositionCtrl)
+    };
+
     struct Config{
         Mecanum4Solver::Config solver_config;
         Wheel::Config wheel_config;

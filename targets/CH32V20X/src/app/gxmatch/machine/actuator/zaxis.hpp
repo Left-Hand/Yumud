@@ -11,6 +11,7 @@ public:
         uint tray_height_mm;
         uint free_height_mm;
         uint ground_height_mm;
+        
         real_t meter_to_turns_scaler;
         real_t reached_threshold;
 

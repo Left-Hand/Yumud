@@ -17,6 +17,9 @@ public:
 
         Scara::Config scara_config;
         ZAxis::Config zaxis_config;
+
+        std::array<Vector2, 3> tray_pos;
+        Vector3 inspect_pos;
     };
 
 protected:
