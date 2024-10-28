@@ -65,10 +65,23 @@ auto create_default_config(){
         },
         
         .zaxis_config = {
-            .tray_height_mm = 0,
-            .free_height_mm = 0,
-            .ground_height_mm = 0,
+            .max_height_mm = 250,
+            .tray_height_mm = 200,
+            .free_height_mm = 150,
+            .ground_height_mm = 120,
+            
+
+            //1m / (3cm * PI)
+            .meter_to_turns_scaler = real_t(1 / (0.03 * PI)),
+            
+            //1mm tolerance
+            .reached_threshold = real_t(0.001),
+            
+            .kp = 1,
+            .kd = 1
         },
+
+        
     };
 }
     

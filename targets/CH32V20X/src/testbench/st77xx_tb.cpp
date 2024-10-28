@@ -200,7 +200,7 @@ void st77xx_tb(IOStream & logger, Spi & spi){
 
     camera.init();
 
-    I2cDrv              vl_drv(SccbSw, VL53L0X::default_id);
+    I2cDrv              vl_drv(SccbSw, VL53L0X::default_i2c_addr);
     VL53L0X             vl(vl_drv);
     vl.init();
     vl.enableContMode();

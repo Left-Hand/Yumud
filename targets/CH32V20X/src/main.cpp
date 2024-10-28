@@ -1,6 +1,5 @@
 #include "sys/core/system.hpp"
 
-#include "app/wlsy/wlsy_inc.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"

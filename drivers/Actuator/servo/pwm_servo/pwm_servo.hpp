@@ -40,28 +40,37 @@ protected:
     }
     
 public:
-    PwmRadianServo(PwmChannel & _instance):
-            instance_(_instance, {real_t(0.025), real_t(0.125)})
+    PwmRadianServo(PwmChannel & instance):
+            instance_(instance, {real_t(0.025), real_t(0.125)})
             {;}
 
 };
 
-// class PwmSpeedServo:public PwmServo{
-// protected:
-//     real_t max_rot_per_second;
+class PwmSpeedServo:public SpeedServo{
+protected:
+    ScaledPwm instance_;
+    real_t max_turns_per_second_;
+    real_t expect_speed_;
 
-//     PwmSpeedServo(PwmChannel & _instance, const real_t & _min_value_duty, const real_t & _max_value_duty, const int & _max_rot_per_second
-//             ):PwmServo(_instance, _min_value_duty, _max_value_duty), max_rot_per_second(_max_rot_per_second){;}
-// public:
-//     void setDuty(const real_t duty) override{
-//         if(!enabled){(instance = (real_t(0))); return;}
-//         instance = (LERP(CLAMP(duty, real_t(-1), real_t(1)) * real_t(0.5) + real_t(0.5), min_value_duty, max_value_duty));
-//     }
+    void setSpeedDirectly(const real_t rps) override{
+        expect_speed_ = rps;
+        setDuty(rps / max_turns_per_second_);
+    }
 
-//     void setSpeed(const real_t rps){
-//         setDuty(rps / max_rot_per_second);
-//     }
-// };
+    real_t getSpeed() override{
+        return expect_speed_;
+    }
+
+    void setDuty(const real_t duty){
+        instance_ = (duty + 1) * real_t(0.5);
+    }
+public:
+    PwmSpeedServo(PwmChannel & instance, const real_t max_turns_per_second = 2):
+            instance_(instance, {real_t(0.025), real_t(0.125)}),
+            max_turns_per_second_(max_turns_per_second),
+            expect_speed_(real_t(0))
+            {;}
+};
 
 
 
