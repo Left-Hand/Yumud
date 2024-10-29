@@ -6,8 +6,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "src/defines/defs.h"
+// #include "src/defines/defs.h"
+#include "targets/CH32V20X/src/defines/defs.h"
 
+
+//#region sdk
 #if defined(CH32V203)
 #ifndef CH32V20X
 #define CH32V20X
@@ -60,21 +63,31 @@
 #include "sdk/ch32v203/system_ch32v20x.h"
 #include "sdk/ch32v203/Core/core_riscv.h"
 #endif
+//#endregion
 
-
-#ifdef __cplusplus 
-
-#include "../sys/constants/enums.hpp"
-#include "../sys/constants/concepts.hpp"
-#include "../sys/constants/units.hpp"
+//#region cpp-only
+#ifdef __cplusplus
+#include "sys/constants/enums.hpp"
+#include "sys/constants/concepts.hpp"
+#include "sys/constants/units.hpp"
 
 #include <type_traits>
 #include <limits>
+
+
+
+#endif
+//#endregion
+
+//#region arch
+#ifdef __cplusplus 
 
 #ifdef ARCH_QKV4
 #include "arch/riscv/qkv4.hpp"
 #endif
 #endif
+//#endregion
+
 
 
 #ifdef HDW_SXX32

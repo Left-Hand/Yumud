@@ -42,7 +42,7 @@ protected:
         *this << any;
     }
 
-    static constexpr const char * get_basealpha(const size_t _radix){
+    scexpr const char * get_basealpha(const size_t _radix){
         switch(_radix){
             default:
             case 10:
@@ -56,6 +56,8 @@ protected:
         }
     }
 public:
+    OutputStream(){;}
+    DELETE_COPY_AND_MOVE(OutputStream)
 
     virtual void write(const char data) = 0;
     virtual void write(const char * data_ptr, const size_t len){
@@ -97,6 +99,7 @@ public:
     }
 
 
+    //#region print integer
     #define PUT_INT_CONTEXT_TEMPLATE(len, convfunc)\
         if(b_showpos and val >= 0) *this << '+';\
         if(b_showbase and (radix() != 10)){*this << get_basealpha(radix());}\
@@ -119,7 +122,9 @@ public:
     OutputStream & operator<<(const T val){
         PUT_INT_CONTEXT_TEMPLATE(24, StringUtils::iutoa)
     }
-    
+    //#endregion
+
+    //#region print vased containers
     template<typename T, size_t size>
     OutputStream & operator<<(const T (&arr)[size]){
         print_arr(&arr[0], &arr[size]);
@@ -143,6 +148,9 @@ public:
         print_arr(arr.begin(), arr.end());
         return *this;
     }
+
+    //#endregion
+
 
     template<HasToString T>
     OutputStream & operator<<(const T & misc){*this << misc.toString(eps_); return *this;}
@@ -187,4 +195,6 @@ public:
 
     auto eps() const {return eps_;}
     auto radix() const {return radix_;}
+
+    void flush(){while(pending()){__nopn(1);};}
 };

@@ -1,6 +1,4 @@
-#ifndef __STORAGE_HPP__
-
-#define __STORAGE_HPP__
+#pragma once
 
 #include "../sys/core/platform.h"
 #include "../types/range/range_t.hpp"
@@ -28,17 +26,17 @@ protected:
     virtual void entry_load() = 0;
     virtual void exit_load() = 0;
 
-    virtual void _store(const uint8_t data, const Address loc){
-        _store(&data, 1, loc);
+    virtual void storeBytes(const uint8_t data, const Address loc){
+        storeBytes(&data, 1, loc);
     }
 
-    virtual void _load(uint8_t & data, const Address loc){
-        _load(&data, 1, loc);
+    virtual void loadBytes(uint8_t & data, const Address loc){
+        loadBytes(&data, 1, loc);
     }
 
-    virtual void _store(const void * data, const Address data_size, const Address loc) = 0;
+    virtual void storeBytes(const void * data, const Address data_size, const Address loc) = 0;
 
-    virtual void _load(void * data, const Address data_size, const Address loc) = 0;
+    virtual void loadBytes(void * data, const Address data_size, const Address loc) = 0;
 
 public:
     virtual void init() = 0;
@@ -46,29 +44,30 @@ public:
     virtual bool busy() = 0;
     Address size() const {return m_capacity;}
     AddressView view() const {return {0, m_capacity};}
-    void store(const void * data, const Address & data_size, const Address & loc){
+
+    void store(const void * data, const Address data_size, const Address loc){
         if(view().has(loc)){
             entry_store();
-            _store(data, data_size, loc);
+            storeBytes(data, data_size, loc);
             exit_store();
         }
     }
 
-    void store(const uint8_t & data, const Address loc){
+    void store(const uint8_t data, const Address loc){
         entry_store();
-        _store(data, loc);
+        storeBytes(data, loc);
         exit_store();
     }
 
     void load(uint8_t & data, const Address loc){
         entry_load();
-        _load(data, loc);
+        loadBytes(data, loc);
         exit_load();
     }
 
-    void load(void * data, const Address & data_size, const Address loc){
+    void load(void * data, const Address data_size, const Address loc){
         entry_load();
-        _load(data, data_size, loc);
+        loadBytes(data, data_size, loc);
         exit_load();
     }
 
@@ -92,4 +91,3 @@ public:
     StoragePaged(const Address _capacity, const AddressView  & _view, const Address _pagesize):Storage(_capacity, _view), m_pagesize(_pagesize){;}
 };
 
-#endif

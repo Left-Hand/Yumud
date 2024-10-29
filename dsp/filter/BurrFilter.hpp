@@ -1,7 +1,4 @@
-#ifndef __BURR_FILTER_HPP__
-
-#define __BURR_FILTER_HPP__
-
+#pragma once
 template<typename real>
 class BurrFilter_t{
 	real last = real(0);
@@ -64,4 +61,3 @@ public:
 	}
 };
 
-#endif

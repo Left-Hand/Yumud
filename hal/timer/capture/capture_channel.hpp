@@ -12,7 +12,7 @@ protected:
     const uint32_t unit;
     const bool double_edge;
 public:
-    CaptureChannelConcept(const uint32_t & _unit,const bool & _double_edge): unit(_unit), double_edge(_double_edge){;}
+    CaptureChannelConcept(const uint32_t _unit,const bool _double_edge): unit(_unit), double_edge(_double_edge){;}
     real_t getFreq() const{
         #ifdef USE_IQ
         iq_t unit_value;

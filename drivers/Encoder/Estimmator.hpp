@@ -1,6 +1,4 @@
-#ifndef __ESTIMMATOR_HPP__
-
-#define __ESTIMATOR_HPP__
+#pragma once
 
 #include "odometer.hpp"
 #include "../dsp/observer/LinearObserver.hpp"
@@ -50,5 +48,3 @@ public:
     }
 
 };
-
-#endif

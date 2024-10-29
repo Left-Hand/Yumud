@@ -10,7 +10,7 @@ namespace NVCV2::Shape{
 
     static void clear_corners(ImageWritable<monochrome auto> & dst){
         auto size = dst.get_size();
-        static constexpr uint8_t targ_v = 0;
+        scexpr uint8_t targ_v = 0;
         for(int y = 0; y < size.y; y++) dst[{0, y}] = targ_v;
         for(int y = 0; y < size.y; y++) dst[{size.x-1, y}] = targ_v;
         for(int x = 0; x < size.x; x++) dst[{x, 0}] = targ_v;
@@ -51,10 +51,10 @@ namespace NVCV2::Shape{
 
     void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
         auto size = dst.get_size();
-        static constexpr auto core_radius = 2;
-        static constexpr auto core_sum = 256;
+        scexpr auto core_radius = 2;
+        scexpr auto core_sum = 256;
     
-        static constexpr uint8_t core[5][5] ={
+        scexpr uint8_t core[5][5] ={
             {1,     4,      6,      4,      1},
             {4,     16,     24,     16,     4},
             {6,     24,     36,     24,     6},
@@ -532,7 +532,7 @@ namespace NVCV2::Shape{
     }
 
 
-    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t & percent){
+    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t percent){
         auto size = src.get_size();
         int n = int(m * m * percent);
 
@@ -997,8 +997,8 @@ namespace NVCV2::Shape{
     
         const auto size = (Rect2i(Vector2i(), dst.get_size()).intersection(Rect2i(Vector2i(), src.get_size()))).size;
 
-        static constexpr int wid = 3;
-        static constexpr int least_size = 7;
+        scexpr int wid = 3;
+        scexpr int least_size = 7;
 
         for(int y = wid; y < size.y - wid - 1; y++){
             for(int x = wid; x < size.x - wid - 1; x++){

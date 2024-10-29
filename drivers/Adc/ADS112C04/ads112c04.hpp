@@ -90,7 +90,7 @@ protected:
     // SCL      SDA     100 1110
     // SCL      SCL     100 1111
 
-    static constexpr uint8_t default_i2c_addr = 0b10000000;
+    scexpr uint8_t default_i2c_addr = 0b10000000;
 
     enum class Command:uint8_t{
         RST =         0b0000'0110,
@@ -126,14 +126,14 @@ protected:
     using RegAddress = uint8_t;
 
     struct Config0Reg{
-        static constexpr RegAddress address = 0;
+        scexpr RegAddress address = 0;
         bool pga_bypass:1;
         GAIN gain:3;
         MUX mux:4;
     };
 
     struct Config1Reg{
-        static constexpr RegAddress address = 1;
+        scexpr RegAddress address = 1;
         bool temp_sensor_mode:1;
         VREF vref:2;
         bool cont_mode:1;
@@ -142,7 +142,7 @@ protected:
     };
 
     struct Config2Reg{
-        static constexpr RegAddress address = 2;
+        scexpr RegAddress address = 2;
         IDAC idac:3;
         bool current_sense_en:1;
         CRC_Type crc_type:2;
@@ -151,7 +151,7 @@ protected:
     };
 
     struct Config3Reg{
-        static constexpr RegAddress address = 3;
+        scexpr RegAddress address = 3;
         uint8_t __resv__:2;
         IDAC1_MUX idac1_mux:3;
         IDAC2_MUX idac2_mux:3;

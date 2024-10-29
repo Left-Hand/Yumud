@@ -1,10 +1,5 @@
 #include "mmc5603.hpp"
 
-#define REG16(x) (*(uint16_t *)(&x))
-#define REG8(x) (*(uint8_t *)(&x))
-
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
 void MMC5603::update(){
     auto & reg = x_reg;
     requestPool(reg.address_x, &reg.data_h, 6);
@@ -13,14 +8,14 @@ void MMC5603::update(){
 void MMC5603::reset(){
     auto & reg = ctrl0_reg;
     reg.do_reset = true;
-    writeReg(reg.address, REG8(reg));
+    writeReg(reg.address, reg);
     reg.do_reset = false;
 }
 
 bool MMC5603::verify(){
     auto & reg = product_id_reg;
-    readReg(reg.address, reg.id);
-    if(reg.id == reg.correct_id) return true;
+    readReg(reg.address, reg);
+    if(reg == reg.correct_id) return true;
     return false;
 }
 

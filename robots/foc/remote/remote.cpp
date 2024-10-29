@@ -12,27 +12,20 @@ using RunStatus = MotorUtils::RunStatus;
 auto msg = MSG(cmd, std::make_tuple(__VA_ARGS__));\
 DEBUG_MSG(msg);\
 can.write(msg);\
-
 // while(can.pending()){;};
 
-bool RemoteFOCMotor::loadArchive(const bool outen){POST(Command::LOAD)return true;}
-// bool RemoteFOCMotor::loadArchive(const bool outen){auto msg = CanMsg{(((uint32_t)(node_id) << 7) | (uint8_t)(Command::LOAD)), std::make_tuple()};;can_pro.can.write(msg);; return true;}
-void RemoteFOCMotor::saveArchive(const bool outen){POST(Command::SAVE);}
-void RemoteFOCMotor::removeArchive(const bool outen){POST(Command::CLEAR);}
-
 void RemoteFOCMotor::setTargetVector(const real_t _pos){POST(Command::SET_TRG_VECT, E(meta.pos_limit.clamp(_pos)));}
-void RemoteFOCMotor::freeze(){POST(Command::FREEZE);}
 void RemoteFOCMotor::setTargetCurrent(const real_t current){POST(Command::SET_TRG_CURR, E(current));}
 void RemoteFOCMotor::setTargetSpeed(const real_t speed){POST(Command::SET_TRG_SPD, E(speed));}
 void RemoteFOCMotor::setTargetPosition(const real_t _pos){POST(Command::SET_TRG_POS, E(meta.pos_limit.clamp(_pos)));}
-void RemoteFOCMotor::setTargetTrapezoid(const real_t _pos){POST(Command::SET_TRG_TPZ, E(meta.pos_limit.clamp(_pos)));}
+void RemoteFOCMotor::setTargetPositionDelta(const real_t delta){POST(Command::SET_TRG_DELTA, E(delta));}
 void RemoteFOCMotor::setTargetTeach(const real_t _max_curr){POST(Command::SET_TRG_TEACH, E(_max_curr));}
 void RemoteFOCMotor::setOpenLoopCurrent(const real_t current){POST(Command::SET_OPEN_CURR, E(current));}
 void RemoteFOCMotor::setCurrentLimit(const real_t max_current){POST(Command::SET_CURR_LMT, E(max_current));}
 void RemoteFOCMotor::locateRelatively(const real_t _pos){POST(Command::LOCATE, E(_pos));}
+void RemoteFOCMotor::freeze(){POST(Command::FREEZE);}
 
-bool RemoteFOCMotor::isActive() const{return true;}
-volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_status;}
+
 
 real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return readCurrent();}
 real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return readSpeed();}
@@ -50,9 +43,12 @@ void RemoteFOCMotor::enable(const bool en){POST(en ? Command::ACTIVE: Command::I
 // void RemoteFOCMotor::setNodeId(const NodeId _id){}
 void RemoteFOCMotor::setSpeedLimit(const real_t max_spd){POST(Command::SET_SPD_LMT,E(max_spd));}
 void RemoteFOCMotor::setAccelLimit(const real_t max_acc){POST(Command::SET_ACC_LMT, E(max_acc));}
-void RemoteFOCMotor::triggerCali(){POST(Command::TRG_CALI);}
-void RemoteFOCMotor::reset(){POST(Command::RST);}
-void RemoteFOCMotor::setNozzle(const real_t duty){POST(duty ? Command::NOZZLE_ON : Command::NOZZLE_OFF);}
+void RemoteFOCMotor::triggerCali(){POST(Command::TRIG_CALI);}
+void RemoteFOCMotor::reset(){POST(Command::RST, uint16_t(0x5aa5));}
+
+
+bool RemoteFOCMotor::isActive() const{return true;}
+volatile RunStatus & RemoteFOCMotor::status(){POST(Command::STAT); return run_status;}
 
 void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
     Command cmd = (Command)(msg.id() & 0x7F);

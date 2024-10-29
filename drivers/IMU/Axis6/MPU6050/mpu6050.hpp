@@ -1,16 +1,13 @@
-#ifndef __MPU6050_HPP__
+#pragma once
 
-#define __MPU6050_HPP__
+#include "drivers/device_defs.h"
+#include "drivers/IMU/IMU.hpp"
+#include "types/quat/Quat_t.hpp"
 
-#include "../drivers/device_defs.h"
-#include "../drivers/IMU/IMU.hpp"
-#include "../types/quat/Quat_t.hpp"
-
-#include "../hal/bus/i2c/i2cdrv.hpp"
 
 class MPU6050:public Axis6{
 public:
-    static constexpr uint8_t default_id = 0xd0;
+    scexpr uint8_t default_id = 0xd0;
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
@@ -70,6 +67,3 @@ public:
     std::tuple<real_t, real_t, real_t> getGyro() override;
     void getTemperature(real_t & temp);
 };
-
-
-#endif

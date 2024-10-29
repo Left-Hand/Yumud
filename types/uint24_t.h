@@ -1,9 +1,7 @@
-#ifndef __UINT24_T_H__
-
-#define __UINT24_T_H__
+#pragma once
 
 #include "stdint.h"
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
 #pragma pack(push, 1)
 struct uint24_t{
@@ -19,7 +17,7 @@ struct uint24_t{
         data = other.data;
     }
 
-    __fast_inline constexpr explicit uint24_t(const uint32_t & other) {
+    __fast_inline constexpr explicit uint24_t(const uint32_t other) {
         data = other & 0xFFFFFF;
     }
 
@@ -37,5 +35,3 @@ struct uint24_t{
 typedef struct uint24_t uint24_t;
 
 #pragma pack(pop)
-
-#endif

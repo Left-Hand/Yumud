@@ -17,8 +17,8 @@ public:
     void refreshRegularData() override;
     void refreshInjectedData() override;
 
-    uint16_t getRegularDataByRank(const uint8_t & rank) override;
-    uint16_t getInjectedDataByRank(const uint8_t & rank) override;
+    uint16_t getRegularDataByRank(const uint8_t rank) override;
+    uint16_t getInjectedDataByRank(const uint8_t rank) override;
 
 };
 

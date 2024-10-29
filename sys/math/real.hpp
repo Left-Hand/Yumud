@@ -1,8 +1,6 @@
-#ifndef __REAL_HPP__
+#pragma once
 
-#define __REAL_HPP__
-
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
 #if (!defined(USE_IQ)) &&  (!defined(USE_STD_MATH))
 #define USE_STD_MATH
@@ -33,6 +31,16 @@ typedef double real_t;
 #else
 typedef float real_t;
 #endif
+
+scexpr real_t pi_4 = real_t(PI/4);
+scexpr real_t pi_2 = real_t(PI/2);
+scexpr real_t pi = real_t(PI);
+scexpr real_t tau = real_t(TAU);
+
+
+__inline consteval real_t operator"" _r(long double x){
+    return real_t(x);
+}
 
 
 __fast_inline constexpr int mean(const int a, const int b){
@@ -152,4 +160,3 @@ __fast_inline constexpr int warp_mod(const int x, const int y){
 
 #include "real.ipp"
 
-#endif

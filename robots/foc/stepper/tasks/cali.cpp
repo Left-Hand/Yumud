@@ -1,7 +1,7 @@
-#include "robots/foc/stepper/stepper.hpp"
 #include "cali.hpp"
 
-#include <numeric>
+#include "robots/foc/stepper/stepper.hpp"
+#include <bits/stl_numeric.h>
 
 void CaliTasker::run(){
 
@@ -10,7 +10,7 @@ void CaliTasker::run(){
         return is_forward ? abs_ret : -abs_ret;
     };
     auto align_func = [this](const SubState next_state){
-        svpwm.setDuty(real_t(align_current), real_t(0));
+        svpwm.setDuty(real_t(align_duty), real_t(0));
         if(cnt >= (int)((foc_freq / 1000) * align_ms)){
             odo.reset();
             odo.update();
@@ -19,7 +19,7 @@ void CaliTasker::run(){
     };
 
     auto preturn_func = [&](const SubState next_state){
-        svpwm.setDuty(cali_current, get_rad((uint8_t)next_state == (uint8_t)SubState::PRE_FORWARD + 1));
+        svpwm.setDuty(cali_duty, get_rad((uint8_t)next_state == (uint8_t)SubState::PRE_FORWARD + 1));
 
         if(cnt >= forward_precycles * subdivide_micros){
             odo.update();
@@ -32,7 +32,7 @@ void CaliTasker::run(){
     auto turn_func = [&](const SubState next_state){
         odo.update();
         bool is_forward = (uint8_t)next_state == (uint8_t)SubState::FORWARD + 1;
-        svpwm.setDuty(cali_current, get_rad(is_forward));
+        svpwm.setDuty(cali_duty, get_rad(is_forward));
 
         if(cnt % subdivide_micros == 0){
             const uint cali_index = warp_mod(openloop_pole, poles);

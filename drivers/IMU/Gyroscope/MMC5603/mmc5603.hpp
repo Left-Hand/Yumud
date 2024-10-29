@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../drivers/IMU/IMU.hpp"
-#include "../hal/bus/i2c/i2cdrv.hpp"
+#include "drivers/device_defs.h"
+#include "drivers/IMU/IMU.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 #include <tuple>
 
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 // #define MMC5603_DEBUG
 
@@ -17,8 +17,18 @@
 
 class MMC5603:public Magnetometer{
 public:
-    static constexpr uint8_t default_i2c_addr = 0b01100000;
+    scexpr uint8_t default_i2c_addr = 0b01100000;
+    enum class DataRate:uint8_t{
 
+    };
+
+    enum class BandWidth:uint8_t{
+        _6_6ms,
+        _3_5ms,
+        _2_0ms,
+        _1_2ms
+    };
+    
     MMC5603(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
     MMC5603(I2cDrv && _bus_drv):i2c_drv(_bus_drv){;}
     MMC5603(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv(I2cDrv(i2c, addr)){;}
@@ -37,34 +47,35 @@ public:
 
 protected:
     using RegAddress = uint8_t;
-    struct AxisReg{
-        static constexpr uint8_t address_x = 0x00;
-        static constexpr uint8_t address_y = 0x02;
-        static constexpr uint8_t address_z = 0x04;
+
+    struct AxisReg:public Reg16{
+        scexpr uint8_t address_x = 0x00;
+        scexpr uint8_t address_y = 0x02;
+        scexpr uint8_t address_z = 0x04;
 
         uint8_t data_h;
         uint8_t data_l;
     };
 
-    struct ExtAxisReg{
-        static constexpr uint8_t address_x = 0x06;
-        static constexpr uint8_t address_y = 0x07;
-        static constexpr uint8_t address_z = 0x08;
+    struct ExtAxisReg:public Reg8{
+        scexpr uint8_t address_x = 0x06;
+        scexpr uint8_t address_y = 0x07;
+        scexpr uint8_t address_z = 0x08;
 
         uint8_t :4;
         uint8_t data:4;
     };
 
-    struct TempReg{
-        static constexpr uint8_t address = 0x09;
-        uint8_t data;
+    struct TempReg:public Reg8{
+        scexpr uint8_t address = 0x09;
+        uint8_t :8;
         operator int() const {
-            return ((data * int(0.8 * 65536) >> 16) - 75);
+            return ((uint8_t(*this) * int(0.8 * 65536) >> 16) - 75);
         }
     };
 
-    struct Status1Reg{
-        static constexpr uint8_t address = 0x18;
+    struct Status1Reg:public Reg8{
+        scexpr uint8_t address = 0x18;
 
         uint8_t:4;
 
@@ -74,18 +85,16 @@ protected:
         uint8_t temp_measure_done:1;
     };
 
-    enum class DataRate:uint8_t{
 
+
+    struct OdrReg:public Reg8{
+        scexpr uint8_t address = 0x1a;
+        uint8_t :8;
     };
 
-    struct OdrReg{
-        static constexpr uint8_t address = 0x1a;
-        uint8_t data;
-    };
 
-
-    struct Ctrl0Reg{
-        static constexpr uint8_t address = 0x1B;
+    struct Ctrl0Reg:public Reg8{
+        scexpr uint8_t address = 0x1B;
 
         uint8_t do_mag_measure:1;
         uint8_t do_temp_measure:1;
@@ -98,15 +107,10 @@ protected:
         uint8_t cmm_freq_en:1;
     };
 
-    enum class BandWidth:uint8_t{
-        _6_6ms,
-        _3_5ms,
-        _2_0ms,
-        _1_2ms
-    };
 
-    struct Ctrl1Reg{
-        static constexpr uint8_t address = 0x1C;
+
+    struct Ctrl1Reg:public Reg8{
+        scexpr uint8_t address = 0x1C;
 
         uint8_t bandwidth:2;
         uint8_t x_inhibit:1;
@@ -118,8 +122,8 @@ protected:
         uint8_t sw_reset:1;
     };
 
-    struct Ctrl2Reg{
-        static constexpr uint8_t address = 0x1D;
+    struct Ctrl2Reg:public Reg8{
+        scexpr uint8_t address = 0x1D;
 
         //These bits determine how many measurements are done before a set is executed, when the 
         // part is in continuous mode and the automatic set/reset is enabled. From 000 to 111, the sensor 
@@ -135,20 +139,19 @@ protected:
     };
 
 
-    struct AxisSelfTestReg{
-        static constexpr uint8_t address_x = 0x1e;
-        static constexpr uint8_t address_y = 0x1f;
-        static constexpr uint8_t address_z = 0x20;
+    struct AxisSelfTestReg:public Reg8{
+        scexpr uint8_t address_x = 0x1e;
+        scexpr uint8_t address_y = 0x1f;
+        scexpr uint8_t address_z = 0x20;
 
-        uint8_t data;
+        uint8_t :8;
     };
 
-    struct ProductIdReg{
-        static constexpr uint8_t address = 0x39;
-        static constexpr uint8_t correct_id = 0b00010000;
-
-        uint8_t id;
-
+    struct ProductIdReg:public Reg8{
+        scexpr uint8_t address = 0x39;
+        scexpr uint8_t correct_id = 0b00010000;
+        
+        uint8_t :8;
     };
 
     struct {

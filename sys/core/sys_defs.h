@@ -18,13 +18,6 @@
 #define __no_inline __attribute__((__noinline__))
 #endif
 
-#ifndef __fast_inline_constexpr
-#ifdef __cplusplus
-    #define __fast_inline_constexpr __fast_inline constexpr
-#else
-    #define __fast_inline_constexpr __fast_inline
-#endif
-#endif
 
 #ifndef __no_inline_constexpr
 #ifdef __cplusplus
@@ -85,6 +78,11 @@
 #define ISRAM(ptr) ((!ISSFR(ptr)) && (((uint32_t)(ptr)) > 0x20000000))
 #define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
 #define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
+#define FAULT_IF(x)\
+do{\
+    if(x) CREATE_FAULT\
+}while(false);\
+
 
 #ifdef __cplusplus
 #define scexpr static constexpr
@@ -152,5 +150,11 @@
 
 #ifdef __cplusplus
 #define DECLTYPE(...) decltype(__VA_ARGS__)
+
+#define DELETE_COPY_AND_MOVE(type)\
+type(const type & other) = delete;\
+type(type && other) = delete;\
+
+
 #endif
 #endif

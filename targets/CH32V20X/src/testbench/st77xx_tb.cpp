@@ -54,9 +54,9 @@ constexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p
 
 class Transmitter:public IOStream{
 protected:
-    static constexpr size_t str_tx_buf_size = 512;
-    static constexpr size_t str_rx_buf_size = 512;
-    static constexpr size_t img_tx_buf_size = 1024;
+    scexpr size_t str_tx_buf_size = 512;
+    scexpr size_t str_rx_buf_size = 512;
+    scexpr size_t img_tx_buf_size = 1024;
 
 public:
     enum class Type{
@@ -93,7 +93,7 @@ public:
     }
 
 protected:
-    static constexpr uint16_t header = 0x54A8;
+    scexpr uint16_t header = 0x54A8;
     uint8_t time_stamp;
 public:
     Transmitter(IOStream & _instance):instance(_instance){;}
@@ -200,7 +200,7 @@ void st77xx_tb(IOStream & logger, Spi & spi){
 
     camera.init();
 
-    I2cDrv              vl_drv(SccbSw, VL53L0X::default_id);
+    I2cDrv              vl_drv(SccbSw, VL53L0X::default_i2c_addr);
     VL53L0X             vl(vl_drv);
     vl.init();
     vl.enableContMode();

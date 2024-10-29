@@ -14,9 +14,9 @@ public:
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
     
-    static constexpr int N = 10; 
-    static constexpr Vector2i img_size = {28, 28};
-    static constexpr int img_channels = 1;
+    scexpr int N = 10; 
+    scexpr Vector2i img_size = {28, 28};
+    scexpr int img_channels = 1;
 
     using Choices = std::array<real_t, N>;
     

@@ -5,7 +5,7 @@
 #define QKV4_REG_DEF(name) static inline volatile name##_Def * name = (name##_Def *)name##_Def::address;
 namespace QingKeV4{
     struct PFIC_CFGR_Def{
-        static constexpr uint32_t address = 0xE000E04C;
+        scexpr uint32_t address = 0xE000E04C;
         uint32_t NESTSTA:8;
         uint32_t GACTSTA:1;
         uint32_t GPENDSTA:1;

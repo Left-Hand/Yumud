@@ -1,5 +1,4 @@
-#ifndef __ANY_HPP__
-
+#pragma once
 #include <memory>
 #include <functional>
 #include <type_traits>
@@ -107,5 +106,3 @@ private:
 
 }
 
-
-#endif

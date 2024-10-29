@@ -5,15 +5,15 @@ void AsciiProtocolConcept::parseArgs(const Strings & args){
         case "reset"_ha:
         case "rst"_ha:
         case "r"_ha:
-            CLI_DEBUG("rsting");
-            NVIC_SystemReset();
+            os.prints("rsting");
+            Sys::Misc::reset();
             break;
         case "alive"_ha:
         case "a"_ha:
-            CLI_DEBUG("chip is alive");
+            os.prints("chip is alive");
             break;
         default:
-            CLI_DEBUG("no command available:", args[0]);
+            os.prints("no command available:", args[0]);
             break;
     }
 }

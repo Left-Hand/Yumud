@@ -34,10 +34,10 @@ class Task {
 
     public:
 
-        Task(const CallbackFunction & _callback, const uint32_t & _timePiece):
+        Task(const CallbackFunction & _callback, const uint32_t _timePiece):
                 callback(_callback), timePiece(_timePiece), timeoutTick(_timePiece){;}
 
-        void setPiece(const uint32_t & _timePiece){timePiece = _timePiece;}
+        void setPiece(const uint32_t _timePiece){timePiece = _timePiece;}
         TaskerStatus delay(uint32_t ms);
         TaskerStatus terminate();
         TaskerStatus rework();

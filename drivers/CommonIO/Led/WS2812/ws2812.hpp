@@ -1,6 +1,4 @@
-#ifndef __WS2812_HPP__
-
-#define __WS2812_HPP__
+#pragma once
 
 #include "../rgbLed.hpp"
 #include <array>
@@ -16,7 +14,7 @@ protected:
     void delayShort(){
         __nopn(32);
     }
-    void sendCode(const bool & state){
+    void sendCode(const bool state){
         // __disable_irq();
         if(state){
             gpio.set();
@@ -37,7 +35,7 @@ protected:
         delayMicroseconds(60);
     }
 
-    void sendByte(const uint8_t & data){
+    void sendByte(const uint8_t data){
         for(uint8_t mask = 0x80; mask; mask >>= 1){
             sendCode(data & mask);
         }
@@ -100,7 +98,7 @@ protected:
     void delayShort(){
         __nopn(32);
     }
-    void sendCode(const bool & state){
+    void sendCode(const bool state){
         __disable_irq();
         if(state){
             gpio.set();
@@ -122,7 +120,7 @@ protected:
         delayMicroseconds(60);
     }
 
-    void sendByte(const uint8_t & data){
+    void sendByte(const uint8_t data){
         for(uint8_t mask = 0x80; mask; mask >>= 1){
             sendCode(data & mask);
         }
@@ -159,5 +157,3 @@ public:
 
     }
 };
-
-#endif

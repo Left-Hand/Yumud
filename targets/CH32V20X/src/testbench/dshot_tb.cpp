@@ -2,7 +2,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "../drivers/Modem/dshot/dshot.hpp"
 
-static constexpr size_t n = 40;
+scexpr size_t n = 40;
 static std::array<uint16_t, 40> data;
 
 

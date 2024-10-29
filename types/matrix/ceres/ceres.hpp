@@ -25,13 +25,13 @@ struct Jet_t
   {
     v.setZero();
     a = value;
-    v(index, 0) = 1.0;
+    v(index, 0) = T(1);
   }
   void init(const T value, const int index)
   {
     v.setZero();
     a = value;
-    v(index, 0) = 1.0;
+    v(index, 0) = T(1);
   }
 };
 /****************jet overload******************/
@@ -114,7 +114,7 @@ inline Jet_t<T, N> operator/(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
   //   b + v   (b + v)(b - v)        b^2
   //
   // which holds because v*v = 0.
-  const T a_inverse = 1.0 / B.a;
+  const T a_inverse = T(1) / B.a;
   const T abyb = A.a * a_inverse;
   return Jet_t<T, N>(abyb, (A.v - abyb * B.v) * a_inverse);
 }
@@ -122,7 +122,7 @@ inline Jet_t<T, N> operator/(const Jet_t<T, N>& A, const Jet_t<T, N>& B)
 template <arithmetic T, size_t N>
 inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A)
 {
-  T temp = std::sqrt(A.a);
+  T temp = ::sqrt(A.a);
 
   return Jet_t<T, N>(temp, T(1) / (T(2) * temp) * A.v);
 }
@@ -130,12 +130,12 @@ inline Jet_t<T, N> sqrt(const Jet_t<T, N>& A)
 template <arithmetic T, size_t N>
 inline Jet_t<T, N> cos(const Jet_t<T, N>& A)
 {
-  return Jet_t<T, N>(std::cos(A.a), -std::sin(A.a) * A.v);
+  return Jet_t<T, N>(::cos(A.a), -::sin(A.a) * A.v);
 }
 template <arithmetic T, size_t N>
 inline Jet_t<T, N> sin(const Jet_t<T, N>& A)
 {
-  return Jet_t<T, N>(std::sin(A.a), std::cos(A.a) * A.v);
+  return Jet_t<T, N>(::sin(A.a), ::cos(A.a) * A.v);
 }
 template <arithmetic T, size_t N>
 inline bool operator>(const Jet_t<T, N>& f, const Jet_t<T, N>& g)
@@ -154,12 +154,3 @@ __inline OutputStream & operator<<(OutputStream & os, const Jet_t<T, N> & jet){
     os << " ]";
     return os;
 }
-
-// template<size_t N>
-// using Jet<N> = Jet_t<real_t, N>;
-
-// template<size_t N>
-// using JetF<N> = Jet_t<float, N>;
-
-// template<size_t N>
-// using JetD<N> = Jet_t<double, N>;

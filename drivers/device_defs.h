@@ -1,10 +1,20 @@
-#ifndef __DEVICE_INC_H__
-#define __DEVICE_INC_H__
+#pragma once
 
-#include "../sys/core/system.hpp"
-#include "../hal/bus/i2c/i2cdrv.hpp"
-#include "../hal/bus/spi/spidrv.hpp"
-#include "../hal/bus/uart/uart.hpp"
+#include <bit>
+#include <array>
+#include <functional>
+#include <memory>
+#include <type_traits>
+#include <optional>
+
+#include "sys/core/system.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
+#include "hal/bus/uart/uart.hpp"
+
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/adc_channel.hpp"
+
 
 #ifndef REG8_BEGIN
 #define REG8_BEGIN union{struct{
@@ -22,8 +32,31 @@
 #define REG16_END };uint16_t data;};
 #endif
 
-struct Reg8{};
-struct Reg16{};
+template<typename T>
+struct Reg_t{
+    Reg_t<T> & operator = (const Reg_t<T> & other) = delete;
+    Reg_t<T> & operator = (Reg_t<T> && other) = delete;
+    // Reg_t(){};
+    // Reg_t(T && other) = delete;
+    // Reg_t(const T & other) = delete;
+    constexpr Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
+    constexpr operator T() const {return (*reinterpret_cast<const T *>(this));}
+    constexpr operator T & () {return (*reinterpret_cast<T *>(this));}
+};
+
+#define REG_TEMPLATE(name, T)\
+struct name:public Reg_t<T>{\
+    using Reg_t<T>::operator T;\
+    using Reg_t<T>::operator T &;\
+    using Reg_t<T>::operator =;\
+};\
+
+REG_TEMPLATE(Reg8, uint8_t)
+REG_TEMPLATE(Reg16, uint16_t)
+
+REG_TEMPLATE(Reg8i, int8_t)
+REG_TEMPLATE(Reg16i, int16_t)
+
 
 struct Fraction {
 public:
@@ -41,7 +74,6 @@ public:
 };
 
 
-
 #define I2CDEV_CONTSRTUCTER(name)\
     name(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}\
     name(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}\
@@ -49,6 +81,4 @@ public:
 
 #define SPIDEV_CONTSRTUCTER(name)\
     name(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}\
-    name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}\
-
-#endif
+    name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}

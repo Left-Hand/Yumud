@@ -120,7 +120,7 @@ void         FLASH_Lock_Fast(void);
 void         FLASH_ErasePage_Fast(uint32_t Page_Address);
 void         FLASH_EraseBlock_32K_Fast(uint32_t Block_Address);
 void         FLASH_EraseBlock_64K_Fast(uint32_t Block_Address);
-void         FLASH_ProgramPage_Fast(uint32_t Page_Address, uint32_t *pbuf);
+void         FLASH_ProgramPage_Fast(uint32_t Page_Address,const uint32_t *pbuf);
 void         FLASH_Access_Clock_Cfg(uint32_t FLASH_Access_CLK);
 void         FLASH_Enhance_Mode(FunctionalState NewState);
 

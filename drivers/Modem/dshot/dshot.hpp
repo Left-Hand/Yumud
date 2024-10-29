@@ -51,7 +51,7 @@ protected:
 
     // bool enabled = false;
 
-    static constexpr uint16_t m_crc(uint16_t data_in){
+    scexpr uint16_t m_crc(uint16_t data_in){
         uint16_t speed_data;
         speed_data = data_in << 5;
         data_in = data_in << 1;

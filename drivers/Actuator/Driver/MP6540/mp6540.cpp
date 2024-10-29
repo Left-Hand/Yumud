@@ -29,7 +29,7 @@ void MP6540::init(){
             MP6540_DEBUG("pwm[", i, "]: is null");
             error();
         }else{
-            item->init();
+            // item->init();
         } 
     }
 
@@ -63,7 +63,7 @@ void MP6540::enable(const bool en){
 }
 
 void MP6540::setSoRes(const real_t so_res_ohms){
-    static constexpr real_t curr_mirror_ratio = real_t(9200.0);
+    scexpr real_t curr_mirror_ratio = real_t(9200.0);
     volt_to_curr_ratio = curr_mirror_ratio / so_res_ohms;
 }
 

@@ -1,6 +1,5 @@
 #pragma once
-
-#include "../motor_utils.hpp"
+#include "robots/foc/motor_utils.hpp"
 #include "../observer/observer.hpp"
 
 #ifdef DEBUG
@@ -20,15 +19,13 @@ struct CtrlResult{
 };
 
 
-struct CurrentCtrl{
+struct CurrentFilter{
+using MetaData = MotorUtils::MetaData;
 using Result = CtrlResult;
 public:
     struct Config{
-        real_t curr_slew_rate;
-        real_t rad_slew_rate;
-        real_t openloop_curr;
-
-        void reset();
+        real_t curr_slew_rate = real_t(60) / foc_freq;
+        real_t rad_slew_rate = real_t(30) / foc_freq;
     };
 
     MetaData & meta;
@@ -39,10 +36,9 @@ protected:
     real_t last_raddiff = 0;
 public:
 
-    CurrentCtrl(MetaData & _meta, Config & _config):meta(_meta), config(_config){reset();}
+    CurrentFilter(MetaData & _meta, Config & _config):meta(_meta), config(_config){reset();}
 
     void reset(){
-        config.reset();
         last_curr = 0;
         last_raddiff = 0;
     }
@@ -56,7 +52,7 @@ public:
     // real_t getLastRaddiff() const {return raddiff_output;}
 };
 
-CtrlResult CurrentCtrl::update(const CtrlResult res){
+CtrlResult CurrentFilter::update(const CtrlResult res){
     last_curr = STEP_TO(last_curr, res.current, config.curr_slew_rate);
     last_raddiff = STEP_TO(last_raddiff, res.raddiff, config.rad_slew_rate);
 
@@ -66,11 +62,11 @@ CtrlResult CurrentCtrl::update(const CtrlResult res){
 
 struct HighLayerCtrl{
 protected:
+    using MetaData = MotorUtils::MetaData;
     MetaData & meta;
-    CurrentCtrl & curr_ctrl;
     using Result = CtrlResult;
 public:
-    HighLayerCtrl(MetaData & _meta, CurrentCtrl & _ctrl):meta(_meta), curr_ctrl(_ctrl){;}
+    HighLayerCtrl(MetaData & _meta):meta(_meta){;}
     virtual void reset() = 0;
 };
 
@@ -78,12 +74,8 @@ struct SpeedCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
-        real_t kp_limit;
 
         real_t kd;
-        real_t kd_limit;
-
-        void reset();
     };
     
     Config & config;
@@ -91,14 +83,16 @@ SPD_SPEC:
     real_t last_real_spd = 0;
     real_t soft_targ_spd = 0;
     real_t filt_real_spd = 0;
+    real_t spd_delta = 0;
 public:
-    SpeedCtrl(MetaData & _meta, Config & _config, CurrentCtrl & _curr_ctrl):
-        HighLayerCtrl(_meta, _curr_ctrl), config(_config){reset();}
+    SpeedCtrl(MetaData & _meta, Config & _config):
+        HighLayerCtrl(_meta), config(_config){reset();}
 
     void reset() override {
-        config.reset();
         last_real_spd = 0;
         soft_targ_spd = 0;
+        filt_real_spd = 0;
+        spd_delta = 0;
     }
 
     Result update(const real_t _targ_speed,const real_t real_speed);
@@ -108,71 +102,27 @@ struct PositionCtrl:public HighLayerCtrl{
 public:
     struct Config{
         real_t kp;
-        real_t ki;
         real_t kd;
-
-        void reset();
     };
 
     Config & config;
 protected:
-    SpeedEstimator::Config spe_config;
-    SpeedEstimator targ_spd_est{spe_config};
-
-    real_t targ_spd = 0;
+    real_t last_targ_pos;
+    bool locked;
 public:
-    PositionCtrl(MetaData & _meta, Config & _config, CurrentCtrl & _curr_ctrl):
-        HighLayerCtrl(_meta, _curr_ctrl), config(_config){reset();}
+    PositionCtrl(MetaData & _meta, Config & _config):
+        HighLayerCtrl(_meta),
+        config(_config)
+        
+        {
+            reset();
+        }
 
-    void reset() override {
-        config.reset();
-        targ_spd_est.reset();
-        targ_spd = 0;
-    }
-
-    Result update(const real_t targ_position, const real_t real_position, 
-            const real_t real_speed);
-};
-
-struct TopLayerCtrl{
-    MetaData & meta;
-    SpeedCtrl & speed_ctrl;
-    PositionCtrl & position_ctrl;
-};
-
-struct TrapezoidPosCtrl:public TopLayerCtrl{
-public:
-    struct Config{
-        real_t pos_sw_radius;
-        void reset();
-    };
-
-    using Result = CtrlResult;
-
-    Config & config;
-protected:
-
-    enum class Tstatus:uint8_t{
-        ACC,
-        DEC,
-        STA,
-    };
-
-    Tstatus tstatus = Tstatus::STA;
-    real_t goal_speed = 0;
-    real_t last_pos_err = 0;
-
-
-public:
-    TrapezoidPosCtrl(MetaData & _meta, Config & _config, SpeedCtrl & _speed_ctrl, PositionCtrl & _position_ctrl):
-            TopLayerCtrl(_meta, _speed_ctrl, _position_ctrl), config(_config){
-                reset();
-            }
+    void reset(){}
     
-    void reset(){
-        config.reset();
-        goal_speed = 0;
-        // last_pos_err = 0;    
-    }
-    Result update(const real_t targ_position,const real_t real_position, const real_t real_speed);
+    Result update(
+        const real_t targ_position, 
+        const real_t real_position, 
+        const real_t real_speed
+    );
 };

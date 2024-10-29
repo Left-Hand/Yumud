@@ -14,19 +14,13 @@
 #include "tasks/tone.hpp"
 #include "tasks/selfcheck.hpp"
 
-#include "statled.hpp"
+#include "robots/foc/components/statled/statled.hpp"
 
 
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
-    using Archive = MotorUtils::Archive;
     using Switches = MotorUtils::Switches;
-
-    // using NodeId = MotorUtils::NodeId;
-
-    Archive archive_;
-    Switches & switches_ = archive_.switches;
 
     volatile CtrlType ctrl_type = CtrlType::POSITION;
 
@@ -36,24 +30,18 @@ class FOCStepper:public FOCMotor{
     RgbLedAnalog rgb_led{red_pwm, green_pwm, blue_pwm};
     StatLed panel_led = StatLed{rgb_led, run_status, ctrl_type};
 
-    CurrentCtrl::Config curr_config;
-    CurrentCtrl curr_ctrl{meta, curr_config};
+    CurrentFilter curr_ctrl{meta, archive_.curr_config};
     
-    SpeedCtrl::Config spd_config;
-    SpeedCtrl speed_ctrl{meta, spd_config, curr_ctrl};
+    SpeedCtrl speed_ctrl{meta, archive_.spd_config};
 
-    PositionCtrl::Config pos_config;
-    PositionCtrl position_ctrl{meta, pos_config, curr_ctrl};
-    
-    TrapezoidPosCtrl::Config tpz_config;
-    TrapezoidPosCtrl trapezoid_ctrl{meta, tpz_config, speed_ctrl, position_ctrl};
+    PositionCtrl position_ctrl{meta, archive_.pos_config};
 
-    SpeedEstimator::Config spe_config;
-    SpeedEstimator speed_estmator{spe_config};
+    SpeedEstimator speed_estmator{archive_.spe_config};
+    SpeedEstimator targ_spd_est{archive_.spe_config};
 
-    bool cali_debug_enabled = true;
-    bool command_debug_enabled = false;
-    bool run_debug_enabled = false;
+    // bool cali_debug_enabled = true;
+    // bool command_debug_enabled = false;
+    // bool run_debug_enabled = false;
     
     uint64_t exe_micros = 0;
 
@@ -75,8 +63,8 @@ class FOCStepper:public FOCMotor{
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
-    FOCStepper(SVPWM & _svpwm, Encoder & _encoder, Memory & _memory):
-            FOCMotor(_svpwm, _encoder, _memory){;}
+    FOCStepper(const NodeId _id, SVPWM & _svpwm, Encoder & _encoder, Memory & _memory):
+            FOCMotor(_id, _svpwm, _encoder, 50, _memory){;}
 
     bool isActive() const {
         return (RunStatus::ACTIVE) == run_status;
@@ -86,21 +74,22 @@ public:
         return run_status;
     }
 
-    bool loadArchive(const bool outen = false);
-    void saveArchive(const bool outen = false);
-    void removeArchive(const bool outen = false);
+    bool loadArchive();
+    void saveArchive();
+    void removeArchive();
 
-    virtual real_t getTarget(){return target;}
 
     void tick();
 
     void init(){
         meta.reset();
-        curr_config.reset();
         
         odo.init();
 
-        panel_led.init();
+        // panel_led.init();
+        red_pwm.init();
+        green_pwm.init();
+        blue_pwm.init();
 
         red_pwm.setPeriod(25);
         green_pwm.setPeriod(25);
@@ -108,36 +97,36 @@ public:
     }
 
     void setTargetCurrent(const real_t curr){
-    target = MIN(curr, meta.max_curr);
+        meta.targ_curr = MIN(curr, meta.max_curr);
         ctrl_type = CtrlType::CURRENT;
     }
 
     void setTargetSpeed(const real_t speed){
-        target = MIN(speed, meta.max_spd);
+        meta.targ_spd = MIN(speed, meta.max_spd);
         ctrl_type = CtrlType::SPEED;
     }
 
     void setTargetPosition(const real_t pos){
-        target = meta.pos_limit.clamp(pos);
+        meta.targ_pos = meta.pos_limit.clamp(pos);
         ctrl_type = CtrlType::POSITION;
     }
 
-    void setTargetTrapezoid(const real_t pos){
-        target = meta.pos_limit.clamp(pos);
-        ctrl_type = CtrlType::TRAPEZOID;
+    void setTargetPositionDelta(const real_t delta){
+        meta.targ_pos = meta.pos_limit.clamp(this->getPosition() + delta);
+        ctrl_type = CtrlType::POSITION;
     }
 
     void setTargetTeach(const real_t max_curr){
-        target = CLAMP(max_curr, 0, meta.max_curr);
+        meta.targ_curr = CLAMP(max_curr, 0, meta.max_curr);
         ctrl_type = CtrlType::TEACH;
     }
 
     void setOpenLoopCurrent(const real_t current){
-        curr_config.openloop_curr = current;
+        meta.max_curr = current;
     }
 
     void setTargetVector(const real_t pos){
-        target = pos;
+        meta.targ_pos = pos;
         ctrl_type = CtrlType::VECTOR;
     }
 
@@ -174,15 +163,6 @@ public:
     }
 
 
-    real_t getPositionErr(){
-        return getPosition() - target;
-    }
-
-    real_t getSpeedErr(){
-        return getSpeed() - target;
-    }
-
-
     void setSpeedLimit(const real_t max_spd){
         meta.max_spd = int(max_spd);
     }
@@ -212,4 +192,13 @@ public:
         run_status = RunStatus::ACTIVE;
         svpwm.enable(true);
     }
+
+    real_t getRaddiff() const {
+        return meta.raddiff;
+    }
+
+    void setRadfix(const real_t rf){
+        meta.radfix = rf;
+    }
+
 };

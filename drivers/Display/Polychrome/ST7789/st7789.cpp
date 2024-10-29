@@ -45,6 +45,7 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
     if((this_point_index == last_point_index_temp + 1) && (!area_locked)){
         return;
     }
+
     writeCommand(0x2a);
     writeData16(pos.x + offset.x);
 
@@ -53,4 +54,16 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
     writeCommand(0x2c);
     area_locked = false;
+}
+
+
+
+void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 & color){
+    setarea_unsafe(rect);
+    interface.writePool((uint16_t)color, int(rect));
+}
+
+void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
+    setarea_unsafe(rect);
+    interface.writePixels((color_ptr), int(rect));
 }

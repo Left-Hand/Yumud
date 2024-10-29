@@ -1,9 +1,7 @@
-#ifndef __QMC5883L_HPP__
+#pragma once
 
-#define __QMC5883L_HPP__
-
-#include "../drivers/device_defs.h"
-#include "../drivers/IMU/IMU.hpp"
+#include "drivers/device_defs.h"
+#include "drivers/IMU/IMU.hpp"
 #include <tuple>
 
 class QMC5883L:public Magnetometer{
@@ -24,7 +22,7 @@ public:
         Single,Continuous
     };
 
-    static constexpr uint8_t default_addr = 0x1a;
+    scexpr uint8_t default_addr = 0x1a;
 protected:
     I2cDrv bus_drv;
 
@@ -112,27 +110,27 @@ protected:
         ChipIDReg chipIDReg;
     };
 
-    void writeReg(const RegAddress & regAddress, const uint16_t & regData){
+    void writeReg(const RegAddress regAddress, const uint16_t regData){
         bus_drv.writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint16_t & regData){
+    void readReg(const RegAddress regAddress, uint16_t & regData){
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void writeReg(const RegAddress & regAddress, const uint8_t & regData){
+    void writeReg(const RegAddress regAddress, const uint8_t regData){
         bus_drv.writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint8_t & regData){
+    void readReg(const RegAddress regAddress, uint8_t & regData){
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void requestPool(const RegAddress & regAddress, uint8_t * datas, uint8_t len){
+    void requestPool(const RegAddress regAddress, uint8_t * datas, uint8_t len){
         bus_drv.readPool((uint8_t)regAddress, datas, len, LSB);
     }
 
-    real_t From16BitToGauss(const uint16_t & data){
+    real_t From16BitToGauss(const uint16_t data){
         real_t guass;
         s16_to_uni(data, guass);
         guass *= fs;
@@ -255,5 +253,3 @@ public:
     }
 
 };
-
-#endif

@@ -30,8 +30,8 @@ protected:
     std::optional<SpiDrv> spi_drv;
 
     using RegAddress = uint8_t;
-    static constexpr uint8_t default_chip_id = 0;//TODO
-    static constexpr uint8_t default_i2c_addr = 0x68;
+    scexpr uint8_t default_chip_id = 0;//TODO
+    scexpr uint8_t default_i2c_addr = 0x68;
 
     struct{
 

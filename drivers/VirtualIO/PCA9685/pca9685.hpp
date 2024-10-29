@@ -1,93 +1,131 @@
-#ifndef __PCA9685B_HPP__
+#pragma once
 
-#define __PCA9685B_HPP__
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port_virtual.hpp"
+#include "drivers/CommonIO/Led/rgbLed.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "drivers/device_defs.h"
 
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port_virtual.hpp"
-#include "../drivers/CommonIO/Led/rgbLed.hpp"
-#include "../hal/timer/pwm/pwm_channel.hpp"
-#include "../drivers/device_defs.h"
 
 class PCA9685: public PortVirtualConcept<16>{
 public:
-    enum class CurrentLimit{
-        Max, High, Medium, Low
-    };
-
-    static constexpr uint8_t default_id = 0b10110000;
+    scexpr uint8_t default_i2c_addr = 0b10000000;
 protected:
     I2cDrv bus_drv;
-    uint16_t buf;
+
+    scexpr uint8_t valid_chipid = 0x23;
 
 
-    static constexpr uint8_t valid_chipid = 0x23;
-
-
-    struct Mode1Reg{
-        REG8_BEGIN
+    struct Mode1Reg:public Reg8{
+        using Reg8::operator=;
+        
         uint8_t allcall:1;
         uint8_t sub:3;
         uint8_t sleep:1;
         uint8_t auto_inc:1;
         uint8_t extclk:1;
         uint8_t restart:1;
-        REG8_END
     };
 
-    struct Mode2Reg{
-        REG8_BEGIN
+    struct Mode2Reg:public Reg8{
+        using Reg8::operator=;
+
         uint8_t outne:2;
         uint8_t outdrv:1;
         uint8_t och:1;
         uint8_t invrt:1;
         uint8_t __resv__:3;
-        REG8_END
     };
 
-    struct LedOnOffRegs{
-        REG16_BEGIN
-        uint16_t cvr:12;
-        uint16_t full:1;
-        uint16_t __resv__:3;
-        REG16_END
+    struct LedOnOffReg:public Reg16{
+        uint16_t cvr:12 = 0;
+        uint16_t full:1 = 0;
+        uint16_t __resv__:3 = 0;
     };
 
     struct LedRegs{
-        LedOnOffRegs on;
-        LedOnOffRegs off;
+        LedOnOffReg  on;
+        LedOnOffReg off;
     };
 
     enum class RegAddress:uint8_t{
         Mode1,
         Mode2,
+        LED0_ON_L = 0x06,
+        LED0_ON_H,
+        LED0_OFF_L,
+        LED0_OFF_H,
         SubAddr = 0x02,
-        Prescale = 0x7f
+        Prescale = 0xfe
     };
 
-    struct{
-        Mode1Reg mode1;
-        Mode2Reg mode2;
-        uint8_t sub_addr[3];
-        uint8_t all_addr;
-        LedRegs sub_channels[16];
-        LedRegs all_channel;
-        uint8_t prescale;
+    Mode1Reg mode1_reg;
+    Mode2Reg mode2_reg;
+    std::array<uint8_t,3> sub_addr_regs;
+    uint8_t all_addr_reg;
+    std::array<LedRegs,16> sub_channels;
+    LedRegs all_channel;
+    uint8_t prescale_reg;
+
+    class PCA8975Channel:public PwmChannel, GpioConcept{
+    protected:
+        PCA9685 & pca;
+        uint8_t channel;
+
+        PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):GpioConcept(_channel), pca(_pca), channel(_channel){;}
+        
+        DELETE_COPY_AND_MOVE(PCA8975Channel)
+        
+        friend class PCA9685;
+    public:
+
+        PCA8975Channel & operator = (const real_t duty) override{
+            pca.setPwm(channel, 0, (uint16_t)(duty << 12));
+            return *this;
+        }
+
+        __fast_inline void set() override {*this = real_t(1);}
+        __fast_inline void clr() override {*this = real_t(0);}
+        __fast_inline void write(const bool val){*this = real_t(val);}
+        __fast_inline bool read() const override {return 0;}
+
+        void setMode(const PinMode mode) override{}
     };
 
-    void writeReg(const RegAddress addr, const uint8_t data){
-        bus_drv.writeReg((uint8_t)addr, data);
+
+    std::array<PCA8975Channel,16> channels{
+        PCA8975Channel{*this, 0},
+        PCA8975Channel{*this, 1},
+        PCA8975Channel{*this, 2},
+        PCA8975Channel{*this, 3},
+        PCA8975Channel{*this, 4},
+        PCA8975Channel{*this, 5},
+        PCA8975Channel{*this, 6},
+        PCA8975Channel{*this, 7},
+        PCA8975Channel{*this, 8},
+        PCA8975Channel{*this, 9},
+        PCA8975Channel{*this, 10},
+        PCA8975Channel{*this, 11},
+        PCA8975Channel{*this, 12},
+        PCA8975Channel{*this, 13},
+        PCA8975Channel{*this, 14},
+        PCA8975Channel{*this, 15}
     };
 
-    void writeReg(const RegAddress addr, const uint16_t data){
-        bus_drv.writeReg((uint8_t)addr, data);
+    __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
+        bus_drv.writeReg((uint8_t)addr, reg);
+    };
+
+    __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
+        bus_drv.writeReg((uint8_t)addr, reg, LSB);
     }
 
-    void readReg(const RegAddress addr, uint8_t & data){
-        bus_drv.readReg((uint8_t)addr, data);
+    __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
+        bus_drv.readReg((uint8_t)addr, reg);
     }
 
-    void readReg(const RegAddress addr, uint16_t & data){
-        bus_drv.readReg((uint8_t)addr, data);
+    __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
+        bus_drv.readReg((uint8_t)addr, reg, LSB);
     }
 
     uint8_t readReg(const RegAddress addr){
@@ -96,7 +134,7 @@ protected:
         return data;
     }
 
-    void write(const uint16_t & data) override{
+    void write(const uint16_t data) override{
         // buf = data;
         // writeReg(RegAddress::out, buf);
     }
@@ -107,123 +145,46 @@ protected:
         return true;
     }
 
+    void test(){
+        static_assert(sizeof(mode1_reg) == 1);
+        static_assert(sizeof(mode2_reg) == 1);
+    }
 public:
     PCA9685(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     PCA9685(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    PCA9685(I2c & _bus):bus_drv{_bus, default_id}{;}
+    PCA9685(I2c & _bus):bus_drv{_bus, default_i2c_addr}{;}
 
-    void setFrequency(uint32_t freq){
-        static constexpr uint32_t osc_freq = 25000000;
-        prescale = osc_freq / 4096 / freq - 1;
-        writeReg(RegAddress::Prescale, prescale);
+    void setFrequency(const uint freq, const real_t trim = real_t(1));
+
+    void setPwm(const uint8_t channel, const uint16_t on, const uint16_t off);
+
+    void setSubAddr(const uint8_t index, const uint8_t addr);
+
+    void enableExtClk(const bool en = true);
+
+    void enableSleep(const bool en = true);
+
+    void init();
+
+    void reset();
+
+    void set(const Pin pin) override;
+
+    void clr(const Pin pin) override;
+
+    void set(const uint16_t data) override;
+
+    void clr(const uint16_t data) override;
+    
+    void writeByIndex(const int index, const bool data) override;
+
+    bool readByIndex(const int index) override;
+
+    void setMode(const int index, const PinMode mode) override;
+
+    PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
+
+    PCA8975Channel & operator [](const size_t index){
+        return channels[index];
     }
-
-    void setSubAddr(const uint8_t index, const uint8_t addr){
-        sub_addr[index] = addr;
-        writeReg(RegAddress(uint8_t(RegAddress::SubAddr) + index), sub_addr[index]);
-    }
-
-
-    // void init(){
-    //     reset();
-    //     delay(10);
-    //     setLedCurrentLimit(CurrentLimit::Low);
-    //     for(uint8_t i = 0; i< 16; i++){
-    //         writeReg((RegAddress)((uint8_t)RegAddress::dim + i), (uint8_t)0);
-    //     }
-    //     ledMode = 0xffff;
-    // }
-
-    void init(){
-        delay(10);
-        DEBUG_PRINT("m1", readReg(RegAddress::Mode1));
-        DEBUG_PRINT("m2", readReg(RegAddress::Mode2));
-    }
-
-    void reset(){
-        // writeReg(RegAddress::swRst, (uint8_t)0x00);
-    }
-
-    void set(const Pin & pin) override{
-        // buf |= (uint16_t)pin;
-        // write(buf);
-    }
-
-    void clr(const Pin & pin) override{
-        // buf &= ~(uint16_t)pin;
-        // write(buf);
-    }
-
-    void setBits(const uint16_t & data) override{
-        // buf |= data;
-        // write(buf);
-    }
-
-    void clrBits(const uint16_t & data) override{
-        // buf &= ~data;
-        // write(buf);
-    }
-
-    void writeByIndex(const int8_t index, const bool data) override{
-        // if(!isIndexValid(index))return;
-        // if(data) buf |= 1 << index;
-        // else buf &= ~(1 << index);
-        // write(buf);
-    }
-    bool readByIndex(const int8_t index) override{
-        // if(!isIndexValid(index)) return false;
-        // read();
-        // return (buf & (1 << index));
-        return true;
-    }
-
-    void setModeByIndex(const int8_t & index, const PinMode & mode) override{
-    //     if(!isIndexValid(index))return;
-    //     uint16_t mask = 1 << index;
-    //     if(PinModeUtils::isIn(mode)) dir |= mask;
-    //     else dir &= ~mask;
-    //     writeReg(RegAddress::dir, dir);
-
-    //     if(index < 8){
-    //         ctl.p0mod = PinModeUtils::isPP(mode);
-    //         writeReg(RegAddress::ctl, ctl.data);
-    //     }
-    }
-
-    // void enableIrqByIndex(const int8_t & index, const bool & en = true){
-    //     if(!isIndexValid(index))return;
-    //     writeReg(RegAddress::inten, (uint8_t)(en << index));
-    // }
-
-    // void enableLedMode(const Pin & pin, const bool & en = true){
-    //     uint8_t index = CTZ((uint16_t)pin);
-    //     if(en) ledMode &= ~(1 << index);
-    //     else ledMode |= (1 << index);
-    //     writeReg(RegAddress::ledMode, ledMode);
-    // }
-
-    // void setLedCurrentLimit(const CurrentLimit & limit){
-    //     ctl.isel = (uint8_t)limit;
-    //     writeReg(RegAddress::ctl, ctl.data);
-    // }
-
-    // void setLedCurrent(const Pin & pin, const uint8_t current){
-    //     uint8_t index = CTZ((uint16_t)pin);
-    //     if(index < 8) index += 4;
-    //     else if(index < 12) index -= 8;
-    //     writeReg((RegAddress)((uint8_t)RegAddress::dim + index), current);
-    // }
-
-    // bool isChipValid(){
-    //     uint8_t chipId;
-    //     readReg(RegAddress::chipId, chipId);
-    //     return (chipId == valid_chipid);
-    // }
-
-    PCA9685 & operator << (const uint8_t & data){write(data); return *this;}
-    PCA9685 & operator = (const uint16_t & data) override {write(data); return *this;}
 };
-
-
-
-#endif

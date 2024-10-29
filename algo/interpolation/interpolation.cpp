@@ -6,11 +6,11 @@
 //     auto turnCnt = millis() % 2667;
 //     uint32_t turns = millis() / 2667;
     
-//     static constexpr real_t velPoints[7] = {
+//     scexpr real_t velPoints[7] = {
 //         real_t(20)/360, real_t(20)/360, real_t(62.4)/360, real_t(62.4)/360, real_t(20.0)/360, real_t(20.0)/360, real_t(20.0)/360
 //     };
     
-//     static constexpr real_t posPoints[7] = {
+//     scexpr real_t posPoints[7] = {
 //         real_t(1.0f)/360,real_t(106.1f)/360,real_t(108.1f)/360, real_t(126.65f)/360, real_t(233.35f)/360,real_t(359.0f)/360,real_t(361.0f)/360
 //     };
 

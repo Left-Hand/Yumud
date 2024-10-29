@@ -13,7 +13,7 @@ public:
 
     GpioPwm(Gpio & _gpio):gpio_(_gpio){;}
 
-    void init() override{
+    void init(){
         gpio_.outpp(false);
         cnt_ = 0;
     }

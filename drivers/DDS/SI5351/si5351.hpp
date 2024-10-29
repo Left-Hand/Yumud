@@ -33,7 +33,7 @@
 class Si5351
 {
 public:
-    static constexpr uint8_t default_addr = 0x60;
+    scexpr uint8_t default_addr = 0x60;
 
     enum si5351_clock {SI5351_CLK0, SI5351_CLK1, SI5351_CLK2, SI5351_CLK3,
         SI5351_CLK4, SI5351_CLK5, SI5351_CLK6, SI5351_CLK7};

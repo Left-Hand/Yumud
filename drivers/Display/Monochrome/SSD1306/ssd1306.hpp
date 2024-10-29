@@ -42,7 +42,7 @@ protected:
         interface.writeCommand(getOffset().y);
     }
 public:
-    static constexpr uint8_t default_id = 0x78;
+    scexpr uint8_t default_id = 0x78;
 
     void init();
 
@@ -78,7 +78,7 @@ public:
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
 protected:
-    static constexpr Vector2i phy_size = Vector2i(72, 40);
+    scexpr Vector2i phy_size = Vector2i(72, 40);
     VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
@@ -97,7 +97,7 @@ public:
 
 class SSD13XX_128X64:public SSD13XX{
 protected:
-    static constexpr Vector2i phy_size = Vector2i(128, 64);
+    scexpr Vector2i phy_size = Vector2i(128, 64);
     VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
 
@@ -117,7 +117,7 @@ public:
 
 class SSD13XX_128X32:public SSD13XX{
 protected:
-    static constexpr Vector2i phy_size = Vector2i(128, 32);
+    scexpr Vector2i phy_size = Vector2i(128, 32);
     VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
@@ -142,7 +142,7 @@ public:
 
 class SSD13XX_88X48:public SSD13XX{
 protected:
-    static constexpr Vector2i phy_size = Vector2i(88, 48);
+    scexpr Vector2i phy_size = Vector2i(88, 48);
     VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
@@ -161,7 +161,7 @@ public:
 
 class SSD13XX_64X48:public SSD13XX{
 protected:
-    static constexpr Vector2i phy_size = Vector2i(64, 48);
+    scexpr Vector2i phy_size = Vector2i(64, 48);
     VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;
@@ -180,7 +180,7 @@ public:
 
 class SSD13XX_128X80:public SSD13XX{
 protected:
-    static constexpr Vector2i phy_size = Vector2i(128, 80);
+    scexpr Vector2i phy_size = Vector2i(128, 80);
     VerticalBinaryImage frame_instance = VerticalBinaryImage(phy_size);
 
     void preinitByCmds() override;

@@ -7,21 +7,18 @@ class AT24CXX:public StoragePaged{
 private:
     constexpr bool is_small_chip(){return m_capacity <= 256;}
 protected:
-    static constexpr uint32_t min_duration_ms = 6;
+    scexpr uint32_t min_duration_ms = 6;
 
     I2cDrv bus_drv;
     uint32_t last_entry_ms = 0;
     
-    void _store(const uint8_t data, const Address loc) override;
-    void _load(uint8_t & data, const Address loc) override;
 
-    void wait_for_free();
+    void storeBytes(const uint8_t data, const Address loc) override;
+    void loadBytes(uint8_t & data, const Address loc) override;
 
-    void update_entry_ms(){last_entry_ms = millis();}
+    void storeBytes(const void * data, const Address data_size, const Address loc) override;
 
-    void _store(const void * data, const Address data_size, const Address loc) override;
-
-    void _load(void * data, const Address data_size, const Address loc) override;
+    void loadBytes(void * data, const Address data_size, const Address loc) override;
 
     void entry_store() override{
         update_entry_ms();
@@ -52,8 +49,11 @@ public:
 
     bool busy() override{return last_entry_ms + min_duration_ms - millis() > 0;}
 
-    static constexpr uint8_t default_id = 0b10100000; 
+    scexpr uint8_t default_id = 0b10100000; 
+private:
+    void wait_for_free();
 
+    void update_entry_ms(){last_entry_ms = millis();}
 };
 
 #define AT24CXX_DEF_TEMPLATE(name, size, pagesize)\

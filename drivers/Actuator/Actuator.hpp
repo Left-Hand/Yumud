@@ -1,9 +1,6 @@
-#ifndef __ACTUATOR_HPP__
+#pragma once
 
-#define __ACTUATOR_HPP__
-
-#include "../hal/timer/pwm/pwm_channel.hpp"
-#include "sys/math/real.hpp"
+#include "../device_defs.h"
 
 class Actuator{
 protected:
@@ -12,26 +9,3 @@ public:
     virtual void init() = 0;
     virtual void enable(const bool en = true) = 0;
 };
-
-
-class Servo:public Actuator{
-public:
-
-};
-
-
-class ServoOpenLoop:public Servo{
-
-};
-
-class PwmBaseServo:public ServoOpenLoop{
-
-};
-
-
-class ServoCloseLoop:public Servo{
-public:
-    virtual real_t getPosition() = 0;
-};
-
-#endif

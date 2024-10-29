@@ -1,28 +1,29 @@
 #pragma once
 
-#include "../hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "../DistanceSensor.hpp"
 
-
-class VL53L0X{
+class VL53L0X:public DistanceSensor{
 protected:
     I2cDrv bus_drv;
 public:
-    static constexpr uint8_t default_id = 0x52;
+    scexpr uint8_t default_i2c_addr = 0x52;
     VL53L0X(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
     VL53L0X(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    VL53L0X(I2c & bus):bus_drv(bus, default_id){;}
+    VL53L0X(I2c & bus):bus_drv(bus, default_i2c_addr){;}
     ~VL53L0X(){;}
 
     void startConv();
     void init();
     void stop();
-    uint16_t getDistance();
+    real_t getDistance() override {return getDistanceMM() * real_t(0.001);};
+    uint16_t getDistanceMM();
     uint16_t getAmbientCount();
     uint16_t getSignalCount();
 
 	void enableHighPrecision(const bool _highPrec = true);
     void enableContMode(const bool _continuous = true);
-    bool update();
+    void update() override;
 
 private:
     bool highPrec = false;
@@ -44,7 +45,7 @@ private:
     }
 
     void flush();
-    bool isIdle();
+    bool busy();
 
 	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;

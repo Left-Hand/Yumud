@@ -1,8 +1,9 @@
 #pragma once
 
-#include "fp32.hpp"
-#include "../real.hpp"
 #include <cstdint>
+#include "fp32.hpp"
+
+#include "sys/math/real.hpp"
 
 
 struct fp8_e4m3{
@@ -62,7 +63,8 @@ struct fp8_e4m3{
 		// 浮点数的隐含位
 		conversion.frac |= (1 << 23);
 		
-		return *reinterpret_cast<const float*>(&conversion.raw);
+		// return *reinterpret_cast<const float*>(&conversion.raw);
+		return std::bit_cast<float>(conversion.raw);
 	}
 
 	explicit constexpr operator iq_t() const {

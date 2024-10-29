@@ -56,11 +56,11 @@ void Adc1::refreshInjectedData(){
     injected_datas[3] = instance->IDATAR4;
 }
 
-uint16_t Adc1::getRegularDataByRank(const uint8_t & rank){
+uint16_t Adc1::getRegularDataByRank(const uint8_t rank){
     return 0;
 }
 
-uint16_t Adc1::getInjectedDataByRank(const uint8_t & rank){
+uint16_t Adc1::getInjectedDataByRank(const uint8_t rank){
     if(rank == 0 || rank > 4) return 0;
     else return injected_datas[rank];
 }

@@ -21,15 +21,6 @@
 namespace NVCV2{
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
-    enum TB{
-        TOP = false,
-        BOTTOM = true
-    };
-
-    enum LR{
-        LEFT = false,
-        RIGHT = true
-    };
 
 
     enum class Direction:uint8_t{
@@ -39,8 +30,3 @@ namespace NVCV2{
 
     using Histogram = std::array<int, 256>;
 }
-
-
-OutputStream & operator<<(OutputStream & os, const NVCV2::TB tb);
-
-OutputStream & operator<<(OutputStream & os, const NVCV2::LR lr);

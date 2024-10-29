@@ -1,10 +1,6 @@
-#ifndef __INA226_HPP__
-#define __INA226_HPP__
+#pragma once
 
-#include "../drivers/device_defs.h"
-#include "sys/math/real.hpp"
-#include "hal/adc/analog_channel.hpp"
-#include <bit>
+#include "drivers/device_defs.h"
 
 #ifdef INA226_DEBUG
 #undef INA226_DEBUG
@@ -95,7 +91,7 @@ protected:
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        i2c_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
+        i2c_drv.readReg((uint8_t)regAddress, regData);
     }
 
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
@@ -108,7 +104,7 @@ protected:
     friend class CurrentChannel;
     friend class VoltageChannel;
 
-    struct INA226Channel:public AnalogInChannel{
+    class INA226Channel:public AnalogInChannel{
     public:
         enum class Index:uint8_t{
             SHUNT_VOLT,
@@ -146,7 +142,7 @@ protected:
 public:
     using Index = INA226Channel::Index;
     
-    static constexpr uint8_t default_i2c_addr = 0x80;
+    scexpr uint8_t default_i2c_addr = 0x80;
 
     #define CHANNEL_CONTEX\
         INA226Channel{*this, INA226Channel::Index::SHUNT_VOLT},\
@@ -157,6 +153,8 @@ public:
     INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
     INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
     INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTEX}{};
+
+    #undef CHANNEL_CONTEX
 
     auto & ch(const Index index){
         return channels[uint8_t(index)];
@@ -198,12 +196,12 @@ public:
         writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void setBusConversionTime(const ConversionTime &time){
+    void setBusConversionTime(const ConversionTime time){
         configReg.busVoltageConversionTime = uint8_t(time);
         writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
 
-    void setShuntConversionTime(const ConversionTime &time){
+    void setShuntConversionTime(const ConversionTime time){
         configReg.shuntVoltageConversionTime = uint8_t(time);
         writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
     }
@@ -235,4 +233,3 @@ public:
     }
 };
 
-#endif

@@ -1,6 +1,4 @@
-#ifndef __ODOMETER_LINES_HPP__
-
-#define __ODOMETER_LINES_HPP__
+#pragma once
 
 #include "Odometer.hpp"
 
@@ -13,5 +11,3 @@ public:
         return Odometer::getPosition() * scale;
     }
 };
-
-#endif

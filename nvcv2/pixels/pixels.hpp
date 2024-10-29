@@ -9,12 +9,12 @@ namespace NVCV2::Pixels{
 
     class UniqueRandomGenerator {
     private:
-        static constexpr uint8_t m = 251;
-        static constexpr uint8_t a = 37;
-        static constexpr uint8_t c = 71;
+        scexpr uint8_t m = 251;
+        scexpr uint8_t a = 37;
+        scexpr uint8_t c = 71;
         std::array<uint8_t, 256> data;
 
-        static constexpr uint8_t iter(const uint8_t x){
+        scexpr uint8_t iter(const uint8_t x){
             return (a * x + c) % m;
         }
     public:
@@ -97,7 +97,7 @@ namespace NVCV2::Pixels{
     void ostu(Image<Binary>& dst, const Image<Grayscale>& src);
 
 
-    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t & k = real_t(0.5), const real_t & eps = real_t(0.02));
+    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t k = real_t(0.5), const real_t eps = real_t(0.02));
 
     void max_entropy(const Image<Grayscale>& src,const int thresh);
 

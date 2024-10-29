@@ -7,13 +7,13 @@
 template<typename T, uint32_t _size>
 class RingBuf_t:public StaticBuffer_t<T, _size>{
 protected:
-    volatile T * advancePointer(volatile T * ptr, size_t step = 1) {
+    T * volatile advancePointer(T * volatile ptr, size_t step = 1) {
         return (ptr + step >=this->buf + this->size) ? ptr + step - this->size : ptr + step;
     }
 
 public:
-    volatile T * read_ptr;
-    volatile T * write_ptr;
+    T * volatile read_ptr;
+    T * volatile write_ptr;
 
     RingBuf_t():read_ptr(this->buf), write_ptr(this->buf){;}
 

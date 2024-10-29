@@ -64,19 +64,19 @@ public:
 
     const T & operator [](const size_t index) const {return *(&this->x + index);}
 
-    static constexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
-    static constexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
-    static constexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);
+    scexpr Vector2_t<T> ZERO = Vector2_t<T>(0, 0);
+    scexpr Vector2_t<T> ONE = Vector2_t<T>(1, 1);
+    scexpr Vector2_t<T> INF = Vector2_t<T>(INFINITY, INFINITY);
 
-    static constexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
-    static constexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
-    static constexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
-    static constexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
+    scexpr Vector2_t<T> LEFT = Vector2_t<T>(-1, 0);
+    scexpr Vector2_t<T> RIGHT = Vector2_t<T>(1, 0);
+    scexpr Vector2_t<T> UP = Vector2_t<T>(0, 1);
+    scexpr Vector2_t<T> DOWN = Vector2_t<T>(0, -1);
 
-    static constexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
-    static constexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
-    static constexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
-    static constexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
+    scexpr Vector2_t<T> LEFT_UP = Vector2_t<T>(-1, 1);
+    scexpr Vector2_t<T> RIGHT_UP = Vector2_t<T>(1, 1);
+    scexpr Vector2_t<T> LEFT_DOWN = Vector2_t<T>(-1, -1);
+    scexpr Vector2_t<T> RIGHT_DOWN = Vector2_t<T>(1, -1);
 
     constexpr Vector2_t<T> normalize(){*this /= this->length();}
     constexpr Vector2_t<T> normalized() const;
@@ -148,53 +148,55 @@ public:
     constexpr Vector2_t<T> slerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
     constexpr Vector2_t<T> slide(const Vector2_t<T>  & n) const;
     constexpr Vector2_t<T> snapped(const Vector2_t<T> & by) const;
+    constexpr Vector2_t<T> cw() const {return Vector2_t<T>(-y, x);}
+    constexpr Vector2_t<T> ccw() const {return Vector2_t<T>(y, -x);}
 
 
-    constexpr __fast_inline Vector2_t<T> & operator=(const Vector2_t<auto> & b){
+    __fast_inline constexpr Vector2_t<T> & operator=(const Vector2_t<auto> & b){
         x = static_cast<T>(b.x);
         y = static_cast<T>(b.y);
         return *this;
     }
 
 
-    constexpr __fast_inline Vector2_t<T> & operator+=(const Vector2_t<auto> & b){
+    __fast_inline constexpr Vector2_t<T> & operator+=(const Vector2_t<auto> & b){
         x += static_cast<T>(b.x);
         y += static_cast<T>(b.y);
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator-=(const Vector2_t<auto> & b){
+    __fast_inline constexpr Vector2_t<T> & operator-=(const Vector2_t<auto> & b){
         x -= static_cast<T>(b.x);
         y -= static_cast<T>(b.y);
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> operator-() const{
+    __fast_inline constexpr Vector2_t<T> operator-() const{
         Vector2_t<T> ret;
         ret.x = -x;
         ret.y = -y;
         return ret;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator*=(const arithmetic auto & n){
+    __fast_inline constexpr Vector2_t<T> & operator*=(const arithmetic auto & n){
         using CommonType = typename std::common_type<T, decltype(n)>::type;
         x = static_cast<T>(static_cast<CommonType>(x) * n);
         y = static_cast<T>(static_cast<CommonType>(y) * n);
         return *this;
     }
 
-    constexpr __fast_inline Vector2_t<T> & operator/=(const arithmetic auto & n){
+    __fast_inline constexpr Vector2_t<T> & operator/=(const arithmetic auto & n){
         using CommonType = typename std::common_type<T, decltype(n)>::type;
         x = static_cast<T>(static_cast<CommonType>(x) / n);
         y = static_cast<T>(static_cast<CommonType>(y) / n);
         return *this;
     }
 
-    __fast_inline Vector2_t<T> operator*(const arithmetic auto & n) const{
+    __fast_inline constexpr Vector2_t<T> operator*(const arithmetic auto & n) const{
         Vector2_t<T> ret = *this;
         return ret *= n;
     }
-    __fast_inline Vector2_t<T> operator/(const arithmetic auto & n) const{
+    __fast_inline constexpr Vector2_t<T> operator/(const arithmetic auto & n) const{
         Vector2_t<T> ret = *this;
         return ret /= n;
     }
@@ -221,7 +223,8 @@ public:
 
 #include "vector2_t.tpp"
 
-
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ')';
 }
+
+using Vector2i = Vector2_t<int>;

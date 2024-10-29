@@ -10,10 +10,14 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         if (func == &std::hex) {setRadix(16);break;}
         if (func == &std::fixed) {
             //TODO
-            break;}
+            break;
+        }
+        
         if (func == &std::scientific) {
             //TODO
-            break;}
+            break;
+        }
+        
         if (func == &std::boolalpha){
             b_boolalpha = true;
             break;
@@ -43,6 +47,16 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
             b_showbase = false;
             break;
         }
+
+        // if (func == &std::flush){
+        //     this->flush();
+        //     break;
+        // }
+
+        // if (func == &std::endl){
+        //     this->write();
+        //     break;
+        // }
     }while(false);
 
     skip_split = true;

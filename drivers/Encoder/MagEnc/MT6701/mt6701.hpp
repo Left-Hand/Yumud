@@ -1,13 +1,9 @@
-#ifndef __MT6701_HPP__
-#define __MT6701_HPP__
+#pragma once
 
-#include <optional>
-#include "sys/math/real.hpp"
+#include "drivers/device_defs.h"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
-#include "../drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/MagEncoder.hpp"
 
 #ifdef MT6701_DEBUG
 #undef MT6701_DEBUG
@@ -71,7 +67,7 @@ protected:
         }
     };
     
-    static constexpr uint8_t default_i2c_addr = 0b000'110'0;
+    scexpr uint8_t default_i2c_addr = 0b000'110'0;
 
     std::optional<I2cDrv> i2c_drv;
     std::optional<SpiDrv> spi_drv;
@@ -254,5 +250,3 @@ public:
 
 
 };
-
-#endif

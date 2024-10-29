@@ -1,10 +1,8 @@
-#ifndef __ST7789_HPP__
-
-#define __ST7789_HPP__
+#pragma once
 
 #include "../../DisplayerInterface.hpp"
-#include "../types/image/image.hpp"
-#include "../hal/bus/spi/spi.hpp"
+#include "types/image/image.hpp"
+#include "hal/bus/spi/spi.hpp"
 
 class ST7789:public Displayer<RGB565>{
 private:
@@ -40,29 +38,22 @@ private:
 
 
 
-
-    void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override{
-        setarea_unsafe(rect);
-        interface.writePool((uint16_t)color, int(rect));
-    }
-
 protected:
 
-    uint32_t getPointIndex(const uint16_t x, const uint16_t y){
+    __fast_inline uint32_t getPointIndex(const uint16_t x, const uint16_t y){
         return (x + y * size.x);
     }
+
     void setpos_unsafe(const Vector2i & pos) override;
     void setarea_unsafe(const Rect2i & rect) override;
 
-    void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
+    __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
         setpos_unsafe(pos);
         interface.writeData(color.data);
     }
 
-    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override{
-        setarea_unsafe(rect);
-        interface.writePixels((color_ptr), int(rect));
-    }
+    void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override;
+    void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override;
 public:
     ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
             ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
@@ -82,9 +73,7 @@ public:
         interface.writePixels((color_ptr), int(rect));
     }
 
-    void setDisplayOffset(const Vector2i & _offset){
-        offset = _offset;
-    }
+    void setDisplayOffset(const Vector2i & _offset){offset = _offset;}
     void setFlipY(const bool flip){modifyCtrl(flip, 7);}
     void setFlipX(const bool flip){modifyCtrl(flip, 6);}
     void setSwapXY(const bool flip){modifyCtrl(flip, 5);}
@@ -92,7 +81,5 @@ public:
     void setFormatRGB(const bool is_rgb){modifyCtrl(!is_rgb, 3);}
     void setFlushDirH(const bool dir){modifyCtrl(dir, 2);}
 
-    void setInversion(const bool & inv){writeCommand(0x20 + inv);}
+    void setInversion(const bool inv){writeCommand(0x20 + inv);}
 };
-
-#endif

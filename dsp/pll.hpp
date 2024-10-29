@@ -1,7 +1,4 @@
-#ifndef __PLL_HPP__
-
-#define __PLL_HPP__
-
+#pragma once
 #include "sys/math/real.hpp"
 
 struct Pll{
@@ -33,7 +30,7 @@ struct Pll{
     }
 
     bool inited = false;
-    real_t update(const real_t & input, const real_t & delta_t){
+    real_t update(const real_t input, const real_t delta_t){
         if(inited == false){
             intergal = real_t(0);
             omega = real_t(0);
@@ -72,4 +69,3 @@ struct Pll{
     }
 };
 
-#endif

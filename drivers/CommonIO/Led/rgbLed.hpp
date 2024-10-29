@@ -1,10 +1,7 @@
-#ifndef __RGB_HPP__
-
-#define __RGB_HPP__
-
+#pragma once
 #include "Led.hpp"
-#include "../types/color/color_t.hpp"
-#include "../hal/timer/pwm/pwm_channel.hpp"
+#include "types/color/color_t.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
 
 
 class RgbLedConcept{
@@ -14,7 +11,7 @@ protected:
     real_t brightness = real_t(1);
 public:
 
-    virtual void init() = 0;
+    // virtual void init() = 0;
 
     void setBrightness(real_t _brightness){
         brightness = _brightness;
@@ -33,7 +30,7 @@ public:
     RgbLedDigital(GpioConcept & _red_gpio, GpioConcept & _green_gpio, GpioConcept & _blue_gpio):
             red_gpio(_red_gpio), green_gpio(_green_gpio), blue_gpio(_blue_gpio){;}
     
-    void init() override{
+    void init(){
         red_gpio.outpp();
         green_gpio.outpp();
         blue_gpio.outpp();
@@ -58,11 +55,11 @@ public:
     RgbLedAnalog(gpio_or_pwm auto & _red_ch, gpio_or_pwm auto & _green_ch, gpio_or_pwm auto & _blue_ch):
         red(_red_ch), green(_green_ch), blue(_blue_ch){;}
 
-    void init() override{
-        red.init();
-        green.init();
-        blue.init();
-    }
+    // void init() override{
+        // red.init();
+        // green.init();
+        // blue.init();
+    // }
 
     RgbLedAnalog & operator = (const Color & color) override{
         red = color.r;    
@@ -71,7 +68,3 @@ public:
         return *this;
     }
 };
-
-
-#endif
-

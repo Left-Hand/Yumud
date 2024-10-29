@@ -8,7 +8,7 @@ protected:
     std::array<Real, N> values;
 public:
     LookUpTable(std::array<Real, N> initializedValues) : values(initializedValues) {}
-    virtual Real operator[](const uint32_t & i) const = 0;
+    virtual Real operator[](const uint32_t i) const = 0;
     virtual Real operator[](const Real & x) const = 0;
 };
 
@@ -24,7 +24,7 @@ public:
     }()) {}
 
 
-    Real operator[](const uint32_t & i) const override {
+    Real operator[](const uint32_t i) const override {
         return this->values[i % N];
     }
 

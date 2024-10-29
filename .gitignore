@@ -18,3 +18,5 @@ tools
 .VSCodeCounter
 hello
 *.json
+*.gcm
+gcm.cache

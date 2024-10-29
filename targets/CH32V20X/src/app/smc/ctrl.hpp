@@ -78,7 +78,7 @@ struct SideCtrl{
         intergal = CLAMP(intergal + (t - last_t) * ki, -intergal_clamp, intergal_clamp);
         real_t ki_contribute = ki * intergal;
 
-        static constexpr real_t eps_dir = real_t(0.01);
+        scexpr real_t eps_dir = real_t(0.01);
         if(abs(error_dir) < eps_dir){
             intergal /= 2;
         }
@@ -116,7 +116,7 @@ public:
     real_t k2 = 0.4;
 
     real_t out_clamp = real_t(1);
-    real_t update(const real_t & pos, const real_t & acc){
+    real_t update(const real_t pos, const real_t acc){
         real_t delta = (t - last_t);
         v1 += acc * delta;
         v1 = k1 * v1 + (1-k1) * (pos - last_pos) / delta;

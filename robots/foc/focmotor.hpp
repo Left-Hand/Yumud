@@ -11,35 +11,40 @@ class FOCMotorConcept{
 public:
     using ErrorCode = MotorUtils::ErrorCode;
     using RunStatus = MotorUtils::RunStatus;
+    
     using CtrlType = MotorUtils::CtrlType;
+    
+    using NodeId = MotorUtils::NodeId;
+    using MetaData = MotorUtils::MetaData;
+    
 protected:
     using ExitFlag = MotorUtils::ExitFlag;
     using InitFlag = MotorUtils::InitFlag;
 
     using Range = Range_t<real_t>;
-
     using Switches = MotorUtils::Switches;
 
 
     volatile RunStatus run_status = RunStatus::INIT;
 
     MetaData meta;
-    real_t target;
+    uint8_t node_id;
+    real_t elecrad_zerofix;
 
     friend class AsciiProtocol;
     friend class CanProtocol;
 
-
+    // NodeId getDefaultNodeId();
 public:
-    virtual bool loadArchive(const bool outen = false) = 0;
-    virtual void saveArchive(const bool outen = false) = 0;
-    virtual void removeArchive(const bool outen = false) = 0;
+    FOCMotorConcept(const NodeId _id):node_id(_id){;}
+    
+
 
     virtual void freeze() = 0;
     virtual void setTargetCurrent(const real_t current) = 0;
     virtual void setTargetSpeed(const real_t speed) = 0;
     virtual void setTargetPosition(const real_t pos) = 0;
-    virtual void setTargetTrapezoid(const real_t pos) = 0;
+    virtual void setTargetPositionDelta(const real_t delta) = 0;
     virtual void setOpenLoopCurrent(const real_t current) = 0;
     virtual void setTargetVector(const real_t pos) = 0;
     virtual void setTargetTeach(const real_t max_curr) = 0;
@@ -47,8 +52,6 @@ public:
 
     virtual bool isActive() const = 0;
     virtual volatile RunStatus & status() = 0;
-
-    virtual real_t getTarget() = 0;
 
     const auto & getMeta() const {return meta;}
 
@@ -68,15 +71,17 @@ public:
     virtual void triggerCali() = 0;
     virtual void reset() = 0;
 
-    virtual uint8_t getNodeId() {return 0;}
-    virtual void setNodeId(const uint8_t _id){}
+    virtual uint8_t getNodeId() {return node_id;}
+    virtual void setNodeId(const uint8_t _id){node_id = _id;}
     auto & getMeta(){return meta;}
-private:
-    uint8_t getDefaultNodeId();
+
 };
 
 class FOCMotor:public FOCMotorConcept {
 protected:
+    using Archive = MotorUtils::Archive;
+    Archive archive_;
+    
     ErrorCode error_code = ErrorCode::OK;
 
     const char * error_message = nullptr;
@@ -137,10 +142,13 @@ public:
     AsciiProtocol * ascii_protocol;
     CanProtocol * can_protocol;
 
-    FOCMotor(SVPWM & _svpwm, Encoder & encoder, Memory & _memory):
-            FOCMotorConcept(),
-            svpwm(_svpwm), odo(encoder), memory(_memory){;}
+    FOCMotor(const NodeId _id, SVPWM & _svpwm, Encoder & encoder, const size_t _poles, Memory & _memory):
+            FOCMotorConcept(_id),
+            svpwm(_svpwm), odo(encoder, _poles), memory(_memory){;}
 
+    virtual bool loadArchive() = 0;
+    virtual void saveArchive() = 0;
+    virtual void removeArchive() = 0;
 
     void bindProtocol(AsciiProtocol & _ascii_protocol){
         ascii_protocol = &_ascii_protocol;
@@ -159,4 +167,10 @@ public:
     }
 
     virtual uint32_t exe() const = 0;
+    virtual void setRadfix(const real_t _radfix) = 0;
+
+
+    auto & archive(){
+        return archive_;
+    }
 };

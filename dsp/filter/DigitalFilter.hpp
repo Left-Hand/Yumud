@@ -21,7 +21,7 @@ public:
 			const bool _polarity = true):size(_size), threshold(_threshold), polarity(_polarity){
 	}
 
-	bool update(const bool & input){
+	bool update(const bool input){
 		bool valid = (input == polarity);
 		bool shift_out = bool(data & (1 << (size - 1)));
 

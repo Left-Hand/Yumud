@@ -1,6 +1,4 @@
-#ifndef __BH1750_HPP__
-
-#define __BH1750_HPP__
+#pragma once
 
 #include "../drivers/device_defs.h"
 
@@ -35,7 +33,7 @@ protected:
         bus_drv.write((uint8_t)cmd);
     }
 
-    void sendCommand(const uint8_t & cmd){
+    void sendCommand(const uint8_t cmd){
         bus_drv.write(cmd);
     }
 
@@ -56,7 +54,7 @@ public:
         currentMode = mode;
     }
 
-    void enableContinuous(const bool & enabled = true){
+    void enableContinuous(const bool enabled = true){
         continuous = enabled;
     }
 
@@ -68,7 +66,7 @@ public:
         }
     }
 
-    void changeMeasureTime(const uint16_t & ms){
+    void changeMeasureTime(const uint16_t ms){
         uint8_t x;
         if(currentMode == Mode::HMode || currentMode == Mode::HMode2){
             x = CLAMP(ms * 69 / 120, 31, 254);
@@ -94,4 +92,3 @@ public:
     }
 };
 
-#endif

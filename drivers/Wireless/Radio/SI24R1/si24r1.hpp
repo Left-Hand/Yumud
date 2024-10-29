@@ -45,7 +45,7 @@ protected:
     #pragma pack(push, 1)
 
     struct TopConfigReg{
-        static constexpr RegAddress address = 0x00;
+        scexpr RegAddress address = 0x00;
         bool prim_rx:1;
         bool power_up:1;
         bool crc_2bytes:1;
@@ -57,7 +57,7 @@ protected:
     };
 
     struct AutoAcknowledgeReg{
-        static constexpr RegAddress address = 0x01;
+        scexpr RegAddress address = 0x01;
         bool p0:1;
         bool p1:1;
         bool p2:1;
@@ -68,7 +68,7 @@ protected:
     };
     
     struct EnableRxAddressReg{
-        static constexpr RegAddress address = 0x02;
+        scexpr RegAddress address = 0x02;
         bool p0:1;
         bool p1:1;
         bool p2:1;
@@ -79,13 +79,13 @@ protected:
     };
 
     struct AddressWidthReg{
-        static constexpr RegAddress address = 0x03;
+        scexpr RegAddress address = 0x03;
         uint8_t pipex_address_width:2;
         uint8_t __resv__:6;
     };
 
     struct AutoRetransmissionReg{
-        static constexpr RegAddress address = 0x04;
+        scexpr RegAddress address = 0x04;
         // 0000: disabled
         // 0001: up to 1 re-transmit on fail of AA
         // ...
@@ -101,14 +101,14 @@ protected:
     };
 
     struct RFChannelReg{
-        static constexpr RegAddress address = 0x05;
+        scexpr RegAddress address = 0x05;
 
         uint8_t rf_channel:7;
         uint8_t __resv__:1;
     };
 
     struct RFConfigReg{
-        static constexpr RegAddress address = 0x06;
+        scexpr RegAddress address = 0x06;
         uint8_t rf_power:3;
         bool rf_datarate_highbit:1;
         bool pll_lock:1;
@@ -118,7 +118,7 @@ protected:
     };
 
     struct StatusReg{
-        static constexpr RegAddress address = 0x07;
+        scexpr RegAddress address = 0x07;
         bool tx_full:1;
         uint8_t rx_pipe_number:2;
         bool max_rt:1;
@@ -128,34 +128,34 @@ protected:
     };
 
     struct TransmissionObservationReg{
-        static constexpr RegAddress address = 0x08;
+        scexpr RegAddress address = 0x08;
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
     };
 
     struct RssiReg{
-        static constexpr RegAddress address = 0x09;
+        scexpr RegAddress address = 0x09;
         bool rssi_less_than_60dbm:1;
         uint8_t __resv__:7;
     };
 
     struct RxAddrReg{
-        static constexpr RegAddress head_address = 0x0A;
+        scexpr RegAddress head_address = 0x0A;
         uint8_t data;
     };
 
     struct TxAddrReg{
-        static constexpr RegAddress address = 0x10;
+        scexpr RegAddress address = 0x10;
         uint64_t data;
     };
     
     struct RxPowerReg{
-        static constexpr RegAddress head_address = 0x11;
+        scexpr RegAddress head_address = 0x11;
         uint8_t data;
     };
 
     struct FifoStatusReg{
-        static constexpr RegAddress address = 0x17;
+        scexpr RegAddress address = 0x17;
         bool rx_empty:1;
         bool rx_full:1;
         uint8_t __resv1__:2;
@@ -166,7 +166,7 @@ protected:
     };
 
     struct DynamicPayloadLengthReg{
-        static constexpr RegAddress address = 0x1c;
+        scexpr RegAddress address = 0x1c;
         bool dpl_p0:1;
         bool dpl_p1:1;
         bool dpl_p2:1;
@@ -177,7 +177,7 @@ protected:
     };
 
     struct FeatureReg {
-        static constexpr RegAddress address = 0x1d;
+        scexpr RegAddress address = 0x1d;
         bool en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         bool en_ack_pay : 1;          // Set 1 enables payload on ACK
         bool en_dpl : 1;              // Set 1 enables dynamic payload length

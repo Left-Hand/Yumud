@@ -8,15 +8,14 @@ public:
     const int8_t pin_index = 0;
 public:
     GpioConcept(int8_t _pin_index):pin_index(_pin_index){;}
+    DELETE_COPY_AND_MOVE(GpioConcept)
+    
     virtual void set() = 0;
     virtual void clr() = 0;
     virtual void write(const bool val) = 0;
     virtual bool read() const = 0;
     bool toggle() {bool val = !this->read(); write(val); return val;}
 
-    virtual GpioConcept & operator = (const bool _val) = 0;
-    operator bool() const {return(this->read());}
-    virtual void setMode(const PinMode mode) = 0;
     void outpp(){setMode(PinMode::OutPP);}
     void outod(){setMode(PinMode::OutOD);}
     void afpp(){setMode(PinMode::OutAfPP);}
@@ -34,6 +33,19 @@ public:
 
     bool isValid() const {return pin_index >= 0;}
     int8_t getIndex() const {return pin_index;}
+    virtual void setMode(const PinMode mode) = 0;
+    
+    GpioConcept & operator = (const bool _val){
+        write(_val);
+        return *this;
+    }
+
+    GpioConcept & operator = (const GpioConcept & other){
+        write(other.read());
+        return *this;
+    }
+
+    operator bool() const {return(this->read());}
 };
 
 class Exti;
@@ -67,8 +79,9 @@ protected:
     friend class Port;
 public:
 
-    Gpio(const Gpio & other) = delete;
-    Gpio(Gpio && other) = delete;
+    DELETE_COPY_AND_MOVE(Gpio)
+
+    using GpioConcept::operator=;
 
     ~Gpio(){};
 
@@ -80,17 +93,9 @@ public:
     }
     __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
     __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
-    __fast_inline volatile GPIO_TypeDef * inst() {return instance;} 
-    __fast_inline Gpio & operator = (const bool _val) override {
-        write(_val);
-        return *this;
-    }
-    __fast_inline Gpio & operator = (const Gpio & other){
-        write(other.read());
-        return *this;
-    }
 
     void setMode(const PinMode mode) override;
+    __fast_inline volatile GPIO_TypeDef * inst() {return instance;} 
 };
 
 class GpioVirtual:public GpioConcept{
@@ -99,6 +104,9 @@ protected:
 
     PortConcept & form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance);
 public:
+    DELETE_COPY_AND_MOVE(GpioVirtual)
+    using GpioConcept::operator=;
+
     GpioVirtual(const Gpio & gpio):GpioConcept(gpio.pin_index), instance(form_gpiotypedef_to_port(gpio.instance)){;}
     GpioVirtual(PortConcept & _instance, const int8_t _pin_index):GpioConcept(_pin_index), instance(_instance){;}
     GpioVirtual(PortConcept & _instance, const Pin _pin):GpioConcept(CTZ((uint16_t)_pin)), instance(_instance){;}
@@ -107,7 +115,5 @@ public:
     __fast_inline void write(const bool val){instance.writeByIndex(pin_index, val);}
     __fast_inline bool read() const override {return instance.readByIndex(pin_index);}
 
-    __fast_inline GpioVirtual & operator = (const bool _val) override {write(_val); return *this;}
-    __fast_inline GpioVirtual & operator = (GpioConcept & other) {write(other.read()); return *this;}
-    void setMode(const PinMode mode) override{instance.setMode(pin_index, mode);}
+    void setMode(const PinMode mode) override{ instance.setMode(pin_index, mode);}
 };

@@ -18,7 +18,7 @@
 //         instanceW.init();
 //     }
 
-//     void setClamp(const real_t & max_value){
+//     void setClamp(const real_t max_value){
 //         real_t abs_max_value = abs(max_value);
 //         instanceU.setClamp(abs_max_value);
 //         instanceV.setClamp(abs_max_value);

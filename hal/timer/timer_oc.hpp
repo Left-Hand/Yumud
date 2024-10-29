@@ -25,8 +25,8 @@ protected:
 public:
     TimerOC(TIM_TypeDef * _instance, const Channel _channel):TimerOut(_instance, _channel), cvr_(from_channel_to_cvr(_channel)), arr_(instance->ATRLR){;}
 
-    void init() override{init(Mode::UpValid, true);}
-    void init(const Mode mode, const bool install = true);
+    // void init() override{init(Mode::UpValid, true);}
+    void init(const Mode mode = Mode::UpValid, const bool install = true);
     void setMode(const Mode _mode);
 
     auto & io(){return TimerUtils::getPin(instance, channel);}

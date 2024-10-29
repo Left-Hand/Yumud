@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstdint>
+
 __inline constexpr uint64_t operator"" _KHz(uint64_t x){
     return x * 1000;
 }

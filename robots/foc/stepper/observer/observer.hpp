@@ -1,32 +1,37 @@
 #pragma once
 
-#include "../motor_utils.hpp"
+#include "robots/foc/motor_utils.hpp"
 
 struct SpeedEstimator{
 public:
     struct Config{
-        real_t err_threshold = inv_poles / 16;
+        real_t err_threshold = inv_poles / 4;
         size_t est_freq = foc_freq;
         size_t max_cycles = foc_freq >> 7;
     };
 
-    Config & config;
+    const Config & config;
 protected:
 
     struct Vars{
         real_t last_position;
+        real_t last_raw_speed;
         real_t last_speed;
         size_t cycles;
         void reset(){
             last_position = 0;
+            last_raw_speed = 0;
             last_speed = 0;
             cycles = 1;
         }
     };
 
     Vars vars;
+
+
+    real_t update_raw(const real_t position);
 public:
-    SpeedEstimator(Config & _config):config(_config){
+    SpeedEstimator(const Config & _config):config(_config){
         reset();
     }
 
@@ -34,34 +39,14 @@ public:
         vars.reset();
     }
 
-
-    __fast_inline real_t update(const real_t position);
-
-    __fast_inline real_t get() const {return vars.last_speed;} 
+    real_t update(const real_t position){
+        auto this_spd = update_raw(position);
+        return vars.last_speed = (vars.last_speed * 127 + this_spd) >> 7;
+        // return vars.last_speed = (vars.last_speed * 255 + this_spd) >> 8;
+    }
+    real_t get() const {return vars.last_speed;} 
 };
 
-real_t SpeedEstimator::update(const real_t position){
-    real_t delta_pos = position - vars.last_position;
-    real_t abs_delta_pos = ABS(delta_pos);
-    real_t this_speed = (delta_pos * int(config.est_freq) / int(vars.cycles));
-
-    if(abs_delta_pos > config.err_threshold){
-    
-        vars.cycles = 1;
-        vars.last_position = position;
-        return vars.last_speed = this_speed;
-    }else{
-        vars.cycles++;
-        if(vars.cycles > config.max_cycles){
-            
-            vars.cycles = 1;
-            vars.last_position = position;
-            return vars.last_speed = this_speed;
-        }
-    }
-
-    return vars.last_speed;
-}
 
 class IntegralableObserverConcept{
 public:

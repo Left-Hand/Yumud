@@ -1,6 +1,4 @@
-#ifndef __MEMORY_HPP__
-
-#define __MEMORY_HPP__
+#pragma once
 
 #include "../types/range/range_t.hpp"
 #include "storage.hpp"
@@ -24,11 +22,9 @@ public:
 
     size_t size(){return m_view.length();}
 
-    template<typename T>
-    void store(const T & data, const Address loc = 0);
-
-    template<typename T>
-    void load(T & data, const Address loc = 0);
+    void store(const auto & data, const Address loc = 0);
+    void store(auto && data, const Address loc = 0);
+    void load(auto & data, const Address loc = 0);
 
     template<typename T>
     T load(const Address loc = 0);
@@ -36,6 +32,3 @@ public:
 };
 
 #include "memory.tpp"
-
-
-#endif

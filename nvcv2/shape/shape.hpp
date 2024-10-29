@@ -60,7 +60,7 @@ namespace NVCV2::Shape{
 
     Image<Grayscale> x2(const Image<Grayscale> & src);
 
-    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t & percent);
+    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t percent);
 
     void zhang_suen(Image<Binary> & dst,const Image<Binary> & src);
 
@@ -188,7 +188,7 @@ namespace NVCV2::Shape{
                 dir_index = warp_dir_index(dir_index + (cw? -1 : 1));
             }
 
-            void spin(const bool & not_inverse){
+            void spin(const bool not_inverse){
                 dir_index = warp_dir_index(dir_index + (cw ^ (!not_inverse) ? -1 : 1));
             }
 
@@ -218,7 +218,7 @@ namespace NVCV2::Shape{
             uint8_t m_jounrey = 0;
             const bool cw;
 
-            static constexpr std::array<Vector2i, 8>dirs = {
+            scexpr std::array<Vector2i, 8>dirs = {
                 Vector2i{1,0},
                 Vector2i{1,-1}, 
                 Vector2i{0, -1}, 

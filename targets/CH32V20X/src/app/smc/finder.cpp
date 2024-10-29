@@ -319,7 +319,7 @@ namespace SMC{
 
     }
 
-    // Boundry CoastUtils::form(const ImageReadable<Grayscale> & src, Vector2i seed_pos, const bool & is_right){
+    // Boundry CoastUtils::form(const ImageReadable<Grayscale> & src, Vector2i seed_pos, const bool is_right){
     Piles get_x_piles(const ImageReadable<Binary> & src, const Point & seed_pos){
 
         Piles ret;

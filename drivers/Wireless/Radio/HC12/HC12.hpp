@@ -1,6 +1,4 @@
-#ifndef __HC12_HPP__
-
-#define __HC12_HPP__
+#pragma once
 
 #include "../hal/bus/uart/uart.hpp"
 #include "sys/string/string.hpp"
@@ -87,5 +85,3 @@ public:
     void setCommBaudRate(const uint16_t baudrate){sendAtCommand("B" + String(baudrate));}
     bool isValid(){return sendAtCommand("");}
 };
-
-#endif

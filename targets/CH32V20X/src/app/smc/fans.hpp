@@ -11,8 +11,8 @@ class SideFan{
 protected:
     TimerOC & instanceP;
     TimerOC & instanceN;
-    static constexpr real_t duty_clamp = 0.92;
-    static constexpr real_t k = 6.5;
+    scexpr real_t duty_clamp = 0.92;
+    scexpr real_t k = 6.5;
 
     bool enabled = true;
     real_t last_force = 0;
@@ -83,7 +83,7 @@ public:
         right_fan.setForce(force);
     }
 
-    void enable(const bool & en = true){
+    void enable(const bool en = true){
         left_fan.enable(en);
         right_fan.enable(en);
     }

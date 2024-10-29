@@ -7,7 +7,7 @@
 #define TCS34725_DEBUG(...)
 #endif
 
-void TCS34725::requestRegData(const RegAddress & regAddress, uint16_t * data_ptr, const size_t len){
+void TCS34725::requestRegData(const RegAddress regAddress, uint16_t * data_ptr, const size_t len){
     uint8_t address = convRegAddress(regAddress);
     TCS34725_DEBUG("address", address)
 
@@ -30,4 +30,16 @@ TCS34725::operator RGB888(){
     return RGB888{
         uint8_t(data[1] >> 8), uint8_t(data[2] >> 8), uint8_t(data[3] >> 8)
     };
+}
+
+
+void TCS34725::setIntPersistence(const uint8_t times){
+    if(times >= 5){
+        uint8_t value = 0b0100 + (times / 5) - 1;
+        intPersistenceReg = value;
+    }else{
+        intPersistenceReg = (uint8_t)MIN(times, 3);
+    }
+
+    writeReg(RegAddress::Integration, integrationReg);
 }

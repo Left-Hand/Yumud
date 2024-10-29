@@ -1,11 +1,7 @@
-#ifndef __PWM_ENCODER_HPP__
-
-#define __PWM_ENCODER_HPP__
+#pragma once
 
 #include "Encoder.hpp"
 
 class PwmEncoder:public Encoder{
 
 };
-
-#endif

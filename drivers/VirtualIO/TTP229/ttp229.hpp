@@ -1,5 +1,4 @@
-#ifndef __TTP229_HPP__
-#define __TTP229_HPP__
+#pragma once
 
 #include "../hal/gpio/gpio.hpp"
 
@@ -42,4 +41,3 @@ public:
     void getMapData(uint16_t & _map){_map = map;}
 };
 
-#endif

@@ -1,7 +1,4 @@
-#ifndef __ENCODER_HPP__
-
-#define __ENCODER_HPP__
-
+#pragma once
 #include "sys/math/real.hpp"
 
 
@@ -22,6 +19,3 @@ protected:
     // virtual void forward() = 0;
     // virtual void backward() = 0;
 };
-
-
-#endif

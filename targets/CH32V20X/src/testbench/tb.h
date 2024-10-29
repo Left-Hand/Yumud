@@ -77,3 +77,5 @@ void m3508_main();
 void math_tb(UartHw & logger);
 
 void zdt_main(UartHw & logger);
+
+void coro_tb();

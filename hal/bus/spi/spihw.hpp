@@ -17,6 +17,7 @@ protected:
     void installGpios();
 
 public:
+    DELETE_COPY_AND_MOVE(SpiHw)
     SpiHw(SPI_TypeDef * _instance):instance(_instance){;}
 
     void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) override;

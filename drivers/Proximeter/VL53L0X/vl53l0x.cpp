@@ -54,8 +54,8 @@ void VL53L0X::startConv(){
 	}	
 }
 
-bool VL53L0X::isIdle(){
-    return !bool(readByteData(VL53L0X_REG_SYSRANGE_START) & 0x01);
+bool VL53L0X::busy(){
+    return bool(readByteData(VL53L0X_REG_SYSRANGE_START) & 0x01);
 }
 
 void VL53L0X::flush(){
@@ -80,14 +80,15 @@ void VL53L0X::stop(){
 	writeByteData(0xFF, 0x00);
 }
 
-bool VL53L0X::update(){
-    bool conv_done = (isIdle());
-    if(conv_done){
+void VL53L0X::update(){
+    bool onbusy = (busy());
+    if(onbusy){
         flush();
     }
-    return conv_done;
 }
-uint16_t VL53L0X::getDistance(){
+
+
+uint16_t VL53L0X::getDistanceMM(){
     uint16_t ret;
     if(result.distance <= 20 || result.distance  > 2400){
         ret = last_result.distance;

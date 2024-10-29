@@ -1,13 +1,12 @@
 #include "sys/core/system.hpp"
-#include "app/embd/embd.h"
 
-#include "app/wlsy/wlsy_inc.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
 
 #include "testbench/tb.h"
-
+#include "app/gui/gui.hpp"
+#include "app/gxmatch/gxmatch.hpp"
 
 void preinit(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -53,7 +52,7 @@ int main(){
     // math_tb(uart1);
     // zdt_main(uart1);
     // m3508_main();
-    while(true);
+    // while(true);
     // lds14_tb(logger, uart2);
     // pca_tb(logger);
     // lua_tb(uart1);p
@@ -62,10 +61,15 @@ int main(){
     // temp_tb(logger);
     // temp_tb2(logger);
     // eeprom_tb(uart1);
+    // eeprom_main();
 
     #elif defined(CH32V30X)
-    preinit();
 
+    preinit();
+    // DEBUG_PRINTLN("??");
+    // gui_main();
+    // math_tb(uart2);
+    // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
     // uart_main();
@@ -96,7 +100,9 @@ int main(){
     // uart7.init(57600);
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
-    embd_main();
+    // embd_main();
+    // gui_main();
+    gxm::host_main();
     // can_tb(logger, can1);
     #endif
     while(true);

@@ -1,51 +1,52 @@
 #include "tb.h"
 #include "../drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "../drivers/Memory/Flash/W25QXX/w25qxx.hpp"
+#include "../drivers/Memory/Flash/W25QXX/w25q16.hpp"
 #include "../hal/flash/flash.hpp"
 
 #include "../algo/random/random_generator.hpp"
 #include "../hal/bkp/bkp.hpp"
 
-#define EEPROM_TB_FIRSTBYTE
-#define EEPROM_TB_SEVERLBYTES
-// #define EEPROM_TB_WHOLECHIP
-// #define EEPROM_TB_RANDOM
+#define MEMORY_TB_FIRSTBYTE
+#define MEMORY_TB_SEVERLBYTES
+// #define MEMORY_TB_WHOLECHIP
+// #define MEMORY_TB_RANDOM
 
-// #define EEPROM_TB_PIECES
-#define EEPROM_TB_CONTENT
+// #define MEMORY_TB_PIECES
+#define MEMORY_TB_CONTENT
 
-#ifdef AT24CXX_DEBUG
-#undef AT24CXX_DEBUG
-#define AT24CXX_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define AT24CXX_DEBUG(...)
-#endif
+#define MEMORY_TB_ASSERT(x, s, a, b)\
+if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); delay(1); CREATE_FAULT;}\
+else {logger.prints("Succeed[", s, ']', std::hex, std::showbase, a, "->", b);}\
 
-struct Temp{
+struct TestData{
     std::array<uint8_t, 4> data = {0x5a,0xa5,0x54,00};
     char name[8] = "Rstr1aN";
     real_t value = real_t(0.1);
-    uint8_t crc = 0x08;
+    uint32_t crc = 0x08;
 };
 
 static void mem_tb(OutputStream & logger, Memory & mem){
     [[maybe_unused]] bool passflag = true;
-    logger.println("mem size is", mem.size());
 
-    #ifdef EEPROM_TB_FIRSTBYTE
+
+
+    logger.prints("start memory testbench \r\nmem size is", mem.size());
+
+    #ifdef MEMORY_TB_FIRSTBYTE
     {
-        uint8_t before = 22;
+        scexpr uint8_t before_orignal = 0x37;
+        mem.store(before_orignal);
+        uint8_t before;
         mem.load(before);
-        // if(before == 0xff) before = 0;
+        MEMORY_TB_ASSERT(before_orignal == before, "specified byte", before_orignal, before);
         mem.store(uint8_t(before + 1));
         uint8_t after;
         mem.load(after);
-        ASSERT_WITH_HALT(before + 1 == after, "firstbyte tb failed", before, "->", after);
-        DEBUG_PRINTLN("firstbyte tb passed", before, "->", after);
+        MEMORY_TB_ASSERT(before + 1 == after, "firts byte tb", before, after);
     }
     #endif
 
-    #ifdef EEPROM_TB_SEVERLBYTES
+    #ifdef MEMORY_TB_SEVERLBYTES
     {
         auto before = Sys::Chip::getChipIdCrc();
         mem.store(before);
@@ -53,12 +54,11 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         decltype(before) after;
         mem.load(after);
 
-        ASSERT_WITH_HALT(before == after, "svbytes tb failed: ", toString(before,16), "->", toString(after, 16));
-        DEBUG_PRINTLN("svbytes tb passed");
+        MEMORY_TB_ASSERT(before == after, "crc bytes tb", before, after);
     }
     #endif
 
-    #ifdef EEPROM_TB_RANDOM
+    #ifdef MEMORY_TB_RANDOM
     {
         RandomGenerator rnd;
         rnd.init();
@@ -72,14 +72,14 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         }
 
         if(!passflag){
-            DEBUG_PRINTLN("random tb failed");
+            logger.prints("random tb failed");
         }else{
-            DEBUG_PRINTLN("random tb passed");
+            logger.prints("random tb passed");
         }
     }
     #endif
 
-    #ifdef EEPROM_TB_WHOLECHIP
+    #ifdef MEMORY_TB_WHOLECHIP
     {
         constexpr auto begin_addr = 0;
 
@@ -89,7 +89,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         uint8_t data_after[sizeof(data_before)] = {0};
 
         passflag &= (0 != memcmp(data_before, data_after, sizeof(data_before)));
-        ASSERT_WITH_HALT(passflag, "wholechip tb failed:", "initial data the same");
+        MEMORY_TB_ASSERT(passflag, "wholechip tb failed:", "initial data the same");
 
         mem.store(data_before, begin_addr);
         mem.load(data_after, begin_addr);
@@ -97,27 +97,27 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         passflag &= (0 == memcmp(data_before, data_after, sizeof(data_before)));
 
         if(!passflag){
-            DEBUG_PRINTLN("wholechip tb failed:", "data not the same")
+            logger.prints("wholechip tb failed:", "data not the same")
 
-            DEBUG_PRINTLN("data wrote");
+            logger.prints("data wrote");
             for(auto & item : data_before){
-                DEBUG_PRINTLN("\t\t", item);
+                logger.prints("\t\t", item);
             }
 
-            DEBUG_PRINTLN("data read");
+            logger.prints("data read");
             for(auto & item : data_after){
-                DEBUG_PRINTLN("\t\t", item);
+                logger.prints("\t\t", item);
             }
 
-            ASSERT_WITH_HALT(false, "wholechip tb terminated");
+            MEMORY_TB_ASSERT(false, "wholechip tb terminated");
         };
-        DEBUG_PRINTLN("wholechip tb passed");
+        logger.prints("wholechip tb passed");
     }
     #endif
 
-    #ifdef EEPROM_TB_PIECES
+    #ifdef MEMORY_TB_PIECES
     {
-        DEBUG_PRINTLN("muti store begin");
+        logger.prints("muti store begin");
         constexpr auto begin_addr = 7;
         // constexpr auto end_addr = 15;
         uint8_t data[] = {3, 1, 2, 4};
@@ -127,30 +127,33 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         mem.store(data, begin_addr);
         mem.load(data2, begin_addr);
         for(const auto & item : data2){
-            logger.println("data_read", int(item));
+            logger.prints("data_read", int(item));
         }
     }
     #endif
 
-    #ifdef EEPROM_TB_CONTENT
+    #ifdef MEMORY_TB_CONTENT
     {
 
-        logger.println("content tb");
-        Temp temp;
+        logger.prints("content tb");
+        TestData temp;
 
-
-        logger.println("write", temp.value, temp.data);
+        logger.prints("write", temp);
         mem.store(temp);
-        temp.value = 0.2;
-        temp.data.fill(0x78);
-        logger.println("modi", temp.value, temp.data);
+        temp.value = real_t(0.2);
+        temp.crc = 0x12;
+        // temp.name = "rstr1aN";
+        temp.data = {22,44,6,78};
+        // temp.data.fill(0x78);
+        // memset(&temp, 'a', sizeof(temp));
+        logger.prints("modi", temp);
         mem.load(temp);
-        logger.println("read", temp.value, temp.data);
+        logger.prints("read", temp);
 
     }
     #endif
 
-    logger.println("at24 tb done");
+    logger.prints("at24 tb done");
 }
 
 [[maybe_unused]] static void eeprom02_tb(OutputStream & logger, I2c & i2c){
@@ -186,82 +189,86 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     logger.setSplitter(" ");
     logger.setRadix(16);
 
-    logger.println("Flash Size:", Sys::Chip::getFlashSize());
-    logger.println("../sys Clock:", Sys::Clock::getSystemFreq());
-    logger.println("AHB Clock:", Sys::Clock::getAHBFreq());
-    logger.println("APB1 Clock:", Sys::Clock::getAPB1Freq());
-    logger.println("APB2 Clock:", Sys::Clock::getAPB2Freq());
+    logger.prints("Flash Size:", Sys::Chip::getFlashSize());
+    logger.prints("../sys Clock:", Sys::Clock::getSystemFreq());
+    logger.prints("AHB Clock:", Sys::Clock::getAHBFreq());
+    logger.prints("APB1 Clock:", Sys::Clock::getAPB1Freq());
+    logger.prints("APB2 Clock:", Sys::Clock::getAPB2Freq());
 
-    Temp temp;
+    TestData temp;
 
     flash.load(temp);
     if(temp.data[0] == 0x39){
-        logger.println("need to store new");
-        logger.println("new data is");
-        Temp new_temp = Temp();
-        logger.println(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
+        logger.prints("need to store new");
+        logger.prints("new data is");
+        TestData new_temp = TestData();
+        logger.prints(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
         flash.store(new_temp);
         flash.load(temp);
-        logger.println("new store done");
+        logger.prints("new store done");
     }
 
-    logger.println("data loaded");
-    logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    logger.println(temp.name);
-    logger.println(temp.value);
-    logger.println(temp.crc);
+    logger.prints("data loaded");
+    logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    logger.prints(temp.name);
+    logger.prints(temp.value);
+    logger.prints(temp.crc);
 
-    logger.println("init bkp");
+    logger.prints("init bkp");
     bkp.init();
-    bkp.writeData(1, bkp.readData(1) + 1);
-    temp.crc = bkp.readData(1);
+    bkp[1] = bkp[1] + 1;
+    temp.crc = bkp[1];
     flash.store(temp);
-    logger.println("flash tb done");
+    logger.prints("flash tb done");
 
     // flash.load(temp);
-    // logger.println();
+    // logger.prints();
     // if(temp.data[0] == 0xE3 || temp.data[0] == 0x39 || (bkp.readData(1) & 0b11) == 0){
-    //     logger.println(temp.data[0]);
+    //     logger.prints(temp.data[0]);
 
     //     temp.data[3] = bkp.readData(1);
     //     temp.name[2] = 'k';
     //     // temp.value = real_t(0.2);
     //     temp.crc = 10;
 
-    //     logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    //     logger.println(temp.name);
-    //     logger.println(temp.value);
-    //     logger.println(temp.crc);
+    //     logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    //     logger.prints(temp.name);
+    //     logger.prints(temp.value);
+    //     logger.prints(temp.crc);
     //     flash.store(temp);
     //     flash.load(temp);
     // }else{
-    //     logger.println("suss");
-    //         logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    // logger.println(temp.name);
-    // logger.println(temp.value);
-    // logger.println(temp.crc);
+    //     logger.prints("suss");
+    //         logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    // logger.prints(temp.name);
+    // logger.prints(temp.value);
+    // logger.prints(temp.crc);
     // }
 
 
     // }
-    // logger.println(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    // logger.println(temp.name);
-    // logger.println(temp.value);
-    // logger.println(temp.crc);
+    // logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
+    // logger.prints(temp.name);
+    // logger.prints(temp.value);
+    // logger.prints(temp.crc);
 
     // 
 }
 
 void eeprom_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    auto logger = DEBUGGER;
+    auto & logger = DEBUGGER;
     logger.setEps(2);
     logger.setRadix(10);
     logger.setSplitter("\t\t");
 
-    I2cSw i2csw = I2cSw(portB[3], portB[5]);
+    I2cSw i2csw = I2cSw(portD[1], portD[0]);
     i2csw.init(400000);
 
-    eeprom64_tb(logger, i2csw);
+    eeprom02_tb(logger, i2csw);
     // flash_tb(logger);
+}
+
+OutputStream & operator << (OutputStream & os, const TestData & td){
+    return os << td.data << ',' << td.name << ',' << td.value << ',' << td.crc;
 }

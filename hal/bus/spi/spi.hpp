@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port_virtual.hpp"
-#include "../hal/bus/bus.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port_virtual.hpp"
+#include "hal/bus/bus.hpp"
 
 class Spi:public FullDuplexBus{
 public:
@@ -27,6 +27,9 @@ protected:
         cs_port[last_index].set();
     }
 public:
+    Spi(){;}
+    DELETE_COPY_AND_MOVE(Spi)
+
     virtual void init(const uint32_t baudRate, const CommMethod tx_method = CommMethod::Blocking, const CommMethod rx_method = CommMethod::Blocking) = 0;
     void bindCsPin(GpioConcept & gpio, const uint8_t index){
         gpio.outpp(1);

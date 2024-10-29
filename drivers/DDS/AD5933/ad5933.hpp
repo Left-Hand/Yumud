@@ -14,7 +14,7 @@ class AD5933 {
 protected:
     I2cDrv i2c_drv;
 public:
-    static constexpr uint8_t default_addr = 0x0D;
+    scexpr uint8_t default_addr = 0x0D;
 public:
     AD5933(I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
     AD5933(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}

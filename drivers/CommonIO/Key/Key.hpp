@@ -1,6 +1,4 @@
-#ifndef __KEY_HPP__
-
-#define __KEY_HPP__
+#pragma once
 
 #include "hal/gpio/gpio.hpp"
 #include "dsp/filter/DigitalFilter.hpp"
@@ -47,6 +45,3 @@ public:
         return m_gpio;
     }
 };
-
-
-#endif

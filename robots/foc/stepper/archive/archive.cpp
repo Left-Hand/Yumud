@@ -1,8 +1,35 @@
 #include "../stepper.hpp"
-
+//FIXME need to remove
 #define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
-bool FOCStepper::loadArchive(const bool outen){
+
+static void getDefaultArchive(MotorUtils::Archive & archive){
+    archive.pos_config = {
+        .kp = real_t(2),
+        .kd = 100
+
+        // .kp = 3,
+        // .kd = 70
+
+        // .kp = 6,
+        // .kd = 116
+        
+        // .kp = 5,
+        // .kd = 23*7
+    };
+
+    archive.spd_config = {
+        // .kp = real_t(205.0/256),
+        .kp = 7,
+        .kd = 70,
+        // .kd = 0,
+
+        // .kp = 8,
+        // .kd = 30,
+    };
+}
+
+bool FOCStepper::loadArchive(){
     using BoardInfo = MotorUtils::BoardInfo;
     Archive archive;
     memory.load(archive);
@@ -40,73 +67,45 @@ bool FOCStepper::loadArchive(const bool outen){
             ARCHIVE_PRINTS("board matches current build");
         }
     }
+    
 
+    
     if(!abort){
-        for(size_t i = 0; i < odo.map().size(); i++){
-            int16_t item_i = archive.cali_map[i];
-            odo.map()[i] = real_t(item_i) / 16384;
-            meta.radfix = 0;
-        }
+        odo.decompress(archive.cali_map);
+        setNodeId(archive.node_id);
 
-        // setNodeId(archive.node_id);
-        
-        memcpy(&archive_, &archive, sizeof(archive));
+        getDefaultArchive(archive);
+        std::swap(archive_, archive);
         ARCHIVE_PRINTS("load successfully!");
     }else{
+        // std::swap(archive_, getDefaultArchive());
+        getDefaultArchive(archive_);
         ARCHIVE_PRINTS("load aborted because data is corrupted");
     }
     ARCHIVE_PRINTS("======");
     return (!abort);
 }
 
-void FOCStepper::saveArchive(const bool outen){
+void FOCStepper::saveArchive(){
     Archive archive;
+    archive.board_info.reset();
 
-    ARCHIVE_PRINTS("======");
-    ARCHIVE_PRINTS("generating archive...");
-    ARCHIVE_PRINTS("current board info:");
-    ARCHIVE_PRINTS(archive.board_info);
+    archive.hashcode = archive.hash();
 
-    memcpy(&archive, &archive_, sizeof(Archive));
-    uint32_t hashcode = archive.hash();
-    archive.hashcode = hashcode;
-
-    for(size_t i = 0; i < odo.map().size(); i++){
-        scexpr auto ratio = real_t(1 / TAU);
-        auto item_i = int16_t((odo.map()[i] - (meta.radfix / poles * ratio)) * 16384);
-        archive.cali_map[i] = item_i;
+    {
+        auto map = odo.compress(meta.radfix);
+        for(size_t i = 0; i < map.size(); i++){
+            archive.cali_map[i] = map[i];
+        }
     }
 
-    archive.node_id = uint8_t(can_protocol ? uint8_t(can_protocol->node_id) : 0);
-
-    ARCHIVE_PRINTS("generate done");
-    ARCHIVE_PRINTS("hash of archive is ", hashcode);
-
-    ARCHIVE_PRINTS("saving archive...");
-    ARCHIVE_PRINTS("please keep power supporting");
-
+    archive.node_id = uint8_t(node_id);
     memory.store(archive);
-
-    ARCHIVE_PRINTS("save done, veritfing");
-
-    ARCHIVE_PRINTS("there is no verification currently");
-
-    ARCHIVE_PRINTS("verification done");
-    ARCHIVE_PRINTS("======");
 }
 
 
-void FOCStepper::removeArchive(const bool outen){
-    Archive archive;
-    archive.clear();
-
-    ARCHIVE_PRINTS("======");
-    ARCHIVE_PRINTS("removing archive...");
-
-    memory.store(archive);
-
-    ARCHIVE_PRINTS("done");
-    ARCHIVE_PRINTS("======");
+void FOCStepper::removeArchive(){
+    memory.store(Archive());
 }
 
 

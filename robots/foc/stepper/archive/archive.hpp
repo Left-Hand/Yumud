@@ -1,8 +1,7 @@
-#ifndef __STEPPER_ARCHIVE_HPP__
+#pragma once
 
-#define __STEPPER_ARCHIVE_HPP__
-
-#include "../motor_utils.hpp"
+#include "robots/foc/motor_utils.hpp"
+#include "../ctrls/ctrls.hpp"
 
 namespace MotorUtils{
     scexpr uint8_t build_version = 10;
@@ -92,44 +91,29 @@ namespace MotorUtils{
         }
     };
 
-    struct Archive{
+    struct alignas(256) Archive{
+        struct alignas(128){
+            std::array<int8_t, 100> cali_map;
 
-        union{
-            struct{
-                struct alignas(128){
-                    struct alignas(16){
-                        uint32_t hashcode;
-                        BoardInfo board_info;
-                        Switches switches;
-                    };
-
-                    struct alignas(16){
-                        uint8_t node_id;
-                    };
-                };
-
-                struct alignas(128){
-                    std::array<int16_t, 50> cali_map;
-                };
-            };
-
-            uint8_t data[256];
+            uint8_t node_id;
+            uint32_t hashcode;
+            BoardInfo board_info;
+            Switches switches;
         };
 
-
+        alignas(16) CurrentFilter::Config curr_config;
+        alignas(16) SpeedCtrl::Config spd_config;
+        alignas(16) PositionCtrl::Config pos_config;
+        alignas(16) SpeedEstimator::Config spe_config;
+        
         uint32_t hash() const {
+            // sizeof(Archive);
             return hash_impl(cali_map);
         }
 
         auto & map() {return cali_map;}
         const auto & map() const {return cali_map;}
-        
-        void clear(){
-            memset(this, 0, sizeof(*this));
-        }
     };
 }
 
 OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi);
-
-#endif

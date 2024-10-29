@@ -1,6 +1,4 @@
-#ifndef __IQT_HPP__
-
-#define __IQT_HPP__
+#pragma once
 
 
 #include "sys/core/platform.h"
@@ -37,7 +35,7 @@ namespace std{
 
 struct iq_t{
 private:
-    __fast_inline static constexpr _iq float_to_iq(const float fv){
+    __fast_inline scexpr _iq float_to_iq(const float fv){
         int32_t d = std::bit_cast<int32_t>(fv);
         int32_t exponent = ((d >> 23) & 0xff);
         uint64_t mantissa = (exponent == 0) ? (0) : ((d & ((1 << 23) - 1)) | (1 << 23));
@@ -84,47 +82,47 @@ public:
     __fast_inline constexpr iq_t(const float fv):value((std::is_constant_evaluated()) ? float_to_iq(fv) : float_to_iq(fv)){};
     #endif
 
-    static __fast_inline constexpr iq_t form (const floating auto fv){iq_t ret; ret.value = float_to_iq(fv); return ret;}
+    static __fast_inline constexpr iq_t from (const floating auto fv){iq_t ret; ret.value = float_to_iq(fv); return ret;}
 
-    __fast_inline_constexpr iq_t operator+(const iq_t other) const {
+    __fast_inline constexpr iq_t operator+(const iq_t other) const {
         return iq_t(_iq(value + other.value));
     }
 
-    __fast_inline_constexpr iq_t operator-(const iq_t other) const {
+    __fast_inline constexpr iq_t operator-(const iq_t other) const {
         return iq_t(_iq(value - other.value));
     }
 
-    __fast_inline_constexpr iq_t operator-() const {
+    __fast_inline constexpr iq_t operator-() const {
         return iq_t(_iq(-value));
     }
 
-    __fast_inline_constexpr iq_t& operator+=(const iq_t other) {
+    __fast_inline constexpr iq_t& operator+=(const iq_t other) {
         value = _iq((int32_t)value + (int32_t)other.value);
         return *this;
     }
 
-    __fast_inline_constexpr iq_t& operator-=(const iq_t other) {
+    __fast_inline constexpr iq_t& operator-=(const iq_t other) {
         value = _iq(value - other.value);
         return *this;
     }
 
-    __fast_inline_constexpr iq_t& operator*=(const iq_t other) {
+    __fast_inline constexpr iq_t& operator*=(const iq_t other) {
         *this = *this * other;
         return *this;
     }
 
-    __fast_inline_constexpr iq_t& operator/=(const iq_t other) {
+    __fast_inline constexpr iq_t& operator/=(const iq_t other) {
         *this = *this / other;
         return *this;
     }
 
     template<integral T>
-    __fast_inline_constexpr iq_t operator*(const T other) const {
+    __fast_inline constexpr iq_t operator*(const T other) const {
         return iq_t(_iq(value * other));
     }
 
     template<integral T>
-    __fast_inline_constexpr iq_t operator/(const T other) const {
+    __fast_inline constexpr iq_t operator/(const T other) const {
         return iq_t(_iq((value / other)));
     }
 
@@ -135,11 +133,11 @@ public:
     iq_t operator/(const floating auto other) = delete;
     #endif
     
-    __fast_inline_constexpr iq_t operator*(const iq_t other) const {
+    __fast_inline constexpr iq_t operator*(const iq_t other) const {
         return iq_t((_iq)((int64_t)value * (int64_t)other.value >> GLOBAL_Q));
     }
 
-    __fast_inline_constexpr iq_t operator/(const iq_t other) const {
+    __fast_inline constexpr iq_t operator/(const iq_t other) const {
         if (std::is_constant_evaluated()) {
             return iq_t((_iq)((int64_t)value / (int64_t)other.value << GLOBAL_Q));
         }else{
@@ -171,22 +169,22 @@ public:
         return value <= other.value;
     }
 
-    __fast_inline_constexpr iq_t operator<<(int shift) const {
+    __fast_inline constexpr iq_t operator<<(int shift) const {
         return iq_t(_iq(value << shift));
     }
 
-    __fast_inline_constexpr iq_t operator>>(int shift) const {
+    __fast_inline constexpr iq_t operator>>(int shift) const {
         return iq_t(_iq(value >> shift));
     }
 
     #undef IQ_OPERATOR_TEMPLATE
 
-    __fast_inline_constexpr explicit operator bool() const {
+    __fast_inline constexpr explicit operator bool() const {
         return bool(value);
     }
 
     #define IQ_TOINT_TEMPLATE(op)\
-    __fast_inline_constexpr explicit operator op() const {\
+    __fast_inline constexpr explicit operator op() const {\
         return op(_IQint(value));\
     }
 
@@ -215,7 +213,7 @@ public:
 };
 
 #define IQ_OP_TEMPLATE(type, op)\
-__fast_inline_constexpr iq_t operator op (const type val, const iq_t iq_v) {\
+__fast_inline constexpr iq_t operator op (const type val, const iq_t iq_v) {\
 	return iq_t(val) op iq_v;\
 }\
 
@@ -242,7 +240,7 @@ IQ_OP_DELETE(/)
 
 
 #define IQ_BINA_TEMPLATE(type, op)\
-__fast_inline_constexpr bool operator op (const type val, const iq_t iq_v) {\
+__fast_inline constexpr bool operator op (const type val, const iq_t iq_v) {\
 	return iq_t(val) op iq_v;\
 }\
 
@@ -328,7 +326,7 @@ __fast_inline iq_t sqrt(const iq_t iq){
     }
 }
 
-__fast_inline_constexpr iq_t abs(const iq_t iq){
+__fast_inline constexpr iq_t abs(const iq_t iq){
     if(long(iq.value) > 0){
         return iq;
     }else{
@@ -336,12 +334,12 @@ __fast_inline_constexpr iq_t abs(const iq_t iq){
     }
 }
 
-__fast_inline_constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
+__fast_inline constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
 
-__fast_inline_constexpr bool signbit(const iq_t iq){return bool(long(iq.value) < 0);}
+__fast_inline constexpr bool signbit(const iq_t iq){return bool(long(iq.value) < 0);}
 
 
-__fast_inline_constexpr iq_t sign(const iq_t iq){
+__fast_inline constexpr iq_t sign(const iq_t iq){
     if(long(iq.value)){
         if(long(iq.value) > 0){
             return iq_t(1);
@@ -351,20 +349,20 @@ __fast_inline_constexpr iq_t sign(const iq_t iq){
     }else return iq_t(0);
 }
 
-__fast_inline_constexpr iq_t fmod(const iq_t a, const iq_t b){return iq_t(_iq(a.value % b.value));}
+__fast_inline constexpr iq_t fmod(const iq_t a, const iq_t b){return iq_t(_iq(a.value % b.value));}
 
 
-__fast_inline_constexpr iq_t lerp(const iq_t x, const iq_t a, const iq_t b){return a * (iq_t(1) - x) + b * x;}
-__fast_inline_constexpr iq_t mean(const iq_t a, const iq_t b){return iq_t(_iq((a.value + b.value) >> 1));}
+__fast_inline constexpr iq_t lerp(const iq_t x, const iq_t a, const iq_t b){return a * (iq_t(1) - x) + b * x;}
+__fast_inline constexpr iq_t mean(const iq_t a, const iq_t b){return iq_t(_iq((a.value + b.value) >> 1));}
 
-__fast_inline_constexpr iq_t frac(const iq_t iq){
+__fast_inline constexpr iq_t frac(const iq_t iq){
     return iq_t(_iq((iq.value) & ((1 << GLOBAL_Q) - 1)));
 }
 
-__fast_inline_constexpr iq_t floor(const iq_t iq){return int(iq);}
-__fast_inline_constexpr iq_t ceil(const iq_t iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
+__fast_inline constexpr iq_t floor(const iq_t iq){return int(iq);}
+__fast_inline constexpr iq_t ceil(const iq_t iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
 
-__fast_inline_constexpr iq_t round(const iq_t iq){return iq_t((int)_IQint(long(iq.value) + _IQ(0.5)));}
+__fast_inline constexpr iq_t round(const iq_t iq){return iq_t((int)_IQint(long(iq.value) + _IQ(0.5)));}
 
 bool is_equal_approx(const iq_t a,const iq_t b);
 
@@ -419,7 +417,7 @@ __fast_inline iq_t pow(const iq_t base, const iq_t exponent) {
 
 #endif
 
-__fast_inline_constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
+__fast_inline constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 #if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
 #elif(GLOBAL_Q < 16)
@@ -431,7 +429,7 @@ __fast_inline_constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 }
 
 
-__fast_inline_constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
+__fast_inline constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
 #if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
 #elif(GLOBAL_Q < 16)
@@ -442,11 +440,11 @@ __fast_inline_constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
 
 }
 
-__fast_inline_constexpr void s16_to_uni(const int16_t data, iq_t & qv){
+__fast_inline constexpr void s16_to_uni(const int16_t data, iq_t & qv){
     qv.value = data > 0 ? _iq(data) : _iq(-(_iq(-data)));
 }
 
-__fast_inline_constexpr void uni_to_u16(const iq_t qv, uint16_t & data){
+__fast_inline constexpr void uni_to_u16(const iq_t qv, uint16_t & data){
 #if GLOBAL_Q >= 16
     data = qv.value >> (GLOBAL_Q - 16);
 #else
@@ -460,11 +458,11 @@ namespace std{
     template<>
     class numeric_limits<iq_t> {
     public:
-        __fast_inline_constexpr static iq_t infinity() noexcept {return iq_t(_iq(0x80000000));}
-        __fast_inline_constexpr static iq_t lowest() noexcept {return iq_t(_iq(0x7FFFFFFF));}
+        __fast_inline constexpr static iq_t infinity() noexcept {return iq_t(_iq(0x80000000));}
+        __fast_inline constexpr static iq_t lowest() noexcept {return iq_t(_iq(0x7FFFFFFF));}
 
-        __fast_inline_constexpr static iq_t min() noexcept {return iq_t(_iq(0x80000000));}
-        __fast_inline_constexpr static iq_t max() noexcept {return iq_t(_iq(0x7FFFFFFF));}
+        __fast_inline constexpr static iq_t min() noexcept {return iq_t(_iq(0x80000000));}
+        __fast_inline constexpr static iq_t max() noexcept {return iq_t(_iq(0x7FFFFFFF));}
     };
 
     #ifndef STRICT_IQ
@@ -505,5 +503,3 @@ namespace std{
     __fast_inline iq_t log(const iq_t iq){return ::log(iq);}
     #endif
 }
-
-#endif

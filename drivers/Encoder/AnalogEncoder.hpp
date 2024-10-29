@@ -1,6 +1,4 @@
-#ifndef __ANALOG_ENCODER_HPP__
-
-#define __ANALOG_ENCODER_HPP__
+#pragma once
 
 #include "Encoder.hpp"
 
@@ -8,4 +6,3 @@ class AnalogEncoder:public Encoder{
 
 };
 
-#endif

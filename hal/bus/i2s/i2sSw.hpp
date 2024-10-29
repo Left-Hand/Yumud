@@ -1,15 +1,7 @@
-/*
- * I2s-soft.h
- *
- *  Created on: Jun 9, 2013
- *      Author: agu
- */
-
-#ifndef I2s_SOFT_H_
-#define I2s_SOFT_H_
+#pragma once
 
 #include "I2s.hpp"
-#include "../../gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 
 class I2sSw: public I2s{
 private:
@@ -21,18 +13,19 @@ GpioConcept & ws;
 uint16_t delays = 0;
 
 __fast_inline volatile void delayDur(){
-    // volatile uint8_t i = delays;
-    // while(i--);
+    if(delays == 0) return;
+    volatile uint8_t i = delays;
+    while(i--);
 }
 
 void clk(){
-    sck = false;
+    sck.clr();
     delayDur();
-    sck = true;
+    sck.set();
     delayDur();
 }
 
-Error start(const uint8_t & _address) {
+Error start(const uint8_t _address) {
     occupied = _address & 0b1;
     ws.outpp();
 
@@ -40,7 +33,7 @@ Error start(const uint8_t & _address) {
 }
 
 void stop() {
-    sda = false;
+    sda.clr();
     occupied = -1;
 }
 
@@ -61,7 +54,7 @@ protected :
 
 public:
 
-    I2sSw(GpioConcept & _sck,GpioConcept & _sda,GpioConcept & _ws,const uint16_t & _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
+    I2sSw(GpioConcept & _sck,GpioConcept & _sda,GpioConcept & _ws,const uint16_t _delays = 10):sck(_sck), sda(_sda), ws(_ws), delays(_delays){;}
 
     Error write(const uint32_t data) override {
         sck.outpp();
@@ -96,7 +89,7 @@ public:
         return ErrorType::OK;
     }
 
-    Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
         return ErrorType::OK;
     }
 
@@ -108,4 +101,3 @@ public:
     void setBaudRate(const uint32_t baudRate) override {;}
 };
 
-#endif 

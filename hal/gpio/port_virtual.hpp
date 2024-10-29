@@ -1,6 +1,4 @@
-#ifndef __PORT_VIRTUAL_HPP__
-
-#define __PORT_VIRTUAL_HPP__
+#pragma once
 
 #include "port.hpp"
 #include "gpio.hpp"
@@ -116,7 +114,7 @@ protected:
     using E = Gpio;
     std::array<E *, N> pin_ptrs = {nullptr};
 
-    void write(const uint16_t & data) override {
+    void write(const uint16_t data) override {
         for(uint8_t i = 0; i < 16; i++){
             writeByIndex(i, bool(data & (1 << i)));
         }
@@ -185,5 +183,3 @@ public:
         pin_ptrs[index]->setMode(mode);
     }
 };
-
-#endif

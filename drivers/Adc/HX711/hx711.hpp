@@ -1,8 +1,6 @@
-#ifndef __HX711_HPP__
+#pragma once
 
-#define __HX711_HPP__
-
-#include "../hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 
 class HX711{
 public:
@@ -18,8 +16,8 @@ protected:
     uint32_t zero_offset;
     bool inversed = false;
 
-    static constexpr real_t G = real_t(9.8);
-    // static constexpr real_t k = real_t(9.8 / 1000);
+    scexpr real_t G = real_t(9.8);
+    // scexpr real_t k = real_t(9.8 / 1000);
 
     uint32_t read_data(void){
         uint32_t data=0;
@@ -58,7 +56,7 @@ public:
         if(isIdle()) last_data = read_data();
     }
 
-    void inverse(const bool & en = true){
+    void inverse(const bool en = true){
         inversed = en;
     }
     void compensate(){
@@ -85,4 +83,3 @@ public:
     }
 
 };
-#endif

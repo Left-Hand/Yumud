@@ -5,7 +5,7 @@
 
 
 template <typename T>
-__fast_inline_constexpr T saturate_cast(const auto & v) {
+__fast_inline constexpr T saturate_cast(const auto & v) {
     using SrcType = std::remove_reference<decltype(v)>::type;
     return static_cast<T>(CLAMP(v, std::numeric_limits<SrcType>::min(), std::numeric_limits<SrcType>::max()));
 }
@@ -14,7 +14,7 @@ __fast_inline_constexpr T saturate_cast(const auto & v) {
 namespace NVCV2::Shape{
 
 
-static constexpr std::array<Vector2i,4> offsets_4 = { Vector2i{-1, 0}, Vector2i{0, -1}, Vector2i{0, 1}, Vector2i{1, 0} };
+scexpr std::array<Vector2i,4> offsets_4 = { Vector2i{-1, 0}, Vector2i{0, -1}, Vector2i{0, 1}, Vector2i{1, 0} };
 // const std::array<Vector2i,8> offsets_8 = { {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},{0, 1}, {1, -1}, {1, 0}, {1, 1} };
 
 
@@ -261,7 +261,7 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
 
 
 Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFilter & filter) {
-    static constexpr Grayscale labelable = 255;
+    scexpr Grayscale labelable = 255;
 
     auto size = src.get_size();
     auto nrow = size.x;
