@@ -283,21 +283,21 @@ constexpr Color_t<T> Color_t<T>::from_hsv(const auto & p_h, const auto & p_s, co
 
 #define COLOR_ADD_SUB_MUL_OPERATOR(op) \
 template <typename T> \
-__fast_inline_constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const auto &rvalue){ \
+__fast_inline constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const auto &rvalue){ \
     Color_t<T> final = p_Color; \
     final op##= rvalue; \
     return final; \
 }\
 \
 template <typename T> \
-__fast_inline_constexpr Color_t<T> operator op(const auto &lvalue, const Color_t<T> &p_Color){ \
+__fast_inline constexpr Color_t<T> operator op(const auto &lvalue, const Color_t<T> &p_Color){ \
     Color_t<T> final = p_Color; \
     final op##= lvalue; \
     return final; \
 }\
 \
 template <typename T> \
-__fast_inline_constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const Color_t<auto> &d_Color){ \
+__fast_inline constexpr Color_t<T> operator op(const Color_t<T> &p_Color, const Color_t<auto> &d_Color){ \
     Color_t<T> final = p_Color; \
     final op##= d_Color; \
     return final; \

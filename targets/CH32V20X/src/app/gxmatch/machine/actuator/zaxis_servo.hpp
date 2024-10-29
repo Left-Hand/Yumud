@@ -13,7 +13,7 @@ protected:
     using Sensor = DistanceSensor;
     Motor & motor_;
     Sensor & sensor_;
-    real_t expect_distance = 0.1;
+    real_t expect_distance = real_t(0.1);
 
     void setSpeed(const real_t speed);
     real_t getSpeed();

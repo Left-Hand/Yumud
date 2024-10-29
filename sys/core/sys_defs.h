@@ -18,13 +18,6 @@
 #define __no_inline __attribute__((__noinline__))
 #endif
 
-#ifndef __fast_inline_constexpr
-#ifdef __cplusplus
-    #define __fast_inline_constexpr __fast_inline constexpr
-#else
-    #define __fast_inline_constexpr __fast_inline
-#endif
-#endif
 
 #ifndef __no_inline_constexpr
 #ifdef __cplusplus

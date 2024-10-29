@@ -63,11 +63,11 @@ public:
     // template<typename U>
     constexpr void set_hsv(const auto & _p_h, const auto & _p_s, const auto & _p_v, const auto & _p_alpha = decltype(_p_alpha)(1));
 
-	__fast_inline_constexpr T &operator[](const uint8_t idx) {
+	__fast_inline constexpr T &operator[](const uint8_t idx) {
         static T default_value = T();
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
-	__fast_inline_constexpr T &operator[](const uint8_t idx) const {
+	__fast_inline constexpr T &operator[](const uint8_t idx) const {
         static const T default_value = T();
 		return (idx < 4) ? *(&r + idx) : default_value;
 	}
@@ -75,7 +75,7 @@ public:
 	constexpr Color_t operator-() const;
 
     // template <typename U>
-    __fast_inline_constexpr Color_t &operator+=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color_t &operator+=(const Color_t<auto> &p_Color) {
         r += static_cast<T>(p_Color.r);
         g += static_cast<T>(p_Color.g);
         b += static_cast<T>(p_Color.b);
@@ -84,7 +84,7 @@ public:
     }
 
     // template <typename U>
-    __fast_inline_constexpr Color_t &operator-=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color_t &operator-=(const Color_t<auto> &p_Color) {
         r -= static_cast<T>(p_Color.r);
         g -= static_cast<T>(p_Color.g);
         b -= static_cast<T>(p_Color.b);
@@ -93,7 +93,7 @@ public:
     }
 
     // template <typename U>
-    __fast_inline_constexpr Color_t &operator*=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color_t &operator*=(const Color_t<auto> &p_Color) {
         r *= static_cast<T>(p_Color.r);
         g *= static_cast<T>(p_Color.g);
         b *= static_cast<T>(p_Color.b);
@@ -102,7 +102,7 @@ public:
     }
 
     // template <typename U>
-    __fast_inline_constexpr Color_t & operator*=(const auto &rvalue) {
+    __fast_inline constexpr Color_t & operator*=(const auto &rvalue) {
         r = r * rvalue;
         g = g * rvalue;
         b = b * rvalue;
@@ -111,7 +111,7 @@ public:
     }
 
     // template<typename U>
-    __fast_inline_constexpr Color_t & operator/=(const Color_t<auto> &p_Color) {
+    __fast_inline constexpr Color_t & operator/=(const Color_t<auto> &p_Color) {
         r /= static_cast<T>(p_Color.r);
         g /= static_cast<T>(p_Color.g);
         b /= static_cast<T>(p_Color.b);
@@ -119,7 +119,7 @@ public:
         return *this;
     }
 
-    __fast_inline_constexpr Color_t & operator/=(const auto &rvalue) {
+    __fast_inline constexpr Color_t & operator/=(const auto &rvalue) {
         if (rvalue == 0) {
             r = 1.0;
             g = 1.0;
@@ -140,7 +140,7 @@ public:
 	constexpr Color_t inverted() const;
 	constexpr Color_t contrasted() const;
 
-	__fast_inline_constexpr Color_t linear_interpolate(const Color_t &p_to, T p_weight) const {
+	__fast_inline constexpr Color_t linear_interpolate(const Color_t &p_to, T p_weight) const {
 		Color_t res = *this;
 
 		res.r += (p_weight * (p_to.r - r));
@@ -151,7 +151,7 @@ public:
 		return res;
 	}
 
-	__fast_inline_constexpr Color_t darkened(T p_amount) const {
+	__fast_inline constexpr Color_t darkened(T p_amount) const {
 		Color_t res = *this;
 		res.r = res.r * (1.0f - p_amount);
 		res.g = res.g * (1.0f - p_amount);
@@ -159,7 +159,7 @@ public:
 		return res;
 	}
 
-	__fast_inline_constexpr Color_t lightened(T p_amount) const {
+	__fast_inline constexpr Color_t lightened(T p_amount) const {
 		Color_t res = *this;
 		res.r = res.r + (1.0f - res.r) * p_amount;
 		res.g = res.g + (1.0f - res.g) * p_amount;
@@ -167,7 +167,7 @@ public:
 		return res;
 	}
 
-	__fast_inline_constexpr Color_t blend(const Color_t &p_over) const {
+	__fast_inline constexpr Color_t blend(const Color_t &p_over) const {
 		Color_t res;
 		T sa = 1.0 - p_over.a;
 		res.a = a * sa + p_over.a;
@@ -181,7 +181,7 @@ public:
 		return res;
 	}
 
-	__fast_inline_constexpr Color_t to_linear() const {
+	__fast_inline constexpr Color_t to_linear() const {
 		return Color_t(
 				r < 0.04045 ? r * (1.0 / 12.92) : pow((r + 0.055) * (1.0 / (1 + 0.055)), T(2.4)),
 				g < 0.04045 ? g * (1.0 / 12.92) : pow((g + 0.055) * (1.0 / (1 + 0.055)), T(2.4)),
@@ -189,7 +189,7 @@ public:
 				a);
 	}
 
-	__fast_inline_constexpr Color_t to_srgb() const {
+	__fast_inline constexpr Color_t to_srgb() const {
 		return Color_t(
 				r < 0.0031308 ? 12.92 * r : (1.0 + 0.055) * pow(r, T(1.0f / 2.4f)) - T(0.055),
 				g < 0.0031308 ? 12.92 * g : (1.0 + 0.055) * pow(g, T(1.0f / 2.4f)) - T(0.055),
@@ -201,7 +201,7 @@ public:
 
 	constexpr static Color_t<T> from_hsv(const auto & p_h, const auto & p_s = 1, const auto & p_v = 1, const auto & p_a = 1);
 
-	__fast_inline_constexpr Color_t() {
+	__fast_inline constexpr Color_t() {
 		r = T(0);
 		g = T(0);
 		b = T(0);
@@ -216,14 +216,14 @@ public:
 		a = static_cast<T>(p_a);
 	}
 
-    __fast_inline_constexpr operator RGB565() const {
+    __fast_inline constexpr operator RGB565() const {
         return RGB565(
             (uint8_t)(r * 31),
             (uint8_t)(g * 63),
             (uint8_t)(b * 31));
     }
 
-    __fast_inline_constexpr operator RGB888() const {
+    __fast_inline constexpr operator RGB888() const {
         return RGB888(
             (uint8_t)(r * 255),
             (uint8_t)(g * 255),

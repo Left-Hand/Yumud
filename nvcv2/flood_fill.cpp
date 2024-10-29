@@ -5,7 +5,7 @@
 
 
 template <typename T>
-__fast_inline_constexpr T saturate_cast(const auto & v) {
+__fast_inline constexpr T saturate_cast(const auto & v) {
     using SrcType = std::remove_reference<decltype(v)>::type;
     return static_cast<T>(CLAMP(v, std::numeric_limits<SrcType>::min(), std::numeric_limits<SrcType>::max()));
 }

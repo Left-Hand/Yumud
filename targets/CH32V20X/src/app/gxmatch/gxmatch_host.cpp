@@ -82,9 +82,9 @@ auto create_default_config(){
         },
 
         .tray_pos = {
-            Vector2{-0.12   , 0.20},
-            Vector2{0       , 0.20},
-            Vector2{0.12    , 0.20}
+            Vector2{-0.12_r   , 0.20_r},
+            Vector2{0       , 0.20_r},
+            Vector2{0.12_r    , 0.20_r}
         }
     };
 }
