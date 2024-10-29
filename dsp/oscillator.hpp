@@ -16,7 +16,7 @@ struct Osc{
 
 // template<typename real>
 struct SineOsc:public Osc<real_t>{
-    real_t forward(const real_t & delta_ms) override{
+    real_t forward(const real_t delta_ms) override{
         ang += delta_ms * freq_khz;
         return sin(ang) * amp;
     }

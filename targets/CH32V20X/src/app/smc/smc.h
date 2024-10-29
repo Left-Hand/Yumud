@@ -235,7 +235,7 @@ public:
         ccd_range = _ccd_range;
     }
 
-    void update_dir(const real_t & _dir){
+    void update_dir(const real_t _dir){
         dir = _dir;
     }
 

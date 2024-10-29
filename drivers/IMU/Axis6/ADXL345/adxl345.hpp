@@ -309,11 +309,11 @@ protected:
     BusDrv & bus_drv;
 
 
-    void writeReg(const RegAddress & reg_address, const Reg8 & reg_data){
+    void writeReg(const RegAddress reg_address, const Reg8 & reg_data){
         bus_drv.write({(uint8_t)((uint8_t)reg_address & 0x7F), *(uint8_t *)&reg_data});
     }
 
-    void readReg(const RegAddress & reg_address, Reg8 & reg_data){
+    void readReg(const RegAddress reg_address, Reg8 & reg_data){
         bus_drv.write((uint8_t)((uint8_t)reg_address | 0x80), false);
         uint8_t temp = 0;
         bus_drv.read(temp);

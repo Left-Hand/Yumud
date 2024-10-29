@@ -128,7 +128,7 @@ protected:
         Burn = 0xFF
     };
 
-    real_t From12BitTo360Degrees(const uint16_t & data){
+    real_t From12BitTo360Degrees(const uint16_t data){
         real_t uni;
         u16_to_uni(data << 4, uni);
         return uni * 360;
@@ -140,23 +140,23 @@ protected:
         return ret >> 4;
     }
 
-    void writeReg(const RegAddress & regAddress, const uint16_t & regData){
+    void writeReg(const RegAddress regAddress, const uint16_t regData){
         bus_drv.writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint16_t & regData){
+    void readReg(const RegAddress regAddress, uint16_t & regData){
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void writeReg(const RegAddress & regAddress, const uint8_t regData){
+    void writeReg(const RegAddress regAddress, const uint8_t regData){
         bus_drv.writeReg((uint8_t)regAddress, regData);
     }
 
-    void readReg(const RegAddress & regAddress, uint8_t & regData){
+    void readReg(const RegAddress regAddress, uint8_t & regData){
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void requestRegData(const RegAddress & regAddress, uint8_t * data_ptr, const size_t len){
+    void requestRegData(const RegAddress regAddress, uint8_t * data_ptr, const size_t len){
         bus_drv.readPool((uint8_t)regAddress, data_ptr, 2, len, false);
     }
 
@@ -221,17 +221,17 @@ public:
         return From12BitTo360Degrees(angleReg.data);
     }
 
-    void setStartAngle(const real_t & angle){
+    void setStartAngle(const real_t angle){
         startAngleReg.data = From360DegreesTo12Bit(angle);
         writeReg(RegAddress::StartAngle, startAngleReg.data);
     }
 
-    void setEndAngle(const real_t & angle){
+    void setEndAngle(const real_t angle){
         endAngleReg.data = From360DegreesTo12Bit(angle);
         writeReg(RegAddress::EndAngle, endAngleReg.data);
     }
 
-    void setAmountAngle(const real_t & angle){
+    void setAmountAngle(const real_t angle){
         amountAngleReg.data = From360DegreesTo12Bit(angle);
         writeReg(RegAddress::AmountAngle, amountAngleReg.data);
     }

@@ -180,7 +180,7 @@ struct Grayscale{
 
     __fast_inline constexpr Grayscale(const uint8_t _data): data(_data){;}
 
-    __fast_inline constexpr Grayscale(const real_t & _data): data(int(_data * 256)){;}
+    __fast_inline constexpr Grayscale(const real_t _data): data(int(_data * 256)){;}
 
     __fast_inline constexpr Grayscale(const RGB565 & rgb);
     __fast_inline constexpr Grayscale & operator = (const uint8_t _data){data = _data; return *this;}

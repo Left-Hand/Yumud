@@ -20,7 +20,7 @@ public:
     Gimbal(){;}
     ~Gimbal(){;}
 
-    void setOrientation(const real_t & _yaw, const real_t & _pitch){
+    void setOrientation(const real_t _yaw, const real_t _pitch){
         yaw = _yaw;
         pitch = _pitch;
         move();

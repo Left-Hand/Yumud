@@ -116,7 +116,7 @@ public:
     real_t k2 = 0.4;
 
     real_t out_clamp = real_t(1);
-    real_t update(const real_t & pos, const real_t & acc){
+    real_t update(const real_t pos, const real_t acc){
         real_t delta = (t - last_t);
         v1 += acc * delta;
         v1 = k1 * v1 + (1-k1) * (pos - last_pos) / delta;

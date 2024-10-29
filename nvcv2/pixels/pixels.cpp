@@ -111,7 +111,7 @@ namespace NVCV2::Pixels{
     }
 
 
-    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t & k, const real_t & eps){
+    void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t k, const real_t eps){
         const Vector2i size = src.get_size();
         std::array<int, 256> statics;
         statics.fill(0);

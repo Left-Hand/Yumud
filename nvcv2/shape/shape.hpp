@@ -60,7 +60,7 @@ namespace NVCV2::Shape{
 
     Image<Grayscale> x2(const Image<Grayscale> & src);
 
-    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t & percent);
+    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t percent);
 
     void zhang_suen(Image<Binary> & dst,const Image<Binary> & src);
 

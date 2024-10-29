@@ -532,7 +532,7 @@ namespace NVCV2::Shape{
     }
 
 
-    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t & percent){
+    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t percent){
         auto size = src.get_size();
         int n = int(m * m * percent);
 

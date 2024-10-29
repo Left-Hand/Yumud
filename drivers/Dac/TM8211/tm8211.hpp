@@ -38,13 +38,13 @@ public:
     TM8211(I2sDrv & _bus_drv):bus_drv(_bus_drv){
         setRail(real_t(3.3 * 0.25f), real_t(3.3 * 0.75f)); 
     }
-    void setChData(const uint8_t index,const uint16_t & data){
+    void setChData(const uint8_t index,const uint16_t data){
         if(index) right_data = data;
         else left_data = data;
 
         write(((left_data << 16) | right_data) & distort_mask);
     }
-    void setRail(const real_t & _voltL, const real_t & _voltH){
+    void setRail(const real_t _voltL, const real_t _voltH){
         voltL = _voltL;
         voltH = _voltH;
         voltComm = (voltL + voltH) / 2;
@@ -53,7 +53,7 @@ public:
 
 
 
-    void setChVoltage(const uint8_t index, const real_t & volt){
+    void setChVoltage(const uint8_t index, const real_t volt){
         setChData(index, VoltageToData(volt));
     }
 
@@ -61,14 +61,14 @@ public:
         uint16_t mask_16 = ~((1 << level) - 1);
         distort_mask = (mask_16 << 16) | mask_16;
     }
-    void setVoltage(const real_t & left_volt, const real_t & right_volt){
+    void setVoltage(const real_t left_volt, const real_t right_volt){
         left_data = VoltageToData(left_volt);
         right_data = VoltageToData(right_volt);
 
         write(((left_data << 16) | right_data) & distort_mask);
     }
 
-    // void setChDuty(const real_t & duty){
+    // void setChDuty(const real_t duty){
 
     // }
 };

@@ -88,7 +88,7 @@ Grayscale Image<ColorType>::bilinear_interpol(const Vector2 & pos) const {
 
 
 // template<typename ColorType>
-// ColorType Image<ColorType>::operator()(const real_t & x, const real_t & y){
+// ColorType Image<ColorType>::operator()(const real_t x, const real_t y){
 //         return this -> operator()(Vector2(x,y));
 // }
 

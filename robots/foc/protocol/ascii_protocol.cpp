@@ -3,7 +3,7 @@
 
 void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
 
-    auto targ_pos_setter = [&](const real_t & arg, const real_t & offset){
+    auto targ_pos_setter = [&](const real_t arg, const real_t offset){
         if(args.size() > 1){
             auto val = arg + offset;
             motor.setTargetPosition(val);

@@ -66,7 +66,7 @@ public:
         }
     }
 
-    void changeMeasureTime(const uint16_t & ms){
+    void changeMeasureTime(const uint16_t ms){
         uint8_t x;
         if(currentMode == Mode::HMode || currentMode == Mode::HMode2){
             x = CLAMP(ms * 69 / 120, 31, 254);

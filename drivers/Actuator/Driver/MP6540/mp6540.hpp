@@ -33,11 +33,11 @@ protected:
 
     struct MP6540CurrentChannel:public AnalogInChannel{
         AnalogInChannel & ain_;
-        const real_t & ratio_;
+        const real_t ratio_;
         real_t basis_ = real_t(0);
         size_t index_;
 
-        MP6540CurrentChannel(AnalogInChannel & _ain, const real_t & _ratio, const uint8_t _index):
+        MP6540CurrentChannel(AnalogInChannel & _ain, const real_t _ratio, const uint8_t _index):
             ain_(_ain), ratio_(_ratio), index_(_index) {}
         MP6540CurrentChannel(const MP6540CurrentChannel & other) = delete;
         MP6540CurrentChannel(MP6540CurrentChannel && other) = delete;

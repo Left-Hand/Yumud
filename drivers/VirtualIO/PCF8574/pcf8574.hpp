@@ -19,13 +19,13 @@ public:
         return ret;
     }
 
-    void writeBit(const uint16_t & index, const bool value){
+    void writeBit(const uint16_t index, const bool value){
         if(value) data |= (1 << index);
         else data &= (~(1 << index));
         bus_drv.write(data);
     }
 
-    bool readBit(const uint16_t & index){
+    bool readBit(const uint16_t index){
         return (read() & (1 << index));
     }
 };
