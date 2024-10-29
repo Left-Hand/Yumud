@@ -1,6 +1,4 @@
-#ifndef __HC595_HPP__
-
-#define __HC595_HPP__
+#pragma once
 
 #include "../hal/gpio/gpio.hpp"
 #include "../hal/gpio/port_virtual.hpp"
@@ -127,6 +125,3 @@ public:
     HC595Single & operator << (const uint8_t data){write(data); return *this;}
     HC595Single & operator = (const uint16_t data) override {write(data); return *this;}
 };
-
-
-#endif

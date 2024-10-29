@@ -1,9 +1,7 @@
-#ifndef __HMC5883L_HPP__
+#pragma once
 
-#define __HMC5883L_HPP__
-
-#include "../drivers/device_defs.h"
-#include "sys/math/real.hpp"
+#include "drivers/device_defs.h"
+// #include "sys/math/real.hpp"
 
 class HMC5883L:public Magnetometer{
 public:
@@ -217,5 +215,3 @@ public:
         writeReg(RegAddress::Mode, modeReg.data);
     }
 };
-
-#endif

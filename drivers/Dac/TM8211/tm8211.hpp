@@ -1,8 +1,6 @@
-#ifndef __TM8211_HPP__
+#pragma once
 
-#define __TM8211_HPP__
-
-#include "../drivers/device_defs.h"
+#include "drivers/device_defs.h"
 #include "sys/math/real.hpp"
 
 class TM8211{
@@ -74,4 +72,3 @@ public:
 
     // }
 };
-#endif

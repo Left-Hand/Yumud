@@ -1,7 +1,4 @@
-#ifndef __PCF8574_HPP__
-
-#define __PCF8574_HPP__
-
+#pragma once
 #include "device_defs.h"
 
 class PCF8574{
@@ -32,5 +29,3 @@ public:
         return (read() & (1 << index));
     }
 };
-
-#endif

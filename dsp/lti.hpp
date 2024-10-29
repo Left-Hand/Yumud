@@ -1,6 +1,4 @@
-#ifndef __LTI_HPP__
-
-#define __LTI_HPP__
+#pragma once
 
 #include "sys/math/real.hpp"
 
@@ -43,7 +41,3 @@ class Observer_t:public LTI_t<real, time>{
     virtual real predict(const time & t) = 0;
 };
 
-
-
-// template <typename real, typename time>
-#endif

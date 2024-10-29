@@ -1,6 +1,4 @@
-#ifndef __MEMORY_HPP__
-
-#define __MEMORY_HPP__
+#pragma once
 
 #include "../types/range/range_t.hpp"
 #include "storage.hpp"
@@ -34,6 +32,3 @@ public:
 };
 
 #include "memory.tpp"
-
-
-#endif

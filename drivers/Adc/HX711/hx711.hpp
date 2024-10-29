@@ -1,8 +1,6 @@
-#ifndef __HX711_HPP__
+#pragma once
 
-#define __HX711_HPP__
-
-#include "../hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 
 class HX711{
 public:
@@ -85,4 +83,3 @@ public:
     }
 
 };
-#endif

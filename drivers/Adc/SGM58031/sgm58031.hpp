@@ -1,9 +1,6 @@
-#ifndef __SGM58031_HPP__
-
-#define __SGM58031_HPP__
+#pragma once
 
 #include "device_defs.h"
-#include "sys/math/real.hpp"
 
 #ifndef SGM58031_DEBUG
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
@@ -236,6 +233,4 @@ public:
 
 #ifdef SGM58031_DEBUG
 #undef SGM58031_DEBUG
-#endif
-
 #endif

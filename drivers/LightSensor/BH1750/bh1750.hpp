@@ -1,6 +1,4 @@
-#ifndef __BH1750_HPP__
-
-#define __BH1750_HPP__
+#pragma once
 
 #include "../drivers/device_defs.h"
 
@@ -94,4 +92,3 @@ public:
     }
 };
 
-#endif

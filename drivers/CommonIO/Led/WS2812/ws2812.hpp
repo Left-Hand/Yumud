@@ -1,6 +1,4 @@
-#ifndef __WS2812_HPP__
-
-#define __WS2812_HPP__
+#pragma once
 
 #include "../rgbLed.hpp"
 #include <array>
@@ -159,5 +157,3 @@ public:
 
     }
 };
-
-#endif

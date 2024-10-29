@@ -1,10 +1,8 @@
-#ifndef __ST7789_HPP__
-
-#define __ST7789_HPP__
+#pragma once
 
 #include "../../DisplayerInterface.hpp"
-#include "../types/image/image.hpp"
-#include "../hal/bus/spi/spi.hpp"
+#include "types/image/image.hpp"
+#include "hal/bus/spi/spi.hpp"
 
 class ST7789:public Displayer<RGB565>{
 private:
@@ -85,5 +83,3 @@ public:
 
     void setInversion(const bool inv){writeCommand(0x20 + inv);}
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef __NEC_ENCODER_HPP__
-#define __NEC_ENCODER_HPP__
+#pragma once
 
 #include <cstdint>
 #include <functional>
@@ -111,5 +110,3 @@ public:
 		encode_prog = EncodeProg::Lead;
 	}
 };
-
-#endif

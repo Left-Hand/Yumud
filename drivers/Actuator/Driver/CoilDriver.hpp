@@ -1,13 +1,10 @@
-#ifndef __COIL_DRIVER_HPP__
-#define __COIL_DRIVER_HPP__
+#pragma once
 
 #include "../Actuator.hpp"
 
-#include "../../hal/gpio/port_virtual.hpp"
-#include "../../hal/timer/pwm/pwm_channel.hpp"
-#include "../../hal/timer/instance/timer_hw.hpp"
-
-#include <optional>
+#include "hal/gpio/port_virtual.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
 
 class CoilDriverConcept: public Actuator{
 public:
@@ -28,6 +25,3 @@ public:
 
     virtual Coil3Driver& operator= (const UVW_Duty & duty) = 0;
 };
-
-
-#endif

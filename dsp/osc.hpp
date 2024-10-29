@@ -1,9 +1,5 @@
-#ifndef __OSC_HPP__
 
-#define __OSC_HPP__
-
-
-
+#pragma once
 
 // void osc_test(){
 //     uart2.init(115200 * 8, Uart::Mode::TxRx);
@@ -78,4 +74,3 @@
 // }
 
 
-#endif

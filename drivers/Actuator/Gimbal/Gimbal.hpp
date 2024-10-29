@@ -1,6 +1,4 @@
-#ifndef __GIMBAL_HPP__
-
-#define __GIMBAL_HPP__
+#pragma once
 
 #include "sys/math/real.hpp"
 #include "vector2/vector2_t.hpp"

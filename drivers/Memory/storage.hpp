@@ -1,6 +1,4 @@
-#ifndef __STORAGE_HPP__
-
-#define __STORAGE_HPP__
+#pragma once
 
 #include "../sys/core/platform.h"
 #include "../types/range/range_t.hpp"
@@ -93,4 +91,3 @@ public:
     StoragePaged(const Address _capacity, const AddressView  & _view, const Address _pagesize):Storage(_capacity, _view), m_pagesize(_pagesize){;}
 };
 
-#endif

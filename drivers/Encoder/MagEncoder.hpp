@@ -1,11 +1,6 @@
-#ifndef __MAG_ENCODER_HPP__
-
-#define __MAG_ENCODER_HPP__
-
+#pragma once
 #include "Encoder.hpp"
 
 class MagEncoder:public AbsoluteEncoder{
 public:
 };
-
-#endif

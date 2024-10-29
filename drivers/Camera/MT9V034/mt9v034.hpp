@@ -1,7 +1,4 @@
-
-#ifndef __MT9V034_HPP__
-
-#define __MT9V034_HPP__
+#pragma once
 
 #include "../camera.hpp" 
 
@@ -97,6 +94,3 @@ public:
         writeReg(0x0B, value);
     }
 };
-
-
-#endif

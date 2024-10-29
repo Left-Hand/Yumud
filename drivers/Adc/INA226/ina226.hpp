@@ -1,10 +1,6 @@
-#ifndef __INA226_HPP__
-#define __INA226_HPP__
+#pragma once
 
-#include "../drivers/device_defs.h"
-#include "sys/math/real.hpp"
-#include "hal/adc/analog_channel.hpp"
-#include <bit>
+#include "drivers/device_defs.h"
 
 #ifdef INA226_DEBUG
 #undef INA226_DEBUG
@@ -237,4 +233,3 @@ public:
     }
 };
 
-#endif

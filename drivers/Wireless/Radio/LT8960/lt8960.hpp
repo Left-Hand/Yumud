@@ -1,8 +1,6 @@
-#ifndef __LT8960_HPP__
+#pragma once
 
-#define __LT8960_HPP__
-
-#include "../../hal/bus/spi/spidrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
 #include <optional>
 #include "types/real.hpp"
 
@@ -447,5 +445,4 @@ public:
 
 #ifdef LT8960_DEBUG
 #undef LT8960_DEBUG
-#endif
 #endif

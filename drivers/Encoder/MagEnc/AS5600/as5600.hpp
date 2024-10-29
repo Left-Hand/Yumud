@@ -1,9 +1,5 @@
-#ifndef __AS5600_HPP__
-
-#define __AS5600_HPP__
-
+#pragma once
 #include "device_defs.h"
-#include "sys/math/real.hpp"
 
 class AS5600{
 public:
@@ -259,5 +255,3 @@ public:
         setPowerMode(PowerMode::Norm);
     }
 };
-
-#endif

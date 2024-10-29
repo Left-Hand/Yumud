@@ -1,6 +1,4 @@
-#ifndef __RADIO_HPP__
-
-#define __RADIO_HPP__
+#pragma once
 
 #include "../hal/gpio/gpio.hpp"
 class Radio{
@@ -10,6 +8,3 @@ protected:
 public:
     virtual void setChannel(const uint16_t _channel) = 0;
 };
-
-
-#endif

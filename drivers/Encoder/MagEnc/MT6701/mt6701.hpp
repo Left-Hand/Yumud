@@ -1,13 +1,9 @@
-#ifndef __MT6701_HPP__
-#define __MT6701_HPP__
+#pragma once
 
-#include <optional>
-#include "sys/math/real.hpp"
+#include "drivers/device_defs.h"
 
-#include "hal/bus/i2c/i2cdrv.hpp"
-#include "hal/bus/spi/spidrv.hpp"
 
-#include "../drivers/Encoder/MagEncoder.hpp"
+#include "drivers/Encoder/MagEncoder.hpp"
 
 #ifdef MT6701_DEBUG
 #undef MT6701_DEBUG
@@ -254,5 +250,3 @@ public:
 
 
 };
-
-#endif

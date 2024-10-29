@@ -1,14 +1,12 @@
-#ifndef __CAMERA_HPP__
+#pragma once
 
-#define __CAMERA_HPP__
+#include "hal/bus/dvp/dvp.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/gpio/gpio.hpp"
 
-#include "../hal/bus/dvp/dvp.hpp"
-#include "../hal/bus/i2c/i2cdrv.hpp"
-#include "../hal/gpio/gpio.hpp"
-
-#include "../types/vector2/vector2_t.hpp"
-#include "../types/image/image.hpp"
-#include "../types/rgb.h"
+#include "types/vector2/vector2_t.hpp"
+#include "types/image/image.hpp"
+#include "types/rgb.h"
 
 class SccbDrv:public I2cDrv{
 protected:
@@ -64,8 +62,3 @@ protected:
         bus_drv.writeSccbReg(addr, data);
     }
 };
-
-
-
-
-#endif

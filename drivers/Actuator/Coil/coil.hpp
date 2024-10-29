@@ -1,5 +1,4 @@
-#ifndef __COIL_HPP__
-#define __COIL_HPP__
+#pragma once
 
 #include "../drivers/Actuator/Actuator.hpp"
 #include "../hal/gpio/gpio.hpp"
@@ -10,4 +9,3 @@ public:
     // virtual void setDuty(const real_t duty){}
 };
 
-#endif

@@ -1,5 +1,4 @@
-#ifndef __MA730_HPP__
-#define __MA730_HPP__
+#pragma once
 
 #include "drivers/device_defs.h"
 #include "drivers/Encoder/MagEncoder.hpp"
@@ -136,5 +135,3 @@ class MA732:public MA730{
 public:
     using MA730::MA730; 
 };
-
-#endif

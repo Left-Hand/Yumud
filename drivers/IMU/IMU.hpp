@@ -1,9 +1,5 @@
-#ifndef __IMU_HPP__
-
-#define __IMU_HPP__
-
-#include "../sys/core/platform.h"
-#include "sys/math/real.hpp"
+#pragma once
+#include "drivers/device_defs.h"
 
 class Accelerometer{
 public:
@@ -30,5 +26,3 @@ public:
 class Axis9:public Axis6, public Magnetometer{
 
 };
-
-#endif

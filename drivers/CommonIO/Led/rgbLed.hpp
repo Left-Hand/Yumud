@@ -1,10 +1,7 @@
-#ifndef __RGB_HPP__
-
-#define __RGB_HPP__
-
+#pragma once
 #include "Led.hpp"
-#include "../types/color/color_t.hpp"
-#include "../hal/timer/pwm/pwm_channel.hpp"
+#include "types/color/color_t.hpp"
+#include "hal/timer/pwm/pwm_channel.hpp"
 
 
 class RgbLedConcept{
@@ -71,7 +68,3 @@ public:
         return *this;
     }
 };
-
-
-#endif
-

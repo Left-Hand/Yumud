@@ -1,7 +1,5 @@
-#ifndef __ADXL345_HPP__
-#define __ADXL345_HPP__
+#pragma once
 
-#include "src"
 
 class ADXL345:public Axis6{
 public:
@@ -334,5 +332,3 @@ public:
     void getGyro(real_t & x, real_t & y, real_t & z) override;
 
 };
-
-#endif

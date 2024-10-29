@@ -1,7 +1,4 @@
-#ifndef __PLL_HPP__
-
-#define __PLL_HPP__
-
+#pragma once
 #include "sys/math/real.hpp"
 
 struct Pll{
@@ -72,4 +69,3 @@ struct Pll{
     }
 };
 
-#endif

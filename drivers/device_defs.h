@@ -1,10 +1,19 @@
-#ifndef __DEVICE_INC_H__
-#define __DEVICE_INC_H__
+#pragma once
+
+#include <bit>
+#include <array>
+#include <functional>
+#include <memory>
+#include <type_traits>
+#include <optional>
 
 #include "sys/core/system.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/spi/spidrv.hpp"
 #include "hal/bus/uart/uart.hpp"
+
+#include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/adc/adc_channel.hpp"
 
 
 #ifndef REG8_BEGIN
@@ -65,7 +74,6 @@ public:
 };
 
 
-
 #define I2CDEV_CONTSRTUCTER(name)\
     name(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}\
     name(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}\
@@ -73,6 +81,4 @@ public:
 
 #define SPIDEV_CONTSRTUCTER(name)\
     name(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}\
-    name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}\
-
-#endif
+    name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
