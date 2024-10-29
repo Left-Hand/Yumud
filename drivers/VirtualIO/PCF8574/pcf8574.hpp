@@ -11,7 +11,7 @@ protected:
     uint8_t data;
 public:
     PCF8574(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    void write(const uint8_t & _data){
+    void write(const uint8_t _data){
         data = _data;
         bus_drv.write(data);
     }
@@ -22,7 +22,7 @@ public:
         return ret;
     }
 
-    void writeBit(const uint16_t & index, const bool & value){
+    void writeBit(const uint16_t & index, const bool value){
         if(value) data |= (1 << index);
         else data &= (~(1 << index));
         bus_drv.write(data);

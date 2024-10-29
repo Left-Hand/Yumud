@@ -58,7 +58,7 @@ public:
         if(isIdle()) last_data = read_data();
     }
 
-    void inverse(const bool & en = true){
+    void inverse(const bool en = true){
         inversed = en;
     }
     void compensate(){

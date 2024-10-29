@@ -32,7 +32,7 @@ void clk(){
     delayDur();
 }
 
-Error start(const uint8_t & _address) {
+Error start(const uint8_t _address) {
     occupied = _address & 0b1;
     ws.outpp();
 
@@ -96,7 +96,7 @@ public:
         return ErrorType::OK;
     }
 
-    Error transfer(uint32_t & data_rx, const uint32_t & data_tx, bool toAck){
+    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
         return ErrorType::OK;
     }
 

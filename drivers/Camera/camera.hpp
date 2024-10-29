@@ -15,7 +15,7 @@ protected:
     using BusDrv<I2c>::index;
     using BusDrv<I2c>::bus;
 public:
-    SccbDrv(I2c & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):
+    SccbDrv(I2c & _bus, const uint8_t _index, const uint32_t _wait_time = 320):
         I2cDrv(_bus, _index, _wait_time){};
 
     void writeSccbReg(const uint8_t reg_address, const uint16_t reg_data){

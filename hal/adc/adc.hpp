@@ -323,6 +323,6 @@ public:
     virtual void refreshRegularData() = 0;
     virtual void refreshInjectedData() = 0;
 
-    virtual uint16_t getRegularDataByRank(const uint8_t & rank) = 0;
-    virtual uint16_t getInjectedDataByRank(const uint8_t & rank) = 0;
+    virtual uint16_t getRegularDataByRank(const uint8_t rank) = 0;
+    virtual uint16_t getInjectedDataByRank(const uint8_t rank) = 0;
 };

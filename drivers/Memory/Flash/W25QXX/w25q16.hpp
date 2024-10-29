@@ -78,7 +78,7 @@ public:
     bool isWriteable();
 
 private:
-    void writeByte(const uint8_t & data){
+    void writeByte(const uint8_t data){
         bus_drv.write(data);
     }
 

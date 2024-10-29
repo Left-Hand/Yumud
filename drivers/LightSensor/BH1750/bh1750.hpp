@@ -35,7 +35,7 @@ protected:
         bus_drv.write((uint8_t)cmd);
     }
 
-    void sendCommand(const uint8_t & cmd){
+    void sendCommand(const uint8_t cmd){
         bus_drv.write(cmd);
     }
 
@@ -56,7 +56,7 @@ public:
         currentMode = mode;
     }
 
-    void enableContinuous(const bool & enabled = true){
+    void enableContinuous(const bool enabled = true){
         continuous = enabled;
     }
 

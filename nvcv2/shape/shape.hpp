@@ -188,7 +188,7 @@ namespace NVCV2::Shape{
                 dir_index = warp_dir_index(dir_index + (cw? -1 : 1));
             }
 
-            void spin(const bool & not_inverse){
+            void spin(const bool not_inverse){
                 dir_index = warp_dir_index(dir_index + (cw ^ (!not_inverse) ? -1 : 1));
             }
 

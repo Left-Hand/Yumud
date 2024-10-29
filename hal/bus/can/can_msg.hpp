@@ -119,10 +119,10 @@ public:
         else if(isExt()) return ExtId;
         else return 0; 
     }
-    constexpr const uint8_t & operator[](const int index) const {return *(Data + index);};
+    constexpr const uint8_t operator[](const int index) const {return *(Data + index);};
     constexpr uint8_t & operator[](const int index) {return *(Data + index);};
 
-    constexpr const uint8_t & at(const int index) const {
+    constexpr const uint8_t at(const int index) const {
         if(IN_RANGE(index, 0, (DLC-1))){
             return Data[index];
         }else{

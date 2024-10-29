@@ -91,9 +91,9 @@ protected:
     }
 
 public:
-    Opa(const uint8_t & _opa_index):opa_index( _opa_index ){;}
+    Opa(const uint8_t _opa_index):opa_index( _opa_index ){;}
 
-    void init( const uint8_t & sel){
+    void init( const uint8_t sel){
         getNegPin().inana();
         getPosPin().inana();
 

@@ -30,7 +30,7 @@ public:
         return (int16_t)(k * 0x7FFF);
     }
 
-    void write(const uint32_t & data){
+    void write(const uint32_t data){
         bus_drv.write(data);
     }
 
@@ -40,7 +40,7 @@ public:
     TM8211(I2sDrv & _bus_drv):bus_drv(_bus_drv){
         setRail(real_t(3.3 * 0.25f), real_t(3.3 * 0.75f)); 
     }
-    void setChData(const uint8_t & index,const uint16_t & data){
+    void setChData(const uint8_t index,const uint16_t & data){
         if(index) right_data = data;
         else left_data = data;
 
@@ -55,7 +55,7 @@ public:
 
 
 
-    void setChVoltage(const uint8_t & index, const real_t & volt){
+    void setChVoltage(const uint8_t index, const real_t & volt){
         setChData(index, VoltageToData(volt));
     }
 

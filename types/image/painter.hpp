@@ -66,7 +66,7 @@ public:
         src_image -> putrect_unsafe(src_image->get_view(), color);
     }
     
-    void setFontScale(const uint8_t & scale){
+    void setFontScale(const uint8_t scale){
         chfont->setScale(scale);
         enfont->setScale(scale);
     }

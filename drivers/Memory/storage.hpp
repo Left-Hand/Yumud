@@ -55,7 +55,7 @@ public:
         }
     }
 
-    void store(const uint8_t & data, const Address loc){
+    void store(const uint8_t data, const Address loc){
         entry_store();
         storeBytes(data, loc);
         exit_store();

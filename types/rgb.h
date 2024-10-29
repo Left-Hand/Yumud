@@ -54,9 +54,9 @@ struct RGB332{
 
     __fast_inline constexpr RGB332(const int & _data): data((uint8_t)_data){;}
 
-    __fast_inline constexpr explicit RGB332(const uint8_t & _r, const uint8_t & _g, const uint8_t & _b): b(_b), g(_g), r(_r){;}
+    __fast_inline constexpr explicit RGB332(const uint8_t _r, const uint8_t _g, const uint8_t _b): b(_b), g(_g), r(_r){;}
 
-    __fast_inline constexpr explicit RGB332(const uint8_t & _data): data(_data){;}
+    __fast_inline constexpr explicit RGB332(const uint8_t _data): data(_data){;}
 
     __fast_inline constexpr explicit operator uint8_t() const {return data;}
 
@@ -151,7 +151,7 @@ struct Binary{
     __fast_inline constexpr Binary() : data(0){;}
     // __fast_inline constexpr Binary(Binary & other) : data(other.data){;}
     // __fast_inline constexpr Binary(Binary && other) : data(other.data){;}
-    // __fast_inline constexpr Binary(const uint8_t & _data): data(_data){;}
+    // __fast_inline constexpr Binary(const uint8_t _data): data(_data){;}
     __fast_inline constexpr Binary(const bool _data): data(_data ? 0xff : 0x00){;}
     //bool will be implicitly converted to uint8_t, add the bool constructer will be ambiguous 
     __fast_inline constexpr Binary(const RGB888 & rgb): data((rgb.r + rgb.g + rgb.b) > 128 * 3 ? 255 : 0){;}
@@ -178,12 +178,12 @@ struct Grayscale{
 #ifdef __cplusplus
     __fast_inline constexpr Grayscale() : data(0){;}
 
-    __fast_inline constexpr Grayscale(const uint8_t & _data): data(_data){;}
+    __fast_inline constexpr Grayscale(const uint8_t _data): data(_data){;}
 
     __fast_inline constexpr Grayscale(const real_t & _data): data(int(_data * 256)){;}
 
     __fast_inline constexpr Grayscale(const RGB565 & rgb);
-    __fast_inline constexpr Grayscale & operator = (const uint8_t & _data){data = _data; return *this;}
+    __fast_inline constexpr Grayscale & operator = (const uint8_t _data){data = _data; return *this;}
 
 
     __fast_inline constexpr operator uint8_t() const {return data;}

@@ -43,7 +43,7 @@ protected:
 		}
 		return ret;
 	}
-	bool writeByte(const uint8_t & byte){
+	bool writeByte(const uint8_t byte){
 
 		if(writeBit((byte & (0x01 << byte_prog)) ? BitType::One : BitType::Zero))
 			byte_prog ++;
@@ -104,7 +104,7 @@ public:
 		return (encode_prog == EncodeProg::Idle);
 	}
 
-	void emit(const uint8_t & _address, const uint8_t & _command){
+	void emit(const uint8_t _address, const uint8_t _command){
 		address = _address;
 		command = _command;
 

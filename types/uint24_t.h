@@ -17,7 +17,7 @@ struct uint24_t{
         data = other.data;
     }
 
-    __fast_inline constexpr explicit uint24_t(const uint32_t & other) {
+    __fast_inline constexpr explicit uint24_t(const uint32_t other) {
         data = other & 0xFFFFFF;
     }
 

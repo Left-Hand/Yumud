@@ -41,15 +41,15 @@ public:
 
         friend class Waveform;
 
-        WaveWindow(TJC & _instance, const uint8_t & _ctrl_id):Ctrl(_instance, _ctrl_id){;}
+        WaveWindow(TJC & _instance, const uint8_t _ctrl_id):Ctrl(_instance, _ctrl_id){;}
 
-        void addChData(const uint8_t & channel_id,const uint8_t data){
+        void addChData(const uint8_t channel_id,const uint8_t data){
             auto str = String("add " + String(ctrl_id) + ',' + String(channel_id) + ',' + String(data));
             instance.print(str);
             // DEBUG_PRINTLN(str);
         }
 
-        // Waveform getChannel(const uint8_t & channel_id){return Waveform(*this, channel_id);}
+        // Waveform getChannel(const uint8_t channel_id){return Waveform(*this, channel_id);}
     };
 
     class Waveform{

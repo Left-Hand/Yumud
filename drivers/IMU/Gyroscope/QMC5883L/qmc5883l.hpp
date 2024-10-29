@@ -120,7 +120,7 @@ protected:
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
 
-    void writeReg(const RegAddress & regAddress, const uint8_t & regData){
+    void writeReg(const RegAddress & regAddress, const uint8_t regData){
         bus_drv.writeReg((uint8_t)regAddress, regData);
     }
 

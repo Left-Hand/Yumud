@@ -16,7 +16,7 @@ protected:
 
     std::array<uint8_t, len> buf;
 
-    void write(const uint8_t & data){
+    void write(const uint8_t data){
         latch_pin.clr();
         for(uint8_t mask = 0x80; mask; mask >>= 1){
             data_pin.write(mask & data);
@@ -58,7 +58,7 @@ public:
         flush();
     }
 
-    HC595 & operator << (const uint8_t & data){write(data); return *this;}
+    HC595 & operator << (const uint8_t data){write(data); return *this;}
 };
 
 class HC595Single: public PortVirtualConcept<8>{

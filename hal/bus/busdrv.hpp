@@ -151,7 +151,7 @@ class ProtocolBusDrv : public BusDrv<BusType> {
 protected:
     using BusDrv<BusType>::index;
     using BusDrv<BusType>::bus;
-    ProtocolBusDrv(BusType & _bus, const uint8_t & _index, const uint32_t & _wait_time = 320):
+    ProtocolBusDrv(BusType & _bus, const uint8_t _index, const uint32_t _wait_time = 320):
         BusDrv<BusType>(_bus, _index, _wait_time){};
 
 public:

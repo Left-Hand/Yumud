@@ -83,7 +83,7 @@ public:
         right_fan.setForce(force);
     }
 
-    void enable(const bool & en = true){
+    void enable(const bool en = true){
         left_fan.enable(en);
         right_fan.enable(en);
     }
