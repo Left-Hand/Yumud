@@ -40,9 +40,12 @@ scexpr float xyz_table[256] = {
     93.868573f, 94.730654f, 95.597335f, 96.468625f, 97.344529f, 98.225055f, 99.110210f, 100.000000f
 };
 
-struct xyz_t{
-    float x,y,z;
+template<arithmetic T>
+struct XYZ_t{
+    T x,y,z;
 };
+
+using XYZ = XYZ_t<float>;
 
 
 __fast_inline constexpr static float fast_cbrtf(float x) {
@@ -70,18 +73,8 @@ __fast_inline constexpr static auto inv_xyz_gamma_to8(const float x) -> uint8_t{
     return __USAT8(fast_floorf((x > 0.0031308f) ? (((1.055f * 255) * powf(x, 0.416666f)) - (0.055f * 255)) : (x * 12.92f * 255)));
 }
 
-__fast_inline constexpr static xyz_t rgb888_to_xyz(const RGB888 & rgb){
+__fast_inline constexpr static XYZ rgb888_to_xyz(const RGB888 & rgb){
     auto [r,g,b] = rgb;
-
-    // int32_t r_q16 = xyz_table_q16[r];
-    // int32_t g_q16 = xyz_table_q16[g];
-    // int32_t b_q16 = xyz_table_q16[b];
-
-    // float x = Q16TOF((((r_q16 * Q16(0.4124f)) + (g_q16 * Q16(0.3576f)) + (b_q16 * Q16(0.1805f))) >> 16) * Q16(1.0f / 095.047f) >> 16);
-    // float y = Q16TOF((((r_q16 * Q16(0.2126f)) + (g_q16 * Q16(0.7152f)) + (b_q16 * Q16(0.0722f))) >> 16) * Q16(1.0f / 100.000f) >> 16);
-    // float z = Q16TOF((((r_q16 * Q16(0.0193f)) + (g_q16 * Q16(0.1192f)) + (b_q16 * Q16(0.9505f))) >> 16) * Q16(1.0f / 108.883f) >> 16);
-    
-    // return {xyz_gamma(x), xyz_gamma(y), xyz_gamma(z)};
     
     float r_lin = xyz_table[r];
     float g_lin = xyz_table[g];
@@ -95,7 +88,7 @@ __fast_inline constexpr static xyz_t rgb888_to_xyz(const RGB888 & rgb){
     return {xyz_gamma(x), xyz_gamma(y), xyz_gamma(z)};
 }
 
-__fast_inline constexpr static xyz_t lab888_to_xyz(const LAB888 & lab){
+__fast_inline constexpr static XYZ lab888_to_xyz(const LAB888 & lab){
     auto [l,a,b] = lab;
     float x = ((l + 16) * 0.008621f) + (a * 0.002f);
     float y = ((l + 16) * 0.008621f);
@@ -108,7 +101,7 @@ __fast_inline constexpr static xyz_t lab888_to_xyz(const LAB888 & lab){
     return {x,y,z};
 }
 
-__fast_inline constexpr static RGB888 xyz_to_rgb888(const xyz_t & xyz){
+__fast_inline constexpr static RGB888 xyz_to_rgb888(const XYZ & xyz){
     auto [x,y,z] = xyz;
     float r_lin = ((x * +3.2406f) + (y * -1.5372f) + (z * -0.4986f)) * (0.01f);
     float g_lin = ((x * -0.9689f) + (y * +1.8758f) + (z * +0.0415f)) * (0.01f);
@@ -124,7 +117,7 @@ __fast_inline constexpr static RGB888 xyz_to_rgb888(const xyz_t & xyz){
 }
 
 
-__fast_inline constexpr static LAB888 xyz_to_lab888(const xyz_t & xyz){
+__fast_inline constexpr static LAB888 xyz_to_lab888(const XYZ & xyz){
     auto [xf, yf, zf] = xyz;
 
     return {

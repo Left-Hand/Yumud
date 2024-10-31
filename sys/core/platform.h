@@ -1,6 +1,4 @@
-#ifndef __PLATFORM_H__
-
-#define __PLATFORM_H__
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
@@ -105,7 +103,5 @@
     #ifdef __cplusplus
     }
     #endif
-
-#endif
 
 #endif
