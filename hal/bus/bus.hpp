@@ -1,6 +1,4 @@
-
-#ifndef __BUS_HPP__
-#define __BUS_HPP__
+#pragma once
 
 #include "sys/core/system.hpp"
 #include "sys/stream/stream.hpp"
@@ -29,10 +27,6 @@ public:
         NO_CS_PIN
     };
 
-    enum Mode:uint8_t{
-        RxOnly = 1, TxOnly, TxRx = TxOnly | RxOnly
-    };
-
     struct Error{
         ErrorType errorType = ErrorType::OK;
 
@@ -43,37 +37,38 @@ public:
         explicit operator ErrorType() {return errorType;}
     };
 
+    using Mode = CommMode;
 
 
 protected:
-    Mode mode = TxRx;
+    Mode mode = Mode::TxRx;
 
 private:
     class Lock{
-        protected:
-            uint16_t req:8 = 0;
-            uint16_t on_int:1 = false;
-            uint16_t locked:1 = false;
-        public:
-            void lock(const uint8_t index){
-                Sys::Exception::disableInterrupt();
-                on_int = Sys::Exception::isIntrruptActing();
-                req = index >> 1;
-                locked = true;
-                Sys::Exception::enableInterrupt();
-            }
+    protected:
+        uint16_t req:8 = 0;
+        uint16_t oninterrupt_:1 = false;
+        uint16_t locked_:1 = false;
+    public:
+        void lock(const uint8_t index){
+            Sys::Exception::disableInterrupt();
+            oninterrupt_ = Sys::Exception::isIntrruptActing();
+            req = index >> 1;
+            locked_ = true;
+            Sys::Exception::enableInterrupt();
+        }
 
-            void unlock(){
-                locked = false;
-            }
+        void unlock(){
+            locked_ = false;
+        }
 
-            bool owned_by(const uint8_t index = 0) const {
-                return (req == index >> 1) and (Sys::Exception::isIntrruptActing() == on_int);
-            }
+        bool owned_by(const uint8_t index = 0) const {
+            return (req == index >> 1) and (Sys::Exception::isIntrruptActing() == oninterrupt_);
+        }
 
-            bool is_idle() const {
-                return locked == false;
-            }
+        bool locked() const {
+            return locked_;
+        }
     };
 
     Lock __m_lock__;
@@ -92,9 +87,9 @@ private:
         locker->unlock();
     }
 
-    bool is_idle(){
+    bool locked(){
         if(locker == nullptr) CREATE_FAULT;
-        return locker->is_idle();
+        return locker->locked();
     }
 
     bool owned_by(const uint8_t index = 0){
@@ -111,7 +106,7 @@ public:
     virtual void setBaudRate(const uint32_t baudRate) = 0;
 
     Error begin(const uint8_t index){
-        if(is_idle()){
+        if(locked()){
             lock(index);
             return lead(index);
         }
@@ -131,8 +126,8 @@ public:
         unlock();
     }
 
-    bool isOccupied(){
-        return locker->is_idle() == false;
+    bool occupied(){
+        return locker->locked();
     }
 };
 
@@ -180,6 +175,3 @@ public:
     virtual bool write(const Packet & msg) = 0;
     virtual const Packet & read() = 0;
 };
-
-
-#endif // !__PRINTABLE_HPP__

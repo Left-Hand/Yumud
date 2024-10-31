@@ -82,7 +82,7 @@ public:
         }
 
         ws = false;
-        return Bus::ErrorType::OK;
+        return ErrorType::OK;
     }
 
     Error read(uint32_t & data, bool toAck = true) {

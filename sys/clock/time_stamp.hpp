@@ -1,6 +1,4 @@
-#ifndef __TIME_STAMP_HPP__
-
-#define __TIME_STAMP_HPP__
+#pragma once
 
 #include "clock.h"
 
@@ -16,6 +14,3 @@ public:
         return (time_current + ((time_current ^ begin) & 0x8000? begin : - begin));
     }
 };
-
-
-#endif
