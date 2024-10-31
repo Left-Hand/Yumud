@@ -49,7 +49,7 @@ protected:
 
     __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
         setpos_unsafe(pos);
-        interface.writeData(color.data);
+        interface.writeData(uint16_t(color));
     }
 
     void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override;
