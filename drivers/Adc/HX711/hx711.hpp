@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal/gpio/gpio.hpp"
+#include "sys/math/real.hpp"
 
 namespace yumud::drivers{
 

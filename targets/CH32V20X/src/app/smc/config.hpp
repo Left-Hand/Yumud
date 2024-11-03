@@ -15,7 +15,7 @@ namespace SMC{
 
 
 
-#pragma pack(push, 1)
+
 
 
 struct GlobalConfig{
@@ -93,6 +93,6 @@ union{};
 
 };
 
-#pragma pack(pop)
+
 
 }

@@ -5,12 +5,6 @@
 #include "../drivers/device_defs.h"
 #include "../drivers/IMU/IMU.hpp"
 
-#pragma pack(push, 1)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
-
 // #define BMI160_DEBUG
 
 #ifdef BMI160_DEBUG
@@ -506,5 +500,3 @@ public:
 };
 
 }
-
-#pragma pack(pop)

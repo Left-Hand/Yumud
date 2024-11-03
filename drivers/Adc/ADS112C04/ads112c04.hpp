@@ -9,12 +9,6 @@
 #define ADS112C04_DEBUG(...)
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
-
 namespace yumud::drivers{
 class ADS112C04{
 public:

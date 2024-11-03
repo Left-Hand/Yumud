@@ -30,7 +30,7 @@ protected:
     I2cDrv & bus_drv;
 
     struct ConfigReg:public Reg16{
-        REG16_BEGIN
+        
         uint8_t compQue : 2;
         uint8_t compLat : 1;
         uint8_t compPol : 1;
@@ -40,11 +40,11 @@ protected:
         uint8_t pga:    3;
         uint8_t mux:    3;
         uint8_t os:     1;
-        REG16_END
+        
     };
 
     struct Config1Reg:public Reg16{
-        REG16_BEGIN
+        
         uint8_t __resv1__    :3;
         uint8_t extRef      :1;
         uint8_t busFlex     :1;
@@ -53,38 +53,38 @@ protected:
         uint8_t drSel       :1;
         uint8_t pd          :1;
         uint8_t __resv3__   :7;
-        REG16_END
+        
     };
 
     struct DeviceIdReg:public Reg16{
-        REG16_BEGIN
+        
         uint8_t __resv1__   :5;
         uint8_t ver         :3;
         uint8_t id          :5;
         uint8_t __resv2__   :3;
-        REG16_END
+        
     };
 
     struct TrimReg:public Reg16{
-        REG16_BEGIN
+        
         uint16_t gn         :11;
         uint8_t __resv__    :5;
-        REG16_END
+        
     };
 
     struct ConvReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct LowThrReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct HighThrReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct{
@@ -109,10 +109,6 @@ protected:
 
     void readReg(const RegAddress regAddress, Reg16 & regData){
         bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
-    }
-
-    void requestRegData(const RegAddress regAddress, uint8_t * data_ptr, const size_t len){
-        bus_drv.readPool((uint8_t)regAddress, data_ptr, 2, len);
     }
 
 public:

@@ -64,11 +64,11 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
 }
 
 #ifdef HAVE_SPI1
-extern yumud::SpiHw spi1;
+static inline yumud::SpiHw spi1{SPI1};
 #endif
 
 #ifdef HAVE_SPI2
-extern yumud::SpiHw spi2;
+static inline yumud::SpiHw spi2{SPI2};
 #endif
 
 extern"C"{

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/device_defs.h"
-
+#include "drivers/IMU/IMU.hpp"
 
 namespace yumud::drivers{
 
@@ -33,36 +33,36 @@ protected:
 
     real_t lsb;
 
-    struct ConfigAReg{
-        REG8_BEGIN
+    struct ConfigAReg:public Reg8{
+        
         uint8_t measureMode:3;
         uint8_t dataRate:2;
         uint8_t sampleNumber:2;
         uint8_t __resv__:1;
-        REG8_END
+        
     };
 
-    struct ConfigBReg{
-        REG8_BEGIN
+    struct ConfigBReg:public Reg8{
+        
         uint8_t __resv__:5;
         uint8_t gain:3;
-        REG8_END
+        
     };
 
-    struct ModeReg{
-        REG8_BEGIN
+    struct ModeReg:public Reg8{
+        
         uint8_t mode:2;
         uint8_t __resv__:5;
         uint8_t hs:1;
-        REG8_END
+        
     };
 
-    struct StatusReg{
-        REG8_BEGIN
+    struct StatusReg:public Reg8{
+        
         uint8_t ready:1;
         uint8_t lock:1;
         uint8_t __resv__:6;
-        REG8_END
+        
     };
 
     enum class RegAddress:uint8_t{
@@ -159,33 +159,33 @@ public:
     }
     void enableHighSpeed(const bool en = true){
         modeReg.hs = true;
-        writeReg(RegAddress::Mode, modeReg.data);
+        writeReg(RegAddress::Mode, modeReg);
     }
 
     void setMeasurementMode(const MeasurementMode mode){
         configAReg.measureMode = (uint8_t)mode;
-        writeReg(RegAddress::ConfigA, configAReg.data);
+        writeReg(RegAddress::ConfigA, configAReg);
     }
 
     void setDataRate(const DataRate rate){
         configAReg.dataRate = (uint8_t)rate;
-        writeReg(RegAddress::ConfigA, configBReg.data);
+        writeReg(RegAddress::ConfigA, configBReg);
     }
 
     void setSampleNumber(const SampleNumber number){
         configAReg.sampleNumber = (uint8_t)number;
-        writeReg(RegAddress::ConfigA, configAReg.data);
+        writeReg(RegAddress::ConfigA, configAReg);
     }
 
     void setGain(const Gain gain){
         configBReg.gain = (uint8_t)gain;
-        writeReg(RegAddress::ConfigB, configBReg.data);
+        writeReg(RegAddress::ConfigB, configBReg);
         setLsb(gain);
     }
 
     void setMode(const Mode mode){
         modeReg.mode = (uint8_t)mode;
-        writeReg(RegAddress::Mode, modeReg.data);
+        writeReg(RegAddress::Mode, modeReg);
     }
 
     std::tuple<real_t, real_t, real_t> getMagnet() override{
@@ -208,13 +208,13 @@ public:
 
 
     bool isIdle(){
-        readReg(RegAddress::Status, statusReg.data);
+        readReg(RegAddress::Status, statusReg);
         return statusReg.ready;
     }
 
     void enableContMode(const bool en = true){
         modeReg.mode = (uint8_t)(en ? Mode::Continuous : Mode::Single);
-        writeReg(RegAddress::Mode, modeReg.data);
+        writeReg(RegAddress::Mode, modeReg);
     }
 };
 

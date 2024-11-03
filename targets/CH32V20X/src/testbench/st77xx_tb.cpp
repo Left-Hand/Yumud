@@ -16,7 +16,7 @@ using namespace yumud::nvcv2;
 
 #ifdef CH32V30X
 
-#pragma pack(push, 1)
+
 
 
 enum class TransType:uint8_t{
@@ -40,7 +40,7 @@ struct ImagePieceUnit:public PieceHeader{
     uint8_t size_y;
     uint16_t data_index;
 };
-#pragma pack(pop)
+
 
 constexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p_prev = 5381) {
 	uint32_t hash = p_prev;

@@ -5,12 +5,8 @@ using namespace yumud;
 
 
 
-#define REG16(x) (*(uint16_t *)(&x))
-#define REG8(x) (*(uint8_t *)(&x))
-
-#define WRITE_REG16(reg) writeReg(reg.address, REG16(reg));
-#define READ_REG16(reg) readReg(reg.address, REG16(reg));
-
+#define WRITE_REG16(reg) writeReg(reg.address, reg);
+#define READ_REG16(reg) readReg(reg.address, reg);
 
 
 // #define LT8920_REG_DEBUG(...) LT8920_DEBUG(__VA_ARGS__)
@@ -23,8 +19,6 @@ using namespace yumud;
 #define PKT_FLAG flag_reg.pktFlag
 #define FIFO_FLAG flag_reg.fifoFlag
 
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
 bool LT8920::verify(){
     uint16_t reg;
     readReg(30, reg);
@@ -32,18 +26,18 @@ bool LT8920::verify(){
 }
 
 uint16_t LT8920::isRfSynthLocked() {
-    readReg(rf_synth_lock_reg.address, REG16(rf_synth_lock_reg));
+    readReg(rf_synth_lock_reg.address, (rf_synth_lock_reg));
     return rf_synth_lock_reg.synthLocked;
 }
 
 uint8_t LT8920::getRssi() {
-    readReg(raw_rssi_reg.address, REG16(raw_rssi_reg));
+    readReg(raw_rssi_reg.address, (raw_rssi_reg));
     return raw_rssi_reg.rawRssi;
 }
 
 void LT8920::setRfChannel(const uint8_t ch) {
     rf_config_reg.rfChannelNo = ch;
-    writeReg(rf_config_reg.address, REG16(rf_config_reg));
+    writeReg(rf_config_reg.address, (rf_config_reg));
 }
 
 void LT8920::setRfFreqMHz(const uint freq) {
@@ -73,38 +67,38 @@ void LT8920::setRole(const Role _role) {
 
 void LT8920::setPaCurrent(const uint8_t current) {
     pa_config_reg.paCurrent = current;
-    writeReg(pa_config_reg.address, REG16(pa_config_reg));
+    writeReg(pa_config_reg.address, (pa_config_reg));
 }
 
 void LT8920::setPaGain(const uint8_t gain) {
     pa_config_reg.paGain = gain;
-    writeReg(pa_config_reg.address, REG16(pa_config_reg));
+    writeReg(pa_config_reg.address, (pa_config_reg));
 }
 
 void LT8920::enableRssi(const uint16_t open) {
     rssi_pdn_reg.rssiPdn = open;
-    writeReg(rssi_pdn_reg.address, REG16(rssi_pdn_reg));
+    writeReg(rssi_pdn_reg.address, (rssi_pdn_reg));
 }
 
 void LT8920::enableAutoCali(const uint16_t open) {
     auto_cali_reg.autoCali = open;
-    writeReg(auto_cali_reg.address, REG16(auto_cali_reg));
+    writeReg(auto_cali_reg.address, (auto_cali_reg));
 }
 
 void LT8920::setBrclkSel(const BrclkSel brclkSel) {
     config1_reg.brclkSel = (uint16_t)brclkSel;
-    writeReg(config1_reg.address, REG16(config1_reg));
+    writeReg(config1_reg.address, (config1_reg));
 }
 
 void LT8920::clearFifoWritePtr() {
     fifo_ptr_reg.clearWritePtr = 1;
-    writeReg(fifo_ptr_reg.address, REG16(fifo_ptr_reg));
+    writeReg(fifo_ptr_reg.address, (fifo_ptr_reg));
     fifo_ptr_reg.clearWritePtr = 0;
 }
 
 void LT8920::clearFifoReadPtr() {
     fifo_ptr_reg.clearReadPtr = 1;
-    writeReg(fifo_ptr_reg.address, REG16(fifo_ptr_reg));
+    writeReg(fifo_ptr_reg.address, (fifo_ptr_reg));
     fifo_ptr_reg.clearReadPtr = 0;
 }
 
@@ -118,22 +112,22 @@ void LT8920::clearFifoPtr() {
 
 void LT8920::setSyncWordBitsgth(const SyncWordBits len) {
     config1_reg.syncWordLen = (uint16_t)len;
-    writeReg(config1_reg.address, REG16(config1_reg));
+    writeReg(config1_reg.address, (config1_reg));
 }
 
 void LT8920::setRetransTime(const uint8_t times) {
     config2_reg.retransTimes = times - 1;
-    writeReg(config2_reg.address, REG16(config2_reg));
+    writeReg(config2_reg.address, (config2_reg));
 }
 
 void LT8920::enableAutoAck(const bool en) {
     config3_reg.autoAck = en;
-    writeReg(config3_reg.address, REG16(config3_reg));
+    writeReg(config3_reg.address, (config3_reg));
 }
 
 void LT8920::enableCrc(const bool en){
     config3_reg.crcEn = en;
-    writeReg(config3_reg.address, REG16(config3_reg));
+    writeReg(config3_reg.address, (config3_reg));
 }
 
 void LT8920::setErrBitsTolerance(uint8_t errbits){
@@ -274,7 +268,7 @@ void LT8920::init(){
     setRole(Role::IDLE);
     setRfChannel(0);
 
-    REG16(fifo_ptr_reg) = 0;
+    fifo_ptr_reg = 0;
 
     // delay(5);
     // setBrclkSel(BrclkSel::Mhz12);
@@ -335,7 +329,7 @@ void LT8920::setSyncWord(const uint64_t syncword){
     memcpy(words, &syncword, 8);
     for(uint8_t i = 0; i < 4; i++){
         sync_word_regs[i].data = words[i];
-        writeReg(sync_word_regs[i].head_address + i, REG16(sync_word_regs[i]));
+        writeReg(sync_word_regs[i].head_address + i, (sync_word_regs[i]));
     }
 }
 
@@ -343,10 +337,10 @@ void LT8920::setSyncWord(const uint64_t syncword){
 void LT8920::writeReg(const RegAddress address, const uint16_t reg){
     LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
-        spi_drv->transfer(REG8(flag_reg), (uint8_t)address, false);
+        spi_drv->transfer(reinterpret_cast<uint8_t &>(flag_reg), (uint8_t)address, false);
         delayT3();
 
-        spi_drv->write(REG16(reg));
+        spi_drv->write((reg));
     }else if(i2c_drv){
         i2c_drv->writeReg((uint8_t)address, reg);
     }
@@ -355,7 +349,7 @@ void LT8920::writeReg(const RegAddress address, const uint16_t reg){
 void LT8920::readReg(const RegAddress address, uint16_t & reg){
     LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
-        spi_drv->transfer(REG8(flag_reg), uint8_t(address | 0x80), false);
+        spi_drv->transfer(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), false);
         spi_drv->read(reg);
     }else if(i2c_drv){
         i2c_drv->readReg((uint8_t)address, reg);
@@ -385,10 +379,10 @@ void LT8920::readFifo(uint8_t * data, const size_t len){
 
 void LT8920::updateFifoStatus(){
     if(spi_drv){
-        // spi_drv->transfer(REG8(flag_reg), flag_reg.address);
+        // spi_drv->transfer((flag_reg), flag_reg.address);
         READ_REG16(flag_reg);
     } else if(i2c_drv){
-        i2c_drv->readReg(flag_reg.address, REG8(flag_reg));
+        i2c_drv->readReg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
     }
 }
 
@@ -409,7 +403,3 @@ bool LT8920::getPktStatus(){
         return flag_reg.pktFlag;
     }
 }
-
-
-
-#pragma GCC diagnostic pop

@@ -3,7 +3,7 @@
 #include "stdint.h"
 #include "sys/core/platform.h"
 
-#pragma pack(push, 1)
+
 struct uint24_t{
     uint32_t data : 24;
 
@@ -34,4 +34,3 @@ struct uint24_t{
 
 typedef struct uint24_t uint24_t;
 
-#pragma pack(pop)

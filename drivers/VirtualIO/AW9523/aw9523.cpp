@@ -5,7 +5,7 @@ using namespace yumud::drivers;
 
 void AW9523::setLedCurrentLimit(const CurrentLimit limit){
     ctl.isel = (uint8_t)limit;
-    writeReg(RegAddress::ctl, ctl.data);
+    writeReg(RegAddress::ctl, ctl);
 }
 
 void AW9523::setLedCurrent(const Pin pin, const uint8_t current){

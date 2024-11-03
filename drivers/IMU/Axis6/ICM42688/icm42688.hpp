@@ -8,11 +8,6 @@
 #include "drivers/IMU/IMU.hpp"
 #include "types/uint24_t.h"
 
-#pragma pack(push, 1)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
 // #define ICM42688_DEBUG
 
@@ -74,6 +69,30 @@ protected:
         ICM42688_DEBUG("Rspi", addr, data);
     }
 
+
+    void writeReg(const uint8_t addr, const uint16_t data){
+        if(i2c_drv) i2c_drv->writeReg(addr, data);
+        if(spi_drv){
+            SpiDrv & drv = spi_drv.value();
+            drv.write(uint8_t(addr), false);
+            drv.write(data);
+
+            ICM42688_DEBUG("Wspi", addr, data);
+
+        }
+    }
+
+    void readReg(const RegAddress addr, uint16_t & data){
+        if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data);
+        if(spi_drv){
+            SpiDrv & drv = spi_drv.value();
+            drv.write(uint8_t(uint8_t(addr) | 0x80), false);
+            drv.read(data);
+        }
+
+        ICM42688_DEBUG("Rspi", addr, data);
+    }
+
     void requestData(const RegAddress addr, void * datas, const size_t len){
         if(i2c_drv) i2c_drv->readPool(uint8_t(addr), (uint8_t *)datas, len);
         if(spi_drv){
@@ -99,6 +118,7 @@ public:
     ICM42688(Spi & bus, const uint8_t index):spi_drv(SpiDrv(bus, index)){;}
 
     void init();
+    
     void update();
 
     bool verify();
@@ -110,5 +130,3 @@ public:
 };
 
 }
-
-#pragma pack(pop)

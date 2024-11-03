@@ -1,8 +1,6 @@
 #pragma once
 
-#include "../../hal/bus/spi/spidrv.hpp"
-#include "sys/math/real.hpp"
-// #include "types/uint128_t.h"
+#include "drivers/device_defs.h"
 
 #ifdef Si24R1_DEBUG
 #define Si24R1_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
@@ -10,11 +8,6 @@
 #define Si24R1_DEBUG(...)
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
 
 namespace yumud::drivers{
@@ -44,9 +37,9 @@ protected:
 
     using RegAddress = uint8_t;
 
-    #pragma pack(push, 1)
+    
 
-    struct TopConfigReg{
+    struct TopConfigReg:public Reg8{
         scexpr RegAddress address = 0x00;
         bool prim_rx:1;
         bool power_up:1;
@@ -58,7 +51,7 @@ protected:
         uint8_t __resv__:1;
     };
 
-    struct AutoAcknowledgeReg{
+    struct AutoAcknowledgeReg:public Reg8{
         scexpr RegAddress address = 0x01;
         bool p0:1;
         bool p1:1;
@@ -69,7 +62,7 @@ protected:
         uint8_t __resv__ :2;
     };
     
-    struct EnableRxAddressReg{
+    struct EnableRxAddressReg:public Reg8{
         scexpr RegAddress address = 0x02;
         bool p0:1;
         bool p1:1;
@@ -80,13 +73,13 @@ protected:
         uint8_t __resv__ :2;
     };
 
-    struct AddressWidthReg{
+    struct AddressWidthReg:public Reg8{
         scexpr RegAddress address = 0x03;
         uint8_t pipex_address_width:2;
         uint8_t __resv__:6;
     };
 
-    struct AutoRetransmissionReg{
+    struct AutoRetransmissionReg:public Reg8{
         scexpr RegAddress address = 0x04;
         // 0000: disabled
         // 0001: up to 1 re-transmit on fail of AA
@@ -102,14 +95,14 @@ protected:
         uint8_t retrans_delay:4;
     };
 
-    struct RFChannelReg{
+    struct RFChannelReg:public Reg8{
         scexpr RegAddress address = 0x05;
 
         uint8_t rf_channel:7;
         uint8_t __resv__:1;
     };
 
-    struct RFConfigReg{
+    struct RFConfigReg:public Reg8{
         scexpr RegAddress address = 0x06;
         uint8_t rf_power:3;
         bool rf_datarate_highbit:1;
@@ -119,7 +112,7 @@ protected:
         bool cont_wave:1;
     };
 
-    struct StatusReg{
+    struct StatusReg:public Reg8{
         scexpr RegAddress address = 0x07;
         bool tx_full:1;
         uint8_t rx_pipe_number:2;
@@ -129,34 +122,34 @@ protected:
         uint8_t __resv__ :1;
     };
 
-    struct TransmissionObservationReg{
+    struct TransmissionObservationReg:public Reg8{
         scexpr RegAddress address = 0x08;
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
     };
 
-    struct RssiReg{
+    struct RssiReg:public Reg8{
         scexpr RegAddress address = 0x09;
         bool rssi_less_than_60dbm:1;
         uint8_t __resv__:7;
     };
 
-    struct RxAddrReg{
+    struct RxAddrReg:public Reg8{
         scexpr RegAddress head_address = 0x0A;
         uint8_t data;
     };
 
-    struct TxAddrReg{
+    struct TxAddrReg:public Reg8{
         scexpr RegAddress address = 0x10;
         uint64_t data;
     };
     
-    struct RxPowerReg{
+    struct RxPowerReg:public Reg8{
         scexpr RegAddress head_address = 0x11;
         uint8_t data;
     };
 
-    struct FifoStatusReg{
+    struct FifoStatusReg:public Reg8{
         scexpr RegAddress address = 0x17;
         bool rx_empty:1;
         bool rx_full:1;
@@ -167,7 +160,7 @@ protected:
         uint8_t __resv2__:1;
     };
 
-    struct DynamicPayloadLengthReg{
+    struct DynamicPayloadLengthReg:public Reg8{
         scexpr RegAddress address = 0x1c;
         bool dpl_p0:1;
         bool dpl_p1:1;
@@ -178,15 +171,13 @@ protected:
         uint8_t __resv__:2;
     };
 
-    struct FeatureReg {
+    struct FeatureReg:public Reg8 {
         scexpr RegAddress address = 0x1d;
         bool en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         bool en_ack_pay : 1;          // Set 1 enables payload on ACK
         bool en_dpl : 1;              // Set 1 enables dynamic payload length
         uint8_t __resv__:5; 
     };
-
-    #pragma pack(pop)
 
     struct{
         TopConfigReg top_config_reg;
@@ -211,21 +202,21 @@ protected:
     void writeReg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
-        spi_drv.transfer(REG8(status_reg), REG8(addr), false);
-        spi_drv.write(&REG8(value), sizeof(value));
+        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), (addr), false);
+        spi_drv.write(&(value), sizeof(value));
     }
 
     void readReg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
-        spi_drv.transfer(REG8(status_reg), REG8(addr), false);
-        spi_drv.read(&REG8(value), sizeof(value));
+        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), false);
+        spi_drv.read(&(value), sizeof(value));
     }
 
     void readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(REG8(status_reg), uint8_t(Command::R_RX_PAYLOAD), false);
+            spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PAYLOAD), false);
             spi_drv.read(buffer, size);
         }
     }
@@ -233,7 +224,7 @@ protected:
     void writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(REG8(status_reg), uint8_t(Command::W_TX_PAYLOAD), false);
+            spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD), false);
             spi_drv.write(buffer, size);
         }
     }
@@ -241,21 +232,21 @@ protected:
     void writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(REG8(status_reg), uint8_t(Command::W_TX_PAYLOAD_NO_ACK), false);
+            spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD_NO_ACK), false);
             spi_drv.write(buffer, size);
         }
     }
 
     void clearTxFifo(){
-        spi_drv.transfer(REG8(status_reg), uint8_t(Command::FLUSH_TX), false);
+        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_TX), false);
     }
 
     void clearRxFifo(){
-        spi_drv.transfer(REG8(status_reg), uint8_t(Command::FLUSH_RX), false);
+        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_RX), false);
     }
 
     void updateStatus(){
-        spi_drv.transfer(REG8(status_reg), uint8_t(Command::NOP), false);
+        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP), false);
     }
 protected:
     SpiDrv spi_drv;
@@ -265,8 +256,8 @@ public:
 
     size_t available(){
         uint8_t size;
-        spi_drv.transfer(REG8(status_reg), uint8_t(Command::R_RX_PL_WID), false);
-        spi_drv.read(REG8(size));
+        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), false);
+        spi_drv.read((size));
         return size;
     }
 };

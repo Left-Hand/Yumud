@@ -9,11 +9,6 @@
 #define PAJ7620_DEBUG(...)
 #endif
 
-#pragma pack(push, 1)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
 class PAJ7620{
 
@@ -39,5 +34,5 @@ class PAJ7620{
 
 };
 
-#pragma pack(pop)
+
 #endif /* GESTSENS_H_ */

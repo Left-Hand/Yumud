@@ -33,39 +33,37 @@ protected:
     I2cDrv & bus_drv;
 
     struct ProgramTimesReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t times :2;
         uint8_t __resv__ :6;
-        REG8_END
+        
     };
 
     struct StartAngleReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct EndAngleReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct AmountAngleReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct RawAngleReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
     };
 
     struct AngleReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
     };
 
     struct ConfigReg:public Reg16{
-        REG16_BEGIN
+        
         uint8_t powerMode :2;
         uint8_t hysteresis:2;
         uint8_t outputStage:2;
@@ -74,32 +72,29 @@ protected:
         uint8_t fastFilter:3;
         uint8_t watchDog:1;
         uint8_t __resv__ :2;
-        REG16_END
+        
     };
 
     struct StatusReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t __resv1__ :3;
         uint8_t magHigh:1;
         uint8_t magLow:1;
         uint8_t magProper:1;
         uint8_t __resv2__ :2;
-        REG8_END
+        
     };
 
     struct AutoGainReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct MagnitudeReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
     };
 
     struct BurnReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct{
@@ -157,46 +152,41 @@ protected:
     void readReg(const RegAddress regAddress, uint8_t & regData){
         bus_drv.readReg((uint8_t)regAddress, regData);
     }
-
-    void requestRegData(const RegAddress regAddress, uint8_t * data_ptr, const size_t len){
-        bus_drv.readPool((uint8_t)regAddress, data_ptr, 2, len, false);
-    }
-
 public:
     AS5600(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
 
     void setPowerMode(const PowerMode & _power_mode){
         configReg.powerMode = (uint8_t)_power_mode;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, configReg);
     }
 
     void setFastFilter(const FastFilter & _fast_filter){
         configReg.fastFilter = (uint8_t)_fast_filter;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, configReg);
     }
 
     void setSlowFilter(const SlowFilter & _slow_filter){
         configReg.slowFilter = (uint8_t)_slow_filter;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, configReg);
     }
 
     void setPwmFrequency(const PwmFrequency & _pwm_frequency){
         configReg.pwmFrequency = (uint8_t)_pwm_frequency;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, configReg);
     }
 
     void setOuputStage(const OutputStage & _output_stage){
         configReg.outputStage = (uint8_t)_output_stage;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, configReg);
     }
 
     void setHysteresis(const Hysteresis & _hysteresis){
         configReg.hysteresis = (uint8_t)_hysteresis;
-        writeReg(RegAddress::Config, configReg.data);
+        writeReg(RegAddress::Config, configReg);
     }
 
     int8_t getMagStatus(){
-        readReg(RegAddress::Status, statusReg.data);
+        readReg(RegAddress::Status, statusReg);
         if(statusReg.magProper) return 0;
         else if(statusReg.magHigh) return 1;
         else return -1;
@@ -239,7 +229,7 @@ public:
     }
 
     uint8_t getProgramTimes(){
-        readReg(RegAddress::ProgramTimes, programTimesReg.data);
+        readReg(RegAddress::ProgramTimes, programTimesReg);
         return programTimesReg.times;
     }
 

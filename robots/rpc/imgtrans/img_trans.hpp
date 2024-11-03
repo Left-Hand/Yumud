@@ -3,7 +3,7 @@
 #include "src/testbench/tb.h"
 #include "types/image/image.hpp"
 
-#pragma pack(push, 1)
+
 
 namespace yumud{
 struct TransType{
@@ -37,7 +37,7 @@ struct ImagePieceUnit:public PieceHeader{
     uint8_t size_y;
     uint16_t data_index;
 };
-#pragma pack(pop)
+
 
 
 

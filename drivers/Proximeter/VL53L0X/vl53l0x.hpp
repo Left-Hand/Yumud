@@ -32,15 +32,13 @@ private:
     bool highPrec = false;
     bool continuous = false;
 
-    #pragma pack(push, 1)
-
     struct Result{
         uint16_t ambientCount; /**< Environment quantity */
         uint16_t signalCount;  /**< A semaphore */
         uint16_t distance;
     };
 
-    #pragma pack(pop)
+    
 
     Result result, last_result;
 	void writeByteData(const uint8_t Reg, const uint8_t byte){
@@ -57,6 +55,7 @@ private:
     }
 
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
+        // sizeof(Result);
         bus_drv.readPool(reg, data, len);
     }
 };

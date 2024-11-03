@@ -243,10 +243,3 @@ void SpiHw::setBitOrder(const Endian endian){
     instance->CTLR1 &= ~SPI_FirstBit_LSB;
     instance->CTLR1 |= endian ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }
-#ifdef HAVE_SPI1
-SpiHw spi1{SPI1};
-#endif
-
-#ifdef HAVE_SPI2
-SpiHw spi2{SPI2};
-#endif

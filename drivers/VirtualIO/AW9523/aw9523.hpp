@@ -20,13 +20,11 @@ protected:
     uint16_t buf;
     scexpr uint8_t valid_chipid = 0x23;
 
-    struct CtlReg{
-        REG8_BEGIN
+    struct CtlReg:Reg8{
         uint8_t isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;
         uint8_t __resv2__:3;
-        REG8_END
     };
 
     enum class RegAddress:uint8_t{
@@ -177,7 +175,7 @@ public:
 
         if(index < 8){
             ctl.p0mod = PinModeUtils::isPP(mode);
-            writeReg(RegAddress::ctl, ctl.data);
+            writeReg(RegAddress::ctl, ctl);
         }
     }
 

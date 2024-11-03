@@ -6,11 +6,6 @@
 #include "drivers/IMU/IMU.hpp"
 
 
-#pragma pack(push, 1)
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
 // #define BMM150_DEBUG
 
@@ -97,7 +92,5 @@ public:
     std::tuple<real_t, real_t, real_t> getMagnet() override;
 };
 
-
-#pragma pack(pop)
 
 }
