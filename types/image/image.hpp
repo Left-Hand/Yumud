@@ -1,9 +1,9 @@
-#ifndef __IMAGE_HPP__
-
-#define __IMAGE_HPP__
+#pragma once
 
 #include "image_basics.hpp"
 
+
+namespace yumud{
 
 template<typename ColorType>
 class Image:public ImageWithData<ColorType, ColorType>{
@@ -141,8 +141,6 @@ public:
 };
 
 
-#include "image.tpp"
-
 
 template<typename ColorType>
 __inline auto make_image(const ImageBasics::Vector2i & _size){
@@ -166,4 +164,8 @@ __inline auto make_gray_mirror(const Image<ColorType> & src){return make_mirror<
 template<typename ColorType>
 __inline auto make_bina_mirror(const Image<ColorType> & src){return make_mirror<Binary>(src);};
 
-#endif
+
+}
+
+#include "image.tpp"
+

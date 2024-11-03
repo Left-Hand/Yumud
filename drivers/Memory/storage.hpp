@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../sys/core/platform.h"
-#include "../types/range/range_t.hpp"
-#include "../sys/debug/debug_inc.h"
-// #include "memory.hpp"
+#include "types/range/range_t.hpp"
+#include "sys/debug/debug_inc.h"
+
+namespace yumud{
 
 class Memory;
 class Storage{
@@ -91,3 +91,4 @@ public:
     StoragePaged(const Address _capacity, const AddressView  & _view, const Address _pagesize):Storage(_capacity, _view), m_pagesize(_pagesize){;}
 };
 
+}

@@ -3,6 +3,7 @@
 #include "stream_base.hpp"
 #include "sys/string/string.hpp"
 
+namespace yumud{
 class InputStream:virtual public BasicStream{
 public:
     virtual void read(char & data) = 0;
@@ -18,3 +19,4 @@ public:
     virtual size_t available() const = 0;
 };
 
+};

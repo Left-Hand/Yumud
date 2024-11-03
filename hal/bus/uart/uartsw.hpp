@@ -2,6 +2,7 @@
 
 #include "uart.hpp"
 
+namespace yumud{
 class UartSw : public Uart{
 protected:
     Gpio & m_tx_gpio;
@@ -37,3 +38,4 @@ public:
 
     void setRxMethod(const CommMethod _rxMethod) override;
 };
+}

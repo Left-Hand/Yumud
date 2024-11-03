@@ -3,7 +3,7 @@
 
 #include "sys/core/platform.h"
 
-#include "dsp/constexprmath/ConstexprMath.hpp"
+// #include "dsp/constexprmath/ConstexprMath.hpp"
 
 #if defined(RISCV)
 #include "riscv/IQmath_RV32.h"
@@ -26,11 +26,10 @@ struct iq_t;
 
 namespace std{
     template <>
-    struct is_arithmetic<iq_t> : std::true_type {};
+    struct is_arithmetic<iq_t> : ::std::true_type {};
 
     template <>
-    struct is_floating_point<iq_t> : std::false_type {};
-    //sounds funny
+    struct is_floating_point<iq_t> : ::std::false_type {};
 }
 
 struct iq_t{
@@ -94,6 +93,10 @@ public:
 
     __fast_inline constexpr iq_t operator-() const {
         return iq_t(_iq(-value));
+    }
+
+    __fast_inline constexpr iq_t operator+() const {
+        return iq_t(_iq(value));
     }
 
     __fast_inline constexpr iq_t& operator+=(const iq_t other) {
@@ -271,7 +274,7 @@ IQ_BINA_DELETE(>=)
 #undef IQ_BINA_TEMPLATE
 #undef IQ_BINAS_TEMPLATE
 
-using cem = ConstexprMath;
+// using cem = ConstexprMath;
 
 __fast_inline iq_t sinf(const iq_t iq){
     {

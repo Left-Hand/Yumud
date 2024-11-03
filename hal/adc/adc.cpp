@@ -1,5 +1,7 @@
 #include "adc.hpp"
-#include "../sys/debug/debug_inc.h"
+
+using namespace yumud;
+using namespace yumud::AdcUtils;
 
 void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_list,
         const std::initializer_list<AdcChannelConfig> & injected_list, const Mode mode){

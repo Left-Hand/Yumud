@@ -11,6 +11,10 @@
 
 using Sys::t;
 
+using namespace yumud;
+using namespace yumud::drivers;
+using namespace yumud::foc;
+
 namespace gxm{
 
 

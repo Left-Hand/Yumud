@@ -3,6 +3,7 @@
 #include "TempSensor.hpp"
 #include "hal/adc/adc_channel.hpp"
 
+namespace yumud::drivers{
 
 class NTC:public TempSensor{
 protected:
@@ -40,4 +41,6 @@ public:
     real_t getTemp(){
         return last_temp;
     }
+};
+
 };

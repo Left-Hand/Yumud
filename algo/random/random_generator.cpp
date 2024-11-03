@@ -1,5 +1,7 @@
 #include "random_generator.hpp"
 
+using namespace yumud;
+
 RandomGenerator::RandomGenerator(){
     seed(0);
 }

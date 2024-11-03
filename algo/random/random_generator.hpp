@@ -2,6 +2,10 @@
 
 #include "sys/core/platform.h"
 #include <cstdint>
+
+namespace yumud{
+
+
 class RandomGenerator {
 public:
     RandomGenerator();
@@ -21,4 +25,6 @@ private:
     void seed(uint32_t seed_number);
     void generateNumbers();
     uint32_t extractNumber();
+};
+
 };

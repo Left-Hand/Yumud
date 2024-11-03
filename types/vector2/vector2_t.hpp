@@ -41,6 +41,8 @@
 #include <type_traits>
 #include <tuple>
 
+namespace yumud{
+
 template<arithmetic T>
 struct Rect2_t;
 
@@ -221,10 +223,17 @@ public:
     }
 };
 
-#include "vector2_t.tpp"
+
+using Vector2i = Vector2_t<int>;
+
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ')';
 }
 
-using Vector2i = Vector2_t<int>;
+}
+
+
+
+
+#include "vector2_t.tpp"

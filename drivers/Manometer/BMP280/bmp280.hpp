@@ -4,8 +4,10 @@
 #include "drivers/device_defs.h"
 #include "sys/math/real.hpp"
 
-#define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-// #define BMP280_DEBUG(...)
+// #define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#define BMP280_DEBUG(...)
+
+namespace yumud::drivers{
 
 class BMP280{
 public:
@@ -114,19 +116,19 @@ protected:
     };
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
         // BMP280_DEBUG((uint8_t)regAddress, (uint8_t)regData);
     }
 
@@ -181,3 +183,5 @@ public:
 
     void init();
 };
+
+}

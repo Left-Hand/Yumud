@@ -1,6 +1,9 @@
 #pragma once
 
 #include "hal/gpio/gpio.hpp"
+#include "sys/math/real.hpp"
+
+namespace yumud::drivers{
 
 class HX711{
 public:
@@ -83,3 +86,4 @@ public:
     }
 
 };
+}

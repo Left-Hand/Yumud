@@ -1,10 +1,12 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 
 #include "drivers/device_defs.h"
+
+
+namespace yumud::drivers{
 
 class AW9523: public PortVirtualConcept<16>{
 public:
@@ -18,13 +20,11 @@ protected:
     uint16_t buf;
     scexpr uint8_t valid_chipid = 0x23;
 
-    struct CtlReg{
-        REG8_BEGIN
+    struct CtlReg:Reg8{
         uint8_t isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;
         uint8_t __resv2__:3;
-        REG8_END
     };
 
     enum class RegAddress:uint8_t{
@@ -47,7 +47,7 @@ protected:
     };
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        bus_drv.writeReg((uint8_t)addr, data);
+        bus_drv.writeReg((uint8_t)addr, data, LSB);
     };
 
     void writeReg(const RegAddress addr, const uint16_t data){
@@ -55,7 +55,7 @@ protected:
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        bus_drv.readReg((uint8_t)addr, data);
+        bus_drv.readReg((uint8_t)addr, data, LSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
@@ -175,7 +175,7 @@ public:
 
         if(index < 8){
             ctl.p0mod = PinModeUtils::isPP(mode);
-            writeReg(RegAddress::ctl, ctl.data);
+            writeReg(RegAddress::ctl, ctl);
         }
     }
 
@@ -210,3 +210,4 @@ public:
     }
 };
 
+};

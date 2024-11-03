@@ -1,5 +1,9 @@
 #include "st7789.hpp"
 
+using namespace yumud::drivers;
+using namespace yumud;
+
+
 
 void ST7789::init(){
     interface.init();

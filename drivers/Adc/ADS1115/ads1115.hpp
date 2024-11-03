@@ -8,11 +8,7 @@
 #define ADS111X_DEBUG(...)
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
-#define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
-#define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
+namespace yumud::drivers{
 
 class ADS111X{
 public:
@@ -36,6 +32,7 @@ public:
     };
 
 protected:
+    using yumud::I2cDrv;
     I2cDrv i2c_drv;
 
     using RegAddress = uint8_t;
@@ -96,48 +93,51 @@ public:
     void startConv(){
         auto & reg = config_reg;
         reg.busy = true;
-        writeReg(reg.address, REG16(reg));
+        writeReg(reg.address, (reg));
         reg.busy = false;
     }
 
     bool isBusy(){
         auto & reg = config_reg;
-        readReg(reg.address, REG16(reg));
+        readReg(reg.address, (reg));
         return reg.busy;
     }
 
     void setThreshold(int16_t low, int16_t high){
         low_thresh_reg.data = low;
         high_thresh_reg.data = high;
-        writeReg(LowThreshReg::address, REG16(low_thresh_reg));
-        writeReg(HighThreshReg::address, REG16(high_thresh_reg));
+        writeReg(LowThreshReg::address, (low_thresh_reg));
+        writeReg(HighThreshReg::address, (high_thresh_reg));
     }
 
     void enableContMode(bool en = true){
         auto & reg = config_reg;
         reg.oneshot_en =!en;
-        writeReg(reg.address, REG16(reg));
+        writeReg(reg.address, (reg));
     }
 
     void setPga(const PGA pga){
         auto & reg = config_reg;
         reg.pga = pga;
-        writeReg(reg.address, REG16(reg));
+        writeReg(reg.address, (reg));
     }
 
     void setMux(const MUX mux){
         auto & reg = config_reg;
         reg.mux = mux;
-        writeReg(reg.address, REG16(reg));
+        writeReg(reg.address, (reg));
     }
 
     void setDataRate(const DataRate data_rate){
         auto & reg = config_reg;
         reg.data_rate = data_rate;
-        writeReg(reg.address, REG16(reg));
+        writeReg(reg.address, (reg));
     }
 };
 
 using ADS1113 = ADS111X;
 using ADS1114 = ADS111X;
 using ADS1115 = ADS111X;
+
+
+};

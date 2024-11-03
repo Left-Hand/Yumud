@@ -2,6 +2,8 @@
 
 #include "Odometer.hpp"
 
+
+namespace yumud::drivers{
 class OdometerScaled:public Odometer{
 protected:
     real_t scale;
@@ -18,3 +20,4 @@ public:
         return Odometer::getPosition() * scale;
     }
 };
+}

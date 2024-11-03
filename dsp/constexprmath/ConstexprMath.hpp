@@ -1,8 +1,6 @@
-#ifndef __CONSTEXPRMATH_HPP__
+#pragma once
 
-#define __CONSTEXPRMATH_HPP__
-
-#include <math.h>
+// #include <math.h>
 
 
 struct ConstexprMath{
@@ -444,5 +442,3 @@ template <int Nrep = 65536, typename float_type = double>
 ///
 ///codes here
 ///
-
-#endif

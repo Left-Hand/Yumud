@@ -1,33 +1,39 @@
 #include "mt6701.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 #define MT6701_NO_I2C_FAULT\
     MT6701_DEBUG("NO I2C!!");\
     CREATE_FAULT\
 
 
 void MT6701::writeReg(const RegAddress regAddress, const uint16_t regData){
-    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 void MT6701::readReg(const RegAddress regAddress, uint16_t & regData){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 void MT6701::writeReg(const RegAddress regAddress, const uint8_t regData){
-    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 void MT6701::readReg(const RegAddress regAddress, uint8_t & regData){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }

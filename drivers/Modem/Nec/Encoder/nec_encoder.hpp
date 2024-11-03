@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <functional>
 
+namespace yumud::drivers{
+
 class NecEncoder{
 protected:
 	uint8_t bit_prog;
@@ -109,4 +111,6 @@ public:
 
 		encode_prog = EncodeProg::Lead;
 	}
+};
+
 };

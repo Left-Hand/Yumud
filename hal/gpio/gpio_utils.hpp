@@ -1,5 +1,8 @@
 #pragma once
 
+#include "sys/core/platform.h"
+
+namespace yumud{
 enum class Pin:uint16_t{
     None,
     _0 = 1 << 0,
@@ -115,4 +118,5 @@ namespace GpioUtils{
 
     scexpr Level HIGH{true};
     scexpr Level LOW{false};
+}
 }

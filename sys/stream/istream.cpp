@@ -1,5 +1,6 @@
 #include "istream.hpp"
 
+using namespace yumud;
 
 String InputStream::readString(const size_t & len){
     String str;

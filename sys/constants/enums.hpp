@@ -25,8 +25,11 @@ MAKE_BINA_ENUM(ClockDirection, CLOCKWISE,COUNTERCLOCKWISE)
 enum class TB:uint8_t{TOP, BOTTOM};
 enum class LR:uint8_t{LEFT, RIGHT};
 
+
+namespace yumud{
 class OutputStream;
 
 OutputStream & operator<<(OutputStream & os, const TB tb);
 
 OutputStream & operator<<(OutputStream & os, const LR lr);
+};

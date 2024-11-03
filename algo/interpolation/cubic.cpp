@@ -1,5 +1,7 @@
 #include "cubic.hpp"
 
+using namespace yumud;
+
 real_t CubicInterpolation::forward(const Vector2 & a,const Vector2 & b, const real_t x){
 
     scexpr real_t y0a = 0; // initial y

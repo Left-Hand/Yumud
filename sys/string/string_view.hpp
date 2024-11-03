@@ -11,16 +11,19 @@
 #include <string>
 #include <string_view>
 
+
+namespace yumud{
+
 class String;
 
 class StringView {
 public:
-    using Strings = std::vector<StringView>;
+    using Strings = ::std::vector<StringView>;
 
     // 构造函数
     StringView(const String & str);
-    StringView(const std::string & str): data_(str.c_str()), size_(str.length()) {}
-    StringView(const std::string_view & str): data_(str.data()), size_(str.length()) {}
+    StringView(const ::std::string & str): data_(str.c_str()), size_(str.length()) {}
+    StringView(const ::std::string_view & str): data_(str.data()), size_(str.length()) {}
     StringView(const char* str) : data_(str), size_(str ? strlen(str) : 0) {}
     StringView(const char* str, size_t size) : data_(str), size_(size) {}
 
@@ -34,8 +37,8 @@ public:
     }
 
     StringView& operator=(StringView && other) {
-        data_ = std::move(other.data_);
-        size_ = std::move(other.size_);
+        data_ = ::std::move(other.data_);
+        size_ = ::std::move(other.size_);
         return *this;
     }
 
@@ -75,3 +78,5 @@ private:
     const char * data_;
     size_t size_;
 };
+
+}

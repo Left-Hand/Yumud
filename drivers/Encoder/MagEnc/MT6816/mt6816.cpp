@@ -1,6 +1,11 @@
 #include "mt6816.hpp"
 
 
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 void MT6816::init() {
     last_semantic = 0;
     lap_position = real_t(-1); // not possible before init done;

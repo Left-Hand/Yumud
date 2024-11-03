@@ -2,6 +2,8 @@
 
 #include "ActionQueue.hpp"
 
+namespace yumud{
+
 struct ClearAction:public Action{
 protected:
     using M_Queue = ActionQueue;
@@ -40,3 +42,5 @@ protected:
 public:
     DelayAction( const uint dur):Action(nullptr, dur){}
 };
+
+}

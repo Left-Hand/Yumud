@@ -2,11 +2,13 @@
 #include "sys/stream/ostream.hpp"
 
 
+using namespace yumud;
+
 OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
     os << "{0x" << 
-        std::hex << msg.StdId << '<'
+        std::hex << msg.id() << '<'
         << ((msg.isStd()) ? "Std" : "Ext")
-        << ((msg.RTR == CAN_RTR_Remote) ? "Rmt" : "Dat")
+        << ((msg.isRemote()) ? "Rmt" : "Dat")
         << '[' << std::dec << msg.size() << ']';
     os << "> ";
     

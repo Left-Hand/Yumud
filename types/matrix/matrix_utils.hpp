@@ -5,6 +5,8 @@
 #include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
 
+namespace yumud{
+
 namespace MatirxUtils{
 
     template<typename T>
@@ -37,4 +39,6 @@ namespace MatirxUtils{
         // }
         return sum;
     }
+}
+
 }

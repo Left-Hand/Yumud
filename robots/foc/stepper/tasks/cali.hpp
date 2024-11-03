@@ -2,6 +2,10 @@
 
 #include "robots/foc/motor_utils.hpp"
 
+namespace yumud::foc{
+
+using namespace yumud::drivers;
+
 class CaliTasker{
 protected:
     using RunStatus = MotorUtils::RunStatus;
@@ -102,3 +106,5 @@ public:
     bool done();
     void reset();
 };
+
+}

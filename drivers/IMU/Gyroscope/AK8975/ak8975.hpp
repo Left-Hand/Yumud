@@ -2,8 +2,8 @@
 
 #include <optional>
 
-#include "../drivers/device_defs.h"
-#include "../drivers/IMU/IMU.hpp"
+#include "drivers/device_defs.h"
+#include "drivers/IMU/IMU.hpp"
 
 // #define AK8975_DEBUG
 
@@ -14,6 +14,8 @@
 #define AK8975_DEBUG(...)
 #endif
 
+
+namespace yumud::drivers{
 class AK8975:public Magnetometer{
 public:
     enum class Mode:uint8_t{
@@ -64,4 +66,6 @@ public:
     void setMode(const Mode mode);
     void disableI2c();
     std::tuple<real_t, real_t, real_t> getMagnet() override;
+};
+
 };

@@ -3,6 +3,7 @@
 #include "robots/foc/stepper/stepper.hpp"
 #include <bits/stl_numeric.h>
 
+using namespace yumud::foc;
 void CaliTasker::run(){
 
     auto get_rad = [this](const bool is_forward) -> real_t{

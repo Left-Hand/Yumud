@@ -1,6 +1,8 @@
 #include "current_ctrl.hpp"
 #include "types/range/range_t.hpp"
 
+using namespace yumud;
+
 real_t CurrentController::update(const real_t targ_current, const real_t real_current){
     scexpr Range duty_range = {0, real_t(0.95)};
 

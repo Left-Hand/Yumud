@@ -2,6 +2,8 @@
 
 #include "Odometer.hpp"
 
+namespace yumud::drivers{
+
 class OdometerLines:public OdometerScaled{
 public:
     OdometerLines(Encoder & _encoder, const int & _lines):
@@ -10,4 +12,7 @@ public:
     real_t getPosition() override{
         return Odometer::getPosition() * scale;
     }
+};
+
+
 };

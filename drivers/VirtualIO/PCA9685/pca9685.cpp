@@ -1,5 +1,10 @@
 #include "pca9685.hpp"
 
+
+using namespace yumud;
+using namespace yumud::drivers;
+
+
 void PCA9685::setFrequency(uint freq, real_t trim){
         readReg(RegAddress::Mode1, mode1_reg);
         

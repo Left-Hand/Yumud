@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../../hal/bus/spi/spidrv.hpp"
-#include "../../hal/bus/i2c/i2cdrv.hpp"
+#include "drivers/device_defs.h"
 #include <optional>
 
 #define LT8920_DEBUG
@@ -14,8 +13,7 @@
 #endif
 
 
-#pragma GCC diagnostic ignored "-Wstrict-aliasing"
-
+namespace yumud::drivers{
 
 class LT8920{
 public:
@@ -201,4 +199,4 @@ protected:
     void updateFifoStatus();
 };
 
-#pragma GCC diagnostic pop
+}

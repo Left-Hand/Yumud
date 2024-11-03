@@ -1,9 +1,11 @@
 #pragma once
 
-#include "../hal/bus/uart/uart.hpp"
+#include "hal/bus/uart/uart.hpp"
 #include "sys/string/string.hpp"
 #include "../Radio.hpp"
 
+
+namespace yumud::drivers{
 class HC12:public IOStream, public Radio{
 public:
     enum class PowerMode{
@@ -84,4 +86,7 @@ public:
     void setChannel(const uint16_t _channel) override {sendAtCommand("C" + String((uint8_t)_channel));}
     void setCommBaudRate(const uint16_t baudrate){sendAtCommand("B" + String(baudrate));}
     bool isValid(){return sendAtCommand("");}
+};
+
+
 };

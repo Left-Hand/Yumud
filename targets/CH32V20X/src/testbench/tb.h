@@ -7,6 +7,8 @@
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2c.hpp"
 
+
+using namespace yumud;
 using Sys::t;
 
 void memory_tb(OutputStream & logger);

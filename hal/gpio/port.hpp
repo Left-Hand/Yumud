@@ -1,11 +1,9 @@
 #pragma once
 
-#include "sys/core/platform.h"
 #include "gpio.hpp"
 #include "port_concept.hpp"
 
-class Gpio;
-
+namespace yumud{
 class Port : public PortConcept{
 protected:
     GPIO_TypeDef * instance;
@@ -82,26 +80,29 @@ __inline void Port::clr(const Pin pin){
     instance->BCR = (uint16_t)pin;
 }
 
+}
 
 #ifdef HAVE_GPIOA
-extern Port portA;
+extern yumud::Port portA;
 #endif
 
 #ifdef HAVE_GPIOB
-extern Port portB;
+extern yumud::Port portB;
 #endif
 
 #ifdef HAVE_GPIOC
-extern Port portC;
+extern yumud::Port portC;
 #endif
 
 #ifdef HAVE_GPIOD
-extern Port portD;
+extern yumud::Port portD;
 #endif
 
 #ifdef HAVE_GPIOE
-extern Port portE;
+extern yumud::Port portE;
 #endif
 
 
+
 #define GpioNull portD[Pin::None]
+

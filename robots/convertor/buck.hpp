@@ -1,7 +1,4 @@
-#ifndef __BUCK_HPP__
-
-#define __BUCK_HPP__
-
+#pragma once
 // class Test:pub
 // void buck_test(){
 //     uart2.init(115200 * 8, Uart::Mode::TxRx);
@@ -99,5 +96,3 @@
 //         Sys::Clock::reCalculateTime();
 //     }
 // }
-
-#endif

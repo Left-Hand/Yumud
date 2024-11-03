@@ -3,6 +3,8 @@
 #include "sys/string/string_view.hpp"
 
 
+using namespace yumud;
+
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{
         if (func == &std::oct) {setRadix(8);break;}

@@ -2,6 +2,8 @@
 
 #include "CoilDriver.hpp"
 
+namespace yumud::drivers{
+
 class TB67H450:public Coil2Driver{
 protected:
     TimerOC & forward_pwm;
@@ -52,7 +54,7 @@ public:
     
     }
 
-    TB67H452 & operator = (const real_t curr){setCurrent(curr); return *this;}
+    TB67H450 & operator = (const real_t curr){setCurrent(curr); return *this;}
 };
 class Coil2:public Coil2Driver{
 protected:
@@ -94,4 +96,6 @@ public:
     // }
 
     // Coil2 & operator = (const real_t duty) override {setDuty(duty); return *this;}
+};
+
 };

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "device_defs.h"
+#include "drivers/device_defs.h"
 
 #ifndef SGM58031_DEBUG
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
 #endif
 
+namespace yumud::drivers{
 
 class SGM58031{
 public:
@@ -26,10 +27,10 @@ public:
         RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
 
     struct ConfigReg:public Reg16{
-        REG16_BEGIN
+        
         uint8_t compQue : 2;
         uint8_t compLat : 1;
         uint8_t compPol : 1;
@@ -39,11 +40,11 @@ protected:
         uint8_t pga:    3;
         uint8_t mux:    3;
         uint8_t os:     1;
-        REG16_END
+        
     };
 
     struct Config1Reg:public Reg16{
-        REG16_BEGIN
+        
         uint8_t __resv1__    :3;
         uint8_t extRef      :1;
         uint8_t busFlex     :1;
@@ -52,38 +53,38 @@ protected:
         uint8_t drSel       :1;
         uint8_t pd          :1;
         uint8_t __resv3__   :7;
-        REG16_END
+        
     };
 
     struct DeviceIdReg:public Reg16{
-        REG16_BEGIN
+        
         uint8_t __resv1__   :5;
         uint8_t ver         :3;
         uint8_t id          :5;
         uint8_t __resv2__   :3;
-        REG16_END
+        
     };
 
     struct TrimReg:public Reg16{
-        REG16_BEGIN
+        
         uint16_t gn         :11;
         uint8_t __resv__    :5;
-        REG16_END
+        
     };
 
     struct ConvReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct LowThrReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct HighThrReg:public Reg16{
-        REG16_BEGIN
-        REG16_END
+        uint16_t data;
+        
     };
 
     struct{
@@ -103,19 +104,16 @@ protected:
 
     real_t fullScale;
     void writeReg(const RegAddress regAddress, const Reg16 & regData){
-        bus_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
+        bus_drv.writeReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, Reg16 & regData){
-        bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
-    }
-
-    void requestRegData(const RegAddress regAddress, uint8_t * data_ptr, const size_t len){
-        bus_drv.readPool((uint8_t)regAddress, data_ptr, 2, len);
+        bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
     }
 
 public:
-    SGM58031(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    SGM58031(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    SGM58031(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
 
     void init(){
         readReg(RegAddress::Config, configReg);
@@ -201,15 +199,15 @@ public:
     void setFS(const real_t _fs, const real_t _vref){
         real_t ratio = abs(_fs) / _vref;
         PGA pga;
-        if(ratio >= 3.0f){
+        if(ratio >= 3){
             pga = PGA::RT2_3;
         }else if(ratio >= 2){
             pga = PGA::RT1;
         }else if(ratio >= 1){
             pga = PGA::RT2;
-        }else if(ratio >= 0.5){
+        }else if(ratio >= real_t(0.5)){
             pga = PGA::RT4;
-        }else if(ratio >= 0.25){
+        }else if(ratio >= real_t(0.25)){
             pga = PGA::RT8;
         }else{
             pga = PGA::RT16;
@@ -219,8 +217,8 @@ public:
     }
 
     void setTrim(const real_t _trim){
-        real_t trim = _trim * 4.0f / 3.0f;
-        real_t offset = trim - 1.30225f;
+        real_t trim = _trim * real_t(4.0f / 3.0f);
+        real_t offset = trim - real_t(1.30225f);
         trimReg.gn = (int)(offset * 0b01111111010);
         writeReg(RegAddress::Trim, trimReg);
     }
@@ -234,3 +232,6 @@ public:
 #ifdef SGM58031_DEBUG
 #undef SGM58031_DEBUG
 #endif
+
+
+}

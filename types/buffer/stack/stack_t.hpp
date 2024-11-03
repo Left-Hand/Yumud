@@ -1,6 +1,4 @@
-#ifndef __STACK_BUF_HPP
-
-#define __STACK_BUF_HPP
+#pragma once
 
 #include "../buffer.hpp"
 
@@ -43,5 +41,3 @@ public:
 };
 
 typedef Stack_t<uint8_t> Stack;
-
-#endif // !__RING_BUF_HPP

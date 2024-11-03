@@ -1,6 +1,10 @@
 #pragma once
 
-#include "../hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
+
+
+namespace yumud::drivers{
+
 class Radio{
 public:
 protected:
@@ -8,3 +12,5 @@ protected:
 public:
     virtual void setChannel(const uint16_t _channel) = 0;
 };
+
+}

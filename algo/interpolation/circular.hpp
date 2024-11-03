@@ -2,6 +2,8 @@
 
 #include "interpolation.hpp"
 
+namespace yumud{
+
 class ArcInterpolation:public Interpolation{
 protected:
     real_t m_Centerx;
@@ -35,4 +37,6 @@ protected:
         real_t r);
 public:
     real_t mapping(const Vector2 & handle, real_t R, real_t x);
+};
+
 };

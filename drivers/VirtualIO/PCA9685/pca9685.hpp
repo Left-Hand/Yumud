@@ -1,12 +1,10 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port_virtual.hpp"
-#include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "drivers/device_defs.h"
 
-
+namespace yumud::drivers{
 class PCA9685: public PortVirtualConcept<16>{
 public:
     scexpr uint8_t default_i2c_addr = 0b10000000;
@@ -113,7 +111,7 @@ protected:
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
-        bus_drv.writeReg((uint8_t)addr, reg);
+        bus_drv.writeReg((uint8_t)addr, reg, LSB);
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
@@ -121,7 +119,7 @@ protected:
     }
 
     __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
-        bus_drv.readReg((uint8_t)addr, reg);
+        bus_drv.readReg((uint8_t)addr, reg, LSB);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
@@ -130,7 +128,7 @@ protected:
 
     uint8_t readReg(const RegAddress addr){
         uint8_t data;
-        bus_drv.readReg((uint8_t)addr, data);
+        bus_drv.readReg((uint8_t)addr, data, LSB);
         return data;
     }
 
@@ -187,4 +185,5 @@ public:
     PCA8975Channel & operator [](const size_t index){
         return channels[index];
     }
+};
 };

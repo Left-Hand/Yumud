@@ -35,6 +35,8 @@
 // const Transform2D_t<T> Transform2D_t<T>::FLIP_X = Transform2D_t(-1, 0, 0, 1, 0, 0);
 // const Transform2D_t<T> Transform2D_t<T>::FLIP_Y = Transform2D_t(1, 0, 0, -1, 0, 0);
 
+
+namespace yumud{
 template<arithmetic T>
 Transform2D_t<T>::Transform2D_t(T xx, T xy, T yx, T yy, T ox, T oy) {
 	elements[0][0] = xx;
@@ -360,4 +362,7 @@ Transform2D_t<T> Transform2D_t<T>::interpolate_with(const Transform2D_t &p_trans
 	Transform2D_t res(::atan2(v.y, v.x), Vector2_t<T>::linear_interpolate(p1, p2, p_c));
 	res.scale_basis(Vector2_t<T>::linear_interpolate(s1, s2, p_c));
 	return res;
+}
+
+
 }

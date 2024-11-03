@@ -4,6 +4,7 @@
 #include "hal/timer/timer_utils.hpp"
 #include "hal/gpio/gpio.hpp"
 
+namespace yumud{
 class TimerOut: public TimerChannel{
 protected:
     TimerOut(TIM_TypeDef * _instance, const Channel _channel):TimerChannel(_instance, _channel){;}
@@ -44,4 +45,6 @@ protected:
 public:
     TimerOCN(TIM_TypeDef * _base, const Channel _channel):TimerOut(_base, _channel){;}
     void init() {installToPin();}
+};
+
 };

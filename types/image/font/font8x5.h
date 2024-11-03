@@ -1,5 +1,4 @@
-#ifndef __FONT6X8_H__
-#define __FONT6X8_H__
+#pragma once
 
 #include "stdint.h"
 
@@ -99,6 +98,5 @@ scexpr uint8_t font8x5_enc[][6]={
 
 };
 
-#endif
 
 

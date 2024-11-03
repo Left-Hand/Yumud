@@ -6,6 +6,8 @@
 
 #include "motor_scexpr.hpp"
 
+
+namespace yumud::foc{
 namespace MotorUtils{
     
 struct MetaData{
@@ -52,3 +54,5 @@ constexpr real_t MetaData::get_max_raddiff(){
 }
 
 }
+
+};

@@ -1,5 +1,4 @@
-#ifndef __SCHMITT_FILTER_H__
-#define __SCHMITT_FILTER_H__
+#pragma once
 
 #include "sys/math/real.hpp"
 
@@ -26,4 +25,3 @@ public:
 };
 }
 
-#endif

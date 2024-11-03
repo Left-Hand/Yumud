@@ -1,15 +1,16 @@
 #pragma once
 
-#include "../../sys/core/system.hpp"
-
 #include <variant>
 #include <type_traits>
 
-#include "../../hal/timer/pwm/gpio_or_pwm.hpp"
+#include "sys/core/system.hpp"
+#include "hal/timer/pwm/gpio_or_pwm.hpp"
 
 
-struct GpioConcept;
-struct PwmChannel;
+class GpioConcept;
+class PwmChannel;
+
+namespace yumud::drivers{
 
 class LedConcept{
 public:
@@ -55,4 +56,6 @@ public:
 
         return *this;
     }
+};
+
 };

@@ -7,6 +7,8 @@
 
 #include <functional>
 
+namespace yumud{
+
 class UsbFS:public OutputStream{
 public:
 
@@ -22,3 +24,5 @@ public:
 #if defined(CH32V30X) && defined(HAVE_USBFS)
 extern UsbFS usbfs;
 #endif
+
+}

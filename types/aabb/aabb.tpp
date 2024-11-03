@@ -30,6 +30,8 @@
 /**************************************************************************/
 
 
+namespace yumud{
+
 template<arithmetic T>
 T AABB_t<T>::get_volume() const {
 	return size.x * size.y * size.z;
@@ -465,4 +467,6 @@ std::optional<Vector3_t<T>> AABB_t<T>::intersects_ray_bind(const Vector3_t<T> & 
 template<arithmetic T>
 AABB_t<T>::operator String() const {
 	return "[P: " + position.operator String() + ", S: " + size + "]";
+}
+
 }

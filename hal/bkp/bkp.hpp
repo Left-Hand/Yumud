@@ -1,10 +1,9 @@
-#ifndef __BKP_HPP__
+#pragma once
 
-#define __BKP_HPP__
+#include "sys/core/platform.h"
 
-#include "../sys/core/platform.h"
-// #include <array>
 
+namespace yumud{
 class Bkp;
 
 struct BkpItem{
@@ -79,7 +78,6 @@ public:
 };
 
 
-extern Bkp & bkp;
+static inline Bkp & bkp = Bkp::getInstance();
 
-
-#endif
+}

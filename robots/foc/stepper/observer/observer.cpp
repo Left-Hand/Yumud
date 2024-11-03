@@ -1,6 +1,9 @@
 #include "observer.hpp"
 #include "../stepper.hpp"
 
+
+using namespace yumud::foc;
+
 real_t SpeedEstimator::update_raw(const real_t position){
     real_t delta_pos = position - vars.last_position;
     real_t abs_delta_pos = ABS(delta_pos);

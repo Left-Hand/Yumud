@@ -15,6 +15,8 @@
 #define MMC5603_DEBUG(...)
 #endif
 
+namespace yumud::drivers{
+
 class MMC5603:public Magnetometer{
 public:
     scexpr uint8_t default_i2c_addr = 0b01100000;
@@ -176,11 +178,11 @@ protected:
     I2cDrv i2c_drv;
 
     void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv.writeReg((uint8_t)address, reg);
+        i2c_drv.writeReg((uint8_t)address, reg, MSB);
     }
 
     void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv.readReg((uint8_t)address, reg);
+        i2c_drv.readReg((uint8_t)address, reg, MSB);
     }
 
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
@@ -189,3 +191,5 @@ protected:
 public:
 
 };
+
+}

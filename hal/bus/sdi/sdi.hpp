@@ -2,6 +2,7 @@
 
 #include "../bus.hpp"
 
+namespace yumud{
 class Sdi:public OutputStream{
 
 public:
@@ -20,3 +21,4 @@ public:
 #ifdef HAVE_SDI
 extern Sdi sdi;
 #endif
+}

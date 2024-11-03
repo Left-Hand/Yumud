@@ -3,6 +3,7 @@
 #include "drivers/Actuator/Actuator.hpp"
 #include "types/range/range_t.hpp"
 
+namespace yumud::drivers{
 
 class RadianServo{
 private:
@@ -40,4 +41,6 @@ public:
     }
 
     virtual real_t getSpeed() = 0;
+};
+
 };

@@ -1,6 +1,4 @@
-#ifndef __PINGPONG_BUF_HPP
-
-#define __PINGPONG_BUF_HPP
+#pragma once
 
 #include "../buffer.hpp"
 
@@ -55,5 +53,3 @@ public:
 
 template<uint32_t size>
 using PingPongBuf = PingPongBuf_t<uint8_t, size>;
-
-#endif // !__RING_BUF_HPP

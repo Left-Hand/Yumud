@@ -20,9 +20,11 @@
 
 #include "../drivers/device_defs.h"
 
+namespace yumud::drivers{
+
 class AD9910{
 protected:
-    SpiDrv & spi_drv;
+    SpiDrv spi_drv;
     
     uint8_t cfr1[4]={0x00,0x40,0x00,0x00};
     uint8_t cfr2[4]={0x01,0x00,0x00,0x00};
@@ -42,6 +44,8 @@ protected:
 
 public:
     AD9910(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
+    AD9910(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+    AD9910(Spi & _spi, const uint8_t index):spi_drv(SpiDrv(_spi, index)){;}
     void init(void);
     void freqConvert(uint32_t Freq);
 
@@ -50,3 +54,4 @@ public:
     void sendSample(const uint8_t *, const size_t);
 };
 
+}

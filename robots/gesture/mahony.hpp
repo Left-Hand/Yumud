@@ -3,6 +3,8 @@
 #include "sys/math/real.hpp"
 #include "types/quat/quat_t.hpp"
 
+
+namespace yumud{
 class Mahony{
 protected:
     real_t sampleFreq = 1000;
@@ -16,3 +18,5 @@ public:
     using Vector3 = Vector3_t<real_t>;
     Quat update(const Vector3 & gyro,const Vector3 & accel);
 };
+
+}

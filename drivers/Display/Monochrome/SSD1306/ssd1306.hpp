@@ -1,7 +1,9 @@
 #pragma once
 
 #include "../../DisplayerInterface.hpp"
-#include "../types/image/packed_image.hpp"
+#include "types/image/packed_image.hpp"
+
+namespace yumud::drivers{
 
 class SSD13XX:public Displayer<Binary>{
 public:
@@ -194,4 +196,6 @@ public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
     SSD13XX_128X80(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
+};
+
 };

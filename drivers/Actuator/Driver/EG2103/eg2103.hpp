@@ -5,8 +5,10 @@
 
 #include <optional>
 
-struct TimerOC;
-struct TimerOCN;
+class TimerOC;
+class TimerOCN;
+
+namespace yumud::drivers{
 
 class EG2103:public Coil2Driver{
 protected:
@@ -22,4 +24,7 @@ public:
     void setDutyRange(const Range & _range){duty_range = _range;}
 
     EG2103 & operator=(const real_t duty) override;
+};
+
+
 };

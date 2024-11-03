@@ -1,5 +1,11 @@
 #include "ad7607.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 void AD7607::reset(void){
     /*! ___|-----|________  >= 50ns */
     rst_gpio.clr();

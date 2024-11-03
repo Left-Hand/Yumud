@@ -1,6 +1,10 @@
 #include "ssd1306.hpp"
 
 
+using namespace yumud::drivers;
+using namespace yumud;
+
+
 void SSD13XX::init(){   
     interface.init(); 
     preinitByCmds();

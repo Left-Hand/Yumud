@@ -2,6 +2,8 @@
 
 #include "robots/foc/motor_utils.hpp"
 
+
+namespace yumud::foc{
 struct SpeedEstimator{
 public:
     struct Config{
@@ -93,3 +95,6 @@ class StallOberserver:public IntegralableObserverConcept{
     void count() override;
 
 };
+
+
+}

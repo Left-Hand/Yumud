@@ -1,5 +1,7 @@
 #include "flash.hpp"
 
+using namespace yumud;
+
 
 #define CLOCK_CONFIG_BY_AHB 0
 #define CLOCK_CONFIG_BY_REG 1

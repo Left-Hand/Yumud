@@ -1,5 +1,6 @@
 #pragma once
 
+namespace yumud::drivers{
 class HMI{
 
 };
@@ -88,3 +89,5 @@ public:
     };
 
 };
+
+}

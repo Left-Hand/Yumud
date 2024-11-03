@@ -11,6 +11,8 @@ public:
 protected:
     const Config & config_;
     
+    using GpioConcept = yumud::GpioConcept;
+
     GpioConcept & gpio_a_;
     GpioConcept & gpio_b_;
 

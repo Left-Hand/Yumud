@@ -2,9 +2,11 @@
 #pragma once
 
 #include "Encoder.hpp"
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/exti/exti.hpp"
-#include "../hal/timer/timer.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/exti/exti.hpp"
+#include "hal/timer/timer.hpp"
+
+namespace yumud::drivers{
 
 class ABEncoderConcept:public AbsoluteEncoder{
 protected:
@@ -129,3 +131,5 @@ class ABZEncoder:public ABEncoderConcept{
 
     // trigExtiCHA.init();
     // trigExtiCHB.init();
+
+}

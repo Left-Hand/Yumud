@@ -39,6 +39,7 @@
  * This is implemented by a point (position) and the box size.
  */
 
+namespace yumud{
 
 template<arithmetic T>
 struct AABB_t{
@@ -496,5 +497,9 @@ __inline OutputStream & operator<<(OutputStream & os, const AABB_t<T> & aabb){
 	os << aabb.size << ')';
 	return os;
 }
+
+
+}
+
 
 #include "aabb.tpp"

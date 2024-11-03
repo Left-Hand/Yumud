@@ -1,5 +1,7 @@
 #include "can.hpp"
-#include "../hal/nvic/nvic.hpp"
+#include "hal/nvic/nvic.hpp"
+
+using namespace yumud;
 
 using Callback = Can::Callback;
 
@@ -241,11 +243,11 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
-    uint8_t mbox = CAN_Transmit(instance, (const CanTxMsg *)&msg);
+    uint8_t mbox = CAN_Transmit(instance, msg.cptx());
     return (mbox != CAN_TxStatus_NoMailBox);
 }
 
-const CanMsg & Can::read(){
+CanMsg Can::read(){
     return pending_rx_msgs.getData();
 }
 
@@ -349,7 +351,7 @@ void Can::handleRx(const uint8_t fifo_num){
             if(CAN_MessagePending(instance, fifo_num) == 0) return;
 
             //从外设读入报文到变量
-            CAN_Receive(instance, fifo_num, &rx_msg);
+            CAN_Receive(instance, fifo_num, rx_msg.prx());
 
             pending_rx_msgs.addData(rx_msg);
         }while(false);

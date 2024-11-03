@@ -13,6 +13,8 @@
 #define SPD_SPEC public
 #endif
 
+
+namespace yumud::foc{
 struct CtrlResult{
     real_t current;
     real_t raddiff;
@@ -126,3 +128,6 @@ public:
         const real_t real_speed
     );
 };
+
+
+}

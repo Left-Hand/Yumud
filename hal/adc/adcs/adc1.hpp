@@ -1,9 +1,9 @@
-#ifndef __ADC1_HPP__
-
-#define __ADC1_HPP__
+#pragma once
 
 #include "../adc.hpp"
 
+
+namespace yumud{
 class Adc1:public AdcPrimary{
 protected:
     volatile uint8_t regular_conv_index = 0;
@@ -23,10 +23,7 @@ public:
 };
 
 #ifdef HAVE_ADC1
-extern Adc1 adc1;
+static inline Adc1 adc1;
 #endif
 
-
-
-
-#endif
+}

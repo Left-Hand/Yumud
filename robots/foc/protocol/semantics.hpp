@@ -1,9 +1,11 @@
-#ifndef __CANSF_SEMANTICS_HPP__
-
-#define __CANSF_SEMANTICS_HPP__
+#pragma once
 
 #include <cstdint>
-#include <types/string/String.hpp>
+#include "types/string/String.hpp"
+
+
+
+namespace yumud{
 namespace CANSF{
     class Semantics{
         protected:
@@ -32,4 +34,4 @@ namespace CANSF{
     };
 };
 
-#endif
+}

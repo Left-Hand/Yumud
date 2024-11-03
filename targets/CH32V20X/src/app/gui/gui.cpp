@@ -11,7 +11,7 @@
 
 #include "nvcv2/shape/shape.hpp"
 
-using namespace NVCV2;
+using namespace yumud::nvcv2;
 
 using Vector2i = Vector2_t<int>;
 
@@ -19,6 +19,9 @@ using Vector2i = Vector2_t<int>;
 
 
 using Sys::t;
+
+using namespace yumud;
+using namespace yumud::drivers;
 
 
 class Node{
@@ -230,7 +233,7 @@ void gui_main(){
 
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
         // painter.bindImage(sketch);
-        painter.setColor(RGB565::CORAL);
+        painter.setColor(ColorEnum::RED);
         // painter.drawRoi(rect);
     };
 
@@ -250,9 +253,9 @@ void gui_main(){
 
     [[maybe_unused]] auto plot_number = [&](const Rect2i & rect, const int index){
         // painter.bindImage(sketch);
-        painter.setColor(RGB565::GREEN);
+        painter.setColor(ColorEnum::GREEN);
         painter.drawRoi(rect);
-        painter.setColor(RGB565::YELLOW);
+        painter.setColor(ColorEnum::YELLOW);
         painter.drawString(rect.position + Vector2i{4,4}, toString(index));
         painter.bindImage(tftDisplayer);
     };
@@ -306,7 +309,7 @@ void gui_main(){
         opt.render(painter);
 
         delay(10);
-        tftDisplayer.fill(RGB565::BLACK);
+        tftDisplayer.fill(ColorEnum::BLACK);
     
         logger.println(label.rect, label2.rect);
         #endif

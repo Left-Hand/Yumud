@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port.hpp"
-#include "../hal/nvic/nvic.hpp"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
+#include "hal/nvic/nvic.hpp"
 
 #include "dma_utils.hpp"
 
@@ -13,6 +13,8 @@
 #include <functional>
 #include <type_traits>
 #include <array>
+
+namespace yumud{
 
 class DmaChannel{
 
@@ -219,18 +221,21 @@ public:
     }
 };
 
+
+}
+
 #define DMA_XY_TEMPLATE(x,y)\
 extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
 
 
 #ifdef HAVE_DMA1
-    extern DmaChannel dma1Ch1;
-    extern DmaChannel dma1Ch2;
-    extern DmaChannel dma1Ch3;
-    extern DmaChannel dma1Ch4;
-    extern DmaChannel dma1Ch5;
-    extern DmaChannel dma1Ch6;
-    extern DmaChannel dma1Ch7;
+    extern yumud::DmaChannel dma1Ch1;
+    extern yumud::DmaChannel dma1Ch2;
+    extern yumud::DmaChannel dma1Ch3;
+    extern yumud::DmaChannel dma1Ch4;
+    extern yumud::DmaChannel dma1Ch5;
+    extern yumud::DmaChannel dma1Ch6;
+    extern yumud::DmaChannel dma1Ch7;
 
     DMA_XY_TEMPLATE(1,1)
     DMA_XY_TEMPLATE(1,2)
@@ -243,17 +248,17 @@ extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
 #endif
 
 #ifdef HAVE_DMA2
-    extern DmaChannel dma2Ch1;
-    extern DmaChannel dma2Ch2;
-    extern DmaChannel dma2Ch3;
-    extern DmaChannel dma2Ch4;
-    extern DmaChannel dma2Ch5;
-    extern DmaChannel dma2Ch6;
-    extern DmaChannel dma2Ch7;
-    extern DmaChannel dma2Ch8;
-    extern DmaChannel dma2Ch9;
-    extern DmaChannel dma2Ch10;
-    extern DmaChannel dma2Ch11;
+    extern yumud::DmaChannel dma2Ch1;
+    extern yumud::DmaChannel dma2Ch2;
+    extern yumud::DmaChannel dma2Ch3;
+    extern yumud::DmaChannel dma2Ch4;
+    extern yumud::DmaChannel dma2Ch5;
+    extern yumud::DmaChannel dma2Ch6;
+    extern yumud::DmaChannel dma2Ch7;
+    extern yumud::DmaChannel dma2Ch8;
+    extern yumud::DmaChannel dma2Ch9;
+    extern yumud::DmaChannel dma2Ch10;
+    extern yumud::DmaChannel dma2Ch11;
 
     DMA_XY_TEMPLATE(2,1)
     DMA_XY_TEMPLATE(2,2)

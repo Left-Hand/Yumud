@@ -1,12 +1,10 @@
-#ifndef __PLATFORM_H__
-
-#define __PLATFORM_H__
+#pragma once
 
 #include <stddef.h>
 #include <stdint.h>
 #include <stdbool.h>
+// #include <bit>
 
-// #include "src/defines/defs.h"
 #include "targets/CH32V20X/src/defines/defs.h"
 
 
@@ -105,7 +103,5 @@
     #ifdef __cplusplus
     }
     #endif
-
-#endif
 
 #endif

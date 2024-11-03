@@ -1,6 +1,4 @@
-#ifndef __FAST_SQRT_H__
-
-#define __FAST_SQRT_H__
+#pragma once
 
 #include "../sys/core/platform.h"
 
@@ -8,16 +6,16 @@
 extern "C"{
 #endif
 
-#ifdef __has_include
-    #if __has_include(<cmath>)
-        #include <cmath>
-        #define __STD_MATH_EXIST
-    #endif
-    #if __has_include(<math.h>)
-        #include <math.h>
-        #define __STD_MATH_EXIST
-    #endif
-#endif
+// #ifdef __has_include
+//     #if __has_include(<cmath>)
+//         #include <cmath>
+//         #define __STD_MATH_EXIST
+//     #endif
+//     #if __has_include(<math.h>)
+//         #include <math.h>
+//         #define __STD_MATH_EXIST
+//     #endif
+// #endif
 
 static __fast_inline float int2float(int number) {
     union {
@@ -60,12 +58,10 @@ __fast_inline float fast_sqrt(float number) {
 }
 
 #if defined(__cplusplus) && (!defined(__STD_MATH_EXIST))
-__fast_inline float std::invsqrt(const float & number){return fast_invsqrt(number);}
+__fast_inline float invsqrt(const float & number){return fast_invsqrt(number);}
 __fast_inline float sqrt(const float & number){return fast_sqrt(number);}
 #endif
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

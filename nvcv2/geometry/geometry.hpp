@@ -3,7 +3,7 @@
 
 #include "../nvcv2.hpp"
 
-namespace NVCV2::Geometry{
+namespace yumud::nvcv2::Geometry{
 
 struct PerspectiveConfig{
     real_t H1 = real_t(1.0);

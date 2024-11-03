@@ -3,6 +3,8 @@
 
 #include "../apriltag.hpp"
 
+
+namespace yumud::nvcv2{
 class Apriltag16H5Decoder:public ApriltagDecoder{
 public:
     scexpr std::array<uint16_t, 30> codes= {
@@ -38,7 +40,7 @@ public:
         0xaf2e
     };
 
-    static std::array<uint16_t, 120> all_codes;
+    static inline std::array<uint16_t, 120> all_codes = {};
 protected:
     uint16_t last_code = 0;
     uint16_t last_direction = 0;
@@ -150,4 +152,6 @@ public:
     operator bool() const{
         return is_valid();
     }
+};
+
 };

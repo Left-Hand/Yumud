@@ -2,8 +2,9 @@
 
 #include "hal/timer/timer.hpp"
 
+
 #define ADVANCED_TIMER_TEMPLATE(x)\
-class Timer##x:public AdvancedTimer{\
+class Timer##x:public yumud::AdvancedTimer{\
 public:\
     Timer##x():AdvancedTimer(TIM##x){;}\
     void bindCb(const IT ch, std::function<void(void)> && cb) override;\
@@ -19,7 +20,7 @@ __interrupt void TIM##x##_CC_IRQHandler(void);\
 extern Timer##x timer##x;\
 
 #define GENERIC_TIMER_TEMPLATE(x)\
-class Timer##x:public GenericTimer{\
+class Timer##x:public yumud::GenericTimer{\
 public:\
     Timer##x():GenericTimer(TIM##x){;}\
     void bindCb(const IT ch, std::function<void(void)> && cb) override;\
@@ -32,7 +33,7 @@ __interrupt void TIM##x##_IRQHandler(void);\
 extern Timer##x timer##x;\
 
 #define BASIC_TIMER_TEMPLATE(x)\
-class Timer##x:public BasicTimer{\
+class Timer##x:public yumud::BasicTimer{\
 public:\
     Timer##x():BasicTimer(TIM##x){;}\
     void bindCb(const IT ch, std::function<void(void)> && cb) override;\

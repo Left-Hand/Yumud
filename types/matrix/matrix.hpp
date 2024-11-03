@@ -127,14 +127,19 @@
  * 
  * See https://github.com/pronenewbits for more!
  ************************************************************************************************************/
-#ifndef MATRIX_H
-#define MATRIX_H
+#pragma once
+
+
 
 #include "kconfig.h"
 #include "memory.h"
 
 #include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
+
+
+namespace yumud{
+
 
 template<arithmetic T>
 class MatrixX_t
@@ -1293,4 +1298,6 @@ using MatrixX = MatrixX_t<real_t>;
 using MatrixXf = MatrixX_t<float>;
 using MatrixXd = MatrixX_t<float>;
     
-#endif // MATRIX_H
+}
+
+// #include "matrix.tpp"

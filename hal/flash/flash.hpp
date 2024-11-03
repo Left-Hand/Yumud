@@ -11,6 +11,8 @@
 #define FLASH_DEBUG(...)
 #endif
 
+
+namespace yumud{
 class Flash:public Storage{
 protected:
 
@@ -83,4 +85,5 @@ public:
     bool busy() override{
         return false;
     }
+};
 };

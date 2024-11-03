@@ -1,17 +1,18 @@
-#ifndef __ADC_CHANNEL_HPP__
+#pragma once
 
-#define __ADC_CHANNEL_HPP__
-
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 #include "adc_utils.hpp"
 
 #include "analog_channel.hpp"
 
 
+
+namespace yumud{
+
+
 class AdcOnChip;
 class AdcPrimary;
 class AdcCompanion;
-
 
 class AdcChannelConcept:public AnalogInChannel{
 public:
@@ -50,7 +51,7 @@ public:
     virtual void setSampleCycles(const SampleCycles cycles) = 0;
 };
 
+}
 
-#endif
 
 

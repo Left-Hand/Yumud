@@ -1,11 +1,12 @@
-#ifndef __DVP_HPP__
-
-#define __DVP_HPP__
+#pragma once
 
 #include "sys/core/platform.h"
+
 #include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port.hpp"
 
+
+namespace yumud{
 class Dvp{
 protected:
     void install();
@@ -22,5 +23,4 @@ __interrupt void DVP_IRQHandler(void);
 extern Dvp dvp;
 
 #endif
-
-#endif
+}

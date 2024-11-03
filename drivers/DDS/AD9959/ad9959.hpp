@@ -8,6 +8,8 @@
 #endif
 #endif
 
+namespace yumud::drivers{
+
 
 class AD9959{
 // protected:
@@ -154,13 +156,17 @@ protected:
     #endif
     uint8_t               last_channels;
     scexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
-    SpiDrv & bus_drv;
+    SpiDrv bus_drv;
     Gpio &         reset_gpio;               // Reset pin (active = high)
     Gpio &         update_gpio;              // I/O_UPDATE: Apply config changes
 
 public:
-    AD9959(SpiDrv & _bus_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
+    AD9959(const SpiDrv & _bus_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
         bus_drv(_bus_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
+        
+    AD9959(SpiDrv && _bus_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
+        bus_drv(_bus_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
+
 
   void init();
 
@@ -223,3 +229,5 @@ protected:
   }
 
 };
+
+}

@@ -2,6 +2,7 @@
 
 #include "i2c.hpp"
 
+namespace yumud{
 
 class I2cHw: public I2c{
 private:
@@ -30,10 +31,13 @@ public:
     void enableHwTimeout(const bool en = true);
 };
 
+}
+
+
 #ifdef HAVE_I2C1
-extern I2cHw i2c1;
+extern yumud::I2cHw i2c1;
 #endif
 
 #ifdef HAVE_I2C2
-extern I2cHw i2c2;
+extern yumud::I2cHw i2c2;
 #endif

@@ -3,6 +3,8 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 
+using namespace yumud;
+
 // void GpioOrPwm::init(){
 //     if(std::holds_alternative<GpioRef>(inst_)){
 //         std::get<GpioRef>(inst_).get().outpp();

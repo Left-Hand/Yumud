@@ -1,9 +1,10 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "types/rgb.h"
 #include "hal/bus/i2c/i2cdrv.hpp"
+#include "drivers/device_defs.h"
 
+
+namespace yumud::drivers{
 
 class TCS34725{
 public:
@@ -93,11 +94,11 @@ protected:
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData);
+        bus_drv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData);
+        bus_drv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData, LSB);
     }
 
     void requestRegData(const RegAddress regAddress, uint16_t * data_ptr, const size_t len);
@@ -188,6 +189,6 @@ public:
         setIntegration(240);
         setGain(Gain::X1);
     }
+};
 
-    operator RGB888();
 };

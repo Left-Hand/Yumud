@@ -2,6 +2,8 @@
 
 #include "interpolation.hpp"
 
+namespace yumud{
+
 class CosineInterpolation:public Interpolation{
 public:
     static real_t forward(real_t x){
@@ -118,3 +120,5 @@ class QuadraticSeatInterpolation:public SeatInterpolation{
         return y;
     }
 };
+
+}

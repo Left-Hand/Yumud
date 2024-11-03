@@ -1,13 +1,16 @@
 #pragma once
 
 #include "i2c.hpp"
-#include "../sys/debug/debug_inc.h"
-#include "../hal/bus/busdrv.hpp"
+#include "sys/debug/debug_inc.h"
+#include "hal/bus/busdrv.hpp"
 
 #include <type_traits>
 #include <concepts>
 #include <initializer_list>
 
+
+
+namespace yumud{
 
 namespace I2cUtils{
     template <typename T>
@@ -31,8 +34,8 @@ protected:
 private:
     template<typename T>
     requires I2cUtils::ValidAddress<T>
-    void writeRegAddress(const T reg_address, const Endian endian = MSB){
-        if(bool(endian)){
+    void writeRegAddress(const T reg_address, const Endian endian){
+        if(endian == MSB){
             for(int i = sizeof(T) - 1; i >= 0; i--){
                 bus.write(((uint8_t *)&reg_address)[i]);
             }
@@ -45,7 +48,7 @@ private:
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void writePool_impl(const U reg_address, const T * data_ptr, const size_t length, const Endian msb = MSB){
+    void writePool_impl(const U reg_address, const T * data_ptr, const size_t length, const Endian endian){
         constexpr size_t size = sizeof(T);
 
         if constexpr(size == 0)   return;
@@ -55,9 +58,9 @@ private:
         const uint8_t * u8_ptr = (const uint8_t *)data_ptr;
 
         if(bus.begin(index) == Bus::ErrorType::OK){
-            writeRegAddress(reg_address);
+            writeRegAddress(reg_address, endian);
             for(size_t i = 0; i < bytes; i += size){
-                if(msb){
+                if(endian == MSB){
                     for(size_t j = size; j > 0; j--){
                         bus.write(u8_ptr[j-1 + i]);
                     }
@@ -75,7 +78,7 @@ private:
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void writePool_impl(const U reg_address, const T data, const size_t length, const Endian msb = MSB){
+    void writePool_impl(const U reg_address, const T data, const size_t length, const Endian endian){
         constexpr size_t size = sizeof(T);
 
         if constexpr(size == 0)   return;
@@ -85,9 +88,9 @@ private:
         const uint8_t * u8_ptr = (const uint8_t *)&data;
 
         if(bus.begin(index) == Bus::ErrorType::OK){
-            writeRegAddress(reg_address);
+            writeRegAddress(reg_address, endian);
             for(size_t i = 0; i < bytes; i += size){
-                if(msb){
+                if(endian == MSB){
                     for(size_t j = size; j > 0; j--){
                         bus.write(u8_ptr[j-1]);
                     }
@@ -104,17 +107,17 @@ private:
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void readPool_impl(const U reg_address, T * data_ptr, const size_t length, const Endian msb = MSB){
+    void readPool_impl(const U reg_address, T * data_ptr, const size_t length, const Endian endian){
         if(length == 0) return;
         constexpr size_t size = sizeof(T);
         size_t bytes = length * size;
         uint8_t * u8_ptr = (uint8_t *)data_ptr;
     
         if(bus.begin(index) == Bus::ErrorType::OK){
-            writeRegAddress(reg_address);
+            writeRegAddress(reg_address, endian);
             if(bus.begin(index | 0x01) == Bus::ErrorType::OK){
                 for(size_t i = 0; i < bytes; i += size){
-                    if(msb){
+                    if(endian == MSB){
                         for(size_t j = size; j > 0; j--){
                             uint32_t temp = 0;
                             bus.read(temp, !((j == 1) && (i == bytes - size)));
@@ -140,41 +143,43 @@ public:
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void writePool(const U reg_address, const T * data_ptr, const size_t length, const Endian msb = MSB){
-        writePool_impl<U, T>(reg_address, data_ptr, length, msb);
+    void writePool(const U reg_address, const T * data_ptr, const size_t length, const Endian endian){
+        writePool_impl<U, T>(reg_address, data_ptr, length, endian);
     }
 
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void writePool(const U reg_address, const T data, const size_t length, const Endian msb = MSB){
-        writePool_impl<U, T>(reg_address, data, length, msb);
+    void writePool(const U reg_address, const T data, const size_t length, const Endian endian){
+        writePool_impl<U, T>(reg_address, data, length, endian);
     }
 
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void writeReg(const U reg_address, const T reg_data, Endian msb = MSB){
-        writePool<U, T>(reg_address, &reg_data, 1, msb);
+    void writeReg(const U reg_address, const T reg_data, Endian endian){
+        writePool<U, T>(reg_address, &reg_data, 1, endian);
     }
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void readPool(const U reg_address, T * data_ptr, const size_t length, const Endian msb = MSB){
-        readPool_impl<U, T>(reg_address, data_ptr, length, msb);
+    void readPool(const U reg_address, T * data_ptr, const size_t length, const Endian endian){
+        readPool_impl<U, T>(reg_address, data_ptr, length, endian);
     }
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void readReg(const U reg_address, T & reg_data, Endian msb = MSB){
-        readPool<U, T>(reg_address, &reg_data, 1, msb);
+    void readReg(const U reg_address, T & reg_data, Endian endian){
+        readPool<U, T>(reg_address, &reg_data, 1, endian);
     }
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    T readReg(const U reg_address, Endian msb = MSB){
+    T readReg(const U reg_address, Endian endian){
         T reg_data;
-        readPool<U, T>(reg_address, &reg_data, 1, msb);
+        readPool<U, T>(reg_address, &reg_data, 1, endian);
         return reg_data;
     }
 };
+
+}

@@ -1,8 +1,4 @@
-#ifndef __SPREAD_CYCLE_HPP__
-
-#define __SPREAD_CYCLE_HPP__
-
-
+#pragma once
 
 // namespace SpreadCycle{
 
@@ -104,7 +100,3 @@
 
 
 // };
-
-
-
-#endif

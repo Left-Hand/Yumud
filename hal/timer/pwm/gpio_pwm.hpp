@@ -1,8 +1,10 @@
 #pragma once
 
-#include "../hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 #include "pwm_channel.hpp"
 
+
+namespace yumud{
 class GpioPwm:public PwmChannel, public Countable<uint16_t>{
 protected:
     Gpio & gpio_;
@@ -41,3 +43,5 @@ public:
 
     __inline operator real_t(){return real_t(cvr_) / real_t(arr_);}
 };
+
+}

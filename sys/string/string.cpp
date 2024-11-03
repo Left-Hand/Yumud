@@ -20,9 +20,9 @@
 */
 
 #include "String.hpp"
-/*********************************************/
-/*  Constructors                             */
-/*********************************************/
+
+
+using namespace yumud;
 
 String::String(const char *cstr)
 {

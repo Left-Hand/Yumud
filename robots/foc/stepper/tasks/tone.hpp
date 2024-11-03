@@ -2,6 +2,8 @@
 
 #include "robots/foc/motor_utils.hpp"
 
+namespace yumud::foc{
+using namespace yumud::drivers;
 class ToneTasker{
 protected:
     enum class Tones:int{
@@ -80,3 +82,5 @@ public:
     void reset();
     bool done();
 };
+
+}

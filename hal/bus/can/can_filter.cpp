@@ -1,24 +1,26 @@
 #include "can_filter.hpp"
 #include "core/platform.h"
 
+using namespace yumud;
+
 [[maybe_unused]]static void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id2){
     CAN_FilterInitTypeDef	CAN_FilterInitStructure;
 
-    CAN_FilterInitStructure.CAN_FilterNumber = FGrop;				 //ÉèÖÃ¹ýÂËÆ÷×é0£¬·¶Î§Îª0~13
-    CAN_FilterInitStructure.CAN_FilterMode=CAN_FilterMode_IdList;	 //ÉèÖÃ¹ýÂËÆ÷×é0Îª±êÊ¶·ûÁÐ±íÄ£Ê½
-    CAN_FilterInitStructure.CAN_FilterScale=CAN_FilterScale_32bit;  //ÉèÖÃ¹ýÂËÆ÷×é0Î»¿íÎª32Î»
+    CAN_FilterInitStructure.CAN_FilterNumber = FGrop;				 //ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½ï¿½ï¿½Î§Îª0~13
+    CAN_FilterInitStructure.CAN_FilterMode=CAN_FilterMode_IdList;	 //ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0Îªï¿½ï¿½Ê¶ï¿½ï¿½ï¿½Ð±ï¿½Ä£Ê½
+    CAN_FilterInitStructure.CAN_FilterScale=CAN_FilterScale_32bit;  //ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0Î»ï¿½ï¿½Îª32Î»
 
-    //ÉèÖÃ±êÊ¶·û¼Ä´æÆ÷
-    CAN_FilterInitStructure.CAN_FilterIdHigh=((Ext_Id1<<3)>>16)&0xffff ;		   //ÉèÖÃ±êÊ¶·û¼Ä´æÆ÷¸ß×Ö½Ú
-    CAN_FilterInitStructure.CAN_FilterIdLow=((Ext_Id1<<3)&0xffff)|CAN_Id_Extended;//ÉèÖÃ±êÊ¶·û¼Ä´æÆ÷µÍ×Ö½Ú,CAN_FilterIdLowµÄIDÎ»¿ÉÒÔËæÒâÉèÖÃ£¬ÔÚ´ËÄ£Ê½ÏÂ²»»áÓÐÐ§¡£
+    //ï¿½ï¿½ï¿½Ã±ï¿½Ê¶ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
+    CAN_FilterInitStructure.CAN_FilterIdHigh=((Ext_Id1<<3)>>16)&0xffff ;		   //ï¿½ï¿½ï¿½Ã±ï¿½Ê¶ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½
+    CAN_FilterInitStructure.CAN_FilterIdLow=((Ext_Id1<<3)&0xffff)|CAN_Id_Extended;//ï¿½ï¿½ï¿½Ã±ï¿½Ê¶ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½,CAN_FilterIdLowï¿½ï¿½IDÎ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ã£ï¿½ï¿½Ú´ï¿½Ä£Ê½ï¿½Â²ï¿½ï¿½ï¿½ï¿½ï¿½Ð§ï¿½ï¿½
 
-    //ÉèÖÃÆÁ±Î¼Ä´æÆ÷£¬ÕâÀïµ±±êÊ¶·û¼Ä´æÆ÷ÓÃ
-    CAN_FilterInitStructure.CAN_FilterMaskIdHigh=((Ext_Id2<<3)>>16)&0xffff;			//ÉèÖÃÆÁ±Î¼Ä´æÆ÷¸ß×Ö½Ú
-    CAN_FilterInitStructure.CAN_FilterMaskIdLow=((Ext_Id2<<3)&0xffff)|CAN_Id_Extended; //ÉèÖÃÆÁ±Î¼Ä´æÆ÷µÍ×Ö½Ú
+    //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¼Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ïµ±ï¿½ï¿½Ê¶ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½ï¿½ï¿½
+    CAN_FilterInitStructure.CAN_FilterMaskIdHigh=((Ext_Id2<<3)>>16)&0xffff;			//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¼Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½
+    CAN_FilterInitStructure.CAN_FilterMaskIdLow=((Ext_Id2<<3)&0xffff)|CAN_Id_Extended; //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Î¼Ä´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö½ï¿½
 
-    CAN_FilterInitStructure.CAN_FilterFIFOAssignment=CAN_FIFO0; //´Ë¹ýÂËÆ÷×é¹ØÁªµ½½ÓÊÕFIFO0
-    CAN_FilterInitStructure.CAN_FilterActivation=ENABLE;		 //¼¤»î´Ë¹ýÂËÆ÷×é
-    CAN_FilterInit(&CAN_FilterInitStructure);					 //ÉèÖÃ¹ýÂËÆ÷
+    CAN_FilterInitStructure.CAN_FilterFIFOAssignment=CAN_FIFO0; //ï¿½Ë¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½FIFO0
+    CAN_FilterInitStructure.CAN_FilterActivation=ENABLE;		 //ï¿½ï¿½ï¿½ï¿½Ë¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    CAN_FilterInit(&CAN_FilterInitStructure);					 //ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ï¿½ï¿½
 }
 
 static void CAN_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t mask2){

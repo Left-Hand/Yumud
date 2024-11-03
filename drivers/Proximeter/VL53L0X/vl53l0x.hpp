@@ -3,6 +3,9 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "../DistanceSensor.hpp"
 
+
+namespace yumud::drivers{
+
 class VL53L0X:public DistanceSensor{
 protected:
     I2cDrv bus_drv;
@@ -29,19 +32,17 @@ private:
     bool highPrec = false;
     bool continuous = false;
 
-    #pragma pack(push, 1)
-
     struct Result{
         uint16_t ambientCount; /**< Environment quantity */
         uint16_t signalCount;  /**< A semaphore */
         uint16_t distance;
     };
 
-    #pragma pack(pop)
+    
 
     Result result, last_result;
 	void writeByteData(const uint8_t Reg, const uint8_t byte){
-        bus_drv.writeReg(Reg, byte);
+        bus_drv.writeReg(Reg, byte, MSB);
     }
 
     void flush();
@@ -49,11 +50,14 @@ private:
 
 	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
-        bus_drv.readReg(Reg, data);
+        bus_drv.readReg(Reg, data, MSB);
         return data;
     }
 
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
-        bus_drv.readPool(reg, data, len);
+        // sizeof(Result);
+        bus_drv.readPool(reg, data, len, MSB);
     }
+};
+
 };

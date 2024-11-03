@@ -29,6 +29,9 @@
 
 using Sys::t;
 
+using namespace yumud;
+using namespace yumud::drivers;
+
 void digipw_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 

@@ -12,7 +12,7 @@ limitations under the License.
 
 #include "tinymaix.h"
 #include "float.h"
-#include "math.h"
+// #include "math.h"
 
 /*************************** TML_CONV2D **********************************/
 static uint32_t k_oft[TM_MAX_KSIZE]; 
@@ -202,7 +202,7 @@ tm_err_t __attribute__((weak)) tml_softmax(tm_mat_t* in, tm_mat_t* out, sctype_t
     float sum = 0;
     for(int c=0; c <in->c; c++){
         dout[c] -= dmax;
-        dout[c] = (float)exp(dout[c]);
+        dout[c] = (float)exp(real_t::from(dout[c]));
         sum     += dout[c];
         dout[c] -= 0.000001;  //prevent 1.0 value (cause 256 overflow)
     }

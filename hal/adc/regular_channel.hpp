@@ -2,6 +2,8 @@
 
 #include "adc_channel.hpp"
 
+namespace yumud{
+
 class RegularChannel: public AdcChannelOnChip{
 public:
     using SampleCycles = AdcUtils::SampleCycles;
@@ -27,5 +29,8 @@ public:
     void setSampleCycles(const SampleCycles cycles) override{
         ADC_RegularChannelConfig(instance, (uint8_t)channel, rank, (uint8_t)cycles);
     }
+
+};
+
 
 };

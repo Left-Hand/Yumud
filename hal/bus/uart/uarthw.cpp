@@ -2,6 +2,7 @@
 
 #include "uarthw.hpp"
 
+using namespace yumud;
 
 #define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
 #define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE

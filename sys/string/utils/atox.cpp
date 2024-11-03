@@ -1,5 +1,8 @@
 #include "../string_utils.hpp"
 
+
+using namespace yumud;
+
 int StringUtils::atoi(const char * str, const size_t len) {
 	int ret = 0;
 	bool minus = false;

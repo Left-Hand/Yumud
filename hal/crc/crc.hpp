@@ -1,10 +1,10 @@
-#ifndef __CRC_HPP__
+#pragma once
 
-#define __CRC_HPP__
-
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 #include <initializer_list>
 
+
+namespace yumud{
 class Crc{
 protected:
     Crc(){;}
@@ -23,4 +23,4 @@ public:
 
 extern Crc & crc;
 
-#endif
+}

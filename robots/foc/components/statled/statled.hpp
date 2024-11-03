@@ -5,10 +5,15 @@
 #include "drivers/CommonIO/Led/rgbLed.hpp"
 #include "types/color/color_t.hpp"
 
-using Sys::t;
-using Color = Color_t<real_t>;
 
-namespace StepperComponents{
+
+namespace yumud::foc::StepperComponents{
+
+using Sys::t;
+using Color = yumud::Color_t<real_t>;
+
+
+using namespace yumud::drivers;
 class StatLed{
 public:
     enum class Method:uint8_t{

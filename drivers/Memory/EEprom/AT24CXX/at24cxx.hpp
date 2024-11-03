@@ -3,6 +3,8 @@
 #include "drivers/device_defs.h"
 #include "drivers/Memory/memory.hpp"
 
+namespace yumud{
+
 class AT24CXX:public StoragePaged{
 private:
     constexpr bool is_small_chip(){return m_capacity <= 256;}
@@ -77,3 +79,4 @@ AT24CXX_DEF_TEMPLATE(512, 1 << 16, 128)
 
 #undef AT24CXX_DEF_TEMPLATE
 
+}

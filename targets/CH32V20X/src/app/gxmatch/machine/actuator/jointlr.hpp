@@ -4,6 +4,7 @@
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 namespace gxm{
+using namespace yumud::drivers;
     
 class JointLR:public Joint{
 public:

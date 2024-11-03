@@ -2,6 +2,8 @@
 
 #include "types/matrix/matrix_static.hpp"
 
+
+namespace yumud{
 template <arithmetic T, size_t N>
 struct Jet_t
 {
@@ -153,4 +155,6 @@ __inline OutputStream & operator<<(OutputStream & os, const Jet_t<T, N> & jet){
     }
     os << " ]";
     return os;
+}
+
 }

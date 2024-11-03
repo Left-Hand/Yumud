@@ -18,7 +18,9 @@
 #include <list>
 #include <unordered_set>
 
-namespace NVCV2{
+using namespace yumud;
+
+namespace yumud::nvcv2{
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
 

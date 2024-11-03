@@ -4,6 +4,8 @@
 #include "drivers/IMU/IMU.hpp"
 #include <tuple>
 
+namespace yumud::drivers{
+
 class QMC5883L:public Magnetometer{
 public:
     enum class DataRate:uint8_t{
@@ -29,61 +31,54 @@ protected:
     real_t fs;
     uint8_t ovsfix = 0;
 
-    struct MagXReg{
-        REG16_BEGIN
-        REG16_END
+    struct MagXReg:public Reg16{
+        uint16_t data;
     };
 
-    struct MagYReg{
-        REG16_BEGIN
-        REG16_END
+    struct MagYReg:public Reg16{
+        uint16_t data;
     };
 
-    struct MagZReg{
-        REG16_BEGIN
-        REG16_END
+    struct MagZReg:public Reg16{
+        uint16_t data;
     };
 
-    struct StatusReg{
-        REG8_BEGIN
+    struct StatusReg:public Reg8{
         uint8_t ready:1;
         uint8_t ovl:1;
         uint8_t lock:1;
         uint8_t __resv__:5;
-        REG8_END
     };
 
-    struct TemperatureReg{
-        REG16_BEGIN
-        REG16_END
+    struct TemperatureReg:public Reg16{
+        uint16_t data;
     };
 
-    struct ConfigAReg{
-        REG8_BEGIN
+    struct ConfigAReg:public Reg8{
+        
         uint8_t measureMode:2;
         uint8_t dataRate:2;
         uint8_t fullScale:2;
         uint8_t OverSampleRatio:2;
-        REG8_END
+        
     };
 
-    struct ConfigBReg{
-        REG8_BEGIN
+    struct ConfigBReg:public Reg8{
+        
         uint8_t intEn:1;
         uint8_t __resv__:5;
         uint8_t rol:1;
         uint8_t srst:1;
-        REG8_END
+        
     };
 
-    struct ResetPeriodReg{
-        REG8_BEGIN
-        REG8_END
+    struct ResetPeriodReg:public Reg8{
+        using Reg8::operator=;
+        uint8_t data;
     };
 
-    struct ChipIDReg{
-        REG8_BEGIN
-        REG8_END
+    struct ChipIDReg:public Reg8{
+        uint8_t data;
     };
 
     enum class RegAddress:uint8_t{
@@ -111,19 +106,19 @@ protected:
     };
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
     }
 
     void requestPool(const RegAddress regAddress, uint8_t * datas, uint8_t len){
@@ -170,7 +165,7 @@ protected:
     }
 
     bool isIdle(){
-        readReg(RegAddress::Status, statusReg.data);
+        readReg(RegAddress::Status, statusReg);
         return statusReg.ready;
     }
 public:
@@ -188,68 +183,71 @@ public:
 
     void enableContMode(const bool en = true){
         configAReg.measureMode = (uint8_t)(en);
-        writeReg(RegAddress::ConfigA, configAReg.data);
+        writeReg(RegAddress::ConfigA, configAReg);
     }
 
     void setDataRate(const DataRate rate){
         configAReg.dataRate = (uint8_t)rate;
-        writeReg(RegAddress::ConfigA, configAReg.data);
+        writeReg(RegAddress::ConfigA, configAReg);
     }
 
     void setFullScale(const FullScale fullscale){
         configAReg.fullScale = (uint8_t)fullscale;
-        writeReg(RegAddress::ConfigA, configAReg.data);
+        writeReg(RegAddress::ConfigA, configAReg);
         setFs(fullscale);
     }
 
     void setOverSampleRatio(const OverSampleRatio ratio){
         configAReg.OverSampleRatio = (uint8_t)ratio;
-        writeReg(RegAddress::ConfigA, configAReg.data);
+        writeReg(RegAddress::ConfigA, configAReg);
         setOvsfix(ratio);
     }
 
-    bool update(){
+    void update(){
         bool done = isIdle();
         if(done){
             requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 3);
         }
-        return done;
+        // return done;
     }
 
     std::tuple<real_t, real_t, real_t> getMagnet() override {
         return std::make_tuple(
-            From16BitToGauss(magXReg.data),
-            From16BitToGauss(magYReg.data),
-            From16BitToGauss(magZReg.data)
+            From16BitToGauss(magXReg),
+            From16BitToGauss(magYReg),
+            From16BitToGauss(magZReg)
         );
     }
     bool isChipValid(){
-        readReg(RegAddress::ChipID, chipIDReg.data);
-        return (chipIDReg.data == 0xFF);
+        readReg(RegAddress::ChipID, chipIDReg);
+        return (chipIDReg == 0xFF);
     }
 
     void setResetPeriod(const uint8_t resetPeriod){
-        resetPeriodReg.data = resetPeriod;
-        writeReg(RegAddress::ResetPeriod, resetPeriodReg.data);
+        resetPeriodReg = resetPeriod;
+        writeReg(RegAddress::ResetPeriod, resetPeriodReg);
     }
 
     void reset(){
         configBReg.srst = true;
-        writeReg(RegAddress::ConfigB, resetPeriodReg.data);
+        writeReg(RegAddress::ConfigB, resetPeriodReg);
         configBReg.srst = false;
-        writeReg(RegAddress::ConfigB, resetPeriodReg.data);
+        writeReg(RegAddress::ConfigB, resetPeriodReg);
     }
 
     void enableInterrupt(const bool en = true){
         configBReg.intEn = (uint8_t)(en);
-        writeReg(RegAddress::ConfigB, configBReg.data);
+        writeReg(RegAddress::ConfigB, configBReg);
     }
 
 
 
     bool isOverflow(){
-        readReg(RegAddress::Status, statusReg.data);
+        readReg(RegAddress::Status, statusReg);
         return statusReg.ovl;
     }
 
 };
+
+
+}

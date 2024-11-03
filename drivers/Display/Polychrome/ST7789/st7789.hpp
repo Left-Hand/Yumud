@@ -4,6 +4,8 @@
 #include "types/image/image.hpp"
 #include "hal/bus/spi/spi.hpp"
 
+namespace yumud::drivers{
+
 class ST7789:public Displayer<RGB565>{
 private:
     DisplayInterfaceSpi & interface;
@@ -49,7 +51,7 @@ protected:
 
     __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
         setpos_unsafe(pos);
-        interface.writeData(color.data);
+        interface.writeData(uint16_t(color));
     }
 
     void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override;
@@ -82,4 +84,6 @@ public:
     void setFlushDirH(const bool dir){modifyCtrl(dir, 2);}
 
     void setInversion(const bool inv){writeCommand(0x20 + inv);}
+};
+
 };

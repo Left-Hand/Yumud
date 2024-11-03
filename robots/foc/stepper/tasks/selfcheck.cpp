@@ -1,5 +1,7 @@
 #include "selfcheck.hpp"
 
+using namespace yumud::foc;
+
 void SelfCheckTasker::run(){
     switch(sub_state){
         case SubState::INIT:

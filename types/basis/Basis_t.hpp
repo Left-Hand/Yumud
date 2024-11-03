@@ -34,6 +34,8 @@
 #include "types/Vector3/vector3_t.hpp"
 #include "types/quat/Quat_t.hpp"
 
+namespace yumud{
+
 template <arithmetic T>
 class Basis_t {
 public:
@@ -361,6 +363,8 @@ __inline OutputStream & operator<<(OutputStream & os, const Basis_t<T> & mat){
 	os << mat[1] << ',';
 	os << mat[2] << ')';
 	return os;
+}
+
 }
 
 #include "Basis_t.tpp"

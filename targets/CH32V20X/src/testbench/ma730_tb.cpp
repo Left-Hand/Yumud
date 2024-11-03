@@ -2,6 +2,8 @@
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "bus/spi/spihw.hpp"
 
+
+using namespace yumud::drivers;
 void ma730_main(){
     DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 

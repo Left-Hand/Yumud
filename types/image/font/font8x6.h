@@ -1,7 +1,6 @@
-#ifndef __FONT6X8_H__
-#define __FONT6X8_H__
+#pragma once
 
-#include "stdint.h"
+#include "sys/core/platform.h"
 
 scexpr uint8_t font8x6_enc[][6]={
 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00},// sp
@@ -99,7 +98,5 @@ scexpr uint8_t font8x6_enc[][6]={
 {0x14, 0x14, 0x14, 0x14, 0x14, 0x14},// horiz lines
 
 };
-
-#endif
 
 

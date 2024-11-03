@@ -1,6 +1,12 @@
 #pragma once
 
 
+#include "../drivers/device_defs.h"
+#include "../drivers/IMU/IMU.hpp"
+
+
+namespace yumud::drivers{
+
 class ADXL345:public Axis6{
 public:
     enum class DataRate:uint8_t{
@@ -57,62 +63,51 @@ protected:
 
 
     struct DeviceIDReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct TapThresholdReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct OffsetXReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct OffsetYReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct OffsetZReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct TapDurationReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct TapLatencyReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct TapWindowReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct ActivityThresholdReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct InactivityThresholdReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct InactivityTimeReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct AxisEnablerReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t InactiveZ :1;
         uint8_t InactiveY :1;
         uint8_t InactiveX :1;
@@ -121,31 +116,29 @@ protected:
         uint8_t activeY :1;
         uint8_t activeZ :1;
         uint8_t activeACorDC:1;
-        REG8_END
+        
     };
 
     struct FreefallThresholdReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct FreefallTimeReg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct AxisControlForSingle2DoubleTapReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t tapZenabled :1;
         uint8_t tapYenabled :1;
         uint8_t tapXenabled :1;
         uint8_t doubleCheck :1;
         uint8_t __resv__ :4;
-        REG8_END
+        
     };
 
     struct SourceOfSingle2DoubleTapReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t tapZSource :1;
         uint8_t tapYSource :1;
         uint8_t tapXSource :1;
@@ -154,29 +147,29 @@ protected:
         uint8_t actYsource :1;
         uint8_t actXsource :1;
         uint8_t __resv__:1;
-        REG8_END
+        
     };
 
     struct DataRateReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t dataRate :4;
         uint8_t lowPower :1;
         uint8_t __resv__ :3;
-        REG8_END
+        
     };
 
     struct PowerSavingReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t wakeupFreq :2;
         uint8_t sleep :1;
         uint8_t measure:1;
         uint8_t autoSleep:1;
         uint8_t link:1;
-        REG8_END
+        
     };
 
     struct InterruptEnablerReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t overrun :1;
         uint8_t watermark :1;
         uint8_t freefall :1;
@@ -185,11 +178,11 @@ protected:
         uint8_t doubleTap:1;
         uint8_t SingleTap:1;
         uint8_t dataReady:1;
-        REG8_END
+        
     };
 
     struct InterruptMapReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t overrun :1;
         uint8_t watermark :1;
         uint8_t freefall :1;
@@ -198,11 +191,11 @@ protected:
         uint8_t doubleTap:1;
         uint8_t SingleTap:1;
         uint8_t dataReady:1;
-        REG8_END
+        
     };
 
     struct SourceOfInterruptReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t overrun :1;
         uint8_t watermark :1;
         uint8_t freefall :1;
@@ -211,11 +204,11 @@ protected:
         uint8_t doubleTap:1;
         uint8_t SingleTap:1;
         uint8_t dataReady:1;
-        REG8_END
+        
     };
 
     struct DataFormatReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t range :2;
         uint8_t justify:1;
         uint8_t fullResolution:1;
@@ -223,53 +216,47 @@ protected:
         uint8_t intInvert :1;
         uint8_t spiMode:1;
         uint8_t selfTest:1;
-        REG8_END
+        
     };
 
     struct DataX0Reg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct DataX1Reg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct DataY0Reg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct DataY1Reg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct DataZ0Reg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct DataZ1Reg:public Reg8{
-        REG8_BEGIN
-        REG8_END
+        uint8_t data;
     };
 
     struct FifoCtrlReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t samples:5;
         uint8_t trigger :1;
         uint8_t fifoMode:2;
-        REG8_END
+        
     };
 
     struct FifoStatusReg:public Reg8{
-        REG8_BEGIN
+        
         uint8_t entires:6;
         uint8_t __resv__ :1;
         uint8_t fifoTrig:1;
-        REG8_END
+        
     };
 
     struct{
@@ -306,29 +293,49 @@ protected:
     };
 
 protected:
-    BusDrv & bus_drv;
+    std::optional<I2cDrv> i2c_drv;
+    std::optional<SpiDrv> spi_drv;
+
 
 
     void writeReg(const RegAddress reg_address, const Reg8 & reg_data){
-        bus_drv.write({(uint8_t)((uint8_t)reg_address & 0x7F), *(uint8_t *)&reg_data});
+        if(i2c_drv){
+            i2c_drv->write({(uint8_t)((uint8_t)reg_address & 0x7F), *(uint8_t *)&reg_data});
+        } else if (spi_drv) {
+            TODO_TRAP("spi is not support yet")
+        }
     }
 
     void readReg(const RegAddress reg_address, Reg8 & reg_data){
-        bus_drv.write((uint8_t)((uint8_t)reg_address | 0x80), false);
-        uint8_t temp = 0;
-        bus_drv.read(temp);
-        uint8_t * reg_ptr = (uint8_t *)&reg_data;
-        *reg_ptr = temp;
+        if(i2c_drv){
+            i2c_drv->write((uint8_t)((uint8_t)reg_address | 0x80), false);
+            uint8_t temp = 0;
+            i2c_drv->read(temp);
+            uint8_t * reg_ptr = (uint8_t *)&reg_data;
+            *reg_ptr = temp;
+        }else if(spi_drv){
+            TODO_TRAP("spi is not support yet")
+        }
     }
 public:
+    scexpr uint8_t defualt_i2c_addr = 0x1D << 1;
 
-    ADXL345(BusDrv & _bus_drv): bus_drv(_bus_drv){;}
+    ADXL345(const I2cDrv & _i2c_drv): i2c_drv(_i2c_drv){;}
+    ADXL345(I2cDrv && _i2c_drv): i2c_drv(_i2c_drv){;}
+    ADXL345(I2c & _i2c, const uint8_t addr = defualt_i2c_addr): i2c_drv(I2cDrv(_i2c, addr)){;}
+
+    ADXL345(const SpiDrv & _spi_drv): spi_drv(_spi_drv){;}
+    ADXL345(SpiDrv && _spi_drv): spi_drv(_spi_drv){;}
+
+    ADXL345(Spi & _spi, const uint8_t index): spi_drv(SpiDrv(_spi, index)){;}
     uint8_t getDeviceID(){
         readReg(RegAddress::DeviceID, deviceIDReg);
         return deviceIDReg.data;
     }
 
-    void getAccel(real_t & x, real_t & y, real_t & z) override;
-    void getGyro(real_t & x, real_t & y, real_t & z) override;
+    std::tuple<real_t, real_t, real_t> getAccel() override;
+    std::tuple<real_t, real_t, real_t> getGyro() override;
+
+};
 
 };

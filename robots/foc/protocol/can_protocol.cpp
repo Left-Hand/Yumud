@@ -1,7 +1,10 @@
 #include "robots/foc/focmotor.hpp"
+#include "robots/foc/misc/motor_enums.hpp"
+// #include "hal/bus/can/can.hpp"
 
-
-
+using namespace yumud;
+using namespace yumud::foc;
+using namespace yumud::foc::MotorUtils;
 
 void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #define EXECUTER_BIND(cmd, method, ...)\

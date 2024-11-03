@@ -5,7 +5,8 @@
 #include "hal/nvic/nvic.hpp"
 #include <functional>
 
-namespace TimerUtils{
+
+namespace yumud::TimerUtils{
     enum class Mode:uint16_t{
         Up = TIM_CounterMode_Up,
         Down = TIM_CounterMode_Down,

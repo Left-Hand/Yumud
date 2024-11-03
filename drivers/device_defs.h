@@ -16,29 +16,11 @@
 #include "hal/adc/adc_channel.hpp"
 
 
-#ifndef REG8_BEGIN
-#define REG8_BEGIN union{struct{
-#endif
-
-#ifndef REG8_END
-#define REG8_END };uint8_t data;};
-#endif
-
-#ifndef REG16_BEGIN
-#define REG16_BEGIN union{struct{
-#endif
-
-#ifndef REG16_END
-#define REG16_END };uint16_t data;};
-#endif
-
 template<typename T>
 struct Reg_t{
     Reg_t<T> & operator = (const Reg_t<T> & other) = delete;
     Reg_t<T> & operator = (Reg_t<T> && other) = delete;
-    // Reg_t(){};
-    // Reg_t(T && other) = delete;
-    // Reg_t(const T & other) = delete;
+
     constexpr Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
     constexpr operator T() const {return (*reinterpret_cast<const T *>(this));}
     constexpr operator T & () {return (*reinterpret_cast<T *>(this));}
@@ -62,7 +44,7 @@ struct Fraction {
 public:
     int numerator;
     int denominator;
-    Fraction(const int _numerator,const int _denominator) : numerator(_numerator), denominator(_denominator) {}
+    // Fraction(const int _numerator,const int _denominator) : numerator(_numerator), denominator(_denominator) {}
 
     int operator * (const int & value){
         return numerator * value / denominator;
@@ -82,3 +64,7 @@ public:
 #define SPIDEV_CONTSRTUCTER(name)\
     name(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}\
     name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+
+
+
+#define TODO_TRAP(str) do{DEBUG_PRINTLN("todo:", str); CREATE_FAULT}while(false);

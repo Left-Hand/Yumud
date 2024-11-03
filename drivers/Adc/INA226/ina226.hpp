@@ -9,7 +9,7 @@
 #define INA226_DEBUG(...)
 #endif
 
-
+namespace yumud::drivers{
 class INA226 {
 public:
 
@@ -87,11 +87,11 @@ protected:
     };
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        i2c_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
+        i2c_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        i2c_drv.readReg((uint8_t)regAddress, regData);
+        i2c_drv.readReg((uint8_t)regAddress, regData, MSB);
     }
 
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
@@ -233,3 +233,4 @@ public:
     }
 };
 
+}

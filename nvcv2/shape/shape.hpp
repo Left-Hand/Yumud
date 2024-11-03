@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <bits/stl_numeric.h>
 
-namespace NVCV2::Shape{
+namespace yumud::nvcv2::Shape{
     namespace Cores{
         const int roberts_x[2][2] = {{-1, 0}, {0, 1}};
         const int roberts_y[2][2] = {{0, -1}, {1, 0}};

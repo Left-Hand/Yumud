@@ -2,6 +2,8 @@
 
 #include "odometer.hpp"
 
+namespace yumud::drivers{
+
 class OdometerPoles:public Odometer{
 protected:
     scexpr int max_poles = 100;
@@ -71,4 +73,6 @@ public:
     real_t pole2position(const int pole){
         return real_t(pole) / poles;
     }
+};
+
 };

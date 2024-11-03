@@ -1,10 +1,9 @@
 #pragma once
 
-#include "../types/range/range_t.hpp"
+#include "types/range/range_t.hpp"
 #include "storage.hpp"
 
-// class Storage;
-
+namespace yumud{
 class Memory{
 
 protected:
@@ -31,4 +30,5 @@ public:
 
 };
 
+}
 #include "memory.tpp"

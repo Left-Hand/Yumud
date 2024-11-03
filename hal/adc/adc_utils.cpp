@@ -1,6 +1,6 @@
 #include "adc_utils.hpp"
 
-namespace AdcUtils{
+namespace yumud::AdcUtils{
 
     void installPin(const Channel channel, const bool en){
         uint8_t ch_index = (uint8_t)channel;

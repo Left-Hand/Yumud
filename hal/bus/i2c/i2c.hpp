@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../hal/bus/bus.hpp"
-#include "../hal/gpio/gpio.hpp"
+#include "hal/bus/bus.hpp"
+#include "hal/gpio/gpio.hpp"
 
+namespace yumud{
 class I2c:public ProtocolBus{
 protected:
     GpioConcept & scl_gpio;
@@ -20,3 +21,6 @@ public:
     GpioConcept & scl(){return scl_gpio;};
     GpioConcept & sda(){return sda_gpio;};
 };
+
+
+}

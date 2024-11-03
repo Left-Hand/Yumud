@@ -1,4 +1,7 @@
 #include "painter_concept.hpp"
+
+using namespace yumud;
+
 void PainterConcept::drawHollowRect(const Rect2i & rect){
     // Rect2i regular = rect.abs();
     // if(!src_image -> get_view().intersects(regular)) return;

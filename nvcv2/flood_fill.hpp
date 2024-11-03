@@ -2,7 +2,7 @@
 
 #include "nvcv2.hpp"
 
-namespace NVCV2::Shape{
+namespace yumud::nvcv2::Shape{
 
 struct Blob{
     Rect2i rect;
@@ -68,8 +68,8 @@ public:
 
 }
 
-__fast_inline OutputStream & operator<<(OutputStream & os, const NVCV2::Shape::Blob & blob){
-    using namespace NVCV2;
+__fast_inline yumud::OutputStream & operator<<(yumud::OutputStream & os, const yumud::nvcv2::Shape::Blob & blob){
+    using namespace yumud::nvcv2;
     return os << '<' << blob.index << '>' << blob.rect;
 }
 

@@ -29,7 +29,8 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#include "../sys/core/platform.h"
+namespace yumud{
+
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::abs() const{
@@ -239,4 +240,7 @@ constexpr Vector2_t<T> operator/(const Vector2_t<T> &p_vector2, const Vector2_t<
     Vector2_t<T> final = p_vector2;
     final /= d_vector2;
     return final;
+}
+
+
 }

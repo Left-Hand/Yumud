@@ -1,5 +1,6 @@
 #include "bkp.hpp"
 
+using namespace yumud;
 
 void Bkp::init(){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);
@@ -29,6 +30,3 @@ void BkpItem::store(const uint16_t data){
 uint16_t BkpItem::load(){
     return bkp.readData(index);
 }
-
-
-Bkp & bkp = Bkp::getInstance();

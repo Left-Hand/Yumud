@@ -1,8 +1,10 @@
 #include "enums.hpp"
 #include "sys/stream/ostream.hpp"
 
-OutputStream & operator<<(OutputStream & os, const TB tb){
-    // using namespace NVCV2;
+using namespace yumud;
+
+yumud::OutputStream & operator<<(yumud::OutputStream & os, const TB tb){
+    // using namespace yumud::nvcv2;
     switch(tb){
         case TB::TOP: return os << 'T';break;
         case TB::BOTTOM: return os << 'B';break;
@@ -11,8 +13,8 @@ OutputStream & operator<<(OutputStream & os, const TB tb){
 }
 
 
-OutputStream & operator<<(OutputStream & os, const LR lr){
-    // using namespace NVCV2;
+yumud::OutputStream & operator<<(yumud::OutputStream & os, const LR lr){
+    // using namespace yumud::nvcv2;
     switch(lr){
         case LR::LEFT: return os << 'L';break;
         case LR::RIGHT: return os << 'R';break;

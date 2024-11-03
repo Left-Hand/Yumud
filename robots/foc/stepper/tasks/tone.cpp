@@ -1,5 +1,7 @@
 #include "tone.hpp"
 
+using namespace yumud::foc;
+
 void ToneTasker::run(){
     using enum Tones;
 

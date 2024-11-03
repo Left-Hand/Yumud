@@ -5,6 +5,9 @@
 #include "../hal/timer/instance/timer_hw.hpp"
 #include "sys/math/real.hpp"
 
+
+namespace yumud::drivers{
+
 class AD7607{
 protected:
     SpiDrv spi_drv;
@@ -20,3 +23,4 @@ public:
     void BusyIrqCallback(uint16_t *ad7606Val,uint8_t ad7606Chl);
     real_t conv(uint16_t bin);
 };
+}

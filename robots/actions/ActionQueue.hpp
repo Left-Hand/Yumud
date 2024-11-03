@@ -3,6 +3,9 @@
 #include "ActionConcept.hpp"
 #include <memory>
 
+namespace yumud{
+
+
 template<typename T>
 concept is_action = std::is_base_of_v<Action, T>;
 
@@ -47,3 +50,5 @@ public:
 
     void update();
 };
+
+}

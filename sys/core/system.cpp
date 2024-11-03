@@ -121,6 +121,9 @@ uint32_t Sys::Chip::getFlashSize(){
 }
 
 uint32_t Sys::Chip::getChipIdCrc(){
+
+    using yumud::crc;
+    
     static uint32_t chip_id_crc = 0;
     if(!chip_id_crc){
         crc.init();

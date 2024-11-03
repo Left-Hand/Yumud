@@ -1,5 +1,6 @@
 #include "w25q16.hpp"
 
+using namespace yumud;
 
 void W25Q16::storeBytes(const uint8_t data, const Address loc){
     this->storeBytes(&data, 1, loc);

@@ -5,6 +5,8 @@
 #include "types/vector2/vector2_t.hpp"
 #include "sys/math/real.hpp"
 
+
+namespace yumud{
 class Mapping{
     // virtual real_t mapping(const Vector2 & from,const Vector2 & to, const real_t x) = 0;
 };
@@ -29,3 +31,5 @@ public:
 
 };
 
+
+}

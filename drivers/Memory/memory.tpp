@@ -1,5 +1,6 @@
 #include "storage.hpp"
 
+namespace yumud{
 void Memory::store(const auto & data, const Address loc){
     storage.store(&data, (Address)sizeof(data), loc);
 }
@@ -17,4 +18,6 @@ T Memory::load(const Address loc){
     T data;
     storage.load(&data, (Address)sizeof(data), loc);
     return data;
+}
+
 }

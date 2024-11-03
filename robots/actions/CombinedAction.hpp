@@ -3,6 +3,9 @@
 #include "ActionConcept.hpp"
 #include "ActionQueue.hpp"
 
+
+namespace yumud{
+
 struct CombinedAction:public Action{
 protected:
     using Queue = std::queue<std::unique_ptr<Action>>; 
@@ -29,3 +32,6 @@ public:
     size_t pending() const {return action_queue.size();}
 };
 
+
+
+}

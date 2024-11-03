@@ -1,6 +1,4 @@
-#ifndef __Complex_t_HPP__
-
-#define __Complex_t_HPP__
+#pragma once
 
 #include "../sys/core/platform.h"
 #include <type_traits>
@@ -120,4 +118,3 @@ public:
 };
 
 #include "complex_t.tpp"
-#endif

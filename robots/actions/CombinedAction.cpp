@@ -1,5 +1,9 @@
 #include "CombinedAction.hpp"
 
+
+using namespace yumud;
+
+
 void CombinedAction::execute() {
     if(action_queue.empty() == false){
         Action & action = *action_queue.front();

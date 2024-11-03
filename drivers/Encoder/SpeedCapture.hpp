@@ -2,6 +2,8 @@
 
 #include "Encoder.hpp"
 
+
+namespace yumud::drivers{
 class SpeedCapture{
 // protected:
 public:
@@ -47,3 +49,6 @@ public:
         return speed;
     }
 };
+
+
+}

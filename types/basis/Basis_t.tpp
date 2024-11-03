@@ -29,8 +29,13 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
+
 #define SQRT12 static_cast<T>(3.464101615137754f)
 #define cofac(row1, col1, row2, col2) ((*this)[row1][col1] * (*this)[row2][col2] - (*this)[row1][col2] * (*this)[row2][col1])
+
+
+namespace yumud{
+
 
 template<arithmetic T>
 void Basis_t<T>::from_z(const Vector3_t<T> &p_z) {
@@ -1013,6 +1018,7 @@ Basis_t<T> Basis_t<T>::slerp(const Basis_t<T> &p_to, const T p_weight) const {
 	return b;
 }
 
+}
 
 
 #undef SQRT12

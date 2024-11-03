@@ -1,6 +1,4 @@
-#ifndef __FONT_HPP__
-
-#define __FONT_HPP__
+#pragma once
 
 #include "types/vector2/vector2_t.hpp"
 #include "types/image/image.hpp"
@@ -8,6 +6,9 @@
 #include "font8x5.h"
 #include "font16x8.h"
 #include "chfont7x7.h"
+
+
+namespace yumud{
 
 class Font{
 protected:
@@ -124,6 +125,8 @@ public:
 
 extern Font7x7 font7x7;
 
+}
+
 // class Font16x8:public Font{
 // public:
 //     Font16x8():Font((void **)font16x8_enc, Vector2i(8,16)){;}
@@ -134,6 +137,3 @@ extern Font7x7 font7x7;
 // };
 
 // extern Font16x8 font16x8;
-
-
-#endif

@@ -11,6 +11,7 @@
 #define DRV8313_DEBUG(...)
 #endif
 
+namespace yumud::drivers{
 
 class DRV8313:public Coil3Driver{
 protected:
@@ -62,3 +63,5 @@ public:
 };
 
 using AT8325 = DRV8313;
+
+};

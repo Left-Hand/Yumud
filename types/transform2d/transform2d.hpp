@@ -33,6 +33,9 @@
 
 #include "types/rect2/rect2_t.hpp"
 
+
+namespace yumud{
+
 template<arithmetic T>
 struct Transform2D_t{
 	// static const Transform2D_t IDENTITY;
@@ -122,5 +125,9 @@ struct Transform2D_t{
 		elements[1][1] = T(1);
 	}
 };
+
+
+}
+
 
 #include "transform2d.tpp"

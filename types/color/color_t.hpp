@@ -38,6 +38,8 @@
 #include "../rgb.h"
 
 
+namespace yumud{
+
 template <typename T>
 requires std::is_arithmetic_v<T>
 struct Color_t {
@@ -233,6 +235,7 @@ public:
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Color_t<auto> & value){
     return os << '(' << value.r << ',' << value.g << ',' << value.b << ',' << value.a << ')';
+}
 }
 
 

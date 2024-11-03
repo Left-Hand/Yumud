@@ -1,5 +1,7 @@
 #include "quadratic.hpp"
 
+using namespace yumud;
+
 real_t QuadraticInterpolation::forward(const Vector2 & handle, const real_t x){
   // adapted from BEZMATH.PS (1993)
   // by Don Lancaster, SYNERGETICS Inc. 
@@ -12,7 +14,7 @@ real_t QuadraticInterpolation::forward(const Vector2 & handle, const real_t x){
     if (a == real_t(0.5)){
         a += epsilon;
     }
-    
+    // iq_t a = 1;
     // solve t from x (an inverse operation)
     real_t om2a = 1 - 2*a;
     real_t k = (sqrt(a*a + om2a*x) - a)/om2a;

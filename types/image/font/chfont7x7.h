@@ -1,12 +1,12 @@
 #include <stdint.h>
 
-#pragma pack(push, 1)
+
 typedef struct _font_item
 {
 	wchar_t code;
 	uint8_t data[7];
 } font_item_t;
-#pragma pack(pop)
+
 
 
 scexpr font_item_t font_items[] = {

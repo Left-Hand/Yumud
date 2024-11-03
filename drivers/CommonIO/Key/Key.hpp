@@ -3,6 +3,8 @@
 #include "hal/gpio/gpio.hpp"
 #include "dsp/filter/DigitalFilter.hpp"
 
+namespace yumud::drivers{
+
 class Key{
 protected:
     using Level = GpioUtils::Level;
@@ -45,3 +47,6 @@ public:
         return m_gpio;
     }
 };
+
+
+}

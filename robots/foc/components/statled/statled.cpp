@@ -1,7 +1,9 @@
 #include "statled.hpp"
 
+using namespace yumud;
+using namespace yumud::foc::StepperComponents;
 
-namespace StepperComponents{
+
 void StatLed::run(){
     switch(run_status){
         case RunStatus::ACTIVE:
@@ -60,4 +62,3 @@ void StatLed::run(){
     led = color_mux;
 }
 
-}

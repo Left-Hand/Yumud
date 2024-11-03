@@ -1,5 +1,11 @@
 #include "ad9854.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 #define PA1				0x00
 #define PA2				0x01
 #define FTW1			0x02

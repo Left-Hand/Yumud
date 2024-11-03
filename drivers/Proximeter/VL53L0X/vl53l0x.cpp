@@ -1,5 +1,9 @@
 #include "vl53l0x.hpp"
 
+using namespace yumud;
+using namespace yumud::drivers;
+
+
 #define VL53L0X_REG_IDENTIFICATION_MODEL_ID      		    0x00c0
 #define VL53L0X_REG_IDENTIFICATION_REVISION_ID      		0x00c2
 #define VL53L0X_REG_PRE_RANGE_CONFIG_VCSEL_PERIOD   		0x0050

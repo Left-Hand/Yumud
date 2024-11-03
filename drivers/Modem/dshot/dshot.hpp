@@ -1,13 +1,16 @@
 #pragma once
 
-#include "../../hal/timer/timer_oc.hpp"
-#include "../../sys/debug/debug_inc.h"
 
-class ServoChannel{
+#include "sys/debug/debug_inc.h"
 
-};
+namespace yumud{
+    class TimerOC;
+    class DmaChannel;
+}
 
-class DShotChannel:public ServoChannel{
+namespace yumud::drivers{
+
+class DShotChannel{
 public:
     enum class Command : uint8_t {
         MOTOR_STOP = 0, // not currently implemented
@@ -61,21 +64,12 @@ protected:
     void update(uint16_t data);
     void invoke();
 public:
-    DShotChannel(TimerOC & _oc):
-        oc(_oc),
-        dma_channel(_oc.dma())
-        {;}
-
+    DShotChannel(TimerOC & _oc);
     DShotChannel(DShotChannel & other) = delete;
     DShotChannel(DShotChannel && other) = delete;
 
     void init();
 
-    // void enable(const bool en = true){
-    //     enabled = en;
-    //     update(0);
-    //     invoke();
-    // }
     auto & operator = (const real_t duty){
         // DEBUG_PRINTLN(duty);
         if(duty != 0) update(m_crc(MAX(int(duty * 2047), 48)));
@@ -85,3 +79,5 @@ public:
         return *this;
     }
 };
+
+}

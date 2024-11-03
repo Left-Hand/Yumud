@@ -1,6 +1,4 @@
-#ifndef __CORDIC_HPP__
-
-#define __CORDIC_HPP__
+#pragma once
 
 #include "../constexprmath/ConstexprMath.hpp"
 #include "sys/math/real.hpp"
@@ -129,4 +127,3 @@ public:
 //	}
 };
 
-#endif

@@ -2,6 +2,8 @@
 
 #include "adc_channel.hpp"
 
+namespace yumud{
+
 class InjectedChannel: public AdcChannelOnChip{
 protected:
     uint8_t mask;
@@ -24,4 +26,6 @@ public:
 
     uint16_t data() override;
     real_t uni() override;
+};
+
 };

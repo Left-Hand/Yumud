@@ -3,6 +3,8 @@
 #include "../rgbLed.hpp"
 #include <array>
 
+namespace yumud::drivers{
+
 class WS2812: public RgbLedConcept<true>{
 protected:
     Gpio & gpio;
@@ -156,4 +158,6 @@ public:
         }
 
     }
+};
+
 };

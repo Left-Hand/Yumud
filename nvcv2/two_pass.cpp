@@ -3,7 +3,7 @@
 using std::min;
 using std::max;
 
-namespace NVCV2::Shape{
+namespace yumud::nvcv2::Shape{
 
 TwoPass::TwoPass(int size)
 {

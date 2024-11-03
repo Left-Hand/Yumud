@@ -1,9 +1,7 @@
-#ifndef __PWMCHANNEL_HPP__
-
-#define __PWMCHANNEL_HPP__
-
+#pragma once
 #include "sys/math/real.hpp"
 
+namespace yumud{
 class PwmChannel{
 public:
     virtual PwmChannel & operator = (const real_t duty) = 0;
@@ -16,4 +14,4 @@ public:
     virtual volatile T & cvr() = 0;
     virtual volatile T & arr() = 0;
 };
-#endif
+}

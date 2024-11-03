@@ -5,6 +5,9 @@
 #include <memory>
 #include <array>
 
+
+namespace yumud{
+
 template<size_t N>
 class PortVirtualConcept : public PortConcept{
 protected:
@@ -183,3 +186,6 @@ public:
         pin_ptrs[index]->setMode(mode);
     }
 };
+
+
+}

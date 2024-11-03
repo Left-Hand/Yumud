@@ -1,7 +1,11 @@
 #include "../stepper.hpp"
+#include "archive.hpp"
 //FIXME need to remove
 #define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
+
+using namespace yumud::foc;
+using namespace yumud;
 
 static void getDefaultArchive(MotorUtils::Archive & archive){
     archive.pos_config = {
@@ -31,6 +35,7 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
 
 bool FOCStepper::loadArchive(){
     using BoardInfo = MotorUtils::BoardInfo;
+
     Archive archive;
     memory.load(archive);
 
@@ -108,8 +113,7 @@ void FOCStepper::removeArchive(){
     memory.store(Archive());
 }
 
-
-OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi){
+OutputStream &yumud::operator<<(OutputStream &os, const foc::MotorUtils::BoardInfo &bi){
     #ifdef ARCHIVE_PRINTS
     os << "======\r\n";
     os << "build version:\t\t" << bi.bver << "\r\n";
@@ -123,5 +127,6 @@ OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi){
     #endif
     return os;
 }
-
 #undef ARCHIVE_PRINTS
+
+

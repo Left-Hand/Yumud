@@ -2,6 +2,8 @@
 
 #include "../camera.hpp" 
 
+namespace yumud::drivers{
+
 class MT9V034:public CameraWithSccb<Grayscale>{
 protected:
     enum class RegAddress : uint8_t {
@@ -94,3 +96,5 @@ public:
         writeReg(0x0B, value);
     }
 };
+
+}

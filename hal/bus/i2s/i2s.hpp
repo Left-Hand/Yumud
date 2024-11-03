@@ -1,13 +1,11 @@
-#ifndef __I2S_HPP__
-
-#define __I2S_HPP__
+#pragma once
 
 #include "../hal/bus/bus.hpp"
 #include "../sys/core/platform.h"
 
-
+namespace yumud{
 class I2s:public WritableBus{
 
 };
 
-#endif
+}

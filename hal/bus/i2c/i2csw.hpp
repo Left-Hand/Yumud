@@ -2,7 +2,7 @@
 
 #include "i2c.hpp"
 
-
+namespace yumud{
 class I2cSw: public I2c{
 private:
     volatile int8_t occupied = -1;
@@ -27,3 +27,5 @@ public:
     void init(const uint32_t baudRate);
     void setBaudRate(const uint32_t baudRate) final override;
 };
+
+}

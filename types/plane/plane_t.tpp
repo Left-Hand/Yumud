@@ -1,4 +1,4 @@
-
+namespace yumud{
 
 template<arithmetic T>
 void Plane_t<T>::set_normal(const Vector3_t<auto> &p_normal) {
@@ -160,4 +160,7 @@ bool Plane_t<T>::is_equal_approx(const Plane_t<T> &p_plane) const {
 template<arithmetic T>
 bool Plane_t<T>::is_finite() const {
 	return normal.is_finite() && is_finite(d);
+}
+
+
 }

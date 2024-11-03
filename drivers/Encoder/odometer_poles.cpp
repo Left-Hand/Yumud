@@ -1,5 +1,9 @@
 #include "odometer_poles.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
 void OdometerPoles::reset(){
     Odometer::reset();
     elecrad_cache = real_t(0);

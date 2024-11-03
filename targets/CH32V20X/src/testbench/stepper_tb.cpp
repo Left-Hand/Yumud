@@ -30,6 +30,8 @@
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
 
 // #include "dsp/filter/EKF.hpp"
+using namespace yumud::drivers;
+using namespace yumud::foc;
 
 
 struct TurnSolver{

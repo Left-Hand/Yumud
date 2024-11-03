@@ -3,6 +3,8 @@
 #include "I2s.hpp"
 #include "hal/gpio/gpio.hpp"
 
+namespace yumud{
+
 class I2sSw: public I2s{
 private:
 volatile int8_t occupied = -1;
@@ -82,7 +84,7 @@ public:
         }
 
         ws = false;
-        return Bus::ErrorType::OK;
+        return ErrorType::OK;
     }
 
     Error read(uint32_t & data, bool toAck = true) {
@@ -101,3 +103,4 @@ public:
     void setBaudRate(const uint32_t baudRate) override {;}
 };
 
+};
