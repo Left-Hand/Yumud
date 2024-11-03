@@ -1,8 +1,8 @@
 #include "smc.h"
 
-using namespace NVCV2;
+using namespace yumud::nvcv2;
 using SMC::CoastFinder;
-using NVCV2::Shape::Seed;
+using yumud::nvcv2::Shape::Seed;
 
 
 namespace SMC{

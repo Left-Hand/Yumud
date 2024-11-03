@@ -1,8 +1,6 @@
-#ifndef __RNG_HPP__
+#pragma once
 
-#define __RNG_HPP__
-
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
 struct Rng{
 // public:
@@ -20,7 +18,5 @@ struct Rng{
 };
 
 #ifdef HAVE_RNG
-extern Rng rng
+static inline Rng rng
 #endif
-
-#endif // __RNG_HPP__

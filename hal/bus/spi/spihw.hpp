@@ -2,6 +2,8 @@
 
 #include "spi.hpp"
 
+namespace yumud{
+
 class SpiHw:public Spi{
 protected:
     SPI_TypeDef * instance;
@@ -59,12 +61,14 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
 }
 
 
+}
+
 #ifdef HAVE_SPI1
-extern SpiHw spi1;
+extern yumud::SpiHw spi1;
 #endif
 
 #ifdef HAVE_SPI2
-extern SpiHw spi2;
+extern yumud::SpiHw spi2;
 #endif
 
 extern"C"{

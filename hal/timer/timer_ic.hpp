@@ -2,6 +2,8 @@
 
 #include "timer_channel.hpp"
 
+namespace yumud{
+
 class TimerIC:public TimerChannel{
 public:
     enum class Channel:uint8_t{
@@ -16,4 +18,6 @@ protected:
     const Channel channel;
 public:
     
+};
+
 };

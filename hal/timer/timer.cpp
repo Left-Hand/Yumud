@@ -1,5 +1,6 @@
 #include "timer.hpp"
 
+using namespace yumud;
 void BasicTimer::enableRcc(){
     switch(uint32_t(instance)){
         #ifdef HAVE_TIM1

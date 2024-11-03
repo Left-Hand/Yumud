@@ -1,5 +1,7 @@
 #include "timer_hw.hpp"
 
+using namespace yumud;
+
 #define TIMER_IT_BIND_TEMPLATE(x)\
 void Timer##x::bindCb(const IT ch, std::function<void(void)> && cb){\
     cbs##x[CTZ((uint8_t)ch)] = cb;\

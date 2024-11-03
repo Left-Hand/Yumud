@@ -1,6 +1,8 @@
 #pragma once
 #include "drivers/device_defs.h"
 
+namespace yumud::drivers{
+
 class Accelerometer{
 public:
     virtual void update() = 0;
@@ -26,3 +28,5 @@ public:
 class Axis9:public Axis6, public Magnetometer{
 
 };
+
+}

@@ -3,6 +3,8 @@
 #include "drivers/Actuator/driver/CoilDriver.hpp"
 #include "types/vector2/vector2_t.hpp"
 
+
+namespace yumud::drivers{
 class SVPWM{
 protected:
     bool rsv = false;
@@ -27,4 +29,6 @@ public:
     }
 
     virtual void enable(const bool en = true) = 0;
+};
+
 };

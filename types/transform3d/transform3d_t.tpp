@@ -30,6 +30,9 @@
 /**************************************************************************/
 
 
+namespace yumud{
+
+
 template<arithmetic T>
 void Transform3D_t<T>::affine_invert() {
 	basis.invert();
@@ -267,4 +270,7 @@ template<arithmetic T>
 Transform3D_t<T>::Transform3D_t(T p_xx, T p_xy, T p_xz, T p_yx, T p_yy, T p_yz, T p_zx, T p_zy, T p_zz, T p_ox, T p_oy, T p_oz) {
 	basis = Basis_t<T>(p_xx, p_xy, p_xz, p_yx, p_yy, p_yz, p_zx, p_zy, p_zz);
 	origin = Vector3_t<T>(p_ox, p_oy, p_oz);
+}
+
+
 }

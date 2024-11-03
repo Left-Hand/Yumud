@@ -34,6 +34,8 @@
 
 #include "vector3/vector3_t.hpp"
 
+namespace yumud{
+
 template <arithmetic T>
 
 struct Quat_t{
@@ -156,7 +158,9 @@ struct Quat_t{
         }
     }
 
-
 };
+
+}
+
 
 #include "Quat_t.tpp"

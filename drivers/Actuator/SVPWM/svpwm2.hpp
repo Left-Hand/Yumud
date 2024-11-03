@@ -2,6 +2,8 @@
 
 #include "svpwm.hpp"
 
+
+namespace yumud::drivers{
 class SVPWM2:public SVPWM{
 public:
     using Driver = Coil2Driver;
@@ -31,3 +33,5 @@ public:
         coil_b.enable(en);
     }
 };
+
+}

@@ -1,5 +1,7 @@
 #include "ak8975.hpp"
 
+using namespace yumud::drivers;
+
 
 void AK8975::init(){
     if(verify() == false) return;

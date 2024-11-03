@@ -1,3 +1,6 @@
+namespace yumud{
+
+
 template<typename ColorType>
 Grayscale Image<ColorType>::mean(const Rect2i & roi) const{
     return this->sum(roi) / (int(roi));
@@ -135,3 +138,5 @@ Grayscale Image<ColorType>::bilinear_interpol(const Vector2 & pos) const {
 
 //     delete[] buf;
 // }
+
+}

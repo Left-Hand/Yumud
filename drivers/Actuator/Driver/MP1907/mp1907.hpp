@@ -9,6 +9,8 @@ struct TimerOC;
 struct TimerOCN;
 struct AdvancedTimer;
 
+namespace yumud::drivers{
+
 class MP1907:public Coil2Driver{
 protected:
     TimerOC & inst_;
@@ -33,4 +35,6 @@ public:
         }
     }
     MP1907 & operator=(const real_t duty) override;
+};
+
 };

@@ -4,6 +4,8 @@
 #include "drivers/IMU/IMU.hpp"
 #include <tuple>
 
+namespace yumud::drivers{
+
 class QMC5883L:public Magnetometer{
 public:
     enum class DataRate:uint8_t{
@@ -253,3 +255,6 @@ public:
     }
 
 };
+
+
+}

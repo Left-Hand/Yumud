@@ -4,8 +4,8 @@
 
 #include <optional>
 
-#include "../drivers/device_defs.h"
-#include "../drivers/IMU/IMU.hpp"
+#include "drivers/device_defs.h"
+#include "drivers/IMU/IMU.hpp"
 #include "types/uint24_t.h"
 
 #pragma pack(push, 1)
@@ -22,6 +22,8 @@
 #else
 #define ICM42688_DEBUG(...)
 #endif
+
+namespace yumud::drivers{
 
 class ICM42688:public Axis6{
 public:
@@ -107,5 +109,6 @@ public:
     std::tuple<real_t, real_t, real_t> getGyro() override;
 };
 
+}
 
 #pragma pack(pop)

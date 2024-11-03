@@ -1,10 +1,13 @@
 #include "tb.h"
 #include "hal/timer/instance/timer_hw.hpp"
+#include "hal/timer/timer_oc.hpp"
 #include "../drivers/Modem/dshot/dshot.hpp"
 
 scexpr size_t n = 40;
 static std::array<uint16_t, 40> data;
 
+using namespace yumud::drivers;
+using namespace yumud;
 
 [[maybe_unused]] static uint16_t m_crc(uint16_t data_in){
 	uint16_t speed_data;

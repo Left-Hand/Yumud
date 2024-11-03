@@ -1,7 +1,5 @@
 #pragma once
-/**
- * Includes
- */
+
 #include "../drivers/device_defs.h"
 #include "sys/math/real.hpp"
 
@@ -10,6 +8,9 @@
  * AD5933 Library class
  *  Contains mainly functions for interfacing with the AD5933.
  */
+
+namespace yumud::drivers{
+
 class AD5933 {
 protected:
     I2cDrv i2c_drv;
@@ -68,4 +69,6 @@ private:
     // Sending/Receiving uint8_t method, for easy re-use
     bool getByte(uint8_t, uint8_t*);
     bool sendByte(uint8_t, uint8_t);
+};
+
 };

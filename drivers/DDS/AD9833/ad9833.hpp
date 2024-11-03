@@ -3,6 +3,8 @@
 #include "../drivers/device_defs.h"
 #include "sys/math/real.hpp"
 
+namespace yumud::drivers{
+
 class AD9833{
 protected:
     SpiDrv & spi_drv;
@@ -17,3 +19,4 @@ public:
     void setPhase(uint16_t phase_reg, uint16_t phase);
     void setWave(uint16_t wave_mode, uint16_t freq_reg, uint16_t phase_reg);
 };
+}

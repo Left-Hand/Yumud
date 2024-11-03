@@ -2,15 +2,16 @@
 
 #include "zaxis.hpp"
 
-
+namespace yumud::drivers{
 class SpeedServo;
 class DistanceSensor;
+};
 
 namespace gxm{
 class ZAxisServo:public ZAxis{
 protected:
-    using Motor = SpeedServo;
-    using Sensor = DistanceSensor;
+    using Motor = yumud::drivers::SpeedServo;
+    using Sensor = yumud::drivers::DistanceSensor;
     Motor & motor_;
     Sensor & sensor_;
     real_t expect_distance = real_t(0.1);

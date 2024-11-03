@@ -35,6 +35,8 @@
 #include "types/vector3/vector3_t.hpp"
 #include <optional>
 
+namespace yumud{
+
 template<arithmetic T>
 struct Plane_t {
 	Vector3_t<T> normal;
@@ -138,14 +140,17 @@ bool Plane_t<T>::operator!=(const Plane_t<T> &p_plane) const {
 	return normal != p_plane.normal || d != p_plane.d;
 }
 
-
-#include "plane_t.tpp"
-
-// using Plane = Plane_t<real_t>;
-// using PlaneF = Plane_t<float>;
-// using PlaneD = Plane_t<double>;
+using Plane = Plane_t<real_t>;
+using PlaneF = Plane_t<float>;
+using PlaneD = Plane_t<double>;
 
 template<arithmetic T>
 __fast_inline OutputStream & operator<<(OutputStream & os, const Plane_t<T> & value){
     return os << '(' << value.normal << ',' << value.d << ')';
 }
+
+
+}
+
+
+#include "plane_t.tpp"

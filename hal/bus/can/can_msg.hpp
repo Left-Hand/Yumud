@@ -1,6 +1,4 @@
-#ifndef __CAN_MSG_HPP__
-
-#define __CAN_MSG_HPP__
+#pragma once
 
 #include "sys/core/system.hpp"
 
@@ -10,7 +8,7 @@
 #include <utility>
 #include <tuple>
 
-
+namespace yumud{
 struct CanMsg:public CanRxMsg{
 protected:
     uint8_t mbox;
@@ -148,7 +146,12 @@ private:
     scexpr uint8_t null_data = 0;
 };
 
-struct OutputStream;
 
-OutputStream & operator<<(OutputStream & os, const CanMsg & msg);
-#endif
+
+};
+
+namespace yumud{
+class OutputStream;
+}
+
+yumud::OutputStream & operator<<(yumud::OutputStream & os, const yumud::CanMsg & msg);

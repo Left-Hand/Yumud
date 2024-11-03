@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/string/string.hpp"
+#include "sys/string/string_view.hpp"
 #include "sys/debug/debug_inc.h"
 
 #include "image.hpp"
@@ -12,6 +13,8 @@
 
 #include "font/font.hpp"
 
+
+namespace yumud{
 
 class PainterConcept{
 protected:
@@ -76,9 +79,10 @@ public:
 
     void drawString(const Vector2i & pos, const String & str);
 
+    void drawString(const Vector2i & pos, const StringView str);
+
     void drawString(const Vector2i & pos, const char * str);
 
-    void drawString(const Vector2i & pos, const StringView str);
 
     void drawHollowEllipse(const Vector2i & pos, const Vector2i & r);
 
@@ -94,3 +98,5 @@ public:
 
     void drawRoi(const Rect2i & rect);
 };
+
+}

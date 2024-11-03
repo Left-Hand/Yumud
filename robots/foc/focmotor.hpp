@@ -7,8 +7,16 @@
 #include "stepper/ctrls/ctrls.hpp"
 #include "drivers/Encoder/odometer_poles.hpp"
 
+
+namespace yumud::foc{
+
+using namespace yumud::drivers;
+
 class FOCMotorConcept{ 
 public:
+    // using namespace yumud::drivers;
+
+
     using ErrorCode = MotorUtils::ErrorCode;
     using RunStatus = MotorUtils::RunStatus;
     
@@ -125,6 +133,8 @@ public:
     };
 
     friend class AsciiProtocol;
+
+
     class CanProtocol:public CanProtocolConcept{
     protected:
         using Command = MotorUtils::Command;
@@ -137,7 +147,9 @@ public:
 
         void parseCanmsg(const CanMsg & msg) override;
     };
+
     friend class CanProtocol;
+
 
     AsciiProtocol * ascii_protocol;
     CanProtocol * can_protocol;
@@ -173,4 +185,6 @@ public:
     auto & archive(){
         return archive_;
     }
+};
+
 };

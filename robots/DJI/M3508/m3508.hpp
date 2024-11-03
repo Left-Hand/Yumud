@@ -10,6 +10,8 @@
 
 #include <bitset>
 
+namespace yumud::drivers{
+using namespace yumud::foc;
 class M3508Port{
 public:
     class M3508{
@@ -193,4 +195,6 @@ public:
     }
 
     #undef M3508_CHECK_INDEX
+};
+
 };

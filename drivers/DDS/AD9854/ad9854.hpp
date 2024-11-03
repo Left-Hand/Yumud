@@ -1,6 +1,4 @@
-#ifndef __SGM58031_HPP__
-
-#define __SGM58031_HPP__
+#pragma once
 
 #include "../drivers/device_defs.h"
 #include "sys/math/real.hpp"
@@ -13,6 +11,9 @@
 #else
 #define AD9854_DEBUG(...)
 #endif
+
+
+namespace yumud::drivers{
 
 class AD9854{
 public:
@@ -36,9 +37,8 @@ public:
     void SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum);
     void SetFreq(real_t fre);
 };
+}
 
 #ifdef AD9854_DEBUG
 #undef AD9854_DEBUG
-#endif
-
 #endif

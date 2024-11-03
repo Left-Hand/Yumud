@@ -1,6 +1,8 @@
 #pragma once
 #include "device_defs.h"
 
+
+namespace yumud::drivers{
 class AS5600{
 public:
     enum class PowerMode:uint8_t{
@@ -255,3 +257,6 @@ public:
         setPowerMode(PowerMode::Norm);
     }
 };
+
+
+}

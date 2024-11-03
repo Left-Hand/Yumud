@@ -1,5 +1,6 @@
 #include "mpu6050.hpp"
 
+using namespace yumud::drivers;
 void MPU6050::init(){
     writeReg(0x6b, 0);
     writeReg(0x19, 0x00);

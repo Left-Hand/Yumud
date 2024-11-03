@@ -1,8 +1,6 @@
 #include "adc1.hpp"
 
-#ifdef HAVE_ADC1
-Adc1 adc1;
-#endif
+using namespace yumud;
 
 #if defined(HAVE_ADC1) || defined(HAVE_ADC2)
 using Callback = AdcUtils::Callback;
@@ -23,6 +21,7 @@ __interrupt void ADC1_2_IRQHandler(void){
 }
 }
 #endif
+
 
 
 void AdcPrimary::bindCb(const IT it,Callback && cb){

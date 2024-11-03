@@ -9,6 +9,8 @@
 #include <memory>
 
 
+namespace yumud{
+
 template <typename ColorType>
 class Painter;
 
@@ -273,3 +275,4 @@ public:
     }
 };
 
+}

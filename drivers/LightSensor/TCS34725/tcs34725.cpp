@@ -1,5 +1,7 @@
 #include "tcs34725.hpp"
 
+using namespace yumud::drivers;
+
 #ifdef TCS34725_DEBUG
 #undef TCS34725_DEBUG
 #define TCS34725_DEBUG(...) DEBUG_PRINT(__VA_ARGS__)
@@ -24,12 +26,6 @@ void TCS34725::getCRGB(real_t & c, real_t & r, real_t & g, real_t & b){
 
 void TCS34725::update(){
     requestRegData(RegAddress::ClearData, data, 4);
-}
-
-TCS34725::operator RGB888(){
-    return RGB888{
-        uint8_t(data[1] >> 8), uint8_t(data[2] >> 8), uint8_t(data[3] >> 8)
-    };
 }
 
 

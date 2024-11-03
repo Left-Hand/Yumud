@@ -15,6 +15,8 @@
 #define MMC5603_DEBUG(...)
 #endif
 
+namespace yumud::drivers{
+
 class MMC5603:public Magnetometer{
 public:
     scexpr uint8_t default_i2c_addr = 0b01100000;
@@ -189,3 +191,5 @@ protected:
 public:
 
 };
+
+}

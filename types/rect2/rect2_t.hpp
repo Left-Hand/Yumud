@@ -5,6 +5,9 @@
 #include "types/range/range_t.hpp"
 #include "types/vector2/vector2_t.hpp"
 
+
+namespace yumud{
+
 template<arithmetic T>
 class Rect2_t{
 public:
@@ -247,3 +250,4 @@ using Rect2f = Rect2_t<float>;
 __fast_inline OutputStream & operator<<(OutputStream & os, const Rect2_t<auto> & value){
     return os << '(' << value.position << ',' << value.size << ')';
 }
+};

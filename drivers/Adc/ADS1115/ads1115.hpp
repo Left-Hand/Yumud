@@ -14,6 +14,8 @@
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
 #define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
+namespace yumud::drivers{
+
 class ADS111X{
 public:
     enum class Package:uint8_t{
@@ -36,6 +38,7 @@ public:
     };
 
 protected:
+    using yumud::I2cDrv;
     I2cDrv i2c_drv;
 
     using RegAddress = uint8_t;
@@ -141,3 +144,6 @@ public:
 using ADS1113 = ADS111X;
 using ADS1114 = ADS111X;
 using ADS1115 = ADS111X;
+
+
+};

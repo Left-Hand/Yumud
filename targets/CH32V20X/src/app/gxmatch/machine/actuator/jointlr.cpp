@@ -1,9 +1,10 @@
 #include "jointlr.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 
+
+
 namespace gxm{
     
-
 bool JointLR::reached(){
     return last_radian_ == expect_radian_;
 }

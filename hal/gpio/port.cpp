@@ -1,6 +1,9 @@
 #include "port.hpp"
 #include "gpio.hpp"
 
+using namespace yumud;
+
+
 Gpio Port::channel_none = Gpio(GPIOD, Pin::None);
 
 void Port::setMode(const int index, const PinMode mode){

@@ -3,6 +3,9 @@
 #include "sys/stream/ostream.hpp"
 #include "sys/string/string.hpp"
 
+
+namespace yumud{
+
 class StringStream:public OutputStream{
 protected:
     String str_;
@@ -15,4 +18,6 @@ public:
 
     operator String() const;
     operator StringView() const;
+};
+
 };

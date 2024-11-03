@@ -37,6 +37,8 @@
 #include "types/vector3/vector3_t.hpp"
 
 
+namespace yumud{
+
 template<arithmetic T>
 struct Transform3D_t{
 	Basis_t<T> basis;
@@ -292,6 +294,8 @@ __inline OutputStream & operator<<(OutputStream & os, const Transform3D_t<T> & t
 	os << transform.basis << ',';
 	os << transform.origin << ')';
 	return os;
+}
+
 }
 
 #include "transform3d_t.tpp"

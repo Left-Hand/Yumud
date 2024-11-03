@@ -1,5 +1,11 @@
 #include "mt6701.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 #define MT6701_NO_I2C_FAULT\
     MT6701_DEBUG("NO I2C!!");\
     CREATE_FAULT\

@@ -5,6 +5,8 @@
 #include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
 
+
+namespace yumud{
 template<arithmetic T, size_t R, size_t C>
 class Matrix_t
 {
@@ -282,4 +284,6 @@ __inline OutputStream & operator<<(OutputStream & os, const Matrix_t<T, R, C> & 
 	}
     os << "]";
     return os;
+}
+
 }

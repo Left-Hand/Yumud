@@ -10,6 +10,8 @@
 #include <string>
 #include <string_view>
 
+namespace yumud{
+
 class StringRef {
 public:
     // 构造函数
@@ -37,3 +39,5 @@ private:
     char * data_;
     size_t size_;
 };
+
+}

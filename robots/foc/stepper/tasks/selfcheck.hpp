@@ -2,6 +2,9 @@
 
 #include "robots/foc/motor_utils.hpp"
 
+
+namespace yumud::foc{
+using namespace yumud::drivers;
 class SelfCheckTasker{
 protected:
     scexpr int subdivide_micros = 1024;
@@ -39,3 +42,5 @@ public:
     void run();
     bool done();
 };
+
+}

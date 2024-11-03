@@ -3,6 +3,7 @@
 #include "sys/core/system.hpp"
 #include "sys/stream/stream.hpp"
 
+namespace yumud{
 enum class CommMethod:uint8_t{
     None = 0,
     Blocking,
@@ -175,3 +176,6 @@ public:
     virtual bool write(const Packet & msg) = 0;
     virtual const Packet & read() = 0;
 };
+
+
+}

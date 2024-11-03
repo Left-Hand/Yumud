@@ -1,7 +1,10 @@
 #include "Led.hpp"
 
-#include "hal/gpio/port_virtual.hpp"
+#include "hal/gpio/gpio.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
+
+using namespace yumud;
+using namespace yumud::drivers;
 
 LedGpio &  LedGpio::operator =(const real_t duty){
     inst = (duty > real_t(0.5)) ^ inversed;

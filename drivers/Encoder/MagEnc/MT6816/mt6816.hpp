@@ -5,6 +5,8 @@
 #include "drivers/Encoder/MagEncoder.hpp"
 #include "drivers/device_defs.h"
 
+namespace yumud::drivers{
+
 class MT6816:public MagEncoder{
 protected:
     SpiDrv bus_drv;
@@ -39,4 +41,6 @@ public:
     uint32_t getErrCnt() const {return errcnt;}
 
     bool stable() override {return last_semantic.no_mag == false;}
+};
+
 };

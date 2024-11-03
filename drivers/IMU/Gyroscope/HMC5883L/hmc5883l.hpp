@@ -1,7 +1,9 @@
 #pragma once
 
 #include "drivers/device_defs.h"
-// #include "sys/math/real.hpp"
+
+
+namespace yumud::drivers{
 
 class HMC5883L:public Magnetometer{
 public:
@@ -214,4 +216,6 @@ public:
         modeReg.mode = (uint8_t)(en ? Mode::Continuous : Mode::Single);
         writeReg(RegAddress::Mode, modeReg.data);
     }
+};
+
 };

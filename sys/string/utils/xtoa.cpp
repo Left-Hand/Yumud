@@ -1,5 +1,7 @@
 #include "../string_utils.hpp"
 
+using namespace yumud;
+
 void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 
 	bool minus = value < 0;

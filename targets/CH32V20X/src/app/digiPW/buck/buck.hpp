@@ -1,14 +1,15 @@
 #pragma once
 
 #include "sys/math/real.hpp"
-#include "../hal/adc/analog_channel.hpp"
-#include "../drivers/Actuator/Driver/CoilDriver.hpp"
+#include "hal/adc/analog_channel.hpp"
+#include "drivers/Actuator/Driver/CoilDriver.hpp"
 #include <bit>
 
 #include "../ctrl/current_ctrl.hpp"
 #include "../ctrl/power_ctrl.hpp"
 #include "../ctrl/voltage_ctrl.hpp"
-
+using namespace yumud;
+using namespace yumud::drivers;
 
 class Buck{
 public:

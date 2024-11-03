@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
-#include "../hal/gpio/port.hpp"
-#include "../hal/nvic/nvic.hpp"
-#include "../hal/dma/dma.hpp"
+#include "hal/gpio/port.hpp"
+#include "hal/nvic/nvic.hpp"
+#include "hal/dma/dma.hpp"
 
 #include "regular_channel.hpp"
 #include "injected_channel.hpp"
@@ -17,6 +17,8 @@ __interrupt void ADC1_2_IRQHandler(void);
 }
 #endif
 
+
+namespace yumud{
 class AdcConcept{
 protected:
 public:
@@ -186,7 +188,9 @@ protected:
         instance->CTLR2 = tempreg.data;
     }
 
-    friend void ADC1_2_IRQHandler(void);
+    #if defined(HAVE_ADC1) || defined(HAVE_ADC2)
+    friend void ::ADC1_2_IRQHandler(void);
+    #endif
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance),
         injected_channels{
@@ -326,3 +330,6 @@ public:
     virtual uint16_t getRegularDataByRank(const uint8_t rank) = 0;
     virtual uint16_t getInjectedDataByRank(const uint8_t rank) = 0;
 };
+
+
+}

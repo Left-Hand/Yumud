@@ -4,6 +4,8 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/bus/bus.hpp"
 
+namespace yumud{
+
 class Spi:public FullDuplexBus{
 public:
     #ifndef SPI_MAX_PINS
@@ -38,3 +40,4 @@ public:
 };
 
 
+}

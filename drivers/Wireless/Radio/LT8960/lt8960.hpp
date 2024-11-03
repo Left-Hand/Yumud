@@ -16,6 +16,7 @@
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
 #define REG8R(x) (*reinterpret_cast<uint8_t *>(&x))
 
+namespace yumud::drivers{
 
 class LT8960{
 public:
@@ -446,3 +447,5 @@ public:
 #ifdef LT8960_DEBUG
 #undef LT8960_DEBUG
 #endif
+
+}

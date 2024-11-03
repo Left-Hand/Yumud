@@ -1,5 +1,9 @@
 #include "NTC.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
 void NTC::update(){
     scexpr real_t T0= real_t(273.15+25);
     scexpr real_t Ka= real_t(273.15);

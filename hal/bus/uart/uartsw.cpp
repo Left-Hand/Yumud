@@ -1,5 +1,7 @@
 #include "uartsw.hpp"
 
+using namespace yumud;
+
 void UartSw::init(const uint32_t baudRate, const CommMethod _rxMethod,const CommMethod _txMethod){
     setTxMethod(_txMethod);
     setRxMethod(_rxMethod);

@@ -1,5 +1,4 @@
-#ifndef __BUSDRV_HPP__
-#define __BUSDRV_HPP__
+#pragma once
 
 #include "spi/spi.hpp"
 #include "i2c/i2c.hpp"
@@ -9,6 +8,7 @@
 
 #include "i2c/i2csw.hpp"
 
+namespace yumud{
 template<typename BusType>
 class BusDrv{
 public:
@@ -239,4 +239,5 @@ protected:
 
 };
 
-#endif
+
+}

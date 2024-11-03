@@ -1,15 +1,18 @@
 #pragma once
 
+namespace yumud{
 class PwmChannel;
+}
 
 namespace gxm{
 
 class Buzzer{
 protected:
-    PwmChannel & instance_;
+    using Inst = yumud::PwmChannel;
+    Inst & instance_;
 
 public:
-    Buzzer(PwmChannel & instance):instance_(instance){;}
+    Buzzer(Inst & instance):instance_(instance){;}
 
     Buzzer & operator =(const bool en);
 };

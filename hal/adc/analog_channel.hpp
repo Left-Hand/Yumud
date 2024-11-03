@@ -2,6 +2,8 @@
 
 #include "sys/math/real.hpp"
 
+namespace yumud{
+
 struct AnalogChannel{
 public:
 
@@ -24,4 +26,6 @@ public:
         write(data16);
         return *this;
     }
+};
+
 };

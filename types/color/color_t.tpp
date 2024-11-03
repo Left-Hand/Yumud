@@ -29,6 +29,9 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
+
+namespace yumud{
+
 template <typename T> 
 constexpr uint32_t Color_t<T>::to_argb32() const {
 	uint32_t c = (uint8_t)round(a * 255);
@@ -331,4 +334,7 @@ Color_t<T> Color_t<T>::operator-() const {
 			1.0 - g,
 			1.0 - b,
 			1.0 - a);
+}
+
+
 }

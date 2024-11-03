@@ -2,6 +2,7 @@
 #include "sys/math/real.hpp"
 
 
+namespace yumud::drivers{
 class Encoder{
 public:
     virtual real_t getLapPosition() = 0;
@@ -19,3 +20,5 @@ protected:
     // virtual void forward() = 0;
     // virtual void backward() = 0;
 };
+
+}

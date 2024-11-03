@@ -3,16 +3,15 @@
 #include "types/color/color_t.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 
+class GpioConcept;
 
+namespace yumud::drivers{
 class RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
 
     real_t brightness = real_t(1);
 public:
-
-    // virtual void init() = 0;
-
     void setBrightness(real_t _brightness){
         brightness = _brightness;
     }
@@ -67,4 +66,6 @@ public:
         blue = color.b;    
         return *this;
     }
+};
+
 };

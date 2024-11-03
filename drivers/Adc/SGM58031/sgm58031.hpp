@@ -6,6 +6,7 @@
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
 #endif
 
+namespace yumud::drivers{
 
 class SGM58031{
 public:
@@ -234,3 +235,6 @@ public:
 #ifdef SGM58031_DEBUG
 #undef SGM58031_DEBUG
 #endif
+
+
+}

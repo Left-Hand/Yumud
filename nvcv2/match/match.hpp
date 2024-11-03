@@ -1,13 +1,15 @@
 #pragma once
 
-#include "../../nvcv2/pixels/pixels.hpp"
-#include "../../nvcv2/shape/shape.hpp"
-#include "../../nvcv2/geometry/geometry.hpp"
-#include "../../nvcv2/two_pass.hpp"
-#include "../../nvcv2/flood_fill.hpp"
-#include "../../nvcv2/mnist/mnist.hpp"
-#include "../../nvcv2/template/template.hpp"
+#include "nvcv2/pixels/pixels.hpp"
+#include "nvcv2/shape/shape.hpp"
+#include "nvcv2/geometry/geometry.hpp"
+#include "nvcv2/two_pass.hpp"
+#include "nvcv2/flood_fill.hpp"
+#include "nvcv2/mnist/mnist.hpp"
+#include "nvcv2/template/template.hpp"
 
+
+namespace yumud::nvcv2{
 class Matcher{
 protected:
     scexpr size_t N = 10;
@@ -22,3 +24,5 @@ public:
 
 
 real_t number_match(const Image<Grayscale> & src, const uint index);
+
+}

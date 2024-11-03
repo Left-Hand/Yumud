@@ -8,6 +8,7 @@
 
 #include <functional>
 
+namespace yumud{
 class Uart:public IOStream, DuplexBus{
 public:
     using Mode = CommMode;
@@ -68,3 +69,5 @@ public:
 
     void bindRxPostCb(Callback && cb){rxPostCb = cb;}
 };
+
+}

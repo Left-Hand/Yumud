@@ -1,5 +1,9 @@
 #include "lt8920.hpp"
 
+using namespace yumud::drivers;
+using namespace yumud;
+
+
 
 #define REG16(x) (*(uint16_t *)(&x))
 #define REG8(x) (*(uint8_t *)(&x))

@@ -30,6 +30,8 @@
 #include "string_view.hpp"
 #include "sys/string/string_utils.hpp"
 
+namespace yumud{
+	
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.
 class StringSumHelper;
@@ -45,7 +47,7 @@ class String
 	typedef void (String::*StringIfHelperType)() const;
 	void StringIfHelper() const {}
 
-
+	friend class StringSumHelper;
 public:
 	// constructors
 	// creates a copy of the initial value.
@@ -62,8 +64,8 @@ public:
     explicit String(char * c);
     explicit String(char * c, const size_t size);
     explicit String(const char * c, const size_t size);
-	String(const std::string & str):String(str.c_str(), str.length()){};
-	String(const std::string_view & str):String(str.data(), str.length()){};
+	String(const ::std::string & str):String(str.c_str(), str.length()){};
+	String(const ::std::string_view & str):String(str.data(), str.length()){};
 	String(const StringView & str):String(str.data(), str.length()){};
 
 	explicit String(uint8_t value, uint8_t base=10);
@@ -212,11 +214,13 @@ public:
 	operator StringView(void) const {return StringView(this->c_str(), this->length());}
 
 
-protected:
+// protected:
+public:
 	char *buffer;	        // the actual char array
 	size_t capacity;  // the array length minus one (for the '\0')
 	size_t len;       // the String length (not counting the '\0')
-protected:
+// protected:
+public:
 	void init(void);
 	void invalidate(void);
 	uint8_t changeBuffer(size_t maxStrLen);
@@ -257,4 +261,5 @@ String toString(unsigned long long value, uint8_t base = 10);
 String toString(float value, uint8_t decimalPlaces = 3);
 String toString(double value, uint8_t decimalPlaces = 3);
 
+}
 #endif  // __cplusplus

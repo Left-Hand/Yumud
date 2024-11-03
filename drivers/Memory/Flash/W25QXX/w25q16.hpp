@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "drivers/Memory/memory.hpp"
 
-// #define W25Q16_DEBUG
+namespace yumud{
 
 #ifdef W25Q16_DEBUG
 #define W25Q16_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
@@ -91,3 +91,5 @@ private:
     }
 
 };
+
+}

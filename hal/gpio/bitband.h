@@ -1,8 +1,6 @@
-#ifndef __BITBAND_H__
+#pragma once
 
-#define __BITBAND_H__
-
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
 #ifdef PLAT_SUPPORT_BITBAND
 
@@ -48,7 +46,5 @@ typedef struct {
 #define PBin(n)		(((GPIO_REG *)(&(GPIOB->INDR)))->bit##n)
 #define PCout(n)	(((GPIO_REG *)(&(GPIOC->OUTDR)))->bit##n)
 #define PCin(n)		(((GPIO_REG *)(&(GPIOC->INDR)))->bit##n)
-
-#endif
 
 #endif

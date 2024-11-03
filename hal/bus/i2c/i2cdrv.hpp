@@ -1,13 +1,16 @@
 #pragma once
 
 #include "i2c.hpp"
-#include "../sys/debug/debug_inc.h"
-#include "../hal/bus/busdrv.hpp"
+#include "sys/debug/debug_inc.h"
+#include "hal/bus/busdrv.hpp"
 
 #include <type_traits>
 #include <concepts>
 #include <initializer_list>
 
+
+
+namespace yumud{
 
 namespace I2cUtils{
     template <typename T>
@@ -178,3 +181,5 @@ public:
         return reg_data;
     }
 };
+
+}

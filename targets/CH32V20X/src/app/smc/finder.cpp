@@ -1,7 +1,7 @@
 #include "finder.hpp"
 #include "smc_debug.h"
 
-using namespace NVCV2;
+using namespace yumud::nvcv2;
 
 
 namespace SMC{
@@ -306,7 +306,7 @@ namespace SMC{
 
     Coast CoastUtils::form(const ImageReadable<Binary> & src, const Vector2i & _seed_pos, const LR is_right){
 
-        using namespace NVCV2::Shape;
+        using namespace yumud::nvcv2::Shape;
 
         auto seed_pos = src.get_view().constrain(_seed_pos);
         Seed seed{seed_pos,  is_right ? Direction::R : Direction::L, !is_right};

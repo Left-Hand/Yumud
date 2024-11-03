@@ -5,6 +5,7 @@
 #include "hal/dma/dma.hpp"
 
 
+
 #ifdef HAVE_UART1
 extern "C" __interrupt void USART1_IRQHandler();
 #endif
@@ -36,6 +37,9 @@ extern "C" __interrupt void UART7_IRQHandler(void);
 #ifdef HAVE_UART8
 extern "C" __interrupt void UART8_IRQHandler(void);
 #endif
+
+
+namespace yumud{
 
 
 class UartHw:public Uart{
@@ -99,66 +103,68 @@ public:
     Gpio & rxio() override;
 
     #ifdef HAVE_UART1
-    friend void USART1_IRQHandler();
+    friend void ::USART1_IRQHandler();
     #endif
 
     #ifdef HAVE_UART2
-    friend void USART2_IRQHandler(void);
+    friend void ::USART2_IRQHandler(void);
     #endif
 
     #ifdef HAVE_UART3
-    friend void USART3_IRQHandler(void);
+    friend void ::USART3_IRQHandler(void);
     #endif
 
     #ifdef HAVE_UART4
-    friend void UART4_IRQHandler(void);
+    friend void ::UART4_IRQHandler(void);
     #endif
 
     #ifdef HAVE_UART5
-    friend void UART5_IRQHandler(void);
+    friend void ::UART5_IRQHandler(void);
     #endif
 
     #ifdef HAVE_UART6
-    friend void UART6_IRQHandler(void);
+    friend void ::UART6_IRQHandler(void);
     #endif
 
     #ifdef HAVE_UART7
-    friend void UART7_IRQHandler(void);
+    friend void ::UART7_IRQHandler(void);
     #endif
 
     #ifdef HAVE_UART8
-    friend void UART8_IRQHandler(void);
+    friend void ::UART8_IRQHandler(void);
     #endif
 
 };
 
+}
+
 
 #ifdef HAVE_UART1
-extern UartHw uart1;
+extern yumud::UartHw uart1;
 #endif
 
 #ifdef HAVE_UART2
-extern UartHw uart2;
+extern yumud::UartHw uart2;
 #endif
 
 #ifdef HAVE_UART3
-extern UartHw uart3;
+extern yumud::UartHw uart3;
 #endif
 
 #ifdef HAVE_UART4
-extern UartHw uart4;
+extern yumud::UartHw uart4;
 #endif
 
 #ifdef HAVE_UART5
-extern UartHw uart5;
+extern yumud::UartHw uart5;
 #endif
 
 #ifdef HAVE_UART6
-extern UartHw uart6;
+extern yumud::UartHw uart6;
 #endif
 
 #ifdef HAVE_UART7
-extern UartHw uart7;
+extern yumud::UartHw uart7;
 #endif
 
 #ifdef HAVE_UART8

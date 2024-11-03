@@ -1,12 +1,15 @@
 #include "wheel.hpp"
 
+
+namespace yumud::foc{
 class FOCMotorConcept;
+}
 
 namespace gxm{
 
 class WheelStepper:public Wheel{
 protected:
-    using Motor = FOCMotorConcept;
+    using Motor = yumud::foc::FOCMotorConcept;
     Motor & motor_;
 public:
     WheelStepper(const Config & config, Motor & motor):Wheel(config), motor_(motor) {;}

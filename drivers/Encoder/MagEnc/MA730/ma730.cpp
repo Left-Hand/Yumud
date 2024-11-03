@@ -1,5 +1,10 @@
 #include "ma730.hpp"
 
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 void MA730::init(){
     
 }

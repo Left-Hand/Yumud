@@ -11,7 +11,7 @@
 
 #include "nvcv2/shape/shape.hpp"
 
-using namespace NVCV2;
+using namespace yumud::nvcv2;
 
 using Vector2i = Vector2_t<int>;
 
@@ -19,6 +19,9 @@ using Vector2i = Vector2_t<int>;
 
 
 using Sys::t;
+
+using namespace yumud;
+using namespace yumud::drivers;
 
 
 class Node{

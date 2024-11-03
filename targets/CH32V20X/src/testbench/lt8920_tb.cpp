@@ -4,6 +4,9 @@
 #include "bus/spi/spihw.hpp"
 #include "bus/spi/spisw.hpp"
 
+
+using namespace yumud::drivers;
+
 bool isInInterruptContext() {
     // uint64_t mstatus;
     // asm volatile("csrr %0, mstatus" : "=r"(mstatus));  // 读取 mstatus 寄存器

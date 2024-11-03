@@ -1,5 +1,6 @@
 #pragma once
 
+namespace yumud::drivers{
 
 class ADXL345:public Axis6{
 public:
@@ -330,5 +331,7 @@ public:
 
     void getAccel(real_t & x, real_t & y, real_t & z) override;
     void getGyro(real_t & x, real_t & y, real_t & z) override;
+
+};
 
 };

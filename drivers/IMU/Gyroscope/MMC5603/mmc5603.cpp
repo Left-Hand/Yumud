@@ -1,5 +1,7 @@
 #include "mmc5603.hpp"
 
+using namespace yumud::drivers;
+
 void MMC5603::update(){
     auto & reg = x_reg;
     requestPool(reg.address_x, &reg.data_h, 6);

@@ -1,6 +1,4 @@
-#ifndef __PID_H__
-
-#define __PID_H__
+#pragma once
 
 #include "sys/math/real.hpp"
 #include <algorithm>
@@ -83,4 +81,3 @@ class PID_t{
 #include "pid.tpp"
 
 typedef PID_t<real_t> PID;
-#endif

@@ -1,8 +1,6 @@
-#ifndef __NVIC_HPP__
+#pragma once
 
-#define __NVIC_HPP__
-
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 
 #if defined(WCH) && defined(RISCV)
 #define SUPPORT_VTF
@@ -69,5 +67,3 @@ public:
 #endif
 
 typedef NvicRequest PficRequest;
-
-#endif

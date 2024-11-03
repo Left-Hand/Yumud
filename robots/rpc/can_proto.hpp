@@ -5,8 +5,9 @@
 
 #include <tuple>
 
-class FOCMotor;
+// class FOCMotor;
 
+namespace yumud{
 
 class CanProtocolConcept{
 public:
@@ -39,3 +40,5 @@ private:
 
     }
 };
+
+}

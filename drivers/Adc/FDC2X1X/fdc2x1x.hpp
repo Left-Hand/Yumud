@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 #ifdef FDC2X1X_DEBUG
 #define FDC2X1X_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
@@ -14,7 +14,10 @@
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
 #define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
+namespace yumud::drivers{
+
 class FDC2X1X{
+
 public:
     enum class Package:uint8_t{
         FDC2112,
@@ -270,3 +273,5 @@ public:
         return ret;
     }
 };
+
+}

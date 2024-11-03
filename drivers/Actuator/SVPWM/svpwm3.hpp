@@ -2,6 +2,8 @@
 
 #include "svpwm.hpp"
 
+namespace yumud::drivers{
+
 class SVPWM3:public SVPWM{
 protected:
     using Driver = Coil3Driver;
@@ -62,3 +64,6 @@ public:
     }
 };
 
+
+
+}

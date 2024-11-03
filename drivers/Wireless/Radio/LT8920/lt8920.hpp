@@ -17,6 +17,8 @@
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
 
 
+namespace yumud::drivers{
+
 class LT8920{
 public:
     enum class PacketType:uint8_t{
@@ -200,5 +202,7 @@ protected:
 
     void updateFifoStatus();
 };
+
+}
 
 #pragma GCC diagnostic pop

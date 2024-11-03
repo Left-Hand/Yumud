@@ -1,5 +1,8 @@
 #include "arg_parser.hpp"
 
+
+using namespace yumud;
+
 Strings ArgParser::update(InputStream & is){
     while(is.available()){
         auto chr = is.read();

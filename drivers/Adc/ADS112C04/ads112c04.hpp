@@ -15,7 +15,7 @@
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
 #define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
-
+namespace yumud::drivers{
 class ADS112C04{
 public:
     enum class DataRate:uint8_t{
@@ -70,6 +70,7 @@ public:
         __RESV__ = 0b11 // 11 : CRC 24-bit
     };
 protected:
+    using yumud::I2cDrv;
     I2cDrv i2c_drv;
 
     // [A1]     [A0]    [I2C ADDRESS]
@@ -216,3 +217,5 @@ public:
         writeReg(config1_reg.address, REG8(config1_reg));
     }
 };
+
+}

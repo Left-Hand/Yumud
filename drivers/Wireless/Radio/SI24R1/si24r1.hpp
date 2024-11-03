@@ -17,6 +17,8 @@
 #define REG8(x) (*reinterpret_cast<uint8_t *>(&x))
 
 
+namespace yumud::drivers{
+
 class Si24R1{
 protected:
     enum class Mode:uint8_t{
@@ -267,4 +269,6 @@ public:
         spi_drv.read(REG8(size));
         return size;
     }
+};
+
 };

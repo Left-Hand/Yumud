@@ -1,5 +1,7 @@
 #include "crc.hpp"
 
+using namespace yumud;
+
 Crc & crc = Crc::getInstance();
 
 void Crc::init(){

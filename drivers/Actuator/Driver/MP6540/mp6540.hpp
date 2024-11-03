@@ -7,7 +7,6 @@
 #include <optional>
 #include <array>
 
-struct PwmChannel;
 
 #ifdef MP6540_DEBUG
 #undef MP6540_DEBUG
@@ -15,6 +14,11 @@ struct PwmChannel;
 #else 
 #define MP6540_DEBUG(...)
 #endif
+
+struct PwmChannel;
+
+namespace yumud::drivers{
+
 
 
 class MP6540:public Coil3Driver{
@@ -69,5 +73,7 @@ public:
     void setSoRes(const real_t so_res_ohms);
 
     MP6540 & operator= (const UVW_Duty & duty) override;
+
+};
 
 };

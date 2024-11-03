@@ -1,6 +1,9 @@
 
 #include "mt9v034.hpp"
 
+using namespace yumud;
+using namespace yumud::drivers;
+
 #define DEVICE_ADDR 0xB8
 
 #define CHIP_ID_ADDR 0x00

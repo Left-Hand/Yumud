@@ -4,6 +4,8 @@
 #include "hal/bus/uart/uart.hpp"
 #include "hal/adc/adc_channel.hpp"
 
+
+namespace yumud::drivers{
 class Mouse{
     
 };
@@ -60,4 +62,6 @@ protected:
     DBUS & inst;
 public:
     DR16(DBUS & _inst):inst(_inst){}
+};
+
 };

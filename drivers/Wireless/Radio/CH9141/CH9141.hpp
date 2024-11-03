@@ -9,6 +9,8 @@
 #include "sys/string/string.hpp"
 #include "../Radio.hpp"
 
+
+namespace yumud::drivers{
 struct MacAddress{
 protected:
     using DataType = std::array<uint8_t, 6>; // Define a type alias for the underlying buffer
@@ -160,4 +162,5 @@ public:
     auto getBleStat(){
         return sendAtCommand("BLESTA");
     }
+};
 };

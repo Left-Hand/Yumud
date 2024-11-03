@@ -7,10 +7,11 @@
 
 #include "uint24_t.h"
 
+
 #ifdef __cplusplus
 #include "sys/math/real.hpp"
 
-class OutputStream;
+namespace yumud{
 enum class ColorEnum:uint32_t{
     WHITE   = 0xFFFFFF,    // White color
     YELLOW  = 0xFFFF00,    // Yellow color
@@ -184,7 +185,7 @@ struct RGB565{
 
     __fast_inline constexpr RGB565 & operator = (const uint16_t data){
         uint8_t _r, _g, _b;
-        std::tie(_r, _g, _b) = seprate(data);
+        ::std::tie(_r, _g, _b) = seprate(data);
         r = _r;
         g = _g;
         b = _b;
@@ -196,7 +197,7 @@ struct RGB565{
         return *this;
     }
 private:
-    static __fast_inline constexpr std::tuple<uint8_t, uint8_t, uint8_t>seprate(const uint16_t data){return {(data >> 11) & 0x1f, (data >> 5) & 0x3f, data & 0x1f};}
+    static __fast_inline constexpr ::std::tuple<uint8_t, uint8_t, uint8_t>seprate(const uint16_t data){return {(data >> 11) & 0x1f, (data >> 5) & 0x3f, data & 0x1f};}
     static __fast_inline constexpr uint16_t uni(const uint8_t _r, const uint8_t _g, const uint8_t _b){return ((_r & 0x1f) << 11) | ((_g & 0x3f) << 5) | (_b & 0x1f);}
     
 #endif
@@ -382,6 +383,8 @@ __fast_inline constexpr RGB565::RGB565(const Binary & bn): RGB565((bool)bn ? 0xf
 
 #ifdef __cplusplus
 
+class OutputStream;
+
 OutputStream & operator<<(OutputStream & os, const Grayscale & value);
 
 OutputStream & operator<<(OutputStream & os, const RGB565 & value);
@@ -390,14 +393,13 @@ OutputStream & operator<<(OutputStream & os, const RGB888 & value);
 
 OutputStream & operator<<(OutputStream & os, const Binary & value);
 
-
 #endif
 
 
 #ifdef __cplusplus
 
 template<typename T>
-concept monochrome = std::is_same_v<T, Binary> || std::is_same_v<T, Grayscale>;
+concept monochrome = ::std::is_same_v<T, Binary> || ::std::is_same_v<T, Grayscale>;
 
-
+}
 #endif

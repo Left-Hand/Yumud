@@ -3,6 +3,8 @@
 #include "sys/core/platform.h"
 #include "thirdparty/sstl/include/sstl/vector.h"
 
+
+namespace yumud{
 struct TrajectoryItem{
     uint32_t x:10;
     uint32_t y:10;
@@ -89,3 +91,5 @@ public:
 struct OutputStream;
 
 OutputStream & operator<<(OutputStream & os, const TrajectoryItem item);
+
+}

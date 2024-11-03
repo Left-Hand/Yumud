@@ -1,5 +1,7 @@
 #include "painter.hpp"
 
+using namespace yumud;
+
 // template<typename ColorType>
 // void Painter<ColorType>::drawHriLine(const Rangei & x_range, const int y){
 //     if(!x_range ||!src_image->get_window().get_y_range().has(y)) return;

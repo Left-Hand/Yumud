@@ -3,6 +3,9 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "../DistanceSensor.hpp"
 
+
+namespace yumud::drivers{
+
 class VL53L0X:public DistanceSensor{
 protected:
     I2cDrv bus_drv;
@@ -56,4 +59,6 @@ private:
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         bus_drv.readPool(reg, data, len);
     }
+};
+
 };

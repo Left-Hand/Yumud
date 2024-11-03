@@ -1,7 +1,9 @@
 #pragma once
 
-#include "../hal/gpio/gpio.hpp"
+#include "hal/gpio/gpio.hpp"
 
+
+namespace yumud::drivers{
 class TTP229{
 protected:
     int8_t num = -1;
@@ -41,3 +43,4 @@ public:
     void getMapData(uint16_t & _map){_map = map;}
 };
 
+};

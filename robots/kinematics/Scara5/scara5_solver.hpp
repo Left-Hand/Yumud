@@ -3,6 +3,8 @@
 #include "sys/math/real.hpp"
 #include "types/vector2/vector2_t.hpp"
 
+
+namespace yumud{
 template<typename T>
 class Scara5Solver_t{
 public:
@@ -49,3 +51,5 @@ public:
         return {l_theta, r_theta};
     }
 };
+
+}

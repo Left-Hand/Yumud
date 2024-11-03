@@ -13,7 +13,7 @@
 
 #include "elements.hpp"
 
-using namespace NVCV2;
+using namespace yumud::nvcv2;
 
 namespace SMC{
     enum class AlignMode:uint8_t{
@@ -28,7 +28,7 @@ namespace SMC{
     using Pile = std::pair<int, Rangei>;
     using Piles = std::map<int, Rangei>;
     using Point = Vector2i; 
-    using NVCV2::Shape::Seed;
+    using yumud::nvcv2::Shape::Seed;
     using Segment = std::pair<const Point & ,const Point &>;
 
 

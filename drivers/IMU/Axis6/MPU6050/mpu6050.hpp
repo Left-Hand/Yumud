@@ -5,6 +5,8 @@
 #include "types/quat/Quat_t.hpp"
 
 
+namespace yumud::drivers{
+
 class MPU6050:public Axis6{
 public:
     scexpr uint8_t default_id = 0xd0;
@@ -66,4 +68,7 @@ public:
     std::tuple<real_t, real_t, real_t> getAccel() override;
     std::tuple<real_t, real_t, real_t> getGyro() override;
     void getTemperature(real_t & temp);
+};
+
+
 };

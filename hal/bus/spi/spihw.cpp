@@ -1,6 +1,7 @@
 #include "spihw.hpp"
 #include "sys/debug/debug_inc.h"
 
+using namespace yumud;
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef HAVE_SPI1

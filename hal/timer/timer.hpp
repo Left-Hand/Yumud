@@ -4,6 +4,8 @@
 #include "timer_utils.hpp"
 
 #ifdef HDW_SXX32
+
+namespace yumud{
 class TimerHw{};
 
 class BasicTimer:public TimerHw{
@@ -111,5 +113,5 @@ public:
 
     AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 };
-
+}
 #endif

@@ -1,6 +1,9 @@
 #include "string_view.hpp"
 #include "String.hpp"
 
+
+using namespace yumud;
+
 StringView::StringView(const String &str):data_(str.c_str()), size_(str.length()){
 
 }
@@ -32,7 +35,7 @@ Strings StringView::split(const char delimiter, const size_t times) const{
 
 
 StringView StringView::substring(size_t left, size_t right) const{
-	if (left > right) std::swap(left, right);
+	if (left > right) ::std::swap(left, right);
     
 	if (left >= size_) return StringView(this->data_, 0);
 	if (right > size_) right = size_;

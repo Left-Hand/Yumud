@@ -4,6 +4,8 @@
 #include "types/image/image.hpp"
 #include "hal/bus/spi/spi.hpp"
 
+namespace yumud::drivers{
+
 class ST7789:public Displayer<RGB565>{
 private:
     DisplayInterfaceSpi & interface;
@@ -82,4 +84,6 @@ public:
     void setFlushDirH(const bool dir){modifyCtrl(dir, 2);}
 
     void setInversion(const bool inv){writeCommand(0x20 + inv);}
+};
+
 };

@@ -5,6 +5,8 @@
 #include "types/vector2/vector2_t.hpp"
 
 
+namespace yumud{
+
 template<arithmetic T>
 struct PoseVelocity2D_t{
     Vector2_t<T> velocity;
@@ -69,4 +71,7 @@ public:
 template<arithmetic T>
 OutputStream & operator<<(OutputStream & os, const PoseVelocity2D_t<T> & pv){
     return os << '(' << pv.velocity << ',' << pv.spinrate << ')';
+}
+
+
 }

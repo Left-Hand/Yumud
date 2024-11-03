@@ -1,5 +1,7 @@
 #include "mahony.hpp"
 
+using namespace yumud;
+
 Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 	Quat q;
 	Vector3 gyro = _gyro;

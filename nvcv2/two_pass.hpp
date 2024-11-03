@@ -3,7 +3,7 @@
 #include "nvcv2.hpp"
 
 
-namespace NVCV2::Shape{
+namespace yumud::nvcv2::Shape{
 class TwoPass{
 public:
 	TwoPass(int size);

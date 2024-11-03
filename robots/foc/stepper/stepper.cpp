@@ -1,6 +1,7 @@
 #include "stepper.hpp"
 #include "sys/math/float/bf16.hpp"
 
+using namespace yumud::foc;
 
 void FOCStepper::invoke_cali(){
     cali_tasker.reset();

@@ -3,6 +3,8 @@
 #include "robots/foc/focmotor.hpp"
 #include "robots/foc/motor_utils.hpp"
 
+
+namespace yumud::foc{
 class RemoteFOCMotor:public FOCMotorConcept, public CanProtocolConcept{
 
 protected:
@@ -70,3 +72,5 @@ public:
         return (ABS(readPosition() - targ_pos) < real_t(0.2)) and stable();
     }
 };
+
+}

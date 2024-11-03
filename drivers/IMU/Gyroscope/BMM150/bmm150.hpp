@@ -2,9 +2,9 @@
 
 #include <optional>
 
-#include "../drivers/device_defs.h"
-#include "../drivers/IMU/IMU.hpp"
-#include "types/uint24_t.h"
+#include "drivers/device_defs.h"
+#include "drivers/IMU/IMU.hpp"
+
 
 #pragma pack(push, 1)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -20,6 +20,8 @@
 #else
 #define BMM150_DEBUG(...)
 #endif
+
+namespace yumud::drivers{
 
 class BMM150:public Magnetometer{
 public:
@@ -97,3 +99,5 @@ public:
 
 
 #pragma pack(pop)
+
+}

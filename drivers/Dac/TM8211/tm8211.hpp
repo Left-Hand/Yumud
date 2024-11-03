@@ -3,6 +3,8 @@
 #include "drivers/device_defs.h"
 #include "sys/math/real.hpp"
 
+
+namespace yumud::drivers{
 class TM8211{
 // private:
 public:
@@ -72,3 +74,5 @@ public:
 
     // }
 };
+
+}

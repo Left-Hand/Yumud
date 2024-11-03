@@ -1,10 +1,10 @@
-#ifndef __CAN_HPP__
-#define __CAN_HPP__
+#pragma once
 
 #include "can_utils.hpp"
 #include "can_msg.hpp"
 #include "can_filter.hpp"
 #include "../hal/bus/bus.hpp"
+
 
 #ifdef HAVE_CAN1
 extern "C"{
@@ -42,6 +42,8 @@ void CAN2_SCE_IRQHandler(void);
 #define CAN_FIFO_SIZE 8
 #endif
 
+
+namespace yumud{
 class Can: public PackedBus<CanMsg>{
 public:
     using BaudRate = CanUtils::BaudRate;
@@ -106,23 +108,23 @@ public:
 
 
     #ifdef HAVE_CAN1
-    friend void USB_HP_CAN1_TX_IRQHandler(void);
+    friend void ::USB_HP_CAN1_TX_IRQHandler(void);
 
-    friend void USB_LP_CAN1_RX0_IRQHandler(void);
+    friend void ::USB_LP_CAN1_RX0_IRQHandler(void);
 
-    friend void CAN1_RX1_IRQHandler(void);
+    friend void ::CAN1_RX1_IRQHandler(void);
 
-    friend void CAN1_SCE_IRQHandler(void);
+    friend void ::CAN1_SCE_IRQHandler(void);
     #endif
 
     #ifdef HAVE_CAN2
-    friend void CAN2_TX_IRQHandler(void);
+    friend void ::CAN2_TX_IRQHandler(void);
 
-    friend void CAN2_RX0_IRQHandler(void);
+    friend void ::CAN2_RX0_IRQHandler(void);
 
-    friend void CAN2_RX1_IRQHandler(void);
+    friend void ::CAN2_RX1_IRQHandler(void);
 
-    friend void CAN2_SCE_IRQHandler(void);
+    friend void ::CAN2_SCE_IRQHandler(void);
     #endif
     };
 
@@ -134,4 +136,4 @@ inline Can can1{CAN1};
 inline Can can2{CAN2};
 #endif
 
-#endif
+}

@@ -2,6 +2,8 @@
 
 #include "hal/gpio/gpio.hpp"
 
+namespace yumud::drivers{
+
 class HX711{
 public:
     enum class ConvType{
@@ -83,3 +85,4 @@ public:
     }
 
 };
+}

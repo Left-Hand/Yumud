@@ -29,13 +29,15 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
+
+
 #define set(p_x, p_y, p_z, p_w)\
 	x = p_x;\
 	y = p_y;\
 	z = p_z;\
 	w = p_w;\
 
-
+namespace yumud{
 template<typename T>
 T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
 	T d = dot(p_to);
@@ -250,6 +252,8 @@ void Quat_t<T>::set_axis_angle(const Vector3_t<T> &axis, const T &angle) {
 		set(axis.x * s, axis.y * s, axis.z * s,
 				cos_angle);
 	}
+}
+
 }
 
 #undef set

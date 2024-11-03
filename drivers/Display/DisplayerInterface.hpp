@@ -6,6 +6,8 @@
 #include "drivers/Display/DisplayerInterface.hpp"
 #include <optional>
 
+namespace yumud::drivers{
+
 class DisplayerInterface{
 public:
     virtual void init() = 0;
@@ -145,3 +147,4 @@ public:
     }
 };
 
+};

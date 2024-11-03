@@ -2,6 +2,8 @@
 
 #include "../CoilDriver.hpp"
 
+namespace yumud::drivers{
+
 class AT8222:public Coil2Driver{
 protected:
     PwmChannel & forward_pwm;
@@ -38,3 +40,5 @@ AT8222 & AT8222::operator = (const real_t duty){
     }
     return *this;
 }
+
+};

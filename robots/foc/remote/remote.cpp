@@ -1,6 +1,9 @@
 #include "remote.hpp"
 #include "sys/math/float/bf16.hpp"
 
+using namespace yumud;
+using namespace yumud::foc;
+
 using Command = MotorUtils::Command;
 using RunStatus = MotorUtils::RunStatus;
 

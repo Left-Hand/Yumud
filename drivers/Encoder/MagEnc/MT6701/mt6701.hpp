@@ -12,6 +12,9 @@
 #define MT6701_DEBUG(...)
 #endif
 
+
+
+namespace yumud::drivers{
 class MT6701:public MagEncoder{
 public:
     enum class Hysteresis:uint8_t{
@@ -247,6 +250,6 @@ public:
         writeReg(RegAddress::Stop, stopData);
         writeReg(RegAddress::StartStop, std::bit_cast<uint8_t>(startStopReg));
     }
-
-
 };
+
+}

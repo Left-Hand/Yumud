@@ -1,5 +1,7 @@
 #include "tb.h"
-#include "../../drivers/LightSensor/TCS34725/tcs34725.hpp"
+#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
+
+using namespace yumud::drivers;
 
 void tcs34725_tb(OutputStream & logger, I2c & i2c){
     TCS34725 tcs{i2c};

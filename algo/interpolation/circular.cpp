@@ -1,5 +1,7 @@
 #include "circular.hpp"
 
+using namespace yumud;
+
 template<typename T>
 static __fast_inline T sq(const T x){
     return x * x;

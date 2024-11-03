@@ -3,6 +3,8 @@
 #include "sys/math/real.hpp"
 #include "vector2/vector2_t.hpp"
 
+namespace yumud{
+
 using Vector2 = Vector2_t<real_t>;
 
 class Gimbal{
@@ -29,4 +31,6 @@ public:
     void setOrientation(const Vector2 & _orientation){
         setOrientation(_orientation.x, _orientation.y);
     }
+}
+
 }

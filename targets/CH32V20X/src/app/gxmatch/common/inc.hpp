@@ -12,6 +12,10 @@
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 namespace gxm{
+
+    using namespace yumud;
+    using namespace yumud::drivers;
+
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;
 

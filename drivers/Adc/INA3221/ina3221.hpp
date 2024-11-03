@@ -9,6 +9,9 @@
 #define INA3221_DEBUG(...)
 #endif
 
+
+namespace yumud::drivers{
+
 class INA3221{
 public:
 // Address Pins and Slave Addresses
@@ -253,3 +256,5 @@ public:
     void setInstantOVC(const size_t index, const real_t volt);
     void setConstantOVC(const size_t index, const real_t volt);
 };
+
+}

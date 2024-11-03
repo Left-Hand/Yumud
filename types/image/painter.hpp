@@ -2,6 +2,8 @@
 
 #include "painter_concept.hpp"
 
+namespace yumud{
+
 template<typename ColorType>
 class Painter:public PainterConcept{
 protected:
@@ -185,3 +187,5 @@ public:
 
 
 };
+
+}

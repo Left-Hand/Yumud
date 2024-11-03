@@ -2,6 +2,7 @@
 
 #include "drivers/device_defs.h"
 
+namespace yumud::drivers{
 class TempSensor{
 public:
     virtual void init() = 0;
@@ -9,3 +10,4 @@ public:
     virtual real_t getTemp() = 0;
 };
 
+}

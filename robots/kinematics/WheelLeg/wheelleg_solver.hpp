@@ -8,6 +8,11 @@
 #include "transform3d/transform3d_t.hpp"
 
 #define SQU(x) ((x) * (x)) 
+
+
+
+namespace yumud{
+
 template<typename T>
 class WheelLegSolver_t{
 public:
@@ -126,5 +131,7 @@ public:
         return PelvisViewer(*this);
     }
 };
+
+}
 
 #undef SQU

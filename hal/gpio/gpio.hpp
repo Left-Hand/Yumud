@@ -3,6 +3,8 @@
 #include "port_concept.hpp"
 #include "gpio_utils.hpp"
 
+namespace yumud{
+
 class GpioConcept{
 public:
     const int8_t pin_index = 0;
@@ -117,3 +119,6 @@ public:
 
     void setMode(const PinMode mode) override{ instance.setMode(pin_index, mode);}
 };
+
+
+}

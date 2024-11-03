@@ -1,5 +1,7 @@
 #include "injected_channel.hpp"
 
+using namespace yumud;
+
 InjectedChannel::InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
         AdcChannelOnChip(_instance, _channel, _rank),
         mask((ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (rank - 1) + ADC_InjectedChannel_1){;}

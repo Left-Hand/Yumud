@@ -1,6 +1,4 @@
-#ifndef __KALMAN_FILTER_HPP__
-
-#define __KALMAN_FILTER_HPP__
+#pragma once
 
 #include "sys/math/real.hpp"
 
@@ -35,4 +33,3 @@ public:
 
 typedef KalmanFilterZ_t<real_t> KalmanFilterZ;
 
-#endif

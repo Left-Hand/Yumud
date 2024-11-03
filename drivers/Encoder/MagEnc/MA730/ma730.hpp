@@ -3,6 +3,8 @@
 #include "drivers/device_defs.h"
 #include "drivers/Encoder/MagEncoder.hpp"
 
+namespace yumud::drivers{
+
 class MA730:public MagEncoder{
 public:
     enum class Width:uint8_t{
@@ -134,4 +136,7 @@ public:
 class MA732:public MA730{
 public:
     using MA730::MA730; 
+};
+
+
 };

@@ -37,6 +37,8 @@
 
 #include <type_traits>
 
+
+namespace yumud{
 template <arithmetic T>
 struct Vector3_t{
 public:
@@ -221,8 +223,10 @@ public:
     }
 };
 
-#include "vector3_t.tpp"
 
-__fast_inline OutputStream & operator<<(OutputStream & os, const Vector3_t<auto> & value){
+}
+__fast_inline yumud::OutputStream & operator<<(yumud::OutputStream & os, const yumud::Vector3_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ',' << value.z << ')';
 }
+
+#include "vector3_t.tpp"

@@ -4,7 +4,6 @@
 
 #include "../drivers/device_defs.h"
 #include "../drivers/IMU/IMU.hpp"
-#include "types/uint24_t.h"
 
 #pragma pack(push, 1)
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
@@ -20,6 +19,8 @@
 #else
 #define BMI160_DEBUG(...)
 #endif
+
+namespace yumud::drivers{
 
 class BMI160:public Axis6{
 public:
@@ -504,5 +505,6 @@ public:
     std::tuple<real_t, real_t, real_t> getGyro() override;
 };
 
+}
 
 #pragma pack(pop)

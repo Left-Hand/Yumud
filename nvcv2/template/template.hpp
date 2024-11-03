@@ -2,7 +2,7 @@
 
 #include "../nvcv2.hpp"
 
-namespace NVCV2::Match{
+namespace yumud::nvcv2::Match{
 
 real_t template_match(const Image<Binary> &, const Image<Binary> &, const Vector2i &);
 real_t template_match(const Image<Grayscale> &, const Image<Grayscale> &, const Vector2i &);

@@ -2,6 +2,9 @@
 
 #include "interpolation.hpp"
 
+
+namespace yumud{
+
 class CubicInterpolation:public Interpolation{
 
 protected:
@@ -61,3 +64,5 @@ protected:
 public:
     static real_t forward(const Vector2 & from,const Vector2 & to, const real_t x);
 };
+
+}

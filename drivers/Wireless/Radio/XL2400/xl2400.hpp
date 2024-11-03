@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../../hal/bus/spi/spidrv.hpp"
-#include "../../hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/spi/spidrv.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 #include <optional>
 // #include "types/uint128_t.h"
 
@@ -17,6 +17,8 @@
 #define REG16(x) (*reinterpret_cast<uint16_t *>(&x))
 #define REG8R(x) (*reinterpret_cast<uint8_t *>(&x))
 
+
+namespace yumud::drivers{
 
 class XL2400{
 public:
@@ -312,3 +314,5 @@ public:
     XL2400(const SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
     XL2400(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
 };
+
+}

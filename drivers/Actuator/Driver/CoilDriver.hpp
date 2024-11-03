@@ -6,6 +6,8 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
+namespace yumud::drivers{
+
 class CoilDriverConcept: public Actuator{
 public:
     // virtual void setClamp(const real_t abs_max_value){}
@@ -25,3 +27,6 @@ public:
 
     virtual Coil3Driver& operator= (const UVW_Duty & duty) = 0;
 };
+
+
+}

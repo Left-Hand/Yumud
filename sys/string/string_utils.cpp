@@ -1,5 +1,7 @@
 #include "string_utils.hpp"
 
+using namespace yumud;
+
 static inline void swap_char(char & a, char & b){
 	char temp = a;
 	a = b;
@@ -96,19 +98,19 @@ bool StringUtils::is_numeric(const char* str, const size_t len) {
 			hasDigit = true;
 		} else if (chr == '.') {
 			if (hasDot || !hasDigit) {
-				return false; // ¶à¸öÐ¡Êýµã»òÕßÐ¡ÊýµãÇ°Ã»ÓÐÊý×Ö£¬·µ»Ø false
+				return false; // ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½ï¿½ï¿½Ç°Ã»ï¿½ï¿½ï¿½ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½ false
 			}
 			hasDot = true;
 		} else if (chr == '+' || chr == '-') {
 			if (hasSign || hasDigit || hasDot) {
-				return false; // ¶à¸öÕý¸ººÅ»òÕßÕý¸ººÅ³öÏÖÔÚÊý×ÖÖ®ºó£¬·µ»Ø false
+				return false; // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®ï¿½ó£¬·ï¿½ï¿½ï¿½ false
 			}
 			hasSign = true;
 		} else {
-			return false; // ·ÇÊý×Ö¡¢Õý¸ººÅ»òÐ¡Êýµã£¬·µ»Ø false
+			return false; // ï¿½ï¿½ï¿½ï¿½ï¿½Ö¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å»ï¿½Ð¡ï¿½ï¿½ï¿½ã£¬ï¿½ï¿½ï¿½ï¿½ false
 		}
 	}
-	return hasDigit; // ÖÁÉÙ°üº¬Ò»¸öÊý×Ö²ÅÈÏÎªÊÇºÏ·¨Êý×Ö
+	return hasDigit;
 }
 
 bool StringUtils::is_digit(const char * str, const size_t len){

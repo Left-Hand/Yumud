@@ -5,8 +5,17 @@
 #include "stream_base.hpp"
 #include "sys/string/string.hpp"
 
+
+namespace yumud{
+
+
 class String;
 class StringStream;
+
+template<typename T>
+concept HasToString = requires(T t, unsigned char eps) {
+    { t.toString(eps) } -> ::std::convertible_to<String>;
+};
 
 class OutputStream: virtual public BasicStream{
 protected:
@@ -76,25 +85,25 @@ public:
     OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
     OutputStream & operator<<(char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
-    OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
-    OutputStream & operator<<(const std::string_view str){write(str.data(),str.length()); return *this;}
-    OutputStream & operator<<(const String & str);
-    OutputStream & operator<<(const StringView str);
+    OutputStream & operator<<(const ::std::string & str){write(str.c_str(),str.length()); return *this;}
+    OutputStream & operator<<(const ::std::string_view str){write(str.data(),str.length()); return *this;}
+    OutputStream & operator<<(const yumud::String & str);
+    OutputStream & operator<<(const yumud::StringView str);
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
     OutputStream & operator<<(const iq_t val);
 
-    OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
-    OutputStream& operator<<(const std::_Setprecision & n){eps_ = n._M_n; skip_split = true; return *this;}
-    OutputStream& operator<<(const std::nullopt_t n){return *this << '/';}
+    OutputStream& operator<<(::std::ios_base& (*func)(::std::ios_base&));
+    OutputStream& operator<<(const ::std::_Setprecision & n){eps_ = n._M_n; skip_split = true; return *this;}
+    OutputStream& operator<<(const ::std::nullopt_t n){return *this << '/';}
     
     template<typename T>
-    OutputStream& operator<<(const std::optional<T> v){
+    OutputStream& operator<<(const ::std::optional<T> v){
         if(bool(v)){
             return *this << v.value();
         }else{
-            return *this << std::nullopt;        
+            return *this << ::std::nullopt;        
         }
     }
 
@@ -108,7 +117,7 @@ public:
         return *this << str;\
 
     template<typename T>
-    requires std::is_integral_v<T> && (sizeof(T) <= 4)
+    requires ::std::is_integral_v<T> && (sizeof(T) <= 4)
     OutputStream & operator<<(const T val){
         PUT_INT_CONTEXT_TEMPLATE(12, StringUtils::itoa)
     }
@@ -132,13 +141,13 @@ public:
     }
 
     template<typename T, size_t size>
-    OutputStream & operator<<(const std::array<T, size> & arr){
+    OutputStream & operator<<(const ::std::array<T, size> & arr){
         print_arr(arr.begin(), arr.end());
         return *this;
     }
 
     template<typename T>
-    OutputStream & operator<<(const std::vector<T> & arr){
+    OutputStream & operator<<(const ::std::vector<T> & arr){
         print_arr((const T *)&arr[0],(const T *)&arr[arr.size()]);
         return *this;
     }
@@ -152,15 +161,12 @@ public:
     //#endregion
 
 
-    template<HasToString T>
-    OutputStream & operator<<(const T & misc){*this << misc.toString(eps_); return *this;}
-
     template <typename... Args>
-    auto& operator<<(const std::tuple<Args...>& t) {
-        using TupleType = std::tuple<Args...>;
-        constexpr size_t tupleSize = std::tuple_size<TupleType>::value;
+    auto& operator<<(const ::std::tuple<Args...>& t) {
+        using TupleType = ::std::tuple<Args...>;
+        constexpr size_t tupleSize = ::std::tuple_size<TupleType>::value;
         *this << '(';
-        std::apply(
+        ::std::apply(
             [&](const auto&... args) {
                 ((tupleSize > 1 && &args != &std::get<tupleSize - 1>(t) ? (*this << args << ',') : (*this << args)), ...);
             },
@@ -171,8 +177,14 @@ public:
     }
 
     template<typename T>
-    requires std::is_enum_v<T>
-    OutputStream & operator<<(T && misc){*this << int(misc); return *this;}
+    requires ::std::is_enum_v<T>
+    OutputStream & operator<<(T && e){return *this;}
+
+
+
+    template<HasToString T>
+    OutputStream & operator<<(const T & misc){*this << misc.toString(eps_); return *this;}
+
 
 
     template <class... Args>
@@ -197,4 +209,6 @@ public:
     auto radix() const {return radix_;}
 
     void flush(){while(pending()){__nopn(1);};}
+};
+
 };

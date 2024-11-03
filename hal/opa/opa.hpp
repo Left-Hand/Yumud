@@ -1,12 +1,12 @@
-#ifndef __OPA_HPP__
+#pragma once
 
-#define __OPA_HPP__
+#include "sys/core/platform.h"
 
-#include "../sys/core/platform.h"
+#include "hal/gpio/gpio.hpp"
+#include "hal/gpio/port.hpp"
 
-#include "../hal/gpio/gpio.hpp"
-#include "../hal/gpio/port.hpp"
 
+namespace yumud{
 class Opa{
 protected:
     uint8_t opa_index;
@@ -108,7 +108,12 @@ public:
     }
 };
 
-extern Opa opa1;
-extern Opa opa2;
-
+#ifdef HAVE_OPA1
+static inline Opa opa1;
 #endif
+
+#ifdef HAVE_OPA2
+static inline Opa opa2;
+#endif
+
+}

@@ -1,5 +1,7 @@
 #include "bmp280.hpp"
 
+using namespace yumud::drivers;
+
 bool BMP280::isChipValid(){
     readReg(RegAddress::ChipID, chipIDReg);
     BMP280_DEBUG("CHIP code: ", uint8_t(chipIDReg));
@@ -56,7 +58,7 @@ void BMP280::getPressure(int32_t & pressure){
         return;
     }
 
-    uint64_t begin_t = nanos();
+    // uint64_t begin_t = nanos();
     //Temperature
     uint32_t var1 = (((float)adc_T)/16384.0f-((float)digT1)/1024.0f)*((float)digT2);
     uint32_t var2 = ((((float)adc_T)/131072.0f-((float)digT1)/8192.0f)*(((float)adc_T)
@@ -76,8 +78,8 @@ void BMP280::getPressure(int32_t & pressure){
     var2 = p*((float)digP8)/32768.0f;
     pressure = p+(var1+var2+((float)digP7))/16.0f;
 
-    uint64_t end_t = nanos();
-    BMP280_DEBUG("cal used", (uint32_t)(end_t - begin_t));
+    // uint64_t end_t = nanos();
+    // BMP280_DEBUG("cal used", (uint32_t)(end_t - begin_t));
 }
 
 void BMP280::init(){

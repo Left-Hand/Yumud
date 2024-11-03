@@ -3,6 +3,8 @@
 #include "drivers/Actuator/servo/servo.hpp"
 #include "types/range/range_t.hpp"
 
+namespace yumud::drivers{
+
 class ScaledPwm:public PwmChannel{
 protected:
     PwmChannel & instance_;
@@ -93,3 +95,4 @@ public:
 //     Servo360(PwmChannel & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), 270){;}
 // };
 
+}

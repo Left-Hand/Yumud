@@ -5,6 +5,8 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/dma/dma.hpp"
 
+namespace yumud{
+
 class TimerChannel{
 public:
     using Channel = TimerUtils::Channel;
@@ -21,3 +23,5 @@ protected:
     TimerChannel(TIM_TypeDef * _instance, const Channel _channel):instance(_instance), channel(_channel){;}
 
 };
+
+}

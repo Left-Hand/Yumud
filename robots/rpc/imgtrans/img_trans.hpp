@@ -4,6 +4,8 @@
 #include "types/image/image.hpp"
 
 #pragma pack(push, 1)
+
+namespace yumud{
 struct TransType{
     uint8_t index:4;
     uint8_t type:4;
@@ -73,3 +75,5 @@ public:
         enabled = en;
     }
 };
+
+}

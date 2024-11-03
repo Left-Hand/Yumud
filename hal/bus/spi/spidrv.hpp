@@ -6,6 +6,8 @@
 #include <initializer_list>
 
 
+namespace yumud{
+
 class SpiDrv:public BusDrv<Spi>{
 protected:
     Endian m_endian = LSB;  
@@ -15,4 +17,6 @@ public:
 
     void setEndian(const Endian _endian){m_endian = _endian;}
     void setBaud(const uint32_t baud){m_baudrate = baud;}
+};
+
 };

@@ -1,5 +1,11 @@
 #include "ad9833.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 #define AD9833_Delay __nopn(4)
 
 #define AD9833_SPI_WRITE(data)      spi_drv.write(data);

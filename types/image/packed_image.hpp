@@ -2,6 +2,8 @@
 
 #include "image.hpp"
 
+namespace yumud{
+
 using PackedBinary = uint8_t;
 
 class PackedBinaryImage:public ImageWithData<Binary, PackedBinary>{
@@ -101,3 +103,6 @@ public:
         }
     }
 };
+
+
+}

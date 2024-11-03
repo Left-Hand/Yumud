@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#define QKV4_REG_DEF(name) static inline volatile name##_Def * name = (name##_Def *)name##_Def::address;
+#define REG_DEF(name) static inline volatile name##_Def * name = (name##_Def *)name##_Def::address;
 
 namespace SXX32{
     struct GPIO_Def{

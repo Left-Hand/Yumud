@@ -1,5 +1,6 @@
 #include "ina3221.hpp"
 
+using namespace yumud::drivers;
 
 #define READ_REG(reg)\
 readReg(reg.address, reg);\

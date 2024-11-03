@@ -1,8 +1,10 @@
 #pragma once
 
-#include "sys/core/platform.h"
+
 #include "gpio_utils.hpp"
 
+
+namespace yumud{
 class PortConcept{
 public:
     virtual void writeByIndex(const int index, const bool data);
@@ -45,4 +47,5 @@ __fast_inline void PortConcept::writeByIndex(const int index, const bool data){
 __fast_inline bool PortConcept::readByIndex(const int index){
     if(index < 0) return false;
     return uint16_t(*this) & (1 << index);
+};
 };

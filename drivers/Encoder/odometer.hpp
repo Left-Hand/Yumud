@@ -5,6 +5,7 @@
 #include <array>
 #include "thirdparty/sstl/include/sstl/vector.h"
 
+namespace yumud::drivers{
 class Odometer{
 public:
     Encoder & encoder;
@@ -74,3 +75,5 @@ public:
         return accPosition;
     }
 };
+
+}

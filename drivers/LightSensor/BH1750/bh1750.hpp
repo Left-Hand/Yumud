@@ -2,6 +2,8 @@
 
 #include "../drivers/device_defs.h"
 
+namespace yumud::drivers{
+
 class BH1750{
 public:
     enum class Mode:uint8_t{
@@ -92,3 +94,4 @@ public:
     }
 };
 
+};

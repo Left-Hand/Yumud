@@ -16,7 +16,7 @@
 
 #include "robots/foc/components/statled/statled.hpp"
 
-
+namespace yumud::foc{
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;
@@ -200,5 +200,7 @@ public:
     void setRadfix(const real_t rf){
         meta.radfix = rf;
     }
+
+};
 
 };

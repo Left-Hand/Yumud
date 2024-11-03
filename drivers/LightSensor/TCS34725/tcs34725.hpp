@@ -1,9 +1,10 @@
 #pragma once
 
-#include "drivers/device_defs.h"
-#include "types/rgb.h"
 #include "hal/bus/i2c/i2cdrv.hpp"
+#include "drivers/device_defs.h"
 
+
+namespace yumud::drivers{
 
 class TCS34725{
 public:
@@ -188,6 +189,6 @@ public:
         setIntegration(240);
         setGain(Gain::X1);
     }
+};
 
-    operator RGB888();
 };

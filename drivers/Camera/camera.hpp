@@ -8,6 +8,8 @@
 #include "types/image/image.hpp"
 #include "types/rgb.h"
 
+namespace yumud{
+
 class SccbDrv:public I2cDrv{
 protected:
     using BusDrv<I2c>::index;
@@ -61,4 +63,6 @@ protected:
     void readReg(const uint8_t addr, uint16_t & data){
         bus_drv.writeSccbReg(addr, data);
     }
+};
+
 };

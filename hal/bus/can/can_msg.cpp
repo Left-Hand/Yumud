@@ -2,6 +2,8 @@
 #include "sys/stream/ostream.hpp"
 
 
+using namespace yumud;
+
 OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
     os << "{0x" << 
         std::hex << msg.StdId << '<'

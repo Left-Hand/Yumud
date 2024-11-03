@@ -1,5 +1,9 @@
 #include "ascii_proto.hpp"
 
+
+
+using namespace yumud;
+
 void AsciiProtocolConcept::parseArgs(const Strings & args){
     switch(args[0].hash()){
         case "reset"_ha:

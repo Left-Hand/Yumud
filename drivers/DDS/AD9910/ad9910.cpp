@@ -1,5 +1,11 @@
 #include "ad9910.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
+
+
 scexpr uint8_t cfr3[4]={0x05,0x0F,0x41,0x32};       									//cfr3控制字  40M输入  25倍频  VC0=101   ICP=001;
   
 

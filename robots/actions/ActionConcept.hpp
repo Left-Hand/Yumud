@@ -7,6 +7,9 @@
 #include "sys/math/real.hpp"
 #include "types/vector2/vector2_t.hpp"
 
+
+namespace yumud{
+
 struct Action {
 public:
     using Vector2 = Vector2_t<real_t>;
@@ -83,3 +86,4 @@ public:
 };
 
 
+}

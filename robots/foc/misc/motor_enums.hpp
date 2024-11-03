@@ -1,6 +1,6 @@
 #pragma once
 
-
+namespace yumud::foc{
 namespace MotorUtils{
 
     enum class RunStatus:uint8_t{
@@ -93,4 +93,6 @@ namespace MotorUtils{
     };
 
     using NodeId =  NodeId_t<uint8_t>;
+}
+
 }

@@ -2,12 +2,16 @@
 
 #include "zaxis.hpp"
 
+
+
+namespace yumud::foc{
 class FOCMotorConcept;
+}
 
 namespace gxm{
 class ZAxisStepper:public ZAxis{
 protected:
-    using Motor = FOCMotorConcept;
+    using Motor = yumud::foc::FOCMotorConcept;
     Motor & motor_;
 public:
     ZAxisStepper(const Config & config, Motor & motor):ZAxis(config), motor_(motor){}

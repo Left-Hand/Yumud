@@ -6,6 +6,7 @@
 
 #include <functional>
 
+namespace yumud{
 class ExtiChannel{
 public:
     enum class Trigger:uint8_t{
@@ -94,4 +95,6 @@ __interrupt void EXTI3_IRQHandler(void);
 __interrupt void EXTI4_IRQHandler(void);
 __interrupt void EXTI9_5_IRQHandler(void);
 __interrupt void EXTI15_10_IRQHandler(void);
+}
+
 }

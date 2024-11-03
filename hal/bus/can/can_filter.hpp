@@ -1,11 +1,10 @@
-#ifndef __CAN_FILTER_HPP__
-
-#define __CAN_FILTER_HPP__
+#pragma once
 
 #include <cstdint>
 #include <initializer_list>
 
-struct CanFilter{
+namespace yumud{
+class CanFilter{
 private:
     struct ID16{
         union{
@@ -57,5 +56,4 @@ public:
     static void init(const CanFilter & filter);
 };
 
-
-#endif
+}

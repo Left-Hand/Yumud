@@ -8,6 +8,8 @@
 #endif
 #endif
 
+namespace yumud::drivers{
+
 
 class AD9959{
 // protected:
@@ -223,3 +225,5 @@ protected:
   }
 
 };
+
+}

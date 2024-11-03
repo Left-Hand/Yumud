@@ -1,5 +1,9 @@
 #include "mp6540.hpp"
 
+
+using namespace yumud;
+using namespace yumud::drivers;
+
 static void error(){
     MP6540_DEBUG("terminated!!!");
     CREATE_FAULT;

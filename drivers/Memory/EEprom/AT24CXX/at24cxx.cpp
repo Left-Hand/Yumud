@@ -1,5 +1,7 @@
 #include "at24cxx.hpp"
 
+using namespace yumud;
+
 #ifdef AT24CXX_DEBUG
 #undef AT24CXX_DEBUG
 #define AT24CXX_DEBUG(...) DEBUG_PRINT(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);

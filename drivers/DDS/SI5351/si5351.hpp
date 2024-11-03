@@ -30,6 +30,7 @@
 
 #include "../drivers/device_defs.h"
 
+namespace yumud::drivers{
 class Si5351
 {
 public:
@@ -131,5 +132,7 @@ private:
 	void ms_div(enum si5351_clock, uint8_t, uint8_t);
 	uint8_t select_r_div(uint64_t *);
 	uint8_t select_r_div_ms67(uint64_t *);
+
+};
 
 };

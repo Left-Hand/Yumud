@@ -3,6 +3,8 @@
 #include "robots/foc/motor_utils.hpp"
 #include "../ctrls/ctrls.hpp"
 
+namespace yumud::foc{
+
 namespace MotorUtils{
     scexpr uint8_t build_version = 10;
     scexpr uint8_t drv_type = 42;
@@ -116,4 +118,9 @@ namespace MotorUtils{
     };
 }
 
-OutputStream & operator<<(OutputStream & os, const MotorUtils::BoardInfo & bi);
+}
+
+
+namespace yumud{
+OutputStream & operator<<(OutputStream & os, const foc::MotorUtils::BoardInfo & bi);
+}

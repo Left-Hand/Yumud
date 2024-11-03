@@ -5,6 +5,9 @@
 
 
 namespace gxm{
+
+using Action = yumud::Action;
+
 template<typename T>
 struct PickDropAction: public Action{
 protected:

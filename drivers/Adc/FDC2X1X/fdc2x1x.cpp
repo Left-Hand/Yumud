@@ -1,5 +1,8 @@
 #include "fdc2x1x.hpp"
 
+using namespace yumud::drivers;
+
+
 void FDC2X1X::init(){
     writeReg(0x08,0x8329);   //(CHx_RCOUNT*16)/55M ==9.76ms，,每10ms左右可以读一次值
 	writeReg(0x09,0x8329);

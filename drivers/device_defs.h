@@ -82,3 +82,8 @@ public:
 #define SPIDEV_CONTSRTUCTER(name)\
     name(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}\
     name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+
+
+// class Device{
+
+// }

@@ -1,5 +1,10 @@
 #include "ad9959.hpp"
 
+
+using namespace yumud::drivers;
+using namespace yumud;
+
+
 void AD9959::init(){
     core_clock = 0;
     last_channels = 0xf0;

@@ -4,6 +4,10 @@
 #include "hal/timer/timer.hpp"
 
 
+
+using namespace yumud;
+using namespace yumud::drivers;
+
 MP1907::MP1907(AdvancedTimer & timer, const uint8_t pair_index, GpioConcept & en_gpio):
     inst_(timer.oc(pair_index)),
     inst_n_(timer.ocn(pair_index)),

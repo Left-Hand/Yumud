@@ -1,5 +1,9 @@
 #include "odometer.hpp"
 
+using namespace yumud;
+using namespace yumud::drivers;
+
+
 void Odometer::update(){
 
     {

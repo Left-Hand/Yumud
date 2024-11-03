@@ -4,8 +4,10 @@
 #include "drivers/device_defs.h"
 #include "sys/math/real.hpp"
 
-#define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-// #define BMP280_DEBUG(...)
+// #define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#define BMP280_DEBUG(...)
+
+namespace yumud::drivers{
 
 class BMP280{
 public:
@@ -181,3 +183,5 @@ public:
 
     void init();
 };
+
+}

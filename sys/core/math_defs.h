@@ -1,6 +1,4 @@
-#ifndef __MATH_DEFS_H__
-
-#define __MATH_DEFS_H__
+#pragma once
 
 #include "sys/core/sys_defs.h"
 
@@ -26,6 +24,10 @@
 
 #ifndef PI
 #define PI 3.1415926535897932384626433833
+#endif
+
+#ifndef M_E
+#define M_E 2.7182818284590452353602874714
 #endif
 
 #ifndef HUGE_VALL
@@ -281,6 +283,3 @@ constexpr __fast_inline bool __sign_same_impl(const T x, const auto y){
 #define DAY ((__DATE__[4] == ' ' ? 0 : __DATE__[4]-'0') * 10 + (__DATE__[5]-'0'))
 #define HOUR ((__TIME__[0]-'0') * 10 + __TIME__[1]-'0')
 #define MINUTE ((__TIME__[3]-'0') * 10 + __TIME__[4]-'0')
-
-
-#endif

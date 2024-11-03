@@ -1,5 +1,6 @@
 #include "timer_utils.hpp"
 
+using namespace yumud;
 
 
 bool TimerUtils::isBasicTimer(const TIM_TypeDef * instance){

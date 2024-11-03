@@ -1,7 +1,7 @@
 #include "pixels.hpp"
 
 
-namespace NVCV2::Pixels{
+namespace yumud::nvcv2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
@@ -191,7 +191,7 @@ namespace NVCV2::Pixels{
             for (int j = 0; j < i; ++j){
                 if (hist[j] != 0){
                     probability = (float)hist[j] / frontpix;
-                    HO = HO + probability*log(1/probability);
+                    HO = HO + probability*float(log(real_t(1)/real_t::from(probability)));
                 }
             }
     
@@ -199,7 +199,7 @@ namespace NVCV2::Pixels{
             for (int k = i; k < 256; ++k){
                 if (hist[k] != 0){
                     probability = (float)hist[k] / (totalpix - frontpix);
-                    HB = HB + probability*log(1/probability);
+                    HB = HB + probability*float(log(1/real_t::from(probability)));
                 }
             }
     
