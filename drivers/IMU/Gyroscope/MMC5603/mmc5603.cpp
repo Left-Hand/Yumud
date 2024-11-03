@@ -40,4 +40,3 @@ std::tuple<real_t, real_t, real_t> MMC5603::getMagnet(){
 
     return {x,y,z};
 }
-#pragma GCC diagnostic pop

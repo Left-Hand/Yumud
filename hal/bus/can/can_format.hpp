@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-#pragma pack(push, 1)
 
 namespace yumud::CanExperimental{
 struct CtrlReg{
@@ -248,5 +247,3 @@ struct CanDef{
     FilterDef filters[4];
 };
 }
-
-#pragma pack(pop)

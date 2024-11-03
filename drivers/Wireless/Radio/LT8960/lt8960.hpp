@@ -193,8 +193,6 @@ public:
     }
 };
 
-#pragma GCC diagnostic pop
-
 #ifdef LT8960_DEBUG
 #undef LT8960_DEBUG
 #endif

@@ -162,6 +162,8 @@ protected:
 
 public:
     AD9959(const SpiDrv & _bus_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
+        bus_drv(_bus_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
+        
     AD9959(SpiDrv && _bus_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
         bus_drv(_bus_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
 

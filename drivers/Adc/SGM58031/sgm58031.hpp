@@ -1,6 +1,6 @@
 #pragma once
 
-#include "device_defs.h"
+#include "drivers/device_defs.h"
 
 #ifndef SGM58031_DEBUG
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
@@ -199,15 +199,15 @@ public:
     void setFS(const real_t _fs, const real_t _vref){
         real_t ratio = abs(_fs) / _vref;
         PGA pga;
-        if(ratio >= 3.0f){
+        if(ratio >= 3){
             pga = PGA::RT2_3;
         }else if(ratio >= 2){
             pga = PGA::RT1;
         }else if(ratio >= 1){
             pga = PGA::RT2;
-        }else if(ratio >= 0.5){
+        }else if(ratio >= real_t(0.5)){
             pga = PGA::RT4;
-        }else if(ratio >= 0.25){
+        }else if(ratio >= real_t(0.25)){
             pga = PGA::RT8;
         }else{
             pga = PGA::RT16;
@@ -217,8 +217,8 @@ public:
     }
 
     void setTrim(const real_t _trim){
-        real_t trim = _trim * 4.0f / 3.0f;
-        real_t offset = trim - 1.30225f;
+        real_t trim = _trim * real_t(4.0f / 3.0f);
+        real_t offset = trim - real_t(1.30225f);
         trimReg.gn = (int)(offset * 0b01111111010);
         writeReg(RegAddress::Trim, trimReg);
     }
