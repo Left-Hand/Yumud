@@ -9,21 +9,52 @@
 #include <tuple>
 
 namespace yumud{
-struct CanMsg:public CanRxMsg{
+
+//TODO do not inhert from CanRxMsg
+struct CanMsg{
 protected:
+    uint32_t StdId;  /* Specifies the standard identifier.
+                        This parameter can be a value between 0 to 0x7FF. */
+
+    uint32_t ExtId;  /* Specifies the extended identifier.
+                        This parameter can be a value between 0 to 0x1FFFFFFF. */
+
+    uint8_t IDE;     /* Specifies the type of identifier for the message that 
+                        will be received. This parameter can be a value of 
+                        @ref CAN_identifier_type */
+
+    uint8_t RTR;     /* Specifies the type of frame for the received message.
+                        This parameter can be a value of 
+                        @ref CAN_remote_transmission_request */
+
+    uint8_t DLC;     /* Specifies the length of the frame that will be received.
+                        This parameter can be a value between 0 to 8 */
+
+    uint8_t Data[8]; /* Contains the data to be received. It ranges from 0 to 
+                        0xFF. */
+
+    uint8_t FMI;     /* Specifies the index of the filter the message stored in 
+                        the mailbox passes through. This parameter can be a 
+                        value between 0 to 0xFF */
     uint8_t mbox;
+
 public:
     constexpr CanMsg(){
-        StdId = 0;
-        ExtId = 0;
-        IDE = 0;
-        RTR = 0;
-        DLC = 0;
+        // StdId = 0;
+        // ExtId = 0;
+        // IDE = 0;
+        // RTR = 0;
+        // DLC = 0;
     }
 
     constexpr CanMsg(const CanMsg & other) = default;
-    constexpr CanMsg(CanMsg && other) noexcept = default;
+    constexpr CanMsg(CanMsg && other) = default;
     constexpr CanMsg & operator = (const CanMsg & other) = default;
+    constexpr CanMsg & operator = (CanMsg && other) = default;
+
+    CanMsg copy(){
+        return *this;
+    }
 
     constexpr CanMsg(const uint32_t id, const bool remote = true){
         StdId = id;
@@ -120,13 +151,6 @@ public:
     constexpr const uint8_t operator[](const int index) const {return *(Data + index);};
     constexpr uint8_t & operator[](const int index) {return *(Data + index);};
 
-    constexpr const uint8_t at(const int index) const {
-        if(IN_RANGE(index, 0, (DLC-1))){
-            return Data[index];
-        }else{
-            return null_data;
-        }
-    };
 
     template<typename T>
     requires (sizeof(T) <= 8)
@@ -142,8 +166,28 @@ public:
     }
     
     constexpr void setSize(const size_t size) {DLC = size;}
-private:
-    scexpr uint8_t null_data = 0;
+
+
+    #ifdef HDW_SXX32
+
+    CanTxMsg * ptx() {
+        return reinterpret_cast<CanTxMsg *>(this);
+    }
+
+    CanRxMsg * prx() {
+        return reinterpret_cast<CanRxMsg *>(this);
+    }
+
+    const CanTxMsg * cptx() const {
+        return reinterpret_cast<const CanTxMsg *>(this);
+    }
+
+    const CanRxMsg * cprx() const {
+        return reinterpret_cast<const CanRxMsg *>(this);
+    }
+
+
+    #endif
 };
 
 
@@ -152,6 +196,5 @@ private:
 
 namespace yumud{
 class OutputStream;
+OutputStream & operator<<(OutputStream & os, const CanMsg & msg);
 }
-
-yumud::OutputStream & operator<<(yumud::OutputStream & os, const yumud::CanMsg & msg);

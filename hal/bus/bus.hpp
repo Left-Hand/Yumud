@@ -174,7 +174,7 @@ private:
     using Bus::setDataBits;//disable this;
 public:
     virtual bool write(const Packet & msg) = 0;
-    virtual const Packet & read() = 0;
+    virtual Packet read() = 0;
 };
 
 

@@ -82,7 +82,7 @@ public:
     void init(const BaudRate baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
 
     bool write(const CanMsg & msg) override;
-    const CanMsg & read() override;
+    CanMsg read() override;
     const CanMsg & front();
     size_t pending();
     size_t available();
