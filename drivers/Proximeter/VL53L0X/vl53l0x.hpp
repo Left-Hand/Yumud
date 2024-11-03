@@ -42,7 +42,7 @@ private:
 
     Result result, last_result;
 	void writeByteData(const uint8_t Reg, const uint8_t byte){
-        bus_drv.writeReg(Reg, byte);
+        bus_drv.writeReg(Reg, byte, MSB);
     }
 
     void flush();
@@ -50,13 +50,13 @@ private:
 
 	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
-        bus_drv.readReg(Reg, data);
+        bus_drv.readReg(Reg, data, MSB);
         return data;
     }
 
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         // sizeof(Result);
-        bus_drv.readPool(reg, data, len);
+        bus_drv.readPool(reg, data, len, MSB);
     }
 };
 

@@ -89,24 +89,24 @@ protected:
     };
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, MSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, MSB);
     }
 
 
     void requestPool(const RegAddress &regAddress, auto * datas, size_t len){
-        bus_drv.readPool((uint8_t)regAddress, datas, len);
+        bus_drv.readPool((uint8_t)regAddress, datas, len, MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){

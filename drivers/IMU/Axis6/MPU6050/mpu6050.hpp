@@ -48,15 +48,15 @@ protected:
     };
 
     void writeReg(const uint8_t reg_addr, const uint8_t data){
-        bus_drv.writeReg(reg_addr, data);
+        bus_drv.writeReg(reg_addr, data, MSB);
     }
 
     void writeReg(const RegAddress reg, const uint8_t data){
-        bus_drv.writeReg((uint8_t)reg, data);
+        bus_drv.writeReg((uint8_t)reg, data, MSB);
     }
 
     void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
-        bus_drv.readPool((uint8_t)reg_addr, datas, len);
+        bus_drv.readPool((uint8_t)reg_addr, datas, len, MSB);
     }
 
 public:

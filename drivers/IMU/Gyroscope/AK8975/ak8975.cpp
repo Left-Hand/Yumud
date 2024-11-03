@@ -107,28 +107,24 @@ std::tuple<real_t, real_t, real_t> AK8975::getMagnet(){
 }
 
 void AK8975::writeReg(const uint8_t addr, const uint8_t data){
-    if(i2c_drv) i2c_drv->writeReg(addr, data);
+    if(i2c_drv) i2c_drv->writeReg(addr, data, MSB);
     if(spi_drv){
-        SpiDrv & drv = spi_drv.value();
-        drv.write(uint16_t(uint16_t(addr) << 8 | data));
+        spi_drv->write(uint16_t(uint16_t(addr) << 8 | data));
     }
 }
     
 void AK8975::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data);
+    if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data, MSB);
     if(spi_drv){
-        SpiDrv & drv = spi_drv.value();
-        drv.write(uint8_t(uint8_t(addr) | 0x80), false);
-        drv.read(data);
+        spi_drv->write(uint8_t(uint8_t(addr) | 0x80), false);
+        spi_drv->read(data);
     }
 }
 
 void AK8975::readPool(const RegAddress addr, void * datas, const size_t len){
-    if(i2c_drv) i2c_drv->readPool(uint8_t(addr), (uint8_t *)datas, len);
+    if(i2c_drv) i2c_drv->readPool(uint8_t(addr), (uint8_t *)datas, len, MSB);
     if(spi_drv){
-        SpiDrv & drv = spi_drv.value();
-        drv.write(uint8_t(uint8_t(addr) | 0x80), false);
-        
-        drv.read((uint8_t *)(datas), len);
+        spi_drv->write(uint8_t(uint8_t(addr) | 0x80), false);
+        spi_drv->read((uint8_t *)(datas), len);
     }
 }

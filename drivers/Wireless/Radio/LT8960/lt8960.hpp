@@ -57,7 +57,7 @@ protected:
 
     void writeReg(const RegAddress address, const uint16_t reg){
         if(i2c_drv){
-            i2c_drv->writeReg((uint8_t)address, reg);
+            i2c_drv->writeReg((uint8_t)address, reg, MSB);
         }else if(spi_drv){
             TODO_TRAP("not implemented yet");
         }
@@ -66,7 +66,7 @@ protected:
 
     void readReg(const RegAddress address, uint16_t & reg){
         if(i2c_drv){
-            i2c_drv->readReg((uint8_t)address, reg);
+            i2c_drv->readReg((uint8_t)address, reg, MSB);
         }else if(spi_drv){
             TODO_TRAP("not implemented yet");
         }
@@ -75,7 +75,7 @@ protected:
 
     void writeByte(const RegAddress address, const uint8_t data){
         if(i2c_drv){
-            i2c_drv->writeReg((uint8_t)address, data);
+            i2c_drv->writeReg((uint8_t)address, data, MSB);
         }else if(spi_drv){
             TODO_TRAP("not implemented yet");
         }
@@ -87,7 +87,7 @@ protected:
             delayT3();
             spi_drv->read(data);
         }else if(i2c_drv){
-            i2c_drv->readReg((uint8_t)address, data);
+            i2c_drv->readReg((uint8_t)address, data, MSB);
         }
     }
 public:

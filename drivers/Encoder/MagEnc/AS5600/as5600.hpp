@@ -30,7 +30,7 @@ public:
     };
 
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
 
     struct ProgramTimesReg:public Reg8{
         
@@ -138,22 +138,23 @@ protected:
     }
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData);
+        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData);
+        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
     }
 public:
-    AS5600(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    AS5600(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    AS5600(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
 
     void setPowerMode(const PowerMode & _power_mode){
         configReg.powerMode = (uint8_t)_power_mode;

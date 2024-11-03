@@ -111,7 +111,7 @@ protected:
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
-        bus_drv.writeReg((uint8_t)addr, reg);
+        bus_drv.writeReg((uint8_t)addr, reg, LSB);
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
@@ -119,7 +119,7 @@ protected:
     }
 
     __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
-        bus_drv.readReg((uint8_t)addr, reg);
+        bus_drv.readReg((uint8_t)addr, reg, LSB);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
@@ -128,7 +128,7 @@ protected:
 
     uint8_t readReg(const RegAddress addr){
         uint8_t data;
-        bus_drv.readReg((uint8_t)addr, data);
+        bus_drv.readReg((uint8_t)addr, data, LSB);
         return data;
     }
 

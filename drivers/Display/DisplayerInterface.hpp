@@ -131,11 +131,11 @@ public:
     void init()override{;}
 
     void writeCommand(const uint8_t cmd) override{
-        bus_drv.writeReg(cmd_token, cmd);
+        bus_drv.writeReg(cmd_token, cmd, LSB);
     }
 
     void writeData(const uint8_t data) override{
-        bus_drv.writeReg(data_token, data);
+        bus_drv.writeReg(data_token, data, LSB);
     }
 
     void writePool(const uint8_t * data_ptr, const size_t len) override{

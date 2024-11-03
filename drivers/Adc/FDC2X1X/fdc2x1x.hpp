@@ -219,11 +219,11 @@ protected:
     };
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv.readReg(uint8_t(addr), data);
+        i2c_drv.readReg(uint8_t(addr), data, MSB);
     }
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv.writeReg(uint8_t(addr), data);
+        i2c_drv.writeReg(uint8_t(addr), data, MSB);
     }
 public:
     scexpr uint8_t default_i2c_addr = 0x54;

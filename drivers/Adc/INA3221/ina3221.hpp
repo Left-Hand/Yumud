@@ -154,13 +154,13 @@ protected:
     __inline void readReg(const RegAddress addr, auto & data){
         static_assert(sizeof(data) == 2);
         // if constexpr(sizeof(data == 1)) i2c_drv.readReg(uint8_t(addr), *reinterpret_cast<uint8_t *>(&data));
-        if constexpr(sizeof(data == 2)) i2c_drv.readReg(uint8_t(addr), *reinterpret_cast<uint16_t *>(&data));
+        if constexpr(sizeof(data == 2)) i2c_drv.readReg(uint8_t(addr), reinterpret_cast<uint16_t &>(data), MSB);
     }
 
     __inline void writeReg(const RegAddress addr, const auto & data){
         static_assert(sizeof(data) == 2);
         // if constexpr(sizeof(data == 1)) i2c_drv.writeReg(uint8_t(addr), *reinterpret_cast<const uint8_t *>(&data));
-        if constexpr(sizeof(data == 2)) i2c_drv.writeReg(uint8_t(addr), *reinterpret_cast<const uint16_t *>(&data));
+        if constexpr(sizeof(data == 2)) i2c_drv.writeReg(uint8_t(addr), reinterpret_cast<const uint16_t &>(data), MSB);
     }
 
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){

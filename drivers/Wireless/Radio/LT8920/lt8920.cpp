@@ -337,22 +337,22 @@ void LT8920::setSyncWord(const uint64_t syncword){
 void LT8920::writeReg(const RegAddress address, const uint16_t reg){
     LT8920_REG_DEBUG("W", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
-        spi_drv->transfer(reinterpret_cast<uint8_t &>(flag_reg), (uint8_t)address, false);
+        spi_drv->transfer(reinterpret_cast<uint8_t &>(flag_reg), (uint8_t)address, CONT);
         delayT3();
 
         spi_drv->write((reg));
     }else if(i2c_drv){
-        i2c_drv->writeReg((uint8_t)address, reg);
+        i2c_drv->writeReg((uint8_t)address, reg, MSB);
     }
 }
 
 void LT8920::readReg(const RegAddress address, uint16_t & reg){
     LT8920_REG_DEBUG("R", std::hex, reg, "at", std::dec, (uint8_t)address);
     if(spi_drv){
-        spi_drv->transfer(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), false);
+        spi_drv->transfer(reinterpret_cast<uint8_t &>(flag_reg), uint8_t(address | 0x80), CONT);
         spi_drv->read(reg);
     }else if(i2c_drv){
-        i2c_drv->readReg((uint8_t)address, reg);
+        i2c_drv->readReg((uint8_t)address, reg, MSB);
     }
 }
 
@@ -382,7 +382,7 @@ void LT8920::updateFifoStatus(){
         // spi_drv->transfer((flag_reg), flag_reg.address);
         READ_REG16(flag_reg);
     } else if(i2c_drv){
-        i2c_drv->readReg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg));
+        i2c_drv->readReg(flag_reg.address, reinterpret_cast<uint8_t &>(flag_reg), MSB);
     }
 }
 

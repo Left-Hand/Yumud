@@ -178,11 +178,11 @@ protected:
     I2cDrv i2c_drv;
 
     void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv.writeReg((uint8_t)address, reg);
+        i2c_drv.writeReg((uint8_t)address, reg, MSB);
     }
 
     void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv.readReg((uint8_t)address, reg);
+        i2c_drv.readReg((uint8_t)address, reg, MSB);
     }
 
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){

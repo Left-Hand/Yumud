@@ -27,7 +27,7 @@ public:
         RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
 protected:
-    I2cDrv & bus_drv;
+    I2cDrv bus_drv;
 
     struct ConfigReg:public Reg16{
         
@@ -104,15 +104,16 @@ protected:
 
     real_t fullScale;
     void writeReg(const RegAddress regAddress, const Reg16 & regData){
-        bus_drv.writeReg((uint8_t)regAddress, *(uint16_t *) &regData);
+        bus_drv.writeReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, Reg16 & regData){
-        bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData);
+        bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
     }
 
 public:
-    SGM58031(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    SGM58031(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
+    SGM58031(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
 
     void init(){
         readReg(RegAddress::Config, configReg);

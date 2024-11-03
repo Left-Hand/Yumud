@@ -94,11 +94,11 @@ protected:
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData);
+        bus_drv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData);
+        bus_drv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData, LSB);
     }
 
     void requestRegData(const RegAddress regAddress, uint16_t * data_ptr, const size_t len);

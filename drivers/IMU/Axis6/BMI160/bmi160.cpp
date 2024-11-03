@@ -5,8 +5,6 @@ using namespace yumud::drivers;
 using namespace yumud;
 
 
-
-
 void BMI160::init(){
     verify();
 

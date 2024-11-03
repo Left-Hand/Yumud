@@ -68,8 +68,8 @@ protected:
         spi_drv.write((uint8_t)data, ends);
     }
 
-    void readByte(uint8_t & data, const bool ends = true){
-        spi_drv.read(data, ends);
+    void readByte(uint8_t & data, const Continuous cont = DISC){
+        spi_drv.read(data, cont);
     }
 
     void wait_for_free(){

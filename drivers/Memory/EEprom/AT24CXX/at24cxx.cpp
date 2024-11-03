@@ -13,23 +13,23 @@ using namespace yumud;
 
 #define WRITE_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    bus_drv.writePool((uint8_t)addr, ptr, len);\
+    bus_drv.writePool((uint8_t)addr, ptr, len, LSB);\
 else\
-    bus_drv.writePool((uint16_t)addr, ptr, len);\
+    bus_drv.writePool((uint16_t)addr, ptr, len, LSB);\
 
 #define READ_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    bus_drv.readPool((uint8_t)addr, ptr, len);\
+    bus_drv.readPool((uint8_t)addr, ptr, len, LSB);\
 else\
-    bus_drv.readPool((uint16_t)addr, ptr, len);\
+    bus_drv.readPool((uint16_t)addr, ptr, len, LSB);\
 
 #define WRITE_REG(loc, data)\
-if(is_small_chip()) bus_drv.writeReg((uint8_t)loc, data);\
-else bus_drv.writeReg((uint16_t)loc, data);\
+if(is_small_chip()) bus_drv.writeReg((uint8_t)loc, data, LSB);\
+else bus_drv.writeReg((uint16_t)loc, data, LSB);\
 
 #define READ_REG(loc, data)\
-if(is_small_chip()) bus_drv.readReg((uint8_t)loc, data);\
-else bus_drv.readReg((uint16_t)loc, data);\
+if(is_small_chip()) bus_drv.readReg((uint8_t)loc, data, LSB);\
+else bus_drv.readReg((uint16_t)loc, data, LSB);\
 
 #ifdef ACCESS_STRICT_PROTECT
 #define CHECK_ADDR(loc)\

@@ -36,7 +36,7 @@ public:
 
     template<typename T>
     requires (std::is_integral_v<T> || std::is_enum_v<T>) && is_writable_bus
-    void write(const T data, bool ends = true){
+    void write(const T data, Continuous cont = DISC){
         constexpr size_t size = sizeof(T);
         if(!bus.begin(index)){
             if (size != 1) this->setDataBits(size * 8);
@@ -49,47 +49,47 @@ public:
                 bus.write((uint32_t)data);
             }
 
-            if(ends) bus.end();
+            if (cont == DISC) bus.end();
             if (size != 1) this->setDataBits(8);
         }
 
     }
     template<typename T>
     requires is_writable_bus
-    void write(std::initializer_list<T> datas, bool ends = true){
+    void write(std::initializer_list<T> datas, Continuous cont = DISC){
         if(!bus.begin(index)){
             if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             for(auto data_item : datas) bus.write(data_item);
-            if(ends) bus.end();
+            if (cont == DISC) bus.end();
             if (sizeof(T) != 1) this->setDataBits(8);
         }
     }
 
     template<typename T, typename U = T>
     requires std::is_integral<T>::value && is_writable_bus
-    void write(const T data, const size_t len, bool ends = true){
+    void write(const T data, const size_t len, Continuous cont = DISC){
         if(!bus.begin(index)){
             if (sizeof(U) != 1) this->setDataBits(sizeof(U) * 8);
             for(size_t i = 0; i < len; i++) bus.write(U(data));
-            if (ends) bus.end();
+            if (cont == DISC) bus.end();
             if (sizeof(U) != 1) this->setDataBits(8);
         }
     }
 
     template<typename T, typename A = T, typename B = A>
     requires std::is_integral<T>::value && is_writable_bus
-    void write(const T * data_ptr, const size_t len, bool ends = true){
+    void write(const T * data_ptr, const size_t len, Continuous cont = DISC){
         if(!bus.begin(index)){
             if (sizeof(B) != 1) this->setDataBits(sizeof(B) * 8);
             for(size_t i = 0; i < len; i++) bus.write(B(A(data_ptr[i])));
-            if (ends) bus.end();
+            if (cont == DISC) bus.end();
             if (sizeof(B) != 1) this->setDataBits(8);
         }
     }
 
     template<typename T>
     requires std::is_integral<T>::value && is_readable_bus
-    void read(T * data_ptr, const size_t len, const bool ends = true){
+    void read(T * data_ptr, const size_t len, const Continuous cont = DISC){
         if(!bus.begin(index)){
             if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             for(size_t i = 0; i < len; i++){
@@ -97,40 +97,40 @@ public:
                 bus.read(temp, (i != len - 1));
                 data_ptr[i] = temp;
             }
-            if(ends) bus.end();
+            if (cont == DISC) bus.end();
             if (sizeof(T) != 1)this->setDataBits(8);
         }
     }
 
     template<typename T>
     requires std::is_integral<T>::value && is_readable_bus
-    void read(T & data, const bool ends = true){
+    void read(T & data, const Continuous cont = DISC){
         if(!bus.begin(index)){
             if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             uint32_t temp;
             bus.read(temp);
             data = temp;
-            if(ends) bus.end();
+            if (cont == DISC) bus.end();
             if (sizeof(T) != 1)this->setDataBits(8);
         }
     }
 
     template<typename T>
     requires std::is_integral<T>::value && is_fulldup_bus
-    void transfer(T & datarx, T datatx, bool ends = true){
+    void transfer(T & datarx, T datatx, Continuous cont = DISC){
         if(!bus.begin(index)){
             if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             uint32_t ret = 0;
             bus.transfer(ret, datatx);
             datarx = ret;
             if (sizeof(T) != 1)this->setDataBits(8);
-            if(ends) bus.end();
+            if (cont == DISC) bus.end();
         }
     }
 
     template<typename T>
     requires std::is_integral<T>::value && is_fulldup_bus
-    T transfer(T datatx, bool ends = true){
+    T transfer(T datatx, Continuous cont = DISC){
         if(!bus.begin(index)){
             if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
             T datarx;
@@ -138,7 +138,7 @@ public:
             bus.transfer(ret, datatx);
             datarx = ret;
             if (sizeof(T) != 1)this->setDataBits(8);
-            if(ends) bus.end();
+            if (cont == DISC) bus.end();
             return datarx;
         }
         return T(0);
@@ -155,81 +155,6 @@ protected:
         BusDrv<BusType>(_bus, _index, _wait_time){};
 
 public:
-    void writePool(const uint8_t reg_address, const uint8_t * data_ptr, const size_t size, const size_t length, const Endian msb = MSB){
-        if(length == 0) return;
-        if(!bus.begin(index)){
-            bus.write(reg_address);
-
-            for(size_t i = 0; i < length; i += size){
-                if(bool(msb)){
-                    for(size_t j = size; j > 0; j--){
-                        bus.write(data_ptr[j-1 + i]);
-                    }
-                }else{
-                    for(size_t j = 0; j < size; j++){
-                        bus.write(data_ptr[j + i]);
-                    }
-                }
-            }
-
-            bus.end();
-        }
-    }
-
-    void readPool(const uint8_t reg_address, uint8_t * data_ptr, const size_t size, const size_t length, const Endian msb = MSB){
-        if(length == 0) return;
-        if(!bus.begin(index)){
-            bus.write(reg_address);
-            if(!bus.begin(index | 0x01)){
-                for(size_t i = 0; i < length; i += size){
-                    if(bool(msb)){
-                        for(size_t j = size; j > 0; j--){
-                            uint32_t temp = 0;
-                            bus.read(temp, !((j == 1) && (i == length - size)));
-                            data_ptr[j-1 + i] = temp;
-                        }
-                    }else{
-                        for(size_t j = 0; j < size; j++){
-                            uint32_t temp = 0;
-                            bus.read(temp, (i + j != length - 1));
-                            data_ptr[j + i] = temp;
-                        }
-                    }
-                }
-            }
-            bus.end();
-        }
-    }
-
-    void readReg(const uint8_t reg_address,uint16_t & reg, Endian msb = MSB){
-        uint8_t buf[2] = {0};
-        readPool(reg_address, buf, 2, 2, msb);
-        reg = buf[1] << 8 | buf[0];
-    }
-
-    void readReg(const uint8_t reg_address, uint8_t & reg_data){
-        if(!bus.begin(index)){
-            bus.write(reg_address);
-            bus.begin(index | 0x01);
-            uint32_t temp;
-            bus.read(temp, false);
-            reg_data = temp;
-            bus.end();
-        }
-    }
-
-    void writeReg(const uint8_t reg_address,  const uint16_t reg_data, Endian msb = MSB){
-        writePool(reg_address, (uint8_t *)&reg_data, 2, 2, msb);
-    }
-
-
-    void writeReg(const uint8_t reg_address,  const uint8_t reg_data){
-        if(!bus.begin(index)){
-            bus.write(reg_address);
-            bus.write(reg_data);
-            bus.end();
-        }
-    }
 };
 
 template <typename BusType, typename = std::enable_if_t<std::is_base_of_v<PackedBus, BusType>>>

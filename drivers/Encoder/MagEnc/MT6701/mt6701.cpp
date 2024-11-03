@@ -12,28 +12,28 @@ using namespace yumud;
 
 
 void MT6701::writeReg(const RegAddress regAddress, const uint16_t regData){
-    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 void MT6701::readReg(const RegAddress regAddress, uint16_t & regData){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 void MT6701::writeReg(const RegAddress regAddress, const uint8_t regData){
-    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 void MT6701::readReg(const RegAddress regAddress, uint8_t & regData){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData);
+    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
