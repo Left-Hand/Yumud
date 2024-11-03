@@ -13,7 +13,7 @@ namespace yumud{
 
 class W25Q16:public StoragePaged{
 protected:
-    SpiDrv bus_drv;
+    SpiDrv spi_drv;
 
     scexpr size_t _m_size = 16 * 1024 * 1024;
     scexpr size_t _pagesize = 4 * 1024;
@@ -62,8 +62,8 @@ protected:
     void exit_load() override;
 
 public:
-    W25Q16(SpiDrv & _bus_drv):StoragePaged(_m_size, _pagesize), bus_drv(_bus_drv){;}
-    W25Q16(Spi & _spi, const uint8_t index = 0):StoragePaged(_m_size, _pagesize), bus_drv(SpiDrv(_spi, index)){;}
+    W25Q16(SpiDrv & _spi_drv):StoragePaged(_m_size, _pagesize), spi_drv(_spi_drv){;}
+    W25Q16(Spi & _spi, const uint8_t index = 0):StoragePaged(_m_size, _pagesize), spi_drv(SpiDrv(_spi, index)){;}
 
     void enableWrite(const bool en = true);
     uint8_t getDeviceManufacturer();
@@ -79,15 +79,15 @@ public:
 
 private:
     void writeByte(const uint8_t data){
-        bus_drv.write(data);
+        spi_drv.writeSingle(data);
     }
 
     void writeByte(const Commands & data){
-        bus_drv.write((uint8_t)data);
+        spi_drv.writeSingle((uint8_t)data);
     }
 
     void readByte(uint8_t & data){
-        bus_drv.read(data);
+        spi_drv.readSingle(data);
     }
 
 };

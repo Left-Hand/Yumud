@@ -11,6 +11,9 @@
 
 #include "nvcv2/shape/shape.hpp"
 
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2csw.hpp"
+
 using namespace yumud::nvcv2;
 
 using Vector2i = Vector2_t<int>;

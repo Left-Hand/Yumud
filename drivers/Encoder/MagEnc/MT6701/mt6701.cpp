@@ -53,11 +53,11 @@ void MT6701::update(){
     }else if(spi_drv){
 
         uint16_t data16;
-        spi_drv->read(data16);
+        spi_drv->readSingle(data16);
 
         uint8_t data8 = 0;
         if(fast_mode == false){
-            spi_drv->read(data8);
+            spi_drv->readSingle(data8);
         }
 
         semantic = Semantic{data8, data16};

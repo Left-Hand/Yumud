@@ -186,8 +186,8 @@ protected:
     void writeReg(const uint8_t addr, const T data){
         if(i2c_drv) i2c_drv->writeReg(addr, data, MSB);
         if(spi_drv){
-            spi_drv->write(uint8_t(addr), false);
-            spi_drv->write(data);
+            spi_drv->writeSingle(uint8_t(addr), CONT);
+            spi_drv->writeSingle(data);
 
             ICM42688_DEBUG("Wspi", addr, data);
         }
@@ -197,8 +197,8 @@ protected:
     void readReg(const uint8_t addr, T & data){
         if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data, MSB);
         if(spi_drv){
-            spi_drv->write(uint8_t(uint8_t(addr) | 0x80), CONT);
-            spi_drv->read(data);
+            spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
+            spi_drv->readSingle(data);
 
             ICM42688_DEBUG("Rspi", addr, data);
         }
@@ -209,8 +209,8 @@ protected:
     void requestData(const uint8_t addr, T * datas, const size_t len){
         if(i2c_drv) i2c_drv->readPool(uint8_t(addr), datas, len, MSB);
         if(spi_drv){
-            spi_drv->write(uint8_t(uint8_t(addr) | 0x80), CONT);
-            spi_drv->read((datas), len);
+            spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
+            spi_drv->readMulti((datas), len);
         }
 
         ICM42688_DEBUG("Rspi", addr, len);

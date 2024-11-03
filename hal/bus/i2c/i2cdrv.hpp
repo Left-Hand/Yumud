@@ -137,8 +137,8 @@ private:
     }
 
 public:
-    I2cDrv(I2c & _bus, const uint8_t _index, const uint32_t _wait_time = 320):
-        BusDrv<I2c>(_bus, _index, _wait_time){};
+    I2cDrv(I2c & _bus, const uint8_t _index):
+        BusDrv<I2c>(_bus, _index){};
 
 
     template<typename U, typename T>
@@ -157,7 +157,7 @@ public:
 
     template<typename U, typename T>
     requires I2cUtils::ValidTypes<U, T>
-    void writeReg(const U reg_address, const T reg_data, Endian endian){
+    void writeReg(const U reg_address, const T reg_data, const Endian endian){
         writePool<U, T>(reg_address, &reg_data, 1, endian);
     }
 

@@ -83,9 +83,9 @@ protected:
 
     void readByte(const RegAddress address, uint8_t & data){
         if(spi_drv){
-            spi_drv->write((uint8_t)((uint8_t)address & 0x80), false);
+            spi_drv->writeSingle((uint8_t)((uint8_t)address & 0x80), CONT);
             delayT3();
-            spi_drv->read(data);
+            spi_drv->readSingle(data);
         }else if(i2c_drv){
             i2c_drv->readReg((uint8_t)address, data, MSB);
         }

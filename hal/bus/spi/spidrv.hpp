@@ -8,12 +8,12 @@
 
 namespace yumud{
 
-class SpiDrv:public BusDrv<Spi>{
+class SpiDrv:public NonProtocolBusDrv<Spi>{
 protected:
     Endian m_endian = LSB;  
     uint32_t m_baudrate = 1000000;
 public:
-    SpiDrv(Spi & _bus, const uint8_t _index, const uint32_t _wait_time = 320):BusDrv<Spi>(_bus, _index,_wait_time){;}
+    SpiDrv(Spi & _bus, const uint8_t _index):NonProtocolBusDrv<Spi>(_bus, _index){;}
 
     void setEndian(const Endian _endian){m_endian = _endian;}
     void setBaud(const uint32_t baud){m_baudrate = baud;}

@@ -71,7 +71,7 @@ public:
     }
 
     void setBitOrder(const Endian endian) override {
-        m_msb = bool(endian);
+        m_msb = (endian == MSB);
     }
 };
 

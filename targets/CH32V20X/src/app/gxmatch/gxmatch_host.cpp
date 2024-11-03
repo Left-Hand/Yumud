@@ -8,6 +8,7 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "robots/foc/remote/remote.hpp"
 
+#include "hal/bus/i2c/i2csw.hpp"
 
 using Sys::t;
 

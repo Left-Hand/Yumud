@@ -57,7 +57,7 @@ void AD9854::Init(void){
 }
 
 void AD9854::SendOneByte(uint8_t data){
-	bus_drv.write(data);
+	bus_drv.writeSingle(data);
 }
 
 void AD9854::SendData(uint8_t _register, uint8_t* data, uint8_t ByteNum){

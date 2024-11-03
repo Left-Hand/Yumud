@@ -298,21 +298,17 @@ protected:
 
 
 
-    void writeReg(const RegAddress reg_address, const Reg8 & reg_data){
+    void writeReg(const RegAddress reg_address, const uint8_t reg_data){
         if(i2c_drv){
-            i2c_drv->write({(uint8_t)((uint8_t)reg_address & 0x7F), *(uint8_t *)&reg_data});
+            i2c_drv->writeReg((uint8_t)((uint8_t)reg_address & 0x7F), reg_data, MSB);
         } else if (spi_drv) {
             TODO_TRAP("spi is not support yet")
         }
     }
 
-    void readReg(const RegAddress reg_address, Reg8 & reg_data){
+    void readReg(const RegAddress reg_address, uint8_t & reg_data){
         if(i2c_drv){
-            i2c_drv->write((uint8_t)((uint8_t)reg_address | 0x80), false);
-            uint8_t temp = 0;
-            i2c_drv->read(temp);
-            uint8_t * reg_ptr = (uint8_t *)&reg_data;
-            *reg_ptr = temp;
+            i2c_drv->readReg(uint8_t(reg_address), reg_data, MSB);
         }else if(spi_drv){
             TODO_TRAP("spi is not support yet")
         }

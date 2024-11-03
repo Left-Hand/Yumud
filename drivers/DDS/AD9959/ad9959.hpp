@@ -221,9 +221,9 @@ protected:
 
     uint32_t    rval = 0;
     int         len = (reg&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[reg&0x07] : 4;
-    bus_drv.write(reg);
+    bus_drv.writeSingle(reg);
     while (len-- > 0){
-        rval = (rval<<8) | bus_drv.transfer((value>>len*8) & 0xFF);
+        rval = (rval<<8) | bus_drv.transferSingle((value>>len*8) & 0xFF);
     }
     return rval;
   }

@@ -19,8 +19,8 @@ uint16_t MT6816::getPositionData(){
     dataTx[0] = (0x80 | 0x03) << 8;
     dataTx[1] = (0x80 | 0x04) << 8;
 
-    bus_drv.transfer(dataRx[0], dataTx[0]);
-    bus_drv.transfer(dataRx[1], dataTx[1]);
+    bus_drv.transferSingle(dataRx[0], dataTx[0]);
+    bus_drv.transferSingle(dataRx[1], dataTx[1]);
 
     return((dataRx[0] & 0x00FF) << 8) | (dataRx[1]);
 }

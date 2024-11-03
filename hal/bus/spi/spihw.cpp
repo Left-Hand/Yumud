@@ -241,5 +241,5 @@ void SpiHw::setBaudRate(const uint32_t baudRate){
 
 void SpiHw::setBitOrder(const Endian endian){
     instance->CTLR1 &= ~SPI_FirstBit_LSB;
-    instance->CTLR1 |= endian ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
+    instance->CTLR1 |= (endian == MSB) ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }

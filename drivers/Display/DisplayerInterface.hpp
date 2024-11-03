@@ -66,50 +66,50 @@ public:
 
     void writeCommand(const uint8_t cmd) override{
         dc_gpio = command_level;
-        spi_drv.write(cmd);
+        spi_drv.writeSingle(cmd);
     }
 
     void writeData(const uint8_t data) override{
         dc_gpio = data_level;
-        spi_drv.write(data);
+        spi_drv.writeSingle(data);
     }
 
     void writePool(const uint8_t * data_ptr, const size_t len) override{
         dc_gpio = data_level;
-        spi_drv.write(data_ptr, len);
+        spi_drv.writeMulti(data_ptr, len);
     }
 
 
     void writePool(const uint8_t data, const size_t len) override{
         dc_gpio = data_level;
-        spi_drv.write(data, len);
+        spi_drv.writeMulti(data, len);
     }
 
     void writeData(const uint16_t data){
         dc_gpio = data_level;
-        spi_drv.write(data);
+        spi_drv.writeSingle(data);
     }
 
     void writePool(const uint16_t * data_ptr, const size_t len){
         dc_gpio = data_level;
-        spi_drv.write(data_ptr, len);
+        spi_drv.writeMulti(data_ptr, len);
     }
 
 
     void writePool(const uint16_t data, const size_t len){
         dc_gpio = data_level;
-        spi_drv.write(data, len);
+        spi_drv.writeMulti(data, len);
     } 
 
     // template<>
     void writePixels(const Grayscale * data, const size_t len){
         dc_gpio = data_level;
-        spi_drv.write<uint8_t, Grayscale, RGB565>((const uint8_t *)data, len);
+        spi_drv.writeMulti<uint8_t, Grayscale, RGB565>((const uint8_t *)data, len);
     } 
 
     void writePixels(const RGB565 * data, const size_t len){
         dc_gpio = data_level;
-        spi_drv.write<uint16_t, RGB565>((const uint16_t *)data, len);
+        spi_drv.writeMulti<uint16_t, RGB565>((const uint16_t *)data, len);
     } 
 };
 
