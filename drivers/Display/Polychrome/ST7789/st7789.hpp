@@ -59,6 +59,7 @@ protected:
 public:
     ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
             ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
+
     void init();
     void puttexture(const Rect2i & rect, const Grayscale * color_ptr){
         setarea_unsafe(rect);

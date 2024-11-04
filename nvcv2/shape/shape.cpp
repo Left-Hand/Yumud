@@ -8,7 +8,7 @@ namespace yumud::nvcv2::Shape{
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;
 
-    static void clear_corners(ImageWritable<monochrome auto> & dst){
+    static void clear_corners(ImageWritable<is_monochrome auto> & dst){
         auto size = dst.get_size();
         scexpr uint8_t targ_v = 0;
         for(int y = 0; y < size.y; y++) dst[{0, y}] = targ_v;

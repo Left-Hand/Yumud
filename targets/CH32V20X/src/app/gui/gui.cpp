@@ -166,7 +166,7 @@ void gui_main(){
 
     spi.bindCsPin(lcd_cs, 0);
     spi.init(144000000, CommMethod::Blocking, CommMethod::None);
-    DisplayInterfaceSpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
+    DisplayerPhySpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
 
     ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));
 

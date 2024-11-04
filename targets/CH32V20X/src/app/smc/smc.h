@@ -6,7 +6,7 @@
 
 #include "../drivers/Camera/MT9V034/mt9v034.hpp"
 #include "../drivers/IMU/Gyroscope/HMC5883L/hmc5883l.hpp"
-#include "../drivers/Display/DisplayerInterface.hpp"
+#include "../drivers/Display/DisplayerPhy.hpp"
 #include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "../drivers/Encoder/ABEncoder.hpp"
 
@@ -353,7 +353,7 @@ protected:
     SideVelocityObserver side_velocity_observer;
     CentripetalCtrl centripetal_ctrl;
 
-    DisplayInterfaceSpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
+    DisplayerPhySpi SpiInterfaceLcd {{spi2, 0}, portD[7], portB[7]};
     ST7789 tftDisplayer {SpiInterfaceLcd, Vector2i(240, 240)};
     Painter<RGB565> painter = Painter<RGB565>{};
 

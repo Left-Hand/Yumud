@@ -3,25 +3,24 @@
 #include "../drivers/device_defs.h"
 #include "../types/rgb.h"
 
-#include "drivers/Display/DisplayerInterface.hpp"
 #include <optional>
 
 namespace yumud::drivers{
 
-class DisplayerInterface{
+class DisplayerPhy{
 public:
     virtual void init() = 0;
+
     virtual void writeCommand(const uint8_t cmd) = 0;
-
-
     virtual void writeData(const uint8_t data) = 0;
+
     virtual void writePool(const uint8_t * data_ptr, const size_t len) = 0;
     virtual void writePool(const uint8_t data, const size_t len) = 0;
 };
 
-class DisplayInterfaceSpi:public DisplayerInterface{
-// protected:
-public:
+class DisplayerPhySpi:public DisplayerPhy{
+protected:
+// public:
     SpiDrv spi_drv;
     GpioConcept & dc_gpio;
     GpioConcept & res_gpio;
@@ -29,21 +28,34 @@ public:
 
     static constexpr bool command_level = false;
     static constexpr bool data_level = true;
+
+    DisplayerPhySpi(const DisplayerPhySpi & other) = default;
+    DisplayerPhySpi(DisplayerPhySpi && other) = default;
 public:
-    DisplayInterfaceSpi(
+
+    DisplayerPhySpi(
             SpiDrv && _bus_drv, 
             GpioConcept & _dc_gpio, 
             GpioConcept & _res_gpio = GpioNull,
             GpioConcept & _blk_gpio = GpioNull
-            ):spi_drv(_bus_drv),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
+        ) :spi_drv(std::move(_bus_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
-    DisplayInterfaceSpi(
+    // 拷贝构造函数
+    DisplayerPhySpi(
+        const SpiDrv & _bus_drv, 
+        GpioConcept & _dc_gpio, 
+        GpioConcept & _res_gpio = GpioNull,
+        GpioConcept & _blk_gpio = GpioNull
+    ) : spi_drv(_bus_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
+
+
+    DisplayerPhySpi(
             Spi & _bus,
             const uint8_t index,
             GpioConcept & _dc_gpio, 
             GpioConcept & _res_gpio = GpioNull,
             GpioConcept & _blk_gpio = GpioNull
-            ):spi_drv(_bus, index),dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){};
+            ):DisplayerPhySpi(SpiDrv(_bus, index), _dc_gpio, _res_gpio, _blk_gpio) {};
 
     void init() override{
         dc_gpio.outpp();
@@ -101,32 +113,28 @@ public:
         spi_drv.write(data, len);
     } 
 
-    // template<>
-    void writePixels(const Grayscale * data, const size_t len){
+
+    template<is_rgb T>
+    void writePixels(const T * data, const size_t len){
         dc_gpio = data_level;
         spi_drv.write<uint8_t, Grayscale, RGB565>((const uint8_t *)data, len);
     } 
-
-    void writePixels(const RGB565 * data, const size_t len){
-        dc_gpio = data_level;
-        spi_drv.write<uint16_t, RGB565>((const uint16_t *)data, len);
-    } 
 };
 
-class DisplayInterfaceI2c:public DisplayerInterface{
+class DisplayInterfaceI2c:public DisplayerPhy{
 protected:
     I2cDrv bus_drv;
 public:
     DisplayInterfaceI2c(I2c & i2c_bus, const uint8_t i2c_id):bus_drv(i2c_bus, i2c_id){};
 };
 
-class OledInterfaceI2c:public DisplayInterfaceI2c{
+class DisplayerPhyI2cc:public DisplayInterfaceI2c{
 protected:
     static constexpr uint8_t cmd_token = 0x00;
     static constexpr uint8_t data_token = 0x40;
     static constexpr uint8_t oled_default_addr = 0x78;
 public:
-    OledInterfaceI2c(I2c & i2c_bus, const uint8_t i2c_id = oled_default_addr):DisplayInterfaceI2c(i2c_bus, i2c_id){};
+    DisplayerPhyI2cc(I2c & i2c_bus, const uint8_t i2c_id = oled_default_addr):DisplayInterfaceI2c(i2c_bus, i2c_id){};
 
     void init()override{;}
 

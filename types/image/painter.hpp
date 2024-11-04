@@ -166,7 +166,7 @@ public:
         if(!char_area) return;
         
         for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
-            uint8_t mask;
+            uint8_t mask = 0;
             for(int j = 0; j < font_size.y; j++){
  
                 if(j % 8 == 0) mask = 0;

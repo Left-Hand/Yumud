@@ -166,7 +166,7 @@ void st77xx_tb(IOStream & logger, Spi & spi){
     spi.init(144000000);
 
     SpiDrv SpiDrvLcd = SpiDrv(spi, 0);
-    DisplayInterfaceSpi SpiInterfaceLcd{SpiDrvLcd, lcd_dc, dev_rst};
+    DisplayerPhySpi SpiInterfaceLcd{SpiDrvLcd, lcd_dc, dev_rst};
 
     ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));
 
