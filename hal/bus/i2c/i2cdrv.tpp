@@ -1,5 +1,6 @@
 //TODO REFACTOR THIS SHIT
-#define I2CDRV_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
+// #define I2CDRV_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
+#define I2CDRV_DEBUG(...)
 
 
 namespace yumud{

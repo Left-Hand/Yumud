@@ -25,6 +25,20 @@ enum class ColorEnum:uint32_t{
     BLUE    = 0xFF0000,    // Blue color
     BLACK   = 0x000000     // Black color
 };
+
+enum class RgbType:uint8_t{
+    _RGB332,
+    _RGB565,
+    _RGB888,
+    _Binary,
+    _HSV888,
+    _LAB888,
+    _XYZ888,
+    _Grayscale,
+    _sGrayscale,
+};
+
+
 #endif
 
 struct RGB332;
@@ -407,7 +421,7 @@ template<typename T>
 concept is_polychrome = is_rgb<T> or ::std::is_same_v<T, LAB888> or ::std::is_same_v<T, HSV888>;
 
 template<typename T>
-concept is_color = is_monochrome<T> and is_polychrome<T> and ::std::is_same_v<T, ColorEnum>;
+concept is_color = is_monochrome<T> or is_polychrome<T> or ::std::is_same_v<T, ColorEnum>;
 
 }
 #endif

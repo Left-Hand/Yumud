@@ -225,7 +225,7 @@ protected:
         if(size){
             size = MIN(size, 32);
             spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD), CONT);
-            spi_drv.writeMulti(buffer, size);
+            spi_drv.writeMulti<uint8_t>(buffer, size);
         }
     }
 
@@ -233,7 +233,7 @@ protected:
         if(size){
             size = MIN(size, 32);
             spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT);
-            spi_drv.writeMulti(buffer, size);
+            spi_drv.writeMulti<uint8_t>(buffer, size);
         }
     }
 

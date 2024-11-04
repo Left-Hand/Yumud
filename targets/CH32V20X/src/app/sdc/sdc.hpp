@@ -178,7 +178,7 @@ public:
         }
     }
 
-    void writeData(const Address _addr, const uint8_t * _data, const size_t & len){
+    void writeData(const Address _addr, const uint8_t * _data, const size_t len){
         enableWrite();
         uint16_t pages = _addr / 256;
         uint32_t addr = _addr;
@@ -191,7 +191,7 @@ public:
         uint8_t remains = addr % 256;
         writePage(addr, data, remains);
     }
-    void readData(const Address addr, uint8_t * data, const size_t & len){
+    void readData(const Address addr, uint8_t * data, const size_t len){
         writeByte(Command::ReadData);
         writeByte(addr >> 16);
         writeByte(addr >> 8);

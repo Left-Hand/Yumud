@@ -2,7 +2,7 @@
 
 using namespace yumud;
 
-String InputStream::readString(const size_t & len){
+String InputStream::readString(const size_t len){
     String str;
     str.reserve(len + 1);
 

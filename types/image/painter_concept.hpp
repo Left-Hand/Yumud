@@ -24,13 +24,13 @@ protected:
     
     void drawHriLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(l, 1));
-        // rect = this->getCanvasWindow().intersection(rect);
+        // rect = this->getClipWindow.intersection(rect);
         if(bool(rect) == false) return;
         drawFilledRect(rect);
     }
     void drawVerLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(1, l));
-        // rect = this->getCanvasWindow().intersection(rect);
+        // rect = this->getClipWindow.intersection(rect);
         if(bool(rect) == false) return;
         drawFilledRect(rect);
     }
@@ -61,9 +61,7 @@ public:
 
     virtual void drawChar(const Vector2i & pos,const wchar_t chr) = 0;
     
-    virtual Rect2i getCanvasWindow() = 0;
-    
-    virtual Vector2i getCanvasSize() {return getCanvasWindow().size;}
+    virtual Rect2i getClipWindow() = 0;
     
     virtual void drawLine(const Vector2i & from, const Vector2i & to) = 0;
 

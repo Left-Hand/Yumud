@@ -64,7 +64,7 @@ public:
         }
     }
 
-    void addDatas(const T * data_ptr, const size_t & len, bool msb = false) override{
+    void addDatas(const T * data_ptr, const size_t len, bool msb = false) override{
         if(msb){
             for(size_t i = len - 1; i > 0; i--) addData(data_ptr[i]);
         }else{
@@ -72,7 +72,7 @@ public:
         }
     }
 
-    void getDatas(T * data_ptr, const size_t & len, bool msb = false) override{
+    void getDatas(T * data_ptr, const size_t len, bool msb = false) override{
         if(msb){
             for(size_t i = len - 1; i > 0; i--) data_ptr[i] = getData();
         }else{

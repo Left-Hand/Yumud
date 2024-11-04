@@ -28,7 +28,7 @@ void PainterConcept::drawHollowRect(const Rect2i & rect){
     drawLine(p1,p4);
 }
 void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
-    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(this->getCanvasWindow()))) || radius <= 0) return;
+    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(this->getClipWindow()))) || radius <= 0) return;
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -62,7 +62,7 @@ void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
 }
 
 void PainterConcept::drawFilledCircle(const Vector2i & pos, const uint radius){
-    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), getCanvasSize())))) || radius == 0) return;
+    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), getClipWindow().size)))) || radius == 0) return;
     if(radius == 1){
         return drawPixel(pos);
     }
@@ -114,7 +114,7 @@ void PainterConcept::drawHollowEllipse(const Vector2i & pos, const Vector2i & r)
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return drawHollowCircle(pos, rx);
-    if (rx<2 || ry<2|| !this->getCanvasWindow().intersects(Rect2i::from_center(pos, r))) return;
+    if (rx<2 || ry<2|| !this->getClipWindow().intersects(Rect2i::from_center(pos, r))) return;
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -155,7 +155,7 @@ void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r)
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return drawHollowCircle(pos, rx);
-    if (rx<2 || ry<2|| !this->getCanvasWindow().intersects(Rect2i::from_center(pos, r))) return;
+    if (rx<2 || ry<2|| !this->getClipWindow().intersects(Rect2i::from_center(pos, r))) return;
 
     int x0 = pos.x;
     int y0 = pos.y;

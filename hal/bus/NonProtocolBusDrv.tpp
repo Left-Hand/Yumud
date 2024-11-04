@@ -24,7 +24,7 @@ void NonProtocolBusDrv<BusType>::writeSingle(const T data, Continuous cont) {
 template <typename BusType>
 template <typename U>
 requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
-void NonProtocolBusDrv<BusType>::writeMulti(const U & data, const size_t len, Continuous cont) {
+void NonProtocolBusDrv<BusType>::writeMulti(const is_stdlayout auto & data, const size_t len, Continuous cont) {
     if (!bus.begin(index)) {
         if (sizeof(U) != 1) this->setDataBits(sizeof(U) * 8);
         for (size_t i = 0; i < len; i++) bus.write(static_cast<U>(data));
@@ -36,7 +36,7 @@ void NonProtocolBusDrv<BusType>::writeMulti(const U & data, const size_t len, Co
 template <typename BusType>
 template <typename U>
 requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
-void NonProtocolBusDrv<BusType>::writeMulti(const U * data_ptr, const size_t len, Continuous cont) {
+void NonProtocolBusDrv<BusType>::writeMulti(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont) {
     if (!bus.begin(index)) {
         if (sizeof(U) != 1) this->setDataBits(sizeof(U) * 8);
         for (size_t i = 0; i < len; i++) bus.write(static_cast<U>(data_ptr[i]));

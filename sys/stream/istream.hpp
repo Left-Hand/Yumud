@@ -13,7 +13,7 @@ public:
 
     char read(){char data; read(data); return data;};
 
-    String readString(const size_t & len);
+    String readString(const size_t len);
     String readStringUntil(const char & chr);
     String readString(){return readString(available());}
     virtual size_t available() const = 0;

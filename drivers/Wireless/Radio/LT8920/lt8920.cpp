@@ -361,7 +361,7 @@ void LT8920::writeFifo(const uint8_t * data, const size_t len){
     LT8920_REG_DEBUG("Wfifo", std::dec, len);
     if(spi_drv){
         spi_drv->writeSingle(uint8_t(50), CONT);
-        spi_drv->writeMulti(data, len);
+        spi_drv->writeMulti<uint8_t>(data, len);
     }else if(i2c_drv){
         i2c_drv->writePool(uint8_t(50) , data, len, LSB);
     }

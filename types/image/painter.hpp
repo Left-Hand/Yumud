@@ -1,6 +1,8 @@
 #pragma once
 
 #include "painter_concept.hpp"
+#include "sys/string/gbk.hpp"
+
 
 namespace yumud{
 
@@ -40,12 +42,8 @@ protected:
 public:
     Painter():PainterConcept(){;}
 
-    Rect2i getCanvasWindow() override {
+    Rect2i getClipWindow() override {
         return src_image->get_view();
-    }
-
-    Vector2i getCanvasSize() override{
-        return src_image->get_size();
     }
 
     void bindImage(ImageWritable<ColorType> & _source){

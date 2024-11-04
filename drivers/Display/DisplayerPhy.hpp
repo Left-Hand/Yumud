@@ -111,12 +111,12 @@ public:
 
     void writeU8(const uint8_t data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv.writeMulti(data, len);
+        spi_drv.writeMulti<uint8_t>(data, len);
     }
 
     void writeU8(const uint8_t * data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv.writeMulti(data, len);
+        spi_drv.writeMulti<uint8_t>(data, len);
     }
 };
 

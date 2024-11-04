@@ -10,6 +10,7 @@
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
 #include "nvcv2/shape/shape.hpp"
+#include "image/font/instance.hpp"
 
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
@@ -158,6 +159,7 @@ void gui_main(){
     #else
     auto & spi = spi1;
     #endif
+
     logger.init(576000);
     auto & lcd_blk = portC[7];
     
@@ -169,9 +171,8 @@ void gui_main(){
 
     spi.bindCsPin(lcd_cs, 0);
     spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
-    DisplayerPhySpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
 
-    ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {135, 240});
 
     {//init tft
         tftDisplayer.init();
@@ -220,23 +221,23 @@ void gui_main(){
     // label2.rect = Rect2i{20,60 + 20,100,20};
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
-        // auto area = Rect2i(pos, src.get_size());
-        // tftDisplayer.puttexture(area, src.get_data());
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
-        // auto area = Rect2i(pos, src.get_size());
-        // tftDisplayer.puttexture(area, src.get_data());
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
-        // auto area = Rect2i(pos, src.get_size());
-        // tftDisplayer.puttexture(area, src.get_data());
+        auto area = Rect2i(pos, src.get_size());
+        tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
         // painter.bindImage(sketch);
-        painter.setColor(ColorEnum::RED);
+        // painter.setColor(ColorEnum::RED);
         // painter.drawRoi(rect);
     };
 

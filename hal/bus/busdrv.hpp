@@ -60,11 +60,11 @@ public:
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
-    void writeMulti(const U & data, const size_t len, Continuous cont = DISC);
+    void writeMulti(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
-    void writeMulti(const U * data_ptr, const size_t len, Continuous cont = DISC);
+    void writeMulti(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<BusType>

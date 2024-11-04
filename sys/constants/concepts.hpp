@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iterator>
+#include <type_traits>
 
 template<typename T>
 concept arithmetic = std::is_arithmetic_v<T>;
@@ -34,3 +35,6 @@ concept integral_s64 = integral_64<T> && std::is_signed_v<T>;
 
 template<typename T>
 concept integral_u64 = integral_64<T> && std::is_unsigned_v<T>;
+
+template<typename T>
+concept is_stdlayout = std::is_standard_layout<T>::value;

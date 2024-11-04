@@ -568,7 +568,7 @@ namespace yumud::nvcv2::Shape{
     }
 
 
-    void XN(Image<Binary> dst, const Image<Binary> & src, const size_t & m, const real_t percent){
+    void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real_t percent){
         const auto size = src.get_size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
