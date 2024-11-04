@@ -1,10 +1,13 @@
 #include "tb.h"
-#include "../drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "../drivers/Memory/Flash/W25QXX/w25q16.hpp"
-#include "../hal/flash/flash.hpp"
+#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
+#include "drivers/Memory/Flash/W25QXX/w25q16.hpp"
+#include "hal/flash/flash.hpp"
 
-#include "../algo/random/random_generator.hpp"
-#include "../hal/bkp/bkp.hpp"
+#include "algo/random/random_generator.hpp"
+#include "hal/bkp/bkp.hpp"
+
+#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 #define MEMORY_TB_FIRSTBYTE
 #define MEMORY_TB_SEVERLBYTES

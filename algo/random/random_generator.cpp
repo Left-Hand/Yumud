@@ -20,7 +20,7 @@ void RandomGenerator::seed(uint32_t seed_number)
     mt[0] = seed_number & 0xffffffffUL;
     for (mt_index = 1; mt_index < N; mt_index++) {
         mt[mt_index] = (1812433253UL * (mt[mt_index - 1] ^ (mt[mt_index - 1] >> 30)) +
-                        mt_index);
+                        uint32_t(mt_index));
         mt[mt_index] &= 0xffffffffUL;
     }
 }

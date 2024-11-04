@@ -168,8 +168,8 @@ void gui_main(){
     auto & dev_rst = portB[7];
 
     spi.bindCsPin(lcd_cs, 0);
-    spi.init(144000000, CommMethod::Blocking, CommMethod::None);
-    DisplayInterfaceSpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
+    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+    DisplayerPhySpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
 
     ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));
 
@@ -190,8 +190,8 @@ void gui_main(){
     painter.bindImage(tftDisplayer);
     // tftDisplayer.fill(RGB565::BLACK);
 
-    painter.setChFont(font7x7);
-    painter.setEnFont(font8x5);
+    painter.setChFont(yumud::font7x7);
+    painter.setEnFont(yumud::font8x5);
 
     Theme theme{
         .stoke_color =  {70,70,70},
@@ -204,7 +204,7 @@ void gui_main(){
 
 
     Label label2{theme};
-    label2.text = String("你好世界");
+    label2.text = "你好世界";
  
     Slider slider{theme};
 
@@ -220,18 +220,18 @@ void gui_main(){
     // label2.rect = Rect2i{20,60 + 20,100,20};
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture(area, src.get_data());
+        // auto area = Rect2i(pos, src.get_size());
+        // tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture(area, src.get_data());
+        // auto area = Rect2i(pos, src.get_size());
+        // tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
-        auto area = Rect2i(pos, src.get_size());
-        tftDisplayer.puttexture(area, src.get_data());
+        // auto area = Rect2i(pos, src.get_size());
+        // tftDisplayer.puttexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
@@ -306,13 +306,26 @@ void gui_main(){
         slider.rect = Rect2i{15,120,100,20};
         opt.rect = Rect2i{15,160,100,20};
 
-        label.render(painter);
-        label2.render(painter);
-        slider.render(painter);
-        opt.render(painter);
+        // label.render(painter);
+        // label2.render(painter);
+        // slider.render(painter);
+        // opt.render(painter);
 
-        delay(10);
+        // tftDisplayer.fill(ColorEnum::RED);
+        // delay(500);
+        // tftDisplayer.fill(ColorEnum::BLUE);
+        // delay(500);
+        painter.setColor(ColorEnum::WHITE);
+        // painter.drawString({0,0}, "what");
+        painter.drawFilledCircle({20,20}, 8);
+        // painter.drawFilledTriangle({80,80}, {100,110}, {70,100});
+        painter.drawPolyline({{80,80}, {100,110}, {70,100}});
+        painter.drawLine({30,20}, {80,50});
+        painter.drawLine({40,40}, {10,50});
+        // painter.drawLine({20,20}, {90,210});
+        delay(20);
         tftDisplayer.fill(ColorEnum::BLACK);
+
     
         logger.println(label.rect, label2.rect);
         #endif

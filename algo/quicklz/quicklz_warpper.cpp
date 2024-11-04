@@ -14,7 +14,7 @@ std::vector<uint8_t> quicklz_compress(const std::vector<uint8_t> & src)
 	for(size_t pos = 0;pos<src.size();pos+=n) {
 		size_t len = MIN(src.size() - pos, n);
 		len = qlz_compress(src.data() + pos, buffer, len, &state);
-		for(size_t i = 0;i < len; i++)dst.push_back(buffer[i]);
+		for(size_t i = 0;i < len; i++)dst.push_back((uint8_t)buffer[i]);
 	}
 	return dst;
 }

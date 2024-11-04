@@ -380,18 +380,28 @@ LAB888::operator RGB888() const {
     return xyz_to_rgb888(lab888_to_xyz(*this));
 }
 
-OutputStream & operator<<(OutputStream & os, const Grayscale & value){
-    return os << '(' << uint8_t(value) << ')';
+OutputStream & operator<<(OutputStream & os, const Binary & bn){
+    return os << '(' << bool(bn) << ')';
 }
 
-OutputStream & operator<<(OutputStream & os, const RGB565 & value){
-    return os << '(' << uint8_t(value.r) << ',' << uint8_t(value.g) << 'r' << uint8_t(value.b) << ')';
+OutputStream & operator<<(OutputStream & os, const Grayscale & gs){
+    return os << '(' << uint8_t(gs) << ')';
 }
 
-OutputStream & operator<<(OutputStream & os, const RGB888 & value){
-    return os << '(' << uint8_t(value.r) << ',' << uint8_t(value.g) << 'r' << uint8_t(value.b) << ')';
+OutputStream & operator<<(OutputStream & os, const sGrayscale & sgs){
+    return os << '(' << int8_t(sgs) << ')';
 }
 
-OutputStream & operator<<(OutputStream & os, const Binary & value){
-    return os << '(' << bool(value) << ')';
-}
+#define OS_RGB    return os << '(' << uint8_t(rgb.r) << ',' << uint8_t(rgb.g) << 'r' << uint8_t(rgb.b) << ')';
+#define OS_XXX(u,v,w)    return os << '(' << uint8_t(u) << ',' << uint8_t(v) << 'r' << uint8_t(w) << ')';
+
+OutputStream & operator<<(OutputStream & os, const RGB565 & rgb){OS_RGB}
+
+OutputStream & operator<<(OutputStream & os, const RGB888 & rgb){OS_RGB}
+
+OutputStream & operator<<(OutputStream & os, const LAB888 & lab){{OS_XXX(lab.l, lab.a, lab.b)};}
+
+OutputStream & operator<<(OutputStream & os, const HSV888 & hsv){{OS_XXX(hsv.h, hsv.s, hsv.v)};}
+
+#undef OS_RGB
+#undef OS_XXX

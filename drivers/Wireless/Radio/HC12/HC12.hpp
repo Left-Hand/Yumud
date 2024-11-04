@@ -2,6 +2,7 @@
 
 #include "hal/bus/uart/uart.hpp"
 #include "sys/string/string.hpp"
+#include "sys/clock/clock.h"
 #include "../Radio.hpp"
 
 

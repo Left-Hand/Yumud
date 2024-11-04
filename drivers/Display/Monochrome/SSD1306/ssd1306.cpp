@@ -16,7 +16,7 @@ void SSD13XX::update(){
     auto & frame = fetchFrame();
     for(int i = 0; i < size.y;i += 8){
         setFlushPos(Vector2i(0, i));
-        interface.writePool(&frame[(i / 8) * size.x], size.x);
+        interface.writeU8(&frame[(i / 8) * size_t(size.x)], size.x);
     }
 }
 

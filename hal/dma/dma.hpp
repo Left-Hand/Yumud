@@ -36,14 +36,14 @@ protected:
     void enableRcc();
     void configPeriphDataBytes(const size_t bytes){
         uint32_t tmpreg = instance->CFGR;
-        tmpreg &= ((~(0b11 << 8)));
+        tmpreg &= ((~(0b11u << 8)));
         tmpreg |= (bytes - 1) << 8;
         instance->CFGR = tmpreg;
     }
 
     void configMemDataBytes(const size_t bytes){
         uint32_t tmpreg = instance->CFGR;
-        tmpreg &= ((~(0b11 << 10)));
+        tmpreg &= ((~(0b11u << 10)));
         tmpreg |= (bytes - 1) << 10;
         instance->CFGR = tmpreg;
     }

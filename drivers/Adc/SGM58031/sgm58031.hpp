@@ -113,7 +113,7 @@ protected:
 
 public:
     SGM58031(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    SGM58031(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
+    SGM58031(I2cDrv && _bus_drv):bus_drv(std::move(_bus_drv)){;}
 
     void init(){
         readReg(RegAddress::Config, configReg);

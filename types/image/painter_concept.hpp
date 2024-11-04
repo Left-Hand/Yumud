@@ -28,8 +28,6 @@ protected:
         if(bool(rect) == false) return;
         drawFilledRect(rect);
     }
-
-
     void drawVerLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(1, l));
         // rect = this->getCanvasWindow().intersection(rect);
@@ -88,9 +86,19 @@ public:
 
     void drawFilledEllipse(const Vector2i & pos, const Vector2i & r);
 
-    void drawPolyline(const Vector2_t<auto> * points, const size_t count);
+    void drawPolyline(const Vector2i * points, const size_t count);
 
-    void drawPolygon(const Vector2_t<auto> * points, const size_t count);
+    void drawPolygon(const Vector2i * points, const size_t count);
+
+    void drawPolyline(const std::initializer_list<Vector2i> & points){
+        drawPolyline(points.begin(), points.size());
+    }
+
+    void drawPolygon(const std::initializer_list<Vector2i> & points){
+        drawPolygon(points.begin(), points.size());
+    }
+
+
 
     void drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2);
 

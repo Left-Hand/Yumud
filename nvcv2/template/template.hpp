@@ -8,7 +8,7 @@ real_t template_match(const Image<Binary> &, const Image<Binary> &, const Vector
 real_t template_match(const Image<Grayscale> &, const Image<Grayscale> &, const Vector2i &);
 
 
-template<monochrome T>
+template<is_monochrome T>
 __inline real_t template_match(const Image<T> & src, const Image<T> & tmp){
     return template_match(src, tmp, {0,0});
 }

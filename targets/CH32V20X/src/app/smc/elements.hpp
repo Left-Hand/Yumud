@@ -1,7 +1,4 @@
-#ifndef __ELEMENTS_HPP__
-
-#define __ELEMENTS_HPP__
-
+#pragma once
 #include "../thirdparty/enums/enum.h"
 #include "finder.hpp"
 
@@ -175,5 +172,3 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const SMC::Barrier::S
 
     #undef ELEMENT_STAT_OUT
 }
-
-#endif

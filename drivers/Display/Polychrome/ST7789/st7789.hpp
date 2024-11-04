@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../DisplayerInterface.hpp"
+#include "drivers/Display/DisplayerPhy.hpp"
 #include "types/image/image.hpp"
 #include "hal/bus/spi/spi.hpp"
 
@@ -8,7 +8,7 @@ namespace yumud::drivers{
 
 class ST7789:public Displayer<RGB565>{
 private:
-    DisplayInterfaceSpi & interface;
+    DisplayerPhySpi interface;
 
     Vector2i offset;
 
@@ -26,7 +26,7 @@ private:
     }
 
     __fast_inline void writeData16(const uint16_t data){
-        interface.writeData(data);
+        interface.writeData16(data);
     }
 
     void modifyCtrl(const bool yes,const uint8_t pos){
@@ -43,7 +43,7 @@ private:
 protected:
 
     __fast_inline uint32_t getPointIndex(const uint16_t x, const uint16_t y){
-        return (x + y * size.x);
+        return (x + y * size_t(size.x));
     }
 
     void setpos_unsafe(const Vector2i & pos) override;
@@ -57,22 +57,17 @@ protected:
     void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override;
     void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override;
 public:
-    ST7789(DisplayInterfaceSpi & _interface, const Vector2i & _size):
+    ST7789(const DisplayerPhySpi & _interface, const Vector2i & _size):
             ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
+
+    ST7789(DisplayerPhySpi && _interface, const Vector2i & _size):
+            ImageBasics(_size), Displayer<RGB565>(_size),interface(std::move(_interface)){;}
+
     void init();
-    void puttexture(const Rect2i & rect, const Grayscale * color_ptr){
-        setarea_unsafe(rect);
-        interface.writePixels(color_ptr, int(rect));
-    }
 
-    void puttexture(const Rect2i & rect, const Binary * color_ptr){
+    void puttexture(const Rect2i & rect, const is_color auto * color_ptr){
         setarea_unsafe(rect);
-        interface.writePixels((Grayscale *)color_ptr, int(rect));
-    }
-
-    void puttexture(const Rect2i & rect, const RGB565 * color_ptr){
-        setarea_unsafe(rect);
-        interface.writePixels((color_ptr), int(rect));
+        interface.writeMulti<RGB565>(color_ptr, int(rect));
     }
 
     void setDisplayOffset(const Vector2i & _offset){offset = _offset;}

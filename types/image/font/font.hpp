@@ -18,7 +18,7 @@ protected:
     uint8_t scale;
     virtual bool _getpixel(const wchar_t chr, const Vector2i & offset) const = 0;
 public:
-    Font(Vector2i _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
+    constexpr Font(Vector2i _size, uint8_t _scale = 1):size(_size), scale(_scale){;}
     bool getpixel(const wchar_t chr, const Vector2i & offset) const{
         return _getpixel(chr, {offset.x / scale, offset.y / scale});
     }
@@ -34,10 +34,10 @@ class Font8x5:public Font{
         return font8x5_enc[MAX(chr - ' ', 0)][offset.x + 1] & (1 << offset.y);
     }
 public:
-    Font8x5():Font( Vector2i(5,8)){;}
+    constexpr Font8x5():Font( Vector2i(5,8)){;}
 };
 
-extern Font8x5 font8x5;
+static inline Font8x5 font8x5;
 
 
 class GBKIterator {
@@ -57,7 +57,7 @@ public:
 			return -1;
 		}
 		
-		unsigned char ch = gbkString[currentIndex];
+		auto ch = gbkString[size_t(currentIndex)];
 		int unicodeValue;
 		
 		if (ch < 0x80) {
@@ -74,7 +74,7 @@ public:
 
 class Font7x7:public Font{
 protected:
-    const font_item_t * find_font_item(uint16_t code)const {
+    const font_item_t * find_font_item(uint16_t code) const{
         size_t left = 0;
         size_t right = ARRSIZE(font_items) - 1;
         
@@ -93,7 +93,7 @@ protected:
         return nullptr;
     }
 public:
-	Font7x7():Font(Vector2i{7,7}){;}
+    constexpr Font7x7():Font(Vector2i{7,7}){;}
 	bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
         // if(!size.has_point(offset)) return false;
         if(offset.y > 6) return false;
@@ -123,17 +123,17 @@ public:
 	}
 };
 
-extern Font7x7 font7x7;
+static inline Font7x7 font7x7;
 
+
+class Font16x8:public Font{
+public:
+    constexpr Font16x8():Font(Vector2i(8,16)){;}
+    bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
+        if (!size.has_point(offset)) return false;
+        return font16x8_enc[MAX(chr - ' ', 0)][offset.y] & (1 << offset.x);
+    }
+};
+
+static inline Font16x8 font16x8;
 }
-
-// class Font16x8:public Font{
-// public:
-//     Font16x8():Font((void **)font16x8_enc, Vector2i(8,16)){;}
-//     bool getpixel(const wchar_t & chr, const Vector2i & offset) const override{
-//         if (!size.has_point(offset)) return false;
-//         return font16x8_enc[MAX(chr - ' ', 0)][offset.y] & (1 << offset.x);
-//     }
-// };
-
-// extern Font16x8 font16x8;

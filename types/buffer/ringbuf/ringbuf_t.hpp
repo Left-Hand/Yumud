@@ -50,9 +50,9 @@ public:
 
     size_t available() const override{
         if (write_ptr >= read_ptr) {
-            return write_ptr - read_ptr;
+            return size_t(write_ptr - read_ptr);
         } else {
-            return this->size - (read_ptr - write_ptr);
+            return this->size - size_t(read_ptr - write_ptr);
         }
     }
 

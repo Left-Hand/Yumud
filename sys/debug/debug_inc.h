@@ -1,6 +1,4 @@
-#ifndef __DEBUG_INC_H__
-
-#define __DEBUG_INC_H__
+#pragma once
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "src/defines/user_defs.h"
@@ -87,6 +85,3 @@ __attribute__((used)) ssize_t _read(int fd, void *buf, size_t count);
 }
 
 #define BREAKPOINT __nopn(1);
-
-
-#endif // __DEBUG_INC_H__

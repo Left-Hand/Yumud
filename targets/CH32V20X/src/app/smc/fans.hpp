@@ -1,6 +1,4 @@
-#ifndef __SMC_FANS_HPP__
-
-#define __SMC_FANS_HPP__
+#pragma once
 
 #include "../hal/timer/timer.hpp"
 #include "../drivers/Modem/dshot/dshot.hpp"
@@ -105,5 +103,3 @@ public:
 };
 
 };
-
-#endif

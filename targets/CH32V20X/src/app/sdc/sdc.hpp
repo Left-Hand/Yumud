@@ -60,16 +60,16 @@ protected:
         StatusReg statusReg;
     };
 
-    void writeByte(const uint8_t data, const bool ends = true){
-        spi_drv.write(data, ends);
+    void writeByte(const uint8_t data, const Continuous cont = DISC){
+        spi_drv.writeSingle(data, cont);
     }
 
-    void writeByte(const Command data, const bool ends = true){
-        spi_drv.write((uint8_t)data, ends);
+    void writeByte(const Command data, const Continuous cont = DISC){
+        spi_drv.writeSingle((uint8_t)data, cont);
     }
 
     void readByte(uint8_t & data, const Continuous cont = DISC){
-        spi_drv.read(data, cont);
+        spi_drv.readSingle(data, cont);
     }
 
     void wait_for_free(){
@@ -101,7 +101,7 @@ public:
 
     uint8_t getDeviceManufacturer(){
         uint8_t data = 1;
-        writeByte(Command::ReadDeviceId, false);
+        writeByte(Command::ReadDeviceId, CONT);
         readByte(data);
         W25QXX_DEBUG("Device Manufacturer: ", data);
         return data;

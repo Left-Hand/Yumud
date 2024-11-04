@@ -1,6 +1,8 @@
 #pragma once
 
 #include "spi.hpp"
+#include "sys/clock/clock.h"
+
 
 namespace yumud{
 class SpiSw: public Spi{

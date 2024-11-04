@@ -44,9 +44,9 @@ namespace yumud::nvcv2::Shape{
 
     void erosion(Image<Binary> & dst, const Image<Binary> & src);
 
-    void erosion_x(Image<Binary> & dst, Image<Binary> & src);
+    void erosion_x(Image<Binary> & dst, const Image<Binary> & src);
 
-    void dilate_x(Image<Binary> & dst, Image<Binary> & src);
+    void dilate_x(Image<Binary> & dst, const Image<Binary> & src);
 
     void erosion_y(Image<Binary> & dst, const Image<Binary> & src);
 
@@ -133,9 +133,9 @@ namespace yumud::nvcv2::Shape{
         morph_open(src, src);
     }
 
-    void convo_roberts_x(Image<Grayscale> & dst, Image<Grayscale> & src);
+    void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src);
 
-    void convo_roberts_xy(Image<Grayscale> & dst, Image<Grayscale> & src);
+    void convo_roberts_xy(Image<Grayscale> & dst, const Image<Grayscale> & src);
 
     void adaptive_threshold(Image<Grayscale> & dst, const Image<Grayscale> & src);
     __inline void convo_roberts_y(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){

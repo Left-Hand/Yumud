@@ -19,4 +19,12 @@ public:
     void setBaud(const uint32_t baud){m_baudrate = baud;}
 };
 
+
+namespace internal{
+template <>
+struct DrvOfBus<Spi>{
+    using DrvType = SpiDrv;
+};
+
+}
 };

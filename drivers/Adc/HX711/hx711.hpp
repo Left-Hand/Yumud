@@ -69,7 +69,7 @@ public:
     }
 
     int getWeightData(){
-        return inversed ? (last_data - zero_offset) : (zero_offset - last_data);
+        return inversed ? int(last_data - zero_offset) : int(zero_offset - last_data);
     }
 
     int getWeightGram(){

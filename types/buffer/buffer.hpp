@@ -1,6 +1,4 @@
-#ifndef __BUFFER_HPP__
-
-#define __BUFFER_HPP__
+#pragma once
 
 #include "../sys/core/platform.h"
 #include <cstdint>
@@ -56,4 +54,3 @@ typedef DynamicBuffer_t<uint8_t> DynamicBuffer;
 
 template<uint32_t size>
 using StaticBuffer = StaticBuffer_t<uint8_t,size>;
-#endif

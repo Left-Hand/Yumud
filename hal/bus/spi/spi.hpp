@@ -1,12 +1,13 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/bus/bus.hpp"
 
+#include "spi_trait.hpp"
+
 namespace yumud{
 
-class Spi:public FullDuplexBus{
+class Spi:public FullDuplexBus, traits::SpiTrait{
 public:
     #ifndef SPI_MAX_PINS
     #define SPI_MAX_PINS 4

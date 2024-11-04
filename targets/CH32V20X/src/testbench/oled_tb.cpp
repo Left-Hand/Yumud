@@ -3,6 +3,8 @@
 #include "types/image/painter.hpp"
 #include "drivers/CommonIO/Key/Key.hpp"
 
+#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 #include <array>
 
@@ -119,7 +121,7 @@ static void oled_tb(){
     I2cSw i2c{portB[13], portB[15]};
     i2c.init(0);
 
-    OledInterfaceI2c oled_if{i2c};
+    DisplayerPhyI2cc oled_if{i2c};
 
     SSD13XX_72X40 oled{oled_if};
     auto & frame = oled.fetchFrame();

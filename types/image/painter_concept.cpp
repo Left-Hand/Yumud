@@ -193,12 +193,12 @@ void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r)
 }
 
 
-void PainterConcept::drawPolyline(const Vector2_t<auto> * points, const size_t count){
+void PainterConcept::drawPolyline(const Vector2i * points, const size_t count){
     for(size_t i = 0; i < count-1; i++) drawLine(points[i], points[i + 1]);
 }
 
 
-void PainterConcept::drawPolygon(const Vector2_t<auto> * points, const size_t count){
+void PainterConcept::drawPolygon(const Vector2i * points, const size_t count){
     drawPolyline(points, count);
     drawLine(points[0], points[count - 1]);
 }
@@ -240,8 +240,6 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
         drawHriLine(Rangei(a, b + 1), y);
         return;
     }
-
-
 
     int dx01 = x1 - x0;
     int dy01 = y1 - y0;
