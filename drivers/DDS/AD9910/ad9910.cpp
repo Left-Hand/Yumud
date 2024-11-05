@@ -55,7 +55,7 @@ void AD9910::init(void)
 void AD9910::writeReg(const uint8_t addr, const uint8_t * data, const size_t len){
     __nopn(4);
     spi_drv.writeSingle(addr);
-    spi_drv.writeMulti(data, len);
+    spi_drv.writeMulti<uint8_t>(data, len);
     __nopn(4);
 }
 

@@ -39,6 +39,15 @@
 #endif
 
 
+#define PANIC(...)\
+do{\
+    if constexpr(sizeof(std::make_tuple(__VA_ARGS__))){\
+        DEBUG_ERROR(__VA_ARGS__);\
+    }\
+    HALT;\
+}while(false);\
+
+
 
 #define RUN_TIME_DEBUG
 
@@ -72,8 +81,10 @@ if(bool(condition) == false){\
     __disable_irq();\
     __disable_irq();\
     delay(1);\
-    CREATE_FAULT;\
+    HALT;\
 }
+
+#define BREAKPOINT __nopn(1);
 
 extern "C"{
 
@@ -83,5 +94,3 @@ __attribute__((used)) void *_sbrk(ptrdiff_t incr);
 __attribute__((used)) void _exit(int status);
 __attribute__((used)) ssize_t _read(int fd, void *buf, size_t count);
 }
-
-#define BREAKPOINT __nopn(1);

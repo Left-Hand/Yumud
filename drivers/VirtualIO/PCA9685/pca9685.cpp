@@ -24,9 +24,9 @@ void PCA9685::setFrequency(uint freq, real_t trim){
     }
 
 void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
-    // if(channel == 0 || channel > 16) CREATE_FAULT;
+    // if(channel == 0 || channel > 16) PANIC();
     // channel -= 1;
-    if(channel > 15) CREATE_FAULT;
+    if(channel > 15) PANIC();
     
     // if(sub_channels[channel].on.cvr != on){
         writeReg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on);

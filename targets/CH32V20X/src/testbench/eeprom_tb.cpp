@@ -18,7 +18,7 @@
 #define MEMORY_TB_CONTENT
 
 #define MEMORY_TB_ASSERT(x, s, a, b)\
-if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); delay(1); CREATE_FAULT;}\
+if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); delay(1); PANIC();}\
 else {logger.prints("Succeed[", s, ']', std::hex, std::showbase, a, "->", b);}\
 
 struct TestData{

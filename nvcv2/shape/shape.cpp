@@ -573,7 +573,7 @@ namespace yumud::nvcv2::Shape{
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
 
-        size_t n = int(m * m * percent);
+        size_t n = int(percent * m * m);
 
         for(size_t y = 0; y < h / m; y++){
             for(size_t x = 0; x < w / m; x++){

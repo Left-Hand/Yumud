@@ -120,7 +120,7 @@ void ICM42688::reset(){
 std::tuple<real_t, real_t, real_t> ICM42688::getAccel(){
 
     auto conv = [this](const real_t x) -> real_t {
-        return ((x * lsb_acc_x64) >> 6);
+        return ((x * this -> lsb_acc_x64) >> 6);
     };
 
     return {conv(accel_data.x), conv(accel_data.y),conv(accel_data.z)};
@@ -134,4 +134,45 @@ std::tuple<real_t, real_t, real_t> ICM42688::getGyro(){
     };
 
     return {conv(gyro_data.x), conv(gyro_data.y),conv(gyro_data.z)};
+}
+
+void ICM42688::writeReg(const uint8_t addr, const uint8_t data){
+	if(i2c_drv){
+		i2c_drv->writeReg(addr, data, MSB);
+	}else if(spi_drv){
+		spi_drv->writeSingle(uint8_t(addr), CONT);
+		spi_drv->writeSingle(data);
+
+		ICM42688_DEBUG("Wspi", addr, data);
+	}else{
+		PANIC("not supported driver");
+	}
+}
+
+void ICM42688::readReg(const uint8_t addr, uint8_t & data){
+	if(i2c_drv){
+		i2c_drv->readReg((uint8_t)addr, data, MSB);
+	}else if(spi_drv){
+		spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
+		spi_drv->readSingle(data);
+
+		ICM42688_DEBUG("Rspi", addr, data);
+	}else{
+
+	}
+}
+
+
+void ICM42688::requestData(const uint8_t addr, int16_t * datas, const size_t len){
+	if(i2c_drv){
+		i2c_drv->readPool(uint8_t(addr), datas, len, MSB);
+	}if(spi_drv){
+		spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
+		spi_drv->readMulti((datas), len);
+
+		ICM42688_DEBUG("Rspi", addr, len);
+	}else{
+		
+	}
+
 }

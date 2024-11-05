@@ -57,15 +57,9 @@ public:
     void enableSingle(const bool _single = true);
     void setTrgoSource(const TrgoSource source);
     
-    TimerChannel & ch(const int index){
-        if(index == 0 or index > 4) CREATE_FAULT
-        return channels[index - 1];
-    }
+    TimerChannel & ch(const size_t index);
     
-    TimerOC & oc(const int index){
-        if(index == 0 or index > 4) CREATE_FAULT
-        return channels[index - 1];
-    }
+    TimerOC & oc(const size_t index);
 
     virtual TimerChannel & operator [](const int index){return ch(index);}
     virtual TimerChannel & operator [](const TimerChannel::Channel channel){return channels[(uint8_t)channel >> 1];}

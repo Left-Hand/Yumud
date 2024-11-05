@@ -1,12 +1,9 @@
 #pragma once
 
-#include "sys/string/string.hpp"
-#include "sys/string/string_view.hpp"
-#include "sys/debug/debug_inc.h"
 
 #include "image.hpp"
-#include "packed_image.hpp"
 
+#include "sys/stream/stream.hpp"
 #include "types/rect2/rect2_t.hpp"
 #include "types/color/color_t.hpp"
 #include "types/rgb.h"
@@ -16,8 +13,14 @@
 
 namespace yumud{
 
-class PainterConcept{
+class String;
+
+class StringView;
+
+class PainterConcept:public OutputStream{
 protected:
+    using Cursor = Vector2i;
+    Cursor cursor = {0,0};
 
     RGB888 m_color;
     Rect2i crop_rect;
@@ -52,6 +55,25 @@ public:
 
     PainterConcept() = default;
 
+
+    void write(const char data) override{
+        drawChar(cursor, wchar_t(data));
+    }
+
+    void write(const char * data, const size_t len) override{
+        drawStr(cursor, data, len);
+    }
+
+    size_t pending() const override{
+        return 0;
+    }
+
+    void fill(const RGB888 & color){
+        this->setColor(color);
+        drawFilledRect(this->getClipWindow());
+    }
+
+
     template<typename U>
     void setColor(U _color){
         m_color = _color;
@@ -75,7 +97,7 @@ public:
 
     void drawString(const Vector2i & pos, const String & str);
 
-    void drawString(const Vector2i & pos, const StringView str);
+    void drawString(const Vector2i & pos, const StringView & str);
 
     void drawString(const Vector2i & pos, const char * str);
 

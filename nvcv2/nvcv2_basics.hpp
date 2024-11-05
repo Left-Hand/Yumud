@@ -1,16 +1,15 @@
 #pragma once
 
-#include "../sys/core/system.hpp"
-#include "../sys/debug/debug_inc.h"
+#include "sys/core/system.hpp"
+#include "sys/debug/debug_inc.h"
 
-#include "../types/color/color_t.hpp"
-#include "../types/image/image.hpp"
-#include "../types/image/packed_image.hpp"
-#include "../types/image/painter.hpp"
-#include "../types/rect2/rect2_t.hpp"
+#include "types/color/color_t.hpp"
+#include "types/image/image.hpp"
+#include "types/image/packed_image.hpp"
+#include "types/rect2/rect2_t.hpp"
 
-#include "../thirdparty/sstl/include/sstl/vector.h" 
-#include "../thirdparty/sstl/include/sstl/function.h" 
+#include "thirdparty/sstl/include/sstl/vector.h" 
+#include "thirdparty/sstl/include/sstl/function.h" 
 
 
 #include <vector>

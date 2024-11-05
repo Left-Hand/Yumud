@@ -227,7 +227,7 @@ template<arithmetic T>
 Vector3_t<T> AABB_t<T>::get_endpoint(int p_point) const {
 	switch (p_point) {
 		default:
-			CREATE_FAULT;
+			HALT;
 		case 0:
 			return Vector3_t<T>(position.x, position.y, position.z);
 		case 1:

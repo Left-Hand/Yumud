@@ -1,4 +1,5 @@
 #include "timer.hpp"
+#include "sys/debug/debug_inc.h"
 
 using namespace yumud;
 void BasicTimer::enableRcc(){
@@ -112,7 +113,7 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
         cycle++;
     }
 
-    if(raw_period / cycle == 0) CREATE_FAULT;
+    if(raw_period / cycle == 0) PANIC();
 
     init(raw_period / cycle, cycle, mode, en);
 }
@@ -193,6 +194,15 @@ void GenericTimer::setTrgoSource(const TrgoSource source){
     TIM_SelectOutputTrigger(instance, (uint8_t)source);
 }
 
+TimerChannel & GenericTimer::ch(const size_t index){
+    if(index == 0 or index > 4) PANIC()
+    return channels[index - 1];
+}
+
+TimerOC & GenericTimer::oc(const size_t index){
+    if(index == 0 or index > 4) PANIC()
+    return channels[index - 1];
+}
 
 void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
 

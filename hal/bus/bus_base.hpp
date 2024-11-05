@@ -1,13 +1,13 @@
 #pragma once
 
-
 #include "sys/core/platform.h"
+#include "BusTrait.hpp"
 #include "sys/stream/stream.hpp"
 #include "bus_enums.hpp"
 
 namespace yumud{
 
-class Bus{
+class Bus:public BusTrait{
 public:
     enum class ErrorType{
         OK,
@@ -66,31 +66,13 @@ private:
     virtual Error lead(const uint8_t _address) = 0;
     virtual void trail() = 0;
 
-    void lock(const uint8_t index){
-        if(locker == nullptr) CREATE_FAULT;
-        locker->lock(index);
-    }
-
-    void unlock(){
-        if(locker == nullptr) CREATE_FAULT;
-        locker->unlock();
-    }
-
-    bool locked(){
-        if(locker == nullptr) CREATE_FAULT;
-        return locker->locked();
-    }
-
-    bool owned_by(const uint8_t index = 0){
-        if(locker == nullptr) CREATE_FAULT;
-        return locker->owned_by(index);
-    }
+    void lock(const uint8_t index);
+    void unlock();
+    bool locked();
+    bool owned_by(const uint8_t index = 0);
 
 public:
     Bus():locker(&__m_lock__){;}
-    virtual void setBitOrder(const Endian endian){};
-    virtual void setDataBits(const uint8_t data_size){};
-    virtual void setBaudRate(const uint32_t baudRate) = 0;
 
     Error begin(const uint8_t index){
         if(false == locked()){

@@ -225,7 +225,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
 
         case "hlt"_ha:
             os.prints("halt");
-            CREATE_FAULT;
+            PANIC();
             break;
 
         case "map"_ha:

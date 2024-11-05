@@ -8,7 +8,7 @@ using namespace yumud;
 
 #define MT6701_NO_I2C_FAULT\
     MT6701_DEBUG("NO I2C!!");\
-    CREATE_FAULT\
+    PANIC()\
 
 
 void MT6701::writeReg(const RegAddress regAddress, const uint16_t regData){
@@ -66,7 +66,7 @@ void MT6701::update(){
         } 
     }else{
         MT6701_DEBUG("no drv!!");
-        CREATE_FAULT;
+        PANIC();
     }
 }
 

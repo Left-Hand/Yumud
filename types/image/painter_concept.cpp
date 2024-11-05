@@ -1,5 +1,8 @@
 #include "painter_concept.hpp"
 
+#include "sys/string/string.hpp"
+#include "sys/string/string_view.hpp"
+
 using namespace yumud;
 
 void PainterConcept::drawHollowRect(const Rect2i & rect){
@@ -106,7 +109,7 @@ void PainterConcept::drawString(const Vector2i & pos, const char * str){
     drawStr(pos, str, strlen(str));
 }
 
-void PainterConcept::drawString(const Vector2i & pos, const StringView str){
+void PainterConcept::drawString(const Vector2i & pos, const StringView & str){
     drawStr(pos, str.data(), str.length());
 }
 

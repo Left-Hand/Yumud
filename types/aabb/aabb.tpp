@@ -378,7 +378,7 @@ template<arithmetic T>
 void AABB_t<T>::get_edge(int p_edge, Vector3_t<T> &r_from, Vector3_t<T> &r_to) const {
 	switch (p_edge) {
 		default:
-		    CREATE_FAULT
+		    HALT;
 		case 0: {
 			r_from = Vector3(position.x + size.x, position.y, position.z);
 			r_to = Vector3(position.x, position.y, position.z);

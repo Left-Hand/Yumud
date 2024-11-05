@@ -30,7 +30,7 @@ protected:
     static inline uint8_t get_verify_code(const VerifyType type, const uint8_t * src, const size_t len){
         switch(type){
             default:
-                CREATE_FAULT;
+                PANIC();
             case VerifyType::X6B:
                 return 0x6b;
             case VerifyType::XOR:{

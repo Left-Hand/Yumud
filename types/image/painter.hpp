@@ -21,8 +21,6 @@ protected:
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
 
-
-
     void drawStr(const Vector2i & pos, const char * str_ptr, const size_t str_len) override{
         GBKIterator iterator(str_ptr);
 
@@ -41,6 +39,7 @@ protected:
     }
 public:
     Painter():PainterConcept(){;}
+
 
     Rect2i getClipWindow() override {
         return src_image->get_view();

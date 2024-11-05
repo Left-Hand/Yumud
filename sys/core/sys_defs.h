@@ -1,6 +1,4 @@
-#ifndef __SYS_DEFS_H__
-
-#define __SYS_DEFS_H__
+#pragma once
 
 #ifndef __always_inline
 #define __always_inline	__inline__ __attribute__((always_inline))
@@ -80,7 +78,7 @@
 #define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
 #define FAULT_IF(x)\
 do{\
-    if(x) CREATE_FAULT\
+    if(x) PANIC()\
 }while(false);\
 
 
@@ -137,18 +135,20 @@ do{\
     
 
 #if defined(__riscv)
-#define CREATE_FAULT asm("csrrw zero, mstatus, zero");
+#define HALT asm("csrrw zero, mstatus, zero");
 #elif defined(__arm__)
     #if defined(__thumb__)
-    #define CREATE_FAULT asm("bkpt 0x00000000");
+    #define HALT asm("bkpt 0x00000000");
     #else
-    #define CREATE_FAULT asm("swi 0x00000000");
+    #define HALT asm("swi 0x00000000");
     #endif
 #else
 #error "Not supported architecture"
 #endif
 
+
 #ifdef __cplusplus
+
 #define DECLTYPE(...) decltype(__VA_ARGS__)
 
 #define DELETE_COPY_AND_MOVE(type)\
@@ -156,5 +156,4 @@ type(const type & other) = delete;\
 type(type && other) = delete;\
 
 
-#endif
 #endif

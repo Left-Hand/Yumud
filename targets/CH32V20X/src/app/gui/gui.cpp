@@ -150,6 +150,50 @@ public:
     }
 };
 
+class Eye:public CanvasItem{
+public:
+    struct Config{
+        Vector2i l_center;
+        Vector2i r_center;
+
+        size_t eye_radius;
+        size_t iris_radius;
+        size_t pupil_radius;
+    };
+
+protected:
+    const Config & config_;
+
+    std::array<Vector2, 2> eye_pos;
+public:
+    Eye(const Theme & theme, const Config & config):CanvasItem(theme), config_(config){}
+
+    void setEye(const Vector2 & l_pos, const Vector2 & r_pos){
+        eye_pos[0] = l_pos;
+        eye_pos[1] = r_pos;
+    }
+
+    void render(PainterConcept & painter) override{
+        auto render_eye = [&](const LR side){
+
+            auto center = (side == LR::LEFT) ? config_.l_center : config_.r_center;
+            auto center_p = center + ((side == LR::LEFT) ? eye_pos[0] : eye_pos[1]) * config_.eye_radius * real_t(0.5);
+
+            painter.setColor(ColorEnum::WHITE);
+            painter.drawFilledCircle(center, config_.eye_radius);
+
+            painter.setColor(ColorEnum::BROWN);
+            painter.drawFilledCircle(center_p, config_.iris_radius);
+
+            painter.setColor(ColorEnum::BLACK);
+            painter.drawFilledCircle(center_p, config_.pupil_radius);
+        };
+
+        render_eye(LR::LEFT);
+        render_eye(LR::RIGHT);
+    }
+};
+
 void gui_main(){
 
     auto & logger = uart2;
@@ -264,6 +308,20 @@ void gui_main(){
         painter.bindImage(tftDisplayer);
     };
 
+    auto eye_conf =         Eye::Config{
+            .l_center = Vector2i{62, 60},
+            .r_center = Vector2i{62, 180},
+
+            .eye_radius = 40,
+            .iris_radius = 13,
+            .pupil_radius = 7
+    };
+
+    Eye eye{
+        theme,
+        eye_conf
+    };
+
     while(true){
 
         #ifdef DRAW_TB
@@ -300,35 +358,50 @@ void gui_main(){
         delay(10);
         #endif
 
-        #define GUI_TB
+        // #define GUI_TB
         #ifdef GUI_TB
         label.rect = Rect2i{15 + 10 * sin(t),20,100,20};
         label2.rect = Rect2i{15,80 + 20 * sin(t),100,20};
         slider.rect = Rect2i{15,120,100,20};
         opt.rect = Rect2i{15,160,100,20};
 
-        // label.render(painter);
-        // label2.render(painter);
-        // slider.render(painter);
-        // opt.render(painter);
+        label.render(painter);
+        label2.render(painter);
+        slider.render(painter);
+        opt.render(painter);
 
-        // tftDisplayer.fill(ColorEnum::RED);
-        // delay(500);
-        // tftDisplayer.fill(ColorEnum::BLUE);
-        // delay(500);
+
+        delay(20);
+        painter.fill(ColorEnum::BLACK);
+
+        #endif
+
+        // #define DRAW_TB
+        #ifdef DRAW_TB
         painter.setColor(ColorEnum::WHITE);
         // painter.drawString({0,0}, "what");
-        painter.drawFilledCircle({20,20}, 8);
-        // painter.drawFilledTriangle({80,80}, {100,110}, {70,100});
-        painter.drawPolyline({{80,80}, {100,110}, {70,100}});
+        painter.drawFilledCircle({20,20}, 17);
+        painter.drawFilledTriangle({80,80}, {100,110}, {70,100});
+        // painter.drawPolyline({{80,80}, {100,110}, {70,100}});
         painter.drawLine({30,20}, {80,50});
         painter.drawLine({40,40}, {10,50});
         // painter.drawLine({20,20}, {90,210});
         delay(20);
         tftDisplayer.fill(ColorEnum::BLACK);
-
-    
-        logger.println(label.rect, label2.rect);
+        delay(20);
+        tftDisplayer.fill(ColorEnum::BLACK);
         #endif
+
+        #define EYE_TB
+        #ifdef EYE_TB
+        eye.render(painter);
+
+        eye.setEye(Vector2::RIGHT.rotated(t * tau), Vector2::RIGHT.rotated(t * pi));;
+
+        delay(20);
+        painter.fill(ColorEnum::BLACK);
+
+        #endif
+    
     }
 }

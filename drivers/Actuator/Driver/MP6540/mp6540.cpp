@@ -6,7 +6,7 @@ using namespace yumud::drivers;
 
 static void error(){
     MP6540_DEBUG("terminated!!!");
-    CREATE_FAULT;
+    PANIC();
 }
 
 MP6540::MP6540(PWM3_WP && pwms, AIN3_WP && ains)
@@ -74,7 +74,7 @@ void MP6540::setSoRes(const real_t so_res_ohms){
 MP6540::MP6540CurrentChannel & MP6540::ch(const size_t index){
     if(index == 0 or index > 3){
         MP6540_DEBUG("Channel index out of range:", index);
-        CREATE_FAULT;
+        PANIC();
     }
     return chs[index - 1];
 }
