@@ -7,11 +7,11 @@ namespace yumud::drivers{
 
 class Key{
 protected:
-    using Level = GpioUtils::Level;
+    using Level = BoolLevel;
 
     DigitalFilter filter;
     GpioConcept & m_gpio;
-    const Level level_= GpioUtils::LOW;
+    const Level level_= LOW;
 
     bool last_state = false;
     bool now_state = false;
@@ -40,7 +40,7 @@ public:
     }
 
     operator bool()const{
-        return m_gpio.read() == level_;
+        return m_gpio.read() == bool(level_);
     }
 
     auto & io(){

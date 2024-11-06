@@ -65,7 +65,7 @@ protected:
     const Line line;
 
     Gpio * const gpio;
-    const PinMode gpio_mode;
+    const GpioMode gpio_mode;
     const NvicPriority priority;
     const Trigger trigger;
     const Mode mode;

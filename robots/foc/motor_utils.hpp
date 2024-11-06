@@ -12,4 +12,4 @@
 #include "drivers/Actuator/SVPWM/svpwm.hpp"
 
 #include "concept/memory.hpp"
-#include "drivers/Encoder/odometer_poles.hpp"
+#include "drivers/Encoder/OdometerPoles.hpp"

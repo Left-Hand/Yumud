@@ -166,15 +166,15 @@ public:
         return (buf & (1 << index));
     }
 
-    void setMode(const int index, const PinMode mode) override{
+    void setMode(const int index, const GpioMode mode) override{
         if(!isIndexValid(index))return;
         uint16_t mask = 1 << index;
-        if(PinModeUtils::isIn(mode)) dir |= mask;
+        if(GpioUtils::isIn(mode)) dir |= mask;
         else dir &= ~mask;
         writeReg(RegAddress::dir, dir);
 
         if(index < 8){
-            ctl.p0mod = PinModeUtils::isPP(mode);
+            ctl.p0mod = GpioUtils::isPP(mode);
             writeReg(RegAddress::ctl, ctl);
         }
     }

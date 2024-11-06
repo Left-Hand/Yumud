@@ -18,24 +18,24 @@ public:
     virtual bool read() const = 0;
     bool toggle() {bool val = !this->read(); write(val); return val;}
 
-    void outpp(){setMode(PinMode::OutPP);}
-    void outod(){setMode(PinMode::OutOD);}
-    void afpp(){setMode(PinMode::OutAfPP);}
-    void afod(){setMode(PinMode::OutAfOD);}
+    void outpp(){setMode(GpioMode::OutPP);}
+    void outod(){setMode(GpioMode::OutOD);}
+    void afpp(){setMode(GpioMode::OutAfPP);}
+    void afod(){setMode(GpioMode::OutAfOD);}
 
-    void outpp(const bool initial_state){setMode(PinMode::OutPP);write(initial_state);}
-    void outod(const bool initial_state){setMode(PinMode::OutOD);write(initial_state);}
-    void afpp(const bool initial_state){setMode(PinMode::OutAfPP);write(initial_state);}
-    void afod(const bool initial_state){setMode(PinMode::OutAfOD);write(initial_state);}
+    void outpp(const bool initial_state){setMode(GpioMode::OutPP);write(initial_state);}
+    void outod(const bool initial_state){setMode(GpioMode::OutOD);write(initial_state);}
+    void afpp(const bool initial_state){setMode(GpioMode::OutAfPP);write(initial_state);}
+    void afod(const bool initial_state){setMode(GpioMode::OutAfOD);write(initial_state);}
 
-    void inana(){setMode(PinMode::InAnalog);}
-    void inflt(){setMode(PinMode::InFloating);}
-    void inpu(){setMode(PinMode::InPullUP);}
-    void inpd(){setMode(PinMode::InPullDN);}
+    void inana(){setMode(GpioMode::InAnalog);}
+    void inflt(){setMode(GpioMode::InFloating);}
+    void inpu(){setMode(GpioMode::InPullUP);}
+    void inpd(){setMode(GpioMode::InPullDN);}
 
     bool isValid() const {return pin_index >= 0;}
     int8_t getIndex() const {return pin_index;}
-    virtual void setMode(const PinMode mode) = 0;
+    virtual void setMode(const GpioMode mode) = 0;
     
     GpioConcept & operator = (const bool _val){
         write(_val);
@@ -96,7 +96,7 @@ public:
     __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
     __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
 
-    void setMode(const PinMode mode) override;
+    void setMode(const GpioMode mode) override;
     __fast_inline volatile GPIO_TypeDef * inst() {return instance;} 
 };
 
@@ -117,7 +117,7 @@ public:
     __fast_inline void write(const bool val){instance.writeByIndex(pin_index, val);}
     __fast_inline bool read() const override {return instance.readByIndex(pin_index);}
 
-    void setMode(const PinMode mode) override{ instance.setMode(pin_index, mode);}
+    void setMode(const GpioMode mode) override{ instance.setMode(pin_index, mode);}
 };
 
 

@@ -87,7 +87,7 @@ protected:
         __fast_inline void write(const bool val){*this = real_t(val);}
         __fast_inline bool read() const override {return 0;}
 
-        void setMode(const PinMode mode) override{}
+        void setMode(const GpioMode mode) override{}
     };
 
 
@@ -178,7 +178,7 @@ public:
 
     bool readByIndex(const int index) override;
 
-    void setMode(const int index, const PinMode mode) override;
+    void setMode(const int index, const GpioMode mode) override;
 
     PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
 

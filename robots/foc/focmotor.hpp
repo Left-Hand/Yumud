@@ -5,7 +5,7 @@
 
 #include "stepper/archive/archive.hpp"
 #include "stepper/ctrls/ctrls.hpp"
-#include "drivers/Encoder/odometer_poles.hpp"
+#include "drivers/Encoder/OdometerPoles.hpp"
 
 
 namespace yumud::foc{

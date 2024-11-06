@@ -24,7 +24,7 @@ public:
     }
 
     PortVirtualConcept & operator = (const uint16_t data) override {write(data); return *this;}
-    virtual void setMode(const int index, const PinMode mode) = 0;
+    virtual void setMode(const int index, const GpioMode mode) = 0;
 };
 
 template<size_t N>
@@ -104,7 +104,7 @@ public:
 
     E & operator [](const size_t index){return isIndexValid(size_t(index)) ? *pin_ptrs[size_t(index)] : GpioNull;}
 
-    void setMode(const int index, const PinMode mode) override{
+    void setMode(const int index, const GpioMode mode) override{
         if(index < 0) return;
         if(!isIndexValid(size_t(index)))return;
         pin_ptrs[size_t(index)]->setMode(mode);
@@ -181,7 +181,7 @@ public:
 
     E & operator [](const size_t index){return isIndexValid(size_t(index)) ? *pin_ptrs[size_t(index)] : GpioNull;}
 
-    void setMode(const int8_t & index, const PinMode & mode) override{
+    void setMode(const int8_t & index, const GpioMode & mode) override{
         if(!isIndexValid(size_t(index)))return;
         pin_ptrs[size_t(index)]->setMode(mode);
     }
