@@ -133,7 +133,7 @@ protected:
     }
 
     void requestPool(const RegAddress regAddress, uint8_t * datas, uint8_t size, uint8_t len){
-        bus_drv.readPool((uint8_t)regAddress, datas, len, LSB);
+        bus_drv.readMulti((uint8_t)regAddress, datas, len, LSB);
     }
 
     uint32_t getPressureData(){

@@ -186,7 +186,7 @@ protected:
     }
 
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv.readPool((uint8_t)addr, data, len, MSB);
+        i2c_drv.readMulti((uint8_t)addr, data, len, MSB);
     }
 public:
 

@@ -52,7 +52,7 @@ protected:
     }
 
     void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
-        i2c_drv.readPool((uint8_t)reg_addr, datas, len, MSB);
+        i2c_drv.readMulti((uint8_t)reg_addr, datas, len, MSB);
     }
 
 public:

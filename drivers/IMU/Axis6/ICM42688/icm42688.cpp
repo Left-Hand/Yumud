@@ -165,7 +165,7 @@ void ICM42688::readReg(const uint8_t addr, uint8_t & data){
 
 void ICM42688::requestData(const uint8_t addr, int16_t * datas, const size_t len){
 	if(i2c_drv){
-		i2c_drv->readPool(uint8_t(addr), datas, len, MSB);
+		i2c_drv->readMulti(uint8_t(addr), datas, len, MSB);
 	}if(spi_drv){
 		spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
 		spi_drv->readMulti((datas), len);

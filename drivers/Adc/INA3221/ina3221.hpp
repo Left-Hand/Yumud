@@ -164,7 +164,7 @@ protected:
     }
 
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
-        i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
+        i2c_drv.readMulti((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
     }
     // struct INA3221Channel:public AnalogInChannel{
     // public:

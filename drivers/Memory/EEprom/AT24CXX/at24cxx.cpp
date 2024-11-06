@@ -13,15 +13,15 @@ using namespace yumud;
 
 #define WRITE_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    bus_drv.writePool((uint8_t)addr, ptr, len, LSB);\
+    bus_drv.writeMulti((uint8_t)addr, ptr, len, LSB);\
 else\
-    bus_drv.writePool((uint16_t)addr, ptr, len, LSB);\
+    bus_drv.writeMulti((uint16_t)addr, ptr, len, LSB);\
 
 #define READ_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    bus_drv.readPool((uint8_t)addr, ptr, len, LSB);\
+    bus_drv.readMulti((uint8_t)addr, ptr, len, LSB);\
 else\
-    bus_drv.readPool((uint16_t)addr, ptr, len, LSB);\
+    bus_drv.readMulti((uint16_t)addr, ptr, len, LSB);\
 
 #define WRITE_REG(loc, data)\
 if(is_small_chip()) bus_drv.writeReg((uint8_t)loc, data, LSB);\

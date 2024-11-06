@@ -56,7 +56,7 @@ private:
 
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         // sizeof(Result);
-        bus_drv.readPool(reg, data, len, MSB);
+        bus_drv.readMulti(reg, data, len, MSB);
     }
 };
 

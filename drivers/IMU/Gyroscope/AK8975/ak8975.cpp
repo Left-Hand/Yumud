@@ -11,12 +11,12 @@ void AK8975::init(){
 
 
 void AK8975::readAdj(){
-    readPool(0x10, &x_adj, 3);
+    readMulti(0x10, &x_adj, 3);
 }
 
 
 void AK8975::update(){
-    readPool(0x03, &x, 2 * 3);
+    readMulti(0x03, &x, 2 * 3);
 }
 
 
@@ -122,8 +122,8 @@ void AK8975::readReg(const RegAddress addr, uint8_t & data){
     }
 }
 
-void AK8975::readPool(const RegAddress addr, void * datas, const size_t len){
-    if(i2c_drv) i2c_drv->readPool(uint8_t(addr), (uint8_t *)datas, len, MSB);
+void AK8975::readMulti(const RegAddress addr, void * datas, const size_t len){
+    if(i2c_drv) i2c_drv->readMulti(uint8_t(addr), (uint8_t *)datas, len, MSB);
     if(spi_drv){
         spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
         spi_drv->readMulti((uint8_t *)(datas), len);

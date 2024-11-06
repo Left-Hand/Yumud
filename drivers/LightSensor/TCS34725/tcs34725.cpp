@@ -13,7 +13,7 @@ void TCS34725::requestRegData(const RegAddress regAddress, uint16_t * data_ptr, 
     uint8_t address = convRegAddress(regAddress);
     TCS34725_DEBUG("address", address)
 
-    bus_drv.readPool(address, data_ptr, len, LSB);
+    bus_drv.readMulti(address, data_ptr, len, LSB);
 }
 
 

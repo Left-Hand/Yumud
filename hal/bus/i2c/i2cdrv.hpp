@@ -34,16 +34,16 @@ private:
 
     template<typename T>
     requires valid_i2c_data<T>
-    void writePool_impl(const valid_i2c_regaddr auto reg_address, const T data, const size_t length, const Endian endian);
+    void writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T data, const size_t length, const Endian endian);
 
     template<typename T>
     requires valid_i2c_data<T>
-    void writePool_impl(const valid_i2c_regaddr auto reg_address, const T * data_ptr, const size_t length, const Endian endian);
+    void writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T * data_ptr, const size_t length, const Endian endian);
 
 
     template<typename T>
     requires valid_i2c_data<T>
-    void readPool_impl(const valid_i2c_regaddr auto reg_address, T * data_ptr, const size_t length, const Endian endian);
+    void readMulti_impl(const valid_i2c_regaddr auto reg_address, T * data_ptr, const size_t length, const Endian endian);
 
 public:
     I2cDrv(I2c & _bus, const uint8_t _index):
@@ -52,41 +52,41 @@ public:
 
     template<typename T>
     requires valid_i2c_data<T>
-    void writePool(const valid_i2c_regaddr auto reg_address, const T * data_ptr, const size_t length, const Endian endian){
-        writePool_impl<T>(reg_address, data_ptr, length, endian);
+    void writeMulti(const valid_i2c_regaddr auto reg_address, const T * data_ptr, const size_t length, const Endian endian){
+        writeMulti_impl<T>(reg_address, data_ptr, length, endian);
     }
 
 
     template<typename T>
     requires valid_i2c_data<T>
-    void writePool(const valid_i2c_regaddr auto reg_address, const T data, const size_t length, const Endian endian){
-        writePool_impl<T>(reg_address, data, length, endian);
+    void writeMulti(const valid_i2c_regaddr auto reg_address, const T data, const size_t length, const Endian endian){
+        writeMulti_impl<T>(reg_address, data, length, endian);
     }
 
 
     template<typename T>
     requires valid_i2c_data<T>
     void writeReg(const valid_i2c_regaddr auto reg_address, const T data, const Endian endian){
-        writePool<T>(reg_address, &data, 1, endian);
+        writeMulti<T>(reg_address, &data, 1, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T>
-    void readPool(const valid_i2c_regaddr auto reg_address, T * data_ptr, const size_t length, const Endian endian){
-        readPool_impl<T>(reg_address, data_ptr, length, endian);
+    void readMulti(const valid_i2c_regaddr auto reg_address, T * data_ptr, const size_t length, const Endian endian){
+        readMulti_impl<T>(reg_address, data_ptr, length, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T>
     void readReg(const valid_i2c_regaddr auto reg_address, T & reg_data, Endian endian){
-        readPool<T>(reg_address, &reg_data, 1, endian);
+        readMulti<T>(reg_address, &reg_data, 1, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T>
     T readReg(const valid_i2c_regaddr auto reg_address, Endian endian){
         T reg_data;
-        readPool<T>(reg_address, &reg_data, 1, endian);
+        readMulti<T>(reg_address, &reg_data, 1, endian);
         return reg_data;
     }
 };

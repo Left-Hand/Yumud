@@ -121,9 +121,9 @@ static void oled_tb(){
     I2cSw i2c{portB[13], portB[15]};
     i2c.init(0);
 
-    DisplayerPhyI2cc oled_if{i2c};
+    DisplayerPhyI2c oled_phy{i2c};
 
-    SSD13XX_72X40 oled{oled_if};
+    SSD13XX_72X40 oled{oled_phy};
     auto & frame = oled.fetchFrame();
     
     oled.init();

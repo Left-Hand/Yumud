@@ -106,7 +106,7 @@ protected:
 
 
     void requestPool(const RegAddress &regAddress, auto * datas, size_t len){
-        bus_drv.readPool((uint8_t)regAddress, datas, len, MSB);
+        bus_drv.readMulti((uint8_t)regAddress, datas, len, MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){
