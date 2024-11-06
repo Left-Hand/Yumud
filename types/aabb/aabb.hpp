@@ -137,8 +137,6 @@ struct AABB_t{
 		return position + (size * T(static_cast<T>(0.5f)));
 	}
 
-	operator String() const;
-
 	__fast_inline constexpr AABB_t() {}
 	__fast_inline constexpr AABB_t(const Vector3_t<T> & p_pos, const Vector3_t<T> & p_size) :
 			position(p_pos),

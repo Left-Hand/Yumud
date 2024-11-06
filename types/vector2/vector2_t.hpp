@@ -31,15 +31,9 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#include "sys/core/platform.h"
 
-#include "sys/string/string.hpp"
 #include "sys/stream/ostream.hpp"
 #include "sys/math/real.hpp"
-
-
-#include <type_traits>
-#include <tuple>
 
 namespace yumud{
 
@@ -225,7 +219,6 @@ public:
 
 
 using Vector2i = Vector2_t<int>;
-
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ')';

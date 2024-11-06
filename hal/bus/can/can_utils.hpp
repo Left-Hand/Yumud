@@ -33,3 +33,9 @@ namespace yumud::CanUtils{
         SOFTWARE_SET_ERR = CAN_ErrorCode_SoftwareSetErr
     };
 };
+
+
+
+#ifndef CAN_SOFTFIFO_SIZE
+#define CAN_SOFTFIFO_SIZE 8
+#endif

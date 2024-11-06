@@ -48,8 +48,8 @@ extern yumud::OutputStream & DEBUGGER;
 do{\
     if constexpr(sizeof(std::make_tuple(__VA_ARGS__))){\
         DEBUG_ERROR(__VA_ARGS__);\
+        delay(10);\
     }\
-    delay(10);\
     __disable_irq();\
     __disable_irq();\
     HALT;\

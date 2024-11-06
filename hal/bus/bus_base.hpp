@@ -73,6 +73,7 @@ private:
 
 public:
     Bus():locker(&__m_lock__){;}
+    DELETE_COPY_AND_MOVE(Bus)
 
     Error begin(const uint8_t index){
         if(false == locked()){

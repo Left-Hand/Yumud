@@ -42,6 +42,9 @@ public:
             GpioConcept & _miso_pin,GpioConcept & _cs_pin):SpiSw(_sclk_pin, _mosi_pin, _miso_pin){
                 bindCsPin(_cs_pin, 0);
             }
+
+    DELETE_COPY_AND_MOVE(SpiSw);
+
     Error write(const uint32_t data) override {
         uint32_t dummy;
         transfer(dummy, data, false);
