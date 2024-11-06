@@ -1,97 +1,60 @@
 #pragma once
 
-#include "../rgbLed.hpp"
+#include "../RgbLed.hpp"
 #include <array>
 
 namespace yumud::drivers{
 
-class WS2812: public RgbLedConcept<true>{
+class WS2812: public RgbLedConcept{
 protected:
     Gpio & gpio;
 
-    void delayLong(){
-        __nopn(120);
-    }
+    __no_inline void delayLong();
+    __no_inline void delayShort();
 
-    void delayShort(){
-        __nopn(32);
-    }
-    void sendCode(const bool state){
-        // __disable_irq();
-        if(state){
-            gpio.set();
-            delayLong();
-            gpio.clr();
-            delayShort();
-        }else{
-            gpio.set();
-            delayShort();
-            gpio.clr();
-            delayLong();
-        }
-        // __enable_irq();
-    }
+    void sendCode(const bool state);
+    void sendByte(const uint8_t data);
 
-    void sendReset(){
-        gpio.clr();
-        delayMicroseconds(60);
-    }
+    void sendReset();
 
-    void sendByte(const uint8_t data){
-        for(uint8_t mask = 0x80; mask; mask >>= 1){
-            sendCode(data & mask);
-        }
-    }
-    void _update(const Color &color) override{
-        uint16_t r,g,b;
-        uni_to_u16(color.r, r);
-        uni_to_u16(color.g, g);
-        uni_to_u16(color.b, b);
 
-        sendReset();
-        sendByte(g >> 8);
-        sendByte(r >> 8);
-        sendByte(b >> 8);
-    }
-
+    void _update(const Color &color);
 public:
     WS2812(Gpio & _gpio):gpio(_gpio){;}
     void init(){
-        // gpio.set();
         gpio.outpp();
     }
     WS2812 & operator = (const Color & color) override{
-        setColor(color);
+        _update(color);
         return *this;
     }
 };
 
-class WS2812Single: public RgbLedConcept<true>{
+class WS2812Single: public RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
 
 
-    void _update(const Color & _color) override{
+    void _update(const Color & _color){
         color = _color;
     }
 public:
     Color color;
     WS2812Single() = default;
-    void init() override{;}
 
     WS2812Single & operator = (const Color & _color) override{
-        setColor(_color);
+        _update(_color);
         return *this;
     }
 };
 
 
-template<uint16_t size>
+template<size_t N>
 class WS2812Chain{
 protected:
     using Color = Color_t<real_t>;
     Gpio & gpio;
-    std::array<WS2812Single, size> leds;
+    std::array<WS2812Single, N> leds;
 
     void delayLong(){
         __nopn(120);
@@ -136,7 +99,7 @@ public:
     }
 
     WS2812Single & operator[](const int index){
-        if(index < 0) return leds.at(size + index);
+        if(index < 0) return leds.at(N + index);
         else return leds.at(index);
     }
 

@@ -11,5 +11,5 @@
 
 #include "drivers/Actuator/SVPWM/svpwm.hpp"
 
-#include "drivers/Memory/memory.hpp"
+#include "concept/memory.hpp"
 #include "drivers/Encoder/odometer_poles.hpp"

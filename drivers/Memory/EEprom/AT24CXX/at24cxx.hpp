@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/device_defs.h"
-#include "drivers/Memory/memory.hpp"
+#include "concept/memory.hpp"
 
 namespace yumud{
 

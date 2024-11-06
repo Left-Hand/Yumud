@@ -1,8 +1,8 @@
 #pragma once
 
 #include "sys/core/system.hpp"
-#include "drivers/Memory/storage.hpp"
-#include "drivers/Memory/memory.hpp"
+#include "concept/storage.hpp"
+#include "concept/memory.hpp"
 
 #ifdef FLASH_DEBUG
 #undef FLASH_DEBUG
