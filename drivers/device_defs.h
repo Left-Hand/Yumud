@@ -56,15 +56,4 @@ public:
 };
 
 
-#define I2CDEV_CONTSRTUCTER(name)\
-    name(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}\
-    name(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}\
-    name(I2c & _i2c):bus_drv(I2cDrv(_i2c, name::default_addr)){;}\
-
-#define SPIDEV_CONTSRTUCTER(name)\
-    name(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}\
-    name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
-
-
-
 #define TODO_TRAP(str) do{DEBUG_PRINTLN("todo:", str); PANIC()}while(false);

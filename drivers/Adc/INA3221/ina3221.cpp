@@ -181,3 +181,7 @@ void INA3221::setConstantOVC(const size_t index, const real_t volt){
 
     writeReg(addr, ShuntVoltReg::to_i16(volt));
 }
+
+// INA3221::INA3221Channel operator real_t(){
+    
+// }

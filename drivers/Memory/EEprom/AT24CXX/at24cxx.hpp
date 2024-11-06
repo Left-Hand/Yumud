@@ -11,7 +11,7 @@ private:
 protected:
     scexpr uint32_t min_duration_ms = 6;
 
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
     uint32_t last_entry_ms = 0;
     
 
@@ -42,9 +42,9 @@ protected:
         update_entry_ms();
     };
 
-    AT24CXX(I2cDrv && _bus_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), bus_drv(_bus_drv){;}
-    AT24CXX(I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), bus_drv{_bus, default_id}{;}
-    AT24CXX(I2cDrv & _bus_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), bus_drv(_bus_drv){;}
+    AT24CXX(I2cDrv && _bus_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(_bus_drv){;}
+    AT24CXX(I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_{_bus, default_id}{;}
+    AT24CXX(I2cDrv & _bus_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(_bus_drv){;}
 
 public:
     void init() override{};

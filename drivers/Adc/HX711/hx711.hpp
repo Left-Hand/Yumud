@@ -20,28 +20,12 @@ protected:
     bool inversed = false;
 
     scexpr real_t G = real_t(9.8);
-    // scexpr real_t k = real_t(9.8 / 1000);
 
-    uint32_t read_data(void){
-        uint32_t data=0;
+    uint32_t read_data(void);
 
-        for(uint8_t i = 0; i < 24; i++){
-            sck_pin = true;
-            __nopn(2);
-            sck_pin = false;
+    class HX711Channel{
 
-            data <<= 1; data |= bool(sdo_pin);
-        }
-
-        for(uint8_t i = 0; i < (uint8_t)conv_type; i++){
-            sck_pin = true;
-            __nopn(2);
-            sck_pin = false;
-        }
-
-        data ^= 0x800000;
-        return(data);
-    }
+    };
 public:
     HX711(GpioConcept & _sck_pin, GpioConcept & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin){;}
     ~HX711(){;}
@@ -78,7 +62,6 @@ public:
 
     real_t getNewton(){
         return (G * real_t(getWeightGram())) / 1000;
-        // return real_t(getWeightGram());
     }
 
     void setConvType(const ConvType & _convtype){

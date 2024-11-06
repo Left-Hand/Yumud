@@ -9,7 +9,7 @@ class PCA9685: public PortVirtualConcept<16>{
 public:
     scexpr uint8_t default_i2c_addr = 0b10000000;
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
 
     scexpr uint8_t valid_chipid = 0x23;
 
@@ -111,24 +111,24 @@ protected:
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
-        bus_drv.writeReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
-        bus_drv.writeReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
-        bus_drv.readReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.readReg((uint8_t)addr, reg, LSB);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
-        bus_drv.readReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.readReg((uint8_t)addr, reg, LSB);
     }
 
     uint8_t readReg(const RegAddress addr){
         uint8_t data;
-        bus_drv.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data, LSB);
         return data;
     }
 
@@ -148,9 +148,9 @@ protected:
         static_assert(sizeof(mode2_reg) == 1);
     }
 public:
-    PCA9685(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    PCA9685(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    PCA9685(I2c & _bus):bus_drv{_bus, default_i2c_addr}{;}
+    PCA9685(I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
+    PCA9685(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    PCA9685(I2c & _bus):i2c_drv_{_bus, default_i2c_addr}{;}
 
     void setFrequency(const uint freq, const real_t trim = real_t(1));
 

@@ -5,7 +5,14 @@
 
 
 namespace yumud::drivers{
-class KeyMatrix{
 
+
+class KeyMatrix{
+protected:
+    std::vector<Key> keys;
+public:
+    
 };
+
+
 }

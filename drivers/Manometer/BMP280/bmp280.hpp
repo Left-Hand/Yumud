@@ -32,7 +32,7 @@ public:
     };
 
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
 
     scexpr uint8_t default_i2c_addr = 0xec;
     scexpr uint8_t valid_chipid = 0x58;
@@ -116,24 +116,24 @@ protected:
     };
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.readReg((uint8_t)regAddress, regData, LSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.readReg((uint8_t)regAddress, regData, LSB);
         // BMP280_DEBUG((uint8_t)regAddress, (uint8_t)regData);
     }
 
     void requestPool(const RegAddress regAddress, uint8_t * datas, uint8_t size, uint8_t len){
-        bus_drv.readMulti((uint8_t)regAddress, datas, len, LSB);
+        i2c_drv_.readMulti((uint8_t)regAddress, datas, len, LSB);
     }
 
     uint32_t getPressureData(){
@@ -157,9 +157,9 @@ protected:
     }
 
 public:
-    BMP280(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    BMP280(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    BMP280(I2c & _i2c, const uint8_t addr = default_i2c_addr):bus_drv(I2cDrv(_i2c, addr)){;}
+    BMP280(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
+    BMP280(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    BMP280(I2c & _i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(_i2c, addr)){;}
     ~BMP280(){;}
 
     bool isChipValid();

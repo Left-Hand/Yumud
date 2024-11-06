@@ -27,9 +27,9 @@ public:
         Continuous, Single
     };
 
-    scexpr uint8_t default_addr = 0x3d;
+    scexpr uint8_t default_i2c_addr = 0x3d;
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
 
     real_t lsb;
 
@@ -89,24 +89,24 @@ protected:
     };
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData, MSB);
+        i2c_drv_.writeReg((uint8_t)regAddress, regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData, MSB);
+        i2c_drv_.readReg((uint8_t)regAddress, regData, MSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData, MSB);
+        i2c_drv_.writeReg((uint8_t)regAddress, regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData, MSB);
+        i2c_drv_.readReg((uint8_t)regAddress, regData, MSB);
     }
 
 
     void requestPool(const RegAddress &regAddress, auto * datas, size_t len){
-        bus_drv.readMulti((uint8_t)regAddress, datas, len, MSB);
+        i2c_drv_.readMulti((uint8_t)regAddress, datas, len, MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){
@@ -147,7 +147,9 @@ protected:
         }
     }
 public:
-    I2CDEV_CONTSRTUCTER(HMC5883L)
+    HMC5883L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    HMC5883L(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    HMC5883L(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
 
     void init(){
         enableHighSpeed();

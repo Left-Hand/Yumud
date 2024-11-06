@@ -47,7 +47,7 @@ protected:
         chipID = 0xFF,
     };
 
-    struct ConfigReg{
+    struct ConfigReg:public Reg16{
         uint16_t shuntVoltageEnable :1;
         uint16_t busVoltageEnable :1;
         uint16_t continuos :1;
@@ -58,7 +58,7 @@ protected:
         uint16_t rst:1;
     };
 
-    struct MaskReg{
+    struct MaskReg:public Reg16{
         uint16_t alertLatchEnable:1;
         uint16_t alertPolarity:1;
         uint16_t mathOverflow:1;

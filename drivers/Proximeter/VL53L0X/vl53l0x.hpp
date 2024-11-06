@@ -8,12 +8,12 @@ namespace yumud::drivers{
 
 class VL53L0X:public DistanceSensor{
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
 public:
     scexpr uint8_t default_i2c_addr = 0x52;
-    VL53L0X(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    VL53L0X(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    VL53L0X(I2c & bus):bus_drv(bus, default_i2c_addr){;}
+    VL53L0X(I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
+    VL53L0X(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    VL53L0X(I2c & bus):i2c_drv_(bus, default_i2c_addr){;}
     ~VL53L0X(){;}
 
     void startConv();
@@ -42,7 +42,7 @@ private:
 
     Result result, last_result;
 	void writeByteData(const uint8_t Reg, const uint8_t byte){
-        bus_drv.writeReg(Reg, byte, MSB);
+        i2c_drv_.writeReg(Reg, byte, MSB);
     }
 
     void flush();
@@ -50,13 +50,13 @@ private:
 
 	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
-        bus_drv.readReg(Reg, data, MSB);
+        i2c_drv_.readReg(Reg, data, MSB);
         return data;
     }
 
     void requestData(const uint8_t reg, uint16_t * data, const size_t len){
         // sizeof(Result);
-        bus_drv.readMulti(reg, data, len, MSB);
+        i2c_drv_.readMulti(reg, data, len, MSB);
     }
 };
 

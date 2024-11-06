@@ -25,6 +25,9 @@ public:
     __fast_inline constexpr int_t operator++(){ ++value; return *this; }
     __fast_inline constexpr int_t operator--(){ --value; return *this;}
 
+    __fast_inline constexpr int_t operator+() const {return *this; }
+    __fast_inline constexpr int_t operator-(){ value = -value; return *this;}
+
     __fast_inline constexpr int_t operator<<(const size_t bits){ return int_t(value << bits);}
     __fast_inline constexpr int_t operator>>(const size_t bits){ return int_t(value >> bits);}
 
