@@ -1,9 +1,16 @@
 #include "debug_inc.h"
+#include "hal/bus/uart/uarthw.hpp"
+
+using namespace yumud;
+
+yumud::OutputStream & yumud::LOGGER = LOGGER_INST;
+yumud::OutputStream & yumud::DEBUGGER = DEBUGGER_INST;
+
 
 extern "C"{
 __attribute__((used)) int _write(int fd, char *buf, int size)
 {
-    DEBUGGER.write(buf, size);
+    DEBUGGER_INST.write(buf, size);
     return size;
 }
 __attribute__((used)) void *_sbrk(ptrdiff_t incr)

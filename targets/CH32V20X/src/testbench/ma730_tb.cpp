@@ -5,7 +5,7 @@
 
 using namespace yumud::drivers;
 void ma730_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     spi1.init(9000000);
     spi1.bindCsPin(portA[15], 2);

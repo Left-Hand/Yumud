@@ -21,7 +21,7 @@ void mpu6050_tb(OutputStream & logger, I2c & i2c){
 }
 
 void mpu6050_main(){
-    auto & logger = DEBUGGER;
+    auto & logger = DEBUGGER_INST;
     logger.init(576_KHz);
     I2cSw i2c{portD[2], portC[12]};
     i2c.init(1_MHz);

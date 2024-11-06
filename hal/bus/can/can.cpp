@@ -25,7 +25,7 @@ void Can::initIt(){
     CAN_ITConfig(instance, it_mask, ENABLE);
 
     switch(uint32_t(instance)){
-        #ifdef HAVE_CAN1
+        #ifdef ENABLE_CAN1
         case CAN1_BASE:
             //tx interrupt
             NvicRequest{{1, 6}, USB_HP_CAN1_TX_IRQn}.enable();
@@ -38,7 +38,7 @@ void Can::initIt(){
             break;
         #endif
 
-        #ifdef HAVE_CAN2
+        #ifdef ENABLE_CAN2
         case CAN2_BASE:
             //tx interrupt
             NvicRequest{{1, 6}, CAN2_TX_IRQn}.enable();
@@ -71,12 +71,12 @@ void Can::clearMailbox(const uint8_t mbox){
 
 Gpio & Can::getTxGpio(){
     switch((uint32_t)instance){
-        #ifdef HAVE_CAN1
+        #ifdef ENABLE_CAN1
         case CAN1_BASE:
             return CAN1_TX_GPIO;
         #endif
 
-        #ifdef HAVE_CAN2
+        #ifdef ENABLE_CAN2
         case CAN2_BASE:
             return CAN2_TX_GPIO;
         #endif
@@ -88,12 +88,12 @@ Gpio & Can::getTxGpio(){
 
 Gpio & Can::getRxGpio(){
     switch((uint32_t)instance){
-        #ifdef HAVE_CAN1
+        #ifdef ENABLE_CAN1
         case CAN1_BASE:
             return CAN1_RX_GPIO;
         #endif
 
-        #ifdef HAVE_CAN2
+        #ifdef ENABLE_CAN2
         case CAN2_BASE:
             return CAN2_RX_GPIO;
         #endif
@@ -113,7 +113,7 @@ void Can::installGpio(){
 }
 void Can::enableRcc(){
     switch((uint32_t)instance){
-        #ifdef HAVE_CAN1
+        #ifdef ENABLE_CAN1
         case CAN1_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN1, ENABLE);
             uint8_t remap = CAN1_REMAP;
@@ -135,7 +135,7 @@ void Can::enableRcc(){
         #endif
 
 
-        #ifdef HAVE_CAN2
+        #ifdef ENABLE_CAN2
         case CAN2_BASE:{
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_CAN2, ENABLE);
             uint8_t remap = CAN2_REMAP;
@@ -394,7 +394,7 @@ void Can::handleSce(){
 }
 
 
-#ifdef HAVE_CAN1
+#ifdef ENABLE_CAN1
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void){
     can1.handleTx();
@@ -416,7 +416,7 @@ void CAN1_SCE_IRQHandler(void){
 }
 #endif
 
-#ifdef HAVE_CAN2
+#ifdef ENABLE_CAN2
 __interrupt
 void CAN2_TX_IRQHandler(void){
     can2.handleTx();

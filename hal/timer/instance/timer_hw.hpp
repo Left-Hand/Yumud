@@ -46,42 +46,42 @@ __interrupt void TIM##x##_IRQHandler(void);\
 extern Timer##x timer##x;\
 
 
-#ifdef HAVE_TIM1
+#ifdef ENABLE_TIM1
 ADVANCED_TIMER_TEMPLATE(1)
 #endif
 
-#ifdef HAVE_TIM2
+#ifdef ENABLE_TIM2
 GENERIC_TIMER_TEMPLATE(2)
 #endif
 
-#ifdef HAVE_TIM3
+#ifdef ENABLE_TIM3
 GENERIC_TIMER_TEMPLATE(3)
 #endif
 
-#ifdef HAVE_TIM4
+#ifdef ENABLE_TIM4
 GENERIC_TIMER_TEMPLATE(4)
 #endif
 
-#ifdef HAVE_TIM5
+#ifdef ENABLE_TIM5
 GENERIC_TIMER_TEMPLATE(5)
 #endif
 
-#ifdef HAVE_TIM6
+#ifdef ENABLE_TIM6
 BASIC_TIMER_TEMPLATE(6)
 #endif
 
-#ifdef HAVE_TIM7
+#ifdef ENABLE_TIM7
 BASIC_TIMER_TEMPLATE(7)
 #endif
 
-#ifdef HAVE_TIM8
+#ifdef ENABLE_TIM8
 ADVANCED_TIMER_TEMPLATE(8)
 #endif
 
-#ifdef HAVE_TIM9
+#ifdef ENABLE_TIM9
 ADVANCED_TIMER_TEMPLATE(9)
 #endif
 
-#ifdef HAVE_TIM10
+#ifdef ENABLE_TIM10
 ADVANCED_TIMER_TEMPLATE(10)
 #endif

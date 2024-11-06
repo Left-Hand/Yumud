@@ -105,7 +105,7 @@ public:
 };
 
 static void oled_tb(){
-    auto & debugger = DEBUGGER;
+    auto & debugger = DEBUGGER_INST;
     debugger.init(DEBUG_UART_BAUD);
 
     auto & printer = uart2;

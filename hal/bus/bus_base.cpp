@@ -46,21 +46,21 @@ bool Bus::Lock::owned_by(const uint8_t index) const {
 
 
 void Bus::lock(const uint8_t index){
-    if(locker == nullptr) PANIC();
+    if(locker == nullptr) HALT;
     locker->lock(index);
 }
 
 void Bus::unlock(){
-    if(locker == nullptr) PANIC();
+    if(locker == nullptr) HALT;
     locker->unlock();
 }
 
 bool Bus::locked(){
-    if(locker == nullptr) PANIC();
+    if(locker == nullptr) HALT;
     return locker->locked();
 }
 
 bool Bus::owned_by(const uint8_t index){
-    if(locker == nullptr) PANIC();
+    if(locker == nullptr) HALT;
     return locker->owned_by(index);
 }

@@ -10,8 +10,8 @@
 
 #define EXTRA_IQ
 
-#define HAVE_UART1
-#define HAVE_UART2
+#define ENABLE_UART1
+#define ENABLE_UART2
 
 
 #define UART1_REMAP 1
@@ -19,7 +19,7 @@
 
 
 
-// #define HAVE_I2C1
+// #define ENABLE_I2C1
 #define I2C1_REMAP 0
-// #define HAVE_I2C2
+// #define ENABLE_I2C2
 #define I2C2_REMAP 0

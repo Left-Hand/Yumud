@@ -6,35 +6,35 @@
 
 
 
-#ifdef HAVE_UART1
+#ifdef ENABLE_UART1
 extern "C" __interrupt void USART1_IRQHandler();
 #endif
 
-#ifdef HAVE_UART2
+#ifdef ENABLE_UART2
 extern "C" __interrupt void USART2_IRQHandler(void);
 #endif
 
-#ifdef HAVE_UART3
+#ifdef ENABLE_UART3
 extern "C" __interrupt void USART3_IRQHandler(void);
 #endif
 
-#ifdef HAVE_UART4
+#ifdef ENABLE_UART4
 extern "C" __interrupt void UART4_IRQHandler(void);
 #endif
 
-#ifdef HAVE_UART5
+#ifdef ENABLE_UART5
 extern "C" __interrupt void UART5_IRQHandler(void);
 #endif
 
-#ifdef HAVE_UART6
+#ifdef ENABLE_UART6
 extern "C" __interrupt void UART6_IRQHandler(void);
 #endif
 
-#ifdef HAVE_UART7
+#ifdef ENABLE_UART7
 extern "C" __interrupt void UART7_IRQHandler(void);
 #endif
 
-#ifdef HAVE_UART8
+#ifdef ENABLE_UART8
 extern "C" __interrupt void UART8_IRQHandler(void);
 #endif
 
@@ -102,35 +102,35 @@ public:
     Gpio & txio() override;
     Gpio & rxio() override;
 
-    #ifdef HAVE_UART1
+    #ifdef ENABLE_UART1
     friend void ::USART1_IRQHandler();
     #endif
 
-    #ifdef HAVE_UART2
+    #ifdef ENABLE_UART2
     friend void ::USART2_IRQHandler(void);
     #endif
 
-    #ifdef HAVE_UART3
+    #ifdef ENABLE_UART3
     friend void ::USART3_IRQHandler(void);
     #endif
 
-    #ifdef HAVE_UART4
+    #ifdef ENABLE_UART4
     friend void ::UART4_IRQHandler(void);
     #endif
 
-    #ifdef HAVE_UART5
+    #ifdef ENABLE_UART5
     friend void ::UART5_IRQHandler(void);
     #endif
 
-    #ifdef HAVE_UART6
+    #ifdef ENABLE_UART6
     friend void ::UART6_IRQHandler(void);
     #endif
 
-    #ifdef HAVE_UART7
+    #ifdef ENABLE_UART7
     friend void ::UART7_IRQHandler(void);
     #endif
 
-    #ifdef HAVE_UART8
+    #ifdef ENABLE_UART8
     friend void ::UART8_IRQHandler(void);
     #endif
 
@@ -139,34 +139,34 @@ public:
 }
 
 
-#ifdef HAVE_UART1
+#ifdef ENABLE_UART1
 extern yumud::UartHw uart1;
 #endif
 
-#ifdef HAVE_UART2
+#ifdef ENABLE_UART2
 extern yumud::UartHw uart2;
 #endif
 
-#ifdef HAVE_UART3
+#ifdef ENABLE_UART3
 extern yumud::UartHw uart3;
 #endif
 
-#ifdef HAVE_UART4
+#ifdef ENABLE_UART4
 extern yumud::UartHw uart4;
 #endif
 
-#ifdef HAVE_UART5
+#ifdef ENABLE_UART5
 extern yumud::UartHw uart5;
 #endif
 
-#ifdef HAVE_UART6
+#ifdef ENABLE_UART6
 extern yumud::UartHw uart6;
 #endif
 
-#ifdef HAVE_UART7
+#ifdef ENABLE_UART7
 extern yumud::UartHw uart7;
 #endif
 
-#ifdef HAVE_UART8
+#ifdef ENABLE_UART8
 extern UartHw uart8;
 #endif

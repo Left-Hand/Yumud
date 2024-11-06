@@ -1,10 +1,10 @@
 #include "system.hpp"
 
-#include "../sys/core/platform.h"
-#include "../hal/crc/crc.hpp"
+#include "sys/core/platform.h"
+#include "hal/crc/crc.hpp"
 
-#include "../sys/clock/clock.h"
-#include "../sys/constants/enums.hpp"
+#include "sys/clock/clock.h"
+#include "sys/constants/enums.hpp"
 
 #ifdef N32G45X
 #define M_RCC_CONFIGER RCC_ConfigHclk

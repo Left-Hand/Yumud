@@ -6,7 +6,7 @@
 using namespace yumud::drivers;
 
 void bmi160_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     spi1.init(18000000);
     spi1.bindCsPin(portA[0], 0);

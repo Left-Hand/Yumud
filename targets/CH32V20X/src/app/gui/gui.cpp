@@ -1,8 +1,9 @@
 #include "gui.hpp"
 
-
+#include "sys/debug/debug_inc.h"
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
 #include "types/image/painter.hpp"
@@ -196,7 +197,7 @@ public:
 
 void gui_main(){
 
-    auto & logger = uart2;
+    auto & logger = LOGGER_INST;
 
     #ifdef CH32V30X
     auto & spi = spi2;
@@ -401,6 +402,8 @@ void gui_main(){
         delay(20);
         painter.fill(ColorEnum::BLACK);
 
+        // DEBUG_PRINTLN(millis());
+        // PANIC("why");
         #endif
     
     }

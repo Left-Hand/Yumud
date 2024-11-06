@@ -19,14 +19,14 @@
     #define HAVE_GPIOC
     #define HAVE_GPIOD
     #define HAVE_GPIOE
-    #define HAVE_DVP
+    #define ENABLE_DVP
     #define HAVE_RNG
     #define HAVE_DMA1
     #define HAVE_DMA2
 #endif
 
 
-#ifdef HAVE_UART1
+#ifdef ENABLE_UART1
     #define UART1_IT_PP 1
     #define UART1_IT_SP 0
 
@@ -47,7 +47,7 @@
 #endif
 
 
-#ifdef HAVE_UART2
+#ifdef ENABLE_UART2
     #define UART2_IT_PP 0
     #define UART2_IT_SP 1
 
@@ -67,7 +67,7 @@
     #endif
 #endif
 
-#ifdef HAVE_UART3
+#ifdef ENABLE_UART3
     #define UART3_IT_PP 1
     #define UART3_IT_SP 1
 
@@ -93,7 +93,7 @@
     #endif
 #endif
 
-#ifdef HAVE_UART4
+#ifdef ENABLE_UART4
     #define UART4_IT_PP 1
     #define UART4_IT_SP 1
 
@@ -119,7 +119,7 @@
     #endif
 #endif
 
-#ifdef HAVE_UART5
+#ifdef ENABLE_UART5
     #define UART5_IT_PP 1
     #define UART5_IT_SP 1
 
@@ -141,7 +141,7 @@
 
 
 
-#ifdef HAVE_UART6
+#ifdef ENABLE_UART6
     #define UART6_IT_PP 0
     #define UART6_IT_SP 1
 
@@ -163,7 +163,7 @@
     #endif
 #endif
 
-#ifdef HAVE_UART7
+#ifdef ENABLE_UART7
     #define UART7_IT_PP 0
     #define UART7_IT_SP 1
 
@@ -186,7 +186,7 @@
 #endif
 
 
-#ifdef HAVE_UART8
+#ifdef ENABLE_UART8
     #define UART8_IT_PP 1
     #define UART8_IT_SP 1
 
@@ -211,7 +211,7 @@
 
 
 
-#ifdef HAVE_SPI1
+#ifdef ENABLE_SPI1
 
     #if SPI1_REMAP == 0
         #define SPI1_CS_GPIO portA[4]
@@ -228,7 +228,7 @@
 #endif
 
 
-#ifdef HAVE_SPI2
+#ifdef ENABLE_SPI2
     #define SPI2_CS_GPIO portB[12]
     #define SPI2_SCLK_GPIO portB[13]
     #define SPI2_MISO_GPIO portB[14]
@@ -237,7 +237,7 @@
 
 
 
-#ifdef HAVE_I2C1
+#ifdef ENABLE_I2C1
     #if I2C1_REMAP == 0
 
         #define I2C1_SCL_GPIO portB[6]
@@ -252,7 +252,7 @@
 #endif
 
 
-#ifdef HAVE_I2C2
+#ifdef ENABLE_I2C2
 
     #if I2C2_REMAP == 0
 
@@ -265,7 +265,7 @@
 
 
 
-#ifdef HAVE_TIM1
+#ifdef ENABLE_TIM1
     #define TIM1_CH1_DMA_CH dma1Ch2
     #define TIM1_CH2_DMA_CH dma1Ch3
     #define TIM1_CH3_DMA_CH dma1Ch6
@@ -310,7 +310,7 @@
 #endif
 
 
-#ifdef HAVE_TIM2
+#ifdef ENABLE_TIM2
     #define TIM2_CH1_DMA_CH dma1Ch5
     #define TIM2_CH2_DMA_CH dma1Ch7
     #define TIM2_CH3_DMA_CH dma1Ch1
@@ -340,7 +340,7 @@
 #endif
 
 
-#ifdef HAVE_TIM3
+#ifdef ENABLE_TIM3
     #define TIM3_CH1_DMA_CH dma1Ch6
     #define TIM3_CH3_DMA_CH dma1Ch2
     #define TIM3_CH4_DMA_CH dma1Ch3
@@ -362,7 +362,7 @@
     #endif
 #endif
 
-#ifdef HAVE_TIM4
+#ifdef ENABLE_TIM4
     #define TIM4_CH1_DMA_CH dma1Ch1
     #define TIM4_CH2_DMA_CH dma1Ch4
     #define TIM4_CH3_DMA_CH dma1Ch5
@@ -381,7 +381,7 @@
 #endif
 
 
-#ifdef HAVE_TIM5
+#ifdef ENABLE_TIM5
     #define TIM5_CH1_DMA_CH dma2Ch5
     #define TIM5_CH2_DMA_CH dma2Ch4
     #define TIM5_CH3_DMA_CH dma2Ch2
@@ -395,7 +395,7 @@
     #endif
 #endif
 
-#ifdef HAVE_TIM6
+#ifdef ENABLE_TIM6
     #if TIM6_REMAP == 0
         #define TIM6_CH1_GPIO portA[0]
         #define TIM6_CH2_GPIO portA[1]
@@ -404,7 +404,7 @@
     #endif
 #endif
 
-#ifdef HAVE_TIM7
+#ifdef ENABLE_TIM7
 
 
     #if TIM7_REMAP == 0
@@ -415,7 +415,7 @@
     #endif
 #endif
 
-#ifdef HAVE_TIM8
+#ifdef ENABLE_TIM8
 
     #define TIM8_CH1_DMA_CH dma2Ch3
     #define TIM8_CH2_DMA_CH dma2Ch5
@@ -447,14 +447,14 @@
     #endif
 #endif
 
-#ifdef HAVE_TIM9
+#ifdef ENABLE_TIM9
     #define TIM9_CH1_DMA_CH dma2Ch7
     #define TIM9_CH2_DMA_CH dma2Ch9
     #define TIM9_CH3_DMA_CH dma2Ch11
     #define TIM9_CH4_DMA_CH dma2Ch8
 #endif
 
-#ifdef HAVE_TIM10
+#ifdef ENABLE_TIM10
     #define TIM10_CH1_DMA_CH dma2Ch8
     #define TIM10_CH2_DMA_CH dma2Ch10
     #define TIM10_CH3_DMA_CH dma2Ch9
@@ -462,7 +462,7 @@
 #endif
 
 
-#ifdef HAVE_CAN1
+#ifdef ENABLE_CAN1
     #define CAN1_RM0_TX_GPIO portA[12]
     #define CAN1_RM0_RX_GPIO portA[11]
 
@@ -490,7 +490,7 @@
     #endif
 #endif
 
-#ifdef HAVE_CAN2
+#ifdef ENABLE_CAN2
     #define CAN2_RM0_TX_GPIO portB[13]
     #define CAN2_RM0_RX_GPIO portB[12]
 
@@ -508,7 +508,7 @@
     #endif
 #endif
 
-#ifdef HAVE_OPA2
+#ifdef ENABLE_OPA2
     #define OPA2_N0_GPIO portB[10]
     #define OPA2_P0_GPIO portB[14]
     #define OPA2_O0_GPIO portA[2]
@@ -519,7 +519,7 @@
 
 #endif
 
-#ifdef HAVE_OPA1
+#ifdef ENABLE_OPA1
     #define OPA1_N0_GPIO portB[11]
     #define OPA1_P0_GPIO portB[15]
     #define OPA1_O0_GPIO portA[3]

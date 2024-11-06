@@ -5,6 +5,7 @@
 #include "dsp/filter/LowpassFilter.hpp"
 
 #include "hal/gpio/port_virtual.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
@@ -33,7 +34,7 @@ using namespace yumud;
 using namespace yumud::drivers;
 
 void digipw_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     /*-----------------------*/
 

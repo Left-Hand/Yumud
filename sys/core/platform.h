@@ -1,9 +1,11 @@
 #pragma once
 
-#include <stddef.h>
+// #include <stddef.h>
 #include <stdint.h>
+
+#ifndef __cplusplus
 #include <stdbool.h>
-// #include <bit>
+#endif
 
 #include "targets/CH32V20X/src/defines/defs.h"
 

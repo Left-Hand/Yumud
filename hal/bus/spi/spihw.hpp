@@ -63,20 +63,20 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
 
 }
 
-#ifdef HAVE_SPI1
+#ifdef ENABLE_SPI1
 static inline yumud::SpiHw spi1{SPI1};
 #endif
 
-#ifdef HAVE_SPI2
+#ifdef ENABLE_SPI2
 static inline yumud::SpiHw spi2{SPI2};
 #endif
 
 extern"C"{
-#ifdef HAVE_SPI1
+#ifdef ENABLE_SPI1
 __interrupt void SPI1_IRQHandler(void);
 #endif
 
-#ifdef HAVE_SPI2
+#ifdef ENABLE_SPI2
 __interrupt void SPI2_IRQHandler(void);
 #endif
 

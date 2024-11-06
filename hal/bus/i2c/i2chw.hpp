@@ -34,10 +34,10 @@ public:
 }
 
 
-#ifdef HAVE_I2C1
+#ifdef ENABLE_I2C1
 extern yumud::I2cHw i2c1;
 #endif
 
-#ifdef HAVE_I2C2
+#ifdef ENABLE_I2C2
 extern yumud::I2cHw i2c2;
 #endif

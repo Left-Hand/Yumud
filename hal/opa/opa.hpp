@@ -16,7 +16,7 @@ protected:
 
     Gpio & getPosPin(){
         switch(opa_index){
-            #ifdef HAVE_OPA1
+            #ifdef ENABLE_OPA1
             case 1:
                 switch(psel){
                     case 0:
@@ -25,7 +25,7 @@ protected:
                         return OPA1_P1_GPIO;
                 }
             #endif
-            #ifdef HAVE_OPA2
+            #ifdef ENABLE_OPA2
             case 2:
                 switch(psel){
                     case 0:
@@ -41,7 +41,7 @@ protected:
 
     Gpio & getNegPin(){
         switch(opa_index){
-            #ifdef HAVE_OPA1
+            #ifdef ENABLE_OPA1
             case 1:
                 switch(psel){
                     case 0:
@@ -50,7 +50,7 @@ protected:
                         return OPA1_N1_GPIO;
                 }
             #endif
-            #ifdef HAVE_OPA2
+            #ifdef ENABLE_OPA2
             case 2:
                 switch(psel){
                     case 0:
@@ -67,7 +67,7 @@ protected:
 
     Gpio & getOutPin(){
         switch(opa_index){
-            #ifdef HAVE_OPA1
+            #ifdef ENABLE_OPA1
             case 1:
                 switch(psel){
                     case 0:
@@ -76,7 +76,7 @@ protected:
                         return OPA1_O1_GPIO;
                 }
             #endif
-            #ifdef HAVE_OPA2
+            #ifdef ENABLE_OPA2
             case 2:
                 switch(psel){
                     case 0:
@@ -108,11 +108,11 @@ public:
     }
 };
 
-#ifdef HAVE_OPA1
+#ifdef ENABLE_OPA1
 static inline Opa opa1;
 #endif
 
-#ifdef HAVE_OPA2
+#ifdef ENABLE_OPA2
 static inline Opa opa2;
 #endif
 

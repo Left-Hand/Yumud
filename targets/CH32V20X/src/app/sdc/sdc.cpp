@@ -5,7 +5,7 @@
 #include "../hal/bus/spi/spisw.hpp"
 
 void w25qxx_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
 
     // auto & spi = spi1;
     auto spi = SpiSw(SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO);

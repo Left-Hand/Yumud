@@ -79,25 +79,13 @@ int main(){
     // embd_main();
     // w25qxx_main();
     // smc_main();
-    // UartHw & logger = uart2;
-    // logger.init(115200);
     // can_tb(logger, can1, true);
-    // UartHw & logger = uart8;
-    // logger.init(115200 * 4, CommMethod::Dma, CommMethod::Interrupt);
-    // logger.init(115200 * 4, CommMethod::Dma);
-// rng.init();
     // pmdc_tb();
     // gpio_tb(portC[13]);
     // dma_tb(logger, dma1Ch1);
     // dma_tb(logger, UART7_RX_DMA_CH);
     // uart_tb(logger);
 
-    // uart7.init(1000000);
-    // uart7.init(9600);
-    // uart7.init(19200);
-
-    // uart7.init(115200);
-    // uart7.init(57600);
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
     // embd_main();

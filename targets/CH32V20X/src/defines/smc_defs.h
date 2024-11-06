@@ -9,14 +9,14 @@
 
 #define EXTRA_IQ
 
-// #define HAVE_UART1
-// #define HAVE_UART2
-// #define HAVE_UART3
-// #define HAVE_UART4
-// #define HAVE_UART5
-#define HAVE_UART6
-// #define HAVE_UART7
-// #define HAVE_UART8
+// #define ENABLE_UART1
+// #define ENABLE_UART2
+// #define ENABLE_UART3
+// #define ENABLE_UART4
+// #define ENABLE_UART5
+#define ENABLE_UART6
+// #define ENABLE_UART7
+// #define ENABLE_UART8
 
 
 
@@ -30,23 +30,23 @@
 #define UART2_REMAP 0
 #define UART7_REMAP 3
 
-#define HAVE_SPI2
+#define ENABLE_SPI2
 #define SPI2_REMAP 1
 
-#define HAVE_TIM1
+#define ENABLE_TIM1
 #define TIM1_REMAP 3
 
-#define HAVE_TIM2
+#define ENABLE_TIM2
 #define TIM2_REMAP 0
 
-#define HAVE_TIM4
+#define ENABLE_TIM4
 #define TIM4_REMAP 1
 
-#define HAVE_TIM5
+#define ENABLE_TIM5
 #define TIM5_REMAP 0
 
 
-#define HAVE_TIM8
+#define ENABLE_TIM8
 #define TIM8_REMAP 0
 
 
