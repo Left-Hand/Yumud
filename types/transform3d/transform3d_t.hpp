@@ -31,8 +31,8 @@
 
 #pragma once
 
-#include "types/aabb/aabb.hpp"
-#include "types/basis/basis_t.hpp"
+#include "types/aabb/AABB_t.hpp"
+#include "types/basis/Basis_t.hpp"
 #include "types/quat/Quat_t.hpp"
 #include "types/vector3/vector3_t.hpp"
 

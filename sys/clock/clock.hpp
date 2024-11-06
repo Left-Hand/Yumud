@@ -2,7 +2,7 @@
 
 #include "clock.h"
 
-#include "sys/math/iq/iqt.hpp"
+#include "sys/math/iq/iq_t.hpp"
 #include <functional>
 namespace Sys{
 extern iq_t t;

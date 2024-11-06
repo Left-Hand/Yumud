@@ -500,4 +500,4 @@ __inline OutputStream & operator<<(OutputStream & os, const AABB_t<T> & aabb){
 }
 
 
-#include "aabb.tpp"
+#include "aabb_t.tpp"

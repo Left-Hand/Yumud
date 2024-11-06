@@ -7,7 +7,7 @@
 #endif
 
 #ifdef USE_IQ
-#include "iq/iqt.hpp"
+#include "iq/iq_t.hpp"
 #endif
 
 #if defined(USE_STDMATH)
@@ -21,7 +21,7 @@
 
 
 #else
-#include "../dsp/floatlib/floatlib.h"
+#include "dsp/floatlib/floatlib.h"
 #endif
 
 #ifdef USE_IQ
@@ -38,7 +38,7 @@ scexpr real_t pi = real_t(PI);
 scexpr real_t tau = real_t(TAU);
 
 
-__inline consteval real_t operator"" _r(long double x){
+consteval real_t operator"" _r(long double x){
     return real_t(x);
 }
 

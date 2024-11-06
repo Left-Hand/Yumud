@@ -4,7 +4,7 @@
 #include "types/vector2/vector2_t.hpp"
 #include "types/vector3/vector3_t.hpp"
 #include "types/plane/plane_t.hpp"
-#include "types/aabb/aabb.hpp"
+#include "types/aabb/aabb_t.hpp"
 #include "transform3d/transform3d_t.hpp"
 
 #define SQU(x) ((x) * (x)) 
