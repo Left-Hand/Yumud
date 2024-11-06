@@ -16,6 +16,8 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
+#include "sys/math/int/int_t.hpp"
+
 using namespace yumud::nvcv2;
 
 using Vector2i = Vector2_t<int>;
@@ -251,6 +253,9 @@ void gui_main(){
 
     Label label2{theme};
     label2.text = "你好世界";
+
+    // auto a = i8{8};
+    // auto b = a + i8{8};
  
     Slider slider{theme};
 

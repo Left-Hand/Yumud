@@ -51,11 +51,6 @@ typedef __IO uint32_t  vu32;
 typedef __IO uint16_t vu16;
 typedef __IO uint8_t  vu8;
 
-typedef uint64_t  u64;
-typedef uint32_t  u32;
-typedef uint16_t u16;
-typedef uint8_t  u8;
-
 typedef __IO int64_t  vs64;
 typedef __IO int32_t  vs32;
 typedef __IO int16_t  vs16;
@@ -108,10 +103,10 @@ typedef struct{
 /* memory mapped structure for SysTick */
 typedef struct
 {
-    __IO u32 CTLR;
-    __IO u32 SR;
-    __IO u64 CNT;
-    __IO u64 CMP;
+    vu32 CTLR;
+    vu32 SR;
+    vu64 CNT;
+    vu64 CMP;
 }SysTick_Type;
 
 
