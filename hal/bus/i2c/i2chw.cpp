@@ -6,7 +6,7 @@ using namespace yumud;
 
 void I2cHw::enableRcc(const bool en){
     switch((uint32_t)instance){
-        #ifdef HAVE_I2C1
+        #ifdef ENABLE_I2C1
         case I2C1_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C1, en);
             if(I2C1_REMAP){
@@ -15,7 +15,7 @@ void I2cHw::enableRcc(const bool en){
             break;
         #endif
 
-        #ifdef HAVE_I2C2
+        #ifdef ENABLE_I2C2
         case I2C2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_I2C2, en);
             break;
@@ -29,12 +29,12 @@ void I2cHw::enableRcc(const bool en){
 
 GpioConcept & I2cHw::getScl(const I2C_TypeDef * _instance){
     switch((uint32_t)_instance){
-        #ifdef HAVE_I2C1
+        #ifdef ENABLE_I2C1
         case I2C1_BASE:
             return I2C1_SCL_GPIO;
         #endif
 
-        #ifdef HAVE_I2C2
+        #ifdef ENABLE_I2C2
         case I2C2_BASE:
             return I2C2_SCL_GPIO;
         #endif
@@ -46,12 +46,12 @@ GpioConcept & I2cHw::getScl(const I2C_TypeDef * _instance){
 
 GpioConcept & I2cHw::getSda(const I2C_TypeDef * _instance){
     switch((uint32_t)_instance){
-        #ifdef HAVE_I2C1
+        #ifdef ENABLE_I2C1
         case I2C1_BASE:
             return I2C1_SDA_GPIO;
         #endif
 
-        #ifdef HAVE_I2C2
+        #ifdef ENABLE_I2C2
         case I2C2_BASE:
             return I2C2_SDA_GPIO;
         #endif
@@ -158,11 +158,3 @@ I2cHw::Error I2cHw::read(uint32_t & data, const bool toAck){
     data = I2C_ReceiveData(instance);
     return ErrorType::OK;
 }
-
-#if defined(HAVE_I2C1)
-I2cHw i2c1{I2C1};
-#endif
-
-#if defined(HAVE_I2C2)
-I2cHw i2c2{I2C2};
-#endif

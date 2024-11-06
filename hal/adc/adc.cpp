@@ -1,4 +1,5 @@
 #include "adc.hpp"
+#include "sys/debug/debug_inc.h"
 
 using namespace yumud;
 using namespace yumud::AdcUtils;
@@ -83,4 +84,10 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
     }
 
     ADC_BufferCmd(instance, ENABLE);
+}
+
+
+InjectedChannel & AdcPrimary::inj(const size_t index){
+    if(index == 0 or index > 4) PANIC();
+    return injected_channels[index - 1];
 }

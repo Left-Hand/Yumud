@@ -64,10 +64,10 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
 void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 & color){
     setarea_unsafe(rect);
-    interface.writePool((uint16_t)color, int(rect));
+    interface.writeMulti<RGB565>(color, size_t(rect));
 }
 
 void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
-    interface.writePixels((color_ptr), int(rect));
+    interface.writeMulti<RGB565>(color_ptr, size_t(rect));
 }

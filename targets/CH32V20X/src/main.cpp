@@ -28,7 +28,6 @@ void preinit(){
 
 
 int main(){
-
     #ifdef CH32V20X
     Sys::Misc::prework();
     // eeprom_main();
@@ -63,6 +62,7 @@ int main(){
     // eeprom_tb(uart1);
     // eeprom_main();
 
+    while(true);
     #elif defined(CH32V30X)
 
     preinit();
@@ -79,31 +79,21 @@ int main(){
     // embd_main();
     // w25qxx_main();
     // smc_main();
-    // UartHw & logger = uart2;
-    // logger.init(115200);
     // can_tb(logger, can1, true);
-    // UartHw & logger = uart8;
-    // logger.init(115200 * 4, CommMethod::Dma, CommMethod::Interrupt);
-    // logger.init(115200 * 4, CommMethod::Dma);
-// rng.init();
     // pmdc_tb();
     // gpio_tb(portC[13]);
     // dma_tb(logger, dma1Ch1);
     // dma_tb(logger, UART7_RX_DMA_CH);
     // uart_tb(logger);
 
-    // uart7.init(1000000);
-    // uart7.init(9600);
-    // uart7.init(19200);
-
-    // uart7.init(115200);
-    // uart7.init(57600);
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
     // embd_main();
-    // gui_main();
-    gxm::host_main();
+    // mpu6050_main();
+    gui_main();
+    // gxm::host_main();
     // can_tb(logger, can1);
+    while(true);
     #endif
     while(true);
 }

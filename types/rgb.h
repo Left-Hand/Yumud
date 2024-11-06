@@ -25,6 +25,20 @@ enum class ColorEnum:uint32_t{
     BLUE    = 0xFF0000,    // Blue color
     BLACK   = 0x000000     // Black color
 };
+
+enum class RgbType:uint8_t{
+    _RGB332,
+    _RGB565,
+    _RGB888,
+    _Binary,
+    _HSV888,
+    _LAB888,
+    _XYZ888,
+    _Grayscale,
+    _sGrayscale,
+};
+
+
 #endif
 
 struct RGB332;
@@ -374,32 +388,40 @@ typedef struct RGB332 RGB332;
 
 #ifdef __cplusplus
 __fast_inline constexpr Grayscale::Grayscale(const RGB565 & rgb):data(((rgb.r*77 + rgb.g*150 + rgb.b*29+128) >> 8)){;}
+
 __fast_inline constexpr RGB565::RGB565(const Grayscale & gs): b((uint8_t)gs >> 3), g((uint8_t)gs >> 2), r((uint8_t)gs >> 3){;}
+
 __fast_inline constexpr RGB565::RGB565(const Binary & bn): RGB565((bool)bn ? 0xffff : 0){;}
 
-#endif
-
-
-
-#ifdef __cplusplus
 
 class OutputStream;
 
-OutputStream & operator<<(OutputStream & os, const Grayscale & value);
 
-OutputStream & operator<<(OutputStream & os, const RGB565 & value);
+OutputStream & operator<<(OutputStream & os, const Binary & bn);
 
-OutputStream & operator<<(OutputStream & os, const RGB888 & value);
+OutputStream & operator<<(OutputStream & os, const Grayscale & gs);
 
-OutputStream & operator<<(OutputStream & os, const Binary & value);
+OutputStream & operator<<(OutputStream & os, const sGrayscale & sgs);
 
-#endif
+OutputStream & operator<<(OutputStream & os, const RGB565 & rgb);
 
+OutputStream & operator<<(OutputStream & os, const RGB888 & rgb);
 
-#ifdef __cplusplus
+OutputStream & operator<<(OutputStream & os, const LAB888 & lab);
+
+OutputStream & operator<<(OutputStream & os, const HSV888 & hsv);
 
 template<typename T>
-concept monochrome = ::std::is_same_v<T, Binary> || ::std::is_same_v<T, Grayscale>;
+concept is_monochrome = ::std::is_same_v<T, Binary> or ::std::is_same_v<T, Grayscale> or ::std::is_same_v<T, sGrayscale>;
+
+template<typename T>
+concept is_rgb = ::std::is_same_v<T, RGB24> or ::std::is_same_v<T, RGB332> or ::std::is_same_v<T, RGB565> or ::std::is_same_v<T, RGB888> ;
+
+template<typename T>
+concept is_polychrome = is_rgb<T> or ::std::is_same_v<T, LAB888> or ::std::is_same_v<T, HSV888>;
+
+template<typename T>
+concept is_color = is_monochrome<T> or is_polychrome<T> or ::std::is_same_v<T, ColorEnum>;
 
 }
 #endif

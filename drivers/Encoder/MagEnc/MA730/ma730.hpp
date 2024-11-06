@@ -81,18 +81,18 @@ protected:
     };
 
     void writeReg(const RegAddress reg_addr, uint8_t data){
-        bus_drv.write((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
+        bus_drv.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
     }
 
     void readReg(const RegAddress reg_addr, uint8_t & reg){
         uint16_t dummy;
-        bus_drv.write((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
-        bus_drv.read(dummy);
+        bus_drv.writeSingle((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
+        bus_drv.readSingle(dummy);
         reg = dummy >> 8;
     }
 
     void directRead(uint16_t & data){
-        bus_drv.read(data);
+        bus_drv.readSingle(data);
     }
 
     uint16_t getRawData();

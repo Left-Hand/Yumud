@@ -61,7 +61,7 @@ protected:
     volatile uint32_t * pin_cfg;
 
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
-        GpioConcept((_pin != Pin::None) ? CTZ((uint16_t)_pin) : -1),
+        GpioConcept((_pin != Pin::None) ? int(CTZ((uint16_t)_pin)) : -1),
         instance(_instance),
 
         #if defined(CH32V20X) || defined(CH32V30X)

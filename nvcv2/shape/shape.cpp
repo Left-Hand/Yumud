@@ -8,36 +8,40 @@ namespace yumud::nvcv2::Shape{
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;
 
-    static void clear_corners(ImageWritable<monochrome auto> & dst){
-        auto size = dst.get_size();
+    static void clear_corners(ImageWritable<is_monochrome auto> & dst){
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         scexpr uint8_t targ_v = 0;
-        for(int y = 0; y < size.y; y++) dst[{0, y}] = targ_v;
-        for(int y = 0; y < size.y; y++) dst[{size.x-1, y}] = targ_v;
-        for(int x = 0; x < size.x; x++) dst[{x, 0}] = targ_v;
-        for(int x = 0; x < size.x; x++) dst[{x, size.y-1}] = targ_v;
+        for(size_t y = 0; y < h; y++) dst[{0, y}] = targ_v;
+        for(size_t y = 0; y < h; y++) dst[{w-1u, y}] = targ_v;
+        for(size_t x = 0; x < w; x++) dst[{x, 0}] = targ_v;
+        for(size_t x = 0; x < w; x++) dst[{x, h-1u}] = targ_v;
     }
 
 
-    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[3][3], const int div){
-        auto size = dst.get_size();
-        for(int y = 1; y < size.y-1; y++){
-            for(int x = 1; x < size.x-1; x++){
-                int pixel = 0;
-                pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
-                pixel += src[x +  (y - 1) * size.x]		* core[0][1];
-                pixel += src[x + 1 + (y - 1) * size.x]	* core[0][2];
+    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const size_t core[3][3], const size_t div){
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
+        for(size_t y = 1; y < h-1u; y++){
+            for(size_t x = 1; x < w-1u; x++){
+                size_t pixel = 0;
+                pixel += src[x - 1 + (y - 1) * w]	* core[0][0];
+                pixel += src[x +  (y - 1) * w]		* core[0][1];
+                pixel += src[x + 1 + (y - 1) * w]	* core[0][2];
                 
-                pixel += src[x - 1 + (y) * size.x]		* core[1][0];
-                pixel += src[x +  (y) * size.x]			* core[1][1];
-                pixel += src[x + 1 + (y) * size.x]		* core[1][2];
+                pixel += src[x - 1 + (y) * w]		* core[1][0];
+                pixel += src[x +  (y) * w]			* core[1][1];
+                pixel += src[x + 1 + (y) * w]		* core[1][2];
                 
-                pixel += src[x - 1 + (y + 1) * size.x] 	* core[2][0];
-                pixel += src[x +  (y + 1) * size.x]		* core[2][1];
-                pixel += src[x + 1 + (y + 1) * size.x]	* core[2][2];
+                pixel += src[x - 1 + (y + 1) * w] 	* core[2][0];
+                pixel += src[x +  (y + 1) * w]		* core[2][1];
+                pixel += src[x + 1 + (y + 1) * w]	* core[2][2];
                 
                 if(div != 1) pixel /= div;
 
-                dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+                dst[x + y * w] = Grayscale(CLAMP(ABS(pixel), 0, 255));
             }
         }
     }
@@ -50,9 +54,11 @@ namespace yumud::nvcv2::Shape{
 
 
     void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
-        auto size = dst.get_size();
-        scexpr auto core_radius = 2;
-        scexpr auto core_sum = 256;
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
+        scexpr auto core_radius = 2u;
+        scexpr auto core_sum = 256u;
     
         scexpr uint8_t core[5][5] ={
             {1,     4,      6,      4,      1},
@@ -63,12 +69,12 @@ namespace yumud::nvcv2::Shape{
         };
 
         clear_corners(dst);
-        for(int y = core_radius; y < size.y - core_radius; ++y){
-            for(int x = core_radius; x < size.x - core_radius; ++x){
+        for(size_t y = core_radius; y < h - core_radius; ++y){
+            for(size_t x = core_radius; x < w - core_radius; ++x){
                 uint32_t sum = 0;
 
-                for(int dy = -core_radius; dy <= core_radius; ++dy){
-                    for(int dx = -core_radius; dx <= core_radius; ++dx){
+                for(size_t dy = -core_radius; dy <= core_radius; ++dy){
+                    for(size_t dx = -core_radius; dx <= core_radius; ++dx){
                         sum += src[Vector2i{x + dx, y + dy}] * core[dy + core_radius][dx + core_radius];
                     }
                 }
@@ -140,96 +146,105 @@ namespace yumud::nvcv2::Shape{
         // return current_point;
     }
     void sobel_xy(Image<Grayscale> & dst, const ImageReadable<Grayscale> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         {
+
             const auto & core = Cores::sobel_x;
-            for(int y = 1; y < size.y-1; y++){
-                for(int x = 1; x < size.x-1; x++){
-                    int pixel = 0;
-                    pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
-                    pixel += src[x +  (y - 1) * size.x]		* core[0][1];
-                    pixel += src[x + 1 + (y - 1) * size.x]	* core[0][2];
+            for(size_t y = 1; y < h-1u; y++){
+                for(size_t x = 1; x < w-1u; x++){
+                    size_t pixel = 0;
+                    pixel += src[x - 1 + (y - 1) * w]	* core[0][0];
+                    pixel += src[x +  (y - 1) * w]		* core[0][1];
+                    pixel += src[x + 1 + (y - 1) * w]	* core[0][2];
                     
-                    pixel += src[x - 1 + (y) * size.x]		* core[1][0];
-                    pixel += src[x +  (y) * size.x]			* core[1][1];
-                    pixel += src[x + 1 + (y) * size.x]		* core[1][2];
+                    pixel += src[x - 1 + (y) * w]		* core[1][0];
+                    pixel += src[x +  (y) * w]			* core[1][1];
+                    pixel += src[x + 1 + (y) * w]		* core[1][2];
                     
-                    pixel += src[x - 1 + (y + 1) * size.x] 	* core[2][0];
-                    pixel += src[x +  (y + 1) * size.x]		* core[2][1];
-                    pixel += src[x + 1 + (y + 1) * size.x]	* core[2][2];
+                    pixel += src[x - 1 + (y + 1) * w] 	* core[2][0];
+                    pixel += src[x +  (y + 1) * w]		* core[2][1];
+                    pixel += src[x + 1 + (y + 1) * w]	* core[2][2];
                     
-                    dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+                    dst[x + y * w] = Grayscale(CLAMP(ABS(pixel), 0, 255));
                 }
             }
         }
         {
             const auto & core = Cores::sobel_y;
-            for(int y = 1; y < size.y-1; y++){
-                for(int x = 1; x < size.x-1; x++){
-                    int pixel = 0;
-                    pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
-                    pixel += src[x +  (y - 1) * size.x]		* core[0][1];
-                    pixel += src[x + 1 + (y - 1) * size.x]	* core[0][2];
+            for(size_t y = 1; y < h-1u; y++){
+                for(size_t x = 1; x < w-1u; x++){
+                    size_t pixel = 0;
+                    pixel += src[x - 1 + (y - 1) * w]	* core[0][0];
+                    pixel += src[x +  (y - 1) * w]		* core[0][1];
+                    pixel += src[x + 1 + (y - 1) * w]	* core[0][2];
                     
-                    pixel += src[x - 1 + (y) * size.x]		* core[1][0];
-                    pixel += src[x +  (y) * size.x]			* core[1][1];
-                    pixel += src[x + 1 + (y) * size.x]		* core[1][2];
+                    pixel += src[x - 1 + (y) * w]		* core[1][0];
+                    pixel += src[x +  (y) * w]			* core[1][1];
+                    pixel += src[x + 1 + (y) * w]		* core[1][2];
                     
-                    pixel += src[x - 1 + (y + 1) * size.x] 	* core[2][0];
-                    pixel += src[x +  (y + 1) * size.x]		* core[2][1];
-                    pixel += src[x + 1 + (y + 1) * size.x]	* core[2][2];
+                    pixel += src[x - 1 + (y + 1) * w] 	* core[2][0];
+                    pixel += src[x +  (y + 1) * w]		* core[2][1];
+                    pixel += src[x + 1 + (y + 1) * w]	* core[2][2];
                     
-                    dst[x + y * size.x] = std::max((uint8_t)dst[x + y *size.x], (uint8_t)CLAMP(ABS(pixel), 0, 255));
+                    dst[x + y * w] = std::max((uint8_t)dst[x + y *w], (uint8_t)CLAMP(ABS(pixel), 0, 255));
                 }
             }
         }
     }
 
-    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const int core[2][2]){
-        auto size = dst.get_size();
-        for(int y = 1; y < size.y-1; y++){
-            for(int x = 1; x < size.x-1; x++){
-                int pixel = 0;
+    void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const size_t core[2][2]){
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
+        for(size_t y = 1; y < h-1u; y++){
+            for(size_t x = 1; x < w-1u; x++){
+                size_t pixel = 0;
 
-                pixel += src[x - 1 + (y - 1) * size.x]	* core[0][0];
-                pixel += src[x +  (y - 1) * size.x]		* core[0][1];
+                pixel += src[x - 1 + (y - 1) * w]	* core[0][0];
+                pixel += src[x +  (y - 1) * w]		* core[0][1];
                 
-                pixel += src[x - 1 + (y) * size.x]		* core[1][0];
-                pixel += src[x +  (y) * size.x]			* core[1][1];
+                pixel += src[x - 1 + (y) * w]		* core[1][0];
+                pixel += src[x +  (y) * w]			* core[1][1];
                 
-                dst[x + y * size.x] = Grayscale(CLAMP(ABS(pixel), 0, 255));
+                dst[x + y * w] = Grayscale(CLAMP(ABS(pixel), 0, 255));
             }
         }
     }
 
     void dilate(Image<Binary> & dst, const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             dilate(dst, temp);
             return;
         }
 
-        for(int y = 1; y < size.y-1; y++){
-            for(int x = 1; x < size.x-1; x++){
+        for(size_t y = 1; y < h-1u; y++){
+            for(size_t x = 1; x < w-1u; x++){
                 bool pixel = false;
-                pixel |= src[x - 1 + (y - 1) * size.x];
-                pixel |= src[x +  (y - 1) * size.x];
-                pixel |= src[x + 1 + (y - 1) * size.x];
-                pixel |= src[x - 1 + (y) * size.x];
-                pixel |= src[x +  (y) * size.x];
-                pixel |= src[x + 1 + (y) * size.x];
-                pixel |= src[x - 1 + (y + 1) * size.x];
-                pixel |= src[x +  (y + 1) * size.x];
-                pixel |= src[x + 1 + (y + 1) * size.x];
+                pixel |= src[x - 1 + (y - 1) * w];
+                pixel |= src[x +  (y - 1) * w];
+                pixel |= src[x + 1 + (y - 1) * w];
+                pixel |= src[x - 1 + (y) * w];
+                pixel |= src[x +  (y) * w];
+                pixel |= src[x + 1 + (y) * w];
+                pixel |= src[x - 1 + (y + 1) * w];
+                pixel |= src[x +  (y + 1) * w];
+                pixel |= src[x + 1 + (y + 1) * w];
                 
-                dst[x + y * size.x] = pixel;
+                dst[x + y * w] = pixel;
             }
         }
     }
 
     void dilate_xy(Image<Binary> & dst, const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             dilate_xy(dst, temp);
@@ -237,12 +252,12 @@ namespace yumud::nvcv2::Shape{
         }
 
         {   
-            const int y = 0;
-            auto * p_dst = (uint8_t *)&dst[1];
-            auto * p_dst_end = (uint8_t *)&dst[size.x - 2];
+            const size_t y = 0;
+            auto * p_dst = reinterpret_cast<uint8_t *>(&dst[1]);
+            auto * p_dst_end = reinterpret_cast<uint8_t *>(&dst[w - 2]);
 
-            auto * p_src = (uint8_t *)&src[y * size.x + 1];
-            auto * p_src_next = (uint8_t *)&src[(y+1) * size.x + 1];
+            auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
+            auto * p_src_next = reinterpret_cast<const uint8_t *>(&src[(y+1) * w + 1]);
             while(p_dst < p_dst_end){
                 *p_dst = *(p_src - 1) | *(p_src) | *(p_src + 1) | *(p_src_next); 
 
@@ -252,12 +267,12 @@ namespace yumud::nvcv2::Shape{
             }
         }
 
-        for(int y = 1; y < size.y-1; y++){
-            auto * p_dst = (uint8_t *)&dst[y * size.x + 1];
-            auto * p_src_last = (uint8_t *)&src[(y-1) * size.x + 1];
-            auto * p_src = (uint8_t *)&src[y * size.x + 1];
-            auto * p_src_next = (uint8_t *)&src[(y+1) * size.x + 1];
-            for(int x = 1; x < size.x-1; x++){
+        for(size_t y = 1; y < h-1u; y++){
+            auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
+            auto * p_src_last = reinterpret_cast<const uint8_t *>(&src[(y-1) * w + 1]);
+            auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
+            auto * p_src_next = reinterpret_cast<const uint8_t *>(&src[(y+1) * w + 1]);
+            for(size_t x = 1; x < w-1u; x++){
                 bool pixel = *(p_src - 1) | *(p_src) | *(p_src + 1); 
                 if(!pixel){
                     *p_dst = false;
@@ -275,12 +290,12 @@ namespace yumud::nvcv2::Shape{
         }
 
         {   
-            const int y = size.y - 1;
-            auto * p_dst = (uint8_t *)&dst[y * size.x + 1];
-            auto * p_dst_end = (uint8_t *)&dst[y * size.x + (size.x - 2)];
+            const size_t y = h - 1;
+            auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
+            auto * p_dst_end = reinterpret_cast<uint8_t *>(&dst[y * w + (w - 2)]);
 
-            auto * p_src_last = (uint8_t *)&src[(y-1) * size.x + 1];
-            auto * p_src = (uint8_t *)&src[y * size.x + 1];
+            auto * p_src_last = reinterpret_cast<const uint8_t *>(&src[(y-1) * w + 1]);
+            auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
 
             while(p_dst != p_dst_end){
                 *p_dst = *(p_src - 1) | *(p_src) | *(p_src + 1) | *(p_src_last); 
@@ -293,70 +308,76 @@ namespace yumud::nvcv2::Shape{
     }
 
     void dilate_y(Image<Binary> & dst, const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             dilate_y(dst, temp);
             return;
         }
 
-        for(int y = 1; y < size.y-1; y++){
-            for(int x = 0; x < size.x; x++){
+        for(size_t y = 1; y < h-1u; y++){
+            for(size_t x = 0; x < w; x++){
                 bool pixel = false;
 
-                pixel |= src[x +  (y - 1) * size.x];
-                pixel |= src[x +  (y) * size.x];
-                pixel |= src[x +  (y + 1) * size.x];
+                pixel |= src[x +  (y - 1) * w];
+                pixel |= src[x +  (y) * w];
+                pixel |= src[x +  (y + 1) * w];
                 
-                dst[x + y * size.x] = pixel;
+                dst[x + y * w] = pixel;
             }
         }
     }
 
     void erosion(Image<Binary> & dst, const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             erosion(dst, temp);
             return;
         }
 
-        for(int y = 1; y < size.y-1; y++){
-            // auto * p_src = (uint8_t *)&src[y * size.x + 1];
-            // auto * p_dst_last = (uint8_t *)&dst[(y-1) * size.x + 1];
-            // auto * p_dst = (uint8_t *)&dst[y * size.x + 1];
-            // auto * p_dst_next = (uint8_t *)&dst[(y+1) * size.x + 1];
+        for(size_t y = 1; y < h-1u; y++){
+            // auto * p_src = reinterpret_cast<uint8_t *>&src[y * w + 1];
+            // auto * p_dst_last = reinterpret_cast<uint8_t *>&dst[(y-1) * w + 1];
+            // auto * p_dst = reinterpret_cast<uint8_t *>&dst[y * w + 1];
+            // auto * p_dst_next = reinterpret_cast<uint8_t *>&dst[(y+1) * w + 1];
             
-            for(int x = 1; x < size.x-1; x++){
+            for(size_t x = 1; x < w-1u; x++){
                 bool pixel = true;
-                pixel &= src[x - 1 + (y - 1) * size.x];
-                pixel &= src[x +  (y - 1) * size.x];
-                pixel &= src[x + 1 + (y - 1) * size.x];
-                pixel &= src[x - 1 + (y) * size.x];
-                pixel &= src[x +  (y) * size.x];
-                pixel &= src[x + 1 + (y) * size.x];
-                pixel &= src[x - 1 + (y + 1) * size.x];
-                pixel &= src[x +  (y + 1) * size.x];
-                pixel &= src[x + 1 + (y + 1) * size.x];
+                pixel &= src[x - 1 + (y - 1) * w];
+                pixel &= src[x +  (y - 1) * w];
+                pixel &= src[x + 1 + (y - 1) * w];
+                pixel &= src[x - 1 + (y) * w];
+                pixel &= src[x +  (y) * w];
+                pixel &= src[x + 1 + (y) * w];
+                pixel &= src[x - 1 + (y + 1) * w];
+                pixel &= src[x +  (y + 1) * w];
+                pixel &= src[x + 1 + (y + 1) * w];
                 
-                dst[x + y * size.x] = pixel;
+                dst[x + y * w] = pixel;
             }
         }
     }
 
-    void erosion_x(Image<Binary> & dst, Image<Binary> & src){
-        auto size = dst.get_size();
+    void erosion_x(Image<Binary> & dst, const Image<Binary> & src){
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             erosion_x(dst, temp);
             return;
         }
 
-        for(int y = 0; y < size.y; y++){
-            auto * p_src = (uint8_t *)&src[y * size.x + 1];
-            auto * p_dst = (uint8_t *)&dst[y * size.x + 1];
+        for(size_t y = 0; y < h; y++){
+            auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
+            auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
             uint8_t last_two = (*p_src - 1) & (*p_src);
-            for (int x = 1; x < size.x - 1; ++x) {
+            for (size_t x = 1; x < w - 1; ++x) {
                 *p_dst = last_two & (*(p_src + 1));
                 last_two = (*p_src) & (*(p_src + 1));
 
@@ -368,19 +389,21 @@ namespace yumud::nvcv2::Shape{
         }
     }
 
-    void dilate_x(Image<Binary> & dst, Image<Binary> & src){
-        auto size = dst.get_size();
+    void dilate_x(Image<Binary> & dst, const Image<Binary> & src){
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             dilate_x(dst, temp);
             return;
         }
 
-        for(int y = 0; y < size.y; y++){
-            auto * p_src = (uint8_t *)&src[y * size.x + 1];
-            auto * p_dst = (uint8_t *)&dst[y * size.x + 1];
+        for(size_t y = 0; y < h; y++){
+            auto * p_src = reinterpret_cast<const uint8_t *>(&src[y * w + 1]);
+            auto * p_dst = reinterpret_cast<uint8_t *>(&dst[y * w + 1]);
             uint8_t last_two = (*p_src - 1) & (*p_src);
-            for (int x = 1; x < size.x - 1; ++x) {
+            for (size_t x = 1; x < w - 1; ++x) {
                 *p_dst = last_two | (*(p_src + 1));
                 last_two = (*p_src) | (*(p_src + 1));
 
@@ -391,49 +414,53 @@ namespace yumud::nvcv2::Shape{
     }
 
     void erosion_y(Image<Binary> & dst, const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             erosion_y(dst, temp);
             return;
         }
 
-        for(int y = 1; y < size.y-1; y++){
-            for(int x = 0; x < size.x; x++){
+        for(size_t y = 1; y < h-1u; y++){
+            for(size_t x = 0; x < w; x++){
                 bool pixel = true;
 
-                pixel &= src[x +  (y - 1) * size.x];
-                pixel &= src[x +  (y) * size.x];
-                pixel &= src[x +  (y + 1) * size.x];
+                pixel &= src[x +  (y - 1) * w];
+                pixel &= src[x +  (y) * w];
+                pixel &= src[x +  (y + 1) * w];
                 
-                dst[x + y * size.x] = pixel;
+                dst[x + y * w] = pixel;
             }
         }
     }
 
     void erosion_xy(Image<Binary> & dst, const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             erosion_xy(dst, temp);
             return;
         }
 
-        for(int y = 0; y < size.y; y++){
-            for(int x = 1; x < size.x-1; x++){
+        for(size_t y = 0; y < h; y++){
+            for(size_t x = 1; x < w-1u; x++){
                 bool pixel = true;
-                pixel &= src[x +  MAX((y - 1), 0) * size.x];
-                pixel &= src[x+  (y) * size.x];
-                pixel &= src[x +  (y) * size.x];
-                pixel &= src[x +  (y) * size.x];
-                pixel &= src[x +  MIN((y + 1), size.y-1) * size.x];
+                pixel &= src[x +  MAX((y - 1), 0) * w];
+                pixel &= src[x+  (y) * w];
+                pixel &= src[x +  (y) * w];
+                pixel &= src[x +  (y) * w];
+                pixel &= src[x +  MIN((y + 1), h-1u) * w];
                 
-                dst[x + y * size.x] = pixel;
+                dst[x + y * w] = pixel;
             }
         }
     }
 
-    auto x4(const ImageReadable<Grayscale> & src, const int m){
+    auto x4(const ImageReadable<Grayscale> & src, const size_t m){
         Image<Grayscale> dst(src.get_size() / m);
         x4(dst, src, m);
         return dst;
@@ -443,12 +470,15 @@ namespace yumud::nvcv2::Shape{
     Image<Grayscale> x2(const Image<Grayscale> & src){
         Image<Grayscale> dst(src.get_size() / 2);
         const auto size = dst.get_size();
-        for(int y = 0; y < size.y; y++){
-            for(int x = 0; x < size.x; x++){
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
+
+        for(size_t y = 0; y < h; y++){
+            for(size_t x = 0; x < w; x++){
                 uint16_t sum = 0;
 
-                for(int j = 0; j < 2; j++){
-                    for(int i = 0; i < 2; i++){
+                for(size_t j = 0; j < 2; j++){
+                    for(size_t i = 0; i < 2; i++){
                         sum += src[{(x << 1) + i,(y << 1) + j}];
                     }
                 }
@@ -462,18 +492,20 @@ namespace yumud::nvcv2::Shape{
     }
 
     void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             anti_pepper_x(dst, temp);
             return;
         }
 
-        for(int y = 0; y < size.y; y++){
-            const auto * p_src = &src[y * size.x + 1];
-            auto * p_dst = &dst[y * size.x + 1];
+        for(size_t y = 0; y < h; y++){
+            const auto * p_src = &src[y * w + 1];
+            auto * p_dst = &dst[y * w + 1];
             uint8_t last_two = false;
-            for (int x = 1; x < size.x - 2; ++x) {
+            for (size_t x = 1; x < w - 2; ++x) {
                 uint8_t next = bool(*(p_src + 1));
                 *p_dst = ((last_two + next) > 1);
                 last_two = uint8_t(bool((*p_src))) + next;
@@ -485,7 +517,9 @@ namespace yumud::nvcv2::Shape{
     }
 
     void anti_pepper_y(Image<Binary> & dst,const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
 
         if(src == dst){
             auto temp = src.clone();
@@ -493,34 +527,36 @@ namespace yumud::nvcv2::Shape{
             return;
         }
 
-        for(int x = 0; x < size.x - 1; ++x){
+        for(size_t x = 0; x < w - 1; ++x){
             auto * p_src = &src[x];
             auto * p_dst = &dst[x];
             uint8_t last_two = false;
-            for (int y = 1; y < size.y - 2; ++y) {
+            for (size_t y = 1; y < h - 2; ++y) {
                 uint8_t next = bool(*(p_src + 1));
                 *p_dst = ((last_two + next) > 1);
                 last_two = uint8_t(bool((*p_src))) + next;
 
-                p_src += size.x;
-                p_dst += size.x;
+                p_src += w;
+                p_dst += w;
             }
         }
     }
 
     void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         if(src == dst){
             auto temp = src.clone();
             anti_pepper(dst, temp);
             return;
         }
 
-        for(int y = 0; y < size.y; y++){
-            auto * p_src = &src[y * size.x + 1];
-            auto * p_dst = &dst[y * size.x + 1];
+        for(size_t y = 0; y < h; y++){
+            auto * p_src = &src[y * w + 1];
+            auto * p_dst = &dst[y * w + 1];
             uint8_t last_two = true;
-            for (int x = 1; x < size.x - 1; ++x) {
+            for (size_t x = 1; x < w - 1; ++x) {
                 uint8_t next = bool(*(p_src + 1));
                 *p_dst = Binary((last_two + next) > 1);
                 last_two = uint8_t(bool((*p_src))) + next;
@@ -532,16 +568,19 @@ namespace yumud::nvcv2::Shape{
     }
 
 
-    void XN(Image<Binary> dst, const Image<Binary> & src, const int & m, const real_t percent){
-        auto size = src.get_size();
-        int n = int(m * m * percent);
+    void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real_t percent){
+        const auto size = src.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
 
-        for(int y = 0; y < size.y / m; y++){
-            for(int x = 0; x < size.x / m; x++){
+        size_t n = int(percent * m * m);
+
+        for(size_t y = 0; y < h / m; y++){
+            for(size_t x = 0; x < w / m; x++){
                 Vector2i base = Vector2i(x, y)* m;
-                int pixel = 0;
-                for(int j = 0; j < m; j++){
-                    for(int i = 0; i < m; i++){
+                size_t pixel = 0;
+                for(size_t j = 0; j < m; j++){
+                    for(size_t i = 0; i < m; i++){
                         Vector2i src_pos = base + Vector2i(i, j);
                         pixel += bool(src[src_pos]);
                     }
@@ -561,7 +600,9 @@ namespace yumud::nvcv2::Shape{
             return;
         }
 
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         auto temp = src.clone();
         dst.clone(src);
         
@@ -570,10 +611,10 @@ namespace yumud::nvcv2::Shape{
 
             bool is_end = true;
 
-            for (int y = 0; y < size.y; ++y) {
-                for (int x = 0; x < size.x; ++x) {
+            for (size_t y = 0; y < h; ++y) {
+                for (size_t x = 0; x < w; ++x) {
                     const Vector2i p{x,y};
-                    // const Binary * p = &temp[x + y * size.x];
+                    // const Binary * p = &temp[x + y * w];
                     
                     if (temp[p] == 0) continue;
                     
@@ -587,16 +628,16 @@ namespace yumud::nvcv2::Shape{
                     Binary p8 = temp[p + Vector2i{-1, -1}];
 
 
-                    int A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
+                    size_t A  = (p2 == 0 && p3 == 1) + (p3 == 0 && p4 == 1) +
                             (p4 == 0 && p5 == 1) + (p5 == 0 && p6 == 1) +
                             (p6 == 0 && p7 == 1) + (p7 == 0 && p8 == 1) +
                             (p8 == 0 && p1 == 1) + (p1 == 0 && p2 == 1);
-                    int B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
-                    int m1 = (iter % 2 == 0) ? (p1 * p3 * p5) : (p1 * p3 * p7);
-                    int m2 = (iter % 2 == 0) ? (p3 * p5 * p7) : (p1 * p5 * p7);
+                    size_t B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
+                    size_t m1 = (iter % 2 == 0) ? (p1 * p3 * p5) : (p1 * p3 * p7);
+                    size_t m2 = (iter % 2 == 0) ? (p3 * p5 * p7) : (p1 * p5 * p7);
                     
                     if (A == 1 && (B >= 2 && B <= 6) && m1 == 0 && m2 == 0){
-                        dst[x + y * size.x] = false;
+                        dst[x + y * w] = false;
                         is_end = false;
                     }
                 }
@@ -619,15 +660,17 @@ namespace yumud::nvcv2::Shape{
             return;
         }
 
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
         auto temp = src.clone();
         dst.clone(src);
         
         uint8_t iter = 0;
         while (true) {
             bool is_end = true;
-            for (int y = 1; y < size.y - 1; ++y) {
-                for (int x = 1; x < size.x - 1; ++x) {
+            for (size_t y = 1; y < h - 1; ++y) {
+                for (size_t x = 1; x < w - 1; ++x) {
                     if(iter % 2 == 0){
                         if((x + y) % 2 != 0) continue;
                     }else{
@@ -647,19 +690,19 @@ namespace yumud::nvcv2::Shape{
                     bool p8 = temp[base + Vector2i(-1, 0)];
                     bool p9 = temp[base + Vector2i(-1, -1)];
 
-                    int B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
-                    int C = ((!p2) && (p3 || p4)) + ((!p4) && (p5 || p6)) + ((!p6) && (p7 || p8)) + ((!p8) && (p9 || p2));
-                    int m1 = (iter % 2 == 0) ? (p2 * p4 * p6) : (p2 * p4 * p8);
-                    int m2 = (iter % 2 == 0) ? (p4 * p6 * p8) : (p2 * p6 * p8);
+                    size_t B  = p1 + p2 + p3 + p4 + p5 + p6 + p7 + p8;
+                    size_t C = ((!p2) && (p3 || p4)) + ((!p4) && (p5 || p6)) + ((!p6) && (p7 || p8)) + ((!p8) && (p9 || p2));
+                    size_t m1 = (iter % 2 == 0) ? (p2 * p4 * p6) : (p2 * p4 * p8);
+                    size_t m2 = (iter % 2 == 0) ? (p4 * p6 * p8) : (p2 * p6 * p8);
                     
                     if (C == 1 && (B >= 2 && B <= 7) && m1 == 0 && m2 == 0){
-                        dst[x + y * size.x] = false;
+                        dst[x + y * w] = false;
                         is_end = false;
                     }
                 }
             }
             iter++;
-            // memcpy(temp, dst, size.x * size.y * sizeof(Binary));
+            // memcpy(temp, dst, w * h * sizeof(Binary));
             temp.clone(dst);
             if (is_end) break;
         }
@@ -668,19 +711,21 @@ namespace yumud::nvcv2::Shape{
 
     }
 
-    void convo_roberts_x(Image<Grayscale> & dst, Image<Grayscale> & src){
+    void convo_roberts_x(Image<Grayscale> & dst, const Image<Grayscale> & src){
         if(src == dst){
             auto temp = src.clone();
             convo_roberts_x(dst, temp);
             return;
         }
 
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
     
-        for (int y = 0; y < size.y; ++y) {
-            auto * p_src = &src[y * size.x];
-            auto * p_dst = &dst[y * size.x];
-            for (int x = 0; x < size.x - 1; ++x) {
+        for (size_t y = 0; y < h; ++y) {
+            const auto * p_src = &src[y * w];
+            auto * p_dst = &dst[y * w];
+            for (size_t x = 0; x < w - 1; ++x) {
                 *p_dst = ABS(*p_src - *(p_src + 1));
                 p_src++;
                 p_dst++; 
@@ -688,7 +733,7 @@ namespace yumud::nvcv2::Shape{
         }
     }
 
-    void convo_roberts_xy(Image<Grayscale> & dst, Image<Grayscale> & src){
+    void convo_roberts_xy(Image<Grayscale> & dst, const Image<Grayscale> & src){
         if(src == dst){
             auto temp = src.space();
             convo_roberts_xy(temp, src);
@@ -696,13 +741,15 @@ namespace yumud::nvcv2::Shape{
             return;
         }
 
-        auto size = dst.get_size();
+        const auto size = dst.get_size();
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
     
-        for (int y = 0; y < size.y - 1; ++y) {
-            auto * p_src = &src[y * size.x];
-            auto * p_src2 = &src[(y + 1) * size.x];
-            auto * p_dst = &dst[y * size.x];
-            for (int x = 0; x < size.x - 1; ++x) {
+        for (size_t y = 0; y < h - 1; ++y) {
+            const auto * p_src = &src[y * w];
+            const auto * p_src2 = &src[(y + 1) * w];
+            auto * p_dst = &dst[y * w];
+            for (size_t x = 0; x < w - 1; ++x) {
                 *p_dst = MAX(ABS(*p_src - *(p_src + 1)), ABS(*p_src - *(p_src2))) ;
                 p_src++;
                 p_dst++; 
@@ -711,10 +758,10 @@ namespace yumud::nvcv2::Shape{
         }
 
         {
-            int y = size.y - 1;
-            auto * p_src = &src[y * size.x];
-            auto * p_dst = &dst[y * size.x];
-            for(int x = 0; x < size.x - 1; ++x) {
+            size_t y = h - 1;
+            auto * p_src = &src[y * w];
+            auto * p_dst = &dst[y * w];
+            for(size_t x = 0; x < w - 1; ++x) {
                 *p_dst = ABS(*p_src - *(p_src + 1));
                 p_src++;
                 p_dst++; 
@@ -756,11 +803,11 @@ namespace yumud::nvcv2::Shape{
 
         auto gm = new gvec_t[int(roi)];
 
-        const int w = roi.w;
+        const auto w = size_t(roi.w);
 
         #define FAST_SQUARE(x) (x * x)
         
-        scexpr uint shift_bits = 9;
+        scexpr size_t shift_bits = 9;
         
         const uint8_t low_squ = FAST_SQUARE(low_thresh) >> shift_bits;
         const uint8_t high_squ = FAST_SQUARE(high_thresh) >> shift_bits;
@@ -768,8 +815,8 @@ namespace yumud::nvcv2::Shape{
 
         //2. Finding Image Gradients
         {
-            for (int y = roi.y + 1; y < roi.y + roi.h - 1; y++) {
-                for (int x = roi.x + 1; x < roi.x + roi.w - 1; x++) {
+            for (size_t y = size_t(roi.y) + 1; y < size_t(roi.y) + size_t(roi.h) - 1u; y++) {
+                for (size_t x = size_t(roi.x) + 1; x < size_t(roi.x) + size_t(roi.w) - 1u; x++) {
                     int16_t vx = 0, vy = 0;
 
                     //  1   0   -1
@@ -810,10 +857,10 @@ namespace yumud::nvcv2::Shape{
 
         clear_corners(dst);
 
-        for (int gy = 1; gy < roi.h-1; gy++) {
+        for (size_t gy = 1; gy < size_t(roi.h)-1; gy++) {
             gvec_t * vc = &gm[gy * w];
             auto * dp = &dst[gy * w];
-            for (int gx = 1; gx < roi.w-1; gx++) {
+            for (size_t gx = 1; gx < size_t(roi.w)-1u; gx++) {
                 vc++;
                 dp++;
 
@@ -826,14 +873,14 @@ namespace yumud::nvcv2::Shape{
                 } else if (vc->g >= high_squ){
                     *dp = 255;
                 } else{
-                    if( gm[(gy - 1) * roi.w + (gx - 1)].g >= high_squ ||
-                        gm[(gy - 1) * roi.w + (gx + 0)].g >= high_squ ||
-                        gm[(gy - 1) * roi.w + (gx + 1)].g >= high_squ ||
-                        gm[(gy + 0) * roi.w + (gx - 1)].g >= high_squ ||
-                        gm[(gy + 0) * roi.w + (gx + 1)].g >= high_squ ||
-                        gm[(gy + 1) * roi.w + (gx - 1)].g >= high_squ ||
-                        gm[(gy + 1) * roi.w + (gx + 0)].g >= high_squ ||
-                        gm[(gy + 1) * roi.w + (gx + 1)].g >= high_squ)
+                    if( gm[(gy - 1) * size_t(roi.w) + (gx - 1)].g >= high_squ ||
+                        gm[(gy - 1) * size_t(roi.w) + (gx + 0)].g >= high_squ ||
+                        gm[(gy - 1) * size_t(roi.w) + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 0) * size_t(roi.w) + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 0) * size_t(roi.w) + (gx + 1)].g >= high_squ ||
+                        gm[(gy + 1) * size_t(roi.w) + (gx - 1)].g >= high_squ ||
+                        gm[(gy + 1) * size_t(roi.w) + (gx + 0)].g >= high_squ ||
+                        gm[(gy + 1) * size_t(roi.w) + (gx + 1)].g >= high_squ)
                     {
 
                         *dp = 255;
@@ -848,26 +895,26 @@ namespace yumud::nvcv2::Shape{
                     switch (Direction(vc->t)) {
                         default:
                         case Direction::R: {
-                            va = &gm[(gy + 0) * roi.w + (gx - 1)];
-                            vb = &gm[(gy + 0) * roi.w + (gx + 1)];
+                            va = &gm[(gy + 0) * size_t(roi.w) + (gx - 1)];
+                            vb = &gm[(gy + 0) * size_t(roi.w) + (gx + 1)];
                             break;
                         }
 
                         case Direction::UR: {
-                            va = &gm[(gy + 1) * roi.w + (gx + 1)];
-                            vb = &gm[(gy - 1) * roi.w + (gx - 1)];
+                            va = &gm[(gy + 1) * size_t(roi.w) + (gx + 1)];
+                            vb = &gm[(gy - 1) * size_t(roi.w) + (gx - 1)];
                             break;
                         }
 
                         case Direction::U: {
-                            va = &gm[(gy + 1) * roi.w + (gx + 0)];
-                            vb = &gm[(gy - 1) * roi.w + (gx + 0)];
+                            va = &gm[(gy + 1) * size_t(roi.w) + (gx + 0)];
+                            vb = &gm[(gy - 1) * size_t(roi.w) + (gx + 0)];
                             break;
                         }
 
                         case Direction::UL: {
-                            va = &gm[(gy + 1) * roi.w + (gx - 1)];
-                            vb = &gm[(gy - 1) * roi.w + (gx + 1)];
+                            va = &gm[(gy + 1) * size_t(roi.w) + (gx - 1)];
+                            vb = &gm[(gy - 1) * size_t(roi.w) + (gx + 1)];
                             break;
                         }
                     }
@@ -888,17 +935,17 @@ namespace yumud::nvcv2::Shape{
 
         using vec_t = Vector2_t<int8_t>;
         #define FAST_SQUARE(x) (x * x)
-        scexpr uint shift_bits = 3;
+        scexpr size_t shift_bits = 3;
     
         auto roi = src.get_view();
         auto gm = new vec_t[int(roi)];
         
-        const int w = roi.w;
+        const auto w = size_t(roi.w);
 
         //2. Finding Image Gradients
         {
-            for (int y = roi.y + 1; y < roi.y + roi.h - 1; y++) {
-                for (int x = roi.x + 1; x < roi.x + roi.w - 1; x++) {
+            for (size_t y = size_t(roi.y) + 1; y < size_t(roi.y) + size_t(roi.h) - 1u; y++) {
+                for (size_t x = size_t(roi.x) + 1; x < size_t(roi.x) + size_t(roi.w) - 1u; x++) {
                     int16_t vx = 0, vy = 0;
 
                     //  1   0   -1
@@ -932,15 +979,15 @@ namespace yumud::nvcv2::Shape{
 
         clear_corners(dst);
 
-        scexpr int wid = 4;
-        scexpr int scale = 127;
+        scexpr size_t wid = 4;
+        scexpr size_t scale = 127;
 
         using template_t = std::array<std::array<vec_t, wid * 2 + 1>, wid * 2 + 1>;
 
         auto generate_template = []() -> template_t{
             template_t ret;
-            for(int y = -wid; y <= wid; y++){
-                for(int x = -wid; x <= wid; x++){
+            for(size_t y = -wid; y <= wid; y++){
+                for(size_t x = -wid; x <= wid; x++){
                     real_t rad = atan2(real_t(y), real_t(x));
                     vec_t vec = vec_t{cos(rad) * scale, sin(rad) * scale};
                     // vec_t vec = vec_t{scale, 0};
@@ -952,20 +999,20 @@ namespace yumud::nvcv2::Shape{
 
         auto temp = generate_template();
               
-        for (int gy = wid; gy < roi.h - wid; gy++) {
+        for (size_t gy = wid; gy < size_t(roi.h) - wid; gy++) {
             vec_t * vc = &gm[gy * w];
             auto * dp = &dst[gy * w];
-            for (int gx = wid; gx < roi.w - wid; gx++) {
+            for (size_t gx = wid; gx < size_t(roi.w) - wid; gx++) {
                 vc++;
                 dp++;
 
                 // *dp = fast_sqrt_i<uint16_t>((vc->x * vc->x + vc->y * vc->y));
 
-                // int x_sum = 0;
-                // int y_sum = 0;
-                int sum = 0;
-                for(int y = -wid; y <= wid; y++){
-                    for(int x = -wid; x <= wid; x++){
+                // size_t x_sum = 0;
+                // size_t y_sum = 0;
+                size_t sum = 0;
+                for(size_t y = -wid; y <= wid; y++){
+                    for(size_t x = -wid; x <= wid; x++){
                         const auto & vec = gm[(gy + y) * w + (gx + x)];
                         const auto & tvec = temp[y + wid][x + wid];
                         // x_sum += ABS(vec.x * tvec.x);
@@ -975,10 +1022,10 @@ namespace yumud::nvcv2::Shape{
                         sum += vec.x * tvec.x + vec.y * tvec.y;
                     }
                 }
-                // int sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
-                // int sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
-                // int sum = MAX(x_sum, y_sum);
-                // int sum =  x_sum * x_sum + y_sum * y_sum;
+                // size_t sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
+                // size_t sum = fast_sqrt_i<int>(FAST_SQUARE(x_sum) + FAST_SQUARE(y_sum));
+                // size_t sum = MAX(x_sum, y_sum);
+                // size_t sum =  x_sum * x_sum + y_sum * y_sum;
                 *dp = (ABS(sum) / ((wid * 2 + 1) * (wid * 2 + 1))) >> 4; 
             }
         }
@@ -996,17 +1043,19 @@ namespace yumud::nvcv2::Shape{
         }
     
         const auto size = (Rect2i(Vector2i(), dst.get_size()).intersection(Rect2i(Vector2i(), src.get_size()))).size;
+        const auto w = size_t(size.x);
+        const auto h = size_t(size.y);
 
-        scexpr int wid = 3;
-        scexpr int least_size = 7;
+        scexpr size_t wid = 3;
+        scexpr size_t least_size = 7;
 
-        for(int y = wid; y < size.y - wid - 1; y++){
-            for(int x = wid; x < size.x - wid - 1; x++){
+        for(size_t y = wid; y < h - wid - 1u; y++){
+            for(size_t x = wid; x < w - wid - 1u; x++){
 
                 std::array<uint8_t, least_size> min_values;
                 std::fill(min_values.begin(), min_values.end(), 255);
-                for(int i=y-wid;i<=y+wid;i++){
-                    for(int j=x-wid;j<=x+wid;j++){
+                for(size_t i=y-wid;i<=y+wid;i++){
+                    for(size_t j=x-wid;j<=x+wid;j++){
                         auto current_value = uint8_t(src[{j,i}]);
                         auto it = std::find_if(min_values.begin(), min_values.end(), [current_value](const uint8_t val){
                             return val > current_value;

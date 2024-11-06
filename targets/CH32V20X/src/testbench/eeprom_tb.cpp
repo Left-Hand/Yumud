@@ -1,10 +1,13 @@
 #include "tb.h"
-#include "../drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "../drivers/Memory/Flash/W25QXX/w25q16.hpp"
-#include "../hal/flash/flash.hpp"
+#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
+#include "drivers/Memory/Flash/W25QXX/w25q16.hpp"
+#include "hal/flash/flash.hpp"
 
-#include "../algo/random/random_generator.hpp"
-#include "../hal/bkp/bkp.hpp"
+#include "algo/random/random_generator.hpp"
+#include "hal/bkp/bkp.hpp"
+
+#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 #define MEMORY_TB_FIRSTBYTE
 #define MEMORY_TB_SEVERLBYTES
@@ -15,7 +18,7 @@
 #define MEMORY_TB_CONTENT
 
 #define MEMORY_TB_ASSERT(x, s, a, b)\
-if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); delay(1); CREATE_FAULT;}\
+if((x) == false) {logger.prints("!!!FAILED[", s, ']', std::hex, std::showbase, a, "->", b); delay(1); PANIC();}\
 else {logger.prints("Succeed[", s, ']', std::hex, std::showbase, a, "->", b);}\
 
 struct TestData{
@@ -256,7 +259,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 void eeprom_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
     auto & logger = DEBUGGER;
     logger.setEps(2);
     logger.setRadix(10);

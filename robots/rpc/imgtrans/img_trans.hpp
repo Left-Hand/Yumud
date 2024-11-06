@@ -52,7 +52,7 @@ public:
 
     OutputStream & instance;
     bool enabled = false;
-    Uart & logger = DEBUGGER;
+    Uart & logger = DEBUGGER_INST;
 
 protected:
     scexpr uint16_t header = 0x54A8;

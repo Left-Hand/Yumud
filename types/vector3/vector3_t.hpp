@@ -31,12 +31,8 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#include "sys/core/platform.h"
 #include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
-
-#include <type_traits>
-
 
 namespace yumud{
 template <arithmetic T>

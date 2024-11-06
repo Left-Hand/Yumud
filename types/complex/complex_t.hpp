@@ -1,10 +1,8 @@
 #pragma once
 
-#include "../sys/core/platform.h"
-#include <type_traits>
+#include "sys/core/platform.h"
 
-template <typename T>
-requires std::is_arithmetic_v<T>
+template <arithmetic T>
 struct Complex_t {
 public:
     T real;
@@ -103,18 +101,15 @@ public:
         imag = static_cast<T>((static_cast<U>(orgImag) * other.real - static_cast<U>(orgReal) * other.imag) / denominator);
         return *this;
     }
-
-    __no_inline explicit operator String() const{
-        if(imag > 0) return (String(static_cast<float>(real)) + String('+') + String(static_cast<float>(imag)) + String('i'));
-        else if(imag < 0)return (String(static_cast<float>(real)) + String(static_cast<float>(-imag)) + String('i'));
-        else return String(static_cast<float>(real));
-    }
-
-    __no_inline String toString(unsigned char decimalPlaces = 2){
-        if(imag > 0) return (String(static_cast<float>(imag), decimalPlaces) + String('+') + String(static_cast<float>(imag), decimalPlaces) + String('i'));
-        else if(imag < 0)return (String(static_cast<float>(imag), decimalPlaces) + String(static_cast<float>(-imag), decimalPlaces) + String('i'));
-        else return String(static_cast<float>(imag), decimalPlaces);
-    }
 };
+
+
+namespace yumud{
+
+    __no_inline OutputStream & operator << (OutputStream & os , const Complex_t<auto> & c){
+        return os << c.real << ',' << (c.imag > 0 ? '+' : ' ') << c.imag << 'i';
+    }
+}
+
 
 #include "complex_t.tpp"

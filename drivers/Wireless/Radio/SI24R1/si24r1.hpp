@@ -202,51 +202,51 @@ protected:
     void writeReg(RegAddress addr, const auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::W_REGISTER);
-        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT);
-        spi_drv.write(&(value), sizeof(value));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), (addr), CONT);
+        spi_drv.writeMulti(&(value), sizeof(value));
     }
 
     void readReg(RegAddress addr, auto & value){
         addr &= ~uint8_t(Command::__RW_MASK);
         addr |= uint8_t(Command::R_REGISTER);
-        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT);
-        spi_drv.read(&(value), sizeof(value));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(addr), CONT);
+        spi_drv.readMulti(&(value), sizeof(value));
     }
 
     void readFifo(uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PAYLOAD), CONT);
-            spi_drv.read(buffer, size);
+            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PAYLOAD), CONT);
+            spi_drv.readMulti(buffer, size);
         }
     }
 
     void writeFifo(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD), CONT);
-            spi_drv.write(buffer, size);
+            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD), CONT);
+            spi_drv.writeMulti<uint8_t>(buffer, size);
         }
     }
 
     void writeFifoNoAck(const uint8_t *buffer, size_t size){
         if(size){
             size = MIN(size, 32);
-            spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT);
-            spi_drv.write(buffer, size);
+            spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::W_TX_PAYLOAD_NO_ACK), CONT);
+            spi_drv.writeMulti<uint8_t>(buffer, size);
         }
     }
 
     void clearTxFifo(){
-        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_TX), CONT);
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_TX));
     }
 
     void clearRxFifo(){
-        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_RX), CONT);
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::FLUSH_RX));
     }
 
     void updateStatus(){
-        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP), CONT);
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:
     SpiDrv spi_drv;
@@ -256,8 +256,8 @@ public:
 
     size_t available(){
         uint8_t size;
-        spi_drv.transfer(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT);
-        spi_drv.read((size));
+        spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::R_RX_PL_WID), CONT);
+        spi_drv.readSingle((size));
         return size;
     }
 };

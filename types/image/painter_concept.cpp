@@ -1,5 +1,8 @@
 #include "painter_concept.hpp"
 
+#include "sys/string/string.hpp"
+#include "sys/string/string_view.hpp"
+
 using namespace yumud;
 
 void PainterConcept::drawHollowRect(const Rect2i & rect){
@@ -28,7 +31,7 @@ void PainterConcept::drawHollowRect(const Rect2i & rect){
     drawLine(p1,p4);
 }
 void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
-    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(this->getCanvasWindow()))) || radius <= 0) return;
+    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).intersects(this->getClipWindow()))) || radius <= 0) return;
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -62,7 +65,7 @@ void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
 }
 
 void PainterConcept::drawFilledCircle(const Vector2i & pos, const uint radius){
-    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), getCanvasSize())))) || radius == 0) return;
+    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), getClipWindow().size)))) || radius == 0) return;
     if(radius == 1){
         return drawPixel(pos);
     }
@@ -106,7 +109,7 @@ void PainterConcept::drawString(const Vector2i & pos, const char * str){
     drawStr(pos, str, strlen(str));
 }
 
-void PainterConcept::drawString(const Vector2i & pos, const StringView str){
+void PainterConcept::drawString(const Vector2i & pos, const StringView & str){
     drawStr(pos, str.data(), str.length());
 }
 
@@ -114,7 +117,7 @@ void PainterConcept::drawHollowEllipse(const Vector2i & pos, const Vector2i & r)
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return drawHollowCircle(pos, rx);
-    if (rx<2 || ry<2|| !this->getCanvasWindow().intersects(Rect2i::from_center(pos, r))) return;
+    if (rx<2 || ry<2|| !this->getClipWindow().intersects(Rect2i::from_center(pos, r))) return;
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -155,7 +158,7 @@ void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r)
     int rx = r.x;
     int ry = r.y;
     if (rx == ry) return drawHollowCircle(pos, rx);
-    if (rx<2 || ry<2|| !this->getCanvasWindow().intersects(Rect2i::from_center(pos, r))) return;
+    if (rx<2 || ry<2|| !this->getClipWindow().intersects(Rect2i::from_center(pos, r))) return;
 
     int x0 = pos.x;
     int y0 = pos.y;
@@ -193,12 +196,12 @@ void PainterConcept::drawFilledEllipse(const Vector2i & pos, const Vector2i & r)
 }
 
 
-void PainterConcept::drawPolyline(const Vector2_t<auto> * points, const size_t count){
+void PainterConcept::drawPolyline(const Vector2i * points, const size_t count){
     for(size_t i = 0; i < count-1; i++) drawLine(points[i], points[i + 1]);
 }
 
 
-void PainterConcept::drawPolygon(const Vector2_t<auto> * points, const size_t count){
+void PainterConcept::drawPolygon(const Vector2i * points, const size_t count){
     drawPolyline(points, count);
     drawLine(points[0], points[count - 1]);
 }
@@ -240,8 +243,6 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
         drawHriLine(Rangei(a, b + 1), y);
         return;
     }
-
-
 
     int dx01 = x1 - x0;
     int dy01 = y1 - y0;

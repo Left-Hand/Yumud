@@ -67,4 +67,4 @@ public:
 
 
 
-#define TODO_TRAP(str) do{DEBUG_PRINTLN("todo:", str); CREATE_FAULT}while(false);
+#define TODO_TRAP(str) do{DEBUG_PRINTLN("todo:", str); PANIC()}while(false);

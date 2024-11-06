@@ -8,12 +8,18 @@
 struct name {\
 private:\
     bool value;\
+    constexpr name(){;}\
 public:\
-    constexpr explicit name(bool _value) : value(_value) {}\
-    constexpr operator bool() const { return value; }\
+    constexpr name(const name & other){value = other.value;};\
+    constexpr name(const bool & _value) = delete;\
+    constexpr name(bool && _value) = delete;\
+    constexpr name operator = (const bool _value) = delete;\
+    scexpr name from(bool _value) { name ret = name(); ret.value = _value; return ret; }\
+    bool operator == (const name & other) const { return value == other.value; }\
+    bool operator != (const name & other) const { return value == other.value; }\
 };\
-scexpr name u {true};\
-scexpr name l{false};\
+scexpr name u = name::from(true);\
+scexpr name l = name::from(false);\
 
 MAKE_BINA_ENUM(Endian, MSB, LSB)
 MAKE_BINA_ENUM(Continuous, CONT, DISC)

@@ -20,7 +20,7 @@ public:
     };
 
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv;
 
     struct vec3i{
         int16_t x;
@@ -47,22 +47,18 @@ protected:
         GyroZ = 0x47,
     };
 
-    void writeReg(const uint8_t reg_addr, const uint8_t data){
-        bus_drv.writeReg(reg_addr, data, MSB);
-    }
-
-    void writeReg(const RegAddress reg, const uint8_t data){
-        bus_drv.writeReg((uint8_t)reg, data, MSB);
+    void writeReg(const auto reg, const uint8_t data){
+        i2c_drv.writeReg((uint8_t)reg, data, MSB);
     }
 
     void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
-        bus_drv.readPool((uint8_t)reg_addr, datas, len, MSB);
+        i2c_drv.readPool((uint8_t)reg_addr, datas, len, MSB);
     }
 
 public:
-    MPU6050(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    MPU6050(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    MPU6050(I2c & bus):bus_drv(bus, default_id){;}
+    MPU6050(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
+    MPU6050(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
+    MPU6050(I2c & bus):i2c_drv(bus, default_id){;}
     void init();
     void update();
     std::tuple<real_t, real_t, real_t> getAccel() override;

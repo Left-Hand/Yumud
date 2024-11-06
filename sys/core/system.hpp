@@ -2,6 +2,7 @@
 
 #include "sys/core/platform.h"
 #include "sys/clock/clock.h"
+#include "sys/clock/clock.hpp"
 #include "sys/math/real.hpp"
 
 namespace Sys{

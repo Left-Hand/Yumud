@@ -67,17 +67,17 @@ void AD9959::setClock( int mult,const int32_t calibration) // Mult must be 0 or 
 
 
 
-    bus_drv.write(Register::FR1);
+    bus_drv.writeSingle(Register::FR1);
     // High VCO Gain is needed for a 255-500MHz master clock, and not up to 160Mhz
     // In-between is unspecified.
-    bus_drv.write(
+    bus_drv.writeSingle(
         (core_clock > 200 ? FR1_Bits::VCOGain : 0)
         | (mult*FR1_Bits::PllDivider)
         | FR1_Bits::ChargePump3         // Lock fast
     );
     // Profile0 means each channel is modulated by a different profile pin:
-    bus_drv.write(FR1_Bits::ModLevels2 | FR1_Bits::RampUpDownOff | FR1_Bits::Profile0);
-    bus_drv.write(FR1_Bits::SyncClkDisable); // Don't output SYNC_CLK
+    bus_drv.writeSingle(FR1_Bits::ModLevels2 | FR1_Bits::RampUpDownOff | FR1_Bits::Profile0);
+    bus_drv.writeSingle(FR1_Bits::SyncClkDisable); // Don't output SYNC_CLK
 }
 
     // Calculating deltas is expensive. You might use this infrequently and then use setDelta
@@ -104,13 +104,13 @@ void AD9959::setAmplitude(ChannelNum chan, uint16_t amplitude){        // Maximu
     if (amplitude > 1024)
         amplitude = 1024;                 // Clamp to the maximum
     setChannels(chan);
-    bus_drv.write(Register::ACR);                  // Amplitude control register
-    bus_drv.write(0);                    // Time between ramp steps
+    bus_drv.writeSingle(Register::ACR);                  // Amplitude control register
+    bus_drv.writeSingle(0);                    // Time between ramp steps
     if (amplitude < 1024)               // Enable amplitude control with no ramping
-        bus_drv.write((ACR_Bits::MultiplierEnable | amplitude)>>8);
+        bus_drv.writeSingle((ACR_Bits::MultiplierEnable | amplitude)>>8);
     else
-        bus_drv.write(0);                  // Disable the amplitude multiplier
-    bus_drv.write(amplitude&0xFF);       // Bottom 8 bits of amplitude
+        bus_drv.writeSingle(0);                  // Disable the amplitude multiplier
+    bus_drv.writeSingle(amplitude&0xFF);       // Bottom 8 bits of amplitude
 }
 
 void AD9959::setPhase(ChannelNum chan, uint16_t phase){                // Maximum phase value is 16383

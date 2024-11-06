@@ -7,10 +7,10 @@ public:
     __inline scexpr uint32_t hash_uiml32(char const*data, size_t length){
         uint32_t h = 0;  
         uint16_t strLength = length, alignedLen = strLength / sizeof(uint32_t);
-        for(uint16_t i = 0; i < alignedLen; ++i)  
+        for(size_t i = 0; i < alignedLen; ++i)  
             h = (h << 5) - h + ((uint32_t*)data)[i]; 
-        for(uint16_t i = alignedLen << 2; i < strLength; ++i)
-            h = (h << 5) - h + data[i]; 
+        for(size_t i = alignedLen << 2; i < strLength; ++i)
+            h = (h << 5) - h + uint8_t(data[i]); 
         return h; 
     }
 
@@ -29,7 +29,7 @@ public:
         uint32_t hash = 5381;
 
         for (size_t i = 0; i < size; i++) {
-            hash = ((hash << 5) + hash) ^ str[i]; /* hash * 33 + c */
+            hash = ((hash << 5) + hash) ^ uint8_t(str[i]); /* hash * 33 + c */
         }
 
         return hash;

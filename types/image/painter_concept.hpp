@@ -1,12 +1,9 @@
 #pragma once
 
-#include "sys/string/string.hpp"
-#include "sys/string/string_view.hpp"
-#include "sys/debug/debug_inc.h"
 
 #include "image.hpp"
-#include "packed_image.hpp"
 
+#include "sys/stream/stream.hpp"
 #include "types/rect2/rect2_t.hpp"
 #include "types/color/color_t.hpp"
 #include "types/rgb.h"
@@ -16,23 +13,27 @@
 
 namespace yumud{
 
-class PainterConcept{
+class String;
+
+class StringView;
+
+class PainterConcept:public OutputStream{
 protected:
+    using Cursor = Vector2i;
+    Cursor cursor = {0,0};
 
     RGB888 m_color;
     Rect2i crop_rect;
     
     void drawHriLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(l, 1));
-        // rect = this->getCanvasWindow().intersection(rect);
+        // rect = this->getClipWindow.intersection(rect);
         if(bool(rect) == false) return;
         drawFilledRect(rect);
     }
-
-
     void drawVerLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(1, l));
-        // rect = this->getCanvasWindow().intersection(rect);
+        // rect = this->getClipWindow.intersection(rect);
         if(bool(rect) == false) return;
         drawFilledRect(rect);
     }
@@ -54,6 +55,25 @@ public:
 
     PainterConcept() = default;
 
+
+    void write(const char data) override{
+        drawChar(cursor, wchar_t(data));
+    }
+
+    void write(const char * data, const size_t len) override{
+        drawStr(cursor, data, len);
+    }
+
+    size_t pending() const override{
+        return 0;
+    }
+
+    void fill(const RGB888 & color){
+        this->setColor(color);
+        drawFilledRect(this->getClipWindow());
+    }
+
+
     template<typename U>
     void setColor(U _color){
         m_color = _color;
@@ -63,9 +83,7 @@ public:
 
     virtual void drawChar(const Vector2i & pos,const wchar_t chr) = 0;
     
-    virtual Rect2i getCanvasWindow() = 0;
-    
-    virtual Vector2i getCanvasSize() {return getCanvasWindow().size;}
+    virtual Rect2i getClipWindow() = 0;
     
     virtual void drawLine(const Vector2i & from, const Vector2i & to) = 0;
 
@@ -79,7 +97,7 @@ public:
 
     void drawString(const Vector2i & pos, const String & str);
 
-    void drawString(const Vector2i & pos, const StringView str);
+    void drawString(const Vector2i & pos, const StringView & str);
 
     void drawString(const Vector2i & pos, const char * str);
 
@@ -88,9 +106,19 @@ public:
 
     void drawFilledEllipse(const Vector2i & pos, const Vector2i & r);
 
-    void drawPolyline(const Vector2_t<auto> * points, const size_t count);
+    void drawPolyline(const Vector2i * points, const size_t count);
 
-    void drawPolygon(const Vector2_t<auto> * points, const size_t count);
+    void drawPolygon(const Vector2i * points, const size_t count);
+
+    void drawPolyline(const std::initializer_list<Vector2i> & points){
+        drawPolyline(points.begin(), points.size());
+    }
+
+    void drawPolygon(const std::initializer_list<Vector2i> & points){
+        drawPolygon(points.begin(), points.size());
+    }
+
+
 
     void drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2);
 

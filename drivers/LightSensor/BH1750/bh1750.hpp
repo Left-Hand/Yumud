@@ -13,7 +13,7 @@ public:
     };
 
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv;
 
     enum class Command{
         PowerDown = 0,
@@ -31,12 +31,12 @@ protected:
     Mode currentMode = Mode::LMode;
     bool continuous = false;
 
-    void sendCommand(const Command & cmd){
-        bus_drv.write((uint8_t)cmd);
+    void sendCommand(const Command cmd){
+        // i2c_drv.write((uint8_t)cmd);
     }
 
     void sendCommand(const uint8_t cmd){
-        bus_drv.write(cmd);
+        // i2c_drv.write(cmd);
     }
 
 public:
@@ -88,8 +88,8 @@ public:
     }
 
     int getLx(){
-        uint8_t data[2];
-        bus_drv.read(data, 2);
+        uint8_t data[2] = {0};
+        // i2c_drv.read(data, 2);
         return lsb * (int)((data[0] << 8) | data[1]);
     }
 };

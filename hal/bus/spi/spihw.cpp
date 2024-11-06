@@ -2,9 +2,24 @@
 #include "sys/debug/debug_inc.h"
 
 using namespace yumud;
+
+
+#ifdef HAVE_SPI1
+void SPI1_IRQHandler(void){
+
+}
+#endif
+
+#ifdef ENABLE_SPI2
+void SPI2_IRQHandler(void){
+    
+}
+#endif
+
+
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
-        #ifdef HAVE_SPI1
+        #ifdef ENABLE_SPI1
         case SPI1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, en);
             if(SPI1_REMAP){
@@ -12,7 +27,7 @@ void SpiHw::enableRcc(const bool en){
             }
             break;
         #endif
-        #ifdef HAVE_SPI2
+        #ifdef ENABLE_SPI2
         case SPI2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2, en);
             break;
@@ -22,22 +37,21 @@ void SpiHw::enableRcc(const bool en){
     }
 }
 
-
 Gpio & SpiHw::getMosiGpio(){
     switch((uint32_t)instance){
         default:
             return GpioNull;
-        #ifdef HAVE_SPI1
+        #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_MOSI_GPIO;
         #endif
 
-        #ifdef HAVE_SPI2
+        #ifdef ENABLE_SPI2
         case SPI2_BASE:
             return SPI2_MOSI_GPIO;
         #endif
 
-        #ifdef HAVE_SPI3
+        #ifdef ENABLE_SPI3
         case SPI3_BASE:
             return SPI3_MOSI_GPIO;
         #endif
@@ -48,17 +62,17 @@ Gpio & SpiHw::getMisoGpio(){
     switch((uint32_t)instance){
         default:
             return GpioNull;
-        #ifdef HAVE_SPI1
+        #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_MISO_GPIO;
         #endif
 
-        #ifdef HAVE_SPI2
+        #ifdef ENABLE_SPI2
         case SPI2_BASE:
             return SPI2_MISO_GPIO;
         #endif
 
-        #ifdef HAVE_SPI3
+        #ifdef ENABLE_SPI3
         case SPI3_BASE:
             return SPI3_MISO_GPIO;
         #endif
@@ -69,17 +83,17 @@ Gpio & SpiHw::getSclkGpio(){
     switch((uint32_t)instance){
         default:
             return GpioNull;
-        #ifdef HAVE_SPI1
+        #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_SCLK_GPIO;
         #endif
 
-        #ifdef HAVE_SPI2
+        #ifdef ENABLE_SPI2
         case SPI2_BASE:
             return SPI2_SCLK_GPIO;
         #endif
 
-        #ifdef HAVE_SPI3
+        #ifdef ENABLE_SPI3
         case SPI3_BASE:
             return SPI3_SCLK_GPIO;
         #endif
@@ -90,17 +104,17 @@ Gpio & SpiHw::getCsGpio(){
     switch((uint32_t)instance){
         default:
             return GpioNull;
-        #ifdef HAVE_SPI1
+        #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_CS_GPIO;
         #endif
 
-        #ifdef HAVE_SPI2
+        #ifdef ENABLE_SPI2
         case SPI2_BASE:
             return SPI2_CS_GPIO;
         #endif
 
-        #ifdef HAVE_SPI3
+        #ifdef ENABLE_SPI3
         case SPI3_BASE:
             return SPI3_CS_GPIO;
         #endif
@@ -114,13 +128,13 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
 	uint32_t busFreq = 0;
 
     switch((uint32_t)instance){
-        #ifdef HAVE_SPI1
+        #ifdef ENABLE_SPI1
         case SPI1_BASE:
             busFreq = RCC_CLK.PCLK1_Frequency;
             break;
         #endif
 
-        #ifdef HAVE_SPI2
+        #ifdef ENABLE_SPI2
         case SPI2_BASE:
             busFreq = RCC_CLK.PCLK2_Frequency;
             break;
@@ -223,14 +237,19 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 
 
 
-void SpiHw::setDataBits(const uint8_t data_size){
+void SpiHw::setDataBits(const uint8_t bits){
     uint16_t tempreg =  instance->CTLR1;
-    if(data_size == 16){
-        if(tempreg & SPI_DataSize_16b) return;
-        tempreg |= SPI_DataSize_16b;
-    }else{
-        tempreg &= ~SPI_DataSize_16b;
+
+    switch(bits){
+        case 16:
+            if(tempreg & SPI_DataSize_16b) return;
+            tempreg |= SPI_DataSize_16b;
+            break;
+        default:
+            tempreg &= ~SPI_DataSize_16b;
+            break;
     }
+
     instance->CTLR1 = tempreg;
 }
 
@@ -241,5 +260,5 @@ void SpiHw::setBaudRate(const uint32_t baudRate){
 
 void SpiHw::setBitOrder(const Endian endian){
     instance->CTLR1 &= ~SPI_FirstBit_LSB;
-    instance->CTLR1 |= endian ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
+    instance->CTLR1 |= (endian == MSB) ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
 }

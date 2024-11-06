@@ -109,7 +109,7 @@ public:
         auto & odo() {return odo_;}
     };
 protected:
-    #define M3508_CHECK_INDEX if(index > size or index == 0) CREATE_FAULT; 
+    #define M3508_CHECK_INDEX if(index > size or index == 0) PANIC(); 
     scexpr size_t max_size = 8;
     
     Can & can;

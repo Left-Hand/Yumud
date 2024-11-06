@@ -1,6 +1,8 @@
 #pragma once
 
 #include "painter_concept.hpp"
+#include "sys/string/gbk.hpp"
+
 
 namespace yumud{
 
@@ -18,8 +20,6 @@ protected:
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
     }
-
-
 
     void drawStr(const Vector2i & pos, const char * str_ptr, const size_t str_len) override{
         GBKIterator iterator(str_ptr);
@@ -40,12 +40,9 @@ protected:
 public:
     Painter():PainterConcept(){;}
 
-    Rect2i getCanvasWindow() override {
-        return src_image->get_view();
-    }
 
-    Vector2i getCanvasSize() override{
-        return src_image->get_size();
+    Rect2i getClipWindow() override {
+        return src_image->get_view();
     }
 
     void bindImage(ImageWritable<ColorType> & _source){
@@ -98,27 +95,21 @@ public:
         src_image -> putrect_unsafe(rect, m_color);
     }
 
-
-    // void drawPixel(const Vector2i & pos, const ColorType & color) override{
-    //     src_image -> putpixel(pos, color);
-    // }
-
     void drawPixel(const Vector2i & pos) override {
         src_image -> putpixel(pos, m_color);
     }
 
     void drawLine(const Vector2i & from, const Vector2i & to) override{
         if(!src_image->has_point(from)){
-            ASSERT_WITH_HALT(false, "start point lost: ", from);
+            // ASSERT_WITH_HALT(false, "start point lost: ", from);
             return;
         }else if(!src_image->has_point(to)){
-            ASSERT_WITH_HALT(false, "end point lost: ", to);
+            // ASSERT_WITH_HALT(false, "end point lost: ", to);
             return;
         }
-        auto x0 = from.x;
-        auto y0 = from.y;
-        auto x1 = to.x;
-        auto y1 = to.y;
+
+        auto [x0, y0] = from;
+        auto [x1, y1] = to;
 
         if(y0 == y1) return drawHriLine(from, x1 - x0);
         if(x0 == x1) return drawVerLine(from, y1 - y0);
@@ -166,7 +157,7 @@ public:
         if(!char_area) return;
         
         for(int i = char_area.position.x; i < char_area.position.x + char_area.size.x ; i++){
-            uint8_t mask;
+            uint8_t mask = 0;
             for(int j = 0; j < font_size.y; j++){
  
                 if(j % 8 == 0) mask = 0;

@@ -10,7 +10,7 @@ writeReg(reg.address, reg);\
 
 #define FAULT_IF(x)\
 do{\
-    if(x) CREATE_FAULT\
+    if(x) PANIC()\
 }while(false);\
 
 
@@ -50,7 +50,7 @@ void INA3221::setAverageTimes(const uint16_t times){
 
 void INA3221::enableChannel(const size_t index, const bool en){
     switch(index){
-        default: CREATE_FAULT
+        default: PANIC()
         case 1:
             config_reg.ch1_en = en;
             break;
@@ -89,7 +89,7 @@ int INA3221::getShuntVoltageuV(const size_t index){
     RegAddress addr;
     ShuntVoltReg * reg = nullptr;
     switch(index){
-        default: CREATE_FAULT
+        default: PANIC()
         case 1:
             reg = &shuntvolt1_reg;
             addr = shuntvolt1_reg.address1;
@@ -115,7 +115,7 @@ int INA3221::getBusVoltagemV(const size_t index){
     RegAddress addr;
     BusVoltReg * reg = nullptr;
     switch(index){
-        default: CREATE_FAULT
+        default: PANIC()
         case 1:
             reg = &busvolt1_reg;
             addr = busvolt1_reg.address1;
@@ -148,7 +148,7 @@ real_t INA3221::getBusVoltage(const size_t index){
 void INA3221::setInstantOVC(const size_t index, const real_t volt){
     RegAddress addr;
     switch(index){
-        default: CREATE_FAULT
+        default: PANIC()
         case 1:
             addr = instant_ovc1_reg.address1;
             break;
@@ -167,7 +167,7 @@ void INA3221::setInstantOVC(const size_t index, const real_t volt){
 void INA3221::setConstantOVC(const size_t index, const real_t volt){
     RegAddress addr;
     switch(index){
-        default: CREATE_FAULT
+        default: PANIC()
         case 1:
             addr = constant_ovc1_reg.address1;
             break;

@@ -60,16 +60,16 @@ protected:
         StatusReg statusReg;
     };
 
-    void writeByte(const uint8_t data, const bool ends = true){
-        spi_drv.write(data, ends);
+    void writeByte(const uint8_t data, const Continuous cont = DISC){
+        spi_drv.writeSingle(data, cont);
     }
 
-    void writeByte(const Command data, const bool ends = true){
-        spi_drv.write((uint8_t)data, ends);
+    void writeByte(const Command data, const Continuous cont = DISC){
+        spi_drv.writeSingle((uint8_t)data, cont);
     }
 
     void readByte(uint8_t & data, const Continuous cont = DISC){
-        spi_drv.read(data, cont);
+        spi_drv.readSingle(data, cont);
     }
 
     void wait_for_free(){
@@ -82,8 +82,8 @@ protected:
     void entry_load() override{}
     void exit_load() override{}
 
-    void loadBytes(void * data, const Address data_size, const Address loc) override{}
-    void storeBytes(const void * data, const Address data_size, const Address loc) override{};
+    void loadBytes(void * data, const Address len, const Address loc) override{}
+    void storeBytes(const void * data, const Address len, const Address loc) override{};
 public:
     void init() override{}
 
@@ -101,7 +101,7 @@ public:
 
     uint8_t getDeviceManufacturer(){
         uint8_t data = 1;
-        writeByte(Command::ReadDeviceId, false);
+        writeByte(Command::ReadDeviceId, CONT);
         readByte(data);
         W25QXX_DEBUG("Device Manufacturer: ", data);
         return data;
@@ -178,7 +178,7 @@ public:
         }
     }
 
-    void writeData(const Address _addr, const uint8_t * _data, const size_t & len){
+    void writeData(const Address _addr, const uint8_t * _data, const size_t len){
         enableWrite();
         uint16_t pages = _addr / 256;
         uint32_t addr = _addr;
@@ -191,7 +191,7 @@ public:
         uint8_t remains = addr % 256;
         writePage(addr, data, remains);
     }
-    void readData(const Address addr, uint8_t * data, const size_t & len){
+    void readData(const Address addr, uint8_t * data, const size_t len){
         writeByte(Command::ReadData);
         writeByte(addr >> 16);
         writeByte(addr >> 8);

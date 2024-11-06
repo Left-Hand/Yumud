@@ -32,19 +32,15 @@
 * 日期                                      作者                             备注
 * 2022-09-15        大W            first version
 ********************************************************************************************************************/
-
-#ifndef _zf_driver_usb_cdc_h
-#define _zf_driver_usb_cdc_h
+#pragma once
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void usb_cdc_send_pack(const uint8_t *p, const size_t length);
+void usb_cdc_send_pack(const uint8_t *p, const unsigned int length);
 void usb_cdc_init( void );
 
 #ifdef __cplusplus
 }
-#endif
-
 #endif

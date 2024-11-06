@@ -5,6 +5,7 @@
 #include "dsp/filter/LowpassFilter.hpp"
 
 #include "hal/gpio/port_virtual.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
@@ -22,9 +23,9 @@
 #include "drivers/Actuator/Driver/MP1907/mp1907.hpp"
 
 #include "dsp/controller/PID.hpp"
-#include "types/image/painter.hpp"
 
-
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2csw.hpp"
 #include "buck/buck.hpp"
 
 using Sys::t;
@@ -33,7 +34,7 @@ using namespace yumud;
 using namespace yumud::drivers;
 
 void digipw_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     /*-----------------------*/
 

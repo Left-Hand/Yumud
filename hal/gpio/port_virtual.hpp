@@ -59,17 +59,17 @@ public:
 
     void bindPin(GpioConcept & gpio, const size_t index){
         if(index >= N)return;
-        pin_ptrs[index] = &gpio;
+        pin_ptrs[size_t(index)] = &gpio;
     }
 
     void writeByIndex(const int index, const bool data) override{
-        if(!isIndexValid(index)) return;
-        pin_ptrs[index]->write(data);
+        if(!isIndexValid(size_t(index))) return;
+        pin_ptrs[size_t(index)]->write(data);
     }
 
     bool readByIndex(const int index) override{
-        if(!isIndexValid(index))return false;
-        return bool(*(pin_ptrs[index]));
+        if(!isIndexValid(size_t(index)))return false;
+        return bool(*(pin_ptrs[size_t(index)]));
     }
 
     void set(const uint16_t data) override{
@@ -100,14 +100,14 @@ public:
         return begin() + N;
     }
 
-    bool isIndexValid(const size_t index){return (index < N and pin_ptrs[index] != nullptr);}
+    bool isIndexValid(const size_t index){return (index < N and pin_ptrs[size_t(index)] != nullptr);}
 
-    E & operator [](const size_t index){return isIndexValid(index) ? *pin_ptrs[index] : GpioNull;}
+    E & operator [](const size_t index){return isIndexValid(size_t(index)) ? *pin_ptrs[size_t(index)] : GpioNull;}
 
     void setMode(const int index, const PinMode mode) override{
         if(index < 0) return;
-        if(!isIndexValid(index))return;
-        pin_ptrs[index]->setMode(mode);
+        if(!isIndexValid(size_t(index)))return;
+        pin_ptrs[size_t(index)]->setMode(mode);
     }
 };
 
@@ -143,17 +143,17 @@ public:
 
     void bindPin(Gpio & gpio, const size_t index){
         if(index >= N)return;
-        pin_ptrs[index] = &(gpio);
+        pin_ptrs[size_t(index)] = &(gpio);
     }
 
     void writeByIndex(const int index, const bool data) override{
-        if(!isIndexValid(index)) return;
-        pin_ptrs[index]->write(data);
+        if(!isIndexValid(size_t(index))) return;
+        pin_ptrs[size_t(index)]->write(data);
     }
 
     bool readByIndex(const int index) override{
-        if(!isIndexValid(index))return false;
-        return pin_ptrs[index]->read();
+        if(!isIndexValid(size_t(index)))return false;
+        return pin_ptrs[size_t(index)]->read();
     }
 
     void set(const uint16_t data) override{
@@ -177,13 +177,13 @@ public:
     }
 
 
-    bool isIndexValid(const size_t index){return (index < N and pin_ptrs[index]->isValid());}
+    bool isIndexValid(const size_t index){return (index < N and pin_ptrs[size_t(index)]->isValid());}
 
-    E & operator [](const size_t index){return isIndexValid(index) ? *pin_ptrs[index] : GpioNull;}
+    E & operator [](const size_t index){return isIndexValid(size_t(index)) ? *pin_ptrs[size_t(index)] : GpioNull;}
 
     void setMode(const int8_t & index, const PinMode & mode) override{
-        if(!isIndexValid(index))return;
-        pin_ptrs[index]->setMode(mode);
+        if(!isIndexValid(size_t(index)))return;
+        pin_ptrs[size_t(index)]->setMode(mode);
     }
 };
 

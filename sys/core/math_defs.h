@@ -259,10 +259,10 @@ constexpr __fast_inline bool __sign_same_impl(const T x, const auto y){
 #define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))
 #define PREV_POWER_OF_2(x) (1 << (31 - __builtin_clz(x)))
 
-#define CTZ(x) __builtin_ctz(x)
+#define CTZ(x) __builtin_ctz((size_t)(x))
 #define BITS(x) (sizeof(x) * 8)
 #define PLAT_WIDTH (BITS(size_t))
-#define CLZ(x) __builtin_clz(x << (PLAT_WIDTH - BITS(x)))
+#define CLZ(x) __builtin_clz(((size_t)(x)) << (PLAT_WIDTH - BITS(x)))
 
 #define ANGLE2RAD(x) ((x) * TAU / 360)
 #define RAD2ANGLE(x) ((x) / TAU * 360)

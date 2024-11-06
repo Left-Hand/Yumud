@@ -204,10 +204,7 @@ public:
             const std::initializer_list<AdcChannelConfig> & injected_list, 
             const Mode mode = Mode::Independent);
 
-    auto & inj(const uint8_t index){
-        if(index == 0 or index > 4) CREATE_FAULT;
-        return injected_channels[index - 1];
-    }
+    InjectedChannel & inj(const size_t index);
 
     void bindCb(const IT it,Callback && cb);
 

@@ -1,6 +1,4 @@
-#ifndef __BUFFER_HPP__
-
-#define __BUFFER_HPP__
+#pragma once
 
 #include "../sys/core/platform.h"
 #include <cstdint>
@@ -13,8 +11,8 @@ public:
     virtual void addData(const T & data) = 0;
     virtual const T & getData() = 0;
     virtual size_t available() const = 0;
-    virtual void addDatas(const T * data_ptr, const size_t & len, bool msb = false) = 0;
-    virtual void getDatas(T * data_ptr, const size_t & len, bool msb = false) = 0;
+    virtual void addDatas(const T * data_ptr, const size_t len, bool msb = false) = 0;
+    virtual void getDatas(T * data_ptr, const size_t len, bool msb = false) = 0;
 };
 
 
@@ -25,7 +23,7 @@ protected:
     size_t size;
 
 public:
-    DynamicBuffer_t(const size_t & _size = 128){
+    DynamicBuffer_t(const size_t _size = 128){
         size = (volatile size_t)_size;
         buf = new T[size];
     }
@@ -56,4 +54,3 @@ typedef DynamicBuffer_t<uint8_t> DynamicBuffer;
 
 template<uint32_t size>
 using StaticBuffer = StaticBuffer_t<uint8_t,size>;
-#endif

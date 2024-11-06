@@ -1,21 +1,24 @@
-#ifndef __DEBUG_INC_H__
+#pragma once
 
-#define __DEBUG_INC_H__
+#include "sys/clock/clock.h"
+#include "sys/stream/ostream.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "src/defines/user_defs.h"
+namespace yumud{
+extern yumud::OutputStream & LOGGER;
+extern yumud::OutputStream & DEBUGGER;
+}
 
 #ifndef VOFA_PRINT
-#define VOFA_PRINT(...) LOGGER.println(__VA_ARGS__);
+#define VOFA_PRINT(...) yumud::LOGGER.println(__VA_ARGS__);
 #endif
 
 
 #ifndef DEBUG_PRINTLN
-#define DEBUG_PRINTLN(...) DEBUGGER.println(__VA_ARGS__);
+#define DEBUG_PRINTLN(...) yumud::DEBUGGER.println(__VA_ARGS__);
 #endif
 
 #ifndef DEBUG_PRINTS
-#define DEBUG_PRINTS(...) DEBUGGER.prints(__VA_ARGS__);
+#define DEBUG_PRINTS(...) yumud::DEBUGGER.prints(__VA_ARGS__);
 #endif
 
 
@@ -39,6 +42,18 @@
 #ifndef DEBUG_VALUE
 #define DEBUG_VALUE(value, ...) DEBUG_PRINTS("<", #value, ">\tis:", value, ##__VA_ARGS__)
 #endif
+
+
+#define PANIC(...)\
+do{\
+    if constexpr(sizeof(std::make_tuple(__VA_ARGS__))){\
+        DEBUG_ERROR(__VA_ARGS__);\
+        delay(10);\
+    }\
+    __disable_irq();\
+    __disable_irq();\
+    HALT;\
+}while(false);\
 
 
 
@@ -71,22 +86,15 @@ if(bool(condition) == false){\
 #define ASSERT_WITH_HALT(condition, ...) \
 if(bool(condition) == false){\
     DEBUG_PRINTLN("[f]:", __LINE__, ':', ##__VA_ARGS__);\
-    __disable_irq();\
-    __disable_irq();\
-    delay(1);\
-    CREATE_FAULT;\
-}
+    PANIC(__VA_ARGS__);\
+}\
+
+#define BREAKPOINT __nopn(1);
 
 extern "C"{
-
 __attribute__((used)) int _write(int fd, char *buf, int size);
 __attribute__((used)) void *_sbrk(ptrdiff_t incr);
 
 __attribute__((used)) void _exit(int status);
 __attribute__((used)) ssize_t _read(int fd, void *buf, size_t count);
 }
-
-#define BREAKPOINT __nopn(1);
-
-
-#endif // __DEBUG_INC_H__

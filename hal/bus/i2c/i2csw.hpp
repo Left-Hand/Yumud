@@ -1,6 +1,7 @@
 #pragma once
 
 #include "i2c.hpp"
+#include "sys/clock/clock.h"
 
 namespace yumud{
 class I2cSw: public I2c{

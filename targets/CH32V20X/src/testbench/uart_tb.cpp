@@ -74,8 +74,8 @@ void uart_main(){
     //uart6 passed
     //uart8 passed
 
-    auto & logger = DEBUGGER;
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::Interrupt);
+    auto & logger = DEBUGGER_INST;
+    logger.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::Interrupt);
     // DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::None);
     uart_tb(logger);
 }

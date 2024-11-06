@@ -61,15 +61,15 @@ DmaChannel & TimerChannel::dma() const {
         }\
         
     switch((uint32_t)instance){
-        #ifdef HAVE_TIM1
+        #ifdef ENABLE_TIM1
         FULL_DMA_CASE(1)
         #endif
 
-        #ifdef HAVE_TIM2
+        #ifdef ENABLE_TIM2
         FULL_DMA_CASE(2)
         #endif
 
-        #ifdef HAVE_TIM3
+        #ifdef ENABLE_TIM3
         case TIM3_BASE:
         switch(channel){
             case Channel::CH1:
@@ -83,7 +83,7 @@ DmaChannel & TimerChannel::dma() const {
         }
         #endif
 
-        #ifdef HAVE_TIM4
+        #ifdef ENABLE_TIM4
         case TIM4_BASE:
         switch(channel){
             case Channel::CH1:
@@ -97,16 +97,16 @@ DmaChannel & TimerChannel::dma() const {
         }
         #endif
 
-        #ifdef HAVE_TIM5
+        #ifdef ENABLE_TIM5
         FULL_DMA_CASE(5)
         #endif
-        #ifdef HAVE_TIM8
+        #ifdef ENABLE_TIM8
         FULL_DMA_CASE(8)
         #endif
-        #ifdef HAVE_TIM9
+        #ifdef ENABLE_TIM9
         FULL_DMA_CASE(9)
         #endif
-        #ifdef HAVE_TIM10
+        #ifdef ENABLE_TIM10
         FULL_DMA_CASE(10)
         #endif
     }

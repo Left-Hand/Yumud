@@ -24,9 +24,9 @@ public:
         }
     }
 
-    __fast_inline void addData(const T * data,const size_t data_size){
-        for(size_t i = 0; i < data_size; i++){
-            addData(data[data_size]);
+    __fast_inline void addData(const T * data,const size_t len){
+        for(size_t i = 0; i < len; i++){
+            addData(data[i]);
         }
     }
     //     auto ptr_before = write_ptr;
@@ -50,9 +50,9 @@ public:
 
     size_t available() const override{
         if (write_ptr >= read_ptr) {
-            return write_ptr - read_ptr;
+            return size_t(write_ptr - read_ptr);
         } else {
-            return this->size - (read_ptr - write_ptr);
+            return this->size - size_t(read_ptr - write_ptr);
         }
     }
 
@@ -64,7 +64,7 @@ public:
         }
     }
 
-    void addDatas(const T * data_ptr, const size_t & len, bool msb = false) override{
+    void addDatas(const T * data_ptr, const size_t len, bool msb = false) override{
         if(msb){
             for(size_t i = len - 1; i > 0; i--) addData(data_ptr[i]);
         }else{
@@ -72,7 +72,7 @@ public:
         }
     }
 
-    void getDatas(T * data_ptr, const size_t & len, bool msb = false) override{
+    void getDatas(T * data_ptr, const size_t len, bool msb = false) override{
         if(msb){
             for(size_t i = len - 1; i > 0; i--) data_ptr[i] = getData();
         }else{

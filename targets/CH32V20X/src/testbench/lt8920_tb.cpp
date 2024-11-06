@@ -20,7 +20,7 @@ bool isInInterruptContext() {
 }
 
 void lt8920_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
 
     // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
@@ -41,7 +41,7 @@ void lt8920_main(){
         DEBUG_PRINTLN("LT8920 founded");
     }else{
         DEBUG_PRINTLN("LT8920 not founded, please check your physical connection");
-        CREATE_FAULT;
+        PANIC();
     }
 
     lt.bindNrstGpio(portB[0]);

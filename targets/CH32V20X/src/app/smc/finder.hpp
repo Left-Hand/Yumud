@@ -1,5 +1,3 @@
-#ifndef __FINER_HPP__
-#define __FINER_HPP__
 
 #include "../nvcv2/flood_fill.hpp"
 #include "../nvcv2/geometry/geometry.hpp"
@@ -341,6 +339,3 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const SMC::AlignMode 
         default: return os << '?';break;
     };
 }
-
-
-#endif

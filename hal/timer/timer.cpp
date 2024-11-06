@@ -1,9 +1,10 @@
 #include "timer.hpp"
+#include "sys/debug/debug_inc.h"
 
 using namespace yumud;
 void BasicTimer::enableRcc(){
     switch(uint32_t(instance)){
-        #ifdef HAVE_TIM1
+        #ifdef ENABLE_TIM1
         case TIM1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, ENABLE);
             switch(TIM1_REMAP){
@@ -21,7 +22,7 @@ void BasicTimer::enableRcc(){
             break;
         #endif
 
-        #ifdef HAVE_TIM2
+        #ifdef ENABLE_TIM2
         case TIM2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
             switch(TIM2_REMAP){
@@ -40,7 +41,7 @@ void BasicTimer::enableRcc(){
             break;
         #endif
 
-        #ifdef HAVE_TIM3
+        #ifdef ENABLE_TIM3
         case TIM3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
             switch(TIM3_REMAP){
@@ -58,7 +59,7 @@ void BasicTimer::enableRcc(){
             break;
         #endif
 
-        #ifdef HAVE_TIM4
+        #ifdef ENABLE_TIM4
         case TIM4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, ENABLE);
             switch(TIM4_REMAP){
@@ -71,13 +72,13 @@ void BasicTimer::enableRcc(){
             break;
         #endif
 
-        #ifdef HAVE_TIM5
+        #ifdef ENABLE_TIM5
         case TIM5_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM5, ENABLE);
             break;
         #endif
 
-        #ifdef HAVE_TIM8
+        #ifdef ENABLE_TIM8
         case TIM8_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, ENABLE);
             switch(TIM8_REMAP){
@@ -112,7 +113,7 @@ void BasicTimer::init(const uint32_t freq, const Mode mode, const bool en){
         cycle++;
     }
 
-    if(raw_period / cycle == 0) CREATE_FAULT;
+    if(raw_period / cycle == 0) HALT;
 
     init(raw_period / cycle, cycle, mode, en);
 }
@@ -193,6 +194,15 @@ void GenericTimer::setTrgoSource(const TrgoSource source){
     TIM_SelectOutputTrigger(instance, (uint8_t)source);
 }
 
+TimerChannel & GenericTimer::ch(const size_t index){
+    if(index == 0 or index > 4) HALT
+    return channels[index - 1];
+}
+
+TimerOC & GenericTimer::oc(const size_t index){
+    if(index == 0 or index > 4) HALT
+    return channels[index - 1];
+}
 
 void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
 

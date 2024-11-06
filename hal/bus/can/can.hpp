@@ -1,12 +1,15 @@
 #pragma once
 
+#include "hal/bus/bus.hpp"
+
 #include "can_utils.hpp"
 #include "can_msg.hpp"
 #include "can_filter.hpp"
-#include "../hal/bus/bus.hpp"
+#include "CanTrait.hpp"
+// #include "interrupts.hpp"
 
 
-#ifdef HAVE_CAN1
+#ifdef ENABLE_CAN1
 extern "C"{
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void);
@@ -22,7 +25,7 @@ void CAN1_SCE_IRQHandler(void);
 }
 #endif
 
-#ifdef HAVE_CAN2
+#ifdef ENABLE_CAN2
 extern "C"{
 __interrupt
 void CAN2_TX_IRQHandler(void);
@@ -38,13 +41,11 @@ void CAN2_SCE_IRQHandler(void);
 }
 #endif
 
-#ifndef CAN_FIFO_SIZE
-#define CAN_FIFO_SIZE 8
-#endif
 
 
 namespace yumud{
-class Can: public PackedBus<CanMsg>{
+
+class Can: public PackedBus<CanMsg>,public CanTrait{
 public:
     using BaudRate = CanUtils::BaudRate;
     using Mode = CanUtils::Mode;
@@ -55,7 +56,7 @@ public:
 protected:
     CAN_TypeDef * instance;
 
-    RingBuf_t<CanMsg, CAN_FIFO_SIZE> pending_rx_msgs;
+    RingBuf_t<CanMsg, CAN_SOFTFIFO_SIZE> pending_rx_msgs;
     Callback cb_txok = nullptr;
     Callback cb_txfail = nullptr;
     Callback cb_rx = nullptr;
@@ -107,7 +108,7 @@ public:
     void bindCbRx(Callback && _cb);
 
 
-    #ifdef HAVE_CAN1
+    #ifdef ENABLE_CAN1
     friend void ::USB_HP_CAN1_TX_IRQHandler(void);
 
     friend void ::USB_LP_CAN1_RX0_IRQHandler(void);
@@ -117,7 +118,7 @@ public:
     friend void ::CAN1_SCE_IRQHandler(void);
     #endif
 
-    #ifdef HAVE_CAN2
+    #ifdef ENABLE_CAN2
     friend void ::CAN2_TX_IRQHandler(void);
 
     friend void ::CAN2_RX0_IRQHandler(void);
@@ -126,13 +127,13 @@ public:
 
     friend void ::CAN2_SCE_IRQHandler(void);
     #endif
-    };
+};
 
-#ifdef HAVE_CAN1
+#ifdef ENABLE_CAN1
 inline Can can1{CAN1};
 #endif
 
-#ifdef HAVE_CAN2
+#ifdef ENABLE_CAN2
 inline Can can2{CAN2};
 #endif
 

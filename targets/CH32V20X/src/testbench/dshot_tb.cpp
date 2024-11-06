@@ -103,7 +103,7 @@ using namespace yumud;
 
 void dshot_main(){
 
-    auto & logger = DEBUGGER;
+    auto & logger = DEBUGGER_INST;
     logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
     logger.setRadix(10);
     logger.setEps(4);

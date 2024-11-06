@@ -137,8 +137,6 @@ struct AABB_t{
 		return position + (size * T(static_cast<T>(0.5f)));
 	}
 
-	operator String() const;
-
 	__fast_inline constexpr AABB_t() {}
 	__fast_inline constexpr AABB_t(const Vector3_t<T> & p_pos, const Vector3_t<T> & p_size) :
 			position(p_pos),
@@ -227,7 +225,7 @@ template<arithmetic T>
 Vector3_t<T> AABB_t<T>::get_endpoint(int p_point) const {
 	switch (p_point) {
 		default:
-			CREATE_FAULT;
+			HALT;
 		case 0:
 			return Vector3_t<T>(position.x, position.y, position.z);
 		case 1:

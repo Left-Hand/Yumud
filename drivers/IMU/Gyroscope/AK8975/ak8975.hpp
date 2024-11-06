@@ -1,7 +1,5 @@
 #pragma once
 
-#include <optional>
-
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
 

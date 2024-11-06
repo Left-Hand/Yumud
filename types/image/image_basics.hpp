@@ -91,7 +91,7 @@ public:
         return color;
     }
 
-    __fast_inline ColorType operator[](const size_t & index)const{
+    __fast_inline ColorType operator[](const size_t index)const{
         ColorType color;
         getpixel(Vector2i(index % ImageBasics::get_size().x, index / ImageBasics::get_size().x), color);
         return color;

@@ -20,7 +20,7 @@ public:
     Image(Image&& other) noexcept : ImageBasics(other.get_size()),  ImageWithData<ColorType, ColorType>(std::move(other)){;}
 
     Image(const Image & other) noexcept: ImageBasics(other.get_size()),  ImageWithData<ColorType, ColorType>(other) {}
-
+ 
     Image & operator=(Image && other) noexcept {
         if (this != &other) {
             this->size = std::move(other.size);

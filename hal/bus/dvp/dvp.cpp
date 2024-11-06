@@ -1,7 +1,7 @@
 #include "dvp.hpp"
 
 using namespace yumud;
-#ifdef HAVE_DVP
+#ifdef ENABLE_DVP
 
 void Dvp::install(){
     portA[9].inpu();

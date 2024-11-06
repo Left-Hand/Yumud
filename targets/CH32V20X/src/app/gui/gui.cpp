@@ -1,8 +1,9 @@
 #include "gui.hpp"
 
-
+#include "sys/debug/debug_inc.h"
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
 #include "types/image/painter.hpp"
@@ -10,6 +11,10 @@
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
 #include "nvcv2/shape/shape.hpp"
+#include "image/font/instance.hpp"
+
+#include "hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2csw.hpp"
 
 using namespace yumud::nvcv2;
 
@@ -146,15 +151,60 @@ public:
     }
 };
 
+class Eye:public CanvasItem{
+public:
+    struct Config{
+        Vector2i l_center;
+        Vector2i r_center;
+
+        size_t eye_radius;
+        size_t iris_radius;
+        size_t pupil_radius;
+    };
+
+protected:
+    const Config & config_;
+
+    std::array<Vector2, 2> eye_pos;
+public:
+    Eye(const Theme & theme, const Config & config):CanvasItem(theme), config_(config){}
+
+    void setEye(const Vector2 & l_pos, const Vector2 & r_pos){
+        eye_pos[0] = l_pos;
+        eye_pos[1] = r_pos;
+    }
+
+    void render(PainterConcept & painter) override{
+        auto render_eye = [&](const LR side){
+
+            auto center = (side == LR::LEFT) ? config_.l_center : config_.r_center;
+            auto center_p = center + ((side == LR::LEFT) ? eye_pos[0] : eye_pos[1]) * config_.eye_radius * real_t(0.5);
+
+            painter.setColor(ColorEnum::WHITE);
+            painter.drawFilledCircle(center, config_.eye_radius);
+
+            painter.setColor(ColorEnum::BROWN);
+            painter.drawFilledCircle(center_p, config_.iris_radius);
+
+            painter.setColor(ColorEnum::BLACK);
+            painter.drawFilledCircle(center_p, config_.pupil_radius);
+        };
+
+        render_eye(LR::LEFT);
+        render_eye(LR::RIGHT);
+    }
+};
+
 void gui_main(){
 
-    auto & logger = uart2;
+    auto & logger = LOGGER_INST;
 
     #ifdef CH32V30X
     auto & spi = spi2;
     #else
     auto & spi = spi1;
     #endif
+
     logger.init(576000);
     auto & lcd_blk = portC[7];
     
@@ -165,10 +215,9 @@ void gui_main(){
     auto & dev_rst = portB[7];
 
     spi.bindCsPin(lcd_cs, 0);
-    spi.init(144000000, CommMethod::Blocking, CommMethod::None);
-    DisplayInterfaceSpi SpiInterfaceLcd{{spi, 0}, lcd_dc, dev_rst};
+    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
-    ST7789 tftDisplayer(SpiInterfaceLcd, Vector2i(135, 240));
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {135, 240});
 
     {//init tft
         tftDisplayer.init();
@@ -187,8 +236,8 @@ void gui_main(){
     painter.bindImage(tftDisplayer);
     // tftDisplayer.fill(RGB565::BLACK);
 
-    painter.setChFont(font7x7);
-    painter.setEnFont(font8x5);
+    painter.setChFont(yumud::font7x7);
+    painter.setEnFont(yumud::font8x5);
 
     Theme theme{
         .stoke_color =  {70,70,70},
@@ -201,7 +250,7 @@ void gui_main(){
 
 
     Label label2{theme};
-    label2.text = String("你好世界");
+    label2.text = "你好世界";
  
     Slider slider{theme};
 
@@ -233,7 +282,7 @@ void gui_main(){
 
     [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
         // painter.bindImage(sketch);
-        painter.setColor(ColorEnum::RED);
+        // painter.setColor(ColorEnum::RED);
         // painter.drawRoi(rect);
     };
 
@@ -258,6 +307,20 @@ void gui_main(){
         painter.setColor(ColorEnum::YELLOW);
         painter.drawString(rect.position + Vector2i{4,4}, toString(index));
         painter.bindImage(tftDisplayer);
+    };
+
+    auto eye_conf =         Eye::Config{
+            .l_center = Vector2i{62, 60},
+            .r_center = Vector2i{62, 180},
+
+            .eye_radius = 40,
+            .iris_radius = 13,
+            .pupil_radius = 7
+    };
+
+    Eye eye{
+        theme,
+        eye_conf
     };
 
     while(true){
@@ -296,7 +359,7 @@ void gui_main(){
         delay(10);
         #endif
 
-        #define GUI_TB
+        // #define GUI_TB
         #ifdef GUI_TB
         label.rect = Rect2i{15 + 10 * sin(t),20,100,20};
         label2.rect = Rect2i{15,80 + 20 * sin(t),100,20};
@@ -308,10 +371,40 @@ void gui_main(){
         slider.render(painter);
         opt.render(painter);
 
-        delay(10);
-        tftDisplayer.fill(ColorEnum::BLACK);
-    
-        logger.println(label.rect, label2.rect);
+
+        delay(20);
+        painter.fill(ColorEnum::BLACK);
+
         #endif
+
+        // #define DRAW_TB
+        #ifdef DRAW_TB
+        painter.setColor(ColorEnum::WHITE);
+        // painter.drawString({0,0}, "what");
+        painter.drawFilledCircle({20,20}, 17);
+        painter.drawFilledTriangle({80,80}, {100,110}, {70,100});
+        // painter.drawPolyline({{80,80}, {100,110}, {70,100}});
+        painter.drawLine({30,20}, {80,50});
+        painter.drawLine({40,40}, {10,50});
+        // painter.drawLine({20,20}, {90,210});
+        delay(20);
+        tftDisplayer.fill(ColorEnum::BLACK);
+        delay(20);
+        tftDisplayer.fill(ColorEnum::BLACK);
+        #endif
+
+        #define EYE_TB
+        #ifdef EYE_TB
+        eye.render(painter);
+
+        eye.setEye(Vector2::RIGHT.rotated(t * tau), Vector2::RIGHT.rotated(t * pi));;
+
+        delay(20);
+        painter.fill(ColorEnum::BLACK);
+
+        // DEBUG_PRINTLN(millis());
+        // PANIC("why");
+        #endif
+    
     }
 }

@@ -1,6 +1,7 @@
 #include "tb.h"
 
 #include "src/app/gui/coro_task.hpp"
+#include "sys/debug/debug_inc.h"
 // #include 
 using Task = coro::Task;
 
@@ -36,8 +37,8 @@ Task world(int max) {
 }
 
 void coro_tb() {
-    DEBUGGER.init(576000, CommMethod::Dma);
-    DEBUGGER.setEps(4);
+    DEBUGGER_INST.init(576000, CommMethod::Dma);
+    DEBUGGER_INST.setEps(4);
     DEBUGGER << "Coroutine test bench started.\n";
     
     // 创建两个协程实例

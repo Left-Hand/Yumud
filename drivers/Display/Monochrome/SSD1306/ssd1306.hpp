@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../DisplayerInterface.hpp"
+#include "drivers/Display/DisplayerPhy.hpp"
 #include "types/image/packed_image.hpp"
 
 namespace yumud::drivers{
@@ -10,8 +10,8 @@ public:
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
 protected:
-    DisplayerInterface & interface;
-    SSD13XX(DisplayerInterface & _interface):Displayer(size), interface(_interface){;}
+    DisplayerPhy & interface;
+    SSD13XX(DisplayerPhy & _interface):Displayer(size), interface(_interface){;}
 
     void setarea_unsafe(const Rect2i & area) override{
         setpos_unsafe(area.position);
@@ -33,7 +33,7 @@ protected:
 
     virtual void setFlushPos(const Vector2i & pos){
         auto [x, y] = pos + getOffset();
-        interface.writeCommand(0xb0 | (y / 8));
+        interface.writeCommand(0xb0 | size_t(y / 8));
         interface.writeCommand(((x & 0xf0 )>>4) |0x10);
         interface.writeCommand((x & 0x0f));
     }
@@ -63,8 +63,8 @@ public:
     }
 
     void turnDisplay(const bool i){
-        interface.writeCommand(0xC8 - 8*i);//正常显示
-        interface.writeCommand(0xA1 - i);
+        interface.writeCommand(0xC8 - 8*uint8_t(i));//正常显示
+        interface.writeCommand(0xA1 - uint8_t(i));
     }
 
     void enableFlipY(const bool flip = true){interface.writeCommand(0xA0 | flip);}
@@ -93,7 +93,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_72X40(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
+    SSD13XX_72X40(DisplayerPhy & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -112,7 +112,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_128X64(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
+    SSD13XX_128X64(DisplayerPhy & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -138,7 +138,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_128X32(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
+    SSD13XX_128X32(DisplayerPhy & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -157,7 +157,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_88X48(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
+    SSD13XX_88X48(DisplayerPhy & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -176,7 +176,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_64X48(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
+    SSD13XX_64X48(DisplayerPhy & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 
@@ -195,7 +195,7 @@ protected:
 public:
 
     VerticalBinaryImage & fetchFrame() override{return frame_instance;};
-    SSD13XX_128X80(DisplayerInterface & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
+    SSD13XX_128X80(DisplayerPhy & _interface):ImageBasics(phy_size), SSD13XX(_interface){;}
 };
 
 };

@@ -1,27 +1,9 @@
 #pragma once
 
-
 #include "sys/core/platform.h"
 
 #ifdef __cplusplus
-#include "sys/math/iq/iqt.hpp"
-#include <functional>
-namespace Sys{
-extern iq_t t;
-};
-void bindSystickCb(std::function<void(void)> && cb);
-extern "C" {
-#endif
-
-#ifdef CH32V20X
-
-#define TIMESTAMP_BEGIN(x) uint32_t time_begin = (x)
-#define TIMESTAMP_SINCE(x) (uint32_t time_current = (x); \
-            (time_current + (time_current ^ time_begin) & 0x8000? time_begin : -time_begin))
-#else
-#define TIMESTAMP_BEGIN(x) (uint32_t __time_begin_t__ = x;)
-#define TIMESTAMP_SINCE(x) (uint32_t __time_current_t__ = x; \
-            __time_current_t__ + (__time_current_t__ ^ __time_begin_t__) & 0x8000 ?  __time_begin_t__ : -__time_begin_t__)
+extern "C"{
 #endif
 
 #define TICKS_PER_MS (F_CPU / 1000)
@@ -68,10 +50,6 @@ void delayNanoseconds(const uint32_t ns);
 void Systick_Init(void);
 __interrupt void SysTick_Handler(void);
 
-
-#undef TIMESTAMP_BEGIN
-#undef TIMESTAMP_SINCE
-
 #undef TICKS_PER_MS
 #undef TICKS_PER_US
 
@@ -79,8 +57,6 @@ __interrupt void SysTick_Handler(void);
 #undef M_SYSTICK_DISER
 #undef M_SYSTICK_ENER
 
-
 #ifdef __cplusplus
 }
 #endif
-

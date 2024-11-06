@@ -2,6 +2,17 @@
 
 #include "spi.hpp"
 
+
+extern"C"{
+#ifdef ENABLE_SPI1
+__interrupt void SPI1_IRQHandler(void);
+#endif
+
+#ifdef ENABLE_SPI2
+__interrupt void SPI2_IRQHandler(void);
+#endif
+}
+
 namespace yumud{
 
 class SpiHw:public Spi{
@@ -31,9 +42,17 @@ public:
     __fast_inline Error write(const uint32_t data) override;
     __fast_inline Error read(uint32_t & data, bool toAck = true) override;
     __fast_inline Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override;
-    void setDataBits(const uint8_t data_size) override;
+    void setDataBits(const uint8_t len) override;
     void setBaudRate(const uint32_t baudRate) override;
-    void setBitOrder(const Endian endian) override ;
+    void setBitOrder(const Endian endian) override;
+
+    #ifdef HAVE_SPI1
+    friend void ::SPI1_IRQHandler(void);
+    #endif
+
+    #ifdef ENABLE_SPI2
+    friend void ::SPI2_IRQHandler(void);
+    #endif
 };
 
 SpiHw::Error SpiHw::write(const uint32_t data){
@@ -60,24 +79,14 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
     return Bus::ErrorType::OK;
 }
 
-
-}
-
-#ifdef HAVE_SPI1
+#ifdef ENABLE_SPI1
 static inline yumud::SpiHw spi1{SPI1};
 #endif
 
-#ifdef HAVE_SPI2
+#ifdef ENABLE_SPI2
 static inline yumud::SpiHw spi2{SPI2};
 #endif
 
-extern"C"{
-#ifdef HAVE_SPI1
-__interrupt void SPI1_IRQHandler(void);
-#endif
-
-#ifdef HAVE_SPI2
-__interrupt void SPI2_IRQHandler(void);
-#endif
-
 }
+
+

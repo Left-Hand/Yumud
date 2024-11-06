@@ -4,7 +4,7 @@
 #include "sys/debug/debug_inc.h"
 
 void float_main(){
-    DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     while(true){
         bf16 i = sin(t);

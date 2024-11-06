@@ -1,6 +1,8 @@
 #pragma once
 
 #include "spi.hpp"
+#include "sys/clock/clock.h"
+
 
 namespace yumud{
 class SpiSw: public Spi{
@@ -40,6 +42,9 @@ public:
             GpioConcept & _miso_pin,GpioConcept & _cs_pin):SpiSw(_sclk_pin, _mosi_pin, _miso_pin){
                 bindCsPin(_cs_pin, 0);
             }
+
+    DELETE_COPY_AND_MOVE(SpiSw);
+
     Error write(const uint32_t data) override {
         uint32_t dummy;
         transfer(dummy, data, false);
@@ -71,7 +76,7 @@ public:
     }
 
     void setBitOrder(const Endian endian) override {
-        m_msb = bool(endian);
+        m_msb = (endian == MSB);
     }
 };
 
