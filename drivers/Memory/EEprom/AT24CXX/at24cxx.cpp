@@ -69,11 +69,11 @@ void AT24CXX::wait_for_free(){
     delay(delays);
 }
 
-void AT24CXX::storeBytes(const void * data, const Address data_size, const Address loc){
-    auto full_end = loc + data_size; 
+void AT24CXX::storeBytes(const void * data, const Address len, const Address loc){
+    auto full_end = loc + len; 
     CHECK_ADDR(full_end);
 
-    AddressView store_window = AddressView{loc,loc + data_size};
+    AddressView store_window = AddressView{loc,loc + len};
     AddressView op_window = {0,0};
     AT24CXX_DEBUG("multi store entry", store_window);
     do{
@@ -88,8 +88,8 @@ void AT24CXX::storeBytes(const void * data, const Address data_size, const Addre
 }
 
 
-void AT24CXX::loadBytes(void * data, const Address data_size, const Address loc){
-    auto full_end = loc + data_size; 
+void AT24CXX::loadBytes(void * data, const Address len, const Address loc){
+    auto full_end = loc + len; 
     CHECK_ADDR(full_end);
-    READ_POOL(loc, (uint8_t *)data, data_size);
+    READ_POOL(loc, (uint8_t *)data, len);
 }

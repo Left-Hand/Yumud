@@ -82,8 +82,8 @@ protected:
     void entry_load() override{}
     void exit_load() override{}
 
-    void loadBytes(void * data, const Address data_size, const Address loc) override{}
-    void storeBytes(const void * data, const Address data_size, const Address loc) override{};
+    void loadBytes(void * data, const Address len, const Address loc) override{}
+    void storeBytes(const void * data, const Address len, const Address loc) override{};
 public:
     void init() override{}
 

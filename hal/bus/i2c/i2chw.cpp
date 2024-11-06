@@ -158,11 +158,3 @@ I2cHw::Error I2cHw::read(uint32_t & data, const bool toAck){
     data = I2C_ReceiveData(instance);
     return ErrorType::OK;
 }
-
-#if defined(ENABLE_I2C1)
-I2cHw i2c1{I2C1};
-#endif
-
-#if defined(ENABLE_I2C2)
-I2cHw i2c2{I2C2};
-#endif

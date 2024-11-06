@@ -2,6 +2,21 @@
 #include "sys/debug/debug_inc.h"
 
 using namespace yumud;
+
+
+#ifdef HAVE_SPI1
+void SPI1_IRQHandler(void){
+
+}
+#endif
+
+#ifdef ENABLE_SPI2
+void SPI2_IRQHandler(void){
+    
+}
+#endif
+
+
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef ENABLE_SPI1
@@ -21,7 +36,6 @@ void SpiHw::enableRcc(const bool en){
             break;
     }
 }
-
 
 Gpio & SpiHw::getMosiGpio(){
     switch((uint32_t)instance){
@@ -223,14 +237,19 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 
 
 
-void SpiHw::setDataBits(const uint8_t data_size){
+void SpiHw::setDataBits(const uint8_t bits){
     uint16_t tempreg =  instance->CTLR1;
-    if(data_size == 16){
-        if(tempreg & SPI_DataSize_16b) return;
-        tempreg |= SPI_DataSize_16b;
-    }else{
-        tempreg &= ~SPI_DataSize_16b;
+
+    switch(bits){
+        case 16:
+            if(tempreg & SPI_DataSize_16b) return;
+            tempreg |= SPI_DataSize_16b;
+            break;
+        default:
+            tempreg &= ~SPI_DataSize_16b;
+            break;
     }
+
     instance->CTLR1 = tempreg;
 }
 

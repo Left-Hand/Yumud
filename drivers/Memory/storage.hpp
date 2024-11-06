@@ -34,9 +34,9 @@ protected:
         loadBytes(&data, 1, loc);
     }
 
-    virtual void storeBytes(const void * data, const Address data_size, const Address loc) = 0;
+    virtual void storeBytes(const void * data, const Address len, const Address loc) = 0;
 
-    virtual void loadBytes(void * data, const Address data_size, const Address loc) = 0;
+    virtual void loadBytes(void * data, const Address len, const Address loc) = 0;
 
 public:
     virtual void init() = 0;
@@ -45,10 +45,10 @@ public:
     Address size() const {return m_capacity;}
     AddressView view() const {return {0, m_capacity};}
 
-    void store(const void * data, const Address data_size, const Address loc){
+    void store(const void * data, const Address len, const Address loc){
         if(view().has(loc)){
             entry_store();
-            storeBytes(data, data_size, loc);
+            storeBytes(data, len, loc);
             exit_store();
         }
     }
@@ -65,9 +65,9 @@ public:
         exit_load();
     }
 
-    void load(void * data, const Address data_size, const Address loc){
+    void load(void * data, const Address len, const Address loc){
         entry_load();
-        loadBytes(data, data_size, loc);
+        loadBytes(data, len, loc);
         exit_load();
     }
 

@@ -28,7 +28,6 @@ void preinit(){
 
 
 int main(){
-
     #ifdef CH32V20X
     Sys::Misc::prework();
     // eeprom_main();
@@ -63,6 +62,7 @@ int main(){
     // eeprom_tb(uart1);
     // eeprom_main();
 
+    while(true);
     #elif defined(CH32V30X)
 
     preinit();
@@ -93,6 +93,7 @@ int main(){
     gui_main();
     // gxm::host_main();
     // can_tb(logger, can1);
+    while(true);
     #endif
     while(true);
 }

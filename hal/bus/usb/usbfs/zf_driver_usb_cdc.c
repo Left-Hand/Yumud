@@ -6,14 +6,8 @@
 
 
 #ifdef CH32V30X
-//-------------------------------------------------------------------------------------------------------------------
-// ???????     USB_CDC??????? ??
-// ???????     *p          ?????????????
-// ???????     length      ????????????( length ???��??64)
-// ???????     void
-// ??????
-//-------------------------------------------------------------------------------------------------------------------
-void usb_cdc_send_pack(const uint8_t *p, const size_t length){
+
+void usb_cdc_send_pack(const uint8_t *p, const unsigned int length){
     if(length == 0) return;
     uint32_t i = 0;
 
@@ -23,7 +17,6 @@ void usb_cdc_send_pack(const uint8_t *p, const size_t length){
     }
     DevEP2_IN_Deal(length);
 
-    //??????????
     while(!(USBOTG_FS->UEP2_TX_CTRL&USBHD_UEP_T_RES1));
 
     // bUEP_T_RES1 & bUEP_T_RES0: handshake response type for USB endpoint X transmittal (IN)
@@ -34,12 +27,6 @@ void usb_cdc_send_pack(const uint8_t *p, const size_t length){
 }
 
 
-//-------------------------------------------------------------------------------------------------------------------
-// ???????     USB?��????��?????
-// ???????     void          ??
-// ???????     void
-// ??????
-//-------------------------------------------------------------------------------------------------------------------
 void usb_cdc_init( void )
 {
     pEP0_RAM_Addr = EP0_DatabufHD;

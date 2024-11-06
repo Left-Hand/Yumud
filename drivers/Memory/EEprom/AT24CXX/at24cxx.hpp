@@ -18,9 +18,9 @@ protected:
     void storeBytes(const uint8_t data, const Address loc) override;
     void loadBytes(uint8_t & data, const Address loc) override;
 
-    void storeBytes(const void * data, const Address data_size, const Address loc) override;
+    void storeBytes(const void * data, const Address len, const Address loc) override;
 
-    void loadBytes(void * data, const Address data_size, const Address loc) override;
+    void loadBytes(void * data, const Address len, const Address loc) override;
 
     void entry_store() override{
         update_entry_ms();

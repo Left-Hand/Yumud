@@ -24,9 +24,9 @@ public:
         }
     }
 
-    __fast_inline void addData(const T * data,const size_t data_size){
-        for(size_t i = 0; i < data_size; i++){
-            addData(data[data_size]);
+    __fast_inline void addData(const T * data,const size_t len){
+        for(size_t i = 0; i < len; i++){
+            addData(data[i]);
         }
     }
     //     auto ptr_before = write_ptr;
