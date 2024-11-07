@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../device_defs.h"
-
+#include "drivers/device_defs.h"
 
 namespace yumud::drivers{
 class Actuator{

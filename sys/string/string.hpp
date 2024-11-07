@@ -27,8 +27,8 @@
 #include "sys/core/platform.h"
 
 
-#include "string_view.hpp"
-#include "sys/string/string_utils.hpp"
+#include "StringView.hpp"
+#include "sys/string/utils/StringUtils.hpp"
 
 namespace yumud{
 	

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/Display/DisplayerPhy.hpp"
-#include "types/image/packed_image.hpp"
+#include "types/image/PackedImage.hpp"
 
 namespace yumud::drivers{
 

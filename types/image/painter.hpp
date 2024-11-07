@@ -1,7 +1,7 @@
 #pragma once
 
-#include "painter_concept.hpp"
-#include "sys/string/gbk.hpp"
+#include "PainterConcept.hpp"
+#include "sys/string/encoding/gbk.hpp"
 
 
 namespace yumud{

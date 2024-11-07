@@ -1,6 +1,6 @@
 #include "tb.h"
 
-#include "../drivers/VirtualIO/PCA9685/pca9685.hpp"
+#include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
 void pca_tb(IOStream & logger){
     // LDS14 lds14(uart);

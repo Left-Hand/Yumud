@@ -1,7 +1,7 @@
-#include "painter_concept.hpp"
+#include "PainterConcept.hpp"
 
-#include "sys/string/string.hpp"
-#include "sys/string/string_view.hpp"
+#include "sys/string/String.hpp"
+#include "sys/string/StringView.hpp"
 
 using namespace yumud;
 
