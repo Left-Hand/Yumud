@@ -24,7 +24,11 @@ protected:
 
     RGB888 m_color;
     Rect2i crop_rect;
-    
+
+    Font * enfont = nullptr;
+    Font * chfont = nullptr;
+    int padding = 1;
+
     void drawHriLine(const Vector2i & pos,const int l){
         auto rect = Rect2i(pos, Vector2i(l, 1));
         // rect = this->getClipWindow.intersection(rect);
@@ -37,7 +41,6 @@ protected:
         if(bool(rect) == false) return;
         drawFilledRect(rect);
     }
-
     void drawVerLine(const Rangei & y_range, const int x){
         auto y_range_regular = y_range.abs();
         drawVerLine(Vector2i(x, y_range_regular.from), y_range_regular.length());
@@ -54,8 +57,6 @@ public:
     DELETE_COPY_AND_MOVE(PainterConcept)
 
     PainterConcept() = default;
-
-
     void write(const char data) override{
         drawChar(cursor, wchar_t(data));
     }
@@ -64,15 +65,20 @@ public:
         drawStr(cursor, data, len);
     }
 
-    size_t pending() const override{
-        return 0;
-    }
+    size_t pending() const override{return 0;}
 
     void fill(const RGB888 & color){
         this->setColor(color);
         drawFilledRect(this->getClipWindow());
     }
 
+    void setChFont(Font & _chfont){
+        chfont = &_chfont;
+    }
+
+    void setEnFont(Font & _enfont){
+        enfont = &_enfont;
+    }
 
     template<typename U>
     void setColor(U _color){
@@ -110,14 +116,9 @@ public:
 
     void drawPolygon(const Vector2i * points, const size_t count);
 
-    void drawPolyline(const std::initializer_list<Vector2i> & points){
-        drawPolyline(points.begin(), points.size());
-    }
+    void drawPolyline(const std::initializer_list<Vector2i> & points);
 
-    void drawPolygon(const std::initializer_list<Vector2i> & points){
-        drawPolygon(points.begin(), points.size());
-    }
-
+    void drawPolygon(const std::initializer_list<Vector2i> & points);
 
 
     void drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2);

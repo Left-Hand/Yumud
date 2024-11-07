@@ -1,6 +1,4 @@
-// coro_task.h
-#ifndef COROUTINE_CORO_TASK_H
-#define COROUTINE_CORO_TASK_H
+#pragma once
 
 #include <coroutine>
 #include <exception>
@@ -8,8 +6,7 @@
 
 
 namespace coro{
-class Task
-{
+class Task{
 public:
     struct promise_type;
     using TaskHd1 = std::coroutine_handle<promise_type>;
@@ -45,6 +42,5 @@ public:
         auto final_suspend() noexcept { return std::suspend_always{}; }
     };
 };
-}
 
-#endif //COROUTINE_CORO_TASK_H
+}

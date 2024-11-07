@@ -2,6 +2,9 @@
 
 using namespace yumud::drivers;
 
+#define WRITE_REG(reg)     writeReg(reg.address, reg);
+#define READ_REG(reg)     readReg(reg.address, reg);
+
 void MMC5603::update(){
     auto & reg = x_reg;
     requestPool(reg.address_x, &reg.data_h, 6);
@@ -10,24 +13,49 @@ void MMC5603::update(){
 void MMC5603::reset(){
     auto & reg = ctrl0_reg;
     reg.do_reset = true;
-    writeReg(reg.address, reg);
+    WRITE_REG(reg)
     reg.do_reset = false;
 }
 
 bool MMC5603::verify(){
     auto & reg = product_id_reg;
-    readReg(reg.address, reg);
-    if(reg == reg.correct_id) return true;
-    return false;
+    READ_REG(reg)
+    if(reg != reg.correct_id) return false;
+
+    setSelfTestThreshlds(0,0,0);//TODO change
+
+    return true;
 }
 
-void MMC5603::setDataRate(const uint dr){
+void MMC5603::setDataRate(const DataRate dr){
+    {
+        auto & reg = odr_reg;
+        reg = uint8_t(dr);
+        WRITE_REG(reg);
+    }
+
+    {
+        auto & reg = ctrl2_reg;
+        if(reg.high_pwr != 1){
+            reg.high_pwr = 1;
+            WRITE_REG(reg);
+        }
+    }
 
     enableContious(true);
 }
 
-void MMC5603::enableContious(const bool en){
 
+void MMC5603::setBandWidth(const BandWidth bw){
+    auto & reg = ctrl1_reg;
+    reg.bandwidth = uint8_t(bw);
+    WRITE_REG(reg)
+}
+
+void MMC5603::enableContious(const bool en){
+    auto & reg = ctrl2_reg;
+    reg.cont_en = en;
+    WRITE_REG(reg)
 }
 
 
@@ -39,4 +67,24 @@ std::tuple<real_t, real_t, real_t> MMC5603::getMagnet(){
     s16_to_uni(int16_t(z_reg.data_h << 8 | z_reg.data_l), z);
 
     return {x,y,z};
+}
+
+void MMC5603::setSelfTestThreshlds(uint8_t x, uint8_t y, uint8_t z){
+    x_st_reg = x;
+    y_st_reg = y;
+    z_st_reg = z;
+
+    WRITE_REG(x_st_reg)
+    WRITE_REG(y_st_reg)
+    WRITE_REG(z_st_reg)
+}
+
+void MMC5603::inhibitChannels(bool x, bool y, bool z){
+    auto & reg = ctrl1_reg;
+
+    reg.x_inhibit = x;
+    reg.y_inhibit = y;
+    reg.z_inhibit = z;
+
+    WRITE_REG(reg)
 }

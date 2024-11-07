@@ -15,6 +15,7 @@ public:\
     constexpr name(bool && _value) = delete;\
     constexpr name operator = (const bool _value) = delete;\
     scexpr name from(bool _value) { name ret = name(); ret.value = _value; return ret; }\
+    explicit operator bool() const { return value; }\
     bool operator == (const name & other) const { return value == other.value; }\
     bool operator != (const name & other) const { return value == other.value; }\
 };\
@@ -25,6 +26,7 @@ MAKE_BINA_ENUM(Endian, MSB, LSB)
 MAKE_BINA_ENUM(Continuous, CONT, DISC)
 MAKE_BINA_ENUM(Ack, ACK, NACK)
 MAKE_BINA_ENUM(ClockDirection, CLOCKWISE,COUNTERCLOCKWISE)
+MAKE_BINA_ENUM(BoolLevel, HIGH, LOW)
 // MAKE_BINA_ENUM(TB, TOP, BOTTOM)
 // MAKE_BINA_ENUM(LR, LEFT, RIGHT)
 

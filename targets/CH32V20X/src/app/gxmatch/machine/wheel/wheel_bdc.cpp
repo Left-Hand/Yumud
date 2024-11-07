@@ -1,6 +1,6 @@
 
 #include "wheel_bdc.hpp"
-#include "drivers/Actuator/Driver/CoilDriver.hpp"
+#include "drivers/Actuator/Bridge/CoilDriver.hpp"
 
 namespace gxm{
 

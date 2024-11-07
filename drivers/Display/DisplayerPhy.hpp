@@ -120,47 +120,42 @@ public:
     }
 };
 
-class DisplayInterfaceI2c:public DisplayerPhy{
-protected:
-    I2cDrv bus_drv;
-public:
-    DisplayInterfaceI2c(I2c & i2c_bus, const uint8_t i2c_id):bus_drv(i2c_bus, i2c_id){};
-};
 
-class DisplayerPhyI2cc:public DisplayInterfaceI2c{
+class DisplayerPhyI2c:public DisplayerPhy{
 protected:
+    I2cDrv i2c_drv_;
     static constexpr uint8_t cmd_token = 0x00;
     static constexpr uint8_t data_token = 0x40;
-    static constexpr uint8_t oled_default_addr = 0x78;
+    static constexpr uint8_t default_i2c_addr = 0x78;
 public:
-    DisplayerPhyI2cc(I2c & i2c_bus, const uint8_t i2c_id = oled_default_addr):DisplayInterfaceI2c(i2c_bus, i2c_id){};
+    DisplayerPhyI2c(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){};
+    DisplayerPhyI2c(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){};
+    DisplayerPhyI2c(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, i2c_addr}){};
 
     void init()override{;}
 
     void writeCommand(const uint32_t cmd) override{
-        bus_drv.writeReg(cmd_token, cmd, LSB);
+        i2c_drv_.writeReg(cmd_token, cmd, LSB);
     }
 
     void writeData(const uint32_t data) override{
-        bus_drv.writeReg(data_token, data, LSB);
+        i2c_drv_.writeReg(data_token, data, LSB);
     }
 
-    template<typename U>
-    void writeMulti(const U * data_ptr, size_t len){
-        bus_drv.writePool(data_token, data_ptr, len, LSB);
+    void writeMulti(const is_stdlayout auto * data_ptr, size_t len){
+        i2c_drv_.writeMulti(data_token, data_ptr, len, LSB);
     }
 
-    template<typename U>
-    void writeMulti(const U data, size_t len){
-        bus_drv.writePool(data_token, data, len, LSB);
+    void writeMulti(const is_stdlayout auto data, size_t len){
+        i2c_drv_.writeMulti(data_token, data, len, LSB);
     }
 
     void writeU8(const uint8_t data, size_t len) override{
-        writeMulti(data, len);
+        writeMulti<uint8_t>(data, len);
     }
 
     void writeU8(const uint8_t * data, size_t len) override{
-        writeMulti(data, len);
+        writeMulti<uint8_t>(data, len);
     }
 };
 

@@ -50,7 +50,7 @@ public:
         if(pin != Pin::None) return channels[CLAMP(CTZ((uint16_t)pin), 0, 15)];
         else return channel_none;
     };
-    void setMode(const int index, const PinMode mode) override;
+    void setMode(const int index, const GpioMode mode) override;
 
 };
 

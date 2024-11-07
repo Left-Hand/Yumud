@@ -1100,8 +1100,8 @@ s32 TempSensor_Volt_To_Temper(s32 Value)
 {
     s32 Temper, Refer_Volt, Refer_Temper;
 
-    Refer_Volt = (s32)((*(u32 *)0x1FFFF720) & 0x0000FFFF);
-    Refer_Temper = (s32)(((*(u32 *)0x1FFFF720) >> 16) & 0x0000FFFF);
+    Refer_Volt = (s32)((*(uint32_t *)0x1FFFF720) & 0x0000FFFF);
+    Refer_Temper = (s32)(((*(uint32_t *)0x1FFFF720) >> 16) & 0x0000FFFF);
 
     Temper = Refer_Temper - ((Value - Refer_Volt) * 10 + (43 >> 1)) / 43;
 

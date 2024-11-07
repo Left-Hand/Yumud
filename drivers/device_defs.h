@@ -26,6 +26,10 @@ struct Reg_t{
     constexpr operator T & () {return (*reinterpret_cast<T *>(this));}
 };
 
+template<typename T>
+concept is_reg = std::same_as<T, Reg_t<std::decay_t<T>>>;
+
+
 #define REG_TEMPLATE(name, T)\
 struct name:public Reg_t<T>{\
     using Reg_t<T>::operator T;\
@@ -35,9 +39,15 @@ struct name:public Reg_t<T>{\
 
 REG_TEMPLATE(Reg8, uint8_t)
 REG_TEMPLATE(Reg16, uint16_t)
+REG_TEMPLATE(Reg32, uint32_t)
+REG_TEMPLATE(Reg64, uint64_t)
 
 REG_TEMPLATE(Reg8i, int8_t)
 REG_TEMPLATE(Reg16i, int16_t)
+REG_TEMPLATE(Reg32i, int32_t)
+REG_TEMPLATE(Reg64i, int64_t)
+
+#undef REG_TEMPLATE
 
 
 struct Fraction {
@@ -56,15 +66,4 @@ public:
 };
 
 
-#define I2CDEV_CONTSRTUCTER(name)\
-    name(I2cDrv & _bus_drv):bus_drv(_bus_drv){;}\
-    name(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}\
-    name(I2c & _i2c):bus_drv(I2cDrv(_i2c, name::default_addr)){;}\
-
-#define SPIDEV_CONTSRTUCTER(name)\
-    name(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}\
-    name(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
-
-
-
-#define TODO_TRAP(str) do{DEBUG_PRINTLN("todo:", str); PANIC()}while(false);
+#define TODO(str) do{PANIC("todo", str)}while(false);

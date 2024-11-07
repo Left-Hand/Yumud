@@ -13,23 +13,23 @@ using namespace yumud;
 
 #define WRITE_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    bus_drv.writePool((uint8_t)addr, ptr, len, LSB);\
+    i2c_drv_.writeMulti((uint8_t)addr, ptr, len, LSB);\
 else\
-    bus_drv.writePool((uint16_t)addr, ptr, len, LSB);\
+    i2c_drv_.writeMulti((uint16_t)addr, ptr, len, LSB);\
 
 #define READ_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    bus_drv.readPool((uint8_t)addr, ptr, len, LSB);\
+    i2c_drv_.readMulti((uint8_t)addr, ptr, len, LSB);\
 else\
-    bus_drv.readPool((uint16_t)addr, ptr, len, LSB);\
+    i2c_drv_.readMulti((uint16_t)addr, ptr, len, LSB);\
 
 #define WRITE_REG(loc, data)\
-if(is_small_chip()) bus_drv.writeReg((uint8_t)loc, data, LSB);\
-else bus_drv.writeReg((uint16_t)loc, data, LSB);\
+if(is_small_chip()) i2c_drv_.writeReg((uint8_t)loc, data, LSB);\
+else i2c_drv_.writeReg((uint16_t)loc, data, LSB);\
 
 #define READ_REG(loc, data)\
-if(is_small_chip()) bus_drv.readReg((uint8_t)loc, data, LSB);\
-else bus_drv.readReg((uint16_t)loc, data, LSB);\
+if(is_small_chip()) i2c_drv_.readReg((uint8_t)loc, data, LSB);\
+else i2c_drv_.readReg((uint16_t)loc, data, LSB);\
 
 #ifdef ACCESS_STRICT_PROTECT
 #define CHECK_ADDR(loc)\
@@ -38,7 +38,7 @@ ASSERT_WITH_HALT((loc <= m_capacity), "invalid addr", loc, m_capacity)
 
 #define CHECK_ADDR(loc)\
 if(loc > m_capacity){\
-    AT24CXX_DEBUG("invalid addr");\
+    PANIC("invalid addr");\
     return;\
 }
 

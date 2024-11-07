@@ -363,7 +363,7 @@ void LT8920::writeFifo(const uint8_t * data, const size_t len){
         spi_drv->writeSingle(uint8_t(50), CONT);
         spi_drv->writeMulti<uint8_t>(data, len);
     }else if(i2c_drv){
-        i2c_drv->writePool(uint8_t(50) , data, len, LSB);
+        i2c_drv->writeMulti(uint8_t(50) , data, len, LSB);
     }
 }
 
@@ -373,7 +373,7 @@ void LT8920::readFifo(uint8_t * data, const size_t len){
         spi_drv->writeSingle(uint8_t(50 | 0x80), CONT);
         spi_drv->readMulti(data, len);
     }else if(i2c_drv){
-        i2c_drv->readPool(uint8_t(50), data, len, LSB);
+        i2c_drv->readMulti(uint8_t(50), data, len, LSB);
     }
 }
 

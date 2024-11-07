@@ -47,7 +47,7 @@ protected:
         chipID = 0xFF,
     };
 
-    struct ConfigReg{
+    struct ConfigReg:public Reg16{
         uint16_t shuntVoltageEnable :1;
         uint16_t busVoltageEnable :1;
         uint16_t continuos :1;
@@ -58,7 +58,7 @@ protected:
         uint16_t rst:1;
     };
 
-    struct MaskReg{
+    struct MaskReg:public Reg16{
         uint16_t alertLatchEnable:1;
         uint16_t alertPolarity:1;
         uint16_t mathOverflow:1;
@@ -95,7 +95,7 @@ protected:
     }
 
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
-        i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
+        i2c_drv.readMulti((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
     }
 
     class CurrentChannel;

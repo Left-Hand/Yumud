@@ -67,7 +67,7 @@ enum class PinName:uint8_t{
 };
 
 
-enum class PinMode:uint8_t{
+enum class GpioMode:uint8_t{
 #if defined(HDW_SXX32)
     InAnalog = 0b0000,
     InFloating = 0b0100,
@@ -88,35 +88,22 @@ enum class PinMode:uint8_t{
 #endif
 };
 
-namespace PinModeUtils{
-    scexpr bool isIn(const PinMode & pinmode){
-        return pinmode == PinMode::InAnalog || pinmode == PinMode::InFloating || pinmode == PinMode::InPullUP || pinmode == PinMode::InPullDN;
-    }
-
-    scexpr bool isOut(const PinMode & pinmode){
-        return pinmode == PinMode::OutPP || pinmode == PinMode::OutOD || pinmode == PinMode::OutAfPP || pinmode == PinMode::OutAfOD;
-    }
-
-    scexpr bool isPP(const PinMode & pinmode){
-        return pinmode == PinMode::OutPP || pinmode == PinMode::OutAfPP;
-    }
-
-    scexpr bool isOD(const PinMode & pinmode){
-        return pinmode == PinMode::OutOD || pinmode == PinMode::OutAfOD;
-    }
-}
 
 namespace GpioUtils{
-    struct Level{
-    private:
-        bool value;
+    scexpr bool isIn(const GpioMode & pinmode){
+        return pinmode == GpioMode::InAnalog || pinmode == GpioMode::InFloating || pinmode == GpioMode::InPullUP || pinmode == GpioMode::InPullDN;
+    }
 
-    public:
-        constexpr explicit Level(bool _value) : value(_value) {}
-        constexpr operator bool() const { return value; }
-    };
+    scexpr bool isOut(const GpioMode & pinmode){
+        return pinmode == GpioMode::OutPP || pinmode == GpioMode::OutOD || pinmode == GpioMode::OutAfPP || pinmode == GpioMode::OutAfOD;
+    }
 
-    scexpr Level HIGH{true};
-    scexpr Level LOW{false};
+    scexpr bool isPP(const GpioMode & pinmode){
+        return pinmode == GpioMode::OutPP || pinmode == GpioMode::OutAfPP;
+    }
+
+    scexpr bool isOD(const GpioMode & pinmode){
+        return pinmode == GpioMode::OutOD || pinmode == GpioMode::OutAfOD;
+    }
 }
 }

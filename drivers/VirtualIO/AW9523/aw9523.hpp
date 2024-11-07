@@ -16,7 +16,7 @@ public:
 
     scexpr uint8_t default_i2c_addr = 0b10110000;
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
     uint16_t buf;
     scexpr uint8_t valid_chipid = 0x23;
 
@@ -47,19 +47,19 @@ protected:
     };
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        bus_drv.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
     };
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        bus_drv.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        bus_drv.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data, LSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        bus_drv.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data, LSB);
     }
 
     void write(const uint16_t data) override{
@@ -115,20 +115,11 @@ protected:
     };
 
 public:
-    AW9523(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    AW9523(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    AW9523(I2c & bus):bus_drv(I2cDrv(bus, default_i2c_addr)){;}
+    AW9523(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
+    AW9523(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    AW9523(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
 
-    void init(){
-        reset();
-        delay(10);
-        setLedCurrentLimit(CurrentLimit::Low);
-        for(uint8_t i = 0; i< 16; i++){
-            writeReg((RegAddress)((uint8_t)RegAddress::dim + i), (uint8_t)0);
-        }
-        ledMode = 0xffff;
-    }
-
+    void init();
     void reset(){
         writeReg(RegAddress::swRst, (uint8_t)0x00);
     }
@@ -153,56 +144,21 @@ public:
         write(buf);
     }
 
-    void writeByIndex(const int index, const bool data) override{
-        if(!isIndexValid(index))return;
-        if(data) buf |= 1 << index;
-        else buf &= ~(1 << index);
-        write(buf);
-    }
+    void writeByIndex(const int index, const bool data) override;
     
-    bool readByIndex(const int index) override{
-        if(!isIndexValid(index)) return false;
-        read();
-        return (buf & (1 << index));
-    }
+    bool readByIndex(const int index) override;
 
-    void setMode(const int index, const PinMode mode) override{
-        if(!isIndexValid(index))return;
-        uint16_t mask = 1 << index;
-        if(PinModeUtils::isIn(mode)) dir |= mask;
-        else dir &= ~mask;
-        writeReg(RegAddress::dir, dir);
+    void setMode(const int index, const GpioMode mode) override;
 
-        if(index < 8){
-            ctl.p0mod = PinModeUtils::isPP(mode);
-            writeReg(RegAddress::ctl, ctl);
-        }
-    }
+    void enableIrqByIndex(const int index, const bool en = true);
 
-    void enableIrqByIndex(const int index, const bool en = true){
-        if(!isIndexValid(index))return;
-        writeReg(RegAddress::inten, (uint8_t)(en << index));
-    }
-
-    void enableLedMode(const Pin pin, const bool en = true){
-        uint index = CTZ((uint16_t)pin);
-        if(en) ledMode &= ~(1 << index);
-        else ledMode |= (1 << index);
-        writeReg(RegAddress::ledMode, ledMode);
-    }
+    void enableLedMode(const Pin pin, const bool en = true);
 
     void setLedCurrentLimit(const CurrentLimit limit);
 
     void setLedCurrent(const Pin pin, const uint8_t current);
     
-    bool verify(){
-        uint8_t chipId;
-        readReg(RegAddress::chipId, chipId);
-        return (chipId == valid_chipid);
-    }
-
-    // AW9523 & operator << (const uint8_t data){write(data); return *this;}
-    
+    bool verify();
     AW9523 & operator = (const uint16_t data) override {write(data); return *this;}
 
     AW9523Pwm & operator [](const size_t index){

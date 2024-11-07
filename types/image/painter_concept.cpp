@@ -285,3 +285,11 @@ void PainterConcept::drawRoi(const Rect2i & rect){
     drawHriLine(center+Vector2i(-2,0), 5);
     drawVerLine(center+Vector2i(0,-2), 5);
 }
+
+void PainterConcept::drawPolyline(const std::initializer_list<Vector2i> & points){
+    drawPolyline(points.begin(), points.size());
+}
+
+void PainterConcept::drawPolygon(const std::initializer_list<Vector2i> & points){
+    drawPolygon(points.begin(), points.size());
+}

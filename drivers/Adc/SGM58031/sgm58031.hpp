@@ -27,7 +27,7 @@ public:
         RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
 
     struct ConfigReg:public Reg16{
         
@@ -104,28 +104,21 @@ protected:
 
     real_t fullScale;
     void writeReg(const RegAddress regAddress, const Reg16 & regData){
-        bus_drv.writeReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
+        i2c_drv_.writeReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
     }
 
     void readReg(const RegAddress regAddress, Reg16 & regData){
-        bus_drv.readReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
+        i2c_drv_.readReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
     }
 
 public:
-    SGM58031(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    SGM58031(I2cDrv && _bus_drv):bus_drv(std::move(_bus_drv)){;}
+    SGM58031(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
+    SGM58031(I2cDrv && _bus_drv):i2c_drv_(std::move(_bus_drv)){;}
 
-    void init(){
-        readReg(RegAddress::Config, configReg);
-        readReg(RegAddress::LowThr, lowThrReg);
-        readReg(RegAddress::HighThr, highThrReg);
-        readReg(RegAddress::Trim, trimReg);
-        readReg(RegAddress::DeviceID, deviceIdReg);
-    }
+    void init();
 
     void getDeviceId(){
         readReg(RegAddress::DeviceID, deviceIdReg);
-        // SGM58031_DEBUG("Ver:", deviceIdReg.ver, "Id", deviceIdReg.id, uint16_t(deviceIdReg));
     }
 
     bool isIdle(){
@@ -155,74 +148,18 @@ public:
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setDataRate(const DataRate & _dr){
-        uint8_t dr = (uint8_t)_dr;
-        configReg.dataRate = dr & 0b111;
-        config1Reg.drSel = dr >> 3;
-        writeReg(RegAddress::Config, configReg);
-        writeReg(RegAddress::Config1, config1Reg);
-    }
+    void setDataRate(const DataRate _dr);
 
-    void setMux(const MUX & _mux){
-        uint8_t mux = (uint8_t)_mux;
-        configReg.mux = mux;
+    void setMux(const MUX _mux){
+        configReg.mux = (uint8_t)_mux;
         writeReg(RegAddress::Config, configReg);
     }
 
-    void setFS(const FS & fs){
-        configReg.pga = (uint8_t)fs;
-        switch(fs){
-            case FS::FS0_256:
-                fullScale = real_t(0.256);
-                break;
-            case FS::FS0_512:
-                fullScale = real_t(0.512f);
-                break;
-            case FS::FS1_024:
-                fullScale = real_t(1.024f);
-                break;
-            case FS::FS2_048:
-                fullScale = real_t(2.048f);
-                break;
-            case FS::FS4_096:
-                fullScale = real_t(4.096f);
-                break;
-            case FS::FS6_144:
-                fullScale = real_t(6.144f);
-                break;
-            default:
-                break;
-        }
-        writeReg(RegAddress::Config, configReg);
-    }
+    void setFS(const FS fs);
 
-    void setFS(const real_t _fs, const real_t _vref){
-        real_t ratio = abs(_fs) / _vref;
-        PGA pga;
-        if(ratio >= 3){
-            pga = PGA::RT2_3;
-        }else if(ratio >= 2){
-            pga = PGA::RT1;
-        }else if(ratio >= 1){
-            pga = PGA::RT2;
-        }else if(ratio >= real_t(0.5)){
-            pga = PGA::RT4;
-        }else if(ratio >= real_t(0.25)){
-            pga = PGA::RT8;
-        }else{
-            pga = PGA::RT16;
-        }
-        configReg.pga = (uint8_t)pga;
-        writeReg(RegAddress::Config, configReg);
-    }
+    void setFS(const real_t _fs, const real_t _vref);
 
-    void setTrim(const real_t _trim){
-        real_t trim = _trim * real_t(4.0f / 3.0f);
-        real_t offset = trim - real_t(1.30225f);
-        trimReg.gn = (int)(offset * 0b01111111010);
-        writeReg(RegAddress::Trim, trimReg);
-    }
-
+    void setTrim(const real_t _trim);
     void enableCh3AsRef(bool yes){
         config1Reg.extRef = yes;
         writeReg(RegAddress::Config1, config1Reg);

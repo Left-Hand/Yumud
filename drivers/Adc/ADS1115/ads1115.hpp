@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../hal/bus/i2c/i2cdrv.hpp"
+#include "drivers/device_defs.h"
 
 #ifdef ADS111X_DEBUG
 #define ADS111X_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
@@ -32,17 +32,16 @@ public:
     };
 
 protected:
-    using yumud::I2cDrv;
     I2cDrv i2c_drv;
 
     using RegAddress = uint8_t;
 
-    struct ConversionReg{
+    struct ConversionReg:public Reg16{
         scexpr RegAddress address = 0b00; 
         uint16_t data;
     };
 
-    struct ConfigReg{
+    struct ConfigReg:public Reg16{
         scexpr RegAddress address = 0b01; 
         uint16_t comp_que:2;
         bool comp_latch:1;
@@ -55,12 +54,12 @@ protected:
         bool busy:1;
     };
 
-    struct LowThreshReg{
+    struct LowThreshReg:public Reg16i{
         scexpr RegAddress address = 0b10;
         int16_t data;
     };
 
-    struct HighThreshReg{
+    struct HighThreshReg:public Reg16i{
         scexpr RegAddress address = 0b11; 
         int16_t data;
     };
@@ -73,11 +72,11 @@ protected:
     };
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv.readReg(uint8_t(addr), data);
+        i2c_drv.readReg(uint8_t(addr), data, LSB);
     }
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv.writeReg(uint8_t(addr), data);
+        i2c_drv.writeReg(uint8_t(addr), data, LSB);
     }
 public:
     // ADDR PIN CONNECTION SLAVE ADDRESS

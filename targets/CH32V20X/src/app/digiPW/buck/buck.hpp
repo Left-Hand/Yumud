@@ -2,7 +2,7 @@
 
 #include "sys/math/real.hpp"
 #include "hal/adc/analog_channel.hpp"
-#include "drivers/Actuator/Driver/CoilDriver.hpp"
+#include "drivers/Actuator/Bridge/CoilDriver.hpp"
 #include <bit>
 
 #include "../ctrl/current_ctrl.hpp"

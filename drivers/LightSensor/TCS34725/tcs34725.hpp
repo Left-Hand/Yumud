@@ -13,7 +13,7 @@ public:
     };
 
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
 
     struct EnableReg:public Reg8{
         uint8_t powerOn : 1;
@@ -86,19 +86,19 @@ protected:
     }
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg(convRegAddress(regAddress), (uint16_t)regData, LSB);
+        i2c_drv_.writeReg(convRegAddress(regAddress), (uint16_t)regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg(convRegAddress(regAddress), (uint16_t &)regData, LSB);
+        i2c_drv_.readReg(convRegAddress(regAddress), (uint16_t &)regData, LSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg(convRegAddress(regAddress, false), (uint8_t)regData, LSB);
+        i2c_drv_.writeReg(convRegAddress(regAddress, false), (uint8_t)regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg(convRegAddress(regAddress, false), (uint8_t &)regData, LSB);
+        i2c_drv_.readReg(convRegAddress(regAddress, false), (uint8_t &)regData, LSB);
     }
 
     void requestRegData(const RegAddress regAddress, uint16_t * data_ptr, const size_t len);
@@ -106,9 +106,9 @@ protected:
 public:
     scexpr uint8_t default_i2c_addr = 0x52;
 
-    TCS34725(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    TCS34725(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
-    TCS34725(I2c & bus, const uint8_t addr = default_i2c_addr):bus_drv(bus, addr){;}
+    TCS34725(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
+    TCS34725(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    TCS34725(I2c & bus, const uint8_t addr = default_i2c_addr):i2c_drv_(bus, addr){;}
 
     void setIntegration(const uint16_t ms){
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);

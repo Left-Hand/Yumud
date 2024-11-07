@@ -6,7 +6,7 @@
 #include <concepts>
 #include <tuple>
 
-#include "sys/math/iq/iqt.hpp"
+#include "sys/math/iq/iq_t.hpp"
 
 namespace yumud::StringUtils {
 

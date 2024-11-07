@@ -1,7 +1,9 @@
 #pragma once
+
 #include "Led.hpp"
 #include "types/color/color_t.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
+#include "hal/gpio/gpio.hpp"
 
 class GpioConcept;
 
@@ -50,15 +52,8 @@ public:
     LedAnalog green;
     LedAnalog blue;
 
-    //template
     RgbLedAnalog(gpio_or_pwm auto & _red_ch, gpio_or_pwm auto & _green_ch, gpio_or_pwm auto & _blue_ch):
         red(_red_ch), green(_green_ch), blue(_blue_ch){;}
-
-    // void init() override{
-        // red.init();
-        // green.init();
-        // blue.init();
-    // }
 
     RgbLedAnalog & operator = (const Color & color) override{
         red = color.r;    

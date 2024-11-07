@@ -29,16 +29,16 @@ PortConcept & GpioVirtual::form_gpiotypedef_to_port(volatile GPIO_TypeDef * _ins
     }
 }
 
-void Gpio::setMode(const PinMode mode){
+void Gpio::setMode(const GpioMode mode){
     if(!isValid()) return;
     uint32_t tempreg = *pin_cfg;
     tempreg &= pin_mask;
     tempreg |= ((uint8_t)mode << ((pin_index % 8) * 4));
     *pin_cfg = tempreg;
 
-    if(mode == PinMode::InPullUP){
+    if(mode == GpioMode::InPullUP){
         instance -> OUTDR |= pin;
-    }else if(mode == PinMode::InPullDN){
+    }else if(mode == GpioMode::InPullDN){
         instance -> OUTDR &= ~pin;
     }
 }

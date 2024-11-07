@@ -1,0 +1,110 @@
+#include "IST8310.hpp"
+
+using namespace yumud::drivers;
+
+
+#define WRITE_REG(reg) writeReg(reg.address, reg);
+#define READ_REG(reg) readReg(reg.address, reg);
+
+
+void IST8310::init(){
+    reset();
+    delay(10);
+
+    if(verify() == false) HALT;
+
+    enableContious(false);
+    setXAverageTimes(AverageTimes::_4);
+    setYAverageTimes(AverageTimes::_4);
+
+    update();
+}
+void IST8310::update(){
+    requestPool(axis_x_reg.address, &axis_x_reg, 3);
+}
+
+bool IST8310::verify(){
+    auto & reg = whoami_reg;
+    READ_REG(reg);
+    return reg == reg.expected_value;
+}
+
+void IST8310::reset(){
+    auto & reg = ctrl2_reg;
+    reg.reset = 1;
+    WRITE_REG(reg)
+    reg.reset = 0;
+}
+
+void IST8310::enableContious(const bool en){
+    auto & reg = ctrl1_reg;
+    reg.cont = en;
+    WRITE_REG(reg);
+}
+
+
+void IST8310::setXAverageTimes(const AverageTimes times){
+    setAverageTimes(true, times);
+}
+
+
+void IST8310::setYAverageTimes(const AverageTimes times){
+    setAverageTimes(false, times);
+}
+
+void IST8310::setAverageTimes(bool is_x, AverageTimes times){
+    auto & reg = average_reg;
+    if(is_x){
+        reg.x_times = uint8_t(times);
+    }else{
+        reg.y_times = uint8_t(times);
+    }
+
+    WRITE_REG(reg)
+}
+
+std::tuple<real_t, real_t, real_t> IST8310::getMagnet(){
+    auto conv = [](const int16_t data) -> real_t{
+        return data * real_t(0.3);
+    };
+
+    return {
+        conv(axis_x_reg),
+        conv(axis_y_reg),
+        conv(axis_z_reg)
+    };
+}
+
+int IST8310::getTemperature(){
+    return temp_reg;
+}
+
+bool IST8310::busy(){
+    auto & reg = status1_reg;
+    READ_REG(reg);
+    return reg.drdy == false;
+}
+
+void IST8310::enableInterrupt(const bool en){
+    auto & reg = ctrl2_reg;
+    reg.int_en = en;
+    WRITE_REG(reg);
+}
+
+void IST8310::setInterruptLevel(const BoolLevel lv){
+    auto & reg = ctrl2_reg;
+    reg.drdy_level = bool(lv);
+    WRITE_REG(reg);
+}
+
+void IST8310::sleep(const bool en){
+    auto & reg = ctrl1_reg;
+    reg.awake = !en;
+    WRITE_REG(reg);
+}
+
+bool IST8310::getInterruptStatus(){
+    auto & reg = status2_reg;
+    READ_REG(reg);
+    return reg.on_int;
+}

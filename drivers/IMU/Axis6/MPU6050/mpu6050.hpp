@@ -2,14 +2,12 @@
 
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
-#include "types/quat/Quat_t.hpp"
-
 
 namespace yumud::drivers{
 
 class MPU6050:public Axis6{
 public:
-    scexpr uint8_t default_id = 0xd0;
+    scexpr uint8_t default_i2c_addr = 0xd0;
 
     enum class DPS:uint8_t{
         _250, _500, _1000, _2000
@@ -20,7 +18,7 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv;
+    I2cDrv i2c_drv_;
 
     struct vec3i{
         int16_t x;
@@ -47,23 +45,24 @@ protected:
         GyroZ = 0x47,
     };
 
-    void writeReg(const auto reg, const uint8_t data){
-        i2c_drv.writeReg((uint8_t)reg, data, MSB);
+    void writeReg(const auto addr, const uint8_t data){
+        i2c_drv_.writeReg((uint8_t)addr, data, MSB);
     }
 
     void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
-        i2c_drv.readPool((uint8_t)reg_addr, datas, len, MSB);
+        i2c_drv_.readMulti((uint8_t)reg_addr, datas, len, MSB);
     }
 
 public:
-    MPU6050(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    MPU6050(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    MPU6050(I2c & bus):i2c_drv(bus, default_id){;}
+    MPU6050(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    MPU6050(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    MPU6050(I2c & bus, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(bus, i2c_addr){;}
+
     void init();
     void update();
     std::tuple<real_t, real_t, real_t> getAccel() override;
     std::tuple<real_t, real_t, real_t> getGyro() override;
-    void getTemperature(real_t & temp);
+    real_t getTemperature();
 };
 
 

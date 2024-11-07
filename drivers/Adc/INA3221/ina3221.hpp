@@ -164,40 +164,39 @@ protected:
     }
 
     void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
-        i2c_drv.readPool((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
+        i2c_drv.readMulti((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
     }
-    // struct INA3221Channel:public AnalogInChannel{
-    // public:
-    //     enum class Index:uint8_t{
-    //         SHUNT_VOLT,
-    //         BUS_VOLT,
-    //         CURRENT,
-    //         POWER
-    //     };
 
-    // protected:
-    //     INA3221 & parent_;
-    //     Index ch_;
-    // public:
-    //     INA3221Channel(INA3221 & _parent, const Index _ch):parent_(_parent), ch_(_ch){}
+    struct INA3221Channel:public AnalogInChannel{
+    public:
+        enum class CHType:uint8_t{
+            SHUNT_VOLT,
+            BUS_VOLT,
+        };
 
-    //     INA3221Channel(const INA3221Channel & other) = delete;
-    //     INA3221Channel(INA3221Channel && other) = delete;
-    //     operator real_t() override{
-    //         switch(ch_){
-    //             case Index::SHUNT_VOLT:
-    //                 return parent_.getShuntVoltage();
-    //             case Index::BUS_VOLT:
-    //                 return parent_.getVoltage();
-    //             case Index::CURRENT:
-    //                 return parent_.getCurrent();
-    //             case Index::POWER:
-    //                 return parent_.getPower();
-    //             default:
-    //                 return 0;
-    //         }
-    //     }
-    // };
+        using CHIndex = uint8_t;
+
+    protected:
+        INA3221 & parent_;
+        CHType ch_;
+        CHIndex idx_;
+    public:
+        INA3221Channel(INA3221 & parent, const CHType ch, const CHIndex idx):
+                parent_(parent), ch_(ch), idx_(idx){}
+
+        INA3221Channel(const INA3221Channel & other) = delete;
+        INA3221Channel(INA3221Channel && other) = delete;
+        operator real_t() override{
+            switch(ch_){
+                case CHType::SHUNT_VOLT:
+                    return parent_.getShuntVoltage(idx_);
+                case CHType::BUS_VOLT:
+                    return parent_.getBusVoltage(idx_);
+                default:
+                    return 0;
+            }
+        }
+    };
 
     struct{
         ConfigReg       config_reg;
@@ -225,7 +224,14 @@ protected:
     };
 
     I2cDrv i2c_drv;
-    // std::array<INA3221Channel, 4> channels;
+    std::array<INA3221Channel, 6> channels = {
+        INA3221Channel{*this, INA3221Channel::CHType::BUS_VOLT, 0},
+        INA3221Channel{*this, INA3221Channel::CHType::SHUNT_VOLT, 0},
+        INA3221Channel{*this, INA3221Channel::CHType::BUS_VOLT, 1},
+        INA3221Channel{*this, INA3221Channel::CHType::SHUNT_VOLT, 1},
+        INA3221Channel{*this, INA3221Channel::CHType::BUS_VOLT, 2},
+        INA3221Channel{*this, INA3221Channel::CHType::SHUNT_VOLT, 2},
+    };
 public:
     INA3221(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
     INA3221(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}

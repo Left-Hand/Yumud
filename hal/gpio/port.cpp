@@ -6,7 +6,7 @@ using namespace yumud;
 
 Gpio Port::channel_none = Gpio(GPIOD, Pin::None);
 
-void Port::setMode(const int index, const PinMode mode){
+void Port::setMode(const int index, const GpioMode mode){
     Gpio gpio = Gpio(instance, (Pin)(1 << index));
     gpio.setMode(mode);
 }

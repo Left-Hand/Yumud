@@ -18,7 +18,7 @@ public:
     virtual void set(const uint16_t mask) = 0;
     virtual void clr(const uint16_t mask) = 0;
     
-    virtual void setMode(const int index, const PinMode mode) = 0;
+    virtual void setMode(const int index, const GpioMode mode) = 0;
     virtual PortConcept & operator = (const uint16_t data) = 0;
 
     virtual operator uint16_t() = 0;

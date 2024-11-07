@@ -7,7 +7,7 @@ ExtiChannel::ExtiChannel(const Line _line, const NvicPriority & _priority,
 
     line(_line), 
     gpio(nullptr), 
-    gpio_mode(PinMode::InAnalog),
+    gpio_mode(GpioMode::InAnalog),
     priority(_priority), 
     trigger(_trigger), 
     mode(_mode){;}
@@ -19,8 +19,8 @@ ExtiChannel::ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
     line(from_gpio_to_line(_gpio)), 
     gpio(&_gpio),
     gpio_mode(
-        (trigger == Trigger::Dual)? PinMode::InFloating : 
-        ((trigger == Trigger::Rising)? PinMode::InPullDN : PinMode::InPullUP)
+        (trigger == Trigger::Dual)? GpioMode::InFloating : 
+        ((trigger == Trigger::Rising)? GpioMode::InPullDN : GpioMode::InPullUP)
     ),
     priority(_priority), 
     trigger(_trigger),

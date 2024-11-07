@@ -7,7 +7,7 @@
 #include "types/matrix/matrix.hpp"
 #include "types/matrix/ceres/ceres.hpp"
 #include "types/plane/plane_t.hpp"
-#include "types/aabb/aabb.hpp"
+#include "types/aabb/aabb_t.hpp"
 #include "types/transform3d/transform3d_t.hpp"
 #include "types/transform2d/transform2d.hpp"
 

@@ -13,9 +13,7 @@ protected:
     using Vector2i = Image<ColorType>::Vector2i;
 
     ImageWritable<ColorType> * src_image = nullptr;
-    Font * enfont = nullptr;
-    Font * chfont = nullptr;
-    int padding = 1;
+
 
     void drawtexture_unsafe(const Rect2i & rect,const ColorType * color_ptr){
         src_image -> puttexture_unsafe(rect, color_ptr);
@@ -49,22 +47,6 @@ public:
         src_image = &_source;
     }
 
-    void setChFont(Font & _chfont){
-        chfont = &_chfont;
-    }
-
-    void setEnFont(Font & _enfont){
-        enfont = &_enfont;
-    }
-
-    void flush(){
-        flush(m_color);
-    }
-
-    void flush(const ColorType & color){
-        src_image -> putrect_unsafe(src_image->get_view(), color);
-    }
-    
     void setFontScale(const uint8_t scale){
         chfont->setScale(scale);
         enfont->setScale(scale);

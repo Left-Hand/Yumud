@@ -105,15 +105,15 @@ bool PCA9685::readByIndex(const int index){
     return true;
 }
 
-void PCA9685::setMode(const int index, const PinMode mode){
+void PCA9685::setMode(const int index, const GpioMode mode){
 //     if(!isIndexValid(index))return;
 //     uint16_t mask = 1 << index;
-//     if(PinModeUtils::isIn(mode)) dir |= mask;
+//     if(GpioMode::isIn(mode)) dir |= mask;
 //     else dir &= ~mask;
 //     writeReg(RegAddress::dir, dir);
 
 //     if(index < 8){
-//         ctl.p0mod = PinModeUtils::isPP(mode);
+//         ctl.p0mod = GpioMode::isPP(mode);
 //         writeReg(RegAddress::ctl, ctl.data);
 //     }
 }

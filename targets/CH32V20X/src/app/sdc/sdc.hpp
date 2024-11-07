@@ -2,7 +2,7 @@
 
 
 #include "../../drivers/device_defs.h"
-#include "../../drivers/Memory/storage.hpp"
+#include "../../concept/storage.hpp"
 
 #define W25QXX_DEBUG
 

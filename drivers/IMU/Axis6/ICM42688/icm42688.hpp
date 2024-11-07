@@ -166,11 +166,6 @@ protected:
     real_t lsb_acc_x64;
     real_t lsb_gyro_x256;
 
-    struct Vec3i16{
-        int16_t x;
-        int16_t y;
-        int16_t z;
-    };
     
     struct{
         Vec3i16 accel_data;

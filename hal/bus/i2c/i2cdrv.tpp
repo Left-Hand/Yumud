@@ -35,7 +35,7 @@ Bus::Error I2cDrv::writeRegAddress(const T reg_address, const Endian endian){
 
 template<typename T>
 requires valid_i2c_data<T>
-void I2cDrv::writePool_impl(const valid_i2c_regaddr auto reg_address, const T * data_ptr, const size_t length, const Endian endian){
+void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T * data_ptr, const size_t length, const Endian endian){
     constexpr size_t size = sizeof(T);
 
     if constexpr(size == 0)   return;
@@ -68,7 +68,7 @@ void I2cDrv::writePool_impl(const valid_i2c_regaddr auto reg_address, const T * 
 
 template<typename T>
 requires valid_i2c_data<T>
-void I2cDrv::writePool_impl(const valid_i2c_regaddr auto reg_address, const T data, const size_t length, const Endian endian){
+void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T data, const size_t length, const Endian endian){
     constexpr size_t size = sizeof(T);
 
     if constexpr(size == 0)   return;
@@ -100,7 +100,7 @@ void I2cDrv::writePool_impl(const valid_i2c_regaddr auto reg_address, const T da
 
 template<typename T>
 requires valid_i2c_data<T>
-void I2cDrv::readPool_impl(const valid_i2c_regaddr auto reg_address, T * data_ptr, const size_t length, const Endian endian){
+void I2cDrv::readMulti_impl(const valid_i2c_regaddr auto reg_address, T * data_ptr, const size_t length, const Endian endian){
     if(length == 0) return;
     constexpr size_t size = sizeof(T);
     size_t bytes = length * size;
