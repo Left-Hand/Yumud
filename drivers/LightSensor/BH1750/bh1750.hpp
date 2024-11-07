@@ -13,9 +13,9 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv;
+    I2cDrv i2c_drv_;
 
-    enum class Command{
+    enum Command:uint8_t{
         PowerDown = 0,
         PowerOn = 1,
         Reset = 7,
@@ -30,16 +30,12 @@ protected:
 
     Mode currentMode = Mode::LMode;
     bool continuous = false;
-
-    void sendCommand(const Command cmd){
-        // i2c_drv.write((uint8_t)cmd);
-    }
-
-    void sendCommand(const uint8_t cmd){
-        // i2c_drv.write(cmd);
-    }
+    void sendCommand(const uint8_t cmd);
 
 public:
+    BH1750(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    BH1750(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+
     void powerOn(){
         sendCommand(Command::PowerOn);
     }
@@ -60,38 +56,11 @@ public:
         continuous = enabled;
     }
 
-    void startConv(){
-        if(continuous){
-            sendCommand(0x10 | (uint8_t)currentMode);
-        }else{
-            sendCommand(0x20 | (uint8_t)currentMode);
-        }
-    }
+    void startConv();
 
-    void changeMeasureTime(const uint16_t ms){
-        uint8_t x;
-        if(currentMode == Mode::HMode || currentMode == Mode::HMode2){
-            x = CLAMP(ms * 69 / 120, 31, 254);
-            lsb.numerator = 5 * 69;
-            lsb.denominator = 6 * x;
-            if(currentMode == Mode::HMode2){
-                lsb.denominator *= 2;
-            }
-        }else{
-            x = CLAMP(ms * 69 / 16, 31, 254);
-            lsb.numerator = 5 * 69 * 4;
-            lsb.denominator = 6 * x;
-        }
+    void changeMeasureTime(const uint16_t ms);
 
-        sendCommand((uint8_t)(Command::ChangeMeasureTimeH) | (x >> 5));
-        sendCommand((uint8_t)(Command::ChangeMeasureTimeL) | (x & 31));
-    }
-
-    int getLx(){
-        uint8_t data[2] = {0};
-        // i2c_drv.read(data, 2);
-        return lsb * (int)((data[0] << 8) | data[1]);
-    }
+    int getLx();
 };
 
 };
