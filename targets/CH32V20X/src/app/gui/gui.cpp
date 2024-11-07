@@ -95,9 +95,6 @@ void gui_main(){
 
     Label label2{theme};
     label2.text = "你好世界";
-
-    // auto a = i8{8};
-    // auto b = a + i8{8};
  
     Slider slider{theme};
 
@@ -127,20 +124,6 @@ void gui_main(){
         tftDisplayer.puttexture(area, src.get_data());
     };
 
-    [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
-        // painter.bindImage(sketch);
-        // painter.setColor(ColorEnum::RED);
-        // painter.drawRoi(rect);
-    };
-
-    [[maybe_unused]] auto plot_number = [&](const Rect2i & rect, const int index){
-        // painter.bindImage(sketch);
-        painter.setColor(ColorEnum::GREEN);
-        painter.drawRoi(rect);
-        painter.setColor(ColorEnum::YELLOW);
-        painter.drawString(rect.position + Vector2i{4,4}, toString(index));
-        painter.bindImage(tftDisplayer);
-    };
 
     auto eye_conf =         Eyes::Config{
             .l_center = Vector2i{62, 60},
