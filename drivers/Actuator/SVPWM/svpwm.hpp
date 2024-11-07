@@ -1,6 +1,6 @@
 #pragma once
 
-#include "drivers/Actuator/driver/CoilDriver.hpp"
+#include "drivers/Actuator/Bridge/CoilDriver.hpp"
 #include "types/vector2/vector2_t.hpp"
 
 

@@ -20,7 +20,7 @@
 #include "drivers/Adc/HX711/HX711.hpp"
 #include "drivers/Wireless/Radio/HC12/HC12.hpp"
 
-#include "drivers/Actuator/Driver/MP1907/mp1907.hpp"
+#include "drivers/Actuator/Bridge/MP1907/mp1907.hpp"
 
 #include "dsp/controller/PID.hpp"
 
