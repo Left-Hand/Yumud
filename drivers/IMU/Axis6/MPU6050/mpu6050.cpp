@@ -33,10 +33,10 @@ std::tuple<real_t, real_t, real_t> MPU6050::getGyro(){
     return {x, y, z};
 }
 
-void MPU6050::getTemperature(real_t &temp){
+real_t MPU6050::getTemperature(){
     real_t dummy;
     s16_to_uni(temprature, dummy);
-    temp = real_t(36.65f) + dummy / real_t(340);
+    return real_t(36.65f) + dummy / real_t(340);
 }
 
 

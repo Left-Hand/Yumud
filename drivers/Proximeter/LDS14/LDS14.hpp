@@ -31,11 +31,11 @@ protected:
         uint16_t timestamp;
         uint8_t crc8;
 
-        protected:
-            uint8_t calc_crc() const;
+    protected:
+        uint8_t calc_crc() const;
 
-        public:
-            bool is_valid() const {return crc8 == calc_crc();}
+    public:
+        bool is_valid() const {return crc8 == calc_crc();}
     };
 
     LidarFrame m_frame;
