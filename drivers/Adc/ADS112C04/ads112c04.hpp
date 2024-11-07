@@ -107,7 +107,7 @@ protected:
     };
 
     enum class IDAC2_MUX {
-        DISABLED = 0b000, // 000 : IDAC2 disabled (default)
+        DISABLED = 0b000, // 000 :IDAC2 disabled (default)
         AIN0    = 0b001, // 001 : IDAC2 connected to AIN0
         AIN1    = 0b010, // 010 : IDAC2 connected to AIN1
         AIN2    = 0b011, // 011 : IDAC2 connected to AIN2
@@ -121,34 +121,34 @@ protected:
 
     struct Config0Reg:public Reg8{
         scexpr RegAddress address = 0;
-        bool pga_bypass:1;
-        GAIN gain:3;
-        MUX mux:4;
+        uint8_t pga_bypass:1;
+        uint8_t gain:3;
+        uint8_t mux:4;
     };
 
     struct Config1Reg:public Reg8{
         scexpr RegAddress address = 1;
-        bool temp_sensor_mode:1;
-        VREF vref:2;
-        bool cont_mode:1;
-        bool turbo_mode:1;
-        DataRate data_rate:3;
+        uint8_t temp_sensor_mode:1;
+        uint8_t vref:2;
+        uint8_t cont_mode:1;
+        uint8_t turbo_mode:1;
+        uint8_t data_rate:3;
     };
 
     struct Config2Reg:public Reg8{
         scexpr RegAddress address = 2;
-        IDAC idac:3;
-        bool current_sense_en:1;
-        CRC_Type crc_type:2;
-        bool data_counter_en:1;
-        bool conv_done:1;
+        uint8_t idac:3;
+        uint8_t current_sense_en:1;
+        uint8_t crc_type:2;
+        uint8_t data_counter_en:1;
+        uint8_t conv_done:1;
     };
 
     struct Config3Reg:public Reg8{
         scexpr RegAddress address = 3;
         uint8_t __resv__:2;
-        IDAC1_MUX idac1_mux:3;
-        IDAC2_MUX idac2_mux:3;
+        uint8_t idac1_mux:3;
+        uint8_t idac2_mux:3;
     };
 
     struct{
@@ -181,12 +181,12 @@ public:
         config3_reg.__resv__ = 0;
     }
     void setMux(const MUX mux){
-        config0_reg.mux = mux;
+        config0_reg.mux = uint8_t(mux);
         writeReg(config0_reg.address, config0_reg);
     }
 
     void setGain(const GAIN gain){
-        config0_reg.gain = gain;
+        config0_reg.gain = uint8_t(gain);
         writeReg(config0_reg.address, config0_reg);
     }
 
@@ -201,12 +201,12 @@ public:
     }
 
     void setIDAC(const IDAC idac){
-        config2_reg.idac = idac;
+        config2_reg.idac = uint8_t(idac);
         writeReg(config2_reg.address, (config2_reg));
     }
 
     void setDataRate(const DataRate data_rate){
-        config1_reg.data_rate = data_rate;
+        config1_reg.data_rate = uint8_t(data_rate);
         writeReg(config1_reg.address, (config1_reg));
     }
 };
