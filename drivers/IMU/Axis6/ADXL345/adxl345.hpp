@@ -302,7 +302,7 @@ protected:
         if(i2c_drv){
             i2c_drv->writeReg((uint8_t)((uint8_t)reg_address & 0x7F), reg_data, MSB);
         } else if (spi_drv) {
-            TODO_TRAP("spi is not support yet")
+            TODO("spi is not support yet")
         }
     }
 
@@ -310,7 +310,7 @@ protected:
         if(i2c_drv){
             i2c_drv->readReg(uint8_t(reg_address), reg_data, MSB);
         }else if(spi_drv){
-            TODO_TRAP("spi is not support yet")
+            TODO("spi is not support yet")
         }
     }
 public:

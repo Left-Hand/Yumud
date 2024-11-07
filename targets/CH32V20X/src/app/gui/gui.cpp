@@ -18,7 +18,14 @@
 
 #include "sys/math/int/int_t.hpp"
 
+#include "elements.hpp"
+
+#include "eyetrack/eyetrack.hpp"
+
+#include "drivers/VirtualIO/PCA9685/pca9685.hpp"
+
 using namespace yumud::nvcv2;
+using namespace etk;
 
 using Vector2i = Vector2_t<int>;
 
@@ -31,171 +38,6 @@ using namespace yumud;
 using namespace yumud::drivers;
 
 
-class Node{
-protected:
-    using Nodes = std::vector<std::reference_wrapper<Node>>;
-    Nodes children_;
-
-public:
-
-    void addChild(Node & node){
-        children_.push_back(node);
-    }
-
-    auto getChildren(){
-        return children_;
-    }
-};
-
-
-struct Theme{
-    RGB888 stoke_color;
-    RGB888 bg_color;
-    RGB888 text_color;
-};
-
-// scexpr auto a = sizeof(Theme);
-
-class CanvasItem{
-public:
-    // struct Config{
-    Rect2i rect = Rect2i();
-    // };  
-    // auto config() const{return config_;}
-protected:
-    // Config & config_;
-    const Theme & theme_;
-public:
-    CanvasItem(const Theme & _theme): theme_(_theme){;}
-    virtual void render(PainterConcept & painter) = 0;
-};
-
-#define PASS_THEME(derived, base)\
-derived(const Theme & _theme): base(_theme){;}
-
-class Control:public CanvasItem{
-public:
-    // CanvasItem(const Theme & _theme): CanvasItem(_theme){;}
-    PASS_THEME(Control, CanvasItem)
-};
-
-class Label:public Control{
-public:
-    String text;
-    PASS_THEME(Label, Control)
-
-    void render(PainterConcept & painter) override{
-        painter.setColor(theme_.bg_color);
-        painter.drawFilledRect(rect);
-
-        painter.setColor(theme_.stoke_color);
-        painter.drawHollowRect(rect);
-
-        painter.setColor(theme_.text_color);
-        painter.drawString(rect.position + Vector2i(10,7), text);
-    }
-};
-
-// class ButtonBase:public Control{
-    
-// };
-
-
-class Slider:public Control{
-public:
-    PASS_THEME(Slider, Control)
-
-    Range range;
-    
-    void render(PainterConcept & painter) override{
-        painter.setColor(theme_.bg_color);
-        painter.drawFilledRect(rect);
-
-        painter.setColor(theme_.stoke_color);
-        painter.drawHollowRect(rect);
-        
-        scexpr auto sp = 3;
-        auto sb = rect.position + Vector2i{sp, rect.size.y/2};
-        auto sw = rect.size.x - 2 * sp;
-
-        painter.setColor(theme_.stoke_color);
-        painter.drawFilledRect(Rect2i{sb, Vector2i{sw, 2}});
-
-        scexpr auto h = 6;
-        scexpr auto w = 6;
-        painter.setColor(theme_.text_color);
-        painter.drawFilledRect(Rect2i{sb + Vector2i{5, - h / 2}, Vector2i{w, h}});
-    }
-};
-
-
-class OptionButton:public Control{
-public:
-    PASS_THEME(OptionButton, Control)
-    
-    void render(PainterConcept & painter) override{
-        painter.setColor(theme_.bg_color);
-        painter.drawFilledRect(rect);
-
-        painter.setColor(theme_.stoke_color);
-        painter.drawHollowRect(rect);
-
-        painter.setColor(theme_.stoke_color);
-        painter.drawFilledRect(Rect2i{rect.position + Vector2i(3,6), Vector2i(22,10)});
-
-        painter.setColor(theme_.text_color);
-        painter.drawFilledCircle(rect.position + Vector2i(10,10), 5);
-
-        painter.setColor(theme_.text_color);
-        painter.drawString(rect.position + Vector2i(30,7), "选择");
-
-        
-    }
-};
-
-class Eye:public CanvasItem{
-public:
-    struct Config{
-        Vector2i l_center;
-        Vector2i r_center;
-
-        size_t eye_radius;
-        size_t iris_radius;
-        size_t pupil_radius;
-    };
-
-protected:
-    const Config & config_;
-
-    std::array<Vector2, 2> eye_pos;
-public:
-    Eye(const Theme & theme, const Config & config):CanvasItem(theme), config_(config){}
-
-    void setEye(const Vector2 & l_pos, const Vector2 & r_pos){
-        eye_pos[0] = l_pos;
-        eye_pos[1] = r_pos;
-    }
-
-    void render(PainterConcept & painter) override{
-        auto render_eye = [&](const LR side){
-
-            auto center = (side == LR::LEFT) ? config_.l_center : config_.r_center;
-            auto center_p = center + ((side == LR::LEFT) ? eye_pos[0] : eye_pos[1]) * config_.eye_radius * real_t(0.5);
-
-            painter.setColor(ColorEnum::WHITE);
-            painter.drawFilledCircle(center, config_.eye_radius);
-
-            painter.setColor(ColorEnum::BROWN);
-            painter.drawFilledCircle(center_p, config_.iris_radius);
-
-            painter.setColor(ColorEnum::BLACK);
-            painter.drawFilledCircle(center_p, config_.pupil_radius);
-        };
-
-        render_eye(LR::LEFT);
-        render_eye(LR::RIGHT);
-    }
-};
 
 void gui_main(){
 
@@ -267,8 +109,8 @@ void gui_main(){
     MT9V034 camera{i2c};
     camera.init();
     camera.setExposureValue(1200);
-    // label.rect = Rect2i{20 + 10,20,100,20};
-    // label2.rect = Rect2i{20,60 + 20,100,20};
+
+    PCA9685 pca{i2c};
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.get_size());
@@ -291,20 +133,6 @@ void gui_main(){
         // painter.drawRoi(rect);
     };
 
-    // [[maybe_unused]] auto plot_april = [&](const Vertexs & vertex, const int index, const real_t dir){
-    //     painter.bindImage(sketch);
-    //     painter.setColor(RGB565::FUCHSIA);
-
-    //     painter.drawPolygon(vertex.begin(), vertex.size());
-    //     auto rect = Rect2i(vertex.begin(), vertex.size());
-    //     painter.setColor(RGB565::RED);
-    //     painter.drawString(rect.position + Vector2i{4,4}, toString(index));
-
-    //     painter.setColor(RGB565::BLUE);
-    //     painter.drawFilledCircle(rect.get_center() + Vector2(12, 0).rotated(dir), 3);
-    //     painter.bindImage(tftDisplayer);
-    // };
-
     [[maybe_unused]] auto plot_number = [&](const Rect2i & rect, const int index){
         // painter.bindImage(sketch);
         painter.setColor(ColorEnum::GREEN);
@@ -314,7 +142,7 @@ void gui_main(){
         painter.bindImage(tftDisplayer);
     };
 
-    auto eye_conf =         Eye::Config{
+    auto eye_conf =         Eyes::Config{
             .l_center = Vector2i{62, 60},
             .r_center = Vector2i{62, 180},
 
@@ -323,9 +151,19 @@ void gui_main(){
             .pupil_radius = 7
     };
 
-    Eye eye{
+    Eyes eye{
         theme,
-        eye_conf
+        eye_conf,
+        {
+            .yaw = pca[0],
+            .pitch = pca[1],
+
+            .upper_l = pca[2],
+            .lower_l = pca[3],
+
+            .upper_r = pca[4],
+            .lower_r = pca[5]
+        }
     };
 
     while(true){
@@ -402,13 +240,13 @@ void gui_main(){
         #ifdef EYE_TB
         eye.render(painter);
 
-        eye.setEye(Vector2::RIGHT.rotated(t * tau), Vector2::RIGHT.rotated(t * pi));;
+        eye.update(
+            {Vector2::RIGHT.rotated(t * tau)}, 
+            std::to_array({EyelidInfo{{0,0}}, EyelidInfo{{0,0}}})
+        );
 
         delay(20);
         painter.fill(ColorEnum::BLACK);
-
-        // DEBUG_PRINTLN(millis());
-        // PANIC("why");
         #endif
     
     }

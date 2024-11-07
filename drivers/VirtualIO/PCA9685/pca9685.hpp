@@ -12,8 +12,6 @@ protected:
     I2cDrv i2c_drv_;
 
     scexpr uint8_t valid_chipid = 0x23;
-
-
     struct Mode1Reg:public Reg8{
         using Reg8::operator=;
         
@@ -110,6 +108,24 @@ protected:
         PCA8975Channel{*this, 15}
     };
 
+
+    // template<typename T>
+    // requires is_reg<T>
+    // __fast_inline void writeReg(const RegAddress addr, const T reg){
+    //     i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
+    // };
+
+    // template<typename T>
+    // requires is_reg<T>
+    // __fast_inline void readReg(const RegAddress addr, T & reg){
+    //     i2c_drv_.readReg((uint8_t)addr, reg, LSB);
+    // }
+
+    // uint8_t readReg(const RegAddress addr){
+    //     uint8_t data;
+    //     i2c_drv_.readReg((uint8_t)addr, data, LSB);
+    //     return data;
+    // }
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
         i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
     };
@@ -131,15 +147,10 @@ protected:
         i2c_drv_.readReg((uint8_t)addr, data, LSB);
         return data;
     }
-
     void write(const uint16_t data) override{
-        // buf = data;
-        // writeReg(RegAddress::out, buf);
     }
 
     uint16_t read() override{
-        // readReg(RegAddress::in, buf);
-        // return buf;
         return true;
     }
 
@@ -148,9 +159,9 @@ protected:
         static_assert(sizeof(mode2_reg) == 1);
     }
 public:
-    PCA9685(I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
-    PCA9685(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
-    PCA9685(I2c & _bus):i2c_drv_{_bus, default_i2c_addr}{;}
+    PCA9685(I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    PCA9685(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    PCA9685(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_{i2c, i2c_addr}{;}
 
     void setFrequency(const uint freq, const real_t trim = real_t(1));
 
@@ -183,6 +194,7 @@ public:
     PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
 
     PCA8975Channel & operator [](const size_t index){
+        if(index >= channels.size()) PANIC();
         return channels[index];
     }
 };

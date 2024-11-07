@@ -59,7 +59,7 @@ protected:
         if(i2c_drv){
             i2c_drv->writeReg((uint8_t)address, reg, MSB);
         }else if(spi_drv){
-            TODO_TRAP("not implemented yet");
+            TODO("not implemented yet");
         }
         LT8960_DEBUG("write",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
@@ -68,7 +68,7 @@ protected:
         if(i2c_drv){
             i2c_drv->readReg((uint8_t)address, reg, MSB);
         }else if(spi_drv){
-            TODO_TRAP("not implemented yet");
+            TODO("not implemented yet");
         }
         LT8960_DEBUG("read",*(uint16_t *)&reg, "at", (uint8_t)address);
     }
@@ -77,7 +77,7 @@ protected:
         if(i2c_drv){
             i2c_drv->writeReg((uint8_t)address, data, MSB);
         }else if(spi_drv){
-            TODO_TRAP("not implemented yet");
+            TODO("not implemented yet");
         }
     }
 
