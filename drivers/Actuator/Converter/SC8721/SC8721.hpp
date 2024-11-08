@@ -17,6 +17,42 @@ class SC8721{
 public:
     scexpr uint8_t default_i2c_addr = 0b01100000;
 
+    enum class DeadZone:uint8_t{
+        _20ns,
+        _40ns
+    };
+
+    // Switching frequency setting:
+    // 00: 260kHz 
+    // 01: 500kHz(default)
+    // 10: 720kHz
+    // 11: 920kHz
+
+    enum class SwitchFreq:uint8_t{
+        _260kHz,
+        _500kHz,
+        _720kHz,
+        _920kHz
+    };
+
+    enum class SlopComp{
+        _0,
+        _50,
+        _100,
+        _150
+    };
+
+    struct Status{
+        uint8_t short_circuit:1;
+        uint8_t vout_vin_h:1;
+        uint8_t thermal_shutdown:1;
+        uint8_t ocp:1;
+        uint8_t vin_ovp:1;
+        uint8_t on_cv:1;
+        uint8_t on_cc:1;
+    };
+
+
     SC8721(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     SC8721(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     SC8721(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
@@ -31,6 +67,13 @@ public:
 
     void enableExternalFb(const bool en = true);
 
+    void setDeadZone(const DeadZone dz);
+
+    void setSwitchFreq(const SwitchFreq freq);
+
+    Status getStatus();
+
+    void setSlopeComp(const SlopComp sc);
 protected:
     using RegAddress = uint8_t;
 
@@ -49,10 +92,16 @@ protected:
         uint8_t :7;
     };
 
-    struct VoutSetReg:public Reg16{//msb
+    struct VoutSetMsbReg:public Reg16{//msb
         scexpr RegAddress address = 0x03;
 
         uint8_t vout_set_msb:8;
+
+    };
+
+    struct VoutSetLsbReg:public Reg16{//msb
+        scexpr RegAddress address = 0x04;
+
         uint8_t vout_set_lsb:2;
         uint8_t fb_dir:1;
         uint8_t fb_on:1;
@@ -107,16 +156,16 @@ protected:
         uint8_t vinovp:1;
     };
 
-    struct{
-        CSOReg cso_reg;
-        SlopeCompReg slope_comp_reg;
-        VoutSetReg vout_set_reg;
-        GlobalCtrlReg global_ctrl;
-        SysSetReg sys_set_reg;
-        FreqSetReg freq_set_reg;
-        Status1Reg status1_reg;
-        Status2Reg status2_reg;
-    };
+
+    CSOReg cso_reg;
+    SlopeCompReg slope_comp_reg;
+    VoutSetMsbReg vout_set_msb_reg;
+    VoutSetLsbReg vout_set_lsb_reg;
+    GlobalCtrlReg global_ctrl;
+    SysSetReg sys_set_reg;
+    FreqSetReg freq_set_reg;
+    Status1Reg status1_reg;
+    Status2Reg status2_reg;
 
     
     void writeReg(const RegAddress address, const uint8_t reg){
@@ -130,6 +179,7 @@ protected:
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
         i2c_drv_.readMulti((uint8_t)addr, data, len, MSB);
     }
+public:
 
 };
 
