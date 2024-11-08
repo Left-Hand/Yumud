@@ -13,3 +13,12 @@ bool SC8721::verify(){
 void SC8721::reset(){
 
 }
+
+
+void SC8721::setTargetVoltage(const real_t volt){
+    uint16_t data = int(volt * 50);
+}
+
+void SC8721::enableExternalFb(const bool en){
+   
+}

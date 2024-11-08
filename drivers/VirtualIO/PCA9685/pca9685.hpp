@@ -173,6 +173,11 @@ public:
 
     void enableSleep(const bool en = true);
 
+    void init(const uint freq, const real_t trim){
+        init();
+        setFrequency(freq, trim);
+    }
+
     void init();
 
     void reset();

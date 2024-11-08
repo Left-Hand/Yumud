@@ -13,6 +13,7 @@
 #include "nvcv2/shape/shape.hpp"
 #include "image/font/instance.hpp"
 
+
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
@@ -24,6 +25,9 @@
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
+
+using namespace yumud;
+using namespace yumud::drivers;
 using namespace yumud::nvcv2;
 using namespace etk;
 
@@ -34,9 +38,22 @@ using Vector2i = Vector2_t<int>;
 
 using Sys::t;
 
-using namespace yumud;
-using namespace yumud::drivers;
+struct EtkToken:public Reg8{
+    using Reg8::operator=;
 
+    uint8_t right:1;
+    uint8_t left:1;
+    uint8_t down:1;
+    uint8_t up:1;
+    uint8_t :4;
+
+    operator Vector2i() const {
+        return Vector2i{
+            right - left,
+            up - down
+        };
+    }
+};
 
 
 void gui_main(){
@@ -49,7 +66,7 @@ void gui_main(){
     auto & spi = spi1;
     #endif
 
-    logger.init(576000);
+    logger.init(115200);
     auto & lcd_blk = portC[7];
     
     lcd_blk.outpp(1);
@@ -61,15 +78,21 @@ void gui_main(){
     spi.bindCsPin(lcd_cs, 0);
     spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
-    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {135, 240});
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
 
     {//init tft
         tftDisplayer.init();
         // tftDisplayer.setDisplayOffset({51, 40}); 
-        tftDisplayer.setDisplayOffset({53, 40}); 
-        tftDisplayer.setFlipX(true);
+
+        tftDisplayer.setFlipX(false);
         tftDisplayer.setFlipY(true);
-        tftDisplayer.setSwapXY(false);
+        if(true){
+            tftDisplayer.setSwapXY(true);
+            tftDisplayer.setDisplayOffset({40, 53}); 
+        }else{
+            tftDisplayer.setSwapXY(false);
+            tftDisplayer.setDisplayOffset({53, 40}); 
+        }
         tftDisplayer.setFormatRGB(true);
         tftDisplayer.setFlushDirH(false);
         tftDisplayer.setFlushDirV(false);
@@ -78,7 +101,6 @@ void gui_main(){
 
     Painter<RGB565> painter = Painter<RGB565>();
     painter.bindImage(tftDisplayer);
-    // tftDisplayer.fill(RGB565::BLACK);
 
     painter.setChFont(yumud::font7x7);
     painter.setEnFont(yumud::font8x5);
@@ -101,13 +123,16 @@ void gui_main(){
     OptionButton opt{theme};
     
     I2cSw       i2c{portD[2], portC[12]};
-    i2c.init(1000000);
+    i2c.init(125_KHz);
     
-    MT9V034 camera{i2c};
-    camera.init();
-    camera.setExposureValue(1200);
+    // MT9V034 camera{i2c};
+    // camera.init();
+    // camera.setExposureValue(1200);
 
     PCA9685 pca{i2c};
+    pca.init();
+    
+    pca.setFrequency(50, real_t(1.09));
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.get_size());
@@ -126,8 +151,8 @@ void gui_main(){
 
 
     auto eye_conf =         Eyes::Config{
-            .l_center = Vector2i{62, 60},
-            .r_center = Vector2i{62, 180},
+            .l_center = Vector2i{60, 62},
+            .r_center = Vector2i{180, 62},
 
             .eye_radius = 40,
             .iris_radius = 13,
@@ -223,13 +248,41 @@ void gui_main(){
         #ifdef EYE_TB
         eye.render(painter);
 
-        eye.update(
-            {Vector2::RIGHT.rotated(t * tau)}, 
-            std::to_array({EyelidInfo{{0,0}}, EyelidInfo{{0,0}}})
-        );
 
         delay(20);
         painter.fill(ColorEnum::BLACK);
+
+        painter.setColor(ColorEnum::RED);
+        painter.drawFilledRect({2,2, 12,12});
+
+        MG995 servo_x{pca[6]};
+        MG995 servo_y{pca[7]};
+
+
+
+        if(logger.available()){
+            EtkToken tk;
+            while(logger.available()){
+                tk = uint8_t(logger.read());
+            }
+            // logger.println(int(tk.up), int(tk.down), int(tk.left), int(tk.right));
+            // logger.println(std::oct, Vector2i(tk), std::, uint8_t(tk));
+
+            eye.update(
+                {Vector2(Vector2i(tk).flipy())}, 
+                std::to_array({EyelidInfo{{0,0}}, EyelidInfo{{0,0}}})
+            );
+
+            eye.move();
+
+            auto vec = Vector2(eye.eyeInfo().pos) * real_t(0.2);
+            vec = Vector2(PI/2, PI - 0.2) + Vector2(-vec.x, vec.y);
+            // vec = Vector2(2.8, PI/2) + vec;
+            //  + Vector2(-vec.x, vec.y);
+            DEBUG_PRINTLN(vec);                                                                                                                                                                                                                                                                           
+            servo_x.setRadian(+vec.x);
+            servo_y.setRadian(+vec.y);
+        }        
         #endif
     
     }

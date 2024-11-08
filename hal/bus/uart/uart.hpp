@@ -64,9 +64,8 @@ public:
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
     virtual void setParity(const Parity parity) = 0;
-    void bindTxPostCb(Callback && cb){txPostCb = cb;}
-
-    void bindRxPostCb(Callback && cb){rxPostCb = cb;}
+    void onTxDone(Callback && cb){txPostCb = cb;}
+    void onRxDone(Callback && cb){rxPostCb = cb;}
 };
 
 }

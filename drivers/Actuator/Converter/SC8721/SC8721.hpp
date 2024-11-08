@@ -27,6 +27,10 @@ public:
 
     void reset();
 
+    void setTargetVoltage(const real_t volt);
+
+    void enableExternalFb(const bool en = true);
+
 protected:
     using RegAddress = uint8_t;
 

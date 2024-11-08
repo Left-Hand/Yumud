@@ -95,4 +95,6 @@ public:
 //     Servo360(PwmChannel & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), 270){;}
 // };
 
+    using MG995 = PwmRadianServo;
+    using SG90 = PwmRadianServo;
 }

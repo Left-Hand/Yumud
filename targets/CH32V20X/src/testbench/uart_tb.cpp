@@ -37,13 +37,13 @@ using std::string;
     tx_led.outpp();
     rx_led.outpp();
 
-    uart.bindTxPostCb([&](){
+    uart.onTxDone([&](){
         tx_led.set();
         delay(1);
         tx_led.clr();
     });
 
-    uart.bindRxPostCb([&](){
+    uart.onRxDone([&](){
         rx_led.set();
         delay(1);
         rx_led.clr();
