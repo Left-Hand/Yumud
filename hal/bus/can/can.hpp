@@ -2,9 +2,9 @@
 
 #include "hal/bus/bus.hpp"
 
-#include "can_utils.hpp"
-#include "can_msg.hpp"
-#include "can_filter.hpp"
+#include "CanUtils.hpp"
+#include "CanMsg.hpp"
+#include "CanFilter.hpp"
 #include "CanTrait.hpp"
 // #include "interrupts.hpp"
 
