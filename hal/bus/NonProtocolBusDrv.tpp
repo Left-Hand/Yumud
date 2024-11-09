@@ -1,3 +1,5 @@
+//TODO fix duplicate code 
+
 namespace yumud{
 
 template <typename BusType>
@@ -11,9 +13,9 @@ void NonProtocolBusDrv<BusType>::writeSingle(const T data, Continuous cont) {
         if constexpr (size == 1) {
             bus.write((uint8_t)data);
         } else if constexpr (size == 2) {
-            bus.write((uint16_t)data);
+            bus.write(uint16_t(data));
         } else {
-            bus.write((uint32_t)data);
+            bus.write(uint32_t(data));
         }
 
         if (cont == DISC) bus.end();
