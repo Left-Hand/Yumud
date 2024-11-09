@@ -154,8 +154,8 @@ public:
         INTF_CONFIG6              = 0x7C
     };
 protected:
-    std::optional<I2cDrv> i2c_drv;
-    std::optional<SpiDrv> spi_drv;
+    std::optional<I2cDrv> i2c_drv_;
+    std::optional<SpiDrv> spi_drv_;
 
     // using RegAddress = uint8_t;
 
@@ -183,12 +183,12 @@ protected:
     }
 public:
 
-    ICM42688(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
-    ICM42688(I2cDrv && _bus_drv):i2c_drv(_bus_drv){;}
-    ICM42688(I2c & bus):i2c_drv(I2cDrv(bus, default_i2c_addr)){;}
-    ICM42688(const SpiDrv & _bus_drv):spi_drv(_bus_drv){;}
-    ICM42688(SpiDrv && _bus_drv):spi_drv(_bus_drv){;}
-    ICM42688(Spi & bus, const uint8_t index):spi_drv(SpiDrv(bus, index)){;}
+    ICM42688(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    ICM42688(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    ICM42688(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, default_i2c_addr)){;}
+    ICM42688(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    ICM42688(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    ICM42688(Spi & spi, const uint8_t index):spi_drv_(SpiDrv(spi, index)){;}
 
     void init();
     

@@ -70,9 +70,9 @@ protected:
 
     DataFrame frame;
     
-    SpiDrv & bus_drv;
+    SpiDrv & spi_drv_;
 public:
-    Ps2Joystick(SpiDrv & spi_drv):bus_drv(spi_drv){;}
+    Ps2Joystick(SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     void init(){
         // Initialize the PS2 controller and set up the necessary pins
         // Configure the SPI interface and enable the controller
@@ -83,17 +83,17 @@ public:
         // Update the 'frame' struct with the new data
 
         DataFrame new_frame;
-        bus_drv.write((uint8_t)0x01, false);
+        spi_drv_.write((uint8_t)0x01, false);
 
-        bus_drv.transfer(*(uint8_t *)&frame.dev_id, (uint8_t)0x42, false);
+        spi_drv_.transfer(*(uint8_t *)&frame.dev_id, (uint8_t)0x42, false);
         new_frame.dev_id = frame.dev_id;
 
         uint8_t permit;
-        bus_drv.transfer(permit, (uint8_t)0x00, false);
+        spi_drv_.transfer(permit, (uint8_t)0x00, false);
 
 
         for(uint8_t i = 0; i < 6; i++){
-            bus_drv.transfer(new_frame.data[i], (uint8_t)0x00, i == 5);
+            spi_drv_.transfer(new_frame.data[i], (uint8_t)0x00, i == 5);
         }
 
         if(permit == 0x5a){

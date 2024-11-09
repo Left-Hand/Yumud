@@ -17,7 +17,8 @@
 			"string_view": "cpp",
 			"initializer_list": "cpp",
 			"ranges": "cpp",
-			"span": "cpp"
+			"span": "cpp",
+			"*.ipp": "cpp"
 		},
 		"hide-files.files": []
 	},

@@ -115,8 +115,8 @@ protected:
     };
 
 public:
-    AW9523(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
-    AW9523(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    AW9523(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    AW9523(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     AW9523(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
 
     void init();

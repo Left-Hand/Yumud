@@ -8,7 +8,7 @@ namespace yumud::drivers{
 class TM8211{
 // private:
 public:
-    I2sDrv bus_drv;
+    I2sDrv i2s_drv_;
 
     int16_t left_data;
     int16_t right_data;
@@ -31,13 +31,13 @@ public:
     }
 
     void write(const uint32_t data){
-        bus_drv.write(data);
+        i2s_drv_.write(data);
     }
 
 
 
 public:
-    TM8211(I2sDrv & _bus_drv):bus_drv(_bus_drv){
+    TM8211(I2sDrv & i2c_drv):i2s_drv_(i2c_drv){
         setRail(real_t(3.3 * 0.25f), real_t(3.3 * 0.75f)); 
     }
     void setChData(const uint8_t index,const uint16_t data){

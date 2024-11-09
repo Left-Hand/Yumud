@@ -21,7 +21,7 @@ public:
 class DisplayerPhySpi:public DisplayerPhy{
 protected:
 // public:
-    SpiDrv spi_drv;
+    SpiDrv spi_drv_;
     GpioConcept & dc_gpio;
     GpioConcept & res_gpio;
     GpioConcept & blk_gpio;
@@ -34,19 +34,19 @@ protected:
 public:
 
     DisplayerPhySpi(
-            SpiDrv && _bus_drv, 
+            SpiDrv && sou_drv, 
             GpioConcept & _dc_gpio, 
             GpioConcept & _res_gpio = GpioNull,
             GpioConcept & _blk_gpio = GpioNull
-        ) :spi_drv(std::move(_bus_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
+        ) :spi_drv_(std::move(sou_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
     // 拷贝构造函数
     DisplayerPhySpi(
-        const SpiDrv & _bus_drv, 
+        const SpiDrv & sou_drv, 
         GpioConcept & _dc_gpio, 
         GpioConcept & _res_gpio = GpioNull,
         GpioConcept & _blk_gpio = GpioNull
-    ) : spi_drv(_bus_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
+    ) : spi_drv_(sou_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
 
     DisplayerPhySpi(
@@ -78,45 +78,45 @@ public:
 
     void writeCommand(const uint32_t cmd) override{
         dc_gpio = command_level;
-        spi_drv.writeSingle<uint8_t>(cmd);
+        spi_drv_.writeSingle<uint8_t>(cmd);
     }
 
     void writeData(const uint32_t data) override{
         dc_gpio = data_level;
-        spi_drv.writeSingle<uint8_t>(data);
+        spi_drv_.writeSingle<uint8_t>(data);
     }
 
     void writeData16(const uint32_t data){
         dc_gpio = data_level;
-        spi_drv.writeSingle<uint16_t>(data);
+        spi_drv_.writeSingle<uint16_t>(data);
     }
 
     void writeSingle(const auto & data){
         dc_gpio = data_level;
-        spi_drv.writeSingle(data);
+        spi_drv_.writeSingle(data);
     }
 
     template<typename U>
     void writeMulti(const auto * data, size_t len){
         dc_gpio = data_level;
-        spi_drv.writeMulti<U>(data, len);
+        spi_drv_.writeMulti<U>(data, len);
     }
 
     template<typename U>
     void writeMulti(const auto & data, size_t len){
         dc_gpio = data_level;
-        spi_drv.writeMulti<U>(data, len);
+        spi_drv_.writeMulti<U>(data, len);
     }
 
 
     void writeU8(const uint8_t data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv.writeMulti<uint8_t>(data, len);
+        spi_drv_.writeMulti<uint8_t>(data, len);
     }
 
     void writeU8(const uint8_t * data, size_t len) override{
         dc_gpio = data_level;
-        spi_drv.writeMulti<uint8_t>(data, len);
+        spi_drv_.writeMulti<uint8_t>(data, len);
     }
 };
 

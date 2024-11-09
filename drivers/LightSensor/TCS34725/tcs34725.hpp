@@ -106,8 +106,8 @@ protected:
 public:
     scexpr uint8_t default_i2c_addr = 0x52;
 
-    TCS34725(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
-    TCS34725(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    TCS34725(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    TCS34725(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     TCS34725(I2c & bus, const uint8_t addr = default_i2c_addr):i2c_drv_(bus, addr){;}
 
     void setIntegration(const uint16_t ms){

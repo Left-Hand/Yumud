@@ -23,8 +23,8 @@ public:
 
 
 protected:
-    std::optional<I2cDrv> i2c_drv;
-    std::optional<SpiDrv> spi_drv;
+    std::optional<I2cDrv> i2c_drv_;
+    std::optional<SpiDrv> spi_drv_;
 
     using RegAddress = uint8_t;
     scexpr uint8_t default_chip_id = 0;//TODO
@@ -36,10 +36,10 @@ protected:
 
 
     void writeReg(const uint8_t addr, const uint8_t data){
-        if(i2c_drv) i2c_drv->writeReg(addr, data, MSB);
-        if(spi_drv){
-            spi_drv->writeSingle(uint8_t(addr), CONT);
-            spi_drv->writeSingle(data);
+        if(i2c_drv_) i2c_drv_->writeReg(addr, data, MSB);
+        if(spi_drv_){
+            spi_drv_->writeSingle(uint8_t(addr), CONT);
+            spi_drv_->writeSingle(data);
 
             BMM150_DEBUG("Wspi", addr, data);
 
@@ -47,20 +47,20 @@ protected:
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data, MSB);
-        if(spi_drv){
-            spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-            spi_drv->readSingle(data);
+        if(i2c_drv_) i2c_drv_->readReg((uint8_t)addr, data, MSB);
+        if(spi_drv_){
+            spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
+            spi_drv_->readSingle(data);
         }
 
         BMM150_DEBUG("Rspi", addr, data);
     }
 
     void requestData(const RegAddress addr, void * datas, const size_t len){
-        if(i2c_drv) i2c_drv->readMulti(uint8_t(addr), (uint8_t *)datas, len, MSB);
-        if(spi_drv){
-            spi_drv->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-            spi_drv->readMulti((uint8_t *)(datas), len);
+        if(i2c_drv_) i2c_drv_->readMulti(uint8_t(addr), (uint8_t *)datas, len, MSB);
+        if(spi_drv_){
+            spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
+            spi_drv_->readMulti((uint8_t *)(datas), len);
         }
 
         BMM150_DEBUG("Rspi", addr, len);
@@ -71,12 +71,12 @@ protected:
     }
 public:
 
-    BMM150(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
-    BMM150(I2cDrv && _bus_drv):i2c_drv(_bus_drv){;}
-    BMM150(I2c & bus):i2c_drv(I2cDrv(bus, default_i2c_addr)){;}
-    BMM150(const SpiDrv & _bus_drv):spi_drv(_bus_drv){;}
-    BMM150(SpiDrv && _bus_drv):spi_drv(_bus_drv){;}
-    BMM150(Spi & bus, const uint8_t index):spi_drv(SpiDrv(bus, index)){;}
+    BMM150(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    BMM150(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    BMM150(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
+    BMM150(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    BMM150(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    BMM150(Spi & bus, const uint8_t index):spi_drv_(SpiDrv(bus, index)){;}
 
     void init();
     void update();
