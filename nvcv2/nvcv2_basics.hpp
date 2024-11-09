@@ -4,8 +4,8 @@
 #include "sys/debug/debug_inc.h"
 
 #include "types/color/color_t.hpp"
-#include "types/image/image.hpp"
-#include "types/image/packed_image.hpp"
+#include "types/image/Image.hpp"
+#include "types/image/PackedImage.hpp"
 #include "types/rect2/rect2_t.hpp"
 
 #include "thirdparty/sstl/include/sstl/vector.h" 

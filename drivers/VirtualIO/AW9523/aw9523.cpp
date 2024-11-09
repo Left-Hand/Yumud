@@ -18,12 +18,12 @@ void AW9523::writeByIndex(const int index, const bool data){
     if(!isIndexValid(index))return;
     if(data) buf |= 1 << index;
     else buf &= ~(1 << index);
-    write(buf);
+    writePort(buf);
 }
 
 bool AW9523::readByIndex(const int index){
     if(!isIndexValid(index)) return false;
-    read();
+    readPort();
     return (buf & (1 << index));
 }
 

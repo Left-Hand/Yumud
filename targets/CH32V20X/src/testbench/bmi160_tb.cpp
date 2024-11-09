@@ -1,7 +1,7 @@
 #include "tb.h"
 #include "bus/spi/spihw.hpp"
-#include "../drivers/IMU/Axis6/BMI160/bmi160.hpp"
-#include "../types/quat/Quat_t.hpp"
+#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+#include "types/quat/Quat_t.hpp"
 
 using namespace yumud::drivers;
 
@@ -19,6 +19,7 @@ void bmi160_main(){
     auto & ledr = portC[13];
     auto & ledb = portC[14];
     auto & ledg = portC[15];
+
     ledr.outpp(); 
     ledb.outpp(); 
     ledg.outpp();

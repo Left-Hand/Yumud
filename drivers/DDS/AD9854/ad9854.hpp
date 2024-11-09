@@ -26,12 +26,12 @@ public:
     };
 
 protected:
-    SpiDrv bus_drv;
+    SpiDrv spi_drv_;
     Ports ports;
 
 public:
-    AD9854(const SpiDrv & _bus_drv, const Ports & _ports):bus_drv(_bus_drv), ports(_ports){;}
-    AD9854(SpiDrv && _bus_drv, const Ports & _ports):bus_drv(_bus_drv), ports(_ports){;}
+    AD9854(const SpiDrv & spi_drv, const Ports & _ports):spi_drv_(spi_drv), ports(_ports){;}
+    AD9854(SpiDrv && spi_drv, const Ports & _ports):spi_drv_(spi_drv), ports(_ports){;}
     
     void Init(void);
     void SendOneByte(uint8_t data);

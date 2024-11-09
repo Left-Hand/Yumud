@@ -62,12 +62,12 @@ protected:
         i2c_drv_.readReg((uint8_t)addr, data, LSB);
     }
 
-    void write(const uint16_t data) override{
+    void writePort(const uint16_t data) override{
         buf = data;
         writeReg(RegAddress::out, buf);
     }
 
-    uint16_t read() override{
+    uint16_t readPort() override{
         readReg(RegAddress::in, buf);
         return buf;
     }
@@ -115,8 +115,8 @@ protected:
     };
 
 public:
-    AW9523(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
-    AW9523(I2cDrv && _bus_drv):i2c_drv_(_bus_drv){;}
+    AW9523(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    AW9523(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     AW9523(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
 
     void init();
@@ -124,24 +124,24 @@ public:
         writeReg(RegAddress::swRst, (uint8_t)0x00);
     }
     
-    void set(const Pin pin) override{
+    void setPin(const Pin pin) override{
         buf |= (uint16_t)pin;
-        write(buf);
+        writePort(buf);
     }
     
-    void clr(const Pin pin) override{
+    void clrPin(const Pin pin) override{
         buf &= ~(uint16_t)pin;
-        write(buf);
+        writePort(buf);
     }
 
-    void set(const uint16_t data) override{
+    void setPin(const uint16_t data) override{
         buf |= data;
-        write(buf);
+        writePort(buf);
     }
 
-    void clr(const uint16_t data) override{
+    void clrPin(const uint16_t data) override{
         buf &= ~data;
-        write(buf);
+        writePort(buf);
     }
 
     void writeByIndex(const int index, const bool data) override;
@@ -159,7 +159,7 @@ public:
     void setLedCurrent(const Pin pin, const uint8_t current);
     
     bool verify();
-    AW9523 & operator = (const uint16_t data) override {write(data); return *this;}
+    AW9523 & operator = (const uint16_t data) override {writePort(data); return *this;}
 
     AW9523Pwm & operator [](const size_t index){
         return channels[index];

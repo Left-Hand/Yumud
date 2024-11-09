@@ -24,8 +24,6 @@ private:
 protected:
     using BusDrv<I2c>::index;
     using BusDrv<I2c>::bus;
-
-    // using I2cUtils::ValidData;
 private:
 
     template<typename T>

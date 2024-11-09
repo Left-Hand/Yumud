@@ -147,6 +147,10 @@ public:
     constexpr Vector2_t<T> cw() const {return Vector2_t<T>(-y, x);}
     constexpr Vector2_t<T> ccw() const {return Vector2_t<T>(y, -x);}
 
+    constexpr Vector2_t<T> flipy() const {return {x,-y};}
+    constexpr Vector2_t<T> flipx() const {return {-x,y};}
+
+    constexpr Vector2_t<T> swapxy() const {return {y,x};}
 
     __fast_inline constexpr Vector2_t<T> & operator=(const Vector2_t<auto> & b){
         x = static_cast<T>(b.x);

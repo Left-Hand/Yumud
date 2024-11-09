@@ -1,6 +1,6 @@
 #pragma once
 
-#include "image_basics.hpp"
+#include "ImageBasics.hpp"
 
 
 namespace yumud{

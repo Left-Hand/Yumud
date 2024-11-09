@@ -25,8 +25,7 @@ namespace gxm{
     using Mecanum4Solver = Mecanum4Solver_t<real_t>;
     using Scara5Solver = Scara5Solver_t<real_t>;
 
-    using MG995 = PwmRadianServo;
-    using SG90 = PwmRadianServo;
+
     
 }
 

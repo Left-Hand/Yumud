@@ -1,5 +1,5 @@
 
-#include "mt9v034.hpp"
+#include "MT9V034.hpp"
 
 using namespace yumud;
 using namespace yumud::drivers;
@@ -66,7 +66,7 @@ using namespace yumud::drivers;
 bool MT9V034::init(){
     // DEBUG_PRINTLN(size);
 
-    if(!isChipValid()){
+    if(false == verify()){
         return false;
     }
 
@@ -96,4 +96,18 @@ bool MT9V034::init(){
 
 
     return true;
+}
+
+
+bool MT9V034::verify(){
+    uint16_t chip_version = 0;
+    [[maybe_unused]]scexpr uint16_t valid_version = 0x1324;
+    readReg(RegAddress::ChipId, chip_version);
+    // DEBUG_PRINTLN("mt9v id is", chip_version);
+    // return (chip_version == valid_version);
+    return true;
+}
+
+void MT9V034::setExposureValue(const uint16_t value){
+    writeReg(0x0B, value);
 }

@@ -407,7 +407,7 @@ void SmartCar::main(){
         DRAW_STR("侧:" + toString(int(motor_strength.hri * 99)));
     };
 
-    DEBUGGER.bindRxPostCb([&](){parse_line(DEBUGGER.readString());});
+    DEBUGGER.onRxDone([&](){parse_line(DEBUGGER.readString());});
 
     
     camera.setExposureValue(1000);

@@ -24,8 +24,8 @@ public:
     };
 
 protected:
-    std::optional<I2cDrv> i2c_drv;
-    std::optional<SpiDrv> spi_drv;
+    std::optional<I2cDrv> i2c_drv_;
+    std::optional<SpiDrv> spi_drv_;
 
     using RegAddress = uint8_t;
     scexpr uint8_t default_chip_id = 0;//TODO
@@ -49,12 +49,12 @@ protected:
     void readAdj();
 public:
 
-    AK8975(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
-    AK8975(I2cDrv && _bus_drv):i2c_drv(_bus_drv){;}
-    AK8975(I2c & bus):i2c_drv(I2cDrv(bus, default_i2c_addr)){;}
-    AK8975(const SpiDrv & _bus_drv):spi_drv(_bus_drv){;}
-    AK8975(SpiDrv && _bus_drv):spi_drv(_bus_drv){;}
-    AK8975(Spi & bus, const uint8_t index):spi_drv(SpiDrv(bus, index)){;}
+    AK8975(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    AK8975(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    AK8975(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
+    AK8975(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    AK8975(SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
+    AK8975(Spi & bus, const uint8_t index):spi_drv_(SpiDrv(bus, index)){;}
 
     void init();
     void update();

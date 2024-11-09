@@ -20,7 +20,7 @@ public:
     };
 
 protected:
-    SpiDrv bus_drv;
+    SpiDrv spi_drv_;
     real_t lap_position;
 
     enum class RegAddress:uint8_t{
@@ -81,27 +81,27 @@ protected:
     };
 
     void writeReg(const RegAddress reg_addr, uint8_t data){
-        bus_drv.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
+        spi_drv_.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
     }
 
     void readReg(const RegAddress reg_addr, uint8_t & reg){
         uint16_t dummy;
-        bus_drv.writeSingle((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
-        bus_drv.readSingle(dummy);
+        spi_drv_.writeSingle((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
+        spi_drv_.readSingle(dummy);
         reg = dummy >> 8;
     }
 
     void directRead(uint16_t & data){
-        bus_drv.readSingle(data);
+        spi_drv_.readSingle(data);
     }
 
     uint16_t getRawData();
 
     void setZeroData(const uint16_t data);
 public:
-    MA730(const SpiDrv & _bus_drv):bus_drv(_bus_drv){;}
-    MA730(SpiDrv && _bus_drv):bus_drv(_bus_drv){;}
-    MA730(Spi & _bus, const uint8_t index):bus_drv(SpiDrv(_bus, index)){;}
+    MA730(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    MA730(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    MA730(Spi & _bus, const uint8_t index):spi_drv_(SpiDrv(_bus, index)){;}
 
 
     void init() override;

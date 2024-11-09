@@ -35,10 +35,10 @@ public:
     void init();
     void enableRcc(const bool en = true);
     __inline void writeByIndex(const int index, const bool data) override;
-    __inline void set(const uint16_t data) override;
-    __inline void set(const Pin pin) override;
-    __inline void clr(const uint16_t data) override;
-    __inline void clr(const Pin pin) override;
+    __inline void setPin(const uint16_t data) override;
+    __inline void setPin(const Pin pin) override;
+    __inline void clrPin(const uint16_t data) override;
+    __inline void clrPin(const Pin pin) override;
     Port & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
 
     operator uint16_t(){return instance->INDR;}
@@ -58,25 +58,25 @@ __inline void Port::writeByIndex(const int index, const bool data){
     if(index < 0) return;
     uint16_t mask = 1 << index;
     if(data){
-        set(mask);
+        setPin(mask);
     }else{
-        clr(mask);
+        clrPin(mask);
     }
 }
 
-__inline void Port::set(const uint16_t data){
+__inline void Port::setPin(const uint16_t data){
     instance->BSHR = data;
 }
 
-__inline void Port::set(const Pin pin){
+__inline void Port::setPin(const Pin pin){
     instance->BSHR = (uint16_t)pin;
 }
 
-__inline void Port::clr(const uint16_t data){
+__inline void Port::clrPin(const uint16_t data){
     instance->BCR = data;
 }
 
-__inline void Port::clr(const Pin pin){
+__inline void Port::clrPin(const Pin pin){
     instance->BCR = (uint16_t)pin;
 }
 

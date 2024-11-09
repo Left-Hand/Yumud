@@ -27,9 +27,9 @@ public:
         _16 = 0b100,
     };
     
-    IST8310(const I2cDrv & _bus_drv):i2c_drv(_bus_drv){;}
-    IST8310(I2cDrv && _bus_drv):i2c_drv(_bus_drv){;}
-    IST8310(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv(I2cDrv(i2c, addr)){;}
+    IST8310(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    IST8310(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    IST8310(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
 
     void init();
     void update();
@@ -156,18 +156,18 @@ protected:
         AverageReg average_reg;
     };
 
-    I2cDrv i2c_drv;
+    I2cDrv i2c_drv_;
 
     void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv.writeReg((uint8_t)address, reg, MSB);
+        i2c_drv_.writeReg((uint8_t)address, reg, MSB);
     }
 
     void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv.readReg((uint8_t)address, reg, MSB);
+        i2c_drv_.readReg((uint8_t)address, reg, MSB);
     }
 
     void requestPool(const RegAddress addr, Reg16i * data, size_t len){
-        i2c_drv.readMulti((uint8_t)addr, data, len, LSB);
+        i2c_drv_.readMulti((uint8_t)addr, data, len, LSB);
     }
 
     void setAverageTimes(bool is_x, AverageTimes times);

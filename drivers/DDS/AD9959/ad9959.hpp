@@ -156,16 +156,16 @@ protected:
     #endif
     uint8_t               last_channels;
     scexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
-    SpiDrv bus_drv;
+    SpiDrv spi_drv_;
     Gpio &         reset_gpio;               // Reset pin (active = high)
     Gpio &         update_gpio;              // I/O_UPDATE: Apply config changes
 
 public:
-    AD9959(const SpiDrv & _bus_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
-        bus_drv(_bus_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
+    AD9959(const SpiDrv & spi_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
+        spi_drv_(spi_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
         
-    AD9959(SpiDrv && _bus_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
-        bus_drv(_bus_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
+    AD9959(SpiDrv && spi_drv, Gpio & _reset_gpio = GpioNull, Gpio & _update_gpio = GpioNull):
+        spi_drv_(spi_drv), reset_gpio(_reset_gpio), update_gpio(_update_gpio){;}
 
 
   void init();
@@ -221,9 +221,9 @@ protected:
 
     uint32_t    rval = 0;
     int         len = (reg&0x7F) < sizeof(register_length)/sizeof(uint8_t) ? register_length[reg&0x07] : 4;
-    bus_drv.writeSingle(reg);
+    spi_drv_.writeSingle(reg);
     while (len-- > 0){
-        rval = (rval<<8) | bus_drv.transferSingle((value>>len*8) & 0xFF);
+        rval = (rval<<8) | spi_drv_.transferSingle((value>>len*8) & 0xFF);
     }
     return rval;
   }

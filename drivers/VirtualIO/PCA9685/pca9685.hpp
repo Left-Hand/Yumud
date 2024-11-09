@@ -147,10 +147,10 @@ protected:
         i2c_drv_.readReg((uint8_t)addr, data, LSB);
         return data;
     }
-    void write(const uint16_t data) override{
+    void writePort(const uint16_t data) override{
     }
 
-    uint16_t read() override{
+    uint16_t readPort() override{
         return true;
     }
 
@@ -173,17 +173,22 @@ public:
 
     void enableSleep(const bool en = true);
 
+    void init(const uint freq, const real_t trim){
+        init();
+        setFrequency(freq, trim);
+    }
+
     void init();
 
     void reset();
 
-    void set(const Pin pin) override;
+    void setPin(const Pin pin) override;
 
-    void clr(const Pin pin) override;
+    void clrPin(const Pin pin) override;
 
-    void set(const uint16_t data) override;
+    void setPin(const uint16_t data) override;
 
-    void clr(const uint16_t data) override;
+    void clrPin(const uint16_t data) override;
     
     void writeByIndex(const int index, const bool data) override;
 
@@ -191,7 +196,7 @@ public:
 
     void setMode(const int index, const GpioMode mode) override;
 
-    PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
+    PCA9685 & operator = (const uint16_t data) override {writePort(data); return *this;}
 
     PCA8975Channel & operator [](const size_t index){
         if(index >= channels.size()) PANIC();

@@ -112,8 +112,12 @@ protected:
     }
 
 public:
-    SGM58031(const I2cDrv & _bus_drv):i2c_drv_(_bus_drv){;}
-    SGM58031(I2cDrv && _bus_drv):i2c_drv_(std::move(_bus_drv)){;}
+    scexpr uint8_t default_i2c_addr = 0b0100000;
+
+    SGM58031(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    SGM58031(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+
+    SGM58031(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, i2c_addr}){;}
 
     void init();
 

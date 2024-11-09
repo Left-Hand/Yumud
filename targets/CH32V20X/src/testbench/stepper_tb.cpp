@@ -15,8 +15,8 @@
 #include "drivers/Encoder/MagEnc/MT6701/mt6701.hpp" 
 #include "drivers/Encoder/MagEnc/MT6816/mt6816.hpp"
 
-#include "drivers/Actuator/Driver/AT8222/at8222.hpp"
-#include "drivers/Actuator/Driver/MP6540/mp6540.hpp"
+#include "drivers/Actuator/Bridge/AT8222/at8222.hpp"
+#include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
 
 #include "drivers/Actuator/SVPWM/svpwm2.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"

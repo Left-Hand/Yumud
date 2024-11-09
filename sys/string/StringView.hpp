@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/string/string_utils.hpp"
+#include "sys/string/utils/StringUtils.hpp"
 #include "algo/hash_func.hpp"
 
 #include <cstdint>

@@ -1,12 +1,12 @@
 #pragma once
 
-#include "../camera.hpp" 
+#include "drivers/Camera/Camera.hpp" 
 
 namespace yumud::drivers{
 
 class MT9V034:public CameraWithSccb<Grayscale>{
 protected:
-    enum class RegAddress : uint8_t {
+    enum RegAddress : uint8_t {
         ChipId = 0,
         RowStart,
         ColumnStart,
@@ -53,20 +53,13 @@ protected:
         uint16_t agcAecEnableReg = 0x02;
     };
 
-    void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeSccbReg((uint8_t)regAddress, regData);
-    }
-
-    void readReg(const RegAddress regAddress, uint16_t regData){
-        bus_drv.readSccbReg((uint8_t)regAddress, regData);
-    }
 
     void writeReg(const uint8_t addr, const uint16_t reg_data){
-        writeReg((RegAddress)addr, reg_data);
+        sccb_drv_.writeReg((RegAddress)addr, reg_data);
     }
 
     void readReg(const uint8_t addr, uint16_t pData){
-        readReg((RegAddress)addr, pData);
+        sccb_drv_.readReg((RegAddress)addr, pData);
     }
 
     void getpixel_unsafe(const Vector2i & pos, Grayscale & color) const override{
@@ -74,27 +67,18 @@ protected:
     };
 
 public:
-    scexpr uint8_t default_id = 0x5c << 1;
+    scexpr uint8_t default_addr = 0x5c << 1;
     scexpr Vector2i camera_size = {188, 120};
 public:
-    MT9V034(SccbDrv & _bus_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(_bus_drv, camera_size){;}
-    MT9V034(SccbDrv && _bus_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(_bus_drv, camera_size){;}
-    MT9V034(I2c & _i2c):ImageBasics(camera_size), CameraWithSccb<Grayscale>(SccbDrv(_i2c, default_id), camera_size){;}
+    MT9V034(const SccbDrv & sccb_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(sccb_drv, camera_size){;}
+    // MT9V034(SccbDrv && sccb_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(sccb_drv, camera_size){;}
+    MT9V034(I2c & _i2c):ImageBasics(camera_size), CameraWithSccb<Grayscale>(SccbDrv(_i2c, default_addr), camera_size){;}
 
     bool init();
 
-    bool isChipValid(){
-        uint16_t chip_version = 0;
-        [[maybe_unused]]scexpr uint16_t valid_version = 0x1324;
-        readReg(RegAddress::ChipId, chip_version);
-        // DEBUG_PRINTLN("mt9v id is", chip_version);
-        // return (chip_version == valid_version);
-        return true;
-    }
+    bool verify();
 
-    void setExposureValue(const uint16_t value){
-        writeReg(0x0B, value);
-    }
+    void setExposureValue(const uint16_t value);
 };
 
 }

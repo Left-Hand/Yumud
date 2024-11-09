@@ -30,7 +30,7 @@ public:
     };
 
 protected:
-    I2cDrv bus_drv;
+    I2cDrv i2c_drv_;
 
     struct ProgramTimesReg:public Reg8{
         
@@ -138,115 +138,63 @@ protected:
     }
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint16_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.readReg((uint8_t)regAddress, regData, LSB);
     }
 
     void writeReg(const RegAddress regAddress, const uint8_t regData){
-        bus_drv.writeReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.writeReg((uint8_t)regAddress, regData, LSB);
     }
 
     void readReg(const RegAddress regAddress, uint8_t & regData){
-        bus_drv.readReg((uint8_t)regAddress, regData, LSB);
+        i2c_drv_.readReg((uint8_t)regAddress, regData, LSB);
     }
 public:
-    AS5600(const I2cDrv & _bus_drv):bus_drv(_bus_drv){;}
-    AS5600(I2cDrv && _bus_drv):bus_drv(_bus_drv){;}
+    scexpr uint8_t default_i2c_addr = 0x1e;
 
-    void setPowerMode(const PowerMode & _power_mode){
-        configReg.powerMode = (uint8_t)_power_mode;
-        writeReg(RegAddress::Config, configReg);
-    }
+    AS5600(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    AS5600(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
 
-    void setFastFilter(const FastFilter & _fast_filter){
-        configReg.fastFilter = (uint8_t)_fast_filter;
-        writeReg(RegAddress::Config, configReg);
-    }
+    AS5600(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, i2c_addr}){;}
 
-    void setSlowFilter(const SlowFilter & _slow_filter){
-        configReg.slowFilter = (uint8_t)_slow_filter;
-        writeReg(RegAddress::Config, configReg);
-    }
+    void setPowerMode(const PowerMode _power_mode);
 
-    void setPwmFrequency(const PwmFrequency & _pwm_frequency){
-        configReg.pwmFrequency = (uint8_t)_pwm_frequency;
-        writeReg(RegAddress::Config, configReg);
-    }
+    void setFastFilter(const FastFilter _fast_filter);
 
-    void setOuputStage(const OutputStage & _output_stage){
-        configReg.outputStage = (uint8_t)_output_stage;
-        writeReg(RegAddress::Config, configReg);
-    }
+    void setSlowFilter(const SlowFilter _slow_filter);
 
-    void setHysteresis(const Hysteresis & _hysteresis){
-        configReg.hysteresis = (uint8_t)_hysteresis;
-        writeReg(RegAddress::Config, configReg);
-    }
+    void setPwmFrequency(const PwmFrequency _pwm_frequency);
 
-    int8_t getMagStatus(){
-        readReg(RegAddress::Status, statusReg);
-        if(statusReg.magProper) return 0;
-        else if(statusReg.magHigh) return 1;
-        else return -1;
-    }
+    void setOuputStage(const OutputStage _output_stage);
 
-    uint8_t getGain(){
-        readReg(RegAddress::AutoGain, autoGainReg.data);
-        return autoGainReg.data;
-    }
+    void setHysteresis(const Hysteresis _hysteresis);
 
-    uint16_t getMagnitude(){
-        readReg(RegAddress::Magnitude, magnitudeReg.data);
-        return (magnitudeReg.data) & 0xFFF;
-    }
+    int8_t getMagStatus();
 
-    real_t getRawAngle(){
-        readReg(RegAddress::RawAngle, rawAngleReg.data);
-        return From12BitTo360Degrees(rawAngleReg.data);
-        // return (real_t)(int)rawAngleReg.data;
-    }
+    uint8_t getGain();
 
-    real_t getAngle(){
-        readReg(RegAddress::Angle, angleReg.data);
-        return From12BitTo360Degrees(angleReg.data);
-    }
+    uint16_t getMagnitude();
 
-    void setStartAngle(const real_t angle){
-        startAngleReg.data = From360DegreesTo12Bit(angle);
-        writeReg(RegAddress::StartAngle, startAngleReg.data);
-    }
+    real_t getRawAngle();
 
-    void setEndAngle(const real_t angle){
-        endAngleReg.data = From360DegreesTo12Bit(angle);
-        writeReg(RegAddress::EndAngle, endAngleReg.data);
-    }
+    real_t getAngle();
 
-    void setAmountAngle(const real_t angle){
-        amountAngleReg.data = From360DegreesTo12Bit(angle);
-        writeReg(RegAddress::AmountAngle, amountAngleReg.data);
-    }
+    void setStartAngle(const real_t angle);
 
-    uint8_t getProgramTimes(){
-        readReg(RegAddress::ProgramTimes, programTimesReg);
-        return programTimesReg.times;
-    }
+    void setEndAngle(const real_t angle);
 
-    void burnAngle(){
-        burnReg.data = 0x80;
-        writeReg(RegAddress::Burn, burnReg.data);
-    }
+    void setAmountAngle(const real_t angle);
 
-    void burnSetting(){
-        burnReg.data = 0x80;
-        writeReg(RegAddress::Burn, burnReg.data);
-    }
+    uint8_t getProgramTimes();
 
-    void init(){
-        setPowerMode(PowerMode::Norm);
-    }
+    void burnAngle();
+
+    void burnSetting();
+
+    void init();
 };
 
 

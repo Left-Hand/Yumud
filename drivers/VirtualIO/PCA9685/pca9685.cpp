@@ -71,22 +71,22 @@ void PCA9685::enableSleep(const bool en){
     mode1_reg.sleep = 0;
 }
     
-void PCA9685::set(const Pin pin){
+void PCA9685::setPin(const Pin pin){
     // buf |= (uint16_t)pin;
     // write(buf);
 }
 
-void PCA9685::clr(const Pin pin){
+void PCA9685::clrPin(const Pin pin){
     // buf &= ~(uint16_t)pin;
     // write(buf);
 }
 
-void PCA9685::set(const uint16_t data){
+void PCA9685::setPin(const uint16_t data){
     // buf |= data;
     // write(buf);
 }
 
-void PCA9685::clr(const uint16_t data){
+void PCA9685::clrPin(const uint16_t data){
     // buf &= ~data;
     // write(buf);
 }

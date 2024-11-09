@@ -1,15 +1,18 @@
 #pragma once
 
 #include "types/rect2/rect2_t.hpp"
+#include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
 namespace etk{
 
+using namespace yumud::drivers;
+
 struct EyeInfo{
-    Vector2 pos_;
+    Vector2 pos;
 };
 
 struct EyelidInfo{
-    Range range_;
+    Range range;
 };
 
 class Eyes;
@@ -18,23 +21,24 @@ class EyesPhy{
 protected:
 
     struct EyePhy{
-        PwmChannel & yaw_;
-        PwmChannel & pitch_;
-
+        PwmRadianServo yaw_;
+        PwmRadianServo pitch_;
+        EyeInfo info_;
         auto & operator = (const EyeInfo & info){
-            yaw_ = info.pos_[0];
-            pitch_ = info.pos_[1];
+            info_.pos = (info.pos + info_.pos * 7) / 8;
+            yaw_.setRadian(info_.pos[0] * real_t(0.6) + real_t(1.8));
+            pitch_.setRadian(info_.pos[1] * real_t(-0.4) + real_t(1.8));
             return *this;
         }
     };
 
     struct EyelidPhy{
-        PwmChannel & lower_;
-        PwmChannel & upper_;
+        PwmRadianServo lower_;
+        PwmRadianServo upper_;
 
         EyelidPhy & operator = (const EyelidInfo & info){
-            lower_ = info.range_[0];
-            upper_ = info.range_[1];
+            lower_.setRadian(info.range[0]);
+            upper_.setRadian(info.range[1]);
             return *this;
         }
     };
@@ -55,13 +59,13 @@ protected:
 
 public:
     EyesPhy(const Refs & refs)
-    : eye_phy_{refs.yaw, refs.pitch}
+    : eye_phy_{PwmRadianServo{refs.yaw}, PwmRadianServo{refs.pitch}}
     , eyelid_phys_{
-        EyelidPhy{refs.upper_l, refs.lower_l},
-        EyelidPhy{refs.upper_r, refs.lower_r}
+        EyelidPhy{PwmRadianServo{refs.upper_l}, PwmRadianServo{refs.lower_l}},
+        EyelidPhy{PwmRadianServo{refs.upper_r}, PwmRadianServo{refs.lower_r}}
     }{}
 
-    void update(const EyeInfo & eye_info, const std::array<EyelidInfo, 2> & eyelids_info){
+    void move(const EyeInfo & eye_info, const std::array<EyelidInfo, 2> & eyelids_info){
         eye_phy_ = eye_info;
         eyelid_phys_[0] = eyelids_info[0];
         eyelid_phys_[1] = eyelids_info[1];
@@ -79,17 +83,17 @@ public:
         size_t pupil_radius;
     };
 
-    EyeInfo eye_info_;
-    std::array<EyelidInfo,2> eyelids_info_;
 protected:
     const Config & config_;
 
-    EyesPhy eyes_phy;
+    EyesPhy eyes_phy_;
+    EyeInfo eye_info_;
+    std::array<EyelidInfo,2> eyelids_info_;
 public:
     Eyes(const Theme & theme, const Config & config, const EyesPhy::Refs & refs):
             CanvasItem(theme), 
             config_(config),
-            eyes_phy{refs}{}
+            eyes_phy_{refs}{}
 
     void solve(const Vector2i & raw_lpos, const Vector2i & raw_rpos){
 
@@ -100,12 +104,22 @@ public:
         eyelids_info_ = std::move(eyelids_info);
     }
 
+    void move(){
+        eyes_phy_.move(eye_info_, eyelids_info_);
+    }
+
+    auto & eyeInfo(){return eye_info_;}
+    auto & eyelidsInfo(){return eyelids_info_;}
+
+    const auto & eyeInfo() const {return eye_info_;}
+    const auto & eyelidsInfo() const {return eyelids_info_;}
+
 
     void render(PainterConcept & painter) override{
         auto render_eye = [&](const LR side){
 
             auto center = (side == LR::LEFT) ? config_.l_center : config_.r_center;
-            auto center_p = center + eye_info_.pos_ * config_.eye_radius * real_t(0.5);
+            auto center_p = center + eye_info_.pos * config_.eye_radius * real_t(0.5);
 
             painter.setColor(ColorEnum::WHITE);
             painter.drawFilledCircle(center, config_.eye_radius);

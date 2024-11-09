@@ -35,7 +35,7 @@ protected:
     real_t accel_scaler = real_t(9.8 * 4);
     real_t gyro_scaler = real_t(0.001064f * 16384);
 
-    enum class RegAddress:uint8_t{
+    enum RegAddress:uint8_t{
         AccelX = 0x3b,
         AccelY = 0x3d,
         AccelZ = 0x3f,
@@ -45,11 +45,11 @@ protected:
         GyroZ = 0x47,
     };
 
-    void writeReg(const auto addr, const uint8_t data){
+    void writeReg(const uint8_t addr, const uint8_t data){
         i2c_drv_.writeReg((uint8_t)addr, data, MSB);
     }
 
-    void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len){
+    void requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
         i2c_drv_.readMulti((uint8_t)reg_addr, datas, len, MSB);
     }
 
