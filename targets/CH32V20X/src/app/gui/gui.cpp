@@ -276,7 +276,7 @@ void gui_main(){
             eye.move();
 
             auto vec = Vector2(eye.eyeInfo().pos) * real_t(0.2);
-            vec = Vector2(PI/2, PI - 0.2) + Vector2(-vec.x, vec.y);
+            vec = Vector2(real_t(PI/2), real_t(PI - 0.2)) + Vector2(-vec.x, vec.y);
             // vec = Vector2(2.8, PI/2) + vec;
             //  + Vector2(-vec.x, vec.y);
             DEBUG_PRINTLN(vec);                                                                                                                                                                                                                                                                           

@@ -147,10 +147,10 @@ protected:
         i2c_drv_.readReg((uint8_t)addr, data, LSB);
         return data;
     }
-    void write(const uint16_t data) override{
+    void writePort(const uint16_t data) override{
     }
 
-    uint16_t read() override{
+    uint16_t readPort() override{
         return true;
     }
 
@@ -196,7 +196,7 @@ public:
 
     void setMode(const int index, const GpioMode mode) override;
 
-    PCA9685 & operator = (const uint16_t data) override {write(data); return *this;}
+    PCA9685 & operator = (const uint16_t data) override {writePort(data); return *this;}
 
     PCA8975Channel & operator [](const size_t index){
         if(index >= channels.size()) PANIC();

@@ -13,18 +13,26 @@ class PortVirtualConcept : public PortConcept{
 protected:
     bool isIndexValid(const size_t index){return (index < N);}
 
-    virtual void write(const uint16_t data) = 0;
-    virtual uint16_t read() = 0;
+    virtual void writePort(const uint16_t data) = 0;
+    virtual uint16_t readPort() = 0;
 public:
 
-    operator uint16_t(){return read();}
+    operator uint16_t(){return readPort();}
 
     constexpr size_t size(){
         return N;
     }
 
-    PortVirtualConcept & operator = (const uint16_t data) override {write(data); return *this;}
-    virtual void setMode(const int index, const GpioMode mode) = 0;
+    void setPin(const uint16_t mask) override {
+        uint16_t raw = readPort();
+        writePort(raw | mask);
+    }
+
+    void clrPin(const uint16_t mask) override {
+        uint16_t raw = readPort();
+        writePort(raw & (~mask));
+    }
+    PortVirtualConcept & operator = (const uint16_t data) override {writePort(data); return *this;}
 };
 
 template<size_t N>
@@ -33,12 +41,13 @@ protected:
     using E = GpioConcept;
     std::array<E *, N> pin_ptrs = {nullptr};
 
-    void write(const uint16_t data) override {
+    void writePort(const uint16_t data) override {
         for(uint8_t i = 0; i < 16; i++){
             writeByIndex(i, bool(data & (1 << i)));
         }
     }
-    uint16_t read() override {
+
+    uint16_t readPort() override {
         uint16_t data = 0;
         for(uint8_t i = 0; i < 16; i++){
             data |= uint16_t(pin_ptrs[i]->read() << i);
