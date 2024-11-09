@@ -124,22 +124,22 @@ public:
         writeReg(RegAddress::swRst, (uint8_t)0x00);
     }
     
-    void set(const Pin pin) override{
+    void setPin(const Pin pin) override{
         buf |= (uint16_t)pin;
         write(buf);
     }
     
-    void clr(const Pin pin) override{
+    void clrPin(const Pin pin) override{
         buf &= ~(uint16_t)pin;
         write(buf);
     }
 
-    void set(const uint16_t data) override{
+    void setPin(const uint16_t data) override{
         buf |= data;
         write(buf);
     }
 
-    void clr(const uint16_t data) override{
+    void clrPin(const uint16_t data) override{
         buf &= ~data;
         write(buf);
     }

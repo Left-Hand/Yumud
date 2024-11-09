@@ -72,23 +72,23 @@ public:
         return bool(*(pin_ptrs[size_t(index)]));
     }
 
-    void set(const uint16_t data) override{
+    void setPin(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
             if(data & (1 << i)) pin_ptrs[i]->set();
         }
     }
 
-    void clr(const uint16_t data) override{
+    void clrPin(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
             if(data & (1 << i)) pin_ptrs[i]->clr();
         }
     }
 
-    void set(const Pin pin) override{
+    void setPin(const Pin pin) override{
         pin_ptrs[CTZ((uint16_t)pin)]->set();
     }
 
-    void clr(const Pin pin) override{
+    void clrPin(const Pin pin) override{
         pin_ptrs[CTZ((uint16_t)pin)]->clr();
     }
 
@@ -156,24 +156,24 @@ public:
         return pin_ptrs[size_t(index)]->read();
     }
 
-    void set(const uint16_t data) override{
+    void setPin(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
-            if(pin_ptrs[i]->isValid() and (data & (1 << i))) pin_ptrs[i]->set();
+            if(pin_ptrs[i]->isValid() and (data & (1 << i))) pin_ptrs[i]->setPin();
         }
     }
-    void clr(const uint16_t data) override{
+    void clrPin(const uint16_t data) override{
         for(uint8_t i = 0; i < 16; i++){
-            if(pin_ptrs[i]->isValid() and data & (1 << i)) pin_ptrs[i]->clr();
+            if(pin_ptrs[i]->isValid() and data & (1 << i)) pin_ptrs[i]->clrPin();
         }
     }
 
-    void set(const Pin pin) override{
+    void setPin(const Pin pin) override{
         const auto i = CTZ((uint16_t)pin);
-        if(isIndexValid(i)) pin_ptrs[]->set();
+        if(isIndexValid(i)) pin_ptrs[]->setPin();
     }
-    void clr(const Pin pin) override{
+    void clrPin(const Pin pin) override{
         const auto i = CTZ((uint16_t)pin);
-        if(isIndexValid(i)) pin_ptrs[i]->clr();
+        if(isIndexValid(i)) pin_ptrs[i]->clrPin();
     }
 
 

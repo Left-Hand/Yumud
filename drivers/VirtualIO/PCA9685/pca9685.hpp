@@ -182,13 +182,13 @@ public:
 
     void reset();
 
-    void set(const Pin pin) override;
+    void setPin(const Pin pin) override;
 
-    void clr(const Pin pin) override;
+    void clrPin(const Pin pin) override;
 
-    void set(const uint16_t data) override;
+    void setPin(const uint16_t data) override;
 
-    void clr(const uint16_t data) override;
+    void clrPin(const uint16_t data) override;
     
     void writeByIndex(const int index, const bool data) override;
 
