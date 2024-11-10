@@ -1,8 +1,11 @@
 #include "../../testbench/tb.h"
-#include "sdc.hpp"
 
-#include "../hal/bus/spi/spihw.hpp"
-#include "../hal/bus/spi/spisw.hpp"
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/spisw.hpp"
+
+#include "drivers/Memory/Flash/X25QXX.hpp"
+
+using namespace yumud::drivers;
 
 void w25qxx_main(){
     DEBUGGER_INST.init(576000);
@@ -34,7 +37,7 @@ void w25qxx_main(){
     // SPI_Init(SPI1, &SPI_InitStructure);
 
     // SPI_Cmd(SPI1, ENABLE);
-    W25QXX w25{SpiDrv{spi, 0}};
+    X25QXX w25{SpiDrv{spi, 0}};
     while(true){
         // DEBUG_PRINTLN(w25.getDeviceManufacturer());
         // DEBUG_PRINTLN(std::hex, std::showbase, w25.getDeviceId());

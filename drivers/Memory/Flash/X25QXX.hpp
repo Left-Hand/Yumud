@@ -3,18 +3,18 @@
 
 #include "drivers/device_defs.h"
 #include "concept/storage.hpp"
-#include "jedec.hpp"
+#include "concept/jedec.hpp"
 
-#define W25QXX_DEBUG
+#define X25QXX_DEBUG
 
-#ifdef W25QXX_DEBUG
-#undef W25QXX_DEBUG
-#define W25QXX_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#ifdef X25QXX_DEBUG
+#undef X25QXX_DEBUG
+#define X25QXX_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
 #else
-#define W25QXX_DEBUG(...)
+#define X25QXX_DEBUG(...)
 #endif
 
-
+namespace yumud::drivers{
 
 
 class SpiDevice{
@@ -26,7 +26,7 @@ protected:
 };
 
 
-class W25QXX:public SpiDevice, public StoragePaged{
+class X25QXX:public SpiDevice, public StoragePaged{
 protected:
     enum class Command:uint8_t{
         WriteEnable = 0x06,
@@ -130,8 +130,8 @@ public:
 
 
 public:
-    W25QXX(const SpiDrv & spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
-    W25QXX(SpiDrv && spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
+    X25QXX(const SpiDrv & spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
+    X25QXX(SpiDrv && spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
 
     void enableWrite(const bool en = true){
         if(en){
@@ -187,40 +187,11 @@ public:
         return statusReg.write_enable_latch;
     }
 
-    void writePage(const Address addr, const uint8_t * data, size_t len){
-        enableWrite();
-        if(len > 256){
-            W25QXX_DEBUG("page too large", len);
-            len = 256;
-        }
-        writeByte(Command::PageProgram, CONT);
-        writeAddr(addr, CONT);
-        for(size_t i = 0; i < len; i++){
-            writeByte(data[i], CONT);
-        }
-    }
+    void writePage(const Address addr, const uint8_t * data, size_t len);
 
-    void writeData(const Address _addr, const uint8_t * _data, const size_t len){
-        enableWrite();
-        uint16_t pages = _addr / 256;
-        uint32_t addr = _addr;
-        uint8_t * data = (uint8_t *)_data;
-        for(uint16_t i = 0; i < pages; i++){
-            writePage(addr, data, 256);
-            addr += 256;
-            data += 256;
-        }
-        uint8_t remains = addr % 256;
-        writePage(addr, data, remains);
-    }
+    void writeData(const Address _addr, const uint8_t * _data, const size_t len);
 
-    void readData(const Address addr, uint8_t * data, const size_t len){
-        writeByte(Command::ReadData);
-        writeByte(addr >> 16);
-        writeByte(addr >> 8);
-        writeByte(addr);
-        for(size_t i = 0; i < len; i++){
-            readByte(data[i]);
-        }
-    }
+    void readData(const Address addr, uint8_t * data, const size_t len);
 };
+
+}
