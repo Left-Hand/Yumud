@@ -23,7 +23,7 @@ protected:
     Gpio & getMosiGpio();
     Gpio & getMisoGpio();
     Gpio & getSclkGpio();
-    Gpio & getCsGpio();
+    Gpio & getHwCsGpio();
 
     void enableRcc(const bool en = true);
     uint16_t calculatePrescaler(const uint32_t baudRate);
@@ -46,7 +46,7 @@ public:
     void setBaudRate(const uint32_t baudRate) override;
     void setBitOrder(const Endian endian) override;
 
-    #ifdef HAVE_SPI1
+    #ifdef ENABLE_SPI1
     friend void ::SPI1_IRQHandler(void);
     #endif
 

@@ -11,7 +11,7 @@
 #include "adc_utils.hpp"
 #include <initializer_list>
 
-#if defined(HAVE_ADC1) || defined(HAVE_ADC2)
+#if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
 extern "C"{
 __interrupt void ADC1_2_IRQHandler(void);
 }
@@ -188,7 +188,7 @@ protected:
         instance->CTLR2 = tempreg.data;
     }
 
-    #if defined(HAVE_ADC1) || defined(HAVE_ADC2)
+    #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
     friend void ::ADC1_2_IRQHandler(void);
     #endif
 public:

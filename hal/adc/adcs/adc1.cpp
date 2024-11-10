@@ -2,7 +2,7 @@
 
 using namespace yumud;
 
-#if defined(HAVE_ADC1) || defined(HAVE_ADC2)
+#if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
 using Callback = AdcUtils::Callback;
 
 

@@ -6,23 +6,23 @@ using namespace yumud;
 PortConcept & GpioVirtual::form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance){
     switch((uint32_t)_instance){
         default:
-        #ifdef HAVE_GPIOA
+        #ifdef ENABLE_GPIOA
         case GPIOA_BASE:
             return portA;
         #endif
-        #ifdef HAVE_GPIOB
+        #ifdef ENABLE_GPIOB
         case GPIOB_BASE:
             return portB;
         #endif
-        #ifdef HAVE_GPIOC
+        #ifdef ENABLE_GPIOC
         case GPIOC_BASE:
             return portC;
         #endif
-        #ifdef HAVE_GPIOD
+        #ifdef ENABLE_GPIOD
         case GPIOD_BASE:
             return portD;
         #endif
-        #ifdef HAVE_GPIOE
+        #ifdef ENABLE_GPIOE
         case GPIOE_BASE:
             return portE;
         #endif

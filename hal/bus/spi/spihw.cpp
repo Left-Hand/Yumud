@@ -1,10 +1,11 @@
 #include "spihw.hpp"
+#include "sys/core/system.hpp"
 #include "sys/debug/debug_inc.h"
 
 using namespace yumud;
 
 
-#ifdef HAVE_SPI1
+#ifdef ENABLE_SPI1
 void SPI1_IRQHandler(void){
 
 }
@@ -100,7 +101,7 @@ Gpio & SpiHw::getSclkGpio(){
     }
 }
 
-Gpio & SpiHw::getCsGpio(){
+Gpio & SpiHw::getHwCsGpio(){
     switch((uint32_t)instance){
         default:
             return GpioNull;
@@ -121,32 +122,38 @@ Gpio & SpiHw::getCsGpio(){
     }
 }
 
-uint16_t SpiHw::calculatePrescaler(const uint32_t baudRate){
-	RCC_ClocksTypeDef RCC_CLK;
-    RCC_GetClocksFreq(&RCC_CLK);
+uint16_t SpiHw::calculatePrescaler(const uint32_t baudrate){
 
 	uint32_t busFreq = 0;
 
     switch((uint32_t)instance){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
-            busFreq = RCC_CLK.PCLK1_Frequency;
+            busFreq = Sys::Clock::getAPB1Freq();
             break;
         #endif
 
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
-            busFreq = RCC_CLK.PCLK2_Frequency;
+            busFreq = Sys::Clock::getAPB2Freq();
             break;
         #endif
+
+        #ifdef ENABLE_SPI3
+        case SPI3_BASE:
+            busFreq = Sys::Clock::getAPB2Freq();
+            break;
+        #endif
+    
         default:
             return SPI_BaudRatePrescaler_256;
     }
 
-	uint32_t exp_div = busFreq / baudRate;
+	uint32_t exp_div = busFreq / baudrate;
 
 	uint32_t real_div = 2;
     uint8_t i = 0;
+
 	while(real_div < exp_div){
         real_div <<= 1;
         i++;
@@ -166,11 +173,14 @@ void SpiHw::installGpios(){
         miso_pin.inflt();
     }
 
-    Gpio & sclk_pin = getSclkGpio();
-    sclk_pin.afpp();
+    {
+        Gpio & sclk_pin = getSclkGpio();
+        sclk_pin.afpp();
+    }
 
-    if(!cs_port.isIndexValid(0)){
-        Gpio & cs_pin = getCsGpio();
+
+    if(false == cs_port.isIndexValid(0)){
+        Gpio & cs_pin = getHwCsGpio();
         cs_pin.set();
         if(hw_cs_enabled){
             cs_pin.afpp();
@@ -192,8 +202,8 @@ void SpiHw::installGpios(){
 }
 
 void SpiHw::enableHwCs(const bool en){
-    Gpio & _cs_pin = getCsGpio();
-    _cs_pin = true;
+    Gpio & _cs_pin = getHwCsGpio();
+    _cs_pin.set();
 
     if(en){
         _cs_pin.afpp();
@@ -245,20 +255,26 @@ void SpiHw::setDataBits(const uint8_t bits){
             if(tempreg & SPI_DataSize_16b) return;
             tempreg |= SPI_DataSize_16b;
             break;
-        default:
+        case 8:
             tempreg &= ~SPI_DataSize_16b;
             break;
+        default:
+            HALT;
     }
 
     instance->CTLR1 = tempreg;
 }
 
 void SpiHw::setBaudRate(const uint32_t baudRate){
-    instance->CTLR1 &= ~SPI_BaudRatePrescaler_256;
-    instance->CTLR1 |= calculatePrescaler(baudRate);
+    uint32_t tempreg = instance -> CTLR1;
+    tempreg &= ~SPI_BaudRatePrescaler_256;
+    tempreg |= calculatePrescaler(baudRate);
+    instance -> CTLR1 = tempreg;
 }
 
 void SpiHw::setBitOrder(const Endian endian){
-    instance->CTLR1 &= ~SPI_FirstBit_LSB;
-    instance->CTLR1 |= (endian == MSB) ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
+    uint32_t tempreg = instance -> CTLR1;
+    tempreg &= ~SPI_FirstBit_LSB;
+    tempreg |= (endian == MSB) ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
+    instance -> CTLR1 = tempreg;
 }

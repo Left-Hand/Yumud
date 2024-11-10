@@ -22,7 +22,7 @@ public:
 
 };
 
-#ifdef HAVE_ADC1
+#ifdef ENABLE_ADC1
 static inline Adc1 adc1;
 #endif
 

@@ -46,6 +46,6 @@ void Sdi::init(){
     *DEBUG_DATA0_ADDRESS = 0u;
 }
 
-#ifdef HAVE_SDI
+#ifdef ENABLE_SDI
 Sdi sdi;
 #endif

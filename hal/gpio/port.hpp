@@ -82,23 +82,23 @@ __inline void Port::clrPin(const Pin pin){
 
 }
 
-#ifdef HAVE_GPIOA
+#ifdef ENABLE_GPIOA
 extern yumud::Port portA;
 #endif
 
-#ifdef HAVE_GPIOB
+#ifdef ENABLE_GPIOB
 extern yumud::Port portB;
 #endif
 
-#ifdef HAVE_GPIOC
+#ifdef ENABLE_GPIOC
 extern yumud::Port portC;
 #endif
 
-#ifdef HAVE_GPIOD
+#ifdef ENABLE_GPIOD
 extern yumud::Port portD;
 #endif
 
-#ifdef HAVE_GPIOE
+#ifdef ENABLE_GPIOE
 extern yumud::Port portE;
 #endif
 

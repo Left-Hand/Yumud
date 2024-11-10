@@ -17,6 +17,6 @@ struct Rng{
 //     }
 };
 
-#ifdef HAVE_RNG
+#ifdef ENABLE_RNG
 static inline Rng rng
 #endif

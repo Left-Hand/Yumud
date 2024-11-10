@@ -5,10 +5,10 @@
 #include "../hal/bus/spi/spisw.hpp"
 
 void w25qxx_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(576000);
 
-    // auto & spi = spi1;
-    auto spi = SpiSw(SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO);
+    auto & spi = spi1;
+    // auto spi = SpiSw(SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO);
     auto & w25_cs = portD[5];
 
     spi.bindCsPin(w25_cs, 0);
@@ -38,8 +38,8 @@ void w25qxx_main(){
     while(true){
         // DEBUG_PRINTLN(w25.getDeviceManufacturer());
         DEBUG_PRINTLN(millis());
-        spi1.write(0xa5);
-        w25_cs = !w25_cs;
+        spi.write(0xa5);
+        // w25_cs = !w25_cs;
         SPI1_SCLK_GPIO = !SPI1_SCLK_GPIO;
         SPI1_MOSI_GPIO = !SPI1_MOSI_GPIO;
         SPI1_MISO_GPIO = !SPI1_MISO_GPIO;

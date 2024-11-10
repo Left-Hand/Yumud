@@ -30,7 +30,7 @@ void UsbFS::write(const char * data_ptr, const size_t len){
 }
 
 
-#ifdef HAVE_USBFS
+#ifdef ENABLE_USBFS
 UsbFS usbfs;
 #endif
 

@@ -77,7 +77,7 @@ int main(){
     // dshot_main();
     // usbcdc_tb();
     // embd_main();
-    // w25qxx_main();
+    w25qxx_main();
     // smc_main();
     // can_tb(logger, can1, true);
     // pmdc_tb();
@@ -90,7 +90,8 @@ int main(){
     // st77xx_tb(logger, spi2);
     // embd_main();
     // mpu6050_main();
-    gui_main();
+    // gui_main();
+    // sdc_main();
     // gxm::host_main();
     // can_tb(logger, can1);
     while(true);

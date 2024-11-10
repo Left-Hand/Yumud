@@ -174,6 +174,10 @@ void gui_main(){
         }
     };
 
+
+    MG995 servo_x{pca[6]};
+    MG995 servo_y{pca[7]};
+
     while(true){
 
         #ifdef DRAW_TB
@@ -258,8 +262,6 @@ void gui_main(){
         // painter.drawString({90,5}, "abcd你好123");
         // DEBUG_PRINTLN("你好");
 
-        MG995 servo_x{pca[6]};
-        MG995 servo_y{pca[7]};
 
 
 
@@ -282,8 +284,8 @@ void gui_main(){
             vec = Vector2(real_t(PI/2), real_t(PI - 0.2)) + Vector2(-vec.x, vec.y);
             // vec = Vector2(2.8, PI/2) + vec;
             //  + Vector2(-vec.x, vec.y);
-            DEBUG_PRINTLN(vec);                                                                                                                                                                                                                                                                           
-            servo_x.setRadian(+vec.x);
+            // DEBUG_PRINTLN(vec);                                                                                                                                                                                                                                                                           
+        servo_x.setRadian(+vec.x);
             servo_y.setRadian(+vec.y);
         }        
         #endif

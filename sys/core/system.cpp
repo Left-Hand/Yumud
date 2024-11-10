@@ -55,7 +55,7 @@ void Sys::Misc::prework(){
     RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOC, ENABLE);
     RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOA | RCC_APB2_PERIPH_GPIOB | RCC_APB2_PERIPH_AFIO, ENABLE);
 
-    #ifdef HAVE_GPIOD
+    #ifdef ENABLE_GPIOD
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE );
     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
     #endif
@@ -73,14 +73,14 @@ void Sys::Misc::prework(){
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE);
 
-    #ifdef HAVE_GPIOD
+    #ifdef ENABLE_GPIOD
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD, ENABLE);
 
     //invalid for ch32v307vct6
     GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
     #endif
 
-    #ifdef HAVE_GPIOE
+    #ifdef ENABLE_GPIOE
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE, ENABLE);
     #endif
     PWR_BackupAccessCmd( ENABLE );

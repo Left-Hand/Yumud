@@ -9,11 +9,16 @@ using namespace yumud;
 
 static void getDefaultArchive(MotorUtils::Archive & archive){
     archive.pos_config = {
-        .kp = real_t(2),
-        .kd = 100
+        // .kp = real_t(3),
+        // .kd = 170
 
-        // .kp = 3,
-        // .kd = 70
+        .kp = real_t(1.8),
+        .kd = 70
+
+
+        //OVERSPEED
+        // .kp = real_t(1.8),
+        // .kd = 20
 
         // .kp = 6,
         // .kd = 116

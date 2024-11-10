@@ -41,8 +41,6 @@ protected:
 
     friend class AsciiProtocol;
     friend class CanProtocol;
-
-    // NodeId getDefaultNodeId();
 public:
     FOCMotorConcept(const NodeId _id):node_id(_id){;}
     
@@ -66,6 +64,7 @@ public:
     real_t getSpeed() const{return meta.spd;}
 
     real_t getPosition() const {return meta.pos;}
+    real_t getTargetEstSpeed() const {return meta.targ_est_spd;}
 
     real_t getCurrent() const {return meta.curr;}
 

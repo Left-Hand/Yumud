@@ -18,7 +18,7 @@ public:
     void init();
 };
 
-#ifdef HAVE_SDI
+#ifdef ENABLE_SDI
 extern Sdi sdi;
 #endif
 }
