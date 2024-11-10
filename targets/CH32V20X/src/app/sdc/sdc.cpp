@@ -34,15 +34,17 @@ void w25qxx_main(){
     // SPI_Init(SPI1, &SPI_InitStructure);
 
     // SPI_Cmd(SPI1, ENABLE);
-    // W25QXX w25{SpiDrv{spi, 0}};
+    W25QXX w25{SpiDrv{spi, 0}};
     while(true){
         // DEBUG_PRINTLN(w25.getDeviceManufacturer());
-        DEBUG_PRINTLN(millis());
-        spi.write(0xa5);
-        // w25_cs = !w25_cs;
-        SPI1_SCLK_GPIO = !SPI1_SCLK_GPIO;
-        SPI1_MOSI_GPIO = !SPI1_MOSI_GPIO;
-        SPI1_MISO_GPIO = !SPI1_MISO_GPIO;
+        // DEBUG_PRINTLN(std::hex, std::showbase, w25.getDeviceId());
+        DEBUG_PRINTLN(std::oct, w25.getDeviceCapacity() >> 10, "kB", w25.getDeviceManufacturer());
+        DEBUG_PRINTLN(std::oct, millis());
+        // spi.write(0xa5);
+        // // w25_cs = !w25_cs;
+        // SPI1_SCLK_GPIO = !SPI1_SCLK_GPIO;
+        // SPI1_MOSI_GPIO = !SPI1_MOSI_GPIO;
+        // SPI1_MISO_GPIO = !SPI1_MISO_GPIO;
         delay(200);
     }
 }

@@ -15,8 +15,8 @@ protected:
     uint32_t last_entry_ms = 0;
     
 
-    void storeBytes(const uint8_t data, const Address loc) override;
-    void loadBytes(uint8_t & data, const Address loc) override;
+    void storeByte(const uint8_t data, const Address loc) override;
+    void loadByte(uint8_t & data, const Address loc) override;
 
     void storeBytes(const void * data, const Address len, const Address loc) override;
 

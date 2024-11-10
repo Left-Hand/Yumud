@@ -31,7 +31,7 @@ OutputStream & yumud::operator << (OutputStream & os, const Bus::ErrorType & err
     }
 }
 
-void Bus::Lock::lock(const uint8_t index){
+void Bus::Locker::lock(const uint8_t index){
     Sys::Exception::disableInterrupt();
     oninterrupt_ = Sys::Exception::isIntrruptActing();
     req = index >> 1;
@@ -40,7 +40,7 @@ void Bus::Lock::lock(const uint8_t index){
 }
 
 
-bool Bus::Lock::owned_by(const uint8_t index) const {
+bool Bus::Locker::owned_by(const uint8_t index) const {
     return (req == index >> 1) and (Sys::Exception::isIntrruptActing() == oninterrupt_);
 }
 

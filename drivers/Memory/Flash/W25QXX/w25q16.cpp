@@ -2,11 +2,11 @@
 
 using namespace yumud;
 
-void W25Q16::storeBytes(const uint8_t data, const Address loc){
+void W25Q16::storeByte(const uint8_t data, const Address loc){
     this->storeBytes(&data, 1, loc);
 }
 
-void W25Q16::loadBytes(uint8_t & data, const Address loc){
+void W25Q16::loadByte(uint8_t & data, const Address loc){
     this->loadBytes(&data, 1, loc);
 }
 

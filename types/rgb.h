@@ -1,11 +1,11 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/math/uint24_t.h"
 
 #include <tuple>
 #include <cstring>
 
-#include "uint24_t.h"
 
 
 #ifdef __cplusplus

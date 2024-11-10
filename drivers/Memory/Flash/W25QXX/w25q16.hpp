@@ -52,8 +52,8 @@ protected:
 
     void writePage(const void * data, const Address len, const size_t addr);
 
-    void storeBytes(const uint8_t data, const Address loc) override;
-    void loadBytes(uint8_t & data, const Address loc) override;
+    void storeByte(const uint8_t data, const Address loc) override;
+    void loadByte(uint8_t & data, const Address loc) override;
     void storeBytes(const void * data, const Address len, const Address loc) override;
     void loadBytes(void * data, const Address len, const Address loc) override;
     void entry_store() override;

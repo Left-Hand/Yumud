@@ -1,8 +1,9 @@
 #pragma once
 
 
-#include "../../drivers/device_defs.h"
-#include "../../concept/storage.hpp"
+#include "drivers/device_defs.h"
+#include "concept/storage.hpp"
+#include "jedec.hpp"
 
 #define W25QXX_DEBUG
 
@@ -13,12 +14,15 @@
 #define W25QXX_DEBUG(...)
 #endif
 
+
+
+
 class SpiDevice{
 protected:
-    SpiDrv spi_drv;
+    SpiDrv spi_drv_;
 
-    SpiDevice(const SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
-    SpiDevice(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+    SpiDevice(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    SpiDevice(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
 };
 
 
@@ -44,32 +48,47 @@ protected:
         JedecId = 0x9F
     };
 
-    union StatusReg{
-        struct {
-            uint8_t busy:1;
-            uint8_t write_enable_latch:1;
-            uint8_t block_protect_bits:3;
-            uint8_t top_or_bottom_protect:1;
-            uint8_t sector_or_block_protect:1;
-            uint8_t __resv__:1;
-        }__packed;
-        uint8_t data;
-    }__packed;
-
-    struct{
-        StatusReg statusReg;
+    struct StatusReg:public Reg8{
+        using Reg8::operator=;
+        uint8_t busy:1;
+        uint8_t write_enable_latch:1;
+        uint8_t block_protect_bits:3;
+        uint8_t top_or_bottom_protect:1;
+        uint8_t sector_or_block_protect:1;
+        uint8_t __resv__:1;
     };
 
+    struct JedecId:public Reg24{
+        using Reg24::operator=;
+        uint8_t capacity;
+        uint8_t memory_type;
+        uint8_t manufacturer_id;
+    };
+
+    StatusReg statusReg;
+    JedecId jedec_id;
+
+
     void writeByte(const uint8_t data, const Continuous cont = DISC){
-        spi_drv.writeSingle(data, cont);
+        spi_drv_.writeSingle<uint8_t>(data, cont);
     }
 
     void writeByte(const Command data, const Continuous cont = DISC){
-        spi_drv.writeSingle((uint8_t)data, cont);
+        spi_drv_.writeSingle<uint8_t>(uint8_t(data), cont);
     }
 
     void readByte(uint8_t & data, const Continuous cont = DISC){
-        spi_drv.readSingle(data, cont);
+        spi_drv_.readSingle<uint8_t>(data, cont);
+    }
+
+    void writeAddr(const Address addr, const Continuous cont = DISC){
+        writeByte(addr >> 16, CONT);
+        writeByte(addr >> 8, CONT);
+        writeByte(addr, cont);
+    }
+
+    void skipByte(){
+        writeByte(0, CONT);
     }
 
     void wait_for_free(){
@@ -84,12 +103,35 @@ protected:
 
     void loadBytes(void * data, const Address len, const Address loc) override{}
     void storeBytes(const void * data, const Address len, const Address loc) override{};
+
+    void updateDeviceId(){
+        writeByte(0x90, CONT);
+        skipByte();
+        skipByte();
+        skipByte();
+
+        readByte(jedec_id[2], CONT);
+        readByte(jedec_id[0]);
+    }
+
+    void updateJedecId(){
+        writeByte(0x9F, CONT);
+
+        readByte(jedec_id[2], CONT);
+        readByte(jedec_id[1], CONT);
+        readByte(jedec_id[0]);
+    }
+
 public:
+
     void init() override{}
 
     bool busy() override{return false;}
+
+
 public:
-    W25QXX(SpiDrv && _spi_drv):SpiDevice(_spi_drv), StoragePaged(32_MB, 256){;}
+    W25QXX(const SpiDrv & spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
+    W25QXX(SpiDrv && spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
 
     void enableWrite(const bool en = true){
         if(en){
@@ -99,67 +141,49 @@ public:
         }
     }
 
-    uint8_t getDeviceManufacturer(){
-        uint8_t data = 1;
-        writeByte(Command::ReadDeviceId, CONT);
-        readByte(data);
-        W25QXX_DEBUG("Device Manufacturer: ", data);
-        return data;
+    JedecManufacturer getDeviceManufacturer(){
+        updateJedecId();
+        return JedecManufacturer(jedec_id.manufacturer_id);
     }
 
-    uint8_t getDeviceStorageType(){
-        uint8_t data;
-        uint8_t dummy;
-        writeByte(Command::ReadDeviceId);
-        readByte(dummy);
-        readByte(data);
-        W25QXX_DEBUG("Device Storage Type: ", data);
-        return data;
+    JedecStorageType getDeviceStorageType(){
+        updateJedecId();
+        return JedecStorageType(jedec_id.memory_type);
     }
 
-    uint8_t getDeviceCapacity(){
-        uint8_t data;
-        uint8_t dummy;
-        writeByte(Command::ReadDeviceId);
-        readByte(dummy);
-        readByte(dummy);
-        readByte(data);
-        W25QXX_DEBUG("Device Capacity: ", data);
-        return data;
+    size_t getDeviceCapacity(){
+        updateJedecId();
+        return 1 << jedec_id.capacity;
+    }
+
+    void enablePowerDown(const bool en = true   ){
+        writeByte(en ? Command::PowerDown : Command::ReleasePowerDown);
     }
 
     void eraseBlock(const Address addr){
         enableWrite();
-        writeByte(Command::SectorErase);
-        writeByte(addr >> 16);
-        writeByte(addr >> 8);
-        writeByte(addr);
+        writeByte(Command::SectorErase, CONT);
+        writeAddr(addr);
     }
 
     void eraseSector(const Address addr){
         enableWrite();
-        writeByte(Command::SectorErase);
-        writeByte(addr >> 16);
-        writeByte(addr >> 8);
-        writeByte(addr);
+        writeByte(Command::SectorErase, CONT);
+        writeAddr(addr);
     }
     void eraseChip(){
         writeByte(Command::ChipErase);
     }
 
     bool isIdle(){
-        writeByte(Command::ReadStatusRegister);
-        uint8_t temp = 0;
-        readByte(temp);
-        statusReg.data = temp;
+        writeByte(Command::ReadStatusRegister, CONT);
+        readByte(statusReg);
         return statusReg.busy;
     }
 
     bool isWriteable(){
         writeByte(Command::ReadStatusRegister);
-        uint8_t temp = 0;
-        readByte(temp);
-        statusReg.data = temp;
+        readByte(statusReg);
         return statusReg.write_enable_latch;
     }
 
@@ -169,12 +193,10 @@ public:
             W25QXX_DEBUG("page too large", len);
             len = 256;
         }
-        writeByte(Command::PageProgram);
-        writeByte(addr >> 16);
-        writeByte(addr >> 8);
-        writeByte(addr);
+        writeByte(Command::PageProgram, CONT);
+        writeAddr(addr, CONT);
         for(size_t i = 0; i < len; i++){
-            writeByte(data[i]);
+            writeByte(data[i], CONT);
         }
     }
 
@@ -191,6 +213,7 @@ public:
         uint8_t remains = addr % 256;
         writePage(addr, data, remains);
     }
+
     void readData(const Address addr, uint8_t * data, const size_t len){
         writeByte(Command::ReadData);
         writeByte(addr >> 16);

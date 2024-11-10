@@ -26,11 +26,11 @@ protected:
     virtual void entry_load() = 0;
     virtual void exit_load() = 0;
 
-    virtual void storeBytes(const uint8_t data, const Address loc){
+    virtual void storeByte(const uint8_t data, const Address loc){
         storeBytes(&data, 1, loc);
     }
 
-    virtual void loadBytes(uint8_t & data, const Address loc){
+    virtual void loadByte(uint8_t & data, const Address loc){
         loadBytes(&data, 1, loc);
     }
 
@@ -55,13 +55,13 @@ public:
 
     void store(const uint8_t data, const Address loc){
         entry_store();
-        storeBytes(data, loc);
+        storeByte(data, loc);
         exit_store();
     }
 
     void load(uint8_t & data, const Address loc){
         entry_load();
-        loadBytes(data, loc);
+        loadByte(data, loc);
         exit_load();
     }
 

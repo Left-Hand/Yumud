@@ -45,12 +45,12 @@ if(loc > m_capacity){\
 #endif
 
 
-void AT24CXX::storeBytes(const uint8_t data, const Address loc){
+void AT24CXX::storeByte(const uint8_t data, const Address loc){
     CHECK_ADDR(loc);
     AT24CXX_DEBUG("store", data, "at", loc);
     WRITE_REG(loc, data);
 }
-void AT24CXX::loadBytes(uint8_t & data, const Address loc){
+void AT24CXX::loadByte(uint8_t & data, const Address loc){
     CHECK_ADDR(loc);
     AT24CXX_DEBUG("load", data, "at", loc);
     READ_REG(loc, data);
