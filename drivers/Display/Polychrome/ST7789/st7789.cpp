@@ -62,7 +62,7 @@ void ST7789::setpos_unsafe(const Vector2i & pos){
 
 
 
-void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 & color){
+void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 color){
     setarea_unsafe(rect);
     interface.writeMulti<RGB565>(color, size_t(rect));
 }
@@ -70,4 +70,20 @@ void ST7789::putrect_unsafe(const Rect2i & rect, const RGB565 & color){
 void ST7789::puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr){
     setarea_unsafe(rect);
     interface.writeMulti<RGB565>(color_ptr, size_t(rect));
+}
+
+void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
+    // PANIC()
+    auto & self = *this;
+    auto pos_ = pos;
+    for(uint8_t i = 0x01; i; i <<= 1){
+        if(i & mask) self.putpixel_unsafe(pos_, color);
+        pos_.y++;
+    }
+
+    // DEBUG_PRINTLN(mask);
+}
+
+void ST7789::putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
+    PANIC()
 }

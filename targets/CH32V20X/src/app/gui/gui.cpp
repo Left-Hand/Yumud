@@ -88,10 +88,10 @@ void gui_main(){
         tftDisplayer.setFlipY(true);
         if(true){
             tftDisplayer.setSwapXY(true);
-            tftDisplayer.setDisplayOffset({40, 53}); 
+            tftDisplayer.setDisplayOffset({40, 52}); 
         }else{
             tftDisplayer.setSwapXY(false);
-            tftDisplayer.setDisplayOffset({53, 40}); 
+            tftDisplayer.setDisplayOffset({52, 40}); 
         }
         tftDisplayer.setFormatRGB(true);
         tftDisplayer.setFlushDirH(false);
@@ -254,6 +254,9 @@ void gui_main(){
 
         painter.setColor(ColorEnum::RED);
         painter.drawFilledRect({2,2, 12,12});
+        // painter.println("你好");
+        // painter.drawString({90,5}, "abcd你好123");
+        // DEBUG_PRINTLN("你好");
 
         MG995 servo_x{pca[6]};
         MG995 servo_y{pca[7]};
