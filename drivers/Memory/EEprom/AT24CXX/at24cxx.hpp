@@ -7,20 +7,16 @@ namespace yumud{
 
 class AT24CXX:public StoragePaged{
 private:
-    constexpr bool is_small_chip(){return m_capacity <= 256;}
+    constexpr bool is_small_chip(){return capacity_ <= 256;}
 protected:
     scexpr uint32_t min_duration_ms = 6;
 
     I2cDrv i2c_drv_;
     uint32_t last_entry_ms = 0;
-    
 
-    void storeByte(const uint8_t data, const Address loc) override;
-    void loadByte(uint8_t & data, const Address loc) override;
+    void storeBytes(const Address loc, const void * data, const Address len) override;
 
-    void storeBytes(const void * data, const Address len, const Address loc) override;
-
-    void loadBytes(void * data, const Address len, const Address loc) override;
+    void loadBytes(const Address loc, void * data, const Address len) override;
 
     void entry_store() override{
         update_entry_ms();

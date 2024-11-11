@@ -86,24 +86,17 @@ protected:
     }
 
     void readBytes(void * data, const size_t len){
-        DEBUGGER.print("nr");
-        DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
-        DEBUGGER.println("nr!");
+        // DEBUGGER.print("nr");
+        // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
+        // DEBUGGER.println("nr!");
         spi_drv_.readMulti<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
-        DEBUGGER.print("ar");
-        DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
-        DEBUGGER.println("ar!");
+        // DEBUGGER.print("ar");
+        // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
+        // DEBUGGER.println("ar!");
     }
 
-    void writeAddr(const Address addr, const Continuous cont = DISC){
-        writeByte(addr >> 16, CONT);
-        writeByte(addr >> 8, CONT);
-        writeByte(addr, cont);
-    }
-
-    void skipByte(){
-        writeByte(0, CONT);
-    }
+    void writeAddr(const Address addr, const Continuous cont = DISC);
+    void skipByte(){writeByte(0, CONT);}
 
     void entry_store() override;
     void exit_store() override;
@@ -111,21 +104,35 @@ protected:
     void entry_load() override;
     void exit_load() override;
 
-    void loadBytes(void * data, const Address len, const Address loc) override;
-    void storeBytes(const void * data, const Address len, const Address loc) override;
+    void loadBytes(const Address loc, void * data, const Address len) override;
+    void storeBytes(const Address loc, const void * data, const Address len) override;
 
     void updateDeviceId();
 
     void updateJedecId();
 
-    void writePage(const Address addr, const uint8_t * data, size_t len);
-public:
-    X25QXX(const SpiDrv & spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
-    X25QXX(SpiDrv && spi_drv):SpiDevice(std::move(spi_drv)), StoragePaged(32_MB, 256){;}
+    void updateStatus();
 
+    void writePage(const Address addr, const uint8_t * data, size_t len);
+
+    bool waitForFree(size_t timeout);
+
+    bool isLargeChip(){return capacity_ > 0x1000000;}
+
+
+    void eraseSector(const Address addr);
+
+    void eraseBlock(const Address addr);
+
+    void eraseWholeChip();
+
+public:
+    X25QXX(const SpiDrv & spi_drv, const Address capacity):SpiDevice(spi_drv), StoragePaged(capacity, 256){;}
+
+    X25QXX(SpiDrv && spi_drv, const Address capacity):SpiDevice(std::move(spi_drv)), StoragePaged(capacity, 256){;}
     void init() override{}
 
-    bool busy() override{return false;}
+    bool busy() override;
 
 
     void enableWrite(const bool en = true){
@@ -153,18 +160,10 @@ public:
 
     void enablePowerDown(const bool en = true);
 
-    void eraseBlock(const Address addr);
-
-    void eraseSector(const Address addr);
-
-    void eraseChip();
-
-    bool isIdle();
 
     bool isWriteable();
 
-
-
+    void eraseBytes(const Address loc, const size_t len) override;
 };
 
 }

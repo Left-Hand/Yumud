@@ -4,22 +4,24 @@
 #include "storage.hpp"
 
 namespace yumud{
+
+
 class Memory{
 
 protected:
     using Address = size_t;
     using AddressView = Range_t<Address>;
 
-    Storage & storage;
-    AddressView m_view;
+    Storage & storage_;
+    AddressView view_;
 public:
-    Memory(Storage & _storage, const AddressView & _window);
-    Memory(Memory & _memory, const AddressView & _window):storage(_memory.storage), m_view(_window.intersection(_memory.view())){;}
+    Memory(Storage & storage, const AddressView & view);
+    // Memory(Memory & memory, const AddressView & view):storage_(memory.storage_), view_(storage_..intersection(memory_.view())){;}
     ~Memory(){;}
 public:
-    AddressView view(){return m_view;}
+    AddressView view(){return view_;}
 
-    size_t size(){return m_view.length();}
+    size_t size(){return view_.length();}
 
     void store(const auto & data, const Address loc = 0);
     void store(auto && data, const Address loc = 0);

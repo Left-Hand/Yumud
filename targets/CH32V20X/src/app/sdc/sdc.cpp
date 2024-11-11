@@ -15,16 +15,19 @@ void w25qxx_main(){
 
     spi.bindCsPin(w25_cs, 0);
     spi.init(36_MHz);
-    X25QXX w25{SpiDrv{spi, 0}};
+    X25QXX w25{SpiDrv{spi, 0}, 1_MB};
     std::array<uint8_t, 8> arr;
+    delay(20);
+    arr = {1,1,4,5,1,4};
+
+    scexpr size_t addr = 0;
+
+    w25.erase(addr, 256);
+    w25.store(addr,arr.begin(), arr.size());
+
     while(true){
 
-        // {
-            arr = {1,1,4,5,1,4};
-            w25.store(arr.begin(), arr.size(), 0);
-            w25.load(arr.begin(), arr.size(), 0);
-        // }
-        // DEBUG_PRINTLN(std::oct, w25.getDeviceCapacity() >> 10, "kB", w25.getDeviceManufacturer());
+        w25.load(addr,arr.begin(), arr.size());
         DEBUG_PRINTLN(std::oct, arr);
         delay(200);
     }

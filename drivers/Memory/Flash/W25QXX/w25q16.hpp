@@ -50,12 +50,10 @@ protected:
     StatusReg statusReg;
 
 
-    void writePage(const void * data, const Address len, const size_t addr);
+    void writePage(const size_t addr, const void * data, const Address len);
 
-    void storeByte(const uint8_t data, const Address loc) override;
-    void loadByte(uint8_t & data, const Address loc) override;
-    void storeBytes(const void * data, const Address len, const Address loc) override;
-    void loadBytes(void * data, const Address len, const Address loc) override;
+    void storeBytes(const Address loc, const void * data, const Address len) override;
+    void loadBytes(const Address loc, void * data, const Address len) override;
     void entry_store() override;
     void exit_store() override;
     void entry_load() override;

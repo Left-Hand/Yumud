@@ -1,17 +1,7 @@
 #include "w25q16.hpp"
 
 using namespace yumud;
-
-void W25Q16::storeByte(const uint8_t data, const Address loc){
-    this->storeBytes(&data, 1, loc);
-}
-
-void W25Q16::loadByte(uint8_t & data, const Address loc){
-    this->loadBytes(&data, 1, loc);
-}
-
-
-void W25Q16::writePage(const void * _data, Address len, const size_t addr){
+void W25Q16::writePage(const size_t addr, const void * _data, Address len){
     enableWrite();
 
     if(len > 256){
@@ -29,22 +19,22 @@ void W25Q16::writePage(const void * _data, Address len, const size_t addr){
     }
 }
 
-void W25Q16::storeBytes(const void * _data, const Address len, const Address _addr){
+void W25Q16::storeBytes(const Address _addr, const void * _data, const Address len){
     //FIXME
     enableWrite();
     uint16_t pages = _addr / 256;
     uint32_t addr = _addr;
     const uint8_t * data = reinterpret_cast<const uint8_t *>(_data);
     for(uint16_t i = 0; i < pages; i++){
-        writePage(data, 256, addr);
+        writePage(addr, data, 256);
         addr += 256;
         data += 256;
     }
     uint8_t remains = addr % 256;
-    writePage(data, remains, addr);
+    writePage(addr, data, remains);
 }
 
-void W25Q16::loadBytes(void * data, const Address len, const Address addr){
+void W25Q16::loadBytes( const Address addr, void * data, const Address len){
     writeByte(Commands::ReadData);
     writeByte(addr >> 16);
     writeByte(addr >> 8);

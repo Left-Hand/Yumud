@@ -65,9 +65,9 @@ protected:
         FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
     }
 
-    void storeBytes(const void * data, const Address len, const Address loc) override;
+    void storeBytes(const Address loc, const void * data, const Address len) override;
 
-    void loadBytes(void * data, const Address len, const Address loc) override;
+    void loadBytes(const Address loc, void * data, const Address len) override;
 
     void erasePage(const Address vaddr);
     void programPage(const Address vaddr, const void * buf);

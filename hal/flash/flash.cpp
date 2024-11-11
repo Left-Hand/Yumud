@@ -8,7 +8,7 @@ using namespace yumud;
 
 #define CLOCK_CONFIG CLOCK_CONFIG_BY_REG
 
-void Flash::storeBytes(const void * data, const Address len, const Address loc){
+void Flash::storeBytes(const Address loc, const void * data, const Address len){
 
     unlock();
     uint8_t buf[page_size] = {0};
@@ -30,7 +30,7 @@ void Flash::storeBytes(const void * data, const Address len, const Address loc){
                     if(page_window.room_right(op_window)){
                         // {----[--]}
                         auto padding_len = page_size - op_window.length();
-                        loadBytes(buf, padding_len, page_window.from);
+                        loadBytes(page_window.from, buf, padding_len);
                         memcpy(buf + (op_window.from - page_window.from), data, op_window.length());
 
                         erasePage(page_window.from);  
@@ -44,7 +44,7 @@ void Flash::storeBytes(const void * data, const Address len, const Address loc){
 
                 case 2:
                     // {--[--]--}
-                    loadBytes(buf, page_size, page_window.from);
+                    loadBytes(page_window.from, buf, page_size);
                     memcpy(buf + (op_window.from - page_window.from), data, op_window.length());
 
                     erasePage(page_window.from);  
@@ -65,7 +65,7 @@ void Flash::storeBytes(const void * data, const Address len, const Address loc){
     lock();
 };
 
-void Flash::loadBytes(void * data, const Address len, const Address loc){
+void Flash::loadBytes(const Address loc, void * data, const Address len){
     FAULT_IF(!ISALIGNED(data))
     memcpy(data, (void *)(loc + base_address), len);
 };
