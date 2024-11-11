@@ -29,7 +29,6 @@ protected:
     virtual void storeByte(const uint8_t data, const Address loc){
         storeBytes(&data, 1, loc);
     }
-
     virtual void loadByte(uint8_t & data, const Address loc){
         loadBytes(&data, 1, loc);
     }
@@ -38,6 +37,7 @@ protected:
 
     virtual void loadBytes(void * data, const Address len, const Address loc) = 0;
 
+    virtual void eraseBytes(const Address len, const Address loc){};
 public:
     virtual void init() = 0;
 

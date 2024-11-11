@@ -73,12 +73,26 @@ protected:
         spi_drv_.writeSingle<uint8_t>(data, cont);
     }
 
-    void writeByte(const Command data, const Continuous cont = DISC){
-        spi_drv_.writeSingle<uint8_t>(uint8_t(data), cont);
+    void writeByte(const Command cmd, const Continuous cont = DISC){
+        writeByte(uint8_t(cmd), cont);
+    }
+
+    void writeBytes(const void * data, const size_t len){
+        spi_drv_.writeMulti<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
     }
 
     void readByte(uint8_t & data, const Continuous cont = DISC){
         spi_drv_.readSingle<uint8_t>(data, cont);
+    }
+
+    void readBytes(void * data, const size_t len){
+        DEBUGGER.print("nr");
+        DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
+        DEBUGGER.println("nr!");
+        spi_drv_.readMulti<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
+        DEBUGGER.print("ar");
+        DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
+        DEBUGGER.println("ar!");
     }
 
     void writeAddr(const Address addr, const Continuous cont = DISC){
@@ -91,47 +105,28 @@ protected:
         writeByte(0, CONT);
     }
 
-    void wait_for_free(){
+    void entry_store() override;
+    void exit_store() override;
 
-    }
+    void entry_load() override;
+    void exit_load() override;
 
-    void entry_store() override{}
-    void exit_store() override{}
+    void loadBytes(void * data, const Address len, const Address loc) override;
+    void storeBytes(const void * data, const Address len, const Address loc) override;
 
-    void entry_load() override{}
-    void exit_load() override{}
+    void updateDeviceId();
 
-    void loadBytes(void * data, const Address len, const Address loc) override{}
-    void storeBytes(const void * data, const Address len, const Address loc) override{};
+    void updateJedecId();
 
-    void updateDeviceId(){
-        writeByte(0x90, CONT);
-        skipByte();
-        skipByte();
-        skipByte();
-
-        readByte(jedec_id[2], CONT);
-        readByte(jedec_id[0]);
-    }
-
-    void updateJedecId(){
-        writeByte(0x9F, CONT);
-
-        readByte(jedec_id[2], CONT);
-        readByte(jedec_id[1], CONT);
-        readByte(jedec_id[0]);
-    }
-
+    void writePage(const Address addr, const uint8_t * data, size_t len);
 public:
+    X25QXX(const SpiDrv & spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
+    X25QXX(SpiDrv && spi_drv):SpiDevice(std::move(spi_drv)), StoragePaged(32_MB, 256){;}
 
     void init() override{}
 
     bool busy() override{return false;}
 
-
-public:
-    X25QXX(const SpiDrv & spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
-    X25QXX(SpiDrv && spi_drv):SpiDevice(spi_drv), StoragePaged(32_MB, 256){;}
 
     void enableWrite(const bool en = true){
         if(en){
@@ -156,42 +151,20 @@ public:
         return 1 << jedec_id.capacity;
     }
 
-    void enablePowerDown(const bool en = true   ){
-        writeByte(en ? Command::PowerDown : Command::ReleasePowerDown);
-    }
+    void enablePowerDown(const bool en = true);
 
-    void eraseBlock(const Address addr){
-        enableWrite();
-        writeByte(Command::SectorErase, CONT);
-        writeAddr(addr);
-    }
+    void eraseBlock(const Address addr);
 
-    void eraseSector(const Address addr){
-        enableWrite();
-        writeByte(Command::SectorErase, CONT);
-        writeAddr(addr);
-    }
-    void eraseChip(){
-        writeByte(Command::ChipErase);
-    }
+    void eraseSector(const Address addr);
 
-    bool isIdle(){
-        writeByte(Command::ReadStatusRegister, CONT);
-        readByte(statusReg);
-        return statusReg.busy;
-    }
+    void eraseChip();
 
-    bool isWriteable(){
-        writeByte(Command::ReadStatusRegister);
-        readByte(statusReg);
-        return statusReg.write_enable_latch;
-    }
+    bool isIdle();
 
-    void writePage(const Address addr, const uint8_t * data, size_t len);
+    bool isWriteable();
 
-    void writeData(const Address _addr, const uint8_t * _data, const size_t len);
 
-    void readData(const Address addr, uint8_t * data, const size_t len);
+
 };
 
 }
