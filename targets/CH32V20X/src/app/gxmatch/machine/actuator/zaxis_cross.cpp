@@ -21,7 +21,7 @@ void ZAxisCross::tick(){
 }
 
 void ZAxisCross::softHome(){
-    this->setDistance(0.15);
+    this->setDistance(0.15_r);
 }
 
 
