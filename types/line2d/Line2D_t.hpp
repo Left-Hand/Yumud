@@ -3,6 +3,7 @@
 #include "sys/math/real.hpp"
 #include "types/vector2/vector2_t.hpp"
 #include "types/line2d/Line2D_t.hpp"
+#include "types/segment2d/Segment2d_t.hpp"
 
 namespace yumud{
 

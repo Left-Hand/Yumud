@@ -2,6 +2,7 @@
 
 #include "sys/math/real.hpp"
 #include "types/vector2/vector2_t.hpp"
+#include "types/line2d/Line2D_t.hpp"
 
 namespace yumud{
 
@@ -50,6 +51,14 @@ public:
 
         //TODO
         return {0,0};
+    }
+
+    __fast_inline constexpr Line2D_t<T> side() const{
+        return Line2D_t<T>(this->p, this->a + T(PI/2));
+    }
+
+    __fast_inline constexpr Ray2D_t<T> rotated(const T r) const{
+        return {this->p, this->a + r};
     }
 };
 

@@ -1,0 +1,27 @@
+#pragma once
+
+#include "types/ray2d/Ray2D_t.hpp"
+
+namespace sequence{
+
+using Ray = yumud::Ray2D_t<real_t>;
+using Rays = std::vector<Ray>;
+
+struct SequenceLimits{
+    real_t max_gyro;
+    real_t max_acc;
+};
+
+
+struct SequenceParas{
+    size_t points;
+    real_t duration;
+};
+
+namespace functions{
+
+Rays linear(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
+Rays fillet(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
+Rays circle(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
+};
+}
