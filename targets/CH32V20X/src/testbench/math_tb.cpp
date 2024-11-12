@@ -9,11 +9,18 @@
 #include "types/plane/plane_t.hpp"
 #include "types/aabb/aabb_t.hpp"
 #include "types/transform3d/transform3d_t.hpp"
-#include "types/transform2d/transform2d.hpp"
+#include "types/transform2d/transform2d_t.hpp"
+
+#include "types/segment2d/Segment2d_t.hpp"
+#include "types/line2d/Line2D_t.hpp"
+#include "types/ray2d/Ray2D_t.hpp"
+
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
+
+
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
