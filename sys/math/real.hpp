@@ -158,5 +158,31 @@ __fast_inline constexpr int warp_mod(const int x, const int y){
     return ret;
 }
 
+template<floating T>
+__fast_inline T powfi(const T base, const int exponent) {
+    if(0 == exponent) {
+        return T(1);
+    }else if(1 == exponent){
+        return base;
+    }else{
+        T ret;
+        if(1 < exponent){
+            for(size_t i = 1; i < exponent; ++i){
+                ret *= base;
+            }
+        }else{
+            for(size_t i = 1; i < -exponent; ++i){
+                ret /= base;
+            }
+        }
+        return ret;
+    }
+}
+
+template<floating T>
+__fast_inline T powi(const T base, const int exponent) {
+    return powi(base, exponent);
+}
+
 #include "real.ipp"
 
