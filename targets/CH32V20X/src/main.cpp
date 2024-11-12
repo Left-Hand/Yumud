@@ -7,6 +7,8 @@
 #include "testbench/tb.h"
 #include "app/gui/gui.hpp"
 #include "app/gxmatch/gxmatch.hpp"
+#include "app/eyetrack/etk.hpp"
+
 
 void preinit(){
     RCC_PCLK1Config(RCC_HCLK_Div1);

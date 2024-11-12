@@ -21,7 +21,6 @@
 
 #include "elements.hpp"
 
-#include "eyetrack/eyetrack.hpp"
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 
@@ -29,7 +28,6 @@
 using namespace yumud;
 using namespace yumud::drivers;
 using namespace yumud::nvcv2;
-using namespace etk;
 
 using Vector2i = Vector2_t<int>;
 
@@ -150,34 +148,6 @@ void gui_main(){
     };
 
 
-    auto eye_conf =         Eyes::Config{
-            .l_center = Vector2i{60, 62},
-            .r_center = Vector2i{180, 62},
-
-            .eye_radius = 40,
-            .iris_radius = 13,
-            .pupil_radius = 7
-    };
-
-    Eyes eye{
-        theme,
-        eye_conf,
-        {
-            .yaw = pca[0],
-            .pitch = pca[1],
-
-            .upper_l = pca[2],
-            .lower_l = pca[3],
-
-            .upper_r = pca[4],
-            .lower_r = pca[5]
-        }
-    };
-
-
-    MG995 servo_x{pca[6]};
-    MG995 servo_y{pca[7]};
-
     while(true){
 
         #ifdef DRAW_TB
@@ -248,47 +218,5 @@ void gui_main(){
         tftDisplayer.fill(ColorEnum::BLACK);
         #endif
 
-        #define EYE_TB
-        #ifdef EYE_TB
-        eye.render(painter);
-
-
-        delay(20);
-        painter.fill(ColorEnum::BLACK);
-
-        painter.setColor(ColorEnum::RED);
-        painter.drawFilledRect({2,2, 12,12});
-        // painter.println("你好");
-        // painter.drawString({90,5}, "abcd你好123");
-        // DEBUG_PRINTLN("你好");
-
-
-
-
-        if(logger.available()){
-            EtkToken tk;
-            while(logger.available()){
-                tk = uint8_t(logger.read());
-            }
-            // logger.println(int(tk.up), int(tk.down), int(tk.left), int(tk.right));
-            // logger.println(std::oct, Vector2i(tk), std::, uint8_t(tk));
-
-            eye.update(
-                {Vector2(Vector2i(tk).flipy())}, 
-                std::to_array({EyelidInfo{{0,0}}, EyelidInfo{{0,0}}})
-            );
-
-            eye.move();
-
-            auto vec = Vector2(eye.eyeInfo().pos) * real_t(0.2);
-            vec = Vector2(real_t(PI/2), real_t(PI - 0.2)) + Vector2(-vec.x, vec.y);
-            // vec = Vector2(2.8, PI/2) + vec;
-            //  + Vector2(-vec.x, vec.y);
-            // DEBUG_PRINTLN(vec);                                                                                                                                                                                                                                                                           
-        servo_x.setRadian(+vec.x);
-            servo_y.setRadian(+vec.y);
-        }        
-        #endif
-    
     }
 }

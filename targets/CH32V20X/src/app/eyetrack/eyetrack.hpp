@@ -72,7 +72,7 @@ public:
     }
 };
 
-class Eyes:public CanvasItem{
+class Eyes{
 public:
     struct Config{
         Vector2i l_center;
@@ -90,8 +90,7 @@ protected:
     EyeInfo eye_info_;
     std::array<EyelidInfo,2> eyelids_info_;
 public:
-    Eyes(const Theme & theme, const Config & config, const EyesPhy::Refs & refs):
-            CanvasItem(theme), 
+    Eyes(const Config & config, const EyesPhy::Refs & refs):
             config_(config),
             eyes_phy_{refs}{}
 
@@ -115,7 +114,7 @@ public:
     const auto & eyelidsInfo() const {return eyelids_info_;}
 
 
-    void render(PainterConcept & painter) override{
+    void render(PainterConcept & painter) {
         auto render_eye = [&](const LR side){
 
             auto center = (side == LR::LEFT) ? config_.l_center : config_.r_center;
