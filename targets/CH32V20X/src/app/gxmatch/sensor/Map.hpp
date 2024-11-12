@@ -16,24 +16,21 @@ enum class AreaType:uint8_t{
 };
 
 struct Map{
-    Vector2 garbage_pos;
-    Vector2 billboard_pos;
-    Vector2 staging_pos;
-    Vector2 raw_material_pos;
-    Vector2 rough_process_pos;
+    Vector2 garbage_pos = {0,0};
+    Vector2 billboard_pos = {real_t(0.065), real_t(0.3)};
+    Vector2 staging_pos = {real_t(1.8), real_t(1.015)};
+    Vector2 raw_material_pos = {real_t(1.45), real_t(0.3)};
+    Vector2 rough_process_pos = {real_t(1.05), real_t(1.72)};
 
     Map & operator =(const Map & other) = default;
     Map & operator =(Map && other) = default;
 };
-
-static inline Map map;
 
 class Area{
 public:
 protected:
     AreaType type_;
 
-    const Map & map_ = map;
 public:
     Area(AreaType type):type_(type){}
     AreaType type() const{return type_;}
@@ -41,12 +38,8 @@ public:
     bool operator ==(const AreaType type) const {return type_ == type;}
     bool operator !=(const AreaType type) const {return type_ != type;}
 
-    explicit operator Vector2() const;
+    Vector2 to_pos(const Map & map_) const;
 };
-
-
-
-
 
 
 }

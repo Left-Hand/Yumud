@@ -15,18 +15,27 @@ public:
 protected:
     const Config & config_;
 
-    T cosine_law(const T a, const T b, const T c){
+    static T cosine_law(const T a, const T b, const T c){
         return acos((a*a + b*b - c*c) / (2*a*b));  
+    }
+    
+    static T square(const T x){
+        return x*x;
     }
 public:
     constexpr CrossSolver_t(const Config & config):
         config_(config){;}
 
+
+    constexpr CrossSolver_t(const CrossSolver_t<T> & other) = delete;
+    constexpr CrossSolver_t(CrossSolver_t<T> && other) = delete;
+
+
     T forward(const T rad){
         auto base_pos = Vector2_t<T>{-config_.xoffs_length_meter, 0};
         auto jpos = base_pos + Vector2_t<T>{config_.upperarm_length_meter, 0}.rotated(rad);
 
-        auto delta_h = sqrt(powi(config_.forearm_length_meter, 2) - powi(jpos.x, 2));
+        auto delta_h = sqrt(square(config_.forearm_length_meter) - square(jpos.x));
         return jpos.y + delta_h;
     }
 

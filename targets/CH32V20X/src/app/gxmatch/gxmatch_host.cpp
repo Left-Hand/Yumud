@@ -176,6 +176,16 @@ void host_main(){
     });
     
     timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
+
+    CrossSolver::Config cross_config = {
+        .xoffs_length_meter = real_t(0.04),
+        .forearm_length_meter = real_t(0.1),
+        .upperarm_length_meter = real_t(0.1)
+    };
+    
+    CrossSolver cross_solver{
+        cross_config
+    };
      
     while(true){
 
@@ -200,7 +210,19 @@ void host_main(){
             bool c = (millis() % 2000 > 1000);
             c ? scara.pickUp() : scara.putDown();
         }
-        logger.println(joint_left.getRadian(), joint_right.getRadian());
+        // logger.println(joint_left.getRadian(), joint_right.getRadian());
+        // logger.println(cross_solver.inverse(real_t(0.07) + real_t(0.05) * sin(t)));
+        {
+            // auto rad = real_t(PI/4) + real_t(PI/4) * sin(t);
+            // logger.println(std::setprecision(3), cross_solver.forward(rad));
+        }
+        
+        {
+            auto height = real_t(0.14) + real_t(0.06) * sin(t);
+            auto inv_rad = cross_solver.inverse(height);
+            auto f_height = cross_solver.forward(inv_rad);
+            logger.println(std::setprecision(3), inv_rad, height, f_height);
+        }
         // pwm = real_t(0.5);
         // logger.println(duty);
         delay(20);

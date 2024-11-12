@@ -3,7 +3,7 @@
 
 using namespace gxm;
 
-Area::operator Vector2() const{
+Vector2 Area::to_pos(const Map & map_) const {
     switch(type_){
         default:
             HALT;

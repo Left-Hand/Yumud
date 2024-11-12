@@ -13,17 +13,17 @@ class Navigator{
 
     };
 protected:
-    const Map & map_ = map;
     const Config & config_;
+    const Map & map_;
 
     Vector2 curr_pos;
 
 public:
-    Navigator(const Config & config):
-        config_(config){}
+    Navigator(const Config & config, const Map & map):
+        config_(config), map_(map){}
 
     void recalibrate(const Area area, const Vector2 & offs){
-        curr_pos = Vector2(area) + offs;
+        curr_pos = area.to_pos(map_) + offs;
     }
 
     void update(){
