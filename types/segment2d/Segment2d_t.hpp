@@ -66,12 +66,12 @@ public:
         return sign((from - p).cross(to - p));
     }
 
-    __fast_inline constexpr bool parrel_with(const Segment2D_t & other){
+    __fast_inline constexpr bool parallel_with(const Segment2D_t & other){
         return is_equal_approx(this->diff().cross(other.diff()), 0);
     }
 
     __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Segment2D_t<T> & other) const{
-        if(this->parrel_with(other)) return std::nullopt;
+        if(this->parallel_with(other)) return std::nullopt;
         else if(this->operator==(other)) return std::nullopt;
         
 
@@ -100,6 +100,14 @@ public:
         //a=y2-y1, b=x1-x2, c=y1*x2-x1*y2
 
         return {from.y - to.y, to.x - from.x, from.cross(to)};
+    }
+
+    __fast_inline constexpr T length() const {
+        return (to - from).length();
+    }
+
+    __fast_inline constexpr T length_squared() const{
+        return (to - from).length_squared();
     }
 };
 

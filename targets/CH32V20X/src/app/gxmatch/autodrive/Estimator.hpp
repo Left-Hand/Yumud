@@ -10,12 +10,13 @@ using namespace yumud::drivers;
 
 class Estimator{
 public:
-    using Vector3 = yumud::Vector3_t<real_t>;
-    using Vector2 = yumud::Vector2_t<real_t>;
+
 
     struct Config{
         Vector3 acc_trim;
         Vector3 gyro_trim;
+
+        size_t trim_times;
     };
 protected:
     const Config & config_;

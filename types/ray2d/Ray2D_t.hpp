@@ -13,13 +13,19 @@ public:
     T rad;
 
 public:
-    constexpr Ray2D_t(){;}
+    __fast_inline constexpr Ray2D_t(){;}
 
-    constexpr Ray2D_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
+    __fast_inline constexpr Ray2D_t(const Vector2_t<auto> & _org, const auto & _rad): 
+            org(static_cast<Vector2_t<T>>(_org)), rad(static_cast<T>(_rad)){;}
+
+    __fast_inline constexpr Ray2D_t(const auto & _x, const auto & _y, const auto & _rad): 
+            org(Vector2_t<T>(_x, _y)), rad(static_cast<T>(_rad)){;}
+            
+    __fast_inline constexpr Ray2D_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
             org(static_cast<Vector2_t<T>>(_from)), rad((_to - _from).angle()){;}
 
     template<arithmetic U = T>
-    constexpr Ray2D_t(const std::tuple<U, U, U> & tup) : 
+    __fast_inline constexpr Ray2D_t(const std::tuple<U, U, U> & tup) : 
             org((Vector2_t<T>(std::get<0>(tup), std::get<1>(tup)))),
             rad(std::get<3>(tup)){;}
 
@@ -35,7 +41,7 @@ public:
         return is_equal_approx(distance_to(pt), 0);
     }
 
-    __fast_inline constexpr bool parrel_with(const Ray2D_t & other){
+    __fast_inline constexpr bool parallel_with(const Ray2D_t & other){
         return is_equal_approx(this->rad, other.rad);
     }
 

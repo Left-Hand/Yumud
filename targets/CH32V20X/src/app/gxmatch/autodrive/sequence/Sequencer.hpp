@@ -1,10 +1,11 @@
 #pragma once
 
 #include "SequenceUtils.hpp"
+#include "SequencerBase.hpp"
 
 namespace gxm{
 
-class Sequencer{
+class Sequencer:public SequencerBase{
 protected:
     const SequenceLimits & limits_;
     const SequenceParas & paras_;
@@ -14,10 +15,14 @@ public:
     Sequencer(const SequenceLimits & limits, const SequenceParas & paras):
         limits_(limits), paras_(paras){}
 
-    void linear();
+    void linear(const Ray & from, const Ray & to);
 
-    void circle();
+    void circle(const Ray & from, const Ray & to);
 
-    void fillet();
+    void fillet(const Ray & from, const Ray & to);
+
+    Rays && fetchCurve(){
+        return std::move(curve);
+    }
 };
 }

@@ -2,15 +2,14 @@
 
 #include "types/vector3/Vector3_t.hpp"
 #include "types/vector2/Vector2_t.hpp"
+#include "types/ray2d/Ray2D_t.hpp"
 
 namespace gxm{
     
 using Vector2 = yumud::Vector2_t<real_t>;
+using Vector3 = yumud::Vector3_t<real_t>;
 
-struct Gesture2D{
-    Vector2 pos;    
-    real_t rot;
-};
+using Gesture2D = yumud::Ray2D_t<real_t>;
 
 
 }
