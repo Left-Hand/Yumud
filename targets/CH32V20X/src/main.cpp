@@ -70,7 +70,7 @@ int main(){
     preinit();
     // DEBUG_PRINTLN("??");
     // gui_main();
-    // math_tb(uart2);
+    math_tb(uart2);
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();

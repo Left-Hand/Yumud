@@ -54,7 +54,7 @@ public:
         }else if(diff2.dot(diff3) < 0){
             return diff2.length();
         }else{
-        return ((diff1).cross(diff2) / 2) / (diff3).length();
+        return ((diff2).cross(diff1)) / (diff3).length();
         }
     }
 
@@ -68,6 +68,10 @@ public:
 
     __fast_inline constexpr bool parallel_with(const Segment2D_t & other){
         return is_equal_approx(this->diff().cross(other.diff()), 0);
+    }
+
+    __fast_inline constexpr bool orthogonal_with(const Segment2D_t & other){
+        return is_equal_approx(this->diff().dot(other.diff()), 0);
     }
 
     __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Segment2D_t<T> & other) const{
@@ -108,6 +112,10 @@ public:
 
     __fast_inline constexpr T length_squared() const{
         return (to - from).length_squared();
+    }
+
+    __fast_inline constexpr T angle() const {
+        return (to - from).angle();
     }
 };
 

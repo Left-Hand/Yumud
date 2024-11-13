@@ -21,7 +21,8 @@ public:
     constexpr Line2D_t(){;}
 
     constexpr Line2D_t(const Segment2D_t<auto> & seg):
-        d(seg.diff().length()), rad(seg.diff().angle()){;}
+        d(((seg.from).cross(seg.to)) / (seg.to - seg.from).length()), 
+        rad(seg.angle()){;}
 
     constexpr Line2D_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
             Line2D_t(Segment2D_t<T>(_from, _to)){;}
@@ -53,10 +54,8 @@ public:
     __fast_inline constexpr Line2D_t<T> abs() const {
         if(T(0) <= rad and rad < T(PI)) return *this; 
 
-        //FIXME
-        scexpr auto magic_scale = 100;
+        auto m = fposmodp(rad, T(TAU));
 
-        auto m = fmod(rad + T(TAU * magic_scale), T(TAU));
         if(d < 0){
             m = m > T(PI) ? m - T(PI) : m + T(PI);
             return {-d, m};
@@ -69,7 +68,7 @@ public:
 	__fast_inline constexpr bool operator==(const Line2D_t & other) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
-        return is_equal_radpprox(regular.d, other_regular.d) and is_equal_radpprox(regular.rad, other_regular.rad);
+        return is_equal_approx(regular.d, other_regular.d) and is_equal_approx(regular.rad, other_regular.rad);
     }
 
 	__fast_inline constexpr bool operator!=(const Line2D_t & other) const{
@@ -77,12 +76,13 @@ public:
     }
 
     __fast_inline constexpr T distance_to(const Vector2_t<T> & p) const{
-        auto res = this->distance_to(Line2D_t{p, this->rad});
-        if(res){
-            return res.value();
-        }else{
-            return 0;
-        }
+        return ABS(this->signed_distance_to(p));
+    }
+    
+    __fast_inline constexpr T signed_distance_to(const Vector2_t<T> & p) const{
+        // x * -sin(rad) + y * cos(rad) + d = 0
+
+        return -sin(rad) * p.x + cos(rad) * p.y + d;
     }
 
     __fast_inline constexpr T angle_to(const Line2D_t<T> & other) const{
@@ -95,11 +95,11 @@ public:
     __fast_inline constexpr bool parallel_with(const Line2D_t & other) const{
         auto regular = this->abs();
         auto other_regular = other.abs();
-        return (not is_equal_radpprox(regular.d, other_regular.d)) and 
-                is_equal_radpprox(fmod(other_regular.rad - regular.rad, T(PI)), 0);
+        return (is_equal_approx(regular.d, other_regular.d)) and 
+                is_equal_approx(fposmodp(other_regular.rad - regular.rad, T(PI)), 0);
     }
 
-    __fast_inline constexpr std::optional<T> distance_to(const Line2D_t<T> & other) const{
+    __fast_inline constexpr std::optional<T> distance_with(const Line2D_t<T> & other) const{
         if(not this->parallel_with(other)) return std::nullopt;
         return {this->d - other.d};
     }
@@ -130,7 +130,21 @@ public:
         auto den = a1 * b2 - a2 * b1;
         auto inv_den = T(1) / den;
 
-        return {num1 * inv_den, num2 * inv_den};
+        return Vector2{num1 * inv_den, num2 * inv_den};
+    }
+
+    __fast_inline constexpr Line2D_t<T> rotated(const Vector2_t<T> & p, const T & delta){
+        if(this->has_point(p)) return Line2D_t{p, this->rad + delta};
+        else{
+            auto rebased = this->rebase(p);
+            rebased.rad += delta;
+            return rebased;
+        }
+    }
+
+    __fast_inline constexpr Line2D_t<T> rebase(const Vector2_t<T> & p){
+        auto regular = this->abs();
+        return Line2D_t{regular.distance_to(p), regular.rad};
     }
 
     __fast_inline constexpr std::optional<Vector2_t<T>> fillet(const Line2D_t<T> & other, const T & radius) const{
@@ -142,15 +156,21 @@ public:
     }
     
     __fast_inline constexpr bool has_point(const Vector2_t<T> & p) const{
-        return is_equal_radpprox(distance_to(p), 0);
+        return is_equal_approx(distance_to(p), 0);
     }
 
     __fast_inline constexpr int sign(const Vector2_t<T> & p) const{
-        return sign(this->distance_to(Line2D_t(p, this->rad)));
+        return sign(this->signed_distance_to(Line2D_t(p, this->rad)));
     }
 
     __fast_inline constexpr std::tuple<T, T, T> abc() const{
         return {-sin(rad), cos(rad), d};
+    }
+
+
+    __fast_inline constexpr bool orthogonal_with(const Line2D_t<T> & other) const {
+        return is_equal_approx(fposmodp(other.rad - this->rad, T(PI)), T(PI/2));
+        // return fposmodp(other.rad - this->rad, T(PI));
     }
 
     __fast_inline constexpr Line2D_t<T> mean(const Line2D_t<T> & other) const {
@@ -158,7 +178,7 @@ public:
         auto other_regular = other.abs();
 
         if(regular.paraell_with(other_regular)){
-            if(is_equal_radpprox(regular.rad, other_regular.rad)){
+            if(is_equal_approx(regular.rad, other_regular.rad)){
                 return *this;
             }else{
                 return {0, this->rad};

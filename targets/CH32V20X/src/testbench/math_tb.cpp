@@ -22,7 +22,7 @@
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
 
-
+#include "sys/math/int/int_t.hpp"
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
@@ -73,17 +73,7 @@ void math_tb(UartHw & logger){
 
     //     delay(200);
     // }
-    logger.println("/?");
-    while(true){
-        // if(logger.pending() == 0) logger.println(millis());
-        while(logger.pending());
-        logger.println(millis());
-        // else{
-            // logger.println(logger.pending());
-            // delay(1);
-        // }
-        delay(10);
-    }
+
     // #define  WHEELLEG_TB
 
 
@@ -197,11 +187,27 @@ void math_tb(UartHw & logger){
 
     using Line = Line2D_t<real_t>;
 
-    print(Line{Vector2{0,0}, Vector2{1,1}});
-    print(Line{Vector2{0,0}, real_t(PI)});
 
-    auto line = Line{Vector2{0,0}, Vector2{1,1}};
-    auto line2 = Line{Vector2{0,0}, Vector2{1,1}};
+    auto line = Line{Vector2{1,0}, Vector2{0,1}};
+    auto other = Line{Vector2{0,0}, real_t(PI/4)};
+    print("line", line);
+    print("other",other);
+
+    print(line.xfromy(1));
+    print(line.yfromx(-1));
+    print("abc:", line.abc());
+    print("angle:", line.angle());
+    print("abs", line.abs());
+    print("dist", line.distance_to(Vector2{0.5_r, 0.5_r}));
+    print("dist", line.distance_to(Vector2{0.5_r, 0.4_r}));
+    print("intersection", line.intersection(Line{Vector2{0,0}, atan(real_t(0.3333_r))}));
+    print("foot", line.foot(Vector2{0, 0.5_r}));
+    print("reflect", line.reflect(Vector2{0, 0.5_r}));
+    print("perpendicular", line.perpendicular(Vector2{0, 0.5_r}));
+    print("orthogonal_with", line.orthogonal_with(Line{Vector2{0,0}, real_t(PI/4)}));
+    print("normal", line.normal());
+    print("rebase", line.rebase(Vector2{-1,0}));
+    print("rotated", line.rotated(Vector2{-1,0}, real_t(PI/4)));
     #endif
 
     while(true);

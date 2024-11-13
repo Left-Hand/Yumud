@@ -52,7 +52,7 @@ public:
         return {0,0};
     }
 
-    __fast_inline constexpr Line2D_t<T> side() const{
+    __fast_inline constexpr Line2D_t<T> normal() const{
         return Line2D_t<T>(this->org, this->rad + T(PI/2));
     }
 
