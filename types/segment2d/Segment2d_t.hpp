@@ -15,7 +15,7 @@ public:
     constexpr Segment2D_t(){;}
 
     constexpr Segment2D_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
-            from(static_cast<Vector2_t<T>>(_from)), to(static_cast<Vector2_t<T>>(to)){;}
+            from(static_cast<Vector2_t<T>>(_from)), to(static_cast<Vector2_t<T>>(_to)){;}
 
     template<arithmetic U = T>
     constexpr Segment2D_t(const std::tuple<U, U, U, U> & tup) : 
@@ -110,5 +110,10 @@ public:
         return (to - from).length_squared();
     }
 };
+
+
+__inline OutputStream & operator <<(OutputStream & os, const Segment2D_t<auto> & seg){
+    return os << '(' << seg.from << ',' << seg.to << ')';
+}
 
 }

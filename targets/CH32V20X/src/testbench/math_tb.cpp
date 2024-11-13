@@ -14,6 +14,8 @@
 #include "types/segment2d/Segment2d_t.hpp"
 #include "types/line2d/Line2D_t.hpp"
 #include "types/ray2d/Ray2D_t.hpp"
+#include "types/Circle2D/Circle2D_t.hpp"
+#include "types/Arc2D/Arc2D_t.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
@@ -178,6 +180,28 @@ void math_tb(UartHw & logger){
         print(delta_micros, transform);
         Sys::Clock::reCalculateTime();
     }
+    #endif
+
+
+    // #define  SEGMENT_TB
+    #ifdef SEGMENT_TB
+
+    using Segment = Segment2D_t<real_t>;
+
+    auto seg = Segment{}
+    #endif
+
+
+    #define  LINE_TB
+    #ifdef LINE_TB
+
+    using Line = Line2D_t<real_t>;
+
+    print(Line{Vector2{0,0}, Vector2{1,1}});
+    print(Line{Vector2{0,0}, real_t(PI)});
+
+    auto line = Line{Vector2{0,0}, Vector2{1,1}};
+    auto line2 = Line{Vector2{0,0}, Vector2{1,1}};
     #endif
 
     while(true);
