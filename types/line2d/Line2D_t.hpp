@@ -58,9 +58,26 @@ public:
 
     __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Line2D_t<T> & other) const{
         if(this->parrel_with(other)) return std::nullopt;
+        else if(this->operator==(other)) return std::nullopt;
+        
 
-        //TODO
-        return {this->d - other.d};
+        //https://www.cnblogs.com/junlin623/p/17640554.html
+
+        //A1x + B1y + C1 = 0
+        //A2x + B2y + C2 = 0
+
+        //x0 = (- B2 * C1 + B1 * C2) / (A1 * B2 - A2 * B1)
+        //y0 = (- A1 * C2 + A2 * C1) / (A1 * B2 - A2 * B1)
+
+        auto [a1, b1, c1] = this->abc();
+        auto [a2, b2, c2] = other.abc();
+
+        auto num1 = c2 * b1 - c1 * b2;
+        auto num2 = c1 * a2 - c2 * a1;
+        auto den = a1 * b2 - a2 * b1;
+        auto inv_den = T(1) / den;
+
+        return {num1 * inv_den, num2 * inv_den};
     }
     
     __fast_inline constexpr bool has_point(const Vector2_t<T> & p) const{

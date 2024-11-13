@@ -2,7 +2,7 @@
 
 #include "types/ray2d/Ray2D_t.hpp"
 
-namespace sequence{
+namespace gxm{
 
 using Ray = yumud::Ray2D_t<real_t>;
 using Rays = std::vector<Ray>;
@@ -18,10 +18,10 @@ struct SequenceParas{
     real_t duration;
 };
 
-namespace functions{
+// namespace functions{
 
-Rays linear(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
-Rays fillet(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
-Rays circle(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
-};
+void linear(Rays & curve, const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
+void fillet(Rays & curve, const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
+void circle(Rays & curve, const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b);
+// };
 }

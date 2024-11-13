@@ -1,23 +1,18 @@
 #include "SequenceUtils.hpp"
 
 
-using namespace sequence;
-using namespace sequence::functions;
+// using namespace sequence;
+// using namespace sequence::functions;
 
-Rays linear(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b){
-    Rays ret = {};
 
-    return ret;
+using namespace gxm;
+
+void linear(Rays & curve, const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b){
+
 }
 
-Rays fillet(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b){
-    Rays ret = {};
-
-    return ret;
+void fillet(Rays & curve, const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b){
 }
 
-Rays circle(const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b){
-    Rays ret = {};
-
-    return ret;
+void circle(Rays & curve, const SequenceLimits & limits, const SequenceParas & paras, const Ray & a, const Ray & b){
 }

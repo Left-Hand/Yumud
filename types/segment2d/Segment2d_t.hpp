@@ -72,13 +72,34 @@ public:
 
     __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Segment2D_t<T> & other) const{
         if(this->parrel_with(other)) return std::nullopt;
+        else if(this->operator==(other)) return std::nullopt;
+        
 
-        //TODO
+        //https://www.cnblogs.com/junlin623/p/17640554.html
+
+        //A1x + B1y + C1 = 0
+        //A2x + B2y + C2 = 0
+
+        //x0 = (- B2 * C1 + B1 * C2) / (A1 * B2 - A2 * B1)
+        //y0 = (- A1 * C2 + A2 * C1) / (A1 * B2 - A2 * B1)
+
         return {this->d - other.d};
     }
 
     __fast_inline constexpr Vector2_t<T> diff() const{
         return to - from;
+    }
+
+    __fast_inline constexpr std::tuple<T, T, T> abc() const{
+
+        //https://www.cnblogs.com/sailJs/p/17802652.html
+
+        //Ax1 + By1 + C1 = 0 
+        //Ax2 + By2 + C2 = 0 
+
+        //a=y2-y1, b=x1-x2, c=y1*x2-x1*y2
+
+        return {from.y - to.y, to.x - from.x, from.cross(to)};
     }
 };
 
