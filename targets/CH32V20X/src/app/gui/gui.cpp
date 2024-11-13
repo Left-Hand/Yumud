@@ -7,6 +7,7 @@
 #include "types/image/image.hpp"
 #include "types/image/font/font.hpp"
 #include "types/image/painter.hpp"
+
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 
@@ -17,13 +18,7 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "sys/math/int/int_t.hpp"
-
 #include "elements.hpp"
-
-
-#include "drivers/VirtualIO/PCA9685/pca9685.hpp"
-
 
 using namespace yumud;
 using namespace yumud::drivers;
@@ -35,23 +30,6 @@ using Vector2i = Vector2_t<int>;
 
 
 using Sys::t;
-
-struct EtkToken:public Reg8{
-    using Reg8::operator=;
-
-    uint8_t right:1;
-    uint8_t left:1;
-    uint8_t down:1;
-    uint8_t up:1;
-    uint8_t :4;
-
-    operator Vector2i() const {
-        return Vector2i{
-            right - left,
-            up - down
-        };
-    }
-};
 
 
 void gui_main(){
@@ -78,9 +56,8 @@ void gui_main(){
 
     ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
 
-    {//init tft
+    {
         tftDisplayer.init();
-        // tftDisplayer.setDisplayOffset({51, 40}); 
 
         tftDisplayer.setFlipX(false);
         tftDisplayer.setFlipY(true);
@@ -126,11 +103,6 @@ void gui_main(){
     // MT9V034 camera{i2c};
     // camera.init();
     // camera.setExposureValue(1200);
-
-    PCA9685 pca{i2c};
-    pca.init();
-    
-    pca.setFrequency(50, real_t(1.09));
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.get_size());
