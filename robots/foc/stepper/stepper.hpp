@@ -112,7 +112,7 @@ public:
     }
 
     void setTargetPositionDelta(const real_t delta){
-        meta.targ_pos = meta.pos_limit.clamp(this->getPosition() + delta);
+        meta.targ_pos = meta.pos_limit.clamp(meta.targ_pos + delta);
         ctrl_type = CtrlType::POSITION;
     }
 
