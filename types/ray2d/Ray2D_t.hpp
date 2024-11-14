@@ -15,13 +15,13 @@ public:
 public:
     __fast_inline constexpr Ray2D_t(){;}
 
-    __fast_inline constexpr Ray2D_t(const Vector2_t<auto> & _org, const auto & _rad): 
+    __fast_inline constexpr Ray2D_t(const Vector2_t<T> & _org, const T & _rad): 
             org(static_cast<Vector2_t<T>>(_org)), rad(static_cast<T>(_rad)){;}
 
-    __fast_inline constexpr Ray2D_t(const auto & _x, const auto & _y, const auto & _rad): 
+    __fast_inline constexpr Ray2D_t(const T & _x, const T & _y, const T & _rad): 
             org(Vector2_t<T>(_x, _y)), rad(static_cast<T>(_rad)){;}
             
-    __fast_inline constexpr Ray2D_t(const Vector2_t<auto> & _from, const Vector2_t<auto> & _to): 
+    __fast_inline constexpr Ray2D_t(const Vector2_t<T> & _from, const Vector2_t<T> & _to): 
             org(static_cast<Vector2_t<T>>(_from)), rad((_to - _from).angle()){;}
 
     template<arithmetic U = T>
@@ -56,12 +56,16 @@ public:
         return Line2D_t<T>(this->org, this->rad + T(PI/2));
     }
 
-    __fast_inline constexpr Ray2D_t<T> rotated(const T r) const{
+    __fast_inline constexpr Ray2D_t<T> rotated(const T & r) const{
         return {this->org, this->rad + r};
     }
     
-    __fast_inline constexpr Segment2D_t<T> cut(const T l) const{
-        return {this->org, this->org + Vector2_t<T>{l, 0}.rotated(this->rad)};
+    __fast_inline constexpr Vector2_t<T> endpoint(const T & l) const{
+        return this->org + Vector2_t<T>{l, 0}.rotated(this->rad);
+    }
+    
+    __fast_inline constexpr Segment2D_t<T> cut(const T & l) const{
+        return {this->org, endpoint(l)};
     }
 
     __fast_inline constexpr T distance_to(const Vector2_t<T> & pt) const{

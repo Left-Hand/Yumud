@@ -2,15 +2,20 @@
 
 using namespace gxm;
 
-void Sequencer::linear(const Ray & from, const Ray & to){
 
-}
-
-
-void Sequencer::circle(const Ray & from, const Ray & to){
+void Sequencer::rotate(Rays & curve, const Ray & from, const Ray & to){
     
 }
 
-void Sequencer::fillet(const Ray & from, const Ray & to){
+void Sequencer::linear(Rays & curve, const Ray & from, const Ray & to){
+
+}
+
+
+void Sequencer::circle(Rays & curve, const Ray & from, const Ray & to){
+    
+}
+
+void Sequencer::fillet(Rays & curve, const Ray & from, const Ray & to){
     
 }

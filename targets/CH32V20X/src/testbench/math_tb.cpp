@@ -202,12 +202,13 @@ void math_tb(UartHw & logger){
     print("dist", line.distance_to(Vector2{0.5_r, 0.4_r}));
     print("intersection", line.intersection(Line{Vector2{0,0}, atan(real_t(0.3333_r))}));
     print("foot", line.foot(Vector2{0, 0.5_r}));
-    print("reflect", line.reflect(Vector2{0, 0.5_r}));
+    print("mirror", line.mirror(Vector2{0, 0.5_r}));
     print("perpendicular", line.perpendicular(Vector2{0, 0.5_r}));
     print("orthogonal_with", line.orthogonal_with(Line{Vector2{0,0}, real_t(PI/4)}));
-    print("normal", line.normal());
+    print("unit", line.unit());
     print("rebase", line.rebase(Vector2{-1,0}));
     print("rotated", line.rotated(Vector2{-1,0}, real_t(PI/4)));
+    print("normal", line.normal(Vector2{-1,0}));
     #endif
 
     while(true);

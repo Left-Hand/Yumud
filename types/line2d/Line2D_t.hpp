@@ -136,10 +136,24 @@ public:
     __fast_inline constexpr Line2D_t<T> rotated(const Vector2_t<T> & p, const T & delta){
         if(this->has_point(p)) return Line2D_t{p, this->rad + delta};
         else{
+            //FIXME optimize
             auto rebased = this->rebase(p);
             rebased.rad += delta;
             return rebased;
         }
+    }
+
+    __fast_inline constexpr Line2D_t<T> normal(const Vector2_t<T> & p){
+        auto new_rad = this->rad + T(PI/2);
+        // x * -sin(rad') + y * cos(rad') + d' = 0
+
+        // considering rad' = rad + PI/2
+
+        // x * -cos(rad) + y * -sin(rad) + d' = 0
+        // => d' = sin(rad) * y + cos(rad) * x
+
+        // return {sin(this->rad) * p.y + cos(this->rad) * p.x, new_rad}
+        return {sin(new_rad) * p.x - cos(new_rad) * p.x, new_rad};
     }
 
     __fast_inline constexpr Line2D_t<T> rebase(const Vector2_t<T> & p){
@@ -191,7 +205,7 @@ public:
         }
     }
 
-    __fast_inline constexpr Vector2_t<T> foot(const Vector2_t<T> p) const{
+    __fast_inline constexpr Vector2_t<T> foot(const Vector2_t<T> & p) const{
         //https://blog.csdn.net/hjxu2016/article/details/111594359
 
         // x * -sin(rad) + y * cos(rad) + d = 0
@@ -218,15 +232,36 @@ public:
         return {B2 * x0 - AB * y0 - A * C, -AB * x0 + A2 * y0 - B * C};
     }
 
-    __fast_inline constexpr Vector2_t<T> reflect(const Vector2_t<T> p) const {
+    __fast_inline constexpr Vector2_t<T> mirror(const Vector2_t<T> & p) const {
         return (this->foot(p) * 2) - p;
     }
 
-    __fast_inline constexpr Segment2D_t<T> perpendicular(const Vector2_t<T> p) const{
+
+    __fast_inline constexpr Line2D_t<T> reflect(const Line2D_t<T> & other) const {
+        auto res = other.intersection(other);
+        if(res){
+            //cross
+            auto p = res.value();
+            auto delta = other.angle_to(*this) * 2;
+            return this->rotated(p, delta);
+        }else{
+            //parallel
+            return {};
+        }
+    }
+
+    __fast_inline constexpr Vector2_t<T> reflect(const Vector2_t<T> & p, const Vector2_t<T> & base) const {
+        
+        // TODO
+
+        return Vector2_t<T>{0,0};
+    }
+
+    __fast_inline constexpr Segment2D_t<T> perpendicular(const Vector2_t<T> & p) const{
         return {p, this->foot(p)};
     }
 
-    __fast_inline constexpr Vector2_t<T> normal() const{
+    __fast_inline constexpr Vector2_t<T> unit() const{
         return {cos(this->rad), sin(this->rad)};
     }
 
