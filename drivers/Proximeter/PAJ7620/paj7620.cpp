@@ -1,5 +1,7 @@
 #include "paj7620.hpp"
 
+using namespace ymd::drivers;
+
 #define GESTURE_ADDRESS_I2C (0x73) /* I2C Address ID */
 
 /* Register bank select R/W*/

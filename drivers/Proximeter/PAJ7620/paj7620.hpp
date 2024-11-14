@@ -1,7 +1,6 @@
-#ifndef GESTURE_H_
-#define GESTURE_H_
+#pragma once
 
-#include "../../hal/bus/i2c/i2cdrv.hpp"
+#include "hal/bus/i2c/i2cdrv.hpp"
 
 #ifdef PAJ7620_DEBUG
 #define PAJ7620_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
@@ -9,7 +8,7 @@
 #define PAJ7620_DEBUG(...)
 #endif
 
-
+namespace ymd::drivers{
 class PAJ7620{
 
     void GESTURE_Actions(void); /* Sets action flags for gestures */
@@ -34,5 +33,4 @@ class PAJ7620{
 
 };
 
-
-#endif /* GESTSENS_H_ */
+}

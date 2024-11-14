@@ -1,5 +1,7 @@
 #pragma once
 
+#include "sys/core/platform.h"
+
 namespace gxm{
     
 template<arithmetic T>

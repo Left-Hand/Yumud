@@ -3,6 +3,7 @@
 #include "types/vector3/Vector3_t.hpp"
 #include "types/vector2/Vector2_t.hpp"
 #include "types/ray2d/Ray2D_t.hpp"
+#include "types/line2d/Line2D_t.hpp"
 
 namespace geometry {
 
@@ -31,6 +32,11 @@ std::tuple<std::optional<ymd::Vector2_t<T>>, std::optional<ymd::Vector2_t<T>>> c
 
     // 返回其中一个圆心（这里返回第一个）
     return {center1, center2};
+}
+
+template<typename T>
+std::optional<ymd::Vector2_t<T>> calculate_fillet_center(const ymd::Line2D_t<T> & a, const ymd::Line2D_t<T> & b, const T radius){
+    return std::nullopt;
 }
 
 }
