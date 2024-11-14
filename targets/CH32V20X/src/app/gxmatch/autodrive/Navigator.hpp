@@ -7,7 +7,7 @@
 
 namespace gxm{
 
-
+//机器人导航的顶层调度类
 class Navigator{
     struct Config{
 

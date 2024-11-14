@@ -9,13 +9,13 @@ using Rays = std::vector<Ray>;
 
 struct SequenceLimits{
     real_t max_gyro;
+    real_t max_spd;
     real_t max_acc;
 };
 
 
 struct SequenceParas{
-    size_t points;
-    real_t duration;
+    size_t freq;
 };
 
 // namespace functions{

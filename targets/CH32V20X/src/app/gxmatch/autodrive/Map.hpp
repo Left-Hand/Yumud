@@ -2,6 +2,7 @@
 
 #include "Gesture2D.hpp"
 
+//描述地图所有元素的相关类与方法
 namespace gxm{
 
 enum class AreaType:uint8_t{
