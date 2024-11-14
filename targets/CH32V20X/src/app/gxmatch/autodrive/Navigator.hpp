@@ -22,8 +22,8 @@ public:
     Navigator(const Config & config, const Map & map):
         config_(config), map_(map){}
 
-    void recalibrate(const Area area, const Vector2 & offs){
-        curr_pos = area.to_pos(map_) + offs;
+    void recalibrate(const Field field, const Vector2 & offs){
+        curr_pos = field.to_pos(map_) + offs;
     }
 
     void update(){

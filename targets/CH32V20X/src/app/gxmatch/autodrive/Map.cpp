@@ -3,37 +3,40 @@
 
 using namespace gxm;
 
-Vector2 Area::to_pos(const Map & map) const {
+Vector2 Field::to_pos(const Map & map) const {
     switch(type_){
         default:
             HALT;
-        case AreaType::Billboard:
+        case FieldType::Billboard:
             return map.billboard_gest.org;
-        case AreaType::Garbage:
+        case FieldType::Garbage:
             return map.garbage_gest.org;
-        case AreaType::RawMaterial:
+        case FieldType::RawMaterial:
             return map.raw_material_gest.org;
-        case AreaType::RoughProcess:
+        case FieldType::RoughProcess:
             return map.rough_process_gest.org;
-        case AreaType::Staging:
+        case FieldType::Staging:
             return map.staging_gest.org;
     }
 }
 
-real_t Area::to_rot(const Map & map) const {
+real_t Field::to_rot(const Map & map) const {
     switch(type_){
         default:
             HALT;
-        case AreaType::Billboard:
+        case FieldType::Billboard:
             return map.billboard_gest.rad;
-        case AreaType::Garbage:
+        case FieldType::Garbage:
             return map.garbage_gest.rad;
-        case AreaType::RawMaterial:
+        case FieldType::RawMaterial:
             return map.raw_material_gest.rad;
-        case AreaType::RoughProcess:
+        case FieldType::RoughProcess:
             return map.rough_process_gest.rad;
-        case AreaType::Staging:
+        case FieldType::Staging:
             return map.staging_gest.rad;
     }
 }
 
+Gesture2D Field::to_gest(const Map & map) const{
+    return {to_pos(map), to_rot(map)};
+}

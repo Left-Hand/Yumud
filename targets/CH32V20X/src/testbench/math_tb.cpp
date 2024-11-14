@@ -16,6 +16,7 @@
 #include "types/ray2d/Ray2D_t.hpp"
 #include "types/Circle2D/Circle2D_t.hpp"
 #include "types/Arc2D/Arc2D_t.hpp"
+#include "types/Bezier2D/Bezier2D_t.hpp"
 
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"

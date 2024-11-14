@@ -5,7 +5,7 @@
 //描述地图所有元素的相关类与方法
 namespace gxm{
 
-enum class AreaType:uint8_t{
+enum class FieldType:uint8_t{
     Garbage,
     Billboard,
     Staging,
@@ -24,20 +24,20 @@ struct Map{
     Map & operator =(Map && other) = default;
 };
 
-class Area{
+class Field{
 public:
 protected:
-    AreaType type_;
-
+    FieldType type_;
 public:
-    Area(AreaType type):type_(type){}
-    AreaType type() const{return type_;}
-    Area & operator = (const AreaType type){type_ = type; return *this;}
-    bool operator ==(const AreaType type) const {return type_ == type;}
-    bool operator !=(const AreaType type) const {return type_ != type;}
+    Field(FieldType type):type_(type){}
+    FieldType type() const{return type_;}
+    Field & operator = (const FieldType type){type_ = type; return *this;}
+    bool operator ==(const FieldType type) const {return type_ == type;}
+    bool operator !=(const FieldType type) const {return type_ != type;}
 
     Vector2 to_pos(const Map & map) const;
     real_t to_rot(const Map & map) const;
+    Gesture2D to_gest(const Map & map) const;
 };
 
 
