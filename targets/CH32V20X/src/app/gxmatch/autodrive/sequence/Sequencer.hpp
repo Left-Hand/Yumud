@@ -10,21 +10,16 @@ protected:
     const SequenceLimits & limits_;
     const SequenceParas & paras_;
 
-    Rays curve_ = {};
 public:
     Sequencer(const SequenceLimits & limits, const SequenceParas & paras):
         limits_(limits), paras_(paras){}
     
-    void rotate(Rays & curve, const Ray & from, const Ray & to);
+    void rotate(Rays & curve, const Ray & from, const real_t & end_rad);
 
-    void linear(Rays & curve, const Ray & from, const Ray & to);
+    void linear(Rays & curve, const Ray & from, const Vector2 & end_pos);
 
     void circle(Rays & curve, const Ray & from, const Ray & to);
 
     void fillet(Rays & curve, const Ray & from, const Ray & to);
-
-    Rays && fetchCurve(){
-        return std::move(curve_);
-    }
 };
 }
