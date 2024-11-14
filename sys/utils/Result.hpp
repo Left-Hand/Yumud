@@ -1,6 +1,6 @@
 #pragma once
 
-namespace yumud{
+namespace ymd{
 
 
 template<typename T, typename E>

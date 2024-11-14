@@ -2,7 +2,7 @@
 
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class RadianServo;
 }
 
@@ -16,7 +16,7 @@ public:
     };
     
 protected:
-    using Servo = yumud::drivers::RadianServo;
+    using Servo = ymd::drivers::RadianServo;
 
     const Config & config_;
     Servo & servo_;

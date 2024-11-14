@@ -4,7 +4,7 @@
 #include "sys/constants/enums.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 
 template<typename T>

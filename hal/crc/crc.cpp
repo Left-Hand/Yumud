@@ -1,6 +1,6 @@
 #include "crc.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 Crc & crc = Crc::getInstance();
 

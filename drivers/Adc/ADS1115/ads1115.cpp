@@ -1,3 +1,3 @@
 #include "ads1115.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;

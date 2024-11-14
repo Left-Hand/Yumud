@@ -3,7 +3,7 @@
 #include "sys/string/string.hpp"
 #include "sys/stream/stream.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class ArgParser{
 private:

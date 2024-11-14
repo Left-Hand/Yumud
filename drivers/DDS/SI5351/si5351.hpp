@@ -30,7 +30,7 @@
 
 #include "../drivers/device_defs.h"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class Si5351
 {
 public:

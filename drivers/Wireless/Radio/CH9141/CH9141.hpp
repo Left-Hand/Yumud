@@ -11,7 +11,7 @@
 #include "../Radio.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 struct MacAddress{
 protected:
     using DataType = std::array<uint8_t, 6>; // Define a type alias for the underlying buffer

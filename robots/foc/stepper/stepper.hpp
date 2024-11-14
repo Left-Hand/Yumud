@@ -16,7 +16,7 @@
 
 #include "robots/foc/components/statled/statled.hpp"
 
-namespace yumud::foc{
+namespace ymd::foc{
 
 class FOCStepper:public FOCMotor{
     using StatLed = StepperComponents::StatLed;

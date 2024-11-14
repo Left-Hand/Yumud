@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace yumud::traits{
+namespace ymd::traits{
 
 class I2cTrait{
 protected:

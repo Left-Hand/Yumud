@@ -3,7 +3,7 @@
 #include "sys/math/real.hpp"
 #include "vector2/vector2_t.hpp"
 
-namespace yumud{
+namespace ymd{
 
 using Vector2 = Vector2_t<real_t>;
 

@@ -3,7 +3,7 @@
 #include "ImageBasics.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename ColorType>
 class Image:public ImageWithData<ColorType, ColorType>{

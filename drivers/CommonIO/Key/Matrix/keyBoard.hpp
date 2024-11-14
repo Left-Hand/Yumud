@@ -3,7 +3,7 @@
 #include <array>
 #include "../Key.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class KeyBoard{
 public:

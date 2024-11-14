@@ -9,7 +9,7 @@
 #include <memory>
 
 
-namespace yumud{
+namespace ymd{
 
 template <typename ColorType>
 class Painter;

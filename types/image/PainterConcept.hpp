@@ -11,7 +11,7 @@
 #include "font/font.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 class String;
 

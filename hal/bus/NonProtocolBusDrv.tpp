@@ -1,6 +1,6 @@
 //TODO fix duplicate code 
 
-namespace yumud{
+namespace ymd{
 
 template <typename BusType>
 template<typename T>

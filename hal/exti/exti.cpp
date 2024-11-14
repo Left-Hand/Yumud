@@ -1,6 +1,6 @@
 #include "exti.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 ExtiChannel::ExtiChannel(const Line _line, const NvicPriority & _priority,
         const Trigger _trigger, const Mode _mode):

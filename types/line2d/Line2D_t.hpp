@@ -5,7 +5,7 @@
 #include "types/line2d/Line2D_t.hpp"
 #include "types/segment2d/Segment2d_t.hpp"
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct Line2D_t{

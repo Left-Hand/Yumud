@@ -6,7 +6,7 @@
 #include "drivers/device_defs.h"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class AW9523: public PortVirtualConcept<16>{
 public:

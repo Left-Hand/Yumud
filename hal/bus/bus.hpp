@@ -3,7 +3,7 @@
 #include "bus_base.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 
 class ReadableBus:virtual public Bus{

@@ -3,7 +3,7 @@
 #include "I2s.hpp"
 #include "hal/gpio/gpio.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class I2sSw: public I2s{
 private:

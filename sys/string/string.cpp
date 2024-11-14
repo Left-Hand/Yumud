@@ -22,7 +22,7 @@
 #include "String.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 String::String(const char *cstr)
 {

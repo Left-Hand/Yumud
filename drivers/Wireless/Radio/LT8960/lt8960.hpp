@@ -10,7 +10,7 @@
 #endif
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class LT8960{
 public:

@@ -4,8 +4,8 @@
 #define ARCHIVE_PRINTS(...) DEBUG_PRINTLN(__VA_ARGS__)
 
 
-using namespace yumud::foc;
-using namespace yumud;
+using namespace ymd::foc;
+using namespace ymd;
 
 static void getDefaultArchive(MotorUtils::Archive & archive){
     archive.pos_config = {
@@ -118,7 +118,7 @@ void FOCStepper::removeArchive(){
     memory.store(Archive());
 }
 
-OutputStream &yumud::operator<<(OutputStream &os, const foc::MotorUtils::BoardInfo &bi){
+OutputStream &ymd::operator<<(OutputStream &os, const foc::MotorUtils::BoardInfo &bi){
     #ifdef ARCHIVE_PRINTS
     os << "======\r\n";
     os << "build version:\t\t" << bi.bver << "\r\n";

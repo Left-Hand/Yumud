@@ -3,7 +3,7 @@
 #include "../RgbLed.hpp"
 #include <array>
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class WS2812: public RgbLedConcept{
 protected:

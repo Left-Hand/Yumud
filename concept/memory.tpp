@@ -1,6 +1,6 @@
 #include "storage.hpp"
 
-namespace yumud{
+namespace ymd{
 void Memory::store(const auto & data, const Address loc){
     storage_.store(loc, &data, (Address)sizeof(data));
 }

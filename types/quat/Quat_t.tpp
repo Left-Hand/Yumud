@@ -37,7 +37,7 @@
 	z = p_z;\
 	w = p_w;\
 
-namespace yumud{
+namespace ymd{
 template<typename T>
 T Quat_t<T>::angle_to(const Quat_t<T> &p_to) const {
 	T d = dot(p_to);

@@ -6,7 +6,7 @@
 
 #include <functional>
 
-namespace yumud{
+namespace ymd{
 class ExtiChannel{
 public:
     enum class Trigger:uint8_t{

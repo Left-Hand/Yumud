@@ -1,7 +1,7 @@
 #include "hx711.hpp"
 
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 uint32_t HX711::read_data(void){
     uint32_t data=0;

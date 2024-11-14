@@ -1,6 +1,6 @@
 #include "tcs34725.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 #ifdef TCS34725_DEBUG
 #undef TCS34725_DEBUG

@@ -1,7 +1,7 @@
 #pragma once
 #include "sys/math/real.hpp"
 
-namespace yumud{
+namespace ymd{
 class PwmChannel{
 public:
     virtual PwmChannel & operator = (const real_t duty) = 0;

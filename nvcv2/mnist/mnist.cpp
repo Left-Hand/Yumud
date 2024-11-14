@@ -116,7 +116,7 @@ void Mnist::unload(){
 Mnist::Result Mnist::update(const Image<Grayscale> & img, const Vector2i & pos){
 
     Image<Grayscale> img_view = img.clone(Rect2i{pos.x, pos.y, 28, 28});
-    // yumud::nvcv2::Pixels::inverse(img_view);
+    // ymd::nvcv2::Pixels::inverse(img_view);
     // DEBUG_PRINTLN(img_view.mean());
     return update(img_view);
 }

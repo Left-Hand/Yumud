@@ -1,6 +1,6 @@
 #include "adc1.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
 using Callback = AdcUtils::Callback;

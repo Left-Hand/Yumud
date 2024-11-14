@@ -1,8 +1,8 @@
 #include "ad9910.hpp"
 
 
-using namespace yumud::drivers;
-using namespace yumud;
+using namespace ymd::drivers;
+using namespace ymd;
 
 
 

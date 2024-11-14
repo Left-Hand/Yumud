@@ -12,7 +12,7 @@
 #define BMI270_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class BMI270:public Axis6{
 public:

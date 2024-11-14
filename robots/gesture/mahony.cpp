@@ -1,6 +1,6 @@
 #include "mahony.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 	Quat q;

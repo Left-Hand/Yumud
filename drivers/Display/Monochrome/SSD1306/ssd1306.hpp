@@ -3,7 +3,7 @@
 #include "drivers/Display/DisplayerPhy.hpp"
 #include "types/image/PackedImage.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class SSD13XX:public Displayer<Binary>{
 public:

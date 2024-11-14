@@ -2,7 +2,7 @@
 #include "../stepper.hpp"
 
 
-using namespace yumud::foc;
+using namespace ymd::foc;
 
 real_t SpeedEstimator::update_raw(const real_t position){
     real_t delta_pos = position - vars.last_position;

@@ -7,7 +7,7 @@
 // #define BMP280_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
 #define BMP280_DEBUG(...)
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class BMP280{
 public:

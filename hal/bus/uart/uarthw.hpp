@@ -39,7 +39,7 @@ extern "C" __interrupt void UART8_IRQHandler(void);
 #endif
 
 
-namespace yumud{
+namespace ymd{
 
 
 class UartHw:public Uart{
@@ -140,31 +140,31 @@ public:
 
 
 #ifdef ENABLE_UART1
-extern yumud::UartHw uart1;
+extern ymd::UartHw uart1;
 #endif
 
 #ifdef ENABLE_UART2
-extern yumud::UartHw uart2;
+extern ymd::UartHw uart2;
 #endif
 
 #ifdef ENABLE_UART3
-extern yumud::UartHw uart3;
+extern ymd::UartHw uart3;
 #endif
 
 #ifdef ENABLE_UART4
-extern yumud::UartHw uart4;
+extern ymd::UartHw uart4;
 #endif
 
 #ifdef ENABLE_UART5
-extern yumud::UartHw uart5;
+extern ymd::UartHw uart5;
 #endif
 
 #ifdef ENABLE_UART6
-extern yumud::UartHw uart6;
+extern ymd::UartHw uart6;
 #endif
 
 #ifdef ENABLE_UART7
-extern yumud::UartHw uart7;
+extern ymd::UartHw uart7;
 #endif
 
 #ifdef ENABLE_UART8

@@ -1,6 +1,6 @@
 #include "BMI088.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 void BMI088::init(){

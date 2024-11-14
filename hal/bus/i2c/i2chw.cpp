@@ -2,7 +2,7 @@
 #include "hal/gpio/port.hpp"
 #include "sys/debug/debug_inc.h"
 
-using namespace yumud;
+using namespace ymd;
 
 void I2cHw::enableRcc(const bool en){
     switch((uint32_t)instance){

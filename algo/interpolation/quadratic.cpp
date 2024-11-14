@@ -1,6 +1,6 @@
 #include "quadratic.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 real_t QuadraticInterpolation::forward(const Vector2 & handle, const real_t x){
   // adapted from BEZMATH.PS (1993)

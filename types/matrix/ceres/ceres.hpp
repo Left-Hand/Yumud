@@ -3,7 +3,7 @@
 #include "types/matrix/matrix_static.hpp"
 
 
-namespace yumud{
+namespace ymd{
 template <arithmetic T, size_t N>
 struct Jet_t
 {

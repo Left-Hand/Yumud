@@ -7,7 +7,7 @@
 
 #include <functional>
 
-namespace yumud{
+namespace ymd{
 
 class UsbFS:public OutputStream{
 public:

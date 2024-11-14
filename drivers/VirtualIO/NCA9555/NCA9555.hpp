@@ -2,7 +2,7 @@
 #include "drivers/device_defs.h"
 #include "hal/gpio/port_virtual.hpp"
 
-namespace yumud::drivers{ 
+namespace ymd::drivers{ 
 class NCA9555: public PortVirtualConcept<16>{
 protected:
     I2cDrv i2c_drv_;

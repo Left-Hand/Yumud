@@ -1,6 +1,6 @@
 #include "X25QXX.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 class RAIIfunctor{

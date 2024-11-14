@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class HMC5883L:public Magnetometer{
 public:

@@ -38,7 +38,7 @@
 #include "../rgb.h"
 
 
-namespace yumud{
+namespace ymd{
 
 template <typename T>
 requires std::is_arithmetic_v<T>

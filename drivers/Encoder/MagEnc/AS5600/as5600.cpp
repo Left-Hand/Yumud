@@ -1,6 +1,6 @@
 #include "as5600.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 void AS5600::setPowerMode(const PowerMode _power_mode){

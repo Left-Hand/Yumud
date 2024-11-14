@@ -3,7 +3,7 @@
 #include "sys/core/platform.h"
 #include "types/vector2/Vector2_t.hpp"
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct Circle2D_t{

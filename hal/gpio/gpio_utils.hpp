@@ -2,7 +2,7 @@
 
 #include "sys/core/platform.h"
 
-namespace yumud{
+namespace ymd{
 enum class Pin:uint16_t{
     None,
     _0 = 1 << 0,

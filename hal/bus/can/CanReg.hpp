@@ -3,7 +3,7 @@
 #include <cstdint>
 
 
-namespace yumud::CanExperimental{
+namespace ymd::CanExperimental{
 struct CtrlReg{
     uint32_t INRQ:1;
     uint32_t SLEEP:1;

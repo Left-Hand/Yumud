@@ -1,6 +1,6 @@
 #include "WS2812.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void WS2812::delayLong(){
     __nopn(120);

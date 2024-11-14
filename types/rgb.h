@@ -11,7 +11,7 @@
 #ifdef __cplusplus
 #include "sys/math/real.hpp"
 
-namespace yumud{
+namespace ymd{
 enum class ColorEnum:uint32_t{
     WHITE   = 0xFFFFFF,    // White color
     YELLOW  = 0xFFFF00,    // Yellow color

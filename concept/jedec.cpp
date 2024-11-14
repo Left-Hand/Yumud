@@ -2,9 +2,9 @@
 #include "sys/stream/ostream.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
-OutputStream & yumud::operator<<(OutputStream &os, const JedecManufacturer man){
+OutputStream & ymd::operator<<(OutputStream &os, const JedecManufacturer man){
 
     switch (man) {
         case JedecManufacturer::Cypress:return os << "Cypress";
@@ -29,6 +29,6 @@ OutputStream & yumud::operator<<(OutputStream &os, const JedecManufacturer man){
     }
 }
 
-OutputStream & yumud::operator<<(OutputStream &os, const JedecStorageType type){
+OutputStream & ymd::operator<<(OutputStream &os, const JedecStorageType type){
     return os;
 }

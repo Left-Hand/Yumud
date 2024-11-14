@@ -26,9 +26,9 @@
 #include "eyeparser.hpp"
 
 
-using namespace yumud;
-using namespace yumud::drivers;
-using namespace yumud::nvcv2;
+using namespace ymd;
+using namespace ymd::drivers;
+using namespace ymd::nvcv2;
 using namespace etk;
 
 using Vector2i = Vector2_t<int>;
@@ -84,8 +84,8 @@ void etk_main(){
     Painter<RGB565> painter = Painter<RGB565>();
     painter.bindImage(tftDisplayer);
 
-    painter.setChFont(yumud::font7x7);
-    painter.setEnFont(yumud::font8x5);
+    painter.setChFont(ymd::font7x7);
+    painter.setEnFont(ymd::font8x5);
 
     
     I2cSw       i2c{portD[2], portC[12]};

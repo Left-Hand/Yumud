@@ -1,6 +1,6 @@
 #include "ina226.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void INA226::update(){
     // requestPool(RegAddress::shuntVoltage, &shuntVoltageReg, 2 * 4);

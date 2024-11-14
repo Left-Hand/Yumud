@@ -30,7 +30,7 @@
 /**************************************************************************/
 
 
-namespace yumud{
+namespace ymd{
 
 
 template<arithmetic T>

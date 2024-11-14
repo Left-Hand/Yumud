@@ -2,7 +2,7 @@
 #include "sys/core/system.hpp"
 #include "sys/debug/debug_inc.h"
 
-using namespace yumud;
+using namespace ymd;
 
 
 #ifdef ENABLE_SPI1

@@ -6,7 +6,7 @@
 #include "hal/gpio/port.hpp"
 
 
-namespace yumud{
+namespace ymd{
 class Opa{
 protected:
     uint8_t opa_index;

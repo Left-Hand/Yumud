@@ -3,7 +3,7 @@
 #include "gpio.hpp"
 #include "port_concept.hpp"
 
-namespace yumud{
+namespace ymd{
 class Port : public PortConcept{
 protected:
     GPIO_TypeDef * instance;
@@ -83,23 +83,23 @@ __inline void Port::clrPin(const Pin pin){
 }
 
 #ifdef ENABLE_GPIOA
-extern yumud::Port portA;
+extern ymd::Port portA;
 #endif
 
 #ifdef ENABLE_GPIOB
-extern yumud::Port portB;
+extern ymd::Port portB;
 #endif
 
 #ifdef ENABLE_GPIOC
-extern yumud::Port portC;
+extern ymd::Port portC;
 #endif
 
 #ifdef ENABLE_GPIOD
-extern yumud::Port portD;
+extern ymd::Port portD;
 #endif
 
 #ifdef ENABLE_GPIOE
-extern yumud::Port portE;
+extern ymd::Port portE;
 #endif
 
 

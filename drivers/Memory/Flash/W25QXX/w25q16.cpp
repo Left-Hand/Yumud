@@ -1,6 +1,6 @@
 #include "w25q16.hpp"
 
-using namespace yumud;
+using namespace ymd;
 void W25Q16::writePage(const size_t addr, const void * _data, Address len){
     enableWrite();
 

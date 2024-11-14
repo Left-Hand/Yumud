@@ -7,7 +7,7 @@
 #include "chfont7x7.h"
 
 
-namespace yumud{
+namespace ymd{
 class Font8x5:public Font{
     bool _getpixel(const wchar_t chr, const Vector2i & offset) const override{
         if (!size.has_point(offset)) return false;

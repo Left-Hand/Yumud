@@ -1,7 +1,7 @@
 #include "img_trans.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 scexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p_prev = 5381) {
 	uint32_t hash = p_prev;

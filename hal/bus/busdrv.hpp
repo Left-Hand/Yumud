@@ -5,7 +5,7 @@
 #include <initializer_list>
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename BusType>
 concept is_bus = std::is_base_of_v<Bus, BusType>;

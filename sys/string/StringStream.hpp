@@ -4,7 +4,7 @@
 #include "sys/string/string.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 class StringStream:public OutputStream{
 protected:

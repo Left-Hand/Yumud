@@ -1,6 +1,6 @@
 #include "robots/foc/stepper/stepper.hpp"
 
-using namespace yumud::foc;
+using namespace ymd::foc;
 
 void FOCStepper::active_task(){
     using Result = CtrlResult;

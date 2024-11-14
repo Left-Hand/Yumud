@@ -11,7 +11,7 @@
 
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename T>
 class WheelLegSolver_t{

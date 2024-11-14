@@ -34,7 +34,7 @@ enum class TB:uint8_t{TOP, BOTTOM};
 enum class LR:uint8_t{LEFT, RIGHT};
 
 
-namespace yumud{
+namespace ymd{
 class OutputStream;
 
 OutputStream & operator<<(OutputStream & os, const TB tb);

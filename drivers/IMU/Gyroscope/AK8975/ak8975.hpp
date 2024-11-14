@@ -13,7 +13,7 @@
 #endif
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class AK8975:public Magnetometer{
 public:
     enum class Mode:uint8_t{

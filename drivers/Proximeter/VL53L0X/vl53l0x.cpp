@@ -1,7 +1,7 @@
 #include "vl53l0x.hpp"
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 
 #define VL53L0X_REG_IDENTIFICATION_MODEL_ID      		    0x00c0

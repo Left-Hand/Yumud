@@ -17,7 +17,7 @@
 
 struct PwmChannel;
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 
 

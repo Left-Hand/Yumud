@@ -34,7 +34,7 @@
 #include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
 
-namespace yumud{
+namespace ymd{
 template <arithmetic T>
 struct Vector3_t{
 public:
@@ -231,7 +231,7 @@ public:
 
 
 }
-__fast_inline yumud::OutputStream & operator<<(yumud::OutputStream & os, const yumud::Vector3_t<auto> & value){
+__fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Vector3_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ',' << value.z << ')';
 }
 

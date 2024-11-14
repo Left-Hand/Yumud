@@ -2,7 +2,7 @@
 
 #include "drivers/Camera/Camera.hpp" 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class MT9V034:public CameraWithSccb<Grayscale>{
 protected:

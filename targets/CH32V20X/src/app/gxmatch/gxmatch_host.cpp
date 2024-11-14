@@ -12,9 +12,9 @@
 
 using Sys::t;
 
-using namespace yumud;
-using namespace yumud::drivers;
-using namespace yumud::foc;
+using namespace ymd;
+using namespace ymd::drivers;
+using namespace ymd::foc;
 
 namespace gxm{
 

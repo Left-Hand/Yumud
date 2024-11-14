@@ -2,7 +2,7 @@
 
 #include "../drivers/device_defs.h"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class BH1750{
 public:

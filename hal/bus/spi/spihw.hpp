@@ -13,7 +13,7 @@ __interrupt void SPI2_IRQHandler(void);
 #endif
 }
 
-namespace yumud{
+namespace ymd{
 
 class SpiHw:public Spi{
 protected:
@@ -80,11 +80,11 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
 }
 
 #ifdef ENABLE_SPI1
-static inline yumud::SpiHw spi1{SPI1};
+static inline ymd::SpiHw spi1{SPI1};
 #endif
 
 #ifdef ENABLE_SPI2
-static inline yumud::SpiHw spi2{SPI2};
+static inline ymd::SpiHw spi2{SPI2};
 #endif
 
 }

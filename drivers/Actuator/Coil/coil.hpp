@@ -4,7 +4,7 @@
 #include "hal/gpio/gpio.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class CoilConcept: public Actuator{
 public:
     // virtual void setClamp(const real_t abs_max_value){}

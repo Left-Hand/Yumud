@@ -3,7 +3,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "sys/math/real.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class HX711{
 public:

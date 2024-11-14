@@ -4,7 +4,7 @@
 #include "types/Circle2D/Circle2D_t.hpp"
 #include "types/Range/Range_t.hpp"
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct Arc2D_t{

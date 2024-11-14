@@ -10,7 +10,7 @@
 
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class XL2400{
 public:

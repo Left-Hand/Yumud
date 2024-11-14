@@ -15,8 +15,8 @@
 
 namespace gxm{
 
-    using namespace yumud;
-    using namespace yumud::drivers;
+    using namespace ymd;
+    using namespace ymd::drivers;
 
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;

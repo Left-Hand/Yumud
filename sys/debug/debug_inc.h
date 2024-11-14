@@ -3,22 +3,22 @@
 #include "sys/clock/clock.h"
 #include "sys/stream/ostream.hpp"
 
-namespace yumud{
-extern yumud::OutputStream & LOGGER;
-extern yumud::OutputStream & DEBUGGER;
+namespace ymd{
+extern ymd::OutputStream & LOGGER;
+extern ymd::OutputStream & DEBUGGER;
 }
 
 #ifndef VOFA_PRINT
-#define VOFA_PRINT(...) yumud::LOGGER.println(__VA_ARGS__);
+#define VOFA_PRINT(...) ymd::LOGGER.println(__VA_ARGS__);
 #endif
 
 
 #ifndef DEBUG_PRINTLN
-#define DEBUG_PRINTLN(...) yumud::DEBUGGER.println(__VA_ARGS__);
+#define DEBUG_PRINTLN(...) ymd::DEBUGGER.println(__VA_ARGS__);
 #endif
 
 #ifndef DEBUG_PRINTS
-#define DEBUG_PRINTS(...) yumud::DEBUGGER.prints(__VA_ARGS__);
+#define DEBUG_PRINTS(...) ymd::DEBUGGER.prints(__VA_ARGS__);
 #endif
 
 

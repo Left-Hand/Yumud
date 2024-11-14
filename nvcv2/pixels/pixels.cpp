@@ -1,7 +1,7 @@
 #include "pixels.hpp"
 
 
-namespace yumud::nvcv2::Pixels{
+namespace ymd::nvcv2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {

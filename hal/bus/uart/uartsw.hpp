@@ -2,7 +2,7 @@
 
 #include "uart.hpp"
 
-namespace yumud{
+namespace ymd{
 class UartSw : public Uart{
 protected:
     Gpio & m_tx_gpio;

@@ -35,7 +35,7 @@
 #include "sys/stream/ostream.hpp"
 #include "sys/math/real.hpp"
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct Rect2_t;

@@ -7,7 +7,7 @@
 
 #include <functional>
 
-namespace yumud{
+namespace ymd{
 class Uart:public IOStream, DuplexBus{
 public:
     using Mode = CommMode;

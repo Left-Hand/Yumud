@@ -11,7 +11,7 @@ __fast_inline constexpr T saturate_cast(const auto & v) {
 }
 
 
-namespace yumud::nvcv2::Shape{
+namespace ymd::nvcv2::Shape{
 
 
 scexpr std::array<Vector2i,4> offsets_4 = { Vector2i{-1, 0}, Vector2i{0, -1}, Vector2i{0, 1}, Vector2i{1, 0} };

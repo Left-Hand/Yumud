@@ -9,7 +9,7 @@
  *  Contains mainly functions for interfacing with the AD5933.
  */
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class AD5933 {
 protected:

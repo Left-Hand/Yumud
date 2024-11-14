@@ -2,7 +2,7 @@
 
 #include "../bus.hpp"
 
-namespace yumud{
+namespace ymd{
 class Sdi:public OutputStream{
 
 public:

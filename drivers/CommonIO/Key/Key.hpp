@@ -3,7 +3,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "dsp/filter/DigitalFilter.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class Key{
 protected:

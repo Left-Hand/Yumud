@@ -3,7 +3,7 @@
 #include "drivers/Actuator/Actuator.hpp"
 #include "types/range/range_t.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class RadianServo{
 private:

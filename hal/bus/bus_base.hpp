@@ -5,7 +5,7 @@
 #include "sys/stream/stream.hpp"
 #include "bus_enums.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class Bus:public BusTrait{
 public:

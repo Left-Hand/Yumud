@@ -3,7 +3,7 @@
 #include "types/range/range_t.hpp"
 #include "sys/debug/debug_inc.h"
 
-namespace yumud{
+namespace ymd{
 
 class Memory;
 class Storage{

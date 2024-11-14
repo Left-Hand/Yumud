@@ -4,7 +4,7 @@
 
 //http://www.baiheee.com/Documents/091203/091203224635.htm
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class SDcard{
 protected:
     struct CommandContent{

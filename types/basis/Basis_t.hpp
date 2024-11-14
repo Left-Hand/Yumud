@@ -34,7 +34,7 @@
 #include "types/Vector3/vector3_t.hpp"
 #include "types/quat/Quat_t.hpp"
 
-namespace yumud{
+namespace ymd{
 
 template <arithmetic T>
 class Basis_t {

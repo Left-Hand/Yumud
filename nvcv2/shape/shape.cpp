@@ -4,7 +4,7 @@
 #include "../dsp/fastmath/square.hpp"
 
 
-namespace yumud::nvcv2::Shape{
+namespace ymd::nvcv2::Shape{
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;
 

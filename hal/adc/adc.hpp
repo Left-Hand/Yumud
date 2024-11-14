@@ -18,7 +18,7 @@ __interrupt void ADC1_2_IRQHandler(void);
 #endif
 
 
-namespace yumud{
+namespace ymd{
 class AdcConcept{
 protected:
 public:

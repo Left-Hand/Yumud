@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <array>
 
-namespace yumud{
+namespace ymd{
 
 class DmaChannel{
 
@@ -229,13 +229,13 @@ extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
 
 
 #ifdef ENABLE_DMA1
-    extern yumud::DmaChannel dma1Ch1;
-    extern yumud::DmaChannel dma1Ch2;
-    extern yumud::DmaChannel dma1Ch3;
-    extern yumud::DmaChannel dma1Ch4;
-    extern yumud::DmaChannel dma1Ch5;
-    extern yumud::DmaChannel dma1Ch6;
-    extern yumud::DmaChannel dma1Ch7;
+    extern ymd::DmaChannel dma1Ch1;
+    extern ymd::DmaChannel dma1Ch2;
+    extern ymd::DmaChannel dma1Ch3;
+    extern ymd::DmaChannel dma1Ch4;
+    extern ymd::DmaChannel dma1Ch5;
+    extern ymd::DmaChannel dma1Ch6;
+    extern ymd::DmaChannel dma1Ch7;
 
     DMA_XY_TEMPLATE(1,1)
     DMA_XY_TEMPLATE(1,2)
@@ -248,17 +248,17 @@ extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
 #endif
 
 #ifdef ENABLE_DMA2
-    extern yumud::DmaChannel dma2Ch1;
-    extern yumud::DmaChannel dma2Ch2;
-    extern yumud::DmaChannel dma2Ch3;
-    extern yumud::DmaChannel dma2Ch4;
-    extern yumud::DmaChannel dma2Ch5;
-    extern yumud::DmaChannel dma2Ch6;
-    extern yumud::DmaChannel dma2Ch7;
-    extern yumud::DmaChannel dma2Ch8;
-    extern yumud::DmaChannel dma2Ch9;
-    extern yumud::DmaChannel dma2Ch10;
-    extern yumud::DmaChannel dma2Ch11;
+    extern ymd::DmaChannel dma2Ch1;
+    extern ymd::DmaChannel dma2Ch2;
+    extern ymd::DmaChannel dma2Ch3;
+    extern ymd::DmaChannel dma2Ch4;
+    extern ymd::DmaChannel dma2Ch5;
+    extern ymd::DmaChannel dma2Ch6;
+    extern ymd::DmaChannel dma2Ch7;
+    extern ymd::DmaChannel dma2Ch8;
+    extern ymd::DmaChannel dma2Ch9;
+    extern ymd::DmaChannel dma2Ch10;
+    extern ymd::DmaChannel dma2Ch11;
 
     DMA_XY_TEMPLATE(2,1)
     DMA_XY_TEMPLATE(2,2)

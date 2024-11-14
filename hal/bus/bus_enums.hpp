@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace yumud{
+namespace ymd{
 
 enum class CommMethod:unsigned char{
     None = 0,

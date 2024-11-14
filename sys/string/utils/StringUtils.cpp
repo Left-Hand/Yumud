@@ -1,6 +1,6 @@
 #include "StringUtils.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 static inline void swap_char(char & a, char & b){
 	char temp = a;

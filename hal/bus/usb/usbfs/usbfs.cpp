@@ -4,7 +4,7 @@
 #include "../hal/bus/usb/usbfs/ch32v30x_usbotg_device.h"
 #include "../hal/bus/usb/usbfs/zf_driver_usb_cdc.h"
 
-using namespace yumud;
+using namespace ymd;
 
 void UsbFS::init(){
     usb_cdc_init();

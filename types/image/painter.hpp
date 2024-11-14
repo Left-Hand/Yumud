@@ -4,7 +4,7 @@
 #include "sys/string/encoding/gbk.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename ColorType>
 class Painter:public PainterConcept{

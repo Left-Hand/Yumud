@@ -2,7 +2,7 @@
 
 #include "svpwm.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class SVPWM3:public SVPWM{
 protected:

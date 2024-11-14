@@ -2,7 +2,7 @@
 #include "sys/stream/ostream.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
     os << "{0x" << 

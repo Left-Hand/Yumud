@@ -12,7 +12,7 @@
 #include <string_view>
 
 
-namespace yumud{
+namespace ymd{
 
 class String;
 

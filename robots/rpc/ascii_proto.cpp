@@ -2,7 +2,7 @@
 
 
 
-using namespace yumud;
+using namespace ymd;
 
 void AsciiProtocolConcept::parseArgs(const Strings & args){
     switch(args[0].hash()){

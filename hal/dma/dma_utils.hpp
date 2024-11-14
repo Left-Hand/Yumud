@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-namespace yumud::DmaUtils{
+namespace ymd::DmaUtils{
     enum class Mode:uint8_t{
         toMem = DMA_DIR_PeripheralSRC,
         toPeriph = DMA_DIR_PeripheralDST,

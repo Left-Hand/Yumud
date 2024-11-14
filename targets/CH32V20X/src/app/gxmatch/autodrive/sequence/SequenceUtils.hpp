@@ -4,7 +4,7 @@
 
 namespace gxm{
 
-using Ray = yumud::Ray2D_t<real_t>;
+using Ray = ymd::Ray2D_t<real_t>;
 using Rays = std::vector<Ray>;
 
 struct SequenceLimits{

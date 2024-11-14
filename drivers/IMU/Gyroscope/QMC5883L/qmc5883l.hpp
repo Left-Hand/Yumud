@@ -4,7 +4,7 @@
 #include "drivers/IMU/IMU.hpp"
 #include <tuple>
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class QMC5883L:public Magnetometer{
 public:

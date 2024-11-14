@@ -20,9 +20,9 @@
 
 #include "elements.hpp"
 
-using namespace yumud;
-using namespace yumud::drivers;
-using namespace yumud::nvcv2;
+using namespace ymd;
+using namespace ymd::drivers;
+using namespace ymd::nvcv2;
 
 using Vector2i = Vector2_t<int>;
 
@@ -77,8 +77,8 @@ void gui_main(){
     Painter<RGB565> painter = Painter<RGB565>();
     painter.bindImage(tftDisplayer);
 
-    painter.setChFont(yumud::font7x7);
-    painter.setEnFont(yumud::font8x5);
+    painter.setChFont(ymd::font7x7);
+    painter.setEnFont(ymd::font8x5);
 
     Theme theme{
         .stoke_color =  {70,70,70},

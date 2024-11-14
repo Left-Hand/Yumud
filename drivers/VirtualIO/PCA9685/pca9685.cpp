@@ -1,8 +1,8 @@
 #include "pca9685.hpp"
 
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 
 void PCA9685::setFrequency(uint freq, real_t trim){

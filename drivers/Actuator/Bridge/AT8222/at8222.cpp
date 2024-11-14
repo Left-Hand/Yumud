@@ -1,8 +1,8 @@
 #include "AT8222.hpp"
 
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
     
     
 void AT8222::init(){

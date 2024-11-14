@@ -6,7 +6,7 @@
 #include "sys/string/string.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 
 class String;
@@ -75,8 +75,8 @@ public:
     OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const ::std::string & str){write(str.c_str(),str.length()); return *this;}
     OutputStream & operator<<(const ::std::string_view str){write(str.data(),str.length()); return *this;}
-    OutputStream & operator<<(const yumud::String & str);
-    OutputStream & operator<<(const yumud::StringView str);
+    OutputStream & operator<<(const ymd::String & str);
+    OutputStream & operator<<(const ymd::StringView str);
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);

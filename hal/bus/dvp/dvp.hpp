@@ -6,7 +6,7 @@
 #include "hal/gpio/port.hpp"
 
 
-namespace yumud{
+namespace ymd{
 class Dvp{
 protected:
     void install();

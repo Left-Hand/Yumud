@@ -36,7 +36,7 @@
 // const Transform2D_t<T> Transform2D_t<T>::FLIP_Y = Transform2D_t(1, 0, 0, -1, 0, 0);
 
 
-namespace yumud{
+namespace ymd{
 template<arithmetic T>
 Transform2D_t<T>::Transform2D_t(T xx, T xy, T yx, T yy, T ox, T oy) {
 	elements[0][0] = xx;

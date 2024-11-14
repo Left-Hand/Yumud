@@ -1,6 +1,6 @@
 #include "OV2640.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 bool OV2640::init(){

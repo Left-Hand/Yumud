@@ -1,7 +1,7 @@
 #include "sdcard.hpp"
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 void SDcard::init(){
 //    unsigned char retry,temp;   

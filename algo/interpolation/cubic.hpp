@@ -3,7 +3,7 @@
 #include "interpolation.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 class CubicInterpolation:public Interpolation{
 

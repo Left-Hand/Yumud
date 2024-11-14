@@ -2,8 +2,8 @@
 
 #include "robots/foc/motor_utils.hpp"
 
-namespace yumud::foc{
-using namespace yumud::drivers;
+namespace ymd::foc{
+using namespace ymd::drivers;
 class ToneTasker{
 protected:
     enum class Tones:int{

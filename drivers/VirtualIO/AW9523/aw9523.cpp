@@ -1,7 +1,7 @@
 #include "aw9523.hpp"
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 void AW9523::init(){
     reset();

@@ -43,7 +43,7 @@ void CAN2_SCE_IRQHandler(void);
 
 
 
-namespace yumud{
+namespace ymd{
 
 class Can: public PackedBus<CanMsg>,public CanTrait{
 public:

@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "drivers/Camera/Camera.hpp" 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class OV2640:public CameraWithSccb<RGB565>{
 

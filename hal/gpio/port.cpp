@@ -1,7 +1,7 @@
 #include "port.hpp"
 #include "gpio.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 
 Gpio Port::channel_none = Gpio(GPIOD, Pin::None);

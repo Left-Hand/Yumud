@@ -8,8 +8,8 @@
 #include "../ctrl/current_ctrl.hpp"
 #include "../ctrl/power_ctrl.hpp"
 #include "../ctrl/voltage_ctrl.hpp"
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 class Buck{
 public:

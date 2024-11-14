@@ -1,6 +1,6 @@
 #pragma once
 
-namespace yumud::foc{
+namespace ymd::foc{
 namespace MotorUtils{
 
     enum class RunStatus:uint8_t{

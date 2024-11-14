@@ -1,6 +1,6 @@
 #include "IST8310.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 #define WRITE_REG(reg) writeReg(reg.address, reg);

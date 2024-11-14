@@ -1,7 +1,7 @@
 #include "CombinedAction.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 
 void CombinedAction::execute() {

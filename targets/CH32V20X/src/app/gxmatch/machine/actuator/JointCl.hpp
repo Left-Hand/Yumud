@@ -12,7 +12,7 @@ public:
 protected:
     const Config & config_;
 
-    using Motor = yumud::drivers::RadianServo;
+    using Motor = ymd::drivers::RadianServo;
     Motor & servo_;
     real_t last_radian_;
     real_t expect_radian_;

@@ -3,7 +3,7 @@
 #include "sys/debug/debug_inc.h"
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename T>
 class Optional{

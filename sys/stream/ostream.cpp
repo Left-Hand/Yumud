@@ -3,7 +3,7 @@
 #include "sys/string/StringView.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     do{

@@ -4,7 +4,7 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void tcs34725_tb(OutputStream & logger, I2c & i2c){
     TCS34725 tcs{i2c};

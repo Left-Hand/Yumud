@@ -6,7 +6,7 @@
 #include <array>
 
 
-namespace yumud{
+namespace ymd{
 
 template<size_t N>
 class PortVirtualConcept : public PortConcept{

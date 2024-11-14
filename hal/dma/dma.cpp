@@ -1,7 +1,7 @@
 #include "dma.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 #define DMA_DONE_CB(x,y) dma##x##_ch##y##_done_cb
 #define DMA_HALF_CB(x,y) dma##x##_ch##y##_half_cb

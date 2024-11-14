@@ -9,7 +9,7 @@
 #include "nvcv2/template/template.hpp"
 
 
-namespace yumud::nvcv2{
+namespace ymd::nvcv2{
 class Matcher{
 protected:
     scexpr size_t N = 10;

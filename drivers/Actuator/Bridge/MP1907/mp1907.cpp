@@ -5,8 +5,8 @@
 
 
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 MP1907::MP1907(AdvancedTimer & timer, const uint8_t pair_index, GpioConcept & en_gpio):
     inst_(timer.oc(pair_index)),

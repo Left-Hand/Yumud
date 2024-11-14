@@ -1,6 +1,6 @@
 #include "StringUtils.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 

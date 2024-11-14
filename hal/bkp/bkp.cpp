@@ -1,6 +1,6 @@
 #include "bkp.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 void Bkp::init(){
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_PWR | RCC_APB1Periph_BKP, ENABLE);

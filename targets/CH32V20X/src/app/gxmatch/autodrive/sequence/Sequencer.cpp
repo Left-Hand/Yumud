@@ -20,7 +20,7 @@ void Sequencer::linear(Rays & curve, const Ray & from, const Ray & to){
 }
 
 template<typename T>
-std::optional<yumud::Vector2_t<T>> calculate_circle_center(const yumud::Vector2_t<T> & p1, const yumud::Vector2_t<T> & p2, const T radius){
+std::optional<ymd::Vector2_t<T>> calculate_circle_center(const ymd::Vector2_t<T> & p1, const ymd::Vector2_t<T> & p2, const T radius){
     return std::nullopt;
 }
 

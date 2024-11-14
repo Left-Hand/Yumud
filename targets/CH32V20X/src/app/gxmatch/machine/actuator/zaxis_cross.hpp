@@ -5,7 +5,7 @@
 #include "JointCl.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class RadianServo;
 };
 

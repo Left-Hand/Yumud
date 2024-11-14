@@ -1,7 +1,7 @@
 #include "gpio.hpp"
 #include "port.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 PortConcept & GpioVirtual::form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance){
     switch((uint32_t)_instance){

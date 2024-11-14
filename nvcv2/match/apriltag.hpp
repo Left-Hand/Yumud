@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <tuple>
 
-namespace yumud{
+namespace ymd{
 
 struct Apriltag{
 

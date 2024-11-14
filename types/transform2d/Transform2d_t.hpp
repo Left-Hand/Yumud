@@ -34,7 +34,7 @@
 #include "types/rect2/rect2_t.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct Transform2D_t{

@@ -1,6 +1,6 @@
 #include "spisw.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 void SpiSw::init(const uint32_t baudRate, const CommMethod tx_method , const CommMethod rx_method ){
     setBaudRate(baudRate);

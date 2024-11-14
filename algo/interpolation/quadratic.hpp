@@ -2,7 +2,7 @@
 
 #include "interpolation.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class QuadraticInterpolation:public Interpolation{
 public:

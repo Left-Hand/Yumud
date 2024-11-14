@@ -4,7 +4,7 @@
 #include "types/vector2/vector2_t.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class SVPWM{
 protected:
     bool rsv = false;

@@ -1,6 +1,6 @@
 #include "injected_channel.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 InjectedChannel::InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
         AdcChannelOnChip(_instance, _channel, _rank),

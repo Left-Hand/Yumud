@@ -4,7 +4,7 @@
 #include "../Key.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 
 class KeyMatrix{

@@ -104,7 +104,7 @@ public:
 };
 
 
-namespace yumud{
+namespace ymd{
 
     __no_inline OutputStream & operator << (OutputStream & os , const Complex_t<auto> & c){
         return os << c.real << ',' << (c.imag > 0 ? '+' : ' ') << c.imag << 'i';

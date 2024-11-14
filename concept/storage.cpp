@@ -1,7 +1,7 @@
 #include "storage.hpp"
 #include "memory.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 Memory Storage::slice(const Storage::AddressView & _view){
     return Memory(*this, view().intersection(view()));

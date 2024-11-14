@@ -1,7 +1,7 @@
 #include "StringStream.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 void StringStream::write(const char data){
     str_ += data;

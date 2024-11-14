@@ -7,7 +7,7 @@
 #include <memory>
 #include <functional>
 
-namespace yumud::CanUtils{
+namespace ymd::CanUtils{
     enum class BaudRate{
         _125K,
         _250K,

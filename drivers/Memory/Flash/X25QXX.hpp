@@ -14,7 +14,7 @@
 #define X25QXX_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 
 class SpiDevice{

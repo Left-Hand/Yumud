@@ -12,7 +12,7 @@
 #endif
 
 
-namespace yumud{
+namespace ymd{
 class Flash:public Storage{
 protected:
 

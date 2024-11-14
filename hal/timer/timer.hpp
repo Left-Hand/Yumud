@@ -5,7 +5,7 @@
 
 #ifdef HDW_SXX32
 
-namespace yumud{
+namespace ymd{
 class TimerHw{};
 
 class BasicTimer:public TimerHw{

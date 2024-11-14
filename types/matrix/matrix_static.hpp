@@ -6,7 +6,7 @@
 #include "sys/stream/ostream.hpp"
 
 
-namespace yumud{
+namespace ymd{
 template<arithmetic T, size_t R, size_t C>
 class Matrix_t
 {

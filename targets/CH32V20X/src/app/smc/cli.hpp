@@ -5,7 +5,7 @@
 #include "finder.hpp"
 
 namespace SMC{
-using namespace yumud::nvcv2;
+using namespace ymd::nvcv2;
 constexpr uint32_t hash_impl(char const * str , size_t size){
     uint32_t hash = 5381;
 

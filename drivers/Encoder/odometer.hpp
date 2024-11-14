@@ -5,7 +5,7 @@
 #include <array>
 #include "thirdparty/sstl/include/sstl/vector.h"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class Odometer{
 public:
     Encoder & encoder;

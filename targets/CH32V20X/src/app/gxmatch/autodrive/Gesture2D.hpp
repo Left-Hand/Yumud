@@ -6,11 +6,11 @@
 
 namespace gxm{
 
-using Vector2 = yumud::Vector2_t<real_t>;
-using Vector3 = yumud::Vector3_t<real_t>;
+using Vector2 = ymd::Vector2_t<real_t>;
+using Vector3 = ymd::Vector3_t<real_t>;
 
 //用于描述姿态
-using Gesture2D = yumud::Ray2D_t<real_t>;
+using Gesture2D = ymd::Ray2D_t<real_t>;
 
 
 }

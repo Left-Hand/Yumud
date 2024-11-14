@@ -1,6 +1,6 @@
 #include "at24cxx.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 #ifdef AT24CXX_DEBUG
 #undef AT24CXX_DEBUG

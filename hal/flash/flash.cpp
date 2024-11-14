@@ -1,6 +1,6 @@
 #include "flash.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 
 #define CLOCK_CONFIG_BY_AHB 0

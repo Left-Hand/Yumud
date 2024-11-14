@@ -14,7 +14,7 @@
 
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class MT6701:public MagEncoder{
 public:
     enum class Hysteresis:uint8_t{

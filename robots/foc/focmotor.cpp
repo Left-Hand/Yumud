@@ -1,3 +1,3 @@
 #include "focmotor.hpp"
 
-using namespace yumud::foc;
+using namespace ymd::foc;

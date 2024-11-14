@@ -5,7 +5,7 @@
 
 #include "spi_trait.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class Spi:public FullDuplexBus, traits::SpiTrait{
 public:

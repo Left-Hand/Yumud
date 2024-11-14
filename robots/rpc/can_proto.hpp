@@ -7,7 +7,7 @@
 
 // class FOCMotor;
 
-namespace yumud{
+namespace ymd{
 
 class CanProtocolConcept{
 public:

@@ -1,7 +1,7 @@
 #pragma once
 
 
-namespace yumud{
+namespace ymd{
 
 
 enum class JedecManufacturer:unsigned char{
@@ -40,5 +40,5 @@ class OutputStream;
 OutputStream & operator<<(OutputStream & os, const JedecManufacturer man);
 OutputStream & operator<<(OutputStream & os, const JedecStorageType type);
 }
-// yumud::OutputStream & operator<<(yumud::OutputStream & os, const yumud::JedecManufacturer man);
-// yumud::OutputStream & operator<<(yumud::OutputStream & os, const yumud::JedecStorageType type);
+// ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::JedecManufacturer man);
+// ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::JedecStorageType type);

@@ -6,7 +6,7 @@
 #include "../Radio.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class HC12:public IOStream, public Radio{
 public:
     enum class PowerMode{

@@ -3,14 +3,14 @@
 #include "sys/debug/debug_inc.h"
 
 
-using namespace yumud;
+using namespace ymd;
 
 
-OutputStream & yumud::operator << (OutputStream & os, const Bus::Error & err){
+OutputStream & ymd::operator << (OutputStream & os, const Bus::Error & err){
     return os << err.type;
 }
 
-OutputStream & yumud::operator << (OutputStream & os, const Bus::ErrorType & err){
+OutputStream & ymd::operator << (OutputStream & os, const Bus::ErrorType & err){
     using ErrorType = Bus::ErrorType;
 
     switch(err){

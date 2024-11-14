@@ -4,7 +4,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "drivers/device_defs.h"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class PCA9685: public PortVirtualConcept<16>{
 public:
     scexpr uint8_t default_i2c_addr = 0b10000000;

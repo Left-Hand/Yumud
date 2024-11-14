@@ -1,8 +1,8 @@
 
 #include "MT9V034.hpp"
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 #define DEVICE_ADDR 0xB8
 

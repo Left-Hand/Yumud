@@ -1,3 +1,3 @@
 #include "protocol_concept.hpp"
 
-using namespace yumud;
+using namespace ymd;

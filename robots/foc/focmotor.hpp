@@ -8,13 +8,13 @@
 #include "drivers/Encoder/OdometerPoles.hpp"
 
 
-namespace yumud::foc{
+namespace ymd::foc{
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 class FOCMotorConcept{ 
 public:
-    // using namespace yumud::drivers;
+    // using namespace ymd::drivers;
 
 
     using ErrorCode = MotorUtils::ErrorCode;

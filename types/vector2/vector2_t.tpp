@@ -29,7 +29,7 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-namespace yumud{
+namespace ymd{
 
 
 template<arithmetic T>

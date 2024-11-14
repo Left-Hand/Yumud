@@ -17,8 +17,8 @@
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 SpiDrv ma730_drv{spi1, 0};
 MA730 ma730{ma730_drv};

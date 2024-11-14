@@ -3,7 +3,7 @@
 
 #include "sys/math/real.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 namespace gxm{
 class Actuator{

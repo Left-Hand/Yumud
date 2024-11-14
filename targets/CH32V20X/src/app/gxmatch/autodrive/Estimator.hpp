@@ -5,8 +5,8 @@
 
 namespace gxm{
 
-using namespace yumud::drivers;
-// using Accelerometer = yumud::Accelerometer;
+using namespace ymd::drivers;
+// using Accelerometer = ymd::Accelerometer;
 
 
 //用于从惯性计与里程计估测姿态

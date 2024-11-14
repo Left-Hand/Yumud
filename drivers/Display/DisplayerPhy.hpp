@@ -5,7 +5,7 @@
 
 #include <optional>
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class DisplayerPhy{
 public:

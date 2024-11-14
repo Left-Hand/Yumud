@@ -10,7 +10,7 @@
 class GpioConcept;
 class PwmChannel;
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class LedConcept{
 public:

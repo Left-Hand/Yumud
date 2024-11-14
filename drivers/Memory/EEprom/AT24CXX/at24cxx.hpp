@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "concept/memory.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class AT24CXX:public StoragePaged{
 private:

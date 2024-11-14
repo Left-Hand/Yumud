@@ -8,7 +8,7 @@
 #include <utility>
 #include <tuple>
 
-namespace yumud{
+namespace ymd{
 
 //TODO do not inhert from CanRxMsg
 struct CanMsg{
@@ -194,7 +194,7 @@ public:
 
 };
 
-namespace yumud{
+namespace ymd{
 class OutputStream;
 OutputStream & operator<<(OutputStream & os, const CanMsg & msg);
 }

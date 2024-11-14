@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "drivers/Encoder/MagEncoder.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class MA730:public MagEncoder{
 public:

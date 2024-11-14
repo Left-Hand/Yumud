@@ -12,7 +12,7 @@
 #define ICM42688_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class ICM42688:public Axis6{
 public:

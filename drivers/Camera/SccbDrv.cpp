@@ -1,6 +1,6 @@
 #include "SccbDrv.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 void SccbDrv::writeReg(const uint8_t reg_address, const uint16_t reg_data){
     if(bus.begin(index) != Bus::ErrorType::OK){

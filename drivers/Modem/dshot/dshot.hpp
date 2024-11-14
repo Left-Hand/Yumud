@@ -3,12 +3,12 @@
 
 #include "sys/debug/debug_inc.h"
 
-namespace yumud{
+namespace ymd{
     class TimerOC;
     class DmaChannel;
 }
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class DShotChannel{
 public:

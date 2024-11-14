@@ -3,7 +3,7 @@
 #include "robots/foc/motor_utils.hpp"
 
 
-namespace yumud::foc{
+namespace ymd::foc{
 struct SpeedEstimator{
 public:
     struct Config{

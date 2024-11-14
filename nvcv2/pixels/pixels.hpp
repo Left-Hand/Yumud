@@ -2,7 +2,7 @@
 
 #include "../nvcv2.hpp"
 
-namespace yumud::nvcv2::Pixels{
+namespace ymd::nvcv2::Pixels{
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src);
 
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src);

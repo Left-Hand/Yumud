@@ -1,6 +1,6 @@
 #include "timer_hw.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 #define TIMER_IT_BIND_TEMPLATE(x)\
 void Timer##x::bindCb(const IT ch, std::function<void(void)> && cb){\

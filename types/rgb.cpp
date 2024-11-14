@@ -2,7 +2,7 @@
 #include "sys/stream/ostream.hpp"
 // #include <cmath>
 
-using namespace yumud;
+using namespace ymd;
 
 #define __SSAT8(x) CLAMP(int8_t(x), -127, 127)
 #define __USAT8(x) CLAMP(uint8_t(x), 0, 255)

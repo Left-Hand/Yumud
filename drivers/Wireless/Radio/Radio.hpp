@@ -3,7 +3,7 @@
 #include "hal/gpio/gpio.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class Radio{
 public:

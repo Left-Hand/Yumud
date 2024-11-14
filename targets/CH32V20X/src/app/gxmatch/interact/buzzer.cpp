@@ -3,7 +3,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 namespace gxm{
 

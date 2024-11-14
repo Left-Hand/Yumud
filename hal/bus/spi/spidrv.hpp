@@ -6,7 +6,7 @@
 #include <initializer_list>
 
 
-namespace yumud{
+namespace ymd{
 
 class SpiDrv:public NonProtocolBusDrv<Spi>{
 protected:

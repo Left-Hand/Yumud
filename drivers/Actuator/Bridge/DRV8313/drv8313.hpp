@@ -11,7 +11,7 @@
 #define DRV8313_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class DRV8313:public Coil3Driver{
 protected:

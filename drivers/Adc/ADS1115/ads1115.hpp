@@ -8,7 +8,7 @@
 #define ADS111X_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class ADS111X{
 public:

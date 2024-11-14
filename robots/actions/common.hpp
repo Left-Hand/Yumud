@@ -2,7 +2,7 @@
 
 #include "ActionQueue.hpp"
 
-namespace yumud{
+namespace ymd{
 
 struct ClearAction:public Action{
 protected:

@@ -2,7 +2,7 @@
 
 #include "zaxis.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class SpeedServo;
 class DistanceSensor;
 };
@@ -17,8 +17,8 @@ public:
 private:
     const Config & config_;
 protected:
-    using Motor = yumud::drivers::SpeedServo;
-    using Sensor = yumud::drivers::DistanceSensor;
+    using Motor = ymd::drivers::SpeedServo;
+    using Sensor = ymd::drivers::DistanceSensor;
     Motor & motor_;
     Sensor & sensor_;
     real_t expect_distance = real_t(0.1);

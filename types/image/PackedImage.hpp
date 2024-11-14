@@ -2,7 +2,7 @@
 
 #include "image.hpp"
 
-namespace yumud{
+namespace ymd{
 
 using PackedBinary = uint8_t;
 

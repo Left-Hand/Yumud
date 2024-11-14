@@ -5,7 +5,7 @@
 
 #include "drivers/Memory/Flash/X25QXX.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void w25qxx_main(){
     DEBUGGER_INST.init(576000);

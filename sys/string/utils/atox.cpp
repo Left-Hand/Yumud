@@ -1,7 +1,7 @@
 #include "StringUtils.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 int StringUtils::atoi(const char * str, const size_t len) {
 	int ret = 0;

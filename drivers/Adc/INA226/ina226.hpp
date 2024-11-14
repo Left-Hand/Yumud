@@ -9,7 +9,7 @@
 #define INA226_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class INA226 {
 public:
 

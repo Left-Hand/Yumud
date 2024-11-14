@@ -1,6 +1,6 @@
 #include "ak8975.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 void AK8975::init(){

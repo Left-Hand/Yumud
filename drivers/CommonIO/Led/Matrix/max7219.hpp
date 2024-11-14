@@ -1,6 +1,6 @@
 #pragma once
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class MAX7219{
 

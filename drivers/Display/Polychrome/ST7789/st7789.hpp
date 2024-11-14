@@ -4,7 +4,7 @@
 #include "types/image/image.hpp"
 #include "hal/bus/spi/spi.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class ST7789:public Displayer<RGB565>{
 private:

@@ -10,7 +10,7 @@
 
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class Si24R1{
 protected:

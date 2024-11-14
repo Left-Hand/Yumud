@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <initializer_list>
 
-namespace yumud{
+namespace ymd{
 
 class I2sDrv:public BusDrv<I2s>{
 public:
