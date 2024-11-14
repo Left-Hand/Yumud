@@ -250,6 +250,11 @@ public:
         }
     }
 
+    __fast_inline constexpr Line2D_t<T> lineplofit(const Vector2_t<T> * begin, const size_t len){
+        //TODO
+        return {};
+    }
+    
     __fast_inline constexpr Vector2_t<T> reflect(const Vector2_t<T> & p, const Vector2_t<T> & base) const {
         
         // TODO

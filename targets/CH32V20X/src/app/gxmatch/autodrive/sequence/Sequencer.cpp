@@ -14,7 +14,7 @@ void Sequencer::rotate(Rays & curve, const Ray & from, const Ray & to){
 }
 
 void Sequencer::linear(Rays & curve, const Ray & from, const Ray & to){
-    auto pdelta = to.org - from.org;
+    // auto pdelta = to.org - from.org;
 
     // this->rotate()
 }
