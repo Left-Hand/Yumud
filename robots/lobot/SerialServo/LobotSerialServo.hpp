@@ -18,13 +18,13 @@ public:
     LobotSerialServo(Uart & uart, const uint8_t id):
             uart_(uart), id_(id){}
 
-    void SetID(uint8_t newID);
+    void setID(const uint8_t newID);
 
-    void Move(int16_t position, uint16_t time);
+    void move(const int16_t position,const uint16_t time);
 
-    void ServoUnload(uint8_t id);
+    void unload();
 
-    void ServoLoad(uint8_t id);
+    void load();
 };
 
 }

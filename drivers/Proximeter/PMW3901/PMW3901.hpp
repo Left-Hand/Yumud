@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/device_defs.h"
-
+#include "types/image/image.hpp"
 
 namespace ymd::drivers{
 
@@ -9,15 +9,18 @@ class PMW3901 {
 protected:
     SpiDrv spi_drv_;
 
-    uint8_t isInited;
-
     uint8_t Motion;
-    int16_t deltaX;
-    int16_t deltaY;
+    struct :public Reg16{uint16_t data;}deltaX;
+    struct :public Reg16{uint16_t data;}deltaY;
 
-    void writeByte(const uint8_t command, const uint8_t data);
-    void readByte(const uint8_t command, uint8_t & data);
-    void readBytes(const uint8_t command, uint8_t * data, const size_t len);
+    bool assertReg(const uint8_t command, const uint8_t data){
+        uint8_t temp = 0;
+        readReg(command, temp);
+        return temp == data;
+    }
+
+    void writeReg(const uint8_t command, const uint8_t data);
+    void readReg(const uint8_t command, uint8_t & data);
 public:
     PMW3901(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     PMW3901(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
@@ -25,6 +28,12 @@ public:
 
     void init();
     void update();
+    std::tuple<int16_t, int16_t> getMotion(){
+        return {deltaX, deltaY};
+    }
+
+    void setLed(bool on);
+    void readImage(ImageWritable<Grayscale> & img);
 };
 
 }

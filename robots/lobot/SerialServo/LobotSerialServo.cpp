@@ -108,21 +108,20 @@ using namespace ymd::drivers;
 #define WRITE_FRAME(command, ...) this->writeFrame(CREATE_FRAME(command, __VA_ARGS__));
 
 
-void LobotSerialServo::Move(int16_t position, uint16_t time) {
+void LobotSerialServo::move(const int16_t position,const uint16_t time) {
     WRITE_FRAME(LOBOT_SERVO_MOVE_TIME_WRITE, time, CLAMP2(position, 1000));
 }
 
-
-void LobotSerialServo::SetID(uint8_t newID) {
-    WRITE_FRAME(LOBOT_SERVO_ID_WRITE, newID)
+void LobotSerialServo::setID(const uint8_t newID) {
+    WRITE_FRAME(LOBOT_SERVO_ID_WRITE, newID);
     id_ = newID;
 }
 
 
-void LobotSerialServo::ServoUnload(uint8_t id) {
-    WRITE_FRAME(LOBOT_SERVO_LOAD_OR_UNLOAD_WRITE, 0)
+void LobotSerialServo::unload() {
+    WRITE_FRAME(LOBOT_SERVO_LOAD_OR_UNLOAD_WRITE, 0);
 }
 
-void LobotSerialServo::ServoLoad(uint8_t id) {
-    WRITE_FRAME(LOBOT_SERVO_LOAD_OR_UNLOAD_WRITE, 1)
+void LobotSerialServo::load() {
+    WRITE_FRAME(LOBOT_SERVO_LOAD_OR_UNLOAD_WRITE, 1);
 }
