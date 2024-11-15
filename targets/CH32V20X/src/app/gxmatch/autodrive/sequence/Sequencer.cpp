@@ -14,14 +14,13 @@ void Sequencer::rotate(Curve & curve, const Ray & from, const real_t & end_rad){
 
     bool inv = end_rad < from.rad;
     const auto freq = paras_.freq;
-    const auto n = solver.period() * freq;
+    const auto n = size_t(int(solver.period() * freq));
     
-    auto t_val = real_t(0);
-    const auto t_delta = real_t(1) / freq; 
+    curve.reserve(curve.size() + n);
     for(size_t i = 0; i < n; i++){
+        const auto t_val = real_t(i) / freq;
         auto rad = solver.forward(t_val);
         curve.push_back(from.rotated(inv ? -rad : rad));
-        t_val += t_delta;
     }
 }
 
@@ -41,12 +40,10 @@ void Sequencer::linear(Curve & curve, const Ray & from, const Vector2 & end_pos)
     const auto freq = paras_.freq;
     const auto n = size_t(int(solver.period() * freq));
     
-    auto t_val = real_t(0);
-    const auto t_delta = real_t(1) / freq;
     curve.reserve(curve.size() + n);
     for(size_t i = 0; i < n; i++){
+        const auto t_val = real_t(i) / freq;
         curve.push_back(Ray(from.org + norm * solver.forward(t_val), from.rad));
-        t_val += t_delta;
     }
 }
 

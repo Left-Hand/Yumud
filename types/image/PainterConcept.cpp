@@ -213,7 +213,7 @@ void PainterConcept::drawHollowTriangle(const Vector2i & p0,const Vector2i & p1,
 }
 
 void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,const Vector2i & p2){
-    int a, b, y, last;
+    int a, b, last;
     int x0 = p0.x;
     int y0 = p0.y;
     int x1 = p1.x;
@@ -240,7 +240,7 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
         else if (x1 > b) b = x1;
         if (x2 < a)      a = x2;
         else if (x2 > b) b = x2;
-        drawHriLine(Rangei(a, b + 1), y);
+        drawHriLine(Rangei(a, b + 1), y0);
         return;
     }
 
@@ -256,6 +256,7 @@ void PainterConcept::drawFilledTriangle(const Vector2i & p0,const Vector2i & p1,
     if (y1 == y2) last = y1;  // Include y1 scanline
     else         last = y1 - 1; // Skip it
 
+    int y;
     for (y = y0; y <= last; y++) {
         a   = x0 + sa / dy01;
         b   = x0 + sb / dy02;

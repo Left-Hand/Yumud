@@ -12,8 +12,12 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "robots/foc/remote/remote.hpp"
 
-
+#include "types/image/painter.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
+
+
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "hal/bus/spi/spihw.hpp"
 
 using Sys::t;
 
@@ -90,7 +94,81 @@ void host_main(){
 
     auto i2c = I2cSw{portD[2], portC[12]};
     i2c.init(1250_KHz);
-    // i2c.init(0);//ok
+    
+    auto & lcd_cs = portD[6];
+    auto & lcd_dc = portD[7];
+    auto & dev_rst = portB[7];
+
+
+    #ifdef CH32V30X
+    auto & spi = spi2;
+    #else
+    auto & spi = spi1;
+    #endif
+    
+    spi.bindCsPin(lcd_cs, 0);
+    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+
+    {
+        tftDisplayer.init();
+
+        tftDisplayer.setFlipX(false);
+        tftDisplayer.setFlipY(true);
+        if(true){
+            tftDisplayer.setSwapXY(true);
+            tftDisplayer.setDisplayOffset({40, 52}); 
+        }else{
+            tftDisplayer.setSwapXY(false);
+            tftDisplayer.setDisplayOffset({52, 40}); 
+        }
+        tftDisplayer.setFormatRGB(true);
+        tftDisplayer.setFlushDirH(false);
+        tftDisplayer.setFlushDirV(false);
+        tftDisplayer.setInversion(true);
+
+        tftDisplayer.fill(ColorEnum::BLACK);
+    }
+    
+    auto painter = Painter<RGB565>{};
+    painter.bindImage(tftDisplayer);
+    auto canvas_transform = [&](const Ray & ray) -> Ray{
+        scexpr auto meter = int{2};
+        scexpr auto size = Vector2{100,100};
+        scexpr auto org =  Vector2{12,12};
+        scexpr auto area = Rect2i{org,size};
+        
+        auto x = LERP(real_t(area.x), real_t(area.x + area.w), ray.org.x / meter);
+        auto y = LERP(real_t(area.y + area.h), real_t(area.y), ray.org.y / meter);
+        return Ray{Vector2{x,y} + Vector2::ones(12), ray.rad};
+    };
+
+    auto draw_curve = [&](const Curve & curve){
+        painter.setColor(ColorEnum::BLUE);
+        for(auto it = curve.begin(); it != curve.end(); it++){
+            auto pos = canvas_transform(Ray(*it)).org;
+            painter.drawPixel(pos);
+        }
+    };
+    
+    auto draw_turtle = [&](const Ray & ray){
+        scexpr real_t len = 7;
+        auto [org, rad] = canvas_transform(ray);
+        rad = -rad;//flipy
+        auto pf = org + Vector2::from_angle(len, rad);
+        auto p1 = org + Vector2::from_angle(len, rad + real_t(  PI * 0.8));
+        auto p2 = org + Vector2::from_angle(len, rad + real_t(- PI * 0.8));
+        DEBUG_PRINTLN(pf,p1,p2);
+
+        // painter.setColor(ColorEnum::RED);
+        painter.setColor(RGB888(HSV888(int(t * 64),255,255)));
+        painter.drawFilledTriangle(pf, p1, p2);
+        painter.setColor(ColorEnum::BLACK);
+        painter.drawHollowTriangle(pf, p1, p2);
+    };
+
+    draw_turtle(Ray(real_t(0.8), real_t(2), real_t(0)));
     
     PCA9685 pca{i2c};
     pca.init();
@@ -189,8 +267,8 @@ void host_main(){
             .max_gyro = 1,
             .max_angular = 1,
             // .max_spd = real_t(0.6),
-            .max_spd = real_t(0.2),
-            .max_acc = real_t(0.2)
+            .max_spd = real_t(0.3),
+            .max_acc = real_t(0.05)
         };
 
         auto params = SequenceParas{
@@ -200,14 +278,18 @@ void host_main(){
         auto sequencer = Sequencer(limits, params);
         auto curve = Curve{};
         // sequencer.linear(curve, Ray{0, 0, 0}, Vector2{1,1});
-        sequencer.fillet(curve, Ray{0,0,0}, Ray{1,1,real_t(PI/2)});
+        // sequencer.fillet(curve, Ray{0,0,0}, Ray{1,1,real_t(PI/2)});
+        sequencer.fillet(curve, Ray{0,0,real_t(PI)}, Ray{1,1,real_t(PI/2)});
+        draw_curve(curve);
         
         DEBUG_PRINTLN(std::setprecision(4));
         for(auto it = curve.begin(); it != curve.end(); ++it){
             delayMicroseconds(1000);
-            auto && [org,rad] = Ray(*it);
+            auto ray = Ray(*it);
+            auto && [org,rad] = ray;
             auto && [x,y] = org;
             DEBUG_PRINTLN(x,y,rad);
+            draw_turtle(ray);
         }
         DEBUG_PRINTLN("done");
         while(true);
