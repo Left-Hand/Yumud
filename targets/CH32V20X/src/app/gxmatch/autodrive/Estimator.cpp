@@ -10,6 +10,9 @@ void Estimator::update(){
     acc3_ = bias_.acc.xform(Vector3(acc_gyro_sensor_.getAccel()));
     gyro3_ = Vector3(acc_gyro_sensor_.getGyro()) - bias_.gyro;
     mag3_ = bias_.mag.xform(Vector3(mag_sensor_.getMagnet()));
+
+    quat_ = mahony_.update9(gyro3_, acc3_, mag3_);
+    euler_ = Basis(quat_).get_euler_xyz();
 }
 
 Quat Estimator::calculateAccelBias(){

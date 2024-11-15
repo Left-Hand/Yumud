@@ -14,11 +14,11 @@ enum class FieldType:uint8_t{
 };
 
 struct Map{
-    Ray garbage_gest =           {real_t(0),       real_t(0),        real_t(PI/2)};
-    Ray billboard_gest =         {real_t(0.065),   real_t(0.3),      real_t(-PI/2)};
-    Ray staging_gest =           {real_t(1.8),     real_t(1.015),    real_t(0)};
-    Ray raw_material_gest =      {real_t(1.45),    real_t(0.3),      real_t(-PI/2)};
-    Ray rough_process_gest =     {real_t(1.05),    real_t(1.72),     real_t(PI/2)};
+    scexpr Ray garbage_gest =           {real_t(0),       real_t(0),        real_t(PI/2)};
+    scexpr Ray billboard_gest =         {real_t(0.065),   real_t(0.3),      real_t(-PI/2)};
+    scexpr Ray staging_gest =           {real_t(1.8),     real_t(1.015),    real_t(0)};
+    scexpr Ray raw_material_gest =      {real_t(1.45),    real_t(0.3),      real_t(-PI/2)};
+    scexpr Ray rough_process_gest =     {real_t(1.05),    real_t(1.72),     real_t(PI/2)};
 
     Map & operator =(const Map & other) = default;
     Map & operator =(Map && other) = default;

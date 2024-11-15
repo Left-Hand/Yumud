@@ -125,26 +125,26 @@ public:
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Vector3_t operator *(const U & _v) const{
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator *(const U & _v) const{
         Vector3_t other = *this;
         other *= _v;
         return other;
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Vector3_t operator /(const U & _v) const{
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator /(const U & _v) const{
         Vector3_t other = *this;
         other /= _v;
         return other;
     }
 
     template<arithmetic U>
-    __fast_inline constexpr Vector3_t operator +(const Vector3_t<U>& other) const {
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator +(const Vector3_t<U>& other) const {
         Vector3_t ret = other;
         return ret += *this;
     }
 
-    __fast_inline constexpr Vector3_t abs() const{
+    [[nodiscard]] __fast_inline constexpr Vector3_t abs() const{
         return Vector3_t{
             ABS(x),
             ABS(y),
@@ -152,12 +152,12 @@ public:
         };
     }
 
-	Vector3_t minf(arithmetic auto p_scalar) const {
+	[[nodiscard]] Vector3_t minf(arithmetic auto p_scalar) const {
 		return Vector3_t(MIN(x, static_cast<T>(p_scalar)), MIN(y, static_cast<T>(p_scalar)), MIN(z, static_cast<T>(p_scalar)));
 	}
 
     template<arithmetic U>
-    __fast_inline constexpr Vector3_t operator -(const Vector3_t<U>& other) const {
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator -(const Vector3_t<U>& other) const {
         return Vector3_t{
             x - static_cast<T>(other.x),
             y - static_cast<T>(other.y),
@@ -165,20 +165,20 @@ public:
         };
     }
     
-    __fast_inline constexpr Vector3_t operator -() const {
+    [[nodiscard]] __fast_inline constexpr Vector3_t operator -() const {
         return Vector3_t{-x,-y,-z};
     }
 
 
     template<arithmetic U>
-    constexpr Vector3_t<T> clampmin(const U & _length) const{
+    [[nodiscard]] constexpr Vector3_t<T> clampmin(const U & _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l < length ? *this * length / l : *this);
     }
 
     template<arithmetic U>
-    constexpr Vector3_t<T> clampmax(const U & _length) const{
+    [[nodiscard]] constexpr Vector3_t<T> clampmax(const U & _length) const{
         T length = static_cast<T>(_length);
         T l = this->length();
         return (l > length ? *this * length / l : *this);
@@ -186,23 +186,23 @@ public:
 
 
     template<arithmetic U>
-    T dot(const Vector3_t<U> &v) const{
+    [[nodiscard]] T dot(const Vector3_t<U> &v) const{
         return x * static_cast<T>(v.x) + y * static_cast<T>(v.y) + z * static_cast<T>(v.z);
     }
 
     template<arithmetic U>
-    Vector3_t cross(const Vector3_t<U> &u) const{
+    [[nodiscard]] Vector3_t cross(const Vector3_t<U> &u) const{
         return Vector3_t(y * static_cast<T>(u.z) - z * static_cast<T>(u.y),
                          z * static_cast<T>(u.x) - x * static_cast<T>(u.z), 
                          x * static_cast<T>(u.y) - y * static_cast<T>(u.x));
     }
 
 
-    T length() const{
+    [[nodiscard]] T length() const{
         return sqrt(x * x + y * y + z * z);
     }
 
-    T length_squared() const{
+    [[nodiscard]] T length_squared() const{
         return x * x + y * y + z * z;
     }
 
@@ -218,7 +218,7 @@ public:
         }
     }
 
-    Vector3_t normalized() const {
+    [[nodiscard]] Vector3_t normalized() const {
         Vector3_t v = *this;
         v.normalize();
         return v;

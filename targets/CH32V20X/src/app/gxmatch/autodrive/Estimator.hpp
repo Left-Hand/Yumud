@@ -52,7 +52,6 @@ public:
     void init();
     void calibrate();
     void update();
-    void tick();
 
     Quat calculateAccelBias();
     Vector3 calculateGyroBias();
@@ -63,10 +62,7 @@ public:
     
     auto acc3() const{return acc3_;}
     auto gyro3() const{return gyro3_;}
-
-    auto gest() const {
-        
-    }
+    auto rot() const{return rot_;}
 };
 
 
