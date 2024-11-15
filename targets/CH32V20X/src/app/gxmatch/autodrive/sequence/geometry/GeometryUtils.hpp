@@ -36,7 +36,7 @@ std::tuple<std::optional<ymd::Vector2_t<T>>, std::optional<ymd::Vector2_t<T>>> c
 }
 
 template<arithmetic T>
-std::optional<ymd::Vector2_t<T>> calculate_fillet_center(const ymd::Line2D_t<T> & a, const ymd::Line2D_t<T> & b, const T radius){
+std::optional<ymd::Vector2_t<T>> calculate_fillet_center(const ymd::Line2D_t<T> & a, const ymd::Line2D_t<T> & b, const T & radius){
     return std::nullopt;
 }
 

@@ -75,11 +75,11 @@ public:
     RingBuf<img_tx_buf_size> img_buf;
 
     void write(const char data) override{
-        str_rx_buf.addData(data);
+        str_rx_Buf.push(data);
     }
 
     void read(char & data) override{
-        data = str_rx_buf.getData();
+        data = str_rx_Buf.pop();
     }
 
     using InputStream::read;

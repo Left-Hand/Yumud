@@ -3,11 +3,11 @@
 #include "../buffer.hpp"
 
 template<typename T>
-class Stack_t:public DynamicBuffer_t<T>{
+class Lifo_t:public DynamicBuffer_t<T>{
 protected:
     volatile T * data_ptr;
 public:
-    Stack_t():DynamicBuffer_t<T>(), data_ptr(this->buf){;}
+    Lifo_t():DynamicBuffer_t<T>(), data_ptr(this->buf){;}
 
     __fast_inline void addData(const T & data) override{
         *data_ptr = data;
@@ -40,4 +40,4 @@ public:
     }
 };
 
-typedef Stack_t<uint8_t> Stack;
+typedef Lifo_t<uint8_t> Stack;

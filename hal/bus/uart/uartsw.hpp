@@ -18,10 +18,10 @@ protected:
     ByteProg byteProg = ByteProg::STOP;
     
     void write(const char data) override{
-        txBuf.addData(data);
+        txBuf.push(data);
     }
 
-    char fetch_next(){return txBuf.getData();}
+    char fetch_next(){return txBuf.pop();}
     Error lead(const uint8_t _address) override;
     void trail() override{;}
 public:

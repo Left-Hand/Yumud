@@ -18,7 +18,7 @@ public:
 
     void linear(Curve & curve, const Ray & from, const Vector2 & end_pos);
 
-    void circle(Curve & curve, const Ray & from, const Ray & to);
+    void arc(Curve & curve, const Ray & from, const Ray & to, const real_t & radius);
 
     void fillet(Curve & curve, const Ray & from, const Ray & to);
 };

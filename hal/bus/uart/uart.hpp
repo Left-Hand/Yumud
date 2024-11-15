@@ -2,7 +2,7 @@
 
 #include "hal/bus/bus.hpp"
 
-#include "types/buffer/ringbuf/ringbuf_t.hpp"
+#include "types/buffer/ringbuf/Fifo_t.hpp"
 #include "hal/gpio/port.hpp"
 
 #include <functional>
@@ -30,8 +30,8 @@ protected:
     #define UART_FIFO_BUF_SIZE 256
     #endif
 
-    RingBuf_t<char, UART_FIFO_BUF_SIZE> txBuf;
-    RingBuf_t<char, UART_FIFO_BUF_SIZE> rxBuf;
+    Fifo_t<char, UART_FIFO_BUF_SIZE> txBuf;
+    Fifo_t<char, UART_FIFO_BUF_SIZE> rxBuf;
 
     Callback txPostCb;
     Callback rxPostCb;

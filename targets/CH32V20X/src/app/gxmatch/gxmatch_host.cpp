@@ -159,7 +159,6 @@ void host_main(){
         auto pf = org + Vector2::from_angle(len, rad);
         auto p1 = org + Vector2::from_angle(len, rad + real_t(  PI * 0.8));
         auto p2 = org + Vector2::from_angle(len, rad + real_t(- PI * 0.8));
-        DEBUG_PRINTLN(pf,p1,p2);
 
         // painter.setColor(ColorEnum::RED);
         painter.setColor(RGB888(HSV888(int(t * 64),255,255)));
@@ -167,8 +166,6 @@ void host_main(){
         painter.setColor(ColorEnum::BLACK);
         painter.drawHollowTriangle(pf, p1, p2);
     };
-
-    draw_turtle(Ray(real_t(0.8), real_t(2), real_t(0)));
     
     PCA9685 pca{i2c};
     pca.init();
@@ -264,11 +261,10 @@ void host_main(){
     
     {
         auto limits = SequenceLimits{
-            .max_gyro = 1,
-            .max_angular = 1,
-            // .max_spd = real_t(0.6),
-            .max_spd = real_t(0.3),
-            .max_acc = real_t(0.05)
+            .max_gyro = 2,
+            .max_angular = 2,
+            .max_spd = real_t(0.8),
+            .max_acc = real_t(0.5)
         };
 
         auto params = SequenceParas{
@@ -279,17 +275,21 @@ void host_main(){
         auto curve = Curve{};
         // sequencer.linear(curve, Ray{0, 0, 0}, Vector2{1,1});
         // sequencer.fillet(curve, Ray{0,0,0}, Ray{1,1,real_t(PI/2)});
-        sequencer.fillet(curve, Ray{0,0,real_t(PI)}, Ray{1,1,real_t(PI/2)});
+
+        auto m = micros();
+        sequencer.fillet(curve, Ray{0,0,real_t(PI)}, Ray{2,2,real_t(PI/2)});
+        DEBUG_PRINTLN(micros() - m);
         draw_curve(curve);
         
         DEBUG_PRINTLN(std::setprecision(4));
+        auto idx = 0;
         for(auto it = curve.begin(); it != curve.end(); ++it){
-            delayMicroseconds(1000);
-            auto ray = Ray(*it);
-            auto && [org,rad] = ray;
-            auto && [x,y] = org;
-            DEBUG_PRINTLN(x,y,rad);
-            draw_turtle(ray);
+            while(millis() < size_t((idx * 5) + 1000));
+            idx++;
+            // auto ray = *it;
+            // auto && [org,rad] = ray;
+            // auto && [x,y] = org;
+            draw_turtle(Ray(*it));
         }
         DEBUG_PRINTLN("done");
         while(true);
