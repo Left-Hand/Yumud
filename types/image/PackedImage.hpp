@@ -2,7 +2,7 @@
 
 #include "image.hpp"
 
-namespace yumud{
+namespace ymd{
 
 using PackedBinary = uint8_t;
 
@@ -16,7 +16,7 @@ protected:
 
 class HorizonBinaryImage : public PackedBinaryImage{
 public:
-    void putpixel_unsafe(const Vector2i & pos, const Binary & color) override{
+    void putpixel_unsafe(const Vector2i & pos, const Binary color) override{
         uint32_t point_index = (pos.y * size.x + pos.x);
         uint32_t data_index = point_index / 8;
         uint8_t mask = 1 << (point_index % 8);
@@ -38,7 +38,7 @@ public:
     HorizonBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2i & _size): ImageBasics(_size), PackedBinaryImage(_data, _size){;}
     HorizonBinaryImage(const Vector2i & _size): ImageBasics(_size), PackedBinaryImage(std::make_shared<PackedBinary[]>(size.x * size.y / 8), _size){;}
 
-    void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const Binary & color) override{
+    void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const Binary color) override{
         uint32_t point_index = (pos.y * size.x + pos.x);
         uint32_t data_index = point_index / 8;
         if(data_index % 8){
@@ -64,7 +64,7 @@ public:
 
 class VerticalBinaryImage : public PackedBinaryImage{
 public:
-    void putpixel_unsafe(const Vector2i & pos, const Binary & color) override{
+    void putpixel_unsafe(const Vector2i & pos, const Binary color) override{
         uint32_t data_index = pos.x + (pos.y / 8) * size.x; 
         uint8_t mask = (1 << (pos.y % 8));
 
@@ -82,7 +82,7 @@ public:
     VerticalBinaryImage(std::shared_ptr<PackedBinary[]> _data, const Vector2i & _size): ImageBasics(_size), PackedBinaryImage(_data, _size){;}
     VerticalBinaryImage(const Vector2i & _size): ImageBasics(_size), PackedBinaryImage(std::make_shared<PackedBinary[]>(size.x * size.y / 8), _size){;}
 
-    void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const Binary & color) override{
+    void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const Binary color) override{
         uint32_t data_index = pos.x + (pos.y / 8) * size.x; 
         if(pos.y % 8){
             uint16_t datum = (data[data_index + size.x] << 8) | data[data_index];

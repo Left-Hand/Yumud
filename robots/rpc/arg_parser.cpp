@@ -1,7 +1,7 @@
 #include "arg_parser.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 Strings ArgParser::update(InputStream & is){
     while(is.available()){

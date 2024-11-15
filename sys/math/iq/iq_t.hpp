@@ -289,7 +289,6 @@ __fast_inline iq_t cosf(const iq_t iq){
 }
 
 __fast_inline iq_t sin(const iq_t iq){return sinf(iq);}
-
 __fast_inline iq_t cos(const iq_t iq){return cosf(iq);}
 
 __fast_inline iq_t tanf(const iq_t iq) {return sin(iq) / cos(iq);}
@@ -306,6 +305,10 @@ __fast_inline iq_t acos(const iq_t iq) {
         return iq_t(_iq(_IQacos(iq.value)));
     }
 }
+
+__fast_inline iq_t asinf(const iq_t iq){return ::asin(iq);}
+__fast_inline iq_t acosf(const iq_t iq){return ::acos(iq);}
+
 
 __fast_inline iq_t atan(const iq_t iq) {
     {
@@ -420,6 +423,30 @@ __fast_inline iq_t pow(const iq_t base, const iq_t exponent) {
 
 #endif
 
+__fast_inline iq_t powfi(const iq_t base, const int exponent) {
+    if(0 == exponent) {
+        return iq_t(1);
+    }else if(1 == exponent){
+        return base;
+    }else{
+        iq_t ret;
+        if(1 < exponent){
+            for(size_t i = 1; i < size_t(exponent); ++i){
+                ret *= base;
+            }
+        }else{
+            for(size_t i = 1; i < size_t(-exponent); ++i){
+                ret /= base;
+            }
+        }
+        return ret;
+    }
+}
+
+__fast_inline iq_t powi(const iq_t base, const int exponent) {
+    return powfi(base, exponent);
+}
+
 __fast_inline constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 #if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
@@ -487,6 +514,7 @@ namespace std{
     __fast_inline iq_t tan(const iq_t iq){return ::tan(iq);}
     __fast_inline iq_t asinf(const iq_t iq){return ::asin(iq);}
     __fast_inline iq_t asin(const iq_t iq){return ::asin(iq);}
+    __fast_inline iq_t acosf(const iq_t iq){return ::acos(iq);}
     __fast_inline iq_t acos(const iq_t iq){return ::acos(iq);}
     __fast_inline iq_t atan(const iq_t iq){return ::atan(iq);}
     __fast_inline iq_t atan2f(const iq_t a, const iq_t b){return ::atan2f(a,b);}

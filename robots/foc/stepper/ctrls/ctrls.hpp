@@ -14,7 +14,7 @@
 #endif
 
 
-namespace yumud::foc{
+namespace ymd::foc{
 struct CtrlResult{
     real_t current;
     real_t raddiff;

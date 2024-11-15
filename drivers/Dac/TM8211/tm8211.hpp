@@ -4,7 +4,7 @@
 #include "sys/math/real.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class TM8211{
 // private:
 public:

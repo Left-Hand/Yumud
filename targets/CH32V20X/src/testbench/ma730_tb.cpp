@@ -3,7 +3,7 @@
 #include "bus/spi/spihw.hpp"
 
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 void ma730_main(){
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 

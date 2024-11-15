@@ -3,7 +3,7 @@
 #include "sys/string/String.hpp"
 #include "sys/string/StringView.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 void PainterConcept::drawHollowRect(const Rect2i & rect){
     // Rect2i regular = rect.abs();

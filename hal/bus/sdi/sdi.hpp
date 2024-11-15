@@ -2,7 +2,7 @@
 
 #include "../bus.hpp"
 
-namespace yumud{
+namespace ymd{
 class Sdi:public OutputStream{
 
 public:
@@ -18,7 +18,7 @@ public:
     void init();
 };
 
-#ifdef HAVE_SDI
+#ifdef ENABLE_SDI
 extern Sdi sdi;
 #endif
 }

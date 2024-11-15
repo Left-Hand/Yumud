@@ -1,4 +1,4 @@
 #include "StringRef.hpp"
 #include "String.hpp"
 
-using namespace yumud;
+using namespace ymd;

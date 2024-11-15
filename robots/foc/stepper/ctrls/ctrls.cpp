@@ -1,6 +1,6 @@
 #include "ctrls.hpp"
 
-using namespace yumud::foc;
+using namespace ymd::foc;
 
 using Result = CtrlResult;
 using MetaData = MotorUtils::MetaData;

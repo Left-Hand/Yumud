@@ -9,7 +9,7 @@
 #include "types/vector2/vector2_t.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class Ps2Joystick{
     // struct Ps2Interface{
     //     Ps2Interface(GpioConcept & _sck_pin, GpioConcept & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin)

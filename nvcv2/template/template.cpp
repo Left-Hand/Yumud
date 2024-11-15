@@ -25,7 +25,7 @@ static auto stddev(const Itpair<auto> & src){
     return std::sqrt(std::inner_product(diff.begin(), diff.end(), diff.begin(), 0.0) / std::distance(src));
 }
 
-namespace yumud::nvcv2::Match{
+namespace ymd::nvcv2::Match{
 
 real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, const Vector2i & offs){
     // auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_view());

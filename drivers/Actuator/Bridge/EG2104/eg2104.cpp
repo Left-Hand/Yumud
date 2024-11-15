@@ -1,4 +1,4 @@
 #include "eg2104.hpp"
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;

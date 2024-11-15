@@ -2,7 +2,7 @@
 #include "sys/math/real.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class Encoder{
 public:
     virtual real_t getLapPosition() = 0;

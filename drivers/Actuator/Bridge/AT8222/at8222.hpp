@@ -2,7 +2,7 @@
 
 #include "../CoilDriver.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class AT8222:public Coil2Driver{
 protected:

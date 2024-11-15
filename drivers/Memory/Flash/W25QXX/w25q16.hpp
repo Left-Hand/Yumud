@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "concept/memory.hpp"
 
-namespace yumud{
+namespace ymd{
 
 #ifdef W25Q16_DEBUG
 #define W25Q16_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
@@ -50,12 +50,10 @@ protected:
     StatusReg statusReg;
 
 
-    void writePage(const void * data, const Address len, const size_t addr);
+    void writePage(const size_t addr, const void * data, const Address len);
 
-    void storeBytes(const uint8_t data, const Address loc) override;
-    void loadBytes(uint8_t & data, const Address loc) override;
-    void storeBytes(const void * data, const Address len, const Address loc) override;
-    void loadBytes(void * data, const Address len, const Address loc) override;
+    void storeBytes(const Address loc, const void * data, const Address len) override;
+    void loadBytes(const Address loc, void * data, const Address len) override;
     void entry_store() override;
     void exit_store() override;
     void entry_load() override;

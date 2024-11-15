@@ -6,7 +6,7 @@
 #include "sys/math/real.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 class CaptureChannelConcept{
 protected:

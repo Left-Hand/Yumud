@@ -1,10 +1,9 @@
 #pragma once
 
-#include "sys/math/real.hpp"
 #include "types/vector2/vector2_t.hpp"
 
 
-namespace yumud{
+namespace ymd{
 template<typename T>
 class Scara5Solver_t{
 public:
@@ -32,7 +31,7 @@ public:
         return lr_mid + lr_diff.normalized().cw() * beak_len;
     }
 
-    std::tuple<T, T> invrese(const Vector2_t<T> & pos){
+    std::tuple<T, T> inverse(const Vector2_t<T> & pos){
         auto l_pos = Vector2_t<T>(-config.should_length_meter / 2, 0);
         auto r_pos = Vector2_t<T>(config.should_length_meter / 2, 0);
         Vector2_t<T> l_offs = pos - l_pos;

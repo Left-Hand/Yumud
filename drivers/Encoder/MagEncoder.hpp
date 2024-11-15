@@ -2,7 +2,7 @@
 #include "Encoder.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class MagEncoder:public AbsoluteEncoder{
 public:
 };

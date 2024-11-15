@@ -1,6 +1,6 @@
 #include "bmp280.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 bool BMP280::isChipValid(){
     readReg(RegAddress::ChipID, chipIDReg);

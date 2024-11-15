@@ -4,7 +4,7 @@
 #include "../DistanceSensor.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class VL53L0X:public DistanceSensor{
 protected:

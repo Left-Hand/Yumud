@@ -1,8 +1,8 @@
 #include "ssd1306.hpp"
 
 
-using namespace yumud::drivers;
-using namespace yumud;
+using namespace ymd::drivers;
+using namespace ymd;
 
 
 void SSD13XX::init(){   

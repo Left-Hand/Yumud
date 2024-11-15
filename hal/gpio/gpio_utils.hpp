@@ -2,7 +2,7 @@
 
 #include "sys/core/platform.h"
 
-namespace yumud{
+namespace ymd{
 enum class Pin:uint16_t{
     None,
     _0 = 1 << 0,
@@ -31,36 +31,36 @@ enum class PinName:uint8_t{
     P##x##16, P##x##17, P##x##18, P##x##19, P##x##20, P##x##21, P##x##22, P##x##23,\
     P##x##24, P##x##25, P##x##26, P##x##27, P##x##28, P##x##29, P##x##30, P##x##31\
 
-    #ifdef HAVE_GPIOA
+    #ifdef ENABLE_GPIOA
     PINNAME_CREATE_TEMPLATE(A, 0)
     #endif
 
-    #ifdef HAVE_GPIOB
+    #ifdef ENABLE_GPIOB
     ,
     PINNAME_CREATE_TEMPLATE(B, 1)
     #endif
 
-    #ifdef HAVE_GPIOC
+    #ifdef ENABLE_GPIOC
     ,
     PINNAME_CREATE_TEMPLATE(C, 2)
     #endif
 
-    #ifdef HAVE_GPIOD
+    #ifdef ENABLE_GPIOD
     ,
     PINNAME_CREATE_TEMPLATE(D, 3)
     #endif
 
-    #ifdef HAVE_GPIOE
+    #ifdef ENABLE_GPIOE
     ,
     PINNAME_CREATE_TEMPLATE(E, 4)
     #endif
 
-    #ifdef HAVE_GPIOF
+    #ifdef ENABLE_GPIOF
     ,
     PINNAME_CREATE_TEMPLATE(F, 5)
     #endif
 
-    #ifdef HAVE_GPIOG
+    #ifdef ENABLE_GPIOG
     ,
     PINNAME_CREATE_TEMPLATE(G, 6)
     #endif

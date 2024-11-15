@@ -7,7 +7,7 @@
 
 #include <functional>
 
-namespace yumud{
+namespace ymd{
 
 class UsbFS:public OutputStream{
 public:
@@ -21,7 +21,7 @@ public:
     size_t pending() const {return 0;}
 };
 
-#if defined(CH32V30X) && defined(HAVE_USBFS)
+#if defined(CH32V30X) && defined(ENABLE_USBFS)
 extern UsbFS usbfs;
 #endif
 

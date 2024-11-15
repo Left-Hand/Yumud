@@ -3,7 +3,7 @@
 #include "drivers/Display/DisplayerPhy.hpp"
 #include "types/image/PackedImage.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class SSD13XX:public Displayer<Binary>{
 public:
@@ -17,7 +17,7 @@ protected:
         setpos_unsafe(area.position);
     }
 
-    void putpixel_unsafe(const Vector2i & pos, const Binary & color){
+    void putpixel_unsafe(const Vector2i & pos, const Binary color){
         auto & frame = fetchFrame();
         frame.putpixel_unsafe(pos, color);
     }

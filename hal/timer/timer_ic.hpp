@@ -2,7 +2,7 @@
 
 #include "timer_channel.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class TimerIC:public TimerChannel{
 public:

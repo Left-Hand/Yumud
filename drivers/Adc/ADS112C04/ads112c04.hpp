@@ -9,7 +9,7 @@
 #define ADS112C04_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class ADS112C04{
 public:
     enum class DataRate:uint8_t{

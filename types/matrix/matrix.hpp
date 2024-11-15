@@ -138,7 +138,7 @@
 #include "sys/stream/ostream.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 
 template<arithmetic T>

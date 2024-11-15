@@ -1,11 +1,11 @@
 #pragma once
 
-#include "hal/gpio/gpio.hpp"
+#include "KeyTrait.hpp"
 #include "dsp/filter/DigitalFilter.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
-class Key{
+class Key:public KeyTrait{
 protected:
     using Level = BoolLevel;
 
@@ -30,20 +30,20 @@ public:
         }
     }
 
-    void update(){
+    void update() override {
         last_state = now_state;
         now_state = filter.update(bool(*this));
     }
 
-    bool pressed(){
+    bool pressed() override{
         return last_state == false and now_state == true;
     }
 
-    operator bool()const{
+    operator bool() const {
         return m_gpio.read() == bool(level_);
     }
 
-    auto & io(){
+    GpioConcept & io() override{
         return m_gpio;
     }
 };

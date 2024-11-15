@@ -1,7 +1,7 @@
 #include "statled.hpp"
 
-using namespace yumud;
-using namespace yumud::foc::StepperComponents;
+using namespace ymd;
+using namespace ymd::foc::StepperComponents;
 
 
 void StatLed::run(){

@@ -1,6 +1,6 @@
 #include "sdi.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 #define DEBUG_DATA0_ADDRESS  ((volatile uint32_t*)0xE0000380)
 #define DEBUG_DATA1_ADDRESS  ((volatile uint32_t*)0xE0000384)
@@ -46,6 +46,6 @@ void Sdi::init(){
     *DEBUG_DATA0_ADDRESS = 0u;
 }
 
-#ifdef HAVE_SDI
+#ifdef ENABLE_SDI
 Sdi sdi;
 #endif

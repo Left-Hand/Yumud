@@ -5,7 +5,7 @@
 #include "bus/spi/spisw.hpp"
 
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 bool isInInterruptContext() {
     // uint64_t mstatus;

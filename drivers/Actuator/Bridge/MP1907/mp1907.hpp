@@ -9,7 +9,7 @@ struct TimerOC;
 struct TimerOCN;
 struct AdvancedTimer;
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class MP1907:public Coil2Driver{
 protected:

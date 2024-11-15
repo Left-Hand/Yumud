@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <functional>
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class NecEncoder{
 protected:

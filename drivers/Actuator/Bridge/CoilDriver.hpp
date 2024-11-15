@@ -6,7 +6,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class CoilDriverConcept: public Actuator{
 public:

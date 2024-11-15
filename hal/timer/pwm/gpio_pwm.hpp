@@ -4,7 +4,7 @@
 #include "pwm_channel.hpp"
 
 
-namespace yumud{
+namespace ymd{
 class GpioPwm:public PwmChannel, public Countable<uint16_t>{
 protected:
     Gpio & gpio_;

@@ -9,7 +9,7 @@
 #include <memory>
 
 
-namespace yumud{
+namespace ymd{
 
 template <typename ColorType>
 class Painter;
@@ -112,7 +112,7 @@ protected:
 
     virtual void setpos_unsafe(const Vector2i & pos) = 0;
     virtual void setarea_unsafe(const Rect2i & rect) = 0;
-    virtual void putpixel_unsafe(const Vector2i & pos, const ColorType & color) = 0;
+    virtual void putpixel_unsafe(const Vector2i & pos, const ColorType color) = 0;
 
     virtual void puttexture_unsafe(const Rect2i & rect, const ColorType * color_ptr){
         setarea_unsafe(rect);
@@ -122,7 +122,7 @@ protected:
                 putpixel_unsafe(Vector2i(x,y), color_ptr[i]);
     }
 
-    virtual void putrect_unsafe(const Rect2i & rect, const ColorType & color){
+    virtual void putrect_unsafe(const Rect2i & rect, const ColorType color){
         
         setarea_unsafe(rect);
         for(int x = rect.position.x; x < rect.position.x + rect.size.x; x++)
@@ -136,27 +136,29 @@ protected:
         }
     }
 
-    virtual void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const ColorType & color){
+    virtual void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const ColorType color){
         Rect2i area(pos, Vector2i(1, 8));
-        if(Rect2i(this->size, Vector2i()).contains(area)){
-            for(int i = 0; i < 8; i++){
+        // if(Rect2i(this->size, Vector2i()).contains(area)){
+        if(true){
+            for(size_t i = 0; i < 8; i++){
                 if(mask & (1 << i)) putpixel_unsafe(pos + Vector2i{0,i}, color);
             }
         }else{
-            for(int i = 0; i < 8; i++){
+            for(size_t i = 0; i < 8; i++){
                 if(mask & (1 << i))putpixel(pos + Vector2i{0,i}, color);
             }
         }
     }
 
-    virtual void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const ColorType & color){
+    virtual void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const ColorType color){
         Rect2i area(pos, Vector2i(8, 1));
-        if(Rect2i(this->size, Vector2i()).contains(area)){
-            for(int i = 0; i < 8; i++){
+        // if(Rect2i(this->size, Vector2i()).contains(area)){
+        if(true){
+            for(size_t i = 0; i < 8; i++){
                 if(mask & (0x80 >> i))putpixel_unsafe(pos + Vector2i{i,0}, color);
             }
         }else{
-            for(int i = 0; i < 8; i++){
+            for(size_t i = 0; i < 8; i++){
                 if(mask & (1 << i))putpixel(pos + Vector2i{i,0}, color);
             }
         }
@@ -229,7 +231,7 @@ protected:
 
     void setpos_unsafe(const Vector2i & pos) override { select_area.position = pos; }
     void setarea_unsafe(const Rect2i & rect) override { select_area = rect; }
-    void putpixel_unsafe(const Vector2i & pos, const ColorType & color) override { data[this->size.x * pos.y + pos.x] = color; }
+    void putpixel_unsafe(const Vector2i & pos, const ColorType color) override { data[this->size.x * pos.y + pos.x] = color; }
     void getpixel_unsafe(const Vector2i & pos, ColorType & color) const override { color = data[this->size.x * pos.y + pos.x]; }
 
     std::shared_ptr<DataType[]> data;

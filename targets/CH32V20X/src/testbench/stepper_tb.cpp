@@ -32,8 +32,8 @@
 #define MOTOR_TYPE MOTOR_TYPE_STEPPER
 
 // #include "dsp/filter/EKF.hpp"
-using namespace yumud::drivers;
-using namespace yumud::foc;
+using namespace ymd::drivers;
+using namespace ymd::foc;
 
 
 struct TurnSolver{
@@ -267,8 +267,9 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetVector(target);
 
         // if(logger.pending() == 0) logger.println(stp.getTarget(), stp.getPosition(), stp.getSpeed(), stp.getCurrent(), real_t(adc1.inj(1)), real_t(adc1.inj(2)));
-        auto target = demo(millis());
-        if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getCurrent(), stp.getRaddiff());
+        // auto target = demo(millis());
+        auto target = 10 * sin(t);
+        if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getTargetEstSpeed(), stp.getCurrent(), stp.getRaddiff());
         // Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(5 * sin(7 * t));

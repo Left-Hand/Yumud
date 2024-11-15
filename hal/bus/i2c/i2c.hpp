@@ -4,7 +4,7 @@
 #include "hal/gpio/gpio.hpp"
 #include "i2c_trait.hpp"
 
-namespace yumud{
+namespace ymd{
 class I2c:public ProtocolBus, public traits::I2cTrait{
 protected:
     GpioConcept & scl_gpio;

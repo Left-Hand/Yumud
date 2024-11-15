@@ -4,7 +4,7 @@
 #include "types/quat/quat_t.hpp"
 
 
-namespace yumud{
+namespace ymd{
 class Mahony{
 protected:
     real_t sampleFreq = 1000;

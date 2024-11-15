@@ -12,9 +12,9 @@
 
 using Sys::t;
 
-using namespace yumud;
-using namespace yumud::drivers;
-using namespace yumud::foc;
+using namespace ymd;
+using namespace ymd::drivers;
+using namespace ymd::foc;
 
 namespace gxm{
 
@@ -44,8 +44,15 @@ scexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
     return pos_center + Vector2{-distance, 0}.rotated(rad);
 }
 
+
+struct GrabSysConfig{
+    Scara::Config scara_config;
+    ZAxis::Config zaxis_config;
+    GrabModule::Config grab_config;
+};
+
 auto create_default_config(){
-    return GrabModule::Config{
+    return GrabSysConfig{
         .scara_config = {
             .solver_config = {
                 .should_length_meter = real_t(0.072),
@@ -70,27 +77,27 @@ auto create_default_config(){
         },
         
         .zaxis_config = {
-            .max_height_mm = 250,
-            .tray_height_mm = 200,
-            .free_height_mm = 150,
-            .ground_height_mm = 120,
+            .max_height = 0.25_r,
+            .tray_height = 0.2_r,
+            .free_height = 0.15_r,
+            .ground_height = 0.12_r,
             
 
             //1m / (3cm * PI)
             .meter_to_turns_scaler = real_t(1 / (0.03 * PI)),
             
             //1mm tolerance
-            .reached_threshold = real_t(0.001),
-            
-            .kp = 1,
-            .kd = 1
+            .reached_threshold = real_t(0.001),  
         },
 
-        .tray_pos = {
-            Vector2{-0.12_r   , 0.20_r},
-            Vector2{0       , 0.20_r},
-            Vector2{0.12_r    , 0.20_r}
+        .grab_config = {
+            .tray_pos = {
+                Vector2{-0.12_r   , 0.20_r},
+                Vector2{0       , 0.20_r},
+                Vector2{0.12_r    , 0.20_r}
+            }
         }
+
     };
 }
     
@@ -152,7 +159,7 @@ void host_main(){
     };
     
     GrabModule grab_module{
-        config, {
+        config.grab_config, {
             zaxis,
             scara
         }
@@ -169,6 +176,16 @@ void host_main(){
     });
     
     timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
+
+    CrossSolver::Config cross_config = {
+        .xoffs_length_meter = real_t(0.04),
+        .forearm_length_meter = real_t(0.1),
+        .upperarm_length_meter = real_t(0.1)
+    };
+    
+    CrossSolver cross_solver{
+        cross_config
+    };
      
     while(true){
 
@@ -193,7 +210,19 @@ void host_main(){
             bool c = (millis() % 2000 > 1000);
             c ? scara.pickUp() : scara.putDown();
         }
-        logger.println(joint_left.getRadian(), joint_right.getRadian());
+        // logger.println(joint_left.getRadian(), joint_right.getRadian());
+        // logger.println(cross_solver.inverse(real_t(0.07) + real_t(0.05) * sin(t)));
+        {
+            // auto rad = real_t(PI/4) + real_t(PI/4) * sin(t);
+            // logger.println(std::setprecision(3), cross_solver.forward(rad));
+        }
+        
+        {
+            auto height = real_t(0.14) + real_t(0.06) * sin(t);
+            auto inv_rad = cross_solver.inverse(height);
+            auto f_height = cross_solver.forward(inv_rad);
+            logger.println(std::setprecision(3), inv_rad, height, f_height);
+        }
         // pwm = real_t(0.5);
         // logger.println(duty);
         delay(20);

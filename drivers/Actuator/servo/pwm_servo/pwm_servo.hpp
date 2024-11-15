@@ -3,7 +3,7 @@
 #include "drivers/Actuator/servo/servo.hpp"
 #include "types/range/range_t.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class ScaledPwm:public PwmChannel{
 protected:

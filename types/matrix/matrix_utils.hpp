@@ -5,7 +5,7 @@
 #include "sys/math/real.hpp"
 #include "sys/stream/ostream.hpp"
 
-namespace yumud{
+namespace ymd{
 
 namespace MatirxUtils{
 

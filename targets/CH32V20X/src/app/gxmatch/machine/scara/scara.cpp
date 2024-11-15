@@ -8,7 +8,7 @@ void Scara::goHome(){
 }
 
 void Scara::moveXY(const Vector2 & pos){
-    auto [a,b] = solver_.invrese(pos);
+    auto [a,b] = solver_.inverse(pos);
     joint_l.setRadian(a + config_.joint_config.left_basis_radian);
     joint_r.setRadian(b + config_.joint_config.right_basis_radian);
 }

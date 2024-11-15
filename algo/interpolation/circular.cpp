@@ -1,6 +1,6 @@
 #include "circular.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 template<typename T>
 static __fast_inline T sq(const T x){

@@ -8,7 +8,7 @@
 #include <algorithm>
 
 
-namespace yumud{
+namespace ymd{
 template<arithmetic T>
 struct Range_t{
 public:
@@ -332,7 +332,7 @@ constexpr bool operator>=(const arithmetic auto & value, const Range_t<auto> & r
 using Rangei = Range_t<int>;
 using Range = Range_t<real_t>;
 
-// namespace yumud{
+// namespace ymd{
 __inline OutputStream & operator<<(OutputStream & os, const Range_t<auto> & value){
     return os << '[' << value.from << ',' << value.to << ')';
 }

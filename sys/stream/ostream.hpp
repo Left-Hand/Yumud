@@ -6,7 +6,7 @@
 #include "sys/string/string.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 
 class String;
@@ -29,18 +29,6 @@ protected:
     bool b_showpos = false;
     bool b_showbase = false;
     
-    template<typename T>
-    void print_arr(const T * _begin, const T * _end){
-        const int _size = _end - _begin;
-        *this << '[';
-        if(_size > 0){
-            for(size_t i = 0; i < size_t(_size - 1); ++i) *this << _begin[i] << ',';
-            *this << _begin[_size - 1];
-        }else{
-            *this << '\\';
-        }
-        *this << ']';
-    }
 
 
     void print_entity(auto && any){
@@ -87,8 +75,8 @@ public:
     OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const ::std::string & str){write(str.c_str(),str.length()); return *this;}
     OutputStream & operator<<(const ::std::string_view str){write(str.data(),str.length()); return *this;}
-    OutputStream & operator<<(const yumud::String & str);
-    OutputStream & operator<<(const yumud::StringView str);
+    OutputStream & operator<<(const ymd::String & str);
+    OutputStream & operator<<(const ymd::StringView str);
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
@@ -134,27 +122,39 @@ public:
     //#endregion
 
     //#region print vased containers
-    template<typename T, size_t size>
-    OutputStream & operator<<(const T (&arr)[size]){
-        print_arr(&arr[0], &arr[size]);
+    template<typename T>
+    void print_arr(const T * _begin, const size_t _size){
+        *this << '[';
+        if(_size > 0){
+            for(size_t i = 0; i < size_t(_size - 1); ++i) *this << _begin[i] << ',';
+            *this << _begin[_size - 1];
+        }else{
+            *this << '\\';
+        }
+        *this << ']';
+    }
+
+    template<typename T, size_t N>
+    OutputStream & operator<<(const T (&arr)[N]){
+        print_arr(&arr[0], N);
         return *this;
     }
 
-    template<typename T, size_t size>
-    OutputStream & operator<<(const ::std::array<T, size> & arr){
-        print_arr(arr.begin(), arr.end());
+    template<typename T, size_t N>
+    OutputStream & operator<<(const ::std::array<T, N> & arr){
+        print_arr(arr.begin(), N);
         return *this;
     }
 
     template<typename T>
     OutputStream & operator<<(const ::std::vector<T> & arr){
-        print_arr((const T *)&arr[0],(const T *)&arr[arr.size()]);
+        print_arr((const T *)&arr[0], arr.size());
         return *this;
     }
 
-    template<typename T, size_t arr_size>
-    OutputStream & operator<<(const sstl::vector<T, arr_size> & arr){
-        print_arr(arr.begin(), arr.end());
+    template<typename T, size_t N>
+    OutputStream & operator<<(const sstl::vector<T, N> & arr){
+        print_arr(arr.begin(), N);
         return *this;
     }
 

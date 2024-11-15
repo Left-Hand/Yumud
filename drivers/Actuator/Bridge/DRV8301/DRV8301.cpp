@@ -1,6 +1,6 @@
 #include "DRV8301.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 #define WRITE_REG(reg) writeReg(reg.address, reg);

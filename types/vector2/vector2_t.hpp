@@ -35,7 +35,7 @@
 #include "sys/stream/ostream.hpp"
 #include "sys/math/real.hpp"
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct Rect2_t;
@@ -134,6 +134,8 @@ public:
     
     constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
     constexpr Vector2_t<T> move_toward(const Vector2_t<T> & to, const arithmetic auto & delta) const;
+    __fast_inline constexpr Vector2_t<T> center(const Vector2_t<T> other) const 
+        {return {(this->x + other.x) / 2, (this->y + other.y) / 2};}
 
     constexpr Vector2_t<T> posmod(const arithmetic auto & mod) const;
     constexpr Vector2_t<T> posmodv(const Vector2_t<T> & modv) const;
@@ -144,13 +146,13 @@ public:
     constexpr Vector2_t<T> slerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
     constexpr Vector2_t<T> slide(const Vector2_t<T>  & n) const;
     constexpr Vector2_t<T> snapped(const Vector2_t<T> & by) const;
-    constexpr Vector2_t<T> cw() const {return Vector2_t<T>(-y, x);}
-    constexpr Vector2_t<T> ccw() const {return Vector2_t<T>(y, -x);}
+    __fast_inline constexpr Vector2_t<T> cw() const {return Vector2_t<T>(-y, x);}
+    __fast_inline constexpr Vector2_t<T> ccw() const {return Vector2_t<T>(y, -x);}
 
-    constexpr Vector2_t<T> flipy() const {return {x,-y};}
-    constexpr Vector2_t<T> flipx() const {return {-x,y};}
+    __fast_inline constexpr Vector2_t<T> flipy() const {return {x,-y};}
+    __fast_inline constexpr Vector2_t<T> flipx() const {return {-x,y};}
 
-    constexpr Vector2_t<T> swapxy() const {return {y,x};}
+    __fast_inline constexpr Vector2_t<T> swapxy() const {return {y,x};}
 
     __fast_inline constexpr Vector2_t<T> & operator=(const Vector2_t<auto> & b){
         x = static_cast<T>(b.x);

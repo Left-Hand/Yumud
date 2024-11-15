@@ -1,3 +1,3 @@
 #include "painter.hpp"
 
-using namespace yumud;
+using namespace ymd;

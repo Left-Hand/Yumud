@@ -89,7 +89,7 @@
     break;\
 }\
 
-namespace yumud{
+namespace ymd{
 
 class AsciiProtocolConcept{
 protected:

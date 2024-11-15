@@ -4,8 +4,8 @@
 // #include "hal/dma/dma.hpp"
 
 
-// using namespace yumud;
-// using namespace yumud::drivers;
+// using namespace ymd;
+// using namespace ymd::drivers;
 
 // void DShotChannel::update(uint16_t data){
 

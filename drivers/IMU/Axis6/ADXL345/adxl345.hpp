@@ -5,7 +5,7 @@
 #include "../drivers/IMU/IMU.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class ADXL345:public Axis6{
 public:

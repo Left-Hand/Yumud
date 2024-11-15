@@ -3,7 +3,7 @@
 #define I2CDRV_DEBUG(...)
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename T>
 requires valid_i2c_regaddr<T>

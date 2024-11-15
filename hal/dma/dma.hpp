@@ -14,7 +14,7 @@
 #include <type_traits>
 #include <array>
 
-namespace yumud{
+namespace ymd{
 
 class DmaChannel{
 
@@ -75,7 +75,7 @@ protected:
     }
 
     scexpr uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
-        #ifdef HAVE_DMA2
+        #ifdef ENABLE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
         return 1;
@@ -85,12 +85,12 @@ protected:
     scexpr uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
         uint8_t dma_index = getDmaIndex(_instance);
         switch(dma_index){
-            #ifdef HAVE_DMA1
+            #ifdef ENABLE_DMA1
             case 1:
                 return ((uint32_t)_instance - DMA1_Channel1_BASE) / (DMA1_Channel2_BASE - DMA1_Channel1_BASE) + 1;
             #endif
 
-            #ifdef HAVE_DMA2
+            #ifdef ENABLE_DMA2
             case 2:
                 if((uint32_t)_instance < DMA2_Channel7_BASE){ 
                     return ((uint32_t)_instance - DMA2_Channel1_BASE) / (DMA2_Channel2_BASE - DMA2_Channel1_BASE) + 1;
@@ -107,11 +107,11 @@ protected:
         uint8_t dma_index = getDmaIndex(_instance);
         uint8_t channel_index = getChannelIndex(_instance);
         switch(dma_index){
-            #ifdef HAVE_DMA1
+            #ifdef ENABLE_DMA1
             case 1:
                 return (DMA1_IT_TC1 << ((CTZ(DMA1_IT_TC2) - CTZ(DMA1_IT_TC1)) * (channel_index - 1)));
             #endif
-            #ifdef HAVE_DMA2
+            #ifdef ENABLE_DMA2
             case 2:
                 if((uint32_t)_instance <= DMA2_Channel7_BASE){ 
                     return ((uint32_t)(DMA2_IT_TC1 & 0xff) << ((CTZ(DMA2_IT_TC2) - CTZ(DMA2_IT_TC1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
@@ -130,11 +130,11 @@ protected:
         uint8_t dma_index = getDmaIndex(_instance);
         uint8_t channel_index = getChannelIndex(_instance);
         switch(dma_index){
-            #ifdef HAVE_DMA1
+            #ifdef ENABLE_DMA1
             case 1:
                 return (DMA1_IT_HT1 << ((CTZ(DMA1_IT_HT2) - CTZ(DMA1_IT_HT1)) * (channel_index - 1)));
             #endif
-            #ifdef HAVE_DMA2
+            #ifdef ENABLE_DMA2
             case 2:
                 if((uint32_t)_instance <= DMA2_Channel7_BASE){ 
                     return ((uint32_t)(DMA2_IT_HT1 & 0xff) << ((CTZ(DMA2_IT_HT2) - CTZ(DMA2_IT_HT1)) * (channel_index - 1))) | (uint32_t)(0x10000000);
@@ -228,14 +228,14 @@ public:
 extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
 
 
-#ifdef HAVE_DMA1
-    extern yumud::DmaChannel dma1Ch1;
-    extern yumud::DmaChannel dma1Ch2;
-    extern yumud::DmaChannel dma1Ch3;
-    extern yumud::DmaChannel dma1Ch4;
-    extern yumud::DmaChannel dma1Ch5;
-    extern yumud::DmaChannel dma1Ch6;
-    extern yumud::DmaChannel dma1Ch7;
+#ifdef ENABLE_DMA1
+    extern ymd::DmaChannel dma1Ch1;
+    extern ymd::DmaChannel dma1Ch2;
+    extern ymd::DmaChannel dma1Ch3;
+    extern ymd::DmaChannel dma1Ch4;
+    extern ymd::DmaChannel dma1Ch5;
+    extern ymd::DmaChannel dma1Ch6;
+    extern ymd::DmaChannel dma1Ch7;
 
     DMA_XY_TEMPLATE(1,1)
     DMA_XY_TEMPLATE(1,2)
@@ -247,18 +247,18 @@ extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
 
 #endif
 
-#ifdef HAVE_DMA2
-    extern yumud::DmaChannel dma2Ch1;
-    extern yumud::DmaChannel dma2Ch2;
-    extern yumud::DmaChannel dma2Ch3;
-    extern yumud::DmaChannel dma2Ch4;
-    extern yumud::DmaChannel dma2Ch5;
-    extern yumud::DmaChannel dma2Ch6;
-    extern yumud::DmaChannel dma2Ch7;
-    extern yumud::DmaChannel dma2Ch8;
-    extern yumud::DmaChannel dma2Ch9;
-    extern yumud::DmaChannel dma2Ch10;
-    extern yumud::DmaChannel dma2Ch11;
+#ifdef ENABLE_DMA2
+    extern ymd::DmaChannel dma2Ch1;
+    extern ymd::DmaChannel dma2Ch2;
+    extern ymd::DmaChannel dma2Ch3;
+    extern ymd::DmaChannel dma2Ch4;
+    extern ymd::DmaChannel dma2Ch5;
+    extern ymd::DmaChannel dma2Ch6;
+    extern ymd::DmaChannel dma2Ch7;
+    extern ymd::DmaChannel dma2Ch8;
+    extern ymd::DmaChannel dma2Ch9;
+    extern ymd::DmaChannel dma2Ch10;
+    extern ymd::DmaChannel dma2Ch11;
 
     DMA_XY_TEMPLATE(2,1)
     DMA_XY_TEMPLATE(2,2)

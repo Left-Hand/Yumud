@@ -1,2 +1,2 @@
 
-// using namespace yumud;
+// using namespace ymd;

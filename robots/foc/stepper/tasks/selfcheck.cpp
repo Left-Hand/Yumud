@@ -1,6 +1,6 @@
 #include "selfcheck.hpp"
 
-using namespace yumud::foc;
+using namespace ymd::foc;
 
 void SelfCheckTasker::run(){
     switch(sub_state){

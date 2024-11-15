@@ -1,7 +1,7 @@
 #include "odometer.hpp"
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 
 void Odometer::update(){

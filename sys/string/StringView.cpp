@@ -2,7 +2,7 @@
 #include "String.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 StringView::StringView(const String &str):data_(str.c_str()), size_(str.length()){
 

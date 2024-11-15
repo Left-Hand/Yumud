@@ -4,7 +4,7 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 using Sys::t;
 

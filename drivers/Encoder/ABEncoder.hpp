@@ -6,7 +6,7 @@
 #include "hal/exti/exti.hpp"
 #include "hal/timer/timer.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class ABEncoderConcept:public AbsoluteEncoder{
 protected:

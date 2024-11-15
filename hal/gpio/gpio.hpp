@@ -3,7 +3,7 @@
 #include "port_concept.hpp"
 #include "gpio_utils.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class GpioConcept{
 public:

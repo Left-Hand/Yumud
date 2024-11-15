@@ -1,6 +1,6 @@
 #pragma once
 
-namespace yumud{
+namespace ymd{
 class PwmChannel;
 }
 
@@ -8,7 +8,7 @@ namespace gxm{
 
 class Buzzer{
 protected:
-    using Inst = yumud::PwmChannel;
+    using Inst = ymd::PwmChannel;
     Inst & instance_;
 
 public:

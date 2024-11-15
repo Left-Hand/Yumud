@@ -5,24 +5,24 @@
 #include "user_defs.h"
 
 #ifdef CH32V20X
-    // #define HAVE_SDI
-    #define HAVE_GPIOA
-    #define HAVE_GPIOB
-    #define HAVE_GPIOC
-    #define HAVE_GPIOD
-    #define HAVE_DMA1
+    // #define ENABLE_SDI
+    #define ENABLE_GPIOA
+    #define ENABLE_GPIOB
+    #define ENABLE_GPIOC
+    #define ENABLE_GPIOD
+    #define ENABLE_DMA1
 
 #elif defined(CH32V30X)
-    #define HAVE_SDI
-    #define HAVE_GPIOA
-    #define HAVE_GPIOB
-    #define HAVE_GPIOC
-    #define HAVE_GPIOD
-    #define HAVE_GPIOE
+    #define ENABLE_SDI
+    #define ENABLE_GPIOA
+    #define ENABLE_GPIOB
+    #define ENABLE_GPIOC
+    #define ENABLE_GPIOD
+    #define ENABLE_GPIOE
     #define ENABLE_DVP
-    #define HAVE_RNG
-    #define HAVE_DMA1
-    #define HAVE_DMA2
+    #define ENABLE_RNG
+    #define ENABLE_DMA1
+    #define ENABLE_DMA2
 #endif
 
 

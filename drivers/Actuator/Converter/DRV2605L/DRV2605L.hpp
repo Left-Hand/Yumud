@@ -11,7 +11,7 @@
 #define DRV2605L_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class DRV2605L{
 public:

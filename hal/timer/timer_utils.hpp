@@ -6,7 +6,7 @@
 #include <functional>
 
 
-namespace yumud::TimerUtils{
+namespace ymd::TimerUtils{
     enum class Mode:uint16_t{
         Up = TIM_CounterMode_Up,
         Down = TIM_CounterMode_Down,

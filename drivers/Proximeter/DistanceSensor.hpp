@@ -4,7 +4,7 @@
 
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class DistanceSensor{
 public:
     virtual real_t getDistance();

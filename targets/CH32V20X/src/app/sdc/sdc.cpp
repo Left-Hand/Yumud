@@ -1,48 +1,34 @@
 #include "../../testbench/tb.h"
-#include "sdc.hpp"
 
-#include "../hal/bus/spi/spihw.hpp"
-#include "../hal/bus/spi/spisw.hpp"
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/spisw.hpp"
+
+#include "drivers/Memory/Flash/X25QXX.hpp"
+
+using namespace ymd::drivers;
 
 void w25qxx_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(576000);
 
-    // auto & spi = spi1;
-    auto spi = SpiSw(SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO);
+    auto & spi = spi1;
     auto & w25_cs = portD[5];
 
     spi.bindCsPin(w25_cs, 0);
-    spi.init(1000000);
-    // spi.init(18000000, CommMethod::Blocking, CommMethod::None);
-    // SPI1_MOSI_GPIO.afpp();
-    // SPI1_SCLK_GPIO.afpp();
-    // SPI1_MISO_GPIO.inflt();
+    spi.init(36_MHz);
+    X25QXX w25{SpiDrv{spi, 0}, 1_MB};
+    std::array<uint8_t, 8> arr;
+    delay(20);
+    arr = {1,1,4,5,1,4};
 
-    // RCC_APB2PeriphClockCmd(RCC_APB2Periph_SPI1, ENABLE);
-    // GPIO_PinRemapConfig(SPI1_REMAP, ENABLE);
+    scexpr size_t addr = 0;
 
-    // SPI_InitTypeDef SPI_InitStructure;
-    // SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-    // SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-    // SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-    // SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-    // SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-    // SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-    // SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_4;
-    // SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-    // SPI_InitStructure.SPI_CRCPolynomial = 7;
-    // SPI_Init(SPI1, &SPI_InitStructure);
+    w25.erase(addr, 256);
+    w25.store(addr,arr.begin(), arr.size());
 
-    // SPI_Cmd(SPI1, ENABLE);
-    // W25QXX w25{SpiDrv{spi, 0}};
     while(true){
-        // DEBUG_PRINTLN(w25.getDeviceManufacturer());
-        DEBUG_PRINTLN(millis());
-        spi1.write(0xa5);
-        w25_cs = !w25_cs;
-        SPI1_SCLK_GPIO = !SPI1_SCLK_GPIO;
-        SPI1_MOSI_GPIO = !SPI1_MOSI_GPIO;
-        SPI1_MISO_GPIO = !SPI1_MISO_GPIO;
+
+        w25.load(addr,arr.begin(), arr.size());
+        DEBUG_PRINTLN(std::oct, arr);
         delay(200);
     }
 }

@@ -16,7 +16,7 @@
 #define BMM150_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class BMM150:public Magnetometer{
 public:

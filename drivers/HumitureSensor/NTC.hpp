@@ -3,7 +3,7 @@
 #include "TempSensor.hpp"
 #include "hal/adc/adc_channel.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class NTC:public TempSensor{
 protected:

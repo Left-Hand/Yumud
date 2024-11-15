@@ -1,3 +1,3 @@
 #include "adc2.hpp"
 
-using namespace yumud;
+using namespace ymd;

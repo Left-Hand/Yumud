@@ -8,7 +8,7 @@
 #include "hal/bus/i2c/i2c.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 using Sys::t;
 
 void memory_tb(OutputStream & logger);

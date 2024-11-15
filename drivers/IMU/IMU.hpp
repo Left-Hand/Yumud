@@ -1,7 +1,7 @@
 #pragma once
 #include "drivers/device_defs.h"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class IMU_Base{
 protected:

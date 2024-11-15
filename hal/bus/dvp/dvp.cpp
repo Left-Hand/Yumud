@@ -1,6 +1,6 @@
 #include "dvp.hpp"
 
-using namespace yumud;
+using namespace ymd;
 #ifdef ENABLE_DVP
 
 void Dvp::install(){

@@ -6,7 +6,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "types/basis/Basis_t.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void m3508_main(){
     scexpr size_t cb_freq = 200;

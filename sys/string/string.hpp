@@ -30,7 +30,7 @@
 #include "StringView.hpp"
 #include "sys/string/utils/StringUtils.hpp"
 
-namespace yumud{
+namespace ymd{
 	
 // An inherited class for holding the result of a concatenation.  These
 // result objects are assumed to be writable by subsequent concatenations.

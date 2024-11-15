@@ -1,6 +1,6 @@
 #include "bh1750.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void BH1750::changeMeasureTime(const uint16_t ms){
     uint8_t x;

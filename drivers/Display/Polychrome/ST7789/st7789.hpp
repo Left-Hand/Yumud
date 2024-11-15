@@ -4,7 +4,7 @@
 #include "types/image/image.hpp"
 #include "hal/bus/spi/spi.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class ST7789:public Displayer<RGB565>{
 private:
@@ -49,13 +49,15 @@ protected:
     void setpos_unsafe(const Vector2i & pos) override;
     void setarea_unsafe(const Rect2i & rect) override;
 
-    __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 & color){
+    __fast_inline void putpixel_unsafe(const Vector2i & pos, const RGB565 color){
         setpos_unsafe(pos);
-        interface.writeData(uint16_t(color));
+        interface.writeData16(uint16_t(color));
     }
 
-    void putrect_unsafe(const Rect2i & rect, const RGB565 & color) override;
+    void putrect_unsafe(const Rect2i & rect, const RGB565 color) override;
     void puttexture_unsafe(const Rect2i & rect, const RGB565 * color_ptr) override;
+    void putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color) override;
+    void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color) override;
 public:
     ST7789(const DisplayerPhySpi & _interface, const Vector2i & _size):
             ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}

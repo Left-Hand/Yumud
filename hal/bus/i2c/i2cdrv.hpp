@@ -9,7 +9,7 @@
 #include <initializer_list>
 
 
-namespace yumud{
+namespace ymd{
 
 template <typename T>
 concept valid_i2c_regaddr = std::integral<T> and (sizeof(T) <= 2) and std::is_unsigned_v<T>;

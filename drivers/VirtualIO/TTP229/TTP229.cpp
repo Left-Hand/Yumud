@@ -1,6 +1,6 @@
 #include "TTP229.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void TTP229::scan(){
     uint16_t new_map = 0;

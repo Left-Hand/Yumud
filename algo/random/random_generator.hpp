@@ -3,7 +3,7 @@
 #include "sys/core/platform.h"
 #include <cstdint>
 
-namespace yumud{
+namespace ymd{
 
 
 class RandomGenerator {

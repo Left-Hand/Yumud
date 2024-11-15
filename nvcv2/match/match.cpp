@@ -2,8 +2,8 @@
 #include "data/autogen/digit_images.hpp"
 
 
-using namespace yumud;
-using namespace yumud::nvcv2;
+using namespace ymd;
+using namespace ymd::nvcv2;
 
 void Matcher::init(){
 
@@ -16,7 +16,7 @@ int Matcher::number(const Image<Grayscale> & src, const Rect2i & roi, const real
 
     for(size_t i = 0; i < N; i++){
         Image<Grayscale> tmp = Image<Grayscale>::load_from_buf(digit_images[i], tmp_size);
-        result[i] = yumud::nvcv2::Match::template_match(fault, tmp);
+        result[i] = ymd::nvcv2::Match::template_match(fault, tmp);
     }
 
 
@@ -40,8 +40,8 @@ int Matcher::number(const Image<Binary> & src, const Rect2i & roi){
     auto begin = millis();
     for(size_t i = 0; i < N; i++){
         Image<Binary> tmp = Image<Binary>::load_from_buf(digit_bina_images[i], tmp_size);
-        yumud::nvcv2::Pixels::inverse(tmp);
-        result[i] = yumud::nvcv2::Match::template_match(src, tmp, roi.position);
+        ymd::nvcv2::Pixels::inverse(tmp);
+        result[i] = ymd::nvcv2::Match::template_match(src, tmp, roi.position);
     }
 
     auto elp = millis() - begin;

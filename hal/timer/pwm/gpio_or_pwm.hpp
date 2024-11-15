@@ -4,7 +4,7 @@
 
 #include <variant>
 
-namespace yumud{
+namespace ymd{
 
 struct GpioConcept;
 

@@ -1,7 +1,7 @@
 #include "dma.hpp"
 
 
-using namespace yumud;
+using namespace ymd;
 
 #define DMA_DONE_CB(x,y) dma##x##_ch##y##_done_cb
 #define DMA_HALF_CB(x,y) dma##x##_ch##y##_half_cb
@@ -63,7 +63,7 @@ case 2:\
     break;\
 
 
-#ifdef HAVE_DMA2
+#ifdef ENABLE_DMA2
 
 #define DMA_BIND_CB_TEMPLATE(name,uname)\
 void DmaChannel::bind##name##Cb(Callback && cb){\
@@ -84,7 +84,7 @@ void DmaChannel::bind##name##Cb(Callback && cb){\
 
 #endif
 
-#ifdef HAVE_DMA1
+#ifdef ENABLE_DMA1
 DMA_IT_TEMPLATE(1,1);
 DMA_IT_TEMPLATE(1,2);
 DMA_IT_TEMPLATE(1,3);
@@ -94,7 +94,7 @@ DMA_IT_TEMPLATE(1,6);
 DMA_IT_TEMPLATE(1,7);
 #endif
 
-#ifdef HAVE_DMA2
+#ifdef ENABLE_DMA2
 DMA_IT_TEMPLATE(2,1);
 DMA_IT_TEMPLATE(2,2);
 DMA_IT_TEMPLATE(2,3);
@@ -119,7 +119,7 @@ DMA_BIND_CB_TEMPLATE(Half, HALF)
 #undef DMA2_BIND_CB_TEMPLATE
 #undef DMA_BIND_CB_TEMPLATE
 
-#ifdef HAVE_DMA1
+#ifdef ENABLE_DMA1
 DmaChannel dma1Ch1{DMA1_Channel1};
 DmaChannel dma1Ch2{DMA1_Channel2};
 DmaChannel dma1Ch3{DMA1_Channel3};
@@ -129,7 +129,7 @@ DmaChannel dma1Ch6{DMA1_Channel6};
 DmaChannel dma1Ch7{DMA1_Channel7};
 #endif
 
-#ifdef HAVE_DMA2
+#ifdef ENABLE_DMA2
 DmaChannel dma2Ch1{DMA2_Channel1};
 DmaChannel dma2Ch2{DMA2_Channel2};
 DmaChannel dma2Ch3{DMA2_Channel3};
@@ -145,7 +145,7 @@ DmaChannel dma2Ch11{DMA2_Channel11};
 
 void DmaChannel::enableRcc(){
 
-    #ifdef HAVE_DMA2
+    #ifdef ENABLE_DMA2
     if(instance < DMA2_Channel1){
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
     }else{
@@ -243,7 +243,7 @@ void DmaChannel::enableIt(const NvicPriority _priority, const bool en){
         case 1:
             irq = (IRQn)((int)DMA1_Channel1_IRQn + ((int)(DMA1_Channel2_IRQn - DMA1_Channel1_IRQn) * (channel_index - 1)));
             break;
-        #ifdef HAVE_DMA2
+        #ifdef ENABLE_DMA2
         case 2:
             if(channel_index <= 5){
                 irq = (IRQn)((int)DMA2_Channel1_IRQn + ((int)(DMA2_Channel2_IRQn - DMA2_Channel1_IRQn) * (channel_index - 1)));

@@ -1,6 +1,6 @@
 #include "random_generator.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 RandomGenerator::RandomGenerator(){
     seed(0);

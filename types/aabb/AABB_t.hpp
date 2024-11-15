@@ -39,7 +39,7 @@
  * This is implemented by a point (position) and the box size.
  */
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct AABB_t{

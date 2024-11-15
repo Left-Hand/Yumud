@@ -8,7 +8,7 @@
 #include "types/vector2/vector2_t.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 struct Action {
 public:

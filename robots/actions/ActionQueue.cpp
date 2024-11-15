@@ -1,6 +1,6 @@
 #include "ActionQueue.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 
 void ActionQueue::update() {

@@ -1,6 +1,6 @@
 #include "robots/foc/stepper/stepper.hpp"
 
-using namespace yumud::foc;
+using namespace ymd::foc;
 
 void FOCStepper::active_task(){
     using Result = CtrlResult;
@@ -65,10 +65,10 @@ void FOCStepper::active_task(){
             }
         } 
 
-        if(SIGN_DIFF(result.raddiff, meta.spd) and ABS(meta.spd) > 1){
-            // result = {ABS(meta.max_curr) * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), result.current)};
-            result = {0, SIGN_AS(real_t(PI/2), result.raddiff)};
-        }
+        // if(SIGN_DIFF(result.raddiff, meta.spd) and ABS(meta.spd) > 1){
+        //     // result = {ABS(meta.max_curr) * MAX(real_t(1) - meta.spd * real_t(0.1), real_t(0)), SIGN_AS(real_t(PI/2), result.current)};
+        //     result = {0, SIGN_AS(real_t(PI/2), result.raddiff)};
+        // }
         
         curr_ctrl.update(result);
         meta.curr = curr_ctrl.curr();

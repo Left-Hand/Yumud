@@ -5,7 +5,7 @@
 #include "sys/stream/stream.hpp"
 #include "bus_enums.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class Bus:public BusTrait{
 public:
@@ -41,12 +41,25 @@ protected:
     Mode mode = Mode::TxRx;
 
 private:
-    class Lock{
+    class Locker{
+    public:
+        Locker * last_ = nullptr;
+        Locker * next_ = nullptr;
     protected:
         uint16_t req:8 = 0;
         uint16_t oninterrupt_:1 = false;
         uint16_t locked_:1 = false;
     public:
+        DELETE_COPY_AND_MOVE(Locker)
+
+        Locker(){;}
+        Locker(Locker * last, Locker * next):last_(last), next_(next){;}
+
+        ~Locker(){
+            unlock();
+            last_ = next_;
+        }
+
         void lock(const uint8_t index);
 
         void unlock(){
@@ -60,8 +73,8 @@ private:
         }
     };
 
-    Lock __m_lock__;
-    Lock * locker = nullptr;
+    Locker __own_locker__;
+    Locker * locker = nullptr;
 
     virtual Error lead(const uint8_t _address) = 0;
     virtual void trail() = 0;
@@ -72,8 +85,12 @@ private:
     bool owned_by(const uint8_t index = 0);
 
 public:
-    Bus():locker(&__m_lock__){;}
+    Bus():locker(&__own_locker__){;}
     DELETE_COPY_AND_MOVE(Bus)
+
+    Locker createLocker(){
+        return Locker{locker, locker};
+    }
 
     Error begin(const uint8_t index){
         if(false == locked()){

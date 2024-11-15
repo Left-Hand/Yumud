@@ -3,7 +3,7 @@
 #include "sys/core/platform.h"
 
 
-namespace yumud{
+namespace ymd{
 class Bkp;
 
 struct BkpItem{

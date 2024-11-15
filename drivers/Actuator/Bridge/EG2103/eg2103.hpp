@@ -8,7 +8,7 @@
 class TimerOC;
 class TimerOCN;
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class EG2103:public Coil2Driver{
 protected:

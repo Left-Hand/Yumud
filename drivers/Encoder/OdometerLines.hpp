@@ -3,7 +3,7 @@
 #include "Odometer.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class OdometerScaled:public Odometer{
 protected:
     real_t scale;

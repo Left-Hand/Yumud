@@ -1,8 +1,8 @@
 #include "robots/foc/focmotor.hpp"
 
-using namespace yumud;
-using namespace yumud::foc;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::foc;
+using namespace ymd::drivers;
 
 void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
 

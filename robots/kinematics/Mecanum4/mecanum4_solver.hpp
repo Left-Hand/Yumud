@@ -5,7 +5,7 @@
 #include "types/vector2/vector2_t.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 struct PoseVelocity2D_t{

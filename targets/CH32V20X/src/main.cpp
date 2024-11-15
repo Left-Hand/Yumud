@@ -7,6 +7,8 @@
 #include "testbench/tb.h"
 #include "app/gui/gui.hpp"
 #include "app/gxmatch/gxmatch.hpp"
+#include "app/eyetrack/etk.hpp"
+
 
 void preinit(){
     RCC_PCLK1Config(RCC_HCLK_Div1);
@@ -68,7 +70,7 @@ int main(){
     preinit();
     // DEBUG_PRINTLN("??");
     // gui_main();
-    // math_tb(uart2);
+    math_tb(uart2);
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
@@ -77,6 +79,8 @@ int main(){
     // dshot_main();
     // usbcdc_tb();
     // embd_main();
+    // gxm::host_main();
+
     // w25qxx_main();
     // smc_main();
     // can_tb(logger, can1, true);
@@ -91,7 +95,8 @@ int main(){
     // embd_main();
     // mpu6050_main();
     gui_main();
-    // gxm::host_main();
+    // sdc_main();
+    gxm::host_main();
     // can_tb(logger, can1);
     while(true);
     #endif

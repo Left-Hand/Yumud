@@ -3,7 +3,7 @@
 #include "../adc.hpp"
 
 
-namespace yumud{
+namespace ymd{
 class Adc1:public AdcPrimary{
 protected:
     volatile uint8_t regular_conv_index = 0;
@@ -22,7 +22,7 @@ public:
 
 };
 
-#ifdef HAVE_ADC1
+#ifdef ENABLE_ADC1
 static inline Adc1 adc1;
 #endif
 

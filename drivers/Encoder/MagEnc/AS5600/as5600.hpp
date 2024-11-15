@@ -2,7 +2,7 @@
 #include "drivers/device_defs.h"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class AS5600{
 public:
     enum class PowerMode:uint8_t{

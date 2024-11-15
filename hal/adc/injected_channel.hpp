@@ -2,7 +2,7 @@
 
 #include "adc_channel.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class InjectedChannel: public AdcChannelOnChip{
 protected:

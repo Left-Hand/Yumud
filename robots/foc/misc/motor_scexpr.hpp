@@ -3,7 +3,7 @@
 #include "sys/math/real.hpp"
 
 
-namespace yumud::foc{
+namespace ymd::foc{
 // scexpr uint32_t foc_freq = 32768;
 // scexpr uint32_t chopper_freq = 32768;
 // scexpr uint32_t foc_freq = 8192 * 4;

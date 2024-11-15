@@ -1,7 +1,7 @@
 #include "can.hpp"
 #include "hal/nvic/nvic.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 using Callback = Can::Callback;
 

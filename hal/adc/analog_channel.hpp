@@ -2,7 +2,7 @@
 
 #include "sys/math/real.hpp"
 
-namespace yumud{
+namespace ymd{
 
 struct AnalogChannel{
 public:

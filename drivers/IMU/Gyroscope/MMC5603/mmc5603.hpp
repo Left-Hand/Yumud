@@ -13,7 +13,7 @@
 #define MMC5603_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class MMC5603:public Magnetometer{
 public:

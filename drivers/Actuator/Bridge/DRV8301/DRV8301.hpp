@@ -8,7 +8,7 @@
 #include <array>
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class DRV8301:public Coil3Driver{
 public:

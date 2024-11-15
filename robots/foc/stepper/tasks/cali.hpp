@@ -2,9 +2,9 @@
 
 #include "robots/foc/motor_utils.hpp"
 
-namespace yumud::foc{
+namespace ymd::foc{
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 class CaliTasker{
 protected:

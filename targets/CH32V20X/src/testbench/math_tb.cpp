@@ -9,11 +9,21 @@
 #include "types/plane/plane_t.hpp"
 #include "types/aabb/aabb_t.hpp"
 #include "types/transform3d/transform3d_t.hpp"
-#include "types/transform2d/transform2d.hpp"
+#include "types/transform2d/transform2d_t.hpp"
+
+#include "types/segment2d/Segment2d_t.hpp"
+#include "types/line2d/Line2D_t.hpp"
+#include "types/ray2d/Ray2D_t.hpp"
+#include "types/Circle2D/Circle2D_t.hpp"
+#include "types/Arc2D/Arc2D_t.hpp"
+#include "types/Bezier2D/Bezier2D_t.hpp"
+
 
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Mecanum4/mecanum4_solver.hpp"
 #include "robots/kinematics/WheelLeg/wheelleg_solver.hpp"
+
+#include "sys/math/int/int_t.hpp"
 #include <ranges>
 
 #define EQUAL_ASSERT(a, b)\
@@ -64,17 +74,7 @@ void math_tb(UartHw & logger){
 
     //     delay(200);
     // }
-    logger.println("/?");
-    while(true){
-        // if(logger.pending() == 0) logger.println(millis());
-        while(logger.pending());
-        logger.println(millis());
-        // else{
-            // logger.println(logger.pending());
-            // delay(1);
-        // }
-        delay(10);
-    }
+
     // #define  WHEELLEG_TB
 
 
@@ -171,6 +171,45 @@ void math_tb(UartHw & logger){
         print(delta_micros, transform);
         Sys::Clock::reCalculateTime();
     }
+    #endif
+
+
+    // #define  SEGMENT_TB
+    #ifdef SEGMENT_TB
+
+    using Segment = Segment2D_t<real_t>;
+
+    auto seg = Segment{}
+    #endif
+
+
+    #define  LINE_TB
+    #ifdef LINE_TB
+
+    using Line = Line2D_t<real_t>;
+
+
+    auto line = Line{Vector2{1,0}, Vector2{0,1}};
+    auto other = Line{Vector2{0,0}, real_t(PI/4)};
+    print("line", line);
+    print("other",other);
+
+    print(line.xfromy(1));
+    print(line.yfromx(-1));
+    print("abc:", line.abc());
+    print("angle:", line.angle());
+    print("abs", line.abs());
+    print("dist", line.distance_to(Vector2{0.5_r, 0.5_r}));
+    print("dist", line.distance_to(Vector2{0.5_r, 0.4_r}));
+    print("intersection", line.intersection(Line{Vector2{0,0}, atan(real_t(0.3333_r))}));
+    print("foot", line.foot(Vector2{0, 0.5_r}));
+    print("mirror", line.mirror(Vector2{0, 0.5_r}));
+    print("perpendicular", line.perpendicular(Vector2{0, 0.5_r}));
+    print("orthogonal_with", line.orthogonal_with(Line{Vector2{0,0}, real_t(PI/4)}));
+    print("unit", line.unit());
+    print("rebase", line.rebase(Vector2{-1,0}));
+    print("rotated", line.rotated(Vector2{-1,0}, real_t(PI/4)));
+    print("normal", line.normal(Vector2{-1,0}));
     #endif
 
     while(true);

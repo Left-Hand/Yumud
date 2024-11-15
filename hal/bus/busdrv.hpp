@@ -5,7 +5,7 @@
 #include <initializer_list>
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename BusType>
 concept is_bus = std::is_base_of_v<Bus, BusType>;
@@ -53,6 +53,8 @@ protected:
 
 public:
     NonProtocolBusDrv(BusType & _bus, const uint8_t _index) : BusDrv<BusType>(_bus, _index) {}
+
+    void end(){bus.end();}
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_writable_bus<BusType>

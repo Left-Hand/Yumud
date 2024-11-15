@@ -4,7 +4,7 @@
 #include "robots/foc/motor_utils.hpp"
 
 
-namespace yumud::foc{
+namespace ymd::foc{
 class RemoteFOCMotor:public FOCMotorConcept, public CanProtocolConcept{
 
 protected:

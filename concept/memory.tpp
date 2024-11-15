@@ -1,22 +1,22 @@
 #include "storage.hpp"
 
-namespace yumud{
+namespace ymd{
 void Memory::store(const auto & data, const Address loc){
-    storage.store(&data, (Address)sizeof(data), loc);
+    storage_.store(loc, &data, (Address)sizeof(data));
 }
 
 void Memory::store(auto && data, const Address loc){
-    storage.store(&data, (Address)sizeof(data), loc);
+    storage_.store(loc, &data, (Address)sizeof(data));
 }
 
 void Memory::load(auto & data, const Address loc){
-    storage.load(&data, (Address)sizeof(data), loc);
+    storage_.load(loc, &data, (Address)sizeof(data));
 }
 
 template<typename T>
 T Memory::load(const Address loc){
     T data;
-    storage.load(&data, (Address)sizeof(data), loc);
+    storage_.load(loc, &data, (Address)sizeof(data));
     return data;
 }
 

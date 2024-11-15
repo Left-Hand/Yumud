@@ -51,5 +51,5 @@
 
 
 
-#define HAVE_USBFS
+#define ENABLE_USBFS
 

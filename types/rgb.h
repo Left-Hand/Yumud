@@ -1,17 +1,17 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/math/uint24_t.h"
 
 #include <tuple>
 #include <cstring>
 
-#include "uint24_t.h"
 
 
 #ifdef __cplusplus
 #include "sys/math/real.hpp"
 
-namespace yumud{
+namespace ymd{
 enum class ColorEnum:uint32_t{
     WHITE   = 0xFFFFFF,    // White color
     YELLOW  = 0xFFFF00,    // Yellow color

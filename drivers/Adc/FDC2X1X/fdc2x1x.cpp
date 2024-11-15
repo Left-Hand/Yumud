@@ -1,6 +1,6 @@
 #include "fdc2x1x.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 
 void FDC2X1X::init(){

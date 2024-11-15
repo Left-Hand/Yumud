@@ -3,7 +3,7 @@
 #include "../drivers/device_defs.h"
 #include "sys/math/real.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class AD9833{
 protected:

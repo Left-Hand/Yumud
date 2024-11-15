@@ -12,7 +12,7 @@
 
 #include "../thirdparty/lodepng/lodepng.h"
 
-using namespace yumud::nvcv2;
+using namespace ymd::nvcv2;
 
 #ifdef CH32V30X
 

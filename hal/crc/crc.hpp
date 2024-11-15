@@ -4,7 +4,7 @@
 #include <initializer_list>
 
 
-namespace yumud{
+namespace ymd{
 class Crc{
 protected:
     Crc(){;}

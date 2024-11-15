@@ -1,7 +1,7 @@
 #include "timer_channel.hpp"
 #include "hal/dma/dma.hpp"
 
-using namespace yumud;
+using namespace ymd;
 volatile uint16_t & TimerChannel::from_channel_to_cvr(const Channel _channel){
     switch(_channel){
         default:

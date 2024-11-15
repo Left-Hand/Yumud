@@ -2,7 +2,7 @@
 
 #include "Odometer.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class OdometerLines:public OdometerScaled{
 public:

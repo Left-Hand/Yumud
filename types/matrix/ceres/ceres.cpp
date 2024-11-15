@@ -2,4 +2,4 @@
 #include "ceres_rotation.hpp"
 
 
-using namespace yumud;
+using namespace ymd;

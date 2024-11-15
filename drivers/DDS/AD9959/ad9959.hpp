@@ -8,7 +8,7 @@
 #endif
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 
 class AD9959{

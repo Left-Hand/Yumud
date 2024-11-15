@@ -888,7 +888,7 @@ bool operator==(const Result<T, E>& lhs, types::Err<E> err) {
         } \
     }
 
-namespace yumud{
+namespace ymd{
 template<typename T>
 using Result = Result<T, Error>;
 };

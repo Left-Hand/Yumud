@@ -3,7 +3,7 @@
 #include "hal/gpio/gpio.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class TTP229{
 protected:
     int8_t num = -1;

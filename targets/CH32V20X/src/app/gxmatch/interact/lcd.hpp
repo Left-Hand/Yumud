@@ -1,6 +1,7 @@
 #pragma once
-
-class String;
+namespace ymd{
+class StringView;
+}
 
 namespace gxm{
 
@@ -8,7 +9,7 @@ class Lcd{
 public:
     Lcd() = default;
     
-    void showString(const String & str);
+    void showString(const ymd::StringView & str);
 };
 
 }

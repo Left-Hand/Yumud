@@ -1,6 +1,6 @@
 #include "exti.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 ExtiChannel::ExtiChannel(const Line _line, const NvicPriority & _priority,
         const Trigger _trigger, const Mode _mode):
@@ -30,27 +30,27 @@ ExtiChannel::ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
 ExtiChannel::Source ExtiChannel::from_gpio_to_source(const Gpio & gpio){
     switch((uint32_t)gpio.instance){
         default:
-        #ifdef HAVE_GPIOA
+        #ifdef ENABLE_GPIOA
         case GPIOA_BASE:
             return Source::PA;
         #endif
-        #ifdef HAVE_GPIOB
+        #ifdef ENABLE_GPIOB
         case GPIOB_BASE:
             return Source::PB;
         #endif
-        #ifdef HAVE_GPIOC
+        #ifdef ENABLE_GPIOC
         case GPIOC_BASE:
             return Source::PC;
         #endif
-        #ifdef HAVE_GPIOD
+        #ifdef ENABLE_GPIOD
         case GPIOD_BASE:
             return Source::PD;
         #endif
-        #ifdef HAVE_GPIOE
+        #ifdef ENABLE_GPIOE
         case GPIOE_BASE:
             return Source::PE;
         #endif
-        #ifdef HAVE_GPIOF
+        #ifdef ENABLE_GPIOF
         case GPIOF_BASE:
             return Source::PF;
         #endif

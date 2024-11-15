@@ -2,7 +2,7 @@
 
 #include "i2c.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class I2cHw: public I2c{
 private:
@@ -32,11 +32,11 @@ public:
 };
 
 #ifdef ENABLE_I2C1
-inline yumud::I2cHw i2c1{I2C1};
+inline ymd::I2cHw i2c1{I2C1};
 #endif
 
 #ifdef ENABLE_I2C2
-inline yumud::I2cHw i2c2{I2C2};
+inline ymd::I2cHw i2c2{I2C2};
 #endif
 
 }

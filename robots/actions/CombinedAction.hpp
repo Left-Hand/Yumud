@@ -4,7 +4,7 @@
 #include "ActionQueue.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 struct CombinedAction:public Action{
 protected:

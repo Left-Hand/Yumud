@@ -4,14 +4,14 @@
 
 
 
-namespace yumud::foc{
+namespace ymd::foc{
 class FOCMotorConcept;
 }
 
 namespace gxm{
 class ZAxisStepper:public ZAxis{
 protected:
-    using Motor = yumud::foc::FOCMotorConcept;
+    using Motor = ymd::foc::FOCMotorConcept;
     Motor & motor_;
 public:
     ZAxisStepper(const Config & config, Motor & motor):ZAxis(config), motor_(motor){}

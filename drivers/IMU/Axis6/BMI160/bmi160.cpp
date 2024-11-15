@@ -1,8 +1,8 @@
 #include "bmi160.hpp"
 
 
-using namespace yumud::drivers;
-using namespace yumud;
+using namespace ymd::drivers;
+using namespace ymd;
 
 
 void BMI160::init(){

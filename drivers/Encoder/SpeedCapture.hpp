@@ -3,7 +3,7 @@
 #include "Encoder.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class SpeedCapture{
 // protected:
 public:

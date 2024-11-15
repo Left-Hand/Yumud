@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "hal/bus/uart/uart.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class LDS14{
 protected:

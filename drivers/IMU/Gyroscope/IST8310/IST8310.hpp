@@ -12,7 +12,7 @@
 #define IST8310_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class IST8310:public Magnetometer{
 public:

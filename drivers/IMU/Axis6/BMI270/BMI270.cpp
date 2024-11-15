@@ -1,6 +1,6 @@
 #include "BMI270.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void BMI270::writeReg(const uint8_t addr, const uint8_t data){
     if(i2c_drv_) i2c_drv_->writeReg(addr, data, MSB);

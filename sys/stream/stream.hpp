@@ -3,7 +3,7 @@
 #include "istream.hpp"
 #include "ostream.hpp"
 
-namespace yumud{
+namespace ymd{
 class IOStream:public OutputStream, public InputStream{
 public:
     IOStream(){;}

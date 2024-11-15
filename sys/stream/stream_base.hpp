@@ -17,7 +17,7 @@
 
 #include <utility>
 
-namespace yumud{
+namespace ymd{
 class BasicStream{
 
 };

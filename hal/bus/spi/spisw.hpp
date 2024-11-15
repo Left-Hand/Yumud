@@ -4,7 +4,7 @@
 #include "sys/clock/clock.h"
 
 
-namespace yumud{
+namespace ymd{
 class SpiSw: public Spi{
 protected:
     volatile int8_t occupied = -1;

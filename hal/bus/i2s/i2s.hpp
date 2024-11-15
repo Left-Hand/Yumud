@@ -3,7 +3,7 @@
 #include "../hal/bus/bus.hpp"
 #include "../sys/core/platform.h"
 
-namespace yumud{
+namespace ymd{
 class I2s:public WritableBus{
 
 };

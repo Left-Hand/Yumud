@@ -1,7 +1,7 @@
 #pragma once
 #include "device_defs.h"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class PCF8574{
 protected:
     I2cDrv i2c_drv_;

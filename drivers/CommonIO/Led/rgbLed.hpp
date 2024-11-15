@@ -7,7 +7,7 @@
 
 class GpioConcept;
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;

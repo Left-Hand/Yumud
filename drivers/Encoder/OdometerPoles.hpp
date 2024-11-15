@@ -2,7 +2,7 @@
 
 #include "odometer.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class OdometerPoles:public Odometer{
 protected:

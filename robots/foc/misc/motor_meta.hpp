@@ -7,7 +7,7 @@
 #include "motor_scexpr.hpp"
 
 
-namespace yumud::foc{
+namespace ymd::foc{
 namespace MotorUtils{
     
 struct MetaData{

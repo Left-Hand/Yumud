@@ -1,7 +1,7 @@
 #include "timer_oc.hpp"
 #include "hal/gpio/port.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 void TimerOut::installToPin(const bool en){
     Gpio & io = TimerUtils::getPin(instance, channel);

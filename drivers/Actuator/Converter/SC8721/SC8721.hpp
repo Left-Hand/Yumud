@@ -11,7 +11,7 @@
 #define SC8721_DEBUG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class SC8721{
 public:

@@ -1,6 +1,6 @@
 #include "cubic.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
 real_t CubicInterpolation::forward(const Vector2 & a,const Vector2 & b, const real_t x){
 

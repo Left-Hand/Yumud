@@ -8,7 +8,7 @@
 
 #include "sys/math/iq/iq_t.hpp"
 
-namespace yumud::StringUtils {
+namespace ymd::StringUtils {
 
 void reverse_str(char * str,const size_t len);
 ::std::tuple<int,int,int> disassemble_fstr(const char * str, const size_t len);

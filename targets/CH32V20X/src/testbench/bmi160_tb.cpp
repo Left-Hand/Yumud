@@ -3,7 +3,7 @@
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "types/quat/Quat_t.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void bmi160_main(){
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);

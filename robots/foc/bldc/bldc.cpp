@@ -4,21 +4,22 @@
 #include "../types/quat/Quat_t.hpp"
 
 
-#include "../hal/timer/instance/timer_hw.hpp"
-#include "../hal/adc/adcs/adc1.hpp"
-#include "../hal/bus/can/can.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/adc/adcs/adc1.hpp"
+#include "hal/bus/can/can.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
-#include "drivers/Actuator/Driver/MP6540/mp6540.hpp"
+#include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
 #include "drivers/Actuator/SVPWM/svpwm.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
 
-using namespace yumud;
-using namespace yumud::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
 SpiDrv ma730_drv{spi1, 0};
 MA730 ma730{ma730_drv};
@@ -148,7 +149,7 @@ __inline auto ab_to_dq(const Current2 & ab, const real_t rad) -> Current2{
 
 
 int bldc_main(){
-    DEBUGGER.init(576000, CommMethod::Blocking);
+    DEBUGGER_INST.init(576000, CommMethod::Blocking);
 
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];

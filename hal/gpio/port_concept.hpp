@@ -4,7 +4,7 @@
 #include "gpio_utils.hpp"
 
 
-namespace yumud{
+namespace ymd{
 class PortConcept{
 public:
     virtual void writeByIndex(const int index, const bool data);

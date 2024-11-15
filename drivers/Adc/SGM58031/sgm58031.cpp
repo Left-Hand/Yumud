@@ -1,6 +1,6 @@
 #include "sgm58031.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 void SGM58031::init(){
     readReg(RegAddress::Config, configReg);

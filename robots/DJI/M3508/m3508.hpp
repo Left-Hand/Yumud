@@ -10,8 +10,8 @@
 
 #include <bitset>
 
-namespace yumud::drivers{
-using namespace yumud::foc;
+namespace ymd::drivers{
+using namespace ymd::foc;
 class M3508Port{
 public:
     class M3508{

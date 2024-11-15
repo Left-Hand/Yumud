@@ -4,7 +4,7 @@
 #include "thirdparty/sstl/include/sstl/vector.h"
 
 
-namespace yumud{
+namespace ymd{
 struct TrajectoryItem{
     uint32_t x:10;
     uint32_t y:10;

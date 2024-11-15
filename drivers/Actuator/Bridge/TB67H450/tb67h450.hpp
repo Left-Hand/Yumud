@@ -2,7 +2,7 @@
 
 #include "CoilDriver.hpp"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class TB67H450:public Coil2Driver{
 protected:

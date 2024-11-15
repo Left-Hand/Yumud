@@ -1,6 +1,6 @@
 #include "memory.hpp"
 
-using namespace yumud;
+using namespace ymd;
 Memory::Memory(Storage & _storage, const AddressView & _window):
-        storage(_storage),m_view(_window.intersection(_storage.view())){;}
+        storage_(_storage),view_(_window.intersection(_storage.view())){;}
 

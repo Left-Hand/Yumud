@@ -1,10 +1,10 @@
 #include "debug_inc.h"
 #include "hal/bus/uart/uarthw.hpp"
 
-using namespace yumud;
+using namespace ymd;
 
-yumud::OutputStream & yumud::LOGGER = LOGGER_INST;
-yumud::OutputStream & yumud::DEBUGGER = DEBUGGER_INST;
+ymd::OutputStream & ymd::LOGGER = LOGGER_INST;
+ymd::OutputStream & ymd::DEBUGGER = DEBUGGER_INST;
 
 
 extern "C"{

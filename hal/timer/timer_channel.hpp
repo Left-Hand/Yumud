@@ -5,7 +5,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/dma/dma.hpp"
 
-namespace yumud{
+namespace ymd{
 
 class TimerChannel{
 public:

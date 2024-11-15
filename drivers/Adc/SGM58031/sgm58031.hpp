@@ -6,7 +6,7 @@
 #define SGM58031_DEBUG(...) DEBUG_LOG(...)
 #endif
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class SGM58031{
 public:

@@ -3,7 +3,7 @@
 #include "svpwm.hpp"
 
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 class SVPWM2:public SVPWM{
 public:
     using Driver = Coil2Driver;

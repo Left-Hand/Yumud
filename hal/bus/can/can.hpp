@@ -2,9 +2,9 @@
 
 #include "hal/bus/bus.hpp"
 
-#include "can_utils.hpp"
-#include "can_msg.hpp"
-#include "can_filter.hpp"
+#include "CanUtils.hpp"
+#include "CanMsg.hpp"
+#include "CanFilter.hpp"
 #include "CanTrait.hpp"
 // #include "interrupts.hpp"
 
@@ -43,7 +43,7 @@ void CAN2_SCE_IRQHandler(void);
 
 
 
-namespace yumud{
+namespace ymd{
 
 class Can: public PackedBus<CanMsg>,public CanTrait{
 public:

@@ -30,7 +30,7 @@
 /**************************************************************************/
 
 
-namespace yumud{
+namespace ymd{
 
 template <typename T> 
 constexpr uint32_t Color_t<T>::to_argb32() const {

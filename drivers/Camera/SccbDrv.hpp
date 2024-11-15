@@ -9,7 +9,7 @@
 #include <initializer_list>
 
 
-namespace yumud{
+namespace ymd{
 
 class SccbDrv:public BusDrv<I2c> {
 protected:

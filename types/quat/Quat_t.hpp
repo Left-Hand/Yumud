@@ -34,7 +34,7 @@
 
 #include "vector3/vector3_t.hpp"
 
-namespace yumud{
+namespace ymd{
 
 template <arithmetic T>
 

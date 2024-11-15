@@ -1,7 +1,7 @@
 #include "timer.hpp"
 #include "sys/debug/debug_inc.h"
 
-using namespace yumud;
+using namespace ymd;
 void BasicTimer::enableRcc(){
     switch(uint32_t(instance)){
         #ifdef ENABLE_TIM1

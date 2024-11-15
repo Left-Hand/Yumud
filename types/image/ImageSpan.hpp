@@ -3,7 +3,7 @@
 #include "types/rgb.h"
 
 
-namespace yumud{
+namespace ymd{
 
 struct ImageSpan{
     void * data;

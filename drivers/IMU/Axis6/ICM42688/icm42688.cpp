@@ -1,6 +1,6 @@
 #include "icm42688.hpp"
 
-using namespace yumud::drivers;
+using namespace ymd::drivers;
 
 scexpr real_t LSB_ACC_16G_x64 = 64 *  0.0047856934_r;
 scexpr real_t  LSB_ACC_8G_x64 = 64 *  0.0023928467_r;

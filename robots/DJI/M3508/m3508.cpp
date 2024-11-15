@@ -1,7 +1,7 @@
 #include "m3508.hpp"
 
-using namespace yumud::drivers;
-using namespace yumud::foc;
+using namespace ymd::drivers;
+using namespace ymd::foc;
 
 using M3508 = M3508Port::M3508;
 #define LIMIT 1000

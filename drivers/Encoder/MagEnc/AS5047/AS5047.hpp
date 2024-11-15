@@ -5,7 +5,7 @@
 #include "drivers/Encoder/MagEncoder.hpp"
 #include "drivers/device_defs.h"
 
-namespace yumud::drivers{
+namespace ymd::drivers{
 
 class AS5047:public MagEncoder{
 protected:

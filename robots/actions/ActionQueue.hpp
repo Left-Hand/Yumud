@@ -3,7 +3,7 @@
 #include "ActionConcept.hpp"
 #include <memory>
 
-namespace yumud{
+namespace ymd{
 
 
 template<typename T>

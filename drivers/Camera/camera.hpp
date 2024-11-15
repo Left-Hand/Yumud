@@ -5,7 +5,7 @@
 #include "types/image/image.hpp"
 #include "types/rgb.h"
 
-namespace yumud{
+namespace ymd{
 
 
 template<typename ColorType>

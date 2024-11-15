@@ -10,7 +10,7 @@
 #include <string>
 #include <string_view>
 
-namespace yumud{
+namespace ymd{
 
 class StringRef {
 public:

@@ -6,8 +6,8 @@
 scexpr size_t n = 40;
 static std::array<uint16_t, 40> data;
 
-using namespace yumud::drivers;
-using namespace yumud;
+using namespace ymd::drivers;
+using namespace ymd;
 
 [[maybe_unused]] static uint16_t m_crc(uint16_t data_in){
 	uint16_t speed_data;

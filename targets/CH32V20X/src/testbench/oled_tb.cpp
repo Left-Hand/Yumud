@@ -10,8 +10,8 @@
 
 
 using namespace GpioUtils;
-using namespace yumud::drivers;
-using namespace yumud;
+using namespace ymd::drivers;
+using namespace ymd;
 
 
 class Menu{

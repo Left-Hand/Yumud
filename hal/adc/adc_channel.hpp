@@ -7,7 +7,7 @@
 
 
 
-namespace yumud{
+namespace ymd{
 
 
 class AdcOnChip;

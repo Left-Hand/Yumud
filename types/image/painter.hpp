@@ -4,7 +4,7 @@
 #include "sys/string/encoding/gbk.hpp"
 
 
-namespace yumud{
+namespace ymd{
 
 template<typename ColorType>
 class Painter:public PainterConcept{
@@ -146,6 +146,7 @@ public:
 
                 Vector2i offs = Vector2i(i - char_area.position.x ,j);
                 if(font->getpixel(chr, offs)){
+                // if(true){
                     mask |= (0x01 << (j % 8));
                 }
 

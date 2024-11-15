@@ -4,7 +4,7 @@
 #include "../apriltag.hpp"
 
 
-namespace yumud::nvcv2{
+namespace ymd::nvcv2{
 class Apriltag16H5Decoder:public ApriltagDecoder{
 public:
     scexpr std::array<uint16_t, 30> codes= {

@@ -1,4 +1,4 @@
-namespace yumud{
+namespace ymd{
 
 template<arithmetic T>
 void Plane_t<T>::set_normal(const Vector3_t<auto> &p_normal) {
