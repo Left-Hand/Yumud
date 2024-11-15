@@ -4,7 +4,7 @@
 using namespace gxm;
 using TrapezoidSolver = TrapezoidSolver_t<real_t>;
 
-void Sequencer::rotate(Rays & curve, const Ray & from, const real_t & end_rad){
+void Sequencer::rotate(Curve & curve, const Ray & from, const real_t & end_rad){
 
     TrapezoidSolver solver{
         limits_.max_angular, 
@@ -27,7 +27,7 @@ void Sequencer::rotate(Rays & curve, const Ray & from, const real_t & end_rad){
 
 
 
-void Sequencer::linear(Rays & curve, const Ray & from, const Vector2 & end_pos){
+void Sequencer::linear(Curve & curve, const Ray & from, const Vector2 & end_pos){
     const auto from_pos = from.org;
     const auto vec = (end_pos - from_pos);
     const auto norm = vec.normalized();
@@ -39,10 +39,11 @@ void Sequencer::linear(Rays & curve, const Ray & from, const Vector2 & end_pos){
     };
 
     const auto freq = paras_.freq;
-    const auto n = solver.period() * freq;
+    const auto n = size_t(int(solver.period() * freq));
     
     auto t_val = real_t(0);
-    const auto t_delta = real_t(1) / freq; 
+    const auto t_delta = real_t(1) / freq;
+    curve.reserve(curve.size() + n);
     for(size_t i = 0; i < n; i++){
         curve.push_back(Ray(from.org + norm * solver.forward(t_val), from.rad));
         t_val += t_delta;
@@ -51,7 +52,7 @@ void Sequencer::linear(Rays & curve, const Ray & from, const Vector2 & end_pos){
 
 
 
-void Sequencer::circle(Rays & curve, const Ray & from, const Ray & to){
+void Sequencer::circle(Curve & curve, const Ray & from, const Ray & to){
     // auto from_line = from.normal();
     // auto to_line = to.normal();
 
@@ -65,7 +66,7 @@ void Sequencer::circle(Rays & curve, const Ray & from, const Ray & to){
     // this->linear(curve, Ray{mid_p, to.rad}, to.org);
 }
 
-void Sequencer::fillet(Rays & curve, const Ray & from, const Ray & to){
+void Sequencer::fillet(Curve & curve, const Ray & from, const Ray & to){
     auto from_line = from.normal();
     auto to_line = to.normal();
 

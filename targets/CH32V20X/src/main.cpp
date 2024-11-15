@@ -70,7 +70,7 @@ int main(){
     preinit();
     // DEBUG_PRINTLN("??");
     // gui_main();
-    math_tb(uart2);
+    // math_tb(uart2);
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
@@ -94,7 +94,7 @@ int main(){
     // st77xx_tb(logger, spi2);
     // embd_main();
     // mpu6050_main();
-    gui_main();
+    // gui_main();
     // sdc_main();
     gxm::host_main();
     // can_tb(logger, can1);

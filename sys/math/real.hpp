@@ -103,7 +103,7 @@ __fast_inline constexpr double sign(const double dv){
 }
 
 template<arithmetic T>
-__fast_inline T fposmodp(T p_x, T p_y) {
+__fast_inline constexpr T fposmodp(T p_x, T p_y) {
     T value = fmod(p_x, p_y);
     if (value < 0) {
         value += p_y;
@@ -112,13 +112,13 @@ __fast_inline T fposmodp(T p_x, T p_y) {
 }
 
 template<integral T>
-__fast_inline T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
+__fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 
-__fast_inline void u16_to_uni(const uint16_t data, float & fv){
+__fast_inline constexpr void u16_to_uni(const uint16_t data, float & fv){
     fv = (float)data / 65535;
 }
 
-__fast_inline void u16_to_uni(const uint16_t data, double & dv){
+__fast_inline constexpr void u16_to_uni(const uint16_t data, double & dv){
     dv = (float)data / 65535;
 }
 
@@ -129,7 +129,7 @@ __fast_inline constexpr int warp_mod(const int x, const int y){
 }
 
 template<floating T>
-__fast_inline T powfi(const T base, const int exponent) {
+__fast_inline constexpr T powfi(const T base, const int exponent) {
     if(0 == exponent) {
         return T(1);
     }else if(1 == exponent){
@@ -150,12 +150,12 @@ __fast_inline T powfi(const T base, const int exponent) {
 }
 
 template<floating T>
-__fast_inline T powi(const T base, const int exponent) {
+__fast_inline constexpr T powi(const T base, const int exponent) {
     return powi(base, exponent);
 }
 
 template<arithmetic T>
-__fast_inline T square(const T x) {
+__fast_inline constexpr T square(const T x) {
     return x * x;
 }
 

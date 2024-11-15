@@ -1,7 +1,7 @@
 #pragma once
 
 #include "drivers/IMU/IMU.hpp"
-#include "Gesture2D.hpp"
+#include "Navigator.hpp"
 
 namespace gxm{
 

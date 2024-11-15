@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Gesture2D.hpp"
+#include "sequence/SequenceUtils.hpp"
 
 //描述地图所有元素的相关类与方法
 namespace gxm{
@@ -14,11 +14,11 @@ enum class FieldType:uint8_t{
 };
 
 struct Map{
-    Gesture2D garbage_gest =           {real_t(0),       real_t(0),        real_t(PI/2)};
-    Gesture2D billboard_gest =         {real_t(0.065),   real_t(0.3),      real_t(-PI/2)};
-    Gesture2D staging_gest =           {real_t(1.8),     real_t(1.015),    real_t(0)};
-    Gesture2D raw_material_gest =      {real_t(1.45),    real_t(0.3),      real_t(-PI/2)};
-    Gesture2D rough_process_gest =     {real_t(1.05),    real_t(1.72),     real_t(PI/2)};
+    Ray garbage_gest =           {real_t(0),       real_t(0),        real_t(PI/2)};
+    Ray billboard_gest =         {real_t(0.065),   real_t(0.3),      real_t(-PI/2)};
+    Ray staging_gest =           {real_t(1.8),     real_t(1.015),    real_t(0)};
+    Ray raw_material_gest =      {real_t(1.45),    real_t(0.3),      real_t(-PI/2)};
+    Ray rough_process_gest =     {real_t(1.05),    real_t(1.72),     real_t(PI/2)};
 
     Map & operator =(const Map & other) = default;
     Map & operator =(Map && other) = default;

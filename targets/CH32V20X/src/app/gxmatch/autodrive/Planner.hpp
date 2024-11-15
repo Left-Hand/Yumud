@@ -2,6 +2,7 @@
 
 #include "Map.hpp"
 #include "sequence/Sequencer.hpp"
+#include "sequence/SequenceUtils.hpp"
 #include <variant>
 
 namespace gxm{
@@ -15,7 +16,7 @@ class Planner{
 protected:
     const Map & map_;
     Sequencer & sequencer_;
-    Rays curve_;
+    Curve curve_;
 public:
     Planner(const Map & map, Sequencer & sequencer):
         map_(map), sequencer_(sequencer){}

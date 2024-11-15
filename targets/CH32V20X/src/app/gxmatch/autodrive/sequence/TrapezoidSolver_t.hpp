@@ -33,13 +33,13 @@ public:
         const T reach_peak_threshold = v * accleration_time; 
 
 
-    /*      s1
-             ____   
-            /    \  
-           /      \ 
-          /        \  
-         /          \ */
-    //  0  t1   t2  ta 
+        /*      s1
+                 ____   
+                /    \  
+               /      \ 
+              /        \  
+             /          \ */
+        //  0  t1   t2  ta 
         peaked = s > reach_peak_threshold;
         if(peaked == false){
 
@@ -67,13 +67,13 @@ public:
                 return a_ * t * t / 2;
             }else if(t < t2){
                 return s1 + v_ * (t - t1);
-            }else{
+            }else if(t < t_all){
                 return s_ - a_ * square(t - t_all) / 2;
             }
         }else{
             if(t < t1){
-                return a_ * t * t / 2;
-            }else if(t < t2){
+                return a_ * square(t) / 2;
+            }else if(t < t_all){
                 return s_ - a_ * square(t - t_all) / 2;
             }
         }
@@ -82,6 +82,14 @@ public:
 
     T period() const {
         return t_all;
+    }
+
+    T peak(){
+        if(peaked){
+            return v_;
+        }else{
+            return a_ * t1;
+        }
     }
 };
 

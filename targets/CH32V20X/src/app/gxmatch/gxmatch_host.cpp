@@ -2,6 +2,8 @@
 #include "host/host.hpp"
 
 #include "autodrive/Planner.hpp"
+#include "autodrive/sequence/TrapezoidSolver_t.hpp"
+
 
 #include "machine/scara/scara.hpp"
 #include "machine/actuator/zaxis_stp.hpp"
@@ -9,6 +11,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "robots/foc/remote/remote.hpp"
+
 
 #include "hal/bus/i2c/i2csw.hpp"
 
@@ -166,7 +169,50 @@ void host_main(){
     CrossSolver cross_solver{
         cross_config
     };
-     
+
+
+    if(false){
+        auto solver = TrapezoidSolver_t<real_t>{4,10.0_r,0.1_r};
+        scexpr auto delta = 0.001_r;
+        
+        DEBUG_PRINTLN(std::setprecision(4));
+        for(real_t x = 0; x <= solver.period(); x += delta){
+            auto y = solver.forward(x);
+            delayMicroseconds(500);
+            DEBUG_PRINTLN(x, y);
+        } 
+        PANIC();
+    }
+    
+    {
+        auto limits = SequenceLimits{
+            .max_gyro = 1,
+            .max_angular = 1,
+            // .max_spd = real_t(0.6),
+            .max_spd = real_t(0.2),
+            .max_acc = real_t(0.2)
+        };
+
+        auto params = SequenceParas{
+            .freq = 200
+        };
+        
+        auto sequencer = Sequencer(limits, params);
+        auto curve = Curve{};
+        // sequencer.linear(curve, Ray{0, 0, 0}, Vector2{1,1});
+        sequencer.fillet(curve, Ray{0,0,0}, Ray{1,1,real_t(PI/2)});
+        
+        DEBUG_PRINTLN(std::setprecision(4));
+        for(auto it = curve.begin(); it != curve.end(); ++it){
+            delayMicroseconds(1000);
+            auto && [org,rad] = Ray(*it);
+            auto && [x,y] = org;
+            DEBUG_PRINTLN(x,y,rad);
+        }
+        DEBUG_PRINTLN("done");
+        while(true);
+    }
+
     while(true){
 
         // auto duty = real_t(0.5) + (sin(t) >> 1);
@@ -203,8 +249,9 @@ void host_main(){
             auto f_height = cross_solver.forward(inv_rad);
             logger.println(std::setprecision(3), inv_rad, height, f_height);
         }
-        // pwm = real_t(0.5);
-        // logger.println(duty);
+
+
+    
         delay(20);
     }
     
