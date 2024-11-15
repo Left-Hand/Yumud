@@ -26,11 +26,6 @@ public:
             T w;
             T h;
         };
-
-        struct{
-            T width;
-            T height;
-        };
     };
 
     constexpr Rect2_t():position(Vector2_t<T>()), size(Vector2_t<T>()){;}

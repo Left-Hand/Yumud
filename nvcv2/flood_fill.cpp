@@ -162,8 +162,8 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
         int cls = labels[i];
         rrects[cls].x += rectList[i].x;
         rrects[cls].y += rectList[i].y;
-        rrects[cls].width += rectList[i].width;
-        rrects[cls].height += rectList[i].height;
+        rrects[cls].w += rectList[i].w;
+        rrects[cls].h += rectList[i].h;
         rweights[cls]++;
     }
  
@@ -193,8 +193,8 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
         rrects[i] = Rect2i(
             saturate_cast<int>(r.x*s),
             saturate_cast<int>(r.y*s),
-            saturate_cast<int>(r.width*s),
-            saturate_cast<int>(r.height*s));
+            saturate_cast<int>(r.w*s),
+            saturate_cast<int>(r.h*s));
     }
  
     rectList.clear();
@@ -224,14 +224,14 @@ void groupRectangles(std::vector<Rect2i>& rectList, int groupThreshold, real_t e
                 continue;
             Rect2i r2 = rrects[j];
  
-            int dx = saturate_cast<int>( r2.width * eps );
-            int dy = saturate_cast<int>( r2.height * eps );
+            int dx = saturate_cast<int>( r2.w * eps );
+            int dy = saturate_cast<int>( r2.h * eps );
  
             if( i != j &&
                 r1.x >= r2.x - dx &&
                 r1.y >= r2.y - dy &&
-                r1.x + r1.width <= r2.x + r2.width + dx &&
-                r1.y + r1.height <= r2.y + r2.height + dy &&
+                r1.x + r1.w <= r2.x + r2.w + dx &&
+                r1.y + r1.h <= r2.y + r2.h + dy &&
                 (n2 > std::max(3, n1) || n1 < 3) )
                 break;
         }
@@ -350,8 +350,8 @@ Image<Grayscale> FloodFill::run(const ImageReadable<Binary> & src, const BlobFil
                     skip_flag |= not filter.width_range.has(rect.w);
                     skip_flag |= not filter.height_range.has(rect.h);
                 }
-                // skip_flag |= rect.height > 50;
-                // skip_flag |= rect.height < 5;
+                // skip_flag |= rect.h > 50;
+                // skip_flag |= rect.h < 5;
                 // skip_flag |= real_t(int(rect)) / blob.area < (1.0 / 0.7);
                 // skip_flag |= blob.area < 50;
                 // skip_flag |= blob.area > 20;

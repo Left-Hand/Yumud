@@ -40,12 +40,7 @@ public:
           /        \  
          /          \ */
     //  0  t1   t2  ta 
-        T t1;
-        T t2;
-        T t_all;
-        T s1;
-
-        const bool peaked = s > reach_peak_threshold;
+        peaked = s > reach_peak_threshold;
         if(peaked == false){
 
             //v ^ 2 = a * x
