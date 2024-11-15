@@ -22,6 +22,10 @@ public:
         map_(map), sequencer_(sequencer){}
 
     void plan(const Ray & face, const Field & from, const Field & to);
+
+    const auto & curve() const {
+        return curve_;
+    }
 };
 
 

@@ -4,6 +4,7 @@
 #include "types/vector2/Vector2_t.hpp"
 #include "types/rect2/rect2_t.hpp"
 #include "types/ray2d/Ray2D_t.hpp"
+#include "types/quat/Quat_t.hpp"
 #include "types/line2d/Line2D_t.hpp"
 
 namespace geometry {
