@@ -19,6 +19,8 @@
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
+#include "softbus/SoftBus.hpp"
+
 using Sys::t;
 
 using namespace ymd;
@@ -259,6 +261,36 @@ void host_main(){
         PANIC();
     }
     
+
+    {
+            using Type = int;
+            using Topic = Topic_t<Type>;
+
+            
+            Topic topic;
+
+            // 创建一个 Publisher
+            auto publisher = topic.createPublisher();
+
+            // 创建多个 Subscriber
+            auto subscriber1 = topic.createSubscriber([](const Type & message) {
+                DEBUGGER << "Subscriber 1 received: " << message << "\r\n";
+            });
+
+            auto subscriber2 = topic.createSubscriber([](const Type & message) {
+                DEBUGGER << "Subscriber 2 received: " << message << "\r\n";
+            });
+
+
+            // 发布消息
+            publisher.publish(1);
+            publisher.publish(2);
+
+
+            // 再次发布消息
+            publisher.publish(3);
+
+    }
     {
         auto limits = SequenceLimits{
             .max_gyro = 2,

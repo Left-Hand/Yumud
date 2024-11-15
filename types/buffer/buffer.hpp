@@ -10,7 +10,8 @@ class BufferConcept_t{
 public:
     virtual void push(const T & data) = 0;
     virtual const T & pop() = 0;
-    virtual size_t available() const = 0;
+    [[nodiscard]] virtual size_t available() const = 0;
+    [[nodiscard]] bool empty() const{return available() == 0;}
     virtual void push(const T * data_ptr, const size_t len, bool msb = false) = 0;
     virtual void pop(T * data_ptr, const size_t len, bool msb = false) = 0;
 };
@@ -23,8 +24,8 @@ protected:
     size_t size;
 
 public:
-    DynamicBuffer_t(const size_t _size = 128){
-        size = (volatile size_t)_size;
+    DynamicBuffer_t(const size_t N = 128){
+        size = N;
         buf = new T[size];
     }
 
@@ -33,11 +34,10 @@ public:
     }
 };
 
-template<typename T, uint32_t _size>
+template<typename T, uint32_t N>
 class StaticBuffer_t:public BufferConcept_t<T>{
 public:
-    T buf[_size]; 
-    size_t size = _size;
+    T buf[N]; 
     StaticBuffer_t() = default;
     ~StaticBuffer_t() = default;
 
@@ -45,8 +45,12 @@ public:
         return buf[index];
     }
 
-    constexpr size_t getSize() const {
-        return size;
+    const T & operator[](const size_t index)const{
+        return buf[index];
+    }
+
+    constexpr size_t size() const {
+        return N;
     }
 };
 

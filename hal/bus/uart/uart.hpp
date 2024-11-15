@@ -59,7 +59,7 @@ public:
 
     size_t available() const {return rxBuf.available();}
     size_t pending() const {return txBuf.available();}
-    size_t remain() const {return txBuf.size - txBuf.available();}
+    size_t remain() const {return txBuf.size() - txBuf.available();}
     virtual void flush(){}//TODO
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;

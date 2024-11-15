@@ -6,7 +6,7 @@ template<typename T, uint32_t _size>
 class Fifo_t:public StaticBuffer_t<T, _size>{
 protected:
     T * volatile advancePointer(T * volatile ptr, size_t step = 1) {
-        return (ptr + step >=this->buf + this->size) ? ptr + step - this->size : ptr + step;
+        return (ptr + step >=this->buf + this->size()) ? ptr + step - this->size() : ptr + step;
     }
 
 public:
@@ -52,7 +52,7 @@ public:
         if (write_ptr >= read_ptr) {
             return size_t(write_ptr - read_ptr);
         } else {
-            return this->size - size_t(read_ptr - write_ptr);
+            return this->size() - size_t(read_ptr - write_ptr);
         }
     }
 
