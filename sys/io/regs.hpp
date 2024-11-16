@@ -12,6 +12,8 @@ public:
     constexpr Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
     constexpr operator T() const {return (*reinterpret_cast<const T *>(this));}
     constexpr operator T & () {return (*reinterpret_cast<T *>(this));}
+    constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
+    constexpr T * operator &() {return (reinterpret_cast<T *>(this));}
 
     constexpr uint8_t & operator [](const size_t idx){return (*(reinterpret_cast<uint8_t *>(this) + idx));} 
     constexpr const uint8_t & operator [](const size_t idx) const {return (*(reinterpret_cast<const uint8_t *>(this) + idx));} 

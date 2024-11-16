@@ -98,7 +98,7 @@ void host_main(){
     auto & logger = uart2;
 
     auto i2c = I2cSw{portD[2], portC[12]};
-    i2c.init(1250_KHz);
+    i2c.init(400_KHz);
     
     auto & lcd_cs = portD[6];
     auto & lcd_dc = portD[7];
@@ -279,18 +279,19 @@ void host_main(){
         }
     }
 
-    {       
-        HMC5883L hmc{i2c};
-        // QMC5883L hmc{i2c};
+    {     
+        QMC5883L mag_sensor{i2c};
 
-        hmc.init();
+        mag_sensor.init();
+        
         while(true){
 
-            hmc.update();
-            auto mag = Vector3{hmc.getMagnet()};
-            auto gest = Quat{{0,0,1}, mag};
+            mag_sensor.update();
+            const auto mag = Vector3{mag_sensor.getMagnet()};
+            // const auto gest = Quat{{0,0,1}, mag.normalized()};
             delay(1);
-            DEBUG_PRINTLN(gest.x, gest.y, gest.z, gest.w);
+            // DEBUG_PRINTLN(std::setprecision(4), gest.x, gest.y, gest.z, gest.w);
+            DEBUG_PRINTLN(mag.x, mag.y, mag.z, atan2(mag.y, mag.x));
         }
     }
 

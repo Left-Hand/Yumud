@@ -2,14 +2,27 @@
 
 using namespace ymd::drivers;
 
+// #define HMC5883L_DEBUG
+
+#ifdef HMC5883L_DEBUG
+#undef HMC5883L_DEBUG
+#define HMC5883L_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define HMC5883L_PANIC(...) PANIC(__VA_ARGS__)
+#define HMC5883L_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define HMC5883L_DEBUG(...)
+#define HMC5883L_PANIC(...)
+#define HMC5883L_ASSERT(cond, ...)
+#endif
 
 void HMC5883L::init(){
-    enableHighSpeed();
-    enableContMode();
-    setMeasurementMode(MeasurementMode::Norm);
-    setDataRate(DataRate::DR75);
-    setSampleNumber(SampleNumber::SN1);
-    setGain(Gain::GL1_52);
+    this->verify();
+    this->enableHighSpeed();
+    this->enableContMode();
+    this->setMeasurementMode(MeasurementMode::Norm);
+    this->setDataRate(DataRate::DR75);
+    this->setSampleNumber(SampleNumber::SN1);
+    this->setGain(Gain::GL1_52);
 }
 
 void HMC5883L::enableHighSpeed(const bool en){
@@ -54,7 +67,9 @@ std::tuple<real_t, real_t, real_t> HMC5883L::getMagnet(){
 bool HMC5883L::verify(){
     uint8_t id[3] = {0};
     requestPool(RegAddress::IDA, id, 3);
-    return (id[0] == 'H' && id[1] == '4' && id[2] == '3');
+    bool passed = (id[0] == 'H' && id[1] == '4' && id[2] == '3');
+    HMC5883L_ASSERT(passed, "HMC5883L not found!", id);
+    return passed;
 }
 
 void HMC5883L::update(){

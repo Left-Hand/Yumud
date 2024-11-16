@@ -11,7 +11,7 @@ using namespace ymd;
 #undef BMI160_DEBUG
 #define BMI160_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define BMI160_PANIC(...) PANIC(__VA_ARGS__)
-#define BMI160_ASSERT(cond, ...) ASSERT(__VA_ARGS__)
+#define BMI160_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define BMI160_DEBUG(...)
 #define BMI160_PANIC(...)
@@ -91,11 +91,7 @@ bool BMI160::verify(){
     readReg(0x7f, dummy);
     readReg(chip_id_reg.address, chip_id_reg.data);
     bool passed = chip_id_reg.data == chip_id_reg.correct;
-    if(passed){
-        DEBUG_PRINTLN("sensor verify passed");
-    }else{
-        DEBUG_PRINTLN("sensor verify failed");
-    }
+    BMI160_ASSERT(passed, "chip id verify failed");
     return passed;
 }
 
