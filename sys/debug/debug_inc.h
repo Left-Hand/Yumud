@@ -57,19 +57,10 @@ do{\
 
 
 
-#define RUN_TIME_DEBUG
-
-#if !defined(ASSERT) && defined(__cplusplus)
-#ifdef RUN_TIME_DEBUG
 #define ASSERT(condition, ...) \
-if(!condition){\
-    DEBUG_PRINTLN("[f]:", __LINE__, ##__VA_ARGS__);\
-}
-#endif
-#else
-#define ASSERT(condition, ...) if(std::is_constant_evaluated()) static_assert(condition, ##__VA_ARGS__);
-#endif
-
+if(bool(condition) == false){\
+    PANIC(__VA_ARGS__);\
+}\
 
 #define ASSERT_WITH_CONTINUE(condition, ...) \
 if(bool(condition) == false){\

@@ -10,7 +10,7 @@ void UsbFS::init(){
     usb_cdc_init();
 }
 void UsbFS::write(const char data){
-    usb_cdc_send_pack((uint8_t *)&data, 1);
+    usb_cdc_send_pack((const uint8_t *)&data, 1);
 }
 
 void UsbFS::write(const char * data_ptr, const size_t len){

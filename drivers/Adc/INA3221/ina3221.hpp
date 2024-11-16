@@ -163,8 +163,8 @@ protected:
         if constexpr(sizeof(data == 2)) i2c_drv.writeReg(uint8_t(addr), reinterpret_cast<const uint16_t &>(data), MSB);
     }
 
-    void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
-        i2c_drv.readMulti((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
+    void requestPool(const RegAddress addr, void * data_ptr, const size_t len){
+        i2c_drv.readMulti((uint8_t)addr, (uint16_t *)data_ptr, len, LSB);
     }
 
     struct INA3221Channel:public AnalogInChannel{

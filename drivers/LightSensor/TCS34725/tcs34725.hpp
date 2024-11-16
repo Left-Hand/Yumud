@@ -61,7 +61,7 @@ protected:
         GainReg gainReg;
         uint8_t deviceIdReg;
         StatusReg statusReg;
-        uint16_t data[4] = {0};
+        uint16_t crgb[4] = {0};
     };
 
     enum class RegAddress:uint8_t{
@@ -81,27 +81,27 @@ protected:
         BlueData = 0x1A
     };
 
-    uint8_t convRegAddress(const RegAddress regAddress, bool repeat = true){
-        return ((uint8_t) regAddress) | 0x80 | (repeat ? 1 << 5 : 0);
+    uint8_t convRegAddress(const RegAddress addr, bool repeat = true){
+        return ((uint8_t) addr) | 0x80 | (repeat ? 1 << 5 : 0);
     }
 
-    void writeReg(const RegAddress regAddress, const uint16_t regData){
-        i2c_drv_.writeReg(convRegAddress(regAddress), (uint16_t)regData, LSB);
+    void writeReg(const RegAddress addr, const uint16_t data){
+        i2c_drv_.writeReg(convRegAddress(addr), (uint16_t)data, LSB);
     }
 
-    void readReg(const RegAddress regAddress, uint16_t & regData){
-        i2c_drv_.readReg(convRegAddress(regAddress), (uint16_t &)regData, LSB);
+    void readReg(const RegAddress addr, uint16_t & data){
+        i2c_drv_.readReg(convRegAddress(addr), (uint16_t &)data, LSB);
     }
 
-    void writeReg(const RegAddress regAddress, const uint8_t regData){
-        i2c_drv_.writeReg(convRegAddress(regAddress, false), (uint8_t)regData, LSB);
+    void writeReg(const RegAddress addr, const uint8_t data){
+        i2c_drv_.writeReg(convRegAddress(addr, false), (uint8_t)data, LSB);
     }
 
-    void readReg(const RegAddress regAddress, uint8_t & regData){
-        i2c_drv_.readReg(convRegAddress(regAddress, false), (uint8_t &)regData, LSB);
+    void readReg(const RegAddress addr, uint8_t & data){
+        i2c_drv_.readReg(convRegAddress(addr, false), (uint8_t &)data, LSB);
     }
 
-    void requestRegData(const RegAddress regAddress, uint16_t * data_ptr, const size_t len);
+    void requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
 public:
     scexpr uint8_t default_i2c_addr = 0x52;
@@ -176,13 +176,7 @@ public:
 
     void update();
 
-    void getCRGB(real_t & c, real_t & r, real_t & g, real_t & b);
-
-    auto getCRGB(){
-        real_t c,r,g,b;
-        getCRGB(c,r,g,b);
-        return std::make_tuple(c,r,g,b);
-    }
+    std::tuple<real_t, real_t, real_t, real_t> getCRGB();
 
     void init(){
         setPower(true);

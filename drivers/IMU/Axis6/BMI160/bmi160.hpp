@@ -3,15 +3,6 @@
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
 
-// #define BMI160_DEBUG
-
-#ifdef BMI160_DEBUG
-#undef BMI160_DEBUG
-#define BMI160_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define BMI160_DEBUG(...)
-#endif
-
 namespace ymd::drivers{
 
 class BMI160:public Axis6{
@@ -23,6 +14,49 @@ public:
 
     enum class G:uint8_t{
         _2, _4, _8, _16
+    };
+
+    enum class AccOdr:uint8_t{
+        _25_32 = 0b0001,
+        _25_16,
+        _25_8,
+        _25_4,
+        _25_2,
+        _25,
+        
+        _50,
+        _100,
+        _200,
+        _400,
+        _800,
+        _1600
+    };
+
+    enum class GyrOdr:uint8_t{
+        _25 = 0b0110,
+        
+        _50,
+        _100,
+        _200,
+        _400,
+        _800,
+        _1600,
+        _3200
+    };
+    
+    enum class AccRange:uint8_t{
+        _2G     =   0b0011,
+        _4G     =   0b0101,
+        _8G     =   0b1000,
+        _16G    =   0b1100
+    };
+
+    enum class GyrRange:uint8_t{
+        _2000deg = 0b0000,
+        _1000deg,
+        _500deg,
+        _250deg,
+        _125deg
     };
 
     enum class Command:uint8_t{
@@ -53,8 +87,12 @@ protected:
     std::optional<I2cDrv> i2c_drv_;
     std::optional<SpiDrv> spi_drv_;
 
-    scexpr uint8_t default_chip_id = 0;//TODO
-    scexpr uint8_t default_i2c_addr = 0x68;
+    scexpr uint8_t default_i2c_addr = 0b11010010;
+    // scexpr uint8_t default_i2c_addr = 0b11010000;
+    // scexpr uint8_t default_i2c_addr = 0x69;
+
+    real_t acc_scale = 0;
+    real_t gyr_scale = 0;
 
     #include "regs.ipp"
 
@@ -68,43 +106,26 @@ protected:
         RhallReg rhall_reg;
         Vector3i16Reg gyro_reg;
         Vector3i16Reg accel_reg;
+
+        AccConfReg acc_conf_reg;
+        AccRangeReg acc_range_reg;
+        GyrConfReg gyr_conf_reg;
+        GyrRangeReg gyr_range_reg;
     };
 
 
-    void writeReg(const uint8_t addr, const uint8_t data){
-        if(i2c_drv_) i2c_drv_->writeReg(addr, data, MSB);
-        if(spi_drv_){
-            spi_drv_->writeSingle(uint8_t(addr), CONT);
-            spi_drv_->writeSingle(data);
+    void writeReg(const uint8_t addr, const uint8_t data);
 
-            BMI160_DEBUG("Wspi", addr, data);
+    void readReg(const RegAddress addr, uint8_t & data);
 
-        }
-    }
-
-    void readReg(const RegAddress addr, uint8_t & data){
-        if(i2c_drv_) i2c_drv_->readReg((uint8_t)addr, data, MSB);
-        if(spi_drv_){
-            spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-            spi_drv_->readSingle(data);
-        }
-
-        BMI160_DEBUG("Rspi", addr, data);
-    }
-
-    void requestData(const RegAddress addr, void * datas, const size_t len){
-        if(i2c_drv_) i2c_drv_->readMulti(uint8_t(addr), (uint8_t *)datas, len, MSB);
-        if(spi_drv_){
-            spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-            spi_drv_->readMulti((uint8_t *)(datas), len);
-        }
-
-        BMI160_DEBUG("Rspi", addr, len);
-    }
+    void requestData(const RegAddress addr, int16_t * datas, const size_t len);
 
     void writeCommand(const uint8_t cmd){
         writeReg(0x7e, cmd);
     }
+
+    static real_t calculateAccelScale(const AccRange range);
+    static real_t calculateGyroScale(const GyrRange range);
 public:
 
     BMI160(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
@@ -121,6 +142,11 @@ public:
 
     void reset();
 
+    void setAccelOdr(const AccOdr odr);
+    void setAccelRange(const AccRange range);
+    void setGyroOdr(const GyrOdr odr);
+    void setGyroRange(const GyrRange range);
+    
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
     std::tuple<real_t, real_t, real_t> getAccel() override;

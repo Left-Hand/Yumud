@@ -53,7 +53,7 @@ protected:
     std::optional<I2cDrv> i2c_drv_;
     std::optional<SpiDrv> spi_drv_;
 
-    scexpr uint8_t default_chip_id = 0;//TODO
+
     scexpr uint8_t default_i2c_addr = 0x68;
 
     using RegAddress = uint8_t;

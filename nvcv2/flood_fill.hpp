@@ -55,11 +55,11 @@ class SimilarRects{
 public:    
     SimilarRects(const real_t _eps) : eps(_eps) {}
     inline bool operator()(const Rect2i& r1, const Rect2i& r2) const{
-        real_t delta = eps*(std::min(r1.width, r2.width) + std::min(r1.height, r2.height))*real_t(0.5);
+        real_t delta = eps*(std::min(r1.w, r2.w) + std::min(r1.h, r2.h))*real_t(0.5);
         return std::abs(r1.x - r2.x) <= delta &&
         std::abs(r1.y - r2.y) <= delta &&
-        std::abs(r1.x + r1.width - r2.x - r2.width) <= delta &&
-        std::abs(r1.y + r1.height - r2.y - r2.height) <= delta;
+        std::abs(r1.x + r1.w - r2.x - r2.w) <= delta &&
+        std::abs(r1.y + r1.h - r2.y - r2.h) <= delta;
     }
 
     real_t eps;

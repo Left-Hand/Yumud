@@ -66,9 +66,9 @@ public:
 
     template<typename T>
     requires (sizeof(T) <= 8) and (!std::is_pointer_v<T>)
-    constexpr CanMsg & operator << (T && val){
+    constexpr CanMsg & operator << (const T & val){
         for(size_t i = 0; i < sizeof(T) and DLC < 8; i++){
-            Data[DLC++] = ((uint8_t *)&val)[i];
+            Data[DLC++] = ((const uint8_t *)&val)[i];
         }
         RTR = CAN_RTR_Data;
         return *this;
@@ -156,7 +156,7 @@ public:
     requires (sizeof(T) <= 8)
     constexpr operator T () const {
         T ret;
-        memcpy((void *)&ret, (void *)&Data, MIN(sizeof(ret), size()));
+        memcpy((void *)&ret, &Data, MIN(sizeof(ret), size()));
         return ret;
     }
 

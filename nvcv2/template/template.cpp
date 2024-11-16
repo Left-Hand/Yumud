@@ -120,8 +120,7 @@ real_t template_match_ncc(const Image<Grayscale> & src, const Image<Grayscale> &
 
     int64_t den = FAST_SQRT(den_t) * FAST_SQRT(den_s);
     uint16_t res = std::abs(num) * 65535 / den;
-    u16_to_uni(res, ret);
-    return ret;
+    return u16_to_uni(res);
 }
 
 
@@ -155,8 +154,7 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
 
     real_t ret;
     uint16_t res = num / area;
-    u16_to_uni(res, ret);
-    return 1-ret;
+    return 1- u16_to_uni(res);
 
 }
 

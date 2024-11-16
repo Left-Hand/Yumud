@@ -180,26 +180,24 @@ public:
         return iq_t(_iq(value >> shift));
     }
 
-    #undef IQ_OPERATOR_TEMPLATE
-
     __fast_inline constexpr explicit operator bool() const {
         return bool(value);
     }
 
-    #define IQ_TOINT_TEMPLATE(op)\
-    __fast_inline constexpr explicit operator op() const {\
-        return op(_IQint(value));\
+    template<integral T>
+    __fast_inline constexpr explicit operator T() const {
+        return _IQint(value);
     }
 
-    IQ_TOINT_TEMPLATE(int);
-    IQ_TOINT_TEMPLATE(int8_t);
-    IQ_TOINT_TEMPLATE(int16_t);
-    IQ_TOINT_TEMPLATE(int32_t);
-    IQ_TOINT_TEMPLATE(uint8_t);
-    IQ_TOINT_TEMPLATE(uint16_t);
-    IQ_TOINT_TEMPLATE(uint32_t);
+    // IQ_TOINT_TEMPLATE(int);
+    // IQ_TOINT_TEMPLATE(int8_t);
+    // IQ_TOINT_TEMPLATE(int16_t);
+    // IQ_TOINT_TEMPLATE(int32_t);
+    // IQ_TOINT_TEMPLATE(uint8_t);
+    // IQ_TOINT_TEMPLATE(uint16_t);
+    // IQ_TOINT_TEMPLATE(uint32_t);
 
-    #undef IQ_TOINT_TEMPLATE
+    // #undef IQ_TOINT_TEMPLATE
 
     __inline constexpr explicit operator float() const{
         if(std::is_constant_evaluated()){
@@ -215,64 +213,61 @@ public:
 
 };
 
-#define IQ_OP_TEMPLATE(type, op)\
-__fast_inline constexpr iq_t operator op (const type val, const iq_t iq_v) {\
+#define IQ_INT_OP_TEMPLATE(op)\
+__fast_inline constexpr iq_t operator op (const integral auto & val, const iq_t iq_v) {\
 	return iq_t(val) op iq_v;\
 }\
 
-#define IQ_OPS_TEMPLATE(type)\
-IQ_OP_TEMPLATE(type, +)\
-IQ_OP_TEMPLATE(type, -)\
-IQ_OP_TEMPLATE(type, *)\
-IQ_OP_TEMPLATE(type, /)\
+IQ_INT_OP_TEMPLATE(+)
+IQ_INT_OP_TEMPLATE(-)
+IQ_INT_OP_TEMPLATE(*)
+IQ_INT_OP_TEMPLATE(/)
 
-IQ_OPS_TEMPLATE(int);
+#undef IQ_INT_OP_TEMPLATE
+
 #ifndef STRICT_IQ
+    //TODO
 #else
-#define IQ_OP_DELETE(op)\
-iq_t operator op (const float val, const iq_t iq_v) = delete;\
+    #define IQ_FLOAT_OP_DELETE(op)\
+    iq_t operator op (const floating auto & val, const iq_t & iq_v) = delete;\
 
-IQ_OP_DELETE(+)
-IQ_OP_DELETE(-)
-IQ_OP_DELETE(*)
-IQ_OP_DELETE(/)
+    IQ_FLOAT_OP_DELETE(+)
+    IQ_FLOAT_OP_DELETE(-)
+    IQ_FLOAT_OP_DELETE(*)
+    IQ_FLOAT_OP_DELETE(/)
 
-#undef IQ_OP_DELETE
+    #undef IQ_FLOAT_OP_DELETE
 
 #endif
 
 
-#define IQ_BINA_TEMPLATE(type, op)\
-__fast_inline constexpr bool operator op (const type val, const iq_t iq_v) {\
+#define IQ_INT_COMP_TEMPLATE(op)\
+__fast_inline constexpr bool operator op (const integral auto & val, const iq_t iq_v) {\
 	return iq_t(val) op iq_v;\
 }\
 
-#define IQ_BINAS_TEMPLATE(type)\
-IQ_BINA_TEMPLATE(type, ==)\
-IQ_BINA_TEMPLATE(type, !=)\
-IQ_BINA_TEMPLATE(type, >)\
-IQ_BINA_TEMPLATE(type, >=)\
-IQ_BINA_TEMPLATE(type, <)\
-IQ_BINA_TEMPLATE(type, <=)\
+IQ_INT_COMP_TEMPLATE(==)
+IQ_INT_COMP_TEMPLATE(!=)
+IQ_INT_COMP_TEMPLATE(>)
+IQ_INT_COMP_TEMPLATE(>=)
+IQ_INT_COMP_TEMPLATE(<)
+IQ_INT_COMP_TEMPLATE(<=)
 
-IQ_BINAS_TEMPLATE(int)
+#undef IQ_INT_COMP_TEMPLATE
+
 #ifndef STRICT_IQ
+    //TODO
 #else
-#define IQ_BINA_DELETE(op)\
-bool operator op (const float val, const iq_t iq_v) = delete;\
+    #define IQ_FLOAT_COMP_DELETE(op)\
+    bool operator op (const floating auto & val, const iq_t iq_v) = delete;\
 
-IQ_BINA_DELETE(==)
-IQ_BINA_DELETE(!=)
-IQ_BINA_DELETE(>)
-IQ_BINA_DELETE(>=)
-
-#undef IQ_BINA_DELETE
+    IQ_FLOAT_COMP_DELETE(==)
+    IQ_FLOAT_COMP_DELETE(!=)
+    IQ_FLOAT_COMP_DELETE(>)
+    IQ_FLOAT_COMP_DELETE(>=)
+    
+    #undef IQ_FLOAT_COMP_DELETE
 #endif
-
-#undef IQ_OP_TEMPLATE
-#undef IQ_OPS_TEMPLATE
-#undef IQ_BINA_TEMPLATE
-#undef IQ_BINAS_TEMPLATE
 
 // using cem = ConstexprMath;
 
@@ -447,7 +442,8 @@ __fast_inline iq_t powi(const iq_t base, const int exponent) {
     return powfi(base, exponent);
 }
 
-__fast_inline constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
+__fast_inline constexpr iq_t u16_to_uni(const uint16_t data){
+    iq_t qv;
 #if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
 #elif(GLOBAL_Q < 16)
@@ -455,11 +451,12 @@ __fast_inline constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 #else
     qv.value = _iq(data);
 #endif
-
+    return qv;
 }
 
 
-__fast_inline constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
+__fast_inline constexpr iq_t u32_to_uni(const uint32_t data){
+    iq_t qv;
 #if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
 #elif(GLOBAL_Q < 16)
@@ -467,22 +464,35 @@ __fast_inline constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
 #else
     qv.value = _iq(data);
 #endif
-
+    return qv;
 }
 
-__fast_inline constexpr void s16_to_uni(const int16_t data, iq_t & qv){
-    qv.value = data > 0 ? _iq(data) : _iq(-(_iq(-data)));
+__fast_inline constexpr iq_t s16_to_uni(const int16_t data){
+    iq_t qv;
+    qv.value = data > 0 ? _iq(data << 1) : _iq(-(_iq(-data << 1)));
+    return qv;
 }
 
-__fast_inline constexpr void uni_to_u16(const iq_t qv, uint16_t & data){
+__fast_inline constexpr uint16_t uni_to_u16(const iq_t qv){
+    uint16_t data;
 #if GLOBAL_Q >= 16
     data = qv.value >> (GLOBAL_Q - 16);
 #else
     data = qv.value << (16 - GLOBAL_Q);
 #endif
     if(data == 0 && long(qv.value) != 0) data = 0xffff;
+    return data;
 }
 
+__fast_inline constexpr int16_t uni_to_s16(const iq_t qv){
+    int16_t data;
+#if GLOBAL_Q >= 16
+    data = qv.value >> (GLOBAL_Q - 16);
+#else
+    data = qv.value << (16 - GLOBAL_Q);
+#endif
+    return data;
+}
 
 namespace std{
     template<>

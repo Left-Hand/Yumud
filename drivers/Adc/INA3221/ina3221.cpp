@@ -87,52 +87,48 @@ void INA3221::reset(){
 int INA3221::getShuntVoltageuV(const size_t index){
 
     RegAddress addr;
-    ShuntVoltReg * reg = nullptr;
-    switch(index){
+    ShuntVoltReg & reg = [&]() -> ShuntVoltReg &{
+        switch(index){
         default: PANIC()
         case 1:
-            reg = &shuntvolt1_reg;
             addr = shuntvolt1_reg.address1;
-            break;
+            return shuntvolt1_reg;
         case 2:
-            reg = &shuntvolt2_reg;
             addr = shuntvolt2_reg.address2;
-            break;
+            return shuntvolt2_reg;
         case 3:
-            reg = &shuntvolt3_reg;
             addr = shuntvolt3_reg.address3;
-            break;
-    }
+            return shuntvolt3_reg;
+        }
+    }();
 
-    readReg(addr, *reg);
+    readReg(addr, reg);
 
-    return reg->to_uv();
+    return reg.to_uv();
 }
 
 
 
 int INA3221::getBusVoltagemV(const size_t index){
     RegAddress addr;
-    BusVoltReg * reg = nullptr;
-    switch(index){
+    BusVoltReg & reg = [&]() -> BusVoltReg &{
+        switch(index){
         default: PANIC()
         case 1:
-            reg = &busvolt1_reg;
             addr = busvolt1_reg.address1;
-            break;
+            return busvolt1_reg;
         case 2:
-            reg = &busvolt2_reg;
             addr = busvolt2_reg.address2;
-            break;
+            return busvolt2_reg;
         case 3:
-            reg = &busvolt3_reg;
             addr = busvolt3_reg.address3;
-            break;
-    }
+            return busvolt3_reg;
+        }
+    }();
 
-    readReg(addr, *reg);
+    readReg(addr, reg);
 
-    return reg->to_mv();
+    return reg.to_mv();
 }
 
 

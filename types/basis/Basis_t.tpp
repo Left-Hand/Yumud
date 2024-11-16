@@ -407,8 +407,8 @@ Vector3_t<T> Basis_t<T>::get_euler_xyz() const {
 
 	Vector3_t<T> euler;
 	T sy = (*this)[0][2];
-	if (sy < (1 - CMP_EPSILON)) {
-		if (sy > -(1 - CMP_EPSILON)) {
+	if (sy < (T(1 - CMP_EPSILON))) {
+		if (sy > -(T(1 - CMP_EPSILON))) {
 			// is this a pure Y rotation?
 			if ((*this)[1][0] == 0 && (*this)[0][1] == 0 && (*this)[1][2] == 0 && (*this)[2][1] == 0 && (*this)[1][1] == 1) {
 				// return the simplest form (human friendlier in editor and scripts)
@@ -422,12 +422,12 @@ Vector3_t<T> Basis_t<T>::get_euler_xyz() const {
 			}
 		} else {
 			euler.x = atan2f((*this)[2][1], (*this)[1][1]);
-			euler.y = -PI / 2.0;
+			euler.y = -T(PI / 2.0);
 			euler.z = 0;
 		}
 	} else {
 		euler.x = atan2f((*this)[2][1], (*this)[1][1]);
-		euler.y = PI / 2.0;
+		euler.y = T(PI / 2.0);
 		euler.z = 0;
 	}
 	return euler;

@@ -26,11 +26,6 @@ public:
             T w;
             T h;
         };
-
-        struct{
-            T width;
-            T height;
-        };
     };
 
     constexpr Rect2_t():position(Vector2_t<T>()), size(Vector2_t<T>()){;}
@@ -73,6 +68,16 @@ public:
     constexpr Vector2_t<T> get_position() const {return(position);}
     constexpr Vector2_t<T> get_size() const {return(size);}
     constexpr Vector2_t<T> get_end() const {return(position + size);}
+    
+    constexpr Vector2_t<T> get_point(const size_t idx) const {
+        switch(idx % 4){
+            default:
+            case 0:return position;
+            case 1:return Vector2_t<T>(position.x + size.x, position.y);
+            case 2:return position + size;
+            case 3:return Vector2_t<T>(position.x, position.y + size.y);
+        }
+    }
 
     constexpr bool is_regular() const{
         return(this->size.x >= 0 && this->size.y >= 0);

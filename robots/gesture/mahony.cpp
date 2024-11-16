@@ -3,13 +3,13 @@
 using namespace ymd;
 
 Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
-	Quat q;
+
 	Vector3 gyro = _gyro;
 	Vector3 accel = _accel;
 	
 	real_t halfvx, halfvy, halfvz;	// 估计的重力加速度矢量，half表示半值
 	real_t halfex, halfey, halfez; // 误差向量
-	real_t q0 = q[0],q1 = q[1], q2 = q[2], q3 = q[3];
+	real_t & q0 = q[0],q1 = q[1], q2 = q[2], q3 = q[3];
 	
 	real_t q0q0 = q[0]*q[0];
 	real_t q0q1 = q[0]*q[1];
@@ -26,7 +26,7 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 		// 注意，这里实际上是矩阵第三列*1/2，在开头对Kp Ki的宏定义均为2*增益，这样处理目的是减少乘法运算量
 		halfvx = q1q3 - q0q2;
 		halfvy = q0q1 + q2q3;
-		halfvz = q0q0 - real_t(0.5f) + q3q3;	// q0q0 - q1q1 - q2q2 + q3q3 的优化版（|q| =1）
+		halfvz = q0q0 - real_t(0.5) + q3q3;	// q0q0 - q1q1 - q2q2 + q3q3 的优化版（|q| =1）
 	
 		// 求误差：实际重力加速度向量（测量值）与理论重力加速度向量（估计值）做外积
 		halfex = (accel.y * halfvz - accel.z * halfvy);
@@ -35,9 +35,9 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 
 		if(twoKi > 0){
 			// 积分过程
-			integralFBx += twoKi * halfex * (1 / sampleFreq);	
-			integralFBy += twoKi * halfey * (1 / sampleFreq);
-			integralFBz += twoKi * halfez * (1 / sampleFreq);
+			integralFBx += twoKi * halfex * invSampleFreq;	
+			integralFBy += twoKi * halfey * invSampleFreq;
+			integralFBz += twoKi * halfez * invSampleFreq;
 
 			// 积分项
 			gyro.x += integralFBx;
@@ -57,9 +57,9 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 	}
 	
 	// 四元数 微分方程
-	gyro.x *= ((1 / sampleFreq) >> 1);
-	gyro.y *= ((1 / sampleFreq) >> 1);
-	gyro.z *= ((1 / sampleFreq) >> 1);
+	gyro.x *= (invSampleFreq >> 1);
+	gyro.y *= (invSampleFreq >> 1);
+	gyro.z *= (invSampleFreq >> 1);
 	
 	q[0] += (-q1 * gyro.x - q2 * gyro.y - q3 * gyro.z);
 	q[1] += (q0 * gyro.x + q2 * gyro.z - q3 * gyro.y);
@@ -68,5 +68,103 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 	
 
     q.normalize();
+	return q;
+}
+
+
+Mahony::Quat Mahony::update9(const Vector3 & _gyro,const Vector3 & _accel,const Vector3 & _mag){
+
+	Vector3 gyro = _gyro;
+	Vector3 accel = _accel;
+	Vector3 mag = _mag;
+
+	real_t recipNorm;
+	real_t & q0 = q[0],q1 = q[1], q2 = q[2], q3 = q[3];
+
+	real_t hx, hy, bx, bz;
+	real_t halfvx, halfvy, halfvz, halfwx, halfwy, halfwz;
+	real_t halfex, halfey, halfez;
+	real_t qa, qb, qc;
+
+	auto [gx,gy,gz] = gyro;
+	// Compute feedback only if accelerometer measurement valid
+	// (avoids NaN in accelerometer normalisation)
+	if(accel) {
+
+		accel.normalize();
+		mag.normalize();
+
+		auto [ax,ay,az] = accel;
+		auto [mx,my,mz] = mag;
+
+		// Auxiliary variables to avoid repeated arithmetic
+		real_t q0q0 = q0 * q0;
+		real_t q0q1 = q0 * q1;
+		real_t q0q2 = q0 * q2;
+		real_t q0q3 = q0 * q3;
+		real_t q1q1 = q1 * q1;
+		real_t q1q2 = q1 * q2;
+		real_t q1q3 = q1 * q3;
+		real_t q2q2 = q2 * q2;
+		real_t q2q3 = q2 * q3;
+		real_t q3q3 = q3 * q3;
+
+		// Reference direction of Earth's magnetic field
+		hx = 2 * (mx * (real_t(0.5) - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2));
+		hy = 2 * (mx * (q1q2 + q0q3) + my * (real_t(0.5) - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+		bx = sqrt(hx * hx + hy * hy);
+		bz = 2 * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (real_t(0.5) - q1q1 - q2q2));
+
+		// Estimated direction of gravity and magnetic field
+		halfvx = q1q3 - q0q2;
+		halfvy = q0q1 + q2q3;
+		halfvz = q0q0 - real_t(0.5) + q3q3;
+		halfwx = bx * (real_t(0.5) - q2q2 - q3q3) + bz * (q1q3 - q0q2);
+		halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+		halfwz = bx * (q0q2 + q1q3) + bz * (real_t(0.5) - q1q1 - q2q2);
+
+		// Error is sum of cross product between estimated direction
+		// and measured direction of field vectors
+		halfex = (ay * halfvz - az * halfvy) + (my * halfwz - mz * halfwy);
+		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+
+		// Compute and apply integral feedback if enabled
+		if(twoKi > 0) {
+			// integral error scaled by Ki
+			integralFBx += twoKi * halfex * invSampleFreq;
+			integralFBy += twoKi * halfey * invSampleFreq;
+			integralFBz += twoKi * halfez * invSampleFreq;
+			gx += integralFBx;	// apply integral feedback
+			gy += integralFBy;
+			gz += integralFBz;
+		} else {
+			integralFBx = 0;	// prevent integral windup
+			integralFBy = 0;
+			integralFBz = 0;
+		}
+
+		// Apply proportional feedback
+		gx += twoKp * halfex;
+		gy += twoKp * halfey;
+		gz += twoKp * halfez;
+	}
+
+	// Integrate rate of change of quaternion
+	gx *= (real_t(0.5) * invSampleFreq);		// pre-multiply common factors
+	gy *= (real_t(0.5) * invSampleFreq);
+	gz *= (real_t(0.5) * invSampleFreq);
+	
+	qa = q0;
+	qb = q1;
+	qc = q2;
+	
+	q0 += (-qb * gx - qc * gy - q3 * gz);
+	q1 += (qa * gx + qc * gz - q3 * gy);
+	q2 += (qa * gy - qb * gz + q3 * gx);
+	q3 += (qa * gz + qb * gy - qc * gx);
+
+	q.normalize();
+
 	return q;
 }

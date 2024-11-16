@@ -41,7 +41,7 @@ public:
         return is_equal_approx(distance_to(pt), 0);
     }
 
-    __fast_inline constexpr bool parallel_with(const Ray2D_t & other){
+    __fast_inline constexpr bool parallel_with(const Ray2D_t & other) const{
         return is_equal_approx(this->rad, other.rad);
     }
 

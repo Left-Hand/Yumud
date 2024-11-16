@@ -21,9 +21,7 @@ public:
 
 
     real_t uni() override{
-        real_t result;
-        u16_to_uni(data_cache, result);
-        return result;
+        return u16_to_uni(data_cache);
     }
 
     void setSampleCycles(const SampleCycles cycles) override{

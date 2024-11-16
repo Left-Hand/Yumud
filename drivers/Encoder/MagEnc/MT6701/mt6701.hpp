@@ -149,10 +149,10 @@ protected:
 
 
     
-    void writeReg(const RegAddress regAddress, const uint16_t regData);
-    void readReg(const RegAddress regAddress, uint16_t & regData);
-    void writeReg(const RegAddress regAddress, const uint8_t regData);
-    void readReg(const RegAddress regAddress, uint8_t & regData);
+    void writeReg(const RegAddress addr, const uint16_t data);
+    void readReg(const RegAddress addr, uint16_t & data);
+    void writeReg(const RegAddress addr, const uint8_t data);
+    void readReg(const RegAddress addr, uint8_t & data);
 public:
     MT6701(I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
     MT6701(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){};
@@ -232,8 +232,7 @@ public:
     }
 
     void setStart(const real_t start){
-        uint16_t _startData;
-        uni_to_u16(start, _startData);
+        uint16_t _startData = uni_to_u16(start);
         _startData >>= 4;
         startData = _startData;
         startStopReg.start = _startData >> 8;
@@ -242,8 +241,7 @@ public:
     }
 
     void setStop(const real_t stop){
-        uint16_t _stopData;
-        uni_to_u16(stop, _stopData);
+        uint16_t _stopData = uni_to_u16(stop);
         _stopData >>= 4;
         stopData = _stopData;
         startStopReg.stop = _stopData >> 8;

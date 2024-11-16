@@ -3,20 +3,20 @@
 #include "../buffer.hpp"
 
 template<typename T, uint32_t _size>
-class RingBuf_t:public StaticBuffer_t<T, _size>{
+class Fifo_t:public StaticBuffer_t<T, _size>{
 protected:
     T * volatile advancePointer(T * volatile ptr, size_t step = 1) {
-        return (ptr + step >=this->buf + this->size) ? ptr + step - this->size : ptr + step;
+        return (ptr + step >=this->buf + this->size()) ? ptr + step - this->size() : ptr + step;
     }
 
 public:
     T * volatile read_ptr;
     T * volatile write_ptr;
 
-    RingBuf_t():read_ptr(this->buf), write_ptr(this->buf){;}
+    Fifo_t():read_ptr(this->buf), write_ptr(this->buf){;}
 
 
-    __fast_inline void addData(const T & data) override{
+    __fast_inline void push(const T & data) override{
         *(T *)write_ptr = data;
         write_ptr = advancePointer(write_ptr);
         if(write_ptr == read_ptr){
@@ -24,9 +24,9 @@ public:
         }
     }
 
-    __fast_inline void addData(const T * data,const size_t len){
+    __fast_inline void push(const T * data,const size_t len){
         for(size_t i = 0; i < len; i++){
-            addData(data[i]);
+            push(data[i]);
         }
     }
     //     auto ptr_before = write_ptr;
@@ -38,7 +38,7 @@ public:
     //     }
     // }
 
-    __fast_inline const T & getData() override{
+    __fast_inline const T & pop() override{
         auto ret_ptr = read_ptr;
         read_ptr = advancePointer(read_ptr);
         return *(const T *)ret_ptr;
@@ -52,7 +52,7 @@ public:
         if (write_ptr >= read_ptr) {
             return size_t(write_ptr - read_ptr);
         } else {
-            return this->size - size_t(read_ptr - write_ptr);
+            return this->size() - size_t(read_ptr - write_ptr);
         }
     }
 
@@ -64,19 +64,19 @@ public:
         }
     }
 
-    void addDatas(const T * data_ptr, const size_t len, bool msb = false) override{
+    void push(const T * data_ptr, const size_t len, bool msb = false) override{
         if(msb){
-            for(size_t i = len - 1; i > 0; i--) addData(data_ptr[i]);
+            for(size_t i = len - 1; i > 0; i--) push(data_ptr[i]);
         }else{
-            for(size_t i = 0; i < len; i++) addData(data_ptr[i]);
+            for(size_t i = 0; i < len; i++) push(data_ptr[i]);
         }
     }
 
-    void getDatas(T * data_ptr, const size_t len, bool msb = false) override{
+    void pop(T * data_ptr, const size_t len, bool msb = false) override{
         if(msb){
-            for(size_t i = len - 1; i > 0; i--) data_ptr[i] = getData();
+            for(size_t i = len - 1; i > 0; i--) data_ptr[i] = pop();
         }else{
-            for(size_t i = 0; i < len; i++) data_ptr[i] = getData();
+            for(size_t i = 0; i < len; i++) data_ptr[i] = pop();
         }
     }
 
@@ -86,5 +86,5 @@ public:
     }
 };
 template<uint32_t size>
-using RingBuf = RingBuf_t<uint8_t, size>;
+using RingBuf = Fifo_t<uint8_t, size>;
 

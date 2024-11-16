@@ -9,23 +9,25 @@ using namespace ymd::drivers;
 #define TCS34725_DEBUG(...)
 #endif
 
-void TCS34725::requestRegData(const RegAddress regAddress, uint16_t * data_ptr, const size_t len){
-    uint8_t address = convRegAddress(regAddress);
+void TCS34725::requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len){
+    uint8_t address = convRegAddress(addr);
     TCS34725_DEBUG("address", address)
 
     i2c_drv_.readMulti(address, data_ptr, len, LSB);
 }
 
 
-void TCS34725::getCRGB(real_t & c, real_t & r, real_t & g, real_t & b){
-    s16_to_uni(data[0], c);
-    s16_to_uni(data[1], r);
-    s16_to_uni(data[2], g);
-    s16_to_uni(data[3], b);
+std::tuple<real_t, real_t, real_t, real_t> TCS34725::getCRGB(){
+    return {
+        s16_to_uni(crgb[0]),
+        s16_to_uni(crgb[1]),
+        s16_to_uni(crgb[2]),
+        s16_to_uni(crgb[3])
+    };
 }
 
 void TCS34725::update(){
-    requestRegData(RegAddress::ClearData, data, 4);
+    requestRegData(RegAddress::ClearData, crgb, 4);
 }
 
 

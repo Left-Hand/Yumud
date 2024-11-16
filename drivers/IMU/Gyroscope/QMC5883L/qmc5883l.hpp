@@ -31,16 +31,16 @@ protected:
     real_t fs;
     uint8_t ovsfix = 0;
 
-    struct MagXReg:public Reg16{
-        uint16_t data;
+    struct MagXReg:public Reg16i{
+        int16_t :16;
     };
 
-    struct MagYReg:public Reg16{
-        uint16_t data;
+    struct MagYReg:public Reg16i{
+        int16_t :16;
     };
 
-    struct MagZReg:public Reg16{
-        uint16_t data;
+    struct MagZReg:public Reg16i{
+        int16_t :16;
     };
 
     struct StatusReg:public Reg8{
@@ -105,31 +105,28 @@ protected:
         ChipIDReg chipIDReg;
     };
 
-    void writeReg(const RegAddress regAddress, const uint16_t regData){
-        i2c_drv_.writeReg((uint8_t)regAddress, regData, LSB);
+    void writeReg(const RegAddress addr, const uint16_t data){
+        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
     }
 
-    void readReg(const RegAddress regAddress, uint16_t & regData){
-        i2c_drv_.readReg((uint8_t)regAddress, regData, LSB);
+    void readReg(const RegAddress addr, uint16_t & data){
+        i2c_drv_.readReg((uint8_t)addr, data, LSB);
     }
 
-    void writeReg(const RegAddress regAddress, const uint8_t regData){
-        i2c_drv_.writeReg((uint8_t)regAddress, regData, LSB);
+    void writeReg(const RegAddress addr, const uint8_t data){
+        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
     }
 
-    void readReg(const RegAddress regAddress, uint8_t & regData){
-        i2c_drv_.readReg((uint8_t)regAddress, regData, LSB);
+    void readReg(const RegAddress addr, uint8_t & data){
+        i2c_drv_.readReg((uint8_t)addr, data, LSB);
     }
 
-    void requestPool(const RegAddress regAddress, uint8_t * datas, uint8_t len){
-        i2c_drv_.readMulti((uint8_t)regAddress, datas, len, LSB);
+    void requestPool(const RegAddress addr, int16_t * datas, const size_t len){
+        i2c_drv_.readMulti((uint8_t)addr, datas, len, LSB);
     }
 
-    real_t From16BitToGauss(const uint16_t data){
-        real_t guass;
-        s16_to_uni(data, guass);
-        guass *= fs;
-        return guass;
+    real_t From16BitToGauss(const int16_t data){
+        return s16_to_uni(data) * fs;
     }
 
     void setFs(const FullScale FS){
@@ -164,91 +161,39 @@ protected:
         }
     }
 
-    bool isIdle(){
+    bool busy(){
         readReg(RegAddress::Status, statusReg);
-        return statusReg.ready;
+        return statusReg.ready == false;
     }
 public:
     QMC5883L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     QMC5883L(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    QMC5883L(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
+    QMC5883L(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):
+            i2c_drv_(I2cDrv(i2c, i2c_addr)){;}
 
-    void init(){
-        if(isChipValid()){
-            setResetPeriod(1);
-            enableContMode();
-            setFullScale(FullScale::FS2G);
-            setOverSampleRatio(OverSampleRatio::OSR512);
-            setDataRate(DataRate::DR200);
-        }
-    }
+    void init();
 
-    void enableContMode(const bool en = true){
-        configAReg.measureMode = (uint8_t)(en);
-        writeReg(RegAddress::ConfigA, configAReg);
-    }
+    void enableContMode(const bool en = true);
+    
+    void setDataRate(const DataRate rate);
+    
+    void setFullScale(const FullScale fullscale);
+    
+    void setOverSampleRatio(const OverSampleRatio ratio);
 
-    void setDataRate(const DataRate rate){
-        configAReg.dataRate = (uint8_t)rate;
-        writeReg(RegAddress::ConfigA, configAReg);
-    }
+    void update();
 
-    void setFullScale(const FullScale fullscale){
-        configAReg.fullScale = (uint8_t)fullscale;
-        writeReg(RegAddress::ConfigA, configAReg);
-        setFs(fullscale);
-    }
+    std::tuple<real_t, real_t, real_t> getMagnet() override;
+    
+    bool verify();
 
-    void setOverSampleRatio(const OverSampleRatio ratio){
-        configAReg.OverSampleRatio = (uint8_t)ratio;
-        writeReg(RegAddress::ConfigA, configAReg);
-        setOvsfix(ratio);
-    }
+    void setResetPeriod(const uint8_t resetPeriod);
 
-    void update(){
-        bool done = isIdle();
-        if(done){
-            requestPool(RegAddress::MagX, (uint8_t *)&magXReg, 3);
-        }
-        // return done;
-    }
+    void reset();
 
-    std::tuple<real_t, real_t, real_t> getMagnet() override {
-        return std::make_tuple(
-            From16BitToGauss(magXReg),
-            From16BitToGauss(magYReg),
-            From16BitToGauss(magZReg)
-        );
-    }
-    bool isChipValid(){
-        readReg(RegAddress::ChipID, chipIDReg);
-        return (chipIDReg == 0xFF);
-    }
+    void enableInterrupt(const bool en = true);
 
-    void setResetPeriod(const uint8_t resetPeriod){
-        resetPeriodReg = resetPeriod;
-        writeReg(RegAddress::ResetPeriod, resetPeriodReg);
-    }
-
-    void reset(){
-        configBReg.srst = true;
-        writeReg(RegAddress::ConfigB, resetPeriodReg);
-        configBReg.srst = false;
-        writeReg(RegAddress::ConfigB, resetPeriodReg);
-    }
-
-    void enableInterrupt(const bool en = true){
-        configBReg.intEn = (uint8_t)(en);
-        writeReg(RegAddress::ConfigB, configBReg);
-    }
-
-
-
-    bool isOverflow(){
-        readReg(RegAddress::Status, statusReg);
-        return statusReg.ovl;
-    }
-
+    bool isOverflow();
 };
 
 

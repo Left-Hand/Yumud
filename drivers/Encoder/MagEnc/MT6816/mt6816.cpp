@@ -39,11 +39,11 @@ void MT6816::update() {
         }
 
         if(count % 2 == last_semantic.pc){
-            u16_to_uni(last_semantic.data_14bit << 2, lap_position);
+            lap_position = u16_to_uni(last_semantic.data_14bit << 2);
         }else{
             errcnt++;
         }
     }else{
-        u16_to_uni(raw, lap_position);
+        lap_position = u16_to_uni(raw);
     }
 }

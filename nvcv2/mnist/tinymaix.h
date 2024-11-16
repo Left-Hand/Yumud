@@ -128,7 +128,7 @@ typedef struct{
     uint8_t* subbuf;        //sub buf addr
     uint16_t main_alloc;    //is main buf alloc or static
     uint16_t layer_i;       //current layer index
-    uint8_t* layer_body;    //current layer body addr
+    const uint8_t* layer_body;    //current layer body addr
 }tm_mdl_t;
 
 //dims==3, hwc

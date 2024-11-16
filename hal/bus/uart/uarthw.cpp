@@ -195,7 +195,7 @@ void UartHw::enableRcc(const bool en){
 
 
 void UartHw::rxneHandle(){
-    this->rxBuf.addData(USART_ReceiveData(instance));
+    this->rxBuf.push(USART_ReceiveData(instance));
 }
 void UartHw::txeHandle(){
 
@@ -205,7 +205,7 @@ void UartHw::idleHandle(){
     if(rxMethod == CommMethod::Dma){
         size_t index = UART_RX_DMA_BUF_SIZE - rxDma.pending();
         if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
-            for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+            for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.push(rx_dma_buf[i]); 
         }
         rx_dma_buf_index = index;
         EXECUTE(rxPostCb);
@@ -384,16 +384,16 @@ void UartHw::enableRxDma(const bool en){
         rxDma.configDataBytes(1);
         rxDma.bindDoneCb([this](){
             this->invokeRxDma();
-            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.push(rx_dma_buf[i]); 
             rx_dma_buf_index = 0;
         });
 
         rxDma.bindHalfCb([this](){
-            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rxBuf.addData(rx_dma_buf[i]); 
+            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rxBuf.push(rx_dma_buf[i]); 
             rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
         });
 
-        rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
+        rxDma.begin((void *)rx_dma_buf, (const void *)(size_t)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
         rxDma.bindHalfCb(nullptr);
@@ -405,12 +405,12 @@ void UartHw::invokeTxDma(){
         if(txBuf.available()){
             size_t tx_amount = 0;
             while(txBuf.available()){
-                tx_dma_buf[tx_amount++] = txBuf.getData();
+                tx_dma_buf[tx_amount++] = txBuf.pop();
                 if(tx_amount >= UART_TX_DMA_BUF_SIZE){
                     break;
                 }
             }
-            txDma.begin((void *)(&instance->DATAR), (void *)tx_dma_buf, tx_amount);
+            txDma.begin((void *)(size_t)(&instance->DATAR), (const void *)tx_dma_buf, tx_amount);
         }else{
             EXECUTE(txPostCb);
         }
@@ -516,20 +516,20 @@ void UartHw::write(const char * data_ptr, const size_t len){
     switch(txMethod){
         case CommMethod::Blocking:
             instance->DATAR;
-            for(size_t i=0;i<len;i++)txBuf.addData(data_ptr[i]);
+            for(size_t i=0;i<len;i++)txBuf.push(data_ptr[i]);
             while(txBuf.available()){
-                instance->DATAR = txBuf.getData();
+                instance->DATAR = txBuf.pop();
                 while((instance->STATR & USART_FLAG_TXE) == RESET);
             }
             while((instance->STATR & USART_FLAG_TC) == RESET);
             break;
         case CommMethod::Interrupt:
-            for(size_t i=0;i<len;i++)txBuf.addData(data_ptr[i]);
+            for(size_t i=0;i<len;i++)txBuf.push(data_ptr[i]);
             invokeTxIt();
 
             break;
         case CommMethod::Dma:
-            for(size_t i=0;i<len;i++)txBuf.addData(data_ptr[i]);
+            for(size_t i=0;i<len;i++)txBuf.push(data_ptr[i]);
             invokeTxDma();
             break;
         default:
@@ -540,18 +540,18 @@ void UartHw::write(const char * data_ptr, const size_t len){
 void UartHw::write(const char data){
     switch(txMethod){
         case CommMethod::Blocking:
-            txBuf.addData(data);
+            txBuf.push(data);
 
             instance->DATAR;
-            instance->DATAR = txBuf.getData();
+            instance->DATAR = txBuf.pop();
             while((instance->STATR & USART_FLAG_TC) == RESET);
             break;
         case CommMethod::Interrupt:
-            txBuf.addData(data);
+            txBuf.push(data);
             invokeTxIt();
             break;
         case CommMethod::Dma:
-            txBuf.addData(data);
+            txBuf.push(data);
             invokeTxDma();
             break;
         default:

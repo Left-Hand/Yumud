@@ -211,13 +211,15 @@ public:
         }
     }
 
-    Rect2_t<T> form_rect() const {
-        return Rect2_t<T>(Vector2_t<T>(), *this);
-
-
+    __fast_inline static constexpr Vector2_t<T> from_angle(const T & len, const T & rad){
+        return {len * ::cos(rad), len * ::sin(rad)};
     }
 
-    Rect2_t<T> form_rect(const Vector2_t<auto> & other) const {
+    __fast_inline static constexpr Vector2_t<T> ones(const T & len){
+        return {len, len};
+    }
+
+    __fast_inline constexpr Rect2_t<T> form_rect(const Vector2_t<auto> & other) const {
         auto rect = Rect2_t<T>(other, other - *this);
         return rect.abs();
     }

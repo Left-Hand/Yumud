@@ -6,17 +6,22 @@
 
 namespace ymd{
 class Mahony{
+public:
+    using Quat = Quat_t<real_t>;
+    using Vector3 = Vector3_t<real_t>;
 protected:
-    real_t sampleFreq = 1000;
+    real_t invSampleFreq = real_t(0.005);
     real_t twoKp = 2;											// 2 * proportional gain (Kp)
     real_t twoKi = 2;											// 2 * integral gain (Ki)
     real_t integralFBx = 0;
     real_t integralFBy = 0; 
     real_t integralFBz = 0;	// 积分误差
+
+	Quat q;
 public:
-    using Quat = Quat_t<real_t>;
-    using Vector3 = Vector3_t<real_t>;
-    Quat update(const Vector3 & gyro,const Vector3 & accel);
+
+    [[nodiscard]] Quat update(const Vector3 & gyro,const Vector3 & accel);
+    [[nodiscard]] Quat update9(const Vector3 & gyro,const Vector3 & accel,const Vector3 & mag);
 };
 
 }

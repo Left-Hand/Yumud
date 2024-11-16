@@ -99,7 +99,7 @@ static __inline ui32 hash_func(ui32 i)
 static __inline ui32 fast_read(void const *src, ui32 bytes)
 {
 #ifndef X86X64
-	unsigned char *p = (unsigned char*)src;
+	const unsigned char *p = (const unsigned char*)src;
 	switch (bytes)
 	{
 	case 4:

@@ -248,7 +248,7 @@ bool Can::write(const CanMsg & msg){
 }
 
 CanMsg Can::read(){
-    return pending_rx_msgs.getData();
+    return pending_rx_msgs.pop();
 }
 
 const CanMsg & Can::front(){
@@ -353,7 +353,7 @@ void Can::handleRx(const uint8_t fifo_num){
             //从外设读入报文到变量
             CAN_Receive(instance, fifo_num, rx_msg.prx());
 
-            pending_rx_msgs.addData(rx_msg);
+            pending_rx_msgs.push(rx_msg);
         }while(false);
         EXECUTE(cb_rx);
         CAN_ClearITPendingBit(instance, fmp_mask);

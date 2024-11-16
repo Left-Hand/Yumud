@@ -27,7 +27,7 @@
     };
 
 
-    struct Vector3i16Reg:public Reg8{
+    struct Vector3i16Reg{
         scexpr RegAddress mag_address = 0x04;
         scexpr RegAddress mag_x_address = 0x04;
         scexpr RegAddress mag_y_address = 0x06;
@@ -131,6 +131,13 @@
         uint8_t data;
     };
 
+    struct AccConfReg:public Reg8{
+        scexpr RegAddress address = 0x40;
+        uint8_t acc_odr:4;
+        uint8_t acc_bwp:3;
+        uint8_t acc_us:1;
+    };
+    
     struct AccRangeReg:public Reg8{
         scexpr RegAddress address = 0x41;
         uint8_t acc_range:4;

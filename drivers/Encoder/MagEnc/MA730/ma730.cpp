@@ -24,8 +24,7 @@ void MA730::setZeroData(const uint16_t data){
 
 
 void MA730::setZeroPosition(const real_t position){
-    uint16_t data = 0;
-    uni_to_u16(frac(position), data);
+    auto data = uni_to_u16(frac(position));
     setZeroData(data);
 }
 
@@ -33,7 +32,7 @@ void MA730::setZeroPosition(const real_t position){
 void MA730::update(){
     uint16_t data = 0;
     directRead(data);
-    u16_to_uni(data, lap_position);
+    lap_position = u16_to_uni(data);
 }
 
 

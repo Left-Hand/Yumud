@@ -19,7 +19,7 @@ limitations under the License.
 static uint8_t l_buf[LAYERBUF_SIZE];
 static const uint8_t* l_bin;
 #define LAYER_BODY (l_buf+sizeof(tm_mdlbin_t))
-#define TM_READ_LAYER(dst,src,num)  memcpy((void*)(dst),(void*)(src),(num))
+#define TM_READ_LAYER(dst,src,num)  memcpy((void*)(dst),(const void*)(src),(num))
 //load model
 //mdl: model handle; bin: model bin buf; buf: main buf for middle output; cb: layer callback; 
 //in: return input mat, include buf addr; //you can ignore it if use static buf
@@ -110,7 +110,7 @@ tm_err_t tm_run(tm_mdl_t* mdl, tm_mat_t* in, tm_mat_t* out)
     int out_idx = 0;
     tml_head_t* h;
     memcpy((void*)&_in, (void*)in, sizeof(tm_mat_t));     
-    mdl->layer_body = (uint8_t*)(l_bin+sizeof(tm_mdlbin_t));
+    mdl->layer_body = (const uint8_t*)(l_bin+sizeof(tm_mdlbin_t));
     for(mdl->layer_i = 0; mdl->layer_i < mdl->b->layer_cnt; mdl->layer_i++){
         TM_READ_LAYER(LAYER_BODY,mdl->layer_body,sizeof(tml_head_t));
         h = (tml_head_t*)(LAYER_BODY);

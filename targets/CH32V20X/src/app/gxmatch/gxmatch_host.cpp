@@ -1,6 +1,10 @@
 #include "gxmatch.hpp"
 #include "host/host.hpp"
 
+#include "autodrive/Planner.hpp"
+#include "autodrive/sequence/TrapezoidSolver_t.hpp"
+
+
 #include "machine/scara/scara.hpp"
 #include "machine/actuator/zaxis_stp.hpp"
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
@@ -8,7 +12,17 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "robots/foc/remote/remote.hpp"
 
+#include "types/image/painter.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
+
+
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
+#include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
+#include "hal/bus/spi/spihw.hpp"
+
+#include "async/Node.hpp"
 
 using Sys::t;
 
@@ -20,29 +34,7 @@ namespace gxm{
 
 
 using Vector2 = Vector2_t<real_t>;
-scexpr real_t squ_len = 96;
-scexpr Vector2 pos_begin = {111, 46};
-scexpr Vector2 pos_end = pos_begin + Vector2{squ_len,squ_len};
-scexpr Vector2 pos_center = Vector2(pos_begin) + Vector2(squ_len / 2, squ_len / 2);
-scexpr Vector2 pos_pending = Vector2(pos_center) - Vector2(80, 0);
 
-
-[[maybe_unused]] static Vector2 get_square_rounded_position(uint8_t index){
-    // xymm 110.5 30
-    // xymm 208.5 126
-    index = index - 1;
-    const auto x_i = 1 - (real_t(index % 3) / 2);
-    const auto y_i = real_t(index / 3) / 2;
-
-    return Vector2(pos_begin.x + (pos_end.x - pos_begin.x) * x_i, pos_begin.y + (pos_end.y - pos_begin.y) * y_i);
-}
-
-
-[[maybe_unused]] static Vector2 get_square_rounded_position(real_t rad){
-    auto rad_90 = fmod(rad + pi_4, pi_2) - pi_4;
-    auto distance = (squ_len / 2) / cos(rad_90);
-    return pos_center + Vector2{-distance, 0}.rotated(rad);
-}
 
 
 struct GrabSysConfig{
@@ -106,8 +98,79 @@ void host_main(){
     auto & logger = uart2;
 
     auto i2c = I2cSw{portD[2], portC[12]};
-    i2c.init(1250_KHz);
-    // i2c.init(0);//ok
+    i2c.init(400_KHz);
+    
+    auto & lcd_cs = portD[6];
+    auto & lcd_dc = portD[7];
+    auto & dev_rst = portB[7];
+
+
+    #ifdef CH32V30X
+    auto & spi = spi2;
+    #else
+    auto & spi = spi1;
+    #endif
+    
+    spi.bindCsPin(lcd_cs, 0);
+    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+
+    {
+        tftDisplayer.init();
+
+        tftDisplayer.setFlipX(false);
+        tftDisplayer.setFlipY(true);
+        if(true){
+            tftDisplayer.setSwapXY(true);
+            tftDisplayer.setDisplayOffset({40, 52}); 
+        }else{
+            tftDisplayer.setSwapXY(false);
+            tftDisplayer.setDisplayOffset({52, 40}); 
+        }
+        tftDisplayer.setFormatRGB(true);
+        tftDisplayer.setFlushDirH(false);
+        tftDisplayer.setFlushDirV(false);
+        tftDisplayer.setInversion(true);
+
+        tftDisplayer.fill(ColorEnum::BLACK);
+    }
+    
+    auto painter = Painter<RGB565>{};
+    painter.bindImage(tftDisplayer);
+    auto canvas_transform = [&](const Ray & ray) -> Ray{
+        scexpr auto meter = int{2};
+        scexpr auto size = Vector2{100,100};
+        scexpr auto org =  Vector2{12,12};
+        scexpr auto area = Rect2i{org,size};
+        
+        auto x = LERP(real_t(area.x), real_t(area.x + area.w), ray.org.x / meter);
+        auto y = LERP(real_t(area.y + area.h), real_t(area.y), ray.org.y / meter);
+        return Ray{Vector2{x,y} + Vector2::ones(12), ray.rad};
+    };
+
+    auto draw_curve = [&](const Curve & curve){
+        painter.setColor(ColorEnum::BLUE);
+        for(auto it = curve.begin(); it != curve.end(); it++){
+            auto pos = canvas_transform(Ray(*it)).org;
+            painter.drawPixel(pos);
+        }
+    };
+    
+    auto draw_turtle = [&](const Ray & ray){
+        scexpr real_t len = 7;
+        auto [org, rad] = canvas_transform(ray);
+        rad = -rad;//flipy
+        auto pf = org + Vector2::from_angle(len, rad);
+        auto p1 = org + Vector2::from_angle(len, rad + real_t(  PI * 0.8));
+        auto p2 = org + Vector2::from_angle(len, rad + real_t(- PI * 0.8));
+
+        // painter.setColor(ColorEnum::RED);
+        painter.setColor(RGB888(HSV888(int(t * 64),255,255)));
+        painter.drawFilledTriangle(pf, p1, p2);
+        painter.setColor(ColorEnum::BLACK);
+        painter.drawHollowTriangle(pf, p1, p2);
+    };
     
     PCA9685 pca{i2c};
     pca.init();
@@ -186,7 +249,119 @@ void host_main(){
     CrossSolver cross_solver{
         cross_config
     };
-     
+
+
+    if(false){
+        auto solver = TrapezoidSolver_t<real_t>{4,10.0_r,0.1_r};
+        scexpr auto delta = 0.001_r;
+        
+        DEBUG_PRINTLN(std::setprecision(4));
+        for(real_t x = 0; x <= solver.period(); x += delta){
+            auto y = solver.forward(x);
+            delayMicroseconds(500);
+            DEBUG_PRINTLN(x, y);
+        } 
+        PANIC();
+    }
+    
+
+    if(true){
+        MPU6050 bmi{i2c};
+
+        bmi.init();
+
+        while(true){
+
+            bmi.update();
+            auto acc = Vector3{bmi.getAccel()};
+            auto gyr = Vector3{bmi.getGyro()};
+            // auto gest = Quat{{0,0,1}, acc};
+            delay(1);
+            DEBUG_PRINTLN(acc.x, acc.y, acc.z, gyr.x, gyr.y, gyr.z, acc.length());
+        }
+    }
+
+    if(false){     
+        QMC5883L mag_sensor{i2c};
+
+        mag_sensor.init();
+        
+        while(true){
+
+            mag_sensor.update();
+            const auto mag = Vector3{mag_sensor.getMagnet()};
+            // const auto gest = Quat{{0,0,1}, mag.normalized()};
+            delay(1);
+            // DEBUG_PRINTLN(std::setprecision(4), gest.x, gest.y, gest.z, gest.w);
+            DEBUG_PRINTLN(mag.x, mag.y, mag.z, atan2(mag.y, mag.x));
+        }
+    }
+
+    {
+            using Type = int;
+            using Topic = Topic_t<Type>;
+
+            
+            Topic topic;
+
+            // 创建一个 Publisher
+            auto publisher = topic.createPublisher();
+
+            // 创建多个 Subscriber
+            auto subscriber1 = topic.createSubscriber([](const Type & message) {
+                DEBUGGER << "Subscriber 1 received: " << message << "\r\n";
+            });
+
+            auto subscriber2 = topic.createSubscriber([](const Type & message) {
+                DEBUGGER << "Subscriber 2 received: " << message << "\r\n";
+            });
+
+
+            // 发布消息
+            publisher.publish(1);
+            publisher.publish(2);
+
+
+            // 再次发布消息
+            publisher.publish(3);
+
+    }
+    {
+        auto limits = SequenceLimits{
+            .max_gyro = 2,
+            .max_angular = 2,
+            .max_spd = real_t(0.8),
+            .max_acc = real_t(0.5)
+        };
+
+        auto params = SequenceParas{
+            .freq = 200
+        };
+        
+        auto sequencer = Sequencer(limits, params);
+        auto curve = Curve{};
+        // sequencer.linear(curve, Ray{0, 0, 0}, Vector2{1,1});
+        // sequencer.fillet(curve, Ray{0,0,0}, Ray{1,1,real_t(PI/2)});
+
+        auto m = micros();
+        sequencer.fillet(curve, Ray{0,0,real_t(PI)}, Ray{2,2,real_t(PI/2)});
+        DEBUG_PRINTLN(micros() - m);
+        draw_curve(curve);
+        
+        DEBUG_PRINTLN(std::setprecision(4));
+        auto idx = 0;
+        for(auto it = curve.begin(); it != curve.end(); ++it){
+            while(millis() < size_t((idx * 5) + 1000));
+            idx++;
+            // auto ray = *it;
+            // auto && [org,rad] = ray;
+            // auto && [x,y] = org;
+            draw_turtle(Ray(*it));
+        }
+        DEBUG_PRINTLN("done");
+        while(true);
+    }
+
     while(true){
 
         // auto duty = real_t(0.5) + (sin(t) >> 1);
@@ -223,8 +398,9 @@ void host_main(){
             auto f_height = cross_solver.forward(inv_rad);
             logger.println(std::setprecision(3), inv_rad, height, f_height);
         }
-        // pwm = real_t(0.5);
-        // logger.println(duty);
+
+
+    
         delay(20);
     }
     

@@ -8,7 +8,7 @@ public:
         uint32_t h = 0;  
         uint16_t strLength = length, alignedLen = strLength / sizeof(uint32_t);
         for(size_t i = 0; i < alignedLen; ++i)  
-            h = (h << 5) - h + ((uint32_t*)data)[i]; 
+            h = (h << 5) - h + (reinterpret_cast<const uint32_t*>(data)[i]); 
         for(size_t i = alignedLen << 2; i < strLength; ++i)
             h = (h << 5) - h + uint8_t(data[i]); 
         return h; 

@@ -29,26 +29,6 @@ using namespace ymd;
 	}
 }
 
-[[maybe_unused]] static void dshot_tb_old(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
-    auto setup = [](TimerOC & oc, DmaChannel & channel){
-        channel.init(DmaChannel::Mode::toPeriphCircular, DmaChannel::Priority::ultra);
-        channel.begin((void *)&oc.cvr(), (void *)data.begin(), data.size());
-        oc.init();
-        oc.enableDma();
-    };
-
-    setup(oc1, dma2Ch3);
-    setup(oc2, dma2Ch5);
-
-    while(true){
-        transfer(m_crc(0));
-        delay(15);
-        transfer(m_crc(300));
-        delay(10);
-        transfer(m_crc(1500));
-        logger.println(millis());
-    }
-}
 
 [[maybe_unused]] static void dshot_tb_new(OutputStream & logger, TimerOC & oc1, TimerOC & oc2){
     DShotChannel ch1{oc1};

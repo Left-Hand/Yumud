@@ -88,32 +88,29 @@ protected:
         StatusReg statusReg;
     };
 
-    void writeReg(const RegAddress regAddress, const uint16_t regData){
-        i2c_drv_.writeReg((uint8_t)regAddress, regData, MSB);
+    void writeReg(const RegAddress addr, const uint16_t data){
+        i2c_drv_.writeReg((uint8_t)addr, data, MSB);
     }
 
-    void readReg(const RegAddress regAddress, uint16_t & regData){
-        i2c_drv_.readReg((uint8_t)regAddress, regData, MSB);
+    void readReg(const RegAddress addr, uint16_t & data){
+        i2c_drv_.readReg((uint8_t)addr, data, MSB);
     }
 
-    void writeReg(const RegAddress regAddress, const uint8_t regData){
-        i2c_drv_.writeReg((uint8_t)regAddress, regData, MSB);
+    void writeReg(const RegAddress addr, const uint8_t data){
+        i2c_drv_.writeReg((uint8_t)addr, data, MSB);
     }
 
-    void readReg(const RegAddress regAddress, uint8_t & regData){
-        i2c_drv_.readReg((uint8_t)regAddress, regData, MSB);
+    void readReg(const RegAddress addr, uint8_t & data){
+        i2c_drv_.readReg((uint8_t)addr, data, MSB);
     }
 
 
-    void requestPool(const RegAddress &regAddress, auto * datas, size_t len){
-        i2c_drv_.readMulti((uint8_t)regAddress, datas, len, MSB);
+    void requestPool(const RegAddress addr, valid_i2c_data auto * datas, size_t len){
+        i2c_drv_.readMulti((uint8_t)addr, datas, len, MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){
-        real_t guass;
-        s16_to_uni(data & 0x8fff, guass);
-        guass *= lsb;
-        return guass;
+        return s16_to_uni(data & 0x8fff) * lsb;
     }
 
     void setLsb(const Gain gain){
@@ -149,75 +146,28 @@ protected:
 public:
     HMC5883L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     HMC5883L(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    HMC5883L(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
+    HMC5883L(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, i2c_addr)){;}
 
-    void init(){
-        enableHighSpeed();
-        enableContMode();
-        setMeasurementMode(MeasurementMode::Norm);
-        setDataRate(DataRate::DR75);
-        setSampleNumber(SampleNumber::SN1);
-        setGain(Gain::GL1_52);
-    }
-    void enableHighSpeed(const bool en = true){
-        modeReg.hs = true;
-        writeReg(RegAddress::Mode, modeReg);
-    }
+    void init();
+    void enableHighSpeed(const bool en = true);
 
-    void setMeasurementMode(const MeasurementMode mode){
-        configAReg.measureMode = (uint8_t)mode;
-        writeReg(RegAddress::ConfigA, configAReg);
-    }
+    void setMeasurementMode(const MeasurementMode mode);
 
-    void setDataRate(const DataRate rate){
-        configAReg.dataRate = (uint8_t)rate;
-        writeReg(RegAddress::ConfigA, configBReg);
-    }
+    void setDataRate(const DataRate rate);
+    void setSampleNumber(const SampleNumber number);
 
-    void setSampleNumber(const SampleNumber number){
-        configAReg.sampleNumber = (uint8_t)number;
-        writeReg(RegAddress::ConfigA, configAReg);
-    }
+    void setGain(const Gain gain);
+    void setMode(const Mode mode);
 
-    void setGain(const Gain gain){
-        configBReg.gain = (uint8_t)gain;
-        writeReg(RegAddress::ConfigB, configBReg);
-        setLsb(gain);
-    }
+    std::tuple<real_t, real_t, real_t> getMagnet() override;
 
-    void setMode(const Mode mode){
-        modeReg.mode = (uint8_t)mode;
-        writeReg(RegAddress::Mode, modeReg);
-    }
-
-    std::tuple<real_t, real_t, real_t> getMagnet() override{
-        real_t x = From12BitToGauss(magXReg);
-        real_t y = From12BitToGauss(magYReg);
-        real_t z = From12BitToGauss(magZReg);
-
-        return std::make_tuple(x,y,z);
-    }
-
-    bool isChipValid(){
-        uint8_t id[3] = {0};
-        requestPool(RegAddress::IDA, id, 3);
-        return (id[0] == 'H' && id[1] == '4' && id[2] == '3');
-    }
-
-    void update() override{
-        requestPool(RegAddress::MagX, &magXReg, 3);
-    }
+    bool verify();
+    void update() override;
 
 
-    bool isIdle(){
-        readReg(RegAddress::Status, statusReg);
-        return statusReg.ready;
-    }
+    bool busy();
 
-    void enableContMode(const bool en = true){
-        modeReg.mode = (uint8_t)(en ? Mode::Continuous : Mode::Single);
-        writeReg(RegAddress::Mode, modeReg);
-    }
+    void enableContMode(const bool en = true);
 };
 
 };
