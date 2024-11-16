@@ -42,7 +42,7 @@ namespace MotorUtils{
         }
 
         bool is_empty() const {
-            uint8_t * ptr = (uint8_t *)this;
+            auto * ptr = (const uint8_t *)this;
             for(size_t i = 0; i < sizeof(*this); i++){
                 if(ptr[i]!= 0){
                     return false;

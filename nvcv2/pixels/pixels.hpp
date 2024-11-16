@@ -61,7 +61,7 @@ namespace ymd::nvcv2::Pixels{
     }
 
     __inline void fast_diff_opera(Image<Grayscale> & dst, const Image<Grayscale> & src) {
-        if((void *)&dst == (void *)&src){
+        if(dst == src){
             auto temp = dst.clone();
             fast_diff_opera(temp, src);
             dst = std::move(temp);

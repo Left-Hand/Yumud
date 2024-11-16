@@ -29,7 +29,7 @@ scexpr uint8_t crc8_table[256] = {
 
 uint8_t LDS14::LidarFrame::calc_crc() const {
     static constexpr size_t len = sizeof(*this) - sizeof(crc8);
-    uint8_t * p = (uint8_t *)this;
+    auto * p = reinterpret_cast<const uint8_t *>(this);
     uint8_t crc = 0;
     for (size_t i = 0; i < len; i++){
         crc = crc8_table[(crc ^ *p++) & 0xff];

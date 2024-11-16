@@ -3,17 +3,6 @@
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
 
-// #define BMI160_DEBUG
-
-#ifdef BMI160_DEBUG
-#undef BMI160_DEBUG
-#define BMI160_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define BMI160_PANIC(...) PANIC(__VA_ARGS)
-#else
-#define BMI160_DEBUG(...)
-#define BMI160_PANIC(...)
-#endif
-
 namespace ymd::drivers{
 
 class BMI160:public Axis6{

@@ -4,11 +4,11 @@ using namespace ymd;
 
 
 // 设置加速度修正PI值
-#define Accel_Kp (3.0f)
-#define Accel_Ki (0.00f)
+#define Accel_Kp (3)
+#define Accel_Ki (0)
 // 设置磁力计修正PI值
-#define Magnetic_Kp (5.0f) // 10.0f
-#define Magnetic_Ki (0.00f)
+#define Magnetic_Kp (5) // 10.0f
+#define Magnetic_Ki (0)
 
 
 #define Fusion_Initial_X_North
@@ -42,7 +42,7 @@ void ImuFusion::update9(const Vector3 & gyro, const Vector3 & accel, const Vecto
     //参考坐标系中的重力向量旋转到载体坐标系
     vx = 2 * (q1q3 - q0q2);
     vy = 2 * (q0q1 + q2q3);
-    vz = 2 * (q0q0 + q3q3) - 1.0f;
+    vz = 2 * (q0q0 + q3q3) - 1;
 
     //估算向量与实际向量求外积，获得向量间的误差（此处所指误差正比于轴角
     aex = (Ay * vz - Az * vy);

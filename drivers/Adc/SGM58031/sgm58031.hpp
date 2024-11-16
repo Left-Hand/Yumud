@@ -103,12 +103,12 @@ protected:
     };
 
     real_t fullScale;
-    void writeReg(const RegAddress regAddress, const Reg16 & regData){
-        i2c_drv_.writeReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
+    void writeReg(const RegAddress regAddress, const uint16_t regData){
+        i2c_drv_.writeReg((uint8_t)regAddress, regData, MSB);
     }
 
-    void readReg(const RegAddress regAddress, Reg16 & regData){
-        i2c_drv_.readReg((uint8_t)regAddress, (uint16_t &)regData, MSB);
+    void readReg(const RegAddress regAddress, uint16_t & regData){
+        i2c_drv_.readReg((uint8_t)regAddress, regData, MSB);
     }
 
 public:

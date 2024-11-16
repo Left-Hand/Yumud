@@ -393,7 +393,7 @@ void UartHw::enableRxDma(const bool en){
             rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
         });
 
-        rxDma.begin((void *)rx_dma_buf, (void *)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
+        rxDma.begin((void *)rx_dma_buf, (const void *)(size_t)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
         rxDma.bindHalfCb(nullptr);
@@ -410,7 +410,7 @@ void UartHw::invokeTxDma(){
                     break;
                 }
             }
-            txDma.begin((void *)(&instance->DATAR), (void *)tx_dma_buf, tx_amount);
+            txDma.begin((void *)(size_t)(&instance->DATAR), (const void *)tx_dma_buf, tx_amount);
         }else{
             EXECUTE(txPostCb);
         }

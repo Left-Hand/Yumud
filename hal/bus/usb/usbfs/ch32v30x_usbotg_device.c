@@ -528,7 +528,7 @@ void OTG_FS_IRQHandler( void )
 
                                 case USB_DESCR_TYP_QUALIF:
                                     /* �豸�޶������� */
-                                    pDescr = ( PUINT8 )&MyUSBQUADescHD[ 0 ];
+                                    pDescr = MyUSBQUADescHD;
                                     len = sizeof( MyUSBQUADescHD );
                                     break;
 
