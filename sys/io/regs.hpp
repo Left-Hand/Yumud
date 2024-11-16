@@ -15,6 +15,15 @@ public:
     constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
     constexpr T * operator &() {return (reinterpret_cast<T *>(this));}
 
+    template<typename U = T>
+    requires std::signed_integral<U>
+    constexpr real_t uni() const { return s16_to_uni(*this); }
+
+    template<typename U = T>
+    requires std::unsigned_integral<U>
+    constexpr real_t uni() const { return u16_to_uni(*this); }
+
+
     constexpr uint8_t & operator [](const size_t idx){return (*(reinterpret_cast<uint8_t *>(this) + idx));} 
     constexpr const uint8_t & operator [](const size_t idx) const {return (*(reinterpret_cast<const uint8_t *>(this) + idx));} 
 };

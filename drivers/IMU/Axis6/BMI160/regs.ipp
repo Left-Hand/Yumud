@@ -27,7 +27,7 @@
     };
 
 
-    struct Vector3i16Reg:public Reg8{
+    struct Vector3i16Reg{
         scexpr RegAddress mag_address = 0x04;
         scexpr RegAddress mag_x_address = 0x04;
         scexpr RegAddress mag_y_address = 0x06;

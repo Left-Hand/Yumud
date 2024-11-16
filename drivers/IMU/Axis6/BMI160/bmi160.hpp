@@ -87,7 +87,9 @@ protected:
     std::optional<I2cDrv> i2c_drv_;
     std::optional<SpiDrv> spi_drv_;
 
-    scexpr uint8_t default_i2c_addr = 0b11010000;
+    scexpr uint8_t default_i2c_addr = 0b11010010;
+    // scexpr uint8_t default_i2c_addr = 0b11010000;
+    // scexpr uint8_t default_i2c_addr = 0x69;
 
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
@@ -116,7 +118,7 @@ protected:
 
     void readReg(const RegAddress addr, uint8_t & data);
 
-    void requestData(const RegAddress addr, void * datas, const size_t len);
+    void requestData(const RegAddress addr, int16_t * datas, const size_t len);
 
     void writeCommand(const uint8_t cmd){
         writeReg(0x7e, cmd);

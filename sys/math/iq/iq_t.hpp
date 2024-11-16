@@ -469,7 +469,7 @@ __fast_inline constexpr iq_t u32_to_uni(const uint32_t data){
 
 __fast_inline constexpr iq_t s16_to_uni(const int16_t data){
     iq_t qv;
-    qv.value = data > 0 ? _iq(data) : _iq(-(_iq(-data)));
+    qv.value = data > 0 ? _iq(data << 1) : _iq(-(_iq(-data << 1)));
     return qv;
 }
 

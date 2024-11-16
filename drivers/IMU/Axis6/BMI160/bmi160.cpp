@@ -5,7 +5,7 @@ using namespace ymd::drivers;
 using namespace ymd;
 
 
-#define BMI160_DEBUG
+// #define BMI160_DEBUG
 
 #ifdef BMI160_DEBUG
 #undef BMI160_DEBUG
@@ -43,12 +43,12 @@ void BMI160::readReg(const RegAddress addr, uint8_t & data){
     }
 }
 
-void BMI160::requestData(const RegAddress addr, void * datas, const size_t len){
+void BMI160::requestData(const RegAddress addr, int16_t * datas, const size_t len){
     if(i2c_drv_){
-        i2c_drv_->readMulti<uint8_t>(uint8_t(addr), reinterpret_cast<uint8_t *>(datas), len, LSB);
+        i2c_drv_->readMulti<int16_t>(uint8_t(addr), datas, len, LSB);
     }else if(spi_drv_){
         spi_drv_->writeSingle<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
-        spi_drv_->readMulti<uint8_t>(reinterpret_cast<uint8_t *>(datas), len);
+        spi_drv_->readMulti<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
     }else{
         BMI160_PANIC("no driver");
     }
@@ -77,13 +77,13 @@ void BMI160::init(){
 	//check the PMU_status	Register(0x03) 
     delay(20);
 
-	ASSERT(getPmuMode(PmuType::ACC) == PmuMode::NORMAL, "accel pmu mode verify failed");
-    ASSERT(getPmuMode(PmuType::GYRO) == PmuMode::NORMAL, "gyro pmu mode verify failed");
+	BMI160_ASSERT(getPmuMode(PmuType::ACC) == PmuMode::NORMAL, "accel pmu mode verify failed");
+    BMI160_ASSERT(getPmuMode(PmuType::GYRO) == PmuMode::NORMAL, "gyro pmu mode verify failed");
 }
 
 void BMI160::update(){
-    requestData(accel_reg.acc_address, &accel_reg, sizeof(accel_reg));
-    requestData(gyro_reg.gyro_address, &gyro_reg, sizeof(gyro_reg));
+    requestData(accel_reg.acc_address, &accel_reg.x, 3);
+    requestData(gyro_reg.gyro_address, &gyro_reg.y, 3);
 }
 
 bool BMI160::verify(){
