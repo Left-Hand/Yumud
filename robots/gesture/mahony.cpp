@@ -2,10 +2,10 @@
 
 using namespace ymd;
 
-Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
+Mahony::Quat Mahony::update(const Vector3 & _gyr,const Vector3 & _acc){
 
-	Vector3 gyro = _gyro;
-	Vector3 accel = _accel;
+	Vector3 gyr = _gyr;
+	Vector3 acc = _acc;
 	
 	real_t halfvx, halfvy, halfvz;	// 估计的重力加速度矢量，half表示半值
 	real_t halfex, halfey, halfez; // 误差向量
@@ -19,8 +19,8 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 	real_t q3q3 = q[3]*q[3];  
 
 	// 只在加速度计数据有效时才进行运算
-	if((accel)) {
-		accel.normalize();
+	if((acc)) {
+		acc.normalize();
 
 		// 通过四元数（旋转矩阵）得到理论重力加速度在机体坐标系下的向量值 
 		// 注意，这里实际上是矩阵第三列*1/2，在开头对Kp Ki的宏定义均为2*增益，这样处理目的是减少乘法运算量
@@ -29,9 +29,9 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 		halfvz = q0q0 - real_t(0.5) + q3q3;	// q0q0 - q1q1 - q2q2 + q3q3 的优化版（|q| =1）
 	
 		// 求误差：实际重力加速度向量（测量值）与理论重力加速度向量（估计值）做外积
-		halfex = (accel.y * halfvz - accel.z * halfvy);
-		halfey = (accel.z * halfvx - accel.x * halfvz);
-		halfez = (accel.x * halfvy - accel.y * halfvx);
+		halfex = (acc.y * halfvz - acc.z * halfvy);
+		halfey = (acc.z * halfvx - acc.x * halfvz);
+		halfez = (acc.x * halfvy - acc.y * halfvx);
 
 		if(twoKi > 0){
 			// 积分过程
@@ -40,9 +40,9 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 			integralFBz += twoKi * halfez * invSampleFreq;
 
 			// 积分项
-			gyro.x += integralFBx;
-			gyro.y += integralFBy;
-			gyro.z += integralFBz;
+			gyr.x += integralFBx;
+			gyr.y += integralFBy;
+			gyr.z += integralFBz;
 		}
 		else {
 			integralFBx = 0;	
@@ -51,20 +51,20 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 		}
 
 		// 比例项
-		gyro.x += twoKp * halfex;
-		gyro.y += twoKp * halfey;
-		gyro.z += twoKp * halfez;
+		gyr.x += twoKp * halfex;
+		gyr.y += twoKp * halfey;
+		gyr.z += twoKp * halfez;
 	}
 	
 	// 四元数 微分方程
-	gyro.x *= (invSampleFreq >> 1);
-	gyro.y *= (invSampleFreq >> 1);
-	gyro.z *= (invSampleFreq >> 1);
+	gyr.x *= (invSampleFreq >> 1);
+	gyr.y *= (invSampleFreq >> 1);
+	gyr.z *= (invSampleFreq >> 1);
 	
-	q[0] += (-q1 * gyro.x - q2 * gyro.y - q3 * gyro.z);
-	q[1] += (q0 * gyro.x + q2 * gyro.z - q3 * gyro.y);
-	q[2] += (q0 * gyro.y - q1 * gyro.z + q3 * gyro.x);
-	q[3] += (q0 * gyro.z + q1 * gyro.y - q2 * gyro.x); 
+	q[0] += (-q1 * gyr.x - q2 * gyr.y - q3 * gyr.z);
+	q[1] += (q0 * gyr.x + q2 * gyr.z - q3 * gyr.y);
+	q[2] += (q0 * gyr.y - q1 * gyr.z + q3 * gyr.x);
+	q[3] += (q0 * gyr.z + q1 * gyr.y - q2 * gyr.x); 
 	
 
     q.normalize();
@@ -72,10 +72,10 @@ Mahony::Quat Mahony::update(const Vector3 & _gyro,const Vector3 & _accel){
 }
 
 
-Mahony::Quat Mahony::update9(const Vector3 & _gyro,const Vector3 & _accel,const Vector3 & _mag){
+Mahony::Quat Mahony::update9(const Vector3 & _gyr,const Vector3 & _acc,const Vector3 & _mag){
 
-	Vector3 gyro = _gyro;
-	Vector3 accel = _accel;
+	Vector3 gyr = _gyr;
+	Vector3 acc = _acc;
 	Vector3 mag = _mag;
 
 	real_t recipNorm;
@@ -86,15 +86,15 @@ Mahony::Quat Mahony::update9(const Vector3 & _gyro,const Vector3 & _accel,const 
 	real_t halfex, halfey, halfez;
 	real_t qa, qb, qc;
 
-	auto [gx,gy,gz] = gyro;
-	// Compute feedback only if accelerometer measurement valid
-	// (avoids NaN in accelerometer normalisation)
-	if(accel) {
+	auto [gx,gy,gz] = gyr;
+	// Compute feedback only if accerometer measurement valid
+	// (avoids NaN in accerometer normalisation)
+	if(acc) {
 
-		accel.normalize();
+		acc.normalize();
 		mag.normalize();
 
-		auto [ax,ay,az] = accel;
+		auto [ax,ay,az] = acc;
 		auto [mx,my,mz] = mag;
 
 		// Auxiliary variables to avoid repeated arithmetic

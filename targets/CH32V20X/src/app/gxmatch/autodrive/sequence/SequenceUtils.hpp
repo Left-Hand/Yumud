@@ -42,8 +42,8 @@ using Curve = std::vector<Gesture2D>;
 
 
 struct SequenceLimits{
-    real_t max_gyro;
-    real_t max_angular;
+    real_t max_gyr;
+    real_t max_agr;
     real_t max_spd;
     real_t max_acc;
 };

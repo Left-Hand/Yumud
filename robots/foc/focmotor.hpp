@@ -68,12 +68,12 @@ public:
 
     real_t getCurrent() const {return meta.curr;}
 
-    real_t getAccel() const{return meta.accel;}
+    real_t getAcc() const{return meta.acc;}
 
     virtual void setCurrentLimit(const real_t max_current) = 0;
     virtual void setPositionLimit(const Range & clamp) = 0;
     virtual void setSpeedLimit(const real_t max_spd) = 0;
-    virtual void setAccelLimit(const real_t max_acc) = 0;
+    virtual void setAccLimit(const real_t max_acc) = 0;
     virtual void enable(const bool en = true) = 0;
     virtual void triggerCali() = 0;
     virtual void reset() = 0;

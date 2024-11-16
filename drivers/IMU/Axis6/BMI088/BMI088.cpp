@@ -11,11 +11,11 @@ void BMI088::update(){
 
 }
 
-std::tuple<real_t, real_t, real_t> BMI088::getAccel(){
+std::tuple<real_t, real_t, real_t> BMI088::getAcc(){
     return {0,0,0};
 }
 
-std::tuple<real_t, real_t, real_t> BMI088::getGyro(){
+std::tuple<real_t, real_t, real_t> BMI088::getGyr(){
     return {0,0,0};
 }
 

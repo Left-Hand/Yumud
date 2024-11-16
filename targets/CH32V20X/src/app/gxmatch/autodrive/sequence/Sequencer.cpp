@@ -8,8 +8,8 @@ using TrapezoidSolver = TrapezoidSolver_t<real_t>;
 void Sequencer::rotate(Curve & curve, const Ray & from, const real_t & end_rad){
 
     const TrapezoidSolver solver{
-        limits_.max_angular, 
-        limits_.max_gyro, 
+        limits_.max_agr, 
+        limits_.max_gyr, 
         ABS(end_rad - from.rad)    
     };
 
@@ -58,8 +58,8 @@ void Sequencer::arc(Curve & curve, const Ray & from, const Ray & to, const real_
     // const auto center = center_opt.value();
     
     // TrapezoidSolver solver{
-    //     limits_.max_angular, 
-    //     limits_.max_gyro, 
+    //     limits_.max_agr, 
+    //     limits_.max_gyr, 
     //     ABS(end_rad - from.rad)    
     // };
 

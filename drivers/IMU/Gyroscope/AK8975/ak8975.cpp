@@ -2,7 +2,16 @@
 
 using namespace ymd::drivers;
 
-
+#ifdef AK8975_DEBUG
+#undef AK8975_DEBUG
+#define AK8975_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define AK8975_PANIC(...) PANIC(__VA_ARGS__)
+#define AK8975_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define AK8975_DEBUG(...)
+#define AK8975_PANIC(...)  PANIC()
+#define AK8975_ASSERT(cond, ...) ASSERT(cond)
+#endif
 void AK8975::init(){
     if(verify() == false) return;
     readAdj();

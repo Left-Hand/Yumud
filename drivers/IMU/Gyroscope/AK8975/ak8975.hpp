@@ -3,15 +3,6 @@
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
 
-// #define AK8975_DEBUG
-
-#ifdef AK8975_DEBUG
-#undef AK8975_DEBUG
-#define AK8975_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define AK8975_DEBUG(...)
-#endif
-
 
 namespace ymd::drivers{
 class AK8975:public Magnetometer{

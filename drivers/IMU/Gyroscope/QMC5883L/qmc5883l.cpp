@@ -1,7 +1,5 @@
 #include "qmc5883l.hpp"
 
-#define QMC5883L_DEBUG
-
 #ifdef QMC5883L_DEBUG
 #undef QMC5883L_DEBUG
 #define QMC5883L_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
@@ -9,10 +7,9 @@
 #define QMC5883L_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define QMC5883L_DEBUG(...)
-#define QMC5883L_PANIC(...)
-#define QMC5883L_ASSERT(cond, ...)
+#define QMC5883L_PANIC(...)  PANIC()
+#define QMC5883L_ASSERT(cond, ...) ASSERT(cond)
 #endif
-
 
 
 using namespace ymd::drivers;

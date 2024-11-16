@@ -28,26 +28,26 @@ void MPU6050::init(){
         writeReg(0x15, 0);
         writeReg(0x17, 0);
         writeReg(0x38, 0x00);
-        setAccelRange(AccRange::_2G);
-        setGyroRange(GyrRange::_1000deg);
+        setAccRange(AccRange::_2G);
+        setGyrRange(GyrRange::_1000deg);
     }
 }
 
 void MPU6050::update(){
-    requestData(RegAddress::AccelX, &accel_x_reg, 7);
+    requestData(RegAddress::AccX, &acc_x_reg, 7);
 }
 
-std::tuple<real_t, real_t, real_t> MPU6050::getAccel(){
-    real_t x = accel_x_reg.uni() * acc_scaler;
-    real_t y = accel_y_reg.uni() * acc_scaler;
-    real_t z = accel_z_reg.uni() * acc_scaler;
+std::tuple<real_t, real_t, real_t> MPU6050::getAcc(){
+    real_t x = acc_x_reg.uni() * acc_scaler;
+    real_t y = acc_y_reg.uni() * acc_scaler;
+    real_t z = acc_z_reg.uni() * acc_scaler;
     return {x, y, z};
 }
 
-std::tuple<real_t, real_t, real_t> MPU6050::getGyro(){
-    real_t x = gyro_x_reg.uni() * gyr_scaler;
-    real_t y = gyro_y_reg.uni() * gyr_scaler;
-    real_t z = gyro_z_reg.uni() * gyr_scaler;
+std::tuple<real_t, real_t, real_t> MPU6050::getGyr(){
+    real_t x = gyr_x_reg.uni() * gyr_scaler;
+    real_t y = gyr_y_reg.uni() * gyr_scaler;
+    real_t z = gyr_z_reg.uni() * gyr_scaler;
     return {x, y, z};
 }
 
@@ -66,21 +66,21 @@ bool MPU6050::verify(){
     return ok;
 }
 
-void MPU6050::setAccelRange(const AccRange range){
+void MPU6050::setAccRange(const AccRange range){
     auto & reg = acc_conf_reg;
     reg.afs_sel = uint8_t(range);
     WRITE_REG(reg);
-    this->acc_scaler = this->calculateAccelScale(range);
+    this->acc_scaler = this->calculateAccScale(range);
 }
 
-void MPU6050::setGyroRange(const GyrRange range){
+void MPU6050::setGyrRange(const GyrRange range){
     auto & reg = gyr_conf_reg;
     reg.fs_sel = uint8_t(range);
     WRITE_REG(reg);
-    this->gyr_scaler = this->calculateGyroScale(range);
+    this->gyr_scaler = this->calculateGyrScale(range);
 }
 
-real_t MPU6050::calculateAccelScale(const AccRange range){
+real_t MPU6050::calculateAccScale(const AccRange range){
     scexpr double g = 9.806;
     switch(range){
         default:
@@ -95,7 +95,7 @@ real_t MPU6050::calculateAccelScale(const AccRange range){
     }
 }
 
-real_t MPU6050::calculateGyroScale(const GyrRange range){
+real_t MPU6050::calculateGyrScale(const GyrRange range){
     switch(range){
         default:
         case GyrRange::_250deg:

@@ -11,7 +11,7 @@ namespace ymd::foc{
 namespace MotorUtils{
     
 struct MetaData{
-    real_t accel = 0;
+    real_t acc = 0;
     real_t curr = 0;
     real_t spd = 0;
     real_t pos = 0;

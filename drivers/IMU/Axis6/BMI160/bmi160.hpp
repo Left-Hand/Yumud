@@ -32,7 +32,7 @@ public:
         _1600
     };
 
-    enum class GyrOdr:uint8_t{
+    enum class Gyrdr:uint8_t{
         _25 = 0b0110,
         
         _50,
@@ -62,7 +62,7 @@ public:
     enum class Command:uint8_t{
         START_FOC = 0x04,
         ACC_SET_PMU = 0b0001'0000,
-        GYRO_SET_PMU = 0b0001'0100,
+        GYR_SET_PMU = 0b0001'0100,
         MAG_SET_PMU = 0b0001'1000,
         FIFO_FLUSH = 0xB0,
         RESET_INTERRUPT =0xB1,
@@ -72,7 +72,7 @@ public:
 
     enum class PmuType{
         ACC,
-        GYRO,
+        GYR,
         MAG
     };
 
@@ -104,8 +104,8 @@ protected:
         StatusReg status_reg;
         Vector3i16Reg mag_reg;
         RhallReg rhall_reg;
-        Vector3i16Reg gyro_reg;
-        Vector3i16Reg accel_reg;
+        Vector3i16Reg gyr_reg;
+        Vector3i16Reg acc_reg;
 
         AccConfReg acc_conf_reg;
         AccRangeReg acc_range_reg;
@@ -124,8 +124,8 @@ protected:
         writeReg(0x7e, cmd);
     }
 
-    static real_t calculateAccelScale(const AccRange range);
-    static real_t calculateGyroScale(const GyrRange range);
+    static real_t calculateAccScale(const AccRange range);
+    static real_t calculateGyrScale(const GyrRange range);
 public:
 
     BMI160(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
@@ -142,15 +142,15 @@ public:
 
     void reset();
 
-    void setAccelOdr(const AccOdr odr);
-    void setAccelRange(const AccRange range);
-    void setGyroOdr(const GyrOdr odr);
-    void setGyroRange(const GyrRange range);
+    void setAccOdr(const AccOdr odr);
+    void setAccRange(const AccRange range);
+    void setGyrOdr(const Gyrdr odr);
+    void setGyrRange(const GyrRange range);
     
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    std::tuple<real_t, real_t, real_t> getAccel() override;
-    std::tuple<real_t, real_t, real_t> getGyro() override;
+    std::tuple<real_t, real_t, real_t> getAcc() override;
+    std::tuple<real_t, real_t, real_t> getGyr() override;
 };
 
 }

@@ -59,11 +59,11 @@ namespace MotorUtils{
         SET_CURR_LMT,//         set global current limit
         SET_POS_LMT,//          set global position limit [a, b]
         SET_SPD_LMT,//          set global speed limit
-        SET_ACC_LMT,//          set global accelration limit
+        SET_ACC_LMT,//          set global accration limit
 
         GET_POS = 0x30,//       get position
         GET_SPD,//              get speed
-        GET_ACC,//              get accelration
+        GET_ACC,//              get accration
         GET_CURR,//             get current
         GET_ALL = 0x3f,         // get all
 

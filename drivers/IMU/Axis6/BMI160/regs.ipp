@@ -33,10 +33,10 @@
         scexpr RegAddress mag_y_address = 0x06;
         scexpr RegAddress mag_z_address = 0x08;
         
-        scexpr RegAddress gyro_address = 0x0c;
-        scexpr RegAddress gyro_x_address = 0x0c;
-        scexpr RegAddress gyro_y_address = 0x0e;
-        scexpr RegAddress gyro_z_address = 0x10;
+        scexpr RegAddress gyr_address = 0x0c;
+        scexpr RegAddress gyr_x_address = 0x0c;
+        scexpr RegAddress gyr_y_address = 0x0e;
+        scexpr RegAddress gyr_z_address = 0x10;
 
         scexpr RegAddress acc_address = 0x12;
         scexpr RegAddress acc_x_address = 0x12;

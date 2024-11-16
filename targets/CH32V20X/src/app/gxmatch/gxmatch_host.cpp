@@ -273,8 +273,8 @@ void host_main(){
         while(true){
 
             bmi.update();
-            auto acc = Vector3{bmi.getAccel()};
-            auto gyr = Vector3{bmi.getGyro()};
+            auto acc = Vector3{bmi.getAcc()};
+            auto gyr = Vector3{bmi.getGyr()};
             // auto gest = Quat{{0,0,1}, acc};
             delay(1);
             DEBUG_PRINTLN(acc.x, acc.y, acc.z, gyr.x, gyr.y, gyr.z, acc.length());
@@ -328,8 +328,8 @@ void host_main(){
     }
     {
         auto limits = SequenceLimits{
-            .max_gyro = 2,
-            .max_angular = 2,
+            .max_gyr = 2,
+            .max_agr = 2,
             .max_spd = real_t(0.8),
             .max_acc = real_t(0.5)
         };

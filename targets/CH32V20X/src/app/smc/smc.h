@@ -5,7 +5,7 @@
 #include "src/testbench/tb.h"
 
 #include "../drivers/Camera/MT9V034/mt9v034.hpp"
-#include "../drivers/IMU/Gyroscope/HMC5883L/hmc5883l.hpp"
+#include "../drivers/IMU/Gyrscope/HMC5883L/hmc5883l.hpp"
 #include "../drivers/Display/DisplayerPhy.hpp"
 #include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "../drivers/Encoder/ABEncoder.hpp"
@@ -124,14 +124,14 @@ public:
 
 
     struct{
-        Quat accel;
-        Vector3 gyro;
+        Quat acc;
+        Vector3 gyr;
         Quat magnet;
     }drift;
     
     struct{
-        Vector3 accel;
-        Vector3 gyro;
+        Vector3 acc;
+        Vector3 gyr;
         Vector3 magnet;
     }msm;
 
@@ -142,9 +142,9 @@ public:
 
     Vector2i seed_pos;
 protected:
-    void set_drift(const Quat & _accel_drift, const Vector3 & _gyro_drift, const Quat & _magent_drift){
-        drift.accel = _accel_drift;
-        drift.gyro = _gyro_drift;
+    void set_drift(const Quat & _acc_drift, const Vector3 & _gyr_drift, const Quat & _magent_drift){
+        drift.acc = _acc_drift;
+        drift.gyr = _gyr_drift;
         drift.magnet = _magent_drift;
     }
 
@@ -156,8 +156,8 @@ protected:
         mpu.update();
         qml.update();
 
-        msm.accel = drift.accel.xform(Vector3(mpu.getAccel()));
-        msm.gyro = (Vector3(mpu.getGyro()) - drift.gyro);
+        msm.acc = drift.acc.xform(Vector3(mpu.getAcc()));
+        msm.gyr = (Vector3(mpu.getGyr()) - drift.gyr);
         msm.magnet = drift.magnet.xform(Vector3(qml.getMagnet()));
 
         real_t delta_t = t - last_t;
@@ -198,12 +198,12 @@ public:
         scexpr int cali_times = 100;
 
         Vector3 temp_gravity = Vector3();
-        Vector3 temp_gyro_offs = Vector3();
+        Vector3 temp_gyr_offs = Vector3();
         Vector3 temp_magent = Vector3();
         
         for(int i = 0; i < cali_times; ++i){
-            temp_gravity += Vector3(mpu.getAccel());
-            temp_gyro_offs += Vector3(mpu.getGyro());    
+            temp_gravity += Vector3(mpu.getAcc());
+            temp_gyr_offs += Vector3(mpu.getGyr());    
             temp_magent += Vector3(qml.getMagnet());
             delay(5);
         }
@@ -213,7 +213,7 @@ public:
 
         set_drift(
             Quat(Vector3(0,0,-1),g/g.length()).inverse(),
-            temp_gyro_offs / cali_times,
+            temp_gyr_offs / cali_times,
             Quat(Vector3(0,0,-1), m/m.length()).inverse()
         );
     }
@@ -248,12 +248,12 @@ public:
         return now_spd;
     }
 
-    auto get_accel() const{
-        return msm.accel;
+    auto get_acc() const{
+        return msm.acc;
     }
 
-    auto get_gyro() const{
-        return msm.gyro;
+    auto get_gyr() const{
+        return msm.gyr;
     }
 
     auto get_magent() const{
@@ -261,7 +261,7 @@ public:
     }
 
     real_t get_omega() const{
-        return msm.gyro.z;
+        return msm.gyr.z;
     }
 
     auto get_view(const Image<Binary> & src){

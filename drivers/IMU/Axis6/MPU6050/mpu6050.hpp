@@ -64,28 +64,28 @@ protected:
         uint8_t xg_st:1 = 0;
     } acc_conf_reg;
     
-    REG16I_QUICK_DEF(0x3B, AccelXReg, accel_x_reg);
-    REG16I_QUICK_DEF(0x3D, AccelYReg, accel_y_reg);
-    REG16I_QUICK_DEF(0x3F, AccelZReg, accel_z_reg);
+    REG16I_QUICK_DEF(0x3B, AccXReg, acc_x_reg);
+    REG16I_QUICK_DEF(0x3D, AccYReg, acc_y_reg);
+    REG16I_QUICK_DEF(0x3F, AccZReg, acc_z_reg);
 
     REG16_QUICK_DEF(0x41, TemperatureReg, temperature_reg);
 
-    REG16I_QUICK_DEF(0x43, GyroXReg, gyro_x_reg);
-    REG16I_QUICK_DEF(0x45, GyroYReg, gyro_y_reg);
-    REG16I_QUICK_DEF(0x47, GyroZReg, gyro_z_reg);
+    REG16I_QUICK_DEF(0x43, GyrXReg, gyr_x_reg);
+    REG16I_QUICK_DEF(0x45, GyrYReg, gyr_y_reg);
+    REG16I_QUICK_DEF(0x47, GyrZReg, gyr_z_reg);
     
 
     real_t acc_scaler = 0;
     real_t gyr_scaler = 0;
 
     enum RegAddress:uint8_t{
-        AccelX = 0x3b,
-        AccelY = 0x3d,
-        AccelZ = 0x3f,
+        AccX = 0x3b,
+        AccY = 0x3d,
+        AccZ = 0x3f,
         Temp = 0x41,
-        GyroX = 0x43,
-        GyroY = 0x45,
-        GyroZ = 0x47,
+        GyrX = 0x43,
+        GyrY = 0x45,
+        GyrZ = 0x47,
     };
 
     void writeReg(const uint8_t addr, const uint8_t data){
@@ -100,8 +100,8 @@ protected:
         i2c_drv_.readMulti((uint8_t)reg_addr, datas, len, MSB);
     }
     
-    static real_t calculateAccelScale(const AccRange range);
-    static real_t calculateGyroScale(const GyrRange range);
+    static real_t calculateAccScale(const AccRange range);
+    static real_t calculateGyrScale(const GyrRange range);
 public:
     MPU6050(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     MPU6050(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
@@ -110,12 +110,12 @@ public:
     bool verify();
     void init();
     void update();
-    std::tuple<real_t, real_t, real_t> getAccel() override;
-    std::tuple<real_t, real_t, real_t> getGyro() override;
+    std::tuple<real_t, real_t, real_t> getAcc() override;
+    std::tuple<real_t, real_t, real_t> getGyr() override;
     real_t getTemperature();
 
-    void setAccelRange(const AccRange range);
-    void setGyroRange(const GyrRange range);
+    void setAccRange(const AccRange range);
+    void setGyrRange(const GyrRange range);
 };
 
 

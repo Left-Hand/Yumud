@@ -2,6 +2,17 @@
 
 using namespace ymd::drivers;
 
+#ifdef MMC5603_DEBUG
+#undef MMC5603_DEBUG
+#define MMC5603_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define MMC5603_PANIC(...) PANIC(__VA_ARGS__)
+#define MMC5603_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define MMC5603_DEBUG(...)
+#define MMC5603_PANIC(...)  PANIC()
+#define MMC5603_ASSERT(cond, ...) ASSERT(cond)
+#endif
+
 #define WRITE_REG(reg)     writeReg(reg.address, reg);
 #define READ_REG(reg)     readReg(reg.address, reg);
 

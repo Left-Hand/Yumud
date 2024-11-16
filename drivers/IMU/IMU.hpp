@@ -14,14 +14,14 @@ public:
     virtual void update() = 0;
 };
 
-class Accelerometer:virtual public IMU_Base{
+class Accerometer:virtual public IMU_Base{
 public:
-    virtual std::tuple<real_t, real_t, real_t> getAccel() = 0;
+    virtual std::tuple<real_t, real_t, real_t> getAcc() = 0;
 };
 
-class Gyroscope:virtual public IMU_Base{
+class Gyrscope:virtual public IMU_Base{
 public:
-    virtual std::tuple<real_t, real_t, real_t>  getGyro() = 0;
+    virtual std::tuple<real_t, real_t, real_t>  getGyr() = 0;
 };
 
 class Magnetometer:virtual public IMU_Base{
@@ -30,7 +30,7 @@ public:
     virtual std::tuple<real_t, real_t, real_t> getMagnet() = 0;
 };
 
-class Axis6:public Accelerometer, public Gyroscope{
+class Axis6:public Accerometer, public Gyrscope{
 public:
 };
 

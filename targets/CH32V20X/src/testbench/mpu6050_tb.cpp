@@ -14,7 +14,7 @@ void mpu6050_tb(OutputStream & logger, I2c & i2c){
 
     while(true){
         mpu.update();
-        auto [x,y,z] = mpu.getGyro();
+        auto [x,y,z] = mpu.getGyr();
         logger.println(x,y,z);
         delay(1);
     }

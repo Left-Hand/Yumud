@@ -51,7 +51,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             break;
 
         case "la"_ha:
-            if(args.size() == 2) motor.setAccelLimit(real_t(args[1]));
+            if(args.size() == 2) motor.setAccLimit(real_t(args[1]));
             break;
 
         case "remove"_ha:

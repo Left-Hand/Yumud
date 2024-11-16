@@ -28,7 +28,7 @@ public:
     enum class Command:uint8_t{
         START_FOC = 0x04,
         ACC_SET_PMU = 0b0001'0000,
-        GYRO_SET_PMU = 0b0001'0100,
+        GYR_SET_PMU = 0b0001'0100,
         MAG_SET_PMU = 0b0001'1000,
         FIFO_FLUSH = 0xB0,
         RESET_INTERRUPT =0xB1,
@@ -38,7 +38,7 @@ public:
 
     enum class PmuType{
         ACC,
-        GYRO,
+        GYR,
         MAG
     };
 
@@ -556,8 +556,8 @@ public:
 
     void setPmuMode(const PmuType pum, const PmuMode mode);
     PmuMode getPmuMode(const PmuType pum);
-    std::tuple<real_t, real_t, real_t> getAccel() override;
-    std::tuple<real_t, real_t, real_t> getGyro() override;
+    std::tuple<real_t, real_t, real_t> getAcc() override;
+    std::tuple<real_t, real_t, real_t> getGyr() override;
 };
 
 }

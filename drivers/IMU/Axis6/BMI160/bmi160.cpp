@@ -5,8 +5,6 @@ using namespace ymd::drivers;
 using namespace ymd;
 
 
-// #define BMI160_DEBUG
-
 #ifdef BMI160_DEBUG
 #undef BMI160_DEBUG
 #define BMI160_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
@@ -14,8 +12,8 @@ using namespace ymd;
 #define BMI160_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define BMI160_DEBUG(...)
-#define BMI160_PANIC(...)
-#define BMI160_ASSERT(cond, ...)
+#define BMI160_PANIC(...)  PANIC()
+#define BMI160_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
 #define WRITE_REG(reg) this->writeReg(reg.address, reg);
@@ -63,27 +61,27 @@ void BMI160::init(){
 	// writeReg(0x42, 0b00'10'0110);		//Gro	ODR:25Hz		gro_bwp=3db	
 	// writeReg(0x43, 0x03);		//Gro_range:250dps
 
-    setAccelOdr(AccOdr::_25);
-    setAccelRange(AccRange::_16G);
-    setGyroOdr(GyrOdr::_25);
-    setGyroRange(GyrRange::_250deg);
+    setAccOdr(AccOdr::_25);
+    setAccRange(AccRange::_16G);
+    setGyrOdr(Gyrdr::_25);
+    setGyrRange(GyrRange::_250deg);
 	//FIFO  Config
 	writeReg(0x47, 0xfe);		//enable
 
     
 	//Set PMU mode	Register(0x7E) CMD		attention the command
 	setPmuMode(PmuType::ACC, PmuMode::NORMAL);		//Acc normal mode
-	setPmuMode(PmuType::GYRO, PmuMode::NORMAL);		//Gro normal mode
+	setPmuMode(PmuType::GYR, PmuMode::NORMAL);		//Gro normal mode
 	//check the PMU_status	Register(0x03) 
     delay(20);
 
-	BMI160_ASSERT(getPmuMode(PmuType::ACC) == PmuMode::NORMAL, "accel pmu mode verify failed");
-    BMI160_ASSERT(getPmuMode(PmuType::GYRO) == PmuMode::NORMAL, "gyro pmu mode verify failed");
+	BMI160_ASSERT(getPmuMode(PmuType::ACC) == PmuMode::NORMAL, "acc pmu mode verify failed");
+    BMI160_ASSERT(getPmuMode(PmuType::GYR) == PmuMode::NORMAL, "gyr pmu mode verify failed");
 }
 
 void BMI160::update(){
-    requestData(accel_reg.acc_address, &accel_reg.x, 3);
-    requestData(gyro_reg.gyro_address, &gyro_reg.y, 3);
+    requestData(acc_reg.acc_address, &acc_reg.x, 3);
+    requestData(gyr_reg.gyr_address, &gyr_reg.y, 3);
 }
 
 bool BMI160::verify(){
@@ -99,27 +97,27 @@ void BMI160::reset(){
     writeCommand(uint8_t(Command::SOFT_RESET));
 }
 
-std::tuple<real_t, real_t, real_t> BMI160::getAccel(){
+std::tuple<real_t, real_t, real_t> BMI160::getAcc(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * acc_scale;
     };
     
     return {
-        conv(accel_reg.x),
-        conv(accel_reg.y),
-        conv(accel_reg.z)
+        conv(acc_reg.x),
+        conv(acc_reg.y),
+        conv(acc_reg.z)
     };
 }
 
-std::tuple<real_t, real_t, real_t> BMI160::getGyro(){
+std::tuple<real_t, real_t, real_t> BMI160::getGyr(){
     auto conv = [&](const int16_t x) -> real_t{
         return s16_to_uni(x) * gyr_scale;
     };
     
     return {
-        conv(gyro_reg.x),
-        conv(gyro_reg.y),
-        conv(gyro_reg.z)
+        conv(gyr_reg.x),
+        conv(gyr_reg.y),
+        conv(gyr_reg.z)
     };
 }
 
@@ -128,8 +126,8 @@ void BMI160::setPmuMode(const PmuType pmu, const PmuMode mode){
         case PmuType::ACC:
             writeCommand(uint8_t(Command::ACC_SET_PMU) | uint8_t(mode));
             break;
-        case PmuType::GYRO:
-            writeCommand(uint8_t(Command::GYRO_SET_PMU) | uint8_t(mode));
+        case PmuType::GYR:
+            writeCommand(uint8_t(Command::GYR_SET_PMU) | uint8_t(mode));
             break;
         case PmuType::MAG:
             writeCommand(uint8_t(Command::MAG_SET_PMU) | uint8_t(mode));
@@ -144,26 +142,26 @@ BMI160::PmuMode BMI160::getPmuMode(const PmuType type){
     switch(type){
         default:
         case PmuType::ACC:  return PmuMode(reg.acc_pmu_status);
-        case PmuType::GYRO: return PmuMode(reg.gyr_pmu_status);
+        case PmuType::GYR: return PmuMode(reg.gyr_pmu_status);
         case PmuType::MAG:  return PmuMode(reg.mag_pmu_status);
     }
 }
 
-void BMI160::setAccelOdr(const AccOdr odr){
+void BMI160::setAccOdr(const AccOdr odr){
     auto & reg = acc_conf_reg;
     reg.acc_odr = uint8_t(odr);
     reg.acc_bwp = 0b010;
     WRITE_REG(reg);
 }
 
-void BMI160::setAccelRange(const AccRange range){
+void BMI160::setAccRange(const AccRange range){
     auto & reg = acc_range_reg;
     reg.acc_range = uint8_t(range);
     WRITE_REG(reg);
-    this->acc_scale = this->calculateAccelScale(range);
+    this->acc_scale = this->calculateAccScale(range);
 }
 
-void BMI160::setGyroOdr(const GyrOdr odr){
+void BMI160::setGyrOdr(const Gyrdr odr){
     auto & reg =  gyr_conf_reg;
     reg.gyr_odr = uint8_t(odr);
     reg.gyr_bwp = 0b010;
@@ -171,15 +169,15 @@ void BMI160::setGyroOdr(const GyrOdr odr){
 
 }
 
-void BMI160::setGyroRange(const GyrRange range){
+void BMI160::setGyrRange(const GyrRange range){
     auto & reg = gyr_range_reg;
     reg.gyr_range = uint8_t(range);
     WRITE_REG(reg);
-    this->gyr_scale = this->calculateGyroScale(range);
+    this->gyr_scale = this->calculateGyrScale(range);
 }
 
 
-real_t BMI160::calculateAccelScale(const AccRange range){
+real_t BMI160::calculateAccScale(const AccRange range){
     scexpr auto g = real_t(9.806);
     switch(range){
         default:
@@ -194,7 +192,7 @@ real_t BMI160::calculateAccelScale(const AccRange range){
     }
 }
 
-real_t BMI160::calculateGyroScale(const GyrRange range){
+real_t BMI160::calculateGyrScale(const GyrRange range){
     scexpr auto base125 = real_t(ANGLE2RAD(125.0));
     switch(range){
         default:

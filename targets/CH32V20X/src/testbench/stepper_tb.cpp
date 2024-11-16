@@ -220,7 +220,7 @@ void stepper_tb(UartHw & logger){
  
     stp.init();
     stp.setSpeedLimit(80);
-    stp.setAccelLimit(172);
+    stp.setAccLimit(172);
     stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
 

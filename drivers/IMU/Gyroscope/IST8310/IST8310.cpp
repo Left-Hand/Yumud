@@ -2,6 +2,16 @@
 
 using namespace ymd::drivers;
 
+#ifdef IST8310_DEBUG
+#undef IST8310_DEBUG
+#define IST8310_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define IST8310_PANIC(...) PANIC(__VA_ARGS__)
+#define IST8310_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define IST8310_DEBUG(...)
+#define IST8310_PANIC(...)  PANIC()
+#define IST8310_ASSERT(cond, ...) ASSERT(cond)
+#endif
 
 #define WRITE_REG(reg) writeReg(reg.address, reg);
 #define READ_REG(reg) readReg(reg.address, reg);

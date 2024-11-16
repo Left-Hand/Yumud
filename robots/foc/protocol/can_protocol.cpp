@@ -53,13 +53,13 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         SETTER_BIND_ONE(   Command::SET_CURR_LMT,   motor.setCurrentLimit)
         SETTER_BIND_TYPE(   Command::SET_POS_LMT,   motor.setPositionLimit, E_2)
         SETTER_BIND_ONE(   Command::SET_SPD_LMT,    motor.setSpeedLimit)
-        SETTER_BIND_ONE(   Command::SET_ACC_LMT,    motor.setAccelLimit)
+        SETTER_BIND_ONE(   Command::SET_ACC_LMT,    motor.setAccLimit)
 
         GETTER_BIND(         Command::GET_POS,       E(motor.getPosition()))
         GETTER_BIND(         Command::GET_SPD,       E(motor.getSpeed()))
         GETTER_BIND(         Command::GET_ACC,       E(0))//TODO
         GETTER_BIND(         Command::GET_CURR,      E(motor.getCurrent()))
-        GETTER_BIND(         Command::GET_ALL,       E_4(motor.getCurrent(), motor.getSpeed(), motor.getPosition(), motor.getAccel()))
+        GETTER_BIND(         Command::GET_ALL,       E_4(motor.getCurrent(), motor.getSpeed(), motor.getPosition(), motor.getAcc()))
 
         EXECUTER_BIND(Command::TRIG_CALI,      motor.triggerCali)
 
