@@ -17,6 +17,9 @@
 
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+#include "drivers/IMU/Gyroscope/HMC5883L/hmc5883l.hpp"
+#include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
 #include "async/Node.hpp"
@@ -261,6 +264,35 @@ void host_main(){
         PANIC();
     }
     
+
+    if(false){
+        BMI160 bmi{i2c};
+
+        bmi.init();
+        while(true){
+
+            bmi.update();
+            auto acc = Vector3{bmi.getAccel()};
+            auto gest = Quat{{0,0,1}, acc};
+            delay(1);
+            DEBUG_PRINTLN(gest.x, gest.y, gest.z, gest.w);
+        }
+    }
+
+    {       
+        HMC5883L hmc{i2c};
+        // QMC5883L hmc{i2c};
+
+        hmc.init();
+        while(true){
+
+            hmc.update();
+            auto mag = Vector3{hmc.getMagnet()};
+            auto gest = Quat{{0,0,1}, mag};
+            delay(1);
+            DEBUG_PRINTLN(gest.x, gest.y, gest.z, gest.w);
+        }
+    }
 
     {
             using Type = int;

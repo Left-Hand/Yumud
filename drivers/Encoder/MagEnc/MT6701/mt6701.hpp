@@ -149,10 +149,10 @@ protected:
 
 
     
-    void writeReg(const RegAddress regAddress, const uint16_t regData);
-    void readReg(const RegAddress regAddress, uint16_t & regData);
-    void writeReg(const RegAddress regAddress, const uint8_t regData);
-    void readReg(const RegAddress regAddress, uint8_t & regData);
+    void writeReg(const RegAddress addr, const uint16_t data);
+    void readReg(const RegAddress addr, uint16_t & data);
+    void writeReg(const RegAddress addr, const uint8_t data);
+    void readReg(const RegAddress addr, uint8_t & data);
 public:
     MT6701(I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
     MT6701(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){};

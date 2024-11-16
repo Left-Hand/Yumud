@@ -86,16 +86,16 @@ protected:
         uint16_t chipIDReg;
     };
 
-    void writeReg(const RegAddress regAddress, const uint16_t regData){
-        i2c_drv.writeReg((uint8_t)regAddress, regData, MSB);
+    void writeReg(const RegAddress addr, const uint16_t data){
+        i2c_drv.writeReg((uint8_t)addr, data, MSB);
     }
 
-    void readReg(const RegAddress regAddress, uint16_t & regData){
-        i2c_drv.readReg((uint8_t)regAddress, regData, MSB);
+    void readReg(const RegAddress addr, uint16_t & data){
+        i2c_drv.readReg((uint8_t)addr, data, MSB);
     }
 
-    void requestPool(const RegAddress regAddress, void * data_ptr, const size_t len){
-        i2c_drv.readMulti((uint8_t)regAddress, (uint16_t *)data_ptr, len, LSB);
+    void requestPool(const RegAddress addr, void * data_ptr, const size_t len){
+        i2c_drv.readMulti((uint8_t)addr, (uint16_t *)data_ptr, len, LSB);
     }
 
     class CurrentChannel;

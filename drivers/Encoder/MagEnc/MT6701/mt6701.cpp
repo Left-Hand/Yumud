@@ -11,29 +11,29 @@ using namespace ymd;
     PANIC()\
 
 
-void MT6701::writeReg(const RegAddress regAddress, const uint16_t regData){
-    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData, MSB);
+void MT6701::writeReg(const RegAddress addr, const uint16_t data){
+    if(i2c_drv) i2c_drv->writeReg((uint8_t)addr, data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-void MT6701::readReg(const RegAddress regAddress, uint16_t & regData){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData, MSB);
+void MT6701::readReg(const RegAddress addr, uint16_t & data){
+    if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-void MT6701::writeReg(const RegAddress regAddress, const uint8_t regData){
-    if(i2c_drv) i2c_drv->writeReg((uint8_t)regAddress, regData, MSB);
+void MT6701::writeReg(const RegAddress addr, const uint8_t data){
+    if(i2c_drv) i2c_drv->writeReg((uint8_t)addr, data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
-void MT6701::readReg(const RegAddress regAddress, uint8_t & regData){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)regAddress, regData, MSB);
+void MT6701::readReg(const RegAddress addr, uint8_t & data){
+    if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data, MSB);
     else{
         MT6701_NO_I2C_FAULT;
     }
