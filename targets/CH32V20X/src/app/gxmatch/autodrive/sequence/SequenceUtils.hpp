@@ -11,7 +11,21 @@ using Vector3 = ymd::Vector3_t<real_t>;
 using Quat = ymd::Quat_t<real_t>;
 using Basis = ymd::Basis_t<real_t>;
 
-struct Gesture2D {
+//序列器约束
+struct SequenceLimits{
+    real_t max_gyr;
+    real_t max_agr;
+    real_t max_spd;
+    real_t max_acc;
+};
+
+//序列器参数
+struct SequenceParas{
+    size_t freq;
+};
+
+//压缩储存的位置和朝向 与Ray互转
+struct CurvePoint {
 protected:
     scexpr int xy_shift_bits = 10;
     scexpr real_t rad_scale = real_t(1024 / TAU);
@@ -21,14 +35,14 @@ protected:
     uint32_t y_:11;
     uint32_t rad_:10;
 public:
-    constexpr Gesture2D(const real_t & x, const real_t & y, const real_t & rad):
+    constexpr CurvePoint(const real_t & x, const real_t & y, const real_t & rad):
         x_(x << xy_shift_bits), y_(y << xy_shift_bits), rad_(rad * rad_scale){;}
 
-    constexpr Gesture2D(const Vector2 & pos, const real_t & rad):
-        Gesture2D(pos.x, pos.y, rad){;}
+    constexpr CurvePoint(const Vector2 & pos, const real_t & rad):
+        CurvePoint(pos.x, pos.y, rad){;}
         
-    constexpr Gesture2D(const Ray & ray):
-        Gesture2D(ray.org.x, ray.org.y, ray.rad){;}
+    constexpr CurvePoint(const Ray & ray):
+        CurvePoint(ray.org.x, ray.org.y, ray.rad){;}
 
 
     constexpr operator Ray() const{
@@ -36,7 +50,7 @@ public:
     }
 };
 
-// struct Gesture2D {
+// struct CurvePoint {
 // protected:
 //     scexpr int xy_scale = 1000;
 //     scexpr real_t rad_scale = real_t(256 / TAU);
@@ -46,13 +60,13 @@ public:
 //     uint32_t y_:12;
 //     uint32_t rad_:8;
 // public:
-//     constexpr Gesture2D(const real_t & x, const real_t & y, const real_t & rad):
+//     constexpr CurvePoint(const real_t & x, const real_t & y, const real_t & rad):
 //         x_(x * xy_scale), y_(y * xy_scale), rad_(rad * rad_scale){;}
-//     constexpr Gesture2D(const Vector2 & pos, const real_t & rad):
-//         Gesture2D(pos.x, pos.y, rad){;}
+//     constexpr CurvePoint(const Vector2 & pos, const real_t & rad):
+//         CurvePoint(pos.x, pos.y, rad){;}
         
-//     constexpr Gesture2D(const Ray & ray):
-//         Gesture2D(ray.org.x, ray.org.y, ray.rad){;}
+//     constexpr CurvePoint(const Ray & ray):
+//         CurvePoint(ray.org.x, ray.org.y, ray.rad){;}
 
 
 //     constexpr operator Ray() const{
@@ -63,23 +77,13 @@ public:
 
 
 
-__fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const gxm::Gesture2D & gesture){
+__fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const gxm::CurvePoint & gesture){
     return os << gxm::Ray(gesture);
 }
 
-using Curve = std::vector<Gesture2D>;
+using Curve = std::vector<CurvePoint>;
 
 
-struct SequenceLimits{
-    real_t max_gyr;
-    real_t max_agr;
-    real_t max_spd;
-    real_t max_acc;
-};
 
-
-struct SequenceParas{
-    size_t freq;
-};
 
 }

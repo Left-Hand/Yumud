@@ -1,5 +1,4 @@
 #include "gxmatch.hpp"
-#include "host/host.hpp"
 
 #include "autodrive/Planner.hpp"
 #include "autodrive/sequence/TrapezoidSolver_t.hpp"
@@ -21,7 +20,9 @@
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 #include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
 #include "hal/bus/spi/spihw.hpp"
-
+#include "common/inc.hpp"
+#include "machine/chassis_module.hpp"
+#include "machine/grab_module.hpp"
 #include "async/Node.hpp"
 
 using Sys::t;
@@ -41,6 +42,7 @@ struct GrabSysConfig{
     Scara::Config scara_config;
     ZAxis::Config zaxis_config;
     GrabModule::Config grab_config;
+    CrossSolver::Config cross_config;
 };
 
 auto create_default_config(){
@@ -88,8 +90,13 @@ auto create_default_config(){
                 Vector2{0       , 0.20_r},
                 Vector2{0.12_r    , 0.20_r}
             }
-        }
+        },
 
+        .cross_config = {
+            .xoffs_length_meter = real_t(0.04),
+            .forearm_length_meter = real_t(0.1),
+            .upperarm_length_meter = real_t(0.1)
+        },
     };
 }
     
@@ -149,7 +156,7 @@ void host_main(){
         return Ray{Vector2{x,y} + Vector2::ones(12), ray.rad};
     };
 
-    auto draw_curve = [&](const Curve & curve){
+    [[maybe_unused]] auto draw_curve = [&](const Curve & curve){
         painter.setColor(ColorEnum::BLUE);
         for(auto it = curve.begin(); it != curve.end(); it++){
             auto pos = canvas_transform(Ray(*it)).org;
@@ -157,7 +164,7 @@ void host_main(){
         }
     };
 
-    auto print_curve = [&](const Curve & curve){
+    [[maybe_unused]] auto print_curve = [&](const Curve & curve){
         logger << std::setprecision(4);
         for(auto it = curve.begin(); it != curve.end(); it++){
             auto [pos, rad] = Ray(*it);
@@ -250,15 +257,9 @@ void host_main(){
     });
     
     timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
-
-    CrossSolver::Config cross_config = {
-        .xoffs_length_meter = real_t(0.04),
-        .forearm_length_meter = real_t(0.1),
-        .upperarm_length_meter = real_t(0.1)
-    };
     
     CrossSolver cross_solver{
-        cross_config
+        config.cross_config
     };
 
 
@@ -296,40 +297,37 @@ void host_main(){
 
             const auto rot = atan2(mag3.y, mag3.x);
             const auto gyr = gyr3.z;
+
             DEBUG_PRINTLN(acc2.x, acc2.y, rot, gyr);
         }
     }
 
     if(false){
-            using Type = int;
-            using Topic = Topic_t<Type>;
+        using Type = Vector2;
+        using Topic = Topic_t<Type>;
 
-            
-            Topic topic;
+        
+        Topic topic;
 
-            // 创建一个 Publisher
-            auto publisher = topic.createPublisher();
+        // 创建一个 Publisher
+        auto publisher = topic.createPublisher();
 
-            // 创建多个 Subscriber
-            auto subscriber1 = topic.createSubscriber([](const Type & message) {
-                DEBUGGER << "Subscriber 1 received: " << message << "\r\n";
-            });
+        // 创建多个 Subscriber
+        auto subscriber1 = topic.createSubscriber([](const Type & message) {
+            DEBUGGER << "Subscriber 1 received: " << message << "\r\n";
+        });
 
-            auto subscriber2 = topic.createSubscriber([](const Type & message) {
-                DEBUGGER << "Subscriber 2 received: " << message << "\r\n";
-            });
-
-
-            // 发布消息
-            publisher.publish(1);
-            publisher.publish(2);
+        auto subscriber2 = topic.createSubscriber([](const Type & message) {
+            DEBUGGER << "Subscriber 2 received: " << message << "\r\n";
+        });
 
 
-            // 再次发布消息
-            publisher.publish(3);
-
+        // 发布消息
+        publisher.publish({0,0});
+        publisher.publish({1,1});
     }
-    {
+
+    if(true){
         auto limits = SequenceLimits{
             .max_gyr = 2,
             .max_agr = 2,
@@ -370,15 +368,13 @@ void host_main(){
         DEBUG_PRINTLN(micros() - m, curve.size());
 
         draw_curve(curve);
-        // print_curve(curve);
+
         DEBUG_PRINTLN(std::setprecision(4));
         auto idx = 0;
         for(auto it = curve.begin(); it != curve.end(); ++it){
-            while(millis() < size_t((idx * 5) + 1000));
+            // while(millis() < size_t((idx * 5) + 1000));
+            delay(1);
             idx++;
-            // auto ray = *it;
-            // auto && [org,rad] = ray;
-            // auto && [x,y] = org;
             draw_turtle(Ray(*it));
         }
         DEBUG_PRINTLN("done");
@@ -422,8 +418,6 @@ void host_main(){
             logger.println(std::setprecision(3), inv_rad, height, f_height);
         }
 
-
-    
         delay(20);
     }
     

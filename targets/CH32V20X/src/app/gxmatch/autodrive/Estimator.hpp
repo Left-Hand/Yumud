@@ -10,9 +10,11 @@ using namespace ymd::drivers;
 // using Accerometer = ymd::Accerometer;
 
 
-//用于从惯性计与里程计估测姿态
+//底盘观测器 用于从惯性计与里程计估测姿态
 class Estimator{
 public:
+
+    //偏置
     struct Bias{
         Quat acc;
         Vector3 gyr;
@@ -20,15 +22,15 @@ public:
     };
 
     struct Config{
-        size_t calibrate_times;
-        bool force_calibrate;
-        Bias pre_bias;
+        size_t calibrate_times;//校准次数
+        bool force_calibrate;//强制校准而不是使用先验偏置
+        Bias pre_bias;//偏置
     };
 protected:
     const Config & config_;
 
-    Axis6 & acc_gyr_sensor_;
-    Magnetometer & mag_sensor_;
+    Axis6 & acc_gyr_sensor_;//加速度与角速度计
+    Magnetometer & mag_sensor_;//地磁计
     
 
     Bias bias_;

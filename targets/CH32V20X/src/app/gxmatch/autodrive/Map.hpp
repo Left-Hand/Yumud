@@ -5,6 +5,7 @@
 //描述地图所有元素的相关类与方法
 namespace gxm{
 
+////描述地图元素类型的枚举
 enum class FieldType:uint8_t{
     Any,
     Garbage,
@@ -14,6 +15,7 @@ enum class FieldType:uint8_t{
     RoughProcess
 };
 
+//描述地图元素分布的位置和朝向
 struct Map{
     scexpr Ray garbage_gest =           {real_t(0),         real_t(0),          real_t(PI/2)};
     scexpr Ray entry_gest =             {real_t(0.3),       real_t(0.3),        real_t(PI/2)};
@@ -27,6 +29,7 @@ struct Map{
     Map & operator =(Map && other) = default;
 };
 
+////描述地图元素的类
 class Field{
 public:
 protected:
