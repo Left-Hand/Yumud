@@ -1,11 +1,11 @@
 #pragma once
 
 #include "drivers/device_defs.h"
-#include "drivers/IMU/IMU.hpp"
+#include "drivers/IMU/BoschIMU.hpp"
 
 namespace ymd::drivers{
 
-class BMI160:public Axis6{
+class BMI160:public Axis6, public BoschSensor{
 public:
 
     enum class DPS:uint8_t{
@@ -84,9 +84,6 @@ public:
     };
 
 protected:
-    std::optional<I2cDrv> i2c_drv_;
-    std::optional<SpiDrv> spi_drv_;
-
     scexpr uint8_t default_i2c_addr = 0b11010010;
     // scexpr uint8_t default_i2c_addr = 0b11010000;
     // scexpr uint8_t default_i2c_addr = 0x69;
@@ -113,11 +110,6 @@ protected:
         GyrRangeReg gyr_range_reg;
     };
 
-
-    void writeReg(const uint8_t addr, const uint8_t data);
-
-    void readReg(const RegAddress addr, uint8_t & data);
-
     void requestData(const RegAddress addr, int16_t * datas, const size_t len);
 
     void writeCommand(const uint8_t cmd){
@@ -127,13 +119,8 @@ protected:
     static real_t calculateAccScale(const AccRange range);
     static real_t calculateGyrScale(const GyrRange range);
 public:
-
-    BMI160(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BMI160(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    BMI160(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, i2c_addr)){;}
-    BMI160(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    BMI160(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    BMI160(Spi & spi, const uint8_t index):spi_drv_(SpiDrv(spi, index)){;}
+    using BoschSensor::BoschSensor;
+    BMI160(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(i2c, i2c_addr){;}
 
     void init();
     void update();

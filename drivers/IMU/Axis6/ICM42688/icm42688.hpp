@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "drivers/IMU/IMU.hpp"
+#include "drivers/IMU/InvensenseIMU.hpp"
 
 
 #ifdef ICM42688_DEBUG
@@ -14,7 +14,7 @@
 
 namespace ymd::drivers{
 
-class ICM42688:public Axis6{
+class ICM42688:public Axis6, public InvensenseSensor{
 public:
 
     enum class AFS:uint8_t{
@@ -154,10 +154,6 @@ public:
         INTF_CONFIG6              = 0x7C
     };
 protected:
-    std::optional<I2cDrv> i2c_drv_;
-    std::optional<SpiDrv> spi_drv_;
-
-    // using RegAddress = uint8_t;
 
 
     scexpr uint8_t default_i2c_addr = 0x68;
@@ -171,23 +167,12 @@ protected:
         Vec3i16 gyr_data;
     };
 
-
-    void writeReg(const uint8_t addr, const uint8_t data);
-
-    void readReg(const uint8_t addr, uint8_t & data);
-    
-    void requestData(const uint8_t addr, int16_t * datas, const size_t len);
     void writeCommand(const uint8_t cmd){
         writeReg(0x7e, cmd);
     }
 public:
-
-    ICM42688(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    ICM42688(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    ICM42688(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, default_i2c_addr)){;}
-    ICM42688(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    ICM42688(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    ICM42688(Spi & spi, const uint8_t index):spi_drv_(SpiDrv(spi, index)){;}
+    using InvensenseSensor::InvensenseSensor;
+    ICM42688(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(i2c, default_i2c_addr){;}
 
     void init();
     

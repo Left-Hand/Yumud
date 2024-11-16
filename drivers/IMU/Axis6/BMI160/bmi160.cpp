@@ -19,28 +19,6 @@ using namespace ymd;
 #define WRITE_REG(reg) this->writeReg(reg.address, reg);
 #define READ_REG(reg) this->readReg(reg.address, reg);
 
-void BMI160::writeReg(const uint8_t addr, const uint8_t data){
-    if(i2c_drv_){
-        i2c_drv_->writeReg(addr, data, MSB);
-    }else if(spi_drv_){
-        spi_drv_->writeSingle(uint8_t(addr), CONT);
-        spi_drv_->writeSingle(data);
-    }else{
-        BMI160_PANIC("no driver");
-    }
-}
-
-void BMI160::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv_){
-        i2c_drv_->readReg((uint8_t)addr, data, MSB);
-    }else if(spi_drv_){
-        spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-        spi_drv_->readSingle(data);
-    }else{
-        BMI160_PANIC("no driver");
-    }
-}
-
 void BMI160::requestData(const RegAddress addr, int16_t * datas, const size_t len){
     if(i2c_drv_){
         i2c_drv_->readMulti<int16_t>(uint8_t(addr), datas, len, LSB);

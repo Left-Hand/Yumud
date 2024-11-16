@@ -12,6 +12,9 @@ using namespace ymd::drivers;
 #define AK8975_PANIC(...)  PANIC()
 #define AK8975_ASSERT(cond, ...) ASSERT(cond)
 #endif
+
+
+
 void AK8975::init(){
     if(verify() == false) return;
     readAdj();
@@ -64,7 +67,7 @@ bool AK8975::verify(){
     auto ms = millis();
     bool readed = false;
     while(millis() - ms < timeout_ms){
-        if(isIdle()){
+        if(this->busy() == false){
             readed = true;
             break;
         }
@@ -81,10 +84,10 @@ bool AK8975::verify(){
     return stable();
 }
 
-bool AK8975::isIdle(){
+bool AK8975::busy(){
     uint8_t stat;
     readReg(0x00, stat);
-    return stat;
+    return stat == 0;
 }
 
 bool AK8975::stable(){

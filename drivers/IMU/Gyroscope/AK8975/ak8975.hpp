@@ -50,7 +50,7 @@ public:
     void init();
     void update();
     bool verify();
-    bool isIdle();
+    bool busy();
     bool stable();
     void setMode(const Mode mode);
     void disableI2c();

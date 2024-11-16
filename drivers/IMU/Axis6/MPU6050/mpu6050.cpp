@@ -21,20 +21,20 @@
 using namespace ymd::drivers;
 void MPU6050::init(){
     if(this->verify()){
-        writeReg(0x6b, 0);
-        writeReg(0x19, 0x00);
-        writeReg(0x1a, 0x00);
-        writeReg(0x13, 0);
-        writeReg(0x15, 0);
-        writeReg(0x17, 0);
-        writeReg(0x38, 0x00);
-        setAccRange(AccRange::_2G);
-        setGyrRange(GyrRange::_1000deg);
+        this->writeReg(0x6b, 0);
+        this->writeReg(0x19, 0x00);
+        this->writeReg(0x1a, 0x00);
+        this->writeReg(0x13, 0);
+        this->writeReg(0x15, 0);
+        this->writeReg(0x17, 0);
+        this->writeReg(0x38, 0x00);
+        this->setAccRange(AccRange::_2G);
+        this->setGyrRange(GyrRange::_1000deg);
     }
 }
 
 void MPU6050::update(){
-    requestData(RegAddress::AccX, &acc_x_reg, 7);
+    this->requestData(RegAddress::AccX, &acc_x_reg, 7);
 }
 
 std::tuple<real_t, real_t, real_t> MPU6050::getAcc(){
@@ -70,6 +70,7 @@ void MPU6050::setAccRange(const AccRange range){
     auto & reg = acc_conf_reg;
     reg.afs_sel = uint8_t(range);
     WRITE_REG(reg);
+    
     this->acc_scaler = this->calculateAccScale(range);
 }
 
@@ -77,6 +78,7 @@ void MPU6050::setGyrRange(const GyrRange range){
     auto & reg = gyr_conf_reg;
     reg.fs_sel = uint8_t(range);
     WRITE_REG(reg);
+    
     this->gyr_scaler = this->calculateGyrScale(range);
 }
 
