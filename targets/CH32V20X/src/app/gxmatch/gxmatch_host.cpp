@@ -19,7 +19,7 @@
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
-#include "softbus/SoftBus.hpp"
+#include "async/Node.hpp"
 
 using Sys::t;
 

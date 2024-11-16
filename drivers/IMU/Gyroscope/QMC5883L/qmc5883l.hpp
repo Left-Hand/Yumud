@@ -126,10 +126,7 @@ protected:
     }
 
     real_t From16BitToGauss(const uint16_t data){
-        real_t guass;
-        s16_to_uni(data, guass);
-        guass *= fs;
-        return guass;
+        return s16_to_uni(data) * fs;
     }
 
     void setFs(const FullScale FS){

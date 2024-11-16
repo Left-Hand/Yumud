@@ -110,10 +110,7 @@ protected:
     }
 
     real_t From12BitToGauss(const uint16_t data){
-        real_t guass;
-        s16_to_uni(data & 0x8fff, guass);
-        guass *= lsb;
-        return guass;
+        return s16_to_uni(data & 0x8fff) * lsb;
     }
 
     void setLsb(const Gain gain){

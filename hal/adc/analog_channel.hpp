@@ -21,9 +21,7 @@ protected:
 public:
 
     AnalogOutChannel & operator = (const real_t value){
-        uint16_t data16;
-        uni_to_u16(value, data16);
-        write(data16);
+        write(uni_to_u16(value));
         return *this;
     }
 };

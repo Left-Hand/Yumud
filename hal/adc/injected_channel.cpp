@@ -15,7 +15,5 @@ uint16_t InjectedChannel::data(){
 }
 
 real_t InjectedChannel::uni(){
-    real_t result;
-    u16_to_uni(ADC_GetInjectedConversionValue(instance, mask) << 4, result);
-    return result;
+    return u16_to_uni(ADC_GetInjectedConversionValue(instance, mask) << 4);
 }

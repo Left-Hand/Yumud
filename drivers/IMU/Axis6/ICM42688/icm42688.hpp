@@ -160,7 +160,6 @@ protected:
     // using RegAddress = uint8_t;
 
 
-    scexpr uint8_t default_chip_id = 0;//TODO
     scexpr uint8_t default_i2c_addr = 0x68;
 
     real_t lsb_acc_x64;

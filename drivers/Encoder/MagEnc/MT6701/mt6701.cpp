@@ -49,7 +49,7 @@ void MT6701::init(){
 void MT6701::update(){
     if(i2c_drv){
         readReg(RegAddress::RawAngle, rawAngleData);
-        u16_to_uni(rawAngleData, lap_position);
+        lap_position = u16_to_uni(rawAngleData);
     }else if(spi_drv){
 
         uint16_t data16;
@@ -62,7 +62,7 @@ void MT6701::update(){
 
         semantic = Semantic{data8, data16};
         if(semantic.valid(fast_mode)){
-            u16_to_uni(semantic.data_14bit << 2, lap_position);
+            lap_position = u16_to_uni(semantic.data_14bit << 2);
         } 
     }else{
         MT6701_DEBUG("no drv!!");

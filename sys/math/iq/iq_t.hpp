@@ -442,7 +442,8 @@ __fast_inline iq_t powi(const iq_t base, const int exponent) {
     return powfi(base, exponent);
 }
 
-__fast_inline constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
+__fast_inline constexpr iq_t u16_to_uni(const uint16_t data){
+    iq_t qv;
 #if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
 #elif(GLOBAL_Q < 16)
@@ -450,11 +451,12 @@ __fast_inline constexpr void u16_to_uni(const uint16_t data, iq_t & qv){
 #else
     qv.value = _iq(data);
 #endif
-
+    return qv;
 }
 
 
-__fast_inline constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
+__fast_inline constexpr iq_t u32_to_uni(const uint32_t data){
+    iq_t qv;
 #if GLOBAL_Q > 16
     qv.value = data << (GLOBAL_Q - 16);
 #elif(GLOBAL_Q < 16)
@@ -462,22 +464,35 @@ __fast_inline constexpr void u32_to_uni(const uint32_t data, iq_t & qv){
 #else
     qv.value = _iq(data);
 #endif
-
+    return qv;
 }
 
-__fast_inline constexpr void s16_to_uni(const int16_t data, iq_t & qv){
+__fast_inline constexpr iq_t s16_to_uni(const int16_t data){
+    iq_t qv;
     qv.value = data > 0 ? _iq(data) : _iq(-(_iq(-data)));
+    return qv;
 }
 
-__fast_inline constexpr void uni_to_u16(const iq_t qv, uint16_t & data){
+__fast_inline constexpr uint16_t uni_to_u16(const iq_t qv){
+    uint16_t data;
 #if GLOBAL_Q >= 16
     data = qv.value >> (GLOBAL_Q - 16);
 #else
     data = qv.value << (16 - GLOBAL_Q);
 #endif
     if(data == 0 && long(qv.value) != 0) data = 0xffff;
+    return data;
 }
 
+__fast_inline constexpr int16_t uni_to_s16(const iq_t qv){
+    int16_t data;
+#if GLOBAL_Q >= 16
+    data = qv.value >> (GLOBAL_Q - 16);
+#else
+    data = qv.value << (16 - GLOBAL_Q);
+#endif
+    return data;
+}
 
 namespace std{
     template<>

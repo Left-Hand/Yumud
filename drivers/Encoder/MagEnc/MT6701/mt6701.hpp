@@ -232,8 +232,7 @@ public:
     }
 
     void setStart(const real_t start){
-        uint16_t _startData;
-        uni_to_u16(start, _startData);
+        uint16_t _startData = uni_to_u16(start);
         _startData >>= 4;
         startData = _startData;
         startStopReg.start = _startData >> 8;
@@ -242,8 +241,7 @@ public:
     }
 
     void setStop(const real_t stop){
-        uint16_t _stopData;
-        uni_to_u16(stop, _stopData);
+        uint16_t _stopData = uni_to_u16(stop);
         _stopData >>= 4;
         stopData = _stopData;
         startStopReg.stop = _stopData >> 8;

@@ -126,15 +126,12 @@ protected:
     };
 
     real_t From12BitTo360Degrees(const uint16_t data){
-        real_t uni;
-        u16_to_uni(data << 4, uni);
+        auto uni = u16_to_uni(data << 4);
         return uni * 360;
     }
 
     uint16_t From360DegreesTo12Bit(const real_t degrees){
-        uint16_t ret;
-        uni_to_u16(CLAMP(degrees / real_t(360), real_t(0), real_t(1)), ret);
-        return ret >> 4;
+        return uni_to_u16(CLAMP(degrees / 360, real_t(0), real_t(1))) >> 4;
     }
 
     void writeReg(const RegAddress regAddress, const uint16_t regData){

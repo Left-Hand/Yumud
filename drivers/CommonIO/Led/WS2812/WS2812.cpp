@@ -38,10 +38,9 @@ void WS2812::sendReset(){
 }
 
 void WS2812::_update(const Color &color){
-    uint16_t r,g,b;
-    uni_to_u16(color.r, r);
-    uni_to_u16(color.g, g);
-    uni_to_u16(color.b, b);
+    auto r = uni_to_u16(color.r);
+    auto g = uni_to_u16(color.g);
+    auto b = uni_to_u16(color.b);
 
     sendReset();
     sendByte(g >> 8);

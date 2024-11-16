@@ -114,13 +114,12 @@ __fast_inline constexpr T fposmodp(T p_x, T p_y) {
 template<integral T>
 __fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 
-__fast_inline constexpr void u16_to_uni(const uint16_t data, float & fv){
-    fv = (float)data / 65535;
+
+template<floating T>
+__fast_inline constexpr void u16_to_uni(const uint16_t data){
+    return (T)data / 65535;
 }
 
-__fast_inline constexpr void u16_to_uni(const uint16_t data, double & dv){
-    dv = (float)data / 65535;
-}
 
 __fast_inline constexpr int warp_mod(const int x, const int y){
     int ret = x % y;

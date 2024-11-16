@@ -18,25 +18,21 @@ void MPU6050::update(){
 }
 
 std::tuple<real_t, real_t, real_t> MPU6050::getAccel(){
-    real_t x, y, z;
-    s16_to_uni(accel.x, x); x *= accel_scaler;
-    s16_to_uni(accel.y, y); y *= accel_scaler;
-    s16_to_uni(accel.z, z); z *= accel_scaler;
+    real_t x = s16_to_uni(accel.x) * accel_scaler;
+    real_t y = s16_to_uni(accel.y) * accel_scaler;
+    real_t z = s16_to_uni(accel.z) * accel_scaler;
     return {x, y, z};
 }
 
 std::tuple<real_t, real_t, real_t> MPU6050::getGyro(){
-    real_t x, y, z;
-    s16_to_uni(gyro.x, x); x *= gyro_scaler;
-    s16_to_uni(gyro.y, y); y *= gyro_scaler;
-    s16_to_uni(gyro.z, z); z *= gyro_scaler;
+    real_t x = s16_to_uni(gyro.x) * gyro_scaler;
+    real_t y = s16_to_uni(gyro.y) * gyro_scaler;
+    real_t z = s16_to_uni(gyro.z) * gyro_scaler;
     return {x, y, z};
 }
 
 real_t MPU6050::getTemperature(){
-    real_t dummy;
-    s16_to_uni(temprature, dummy);
-    return real_t(36.65f) + dummy / real_t(340);
+    return real_t(36.65f) + s16_to_uni(temprature) / real_t(340);
 }
 
 

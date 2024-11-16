@@ -131,6 +131,13 @@
         uint8_t data;
     };
 
+    struct AccConfReg:public Reg8{
+        scexpr RegAddress address = 0x40;
+        uint8_t acc_odr:4;
+        uint8_t acc_bwp:3;
+        uint8_t acc_us:1;
+    };
+    
     struct AccRangeReg:public Reg8{
         scexpr RegAddress address = 0x41;
         uint8_t acc_range:4;

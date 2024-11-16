@@ -18,10 +18,10 @@ void TCS34725::requestRegData(const RegAddress regAddress, uint16_t * data_ptr, 
 
 
 void TCS34725::getCRGB(real_t & c, real_t & r, real_t & g, real_t & b){
-    s16_to_uni(data[0], c);
-    s16_to_uni(data[1], r);
-    s16_to_uni(data[2], g);
-    s16_to_uni(data[3], b);
+    c = s16_to_uni(data[0]);
+    r = s16_to_uni(data[1]);
+    g = s16_to_uni(data[2]);
+    b = s16_to_uni(data[3]);
 }
 
 void TCS34725::update(){
