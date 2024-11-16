@@ -15,13 +15,13 @@ void Sequencer::rotate(Curve & curve, const Ray & from, const real_t & end_rad){
 
     const bool inv = end_rad < from.rad;
     const auto freq = paras_.freq;
-    const auto n = size_t(int(solver.period() * freq));
+    const auto n = size_t(solver.period() * freq);
     
     curve.reserve(curve.size() + n);
     
     for(size_t i = 0; i < n; i++){
         const auto t_val = real_t(i) / freq;
-        auto rad = solver.forward(t_val);
+        const auto rad = solver.forward(t_val);
         curve.push_back(from.rotated(inv ? -rad : rad));
     }
 }
@@ -40,7 +40,7 @@ void Sequencer::linear(Curve & curve, const Ray & from, const Vector2 & end_pos)
     };
 
     const auto freq = paras_.freq;
-    const auto n = size_t(int(solver.period() * freq));
+    const auto n = size_t(solver.period() * freq);
     
     curve.reserve(curve.size() + n);
     
@@ -75,16 +75,51 @@ void Sequencer::arc(Curve & curve, const Ray & from, const Ray & to, const real_
     // }
 }
 
-void Sequencer::fillet(Curve & curve, const Ray & from, const Ray & to){
-    auto from_line = from.normal();
-    auto to_line = to.normal();
+void Sequencer::sideways(Curve & curve, const Ray & from, const Ray & to){
+    auto from_norm_line = from.normal();
+    auto to_norm_line = to.normal();
+
+    if(from_norm_line.parallel_with(to_norm_line)){
+        this->linear(curve, from, to.org);
+        return;
+    }
+
+    auto mid_p_opt = from_norm_line.intersection(to_norm_line);
+    if(!mid_p_opt) return;
+
+    auto mid_p = mid_p_opt.value();
+    
+    this->linear(curve, Ray{from.org, from.rad}, mid_p);
+    this->rotate(curve, Ray{mid_p, from.rad}, to.rad);
+    this->linear(curve, Ray{mid_p, to.rad}, to.org);
+}
+
+void Sequencer::follow(Curve & curve, const Ray & from, const Ray & to){
+    auto from_line = Line(from);
+    auto to_line = Line(to);
+
+    if(from_line.parallel_with(to_line)){
+        this->linear(curve, from, to.org);
+        return;
+    }
 
     auto mid_p_opt = from_line.intersection(to_line);
     if(!mid_p_opt) return;
 
     auto mid_p = mid_p_opt.value();
     
-    this->linear(curve, from, mid_p);
-    this->rotate(curve, Ray{mid_p, from.rad}, to.rad);
-    this->linear(curve, Ray{mid_p, to.rad}, to.org);
+    this->rotate(curve, from, from_line.rad);
+    this->linear(curve, Ray{from.org, from_line.rad}, mid_p);
+    this->rotate(curve, Ray{mid_p, from_line.rad}, to_line.rad);
+    this->linear(curve, Ray{mid_p, to_line.rad}, to.org);
+    this->rotate(curve, Ray{to.org, to_line.rad}, to.rad);
+}
+
+void Sequencer::shift(Curve & curve, const Ray & from, const Ray & to){
+    this->linear(curve, from, to.org);
+}
+
+
+void Sequencer::spin(Curve & curve, const Ray & from, const Ray & to){
+    this->rotate(curve, from, to.rad);
 }

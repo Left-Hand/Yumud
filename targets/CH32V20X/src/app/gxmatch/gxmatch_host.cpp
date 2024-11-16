@@ -17,8 +17,8 @@
 
 
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
-#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
+#include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
+#include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 #include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
 #include "hal/bus/spi/spihw.hpp"
 
@@ -156,6 +156,15 @@ void host_main(){
             painter.drawPixel(pos);
         }
     };
+
+    auto print_curve = [&](const Curve & curve){
+        logger << std::setprecision(4);
+        for(auto it = curve.begin(); it != curve.end(); it++){
+            auto [pos, rad] = Ray(*it);
+            delay(1);
+            logger.println(pos.x, pos.y, rad);
+        }
+    };
     
     auto draw_turtle = [&](const Ray & ray){
         scexpr real_t len = 7;
@@ -168,6 +177,8 @@ void host_main(){
         // painter.setColor(ColorEnum::RED);
         painter.setColor(RGB888(HSV888(int(t * 64),255,255)));
         painter.drawFilledTriangle(pf, p1, p2);
+        // painter.drawPixel(org);
+
         painter.setColor(ColorEnum::BLACK);
         painter.drawHollowTriangle(pf, p1, p2);
     };
@@ -265,39 +276,31 @@ void host_main(){
     }
     
 
-    if(true){
-        MPU6050 bmi{i2c};
-
-        bmi.init();
-
-        while(true){
-
-            bmi.update();
-            auto acc = Vector3{bmi.getAcc()};
-            auto gyr = Vector3{bmi.getGyr()};
-            // auto gest = Quat{{0,0,1}, acc};
-            delay(1);
-            DEBUG_PRINTLN(acc.x, acc.y, acc.z, gyr.x, gyr.y, gyr.z, acc.length());
-        }
-    }
-
-    if(false){     
+    if(false){
+        MPU6050 acc_gyr_sensor{i2c};
         QMC5883L mag_sensor{i2c};
 
+        acc_gyr_sensor.init();
         mag_sensor.init();
-        
+
         while(true){
 
+            acc_gyr_sensor.update();
             mag_sensor.update();
-            const auto mag = Vector3{mag_sensor.getMagnet()};
-            // const auto gest = Quat{{0,0,1}, mag.normalized()};
-            delay(1);
-            // DEBUG_PRINTLN(std::setprecision(4), gest.x, gest.y, gest.z, gest.w);
-            DEBUG_PRINTLN(mag.x, mag.y, mag.z, atan2(mag.y, mag.x));
+
+            const auto acc3 = Vector3{acc_gyr_sensor.getAcc()};
+            const auto gyr3 = Vector3{acc_gyr_sensor.getGyr()};
+            const auto mag3 = Vector3{mag_sensor.getMagnet()};
+
+            const auto acc2 = Vector2{acc3.x, acc3.y};
+
+            const auto rot = atan2(mag3.y, mag3.x);
+            const auto gyr = gyr3.z;
+            DEBUG_PRINTLN(acc2.x, acc2.y, rot, gyr);
         }
     }
 
-    {
+    if(false){
             using Type = int;
             using Topic = Topic_t<Type>;
 
@@ -331,7 +334,7 @@ void host_main(){
             .max_gyr = 2,
             .max_agr = 2,
             .max_spd = real_t(0.8),
-            .max_acc = real_t(0.5)
+            .max_acc = real_t(1.5)
         };
 
         auto params = SequenceParas{
@@ -340,14 +343,34 @@ void host_main(){
         
         auto sequencer = Sequencer(limits, params);
         auto curve = Curve{};
-        // sequencer.linear(curve, Ray{0, 0, 0}, Vector2{1,1});
-        // sequencer.fillet(curve, Ray{0,0,0}, Ray{1,1,real_t(PI/2)});
 
-        auto m = micros();
-        sequencer.fillet(curve, Ray{0,0,real_t(PI)}, Ray{2,2,real_t(PI/2)});
-        DEBUG_PRINTLN(micros() - m);
+        Map map{};
+        Planner planner{map, sequencer};
+
+        const auto m = micros();
+
+        planner.plan(
+            curve,
+            Field{FieldType::Garbage},
+            Field{FieldType::Staging}
+        );
+
+        planner.plan(
+            curve,
+            Field{FieldType::Staging},
+            Field{FieldType::RoughProcess}
+        );
+
+        planner.plan(
+            curve,
+            Field{FieldType::RoughProcess},
+            Field{FieldType::Garbage}
+        );
+
+        DEBUG_PRINTLN(micros() - m, curve.size());
+
         draw_curve(curve);
-        
+        // print_curve(curve);
         DEBUG_PRINTLN(std::setprecision(4));
         auto idx = 0;
         for(auto it = curve.begin(); it != curve.end(); ++it){

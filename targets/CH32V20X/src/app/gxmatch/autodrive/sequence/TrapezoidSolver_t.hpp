@@ -49,14 +49,14 @@ public:
             t1 = real_max_spd / a;
             t2 = t1;
             
-            s1 = t1 * real_max_spd / 2;
+            s1 = t1 * real_max_spd >> 1;
 
             t_all = 2 * t1;
         }else{
             t1 = accleration_time;
             t2 = ((s - reach_peak_threshold) / v) + t1;
 
-            s1 = a * t1 * t1 / 2;
+            s1 = a * t1 * t1 >> 1;
             t_all = t2 + t1;
         }   
     }
@@ -64,17 +64,17 @@ public:
     T forward(const T t) const{
         if(peaked){
             if(t < t1){
-                return a_ * t * t / 2;
+                return (a_ * square(t)) >> 1;
             }else if(t < t2){
                 return s1 + v_ * (t - t1);
             }else if(t < t_all){
-                return s_ - a_ * square(t - t_all) / 2;
+                return s_ - ((a_ * square(t - t_all)) >> 1);
             }
         }else{
             if(t < t1){
-                return a_ * square(t) / 2;
+                return a_ * square(t) >> 1;
             }else if(t < t_all){
-                return s_ - a_ * square(t - t_all) / 2;
+                return s_ - ((a_ * square(t - t_all)) >> 1);
             }
         }
         return s_;
