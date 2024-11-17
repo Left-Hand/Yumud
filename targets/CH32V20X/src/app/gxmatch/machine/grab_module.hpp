@@ -11,6 +11,8 @@
 
 namespace gxm{
 
+
+
 class GrabModule:public MotionModule{
 public:
     struct Config{
@@ -54,5 +56,12 @@ public:
     bool reached();
     // bool done();
 };
-    
+
+struct GrabSysConfig{
+    Scara::Config scara_config;
+    ZAxis::Config zaxis_config;
+    GrabModule::Config grab_config;
+    CrossSolver::Config cross_config;
+};
+
 }
