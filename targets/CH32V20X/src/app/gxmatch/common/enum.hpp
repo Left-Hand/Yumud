@@ -9,7 +9,8 @@ enum class TrayIndex{
     Right,
 };
 
-enum class BlockColor{
+enum class MaterialColor{
+    None,
     Red,
     Blue,
     Green,

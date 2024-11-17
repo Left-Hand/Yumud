@@ -6,12 +6,12 @@ void VisionModule::update(){
     
 }
 
-Vector2 VisionModule::getBlockOffset(const BlockColor color){
+Vector2 VisionModule::getMatrialOffset(const MaterialColor color){
     return {0,0};
 }
 
-BlockColor VisionModule::getCentreBlockColor(){
-    return BlockColor::Blue;
+MaterialColor VisionModule::getCentralColor(){
+    return MaterialColor::Blue;
 }
 
 bool VisionModule::confident(){

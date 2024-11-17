@@ -5,11 +5,14 @@
 namespace gxm{
     
 class VisionModule{
+protected:
+
 public:
     void update();
 
-    Vector2 getBlockOffset(const BlockColor color);
-    BlockColor getCentreBlockColor();
+    Vector2 getMatrialOffset(const MaterialColor color);
+    Vector2 getCentralOffset(){return getMatrialOffset(getCentralColor());}
+    MaterialColor getCentralColor();
     bool confident();
 };
 
