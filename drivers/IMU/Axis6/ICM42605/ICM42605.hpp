@@ -2,19 +2,11 @@
 
 #pragma once
 
-#include "drivers/IMU/IMU.hpp"
-
-
-#ifdef ICM42605_DEBUG
-#undef ICM42605_DEBUG
-#define ICM42605_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define ICM42605_DEBUG(...)
-#endif
+#include "drivers/IMU/InvensenseIMU.hpp"
 
 namespace ymd::drivers{
 
-class ICM42605:public Axis6{
+class ICM42605:public Axis6, public InvensenseSensor{
 public:
 
     enum class AFS:uint8_t{
@@ -168,23 +160,12 @@ protected:
         Vec3i16 gyr_data;
     };
 
-
-    void writeReg(const uint8_t addr, const uint8_t data);
-
-    void readReg(const uint8_t addr, uint8_t & data);
-    
-    void requestData(const uint8_t addr, int16_t * datas, const size_t len);
     void writeCommand(const uint8_t cmd){
         writeReg(0x7e, cmd);
     }
 public:
-
-    ICM42605(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    ICM42605(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    ICM42605(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, default_i2c_addr)){;}
-    ICM42605(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    ICM42605(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    ICM42605(Spi & spi, const uint8_t index):spi_drv_(SpiDrv(spi, index)){;}
+    using InvensenseSensor::InvensenseSensor;
+    ICM42605(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(I2cDrv(i2c, default_i2c_addr)){;}
 
     void init();
     

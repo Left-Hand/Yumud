@@ -300,9 +300,9 @@ void host_main(){
     if(true){
         auto limits = SequenceLimits{
             .max_gyr = 2,
-            .max_agr = 2,
-            .max_spd = real_t(0.8),
-            .max_acc = real_t(1.5)
+            .max_agr = real_t(0.5),
+            .max_spd = real_t(0.5),
+            .max_acc = real_t(0.2)
         };
 
         auto params = SequenceParas{

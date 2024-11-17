@@ -88,41 +88,6 @@ bool ICM42605::verify(){
 //     return 0;
 // }
 
-void ICM42605::writeReg(const uint8_t addr, const uint8_t data){
-	if(i2c_drv_){
-		i2c_drv_->writeReg(addr, data, MSB);
-	}else if(spi_drv_){
-		spi_drv_->writeSingle(uint8_t(addr), CONT);
-		spi_drv_->writeSingle(data);
-	}else{
-		HALT;
-	}
-}
-
-void ICM42605::readReg(const uint8_t addr, uint8_t & data){
-	if(i2c_drv_){
-		i2c_drv_->readReg((uint8_t)addr, data, MSB);
-	}else if(spi_drv_){
-		spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-		spi_drv_->readSingle(data);
-	}else{
-		HALT;
-	}
-}
-
-
-void ICM42605::requestData(const uint8_t addr, int16_t * datas, const size_t len){
-	if(i2c_drv_){
-		i2c_drv_->readMulti(uint8_t(addr), datas, len, MSB);
-	}if(spi_drv_){
-		spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
-		spi_drv_->readMulti((datas), len);
-	}else{
-        HALT;
-	}
-
-}
-
 
 void ICM42605::update(){
 
