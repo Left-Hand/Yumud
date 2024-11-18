@@ -28,6 +28,54 @@ using Vector2i = Vector2_t<int>;
 
 #define WHARE_OK while(true){DEBUGGER.println(millis());};
 
+class RenderTrait{
+public:
+    virtual void render(PainterConcept & painter) = 0;
+};
+
+
+class Icon:public RenderTrait{
+protected:
+    Rect2i rect_ = {0,0,30,30};
+    String name_ = "nil";
+public:
+    Icon() = default;
+
+    void render(PainterConcept & painter) override{
+        painter.setColor(ColorEnum::WHITE);
+        painter.drawFilledRect(rect_);
+        // painter.drawString(rect_ + Vector2i{0, -10}, name_);
+    }
+};
+
+class Menu:public RenderTrait{
+protected:
+    using Items = std::vector<Icon *>;
+
+    Items items_;
+
+    int item_padding_ = 10;
+    Vector2i item_org_ = {10,10};
+
+    void draw_otherwides(PainterConcept & painter){
+        painter.setColor(ColorEnum::WHITE);
+    }
+public:
+    Menu() = default;
+
+    void render(PainterConcept & painter) override{
+        // auto item_org = item_org_;
+        // for(auto it = items_.begin(); it != items_.end(); ++it){
+        // for(auto item : items_){
+            // painter.drawFilledRect(item_org, it);
+        // };
+
+        // draw_otherwids(painter);
+
+        
+    }
+};
+
 
 using Sys::t;
 

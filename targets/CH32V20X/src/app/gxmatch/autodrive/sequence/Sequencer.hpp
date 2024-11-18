@@ -32,5 +32,7 @@ public:
 
     //旋转
     void spin(Curve & curve, const Ray & from, const Ray & to);
+
+    void wait(Curve & curve, const Ray & from, const real_t & dur);
 };
 }

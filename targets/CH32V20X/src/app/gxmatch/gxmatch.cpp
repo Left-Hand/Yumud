@@ -247,13 +247,21 @@ void host_main(){
     }
     
 
-    if(false){
+    if(true){
         MPU6050 acc_gyr_sensor{i2c};
         QMC5883L mag_sensor{i2c};
 
         acc_gyr_sensor.init();
         mag_sensor.init();
 
+        ComplementaryFilter::Config rot_config = {
+            .kq = real_t(0.92),
+            .ko = real_t(0.2)
+        };
+        
+        ComplementaryFilter rot_obs = {rot_config};
+    
+        DEBUG_PRINTLN(std::setprecision(4))
         while(true){
 
             acc_gyr_sensor.update();
@@ -265,10 +273,12 @@ void host_main(){
 
             const auto acc2 = Vector2{acc3.x, acc3.y};
 
-            const auto rot = atan2(mag3.y, mag3.x);
+            const auto rot = -atan2(mag3.y, mag3.x);
             const auto gyr = gyr3.z;
 
-            DEBUG_PRINTLN(acc2.x, acc2.y, rot, gyr);
+            auto rot_ = rot_obs.update(rot, gyr, t);
+            DEBUG_PRINTLN(rot, gyr, rot_);
+            delay(5);
         }
     }
 
@@ -297,7 +307,7 @@ void host_main(){
         publisher.publish({1,1});
     }
 
-    if(true){
+    if(false){
         auto limits = SequenceLimits{
             .max_gyr = 2,
             .max_agr = real_t(0.5),
@@ -313,7 +323,8 @@ void host_main(){
         auto curve = Curve{};
 
         Map map{};
-        Planner planner{map, sequencer};
+        Planner::Config planner_config = {.duration = real_t(3.2)};
+        Planner planner{planner_config, map, sequencer};
 
         const auto m = micros();
 

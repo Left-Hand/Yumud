@@ -1,7 +1,7 @@
 #include "mpu6050.hpp"
 
 
-// #define MPU6050_DEBUG
+#define MPU6050_DEBUG
 
 #ifdef MPU6050_DEBUG
 #undef MPU6050_DEBUG
@@ -55,15 +55,12 @@ real_t MPU6050::getTemperature(){
     return real_t(36.65f) + temperature_reg.uni() / 340;
 }
 
+
 bool MPU6050::verify(){
     //0x75 0x68
-    
     uint8_t data;
     readReg(0x75, data);
-    bool ok = (data == 0x68);
-    MPU6050_ASSERT(ok, "MPU6050 verify failed");
-    MPU6050_DEBUG("MPU6050 verify ok")
-    return ok;
+    return MPU6050_ASSERT(data == 0x68, "MPU6050 verify failed");
 }
 
 void MPU6050::setAccRange(const AccRange range){

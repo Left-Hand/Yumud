@@ -1,5 +1,7 @@
 #include "qmc5883l.hpp"
 
+#define QMC5883L_DEBUG
+
 #ifdef QMC5883L_DEBUG
 #undef QMC5883L_DEBUG
 #define QMC5883L_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
@@ -60,7 +62,7 @@ std::tuple<real_t, real_t, real_t> QMC5883L::getMagnet(){
 
 bool QMC5883L::verify(){
     readReg(RegAddress::ChipID, chipIDReg);
-    return (chipIDReg == 0xFF);
+    return QMC5883L_ASSERT(chipIDReg == 0xFF, "QMC5883L not found");
 }
 
 void QMC5883L::setResetPeriod(const uint8_t resetPeriod){

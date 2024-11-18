@@ -17,6 +17,11 @@ struct Path2D{
 class Planner{
 public:
 
+    struct Config{
+        real_t duration = 0.5;        
+    };
+
+
     //预设的固定路线类
     struct PlanPreset{
         using Callback = std::function<void(Curve &, const Ray &)>;
@@ -53,6 +58,7 @@ public:
         }
     };
 protected:
+    const Config & config_;
     const Map & map_;
     Sequencer & sequencer_;
 
@@ -62,8 +68,8 @@ protected:
 public:
     DELETE_COPY_AND_MOVE(Planner)
 
-    Planner(const Map & map, Sequencer & sequencer):
-        map_(map), sequencer_(sequencer){init();}
+    Planner(const Config & config, const Map & map, Sequencer & sequencer):
+        config_(config), map_(map), sequencer_(sequencer){init();}
 
     //进行规划 输入要输出的路线 当前所在位置及朝向 所在区域 前往区域
     void plan(Curve & curve, const Ray & face, const Field & from, const Field & to);

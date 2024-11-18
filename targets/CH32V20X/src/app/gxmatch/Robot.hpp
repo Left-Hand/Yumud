@@ -1,27 +1,30 @@
 #pragma once
 
 #include "gxmatch.hpp"
+#include "hal/timer/instance/timer_hw.hpp"
+#include "hal/gpio/port_virtual.hpp"
+#include "hal/bus/i2c/i2csw.hpp"
+#include "hal/bus/spi/spihw.hpp"
 
 #include "autodrive/Planner.hpp"
 #include "autodrive/sequence/TrapezoidSolver_t.hpp"
+#include "autodrive/Estimator.hpp"
 
 
 #include "machine/scara/scara.hpp"
 #include "machine/actuator/zaxis_stp.hpp"
-#include "drivers/VirtualIO/PCA9685/pca9685.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/gpio/port_virtual.hpp"
+
 #include "robots/foc/remote/remote.hpp"
 
 #include "types/image/painter.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
 
 
+#include "drivers/VirtualIO/PCA9685/pca9685.hpp"
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-#include "drivers/IMU/Axis6/BMI160/BMI160.hpp"
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 #include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
-#include "hal/bus/spi/spihw.hpp"
+
+
 #include "common/inc.hpp"
 #include "machine/chassis_module.hpp"
 #include "machine/grab_module.hpp"
