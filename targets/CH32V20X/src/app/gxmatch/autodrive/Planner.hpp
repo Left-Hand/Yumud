@@ -18,7 +18,7 @@ class Planner{
 public:
 
     struct Config{
-        real_t duration = 0.5;        
+        real_t duration = real_t(0.5);        
     };
 
 

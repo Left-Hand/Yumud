@@ -2,12 +2,19 @@
 
 using namespace ymd;
 
+// #define AT24CXX_DEBUG
+
 #ifdef AT24CXX_DEBUG
 #undef AT24CXX_DEBUG
-#define AT24CXX_DEBUG(...) DEBUG_PRINT(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#define AT24CXX_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define AT24CXX_PANIC(...) PANIC(__VA_ARGS__)
+#define AT24CXX_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define AT24CXX_DEBUG(...)
+#define AT24CXX_PANIC(...)  PANIC()
+#define AT24CXX_ASSERT(cond, ...) ASSERT(cond)
 #endif
+
 
 #define ACCESS_STRICT_PROTECT
 
@@ -33,12 +40,12 @@ else i2c_drv_.readReg((uint16_t)loc, data, LSB);\
 
 #ifdef ACCESS_STRICT_PROTECT
 #define CHECK_ADDR(loc)\
-PANIC((loc <= capacity_), "invalid addr", loc, capacity_)
+AT24CXX_ASSERT((loc <= capacity_), "invalid addr", loc, capacity_)
 #else
 
 #define CHECK_ADDR(loc)\
 if(loc > m_capacity){\
-    PANIC("invalid addr");\
+    AT24CXX_ASSERT("invalid addr");\
     return;\
 }
 

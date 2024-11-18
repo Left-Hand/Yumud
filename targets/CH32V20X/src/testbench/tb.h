@@ -82,3 +82,4 @@ void math_tb(UartHw & logger);
 void zdt_main(UartHw & logger);
 
 void coro_tb();
+void pmw3901_main();

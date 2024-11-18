@@ -103,7 +103,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
             targ_pos_setter(real_t(args[1]), real_t(0));
             break;
         case "f"_ha:
-            targ_pos_setter(real_t(args[1]), motor.getPosition());
+            motor.setTargetPositionDelta(real_t(args[1]));
             break;
         case "b"_ha:
             targ_pos_setter(-real_t(args[1]), motor.getPosition());

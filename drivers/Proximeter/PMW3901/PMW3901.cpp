@@ -22,17 +22,39 @@
 #define PMW3901_REG_RawData_Grab_Status     0x59
 #define PMW3901_REG_Inverse_Product_ID      0x5F
 
+#define PMW3901_DEBUG
+
+#ifdef PMW3901_DEBUG
+#undef PMW3901_DEBUG
+#define PMW3901_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define PMW3901_PANIC(...) PANIC(__VA_ARGS__)
+#define PMW3901_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define PMW3901_DEBUG(...)
+#define PMW3901_PANIC(...)  PANIC()
+#define PMW3901_ASSERT(cond, ...) ASSERT(cond)
+#endif
+
+
 using namespace ymd::drivers;
 
 void PMW3901::writeReg(const uint8_t command, const uint8_t data){
-    spi_drv_.writeSingle<uint8_t>(command, CONT);
+    spi_drv_.writeSingle<uint8_t>(command | 0x80, CONT);
     spi_drv_.writeSingle<uint8_t>(data);
+
+    #ifdef PMW3901_DEBUG
+    delayMicroseconds(30);
+    #endif
 }
 
 
 void PMW3901::readReg(const uint8_t command, uint8_t & data){
-    spi_drv_.writeSingle<uint8_t>(command, CONT);
+    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT);
     spi_drv_.readSingle<uint8_t>(data);
+
+    #ifdef PMW3901_DEBUG
+    delayMicroseconds(30);
+    #endif
 }
 
 
@@ -73,13 +95,17 @@ void PMW3901::readImage(ImageWritable<Grayscale> & img){
     } while(check == 0x03); //while bits aren't set denoting ready state
 }
 
+bool PMW3901::verify(){
+    if(!assertReg(PMW3901_REG_Inverse_Product_ID, 0xB6)) return false;
+    if(!assertReg(PMW3901_REG_Product_ID, 0x49)) return false;
+    return true;
+}
 void PMW3901::init() {
-
+    spi_drv_.release();
     writeReg(PMW3901_REG_Power_Up_Reset, 0x5A);
     delay(5);
 
-    if(!assertReg(PMW3901_REG_Product_ID, 0x49)) return;
-    if(!assertReg(PMW3901_REG_Inverse_Product_ID, 0xB6)) return;
+    PMW3901_ASSERT(verify(), "PMW3901 not found!");
     update();
 
     writeReg(0x7F, 0x00);
@@ -167,4 +193,12 @@ void PMW3901::setLed(bool ledOn){
 
 void PMW3901::update(){
     spi_drv_.readMulti<uint8_t>(&Motion, 5);
+}
+
+bool PMW3901::assertReg(const uint8_t command, const uint8_t data){
+    uint8_t temp = 0;
+    readReg(command, temp);
+    PMW3901_DEBUG(command, data, temp);
+    // return PMW3901_ASSERT(temp == data, "reg:", command, "is not equal to", data, "fact is", temp);
+    return (temp == data);
 }
