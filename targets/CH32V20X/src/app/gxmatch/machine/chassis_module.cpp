@@ -4,11 +4,11 @@ namespace gxm{
 
 
 void ChassisModule::positionTrim(const Vector2 & trim){
-    wheels_.forwardPosition(solver_.inverse(trim, 0));
+    wheels_.setDelta(solver_.inverse(trim, 0));
 }
 
 void ChassisModule::rotationTrim(const real_t raderr){
-    wheels_.forwardPosition(solver_.inverse({0,0}, raderr));
+    wheels_.setDelta(solver_.inverse({0,0}, raderr));
 }
 
 void ChassisModule::forwardMove(const Vector2 & vel, const real_t spinrate){

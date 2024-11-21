@@ -5,18 +5,27 @@
 
 namespace ymd::drivers{
 
-class PMW3901 {
+namespace internal{
+#pragma pack(push, 1)
+struct PMW3901_Data {
+uint8_t motion;
+int16_t dx;
+int16_t dy;
+};
+#pragma pack(pop)
+}
+
+class PMW3901:public internal::PMW3901_Data{
 protected:
     SpiDrv spi_drv_;
-
-    uint8_t Motion;
-    struct :public Reg16{uint16_t data;}deltaX;
-    struct :public Reg16{uint16_t data;}deltaY;
+    real_t x;
+    real_t y;
 
     bool assertReg(const uint8_t command, const uint8_t data);
-
     void writeReg(const uint8_t command, const uint8_t data);
     void readReg(const uint8_t command, uint8_t & data);
+
+    void updateData();
 public:
     PMW3901(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     PMW3901(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
@@ -25,8 +34,13 @@ public:
     bool verify();
     void init();
     void update();
-    std::tuple<int16_t, int16_t> getMotion(){
-        return {deltaX, deltaY};
+    void update(const real_t rad);
+    auto getMotion(){
+        return std::make_tuple(dx, dy);
+    }
+
+    auto getPosition(){
+        return std::make_tuple(x, y);
     }
 
     void setLed(bool on);

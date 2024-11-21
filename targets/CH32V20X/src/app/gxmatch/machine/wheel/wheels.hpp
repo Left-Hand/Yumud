@@ -4,56 +4,41 @@
 
 namespace gxm{
 class Wheels{
-protected:
-    std::array<Wheel *, 4> instances;
 public:
-    Wheels(Wheel & w1, Wheel & w2, Wheel & w3, Wheel & w4):
-        instances{&w1, &w2, &w3, &w4}{;}
+    struct Config{
+        real_t wheel_radius;
+        real_t kp;
+        real_t kd;
+    };
 
-    void setSpeed(const std::tuple<real_t, real_t, real_t, real_t> & spds){
-        #define SET_SPD(n) instances[n]->setSpeed(std::get<n>(spds))
-        SET_SPD(0);
-        SET_SPD(1);
-        SET_SPD(2);
-        SET_SPD(3);
-    }
+protected:
+    using Refs = std::array<std::reference_wrapper<Wheel>, 4>;
 
-    void setPosition(const std::tuple<real_t, real_t, real_t, real_t> & pos){
-        #define SET_POS(n) instances[n]->setPosition(std::get<n>(pos))
-        SET_POS(0);
-        SET_POS(1);
-        SET_POS(2);
-        SET_POS(3);
-    }
+    const Config & config_;
+    std::array<Wheel *, 4> instances_;
+public:
+    Wheels(const Config & config, const Refs & refs):
+        config_(config),
+        instances_{&refs[0].get(), &refs[1].get(), &refs[2].get(), &refs[3].get()}
+        {;}
 
-    void forwardPosition(const std::tuple<real_t, real_t, real_t, real_t> & pos){
-        #define FWD_POS(n) instances[n]->forwardPosition(std::get<n>(pos))
-        FWD_POS(0);
-        FWD_POS(1);
-        FWD_POS(2);
-        FWD_POS(3);
-    }
+    void init();
 
-    std::tuple<real_t, real_t, real_t, real_t> getPosition(){
-        return std::make_tuple(
-            instances[0]->getPosition(),
-            instances[1]->getPosition(),
-            instances[2]->getPosition(),
-            instances[3]->getPosition()
-        );
-    }
+    bool verify();
 
-    std::tuple<real_t, real_t, real_t, real_t> getSpeed(){
-        return std::make_tuple(
-            instances[0]->getSpeed(),
-            instances[1]->getSpeed(),
-            instances[2]->getSpeed(),
-            instances[3]->getSpeed()
-        );
-    }
+    void setSpeed(const std::tuple<real_t, real_t, real_t, real_t> & spds);
+
+    void setPosition(const std::tuple<real_t, real_t, real_t, real_t> & pos);
+
+    void setDelta(const std::tuple<real_t, real_t, real_t, real_t> & pos);
+
+    std::tuple<real_t, real_t, real_t, real_t> getPosition();
+
+    std::tuple<real_t, real_t, real_t, real_t> getSpeed();
 
     Wheel & operator [](const size_t idx){
-        return *instances[idx];
+        if(idx > 3) HALT;
+        return *instances_[idx];
     }
 };
 

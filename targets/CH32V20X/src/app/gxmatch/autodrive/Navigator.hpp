@@ -5,7 +5,7 @@
 
 namespace gxm{
 
-//机器人导航的顶层调度类
+//机器人导航的顶层调度类 将产生的路径对底盘进行控制
 class Navigator{
     struct Config{
 

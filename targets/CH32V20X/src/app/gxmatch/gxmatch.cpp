@@ -267,11 +267,11 @@ void host_main(){
             acc_gyr_sensor.update();
             mag_sensor.update();
 
-            const auto acc3 = Vector3{acc_gyr_sensor.getAcc()};
+            // const auto acc3 = Vector3{acc_gyr_sensor.getAcc()};
             const auto gyr3 = Vector3{acc_gyr_sensor.getGyr()};
             const auto mag3 = Vector3{mag_sensor.getMagnet()};
 
-            const auto acc2 = Vector2{acc3.x, acc3.y};
+            // const auto acc2 = Vector2{acc3.x, acc3.y};
 
             const auto rot = -atan2(mag3.y, mag3.x);
             const auto gyr = gyr3.z;
