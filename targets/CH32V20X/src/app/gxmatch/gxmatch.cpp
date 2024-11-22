@@ -247,7 +247,7 @@ void host_main(){
     }
     
 
-    if(true){
+    if(false){
         MPU6050 acc_gyr_sensor{i2c};
         QMC5883L mag_sensor{i2c};
 
@@ -307,7 +307,9 @@ void host_main(){
         publisher.publish({1,1});
     }
 
-    if(false){
+
+
+    if(true){
         auto limits = SequenceLimits{
             .max_gyr = 2,
             .max_agr = real_t(0.5),

@@ -1,4 +1,5 @@
 #include "can.hpp"
+#include "CanFilter.hpp"
 #include "hal/nvic/nvic.hpp"
 
 using namespace ymd;
@@ -157,7 +158,7 @@ void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
 void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
 void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
 
-void Can::init(const uint baudRate, const Mode _mode, const CanFilter & filter){
+void Can::init(const uint baudRate, const Mode _mode){
     BaudRate baud;
     switch(baudRate){
         case 125_KHz:
@@ -176,9 +177,8 @@ void Can::init(const uint baudRate, const Mode _mode, const CanFilter & filter){
             break;
     }
 
-    init(baud, _mode, filter);
+    init(baud, _mode, CanFilter{instance, 0});
 }
-
 
 void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filter){
     installGpio();

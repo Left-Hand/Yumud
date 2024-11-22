@@ -118,10 +118,10 @@ do{\
 #define TYPE_CMP(a,b) __builtin_types_compatible_p(type_a, type_b);
 #define ACCESS_ONCE(x) (*(volatile typeof(x) *)&(x))
 
-#define BSWAP_8(x) ((x) & 0xff)
-#define BSWAP_16(x) ((BSWAP_8(x) << 8) | BSWAP_8((x) >> 8))
-#define BSWAP_32(x) ((BSWAP_16(x) << 16) | BSWAP_16((x) >> 16))
-#define BSWAP_64(x) ((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32))
+#define BSWAP_8(x) ((decltype(x))((x) & 0xff))
+#define BSWAP_16(x) ((decltype(x))((BSWAP_8(x) << 8) | BSWAP_8((x) >> 8)))
+#define BSWAP_32(x) ((decltype(x))(((BSWAP_16(x) << 16) | BSWAP_16((x) >> 16))))
+#define BSWAP_64(x) ((decltype(x))((BSWAP_32(x) << 32) | BSWAP_32((x) >> 32)))
 
 #define VAR_AND_SIZE(x) x,sizeof(x)
 #define PTR8_AND_SIZE(x) (const uint8_t *)&x, sizeof(x)

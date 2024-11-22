@@ -4,7 +4,7 @@
 
 #include "CanUtils.hpp"
 #include "CanMsg.hpp"
-#include "CanFilter.hpp"
+
 #include "CanTrait.hpp"
 // #include "interrupts.hpp"
 
@@ -45,6 +45,7 @@ void CAN2_SCE_IRQHandler(void);
 
 namespace ymd{
 
+struct CanFilter;
 class Can: public PackedBus<CanMsg>,public CanTrait{
 public:
     using BaudRate = CanUtils::BaudRate;
@@ -53,6 +54,8 @@ public:
 
     using Packet = CanMsg;
     using Callback = std::function<void(void)>;
+
+
 protected:
     CAN_TypeDef * instance;
 
@@ -74,13 +77,15 @@ protected:
     void handleTx();
     void handleRx(const uint8_t fifo_num);
     void handleSce();
+
+
+    void init(const BaudRate baudRate, const Mode mode, const CanFilter & filter);
+    friend class CanFilter;
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
     void setBaudRate(const uint32_t baudRate) override;
 
-    void init(const uint baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
-
-    void init(const BaudRate baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
+    void init(const uint baudRate, const Mode mode = Mode::Normal);
 
     bool write(const CanMsg & msg) override;
     CanMsg read() override;
