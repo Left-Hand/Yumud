@@ -20,8 +20,8 @@ protected:
 	Quat q;
 public:
 
-    [[nodiscard]] Quat update(const Vector3 & gyro,const Vector3 & accel);
-    [[nodiscard]] Quat update9(const Vector3 & gyro,const Vector3 & accel,const Vector3 & mag);
+    [[nodiscard]] Quat update(const Vector3 & gyr,const Vector3 & acc);
+    [[nodiscard]] Quat update9(const Vector3 & gyr,const Vector3 & acc,const Vector3 & mag);
 };
 
 }

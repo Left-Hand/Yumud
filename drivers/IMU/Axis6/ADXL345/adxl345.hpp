@@ -329,8 +329,8 @@ public:
         return deviceIDReg.data;
     }
 
-    std::tuple<real_t, real_t, real_t> getAccel() override;
-    std::tuple<real_t, real_t, real_t> getGyro() override;
+    std::tuple<real_t, real_t, real_t> getAcc() override;
+    std::tuple<real_t, real_t, real_t> getGyr() override;
 
 };
 

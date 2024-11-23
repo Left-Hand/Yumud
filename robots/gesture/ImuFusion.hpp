@@ -43,7 +43,7 @@ protected:
 
     Quat quat;
 public:
-    void update9(const Vector3 & gyro, const Vector3 & accel, const Vector3 & mag);
+    void update9(const Vector3 & gyr, const Vector3 & acc, const Vector3 & mag);
 
     auto get_quat() const { return quat; }
     auto get_euler() const {return Basis(get_quat()).get_euler_xyz();} 

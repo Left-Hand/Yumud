@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/math/uint24_t.h"
+#include "sys/math/real.hpp"
 
 template<typename T>
 struct Reg_t{

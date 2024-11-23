@@ -33,7 +33,7 @@ void RemoteFOCMotor::freeze(){POST(Command::FREEZE);}
 real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return readCurrent();}
 real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return readSpeed();}
 real_t RemoteFOCMotor::getPosition() const{POST(Command::GET_POS); return readPosition();}
-real_t RemoteFOCMotor::getAccel() const{POST(Command::GET_ACC); return readAccel();}
+real_t RemoteFOCMotor::getAcc() const{POST(Command::GET_ACC); return readAcc();}
 void RemoteFOCMotor::updateAll() const{POST(Command::GET_ALL);}
 
 void RemoteFOCMotor::setPositionLimit(const Range & clamp){
@@ -45,7 +45,7 @@ void RemoteFOCMotor::setPositionLimit(const Range & clamp){
 void RemoteFOCMotor::enable(const bool en){POST(en ? Command::ACTIVE: Command::INACTIVE);}
 // void RemoteFOCMotor::setNodeId(const NodeId _id){}
 void RemoteFOCMotor::setSpeedLimit(const real_t max_spd){POST(Command::SET_SPD_LMT,E(max_spd));}
-void RemoteFOCMotor::setAccelLimit(const real_t max_acc){POST(Command::SET_ACC_LMT, E(max_acc));}
+void RemoteFOCMotor::setAccLimit(const real_t max_acc){POST(Command::SET_ACC_LMT, E(max_acc));}
 void RemoteFOCMotor::triggerCali(){POST(Command::TRIG_CALI);}
 void RemoteFOCMotor::reset(){POST(Command::RST, uint16_t(0x5aa5));}
 
@@ -63,7 +63,7 @@ void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
             meta.spd = E(msg);
             break;
         case Command::GET_ACC:
-            meta.accel = E(msg);
+            meta.acc = E(msg);
             break;
         case Command::GET_CURR:
             meta.curr = E(msg);
@@ -73,7 +73,7 @@ void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
             meta.curr =     std::get<0>(res);
             meta.spd =      std::get<1>(res);
             meta.pos =      std::get<2>(res);
-            meta.accel =    std::get<3>(res);
+            meta.acc =    std::get<3>(res);
             break;
         }
         default:

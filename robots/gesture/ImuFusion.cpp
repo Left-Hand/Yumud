@@ -4,8 +4,8 @@ using namespace ymd;
 
 
 // 设置加速度修正PI值
-#define Accel_Kp (3)
-#define Accel_Ki (0)
+#define Acc_Kp (3)
+#define Acc_Ki (0)
 // 设置磁力计修正PI值
 #define Magnetic_Kp (5) // 10.0f
 #define Magnetic_Ki (0)
@@ -13,14 +13,14 @@ using namespace ymd;
 
 #define Fusion_Initial_X_North
 
-void ImuFusion::update9(const Vector3 & gyro, const Vector3 & accel, const Vector3 & mag){
+void ImuFusion::update9(const Vector3 & gyr, const Vector3 & acc, const Vector3 & mag){
 
     real_t hx, hy; // 旋转到参考坐标系的机体磁场
     real_t bz; // 参考坐标系的地磁场
     real_t wx, wy, wz; // 误差向量
 
-    scexpr real_t akp = Accel_Kp;
-    scexpr real_t aki = Accel_Ki;
+    scexpr real_t akp = Acc_Kp;
+    scexpr real_t aki = Acc_Ki;
     scexpr real_t mkp = Magnetic_Kp;
     scexpr real_t mki = Magnetic_Ki; // 170 0.05f
     
@@ -35,8 +35,8 @@ void ImuFusion::update9(const Vector3 & gyro, const Vector3 & accel, const Vecto
     real_t q2q3 = this->quat.z * this->quat.w;
     real_t q3q3 = this->quat.w * this->quat.w;
 
-    auto [Ax, Ay, Az] = accel.normalized();
-    auto [Gx, Gy, Gz] = gyro; // 角速度信息 - 用户输入
+    auto [Ax, Ay, Az] = acc.normalized();
+    auto [Gx, Gy, Gz] = gyr; // 角速度信息 - 用户输入
     auto [Mx, My, Mz] = mag.normalized(); // 磁力计信息 - 用户输入
     
     //参考坐标系中的重力向量旋转到载体坐标系

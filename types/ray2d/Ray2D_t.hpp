@@ -89,6 +89,10 @@ public:
 
         return {-s, c, - c * org.y + s * org.x};
     }
+
+    operator Line2D_t<T>() const{
+        return Line2D_t<T>(this->org, this->rad);
+    }
 };
 
 

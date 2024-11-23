@@ -9,10 +9,9 @@
 #define QMC5883L_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define QMC5883L_DEBUG(...)
-#define QMC5883L_PANIC(...)
-#define QMC5883L_ASSERT(cond, ...)
+#define QMC5883L_PANIC(...)  PANIC()
+#define QMC5883L_ASSERT(cond, ...) ASSERT(cond)
 #endif
-
 
 
 using namespace ymd::drivers;
@@ -63,7 +62,7 @@ std::tuple<real_t, real_t, real_t> QMC5883L::getMagnet(){
 
 bool QMC5883L::verify(){
     readReg(RegAddress::ChipID, chipIDReg);
-    return (chipIDReg == 0xFF);
+    return QMC5883L_ASSERT(chipIDReg == 0xFF, "QMC5883L not found");
 }
 
 void QMC5883L::setResetPeriod(const uint8_t resetPeriod){

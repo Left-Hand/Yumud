@@ -37,6 +37,6 @@ real_t Field::to_rot(const Map & map) const {
     }
 }
 
-Gesture2D Field::to_gest(const Map & map) const{
+Ray Field::to_ray(const Map & map) const{
     return {to_pos(map), to_rot(map)};
 }

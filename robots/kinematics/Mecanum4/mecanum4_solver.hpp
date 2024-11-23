@@ -12,8 +12,8 @@ struct PoseVelocity2D_t{
     Vector2_t<T> velocity;
     T spinrate;
 };
-    
-    
+
+
 template<arithmetic T>
 class Mecanum4Solver_t{
 public:

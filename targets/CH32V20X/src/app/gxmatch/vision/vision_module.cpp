@@ -6,20 +6,12 @@ void VisionModule::update(){
     
 }
 
-real_t VisionModule::getLanePadding(){
-    return 0;
-}
-
-real_t VisionModule::getLaneRadian(){
-    return 0;
-}
-
-Vector2 VisionModule::getBlockOffset(const BlockColor color){
+Vector2 VisionModule::getMatrialOffset(const MaterialColor color){
     return {0,0};
 }
 
-BlockColor VisionModule::getCentreBlockColor(){
-    return BlockColor::Blue;
+MaterialColor VisionModule::getCentralColor(){
+    return MaterialColor::Blue;
 }
 
 bool VisionModule::confident(){

@@ -5,6 +5,8 @@
 namespace gxm{
 
 // https://zhuanlan.zhihu.com/p/652803608
+
+//对当前量与目标量进行梯形位置求解
 template<arithmetic T>
 class SigmoidSolver_t{
 protected:

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "bus.hpp"
+#include "sys/clock/clock.h"
 #include <type_traits>
 #include <initializer_list>
 
@@ -53,7 +54,12 @@ protected:
 
 public:
     NonProtocolBusDrv(BusType & _bus, const uint8_t _index) : BusDrv<BusType>(_bus, _index) {}
-
+    void release(){
+        if (Bus::ErrorType::OK == bus.begin(index) ) {
+            ::delay(1);
+            bus.end();
+        }
+    }
     void end(){bus.end();}
 
     template<typename T>

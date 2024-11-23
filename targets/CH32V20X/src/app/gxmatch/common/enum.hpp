@@ -4,12 +4,13 @@
 namespace gxm{
     
 enum class TrayIndex{
-    Left,
+    Left = 0,
     Center,
     Right,
 };
 
-enum class BlockColor{
+enum class MaterialColor{
+    None = 0,
     Red,
     Blue,
     Green,

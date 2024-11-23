@@ -167,7 +167,7 @@ public:
         meta.max_spd = int(max_spd);
     }
 
-    void setAccelLimit(const real_t max_acc){
+    void setAccLimit(const real_t max_acc){
         meta.max_acc = int(max_acc);
     }
 

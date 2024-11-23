@@ -4,38 +4,38 @@ using namespace ymd::drivers;
 using namespace gxm;
 
 void Estimator::update(){
-    acc_gyro_sensor_.update();
+    acc_gyr_sensor_.update();
     mag_sensor_.update();
 
-    acc3_ = bias_.acc.xform(Vector3(acc_gyro_sensor_.getAccel()));
-    gyro3_ = Vector3(acc_gyro_sensor_.getGyro()) - bias_.gyro;
+    acc3_ = bias_.acc.xform(Vector3(acc_gyr_sensor_.getAcc()));
+    gyr3_ = Vector3(acc_gyr_sensor_.getGyr()) - bias_.gyr;
     mag3_ = bias_.mag.xform(Vector3(mag_sensor_.getMagnet()));
 
-    quat_ = mahony_.update9(gyro3_, acc3_, mag3_);
+    quat_ = mahony_.update9(gyr3_, acc3_, mag3_);
     euler_ = Basis(quat_).get_euler_xyz();
 }
 
-Quat Estimator::calculateAccelBias(){
+Quat Estimator::calculateAccBias(){
     Vector3 acc_bias_sum = Vector3::ZERO;
     
     for(size_t i = 0; i < config_.calibrate_times; i++){
-        acc_gyro_sensor_.update();
-        acc_bias_sum += Vector3(acc_gyro_sensor_.getAccel());
+        acc_gyr_sensor_.update();
+        acc_bias_sum += Vector3(acc_gyr_sensor_.getAcc());
     }
 
     const auto acc_vec3 = acc_bias_sum / config_.calibrate_times;
     return Quat(Vector3(0,0,-1), acc_vec3.normalized()).inverse();
 }
 
-Vector3 Estimator::calculateGyroBias(){
-    Vector3 gyro_bias_sum = Vector3::ZERO;
+Vector3 Estimator::calculateGyrBias(){
+    Vector3 gyr_bias_sum = Vector3::ZERO;
     
     for(size_t i = 0; i < config_.calibrate_times; i++){
-        acc_gyro_sensor_.update();
-        gyro_bias_sum += Vector3(acc_gyro_sensor_.getGyro());
+        acc_gyr_sensor_.update();
+        gyr_bias_sum += Vector3(acc_gyr_sensor_.getGyr());
     }
 
-    return gyro_bias_sum / config_.calibrate_times;
+    return gyr_bias_sum / config_.calibrate_times;
 }
 
 
@@ -53,8 +53,8 @@ Quat Estimator::calculateMagBias(){
 
 
 void Estimator::calibrate(){
-    bias_.acc = calculateAccelBias();
-    bias_.gyro = calculateGyroBias();
+    bias_.acc = calculateAccBias();
+    bias_.gyr = calculateGyrBias();
     bias_.mag = calculateMagBias();
 }
 

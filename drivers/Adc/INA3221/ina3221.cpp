@@ -2,6 +2,17 @@
 
 using namespace ymd::drivers;
 
+#ifdef INA3221_DEBUG
+#undef INA3221_DEBUG
+#define INA3221_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define INA3221_PANIC(...) PANIC(__VA_ARGS__)
+#define INA3221_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define INA3221_DEBUG(...)
+#define INA3221_PANIC(...)  PANIC()
+#define INA3221_ASSERT(cond, ...) ASSERT(cond)
+#endif
+
 #define READ_REG(reg)\
 readReg(reg.address, reg);\
 

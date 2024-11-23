@@ -3,68 +3,93 @@
 
 using namespace ymd;
 
-[[maybe_unused]]static void CANFilterConfig_List_Extend(uint8_t FGrop,uint32_t Ext_Id1, uint32_t Ext_Id2){
-    CAN_FilterInitTypeDef	CAN_FilterInitStructure;
+void CanFilter::list(const std::initializer_list<CanID16> & list){
+    switch(list.size()){
+        default:
+            HALT;
+        case 2:
+            id16[0] =       *std::next(list.begin(), 0);
+            id16[1] =       *std::next(list.begin(), 1);
+            mask16[0] =     *std::next(list.begin(), 2);
+            mask16[1] =     *std::next(list.begin(), 3);
 
-    CAN_FilterInitStructure.CAN_FilterNumber = FGrop;				 //���ù�������0����ΧΪ0~13
-    CAN_FilterInitStructure.CAN_FilterMode=CAN_FilterMode_IdList;	 //���ù�������0Ϊ��ʶ���б�ģʽ
-    CAN_FilterInitStructure.CAN_FilterScale=CAN_FilterScale_32bit;  //���ù�������0λ��Ϊ32λ
+            break;
+    }
+    is32 = false;
+    islist = true;
+    inited = true;
 
-    //���ñ�ʶ���Ĵ���
-    CAN_FilterInitStructure.CAN_FilterIdHigh=((Ext_Id1<<3)>>16)&0xffff ;		   //���ñ�ʶ���Ĵ������ֽ�
-    CAN_FilterInitStructure.CAN_FilterIdLow=((Ext_Id1<<3)&0xffff)|CAN_Id_Extended;//���ñ�ʶ���Ĵ������ֽ�,CAN_FilterIdLow��IDλ�����������ã��ڴ�ģʽ�²�����Ч��
-
-    //�������μĴ��������ﵱ��ʶ���Ĵ�����
-    CAN_FilterInitStructure.CAN_FilterMaskIdHigh=((Ext_Id2<<3)>>16)&0xffff;			//�������μĴ������ֽ�
-    CAN_FilterInitStructure.CAN_FilterMaskIdLow=((Ext_Id2<<3)&0xffff)|CAN_Id_Extended; //�������μĴ������ֽ�
-
-    CAN_FilterInitStructure.CAN_FilterFIFOAssignment=CAN_FIFO0; //�˹����������������FIFO0
-    CAN_FilterInitStructure.CAN_FilterActivation=ENABLE;		 //����˹�������
-    CAN_FilterInit(&CAN_FilterInitStructure);					 //���ù�����
+    apply();
 }
 
-static void CAN_Init_Filter(uint16_t id1, uint16_t mask1, uint16_t id2, uint16_t mask2){
-    CAN_FilterInitTypeDef CAN_FilterInitSturcture = {0};
+void CanFilter::list(const std::initializer_list<CanID32> & list){
+    switch(list.size()){
+        default:
+            HALT;
+        case 2:
+            id32 =      *list.begin();
+            mask32 =    *std::next(list.begin());
+            break;
+    }
+    is32 = true;
+    islist = true;
+    inited = true;
 
-    CAN_FilterInitSturcture.CAN_FilterNumber = 1;
+    apply();
+}
 
-    CAN_FilterInitSturcture.CAN_FilterMode = CAN_FilterMode_IdMask;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
+void CanFilter::mask(const CanID16 & id1, const CanID16 & mask1, const CanID16 & id2, const CanID16 & mask2){
+    id16[0] = id1;
+    id16[1] = id2;
+    mask16[0] = mask1;
+    mask16[1] = mask2;
 
-    // CAN_FilterInitSturcture.CAN_FilterIdLow  = id1 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdLow = mask2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterIdHigh = id2 << 5;
-    // CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = mask2 << 5;
-    CAN_FilterInitSturcture.CAN_FilterIdLow = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdLow = 0;
-    CAN_FilterInitSturcture.CAN_FilterIdHigh = 0;
-    CAN_FilterInitSturcture.CAN_FilterMaskIdHigh = 0;
+    is32 = false;
+    islist = false;
+    inited = true;
 
-    CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO0;
-    CAN_FilterInitSturcture.CAN_FilterActivation = ENABLE;
-    CAN_FilterInitSturcture.CAN_FilterScale = CAN_FilterScale_16bit;
+    apply();
+}
+
+void CanFilter::mask(const CanID32 & id, const CanID32 & mask){
+    id32 = id;
+    mask32 = mask;
+
+    is32 = true;
+    islist = false;
+    inited = true;
+
+    apply();
+}
+
+
+void CanFilter::apply(){
+    if(!inited){
+        // HALT;
+        return;
+    }
+
+    CAN_FilterInitTypeDef CAN_FilterInitSturcture = {
+        .CAN_FilterIdHigh = id16[1],
+        .CAN_FilterIdLow = id16[0],
+        .CAN_FilterMaskIdHigh = mask16[1],
+        .CAN_FilterMaskIdLow = mask16[0],
+        .CAN_FilterFIFOAssignment = CAN_FIFO0,
+        .CAN_FilterNumber = idx,
+        .CAN_FilterMode = islist ? CAN_FilterMode_IdList : CAN_FilterMode_IdMask,
+        .CAN_FilterScale = is32 ? CAN_FilterScale_32bit : CAN_FilterScale_16bit,
+        .CAN_FilterActivation = ENABLE,
+    };
 
     CAN_FilterInit(&CAN_FilterInitSturcture);
 
-    CAN_FilterInitSturcture.CAN_FilterNumber = 0;
     CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO1;
+    //register both fifo
     CAN_FilterInit(&CAN_FilterInitSturcture);
+
 }
 
-// CanFilter::CanFilter(const std::initializer_list<uint16_t> & list){
-//     switch(list.size()){
-//         case 4:
-
-//             break;
-//         default:
-//             break;
-//     }
-// }
-
-void CanFilter::init(){
-    init(*this);
-}
-
-void CanFilter::init(const CanFilter & filter){
-    CAN_Init_Filter(0,0,0, 0xf);
+void CanFilter::deinit(){
+    HALT;
+    //TODO
 }

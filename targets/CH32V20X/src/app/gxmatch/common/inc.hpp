@@ -30,9 +30,10 @@ namespace gxm{
 }
 
 
-#include "decl/rotorinfo.hpp"
-#include "decl/rowinfo.hpp"
+#include "decl/RotorInfo.hpp"
+#include "decl/RowInfo.hpp"
+#include "decl/InventoryInfo.hpp"
 
-#include "enum/index.hpp"
+#include "enum.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"

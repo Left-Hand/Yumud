@@ -96,7 +96,28 @@ real_t demo(uint milliseconds, uint microseconds = 0){
     return new_pos;
 }
 
+real_t demo2(const real_t x){
+    return -(x + sin(x))/2;
+}
 
+
+uint8_t get_default_id(){
+    auto chip_id = Sys::Chip::getChipIdCrc();
+    switch(chip_id){
+        case 3273134334:
+            return 3;
+        case 341554774:
+            return 2;
+        case 4079188777:
+            return 1;
+        case 0x551C4DEA:
+            return  3;
+        case 0x8E268D66:
+            return 1;
+        default:
+            return 0;
+    }
+};
 void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
     using TimerUtils::IT;
@@ -149,23 +170,7 @@ void stepper_tb(UartHw & logger){
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
-    auto get_default_id = []() -> uint8_t {
-        auto chip_id = Sys::Chip::getChipIdCrc();
-        switch(chip_id){
-            case 3273134334:
-                return 3;
-            case 341554774:
-                return 2;
-            case 4079188777:
-                return 1;
-            case 0x551C4DEA:
-                return  3;
-            case 0x8E268D66:
-                return 1;
-            default:
-                return 0;
-        }
-    };
+
 
     adc1.init(
         {
@@ -196,10 +201,17 @@ void stepper_tb(UartHw & logger){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
+    uint8_t node_id = get_default_id();
+    auto & can = can1;
+    can.init(1_MHz);
+    
+    can[0].mask(
+        CanID16{uint16_t(uint16_t(node_id) << 7), CanRemoteType::Any}, CanID16::IGNORE_LOW(7, CanRemoteType::Any),
+        CanID16{0x000, CanRemoteType::Any}, CanID16::IGNORE_LOW(7, CanRemoteType::Any));
 
-    FOCStepper stp{get_default_id(), svpwm, encoder, mem};
+    FOCStepper stp{node_id, svpwm, encoder, mem};
     FOCMotor::AsciiProtocol ascii_p{logger, stp};
-    FOCMotor::CanProtocol can_p{can1, stp};
+    FOCMotor::CanProtocol can_p{can, stp};
 
     stp.bindProtocol(ascii_p);
     stp.bindProtocol(can_p);
@@ -216,11 +228,10 @@ void stepper_tb(UartHw & logger){
     });
     timer3.enableIt(IT::Update,{0,0});
 
-    can1.init(Can::BaudRate::_1M);
  
     stp.init();
     stp.setSpeedLimit(80);
-    stp.setAccelLimit(172);
+    stp.setAccLimit(172);
     stp.setOpenLoopCurrent(real_t(0.7));
     stp.setCurrentLimit(real_t(0.4));
 
@@ -268,12 +279,13 @@ void stepper_tb(UartHw & logger){
 
         // if(logger.pending() == 0) logger.println(stp.getTarget(), stp.getPosition(), stp.getSpeed(), stp.getCurrent(), real_t(adc1.inj(1)), real_t(adc1.inj(2)));
         // auto target = demo(millis());
-        auto target = 10 * sin(t);
+        // auto target = -floor(t>>1)<<1;
+        auto target = -demo2(t);
         if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getTargetEstSpeed(), stp.getCurrent(), stp.getRaddiff());
         // Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(5 * sin(7 * t));
-        // stp.setTargetPosition(target);
+        stp.setTargetPosition(target);
         // stp.setTargetSpeed(1);
 
         // stp.setTargetPosition(17* sin(2 * t));

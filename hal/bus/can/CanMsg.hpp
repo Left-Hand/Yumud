@@ -1,6 +1,7 @@
 #pragma once
 
-#include "sys/core/system.hpp"
+#include "sys/core/platform.h"
+#include "sys/stream/ostream.hpp"
 
 #include <memory.h>
 #include <initializer_list>
@@ -190,11 +191,24 @@ public:
     #endif
 };
 
+__inline OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
+    os << "{" << std::showbase << 
+        std::hex << msg.id() << '<'
+        << ((msg.isStd()) ? "Std" : "Ext")
+        << ((msg.isRemote()) ? "Rmt" : "Dat") << std::noshowbase
+        << '[' << std::dec << msg.size() << ']';
+    os << "> ";
+    
+    os << std::hex;
 
-
-};
-
-namespace ymd{
-class OutputStream;
-OutputStream & operator<<(OutputStream & os, const CanMsg & msg);
+    for(size_t i = 0; i < msg.size(); i++){
+        os << msg[i];
+        if(i == msg.size() - 1) break;
+        os << ',';
+    }
+    
+    os << std::dec;
+        
+    return os << '}';
+}
 }

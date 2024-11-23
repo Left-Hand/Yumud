@@ -1,28 +1,4 @@
-#include "gxmatch.hpp"
-#include "host/host.hpp"
-
-#include "autodrive/Planner.hpp"
-#include "autodrive/sequence/TrapezoidSolver_t.hpp"
-
-
-#include "machine/scara/scara.hpp"
-#include "machine/actuator/zaxis_stp.hpp"
-#include "drivers/VirtualIO/PCA9685/pca9685.hpp"
-#include "hal/timer/instance/timer_hw.hpp"
-#include "hal/gpio/port_virtual.hpp"
-#include "robots/foc/remote/remote.hpp"
-
-#include "types/image/painter.hpp"
-#include "hal/bus/i2c/i2csw.hpp"
-
-
-#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
-#include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
-#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
-#include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
-#include "hal/bus/spi/spihw.hpp"
-
-#include "async/Node.hpp"
+#include "Robot.hpp"
 
 using Sys::t;
 
@@ -37,11 +13,7 @@ using Vector2 = Vector2_t<real_t>;
 
 
 
-struct GrabSysConfig{
-    Scara::Config scara_config;
-    ZAxis::Config zaxis_config;
-    GrabModule::Config grab_config;
-};
+
 
 auto create_default_config(){
     return GrabSysConfig{
@@ -88,8 +60,13 @@ auto create_default_config(){
                 Vector2{0       , 0.20_r},
                 Vector2{0.12_r    , 0.20_r}
             }
-        }
+        },
 
+        .cross_config = {
+            .xoffs_length_meter = real_t(0.04),
+            .forearm_length_meter = real_t(0.1),
+            .upperarm_length_meter = real_t(0.1)
+        },
     };
 }
     
@@ -149,11 +126,20 @@ void host_main(){
         return Ray{Vector2{x,y} + Vector2::ones(12), ray.rad};
     };
 
-    auto draw_curve = [&](const Curve & curve){
+    [[maybe_unused]] auto draw_curve = [&](const Curve & curve){
         painter.setColor(ColorEnum::BLUE);
         for(auto it = curve.begin(); it != curve.end(); it++){
             auto pos = canvas_transform(Ray(*it)).org;
             painter.drawPixel(pos);
+        }
+    };
+
+    [[maybe_unused]] auto print_curve = [&](const Curve & curve){
+        logger << std::setprecision(4);
+        for(auto it = curve.begin(); it != curve.end(); it++){
+            auto [pos, rad] = Ray(*it);
+            delay(1);
+            logger.println(pos.x, pos.y, rad);
         }
     };
     
@@ -168,6 +154,8 @@ void host_main(){
         // painter.setColor(ColorEnum::RED);
         painter.setColor(RGB888(HSV888(int(t * 64),255,255)));
         painter.drawFilledTriangle(pf, p1, p2);
+        // painter.drawPixel(org);
+
         painter.setColor(ColorEnum::BLACK);
         painter.drawHollowTriangle(pf, p1, p2);
     };
@@ -239,15 +227,9 @@ void host_main(){
     });
     
     timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
-
-    CrossSolver::Config cross_config = {
-        .xoffs_length_meter = real_t(0.04),
-        .forearm_length_meter = real_t(0.1),
-        .upperarm_length_meter = real_t(0.1)
-    };
     
     CrossSolver cross_solver{
-        cross_config
+        config.cross_config
     };
 
 
@@ -265,73 +247,74 @@ void host_main(){
     }
     
 
-    if(true){
-        MPU6050 bmi{i2c};
-
-        bmi.init();
-
-        while(true){
-
-            bmi.update();
-            auto acc = Vector3{bmi.getAccel()};
-            auto gyr = Vector3{bmi.getGyro()};
-            // auto gest = Quat{{0,0,1}, acc};
-            delay(1);
-            DEBUG_PRINTLN(acc.x, acc.y, acc.z, gyr.x, gyr.y, gyr.z, acc.length());
-        }
-    }
-
-    if(false){     
+    if(false){
+        MPU6050 acc_gyr_sensor{i2c};
         QMC5883L mag_sensor{i2c};
 
+        acc_gyr_sensor.init();
         mag_sensor.init();
+
+        ComplementaryFilter::Config rot_config = {
+            .kq = real_t(0.92),
+            .ko = real_t(0.2)
+        };
         
+        ComplementaryFilter rot_obs = {rot_config};
+    
+        DEBUG_PRINTLN(std::setprecision(4))
         while(true){
 
+            acc_gyr_sensor.update();
             mag_sensor.update();
-            const auto mag = Vector3{mag_sensor.getMagnet()};
-            // const auto gest = Quat{{0,0,1}, mag.normalized()};
-            delay(1);
-            // DEBUG_PRINTLN(std::setprecision(4), gest.x, gest.y, gest.z, gest.w);
-            DEBUG_PRINTLN(mag.x, mag.y, mag.z, atan2(mag.y, mag.x));
+
+            // const auto acc3 = Vector3{acc_gyr_sensor.getAcc()};
+            const auto gyr3 = Vector3{acc_gyr_sensor.getGyr()};
+            const auto mag3 = Vector3{mag_sensor.getMagnet()};
+
+            // const auto acc2 = Vector2{acc3.x, acc3.y};
+
+            const auto rot = -atan2(mag3.y, mag3.x);
+            const auto gyr = gyr3.z;
+
+            auto rot_ = rot_obs.update(rot, gyr, t);
+            DEBUG_PRINTLN(rot, gyr, rot_);
+            delay(5);
         }
     }
 
-    {
-            using Type = int;
-            using Topic = Topic_t<Type>;
+    if(false){
+        using Type = Vector2;
+        using Topic = Topic_t<Type>;
 
-            
-            Topic topic;
+        
+        Topic topic;
 
-            // 创建一个 Publisher
-            auto publisher = topic.createPublisher();
+        // 创建一个 Publisher
+        auto publisher = topic.createPublisher();
 
-            // 创建多个 Subscriber
-            auto subscriber1 = topic.createSubscriber([](const Type & message) {
-                DEBUGGER << "Subscriber 1 received: " << message << "\r\n";
-            });
+        // 创建多个 Subscriber
+        auto subscriber1 = topic.createSubscriber([](const Type & message) {
+            DEBUGGER << "Subscriber 1 received: " << message << "\r\n";
+        });
 
-            auto subscriber2 = topic.createSubscriber([](const Type & message) {
-                DEBUGGER << "Subscriber 2 received: " << message << "\r\n";
-            });
-
-
-            // 发布消息
-            publisher.publish(1);
-            publisher.publish(2);
+        auto subscriber2 = topic.createSubscriber([](const Type & message) {
+            DEBUGGER << "Subscriber 2 received: " << message << "\r\n";
+        });
 
 
-            // 再次发布消息
-            publisher.publish(3);
-
+        // 发布消息
+        publisher.publish({0,0});
+        publisher.publish({1,1});
     }
-    {
+
+
+
+    if(true){
         auto limits = SequenceLimits{
-            .max_gyro = 2,
-            .max_angular = 2,
-            .max_spd = real_t(0.8),
-            .max_acc = real_t(0.5)
+            .max_gyr = 2,
+            .max_agr = real_t(0.5),
+            .max_spd = real_t(0.5),
+            .max_acc = real_t(0.2)
         };
 
         auto params = SequenceParas{
@@ -340,22 +323,41 @@ void host_main(){
         
         auto sequencer = Sequencer(limits, params);
         auto curve = Curve{};
-        // sequencer.linear(curve, Ray{0, 0, 0}, Vector2{1,1});
-        // sequencer.fillet(curve, Ray{0,0,0}, Ray{1,1,real_t(PI/2)});
 
-        auto m = micros();
-        sequencer.fillet(curve, Ray{0,0,real_t(PI)}, Ray{2,2,real_t(PI/2)});
-        DEBUG_PRINTLN(micros() - m);
+        Map map{};
+        Planner::Config planner_config = {.duration = real_t(3.2)};
+        Planner planner{planner_config, map, sequencer};
+
+        const auto m = micros();
+
+        planner.plan(
+            curve,
+            Field{FieldType::Garbage},
+            Field{FieldType::Staging}
+        );
+
+        planner.plan(
+            curve,
+            Field{FieldType::Staging},
+            Field{FieldType::RoughProcess}
+        );
+
+        planner.plan(
+            curve,
+            Field{FieldType::RoughProcess},
+            Field{FieldType::Garbage}
+        );
+
+        DEBUG_PRINTLN(micros() - m, curve.size());
+
         draw_curve(curve);
-        
+
         DEBUG_PRINTLN(std::setprecision(4));
         auto idx = 0;
         for(auto it = curve.begin(); it != curve.end(); ++it){
-            while(millis() < size_t((idx * 5) + 1000));
+            // while(millis() < size_t((idx * 5) + 1000));
+            delay(1);
             idx++;
-            // auto ray = *it;
-            // auto && [org,rad] = ray;
-            // auto && [x,y] = org;
             draw_turtle(Ray(*it));
         }
         DEBUG_PRINTLN("done");
@@ -399,8 +401,6 @@ void host_main(){
             logger.println(std::setprecision(3), inv_rad, height, f_height);
         }
 
-
-    
         delay(20);
     }
     

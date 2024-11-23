@@ -4,9 +4,9 @@
 
 #include "CanUtils.hpp"
 #include "CanMsg.hpp"
-#include "CanFilter.hpp"
+
 #include "CanTrait.hpp"
-// #include "interrupts.hpp"
+#include "CanFilter.hpp"
 
 
 #ifdef ENABLE_CAN1
@@ -45,6 +45,7 @@ void CAN2_SCE_IRQHandler(void);
 
 namespace ymd{
 
+struct CanFilter;
 class Can: public PackedBus<CanMsg>,public CanTrait{
 public:
     using BaudRate = CanUtils::BaudRate;
@@ -53,6 +54,8 @@ public:
 
     using Packet = CanMsg;
     using Callback = std::function<void(void)>;
+
+
 protected:
     CAN_TypeDef * instance;
 
@@ -60,6 +63,7 @@ protected:
     Callback cb_txok = nullptr;
     Callback cb_txfail = nullptr;
     Callback cb_rx = nullptr;
+    bool sync_ = true;
 
     Gpio & getTxGpio();
     Gpio & getRxGpio();
@@ -74,13 +78,35 @@ protected:
     void handleTx();
     void handleRx(const uint8_t fifo_num);
     void handleSce();
+
+
+    void init(const BaudRate baudRate, const Mode mode);
+    friend class CanFilter;
+
+    std::array<CanFilter, 14> filters = {
+        CanFilter{this->instance, 0},
+        CanFilter{this->instance, 1},
+        CanFilter{this->instance, 2},
+        CanFilter{this->instance, 3},
+        CanFilter{this->instance, 4},
+        CanFilter{this->instance, 5},
+        CanFilter{this->instance, 6},
+        CanFilter{this->instance, 7},
+        CanFilter{this->instance, 8},
+        CanFilter{this->instance, 9},
+        CanFilter{this->instance, 10},
+        CanFilter{this->instance, 11},
+        CanFilter{this->instance, 12},
+        CanFilter{this->instance, 13},
+    };
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
+
+    Can(const Can & other) = delete;
+    Can(Can && other) = delete;
     void setBaudRate(const uint32_t baudRate) override;
 
-    void init(const uint baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
-
-    void init(const BaudRate baudRate, const Mode mode = Mode::Normal, const CanFilter & filter = CanFilter());
+    void init(const uint baudRate, const Mode mode = Mode::Normal);
 
     bool write(const CanMsg & msg) override;
     CanMsg read() override;
@@ -89,7 +115,7 @@ public:
     size_t available();
 
     void clear(){while(this->available()){this->read();}}
-
+    void sync(const bool en){sync_ = en;}
     bool isTranmitting();
     bool isReceiving();
     void enableHwReTransmit(const bool en = true);
@@ -106,6 +132,11 @@ public:
     void bindCbTxOk(Callback && _cb);
     void bindCbTxFail(Callback && _cb);
     void bindCbRx(Callback && _cb);
+
+    CanFilter & operator[](const size_t idx){
+        if(idx > 13) HALT;
+        return this->filters[idx];
+    }
 
 
     #ifdef ENABLE_CAN1

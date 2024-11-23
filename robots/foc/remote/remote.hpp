@@ -47,18 +47,18 @@ public:
     real_t getSpeed() const;
     real_t getPosition() const;
     real_t getCurrent() const;
-    real_t getAccel() const;
+    real_t getAcc() const;
     real_t readSpeed() const{return meta.spd;}
     real_t readPosition() const{return meta.pos;}
     real_t readCurrent() const{return meta.curr;}
-    real_t readAccel() const{return meta.accel;}
+    real_t readAcc() const{return meta.acc;}
     void updateAll() const;
 
     void setPositionLimit(const Range & clamp);
     void enable(const bool en = true);
     // void setNodeId(const NodeId _id);
     void setSpeedLimit(const real_t max_spd);
-    void setAccelLimit(const real_t max_acc);
+    void setAccLimit(const real_t max_acc);
     void reset();
     void triggerCali();
     // void parseCan(const CanMsg & msg);

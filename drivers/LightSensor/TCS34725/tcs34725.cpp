@@ -4,9 +4,13 @@ using namespace ymd::drivers;
 
 #ifdef TCS34725_DEBUG
 #undef TCS34725_DEBUG
-#define TCS34725_DEBUG(...) DEBUG_PRINT(__VA_ARGS__)
+#define TCS34725_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define TCS34725_PANIC(...) PANIC(__VA_ARGS__)
+#define TCS34725_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define TCS34725_DEBUG(...)
+#define TCS34725_PANIC(...)  PANIC()
+#define TCS34725_ASSERT(cond, ...) ASSERT(cond)
 #endif
 
 void TCS34725::requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len){

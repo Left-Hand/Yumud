@@ -27,26 +27,28 @@ extern ymd::OutputStream & DEBUGGER;
 #endif
 
 #ifndef DEBUG_LOG
-#define DEBUG_LOG(...) DEBUG_PRINTS("[L]{", __FUNCTION__ ,',', __LINE__ , '}', ##__VA_ARGS__)
+#define DEBUG_LOG(...) DEBUG_PRINTS("[L][", __FUNCTION__, ' ', __FILE__, ':', __LINE__ , ']', ##__VA_ARGS__)
 #endif
 
 
 #ifndef DEBUG_ERROR
-#define DEBUG_ERROR(...) DEBUG_PRINTS("[E]{", __FUNCTION__ ,',',  __LINE__ , '}', ##__VA_ARGS__)
+#define DEBUG_ERROR(...) DEBUG_PRINTS("[E][", __FUNCTION__, ' ', __FILE__, ':', __LINE__ , ']', ##__VA_ARGS__)
 #endif
 
 #ifndef DEBUG_WARN
-#define DEBUG_WARN(...) DEBUG_PRINTS("[W]{", __FUNCTION__ ,',',  __LINE__ , '}', ##__VA_ARGS__)
+#define DEBUG_WARN(...) DEBUG_PRINTS("[W][", __FUNCTION__, ' ', __FILE__, ':', __LINE__ , ']', ##__VA_ARGS__)
 #endif
 
 #ifndef DEBUG_VALUE
 #define DEBUG_VALUE(value, ...) DEBUG_PRINTS("<", #value, ">\tis:", value, ##__VA_ARGS__)
 #endif
 
+#define __COUNT_ARGS(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _n, X...) _n
+#define NARG(X...) __COUNT_ARGS(, ##X, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
 
 #define PANIC(...)\
 do{\
-    if constexpr(sizeof(std::make_tuple(__VA_ARGS__))){\
+    if constexpr(NARG(__VA_ARGS__)){\
         DEBUG_ERROR(__VA_ARGS__);\
         delay(10);\
     }\
@@ -58,9 +60,13 @@ do{\
 
 
 #define ASSERT(condition, ...) \
-if(bool(condition) == false){\
-    PANIC(__VA_ARGS__);\
-}\
+({ \
+    bool _cond = (bool)(condition); \
+    if (!_cond) { \
+        PANIC(__VA_ARGS__); \
+    } \
+    _cond; \
+})
 
 #define ASSERT_WITH_CONTINUE(condition, ...) \
 if(bool(condition) == false){\

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "src/testbench/tb.h"
+
+#include "sys/stream/ostream.hpp"
 #include "types/image/image.hpp"
-
-
 
 namespace ymd{
 struct TransType{
@@ -52,7 +51,7 @@ public:
 
     OutputStream & instance;
     bool enabled = false;
-    Uart & logger = DEBUGGER_INST;
+    // OutputStream & logger;
 
 protected:
     scexpr uint16_t header = 0x54A8;
