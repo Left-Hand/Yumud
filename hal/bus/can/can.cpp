@@ -177,10 +177,10 @@ void Can::init(const uint baudRate, const Mode _mode){
             break;
     }
 
-    init(baud, _mode, CanFilter{instance, 0});
+    init(baud, _mode);
 }
 
-void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filter){
+void Can::init(const BaudRate baudRate, const Mode _mode){
     installGpio();
     enableRcc();
 
@@ -220,8 +220,6 @@ void Can::init(const BaudRate baudRate, const Mode _mode, const CanFilter & filt
     config.CAN_RFLM = DISABLE;
     config.CAN_TXFP = DISABLE;
     CAN_Init(instance, &config);
-
-    CanFilter::init(filter);
     initIt();
 }
 
@@ -243,8 +241,17 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
-    uint8_t mbox = CAN_Transmit(instance, msg.cptx());
-    return (mbox != CAN_TxStatus_NoMailBox);
+    if(this->sync_){
+        uint8_t mbox;
+        do{
+            mbox = CAN_Transmit(instance, msg.cptx());
+        }while(mbox == CAN_TxStatus_NoMailBox);
+
+        return true;
+    }else{
+        uint8_t mbox = CAN_Transmit(instance, msg.cptx());
+        return (mbox != CAN_TxStatus_NoMailBox);
+    }
 }
 
 CanMsg Can::read(){
@@ -323,6 +330,7 @@ void Can::handleTx(){
         }
     }
 }
+
 void Can::handleRx(const uint8_t fifo_num){
     uint32_t fmp_mask;
     uint32_t ff_mask;
@@ -393,6 +401,11 @@ void Can::handleSce(){
     }
 }
 
+
+
+// CanFilter & Can::operator[](const size_t idx){
+//     return CanFilter{this->instance, 0};
+// }
 
 #ifdef ENABLE_CAN1
 __interrupt

@@ -97,7 +97,8 @@ int main(){
     // mpu6050_main();
     // gui_main();
     // sdc_main();
-    m2006_main();
+    can_ring_main();
+    // m2006_main();
     // gxm::host_main();
     // can_tb(logger, can1);
     while(true);

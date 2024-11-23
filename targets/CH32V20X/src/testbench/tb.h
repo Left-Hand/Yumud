@@ -3,12 +3,17 @@
 #include "sys/core/system.hpp"
 
 #include "hal/bus/spi/spi.hpp"
-#include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/i2c/i2c.hpp"
 
+namespace ymd{
+    class Can;
+    class UartHw;
+    class OutputStream;
+}
 
 using namespace ymd;
+
 using Sys::t;
 
 void memory_tb(OutputStream & logger);
@@ -84,3 +89,5 @@ void zdt_main(UartHw & logger);
 
 void coro_tb();
 void pmw3901_main();
+
+void can_ring_main();

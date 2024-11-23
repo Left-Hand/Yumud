@@ -100,6 +100,24 @@ real_t demo2(const real_t x){
     return -(x + sin(x))/2;
 }
 
+
+uint8_t get_default_id(){
+    auto chip_id = Sys::Chip::getChipIdCrc();
+    switch(chip_id){
+        case 3273134334:
+            return 3;
+        case 341554774:
+            return 2;
+        case 4079188777:
+            return 1;
+        case 0x551C4DEA:
+            return  3;
+        case 0x8E268D66:
+            return 1;
+        default:
+            return 0;
+    }
+};
 void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
     using TimerUtils::IT;
@@ -152,23 +170,7 @@ void stepper_tb(UartHw & logger){
     using AdcChannelEnum = AdcUtils::Channel;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
-    auto get_default_id = []() -> uint8_t {
-        auto chip_id = Sys::Chip::getChipIdCrc();
-        switch(chip_id){
-            case 3273134334:
-                return 3;
-            case 341554774:
-                return 2;
-            case 4079188777:
-                return 1;
-            case 0x551C4DEA:
-                return  3;
-            case 0x8E268D66:
-                return 1;
-            default:
-                return 0;
-        }
-    };
+
 
     adc1.init(
         {
@@ -199,10 +201,17 @@ void stepper_tb(UartHw & logger){
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
+    uint8_t node_id = get_default_id();
+    auto & can = can1;
+    can.init(1_MHz);
+    
+    can[0].mask(
+        CanID16{uint16_t(uint16_t(node_id) << 7), CanRemoteType::Any}, CanID16::IGNORE_LOW(7, CanRemoteType::Any),
+        CanID16{0x000, CanRemoteType::Any}, CanID16::IGNORE_LOW(7, CanRemoteType::Any));
 
-    FOCStepper stp{get_default_id(), svpwm, encoder, mem};
+    FOCStepper stp{node_id, svpwm, encoder, mem};
     FOCMotor::AsciiProtocol ascii_p{logger, stp};
-    FOCMotor::CanProtocol can_p{can1, stp};
+    FOCMotor::CanProtocol can_p{can, stp};
 
     stp.bindProtocol(ascii_p);
     stp.bindProtocol(can_p);
@@ -219,7 +228,6 @@ void stepper_tb(UartHw & logger){
     });
     timer3.enableIt(IT::Update,{0,0});
 
-    can1.init(Can::BaudRate::_1M);
  
     stp.init();
     stp.setSpeedLimit(80);

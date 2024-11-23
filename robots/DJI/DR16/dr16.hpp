@@ -1,6 +1,5 @@
 #pragma once
 
-#include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uart.hpp"
 #include "hal/adc/adc_channel.hpp"
 
