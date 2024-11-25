@@ -75,7 +75,7 @@ protected:
 
     void writeByte(const RegAddress address, const uint8_t data){
         if(i2c_drv){
-            i2c_drv->writeReg((uint8_t)address, data, MSB);
+            i2c_drv->writeReg((uint8_t)address, data);
         }else if(spi_drv){
             TODO("not implemented yet");
         }
@@ -87,7 +87,7 @@ protected:
             delayT3();
             spi_drv->readSingle(data);
         }else if(i2c_drv){
-            i2c_drv->readReg((uint8_t)address, data, MSB);
+            i2c_drv->readReg((uint8_t)address, data);
         }
     }
 public:

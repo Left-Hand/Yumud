@@ -116,7 +116,7 @@ __fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 
 
 
 template<floating T>
-__fast_inline constexpr void u16_to_uni(const uint16_t data){
+__fast_inline constexpr T u16_to_uni(const uint16_t data){
     return (T)data / 65535;
 }
 

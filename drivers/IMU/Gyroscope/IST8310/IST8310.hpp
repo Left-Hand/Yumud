@@ -142,28 +142,27 @@ protected:
         uint8_t :2;
     };
 
-    struct {
-        WhoAmIReg whoami_reg;
-        Status1Reg status1_reg;
-        AxisXReg axis_x_reg;
-        AxisYReg axis_y_reg;
-        AxisZReg axis_z_reg;
-        Status2Reg status2_reg;
-        Ctrl1Reg ctrl1_reg;
-        Ctrl2Reg ctrl2_reg;
-        SelfTestReg selftest_reg;
-        TempReg temp_reg; 
-        AverageReg average_reg;
-    };
+
 
     I2cDrv i2c_drv_;
 
+    WhoAmIReg whoami_reg;
+    Status1Reg status1_reg;
+    AxisXReg axis_x_reg;
+    AxisYReg axis_y_reg;
+    AxisZReg axis_z_reg;
+    Status2Reg status2_reg;
+    Ctrl1Reg ctrl1_reg;
+    Ctrl2Reg ctrl2_reg;
+    SelfTestReg selftest_reg;
+    TempReg temp_reg; 
+    AverageReg average_reg;
     void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv_.writeReg((uint8_t)address, reg, MSB);
+        i2c_drv_.writeReg((uint8_t)address, reg);
     }
 
     void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv_.readReg((uint8_t)address, reg, MSB);
+        i2c_drv_.readReg((uint8_t)address, reg);
     }
 
     void requestPool(const RegAddress addr, int16_t * data, const size_t len){

@@ -69,16 +69,14 @@ protected:
         uint8_t magnitudeHigh :1;
     };
 
-    struct{
-        uint16_t zeroDataReg;
-        uint8_t trimReg;
-        TrimConfigReg trimConfigReg;
-        ZParametersReg zParametersReg;
-        uint8_t pulsePerTurnReg;
-        ThresholdReg thresholdReg;
-        DirectionReg directionReg;
-        MagnitudeReg magnitudeReg;
-    };
+    uint16_t zeroDataReg;
+    uint8_t trimReg;
+    TrimConfigReg trimConfigReg;
+    ZParametersReg zParametersReg;
+    uint8_t pulsePerTurnReg;
+    ThresholdReg thresholdReg;
+    DirectionReg directionReg;
+    MagnitudeReg magnitudeReg;
 
     void writeReg(const RegAddress reg_addr, uint8_t data){
         spi_drv_.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));

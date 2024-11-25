@@ -25,7 +25,7 @@ real_t BMI088::getTemperature(){
 
 void BMI088::writeReg(const RegAddress reg, const uint8_t data){
     if(i2c_drv_){
-        i2c_drv_->writeReg((uint8_t)reg, data, MSB);
+        i2c_drv_->writeReg((uint8_t)reg, data);
     }else if (spi_drv_){
         TODO("not implemented yet");
     }else{
@@ -35,7 +35,7 @@ void BMI088::writeReg(const RegAddress reg, const uint8_t data){
 
 void BMI088::writeReg(const RegAddress reg, uint8_t & data){
     if(i2c_drv_){
-        i2c_drv_->writeReg((uint8_t)reg, data, MSB);
+        i2c_drv_->writeReg((uint8_t)reg, data);
     }else if (spi_drv_){
         TODO("not implemented yet");
     }else{

@@ -494,6 +494,10 @@ __fast_inline constexpr int16_t uni_to_s16(const iq_t qv){
     return data;
 }
 
+
+__fast_inline auto uni(const uint16_t data){return u16_to_uni(data);}
+__fast_inline auto uni(const int16_t data){return s16_to_uni(data);}
+
 namespace std{
     template<>
     class numeric_limits<iq_t> {

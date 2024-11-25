@@ -198,30 +198,28 @@ protected:
         }
     };
 
-    struct{
-        ConfigReg       config_reg;
-        ShuntVoltReg    shuntvolt1_reg;
-        BusVoltReg      busvolt1_reg;
-        ShuntVoltReg    shuntvolt2_reg;
-        BusVoltReg      busvolt2_reg;
-        ShuntVoltReg    shuntvolt3_reg;
-        BusVoltReg      busvolt3_reg;
-        InstantOVCReg   instant_ovc1_reg;
-        ConstantOVCReg  constant_ovc1_reg;
-        InstantOVCReg   instant_ovc2_reg;
-        ConstantOVCReg  constant_ovc2_reg;
-        InstantOVCReg   instant_ovc3_reg;
-        ConstantOVCReg  constant_ovc3_reg;
+    ConfigReg       config_reg;
+    ShuntVoltReg    shuntvolt1_reg;
+    BusVoltReg      busvolt1_reg;
+    ShuntVoltReg    shuntvolt2_reg;
+    BusVoltReg      busvolt2_reg;
+    ShuntVoltReg    shuntvolt3_reg;
+    BusVoltReg      busvolt3_reg;
+    InstantOVCReg   instant_ovc1_reg;
+    ConstantOVCReg  constant_ovc1_reg;
+    InstantOVCReg   instant_ovc2_reg;
+    ConstantOVCReg  constant_ovc2_reg;
+    InstantOVCReg   instant_ovc3_reg;
+    ConstantOVCReg  constant_ovc3_reg;
 
-        ShuntVoltReg    shuntvolt_reg;
-        ShuntVoltReg    shuntvolt_limit_reg;
-        MaskReg         mask_reg;
-        PowerHoReg      power_ho_reg;
-        PowerLoReg      power_lo_reg;
+    ShuntVoltReg    shuntvolt_reg;
+    ShuntVoltReg    shuntvolt_limit_reg;
+    MaskReg         mask_reg;
+    PowerHoReg      power_ho_reg;
+    PowerLoReg      power_lo_reg;
 
-        ManuIdReg       manu_id_reg;
-        ChipIdReg       chip_id_reg;
-    };
+    ManuIdReg       manu_id_reg;
+    ChipIdReg       chip_id_reg;
 
     I2cDrv i2c_drv;
     std::array<INA3221Channel, 6> channels = {

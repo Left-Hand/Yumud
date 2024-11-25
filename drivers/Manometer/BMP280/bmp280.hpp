@@ -91,29 +91,27 @@ protected:
         TemperatureX=0xFC
     };
 
-    struct{
-        uint16_t digT1;
-        int16_t digT2;
-        int16_t digT3;
-        uint16_t digP1;
-        int16_t digP2;
-        int16_t digP3;
-        int16_t digP4;
-        int16_t digP5;
-        int16_t digP6;
-        int16_t digP7;
-        int16_t digP8;
-        int16_t digP9;
-        ChipIDReg chipIDReg;
-        ResetReg resetReg;
-        StatusReg statusReg;
-        CtrlReg ctrlReg;
-        ConfigReg configReg;
-        PressureReg pressureReg;
-        PressureXReg pressureXReg;
-        TemperatureReg temperatureReg;
-        TemperatureXReg temperatureXReg;
-    };
+    uint16_t digT1;
+    int16_t digT2;
+    int16_t digT3;
+    uint16_t digP1;
+    int16_t digP2;
+    int16_t digP3;
+    int16_t digP4;
+    int16_t digP5;
+    int16_t digP6;
+    int16_t digP7;
+    int16_t digP8;
+    int16_t digP9;
+    ChipIDReg chipIDReg;
+    ResetReg resetReg;
+    StatusReg statusReg;
+    CtrlReg ctrlReg;
+    ConfigReg configReg;
+    PressureReg pressureReg;
+    PressureXReg pressureXReg;
+    TemperatureReg temperatureReg;
+    TemperatureXReg temperatureXReg;
 
     void writeReg(const RegAddress addr, const uint16_t data){
         i2c_drv_.writeReg((uint8_t)addr, data, LSB);
@@ -124,16 +122,16 @@ protected:
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data);
         // BMP280_DEBUG((uint8_t)addr, (uint8_t)data);
     }
 
     void requestPool(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
-        i2c_drv_.readMulti((uint8_t)addr, datas, len, LSB);
+        i2c_drv_.readMulti((uint8_t)addr, datas, len);
     }
 
     uint32_t getPressureData(){

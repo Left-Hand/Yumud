@@ -7,8 +7,8 @@ namespace ymd{
 
 template<typename T>
 requires valid_i2c_regaddr<T>
-Bus::Error I2cDrv::writeRegAddress(const T reg_address, const Endian endian){
-    auto p = reinterpret_cast<const uint8_t *>(&reg_address);
+Bus::Error I2cDrv::writeRegAddress(const T addr, const Endian endian){
+    auto p = reinterpret_cast<const uint8_t *>(&addr);
 
     Bus::Error err = Bus::ErrorType::OK;
 
@@ -35,7 +35,7 @@ Bus::Error I2cDrv::writeRegAddress(const T reg_address, const Endian endian){
 
 template<typename T>
 requires valid_i2c_data<T>
-void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T * data_ptr, const size_t length, const Endian endian){
+void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto addr, const T * data_ptr, const size_t length, const Endian endian){
     constexpr size_t size = sizeof(T);
 
     if constexpr(size == 0)   return;
@@ -46,7 +46,7 @@ void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T *
 
     auto err = bus.begin(index);
     if(err == Bus::ErrorType::OK){
-        writeRegAddress(reg_address, endian);
+        writeRegAddress(addr, endian);
         for(size_t i = 0; i < bytes; i += size){
             if(endian == MSB){
                 for(size_t j = size; j > 0; j--){
@@ -68,7 +68,7 @@ void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T *
 
 template<typename T>
 requires valid_i2c_data<T>
-void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T data, const size_t length, const Endian endian){
+void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto addr, const T data, const size_t length, const Endian endian){
     constexpr size_t size = sizeof(T);
 
     if constexpr(size == 0)   return;
@@ -79,7 +79,7 @@ void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T d
 
     auto err = bus.begin(index);
     if(err == Bus::ErrorType::OK){
-        writeRegAddress(reg_address, endian);
+        writeRegAddress(addr, endian);
         for(size_t i = 0; i < bytes; i += size){
             if(endian == MSB){
                 for(size_t j = size; j > 0; j--){
@@ -100,7 +100,7 @@ void I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto reg_address, const T d
 
 template<typename T>
 requires valid_i2c_data<T>
-void I2cDrv::readMulti_impl(const valid_i2c_regaddr auto reg_address, T * data_ptr, const size_t length, const Endian endian){
+void I2cDrv::readMulti_impl(const valid_i2c_regaddr auto addr, T * data_ptr, const size_t length, const Endian endian){
     if(length == 0) return;
     constexpr size_t size = sizeof(T);
     size_t bytes = length * size;
@@ -108,7 +108,7 @@ void I2cDrv::readMulti_impl(const valid_i2c_regaddr auto reg_address, T * data_p
 
     auto err = bus.begin(index);
     if(err == Bus::ErrorType::OK){
-        writeRegAddress(reg_address, endian);
+        this->writeRegAddress(addr, endian);
         if(bus.begin(index | 0x01) == Bus::ErrorType::OK){
             for(size_t i = 0; i < bytes; i += size){
                 if(endian == MSB){

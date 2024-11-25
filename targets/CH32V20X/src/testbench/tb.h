@@ -32,7 +32,8 @@ void pmdc_tb();
 
 void lds14_tb(IOStream & logger,Uart & uart);
 void gpio_tb(GpioConcept & gpio);
-void pca_tb(IOStream & logger);
+// void pca_tb(IOStream & logger);
+void pca_main();
 void st77xx_tb(IOStream & logger, Spi & spi);
 
 void joystick_tb(OutputStream & logger);
@@ -91,3 +92,5 @@ void coro_tb();
 void pmw3901_main();
 
 void can_ring_main();
+
+void paj7620_main();

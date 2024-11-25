@@ -1,8 +1,7 @@
-#include "tb.h"
+#include "../tb.h"
+
 #include "sys/debug/debug_inc.h"
-
 #include "hal/bus/can/can.hpp"
-
 #include "hal/timer/instance/timer_hw.hpp"
 
 void can_ring_main(){

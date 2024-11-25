@@ -179,24 +179,22 @@ protected:
         uint8_t __resv__:5; 
     };
 
-    struct{
-        TopConfigReg top_config_reg;
-        AutoAcknowledgeReg auto_acknowledge_reg;
-        EnableRxAddressReg enable_rx_address_reg;
-        AddressWidthReg address_width_reg;
-        AutoRetransmissionReg auto_retransmission_reg;
-        RFChannelReg rf_channel_reg;
-        RFConfigReg rf_config_reg;
-        StatusReg status_reg;
-        TransmissionObservationReg transmission_observation_reg;
-        RssiReg rssi_reg;
-        RxAddrReg rx_addr_regs[6];
-        TxAddrReg tx_addr_reg;
-        RxPowerReg rx_power_regs[6];
-        FifoStatusReg fifo_status_reg;
-        DynamicPayloadLengthReg dynamic_payload_length_reg;
-        FeatureReg feature_reg;
-    };
+    TopConfigReg top_config_reg;
+    AutoAcknowledgeReg auto_acknowledge_reg;
+    EnableRxAddressReg enable_rx_address_reg;
+    AddressWidthReg address_width_reg;
+    AutoRetransmissionReg auto_retransmission_reg;
+    RFChannelReg rf_channel_reg;
+    RFConfigReg rf_config_reg;
+    StatusReg status_reg;
+    TransmissionObservationReg transmission_observation_reg;
+    RssiReg rssi_reg;
+    RxAddrReg rx_addr_regs[6];
+    TxAddrReg tx_addr_reg;
+    RxPowerReg rx_power_regs[6];
+    FifoStatusReg fifo_status_reg;
+    DynamicPayloadLengthReg dynamic_payload_length_reg;
+    FeatureReg feature_reg;
 
 
     void writeReg(RegAddress addr, const auto & value){

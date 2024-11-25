@@ -47,30 +47,37 @@ void DRV8301::enablePwm3(const bool en){
     WRITE_REG(reg);
 }
 
-struct SpiFormat:public Reg16{
+struct SpiFormat{
     uint16_t data:11;
     uint16_t addr:4;
     uint16_t write:1;
+
+    operator uint16_t() const{
+        return *reinterpret_cast<const uint16_t *>(this);
+    }
+
+    operator uint16_t &(){
+        return *reinterpret_cast<uint16_t *>(this);
+    }
 };
 
 void DRV8301::writeReg(const RegAddress addr, const uint16_t reg){
-    SpiFormat spi_format{
+    const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
         .write = 1
     };
 
-    spi_drv_.writeSingle<uint16_t>(spi_format);
+    spi_drv_.writeSingle<uint16_t>((spi_format));
 }
 
 void DRV8301::readReg(const RegAddress addr, uint16_t & reg){
-    SpiFormat spi_format{
-        .data = 0,
+    SpiFormat spi_format = {
         .addr = uint16_t(addr),
         .write = 1
     };
 
-    spi_drv_.readSingle<uint16_t>(spi_format);
+    spi_drv_.readSingle<uint16_t>((spi_format));
 
     reg = spi_format.data;
 }

@@ -39,15 +39,13 @@ protected:
         swRst = 0x7f
     };
 
-    struct{
-        uint16_t dir;
-        uint16_t inten;
-        CtlReg ctl;
-        uint16_t ledMode;
-    };
+    uint16_t dir;
+    uint16_t inten;
+    CtlReg ctl;
+    uint16_t ledMode;
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, data);
     };
 
     void writeReg(const RegAddress addr, const uint16_t data){
@@ -55,7 +53,7 @@ protected:
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){

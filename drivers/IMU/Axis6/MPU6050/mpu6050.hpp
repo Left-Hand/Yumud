@@ -89,11 +89,11 @@ protected:
     };
 
     void writeReg(const uint8_t addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, MSB);
+        i2c_drv_.writeReg((uint8_t)addr, data);
     }
 
     void readReg(const uint8_t addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, MSB);
+        i2c_drv_.readReg((uint8_t)addr, data);
     }
 
     void requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){

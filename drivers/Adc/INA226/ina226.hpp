@@ -73,18 +73,16 @@ protected:
         uint16_t shuntOverVoltage:1;
     };
 
-    struct{
-        ConfigReg configReg;
-        uint16_t shuntVoltageReg;
-        uint16_t busVoltageReg;
-        uint16_t powerReg;
-        int16_t currentReg;
-        int16_t calibrationReg;
-        MaskReg maskReg;
-        uint16_t alertLimitReg;
-        uint16_t manufactureIDReg;
-        uint16_t chipIDReg;
-    };
+    ConfigReg configReg;
+    uint16_t shuntVoltageReg;
+    uint16_t busVoltageReg;
+    uint16_t powerReg;
+    int16_t currentReg;
+    int16_t calibrationReg;
+    MaskReg maskReg;
+    uint16_t alertLimitReg;
+    uint16_t manufactureIDReg;
+    uint16_t chipIDReg;
 
     void writeReg(const RegAddress addr, const uint16_t data){
         i2c_drv.writeReg((uint8_t)addr, data, MSB);

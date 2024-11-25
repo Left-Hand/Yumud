@@ -20,15 +20,15 @@ using namespace ymd;
 
 #define WRITE_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    i2c_drv_.writeMulti((uint8_t)addr, ptr, len, LSB);\
+    i2c_drv_.writeMulti((uint8_t)addr, ptr, len);\
 else\
-    i2c_drv_.writeMulti((uint16_t)addr, ptr, len, LSB);\
+    i2c_drv_.writeMulti((uint16_t)addr, ptr, len);\
 
 #define READ_POOL(addr, ptr, len)\
 if(is_small_chip())\
-    i2c_drv_.readMulti((uint8_t)addr, ptr, len, LSB);\
+    i2c_drv_.readMulti((uint8_t)addr, ptr, len);\
 else\
-    i2c_drv_.readMulti((uint16_t)addr, ptr, len, LSB);\
+    i2c_drv_.readMulti((uint16_t)addr, ptr, len);\
 
 #define WRITE_REG(loc, data)\
 if(is_small_chip()) i2c_drv_.writeReg((uint8_t)loc, data, LSB);\
@@ -88,5 +88,5 @@ void AT24CXX::storeBytes(const Address loc, const void * data, const Address len
 void AT24CXX::loadBytes(const Address loc, void * data, const Address len){
     auto full_end = loc + len; 
     CHECK_ADDR(full_end);
-    READ_POOL(loc, (uint8_t *)data, len);
+    READ_POOL(loc, reinterpret_cast<uint8_t *>(data), len);
 }

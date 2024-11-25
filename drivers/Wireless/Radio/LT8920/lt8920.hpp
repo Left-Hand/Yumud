@@ -61,9 +61,9 @@ public:
     };
 
 public:
-    LT8920(const SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
-    LT8920(SpiDrv && _spi_drv) : spi_drv(_spi_drv) {;}
-    LT8920(Spi & _spi, const uint8_t _index) : spi_drv(SpiDrv(_spi, _index)) {;}
+    LT8920(const SpiDrv & spi_drv) : spi_drv_(spi_drv) {;}
+    LT8920(SpiDrv && spi_drv) : spi_drv_(std::move(spi_drv)) {;}
+    LT8920(Spi & spi, const uint8_t index) : spi_drv_(SpiDrv(spi, index)) {;}
 
     void bindNrstGpio(GpioConcept & gpio){nrst_gpio = &gpio;}
     void bindPktGpio(GpioConcept & gpio){pkt_status_gpio = &gpio;}
@@ -113,8 +113,8 @@ protected:
     bool getFifoStatus();
     bool getPktStatus();
 
-    std::optional<SpiDrv> spi_drv;
-    std::optional<I2cDrv> i2c_drv;
+    std::optional<SpiDrv> spi_drv_;
+    std::optional<I2cDrv> i2c_drv_;
     GpioConcept * pkt_status_gpio = nullptr;
     GpioConcept * fifo_status_gpio = nullptr;
     GpioConcept * nrst_gpio = nullptr;
@@ -127,65 +127,63 @@ protected:
 
     #include "lt8920_regs.hpp"
 
-    struct {
-        uint16_t __resv1__[2];
-        // REG3 RO
-        RfSynthLockReg rf_synth_lock_reg;
-        uint16_t __resv2__[2];
-        // REG6 RO
-        RawRssiReg raw_rssi_reg;
-        // REG7 
-        RfConfigReg rf_config_reg;
-        uint16_t __resv3__;
-        // REG9
-        PaConfigReg pa_config_reg;
+    uint16_t __resv1__[2];
+    // REG3 RO
+    RfSynthLockReg rf_synth_lock_reg;
+    uint16_t __resv2__[2];
+    // REG6 RO
+    RawRssiReg raw_rssi_reg;
+    // REG7 
+    RfConfigReg rf_config_reg;
+    uint16_t __resv3__;
+    // REG9
+    PaConfigReg pa_config_reg;
 
-        // REG10
-        OscEnableReg osc_enable_reg;
+    // REG10
+    OscEnableReg osc_enable_reg;
 
-        // REG11
-        RssiPdnReg rssi_pdn_reg;
-        uint16_t __resv4__[11];
-        // REG23
-        DeviceIDReg device_id_reg;
-        uint16_t __resv5__[5];
-        // REG29 RO
+    // REG11
+    RssiPdnReg rssi_pdn_reg;
+    uint16_t __resv4__[11];
+    // REG23
+    DeviceIDReg device_id_reg;
+    uint16_t __resv5__[5];
+    // REG29 RO
 
-        AutoCaliReg auto_cali_reg;
-        uint16_t __resv6__[2];
-        // REG32 RO
-        Config1Reg config1_reg;
-        // REG33 RO
-        Delay1Reg delay1_reg;
-        // REG34
-        Delay2Reg delay2_reg;
-        // REG35
-        Config2Reg config2_reg;
+    AutoCaliReg auto_cali_reg;
+    uint16_t __resv6__[2];
+    // REG32 RO
+    Config1Reg config1_reg;
+    // REG33 RO
+    Delay1Reg delay1_reg;
+    // REG34
+    Delay2Reg delay2_reg;
+    // REG35
+    Config2Reg config2_reg;
 
-        SyncWordReg sync_word_regs[4];
+    SyncWordReg sync_word_regs[4];
 
-        // REG40
-        ThresholdReg threshold_reg;
+    // REG40
+    ThresholdReg threshold_reg;
 
-        // REG41
-        Config3Reg config3_reg;
+    // REG41
+    Config3Reg config3_reg;
 
-        // REG42
-        RxConfigReg rx_config_reg;
+    // REG42
+    RxConfigReg rx_config_reg;
 
-        // REG43
-        RssiConfigReg rssi_config_reg;
+    // REG43
+    RssiConfigReg rssi_config_reg;
 
-        // REG44
-        DataRateReg data_rate_reg;
-        uint16_t __resv7__[3];
-        // REG48 RO
-        FlagReg flag_reg;
+    // REG44
+    DataRateReg data_rate_reg;
+    uint16_t __resv7__[3];
+    // REG48 RO
+    FlagReg flag_reg;
 
-        uint16_t __resv8__[3];
-        // REG52
-        FifoPtrReg fifo_ptr_reg;
-    };
+    uint16_t __resv8__[3];
+    // REG52
+    FifoPtrReg fifo_ptr_reg;
 
     void delayT3(){delayMicroseconds(1);}
 

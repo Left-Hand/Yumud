@@ -168,39 +168,37 @@ protected:
         uint8_t :8;
     };
 
-    struct {
-        AxisReg x_reg;
-        AxisReg y_reg;
-        AxisReg z_reg;
-        ExtAxisReg x_ext_reg;
-        ExtAxisReg y_ext_reg;
-        ExtAxisReg z_ext_reg;
-        TempReg temp_reg;
-        Status1Reg stat_reg;
+    AxisReg x_reg;
+    AxisReg y_reg;
+    AxisReg z_reg;
+    ExtAxisReg x_ext_reg;
+    ExtAxisReg y_ext_reg;
+    ExtAxisReg z_ext_reg;
+    TempReg temp_reg;
+    Status1Reg stat_reg;
 
-        OdrReg odr_reg;
-        Ctrl0Reg ctrl0_reg;
-        Ctrl1Reg ctrl1_reg;
-        Ctrl2Reg ctrl2_reg;
+    OdrReg odr_reg;
+    Ctrl0Reg ctrl0_reg;
+    Ctrl1Reg ctrl1_reg;
+    Ctrl2Reg ctrl2_reg;
 
-        AxisSelfTestXReg x_st_reg;
-        AxisSelfTestYReg y_st_reg;
-        AxisSelfTestZReg z_st_reg;
-        ProductIdReg product_id_reg;
-    };
+    AxisSelfTestXReg x_st_reg;
+    AxisSelfTestYReg y_st_reg;
+    AxisSelfTestZReg z_st_reg;
+    ProductIdReg product_id_reg;
 
     I2cDrv i2c_drv_;
 
     void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv_.writeReg((uint8_t)address, reg, MSB);
+        i2c_drv_.writeReg((uint8_t)address, reg);
     }
 
     void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv_.readReg((uint8_t)address, reg, MSB);
+        i2c_drv_.readReg((uint8_t)address, reg);
     }
 
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readMulti((uint8_t)addr, data, len, MSB);
+        i2c_drv_.readMulti((uint8_t)addr, data, len);
     }
 
     void setSelfTestThreshlds(uint8_t x, uint8_t y, uint8_t z);

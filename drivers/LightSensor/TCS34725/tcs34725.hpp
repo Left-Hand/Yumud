@@ -50,19 +50,17 @@ protected:
     };
 
 
-    struct{
-        EnableReg enableReg;
-        uint8_t integrationReg;
-        uint8_t waitTimeReg;
-        uint16_t lowThrReg;
-        uint16_t highThrReg;
-        IntPersistenceReg intPersistenceReg;
-        LongWaitReg longWaitReg;
-        GainReg gainReg;
-        uint8_t deviceIdReg;
-        StatusReg statusReg;
-        uint16_t crgb[4] = {0};
-    };
+    EnableReg enableReg;
+    uint8_t integrationReg;
+    uint8_t waitTimeReg;
+    uint16_t lowThrReg;
+    uint16_t highThrReg;
+    IntPersistenceReg intPersistenceReg;
+    LongWaitReg longWaitReg;
+    GainReg gainReg;
+    uint8_t deviceIdReg;
+    StatusReg statusReg;
+    uint16_t crgb[4] = {0};
 
     enum class RegAddress:uint8_t{
         Enable = 0x00,
@@ -94,11 +92,11 @@ protected:
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg(convRegAddress(addr, false), (uint8_t)data, LSB);
+        i2c_drv_.writeReg(convRegAddress(addr, false), (uint8_t)data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg(convRegAddress(addr, false), (uint8_t &)data, LSB);
+        i2c_drv_.readReg(convRegAddress(addr, false), (uint8_t &)data);
     }
 
     void requestRegData(const RegAddress addr, uint16_t * data_ptr, const size_t len);

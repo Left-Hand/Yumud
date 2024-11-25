@@ -87,15 +87,13 @@ protected:
         
     };
 
-    struct{
-        ConvReg convReg;
-        ConfigReg configReg;
-        LowThrReg lowThrReg;
-        HighThrReg highThrReg;
-        Config1Reg config1Reg;
-        DeviceIdReg deviceIdReg;
-        TrimReg trimReg;
-    };
+    ConvReg convReg;
+    ConfigReg configReg;
+    LowThrReg lowThrReg;
+    HighThrReg highThrReg;
+    Config1Reg config1Reg;
+    DeviceIdReg deviceIdReg;
+    TrimReg trimReg;
 
     enum class RegAddress:uint8_t{
         Conv = 0,
