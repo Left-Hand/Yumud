@@ -1,6 +1,5 @@
 #pragma once
 
-#include <optional>
 
 #include "stream_base.hpp"
 #include "sys/string/string.hpp"
@@ -93,6 +92,16 @@ public:
         }else{
             return *this << ::std::nullopt;        
         }
+    }
+
+    template<size_t N>
+    OutputStream & operator<<(const ::std::bitset<N> & bs){
+        char str[N + 1];
+        for(size_t i = 0; i < N; ++i){
+            str[N - 1 - i] = (bs[i]) ? '1' : '0';
+        }
+        str[N] = '\0';
+        return *this << str;
     }
 
 

@@ -9,14 +9,15 @@ namespace ymd{
 
 class Bus:public BusTrait{
 public:
-    enum class ErrorType{
+    enum class ErrorType:uint8_t{
         OK,
         ALREADY,
         OCCUPIED,
         TIMEOUT,
         OVERLOAD,
         NO_ACK,
-        NO_CS_PIN
+        NO_CS_PIN,
+        ZERO_LENGTH,
     };
 
     struct Error{
@@ -33,6 +34,8 @@ public:
         explicit operator bool() {return type != ErrorType::OK;}
         explicit operator ErrorType() {return type;}
     };
+    
+    // scexpr int a = sizeof(Error);
 
     using Mode = CommMode;
 

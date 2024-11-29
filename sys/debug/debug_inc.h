@@ -43,9 +43,6 @@ extern ymd::OutputStream & DEBUGGER;
 #define DEBUG_VALUE(value, ...) DEBUG_PRINTS("<", #value, ">\tis:", value, ##__VA_ARGS__)
 #endif
 
-// #define __COUNT_ARGS(_0, _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11, _12, _n, X...) _n
-// #define NARG(X...) __COUNT_ARGS(, ##X, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0)
-
 #define NARG(...) (std::tuple_size_v<decltype(std::make_tuple(__VA_ARGS__))>)
 
 #define PANIC(...)\
@@ -59,16 +56,15 @@ do{\
     HALT;\
 }while(false);\
 
+template<typename... Args>
+bool __assert_impl(bool cond, Args&&... args) {
+    if (!cond) {
+        PANIC(std::forward<Args>(args)...);
+    }
+    return cond;
+}
 
-
-#define ASSERT(condition, ...) \
-({ \
-    bool _cond = (bool)(condition); \
-    if (!_cond) { \
-        PANIC(__VA_ARGS__); \
-    } \
-    _cond; \
-})
+#define ASSERT(condition, ...) __assert_impl((bool)(condition), ##__VA_ARGS__);
 
 #define ASSERT_WITH_CONTINUE(condition, ...) \
 if(bool(condition) == false){\

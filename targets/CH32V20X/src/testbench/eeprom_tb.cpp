@@ -9,6 +9,8 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
+using namespace ymd::drivers;
+
 #define MEMORY_TB_FIRSTBYTE
 #define MEMORY_TB_SEVERLBYTES
 // #define MEMORY_TB_WHOLECHIP
@@ -38,13 +40,13 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     #ifdef MEMORY_TB_FIRSTBYTE
     {
         scexpr uint8_t before_orignal = 0x37;
-        mem.store(before_orignal);
+        mem.store(0,before_orignal);
         uint8_t before;
-        mem.load(before);
+        mem.load(0,before);
         MEMORY_TB_ASSERT(before_orignal == before, "specified byte", before_orignal, before);
-        mem.store(uint8_t(before + 1));
+        mem.store(0,uint8_t(before + 1));
         uint8_t after;
-        mem.load(after);
+        mem.load(0,after);
         MEMORY_TB_ASSERT(before + 1 == after, "firts byte tb", before, after);
     }
     #endif
@@ -52,10 +54,10 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     #ifdef MEMORY_TB_SEVERLBYTES
     {
         auto before = Sys::Chip::getChipIdCrc();
-        mem.store(before);
+        mem.store(0,before);
 
         decltype(before) after;
-        mem.load(after);
+        mem.load(0,after);
 
         MEMORY_TB_ASSERT(before == after, "crc bytes tb", before, after);
     }
@@ -142,7 +144,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         TestData temp;
 
         logger.prints("write", temp);
-        mem.store(temp);
+        mem.store(0,temp);
         temp.value = real_t(0.2);
         temp.crc = 0x12;
         // temp.name = "rstr1aN";
@@ -150,7 +152,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
         // temp.data.fill(0x78);
         // memset(&temp, 'a', sizeof(temp));
         logger.prints("modi", temp);
-        mem.load(temp);
+        mem.load(0,temp);
         logger.prints("read", temp);
 
     }
@@ -200,14 +202,14 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
     TestData temp;
 
-    flash.load(temp);
+    flash.load(0,temp);
     if(temp.data[0] == 0x39){
         logger.prints("need to store new");
         logger.prints("new data is");
         TestData new_temp = TestData();
         logger.prints(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
-        flash.store(new_temp);
-        flash.load(temp);
+        flash.store(0,new_temp);
+        flash.load(0,temp);
         logger.prints("new store done");
     }
 
@@ -221,7 +223,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     bkp.init();
     bkp[1] = bkp[1] + 1;
     temp.crc = bkp[1];
-    flash.store(temp);
+    flash.store(0,temp);
     logger.prints("flash tb done");
 
     // flash.load(temp);

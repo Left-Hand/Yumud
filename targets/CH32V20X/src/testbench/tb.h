@@ -94,3 +94,5 @@ void pmw3901_main();
 void can_ring_main();
 
 void paj7620_main();
+
+void proxy_tb();

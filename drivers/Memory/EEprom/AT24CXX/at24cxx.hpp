@@ -3,7 +3,7 @@
 #include "drivers/device_defs.h"
 #include "concept/memory.hpp"
 
-namespace ymd{
+namespace ymd::drivers{
 
 class AT24CXX:public StoragePaged{
 private:
@@ -17,6 +17,10 @@ protected:
     void storeBytes(const Address loc, const void * data, const Address len) override;
 
     void loadBytes(const Address loc, void * data, const Address len) override;
+
+    void writePool(const size_t addr, const uint8_t * data, const size_t len);
+
+    void readPool(const size_t addr, uint8_t * data, const size_t len);
 
     void entry_store() override{
         update_entry_ms();
@@ -38,8 +42,8 @@ protected:
         update_entry_ms();
     };
 
+    AT24CXX(I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_{_bus, default_i2c_addr}{;}
     AT24CXX(I2cDrv && i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
-    AT24CXX(I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_{_bus, default_id}{;}
     AT24CXX(I2cDrv & i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
 
 public:
@@ -47,7 +51,7 @@ public:
 
     bool busy() override{return last_entry_ms + min_duration_ms - millis() > 0;}
 
-    scexpr uint8_t default_id = 0b10100000; 
+    scexpr uint8_t default_i2c_addr = 0b10100000; 
 private:
     void wait_for_free();
 

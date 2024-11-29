@@ -1038,8 +1038,8 @@ class compact_ptr {
  private:
   struct storage {
     template <class... Args>
-    explicit storage(const Alloc& alloc, Args&&... args)
-        : value(std::forward<Args>(args)...), alloc(alloc) {}
+    explicit storage(const Alloc& _alloc, Args&&... args)
+        : value(std::forward<Args>(args)...), alloc(_alloc) {}
 
     T value;
     Alloc alloc;

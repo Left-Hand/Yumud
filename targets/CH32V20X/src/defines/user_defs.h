@@ -17,7 +17,7 @@
 
 #define DEBUGGER_INST uart2
 #define LOGGER_INST uart2
-#define DEBUG_UART_BAUD 115200
+#define DEBUG_UART_BAUD 576000
 
 #include "v3defs.h"
 // #include "smc_defs.h"

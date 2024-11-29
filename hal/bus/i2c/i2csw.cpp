@@ -8,25 +8,23 @@ I2cSw::Error I2cSw::wait_ack(){
     sda_gpio.inflt();
     delayDur();
     scl_gpio.set();
-    TimeStamp stamp;
+    TimeStamp delta;
 
-    bool overtime = false;
+    bool ovt = false;
     while(sda_gpio.read()){
-        if(stamp >= timeout){
-            overtime = true;
+        if(delta >= timeout){
+            ovt = true;
             break;
         }
     }
 
-    if(overtime){
-        delayDur();
-        scl_gpio.clr();
-        delayDur();
-        return ErrorType::TIMEOUT;
+    delayDur();
+    scl_gpio.clr();
+    delayDur();
+    
+    if(ovt){
+        return ErrorType::NO_ACK;
     }else{
-        delayDur();
-        scl_gpio.clr();
-        delayDur();
         return ErrorType::OK;
     }
 
@@ -42,9 +40,7 @@ I2cSw::Error I2cSw::lead(const uint8_t _address){
     delayDur();
     scl_gpio.clr();
     delayDur();
-    write(_address);
-
-    return ErrorType::OK;
+    return write(_address);
 }
 
 void I2cSw::trail(){

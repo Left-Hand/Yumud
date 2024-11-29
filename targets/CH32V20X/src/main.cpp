@@ -67,8 +67,8 @@ int main(){
 
     while(true);
     #elif defined(CH32V30X)
-
     preinit();
+    // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();
     // math_tb(uart2);
@@ -81,7 +81,8 @@ int main(){
     // usbcdc_tb();
     // embd_main();
     // gxm::host_main();
-    pca_main();
+
+    // pca_main();
     // w25qxx_main();
     // smc_main();
     // can_tb(logger, can1, true);
@@ -97,7 +98,9 @@ int main(){
     // mpu6050_main();
     // gui_main();
     // sdc_main();
-    can_ring_main();
+    // proxy_tb();
+    paj7620_main();
+    // can_ring_main();
     // m2006_main();
     // gxm::host_main();
     // can_tb(logger, can1);

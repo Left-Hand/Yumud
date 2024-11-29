@@ -7,7 +7,6 @@ struct EtkDataFrame{
 };
 
 
-
 struct EtkToken:public Reg8{
     using Reg8::operator=;
 
@@ -19,8 +18,8 @@ struct EtkToken:public Reg8{
 
     operator Vector2i() const {
         return Vector2i{
-            right - left,
-            up - down
+            int(right) - int(left),
+            int(up) - int(down)
         };
     }
 };
