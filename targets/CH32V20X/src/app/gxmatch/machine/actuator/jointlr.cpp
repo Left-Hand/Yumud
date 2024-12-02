@@ -22,11 +22,16 @@ void JointLR::setRadian(const real_t rad){
 
 void JointLR::output(const real_t rad){
     // DEBUG_PRINTLN(rad);
-    if(inversed_){
-        servo_.setRadian(- rad + this->basis_radian_);
-    }else{
-        servo_.setRadian(rad + this->basis_radian_);
-    }
+    real_t out = [&](){
+        if(inversed_){
+            return (- rad + this->basis_radian_);
+        }else{
+            return (rad + this->basis_radian_);
+        }
+    }();
+
+    servo_.setRadian(out);
+    // DEBUG_PRINTLN(out);
 }
 
 void JointLR::tick(){

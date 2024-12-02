@@ -83,6 +83,16 @@ public:
     constexpr Vector2_t<T> abs() const;
 
     template<arithmetic U>
+    __fast_inline constexpr Vector2_t<T> increase_x(const U & v){
+        return {x + v, y};
+    }
+
+    template<arithmetic U>
+    __fast_inline constexpr Vector2_t<T> increase_y(const U & v){
+        return {x, y + v};
+    }
+
+    template<arithmetic U>
     constexpr T cos(const Vector2_t<U> & b) const{
         return this->dot(b) / this->length() / b.length();
     }

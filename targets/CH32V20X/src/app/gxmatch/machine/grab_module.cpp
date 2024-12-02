@@ -1,100 +1,32 @@
-#include "grab_module.hpp"
-#include "actuator/jointlr.hpp"
-#include "actuator/zaxis.hpp"
-#include "scara/nozzle.hpp"
-
-#include "../common/inc.hpp"
-#include "../autodrive/sequence/TrapezoidSolver_t.hpp"
+#include "grab_actions.hpp"
 
 using namespace gxm;
 using namespace gxm::GrabActions;
-
-
-class PressAction:public GrabAction{
-public:
-    PressAction(Inst & inst):
-        GrabAction(inst.config().nozzle_sustain, [this](){
-            inst_.press();
-        }, inst){};
-};
-
-
-class ReleaseAction:public GrabAction{
-public:
-    ReleaseAction(Inst & inst):
-        GrabAction(1, [this](){
-            inst_.release();
-        }, inst){};
-};
-
-class TestAction:public GrabAction{
-public:
-    TestAction(Inst & inst):
-        GrabAction(200, [this](){
-            DEBUG_PRINTLN(millis())
-        }, inst){};
-};
-
-class MoveAction:public GrabAction{
-protected:
-    using TrapezoidSolver = TrapezoidSolver_t<real_t>;
-
-    Vector3 from_;
-    real_t dist_;
-    Vector3 norm_;
-    TrapezoidSolver solver_;
-    real_t dur_;
-public:
-    MoveAction(Inst & inst, const Vector3 & from, const Vector3 & to):
-        GrabAction(UINT_MAX, [this](){
-            auto time = this->time();
-            if(time > dur_){
-                // DEBUG_PRINTLN("killed")
-                this->kill();
-            }
-            auto dest_pos = from_ + norm_ * solver_.forward(time);
-            // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time, dur_);
-            inst_.moveTo(dest_pos);
-            auto pos = inst_.getPos();
-            // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time);
-        }, inst),
-
-        from_(from),
-        dist_((to - from).length()),
-        norm_((to - from) / dist_),
-
-        solver_{
-            inst.config().max_acc, 
-            inst.config().max_spd,
-            dist_
-        },
-
-        dur_{solver_.period()}
-        
-        {};
-};
 
 void GrabModule::goHome(){
     scara_.goHome();
 }
 
-void GrabModule::moveZ(const real_t pos){
-    zaxis_.setDistance(pos);
+void GrabModule::rapid(const Vector3 & pos){
+    if(config_.safe_aabb.has_point(pos) == false){
+        DEBUG_PRINTLN("out of bound", pos);
+    }
+
+    scara_.moveXY(pos.xy());
+    zaxis_.setDistance(pos.z + config_.z_bias);
 }
 
-void GrabModule::moveXY(const Vector2 & pos){
-    scara_.moveXY(pos);
+void GrabModule::press(){
+    this->scara_.press();
 }
 
-
-void GrabModule::moveTo(const Vector3 & pos){
-    moveXY({pos.x, pos.y});
-    moveZ(pos.z);
+void GrabModule::release(){
+    this->scara_.release();
 }
 
 void GrabModule::move(const Vector3 & pos){
     auto & self = *this;
-    self << new MoveAction(self, self.getPos(), pos);
+    self << new MoveAction(self, pos);
 }
 
 
@@ -105,24 +37,96 @@ Vector3 GrabModule::getPos(){
 }
 
 
-void GrabModule::press(){
-    scara_.press();
+void GrabModule::air_take_air(){
+    auto & self = *this;
+    self  
+        <<  new MoveXYAction(self, config_.catch_xy)
+        <<  new MoveZAction(self, config_.catch_z)
+        <<  new PressAction(self)
+        <<  new MoveZAction(self, config_.free_z)
+        <<  new StatusAction(self, TranportStatus::AIR)
+    ;
 }
 
-void GrabModule::release(){
-    scara_.release();
+void GrabModule::air_give_air(const TrayIndex tray_index){
+    auto & self = *this;
+    self  
+        <<  new MoveXYAction(self, calculateTrayPos(tray_index))
+        <<  new MoveZAction(self, config_.tray_z)
+        <<  new PressAction(self)
+        <<  new MoveZAction(self, config_.free_z)
+        <<  new StatusAction(self, TranportStatus::AIR)
+    ;
+}
+
+void GrabModule::to_air(){
+    auto & self = *this;
+    self  
+        <<  new MoveZAction(self, config_.free_z)
+        <<  new StatusAction(self, TranportStatus::AIR)
+    ;
+}
+
+void GrabModule::air_inspect(){
+    auto & self = *this;
+    self  
+        <<  new MoveZAction(self, config_.inspect_xyz.z)
+        <<  new MoveXYAction(self, config_.inspect_xyz.xy())
+        <<  new StatusAction(self, TranportStatus::AIR)
+    ;
+}
+
+void GrabModule::take_place(const TrayIndex tray_index){
+    auto & self = *this;
+    self  
+        <<  new MoveXYAction(self, calculateTrayPos(tray_index))
+        <<  new MoveZAction(self, config_.tray_z)
+        <<  new ReleaseAction(self)
+        <<  new StatusAction(self, TranportStatus::INNER)
+    ;
+}
+void GrabModule::give_place(){
+    auto & self = *this;
+    self  
+        <<  new MoveXYAction(self, config_.catch_xy)
+        <<  new MoveZAction(self, config_.catch_z)
+        <<  new ReleaseAction(self)
+        <<  new StatusAction(self, TranportStatus::OUTER)
+    ;
 }
 
 
-void GrabModule::take(){
+void GrabModule::inspect(){
+    switch(status_){
+        case TranportStatus::INNER:
+            to_air();
+        default:
+            air_inspect();
+    }
+}
 
+void GrabModule::take(const TrayIndex index){
+    switch(status_){
+        case TranportStatus::INNER:
+            //如果当前在内部 需要先升空再取上
+            to_air();
+            air_take_air();
+        default:
+            take_place(index);
+    }
 }
 
 
 
-void GrabModule::give(){
-    // self.addAction(new MoveAction{self, config_.})
-    // self.addAction(new )
+void GrabModule::give(const TrayIndex index){
+    switch(status_){
+        case TranportStatus::OUTER:
+            //如果当前在外部 需要先升空再取上
+            to_air();
+            air_give_air(index);
+        default:
+            give_place();
+    }
 }
 
 void GrabModule::test(){
@@ -130,7 +134,7 @@ void GrabModule::test(){
 
     // self.addAction(new MoveAction{self, config_.})
     // self << new TestAction{self};
-    self << TestAction{self};
+    self << new TestAction{self};
     // self << MoveAction(self, Vector3(0, 0, 0), Vector3(1,1,1));
     // self << new MoveAction(self, Vector3(0, 0.2_r, 0.1_r), Vector3(0.1_r,0.2_r,0.1_r));
     // self << PressAction(self);
@@ -148,20 +152,15 @@ bool GrabModule::reached(){
 
 // }
 
-void GrabModule::begin(){
-    
-}
-
-
 void GrabModule::init(){
     auto & self = *this;
 
-    self.moveTo(Vector3(config_.inspect_xy, real_t(0.16)));
-    self << DelayAction(3000);
+    // self.rapid(Vector3(config_.inspect_xy);
+    // self << DelayAction(3000);
+    self << RapidAction(self, config_.home_xyz);
 }
 
 
-Vector3 GrabModule::calculateTrayPos(TrayIndex index){
-    auto vec2 = config_.tray_xy[size_t(index)];
-    return {vec2.x, vec2.y, config_.tray_z};
+Vector2 GrabModule::calculateTrayPos(TrayIndex index){
+    return {config_.tray_xy[size_t(index)]};
 }

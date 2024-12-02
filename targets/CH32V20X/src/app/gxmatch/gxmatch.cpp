@@ -6,11 +6,12 @@ auto create_default_config(){
     return SysConfig{
         .joint_config = {
             .max_rad_delta = real_t(0.07),
-            .left_basis_radian = real_t(-PI/2 + 0.18),
+            .left_basis_radian = real_t(-PI/2 + 0.33),
             // .right_basis_radian = real_t(PI/2 - 0.10),
             // .right_basis_radian = real_t(PI/2 - 0.20),
             // .right_basis_radian = real_t(PI/2 + 0.3),
-            .right_basis_radian = real_t(PI/2),
+            // .right_basis_radian = real_t(PI/2 - 0.2),
+            .right_basis_radian = real_t(PI/2 + 0.5),
             // .right_basis_radian = real_t(0),
             .z_basis_radian = real_t(PI/2),
         },
@@ -60,11 +61,19 @@ auto create_default_config(){
 
             .tray_z = 0.10_r,
 
-            .inspect_xy = Vector2{0, 0.12_r},
+            .free_z = 0.17_r,
 
-            .blocked_area = AABB{
-                Vector3{-0.05_r, -0.05_r, 0.05_r},
-                Vector3{0.05_r, 0.05_r, 0.05_r}
+            .catch_z = 0.06_r,
+
+            .z_bias = 0.005_r,
+        
+            .catch_xy = Vector2{0, 0.15_r},
+
+            .inspect_xyz = Vector3{0, 0.12_r, 0.15_r},
+
+            .safe_aabb = AABB{
+                Vector3{-1, 0.12_r, 0.0_r},
+                Vector3{2, 0.12_r, 0.17_r}
             },
 
             .max_spd = 0.2_r,
@@ -246,11 +255,11 @@ void host_main(){
 
 
         MG995 servo_left{pca[0]};
-        MG995 servo_right{pca[15]};
+        MG995 servo_right{pca[1]};
 
-        SG90 claw_servo{pca[2]};
+        SG90 claw_servo{pca[5]};
 
-        SG90 servo_cross{pca[3]};
+        SG90 servo_cross{pca[15]};
 
 
         // RemoteFOCMotor z_motor{logger, can1, 1};
@@ -290,7 +299,7 @@ void host_main(){
         
         Nozzle nozzle{
             config.scara_config.nozzle_config, 
-            pca[4]
+            pca[3]
         };
 
         Scara scara{
@@ -333,12 +342,57 @@ void host_main(){
             DEBUG_PRINTLN("tick1k binded");
         }
 
+        // if(true){
+        //     // pca.v
+        // }
+
         // auto transz_rad = [](const real_t x) -> real_t{
         //     return real_t(PI - x);
         // }
 
-        // if(false){
+        // joint_left.setRadian(real_t(PI/2));
+        // joint_right.setRadian(real_t(PI/2));
+        // while(true);
+        // test_joint(joint_left, [](const real_t time)->real_t{
+        //     // return real_t(PI);
+        //     // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
+        //     return real_t(PI*0.75) + sin(t) * real_t(PI*0.25);
+        //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+        // });
+        
+        // test_joint(joint_right, [](const real_t time)->real_t{
+        //     // return real_t(PI);
+        //     // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
+        //     return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
+        //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+        // });
+
+        // SG90 servo_test = {pca[14]};
+        // test_servo(servo_test, [](const real_t time)->real_t{
+        //     // return real_t(PI);
+        //     // auto ret =real_t(PI*0.75) + sin(t) * real_t(PI/4);
+        //     auto ret = 0;
+        //     DEBUG_PRINTLN(ret);
+        //     return ret;
+        //     // return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
+        //     // return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
+        //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+        // });
+
+        // test_joint(joint_z, [](const real_t time)->real_t{
+        //     // return sin(time) * real_t(0.2) + real_t(0.6);
+        //     auto ret = sin(time) * real_t(0.6); 
+        //     // auto ret = 0; 
+        //     // DEBUG_PRINTLN(ret);
+        //     return ret;
+        //     // return  0;
+        //     // return (sin(time))* real_t(PI/2);
+        //     // return 0;
+        //     // return real_t(PI);
+        //     // return 0.2_r;
+        // });
         if(false){
+        // if(true){
             // test_joint(joint_z, [](const real_t time)->real_t{
             //     // return sin(time) * real_t(0.2) + real_t(0.6);
             //     return sin(time) * real_t(0.6);
@@ -347,12 +401,28 @@ void host_main(){
             //     // return real_t(PI);
             //     // return 0.2_r;
             // });
+
+            // servo_left.setRadian(real_t(PI/2));
+            // joint_left.setRadian(real_t(PI/2));
+            joint_left.setRadian(real_t(PI));
+            // joint_right.setRadian(real_t(PI/2));
+            // joint_right.setRadian(real_t(PI/2));
+            // joint_right.setRadian(real_t(0));
+            // servo_right.setRadian(real_t(0));
+            // servo_right.setRadian(real_t(PI));
+
+            servo_right.setRadian(real_t(PI/2));
             joint_z.setRadian(0.4_r);
+            // servo_z.setRadian
+            // joint_right.setRadian(
+            // servo_right.setRadian(real_t(PI/2));
+            // servo_right.setRadian(real_t(PI/2));
+            while(true);
             // joint_left.setRadian(real_t(PI/2));
             // joint_left.setRadian(real_t(PI/2));
             joint_left.setRadian(real_t(PI));
             // joint_left.setRadian(0);
-            // joint_right.setRadian(real_t(PI));
+            // 
             // test_joint(joint_left, [](const real_t time)->real_t{
             //     // return real_t(PI);
             //     // return real_t(PI/2);
@@ -391,7 +461,7 @@ void host_main(){
         }
 
 
-        if(true){//测试xyz
+        if(false){//测试xyz
             Scara5Solver solver{config.scara_config.solver_config};
             CrossSolver cross_solver{config.zaxis_config.solver_config};
             while(true){
@@ -406,8 +476,9 @@ void host_main(){
                 auto height = LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1);
                 auto inv_radz = cross_solver.inverse(height);
 
-                DEBUG_PRINTLN(joint_left.getRadian(), joint_right.getRadian(), joint_z.getRadian());
+                // DEBUG_PRINTLN(joint_left.getRadian(), joint_right.getRadian(), joint_z.getRadian());
                 joint_z.setRadian(inv_radz);
+                // servo_cross.setRadian(real_t(0.4));
                 delay(20);
             }
         }
@@ -417,7 +488,7 @@ void host_main(){
                 auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t);
                 auto height = LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1);
 
-                grab_module.moveTo(Vector3(pos.x, pos.y, height));
+                grab_module.rapid(Vector3(pos.x, pos.y, height));
 
                 auto p3 = grab_module.getPos();
                 DEBUG_PRINTLN(pos.x, pos.y, height, p3.x, p3.y, p3.z);
@@ -442,8 +513,8 @@ void host_main(){
                 // auto pos = pos_arr[i];
                 auto pos = Vector3(Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t), LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1));
 
-                // grab_module.move(pos);
-                grab_module.moveTo(pos);
+                grab_module.move(pos);
+                // grab_module.moveTo(pos);
 
 
                 getline(logger);

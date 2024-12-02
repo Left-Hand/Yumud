@@ -98,9 +98,23 @@ public:
         return *this;
     }
 
+    template<arithmetic U>
+    __fast_inline constexpr Vector3_t<T> increase_x(const U & v){
+        return {x + v, y, z};
+    }
 
     template<arithmetic U>
-    Vector3_t & operator *= (const U & _v){
+    __fast_inline constexpr Vector3_t<T> increase_y(const U & v){
+        return {x, y + v, z};
+    }
+
+    template<arithmetic U>
+    __fast_inline constexpr Vector3_t<T> increase_z(const U & v){
+        return {x, y, z + v};
+    }
+
+    template<arithmetic U>
+    constexpr Vector3_t & operator *= (const U & _v){
         T v = static_cast<T>(_v);
         x *= v;
         y *= v;
@@ -109,7 +123,7 @@ public:
     }
 
     template<arithmetic U>
-    Vector3_t & operator /= (const Vector3_t<U>& v) {
+    constexpr Vector3_t & operator /= (const Vector3_t<U>& v) {
         x /= static_cast<T>(v.x);
         y /= static_cast<T>(v.y);
         z /= static_cast<T>(v.z);
@@ -117,7 +131,7 @@ public:
     }
 
     template<arithmetic U>
-    Vector3_t & operator /= (const U & _v){
+    constexpr Vector3_t & operator /= (const U & _v){
         T v = static_cast<T>(_v);
         x /= v;
         y /= v;
@@ -185,29 +199,33 @@ public:
         return (l > length ? *this * length / l : *this);
     }
 
+    constexpr Vector2_t<T> xy() const{
+        return {x,y};
+    }
+
 
     template<arithmetic U>
-    [[nodiscard]] T dot(const Vector3_t<U> &v) const{
+    constexpr T dot(const Vector3_t<U> &v) const{
         return x * static_cast<T>(v.x) + y * static_cast<T>(v.y) + z * static_cast<T>(v.z);
     }
 
     template<arithmetic U>
-    [[nodiscard]] Vector3_t cross(const Vector3_t<U> &u) const{
+    constexpr Vector3_t cross(const Vector3_t<U> &u) const{
         return Vector3_t(y * static_cast<T>(u.z) - z * static_cast<T>(u.y),
                          z * static_cast<T>(u.x) - x * static_cast<T>(u.z), 
                          x * static_cast<T>(u.y) - y * static_cast<T>(u.x));
     }
 
 
-    [[nodiscard]] T length() const{
+    constexpr T length() const{
         return sqrt(x * x + y * y + z * z);
     }
 
-    [[nodiscard]] T length_squared() const{
+    constexpr T length_squared() const{
         return x * x + y * y + z * z;
     }
 
-    void normalize() {
+    constexpr void normalize() {
         T lengthsq = length_squared();
         if (lengthsq == 0) {
             x = y = z = 0;
@@ -219,7 +237,7 @@ public:
         }
     }
 
-    [[nodiscard]] Vector3_t normalized() const {
+    constexpr Vector3_t normalized() const {
         Vector3_t v = *this;
         v.normalize();
         return v;

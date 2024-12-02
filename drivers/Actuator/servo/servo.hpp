@@ -25,6 +25,13 @@ public:
     void setRadian(const real_t rad){
         // setGLobalRadian(rad_range_.clamp(rad + basis_));
         setGLobalRadian(rad_range_.clamp(rad));
+        // if(rad_range_.has(rad) == false){
+            // DEBUG_PRINTLN());
+        //     HALT;
+        // }
+
+
+        // setGLobalRadian(rad);
     }
 
     real_t getRadian(){
