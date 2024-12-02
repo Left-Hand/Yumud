@@ -18,7 +18,8 @@ protected:
     bool peaked;
     
 public:
-    DELETE_COPY_AND_MOVE(TrapezoidSolver_t);
+    TrapezoidSolver_t(const TrapezoidSolver_t<T> & other) = delete;
+    TrapezoidSolver_t(TrapezoidSolver_t<T> && other) = default;
 
     TrapezoidSolver_t(const T & a, const T & v, const T & s):
         a_(a), v_(v), s_(s) {

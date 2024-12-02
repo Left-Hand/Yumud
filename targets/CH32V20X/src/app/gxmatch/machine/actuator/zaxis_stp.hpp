@@ -15,7 +15,6 @@ protected:
     Motor & motor_;
 public:
     ZAxisStepper(const Config & config, Motor & motor):ZAxis(config), motor_(motor){}
-    // ZAxisStepper(const Config & config):ZAxis(config){}
     DELETE_COPY_AND_MOVE(ZAxisStepper)
     
     bool reached() override;

@@ -369,7 +369,9 @@ void host_main(){
             }
         };
         
-        auto tick_1khz = [&](){grab_module.tick();};
+        auto tick_1khz = [&](){
+            grab_module.tick();
+        };
         auto tick_50hz = [&](){
             joint_left.tick();
             joint_right.tick();
@@ -407,8 +409,15 @@ void host_main(){
 
         if(true){//测试动作组
             while(true){
-                grab_module.take();
-                delay(1000);
+                grab_module.test();
+                // grab_module.take();
+                DEBUG_PRINTLN("next");
+                while(true){
+                    if(logger.available()){
+                        logger.readString();
+                        break;
+                    }
+                }
             }
         }
 

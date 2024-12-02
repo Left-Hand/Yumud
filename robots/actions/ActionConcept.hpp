@@ -48,20 +48,23 @@ protected:
         sustain = 0;
     }
 
-    real_t since() const {
+    real_t time() const {
         return real_t(CLAMP(full - sustain, size_t(0), size_t((1 << GLOBAL_Q )- 5))) / 1000;
     }
 public:
     // Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
     Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain(s), full(s){}
 
-    bool is_valid() const {
-        return sustain > 0;
+    bool died() const{
+        return sustain <= 0;
     }
+    // bool is_valid() const {
+    //     return sustain > 0;
+    // }
 
-    operator bool() const {
-        return is_valid();
-    }
+    // operator bool() const {
+    //     return is_valid();
+    // }
 
     Action& operator--() {
         if (sustain > 0) {
@@ -79,7 +82,7 @@ public:
         // if(once and executed) return;
         if(sustain > 0){
             execute();
-            sustain --;
+            if(sustain) sustain --;
             executed = true;
         }
     }

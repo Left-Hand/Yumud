@@ -12,7 +12,7 @@ void ActionQueue::update() {
     if(action_queue.size()){
         auto & action = *action_queue.front();
         action.invoke();
-        if (bool(action) == false) {
+        if (action.died() == true) {
             action_queue.pop();
         }
     }

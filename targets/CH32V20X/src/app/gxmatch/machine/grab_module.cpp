@@ -44,14 +44,19 @@ protected:
     Vector3 norm_;
     TrapezoidSolver solver_;
     real_t dur_;
-    // Vector3 to_;
 public:
     MoveAction(Inst & inst, const Vector3 & from, const Vector3 & to):
         GrabAction(UINT_MAX, [this](){
-            auto t = this->since();
-            if(t > dur_){this->kill();}
-            inst_.moveTo(from_ + norm_ * solver_.forward(this->dur_));
+            auto time = this->time();
+            if(time > dur_){
+                // DEBUG_PRINTLN("killed")
+                this->kill();
+            }
+            auto pos = from_ + norm_ * solver_.forward(time);
+            DEBUG_PRINTLN(pos.x, pos.y, pos.z, time, dur_);
+            // inst_.moveTo(pos);
         }, inst),
+
         from_(from),
         dist_((to - from).length()),
         norm_((to - from) / dist_),
@@ -101,15 +106,24 @@ void GrabModule::release(){
 
 
 void GrabModule::take(){
-    auto & self = *this;
 
-    // self.addAction(new MoveAction{self, config_.})
-    self << new TestAction{self};
 }
+
+
 
 void GrabModule::give(){
     // self.addAction(new MoveAction{self, config_.})
     // self.addAction(new )
+}
+
+void GrabModule::test(){
+    auto & self = *this;
+
+    // self.addAction(new MoveAction{self, config_.})
+    // self << new TestAction{self};
+    // self << new TestAction{self};
+    // self << MoveAction(self, Vector3(0, 0, 0), Vector3(1,1,1));
+    self << new MoveAction(self, Vector3(0, 0, 0), Vector3(1,1,1));
 }
 
 

@@ -78,6 +78,7 @@ public:
     void take();
     void give();
     void begin();
+    void test();
     
     bool reached();
 
