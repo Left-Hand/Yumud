@@ -7,9 +7,9 @@ namespace gxm{
 class Wheel{
 public:
     struct Config{
-        real_t wheel_radius = real_t(0.06);
-        real_t max_tps = real_t(0.5);
-        real_t max_aps = real_t(0.5);
+        real_t wheel_radius;
+        // real_t max_tps = real_t(0.5);
+        // real_t max_aps = real_t(0.5);
     };
     
 protected:

@@ -1,4 +1,4 @@
-#include "chassis_module.hpp"
+#include "chassis_actions.hpp"
 
 namespace gxm{
 
@@ -23,9 +23,31 @@ void ChassisModule::calibratePosition(const Vector2 & pos){
     
 }
 
-void ChassisModule::tick(){
+void ChassisModule::test(){
 
 }
     
+
+bool ChassisModule::arrived(){
+    return false;
+}
+
+void ChassisModule::rapid(const Ray & ray){
+
+}
+
+
+void ChassisModule::rapid_move(const Vector2 & pos){
+
+}
+
+void ChassisModule::rapid_spin(const real_t & rad){
+
+}
+
+Ray ChassisModule::feedback(){
+    return {0,0,0};
+}
+
 }
 

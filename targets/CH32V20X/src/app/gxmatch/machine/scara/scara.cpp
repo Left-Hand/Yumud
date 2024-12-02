@@ -33,4 +33,8 @@ bool Scara::reached(){
 }
 
 
+bool Scara::caught(){
+    return true;
+}
+
 }

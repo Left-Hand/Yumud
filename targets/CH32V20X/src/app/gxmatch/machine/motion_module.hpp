@@ -1,8 +1,7 @@
 #pragma once
 
-
-
 #include "robots/actions/ActionQueue.hpp"
+#include "../autodrive/Navigator.hpp"
 
 #include "../common/inc.hpp"
 
@@ -34,6 +33,10 @@ public:
 
     size_t pending() const {
         return actions_.pending();
+    }
+
+    bool done() const{
+        return pending() == 0;
     }
 };
 

@@ -40,6 +40,7 @@ public:
     void release();//放下物块
 
     bool reached();
+    bool caught();
 
     Scara(const Config & config, const Refs & refs):
         config_(config),

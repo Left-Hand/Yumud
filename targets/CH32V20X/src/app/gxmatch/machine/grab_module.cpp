@@ -146,18 +146,16 @@ bool GrabModule::reached(){
     return scara_.reached() and zaxis_.reached();
 }
 
-// bool GrabModule::done(){
-//     return zaxis.reached();
-//     //  and joint_l.reached() and joint_r.reached();
-
-// }
+bool GrabModule::caught(){
+    return scara_.caught();
+}
 
 void GrabModule::init(){
     auto & self = *this;
 
     // self.rapid(Vector3(config_.inspect_xy);
-    // self << DelayAction(3000);
     self << RapidAction(self, config_.home_xyz);
+    self << DelayAction(3000);
 }
 
 

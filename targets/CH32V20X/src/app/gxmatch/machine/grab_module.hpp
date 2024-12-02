@@ -107,6 +107,7 @@ public:
     void test();
     
     bool reached();
+    bool caught();
 
     const auto & config(){return config_;}
     void setStatus(const TranportStatus status){
