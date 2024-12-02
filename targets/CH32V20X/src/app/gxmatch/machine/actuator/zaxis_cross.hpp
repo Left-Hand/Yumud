@@ -2,7 +2,7 @@
 
 #include "src/app/gxmatch/common/inc.hpp"
 #include "zaxis.hpp"
-#include "JointCl.hpp"
+#include "jointlr.hpp"
 
 
 namespace ymd::drivers{
@@ -12,7 +12,8 @@ class RadianServo;
 namespace gxm{
 class ZAxisCross:public ZAxis{
 public:
-    using Motor = gxm::JointCl;
+    using Motor = JointLR;
+    // using Motor = SG90;
     using Solver = gxm::CrossSolver;
 
     struct Config:public ZAxis::Config{

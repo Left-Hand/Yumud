@@ -5,16 +5,12 @@
 #include <queue>
 
 #include "sys/math/real.hpp"
-#include "types/vector2/vector2_t.hpp"
 
 
 namespace ymd{
 
 struct Action {
 public:
-    using Vector2 = Vector2_t<real_t>;
-    using Vector2i = Vector2_t<int>;
-
     using Callback = std::function<void(void)>;
 protected:
     Callback func_ = nullptr;
@@ -87,6 +83,14 @@ public:
         }
     }
 };
+
+struct DelayAction:public Action{
+protected:
+    void execute() override {}
+public:
+    DelayAction( const uint dur):Action(dur, nullptr){}
+};
+
 
 
 }

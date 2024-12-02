@@ -24,27 +24,32 @@ void PCA9685::setFrequency(uint freq, real_t trim){
     }
 
 void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
-    // if(channel == 0 || channel > 16) PANIC();
-    // channel -= 1;
     if(channel > 15) PANIC();
     
-    // if(sub_channels[channel].on.cvr != on){
+    if(sub_channels[channel].on.cvr != on){
         writeReg(RegAddress(uint8_t(RegAddress::LED0_ON_L) + 4 * channel), on);
-        // sub_channels[channel].on.cvr = on;
-    // }
+        sub_channels[channel].on.cvr = on;
+    }
 
-    // if(sub_channels[channel].off.cvr != off){
-        writeReg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), off);
-        // sub_channels[channel].off.cvr = off;
-    // }
+    {
+        auto & reg = sub_channels[channel].off;
+
+        // DEBUG_PRINTLN(off);
+        if(off >= (4096)){
+            // reg.full = true;   
+            // DEBUG_PRINTLN("!!");
+        }else if(sub_channels[channel].off.cvr != off){
+            reg.full = false;
+            reg.cvr = off;
+        }
+        writeReg(RegAddress(uint8_t(RegAddress::LED0_OFF_L) + 4 * channel), reg);
+    }
 }
 
 void PCA9685::init(){
     mode1_reg = 0;
     writeReg(RegAddress::Mode1, mode1_reg);
     delay(10);
-    // DEBUG_PRINT("m1", readReg(RegAddress::Mode1));
-    // DEBUG_PRINT("m2", readReg(RegAddress::Mode2));
 }
 
 

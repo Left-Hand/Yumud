@@ -3,7 +3,7 @@
 #include "motion_module.hpp"
 
 #include "actuator/jointlr.hpp"
-#include "actuator/zaxis.hpp"
+#include "actuator/zaxis_cross.hpp"
 #include "scara/claw.hpp"
 #include "scara/nozzle.hpp"
 #include "scara/scara.hpp"
@@ -39,18 +39,20 @@ public:
         AABB blocked_area;
         real_t max_spd;
         real_t max_acc;
+
+        uint nozzle_sustain;
     };
 
 protected:
 
 
     struct Refs{
-        std::reference_wrapper<ZAxis> zaxis;
+        std::reference_wrapper<ZAxisCross> zaxis;
         std::reference_wrapper<Scara> scara;
     };
         
     Config config_;
-    ZAxis & zaxis_;
+    ZAxisCross & zaxis_;
     Scara & scara_;
 
 public:
@@ -75,6 +77,8 @@ public:
         scara_(refs.scara)
         {}
 
+    void init();
+    void move(const Vector3 & pos);
     void take();
     void give();
     void begin();
@@ -84,15 +88,6 @@ public:
 
     const auto & config(){return config_;}
 };
-
-struct GrabSysConfig{
-    Scara::Config scara_config;
-    ZAxis::Config zaxis_config;
-    GrabModule::Config grab_config;
-    CrossSolver::Config cross_config;
-
-};
-
 
 
 

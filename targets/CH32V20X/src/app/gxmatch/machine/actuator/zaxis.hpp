@@ -14,6 +14,7 @@ public:
         
         // real_t meter_to_turns_scaler;
         // real_t reached_threshold;
+        // real_t basis_radian;
     };
 
 private:

@@ -3,16 +3,20 @@
 namespace gxm{
 
 void Scara::goHome(){
-    joint_l.setRadian(real_t(PI/2) + config_.joint_config.left_basis_radian);
-    joint_r.setRadian(real_t(PI/2) + config_.joint_config.right_basis_radian);
+    joint_l.setRadian(real_t(PI/2));
+    joint_r.setRadian(real_t(PI/2));
 }
 
 void Scara::moveXY(const Vector2 & pos){
     auto [a,b] = solver_.inverse(pos);
-    joint_l.setRadian(a + config_.joint_config.left_basis_radian);
-    joint_r.setRadian(b + config_.joint_config.right_basis_radian);
+    joint_l.setRadian(a);
+    joint_r.setRadian(b);
 }
 
+
+Vector2 Scara::getPos(){
+    return solver_.forward(joint_l.getRadian(), joint_r.getRadian());
+}
 
 void Scara::press(){
     claw.press();

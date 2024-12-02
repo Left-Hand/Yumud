@@ -36,7 +36,7 @@ protected:
     struct LedOnOffReg:public Reg16{
         uint16_t cvr:12 = 0;
         uint16_t full:1 = 0;
-        uint16_t __resv__:3 = 0;
+        const uint16_t __resv__:3 = 0;
     };
 
     struct LedRegs{

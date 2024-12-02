@@ -31,8 +31,7 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#include "sys/math/real.hpp"
-#include "sys/stream/ostream.hpp"
+#include "types/vector2/vector2_t.hpp"
 
 namespace ymd{
 template <arithmetic T>
@@ -55,6 +54,8 @@ public:
     __fast_inline constexpr Vector3_t(){;}
 
     __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) : x(v.x), y(v.y), z(v.z) {;}
+
+    __fast_inline constexpr Vector3_t(const Vector2_t<arithmetic auto>& v, const arithmetic auto z_) : x(v.x), y(v.y), z(z_) {;}
 
     __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
 

@@ -1,109 +1,34 @@
-#include "Robot.hpp"
-
-using Sys::t;
-
-using namespace ymd;
-using namespace ymd::drivers;
-using namespace ymd::foc;
+#include "misc.hpp"
 
 namespace gxm{
 
-
-using Vector2 = Vector2_t<real_t>;
-
-
-
-void initDisplayer(ST7789 & tftDisplayer){
-    tftDisplayer.init();
-
-    tftDisplayer.setFlipX(false);
-    tftDisplayer.setFlipY(true);
-    if(true){
-        tftDisplayer.setSwapXY(true);
-        tftDisplayer.setDisplayOffset({40, 52}); 
-    }else{
-        tftDisplayer.setSwapXY(false);
-        tftDisplayer.setDisplayOffset({52, 40}); 
-    }
-    tftDisplayer.setFormatRGB(true);
-    tftDisplayer.setFlushDirH(false);
-    tftDisplayer.setFlushDirV(false);
-    tftDisplayer.setInversion(true);
-
-    tftDisplayer.fill(ColorEnum::BLACK);
-}
-
-
-auto canvas_transform(const Ray & ray) -> Ray{
-    scexpr auto meter = int{2};
-    scexpr auto size = Vector2{100,100};
-    scexpr auto org =  Vector2{12,12};
-    scexpr auto area = Rect2i{org,size};
-    
-    auto x = LERP(real_t(area.x), real_t(area.x + area.w), ray.org.x / meter);
-    auto y = LERP(real_t(area.y + area.h), real_t(area.y), ray.org.y / meter);
-    return Ray{Vector2{x,y} + Vector2::ones(12), ray.rad};
-};
-
-
-auto draw_curve(PainterConcept & painter, const Curve & curve) -> void {
-    painter.setColor(ColorEnum::BLUE);
-    for(auto it = curve.begin(); it != curve.end(); it++){
-        auto pos = canvas_transform(Ray(*it)).org;
-        painter.drawPixel(pos);
-    }
-};
-
-auto print_curve(OutputStream & logger, const Curve & curve) -> void{
-    logger << std::setprecision(4);
-    for(auto it = curve.begin(); it != curve.end(); it++){
-        auto [pos, rad] = Ray(*it);
-        delay(1);
-        logger.println(pos.x, pos.y, rad);
-    }
-};
-
-auto draw_turtle(PainterConcept & painter, const Ray & ray) -> void{
-    scexpr real_t len = 7;
-    auto [org, rad] = canvas_transform(ray);
-    rad = -rad;//flipy
-    auto pf = org + Vector2::from_angle(len, rad);
-    auto p1 = org + Vector2::from_angle(len, rad + real_t(  PI * 0.8));
-    auto p2 = org + Vector2::from_angle(len, rad + real_t(- PI * 0.8));
-
-    // painter.setColor(ColorEnum::RED);
-    painter.setColor(RGB888(HSV888(int(t * 64),255,255)));
-    painter.drawFilledTriangle(pf, p1, p2);
-    // painter.drawPixel(org);
-
-    painter.setColor(ColorEnum::BLACK);
-    painter.drawHollowTriangle(pf, p1, p2);
-};
-
-
-
 auto create_default_config(){
-    return GrabSysConfig{
+    return SysConfig{
+        .joint_config = {
+            .max_rad_delta = real_t(0.07),
+            .left_basis_radian = real_t(-PI/2 + 0.18),
+            // .right_basis_radian = real_t(PI/2 - 0.10),
+            // .right_basis_radian = real_t(PI/2 - 0.20),
+            // .right_basis_radian = real_t(PI/2 + 0.3),
+            .right_basis_radian = real_t(PI/2),
+            // .right_basis_radian = real_t(0),
+            .z_basis_radian = real_t(PI/2),
+        },
+
         .scara_config = {
             .solver_config = {
                 .should_length_meter = real_t(0.072),
                 .forearm_length_meter = real_t(0.225),
                 .upperarm_length_meter = real_t(0.185),
             },
-            
-            .joint_config = {
-                .max_rad_delta = real_t(0.02),
-                // .left_radian_clamp = {0,0},
-                // .right_radian_clamp = {0,0},
-                .left_basis_radian = real_t(-PI/2 + 0.154),
-                .right_basis_radian = real_t(PI/2 - 0.3),
-            },
+
             .claw_config = {
                 .press_radian = real_t(PI/2),
                 .release_radian = 0
             },
+
             .nozzle_config = {
-                
+                // .sustain = 400
             },
         },
         
@@ -113,7 +38,12 @@ auto create_default_config(){
             // .free_height = 0.15_r,
             // .ground_height = 0.12_r,
             
-
+            // .basis_radian = real_t(0),
+            .solver_config = CrossSolver::Config{
+                .xoffs_length_meter = 0.042_r,
+                .forearm_length_meter = 0.082_r,
+                .upperarm_length_meter = 0.1_r
+            }
             // //1m / (3cm * PI)
             // .meter_to_turns_scaler = real_t(1 / (0.03 * PI)),
             
@@ -137,15 +67,11 @@ auto create_default_config(){
                 Vector3{0.05_r, 0.05_r, 0.05_r}
             },
 
-            .max_spd = 1,
-            .max_acc = 1
-        },
+            .max_spd = 0.2_r,
+            .max_acc = 0.2_r,
 
-        .cross_config = {
-            .xoffs_length_meter = real_t(0.04),
-            .forearm_length_meter = real_t(0.1),
-            .upperarm_length_meter = real_t(0.1)
-        },
+            .nozzle_sustain = 500
+        }
     };
 }
     
@@ -320,27 +246,41 @@ void host_main(){
 
 
         MG995 servo_left{pca[0]};
-        MG995 servo_right{pca[1]};
+        MG995 servo_right{pca[15]};
 
         SG90 claw_servo{pca[2]};
-        RemoteFOCMotor z_motor{logger, can1, 1};
+
+        SG90 servo_cross{pca[3]};
+
+
+        // RemoteFOCMotor z_motor{logger, can1, 1};
         
 
         auto config = create_default_config();
-        
+        auto & joint_config = config.joint_config;
         JointLR joint_left{
-            config.scara_config.joint_config,
+            joint_config.max_rad_delta,
+            joint_config.left_basis_radian,
             servo_left
         };
 
         JointLR joint_right{
-            config.scara_config.joint_config,
+            joint_config.max_rad_delta,
+            joint_config.right_basis_radian,
             servo_right
         };
 
-        ZAxisStepper zaxis{
+        JointLR joint_z{
+            joint_config.max_rad_delta,
+            joint_config.z_basis_radian,
+            servo_cross
+        };
+
+        joint_z.inverse();
+
+        ZAxisCross zaxis{
             config.zaxis_config,
-            z_motor
+            joint_z
         };
         
         Claw claw{
@@ -350,7 +290,7 @@ void host_main(){
         
         Nozzle nozzle{
             config.scara_config.nozzle_config, 
-            GpioNull, GpioNull
+            pca[4]
         };
 
         Scara scara{
@@ -375,9 +315,10 @@ void host_main(){
         auto tick_50hz = [&](){
             joint_left.tick();
             joint_right.tick();
+            joint_z.tick();
         };
 
-        if(false){//绑定舵机更新回调函数
+        if(true){//绑定舵机更新回调函数
             auto & timer = timer2;
             timer.init(servo_freq);
 
@@ -392,22 +333,127 @@ void host_main(){
             DEBUG_PRINTLN("tick1k binded");
         }
 
-        if(false){//测试升降求解器
-            CrossSolver cross_solver{
-                config.cross_config
-            };
+        // auto transz_rad = [](const real_t x) -> real_t{
+        //     return real_t(PI - x);
+        // }
 
+        // if(false){
+        if(false){
+            // test_joint(joint_z, [](const real_t time)->real_t{
+            //     // return sin(time) * real_t(0.2) + real_t(0.6);
+            //     return sin(time) * real_t(0.6);
+            //     // return (sin(time))* real_t(PI/2);
+            //     // return 0;
+            //     // return real_t(PI);
+            //     // return 0.2_r;
+            // });
+            joint_z.setRadian(0.4_r);
+            // joint_left.setRadian(real_t(PI/2));
+            // joint_left.setRadian(real_t(PI/2));
+            joint_left.setRadian(real_t(PI));
+            // joint_left.setRadian(0);
+            // joint_right.setRadian(real_t(PI));
+            // test_joint(joint_left, [](const real_t time)->real_t{
+            //     // return real_t(PI);
+            //     // return real_t(PI/2);
+            //     return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+            // });
+
+
+            // test_servo(servo_right, [](const real_t time)->real_t{
+            //     // return real_t(PI);
+            //     // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
+            //     return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
+            //     // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+            // });
+
+            test_joint(joint_right, [](const real_t time)->real_t{
+                // return real_t(PI);
+                // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
+                return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
+                // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
+            });
+
+            // while(true);
+        }
+
+        if(false){//测试升降
+            CrossSolver cross_solver{config.zaxis_config.solver_config};
             while(true){
-                auto height = real_t(0.14) + real_t(0.06) * sin(t);
+                auto height = LERP(0, 0.17_r, (sin(t) + 1) >> 1);
                 auto inv_rad = cross_solver.inverse(height);
-                auto f_height = cross_solver.forward(inv_rad);
-                DEBUG_PRINTLN(std::setprecision(3), inv_rad, height, f_height);
-
+                // auto f_height = cross_solver.forward(inv_rad);
+                // DEBUG_PRINTLN(std::setprecision(4), inv_rad, height, f_height);
+                                
+                joint_z.setRadian(inv_rad);
                 delay(20);
             }
         }
 
-        if(true){//测试动作组
+
+        if(true){//测试xyz
+            Scara5Solver solver{config.scara_config.solver_config};
+            CrossSolver cross_solver{config.zaxis_config.solver_config};
+            while(true){
+                auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t);
+                // auto pos = Vector2(0, 0.19_r) + Vector2(0.0_r, 0).rotated(t);
+                auto inv_rad = solver.inverse(pos);
+
+                auto [rad_left, rad_right] = inv_rad;
+                joint_left.setRadian(rad_left);
+                joint_right.setRadian(rad_right);
+
+                auto height = LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1);
+                auto inv_radz = cross_solver.inverse(height);
+
+                DEBUG_PRINTLN(joint_left.getRadian(), joint_right.getRadian(), joint_z.getRadian());
+                joint_z.setRadian(inv_radz);
+                delay(20);
+            }
+        }
+
+        if(false){//测试机械臂位置反馈
+            while(true){
+                auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t);
+                auto height = LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1);
+
+                grab_module.moveTo(Vector3(pos.x, pos.y, height));
+
+                auto p3 = grab_module.getPos();
+                DEBUG_PRINTLN(pos.x, pos.y, height, p3.x, p3.y, p3.z);
+                delay(20);
+            }
+        }
+
+        if(true){//测试
+
+            grab_module.init();
+            getline(logger);
+            size_t i = 0;
+            scexpr auto pos_arr = std::to_array<Vector3>({
+                {0.02_r, 0.12_r, 0.17_r},
+                {-0.04_r, 0.12_r, 0.17_r},
+                // {0, 0.2_r, 0.12_r},
+            });
+
+            while(true){
+                // DEBUG_PRINTLN("next", i);
+
+                // auto pos = pos_arr[i];
+                auto pos = Vector3(Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t), LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1));
+
+                // grab_module.move(pos);
+                grab_module.moveTo(pos);
+
+
+                getline(logger);
+                
+                i = (i + 1)%pos_arr.size();
+            }
+        }
+
+
+        if(false){//测试动作组
             while(true){
                 grab_module.test();
                 // grab_module.take();
@@ -420,6 +466,10 @@ void host_main(){
                 }
             }
         }
+
+
+
+
 
         if(true){
             while(true){
