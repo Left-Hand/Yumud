@@ -14,46 +14,46 @@ struct Action {
 public:
     using Vector2 = Vector2_t<real_t>;
     using Vector2i = Vector2_t<int>;
+
+    using Callback = std::function<void(void)>;
 protected:
-    std::function<void(void)> func = nullptr;
-    struct{
-        uint sustain = 0;
-        const uint full;
-        // bool once = true;
-        volatile bool executed = false;
-    };
+    Callback func_ = nullptr;
+    
+    size_t sustain = 0;
+    const size_t full;
+    volatile bool executed = false;
 
     virtual void execute(){
-        EXECUTE(func);
+        EXECUTE(func_);
     }
 
-    enum class SpecialActionType{
-        NONE,
-        DELAY,
-        CLEAR,
-        ABORT
-    };
+    // enum class SpecialActionType{
+    //     NONE,
+    //     DELAY,
+    //     CLEAR,
+    //     ABORT
+    // };
     
-    virtual SpecialActionType special() const {return SpecialActionType::NONE;}
+    // virtual SpecialActionType special() const {return SpecialActionType::NONE;}
 
     bool first() const {
         return executed == false;
     }
 
-    real_t ratio() const {
+    real_t progress() const {
         return real_t(1) - real_t(sustain) / full;
     }
 
-    void abort(){
+    void kill(){
         sustain = 0;
     }
 
     real_t since() const {
-        return real_t(CLAMP(int(full - sustain),0 , ((1 << GLOBAL_Q )- 5))) / 1000;
+        return real_t(CLAMP(full - sustain, size_t(0), size_t((1 << GLOBAL_Q )- 5))) / 1000;
     }
 public:
     // Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
-    Action(std::function<void()> &&f, const uint s = 1) : func(std::move(f)), sustain(s), full(s){}
+    Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain(s), full(s){}
 
     bool is_valid() const {
         return sustain > 0;
@@ -70,7 +70,7 @@ public:
         return *this;
     }
 
-    auto remain() const {
+    size_t remain() const {
         return sustain;
     }
 

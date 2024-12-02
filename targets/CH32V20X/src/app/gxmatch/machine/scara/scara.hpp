@@ -36,8 +36,8 @@ public:
     void goHome();//进行坐标归位
     void moveXY(const Vector2 & pos);//只改变XY坐标
 
-    void pickUp();//拾起物块
-    void putDown();//放下物块
+    void press();//拾起物块
+    void release();//放下物块
 
     bool reached();
 

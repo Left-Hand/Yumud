@@ -11,13 +11,34 @@
 
 namespace gxm{
 
+class GrabModule;
 
+namespace GrabActions{
+
+class GrabAction:public Action{
+protected:
+    using Inst = GrabModule; 
+    Inst & inst_;
+    GrabAction(size_t s, Callback && func, Inst & inst):
+        Action(s, std::move(func)),
+        inst_(inst){;}
+public:
+};
+
+
+}
 
 class GrabModule:public MotionModule{
 public:
     struct Config{
-        std::array<Vector2, 3> tray_pos;
-        Vector3 inspect_pos;
+        std::array<Vector2, 3> tray_xy;
+        real_t tray_z;
+        
+        Vector2 inspect_xy;
+
+        AABB blocked_area;
+        real_t max_spd;
+        real_t max_acc;
     };
 
 protected:
@@ -29,24 +50,29 @@ protected:
     };
         
     Config config_;
-    ZAxis & zaxis;
-    Scara & scara;
+    ZAxis & zaxis_;
+    Scara & scara_;
+
+public:
+// protected:
     
 public:
+// protected:
     void goHome();//进行坐标归位
     void moveZ(const real_t pos);//只改变Z轴坐标
     void moveXY(const Vector2 & pos);//只改变XY坐标
     void moveTo(const Vector3 & pos);//改变所有坐标
+    Vector3 getPos();
 
-    void pickUp();//拾起物块
-    void putDown();//放下物块
+    void press();//拾起物块
+    void release();//放下物块
 
-    // Vector2 calculatePos(TrayIndex index)
+    Vector3 calculateTrayPos(TrayIndex index);
 public:
     GrabModule(const Config & config, const Refs & refs):
         config_(config),
-        zaxis(refs.zaxis),
-        scara(refs.scara)
+        zaxis_(refs.zaxis),
+        scara_(refs.scara)
         {}
 
     void take();
@@ -54,7 +80,8 @@ public:
     void begin();
     
     bool reached();
-    // bool done();
+
+    const auto & config(){return config_;}
 };
 
 struct GrabSysConfig{
@@ -62,6 +89,10 @@ struct GrabSysConfig{
     ZAxis::Config zaxis_config;
     GrabModule::Config grab_config;
     CrossSolver::Config cross_config;
+
 };
+
+
+
 
 }

@@ -8,18 +8,20 @@ namespace gxm{
 
 
 void ZAxisServo::setSpeed(const real_t speed){
-    motor_.setSpeed(speed * config_.meter_to_turns_scaler);
+    // motor_.setSpeed(speed * config_.meter_to_turns_scaler);
 };
 
 real_t ZAxisServo::getSpeed(){
-    return motor_.getSpeed() / config_.meter_to_turns_scaler;
+    // return motor_.getSpeed() / config_.meter_to_turns_scaler;
+    return 1;
 }
 
 real_t ZAxisServo::getErr(){
     return expect_distance - getDistance();
 }
 bool ZAxisServo::reached(){
-    return ABS(getErr()) < config_.reached_threshold; 
+    // return ABS(getErr()) < config_.reached_threshold; 
+    return false;
 }
 
 

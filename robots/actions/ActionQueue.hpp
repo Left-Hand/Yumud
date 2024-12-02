@@ -11,8 +11,10 @@ concept is_action = std::is_base_of_v<Action, T>;
 
 class ActionQueue {
 protected:
+    using Element = Action;
+    using Warpper = std::unique_ptr<Element>;
+    using Queue = std::queue<Warpper>; 
 
-    using Queue = std::queue<std::unique_ptr<Action>>; 
     Queue action_queue = {};
 
     bool clear_req = false;
@@ -20,12 +22,13 @@ public:
     ActionQueue() = default;
 
 
-    auto & operator<<(std::unique_ptr<Action> action) {
+    auto & operator<<(Warpper action) {
         action_queue.emplace(std::move(action));
         return *this;
     }
 
-    auto & operator<<(Action * action) {
+    auto & operator<<(Element * action) {
+        // action_queue.emplace(Warpper(action));
         action_queue.emplace((action));
         return *this;
     }

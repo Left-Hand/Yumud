@@ -20,7 +20,7 @@ public:
     
     bool reached() override;
     void setDistance(const real_t dist) override;  
-    real_t getDistance() override;
+    real_t getDistance() override{return 0;}
     void tick() override;
 
     void softHome() override;

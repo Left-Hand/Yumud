@@ -10,6 +10,8 @@
 #include "robots/kinematics/Scara5/scara5_solver.hpp"
 #include "robots/kinematics/Cross/CrossSolver_t.hpp"
 
+#include "types/aabb/AABB_t.hpp"
+
 
 #include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
 
@@ -23,6 +25,7 @@ namespace gxm{
 
     using Vector3 = Vector3_t<real_t>;
     using Vector3i = Vector3_t<int>;
+    using AABB = AABB_t<real_t>;
 
     using Mecanum4Solver = Mecanum4Solver_t<real_t>;
     using Scara5Solver = Scara5Solver_t<real_t>;

@@ -14,12 +14,12 @@ void Scara::moveXY(const Vector2 & pos){
 }
 
 
-void Scara::pickUp(){
+void Scara::press(){
     claw.press();
     nozzle.press();
 }
 
-void Scara::putDown(){
+void Scara::release(){
     claw.release();
     nozzle.release();
 }
