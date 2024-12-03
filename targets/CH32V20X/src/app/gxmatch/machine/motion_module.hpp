@@ -21,13 +21,15 @@ public:
         return *this;
     }
 
-    template<typename T>
-    requires std::is_base_of_v<Action, T>
-    auto & operator<<(T && action){
-        actions_ << std::make_unique<T>(std::move(action));
-        return *this;
-    }
+    // template<typename T>
+    // requires std::is_base_of_v<Action, T>
+    // auto & operator<<(T && action){
+    //     actions_ << std::make_unique<T>(std::move(action));
+    //     return *this;
+    // }
+
     void tick(){
+        // DEBUG_PRINTLN("tick");
         actions_.update();
     }
 
@@ -37,6 +39,10 @@ public:
 
     bool done() const{
         return pending() == 0;
+    }
+
+    const char * which(){
+        return actions_.front()->name();
     }
 };
 

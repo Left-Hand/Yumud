@@ -14,6 +14,9 @@ void ActionQueue::update() {
         action.invoke();
         if (action.died() == true) {
             action_queue.pop();
+            // DEBUG_PRINTLN("action poped");
+        }else{
+            // DEBUG_PRINTLN("action remained", pending(), action.name(), action.remain(), (uint32_t)std::addressof(action));
         }
     }
 }

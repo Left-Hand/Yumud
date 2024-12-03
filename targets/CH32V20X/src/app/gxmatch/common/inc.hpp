@@ -1,8 +1,5 @@
 #pragma once
 
-#include "config.hpp"
-
-
 #include "types/vector3/vector3_t.hpp"
 #include "types/vector2/vector2_t.hpp"
 

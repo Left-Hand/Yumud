@@ -1,88 +1,9 @@
 #include "misc.hpp"
+#include "config.hpp"
 
 namespace gxm{
 
-auto create_default_config(){
-    return SysConfig{
-        .joint_config = {
-            .max_rad_delta = real_t(0.07),
-            .left_basis_radian = real_t(-PI/2 + 0.33),
-            // .right_basis_radian = real_t(PI/2 - 0.10),
-            // .right_basis_radian = real_t(PI/2 - 0.20),
-            // .right_basis_radian = real_t(PI/2 + 0.3),
-            // .right_basis_radian = real_t(PI/2 - 0.2),
-            .right_basis_radian = real_t(PI/2 + 0.5),
-            // .right_basis_radian = real_t(0),
-            .z_basis_radian = real_t(PI/2),
-        },
 
-        .scara_config = {
-            .solver_config = {
-                .should_length_meter = real_t(0.072),
-                .forearm_length_meter = real_t(0.225),
-                .upperarm_length_meter = real_t(0.185),
-            },
-
-            .claw_config = {
-                .press_radian = real_t(PI/2),
-                .release_radian = 0
-            },
-
-            .nozzle_config = {
-                // .sustain = 400
-            },
-        },
-        
-        .zaxis_config = {
-            // .max_height = 0.25_r,
-            // .tray_height = 0.2_r,
-            // .free_height = 0.15_r,
-            // .ground_height = 0.12_r,
-            
-            // .basis_radian = real_t(0),
-            .solver_config = CrossSolver::Config{
-                .xoffs_length_meter = 0.042_r,
-                .forearm_length_meter = 0.082_r,
-                .upperarm_length_meter = 0.1_r
-            }
-            // //1m / (3cm * PI)
-            // .meter_to_turns_scaler = real_t(1 / (0.03 * PI)),
-            
-            // //1mm tolerance
-            // .reached_threshold = real_t(0.001),  
-        },
-
-        .grab_config = {
-            .tray_xy = {
-                Vector2{-0.12_r   , 0.20_r},
-                Vector2{0       , 0.20_r},
-                Vector2{0.12_r    , 0.20_r}
-            },
-
-            .tray_z = 0.10_r,
-
-            .free_z = 0.17_r,
-
-            .catch_z = 0.06_r,
-
-            .z_bias = 0.005_r,
-        
-            .catch_xy = Vector2{0, 0.15_r},
-
-            .inspect_xyz = Vector3{0, 0.12_r, 0.15_r},
-
-            .safe_aabb = AABB{
-                Vector3{-1, 0.12_r, 0.0_r},
-                Vector3{2, 0.12_r, 0.17_r}
-            },
-
-            .max_spd = 0.2_r,
-            .max_acc = 0.2_r,
-
-            .nozzle_sustain = 500
-        }
-    };
-}
     
 void host_main(){
     uart2.init(576000);
@@ -97,15 +18,22 @@ void host_main(){
 
 
     #ifdef CH32V30X
-    auto & spi = spi2;
+    auto & lcd_spi = spi2;
     #else
-    auto & spi = spi1;
+    auto & lcd_spi = spi1;
     #endif
     
-    spi.bindCsPin(lcd_cs, 0);
-    spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+    lcd_spi.bindCsPin(lcd_cs, 0);
+    lcd_spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
-    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+    ST7789 tftDisplayer({{lcd_spi, 0}, lcd_dc, dev_rst}, {240, 135});
+
+    auto & pmw_spi = spi1;
+
+    pmw_spi.init(9_MHz);
+    pmw_spi.bindCsPin(portD[5], 0);
+    PMW3901 pmw{pmw_spi, 0};
+    pmw.init();
 
     initDisplayer(tftDisplayer);
     
@@ -245,13 +173,28 @@ void host_main(){
         while(true);
     }
 
+    if(true){
+        while(true){
 
+            // pos += Vector2(pmw.getPosition());
+            // auto pos = Vector2(pmw.getMotion());
+
+            auto begin = micros();
+            pmw.update();
+            auto pos = Vector2(pmw.getPosition());
+            auto [x,y] = pos;
+            DEBUG_PRINTLN(x,y, micros() - begin);
+            // delayMicroseconds(5000);
+            delay(5);
+        }
+    }
+    
     if(true){
         
         PCA9685 pca{i2c};
         pca.init();
         
-        pca.setFrequency(servo_freq, real_t(1.09));
+        pca.setFrequency(50, real_t(1.09));
 
 
         MG995 servo_left{pca[0]};
@@ -327,13 +270,28 @@ void host_main(){
             joint_z.tick();
         };
 
-        if(true){//绑定舵机更新回调函数
+        auto tick_200hz = [&](){
+            joint_left.tick();
+            joint_right.tick();
+            joint_z.tick();
+        };
+
+        if(true){//绑定50hz舵机更新回调函数
             auto & timer = timer2;
-            timer.init(servo_freq);
+            timer.init(50);
 
             timer.bindCb(TimerUtils::IT::Update, tick_50hz);
             timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
             DEBUG_PRINTLN("tick50 binded");
+        }
+
+        if(true){//绑定200hz车体控制回调函数
+            auto & timer = timer1;
+            timer.init(200);
+
+            timer.bindCb(TimerUtils::IT::Update, tick_200hz);
+            timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
+            DEBUG_PRINTLN("tick200 binded");
         }
 
 
@@ -404,15 +362,15 @@ void host_main(){
 
             // servo_left.setRadian(real_t(PI/2));
             // joint_left.setRadian(real_t(PI/2));
-            joint_left.setRadian(real_t(PI));
+            joint_left.setRadian(real_t(PI/2));
             // joint_right.setRadian(real_t(PI/2));
             // joint_right.setRadian(real_t(PI/2));
             // joint_right.setRadian(real_t(0));
             // servo_right.setRadian(real_t(0));
             // servo_right.setRadian(real_t(PI));
 
-            servo_right.setRadian(real_t(PI/2));
-            joint_z.setRadian(0.4_r);
+            joint_right.setRadian(real_t(PI/2));
+            joint_z.setRadian(0);
             // servo_z.setRadian
             // joint_right.setRadian(
             // servo_right.setRadian(real_t(PI/2));
@@ -447,10 +405,13 @@ void host_main(){
             // while(true);
         }
 
-        if(false){//测试升降
+        // if(false){//测试升降
+        if(true){//测试升降
+            scara.press();
             CrossSolver cross_solver{config.zaxis_config.solver_config};
             while(true){
-                auto height = LERP(0, 0.17_r, (sin(t) + 1) >> 1);
+                auto height = LERP(0, 0.16_r, (sin(t) + 1) >> 1);
+                // auto height = LERP(0, 0, (sin(t) + 1) >> 1);
                 auto inv_rad = cross_solver.inverse(height);
                 // auto f_height = cross_solver.forward(inv_rad);
                 // DEBUG_PRINTLN(std::setprecision(4), inv_rad, height, f_height);
@@ -499,19 +460,34 @@ void host_main(){
         if(true){//测试
 
             grab_module.init();
-            getline(logger);
+            ;
+            // getline(logger);
             size_t i = 0;
             scexpr auto pos_arr = std::to_array<Vector3>({
-                {0.02_r, 0.12_r, 0.17_r},
-                {-0.04_r, 0.12_r, 0.17_r},
-                // {0, 0.2_r, 0.12_r},
+                {0.02_r, 0.2_r, 0.12_r},
+                {-0.04_r, 0.2_r, 0.12_r},
+                {-0.09_r, 0.2_r, 0.12_r},
             });
 
+            for(const auto & pos : pos_arr){
+                grab_module.move(pos);
+                // DEBUG_PRINTLN(pos)
+                grab_module.press();
+                grab_module.release();
+                // grab_module << new DelayAction(1000);
+            }
+            // while(true){
+            //     // DEBUG_PRINTLN(grab_module.pending());
+            //     DEBUG_PRINTLN(millis(), grab_module.pending(), grab_module.which());
+            //     delay(200);
+            // }
             while(true){
                 // DEBUG_PRINTLN("next", i);
 
                 // auto pos = pos_arr[i];
-                auto pos = Vector3(Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t), LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1));
+                auto pos = Vector3(Vector2(0, 0.17_r) + Vector2(0.03_r, 0).rotated(t), LERP(0.12_r, 0.16_r, (sin(t) + 1) >> 1));
+                // DEBUG_PRINTLN("???");
+                // DEBUG_PRINTLN(pos.x, pos.y, pos.z);
 
                 grab_module.move(pos);
                 // grab_module.moveTo(pos);

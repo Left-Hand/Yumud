@@ -9,6 +9,7 @@
 #include "scara/scara.hpp"
 
 
+
 namespace gxm{
 
 class GrabModule;
@@ -55,7 +56,7 @@ public:
         INNER
     };
 
-    TranportStatus status_;
+    TranportStatus status_=  TranportStatus::AIR;
 
 
 protected:
@@ -82,14 +83,14 @@ public:
     // void moveXY(const Vector2 & pos);//只改变XY坐标
     void rapid(const Vector3 & pos);//改变所有坐标
     Vector3 getPos();
-    void air_take_air();
-    void air_give_air(const TrayIndex tray_index);
-    void air_inspect();
-    void take_place(const TrayIndex tray_index);
-    void give_place();
-    void to_air();
-    void press();
-    void release();
+    void meta_air_take_air();
+    void meta_air_give_air(const TrayIndex tray_index);
+    void meta_air_inspect();
+    void meta_take_place(const TrayIndex tray_index);
+    void meta_give_place();
+    void meta_to_air();
+    void meta_press();
+    void meta_release();
 
     Vector2 calculateTrayPos(const TrayIndex index);
 public:
@@ -108,6 +109,9 @@ public:
     
     bool reached();
     bool caught();
+
+    void press();
+    void release();
 
     const auto & config(){return config_;}
     void setStatus(const TranportStatus status){

@@ -49,6 +49,9 @@ void PCA9685::setPwm(uint8_t channel, uint16_t on, uint16_t off){
 void PCA9685::init(){
     mode1_reg = 0;
     writeReg(RegAddress::Mode1, mode1_reg);
+    for(size_t i = 0; i < 16; i++){
+        setPwm(i, 0, 0);
+    }
     delay(10);
 }
 

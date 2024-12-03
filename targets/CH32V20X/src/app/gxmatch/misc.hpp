@@ -39,13 +39,6 @@ struct JointConfig{
     real_t z_basis_radian;
 };
 
-struct SysConfig{
-    JointConfig joint_config;
-    Scara::Config scara_config;
-    ZAxisCross::Config zaxis_config;
-    GrabModule::Config grab_config;
-};
-
 
 
 }

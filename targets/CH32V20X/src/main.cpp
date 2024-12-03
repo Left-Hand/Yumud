@@ -91,7 +91,7 @@ int main(){
     // dma_tb(logger, dma1Ch1);
     // dma_tb(logger, UART7_RX_DMA_CH);
     // uart_tb(logger);
-
+    // pmw3901_main();
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
     // embd_main();

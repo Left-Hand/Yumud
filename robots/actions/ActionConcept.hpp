@@ -1,6 +1,8 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/debug/debug_inc.h"
+
 #include <functional>
 #include <queue>
 
@@ -15,9 +17,10 @@ public:
 protected:
     Callback func_ = nullptr;
     
-    size_t sustain = 0;
+    int sustain = 0;
     const size_t full;
     volatile bool executed = false;
+    volatile bool decreased_ = false;
 
     virtual void execute(){
         EXECUTE(func_);
@@ -41,7 +44,7 @@ protected:
     }
 
     void kill(){
-        sustain = 0;
+        decreased_ = true;
     }
 
     real_t time() const {
@@ -49,18 +52,13 @@ protected:
     }
 public:
     // Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
-    Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain(s), full(s){}
+    Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain(MIN(s, INT32_MAX)), full(sustain){}
 
     bool died() const{
-        return sustain <= 0;
+        // return sustain <= 0;
+        return decreased_;
     }
-    // bool is_valid() const {
-    //     return sustain > 0;
-    // }
 
-    // operator bool() const {
-    //     return is_valid();
-    // }
 
     Action& operator--() {
         if (sustain > 0) {
@@ -69,7 +67,7 @@ public:
         return *this;
     }
 
-    size_t remain() const {
+    int remain() const {
         return sustain;
     }
 
@@ -78,17 +76,25 @@ public:
         // if(once and executed) return;
         if(sustain > 0){
             execute();
+            // DEBUG_PRINTLN(sustain);
             if(sustain) sustain --;
+            if(sustain <= 0) decreased_ = true;
             executed = true;
         }
     }
+
+    virtual const char * name() = 0;
 };
+
+#define ACTION_NAME(nm)\
+const char * name() override {return #nm; }
 
 struct DelayAction:public Action{
 protected:
     void execute() override {}
 public:
     DelayAction( const uint dur):Action(dur, nullptr){}
+    ACTION_NAME(delay)
 };
 
 

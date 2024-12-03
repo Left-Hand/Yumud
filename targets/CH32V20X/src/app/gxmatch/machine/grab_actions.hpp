@@ -8,23 +8,26 @@
 namespace gxm::GrabActions{
 class PressAction:public GrabAction{
 public:
+    ACTION_NAME(press)
     PressAction(Inst & inst):
         GrabAction(inst.config().nozzle_sustain, [this](){
-            inst_.press();
+            inst_.meta_press();
         }, inst){};
 };
 
 
 class ReleaseAction:public GrabAction{
 public:
+    ACTION_NAME(release)
     ReleaseAction(Inst & inst):
         GrabAction(1, [this](){
-            inst_.release();
+            inst_.meta_release();
         }, inst){};
 };
 
 class TestAction:public GrabAction{
 public:
+    ACTION_NAME(test)
     TestAction(Inst & inst):
         GrabAction(200, [this](){
             DEBUG_PRINTLN(millis())
@@ -56,6 +59,7 @@ protected:
         dur_ = {solver_->period()};
     }
 public:
+    ACTION_NAME(move)
     MoveAction(Inst & inst, const Vector3 & to):
         GrabAction(UINT_MAX, [this](){
             if(this->first()){//将计算延迟到实际开始运行而不是构造时 确保起始位置正确
@@ -100,6 +104,7 @@ protected:
         dur_ = {solver_->period()};
     }
 public:
+    ACTION_NAME(movez)
     MoveZAction(Inst & inst, const real_t to):
         GrabAction(UINT_MAX, [this](){
             if(this->first()){//将计算延迟到实际开始运行而不是构造时 确保起始位置正确
@@ -145,6 +150,7 @@ protected:
         dur_ = {solver_->period()};
     }
 public:
+    ACTION_NAME(movexy)
     MoveXYAction(Inst & inst, const Vector2 to):
         GrabAction(UINT_MAX, [this](){
             if(this->first()){//将计算延迟到实际开始运行而不是构造时 确保起始位置正确
@@ -167,6 +173,7 @@ public:
 
 class ReachedAction:public GrabAction{
 public:
+    ACTION_NAME(reached)
     ReachedAction(Inst & inst):
         GrabAction(UINT_MAX, [this](){
             if(inst_.reached()) kill();
@@ -178,13 +185,19 @@ class RapidAction:public GrabAction{
 protected:
     Vector3 to_;
 public:
+    ACTION_NAME(rapid)
     RapidAction(Inst & inst, const Vector3 & to):
         GrabAction(UINT_MAX, [this](){
             if(first()){
                 inst_.rapid(to_);
             }
 
-            if(inst_.reached()) kill();
+            // DEBUG_PRINTLN("rapid sus", time());
+            // DEBUG_PRINTLN("rapid, re",/ inst_.reached());
+            if(inst_.reached()){
+                kill();
+                // DEBUG_PRINTLN("rapid killed", uint32_t(this));
+            }
         }, inst),
         to_(to)
         {};
@@ -197,6 +210,7 @@ protected:
 
     Status status_;
 public:
+    ACTION_NAME(status)
     StatusAction(Inst & inst, const Status status):
         GrabAction(1, [this](){
             inst_.setStatus(status_);

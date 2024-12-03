@@ -29,6 +29,7 @@ void Scara::release(){
 }
 
 bool Scara::reached(){
+    // DEBUG_PRINTLN(joint_l.reached(), joint_r.reached());
     return joint_l.reached() and joint_r.reached();
 }
 

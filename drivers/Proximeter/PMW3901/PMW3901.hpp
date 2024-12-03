@@ -7,10 +7,29 @@ namespace ymd::drivers{
 
 namespace internal{
 #pragma pack(push, 1)
+
+struct MotionReg:public Reg8{
+    using Reg8::operator=;
+
+    uint8_t frameFrom0:1;
+    uint8_t runMode:2;
+    const uint8_t __resv1__:1 = 0;
+    uint8_t rawFrom0:1;
+    uint8_t __resv2__:2;
+    uint8_t occured:1;
+};
+
+struct DeltaReg:public Reg16{
+    using Reg16::operator =;
+
+    uint16_t :16;
+};
+
 struct PMW3901_Data {
-uint8_t motion;
-int16_t dx;
-int16_t dy;
+MotionReg motion;
+uint8_t observation;
+DeltaReg dx;
+DeltaReg dy;
 };
 #pragma pack(pop)
 }
@@ -18,14 +37,17 @@ int16_t dy;
 class PMW3901:public internal::PMW3901_Data{
 protected:
     SpiDrv spi_drv_;
-    real_t x;
-    real_t y;
+    real_t x_cm;
+    real_t y_cm;
 
     bool assertReg(const uint8_t command, const uint8_t data);
     void writeReg(const uint8_t command, const uint8_t data);
     void readReg(const uint8_t command, uint8_t & data);
+    void readMulti(const uint8_t commnad, uint8_t * data, const size_t len);
 
-    void updateData();
+    void readDataSlow();
+    void readDataBurst();
+    void readData();
 public:
     PMW3901(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     PMW3901(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
@@ -36,11 +58,11 @@ public:
     void update();
     void update(const real_t rad);
     auto getMotion(){
-        return std::make_tuple(dx, dy);
+        return std::make_tuple(int16_t(dx), int16_t(dy));
     }
 
     auto getPosition(){
-        return std::make_tuple(x, y);
+        return std::make_tuple(x_cm * real_t(0.01), y_cm * real_t(0.01));
     }
 
     void setLed(bool on);

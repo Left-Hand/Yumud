@@ -16,12 +16,22 @@ void GrabModule::rapid(const Vector3 & pos){
     zaxis_.setDistance(pos.z + config_.z_bias);
 }
 
-void GrabModule::press(){
+void GrabModule::meta_press(){
     this->scara_.press();
 }
 
-void GrabModule::release(){
+void GrabModule::meta_release(){
     this->scara_.release();
+}
+
+void GrabModule::press(){
+    auto & self = *this;
+    self << new PressAction(self);
+}
+
+void GrabModule::release(){
+    auto & self = *this;
+    self << new ReleaseAction(self);
 }
 
 void GrabModule::move(const Vector3 & pos){
@@ -37,7 +47,7 @@ Vector3 GrabModule::getPos(){
 }
 
 
-void GrabModule::air_take_air(){
+void GrabModule::meta_air_take_air(){
     auto & self = *this;
     self  
         <<  new MoveXYAction(self, config_.catch_xy)
@@ -48,7 +58,7 @@ void GrabModule::air_take_air(){
     ;
 }
 
-void GrabModule::air_give_air(const TrayIndex tray_index){
+void GrabModule::meta_air_give_air(const TrayIndex tray_index){
     auto & self = *this;
     self  
         <<  new MoveXYAction(self, calculateTrayPos(tray_index))
@@ -59,7 +69,7 @@ void GrabModule::air_give_air(const TrayIndex tray_index){
     ;
 }
 
-void GrabModule::to_air(){
+void GrabModule::meta_to_air(){
     auto & self = *this;
     self  
         <<  new MoveZAction(self, config_.free_z)
@@ -67,7 +77,7 @@ void GrabModule::to_air(){
     ;
 }
 
-void GrabModule::air_inspect(){
+void GrabModule::meta_air_inspect(){
     auto & self = *this;
     self  
         <<  new MoveZAction(self, config_.inspect_xyz.z)
@@ -76,7 +86,7 @@ void GrabModule::air_inspect(){
     ;
 }
 
-void GrabModule::take_place(const TrayIndex tray_index){
+void GrabModule::meta_take_place(const TrayIndex tray_index){
     auto & self = *this;
     self  
         <<  new MoveXYAction(self, calculateTrayPos(tray_index))
@@ -85,7 +95,7 @@ void GrabModule::take_place(const TrayIndex tray_index){
         <<  new StatusAction(self, TranportStatus::INNER)
     ;
 }
-void GrabModule::give_place(){
+void GrabModule::meta_give_place(){
     auto & self = *this;
     self  
         <<  new MoveXYAction(self, config_.catch_xy)
@@ -99,9 +109,9 @@ void GrabModule::give_place(){
 void GrabModule::inspect(){
     switch(status_){
         case TranportStatus::INNER:
-            to_air();
+            meta_to_air();
         default:
-            air_inspect();
+            meta_air_inspect();
     }
 }
 
@@ -109,10 +119,10 @@ void GrabModule::take(const TrayIndex index){
     switch(status_){
         case TranportStatus::INNER:
             //如果当前在内部 需要先升空再取上
-            to_air();
-            air_take_air();
+            meta_to_air();
+            meta_air_take_air();
         default:
-            take_place(index);
+            meta_take_place(index);
     }
 }
 
@@ -122,10 +132,10 @@ void GrabModule::give(const TrayIndex index){
     switch(status_){
         case TranportStatus::OUTER:
             //如果当前在外部 需要先升空再取上
-            to_air();
-            air_give_air(index);
+            meta_to_air();
+            meta_air_give_air(index);
         default:
-            give_place();
+            meta_give_place();
     }
 }
 
@@ -144,6 +154,7 @@ void GrabModule::test(){
 
 bool GrabModule::reached(){
     return scara_.reached() and zaxis_.reached();
+    // return getPos
 }
 
 bool GrabModule::caught(){
@@ -154,8 +165,9 @@ void GrabModule::init(){
     auto & self = *this;
 
     // self.rapid(Vector3(config_.inspect_xy);
-    self << RapidAction(self, config_.home_xyz);
-    self << DelayAction(3000);
+    self << new RapidAction(self, config_.home_xyz);
+    self << new DelayAction(3000);
+    self << new StatusAction(self, TranportStatus::AIR);
 }
 
 

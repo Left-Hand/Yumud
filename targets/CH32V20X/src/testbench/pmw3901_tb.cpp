@@ -10,25 +10,30 @@ void pmw3901_main(){
 
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
-    // SpiSw spisw {SPI1_SCLK_GPIO, SPI1_MOSI_GPIO, SPI1_MISO_GPIO};
+    DEBUG_PRINTLN(std::setprecision(4));
 
     auto & spi = spi1;
 
 
     spi.init(9_MHz);
-    spi.bindCsPin(portA[15], 0);
+    spi.bindCsPin(portD[5], 0);
 
     PMW3901 pmw{spi, 0};
     pmw.init();
     // pmw.update();
     
-    Vector2_t<int16_t> pos;
+    // Vector2_t<int16_t> pos;
     while(true){
-        // pmw.verify();
+
+        // pos += Vector2(pmw.getPosition());
+        // auto pos = Vector2(pmw.getMotion());
+
+        auto begin = micros();
         pmw.update();
-        pos += Vector2(pmw.getMotion());
+        auto pos = Vector2(pmw.getPosition());
         auto [x,y] = pos;
-        DEBUG_PRINTLN(x,y);
-        delayMicroseconds(5000);
+        DEBUG_PRINTLN(x,y, micros() - begin);
+        // delayMicroseconds(5000);
+        delay(5);
     }
 }
