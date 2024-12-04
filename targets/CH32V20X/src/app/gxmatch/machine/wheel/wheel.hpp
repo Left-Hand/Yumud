@@ -14,8 +14,8 @@ public:
         real_t max_aps;
     };
     
-protected:
     using Motor = ymd::foc::FOCMotorConcept;
+protected:
 
     // const FocMotor & config_;
 private:
@@ -50,6 +50,8 @@ public:
 
     // real_t getSpeed();
     real_t getPosition();
+
+    auto & motor() {return motor_;}
 };
 
 

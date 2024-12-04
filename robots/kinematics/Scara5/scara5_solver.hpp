@@ -9,8 +9,8 @@ class Scara5Solver_t{
 public:
     struct Config{
         const T should_length_meter;
-        const T forearm_length_meter;
         const T upperarm_length_meter;
+        const T forearm_length_meter;
     };
 
 protected:

@@ -32,21 +32,51 @@ bool ChassisModule::arrived(){
     return false;
 }
 
-void ChassisModule::rapid(const Ray & ray){
-
+void ChassisModule::closeloop(){
+    auto && pos_err = expect_pos - pos();
+    auto && rad_err = expect_rad - rad();
+    auto && delta = solver_.inverse(pos_err, rad_err);
+    wheels_.setDelta(delta);
 }
 
 
-void ChassisModule::rapid_move(const Vector2 & pos){
-
+void ChassisModule::meta_rapid(const Ray & ray){
+    meta_rapid_shift(ray.org);
+    meta_rapid_spin(ray.rad);
 }
 
-void ChassisModule::rapid_spin(const real_t & rad){
-
+void ChassisModule::meta_rapid_shift(const Vector2 & pos){
+    expect_pos = pos;
 }
+
+void ChassisModule::meta_rapid_spin(const real_t rad){
+    expect_rad = rad;
+}
+
+
+Vector2 ChassisModule::pos(){
+    TODO();
+
+    return {0,0};
+}
+
+real_t ChassisModule::rad(){
+    TODO();
+
+    return 0;
+}
+
+Ray ChassisModule::gest(){
+    return {this->pos(), this->rad()};
+}
+
 
 Ray ChassisModule::feedback(){
     return {0,0,0};
+}
+
+void ChassisModule::tick(){
+    wheels_.update();
 }
 
 }

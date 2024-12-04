@@ -135,7 +135,8 @@ void FOCStepper::tick(){
 void FOCStepper::run(){
     panel_led.run();
     
-    if(can_protocol) can_protocol->update();
+    auto & can = can_protocol->can();
+    if(can_protocol) can_protocol->update(can.read());
     if(ascii_protocol) ascii_protocol->update();
 
     red_pwm.tick();

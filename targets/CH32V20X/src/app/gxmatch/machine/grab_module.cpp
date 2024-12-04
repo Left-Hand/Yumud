@@ -10,6 +10,7 @@ void GrabModule::goHome(){
 void GrabModule::rapid(const Vector3 & pos){
     if(config_.safe_aabb.has_point(pos) == false){
         DEBUG_PRINTLN("out of bound", pos);
+        return;
     }
 
     scara_.moveXY(pos.xy());
@@ -52,6 +53,7 @@ void GrabModule::meta_air_take_air(){
     self  
         <<  new MoveXYAction(self, config_.catch_xy)
         <<  new MoveZAction(self, config_.catch_z)
+        << new DebugAction("press??")
         <<  new PressAction(self)
         <<  new MoveZAction(self, config_.free_z)
         <<  new StatusAction(self, TranportStatus::AIR)
@@ -63,6 +65,7 @@ void GrabModule::meta_air_give_air(const TrayIndex tray_index){
     self  
         <<  new MoveXYAction(self, calculateTrayPos(tray_index))
         <<  new MoveZAction(self, config_.tray_z)
+        << new DebugAction("press??")
         <<  new PressAction(self)
         <<  new MoveZAction(self, config_.free_z)
         <<  new StatusAction(self, TranportStatus::AIR)
@@ -89,6 +92,8 @@ void GrabModule::meta_air_inspect(){
 void GrabModule::meta_take_place(const TrayIndex tray_index){
     auto & self = *this;
     self  
+        <<  new PressAction(self)
+        <<  new MoveZAction(self, config_.free_z)
         <<  new MoveXYAction(self, calculateTrayPos(tray_index))
         <<  new MoveZAction(self, config_.tray_z)
         <<  new ReleaseAction(self)
@@ -98,8 +103,11 @@ void GrabModule::meta_take_place(const TrayIndex tray_index){
 void GrabModule::meta_give_place(){
     auto & self = *this;
     self  
+        <<  new PressAction(self)
+        <<  new MoveZAction(self, config_.free_z)
         <<  new MoveXYAction(self, config_.catch_xy)
         <<  new MoveZAction(self, config_.catch_z)
+        // << new DebugAction("catch done" )
         <<  new ReleaseAction(self)
         <<  new StatusAction(self, TranportStatus::OUTER)
     ;
@@ -166,7 +174,7 @@ void GrabModule::init(){
 
     // self.rapid(Vector3(config_.inspect_xy);
     self << new RapidAction(self, config_.home_xyz);
-    self << new DelayAction(3000);
+    self << new DelayAction(1000);
     self << new StatusAction(self, TranportStatus::AIR);
 }
 

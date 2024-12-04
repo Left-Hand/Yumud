@@ -5,22 +5,25 @@ using namespace gxm;
 SysConfig gxm::create_default_config(){
     return SysConfig{
         .joint_config = {
-            .max_rad_delta = real_t(0.07),
-            .left_basis_radian = real_t(-PI/2 + 0.33),
+            .max_rad_delta = real_t(0.03),
+            // .left_basis_radian = real_t(-PI/2 + 0.2),
+            .left_basis_radian = real_t(-PI/2 + 0.34),
             // .right_basis_radian = real_t(PI/2 - 0.10),
             // .right_basis_radian = real_t(PI/2 - 0.20),
             // .right_basis_radian = real_t(PI/2 + 0.3),
             // .right_basis_radian = real_t(PI/2 - 0.2),
-            .right_basis_radian = real_t(PI/2 + 0.5),
+            // .right_basis_radian = real_t(PI/2 + 0.16),
+            .right_basis_radian = real_t(PI/2 - 0.01),
             // .right_basis_radian = real_t(0),
-            .z_basis_radian = real_t(PI/2 + 0.17),
+            // .z_basis_radian = real_t(PI/2 + 0.17),
+            .z_basis_radian = real_t(PI/2 + 0.25),
         },
 
         .scara_config = {
             .solver_config = {
                 .should_length_meter = real_t(0.08),
-                .forearm_length_meter = real_t(0.10),
-                .upperarm_length_meter = real_t(0.18),
+                .upperarm_length_meter = real_t(0.10),
+                .forearm_length_meter = real_t(0.18),
             },
 
             .claw_config = {
@@ -42,8 +45,8 @@ SysConfig gxm::create_default_config(){
             // .basis_radian = real_t(0),
             .solver_config = CrossSolver::Config{
                 .xoffs_length_meter = 0.042_r,
-                .forearm_length_meter = 0.082_r,
-                .upperarm_length_meter = 0.1_r
+                .upperarm_length_meter = 0.082_r,
+                .forearm_length_meter = 0.1_r
             }
             // //1m / (3cm * PI)
             // .meter_to_turns_scaler = real_t(1 / (0.03 * PI)),
@@ -54,55 +57,72 @@ SysConfig gxm::create_default_config(){
 
         .grab_config = {
             .tray_xy = {
-                Vector2{-0.12_r   , 0.20_r},
-                Vector2{0       , 0.20_r},
-                Vector2{0.12_r    , 0.20_r}
+                Vector2{-0.098_r    ,   0.145_r},
+                Vector2{-0.004_r     ,   0.145_r},
+                Vector2{0.092_r     ,   0.145_r}
             },
 
-            .tray_z = 0.10_r,
+            .tray_z = 0.14_r,
 
-            .free_z = 0.14_r,
+            .free_z = 0.163_r,
 
-            .catch_z = 0.06_r,
+            .catch_z = 0.054_r,
 
-            .z_bias = 0.005_r,
+            .z_bias = 0.00005_r,
         
-            .catch_xy = Vector2{0, 0.15_r},
+            .catch_xy = Vector2{0, 0.26_r},
 
-            .inspect_xyz = Vector3{0, 0.12_r, 0.15_r},
+            .inspect_xyz = Vector3{0, 0.24_r, 0.16_r},
             
-            .home_xyz = Vector3(0, 0.12_r, 0.15_r),
+            .home_xyz = Vector3(0, 0.24_r, 0.16_r),
 
             .safe_aabb = AABB{
                 Vector3{-0.13_r, 0.12_r, 0.0_r},
-                Vector3{0.26_r, 0.14_r, 0.17_r}
+                Vector3{0.26_r, 0.15_r, 0.17_r}
             },
 
-            .max_spd = 0.2_r,
-            .max_acc = 0.6_r,
+            .max_spd = 0.14_r,
+            .max_acc = 0.5_r,
 
+            .max_z_spd = 0.04_r,
+            .max_z_acc = 0.04_r,
             .nozzle_sustain = 500
         },
 
-        .wheel_config = {
-            .wheel_radius = 0.06_r,//轮子直径
-            .max_tps = 1,//最大每秒转圈数
-            .max_aps = 1,//最大每秒圈速加速度
+
+        .wheels_config = {
+            .wheel_config = {
+                .wheel_radius = 0.06_r,//轮子直径
+                .max_tps = 1,//最大每秒转圈数
+                .max_aps = 1,//最大每秒圈速加速度
+            },
         },
 
-        .wheels_config = {},
+        .chassis_config = {
+            .solver_config = {
+                .chassis_width_meter = 0.2_r,
+                .chassis_height_meter = 0.25_r
+            },
 
-        .est_config = {
-            .calibrate_times = 1,//校准次数
-            .force_calibrate = false,//强制校准而不是使用先验偏置
-            .pre_bias = {
+            .est_config = {
+                .calibrate_times = 1,//校准次数
+                .force_calibrate = false,//强制校准而不是使用先验偏置
+                .pre_bias = {
 
-            },//偏置 空为未给
+                },//偏置 空为未给
 
-            .rot_obs_config = {//转向观测器配置
-                .kq = 0.5_r,
-                .ko = 0.5_r,
-            }
+                .rot_obs_config = {//转向观测器配置
+                    .kq = 0.5_r,
+                    .ko = 0.5_r,
+                }
+            },
+
+            .max_acc = 1,
+            .max_spd = 1,
+            
+            .max_agr = 1,
+            .max_spr = 1
         }
+
     };
 }

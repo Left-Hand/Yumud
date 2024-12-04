@@ -7,9 +7,9 @@ struct SysConfig{
     Scara::Config scara_config;
     ZAxisCross::Config zaxis_config;
     GrabModule::Config grab_config;
-    Wheel::Config wheel_config;
     Wheels::Config wheels_config;
-    Estimator::Config est_config;
+    ChassisModule::Config chassis_config;
+    // Estimator::Config est_config;
 };
 
 

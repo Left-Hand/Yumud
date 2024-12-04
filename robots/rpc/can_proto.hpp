@@ -17,24 +17,32 @@ public:
     using E_2 = std::tuple<E, E>;
     using E_3 = std::tuple<bf16, bf16, bf16>;
     using E_4 = std::tuple<bf16, bf16, bf16, bf16>;
+
 public:
-    Can & can;
-    
-    CanProtocolConcept(Can & _can):can(_can){;}
+    Can & can_;
+    uint8_t node_id_;
+
+    CanProtocolConcept(
+        Can & _can, const uint8_t node_id):
+        can_(_can), node_id_(node_id){;}
 
     virtual void parseCanmsg(const CanMsg & msg) = 0;
 
 
-    void update(){
-        if(can.available()){
-            const CanMsg & msg = can.read();
+    bool update(const CanMsg & msg){
+        // if(can_.available()){
+            // const CanMsg msg = can_.read();
             // uint8_t id = msg.id() >> 7;
             // if(id == 0 || id == uint8_t(node_id)){
-            parseCanmsg(msg);
-            // }
-        }
+
+        if(msg.id() >> 7 == node_id_) return false;
+        parseCanmsg(msg);
+        return true;
     }
 
+    Can & can(){
+        return can_;
+    }
 private:
     void collect(){
 

@@ -19,7 +19,7 @@ protected:
 protected:
 
     void parseCanmsg(const CanMsg & msg) override;
-
+    
     IOStream & logger;
     
     using CanProtocolConcept::E;
@@ -31,7 +31,7 @@ public:
     RemoteFOCMotor(RemoteFOCMotor && other) = delete;
 
     RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
-            FOCMotorConcept(_id), CanProtocolConcept(_can), logger(_logger){;}
+            FOCMotorConcept(_id), CanProtocolConcept(_can, _id), logger(_logger){;}
 
             
     void setTargetCurrent(const real_t current);

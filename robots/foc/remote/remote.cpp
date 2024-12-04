@@ -14,7 +14,7 @@ using RunStatus = MotorUtils::RunStatus;
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, std::make_tuple(__VA_ARGS__));\
 DEBUG_MSG(msg);\
-can.write(msg);\
+can_.write(msg);\
 // while(can.pending()){;};
 
 void RemoteFOCMotor::setTargetVector(const real_t _pos){POST(Command::SET_TRG_VECT, E(meta.pos_limit.clamp(_pos)));}

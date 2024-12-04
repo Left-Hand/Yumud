@@ -21,4 +21,4 @@
 
 
 
-#define TODO(str) do{PANIC("todo", str)}while(false);
+#define TODO(...) do{PANIC("todo", ##__VA_ARGS__)}while(false);

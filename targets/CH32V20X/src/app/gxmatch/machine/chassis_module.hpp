@@ -61,8 +61,7 @@ public:
 
     struct Config{
         Mecanum4Solver::Config solver_config;
-        // Wheel::Config wheel_config;
-        real_t wheel_radius_;
+        Estimator::Config est_config;
 
         real_t max_acc;
         real_t max_spd;
@@ -70,21 +69,44 @@ public:
         real_t max_agr;
         real_t max_spr;
     };
+
+    class FeedBacker{
+    public:
+        virtual Vector2 pos() = 0;
+        virtual real_t rad() = 0;
+    };
     
+
+    class FeedBackerOpenLoop:public FeedBacker{
+
+    };
+
+    class FeedBackerCloseLoop:public FeedBacker{
+
+    };
 
     const Config & config_;
     Wheels wheels_;
-
     Mecanum4Solver solver_{config_.solver_config};
-    
+    // Estimator est_{config_.est_config};
+    Estimator & est_;
 protected:
 
+    Vector2 expect_pos;
+    real_t expect_rad;
+    void closeloop();
 public:
-    ChassisModule(const Config & config, const Wheels & wheels):config_(config), wheels_(wheels) {}
+    ChassisModule(const Config & config, 
+            const Wheels & wheels,
+            Estimator & est
+        ):
+        config_(config), 
+        wheels_(wheels),
+        est_(est){}
 
-    void rapid(const Ray & ray);
-    void rapid_move(const Vector2 & pos);
-    void rapid_spin(const real_t & rad);
+    void meta_rapid(const Ray & ray);
+    void meta_rapid_shift(const Vector2 & pos);
+    void meta_rapid_spin(const real_t rad);
 
     void positionTrim(const Vector2 & trim);
     void rotationTrim(const real_t raderr);
@@ -94,6 +116,12 @@ public:
     void calibrateRotation(const real_t rad);
 
     void test();
+    void tick();
+
+
+    Vector2 pos();
+    real_t rad();
+    Ray gest();
     bool arrived();
 
     Ray feedback();

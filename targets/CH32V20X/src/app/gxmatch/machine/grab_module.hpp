@@ -47,6 +47,9 @@ public:
         real_t max_spd;
         real_t max_acc;
 
+        real_t max_z_spd;
+        real_t max_z_acc;
+
         uint nozzle_sustain;
     };
 

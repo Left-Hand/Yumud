@@ -8,13 +8,13 @@ namespace gxm{
 
 namespace ChassisActions{
 
-class RapidMoveAction:public ChassisAction{
+class RapidShiftAction:public ChassisAction{
 protected:
     Vector2 dest_;
 public:
-    RapidMoveAction(Inst & inst, const Vector2 & pos):
+    RapidShiftAction(Inst & inst, const Vector2 & pos):
         ChassisAction(UINT_MAX, [this](){
-            inst_.rapid_move(dest_);
+            inst_.meta_rapid_shift(dest_);
             if(inst_.arrived()){
                 this->kill();
             }
@@ -28,7 +28,7 @@ protected:
 public:
     RapidSpinAction(Inst & inst, const real_t rad):
         ChassisAction(UINT_MAX, [this](){
-            inst_.rapid_spin(dest_);
+            inst_.meta_rapid_spin(dest_);
             if(inst_.arrived()){
                 this->kill();
             }
@@ -37,7 +37,7 @@ public:
 };
 
 
-class MoveAction:public ChassisAction{
+class ShiftAction:public ChassisAction{
 protected:
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
     std::optional<TrapezoidSolver> solver_ = std::nullopt;
@@ -60,7 +60,7 @@ protected:
         );
     }
 public:
-    MoveAction(Inst & inst, const Vector2 & pos):
+    ShiftAction(Inst & inst, const Vector2 & pos):
         ChassisAction(UINT_MAX, [this](){
             if(first()){
                 init();
@@ -70,7 +70,7 @@ public:
             }
 
             auto time = this->time();
-            inst_.rapid_move(from_ + norm_ * solver_->forward(time));
+            inst_.meta_rapid_shift(from_ + norm_ * solver_->forward(time));
 
         }, inst),
         dest_(pos){};
@@ -100,7 +100,7 @@ public:
             }
 
             auto time = this->time();
-            inst_.rapid_spin(current_ + solver_->forward(time));
+            inst_.meta_rapid_spin(current_ + solver_->forward(time));
             if(inst_.arrived()){
                 this->kill();
             }

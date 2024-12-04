@@ -11,7 +11,10 @@ public:
     ACTION_NAME(press)
     PressAction(Inst & inst):
         GrabAction(inst.config().nozzle_sustain, [this](){
-            inst_.meta_press();
+            if(first()){
+                inst_.meta_press();
+                // DEBUG_PRINTLN("[presss]")
+            }
         }, inst){};
 };
 
@@ -20,8 +23,11 @@ class ReleaseAction:public GrabAction{
 public:
     ACTION_NAME(release)
     ReleaseAction(Inst & inst):
-        GrabAction(1, [this](){
-            inst_.meta_release();
+        GrabAction(inst.config().nozzle_sustain, [this](){
+            if(first()){
+                inst_.meta_release();
+                // DEBUG_PRINTLN("[reasss]")
+            }
         }, inst){};
 };
 
@@ -93,11 +99,14 @@ protected:
 
     void init(const Vector3 & from){
         from_ = (from);
-        dist_ = (to_ - from.z);
-
+        dist_ = to_ - from.z;
+        // dist_ = ABS(to - from);
+        
         solver_.emplace(TrapezoidSolver{
-            inst_.config().max_acc, 
-            inst_.config().max_spd,
+            inst_.config().max_z_acc, 
+            inst_.config().max_z_spd,
+            // 0.01_r,
+            // 0.01_r,
             dist_
         });
 
@@ -116,7 +125,7 @@ public:
                 this->kill();
             }
             auto dest_pos = Vector3(from_.xy(), from_.z + solver_->forward(time));
-            // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time, dur_);
+            // DEBUG_PRINTLN(dest_pos.x, dest_pos.y, dest_pos.z, time, dist_);
             inst_.rapid(dest_pos);
             // auto pos = inst_.getPos();
             // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time);
@@ -161,8 +170,8 @@ public:
             if(time > dur_){
                 this->kill();
             }
-            auto dest_pos = Vector3(from_.xy(), from_.z + solver_->forward(time));
-            // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time, dur_);
+            auto dest_pos = Vector3(from_.xy() + norm_ * solver_->forward(time), from_.z);
+            // DEBUG_PRINTLN(dest_pos.x, dest_pos.y, dest_pos.z);
             inst_.rapid(dest_pos);
             // auto pos = inst_.getPos();
             // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time);
@@ -192,7 +201,7 @@ public:
                 inst_.rapid(to_);
             }
 
-            // DEBUG_PRINTLN("rapid sus", time());
+            // DEBUG_PRINTLN("rapid", to_);
             // DEBUG_PRINTLN("rapid, re",/ inst_.reached());
             if(inst_.reached()){
                 kill();

@@ -114,6 +114,10 @@ protected:
     ComplementaryFilter rot_obs_{config_.rot_obs_config};
 
 public:
+    Estimator(const Estimator & other) = delete;
+    Estimator(Estimator && other) = delete;
+
+
     Estimator(const Config & config, 
             Axis6 & acc_gyr_sensor, 
             Magnetometer & mag_sensor,

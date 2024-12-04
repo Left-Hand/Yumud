@@ -7,6 +7,7 @@
 #include <queue>
 
 #include "sys/math/real.hpp"
+#include "sys/stream/StringStream.hpp"
 
 
 namespace ymd{
@@ -96,6 +97,35 @@ public:
     DelayAction( const uint dur):Action(dur, nullptr){}
     ACTION_NAME(delay)
 };
+
+struct DebugAction:public Action{
+protected:
+    // String str_;
+    void execute() override {
+        DEBUG_PRINTLN(String(ss_));
+    }
+
+    StringStream ss_;
+public:
+    DebugAction(const char * str):
+        Action(1, nullptr){
+            ss_ << str;
+        }
+
+    DebugAction(const String & str):
+        Action(1, nullptr){
+            ss_ << str;
+        }
+
+    template <typename... Args>
+    DebugAction(Args&&... args):
+        Action(1, nullptr){
+        (this->ss_ << ... << args);
+    }
+
+    ACTION_NAME(debug)
+};
+
 
 
 

@@ -1,5 +1,6 @@
 #include "misc.hpp"
 #include "config.hpp"
+#include "async/CanMaster.hpp"
 
 namespace gxm{
 
@@ -130,6 +131,12 @@ void host_main(){
 
         MG995 servo_left{pca[0]};
         MG995 servo_right{pca[1]};
+
+        Nozzle nozzle{
+            config.scara_config.nozzle_config, 
+            pca[3]
+        };
+
         SG90 claw_servo{pca[5]};
         SG90 servo_cross{pca[15]};
 
@@ -171,10 +178,7 @@ void host_main(){
             claw_servo
         };
         
-        Nozzle nozzle{
-            config.scara_config.nozzle_config, 
-            pca[3]
-        };
+
 
         Scara scara{
             config.scara_config, {
@@ -224,12 +228,20 @@ void host_main(){
         //     // pca.v
         // }
 
-        // auto transz_rad = [](const real_t x) -> real_t{
-        //     return real_t(PI - x);
-        // }
-
         // joint_left.setRadian(real_t(PI/2));
         // joint_right.setRadian(real_t(PI/2));
+        // while(true);
+
+        // test_servo(servo_cross, [](const real_t time) -> real_t{
+        //     // return real_t(PI);
+        //     return real_t(1);
+        // });
+        // test_joint(joint_z, [](const real_t time) -> real_t{
+        //     return  0;
+        // });
+
+        // joint_left.setRadian(real_t(PI));
+        // joint_right.setRadian(real_t(0));
         // while(true);
         // test_joint(joint_left, [](const real_t time)->real_t{
         //     // return real_t(PI);
@@ -325,12 +337,18 @@ void host_main(){
             // while(true);
         }
 
-        // if(false){//测试升降
-        if(true){//测试升降
+        if(false){//测试升降
+        // if(true){//测试升降
             scara.press();
             CrossSolver cross_solver{config.zaxis_config.solver_config};
             while(true){
-                auto height = LERP(0, 0.16_r, (sin(t) + 1) >> 1);
+
+
+                // auto height = real_t(0.02);//catch_height
+                // auto height = real_t(0.163);//free_height
+                auto height = real_t(0.14);//tray_height
+
+
                 // auto height = LERP(0, 0, (sin(t) + 1) >> 1);
                 auto inv_rad = cross_solver.inverse(height);
                 // auto f_height = cross_solver.forward(inv_rad);
@@ -343,18 +361,23 @@ void host_main(){
 
 
         if(false){//测试xyz
+        // if(true){//测试xyz
             Scara5Solver solver{config.scara_config.solver_config};
             CrossSolver cross_solver{config.zaxis_config.solver_config};
             while(true){
-                auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t);
-                // auto pos = Vector2(0, 0.19_r) + Vector2(0.0_r, 0).rotated(t);
+                // auto pos = Vector2(-0.007_r, 0.144_r);//center
+                auto pos = Vector2(-0.101_r, 0.144_r);//left
+                // auto pos = Vector2(0.085_r, 0.144_r);//right
+                // auto pos = Vector2(0.0_r, 0.245_r);//inspect
+                // auto pos = Vector2(0.0_r, 0.265_r);//catch
+
                 auto inv_rad = solver.inverse(pos);
 
                 auto [rad_left, rad_right] = inv_rad;
                 joint_left.setRadian(rad_left);
                 joint_right.setRadian(rad_right);
 
-                auto height = LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1);
+                auto height = LERP(0.14_r, 0.14_r, (sin(t) + 1) >> 1);
                 auto inv_radz = cross_solver.inverse(height);
 
                 // DEBUG_PRINTLN(joint_left.getRadian(), joint_right.getRadian(), joint_z.getRadian());
@@ -380,43 +403,40 @@ void host_main(){
         if(true){//测试
 
             grab_module.init();
-            ;
             // getline(logger);
-            size_t i = 0;
-            scexpr auto pos_arr = std::to_array<Vector3>({
-                {0.02_r, 0.2_r, 0.12_r},
-                {-0.04_r, 0.2_r, 0.12_r},
-                {-0.09_r, 0.2_r, 0.12_r},
-            });
+            // size_t i = 0;
+            // scexpr auto pos_arr = std::to_array<Vector3>({
+            //     {0.02_r, 0.2_r, 0.12_r},
+            //     {-0.04_r, 0.2_r, 0.12_r},
+            //     {-0.09_r, 0.2_r, 0.12_r},
+            // });
 
-            for(const auto & pos : pos_arr){
-                grab_module.move(pos);
-                // DEBUG_PRINTLN(pos)
-                grab_module.press();
-                grab_module.release();
-                // grab_module << new DelayAction(1000);
-            }
+            // for(const auto & pos : pos_arr){
+            //     grab_module.move(pos);
+            //     grab_module.press();
+            //     grab_module.release();
+            // }
+
+            grab_module.inspect();
+            // grab_module.take(TrayIndex::Left);
+            // for(size_t i = 0; i < 10; i++){
+            //     grab_module.press();
+            //     grab_module << new DebugAction("pressed");
+            //     grab_module.release();
+            //     grab_module << new DebugAction("released");
+            // }
+            // grab_module.take(TrayIndex::Center);
+            // grab_module.give(TrayIndex::Center);
+            // grab_module.take(TrayIndex::Left);
+            // grab_module.give(TrayIndex::Left);
+            grab_module.take(TrayIndex::Right);
+            grab_module.give(TrayIndex::Right);
             // while(true){
             //     // DEBUG_PRINTLN(grab_module.pending());
             //     DEBUG_PRINTLN(millis(), grab_module.pending(), grab_module.which());
             //     delay(200);
             // }
-            while(true){
-                // DEBUG_PRINTLN("next", i);
-
-                // auto pos = pos_arr[i];
-                auto pos = Vector3(Vector2(0, 0.17_r) + Vector2(0.03_r, 0).rotated(t), LERP(0.12_r, 0.16_r, (sin(t) + 1) >> 1));
-                // DEBUG_PRINTLN("???");
-                // DEBUG_PRINTLN(pos.x, pos.y, pos.z);
-
-                grab_module.move(pos);
-                // grab_module.moveTo(pos);
-
-
-                getline(logger);
-                
-                i = (i + 1)%pos_arr.size();
-            }
+            while(true);
         }
 
 
@@ -535,9 +555,10 @@ void host_main(){
                 }
             }
 
+            auto & est_config = config.chassis_config.est_config;
             if(false){//测试状态观测器
                 Estimator est_ = {
-                    config.est_config,
+                    est_config,
                     acc_gyr_sensor_,
                     mag_sensor_,
                     flow_sensor_
@@ -588,10 +609,10 @@ void host_main(){
             }
         }
         
-        auto & wheel_config = config.wheel_config;
+        auto & wheel_config = config.wheels_config.wheel_config;
 
         if(true){//测试单个轮子
-            Wheel wheel = {config.wheel_config, stp};
+            Wheel wheel = {wheel_config, stp};
             wheel.setPosition(0.2_r * sin(t));
         }
 
@@ -603,12 +624,6 @@ void host_main(){
                 {logger, can, 4},
             });
 
-            auto wheel_arr = std::array<Wheel, 4>({
-                Wheel{wheel_config, stps[0]},
-                Wheel{wheel_config, stps[1]},
-                Wheel{wheel_config, stps[2]},
-                Wheel{wheel_config, stps[3]}
-            });
             // RemoteFOCMotor stp1 = {logger, can, 1}; 
             // RemoteFOCMotor stp2 = {logger, can, 2}; 
             // RemoteFOCMotor stp3 = {logger, can, 3}; 
@@ -618,13 +633,41 @@ void host_main(){
             Wheels wheels = {
                 config.wheels_config,
                 // stp1, stp2, stp3, stp4
-                {wheel_arr[0], wheel_arr[1], wheel_arr[2], wheel_arr[3]}
+                {
+                    stps[0],
+                    stps[1],
+                    stps[2],
+                    stps[3]
+                }
             };
             
             while(true){
                 scexpr real_t delta = {0.001};
                 wheels.forward({delta, delta, delta, delta});
                 delay(5);
+            }
+
+            if(true){
+                auto flow_sensor_{create_pmw()};
+                init_pmw(flow_sensor_);
+
+                MPU6050 acc_gyr_sensor_{i2c};
+                acc_gyr_sensor_.init();
+
+                QMC5883L mag_sensor_{i2c};
+                mag_sensor_.init();
+                
+                Estimator est = {
+                    config.chassis_config.est_config,
+                    acc_gyr_sensor_,
+                    mag_sensor_,
+                    flow_sensor_        
+                };
+
+                ChassisModule chassis_module {
+                    config.chassis_config, 
+                    wheels, est};
+                
             }
         }
     }
