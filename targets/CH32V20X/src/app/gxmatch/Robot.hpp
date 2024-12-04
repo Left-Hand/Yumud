@@ -12,7 +12,6 @@
 
 
 #include "machine/scara/scara.hpp"
-#include "machine/actuator/zaxis_stp.hpp"
 
 #include "robots/foc/remote/remote.hpp"
 
