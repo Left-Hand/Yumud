@@ -6,6 +6,8 @@ namespace gxm{
 //     setMotorSpeed(World2Motor(spd));
 // }
 
+/// @brief 
+/// @param pos 
 void Wheel::setPosition(const real_t pos){
     last_targ_position = World2Motor(pos);
     setMotorPosition(last_targ_position);

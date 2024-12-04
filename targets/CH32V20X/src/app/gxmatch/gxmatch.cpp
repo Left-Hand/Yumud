@@ -14,6 +14,7 @@ void host_main(){
     // spi2.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
     can1.init(1_MHz);
+    auto & can = can1;
 
     auto displayer{create_displayer()};
     init_displayer(displayer);
@@ -491,41 +492,7 @@ void host_main(){
 
         bind_tick200hz(tick_200hz);
 
-        if(true){//测试单个电机
-            RemoteFOCMotor stp = {logger, can1, 1};
-            stp.reset();
-            delay(1000);
-            while(true){
-                stp.setTargetPosition(sin(t));
-            }
-        }
 
-        if(true){//测试多个电机
-            auto stps = std::array<RemoteFOCMotor, 4>({
-                {logger, can1, 1},
-                {logger, can1, 2},
-                {logger, can1, 3},
-                {logger, can1, 4},
-            });
-
-            for(auto & stp : stps){
-                stp.reset();
-            }    
-
-            delay(1000);
-            while(true){
-                auto p0 = sin(t);
-                auto p1 = frac(t);
-                auto p2 = real_t(int(t));
-                auto p3 = ABS(sin(t));
-
-                stps[0].setTargetPosition(p0);
-                stps[1].setTargetPosition(p1);
-                stps[2].setTargetPosition(p2);
-                stps[3].setTargetPosition(p3);
-            }
-        }
-        
         if(false){
 
             auto flow_sensor_{create_pmw()};
@@ -586,12 +553,79 @@ void host_main(){
             }
         }
 
+        RemoteFOCMotor stp = {logger, can1, 1};
+        if(true){//测试单个电机
+            stp.reset();
+            delay(1000);
+            while(true){
+                stp.setTargetPosition(sin(t));
+            }
+        }
+
+        if(true){//测试多个电机
+            auto stps = std::array<RemoteFOCMotor, 4>({
+                {logger, can1, 1},
+                {logger, can1, 2},
+                {logger, can1, 3},
+                {logger, can1, 4},
+            });
+
+            for(auto & stp_ : stps){
+                stp_.reset();
+            }    
+
+            delay(1000);
+            while(true){
+                auto p0 = sin(t);
+                auto p1 = frac(t);
+                auto p2 = real_t(int(t));
+                auto p3 = ABS(sin(t));
+
+                stps[0].setTargetPosition(p0);
+                stps[1].setTargetPosition(p1);
+                stps[2].setTargetPosition(p2);
+                stps[3].setTargetPosition(p3);
+            }
+        }
+        
+        auto & wheel_config = config.wheel_config;
+
         if(true){//测试单个轮子
-            // Wheel wheel = stp
+            Wheel wheel = {config.wheel_config, stp};
+            wheel.setPosition(0.2_r * sin(t));
         }
 
         if(true){//测试多个轮子
-            // Wheel
+            auto stps = std::array<RemoteFOCMotor, 4>({
+                {logger, can, 1},
+                {logger, can, 2},
+                {logger, can, 3},
+                {logger, can, 4},
+            });
+
+            auto wheel_arr = std::array<Wheel, 4>({
+                Wheel{wheel_config, stps[0]},
+                Wheel{wheel_config, stps[1]},
+                Wheel{wheel_config, stps[2]},
+                Wheel{wheel_config, stps[3]}
+            });
+            // RemoteFOCMotor stp1 = {logger, can, 1}; 
+            // RemoteFOCMotor stp2 = {logger, can, 2}; 
+            // RemoteFOCMotor stp3 = {logger, can, 3}; 
+            // RemoteFOCMotor stp4 = {logger, can, 4}; 
+
+
+            Wheels wheels = {
+                config.wheels_config,
+                // stp1, stp2, stp3, stp4
+                {wheel_arr[0], wheel_arr[1], wheel_arr[2], wheel_arr[3]}
+            };
+            
+            while(true){
+                scexpr real_t delta = {0.001};
+                wheels.forward({delta, delta, delta, delta});
+                delay(5);
+            }
         }
     }
 

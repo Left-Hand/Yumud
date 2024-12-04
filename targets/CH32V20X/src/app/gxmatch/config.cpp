@@ -90,6 +90,7 @@ SysConfig gxm::create_default_config(){
             .max_aps = 1,//最大每秒圈速加速度
         },
 
+        .wheels_config = {},
 
         .est_config = {
             .calibrate_times = 1,//校准次数

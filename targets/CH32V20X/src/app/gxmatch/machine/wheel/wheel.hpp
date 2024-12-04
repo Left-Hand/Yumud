@@ -2,7 +2,7 @@
 
 #include "../../common/inc.hpp"
 #include "robots/foc/focmotor.hpp"
-
+#include "robots/foc/remote/remote.hpp"
 
 namespace gxm{
 
@@ -32,10 +32,12 @@ protected:
         return x * (real_t(TAU) * config_.wheel_radius);
     }
 protected:
-    virtual void setMotorSpeed(const real_t spd) = 0;
-    virtual void setMotorPosition(const real_t pos) = 0;
-    virtual real_t getMotorSpeed() = 0;
-    virtual real_t getMotorPosition() = 0;
+    void setMotorPosition(const real_t pos){
+        motor_.setTargetPosition(pos);
+    }
+    real_t getMotorPosition(){
+        return motor_.getPosition();
+    }
 
     real_t last_targ_position;
 public:
