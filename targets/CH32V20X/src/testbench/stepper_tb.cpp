@@ -290,6 +290,7 @@ void stepper_tb(UartHw & logger){
         // auto target = demo(millis());
         // auto target = -floor(t>>1)<<1;
         // auto target = -demo2(t);
+        // auto target = t * 0.2_r;
         // if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getTargetEstSpeed(), stp.getCurrent(), stp.getRaddiff());
         // Sys::Clock::reCalculateTime();
 

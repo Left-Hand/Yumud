@@ -16,7 +16,7 @@ public:
     
     using Motor = ymd::foc::FOCMotorConcept;
 protected:
-
+    bool inversed_ = false;
     // const FocMotor & config_;
 private:
     const Config & config_;
@@ -25,11 +25,11 @@ protected:
 
 
     __fast_inline constexpr real_t World2Motor(const real_t x){
-        return x / (real_t(TAU) * config_.wheel_radius);
+        return (inversed_ ? -x : x) / (real_t(TAU) * config_.wheel_radius);
     }
 
     __fast_inline constexpr real_t Motor2World(const real_t x){
-        return x * (real_t(TAU) * config_.wheel_radius);
+        return (inversed_ ? -x : x) * (real_t(TAU) * config_.wheel_radius);
     }
 protected:
     void setMotorPosition(const real_t pos){
@@ -46,7 +46,12 @@ public:
 
     // void setSpeed(const real_t spd);
     void setPosition(const real_t pos);
+    void setCurrent(const real_t curr);
     void forwardPosition(const real_t step);
+
+    void inverse(const bool en = true){
+        inversed_ = en;
+    }
 
     // real_t getSpeed();
     real_t getPosition();

@@ -18,6 +18,10 @@ void Wheel::forwardPosition(const real_t step){
     setMotorPosition(last_targ_position);
 }
 
+void Wheel::setCurrent(const real_t curr){
+    motor_.setTargetCurrent(curr);
+}
+
 // real_t Wheel::getSpeed(){
 //     return Motor2World(getMotorSpeed());
 // }

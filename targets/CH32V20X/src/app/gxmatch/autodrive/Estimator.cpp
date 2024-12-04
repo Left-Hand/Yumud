@@ -3,6 +3,10 @@
 using namespace ymd::drivers;
 using namespace gxm;
 
+void Estimator::reset(){
+
+}
+
 void Estimator::update(const real_t time){
     // acc_gyr_sensor_.update();
     // mag_sensor_.update();
@@ -32,9 +36,18 @@ void Estimator::update(const real_t time){
 
     flow_sensor_.update(rot_);
 
+    auto new_pos = Vector2(flow_sensor_.getPosition());
+    auto delta_pos = new_pos - pos_;
     pos_ = flow_sensor_.getPosition();
-    const auto [x,y] = pos_;
-    DEBUG_PRINTLN(rot_, gyr_, x, y);
+
+    auto delta_t = time - last_time;
+    last_time = time;
+
+    auto new_spd = delta_pos / delta_t;
+    spd_ = spd_lpf_.update(new_spd);
+
+    // const auto [x,y] = pos_;
+    // DEBUG_PRINTLN(rot_, gyr_, x, y);
 }
 
 Quat Estimator::calculateAccBias(){

@@ -248,6 +248,10 @@ public:
     }
 };
 
+template<arithmetic T>
+__fast_inline constexpr Vector3_t<T> operator*(const arithmetic auto & n, const Vector3_t<T> & vec){
+    return vec * n;
+}
 
 }
 __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Vector3_t<auto> & value){

@@ -118,6 +118,7 @@ public:
     void test();
     void tick();
 
+    void closeloop_spin(const real_t targ_rot, const real_t targ_spr);
 
     Vector2 pos();
     real_t rad();

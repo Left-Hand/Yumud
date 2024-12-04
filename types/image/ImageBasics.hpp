@@ -40,7 +40,7 @@ public:
     ImageBasics(const Vector2i & _size):size(_size){;}
 
     Vector2i uv2pixel(const Vector2 & uv) const{
-        return Vector2i(int(LERP((uv.x + 1) / 2, 0, this->size.x)), int(LERP((uv.y + 1) / 2, 0, this->size.y)));
+        return Vector2i(int(LERP(0, this->size.x, ((uv.x + 1) / 2))), int(LERP(0, this->size.y, (uv.y + 1)/2)));
     }
 
     Vector2 uv2aero(const Vector2 & uv) const{

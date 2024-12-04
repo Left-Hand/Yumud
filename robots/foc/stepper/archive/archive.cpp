@@ -12,10 +12,10 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
         // .kp = real_t(3),
         // .kd = 170
 
-        // .kp = real_t(1.8),
+        .kp = real_t(2),
+        .kd = 40
+        // .kp = real_t(3),
         // .kd = 70
-        .kp = real_t(3),
-        .kd = 70
 
         //OVERSPEED
         // .kp = real_t(1.8),

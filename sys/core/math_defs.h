@@ -143,11 +143,11 @@
 
 #ifndef LERP
 #ifdef __cplusplus
-    #define LERP(a,b,x) __lerp_tmpl(a,b, x)
-    template <typename T, typename U, typename V>
-    requires std::is_arithmetic_v<V>
-    constexpr __fast_inline T __lerp_tmpl(const U & a, const V & b, const T & x){
-        return T(a) * (T(1) - x) + T(b) * x;
+    #define LERP(a,b,x) __lerp_tmpl(a, b, x)
+    template <typename T, typename U>
+    requires std::is_arithmetic_v<U>
+    constexpr __fast_inline T __lerp_tmpl(const T & a, const T & b, const U & x){
+        return T((U(U(1) - x) * a) + (x * b));
     }
 #else
 #define LERP(a,b, x) (a * (1 - x) + b * x)
