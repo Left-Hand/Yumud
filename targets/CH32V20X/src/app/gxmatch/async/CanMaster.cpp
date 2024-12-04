@@ -5,14 +5,13 @@ using namespace gxm;
 using namespace ymd;
 
 void CanMaster::update(){
-    auto & can = can1;
-    if(can.available()){
-        while(can.available()){
-            auto && msg = can.read();
+    if(can_.available()){
+        while(can_.available()){
+            auto && msg = can_.read();
 
             bool accepted = false;
-            for(Wrapper & proto : pool){
-                if(proto.get().update(msg)){
+            for(Wrapper & item : pool){
+                if(item.get().update(msg)){
                     accepted = true;
                     break;
                 }

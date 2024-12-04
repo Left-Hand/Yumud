@@ -247,6 +247,17 @@ constexpr __fast_inline bool __sign_same_impl(const T x, const auto y){
 #endif
 #endif
 
+#ifndef INVERSE_IF
+#ifdef __cplusplus
+#define INVERSE_IF(b, x) __inverse_if_impl(b, x)
+
+template<typename T>
+constexpr __fast_inline T __inverse_if_impl(const bool b, const T & x){
+    return b ? -x : x;
+}
+
+#endif
+#endif
 
 #ifndef LSHIFT
 #define LSHIFT(x,s) ((s) >= 0 ? ((x) << (s)) : ((x) >> (-(s))))

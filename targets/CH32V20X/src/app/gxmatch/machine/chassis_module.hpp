@@ -41,8 +41,8 @@ public:
 
     enum class CtrlMode{
         NONE,
-        ROT,
-        POS
+        SPIN,
+        SHIFT
     };
 
 

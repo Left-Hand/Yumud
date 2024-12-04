@@ -154,4 +154,33 @@ String getline(InputStream & logger){
         }
     }
 }
+
+void bind_tick_200hz(std::function<void(void)> && func){
+    auto & timer = timer1;
+    timer.init(200);
+
+    timer.bindCb(TimerUtils::IT::Update, std::move(func));
+    timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
+    DEBUG_PRINTLN("tick200 binded");
+};
+
+
+void bind_tick_50hz(std::function<void(void)> && func){
+    // if(true){//绑定50hz舵机更新回调函数
+    auto & timer = timer2;
+    timer.init(50);
+
+    timer.bindCb(TimerUtils::IT::Update, std::move(func));
+    timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
+    DEBUG_PRINTLN("tick50 binded");
+    // }
+}
+
+void bind_tick_1khz(std::function<void(void)> && func){
+    // if(true){//绑定滴答时钟
+    bindSystickCb(std::move(func));
+    DEBUG_PRINTLN("tick1k binded");
+    // }
+}
+
 }

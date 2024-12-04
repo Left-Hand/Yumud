@@ -205,25 +205,8 @@ void host_main(){
             joint_z.tick();
         };
 
-
-
-        if(true){//绑定50hz舵机更新回调函数
-            auto & timer = timer2;
-            timer.init(50);
-
-            timer.bindCb(TimerUtils::IT::Update, tick_50hz);
-            timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
-            DEBUG_PRINTLN("tick50 binded");
-        }
-
-
-
-
-        if(true){//绑定滴答时钟
-            bindSystickCb(tick_1khz);
-            DEBUG_PRINTLN("tick1k binded");
-        }
-
+        bind_tick_50hz(tick_50hz);
+        bind_tick_1khz(tick_1khz);
         // if(true){
         //     // pca.v
         // }
@@ -441,208 +424,151 @@ void host_main(){
         }
 
 
+
+
         if(true){
-            auto tick_200hz = [&](){
 
-            };
+            auto flow_sensor_{create_pmw()};
+            init_pmw(flow_sensor_);
 
-            auto bind_tick200hz = [](std::function<void(void)> && func){
-                auto & timer = timer1;
-                timer.init(200);
+            MPU6050 acc_gyr_sensor_{i2c};
+            acc_gyr_sensor_.init();
 
-                timer.bindCb(TimerUtils::IT::Update, std::move(func));
-                timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
-                DEBUG_PRINTLN("tick200 binded");
-            };
+            QMC5883L mag_sensor_{i2c};
+            mag_sensor_.init();
 
-            bind_tick200hz(tick_200hz);
+            auto & wheel_config = config.wheels_config.wheel_config;
 
-
-            if(true){
-
-                auto flow_sensor_{create_pmw()};
-                init_pmw(flow_sensor_);
-
-                MPU6050 acc_gyr_sensor_{i2c};
-                acc_gyr_sensor_.init();
-
-                QMC5883L mag_sensor_{i2c};
-                mag_sensor_.init();
-
-                auto & wheel_config = config.wheels_config.wheel_config;
-
-                // if(true){//测试单个电机
-                if(false){//测试单个电机
-                    RemoteFOCMotor stp = {logger, can1, 1};
-                    stp.reset();
-                    delay(1000);
-                    while(true){
-                        auto targ = sin(t);
-                        stp.setTargetPosition(targ);
-                        delay(5);
-                        DEBUG_PRINTLN(targ);
-                    }
-
-                    if(true){//测试单个轮子
-                        Wheel wheel = {wheel_config, stp};
-                        wheel.setPosition(0.2_r * sin(t));
-                        delay(5);
-                    }
+            // if(true){//测试单个电机
+            if(false){//测试单个电机
+                RemoteFOCMotor stp = {logger, can1, 1};
+                stp.reset();
+                delay(1000);
+                while(true){
+                    auto targ = sin(t);
+                    stp.setTargetPosition(targ);
+                    delay(5);
+                    DEBUG_PRINTLN(targ);
                 }
 
-
-
-                // if(true){//测试多个电机
-                if(false){//测试多个电机
-                    auto stps = std::array<RemoteFOCMotor, 4>({
-                        {logger, can1, 1},
-                        {logger, can1, 2},
-                        {logger, can1, 3},
-                        {logger, can1, 4},
-                    });
-
-                    for(auto & stp_ : stps){
-                        stp_.reset();
-                    }    
-
-                    delay(1000);
-                    while(true){
-                        // auto p0 = sin(t);
-                        // auto p1 = frac(t);
-                        // auto p2 = real_t(int(t));
-                        // auto p2 = real_t(int(t));
-                        // auto p3 = ABS(sin(t));
-                        // scexpr auto a = 0.765*((124.0/15) + 1);
-                        auto p0 = 2.8_r * t;
-                        auto p1 = -2.8_r * t;
-                        auto p2 = -2.8_r * t;
-                        auto p3 = 2.8_r * t;
-
-                        DEBUG_PRINTLN(p0, p1, p2, p3);
-                        stps[0].setTargetPosition(-p0);
-                        stps[1].setTargetPosition(p1);
-                        stps[2].setTargetPosition(-p2);
-                        stps[3].setTargetPosition(p3);
-
-                        delay(5);
-                    }
-                }
-
-                if(true){//测试多个轮子
-                    auto stps = std::array<RemoteFOCMotor, 4>({
-                        {logger, can, 1},
-                        {logger, can, 2},
-                        {logger, can, 3},
-                        {logger, can, 4},
-                    });
-
-                    for(auto & stp_ : stps){
-                        stp_.reset();
-                        stp_.locateRelatively(0);
-                    }    
-
-                    Wheels wheels = {
-                        config.wheels_config,
-                        {
-                            stps[0],
-                            stps[1],
-                            stps[2],
-                            stps[3]
-                        }
-                    };
-
-                    wheels[0].inverse();
-                    wheels[2].inverse();
-
-                    Mecanum4Solver solver = {config.chassis_config.solver_config};
-                    while(true){
-                        // scexpr real_t delta = {0.003_r};
-                        // auto delta = solver.inverse(Vector2{0, 0.005_r}, 0);
-                        // auto delta = solver.inverse(Vector2{0, 0}, 0.005_r);
-                        // auto delta = solver.inverse(Vector2{0.003_r, 0.003_r}, 0);
-                        // auto delta = solver.inverse(Vector2{-0.003_r, 0.00_r}, 0);
-                        auto delta = solver.inverse(Vector2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
-                        wheels.forward(delta);
-
-                        delay(5);
-                    }
-                }
-                // if(false){//测试观测姿态
-                if(true){//测试观测姿态
-                    ComplementaryFilter::Config rot_config = {
-                        .kq = real_t(0.92),
-                        .ko = real_t(0.5)
-                    };
-                    
-                    ComplementaryFilter rot_obs = {rot_config};
-                
-                    DEBUG_PRINTLN(std::setprecision(4))
-                    while(true){
-
-                        acc_gyr_sensor_.update();
-                        mag_sensor_.update();
-
-                        const auto gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
-                        const auto mag3_raw = Vector3{mag_sensor_.getMagnet()};
-
-                        const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
-                        const auto gyr_raw = gyr3_raw.z;
-
-                        const auto rot = rot_obs.update(rot_raw, gyr_raw, t);
-
-                        flow_sensor_.update(rot);
-
-                        const auto [x,y] = flow_sensor_.getPosition();
-
-                        DEBUG_PRINTLN(rot, gyr_raw, x, y);
-                        delay(5);
-                    }
-                }
-
-                auto & est_config = config.chassis_config.est_config;
-                if(false){//测试状态观测器
-                    Estimator est_ = {
-                        est_config,
-                        acc_gyr_sensor_,
-                        mag_sensor_,
-                        flow_sensor_
-                    };
-
-                    est_.init();
-
-                    while(true){
-                        est_.update(t);
-                        
-                        DEBUG_PRINTLN(est_.pos());
-                    }
+                if(true){//测试单个轮子
+                    Wheel wheel = {wheel_config, stp};
+                    wheel.setPosition(0.2_r * sin(t));
+                    delay(5);
                 }
             }
 
+            CanMaster can_master = {can};
+
+            auto stps = std::array<RemoteFOCMotor, 4>({
+                {logger, can, 1},
+                {logger, can, 2},
+                {logger, can, 3},
+                {logger, can, 4},
+            });
+
+            auto init_steppers = [&](){
+                for(auto & stp_ : stps){
+                    stp_.reset();
+                    stp_.locateRelatively(0);
+                }    
+            };
+
+            init_steppers();
+            can_master.registerNodes(stps.begin(), stps.end());
+
+            Wheels wheels = {
+                config.wheels_config,
+                {
+                    stps[0],
+                    stps[1],
+                    stps[2],
+                    stps[3]
+                }
+            };
+
+            wheels[0].inverse();
+            wheels[2].inverse();
 
 
-            // if(true){
-            //     auto flow_sensor_{create_pmw()};
-            //     init_pmw(flow_sensor_);
+            if(true){//测试多个轮子
+                auto tick_200hz = [&](){
+                    can_master.update();
+                };
 
-            //     MPU6050 acc_gyr_sensor_{i2c};
-            //     acc_gyr_sensor_.init();
+                bind_tick_200hz(tick_200hz);
 
-            //     QMC5883L mag_sensor_{i2c};
-            //     mag_sensor_.init();
+                Mecanum4Solver solver = {config.chassis_config.solver_config};
+                while(true){
+                    // scexpr real_t delta = {0.003_r};
+                    // auto delta = solver.inverse(Vector2{0, 0.005_r}, 0);
+                    // auto delta = solver.inverse(Vector2{0, 0}, 0.005_r);
+                    // auto delta = solver.inverse(Vector2{0.003_r, 0.003_r}, 0);
+                    // auto delta = solver.inverse(Vector2{-0.003_r, 0.00_r}, 0);
+                    auto delta = solver.inverse(Vector2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
+                    wheels.forward(delta);
+
+                    delay(5);
+                }
+            }
+            // if(false){//测试观测姿态
+            if(true){//测试观测姿态
+                ComplementaryFilter::Config rot_config = {
+                    .kq = real_t(0.92),
+                    .ko = real_t(0.5)
+                };
                 
-            //     Estimator est = {
-            //         config.chassis_config.est_config,
-            //         acc_gyr_sensor_,
-            //         mag_sensor_,
-            //         flow_sensor_        
-            //     };
-
-            //     ChassisModule chassis_module {
-            //         config.chassis_config, 
-            //         wheels, est};
-            // }
+                ComplementaryFilter rot_obs = {rot_config};
             
-        }
+                DEBUG_PRINTLN(std::setprecision(4))
+                while(true){
+
+                    acc_gyr_sensor_.update();
+                    mag_sensor_.update();
+
+                    const auto gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
+                    const auto mag3_raw = Vector3{mag_sensor_.getMagnet()};
+
+                    const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
+                    const auto gyr_raw = gyr3_raw.z;
+
+                    const auto rot = rot_obs.update(rot_raw, gyr_raw, t);
+
+                    flow_sensor_.update(rot);
+
+                    const auto [x,y] = flow_sensor_.getPosition();
+
+                    DEBUG_PRINTLN(rot, gyr_raw, x, y);
+                    delay(5);
+                }
+            }
+
+            auto & est_config = config.chassis_config.est_config;
+
+            Estimator est_ = {
+                est_config,
+                acc_gyr_sensor_,
+                mag_sensor_,
+                flow_sensor_
+            };
+
+            if(false){//测试状态观测器
+
+                est_.init();
+
+                while(true){
+                    est_.update(t);
+                    
+                    DEBUG_PRINTLN(est_.pos());
+                }
+            }
+
+            if(true){
+                ChassisModule chassis_module {
+                    config.chassis_config, 
+                    wheels, est_};
+                }
+        }   
     }
 
 };

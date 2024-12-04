@@ -41,10 +41,10 @@ void ChassisModule::closeloop(){
     switch(ctrl_mode_){
         case CtrlMode::NONE:
             break;
-        case CtrlMode::POS:
+        case CtrlMode::SHIFT:
             pos_ctrl_.update(expect_pos_, this->pos(), this->spd());
             break;
-        case CtrlMode::ROT:
+        case CtrlMode::SPIN:
             rot_ctrl_.update(expect_rot_, this->rot(), this->gyr());
             break;
     }
@@ -57,16 +57,19 @@ void ChassisModule::setCurrent(const Ray & ray){
 }
 
 void ChassisModule::meta_rapid(const Ray & ray){
-    meta_rapid_shift(ray.org);
-    meta_rapid_spin(ray.rad);
+    TODO();
+    // meta_rapid_shift(ray.org);
+    // meta_rapid_spin(ray.rad);
 }
 
 void ChassisModule::meta_rapid_shift(const Vector2 & pos){
     expect_pos_ = pos;
+    ctrl_mode_ = CtrlMode::SHIFT;
 }
 
 void ChassisModule::meta_rapid_spin(const real_t rad){
     expect_rot_ = rad;
+    ctrl_mode_ = CtrlMode::SPIN;
 }
 
 

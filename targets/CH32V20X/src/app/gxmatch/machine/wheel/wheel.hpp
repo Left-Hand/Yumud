@@ -25,19 +25,15 @@ protected:
 
 
     __fast_inline constexpr real_t World2Motor(const real_t x){
-        return (inversed_ ? -x : x) / (real_t(TAU) * config_.wheel_radius);
+        return x / (real_t(TAU) * config_.wheel_radius);
     }
 
     __fast_inline constexpr real_t Motor2World(const real_t x){
-        return (inversed_ ? -x : x) * (real_t(TAU) * config_.wheel_radius);
+        return x * (real_t(TAU) * config_.wheel_radius);
     }
 protected:
-    void setMotorPosition(const real_t pos){
-        motor_.setTargetPosition(pos);
-    }
-    real_t getMotorPosition(){
-        return motor_.getPosition();
-    }
+    void setMotorPosition(const real_t pos);
+    real_t getMotorPosition();
 
     real_t last_targ_position;
 public:
