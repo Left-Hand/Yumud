@@ -2,7 +2,7 @@
 
 using namespace ymd::drivers;
 
-#define AT24CXX_DEBUG
+// #define AT24CXX_DEBUG
 
 #ifdef AT24CXX_DEBUG
 #undef AT24CXX_DEBUG

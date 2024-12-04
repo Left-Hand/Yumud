@@ -12,9 +12,10 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
         // .kp = real_t(3),
         // .kd = 170
 
-        .kp = real_t(1.8),
+        // .kp = real_t(1.8),
+        // .kd = 70
+        .kp = real_t(3),
         .kd = 70
-
 
         //OVERSPEED
         // .kp = real_t(1.8),
@@ -82,7 +83,7 @@ bool FOCStepper::loadArchive(){
     
     if(!abort){
         odo.decompress(archive.cali_map);
-        setNodeId(archive.node_id);
+        // setNodeId(archive.node_id);
 
         getDefaultArchive(archive);
         std::swap(archive_, archive);

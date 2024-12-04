@@ -102,21 +102,30 @@ real_t demo2(const real_t x){
 
 
 uint8_t get_default_id(){
-    auto chip_id = Sys::Chip::getChipIdCrc();
-    switch(chip_id){
-        case 3273134334:
-            return 3;
-        case 341554774:
-            return 2;
-        case 4079188777:
-            return 1;
-        case 0x551C4DEA:
-            return  3;
-        case 0x8E268D66:
-            return 1;
-        default:
-            return 0;
-    }
+
+    auto node_id = [](){
+        auto chip_id = Sys::Chip::getChipIdCrc();
+        // DEBUG_PRINTLN("myididididdid", chip_id)
+        switch(chip_id){
+            case 3273134334:
+                return 3;
+            case 0xF3237B29:
+                return 4;
+            case 0x145BB656:
+                return 1;
+            case 0x551C4DEA:
+                return  3;
+            case 0x8E268D66:
+                return 1;
+            case 0xC803C4C6:
+                return 2;
+            default:
+                return 0;
+        }
+    }();
+
+    DEBUG_PRINTLN("node_id", node_id);
+    return node_id;
 };
 void stepper_tb(UartHw & logger){
     using TimerUtils::Mode;
@@ -280,12 +289,17 @@ void stepper_tb(UartHw & logger){
         // if(logger.pending() == 0) logger.println(stp.getTarget(), stp.getPosition(), stp.getSpeed(), stp.getCurrent(), real_t(adc1.inj(1)), real_t(adc1.inj(2)));
         // auto target = demo(millis());
         // auto target = -floor(t>>1)<<1;
-        auto target = -demo2(t);
-        if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getTargetEstSpeed(), stp.getCurrent(), stp.getRaddiff());
+        // auto target = -demo2(t);
+        // if(logger.pending() == 0) logger.println(target, stp.getPosition(), stp.getSpeed(), stp.getTargetEstSpeed(), stp.getCurrent(), stp.getRaddiff());
         // Sys::Clock::reCalculateTime();
 
         // stp.setTargetPosition(5 * sin(7 * t));
-        stp.setTargetPosition(target);
+
+        // static uint last_millis = 0;
+        // if(millis() - last_millis >= 5){
+        //     stp.setTargetPosition(target);
+        //     last_millis = millis();
+        // }
         // stp.setTargetSpeed(1);
 
         // stp.setTargetPosition(17* sin(2 * t));

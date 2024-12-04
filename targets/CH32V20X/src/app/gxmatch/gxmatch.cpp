@@ -134,7 +134,7 @@ void host_main(){
 
         Nozzle nozzle{
             config.scara_config.nozzle_config, 
-            pca[3]
+            pca[14]
         };
 
         SG90 claw_servo{pca[5]};
@@ -400,7 +400,8 @@ void host_main(){
             }
         }
 
-        if(true){//测试
+        if(true){//测试抓取动作
+        // if(false){//测试抓取动作
 
             grab_module.init();
             // getline(logger);
@@ -440,60 +441,6 @@ void host_main(){
         }
 
 
-        if(false){//测试动作组
-            while(true){
-                grab_module.test();
-                // grab_module.take();
-                DEBUG_PRINTLN("next");
-                while(true){
-                    if(logger.available()){
-                        logger.readString();
-                        break;
-                    }
-                }
-            }
-        }
-
-
-
-
-
-        if(true){
-            while(true){
-
-                // auto duty = real_t(0.5) + (sin(t) >> 1);
-                // duty = LERP(real_t(0.025), real_t(0.125), duty);
-                // duty = (real_t(0.025) + real_t(0.125))/2;
-                // duty *= real_t(0.2);
-                // pwm = duty;
-                // pwm2 = duty;
-
-                // joint_left.setRadian(real_t(PI/2) * (1 + sin(t)));
-                // grab_module.moveXY(Vector2(real_t(0.12), 0).rotated(t/2) + Vector2(0, real_t(0.24)));
-                // grab_module.moveXY(Vector2(real_t(0.12), 0).rotated(t) + Vector2(0, real_t(0.24)));
-                // grab_module.moveXY(Vector2(real_t(0.12) * sign(sin(t)), 0) + Vector2(0, real_t(0.24)));
-                // grab_module.moveXY(Vector2(0, real_t(0.24)));
-                // grab_module.goHome();
-
-                // #ifdef 
-                scara.moveXY(Vector2(real_t(0.09), 0).rotated(t) + Vector2(0, real_t(0.24)));
-                // scara.goHome();
-                {
-                    bool c = (millis() % 2000 > 1000);
-                    c ? scara.press() : scara.release();
-                }
-                // logger.println(joint_left.getRadian(), joint_right.getRadian());
-                // logger.println(cross_solver.inverse(real_t(0.07) + real_t(0.05) * sin(t)));
-                {
-                    // auto rad = real_t(PI/4) + real_t(PI/4) * sin(t);
-                    // logger.println(std::setprecision(3), cross_solver.forward(rad));
-                }
-
-                delay(20);
-            }
-        }
-    }
-
     if(true){
         auto tick_200hz = [&](){
             // joint_left.tick();
@@ -513,7 +460,7 @@ void host_main(){
         bind_tick200hz(tick_200hz);
 
 
-        if(false){
+        if(true){
 
             auto flow_sensor_{create_pmw()};
             init_pmw(flow_sensor_);
@@ -642,7 +589,7 @@ void host_main(){
             };
             
             while(true){
-                scexpr real_t delta = {0.001};
+                scexpr real_t delta = {0.001_r};
                 wheels.forward({delta, delta, delta, delta});
                 delay(5);
             }
@@ -667,10 +614,10 @@ void host_main(){
                 ChassisModule chassis_module {
                     config.chassis_config, 
                     wheels, est};
-                
             }
         }
     }
+}
 
 };
 
