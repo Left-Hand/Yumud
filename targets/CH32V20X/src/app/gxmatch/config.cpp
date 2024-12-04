@@ -114,7 +114,21 @@ SysConfig gxm::create_default_config(){
                 .rot_obs_config = {//转向观测器配置
                     .kq = 0.5_r,
                     .ko = 0.5_r,
+                },
+
+                .spd_lpf_config = {
+                    .kf = 0.5_r
                 }
+            },
+
+            .rot_ctrl_config = {
+                .kp = 1,
+                .kd = 1
+            },
+
+            .pos_ctrl_config = {
+                .kp = 1,
+                .kd = 1
             },
 
             .max_acc = 1,

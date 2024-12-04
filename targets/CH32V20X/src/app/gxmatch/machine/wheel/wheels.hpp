@@ -52,6 +52,8 @@ public:
     bool verify();
 
 
+    void setCurrent(const std::tuple<real_t, real_t, real_t, real_t> & curr);
+
     void setPosition(const std::tuple<real_t, real_t, real_t, real_t> & pos);
 
     void setDelta(const std::tuple<real_t, real_t, real_t, real_t> & delta);

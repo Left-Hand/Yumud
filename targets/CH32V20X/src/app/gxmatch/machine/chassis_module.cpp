@@ -1,7 +1,7 @@
 #include "chassis_actions.hpp"
+#include "chassis_ctrl.hpp"
 
 namespace gxm{
-
 
 void ChassisModule::positionTrim(const Vector2 & trim){
     wheels_.setDelta(solver_.inverse(trim, 0));
@@ -33,12 +33,28 @@ bool ChassisModule::arrived(){
 }
 
 void ChassisModule::closeloop(){
-    auto && pos_err = expect_pos - pos();
-    auto && rad_err = expect_rad - rad();
-    auto && delta = solver_.inverse(pos_err, rad_err);
-    wheels_.setDelta(delta);
+        // auto && pos_err = expect_pos - pos();
+        // auto && rot_err = expect_rad - rot();
+        // auto && delta = solver_.inverse(pos_err, rot_err);
+        // wheels_.setDelta(delta);
+
+    switch(ctrl_mode_){
+        case CtrlMode::NONE:
+            break;
+        case CtrlMode::POS:
+            pos_ctrl_.update(expect_pos_, this->pos(), this->spd());
+            break;
+        case CtrlMode::ROT:
+            rot_ctrl_.update(expect_rot_, this->rot(), this->gyr());
+            break;
+    }
 }
 
+
+void ChassisModule::setCurrent(const Ray & ray){
+    auto && curr = solver_.inverse(ray);
+    wheels_.setCurrent(curr);
+}
 
 void ChassisModule::meta_rapid(const Ray & ray){
     meta_rapid_shift(ray.org);
@@ -46,28 +62,28 @@ void ChassisModule::meta_rapid(const Ray & ray){
 }
 
 void ChassisModule::meta_rapid_shift(const Vector2 & pos){
-    expect_pos = pos;
+    expect_pos_ = pos;
 }
 
 void ChassisModule::meta_rapid_spin(const real_t rad){
-    expect_rad = rad;
+    expect_rot_ = rad;
 }
 
 
 Vector2 ChassisModule::pos(){
-    TODO();
-
-    return {0,0};
+    return est_.pos();
 }
 
-real_t ChassisModule::rad(){
-    TODO();
+Vector2 ChassisModule::spd(){
+    return est_.spd();
+}
 
-    return 0;
+real_t ChassisModule::rot(){
+    return est_.rot();
 }
 
 Ray ChassisModule::gest(){
-    return {this->pos(), this->rad()};
+    return {this->pos(), this->rot()};
 }
 
 
@@ -77,6 +93,10 @@ Ray ChassisModule::feedback(){
 
 void ChassisModule::tick(){
     wheels_.update();
+}
+
+real_t ChassisModule::gyr(){
+    return est_.gyr();
 }
 
 }

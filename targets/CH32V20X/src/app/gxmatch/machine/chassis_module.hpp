@@ -1,12 +1,6 @@
 #pragma once
 
-#include "motion_module.hpp"
-#include "../autodrive/Estimator.hpp"
-#include "wheel/wheels.hpp"
-#include "wheel/wheel.hpp"
-
-
-
+#include "chassis_ctrl.hpp"
 namespace gxm{
 
 class ChassisModule;
@@ -29,39 +23,14 @@ public:
 
 class ChassisModule:public MotionModule{
 public:
-    class RotationCtrl{
-    public:
-        struct Config{
-            real_t kp;
-            real_t kd;  
-        };
 
-    protected:
-        const Config & config_;
-    public:
-        RotationCtrl(const Config & config):config_(config){;}
-        RotationCtrl(const RotationCtrl & other) = delete;
-        RotationCtrl(RotationCtrl && other) = delete;
-        
-    };
-
-    class PositionCtrl{
-    public:
-        struct Config{
-            real_t kp;
-            real_t kd;
-        };
-
-    protected:
-        const Config & config_;
-    public:
-        PositionCtrl(const Config & config):config_(config){;}
-        DELETE_COPY_AND_MOVE(PositionCtrl)
-    };
 
     struct Config{
         Mecanum4Solver::Config solver_config;
         Estimator::Config est_config;
+
+        RotationCtrl::Config rot_ctrl_config;
+        PositionCtrl::Config pos_ctrl_config;
 
         real_t max_acc;
         real_t max_spd;
@@ -70,31 +39,27 @@ public:
         real_t max_spr;
     };
 
-    class FeedBacker{
-    public:
-        virtual Vector2 pos() = 0;
-        virtual real_t rad() = 0;
-    };
-    
-
-    class FeedBackerOpenLoop:public FeedBacker{
-
+    enum class CtrlMode{
+        NONE,
+        ROT,
+        POS
     };
 
-    class FeedBackerCloseLoop:public FeedBacker{
 
-    };
-
+protected:
     const Config & config_;
     Wheels wheels_;
     Mecanum4Solver solver_{config_.solver_config};
-    // Estimator est_{config_.est_config};
     Estimator & est_;
-protected:
 
-    Vector2 expect_pos;
-    real_t expect_rad;
-    void closeloop();
+    RotationCtrl rot_ctrl_{config_.rot_ctrl_config, *this};
+    PositionCtrl pos_ctrl_{config_.pos_ctrl_config, *this};
+
+    CtrlMode ctrl_mode_ = CtrlMode::NONE;
+
+    Vector2 expect_pos_;
+    real_t expect_rot_;
+
 public:
     ChassisModule(const Config & config, 
             const Wheels & wheels,
@@ -118,10 +83,17 @@ public:
     void test();
     void tick();
 
-    void closeloop_spin(const real_t targ_rot, const real_t targ_spr);
+    void setCurrent(const Ray & ray);
+    void closeloop();
+    void setMode(const CtrlMode mode){
+        ctrl_mode_ = mode;
+    }
 
     Vector2 pos();
-    real_t rad();
+    Vector2 spd();
+    real_t rot();
+    real_t gyr();
+
     Ray gest();
     bool arrived();
 

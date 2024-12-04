@@ -26,6 +26,16 @@ void Wheels::setPosition(const std::tuple<real_t, real_t, real_t, real_t> & pos)
     SET_POS(1);
     SET_POS(2);
     SET_POS(3);
+    #undef SET_POS
+}
+
+void Wheels::setCurrent(const std::tuple<real_t, real_t, real_t, real_t> & curr){
+    #define SET_CURR(n) instances_[n].setCurrent(std::get<n>(curr))
+    SET_CURR(0);
+    SET_CURR(1);
+    SET_CURR(2);
+    SET_CURR(3);
+    #undef SET_CURR
 }
 
 void Wheels::setDelta(const std::tuple<real_t, real_t, real_t, real_t> & pos){
@@ -34,6 +44,7 @@ void Wheels::setDelta(const std::tuple<real_t, real_t, real_t, real_t> & pos){
     FWD_POS(1);
     FWD_POS(2);
     FWD_POS(3);
+    #undef FWD_POS
 }
 
 
@@ -43,6 +54,7 @@ void Wheels::forward(const std::tuple<real_t, real_t, real_t, real_t> & pos){
     FWD_POS(1);
     FWD_POS(2);
     FWD_POS(3);
+    #undef FWD_POS
 }
 
 

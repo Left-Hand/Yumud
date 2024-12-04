@@ -187,6 +187,9 @@ protected:
     Magnetometer & mag_sensor_;//地磁计
     FlowSensor & flow_sensor_;
 
+    ComplementaryFilter rot_obs_{config_.rot_obs_config};
+    Vector2Lpf spd_lpf_{config_.spd_lpf_config};
+    
     Bias bias_;
 
     Vector3 acc3_raw;
@@ -207,11 +210,7 @@ protected:
     Vector2 spd_;
 
     real_t last_time;
-    // Quat quat_;
 
-    // Mahony mahony_;
-    ComplementaryFilter rot_obs_{config_.rot_obs_config};
-    Vector2Lpf spd_lpf_{config_.spd_lpf_config};
 public:
     Estimator(const Estimator & other) = delete;
     Estimator(Estimator && other) = delete;
@@ -244,6 +243,8 @@ public:
     auto rot() const{return rot_;}
 
     auto pos() const{return pos_;}
+
+    auto spd() const{return spd_;}
 
     auto euler() const{
         return euler_;
