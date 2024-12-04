@@ -11,7 +11,7 @@ class Scara{
 public:
     struct Config{
         Scara5Solver::Config solver_config;
-        JointLR::Config joint_config;
+        // JointLR::Config joint_config;
         Claw::Config claw_config;
         Nozzle::Config nozzle_config;
     };
@@ -35,11 +35,12 @@ protected:
 public:
     void goHome();//进行坐标归位
     void moveXY(const Vector2 & pos);//只改变XY坐标
-
-    void pickUp();//拾起物块
-    void putDown();//放下物块
+    Vector2 getPos();
+    void press();//拾起物块
+    void release();//放下物块
 
     bool reached();
+    bool caught();
 
     Scara(const Config & config, const Refs & refs):
         config_(config),

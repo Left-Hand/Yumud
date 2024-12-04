@@ -169,97 +169,94 @@
         uint16_t clearWritePtr:1;//清空 TX FIFO 指针为 0，但不清空 TX FIFO 中的数据
     };
 
-    struct{
+    //REG3 RO
+    RfSynthLockReg rfSynthLockReg;
 
-        //REG3 RO
-        RfSynthLockReg rfSynthLockReg;
+    //REG6 
+    RawRssiReg rawRssiReg;
 
-        //REG6 
-        RawRssiReg rawRssiReg;
+    //REG7
+    RfConfigReg rfConfReg;
 
-        //REG7
-        RfConfigReg rfConfReg;
+    //REG9
+    PaConfigReg paConfigReg;
 
-        //REG9
-        PaConfigReg paConfigReg;
+    //REG10
+    OscEnableReg oscEnableReg;
 
-        //REG10
-        OscEnableReg oscEnableReg;
+    //REG15
+    FuncConfReg funcConfReg;
 
-        //REG15
-        FuncConfReg funcConfReg;
+    //REG28
+    FreqOffsReg freqOffsReg;
 
-        //REG28
-        FreqOffsReg freqOffsReg;
+    //REG11
+    RssiPdnReg rssiPdnReg;
 
-        //REG11
-        RssiPdnReg rssiPdnReg;
+    //REG32 
+    RfConfigReg rfConfigReg;
 
-        //REG32 
-        RfConfigReg rfConfigReg;
+    //REG23
+    AutoCaliReg autoCaliReg;
 
-        //REG23
-        AutoCaliReg autoCaliReg;
+    //REG29 RO
+    DeviceIDReg deviceIDReg;
 
-        //REG29 RO
-        DeviceIDReg deviceIDReg;
+    //REG32 RO
+    Config1Reg config1Reg;
 
-        //REG32 RO
-        Config1Reg config1Reg;
+    //REG33 RO
+    Delay1Reg delay1Reg;
 
-        //REG33 RO
-        Delay1Reg delay1Reg;
+    //REG34
+    Delay2Reg delay2Reg;
 
-        //REG34
-        Delay2Reg delay2Reg;
+    //REG35
+    Config2Reg config2Reg;
+    union{
+        struct{
+            //REG36
+            uint16_t syncWord0Reg;
 
-        //REG35
-        Config2Reg config2Reg;
-        union{
-            struct{
-                //REG36
-                uint16_t syncWord0Reg;
+            //REG37
+            uint16_t syncWord1Reg;
 
-                //REG37
-                uint16_t syncWord1Reg;
+            //REG38
+            uint16_t syncWord2Reg;
 
-                //REG38
-                uint16_t syncWord2Reg;
-
-                //REG39
-                uint16_t syncWord3Reg;
-            };
-            uint16_t syncWordRegs[4]; 
+            //REG39
+            uint16_t syncWord3Reg;
         };
-
-
-        //REG40
-        ThresholdReg thresholdReg;
-
-        //REG41
-        Config3Reg config3Reg;
-
-        //REG42
-        RxConfigReg rxConfigReg;
-
-        //REG43
-        RssiConfigReg rssiConfigReg;
-
-        //REG44
-        DataRateReg dataRateReg;
-
-        //REG46
-        ChannelReg channelReg;
-    
-        //REG48 RO
-        FlagReg flagReg;
-
-        //REG50
-        uint16_t fifoReg;
-
-        //REG52
-        FifoPtrReg fifoPtrReg;
+        uint16_t syncWordRegs[4]; 
     };
+
+
+    //REG40
+    ThresholdReg thresholdReg;
+
+    //REG41
+    Config3Reg config3Reg;
+
+    //REG42
+    RxConfigReg rxConfigReg;
+
+    //REG43
+    RssiConfigReg rssiConfigReg;
+
+    //REG44
+    DataRateReg dataRateReg;
+
+    //REG46
+    ChannelReg channelReg;
+
+    //REG48 RO
+    FlagReg flagReg;
+
+    //REG50
+    uint16_t fifoReg;
+
+    //REG52
+    FifoPtrReg fifoPtrReg;
 
     enum class RegAddress:uint8_t{
         RfSynthLock = 3,

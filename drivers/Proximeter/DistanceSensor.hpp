@@ -2,8 +2,6 @@
 
 #include "sys/math/real.hpp"
 
-
-
 namespace ymd::drivers{
 class DistanceSensor{
 public:

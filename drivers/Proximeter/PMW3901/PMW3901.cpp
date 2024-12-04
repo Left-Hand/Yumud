@@ -22,7 +22,7 @@
 #define PMW3901_REG_RawData_Grab_Status     0x59
 #define PMW3901_REG_Inverse_Product_ID      0x5F
 
-// #define PMW3901_DEBUG
+#define PMW3901_DEBUG
 
 #ifdef PMW3901_DEBUG
 #undef PMW3901_DEBUG
@@ -47,6 +47,11 @@ void PMW3901::writeReg(const uint8_t command, const uint8_t data){
 void PMW3901::readReg(const uint8_t command, uint8_t & data){
     spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT);
     spi_drv_.readSingle<uint8_t>(data);
+}
+
+void PMW3901::readMulti(const uint8_t command, uint8_t * data, const size_t len){
+    spi_drv_.writeSingle<uint8_t>(command & 0x7f, CONT);
+    spi_drv_.readMulti<uint8_t>(data, len);
 }
 
 
@@ -92,6 +97,58 @@ bool PMW3901::verify(){
     if(!assertReg(PMW3901_REG_Product_ID, 0x49)) return false;
     return true;
 }
+
+void PMW3901::setLed(bool ledOn){
+    writeReg(0x7f, 0x14);
+    writeReg(0x6f, ledOn ? 0x1c : 0x00);
+    writeReg(0x7f, 0x00);
+}
+void PMW3901::readData(){
+    // readDataSlow();
+    readDataBurst();
+}
+void PMW3901::readDataSlow(){
+    uint8_t data[5];
+
+    for(uint8_t i = 0; i < 5; i++){
+        readReg(0x02 + i, data[i]);
+    }
+
+    motion = data[0];
+    dx = (data[2] << 8) | data[1];
+    dy = (data[4] << 8) | data[3];
+}
+
+void PMW3901::readDataBurst(){
+    readMulti(0x16, &motion, 6);
+}
+
+
+scexpr real_t scale = real_t(13.0/2000);
+void PMW3901::update(){
+    readData();
+
+    x_cm += int16_t(dx) * scale;
+    y_cm += int16_t(dy) * scale;
+}
+
+void PMW3901::update(const real_t rad){
+    readData();
+    
+    Vector2 delta = Vector2(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad);
+    x_cm += delta.x;
+    y_cm += delta.y;
+}
+
+
+bool PMW3901::assertReg(const uint8_t command, const uint8_t data){
+    uint8_t temp = 0;
+    readReg(command, temp);
+    // PMW3901_DEBUG(command, data, temp);
+    // return PMW3901_ASSERT(temp == data, "reg:", command, "is not equal to", data, "fact is", temp);
+    return (temp == data);
+}
+
 void PMW3901::init() {
     spi_drv_.release();
     writeReg(PMW3901_REG_Power_Up_Reset, 0x5A);
@@ -178,45 +235,4 @@ void PMW3901::init() {
     writeReg(0x5A, 0x50);
     writeReg(0x40, 0x80);
 
-}
-
-void PMW3901::setLed(bool ledOn){
-    writeReg(0x7f, 0x14);
-    writeReg(0x6f, ledOn ? 0x1c : 0x00);
-    writeReg(0x7f, 0x00);
-}
-
-void PMW3901::updateData(){
-    uint8_t data[5];
-
-    for(uint8_t i = 0; i < 5; i++){
-        readReg(0x02 + i, data[i]);
-    }
-
-    motion = data[0];
-    dx = (data[2] << 8) | data[1];
-    dy = (data[4] << 8) | data[3];
-}
-
-void PMW3901::update(){
-    updateData();
-
-    x += dx;
-    y += dy;
-}
-
-void PMW3901::update(const real_t rad){
-    updateData();
-    
-    x += dx * cos(rad);
-    y += dy * sin(rad);
-}
-
-
-bool PMW3901::assertReg(const uint8_t command, const uint8_t data){
-    uint8_t temp = 0;
-    readReg(command, temp);
-    // PMW3901_DEBUG(command, data, temp);
-    // return PMW3901_ASSERT(temp == data, "reg:", command, "is not equal to", data, "fact is", temp);
-    return (temp == data);
 }

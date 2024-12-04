@@ -2,6 +2,9 @@
 #include "CanFilter.hpp"
 #include "hal/nvic/nvic.hpp"
 
+#include "sys/debug/debug_inc.h"
+#include "hal/bus/uart/uarthw.hpp"
+
 using namespace ymd;
 
 using Callback = Can::Callback;
@@ -241,6 +244,7 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
+    // DEBUGGER_INST.println(msg);
     if(this->sync_){
         uint8_t mbox;
         do{

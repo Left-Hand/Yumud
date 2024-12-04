@@ -116,7 +116,15 @@ constexpr Vector2_t<T> Vector2_t<T>::posmodv(const Vector2_t<T> & b) const{
 
 template<arithmetic T>
 constexpr Vector2_t<T> Vector2_t<T>::project(const Vector2_t<T> & b) const{
-    return b * (dot(b) / b.length_squared());
+    return (this->dot(b)) * b / b.length_squared();
+}
+
+template<arithmetic T>
+constexpr T Vector2_t<T>::project(const T & rad) const{
+    // return (this->rotated(-rad)).x;
+    // this->improduct(Vector2_t<T>(::cos(r), ::sin(r)));
+    return (this->x) * ::cos(rad) + (this->y) * ::sin(rad);
+
 }
 
 template<arithmetic T>

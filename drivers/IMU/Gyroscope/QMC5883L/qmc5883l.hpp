@@ -93,17 +93,15 @@ protected:
         ChipID = 0x0D
     };
 
-    struct{
-        MagXReg magXReg;
-        MagYReg magYReg;
-        MagZReg magZReg;
-        StatusReg statusReg;
-        TemperatureReg temperatureReg;
-        ConfigAReg configAReg;
-        ConfigBReg configBReg;
-        ResetPeriodReg resetPeriodReg;
-        ChipIDReg chipIDReg;
-    };
+    MagXReg magXReg;
+    MagYReg magYReg;
+    MagZReg magZReg;
+    StatusReg statusReg;
+    TemperatureReg temperatureReg;
+    ConfigAReg configAReg;
+    ConfigBReg configBReg;
+    ResetPeriodReg resetPeriodReg;
+    ChipIDReg chipIDReg;
 
     void writeReg(const RegAddress addr, const uint16_t data){
         i2c_drv_.writeReg((uint8_t)addr, data, LSB);
@@ -114,11 +112,11 @@ protected:
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data);
     }
 
     void requestPool(const RegAddress addr, int16_t * datas, const size_t len){
@@ -166,6 +164,9 @@ protected:
         return statusReg.ready == false;
     }
 public:
+    QMC5883L(const QMC5883L & other) = delete;
+    QMC5883L(QMC5883L && other) = delete;
+
     QMC5883L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     QMC5883L(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     QMC5883L(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):

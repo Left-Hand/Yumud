@@ -97,19 +97,17 @@ protected:
         uint8_t data;
     };
 
-    struct{
-        ProgramTimesReg programTimesReg;
-        StartAngleReg startAngleReg;
-        EndAngleReg endAngleReg;
-        AmountAngleReg amountAngleReg;
-        RawAngleReg rawAngleReg;
-        AngleReg angleReg;
-        ConfigReg configReg;
-        StatusReg statusReg;
-        AutoGainReg autoGainReg;
-        MagnitudeReg magnitudeReg;
-        BurnReg burnReg;
-    };
+    ProgramTimesReg programTimesReg;
+    StartAngleReg startAngleReg;
+    EndAngleReg endAngleReg;
+    AmountAngleReg amountAngleReg;
+    RawAngleReg rawAngleReg;
+    AngleReg angleReg;
+    ConfigReg configReg;
+    StatusReg statusReg;
+    AutoGainReg autoGainReg;
+    MagnitudeReg magnitudeReg;
+    BurnReg burnReg;
 
     enum class RegAddress : uint8_t {
         ProgramTimes = 0x00,
@@ -143,11 +141,11 @@ protected:
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data);
     }
 public:
     scexpr uint8_t default_i2c_addr = 0x1e;

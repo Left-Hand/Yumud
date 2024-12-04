@@ -151,12 +151,10 @@ protected:
         uint8_t idac2_mux:3;
     };
 
-    struct{
-        Config0Reg config0_reg;
-        Config1Reg config1_reg;
-        Config2Reg config2_reg;
-        Config3Reg config3_reg;
-    };
+    Config0Reg config0_reg;
+    Config1Reg config1_reg;
+    Config2Reg config2_reg;
+    Config3Reg config3_reg;
 
 
 
@@ -165,11 +163,11 @@ protected:
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv.readReg(uint8_t(uint8_t(Command::READ_REG) + addr), data, LSB);
+        i2c_drv.readReg(uint8_t(uint8_t(Command::READ_REG) + addr), data);
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv.writeReg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data, LSB);
+        i2c_drv.writeReg(uint8_t(uint8_t(Command::WRITE_REG) + addr), data);
     }
 public:
 

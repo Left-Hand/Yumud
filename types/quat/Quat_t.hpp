@@ -160,7 +160,15 @@ struct Quat_t{
 
 };
 
+template<arithmetic T>
+__fast_inline constexpr Quat_t<T> operator*(const arithmetic auto & n, const Quat_t<T> & vec){
+    return vec * n;
 }
 
+
+}
+__fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Quat_t<auto> & value){
+    return os << '(' << value.x << ',' << value.y << ',' << value.z << ',' << value.w << ')';
+}
 
 #include "Quat_t.tpp"

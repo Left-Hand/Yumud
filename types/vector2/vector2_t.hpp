@@ -83,6 +83,16 @@ public:
     constexpr Vector2_t<T> abs() const;
 
     template<arithmetic U>
+    __fast_inline constexpr Vector2_t<T> increase_x(const U & v){
+        return {x + v, y};
+    }
+
+    template<arithmetic U>
+    __fast_inline constexpr Vector2_t<T> increase_y(const U & v){
+        return {x, y + v};
+    }
+
+    template<arithmetic U>
     constexpr T cos(const Vector2_t<U> & b) const{
         return this->dot(b) / this->length() / b.length();
     }
@@ -140,6 +150,7 @@ public:
     constexpr Vector2_t<T> posmod(const arithmetic auto & mod) const;
     constexpr Vector2_t<T> posmodv(const Vector2_t<T> & modv) const;
     constexpr Vector2_t<T> project(const Vector2_t<T> & b) const;
+    constexpr T project(const T & rad) const;
     constexpr Vector2_t<T> reflect(const Vector2_t<T> & n) const;
     constexpr Vector2_t<T> round() const;
     constexpr Vector2_t<T> sign() const;
@@ -224,6 +235,11 @@ public:
         return rect.abs();
     }
 };
+
+template<arithmetic T>
+__fast_inline constexpr Vector2_t<T> operator*(const arithmetic auto & n, const Vector2_t<T> & vec){
+    return vec * n;
+}
 
 
 using Vector2i = Vector2_t<int>;

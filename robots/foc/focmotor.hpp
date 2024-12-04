@@ -36,7 +36,7 @@ protected:
     volatile RunStatus run_status = RunStatus::INIT;
 
     MetaData meta;
-    uint8_t node_id;
+    const uint8_t node_id;
     real_t elecrad_zerofix;
 
     friend class AsciiProtocol;
@@ -79,8 +79,11 @@ public:
     virtual void reset() = 0;
 
     virtual uint8_t getNodeId() {return node_id;}
-    virtual void setNodeId(const uint8_t _id){node_id = _id;}
+    // virtual void setNodeId(const uint8_t _id){node_id = _id;}
     auto & getMeta(){return meta;}
+
+    auto & id(){return node_id;}
+    auto id() const {return node_id;}
 
 };
 
@@ -141,7 +144,7 @@ public:
 
     public:
         CanProtocol(Can & _can, FOCMotor & _motor):
-            CanProtocolConcept(_can),
+            CanProtocolConcept(_can, _motor.id()),
             motor(_motor){;}
 
         void parseCanmsg(const CanMsg & msg) override;

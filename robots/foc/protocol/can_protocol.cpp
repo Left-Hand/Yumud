@@ -32,7 +32,7 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
     #define GETTER_BIND(cmd, ...)\
     case cmd:\
         if(msg.isRemote()){\
-            can.write(CanMsg(tx_id, std::make_tuple(__VA_ARGS__)));\
+            can_.write(CanMsg(tx_id, std::make_tuple(__VA_ARGS__)));\
         }\
         break;\
     
@@ -70,7 +70,7 @@ void FOCMotor::CanProtocol::parseCanmsg(const CanMsg & msg){
         VERIFIED_BIND(Command::RST,           motor.reset, uint8_t(0xff))
         EXECUTER_BIND(Command::INACTIVE,      motor.enable, false)
         EXECUTER_BIND(Command::ACTIVE,        motor.enable, true)
-        EXECUTER_BIND(Command::SET_NODEID,    motor.setNodeId, uint8_t(msg))
+        // EXECUTER_BIND(Command::SET_NODEID,    motor.setNodeId, uint8_t(msg))
 
         default:
             break;

@@ -14,8 +14,9 @@
 #include <string_view>
 #include <type_traits>
 #include <tuple>
-
+#include <optional>
 #include <utility>
+#include <bitset>
 
 namespace ymd{
 class BasicStream{

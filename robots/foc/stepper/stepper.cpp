@@ -135,7 +135,15 @@ void FOCStepper::tick(){
 void FOCStepper::run(){
     panel_led.run();
     
-    if(can_protocol) can_protocol->update();
+    if(can_protocol){
+        auto & can = can_protocol->can();
+        if(can.available()){
+            auto && msg = can.read();
+            // DEBUG_PRINTLN(millis());
+            can_protocol->update(msg);
+        }
+    } 
+
     if(ascii_protocol) ascii_protocol->update();
 
     red_pwm.tick();
@@ -157,11 +165,11 @@ void FOCStepper::report(){
     // target_pos = sign(frac(t) - 0.5);
     // target_pos = sin(t);
     // RUN_DEBUG(, est_pos, est_speed);
-    if(DEBUGGER.pending()==0){
+    // if(DEBUGGER.pending()==0){
     //     // delayMicroseconds(200);   
     //     // delay(1); 
         // DEBUG_PRINTLN(std::setprecision(3), target, getSpeed(), getPosition(), getCurrent(), run_leadangle, speed_ctrl.soft_targ_spd);
-    }
+    // }
     // delay(1);
     // , est_speed, t, odo.getElecRad(), openloop_elecrad);
     // logger << est_pos << est_speed << run_current << elecrad_zerofix << endl;

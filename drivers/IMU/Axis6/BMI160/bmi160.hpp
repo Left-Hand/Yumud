@@ -93,22 +93,20 @@ protected:
 
     #include "regs.ipp"
 
-    struct{
-        ChipIdReg chip_id_reg;
-        uint8_t __resv1__;
-        ErrReg err_reg;
-        PmuStatusReg pmu_status_reg;
-        StatusReg status_reg;
-        Vector3i16Reg mag_reg;
-        RhallReg rhall_reg;
-        Vector3i16Reg gyr_reg;
-        Vector3i16Reg acc_reg;
+    ChipIdReg chip_id_reg;
+    uint8_t __resv1__;
+    ErrReg err_reg;
+    PmuStatusReg pmu_status_reg;
+    StatusReg status_reg;
+    Vector3i16Reg mag_reg;
+    RhallReg rhall_reg;
+    Vector3i16Reg gyr_reg;
+    Vector3i16Reg acc_reg;
 
-        AccConfReg acc_conf_reg;
-        AccRangeReg acc_range_reg;
-        GyrConfReg gyr_conf_reg;
-        GyrRangeReg gyr_range_reg;
-    };
+    AccConfReg acc_conf_reg;
+    AccRangeReg acc_range_reg;
+    GyrConfReg gyr_conf_reg;
+    GyrRangeReg gyr_range_reg;
 
     void requestData(const RegAddress addr, int16_t * datas, const size_t len);
 

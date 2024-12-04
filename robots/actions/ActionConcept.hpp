@@ -1,67 +1,65 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/debug/debug_inc.h"
+
 #include <functional>
 #include <queue>
 
 #include "sys/math/real.hpp"
-#include "types/vector2/vector2_t.hpp"
+#include "sys/stream/StringStream.hpp"
 
 
 namespace ymd{
 
 struct Action {
 public:
-    using Vector2 = Vector2_t<real_t>;
-    using Vector2i = Vector2_t<int>;
+    using Callback = std::function<void(void)>;
 protected:
-    std::function<void(void)> func = nullptr;
-    struct{
-        uint sustain = 0;
-        const uint full;
-        // bool once = true;
-        volatile bool executed = false;
-    };
+    Callback func_ = nullptr;
+    
+    int sustain = 0;
+    const size_t full;
+    volatile bool executed = false;
+    volatile bool decreased_ = false;
 
     virtual void execute(){
-        EXECUTE(func);
+        EXECUTE(func_);
     }
 
-    enum class SpecialActionType{
-        NONE,
-        DELAY,
-        CLEAR,
-        ABORT
-    };
+    // enum class SpecialActionType{
+    //     NONE,
+    //     DELAY,
+    //     CLEAR,
+    //     ABORT
+    // };
     
-    virtual SpecialActionType special() const {return SpecialActionType::NONE;}
+    // virtual SpecialActionType special() const {return SpecialActionType::NONE;}
 
     bool first() const {
         return executed == false;
     }
 
-    real_t ratio() const {
+    real_t progress() const {
         return real_t(1) - real_t(sustain) / full;
     }
 
-    void abort(){
-        sustain = 0;
+    void kill(){
+        decreased_ = true;
     }
 
-    real_t since() const {
-        return real_t(CLAMP(int(full - sustain),0 , ((1 << GLOBAL_Q )- 5))) / 1000;
+    real_t time() const {
+        return real_t(CLAMP(full - sustain, size_t(0), size_t((1 << GLOBAL_Q )- 5))) / 1000;
     }
 public:
     // Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
-    Action(std::function<void()> &&f, const uint s = 1) : func(std::move(f)), sustain(s), full(s){}
+    Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain(MIN(s, INT32_MAX)), full(sustain){}
 
-    bool is_valid() const {
-        return sustain > 0;
+    bool died() const{
+        // return sustain <= 0;
+        return decreased_;
     }
 
-    operator bool() const {
-        return is_valid();
-    }
 
     Action& operator--() {
         if (sustain > 0) {
@@ -70,7 +68,7 @@ public:
         return *this;
     }
 
-    auto remain() const {
+    int remain() const {
         return sustain;
     }
 
@@ -79,11 +77,56 @@ public:
         // if(once and executed) return;
         if(sustain > 0){
             execute();
-            sustain --;
+            // DEBUG_PRINTLN(sustain);
+            if(sustain) sustain --;
+            if(sustain <= 0) decreased_ = true;
             executed = true;
         }
     }
+
+    virtual const char * name() = 0;
 };
+
+#define ACTION_NAME(nm)\
+const char * name() override {return #nm; }
+
+struct DelayAction:public Action{
+protected:
+    void execute() override {}
+public:
+    DelayAction( const uint dur):Action(dur, nullptr){}
+    ACTION_NAME(delay)
+};
+
+struct DebugAction:public Action{
+protected:
+    // String str_;
+    void execute() override {
+        DEBUG_PRINTLN(String(ss_));
+    }
+
+    StringStream ss_;
+public:
+    DebugAction(const char * str):
+        Action(1, nullptr){
+            ss_ << str;
+        }
+
+    DebugAction(const String & str):
+        Action(1, nullptr){
+            ss_ << str;
+        }
+
+    template <typename... Args>
+    DebugAction(Args&&... args):
+        Action(1, nullptr){
+        (this->ss_ << ... << args);
+    }
+
+    ACTION_NAME(debug)
+};
+
+
 
 
 }

@@ -16,6 +16,10 @@ public:
     void write(const char * data_ptr, const size_t len) override;
     size_t pending() const override;
 
+    String str() && {
+        return std::move(str_);
+    }
+    
     operator String() const;
     operator StringView() const;
 };

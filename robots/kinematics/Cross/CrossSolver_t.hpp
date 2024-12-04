@@ -9,8 +9,8 @@ class CrossSolver_t{
 public:
     struct Config{
         const T xoffs_length_meter;
-        const T forearm_length_meter;
         const T upperarm_length_meter;
+        const T forearm_length_meter;
     };
 protected:
     const Config & config_;

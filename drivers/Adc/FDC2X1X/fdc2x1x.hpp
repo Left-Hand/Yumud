@@ -202,21 +202,19 @@ protected:
         uint16_t id;
     };
 
-    struct{
-        ConversionDataReg conv_data_regs[4];
-        ReferenceCountReg ref_count_regs[4];
-        OffsetReg offset_regs[4];
-        SettleCountReg settle_count_regs[4];
-        ClockDividerReg clock_divider_regs[4];
-        StatusReg status_reg;
-        StatusConfigReg status_config_reg;
-        ConfigReg config_reg;
-        MuxConfigReg mux_config_reg;
-        ResetDevReg reset_dev_reg;
-        DriveCurrentReg drive_current_regs[4];
-        ManufacturerIdReg manufacturer_id_reg;
-        DeviceIdReg device_id_reg;
-    };
+    ConversionDataReg conv_data_regs[4];
+    ReferenceCountReg ref_count_regs[4];
+    OffsetReg offset_regs[4];
+    SettleCountReg settle_count_regs[4];
+    ClockDividerReg clock_divider_regs[4];
+    StatusReg status_reg;
+    StatusConfigReg status_config_reg;
+    ConfigReg config_reg;
+    MuxConfigReg mux_config_reg;
+    ResetDevReg reset_dev_reg;
+    DriveCurrentReg drive_current_regs[4];
+    ManufacturerIdReg manufacturer_id_reg;
+    DeviceIdReg device_id_reg;
 
     void readReg(const RegAddress addr, uint16_t & data){
         i2c_drv.readReg(uint8_t(addr), data, MSB);

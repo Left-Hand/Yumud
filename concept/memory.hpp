@@ -23,14 +23,21 @@ public:
 
     size_t size(){return view_.length();}
 
-    void store(const auto & data, const Address loc = 0);
-    void store(auto && data, const Address loc = 0);
-    void load(auto & data, const Address loc = 0);
+void store(const Address loc, const is_stdlayout auto & data);
+    void store(const Address loc, is_stdlayout auto && data);
+    void store(const Address loc, const uint8_t * begin, const uint8_t * end);
+
+    void load(const Address loc, is_stdlayout auto & data);
+    void load(const Address loc, uint8_t * begin, uint8_t * end);
 
     template<typename T>
-    T load(const Address loc = 0);
+    T load(const Address loc);
 
 };
 
+
+
 }
+
+
 #include "memory.tpp"

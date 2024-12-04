@@ -17,8 +17,6 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
-#include "sys/math/int/int_t.hpp"
-
 
 #include "eyetrack.hpp"
 
@@ -153,10 +151,8 @@ void etk_main(){
 
             auto vec = Vector2(eye.eyeInfo().pos) * real_t(0.2);
             vec = Vector2(real_t(PI/2), real_t(PI - 0.2)) + Vector2(-vec.x, vec.y);
-            // vec = Vector2(2.8, PI/2) + vec;
-            //  + Vector2(-vec.x, vec.y);
-            // DEBUG_PRINTLN(vec);                                                                                                                                                                                                                                                                           
-        servo_x.setRadian(+vec.x);
+                                                                                                                                                                                                                                                                                    
+            servo_x.setRadian(+vec.x);
             servo_y.setRadian(+vec.y);
         }        
         #endif

@@ -1,9 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
-#include "sys/stream/ostream.hpp"
-#include "types/vector2/vector2_t.hpp"
-
+#include "types/ray2d/Ray2D_t.hpp"
 
 namespace ymd{
 
@@ -28,21 +25,21 @@ protected:
     const Config & config;
 
     Vector2_t<T> get_velocity_from_wheels(const T4 & spd4) {
-        T x = (spd4[1] + spd4[3] - spd4[0] - spd4[2]) * T(0.25);
+        T x = (spd4[0] + spd4[3] - spd4[1] - spd4[2]) * T(0.25);
         T y = (spd4[0] + spd4[1] + spd4[2] + spd4[3]) * T(0.25);
         return Vector2_t<T>(x, y);
     }
 
     T get_spinrate_from_wheels(const T4 & spd4) {
         T temp = config.chassis_height_meter + config.chassis_width_meter;
-        return (spd4[0] - spd4[1] + spd4[2] - spd4[3]) / (4 * temp);
+        return (spd4[1] - spd4[0] + spd4[2] - spd4[3]) / (4 * temp);
     }
 
     T4  get_wheels_from_status(const Vector2_t<T>& spd, T spinrate) {
         T temp = config.chassis_height_meter + config.chassis_width_meter;
         return {
-            spd.y - spd.x + spinrate * temp,
             spd.y + spd.x - spinrate * temp,
+            spd.y - spd.x + spinrate * temp,
             spd.y - spd.x - spinrate * temp,
             spd.y + spd.x + spinrate * temp
         };
@@ -51,16 +48,16 @@ protected:
 public:
     Mecanum4Solver_t(const Config & _config):config(_config) {}
 
-    PoseVelocity2D_t<T> forward(const T4 & spd4){
+    Ray2D_t<T> forward(const T4 & spd4){
         return {get_velocity_from_wheels(spd4), get_spinrate_from_wheels(spd4)};
     }
     
-    PoseVelocity2D_t<T> forward(const T w1, const T w2, const T w3, const T w4){
+    Ray2D_t<T> forward(const T w1, const T w2, const T w3, const T w4){
         return forward({w1,w2,w3,w4});
     }
 
-    T4 inverse(const PoseVelocity2D_t<T> & pv){
-        return get_wheels_from_status(pv.velocity, pv.spinrate);
+    T4 inverse(const Ray2D_t<T> & pv){
+        return get_wheels_from_status(pv.org, pv.rad);
     }
 
     T4 inverse(const Vector2_t<T> & velocity, const T spinrate){

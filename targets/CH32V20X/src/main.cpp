@@ -49,8 +49,8 @@ int main(){
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
-    // stepper_tb(uart1);
-    pmw3901_main();
+    stepper_tb(uart1);
+    // pmw3901_main();
     // math_tb(uart1);
     // zdt_main(uart1);
     // m3508_main();
@@ -67,8 +67,8 @@ int main(){
 
     while(true);
     #elif defined(CH32V30X)
-
     preinit();
+    // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();
     // math_tb(uart2);
@@ -82,6 +82,7 @@ int main(){
     // embd_main();
     // gxm::host_main();
 
+    // pca_main();
     // w25qxx_main();
     // smc_main();
     // can_tb(logger, can1, true);
@@ -90,16 +91,18 @@ int main(){
     // dma_tb(logger, dma1Ch1);
     // dma_tb(logger, UART7_RX_DMA_CH);
     // uart_tb(logger);
-
+    // pmw3901_main();
     // ch9141_tb(logger, uart7);
     // st77xx_tb(logger, spi2);
     // embd_main();
     // mpu6050_main();
     // gui_main();
     // sdc_main();
-    can_ring_main();
+    // proxy_tb();
+    // paj7620_main();
+    // can_ring_main();
     // m2006_main();
-    // gxm::host_main();
+    gxm::host_main();
     // can_tb(logger, can1);
     while(true);
     #endif

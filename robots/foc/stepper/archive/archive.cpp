@@ -12,9 +12,10 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
         // .kp = real_t(3),
         // .kd = 170
 
-        .kp = real_t(1.8),
-        .kd = 70
-
+        .kp = real_t(2),
+        .kd = 40
+        // .kp = real_t(3),
+        // .kd = 70
 
         //OVERSPEED
         // .kp = real_t(1.8),
@@ -42,7 +43,7 @@ bool FOCStepper::loadArchive(){
     using BoardInfo = MotorUtils::BoardInfo;
 
     Archive archive;
-    memory.load(archive);
+    memory.load(0,archive);
 
     bool match = true;
     bool abort = false;
@@ -82,7 +83,7 @@ bool FOCStepper::loadArchive(){
     
     if(!abort){
         odo.decompress(archive.cali_map);
-        setNodeId(archive.node_id);
+        // setNodeId(archive.node_id);
 
         getDefaultArchive(archive);
         std::swap(archive_, archive);
@@ -110,12 +111,12 @@ void FOCStepper::saveArchive(){
     }
 
     archive.node_id = uint8_t(node_id);
-    memory.store(archive);
+    memory.store(0,archive);
 }
 
 
 void FOCStepper::removeArchive(){
-    memory.store(Archive());
+    memory.store(0,Archive());
 }
 
 OutputStream &ymd::operator<<(OutputStream &os, const foc::MotorUtils::BoardInfo &bi){

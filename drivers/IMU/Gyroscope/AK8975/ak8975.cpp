@@ -119,7 +119,7 @@ std::tuple<real_t, real_t, real_t> AK8975::getMagnet(){
 }
 
 void AK8975::writeReg(const uint8_t addr, const uint8_t data){
-    if(i2c_drv_) i2c_drv_->writeReg(addr, data, MSB);
+    if(i2c_drv_) i2c_drv_->writeReg(addr, data);
     if(spi_drv_){
         spi_drv_->writeSingle(uint16_t(uint16_t(addr) << 8 | data));
         // i2c_drv->writeMulti()
@@ -127,7 +127,7 @@ void AK8975::writeReg(const uint8_t addr, const uint8_t data){
 }
     
 void AK8975::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv_) i2c_drv_->readReg((uint8_t)addr, data, MSB);
+    if(i2c_drv_) i2c_drv_->readReg((uint8_t)addr, data);
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
         spi_drv_->readSingle(data);
@@ -135,7 +135,7 @@ void AK8975::readReg(const RegAddress addr, uint8_t & data){
 }
 
 void AK8975::readMulti(const RegAddress addr, void * datas, const size_t len){
-    if(i2c_drv_) i2c_drv_->readMulti(uint8_t(addr), (uint8_t *)datas, len, MSB);
+    if(i2c_drv_) i2c_drv_->readMulti(uint8_t(addr), reinterpret_cast<uint8_t *>(datas), len);
     if(spi_drv_){
         spi_drv_->writeSingle(uint8_t(uint8_t(addr) | 0x80), CONT);
         spi_drv_->readMulti((uint8_t *)(datas), len);

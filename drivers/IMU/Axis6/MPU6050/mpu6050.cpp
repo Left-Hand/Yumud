@@ -38,21 +38,21 @@ void MPU6050::update(){
 }
 
 std::tuple<real_t, real_t, real_t> MPU6050::getAcc(){
-    real_t x = acc_x_reg.uni() * acc_scaler;
-    real_t y = acc_y_reg.uni() * acc_scaler;
-    real_t z = acc_z_reg.uni() * acc_scaler;
+    real_t x = uni(acc_x_reg) * acc_scaler;
+    real_t y = uni(acc_y_reg) * acc_scaler;
+    real_t z = uni(acc_z_reg) * acc_scaler;
     return {x, y, z};
 }
 
 std::tuple<real_t, real_t, real_t> MPU6050::getGyr(){
-    real_t x = gyr_x_reg.uni() * gyr_scaler;
-    real_t y = gyr_y_reg.uni() * gyr_scaler;
-    real_t z = gyr_z_reg.uni() * gyr_scaler;
+    real_t x = uni(gyr_x_reg) * gyr_scaler;
+    real_t y = uni(gyr_y_reg) * gyr_scaler;
+    real_t z = uni(gyr_z_reg) * gyr_scaler;
     return {x, y, z};
 }
 
 real_t MPU6050::getTemperature(){
-    return real_t(36.65f) + temperature_reg.uni() / 340;
+    return real_t(36.65f) + uni(temperature_reg) / 340;
 }
 
 

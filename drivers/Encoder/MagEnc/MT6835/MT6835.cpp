@@ -19,9 +19,12 @@ void MT6835::update() {
 }
 
 
-struct WRFormat:public Reg16{
+struct WRFormat{
     uint16_t addr:12;
     uint16_t type:4;
+
+    operator uint16_t & (){return *reinterpret_cast<uint16_t *>(this);}
+    operator uint16_t () const {return *reinterpret_cast<const uint16_t *>(this);}
 };
 
 

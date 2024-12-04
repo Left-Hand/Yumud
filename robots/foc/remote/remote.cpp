@@ -14,7 +14,7 @@ using RunStatus = MotorUtils::RunStatus;
 #define POST(cmd, ...)\
 auto msg = MSG(cmd, std::make_tuple(__VA_ARGS__));\
 DEBUG_MSG(msg);\
-can.write(msg);\
+can_.write(msg);\
 // while(can.pending()){;};
 
 void RemoteFOCMotor::setTargetVector(const real_t _pos){POST(Command::SET_TRG_VECT, E(meta.pos_limit.clamp(_pos)));}
@@ -47,7 +47,7 @@ void RemoteFOCMotor::enable(const bool en){POST(en ? Command::ACTIVE: Command::I
 void RemoteFOCMotor::setSpeedLimit(const real_t max_spd){POST(Command::SET_SPD_LMT,E(max_spd));}
 void RemoteFOCMotor::setAccLimit(const real_t max_acc){POST(Command::SET_ACC_LMT, E(max_acc));}
 void RemoteFOCMotor::triggerCali(){POST(Command::TRIG_CALI);}
-void RemoteFOCMotor::reset(){POST(Command::RST, uint16_t(0x5aa5));}
+void RemoteFOCMotor::reset(){POST(Command::RST, uint16_t(0xff));}
 
 
 bool RemoteFOCMotor::isActive() const{return true;}

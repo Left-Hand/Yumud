@@ -32,35 +32,37 @@ struct DrvOfBus {
 
 template<typename BusType>
 class BusDrv{
-public:
-    BusType & bus;
 protected:
-    uint8_t index;
+    BusType & bus_;
+    uint8_t index_;
     uint8_t data_bits = 8;
     uint32_t wait_time = 10;
 
     void setDataBits(const size_t _data_bits){
-        bus.setDataBits(_data_bits);
+        bus_.setDataBits(_data_bits);
     }
                                                                                                                            
-    BusDrv(BusType & _bus, const uint8_t _index):bus(_bus), index(_index){;}
+    BusDrv(BusType & bus, const uint8_t index):bus_(bus), index_(index){;}
+public:
+    auto & bus(){return bus_;}
+    auto index(){return index_;}
 };
 
 template <typename BusType>
 class NonProtocolBusDrv : public BusDrv<BusType> {
 protected:
-    using BusDrv<BusType>::index;
-    using BusDrv<BusType>::bus;
+    using BusDrv<BusType>::index_;
+    using BusDrv<BusType>::bus_;
 
 public:
     NonProtocolBusDrv(BusType & _bus, const uint8_t _index) : BusDrv<BusType>(_bus, _index) {}
     void release(){
-        if (Bus::ErrorType::OK == bus.begin(index) ) {
-            ::delay(1);
-            bus.end();
+        if (Bus::ErrorType::OK == bus_.begin(index_) ) {
+            delay(1);
+            bus_.end();
         }
     }
-    void end(){bus.end();}
+    void end(){bus_.end();}
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_writable_bus<BusType>
@@ -94,8 +96,8 @@ public:
 template <typename BusType, typename = std::enable_if_t<std::is_base_of_v<ProtocolBus, BusType>>>
 class ProtocolBusDrv : public BusDrv<BusType> {
 protected:
-    using BusDrv<BusType>::index;
-    using BusDrv<BusType>::bus;
+    using BusDrv<BusType>::index_;
+    using BusDrv<BusType>::bus_;
     ProtocolBusDrv(BusType & _bus, const uint8_t _index):
         BusDrv<BusType>(_bus, _index){};
 

@@ -21,11 +21,11 @@ public:
         if (size != 1) this->setDataBits(size * 8);
 
         if constexpr (size == 1) {
-            bus.write((uint8_t)data);
+            bus_.write((uint8_t)data);
         } else if constexpr (size == 2) {
-            bus.write(uint16_t(data));
+            bus_.write(uint16_t(data));
         } else {
-            bus.write(uint32_t(data));
+            bus_.write(uint32_t(data));
         }
 
         if (size != 1) this->setDataBits(8);

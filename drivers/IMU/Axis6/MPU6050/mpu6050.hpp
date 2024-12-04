@@ -89,11 +89,11 @@ protected:
     };
 
     void writeReg(const uint8_t addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, MSB);
+        i2c_drv_.writeReg((uint8_t)addr, data);
     }
 
     void readReg(const uint8_t addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, MSB);
+        i2c_drv_.readReg((uint8_t)addr, data);
     }
 
     void requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
@@ -103,6 +103,9 @@ protected:
     static real_t calculateAccScale(const AccRange range);
     static real_t calculateGyrScale(const GyrRange range);
 public:
+    MPU6050(const MPU6050 & other) = delete;
+    MPU6050(MPU6050 && other) = delete;
+
     MPU6050(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     MPU6050(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     MPU6050(I2c & bus, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(bus, i2c_addr){;}

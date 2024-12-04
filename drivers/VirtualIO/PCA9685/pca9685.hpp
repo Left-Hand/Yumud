@@ -36,7 +36,7 @@ protected:
     struct LedOnOffReg:public Reg16{
         uint16_t cvr:12 = 0;
         uint16_t full:1 = 0;
-        uint16_t __resv__:3 = 0;
+        const uint16_t __resv__:3 = 0;
     };
 
     struct LedRegs{
@@ -127,7 +127,7 @@ protected:
     //     return data;
     // }
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
-        i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.writeReg((uint8_t)addr, reg);
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
@@ -135,7 +135,7 @@ protected:
     }
 
     __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
-        i2c_drv_.readReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.readReg((uint8_t)addr, reg);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
@@ -144,7 +144,7 @@ protected:
 
     uint8_t readReg(const RegAddress addr){
         uint8_t data;
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg((uint8_t)addr, data);
         return data;
     }
     void writePort(const uint16_t data) override{

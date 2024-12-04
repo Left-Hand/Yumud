@@ -32,15 +32,5 @@ public:
     AbortAction(M_Queue & _queue):Action(nullptr, 0), queue(_queue){}
 };
 
-struct DelayAction:public Action{
-protected:
-
-    void execute() override {}
-    SpecialActionType special() const override {
-        return SpecialActionType::DELAY;
-    }
-public:
-    DelayAction( const uint dur):Action(nullptr, dur){}
-};
 
 }

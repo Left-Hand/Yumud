@@ -16,13 +16,39 @@ protected:
     T t_all;
     T s1;
     bool peaked;
-    
-public:
-    DELETE_COPY_AND_MOVE(TrapezoidSolver_t);
+    bool inversed;
 
-    TrapezoidSolver_t(const T & a, const T & v, const T & s):
-        a_(a), v_(v), s_(s) {
-            // v = at
+    T _forward(const T t) const{
+        if(peaked){
+            if(t < t1){
+                return (a_ * square(t)) >> 1;
+            }else if(t < t2){
+                return s1 + v_ * (t - t1);
+            }else if(t < t_all){
+                return s_ - ((a_ * square(t - t_all)) >> 1);
+            }
+        }else{
+            if(t < t1){
+                return a_ * square(t) >> 1;
+            }else if(t < t_all){
+                return s_ - ((a_ * square(t - t_all)) >> 1);
+            }
+        }
+        return s_;
+    }
+public:
+    TrapezoidSolver_t(const TrapezoidSolver_t<T> & other) = delete;
+    TrapezoidSolver_t(TrapezoidSolver_t<T> && other) = default;
+
+    TrapezoidSolver_t(T a, T v,T s):
+        a_(ABS(a)), v_(ABS(v)), s_(ABS(s)) {
+
+        a = ABS(a);
+        v = ABS(v);
+
+        inversed = (s < 0);
+        s = ABS(s);
+
         const T accleration_time = v / a;
 
 
@@ -61,23 +87,8 @@ public:
         }   
     }
 
-    T forward(const T t) const{
-        if(peaked){
-            if(t < t1){
-                return (a_ * square(t)) >> 1;
-            }else if(t < t2){
-                return s1 + v_ * (t - t1);
-            }else if(t < t_all){
-                return s_ - ((a_ * square(t - t_all)) >> 1);
-            }
-        }else{
-            if(t < t1){
-                return a_ * square(t) >> 1;
-            }else if(t < t_all){
-                return s_ - ((a_ * square(t - t_all)) >> 1);
-            }
-        }
-        return s_;
+    T forward(const T t)const{
+        return inversed ? -_forward(t) : _forward(t);
     }
 
     T period() const {

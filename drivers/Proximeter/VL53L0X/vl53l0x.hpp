@@ -42,7 +42,7 @@ private:
 
     Result result, last_result;
 	void writeByteData(const uint8_t Reg, const uint8_t byte){
-        i2c_drv_.writeReg(Reg, byte, MSB);
+        i2c_drv_.writeReg(Reg, byte);
     }
 
     void flush();
@@ -50,7 +50,7 @@ private:
 
 	uint8_t readByteData(const uint8_t Reg){
         uint8_t data;
-        i2c_drv_.readReg(Reg, data, MSB);
+        i2c_drv_.readReg(Reg, data);
         return data;
     }
 

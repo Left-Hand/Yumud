@@ -12,7 +12,6 @@
 
 
 #include "machine/scara/scara.hpp"
-#include "machine/actuator/zaxis_stp.hpp"
 
 #include "robots/foc/remote/remote.hpp"
 
@@ -23,6 +22,7 @@
 #include "drivers/Display/Polychrome/ST7789/st7789.hpp"
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 #include "drivers/IMU/Gyroscope/QMC5883L/qmc5883l.hpp"
+#include "drivers/Proximeter/PMW3901/PMW3901.hpp"
 
 
 #include "common/inc.hpp"

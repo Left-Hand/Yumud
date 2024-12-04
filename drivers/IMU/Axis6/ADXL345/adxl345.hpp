@@ -259,38 +259,36 @@ protected:
         
     };
 
-    struct{
-        DeviceIDReg deviceIDReg;
-        TapThresholdReg tapThresholdReg;
-        OffsetXReg offsetXReg;
-        OffsetYReg offsetYReg;
-        OffsetZReg offsetZReg;
-        TapDurationReg tapDurationReg;
-        TapLatencyReg tapLatencyReg;
-        TapWindowReg tapWindowReg;
-        ActivityThresholdReg activityThresholdReg;
-        InactivityThresholdReg inactivityThresholdReg;
-        InactivityTimeReg inactivityTimeReg;
-        AxisEnablerReg axisEnablerReg;
-        FreefallThresholdReg freefallThresholdReg;
-        FreefallTimeReg freefallTimeReg;
-        AxisControlForSingle2DoubleTapReg axisControlForSingle2DoubleTapReg;
-        SourceOfSingle2DoubleTapReg sourceOfSingle2DoubleTapReg;
-        DataRateReg dataRateReg;
-        PowerSavingReg powerSavingReg;
-        InterruptEnablerReg interruptEnablerReg;
-        InterruptMapReg interruptMapReg;
-        SourceOfInterruptReg sourceOfInterruptReg;
-        DataFormatReg dataFormatReg;
-        DataX0Reg dataX0Reg;
-        DataX1Reg dataX1Reg;
-        DataY0Reg dataY0Reg;
-        DataY1Reg dataY1Reg;
-        DataZ0Reg dataZ0Reg;
-        DataZ1Reg dataZ1Reg;
-        FifoCtrlReg fifoCtrlReg;
-        FifoStatusReg fifoStatusReg;
-    };
+    DeviceIDReg deviceIDReg;
+    TapThresholdReg tapThresholdReg;
+    OffsetXReg offsetXReg;
+    OffsetYReg offsetYReg;
+    OffsetZReg offsetZReg;
+    TapDurationReg tapDurationReg;
+    TapLatencyReg tapLatencyReg;
+    TapWindowReg tapWindowReg;
+    ActivityThresholdReg activityThresholdReg;
+    InactivityThresholdReg inactivityThresholdReg;
+    InactivityTimeReg inactivityTimeReg;
+    AxisEnablerReg axisEnablerReg;
+    FreefallThresholdReg freefallThresholdReg;
+    FreefallTimeReg freefallTimeReg;
+    AxisControlForSingle2DoubleTapReg axisControlForSingle2DoubleTapReg;
+    SourceOfSingle2DoubleTapReg sourceOfSingle2DoubleTapReg;
+    DataRateReg dataRateReg;
+    PowerSavingReg powerSavingReg;
+    InterruptEnablerReg interruptEnablerReg;
+    InterruptMapReg interruptMapReg;
+    SourceOfInterruptReg sourceOfInterruptReg;
+    DataFormatReg dataFormatReg;
+    DataX0Reg dataX0Reg;
+    DataX1Reg dataX1Reg;
+    DataY0Reg dataY0Reg;
+    DataY1Reg dataY1Reg;
+    DataZ0Reg dataZ0Reg;
+    DataZ1Reg dataZ1Reg;
+    FifoCtrlReg fifoCtrlReg;
+    FifoStatusReg fifoStatusReg;
 
 protected:
     std::optional<I2cDrv> i2c_drv;
@@ -300,7 +298,7 @@ protected:
 
     void writeReg(const RegAddress reg_address, const uint8_t reg_data){
         if(i2c_drv){
-            i2c_drv->writeReg((uint8_t)((uint8_t)reg_address & 0x7F), reg_data, MSB);
+            i2c_drv->writeReg((uint8_t)((uint8_t)reg_address & 0x7F), reg_data);
         } else if (spi_drv) {
             TODO("spi is not support yet")
         }
@@ -308,7 +306,7 @@ protected:
 
     void readReg(const RegAddress reg_address, uint8_t & reg_data){
         if(i2c_drv){
-            i2c_drv->readReg(uint8_t(reg_address), reg_data, MSB);
+            i2c_drv->readReg(uint8_t(reg_address), reg_data);
         }else if(spi_drv){
             TODO("spi is not support yet")
         }

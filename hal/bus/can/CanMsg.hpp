@@ -119,10 +119,16 @@ public:
     constexpr const uint8_t * end() const {return Data + size();}
     constexpr size_t size() const {return MIN(DLC, 8);}
 
-    operator std::vector<uint8_t>() const{return {begin(), end()};}
+    operator std::vector<uint8_t>() const{return std::vector<uint8_t>{begin(), end()};}
 
     template<size_t N>
-    operator std::array<uint8_t, N>() const{return {begin(), end()};}
+    operator std::array<uint8_t, N>() const{
+        std::array<uint8_t, N> ret;
+        for(size_t i = 0; i < N; i++){
+            ret[i] = (*this)[i];
+        }
+        return ret;
+    }
 
     auto to_vector() const {
         return std::vector<uint8_t>(*this);
@@ -193,7 +199,8 @@ public:
 
 __inline OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
     os << "{" << std::showbase << 
-        std::hex << msg.id() << '<'
+        std::hex << std::bitset<11>(msg.id()) << '<'
+        // std::hex << std::bitset<11>(msg.id()) << '<'
         << ((msg.isStd()) ? "Std" : "Ext")
         << ((msg.isRemote()) ? "Rmt" : "Dat") << std::noshowbase
         << '[' << std::dec << msg.size() << ']';

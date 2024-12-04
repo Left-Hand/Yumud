@@ -1,15 +1,15 @@
 #include "storage.hpp"
 
 namespace ymd{
-void Memory::store(const auto & data, const Address loc){
+void Memory::store(const Address loc, const is_stdlayout auto & data){
     storage_.store(loc, &data, (Address)sizeof(data));
 }
 
-void Memory::store(auto && data, const Address loc){
+void Memory::store(const Address loc, is_stdlayout auto && data){
     storage_.store(loc, &data, (Address)sizeof(data));
 }
 
-void Memory::load(auto & data, const Address loc){
+void Memory::load(const Address loc, is_stdlayout auto & data){
     storage_.load(loc, &data, (Address)sizeof(data));
 }
 

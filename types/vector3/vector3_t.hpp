@@ -31,8 +31,7 @@
 /* Note: This file has been modified by Rstr1aN / Yumud.                  */
 /**************************************************************************/
 
-#include "sys/math/real.hpp"
-#include "sys/stream/ostream.hpp"
+#include "types/vector2/vector2_t.hpp"
 
 namespace ymd{
 template <arithmetic T>
@@ -55,6 +54,8 @@ public:
     __fast_inline constexpr Vector3_t(){;}
 
     __fast_inline constexpr Vector3_t(const Vector3_t<arithmetic auto>& v) : x(v.x), y(v.y), z(v.z) {;}
+
+    __fast_inline constexpr Vector3_t(const Vector2_t<arithmetic auto>& v, const arithmetic auto z_) : x(v.x), y(v.y), z(z_) {;}
 
     __fast_inline constexpr Vector3_t(const T & _x, const T & _y, const T & _z): x(static_cast<T>(_x)), y(static_cast<T>(_y)), z(static_cast<T>(_z)){;}
 
@@ -97,9 +98,23 @@ public:
         return *this;
     }
 
+    template<arithmetic U>
+    __fast_inline constexpr Vector3_t<T> increase_x(const U & v){
+        return {x + v, y, z};
+    }
 
     template<arithmetic U>
-    Vector3_t & operator *= (const U & _v){
+    __fast_inline constexpr Vector3_t<T> increase_y(const U & v){
+        return {x, y + v, z};
+    }
+
+    template<arithmetic U>
+    __fast_inline constexpr Vector3_t<T> increase_z(const U & v){
+        return {x, y, z + v};
+    }
+
+    template<arithmetic U>
+    constexpr Vector3_t & operator *= (const U & _v){
         T v = static_cast<T>(_v);
         x *= v;
         y *= v;
@@ -108,7 +123,7 @@ public:
     }
 
     template<arithmetic U>
-    Vector3_t & operator /= (const Vector3_t<U>& v) {
+    constexpr Vector3_t & operator /= (const Vector3_t<U>& v) {
         x /= static_cast<T>(v.x);
         y /= static_cast<T>(v.y);
         z /= static_cast<T>(v.z);
@@ -116,7 +131,7 @@ public:
     }
 
     template<arithmetic U>
-    Vector3_t & operator /= (const U & _v){
+    constexpr Vector3_t & operator /= (const U & _v){
         T v = static_cast<T>(_v);
         x /= v;
         y /= v;
@@ -184,29 +199,33 @@ public:
         return (l > length ? *this * length / l : *this);
     }
 
+    constexpr Vector2_t<T> xy() const{
+        return {x,y};
+    }
+
 
     template<arithmetic U>
-    [[nodiscard]] T dot(const Vector3_t<U> &v) const{
+    constexpr T dot(const Vector3_t<U> &v) const{
         return x * static_cast<T>(v.x) + y * static_cast<T>(v.y) + z * static_cast<T>(v.z);
     }
 
     template<arithmetic U>
-    [[nodiscard]] Vector3_t cross(const Vector3_t<U> &u) const{
+    constexpr Vector3_t cross(const Vector3_t<U> &u) const{
         return Vector3_t(y * static_cast<T>(u.z) - z * static_cast<T>(u.y),
                          z * static_cast<T>(u.x) - x * static_cast<T>(u.z), 
                          x * static_cast<T>(u.y) - y * static_cast<T>(u.x));
     }
 
 
-    [[nodiscard]] T length() const{
+    constexpr T length() const{
         return sqrt(x * x + y * y + z * z);
     }
 
-    [[nodiscard]] T length_squared() const{
+    constexpr T length_squared() const{
         return x * x + y * y + z * z;
     }
 
-    void normalize() {
+    constexpr void normalize() {
         T lengthsq = length_squared();
         if (lengthsq == 0) {
             x = y = z = 0;
@@ -218,7 +237,7 @@ public:
         }
     }
 
-    [[nodiscard]] Vector3_t normalized() const {
+    constexpr Vector3_t normalized() const {
         Vector3_t v = *this;
         v.normalize();
         return v;
@@ -229,6 +248,10 @@ public:
     }
 };
 
+template<arithmetic T>
+__fast_inline constexpr Vector3_t<T> operator*(const arithmetic auto & n, const Vector3_t<T> & vec){
+    return vec * n;
+}
 
 }
 __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Vector3_t<auto> & value){

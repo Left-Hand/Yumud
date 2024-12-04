@@ -12,12 +12,33 @@ bool JointLR::reached(){
 void JointLR::setRadian(const real_t rad){
     expect_radian_ = rad;
 
+    if(!inited_){
+        last_radian_ = expect_radian_;
+        inited_ = true;
+    }
+
+    output(last_radian_);
+}
+
+void JointLR::output(const real_t rad){
+    // DEBUG_PRINTLN(rad);
+    real_t out = [&](){
+        if(inversed_){
+            return (- rad + this->basis_radian_);
+        }else{
+            return (rad + this->basis_radian_);
+        }
+    }();
+
+    servo_.setRadian(out);
+    // DEBUG_PRINTLN(out);
 }
 
 void JointLR::tick(){
-    last_radian_ = STEP_TO(last_radian_, expect_radian_, config_.max_rad_delta);
     if(reached() == false){
-        servo_.setRadian(last_radian_);
+        // DEBUG_PRINTLN(last_radian_, expect_radian_);
+        last_radian_ = STEP_TO(last_radian_, expect_radian_, max_rad_delta_);
+        output(last_radian_);
     }
 }
 

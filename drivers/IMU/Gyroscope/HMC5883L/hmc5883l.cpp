@@ -66,7 +66,9 @@ std::tuple<real_t, real_t, real_t> HMC5883L::getMagnet(){
 
 bool HMC5883L::verify(){
     uint8_t id[3] = {0};
-    requestPool(RegAddress::IDA, id, 3);
+    readReg(RegAddress::IDA, id[0]);
+    readReg(RegAddress::IDB, id[1]);
+    readReg(RegAddress::IDC, id[2]);
     bool passed = (id[0] == 'H' && id[1] == '4' && id[2] == '3');
     HMC5883L_ASSERT(passed, "HMC5883L not found!", id);
     return passed;

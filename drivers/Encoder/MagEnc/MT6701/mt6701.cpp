@@ -26,14 +26,14 @@ void MT6701::readReg(const RegAddress addr, uint16_t & data){
 }
 
 void MT6701::writeReg(const RegAddress addr, const uint8_t data){
-    if(i2c_drv) i2c_drv->writeReg((uint8_t)addr, data, MSB);
+    if(i2c_drv) i2c_drv->writeReg((uint8_t)addr, data);
     else{
         MT6701_NO_I2C_FAULT;
     }
 }
 
 void MT6701::readReg(const RegAddress addr, uint8_t & data){
-    if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data, MSB);
+    if(i2c_drv) i2c_drv->readReg((uint8_t)addr, data);
     else{
         MT6701_NO_I2C_FAULT;
     }

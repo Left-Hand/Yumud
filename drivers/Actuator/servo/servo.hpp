@@ -8,7 +8,7 @@ namespace ymd::drivers{
 class RadianServo{
 private:
     Range rad_range_ = {0, real_t(PI)};
-    real_t basis_ = 0;
+    // real_t basis_ = 0;
 protected:
     
     virtual void setGLobalRadian(const real_t rad) = 0;
@@ -18,12 +18,20 @@ public:
         rad_range_ = range;
     }
     
-    void setBasis(const real_t rad){
-        basis_ = rad;
-    }
+    // void setBasis(const real_t rad){
+    //     basis_ = rad;
+    // }
     
     void setRadian(const real_t rad){
-        setGLobalRadian(rad_range_.clamp(rad + basis_));
+        // setGLobalRadian(rad_range_.clamp(rad + basis_));
+        setGLobalRadian(rad_range_.clamp(rad));
+        // if(rad_range_.has(rad) == false){
+            // DEBUG_PRINTLN());
+        //     HALT;
+        // }
+
+
+        // setGLobalRadian(rad);
     }
 
     real_t getRadian(){

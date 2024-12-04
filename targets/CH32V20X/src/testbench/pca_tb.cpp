@@ -1,14 +1,34 @@
 #include "tb.h"
 
+#include "hal/bus/i2c/i2csw.hpp"
+
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
+#include "drivers/Actuator/servo/pwm_servo/pwm_servo.hpp"
+
+
+using namespace ymd::drivers;
 
 void pca_tb(IOStream & logger){
-    // LDS14 lds14(uart);
-    // auto & i2c = i2c1;
-    I2cSw i2c {portB[6], portB[7]};
+    I2cSw i2c = {portD[2], portC[12]};
+
+    scexpr int servo_freq = 50;
     
-    i2c.init(100000);
+    i2c.init(100_KHz);
     PCA9685 pca{i2c};
-    // lds14.run();
     pca.init();
+    pca.setFrequency(servo_freq, real_t(1.09));
+
+    MG995 servo_left{pca[0]};
+    MG995 servo_right{pca[1]};
+
+    while(true){
+        servo_left.setRadian(0);
+        servo_right.setRadian(0);
+    }
+}
+
+void pca_main(){
+    auto & logger = DEBUGGER_INST;
+    logger.init(DEBUG_UART_BAUD);
+    pca_tb(logger);
 }

@@ -64,12 +64,10 @@ protected:
         int16_t data;
     };
 
-    struct{
-        ConversionReg conversion_reg;
-        ConfigReg config_reg;
-        LowThreshReg low_thresh_reg;
-        HighThreshReg high_thresh_reg;
-    };
+    ConversionReg conversion_reg;
+    ConfigReg config_reg;
+    LowThreshReg low_thresh_reg;
+    HighThreshReg high_thresh_reg;
 
     void readReg(const RegAddress addr, uint16_t & data){
         i2c_drv.readReg(uint8_t(addr), data, LSB);

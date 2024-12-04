@@ -5,7 +5,8 @@
 namespace gxm{
 
 bool ZAxisCross::reached(){
-    return motor_.reached();
+    // return motor_.reached();
+    return true;
 }
 
 real_t ZAxisCross::getDistance(){

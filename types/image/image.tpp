@@ -13,8 +13,10 @@ uint64_t Image<ColorType>::sum(const Rect2i & roi) const{
     const Range_t<uint> x_range = roi.get_x_range();
     const Range_t<uint> y_range = roi.get_y_range();
 
+    const auto & self = *this;
+    
     for(uint j = y_range.from; j < y_range.to; ++j){
-        const auto * ptr = &(this->operator[](Vector2i{x_range.from, j}));
+        const auto * ptr = &(self[Vector2i{x_range.from, j}]);
         for(uint i = 0; i < x_range.length(); ++i){
             _sum += uint8_t(ptr[i]);
         }
@@ -39,6 +41,7 @@ Grayscale Image<ColorType>::bilinear_interpol(const Vector2 & pos) const {
     if(!this->has_point(pos_i) || !this->has_point(pos_i + Vector2i{1,1})) return Grayscale();
     Vector2 pos_frac = {frac(pos.x), frac(pos.y)};
     
+    const auto & self = *this;
     if(pos_frac.x){
         // uint16_t x_u16;
         // uni_to_u16(pos_frac.x, x_u16);
@@ -61,17 +64,17 @@ Grayscale Image<ColorType>::bilinear_interpol(const Vector2 & pos) const {
         // int c1 =  int(img(pos_i));
         // int c2 = int(img(pos_i + Vector2i(1, 0)));
         // return int((real_t(1)-pos_frac.x) * c1 + pos_frac.x * c2);
-        int color_up = int(LERP(pos_frac.x, int(this->operator[](pos_i)), int(this->operator[](pos_i + Vector2i(1, 0)))));
+        int color_up = int(LERP(int(self[pos_i]), int(self[pos_i + Vector2i(1, 0)]), pos_frac.x));
         // return color_up;
         if(!pos_frac.y){
             return color_up;
         }else{
             // uint32_t color_dn = x_u16 * img(pos_i + Vector2i(0, 1)) + (~x_u16) * img(pos_i + Vector2i(1, 1));
-            int color_dn = int(LERP(pos_frac.x, int(this->operator[](pos_i + Vector2i(0, 1))), int(this->operator[](pos_i + Vector2i(1, 1)))));
+            int color_dn = int(LERP(int(self[pos_i + Vector2i(0, 1)]), int(self[pos_i + Vector2i(1, 1)]), pos_frac.x));
             // uint16_t y_u16;
             // uni_to_u16(pos_frac.y, y_u16);
             // return ((color_up >> 16) * y_u16 + (color_dn >> 16) * (~y_u16)) >> 16;
-            return int(LERP(pos_frac.y, color_up, color_dn));
+            return int(LERP(color_up, color_dn, pos_frac.y));
         }
     }else{
         // if(pos_frac.y){
@@ -80,7 +83,7 @@ Grayscale Image<ColorType>::bilinear_interpol(const Vector2 & pos) const {
         //     // return (y_u16 * img(pos_i) + (~y_u16) * img(pos_i + Vector2i(0, 1))) >> 16;
         //     return LERP(pos_frac.y, img(pos_i), img(pos_i + Vector2i(0, 1)));
         // }else{
-            return this->operator[](pos_i);
+            return self[pos_i];
         // }
     }
     // return (ColorType)LERP(

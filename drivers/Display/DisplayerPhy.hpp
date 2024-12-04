@@ -142,12 +142,20 @@ public:
         i2c_drv_.writeReg(data_token, data, LSB);
     }
 
-    void writeMulti(const is_stdlayout auto * data_ptr, size_t len){
-        i2c_drv_.writeMulti(data_token, data_ptr, len, LSB);
+    void writeMulti(const is_stdlayout auto * pdata, size_t len){
+        if constexpr(sizeof(*pdata) != 1){
+            i2c_drv_.writeMulti(data_token, pdata, len, LSB);
+        }else {
+            i2c_drv_.writeMulti(data_token, pdata, len);
+        }
     }
 
     void writeMulti(const is_stdlayout auto data, size_t len){
-        i2c_drv_.writeMulti(data_token, data, len, LSB);
+        if constexpr(sizeof(data) != 1){
+            i2c_drv_.writeSame(data_token, data, len, LSB);
+        }else {
+            i2c_drv_.writeSame(data_token, data, len);
+        }
     }
 
     void writeU8(const uint8_t data, size_t len) override{
