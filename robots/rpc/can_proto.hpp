@@ -30,12 +30,7 @@ public:
 
 
     bool update(const CanMsg & msg){
-        // if(can_.available()){
-            // const CanMsg msg = can_.read();
-            // uint8_t id = msg.id() >> 7;
-            // if(id == 0 || id == uint8_t(node_id)){
-
-        if(msg.id() >> 7 == node_id_) return false;
+        if((msg.id() >> 7) != node_id_) return false;
         parseCanmsg(msg);
         return true;
     }

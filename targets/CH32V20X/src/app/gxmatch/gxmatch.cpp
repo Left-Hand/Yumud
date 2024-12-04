@@ -400,8 +400,8 @@ void host_main(){
             }
         }
 
-        if(true){//测试抓取动作
-        // if(false){//测试抓取动作
+        // if(true){//测试抓取动作
+        if(false){//测试抓取动作
 
             grab_module.init();
             // getline(logger);
@@ -429,8 +429,8 @@ void host_main(){
             // grab_module.take(TrayIndex::Center);
             // grab_module.give(TrayIndex::Center);
             // grab_module.take(TrayIndex::Left);
-            // grab_module.give(TrayIndex::Left);
-            grab_module.take(TrayIndex::Right);
+            grab_module.give(TrayIndex::Left);
+            // grab_module.take(TrayIndex::Right);
             grab_module.give(TrayIndex::Right);
             // while(true){
             //     // DEBUG_PRINTLN(grab_module.pending());
@@ -443,9 +443,7 @@ void host_main(){
 
     if(true){
         auto tick_200hz = [&](){
-            // joint_left.tick();
-            // joint_right.tick();
-            // joint_z.tick();
+
         };
 
         auto bind_tick200hz = [](std::function<void(void)> && func){
@@ -471,7 +469,60 @@ void host_main(){
             QMC5883L mag_sensor_{i2c};
             mag_sensor_.init();
 
-            if(false){//测试观测姿态
+        auto & wheel_config = config.wheels_config.wheel_config;
+
+        // if(true){//测试单个电机
+        if(false){//测试单个电机
+            RemoteFOCMotor stp = {logger, can1, 1};
+            stp.reset();
+            delay(1000);
+            while(true){
+                auto targ = sin(t);
+                stp.setTargetPosition(targ);
+                delay(5);
+                DEBUG_PRINTLN(targ);
+            }
+
+            if(true){//测试单个轮子
+                Wheel wheel = {wheel_config, stp};
+                wheel.setPosition(0.2_r * sin(t));
+                delay(5);
+            }
+        }
+
+
+
+        if(true){//测试多个电机
+            auto stps = std::array<RemoteFOCMotor, 4>({
+                {logger, can1, 1},
+                {logger, can1, 2},
+                {logger, can1, 3},
+                {logger, can1, 4},
+            });
+
+            for(auto & stp_ : stps){
+                stp_.reset();
+            }    
+
+            delay(1000);
+            while(true){
+                auto p0 = sin(t);
+                auto p1 = frac(t);
+                auto p2 = real_t(int(t));
+                auto p3 = ABS(sin(t));
+
+                // DEBUG_PRINTLN(p0, p1, p2, p3);
+                stps[0].setTargetPosition(p0);
+                stps[1].setTargetPosition(p1);
+                stps[2].setTargetPosition(p2);
+                stps[3].setTargetPosition(p3);
+
+                delay(5);
+            }
+        }
+
+            // if(false){//测试观测姿态
+            if(true){//测试观测姿态
                 ComplementaryFilter::Config rot_config = {
                     .kq = real_t(0.92),
                     .ko = real_t(0.5)
@@ -521,47 +572,10 @@ void host_main(){
             }
         }
 
-        RemoteFOCMotor stp = {logger, can1, 1};
-        if(true){//测试单个电机
-            stp.reset();
-            delay(1000);
-            while(true){
-                stp.setTargetPosition(sin(t));
-            }
-        }
-
-        if(true){//测试多个电机
-            auto stps = std::array<RemoteFOCMotor, 4>({
-                {logger, can1, 1},
-                {logger, can1, 2},
-                {logger, can1, 3},
-                {logger, can1, 4},
-            });
-
-            for(auto & stp_ : stps){
-                stp_.reset();
-            }    
-
-            delay(1000);
-            while(true){
-                auto p0 = sin(t);
-                auto p1 = frac(t);
-                auto p2 = real_t(int(t));
-                auto p3 = ABS(sin(t));
-
-                stps[0].setTargetPosition(p0);
-                stps[1].setTargetPosition(p1);
-                stps[2].setTargetPosition(p2);
-                stps[3].setTargetPosition(p3);
-            }
-        }
         
-        auto & wheel_config = config.wheels_config.wheel_config;
 
-        if(true){//测试单个轮子
-            Wheel wheel = {wheel_config, stp};
-            wheel.setPosition(0.2_r * sin(t));
-        }
+
+
 
         if(true){//测试多个轮子
             auto stps = std::array<RemoteFOCMotor, 4>({

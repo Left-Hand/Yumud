@@ -53,7 +53,7 @@ void GrabModule::meta_air_take_air(){
     self  
         <<  new MoveXYAction(self, config_.catch_xy)
         <<  new MoveZAction(self, config_.catch_z)
-        << new DebugAction("press??")
+        // << new DebugAction("press??")
         <<  new PressAction(self)
         <<  new MoveZAction(self, config_.free_z)
         <<  new StatusAction(self, TranportStatus::AIR)
@@ -65,7 +65,7 @@ void GrabModule::meta_air_give_air(const TrayIndex tray_index){
     self  
         <<  new MoveXYAction(self, calculateTrayPos(tray_index))
         <<  new MoveZAction(self, config_.tray_z)
-        << new DebugAction("press??")
+        // << new DebugAction("press??")
         <<  new PressAction(self)
         <<  new MoveZAction(self, config_.free_z)
         <<  new StatusAction(self, TranportStatus::AIR)
@@ -124,27 +124,27 @@ void GrabModule::inspect(){
 }
 
 void GrabModule::take(const TrayIndex index){
-    switch(status_){
-        case TranportStatus::INNER:
+    // switch(status_){
+        // case TranportStatus::INNER:
             //如果当前在内部 需要先升空再取上
             meta_to_air();
             meta_air_take_air();
-        default:
+        // default:
             meta_take_place(index);
-    }
+    // }
 }
 
 
 
 void GrabModule::give(const TrayIndex index){
-    switch(status_){
-        case TranportStatus::OUTER:
+    // switch(status_){
+        // case TranportStatus::OUTER:
             //如果当前在外部 需要先升空再取上
             meta_to_air();
             meta_air_give_air(index);
-        default:
+        // default:
             meta_give_place();
-    }
+    // }
 }
 
 void GrabModule::test(){

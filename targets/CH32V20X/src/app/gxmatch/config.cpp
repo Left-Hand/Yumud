@@ -5,7 +5,7 @@ using namespace gxm;
 SysConfig gxm::create_default_config(){
     return SysConfig{
         .joint_config = {
-            .max_rad_delta = real_t(0.03),
+            .max_rad_delta = real_t(0.13),
             // .left_basis_radian = real_t(-PI/2 + 0.2),
             .left_basis_radian = real_t(-PI/2 + 0.34),
             // .right_basis_radian = real_t(PI/2 - 0.10),
@@ -57,14 +57,14 @@ SysConfig gxm::create_default_config(){
 
         .grab_config = {
             .tray_xy = {
-                Vector2{-0.098_r    ,   0.145_r},
-                Vector2{-0.004_r     ,   0.145_r},
-                Vector2{0.092_r     ,   0.145_r}
+                Vector2{-0.098_r    ,   0.144_r},
+                Vector2{-0.004_r     ,   0.144_r},
+                Vector2{0.092_r     ,   0.144_r}
             },
 
-            .tray_z = 0.14_r,
+            .tray_z = 0.132_r,
 
-            .free_z = 0.163_r,
+            .free_z = 0.169_r,
 
             .catch_z = 0.054_r,
 
@@ -81,11 +81,11 @@ SysConfig gxm::create_default_config(){
                 Vector3{0.26_r, 0.15_r, 0.17_r}
             },
 
-            .max_spd = 0.14_r,
+            .max_spd = 0.83_r,
             .max_acc = 0.5_r,
 
-            .max_z_spd = 0.04_r,
-            .max_z_acc = 0.04_r,
+            .max_z_spd = 0.17_r,
+            .max_z_acc = 0.07_r,
             .nozzle_sustain = 500
         },
 

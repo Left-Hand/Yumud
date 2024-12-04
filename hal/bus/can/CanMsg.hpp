@@ -199,7 +199,8 @@ public:
 
 __inline OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
     os << "{" << std::showbase << 
-        std::hex << msg.id() << '<'
+        std::hex << std::bitset<11>(msg.id()) << '<'
+        // std::hex << std::bitset<11>(msg.id()) << '<'
         << ((msg.isStd()) ? "Std" : "Ext")
         << ((msg.isRemote()) ? "Rmt" : "Dat") << std::noshowbase
         << '[' << std::dec << msg.size() << ']';
