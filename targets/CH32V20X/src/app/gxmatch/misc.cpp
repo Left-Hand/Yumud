@@ -91,6 +91,62 @@ void test_joint(JointLR & joint, std::function<real_t(real_t)> && func){
 }
 
 
+PMW3901 create_pmw(){
+    auto & pmw_spi = spi1;
+
+    pmw_spi.init(9_MHz);
+    pmw_spi.bindCsPin(portD[5], 0);
+    return {pmw_spi, 0};
+    // PMW3901 pmw{pmw_spi, 0};
+    // pmw.init();
+    // return pmw;
+}
+
+void init_pmw(PMW3901 & pmw){
+    pmw.init();
+}
+
+
+ST7789 create_displayer(){
+    auto & lcd_cs = portD[6];
+    auto & lcd_dc = portD[7];
+    auto & dev_rst = portB[7];
+
+
+    #ifdef CH32V30X
+    auto & lcd_spi = spi2;
+    #else
+    auto & lcd_spi = spi1;
+    #endif
+    
+    lcd_spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+    lcd_spi.bindCsPin(lcd_cs, 0);
+
+    return {{{lcd_spi, 0}, lcd_dc, dev_rst}, {240, 135}};
+}
+
+
+void init_displayer(ST7789 & displayer){
+    displayer.init();
+
+    displayer.setFlipX(false);
+    displayer.setFlipY(true);
+    if(true){
+        displayer.setSwapXY(true);
+        displayer.setDisplayOffset({40, 52}); 
+    }else{
+        displayer.setSwapXY(false);
+        displayer.setDisplayOffset({52, 40}); 
+    }
+    displayer.setFormatRGB(true);
+    displayer.setFlushDirH(false);
+    displayer.setFlushDirV(false);
+    displayer.setInversion(true);
+
+    displayer.fill(ColorEnum::BLACK);
+}
+
+
 String getline(InputStream & logger){
     while(true){
         if(logger.available()){

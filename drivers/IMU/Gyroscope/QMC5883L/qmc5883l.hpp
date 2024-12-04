@@ -164,6 +164,9 @@ protected:
         return statusReg.ready == false;
     }
 public:
+    QMC5883L(const QMC5883L & other) = delete;
+    QMC5883L(QMC5883L && other) = delete;
+
     QMC5883L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     QMC5883L(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
     QMC5883L(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):

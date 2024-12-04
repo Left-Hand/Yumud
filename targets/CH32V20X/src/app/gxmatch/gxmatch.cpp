@@ -3,42 +3,23 @@
 
 namespace gxm{
 
-
-    
 void host_main(){
-    uart2.init(576000);
-    auto & logger = uart2;
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    auto & logger = DEBUGGER_INST;
 
     auto i2c = I2cSw{portD[2], portC[12]};
     i2c.init(400_KHz);
-    
-    auto & lcd_cs = portD[6];
-    auto & lcd_dc = portD[7];
-    auto & dev_rst = portB[7];
+    auto config = create_default_config();
+    // spi1.init(9_MHz);
+    // spi2.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
+    can1.init(1_MHz);
 
-    #ifdef CH32V30X
-    auto & lcd_spi = spi2;
-    #else
-    auto & lcd_spi = spi1;
-    #endif
-    
-    lcd_spi.bindCsPin(lcd_cs, 0);
-    lcd_spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
-
-    ST7789 tftDisplayer({{lcd_spi, 0}, lcd_dc, dev_rst}, {240, 135});
-
-    auto & pmw_spi = spi1;
-
-    pmw_spi.init(9_MHz);
-    pmw_spi.bindCsPin(portD[5], 0);
-    PMW3901 pmw{pmw_spi, 0};
-    pmw.init();
-
-    initDisplayer(tftDisplayer);
+    auto displayer{create_displayer()};
+    init_displayer(displayer);
     
     auto painter = Painter<RGB565>{};
-    painter.bindImage(tftDisplayer);
+    painter.bindImage(displayer);
 
 
 
@@ -55,41 +36,6 @@ void host_main(){
         PANIC();
     }
     
-
-    if(false){
-        MPU6050 acc_gyr_sensor{i2c};
-        QMC5883L mag_sensor{i2c};
-
-        acc_gyr_sensor.init();
-        mag_sensor.init();
-
-        ComplementaryFilter::Config rot_config = {
-            .kq = real_t(0.92),
-            .ko = real_t(0.2)
-        };
-        
-        ComplementaryFilter rot_obs = {rot_config};
-    
-        DEBUG_PRINTLN(std::setprecision(4))
-        while(true){
-
-            acc_gyr_sensor.update();
-            mag_sensor.update();
-
-            // const auto acc3 = Vector3{acc_gyr_sensor.getAcc()};
-            const auto gyr3 = Vector3{acc_gyr_sensor.getGyr()};
-            const auto mag3 = Vector3{mag_sensor.getMagnet()};
-
-            // const auto acc2 = Vector2{acc3.x, acc3.y};
-
-            const auto rot = -atan2(mag3.y, mag3.x);
-            const auto gyr = gyr3.z;
-
-            auto rot_ = rot_obs.update(rot, gyr, t);
-            DEBUG_PRINTLN(rot, gyr, rot_);
-            delay(5);
-        }
-    }
 
     if(false){
         using Type = Vector2;
@@ -174,22 +120,6 @@ void host_main(){
     }
 
     if(true){
-        while(true){
-
-            // pos += Vector2(pmw.getPosition());
-            // auto pos = Vector2(pmw.getMotion());
-
-            auto begin = micros();
-            pmw.update();
-            auto pos = Vector2(pmw.getPosition());
-            auto [x,y] = pos;
-            DEBUG_PRINTLN(x,y, micros() - begin);
-            // delayMicroseconds(5000);
-            delay(5);
-        }
-    }
-    
-    if(true){
         
         PCA9685 pca{i2c};
         pca.init();
@@ -199,16 +129,16 @@ void host_main(){
 
         MG995 servo_left{pca[0]};
         MG995 servo_right{pca[1]};
-
         SG90 claw_servo{pca[5]};
-
         SG90 servo_cross{pca[15]};
+
 
 
         // RemoteFOCMotor z_motor{logger, can1, 1};
         
+        // RemoteFOCMotor z_motor{logger, can1, 1};
 
-        auto config = create_default_config();
+
         auto & joint_config = config.joint_config;
         JointLR joint_left{
             joint_config.max_rad_delta,
@@ -270,11 +200,7 @@ void host_main(){
             joint_z.tick();
         };
 
-        auto tick_200hz = [&](){
-            joint_left.tick();
-            joint_right.tick();
-            joint_z.tick();
-        };
+
 
         if(true){//绑定50hz舵机更新回调函数
             auto & timer = timer2;
@@ -285,14 +211,7 @@ void host_main(){
             DEBUG_PRINTLN("tick50 binded");
         }
 
-        if(true){//绑定200hz车体控制回调函数
-            auto & timer = timer1;
-            timer.init(200);
 
-            timer.bindCb(TimerUtils::IT::Update, tick_200hz);
-            timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
-            DEBUG_PRINTLN("tick200 binded");
-        }
 
 
         if(true){//绑定滴答时钟
@@ -553,7 +472,129 @@ void host_main(){
             }
         }
     }
-    
+
+    if(true){
+        auto tick_200hz = [&](){
+            // joint_left.tick();
+            // joint_right.tick();
+            // joint_z.tick();
+        };
+
+        auto bind_tick200hz = [](std::function<void(void)> && func){
+            auto & timer = timer1;
+            timer.init(200);
+
+            timer.bindCb(TimerUtils::IT::Update, std::move(func));
+            timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
+            DEBUG_PRINTLN("tick200 binded");
+        };
+
+        bind_tick200hz(tick_200hz);
+
+        if(true){//测试单个电机
+            RemoteFOCMotor stp = {logger, can1, 1};
+            stp.reset();
+            delay(1000);
+            while(true){
+                stp.setTargetPosition(sin(t));
+            }
+        }
+
+        if(true){//测试多个电机
+            auto stps = std::array<RemoteFOCMotor, 4>({
+                {logger, can1, 1},
+                {logger, can1, 2},
+                {logger, can1, 3},
+                {logger, can1, 4},
+            });
+
+            for(auto & stp : stps){
+                stp.reset();
+            }    
+
+            delay(1000);
+            while(true){
+                auto p0 = sin(t);
+                auto p1 = frac(t);
+                auto p2 = real_t(int(t));
+                auto p3 = ABS(sin(t));
+
+                stps[0].setTargetPosition(p0);
+                stps[1].setTargetPosition(p1);
+                stps[2].setTargetPosition(p2);
+                stps[3].setTargetPosition(p3);
+            }
+        }
+        
+        if(false){
+
+            auto flow_sensor_{create_pmw()};
+            init_pmw(flow_sensor_);
+
+            MPU6050 acc_gyr_sensor_{i2c};
+            acc_gyr_sensor_.init();
+
+            QMC5883L mag_sensor_{i2c};
+            mag_sensor_.init();
+
+            if(false){//测试观测姿态
+                ComplementaryFilter::Config rot_config = {
+                    .kq = real_t(0.92),
+                    .ko = real_t(0.5)
+                };
+                
+                ComplementaryFilter rot_obs = {rot_config};
+            
+                DEBUG_PRINTLN(std::setprecision(4))
+                while(true){
+
+                    acc_gyr_sensor_.update();
+                    mag_sensor_.update();
+
+                    const auto gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
+                    const auto mag3_raw = Vector3{mag_sensor_.getMagnet()};
+
+                    const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
+                    const auto gyr_raw = gyr3_raw.z;
+
+                    const auto rot = rot_obs.update(rot_raw, gyr_raw, t);
+
+                    flow_sensor_.update(rot);
+
+                    const auto [x,y] = flow_sensor_.getPosition();
+
+                    DEBUG_PRINTLN(rot, gyr_raw, x, y);
+                    delay(5);
+                }
+            }
+
+            if(false){//测试状态观测器
+                Estimator est_ = {
+                    config.est_config,
+                    acc_gyr_sensor_,
+                    mag_sensor_,
+                    flow_sensor_
+                };
+
+                est_.init();
+
+                while(true){
+                    est_.update(t);
+                    
+                    DEBUG_PRINTLN(est_.pos());
+                }
+            }
+        }
+
+        if(true){//测试单个轮子
+            // Wheel wheel = stp
+        }
+
+        if(true){//测试多个轮子
+            // Wheel
+        }
+    }
+
 };
 
 

@@ -161,6 +161,8 @@ struct Quat_t{
 };
 
 }
-
+__fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Quat_t<auto> & value){
+    return os << '(' << value.x << ',' << value.y << ',' << value.z << ',' << value.w << ')';
+}
 
 #include "Quat_t.tpp"

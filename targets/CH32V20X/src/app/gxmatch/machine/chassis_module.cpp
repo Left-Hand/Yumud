@@ -12,7 +12,7 @@ void ChassisModule::rotationTrim(const real_t raderr){
 }
 
 void ChassisModule::forwardMove(const Vector2 & vel, const real_t spinrate){
-    wheels_.setSpeed(solver_.inverse(vel, spinrate));
+    // wheels_.setSpeed(solver_.inverse(vel, spinrate));
 }
 
 void ChassisModule::calibrateRotation(const real_t rad){

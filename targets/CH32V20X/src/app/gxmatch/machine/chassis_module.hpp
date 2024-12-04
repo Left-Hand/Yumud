@@ -3,6 +3,7 @@
 #include "motion_module.hpp"
 #include "../autodrive/Estimator.hpp"
 #include "wheel/wheels.hpp"
+#include "wheel/wheel_stp.hpp"
 
 
 
@@ -39,7 +40,9 @@ public:
         const Config & config_;
     public:
         RotationCtrl(const Config & config):config_(config){;}
-        DELETE_COPY_AND_MOVE(RotationCtrl)
+        RotationCtrl(const RotationCtrl & other) = delete;
+        RotationCtrl(RotationCtrl && other) = delete;
+        
     };
 
     class PositionCtrl{
@@ -58,7 +61,8 @@ public:
 
     struct Config{
         Mecanum4Solver::Config solver_config;
-        Wheel::Config wheel_config;
+        // Wheel::Config wheel_config;
+        real_t wheel_radius_;
 
         real_t max_acc;
         real_t max_spd;

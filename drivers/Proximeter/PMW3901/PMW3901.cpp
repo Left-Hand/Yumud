@@ -22,7 +22,7 @@
 #define PMW3901_REG_RawData_Grab_Status     0x59
 #define PMW3901_REG_Inverse_Product_ID      0x5F
 
-// #define PMW3901_DEBUG
+#define PMW3901_DEBUG
 
 #ifdef PMW3901_DEBUG
 #undef PMW3901_DEBUG

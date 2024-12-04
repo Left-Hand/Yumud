@@ -2,7 +2,7 @@
 
 using namespace gxm;
 
-SysConfig create_default_config(){
+SysConfig gxm::create_default_config(){
     return SysConfig{
         .joint_config = {
             .max_rad_delta = real_t(0.07),
@@ -82,6 +82,26 @@ SysConfig create_default_config(){
             .max_acc = 0.6_r,
 
             .nozzle_sustain = 500
+        },
+
+        .wheel_config = {
+            .wheel_radius = 0.06_r,//轮子直径
+            .max_tps = 1,//最大每秒转圈数
+            .max_aps = 1,//最大每秒圈速加速度
+        },
+
+
+        .est_config = {
+            .calibrate_times = 1,//校准次数
+            .force_calibrate = false,//强制校准而不是使用先验偏置
+            .pre_bias = {
+
+            },//偏置 空为未给
+
+            .rot_obs_config = {//转向观测器配置
+                .kq = 0.5_r,
+                .ko = 0.5_r,
+            }
         }
     };
 }

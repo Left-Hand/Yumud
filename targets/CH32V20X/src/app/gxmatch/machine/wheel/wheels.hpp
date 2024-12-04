@@ -26,15 +26,17 @@ public:
 
     bool verify();
 
-    void setSpeed(const std::tuple<real_t, real_t, real_t, real_t> & spds);
+    // void setSpeed(const std::tuple<real_t, real_t, real_t, real_t> & spds);
 
     void setPosition(const std::tuple<real_t, real_t, real_t, real_t> & pos);
 
-    void setDelta(const std::tuple<real_t, real_t, real_t, real_t> & pos);
+    void setDelta(const std::tuple<real_t, real_t, real_t, real_t> & delta);
+
+    void forward(const std::tuple<real_t, real_t, real_t, real_t> & delta);
 
     std::tuple<real_t, real_t, real_t, real_t> getPosition();
 
-    std::tuple<real_t, real_t, real_t, real_t> getSpeed();
+    // std::tuple<real_t, real_t, real_t, real_t> getSpeed();
 
     Wheel & operator [](const size_t idx){
         if(idx > 3) HALT;

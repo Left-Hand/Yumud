@@ -32,6 +32,14 @@ void test_joint(JointLR & joint, std::function<real_t(real_t)> && func);
 
 String getline(InputStream & logger);
 
+
+PMW3901 create_pmw();
+void init_pmw(PMW3901 & pmw);
+
+ST7789 create_displayer();
+void init_displayer(ST7789 & displayer);
+
+
 struct JointConfig{
     real_t max_rad_delta;
     real_t left_basis_radian;

@@ -27,6 +27,9 @@ protected:
     using CanProtocolConcept::E_3;
     using CanProtocolConcept::E_4;
 public:
+    RemoteFOCMotor(const RemoteFOCMotor & other) = delete;
+    RemoteFOCMotor(RemoteFOCMotor && other) = delete;
+
     RemoteFOCMotor(IOStream & _logger, Can & _can, NodeId _id):
             FOCMotorConcept(_id), CanProtocolConcept(_can), logger(_logger){;}
 

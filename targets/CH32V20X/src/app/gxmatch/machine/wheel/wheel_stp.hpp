@@ -8,11 +8,18 @@ class FOCMotorConcept;
 namespace gxm{
 
 class WheelStepper:public Wheel{
+public:
+    struct Config:public Wheel::Config{
+
+    };
 protected:
     using Motor = ymd::foc::FOCMotorConcept;
-    Motor & motor_;
+    const Config & config_;
 public:
-    WheelStepper(const Config & config, Motor & motor):Wheel(config), motor_(motor) {;}
+    WheelStepper(const Config & config, Motor & motor):
+        Wheel(config, motor), 
+        config_(config){;}
+
     DELETE_COPY_AND_MOVE(WheelStepper)
 
     void setMotorSpeed(const real_t spd) override;
