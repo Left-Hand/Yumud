@@ -55,6 +55,9 @@ public:
     // Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
     Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain(MIN(s, INT32_MAX)), full(sustain){}
 
+    Action(const Action & other) = delete;
+    Action(Action && other) = default;
+
     bool died() const{
         // return sustain <= 0;
         return decreased_;

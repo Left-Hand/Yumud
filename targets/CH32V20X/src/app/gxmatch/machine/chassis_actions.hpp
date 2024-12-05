@@ -12,6 +12,7 @@ class RapidShiftAction:public ChassisAction{
 protected:
     Vector2 dest_;
 public:
+    ACTION_NAME(rapid_shift)
     RapidShiftAction(Inst & inst, const Vector2 & pos):
         ChassisAction(UINT_MAX, [this](){
             inst_.meta_rapid_shift(dest_);
@@ -26,6 +27,7 @@ class RapidSpinAction:public ChassisAction{
 protected:
     real_t dest_;
 public:
+    ACTION_NAME(rapid_spin)
     RapidSpinAction(Inst & inst, const real_t rad):
         ChassisAction(UINT_MAX, [this](){
             inst_.meta_rapid_spin(dest_);
@@ -60,6 +62,7 @@ protected:
         );
     }
 public:
+    ACTION_NAME(shift)
     ShiftAction(Inst & inst, const Vector2 & pos):
         ChassisAction(UINT_MAX, [this](){
             if(first()){
@@ -93,6 +96,7 @@ protected:
         );
     }
 public:
+    ACTION_NAME(spin)
     SpinAction(Inst & inst, const real_t rad):
         ChassisAction(UINT_MAX, [this](){
             if(first()){
@@ -111,6 +115,7 @@ public:
 
 class WaitArriveAction:public ChassisAction{
 public:
+    ACTION_NAME(wait_arrive)
     WaitArriveAction(Inst & inst):
         ChassisAction(UINT_MAX, [this](){
             if(inst_.arrived()) kill();
@@ -121,13 +126,16 @@ public:
 
 
 class TrimAction:public ChassisAction{
+protected:
+    Ray trim_;
 public:
-    TrimAction(Inst & inst):
+    ACTION_NAME(trim)
+    TrimAction(Inst & inst, const Ray & trim):
         ChassisAction(UINT_MAX, [this](){
             // if(inst_.arrived()) kill();
-            TODO("csd");
-        }, inst)
-        {};
+            // TODO("csd");
+        }, inst),
+        trim_(trim){};
 };
 
 }

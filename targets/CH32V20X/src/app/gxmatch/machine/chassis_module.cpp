@@ -1,26 +1,34 @@
 #include "chassis_actions.hpp"
 #include "chassis_ctrl.hpp"
 
-namespace gxm{
 
-void ChassisModule::positionTrim(const Vector2 & trim){
-    wheels_.setDelta(solver_.inverse(trim, 0));
-}
 
-void ChassisModule::rotationTrim(const real_t raderr){
-    wheels_.setDelta(solver_.inverse({0,0}, raderr));
-}
+using namespace gxm;
+using namespace ChassisActions;
+
+// void ChassisModule::positionTrim(const Vector2 & trim){
+//     wheels_.setDelta(solver_.inverse(trim, 0));
+// }
+
+// void ChassisModule::rotationTrim(const real_t raderr){
+//     wheels_.setDelta(solver_.inverse({0,0}, raderr));
+// }
 
 void ChassisModule::forwardMove(const Vector2 & vel, const real_t spinrate){
     // wheels_.setSpeed(solver_.inverse(vel, spinrate));
 }
 
-void ChassisModule::calibrateRotation(const real_t rad){
+// void ChassisModule::calibrateRotation(const real_t rad){
     
-}
+// }
 
-void ChassisModule::calibratePosition(const Vector2 & pos){
+
+// void ChassisModule::calibratePosition(const Vector2 & pos){
     
+// }
+
+void ChassisModule::recalibrate(const Ray & ray){
+    TODO();
 }
 
 void ChassisModule::test(){
@@ -72,6 +80,11 @@ void ChassisModule::meta_rapid_spin(const real_t rad){
     ctrl_mode_ = CtrlMode::SPIN;
 }
 
+void ChassisModule::trim(const Ray & ray){
+    auto & self = *this;
+    self << new TrimAction(self, ray);
+}
+
 
 Vector2 ChassisModule::pos(){
     return est_.pos();
@@ -102,5 +115,5 @@ real_t ChassisModule::gyr(){
     return est_.gyr();
 }
 
-}
+
 

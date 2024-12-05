@@ -23,31 +23,38 @@ void Estimator::update(const real_t time){
 
     acc3_raw = Vector3{acc_gyr_sensor_.getAcc()};
     gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
+    // mag3_raw = Vector3{mag_sensor_.getMagnet()};
     mag3_raw = Vector3{mag_sensor_.getMagnet()};
 
     // acc3_ = bias_.acc.xform(acc3_raw);
     // gyr3_ = Vector3(gyr3_raw - bias_.gyr);
     // mag3_ = bias_.mag.xform(mag3_raw);
 
-    const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
+    const auto rot_raw = calculate_raw_dir(mag3_raw);
 
     gyr_ = gyr3_raw.z;
-    rot_ = rot_obs_.update(rot_raw, gyr_, time);
+    rot_ = rot_obs_.update(rot_raw - bias_.rot, gyr_, time);
 
     flow_sensor_.update(rot_);
 
-    auto new_pos = Vector2(flow_sensor_.getPosition());
-    auto delta_pos = new_pos - pos_;
+    const auto new_pos = Vector2(flow_sensor_.getPosition());
+    const auto delta_pos = new_pos - pos_;
     pos_ = flow_sensor_.getPosition();
 
-    auto delta_t = time - last_time;
+    const auto delta_t = time - last_time;
     last_time = time;
 
-    auto new_spd = delta_pos / delta_t;
+    const auto new_spd = delta_pos / delta_t;
     spd_ = spd_lpf_.update(new_spd);
 
     // const auto [x,y] = pos_;
     // DEBUG_PRINTLN(rot_, gyr_, x, y);
+}
+
+void Estimator::recalibrate(const Vector2 & _pos, const real_t _rot){
+    TODO();
+    pos_ = _pos;
+    rot_ = _rot;
 }
 
 Quat Estimator::calculateAccBias(){
@@ -91,7 +98,7 @@ void Estimator::calibrate(){
     bias_.acc = calculateAccBias();
     bias_.gyr = calculateGyrBias();
     bias_.mag = calculateMagBias();
-
+    bias_.rot = calculate_raw_dir(Vector3{mag_sensor_.getMagnet()});
     DEBUG_PRINTLN(bias_.acc, bias_.gyr, bias_.mag)
 }
 

@@ -10,6 +10,47 @@ namespace gxm{
 using namespace ymd::drivers;
 // using Accerometer = ymd::Accerometer;
 
+struct TauWrapper{
+protected:
+    real_t last_value_;
+    real_t accumulated_value_;
+
+    bool inited = false;
+public:
+    TauWrapper(){;}
+
+    real_t update(const real_t value){
+        if(!inited){
+            last_value_ = value;
+            accumulated_value_ = 0;
+            inited = true;
+        }else{
+            auto delta = value - last_value_;
+
+            scexpr auto one = real_t(PI);
+            scexpr auto half_one = real_t(PI/2);
+
+            if(delta > half_one){
+                delta -= one;
+            }else if (delta < -half_one){
+                delta += one;
+            }
+
+            last_value_ = value;
+            accumulated_value_ += delta;
+        }
+
+
+        return accumulated_value_;
+    }
+
+    void reset(){
+        last_value_ = 0;
+        accumulated_value_ = 0;
+        inited = false;
+    }
+};
+
 
 
 class ComplementaryFilter{
@@ -64,6 +105,40 @@ public:
         inited = false;
     }
 };
+
+
+class RotationObserver{
+public:
+    using Config = ComplementaryFilter::Config;
+protected:
+    TauWrapper tau_wrapper_;
+    ComplementaryFilter comp_filter_;
+public:
+    RotationObserver(const Config & config):
+        comp_filter_(config){
+            reset();
+        }
+
+    real_t update(const real_t rot, const real_t gyr, const real_t time){
+        return comp_filter_.update(
+            tau_wrapper_.update(rot)
+            , gyr, time);
+    }
+
+    void reset(const real_t time = 0){
+        tau_wrapper_.reset();
+        comp_filter_.reset();
+    }
+};
+
+__fast_inline constexpr real_t min_rad_diff(real_t from, real_t to){
+    from = fposmodp(from, real_t(TAU));
+    to = fposmodp(to, real_t(TAU));
+
+    const auto diff = to - from;
+    return diff > real_t(PI) ? (diff - real_t(TAU)) : diff;
+}
+
 
 template<typename T>
 class LowPassFilter_t{
@@ -161,6 +236,7 @@ using Vector2Lpf = LowPassFilter_t<Vector2>;
 
 
 
+
 //底盘观测器 用于从惯性计与里程计估测姿态
 class Estimator{
 public:
@@ -170,6 +246,7 @@ public:
         Quat acc;
         Vector3 gyr;
         Quat mag;
+        real_t rot;
     };
 
     struct Config{
@@ -187,7 +264,8 @@ protected:
     Magnetometer & mag_sensor_;//地磁计
     FlowSensor & flow_sensor_;
 
-    ComplementaryFilter rot_obs_{config_.rot_obs_config};
+    // ComplementaryFilter rot_obs_{config_.rot_obs_config};
+    RotationObserver rot_obs_{config_.rot_obs_config};
     Vector2Lpf spd_lpf_{config_.spd_lpf_config};
     
     Bias bias_;
@@ -211,10 +289,12 @@ protected:
 
     real_t last_time;
 
+    __fast_inline real_t calculate_raw_dir(const Vector3 & mag) const {
+        return -atan2(mag.y, mag.x);
+    }
 public:
     Estimator(const Estimator & other) = delete;
     Estimator(Estimator && other) = delete;
-
 
     Estimator(const Config & config, 
             Axis6 & acc_gyr_sensor, 
@@ -229,6 +309,8 @@ public:
     void init();
     void reset();
     void calibrate();
+
+    void recalibrate(const Vector2 & _pos, const real_t _rot);
     void update(const real_t time);
 
     Quat calculateAccBias();

@@ -60,6 +60,8 @@ protected:
     Vector2 expect_pos_;
     real_t expect_rot_;
 
+
+
 public:
     ChassisModule(const Config & config, 
             const Wheels & wheels,
@@ -69,17 +71,21 @@ public:
         wheels_(wheels),
         est_(est){}
 
+
+
     void meta_rapid(const Ray & ray);
     void meta_rapid_shift(const Vector2 & pos);
     void meta_rapid_spin(const real_t rad);
 
-    void positionTrim(const Vector2 & trim);
-    void rotationTrim(const real_t raderr);
+    // void positionTrim(const Vector2 & trim);
+    // void rotationTrim(const real_t raderr);
+
+    void trim(const Ray & ray);
     void forwardMove(const Vector2 & vel, const real_t spinrate);
 
-    void calibratePosition(const Vector2 & pos);
-    void calibrateRotation(const real_t rad);
-
+    // void calibratePosition(const Vector2 & pos);
+    // void calibrateRotation(const real_t rad);
+    void recalibrate(const Ray & ray);
     void test();
     void tick();
 
