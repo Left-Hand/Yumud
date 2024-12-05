@@ -32,7 +32,11 @@ void RemoteFOCMotor::freeze(){POST(Command::FREEZE);}
 
 real_t RemoteFOCMotor::getCurrent() const{POST(Command::GET_CURR); return readCurrent();}
 real_t RemoteFOCMotor::getSpeed() const{POST(Command::GET_SPD); return readSpeed();}
-real_t RemoteFOCMotor::getPosition() const{POST(Command::GET_POS); return readPosition();}
+
+real_t RemoteFOCMotor::getPosition() const{
+    POST(Command::GET_POS); 
+    return readPosition();
+}
 real_t RemoteFOCMotor::getAcc() const{POST(Command::GET_ACC); return readAcc();}
 void RemoteFOCMotor::updateAll() const{POST(Command::GET_ALL);}
 

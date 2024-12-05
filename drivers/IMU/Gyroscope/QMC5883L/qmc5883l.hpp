@@ -123,9 +123,7 @@ protected:
         i2c_drv_.readMulti((uint8_t)addr, datas, len, LSB);
     }
 
-    real_t From16BitToGauss(const int16_t data){
-        return s16_to_uni(data) * fs;
-    }
+    real_t From16BitToGauss(const int16_t data);
 
     void setFs(const FullScale FS){
         switch(FS){

@@ -22,6 +22,12 @@ void CanFilter::list(const std::initializer_list<CanID16> & list){
     apply();
 }
 
+void CanFilter::all(){
+    mask(
+        CanID16::ACCEPT_ALL(), CanID16::ACCEPT_ALL(),
+        CanID16::ACCEPT_ALL(), CanID16::ACCEPT_ALL());
+}
+
 void CanFilter::list(const std::initializer_list<CanID32> & list){
     switch(list.size()){
         default:

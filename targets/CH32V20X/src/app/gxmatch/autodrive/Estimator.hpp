@@ -257,7 +257,8 @@ public:
         ComplementaryFilter::Config rot_obs_config;
         Vector2Lpf::Config spd_lpf_config;
     };
-protected:
+// protected:
+public:
     const Config & config_;
 
     Axis6 & acc_gyr_sensor_;//加速度与角速度计
@@ -289,9 +290,7 @@ protected:
 
     real_t last_time;
 
-    __fast_inline real_t calculate_raw_dir(const Vector3 & mag) const {
-        return -atan2(mag.y, mag.x);
-    }
+    real_t calculate_raw_dir(const Vector3 & mag) const;
 public:
     Estimator(const Estimator & other) = delete;
     Estimator(Estimator && other) = delete;

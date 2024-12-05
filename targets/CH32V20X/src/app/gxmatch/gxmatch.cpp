@@ -7,7 +7,14 @@
 #include "nvcv2/shape/shape.hpp"
 #include "nvcv2/pixels/pixels.hpp"
 
+#include "machine/chassis_actions.hpp"
+
+
 using namespace nvcv2;
+
+// consteval real_t operator"" r(long double x){
+//     return real_t(x);
+// }
 
 namespace gxm{
 
@@ -15,14 +22,22 @@ void host_main(){
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
     auto & logger = DEBUGGER_INST;
 
+    DEBUG_PRINTLN("poweron");
+
     auto i2c = I2cSw{portD[2], portC[12]};
     i2c.init(400_KHz);
     auto config = create_default_config();
+
+    // auto & wuart = uart7;
+    // wuart.init(115200);
     // spi1.init(9_MHz);
     // spi2.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
-    can1.init(1_MHz);
     auto & can = can1;
+
+    can.init(1_MHz);
+    can[0].all();
+        
 
     auto displayer{create_displayer()};
     init_displayer(displayer);
@@ -31,18 +46,8 @@ void host_main(){
     painter.bindImage(displayer);
 
     if(false){
-        if(false){
-            auto solver = TrapezoidSolver_t<real_t>{4,10.0_r,0.1_r};
-            scexpr auto delta = 0.001_r;
-            
-            DEBUG_PRINTLN(std::setprecision(4));
-            for(real_t x = 0; x <= solver.period(); x += delta){
-                auto y = solver.forward(x);
-                delayMicroseconds(500);
-                DEBUG_PRINTLN(x, y);
-            } 
-            PANIC();
-        }
+    // if(true){
+
         
 
         if(false){
@@ -70,9 +75,9 @@ void host_main(){
             publisher.publish({1,1});
         }
 
-
-
-        if(false){
+        //#region 路径规划
+        if(true){
+        // if(false){
             auto limits = SequenceLimits{
                 .max_gyr = 2,
                 .max_agr = real_t(0.5),
@@ -126,11 +131,14 @@ void host_main(){
             DEBUG_PRINTLN("done");
             while(true);
         }
+
+        //#endregion
     }
 
 
     //#region 测试机械臂
-    if(true){
+    // if(true){
+    if(false){
         
         PCA9685 pca{i2c};
         pca.init();
@@ -346,7 +354,6 @@ void host_main(){
         }
         //#endregion
 
-
         //#region 测试xyz
         if(false){
         // if(true){//测试xyz
@@ -392,8 +399,8 @@ void host_main(){
         //#endregion
 
         //#region 测试抓取动作
-        if(true){
-        // if(false){//测试抓取动作
+        // if(true){
+        if(false){
 
             grab_module.init();
             // getline(logger);
@@ -437,8 +444,10 @@ void host_main(){
 
     //#endregion
 
-    if(true){//#region 底盘
-
+    //#region 底盘
+    if(true){
+    // if(false){
+        bind_tick_1khz(nullptr);
         auto flow_sensor_{create_pmw()};
         init_pmw(flow_sensor_);
 
@@ -448,6 +457,15 @@ void host_main(){
         QMC5883L mag_sensor_{i2c};
         mag_sensor_.init();
 
+        auto & est_config = config.chassis_config.est_config;
+
+        Estimator est_ = {
+            est_config,
+            acc_gyr_sensor_,
+            mag_sensor_,
+            flow_sensor_
+        };
+        
         auto & wheel_config = config.wheels_config.wheel_config;
 
         CanMaster can_master = {can};
@@ -467,8 +485,10 @@ void host_main(){
         };
 
         init_steppers();
-        can_master.registerNodes(stps.begin(), stps.end());
-
+        // can_master.registerNode(stps[0]);
+        // can_master.registerNode(stps[1]);
+        // can_master.registerNode(stps[2]);
+        // can_master.registerNode(stps[3]);
         Wheels wheels = {
             config.wheels_config,
             {
@@ -476,59 +496,72 @@ void host_main(){
                 stps[1],
                 stps[2],
                 stps[3]
-            }
+            },
+            can
         };
 
         wheels[0].inverse();
         wheels[2].inverse();
 
-        //#region 测试单个电机
-        // if(true){
-        if(false){//测试单个电机
-            RemoteFOCMotor stp = {logger, can1, 1};
-            stp.reset();
-            delay(1000);
-            while(true){
-                auto targ = sin(t);
-                stp.setTargetPosition(targ);
-                delay(5);
-                DEBUG_PRINTLN(targ);
-            }
 
-            if(true){//测试单个轮子
-                Wheel wheel = {wheel_config, stp};
-                wheel.setPosition(0.2_r * sin(t));
-                delay(5);
-            }
-        }
-        //#endregion
-
-        //#region 测试多个轮子
+        //#region 测试整个底盘
         if(true){
-            auto tick_200hz = [&](){
-                can_master.update();
-            };
+            ChassisModule chassis_module {
+                config.chassis_config, 
+                wheels, est_};
 
-            bind_tick_200hz(tick_200hz);
+            bind_tick_800hz([&]{
+                chassis_module.tick800();
+            });
 
-            Mecanum4Solver solver = {config.chassis_config.solver_config};
+            bind_tick_1khz([&]{
+                chassis_module.tick();
+            });
+
             while(true){
-                // scexpr real_t delta = {0.003_r};
-                // auto delta = solver.inverse(Vector2{0, 0.005_r}, 0);
-                // auto delta = solver.inverse(Vector2{0, 0}, 0.005_r);
-                // auto delta = solver.inverse(Vector2{0.003_r, 0.003_r}, 0);
-                // auto delta = solver.inverse(Vector2{-0.003_r, 0.00_r}, 0);
-                auto delta = solver.inverse(Vector2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
-                wheels.forward(delta);
+                using namespace ChassisActions;
+                // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
+                // delay(5);
 
-                delay(5);
+                delay(2000);
+                chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+                DEBUG_PRINTLN(chassis_module.pending());
+                // chassis_module.setCurrent({{0,0}, 0.2_r});
+                // DEBUG_PRINTLN("???");
             }
+
         }
         //#endregion
+
+        Mecanum4Solver solver = {config.chassis_config.solver_config};
+        //#region 测试位置反馈
+        auto test_pos_ret = [&](){
+
+
+            while(true){
+                // DEBUG_PRINTLN(
+                //     wheels[0].getPosition(),
+                //     wheels[1].getPosition(),
+                //     wheels[2].getPosition(),
+                //     wheels[3].getPosition()
+                // )
+                // DEBUG_PRINTLN(est_.rot());
+                DEBUG_PRINTLN(mag_sensor_.getMagnet())
+                delay(5);
+            }
+        };
+
+        if(true){
+        // if(false){
+            test_pos_ret();
+        }
+
+        //#endregion
+
 
         //#region 测试观测姿态
         // if(false){
-        if(true){//测试观测姿态
+        auto test_gest_obs = [&](){//测试观测姿态
             ComplementaryFilter::Config rot_config = {
                 .kq = real_t(0.92),
                 .ko = real_t(0.5)
@@ -552,48 +585,160 @@ void host_main(){
 
                 flow_sensor_.update(rot);
 
-                const auto [x,y] = flow_sensor_.getPosition();
+                // const auto [x,y] = flow_sensor_.getPosition();
 
-                DEBUG_PRINTLN(rot, gyr_raw, x, y);
+                // DEBUG_PRINTLN(rot, gyr_raw, x, y);
+                DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z, fposmodp(rot_raw, real_t(PI/2)));
+                // DEBUG_PRINTLN(gyr_raw);
                 delay(5);
             }
+        };
+
+        if(true){
+        // if(false){
+            test_gest_obs();
         }
 
         //#endregion
 
-        auto & est_config = config.chassis_config.est_config;
-
-        Estimator est_ = {
-            est_config,
-            acc_gyr_sensor_,
-            mag_sensor_,
-            flow_sensor_
-        };
-
         //#region 测试状态观测器
-        if(false){
+        auto test_est_obs = [&](){
 
             est_.init();
 
             while(true){
                 est_.update(t);
-                
-                DEBUG_PRINTLN(est_.pos());
+                delay(5);
+                DEBUG_PRINTLN(est_.mag3_raw.x, est_.mag3_raw.y, est_.mag3_raw.z);
             }
+        };
+
+        // if(true){
+        if(false){
+            test_est_obs();
+        }
+
+        //#endregion
+
+
+        //#region 测试单个电机
+        auto test_single_motor = [&](){
+            RemoteFOCMotor stp = {logger, can1, 1};
+            stp.reset();
+            delay(1000);
+            while(true){
+                auto targ = sin(t);
+                stp.setTargetPosition(targ);
+                delay(5);
+                DEBUG_PRINTLN(targ);
+            }
+
+            if(true){//测试单个轮子
+                Wheel wheel = {wheel_config, stp};
+                wheel.setPosition(0.2_r * sin(t));
+                delay(5);
+            }
+        };
+
+        // if(true){
+        if(false){
+            test_single_motor();
         }
         //#endregion
 
-        //#region 测试整个底盘
-        if(true){
-            ChassisModule chassis_module {
-                config.chassis_config, 
-                wheels, est_};
+
+        //#region 测试轮组
+        if(false){
+        // if(true){
+
+            wheels.init();
+
+            // auto delta = solver.inverse(Vector2{0, 0}, 0.7_r*sin(t));
+
+            real_t ang;
+            bind_tick_200hz(
+                [&](){
+                // wheels.request();
+                // DEBUG_PRINTLN(can.available());
+                // can_master.update();
+                acc_gyr_sensor_.update();
+        
+                ang += Vector3(acc_gyr_sensor_.getGyr()).z * 0.005_r;
+                // auto delta = solver.inverse(Vector2{0.4_r*sin(t), 0}, 0);
+
+                // scexpr real_t delta = {0.003_r};
+                // auto delta = solver.inverse(Vector2{0, 0.0003_r}, 0);
+                // auto delta = solver.inverse(Vector2{0, 0.3_r * sin(t)}, 0);
+                
+                // auto delta = solver.inverse(Vector2{0._r, 0.0_r}, 0);
+                // auto delta = solver.inverse(Vector2{0, 0}, 0.005_r);
+                // auto delta = solver.inverse(Vector2{0.003_r, 0.003_r}, 0);
+                // auto delta = solver.inverse(Vector2{-0.003_r, 0.00_r}, 0);
+                // auto delta = solver.inverse(Vector2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
+                auto delta = solver.inverse(Vector2{0, 0.00_r}, CLAMP2((1-ang) * real_t(9), 1));
+                // DEBUG_PRINTLN(millis());
+                // wheels.setCurrent(delta);
+                // DEBUG_PRINTLN(std::get<0>(delta));
+                // wheels.setSpeed(delta);
+                // wheels.setPosition(delta);
+                wheels.setCurrent(delta);
+            }
+
+            );
+
+            while(true){
+                // delta = solver.inverse(Vector2{0, 0}, 1.7_r*sin(t));
+                // delta = solver.inverse(Vector2{0, 1.7_r*sin(t)});
+                
+                // DEBUG_PRINTLN(std::get<0>(delta));
+                // DEBUG_PRINTLN(delta);
+                // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
+                DEBUG_PRINTLN(ang)
+                delay(5);
+            }
         }
+
+        // if(false){
+        if(true){
+            wheels.init();
+
+            real_t py;
+            bind_tick_200hz(
+                [&](){
+                flow_sensor_.update();
+        
+                py = Vector2(flow_sensor_.getPosition()).y;
+                // py = Vector2(flow_sensor_.getPosition()).x;
+                
+                auto delta = solver.inverse(Vector2{0, CLAMP2((0.2_r-py) * real_t(20), 0.8_r)}, 0);
+                // auto delta = solver.inverse(Vector2{0, 1}, 0);
+                // DEBUG_PRINTLN(delta);
+                wheels.setCurrent(delta);
+            });
+
+            while(true){
+                // delta = solver.inverse(Vector2{0, 0}, 1.7_r*sin(t));
+                // delta = solver.inverse(Vector2{0, 1.7_r*sin(t)});
+                
+                // DEBUG_PRINTLN(std::get<0>(delta));
+                // DEBUG_PRINTLN(delta);
+                // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
+                DEBUG_PRINTLN(std::setprecision(4), py)
+                delay(5);
+            }
+        }
+
+
         //#endregion
+
+
 
     }//#endregion
     
-    if(true){//视觉
+    //#region 视觉
+    // if(true){
+    if(false){
+        bindSystickCb(nullptr);
         [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
             const auto area = Rect2i(pos, src.get_size());
             displayer.puttexture(area, src.get_data());
@@ -616,19 +761,28 @@ void host_main(){
 
         MT9V034     camera{i2c};
         camera.init();
-        camera.setExposureValue(1200);
+        camera.setExposureValue(500);
 
 
-        displayer.fill(ColorEnum::BLACK);
-        // painter.setChFont(font7x7);
+        while(false){
+            displayer.fill(ColorEnum::BLACK);
+            delay(200);
+            displayer.fill(ColorEnum::WHITE);
+            delay(200);
+        }
+
         while(true){
             painter.setColor(ColorEnum::WHITE);
 
-            Image<Grayscale> img = Shape::x2(camera);
+            // Image<Grayscale> img = Shape::x2(camera);
+            Image<Grayscale> img = camera.clone();
+            auto ave = Pixels::average(img);
+            DEBUG_PRINTLN(millis(), uint8_t(ave));
+            plot_gray(img, {0, 0});
             // auto img = raw_img.space();
             // Geometry::perspective(img, raw_img);
-            plot_gray(img, {0, img.get_size().y * 1});
-        
+            // plot_gray(img, {0, img.get_size().y * 1});
+            continue;
             auto img_ada = img.space();
             // Shape::adaptive_threshold(img_ada, img);
             // plot_gray(img_ada, {0, img.get_size().y * 2});
@@ -642,9 +796,11 @@ void host_main(){
             // Pixels::inverse(img_bina);
             plot_gray(img_processed, {0, img.get_size().y * 2});
             plot_gray(img_processed2, {0, img.get_size().y * 3});
-            DEBUG_PRINTLN(millis());
+
         }
     }
+
+    //#endregion
 
     
 };

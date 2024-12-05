@@ -30,7 +30,6 @@ public:
     ACTION_NAME(rapid_spin)
     RapidSpinAction(Inst & inst, const real_t rad):
         ChassisAction(UINT_MAX, [this](){
-            inst_.meta_rapid_spin(dest_);
             if(inst_.arrived()){
                 this->kill();
             }
@@ -41,6 +40,7 @@ public:
 
 class ShiftAction:public ChassisAction{
 protected:
+    using CtrlMode = ChassisModule::CtrlMode;
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
     std::optional<TrapezoidSolver> solver_ = std::nullopt;
 
@@ -82,17 +82,15 @@ public:
 class SpinAction:public ChassisAction{
 protected:
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
-
-    real_t current_;
+    using CtrlMode = ChassisModule::CtrlMode;
     real_t dest_;
     std::optional<TrapezoidSolver> solver_ = std::nullopt;
 
     void init(){
-        current_ = inst_.feedback().rad;
         const auto & config = inst_.config(); 
 
         solver_.emplace(
-            TrapezoidSolver{config.max_agr, config.max_spr, dest_ - current_}
+            TrapezoidSolver{config.max_agr, config.max_spr, dest_}
         );
     }
 public:
@@ -101,11 +99,15 @@ public:
         ChassisAction(UINT_MAX, [this](){
             if(first()){
                 init();
+                inst_.entry_spin();
             }
 
             auto time = this->time();
-            inst_.meta_rapid_spin(current_ + solver_->forward(time));
-            if(inst_.arrived()){
+            auto rading = solver_->forward(time);
+            inst_.set_target_rad(rading);
+
+            // DEBUG_PRINTLN(inst_.rad());
+            if(time > solver_->period() + real_t(0.4)){
                 this->kill();
             }
         }, inst),

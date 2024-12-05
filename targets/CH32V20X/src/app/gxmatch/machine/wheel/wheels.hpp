@@ -7,6 +7,8 @@ class Wheels{
 public:
     struct Config{
         Wheel::Config wheel_config;
+
+        real_t max_curr;
     };
 
     using Motor = Wheel::Motor;
@@ -25,9 +27,9 @@ protected:
 
     const Config & config_;
     std::array<Wheel, 4> instances_;
-
+    Can & can_;
 public:
-    Wheels(const Config & config, const Refs & refs):
+    Wheels(const Config & config, const Refs & refs, Can & can):
         config_(config),
         instances_{
             Wheel{config.wheel_config, refs[0]},
@@ -42,15 +44,17 @@ public:
             // std::get<1>(refs),
             // std::get<2>(refs),
             // std::get<3>(refs)
-        }
+        },
+        can_(can)
         {;}
 
     void init();
 
-    void update();
+    void request();
 
     bool verify();
 
+    void setSpeed(const std::tuple<real_t, real_t, real_t, real_t> & spd);
 
     void setCurrent(const std::tuple<real_t, real_t, real_t, real_t> & curr);
 

@@ -6,21 +6,26 @@ using namespace ymd;
 
 void CanMaster::update(){
     if(can_.available()){
-        while(can_.available()){
-            auto && msg = can_.read();
+        // DEBUG_PRINTLN(pool.size());
+        // while(can_.available()){
+        if(true){
+            auto msg = can_.read();
 
             bool accepted = false;
-            for(Wrapper & item : pool){
-                if(item.get().update(msg)){
-                    accepted = true;
-                    break;
+            for(CanProtocolConcept * item : pool){
+                if(item){
+                    if(item->update(msg)){
+                        accepted = true;
+                        break;
+                    }
                 }
             }
 
             if(accepted){
-
+                // DEBUG_PRINTLN(msg);
             }else{ 
-                DEBUG_PRINTLN("unaccepted msg", msg.id());
+                // HALT;
+                // DEBUG_PRINTLN("unaccepted msg", msg.id());
             }
         }
     }

@@ -33,6 +33,7 @@ void test_joint(JointLR & joint, std::function<real_t(real_t)> && func);
 String getline(InputStream & logger);
 
 void bind_tick_200hz(std::function<void(void)> && func);
+void bind_tick_800hz(std::function<void(void)> && func);
 void bind_tick_50hz(std::function<void(void)> && func);
 void bind_tick_1khz(std::function<void(void)> && func);
 

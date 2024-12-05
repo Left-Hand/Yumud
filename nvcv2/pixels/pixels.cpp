@@ -2,6 +2,53 @@
 
 
 namespace ymd::nvcv2::Pixels{
+
+    class UniqueRandomGenerator {
+    private:
+        scexpr uint8_t m = 251;
+        scexpr uint8_t a = 37;
+        scexpr uint8_t c = 71;
+        std::array<uint8_t, 256> data;
+
+        scexpr uint8_t iter(const uint8_t x){
+            return (a * x + c) % m;
+        }
+    public:
+        UniqueRandomGenerator() {
+            // Initialize with unique random numbers using LCG
+            std::array<bool, 256> used{};
+            used.fill(0);
+            // uint8_t x = 0; // Initial seed
+            uint8_t x_next = iter(0);
+            for (size_t i = 0; i < 256; ++i) {
+                // Find next unique number
+                uint8_t x_new = x_next;
+                // while(used[x_new]){
+                    x_new = iter(x_new);
+                // }
+                x_next = x_new;
+                // Mark x as used and assign to data[i]
+                used[x_next] = true;
+                data[i] = x_next;
+            }
+            data[0] = 0;
+        }
+
+        uint8_t operator[](const uint8_t index) const{
+            return data[index];
+        }
+    };
+
+    uint sum(const Image<Grayscale>& src){
+        uint s = 0;
+        for (size_t i = 0; i < size_t(src.get_size().area()); i++) {
+            s += uint8_t(src[i]);
+        }
+
+        return s;
+    }
+
+
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
         for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
             for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
@@ -297,7 +344,7 @@ namespace ymd::nvcv2::Pixels{
 
 
     void inverse(Image<Grayscale>& src) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.get_size().area(); i++) {
             src[i] = ~uint8_t(src[i]);
         }
     }
@@ -314,7 +361,7 @@ namespace ymd::nvcv2::Pixels{
             }
         }
 
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.get_size().area(); i++) {
             src[i] = lut[uint8_t(src[i])];
         }
     }
@@ -322,20 +369,20 @@ namespace ymd::nvcv2::Pixels{
 
 
     void sum_with(Image<Grayscale> & src, Image<Grayscale>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.get_size().area(); i++) {
             src[i] = MIN((uint8_t)src[i] + (uint8_t)op[i], 255);
         }
     }
 
     void sub_with(Image<Grayscale> & src, Image<Grayscale>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.get_size().area(); i++) {
             src[i] = MAX((uint8_t)src[i] - (uint8_t)op[i], 0);
         }
     }
 
 
     void mask_with(Image<Grayscale> & src, const ImageReadable<Binary>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.get_size().area(); i++) {
             src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
         }
     }

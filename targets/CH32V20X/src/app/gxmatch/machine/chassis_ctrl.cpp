@@ -11,15 +11,15 @@ static __inline Vector2 signed_sqrt(const Vector2 vec){
 }
 
 
-void RotationCtrl::update(const real_t targ_rad, const real_t rad, const real_t gyr){
+real_t RotationCtrl::update(const real_t targ_rad, const real_t rad, const real_t gyr){
     auto rad_err = targ_rad - rad;
     auto gyr_err = 0 - gyr;
-    Ray && curr = {Vector2{0,0}, 
-        signed_sqrt(rad_err) * config_.kp +
-        gyr_err * config_.kd 
-    };
+    // Ray && curr = {Vector2{0,0}, 
+    return signed_sqrt(rad_err) * config_.kp +
+        gyr_err * config_.kd;
+    // };
 
-    chassis_.setCurrent(curr);
+    // chassis_.setCurrent(curr);
 }
 
 void PositionCtrl::update(const Vector2 & targ_pos, const Vector2 & pos, const Vector2 & spd){

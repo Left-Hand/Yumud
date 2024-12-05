@@ -234,6 +234,10 @@ public:
         auto rect = Rect2_t<T>(other, other - *this);
         return rect.abs();
     }
+
+    __fast_inline constexpr T area() const {
+        return x * y;
+    }
 };
 
 template<arithmetic T>

@@ -20,15 +20,15 @@ public:
 
 protected:
     const Config & config_;
-    ChassisModule & chassis_;
+    // ChassisModule & chassis_;
 public:
-    RotationCtrl(const Config & config, ChassisModule & chassis):
-        config_(config), chassis_(chassis){;}
+    RotationCtrl(const Config & config):
+        config_(config){;}
         
     RotationCtrl(const RotationCtrl & other) = delete;
     RotationCtrl(RotationCtrl && other) = delete;
 
-    void update(const real_t targ_rad, const real_t rad, const real_t gyr);
+    real_t update(const real_t targ_rad, const real_t rad, const real_t gyr);
 };
 
 class ChassisModule;
@@ -52,6 +52,26 @@ public:
 
     void update(const Vector2 & targ_pos, const Vector2 & pos, const Vector2 & spd);
 };
+
+// class TravelCtrl{
+// public:
+//     struct Config{
+//         real_t kp;
+//         real_t kd;
+//     };
+
+// protected:
+//     const Config & config_;
+// public:
+//     TravelCtrl(const Config & config):
+//         config_(config), chassis_(chassis){;}
+
+//     PositionCtrl(const PositionCtrl & other) = delete;
+//     PositionCtrl(PositionCtrl && other) = delete;
+
+//     // void update(const );
+//     void reset();
+// };
 
 class FeedBacker{
 public:

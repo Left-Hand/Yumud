@@ -483,7 +483,7 @@ namespace ymd::nvcv2::Shape{
                     }
                 }
 
-                dst[{x,y}] = sum / 4;
+                dst[{x,y}] = sum >> 2;
 
                 // dst[{x,y}] = src[{x << 1,y << 1}];
             }
@@ -937,6 +937,7 @@ namespace ymd::nvcv2::Shape{
         #define FAST_SQUARE(x) (x * x)
         scexpr size_t shift_bits = 3;
     
+        // sizeof(vec_t);
         auto roi = src.get_view();
         auto gm = new vec_t[int(roi)];
         

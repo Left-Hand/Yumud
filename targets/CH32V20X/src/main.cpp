@@ -1,5 +1,6 @@
 #include "sys/core/system.hpp"
 
+#include "hal/bus/spi/spihw.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
@@ -93,7 +94,7 @@ int main(){
     // uart_tb(logger);
     // pmw3901_main();
     // ch9141_tb(logger, uart7);
-    // st77xx_tb(logger, spi2);
+    // st77xx_tb(spi2);
     // embd_main();
     // mpu6050_main();
     // gui_main();

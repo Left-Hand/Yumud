@@ -1,18 +1,17 @@
 #include "tb.h"
-#include "../drivers/Display/Polychrome/ST7789/st7789.hpp"
-#include "../drivers/Wireless/Radio/CH9141/CH9141.hpp"
-#include "../drivers/Proximeter/VL53L0X/vl53l0x.hpp"
-#include "../drivers/Camera/MT9V034/mt9v034.hpp"
+#include "drivers/Display/Polychrome/ST7789/st7789.hpp"
+#include "drivers/Wireless/Radio/CH9141/CH9141.hpp"
+#include "drivers/Proximeter/VL53L0X/vl53l0x.hpp"
+#include "drivers/Camera/MT9V034/mt9v034.hpp"
 
-#include "../nvcv2/pixels.hpp"
-#include "../nvcv2/shape.hpp"
-#include "../nvcv2/geometry.hpp"
-#include "../nvcv2/two_pass.hpp"
-#include "../nvcv2/flood_fill.hpp"
-
-#include "../thirdparty/lodepng/lodepng.h"
+#include "nvcv2/pixels/pixels.hpp"
+#include "nvcv2/shape/shape.hpp"
+#include "nvcv2/geometry/geometry.hpp"
+#include "nvcv2/two_pass.hpp"
+#include "nvcv2/flood_fill.hpp"
 
 using namespace ymd::nvcv2;
+using namespace ymd::drivers;
 
 #ifdef CH32V30X
 
@@ -52,104 +51,98 @@ constexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p
 	return hash;
 }
 
-class Transmitter:public IOStream{
-protected:
-    scexpr size_t str_tx_buf_size = 512;
-    scexpr size_t str_rx_buf_size = 512;
-    scexpr size_t img_tx_buf_size = 1024;
+// class Transmitter:public IOStream{
+// protected:
+//     scexpr size_t str_tx_buf_size = 512;
+//     scexpr size_t str_rx_buf_size = 512;
+//     scexpr size_t img_tx_buf_size = 1024;
 
-public:
-    enum class Type{
-        IMG0,
-        IMG1,
-        IMG2,
-        IMG3,
-        STR,
-    };
+// public:
+//     enum class Type{
+//         IMG0,
+//         IMG1,
+//         IMG2,
+//         IMG3,
+//         STR,
+//     };
 
-    IOStream & instance;
-    Uart & logger = uart2;
+//     IOStream & instance;
+//     Uart & logger = uart2;
 
-    RingBuf<str_tx_buf_size> str_tx_buf;
-    RingBuf<str_rx_buf_size> str_rx_buf;
-    RingBuf<img_tx_buf_size> img_buf;
+//     RingBuf<str_tx_buf_size> str_tx_buf;
+//     RingBuf<str_rx_buf_size> str_rx_buf;
+//     RingBuf<img_tx_buf_size> img_buf;
 
-    void write(const char data) override{
-        str_rx_Buf.push(data);
-    }
+//     using InputStream::read;
 
-    void read(char & data) override{
-        data = str_rx_Buf.pop();
-    }
+//     size_t available() const override{
+//         return str_rx_buf.available();
+//     }
 
-    using InputStream::read;
+//     size_t pending() const override{
+//         return str_tx_buf.available();
+//     }
 
-    size_t available() const override{
-        return str_rx_buf.available();
-    }
+// protected:
+//     scexpr uint16_t header = 0x54A8;
+//     uint8_t time_stamp;
+// public:
+//     Transmitter(IOStream & _instance):instance(_instance){;}
+//     void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
 
-    size_t pending() const override{
-        return str_tx_buf.available();
-    }
+//         unit.header = header;
+//         unit.trans_type = TransType::GS_0;
+//         unit.hash = hash_djb2_buffer(data_from, len);
+//         unit.time_stamp = time_stamp;
 
-protected:
-    scexpr uint16_t header = 0x54A8;
-    uint8_t time_stamp;
-public:
-    Transmitter(IOStream & _instance):instance(_instance){;}
-    void sendBlockData(ImagePieceUnit & unit, const uint8_t * data_from, const size_t len){
+//         instance.write((const char *)&unit, sizeof(unit));
+//         instance.write((const char *)(data_from), len);
+//     }
 
-        unit.header = header;
-        unit.trans_type = TransType::GS_0;
-        unit.hash = hash_djb2_buffer(data_from, len);
-        unit.time_stamp = time_stamp;
+//     auto compress_png(const ImageWithData<Grayscale, Grayscale> & img){
+//         std::vector<uint8_t>buffer;
+//         lodepng::State state;
+//         lodepng::encode(buffer, (const uint8_t * )img.data.get(), img.get_size().x, img.get_size().y, state);
+//         return buffer;
+//     }
 
-        instance.write((const char *)&unit, sizeof(unit));
-        instance.write((const char *)(data_from), len);
-    }
+//     void transmit(const ImageWithData<Grayscale, Grayscale> & img, const uint8_t index){
+//         constexpr size_t mtu = 180;
+//         const auto & img_size = img.get_size();
+//         size_t len = img_size.x * img_size.y;
 
-    auto compress_png(const ImageWithData<Grayscale, Grayscale> & img){
-        std::vector<uint8_t>buffer;
-        lodepng::State state;
-        lodepng::encode(buffer, (const uint8_t * )img.data.get(), img.get_size().x, img.get_size().y, state);
-        return buffer;
-    }
+//         // const uint8_t * buf = (const uint8_t *)img.;
+//         uint8_t block_total = len / mtu + bool(len % mtu);
+//         uint8_t block_number = 0;
 
-    void transmit(const ImageWithData<Grayscale, Grayscale> & img, const uint8_t index){
-        constexpr size_t mtu = 180;
-        const auto & img_size = img.get_size();
-        size_t len = img_size.x * img_size.y;
+//         while(true){
 
-        const uint8_t * buf = (const uint8_t *)img.data.get();
-        uint8_t block_total = len / mtu + bool(len % mtu);
-        uint8_t block_number = 0;
+//             uint16_t block_start = block_number * mtu;
+//             uint16_t block_end = block_start + std::min(len - block_start, mtu);
 
-        while(true){
+//             ImagePieceUnit unit;
+//             unit.size_x = img_size.x;
+//             unit.size_y = img_size.y;
+//             unit.data_index = block_start;
 
-            uint16_t block_start = block_number * mtu;
-            uint16_t block_end = block_start + std::min(len - block_start, mtu);
+//             sendBlockData(unit, (const uint8_t *)buf + block_start, block_end - block_start);
 
-            ImagePieceUnit unit;
-            unit.size_x = img_size.x;
-            unit.size_y = img_size.y;
-            unit.data_index = block_start;
+//             block_number++;
 
-            sendBlockData(unit, (const uint8_t *)buf + block_start, block_end - block_start);
+//             if(block_number >= block_total){
+//                 break;
+//             }
 
-            block_number++;
+//         }
 
-            if(block_number >= block_total){
-                break;
-            }
-
-        }
-
-        time_stamp++;
-    }
-};
+//         time_stamp++;
+//     }
+// };
 
 
-void st77xx_tb(IOStream & logger, Spi & spi){
+void st77xx_tb(Spi & spi){
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+
     auto & led = portC[14];
     auto & lcd_blk = portC[7];
     auto & light = portC[6];
@@ -219,7 +212,7 @@ void st77xx_tb(IOStream & logger, Spi & spi){
     CH9141 ch9141{uart7, portC[1], portD[3]};
     ch9141.init();
 
-    Transmitter trans{ch9141};
+    // Transmitter trans{ch9141};
     // Transmitter trans{logger};
 
     while(true){

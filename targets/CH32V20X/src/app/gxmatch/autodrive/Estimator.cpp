@@ -7,6 +7,12 @@ void Estimator::reset(){
 
 }
 
+
+
+real_t Estimator::calculate_raw_dir(const Vector3 & mag) const {
+    return -atan2(mag.y, mag.x);
+}
+
 void Estimator::update(const real_t time){
     // acc_gyr_sensor_.update();
     // mag_sensor_.update();
@@ -23,29 +29,35 @@ void Estimator::update(const real_t time){
 
     acc3_raw = Vector3{acc_gyr_sensor_.getAcc()};
     gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
-    // mag3_raw = Vector3{mag_sensor_.getMagnet()};
     mag3_raw = Vector3{mag_sensor_.getMagnet()};
+    // mag3_raw = Vector3{};
+    const auto rot_raw = calculate_raw_dir(mag3_raw);
+    gyr_ = gyr3_raw.z;
+    rot_ = rot_obs_.update(rot_raw, gyr_, time) - bias_.rot;
+
+
 
     // acc3_ = bias_.acc.xform(acc3_raw);
     // gyr3_ = Vector3(gyr3_raw - bias_.gyr);
     // mag3_ = bias_.mag.xform(mag3_raw);
 
-    const auto rot_raw = calculate_raw_dir(mag3_raw);
 
-    gyr_ = gyr3_raw.z;
-    rot_ = rot_obs_.update(rot_raw - bias_.rot, gyr_, time);
+    // DEBUG_PRINTLN(mag3_raw);
+    // DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z);
 
-    flow_sensor_.update(rot_);
 
-    const auto new_pos = Vector2(flow_sensor_.getPosition());
-    const auto delta_pos = new_pos - pos_;
-    pos_ = flow_sensor_.getPosition();
 
-    const auto delta_t = time - last_time;
-    last_time = time;
+    // flow_sensor_.update(rot_ + real_t(PI/2));
 
-    const auto new_spd = delta_pos / delta_t;
-    spd_ = spd_lpf_.update(new_spd);
+    // const auto new_pos = Vector2(flow_sensor_.getPosition());
+    // const auto delta_pos = new_pos - pos_;
+    // pos_ = flow_sensor_.getPosition();
+
+    // const auto delta_t = time - last_time;
+    // last_time = time;
+
+    // const auto new_spd = delta_pos / delta_t;
+    // spd_ = spd_lpf_.update(new_spd);
 
     // const auto [x,y] = pos_;
     // DEBUG_PRINTLN(rot_, gyr_, x, y);
@@ -95,14 +107,18 @@ Quat Estimator::calculateMagBias(){
 
 
 void Estimator::calibrate(){
-    bias_.acc = calculateAccBias();
-    bias_.gyr = calculateGyrBias();
-    bias_.mag = calculateMagBias();
+    // bias_.acc = calculateAccBias();
+    bias_.acc = Vector3();
+    // bias_.gyr = calculateGyrBias();
+    bias_.gyr = Vector3();
+    // bias_.mag = calculateMagBias();
     bias_.rot = calculate_raw_dir(Vector3{mag_sensor_.getMagnet()});
-    DEBUG_PRINTLN(bias_.acc, bias_.gyr, bias_.mag)
+    // DEBUG_PRINTLN(bias_.acc, bias_.gyr, bias_.mag)
 }
 
-void Estimator::init(){
+
+void Estimator::init()
+{
     if(config_.force_calibrate){
         calibrate();
     }else{

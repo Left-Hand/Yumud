@@ -5,7 +5,7 @@ using namespace gxm;
 SysConfig gxm::create_default_config(){
     return SysConfig{
         .joint_config = {
-            .max_rad_delta = real_t(0.13),
+            .max_rad_delta = real_t(1.13),
             // .left_basis_radian = real_t(-PI/2 + 0.2),
             .left_basis_radian = real_t(-PI/2 + 0.34),
             // .right_basis_radian = real_t(PI/2 - 0.10),
@@ -81,11 +81,11 @@ SysConfig gxm::create_default_config(){
                 Vector3{0.26_r, 0.15_r, 0.17_r}
             },
 
-            .max_spd = 0.83_r,
-            .max_acc = 0.5_r,
+            .max_spd = 0.53_r,
+            .max_acc = 0.6_r,
 
-            .max_z_spd = 0.17_r,
-            .max_z_acc = 0.07_r,
+            .max_z_spd = 0.37_r,
+            .max_z_acc = 0.37_r,
             .nozzle_sustain = 500
         },
 
@@ -96,6 +96,8 @@ SysConfig gxm::create_default_config(){
                 .max_tps = 1,//最大每秒转圈数
                 .max_aps = 1,//最大每秒圈速加速度
             },
+
+            .max_curr = 0.5_r
         },
 
         .chassis_config = {
@@ -122,7 +124,7 @@ SysConfig gxm::create_default_config(){
             },
 
             .rot_ctrl_config = {
-                .kp = 1,
+                .kp = 8,
                 .kd = 1
             },
 

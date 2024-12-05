@@ -30,7 +30,9 @@ public:
 
 
     bool update(const CanMsg & msg){
-        if((msg.id() >> 7) != node_id_) return false;
+        auto node_id = msg.id() >> 7;
+        // if(node_id != node_id_ and node_id != 0) return false;
+        if(node_id != node_id_) return false;
         parseCanmsg(msg);
         return true;
     }

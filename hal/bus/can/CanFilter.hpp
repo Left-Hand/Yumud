@@ -116,6 +116,7 @@ public:
     void mask(const ID16 & id1, const ID16 & mask1, const ID16 & id2, const ID16 & mask2);
     void list(const std::initializer_list<ID16> & list);
     void mask(const std::initializer_list<ID16> & masks);
+    void all();
 
     void mask(const ID32 & id, const ID32 & mask);
     void list(const std::initializer_list<ID32> & list);

@@ -25,14 +25,23 @@ protected:
     const Config & config;
 
     Vector2_t<T> get_velocity_from_wheels(const T4 & spd4) {
-        T x = (spd4[0] + spd4[3] - spd4[1] - spd4[2]) * T(0.25);
-        T y = (spd4[0] + spd4[1] + spd4[2] + spd4[3]) * T(0.25);
+        T s0 = std::get<0>(spd4);
+        T s1 = std::get<1>(spd4);
+        T s2 = std::get<2>(spd4);
+        T s3 = std::get<3>(spd4);
+
+        T x = (s0 + s3 - s1 - s2) * T(0.25);
+        T y = (s0 + s1 + s2 + s3) * T(0.25);
         return Vector2_t<T>(x, y);
     }
 
     T get_spinrate_from_wheels(const T4 & spd4) {
         T temp = config.chassis_height_meter + config.chassis_width_meter;
-        return (spd4[1] - spd4[0] + spd4[2] - spd4[3]) / (4 * temp);
+        T s0 = std::get<0>(spd4);
+        T s1 = std::get<1>(spd4);
+        T s2 = std::get<2>(spd4);
+        T s3 = std::get<3>(spd4);
+        return (s1 - s0 + s2 - s3) / (4 * temp);
     }
 
     T4  get_wheels_from_status(const Vector2_t<T>& spd, T spinrate) {
