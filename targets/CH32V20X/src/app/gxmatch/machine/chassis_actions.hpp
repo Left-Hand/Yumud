@@ -8,36 +8,10 @@ namespace gxm{
 
 namespace ChassisActions{
 
-class RapidShiftAction:public ChassisAction{
-protected:
-    Vector2 dest_;
-public:
-    ACTION_NAME(rapid_shift)
-    RapidShiftAction(Inst & inst, const Vector2 & pos):
-        ChassisAction(UINT_MAX, [this](){
-            if(inst_.arrived()){
-                this->kill();
-            }
-        }, inst),
-        dest_(pos){};
-};
 
-class RapidSpinAction:public ChassisAction{
-protected:
-    real_t dest_;
-public:
-    ACTION_NAME(rapid_spin)
-    RapidSpinAction(Inst & inst, const real_t rad):
-        ChassisAction(UINT_MAX, [this](){
-            if(inst_.arrived()){
-                this->kill();
-            }
-        }, inst),
-        dest_(rad){};
-};
+scexpr real_t safe_wait_time = 0.4_r;
 
-
-class ShiftAction:public ChassisAction{
+class StraightAction:public ChassisAction{
 protected:
     using CtrlMode = ChassisModule::CtrlMode;
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
@@ -54,8 +28,9 @@ protected:
         );
     }
 public:
-    ACTION_NAME(shift)
-    ShiftAction(Inst & inst, const real_t dest):
+    ACTION_NAME(straight)
+
+    StraightAction(Inst & inst, const real_t dest):
         ChassisAction(UINT_MAX, [this](){
             if(first()){
                 init();
@@ -66,7 +41,89 @@ public:
             auto fronting = solver_->forward(time);
             inst_.set_target_jny({{0,fronting}, 0});
 
-            if(time > solver_->period() + real_t(0.4)){
+            if(time > solver_->period() + safe_wait_time){
+                this->kill();
+            }
+
+        }, inst),
+        dest_(dest){};
+};
+
+
+class SideAction:public ChassisAction{
+protected:
+    using CtrlMode = ChassisModule::CtrlMode;
+    using TrapezoidSolver = TrapezoidSolver_t<real_t>;
+    std::optional<TrapezoidSolver> solver_ = std::nullopt;
+
+    real_t dest_;
+
+
+    void init(){
+        const auto & config = inst_.config(); 
+
+        solver_.emplace(
+            TrapezoidSolver{config.max_acc, config.max_spd, dest_}
+        );
+    }
+public:
+    ACTION_NAME(side)
+    
+    SideAction(Inst & inst, const real_t dest):
+        ChassisAction(UINT_MAX, [this](){
+            if(first()){
+                init();
+                inst_.entry_shift();
+            }
+
+            auto time = this->time();
+            auto fronting = solver_->forward(time);
+            inst_.set_target_jny({{fronting, 0}, 0});
+
+            if(time > solver_->period() + safe_wait_time){
+                inst_.freeze();
+                this->kill();
+            }
+
+        }, inst),
+        dest_(dest){};
+};
+
+class MoveAction:public ChassisAction{
+protected:
+    using CtrlMode = ChassisModule::CtrlMode;
+    using TrapezoidSolver = TrapezoidSolver_t<real_t>;
+    std::optional<TrapezoidSolver> solver_ = std::nullopt;
+
+    Vector2 dest_;
+    Vector2 norm_;
+    real_t dist_;
+
+    void init(){
+        const auto & config = inst_.config(); 
+        dist_ = dest_.length();
+        norm_ = dest_ / dist_;
+
+        solver_.emplace(
+            TrapezoidSolver{config.max_acc, config.max_spd, dist_}
+        );
+    }
+public:
+    ACTION_NAME(move)
+    
+    MoveAction(Inst & inst, const Vector2 &  dest):
+        ChassisAction(UINT_MAX, [this](){
+            if(first()){
+                init();
+                inst_.entry_shift();
+            }
+
+            auto time = this->time();
+            auto fronting = solver_->forward(time);
+            inst_.set_target_jny({fronting * norm_, 0});
+
+            if(time > solver_->period() + safe_wait_time){
+                inst_.freeze();
                 this->kill();
             }
 
@@ -101,7 +158,8 @@ public:
             auto rading = solver_->forward(time);
             inst_.set_target_rad(rading);
 
-            if(time > solver_->period() + real_t(0.4)){
+            if(time > solver_->period() + safe_wait_time){
+                inst_.freeze();
                 this->kill();
             }
         }, inst),

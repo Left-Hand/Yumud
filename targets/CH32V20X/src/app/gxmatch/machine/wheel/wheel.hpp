@@ -52,6 +52,7 @@ public:
     void setSpeed(const real_t spd);
     void setCurrent(const real_t curr);
     void forwardPosition(const real_t step);
+    void freeze();
 
     void inverse(const bool en = true){
         inversed_ = en;

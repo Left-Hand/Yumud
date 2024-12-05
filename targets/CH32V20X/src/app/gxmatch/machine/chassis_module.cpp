@@ -36,31 +36,30 @@ void ChassisModule::test(){
 }
     
 
+void ChassisModule::freeze(){
+    wheels_.freeze();
+}
+
 bool ChassisModule::arrived(){
     return false;
 }
 
 void ChassisModule::closeloop(){
-        // auto && pos_err = expect_pos - pos();
-        // auto && rot_err = expect_rad - rot();
-        // auto && delta = solver_.inverse(pos_err, rot_err);
-        // wheels_.setDelta(delta);
 
-    auto rot_output = rot_ctrl_.update(target_rot_, this->rad(), this->gyr());
-    auto pos_output = pos_ctrl_.update(target_jny_.org, this->jny().org, this->spd());
-    // DEBUG_PRINTLN(target_rot_, this->rad());
-    // DEBUG_PRINTLN(rot_output);
-    // DEBUG_PRINTLN(ctrl_mode_)
     switch(ctrl_mode_){
         case CtrlMode::NONE:
             // DEBUG_PRINTLN("no mode");
             break;
-        case CtrlMode::SHIFT:
-        //     // pos_ctrl_.update(expect_pos_, this->pos(), this->spd());
-            setCurrent(Ray{pos_output, 0});
+        case CtrlMode::SHIFT:{
+            auto rot_output = rot_ctrl_.update(0, this->rad(), this->gyr());
+            auto pos_output = pos_ctrl_.update(target_jny_.org, this->jny().org, this->spd());
+            setCurrent(Ray{pos_output, rot_output});
+        }
             break;
-        case CtrlMode::SPIN:
+        case CtrlMode::SPIN:{
+            auto rot_output = rot_ctrl_.update(target_rot_, this->rad(), this->gyr());
             setCurrent(Ray{Vector2{0,0}, rot_output});    
+        }
             break;
     }
 }
@@ -69,10 +68,12 @@ void ChassisModule::closeloop(){
 void ChassisModule::entry_spin(){
     ctrl_mode_ = CtrlMode::SPIN;
     reset_rot();
+    reset_journey();
 }
 
 void ChassisModule::entry_shift(){
     ctrl_mode_ = CtrlMode::SHIFT;
+    reset_rot();
     reset_journey();
 }
 
@@ -80,6 +81,7 @@ void ChassisModule::setCurrent(const Ray & ray){
     auto && curr = solver_.inverse(ray);
     // DEBUG_PRINTLN(curr)
     wheels_.setCurrent(curr);
+    // wheels_.setSpeed(curr);
 }
 
 

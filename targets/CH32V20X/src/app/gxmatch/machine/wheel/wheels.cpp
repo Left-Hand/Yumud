@@ -20,10 +20,17 @@ void Wheels::init(){
         motor.setOpenLoopCurrent(curr);
         motor.setCurrentLimit(curr);
     }
-    
 }
+
+
 bool Wheels::verify(){
     return true;
+}
+
+void Wheels::freeze(){
+    for(Wheel & wheel : instances_){
+        wheel.freeze();
+    }
 }
 
 void Wheels::request(){

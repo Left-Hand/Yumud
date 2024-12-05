@@ -520,14 +520,28 @@ void host_main(){
 
             using namespace ChassisActions;
 
-            chassis_module << new DelayAction(3000);
-            chassis_module << new ShiftAction(chassis_module, 0.5_r);
-            chassis_module << new DelayAction(3000);
-            chassis_module << new ShiftAction(chassis_module, -0.5_r);
-            chassis_module << new DelayAction(3000);
-            chassis_module << new ShiftAction(chassis_module, 0.5_r);
-            chassis_module << new DelayAction(3000);
-            chassis_module << new ShiftAction(chassis_module, -0.5_r);
+            chassis_module << new DelayAction(2000);
+            chassis_module << new StraightAction(chassis_module, 1.72_r);
+            chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            chassis_module << new StraightAction(chassis_module, 1.72_r);
+            chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            chassis_module << new StraightAction(chassis_module, 1.72_r);
+
+            chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+
+            chassis_module << new StraightAction(chassis_module, -1.72_r);
+            chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            chassis_module << new StraightAction(chassis_module, -1.72_r);
+            chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            chassis_module << new StraightAction(chassis_module, -1.72_r);
+            // chassis_module << new SideAction(chassis_module, 0.5_r);
+            // chassis_module << new DelayAction(3000);
+            // chassis_module << new StraightAction(chassis_module, -0.5_r);
+            // chassis_module << new DelayAction(3000);
+            // chassis_module << new StraightAction(chassis_module, 0.5_r);
+            // chassis_module << new DelayAction(3000);
+            // chassis_module << new StraightAction(chassis_module, -0.5_r);
 
             while(true){
                 // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());

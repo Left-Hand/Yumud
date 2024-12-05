@@ -12,6 +12,10 @@ void Wheel::updatePosition(){
     motor_.getPosition();
 }
 
+void Wheel::freeze(){
+    motor_.freeze();
+}
+
 real_t Wheel::readPosition(){
     return INVERSE_IF(inversed_, Motor2World(motor_.readPosition()));
 }

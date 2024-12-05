@@ -36,14 +36,6 @@ public:
             Wheel{config.wheel_config, refs[1]},
             Wheel{config.wheel_config, refs[2]},
             Wheel{config.wheel_config, refs[3]}
-            // &std::get<0>(refs).get(), 
-            // &std::get<1>(refs).get(), 
-            // &std::get<2>(refs).get(), 
-            // &std::get<3>(refs).get() 
-            // std::get<0>(refs),
-            // std::get<1>(refs),
-            // std::get<2>(refs),
-            // std::get<3>(refs)
         },
         can_(can)
         {;}
@@ -63,6 +55,8 @@ public:
     void setDelta(const std::tuple<real_t, real_t, real_t, real_t> & delta);
 
     void forward(const std::tuple<real_t, real_t, real_t, real_t> & delta);
+
+    void freeze();
 
     std::tuple<real_t, real_t, real_t, real_t> getPosition();
 

@@ -66,7 +66,6 @@ protected:
 
     CtrlMode ctrl_mode_ = CtrlMode::NONE;
 
-    // Vector2 target_pos_;
     Ray target_jny_;
     real_t target_rot_;
 
@@ -107,13 +106,13 @@ public:
 
     real_t rad(){return current_rot_;}
     real_t gyr(){return gyr_;}
-    // real_t jny(){return curr}
     auto jny(){return current_jny_;}
     auto diff(){return current_jny_.org;}
     auto spd(){return spd_;}
 
     void entry_spin();
     void entry_shift();
+    void freeze();
 
     void set_target_rad(const real_t rad){
         this->target_rot_ = rad;
