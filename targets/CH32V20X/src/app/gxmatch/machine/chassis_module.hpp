@@ -55,20 +55,23 @@ protected:
     Axis6 & acc_gyr_sensor_ = est_.acc_gyr_sensor_;
     Magnetometer & mag_sensor_ = est_.mag_sensor_;
 
-    real_t current_journey_;
+    Ray current_jny_;
     real_t current_rot_;
     real_t gyr_;
 
     std::array<real_t, 4>last_motor_positions;
 
     RotationCtrl rot_ctrl_{config_.rot_ctrl_config};
-    // PositionCtrl pos_ctrl_{config_.pos_ctrl_config};
+    PositionCtrl pos_ctrl_{config_.pos_ctrl_config};
 
     CtrlMode ctrl_mode_ = CtrlMode::NONE;
 
-    Vector2 target_pos_;
-    real_t target_jny_;
+    // Vector2 target_pos_;
+    Ray target_jny_;
     real_t target_rot_;
+
+    Vector2 spd_;
+    Vector2 last_pos_;
 
 public:
     ChassisModule(const Config & config, 
@@ -79,11 +82,6 @@ public:
         wheels_(wheels),
         est_(est){}
 
-
-
-    void meta_rapid(const Ray & ray);
-    void meta_rapid_shift(const Vector2 & pos);
-    void meta_rapid_spin(const real_t rad);
 
     void reset_rot();
     void reset_journey();
@@ -109,20 +107,24 @@ public:
 
     real_t rad(){return current_rot_;}
     real_t gyr(){return gyr_;}
-    real_t journey(){return current_journey_;}
+    // real_t jny(){return curr}
+    auto jny(){return current_jny_;}
+    auto diff(){return current_jny_.org;}
+    auto spd(){return spd_;}
 
     void entry_spin();
+    void entry_shift();
+
     void set_target_rad(const real_t rad){
         this->target_rot_ = rad;
     }
-    
-    void set_target_jny(const real_t jny){
+
+    void set_target_jny(const Ray & jny){
         this->target_jny_ = jny;
     }
-    Ray gest();
-    bool arrived();
 
-    Ray feedback();
+
+    bool arrived();
     const auto & config()const {return config_;}
 };
 

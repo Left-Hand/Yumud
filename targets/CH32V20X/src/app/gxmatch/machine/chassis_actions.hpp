@@ -15,7 +15,6 @@ public:
     ACTION_NAME(rapid_shift)
     RapidShiftAction(Inst & inst, const Vector2 & pos):
         ChassisAction(UINT_MAX, [this](){
-            inst_.meta_rapid_shift(dest_);
             if(inst_.arrived()){
                 this->kill();
             }
@@ -44,39 +43,35 @@ protected:
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
     std::optional<TrapezoidSolver> solver_ = std::nullopt;
 
-    Vector2 from_;
-    Vector2 dest_;
+    real_t dest_;
 
-    real_t dist_;
-    Vector2 norm_;
 
     void init(){
         const auto & config = inst_.config(); 
 
-        from_ = inst_.feedback().org;
-        dist_ = (dest_ - from_).length();
-        norm_ = (dest_ - from_) / dist_;
-
         solver_.emplace(
-            TrapezoidSolver{config.max_acc, config.max_spr, dist_}
+            TrapezoidSolver{config.max_acc, config.max_spd, dest_}
         );
     }
 public:
     ACTION_NAME(shift)
-    ShiftAction(Inst & inst, const Vector2 & pos):
+    ShiftAction(Inst & inst, const real_t dest):
         ChassisAction(UINT_MAX, [this](){
             if(first()){
                 init();
-            }
-            if(inst_.arrived()){
-                this->kill();
+                inst_.entry_shift();
             }
 
             auto time = this->time();
-            inst_.meta_rapid_shift(from_ + norm_ * solver_->forward(time));
+            auto fronting = solver_->forward(time);
+            inst_.set_target_jny({{0,fronting}, 0});
+
+            if(time > solver_->period() + real_t(0.4)){
+                this->kill();
+            }
 
         }, inst),
-        dest_(pos){};
+        dest_(dest){};
 };
 
 class SpinAction:public ChassisAction{
@@ -106,7 +101,6 @@ public:
             auto rading = solver_->forward(time);
             inst_.set_target_rad(rading);
 
-            // DEBUG_PRINTLN(inst_.rad());
             if(time > solver_->period() + real_t(0.4)){
                 this->kill();
             }

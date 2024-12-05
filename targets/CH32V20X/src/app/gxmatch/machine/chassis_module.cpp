@@ -47,6 +47,7 @@ void ChassisModule::closeloop(){
         // wheels_.setDelta(delta);
 
     auto rot_output = rot_ctrl_.update(target_rot_, this->rad(), this->gyr());
+    auto pos_output = pos_ctrl_.update(target_jny_.org, this->jny().org, this->spd());
     // DEBUG_PRINTLN(target_rot_, this->rad());
     // DEBUG_PRINTLN(rot_output);
     // DEBUG_PRINTLN(ctrl_mode_)
@@ -56,6 +57,7 @@ void ChassisModule::closeloop(){
             break;
         case CtrlMode::SHIFT:
         //     // pos_ctrl_.update(expect_pos_, this->pos(), this->spd());
+            setCurrent(Ray{pos_output, 0});
             break;
         case CtrlMode::SPIN:
             setCurrent(Ray{Vector2{0,0}, rot_output});    
@@ -69,27 +71,17 @@ void ChassisModule::entry_spin(){
     reset_rot();
 }
 
+void ChassisModule::entry_shift(){
+    ctrl_mode_ = CtrlMode::SHIFT;
+    reset_journey();
+}
+
 void ChassisModule::setCurrent(const Ray & ray){
     auto && curr = solver_.inverse(ray);
     // DEBUG_PRINTLN(curr)
     wheels_.setCurrent(curr);
 }
 
-void ChassisModule::meta_rapid(const Ray & ray){
-    TODO();
-    // meta_rapid_shift(ray.org);
-    // meta_rapid_spin(ray.rad);
-}
-
-void ChassisModule::meta_rapid_shift(const Vector2 & pos){
-    // expect_pos_ = pos;
-    ctrl_mode_ = CtrlMode::SHIFT;
-}
-
-void ChassisModule::meta_rapid_spin(const real_t rad){
-    // expect_rot_ = rad;
-    ctrl_mode_ = CtrlMode::SPIN;
-}
 
 void ChassisModule::trim(const Ray & ray){
     auto & self = *this;
@@ -98,20 +90,18 @@ void ChassisModule::trim(const Ray & ray){
 
 void ChassisModule::reset_journey(){
     // current_journey_ = 0;
-    last_motor_positions.fill(0);
+    // last_motor_positions.fill(0);
+    for(size_t i = 0; i < 4; i++){
+        last_motor_positions[i] = wheels_[i].readPosition();
+    }
 }
 
 void ChassisModule::reset_rot(){
     current_rot_ = 0;
 }
 
-
-Ray ChassisModule::feedback(){
-    return {0,0,0};
-}
-
 void ChassisModule::tick800(){
-    // wheels_.request();
+    wheels_.request();
 
     static int i = 0;
     i = (i + 1) %4;
@@ -134,8 +124,20 @@ void ChassisModule::tick800(){
             );
         };
 
-        current_journey_ = calculate_journey().org.y;
+        current_jny_ = calculate_journey();
 
+        spd_ = (current_jny_.org - last_pos_) * 200;
+        last_pos_ = current_jny_.org;
+
+        // current_journey_ = ray_j.org.y;
+        // DEBUG_PRINTLN(ray_j);
+        // DEBUG_PRINTLN(current_journey_)
+        // DEBUG_PRINTLN(
+        //         wheels_[0].readPosition() - last_motor_positions[0],
+        //         wheels_[1].readPosition() - last_motor_positions[1],
+        //         wheels_[2].readPosition() - last_motor_positions[2],
+        //         wheels_[3].readPosition() - last_motor_positions[3]
+        // )
         closeloop();
     }
 }

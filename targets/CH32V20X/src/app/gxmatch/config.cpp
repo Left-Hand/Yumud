@@ -92,7 +92,7 @@ SysConfig gxm::create_default_config(){
 
         .wheels_config = {
             .wheel_config = {
-                .wheel_radius = 0.06_r,//轮子直径
+                .wheel_radius = 0.03_r,//轮子半径
                 .max_tps = 1,//最大每秒转圈数
                 .max_aps = 1,//最大每秒圈速加速度
             },
@@ -129,8 +129,8 @@ SysConfig gxm::create_default_config(){
             },
 
             .pos_ctrl_config = {
-                .kp = 1,
-                .kd = 1
+                .kp = 4,
+                .kd = 5
             },
 
             .max_acc = 1,

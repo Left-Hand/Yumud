@@ -42,15 +42,14 @@ public:
 
 protected:
     const Config & config_;
-    ChassisModule & chassis_;
 public:
-    PositionCtrl(const Config & config, ChassisModule & chassis):
-        config_(config), chassis_(chassis){;}
+    PositionCtrl(const Config & config):
+        config_(config){;}
 
     PositionCtrl(const PositionCtrl & other) = delete;
     PositionCtrl(PositionCtrl && other) = delete;
 
-    void update(const Vector2 & targ_pos, const Vector2 & pos, const Vector2 & spd);
+    Vector2 update(const Vector2 & targ_pos, const Vector2 & pos, const Vector2 & spd);
 };
 
 // class TravelCtrl{

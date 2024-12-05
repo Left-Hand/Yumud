@@ -469,12 +469,12 @@ void host_main(){
         auto & wheel_config = config.wheels_config.wheel_config;
 
         CanMaster can_master = {can};
-
+        // can.sync(false);
         auto stps = std::array<RemoteFOCMotor, 4>({
             {logger, can, 1},
             {logger, can, 2},
             {logger, can, 3},
-            {logger, can, 4},
+            {logger, can, 5},
         });
 
         auto init_steppers = [&](){
@@ -518,14 +518,37 @@ void host_main(){
                 chassis_module.tick();
             });
 
-            while(true){
-                using namespace ChassisActions;
-                // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
-                // delay(5);
+            using namespace ChassisActions;
 
-                delay(2000);
-                chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
-                DEBUG_PRINTLN(chassis_module.pending());
+            chassis_module << new DelayAction(3000);
+            chassis_module << new ShiftAction(chassis_module, 0.5_r);
+            chassis_module << new DelayAction(3000);
+            chassis_module << new ShiftAction(chassis_module, -0.5_r);
+            chassis_module << new DelayAction(3000);
+            chassis_module << new ShiftAction(chassis_module, 0.5_r);
+            chassis_module << new DelayAction(3000);
+            chassis_module << new ShiftAction(chassis_module, -0.5_r);
+
+            while(true){
+                // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
+                delay(5);
+
+                // {
+                //     delay(2000);
+
+                //     static bool fwd = false;
+                //     fwd = !fwd;
+                    
+                // }
+                // chassis_module.setCurrent({{0, 0.5_r * sin(3 * t)}, 0});
+                // chassis_module.setCurrent({{0.8_r * sin(3 * t), 0}, 0});
+                auto ray = chassis_module.jny();
+                auto [org, rad] = ray;
+                auto [x,y] = org;
+
+                DEBUG_PRINTLN(std::setprecision(4))
+                DEBUG_PRINTLN(x,y);
+                // , x,y,rad);
                 // chassis_module.setCurrent({{0,0}, 0.2_r});
                 // DEBUG_PRINTLN("???");
             }

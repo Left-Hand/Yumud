@@ -35,6 +35,24 @@ void Wheels::request(){
     static int i = 0;
     i = (i+1)%4;
 
+    while(can_.available()){
+        auto msg = can_.read();
+        
+        bool accepted = false;
+        for(size_t j = 0; j < 4; j++){
+            auto & motor = wheels[j].motor();
+            if(motor.update(msg)){
+                accepted = true;
+                break;
+            }
+        }
+
+        // if(!accepted){
+            // DEBUG_PRINTLN(msg.id() >> 7);
+        // }
+    }
+
+
     switch(i){
         case 0:
             // wheels[0].setPosition(0.1_r * sin(t));
@@ -54,24 +72,6 @@ void Wheels::request(){
             break;
     }
 
-    while(can_.available()){
-        auto msg = can_.read();
-
-        bool accepted = false;
-        for(size_t j = 0; j < 4; j++){
-            auto & motor = wheels[j].motor();
-                if(motor.update(msg)){
-                    accepted = true;
-                    break;
-            }
-        }
-
-        if(!accepted){
-            DEBUG_PRINTLN(msg.id() >> 7);
-        }
-
-
-    }
     // auto & can = instances_
 };
 

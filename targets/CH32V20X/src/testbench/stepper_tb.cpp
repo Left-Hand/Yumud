@@ -110,7 +110,7 @@ uint8_t get_default_id(){
             case 3273134334:
                 return 3;
             case 0xF3237B29:
-                return 4;
+                return 5;
             case 0x145BB656:
                 return 1;
             case 0x551C4DEA:
