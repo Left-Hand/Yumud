@@ -174,6 +174,8 @@ void GrabModule::init(){
 
     // self.rapid(Vector3(config_.inspect_xy);
     self << new RapidAction(self, config_.home_xyz);
+    // self << new MoveZAction(self, config_.free_z);
+    // self << new MoveXYAction(self, config_.catch_xy);
     self << new DelayAction(1000);
     self << new StatusAction(self, TranportStatus::AIR);
 }

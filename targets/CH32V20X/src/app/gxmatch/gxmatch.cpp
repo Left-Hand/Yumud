@@ -429,8 +429,11 @@ void host_main(){
             // grab_module.give(TrayIndex::Center);
             // grab_module.take(TrayIndex::Left);
             grab_module.give(TrayIndex::Left);
-            // grab_module.take(TrayIndex::Right);
+            grab_module.take(TrayIndex::Center);
+            grab_module.give(TrayIndex::Center);
+            grab_module.take(TrayIndex::Right);
             grab_module.give(TrayIndex::Right);
+            grab_module.take(TrayIndex::Left);
             // while(true){
             //     // DEBUG_PRINTLN(grab_module.pending());
             //     DEBUG_PRINTLN(millis(), grab_module.pending(), grab_module.which());
@@ -520,28 +523,31 @@ void host_main(){
 
             using namespace ChassisActions;
 
+            // chassis_module << new DelayAction(2000);
+            // chassis_module << new StraightAction(chassis_module, 1.72_r);
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new StraightAction(chassis_module, 1.72_r);
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new StraightAction(chassis_module, 1.72_r);
+
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+
+            // chassis_module << new StraightAction(chassis_module, -1.72_r);
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new StraightAction(chassis_module, -1.72_r);
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new StraightAction(chassis_module, -1.72_r);
+
             chassis_module << new DelayAction(2000);
-            chassis_module << new StraightAction(chassis_module, 1.72_r);
             chassis_module << new SpinAction(chassis_module, real_t(PI/2));
-            chassis_module << new StraightAction(chassis_module, 1.72_r);
             chassis_module << new SpinAction(chassis_module, real_t(PI/2));
-            chassis_module << new StraightAction(chassis_module, 1.72_r);
 
             chassis_module << new SpinAction(chassis_module, real_t(PI/2));
             chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
 
-            chassis_module << new StraightAction(chassis_module, -1.72_r);
             chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
-            chassis_module << new StraightAction(chassis_module, -1.72_r);
             chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
-            chassis_module << new StraightAction(chassis_module, -1.72_r);
-            // chassis_module << new SideAction(chassis_module, 0.5_r);
-            // chassis_module << new DelayAction(3000);
-            // chassis_module << new StraightAction(chassis_module, -0.5_r);
-            // chassis_module << new DelayAction(3000);
-            // chassis_module << new StraightAction(chassis_module, 0.5_r);
-            // chassis_module << new DelayAction(3000);
-            // chassis_module << new StraightAction(chassis_module, -0.5_r);
 
             while(true){
                 // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());

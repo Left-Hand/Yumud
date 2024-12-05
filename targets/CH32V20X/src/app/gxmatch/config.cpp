@@ -57,16 +57,16 @@ SysConfig gxm::create_default_config(){
 
         .grab_config = {
             .tray_xy = {
-                Vector2{-0.098_r    ,   0.144_r},
+                Vector2{-0.0983_r    ,   0.144_r},
                 Vector2{-0.004_r     ,   0.144_r},
-                Vector2{0.092_r     ,   0.144_r}
+                Vector2{0.0905_r     ,   0.144_r}
             },
 
-            .tray_z = 0.132_r,
+            .tray_z = 0.1333_r,
 
             .free_z = 0.169_r,
 
-            .catch_z = 0.054_r,
+            .catch_z = 0.056_r,
 
             .z_bias = 0.00005_r,
         
@@ -92,12 +92,13 @@ SysConfig gxm::create_default_config(){
 
         .wheels_config = {
             .wheel_config = {
-                .wheel_radius = 0.031_r,//轮子半径
+                .wheel_radius = 0.0315_r,//轮子半径
+                // .wheel_radius = 0.0307_r,//轮子半径
                 .max_tps = 1,//最大每秒转圈数
                 .max_aps = 1,//最大每秒圈速加速度
             },
 
-            .max_curr = 0.5_r
+            .max_curr = 0.6_r
         },
 
         .chassis_config = {
@@ -137,7 +138,7 @@ SysConfig gxm::create_default_config(){
             .max_spd = 0.5_r,
             
             .max_agr = 0.5_r,
-            .max_spr = 2.0_r
+            .max_spr = 0.8_r
         }
 
     };
