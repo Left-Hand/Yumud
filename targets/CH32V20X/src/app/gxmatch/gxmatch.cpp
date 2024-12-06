@@ -48,8 +48,6 @@ void host_main(){
     if(false){
     // if(true){
 
-        
-
         if(false){
             using Type = Vector2;
             using Topic = Topic_t<Type>;
@@ -74,65 +72,6 @@ void host_main(){
             publisher.publish({0,0});
             publisher.publish({1,1});
         }
-
-        //#region 路径规划
-        if(true){
-        // if(false){
-            auto limits = SequenceLimits{
-                .max_gyr = 2,
-                .max_agr = real_t(0.5),
-                .max_spd = real_t(0.5),
-                .max_acc = real_t(0.2)
-            };
-
-            auto params = SequenceParas{
-                .freq = 200
-            };
-            
-            auto sequencer = Sequencer(limits, params);
-            auto curve = Curve{};
-
-            Map map{};
-            Planner::Config planner_config = {.duration = real_t(3.2)};
-            Planner planner{planner_config, map, sequencer};
-
-            const auto m = micros();
-
-            planner.plan(
-                curve,
-                Field{FieldType::Garbage},
-                Field{FieldType::Staging}
-            );
-
-            planner.plan(
-                curve,
-                Field{FieldType::Staging},
-                Field{FieldType::RoughProcess}
-            );
-
-            planner.plan(
-                curve,
-                Field{FieldType::RoughProcess},
-                Field{FieldType::Garbage}
-            );
-
-            DEBUG_PRINTLN(micros() - m, curve.size());
-
-            draw_curve(painter, curve);
-
-            DEBUG_PRINTLN(std::setprecision(4));
-            auto idx = 0;
-            for(auto it = curve.begin(); it != curve.end(); ++it){
-                // while(millis() < size_t((idx * 5) + 1000));
-                delay(1);
-                idx++;
-                draw_turtle(painter, Ray(*it));
-            }
-            DEBUG_PRINTLN("done");
-            while(true);
-        }
-
-        //#endregion
     }
 
 
@@ -399,8 +338,8 @@ void host_main(){
         //#endregion
 
         //#region 测试抓取动作
-        // if(true){
-        if(false){
+        if(true){
+        // if(false){
 
             grab_module.init();
             // getline(logger);
@@ -460,14 +399,6 @@ void host_main(){
         QMC5883L mag_sensor_{i2c};
         mag_sensor_.init();
 
-        auto & est_config = config.chassis_config.est_config;
-
-        Estimator est_ = {
-            est_config,
-            acc_gyr_sensor_,
-            mag_sensor_,
-            flow_sensor_
-        };
         
         auto & wheel_config = config.wheels_config.wheel_config;
 
@@ -488,10 +419,6 @@ void host_main(){
         };
 
         init_steppers();
-        // can_master.registerNode(stps[0]);
-        // can_master.registerNode(stps[1]);
-        // can_master.registerNode(stps[2]);
-        // can_master.registerNode(stps[3]);
         Wheels wheels = {
             config.wheels_config,
             {
@@ -511,7 +438,9 @@ void host_main(){
         if(true){
             ChassisModule chassis_module {
                 config.chassis_config, 
-                wheels, est_};
+                wheels, 
+                acc_gyr_sensor_, 
+                mag_sensor_};
 
             bind_tick_800hz([&]{
                 chassis_module.tick800();
@@ -519,13 +448,46 @@ void host_main(){
 
             bind_tick_1khz([&]{
                 chassis_module.tick();
+                
             });
 
             using namespace ChassisActions;
 
+            Map map{};
+
+            Planner planner{chassis_module, map};
+
+            planner.wait(1.5_r);
+
+            planner.plan(
+                Field{FieldType::Garbage},
+                Field{FieldType::RoughProcess}
+            );
+
+            planner.wait(1.5_r);
+
+            planner.plan(
+                Field{FieldType::RoughProcess},
+                Field{FieldType::Staging}
+            );
+
+            planner.wait(1.5_r);
+
+            planner.plan(
+                Field{FieldType::Staging},
+                Field{FieldType::Garbage}
+            );
+
+
+
             // chassis_module << new DelayAction(2000);
-            // chassis_module << new StraightAction(chassis_module, 1.72_r);
-            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new StrictSpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new DelayAction(1000);
+            // chassis_module << new StrictSpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new DelayAction(1000);
+
+            // chassis_module << new DelayAction(1000);
+
             // chassis_module << new StraightAction(chassis_module, 1.72_r);
             // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
             // chassis_module << new StraightAction(chassis_module, 1.72_r);
@@ -539,15 +501,15 @@ void host_main(){
             // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
             // chassis_module << new StraightAction(chassis_module, -1.72_r);
 
-            chassis_module << new DelayAction(2000);
-            chassis_module << new SpinAction(chassis_module, real_t(PI/2));
-            chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new DelayAction(2000);
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
 
-            chassis_module << new SpinAction(chassis_module, real_t(PI/2));
-            chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
 
-            chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
-            chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
 
             while(true){
                 // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
@@ -566,8 +528,10 @@ void host_main(){
                 auto [org, rad] = ray;
                 auto [x,y] = org;
 
-                DEBUG_PRINTLN(std::setprecision(4))
-                DEBUG_PRINTLN(x,y);
+                // DEBUG_PRINTLN(std::setprecision(4))
+                // DEBUG_PRINTLN(x,y);
+
+                // chassis_module.setPosition({0,0,sin(t) * real_t(PI/2)});
                 // , x,y,rad);
                 // chassis_module.setCurrent({{0,0}, 0.2_r});
                 // DEBUG_PRINTLN("???");
@@ -640,25 +604,6 @@ void host_main(){
         if(true){
         // if(false){
             test_gest_obs();
-        }
-
-        //#endregion
-
-        //#region 测试状态观测器
-        auto test_est_obs = [&](){
-
-            est_.init();
-
-            while(true){
-                est_.update(t);
-                delay(5);
-                DEBUG_PRINTLN(est_.mag3_raw.x, est_.mag3_raw.y, est_.mag3_raw.z);
-            }
-        };
-
-        // if(true){
-        if(false){
-            test_est_obs();
         }
 
         //#endregion

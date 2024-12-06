@@ -94,7 +94,8 @@ struct DelayAction:public Action{
 protected:
     void execute() override {}
 public:
-    DelayAction( const uint dur):Action(dur, nullptr){}
+    DelayAction(const uint dur):Action(dur, nullptr){}
+    // DelayAction(const real-t):Action(dur, nullptr){}
     ACTION_NAME(delay)
 };
 

@@ -36,7 +36,7 @@ protected:
     }
 
     T get_spinrate_from_wheels(const T4 & spd4) {
-        T temp = config.chassis_height_meter + config.chassis_width_meter;
+        T temp = (config.chassis_height_meter + config.chassis_width_meter) / 2;
         T s0 = std::get<0>(spd4);
         T s1 = std::get<1>(spd4);
         T s2 = std::get<2>(spd4);
@@ -45,7 +45,7 @@ protected:
     }
 
     T4  get_wheels_from_status(const Vector2_t<T>& spd, T spinrate) {
-        T temp = config.chassis_height_meter + config.chassis_width_meter;
+        T temp = (config.chassis_height_meter + config.chassis_width_meter) / 2;
         return {
             spd.y + spd.x - spinrate * temp,
             spd.y - spd.x + spinrate * temp,

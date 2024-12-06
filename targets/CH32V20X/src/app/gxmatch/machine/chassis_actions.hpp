@@ -89,7 +89,7 @@ public:
         dest_(dest){};
 };
 
-class MoveAction:public ChassisAction{
+class ShiftAction:public ChassisAction{
 protected:
     using CtrlMode = ChassisModule::CtrlMode;
     using TrapezoidSolver = TrapezoidSolver_t<real_t>;
@@ -109,9 +109,9 @@ protected:
         );
     }
 public:
-    ACTION_NAME(move)
+    ACTION_NAME(shift)
     
-    MoveAction(Inst & inst, const Vector2 &  dest):
+    ShiftAction(Inst & inst, const Vector2 & dest):
         ChassisAction(UINT_MAX, [this](){
             if(first()){
                 init();
@@ -167,16 +167,72 @@ public:
 };
 
 
-class WaitArriveAction:public ChassisAction{
+class StrictSpinAction:public ChassisAction{
+protected:
+    using TrapezoidSolver = TrapezoidSolver_t<real_t>;
+    using CtrlMode = ChassisModule::CtrlMode;
+    real_t dest_;
+    std::optional<TrapezoidSolver> solver_ = std::nullopt;
+
+    void init(){
+        const auto & config = inst_.config(); 
+
+        solver_.emplace(
+            TrapezoidSolver{config.max_agr, config.max_spr, dest_}
+        );
+    }
 public:
-    ACTION_NAME(wait_arrive)
-    WaitArriveAction(Inst & inst):
+    ACTION_NAME(strict_spin)
+    StrictSpinAction(Inst & inst, const real_t rad):
         ChassisAction(UINT_MAX, [this](){
-            if(inst_.arrived()) kill();
+            if(first()){
+                init();
+                inst_.entry_strict_spin();
+            }
+
+            auto time = this->time();
+            auto rading = solver_->forward(time);
+            inst_.set_target_rad(rading);
+            // DEBUG_PRINTLN(rading);
+            if(time > solver_->period() + safe_wait_time){
+                inst_.freeze();
+                this->kill();
+            }
+        }, inst),
+        dest_(rad){};
+};
+
+
+// class WaitArriveAction:public ChassisAction{
+// public:
+//     ACTION_NAME(wait_arrive)
+//     WaitArriveAction(Inst & inst):
+//         ChassisAction(UINT_MAX, [this](){
+//             if(inst_.arrived()) kill();
+//         }, inst)
+//         {};
+// };
+
+class FreezeAction:public ChassisAction{
+public:
+    ACTION_NAME(freeze)
+    FreezeAction(Inst & inst):
+        ChassisAction(1, [this](){
+            inst_.freeze();
         }, inst)
         {};
 };
 
+
+// class FreezeAction:public ChassisAction{
+// public:
+//     ACTION_NAME(freeze)
+//     FreezeAction(Inst & inst):
+//         ChassisAction(1, [this](){
+//             inst_.freeze();
+//         }, inst)
+//         {};
+// };
 
 
 class TrimAction:public ChassisAction{

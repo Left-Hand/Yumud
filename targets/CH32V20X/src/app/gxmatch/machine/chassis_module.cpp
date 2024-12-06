@@ -1,54 +1,38 @@
 #include "chassis_actions.hpp"
 #include "chassis_ctrl.hpp"
 
-
-
 using namespace gxm;
 using namespace ChassisActions;
 
-// void ChassisModule::positionTrim(const Vector2 & trim){
-//     wheels_.setDelta(solver_.inverse(trim, 0));
-// }
 
-// void ChassisModule::rotationTrim(const real_t raderr){
-//     wheels_.setDelta(solver_.inverse({0,0}, raderr));
-// }
-
-void ChassisModule::forwardMove(const Vector2 & vel, const real_t spinrate){
-    // wheels_.setSpeed(solver_.inverse(vel, spinrate));
-}
-
-// void ChassisModule::calibrateRotation(const real_t rad){
-    
-// }
-
-
-// void ChassisModule::calibratePosition(const Vector2 & pos){
-    
-// }
 
 void ChassisModule::recalibrate(const Ray & ray){
     TODO();
 }
 
-void ChassisModule::test(){
 
-}
-    
 
 void ChassisModule::freeze(){
     wheels_.freeze();
 }
 
-bool ChassisModule::arrived(){
-    return false;
-}
 
 void ChassisModule::closeloop(){
 
     switch(ctrl_mode_){
         case CtrlMode::NONE:
             // DEBUG_PRINTLN("no mode");
+            break;
+
+        case CtrlMode::STRICT_SPIN:{
+            auto p1234 = solver_.inverse(Ray{0,0, target_rot_});
+            auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
+            auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
+            auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
+            auto p4 = last_motor_positions[3] +  std::get<3>(p1234);
+            DEBUG_PRINTLN(p1, p2, p3, p4, target_rot_);
+            setPosition({p1, p2, p3, p4});
+        }
             break;
         case CtrlMode::SHIFT:{
             auto rot_output = rot_ctrl_.update(0, this->rad(), this->gyr());
@@ -71,6 +55,12 @@ void ChassisModule::entry_spin(){
     reset_journey();
 }
 
+void ChassisModule::entry_strict_spin(){
+    ctrl_mode_ = CtrlMode::STRICT_SPIN;
+    reset_rot();
+    reset_journey();
+}
+
 void ChassisModule::entry_shift(){
     ctrl_mode_ = CtrlMode::SHIFT;
     reset_rot();
@@ -83,6 +73,20 @@ void ChassisModule::setCurrent(const Ray & ray){
     wheels_.setCurrent(curr);
     // wheels_.setSpeed(curr);
 }
+
+void ChassisModule::setPosition(const Ray & ray){
+    // DEBUG_PRINTLN("!!!!", ray);
+    auto && pos = solver_.inverse(ray);
+    // DEBUG_PRINTLN(curr)
+    // DEBUG_PRINTLN("????", pos);
+    wheels_.setPosition(pos);
+    // wheels_.setSpeed(curr);
+}
+
+void ChassisModule::setPosition(const std::tuple<real_t, real_t, real_t, real_t> pos){
+    wheels_.setPosition(pos);
+}
+
 
 
 void ChassisModule::trim(const Ray & ray){
@@ -114,7 +118,8 @@ void ChassisModule::tick800(){
         // wheels.setCurrent(delta);
         acc_gyr_sensor_.update();
 
-        gyr_ = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.0035);
+        // gyr_ = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.0035);
+        gyr_ = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.005);
         current_rot_ += gyr_ * real_t(1.0/200);
 
         auto calculate_journey = [this]() -> Ray{
@@ -146,3 +151,52 @@ void ChassisModule::tick800(){
 
 
 
+
+//侧向移动
+void ChassisModule::sideways(const real_t dist){
+    auto & self = *this;
+    self << new SideAction(self, dist);
+}
+
+//径向移动
+void ChassisModule::straight(const real_t dist){
+    auto & self = *this;
+    self << new StraightAction(self, dist);
+}
+
+//平移
+void ChassisModule::shift(const Vector2 & diff){
+    auto & self = *this;
+    self << new ShiftAction(self, diff);
+}
+
+//旋转
+void ChassisModule::spin(const real_t ang){
+    auto & self = *this;
+    self << new SpinAction(self, ang);
+}
+
+void ChassisModule::strict_spin(const real_t ang){
+    auto & self = *this;
+    self << new StrictSpinAction(self, ang);
+
+}
+
+void ChassisModule::wait(const real_t dur){
+    auto & self = *this;
+    self << new DelayAction(int(dur * 1000));
+}
+
+void ChassisModule::follow(const Ray & to){
+    auto & self = *this;
+    auto from = Ray{{0,0}, real_t(PI/2)};
+
+    auto p_opt = from.intersection(to);
+    auto p = p_opt.value();
+
+    self.straight(p.y);
+    self.spin(min_rad_diff(real_t(PI/2), to.rad));
+    self.straight((to.org - p).length());
+    // self << new ShiftAction(self, to.org);
+    // self << new SpinAction(self, to.rad);
+}

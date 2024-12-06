@@ -2,9 +2,8 @@
 
 
 #include "motion_module.hpp"
-#include "../autodrive/Estimator.hpp"
+#include "../autodrive/Filters.hpp"
 #include "wheel/wheels.hpp"
-#include "wheel/wheel.hpp"
 
 
 namespace gxm{

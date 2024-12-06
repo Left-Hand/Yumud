@@ -54,9 +54,9 @@ void Wheels::request(){
             }
         }
 
-        // if(!accepted){
+        if(!accepted){
             // DEBUG_PRINTLN(msg.id() >> 7);
-        // }
+        }
     }
 
 
@@ -83,8 +83,9 @@ void Wheels::request(){
 };
 
 void Wheels::setPosition(const std::tuple<real_t, real_t, real_t, real_t> & pos){
-    // #define SET_POS(n) instances_[n].setPosition(std::get<n>(pos))
-    #define SET_POS(n) instances_[n].setVector(std::get<n>(pos))
+    #define SET_POS(n) instances_[n].setPosition(std::get<n>(pos))
+    // #define SET_POS(n) instances_[n].setVector(std::get<n>(pos))
+    // DEBUG_PRINTLN("?????", pos)
     SET_POS(0);
     SET_POS(1);
     SET_POS(2);
