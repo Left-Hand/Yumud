@@ -81,7 +81,7 @@ public:
 
     //进行规划 输入要输出的路线 当前所在位置及朝向 所在区域 前往区域
     void plan(const Field & from, const Field & to);
-    void wait(const real_t time);
+    void wait(const uint time);
 
     //进行规划 输入要输出的路线 所在区域 前往区域
     // void plan(const Field & from, const Field & to){

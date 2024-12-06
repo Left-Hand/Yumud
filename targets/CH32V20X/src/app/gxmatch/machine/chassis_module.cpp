@@ -24,13 +24,23 @@ void ChassisModule::closeloop(){
             // DEBUG_PRINTLN("no mode");
             break;
 
+        case CtrlMode::STRICT_SHIFT:{
+            auto p1234 = solver_.inverse(Ray{target_jny_.org, 0});
+            auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
+            auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
+            auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
+            auto p4 = last_motor_positions[3] +  std::get<3>(p1234);
+            // DEBUG_PRINTLN(p1, p2, p3, p4, target_rot_);
+            setPosition({p1, p2, p3, p4});
+        }
+            break;
         case CtrlMode::STRICT_SPIN:{
             auto p1234 = solver_.inverse(Ray{0,0, target_rot_});
             auto p1 = last_motor_positions[0] +  std::get<0>(p1234);
             auto p2 = last_motor_positions[1] +  std::get<1>(p1234);
             auto p3 = last_motor_positions[2] +  std::get<2>(p1234);
             auto p4 = last_motor_positions[3] +  std::get<3>(p1234);
-            DEBUG_PRINTLN(p1, p2, p3, p4, target_rot_);
+            // DEBUG_PRINTLN(p1, p2, p3, p4, target_rot_);
             setPosition({p1, p2, p3, p4});
         }
             break;
@@ -63,6 +73,12 @@ void ChassisModule::entry_strict_spin(){
 
 void ChassisModule::entry_shift(){
     ctrl_mode_ = CtrlMode::SHIFT;
+    reset_rot();
+    reset_journey();
+}
+
+void ChassisModule::entry_strict_shift(){
+    ctrl_mode_ = CtrlMode::STRICT_SHIFT;
     reset_rot();
     reset_journey();
 }
@@ -104,6 +120,22 @@ void ChassisModule::reset_journey(){
 
 void ChassisModule::reset_rot(){
     current_rot_ = 0;
+}
+
+void ChassisModule::init(){
+    auto init_steppers = [&](){
+        for(size_t i = 0; i < 4; i++){
+            auto & stp_ = wheels_[i].motor();
+            stp_.reset();
+            stp_.locateRelatively(0);
+        }    
+    };
+
+    init_steppers();
+
+    auto & self = *this;
+    self << new FreezeAction(self);
+    self << new DelayAction(2000);
 }
 
 void ChassisModule::tick800(){
@@ -179,13 +211,17 @@ void ChassisModule::spin(const real_t ang){
 void ChassisModule::strict_spin(const real_t ang){
     auto & self = *this;
     self << new StrictSpinAction(self, ang);
-
 }
 
-void ChassisModule::wait(const real_t dur){
+void ChassisModule::strict_shift(const Vector2 & offs){
     auto & self = *this;
-    self << new DelayAction(int(dur * 1000));
+    self << new StrictShiftAction(self, offs);
 }
+
+// void ChassisModule::wait(const real_t dur){
+//     auto & self = *this;
+//     self << new DelayAction(int(dur * 1000));
+// }
 
 void ChassisModule::follow(const Ray & to){
     auto & self = *this;

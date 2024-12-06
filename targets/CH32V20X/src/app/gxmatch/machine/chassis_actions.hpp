@@ -202,6 +202,48 @@ public:
         dest_(rad){};
 };
 
+class StrictShiftAction:public ChassisAction{
+protected:
+    using CtrlMode = ChassisModule::CtrlMode;
+    using TrapezoidSolver = TrapezoidSolver_t<real_t>;
+    std::optional<TrapezoidSolver> solver_ = std::nullopt;
+
+    Vector2 dest_;
+    Vector2 norm_;
+    real_t dist_;
+
+    void init(){
+        const auto & config = inst_.config(); 
+        dist_ = dest_.length();
+        norm_ = dest_ / dist_;
+
+        solver_.emplace(
+            TrapezoidSolver{config.max_acc, config.max_spd, dist_}
+        );
+    }
+public:
+    ACTION_NAME(strict_shift)
+    
+    StrictShiftAction(Inst & inst, const Vector2 & dest):
+        ChassisAction(UINT_MAX, [this](){
+            if(first()){
+                init();
+                inst_.entry_strict_shift();
+            }
+
+            auto time = this->time();
+            auto fronting = solver_->forward(time);
+            inst_.set_target_jny({fronting * norm_, 0});
+
+            if(time > solver_->period() + safe_wait_time){
+                inst_.freeze();
+                this->kill();
+            }
+
+        }, inst),
+        dest_(dest){};
+};
+
 
 // class WaitArriveAction:public ChassisAction{
 // public:

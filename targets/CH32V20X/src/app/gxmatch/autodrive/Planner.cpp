@@ -52,7 +52,7 @@ void Planner::init(){
 
 }
 
-void Planner::wait(const real_t time){
+void Planner::wait(const uint time){
     inst_.wait(time);
 }
 

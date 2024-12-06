@@ -70,9 +70,14 @@ SysConfig gxm::create_default_config(){
 
             .z_bias = 0.00005_r,
         
-            .catch_xy = Vector2{0, 0.26_r},
-
+            .catch_xy = {
+                Vector2{-0.1_r, 0.24_r},
+                Vector2{-0.0_r, 0.24_r},
+                Vector2{0.1_r, 0.24_r},
+            },
+            
             .inspect_xyz = Vector3{0, 0.24_r, 0.16_r},
+            .idle_xyz = Vector3{0, 0.145_r, 0.16_r},
             
             .home_xyz = Vector3(0, 0.24_r, 0.16_r),
 
@@ -81,12 +86,12 @@ SysConfig gxm::create_default_config(){
                 Vector3{0.26_r, 0.15_r, 0.17_r}
             },
 
-            .max_spd = 0.53_r,
-            .max_acc = 0.6_r,
+            .max_spd = 1.03_r,
+            .max_acc = 0.8_r,
 
-            .max_z_spd = 0.37_r,
-            .max_z_acc = 0.37_r,
-            .nozzle_sustain = 500
+            .max_z_spd = 1.07_r,
+            .max_z_acc = 0.8_r,
+            .nozzle_sustain = 200
         },
 
 

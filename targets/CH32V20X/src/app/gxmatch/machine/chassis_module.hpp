@@ -48,7 +48,8 @@ public:
         NONE,
         SPIN,
         SHIFT,
-        STRICT_SPIN
+        STRICT_SPIN,
+        STRICT_SHIFT
     };
 
 
@@ -99,6 +100,7 @@ public:
     void trim(const Ray & ray);
 
     void recalibrate(const Ray & ray);
+    void init();
     void tick800();
 
     void setCurrent(const Ray & ray);
@@ -118,6 +120,7 @@ public:
     void entry_spin();
     void entry_shift();
     void entry_strict_spin();
+    void entry_strict_shift();
     void freeze();
 
     //侧向移动
@@ -134,8 +137,9 @@ public:
     //旋转
     void spin(const real_t ang);
     void strict_spin(const real_t ang);
+    void strict_shift(const Vector2 & offs);
 
-    void wait(const real_t dur);
+    // void wait(const real_t dur);
 
     void set_target_rad(const real_t rad){
         this->target_rot_ = rad;

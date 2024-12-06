@@ -20,7 +20,8 @@
 
 using namespace ymd::drivers;
 void MPU6050::init(){
-    if(this->verify()){
+    bool ok = MPU6050_ASSERT(this->verify(), "MPU6050 verify failed")
+    if(ok){
         this->writeReg(0x6b, 0);
         this->writeReg(0x19, 0x00);
         this->writeReg(0x1a, 0x00);
@@ -60,7 +61,7 @@ bool MPU6050::verify(){
     //0x75 0x68
     uint8_t data;
     readReg(0x75, data);
-    return MPU6050_ASSERT(data == 0x68, "MPU6050 verify failed");
+    return data == 0x68;
 }
 
 void MPU6050::setAccRange(const AccRange range){

@@ -23,7 +23,7 @@ class ReleaseAction:public GrabAction{
 public:
     ACTION_NAME(release)
     ReleaseAction(Inst & inst):
-        GrabAction(inst.config().nozzle_sustain, [this](){
+        GrabAction(1, [this](){
             if(first()){
                 inst_.meta_release();
                 // DEBUG_PRINTLN("[reasss]")
@@ -36,7 +36,7 @@ public:
     ACTION_NAME(test)
     TestAction(Inst & inst):
         GrabAction(200, [this](){
-            DEBUG_PRINTLN(millis())
+            // DEBUG_PRINTLN(millis())
         }, inst){};
 };
 
@@ -175,6 +175,7 @@ public:
             inst_.rapid(dest_pos);
             // auto pos = inst_.getPos();
             // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time);
+            DEBUG_PRINTLN(dest_pos.x, dest_pos.y);
         }, inst),
         to_(to)
         {};
@@ -212,20 +213,6 @@ public:
         {};
 };
 
-class StatusAction:public GrabAction{
-protected:
-    // Vector3 to_;
-    using Status = GrabModule::TranportStatus;
 
-    Status status_;
-public:
-    ACTION_NAME(status)
-    StatusAction(Inst & inst, const Status status):
-        GrabAction(1, [this](){
-            inst_.setStatus(status_);
-        }, inst),
-        status_(status)
-        {};
-};
 
 }
