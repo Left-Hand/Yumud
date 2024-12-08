@@ -14,6 +14,7 @@
 using namespace nvcv2;
 using namespace gxm;
 
+
 class VisionModule:public AsciiProtocolConcept{
 protected:
     // UartHw & uart_;
@@ -32,8 +33,10 @@ public:
         AsciiProtocolConcept(uart){;}
 
     void parseArgs(const Strings & args) override{
+        // DEBUG_PRINTLN(args);
         switch(args[0].hash()){
             case "color"_ha:
+                // DEBUG_PRINTLN("c is", uint8_t(args[1][0]));
                 switch(args[1][0]){
                     case 'n':
                         // color_ = MaterialColor::None;
@@ -46,7 +49,9 @@ public:
                         color_ = MaterialColor::Green;
                         break;
                     case 'b':
+                        // DEBUG_PRINTLN("csdbjcnsadjk")
                         color_ = MaterialColor::Blue;
+                        
                         break;
                 }
             break;
@@ -65,20 +70,30 @@ public:
 
     void close(){
         os.println("close");
+        mode_ = Mode::CLOSED;
     }
 
     auto color(){
         if(mode_ != Mode::COLOR){
             os.println("color"); 
             color_ = std::nullopt;
+            mode_ = Mode::COLOR;
         }
-        return color_;
+        return color_.value_or(MaterialColor::None);
     }
 
+    bool has_color(){
+        return color_.has_value();
+    }
+
+    bool has_offset(){
+        return offset_.has_value();
+    }
     auto offset(){
         if(mode_ != Mode::OFFSET){
             os.println("offset");
             offset_ = std::nullopt;
+            mode_ = Mode::OFFSET;
         }
         return offset_;
     }
@@ -97,7 +112,7 @@ void host_main(){
     DEBUG_PRINTLN(std::setprecision(4), "poweron");
 
     auto i2c = I2cSw{portD[2], portC[12]};
-    i2c.init(400_KHz);
+    i2c.init(3400_KHz);
     auto config = create_default_config();
 
     // auto & wuart = uart7;
@@ -137,6 +152,7 @@ void host_main(){
 
         SG90 claw_servo{pca[5]};
         SG90 servo_cross{pca[15]};
+
 
         auto & joint_config = config.joint_config;
         JointLR joint_left{
@@ -902,7 +918,7 @@ void host_main(){
         acc_gyr_sensor_.init();
 
         QMC5883L mag_sensor_{i2c};
-        // mag_sensor_.init();
+        mag_sensor_.init();
 
         auto stps = std::array<RemoteFOCMotor, 4>({
             {logger, can, 1},
@@ -910,6 +926,15 @@ void host_main(){
             {logger, can, 3},
             {logger, can, 5},
         });
+
+        auto idle = [&](){
+            pca[0] = 0.001_r;
+            pca[1] = 0.001_r;
+            pca[14] = 0.001_r;
+            pca[15] = 0.001_r;
+            // pca.reset();
+        };
+
 
         Wheels wheels = {
             config.wheels_config,
@@ -938,10 +963,14 @@ void host_main(){
         using namespace GrabActions;
 
         Map map{};
+        auto & vuart = uart2;
+        vuart.init(115200, CommMethod::Blocking);
+        VisionModule vision{vuart};
 
         Planner planner{chassis_module, map};
 
-        grab_module.init();
+        // grab_module.init();
+        // grab_module.idle();
         chassis_module.init();
 
         enum class Status:uint8_t{
@@ -953,6 +982,7 @@ void host_main(){
             END
         };
 
+        // Status status = Status::GO_ROUGH;
         Status status = Status::NONE;
 
         auto & chassis = chassis_module;
@@ -966,24 +996,158 @@ void host_main(){
             chassis << new StrictSpinAction(chassis, real_t(PI/2));
         };
 
+        // debuguart
+        enum class Process:uint8_t{
+            INIT,
+            INSPECT,
+            TO_FIND,
+            GET_OFFS,
+            MOVE,
+            GIVE_CENTER,
+            MOVE_LEFT,
+            GIVE_LEFT,
+            MOVE_RIGHT,
+            GIVE_RIGHT,
+            TAKE_RIGHT,
+            REMOVE_LEFT,
+            TAKE_LEFT,
+            MOVE_CENTER,
+            TAKE_CENTER,
+            BACK,
+            DONE,
+        };
+
+        bool field_ok = false;
+
+        Process process = Process::INIT;
+
+        scexpr real_t g_width = 0.15_r;
+        scexpr real_t g_back = 0.15_r;
+
         auto process_field = [&](){
-            grab.inspect();
+            return;
+            DEBUG_PRINTLN(int(process));
+            switch(process){
+                case Process::INIT:
+                    field_ok = false;
+                    if(true){
+                        vision.color();
+                        grab.inspect();
+                        process = Process::INSPECT;
+                    }
+                    break;
+                case Process::INSPECT:
+                    if(grab.pending() == 0){
+                        process = Process::TO_FIND;
+                    }
+                    break;
+                case Process::TO_FIND:
+                    chassis.setCurrent({0, 0.5_r, 0});
+                    // if(vision.has_color()){
+                    if(true){
+                        vision.offset();
+                        process = Process::GET_OFFS;
+                    }
+                    break;
+                case Process::GET_OFFS:
+                    // if(vision.offset().has_value()){
+                    if(true){
+                        vision.close();
+                        chassis.strict_shift((Vector2{0, 0.04_r}));
+                        process = Process::MOVE;
+                    }
+                    break;
+                case Process::MOVE:
+                    if(chassis.pending() == 0){
+                        grab.give(TrayIndex::Center);
+                        process = Process::GIVE_CENTER;
+                    }
+                    break;
+                case Process::GIVE_CENTER:
+                    if(grab.pending() == 0){
+                        // grab.take(TrayIndex::Center);
+                        chassis.strict_shift(Vector2{-g_width, 0});
+                        process = Process::MOVE_LEFT;
+                    }
+                    break;
+                case Process::MOVE_LEFT:
+                    if(chassis.pending() == 0){
+                        grab.give(TrayIndex::Left);
+                        process = Process::GIVE_LEFT;
+                    }
+                    break;
+                case Process::GIVE_LEFT:
+                    if(grab.pending() == 0){
+                        chassis.strict_shift(Vector2{g_width * 2, 0});
+                        process = Process::MOVE_RIGHT;
+                    }
+                    break;
+                case Process::MOVE_RIGHT:   
+                    if(chassis.pending() == 0){
+                        grab.give(TrayIndex::Right);
+                        process = Process::GIVE_RIGHT;
+                    }
+                    break;
+                case Process::GIVE_RIGHT:
+                    if(grab.pending() == 0){
+                        grab.take(TrayIndex::Right);
+                        process = Process::TAKE_RIGHT;
+                    }
+                    break;
+                case Process::TAKE_RIGHT:   
+                    if(grab.pending() == 0){
+                        chassis.strict_shift({-2 * g_width, 0});
+                        process = Process::REMOVE_LEFT;
+                    }
+                    break;
+                case Process::REMOVE_LEFT:
+                    if(chassis.pending() == 0){
+                        grab.take(TrayIndex::Left);
+                        process = Process::TAKE_LEFT;
+                    }
+                    break;
+                case Process::TAKE_LEFT:
+                    if(grab.pending() == 0){
+                        chassis.strict_shift({g_width, 0});
+                        process = Process::MOVE_CENTER;
+                    }
+                    break;
+                case Process::MOVE_CENTER:
+                    if(chassis.pending() == 0){
+                        grab.take(TrayIndex::Center);
+                        process = Process::TAKE_CENTER;
+                    }
+                    break;
+                case Process::TAKE_CENTER:
+                    if(grab.pending() == 0){
+                        chassis.strict_shift({0, -g_back});
+                        process = Process::BACK;
+                    }
+                    break;
+                case Process::BACK:
+                    if(chassis.pending() == 0){
+                        process = Process::DONE;
+                    }
+                    break;
+                case Process::DONE:
+                    field_ok = true;
+                    break;
+            }
+            // grab.inspect();
 
-            grab.give(TrayIndex::Left);
-            grab.give(TrayIndex::Center);
-            grab.give(TrayIndex::Right);
-            grab.take(TrayIndex::Left);
-            grab.take(TrayIndex::Center);
-            grab.take(TrayIndex::Right);
+            // grab.give(TrayIndex::Left);
+            // grab.give(TrayIndex::Center);
+            // grab.give(TrayIndex::Right);
+            // grab.take(TrayIndex::Left);
+            // grab.take(TrayIndex::Center);
+            // grab.take(TrayIndex::Right);
 
-            grab.idle();
+            // grab.idle();
         };
 
         auto sm_at_rough = [&](){
             process_field();
         };
-
-
 
         auto sm_go_staging = [&](){
             chassis << new StrictSpinAction(chassis, real_t(-PI/2));
@@ -992,8 +1156,6 @@ void host_main(){
             chassis << new StraightAction(chassis, 0.850_r);
             chassis << new StrictSpinAction(chassis, real_t(PI/2));
         };
-
-
 
         auto sm_at_staging = [&](){
             process_field();
@@ -1005,18 +1167,24 @@ void host_main(){
 
         auto check_at_rough = [&]() -> bool{
             return grab.done() and chassis.done();
+            // return field_ok;
         };
 
         auto check_go_staging = [&]() -> bool{
-            return grab.done() and chassis.done();
+            // return grab.done() and chassis.done();
+            // return field_ok;
+            return true;
         };
 
         auto check_at_staging = [&]() -> bool{
             return grab.done() and chassis.done();
+            // return field_ok;
         };
 
         auto check_end = [&]() -> bool {
-            return grab.done() and chassis.done();
+            // return grab.done() and chassis.done();
+            // return field_ok;
+            return true;
         };
 
         auto sm_end = [&](){
@@ -1053,12 +1221,20 @@ void host_main(){
                 case Status::AT_ROUGH:
                     process_field();
                     if(check_go_staging()){
+                    // DEBUG_PRINTLN("at rough");
+                    // DEBUG_PRINTLN("at rough");
+                    // if(true){
+                        // grab.idle();
+                        idle();
                         sm_go_staging();
+                        field_ok = false;
+                        process = Process::INIT;
                         sw_state(Status::GO_STAGING);
                     }
 
                     break;
                 case Status::GO_STAGING:
+                    // DEBUG_PRINTLN("go st");
                     if(check_at_staging()){
                         sm_at_staging();
                         sw_state(Status::AT_STAGING);
@@ -1068,6 +1244,8 @@ void host_main(){
                 case Status::AT_STAGING:
                     process_field();
                     if(check_end()){
+                        // grab.idle();
+                        idle();
                         sm_end();
                         sw_state(Status::END);
                     }
@@ -1079,37 +1257,106 @@ void host_main(){
             cnt++;
         };
 
-        bind_tick_800hz([&]{
-            chassis_module.tick800();
-        });
-
         auto & led = portC[14];
         led.outpp();
-        bind_tick_50hz([&](){
+
+
+        auto tick_50hz = [&]{
             joint_left.tick();
             joint_right.tick();
             joint_z.tick();
             led.toggle();
+        };
+
+        bind_tick_800hz([&]{
+            chassis_module.tick800();
+            static uint8_t i = 0;
+            i = (i + 1) % 16;
+            if(i == 0){
+                tick_50hz();
+            }
         });
+
 
         bind_tick_1khz([&](){
             grab_module.tick();
             chassis_module.tick();
-            // mmain();
+            vision.update();
+
+            mmain();
         });
 
-        sm_go_rough();
-        sm_go_staging();
-        sm_end();
+        // sm_go_rough();
+        // chassis.strict_spin(real_t(PI/2));
+        // for(size_t i = 0; i < 10; i ++){
+        //     chassis.spin(real_t(PI/2));
+        //     chassis.wait(1500);
+        // }
+        // chassis.wait(500);
+        // chassis.strict_spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.wait(500);
+
+        // grab.wait(4000);
+        // grab.take(TrayIndex::Center);
+        // grab.take(TrayIndex::Left);
+        // grab.give(TrayIndex::Left);
 
         // sm_at_rough();
-        
-        // sm_at_staging();
 
+        // sm_go_rough();
+        // sm_go_staging();
+        // sm_end();
+
+        // txo.outpp();
+        // uart2.init(115200);
         while(true){
-            // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
-            delay(10);
+            // vuart.println("color");
+            // vision.offset();
+            // delay(2000);
+            // vuart.println("offset");
+            // delay(2000);
+            // DEBUG_PRINTLN(vision.color(), vision.offset());
+            // if(vision.has_color()){
+            //     // DEBUG_PRINTLN("color", int(vision.color()));
+            //     switch(vision.color()){
+            //         case MaterialColor::Blue:
+            //             DEBUG_PRINTLN("b")
+            //             break;
+            //         case MaterialColor::Green:
+            //             DEBUG_PRINTLN("g")
+            //             break;
 
+            //         case MaterialColor::None:
+            //             DEBUG_PRINTLN("n")
+            //             break;
+            //         case MaterialColor::Red:
+            //             DEBUG_PRINTLN("r")
+            //             break;
+            //     }
+            // }else{
+            //     DEBUG_PRINTLN("none");
+            // }
+
+            // if(vision.has_offset()){
+            //     DEBUG_PRINTLN(vision.offset());
+            // }
+            // delay(200);
+            // if(vuart.available()){
+            //     DEBUG_PRINTLN(vuart.readString());
+            // }
+            // else{
+                // DEBUG_PRINTLN("???")
+            // }
+            // vuart.println("offset");
+            // delay(1000);
+            continue;
+            // DEBUG_PRINTLN(uart2.available());
+            // delay(10);
+            // delay
+            // delay(100);
+            // txo.toggle();
+            // uart2.println()
             // {
             //     delay(2000);
 
@@ -1119,10 +1366,20 @@ void host_main(){
             // }
             // chassis_module.setCurrent({{0, 0.5_r * sin(3 * t)}, 0});
             // chassis_module.setCurrent({{0.8_r * sin(3 * t), 0}, 0});
-            auto ray = chassis_module.jny();
-            auto [org, rad] = ray;
-            auto [x,y] = org;
+            // auto ray = chassis_module.jny();
+            // auto [org, rad] = ray;
+            // auto [x,y] = org;
+            // if(millis() % 2000 > 1000){grab.meta_press();}
+            // else{grab.meta_release();}
+            
 
+            // chassis.setCurrent({0,0,0});
+            // DEBUG_PRINTLN(chassis.gyr(), 
+            //     chassis.rad(), stps[0].readPosition(), stps[1].readPosition(), stps[2].readPosition(),
+            //     stps[3].readPosition());]
+            // uart2.println("color");
+            // DEBUG_PRINTLN(uart2.pending());
+            // DEBUG_PRINTLN(int(status));
             // DEBUG_PRINTLN(std::setprecision(4))
             // DEBUG_PRINTLN(int(status));
             // DEBUG_PRINTLN(grab.pending());

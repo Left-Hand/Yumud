@@ -2,6 +2,8 @@
 
 using namespace gxm;
 using namespace gxm::GrabActions;
+#define DEBUG(...)     *this << new DebugAction(__VA_ARGS__);
+
 
 void GrabModule::goHome(){
     scara_.goHome();
@@ -15,6 +17,11 @@ void GrabModule::rapid(const Vector3 & pos){
 
     scara_.moveXY(pos.xy());
     zaxis_.setDistance(pos.z + config_.z_bias);
+}
+
+void GrabModule::meta_idle(){
+    scara_.idle();
+    zaxis_.idle();
 }
 
 void GrabModule::meta_press(){
@@ -100,6 +107,7 @@ void GrabModule::meta_take_place(const TrayIndex tray_index){
     auto & self = *this;
     self.press();
     self.move_z(config_.free_z);
+    DEBUG(calculateTrayPos(tray_index));
     self.move_xy(calculateTrayPos(tray_index));
     self.move_z(config_.tray_z);
     self.release();
@@ -145,12 +153,15 @@ void GrabModule::inspect(){
 void GrabModule::idle(){
     meta_to_air();
     this->move(config_.idle_xyz);
+    this->release();
+    *this << new IdleAction(*this);
 }
 
 void GrabModule::take(const TrayIndex index){
     meta_to_air();
     meta_air_take_air(index);
     meta_take_place(index);
+    meta_to_air();
 }
 
 
@@ -159,6 +170,7 @@ void GrabModule::give(const TrayIndex index){
     meta_to_air();
     meta_air_give_air(index);
     meta_give_place(index);
+    meta_to_air();
 }
 
 void GrabModule::test(){
@@ -194,6 +206,7 @@ void GrabModule::init(){
 
 
 Vector2 GrabModule::calculateTrayPos(TrayIndex index) const{
+    // return {config_.tray_xy[size_t(index)].x, 0.144_r};
     return {config_.tray_xy[size_t(index)]};
     // switch(index){
     //     case TrayIndex::Left :

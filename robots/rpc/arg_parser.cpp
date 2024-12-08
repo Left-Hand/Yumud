@@ -5,6 +5,7 @@ using namespace ymd;
 
 Strings ArgParser::update(InputStream & is){
     while(is.available()){
+        // DEBUG_P
         auto chr = is.read();
         if(chr == 0) continue;
         temp += chr;

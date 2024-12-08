@@ -42,4 +42,7 @@ void JointLR::tick(){
     }
 }
 
+void JointLR::idle(){
+    servo_.idle();
+}
 }

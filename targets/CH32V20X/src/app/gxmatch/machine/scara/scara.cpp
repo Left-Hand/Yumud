@@ -38,4 +38,9 @@ bool Scara::caught(){
     return true;
 }
 
+
+void Scara::idle(){
+    joint_l.idle();
+    joint_r.idle();
+}
 }

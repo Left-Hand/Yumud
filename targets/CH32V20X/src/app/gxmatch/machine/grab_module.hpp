@@ -66,9 +66,6 @@ protected:
     Config config_;
     ZAxisCross & zaxis_;
     Scara & scara_;
-
-
-
 public:
 // protected:
     
@@ -87,6 +84,7 @@ public:
     void meta_to_air();
     void meta_press();
     void meta_release();
+    void meta_idle();
 
     Vector2 calculateTrayPos(const TrayIndex index) const;
     Vector2 calculateCatchPos(const TrayIndex index) const;

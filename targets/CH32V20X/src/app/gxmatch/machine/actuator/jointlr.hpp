@@ -39,6 +39,7 @@ public:
     void setRadian(const real_t dist) override; 
     real_t getRadian(){return std::bit_cast<real_t>(last_radian_);}
     void tick() override;
+    void idle();
     void inverse(const bool en = true){
         inversed_ = en;
     }

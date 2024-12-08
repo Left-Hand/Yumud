@@ -2,7 +2,7 @@
 
 #include "chassis_ctrl.hpp"
 #include "drivers/IMU/IMU.hpp"
-
+#include "dsp/filter/KalmanFilter.hpp"
 
 namespace gxm{
 
@@ -81,6 +81,7 @@ protected:
     Vector2 spd_;
     Vector2 last_pos_;
     
+
     void closeloop();
 public:
     ChassisModule(const Config & config, 

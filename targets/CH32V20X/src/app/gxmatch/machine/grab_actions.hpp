@@ -23,7 +23,7 @@ class ReleaseAction:public GrabAction{
 public:
     ACTION_NAME(release)
     ReleaseAction(Inst & inst):
-        GrabAction(1, [this](){
+        GrabAction(inst.config().nozzle_sustain, [this](){
             if(first()){
                 inst_.meta_release();
                 // DEBUG_PRINTLN("[reasss]")
@@ -175,7 +175,7 @@ public:
             inst_.rapid(dest_pos);
             // auto pos = inst_.getPos();
             // DEBUG_PRINTLN(pos.x, pos.y, pos.z, time);
-            DEBUG_PRINTLN(dest_pos.x, dest_pos.y);
+            // DEBUG_PRINTLN(dest_pos.x, dest_pos.y);
         }, inst),
         to_(to)
         {};
@@ -210,6 +210,17 @@ public:
             }
         }, inst),
         to_(to)
+        {};
+};
+
+class IdleAction:public GrabAction{
+protected:
+public:
+    ACTION_NAME(rapid)
+    IdleAction(Inst & inst):
+        GrabAction(1, [this](){
+            inst_.meta_idle();
+        }, inst)
         {};
 };
 
