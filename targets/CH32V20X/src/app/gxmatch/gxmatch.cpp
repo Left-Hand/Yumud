@@ -106,7 +106,8 @@ public:
 namespace gxm{
 
 void host_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(1000000);
     auto & logger = DEBUGGER_INST;
 
     DEBUG_PRINTLN(std::setprecision(4), "poweron");
@@ -989,10 +990,25 @@ void host_main(){
         auto & grab = grab_module;
 
         auto sm_go_rough = [&](){
-            chassis << new ShiftAction(chassis, {0.255_r, 0.155_r});
-            chassis << new StraightAction(chassis, 1.74_r);
+            chassis << new StrictShiftAction(chassis, {0.225_r, 0.155_r});
+            // chassis << new StrictShiftAction(chassis, {0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {-0.225_r, 0});
+
+            // chassis << new ShiftAction(chassis, {0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {-0.225_r, 0});
+
+
+            chassis << new StraightAction(chassis, 1.72_r);
             chassis << new StrictSpinAction(chassis, real_t(-PI/2));
-            chassis << new StraightAction(chassis, 0.805_r);
+            chassis << new StraightAction(chassis, 0.825_r);
             chassis << new StrictSpinAction(chassis, real_t(PI/2));
         };
 
@@ -1151,9 +1167,9 @@ void host_main(){
 
         auto sm_go_staging = [&](){
             chassis << new StrictSpinAction(chassis, real_t(-PI/2));
-            chassis << new StraightAction(chassis, 0.845_r);
+            chassis << new StraightAction(chassis, 0.825_r);
             chassis << new StrictSpinAction(chassis, real_t(-PI/2));
-            chassis << new StraightAction(chassis, 0.850_r);
+            chassis << new StraightAction(chassis, 0.860_r);
             chassis << new StrictSpinAction(chassis, real_t(PI/2));
         };
 
@@ -1189,10 +1205,10 @@ void host_main(){
 
         auto sm_end = [&](){
             chassis << new StrictSpinAction(chassis, real_t(-PI/2));
-            chassis << new StraightAction(chassis, 0.850_r);
+            chassis << new StraightAction(chassis, 0.860_r);
             chassis << new StrictSpinAction(chassis, real_t(-PI/2));
             chassis << new StraightAction(chassis, 1.65_r);
-            chassis << new ShiftAction(chassis, {-0.185_r, 0.265_r});   
+            chassis << new StrictShiftAction(chassis, {-0.155_r, 0.225_r});   
         };
 
         uint cnt = 0;
@@ -1283,13 +1299,14 @@ void host_main(){
             chassis_module.tick();
             vision.update();
 
-            mmain();
+            // mmain();
         });
 
         // sm_go_rough();
         // chassis.strict_spin(real_t(PI/2));
         // for(size_t i = 0; i < 10; i ++){
-        //     chassis.spin(real_t(PI/2));
+            // chassis.spin(real_t(PI/2));
+            
         //     chassis.wait(1500);
         // }
         // chassis.wait(500);
@@ -1304,13 +1321,38 @@ void host_main(){
 
         // sm_at_rough();
 
-        // sm_go_rough();
-        // sm_go_staging();
-        // sm_end();
+        sm_go_rough();
+        sm_go_staging();
+        sm_end();
 
+        // delay(1000);
+        // chassis << new ShiftAction(chassis, {0.255_r, 0.155_r});
+        // chassis << new StraightAction(chassis, 1.74_r);
+        // chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+        // chassis << new StraightAction(chassis, 0.805_r);
+        // chassis << new StrictSpinAction(chassis, real_t(PI/2));
         // txo.outpp();
         // uart2.init(115200);
+        // chassis.shift({0.2_r, 0});
+        // chassis.shift({-0.2_r, 0});
+        // chassis.spin(real_t(PI/2));
+        // chassis.spin(real_t(PI/2));
+        // chassis.spin(real_t(PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
         while(true){
+            // chassis.setCurrent({0,0, 3 * sin(t)});
+            // chassis.setCurrent({0, /sin(t), 0});
+            // chassis.setCurrent({0.4_r, 0, 0});
+            // wheels.setCurrent({real_t(1), 0, 0, 0});
+            // wheels.setCurrent({1, -1, 1, -1});
+            // wheels.setCurrent({0, 1, 0, 0});
+            // wheels.setCurrent({0, 0, 1, 0});
+            // wheels.setCurrent({0, 0, 0, 1});
+            // DEBUG_PRINTLN(chassis.gyr(), chassis.rad());
+            delay(10);
             // vuart.println("color");
             // vision.offset();
             // delay(2000);

@@ -57,16 +57,13 @@ protected:
     const Config & config_;
     Wheels wheels_;
     Mecanum4Solver solver_{config_.solver_config};
-    // Estimator & est_;
 
-    // Axis6 & acc_gyr_sensor_ = est_.acc_gyr_sensor_;
-    // Magnetometer & mag_sensor_ = est_.mag_sensor_;
     Axis6 & acc_gyr_sensor_;
     Magnetometer & mag_sensor_;
 
     Ray current_jny_;
-    real_t current_rot_;
     real_t gyr_;
+    real_t gyr_sum_;
 
     std::array<real_t, 4>last_motor_positions;
 
@@ -112,7 +109,7 @@ public:
         ctrl_mode_ = mode;
     }
 
-    real_t rad(){return current_rot_;}
+    real_t rad(){return gyr_sum_ * real_t(0.005);}
     real_t gyr(){return gyr_;}
     auto jny(){return current_jny_;}
     auto diff(){return current_jny_.org;}

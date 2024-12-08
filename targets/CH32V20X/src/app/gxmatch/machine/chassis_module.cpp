@@ -121,7 +121,7 @@ void ChassisModule::reset_journey(){
 }
 
 void ChassisModule::reset_rot(){
-    current_rot_ = 0;
+    gyr_sum_ = 0;
 }
 
 void ChassisModule::init(){
@@ -151,29 +151,27 @@ void ChassisModule::tick800(){
         // auto delta = solver.inverse(Vector2{0, 0.00_r}, 0.7_r);
         // wheels.setCurrent(delta);
         acc_gyr_sensor_.update();
-        mag_sensor_.update();
+        // mag_sensor_.update();
 
-        auto mag = Vector3(mag_sensor_.getMagnet());
+        // auto mag = Vector3(mag_sensor_.getMagnet());
         // gyr_ = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.0035);
         // gyr_ = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.005);
         // gyr_ = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.002);
-        auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.00325);
+        auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.00113);
+        // auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z;
+        // auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.00625);
+        // auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z + real_t(0.00525);
         // gyr_ = Vector3(acc_gyr_sensor_.getGyr()).z - real_t(0.009);
         // auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z - real_t(0.009);
         // auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z - real_t(0.134);
 
-        static KalmanFilterZ kf{1,1};
+        static KalmanFilterZ kf{10,0.01_r};
         gyr_ = ABS(gyr_raw) > 3 ? 0 : kf.update(gyr_raw);
-        
 
-        static ComplementaryFilter::Config rot_config = {
-            .kq = real_t(0.92),
-            .ko = real_t(0.5)
-        };
-        
-        static  ComplementaryFilter rot_obs = {rot_config};
-        
-        current_rot_ = rot_obs.update(-atan2(mag.y, mag.x), gyr_, Sys::t);
+
+        DEBUG_PRINTLN(gyr_, rad());
+
+        gyr_sum_ += gyr_;
 
         auto calculate_journey = [this]() -> Ray{
             return solver_.forward(
@@ -218,7 +216,7 @@ void ChassisModule::straight(const real_t dist){
 }
 
 //平移
-void ChassisModule::shift(const Vector2 & diff){
+void ChassisModule:: shift(const Vector2 & diff){
     auto & self = *this;
     self << new ShiftAction(self, diff);
 }

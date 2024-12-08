@@ -2,31 +2,28 @@
 
 #include "sys/math/real.hpp"
 
-template<typename real>
-requires std::is_arithmetic_v<real>
+template<typename T>
+requires std::is_arithmetic_v<T>
 class KalmanFilterZ_t{
 
 private:
-    real r;
-    real q;
+    T r;
+    T q;
 
-    real x_last;
-    real p_last;
+    T x_last;
+    T p_last;
 
-    real p_mid;
-    real kg;
+    T p_mid;
+    T kg;
 
     bool init = false;
 
 public:
-    template<typename U>
-    KalmanFilterZ_t(const U & _r,const U & _q ):r(static_cast<real>(_r)), q(static_cast<real>(_q)){;}
+    KalmanFilterZ_t(const arithmetic auto & _r,const arithmetic auto & _q ):r(static_cast<T>(_r)), q(static_cast<T>(_q)){;}
 
-    template<typename U>
-    const real update(const U x);
+    const T update(const arithmetic auto x);
 
-    template<typename U>
-    const real predict(const U x);
+    const T predict(const arithmetic auto x);
 };
 
 #include "KalmanFilter.tpp"

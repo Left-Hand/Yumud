@@ -98,7 +98,8 @@ SysConfig gxm::create_default_config(){
         .wheels_config = {
             .wheel_config = {
                 // .wheel_radius = 0.0315_r,//轮子半径
-                .wheel_radius = 0.0309_r,//轮子半径
+                // .wheel_radius = 0.0309_r,//轮子半径
+                .wheel_radius = 0.0302_r,//轮子半径
                 // .wheel_radius = 0.0307_r,//轮子半径
                 .max_tps = 1,//最大每秒转圈数
                 .max_aps = 1,//最大每秒圈速加速度
@@ -109,13 +110,15 @@ SysConfig gxm::create_default_config(){
 
         .chassis_config = {
             .solver_config = {
-                .chassis_width_meter = 0.157_r,
-                .chassis_height_meter = 0.237_r
+                .chassis_width_meter = 0.237_r,
+                .chassis_height_meter = 0.149_r
             },
 
             .rot_ctrl_config = {
+                // .kp = 6,
                 .kp = 4,
                 .kd = 1.6_r
+                // .kd = 2
             },
 
             .pos_ctrl_config = {
@@ -123,11 +126,11 @@ SysConfig gxm::create_default_config(){
                 .kd = 1.6_r
             },
 
-            .max_acc = 0.85_r,
-            .max_spd = 1.7_r,
+            .max_acc = 0.5_r,
+            .max_spd = 1.0_r,
             
-            .max_agr = 1.7_r,
-            .max_spr = 2.8_r,
+            .max_agr = 1.0_r,
+            .max_spr = 2.0_r,
 
             .still_time = 0.5_r
         }
