@@ -54,12 +54,11 @@ public:
 
     using Packet = CanMsg;
     using Callback = std::function<void(void)>;
-
-
 protected:
     CAN_TypeDef * instance;
 
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> pending_rx_msgs;
+    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_pending_msgs;
     Callback cb_txok = nullptr;
     Callback cb_txfail = nullptr;
     Callback cb_rx = nullptr;

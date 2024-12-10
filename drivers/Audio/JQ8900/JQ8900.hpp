@@ -18,6 +18,7 @@ class JQ8900{
 
         void send(const uint8_t data);
         void sendLine(const uint8_t value, const CMD cmd);
+        void sendNum(const int value);
     public:
         JQ8900(Gpio & _ser):ser(_ser){};
 

@@ -34,7 +34,7 @@ int main(){
     #ifdef CH32V20X
     Sys::Misc::prework();
     // eeprom_main();
-    // uart_main();
+     // uart_main();
     // qlz_main();
     // embd_main();
     // embd_main();
@@ -71,7 +71,7 @@ int main(){
     preinit();
     // programmer_main();
     // DEBUG_PRINTLN("??");
-    // gui_main();
+    gui_main();
     // math_tb(uart2);
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
