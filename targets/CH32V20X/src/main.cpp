@@ -34,7 +34,7 @@ int main(){
     #ifdef CH32V20X
     Sys::Misc::prework();
     // eeprom_main();
-     // uart_main();
+    //  uart_main();
     // qlz_main();
     // embd_main();
     // embd_main();
@@ -50,6 +50,7 @@ int main(){
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
+    // m3508_main();
     stepper_tb(uart1);
     // pmw3901_main();
     // math_tb(uart1);

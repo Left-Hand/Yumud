@@ -3,8 +3,8 @@
 
 using namespace ymd;
 
-PortConcept & GpioVirtual::form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance){
-    switch((uint32_t)_instance){
+PortConcept & GpioVirtual::form_gpiotypedef_to_port(uint32_t base){
+    switch(base){
         default:
         #ifdef ENABLE_GPIOA
         case GPIOA_BASE:

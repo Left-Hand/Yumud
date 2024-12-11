@@ -93,21 +93,21 @@ namespace SXX32{
         };
 
         struct SPI_Def{
-            CTLR1_Reg CTLR1;
-            CTLR2_Reg CTLR2;
-            STATR_Reg STATR;
-            DATAR_Reg DATAR;
-            CRCR_Reg CRCR;
-            RCRCR_Reg RCRCR;
-            TCRCR_Reg TCRCR;
-            CFGR_Reg CFGR;
-            HSCR_Reg HSCR;
+            volatile CTLR1_Reg CTLR1;
+            volatile CTLR2_Reg CTLR2;
+            volatile STATR_Reg STATR;
+            volatile DATAR_Reg DATAR;
+            volatile CRCR_Reg CRCR;
+            volatile RCRCR_Reg RCRCR;
+            volatile TCRCR_Reg TCRCR;
+            volatile CFGR_Reg CFGR;
+            volatile HSCR_Reg HSCR;
         };
 
 
-        static inline volatile SPI_Def * SPI1 = (volatile SPI_Def *)(0x40013000);
-        static inline volatile SPI_Def * SPI2 = (volatile SPI_Def *)(0x40003800);
-        static inline volatile SPI_Def * SPI3 = (volatile SPI_Def *)(0x40003C00);
+        static inline SPI_Def * SPI1 = (SPI_Def *)(0x40013000);
+        static inline SPI_Def * SPI2 = (SPI_Def *)(0x40003800);
+        static inline SPI_Def * SPI3 = (SPI_Def *)(0x40003C00);
 
     }
 }

@@ -88,22 +88,22 @@ namespace SXX32{
         };
 
         struct UART_Def{
-            STATR_Reg STATR;
-            DATAR_Reg DATAR;
-            BRR_Reg BRR;
-            CTLR1_Reg CTLR1;
-            CTLR2_Reg CTLR2;
-            CTLR3_Reg CTLR3;
-            GPR_Reg GPR;
+            volatile STATR_Reg STATR;
+            volatile DATAR_Reg DATAR;
+            volatile BRR_Reg BRR;
+            volatile CTLR1_Reg CTLR1;
+            volatile CTLR2_Reg CTLR2;
+            volatile CTLR3_Reg CTLR3;
+            volatile GPR_Reg GPR;
         };
 
-        static inline volatile UART_Def * UART1 = (volatile UART_Def *)(0x40013800);
-        static inline volatile UART_Def * UART2 = (volatile UART_Def *)(0x40004400);
-        static inline volatile UART_Def * UART3 = (volatile UART_Def *)(0x40014800);
-        static inline volatile UART_Def * UART4 = (volatile UART_Def *)(0x40004C00);
-        static inline volatile UART_Def * UART5 = (volatile UART_Def *)(0x40015000);
-        static inline volatile UART_Def * UART6 = (volatile UART_Def *)(0x40001800);
-        static inline volatile UART_Def * UART7 = (volatile UART_Def *)(0x40011C00);
-        static inline volatile UART_Def * UART8 = (volatile UART_Def *)(0x40002000);
+        static inline UART_Def * UART1 = (UART_Def *)(0x40013800);
+        static inline UART_Def * UART2 = (UART_Def *)(0x40004400);
+        static inline UART_Def * UART3 = (UART_Def *)(0x40014800);
+        static inline UART_Def * UART4 = (UART_Def *)(0x40004C00);
+        static inline UART_Def * UART5 = (UART_Def *)(0x40015000);
+        static inline UART_Def * UART6 = (UART_Def *)(0x40001800);
+        static inline UART_Def * UART7 = (UART_Def *)(0x40011C00);
+        static inline UART_Def * UART8 = (UART_Def *)(0x40002000);
     }
 }

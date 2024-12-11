@@ -115,20 +115,20 @@ namespace SXX32{
         };
 
         struct I2C_Def{
-            CTLR1_Reg CTLR1;
-            CTLR2_Reg CTLR2;
-            OADDR1_Reg OADDR1;
-            OADDR2_Reg OADDR2;
-            DATAR_Reg DATAR;
-            STAR1_Reg STAR1;
-            STAR2_Reg STAR2;
-            CKCFRG_Reg CKCFRG;
-            RTR_Reg RTR;
+            volatile CTLR1_Reg CTLR1;
+            volatile CTLR2_Reg CTLR2;
+            volatile OADDR1_Reg OADDR1;
+            volatile OADDR2_Reg OADDR2;
+            volatile DATAR_Reg DATAR;
+            volatile STAR1_Reg STAR1;
+            volatile STAR2_Reg STAR2;
+            volatile CKCFRG_Reg CKCFRG;
+            volatile RTR_Reg RTR;
         };
 
 
-        static inline volatile I2C_Def * I2C1 = (volatile I2C_Def *)(0x40005400);
-        static inline volatile I2C_Def * I2C2 = (volatile I2C_Def *)(0x40005800);
+        static inline I2C_Def * I2C1 = (I2C_Def *)(0x40005400);
+        static inline I2C_Def * I2C2 = (I2C_Def *)(0x40005800);
 
     }
 }

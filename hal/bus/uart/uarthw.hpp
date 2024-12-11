@@ -47,18 +47,19 @@ public:
 protected:
     USART_TypeDef * instance;
 
-    void enableRcc(const bool en = true);
-    void enableIt(const bool en = true);
-    void enableRxneIt(const bool en = true);
-    void enableIdleIt(const bool en = true);
+    void enableRcc(const bool en);
+    void enableIt(const bool en);
+    void enableRxneIt(const bool en);
+    void enableIdleIt(const bool en);
     void invokeTxIt();
 
-    void enableRxDma(const bool en = true);
-    void enableTxDma(const bool en = true);
+    void enableRxDma(const bool en);
+    void enableTxDma(const bool en);
 
+    void rxDmaDoneHandler();
+    void rxDmaHalfHandler();
 
     void invokeTxDma();
-    void invokeRxDma();
 
     void rxneHandle();
     void txeHandle();
@@ -139,6 +140,7 @@ public:
 }
 
 
+
 #ifdef ENABLE_UART1
 extern ymd::UartHw uart1;
 #endif
@@ -168,5 +170,5 @@ extern ymd::UartHw uart7;
 #endif
 
 #ifdef ENABLE_UART8
-extern UartHw uart8;
+extern ymd::UartHw uart8;
 #endif

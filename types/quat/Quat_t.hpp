@@ -165,10 +165,16 @@ __fast_inline constexpr Quat_t<T> operator*(const arithmetic auto & n, const Qua
     return vec * n;
 }
 
+__fast_inline constexpr auto lerp(const Quat_t<arithmetic auto> & a, const Quat_t<arithmetic auto> & b, const arithmetic auto & t){
+    return a.slerp(b, t);
+}
 
 }
 __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Quat_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ',' << value.z << ',' << value.w << ')';
 }
+
+
+
 
 #include "Quat_t.tpp"

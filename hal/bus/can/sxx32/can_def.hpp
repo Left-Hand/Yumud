@@ -451,26 +451,26 @@ namespace SXX32{
         };
 
         struct CAN_Filt_Def{
-
-            //0x40006600
-            FCTLR_Reg FCTLR;
-
-            FMCFGR_Reg FMCFGR;
-            FSCFGR_Reg FSCFGR;
-            FAFIFOR_Reg FAFIFOR;
-            FWR_Reg FWR;
-
+        private:
             struct CAN_Filt_Pair{
                 FiR_Reg FIR[2];
             };
+        public:
+            //0x40006600
+            volatile FCTLR_Reg FCTLR;
 
-            CAN_Filt_Pair FILTER[28];
+            volatile FMCFGR_Reg FMCFGR;
+            volatile FSCFGR_Reg FSCFGR;
+            volatile FAFIFOR_Reg FAFIFOR;
+            volatile FWR_Reg FWR;
+
+            volatile CAN_Filt_Pair FILTER[28];
         };
 
 
-        static inline volatile CAN_Def * CAN1 = (volatile CAN_Def *)(0x40006400);
-        static inline volatile CAN_Def * CAN2 = (volatile CAN_Def *)(0x40006800);
-        static inline volatile CAN_Def * CAN_Filt = (volatile CAN_Filt_Def *)(0x40006600);
+        static inline CAN_Def * CAN1 = (CAN_Def *)(0x40006400);
+        static inline CAN_Def * CAN2 = (CAN_Def *)(0x40006800);
+        static inline CAN_Filt_Def * CAN_Filt = (CAN_Filt_Def *)(0x40006600);
 
     }
 }

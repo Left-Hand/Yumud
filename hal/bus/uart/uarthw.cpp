@@ -374,6 +374,17 @@ void UartHw::enableTxDma(const bool en){
     }
 }
 
+void UartHw::rxDmaDoneHandler(){
+    rxDma.begin();
+    for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.push(rx_dma_buf[i]); 
+    rx_dma_buf_index = 0;
+}
+
+void UartHw::rxDmaHalfHandler(){
+    for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rxBuf.push(rx_dma_buf[i]); 
+    rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
+}
+
 void UartHw::enableRxDma(const bool en){
     USART_DMACmd(instance, USART_DMAReq_Rx, en);
     if(en){
@@ -382,17 +393,9 @@ void UartHw::enableRxDma(const bool en){
         rxDma.enableDoneIt();
         rxDma.enableHalfIt();
         rxDma.configDataBytes(1);
-        rxDma.bindDoneCb([this](){
-            this->invokeRxDma();
-            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.push(rx_dma_buf[i]); 
-            rx_dma_buf_index = 0;
-        });
 
-        rxDma.bindHalfCb([this](){
-            for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rxBuf.push(rx_dma_buf[i]); 
-            rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
-        });
-
+        rxDma.bindDoneCb(std::bind(&UartHw::rxDmaDoneHandler, this));
+        rxDma.bindHalfCb(std::bind(&UartHw::rxDmaHalfHandler, this));
         rxDma.begin((void *)rx_dma_buf, (const void *)(size_t)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
@@ -415,10 +418,6 @@ void UartHw::invokeTxDma(){
             EXECUTE(txPostCb);
         }
     }
-}
-
-void UartHw::invokeRxDma(){
-    rxDma.begin();
 }
 
 
@@ -446,7 +445,7 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
                 enableTxDma(false);
                 break;
             case CommMethod::Dma:
-                enableTxDma();
+                enableTxDma(true);
                 break;
             default:
                 break;
@@ -469,12 +468,12 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
             case CommMethod::Interrupt:
                 enableRxDma(false);
                 enableIdleIt(false);
-                enableRxneIt();
+                enableRxneIt(true);
                 break;
             case CommMethod::Dma:
                 enableRxneIt(false);
-                enableIdleIt();
-                enableRxDma();
+                enableIdleIt(true);
+                enableRxDma(true);
                 break;
             default:
                 break;
@@ -485,16 +484,17 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
 
 
 void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const CommMethod _rxMethod){
-    enableRcc();
+    enableRcc(true);
 
-    USART_InitTypeDef USART_InitStructure;
-    USART_InitStructure.USART_BaudRate = baudRate;
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    USART_InitStructure.USART_Mode = ((_txMethod != CommMethod::None) ? USART_Mode_Tx : 0) |
-                                    ((_rxMethod != CommMethod::None) ? USART_Mode_Rx : 0);
+    USART_InitTypeDef USART_InitStructure{
+        .USART_BaudRate = baudRate,
+        .USART_WordLength = USART_WordLength_8b,
+        .USART_StopBits = USART_StopBits_1,
+        .USART_Parity = USART_Parity_No,
+        .USART_Mode =   uint16_t(((_txMethod != CommMethod::None) ? uint16_t(USART_Mode_Tx) : 0u) |
+                        ((_rxMethod != CommMethod::None) ? uint16_t(USART_Mode_Rx) : 0u)),
+        .USART_HardwareFlowControl = USART_HardwareFlowControl_None
+    };
 
     USART_Init(instance, &USART_InitStructure);
     USART_Cmd(instance, ENABLE);
@@ -508,6 +508,7 @@ UartHw::Error UartHw::lead(const uint8_t index){
     while((instance->STATR & USART_FLAG_TXE) == RESET);
     return ErrorType::OK;
 }
+
 void UartHw::trail(){
     while((instance->STATR & USART_FLAG_TC) == RESET);
 }

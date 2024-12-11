@@ -221,6 +221,13 @@ public:
     }
 };
 
+#ifdef ENABLE_DMA1
+
+#endif
+
+#ifdef ENABLE_DMA2
+
+#endif
 
 }
 
@@ -272,3 +279,5 @@ extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
     DMA_XY_TEMPLATE(2,10)
     DMA_XY_TEMPLATE(2,11)
 #endif
+
+#undef DMA_XY_TEMPLATE
