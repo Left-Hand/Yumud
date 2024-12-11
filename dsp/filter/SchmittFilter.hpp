@@ -1,19 +1,19 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "sys/math/real_t.hpp"
 
-template<typename real>
-class SchmittFilter{
+template<arithmetic T>
+class SchmittFilter_t{
 protected:
-	real lowThr = 0;
-	real highThr = 0;
+	T lowThr = 0;
+	T highThr = 0;
 	bool output = false;
 
 public:
 
-	SchmittFilter(const real _lowThr,const real _highThr):lowThr(_lowThr),highThr(_highThr){;}
+	SchmittFilter_t(const T _lowThr,const T _highThr):lowThr(_lowThr),highThr(_highThr){;}
 
-	bool update(const real & input){
+	bool update(const T & input){
         if(input < lowThr and 
 				output == true){
             output = false;

@@ -1,36 +1,36 @@
-// #include "dshot.hpp"
+#include "dshot.hpp"
 
-// #include "hal/timer/timer_oc.hpp"
-// #include "hal/dma/dma.hpp"
+#include "hal/timer/timer_oc.hpp"
+#include "hal/dma/dma.hpp"
 
 
-// using namespace ymd;
-// using namespace ymd::drivers;
+using namespace ymd;
+using namespace ymd::drivers;
 
-// void DShotChannel::update(uint16_t data){
+void DShotChannel::update(uint16_t data){
 
-//     for(size_t i = 0; i < 16; i++){
-//         buf[i] = (data & 0x8000) ? high_cnt : low_cnt;
-//         data = data << 1;
-//     }
-// }
+    for(size_t i = 0; i < 16; i++){
+        buf[i] = (data & 0x8000) ? high_cnt : low_cnt;
+        data = data << 1;
+    }
+}
 
-// DShotChannel::DShotChannel(TimerOC & _oc):
-//         oc(_oc),
-//         dma_channel(_oc.dma())
-//         {;}
+DShotChannel::DShotChannel(TimerOC & _oc):
+        oc(_oc),
+        dma_channel(_oc.dma())
+        {;}
 
-// void DShotChannel::invoke(){
-//     dma_channel.begin((void *)&oc.cvr(), (void *)buf.begin(), buf.size());
-// }
+void DShotChannel::invoke(){
+    dma_channel.begin((void *)&oc.cvr(), buf, 40);
+}
 
-// void DShotChannel::init(){
-//     dma_channel.init(DmaChannel::Mode::toPeriph, DmaChannel::Priority::ultra);
-//     dma_channel.configDataBytes(2);
-//     oc.init();
-//     oc.enableSync();
-//     oc.enableDma();
+void DShotChannel::init(){
+    dma_channel.init(DmaChannel::Mode::toPeriph, DmaChannel::Priority::ultra);
+    dma_channel.configDataBytes(2);
+    oc.init();
+    oc.enableSync();
+    oc.enableDma();
 
-//     high_cnt = (234 * 2 / 3);
-//     low_cnt = (234 * 1 / 3);
-// }
+    high_cnt = (234 * 2 / 3);
+    low_cnt = (234 * 1 / 3);
+}

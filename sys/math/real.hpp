@@ -21,7 +21,7 @@
 
 
 #else
-#include "dsp/floatlib/floatlib.h"
+#include "dsp/floatlib/floatlib.hpp"
 #endif
 
 #ifdef USE_IQ

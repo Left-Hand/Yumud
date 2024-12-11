@@ -1,7 +1,6 @@
 #pragma once
 
-
-#include "sys/debug/debug_inc.h"
+#include "sys/math/real.hpp"
 
 namespace ymd{
     class TimerOC;
@@ -45,7 +44,7 @@ public:
         SIGNAL_LINE_TELEMETRY_ENABLE = 33, // Required 6 times. Enable commands 42 through
     };
 
-    std::array<uint16_t, 40> buf = {0};
+    uint16_t buf[40] = {0};
 protected:
     uint16_t high_cnt;
     uint16_t low_cnt;
