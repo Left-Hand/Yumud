@@ -36,23 +36,23 @@ namespace SXX32{
         };
 
         struct LCKR{
-            uint16_t lck:16;
-            uint16_t lckk:1;
-            uint16_t 15;
+            uint32_t lck:16;
+            uint32_t lckk:1;
+            uint32_t 15;
         };
 
-        CFGLR cfglr;
-        CFGHR cfghr;
-        INDR indr;
-        OUTDR outdr;
-        BSHR bshr;
-        BCR bcr;
-        LCKR lckr;
+        volatile CFGLR cfglr;
+        volatile CFGHR cfghr;
+        volatile INDR indr;
+        volatile OUTDR outdr;
+        volatile BSHR bshr;
+        volatile BCR bcr;
+        volatile LCKR lckr;
     };
 
-    static inline volatile GPIO_REG_Def gpio_a_def = (volatile GPIO_REG_Def *)(0x40010800);
-    static inline volatile GPIO_REG_Def gpio_b_def = (volatile GPIO_REG_Def *)(0x40010C00);
-    static inline volatile GPIO_REG_Def gpio_c_def = (volatile GPIO_REG_Def *)(0x40011000);
-    static inline volatile GPIO_REG_Def gpio_d_def = (volatile GPIO_REG_Def *)(0x40011400);
-    static inline volatile GPIO_REG_Def gpio_e_def = (volatile GPIO_REG_Def *)(0x40011800);
+    static inline GPIO_Def * gpio_a_def = (GPIO_Def *)(0x40010800);
+    static inline GPIO_Def * gpio_b_def = (GPIO_Def *)(0x40010C00);
+    static inline GPIO_Def * gpio_c_def = (GPIO_Def *)(0x40011000);
+    static inline GPIO_Def * gpio_d_def = (GPIO_Def *)(0x40011400);
+    static inline GPIO_Def * gpio_e_def = (GPIO_Def *)(0x40011800);
 }
