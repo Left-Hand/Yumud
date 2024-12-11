@@ -36,7 +36,7 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
             ADC_RegularChannelConfig(instance,(uint8_t)config.channel,i,(uint8_t)config.cycles);
             AdcUtils::installPin(config.channel);
 
-            temp_verf_activation |= (config.channel == Channel::TEMP || config.channel == Channel::VREF);
+            temp_verf_activation |= (config.channel == ChannelIndex::TEMP || config.channel == ChannelIndex::VREF);
 
             if(i > 16) break;
         }
@@ -52,7 +52,10 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
             ADC_SetInjectedOffset(instance, ADC_InjectedChannel_1 + (ADC_InjectedChannel_2 - ADC_InjectedChannel_1) * (i-1),MAX(cali_data, 0)); // offset can`t be negative
             installPin(config.channel);
 
-            temp_verf_activation |= (config.channel == Channel::TEMP || config.channel == Channel::VREF);
+            temp_verf_activation |= (
+                config.channel == ChannelIndex::TEMP || 
+                config.channel == ChannelIndex::VREF
+            );
 
             if(i > 4) break;
         }

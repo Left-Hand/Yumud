@@ -11,7 +11,7 @@ namespace ymd::drivers{
 class AD7607{
 protected:
     SpiDrv spi_drv;
-    TimerOC trigger;
+    TimerOC & trigger;
     Gpio & rst_gpio;
 public:
     AD7607(SpiDrv && _spi_drv, TimerOC & _trgger, Gpio & _rst_gpio = GpioNull):spi_drv(_spi_drv), trigger(_trgger), rst_gpio(_rst_gpio){;}

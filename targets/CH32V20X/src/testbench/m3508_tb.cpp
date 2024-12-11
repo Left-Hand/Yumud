@@ -15,10 +15,8 @@ void m3508_main(){
     led.outpp(1);
 
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    // can1.init(1_M, Can::Mode::Silent);
-    // can1.init(1_M, Can::Mode::Internal);
+
     can1.init(1_M, Can::Mode::Normal);
-    // can1.init(1_M);
 
     M3508Port port{can1};
     
@@ -38,7 +36,8 @@ void m3508_main(){
     while(true){
         // port.setTargetCurrent();
         // real_t targ_curr = real_t(1.5) * sin(real_t(TAU/4) * t);
-        real_t target = 3 * sin(t);
+        // real_t target = 3 * sin(t);
+        real_t target = 3 * t;
         // real_t targ_curr = 4 * sin( t*real_t(1.7));
         // real_t targ_curr = 0;
         // motor.setTargetCurrent(targ_curr);

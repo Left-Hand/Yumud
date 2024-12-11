@@ -2,7 +2,7 @@
 
 namespace ymd::AdcUtils{
 
-    void installPin(const Channel channel, const bool en){
+    void installPin(const ChannelIndex channel, const bool en){
         uint8_t ch_index = (uint8_t)channel;
 
         if(ch_index > 15) return;

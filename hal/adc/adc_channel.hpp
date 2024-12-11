@@ -30,18 +30,18 @@ public:
 
 class AdcChannelOnChip: public AdcChannelConcept{
 protected:
-    using Channel = AdcUtils::Channel;
+    using ChannelIndex = AdcUtils::ChannelIndex;
     using SampleCycles = AdcUtils::SampleCycles;
 
     ADC_TypeDef * instance;
-    Channel channel;
+    ChannelIndex channel;
     uint8_t rank;
 
     friend class AdcOnChip;
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    AdcChannelOnChip(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank):
+    AdcChannelOnChip(ADC_TypeDef * _instance, const ChannelIndex _channel, const uint8_t _rank):
             instance(_instance), channel(_channel), rank(_rank){};
     
     void init(){

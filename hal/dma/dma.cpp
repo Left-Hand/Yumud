@@ -143,22 +143,22 @@ DmaChannel dma2Ch10{DMA2_Channel10};
 DmaChannel dma2Ch11{DMA2_Channel11};
 #endif
 
-void DmaChannel::enableRcc(){
+void DmaChannel::enableRcc(bool en){
 
     #ifdef ENABLE_DMA2
     if(instance < DMA2_Channel1){
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en);
     }else{
-        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, ENABLE);
+        RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2, en);
     }
 
     #else
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en);
     #endif
 }
 
 
-void DmaChannel::begin(void * dst, const void * src, size_t size){
+void DmaChannel::begin(void * dst, const void * src, const size_t size){
 
     if(periphIsDst()){
         instance -> PADDR = (uint32_t)dst;
@@ -173,10 +173,10 @@ void DmaChannel::begin(void * dst, const void * src, size_t size){
 
 
 void DmaChannel::init(const Mode _mode,const Priority priority){
-    enableRcc();
+    enableRcc(true);
     mode = _mode;
     DMA_InitTypeDef DMA_InitStructure = {0};
-    DMA_DeInit(instance);
+    // DMA_DeInit(instance);
 
     DMA_InitStructure.DMA_Mode = DMA_Mode_Normal;
 
@@ -206,8 +206,8 @@ void DmaChannel::init(const Mode _mode,const Priority priority){
         case Mode::synergyCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
         case Mode::synergy:
-            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
+            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)nullptr;
+            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)nullptr;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
             DMA_InitStructure.DMA_BufferSize = 0;
             DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;
@@ -217,8 +217,8 @@ void DmaChannel::init(const Mode _mode,const Priority priority){
         case Mode::distributeCircular:
             DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
         case Mode::distribute:
-            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)NULL;
-            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)NULL;
+            DMA_InitStructure.DMA_PeripheralBaseAddr = (uint32_t)nullptr;
+            DMA_InitStructure.DMA_MemoryBaseAddr = (uint32_t)nullptr;
             DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralDST;
             DMA_InitStructure.DMA_BufferSize = 0;
             DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Enable;

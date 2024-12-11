@@ -11,8 +11,6 @@ public:
     Driver & coil_a;
     Driver & coil_b;
 
-
-
 public:
     SVPWM2(Driver & _coilA, Driver & _coilB):coil_a(_coilA), coil_b(_coilB){;}
 

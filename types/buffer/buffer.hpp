@@ -12,8 +12,8 @@ public:
     virtual const T & pop() = 0;
     [[nodiscard]] virtual size_t available() const = 0;
     [[nodiscard]] bool empty() const{return available() == 0;}
-    virtual void push(const T * data_ptr, const size_t len, bool msb = false) = 0;
-    virtual void pop(T * data_ptr, const size_t len, bool msb = false) = 0;
+    // virtual void push(const T * data_ptr, const size_t len, bool msb = false) = 0;
+    // virtual void pop(T * data_ptr, const size_t len, bool msb = false) = 0;
 };
 
 
@@ -34,27 +34,20 @@ public:
     }
 };
 
-template<typename T, uint32_t N>
+template<typename T, size_t N>
 class StaticBuffer_t:public BufferConcept_t<T>{
 public:
-    T buf[N]; 
+    // std::array<T, N> buf;
+    T buf[N];
     StaticBuffer_t() = default;
     ~StaticBuffer_t() = default;
 
-    T & operator[](const size_t index){
-        return buf[index];
-    }
-
-    const T & operator[](const size_t index)const{
-        return buf[index];
-    }
-
-    constexpr size_t size() const {
+    __fast_inline constexpr size_t size() const {
         return N;
     }
 };
 
 typedef DynamicBuffer_t<uint8_t> DynamicBuffer;
 
-template<uint32_t size>
-using StaticBuffer = StaticBuffer_t<uint8_t,size>;
+template<size_t N>
+using StaticBuffer = StaticBuffer_t<uint8_t, N>;

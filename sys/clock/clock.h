@@ -17,16 +17,16 @@ extern "C"{
 #define M_SYSTICK_ENER    NVIC_EnableIRQ(SysTicK_IRQn);
 #endif
 
-#define NANO_MUT(x) ( x * 1000 / (F_CPU / 1000000))
+#define NANO_MUT(x) (((x) * 1000) / TICKS_PER_US)
 
 extern volatile uint32_t msTick;
 
-__fast_inline uint32_t millis(void){return msTick;}
+__fast_inline static uint32_t millis(void){return msTick;}
 
 __fast_inline static uint64_t micros(void){
     M_SYSTICK_DISER;
-    __IO uint64_t m = msTick;
-    __IO uint64_t ticks = M_SYSTICK_CNT;
+    uint32_t m = msTick;
+    uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
     M_SYSTICK_ENER;
 
     return (m * 1000 + ticks / TICKS_PER_US);
@@ -34,8 +34,8 @@ __fast_inline static uint64_t micros(void){
 
 __fast_inline static uint64_t nanos(){
     M_SYSTICK_DISER;
-    __IO uint64_t m = msTick;
-    __IO uint64_t ticks = M_SYSTICK_CNT;
+    uint32_t m = msTick;
+    uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
     M_SYSTICK_ENER;
 
     return (m * 1000000 + NANO_MUT(ticks));

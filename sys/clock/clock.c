@@ -33,14 +33,15 @@ void delay(const uint32_t ms)
 
 void delayMicroseconds(const uint32_t us)
 {
-  __IO uint64_t currentTicks = SysTick->CNT;
+  uint32_t currentTicks = SysTick->CNT;
   /* Number of ticks per millisecond */
-  uint64_t tickPerMs = SysTick->CMP + 1;
+  uint32_t tickPerMs = SysTick->CMP + 1;
   /* Number of ticks to count */
-  uint64_t nbTicks = MAX(us - MICRO_TRIM, 0) * TICKS_PER_US;
+  // uint64_t nbTicks = MAX(us - MICRO_TRIM, 0) * TICKS_PER_US;
+  uint32_t nbTicks = us * TICKS_PER_US;
   /* Number of elapsed ticks */
-  uint64_t elapsedTicks = 0;
-  __IO uint64_t oldTicks = currentTicks;
+  uint32_t elapsedTicks = 0;
+  uint32_t oldTicks = currentTicks;
   do {
     currentTicks = SysTick->CNT;
     // elapsedTicks += (oldTicks < currentTicks) ? tickPerMs + oldTicks - currentTicks :

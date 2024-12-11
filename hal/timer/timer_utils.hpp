@@ -7,7 +7,7 @@
 
 
 namespace ymd::TimerUtils{
-    enum class Mode:uint16_t{
+    enum class Mode:uint8_t{
         Up = TIM_CounterMode_Up,
         Down = TIM_CounterMode_Down,
         CenterAlignedDownTrig = TIM_CounterMode_CenterAligned1,
@@ -15,8 +15,14 @@ namespace ymd::TimerUtils{
         CenterAlignedDualTrig = TIM_CounterMode_CenterAligned3
     };
 
-    enum class Channel:uint8_t{
-        CH1, CH1N, CH2, CH2N, CH3, CH3N, CH4
+    enum class ChannelIndex:uint8_t{
+        CH1     =   0b000,
+        CH1N    =   0b001,
+        CH2     =   0b010,
+        CH2N    =   0b011,
+        CH3     =   0b100,
+        CH3N    =   0b101,
+        CH4     =   0b110
     };
 
     enum class TrgoSource:uint8_t{
@@ -48,7 +54,7 @@ namespace ymd::TimerUtils{
         High = TIM_LOCKLevel_3
     };
 
-    enum class OcMode:uint16_t{
+    enum class OcMode:uint8_t{
         Timing = TIM_OCMode_Timing,
         Active = TIM_OCMode_Active,
         Inactive = TIM_OCMode_Inactive,
@@ -57,13 +63,18 @@ namespace ymd::TimerUtils{
         DownValid = TIM_OCMode_PWM2
     };
 
+    namespace internal{
+        
     bool isBasicTimer(const TIM_TypeDef * instance);
 
     bool isGenericTimer(const TIM_TypeDef * instance);
 
     bool isAdvancedTimer(const TIM_TypeDef * instance);
 
-    IRQn ItToIrq(const TIM_TypeDef * instance, const IT & it);
+    IRQn ItToIrq(const TIM_TypeDef * instance, const IT it);
 
-    Gpio & getPin(const TIM_TypeDef * instance, const Channel channel);
+    Gpio & getPin(const TIM_TypeDef * instance, const ChannelIndex channel);
+
+    }
+
 };

@@ -2,6 +2,9 @@
 #include "sys/debug/debug_inc.h"
 
 using namespace ymd;
+using namespace ymd::TimerUtils::internal;
+
+
 void BasicTimer::enableRcc(){
     switch(uint32_t(instance)){
         #ifdef ENABLE_TIM1
@@ -94,7 +97,7 @@ void BasicTimer::enableRcc(){
 }
 
 uint BasicTimer::getClk(){
-    return TimerUtils::isAdvancedTimer(instance) ? Sys::Clock::getAPB2Freq() : Sys::Clock::getAPB1Freq();
+    return isAdvancedTimer(instance) ? Sys::Clock::getAPB2Freq() : Sys::Clock::getAPB1Freq();
 }
 
 
@@ -142,7 +145,7 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 void BasicTimer::enable(const bool en){
     if(en){
         TIM_Cmd(instance, ENABLE);
-        if(TimerUtils::isAdvancedTimer(instance)){
+        if(isAdvancedTimer(instance)){
             TIM_CtrlPWMOutputs(instance, ENABLE);
         }
     }else{
@@ -182,12 +185,17 @@ void GenericTimer::initAsEncoder(const Mode mode){
         TIM_ICInit(instance,&TIM_ICInitStruct);
     }
 
-	TIM_EncoderInterfaceConfig(instance,TIM_EncoderMode_TI12,TIM_ICPolarity_Rising,TIM_ICPolarity_Rising);
+	TIM_EncoderInterfaceConfig(instance,
+        TIM_EncoderMode_TI12, 
+        TIM_ICPolarity_Rising,
+        TIM_ICPolarity_Rising
+    );
+
     TIM_Cmd(instance, ENABLE);
 }
 
 void GenericTimer::enableSingle(const bool _single){
-    TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive:TIM_OPMode_Single);
+    TIM_SelectOnePulseMode(instance, _single ? TIM_OPMode_Repetitive : TIM_OPMode_Single);
 }
 
 void GenericTimer::setTrgoSource(const TrgoSource source){
@@ -239,7 +247,7 @@ uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
         uint8_t head = 0b10000000;
         uint8_t mask = 0b00111111;
 
-        dead = MIN(dead, 254) / 2;
+        dead = MIN(dead, 254) >> 1;
         dead -= 64;
         dead &= mask;
         dead |= head;
@@ -247,7 +255,7 @@ uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
         uint8_t head = 0b11000000;
         uint8_t mask = 0b00011111;
 
-        dead = MIN(dead, 504) / 8;
+        dead = MIN(dead, 504) >> 1;
         dead -= 32;
         dead &= mask;
         dead |= head;
@@ -255,7 +263,7 @@ uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
         uint8_t head = 0b11100000;
         uint8_t mask = 0b00011111;
 
-        dead = MIN(dead, 1008) / 16;
+        dead = MIN(dead, 1008) >> 4;
         dead -= 32;
         dead &= mask;
         dead |= head;
@@ -264,4 +272,27 @@ uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
     }
 
     return dead;
+}
+
+void BasicTimer::enableIt(const IT it,const NvicPriority request, const bool en){
+    NvicPriority::enable(request, ItToIrq(instance, it), en);
+    TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
+}
+
+TimerChannel & AdvancedTimer::operator [](const int index){
+    bool is_co = index < 0;
+    if(is_co){
+        return n_channels[CLAMP(-index, 1, 3) - 1];
+    }else{
+        return channels[CLAMP(index, 1, 4) - 1];
+    }
+}
+
+TimerChannel & AdvancedTimer::operator [](const TimerChannel::ChannelIndex ch){
+    bool is_co = (uint8_t) ch & 0b1;
+    if(is_co){
+        return n_channels[((uint8_t)ch - 1) >> 1];
+    }else{
+        return channels[(uint8_t)ch >> 1];
+    }
 }

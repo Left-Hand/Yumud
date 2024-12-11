@@ -16,7 +16,7 @@ protected:
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    InjectedChannel(ADC_TypeDef * _instance, const Channel _channel, const uint8_t _rank);
+    InjectedChannel(ADC_TypeDef * _instance, const ChannelIndex _channel, const uint8_t _rank);
 
     InjectedChannel(const InjectedChannel & other) = delete;
     InjectedChannel(InjectedChannel && other) = delete;

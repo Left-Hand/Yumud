@@ -144,7 +144,7 @@ void DMA_DeInit(DMA_Channel_TypeDef *DMAy_Channelx)
  *
  * @return  none
  */
-void DMA_Init(DMA_Channel_TypeDef *DMAy_Channelx, DMA_InitTypeDef *DMA_InitStruct)
+void DMA_Init(DMA_Channel_TypeDef *DMAy_Channelx, const DMA_InitTypeDef *DMA_InitStruct)
 {
     uint32_t tmpreg = 0;
 

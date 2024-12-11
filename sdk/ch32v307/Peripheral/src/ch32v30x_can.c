@@ -550,36 +550,33 @@ void CAN_CancelTransmit(CAN_TypeDef *CANx, uint8_t Mailbox)
  */
 void CAN_Receive(CAN_TypeDef *CANx, uint8_t FIFONumber, CanRxMsg *RxMessage)
 {
-    RxMessage->IDE = (uint8_t)0x04 & CANx->sFIFOMailBox[FIFONumber].RXMIR;
+    uint32_t rxmir = CANx->sFIFOMailBox[FIFONumber].RXMIR;
+    uint32_t rxmdtr = CANx->sFIFOMailBox[FIFONumber].RXMDTR;
+    RxMessage->IDE = (uint8_t)0x04 & rxmir;
 
     if(RxMessage->IDE == CAN_Id_Standard)
     {
-        RxMessage->StdId = (uint32_t)0x000007FF & (CANx->sFIFOMailBox[FIFONumber].RXMIR >> 21);
+        RxMessage->StdId = (uint32_t)0x000007FF & (rxmir >> 21);
     }
     else
     {
-        RxMessage->ExtId = (uint32_t)0x1FFFFFFF & (CANx->sFIFOMailBox[FIFONumber].RXMIR >> 3);
+        RxMessage->ExtId = (uint32_t)0x1FFFFFFF & (rxmir >> 3);
     }
 
-    RxMessage->RTR = (uint8_t)0x02 & CANx->sFIFOMailBox[FIFONumber].RXMIR;
-    RxMessage->DLC = (uint8_t)0x0F & CANx->sFIFOMailBox[FIFONumber].RXMDTR;
-    RxMessage->FMI = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDTR >> 8);
-    RxMessage->Data[0] = (uint8_t)0xFF & CANx->sFIFOMailBox[FIFONumber].RXMDLR;
-    RxMessage->Data[1] = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDLR >> 8);
-    RxMessage->Data[2] = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDLR >> 16);
-    RxMessage->Data[3] = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDLR >> 24);
-    RxMessage->Data[4] = (uint8_t)0xFF & CANx->sFIFOMailBox[FIFONumber].RXMDHR;
-    RxMessage->Data[5] = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDHR >> 8);
-    RxMessage->Data[6] = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDHR >> 16);
-    RxMessage->Data[7] = (uint8_t)0xFF & (CANx->sFIFOMailBox[FIFONumber].RXMDHR >> 24);
+    RxMessage->RTR = (uint8_t)0x02 & rxmir;
+    RxMessage->DLC = (uint8_t)0x0F & rxmdtr;
+    RxMessage->FMI = (uint8_t)0xFF & (rxmdtr >> 8);
+
+    *(uint32_t *)&RxMessage->Data[0] = CANx->sFIFOMailBox[FIFONumber].RXMDLR;
+    *(uint32_t *)&RxMessage->Data[4] = CANx->sFIFOMailBox[FIFONumber].RXMDHR;
 
     if(FIFONumber == CAN_FIFO0)
     {
-        CANx->RFIFO0 |= CAN_RFIFO0_RFOM0;
+        CANx->RFIFO0 = CAN_RFIFO0_RFOM0 | CANx->RFIFO0;
     }
     else
     {
-        CANx->RFIFO1 |= CAN_RFIFO1_RFOM1;
+        CANx->RFIFO1 = CAN_RFIFO1_RFOM1 | CANx->RFIFO1;
     }
 }
 

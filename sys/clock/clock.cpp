@@ -16,8 +16,7 @@ void SysTick_Handler(void)
 {
     msTick+=1;
     SysTick->SR = 0;
-    Sys::t.value = _iq((msTick * (1 << GLOBAL_Q)) / 1000);
-    Sys::Clock::reCalculateTime();
+    Sys::Clock::reCalculateTimeMs();
     EXECUTE(cb);
 }
 

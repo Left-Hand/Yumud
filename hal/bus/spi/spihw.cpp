@@ -149,17 +149,15 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudrate){
             return SPI_BaudRatePrescaler_256;
     }
 
-	uint32_t exp_div = busFreq / baudrate;
-
 	uint32_t real_div = 2;
     uint8_t i = 0;
 
-	while(real_div < exp_div){
+	while(real_div * baudrate < busFreq){
         real_div <<= 1;
         i++;
     }
 
-    return MIN(i * 8, SPI_BaudRatePrescaler_256);
+    return MIN(i << 3, SPI_BaudRatePrescaler_256);
 }
 
 void SpiHw::installGpios(){
@@ -196,7 +194,7 @@ void SpiHw::installGpios(){
         // }
     // }
 
-    for(uint8_t i = 0; i < cs_port.size(); i++){
+    for(size_t i = 0; i < cs_port.size(); i++){
         cs_port[i].outpp();
     }
 }
@@ -224,17 +222,19 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 	enableRcc();
     installGpios();
 
-    SPI_InitTypeDef SPI_InitStructure = {0};
+    SPI_InitTypeDef SPI_InitStructure = {
+        .SPI_Direction = SPI_Direction_2Lines_FullDuplex,
+        .SPI_Mode = SPI_Mode_Master,
+        .SPI_DataSize = SPI_DataSize_8b,
+        .SPI_CPOL = SPI_CPOL_High,
+        .SPI_CPHA = SPI_CPHA_2Edge,
+        .SPI_NSS = SPI_NSS_Soft,
+        .SPI_BaudRatePrescaler = calculatePrescaler(baudrate),
+        .SPI_FirstBit = SPI_FirstBit_MSB,
+        .SPI_CRCPolynomial = 7
+    };
 
-	SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-	SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-	SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-	SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-	SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-	SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-	SPI_InitStructure.SPI_BaudRatePrescaler = calculatePrescaler(baudrate);
-	SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-	SPI_InitStructure.SPI_CRCPolynomial = 7;
+
 	SPI_Init(instance, &SPI_InitStructure);
 
 	SPI_Cmd(instance, ENABLE);
@@ -277,4 +277,50 @@ void SpiHw::setBitOrder(const Endian endian){
     tempreg &= ~SPI_FirstBit_LSB;
     tempreg |= (endian == MSB) ? SPI_FirstBit_MSB : SPI_FirstBit_LSB;
     instance -> CTLR1 = tempreg;
+}
+
+
+SpiHw::Error SpiHw::write(const uint32_t data){
+    // if(txMethod != CommMethod::None){
+    //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
+    //     instance->DATAR = data;
+    // }
+
+    // if(rxMethod != CommMethod::None){
+    //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
+    //     instance->DATAR;
+    // }
+    // return ErrorType::OK;
+    uint32_t dummy;
+    return transfer(dummy, data);
+}
+
+
+SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
+    // if(txMethod != CommMethod::None){
+    //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
+    //     instance->DATAR = 0;
+    // }
+
+    // if(rxMethod != CommMethod::None){
+    //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
+    //     data = instance->DATAR;
+    // }
+    // return ErrorType::OK;
+    return transfer(data, 0, toAck);
+}
+
+
+SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
+    if(txMethod != CommMethod::None){
+        while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
+        instance->DATAR = data_tx;
+    }
+
+    if(rxMethod != CommMethod::None){
+        while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
+        data_rx = instance->DATAR;
+    }
+
+    return Bus::ErrorType::OK;
 }

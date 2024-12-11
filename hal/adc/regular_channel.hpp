@@ -6,8 +6,6 @@ namespace ymd{
 
 class RegularChannel: public AdcChannelOnChip{
 public:
-    using SampleCycles = AdcUtils::SampleCycles;
-    using Channel = AdcUtils::Channel;
 protected:
     uint32_t data_cache;
 
@@ -16,7 +14,7 @@ protected:
     friend class AdcCompanion;
 
 public:
-    RegularChannel(ADC_TypeDef * _instance,const Channel _channel, const uint8_t _rank):
+    RegularChannel(ADC_TypeDef * _instance,const ChannelIndex _channel, const uint8_t _rank):
         AdcChannelOnChip(_instance, _channel, _rank){;}
 
 

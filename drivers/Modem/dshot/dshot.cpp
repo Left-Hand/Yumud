@@ -21,7 +21,7 @@ DShotChannel::DShotChannel(TimerOC & _oc):
         {;}
 
 void DShotChannel::invoke(){
-    dma_channel.begin((void *)&oc.cvr(), buf, 40);
+    dma_channel.begin((void *)(uint32_t)(&oc.cvr()), buf, 40);
 }
 
 void DShotChannel::init(){

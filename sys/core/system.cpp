@@ -99,13 +99,19 @@ void Sys::Misc::reset(){
 
 
 void Sys::Clock::reCalculateTime(){
-        #ifdef USE_IQ
-        t.value = _iq((micros() * (1 << GLOBAL_Q)) / 1000000);
-        #else
-        t = msTick * (1 / 1000.0f);
-        #endif
-    }
+    #ifdef USE_IQ
+    t.value = _iq(
+        (micros() * (1 << GLOBAL_Q)) / 1000000
+    );
+    #else
+    t = msTick * (1 / 1000.0f);
+    #endif
+}
 
+void Sys::Clock::reCalculateTimeMs(){
+    Sys::t.value = _iq(
+        (msTick * (1 << GLOBAL_Q)) / 1000);
+}
 
 uint64_t Sys::Chip::getChipId(){
     static uint32_t chip_id[2] = {

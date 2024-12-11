@@ -33,7 +33,7 @@ protected:
     uint32_t done_mask;
     uint32_t half_mask;
 
-    void enableRcc();
+    void enableRcc(const bool en);
     void configPeriphDataBytes(const size_t bytes){
         uint32_t tmpreg = instance->CFGR;
         tmpreg &= ((~(0b11u << 8)));
@@ -151,6 +151,10 @@ protected:
 public:
 
     DmaChannel() = delete;
+
+    DmaChannel(const DmaChannel & other) = delete;
+    DmaChannel(DmaChannel && other) = delete;
+
     DmaChannel(DMA_Channel_TypeDef * _instance):
                 instance(_instance), 
                 dma_index(getDmaIndex(_instance)),

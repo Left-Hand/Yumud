@@ -164,7 +164,7 @@ typedef struct
 #define DMA1_FLAG_TE8                      ((uint32_t)0x80000000)
 
 void       DMA_DeInit(DMA_Channel_TypeDef *DMAy_Channelx);
-void       DMA_Init(DMA_Channel_TypeDef *DMAy_Channelx, DMA_InitTypeDef *DMA_InitStruct);
+void       DMA_Init(DMA_Channel_TypeDef *DMAy_Channelx, const DMA_InitTypeDef *DMA_InitStruct);
 void       DMA_StructInit(DMA_InitTypeDef *DMA_InitStruct);
 void       DMA_Cmd(DMA_Channel_TypeDef *DMAy_Channelx, FunctionalState NewState);
 void       DMA_ITConfig(DMA_Channel_TypeDef *DMAy_Channelx, uint32_t DMA_IT, FunctionalState NewState);

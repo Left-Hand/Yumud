@@ -2,9 +2,11 @@
 #include "hal/gpio/port.hpp"
 
 using namespace ymd;
+using namespace ymd::TimerUtils;
+using namespace ymd::TimerUtils::internal;
 
 void TimerOut::installToPin(const bool en){
-    Gpio & io = TimerUtils::getPin(instance, channel);
+    Gpio & io = getPin(instance, idx_);
     if(en)io.afpp();
     else io.inflt();
     enable(en);
@@ -24,11 +26,13 @@ void TimerOC::init(const TimerOC::Mode mode, const bool install){
 }
 
 void TimerOC::setMode(const TimerOC::Mode mode){
+    using enum ChannelIndex;
+
     uint16_t m_code,s_code;
-    switch(channel){
+    switch(idx_){
         default:
             return;
-        case Channel::CH1:
+        case CH1:
             {
                 uint16_t tmpccmrx = instance->CHCTLR1;
                 m_code = TIM_OC1M;
@@ -39,7 +43,7 @@ void TimerOC::setMode(const TimerOC::Mode mode){
                 instance->CHCTLR1 = tmpccmrx;
                 break;
             }
-        case Channel::CH2:
+        case CH2:
             {
                 uint16_t tmpccmrx = instance->CHCTLR1;
                 m_code = TIM_OC2M;
@@ -50,7 +54,7 @@ void TimerOC::setMode(const TimerOC::Mode mode){
                 instance->CHCTLR1 = tmpccmrx;
                 break;
             }
-        case Channel::CH3:
+        case CH3:
             {
                 uint16_t tmpccmrx = instance->CHCTLR2;
                 m_code = TIM_OC3M;
@@ -61,7 +65,7 @@ void TimerOC::setMode(const TimerOC::Mode mode){
                 instance->CHCTLR2 = tmpccmrx;
                 break;
             }
-        case Channel::CH4:
+        case CH4:
             {
                 uint16_t tmpccmrx = instance->CHCTLR2;
                 m_code = TIM_OC4M;
@@ -76,33 +80,35 @@ void TimerOC::setMode(const TimerOC::Mode mode){
 }
 
 void TimerOut::enable(const bool en){
-    if(en) instance->CCER |= 1 << ((uint8_t)channel * 2);
-    else instance->CCER &= ~(1 << ((uint8_t)channel) * 2);
+    if(en) instance->CCER |= 1 << ((uint8_t)idx_ * 2);
+    else instance->CCER &= ~(1 << ((uint8_t)idx_) * 2);
 }
 
 
 void TimerOut::setPolarity(const bool pol){
-    if(!pol) instance->CCER |= (1 << ((uint8_t)channel * 2 + 1));
-    else instance->CCER &= (~(1 << (((uint8_t)channel) * 2 + 1)));
+    if(!pol) instance->CCER |= (1 << ((uint8_t)idx_ * 2 + 1));
+    else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2 + 1)));
 }
 
 void TimerOut::setOutputState(const bool s){
-    if(s) instance->CCER |= (1 << ((uint8_t)channel * 2));
-    else instance->CCER &= (~(1 << (((uint8_t)channel) * 2)));
+    if(s) instance->CCER |= (1 << ((uint8_t)idx_ * 2));
+    else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
 }
 
 void TimerOut::enableSync(const bool _sync){
-    switch(channel){
-        case Channel::CH1:
+    using enum ChannelIndex;
+
+    switch(idx_){
+        case CH1:
             TIM_OC1PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
-        case Channel::CH2:
+        case CH2:
             TIM_OC2PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
-        case Channel::CH3:
+        case CH3:
             TIM_OC3PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
-        case Channel::CH4:
+        case CH4:
             TIM_OC4PreloadConfig(instance, _sync ? TIM_OCPreload_Enable : TIM_OCPreload_Disable);
             break;
         default:
@@ -112,11 +118,19 @@ void TimerOut::enableSync(const bool _sync){
 
 
 void TimerOut::setIdleState(const bool state){
-    if(TimerUtils::isAdvancedTimer(instance)){
+    if(isAdvancedTimer(instance)){
         auto tmpcr2 = instance->CTLR2;
-        const auto mask = (uint16_t)(TIM_OIS1 << (uint8_t)channel);
+        const auto mask = (uint16_t)(TIM_OIS1 << (uint8_t)idx_);
         tmpcr2 &= (uint16_t)(~mask);
         if(state) tmpcr2 |= mask;
         instance->CTLR2 = tmpcr2;
     }
+}
+
+Gpio & TimerOC::io(){
+    return getPin(instance, idx_);
+}
+
+Gpio & TimerOCN::io(){
+    return getPin(instance, idx_);
 }
