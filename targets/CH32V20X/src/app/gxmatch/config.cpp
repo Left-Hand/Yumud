@@ -5,7 +5,7 @@ using namespace gxm;
 SysConfig gxm::create_default_config(){
     return SysConfig{
         .joint_config = {
-            .max_rad_delta = real_t(0.13),
+            .max_rad_delta = real_t(1.13),
             // .left_basis_radian = real_t(-PI/2 + 0.2),
             .left_basis_radian = real_t(-PI/2 + 0.34),
             // .right_basis_radian = real_t(PI/2 - 0.10),
@@ -57,22 +57,27 @@ SysConfig gxm::create_default_config(){
 
         .grab_config = {
             .tray_xy = {
-                Vector2{-0.098_r    ,   0.144_r},
+                Vector2{-0.0983_r    ,   0.144_r},
                 Vector2{-0.004_r     ,   0.144_r},
-                Vector2{0.092_r     ,   0.144_r}
+                Vector2{0.0905_r     ,   0.144_r}
             },
 
-            .tray_z = 0.132_r,
+            .tray_z = 0.1333_r,
 
             .free_z = 0.169_r,
 
-            .catch_z = 0.054_r,
+            .catch_z = 0.056_r,
 
             .z_bias = 0.00005_r,
         
-            .catch_xy = Vector2{0, 0.26_r},
-
+            .catch_xy = {
+                Vector2{-0.0_r, 0.24_r},
+                Vector2{-0.0_r, 0.24_r},
+                Vector2{0.0_r, 0.24_r},
+            },
+            
             .inspect_xyz = Vector3{0, 0.24_r, 0.16_r},
+            .idle_xyz = Vector3{0, 0.145_r, 0.16_r},
             
             .home_xyz = Vector3(0, 0.24_r, 0.16_r),
 
@@ -81,61 +86,53 @@ SysConfig gxm::create_default_config(){
                 Vector3{0.26_r, 0.15_r, 0.17_r}
             },
 
-            .max_spd = 0.83_r,
-            .max_acc = 0.5_r,
+            .max_spd = 1.03_r,
+            .max_acc = 0.8_r,
 
-            .max_z_spd = 0.17_r,
-            .max_z_acc = 0.07_r,
+            .max_z_spd = 1.07_r,
+            .max_z_acc = 0.8_r,
             .nozzle_sustain = 500
         },
 
 
         .wheels_config = {
             .wheel_config = {
-                .wheel_radius = 0.06_r,//轮子直径
+                // .wheel_radius = 0.0315_r,//轮子半径
+                // .wheel_radius = 0.0309_r,//轮子半径
+                .wheel_radius = 0.0302_r,//轮子半径
+                // .wheel_radius = 0.0307_r,//轮子半径
                 .max_tps = 1,//最大每秒转圈数
                 .max_aps = 1,//最大每秒圈速加速度
             },
+
+            .max_curr = 0.6_r
         },
 
         .chassis_config = {
             .solver_config = {
-                .chassis_width_meter = 0.2_r,
-                .chassis_height_meter = 0.25_r
-            },
-
-            .est_config = {
-                .calibrate_times = 1,//校准次数
-                .force_calibrate = false,//强制校准而不是使用先验偏置
-                .pre_bias = {
-
-                },//偏置 空为未给
-
-                .rot_obs_config = {//转向观测器配置
-                    .kq = 0.5_r,
-                    .ko = 0.5_r,
-                },
-
-                .spd_lpf_config = {
-                    .kf = 0.5_r
-                }
+                .chassis_width_meter = 0.237_r,
+                .chassis_height_meter = 0.149_r
             },
 
             .rot_ctrl_config = {
-                .kp = 1,
-                .kd = 1
+                // .kp = 6,
+                .kp = 4,
+                .kd = 1.6_r
+                // .kd = 2
             },
 
             .pos_ctrl_config = {
-                .kp = 1,
-                .kd = 1
+                .kp = 4,
+                .kd = 1.6_r
             },
 
-            .max_acc = 1,
-            .max_spd = 1,
+            .max_acc = 0.5_r,
+            .max_spd = 1.0_r,
             
-            .max_agr = 1,
-            .max_spr = 1
+            .max_agr = 1.0_r,
+            .max_spr = 2.0_r,
+
+            .still_time = 0.5_r
         }
 
     };

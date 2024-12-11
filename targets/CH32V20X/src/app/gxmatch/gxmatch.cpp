@@ -2,20 +2,130 @@
 #include "config.hpp"
 #include "async/CanMaster.hpp"
 
+#include "drivers/Camera/MT9V034/mt9v034.hpp"
+#include "nvcv2/geometry/geometry.hpp"
+#include "nvcv2/shape/shape.hpp"
+#include "nvcv2/pixels/pixels.hpp"
+
+#include "machine/chassis_actions.hpp"
+#include "common/enum.hpp"
+
+
+using namespace nvcv2;
+using namespace gxm;
+
+
+class VisionModule:public AsciiProtocolConcept{
+protected:
+    // UartHw & uart_;
+    std::optional<MaterialColor> color_;
+    std::optional<Vector2> offset_;
+
+    enum class Mode:uint8_t{
+        CLOSED,
+        COLOR,
+        OFFSET
+    };
+
+    Mode mode_ = Mode::CLOSED;
+public: 
+    VisionModule(UartHw & uart):
+        AsciiProtocolConcept(uart){;}
+
+    void parseArgs(const Strings & args) override{
+        // DEBUG_PRINTLN(args);
+        switch(args[0].hash()){
+            case "color"_ha:
+                // DEBUG_PRINTLN("c is", uint8_t(args[1][0]));
+                switch(args[1][0]){
+                    case 'n':
+                        // color_ = MaterialColor::None;
+                        color_ = std::nullopt;
+                        break;
+                    case 'r':
+                        color_ = MaterialColor::Red;
+                        break;
+                    case 'g':
+                        color_ = MaterialColor::Green;
+                        break;
+                    case 'b':
+                        // DEBUG_PRINTLN("csdbjcnsadjk")
+                        color_ = MaterialColor::Blue;
+                        
+                        break;
+                }
+            break;
+
+            case "offset"_ha:
+                if(args.size() == 3){
+                    offset_ = Vector2{
+                        real_t(args[1]),
+                        real_t(args[2])
+                    };
+                }else{
+                    offset_ = std::nullopt;
+                }
+        }
+    }
+
+    void close(){
+        os.println("close");
+        mode_ = Mode::CLOSED;
+    }
+
+    auto color(){
+        if(mode_ != Mode::COLOR){
+            os.println("color"); 
+            color_ = std::nullopt;
+            mode_ = Mode::COLOR;
+        }
+        return color_.value_or(MaterialColor::None);
+    }
+
+    bool has_color(){
+        return color_.has_value();
+    }
+
+    bool has_offset(){
+        return offset_.has_value();
+    }
+    auto offset(){
+        if(mode_ != Mode::OFFSET){
+            os.println("offset");
+            offset_ = std::nullopt;
+            mode_ = Mode::OFFSET;
+        }
+        return offset_;
+    }
+
+
+};
+
+// class Ascii
+
 namespace gxm{
 
 void host_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(1000000);
     auto & logger = DEBUGGER_INST;
 
+    DEBUG_PRINTLN(std::setprecision(4), "poweron");
+
     auto i2c = I2cSw{portD[2], portC[12]};
-    i2c.init(400_KHz);
+    i2c.init(3400_KHz);
     auto config = create_default_config();
+
+    // auto & wuart = uart7;
+    // wuart.init(115200);
     // spi1.init(9_MHz);
     // spi2.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
-    can1.init(1_MHz);
     auto & can = can1;
+
+    can.init(1_MHz);
+    can[0].all();
+        
 
     auto displayer{create_displayer()};
     init_displayer(displayer);
@@ -23,105 +133,9 @@ void host_main(){
     auto painter = Painter<RGB565>{};
     painter.bindImage(displayer);
 
-
-
+    //#region 测试机械臂
+    // if(true){
     if(false){
-        auto solver = TrapezoidSolver_t<real_t>{4,10.0_r,0.1_r};
-        scexpr auto delta = 0.001_r;
-        
-        DEBUG_PRINTLN(std::setprecision(4));
-        for(real_t x = 0; x <= solver.period(); x += delta){
-            auto y = solver.forward(x);
-            delayMicroseconds(500);
-            DEBUG_PRINTLN(x, y);
-        } 
-        PANIC();
-    }
-    
-
-    if(false){
-        using Type = Vector2;
-        using Topic = Topic_t<Type>;
-
-        
-        Topic topic;
-
-        // 创建一个 Publisher
-        auto publisher = topic.createPublisher();
-
-        // 创建多个 Subscriber
-        auto subscriber1 = topic.createSubscriber([](const Type & message) {
-            DEBUGGER << "Subscriber 1 received: " << message << "\r\n";
-        });
-
-        auto subscriber2 = topic.createSubscriber([](const Type & message) {
-            DEBUGGER << "Subscriber 2 received: " << message << "\r\n";
-        });
-
-
-        // 发布消息
-        publisher.publish({0,0});
-        publisher.publish({1,1});
-    }
-
-
-
-    if(false){
-        auto limits = SequenceLimits{
-            .max_gyr = 2,
-            .max_agr = real_t(0.5),
-            .max_spd = real_t(0.5),
-            .max_acc = real_t(0.2)
-        };
-
-        auto params = SequenceParas{
-            .freq = 200
-        };
-        
-        auto sequencer = Sequencer(limits, params);
-        auto curve = Curve{};
-
-        Map map{};
-        Planner::Config planner_config = {.duration = real_t(3.2)};
-        Planner planner{planner_config, map, sequencer};
-
-        const auto m = micros();
-
-        planner.plan(
-            curve,
-            Field{FieldType::Garbage},
-            Field{FieldType::Staging}
-        );
-
-        planner.plan(
-            curve,
-            Field{FieldType::Staging},
-            Field{FieldType::RoughProcess}
-        );
-
-        planner.plan(
-            curve,
-            Field{FieldType::RoughProcess},
-            Field{FieldType::Garbage}
-        );
-
-        DEBUG_PRINTLN(micros() - m, curve.size());
-
-        draw_curve(painter, curve);
-
-        DEBUG_PRINTLN(std::setprecision(4));
-        auto idx = 0;
-        for(auto it = curve.begin(); it != curve.end(); ++it){
-            // while(millis() < size_t((idx * 5) + 1000));
-            delay(1);
-            idx++;
-            draw_turtle(painter, Ray(*it));
-        }
-        DEBUG_PRINTLN("done");
-        while(true);
-    }
-
-    if(true){
         
         PCA9685 pca{i2c};
         pca.init();
@@ -139,12 +153,6 @@ void host_main(){
 
         SG90 claw_servo{pca[5]};
         SG90 servo_cross{pca[15]};
-
-
-
-        // RemoteFOCMotor z_motor{logger, can1, 1};
-        
-        // RemoteFOCMotor z_motor{logger, can1, 1};
 
 
         auto & joint_config = config.joint_config;
@@ -205,25 +213,8 @@ void host_main(){
             joint_z.tick();
         };
 
-
-
-        if(true){//绑定50hz舵机更新回调函数
-            auto & timer = timer2;
-            timer.init(50);
-
-            timer.bindCb(TimerUtils::IT::Update, tick_50hz);
-            timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
-            DEBUG_PRINTLN("tick50 binded");
-        }
-
-
-
-
-        if(true){//绑定滴答时钟
-            bindSystickCb(tick_1khz);
-            DEBUG_PRINTLN("tick1k binded");
-        }
-
+        bind_tick_50hz(tick_50hz);
+        bind_tick_1khz(tick_1khz);
         // if(true){
         //     // pca.v
         // }
@@ -337,7 +328,8 @@ void host_main(){
             // while(true);
         }
 
-        if(false){//测试升降
+        //#region 测试升降
+        if(false){
         // if(true){//测试升降
             scara.press();
             CrossSolver cross_solver{config.zaxis_config.solver_config};
@@ -358,9 +350,10 @@ void host_main(){
                 delay(20);
             }
         }
+        //#endregion
 
-
-        if(false){//测试xyz
+        //#region 测试xyz
+        if(false){
         // if(true){//测试xyz
             Scara5Solver solver{config.scara_config.solver_config};
             CrossSolver cross_solver{config.zaxis_config.solver_config};
@@ -386,8 +379,10 @@ void host_main(){
                 delay(20);
             }
         }
+        //#endregion
 
-        if(false){//测试机械臂位置反馈
+        //#region 测试机械臂位置反馈
+        if(false){
             while(true){
                 auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t);
                 auto height = LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1);
@@ -399,9 +394,11 @@ void host_main(){
                 delay(20);
             }
         }
+        //#endregion
 
-        if(true){//测试抓取动作
-        // if(false){//测试抓取动作
+        //#region 测试抓取动作
+        if(true){
+        // if(false){
 
             grab_module.init();
             // getline(logger);
@@ -430,8 +427,11 @@ void host_main(){
             // grab_module.give(TrayIndex::Center);
             // grab_module.take(TrayIndex::Left);
             grab_module.give(TrayIndex::Left);
-            // grab_module.take(TrayIndex::Right);
+            grab_module.take(TrayIndex::Center);
+            grab_module.give(TrayIndex::Center);
+            grab_module.take(TrayIndex::Right);
             grab_module.give(TrayIndex::Right);
+            grab_module.take(TrayIndex::Left);
             // while(true){
             //     // DEBUG_PRINTLN(grab_module.pending());
             //     DEBUG_PRINTLN(millis(), grab_module.pending(), grab_module.which());
@@ -439,212 +439,1001 @@ void host_main(){
             // }
             while(true);
         }
+        //#endregion 
+
+    }
+
+    //#endregion
+
+    //#region 底盘
+    if(false){
+    // if(false){
+        bind_tick_1khz(nullptr);
+        auto flow_sensor_{create_pmw()};
+        init_pmw(flow_sensor_);
+
+        MPU6050 acc_gyr_sensor_{i2c};
+        acc_gyr_sensor_.init();
+
+        QMC5883L mag_sensor_{i2c};
+        mag_sensor_.init();
+
+        
+        auto & wheel_config = config.wheels_config.wheel_config;
+
+        CanMaster can_master = {can};
+        // can.sync(false);
+        auto stps = std::array<RemoteFOCMotor, 4>({
+            {logger, can, 1},
+            {logger, can, 2},
+            {logger, can, 3},
+            {logger, can, 5},
+        });
+
+        auto init_steppers = [&](){
+            for(auto & stp_ : stps){
+                stp_.reset();
+                stp_.locateRelatively(0);
+            }    
+        };
+
+        init_steppers();
+        Wheels wheels = {
+            config.wheels_config,
+            {
+                stps[0],
+                stps[1],
+                stps[2],
+                stps[3]
+            },
+            can
+        };
+
+        wheels[0].inverse();
+        wheels[2].inverse();
 
 
+        //#region 测试整个底盘
         if(true){
-            auto tick_200hz = [&](){
+            ChassisModule chassis_module {
+                config.chassis_config, 
+                wheels, 
+                acc_gyr_sensor_, 
+                mag_sensor_};
 
-            };
+            bind_tick_800hz([&]{
+                chassis_module.tick800();
+            });
 
-            auto bind_tick200hz = [](std::function<void(void)> && func){
-                auto & timer = timer1;
-                timer.init(200);
-
-                timer.bindCb(TimerUtils::IT::Update, std::move(func));
-                timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
-                DEBUG_PRINTLN("tick200 binded");
-            };
-
-            bind_tick200hz(tick_200hz);
-
-
-            if(true){
-
-                auto flow_sensor_{create_pmw()};
-                init_pmw(flow_sensor_);
-
-                MPU6050 acc_gyr_sensor_{i2c};
-                acc_gyr_sensor_.init();
-
-                QMC5883L mag_sensor_{i2c};
-                mag_sensor_.init();
-
-                auto & wheel_config = config.wheels_config.wheel_config;
-
-                // if(true){//测试单个电机
-                if(false){//测试单个电机
-                    RemoteFOCMotor stp = {logger, can1, 1};
-                    stp.reset();
-                    delay(1000);
-                    while(true){
-                        auto targ = sin(t);
-                        stp.setTargetPosition(targ);
-                        delay(5);
-                        DEBUG_PRINTLN(targ);
-                    }
-
-                    if(true){//测试单个轮子
-                        Wheel wheel = {wheel_config, stp};
-                        wheel.setPosition(0.2_r * sin(t));
-                        delay(5);
-                    }
-                }
-
-
-
-                // if(true){//测试多个电机
-                if(false){//测试多个电机
-                    auto stps = std::array<RemoteFOCMotor, 4>({
-                        {logger, can1, 1},
-                        {logger, can1, 2},
-                        {logger, can1, 3},
-                        {logger, can1, 4},
-                    });
-
-                    for(auto & stp_ : stps){
-                        stp_.reset();
-                    }    
-
-                    delay(1000);
-                    while(true){
-                        // auto p0 = sin(t);
-                        // auto p1 = frac(t);
-                        // auto p2 = real_t(int(t));
-                        // auto p2 = real_t(int(t));
-                        // auto p3 = ABS(sin(t));
-                        // scexpr auto a = 0.765*((124.0/15) + 1);
-                        auto p0 = 2.8_r * t;
-                        auto p1 = -2.8_r * t;
-                        auto p2 = -2.8_r * t;
-                        auto p3 = 2.8_r * t;
-
-                        DEBUG_PRINTLN(p0, p1, p2, p3);
-                        stps[0].setTargetPosition(-p0);
-                        stps[1].setTargetPosition(p1);
-                        stps[2].setTargetPosition(-p2);
-                        stps[3].setTargetPosition(p3);
-
-                        delay(5);
-                    }
-                }
-
-                if(true){//测试多个轮子
-                    auto stps = std::array<RemoteFOCMotor, 4>({
-                        {logger, can, 1},
-                        {logger, can, 2},
-                        {logger, can, 3},
-                        {logger, can, 4},
-                    });
-
-                    for(auto & stp_ : stps){
-                        stp_.reset();
-                        stp_.locateRelatively(0);
-                    }    
-
-                    Wheels wheels = {
-                        config.wheels_config,
-                        {
-                            stps[0],
-                            stps[1],
-                            stps[2],
-                            stps[3]
-                        }
-                    };
-
-                    wheels[0].inverse();
-                    wheels[2].inverse();
-
-                    Mecanum4Solver solver = {config.chassis_config.solver_config};
-                    while(true){
-                        // scexpr real_t delta = {0.003_r};
-                        // auto delta = solver.inverse(Vector2{0, 0.005_r}, 0);
-                        // auto delta = solver.inverse(Vector2{0, 0}, 0.005_r);
-                        // auto delta = solver.inverse(Vector2{0.003_r, 0.003_r}, 0);
-                        // auto delta = solver.inverse(Vector2{-0.003_r, 0.00_r}, 0);
-                        auto delta = solver.inverse(Vector2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
-                        wheels.forward(delta);
-
-                        delay(5);
-                    }
-                }
-                // if(false){//测试观测姿态
-                if(true){//测试观测姿态
-                    ComplementaryFilter::Config rot_config = {
-                        .kq = real_t(0.92),
-                        .ko = real_t(0.5)
-                    };
-                    
-                    ComplementaryFilter rot_obs = {rot_config};
+            bind_tick_1khz([&]{
+                chassis_module.tick();
                 
-                    DEBUG_PRINTLN(std::setprecision(4))
-                    while(true){
+            });
 
-                        acc_gyr_sensor_.update();
-                        mag_sensor_.update();
+            using namespace ChassisActions;
 
-                        const auto gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
-                        const auto mag3_raw = Vector3{mag_sensor_.getMagnet()};
+            Map map{};
 
-                        const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
-                        const auto gyr_raw = gyr3_raw.z;
+            Planner planner{chassis_module, map};
 
-                        const auto rot = rot_obs.update(rot_raw, gyr_raw, t);
+            planner.wait(1500);
 
-                        flow_sensor_.update(rot);
+            planner.plan(
+                Field{FieldType::Garbage},
+                Field{FieldType::RoughProcess}
+            );
 
-                        const auto [x,y] = flow_sensor_.getPosition();
+            planner.wait(1500);
 
-                        DEBUG_PRINTLN(rot, gyr_raw, x, y);
-                        delay(5);
-                    }
-                }
+            planner.plan(
+                Field{FieldType::RoughProcess},
+                Field{FieldType::Staging}
+            );
 
-                auto & est_config = config.chassis_config.est_config;
-                if(false){//测试状态观测器
-                    Estimator est_ = {
-                        est_config,
-                        acc_gyr_sensor_,
-                        mag_sensor_,
-                        flow_sensor_
-                    };
+            planner.wait(1500);
 
-                    est_.init();
+            planner.plan(
+                Field{FieldType::Staging},
+                Field{FieldType::Garbage}
+            );
 
-                    while(true){
-                        est_.update(t);
-                        
-                        DEBUG_PRINTLN(est_.pos());
-                    }
-                }
+
+
+            // chassis_module << new DelayAction(2000);
+            // chassis_module << new StrictSpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new DelayAction(1000);
+            // chassis_module << new StrictSpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new DelayAction(1000);
+
+            // chassis_module << new DelayAction(1000);
+
+            // chassis_module << new StraightAction(chassis_module, 1.72_r);
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new StraightAction(chassis_module, 1.72_r);
+
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+
+            // chassis_module << new StraightAction(chassis_module, -1.72_r);
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new StraightAction(chassis_module, -1.72_r);
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new StraightAction(chassis_module, -1.72_r);
+
+            // chassis_module << new DelayAction(2000);
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+
+            // chassis_module << new SpinAction(chassis_module, real_t(PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+            // chassis_module << new SpinAction(chassis_module, real_t(-PI/2));
+
+            while(true){
+                // DEBUG_PRINTLN(chassis_module.rot(), chassis_module.gyr());
+                delay(5);
+
+                // {
+                //     delay(2000);
+
+                //     static bool fwd = false;
+                //     fwd = !fwd;
+                    
+                // }
+                // chassis_module.setCurrent({{0, 0.5_r * sin(3 * t)}, 0});
+                // chassis_module.setCurrent({{0.8_r * sin(3 * t), 0}, 0});
+                auto ray = chassis_module.jny();
+                auto [org, rad] = ray;
+                auto [x,y] = org;
+
+                // DEBUG_PRINTLN(std::setprecision(4))
+                DEBUG_PRINTLN(x,y);
+
+                // chassis_module.setPosition({0,0,sin(t) * real_t(PI/2)});
+                // , x,y,rad);
+                // chassis_module.setCurrent({{0,0}, 0.2_r});
+                // DEBUG_PRINTLN("???");
             }
 
+        }
+        //#endregion
+
+        Mecanum4Solver solver = {config.chassis_config.solver_config};
+        //#region 测试位置反馈
+        auto test_pos_ret = [&](){
 
 
-            // if(true){
-            //     auto flow_sensor_{create_pmw()};
-            //     init_pmw(flow_sensor_);
+            while(true){
+                // DEBUG_PRINTLN(
+                //     wheels[0].getPosition(),
+                //     wheels[1].getPosition(),
+                //     wheels[2].getPosition(),
+                //     wheels[3].getPosition()
+                // )
+                // DEBUG_PRINTLN(est_.rot());
+                DEBUG_PRINTLN(mag_sensor_.getMagnet())
+                delay(5);
+            }
+        };
 
-            //     MPU6050 acc_gyr_sensor_{i2c};
-            //     acc_gyr_sensor_.init();
+        if(true){
+        // if(false){
+            test_pos_ret();
+        }
 
-            //     QMC5883L mag_sensor_{i2c};
-            //     mag_sensor_.init();
-                
-            //     Estimator est = {
-            //         config.chassis_config.est_config,
-            //         acc_gyr_sensor_,
-            //         mag_sensor_,
-            //         flow_sensor_        
-            //     };
+        //#endregion
 
-            //     ChassisModule chassis_module {
-            //         config.chassis_config, 
-            //         wheels, est};
-            // }
+
+        //#region 测试观测姿态
+        // if(false){
+        auto test_gest_obs = [&](){//测试观测姿态
+            ComplementaryFilter::Config rot_config = {
+                .kq = real_t(0.92),
+                .ko = real_t(0.5)
+            };
             
+            ComplementaryFilter rot_obs = {rot_config};
+        
+            DEBUG_PRINTLN(std::setprecision(4))
+            while(true){
+
+                acc_gyr_sensor_.update();
+                mag_sensor_.update();
+
+                const auto gyr3_raw = Vector3{acc_gyr_sensor_.getGyr()};
+                const auto mag3_raw = Vector3{mag_sensor_.getMagnet()};
+
+                const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
+                const auto gyr_raw = gyr3_raw.z;
+
+                const auto rot = rot_obs.update(rot_raw, gyr_raw, t);
+
+                flow_sensor_.update(rot);
+
+                // const auto [x,y] = flow_sensor_.getPosition();
+
+                // DEBUG_PRINTLN(rot, gyr_raw, x, y);
+                DEBUG_PRINTLN(mag3_raw.x, mag3_raw.y, mag3_raw.z, fposmodp(rot_raw, real_t(PI/2)));
+                // DEBUG_PRINTLN(gyr_raw);
+                delay(5);
+            }
+        };
+
+        if(true){
+        // if(false){
+            test_gest_obs();
+        }
+
+        //#endregion
+
+
+        //#region 测试单个电机
+        auto test_single_motor = [&](){
+            RemoteFOCMotor stp = {logger, can1, 1};
+            stp.reset();
+            delay(1000);
+            while(true){
+                auto targ = sin(t);
+                stp.setTargetPosition(targ);
+                delay(5);
+                DEBUG_PRINTLN(targ);
+            }
+
+            if(true){//测试单个轮子
+                Wheel wheel = {wheel_config, stp};
+                wheel.setPosition(0.2_r * sin(t));
+                delay(5);
+            }
+        };
+
+        // if(true){
+        if(false){
+            test_single_motor();
+        }
+        //#endregion
+
+
+        //#region 测试轮组
+        if(false){
+        // if(true){
+
+            wheels.init();
+
+            // auto delta = solver.inverse(Vector2{0, 0}, 0.7_r*sin(t));
+
+            real_t ang;
+            bind_tick_200hz(
+                [&](){
+                // wheels.request();
+                // DEBUG_PRINTLN(can.available());
+                // can_master.update();
+                acc_gyr_sensor_.update();
+        
+                ang += Vector3(acc_gyr_sensor_.getGyr()).z * 0.005_r;
+                // auto delta = solver.inverse(Vector2{0.4_r*sin(t), 0}, 0);
+
+                // scexpr real_t delta = {0.003_r};
+                // auto delta = solver.inverse(Vector2{0, 0.0003_r}, 0);
+                // auto delta = solver.inverse(Vector2{0, 0.3_r * sin(t)}, 0);
+                
+                // auto delta = solver.inverse(Vector2{0._r, 0.0_r}, 0);
+                // auto delta = solver.inverse(Vector2{0, 0}, 0.005_r);
+                // auto delta = solver.inverse(Vector2{0.003_r, 0.003_r}, 0);
+                // auto delta = solver.inverse(Vector2{-0.003_r, 0.00_r}, 0);
+                // auto delta = solver.inverse(Vector2{real_t(1.0/200) * sin(t), 0.00_r}, 0);
+                auto delta = solver.inverse(Vector2{0, 0.00_r}, CLAMP2((1-ang) * real_t(9), 1));
+                // DEBUG_PRINTLN(millis());
+                // wheels.setCurrent(delta);
+                // DEBUG_PRINTLN(std::get<0>(delta));
+                // wheels.setSpeed(delta);
+                // wheels.setPosition(delta);
+                wheels.setCurrent(delta);
+            }
+
+            );
+
+            while(true){
+                // delta = solver.inverse(Vector2{0, 0}, 1.7_r*sin(t));
+                // delta = solver.inverse(Vector2{0, 1.7_r*sin(t)});
+                
+                // DEBUG_PRINTLN(std::get<0>(delta));
+                // DEBUG_PRINTLN(delta);
+                // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
+                DEBUG_PRINTLN(ang)
+                delay(5);
+            }
+        }
+
+        // if(false){
+        if(true){
+            wheels.init();
+
+            real_t py;
+            bind_tick_200hz(
+                [&](){
+                flow_sensor_.update();
+        
+                py = Vector2(flow_sensor_.getPosition()).y;
+                // py = Vector2(flow_sensor_.getPosition()).x;
+                
+                auto delta = solver.inverse(Vector2{0, CLAMP2((0.2_r-py) * real_t(20), 0.8_r)}, 0);
+                // auto delta = solver.inverse(Vector2{0, 1}, 0);
+                // DEBUG_PRINTLN(delta);
+                wheels.setCurrent(delta);
+            });
+
+            while(true){
+                // delta = solver.inverse(Vector2{0, 0}, 1.7_r*sin(t));
+                // delta = solver.inverse(Vector2{0, 1.7_r*sin(t)});
+                
+                // DEBUG_PRINTLN(std::get<0>(delta));
+                // DEBUG_PRINTLN(delta);
+                // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
+                DEBUG_PRINTLN(std::setprecision(4), py)
+                delay(5);
+            }
+        }
+
+
+        //#endregion
+
+
+
+    }//#endregion
+    
+    //#region 视觉
+    // if(true){
+    if(false){
+        bindSystickCb(nullptr);
+        [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
+            const auto area = Rect2i(pos, src.get_size());
+            displayer.puttexture(area, src.get_data());
+        };
+
+        [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
+            const auto area = Rect2i(pos, src.get_size());
+            displayer.puttexture(area, src.get_data());
+        };
+
+        [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
+            const auto area = Rect2i(pos, src.get_size());
+            displayer.puttexture(area, src.get_data());
+        };
+
+        // [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){
+        //     painter.bindImage(sketch);
+        //     painter.setColor(RGB565::CORAL);
+        // };
+
+        MT9V034     camera{i2c};
+        camera.init();
+        camera.setExposureValue(500);
+
+
+        while(false){
+            displayer.fill(ColorEnum::BLACK);
+            delay(200);
+            displayer.fill(ColorEnum::WHITE);
+            delay(200);
+        }
+
+        while(true){
+            painter.setColor(ColorEnum::WHITE);
+
+            // Image<Grayscale> img = Shape::x2(camera);
+            Image<Grayscale> img = camera.clone();
+            auto ave = Pixels::average(img);
+            DEBUG_PRINTLN(millis(), uint8_t(ave));
+            plot_gray(img, {0, 0});
+            // auto img = raw_img.space();
+            // Geometry::perspective(img, raw_img);
+            // plot_gray(img, {0, img.get_size().y * 1});
+            continue;
+            auto img_ada = img.space();
+            // Shape::adaptive_threshold(img_ada, img);
+            // plot_gray(img_ada, {0, img.get_size().y * 2});
+
+            auto img_processed = img.space<Grayscale>();
+            // Shape::canny(img_bina, img, {60, 120});
+            Shape::eye(img_processed, img);
+            auto img_processed2 = img.space<Grayscale>();
+            Shape::eye(img_processed2, img_processed);
+            // Pixels::binarization(img_bina, img_ada, 220);
+            // Pixels::inverse(img_bina);
+            plot_gray(img_processed, {0, img.get_size().y * 2});
+            plot_gray(img_processed2, {0, img.get_size().y * 3});
+
         }
     }
 
+    //#endregion
+
+    if(true){
+        PCA9685 pca{i2c};
+        pca.init();
+        
+        pca.setFrequency(50, real_t(1.09));
+
+        MG995 servo_left{pca[0]};
+        MG995 servo_right{pca[1]};
+
+        Nozzle nozzle{
+            config.scara_config.nozzle_config, 
+            pca[14]
+        };
+
+        SG90 claw_servo{pca[5]};
+        SG90 servo_cross{pca[15]};
+
+        auto & joint_config = config.joint_config;
+        JointLR joint_left{
+            joint_config.max_rad_delta,
+            joint_config.left_basis_radian,
+            servo_left
+        };
+
+        JointLR joint_right{
+            joint_config.max_rad_delta,
+            joint_config.right_basis_radian,
+            servo_right
+        };
+
+        JointLR joint_z{
+            joint_config.max_rad_delta,
+            joint_config.z_basis_radian,
+            servo_cross
+        };
+
+        joint_z.inverse();
+
+        ZAxisCross zaxis{
+            config.zaxis_config,
+            joint_z
+        };
+        
+        Claw claw{
+            config.scara_config.claw_config,
+            claw_servo
+        };
+        
+
+
+        Scara scara{
+            config.scara_config, {
+                joint_left,
+                joint_right,
+                claw,
+                nozzle
+            }
+        };
+        
+        GrabModule grab_module{
+            config.grab_config, {
+                zaxis,
+                scara
+            }
+        };
+
+        MPU6050 acc_gyr_sensor_{i2c};
+        acc_gyr_sensor_.init();
+
+        QMC5883L mag_sensor_{i2c};
+        mag_sensor_.init();
+
+        auto stps = std::array<RemoteFOCMotor, 4>({
+            {logger, can, 1},
+            {logger, can, 2},
+            {logger, can, 3},
+            {logger, can, 5},
+        });
+
+        auto idle = [&](){
+            pca[0] = 0.001_r;
+            pca[1] = 0.001_r;
+            pca[14] = 0.001_r;
+            pca[15] = 0.001_r;
+            // pca.reset();
+        };
+
+
+        Wheels wheels = {
+            config.wheels_config,
+            {
+                stps[0],
+                stps[1],
+                stps[2],
+                stps[3]
+            },
+            can
+        };
+
+        wheels[0].inverse();
+        wheels[2].inverse();
+
+
+        ChassisModule chassis_module {
+            config.chassis_config, 
+            wheels, 
+            acc_gyr_sensor_, 
+            mag_sensor_};
+
+
+
+        using namespace ChassisActions;
+        using namespace GrabActions;
+
+        Map map{};
+        auto & vuart = uart2;
+        vuart.init(115200, CommMethod::Blocking);
+        VisionModule vision{vuart};
+
+        Planner planner{chassis_module, map};
+
+        // grab_module.init();
+        // grab_module.idle();
+        chassis_module.init();
+
+        enum class Status:uint8_t{
+            NONE,
+            GO_ROUGH,
+            AT_ROUGH,
+            GO_STAGING,
+            AT_STAGING,
+            END
+        };
+
+        // Status status = Status::GO_ROUGH;
+        Status status = Status::NONE;
+
+        auto & chassis = chassis_module;
+        auto & grab = grab_module;
+
+        auto sm_go_rough = [&](){
+            chassis << new StrictShiftAction(chassis, {0.225_r, 0.155_r});
+            // chassis << new StrictShiftAction(chassis, {0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {0.225_r, 0});
+            // chassis << new StrictShiftAction(chassis, {-0.225_r, 0});
+
+            // chassis << new ShiftAction(chassis, {0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {-0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {0.225_r, 0});
+            // chassis << new ShiftAction(chassis, {-0.225_r, 0});
+
+
+            chassis << new StraightAction(chassis, 1.72_r);
+            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StraightAction(chassis, 0.825_r);
+            chassis << new StrictSpinAction(chassis, real_t(PI/2));
+        };
+
+        // debuguart
+        enum class Process:uint8_t{
+            INIT,
+            INSPECT,
+            TO_FIND,
+            GET_OFFS,
+            MOVE,
+            GIVE_CENTER,
+            MOVE_LEFT,
+            GIVE_LEFT,
+            MOVE_RIGHT,
+            GIVE_RIGHT,
+            TAKE_RIGHT,
+            REMOVE_LEFT,
+            TAKE_LEFT,
+            MOVE_CENTER,
+            TAKE_CENTER,
+            BACK,
+            DONE,
+        };
+
+        bool field_ok = false;
+
+        Process process = Process::INIT;
+
+        scexpr real_t g_width = 0.15_r;
+        scexpr real_t g_back = 0.15_r;
+
+        auto process_field = [&](){
+            return;
+            DEBUG_PRINTLN(int(process));
+            switch(process){
+                case Process::INIT:
+                    field_ok = false;
+                    if(true){
+                        vision.color();
+                        grab.inspect();
+                        process = Process::INSPECT;
+                    }
+                    break;
+                case Process::INSPECT:
+                    if(grab.pending() == 0){
+                        process = Process::TO_FIND;
+                    }
+                    break;
+                case Process::TO_FIND:
+                    chassis.setCurrent({0, 0.5_r, 0});
+                    // if(vision.has_color()){
+                    if(true){
+                        vision.offset();
+                        process = Process::GET_OFFS;
+                    }
+                    break;
+                case Process::GET_OFFS:
+                    // if(vision.offset().has_value()){
+                    if(true){
+                        vision.close();
+                        chassis.strict_shift((Vector2{0, 0.04_r}));
+                        process = Process::MOVE;
+                    }
+                    break;
+                case Process::MOVE:
+                    if(chassis.pending() == 0){
+                        grab.give(TrayIndex::Center);
+                        process = Process::GIVE_CENTER;
+                    }
+                    break;
+                case Process::GIVE_CENTER:
+                    if(grab.pending() == 0){
+                        // grab.take(TrayIndex::Center);
+                        chassis.strict_shift(Vector2{-g_width, 0});
+                        process = Process::MOVE_LEFT;
+                    }
+                    break;
+                case Process::MOVE_LEFT:
+                    if(chassis.pending() == 0){
+                        grab.give(TrayIndex::Left);
+                        process = Process::GIVE_LEFT;
+                    }
+                    break;
+                case Process::GIVE_LEFT:
+                    if(grab.pending() == 0){
+                        chassis.strict_shift(Vector2{g_width * 2, 0});
+                        process = Process::MOVE_RIGHT;
+                    }
+                    break;
+                case Process::MOVE_RIGHT:   
+                    if(chassis.pending() == 0){
+                        grab.give(TrayIndex::Right);
+                        process = Process::GIVE_RIGHT;
+                    }
+                    break;
+                case Process::GIVE_RIGHT:
+                    if(grab.pending() == 0){
+                        grab.take(TrayIndex::Right);
+                        process = Process::TAKE_RIGHT;
+                    }
+                    break;
+                case Process::TAKE_RIGHT:   
+                    if(grab.pending() == 0){
+                        chassis.strict_shift({-2 * g_width, 0});
+                        process = Process::REMOVE_LEFT;
+                    }
+                    break;
+                case Process::REMOVE_LEFT:
+                    if(chassis.pending() == 0){
+                        grab.take(TrayIndex::Left);
+                        process = Process::TAKE_LEFT;
+                    }
+                    break;
+                case Process::TAKE_LEFT:
+                    if(grab.pending() == 0){
+                        chassis.strict_shift({g_width, 0});
+                        process = Process::MOVE_CENTER;
+                    }
+                    break;
+                case Process::MOVE_CENTER:
+                    if(chassis.pending() == 0){
+                        grab.take(TrayIndex::Center);
+                        process = Process::TAKE_CENTER;
+                    }
+                    break;
+                case Process::TAKE_CENTER:
+                    if(grab.pending() == 0){
+                        chassis.strict_shift({0, -g_back});
+                        process = Process::BACK;
+                    }
+                    break;
+                case Process::BACK:
+                    if(chassis.pending() == 0){
+                        process = Process::DONE;
+                    }
+                    break;
+                case Process::DONE:
+                    field_ok = true;
+                    break;
+            }
+            // grab.inspect();
+
+            // grab.give(TrayIndex::Left);
+            // grab.give(TrayIndex::Center);
+            // grab.give(TrayIndex::Right);
+            // grab.take(TrayIndex::Left);
+            // grab.take(TrayIndex::Center);
+            // grab.take(TrayIndex::Right);
+
+            // grab.idle();
+        };
+
+        auto sm_at_rough = [&](){
+            process_field();
+        };
+
+        auto sm_go_staging = [&](){
+            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StraightAction(chassis, 0.825_r);
+            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StraightAction(chassis, 0.860_r);
+            chassis << new StrictSpinAction(chassis, real_t(PI/2));
+        };
+
+        auto sm_at_staging = [&](){
+            process_field();
+        };
+
+        auto check_go_rough = [&]() -> bool{
+            return grab.done() and chassis.done();
+        };
+
+        auto check_at_rough = [&]() -> bool{
+            return grab.done() and chassis.done();
+            // return field_ok;
+        };
+
+        auto check_go_staging = [&]() -> bool{
+            // return grab.done() and chassis.done();
+            // return field_ok;
+            return true;
+        };
+
+        auto check_at_staging = [&]() -> bool{
+            return grab.done() and chassis.done();
+            // return field_ok;
+        };
+
+        auto check_end = [&]() -> bool {
+            // return grab.done() and chassis.done();
+            // return field_ok;
+            return true;
+        };
+
+        auto sm_end = [&](){
+            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StraightAction(chassis, 0.860_r);
+            chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+            chassis << new StraightAction(chassis, 1.65_r);
+            chassis << new StrictShiftAction(chassis, {-0.155_r, 0.225_r});   
+        };
+
+        uint cnt = 0;
+
+        auto sw_state = [&](const Status new_st){
+            status = new_st;
+            cnt = 0;
+        };
+
+        auto mmain = [&](){
+            
+            switch(status){
+                case Status::NONE:
+                    if(check_go_rough()){
+                        sm_go_rough();
+                        sw_state(Status::GO_ROUGH);
+                        break;
+                    }
+                case Status::GO_ROUGH:
+                    if(check_at_rough()){
+                        sm_at_rough();
+                        sw_state(Status::AT_ROUGH);
+                    }
+                    break;
+
+                case Status::AT_ROUGH:
+                    process_field();
+                    if(check_go_staging()){
+                    // DEBUG_PRINTLN("at rough");
+                    // DEBUG_PRINTLN("at rough");
+                    // if(true){
+                        // grab.idle();
+                        idle();
+                        sm_go_staging();
+                        field_ok = false;
+                        process = Process::INIT;
+                        sw_state(Status::GO_STAGING);
+                    }
+
+                    break;
+                case Status::GO_STAGING:
+                    // DEBUG_PRINTLN("go st");
+                    if(check_at_staging()){
+                        sm_at_staging();
+                        sw_state(Status::AT_STAGING);
+                    }
+                    break;
+
+                case Status::AT_STAGING:
+                    process_field();
+                    if(check_end()){
+                        // grab.idle();
+                        idle();
+                        sm_end();
+                        sw_state(Status::END);
+                    }
+                    break;
+                case Status::END:
+                    break;
+            }
+
+            cnt++;
+        };
+
+        auto & led = portC[14];
+        led.outpp();
+
+
+        auto tick_50hz = [&]{
+            joint_left.tick();
+            joint_right.tick();
+            joint_z.tick();
+            led.toggle();
+        };
+
+        bind_tick_800hz([&]{
+            chassis_module.tick800();
+            static uint8_t i = 0;
+            i = (i + 1) % 16;
+            if(i == 0){
+                tick_50hz();
+            }
+        });
+
+
+        bind_tick_1khz([&](){
+            grab_module.tick();
+            chassis_module.tick();
+            vision.update();
+
+            // mmain();
+        });
+
+        // sm_go_rough();
+        // chassis.strict_spin(real_t(PI/2));
+        // for(size_t i = 0; i < 10; i ++){
+            // chassis.spin(real_t(PI/2));
+            
+        //     chassis.wait(1500);
+        // }
+        // chassis.wait(500);
+        // chassis.strict_spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.wait(500);
+
+        // grab.wait(4000);
+        // grab.take(TrayIndex::Center);
+        // grab.take(TrayIndex::Left);
+        // grab.give(TrayIndex::Left);
+
+        // sm_at_rough();
+
+        sm_go_rough();
+        sm_go_staging();
+        sm_end();
+
+        // delay(1000);
+        // chassis << new ShiftAction(chassis, {0.255_r, 0.155_r});
+        // chassis << new StraightAction(chassis, 1.74_r);
+        // chassis << new StrictSpinAction(chassis, real_t(-PI/2));
+        // chassis << new StraightAction(chassis, 0.805_r);
+        // chassis << new StrictSpinAction(chassis, real_t(PI/2));
+        // txo.outpp();
+        // uart2.init(115200);
+        // chassis.shift({0.2_r, 0});
+        // chassis.shift({-0.2_r, 0});
+        // chassis.spin(real_t(PI/2));
+        // chassis.spin(real_t(PI/2));
+        // chassis.spin(real_t(PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
+        // chassis.spin(real_t(-PI/2));
+        while(true){
+            // chassis.setCurrent({0,0, 3 * sin(t)});
+            // chassis.setCurrent({0, /sin(t), 0});
+            // chassis.setCurrent({0.4_r, 0, 0});
+            // wheels.setCurrent({real_t(1), 0, 0, 0});
+            // wheels.setCurrent({1, -1, 1, -1});
+            // wheels.setCurrent({0, 1, 0, 0});
+            // wheels.setCurrent({0, 0, 1, 0});
+            // wheels.setCurrent({0, 0, 0, 1});
+            // DEBUG_PRINTLN(chassis.gyr(), chassis.rad());
+            delay(10);
+            // vuart.println("color");
+            // vision.offset();
+            // delay(2000);
+            // vuart.println("offset");
+            // delay(2000);
+            // DEBUG_PRINTLN(vision.color(), vision.offset());
+            // if(vision.has_color()){
+            //     // DEBUG_PRINTLN("color", int(vision.color()));
+            //     switch(vision.color()){
+            //         case MaterialColor::Blue:
+            //             DEBUG_PRINTLN("b")
+            //             break;
+            //         case MaterialColor::Green:
+            //             DEBUG_PRINTLN("g")
+            //             break;
+
+            //         case MaterialColor::None:
+            //             DEBUG_PRINTLN("n")
+            //             break;
+            //         case MaterialColor::Red:
+            //             DEBUG_PRINTLN("r")
+            //             break;
+            //     }
+            // }else{
+            //     DEBUG_PRINTLN("none");
+            // }
+
+            // if(vision.has_offset()){
+            //     DEBUG_PRINTLN(vision.offset());
+            // }
+            // delay(200);
+            // if(vuart.available()){
+            //     DEBUG_PRINTLN(vuart.readString());
+            // }
+            // else{
+                // DEBUG_PRINTLN("???")
+            // }
+            // vuart.println("offset");
+            // delay(1000);
+            continue;
+            // DEBUG_PRINTLN(uart2.available());
+            // delay(10);
+            // delay
+            // delay(100);
+            // txo.toggle();
+            // uart2.println()
+            // {
+            //     delay(2000);
+
+            //     static bool fwd = false;
+            //     fwd = !fwd;
+                
+            // }
+            // chassis_module.setCurrent({{0, 0.5_r * sin(3 * t)}, 0});
+            // chassis_module.setCurrent({{0.8_r * sin(3 * t), 0}, 0});
+            // auto ray = chassis_module.jny();
+            // auto [org, rad] = ray;
+            // auto [x,y] = org;
+            // if(millis() % 2000 > 1000){grab.meta_press();}
+            // else{grab.meta_release();}
+            
+
+            // chassis.setCurrent({0,0,0});
+            // DEBUG_PRINTLN(chassis.gyr(), 
+            //     chassis.rad(), stps[0].readPosition(), stps[1].readPosition(), stps[2].readPosition(),
+            //     stps[3].readPosition());]
+            // uart2.println("color");
+            // DEBUG_PRINTLN(uart2.pending());
+            // DEBUG_PRINTLN(int(status));
+            // DEBUG_PRINTLN(std::setprecision(4))
+            // DEBUG_PRINTLN(int(status));
+            // DEBUG_PRINTLN(grab.pending());
+
+            // chassis_module.setPosition({0,0,sin(t) * real_t(PI/2)});
+            // , x,y,rad);
+            // chassis_module.setCurrent({{0,0}, 0.2_r});
+            // DEBUG_PRINTLN("???");
+        }
+    }
+
+    
 };
 
 

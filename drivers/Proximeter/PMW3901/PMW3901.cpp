@@ -95,6 +95,7 @@ void PMW3901::readImage(ImageWritable<Grayscale> & img){
 bool PMW3901::verify(){
     if(!assertReg(PMW3901_REG_Inverse_Product_ID, 0xB6)) return false;
     if(!assertReg(PMW3901_REG_Product_ID, 0x49)) return false;
+
     return true;
 }
 
@@ -135,7 +136,7 @@ void PMW3901::update(){
 void PMW3901::update(const real_t rad){
     readData();
     
-    Vector2 delta = Vector2(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad);
+    Vector2 delta = Vector2(real_t(int16_t(dx)), real_t(int16_t(dy))).rotated(rad - real_t(PI/2)) * scale;
     x_cm += delta.x;
     y_cm += delta.y;
 }

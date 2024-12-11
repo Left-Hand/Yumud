@@ -41,9 +41,8 @@ protected:
 
     Uart(){;}
 public:
-
-    DELETE_COPY_AND_MOVE(Uart)
-    
+    Uart(const Uart & other) = delete;
+    Uart(Uart && other) = delete;
 
     void read(char & data) override;
     void read(char * data_ptr, const size_t len) override;
@@ -60,7 +59,7 @@ public:
     size_t available() const {return rxBuf.available();}
     size_t pending() const {return txBuf.available();}
     size_t remain() const {return txBuf.size() - txBuf.available();}
-    virtual void flush(){}//TODO
+    virtual void flush();
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
     virtual void setParity(const Parity parity) = 0;

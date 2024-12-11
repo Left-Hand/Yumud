@@ -38,8 +38,9 @@ public:
         real_t catch_z;
         real_t z_bias;
         
-        Vector2 catch_xy;
+        std::array<Vector2, 3> catch_xy;
         Vector3 inspect_xyz;
+        Vector3 idle_xyz;
 
         Vector3 home_xyz;
 
@@ -53,14 +54,6 @@ public:
         uint nozzle_sustain;
     };
 
-    enum class TranportStatus{
-        AIR,
-        OUTER,
-        INNER
-    };
-
-    TranportStatus status_=  TranportStatus::AIR;
-
 
 protected:
 
@@ -73,9 +66,6 @@ protected:
     Config config_;
     ZAxisCross & zaxis_;
     Scara & scara_;
-
-
-
 public:
 // protected:
     
@@ -86,16 +76,18 @@ public:
     // void moveXY(const Vector2 & pos);//只改变XY坐标
     void rapid(const Vector3 & pos);//改变所有坐标
     Vector3 getPos();
-    void meta_air_take_air();
+    void meta_air_take_air(const TrayIndex tray_index);
     void meta_air_give_air(const TrayIndex tray_index);
     void meta_air_inspect();
     void meta_take_place(const TrayIndex tray_index);
-    void meta_give_place();
+    void meta_give_place(const TrayIndex tray_index);
     void meta_to_air();
     void meta_press();
     void meta_release();
+    void meta_idle();
 
-    Vector2 calculateTrayPos(const TrayIndex index);
+    Vector2 calculateTrayPos(const TrayIndex index) const;
+    Vector2 calculateCatchPos(const TrayIndex index) const;
 public:
     GrabModule(const Config & config, const Refs & refs):
         config_(config),
@@ -105,7 +97,10 @@ public:
 
     void init();
     void move(const Vector3 & pos);
+    void move_xy(const Vector2 & pos);
+    void move_z(const real_t z);
     void inspect();
+    void idle();
     void take(const TrayIndex index);
     void give(const TrayIndex index);
     void test();
@@ -117,9 +112,6 @@ public:
     void release();
 
     const auto & config(){return config_;}
-    void setStatus(const TranportStatus status){
-        status_ = status;
-    }
 };
 
 

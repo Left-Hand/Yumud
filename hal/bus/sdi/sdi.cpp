@@ -42,6 +42,10 @@ void Sdi::write(const char * data_ptr, const size_t len){
     while(*(DEBUG_DATA0_ADDRESS));
 }
 
+size_t Sdi::pending() const{
+    return (*(DEBUG_DATA0_ADDRESS) == 0u) ? 1 : 0;
+}
+
 void Sdi::init(){
     *DEBUG_DATA0_ADDRESS = 0u;
 }

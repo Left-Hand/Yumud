@@ -38,6 +38,8 @@ public:
         return getGlobalRadian();
     }
 
+    virtual void idle();
+
 };
 
 

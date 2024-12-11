@@ -42,6 +42,8 @@ public:
         return *this;
     }
 
+    bool operator==(const StringView & other) const { return size_ == other.size_ && memcmp(data_, other.data_, size_) == 0; }
+
     size_t size() const { return size_; }
     size_t length() const {return size_;}
 

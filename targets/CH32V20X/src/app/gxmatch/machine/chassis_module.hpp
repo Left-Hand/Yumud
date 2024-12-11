@@ -1,6 +1,9 @@
 #pragma once
 
 #include "chassis_ctrl.hpp"
+#include "drivers/IMU/IMU.hpp"
+#include "dsp/filter/KalmanFilter.hpp"
+
 namespace gxm{
 
 class ChassisModule;
@@ -27,7 +30,7 @@ public:
 
     struct Config{
         Mecanum4Solver::Config solver_config;
-        Estimator::Config est_config;
+        // Estimator::Config est_config;
 
         RotationCtrl::Config rot_ctrl_config;
         PositionCtrl::Config pos_ctrl_config;
@@ -37,12 +40,16 @@ public:
         
         real_t max_agr;
         real_t max_spr;
+
+        real_t still_time;
     };
 
     enum class CtrlMode{
         NONE,
-        ROT,
-        POS
+        SPIN,
+        SHIFT,
+        STRICT_SPIN,
+        STRICT_SHIFT
     };
 
 
@@ -50,54 +57,97 @@ protected:
     const Config & config_;
     Wheels wheels_;
     Mecanum4Solver solver_{config_.solver_config};
-    Estimator & est_;
 
-    RotationCtrl rot_ctrl_{config_.rot_ctrl_config, *this};
-    PositionCtrl pos_ctrl_{config_.pos_ctrl_config, *this};
+    Axis6 & acc_gyr_sensor_;
+    Magnetometer & mag_sensor_;
+
+    Ray current_jny_;
+    real_t gyr_;
+    real_t gyr_sum_;
+
+    std::array<real_t, 4>last_motor_positions;
+
+    RotationCtrl rot_ctrl_{config_.rot_ctrl_config};
+    PositionCtrl pos_ctrl_{config_.pos_ctrl_config};
 
     CtrlMode ctrl_mode_ = CtrlMode::NONE;
 
-    Vector2 expect_pos_;
-    real_t expect_rot_;
+    Ray target_jny_;
+    real_t target_rot_;
 
+    Vector2 spd_;
+    Vector2 last_pos_;
+    
+
+    void closeloop();
 public:
     ChassisModule(const Config & config, 
             const Wheels & wheels,
-            Estimator & est
+            Axis6 & acc_gyr_sensor,
+            Magnetometer & mag_sensor
         ):
         config_(config), 
         wheels_(wheels),
-        est_(est){}
+        acc_gyr_sensor_(acc_gyr_sensor),
+        mag_sensor_(mag_sensor)
+        {}
 
-    void meta_rapid(const Ray & ray);
-    void meta_rapid_shift(const Vector2 & pos);
-    void meta_rapid_spin(const real_t rad);
 
-    void positionTrim(const Vector2 & trim);
-    void rotationTrim(const real_t raderr);
-    void forwardMove(const Vector2 & vel, const real_t spinrate);
+    void reset_rot();
+    void reset_journey();
+    void trim(const Ray & ray);
 
-    void calibratePosition(const Vector2 & pos);
-    void calibrateRotation(const real_t rad);
-
-    void test();
-    void tick();
+    void recalibrate(const Ray & ray);
+    void init();
+    void tick800();
 
     void setCurrent(const Ray & ray);
-    void closeloop();
+    void setPosition(const Ray & ray);
+    void setPosition(const std::tuple<real_t, real_t, real_t, real_t> pos);
+
     void setMode(const CtrlMode mode){
         ctrl_mode_ = mode;
     }
 
-    Vector2 pos();
-    Vector2 spd();
-    real_t rot();
-    real_t gyr();
+    real_t rad(){return gyr_sum_ * real_t(0.005);}
+    real_t gyr(){return gyr_;}
+    auto jny(){return current_jny_;}
+    auto diff(){return current_jny_.org;}
+    auto spd(){return spd_;}
 
-    Ray gest();
-    bool arrived();
+    void entry_spin();
+    void entry_shift();
+    void entry_strict_spin();
+    void entry_strict_shift();
+    void freeze();
 
-    Ray feedback();
+    //侧向移动
+    void sideways(const real_t dist);
+
+    //径向移动
+    void straight(const real_t dist);
+
+    //平移
+    void shift(const Vector2 & diff);
+
+    void follow(const Ray & to);
+
+    //旋转
+    void spin(const real_t ang);
+    void strict_spin(const real_t ang);
+    void strict_shift(const Vector2 & offs);
+
+    // void wait(const real_t dur);
+
+    void set_target_rad(const real_t rad){
+        this->target_rot_ = rad;
+    }
+
+    void set_target_jny(const Ray & jny){
+        this->target_jny_ = jny;
+    }
+
+    // bool arrived();
     const auto & config()const {return config_;}
 };
 

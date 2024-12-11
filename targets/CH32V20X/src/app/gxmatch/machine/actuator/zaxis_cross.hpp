@@ -34,6 +34,9 @@ public:
     real_t getDistance() override;
 
     void tick() override;
+    void idle(){
+        motor_.idle();
+    }
 
     void softHome() override;
 };

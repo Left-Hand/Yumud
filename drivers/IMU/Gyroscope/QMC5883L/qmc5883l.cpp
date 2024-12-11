@@ -48,16 +48,30 @@ void QMC5883L::setOverSampleRatio(const OverSampleRatio ratio){
     setOvsfix(ratio);
 }
 
+// __fast_inline constexpr iq_t s16_to_uni(const int16_t data){
+//     iq_t qv;
+//     qv.value = data > 0 ? _iq(data << 1) : _iq(-(_iq(-data << 1)));
+//     return qv;
+// }
+
+
+// real_t QMC5883L::From16BitToGauss(const int16_t data){
+//     return 
+// }
+
 void QMC5883L::update(){
     requestPool(RegAddress::MagX, &magXReg, 3);
 }
 
 std::tuple<real_t, real_t, real_t> QMC5883L::getMagnet(){
-    return std::make_tuple(
-        From16BitToGauss(magXReg),
-        From16BitToGauss(magYReg),
-        From16BitToGauss(magZReg)
-    );
+    return {
+        uni(int16_t(magXReg)) * fs,
+        uni(int16_t(magYReg)) * fs,
+        uni(int16_t(magZReg)) * fs
+        // int16_t(magXReg), int16_t(magYReg), int16_t(magZReg)
+        // 0,0,0
+        // 0, 0, 0
+    };
 }
 
 bool QMC5883L::verify(){

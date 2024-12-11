@@ -1,5 +1,6 @@
 #include "sys/core/system.hpp"
 
+#include "hal/bus/spi/spihw.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
 #include "robots/foc/bldc/bldc.hpp"
@@ -33,7 +34,7 @@ int main(){
     #ifdef CH32V20X
     Sys::Misc::prework();
     // eeprom_main();
-    // uart_main();
+    //  uart_main();
     // qlz_main();
     // embd_main();
     // embd_main();
@@ -49,6 +50,7 @@ int main(){
     // joystick_tb(uart1);
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
+    // m3508_main();
     stepper_tb(uart1);
     // pmw3901_main();
     // math_tb(uart1);
@@ -70,7 +72,7 @@ int main(){
     preinit();
     // programmer_main();
     // DEBUG_PRINTLN("??");
-    // gui_main();
+    gui_main();
     // math_tb(uart2);
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
@@ -93,7 +95,7 @@ int main(){
     // uart_tb(logger);
     // pmw3901_main();
     // ch9141_tb(logger, uart7);
-    // st77xx_tb(logger, spi2);
+    // st77xx_tb(spi2);
     // embd_main();
     // mpu6050_main();
     // gui_main();

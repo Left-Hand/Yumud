@@ -253,9 +253,16 @@ __fast_inline constexpr Vector3_t<T> operator*(const arithmetic auto & n, const 
     return vec * n;
 }
 
+
+__fast_inline constexpr auto lerp(const Vector3_t<arithmetic auto> & a, const Vector3_t<arithmetic auto> & b, const arithmetic auto & t){
+    return a + (b - a) * t;
+}
+
+
 }
 __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Vector3_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ',' << value.z << ')';
 }
+
 
 #include "vector3_t.tpp"

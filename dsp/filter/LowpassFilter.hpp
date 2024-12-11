@@ -1,6 +1,4 @@
-#ifndef __LOWPASS_FILTER_HPP__
-
-#define __LOWPASS_FILTER_HPP__
+#pragma once
 
 #include "../lti.hpp"
 
@@ -76,5 +74,3 @@ public:
 
 using LPF = LowpassFilter_t<real_t, real_t>;
 using LPFZ = LowpassFilterZ_t<real_t>;
-
-#endif

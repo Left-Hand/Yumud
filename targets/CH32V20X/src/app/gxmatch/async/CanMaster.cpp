@@ -5,23 +5,27 @@ using namespace gxm;
 using namespace ymd;
 
 void CanMaster::update(){
-    auto & can = can1;
-    if(can.available()){
-        while(can.available()){
-            auto && msg = can.read();
+    if(can_.available()){
+        // DEBUG_PRINTLN(pool.size());
+        // while(can_.available()){
+        if(true){
+            auto msg = can_.read();
 
             bool accepted = false;
-            for(Wrapper & proto : pool){
-                if(proto.get().update(msg)){
-                    accepted = true;
-                    break;
+            for(CanProtocolConcept * item : pool){
+                if(item){
+                    if(item->update(msg)){
+                        accepted = true;
+                        break;
+                    }
                 }
             }
 
             if(accepted){
-
+                // DEBUG_PRINTLN(msg);
             }else{ 
-                DEBUG_PRINTLN("unaccepted msg", msg.id());
+                // HALT;
+                // DEBUG_PRINTLN("unaccepted msg", msg.id());
             }
         }
     }

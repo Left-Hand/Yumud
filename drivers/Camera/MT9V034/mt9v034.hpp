@@ -6,7 +6,7 @@ namespace ymd::drivers{
 
 class MT9V034:public CameraWithSccb<Grayscale>{
 protected:
-    enum RegAddress : uint8_t {
+    enum class RegAddress : uint8_t {
         ChipId = 0,
         RowStart,
         ColumnStart,
@@ -55,11 +55,11 @@ protected:
 
 
     void writeReg(const uint8_t addr, const uint16_t reg_data){
-        sccb_drv_.writeReg((RegAddress)addr, reg_data);
+        sccb_drv_.writeReg(addr, reg_data);
     }
 
-    void readReg(const uint8_t addr, uint16_t pData){
-        sccb_drv_.readReg((RegAddress)addr, pData);
+    void readReg(const uint8_t addr, uint16_t & pData){
+        sccb_drv_.readReg(addr, pData);
     }
 
     void getpixel_unsafe(const Vector2i & pos, Grayscale & color) const override{
@@ -71,7 +71,7 @@ public:
     scexpr Vector2i camera_size = {188, 120};
 public:
     MT9V034(const SccbDrv & sccb_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(sccb_drv, camera_size){;}
-    // MT9V034(SccbDrv && sccb_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(sccb_drv, camera_size){;}
+    MT9V034(SccbDrv && sccb_drv):ImageBasics(camera_size), CameraWithSccb<Grayscale>(std::move(sccb_drv), camera_size){;}
     MT9V034(I2c & _i2c):ImageBasics(camera_size), CameraWithSccb<Grayscale>(SccbDrv(_i2c, default_addr), camera_size){;}
 
     bool init();

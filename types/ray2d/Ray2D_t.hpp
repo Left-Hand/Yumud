@@ -33,6 +33,18 @@ public:
         return is_equal_approx(this->org == other.org) and is_equal_appro(this->rad, other.rad);
     }
 
+	__fast_inline constexpr Ray2D_t operator + (const Ray2D_t & other) const{
+        return Ray2D_t{this->org + other.org, this->rad + other.rad}.regular();
+    }
+
+	__fast_inline constexpr Ray2D_t operator - (const Ray2D_t & other) const{
+        return Ray2D_t{this->org - other.org, this->rad - other.rad}.regular();
+    }
+
+    __fast_inline constexpr Ray2D_t regular() const{
+        return Ray2D_t{this->org, fposmodp(this->rad, T(TAU))};
+    }
+
 	__fast_inline constexpr bool operator!=(const Ray2D_t & other) const{
         return (*this == other) == false; 
     }
@@ -46,10 +58,11 @@ public:
     }
 
     __fast_inline constexpr std::optional<Vector2_t<T>> intersection(const Ray2D_t<T> & other) const{
-        if(this->orgarrel_with(other)) return std::nullopt;
+        // if(this->parallel_with(other)) return std::nullopt;
 
-        //TODO
-        return {0,0};
+        // //TODO
+        // // return {0,0};
+        return Line2D_t<T>(*this).intersection(Line2D_t<T>(other));
     }
 
     __fast_inline constexpr Line2D_t<T> normal() const{

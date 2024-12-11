@@ -20,9 +20,17 @@ public:
     }
 
     ScaledPwm & operator = (const real_t duty) override {
-        if(false == enabled) return *this;
-        instance_ = duty_range_.lerp(duty);
-        return *this;
+        if(false == enabled){
+            instance_ = 0;
+            return *this;
+        }else{
+            instance_ = duty_range_.lerp(duty);
+            return *this;
+        }
+    }
+
+    auto & inst(){
+        return instance_;
     }
 };
 
@@ -45,6 +53,10 @@ public:
     PwmRadianServo(PwmChannel & instance):
             instance_(instance, {real_t(0.025), real_t(0.125)})
             {;}
+
+    void idle() override{
+        instance_.enable(false);
+    }
 
 };
 
@@ -72,6 +84,8 @@ public:
             max_turns_per_second_(max_turns_per_second),
             expect_speed_(real_t(0))
             {;}
+
+
 };
 
 

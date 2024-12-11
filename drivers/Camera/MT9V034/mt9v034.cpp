@@ -102,7 +102,7 @@ bool MT9V034::init(){
 bool MT9V034::verify(){
     uint16_t chip_version = 0;
     [[maybe_unused]]scexpr uint16_t valid_version = 0x1324;
-    readReg(RegAddress::ChipId, chip_version);
+    readReg(CHIP_ID_ADDR, chip_version);
     // DEBUG_PRINTLN("mt9v id is", chip_version);
     // return (chip_version == valid_version);
     return true;

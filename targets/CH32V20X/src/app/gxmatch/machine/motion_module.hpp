@@ -44,6 +44,10 @@ public:
     const char * which(){
         return actions_.front()->name();
     }
+
+    void wait(const uint ms){
+        *this << new DelayAction(ms);
+    }
 };
 
 }

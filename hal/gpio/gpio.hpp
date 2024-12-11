@@ -104,12 +104,12 @@ class GpioVirtual:public GpioConcept{
 protected:
     PortConcept & instance;
 
-    PortConcept & form_gpiotypedef_to_port(volatile GPIO_TypeDef * _instance);
+    static PortConcept & form_gpiotypedef_to_port(uint32_t base);
 public:
     DELETE_COPY_AND_MOVE(GpioVirtual)
     using GpioConcept::operator=;
 
-    GpioVirtual(const Gpio & gpio):GpioConcept(gpio.pin_index), instance(form_gpiotypedef_to_port(gpio.instance)){;}
+    GpioVirtual(const Gpio & gpio):GpioConcept(gpio.pin_index), instance(form_gpiotypedef_to_port(uint32_t(gpio.instance))){;}
     GpioVirtual(PortConcept & _instance, const int8_t _pin_index):GpioConcept(_pin_index), instance(_instance){;}
     GpioVirtual(PortConcept & _instance, const Pin _pin):GpioConcept(CTZ((uint16_t)_pin)), instance(_instance){;}
     __fast_inline void set() override {instance.setByIndex(pin_index);}

@@ -38,7 +38,7 @@ public:
     Vector2 getPos();
     void press();//拾起物块
     void release();//放下物块
-
+    void idle();
     bool reached();
     bool caught();
 

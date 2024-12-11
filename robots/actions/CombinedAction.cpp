@@ -12,6 +12,6 @@ void CombinedAction::execute() {
             action_queue.pop();
         }
     }else{
-        sustain = 0;
+        live(0);
     }
 }

@@ -227,16 +227,82 @@ void Can::init(const BaudRate baudRate, const Mode _mode){
 }
 
 size_t Can::pending(){
-    if((instance->TSTATR & CAN_TSTATR_TME0) == CAN_TSTATR_TME0){
+    uint32_t tempreg = instance->TSTATR;
+    if((tempreg & CAN_TSTATR_TME0) == CAN_TSTATR_TME0){
         return 0;
-    }else if((instance->TSTATR & CAN_TSTATR_TME1) == CAN_TSTATR_TME1){
+    }else if((tempreg & CAN_TSTATR_TME1) == CAN_TSTATR_TME1){
         return 1;
-    }else if((instance->TSTATR & CAN_TSTATR_TME2) == CAN_TSTATR_TME2){
+    }else if((tempreg & CAN_TSTATR_TME2) == CAN_TSTATR_TME2){
         return 2;
     }else{
         return 3;
     }
 }
+
+
+    // uint8_t transmit_mailbox = 0;
+    // uint32_t data_l = 0;
+    // uint32_t data_h = 0;
+
+    // if((CANx->TSTATR & CAN_TSTATR_TME0) == CAN_TSTATR_TME0)
+    // {
+    //     transmit_mailbox = 0;
+    // }
+    // else if((CANx->TSTATR & CAN_TSTATR_TME1) == CAN_TSTATR_TME1)
+    // {
+    //     transmit_mailbox = 1;
+    // }
+    // else if((CANx->TSTATR & CAN_TSTATR_TME2) == CAN_TSTATR_TME2)
+    // {
+    //     transmit_mailbox = 2;
+    // }
+    // else
+    // {
+    //     transmit_mailbox = CAN_TxStatus_NoMailBox;
+    // }
+
+    // if(transmit_mailbox != CAN_TxStatus_NoMailBox)
+    // {
+    //     CANx->sTxMailBox[transmit_mailbox].TXMIR &= TMIDxR_TXRQ;
+    //     if(TxMessage->IDE == CAN_Id_Standard)
+    //     {
+    //         CANx->sTxMailBox[transmit_mailbox].TXMIR |= ((TxMessage->StdId << 21) |
+    //                                                      TxMessage->RTR);
+    //     }
+    //     else
+    //     {
+    //         CANx->sTxMailBox[transmit_mailbox].TXMIR |= ((TxMessage->ExtId << 3) |
+    //                                                      TxMessage->IDE |
+    //                                                      TxMessage->RTR);
+    //     }
+
+
+    //     CANx->sTxMailBox[transmit_mailbox].TXMDTR &= (uint32_t)0xFFFFFFF0;
+    //     CANx->sTxMailBox[transmit_mailbox].TXMDTR |= TxMessage->DLC & 0x0F;
+
+    //     if(TxMessage->DLC && (TxMessage->RTR != CAN_RTR_Remote))
+    //     {
+    //         switch(TxMessage->DLC){
+    //             case 8: data_h |= (((uint32_t)TxMessage->Data[7] << 24));
+    //             case 7: data_h |= (((uint32_t)TxMessage->Data[6] << 16));
+    //             case 6: data_h |= (((uint32_t)TxMessage->Data[5] << 8));
+    //             case 5: data_h |= (((uint32_t)TxMessage->Data[4] << 0));
+    //             case 4: data_l |= (((uint32_t)TxMessage->Data[3] << 24));
+    //             case 3: data_l |= (((uint32_t)TxMessage->Data[2] << 16));
+    //             case 2: data_l |= (((uint32_t)TxMessage->Data[1] << 8));
+    //             case 1: data_l |= (((uint32_t)TxMessage->Data[0] << 0));
+    //             case 0:
+    //             default:
+    //                 break;
+    //         }
+    //     }
+
+    //     CANx->sTxMailBox[transmit_mailbox].TXMDHR = data_h;
+    //     CANx->sTxMailBox[transmit_mailbox].TXMDLR = data_l;
+    //     CANx->sTxMailBox[transmit_mailbox].TXMIR |= TMIDxR_TXRQ;
+    // }
+
+    // return transmit_mailbox;
 
 void Can::enableHwReTransmit(const bool en){
     if(en)  instance->CTLR &= ~CAN_CTLR_NART;
@@ -244,7 +310,6 @@ void Can::enableHwReTransmit(const bool en){
 }
 
 bool Can::write(const CanMsg & msg){
-    // DEBUGGER_INST.println(msg);
     if(this->sync_){
         uint8_t mbox;
         do{

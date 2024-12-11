@@ -11,12 +11,13 @@
 #define EXTRA_IQ
 
 #define ENABLE_UART2
+#define ENABLE_UART4
 #define ENABLE_UART7
 
 #define UART1_REMAP 1
 #define UART2_REMAP 0
 #define UART3_REMAP 0
-#define UART4_REMAP 0
+#define UART4_REMAP 1
 #define UART5_REMAP 0
 #define UART6_REMAP 0
 #define UART7_REMAP 0

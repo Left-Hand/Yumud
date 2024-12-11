@@ -110,7 +110,7 @@ uint8_t get_default_id(){
             case 3273134334:
                 return 3;
             case 0xF3237B29:
-                return 4;
+                return 5;
             case 0x145BB656:
                 return 1;
             case 0x551C4DEA:
@@ -213,6 +213,7 @@ void stepper_tb(UartHw & logger){
     uint8_t node_id = get_default_id();
     auto & can = can1;
     can.init(1_MHz);
+    // can.enableHwReTransmit();
     
     can[0].mask(
         CanID16{uint16_t(uint16_t(node_id) << 7), CanRemoteType::Any}, CanID16::IGNORE_LOW(7, CanRemoteType::Any),
@@ -306,8 +307,9 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetPosition(17* sin(2 * t));
         // stp.setTargetPosition(7 * frac(t));
 
-        // real_t target = real_t(0.7) * sin(t)
+        // real_t target = real_t(0.7) * sin(t);
         // stp.setTargetPosition(target);
+        // stp.setTargetVector(target);
         // stp.setTargetCurrent(target);
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(stp.getPosition(), target);
 

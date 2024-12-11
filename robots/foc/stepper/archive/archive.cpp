@@ -12,7 +12,7 @@ static void getDefaultArchive(MotorUtils::Archive & archive){
         // .kp = real_t(3),
         // .kd = 170
 
-        .kp = real_t(2),
+        .kp = real_t(2.3),
         .kd = 40
         // .kp = real_t(3),
         // .kd = 70

@@ -15,33 +15,27 @@ namespace ymd{
 struct Action {
 public:
     using Callback = std::function<void(void)>;
-protected:
+
+// protected:
+private:
     Callback func_ = nullptr;
     
-    int sustain = 0;
-    const size_t full;
-    volatile bool executed = false;
+    int sustain_ = 0;
+    const size_t full_;
+    volatile bool executed_ = false;
     volatile bool decreased_ = false;
-
+protected:
     virtual void execute(){
         EXECUTE(func_);
     }
 
-    // enum class SpecialActionType{
-    //     NONE,
-    //     DELAY,
-    //     CLEAR,
-    //     ABORT
-    // };
-    
-    // virtual SpecialActionType special() const {return SpecialActionType::NONE;}
 
     bool first() const {
-        return executed == false;
+        return executed_ == false;
     }
 
     real_t progress() const {
-        return real_t(1) - real_t(sustain) / full;
+        return real_t(1) - real_t(sustain_) / full_;
     }
 
     void kill(){
@@ -49,38 +43,44 @@ protected:
     }
 
     real_t time() const {
-        return real_t(CLAMP(full - sustain, size_t(0), size_t((1 << GLOBAL_Q )- 5))) / 1000;
+        return real_t(CLAMP(full_ - sustain_, size_t(0), size_t((1 << GLOBAL_Q )- 5))) / 1000;
     }
 public:
-    // Action(std::function<void()> &&f, const uint s = 0, const bool _once = true) : func(std::move(f)), sustain(s), full(s), once(_once) {}
-    Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain(MIN(s, INT32_MAX)), full(sustain){}
+    Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain_(MIN(s, INT32_MAX)), full_(sustain_){}
+
+    Action(const Action & other) = delete;
+    Action(Action && other) = default;
 
     bool died() const{
         // return sustain <= 0;
         return decreased_;
     }
 
+    void live(const uint rem){
+        sustain_ = rem;
+    }
+
 
     Action& operator--() {
-        if (sustain > 0) {
-            --sustain;
+        if (sustain_ > 0) {
+            --sustain_;
         }
         return *this;
     }
 
     int remain() const {
-        return sustain;
+        return sustain_;
     }
 
     void invoke(){
         // if(sustain > 0) sustain--;
         // if(once and executed) return;
-        if(sustain > 0){
+        if(sustain_ > 0){
             execute();
             // DEBUG_PRINTLN(sustain);
-            if(sustain) sustain --;
-            if(sustain <= 0) decreased_ = true;
-            executed = true;
+            if(sustain_) sustain_ --;
+            if(sustain_ <= 0) decreased_ = true;
+            executed_ = true;
         }
     }
 
@@ -94,7 +94,8 @@ struct DelayAction:public Action{
 protected:
     void execute() override {}
 public:
-    DelayAction( const uint dur):Action(dur, nullptr){}
+    DelayAction(const uint dur):Action(dur, nullptr){}
+    // DelayAction(const real-t):Action(dur, nullptr){}
     ACTION_NAME(delay)
 };
 

@@ -142,21 +142,21 @@ public:
         return c ? sqrt(c) : 0;}
     constexpr T length_squared() const {return (x*x + y*y);}
     
-    constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
-    constexpr Vector2_t<T> move_toward(const Vector2_t<T> & to, const arithmetic auto & delta) const;
+    __fast_inline constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
+    __fast_inline constexpr Vector2_t<T> move_toward(const Vector2_t<T> & to, const arithmetic auto & delta) const;
     __fast_inline constexpr Vector2_t<T> center(const Vector2_t<T> other) const 
         {return {(this->x + other.x) / 2, (this->y + other.y) / 2};}
 
-    constexpr Vector2_t<T> posmod(const arithmetic auto & mod) const;
-    constexpr Vector2_t<T> posmodv(const Vector2_t<T> & modv) const;
-    constexpr Vector2_t<T> project(const Vector2_t<T> & b) const;
-    constexpr T project(const T & rad) const;
-    constexpr Vector2_t<T> reflect(const Vector2_t<T> & n) const;
-    constexpr Vector2_t<T> round() const;
-    constexpr Vector2_t<T> sign() const;
-    constexpr Vector2_t<T> slerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
-    constexpr Vector2_t<T> slide(const Vector2_t<T>  & n) const;
-    constexpr Vector2_t<T> snapped(const Vector2_t<T> & by) const;
+    __fast_inline constexpr Vector2_t<T> posmod(const arithmetic auto & mod) const;
+    __fast_inline constexpr Vector2_t<T> posmodv(const Vector2_t<T> & modv) const;
+    __fast_inline constexpr Vector2_t<T> project(const Vector2_t<T> & b) const;
+    __fast_inline constexpr T project(const T & rad) const;
+    __fast_inline constexpr Vector2_t<T> reflect(const Vector2_t<T> & n) const;
+    __fast_inline constexpr Vector2_t<T> round() const;
+    __fast_inline constexpr Vector2_t<T> sign() const;
+    __fast_inline constexpr Vector2_t<T> slerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
+    __fast_inline constexpr Vector2_t<T> slide(const Vector2_t<T>  & n) const;
+    __fast_inline constexpr Vector2_t<T> snapped(const Vector2_t<T> & by) const;
     __fast_inline constexpr Vector2_t<T> cw() const {return Vector2_t<T>(-y, x);}
     __fast_inline constexpr Vector2_t<T> ccw() const {return Vector2_t<T>(y, -x);}
 
@@ -234,6 +234,10 @@ public:
         auto rect = Rect2_t<T>(other, other - *this);
         return rect.abs();
     }
+
+    __fast_inline constexpr T area() const {
+        return x * y;
+    }
 };
 
 template<arithmetic T>
@@ -247,6 +251,11 @@ using Vector2 = Vector2_t<real_t>;
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto> & value){
     return os << '(' << value.x << ',' << value.y << ')';
+}
+
+
+__fast_inline constexpr auto lerp(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b, const arithmetic auto & t){
+    return a + (b - a) * t;
 }
 
 }

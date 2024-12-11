@@ -7,42 +7,6 @@ namespace ymd::nvcv2::Pixels{
 
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src);
 
-    class UniqueRandomGenerator {
-    private:
-        scexpr uint8_t m = 251;
-        scexpr uint8_t a = 37;
-        scexpr uint8_t c = 71;
-        std::array<uint8_t, 256> data;
-
-        scexpr uint8_t iter(const uint8_t x){
-            return (a * x + c) % m;
-        }
-    public:
-        UniqueRandomGenerator() {
-            // Initialize with unique random numbers using LCG
-            std::array<bool, 256> used{};
-            used.fill(0);
-            // uint8_t x = 0; // Initial seed
-            uint8_t x_next = iter(0);
-            for (size_t i = 0; i < 256; ++i) {
-                // Find next unique number
-                uint8_t x_new = x_next;
-                // while(used[x_new]){
-                    x_new = iter(x_new);
-                // }
-                x_next = x_new;
-                // Mark x as used and assign to data[i]
-                used[x_next] = true;
-                data[i] = x_next;
-            }
-            data[0] = 0;
-        }
-
-        uint8_t operator[](const uint8_t index) const{
-            return data[index];
-        }
-    };
-
 
     void dyeing(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src);
 
@@ -104,6 +68,12 @@ namespace ymd::nvcv2::Pixels{
     int get_huang_fuzzy_threshold(Histogram hist);
 
     int huang(Image<Binary>& dst, const Image<Grayscale>& src);
+
+    uint sum(const Image<Grayscale>& src);
+
+    __inline Grayscale average(const Image<Grayscale>& src){
+        return sum(src) / src.get_size().area();
+    }
 
     void gamma(Image<Grayscale>& src, const real_t ga);
 

@@ -129,15 +129,20 @@ ST7789 create_displayer(){
 void init_displayer(ST7789 & displayer){
     displayer.init();
 
-    displayer.setFlipX(false);
-    displayer.setFlipY(true);
+    // displayer.setFlipX(false);
+    // displayer.setFlipY(true);
+
+    displayer.setFlipX(true);
+    displayer.setFlipY(false);
+
     if(true){
         displayer.setSwapXY(true);
-        displayer.setDisplayOffset({40, 52}); 
+        displayer.setDisplayOffset({40, 53}); 
     }else{
         displayer.setSwapXY(false);
-        displayer.setDisplayOffset({52, 40}); 
+        displayer.setDisplayOffset({53, 40}); 
     }
+
     displayer.setFormatRGB(true);
     displayer.setFlushDirH(false);
     displayer.setFlushDirV(false);
@@ -154,4 +159,43 @@ String getline(InputStream & logger){
         }
     }
 }
+
+void bind_tick_200hz(std::function<void(void)> && func){
+    auto & timer = timer3;
+    timer.init(200);
+
+    timer.bindCb(TimerUtils::IT::Update, std::move(func));
+    timer.enableIt(TimerUtils::IT::Update, {1,0});
+    DEBUG_PRINTLN("tick200 binded");
+};
+
+
+void bind_tick_800hz(std::function<void(void)> && func){
+    auto & timer = timer3;
+    timer.init(800);
+
+    timer.bindCb(TimerUtils::IT::Update, std::move(func));
+    timer.enableIt(TimerUtils::IT::Update, {1,0});
+    DEBUG_PRINTLN("tick800 binded");
+};
+
+
+void bind_tick_50hz(std::function<void(void)> && func){
+    // if(true){//绑定50hz舵机更新回调函数
+    auto & timer = timer2;
+    timer.init(50);
+
+    timer.bindCb(TimerUtils::IT::Update, std::move(func));
+    timer.enableIt(TimerUtils::IT::Update, {1,0});
+    DEBUG_PRINTLN("tick50 binded");
+    // }
+}
+
+void bind_tick_1khz(std::function<void(void)> && func){
+    // if(true){//绑定滴答时钟
+    bindSystickCb(std::move(func));
+    DEBUG_PRINTLN("tick1k binded");
+    // }
+}
+
 }

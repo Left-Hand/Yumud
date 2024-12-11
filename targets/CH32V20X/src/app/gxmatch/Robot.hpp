@@ -48,6 +48,7 @@ protected:
         GrabModule & grab_module;
     };
 
+    // void tick
 public:
     Robot(const Robot & other) = delete;
     Robot(Robot && other) = delete;

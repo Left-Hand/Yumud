@@ -11,9 +11,7 @@ public:
 
     void write(const char * data_ptr, const size_t len) override;
 
-    size_t pending() const override{
-        return 0;
-    }
+    size_t pending() const override;
 
     void init();
 };
