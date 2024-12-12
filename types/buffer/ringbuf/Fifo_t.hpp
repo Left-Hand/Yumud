@@ -16,8 +16,8 @@ protected:
     //         return temp + N;
     //     }
     // }
-    // using Pointer = T * volatile;
-    using Pointer = T *;
+    using Pointer = T * volatile;
+    // using Pointer = T *;
 
     __fast_inline bool over(Pointer ptr, const size_t step){
         return ptr + step >= this->buf + N;
@@ -44,42 +44,43 @@ public:
     }
 
     __fast_inline void push(const T * pdata,const size_t len){
-        //仅允许一次循环 如果有两次循环那便不是正确用法
+        for(size_t i = 0; i < len; i++) push(pdata[i]);
+        // //仅允许一次循环 如果有两次循环那便不是正确用法
 
-        T * p_org = (T *)write_ptr;
-        const int over = (write_ptr + len - N - this->buf);
-        if(over >= 0){
-            write_ptr = this->buf + over;
+        // T * p_org = (T *)write_ptr;
+        // const int over = (write_ptr + len - N - this->buf);
+        // if(over >= 0){
+        //     write_ptr = this->buf + over;
 
-            const size_t len1 = N - (p_org - this->buf);
-            const size_t len2 = over;
+        //     const size_t len1 = N - (p_org - this->buf);
+        //     const size_t len2 = over;
 
-            memcpy(p_org, pdata, len1);
-            memcpy(this->buf, pdata + len1, len2);
-        }else{
-            write_ptr = write_ptr + len;
-            memcpy(p_org, pdata, len);
-        }
+        //     memcpy(p_org, pdata, len1);
+        //     memcpy(this->buf, pdata + len1, len2);
+        // }else{
+        //     write_ptr = write_ptr + len;
+        //     memcpy(p_org, pdata, len);
+        // }
     }
 
     void pop(T * pdata, const size_t len){
-        // for(size_t i = 0; i < len; i++) pdata[i] = pop();
+        for(size_t i = 0; i < len; i++) pdata[i] = pop();
         //仅允许一次循环 如果有两次循环那便不是正确用法
 
-        T * p_org = (T *)read_ptr;
-        const int over = (read_ptr + len - N - this->buf);
-        if(over >= 0){
-            read_ptr = this->buf + over;
+        // T * p_org = (T *)read_ptr;
+        // const int over = (read_ptr + len - N - this->buf);
+        // if(over >= 0){
+        //     read_ptr = this->buf + over;
 
-            const auto len1 = N - (p_org - this->buf);
-            const auto len2 = over;
+        //     const auto len1 = N - (p_org - this->buf);
+        //     const auto len2 = over;
 
-            memcpy(pdata, p_org, len1);
-            memcpy(pdata + len1, this->buf, len2);
-        }else{
-            read_ptr = pdata + len;
-            memcpy(pdata, p_org, len);
-        }
+        //     memcpy(pdata, p_org, len1);
+        //     memcpy(pdata + len1, this->buf, len2);
+        // }else{
+        //     read_ptr = pdata + len;
+        //     memcpy(pdata, p_org, len);
+        // }
     }
 
     __fast_inline const T & pop() override{
@@ -107,9 +108,6 @@ public:
             return (this->buf + this->size) - read_ptr;
         }
     }
-
-
-
 
     void vent(const size_t len){
         read_ptr = advance(read_ptr, len);

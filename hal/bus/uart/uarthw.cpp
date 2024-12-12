@@ -438,7 +438,7 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
     if(txMethod != _txMethod){
 
         Gpio & tx_pin = txio();
-        if(txMethod != CommMethod::None){
+        if(_txMethod != CommMethod::None){
             tx_pin.afpp();
         }else{
             // tx_pin.inflt();
@@ -467,7 +467,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
     if(rxMethod != _rxMethod){
         
         Gpio & rx_pin = rxio();
-        if(rxMethod != CommMethod::None){
+        if(_rxMethod != CommMethod::None){
             rx_pin.inpu();
         }else{
             // rx_pin.inflt();
@@ -524,27 +524,40 @@ void UartHw::trail(){
     while((instance->STATR & USART_FLAG_TC) == RESET);
 }
 
-void UartHw::write(const char * data_ptr, const size_t len){
+void UartHw::write(const char * pdata, const size_t len){
     switch(txMethod){
         case CommMethod::Blocking:
             instance->DATAR;
-            // for(size_t i=0;i<len;i++)tx_fifo.push(data_ptr[i]);
-            tx_fifo.push(data_ptr, len);
+            // for(size_t i=0;i<len;i++)tx_fifo.push(pdata[i]);
+            // tx_fifo.push(pdata, len);
+            // while(tx_fifo.available()){
+
+
+            // for(size_t i = 0; i < len; i++){
+            //     instance->DATAR = pdata[i];
+            //     while((instance->STATR & USART_FLAG_TXE) == RESET);
+            // }
+
+
+            // tx_fifo.push(pdata, len);
+            for(size_t i = 0; i < len; i++) tx_fifo.push(pdata[i]);
+            // delay(1);
             while(tx_fifo.available()){
+            // for(size_t i = 0; i < len; i++){
                 instance->DATAR = tx_fifo.pop();
-                while((instance->STATR & USART_FLAG_TXE) == RESET);
             }
+            // delay(1);
             while((instance->STATR & USART_FLAG_TC) == RESET);
             break;
         case CommMethod::Interrupt:
-            // for(size_t i=0;i<len;i++)tx_fifo.push(data_ptr[i]);
-            tx_fifo.push(data_ptr, len);
+            // for(size_t i=0;i<len;i++)tx_fifo.push(pdata[i]);
+            tx_fifo.push(pdata, len);
             invokeTxIt();
 
             break;
         case CommMethod::Dma:
-            // for(size_t i=0;i<len;i++)tx_fifo.push(data_ptr[i]);
-            tx_fifo.push(data_ptr, len);
+            // for(size_t i=0;i<len;i++)tx_fifo.push(pdata[i]);
+            tx_fifo.push(pdata, len);
             invokeTxDma();
             break;
         default:

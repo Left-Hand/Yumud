@@ -81,10 +81,18 @@ using Sys::t;
 
 
 void gui_main(){
-    // DEBUGGER_INST.init(DEBUG_UART_BAUD);
-    // DEBUGGER_INST.init(1000000, CommMethod::Blocking);
-    DEBUGGER_INST.init(1000000);
-    uart2.init(576000);
+    auto & led = portC[15];
+    led.outpp();
+    // while(true){
+    //     led = true;
+    //     delay(200);
+    //     led = false;
+    //     delay(200);
+    // }
+
+    DEBUGGER_INST.init(1000000, CommMethod::Blocking, CommMethod::Interrupt);
+    uart2.init(576000, CommMethod::Blocking, CommMethod::Interrupt);
+    // uart2.init(576000);
 
 
     #ifdef CH32V30X
@@ -92,6 +100,7 @@ void gui_main(){
     #else
     auto & spi = spi1;
     #endif
+
 
     auto & lcd_blk = portC[7];
     
