@@ -158,9 +158,9 @@ void DmaChannel::enableRcc(bool en){
 }
 
 
-void DmaChannel::begin(void * dst, const void * src, const size_t size){
+void DmaChannel::start(void * dst, const void * src, const size_t size){
 
-    if(periphIsDst()){
+    if(periphIsDst(mode)){
         instance -> PADDR = (uint32_t)dst;
         instance -> MADDR = (uint32_t)src;
     }else{
@@ -168,7 +168,7 @@ void DmaChannel::begin(void * dst, const void * src, const size_t size){
         instance -> MADDR = (uint32_t)dst;
     }
     instance -> CNTR = size;
-    begin();
+    start();
 }
 
 

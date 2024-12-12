@@ -13,3 +13,32 @@ BtNode * BtComposite::find(const StringView name){
     }
     return nullptr;
 }
+
+BtNode & BtComposite::operator[](size_t idx){
+    if(idx >= children_.size()){
+        HALT;
+    }
+
+    auto p_child = children_[idx];
+
+    if(p_child == nullptr){
+        HALT;
+    }
+
+    return *p_child;
+}
+
+const BtNode & BtComposite::operator[](size_t idx) const {
+    if(idx >= children_.size()){
+        HALT;
+    }
+
+    auto p_child = children_[idx];
+
+    if(p_child == nullptr){
+        HALT;
+    }
+
+    return *p_child;
+}
+

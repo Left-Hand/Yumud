@@ -19,17 +19,6 @@ public:
 private:
     String name_;
 public:
-//     T data;
-//     BtNode* left;
-//     BtNode* right;
-
-//     BtNode(T data){
-//         this->data = data;
-//         left = nullptr;
-//         right = nullptr;
-//     }
-// };
-
     BtNode(const StringView name):
         name_(name){;}
 
@@ -41,6 +30,8 @@ public:
 
     StringView name() const{ return StringView(name_); }
 
+    virtual BtNode & operator[] (const size_t idx);
+    virtual const BtNode & operator[](const size_t idx) const ;
 };
 
 }

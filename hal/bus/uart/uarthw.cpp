@@ -195,7 +195,7 @@ void UartHw::enableRcc(const bool en){
 
 
 void UartHw::rxneHandle(){
-    this->rxBuf.push(USART_ReceiveData(instance));
+    this->rx_fifo.push(USART_ReceiveData(instance));
 }
 void UartHw::txeHandle(){
 
@@ -205,7 +205,8 @@ void UartHw::idleHandle(){
     if(rxMethod == CommMethod::Dma){
         size_t index = UART_RX_DMA_BUF_SIZE - rxDma.pending();
         if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
-            for(size_t i = rx_dma_buf_index; i < index; i++) this->rxBuf.push(rx_dma_buf[i]); 
+            // for(size_t i = rx_dma_buf_index; i < index; i++) this->rx_fifo.push(rx_dma_buf[i]); 
+            this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], (index - rx_dma_buf_index)); 
         }
         rx_dma_buf_index = index;
         EXECUTE(rxPostCb);
@@ -375,13 +376,17 @@ void UartHw::enableTxDma(const bool en){
 }
 
 void UartHw::rxDmaDoneHandler(){
-    rxDma.begin();
-    for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rxBuf.push(rx_dma_buf[i]); 
+    //将数据从当前索引填充至末尾
+    rxDma.start();
+    // for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rx_fifo.push(rx_dma_buf[i]); 
+    this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], UART_RX_DMA_BUF_SIZE - rx_dma_buf_index); 
     rx_dma_buf_index = 0;
 }
 
 void UartHw::rxDmaHalfHandler(){
-    for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rxBuf.push(rx_dma_buf[i]); 
+    //将数据从当前索引填充至半满
+    // for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE / 2; i++) this->rx_fifo.push(rx_dma_buf[i]); 
+    this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index); 
     rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
 }
 
@@ -396,7 +401,7 @@ void UartHw::enableRxDma(const bool en){
 
         rxDma.bindDoneCb(std::bind(&UartHw::rxDmaDoneHandler, this));
         rxDma.bindHalfCb(std::bind(&UartHw::rxDmaHalfHandler, this));
-        rxDma.begin((void *)rx_dma_buf, (const void *)(size_t)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
+        rxDma.start((void *)rx_dma_buf.begin(), (const void *)(size_t)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
         rxDma.bindHalfCb(nullptr);
@@ -405,15 +410,10 @@ void UartHw::enableRxDma(const bool en){
 
 void UartHw::invokeTxDma(){
     if(txDma.pending() == 0){
-        if(txBuf.available()){
-            size_t tx_amount = 0;
-            while(txBuf.available()){
-                tx_dma_buf[tx_amount++] = txBuf.pop();
-                if(tx_amount >= UART_TX_DMA_BUF_SIZE){
-                    break;
-                }
-            }
-            txDma.begin((void *)(size_t)(&instance->DATAR), (const void *)tx_dma_buf, tx_amount);
+        if(tx_fifo.available()){
+            const size_t tx_amount = MIN(tx_fifo.available(), tx_dma_buf.size());
+            tx_fifo.pop(tx_dma_buf.begin(), tx_amount);
+            txDma.start((void *)(size_t)(&instance->DATAR), (const void *)tx_dma_buf.begin(), tx_amount);
         }else{
             EXECUTE(txPostCb);
         }
@@ -433,11 +433,14 @@ void UartHw::enableIdleIt(const bool en){
 
 void UartHw::setTxMethod(const CommMethod _txMethod){
     if(txMethod != _txMethod){
-        txMethod = _txMethod;
+
+        Gpio & tx_pin = txio();
         if(txMethod != CommMethod::None){
-            Gpio & tx_pin = txio();
             tx_pin.afpp();
+        }else{
+            // tx_pin.inflt();
         }
+
         switch(txMethod){
             case CommMethod::Blocking:
                 break;
@@ -450,6 +453,8 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
             default:
                 break;
         }
+
+        txMethod = _txMethod;
     }
 }
 
@@ -457,10 +462,12 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
 
 void UartHw::setRxMethod(const CommMethod _rxMethod){
     if(rxMethod != _rxMethod){
-        rxMethod = _rxMethod;
+        
+        Gpio & rx_pin = rxio();
         if(rxMethod != CommMethod::None){
-            Gpio & rx_pin = rxio();
             rx_pin.inpu();
+        }else{
+            // rx_pin.inflt();
         }
         switch(rxMethod){
             case CommMethod::Blocking:
@@ -478,6 +485,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
             default:
                 break;
         }
+        rxMethod = _rxMethod;
     }
 }
 
@@ -517,20 +525,23 @@ void UartHw::write(const char * data_ptr, const size_t len){
     switch(txMethod){
         case CommMethod::Blocking:
             instance->DATAR;
-            for(size_t i=0;i<len;i++)txBuf.push(data_ptr[i]);
-            while(txBuf.available()){
-                instance->DATAR = txBuf.pop();
+            // for(size_t i=0;i<len;i++)tx_fifo.push(data_ptr[i]);
+            tx_fifo.push(data_ptr, len);
+            while(tx_fifo.available()){
+                instance->DATAR = tx_fifo.pop();
                 while((instance->STATR & USART_FLAG_TXE) == RESET);
             }
             while((instance->STATR & USART_FLAG_TC) == RESET);
             break;
         case CommMethod::Interrupt:
-            for(size_t i=0;i<len;i++)txBuf.push(data_ptr[i]);
+            // for(size_t i=0;i<len;i++)tx_fifo.push(data_ptr[i]);
+            tx_fifo.push(data_ptr, len);
             invokeTxIt();
 
             break;
         case CommMethod::Dma:
-            for(size_t i=0;i<len;i++)txBuf.push(data_ptr[i]);
+            // for(size_t i=0;i<len;i++)tx_fifo.push(data_ptr[i]);
+            tx_fifo.push(data_ptr, len);
             invokeTxDma();
             break;
         default:
@@ -541,18 +552,18 @@ void UartHw::write(const char * data_ptr, const size_t len){
 void UartHw::write(const char data){
     switch(txMethod){
         case CommMethod::Blocking:
-            txBuf.push(data);
+            tx_fifo.push(data);
 
             instance->DATAR;
-            instance->DATAR = txBuf.pop();
+            instance->DATAR = tx_fifo.pop();
             while((instance->STATR & USART_FLAG_TC) == RESET);
             break;
         case CommMethod::Interrupt:
-            txBuf.push(data);
+            tx_fifo.push(data);
             invokeTxIt();
             break;
         case CommMethod::Dma:
-            txBuf.push(data);
+            tx_fifo.push(data);
             invokeTxDma();
             break;
         default:

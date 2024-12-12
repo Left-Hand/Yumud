@@ -8,9 +8,9 @@ protected:
     Gpio & m_tx_gpio;
     Gpio & m_rx_gpio;
 
-    enum class ByteProg:int8_t{
-        START = -1,
-        D0,D1,D2,D3,D4,D5,D6,D7,
+    enum class ByteProg: int8_t{
+        D0 = 0,D1,D2,D3,D4,D5,D6,D7,
+        START,
         STOP
     };
 
@@ -18,10 +18,10 @@ protected:
     ByteProg byteProg = ByteProg::STOP;
     
     void write(const char data) override{
-        txBuf.push(data);
+        tx_fifo.push(data);
     }
 
-    char fetch_next(){return txBuf.pop();}
+    char fetch_next(){return tx_fifo.pop();}
     Error lead(const uint8_t _address) override;
     void trail() override{;}
 public:

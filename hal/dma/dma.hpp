@@ -27,11 +27,11 @@ protected:
 // public:
     DMA_Channel_TypeDef * instance;
     Mode mode;
-    uint8_t dma_index;
-    uint8_t channel_index;
+    const uint8_t dma_index;
+    const uint8_t channel_index;
 
-    uint32_t done_mask;
-    uint32_t half_mask;
+    const uint32_t done_mask;
+    const uint32_t half_mask;
 
     void enableRcc(const bool en);
     void configPeriphDataBytes(const size_t bytes){
@@ -48,18 +48,8 @@ protected:
         instance->CFGR = tmpreg;
     }
 
-    bool periphIsDst() const{
-        switch(mode){
-            case Mode::toPeriph:
-            case Mode::toPeriphCircular:
-                return true;
-            default:
-                return false;
-        }
-    }
-
     void configDstMemDataBytes(const size_t bytes){
-        if(periphIsDst()){
+        if(periphIsDst(mode)){
             configPeriphDataBytes(bytes);
         }else{
             configMemDataBytes(bytes);
@@ -67,14 +57,14 @@ protected:
     }
 
     void configSrcMemDataBytes(const size_t bytes){
-        if(!periphIsDst()){
+        if(!periphIsDst(mode)){
             configPeriphDataBytes(bytes);
         }else{
             configMemDataBytes(bytes);
         }
     }
 
-    scexpr uint8_t getDmaIndex(const DMA_Channel_TypeDef * _instance){
+    scexpr uint8_t calculateDmaIndex(const DMA_Channel_TypeDef * _instance){
         #ifdef ENABLE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
@@ -82,8 +72,8 @@ protected:
         #endif
     }
 
-    scexpr uint8_t getChannelIndex(const DMA_Channel_TypeDef * _instance){
-        uint8_t dma_index = getDmaIndex(_instance);
+    scexpr uint8_t calculateChannelIndex(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = calculateDmaIndex(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
@@ -103,9 +93,19 @@ protected:
         }
     }
 
-    scexpr uint32_t getDoneMask(const DMA_Channel_TypeDef * _instance){
-        uint8_t dma_index = getDmaIndex(_instance);
-        uint8_t channel_index = getChannelIndex(_instance);
+    scexpr bool periphIsDst(const Mode mode_){
+        switch(mode_){
+            case Mode::toPeriph:
+            case Mode::toPeriphCircular:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    scexpr uint32_t calculateDoneMask(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = calculateDmaIndex(_instance);
+        uint8_t channel_index = calculateChannelIndex(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
@@ -126,9 +126,9 @@ protected:
     }
 
 
-    scexpr uint32_t getHalfMask(const DMA_Channel_TypeDef * _instance){
-        uint8_t dma_index = getDmaIndex(_instance);
-        uint8_t channel_index = getChannelIndex(_instance);
+    scexpr uint32_t calculateHalfMask(const DMA_Channel_TypeDef * _instance){
+        uint8_t dma_index = calculateDmaIndex(_instance);
+        uint8_t channel_index = calculateChannelIndex(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
             case 1:
@@ -157,42 +157,42 @@ public:
 
     DmaChannel(DMA_Channel_TypeDef * _instance):
                 instance(_instance), 
-                dma_index(getDmaIndex(_instance)),
-                channel_index(getChannelIndex(_instance)),
-                done_mask(getDoneMask(instance)),
-                half_mask(getHalfMask(instance)){;}
+                dma_index(calculateDmaIndex(_instance)),
+                channel_index(calculateChannelIndex(_instance)),
+                done_mask(calculateDoneMask(instance)),
+                half_mask(calculateHalfMask(instance)){;}
 
     void init(const Mode _mode,const Priority priority = Priority::medium);
 
-    void begin(){
+    void start(){
         DMA_ClearFlag(done_mask);
         DMA_ClearFlag(half_mask);
 
         DMA_Cmd(instance, ENABLE);
     }
 
-    void begin(void * dst, const void * src, size_t size);
+    void start(void * dst, const void * src, size_t size);
     template <typename T>
-    void begin(T * dst, const T * src, size_t size){
+    void start(T * dst, const T * src, size_t size){
         configDstMemDataBytes(sizeof(T));
         configSrcMemDataBytes(sizeof(T));
-        begin((void *)dst, (const void *)src, size);
+        start((void *)dst, (const void *)src, size);
     }
 
     template <typename U, typename T>
     requires std::is_array_v<T>
-    void begin(U * dst, const T & src){//TODO array can only be c-ctyle array
+    void start(U * dst, const T & src){//TODO array can only be c-ctyle array
         configDstMemDataBytes(sizeof(U));
         configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
-        begin((void *)dst, (const void *)&src[0], std::distance(std::begin(src), std::end(src)));
+        start((void *)dst, (const void *)&src[0], std::distance(std::begin(src), std::end(src)));
     }
 
     template <typename U, typename T>
     requires std::is_array_v<U>
-    void begin(U & dst, const T * src){
+    void start(U & dst, const T * src){
         configDstMemDataBytes(sizeof(U));
         configSrcMemDataBytes(sizeof(std::remove_extent_t<T>));
-        begin((void *)&dst[0], (const void *)src, std::distance(std::begin(dst), std::end(dst)));
+        start((void *)&dst[0], (const void *)src, std::distance(std::begin(dst), std::end(dst)));
     }
 
     void configDataBytes(const size_t bytes){

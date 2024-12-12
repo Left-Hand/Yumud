@@ -21,7 +21,7 @@ void UartSw::tick(){
 
         case ByteProg::STOP:
             m_tx_gpio.set();
-            if(txBuf.available()){
+            if(tx_fifo.available()){
                 current_char = fetch_next();
                 byteProg = ByteProg::START;
             }

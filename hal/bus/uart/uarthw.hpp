@@ -72,8 +72,8 @@ protected:
     #define UART_DMA_BUF_SIZE 64
     #endif
 
-    char tx_dma_buf[UART_DMA_BUF_SIZE];
-    char rx_dma_buf[UART_DMA_BUF_SIZE];
+    std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf;
+    std::array<char, UART_DMA_BUF_SIZE> rx_dma_buf;
 
     DmaChannel & txDma;
     DmaChannel & rxDma;

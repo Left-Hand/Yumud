@@ -57,6 +57,12 @@ public:
 
     virtual void write(const char data) = 0;
     virtual void write(const char * data_ptr, const size_t len){
+        
+        // for(size_t i = 0; i<len; i++){
+        //     auto chr = data_ptr[i];
+        //     if(chr == 0) break;
+        //     write(chr);
+        // }
         for(size_t i = 0; i<len; i++) write(data_ptr[i]);
 	}
 
