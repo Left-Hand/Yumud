@@ -91,8 +91,8 @@ void gui_main(){
     // }
 
     DEBUGGER_INST.init(1000000, CommMethod::Blocking, CommMethod::Interrupt);
-    uart2.init(576000, CommMethod::Blocking, CommMethod::Interrupt);
-    // uart2.init(576000);
+    // uart2.init(576000, CommMethod::Blocking, CommMethod::Interrupt);
+    uart2.init(576000);
 
 
     #ifdef CH32V30X
