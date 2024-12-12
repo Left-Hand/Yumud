@@ -206,7 +206,7 @@ void stepper_tb(UartHw & logger){
     // MT6701 encoder{{spi1, 0}};
 
     I2cSw i2cSw{portD[1], portD[0]};
-    i2cSw.init(400_K);
+    i2cSw.init(400_KHz);
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 

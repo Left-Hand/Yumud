@@ -399,8 +399,11 @@ void UartHw::enableRxDma(const bool en){
         rxDma.enableHalfIt();
         rxDma.configDataBytes(1);
 
-        rxDma.bindDoneCb(std::bind(&UartHw::rxDmaDoneHandler, this));
-        rxDma.bindHalfCb(std::bind(&UartHw::rxDmaHalfHandler, this));
+        // rxDma.bindDoneCb(std::bind(&UartHw::rxDmaDoneHandler, this));
+        // rxDma.bindHalfCb(std::bind(&UartHw::rxDmaHalfHandler, this));
+
+        rxDma.bindDoneCb([this](){this->rxDmaDoneHandler();});
+        rxDma.bindHalfCb([this](){this->rxDmaHalfHandler();});
         rxDma.start((void *)rx_dma_buf.begin(), (const void *)(size_t)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rxDma.bindDoneCb(nullptr);
