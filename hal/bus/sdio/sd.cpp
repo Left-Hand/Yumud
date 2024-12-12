@@ -11,6 +11,9 @@
 *******************************************************************************/
 #include "sd.hpp"
 #include "sys/stream/ostream.hpp"
+#include "hal/gpio/port.hpp"
+
+#ifdef ENABLE_SDIO
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -205,87 +208,6 @@ SD_Error CmdResp3Error( void );
 SD_Error CmdResp2Error( void );
 SD_Error CmdResp6Error( uint8_t cmd, uint16_t *prca );
 
-uint8_t convert_from_bytes_to_power_of_two( uint16_t NumberOfBytes );
-
-
-
-
-__attribute__( ( aligned( 4 ) ) ) uint8_t SDIO_DATA_BUFFER[512];
-
-
-SD_Error SD::Init( void )
-{
-    NVIC_InitTypeDef NVIC_InitStructure;
-    GPIO_InitTypeDef  GPIO_InitStructure;
-
-    uint8_t clkdiv = 0;
-    SD_Error errorstatus = SD_OK;
-
-    RCC_APB2PeriphClockCmd( RCC_APB2Periph_GPIOC | RCC_APB2Periph_GPIOD, ENABLE );
-    RCC_AHBPeriphClockCmd( RCC_AHBPeriph_SDIO | RCC_AHBPeriph_DMA2, ENABLE );
-
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init( GPIOC, &GPIO_InitStructure );
-
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init( GPIOD, &GPIO_InitStructure );
-
-    GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_Init( GPIOD, &GPIO_InitStructure );
-
-    SDIO_DeInit();
-
-    NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
-    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
-    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init( &NVIC_InitStructure );
-
-    errorstatus = PowerON();
-
-    if( errorstatus == SD_OK )
-    {
-        errorstatus = InitializeCards();
-    }
-
-    if( errorstatus == SD_OK )
-    {
-        errorstatus = GetCardInfo(cardinfo);
-    }
-
-    if( errorstatus == SD_OK )
-    {
-        errorstatus = SelectDeselect( ( uint32_t )( cardinfo.RCA << 16 ) );
-    }
-
-    if( errorstatus == SD_OK )
-    {
-        errorstatus = EnableWideBusOperation( 1 );
-    }
-
-    if( ( errorstatus == SD_OK ) || ( SDIO_MULTIMEDIA_CARD == CardType ) )
-    {
-        if( cardinfo.CardType == SDIO_STD_CAPACITY_SD_CARD_V1_1 || cardinfo.CardType == SDIO_STD_CAPACITY_SD_CARD_V2_0 )
-        {
-            clkdiv = SDIO_TRANSFER_CLK_DIV + 6;
-        }
-        else
-        {
-            clkdiv = SDIO_TRANSFER_CLK_DIV + 1;
-        }
-        SDIO_Clock_Set( clkdiv );
-
-        errorstatus = SetDeviceMode( SD_POLLING_MODE );
-    }
-    return errorstatus;
-}
-
-
 void SDIO_Clock_Set( uint8_t clkdiv )
 {
     uint32_t tmpreg = SDIO->CLKCR;
@@ -296,10 +218,107 @@ void SDIO_Clock_Set( uint8_t clkdiv )
 }
 
 
+constexpr uint8_t convert_from_bytes_to_power_of_two( uint16_t NumberOfBytes )
+{
+    uint8_t count = 0;
+    while( NumberOfBytes != 1 )
+    {
+        NumberOfBytes >>= 1;
+        count++;
+    }
+    return count;
+}
+
+
+
+
+
+__attribute__( ( aligned( 4 ) ) ) uint8_t SDIO_DATA_BUFFER[512];
+
+
+void SD::enableRcc(const bool en){
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_SDIO, en);
+}
+
+SD_Error SD::Init( void ){
+    enableRcc(true);
+
+    portC[8].afpp();
+    portC[9].afpp();
+    portC[10].afpp();
+    portC[11].afpp();
+    portC[12].afpp();
+
+    portD[2].afpp();
+
+    portD[7].inpu();
+
+    // GPIO_InitTypeDef  GPIO_InitStructure;
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_8 | GPIO_Pin_9 | GPIO_Pin_10 | GPIO_Pin_11 | GPIO_Pin_12;
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    // GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    // GPIO_Init( GPIOC, &GPIO_InitStructure );
+
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+    // GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+    // GPIO_Init( GPIOD, &GPIO_InitStructure );
+
+    // GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+    // GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    // GPIO_Init( GPIOD, &GPIO_InitStructure );
+
+    SDIO_DeInit();
+
+    NVIC_InitTypeDef NVIC_InitStructure;
+    NVIC_InitStructure.NVIC_IRQChannel = SDIO_IRQn;
+    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
+    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_Init( &NVIC_InitStructure );
+
+
+    uint8_t clkdiv = 0;
+    SD_Error err = SD_OK;
+
+    err = PowerON();
+
+    if( err == SD_OK ){
+        err = InitializeCards();
+    }
+
+    if( err == SD_OK ){
+        err = GetCardInfo(cardinfo);
+    }
+
+    if( err == SD_OK ){
+        err = SelectDeselect( ( uint32_t )( cardinfo.RCA << 16 ) );
+    }
+
+    if( err == SD_OK ){
+        err = EnableWideBusOperation( 1 );
+    }
+
+    if( ( err == SD_OK ) || ( SDIO_MULTIMEDIA_CARD == CardType ) ){
+        if( cardinfo.CardType == SDIO_STD_CAPACITY_SD_CARD_V1_1 || cardinfo.CardType == SDIO_STD_CAPACITY_SD_CARD_V2_0 ){
+            clkdiv = SDIO_TRANSFER_CLK_DIV + 6;
+        }else{
+            clkdiv = SDIO_TRANSFER_CLK_DIV + 1;
+        }
+        SDIO_Clock_Set( clkdiv );
+
+        err = SetDeviceMode( SD_POLLING_MODE );
+    }
+    return err;
+}
+
+
+
+
 SD_Error SD::PowerON( void )
 {
     uint8_t i = 0;
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint32_t response = 0, count = 0, validvoltage = 0;
     uint32_t SDType = SD_STD_CAPACITY;
 
@@ -323,15 +342,15 @@ SD_Error SD::PowerON( void )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdError();
-        if( errorstatus == SD_OK )
+        err = CmdError();
+        if( err == SD_OK )
         {
             break;
         }
     }
-    if( errorstatus != SD_OK )
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
 
     SDIO_CmdInitStructure.SDIO_Argument = SD_CHECK_PATTERN;
@@ -341,8 +360,8 @@ SD_Error SD::PowerON( void )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp7Error();
-    if( errorstatus == SD_OK )
+    err = CmdResp7Error();
+    if( err == SD_OK )
     {
         CardType = SDIO_STD_CAPACITY_SD_CARD_V2_0;
         SDType = SD_HIGH_CAPACITY;
@@ -354,9 +373,9 @@ SD_Error SD::PowerON( void )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_APP_CMD );
+    err = CmdResp1Error( SD_CMD_APP_CMD );
 
-    if( errorstatus == SD_OK )
+    if( err == SD_OK )
     {
         while( ( !validvoltage ) && ( count < SD_MAX_VOLT_TRIAL ) )
         {
@@ -367,10 +386,10 @@ SD_Error SD::PowerON( void )
             SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
             SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-            errorstatus = CmdResp1Error( SD_CMD_APP_CMD );
-            if( errorstatus != SD_OK )
+            err = CmdResp1Error( SD_CMD_APP_CMD );
+            if( err != SD_OK )
             {
-                return errorstatus;
+                return err;
             }
 
             SDIO_CmdInitStructure.SDIO_Argument = SD_VOLTAGE_WINDOW_SD | SDType;
@@ -380,11 +399,11 @@ SD_Error SD::PowerON( void )
             SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
             SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-            errorstatus = CmdResp3Error();
+            err = CmdResp3Error();
 
-            if( errorstatus != SD_OK )
+            if( err != SD_OK )
             {
-                return errorstatus;
+                return err;
             }
             response = SDIO->RESP1;;
             validvoltage = ( ( ( response >> 31 ) == 1 ) ? 1 : 0 );
@@ -392,8 +411,8 @@ SD_Error SD::PowerON( void )
         }
         if( count >= SD_MAX_VOLT_TRIAL )
         {
-            errorstatus = SD_INVALID_VOLTRANGE;
-            return errorstatus;
+            err = SD_INVALID_VOLTRANGE;
+            return err;
         }
         if( response &= SD_HIGH_CAPACITY )
         {
@@ -411,10 +430,10 @@ SD_Error SD::PowerON( void )
             SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
             SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-            errorstatus = CmdResp3Error();
-            if( errorstatus != SD_OK )
+            err = CmdResp3Error();
+            if( err != SD_OK )
             {
-                return errorstatus;
+                return err;
             }
             response = SDIO->RESP1;;
             validvoltage = ( ( ( response >> 31 ) == 1 ) ? 1 : 0 );
@@ -422,12 +441,12 @@ SD_Error SD::PowerON( void )
         }
         if( count >= SD_MAX_VOLT_TRIAL )
         {
-            errorstatus = SD_INVALID_VOLTRANGE;
-            return errorstatus;
+            err = SD_INVALID_VOLTRANGE;
+            return err;
         }
         CardType = SDIO_MULTIMEDIA_CARD;
     }
-    return( errorstatus );
+    return( err );
 }
 
 
@@ -440,7 +459,7 @@ SD_Error SD::PowerOFF( void )
 
 SD_Error SD::InitializeCards( void )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint16_t rca = 0x01;
     if( SDIO_GetPowerState() == 0 )
     {
@@ -455,10 +474,10 @@ SD_Error SD::InitializeCards( void )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp2Error();
-        if( errorstatus != SD_OK )
+        err = CmdResp2Error();
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
         CID_Tab[0] = SDIO->RESP1;
         CID_Tab[1] = SDIO->RESP2;
@@ -474,10 +493,10 @@ SD_Error SD::InitializeCards( void )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp6Error( SD_CMD_SET_REL_ADDR, &rca );
-        if( errorstatus != SD_OK )
+        err = CmdResp6Error( SD_CMD_SET_REL_ADDR, &rca );
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
     }
     if( SDIO_MULTIMEDIA_CARD == CardType )
@@ -489,10 +508,10 @@ SD_Error SD::InitializeCards( void )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp2Error();
-        if( errorstatus != SD_OK )
+        err = CmdResp2Error();
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
     }
     if( SDIO_SECURE_DIGITAL_IO_CARD != CardType )
@@ -505,10 +524,10 @@ SD_Error SD::InitializeCards( void )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp2Error();
-        if( errorstatus != SD_OK )
+        err = CmdResp2Error();
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
         CSD_Tab[0] = SDIO->RESP1;
         CSD_Tab[1] = SDIO->RESP2;
@@ -521,7 +540,7 @@ SD_Error SD::InitializeCards( void )
 
 SD_Error SD::GetCardInfo(SD_CardInfo  & info)
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint8_t tmp = 0;
     info.CardType = ( uint8_t )CardType;
     info.RCA = ( uint16_t )RCA;
@@ -637,13 +656,13 @@ SD_Error SD::GetCardInfo(SD_CardInfo  & info)
     tmp = ( uint8_t )( CID_Tab[3] & 0x000000FF );
     info.SD_cid.CID_CRC = ( tmp & 0xFE ) >> 1;
     info.SD_cid.Reserved2 = 1;
-    return errorstatus;
+    return err;
 }
 
 
 SD_Error SD::EnableWideBusOperation( uint32_t wmode )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     if( SDIO_MULTIMEDIA_CARD == CardType )
     {
         return SD_UNSUPPORTED_FEATURE;
@@ -656,8 +675,8 @@ SD_Error SD::EnableWideBusOperation( uint32_t wmode )
         }
         else
         {
-            errorstatus = SDEnWideBus( wmode );
-            if( SD_OK == errorstatus )
+            err = SDEnWideBus( wmode );
+            if( SD_OK == err )
             {
                 SDIO->CLKCR &= ~( 3 << 11 );
                 SDIO->CLKCR |= ( uint16_t )wmode << 11;
@@ -665,22 +684,22 @@ SD_Error SD::EnableWideBusOperation( uint32_t wmode )
             }
         }
     }
-    return errorstatus;
+    return err;
 }
 
 
 SD_Error SD::SetDeviceMode( uint32_t Mode )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     if( ( Mode == SD_DMA_MODE ) || ( Mode == SD_POLLING_MODE ) )
     {
         DeviceMode = Mode;
     }
     else
     {
-        errorstatus = SD_INVALID_PARAMETER;
+        err = SD_INVALID_PARAMETER;
     }
-    return errorstatus;
+    return err;
 }
 
 
@@ -699,7 +718,7 @@ SD_Error SD::SelectDeselect( uint32_t addr )
 
 SD_Error SD::ReadBlock( uint8_t *buf, uint64_t addr, uint16_t blksize )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint8_t power;
     uint32_t count = 0, *tempbuff = ( uint32_t * )buf;
     uint32_t timeout = SDIO_DATATIMEOUT;
@@ -738,11 +757,11 @@ SD_Error SD::ReadBlock( uint8_t *buf, uint64_t addr, uint16_t blksize )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
+        err = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
 
-        if( errorstatus != SD_OK )
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
     }
     else
@@ -764,10 +783,10 @@ SD_Error SD::ReadBlock( uint8_t *buf, uint64_t addr, uint16_t blksize )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_READ_SINGLE_BLOCK );
-    if( errorstatus != SD_OK )
+    err = CmdResp1Error( SD_CMD_READ_SINGLE_BLOCK );
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
     if( DeviceMode == SD_POLLING_MODE )
     {
@@ -837,17 +856,17 @@ SD_Error SD::ReadBlock( uint8_t *buf, uint64_t addr, uint16_t blksize )
         }
         if( TransferError != SD_OK )
         {
-            errorstatus = TransferError;
+            err = TransferError;
         }
     }
-    return errorstatus;
+    return err;
 }
 
 __attribute__( ( aligned( 4 ) ) ) uint32_t *g_tempbuff;
 
 SD_Error SD::ReadMultiBlocks( uint8_t *buf, uint64_t addr, uint16_t blksize, uint32_t nblks )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint8_t power;
     uint32_t count = 0;
     uint32_t timeout = SDIO_DATATIMEOUT;
@@ -883,10 +902,10 @@ SD_Error SD::ReadMultiBlocks( uint8_t *buf, uint64_t addr, uint16_t blksize, uin
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
-        if( errorstatus != SD_OK )
+        err = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
     }
     else
@@ -914,10 +933,10 @@ SD_Error SD::ReadMultiBlocks( uint8_t *buf, uint64_t addr, uint16_t blksize, uin
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_READ_MULT_BLOCK );
-        if( errorstatus != SD_OK )
+        err = CmdResp1Error( SD_CMD_READ_MULT_BLOCK );
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
         if( DeviceMode == SD_POLLING_MODE )
         {
@@ -979,10 +998,10 @@ SD_Error SD::ReadMultiBlocks( uint8_t *buf, uint64_t addr, uint16_t blksize, uin
                     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
                     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-                    errorstatus = CmdResp1Error( SD_CMD_STOP_TRANSMISSION );
-                    if( errorstatus != SD_OK )
+                    err = CmdResp1Error( SD_CMD_STOP_TRANSMISSION );
+                    if( err != SD_OK )
                     {
-                        return errorstatus;
+                        return err;
                     }
                 }
             }
@@ -1008,17 +1027,17 @@ SD_Error SD::ReadMultiBlocks( uint8_t *buf, uint64_t addr, uint16_t blksize, uin
             while( ( TransferEnd == 0 ) && ( TransferError == SD_OK ) );
             if( TransferError != SD_OK )
             {
-                errorstatus = TransferError;
+                err = TransferError;
             }
         }
     }
-    return errorstatus;
+    return err;
 }
 
 
 SD_Error SD::WriteBlock(const uint8_t *buf, uint64_t addr,  uint16_t blksize )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint8_t  power = 0, cardstate = 0;
     uint32_t timeout = 0, bytestransferred = 0;
     uint32_t cardstatus = 0, count = 0, restwords = 0;
@@ -1055,10 +1074,10 @@ SD_Error SD::WriteBlock(const uint8_t *buf, uint64_t addr,  uint16_t blksize )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
+        err = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
 
-        if( errorstatus != SD_OK ){
-            return errorstatus;
+        if( err != SD_OK ){
+            return err;
         }
 
     }else{
@@ -1072,10 +1091,10 @@ SD_Error SD::WriteBlock(const uint8_t *buf, uint64_t addr,  uint16_t blksize )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_SEND_STATUS );
+    err = CmdResp1Error( SD_CMD_SEND_STATUS );
 
-    if( errorstatus != SD_OK ){
-        return errorstatus;
+    if( err != SD_OK ){
+        return err;
     }
     cardstatus = SDIO->RESP1;
     timeout = SD_DATATIMEOUT;
@@ -1091,10 +1110,10 @@ SD_Error SD::WriteBlock(const uint8_t *buf, uint64_t addr,  uint16_t blksize )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_SEND_STATUS );
-        if( errorstatus != SD_OK )
+        err = CmdResp1Error( SD_CMD_SEND_STATUS );
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
         cardstatus = SDIO->RESP1;
     }
@@ -1110,10 +1129,10 @@ SD_Error SD::WriteBlock(const uint8_t *buf, uint64_t addr,  uint16_t blksize )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_WRITE_SINGLE_BLOCK );
-    if( errorstatus != SD_OK )
+    err = CmdResp1Error( SD_CMD_WRITE_SINGLE_BLOCK );
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
     StopCondition = 0;
 
@@ -1217,18 +1236,18 @@ SD_Error SD::WriteBlock(const uint8_t *buf, uint64_t addr,  uint16_t blksize )
         }
     }
     SDIO_ClearFlag( SDIO_STATIC_FLAGS );
-    errorstatus = IsCardProgramming( &cardstate );
-    while( ( errorstatus == SD_OK ) && ( ( cardstate == SD_CARD_PROGRAMMING ) || ( cardstate == SD_CARD_RECEIVING ) ) )
+    err = IsCardProgramming( &cardstate );
+    while( ( err == SD_OK ) && ( ( cardstate == SD_CARD_PROGRAMMING ) || ( cardstate == SD_CARD_RECEIVING ) ) )
     {
-        errorstatus = IsCardProgramming( &cardstate );
+        err = IsCardProgramming( &cardstate );
     }
-    return errorstatus;
+    return err;
 }
 
 
 SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksize, uint32_t nblks )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint8_t  power = 0, cardstate = 0;
     uint32_t timeout = 0, bytestransferred = 0;
     uint32_t count = 0, restwords = 0;
@@ -1268,11 +1287,11 @@ SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksiz
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
+        err = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
 
-        if( errorstatus != SD_OK )
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
 
     }
@@ -1295,11 +1314,11 @@ SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksiz
             SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
             SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-            errorstatus = CmdResp1Error( SD_CMD_APP_CMD );
+            err = CmdResp1Error( SD_CMD_APP_CMD );
 
-            if( errorstatus != SD_OK )
+            if( err != SD_OK )
             {
-                return errorstatus;
+                return err;
             }
 
             SDIO_CmdInitStructure.SDIO_Argument = nblks;
@@ -1309,11 +1328,11 @@ SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksiz
             SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
             SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-            errorstatus = CmdResp1Error( SD_CMD_SET_BLOCK_COUNT );
+            err = CmdResp1Error( SD_CMD_SET_BLOCK_COUNT );
 
-            if( errorstatus != SD_OK )
+            if( err != SD_OK )
             {
-                return errorstatus;
+                return err;
             }
 
         }
@@ -1325,11 +1344,11 @@ SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksiz
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_WRITE_MULT_BLOCK );
+        err = CmdResp1Error( SD_CMD_WRITE_MULT_BLOCK );
 
-        if( errorstatus != SD_OK )
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
 
         SDIO_DataInitStructure.SDIO_DataBlockSize = power << 4; ;
@@ -1407,10 +1426,10 @@ SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksiz
                     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
                     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-                    errorstatus = CmdResp1Error( SD_CMD_STOP_TRANSMISSION );
-                    if( errorstatus != SD_OK )
+                    err = CmdResp1Error( SD_CMD_STOP_TRANSMISSION );
+                    if( err != SD_OK )
                     {
-                        return errorstatus;
+                        return err;
                     }
                 }
             }
@@ -1451,12 +1470,12 @@ SD_Error SD::WriteMultiBlocks(const uint8_t *buf, uint64_t addr, uint16_t blksiz
         }
     }
     SDIO_ClearFlag( SDIO_STATIC_FLAGS );
-    errorstatus = IsCardProgramming( &cardstate );
-    while( ( errorstatus == SD_OK ) && ( ( cardstate == SD_CARD_PROGRAMMING ) || ( cardstate == SD_CARD_RECEIVING ) ) )
+    err = IsCardProgramming( &cardstate );
+    while( ( err == SD_OK ) && ( ( cardstate == SD_CARD_PROGRAMMING ) || ( cardstate == SD_CARD_RECEIVING ) ) )
     {
-        errorstatus = IsCardProgramming( &cardstate );
+        err = IsCardProgramming( &cardstate );
     }
-    return errorstatus;
+    return err;
 }
 void SDIO_IRQHandler(void) __attribute__((interrupt("WCH-Interrupt-fast")));
 
@@ -1539,7 +1558,7 @@ SD_Error SD::ProcessIRQSrc( void )
 
 SD_Error CmdError( void )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint32_t timeout = SDIO_CMD0TIMEOUT;
     while( timeout-- )
     {
@@ -1553,13 +1572,13 @@ SD_Error CmdError( void )
         return SD_CMD_RSP_TIMEOUT;
     }
     SDIO_ClearFlag( SDIO_STATIC_FLAGS );
-    return errorstatus;
+    return err;
 }
 
 
 SD_Error CmdResp7Error( void )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint32_t status=0;
     uint32_t timeout = SDIO_CMD0TIMEOUT;
     while( timeout-- )
@@ -1572,16 +1591,16 @@ SD_Error CmdResp7Error( void )
     }
     if( ( timeout == 0 ) || ( status & ( 1 << 2 ) ) )
     {
-        errorstatus = SD_CMD_RSP_TIMEOUT;
+        err = SD_CMD_RSP_TIMEOUT;
         SDIO_ClearFlag( SDIO_FLAG_CTIMEOUT );
-        return errorstatus;
+        return err;
     }
     if( ( status ) & ( 1 << 6 ) )
     {
-        errorstatus = SD_OK;
+        err = SD_OK;
         SDIO_ClearFlag( SDIO_FLAG_CMDREND );
     }
-    return errorstatus;
+    return err;
 }
 
 
@@ -1638,7 +1657,7 @@ SD_Error CmdResp3Error( void )
 
 SD_Error CmdResp2Error( void )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint32_t status=0;
     uint32_t timeout = SDIO_CMD0TIMEOUT;
     while( timeout-- )
@@ -1651,23 +1670,23 @@ SD_Error CmdResp2Error( void )
     }
     if( ( timeout == 0 ) || ( status & ( 1 << 2 ) ) )
     {
-        errorstatus = SD_CMD_RSP_TIMEOUT;
+        err = SD_CMD_RSP_TIMEOUT;
         SDIO_ClearFlag( SDIO_FLAG_CTIMEOUT );
-        return errorstatus;
+        return err;
     }
     if( SDIO_GetFlagStatus( SDIO_FLAG_CCRCFAIL ) != RESET )
     {
-        errorstatus = SD_CMD_CRC_FAIL;
+        err = SD_CMD_CRC_FAIL;
         SDIO_ClearFlag( SDIO_FLAG_CCRCFAIL );
     }
     SDIO_ClearFlag( SDIO_STATIC_FLAGS );
-    return errorstatus;
+    return err;
 }
 
 
 SD_Error CmdResp6Error( uint8_t cmd, uint16_t *prca )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint32_t status=0;
     uint32_t rspr1;
     while( 1 )
@@ -1698,7 +1717,7 @@ SD_Error CmdResp6Error( uint8_t cmd, uint16_t *prca )
     if( SD_ALLZERO == ( rspr1 & ( SD_R6_GENERAL_UNKNOWN_ERROR | SD_R6_ILLEGAL_CMD | SD_R6_COM_CRC_FAILED ) ) )
     {
         *prca = ( uint16_t )( rspr1 >> 16 );
-        return errorstatus;
+        return err;
     }
     if( rspr1 & SD_R6_GENERAL_UNKNOWN_ERROR )
     {
@@ -1712,13 +1731,13 @@ SD_Error CmdResp6Error( uint8_t cmd, uint16_t *prca )
     {
         return SD_COM_CRC_FAILED;
     }
-    return errorstatus;
+    return err;
 }
 
 
 SD_Error SD::SDEnWideBus( uint8_t enx )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint32_t scr[2] = {0, 0};
     uint8_t arg = 0X00;
     if( enx )
@@ -1733,10 +1752,10 @@ SD_Error SD::SDEnWideBus( uint8_t enx )
     {
         return SD_LOCK_UNLOCK_FAILED;
     }
-    errorstatus = FindSCR( RCA, scr );
-    if( errorstatus != SD_OK )
+    err = FindSCR( RCA, scr );
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
     if( ( scr[1]&SD_WIDE_BUS_SUPPORT ) != SD_ALLZERO )
     {
@@ -1747,11 +1766,11 @@ SD_Error SD::SDEnWideBus( uint8_t enx )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_APP_CMD );
+        err = CmdResp1Error( SD_CMD_APP_CMD );
 
-        if( errorstatus != SD_OK )
+        if( err != SD_OK )
         {
-            return errorstatus;
+            return err;
         }
 
         SDIO_CmdInitStructure.SDIO_Argument = arg;
@@ -1761,8 +1780,8 @@ SD_Error SD::SDEnWideBus( uint8_t enx )
         SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
         SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-        errorstatus = CmdResp1Error( SD_CMD_APP_SD_SET_BUSWIDTH );
-        return errorstatus;
+        err = CmdResp1Error( SD_CMD_APP_SD_SET_BUSWIDTH );
+        return err;
     }
     else
     {
@@ -1815,11 +1834,11 @@ SD_Error SD::IsCardProgramming( uint8_t *pstatus )
 
 SD_Error SD::SendStatus( uint32_t *pcardstatus )
 {
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     if( pcardstatus == NULL )
     {
-        errorstatus = SD_INVALID_PARAMETER;
-        return errorstatus;
+        err = SD_INVALID_PARAMETER;
+        return err;
     }
 
     SDIO_CmdInitStructure.SDIO_Argument = ( uint32_t ) RCA << 16;
@@ -1829,13 +1848,13 @@ SD_Error SD::SendStatus( uint32_t *pcardstatus )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_SEND_STATUS );
-    if( errorstatus != SD_OK )
+    err = CmdResp1Error( SD_CMD_SEND_STATUS );
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
     *pcardstatus = SDIO->RESP1;
-    return errorstatus;
+    return err;
 }
 
 
@@ -1856,7 +1875,7 @@ SDCardState SD::GetState( void )
 SD_Error SD::FindSCR( uint16_t rca, uint32_t *pscr )
 {
     uint32_t index = 0;
-    SD_Error errorstatus = SD_OK;
+    SD_Error err = SD_OK;
     uint32_t tempscr[2] = {0, 0};
 
     SDIO_CmdInitStructure.SDIO_Argument = ( uint32_t )8;
@@ -1866,11 +1885,11 @@ SD_Error SD::FindSCR( uint16_t rca, uint32_t *pscr )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
+    err = CmdResp1Error( SD_CMD_SET_BLOCKLEN );
 
-    if( errorstatus != SD_OK )
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
 
     SDIO_CmdInitStructure.SDIO_Argument = ( uint32_t ) RCA << 16;
@@ -1880,11 +1899,11 @@ SD_Error SD::FindSCR( uint16_t rca, uint32_t *pscr )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_APP_CMD );
+    err = CmdResp1Error( SD_CMD_APP_CMD );
 
-    if( errorstatus != SD_OK )
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
 
     SDIO_DataInitStructure.SDIO_DataTimeOut = SD_DATATIMEOUT;
@@ -1902,11 +1921,11 @@ SD_Error SD::FindSCR( uint16_t rca, uint32_t *pscr )
     SDIO_CmdInitStructure.SDIO_CPSM = SDIO_CPSM_Enable;
     SDIO_SendCommand( &SDIO_CmdInitStructure );
 
-    errorstatus = CmdResp1Error( SD_CMD_SD_APP_SEND_SCR );
+    err = CmdResp1Error( SD_CMD_SD_APP_SEND_SCR );
 
-    if( errorstatus != SD_OK )
+    if( err != SD_OK )
     {
-        return errorstatus;
+        return err;
     }
 
     while( !( SDIO->STA & ( SDIO_FLAG_RXOVERR | SDIO_FLAG_DCRCFAIL | SDIO_FLAG_DTIMEOUT | SDIO_FLAG_DBCKEND | SDIO_FLAG_STBITERR ) ) )
@@ -1945,20 +1964,10 @@ SD_Error SD::FindSCR( uint16_t rca, uint32_t *pscr )
 
     *( pscr + 1 ) = ( ( tempscr[0] & SD_0TO7BITS ) << 24 ) | ( ( tempscr[0] & SD_8TO15BITS ) << 8 ) | ( ( tempscr[0] & SD_16TO23BITS ) >> 8 ) | ( ( tempscr[0] & SD_24TO31BITS ) >> 24 );
     *( pscr ) = ( ( tempscr[1] & SD_0TO7BITS ) << 24 ) | ( ( tempscr[1] & SD_8TO15BITS ) << 8 ) | ( ( tempscr[1] & SD_16TO23BITS ) >> 8 ) | ( ( tempscr[1] & SD_24TO31BITS ) >> 24 );
-    return errorstatus;
+    return err;
 }
 
 
-uint8_t convert_from_bytes_to_power_of_two( uint16_t NumberOfBytes )
-{
-    uint8_t count = 0;
-    while( NumberOfBytes != 1 )
-    {
-        NumberOfBytes >>= 1;
-        count++;
-    }
-    return count;
-}
 
 
 void SD::DMA_Config(const void *mbuf, uint32_t bufsize, uint32_t DMA_DIR )
@@ -2053,3 +2062,5 @@ OutputStream & operator<<(OutputStream & os, const SD & sd){
 
     return os;
 }
+
+#endif

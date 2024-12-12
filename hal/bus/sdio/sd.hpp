@@ -14,6 +14,7 @@
 #include "sys/core/platform.h"
 #include "string.h"
 
+#ifdef ENABLE_SDIO
 
 void SDIO_Clock_Set(uint8_t clkdiv);
 void SDIO_Send_Cmd(uint8_t cmdindex,uint8_t waitrsp,uint32_t arg);
@@ -32,9 +33,8 @@ void SDIO_Send_Data_Cfg(uint32_t datatimeout,uint32_t datalen,uint8_t blksize,ui
 namespace ymd::drivers{
 class SD{
 public:
-    /*SD——CSD*/
-    typedef struct
-    {
+    #pragma pack(push, 1)
+    struct SD_CSD{
         uint8_t  CSDStruct;
         uint8_t  SysSpecVersion;
         uint8_t  Reserved1;
@@ -72,12 +72,11 @@ public:
         uint8_t  ECC;
         uint8_t  CSD_CRC;
         uint8_t  Reserved4;
-    } SD_CSD;   
+    };   
 
 
     /*SD——CID*/
-    typedef struct
-    {
+    struct SD_CID{
         uint8_t  ManufacturerID;
         uint16_t OEM_AppliID;
         uint32_t ProdName1;
@@ -88,8 +87,9 @@ public:
         uint16_t ManufactDate;
         uint8_t  CID_CRC;
         uint8_t  Reserved2;
-    } SD_CID;
+    };
 
+    #pragma pack(pop)
 
     /*SDIO Err define */
     enum class SD_Error:uint8_t{
@@ -176,6 +176,8 @@ protected:
     SD_Error SDEnWideBus( uint8_t enx );
     SD_Error IsCardProgramming( uint8_t *pstatus );
     SD_Error FindSCR( uint16_t rca, uint32_t *pscr );
+
+    void enableRcc(const bool en);
 public:
     SD_CardInfo cardinfo;
 
@@ -215,4 +217,5 @@ public:
 OutputStream & operator<<(OutputStream & os, const SD & sd);
 }
 
+#endif
 

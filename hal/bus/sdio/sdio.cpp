@@ -279,9 +279,11 @@
 // }
 
 // // Wait until given flags are unset or till timeout
-// #define SDIO_WAIT(FLAGS) do{ \
-//   uint32_t count = 1 + (SDIO_CMDTIMEOUT) * ((F_CPU) / 8U / 1000U); \
-//   do { if (!--count) return false; } while (!SDIO_GET_FLAG(FLAGS)); \
+
+// #define SDIO_WAIT(FLAGS) do{
+//   uint32_t count = 1 + (SDIO_CMDTIMEOUT) * ((F_CPU) / 8U / 1000U);
+//   do { if (!--count) return false; } while (!SDIO_GET_FLAG(FLAGS));
+
 // }while(0)
 
 // bool SDIO_GetCmdError() {
