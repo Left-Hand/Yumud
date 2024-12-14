@@ -8,8 +8,8 @@
 template<typename T>
 class BufferConcept_t{
 public:
-    virtual void push(const T & data) = 0;
-    virtual const T & pop() = 0;
+    // virtual void push(const T & data) = 0;
+    // virtual const T & pop() = 0;
     [[nodiscard]] virtual size_t available() const = 0;
     [[nodiscard]] bool empty() const{return available() == 0;}
     // virtual void push(const T * data_ptr, const size_t len, bool msb = false) = 0;

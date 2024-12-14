@@ -5,19 +5,9 @@
 template<typename T, size_t N>
 class Fifo_t:public StaticBuffer_t<T, N>{
 protected:
-    // Pointer advance(Pointer ptr,const size_t step) {
-    //     T * temp = const_cast<T *>(ptr) + step - N;
 
-    //     if((temp >= this->buf)){
-    //         // return const_cast<volatile T *>(temp);
-    //         return temp;
-    //     }else{
-    //         // return const_cast<volatile T *>(temp + N);
-    //         return temp + N;
-    //     }
-    // }
-    using Pointer = T * volatile;
-    // using Pointer = T *;
+    // using Pointer = T * volatile;
+    using Pointer = T *;
 
     __fast_inline bool over(Pointer ptr, const size_t step){
         return ptr + step >= this->buf + N;
@@ -34,59 +24,73 @@ public:
     Fifo_t():read_ptr(this->buf), write_ptr(this->buf){;}
 
 
-    __fast_inline void push(const T & data) override{
+    __fast_inline void push(auto && data){
         T * porg = (T *)write_ptr;
         write_ptr = advance(write_ptr, 1);
-        *porg = data;
-        if(write_ptr == read_ptr){
-            read_ptr = advance(read_ptr, 1);
-        }
+        new (porg) T(data);
+        // if(write_ptr == read_ptr){
+        //     read_ptr = advance(read_ptr, 1);
+        // }
+    }
+
+    template <typename ... Args>
+    __fast_inline void emplace(Args&&... args){
+        T * porg = (T *)write_ptr;
+        write_ptr = advance(write_ptr, 1);
+        new (porg) T(std::forward<Args>(args)...);
+        // if (write_ptr == read_ptr) {
+        //     read_ptr = advance(read_ptr, 1);
+        // }
     }
 
     __fast_inline void push(const T * pdata,const size_t len){
-        for(size_t i = 0; i < len; i++) push(pdata[i]);
-        // //仅允许一次循环 如果有两次循环那便不是正确用法
+        T * p_org = (T *)write_ptr;
+        const int over = (write_ptr + len - N - this->buf);
+        if(over >= 0){
+            write_ptr = this->buf + over;
 
-        // T * p_org = (T *)write_ptr;
-        // const int over = (write_ptr + len - N - this->buf);
-        // if(over >= 0){
-        //     write_ptr = this->buf + over;
+            const size_t len1 = N - (p_org - this->buf);
+            const size_t len2 = over;
 
-        //     const size_t len1 = N - (p_org - this->buf);
-        //     const size_t len2 = over;
+            for(size_t i = 0; i < len1; i++){
+                new (p_org + i) T(pdata[i]);
+            }
 
-        //     memcpy(p_org, pdata, len1);
-        //     memcpy(this->buf, pdata + len1, len2);
-        // }else{
-        //     write_ptr = write_ptr + len;
-        //     memcpy(p_org, pdata, len);
-        // }
+            const T * last_data = pdata + len1;
+            for(size_t i = 0; i < len2; i++){
+                new (this->buf + i) T(last_data[i]);
+            }
+        }else{
+            write_ptr = write_ptr + len;
+            for(size_t i = 0; i < len; i++){
+                new (p_org + i) T(pdata[i]);
+            }
+        }
     }
 
     void pop(T * pdata, const size_t len){
-        for(size_t i = 0; i < len; i++) pdata[i] = pop();
-        //仅允许一次循环 如果有两次循环那便不是正确用法
+        T * p_org = (T *)read_ptr;
+        const int over = (read_ptr + len - N - this->buf);
+        if(over >= 0){
+            read_ptr = this->buf + over;
 
-        // T * p_org = (T *)read_ptr;
-        // const int over = (read_ptr + len - N - this->buf);
-        // if(over >= 0){
-        //     read_ptr = this->buf + over;
+            const size_t len1 = N - (p_org - this->buf);
+            const size_t len2 = over;
 
-        //     const auto len1 = N - (p_org - this->buf);
-        //     const auto len2 = over;
+            T * last_data = pdata + len1;
 
-        //     memcpy(pdata, p_org, len1);
-        //     memcpy(pdata + len1, this->buf, len2);
-        // }else{
-        //     read_ptr = pdata + len;
-        //     memcpy(pdata, p_org, len);
-        // }
+            for(size_t i = 0; i < len1; i++) new (pdata + i) T(p_org[i]);
+            for(size_t i = 0; i < len2; i++) new (last_data + i) T(this->buf[i]);
+        }else{
+            read_ptr = read_ptr + len;
+            for(size_t i = 0; i < len; i++) new (pdata + i) T(p_org[i]);
+        }
     }
 
-    __fast_inline const T & pop() override{
-        auto ret_ptr = read_ptr;
+    __fast_inline const T && pop(){
+        const T * ret_ptr = read_ptr;
         read_ptr = advance(read_ptr, 1);
-        return *(const T *)ret_ptr;
+        return std::move(*ret_ptr);
     }
 
     __fast_inline const T & front() {
@@ -101,7 +105,7 @@ public:
         }
     }
 
-    volatile size_t straight() const{
+    size_t straight() const{
         if (write_ptr >= read_ptr) {
             return write_ptr - read_ptr;
         }else{

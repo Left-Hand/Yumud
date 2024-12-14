@@ -57,8 +57,8 @@ public:
 protected:
     CAN_TypeDef * instance;
 
-    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> pending_rx_msgs;
-    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_pending_msgs;
+    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
+    Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
     Callback cb_txok = nullptr;
     Callback cb_txfail = nullptr;
     Callback cb_rx = nullptr;
@@ -80,6 +80,8 @@ protected:
 
 
     void init(const BaudRate baudRate, const Mode mode);
+    uint8_t transmit(const CanMsg & msg);
+    CanMsg receive(const uint8_t fifo_num);
     friend class CanFilter;
 
     std::array<CanFilter, 14> filters = {
@@ -108,7 +110,8 @@ public:
     void init(const uint baudRate, const Mode mode = Mode::Normal);
 
     bool write(const CanMsg & msg) override;
-    CanMsg read() override;
+    bool write(const CanMsg && msg) override;
+    const CanMsg && read() override;
     const CanMsg & front();
     size_t pending();
     size_t available();
