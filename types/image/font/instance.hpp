@@ -2,9 +2,9 @@
 
 #include "font.hpp"
 
-#include "font8x5.h"
-#include "font16x8.h"
-#include "chfont7x7.h"
+#include "font8x5.hpp"
+#include "font16x8.hpp"
+#include "chfont7x7.hpp"
 
 
 namespace ymd{
