@@ -114,17 +114,21 @@ void gui_main(){
     spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
     // spi.init(36_MHz, CommMethod::Blocking, CommMethod::None);
 
-    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {135, 240});
 
     {
         tftDisplayer.init();
 
-        tftDisplayer.setFlipX(false);
-        tftDisplayer.setFlipY(true);
-        if(true){
+
+        // if(true ){
+        if(false){
+            tftDisplayer.setFlipX(false);
+            tftDisplayer.setFlipY(true);
             tftDisplayer.setSwapXY(true);
             tftDisplayer.setDisplayOffset({40, 52}); 
         }else{
+            tftDisplayer.setFlipX(true);
+            tftDisplayer.setFlipY(true);
             tftDisplayer.setSwapXY(false);
             tftDisplayer.setDisplayOffset({52, 40}); 
         }
@@ -230,24 +234,25 @@ void gui_main(){
 
         #define GUI_TB
         #ifdef GUI_TB
-        // label.rect = Rect2i{15 + 10 * sin(t),20,100,20};
-        // label2.rect = Rect2i{15,80 + 20 * sin(t),100,20};
-        // slider.rect = Rect2i{15,120,100,20};
-        // opt.rect = Rect2i{15,160,100,20};
+        label.rect = Rect2i{15 + 10 * sin(4 * t),20,100,20};
+        label2.rect = Rect2i{15,80 + 20 * sin(4 * t),100,20};
+        slider.rect = Rect2i{15,120,100,20};
+        opt.rect = Rect2i{15,160,100,20};
 
-        // label.render(painter);
-        // label2.render(painter);
-        // slider.render(painter);
-        // opt.render(painter);
+        label.render(painter);
+        label2.render(painter);
+        slider.render(painter);
+        opt.render(painter);
 
 
-        // delay(20);
-        painter.fill(ColorEnum::RED);
-        auto m = micros();
-        painter.fill(ColorEnum::GREEN);
+        // delay(200);
+        // painter.fill(ColorEnum::RED);
+        // auto m = micros();
+        // painter.fill(ColorEnum::GREEN);
         // uart2.println(1000000 / (micros() - m));
-        uart2.println(micros() - m);
-        painter.fill(ColorEnum::BLUE);
+        uart2.println(millis(), uart2.available());
+        // uart2.println(micros() - m);
+        // painter.fill(ColorEnum::BLUE);
 
 
         #endif

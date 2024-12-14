@@ -239,70 +239,54 @@ size_t Can::pending(){
     }
 }
 
+uint8_t Can::transmit(const CanMsg & msg){
+    uint8_t transmit_mailbox = 0;
 
-    // uint8_t transmit_mailbox = 0;
-    // uint32_t data_l = 0;
-    // uint32_t data_h = 0;
+    {
+        uint32_t tempreg = instance->TSTATR;
+        if((tempreg & CAN_TSTATR_TME0) == CAN_TSTATR_TME0){
+            transmit_mailbox = 0;
+        }else if((tempreg & CAN_TSTATR_TME1) == CAN_TSTATR_TME1){
+            transmit_mailbox = 1;
+        }else if((tempreg & CAN_TSTATR_TME2) == CAN_TSTATR_TME2){
+            transmit_mailbox = 2;
+        }else{
+            return CAN_TxStatus_NoMailBox;
+        }
+    }
 
-    // if((CANx->TSTATR & CAN_TSTATR_TME0) == CAN_TSTATR_TME0)
-    // {
-    //     transmit_mailbox = 0;
-    // }
-    // else if((CANx->TSTATR & CAN_TSTATR_TME1) == CAN_TSTATR_TME1)
-    // {
-    //     transmit_mailbox = 1;
-    // }
-    // else if((CANx->TSTATR & CAN_TSTATR_TME2) == CAN_TSTATR_TME2)
-    // {
-    //     transmit_mailbox = 2;
-    // }
-    // else
-    // {
-    //     transmit_mailbox = CAN_TxStatus_NoMailBox;
-    // }
+    if(transmit_mailbox != CAN_TxStatus_NoMailBox){
 
-    // if(transmit_mailbox != CAN_TxStatus_NoMailBox)
-    // {
-    //     CANx->sTxMailBox[transmit_mailbox].TXMIR &= TMIDxR_TXRQ;
-    //     if(TxMessage->IDE == CAN_Id_Standard)
-    //     {
-    //         CANx->sTxMailBox[transmit_mailbox].TXMIR |= ((TxMessage->StdId << 21) |
-    //                                                      TxMessage->RTR);
-    //     }
-    //     else
-    //     {
-    //         CANx->sTxMailBox[transmit_mailbox].TXMIR |= ((TxMessage->ExtId << 3) |
-    //                                                      TxMessage->IDE |
-    //                                                      TxMessage->RTR);
-    //     }
+        uint32_t tempmir;
+        uint32_t tempdtr = instance->sTxMailBox[transmit_mailbox].TXMDTR;
 
+        if(msg.isStd()){
+            tempmir = ((msg.id() << 21) | (msg.isRemote() << 1) | 0x01);
+        }else{
+            tempmir = ((msg.id() << 3)  | (1 << 2) | (msg.isRemote() << 1) | 0x01);
+        }
 
-    //     CANx->sTxMailBox[transmit_mailbox].TXMDTR &= (uint32_t)0xFFFFFFF0;
-    //     CANx->sTxMailBox[transmit_mailbox].TXMDTR |= TxMessage->DLC & 0x0F;
+        tempdtr &= (uint32_t)0xFFFFFFF0;
+        tempdtr |= msg.size() & 0x0F;
 
-    //     if(TxMessage->DLC && (TxMessage->RTR != CAN_RTR_Remote))
-    //     {
-    //         switch(TxMessage->DLC){
-    //             case 8: data_h |= (((uint32_t)TxMessage->Data[7] << 24));
-    //             case 7: data_h |= (((uint32_t)TxMessage->Data[6] << 16));
-    //             case 6: data_h |= (((uint32_t)TxMessage->Data[5] << 8));
-    //             case 5: data_h |= (((uint32_t)TxMessage->Data[4] << 0));
-    //             case 4: data_l |= (((uint32_t)TxMessage->Data[3] << 24));
-    //             case 3: data_l |= (((uint32_t)TxMessage->Data[2] << 16));
-    //             case 2: data_l |= (((uint32_t)TxMessage->Data[1] << 8));
-    //             case 1: data_l |= (((uint32_t)TxMessage->Data[0] << 0));
-    //             case 0:
-    //             default:
-    //                 break;
-    //         }
-    //     }
+        if(msg.size() && (!msg.isRemote())){
 
-    //     CANx->sTxMailBox[transmit_mailbox].TXMDHR = data_h;
-    //     CANx->sTxMailBox[transmit_mailbox].TXMDLR = data_l;
-    //     CANx->sTxMailBox[transmit_mailbox].TXMIR |= TMIDxR_TXRQ;
-    // }
+            #pragma GCC diagnostic push
+            #pragma GCC diagnostic ignored "-Wuninitialized"
 
-    // return transmit_mailbox;
+            uint64_t && data = msg.data();
+            instance->sTxMailBox[transmit_mailbox].TXMDLR = data & UINT32_MAX;
+            instance->sTxMailBox[transmit_mailbox].TXMDHR = data >> 32;
+
+            #pragma GCC diagnostic pop
+        }
+        instance->sTxMailBox[transmit_mailbox].TXMDTR = tempdtr;
+        instance->sTxMailBox[transmit_mailbox].TXMIR = tempmir;
+    }
+
+    return transmit_mailbox;
+}
+
 
 void Can::enableHwReTransmit(const bool en){
     if(en)  instance->CTLR &= ~CAN_CTLR_NART;
@@ -313,26 +297,38 @@ bool Can::write(const CanMsg & msg){
     if(this->sync_){
         uint8_t mbox;
         do{
-            mbox = CAN_Transmit(instance, msg.cptx());
+            mbox = transmit(msg);
         }while(mbox == CAN_TxStatus_NoMailBox);
 
         return true;
     }else{
-        uint8_t mbox = CAN_Transmit(instance, msg.cptx());
-        return (mbox != CAN_TxStatus_NoMailBox);
+        if(pending() < 3){
+            uint8_t mbox = transmit(msg);
+            return (mbox != CAN_TxStatus_NoMailBox);
+        }else{
+            // if(tx_fifo_.available() < tx_fifo_.size()){
+                tx_fifo_.push(msg);
+                return true;
+            // }
+            // return false;
+        }
     }
 }
 
-CanMsg Can::read(){
-    return pending_rx_msgs.pop();
+bool Can::write(const CanMsg && msg){
+    return write(static_cast<const CanMsg &>(msg));
+}
+
+const CanMsg && Can::read(){
+    return std::move(rx_fifo_.pop());
 }
 
 const CanMsg & Can::front(){
-    return pending_rx_msgs.front();
+    return rx_fifo_.front();
 }
 
 size_t Can::available(){
-    return pending_rx_msgs.available();
+    return rx_fifo_.available();
 }
 
 uint8_t Can::getRxErrCnt(){
@@ -380,22 +376,53 @@ void Can::setBaudRate(const uint32_t baudRate){
     //TODO
 }
 
+CanMsg Can::receive(const uint8_t fifo_num){
+    uint32_t rxmir = instance->sFIFOMailBox[fifo_num].RXMIR;
+    uint32_t rxmdtr = instance->sFIFOMailBox[fifo_num].RXMDTR;
+
+    bool ext = (uint8_t)0x04 & rxmir;
+    uint32_t id = ext ? ((rxmir >> 3)) : (((1 << 11) - 1) & (rxmir >> 21));
+    // uint32_t id = (rxmir >> 21);
+    bool remote = (uint8_t)0x02 & rxmir;
+    uint8_t dlc = (uint8_t)0x0F & rxmdtr;
+    // uint8_t fmi = (uint8_t)0xFF & (rxmdtr >> 8);
+
+    uint64_t data = instance->sFIFOMailBox[fifo_num].RXMDLR | (uint64_t(instance->sFIFOMailBox[fifo_num].RXMDHR) << 32);
+
+    if(fifo_num == CAN_FIFO0){
+        instance->RFIFO0 = CAN_RFIFO0_RFOM0 | instance->RFIFO0;
+    }else{
+        instance->RFIFO1 = CAN_RFIFO1_RFOM1 | instance->RFIFO1;
+    }
+
+    if(remote){
+        return std::move(CanMsg(id, true));
+    }else{
+        return std::move(CanMsg(id, data, dlc));
+    }
+}
+
 void Can::handleTx(){
     for(uint8_t mbox = 0; mbox < 3; mbox++){
         if(isMailBoxDone(mbox)){ // if existing message done
             uint8_t tx_status = CAN_TransmitStatus(instance, mbox);
 
             switch (tx_status){
-            case(CAN_TxStatus_Failed):
-                //process failed message
-                EXECUTE(cb_txfail);
-                break;
-            case(CAN_TxStatus_Ok):
-                //process success message
-                EXECUTE(cb_txok);
-                break;
+                case(CAN_TxStatus_Failed):
+                    //process failed message
+                    EXECUTE(cb_txfail);
+                    break;
+                case(CAN_TxStatus_Ok):
+                    //process success message
+                    EXECUTE(cb_txok);
+                    break;
             }
+
             clearMailbox(mbox);
+
+            if(tx_fifo_.available()){
+                transmit(tx_fifo_.pop());
+            }
         }
     }
 }
@@ -422,15 +449,16 @@ void Can::handleRx(const uint8_t fifo_num){
     if (CAN_GetITStatus(instance, fmp_mask)){
         //process rx pending
         do{
-            CanMsg rx_msg;
+            // CanMsg rx_msg;
 
             //如果没有接收到 直接返回
             if(CAN_MessagePending(instance, fifo_num) == 0) return;
 
             //从外设读入报文到变量
-            CAN_Receive(instance, fifo_num, rx_msg.prx());
+            // CAN_Receive(instance, fifo_num, rx_msg.prx());
+            
 
-            pending_rx_msgs.push(rx_msg);
+            rx_fifo_.push(std::move(receive(fifo_num)));
         }while(false);
         EXECUTE(cb_rx);
         CAN_ClearITPendingBit(instance, fmp_mask);

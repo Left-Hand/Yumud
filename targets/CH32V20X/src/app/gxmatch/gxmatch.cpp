@@ -107,7 +107,7 @@ namespace gxm{
 
 void host_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD);
-    DEBUGGER_INST.init(1000000);
+    DEBUGGER_INST.init(576000);
     auto & logger = DEBUGGER_INST;
 
     DEBUG_PRINTLN(std::setprecision(4), "poweron");
@@ -115,11 +115,6 @@ void host_main(){
     auto i2c = I2cSw{portD[2], portC[12]};
     i2c.init(3400_KHz);
     auto config = create_default_config();
-
-    // auto & wuart = uart7;
-    // wuart.init(115200);
-    // spi1.init(9_MHz);
-    // spi2.init(144_MHz, CommMethod::Blocking, CommMethod::None);
 
     auto & can = can1;
 
@@ -849,7 +844,8 @@ void host_main(){
 
     //#endregion
 
-    if(true){
+    // if(true){
+    if(false){
         PCA9685 pca{i2c};
         pca.init();
         
@@ -965,7 +961,7 @@ void host_main(){
 
         Map map{};
         auto & vuart = uart2;
-        vuart.init(115200, CommMethod::Blocking);
+        vuart.init(576000, CommMethod::Blocking);
         VisionModule vision{vuart};
 
         Planner planner{chassis_module, map};
@@ -1218,7 +1214,7 @@ void host_main(){
             cnt = 0;
         };
 
-        auto mmain = [&](){
+        [[maybe_unused]] auto mmain = [&](){
             
             switch(status){
                 case Status::NONE:
@@ -1321,9 +1317,9 @@ void host_main(){
 
         // sm_at_rough();
 
-        sm_go_rough();
-        sm_go_staging();
-        sm_end();
+        // sm_go_rough();
+        // sm_go_staging();
+        // sm_end();
 
         // delay(1000);
         // chassis << new ShiftAction(chassis, {0.255_r, 0.155_r});
@@ -1353,6 +1349,7 @@ void host_main(){
             // wheels.setCurrent({0, 0, 0, 1});
             // DEBUG_PRINTLN(chassis.gyr(), chassis.rad());
             delay(10);
+            chassis.setCurrent({0,0,0.1_r * sin(t)});
             // vuart.println("color");
             // vision.offset();
             // delay(2000);
@@ -1430,6 +1427,47 @@ void host_main(){
             // , x,y,rad);
             // chassis_module.setCurrent({{0,0}, 0.2_r});
             // DEBUG_PRINTLN("???");
+        }
+    }
+
+    if(true){
+        auto & led = portC[14];
+
+        led.outpp();
+
+        auto stps = std::array<RemoteFOCMotor, 4>({
+            {logger, can, 1},
+            {logger, can, 2},
+            {logger, can, 3},
+            {logger, can, 5},
+        });
+
+        // auto & stp = stps[0];
+        auto & stp = stps[1];
+        // auto & stp = stps[2];
+        // auto & stp = stps[3];
+
+        while(true){
+            // auto targ = 0.4_r * sin(10 * t);
+            // auto targ = 10.4_r * sin(4 * t);
+            auto targ = 4.4_r * t;
+            // stp.setTargetCurrent(targ);
+            stp.setTargetPosition(targ);
+            // stp.setTargetSpeed(targ);
+            stp.getPosition();
+            // stp.setTargetPosition(targ);
+            // can.write(CanMsg{0b0010'00000010, std::make_tuple(targ)});
+            // can.write(CanMsg{0b0010'00000010, std::make_tuple(targ)});
+
+            led.toggle();
+            delay(19);
+
+            real_t spd = 0;
+            if(can.available()){
+                // DEBUG_PRINTLN(can.read());
+                spd = real_t(can.read());
+            }
+            DEBUG_PRINTLN(millis(), targ, can.pending(), spd);
         }
     }
 

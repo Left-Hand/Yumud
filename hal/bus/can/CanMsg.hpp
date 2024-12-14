@@ -14,6 +14,9 @@ namespace ymd{
 //TODO do not inhert from CanRxMsg
 struct CanMsg{
 protected:
+
+    #pragma pack(push, 1)
+
     uint32_t StdId;  /* Specifies the standard identifier.
                         This parameter can be a value between 0 to 0x7FF. */
 
@@ -31,13 +34,16 @@ protected:
     uint8_t DLC;     /* Specifies the length of the frame that will be received.
                         This parameter can be a value between 0 to 8 */
 
-    uint8_t Data[8]; /* Contains the data to be received. It ranges from 0 to 
-                        0xFF. */
+    union{
+        uint8_t Data[8];
+        uint64_t data64;
+    };
 
     uint8_t FMI;     /* Specifies the index of the filter the message stored in 
                         the mailbox passes through. This parameter can be a 
                         value between 0 to 0xFF */
     uint8_t mbox;
+    #pragma pack(pop)
 
 public:
     constexpr CanMsg(){
@@ -50,10 +56,11 @@ public:
 
     constexpr CanMsg(const CanMsg & other) = default;
     constexpr CanMsg(CanMsg && other) = default;
+
     constexpr CanMsg & operator = (const CanMsg & other) = default;
     constexpr CanMsg & operator = (CanMsg && other) = default;
 
-    CanMsg copy(){
+    constexpr CanMsg copy(){
         return *this;
     }
 
@@ -63,6 +70,15 @@ public:
         IDE = (id > 0x7FF ? CAN_ID_EXT : CAN_ID_STD);
         RTR = remote ? CAN_RTR_Remote : CAN_RTR_DATA;
         DLC = 0;
+    }
+
+    explicit constexpr CanMsg(const uint32_t id, const uint64_t data, const uint8_t dlc){
+        StdId = id;
+        ExtId = id;
+        IDE = (id > 0x7FF ? CAN_ID_EXT : CAN_ID_STD);
+        RTR = CAN_RTR_DATA;
+        data64 = data;
+        DLC = dlc;
     }
 
     template<typename T>
@@ -102,11 +118,10 @@ public:
                 ((*this << args), ...);
             }, tup
         );
-
     }
 
     constexpr CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id) {
-        setSize(MIN(len, 8));
+        resize(MIN(len, 8));
 
         for(uint8_t i = 0; i < size(); i++){
             this->operator[](i) = buf[i];
@@ -118,6 +133,9 @@ public:
     constexpr const uint8_t * begin() const {return Data;}
     constexpr const uint8_t * end() const {return Data + size();}
     constexpr size_t size() const {return MIN(DLC, 8);}
+
+    constexpr uint64_t data() const{ return data64;}
+    constexpr uint64_t & data() {return data64;}
 
     operator std::vector<uint8_t>() const{return std::vector<uint8_t>{begin(), end()};}
 
@@ -172,7 +190,7 @@ public:
         IDE = (en ? CAN_ID_EXT : CAN_ID_STD);
     }
     
-    constexpr void setSize(const size_t size) {DLC = size;}
+    constexpr void resize(const size_t size) {DLC = size;}
 
 
     #ifdef HDW_SXX32
