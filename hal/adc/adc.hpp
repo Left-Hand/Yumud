@@ -22,15 +22,15 @@ namespace ymd{
 class AdcConcept{
 protected:
 public:
-    using Callback = std::function<void(void)>;
+    using Callback = AdcUtils::Callback;
 };
 
 struct AdcChannelConfig{
 public:
-    using Channel = AdcUtils::Channel;
+    using ChannelIndex = AdcUtils::ChannelIndex;
     using SampleCycles = AdcUtils::SampleCycles;
 
-    Channel channel;
+    ChannelIndex channel;
     SampleCycles cycles = SampleCycles::T41_5;
 };
 
@@ -115,7 +115,7 @@ protected:
     Callback eoc_cb;
     Callback awd_cb;
 
-    using Channel = AdcUtils::Channel;
+    using ChannelIndex = AdcUtils::ChannelIndex;
     using SampleCycles = AdcUtils::SampleCycles;
     using Mode = AdcUtils::Mode;
     using IT = AdcUtils::IT;
@@ -150,7 +150,7 @@ protected:
         injected_cnt = cnt;
     }
 
-    void setRegularSampleTime(const Channel channel,  const SampleCycles _sample_time){
+    void setRegularSampleTime(const ChannelIndex channel,  const SampleCycles _sample_time){
         auto sample_time = _sample_time;
         uint8_t ch = (uint8_t)channel;
         uint8_t offset = ch % 10;
@@ -194,10 +194,10 @@ protected:
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance),
         injected_channels{
-            InjectedChannel(instance, Channel::VREF, 1),
-            InjectedChannel(instance, Channel::VREF, 2),
-            InjectedChannel(instance, Channel::VREF, 3),
-            InjectedChannel(instance, Channel::VREF, 4)
+            InjectedChannel(instance, ChannelIndex::VREF, 1),
+            InjectedChannel(instance, ChannelIndex::VREF, 2),
+            InjectedChannel(instance, ChannelIndex::VREF, 3),
+            InjectedChannel(instance, ChannelIndex::VREF, 4)
         }{;}
 
     void init(const std::initializer_list<AdcChannelConfig> & regular_list,

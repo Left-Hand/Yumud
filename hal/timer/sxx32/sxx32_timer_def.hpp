@@ -34,7 +34,6 @@ namespace SXX32{
             uint16_t :1;
         };
 
-
     };
 
     // static inline volatile GPIO_REG_Def timer_1_def = (volatile GPIO_REG_Def *)(0x40010800);

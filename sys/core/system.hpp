@@ -43,6 +43,7 @@ namespace Sys{
         void setAHBDiv(const uint8_t div);
 
         void reCalculateTime();
+        void reCalculateTimeMs();
     };
 };
 

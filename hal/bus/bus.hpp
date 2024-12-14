@@ -46,8 +46,14 @@ class PackedBus:public Bus{
 private:
     using Bus::setDataBits;//disable this;
 public:
+    // template <typename ... Args>
+    // bool write(Args&&... args){
+    //     return write(Packet(std::forward<Args>(args)...));
+    // }
+
     virtual bool write(const Packet & msg) = 0;
-    virtual Packet read() = 0;
+    virtual bool write(const Packet && msg){return write(static_cast<const Packet &>(msg));}
+    virtual const Packet && read() = 0;
 };
 
 }

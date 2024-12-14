@@ -1,6 +1,32 @@
 #include "StringUtils.hpp"
 
 using namespace ymd;
+using namespace ymd::StringUtils;
+
+
+template<integral T>
+static void itoa_impl(T value, char * str, uint8_t radix){
+    int sign = 0;
+    int i=0;
+    if(value < 0){
+        sign = -1;
+        value = -value;  
+    }
+    do {
+        if(value%radix>9)
+            str[i] = value%radix +'0'+7;
+        else
+            str[i] = value%radix +'0';
+        i++;
+    } while((value/=radix)>0);
+    if(sign<0) {
+        str[i] = '-';
+        i++;
+    }
+
+    reverse_str(str, i);
+}
+
 
 void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 
@@ -32,30 +58,13 @@ void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
     }
 }
 
-void StringUtils::itoa(int64_t value,char *str,uint8_t radix){
-    int sign = 0;
-    int i=0;
-    if(value < 0){
-        sign = -1;
-        value = -value;  
-    }
-    do {
-        if(value%radix>9)
-            str[i] = value%radix +'0'+7;
-        else
-            str[i] = value%radix +'0';
-        i++;
-    } while((value/=radix)>0);
-    if(sign<0) {
-        str[i] = '-';
-        i++;
-    }
 
-    reverse_str(str, i);
+
+void StringUtils::itoa(int32_t value,char *str,uint8_t radix){
+    itoa_impl<int32_t>(value, str, radix);
 }
 
-void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)  
-{
+void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)  {
 	uint8_t i = 0;
     value = ABS(value);
 	do{
@@ -70,8 +79,7 @@ void StringUtils::itoas(int value,char *str,uint8_t radix, uint8_t size)
 	reverse_str(str, size);
 }
 
-void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix)
-{
+void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
     int i=0;
 
     do {
@@ -86,6 +94,9 @@ void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix)
 }
 
 
+void iltoa(int64_t value, char * str, uint8_t radix){
+    itoa_impl<int64_t>(value, str, radix);
+}
 
 void StringUtils::ftoa(float number,char *buf, uint8_t eps)
 {

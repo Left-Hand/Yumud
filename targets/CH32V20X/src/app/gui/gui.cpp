@@ -81,8 +81,19 @@ using Sys::t;
 
 
 void gui_main(){
+    auto & led = portC[15];
+    led.outpp();
+    // while(true){
+    //     led = true;
+    //     delay(200);
+    //     led = false;
+    //     delay(200);
+    // }
 
-    auto & logger = LOGGER_INST;
+    DEBUGGER_INST.init(1000000, CommMethod::Blocking, CommMethod::Interrupt);
+    // uart2.init(576000, CommMethod::Blocking, CommMethod::Interrupt);
+    uart2.init(576000);
+
 
     #ifdef CH32V30X
     auto & spi = spi2;
@@ -90,7 +101,7 @@ void gui_main(){
     auto & spi = spi1;
     #endif
 
-    logger.init(115200);
+
     auto & lcd_blk = portC[7];
     
     lcd_blk.outpp(1);
@@ -101,18 +112,23 @@ void gui_main(){
 
     spi.bindCsPin(lcd_cs, 0);
     spi.init(144_MHz, CommMethod::Blocking, CommMethod::None);
+    // spi.init(36_MHz, CommMethod::Blocking, CommMethod::None);
 
-    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {240, 135});
+    ST7789 tftDisplayer({{spi, 0}, lcd_dc, dev_rst}, {135, 240});
 
     {
         tftDisplayer.init();
 
-        tftDisplayer.setFlipX(false);
-        tftDisplayer.setFlipY(true);
-        if(true){
+
+        // if(true ){
+        if(false){
+            tftDisplayer.setFlipX(false);
+            tftDisplayer.setFlipY(true);
             tftDisplayer.setSwapXY(true);
             tftDisplayer.setDisplayOffset({40, 52}); 
         }else{
+            tftDisplayer.setFlipX(true);
+            tftDisplayer.setFlipY(true);
             tftDisplayer.setSwapXY(false);
             tftDisplayer.setDisplayOffset({52, 40}); 
         }
@@ -167,7 +183,8 @@ void gui_main(){
         tftDisplayer.puttexture(area, src.get_data());
     };
 
-
+    DEBUG_PRINTLN(std::setprecision(4));
+    uart2.print(std::setprecision(4));
     while(true){
 
         #ifdef DRAW_TB
@@ -204,10 +221,21 @@ void gui_main(){
         delay(10);
         #endif
 
-        // #define GUI_TB
+
+        // DEBUG_PRINTLN(millis(), micros(), t);
+        // uart2.println(millis(), micros(), t, nanos());
+        // delay(1);
+        // delayMicroseconds(180);
+        // delayMicroseconds(380);
+        // delay(1);
+        // if(millis() > 10000) Sys::Misc::reset();
+        // while(uart7.pending());
+        // delayMicroseconds(500);
+
+        #define GUI_TB
         #ifdef GUI_TB
-        label.rect = Rect2i{15 + 10 * sin(t),20,100,20};
-        label2.rect = Rect2i{15,80 + 20 * sin(t),100,20};
+        label.rect = Rect2i{15 + 10 * sin(4 * t),20,100,20};
+        label2.rect = Rect2i{15,80 + 20 * sin(4 * t),100,20};
         slider.rect = Rect2i{15,120,100,20};
         opt.rect = Rect2i{15,160,100,20};
 
@@ -217,8 +245,15 @@ void gui_main(){
         opt.render(painter);
 
 
-        delay(20);
-        painter.fill(ColorEnum::BLACK);
+        // delay(200);
+        // painter.fill(ColorEnum::RED);
+        // auto m = micros();
+        // painter.fill(ColorEnum::GREEN);
+        // uart2.println(1000000 / (micros() - m));
+        uart2.println(millis(), uart2.available());
+        // uart2.println(micros() - m);
+        // painter.fill(ColorEnum::BLUE);
+
 
         #endif
 

@@ -30,8 +30,8 @@ protected:
     #define UART_FIFO_BUF_SIZE 256
     #endif
 
-    Fifo_t<char, UART_FIFO_BUF_SIZE> txBuf;
-    Fifo_t<char, UART_FIFO_BUF_SIZE> rxBuf;
+    Fifo_t<char, UART_FIFO_BUF_SIZE> tx_fifo;
+    Fifo_t<char, UART_FIFO_BUF_SIZE> rx_fifo;
 
     Callback txPostCb;
     Callback rxPostCb;
@@ -39,26 +39,29 @@ protected:
     Error read(uint32_t & data, const bool toack) override {char _;read(_);return ErrorType::OK;};
     Error write(const uint32_t data) override {write((char)data); return ErrorType::OK;};
 
+    // virtual void writeBytes(const char * pdata, const size_t len) = 0;
+
     Uart(){;}
 public:
     Uart(const Uart & other) = delete;
     Uart(Uart && other) = delete;
 
     void read(char & data) override;
-    void read(char * data_ptr, const size_t len) override;
+    void read(char * pdata, const size_t len) override;
 
     virtual Gpio & txio() = 0;
     virtual Gpio & rxio() = 0;
-    virtual void write(const char * data_ptr, const size_t len) = 0;
-    virtual void write(const char data) = 0;
+
+    using IOStream::write;
+
     virtual void init(
         const uint32_t baudRate, 
         const CommMethod _rxMethod = CommMethod::Interrupt,
         const CommMethod _txMethod = CommMethod::Blocking) = 0;
 
-    size_t available() const {return rxBuf.available();}
-    size_t pending() const {return txBuf.available();}
-    size_t remain() const {return txBuf.size() - txBuf.available();}
+    size_t available() const {return rx_fifo.available();}
+    size_t pending() const {return tx_fifo.available();}
+    size_t remain() const {return tx_fifo.size() - tx_fifo.available();}
     virtual void flush();
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;

@@ -12,7 +12,7 @@ using RunStatus = MotorUtils::RunStatus;
 #define DEBUG_MSG(msg)
 
 #define POST(cmd, ...)\
-auto msg = MSG(cmd, std::make_tuple(__VA_ARGS__));\
+auto && msg = MSG(cmd, std::make_tuple(__VA_ARGS__));\
 DEBUG_MSG(msg);\
 can_.write(msg);\
 // while(can.pending()){;};

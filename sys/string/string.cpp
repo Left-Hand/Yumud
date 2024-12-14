@@ -84,7 +84,7 @@ String::String(const char * c, const size_t size){
 String::String(uint8_t value, uint8_t base)
 {
 	init();
-	char buf[12] = {0};
+	char buf[4] = {0};
 	StringUtils::itoa(value, buf, base);
 	*this = buf;
 }
@@ -125,7 +125,7 @@ String::String(long long value, uint8_t base)
 {
 	init();
 	char buf[24] = {0};
-	StringUtils::itoa(value, buf, base);
+	StringUtils::iltoa(value, buf, base);
 	*this = buf;
 }
 

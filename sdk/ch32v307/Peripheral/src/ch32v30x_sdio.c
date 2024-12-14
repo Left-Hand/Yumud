@@ -218,7 +218,7 @@ void SDIO_DMACmd(FunctionalState NewState)
  *
  * @return  none
  */
-void SDIO_SendCommand(SDIO_CmdInitTypeDef *SDIO_CmdInitStruct)
+void SDIO_SendCommand(const SDIO_CmdInitTypeDef *SDIO_CmdInitStruct)
 {
     uint32_t tmpreg = 0;
 
@@ -294,7 +294,7 @@ uint32_t SDIO_GetResponse(uint32_t SDIO_RESP)
  *
  * @return  none
  */
-void SDIO_DataConfig(SDIO_DataInitTypeDef *SDIO_DataInitStruct)
+void SDIO_DataConfig(const SDIO_DataInitTypeDef *SDIO_DataInitStruct)
 {
     uint32_t tmpreg = 0;
 

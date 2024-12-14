@@ -39,9 +39,9 @@ public:
 
     void enableRxIt(const bool en = true);
 
-    __fast_inline Error write(const uint32_t data) override;
-    __fast_inline Error read(uint32_t & data, bool toAck = true) override;
-    __fast_inline Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override;
+    Error write(const uint32_t data) override;
+    Error read(uint32_t & data, bool toAck = true) override;
+    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override;
     void setDataBits(const uint8_t len) override;
     void setBaudRate(const uint32_t baudRate) override;
     void setBitOrder(const Endian endian) override;
@@ -55,29 +55,7 @@ public:
     #endif
 };
 
-SpiHw::Error SpiHw::write(const uint32_t data){
-    uint32_t dummy = 0;
-    transfer(dummy, data);
-    return ErrorType::OK;
-}
-SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
-    transfer(data, 0);
-    return ErrorType::OK;
-}
 
-SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
-    if(txMethod != CommMethod::None){
-        while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
-        instance->DATAR = data_tx;
-    }
-
-    if(rxMethod != CommMethod::None){
-        while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
-        data_rx = instance->DATAR;
-    }
-
-    return Bus::ErrorType::OK;
-}
 
 #ifdef ENABLE_SPI1
 static inline ymd::SpiHw spi1{SPI1};

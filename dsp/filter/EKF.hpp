@@ -2,27 +2,28 @@
 
 #include "sys/core/platform.h"
 
-template<size_t N_X, size_t N_Y>
+template<arithmetic T, size_t N_X, size_t N_Y>
 class AdaptiveEKF {
-    using MatrixXX = Matrix_t<real_t, N_X, N_X>;
-    using MatrixYX = Matrix_t<real_t, N_Y, N_X>;
-    using MatrixXY = Matrix_t<real_t, N_X, N_Y>;
-    using MatrixYY = Matrix_t<real_t, N_Y, N_Y>;
-    using VectorX = Matrix_t<real_t, N_X, 1>;
-    using VectorY = Matrix_t<real_t, N_Y, 1>;
+    using MatrixXX = Matrix_t<T, N_X, N_X>;
+    using MatrixYX = Matrix_t<T, N_Y, N_X>;
+    using MatrixXY = Matrix_t<T, N_X, N_Y>;
+    using MatrixYY = Matrix_t<T, N_Y, N_Y>;
+    using VectorX = Matrix_t<T, N_X, 1>;
+    using VectorY = Matrix_t<T, N_Y, 1>;
 
 public:
     explicit AdaptiveEKF(const VectorX &X0 = VectorX::Zero())
             : Xe(X0), P(MatrixXX::Identity()), Q(MatrixXX::Identity()), R(MatrixYY::Identity()) {}
 
-    template<class Func>
+
+    template<typename Func>
     VectorX predict(Func &&func) {
-        Jet_t<real_t, N_X> Xe_auto_jet[N_X];
+        Jet_t<T, N_X> Xe_auto_jet[N_X];
         for (int i = 0; i < N_X; i++) {
             Xe_auto_jet[i].a = Xe[i];
             Xe_auto_jet[i].v[i] = 1;
         }
-        Jet_t<real_t, N_X> Xp_auto_jet[N_X];
+        Jet_t<T, N_X> Xp_auto_jet[N_X];
         func(Xe_auto_jet, Xp_auto_jet);
         for (int i = 0; i < N_X; i++) {
             Xp[i] = Xp_auto_jet[i].a;
@@ -32,14 +33,15 @@ public:
         return Xp;
     }
 
-    template<class Func>
+
+    template<typename Func>
     VectorX update(Func &&func, const VectorY &Y) {
-        Jet_t<real_t, N_X> Xp_auto_jet[N_X];
+        Jet_t<T, N_X> Xp_auto_jet[N_X];
         for (size_t i = 0; i < N_X; i++) {
             Xp_auto_jet[i].a = Xp[i];
             Xp_auto_jet[i].v[i] = 1;
         }
-        Jet_t<real_t, N_X> Yp_auto_jet[N_Y];
+        Jet_t<T, N_X> Yp_auto_jet[N_Y];
         func(Xp_auto_jet, Yp_auto_jet);
         for (size_t i = 0; i < N_Y; i++) {
             Yp[i] = Yp_auto_jet[i].a;
@@ -50,6 +52,7 @@ public:
         P = (MatrixXX::Identity() - K * H) * P;
         return Xe;
     }
+
 
     VectorX Xe;     // 估计状态变量
     VectorX Xp;     // 预测状态变量
@@ -64,9 +67,8 @@ public:
 
 constexpr int Z_N = 2, X_N = 3;
 
-struct Predict
-{
-    template <typename T>
+template <arithmetic T>
+struct Predict{
     void operator () (const T x0[X_N], T x1[X_N])
     {
         x1[0] = x0[2] * (x0[1] + delta_x) * (x0[1] + delta_x);
@@ -74,14 +76,13 @@ struct Predict
         x1[2] = x0[2];
     }
 
-    scexpr real_t delta_x = 1;
+    scexpr T delta_x = 1;
 };
 
 
 
-struct Measure
-{
-    template <typename T>
+template <typename T>
+struct Measure{
     void operator () (const T x0[X_N], T z0[Z_N])
     {
         z0[0] = x0[0];

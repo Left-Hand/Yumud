@@ -72,11 +72,11 @@ protected:
     #define UART_DMA_BUF_SIZE 64
     #endif
 
-    char tx_dma_buf[UART_DMA_BUF_SIZE];
-    char rx_dma_buf[UART_DMA_BUF_SIZE];
+    std::array<char, UART_DMA_BUF_SIZE> tx_dma_buf;
+    std::array<char, UART_DMA_BUF_SIZE> rx_dma_buf;
 
-    DmaChannel & txDma;
-    DmaChannel & rxDma;
+    DmaChannel & tx_dma;
+    DmaChannel & rx_dma;
 
     Error lead(const uint8_t _address) override;
     void trail() override;
@@ -85,8 +85,8 @@ public:
 
     void write(const char data) override;
 
-    UartHw(USART_TypeDef * _instance, DmaChannel & _txDma, DmaChannel & _rxDma):
-            instance(_instance), txDma(_txDma), rxDma(_rxDma){;}
+    UartHw(USART_TypeDef * _instance, DmaChannel & _tx_dma, DmaChannel & _rx_dma):
+            instance(_instance), tx_dma(_tx_dma), rx_dma(_rx_dma){;}
 
     void init(
         const uint32_t baudRate, 

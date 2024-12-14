@@ -72,7 +72,7 @@ int main(){
     preinit();
     // programmer_main();
     // DEBUG_PRINTLN("??");
-    gui_main();
+    // gui_main();
     // math_tb(uart2);
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);

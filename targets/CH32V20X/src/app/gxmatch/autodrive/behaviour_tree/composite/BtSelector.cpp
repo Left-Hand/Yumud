@@ -7,13 +7,14 @@ using Execution = BtNode::Execution;
 
 Execution BtSelector::execute() {
     using enum Execution;
-    // auto & self = *this;
-	// while (idx_ < count()):
-	// 	result = get_child(idx_)._task()
-	// 	if result == FAILED:
-	// 		idx_ += 1
-	// 	else:
-	// 		break
+
+    Execution result;
+    auto & self = *this;
+	if(idx_ < self.count()){
+		if (self[idx_].execute() == Execution::SUCCESS){
+            idx_ += 1;
+        }
+    }
 	
 	// if idx_ >= get_child_count() || result == SUCCEED:
 	// 	idx_ = 0

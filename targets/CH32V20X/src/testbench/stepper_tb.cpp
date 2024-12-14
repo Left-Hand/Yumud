@@ -1,7 +1,7 @@
 #include "tb.h"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/can/can.hpp"
-#include "hal/adc/adcs/adc1.hpp"
+// #include "hal/adc/adcs/adc1.hpp"
 
 #include "robots/foc/stepper/stepper.hpp"
 #include "algo/interpolation/cubic.hpp"
@@ -176,24 +176,24 @@ void stepper_tb(UartHw & logger){
     timer1.oc(3).setPolarity(false);
     timer1.oc(4).setPolarity(false);
     
-    using AdcChannelEnum = AdcUtils::Channel;
-    using AdcCycleEnum = AdcUtils::SampleCycles;
+    // using AdcChannelEnum = AdcUtils::ChannelIndex;
+    // using AdcCycleEnum = AdcUtils::SampleCycles;
 
 
 
-    adc1.init(
-        {
-            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
-        },{
-            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T7_5},
-            AdcChannelConfig{AdcChannelEnum::CH3, AdcCycleEnum::T7_5},
-        }
-    );
+    // adc1.init(
+    //     {
+    //         AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
+    //     },{
+    //         AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T7_5},
+    //         AdcChannelConfig{AdcChannelEnum::CH3, AdcCycleEnum::T7_5},
+    //     }
+    // );
 
-    timer1.setTrgoSource(TimerUtils::TrgoSource::Update);
-    timer1.setRepeatTimes(1);
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
-    adc1.enableAutoInject(false);
+    // timer1.setTrgoSource(TimerUtils::TrgoSource::Update);
+    // timer1.setRepeatTimes(1);
+    // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
+    // adc1.enableAutoInject(false);
 
 
     svpwm.init();
@@ -206,7 +206,7 @@ void stepper_tb(UartHw & logger){
     // MT6701 encoder{{spi1, 0}};
 
     I2cSw i2cSw{portD[1], portD[0]};
-    i2cSw.init(400_K);
+    i2cSw.init(400_KHz);
     AT24C02 at24{i2cSw};
     Memory mem{at24};
 
@@ -229,13 +229,9 @@ void stepper_tb(UartHw & logger){
     timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
     timer3.enableArrSync();
     timer3.bindCb(IT::Update, [&](){
-        static int cnt = 0;
-        cnt++;
-        // if(cnt == chopper_freq / foc_freq){
         stp.tick();
-            // cnt = 0;
-        // }
     });
+
     timer3.enableIt(IT::Update,{0,0});
 
  
@@ -248,12 +244,6 @@ void stepper_tb(UartHw & logger){
     while(!stp.isActive());
     stp.setTargetCurrent(real_t(0));
     stp.setCurrentLimit(real_t(1.8));
-
-    // CubicInterpolation cubic;
-
-    // cubic.mapping
-    // t = 0;
-
     
     while(true){
         stp.run();
@@ -344,6 +334,6 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetPosition(real_t(0.3) * sin(t));
         // stp.setTargetPosition(sin(t) / 4);
         // stp.setTargetPosition(4 * sign(sin(4 * t)));
-        Sys::Clock::reCalculateTime();
+        Sys::Clock::reCalculateTimeMs();
     }
 }

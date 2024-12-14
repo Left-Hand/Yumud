@@ -1,7 +1,6 @@
 #pragma once
 
-
-#include "sys/debug/debug_inc.h"
+#include "sys/math/real.hpp"
 
 namespace ymd{
     class TimerOC;
@@ -35,9 +34,9 @@ public:
         LED1_ON = 23, // -
         LED2_ON = 24, // -
         LED3_ON = 25, // -
-        led0_off = 26, // -
+        LED0_off = 26, // -
         LED1_OFF = 27, // - LED2_OFF = 28, // -
-        led2_off = 28, // - led3_off = 29, // -
+        LED2_off = 28, // - led3_off = 29, // -
         LED3_OFF = 29, // - LED1_OFF = 27, // - LED2_OFF = 28, // -
         AUDIO_STREAM_MODE = 30, // Audio_Stream mode on/off not currently implemented
         MUTE_MODE = 31, // Mute mode on/off not currently implemented
@@ -45,7 +44,7 @@ public:
         SIGNAL_LINE_TELEMETRY_ENABLE = 33, // Required 6 times. Enable commands 42 through
     };
 
-    std::array<uint16_t, 40> buf = {0};
+    uint16_t buf[40] = {0};
 protected:
     uint16_t high_cnt;
     uint16_t low_cnt;
@@ -61,6 +60,7 @@ protected:
         data_in = (data_in ^ (data_in >> 4) ^ (data_in >> 8)) & 0x0f;
         return speed_data | data_in;
     }
+    
     void update(uint16_t data);
     void invoke();
 public:

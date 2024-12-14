@@ -1,5 +1,6 @@
-#ifndef __DIGITAL_FILTER_H__
-#define __DIGITAL_FILTER_H__
+#pragma once
+
+#include <cstdint>
 
 class DigitalFilter{
 protected:
@@ -47,5 +48,3 @@ public:
 		return ret;
 	}
 };
-
-#endif

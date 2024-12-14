@@ -9,19 +9,23 @@ namespace ymd{
 
 class TimerChannel{
 public:
-    using Channel = TimerUtils::Channel;
+    using ChannelIndex = TimerUtils::ChannelIndex;
+protected:
+    TIM_TypeDef * instance;
+
+    const ChannelIndex idx_;
+
+    static volatile uint16_t & from_channel_to_cvr(TIM_TypeDef * timer, const ChannelIndex _channel);
+    TimerChannel(TIM_TypeDef * _instance, const ChannelIndex idx):
+        instance(_instance), 
+        idx_(idx){;}
+public:
+    TimerChannel(const TimerChannel & other) = delete;
+    TimerChannel(TimerChannel && other) = delete;
 
     void enableDma(const bool en = true);
 
     DmaChannel & dma() const;
-protected:
-    TIM_TypeDef * instance;
-    const Channel channel;
-
-    volatile uint16_t & from_channel_to_cvr(const Channel _channel);
-
-    TimerChannel(TIM_TypeDef * _instance, const Channel _channel):instance(_instance), channel(_channel){;}
-
 };
 
 }

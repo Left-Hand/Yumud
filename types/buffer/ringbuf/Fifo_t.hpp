@@ -2,46 +2,95 @@
 
 #include "../buffer.hpp"
 
-template<typename T, uint32_t _size>
-class Fifo_t:public StaticBuffer_t<T, _size>{
+template<typename T, size_t N>
+class Fifo_t:public StaticBuffer_t<T, N>{
 protected:
-    T * volatile advancePointer(T * volatile ptr, size_t step = 1) {
-        return (ptr + step >=this->buf + this->size()) ? ptr + step - this->size() : ptr + step;
+
+    // using Pointer = T * volatile;
+    using Pointer = T *;
+
+    __fast_inline bool over(Pointer ptr, const size_t step){
+        return ptr + step >= this->buf + N;
     }
 
+    Pointer advance(Pointer ptr, const size_t step) {
+        // return over(ptr, step) ? ptr + step - N : ptr + step;
+        return (ptr + step >= this->buf + N) ? ptr + step - N : ptr + step;
+    }
 public:
-    T * volatile read_ptr;
-    T * volatile write_ptr;
+    Pointer read_ptr;
+    Pointer write_ptr;
 
     Fifo_t():read_ptr(this->buf), write_ptr(this->buf){;}
 
 
-    __fast_inline void push(const T & data) override{
-        *(T *)write_ptr = data;
-        write_ptr = advancePointer(write_ptr);
-        if(write_ptr == read_ptr){
-            read_ptr = advancePointer(read_ptr);
+    __fast_inline void push(auto && data){
+        T * porg = (T *)write_ptr;
+        write_ptr = advance(write_ptr, 1);
+        new (porg) T(data);
+        // if(write_ptr == read_ptr){
+        //     read_ptr = advance(read_ptr, 1);
+        // }
+    }
+
+    template <typename ... Args>
+    __fast_inline void emplace(Args&&... args){
+        T * porg = (T *)write_ptr;
+        write_ptr = advance(write_ptr, 1);
+        new (porg) T(std::forward<Args>(args)...);
+        // if (write_ptr == read_ptr) {
+        //     read_ptr = advance(read_ptr, 1);
+        // }
+    }
+
+    __fast_inline void push(const T * pdata,const size_t len){
+        T * p_org = (T *)write_ptr;
+        const int over = (write_ptr + len - N - this->buf);
+        if(over >= 0){
+            write_ptr = this->buf + over;
+
+            const size_t len1 = N - (p_org - this->buf);
+            const size_t len2 = over;
+
+            for(size_t i = 0; i < len1; i++){
+                new (p_org + i) T(pdata[i]);
+            }
+
+            const T * last_data = pdata + len1;
+            for(size_t i = 0; i < len2; i++){
+                new (this->buf + i) T(last_data[i]);
+            }
+        }else{
+            write_ptr = write_ptr + len;
+            for(size_t i = 0; i < len; i++){
+                new (p_org + i) T(pdata[i]);
+            }
         }
     }
 
-    __fast_inline void push(const T * data,const size_t len){
-        for(size_t i = 0; i < len; i++){
-            push(data[i]);
+    void pop(T * pdata, const size_t len){
+        T * p_org = (T *)read_ptr;
+        const int over = (read_ptr + len - N - this->buf);
+        if(over >= 0){
+            read_ptr = this->buf + over;
+
+            const size_t len1 = N - (p_org - this->buf);
+            const size_t len2 = over;
+
+            T * last_data = pdata + len1;
+
+            for(size_t i = 0; i < len1; i++) new (pdata + i) T(p_org[i]);
+            for(size_t i = 0; i < len2; i++) new (last_data + i) T(this->buf[i]);
+        }else{
+            read_ptr = read_ptr + len;
+            for(size_t i = 0; i < len; i++) new (pdata + i) T(p_org[i]);
         }
     }
-    //     auto ptr_before = write_ptr;
-    //     // *write_ptr = data;
-    //     memcpy(write_ptr, data, )
-    //     write_ptr = advancePointer(write_ptr);
-    //     if(write_ptr == read_ptr){
-    //         read_ptr = advancePointer(read_ptr);
-    //     }
-    // }
 
-    __fast_inline const T & pop() override{
-        auto ret_ptr = read_ptr;
-        read_ptr = advancePointer(read_ptr);
-        return *(const T *)ret_ptr;
+    __fast_inline const T && pop(){
+        const T * ret_ptr = read_ptr;
+        read_ptr = advance(read_ptr, 1);
+        return std::move(*ret_ptr);
     }
 
     __fast_inline const T & front() {
@@ -52,11 +101,11 @@ public:
         if (write_ptr >= read_ptr) {
             return size_t(write_ptr - read_ptr);
         } else {
-            return this->size() - size_t(read_ptr - write_ptr);
+            return N - size_t(read_ptr - write_ptr);
         }
     }
 
-    volatile size_t straight() const{
+    size_t straight() const{
         if (write_ptr >= read_ptr) {
             return write_ptr - read_ptr;
         }else{
@@ -64,24 +113,8 @@ public:
         }
     }
 
-    void push(const T * data_ptr, const size_t len, bool msb = false) override{
-        if(msb){
-            for(size_t i = len - 1; i > 0; i--) push(data_ptr[i]);
-        }else{
-            for(size_t i = 0; i < len; i++) push(data_ptr[i]);
-        }
-    }
-
-    void pop(T * data_ptr, const size_t len, bool msb = false) override{
-        if(msb){
-            for(size_t i = len - 1; i > 0; i--) data_ptr[i] = pop();
-        }else{
-            for(size_t i = 0; i < len; i++) data_ptr[i] = pop();
-        }
-    }
-
     void vent(const size_t len){
-        read_ptr = advancePointer(read_ptr, len);
+        read_ptr = advance(read_ptr, len);
         return;
     }
 };

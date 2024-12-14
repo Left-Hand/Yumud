@@ -7,14 +7,18 @@
 namespace ymd{
 class TimerOut: public TimerChannel{
 protected:
-    TimerOut(TIM_TypeDef * _instance, const Channel _channel):TimerChannel(_instance, _channel){;}
+    TimerOut(TIM_TypeDef * _instance, const ChannelIndex _channel):TimerChannel(_instance, _channel){;}
 public:
+
+
     void installToPin(const bool en = true);
     void enableSync(const bool _sync = true);
     void setPolarity(const bool pol);
     void setOutputState(const bool s);
     void setIdleState(const bool state);
     void enable(const bool en = true);
+
+    virtual Gpio & io() = 0;
 };
 
 class TimerOC:public TimerOut, public PwmChannel{
@@ -24,13 +28,14 @@ protected:
     volatile uint16_t & cvr_;
     volatile uint16_t & arr_;
 public:
-    TimerOC(TIM_TypeDef * _instance, const Channel _channel):TimerOut(_instance, _channel), cvr_(from_channel_to_cvr(_channel)), arr_(instance->ATRLR){;}
+    TimerOC(TIM_TypeDef * _instance, const ChannelIndex _channel):
+        TimerOut(_instance, _channel), 
+            cvr_(from_channel_to_cvr(_instance, _channel)), arr_(instance->ATRLR){;}
 
-    // void init() override{init(Mode::UpValid, true);}
     void init(const Mode mode = Mode::UpValid, const bool install = true);
     void setMode(const Mode _mode);
 
-    auto & io(){return TimerUtils::getPin(instance, channel);}
+    Gpio & io();
     __fast_inline volatile uint16_t & cvr(){return cvr_;}
     __fast_inline volatile uint16_t & arr(){return arr_;}
 
@@ -39,12 +44,11 @@ public:
 };
 
 class TimerOCN:public TimerOut{
-protected:
-    // volatile uint16_t cvr_ = 0;
-    // volatile uint16_t arr_ = 0;
 public:
-    TimerOCN(TIM_TypeDef * _base, const Channel _channel):TimerOut(_base, _channel){;}
+    TimerOCN(TIM_TypeDef * _base, const ChannelIndex _channel):TimerOut(_base, _channel){;}
     void init() {installToPin();}
+
+    Gpio & io() override;
 };
 
 };

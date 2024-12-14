@@ -201,7 +201,7 @@ int bldc_main(){
     auto & v_ch = mp6540.ch(2);
     auto & w_ch = mp6540.ch(3);
     
-    using AdcChannelEnum = AdcUtils::Channel;
+    using AdcChannelEnum = AdcUtils::ChannelIndex;
     using AdcCycleEnum = AdcUtils::SampleCycles;
 
     adc1.init(

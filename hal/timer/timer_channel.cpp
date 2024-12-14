@@ -2,59 +2,68 @@
 #include "hal/dma/dma.hpp"
 
 using namespace ymd;
-volatile uint16_t & TimerChannel::from_channel_to_cvr(const Channel _channel){
+
+volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const ChannelIndex _channel){
+    using enum ChannelIndex;
+
     switch(_channel){
         default:
-        case Channel::CH1:
-        case Channel::CH1N:
-            return (instance->CH1CVR);
-        case Channel::CH2:
-        case Channel::CH2N:
-            return (instance->CH2CVR);
-        case Channel::CH3:
-        case Channel::CH3N:
-            return (instance->CH3CVR);
-        case Channel::CH4:
-            return (instance->CH4CVR);
+        case CH1:
+        case CH1N:
+            return (timer->CH1CVR);
+        case CH2:
+        case CH2N:
+            return (timer->CH2CVR);
+        case CH3:
+        case CH3N:
+            return (timer->CH3CVR);
+        case CH4:
+            return (timer->CH4CVR);
     }
 }
 
 
 void TimerChannel::enableDma(const bool en){
+    using enum ChannelIndex;
+
     uint16_t source = 0;
-    switch(channel){
-        case Channel::CH1:
+
+    switch(idx_){
+        case CH1:
             source = TIM_DMA_CC1;
             break;
-        case Channel::CH2:
+        case CH2:
             source = TIM_DMA_CC2;
             break;
-        case Channel::CH3:
+        case CH3:
             source = TIM_DMA_CC3;
             break;
-        case Channel::CH4:
+        case CH4:
             source = TIM_DMA_CC4;
             break;
         default:
             break;
     }
+
     TIM_DMACmd(instance, source, en);
 }
 
 
 DmaChannel & TimerChannel::dma() const {
+    using enum ChannelIndex;
+
     #define DMA_NULL dma1Ch1
 
     #define FULL_DMA_CASE(x)\
         case TIM##x##_BASE:\
-        switch(channel){\
-            case Channel::CH1:\
+        switch(idx_){\
+            case CH1:\
                 return TIM##x##_CH1_DMA_CH;\
-            case Channel::CH2:\
+            case CH2:\
                 return TIM##x##_CH2_DMA_CH;\
-            case Channel::CH3:\
+            case CH3:\
                 return TIM##x##_CH3_DMA_CH;\
-            case Channel::CH4:\
+            case CH4:\
                 return TIM##x##_CH4_DMA_CH;\
             default:\
                 break;\
@@ -71,12 +80,12 @@ DmaChannel & TimerChannel::dma() const {
 
         #ifdef ENABLE_TIM3
         case TIM3_BASE:
-        switch(channel){
-            case Channel::CH1:
+        switch(idx_){
+            case CH1:
                 return TIM3_CH1_DMA_CH;
-            case Channel::CH3:
+            case CH3:
                 return TIM3_CH3_DMA_CH;
-            case Channel::CH4:
+            case CH4:
                 return TIM3_CH4_DMA_CH;
             default:
                 break;
@@ -85,12 +94,12 @@ DmaChannel & TimerChannel::dma() const {
 
         #ifdef ENABLE_TIM4
         case TIM4_BASE:
-        switch(channel){
-            case Channel::CH1:
+        switch(idx_){
+            case CH1:
                 return TIM4_CH1_DMA_CH;
-            case Channel::CH2:
+            case CH2:
                 return TIM4_CH2_DMA_CH;
-            case Channel::CH3:
+            case CH3:
                 return TIM4_CH3_DMA_CH;
             default:
                 break;
