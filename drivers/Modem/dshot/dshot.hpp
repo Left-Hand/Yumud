@@ -50,9 +50,6 @@ protected:
     uint16_t low_cnt;
     TimerOC & oc;
     DmaChannel & dma_channel;
-
-    // bool enabled = false;
-
     scexpr uint16_t m_crc(uint16_t data_in){
         uint16_t speed_data;
         speed_data = data_in << 5;
@@ -65,19 +62,12 @@ protected:
     void invoke();
 public:
     DShotChannel(TimerOC & _oc);
-    DShotChannel(DShotChannel & other) = delete;
+    DShotChannel(const DShotChannel & other) = delete;
     DShotChannel(DShotChannel && other) = delete;
 
     void init();
 
-    auto & operator = (const real_t duty){
-        // DEBUG_PRINTLN(duty);
-        if(duty != 0) update(m_crc(MAX(int(duty * 2047), 48)));
-        else update(0);
-        // DEBUG_PRINTLN(buf);
-        invoke();
-        return *this;
-    }
+    DShotChannel & operator = (const real_t duty);
 };
 
 }

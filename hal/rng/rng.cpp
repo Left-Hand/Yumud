@@ -1,8 +1,9 @@
 #include "rng.hpp"
+#include "sys/core/sdk.h"
 
 using namespace ymd;
 
-static void init(){
+void Rng::init(){
 
     #ifdef ENABLE_RNG
     RCC_AHBPeriphClockCmd(RCC_AHBPeriph_RNG, ENABLE);
@@ -10,7 +11,7 @@ static void init(){
     #endif
 }
 
-static int update(){
+int Rng::update(){
 
     #ifdef ENABLE_RNG
     while(RNG_GetFlagStatus(RNG_FLAG_DRDY)==RESET);
