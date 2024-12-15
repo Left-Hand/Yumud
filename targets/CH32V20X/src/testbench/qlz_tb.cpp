@@ -1,5 +1,6 @@
 #include "tb.h"
 #include "../../algo/quicklz/quicklz_warpper.hpp"
+#include "sys/clock/clock.hpp"
 void qlz_tb(OutputStream & logger){
 
 	logger.println("qlz_tb begin");

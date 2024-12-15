@@ -1,6 +1,9 @@
 #pragma once
 
+
 #include "sys/core/platform.h"
+#include "sys/core/sdk.h"
+
 #include "adc_utils.hpp"
 
 #include "analog_channel.hpp"

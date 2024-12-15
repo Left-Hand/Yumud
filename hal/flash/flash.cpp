@@ -1,7 +1,7 @@
 #include "flash.hpp"
+#include "sys/core/sdk.h"
 
 using namespace ymd;
-
 
 #define CLOCK_CONFIG_BY_AHB 0
 #define CLOCK_CONFIG_BY_REG 1
@@ -74,6 +74,20 @@ void Flash::erasePage(const Address vaddr){
     auto phyaddr = base_address + vaddr;
     FAULT_IF(!ISALIGNED(phyaddr));
     FLASH_ErasePage_Fast(phyaddr);
+}
+
+void Flash::lock(){
+    FLASH_Lock_Fast();
+    __enable_irq();
+}
+
+void Flash::unlock(){
+    __disable_irq();
+    __disable_irq();
+    __nopn(4);
+    FLASH_Unlock_Fast();
+
+    FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
 }
 
 void Flash::programPage(const Address vaddr, const void * buf){

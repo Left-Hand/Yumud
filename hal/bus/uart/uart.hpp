@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sys/core/sdk.h"
 #include "hal/bus/bus.hpp"
 
 #include "types/buffer/ringbuf/Fifo_t.hpp"

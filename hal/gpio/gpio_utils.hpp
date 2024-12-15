@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/core/sdk.h"
 
 namespace ymd{
 enum class Pin:uint16_t{

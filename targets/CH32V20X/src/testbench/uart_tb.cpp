@@ -1,6 +1,7 @@
 #include "tb.h"
 
 #include <string>
+#include "sys/clock/clock.hpp"
 
 #define UART_TB_ECHO
 using std::string;

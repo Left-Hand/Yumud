@@ -3,7 +3,7 @@
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
 #include "bus/spi/spihw.hpp"
 #include "bus/spi/spisw.hpp"
-
+#include "sys/clock/clock.hpp"
 
 using namespace ymd::drivers;
 

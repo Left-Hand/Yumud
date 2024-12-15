@@ -1,6 +1,8 @@
 #include "misc.hpp"
 #include "config.hpp"
 #include "async/CanMaster.hpp"
+#include "sys/core/system.hpp"
+#include "sys/clock/clock.hpp"
 
 #include "drivers/Camera/MT9V034/mt9v034.hpp"
 #include "nvcv2/geometry/geometry.hpp"

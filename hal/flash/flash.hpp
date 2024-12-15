@@ -22,7 +22,7 @@ protected:
     using AddressWindow = Range_t<Address>;
 
     scexpr Page page_size = 256;
-    scexpr Address base_address = FLASH_WRProt_Sectors31to127;
+    scexpr Address base_address = 0x80000000;
     scexpr uint max_clock = 72000000;
 
     Page page_count;
@@ -51,19 +51,9 @@ protected:
     }
 
 
-    void lock(){
-        FLASH_Lock_Fast();
-        __enable_irq();
-    }
+    void lock();
 
-    void unlock(){
-        __disable_irq();
-        __disable_irq();
-        __nopn(4);
-        FLASH_Unlock_Fast();
-
-        FLASH_ClearFlag(FLASH_FLAG_BSY | FLASH_FLAG_EOP|FLASH_FLAG_WRPRTERR);
-    }
+    void unlock();
 
     void storeBytes(const Address loc, const void * data, const Address len) override;
 

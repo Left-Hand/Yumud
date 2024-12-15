@@ -51,8 +51,8 @@ do{\
         DEBUG_ERROR(__VA_ARGS__);\
         delay(10);\
     }\
-    __disable_irq();\
-    __disable_irq();\
+    DISABLE_INT;\
+    DISABLE_INT;\
     HALT;\
 }while(false);\
 

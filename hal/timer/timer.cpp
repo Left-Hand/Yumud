@@ -1,5 +1,5 @@
 #include "timer.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/core/system.hpp"
 
 using namespace ymd;
 using namespace ymd::TimerUtils::internal;
