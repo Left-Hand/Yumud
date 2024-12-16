@@ -1,18 +1,25 @@
 #pragma once
 
+#include <initializer_list>
+#include <bitset>
+
 #include "sys/io/regs.hpp"
 #include "CanUtils.hpp"
-#include <initializer_list>
 
 namespace ymd{
+
+class Can;
+class StringView;
 
 struct CanID16{
     using RemoteType = CanUtils::RemoteType;
 
+    #pragma pack(push, 1)
     const uint16_t __resv1__:3 = 0;
     const uint16_t ide:1 = 0;
     uint16_t rtr:1;
     uint16_t id:11;
+    #pragma pack(pop)
 
     scexpr CanID16 ACCEPT_ALL(){
         return {0, RemoteType::Data};
@@ -33,8 +40,14 @@ struct CanID16{
     constexpr CanID16(const uint16_t _id, const RemoteType rmt):
         rtr(uint8_t(rmt)), id(_id){;}
 
+    CanID16(const std::bitset<11> & bits, const RemoteType rmt):
+        rtr(uint8_t(rmt)), 
+        id(uint16_t(bits.to_ulong()))
+    {;}
+    
     constexpr CanID16(const CanID16 & other) = default;
     constexpr CanID16(CanID16 && other) = default;
+
 
     CanID16 & remote(bool rmt){rtr = rmt; return *this;}
 
@@ -46,10 +59,13 @@ struct CanID16{
 struct CanID32{
     using RemoteType = CanUtils::RemoteType;
 
+
+    #pragma pack(push, 1)
     const uint32_t __resv1__:1 = 0;
     uint32_t rtr:1;
     const uint32_t ide:1 = 1;
     uint32_t id:29;
+    #pragma pack(pop)
 
     scexpr CanID32 ACCEPT_ALL(){
         return {0, RemoteType::Data};
@@ -71,10 +87,18 @@ struct CanID32{
     constexpr CanID32(const uint32_t _id, const RemoteType rmt):
         rtr(uint8_t(rmt)), id(_id){;}
 
+    CanID32(
+        const std::bitset<29> & bits,
+        const RemoteType rmt):
+        
+        rtr(uint8_t(rmt)), 
+        id(uint32_t(bits.to_ulong())){}
+
     constexpr CanID32(const CanID32 & other) = default;
     constexpr CanID32(CanID32 && other) = default;
-
+    
     CanID32 &  remote(bool rmt){rtr = rmt; return *this;}
+
     operator uint32_t() const{
         return *reinterpret_cast<const uint32_t *>(this);
     }
@@ -105,11 +129,13 @@ protected:
 
     // CanFilter conv_copy(const bool rmt) const;
     void apply();
-public:
+
     CanFilter(CAN_TypeDef * can_, const uint16_t idx_):can(can_), idx(idx_){};
     CanFilter(const CanFilter & other) = delete;
     CanFilter(CanFilter && other) = delete;
 
+    friend class Can;
+public:
     void mask(const ID16 & id, const ID16 & mask){
         this->mask(id, mask, ID16{0xffff,RemoteType::Remote}, ID16{0xffff,RemoteType::Remote});
     }
@@ -122,6 +148,7 @@ public:
     void list(const std::initializer_list<ID32> & list);
     void mask(const std::initializer_list<ID32> & masks);
 
+    bool bystr(const StringView & str);
     void deinit();
 
 };

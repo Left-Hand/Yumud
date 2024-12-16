@@ -18,7 +18,3 @@
 
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/adc/adc_channel.hpp"
-
-
-
-#define TODO(...) do{PANIC("todo", ##__VA_ARGS__)}while(false);
