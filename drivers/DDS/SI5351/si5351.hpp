@@ -28,11 +28,10 @@
 
 #pragma once
 
-#include "../drivers/device_defs.h"
+#include "drivers/device_defs.h"
 
 namespace ymd::drivers{
-class Si5351
-{
+class Si5351{
 public:
     scexpr uint8_t default_addr = 0x60;
 
@@ -81,9 +80,13 @@ private:
     uint8_t clkin_div;
     I2cDrv i2c_drv;
     bool clk_first_set[8];
+
+	uint8_t si5351_write_bulk(uint8_t, uint8_t, uint8_t *);
+	uint8_t si5351_write(uint8_t, uint8_t);
+	uint8_t si5351_read(uint8_t);
 public:
-    Si5351(I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    Si5351(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
+    Si5351(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
+    Si5351(I2cDrv && _i2c_drv):i2c_drv(std::move(_i2c_drv)){;}
     Si5351(I2c & bus):i2c_drv(bus, default_addr){;}
 
 	bool init(uint8_t, uint32_t, int32_t);
@@ -108,10 +111,8 @@ public:
 	void set_clock_fanout(enum si5351_clock_fanout, uint8_t);
 	void set_pll_input(enum si5351_pll, enum si5351_pll_input);
 	void set_vcxo(uint64_t, uint8_t);
-  void set_ref_freq(uint32_t, enum si5351_pll_input);
-	uint8_t si5351_write_bulk(uint8_t, uint8_t, uint8_t *);
-	uint8_t si5351_write(uint8_t, uint8_t);
-	uint8_t si5351_read(uint8_t);
+    void set_ref_freq(uint32_t, enum si5351_pll_input);
+
 	struct Si5351Status dev_status = {.SYS_INIT = 0, .LOL_B = 0, .LOL_A = 0,
     .LOS = 0, .REVID = 0};
 	struct Si5351IntStatus dev_int_status = {.SYS_INIT_STKY = 0, .LOL_B_STKY = 0,
@@ -120,8 +121,8 @@ public:
 	uint64_t clk_freq[8];
 	uint64_t plla_freq;
 	uint64_t pllb_freq;
-  enum si5351_pll_input plla_ref_osc;
-  enum si5351_pll_input pllb_ref_osc;
+    enum si5351_pll_input plla_ref_osc;
+    enum si5351_pll_input pllb_ref_osc;
 	uint32_t xtal_freq[2];
 private:
 	uint64_t pll_calc(enum si5351_pll, uint64_t, struct Si5351RegSet *, int32_t, uint8_t);

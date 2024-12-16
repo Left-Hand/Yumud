@@ -113,7 +113,7 @@ using namespace ymd;
  * @return Success or failure
  */
 bool AD5933::getByte(uint8_t address, uint8_t *value) {
-    i2c_drv.readReg(address, *value);
+    _i2c_drv.readReg(address, *value);
     return true;
 }
 
@@ -125,7 +125,7 @@ bool AD5933::getByte(uint8_t address, uint8_t *value) {
  * @return Success or failure of transmission
  */
 bool AD5933::sendByte(uint8_t address, uint8_t value) {
-    i2c_drv.writeReg(address, value);
+    _i2c_drv.writeReg(address, value);
     return true;
 }
 
@@ -300,11 +300,12 @@ bool AD5933::setSettlingCycles(int time)
  * @param start The initial frequency.
  * @return Success or failure
  */
-bool AD5933::setStartFrequency(unsigned long start) {
+bool AD5933::setStartFrequency(uint32_t start) {
     // Page 24 of the Datasheet gives the following formula to represent the
     // start frequency.
     // TODO: Precompute for better performance if we want to keep this constant.
-    long freqHex = (start / clockSpeed / 4.0)*double(pow(2, 27));
+
+    uint32_t freqHex = (start / clockSpeed / 4)*((1 << 27));
     if (freqHex > 0xFFFFFF) {
         return false;   // overflow
     }
@@ -326,11 +327,11 @@ bool AD5933::setStartFrequency(unsigned long start) {
  * @param start The frequency to increment by. Max of 0xFFFFFF.
  * @return Success or failure
  */
-bool AD5933::setIncrementFrequency(unsigned long increment) {
+bool AD5933::setIncrementFrequency(uint32_t increment) {
     // Page 25 of the Datasheet gives the following formula to represent the
     // increment frequency.
     // TODO: Precompute for better performance if we want to keep this constant.
-    long freqHex = (increment / (clockSpeed / 4.0))*double(pow(2, 27));
+    uint32_t freqHex = (increment / clockSpeed / 4)*((1 << 27));
     if (freqHex > 0xFFFFFF) {
         return false;   // overflow
     }
@@ -352,7 +353,7 @@ bool AD5933::setIncrementFrequency(unsigned long increment) {
  * @param start The number of increments to use. Max 511.
  * @return Success or failure
  */
-bool AD5933::setNumberIncrements(unsigned int num) {
+bool AD5933::setNumberIncrements(uint32_t num) {
     // Check that the number sent in is valid.
     if (num > 511) {
         return false;
@@ -485,7 +486,7 @@ int AD5933::readControlRegister() {
  * @param imag Pointer to an int that will contain the imaginary component.
  * @return Success or failure
  */
-bool AD5933::getComplexData(int *real, int *imag) {
+bool AD5933::getComplexData(int16_t & real, int16_t & imag) {
     // Wait for a measurement to be available
     while ((readStatusRegister() & STATUS_DATA_VALID) != STATUS_DATA_VALID);
 
@@ -500,13 +501,13 @@ bool AD5933::getComplexData(int *real, int *imag) {
     {
         // Combine the two separate uint8_ts into a single 16-bit value and store
         // them at the locations specified.
-        *real = (int16_t)(((realComp[0] << 8) | realComp[1]) & 0xFFFF);
-        *imag = (int16_t)(((imagComp[0] << 8) | imagComp[1]) & 0xFFFF);
+        real = (int16_t)(((realComp[0] << 8) | realComp[1]) & 0xFFFF);
+        imag = (int16_t)(((imagComp[0] << 8) | imagComp[1]) & 0xFFFF);
 
         return true;
     } else {
-        *real = -1;
-        *imag = -1;
+        real = -1;
+        imag = -1;
         return false;
     }
 }
@@ -539,7 +540,7 @@ bool AD5933::setPowerMode(uint8_t level) {
  * @param n Length of the array (or the number of discrete measurements)
  * @return Success or failure
  */
-bool AD5933::frequencySweep(int real[], int imag[], int n) {
+bool AD5933::frequencySweep(int16_t *real, int16_t *imag, const size_t n) {
     // Begin by issuing a sequence of commands
     // If the commands aren't taking hold, add a brief delay
     if (!(setPowerMode(POWER_STANDBY) &&         // place in standby
@@ -550,7 +551,7 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
          }
 
     // Perform the sweep. Make sure we don't exceed n.
-    int i = 0;
+    size_t i = 0;
     while ((readStatusRegister() & STATUS_SWEEP_DONE) != STATUS_SWEEP_DONE) {
         // Make sure we aren't exceeding the bounds of our buffer
         if (i >= n) {
@@ -558,7 +559,7 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
         }
 
         // Get the data for this frequency point and store it in the array
-        if (!getComplexData(&real[i], &imag[i])) {
+        if (!getComplexData(real[i], imag[i])) {
             return false;
         }
 
@@ -580,26 +581,29 @@ bool AD5933::frequencySweep(int real[], int imag[], int n) {
  * @param n Length of the array (or the number of discrete measurements)
  * @return Success or failure
  */
-bool AD5933::calibrate(real_t gain[], int phase[], int ref, int n) {
-    // We need arrays to hold the real and imaginary values temporarily
-    int *real = new int[n];
-    int *imag = new int[n];
+bool AD5933::calibrate(
+    const real_t *gain, 
+    const int *phase,
+    int ref, int n
+){
+    // auto real = (int16_t *)alloca(n*sizeof(int16_t));
+    // auto imag = (int16_t *)alloca(n*sizeof(int16_t));
+    int16_t real[n];
+    int16_t imag[n];
 
-    // Perform the frequency sweep
     if (!frequencySweep(real, imag, n)) {
-        delete [] real;
-        delete [] imag;
         return false;
     }
 
-    // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
-        gain[i] = (real_t(1)/ref)/sqrt(pow(real_t(real[i]), 2) + pow(real_t(imag[i]), 2));
-        // TODO: phase
+        // Calculate gain factor
+        TODO();
+        // gain[i] = (real_t(1) / ref) / sqrt(real_t(real[i]) * real_t(real[i]) + real_t(imag[i]) * real_t(imag[i]));
+
+        // Calculate phase in degrees
+        // phase[i] = static_cast<int>(atan2(real_t(imag[i]), real_t(real[i])) * 180 / M_PI);
     }
 
-    delete [] real;
-    delete [] imag;
     return true;
 }
 
@@ -615,8 +619,13 @@ bool AD5933::calibrate(real_t gain[], int phase[], int ref, int n) {
  * @param n Length of the array (or the number of discrete measurements)
  * @return Success or failure
  */
-bool AD5933::calibrate(real_t gain[], int phase[], int real[], int imag[],
-                       int ref, int n) {
+bool AD5933::calibrate(
+    const real_t *gain,
+    const int *phase,
+    int16_t *real,
+    int16_t *imag,
+    int ref, int n
+) {
     // Perform the frequency sweep
     if (!frequencySweep(real, imag, n)) {
         return false;
@@ -624,8 +633,8 @@ bool AD5933::calibrate(real_t gain[], int phase[], int real[], int imag[],
 
     // For each point in the sweep, calculate the gain factor and phase
     for (int i = 0; i < n; i++) {
-        gain[i] = (real_t(1)/ref)/sqrt(pow(real_t(real[i]), 2) + pow(real_t(imag[i]), 2));
-        // TODO: phase
+        TODO("phase")
+        // gain[i] = (real_t(1) / ref) / sqrt(real[i] * real[i]  + imag[i] * imag[i]);
     }
 
     return true;

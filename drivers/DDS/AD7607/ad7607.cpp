@@ -27,7 +27,7 @@ void AD7607::stop(void){
     // HAL_TIM_PWM_Stop(&htim3,TIM_CHANNEL_1);//停止AD7607转换
 }
  
-void AD7607::BusyIrqCallback(uint16_t *ad7606Val,uint8_t ad7606Chl){
+void AD7607::BusyIrqCallback(const uint16_t *ad7606Val,uint8_t ad7606Chl){
     // spi_drv.re
 }
  

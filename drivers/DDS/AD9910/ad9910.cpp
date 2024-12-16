@@ -28,7 +28,8 @@ UP_DAT=1;\
 DLY;\
 UP_DAT=0;\
 
-
+scexpr real_t magic_1 = real_t(4.294967296);//将输入频率因子分为四个字节  4.294967296=(2^32)/1000000000 （1G 是内部时钟速度）
+scexpr real_t magic_2 = real_t(25.20615385);	   //将输入幅度因子分为两个字节  25.20615385=(2^14)/650
 
 void AD9910::init(void)
 {	
@@ -64,9 +65,9 @@ void AD9910::writeData(const uint8_t txdat){
 }  
 
     
-void AD9910::writeProfile(void){
+void AD9910::writeProfile(const Profile & profile){
 
-    writeReg(0x0e, profile11, 8);
+    writeReg(0x0e, profile.cbegin(), 8);
 
 	delay(1);
 }         
@@ -77,75 +78,88 @@ void AD9910::freqConvert(uint32_t Freq)
 	uint32_t Temp;
 	if(Freq > 400000000)
 		Freq = 400000000;
-	Temp=(uint32_t)Freq*4.294967296; //将输入频率因子分为四个字节  4.294967296=(2^32)/1000000000 （1G 是内部时钟速度）
-	profile11[7]=(uint8_t)Temp;
-	profile11[6]=(uint8_t)(Temp>>8);
-	profile11[5]=(uint8_t)(Temp>>16);
-	profile11[4]=(uint8_t)(Temp>>24);
-	writeProfile();
+	Temp=(uint32_t)(Freq*magic_1); 
+
+	Profile profile;
+	
+	profile[7]=(uint8_t)Temp;
+	profile[6]=(uint8_t)(Temp>>8);
+	profile[5]=(uint8_t)(Temp>>16);
+	profile[4]=(uint8_t)(Temp>>24);
+	writeProfile(profile);
 }
 
 void AD9910::setAmplitude(uint32_t Amp)
 {
 	uint32_t Temp;
-	Temp = (uint32_t)Amp*25.20615385;	   //将输入幅度因子分为两个字节  25.20615385=(2^14)/650
+	Temp = (uint32_t)(Amp*magic_2);
 	if(Temp > 0x3fff)
 		Temp = 0x3fff;
 	Temp &= 0x3fff;
-	profile11[1]=(uint8_t)Temp;
-	profile11[0]=(uint8_t)(Temp>>8);
-	writeProfile();
+
+	Profile profile;
+
+	profile[1]=(uint8_t)Temp;
+	profile[0]=(uint8_t)(Temp>>8);
+
+	writeProfile(profile);
 }
 
-void AD9910::writeDrg(void){
-    writeReg(0x0b, drgparameter, 8);
-    writeReg(0x0c, drgparameter + 8, 4);
-    writeReg(0x0d, drgparameter + 16, 4);
+void AD9910::writeDrg(const DrgParamenter & drgparameter){
+    writeReg(0x0b, drgparameter.cbegin(), 8);
+    writeReg(0x0c, drgparameter.cbegin() + 8, 4);
+    writeReg(0x0d, drgparameter.cbegin() + 16, 4);
 	
 	delay(1);
 }         
 
 
 void AD9910::freqSweep(uint32_t SweepMinFre, uint32_t SweepMaxFre, uint32_t SweepStepFre, uint32_t SweepTime){
-	uint32_t Temp1, Temp2, ITemp3, DTemp3, ITemp4, DTemp4;
-	Temp1 = (uint32_t)SweepMinFre*4.294967296;
-	if(SweepMaxFre > 400000000)
-		SweepMaxFre = 400000000;
-	Temp2 = (uint32_t)SweepMaxFre*4.294967296;
-	if(SweepStepFre > 400000000)
-		SweepStepFre = 400000000;
-	ITemp3 = (uint32_t)SweepStepFre*4.294967296;
-	DTemp3 = ITemp3;
-	ITemp4 = (uint32_t)SweepTime/4; //1GHz/4, 单位：ns
-	if(ITemp4 > 0xffff)
-		ITemp4 = 0xffff;
-	DTemp4 = ITemp4;
+
+
+	const uint32_t Temp1 = (uint32_t)(SweepMinFre*magic_1);
+	SweepMaxFre = MIN(SweepMaxFre, 400000000);
+
+	const uint32_t  Temp2 = (uint32_t)(SweepMaxFre*magic_1);
+
+	const uint32_t ITemp3 = (uint32_t)(SweepStepFre*magic_1);
+	const uint32_t DTemp3 = ITemp3;
+	const uint32_t ITemp4 = MIN((uint32_t)SweepTime >> 2, 0xffff); //1GHz/4, 单位：ns
+	const uint32_t DTemp4 = ITemp4;
 	
-	//扫频上下限
-	drgparameter[7]=(uint8_t)Temp1;
-	drgparameter[6]=(uint8_t)(Temp1>>8);
-	drgparameter[5]=(uint8_t)(Temp1>>16);
-	drgparameter[4]=(uint8_t)(Temp1>>24);
-	drgparameter[3]=(uint8_t)Temp2;
-	drgparameter[2]=(uint8_t)(Temp2>>8);
-	drgparameter[1]=(uint8_t)(Temp2>>16);
-	drgparameter[0]=(uint8_t)(Temp2>>24);
-	//频率步进（单位：Hz）
-	drgparameter[15]=(uint8_t)ITemp3;
-	drgparameter[14]=(uint8_t)(ITemp3>>8);
-	drgparameter[13]=(uint8_t)(ITemp3>>16);
-	drgparameter[12]=(uint8_t)(ITemp3>>24);
-	drgparameter[11]=(uint8_t)DTemp3;
-	drgparameter[10]=(uint8_t)(DTemp3>>8);
-	drgparameter[9]=(uint8_t)(DTemp3>>16);
-	drgparameter[8]=(uint8_t)(DTemp3>>24);
-	//步进时间间隔（单位：us）
-	drgparameter[19]=(uint8_t)ITemp4;
-	drgparameter[18]=(uint8_t)(ITemp4>>8);
-	drgparameter[17]=(uint8_t)DTemp4;
-	drgparameter[16]=(uint8_t)(DTemp4>>8);
+	const DrgParamenter drgparameter = [&]() -> DrgParamenter{
+		DrgParamenter _drgparameter;
+		//扫频上下限
+		_drgparameter[7]=(uint8_t)Temp1;
+		_drgparameter[6]=(uint8_t)(Temp1>>8);
+		_drgparameter[5]=(uint8_t)(Temp1>>16);
+		_drgparameter[4]=(uint8_t)(Temp1>>24);
+		_drgparameter[3]=(uint8_t)Temp2;
+		_drgparameter[2]=(uint8_t)(Temp2>>8);
+		_drgparameter[1]=(uint8_t)(Temp2>>16);
+		_drgparameter[0]=(uint8_t)(Temp2>>24);
+
+		//频率步进（单位：Hz）
+		_drgparameter[15]=(uint8_t)ITemp3;
+		_drgparameter[14]=(uint8_t)(ITemp3>>8);
+		_drgparameter[13]=(uint8_t)(ITemp3>>16);
+		_drgparameter[12]=(uint8_t)(ITemp3>>24);
+		_drgparameter[11]=(uint8_t)DTemp3;
+		_drgparameter[10]=(uint8_t)(DTemp3>>8);
+		_drgparameter[9]=(uint8_t)(DTemp3>>16);
+		_drgparameter[8]=(uint8_t)(DTemp3>>24);
+
+		//步进时间间隔（单位：us）
+		_drgparameter[19]=(uint8_t)ITemp4;
+		_drgparameter[18]=(uint8_t)(ITemp4>>8);
+		_drgparameter[17]=(uint8_t)DTemp4;
+		_drgparameter[16]=(uint8_t)(DTemp4>>8);
+
+		return _drgparameter;
+	}();
+
 	//发送DRG参数
-	writeDrg();
+	writeDrg(drgparameter);
 }
 
 void AD9910::writeRamprofile(void)
