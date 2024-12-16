@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "sys/string/string.hpp"
 #include "sys/string/StringView.hpp"
 

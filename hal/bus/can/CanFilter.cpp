@@ -263,11 +263,11 @@ void CanFilter::deinit(){
 bool CanFilter::bystr(const StringView & str){
     auto result = parse_str(str);
 
-    if(result.valid == false) HALT;
+    if(result.valid == false){
+        return false;
+    }
 
     auto & self = *this;
-    // self.id = result.id;
-    // self.rtr = result.is_rtr;
 
     switch(result.size){
         case 11:{

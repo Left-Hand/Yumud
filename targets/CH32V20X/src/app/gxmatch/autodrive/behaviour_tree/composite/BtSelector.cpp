@@ -10,16 +10,18 @@ Execution BtSelector::execute() {
 
     Execution result;
     auto & self = *this;
-	if(idx_ < self.count()){
-		if (self[idx_].execute() == Execution::SUCCESS){
-            idx_ += 1;
+
+    while (idx_ < self.count()) {
+        result = self[idx_].execute();
+        if (result == SUCCESS) {
+            idx_ = 0; // Reset index for next run
+            return SUCCESS;
+        } else if (result == RUNNING) {
+            return RUNNING;
         }
+        idx_ += 1;
     }
-	
-	// if idx_ >= get_child_count() || result == SUCCEED:
-	// 	idx_ = 0
-	// 	if result == SUCCEED:
-	// 		return SUCCEED
-	
-	return FAILED;
+
+    idx_ = 0; // Reset index for next run
+    return FAILED;
 }
