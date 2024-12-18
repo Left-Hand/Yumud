@@ -6,12 +6,22 @@ namespace btree {
 
 class BtDecorator : public BtNode {
 public:
-    explicit BtDecorator(std::unique_ptr<BtNode> child) : child_(std::move(child)) {}
+    using Child = BtNode;
+    using Wrapper = Child *;
 
-    virtual ~BtDecorator() = default;
+private:
+    Wrapper child_;
 
 protected:
-    std::unique_ptr<BtNode> child_;
+public:
+    explicit BtDecorator(const Name name, Wrapper child);
+    explicit BtDecorator(Wrapper child):
+        BtDecorator("Decorator", std::move(child)) {}
+    virtual ~BtDecorator() = default;
+
+    BtNode & operator[] (const size_t idx);
+    const BtNode & operator[](const size_t idx) const ;
+
 };
 
 }

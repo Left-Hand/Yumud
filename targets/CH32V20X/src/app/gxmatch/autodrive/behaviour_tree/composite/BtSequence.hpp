@@ -4,7 +4,7 @@ namespace btree{
 
 class BtSequence: public BtComposite {
 public:
-    Execution execute() override;
+    Execution tick() override;
 };
 
 

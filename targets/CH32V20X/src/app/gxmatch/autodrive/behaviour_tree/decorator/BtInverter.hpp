@@ -4,24 +4,14 @@
 
 namespace btree {
 
-class Inverter : public BtDecorator {
+class BtInverter : public BtDecorator {
 public:
-    explicit Inverter(std::unique_ptr<BtNode> child) : BtDecorator(std::move(child)) {}
+    using BtDecorator::BtDecorator;
 
-    Execution execute() override {
-        Execution result = child_->execute();
-        switch (result) {
-            case Execution::SUCCESS:
-                return Execution::FAILED;
-            case Execution::FAILED:
-                return Execution::SUCCESS;
-            case Execution::RUNNING:
-                return Execution::RUNNING;
-        }
-        return Execution::FAILED; // Default case, should not reach here
-    }
+    explicit BtInverter(Wrapper child):
+        BtDecorator("Inverter", std::move(child)) {}
+
+    Execution tick() override;
 };
 
 } // namespace btree
-
-#endif // INVERTER_HPP

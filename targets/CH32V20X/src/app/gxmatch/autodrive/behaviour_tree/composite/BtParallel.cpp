@@ -26,13 +26,16 @@ using Execution = BtNode::Execution;
 //     return running ? Execution::RUNNING : Execution::SUCCESS;
 // }
 
-Execution BtParallel::execute() {
-    // auto & self = *this;
+Execution BtParallel::tick() {
+    auto & self = *this;
+    auto & children = self.children();
+
     bool running = false;
-    for (size_t i = 0; i < children_.size(); i++) {
-        auto child = children_[i];
+
+    for (size_t i = 0; i < children.size(); i++) {
+        auto child = children[i];
         if (child) {
-            switch (child->execute()) {
+            switch (child->tick()) {
                 case Execution::SUCCESS:
                     // No need to do anything, continue checking other children
                     break;

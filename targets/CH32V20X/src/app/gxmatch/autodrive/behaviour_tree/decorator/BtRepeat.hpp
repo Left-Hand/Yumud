@@ -4,25 +4,14 @@
 
 namespace btree {
 
-class Repeater : public BtDecorator {
+class BtRepeat : public BtDecorator {
 public:
-    Repeater(std::unique_ptr<BtNode> child, size_t repeat_count)
-        : BtDecorator(std::move(child)), repeat_count_(repeat_count), current_count_(0) {}
+    using BtDecorator::BtDecorator;
 
-    Execution execute() override {
-        if (current_count_ >= repeat_count_) {
-            return Execution::SUCCESS;
-        }
+    explicit BtRepeat(Wrapper child):
+        BtDecorator("Inverter", std::move(child)) {}
 
-        Execution result = child_->execute();
-        if (result == Execution::FAILED) {
-            return Execution::FAILED;
-        } else if (result == Execution::SUCCESS) {
-            current_count_++;
-        }
-
-        return Execution::RUNNING;
-    }
+    Execution tick() override;
 
 private:
     size_t repeat_count_;

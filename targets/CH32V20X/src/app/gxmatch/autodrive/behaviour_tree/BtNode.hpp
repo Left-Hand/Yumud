@@ -11,24 +11,27 @@ namespace btree{
 struct BtNode{
 public:
     enum Execution{
+        IDLE,
         SUCCESS, 
         FAILED,
-        RUNNING
+        RUNNING,
+        HALTED
     };
 
     using String = ymd::String;
     using StringView = ymd::StringView;
+    using Name = StringView;
 private:
     String name_;
 public:
-    BtNode(const StringView name):
+    BtNode(const Name name):
         name_(name){;}
 
     BtNode(const BtNode & other) = default;
     BtNode(BtNode && other) = default;
     virtual ~BtNode() = default;
 
-    virtual Execution execute() = 0;
+    virtual Execution tick() = 0;
 
     StringView name() const{ return StringView(name_); }
 
