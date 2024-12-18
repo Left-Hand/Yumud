@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/core/sdk.h"
 #include "sys/stream/ostream.hpp"
 
 #include <memory.h>

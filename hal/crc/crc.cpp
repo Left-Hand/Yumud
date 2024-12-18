@@ -1,4 +1,5 @@
 #include "crc.hpp"
+#include "sys/core/sdk.h"
 
 using namespace ymd;
 

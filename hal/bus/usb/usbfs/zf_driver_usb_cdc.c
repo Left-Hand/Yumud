@@ -1,4 +1,5 @@
 #include "sys/core/platform.h"
+#include "sys/core/sdk.h"
 #include "sys/clock/clock.h"
 
 #include "ch32v30x_usbotg_device.h"

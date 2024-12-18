@@ -3,9 +3,9 @@
 using namespace btree;
 
 using Execution = BtNode::Execution;
+using Wrapper = BtComposite::Wrapper;
 
-
-BtNode * BtComposite::find(const StringView name){
+Wrapper BtComposite::find(const StringView name){
     for(auto & child : children_){
         if(child->name() == name){
             return child;

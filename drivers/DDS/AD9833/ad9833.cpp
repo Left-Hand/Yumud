@@ -26,12 +26,6 @@ using namespace ymd;
 #define AD9833_REG_PHASE1   (7 << 13)
 
 
-// WaveMode
-#define AD9833_OUT_SINUS    ((0 << 5) | (0 << 1) | (0 << 3))
-#define AD9833_OUT_TRIANGLE ((0 << 5) | (1 << 1) | (0 << 3))
-#define AD9833_OUT_MSB      ((1 << 5) | (0 << 1) | (1 << 3))
-#define AD9833_OUT_MSB2     ((1 << 5) | (0 << 1) | (0 << 3))
-
 // Registers
 #define AD9833_REG_CMD      (0 << 14)
 #define AD9833_REG_FREQ0    (1 << 14)
@@ -100,7 +94,7 @@ void AD9833::setPhase(uint16_t phase_reg, uint16_t phase) {
 }
 
 
-void AD9833::setWave(uint16_t wave_mode, uint16_t freq_reg, uint16_t phase_reg) {
+void AD9833::setWave(WaveMode wave_mode, uint16_t freq_reg, uint16_t phase_reg) {
     uint32_t freq_sel, phase_sel;
 
     if (freq_reg == AD9833_REG_FREQ0) {
@@ -114,12 +108,12 @@ void AD9833::setWave(uint16_t wave_mode, uint16_t freq_reg, uint16_t phase_reg) 
         phase_sel = 1 << AD9833_PSELECT;
     }
 
-    uint16_t data = AD9833_REG_CMD | wave_mode | freq_sel | phase_sel;
+    uint16_t data = AD9833_REG_CMD | uint8_t(wave_mode) | freq_sel | phase_sel;
     writeData(data);
 }
 
 
-void AD9833::init(uint16_t freq_reg, real_t freq, uint16_t phase_reg, uint16_t phase, uint16_t wave_mode) {
+void AD9833::init(uint16_t freq_reg, real_t freq, uint16_t phase_reg, uint16_t phase, WaveMode wave_mode) {
     setFreq(freq_reg, freq, true);
     setPhase(phase_reg, phase);
     setWave(wave_mode, freq_reg, phase_reg);

@@ -184,7 +184,9 @@ public:
 	StringView substring( size_t beginIndex, size_t endIndex ) const;
 
 	Strings split(const char chr, const size_t times = 0) const;
-
+    constexpr const char * begin() const {return buffer;}
+    constexpr const char * end() const {return buffer + len;}
+	constexpr size_t size() const {return len;}
 	// modification
 	void replace(char find, char replace);
 	// String& replace(const String& replace);

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include "sys/core/sdk.h"
+
 namespace ymd::DmaUtils{
     enum class Mode:uint8_t{
         toMem = DMA_DIR_PeripheralSRC,

@@ -1,4 +1,5 @@
 #include "WS2812.hpp"
+#include "sys/clock/clock.h"
 
 using namespace ymd::drivers;
 

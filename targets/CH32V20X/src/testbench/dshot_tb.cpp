@@ -1,4 +1,6 @@
 #include "tb.h"
+
+#include "sys/clock/clock.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/timer/timer_oc.hpp"
 #include "../drivers/Modem/dshot/dshot.hpp"

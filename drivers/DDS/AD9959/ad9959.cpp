@@ -7,7 +7,7 @@ using namespace ymd;
 
 void AD9959::init(){
     core_clock = 0;
-    last_channels = 0xf0;
+    last_channels = ChannelIndex::ChannelAll;
     // Ensure that the SPI device is initialised
     // "setting SCK, MOSI, and SS to outputs, pulling SCK and MOSI low, and SS high"
 
@@ -37,11 +37,11 @@ void AD9959::reset(CFR_Bits cfr){
     pulse(update_gpio);
 
     // Apply the requested CFR bits
-    last_channels = ChannelNum::ChannelNone;        // Ensure channels get set, not optimised out
-    setChannels(ChannelNum::ChannelAll);
-    write(Register::CFR, cfr);
+    last_channels = ChannelIndex::ChannelNone;        // Ensure channels get set, not optimised out
+    setChannels(ChannelIndex::ChannelAll);
+    write(Register::CFR, uint8_t(cfr));
 
-    setChannels(ChannelNum::ChannelNone);           // Disable all channels, set 3-wire MSB mode:
+    setChannels(ChannelIndex::ChannelNone);           // Disable all channels, set 3-wire MSB mode:
     pulse(update_gpio);                   // Apply the changes
     setClock();                         // Set the PLL going
     // It will take up to a millisecond before the PLL locks and stabilises.
@@ -71,12 +71,15 @@ void AD9959::setClock( int mult,const int32_t calibration) // Mult must be 0 or 
     // High VCO Gain is needed for a 255-500MHz master clock, and not up to 160Mhz
     // In-between is unspecified.
     spi_drv_.writeSingle(
-        (core_clock > 200 ? FR1_Bits::VCOGain : 0)
-        | (mult*FR1_Bits::PllDivider)
-        | FR1_Bits::ChargePump3         // Lock fast
+        (core_clock > 200 ? uint8_t(FR1_Bits::VCOGain) : uint8_t(0)) |
+        (mult*uint8_t(FR1_Bits::PllDivider)) | 
+        uint8_t(FR1_Bits::ChargePump3)         // Lock fast
     );
     // Profile0 means each channel is modulated by a different profile pin:
-    spi_drv_.writeSingle(FR1_Bits::ModLevels2 | FR1_Bits::RampUpDownOff | FR1_Bits::Profile0);
+    spi_drv_.writeSingle(
+        uint8_t(FR1_Bits::ModLevels2) |
+        uint8_t(FR1_Bits::RampUpDownOff) |
+        uint8_t(FR1_Bits::Profile0));
     spi_drv_.writeSingle(FR1_Bits::SyncClkDisable); // Don't output SYNC_CLK
 }
 
@@ -90,30 +93,31 @@ uint32_t AD9959::frequencyDelta(uint32_t freq) const{
     #endif
 }
 
-void AD9959::setFrequency(ChannelNum chan, uint32_t freq){
+void AD9959::setFrequency(ChannelIndex chan, uint32_t freq){
     setDelta(chan, frequencyDelta(freq));
 }
 
-void AD9959::setDelta(ChannelNum chan, uint32_t delta){
+void AD9959::setDelta(ChannelIndex chan, uint32_t delta){
     setChannels(chan);
     write(Register::CFTW, delta);
 }
 
-void AD9959::setAmplitude(ChannelNum chan, uint16_t amplitude){        // Maximum amplitude value is 1024
+void AD9959::setAmplitude(ChannelIndex chan, uint16_t amplitude){        // Maximum amplitude value is 1024
 
     if (amplitude > 1024)
         amplitude = 1024;                 // Clamp to the maximum
     setChannels(chan);
     spi_drv_.writeSingle(Register::ACR);                  // Amplitude control register
     spi_drv_.writeSingle(0);                    // Time between ramp steps
-    if (amplitude < 1024)               // Enable amplitude control with no ramping
-        spi_drv_.writeSingle((ACR_Bits::MultiplierEnable | amplitude)>>8);
-    else
+    if (amplitude < 1024){               // Enable amplitude control with no ramping
+        spi_drv_.writeSingle((uint16_t(ACR_Bits::MultiplierEnable) | amplitude)>>8);
+    }else{
         spi_drv_.writeSingle(0);                  // Disable the amplitude multiplier
+    }
     spi_drv_.writeSingle(amplitude&0xFF);       // Bottom 8 bits of amplitude
 }
 
-void AD9959::setPhase(ChannelNum chan, uint16_t phase){                // Maximum phase value is 16383
+void AD9959::setPhase(ChannelIndex chan, uint16_t phase){                // Maximum phase value is 16383
     setChannels(chan);
     write(Register::CPOW, phase & 0x3FFF);        // Phase wraps around anyway
 }
@@ -122,60 +126,60 @@ void AD9959::update(){
     pulse(update_gpio);
 }
 
-void AD9959::sweepFrequency(ChannelNum chan, uint32_t freq, bool follow){       // Target frequency
+void AD9959::sweepFrequency(ChannelIndex chan, uint32_t freq, bool follow){       // Target frequency
     sweepDelta(chan, frequencyDelta(freq), follow);
 }
 
-void AD9959::sweepDelta(ChannelNum chan, uint32_t delta, bool follow){
+void AD9959::sweepDelta(ChannelIndex chan, uint32_t delta, bool follow){
     setChannels(chan);
     // Set up for frequency sweep
     write(
         Register::CFR,
-        CFR_Bits::FrequencyModulation |
-        CFR_Bits::SweepEnable |
-        CFR_Bits::DACFullScale |
-        CFR_Bits::MatchPipeDelay |
-        (follow ? 0 : CFR_Bits::SweepNoDwell)
+        uint8_t(CFR_Bits::FrequencyModulation) |
+        uint8_t(CFR_Bits::SweepEnable) |
+        uint8_t(CFR_Bits::DACFullScale) |
+        uint8_t(CFR_Bits::MatchPipeDelay) |
+        (follow ? uint8_t(0) : uint8_t(CFR_Bits::SweepNoDwell))
     );
     // Write the frequency delta into the sweep destination register
     write(Register::CW1, delta);
 }
 
-void AD9959::sweepAmplitude(ChannelNum chan, uint16_t amplitude, bool follow){  // Target amplitude (half)
+void AD9959::sweepAmplitude(ChannelIndex chan, uint16_t amplitude, bool follow){  // Target amplitude (half)
     setChannels(chan);
 
     // Set up for amplitude sweep
     write(
         Register::CFR,
-        CFR_Bits::AmplitudeModulation |
-        CFR_Bits::SweepEnable |
-        CFR_Bits::DACFullScale |
-        CFR_Bits::MatchPipeDelay |
-        (follow ? 0 : CFR_Bits::SweepNoDwell)
+        uint8_t(CFR_Bits::AmplitudeModulation) |
+        uint8_t(CFR_Bits::SweepEnable) |
+        uint8_t(CFR_Bits::DACFullScale) |
+        uint8_t(CFR_Bits::MatchPipeDelay) |
+        (follow ? uint8_t(0) : uint8_t(CFR_Bits::SweepNoDwell))
     );
 
     // Write the amplitude into the sweep destination register, MSB aligned
     write(Register::CW1, ((uint32_t)amplitude) * (0x1<<(32-10)));
 }
 
-void AD9959::sweepPhase(ChannelNum chan, uint16_t phase, bool follow){          // Target phase (180 degrees)
+void AD9959::sweepPhase(ChannelIndex chan, uint16_t phase, bool follow){          // Target phase (180 degrees)
     setChannels(chan);
 
     // Set up for phase sweep
     write(
         Register::CFR,
-        CFR_Bits::PhaseModulation |
-        CFR_Bits::SweepEnable |
-        CFR_Bits::DACFullScale |
-        CFR_Bits::MatchPipeDelay |
-        (follow ? 0 : CFR_Bits::SweepNoDwell)
+        uint8_t(CFR_Bits::PhaseModulation) |
+        uint8_t(CFR_Bits::SweepEnable) |
+        uint8_t(CFR_Bits::DACFullScale) |
+        uint8_t(CFR_Bits::MatchPipeDelay) |
+        (follow ? uint8_t(0) : uint8_t(CFR_Bits::SweepNoDwell))
     );
 
     // Write the phase into the sweep destination register, MSB aligned
     write(Register::CW1, ((uint32_t)phase) * (0x1<<(32-14)));
 }
 
-void AD9959::sweepRates(ChannelNum chan, uint32_t increment, uint8_t up_rate, uint32_t decrement, uint8_t down_rate){
+void AD9959::sweepRates(ChannelIndex chan, uint32_t increment, uint8_t up_rate, uint32_t decrement, uint8_t down_rate){
 
     setChannels(chan);
     write(Register::RDW, increment);                      // Rising Sweep Delta Word
@@ -183,13 +187,12 @@ void AD9959::sweepRates(ChannelNum chan, uint32_t increment, uint8_t up_rate, ui
     write(Register::LSRR, (down_rate<<8) | up_rate);      // Linear Sweep Ramp Rate
 }
 
-void AD9959::setChannels(ChannelNum chan){
-    if (last_channels != chan)
+void AD9959::setChannels(ChannelIndex chan){
+    if (last_channels != chan){
         write(Register::CSR, (uint8_t)chan|(uint8_t)CSR_Bits::MSB_First|(uint8_t)CSR_Bits::IO3Wire);
-    last_channels = chan;
+        last_channels = chan;
     }
-
-    // To read channel registers, you must first use setChannels to select exactly one channel!
+}    // To read channel registers, you must first use setChannels to select exactly one channel!
 uint32_t AD9959::read(Register reg){
-    return write(0x80|reg, 0);  // The zero data is discarded, just the return value is used
+    return write(Register(0x80|uint8_t(reg)), 0);  // The zero data is discarded, just the return value is used
 }

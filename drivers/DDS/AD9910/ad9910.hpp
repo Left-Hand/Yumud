@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "../drivers/device_defs.h"
+#include "drivers/device_defs.h"
 
 namespace ymd::drivers{
 
@@ -26,25 +26,41 @@ class AD9910{
 protected:
     SpiDrv spi_drv;
     
-    uint8_t cfr1[4]={0x00,0x40,0x00,0x00};
-    uint8_t cfr2[4]={0x01,0x00,0x00,0x00};
+    scexpr uint8_t cfr1[4] = {0x00,0x40,0x00,0x00};
+    scexpr uint8_t cfr2[4] = {0x01,0x00,0x00,0x00};
     
-    uint8_t profile11[8]={0x3f,0xff,0x00,0x00,0x25,0x09,0x7b,0x42};
 
-    uint8_t drgparameter[20]={0x00};
-    uint8_t ramprofile0[8] = {0x00};
+    struct Profile{
+    protected:
+        uint8_t data[8] = {0x3f,0xff,0x00,0x00,0x25,0x09,0x7b,0x42};
+    public: 
+        Profile() = default;
+        uint8_t & operator [](const size_t idx){return data[idx];}
+        const uint8_t * cbegin() const {return data;}
+    };
+
+    struct DrgParamenter {
+    protected:
+        uint8_t data[20];
+    public: 
+        DrgParamenter () = default;
+        uint8_t & operator [](const size_t idx){return data[idx];}
+        const uint8_t * cbegin() const {return data;}
+    };
+
+    scexpr uint8_t ramprofile0[8] = {0};
 
     void writeReg(const uint8_t, const uint8_t *, const size_t);
     void writeData(const uint8_t);
 
-    void writeProfile(void);
+    void writeProfile(const Profile & profile);
     void writeRamprofile();
-    void writeDrg(void);
+    void writeDrg(const DrgParamenter & drg);
 
 
 public:
-    AD9910(SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
-    AD9910(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+    AD9910(const SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
+    AD9910(SpiDrv && _spi_drv):spi_drv(std::move(_spi_drv)){;}
     AD9910(Spi & _spi, const uint8_t index):spi_drv(SpiDrv(_spi, index)){;}
     void init(void);
     void freqConvert(uint32_t Freq);

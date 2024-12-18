@@ -1,4 +1,5 @@
 #include "statled.hpp"
+#include "sys/core/system.hpp"
 
 using namespace ymd;
 using namespace ymd::foc::StepperComponents;
@@ -41,7 +42,7 @@ void StatLed::run(){
             break;
     }
 
-    real_t uni = t * real_t(100000 / period) * real_t(0.01);
+    real_t uni = Sys::t * real_t(100000 / period) * real_t(0.01);
     real_t ratio;
     switch(method){
         case Method::Saw:

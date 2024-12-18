@@ -51,8 +51,8 @@ do{\
         DEBUG_ERROR(__VA_ARGS__);\
         delay(10);\
     }\
-    __disable_irq();\
-    __disable_irq();\
+    DISABLE_INT;\
+    DISABLE_INT;\
     HALT;\
 }while(false);\
 
@@ -85,6 +85,7 @@ if(bool(condition) == false){\
 }\
 
 #define BREAKPOINT __nopn(1);
+#define TODO(...) do{PANIC("todo", ##__VA_ARGS__)}while(false);
 
 extern "C"{
 __attribute__((used)) int _write(int fd, char *buf, int size);

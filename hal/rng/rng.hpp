@@ -2,20 +2,16 @@
 
 #include "sys/core/platform.h"
 
+namespace ymd{
 struct Rng{
-// public:
-//     Rng(){};
+public:
+    Rng(){};
 
-//     static void init(){
-//         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_RNG, ENABLE);
-//         RNG_Cmd(ENABLE);
-//     }
-
-//     static int update(){
-//         while(RNG_GetFlagStatus(RNG_FLAG_DRDY)==RESET);
-//         return RNG_GetRandomNumber();
-//     }
+    static void init();
+    static int update();
 };
+
+}
 
 #ifdef ENABLE_RNG
 static inline Rng rng

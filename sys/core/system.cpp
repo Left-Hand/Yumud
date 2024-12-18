@@ -1,10 +1,13 @@
 #include "system.hpp"
 
 #include "sys/core/platform.h"
+#include "sys/core/sdk.h"
+#include "sys/core/arch.h"
+
 #include "hal/crc/crc.hpp"
 
 #include "sys/clock/clock.h"
-#include "sys/constants/enums.hpp"
+#include "sys/clock/clock.hpp"
 
 #ifdef N32G45X
 #define M_RCC_CONFIGER RCC_ConfigHclk
@@ -109,8 +112,7 @@ void Sys::Clock::reCalculateTime(){
 }
 
 void Sys::Clock::reCalculateTimeMs(){
-    Sys::t.value = _iq(
-        (msTick * (1 << GLOBAL_Q)) / 1000);
+    retime();
 }
 
 uint64_t Sys::Chip::getChipId(){
@@ -290,4 +292,12 @@ uint8_t Sys::Exception::getInterruptDepth(){
     #else
     return 0;
     #endif
+}
+
+void Sys::Exception::disableInterrupt(){
+    __disable_irq();
+}
+
+void Sys::Exception::enableInterrupt(){
+    __enable_irq();
 }
