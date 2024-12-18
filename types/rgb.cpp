@@ -7,39 +7,71 @@ using namespace ymd;
 #define __SSAT8(x) CLAMP(int8_t(x), -127, 127)
 #define __USAT8(x) CLAMP(uint8_t(x), 0, 255)
 
-scexpr real_t xyz_table[256] = {
-    real_t(0.000000f ), real_t( 0.030353f), real_t( 0.060705f), real_t( 0.091058f), real_t( 0.121411f), real_t( 0.151763f), real_t( 0.182116f), real_t( 0.212469f),
-    real_t(0.242822f ), real_t( 0.273174f), real_t( 0.303527f), real_t( 0.334654f), real_t( 0.367651f), real_t( 0.402472f), real_t( 0.439144f), real_t( 0.477695f),
-    real_t(0.518152f ), real_t( 0.560539f), real_t( 0.604883f), real_t( 0.651209f), real_t( 0.699541f), real_t( 0.749903f), real_t( 0.802319f), real_t( 0.856813f),
-    real_t(0.913406f ), real_t( 0.972122f), real_t( 1.032982f), real_t( 1.096009f), real_t( 1.161225f), real_t( 1.228649f), real_t( 1.298303f), real_t( 1.370208f),
-    real_t(1.444384f ), real_t( 1.520851f), real_t( 1.599629f), real_t( 1.680738f), real_t( 1.764195f), real_t( 1.850022f), real_t( 1.938236f), real_t( 2.028856f),
-    real_t(2.121901f ), real_t( 2.217388f), real_t( 2.315337f), real_t( 2.415763f), real_t( 2.518686f), real_t( 2.624122f), real_t( 2.732089f), real_t( 2.842604f),
-    real_t(2.955683f ), real_t( 3.071344f), real_t( 3.189603f), real_t( 3.310477f), real_t( 3.433981f), real_t( 3.560131f), real_t( 3.688945f), real_t( 3.820437f),
-    real_t(3.954624f ), real_t( 4.091520f), real_t( 4.231141f), real_t( 4.373503f), real_t( 4.518620f), real_t( 4.666509f), real_t( 4.817182f), real_t( 4.970657f),
-    real_t(5.126946f ), real_t( 5.286065f), real_t( 5.448028f), real_t( 5.612849f), real_t( 5.780543f), real_t( 5.951124f), real_t( 6.124605f), real_t( 6.301002f),
-    real_t(6.480327f ), real_t( 6.662594f), real_t( 6.847817f), real_t( 7.036010f), real_t( 7.227185f), real_t( 7.421357f), real_t( 7.618538f), real_t( 7.818742f),
-    real_t(8.021982f ), real_t( 8.228271f), real_t( 8.437621f), real_t( 8.650046f), real_t( 8.865559f), real_t( 9.084171f), real_t( 9.305896f), real_t( 9.530747f),
-    real_t(9.758735f ), real_t( 9.989873f), real_t(10.224173f), real_t(10.461648f), real_t(10.702310f), real_t(10.946171f), real_t(11.193243f), real_t(11.443537f),
-    real_t(11.697067f), real_t(11.953843f), real_t(12.213877f), real_t(12.477182f), real_t(12.743768f), real_t(13.013648f), real_t(13.286832f), real_t(13.563333f),
-    real_t(13.843162f), real_t(14.126329f), real_t(14.412847f), real_t(14.702727f), real_t(14.995979f), real_t(15.292615f), real_t(15.592646f), real_t(15.896084f),
-    real_t(16.202938f), real_t(16.513219f), real_t(16.826940f), real_t(17.144110f), real_t(17.464740f), real_t(17.788842f), real_t(18.116424f), real_t(18.447499f),
-    real_t(18.782077f), real_t(19.120168f), real_t(19.461783f), real_t(19.806932f), real_t(20.155625f), real_t(20.507874f), real_t(20.863687f), real_t(21.223076f),
-    real_t(21.586050f), real_t(21.952620f), real_t(22.322796f), real_t(22.696587f), real_t(23.074005f), real_t(23.455058f), real_t(23.839757f), real_t(24.228112f),
-    real_t(24.620133f), real_t(25.015828f), real_t(25.415209f), real_t(25.818285f), real_t(26.225066f), real_t(26.635560f), real_t(27.049779f), real_t(27.467731f),
-    real_t(27.889426f), real_t(28.314874f), real_t(28.744084f), real_t(29.177065f), real_t(29.613827f), real_t(30.054379f), real_t(30.498731f), real_t(30.946892f),
-    real_t(31.398871f), real_t(31.854678f), real_t(32.314321f), real_t(32.777810f), real_t(33.245154f), real_t(33.716362f), real_t(34.191442f), real_t(34.670406f),
-    real_t(35.153260f), real_t(35.640014f), real_t(36.130678f), real_t(36.625260f), real_t(37.123768f), real_t(37.626212f), real_t(38.132601f), real_t(38.642943f),
-    real_t(39.157248f), real_t(39.675523f), real_t(40.197778f), real_t(40.724021f), real_t(41.254261f), real_t(41.788507f), real_t(42.326767f), real_t(42.869050f),
-    real_t(43.415364f), real_t(43.965717f), real_t(44.520119f), real_t(45.078578f), real_t(45.641102f), real_t(46.207700f), real_t(46.778380f), real_t(47.353150f),
-    real_t(47.932018f), real_t(48.514994f), real_t(49.102085f), real_t(49.693300f), real_t(50.288646f), real_t(50.888132f), real_t(51.491767f), real_t(52.099557f),
-    real_t(52.711513f), real_t(53.327640f), real_t(53.947949f), real_t(54.572446f), real_t(55.201140f), real_t(55.834039f), real_t(56.471151f), real_t(57.112483f),
-    real_t(57.758044f), real_t(58.407842f), real_t(59.061884f), real_t(59.720179f), real_t(60.382734f), real_t(61.049557f), real_t(61.720656f), real_t(62.396039f),
-    real_t(63.075714f), real_t(63.759687f), real_t(64.447968f), real_t(65.140564f), real_t(65.837482f), real_t(66.538730f), real_t(67.244316f), real_t(67.954247f),
-    real_t(68.668531f), real_t(69.387176f), real_t(70.110189f), real_t(70.837578f), real_t(71.569350f), real_t(72.305513f), real_t(73.046074f), real_t(73.791041f),
-    real_t(74.540421f), real_t(75.294222f), real_t(76.052450f), real_t(76.815115f), real_t(77.582222f), real_t(78.353779f), real_t(79.129794f), real_t(79.910274f),
-    real_t(80.695226f), real_t(81.484657f), real_t(82.278575f), real_t(83.076988f), real_t(83.879901f), real_t(84.687323f), real_t(85.499261f), real_t(86.315721f),
-    real_t(87.136712f), real_t(87.962240f), real_t(88.792312f), real_t(89.626935f), real_t(90.466117f), real_t(91.309865f), real_t(92.158186f), real_t(93.011086f),
-    real_t(93.868573f), real_t(94.730654f), real_t(95.597335f), real_t(96.468625f), real_t(97.344529f), real_t(98.225055f), real_t(99.110210f), real_t(100.000000f)
+scexpr uint16_t xyz_table[256] = {
+    uint16_t(0.000000f  * 256), uint16_t( 0.030353f * 256), uint16_t( 0.060705f * 256), uint16_t( 0.091058f * 256), 
+    uint16_t( 0.121411f * 256), uint16_t( 0.151763f * 256), uint16_t( 0.182116f * 256), uint16_t( 0.212469f * 256),
+    uint16_t(0.242822f  * 256), uint16_t( 0.273174f * 256), uint16_t( 0.303527f * 256), uint16_t( 0.334654f * 256), 
+    uint16_t( 0.367651f * 256), uint16_t( 0.402472f * 256), uint16_t( 0.439144f * 256), uint16_t( 0.477695f * 256),
+    uint16_t(0.518152f  * 256), uint16_t( 0.560539f * 256), uint16_t( 0.604883f * 256), uint16_t( 0.651209f * 256), 
+    uint16_t( 0.699541f * 256), uint16_t( 0.749903f * 256), uint16_t( 0.802319f * 256), uint16_t( 0.856813f * 256),
+    uint16_t(0.913406f  * 256), uint16_t( 0.972122f * 256), uint16_t( 1.032982f * 256), uint16_t( 1.096009f * 256), 
+    uint16_t( 1.161225f * 256), uint16_t( 1.228649f * 256), uint16_t( 1.298303f * 256), uint16_t( 1.370208f * 256),
+    uint16_t(1.444384f  * 256), uint16_t( 1.520851f * 256), uint16_t( 1.599629f * 256), uint16_t( 1.680738f * 256), 
+    uint16_t( 1.764195f * 256), uint16_t( 1.850022f * 256), uint16_t( 1.938236f * 256), uint16_t( 2.028856f * 256),
+    uint16_t(2.121901f  * 256), uint16_t( 2.217388f * 256), uint16_t( 2.315337f * 256), uint16_t( 2.415763f * 256), 
+    uint16_t( 2.518686f * 256), uint16_t( 2.624122f * 256), uint16_t( 2.732089f * 256), uint16_t( 2.842604f * 256),
+    uint16_t(2.955683f  * 256), uint16_t( 3.071344f * 256), uint16_t( 3.189603f * 256), uint16_t( 3.310477f * 256), 
+    uint16_t( 3.433981f * 256), uint16_t( 3.560131f * 256), uint16_t( 3.688945f * 256), uint16_t( 3.820437f * 256),
+    uint16_t(3.954624f  * 256), uint16_t( 4.091520f * 256), uint16_t( 4.231141f * 256), uint16_t( 4.373503f * 256), 
+    uint16_t( 4.518620f * 256), uint16_t( 4.666509f * 256), uint16_t( 4.817182f * 256), uint16_t( 4.970657f * 256),
+    uint16_t(5.126946f  * 256), uint16_t( 5.286065f * 256), uint16_t( 5.448028f * 256), uint16_t( 5.612849f * 256), 
+    uint16_t( 5.780543f * 256), uint16_t( 5.951124f * 256), uint16_t( 6.124605f * 256), uint16_t( 6.301002f * 256),
+    uint16_t(6.480327f  * 256), uint16_t( 6.662594f * 256), uint16_t( 6.847817f * 256), uint16_t( 7.036010f * 256), 
+    uint16_t( 7.227185f * 256), uint16_t( 7.421357f * 256), uint16_t( 7.618538f * 256), uint16_t( 7.818742f * 256),
+    uint16_t(8.021982f  * 256), uint16_t( 8.228271f * 256), uint16_t( 8.437621f * 256), uint16_t( 8.650046f * 256), 
+    uint16_t( 8.865559f * 256), uint16_t( 9.084171f * 256), uint16_t( 9.305896f * 256), uint16_t( 9.530747f * 256),
+    uint16_t(9.758735f  * 256), uint16_t( 9.989873f * 256), uint16_t(10.224173f * 256), uint16_t(10.461648f * 256), 
+    uint16_t(10.702310f * 256), uint16_t(10.946171f * 256), uint16_t(11.193243f * 256), uint16_t(11.443537f * 256),
+    uint16_t(11.697067f * 256), uint16_t(11.953843f * 256), uint16_t(12.213877f * 256), uint16_t(12.477182f * 256), 
+    uint16_t(12.743768f * 256), uint16_t(13.013648f * 256), uint16_t(13.286832f * 256), uint16_t(13.563333f * 256),
+    uint16_t(13.843162f * 256), uint16_t(14.126329f * 256), uint16_t(14.412847f * 256), uint16_t(14.702727f * 256), 
+    uint16_t(14.995979f * 256), uint16_t(15.292615f * 256), uint16_t(15.592646f * 256), uint16_t(15.896084f * 256),
+    uint16_t(16.202938f * 256), uint16_t(16.513219f * 256), uint16_t(16.826940f * 256), uint16_t(17.144110f * 256), 
+    uint16_t(17.464740f * 256), uint16_t(17.788842f * 256), uint16_t(18.116424f * 256), uint16_t(18.447499f * 256),
+    uint16_t(18.782077f * 256), uint16_t(19.120168f * 256), uint16_t(19.461783f * 256), uint16_t(19.806932f * 256), 
+    uint16_t(20.155625f * 256), uint16_t(20.507874f * 256), uint16_t(20.863687f * 256), uint16_t(21.223076f * 256),
+    uint16_t(21.586050f * 256), uint16_t(21.952620f * 256), uint16_t(22.322796f * 256), uint16_t(22.696587f * 256), 
+    uint16_t(23.074005f * 256), uint16_t(23.455058f * 256), uint16_t(23.839757f * 256), uint16_t(24.228112f * 256),
+    uint16_t(24.620133f * 256), uint16_t(25.015828f * 256), uint16_t(25.415209f * 256), uint16_t(25.818285f * 256), 
+    uint16_t(26.225066f * 256), uint16_t(26.635560f * 256), uint16_t(27.049779f * 256), uint16_t(27.467731f * 256),
+    uint16_t(27.889426f * 256), uint16_t(28.314874f * 256), uint16_t(28.744084f * 256), uint16_t(29.177065f * 256), 
+    uint16_t(29.613827f * 256), uint16_t(30.054379f * 256), uint16_t(30.498731f * 256), uint16_t(30.946892f * 256),
+    uint16_t(31.398871f * 256), uint16_t(31.854678f * 256), uint16_t(32.314321f * 256), uint16_t(32.777810f * 256), 
+    uint16_t(33.245154f * 256), uint16_t(33.716362f * 256), uint16_t(34.191442f * 256), uint16_t(34.670406f * 256),
+    uint16_t(35.153260f * 256), uint16_t(35.640014f * 256), uint16_t(36.130678f * 256), uint16_t(36.625260f * 256), 
+    uint16_t(37.123768f * 256), uint16_t(37.626212f * 256), uint16_t(38.132601f * 256), uint16_t(38.642943f * 256),
+    uint16_t(39.157248f * 256), uint16_t(39.675523f * 256), uint16_t(40.197778f * 256), uint16_t(40.724021f * 256), 
+    uint16_t(41.254261f * 256), uint16_t(41.788507f * 256), uint16_t(42.326767f * 256), uint16_t(42.869050f * 256),
+    uint16_t(43.415364f * 256), uint16_t(43.965717f * 256), uint16_t(44.520119f * 256), uint16_t(45.078578f * 256), 
+    uint16_t(45.641102f * 256), uint16_t(46.207700f * 256), uint16_t(46.778380f * 256), uint16_t(47.353150f * 256),
+    uint16_t(47.932018f * 256), uint16_t(48.514994f * 256), uint16_t(49.102085f * 256), uint16_t(49.693300f * 256), 
+    uint16_t(50.288646f * 256), uint16_t(50.888132f * 256), uint16_t(51.491767f * 256), uint16_t(52.099557f * 256),
+    uint16_t(52.711513f * 256), uint16_t(53.327640f * 256), uint16_t(53.947949f * 256), uint16_t(54.572446f * 256), 
+    uint16_t(55.201140f * 256), uint16_t(55.834039f * 256), uint16_t(56.471151f * 256), uint16_t(57.112483f * 256),
+    uint16_t(57.758044f * 256), uint16_t(58.407842f * 256), uint16_t(59.061884f * 256), uint16_t(59.720179f * 256), 
+    uint16_t(60.382734f * 256), uint16_t(61.049557f * 256), uint16_t(61.720656f * 256), uint16_t(62.396039f * 256),
+    uint16_t(63.075714f * 256), uint16_t(63.759687f * 256), uint16_t(64.447968f * 256), uint16_t(65.140564f * 256), 
+    uint16_t(65.837482f * 256), uint16_t(66.538730f * 256), uint16_t(67.244316f * 256), uint16_t(67.954247f * 256),
+    uint16_t(68.668531f * 256), uint16_t(69.387176f * 256), uint16_t(70.110189f * 256), uint16_t(70.837578f * 256), 
+    uint16_t(71.569350f * 256), uint16_t(72.305513f * 256), uint16_t(73.046074f * 256), uint16_t(73.791041f * 256),
+    uint16_t(74.540421f * 256), uint16_t(75.294222f * 256), uint16_t(76.052450f * 256), uint16_t(76.815115f * 256), 
+    uint16_t(77.582222f * 256), uint16_t(78.353779f * 256), uint16_t(79.129794f * 256), uint16_t(79.910274f * 256),
+    uint16_t(80.695226f * 256), uint16_t(81.484657f * 256), uint16_t(82.278575f * 256), uint16_t(83.076988f * 256), 
+    uint16_t(83.879901f * 256), uint16_t(84.687323f * 256), uint16_t(85.499261f * 256), uint16_t(86.315721f * 256),
+    uint16_t(87.136712f * 256), uint16_t(87.962240f * 256), uint16_t(88.792312f * 256), uint16_t(89.626935f * 256), 
+    uint16_t(90.466117f * 256), uint16_t(91.309865f * 256), uint16_t(92.158186f * 256), uint16_t(93.011086f * 256),
+    uint16_t(93.868573f * 256), uint16_t(94.730654f * 256), uint16_t(95.597335f * 256), uint16_t(96.468625f * 256), 
+    uint16_t(97.344529f * 256), uint16_t(98.225055f * 256), uint16_t(99.110210f * 256), uint16_t(100.00000f * 256)
 };
 
 template<arithmetic T>
@@ -63,24 +95,20 @@ __fast_inline constexpr static float fast_cbrtf(float x) {
     return v.x;
 }
 
-__fast_inline constexpr static int fast_floorf(real_t x) {
-    return (int)floor(iq_t(x));
-}
-
 __fast_inline constexpr static auto xyz_gamma(const real_t x) -> real_t{
     return (x > 0.008856_r) ? iq_t::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
 }
 
 __fast_inline constexpr static auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
-    return __USAT8(fast_floorf((x > 0.0031308_r) ? (((1.055_r * 255) * pow(x, 0.416666_r)) - (0.055_r * 255)) : (x * 12.92_r * 255)));
+    return __USAT8(int((x > 0.0031308_r) ? (((1.055_r * 255) * pow(x, 0.416666_r)) - (0.055_r * 255)) : (x * 12.92_r * 255)));
 }
 
 __fast_inline constexpr static XYZ rgb888_to_xyz(const RGB888 & rgb){
     auto [r,g,b] = rgb;
     
-    real_t r_lin = xyz_table[r];
-    real_t g_lin = xyz_table[g];
-    real_t b_lin = xyz_table[b];
+    real_t r_lin = iq_t(xyz_table[r]) >> 8;
+    real_t g_lin = iq_t(xyz_table[g]) >> 8;
+    real_t b_lin = iq_t(xyz_table[b]) >> 8;
 
     real_t x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * real_t(1.0f / 095.047f);
     real_t y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * real_t(1.0f / 100.000f);
@@ -123,9 +151,9 @@ __fast_inline constexpr static LAB888 xyz_to_lab888(const XYZ & xyz){
     auto [xf, yf, zf] = xyz;
 
     return {
-            CLAMP(uint8_t(fast_floorf(116 * yf) - 16), 0, 100),
-            __SSAT8(int8_t(fast_floorf(500 * (xf - yf)))),
-            __SSAT8(int8_t(fast_floorf(200 * (yf - zf))))
+            CLAMP( uint8_t(int(116 * yf) - 16), 0, 100),
+            __SSAT8(int8_t(int(500 * (xf - yf)))),
+            __SSAT8(int8_t(int(200 * (yf - zf))))
     };
 }
 
@@ -199,7 +227,7 @@ HSV888::HSV888(const RGB888 & rgb){
     
     if( s != 255 ) {
         // undo 'dimming' of saturation
-        s = 255 - sqrt16( (255-s) * 256);
+        s = 255 - sqrt16(uint16_t(255-s) << 8);
     }
 
     if( (r + g + b) == 0) {
@@ -226,9 +254,9 @@ HSV888::HSV888(const RGB888 & rgb){
     if( total < 255) {
         if( total == 0) total = 1;
         uint32_t scaleup = 65535 / (total);
-        r = ((uint32_t)(r) * scaleup) / 256;
-        g = ((uint32_t)(g) * scaleup) / 256;
-        b = ((uint32_t)(b) * scaleup) / 256;
+        r = ((uint32_t)(r) * scaleup) >> 8;
+        g = ((uint32_t)(g) * scaleup) >> 8;
+        b = ((uint32_t)(b) * scaleup) >> 8;
     }
     
     if( total > 255 ) {
@@ -236,7 +264,7 @@ HSV888::HSV888(const RGB888 & rgb){
     } else {
         v = qadd8(desat,total);
         // undo 'dimming' of brightness
-        if( v != 255) v = sqrt16( v * 256);
+        if( v != 255) v = sqrt16(uint16_t(v) << 8);
         // without lib8tion: real_t ... ew ... sqrt... double ew, or rather, ew ^ 0.5
         // if( v != 255) v = (256.0 * sqrt( (real_t)(v) / 256.0));
         
@@ -251,7 +279,7 @@ HSV888::HSV888(const RGB888 & rgb){
         // Hue could be Purple/Pink-Red,Red-Orange,Orange-Yellow
         if( g == 0 ) {
             // if green is zero, we're in Purple/Pink-Red
-            h = (HUE_PURPLE + HUE_PINK) / 2;
+            h = (HUE_PURPLE + HUE_PINK) >> 1;
             h += scale8( qsub8(r, 128), FIXFRAC8(48,128));
         } else if ( (r - g) > g) {
             // if R-G > G then we're in Red-Orange
@@ -274,7 +302,7 @@ HSV888::HSV888(const RGB888 & rgb){
             uint8_t radj = scale8( qsub8(171,r),   47); //171..0 -> 0..171 -> 0..31
             uint8_t gadj = scale8( qsub8(g,171),   96); //171..255 -> 0..84 -> 0..31;
             uint8_t rgadj = radj + gadj;
-            uint8_t hueadv = rgadj / 2;
+            uint8_t hueadv = rgadj >> 1;
             h += hueadv;
             //h += scale8( qadd8( 4, qadd8((g - 128), (128 - r))),
             //             FIXFRAC8(32,255)); //
@@ -294,7 +322,7 @@ HSV888::HSV888(const RGB888 & rgb){
         // Hue could be Aqua/Blue-Blue, Blue-Purple, Purple-Pink
         if( r == 0) {
             // if red is zero, we're in Aqua/Blue-Blue
-            h = HUE_AQUA + ((HUE_BLUE - HUE_AQUA) / 4);
+            h = HUE_AQUA + ((HUE_BLUE - HUE_AQUA) >> 2);
             h += scale8( qsub8(b, 128), FIXFRAC8(24,128));
         } else if ( (b-r) > r) {
             // B-R > R, we're in Blue-Purple
@@ -326,7 +354,7 @@ RGB888::RGB888(const HSV888 & hsv){
     // The brightness floor is minimum number that all of
     // R, G, and B will be set to.
     uint8_t invsat = APPLY_DIMMING( 255 - saturation);
-    uint8_t brightness_floor = (value * invsat) / 256;
+    uint8_t brightness_floor = (value * invsat) >> 8;
 
     // The color amplitude is the maximum amount of R, G, and B
     // that will be added on top of the brightness_floor to
@@ -341,8 +369,8 @@ RGB888::RGB888(const HSV888 & hsv){
     uint8_t rampup = offset; // 0..63
     uint8_t rampdown = (HSV_SECTION_3 - 1) - offset; // 63..0
 
-    uint8_t rampup_amp_adj   = (rampup   * color_amplitude) / (256 / 4);
-    uint8_t rampdown_amp_adj = (rampdown * color_amplitude) / (256 / 4);
+    uint8_t rampup_amp_adj   = (rampup   * color_amplitude) >> 6;
+    uint8_t rampdown_amp_adj = (rampdown * color_amplitude) >> 6;
 
     // add brightness_floor offset to everything
     uint8_t rampup_adj_with_floor   = rampup_amp_adj   + brightness_floor;
