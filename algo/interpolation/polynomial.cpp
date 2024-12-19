@@ -34,9 +34,9 @@ std::tuple<real_t, real_t> SeatInterpolation::get_ab(const Vector2 & handle){
 real_t SeatInterpolation::forward(const real_t x) const {
     real_t y = 0;
     if (x <= a){
-        y = b - b*pow(1-x/a, 3.0);
+        y = b - b*pow(1-x/a, 3);
     } else {
-        y = b + (1-b)*pow((x-a)/(1-a), 3.0);
+        y = b + (1-b)*pow((x-a)/(1-a), 3);
     }
     return y;
 }

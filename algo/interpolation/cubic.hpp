@@ -40,8 +40,8 @@ protected:
         T y = E*(k*k*k) + F*(k*k) + G*k + H;
         return y;
     }
-    static real_t forward(const Vector2 & a,const Vector2 & b, const real_t x);
 public:
+    static real_t forward(const Vector2 & a,const Vector2 & b, const real_t x);
 
     real_t forward(const real_t x) const override;
 };
@@ -79,8 +79,8 @@ protected:
         return y0*B0(k) + y1*B1(k) + y2*B2(k) + y3*B3(k);
     }
 protected:
-    static real_t forward(const Vector2 & from,const Vector2 & to, const real_t x);
 public:
+    static real_t forward(const Vector2 & from,const Vector2 & to, const real_t x);
     real_t forward(const real_t x) const override;
 
 };

@@ -34,6 +34,7 @@
 // #include "dsp/filter/EKF.hpp"
 using namespace ymd::drivers;
 using namespace ymd::foc;
+using namespace ymd::intp;
 
 
 struct TurnSolver{
@@ -48,7 +49,7 @@ struct TurnSolver{
 TurnSolver turnSolver;
 
 real_t demo(uint milliseconds, uint microseconds = 0){
-    using Vector2 = CubicInterpolation::Vector2;
+    // using Vector2 = CubicInterpolation::Vector2;
     
     uint32_t turnCnt = milliseconds % 2667;
     uint32_t turns = milliseconds / 2667;

@@ -50,7 +50,7 @@ real_t NearCubicInterpolation::forward(const Vector2 & from,const Vector2 & to, 
     auto [c,d] = to;
     real_t y = 0;
 
-    scexpr double epsilon = 0.001;
+    scexpr real_t epsilon = real_t(0.001);
     scexpr real_t min_param_a = real_t(0 + epsilon);
     scexpr real_t max_param_a = real_t(1 - epsilon);
     scexpr real_t min_param_b = real_t(0 + epsilon);
@@ -92,8 +92,8 @@ real_t NearCubicInterpolation::forward(const Vector2 & from,const Vector2 & to, 
     x1 = (ccx - x2*B2t1) / B1t1;
     y1 = (ccy - y2*B2t1) / B1t1;
 
-    x1 = MAX(0+epsilon, MIN(1-epsilon, x1));
-    x2 = MAX(0+epsilon, MIN(1-epsilon, x2));
+    x1 = CLAMP(x1, + epsilon, 1 - epsilon);
+    x2 = CLAMP(x2, + epsilon, 1 - epsilon);
 
     // Note that this function also requires cubicBezier()!
     y = CubicInterpolation::forward({x1,y1}, {x2,y2}, x);
