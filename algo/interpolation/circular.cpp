@@ -7,7 +7,7 @@ static __fast_inline T sq(const T x){
     return x * x;
 }
 
-bool ArcInterpolation::IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3){
+bool ArcInterpolation::IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3) const {
     auto [pt1x, pt1y] = pt1;
     auto [pt2x, pt2y] = pt2;
     auto [pt3x, pt3y] = pt3;
@@ -37,7 +37,7 @@ bool ArcInterpolation::IsPerpendicular(const Vector2 & pt1,const Vector2 & pt2,c
     else return false;
 }
 
-void ArcInterpolation::calcCircleFrom3Points (const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3){
+std::tuple<real_t, real_t, real_t> ArcInterpolation::calcCircleFrom3Points (const Vector2 & pt1,const Vector2 & pt2,const Vector2 & pt3) const {
     auto [pt1x, pt1y] = pt1;
     auto [pt2x, pt2y] = pt2;
     auto [pt3x, pt3y] = pt3;
@@ -49,79 +49,92 @@ void ArcInterpolation::calcCircleFrom3Points (const Vector2 & pt1,const Vector2 
     scexpr real_t epsilon = real_t(0.001);
 
     if (abs(xDelta_a) <= epsilon && abs(yDelta_b) <= epsilon){
-        m_Centerx = (pt2x + pt3x) / 2;
-        m_Centery = (pt1y + pt2y) / 2;
-        m_dRadius = sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y));
-        return;
+        // m_Centerx = (pt2x + pt3x) / 2;
+        // m_Centery = (pt1y + pt2y) / 2;
+        // m_dRadius = sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y));
+        // return;
+        return {
+            (pt2x + pt3x) / 2,
+            (pt1y + pt2y) / 2,
+            sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y))
+        };
     }
 
     // IsPerpendicular() assure that xDelta(s) are not zero
     real_t aSlope = yDelta_a / xDelta_a; 
     real_t bSlope = yDelta_b / xDelta_b;
 
-    if (abs(aSlope-bSlope) <= epsilon){	
-        // checking whether the given points are colinear. 	
-        return;
-    }
+    // if (abs(aSlope-bSlope) <= epsilon){	
+    //     // checking whether the given points are colinear. 	
+    //     return;
+    // }
 
     // calc center
-    m_Centerx = (
+    return {(
         aSlope*bSlope*(pt1y - pt3y) + 
         bSlope*(pt1x + pt2x) - 
         aSlope*(pt2x+pt3x) )
-        /(2* (bSlope-aSlope) );
-    m_Centery = -1*(m_Centerx - (pt1x+pt2x)/2)/aSlope +  (pt1y+pt2y)/2;
-    m_dRadius = sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y));
+        /(2* (bSlope-aSlope) ),
+        -1*(m_Centerx - (pt1x+pt2x)/2)/aSlope +  (pt1y+pt2y)/2,
+        sqrt(sq(m_Centerx-pt1x) + sq(m_Centery-pt1y))
+    };
 }
 
+ArcInterpolation::ArcInterpolation(const Vector2 & handle):
+    _a(handle.x), _b(handle.y){
+        scexpr real_t pt1x = 0;
+        scexpr real_t pt1y = 0;
+        real_t pt2x = _a;
+        real_t pt2y = _b;
+        scexpr real_t pt3x = 1;
+        scexpr real_t pt3y = 1;
+        auto && result = [&]() -> std::tuple<real_t, real_t, real_t> {
+            if      (!IsPerpendicular(Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y}))		
+                calcCircleFrom3Points (Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y});	
+            else if (!IsPerpendicular(Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y}))		
+                calcCircleFrom3Points (Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y});	
+            else if (!IsPerpendicular(Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y}))		
+                calcCircleFrom3Points (Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y});	
+            else if (!IsPerpendicular(Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y}))		
+                calcCircleFrom3Points (Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y});	
+            else if (!IsPerpendicular(Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y}))		
+                calcCircleFrom3Points (Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y});	
+            else if (!IsPerpendicular(Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y}))		
+                calcCircleFrom3Points (Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y});	
+            return {0,0,0};
+        }();
 
-real_t ArcInterpolation::mapping(const Vector2 handle, real_t x){
+        std::tie(m_Centerx, m_Centery, m_dRadius) = result;
+    };
+
+
+real_t ArcInterpolation::forward(real_t x) const {
     scexpr real_t epsilon = real_t(0.001);
-    scexpr real_t min_param_a = real_t(0 + epsilon);
-    scexpr real_t max_param_a = real_t(1 - epsilon);
-    scexpr real_t min_param_b = real_t(0 + epsilon);
-    scexpr real_t max_param_b = real_t(1 - epsilon);
+    // scexpr real_t min_param_a = real_t(0 + epsilon);
+    // scexpr real_t max_param_a = real_t(1 - epsilon);
+    // scexpr real_t min_param_b = real_t(0 + epsilon);
+    // scexpr real_t max_param_b = real_t(1 - epsilon);
 
-    auto [a,b] = handle;
-    a = MIN(max_param_a, MAX(min_param_a, a));
-    b = MIN(max_param_b, MAX(min_param_b, b));
+    // auto [a,b] = handle;
+    // a = MIN(max_param_a, MAX(min_param_a, a));
+    // b = MIN(max_param_b, MAX(min_param_b, b));
     x = CLAMP(x, epsilon, real_t(1)-epsilon);
     
-    real_t pt1x = 0;
-    real_t pt1y = 0;
-    real_t pt2x = a;
-    real_t pt2y = b;
-    real_t pt3x = 1;
-    real_t pt3y = 1;
 
-    if      (!IsPerpendicular(Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y}))		
-        calcCircleFrom3Points (Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y});	
-    else if (!IsPerpendicular(Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y}))		
-        calcCircleFrom3Points (Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y});	
-    else if (!IsPerpendicular(Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y}))		
-        calcCircleFrom3Points (Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y}, Vector2{pt3x,pt3y});	
-    else if (!IsPerpendicular(Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y}))		
-        calcCircleFrom3Points (Vector2{pt2x,pt2y}, Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y});	
-    else if (!IsPerpendicular(Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y}))		
-        calcCircleFrom3Points (Vector2{pt3x,pt3y}, Vector2{pt2x,pt2y}, Vector2{pt1x,pt1y});	
-    else if (!IsPerpendicular(Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y}))		
-        calcCircleFrom3Points (Vector2{pt3x,pt3y}, Vector2{pt1x,pt1y}, Vector2{pt2x,pt2y});	
-    else { 
-        return 0;
-    }
+
 
     // constrain
-    if ((m_Centerx > 0) && (m_Centerx < 1)){
-        if (a < m_Centerx){
-        m_Centerx = 1;
-        m_Centery = 0;
-        m_dRadius = 1;
-        } else {
-        m_Centerx = 0;
-        m_Centery = 1;
-        m_dRadius = 1;
-        }
-    }
+    // if ((m_Centerx > 0) && (m_Centerx < 1)){
+    //     if (_a < m_Centerx){
+    //         m_Centerx = 1;
+    //         m_Centery = 0;
+    //         m_dRadius = 1;
+    //     } else {
+    //         m_Centerx = 0;
+    //         m_Centery = 1;
+    //         m_dRadius = 1;
+    //     }
+    // }
     
     real_t y = 0;
     if (x >= m_Centerx){
@@ -155,7 +168,7 @@ void CircularFilletInterpoation::computeFilletParameters (
         const Vector2 & pt2,
         const Vector2 & pt3,
         const Vector2 & pt4,
-        real_t r){
+        real_t r) {
 
     auto [p1x, p1y] = pt1;
     auto [p2x, p2y] = pt2;
@@ -266,20 +279,20 @@ real_t arcCenterX, arcCenterY;
 real_t arcRadius;
 
 //--------------------------------------------------------
-real_t CircularFilletInterpoation::mapping(const Vector2 & handle, real_t R, real_t x){
+real_t CircularFilletInterpoation::forward(real_t x) const {
   
-  scexpr real_t epsilon = real_t(0.001);
-  scexpr real_t min_param_a = real_t(0 + epsilon);
-  scexpr real_t max_param_a = real_t(1 - epsilon);
-  scexpr real_t min_param_b = real_t(0 + epsilon);
-  scexpr real_t max_param_b = real_t(1 - epsilon);
+//   scexpr real_t epsilon = real_t(0.001);
+//   scexpr real_t min_param_a = real_t(0 + epsilon);
+//   scexpr real_t max_param_a = real_t(1 - epsilon);
+//   scexpr real_t min_param_b = real_t(0 + epsilon);
+//   scexpr real_t max_param_b = real_t(1 - epsilon);
 
-  auto [a,b] = handle;
+//   auto [a,b] = handle;
 
-  a = MAX(min_param_a, MIN(max_param_a, a)); 
-  b = MAX(min_param_b, MIN(max_param_b, b)); 
+//   a = MAX(min_param_a, MIN(max_param_a, a)); 
+//   b = MAX(min_param_b, MIN(max_param_b, b)); 
 
-  computeFilletParameters ({0,0}, {a,b}, {a,b}, {1,1}, R);
+
   real_t t = 0;
   real_t y = 0;
   x = MAX(0, MIN(1, x));

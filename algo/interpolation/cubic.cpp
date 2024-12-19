@@ -1,6 +1,10 @@
 #include "cubic.hpp"
 
-using namespace ymd;
+using namespace ymd::intp;
+
+real_t CubicInterpolation::forward(const real_t x) const {
+    return forward({_a, _b}, {_c, _d}, x);
+}
 
 real_t CubicInterpolation::forward(const Vector2 & a,const Vector2 & b, const real_t x){
 
@@ -35,26 +39,33 @@ real_t CubicInterpolation::forward(const Vector2 & a,const Vector2 & b, const re
     return y;
 }
 
+
+real_t NearCubicInterpolation::forward(const real_t x) const {
+    return forward({_a, _b}, {_c, _d}, x);
+}
+
+
 real_t NearCubicInterpolation::forward(const Vector2 & from,const Vector2 & to, const real_t x){
     auto [a,b] = from;
     auto [c,d] = to;
     real_t y = 0;
-    scexpr real_t epsilon = real_t(0.001);
-    real_t min_param_a = 0 + epsilon;
-    real_t max_param_a = 1 - epsilon;
-    real_t min_param_b = 0 + epsilon;
-    real_t max_param_b = 1 - epsilon;
-    a = MAX(min_param_a, MIN(max_param_a, a));
-    b = MAX(min_param_b, MIN(max_param_b, b));
 
-    real_t x0 = 0;  
-    real_t y0 = 0;
+    scexpr double epsilon = 0.001;
+    scexpr real_t min_param_a = real_t(0 + epsilon);
+    scexpr real_t max_param_a = real_t(1 - epsilon);
+    scexpr real_t min_param_b = real_t(0 + epsilon);
+    scexpr real_t max_param_b = real_t(1 - epsilon);
+    a = CLAMP(a, min_param_a, max_param_a);
+    b = CLAMP(b, min_param_b, max_param_b);
+
+    scexpr real_t x0 = 0;  
+    scexpr real_t y0 = 0;
     real_t x4 = a;  
     real_t y4 = b;
     real_t x5 = c;  
     real_t y5 = d;
-    real_t x3 = 1;  
-    real_t y3 = 1;
+    scexpr real_t x3 = 1;  
+    scexpr real_t y3 = 1;
     real_t x1,y1,x2,y2; // to be solved.
 
     // arbitrary but reasonable 

@@ -1,6 +1,6 @@
-#include "interpolation.hpp"
+#include "Interpolation.hpp"
 
-#include "sys/math/real.hpp"
+
 
 // real_t Interpolation::demo(){
 //     auto turnCnt = millis() % 2667;
