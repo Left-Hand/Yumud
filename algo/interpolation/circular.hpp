@@ -2,7 +2,7 @@
 
 #include "interpolation.hpp"
 
-namespace ymd{
+namespace ymd::intp{
 
 class ArcInterpolation:public Interpolation{
 protected:

@@ -2,7 +2,7 @@
 
 
 #include "hal/bus/uart/uarthw.hpp"
-
+#include "algo/interpolation/Polynomial.hpp"
 #include "sys/debug/debug_inc.h"
 #include "types/vector2/vector2_t.hpp"
 
@@ -57,6 +57,63 @@ auto rasterization_points(const Points & points, const size_t n){
     return ret;
 }
 
+template<typename T>
+concept Functor = requires(T f, real_t x) {
+    { f(x) } -> std::same_as<real_t>;
+};
+
+template<typename T>
+concept Arithmetic = std::is_arithmetic_v<T>;
+
+// template<typename T, Arithmetic U>
+// concept Lerpable = requires(T a, T b, U t) {
+//     { a + b } -> std::same_as<T>;
+//     { a - b } -> std::same_as<T>;
+//     { a * t } -> std::same_as<T>;
+// };
+
+auto rasterization_points(const Functor auto & functor, const size_t n){
+    std::vector<real_t> ret;
+
+    for(size_t i = 0; i < n; i++){
+        const auto x = real_t(i) / n;
+        ret.emplace_back(functor(x));
+    }
+
+    return ret;
+}
+
+// template<Lerpable T, Functor U>
+template<typename T, typename U>
+class Tweener_t{
+    const T from_;
+    const T delta_;
+
+    using Interpolation = intp::Interpolation;
+    const U _func; 
+public:
+    Tweener_t(const T & from,const T & to, const U & func) : from_(from), delta_(to - from), _func(std::move(func)) {}
+
+    T operator()(const real_t x) const {
+        return from_ + delta_ * real_t(_func(x));
+    }
+};
+
+using namespace ymd::intp;
+using Tween_CosVec2 = Tweener_t<Vector2_t<real_t>, CosineInterpolation>;
+
+using Tween_Cos = Tweener_t<real_t, CosineInterpolation>;
+
+template<arithmetic T, typename U>
+auto make_tweener(const T & from, const T & to,const U & inst){
+    return Tweener_t<real_t, U>(from, to, inst);
+}
+
+template<typename T, typename U>
+auto make_tweener(const T & from, const T & to,const U & inst){
+    return Tweener_t<T, U>(from, to, inst);
+}
+
 void curve_tb() {
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN(std::setprecision(4));
@@ -82,7 +139,18 @@ void curve_tb() {
     // DEBUG_PRINTLN(get_y_by_x(points, 0.95_r));
     // DEBUG_PRINTLN(get_y_by_x(points, 1.04_r));
 
-    auto rpoints = rasterization_points(points, 50);
+    // auto rpoints = rasterization_points(points, 50);
+
+
+    // auto rpoints = rasterization_points(intp::CosineInterpolation(), 50);
+    // auto rpoints = rasterization_points(intp::SeatInterpolation({0.6_r, 0.2_r}), 50);
+    // auto rpoints = rasterization_points(intp::QuadraticSeatInterpolation({0.6_r, 0.2_r}, 10), 50);
+    // auto rpoints = rasterization_points(intp::SymmetricInterpolation({0.6_r, 0.2_r}, 10), 50);
+    [[maybe_unused]] auto tw1 = make_tweener(0, 4, intp::CosineInterpolation());
+    [[maybe_unused]] auto tw2 = make_tweener(Vector2(0,0), Vector2(4,4), intp::CosineInterpolation());
+
+    auto rpoints = rasterization_points(tw1, 50);
+    // auto rpoints = rasterization_points(make_tweener(Vector2(0,0), Vector2(1,4), intp::CosineInterpolation()), 50);
 
     for(auto & p : rpoints) {
         DEBUG_PRINTLN(p);
