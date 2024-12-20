@@ -3,6 +3,8 @@
 #include "DacUtils.hpp"
 #include "sys/math/real.hpp"
 
+#ifdef ENABLE_DAC
+
 namespace ymd::hal{
 
 class DacChannel{
@@ -46,3 +48,5 @@ public:
 };
 
 }
+
+#endif

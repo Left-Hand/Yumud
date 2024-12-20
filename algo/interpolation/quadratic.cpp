@@ -1,12 +1,12 @@
 #include "quadratic.hpp"
 
-using namespace ymd;
+using namespace ymd::intp;
 
-real_t QuadraticInterpolation::forward(const Vector2 & handle, const real_t x){
+real_t QuadraticInterpolation::forward(const real_t x){
   // adapted from BEZMATH.PS (1993)
   // by Don Lancaster, SYNERGETICS Inc. 
   // http://www.tinaja.com/text/bezmath.html
-    auto [a,b] = handle;
+    auto [a,b] = _handle;
     real_t epsilon = real_t(0.00001);
     a = MAX(0, MIN(1, a)); 
     b = MAX(0, MIN(1, b)); 

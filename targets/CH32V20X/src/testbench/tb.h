@@ -96,3 +96,5 @@ void can_ring_main();
 void paj7620_main();
 
 void proxy_tb();
+
+void curve_tb();

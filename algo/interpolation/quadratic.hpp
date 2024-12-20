@@ -2,11 +2,14 @@
 
 #include "interpolation.hpp"
 
-namespace ymd{
+namespace ymd::intp{
 
 class QuadraticInterpolation:public Interpolation{
+protected:
+    Vector2 _handle;
 public:
-    static real_t forward(const Vector2 & handle, const real_t x);
+    QuadraticInterpolation(const Vector2 & handle):_handle(handle){}
+    real_t forward(const real_t x);
 };
 
 }

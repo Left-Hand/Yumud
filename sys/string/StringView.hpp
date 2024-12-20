@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sys/string/utils/StringUtils.hpp"
-#include "algo/hash_func.hpp"
+#include "sys/utils/hash_func.hpp"
 
 #include <cstdint>
 #include <memory.h>

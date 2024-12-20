@@ -6,7 +6,7 @@
 #include "misc/motor_scexpr.hpp"
 
 #include "sys/debug/debug_inc.h"
-#include "algo/hash_func.hpp"
+#include "sys/utils/hash_func.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 
 #include "drivers/Actuator/SVPWM/svpwm.hpp"

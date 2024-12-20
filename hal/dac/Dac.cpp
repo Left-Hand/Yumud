@@ -4,6 +4,8 @@
 using namespace ymd::hal;
 using namespace ymd::hal::DacUtils;
 
+#ifdef ENABLE_DAC
+
 void DacChannel::init(){
     DAC_InitTypeDef  DAC_InitType = {
         .DAC_Trigger = DAC_Trigger_None,
@@ -70,3 +72,5 @@ void Dac::enableRcc(const bool en){
 void Dac::init(){
     enableRcc(true);
 }
+
+#endif
