@@ -8,10 +8,16 @@
 #include "types/vector3/vector3_t.hpp"
 #include "robots/curve/CurveConcept_t.hpp"
 
+#include "sys/utils/setget/Getter.hpp"
+#include "sys/utils/setget/Setter.hpp"
+#include "robots/tween/Tween.hpp"
+
 using Point = Vector2_t<real_t>;
 using Points = std::vector<Vector2_t<real_t>>;
 
 using namespace ymd::intp;
+using namespace ymd::utils;
+using namespace ymd::tween;
 // void sort_po
 
 auto compare_points_by_x = [](const Vector2_t<real_t> & a, const Vector2_t<real_t> & b) -> bool {
@@ -72,7 +78,7 @@ concept Arithmetic = std::is_arithmetic_v<T>;
 //     { a * t } -> std::same_as<T>;
 // };
 
-auto rasterization_points(const Functor auto & functor, const size_t n){
+auto rasterization_points(const auto & functor, const size_t n){
     std::vector<real_t> ret;
 
     for(size_t i = 0; i < n; i++){
@@ -82,125 +88,6 @@ auto rasterization_points(const Functor auto & functor, const size_t n){
 
     return ret;
 }
-
-
-
-template<typename T>
-class SetterConcept_t{
-public:
-    SetterConcept_t(const SetterConcept_t & other) = delete;
-    SetterConcept_t(SetterConcept_t && other) = default;
-
-    SetterConcept_t() = default;
-
-    virtual ~SetterConcept_t() = default;
-
-    virtual SetterConcept_t & operator =(const T & value) = 0; 
-};
-
-template<typename T>
-class LambdaSetter_t: public SetterConcept_t<T>{
-public:
-    using Setter = std::function<void(T)>;
-protected:
-    Setter _setter;
-public:
-    template<typename F>
-    LambdaSetter_t(F && setter)
-        : _setter(std::forward<F>(setter)) {}
-
-    LambdaSetter_t & operator =(const T & value){
-        _setter(value);
-        return *this;
-    }
-};
-
-template<typename ValueType, typename ObjType>
-auto make_setter(ObjType & obj, void(ObjType::*member_func_ptr)(const ValueType &)) {
-    return LambdaSetter_t<ValueType>(
-        [&obj, member_func_ptr](const ValueType & value) {
-            (obj.*member_func_ptr)(value);
-        });
-}
-
-
-template<typename T>
-class GetterConcept_t{
-public:
-    GetterConcept_t(const GetterConcept_t & other) = delete;
-    GetterConcept_t(GetterConcept_t && other) = default;
-
-    GetterConcept_t() = default;
-
-    virtual ~GetterConcept_t() = default;
-
-    virtual T operator()() = 0; 
-};
-
-
-template<typename T>
-class LambdaGetter_t: public GetterConcept_t<T>{
-public:
-    using Getter = std::function<T(void)>;
-protected:
-    Getter _getter;
-public:
-    template<typename F>
-    LambdaGetter_t(F && getter)
-        : _getter(std::forward<F>(getter)) {}
-
-    T operator ()() override {
-        return _getter();
-    }
-};
-
-template<typename ValueType, typename ObjType>
-auto make_getter(ObjType & obj, ValueType(ObjType::*member_func_ptr)()) {
-    return LambdaGetter_t<ValueType>(
-        [&obj, member_func_ptr]() {
-            return (obj.*member_func_ptr)();
-        });
-}
-
-
-template<typename Setter, typename Curve>
-class Tweener_t{
-    Setter _setter;
-    Curve _curve; 
-public:
-    Tweener_t(Setter && setter, Curve && curve):
-        _setter(std::move(setter)),
-        _curve(std::move(curve)){}
-
-    void update(const real_t time){
-        _setter = _curve(time);
-    }
-};
-
-
-template<typename T, typename U>
-auto make_tweener(T && setter, U && curve){
-    return Tweener_t<T, U>(std::move(setter), std::move(curve));
-}
-
-
-template<typename ValueType, typename Interpolator, typename U = ValueType>
-auto make_tweener(
-    auto & obj, 
-    void(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(const ValueType &),
-    const Interpolator & interpolator, 
-    const U & from, 
-    const U & to)
-{
-
-    auto setter = make_setter<ValueType>(obj, member_func_ptr);
-
-    using CurveType = std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>;
-    auto curve = make_curve<CurveType>(interpolator, from, to);
-
-    return Tweener_t<decltype(setter), decltype(curve)>(std::move(setter), std::move(curve));
-}
-
 
 void curve_tb() {
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
@@ -237,26 +124,31 @@ void curve_tb() {
             // DEBUG_PRINTLN
             return Vector2(1,0).rotated(t);
         }
+
+        operator real_t(){
+            return sin(Sys::t);
+        }
     };
 
     Ball ball;
 
-    auto getter = make_getter(ball, &Ball::getPosition);
 
-    auto tweener = make_tweener(
+    [[maybe_unused]] auto tweener = make_tweener(
         ball, &Ball::setPosition, 
         CosineInterpolation(), {0,0}, {1,1}
     );
 
-    auto tw2 = make_tweener(
+    [[maybe_unused]] auto tw2 = make_tweener(
         ball, &Ball::setScale, 
         CosineInterpolation(), {0,0,0}, {1,1,1}
     );
 
-    auto tw3 = make_tweener(
+    [[maybe_unused]] auto tw3 = make_tweener(
         ball, &Ball::setSize, 
         CosineInterpolation(), 0, 1
     );
+
+    auto getter = make_getter(ball, &Ball::operator real_t);
 
 
     // for(auto & p : points) {

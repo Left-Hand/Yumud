@@ -2,7 +2,7 @@
 
 #include "sys/math/real.hpp"
 
-namespace ymd{
+namespace ymd::curve{
 
 template<typename T>
 concept Functor = requires(T f, real_t x) {
