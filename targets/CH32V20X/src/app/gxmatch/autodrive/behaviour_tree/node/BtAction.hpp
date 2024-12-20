@@ -1,6 +1,6 @@
 #pragma once
 
-namespace btree{
+namespace ymd::btree{
 
 class BtAction : public BtNode{
 public:

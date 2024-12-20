@@ -2,7 +2,7 @@
 
 #include "../BtNode.hpp"
 
-namespace btree {
+namespace ymd::btree {
 
 class BtDecorator : public BtNode {
 public:

@@ -2,7 +2,7 @@
 
 #include "BtDecorator.hpp"
 
-namespace btree {
+namespace ymd::btree {
 
 class BtRepeat : public BtDecorator {
 public:

@@ -10,7 +10,8 @@ namespace ymd::utils{
 template<typename T>
 class SetterConcept_t{
 public:
-    SetterConcept_t(const SetterConcept_t & other) = delete;
+    using Type = T;
+    SetterConcept_t(const SetterConcept_t & other) = default;
     SetterConcept_t(SetterConcept_t && other) = default;
 
     SetterConcept_t() = default;

@@ -12,7 +12,8 @@ concept Functor = requires(T f, real_t x) {
 template<typename T>
 class CurveConcept_t{
 public:
-    CurveConcept_t(const CurveConcept_t & other) = delete;
+    using Type = T;
+    CurveConcept_t(const CurveConcept_t & other) = default;
     CurveConcept_t(CurveConcept_t && other) = default;
 
     CurveConcept_t() = default;
@@ -28,8 +29,15 @@ class CurveFunctor_t:public CurveConcept_t<T>{
     const T delta_;
     const real_t dur_;
 public:
-    CurveFunctor_t(U && functor, const T & from,const T & to, const real_t dur = 2) :
+    CurveFunctor_t(U && functor, const T & from,const T & to, const real_t dur = 1) :
         _functor(std::move(functor)),
+        from_(from), 
+        delta_(to - from),
+        dur_(dur)
+        {}
+
+    CurveFunctor_t(const U & functor, const T & from,const T & to, const real_t dur = 1) :
+        _functor((functor)),
         from_(from), 
         delta_(to - from),
         dur_(dur)
@@ -40,14 +48,16 @@ public:
     }
 };
 
-template<arithmetic T, typename U>
-auto make_curve(U && functor, const T from, const T to) {
-    return CurveFunctor_t<real_t, U>(std::move(functor), from, to);
+template<arithmetic T>
+auto make_curve(Functor auto && functor, const T & from, const T & to) {
+    using Func = std::remove_reference_t<decltype(functor)>;
+    return CurveFunctor_t<real_t, Func>(std::forward<Func>(functor), from, to);
 }
 
-template<typename T, typename U>
-auto make_curve(U && functor, const T from, const T to) {
-    return CurveFunctor_t<T, U>(std::move(functor), from, to);
+template<typename T>
+auto make_curve(Functor auto && functor, const T & from, const T & to) {
+    using Func = std::remove_reference_t<decltype(functor)>;
+    return CurveFunctor_t<T, Func>(std::forward<Func>(functor), from, to);
 }
 
 }

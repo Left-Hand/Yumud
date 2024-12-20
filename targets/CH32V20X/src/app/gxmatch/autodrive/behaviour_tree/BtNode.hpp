@@ -5,7 +5,7 @@
 #include "sys/string/string.hpp"
 #include "sys/string/StringView.hpp"
 
-namespace btree{
+namespace ymd::btree{
 
 
 struct BtNode{

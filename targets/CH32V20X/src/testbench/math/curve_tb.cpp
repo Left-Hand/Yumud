@@ -18,6 +18,7 @@ using Points = std::vector<Vector2_t<real_t>>;
 using namespace ymd::intp;
 using namespace ymd::utils;
 using namespace ymd::tween;
+using namespace ymd::curve;
 // void sort_po
 
 auto compare_points_by_x = [](const Vector2_t<real_t> & a, const Vector2_t<real_t> & b) -> bool {
@@ -109,11 +110,12 @@ void curve_tb() {
     class Ball{
     public:
         void setSize(const real_t & size){
-            DEBUG_PRINTLN("size", size);
+            DEBUG_PRINTLN(size);
         }
 
         void setPosition(const Vector2 & pos){
-            DEBUG_PRINTLN("ball moved to", pos);
+            auto [x,y] = pos;
+            DEBUG_PRINTLN(x,y);
         }
 
         void setScale(const Vector3 & scale){
@@ -134,20 +136,26 @@ void curve_tb() {
     Ball ball;
 
 
-    auto setter = make_setter(ball, &Ball::setPosition);
+    auto pos_setter = make_setter(ball, &Ball::setPosition);
+    auto curve = make_curve<Vector2>(CosineInterpolation(), {0,0}, {1,4});
+
     auto getter = make_getter(ball, &Ball::getPosition);
     auto getter2 = make_getter(ball, &Ball::operator real_t);
 
-
-    [[maybe_unused]] auto tw2 = make_tweener(
-        ball, &Ball::setScale, 
-        CosineInterpolation(), {0,0,0}, {1,1,1}
+    [[maybe_unused]] auto tweener = make_tweener(
+        ball, &Ball::setPosition,
+        CosineInterpolation(), {1,0}, {-0.3_r,4}
     );
 
-    [[maybe_unused]] auto tw3 = make_tweener(
-        ball, &Ball::setSize, 
-        CosineInterpolation(), 0, 1
-    );
+    // [[maybe_unused]] auto tw2 = make_tweener(
+    //     ball, &Ball::setScale, 
+    //     CosineInterpolation(), {0,0,0}, {1,1,1}
+    // );
+
+    // [[maybe_unused]] auto tw3 = make_tweener(
+    //     ball, &Ball::setSize, 
+    //     CosineInterpolation(), 0, 1
+    // );
 
 
     // for(auto & p : points) {
@@ -185,10 +193,14 @@ void curve_tb() {
         // tweener.update(frac(t));
         // setter = Vector2(1,0).rotated(t);
 
-        DEBUG_PRINTLN(getter(), getter2());
+        // DEBUG_PRINTLN(getter(), getter2());
+        // tw3.update(frac(time()));
+        // pos_setter({sin(time()), cos(time())});
+
+        tweener.update(frac(t));
         // auto pos = getter();
         // setter = Vector2(getter);
-        setter = getter;
+        // setter = getter;
         // setter = Vector2(getter);
         // setter(getter());
         delay(10);

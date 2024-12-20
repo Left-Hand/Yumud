@@ -1,6 +1,6 @@
 #include "BtComposite.hpp"
 
-using namespace btree;
+using namespace ymd::btree;
 
 using Execution = BtNode::Execution;
 using Wrapper = BtComposite::Wrapper;

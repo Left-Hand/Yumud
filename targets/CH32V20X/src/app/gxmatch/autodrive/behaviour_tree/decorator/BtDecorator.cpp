@@ -1,6 +1,6 @@
 #include "BtDecorator.hpp"
 
-using namespace btree;
+using namespace ymd::btree;
 using Name = BtDecorator::Name;
 using Wrapper = BtDecorator::Wrapper;
 
