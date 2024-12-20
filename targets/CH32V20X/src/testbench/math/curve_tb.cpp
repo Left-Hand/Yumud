@@ -92,6 +92,16 @@ auto rasterization_points(const auto & functor, const size_t n){
 void curve_tb() {
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN(std::setprecision(4));
+    while(true){
+        // DEBUG_PRINTLN(getter());
+        // DEBUG_PRINTLN(std::bit_cast<uint32_t>(t), millis());
+        // const auto time = Sys::Clock::reCalculateTime();
+
+        Sys::Clock::reCalculateTime();
+        DEBUG_PRINTLN(iq_t(_iq((micros() * (1 << GLOBAL_Q)) / 1000000)), Sys::t);
+
+        delay(10);
+    }
 
     using Vector3 = Vector3_t<real_t>;
 
@@ -103,7 +113,7 @@ void curve_tb() {
         {1,1},
     };
 
-    std::sort(points.begin(), points.end(), compare_points_by_x);
+    std::sort(points.begin(), points.end(), Vector2::compare_x);
 
 
     class Ball{
@@ -126,6 +136,7 @@ void curve_tb() {
         }
 
         operator real_t(){
+            DEBUG_PRINTLN("??")
             return sin(Sys::t);
         }
     };
@@ -133,10 +144,16 @@ void curve_tb() {
     Ball ball;
 
 
-    [[maybe_unused]] auto tweener = make_tweener(
-        ball, &Ball::setPosition, 
-        CosineInterpolation(), {0,0}, {1,1}
-    );
+    auto setter = make_setter(ball, &Ball::setPosition);
+    // [[maybe_unused]] auto tweener = make_tweener(
+    //     ball, &Ball::setPosition, 
+    //     CosineInterpolation(), {0,0}, {1,1}
+    // );
+
+    // auto tweener = make_tweener(
+    //     ball, & 
+    //     CosineInterpolation(), {0,0}, {1,1}
+    // );
 
     [[maybe_unused]] auto tw2 = make_tweener(
         ball, &Ball::setScale, 
@@ -148,7 +165,7 @@ void curve_tb() {
         CosineInterpolation(), 0, 1
     );
 
-    auto getter = make_getter(ball, &Ball::operator real_t);
+    // auto getter = make_getter(ball, &Ball::operator real_t);
 
 
     // for(auto & p : points) {
@@ -182,7 +199,12 @@ void curve_tb() {
     delay(10);
     
     while(true){
-        DEBUG_PRINTLN(getter());
+        // DEBUG_PRINTLN(getter());
+        // tweener.update(frac(t));
+        // setter = Vector2(1,0).rotated(t);
+
+        DEBUG_PRINTLN(Sys::t);
+        delay(10);
     }
 
     // while(true){

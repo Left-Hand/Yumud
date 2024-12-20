@@ -7,7 +7,6 @@
 #include <type_traits>
 #include <optional>
 
-#include "sys/core/system.hpp"
 #include "sys/io/regs.hpp"
 #include "sys/math/fraction.hpp"
 

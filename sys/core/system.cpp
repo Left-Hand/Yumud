@@ -103,9 +103,9 @@ void Sys::Misc::reset(){
 
 void Sys::Clock::reCalculateTime(){
     #ifdef USE_IQ
-    t.value = _iq(
+    t = iq_t(_iq(
         (micros() * (1 << GLOBAL_Q)) / 1000000
-    );
+    ));
     #else
     t = msTick * (1 / 1000.0f);
     #endif

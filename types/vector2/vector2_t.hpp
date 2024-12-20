@@ -82,6 +82,24 @@ public:
     constexpr Vector2_t<T> rotated(const T r)const;
     constexpr Vector2_t<T> abs() const;
 
+
+    static bool compare_x(const Vector2_t & a, const Vector2_t & b){
+        return a.x < b.x;
+    };
+
+    static bool compare_y(const Vector2_t & a, const Vector2_t & b){
+        return a.y < b.y;
+    };
+
+    static bool compare_length(const Vector2_t & a, const Vector2_t & b){
+        return a.length_squared() < b.length_squared();
+    };
+
+    static bool compare_angle(const Vector2_t & a, const Vector2_t & b){
+        return a.cross(b) > 0;
+    };
+
+
     template<arithmetic U>
     __fast_inline constexpr Vector2_t<T> increase_x(const U & v){
         return {x + v, y};

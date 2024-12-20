@@ -2,7 +2,6 @@
 
 #include "Robot.hpp"
 
-using Sys::t;
 
 using namespace ymd;
 using namespace ymd::drivers;

@@ -7,7 +7,8 @@ using Execution = BtNode::Execution;
 Execution BtRepeat::tick(){
     auto & self = *this;
 
-    if (current_count_ >= repeat_count_) {
+    if(current_count_ >= repeat_count_){
+        current_count_ = 0;
         return Execution::SUCCESS;
     }
 

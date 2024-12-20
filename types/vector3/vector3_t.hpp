@@ -246,6 +246,23 @@ public:
     constexpr operator bool() const {
         return bool(x) or bool(y) or bool(z);
     }
+
+    static bool compare_x(const Vector3_t & a, const Vector3_t & b){
+        return a.x < b.x;
+    };
+
+    static bool compare_y(const Vector3_t & a, const Vector3_t & b){
+        return a.y < b.y;
+    };
+
+    static bool compare_z(const Vector3_t & a, const Vector3_t & b){
+        return a.y < b.y;
+    };
+
+    static bool compare_length(const Vector3_t & a, const Vector3_t & b){
+        return a.length_squared() < b.length_square();
+    };
+
 };
 
 template<arithmetic T>

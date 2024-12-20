@@ -28,6 +28,8 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "buck/buck.hpp"
 
+#include "sys/core/system.hpp"
+
 using Sys::t;
 
 using namespace ymd;
