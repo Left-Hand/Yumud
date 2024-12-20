@@ -5,6 +5,8 @@
 #include "algo/interpolation/Polynomial.hpp"
 #include "sys/debug/debug_inc.h"
 #include "types/vector2/vector2_t.hpp"
+#include "types/vector3/vector3_t.hpp"
+#include "robots/curve/CurveConcept_t.hpp"
 
 using Point = Vector2_t<real_t>;
 using Points = std::vector<Vector2_t<real_t>>;
@@ -58,10 +60,7 @@ auto rasterization_points(const Points & points, const size_t n){
     return ret;
 }
 
-template<typename T>
-concept Functor = requires(T f, real_t x) {
-    { f(x) } -> std::same_as<real_t>;
-};
+
 
 template<typename T>
 concept Arithmetic = std::is_arithmetic_v<T>;
@@ -85,46 +84,6 @@ auto rasterization_points(const Functor auto & functor, const size_t n){
 }
 
 
-template<typename T>
-class CurveConcept_t{
-public:
-    CurveConcept_t(const CurveConcept_t & other) = delete;
-    CurveConcept_t(CurveConcept_t && other) = default;
-
-    CurveConcept_t() = default;
-    virtual ~CurveConcept_t() = default;
-
-    virtual T operator()(const real_t x) const = 0;
-};
-
-template<typename T, Functor U>
-class CurveFunctor_t:public CurveConcept_t<T>{
-    const U _functor; 
-    const T from_;
-    const T delta_;
-    const real_t dur_;
-public:
-    CurveFunctor_t(U && functor, const T & from,const T & to, const real_t dur = 2) :
-        _functor(std::move(functor)),
-        from_(from), 
-        delta_(to - from),
-        dur_(dur)
-        {}
-
-    T operator()(const real_t x) const override{
-        return from_ + delta_ * real_t(_functor(x));
-    }
-};
-
-template<arithmetic T, typename U>
-auto make_curve(U && functor, const T from, const T to) {
-    return CurveFunctor_t<real_t, U>(std::move(functor), from, to);
-}
-
-template<typename T, typename U>
-auto make_curve(U && functor, const T from, const T to) {
-    return CurveFunctor_t<T, U>(std::move(functor), from, to);
-}
 
 template<typename T>
 class SetterConcept_t{
@@ -156,13 +115,53 @@ public:
     }
 };
 
-template<typename ObjType, typename MemberFuncPtr>
-auto make_setter(ObjType & obj, MemberFuncPtr member_func_ptr) {
-    return LambdaSetter_t<Vector2>(
-        [&obj, member_func_ptr](const Vector2 & value) {
+template<typename ValueType, typename ObjType>
+auto make_setter(ObjType & obj, void(ObjType::*member_func_ptr)(const ValueType &)) {
+    return LambdaSetter_t<ValueType>(
+        [&obj, member_func_ptr](const ValueType & value) {
             (obj.*member_func_ptr)(value);
         });
 }
+
+
+template<typename T>
+class GetterConcept_t{
+public:
+    GetterConcept_t(const GetterConcept_t & other) = delete;
+    GetterConcept_t(GetterConcept_t && other) = default;
+
+    GetterConcept_t() = default;
+
+    virtual ~GetterConcept_t() = default;
+
+    virtual T operator()() = 0; 
+};
+
+
+template<typename T>
+class LambdaGetter_t: public GetterConcept_t<T>{
+public:
+    using Getter = std::function<T(void)>;
+protected:
+    Getter _getter;
+public:
+    template<typename F>
+    LambdaGetter_t(F && getter)
+        : _getter(std::forward<F>(getter)) {}
+
+    T operator ()() override {
+        return _getter();
+    }
+};
+
+template<typename ValueType, typename ObjType>
+auto make_getter(ObjType & obj, ValueType(ObjType::*member_func_ptr)()) {
+    return LambdaGetter_t<ValueType>(
+        [&obj, member_func_ptr]() {
+            return (obj.*member_func_ptr)();
+        });
+}
+
 
 template<typename Setter, typename Curve>
 class Tweener_t{
@@ -184,17 +183,21 @@ auto make_tweener(T && setter, U && curve){
     return Tweener_t<T, U>(std::move(setter), std::move(curve));
 }
 
-template<typename ObjType, typename ValueType, typename Interpolator>
+
+template<typename ValueType, typename Interpolator, typename U = ValueType>
 auto make_tweener(
-    ObjType & obj, 
-    void(ObjType::*member_func_ptr)(const ValueType &),
+    auto & obj, 
+    void(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(const ValueType &),
     const Interpolator & interpolator, 
-    const ValueType & from, 
-    const ValueType & to)
+    const U & from, 
+    const U & to)
 {
 
-    auto setter = make_setter(obj, member_func_ptr);
-    auto curve = make_curve(interpolator, from, to);   
+    auto setter = make_setter<ValueType>(obj, member_func_ptr);
+
+    using CurveType = std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>;
+    auto curve = make_curve<CurveType>(interpolator, from, to);
+
     return Tweener_t<decltype(setter), decltype(curve)>(std::move(setter), std::move(curve));
 }
 
@@ -203,6 +206,7 @@ void curve_tb() {
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
     DEBUG_PRINTLN(std::setprecision(4));
 
+    using Vector3 = Vector3_t<real_t>;
 
     Points points = {
         {0,0},
@@ -212,31 +216,49 @@ void curve_tb() {
         {1,1},
     };
 
+    std::sort(points.begin(), points.end(), compare_points_by_x);
+
+
     class Ball{
     public:
+        void setSize(const real_t & size){
+            DEBUG_PRINTLN("size", size);
+        }
+
         void setPosition(const Vector2 & pos){
             DEBUG_PRINTLN("ball moved to", pos);
+        }
+
+        void setScale(const Vector3 & scale){
+            DEBUG_PRINTLN("ball scale is", scale);
+        }
+
+        Vector2 getPosition(){
+            // DEBUG_PRINTLN
+            return Vector2(1,0).rotated(t);
         }
     };
 
     Ball ball;
+
+    auto getter = make_getter(ball, &Ball::getPosition);
 
     auto tweener = make_tweener(
         ball, &Ball::setPosition, 
         CosineInterpolation(), {0,0}, {1,1}
     );
 
-    std::sort(points.begin(), points.end(), compare_points_by_x);
-
-    auto tw1 = make_tweener(
-        make_setter(ball, &Ball::setPosition), 
-        make_curve(CosineInterpolation(), Vector2{0,0}, Vector2{1,1})
-    );
-
     auto tw2 = make_tweener(
-        ball, &Ball::setPosition, 
-        CosineInterpolation(), Vector2{0,0}, Vector2{1,1}
+        ball, &Ball::setScale, 
+        CosineInterpolation(), {0,0,0}, {1,1,1}
     );
+
+    auto tw3 = make_tweener(
+        ball, &Ball::setSize, 
+        CosineInterpolation(), 0, 1
+    );
+
+
     // for(auto & p : points) {
     //     DEBUG_PRINTLN(p);
     //     delay(10);
@@ -267,7 +289,9 @@ void curve_tb() {
     // }
     delay(10);
     
-    while(true);
+    while(true){
+        DEBUG_PRINTLN(getter());
+    }
 
     // while(true){
     //     DEBUG_PRINTLN(millis());
