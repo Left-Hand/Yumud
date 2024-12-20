@@ -1,8 +1,12 @@
 #pragma once
 
 #include <type_traits>
+#include "sys/utils/setget/Getter.hpp"
 
 namespace ymd::utils{
+// template<typename T>
+// class GetterConcept_t;
+
 template<typename T>
 class SetterConcept_t{
 public:
@@ -12,14 +16,28 @@ public:
     SetterConcept_t() = default;
 
     virtual ~SetterConcept_t() = default;
+    
+    SetterConcept_t & operator =(const T & value){
+        auto & self = *this;
+        self(value);
+        return self;
+    }
 
-    virtual SetterConcept_t & operator =(const T & value) = 0; 
+    SetterConcept_t & operator =(GetterConcept_t<T> & getter){
+        auto & self = *this;
+        self = getter();
+        return self;
+    }
+
+    virtual void operator ()(const T & value) = 0; 
 };
 
 template<typename T>
 class LambdaSetter_t: public SetterConcept_t<T>{
 public:
     using Setter = std::function<void(T)>;
+    using SetterConcept_t<T>::operator =;
+
 protected:
     Setter _setter;
 public:
@@ -27,9 +45,14 @@ public:
     LambdaSetter_t(F && setter)
         : _setter(std::forward<F>(setter)) {}
 
-    LambdaSetter_t & operator =(const T & value){
+    // LambdaSetter_t & operator =(const T & value){
+    //     auto & self = *this;
+    //     self(value);
+    //     return self;
+    // }
+
+    void operator ()(const T & value) override{
         _setter(value);
-        return *this;
     }
 };
 

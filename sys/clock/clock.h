@@ -20,8 +20,10 @@ void delayNanoseconds(const uint32_t ns);
 void Systick_Init(void);
 __interrupt void SysTick_Handler(void);
 
-void retime();
-
 #ifdef __cplusplus
 }
+
+#include "sys/math/real.hpp"
+
+real_t time();
 #endif

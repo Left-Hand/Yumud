@@ -9,6 +9,8 @@
 #include "sys/clock/clock.h"
 #include "sys/clock/clock.hpp"
 
+#include "sys/debug/debug_inc.h"
+
 #ifdef N32G45X
 #define M_RCC_CONFIGER RCC_ConfigHclk
 #else
@@ -38,6 +40,10 @@
 #else
 #define M_RCC_CLK_GETTER RCC_GetClocksFreq
 #endif
+
+namespace Sys{
+real_t t;
+}
 
 void Sys::Clock::delayMs(const uint32_t ms){
     delay(ms);
@@ -103,16 +109,10 @@ void Sys::Misc::reset(){
 
 void Sys::Clock::reCalculateTime(){
     #ifdef USE_IQ
-    t = iq_t(_iq(
-        (micros() * (1 << GLOBAL_Q)) / 1000000
-    ));
+    t = time();
     #else
     t = msTick * (1 / 1000.0f);
     #endif
-}
-
-void Sys::Clock::reCalculateTimeMs(){
-    retime();
 }
 
 uint64_t Sys::Chip::getChipId(){

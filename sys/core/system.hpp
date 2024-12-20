@@ -4,7 +4,7 @@
 #include "sys/math/real.hpp"
 
 namespace Sys{
-    static inline real_t t;
+    extern real_t t;
     
     namespace Misc{
         void prework();
@@ -43,7 +43,7 @@ namespace Sys{
         void setAHBDiv(const uint8_t div);
 
         void reCalculateTime();
-        void reCalculateTimeMs();
+        // void reCalculateTimeMs();
     };
 };
 
