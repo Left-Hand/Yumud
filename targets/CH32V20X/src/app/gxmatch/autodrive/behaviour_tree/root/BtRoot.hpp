@@ -1,10 +1,12 @@
 #pragma once
 
-#include "../BtNode.hpp"
+#include "../../behaviour_tree/composite/BtComposite.hpp"
 
 namespace ymd::btree{
 
-class BtRoot:public BtNode{
+class BtRoot:public BtComposite{
+    BtRoot():BtComposite("root"){;}
+public:
 
 };
 

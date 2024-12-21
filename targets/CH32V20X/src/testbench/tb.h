@@ -98,3 +98,6 @@ void paj7620_main();
 void proxy_tb();
 
 void curve_tb();
+
+
+void btree_basic_tb();

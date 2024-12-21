@@ -8,16 +8,18 @@ using Execution = BtNode::Execution;
 Execution BtSelector::tick() {
     using enum Execution;
 
-    Execution result;
     auto & self = *this;
 
-    while (idx_ < self.count()) {
-        result = self[idx_].tick();
-        if (result == SUCCESS) {
-            idx_ = 0; // Reset index for next run
-            return SUCCESS;
-        } else if (result == RUNNING) {
-            return RUNNING;
+    while (idx_ < self.getChildCount()) {
+        const auto result = self[idx_].tick();
+        switch(result){
+            case SUCCESS:
+                idx_ = 0;
+                return SUCCESS;
+            case RUNNING:
+                return RUNNING;
+            default:
+                break;
         }
         idx_ += 1;
     }

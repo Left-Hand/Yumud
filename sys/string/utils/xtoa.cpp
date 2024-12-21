@@ -30,12 +30,14 @@ static void itoa_impl(T value, char * str, uint8_t radix){
 
 void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 
-	bool minus = value < 0;
+	const bool minus = value < 0;
     eps = MIN(eps, 5);
-    auto abs_value = ABS(int32_t(_iq(value)));
 
-    uint32_t int_part = uint32_t(abs_value) >> GLOBAL_Q;
-    uint32_t frac_part = uint32_t(abs_value) & ((1 << GLOBAL_Q )- 1);
+    const int32_t abs_value = ABS(int32_t(_iq(value)));
+    const uint32_t lower_mask = ((1 << GLOBAL_Q )- 1);
+
+    const uint32_t int_part = uint32_t(abs_value) >> GLOBAL_Q;
+    const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
 
     {
         if(minus){
@@ -50,11 +52,18 @@ void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 		str[end] = '.';//add dot to seprate
 		end += 1;//move to \0
 
-        for(uint8_t i = 0; i < eps; i++){
-            frac_part *= 10;
-        }
+        const uint32_t scale = [=](){
+            uint32_t ret = 1;
+            for(size_t i = 0; i < eps; i++){
+                ret *= 10;
+            }
+            return ret;
+        }();
 
-        StringUtils::itoas(frac_part >> GLOBAL_Q,str + end, 10, eps);
+        const bool upper_round = ((frac_part * scale) & lower_mask) > (lower_mask >> 1);
+        const uint32_t frac_int = (frac_part * scale) >> GLOBAL_Q;
+
+        StringUtils::itoas(frac_int + upper_round, str + end, 10, eps);
     }
 }
 
