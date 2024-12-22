@@ -148,18 +148,22 @@ void curve_tb() {
     auto getter2 = make_getter(ball, &Ball::operator real_t);
 
 
+    // [[maybe_unused]] auto tweener = make_tweener(
+    //     ball, &Ball::setPosition,
+    //     1, {1,0}, {-0.3_r,4}, CosineInterpolation()
+    // );
+
+    // [[maybe_unused]] Tweener_t<Vector2> * tw2 = new_tweener<Vector2>(
+    //     pos_setter,curve3
+    // );
     [[maybe_unused]] auto tweener = make_tweener(
         ball, &Ball::setPosition,
         1, {1,0}, {-0.3_r,4}, CosineInterpolation()
     );
 
-    [[maybe_unused]] auto tw2 = make_tweener(
-        pos_setter,curve3
-    );
-
-    [[maybe_unused]] auto tw3 = new_tweener(
-        pos_setter,curve3
-    );
+    // [[maybe_unused]] auto tw3 = new_tweener<Vector2>(
+    //     pos_setter,curve3
+    // );
 
     // [[maybe_unused]] auto tw3 = make_tweener(
     //     ball, &Ball::setSize, 
@@ -206,7 +210,8 @@ void curve_tb() {
         // tw3.update(frac(time()));
         // pos_setter({sin(time()), cos(time())});
 
-        tw2.update(fmod(t, tw2.period()));
+        // tw2->update(fmod(t, tw2->period()));
+        tweener.update(fmod(t, tweener.period()));
         // tw3.update()
         // auto [x,y] = curve3(fmod(t, curve3.period()));
         // DEBUG_PRINTLN(x,y);
