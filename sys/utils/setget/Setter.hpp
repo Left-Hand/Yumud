@@ -3,6 +3,18 @@
 #include <type_traits>
 #include "sys/utils/setget/Getter.hpp"
 
+
+#include "sys/polymorphism/proxy.hpp"
+
+// PRO_DEF_MEM_DISPATCH(MemDraw, Draw);
+// PRO_DEF_MEM_DISPATCH(MemArea, Area);
+
+// struct Drawable : pro::facade_builder
+//     ::add_convention<MemDraw, void(OutputStream& output)>
+//     ::add_convention<MemArea, real_t()>
+//     ::support_copy<pro::constraint_level::nontrivial>
+//     ::build {};
+
 namespace ymd::utils{
 // template<typename T>
 // class GetterConcept_t;
@@ -37,6 +49,7 @@ template<typename T>
 class LambdaSetter_t: public SetterConcept_t<T>{
 public:
     using Setter = std::function<void(T)>;
+    // scexpr auto a = sizeof(std::function<void(real_t)>);
     using SetterConcept_t<T>::operator =;
 
 protected:

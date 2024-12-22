@@ -161,6 +161,20 @@ void curve_tb() {
         1, {1,0}, {-0.3_r,4}, CosineInterpolation()
     );
 
+    // auto tweener4 = TweenerStatic_t<Vector2>(pos_setter, curve3);
+    // sizeof(TweenerStatic_t<Vector2>::Curve &);
+    // sizeof(tweener4._curve);
+    // using setter_type = decltype(&tweener4._setter);
+    // using curve_type = decltype(&tweener4._curve);
+    // sizeof(setter_type);
+    // sizeof(curve_type);
+    // auto a = "??";
+    // sizeof(a);
+    // sizeof()
+    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>);
+    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::CurveWrapper);
+    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::SetterWrapper);
+
     // [[maybe_unused]] auto tw3 = new_tweener<Vector2>(
     //     pos_setter,curve3
     // );
@@ -212,6 +226,13 @@ void curve_tb() {
 
         // tw2->update(fmod(t, tw2->period()));
         tweener.update(fmod(t, tweener.period()));
+        // DEBUG_PRINTLN(size_t(&Ball::setPosition));
+        // DEBUG_PRINTLN(sizeof(decltype(tweener4)));P
+        // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener)>));
+        // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener4)>));
+        // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(pos_setter)>));
+        // DEBUG_PRINTLN( sizeof(size_t));
+        // DEBUG_PRINTLN( sizeof(int*));
         // tw3.update()
         // auto [x,y] = curve3(fmod(t, curve3.period()));
         // DEBUG_PRINTLN(x,y);
