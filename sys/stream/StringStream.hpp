@@ -16,12 +16,20 @@ public:
     void write(const char * data_ptr, const size_t len) override;
     size_t pending() const override;
 
-    String str() && {
+    String && move_str() && {
         return std::move(str_);
     }
-    
-    operator String() const;
-    operator StringView() const;
+
+    void reserve(const size_t len){
+        str_.reserve(len);
+    }
+
+    String copy() const{
+        return String(str_);
+    }
+
+    explicit operator String() const;
+    explicit operator StringView() const;
 };
 
 };

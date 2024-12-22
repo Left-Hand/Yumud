@@ -44,12 +44,17 @@ private:
     real_t radius_;
 };
 
+struct What{
+
+};
+
 String PrintDrawableToString(pro::proxy<Drawable> p) {
     StringStream result;
     result << "entity = ";
     p->Draw(result);
     result << ", area = " << p->Area();
-    return std::move(result).str();
+    return std::move(result).move_str();
+    // return result.move_str();
 }
 
 void proxy_tb(){
@@ -57,8 +62,9 @@ void proxy_tb(){
 
     pro::proxy<Drawable> p = pro::make_proxy<Drawable, Rectangle>(3, 5);
     pro::proxy<Drawable> p2 = pro::make_proxy<Drawable, Circle>(3);
+    // pro::proxy<Drawable> p3 = pro::make_proxy<Drawable, What>(3);
     DEBUG_PRINTLN(PrintDrawableToString(p));  // Prints: "entity = {Rectangle: width = 3.00, height = 5.00}, area = 15"
     DEBUG_PRINTLN(PrintDrawableToString(p2));  // Prints: "entity = {Circle: radius = 3.00}, area = 28.27"
-
+    DEBUG_PRINTLN(sizeof(decltype(p)));
     while(true);
 }

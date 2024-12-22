@@ -1,43 +1,112 @@
 #pragma once
 
 #include "sys/utils/setget/Setter.hpp"
+#include "robots/curve/CurveConcept_t.hpp"
 
 
 namespace ymd::tween{
 
-template<typename Setter, typename Curve>
-class Tweener_t{
-    Setter _setter;
-    Curve _curve; 
+template<typename T>
+class TweenerConcept_t{
 public:
-    Tweener_t(Setter && setter, Curve && curve):
-        _setter(std::move(setter)),
-        _curve(std::move(curve)){}
+    using Setter = ymd::utils::SetterConcept_t<T>;
+    using Curve = ymd::curve::CurveConcept_t<T>;
 
-    void update(const real_t time){
-        _setter = _curve(time);
-    }
+    virtual void update(const real_t time) = 0;
+    virtual real_t period() const = 0;
 };
 
 
-template<typename T, typename U>
-auto make_tweener(T && setter, U && curve){
-    return Tweener_t<T, U>(std::move(setter), std::move(curve));
+template<typename T>
+// class TweenerStatic_t{
+class TweenerStatic_t:public TweenerConcept_t<T>{
+public:
+    using Setter = TweenerConcept_t<T>::Setter;
+    using Curve = TweenerConcept_t<T>::Curve;
+
+    Setter & _setter;
+    Curve & _curve; 
+public:
+    TweenerStatic_t(Setter & setter, Curve & curve):
+        _setter(setter),
+        _curve(curve){}
+
+    void update(const real_t time) {
+        // auto && res = _curve(time);
+        _setter( _curve(time));
+    }
+
+    real_t period() const {
+        return _curve.period();
+    }
+};
+
+// namespace test{
+
+
+template<typename T>
+class Tweener_t:public TweenerConcept_t<T>{
+public:
+    using Setter = TweenerConcept_t<T>::Setter;
+    using Curve = TweenerConcept_t<T>::Curve;
+
+    using SetterWrapper = std::shared_ptr<Setter>;
+    using CurveWrapper = std::shared_ptr<Curve>;
+protected:
+    SetterWrapper _setter;
+    CurveWrapper _curve; 
+public:
+
+    template<typename SetterType, typename CurveType>
+    Tweener_t(const SetterType & setter, const CurveType & curve)
+        : _setter(std::make_shared<SetterType>((setter))),
+          _curve(std::make_shared<CurveType>((curve))) {}
+
+    Tweener_t(const SetterWrapper setter, const CurveWrapper curve)
+        : _setter(setter),
+          _curve(curve){}
+
+    void update(const real_t time) override {
+        if(_setter == nullptr or _curve == nullptr) HALT;
+        (*_setter)( (*_curve)(time));
+    }
+
+    real_t period() const override{
+        return _curve->period();
+    }
+};
+// }
+
+template<typename T>
+auto make_tweener(auto && setter, auto && curve){
+    return Tweener_t<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
 }
+
+template<typename T>
+auto new_tweener(auto && setter, auto && curve){
+    return new Tweener_t<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+}
+
+// auto new_tweener(auto && setter, auto && curve){
+//     return new Tweener_t(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+// }
+
 
 template<typename ValueType, typename Interpolator>
 auto make_tweener(
-    auto & obj, 
+    auto && obj, 
     void (std::remove_reference_t<decltype(obj)>::*member_func_ptr)(const ValueType &),
-    const Interpolator & interpolator, 
+    const real_t dur,
     const std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType> & from, 
-    const std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType> & to)
+    const std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType> & to,
+    const Interpolator & interpolator 
+    )
 {
+    auto setter = ymd::utils::make_setter(obj, member_func_ptr);
+    auto curve = ymd::curve::make_curve(from, to, dur, interpolator);
 
-    auto && setter = ymd::utils::make_setter(obj, member_func_ptr);
-    auto && curve = ymd::curve::make_curve(interpolator, from, to);
-
-    return Tweener_t<decltype(setter), decltype(curve)>(std::move(setter), std::move(curve));
+    return Tweener_t<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>(
+        std::move(setter), std::move(curve));
 }
 
 

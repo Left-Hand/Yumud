@@ -2,7 +2,7 @@
 
 #include "../BtNode.hpp"
 
-namespace btree {
+namespace ymd::btree {
 
 class BtDecorator : public BtNode {
 public:
@@ -19,8 +19,12 @@ public:
         BtDecorator("Decorator", std::move(child)) {}
     virtual ~BtDecorator() = default;
 
-    BtNode & operator[] (const size_t idx);
-    const BtNode & operator[](const size_t idx) const ;
+    size_t getChildCount() const final override{
+        return 1;
+    }
+
+    BtNode & operator[] (const size_t idx) override;
+    const BtNode & operator[](const size_t idx) const override;
 
 };
 

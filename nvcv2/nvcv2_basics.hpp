@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/core/system.hpp"
+#include "sys/core/platform.h"
 #include "sys/debug/debug_inc.h"
 
 #include "types/color/color_t.hpp"

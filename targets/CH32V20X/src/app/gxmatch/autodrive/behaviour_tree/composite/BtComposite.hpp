@@ -2,7 +2,7 @@
 
 #include "../BtNode.hpp"
 
-namespace btree{
+namespace ymd::btree{
 
 class BtComposite : public BtNode{
 public:
@@ -25,8 +25,13 @@ public:
         children_.push_back(Wrapper(child));
     }
 
-    Wrapper find(const StringView name);
-    size_t count() const{ return children_.size();}
+    Wrapper findChild(const StringView name);
+    size_t getChildCount() const final override{
+        return children_.size();
+    }
+
+    String getChildPath(const Wrapper child);
+    String getChildName(const Wrapper child);
 
     BtNode & operator[] (const size_t idx) override;
     const BtNode & operator[](const size_t idx) const override;

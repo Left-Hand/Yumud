@@ -1,5 +1,8 @@
 #include "misc.hpp"
 #include "sys/clock/clock.hpp"
+#include "sys/core/system.hpp"
+
+using Sys::t;
 
 namespace gxm{
 

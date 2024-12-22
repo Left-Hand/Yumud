@@ -1,6 +1,6 @@
 #include "BtComposite.hpp"
 
-namespace btree{
+namespace ymd::btree{
 
 class BtSequence: public BtComposite {
 public:

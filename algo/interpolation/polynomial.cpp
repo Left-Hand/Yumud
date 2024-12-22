@@ -8,11 +8,10 @@ real_t CosineInterpolation::forward(real_t x) const {
     real_t x6 = x4*x2;
     
     scexpr real_t fa = real_t( 4.0/9.0);
-    scexpr real_t fb = real_t(17.0/9.0);
+    scexpr real_t fb = real_t(-17.0/9.0);
     scexpr real_t fc = real_t(22.0/9.0);
     
-    real_t y = fa*x6 - fb*x4 + fc*x2;
-    return y;
+    return fa*x6 + fb*x4 + fc*x2;
 }
 
 

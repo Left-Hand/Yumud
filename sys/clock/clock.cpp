@@ -1,6 +1,7 @@
 #include "clock.hpp"
 #include "sys/core/sdk.h"
 #include "sys/core/system.hpp"
+#include "sys/debug/debug_inc.h"
 
 
 #define TICKS_PER_MS (F_CPU / 1000)
@@ -122,17 +123,18 @@ void bindSystickCb(std::function<void(void)> && _cb){
 }
 
 
-void SysTick_Handler(void)
-{
+void SysTick_Handler(void){
     msTick+=1;
     SysTick->SR = 0;
-    Sys::Clock::reCalculateTimeMs();
+    Sys::Clock::reCalculateTime();
+    // DEBUG_PRINTLN(Sys::t);
     EXECUTE(cb);
 }
 
-void retime(){
-    Sys::t.value = _iq(
-        (msTick * (1 << GLOBAL_Q)) / 1000);
+real_t time(){
+    return iq_t(_iq(
+        (micros() * (1 << GLOBAL_Q)) / 1000000
+    ));
 }
 
 #undef TICKS_PER_MS

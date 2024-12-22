@@ -335,6 +335,6 @@ void stepper_tb(UartHw & logger){
         // stp.setTargetPosition(real_t(0.3) * sin(t));
         // stp.setTargetPosition(sin(t) / 4);
         // stp.setTargetPosition(4 * sign(sin(4 * t)));
-        Sys::Clock::reCalculateTimeMs();
+        // Sys::Clock::reCalculateTimeMs();
     }
 }

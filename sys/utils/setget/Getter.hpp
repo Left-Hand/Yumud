@@ -14,7 +14,11 @@ public:
 
     virtual ~GetterConcept_t() = default;
 
-    virtual T operator()() = 0; 
+    virtual T operator()() = 0;
+
+    operator T(){
+        return this->operator()();
+    }
 };
 
 
@@ -40,6 +44,15 @@ auto make_getter(auto & obj, ValueType(std::remove_reference_t<decltype(obj)>::*
         [&obj, member_func_ptr]() {
             return (obj.*member_func_ptr)();
         });
+}
+
+template<typename ValueType, typename Func>
+auto make_getter(Func && func) {
+    return LambdaGetter_t<ValueType>(
+        [func = std::forward<Func>(func)]() -> ValueType {
+            return func();
+        }
+    );
 }
 
 }

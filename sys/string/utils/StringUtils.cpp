@@ -2,18 +2,12 @@
 
 using namespace ymd;
 
-static inline void swap_char(char & a, char & b){
-	char temp = a;
-	a = b;
-	b = temp;
-}
-
 void StringUtils::reverse_str(char * str, size_t len){
 	if(len == 0) return;
 
 	len -= 1;
 	for(size_t i = 0; i < len / 2 + (len % 2); i++){
-		swap_char(str[i],str[len - i]);
+		std::swap(str[i],str[len - i]);
 	}
 
 	str[len + 1] = '\0';
@@ -177,59 +171,5 @@ void StringUtils::str_replace(char *src, const size_t src_len, const char *match
 			}
 			find_ptr += dst_len;
 		}
-	}
-}
-
-
-
-
-[[maybe_unused]] static void mystof(const char * str, const size_t len, int & int_part, int & frac_part, int & scale){
-    scale = 1;
-    bool minus = false;
-
-	const size_t default_begin_index = len; 
-	const size_t default_point_index = len;
-	size_t begin_index = default_begin_index;
-	size_t point_index = default_point_index;
-
-	for(size_t i = 0; i < len; i++){
-		char chr = str[i];
-		
-		if(begin_index == default_begin_index){
-			if(StringUtils::is_digit(chr)){
-				begin_index = i;
-			}
-		}
-	
-		if(chr=='\0'){
-			int_part = 0;
-			frac_part = 0;
-			return;
-		}
-
-		if(chr == '.'){
-			point_index = i + 1;
-            break;
-		}
-
-		if(chr=='-'){
-			minus = true;
-		}
-	}
-
-	if(point_index < len){
-		frac_part = StringUtils::atoi(str + point_index , len - (point_index));
-	}
-
-	int_part = StringUtils::atoi(str + begin_index, len - (point_index + 1));
-
-
-	for(size_t i = 0; i < len - point_index; i++){
-		scale *= 10;
-	}
-
-	if(minus){
-		int_part = -int_part;
-		frac_part = -frac_part;
 	}
 }

@@ -1,6 +1,6 @@
 #include "BtNode.hpp"
 
-using namespace btree;
+using namespace ymd::btree;
 
 
 BtNode & BtNode::operator[] (const size_t idx){

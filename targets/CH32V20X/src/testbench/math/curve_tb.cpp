@@ -1,15 +1,18 @@
 #include "../tb.h"
 
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "algo/interpolation/Polynomial.hpp"
-#include "sys/debug/debug_inc.h"
-#include "types/vector2/vector2_t.hpp"
-#include "types/vector3/vector3_t.hpp"
-#include "robots/curve/CurveConcept_t.hpp"
-
 #include "sys/utils/setget/Getter.hpp"
 #include "sys/utils/setget/Setter.hpp"
+#include "sys/debug/debug_inc.h"
+
+#include "hal/bus/uart/uarthw.hpp"
+#include "algo/interpolation/Polynomial.hpp"
+#include "types/vector2/vector2_t.hpp"
+#include "types/vector3/vector3_t.hpp"
+
+#include "robots/curve/CurveConcept_t.hpp"
+#include "robots/curve/CurveTrapezoid_t.hpp"
+
 #include "robots/tween/Tween.hpp"
 
 using Point = Vector2_t<real_t>;
@@ -18,6 +21,7 @@ using Points = std::vector<Vector2_t<real_t>>;
 using namespace ymd::intp;
 using namespace ymd::utils;
 using namespace ymd::tween;
+using namespace ymd::curve;
 // void sort_po
 
 auto compare_points_by_x = [](const Vector2_t<real_t> & a, const Vector2_t<real_t> & b) -> bool {
@@ -103,17 +107,18 @@ void curve_tb() {
         {1,1},
     };
 
-    std::sort(points.begin(), points.end(), compare_points_by_x);
+    std::sort(points.begin(), points.end(), Vector2::compare_x);
 
 
     class Ball{
     public:
         void setSize(const real_t & size){
-            DEBUG_PRINTLN("size", size);
+            DEBUG_PRINTLN(size);
         }
 
         void setPosition(const Vector2 & pos){
-            DEBUG_PRINTLN("ball moved to", pos);
+            auto [x,y] = pos;
+            DEBUG_PRINTLN(x,y, sin(t));
         }
 
         void setScale(const Vector3 & scale){
@@ -126,29 +131,58 @@ void curve_tb() {
         }
 
         operator real_t(){
-            return sin(Sys::t);
+            // DEBUG_PRINTLN("??")
+            return Sys::t;
         }
     };
 
     Ball ball;
 
 
+    auto pos_setter = make_setter(ball, &Ball::setPosition);
+    auto curve = make_curve<Vector2>({0,0}, {1,4}, 1, CosineInterpolation());
+    auto curve2 = make_curve(-2, 9, 2, CosineInterpolation());
+    auto curve3 = make_curve<CurveTrapezoid_t, Vector2>({9,0}, {30, 8}, 20, 90);
+
+    auto getter = make_getter(ball, &Ball::getPosition);
+    auto getter2 = make_getter(ball, &Ball::operator real_t);
+
+
+    // [[maybe_unused]] auto tweener = make_tweener(
+    //     ball, &Ball::setPosition,
+    //     1, {1,0}, {-0.3_r,4}, CosineInterpolation()
+    // );
+
+    // [[maybe_unused]] Tweener_t<Vector2> * tw2 = new_tweener<Vector2>(
+    //     pos_setter,curve3
+    // );
     [[maybe_unused]] auto tweener = make_tweener(
-        ball, &Ball::setPosition, 
-        CosineInterpolation(), {0,0}, {1,1}
+        ball, &Ball::setPosition,
+        1, {1,0}, {-0.3_r,4}, CosineInterpolation()
     );
 
-    [[maybe_unused]] auto tw2 = make_tweener(
-        ball, &Ball::setScale, 
-        CosineInterpolation(), {0,0,0}, {1,1,1}
-    );
+    // auto tweener4 = TweenerStatic_t<Vector2>(pos_setter, curve3);
+    // sizeof(TweenerStatic_t<Vector2>::Curve &);
+    // sizeof(tweener4._curve);
+    // using setter_type = decltype(&tweener4._setter);
+    // using curve_type = decltype(&tweener4._curve);
+    // sizeof(setter_type);
+    // sizeof(curve_type);
+    // auto a = "??";
+    // sizeof(a);
+    // sizeof()
+    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>);
+    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::CurveWrapper);
+    // scexpr auto a = sizeof(std::remove_pointer_t<decltype(tweener)>::SetterWrapper);
 
-    [[maybe_unused]] auto tw3 = make_tweener(
-        ball, &Ball::setSize, 
-        CosineInterpolation(), 0, 1
-    );
+    // [[maybe_unused]] auto tw3 = new_tweener<Vector2>(
+    //     pos_setter,curve3
+    // );
 
-    auto getter = make_getter(ball, &Ball::operator real_t);
+    // [[maybe_unused]] auto tw3 = make_tweener(
+    //     ball, &Ball::setSize, 
+    //     CosineInterpolation(), 0, 1
+    // );
 
 
     // for(auto & p : points) {
@@ -182,7 +216,35 @@ void curve_tb() {
     delay(10);
     
     while(true){
-        DEBUG_PRINTLN(getter());
+        // DEBUG_PRINTLN(getter());
+        // tweener.update(frac(t));
+        // setter = Vector2(1,0).rotated(t);
+
+        // DEBUG_PRINTLN(getter(), getter2());
+        // tw3.update(frac(time()));
+        // pos_setter({sin(time()), cos(time())});
+
+        // tw2->update(fmod(t, tw2->period()));
+        tweener.update(fmod(t, tweener.period()));
+        // DEBUG_PRINTLN(size_t(&Ball::setPosition));
+        // DEBUG_PRINTLN(sizeof(decltype(tweener4)));P
+        // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener)>));
+        // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener4)>));
+        // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(pos_setter)>));
+        // DEBUG_PRINTLN( sizeof(size_t));
+        // DEBUG_PRINTLN( sizeof(int*));
+        // tw3.update()
+        // auto [x,y] = curve3(fmod(t, curve3.period()));
+        // DEBUG_PRINTLN(x,y);
+        // static int i = 0;
+        // DEBUG_PRINTLN(real_t(i++) / 10 + real_t(0.0001))
+        // DEBUG_PRINTLN(2 * sin(time()))
+        // auto pos = getter();
+        // setter = Vector2(getter);
+        // setter = getter;
+        // setter = Vector2(getter);
+        // setter(getter());
+        delay(10);
     }
 
     // while(true){

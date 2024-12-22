@@ -11,11 +11,12 @@
 
 #include "machine/chassis_actions.hpp"
 #include "common/enum.hpp"
+#include "sys/core/system.hpp"
 
 
 using namespace nvcv2;
 using namespace gxm;
-
+using Sys::t;
 
 class VisionModule:public AsciiProtocolConcept{
 protected:

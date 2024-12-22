@@ -82,6 +82,24 @@ public:
     constexpr Vector2_t<T> rotated(const T r)const;
     constexpr Vector2_t<T> abs() const;
 
+
+    static bool compare_x(const Vector2_t & a, const Vector2_t & b){
+        return a.x < b.x;
+    };
+
+    static bool compare_y(const Vector2_t & a, const Vector2_t & b){
+        return a.y < b.y;
+    };
+
+    static bool compare_length(const Vector2_t & a, const Vector2_t & b){
+        return a.length_squared() < b.length_squared();
+    };
+
+    static bool compare_angle(const Vector2_t & a, const Vector2_t & b){
+        return a.cross(b) > 0;
+    };
+
+
     template<arithmetic U>
     __fast_inline constexpr Vector2_t<T> increase_x(const U & v){
         return {x + v, y};
@@ -256,6 +274,14 @@ __fast_inline OutputStream & operator<<(OutputStream & os, const Vector2_t<auto>
 
 __fast_inline constexpr auto lerp(const Vector2_t<arithmetic auto> & a, const Vector2_t<arithmetic auto> & b, const arithmetic auto & t){
     return a + (b - a) * t;
+}
+
+__fast_inline constexpr auto distance(const Vector2_t<arithmetic auto> & from, const Vector2_t<arithmetic auto> & to){
+    return (to - from).length();
+}
+
+__fast_inline constexpr auto normal(const Vector2_t<arithmetic auto> & from, const Vector2_t<arithmetic auto> & to){
+    return (to - from).normalized();
 }
 
 }

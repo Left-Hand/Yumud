@@ -1,11 +1,12 @@
 #include "BtComposite.hpp"
 
-using namespace btree;
+using namespace ymd;
+using namespace ymd::btree;
 
 using Execution = BtNode::Execution;
 using Wrapper = BtComposite::Wrapper;
 
-Wrapper BtComposite::find(const StringView name){
+Wrapper BtComposite::findChild(const StringView name){
     for(auto & child : children_){
         if(child->name() == name){
             return child;
@@ -42,3 +43,11 @@ const BtNode & BtComposite::operator[](size_t idx) const {
     return *p_child;
 }
 
+
+String BtComposite::getChildPath(const Wrapper child){
+    return child->getName();
+}
+
+String BtComposite::getChildName(const Wrapper child){
+    return child->getName();
+}

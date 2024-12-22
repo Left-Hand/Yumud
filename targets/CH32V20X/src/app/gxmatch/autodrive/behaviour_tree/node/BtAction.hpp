@@ -1,12 +1,15 @@
 #pragma once
 
-namespace btree{
+#include "../BtNode.hpp"
+
+namespace ymd::btree{
 
 class BtAction : public BtNode{
 public:
-    // BtAction(const char* name) : BtNode(name)
-    using BtDecorator::BtNode;
-    virtual Execution tick() = 0
+    BtAction(): BtNode("action"){;}
+    BtAction(const Name name): BtNode(name){;}
+
+    using BtNode::BtNode;
 };
 
 }
