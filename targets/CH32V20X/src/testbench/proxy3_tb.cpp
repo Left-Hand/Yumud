@@ -49,7 +49,8 @@ String PrintDrawableToString(pro::proxy<Drawable> p) {
     result << "entity = ";
     p->Draw(result);
     result << ", area = " << p->Area();
-    return std::move(result).str();
+    return std::move(result).move_str();
+    // return result.move_str();
 }
 
 void proxy_tb(){

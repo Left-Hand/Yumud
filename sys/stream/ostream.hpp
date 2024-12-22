@@ -18,18 +18,18 @@ concept HasToString = requires(T t, unsigned char eps) {
 
 class OutputStream: virtual public BasicStream{
 protected:
+    #pragma pack(push, 1)
     uint8_t radix_ = 10;
-    uint8_t eps_ = 2;
+    uint8_t eps_ = 3;
+
+    bool skip_split:1 = false;
+    bool b_boolalpha:1 = false;
+    bool b_showpos:1 = false;
+    bool b_showbase:1 = false;
+    #pragma pack(pop)
 
     String splitter = ", ";
     
-    bool skip_split = false;
-    bool b_boolalpha = false;
-    bool b_showpos = false;
-    bool b_showbase = false;
-    
-
-
     void print_entity(auto && any){
         if(skip_split == false){
             *this << splitter;

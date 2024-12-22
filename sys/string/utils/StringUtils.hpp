@@ -25,7 +25,7 @@ __fast_inline bool is_alpha(const char chr) {
 void itoa(int32_t value, char * str, uint8_t radix);
 void iutoa(uint64_t value, char * str, uint8_t radix);
 void iltoa(int64_t value, char * str, uint8_t radix);
-void itoas(int value, char * str, uint8_t radix, uint8_t size);
+
 
 
 void ftoa(float value, char * str, uint8_t eps);
