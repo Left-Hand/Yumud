@@ -1,9 +1,17 @@
 #include "StringUtils.hpp"
+#include <array>
 
 using namespace ymd;
 using namespace ymd::StringUtils;
 
-scexpr uint32_t scale_map[] = {1, 10, 100, 1000, 10000, 100000, 1000000, 10000000};
+scexpr auto scale_map = [](){
+    std::array<uint32_t, 8> ret = {};
+    ret[0] = 1;
+    for(size_t i = 1; i < ret.size(); i++){
+        ret[i] = ret[i-1] * 10;
+    }
+    return ret;
+}();
 
 template<integral T>
 static __fast_inline size_t get_scale(T value){
@@ -80,9 +88,12 @@ void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 
     const uint32_t scale = scale_map[eps];
 
-    const bool upper_round = ((frac_part * scale) & lower_mask) > (lower_mask >> 1);
-    const uint32_t frac_int = ((frac_part * scale) >> GLOBAL_Q) + upper_round;
+    const uint32_t fs = frac_part * scale;
     
+    const bool upper_round = (fs & lower_mask) >= (lower_mask >> 1);
+    // const bool upper_round = false;
+
+    const uint32_t frac_int = (fs >> GLOBAL_Q) + upper_round;
     const uint32_t int_part = (uint32_t(abs_value) >> GLOBAL_Q) + bool(frac_int >= scale);
 
     {

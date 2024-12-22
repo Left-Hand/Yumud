@@ -92,7 +92,7 @@ auto rasterization_points(const auto & functor, const size_t n){
 
 void curve_tb() {
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
-    // DEBUG_PRINTLN(std::setprecision(1));
+    DEBUG_PRINTLN(std::setprecision(4));
 
     using Vector3 = Vector3_t<real_t>;
 
@@ -197,9 +197,9 @@ void curve_tb() {
         // tw3.update(frac(time()));
         // pos_setter({sin(time()), cos(time())});
 
-        // tweener.update(frac(t));
-        static int i = 0;
-        DEBUG_PRINTLN(real_t(i++) / 10 + real_t(0.001))
+        tweener.update(frac(t));
+        // static int i = 0;
+        // DEBUG_PRINTLN(real_t(i++) / 10 + real_t(0.0001))
         // DEBUG_PRINTLN(2 * sin(time()))
         // auto pos = getter();
         // setter = Vector2(getter);

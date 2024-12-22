@@ -18,7 +18,8 @@
 			"initializer_list": "cpp",
 			"ranges": "cpp",
 			"span": "cpp",
-			"*.ipp": "cpp"
+			"*.ipp": "cpp",
+			"cstdint": "cpp"
 		},
 		"hide-files.files": []
 	},
