@@ -1,15 +1,18 @@
 #include "../tb.h"
 
 
-#include "hal/bus/uart/uarthw.hpp"
-#include "algo/interpolation/Polynomial.hpp"
-#include "sys/debug/debug_inc.h"
-#include "types/vector2/vector2_t.hpp"
-#include "types/vector3/vector3_t.hpp"
-#include "robots/curve/CurveConcept_t.hpp"
-
 #include "sys/utils/setget/Getter.hpp"
 #include "sys/utils/setget/Setter.hpp"
+#include "sys/debug/debug_inc.h"
+
+#include "hal/bus/uart/uarthw.hpp"
+#include "algo/interpolation/Polynomial.hpp"
+#include "types/vector2/vector2_t.hpp"
+#include "types/vector3/vector3_t.hpp"
+
+#include "robots/curve/CurveConcept_t.hpp"
+#include "robots/curve/CurveTrapezoid_t.hpp"
+
 #include "robots/tween/Tween.hpp"
 
 using Point = Vector2_t<real_t>;
@@ -115,7 +118,7 @@ void curve_tb() {
 
         void setPosition(const Vector2 & pos){
             auto [x,y] = pos;
-            DEBUG_PRINTLN(x,y);
+            DEBUG_PRINTLN(x,y, sin(t));
         }
 
         void setScale(const Vector3 & scale){
@@ -137,20 +140,26 @@ void curve_tb() {
 
 
     auto pos_setter = make_setter(ball, &Ball::setPosition);
-    auto curve = make_curve<Vector2>(CosineInterpolation(), {0,0}, {1,4});
+    auto curve = make_curve<Vector2>({0,0}, {1,4}, 1, CosineInterpolation());
+    auto curve2 = make_curve(-2, 9, 2, CosineInterpolation());
+    auto curve3 = make_curve<CurveTrapezoid_t, Vector2>({9,0}, {30, 8}, 20, 90);
 
     auto getter = make_getter(ball, &Ball::getPosition);
     auto getter2 = make_getter(ball, &Ball::operator real_t);
 
+
     [[maybe_unused]] auto tweener = make_tweener(
         ball, &Ball::setPosition,
-        CosineInterpolation(), {1,0}, {-0.3_r,4}
+        1, {1,0}, {-0.3_r,4}, CosineInterpolation()
     );
 
-    // [[maybe_unused]] auto tw2 = make_tweener(
-    //     ball, &Ball::setScale, 
-    //     CosineInterpolation(), {0,0,0}, {1,1,1}
-    // );
+    [[maybe_unused]] auto tw2 = make_tweener(
+        pos_setter,curve3
+    );
+
+    [[maybe_unused]] auto tw3 = new_tweener(
+        pos_setter,curve3
+    );
 
     // [[maybe_unused]] auto tw3 = make_tweener(
     //     ball, &Ball::setSize, 
@@ -197,7 +206,10 @@ void curve_tb() {
         // tw3.update(frac(time()));
         // pos_setter({sin(time()), cos(time())});
 
-        tweener.update(frac(t));
+        tw2.update(fmod(t, tw2.period()));
+        // tw3.update()
+        // auto [x,y] = curve3(fmod(t, curve3.period()));
+        // DEBUG_PRINTLN(x,y);
         // static int i = 0;
         // DEBUG_PRINTLN(real_t(i++) / 10 + real_t(0.0001))
         // DEBUG_PRINTLN(2 * sin(time()))

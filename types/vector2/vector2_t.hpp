@@ -276,6 +276,14 @@ __fast_inline constexpr auto lerp(const Vector2_t<arithmetic auto> & a, const Ve
     return a + (b - a) * t;
 }
 
+__fast_inline constexpr auto distance(const Vector2_t<arithmetic auto> & from, const Vector2_t<arithmetic auto> & to){
+    return (to - from).length();
+}
+
+__fast_inline constexpr auto normal(const Vector2_t<arithmetic auto> & from, const Vector2_t<arithmetic auto> & to){
+    return (to - from).normalized();
+}
+
 }
 
 

@@ -275,6 +275,13 @@ __fast_inline constexpr auto lerp(const Vector3_t<arithmetic auto> & a, const Ve
     return a + (b - a) * t;
 }
 
+__fast_inline constexpr auto distance(const Vector3_t<arithmetic auto> & a, const Vector3_t<arithmetic auto> & b){
+    return (a - b).length();
+}
+
+__fast_inline constexpr auto normal(const Vector3_t<arithmetic auto> & from, const Vector3_t<arithmetic auto> & to){
+    return (to - from).normalized();
+}
 
 }
 __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Vector3_t<auto> & value){
