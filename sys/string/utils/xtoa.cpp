@@ -14,35 +14,90 @@ scexpr auto scale_map = [](){
 }();
 
 template<integral T>
-static __fast_inline size_t get_scale(T value){
-    size_t scale = 0;
-    while(value < scale_map[scale]) scale++;
-    return scale;
+static __fast_inline constexpr size_t get_scalar(T value){
+    if(value == 0) return 1;
+
+	size_t scalar = 0;
+	value = ABS(value);
+	
+	while(value > 1000000){
+		value /= 1000000;
+		scalar += 6;
+	}
+	
+	size_t i = 0;
+	while(uint32_t(value) >= scale_map[i]) i++;
+	return scalar + i;
 }
+
 
 template<integral T>
-static void itoa_impl(T value, char * str, uint8_t radix){
-    int sign = 0;
-    int i=0;
-    if(value < 0){
-        sign = -1;
-        value = -value;  
-    }
+static void itoa_impl(T value, char * _str, uint8_t radix){
+    const bool minus = value < 0;
+    value = ABS(value);
+    const size_t scalar = get_scalar(value);
+    char * str = _str + scalar + minus - 1;
+    str[1] = 0;
     do {
 		const uint8_t digit = value % radix;
-        if(digit > 9){
-            str[i] = digit +'0'+7;
-        }else{
-            str[i] = digit +'0';
-        }i++;
-    } while((value/=radix)>0);
-    if(sign<0) {
-        str[i] = '-';
-        i++;
-    }
+        *str = ((digit) > 9) ? 
+		(digit - 10) + ('A') : (digit) + '0';
 
-    reverse_str(str, i);
+        str--;
+    } while((value /= radix) > 0 and (str >= _str));
+    // } while((value/=radix) and (str >= _str));
+    // }while(((value /= radix) > 0));
+
+    if(minus) {
+        _str[0] = '-';
+    }
 }
+
+// template<integral T>
+// static void itoa_impl(T value, char * str, uint8_t radix){
+//     int sign = 0;
+//     size_t i=0;
+//     if(value < 0){
+//         sign = -1;
+//         value = -value;  
+//     }
+//     const size_t scalar = get_scalar(value);
+//     do {
+// 		const uint8_t digit = value % radix;
+//         if(digit > 9){
+//             str[i] = digit +'0'+7;
+//         }else{
+//             str[i] = digit +'0';
+//         }i++;
+//     } while((value/=radix)>0 and i <= scalar);
+//     if(sign<0) {
+//         str[i] = '-';
+//         i++;
+//     }
+
+//     reverse_str(str, i);
+// }
+
+
+// template<integral T>
+// static __fast_inline constexpr void itoa_impl(const T _value, char * _str, uint8_t radix){
+// 	const bool minus = (_value < 0);
+// 	std::make_unsigned_t<T> value = ABS(_value);
+// 	const size_t scalar = get_scalar(_value);
+
+// 	char * str = _str + scalar + minus - 1;
+// 	do{
+// 		const uint8_t digit = value % radix;
+// 		*str = ((digit) > 9) ? 
+// 		(digit - 10) + ('A') : (digit) + '0';
+		
+// 		str--;
+// 	}while(((value /= radix) > 0) and (str >= _str));
+	
+// 	if(minus) {
+// 		_str[0] = '-';
+// 	}
+// }
 
 // static void itoas(int value, char *str, uint8_t radix, uint8_t size)  {
 // 	size_t i = 0;
@@ -61,14 +116,16 @@ static void itoa_impl(T value, char * str, uint8_t radix){
 // 	reverse_str(str, size);
 // }
 
-static void itoas(uint32_t value, char *_str, uint8_t radix, uint8_t size)  {
+static __fast_inline constexpr void itoas(uint32_t value, char *_str, uint8_t radix, uint8_t size)  {
 	char * str = _str + size - 1;
 	do{
 		const uint8_t digit = value % radix;
 		*str = ((digit) > 9) ? 
 		(digit - 10) + ('A') : (digit) + '0';
+
 		str--;
 	}while(((value /= radix) > 0) and (str >= _str));
+	// }while(((value /= radix) > 0));
 	
 	while(str >= _str){
 		*str = '0';

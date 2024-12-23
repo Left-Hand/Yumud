@@ -172,7 +172,7 @@ String::~String()
 inline void String::init(void)
 {
 	buffer = NULL;
-	capacity = 0;
+	capacity_ = 0;
 	len = 0;
 }
 
@@ -180,12 +180,12 @@ void String::invalidate(void)
 {
 	if (buffer) free(buffer);
 	buffer = NULL;
-	capacity = len = 0;
+	capacity_ = len = 0;
 }
 
 uint8_t String::reserve(size_t size)
 {
-	if (buffer && capacity >= size) return 1;
+	if (buffer && capacity_ >= size) return 1;
 	if (changeBuffer(size)) {
 		if (len == 0) buffer[0] = 0;
 		return 1;
@@ -198,7 +198,7 @@ uint8_t String::changeBuffer(size_t maxStrLen)
 	char *newbuffer = (char *)realloc(buffer, maxStrLen + 1);
 	if (newbuffer) {
 		buffer = newbuffer;
-		capacity = maxStrLen;
+		capacity_ = maxStrLen;
 		return 1;
 	}
 	return 0;
@@ -223,7 +223,7 @@ String & String::copy(const char *cstr, size_t length)
 void String::move(String &rhs)
 {
 	if (buffer) {
-		if (capacity >= rhs.len) {
+		if (capacity_ >= rhs.len) {
 			strcpy(buffer, rhs.buffer);
 			len = rhs.len;
 			rhs.len = 0;
@@ -233,10 +233,10 @@ void String::move(String &rhs)
 		}
 	}
 	buffer = rhs.buffer;
-	capacity = rhs.capacity;
+	capacity_ = rhs.capacity_;
 	len = rhs.len;
 	rhs.buffer = NULL;
-	rhs.capacity = 0;
+	rhs.capacity_ = 0;
 	rhs.len = 0;
 }
 #endif
