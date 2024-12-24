@@ -6,18 +6,21 @@
 
 #include "sys/polymorphism/proxy.hpp"
 
-// PRO_DEF_MEM_DISPATCH(MemDraw, Draw);
-// PRO_DEF_MEM_DISPATCH(MemArea, Area);
-
-// struct Drawable : pro::facade_builder
-//     ::add_convention<MemDraw, void(OutputStream& output)>
-//     ::add_convention<MemArea, real_t()>
-//     ::support_copy<pro::constraint_level::nontrivial>
-//     ::build {};
-
 namespace ymd::utils{
 // template<typename T>
 // class GetterConcept_t;
+
+
+namespace internal{
+    PRO_DEF_MEM_DISPATCH(MemPeriod, period);
+    PRO_DEF_MEM_DISPATCH(MemUpdate, update);
+
+    template<typename T>
+    struct TweenerFacade_t : pro::facade_builder
+        ::add_convention<internal::MemPeriod, real_t() const>
+        ::add_convention<internal::MemUpdate, void(real_t)>
+        ::build {};
+}
 
 template<typename T>
 class SetterConcept_t{

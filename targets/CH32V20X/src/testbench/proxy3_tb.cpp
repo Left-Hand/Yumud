@@ -171,10 +171,10 @@ void proxy_tb(){
         ss.reserve(1000);
         auto m = micros();
         
-        // char buf[16] = {0};
-        for(size_t i = 0; i < 14; i++){
-            ss.println(*shapes[i]);
-            // StringUtils::qtoa(t, buf, 4);
+        char buf[16] = {0};
+        for(size_t i = 0; i < 100000; i++){
+            // ss.println(*shapes[i]);
+            StringUtils::qtoa(t, buf, 4);
             // DEBUG_PRINTLN(*shapes[i]);
             // rect.width() = rect.width() + 1;
             // DEBUG_PRINTLN(rect);

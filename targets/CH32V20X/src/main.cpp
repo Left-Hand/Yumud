@@ -74,7 +74,9 @@ int main(){
     // DEBUG_PRINTLN("??");
     // gui_main();
     // math_tb(uart2);
-    // curve_tb();
+
+    curve_tb();
+
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();

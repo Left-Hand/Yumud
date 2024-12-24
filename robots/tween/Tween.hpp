@@ -6,6 +6,19 @@
 
 namespace ymd::tween{
 
+namespace internal{
+    PRO_DEF_MEM_DISPATCH(MemPeriod, period);
+    PRO_DEF_MEM_DISPATCH(MemUpdate, update);
+
+    // template<typename T>
+    struct TweenerFacade : pro::facade_builder
+        ::add_convention<internal::MemPeriod, real_t() const>
+        ::add_convention<internal::MemUpdate, void(real_t)>
+        ::build {};
+}
+// template<typename T>
+using TweenerProxy = pro::proxy<internal::TweenerFacade>;
+
 template<typename T>
 class TweenerConcept_t{
 public:
@@ -41,7 +54,6 @@ public:
     }
 };
 
-// namespace test{
 
 
 template<typename T>
@@ -75,7 +87,8 @@ public:
         return _curve->period();
     }
 };
-// }
+
+
 
 template<typename T>
 auto make_tweener(auto && setter, auto && curve){
@@ -108,6 +121,8 @@ auto make_tweener(
     return Tweener_t<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>(
         std::move(setter), std::move(curve));
 }
+
+
 
 
 }
