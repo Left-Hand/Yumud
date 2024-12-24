@@ -27,6 +27,10 @@ public:
 
     virtual void update(const real_t time) = 0;
     virtual real_t period() const = 0;
+
+    TweenerProxy operator &(){
+        return TweenerProxy(this);
+    }
 };
 
 
@@ -96,9 +100,14 @@ auto make_tweener(auto && setter, auto && curve){
 }
 
 template<typename T>
-auto new_tweener(auto && setter, auto && curve){
-    return new Tweener_t<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+auto make_twproxy(auto && setter, auto && curve){
+    return pro::make_proxy<internal::TweenerFacade, Tweener_t<T>>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
 }
+
+// template<typename T>
+// auto new_tweener(auto && setter, auto && curve){
+//     return new Tweener_t<T>(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
+// }
 
 // auto new_tweener(auto && setter, auto && curve){
 //     return new Tweener_t(std::forward<decltype(setter)>(setter), std::forward<decltype(curve)>(curve));
@@ -122,6 +131,22 @@ auto make_tweener(
         std::move(setter), std::move(curve));
 }
 
+template<typename ValueType, typename Interpolator>
+auto make_twproxy(
+    auto && obj, 
+    void (std::remove_reference_t<decltype(obj)>::*member_func_ptr)(const ValueType &),
+    const real_t dur,
+    const std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType> & from, 
+    const std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType> & to,
+    const Interpolator & interpolator 
+    )
+{
+    auto setter = ymd::utils::make_setter(obj, member_func_ptr);
+    auto curve = ymd::curve::make_curve(from, to, dur, interpolator);
+
+    return pro::make_proxy<internal::TweenerFacade, Tweener_t<std::conditional_t<std::is_arithmetic_v<ValueType>, real_t, ValueType>>>(
+        std::move(setter), std::move(curve));
+}
 
 
 
