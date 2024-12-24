@@ -74,7 +74,9 @@ int main(){
     // DEBUG_PRINTLN("??");
     // gui_main();
     // math_tb(uart2);
+
     curve_tb();
+
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
     // eeprom_main();
@@ -101,7 +103,7 @@ int main(){
     // mpu6050_main();
     // gui_main();
     // sdc_main();
-    // proxy_tb();
+    proxy_tb();
     // paj7620_main();
     // can_ring_main();
     // m2006_main();

@@ -2,11 +2,11 @@
 
 #include "Interpolation.hpp"
 
-namespace ymd{
+namespace ymd::intp{
 
 class LinearInterpolation:public Interpolation{
 public:
-    real_t forward(const real_t x) override{
+    real_t forward(const real_t x)const override{
         return x;
     }
 };

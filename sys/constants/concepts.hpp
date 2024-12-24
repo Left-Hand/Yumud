@@ -13,6 +13,12 @@ template<typename T>
 concept integral = std::is_integral_v<T>;
 
 template<typename T>
+concept uintegral = std::is_integral_v<T> and std::is_unsigned_v<T>;
+
+template<typename T>
+concept sintegral = std::is_integral_v<T> and std::is_signed_v<T>;
+
+template<typename T>
 concept integral_32 = std::is_integral_v<T> && sizeof(T) == 4;
 
 template<typename T>

@@ -215,11 +215,11 @@ public:
 
 	operator StringView(void) const {return StringView(this->c_str(), this->length());}
 
-
+	size_t capacity() const {return capacity_;}
 // protected:
 public:
 	char *buffer;	        // the actual char array
-	size_t capacity;  // the array length minus one (for the '\0')
+	size_t capacity_;  // the array length minus one (for the '\0')
 	size_t len;       // the String length (not counting the '\0')
 // protected:
 public:

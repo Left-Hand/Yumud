@@ -4,9 +4,11 @@
 #include "sys/utils/setget/Getter.hpp"
 #include "sys/utils/setget/Setter.hpp"
 #include "sys/debug/debug_inc.h"
+#include "sys/polymorphism/proxy.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "algo/interpolation/Polynomial.hpp"
+#include "algo/interpolation/Linear.hpp"
 #include "types/vector2/vector2_t.hpp"
 #include "types/vector3/vector3_t.hpp"
 
@@ -23,6 +25,8 @@ using namespace ymd::utils;
 using namespace ymd::tween;
 using namespace ymd::curve;
 // void sort_po
+
+
 
 auto compare_points_by_x = [](const Vector2_t<real_t> & a, const Vector2_t<real_t> & b) -> bool {
     return a.x < b.x;
@@ -122,7 +126,8 @@ void curve_tb() {
         }
 
         void setScale(const Vector3 & scale){
-            DEBUG_PRINTLN("ball scale is", scale);
+            auto [x,y,z] = scale;
+            DEBUG_PRINTLN(x,y,z);
         }
 
         Vector2 getPosition(){
@@ -156,10 +161,22 @@ void curve_tb() {
     // [[maybe_unused]] Tweener_t<Vector2> * tw2 = new_tweener<Vector2>(
     //     pos_setter,curve3
     // );
-    [[maybe_unused]] auto tweener = make_tweener(
+    // [[maybe_unused]] auto tweener = make_tweener(
+    //     ball, &Ball::setPosition,
+    //     1, {40,0}, {-0.3_r,4}, CosineInterpolation()
+    // );
+
+    // TweenerProxy tp = &tweener;
+    [[maybe_unused]] auto tp2 = make_twproxy(
         ball, &Ball::setPosition,
-        1, {1,0}, {-0.3_r,4}, CosineInterpolation()
+        1, {40,0}, {-0.3_r,4}, LinearInterpolation()
     );
+
+    [[maybe_unused]] auto tp = make_twproxy(
+        ball, &Ball::setScale,
+        1, {40,0, 3}, {-0.3_r,4, 9}, CosineInterpolation()
+    );
+
 
     // auto tweener4 = TweenerStatic_t<Vector2>(pos_setter, curve3);
     // sizeof(TweenerStatic_t<Vector2>::Curve &);
@@ -225,8 +242,10 @@ void curve_tb() {
         // pos_setter({sin(time()), cos(time())});
 
         // tw2->update(fmod(t, tw2->period()));
-        tweener.update(fmod(t, tweener.period()));
+        // tweener.update(fmod(t, tweener.period()));
         // DEBUG_PRINTLN(size_t(&Ball::setPosition));
+        tp->update(fmod(t, tp->period()));
+        tp2->update(fmod(t, tp2->period()));
         // DEBUG_PRINTLN(sizeof(decltype(tweener4)));P
         // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener)>));
         // DEBUG_PRINTLN( sizeof(std::remove_pointer_t<decltype(tweener4)>));
