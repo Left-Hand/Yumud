@@ -4,12 +4,9 @@
 
 namespace hwspec::CH32V20x::I2C_Regs{
 
-    
 struct CTLR1_Reg{
     uint16_t PE:1;
-    uint16_t SMBUS:1;
-    uint16_t :1;
-    uint16_t SMBTYPE:1;
+    uint16_t :3;
 
 
     uint16_t ENARP:1;
@@ -22,8 +19,7 @@ struct CTLR1_Reg{
     uint16_t ACK:1;
     uint16_t POS:1;
     uint16_t PEC:1;
-    uint16_t ALERT:1;
-    uint16_t :1;
+    uint16_t :2;
     uint16_t SWRST:1;
 };
 
@@ -41,8 +37,8 @@ struct CTLR2_Reg{
 
 //I2C 地址寄存器 1
 struct OADDR1_Reg{
-    uint16_t ADD0:1;
-    uint16_t ADD:9;
+    uint16_t ADD0:8;
+    uint16_t ADD:2;
     uint16_t :5;
     uint16_t ADDMODE:1;
 };
@@ -88,9 +84,9 @@ struct STAR2_Reg{
     uint16_t :1;
 
     uint16_t GENCALL:1;
-    uint16_t SMBDEFAULT:1;
-    uint16_t SMBHOST:1;
-    uint16_t DYAKF:1;
+    uint16_t :2;
+
+    uint16_t DUALF:1;
 
     uint16_t PEC:8;
 };
@@ -124,11 +120,9 @@ struct I2C_Def{
     volatile STAR1_Reg STAR1;
     volatile STAR2_Reg STAR2;
     volatile CKCFRG_Reg CKCFRG;
-    volatile RTR_Reg RTR;
 };
 
 
 static inline I2C_Def * I2C1 = (I2C_Def *)(0x40005400);
-static inline I2C_Def * I2C2 = (I2C_Def *)(0x40005800);
 
 }
