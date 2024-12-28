@@ -65,6 +65,15 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     return *this;
 }
 
+
+// template<typename T>
+// static __fast_inline void print_numeric_impl(OutputStream & os, T value, auto convfunc){
+//     char str[12] = {0};
+//     convfunc(value, str, this->eps());
+//     if(b_showpos and value >= 0) *this << '+';
+//     return *this << str;
+// }
+
 #define PUT_FLOAT_TEMPLATE(type, convfunc)\
 OutputStream & OutputStream::operator<<(const type value){\
     char str[12] = {0};\
@@ -73,7 +82,13 @@ OutputStream & OutputStream::operator<<(const type value){\
     return *this << str;\
 }\
 
-PUT_FLOAT_TEMPLATE(iq_t, StringUtils::qtoa)
+OutputStream & OutputStream::operator<<(const iq_t value){
+    char str[12] = {0};
+    StringUtils::qtoa(value, str, this->eps());
+    if(b_showpos and value >= 0) *this << '+';
+    return *this << str;
+}
+
 PUT_FLOAT_TEMPLATE(float, StringUtils::ftoa)
 PUT_FLOAT_TEMPLATE(double, StringUtils::ftoa)
 

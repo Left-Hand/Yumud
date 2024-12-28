@@ -3,7 +3,8 @@
 
 #include "stream_base.hpp"
 #include "sys/string/string.hpp"
-
+#include <ostream>
+#include <span>
 
 namespace ymd{
 
@@ -78,14 +79,22 @@ public:
     OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
     OutputStream & operator<<(char* str){if(str) write(str, strlen(str)); return *this;}
     OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
-    OutputStream & operator<<(const ::std::string & str){write(str.c_str(),str.length()); return *this;}
-    OutputStream & operator<<(const ::std::string_view str){write(str.data(),str.length()); return *this;}
-    OutputStream & operator<<(const ymd::String & str);
-    OutputStream & operator<<(const ymd::StringView str);
+    OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
+    OutputStream & operator<<(const std::string_view str){write(str.data(),str.length()); return *this;}
+    OutputStream & operator<<(const String & str);
+    OutputStream & operator<<(const StringView str);
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
     OutputStream & operator<<(const iq_t val);
+
+    OutputStream& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
+        if (manipulator == static_cast<std::ostream& (*)(std::ostream&)>(std::endl)) {
+            *this << "\r\n";
+            this->flush();
+        }
+        return *this;
+    }
 
     OutputStream& operator<<(::std::ios_base& (*func)(::std::ios_base&));
     OutputStream& operator<<(const ::std::_Setprecision & n){eps_ = n._M_n; skip_split = true; return *this;}
@@ -170,6 +179,12 @@ public:
     template<typename T, size_t N>
     OutputStream & operator<<(const sstl::vector<T, N> & arr){
         print_arr(arr.begin(), N);
+        return *this;
+    }
+
+    template<typename T>
+    OutputStream & operator<<(std::span<const T> span){
+        print_arr(span.data(), span.size());
         return *this;
     }
 

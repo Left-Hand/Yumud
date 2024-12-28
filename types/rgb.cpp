@@ -4,6 +4,29 @@
 
 using namespace ymd;
 
+//https://www.zhihu.com/question/27417946/answer/1253126563
+
+static inline int32_t clamp_to_0(int32_t x) { 
+	return ((-x) >> 31) & x; 
+}
+static inline int32_t clamp_to_255(int32_t x) {
+	return (((255 - x) >> 31) | x) & 255;
+}
+
+static inline uint32_t next_power_of_2(uint32_t x) {
+	x--;
+	x |= x >> 1; 
+	x |= x >> 2; 
+	x |= x >> 4; 
+	x |= x >> 8; 
+	x |= x >> 16; 
+	x++;
+	return x;
+}
+
+// if ((int32_t)(((uint32_t)x - (uint32_t)minx) | ((uint32_t)maxx - (uint32_t)x)) > = 0)
+
+
 #define __SSAT8(x) CLAMP(int8_t(x), -127, 127)
 #define __USAT8(x) CLAMP(uint8_t(x), 0, 255)
 
@@ -82,6 +105,7 @@ struct XYZ_t{
 using XYZ = XYZ_t<real_t>;
 
 
+//快速计算立方根
 __fast_inline constexpr static float fast_cbrtf(float x) {
     union {
         int ix; float x;
@@ -243,9 +267,9 @@ HSV888::HSV888(const RGB888 & rgb){
     if( s < 255) {
         if( s == 0) s = 1;
         uint32_t scaleup = 65535 / (s);
-        r = ((uint32_t)(r) * scaleup) / 256;
-        g = ((uint32_t)(g) * scaleup) / 256;
-        b = ((uint32_t)(b) * scaleup) / 256;
+        r = ((uint32_t)(r) * scaleup) >> 8;
+        g = ((uint32_t)(g) * scaleup) >> 8;
+        b = ((uint32_t)(b) * scaleup) >> 8;
     }
     
     uint16_t total = r + g + b;
