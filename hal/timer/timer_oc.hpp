@@ -40,7 +40,7 @@ public:
     __fast_inline volatile uint16_t & arr(){return arr_;}
 
     __fast_inline TimerOC & operator = (const real_t duty) override{cvr_ = int(duty * arr_);return *this;}
-    __fast_inline operator real_t(){return real_t(cvr_) / real_t(arr_);}
+    __fast_inline operator real_t(){return real_t(cvr_) / int(arr_);}
 };
 
 class TimerOCN:public TimerOut{
