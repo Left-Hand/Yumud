@@ -1,4 +1,4 @@
-#include "tb.h"
+#include "../tb.h"
 #include "sys/debug/debug_inc.h"
 #include <vector>
 #include <array>
@@ -211,21 +211,21 @@ void floyd_main(){
 	Topology tp;
 	
 
-	tp.emplaceEdge(1, 2, 0.5);
-	tp.emplaceEdge(1, 3, 2.0);
-	tp.emplaceEdge(1, 4, 1.5);
+	tp.emplaceEdge(1, 2, 0.5_r);
+	tp.emplaceEdge(1, 3, 2.0_r);
+	tp.emplaceEdge(1, 4, 1.5_r);
 	
-	tp.emplaceEdge(2, 5, 1.2);
-	tp.emplaceEdge(2, 6, 9.2);
+	tp.emplaceEdge(2, 5, 1.2_r);
+	tp.emplaceEdge(2, 6, 9.2_r);
 
-	tp.emplaceEdge(3, 5, 5.0);
-	tp.emplaceEdge(3, 7, 3.1);
+	tp.emplaceEdge(3, 5, 5.0_r);
+	tp.emplaceEdge(3, 7, 3.1_r);
 
-	tp.emplaceEdge(4, 7, 4.0);
+	tp.emplaceEdge(4, 7, 4.0_r);
 	
-	tp.emplaceEdge(5, 6, 6.7);
+	tp.emplaceEdge(5, 6, 6.7_r);
 
-	tp.emplaceEdge(6, 7, 15.6);
+	tp.emplaceEdge(6, 7, 15.6_r);
 	
 	MatrixR r;
 	MatrixS s;

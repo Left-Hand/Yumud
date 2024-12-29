@@ -457,8 +457,7 @@ void Can::handleRx(const uint8_t fifo_num){
             //从外设读入报文到变量
             // CAN_Receive(instance, fifo_num, rx_msg.prx());
             
-
-            rx_fifo_.push(std::move(receive(fifo_num)));
+            rx_fifo_.push(receive(fifo_num));
         }while(false);
         EXECUTE(cb_rx);
         CAN_ClearITPendingBit(instance, fmp_mask);

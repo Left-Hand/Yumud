@@ -75,17 +75,16 @@ public:
 
 
     OutputStream & operator<<(const bool val);
-    OutputStream & operator<<(const char chr){write(chr); return *this;}
-    OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
-    OutputStream & operator<<(char* str){if(str) write(str, strlen(str)); return *this;}
-    OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
-    OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
-    OutputStream & operator<<(const std::string_view str){write(str.data(),str.length()); return *this;}
-    OutputStream & operator<<(const String & str);
-    OutputStream & operator<<(const StringView str);
+    __inline OutputStream & operator<<(const char chr){write(chr); return *this;}
+    __inline OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
+    __inline OutputStream & operator<<(char * str){if(str) write(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const std::string_view str){write(str.data(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const String & str){write(str.c_str(), str.length()); return * this;}
+    __inline OutputStream & operator<<(const StringView str){write(str.data(), str.length()); return * this;}
     
     OutputStream & operator<<(const float val);
-    OutputStream & operator<<(const double val);
     OutputStream & operator<<(const iq_t val);
 
     OutputStream& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
@@ -121,30 +120,30 @@ public:
 
 
     //#region print integer
-    #define PUT_INT_CONTEXT_TEMPLATE(len, convfunc)\
-        if(b_showpos and val >= 0) *this << '+';\
-        if(b_showbase and (radix() != 10)){*this << get_basealpha(radix());}\
-        char str[len];\
-        convfunc(val, str, this->radix_);\
-        return *this << str;\
+private:
+    void print_int(const int val);
+    void print_int(const uint64_t val);
+    void print_int(const int64_t val);
+public:
+
 
     template<typename T>
-    requires ::std::is_integral_v<T> && (sizeof(T) <= 4)
+    requires ::std::is_integral_v<T>
     OutputStream & operator<<(const T val){
-        PUT_INT_CONTEXT_TEMPLATE(12, StringUtils::itoa)
+        if constexpr(sizeof(T) <= 4){
+            print_int(int(val));
+        }else{
+            if constexpr (::std::is_signed_v<T>){
+                print_int(int64_t(val));
+            }else{
+                print_int(uint64_t(val));
+            }
+        }
+        return *this;
     }
 
-    template<integral_u64 T>
-    OutputStream & operator<<(const T val){
-        PUT_INT_CONTEXT_TEMPLATE(24, StringUtils::iutoa)
-    }
-
-    template<integral_s64 T>
-    OutputStream & operator<<(const T val){
-        PUT_INT_CONTEXT_TEMPLATE(24, StringUtils::iutoa)
-    }
     //#endregion
-
+private:
     //#region print vased containers
     template<typename T>
     void print_arr(const T * _begin, const size_t _size){
@@ -158,6 +157,8 @@ public:
         *this << ']';
     }
 
+
+public:
     template<typename T, size_t N>
     OutputStream & operator<<(const T (&arr)[N]){
         print_arr(&arr[0], N);
@@ -166,13 +167,14 @@ public:
 
     template<typename T, size_t N>
     OutputStream & operator<<(const ::std::array<T, N> & arr){
-        print_arr(arr.begin(), N);
+        print_arr(arr.cbegin(), N);
         return *this;
     }
 
     template<typename T>
     OutputStream & operator<<(const ::std::vector<T> & arr){
         print_arr((const T *)&arr[0], arr.size());
+        // print_arr(arr.cbegin(), arr.size());
         return *this;
     }
 
@@ -182,8 +184,7 @@ public:
         return *this;
     }
 
-    template<typename T>
-    OutputStream & operator<<(std::span<const T> span){
+    OutputStream & operator<<(std::span<auto> span){
         print_arr(span.data(), span.size());
         return *this;
     }
@@ -208,7 +209,10 @@ public:
 
     template<typename T>
     requires ::std::is_enum_v<T>
-    OutputStream & operator<<(T && e){return *this;}
+    OutputStream & operator<<(T && e){
+        print_int(static_cast<int>(e));
+        return *this;
+    }
 
 
 

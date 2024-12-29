@@ -74,27 +74,46 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
 //     return *this << str;
 // }
 
-#define PUT_FLOAT_TEMPLATE(type, convfunc)\
-OutputStream & OutputStream::operator<<(const type value){\
+#define PRINT_FLOAT_TEMPLATE(type, convfunc)\
     char str[12] = {0};\
-    convfunc(value, str, this->eps());\
+    const auto len = convfunc(value, str, this->eps());\
     if(b_showpos and value >= 0) *this << '+';\
-    return *this << str;\
-}\
+    this->write(str, len);\
 
 OutputStream & OutputStream::operator<<(const iq_t value){
-    char str[12] = {0};
-    StringUtils::qtoa(value, str, this->eps());
-    if(b_showpos and value >= 0) *this << '+';
-    return *this << str;
+    PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::qtoa);
+    return *this;
 }
 
-PUT_FLOAT_TEMPLATE(float, StringUtils::ftoa)
-PUT_FLOAT_TEMPLATE(double, StringUtils::ftoa)
+OutputStream & OutputStream::operator<<(const float value){
+    PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::ftoa);
+    return *this;
+}
+
+#define PRINT_INT_TEMPLATE(blen, convfunc)\
+    if(b_showpos and val >= 0) *this << '+';\
+    if(b_showbase and (radix() != 10)){*this << get_basealpha(radix());}\
+    char str[blen];\
+    const auto len = convfunc(val, str, this->radix_);\
+    this->write(str, len);\
+
+void OutputStream::print_int(const int val){
+    PRINT_INT_TEMPLATE(12, StringUtils::itoa);
+}
+
+void OutputStream::print_int(const uint64_t val){
+    PRINT_INT_TEMPLATE(24, StringUtils::iutoa);
+}
+
+void OutputStream::print_int(const int64_t val){
+    PRINT_INT_TEMPLATE(24, StringUtils::iltoa);
+}
+
+
+// PUT_FLOAT_TEMPLATE(float, StringUtils::ftoa)
+// PUT_FLOAT_TEMPLATE(double, StringUtils::ftoa)
 
 #undef PUT_FLOAT_TEMPLATE
-OutputStream & OutputStream::operator<<(const String & str){write(str.c_str(), str.length()); return * this;}
-OutputStream & OutputStream::operator<<(const StringView str){write(str.data(), str.length()); return * this;}
 
 OutputStream & OutputStream::operator<<(const bool val){
     if(b_boolalpha == false){

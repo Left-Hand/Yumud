@@ -5,7 +5,7 @@
 
 #ifdef HDW_SXX32
 
-#define ADVANCED_TIMER_IT(x)\
+#define ADVANCED_TIMER_IT_FORWARD_DECL(x)\
 extern "C"{\
 __interrupt void TIM##x##_BRK_IRQHandler(void);\
 __interrupt void TIM##x##_UP_IRQHandler(void);\
@@ -14,77 +14,77 @@ __interrupt void TIM##x##_CC_IRQHandler(void);\
 }\
 
 
-#define GENERIC_TIMER_IT(x)\
+#define GENERIC_TIMER_IT_FORWARD_DECL(x)\
 extern "C"{\
 __interrupt void TIM##x##_IRQHandler(void);\
 }\
 
 
-#define BASIC_TIMER_IT(x)\
+#define BASIC_TIMER_IT_FORWARD_DECL(x)\
 extern "C"{\
 __interrupt void TIM##x##_IRQHandler(void);\
 }\
 
 
 
-#define ADVANCED_TIMER_FRIEND(x)\
+#define ADVANCED_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_BRK_IRQHandler(void);\
 friend void ::TIM##x##_UP_IRQHandler(void);\
 friend void ::TIM##x##_TRG_COM_IRQHandler(void);\
 friend void ::TIM##x##_CC_IRQHandler(void);\
 
 
-#define GENERIC_TIMER_FRIEND(x)\
+#define GENERIC_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_IRQHandler(void);\
 
 
-#define BASIC_TIMER_FRIEND(x)\
+#define BASIC_TIMER_FRIEND_DECL(x)\
 friend void ::TIM##x##_IRQHandler(void);\
 
 
 #ifdef ENABLE_TIM1
-ADVANCED_TIMER_IT(1)
+ADVANCED_TIMER_IT_FORWARD_DECL(1)
 #endif
 
 #ifdef ENABLE_TIM2
-GENERIC_TIMER_IT(2)
+GENERIC_TIMER_IT_FORWARD_DECL(2)
 #endif
 
 #ifdef ENABLE_TIM3
-GENERIC_TIMER_IT(3)
+GENERIC_TIMER_IT_FORWARD_DECL(3)
 #endif
 
 #ifdef ENABLE_TIM4
-GENERIC_TIMER_IT(4)
+GENERIC_TIMER_IT_FORWARD_DECL(4)
 #endif
 
 #ifdef ENABLE_TIM5
-GENERIC_TIMER_IT(5)
+GENERIC_TIMER_IT_FORWARD_DECL(5)
 #endif
 
 #ifdef ENABLE_TIM6
-BASIC_TIMER_IT(6)
+BASIC_TIMER_IT_FORWARD_DECL(6)
 #endif
 
 #ifdef ENABLE_TIM7
-BASIC_TIMER_IT(7)
+BASIC_TIMER_IT_FORWARD_DECL(7)
 #endif
 
 #ifdef ENABLE_TIM8
-ADVANCED_TIMER_IT(8)
+ADVANCED_TIMER_IT_FORWARD_DECL(8)
 #endif
 
 #ifdef ENABLE_TIM9
-ADVANCED_TIMER_IT(9)
+ADVANCED_TIMER_IT_FORWARD_DECL(9)
 #endif
 
 #ifdef ENABLE_TIM10
-ADVANCED_TIMER_IT(10)
+ADVANCED_TIMER_IT_FORWARD_DECL(10)
 #endif
 
-#undef ADVANCED_TIMER_IT
-#undef GENERIC_TIMER_IT
-#undef BASIC_TIMER_IT
+#undef ADVANCED_TIMER_IT_FORWARD_DECL
+#undef GENERIC_TIMER_IT_FORWARD_DECL
+#undef BASIC_TIMER_IT_FORWARD_DECL
 
 
 namespace ymd{
@@ -134,11 +134,11 @@ public:
     BasicTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM6
-    BASIC_TIMER_FRIEND(6)
+    BASIC_TIMER_FRIEND_DECL(6)
     #endif
 
     #ifdef ENABLE_TIM7
-    BASIC_TIMER_FRIEND(7)
+    BASIC_TIMER_FRIEND_DECL(7)
     #endif
 };
 
@@ -163,29 +163,27 @@ public:
     void enableSingle(const bool _single = true);
     void setTrgoSource(const TrgoSource source);
     
-    TimerChannel & ch(const size_t index);
-    
     TimerOC & oc(const size_t index);
 
-    virtual TimerChannel & operator [](const int index){return ch(index);}
+    virtual TimerChannel & operator [](const int index);
     virtual TimerChannel & operator [](const TimerChannel::ChannelIndex channel){return channels[(uint8_t)channel >> 1];}
 
     GenericTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM2
-    GENERIC_TIMER_FRIEND(2)
+    GENERIC_TIMER_FRIEND_DECL(2)
     #endif
 
     #ifdef ENABLE_TIM3
-    GENERIC_TIMER_FRIEND(3)
+    GENERIC_TIMER_FRIEND_DECL(3)
     #endif
 
     #ifdef ENABLE_TIM4
-    GENERIC_TIMER_FRIEND(4)
+    GENERIC_TIMER_FRIEND_DECL(4)
     #endif
 
     #ifdef ENABLE_TIM5
-    GENERIC_TIMER_FRIEND(5)
+    GENERIC_TIMER_FRIEND_DECL(5)
     #endif
 
 
@@ -219,23 +217,26 @@ public:
     AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM1
-    ADVANCED_TIMER_FRIEND(1);
+    ADVANCED_TIMER_FRIEND_DECL(1);
     #endif
 
     #ifdef ENABLE_TIM8
-    ADVANCED_TIMER_FRIEND(8);
+    ADVANCED_TIMER_FRIEND_DECL(8);
     #endif
 
     #ifdef ENABLE_TIM9
-    ADVANCED_TIMER_FRIEND(9);
+    ADVANCED_TIMER_FRIEND_DECL(9);
     #endif
 
     #ifdef ENABLE_TIM10
-    ADVANCED_TIMER_FRIEND(10);
+    ADVANCED_TIMER_FRIEND_DECL(10);
     #endif
 };
 }
 
+#undef BASIC_TIMER_FRIEND_DECL
+#undef GENERIC_TIMER_FRIEND_DECL
+#undef ADVANCED_TIMER_FRIEND_DECL
 
 #ifdef ENABLE_TIM1
 inline ymd::AdvancedTimer timer1{TIM1};

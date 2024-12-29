@@ -4,6 +4,16 @@
 using namespace ymd;
 using namespace ymd::TimerUtils::internal;
 
+// #define TIM_DEBUG
+
+#ifdef TIM_DEBUG
+__inline void TIM_ASSERT(bool x){
+    if(!x) HALT;
+}
+
+#else
+#define TIM_ASSERT(x)
+#endif
 
 void BasicTimer::enableRcc(const bool en){
     switch(uint32_t(instance)){
@@ -204,19 +214,9 @@ void GenericTimer::setTrgoSource(const TrgoSource source){
     TIM_SelectOutputTrigger(instance, (uint8_t)source);
 }
 
-TimerChannel & GenericTimer::ch(const size_t index){
-    if(index == 0 or index > 4) HALT
-    return channels[index - 1];
-}
-
-TimerOC & GenericTimer::oc(const size_t index){
-    if(index == 0 or index > 4) HALT
-    return channels[index - 1];
-}
-
 void AdvancedTimer::initBdtr(const uint32_t ns, const LockLevel level){
 
-    TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
+    const TIM_BDTRInitTypeDef TIM_BDTRInitStructure{
         .TIM_OSSRState = TIM_OSSRState_Disable,
         .TIM_OSSIState = TIM_OSSIState_Disable,
         .TIM_LOCKLevel = (uint16_t)level,
@@ -281,14 +281,30 @@ void BasicTimer::enableIt(const IT it,const NvicPriority request, const bool en)
     TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
 }
 
+
+TimerOC & GenericTimer::oc(const size_t index){
+    TIM_ASSERT(index <= 4 and index != 0);
+
+    return channels[index - 1];
+}
+
+
+TimerChannel & GenericTimer::operator [](const int index){
+    return channels[index];
+}
+
+
 TimerChannel & AdvancedTimer::operator [](const int index){
+    TIM_ASSERT(index <= 4 and index >= -3);
+    
     bool is_co = index < 0;
     if(is_co){
-        return n_channels[CLAMP(-index, 1, 3) - 1];
+        return n_channels[-index - 1];
     }else{
-        return channels[CLAMP(index, 1, 4) - 1];
+        return channels[(index -1) & 0b11];
     }
 }
+
 
 TimerChannel & AdvancedTimer::operator [](const TimerChannel::ChannelIndex ch){
     bool is_co = (uint8_t) ch & 0b1;
@@ -306,7 +322,7 @@ void BasicTimer::handleIt(const IT it){
     TIM_ClearITPendingBit(instance, code);
 }
 
-#define HANDLE_IT(it)     if((itstatus & uint8_t(it)) && (itenable && uint8_t(it))) handleIt(it);
+#define HANDLE_IT(it)     if((itstatus & uint8_t(it)) and (itenable & uint8_t(it))) handleIt(it);
 
 
 void BasicTimer::onUpdateHandler(){
