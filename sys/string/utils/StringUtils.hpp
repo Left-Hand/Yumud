@@ -22,14 +22,13 @@ __fast_inline bool is_alpha(const char chr) {
     return (chr >= 'a' && chr <= 'z') || (chr >= 'A' && chr <= 'Z');
 }
 
-void itoa(int32_t value, char * str, uint8_t radix);
-void iutoa(uint64_t value, char * str, uint8_t radix);
-void iltoa(int64_t value, char * str, uint8_t radix);
+size_t itoa(int32_t value, char * str, uint8_t radix);
+size_t iutoa(uint64_t value, char * str, uint8_t radix);
+size_t iltoa(int64_t value, char * str, uint8_t radix);
 
 
-
-void ftoa(float value, char * str, uint8_t eps);
-void qtoa(const iq_t value, char * str, uint8_t eps);
+size_t ftoa(float value, char * str, uint8_t eps);
+size_t qtoa(const iq_t value, char * str, uint8_t eps);
 
 
 int atoi(const char * str, const size_t len);

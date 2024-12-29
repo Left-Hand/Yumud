@@ -10,11 +10,11 @@
 
 namespace ymd::TimerUtils{
     enum class Mode:uint8_t{
-        Up = TIM_CounterMode_Up,
-        Down = TIM_CounterMode_Down,
-        CenterAlignedDownTrig = TIM_CounterMode_CenterAligned1,
-        CenterAlignedUpTrig = TIM_CounterMode_CenterAligned2,
-        CenterAlignedDualTrig = TIM_CounterMode_CenterAligned3
+        Up                      = TIM_CounterMode_Up,
+        Down                    = TIM_CounterMode_Down,
+        CenterAlignedDownTrig   = TIM_CounterMode_CenterAligned1,
+        CenterAlignedUpTrig     = TIM_CounterMode_CenterAligned2,
+        CenterAlignedDualTrig   = TIM_CounterMode_CenterAligned3
     };
 
     enum class ChannelIndex:uint8_t{
@@ -39,30 +39,30 @@ namespace ymd::TimerUtils{
     };
 
     enum class IT:uint8_t{
-        Update = TIM_IT_Update,
-        CC1 = TIM_IT_CC1,
-        CC2 = TIM_IT_CC2,
-        CC3 = TIM_IT_CC3,
-        CC4 = TIM_IT_CC4,
-        COM = TIM_IT_COM,
+        Update  = TIM_IT_Update,
+        CC1     = TIM_IT_CC1,
+        CC2     = TIM_IT_CC2,
+        CC3     = TIM_IT_CC3,
+        CC4     = TIM_IT_CC4,
+        COM     = TIM_IT_COM,
         Trigger = TIM_IT_Trigger,
-        Break = TIM_IT_Break,
+        Break   = TIM_IT_Break,
     };
 
     enum class BdtrLockLevel:uint16_t{
-        Off = TIM_LOCKLevel_OFF,
-        Low = TIM_LOCKLevel_1,
-        Medium = TIM_LOCKLevel_2,
-        High = TIM_LOCKLevel_3
+        Off     = TIM_LOCKLevel_OFF,
+        Low     = TIM_LOCKLevel_1,
+        Medium  = TIM_LOCKLevel_2,
+        High    = TIM_LOCKLevel_3
     };
 
     enum class OcMode:uint8_t{
-        Timing = TIM_OCMode_Timing,
-        Active = TIM_OCMode_Active,
-        Inactive = TIM_OCMode_Inactive,
-        Toggle = TIM_OCMode_Toggle,
-        UpValid = TIM_OCMode_PWM1,
-        DownValid = TIM_OCMode_PWM2
+        Timing      = TIM_OCMode_Timing,
+        Active      = TIM_OCMode_Active,
+        Inactive    = TIM_OCMode_Inactive,
+        Toggle      = TIM_OCMode_Toggle,
+        UpValid     = TIM_OCMode_PWM1,
+        DownValid   = TIM_OCMode_PWM2
     };
 
     namespace internal{

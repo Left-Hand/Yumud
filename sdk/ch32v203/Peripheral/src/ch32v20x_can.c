@@ -45,7 +45,7 @@
 
 #define CAN_MODE_MASK                ((uint32_t) 0x00000003)
 
-static ITStatus CheckITStatus(uint32_t CAN_Reg, uint32_t It_Bit);
+// static ITStatus CheckITStatus(uint32_t CAN_Reg, uint32_t It_Bit);
 
 
 /*********************************************************************
@@ -1047,81 +1047,59 @@ void CAN_ClearFlag(CAN_TypeDef* CANx, uint32_t CAN_FLAG)
  *
  * @return  ITStatus - SET or RESET.
  */
-ITStatus CAN_GetITStatus(CAN_TypeDef* CANx, uint32_t CAN_IT)
-{
-	ITStatus itstatus = RESET;
+
+ITStatus CAN_GetITStatus(CAN_TypeDef* CANx, uint32_t CAN_IT){
   
   if((CANx->INTENR & CAN_IT) != RESET)
   {
     switch (CAN_IT)
     {
       case CAN_IT_TME:
-	      itstatus = CheckITStatus(CANx->TSTATR, CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2);  
+	      return(CANx->TSTATR & (CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2));  
 	      break;
 			
       case CAN_IT_FMP0:
-			  itstatus = CheckITStatus(CANx->RFIFO0, CAN_RFIFO0_FMP0);  
-	      break;
+			  return (CANx->RFIFO0 & CAN_RFIFO0_FMP0);  
 			
       case CAN_IT_FF0:
-        itstatus = CheckITStatus(CANx->RFIFO0, CAN_RFIFO0_FULL0);  
-	      break;
+        return (CANx->RFIFO0 & CAN_RFIFO0_FULL0);  
 			
       case CAN_IT_FOV0:
-        itstatus = CheckITStatus(CANx->RFIFO0, CAN_RFIFO0_FOVR0);  
-	      break;
+        return (CANx->RFIFO0 & CAN_RFIFO0_FOVR0);  
 			
       case CAN_IT_FMP1:
-        itstatus = CheckITStatus(CANx->RFIFO1, CAN_RFIFO1_FMP1);  
-	      break;
+        return (CANx->RFIFO0 & CAN_RFIFO1_FMP1);  
 			
       case CAN_IT_FF1:
-	      itstatus = CheckITStatus(CANx->RFIFO1, CAN_RFIFO1_FULL1);  
-	      break;
+	      return (CANx->RFIFO0 & CAN_RFIFO1_FULL1);  
 			
       case CAN_IT_FOV1:
-	      itstatus = CheckITStatus(CANx->RFIFO1, CAN_RFIFO1_FOVR1);  
-	      break;
+	      return (CANx->RFIFO0 & CAN_RFIFO1_FOVR1);  
 			
       case CAN_IT_WKU:
-        itstatus = CheckITStatus(CANx->STATR, CAN_STATR_WKUI);  
-	      break;
+        return (CANx->STATR& CAN_STATR_WKUI);  
 			
       case CAN_IT_SLK:
-	      itstatus = CheckITStatus(CANx->STATR, CAN_STATR_SLAKI);  
-	      break;
+	      return (CANx->STATR& CAN_STATR_SLAKI);  
 			
       case CAN_IT_EWG:
-	      itstatus = CheckITStatus(CANx->ERRSR, CAN_ERRSR_EWGF);  
-	      break;
+	      return (CANx->ERRSR& CAN_ERRSR_EWGF);  
 			
       case CAN_IT_EPV:
-	      itstatus = CheckITStatus(CANx->ERRSR, CAN_ERRSR_EPVF);  
-	      break;
+	      return (CANx->ERRSR& CAN_ERRSR_EPVF);  
 			
       case CAN_IT_BOF:
-	      itstatus = CheckITStatus(CANx->ERRSR, CAN_ERRSR_BOFF);  
-	      break;
+	      return (CANx->ERRSR& CAN_ERRSR_BOFF);  
 			
       case CAN_IT_LEC:
-	      itstatus = CheckITStatus(CANx->ERRSR, CAN_ERRSR_LEC);  
-	      break;
+	      return (CANx->ERRSR& CAN_ERRSR_LEC);  
 			
       case CAN_IT_ERR:
-        itstatus = CheckITStatus(CANx->STATR, CAN_STATR_ERRI); 
-	      break;
+        return (CANx->STATR& CAN_STATR_ERRI); 
 			
-      default :
-        itstatus = RESET;
-        break;
     }
 	}
-  else
-  {
-    itstatus  = RESET;
-  }
-  
-  return  itstatus;
+  return RESET;
 }
 
 /*********************************************************************
@@ -1204,34 +1182,6 @@ void CAN_ClearITPendingBit(CAN_TypeDef* CANx, uint32_t CAN_IT)
 			break;
 	}
 }
-
-/*********************************************************************
- * @fn      CheckITStatus
- *
- * @brief   Checks whether the CAN interrupt has occurred or not.
- *
- * @param   CAN_Reg - specifies the CAN interrupt register to check
- *          It_Bit - specifies the interrupt source bit to check.
- *
- * @return  ITStatus - SET or RESET.
- */
-static ITStatus CheckITStatus(uint32_t CAN_Reg, uint32_t It_Bit)
-{
-  ITStatus pendingbitstatus = RESET;
-  
-  if ((CAN_Reg & It_Bit) != (uint32_t)RESET)
-  {
-    pendingbitstatus = SET;
-  }
-  else
-  {
-    pendingbitstatus = RESET;
-  }
-	
-  return pendingbitstatus;
-}
-
-
 
 
 

@@ -74,7 +74,7 @@ static __fast_inline constexpr size_t get_scalar(T value){
 //     }
 // }
 
-template<sintegral T>
+template<integral T>
 static size_t itoa_impl(T value, char * str, uint8_t radix){
     value = ABS(value);
     const bool minus = value < 0;
@@ -82,10 +82,6 @@ static size_t itoa_impl(T value, char * str, uint8_t radix){
     const size_t len = get_scalar(value) + minus;
     str[len] = 0;
     int i = len - 1;
-
-    // int i = get_scalar(value) + minus - 1;
-    // str[i + 1] = 0;
-    // const size_t len = i + 1;
 
     do {
 		const uint8_t digit = value % radix;
@@ -101,18 +97,18 @@ static size_t itoa_impl(T value, char * str, uint8_t radix){
     return len;
 }
 
-template<uintegral T>
-static void itoa_impl(T value, char * str, uint8_t radix){
-    int i = get_scalar(value) - 1;
-    str[i + 1] = 0;
-    do {
-		const uint8_t digit = value % radix;
-        str[i] = ((digit) > 9) ? 
-		(digit - 10) + ('A') : (digit) + '0';
+// template<uintegral T>
+// static void itoa_impl(T value, char * str, uint8_t radix){
+//     int i = get_scalar(value) - 1;
+//     str[i + 1] = 0;
+//     do {
+// 		const uint8_t digit = value % radix;
+//         str[i] = ((digit) > 9) ? 
+// 		(digit - 10) + ('A') : (digit) + '0';
 
-        i--;
-    } while((value /= radix) > 0 and (i >= 0));
-}
+//         i--;
+//     } while((value /= radix) > 0 and (i >= 0));
+// }
 
 
 // template<integral T>
@@ -208,7 +204,7 @@ static __fast_inline constexpr void itoas(uint32_t value, char *str, uint8_t rad
 
 }
 
-void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
+size_t StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
 
     eps = MIN(eps, 5);
 
@@ -238,17 +234,19 @@ void StringUtils::qtoa(const iq_t value, char * str, uint8_t eps){
         //add dot to seprate
         itoas(frac_int, str + end + 1, 10, eps);
     }
+
+    return end + 1 + eps;
 }
 
 
 
-void StringUtils::itoa(int32_t value, char *str, uint8_t radix){
-    itoa_impl<int32_t>(value, str, radix);
+size_t StringUtils::itoa(int32_t value, char *str, uint8_t radix){
+    return itoa_impl<int32_t>(value, str, radix);
 }
 
 
 
-void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
+size_t StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
     // int i=0;
 
     // do {
@@ -260,15 +258,15 @@ void StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
     // } while((value/=radix)>0);
 
     // reverse_str(str, i);
-    itoa_impl(value, str, radix);
+    return itoa_impl(value, str, radix);
 }
 
 
-void iltoa(int64_t value, char * str, uint8_t radix){
-    itoa_impl<int64_t>(value, str, radix);
+size_t iltoa(int64_t value, char * str, uint8_t radix){
+    return itoa_impl<int64_t>(value, str, radix);
 }
 
-void StringUtils::ftoa(float number,char *buf, uint8_t eps)
+size_t StringUtils::ftoa(float number,char *buf, uint8_t eps)
 {
     char str_int[12] = {0};
     char str_float[eps+1] = {0};
@@ -295,4 +293,6 @@ void StringUtils::ftoa(float number,char *buf, uint8_t eps)
     str_int[i] = '.';
     strcat(str_int,str_float);
     strcpy(buf,str_int);
+
+    return strlen(buf);
 }

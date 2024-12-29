@@ -3,6 +3,26 @@
 
 using namespace ymd;
 
+[[maybe_unused]] static FlagStatus PL_DMA_GetFlagStatus(uint32_t DMAy_FLAG)
+{
+    FlagStatus bitstatus = RESET;
+    uint32_t   tmpreg = 0;
+
+    tmpreg = DMA1->INTFR;
+
+    if((tmpreg & DMAy_FLAG) != (uint32_t)RESET)
+    {
+        bitstatus = SET;
+    }
+    else
+    {
+        bitstatus = RESET;
+    }
+
+    return bitstatus;
+}
+
+
 #define DMA_DONE_CB(x,y) dma##x##_ch##y##_done_cb
 #define DMA_HALF_CB(x,y) dma##x##_ch##y##_half_cb
 

@@ -127,13 +127,13 @@ protected:
     std::array<E *, N> pin_ptrs = {nullptr};
 
     void write(const uint16_t data) override {
-        for(uint8_t i = 0; i < 16; i++){
+        for(size_t i = 0; i < N; i++){
             writeByIndex(i, bool(data & (1 << i)));
         }
     }
     uint16_t read() override {
         uint16_t data = 0;
-        for(uint8_t i = 0; i < 16; i++){
+        for(size_t i = 0; i < N; i++){
             data |= uint16_t(pin_ptrs[i]->read() << i);
         }
         return data;
