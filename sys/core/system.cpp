@@ -132,13 +132,13 @@ uint32_t Sys::Chip::getChipIdCrc(){
 
     using ymd::crc;
     
-    static uint32_t chip_id_crc = 0;
-    if(!chip_id_crc){
+    static const uint32_t chip_id_crc = [&](){
         crc.init();
         crc.clear();
         uint64_t chip_id = getChipId();
-        chip_id_crc = crc.update({(uint32_t)chip_id, (uint32_t)(chip_id >> 32)});
-    }
+        return crc.update({(uint32_t)chip_id, (uint32_t)(chip_id >> 32)});
+    }();
+    
     return chip_id_crc;
 }
 
@@ -151,11 +151,11 @@ uint64_t Sys::Chip::getMacAddress(){
 }
 
 
-static M_CLOCK_TYPEDEF RCC_CLK;
+// static M_CLOCK_TYPEDEF RCC_CLK;
 
-static void ClockUpdate(){
-	M_RCC_CLK_GETTER(&RCC_CLK);//Get chip frequencies
-}
+// static void ClockUpdate(){
+// 	M_RCC_CLK_GETTER(&RCC_CLK);//Get chip frequencies
+// }
 
 #ifdef N32G45X
 #define M_RCC_SYSCLK(inst) inst.SysclkFreq;
@@ -176,13 +176,15 @@ static void ClockUpdate(){
 
 
 uint32_t Sys::Clock::getSystemFreq(){
-    ClockUpdate();
+    M_CLOCK_TYPEDEF RCC_CLK;
+    M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_SYSCLK(RCC_CLK);
 }
 
 
 uint32_t Sys::Clock::getAPB1Freq(){
-    ClockUpdate();
+    M_CLOCK_TYPEDEF RCC_CLK;
+    M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_PCLK1(RCC_CLK);
 }
 
@@ -248,12 +250,14 @@ void Sys::Clock::setAPB2Div(const uint8_t _div){
 
 
 uint32_t Sys::Clock::getAPB2Freq(){
-    ClockUpdate();
+    M_CLOCK_TYPEDEF RCC_CLK;
+    M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_PCLK2(RCC_CLK);
 }
 
 uint32_t Sys::Clock::getAHBFreq(){
-    ClockUpdate();
+    M_CLOCK_TYPEDEF RCC_CLK;
+    M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_HCLK(RCC_CLK);
 }
 

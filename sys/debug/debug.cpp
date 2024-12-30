@@ -3,18 +3,11 @@
 
 using namespace ymd;
 
-ymd::OutputStream & ymd::LOGGER = LOGGER_INST;
-ymd::OutputStream & ymd::DEBUGGER = DEBUGGER_INST;
-
-
-extern "C"{
-__attribute__((used)) int _write(int fd, char *buf, int size)
-{
+__attribute__((used)) int _write(int fd, char *buf, int size){
     DEBUGGER_INST.write(buf, size);
     return size;
 }
-__attribute__((used)) void *_sbrk(ptrdiff_t incr)
-{
+__attribute__((used)) void *_sbrk(ptrdiff_t incr){
     extern char _end[];
     extern char _heap_end[];
     static char *curbrk = _end;
@@ -32,6 +25,4 @@ __attribute__((used)) void _exit(int status){
 
 __attribute__((used)) ssize_t _read(int fd, void *buf, size_t count){
     return 0;
-}
-
 }

@@ -82,7 +82,7 @@ void CAN_DeInit(CAN_TypeDef *CANx)
  *             CAN_InitStatus_Failed.
  *             CAN_InitStatus_Success.
  */
-uint8_t CAN_Init(CAN_TypeDef *CANx, CAN_InitTypeDef *CAN_InitStruct)
+uint8_t CAN_Init(CAN_TypeDef *CANx,const CAN_InitTypeDef *CAN_InitStruct)
 {
     uint8_t  InitStatus = CAN_InitStatus_Failed;
     uint32_t wait_ack = 0x00000000;

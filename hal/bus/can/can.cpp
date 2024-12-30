@@ -5,17 +5,28 @@
 #include "sys/debug/debug_inc.h"
 #include "hal/bus/uart/uarthw.hpp"
 
+//#region switches
+
+// #define SCE_ENABLED
+
+//#endregion switches
+
 using namespace ymd;
 
 using Callback = Can::Callback;
 
-#define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x * 8))
+#define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x << 3))
+// #define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x * 8))
+
+
 
 void Can::initIt(){
     uint32_t it_mask = 
         CAN_IT_TME      //tx done
         | CAN_IT_FMP0   //rx fifo0
         | CAN_IT_FMP1   //rx fifo1
+
+        #ifdef SCE_ENABLED
         | CAN_IT_ERR 
         | CAN_IT_WKU
         | CAN_IT_SLK 
@@ -23,6 +34,7 @@ void Can::initIt(){
         | CAN_IT_EPV 
         | CAN_IT_BOF
         | CAN_IT_LEC
+        #endif
     ;
 
     CAN_ClearITPendingBit(instance, it_mask);
@@ -38,7 +50,10 @@ void Can::initIt(){
             //rx1 interrupt
             NvicRequest{{1, 5}, CAN1_RX1_IRQn}.enable();
             //sce interrupt
+
+            #ifdef SCE_ENABLED
             NvicRequest{{1, 2}, CAN1_SCE_IRQn}.enable();
+            #endif
             break;
         #endif
 
@@ -51,7 +66,9 @@ void Can::initIt(){
             //rx1 interrupt
             NvicRequest{{1, 5}, CAN2_RX1_IRQn}.enable();
             //sce interrupt
+            #ifdef SCE_ENABLED
             NvicRequest{{1, 2}, CAN2_SCE_IRQn}.enable();
+            #endif
             break;
         #endif
         
@@ -75,6 +92,8 @@ void Can::clearMailbox(const uint8_t mbox){
 
 Gpio & Can::getTxGpio(){
     switch((uint32_t)instance){
+        default:
+            HALT;
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             return CAN1_TX_GPIO;
@@ -85,13 +104,14 @@ Gpio & Can::getTxGpio(){
             return CAN2_TX_GPIO;
         #endif
 
-        default:
-            return GpioNull;
+
     }
 }
 
 Gpio & Can::getRxGpio(){
     switch((uint32_t)instance){
+        default:
+            HALT
         #ifdef ENABLE_CAN1
         case CAN1_BASE:
             return CAN1_RX_GPIO;
@@ -101,9 +121,6 @@ Gpio & Can::getRxGpio(){
         case CAN2_BASE:
             return CAN2_RX_GPIO;
         #endif
-
-        default:
-            return GpioNull;
     }
 }
 
@@ -164,6 +181,8 @@ void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
 void Can::init(const uint baudRate, const Mode _mode){
     BaudRate baud;
     switch(baudRate){
+        default:
+            HALT
         case 125_KHz:
             baud = BaudRate::_125K;
             break;
@@ -173,8 +192,6 @@ void Can::init(const uint baudRate, const Mode _mode){
         case 500_KHz:
             baud = BaudRate::_500K;
             break;
-
-        default:
         case 1_MHz:
             baud = BaudRate::_1M;
             break;
@@ -187,41 +204,40 @@ void Can::init(const BaudRate baudRate, const Mode _mode){
     installGpio();
     enableRcc();
 
-    uint8_t swj, bs1, bs2;
-    uint8_t prescale = 0;
 
-    swj = CAN_SJW_2tq;
-    bs1 = CAN_BS1_6tq;
-    bs2 = CAN_BS2_5tq;
+    scexpr uint8_t swj = CAN_SJW_2tq;
+    scexpr uint8_t bs1 = CAN_BS1_6tq;
+    scexpr uint8_t bs2 = CAN_BS2_5tq;
 
-    switch(baudRate){
-    case BaudRate::_125K:
-        prescale = 96;
-        break;
-    case BaudRate::_250K:
-        prescale = 48;
-        break;
-    case BaudRate::_500K:
-        prescale = 24;
-        break;
-    case BaudRate::_1M:
-        prescale = 12;
-        break;
+    const uint8_t prescale = [baudRate]()->uint8_t{
+        switch(baudRate){
+            default:
+            case BaudRate::_125K:
+                return 96;
+            case BaudRate::_250K:
+                return 48;
+            case BaudRate::_500K:
+                return 24;
+            case BaudRate::_1M:
+                return 12;
+        };
+    }();
+
+    const CAN_InitTypeDef config = {
+        .CAN_Prescaler = prescale,
+        .CAN_Mode = (uint8_t)_mode,
+        .CAN_SJW = swj,
+        .CAN_BS1 = bs1,
+        .CAN_BS2 = bs2,
+
+        .CAN_TTCM = DISABLE,
+        .CAN_ABOM = ENABLE,
+        .CAN_AWUM = DISABLE,
+        .CAN_NART = ENABLE,
+        .CAN_RFLM = DISABLE,
+        .CAN_TXFP = DISABLE,
     };
 
-    CAN_InitTypeDef config;
-    config.CAN_Prescaler = prescale;
-    config.CAN_Mode = (uint8_t)_mode;
-    config.CAN_SJW = swj;
-    config.CAN_BS1 = bs1;
-    config.CAN_BS2 = bs2;
-
-    config.CAN_TTCM = DISABLE;
-    config.CAN_ABOM = ENABLE;
-    config.CAN_AWUM = DISABLE;
-    config.CAN_NART = ENABLE;
-    config.CAN_RFLM = DISABLE;
-    config.CAN_TXFP = DISABLE;
     CAN_Init(instance, &config);
     initIt();
 }
@@ -244,15 +260,20 @@ uint8_t Can::transmit(const CanMsg & msg){
 
     {
         uint32_t tempreg = instance->TSTATR;
-        if((tempreg & CAN_TSTATR_TME0) == CAN_TSTATR_TME0){
+
+        // scexpr auto mask = CAN_TSTATR_TME0 | CAN_TSTATR_TME1 | CAN_TSTATR_TME2;
+
+        if((tempreg & CAN_TSTATR_TME0)){
             transmit_mailbox = 0;
-        }else if((tempreg & CAN_TSTATR_TME1) == CAN_TSTATR_TME1){
+        }else if((tempreg & CAN_TSTATR_TME1)){
             transmit_mailbox = 1;
-        }else if((tempreg & CAN_TSTATR_TME2) == CAN_TSTATR_TME2){
+        }else if((tempreg & CAN_TSTATR_TME2)){
             transmit_mailbox = 2;
         }else{
             return CAN_TxStatus_NoMailBox;
         }
+
+
     }
 
     if(transmit_mailbox != CAN_TxStatus_NoMailBox){
@@ -274,12 +295,13 @@ uint8_t Can::transmit(const CanMsg & msg){
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wuninitialized"
 
-            uint64_t && data = msg.data();
+            uint64_t data = msg.data();
             instance->sTxMailBox[transmit_mailbox].TXMDLR = data & UINT32_MAX;
             instance->sTxMailBox[transmit_mailbox].TXMDHR = data >> 32;
 
             #pragma GCC diagnostic pop
         }
+
         instance->sTxMailBox[transmit_mailbox].TXMDTR = tempdtr;
         instance->sTxMailBox[transmit_mailbox].TXMIR = tempmir;
     }
@@ -349,6 +371,7 @@ bool Can::isTranmitting(){
 bool Can::isReceiving(){
     return bool(instance->STATR & CAN_STATR_RXM);
 }
+
 bool Can::isBusOff(){
     return instance->ERRSR & CAN_ERRSR_BOFF;
 }
@@ -396,9 +419,9 @@ CanMsg Can::receive(const uint8_t fifo_num){
     }
 
     if(remote){
-        return std::move(CanMsg(id, true));
+        return CanMsg(id, true);
     }else{
-        return std::move(CanMsg(id, data, dlc));
+        return CanMsg(id, data, dlc);
     }
 }
 
@@ -519,10 +542,12 @@ void CAN1_RX1_IRQHandler(void){
     can1.handleRx(CAN_FIFO1);
 }
 
+#ifdef SCE_ENABLED
 __interrupt
 void CAN1_SCE_IRQHandler(void){
     can1.handleSce();
 }
+#endif
 #endif
 
 #ifdef ENABLE_CAN2
@@ -541,8 +566,10 @@ void CAN2_RX1_IRQHandler(void){
     can2.handleRx(CAN_FIFO1);
 }
 
+#ifdef SCE_ENABLED
 __interrupt
 void CAN2_SCE_IRQHandler(void){
     can2.handleSce();
 }
+#endif
 #endif

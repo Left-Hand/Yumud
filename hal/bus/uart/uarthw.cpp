@@ -20,7 +20,7 @@ __interrupt void uname##_IRQHandler(void){\
         name.txeHandle();\
         USART_ClearITPendingBit(uname,USART_IT_TXE);\
     }else if(USART_GetFlagStatus(uname,USART_FLAG_ORE)){\
-        USART_ReceiveData(uname);\
+        uname->DATAR;\
         USART_ClearFlag(uname,USART_FLAG_ORE);\
     }\
 }\
@@ -197,6 +197,7 @@ void UartHw::enableRcc(const bool en){
 void UartHw::rxneHandle(){
     this->rx_fifo.push(USART_ReceiveData(instance));
 }
+
 void UartHw::txeHandle(){
 
 }
@@ -366,6 +367,7 @@ void UartHw::invokeTxIt(){
 
 void UartHw::enableTxDma(const bool en){
     USART_DMACmd(instance, USART_DMAReq_Tx, en);
+
     if(en){
         tx_dma.init(DmaChannel::Mode::toPeriph);
         tx_dma.enableIt({1,1});
@@ -461,7 +463,6 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
 }
 
 
-
 void UartHw::setRxMethod(const CommMethod _rxMethod){
     if(rxMethod != _rxMethod){
         
@@ -490,7 +491,6 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
         rxMethod = _rxMethod;
     }
 }
-
 
 
 void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const CommMethod _rxMethod){
@@ -534,6 +534,7 @@ void UartHw::write(const char * pdata, const size_t len){
                 while((instance->STATR & USART_FLAG_TXE) == RESET);
             }
             while((instance->STATR & USART_FLAG_TC) == RESET);
+            
             break;
         case CommMethod::Interrupt:
             tx_fifo.push(pdata, len);
@@ -557,6 +558,7 @@ void UartHw::write(const char data){
             instance->DATAR;
             instance->DATAR = tx_fifo.pop();
             while((instance->STATR & USART_FLAG_TC) == RESET);
+
             break;
         case CommMethod::Interrupt:
             tx_fifo.push(data);
