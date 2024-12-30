@@ -631,7 +631,7 @@ struct meta_ptr_reset_guard {
 template <class F>
 struct proxy_helper {
   static inline const auto& get_meta(const proxy<F>& p) noexcept {
-    assert(p.has_value());
+    // assert(p.has_value());
     return *p.meta_.operator->();
   }
   template <class C, class O, qualifier_type Q, class... Args>

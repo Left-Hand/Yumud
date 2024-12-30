@@ -104,7 +104,7 @@ int main(){
     // mpu6050_main();
     // gui_main();
     // sdc_main();
-    proxy_tb();
+    // proxy_tb();
     // paj7620_main();
     // can_ring_main();
     // m2006_main();

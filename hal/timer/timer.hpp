@@ -105,6 +105,7 @@ protected:
 
     uint getClk();
     void enableRcc(const bool en);
+    void remap(const uint8_t rm);
 
     void onUpdateHandler();
     void onBreakHandler();

@@ -396,23 +396,11 @@
 #endif
 
 #ifdef ENABLE_TIM6
-    #if TIM6_REMAP == 0
-        #define TIM6_CH1_GPIO portA[0]
-        #define TIM6_CH2_GPIO portA[1]
-        #define TIM6_CH3_GPIO portA[2]
-        #define TIM6_CH4_GPIO portA[3]
-    #endif
+    //TIM6 no io channel
 #endif
 
 #ifdef ENABLE_TIM7
-
-
-    #if TIM7_REMAP == 0
-        #define TIM7_CH1_GPIO portA[0]
-        #define TIM7_CH2_GPIO portA[1]
-        #define TIM7_CH3_GPIO portA[2]
-        #define TIM7_CH4_GPIO portA[3]
-    #endif
+    //TIM7 no io channel 
 #endif
 
 #ifdef ENABLE_TIM8
@@ -452,6 +440,52 @@
     #define TIM9_CH2_DMA_CH dma2Ch9
     #define TIM9_CH3_DMA_CH dma2Ch11
     #define TIM9_CH4_DMA_CH dma2Ch8
+
+    #if TIM9_REMAP == 0
+        #define TIM9_CH1_GPIO portA[2]
+        #define TIM9_CH1N_GPIO portC[0]
+
+        #define TIM9_CH2_GPIO portA[3]
+        #define TIM9_CH2N_GPIO portC[1]
+
+        #define TIM9_CH3_GPIO portA[4]
+        #define TIM9_CH3N_GPIO portC[2]
+
+        #define TIM9_CH4_GPIO portC[4]
+    #elif TIM9_REMAP == 1
+        #define TIM9_CH1_GPIO portA[2]
+        #define TIM9_CH1N_GPIO portB[0]
+
+        #define TIM9_CH2_GPIO portA[3]
+        #define TIM9_CH2N_GPIO portB[1]
+
+        #define TIM9_CH3_GPIO portA[4]
+        #define TIM9_CH3N_GPIO portB[2]
+
+        #define TIM9_CH4_GPIO portC[14]
+    #elif TIM9_REMAP == 2
+        #define TIM9_CH1_GPIO portD[9]
+        #define TIM9_CH1N_GPIO portD[8]
+
+        #define TIM9_CH2_GPIO portD[11]
+        #define TIM9_CH2N_GPIO portD[10]
+
+        #define TIM9_CH3_GPIO portD[13]
+        #define TIM9_CH3N_GPIO portD[12]
+
+        #define TIM9_CH4_GPIO portD[15]
+    #elif TIM9_REMAP == 3
+        #define TIM9_CH1_GPIO portD[9]
+        #define TIM9_CH1N_GPIO portD[8]
+
+        #define TIM9_CH2_GPIO portD[11]
+        #define TIM9_CH2N_GPIO portD[10]
+
+        #define TIM9_CH3_GPIO portD[13]
+        #define TIM9_CH3N_GPIO portD[12]
+
+        #define TIM9_CH4_GPIO portD[15]
+    #endif
 #endif
 
 #ifdef ENABLE_TIM10
@@ -459,6 +493,52 @@
     #define TIM10_CH2_DMA_CH dma2Ch10
     #define TIM10_CH3_DMA_CH dma2Ch9
     #define TIM10_CH4_DMA_CH dma2Ch6
+
+    #if TIM10_REMAP == 0
+        #define TIM10_CH1_GPIO portB[8]
+        #define TIM10_CH1N_GPIO portA[12]
+
+        #define TIM10_CH2_GPIO portB[9]
+        #define TIM10_CH2N_GPIO portA[13]
+
+        #define TIM10_CH3_GPIO portC[3]
+        #define TIM10_CH3N_GPIO portA[14]
+
+        #define TIM10_CH4_GPIO portC[11]
+    #elif TIM10_REMAP == 1
+        #define TIM10_CH1_GPIO portB[3]
+        #define TIM10_CH1N_GPIO portA[5]
+
+        #define TIM10_CH2_GPIO portB[4]
+        #define TIM10_CH2N_GPIO portA[6]
+
+        #define TIM10_CH3_GPIO portB[5]
+        #define TIM10_CH3N_GPIO portA[7]
+
+        #define TIM10_CH4_GPIO portC[14]
+    #elif TIM10_REMAP == 2
+        #define TIM10_CH1_GPIO portD[1]
+        #define TIM10_CH1N_GPIO portE[3]
+
+        #define TIM10_CH2_GPIO portD[3]
+        #define TIM10_CH2N_GPIO portE[4]
+
+        #define TIM10_CH3_GPIO portD[5]
+        #define TIM10_CH3N_GPIO portE[5]
+
+        #define TIM10_CH4_GPIO portD[7]
+    #elif TIM10_REMAP == 3
+        #define TIM10_CH1_GPIO portD[1]
+        #define TIM10_CH1N_GPIO portE[3]
+
+        #define TIM10_CH2_GPIO portD[3]
+        #define TIM10_CH2N_GPIO portE[4]
+
+        #define TIM10_CH3_GPIO portD[5]
+        #define TIM10_CH3N_GPIO portE[5]
+
+        #define TIM10_CH4_GPIO portD[7]
+    #endif
 #endif
 
 
