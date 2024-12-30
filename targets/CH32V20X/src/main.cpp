@@ -33,7 +33,7 @@ void preinit(){
 int main(){
     #ifdef CH32V20X
     Sys::Misc::prework();
-    // eeprom_main();
+    eeprom_main();
     // while(true);
     //  uart_main();
     // qlz_main();
@@ -52,7 +52,7 @@ int main(){
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
     // m3508_main();
-    stepper_tb(uart1);
+    // stepper_tb(uart1);
     // pmw3901_main();
     // math_tb(uart1);
     // zdt_main(uart1);

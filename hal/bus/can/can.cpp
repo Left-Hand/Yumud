@@ -425,6 +425,12 @@ CanMsg Can::receive(const uint8_t fifo_num){
     }
 }
 
+
+CanFilter Can::operator[](const size_t idx) const {
+    if(idx > 13) HALT;
+    return CanFilter(this->instance, idx);
+}
+
 void Can::handleTx(){
     for(uint8_t mbox = 0; mbox < 3; mbox++){
         if(isMailBoxDone(mbox)){ // if existing message done

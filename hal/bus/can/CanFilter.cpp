@@ -175,7 +175,6 @@ void CanFilter::list(const std::initializer_list<CanID16> & list){
     }
     is32 = false;
     islist = true;
-    inited = true;
 
     apply();
 }
@@ -197,7 +196,6 @@ void CanFilter::list(const std::initializer_list<CanID32> & list){
     }
     is32 = true;
     islist = true;
-    inited = true;
 
     apply();
 }
@@ -210,7 +208,6 @@ void CanFilter::mask(const CanID16 & id1, const CanID16 & mask1, const CanID16 &
 
     is32 = false;
     islist = false;
-    inited = true;
 
     apply();
 }
@@ -221,17 +218,12 @@ void CanFilter::mask(const CanID32 & id, const CanID32 & mask){
 
     is32 = true;
     islist = false;
-    inited = true;
 
     apply();
 }
 
 
 void CanFilter::apply(){
-    if(!inited){
-        // HALT;
-        return;
-    }
 
     CAN_FilterInitTypeDef CAN_FilterInitSturcture = {
         .CAN_FilterIdHigh = id16[1],
@@ -248,7 +240,8 @@ void CanFilter::apply(){
     CAN_FilterInit(&CAN_FilterInitSturcture);
 
     CAN_FilterInitSturcture.CAN_FilterFIFOAssignment = CAN_Filter_FIFO1;
-    //register both fifo
+
+    //register fifo1
     CAN_FilterInit(&CAN_FilterInitSturcture);
 
 }

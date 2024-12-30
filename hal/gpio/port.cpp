@@ -11,6 +11,16 @@ void Port::setMode(const int index, const GpioMode mode){
     gpio.setMode(mode);
 }
 
+// Gpio Port::operator [](const int index){
+//     if(index < 0) return channel_none;
+
+//     return Gpio(instance, Pin(1 << index));
+// };
+// Gpio Port::operator [](const Pin pin){
+//     if(pin != Pin::None) return channel_none;
+
+//     return Gpio(instance, pin);
+// };
 
 void Port::enableRcc(const bool en){
     switch((uint32_t)instance){

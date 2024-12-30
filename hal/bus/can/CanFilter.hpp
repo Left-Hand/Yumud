@@ -108,12 +108,10 @@ class CanFilter{
 protected:
     using ID16 = CanID16;
     using ID32 = CanID32;
-
-    bool is_remote();
     using RemoteType = CanUtils::RemoteType;
+
     CAN_TypeDef * can;
     uint8_t idx;
-    bool inited = false;
     bool is32;
     bool islist;
 
@@ -127,9 +125,9 @@ protected:
         uint32_t mask32;
     };
 
-    // CanFilter conv_copy(const bool rmt) const;
     void apply();
 
+    bool is_remote();
     CanFilter(CAN_TypeDef * can_, const uint16_t idx_):can(can_), idx(idx_){};
     CanFilter(const CanFilter & other) = delete;
     CanFilter(CanFilter && other) = delete;

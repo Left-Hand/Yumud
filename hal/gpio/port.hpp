@@ -42,14 +42,18 @@ public:
     Port & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
 
     operator uint16_t(){return instance->INDR;}
+
     Gpio & operator [](const int index){
         if(index < 0) return channel_none;
-        else return channels[CLAMP(index, 0, 15)];
+        else return channels[index & 0b1111];
     };
     Gpio & operator [](const Pin pin){
-        if(pin != Pin::None) return channels[CLAMP(CTZ((uint16_t)pin), 0, 15)];
+        if(pin != Pin::None) return channels[CTZ((uint16_t)pin) & 0b1111];
         else return channel_none;
     };
+
+    // Gpio operator [](const int index);
+    // Gpio operator [](const Pin pin);
     void setMode(const int index, const GpioMode mode) override;
 
 };
@@ -102,7 +106,4 @@ extern ymd::Port portD;
 extern ymd::Port portE;
 #endif
 
-
-
-#define GpioNull portD[Pin::None]
 

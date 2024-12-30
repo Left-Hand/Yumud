@@ -84,22 +84,22 @@ protected:
     CanMsg receive(const uint8_t fifo_num);
     friend class CanFilter;
 
-    std::array<CanFilter, 14> filters = {
-        CanFilter{this->instance, 0},
-        CanFilter{this->instance, 1},
-        CanFilter{this->instance, 2},
-        CanFilter{this->instance, 3},
-        CanFilter{this->instance, 4},
-        CanFilter{this->instance, 5},
-        CanFilter{this->instance, 6},
-        CanFilter{this->instance, 7},
-        CanFilter{this->instance, 8},
-        CanFilter{this->instance, 9},
-        CanFilter{this->instance, 10},
-        CanFilter{this->instance, 11},
-        CanFilter{this->instance, 12},
-        CanFilter{this->instance, 13},
-    };
+    // std::array<CanFilter, 14> filters = {
+    //     CanFilter{this->instance, 0},
+    //     CanFilter{this->instance, 1},
+    //     CanFilter{this->instance, 2},
+    //     CanFilter{this->instance, 3},
+    //     CanFilter{this->instance, 4},
+    //     CanFilter{this->instance, 5},
+    //     CanFilter{this->instance, 6},
+    //     CanFilter{this->instance, 7},
+    //     CanFilter{this->instance, 8},
+    //     CanFilter{this->instance, 9},
+    //     CanFilter{this->instance, 10},
+    //     CanFilter{this->instance, 11},
+    //     CanFilter{this->instance, 12},
+    //     CanFilter{this->instance, 13},
+    // };
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
 
@@ -135,10 +135,7 @@ public:
     void bindCbTxFail(Callback && _cb);
     void bindCbRx(Callback && _cb);
 
-    CanFilter & operator[](const size_t idx){
-        if(idx > 13) HALT;
-        return this->filters[idx];
-    }
+    CanFilter operator[](const size_t idx) const ;
 
 
     #ifdef ENABLE_CAN1

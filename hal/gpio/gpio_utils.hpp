@@ -1,7 +1,7 @@
 #pragma once
 
+#include <cstdint>
 #include "sys/core/platform.h"
-#include "sys/core/sdk.h"
 
 namespace ymd{
 enum class Pin:uint16_t{
@@ -91,20 +91,20 @@ enum class GpioMode:uint8_t{
 
 
 namespace GpioUtils{
-    scexpr bool isIn(const GpioMode & pinmode){
-        return pinmode == GpioMode::InAnalog || pinmode == GpioMode::InFloating || pinmode == GpioMode::InPullUP || pinmode == GpioMode::InPullDN;
+    __inline scexpr bool isIn(const GpioMode mode){
+        return mode == GpioMode::InAnalog || mode == GpioMode::InFloating || mode == GpioMode::InPullUP || mode == GpioMode::InPullDN;
     }
 
-    scexpr bool isOut(const GpioMode & pinmode){
-        return pinmode == GpioMode::OutPP || pinmode == GpioMode::OutOD || pinmode == GpioMode::OutAfPP || pinmode == GpioMode::OutAfOD;
+    __inline scexpr bool isOut(const GpioMode mode){
+        return mode == GpioMode::OutPP || mode == GpioMode::OutOD || mode == GpioMode::OutAfPP || mode == GpioMode::OutAfOD;
     }
 
-    scexpr bool isPP(const GpioMode & pinmode){
-        return pinmode == GpioMode::OutPP || pinmode == GpioMode::OutAfPP;
+    __inline scexpr bool isPP(const GpioMode mode){
+        return mode == GpioMode::OutPP || mode == GpioMode::OutAfPP;
     }
 
-    scexpr bool isOD(const GpioMode & pinmode){
-        return pinmode == GpioMode::OutOD || pinmode == GpioMode::OutAfOD;
+    __inline scexpr bool isOD(const GpioMode mode){
+        return mode == GpioMode::OutOD || mode == GpioMode::OutAfOD;
     }
 }
 }

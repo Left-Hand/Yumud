@@ -192,7 +192,7 @@ uint8_t CAN_Init(CAN_TypeDef *CANx,const CAN_InitTypeDef *CAN_InitStruct)
  *
  * @return  none
  */
-void CAN_FilterInit(CAN_FilterInitTypeDef *CAN_FilterInitStruct)
+void CAN_FilterInit(const CAN_FilterInitTypeDef *CAN_FilterInitStruct)
 {
     uint32_t filter_number_bit_pos = 0;
 
