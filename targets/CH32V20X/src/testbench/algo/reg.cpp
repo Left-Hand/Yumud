@@ -72,9 +72,9 @@ enum class Mask:uint16_t{
 
 // #define scinit static constinit;
 void test() {
-    scexpr auto reg = MyReg{.a = 1, .b = 0, .c = 1};
-    scexpr uint16_t mask = MyReg::maskof({.a = 1, .b = 0, .c = 1, .__resv__ = 0});
-    scexpr int a = mask;
+    // scexpr auto reg = MyReg{.a = 1, .b = 0, .c = 1};
+    // scexpr uint16_t mask = MyReg::maskof({.a = 1, .b = 0, .c = 1, .__resv__ = 0});
+    // scexpr int a = mask;
     // constexpr auto reg_uint16 = reg.maskof(&MyReg::a, &MyReg::b, &MyReg::c);
     // static_assert(reg_uint16 == 0b10000001, "Conversion failed");
 }

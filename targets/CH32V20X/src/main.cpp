@@ -33,13 +33,13 @@ void preinit(){
 int main(){
     #ifdef CH32V20X
     Sys::Misc::prework();
-    eeprom_main();
+    // eeprom_main();
     // while(true);
     //  uart_main();
     // qlz_main();
     // embd_main();
     // embd_main();
-    // bldc_main();
+    bldc_main();
     // uart_main();
     // wlsy_main();
     // lt8920_main();
@@ -104,7 +104,7 @@ int main(){
     // mpu6050_main();
     // gui_main();
     // sdc_main();
-    proxy_tb();
+    // proxy_tb();
     // paj7620_main();
     // can_ring_main();
     // m2006_main();

@@ -20,10 +20,13 @@ public:
     uint16_t getRegularDataByRank(const uint8_t rank) override;
     uint16_t getInjectedDataByRank(const uint8_t rank) override;
 
+    #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
+    friend void ::ADC1_2_IRQHandler(void);
+    #endif
 };
 
 #ifdef ENABLE_ADC1
-static inline Adc1 adc1;
+extern Adc1 adc1;
 #endif
 
 }

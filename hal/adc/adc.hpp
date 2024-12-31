@@ -104,10 +104,7 @@ public:
     AdcOnChip(ADC_TypeDef * _instance):instance(_instance){;}
 };
 
-class AdcCompanion:public AdcOnChip{
-public:
-    AdcCompanion(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
-};
+
 
 class AdcPrimary: public AdcOnChip{
 protected:
@@ -328,5 +325,10 @@ public:
     virtual uint16_t getInjectedDataByRank(const uint8_t rank) = 0;
 };
 
+
+class AdcCompanion:public AdcOnChip{
+public:
+    AdcCompanion(ADC_TypeDef * _instance):AdcOnChip(_instance){;}
+};
 
 }

@@ -1,11 +1,11 @@
 #pragma once
 
 #include "sys/clock/clock.h"
-#include "sys/stream/ostream.hpp"
+#include "debugger.hpp"
 
 namespace ymd{
 extern ymd::OutputStream & LOGGER;
-extern ymd::OutputStream & DEBUGGER;
+extern ymd::Debugger & DEBUGGER;
 }
 
 #ifndef VOFA_PRINT
@@ -45,44 +45,31 @@ extern ymd::OutputStream & DEBUGGER;
 
 #define NARG(...) (std::tuple_size_v<decltype(std::make_tuple(__VA_ARGS__))>)
 
+template<typename... Args>
+void __panic_impl(Args&&... args){
+    if constexpr(NARG(args...)){
+        DEBUG_ERROR(std::forward<Args>(args)...);
+        delay(10);
+    }
+    DISABLE_INT;
+    DISABLE_INT;
+    HALT;
+}
+
+
 #define PANIC(...)\
-do{\
-    if constexpr(NARG(__VA_ARGS__)){\
-        DEBUG_ERROR(__VA_ARGS__);\
-        delay(10);\
-    }\
-    DISABLE_INT;\
-    DISABLE_INT;\
-    HALT;\
-}while(false);\
+__panic_impl(__VA_ARGS__);\
 
 template<typename... Args>
 bool __assert_impl(bool cond, Args&&... args) {
     if (!cond) {
-        PANIC(std::forward<Args>(args)...);
+        __panic_impl(std::forward<Args>(args)...);
     }
     return cond;
 }
 
-#define ASSERT(condition, ...) __assert_impl((bool)(condition), ##__VA_ARGS__);
-
-#define ASSERT_WITH_CONTINUE(condition, ...) \
-if(bool(condition) == false){\
-    DEBUG_PRINTLN("[f]:", __LINE__, ##__VA_ARGS__);\
-    continue;\
-}
-
-#define ASSERT_WITH_RETURN(condition, ...) \
-if(bool(condition) == false){\
-    DEBUG_PRINTLN("[f]:", __LINE__, ##__VA_ARGS__);\
-    return;\
-}
-
-#define ASSERT_WITH_HALT(condition, ...) \
-if(bool(condition) == false){\
-    DEBUG_PRINTLN("[f]:", __LINE__, ':', ##__VA_ARGS__);\
-    PANIC(__VA_ARGS__);\
-}\
+#define ASSERT(condition, ...)\
+__assert_impl((bool)(condition), ##__VA_ARGS__);
 
 #define BREAKPOINT __nopn(1);
 #define TODO(...) do{PANIC("todo", ##__VA_ARGS__)}while(false);

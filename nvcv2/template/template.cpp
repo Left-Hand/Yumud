@@ -75,7 +75,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
 
 #define BOUNDARY_CHECK()\
 if(not src.get_view().contains(Rect2i{offs, tmp.get_size()})){\
-    ASSERT_WITH_HALT(false, "template_match: out of bound");\
+    ASSERT(false, "template_match: out of bound");\
     return 0;\
 }\
 

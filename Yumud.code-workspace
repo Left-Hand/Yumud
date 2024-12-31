@@ -19,7 +19,8 @@
 			"ranges": "cpp",
 			"span": "cpp",
 			"*.ipp": "cpp",
-			"cstdint": "cpp"
+			"cstdint": "cpp",
+			"*.tpp": "cpp"
 		},
 		"hide-files.files": []
 	},

@@ -23,7 +23,7 @@ public:
     TimerChannel(const TimerChannel & other) = delete;
     TimerChannel(TimerChannel && other) = delete;
 
-    void enableDma(const bool en = true);
+    TimerChannel & enableDma(const bool en = true);
 
     DmaChannel & dma() const;
 };

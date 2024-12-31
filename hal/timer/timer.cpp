@@ -1,10 +1,42 @@
 #include "timer.hpp"
 #include "sys/core/system.hpp"
 
+// #define TIM_DEBUG
+// TIM1_RM
+
+#define TIM1_RM_A8_A9_A10_A11__B13_B14_B15 0
+#define TIM1_RM_A8_A9_A10_A11__A7_B0_B1 1
+#define TIM1_RM_E9_E11_E13_E14__E8_E10_E12 3
+
+#define TIM2_RM_A0_A1_A2_A3 0
+#define TIM2_RM_A15_B3_A2_A3 1
+#define TIM2_RM_A0_A1_B10_B11 2
+#define TIM2_RM_A15_B3_B10_B11 3
+
+#define TIM3_RM_A6_A7_B0_B1 0
+#define TIM3_RM_B4_B5_B0_B1 2
+
+#define TIM4_RM_B6_B7_B8_B9 0
+#define TIM4_RM_D12_D13_D14_D15 1
+
+#define TIM5_RM_A0_A1_A2_A3 0
+
+#define TIM6_RM_A0_A1_A2_A3 0
+
+#define TIM8_RM_C6_C7_C8_C9__A7_B0_B1 0
+#define TIM8_RM_B6_B7_B8_C13__A13_A14_A15 1
+
+#define TIM9_RM_A2_A3_A4_C4__C0_C1_C2 0
+#define TIM9_RM_A2_A3_A4_C4__B0_B1_B2 1
+#define TIM9_RM_D9_D11_D13_D15__D8_D10_D12 2
+
+#define TIM10_RM_B8_B9_C3_C11__A12_A13_A14 0
+#define TIM10_RM_B3_B4_B5_C14__A5_A6_A7 1
+#define TIM10_RM_D1_D3_D5_D7__E3_E4_E5 2
+
 using namespace ymd;
 using namespace ymd::TimerUtils::internal;
 
-// #define TIM_DEBUG
 
 #ifdef TIM_DEBUG
 __inline void TIM_ASSERT(bool x){
@@ -99,6 +131,92 @@ void BasicTimer::enableRcc(const bool en){
                     break;
                 case 1:
                     GPIO_PinRemapConfig(GPIO_Remap_TIM8, en);
+                    break;
+            }
+            break;
+        #endif
+    }
+}
+
+void BasicTimer::remap(const uint8_t rm){
+    switch(uint32_t(instance)){
+        #ifdef ENABLE_TIM1
+        case TIM1_BASE:
+            switch(rm){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM1, ENABLE);
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM1, ENABLE);
+                    break;
+            }
+            break;
+        #endif
+
+        #ifdef ENABLE_TIM2
+        case TIM2_BASE:
+            switch(rm){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap1_TIM2, ENABLE);
+                    break;
+                case 2:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap2_TIM2, ENABLE);
+                    break;
+                case 3:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM2, ENABLE);
+                    break;
+            }
+            break;
+        #endif
+
+        #ifdef ENABLE_TIM3
+        case TIM3_BASE:
+            switch(rm){
+                case 0:
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM3, ENABLE);
+                    break;
+                case 3:
+                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM3, ENABLE);
+                    break;
+            }
+            break;
+        #endif
+
+        #ifdef ENABLE_TIM4
+        case TIM4_BASE:
+            switch(rm){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_Remap_TIM4, ENABLE);
+                    break;
+            }
+            break;
+        #endif
+
+        #ifdef ENABLE_TIM5
+        case TIM5_BASE:
+            //no remap
+            break;
+        #endif
+
+        #ifdef ENABLE_TIM8
+        case TIM8_BASE:
+            switch(rm){
+                case 0:
+                    break;
+                case 1:
+                    GPIO_PinRemapConfig(GPIO_Remap_TIM8, ENABLE);
                     break;
             }
             break;

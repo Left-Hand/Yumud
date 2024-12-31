@@ -1,33 +1,9 @@
-#include "gpio.hpp"
-#include "port.hpp"
+#include "port_concept.hpp"
+#include "Gpio.hpp"
 
 using namespace ymd;
 
-PortConcept & GpioVirtual::form_gpiotypedef_to_port(uint32_t base){
-    switch(base){
-        default:
-        #ifdef ENABLE_GPIOA
-        case GPIOA_BASE:
-            return portA;
-        #endif
-        #ifdef ENABLE_GPIOB
-        case GPIOB_BASE:
-            return portB;
-        #endif
-        #ifdef ENABLE_GPIOC
-        case GPIOC_BASE:
-            return portC;
-        #endif
-        #ifdef ENABLE_GPIOD
-        case GPIOD_BASE:
-            return portD;
-        #endif
-        #ifdef ENABLE_GPIOE
-        case GPIOE_BASE:
-            return portE;
-        #endif
-    }
-}
+
 
 void Gpio::setMode(const GpioMode mode){
     if(!isValid()) return;
@@ -42,3 +18,12 @@ void Gpio::setMode(const GpioMode mode){
         instance -> OUTDR &= ~pin;
     }
 }
+
+Gpio & Gpio::null(){
+    static Gpio GpioNull = Gpio(GPIOD, Pin::None);
+    return GpioNull;
+}
+
+// namespace ymd{
+// Gpio & GpioNull = Gpio::null();
+// }

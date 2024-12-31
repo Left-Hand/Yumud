@@ -7,50 +7,40 @@
 #define SUPPORT_VTF
 #endif
 
+namespace ymd{
+
 struct NvicPriority;
 class NvicRequest;
 
 struct NvicPriority{
 protected:
-    const uint8_t pre;
-    const uint8_t sub;
+    const uint8_t _pre;
+    const uint8_t _sub;
 public:
-    NvicPriority() = delete;
-    NvicPriority(const uint8_t _pre, const uint8_t _sub):pre(CLAMP(_pre,0,1)), sub(CLAMP(_sub, 0,7)){;}
+    NvicPriority(const uint8_t pre, const uint8_t sub);
 
-    static void enable(const NvicPriority request, const IRQn _irq, const bool en = true){
-        NVIC_InitTypeDef NVIC_InitStructure = {0};
-        NVIC_InitStructure.NVIC_IRQChannel = _irq;
-        NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = request.pre;
-        NVIC_InitStructure.NVIC_IRQChannelSubPriority = request.sub;
-        NVIC_InitStructure.NVIC_IRQChannelCmd = en;
-        NVIC_Init(&NVIC_InitStructure);
-    }
+    static void enable(const NvicPriority & request, const IRQn _irq, const bool en = true);
 
-    void enable(const IRQn _irq, const bool en = true) const {
-        enable(*this, _irq, en);
-    }
+    void enable(const IRQn _irq, const bool en = true) const;
+
+
 };
 
 
-class NvicRequest:public NvicPriority{
+class NvicRequest{
 protected:
-    const IRQn irq;
+    const NvicPriority _priority;
+    const IRQn _irq;
 public:
-    NvicRequest(const uint8_t _pre, const uint8_t _sub, const IRQn _irq):
-            NvicPriority(_pre, _sub), irq(_irq){;}
+    NvicRequest(const uint8_t pre, const uint8_t sub, const IRQn irq):
+            _priority(pre, sub), _irq(irq){;}
 
-    NvicRequest(const NvicPriority priority, const IRQn _irq):
-            NvicPriority(priority), irq(_irq){;}
+    NvicRequest(const NvicPriority priority, const IRQn irq):
+            _priority(priority), _irq(irq){;}
 
-    void enable(const bool en = true) const {
-        NvicPriority::enable(*this, this->irq, en);
-    }
+    void enable(const bool en = true) const ;
 
-    static void enable(const NvicRequest request, const bool en = true){
-        NvicPriority::enable(request, request.irq, en);
-    }
-
+    static void enable(const NvicRequest & request, const bool en = true);
 };
 
 #ifdef SUPPORT_VTF
@@ -67,4 +57,6 @@ public:
 };
 #endif
 
-typedef NvicRequest PficRequest;
+using PficRequest = NvicRequest;
+
+}

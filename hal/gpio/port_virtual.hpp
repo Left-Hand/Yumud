@@ -111,7 +111,12 @@ public:
 
     bool isIndexValid(const size_t index){return (index < N and pin_ptrs[size_t(index)] != nullptr);}
 
-    E & operator [](const size_t index){return isIndexValid(size_t(index)) ? *pin_ptrs[size_t(index)] : GpioNull;}
+    E & operator [](const size_t index){
+        if(isIndexValid(size_t(index))) 
+            return *pin_ptrs[size_t(index)];
+        else
+            return GpioNull;
+    }
 
     void setMode(const int index, const GpioMode mode) override{
         if(index < 0) return;
