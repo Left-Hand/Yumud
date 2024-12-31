@@ -32,7 +32,7 @@ public:
         _1600
     };
 
-    enum class Gyrdr:uint8_t{
+    enum class GyrOdr:uint8_t{
         _25 = 0b0110,
         
         _50,
@@ -91,8 +91,9 @@ protected:
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
 
-    #include "regs.ipp"
+    // #pragma pack(push, 1)
 
+    #include "regs.ipp"
     ChipIdReg chip_id_reg;
     uint8_t __resv1__;
     ErrReg err_reg;
@@ -100,15 +101,14 @@ protected:
     StatusReg status_reg;
     Vector3i16Reg mag_reg;
     RhallReg rhall_reg;
+
     Vector3i16Reg gyr_reg;
     Vector3i16Reg acc_reg;
-
     AccConfReg acc_conf_reg;
     AccRangeReg acc_range_reg;
     GyrConfReg gyr_conf_reg;
     GyrRangeReg gyr_range_reg;
-
-    void requestData(const RegAddress addr, int16_t * datas, const size_t len);
+    // #pragma pack(pop)
 
     void writeCommand(const uint8_t cmd){
         writeReg(0x7e, cmd);
@@ -128,8 +128,10 @@ public:
     void reset();
 
     void setAccOdr(const AccOdr odr);
+    real_t setAccOdr(const real_t odr);
     void setAccRange(const AccRange range);
-    void setGyrOdr(const Gyrdr odr);
+    void setGyrOdr(const GyrOdr odr);
+    real_t setGyrOdr(const real_t odr);
     void setGyrRange(const GyrRange range);
     
     void setPmuMode(const PmuType pum, const PmuMode mode);

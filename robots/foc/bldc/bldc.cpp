@@ -165,6 +165,8 @@ int bldc_main(){
     uart2.init(576000);
     DEBUGGER.change(uart2);
     DEBUGGER.setEps(4);
+    DEBUGGER.setSplitter(",");
+
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
 
@@ -194,16 +196,20 @@ int bldc_main(){
 
     can1.init(1_MHz);
 
+    BMI160 bmi{spi1, 0};
+    bmi.init();
 
     MA730 ma730{spi1, 2};
     ma730.init();
 
-    // while(true){
-    //     ma730.update();
-    //     DEBUG_PRINTLN(ma730.getLapPosition());
-    //     delay(10);
+    // for(size_t i = 0; i < 1000; ++i) {
+    //     bmi.update();
+    //     // auto [x,y,z] = bmi.getAcc();
+    //     auto [x,y,z] = bmi.getGyr();
+    //     DEBUG_PRINTLN(x,y,z);
+    //     delay(2);
+    //     // DEBUGGER << std::endl;
     // }
-
     Odometer odo{ma730};
     odo.init();
 
@@ -367,8 +373,8 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2]);
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), ab_curr[0],ab_curr[1]);
         // delay(2);
-        DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
-        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
+        // DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
+        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
 
         // CanMsg msg = {0x11, uint8_t(0x57)};
         // if(can1.pending() == 0) can1.write(msg);

@@ -1,9 +1,10 @@
 #include "bmi160.hpp"
-
+#include <array>
 
 using namespace ymd::drivers;
 using namespace ymd;
 
+#define BMI160_DEBUG
 
 #ifdef BMI160_DEBUG
 #undef BMI160_DEBUG
@@ -19,30 +20,13 @@ using namespace ymd;
 #define WRITE_REG(reg) this->writeReg(reg.address, reg);
 #define READ_REG(reg) this->readReg(reg.address, reg);
 
-void BMI160::requestData(const RegAddress addr, int16_t * datas, const size_t len){
-    if(i2c_drv_){
-        i2c_drv_->readMulti<int16_t>(uint8_t(addr), datas, len, LSB);
-    }else if(spi_drv_){
-        spi_drv_->writeSingle<uint8_t>(uint8_t(uint8_t(addr) | 0x80), CONT);
-        spi_drv_->readMulti<uint8_t>(reinterpret_cast<uint8_t *>(datas), len * sizeof(int16_t));
-    }else{
-        BMI160_PANIC("no driver");
-    }
-}
-
-
 void BMI160::init(){
     verify();
 
-	// writeReg(0x40, 0b0'010'0110);		//ACC	ODR:25Hz		acc_bwp=3db(defult:acc_us=0b0)	
-	// writeReg(0x41, 0x0C);		//Acc_range:16g
-	// writeReg(0x42, 0b00'10'0110);		//Gro	ODR:25Hz		gro_bwp=3db	
-	// writeReg(0x43, 0x03);		//Gro_range:250dps
-
-    setAccOdr(AccOdr::_25);
-    setAccRange(AccRange::_16G);
-    setGyrOdr(Gyrdr::_25);
-    setGyrRange(GyrRange::_250deg);
+    setAccOdr(AccOdr::_800);
+    setAccRange(AccRange::_8G);
+    setGyrOdr(GyrOdr::_800);
+    setGyrRange(GyrRange::_1000deg);
 	//FIFO  Config
 	writeReg(0x47, 0xfe);		//enable
 
@@ -51,6 +35,7 @@ void BMI160::init(){
 	setPmuMode(PmuType::ACC, PmuMode::NORMAL);		//Acc normal mode
 	setPmuMode(PmuType::GYR, PmuMode::NORMAL);		//Gro normal mode
 	//check the PMU_status	Register(0x03) 
+
     delay(20);
 
 	BMI160_ASSERT(getPmuMode(PmuType::ACC) == PmuMode::NORMAL, "acc pmu mode verify failed");
@@ -59,7 +44,7 @@ void BMI160::init(){
 
 void BMI160::update(){
     requestData(acc_reg.acc_address, &acc_reg.x, 3);
-    requestData(gyr_reg.gyr_address, &gyr_reg.y, 3);
+    requestData(gyr_reg.gyr_address, &gyr_reg.x, 3);
 }
 
 bool BMI160::verify(){
@@ -139,12 +124,56 @@ void BMI160::setAccRange(const AccRange range){
     this->acc_scale = this->calculateAccScale(range);
 }
 
-void BMI160::setGyrOdr(const Gyrdr odr){
+void BMI160::setGyrOdr(const GyrOdr odr){
     auto & reg =  gyr_conf_reg;
     reg.gyr_odr = uint8_t(odr);
     reg.gyr_bwp = 0b010;
     WRITE_REG(reg);
 
+}
+real_t BMI160::setGyrOdr(const real_t odr){
+    scexpr std::array odr_map = {
+        25, 50, 100, 200, 400, 800, 1600, 3200
+    };
+
+    auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
+
+    if (it != odr_map.end()) {
+        auto index = std::distance(odr_map.begin(), it);
+        setGyrOdr(static_cast<GyrOdr>(index + uint8_t(GyrOdr::_25)));
+        return *it;
+    }else {
+        BMI160_PANIC("Invalid ODR value");
+    }
+    return 0;
+}
+
+real_t BMI160::setAccOdr(const real_t odr){
+    scexpr std::array odr_map = {
+        real_t(25.0/32),
+        real_t(25.0/16),
+        real_t(25.0/8),
+        real_t(25.0/4),
+        real_t(25.0/2),
+        real_t(25), 
+        real_t(50), 
+        real_t(100), 
+        real_t(200), 
+        real_t(400), 
+        real_t(800),
+        real_t(1600)
+    };
+
+    auto it = std::lower_bound(odr_map.begin(), odr_map.end(), (odr));
+
+    if (it != odr_map.end()) {
+        auto index = std::distance(odr_map.begin(), it);
+        setAccOdr(static_cast<AccOdr>(index + uint8_t(AccOdr::_25_32)));
+        return *it;
+    } else {
+        BMI160_PANIC("Invalid ODR value");
+    }
+    return 0;
 }
 
 void BMI160::setGyrRange(const GyrRange range){
@@ -153,6 +182,7 @@ void BMI160::setGyrRange(const GyrRange range){
     WRITE_REG(reg);
     this->gyr_scale = this->calculateGyrScale(range);
 }
+
 
 
 real_t BMI160::calculateAccScale(const AccRange range){

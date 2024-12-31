@@ -2,6 +2,15 @@
 
 using namespace ymd::drivers;
 
+
+#ifdef INA226_DEBUG
+#undef INA226_DEBUG
+#define INA226_DEBUG(...) DEBUG_LOG(...)
+#else 
+#define INA226_DEBUG(...)
+#endif
+
+
 void INA226::update(){
     // requestPool(RegAddress::shuntVoltage, &shuntVoltageReg, 2 * 4);
     // requestPool(RegAddress::busVoltage, &busVoltageReg, 3);
