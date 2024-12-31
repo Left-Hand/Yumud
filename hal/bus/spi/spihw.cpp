@@ -324,3 +324,13 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
 
     return Bus::ErrorType::OK;
 }
+
+namespace ymd{
+#ifdef ENABLE_SPI1
+SpiHw spi1{SPI1};
+#endif
+
+#ifdef ENABLE_SPI2
+SpiHw spi2{SPI2};
+#endif
+}

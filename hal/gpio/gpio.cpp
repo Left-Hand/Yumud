@@ -23,4 +23,7 @@ Gpio & Gpio::null(){
     static Gpio GpioNull = Gpio(GPIOD, Pin::None);
     return GpioNull;
 }
-// Gpio GpioNull = Gpio
+
+// namespace ymd{
+// Gpio & GpioNull = Gpio::null();
+// }

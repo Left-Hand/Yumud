@@ -5,16 +5,10 @@ using namespace ymd;
 using namespace ymd::TimerUtils;
 using namespace ymd::TimerUtils::internal;
 
-void TimerOut::installToPin(const bool en){
-    Gpio & io = getPin(instance, idx_);
-    if(en)io.afpp();
-    else io.inflt();
-    enable(en);
-}
 
-void TimerOC::init(const TimerOC::Mode mode, const bool install){
-    setPolarity(true);
-    enableSync();
+
+TimerOC & TimerOC::init(const TimerOC::Mode mode, const bool install){
+    // sync();
 
     setMode(mode);
 
@@ -23,15 +17,19 @@ void TimerOC::init(const TimerOC::Mode mode, const bool install){
     }
 
     enable();
+
+    return *this;
 }
 
-void TimerOC::setMode(const TimerOC::Mode mode){
+TimerOC & TimerOC::setMode(const TimerOC::Mode mode){
     using enum ChannelIndex;
 
-    uint16_t m_code,s_code;
+    uint16_t m_code;
+    uint16_t s_code;
+    // volatile uint16_t *ctlr_reg;
     switch(idx_){
         default:
-            return;
+            HALT;
         case CH1:
             {
                 uint16_t tmpccmrx = instance->CHCTLR1;
@@ -77,25 +75,40 @@ void TimerOC::setMode(const TimerOC::Mode mode){
                 break;
             }
     }
+
+    return *this;
 }
 
-void TimerOut::enable(const bool en){
+void TimerOut::installToPin(const bool en){
+    Gpio & io = getPin(instance, idx_);
+    if(en)io.afpp();
+    else io.inflt();
+    enable(en);
+}
+
+TimerOut & TimerOut::enable(const bool en){
     if(en) instance->CCER |= 1 << ((uint8_t)idx_ * 2);
     else instance->CCER &= ~(1 << ((uint8_t)idx_) * 2);
+
+    return *this;
 }
 
 
-void TimerOut::setPolarity(const bool pol){
+TimerOut & TimerOut::setPolarity(const bool pol){
     if(!pol) instance->CCER |= (1 << ((uint8_t)idx_ * 2 + 1));
     else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2 + 1)));
+
+    return *this;
 }
 
-void TimerOut::setOutputState(const bool s){
+TimerOut & TimerOut::setOutputState(const bool s){
     if(s) instance->CCER |= (1 << ((uint8_t)idx_ * 2));
     else instance->CCER &= (~(1 << (((uint8_t)idx_) * 2)));
+
+    return *this;
 }
 
-void TimerOut::enableSync(const bool _sync){
+TimerOut & TimerOut::sync(const bool _sync){
     using enum ChannelIndex;
 
     switch(idx_){
@@ -114,10 +127,12 @@ void TimerOut::enableSync(const bool _sync){
         default:
             break;
     }
+
+    return *this;
 }
 
 
-void TimerOut::setIdleState(const bool state){
+TimerOut & TimerOut::setIdleState(const bool state){
     if(isAdvancedTimer(instance)){
         auto tmpcr2 = instance->CTLR2;
         const auto mask = (uint16_t)(TIM_OIS1 << (uint8_t)idx_);
@@ -125,6 +140,8 @@ void TimerOut::setIdleState(const bool state){
         if(state) tmpcr2 |= mask;
         instance->CTLR2 = tmpcr2;
     }
+
+    return *this;
 }
 
 Gpio & TimerOC::io(){

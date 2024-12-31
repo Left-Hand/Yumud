@@ -58,11 +58,11 @@ public:
 
 
 #ifdef ENABLE_SPI1
-static inline ymd::SpiHw spi1{SPI1};
+extern SpiHw spi1;
 #endif
 
 #ifdef ENABLE_SPI2
-static inline ymd::SpiHw spi2{SPI2};
+extern SpiHw spi2;
 #endif
 
 }

@@ -8,15 +8,15 @@ namespace ymd{
 class TimerOut: public TimerChannel{
 protected:
     TimerOut(TIM_TypeDef * _instance, const ChannelIndex _channel):TimerChannel(_instance, _channel){;}
+    void installToPin(const bool en = true);
 public:
 
 
-    void installToPin(const bool en = true);
-    void enableSync(const bool _sync = true);
-    void setPolarity(const bool pol);
-    void setOutputState(const bool s);
-    void setIdleState(const bool state);
-    void enable(const bool en = true);
+    TimerOut & sync(const bool _sync = true);
+    TimerOut & setPolarity(const bool pol);
+    TimerOut & setOutputState(const bool s);
+    TimerOut & setIdleState(const bool state);
+    TimerOut & enable(const bool en = true);
 
     virtual Gpio & io() = 0;
 };
@@ -32,8 +32,8 @@ public:
         TimerOut(_instance, _channel), 
             cvr_(from_channel_to_cvr(_instance, _channel)), arr_(instance->ATRLR){;}
 
-    void init(const Mode mode = Mode::UpValid, const bool install = true);
-    void setMode(const Mode _mode);
+    TimerOC & init(const Mode mode = Mode::UpValid, const bool install = true);
+    TimerOC & setMode(const Mode _mode);
 
     Gpio & io();
     __fast_inline volatile uint16_t & cvr(){return cvr_;}

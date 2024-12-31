@@ -37,19 +37,19 @@ protected:
 
     struct MP6540CurrentChannel:public AnalogInChannel{
         AnalogInChannel & ain_;
-        const real_t ratio_;
-        real_t basis_ = real_t(0);
+        const real_t & ratio_;
+        real_t bias_ = real_t(0);
         size_t index_;
 
-        MP6540CurrentChannel(AnalogInChannel & _ain, const real_t _ratio, const uint8_t _index):
+        MP6540CurrentChannel(AnalogInChannel & _ain, const real_t & _ratio, const uint8_t _index):
             ain_(_ain), ratio_(_ratio), index_(_index) {}
         MP6540CurrentChannel(const MP6540CurrentChannel & other) = delete;
         MP6540CurrentChannel(MP6540CurrentChannel && other) = delete;
 
         real_t getRawVoltage() {return real_t(ain_);}
-        void setBasis(const real_t _basis) {basis_ = _basis;}
+        void setBasis(const real_t _basis) {bias_ = _basis;}
         operator real_t() override{
-            return real_t(ain_) * ratio_ - basis_;
+            return real_t(ain_) * ratio_ - bias_;
         }
     };
 
@@ -70,7 +70,7 @@ public:
 
     MP6540CurrentChannel & ch(const size_t index);
 
-    void setSoRes(const real_t so_res_ohms);
+    void setSoRes(const uint so_res_ohms);
 
     MP6540 & operator= (const UVW_Duty & duty) override;
 

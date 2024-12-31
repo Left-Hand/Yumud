@@ -17,7 +17,7 @@ public:
     constexpr Font8x5():Font( Vector2i(5,8)){;}
 };
 
-static inline Font8x5 font8x5;
+extern Font8x5 font8x5;
 
 
 
@@ -72,7 +72,7 @@ public:
 	}
 };
 
-static inline Font7x7 font7x7;
+extern Font7x7 font7x7;
 
 
 class Font16x8:public Font{
@@ -84,5 +84,5 @@ public:
     }
 };
 
-static inline Font16x8 font16x8;
+extern Font16x8 font16x8;
 }

@@ -1,4 +1,5 @@
 #include "adc1.hpp"
+#include "sys/debug/debug_inc.h"
 
 using namespace ymd;
 
@@ -8,15 +9,25 @@ using Callback = AdcUtils::Callback;
 
 extern "C"{
 __interrupt void ADC1_2_IRQHandler(void){
-    if(ADC_GetITStatus(ADC1,ADC_IT_JEOC)){
-        EXECUTE(adc1.jeoc_cb);
-        ADC_ClearITPendingBit(ADC1,ADC_IT_JEOC);
-    }else if(ADC_GetITStatus(ADC1, ADC_IT_EOC)){
+    const uint32_t tempCTLR = ADC1->CTLR1;
+    const uint32_t tempSTATR = ADC1->STATR;
+
+    #define CHECK_IT(x) (tempSTATR & (x >> 8) and tempCTLR & (x & 0xFF))
+    #define CLEAR_IT(x) ADC1->STATR = ~(uint32_t)(x >> 8);
+
+    if(CHECK_IT(ADC_IT_JEOC)){
+
+        if(adc1.jeoc_cb){
+            BREAKPOINT;
+            adc1.jeoc_cb();
+        }
+        CLEAR_IT(ADC_IT_JEOC);
+    }else if(CHECK_IT(ADC_IT_EOC)){
         EXECUTE(adc1.eoc_cb);
-        ADC_ClearITPendingBit(ADC1,ADC_IT_EOC);
-    }else if(ADC_GetITStatus(ADC1,ADC_IT_AWD)){
+        CLEAR_IT(ADC_IT_EOC);
+    }else if(CHECK_IT(ADC_IT_AWD)){
         EXECUTE(adc1.awd_cb);
-        ADC_ClearITPendingBit(ADC1,ADC_IT_AWD);
+        CLEAR_IT(ADC_IT_AWD);
     }
 }
 }
@@ -27,13 +38,13 @@ __interrupt void ADC1_2_IRQHandler(void){
 void AdcPrimary::bindCb(const IT it,Callback && cb){
     switch(it){
         case IT::JEOC:
-            jeoc_cb = cb;
+            jeoc_cb = std::move(cb);
             break;
         case IT::EOC:
-            eoc_cb = cb;
+            eoc_cb = std::move(cb);
             break;
         case IT::AWD:
-            awd_cb = cb;
+            awd_cb = std::move(cb);
             break;
         default:
             break;
@@ -64,3 +75,8 @@ uint16_t Adc1::getInjectedDataByRank(const uint8_t rank){
     else return injected_datas[rank];
 }
 
+namespace ymd{
+#ifdef ENABLE_ADC1
+Adc1 adc1;
+#endif
+}

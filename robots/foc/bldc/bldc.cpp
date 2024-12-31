@@ -21,8 +21,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
-SpiDrv ma730_drv{spi1, 0};
-MA730 ma730{ma730_drv};
+
 
 using Sys::t;
 // constexpr int pwmFreq = 67000;
@@ -146,11 +145,23 @@ __inline auto ab_to_dq(const Current2 & ab, const real_t rad) -> Current2{
     return {cos(rad) * ab[1] - sin(rad) * ab[0], sin(rad) * ab[1] + cos(rad) * ab[0]};
 };
 
+static __inline real_t sign_sqrt(const real_t x){
+    return x < 0 ? -sqrt(-x) : sqrt(x);
+};
 
+static __inline real_t smooth(const real_t x){
+    return x - sin(x);
+}
 
+static __inline real_t f(const real_t x){
+    // return sin(7 * x) / 7 + sin(5 * x) / 5 + sin(3 * x)/ 3 + sin(x);
+    // return sin(5 * x) / 5 + sin(3 * x)/ 3 + sin(x);
+    return sin(x);
+}
 int bldc_main(){
-    DEBUGGER_INST.init(576000, CommMethod::Blocking);
-
+    uart2.init(576000);
+    DEBUGGER.change(uart2);
+    DEBUGGER.setEps(4);
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
 
@@ -163,11 +174,11 @@ int bldc_main(){
     auto & pwm_v = timer1.oc(2); 
     auto & pwm_w = timer1.oc(3); 
 
-    timer1.oc(4).init(TimerUtils::OcMode::UpValid, false);
-    timer1.oc(4).setOutputState(true);
-
-    timer1.oc(4).cvr() = timer1.arr()-1;
-    timer1.oc(4).setIdleState(false);
+    timer1.oc(4).init(TimerUtils::OcMode::UpValid, false)
+                .setOutputState(true)
+                .setIdleState(false);
+    
+    timer1.oc(4).cvr() = timer1.arr() - 1;
 
     pwm_u.init();
     pwm_v.init();
@@ -176,11 +187,19 @@ int bldc_main(){
     spi1.init(18_MHz);
     spi1.bindCsPin(portA[15], 2);
     spi1.bindCsPin(portA[0], 0);
+
+
     can1.init(1_MHz);
 
 
     MA730 ma730{spi1, 2};
     ma730.init();
+
+    // while(true){
+    //     ma730.update();
+    //     DEBUG_PRINTLN(ma730.getLapPosition());
+    //     delay(10);
+    // }
 
     Odometer odo{ma730};
     odo.init();
@@ -197,9 +216,9 @@ int bldc_main(){
     SVPWM3 svpwm {mp6540};
     
 
-    auto & u_ch = mp6540.ch(1);
-    auto & v_ch = mp6540.ch(2);
-    auto & w_ch = mp6540.ch(3);
+    auto & u_sense = mp6540.ch(1);
+    auto & v_sense = mp6540.ch(2);
+    auto & w_sense = mp6540.ch(3);
     
     using AdcChannelEnum = AdcUtils::ChannelIndex;
     using AdcCycleEnum = AdcUtils::SampleCycles;
@@ -225,12 +244,10 @@ int bldc_main(){
     // adc1.enableContinous();
     adc1.enableAutoInject(false);
 
-
     real_t rad = 0;
-    real_t open_rad = 0;
 
     Current3 uvw_curr = {0,0,0};
-    Current3 uvw_curr_drift = {0,0,0};
+    Current3 uvw_curr_bias = {14.62_r,14.68_r,14.68_r};
 
     Current2 ab_curr = {0,0};
     Current2 dq_curr = {0,0};
@@ -251,42 +268,57 @@ int bldc_main(){
 
         static Current3 uvw_curr_raw;
                 
-        LPF(uvw_curr_raw[0], real_t(u_ch));
-        LPF(uvw_curr_raw[1], real_t(v_ch));
-        LPF(uvw_curr_raw[2], real_t(w_ch));
+        LPF(uvw_curr_raw[0], real_t(u_sense));
+        LPF(uvw_curr_raw[1], real_t(v_sense));
+        LPF(uvw_curr_raw[2], real_t(w_sense));
 
         // SLPF(s_lpf_u_curr, uvw_curr_raw[0]);
         
         for(size_t i = 0; i < 3; i++){
-            uvw_curr[i] = uvw_curr_raw[i] - uvw_curr_drift[i];
+            uvw_curr[i] = uvw_curr_raw[i];
         }
 
         ab_curr = uvw_to_ab(uvw_curr);
-
+        dq_curr = ab_to_dq(ab_curr, rad);
         // bus_volt = data_to_volt(adc_data[3]);
     };
 
 
+    uint32_t dt;
     auto cb = [&](){
-
+        auto m = micros();
         update_curr();
 
         odo.update();
         auto pos = ma730.getLapPosition();
         rad = real_t(TAU + PI / 2) + real_t(PI / 2) + real_t(0.7)  - frac(pos * 7) * real_t(TAU);
-        // real_t open_pos = t * real_t(0.3);
-        real_t open_pos = t * real_t(2.3);
-        open_rad = frac(open_pos * 7) * real_t(TAU);
+        // real_t open_rad = t * real_t(12.3);
+        // real_t targ_pos = t * real_t(1);
+        // real_t targ_pos = t * real_t(10);
+        // real_t targ_pos = t * real_t(10);
+        // real_t targ_pos = 200;
+        // real_t targ_pos = smooth(t) * 20;
+        // real_t targ_pos = 4 * floor(2 * t);
+        real_t targ_pos = 10 * f(t);
+        // real_t targ_pos = sin(4 * t) * real_t(0.2);
+        // real_t targ_pos = sin(t) * real_t(12.3);
+        // real_t targ_pos = 20 * sin(t);
+        // real_t targ_pos = 0;
+        // open_rad = frac(open_pos * 7) * real_t(TAU);
         // est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) + real_t(PI/2);
-        est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) - real_t(PI);
+        // est_rad = atan2(ab_curr[1], ab_curr[0]) + real_t(7.2) - real_t(PI);
         // setDQDuty(0, real_t(0.01), rad);
         // setDQDuty(0, real_t(0.01), open_rad);
-        svpwm.setDuty(real_t(-0.3), rad);
-        // svpwm.setDQDuty(Vector2(0,real_t(0.2)), open_rad);
+
+        // svpwm.setDuty(real_t(0.3) * sin(t), rad);
+        // signs
+        // svpwm.setDuty(0.1_r, frac(targ_pos) * real_t(7*TAU));
+        // svpwm.setDuty(CLAMP2((-0.17_r) * sign_sqrt(targ_pos - odo.getPosition()), 0.4_r) , rad);
+        svpwm.setDuty(CLAMP2(- 0.2_r * (targ_pos - odo.getPosition()), 0.5_r) , rad);
         
         // setDQDuty(0, real_t(0.01), est_rad);
         // auto temp_dq_curr = ab_to_dq(ab_curr, rad);
-        dq_curr = ab_to_dq(ab_curr, rad);
+        dt = micros() - m;
     };
 
     auto & ledr = portC[13];
@@ -297,15 +329,17 @@ int bldc_main(){
     ledg.outpp();
     portA[7].inana();
 
-    for(size_t i = 0; i < 4000; ++i){
+    for(size_t i = 0; i < 400; ++i){
         update_curr();
+        delay(1);
+        // DEBUG_PRINTLN(real_t(u_sense), real_t(v_sense), real_t(w_sense));
+        // DEBUG_PRINTLN(real_t(adc1.inj(1)), real_t(adc1.inj(2)), real_t(adc1.inj(3)));
+        // delay(2);
     }
     
-    u_ch.setBasis(uvw_curr[0]);
-    v_ch.setBasis(uvw_curr[1]);
-    w_ch.setBasis(uvw_curr[2]);
-
-    // DEBUG_PRINTLN(real_t(u_ch), real_t(v_ch), real_t(w_ch));
+    u_sense.setBasis(uvw_curr_bias[0]);
+    v_sense.setBasis(uvw_curr_bias[1]);
+    w_sense.setBasis(uvw_curr_bias[2]);
 
     adc1.bindCb(AdcUtils::IT::JEOC, cb);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
@@ -323,7 +357,14 @@ int bldc_main(){
 
         // auto _t = real_t(0);
 
-        // DEBUG_PRINTLN(uvw_curr);
+        // DEBUG_PRINTLN(odo.getPosition());
+        // DEBUG_PRINTLN((odo.getPosition()), real_t(u_sense), real_t(v_sense), real_t(w_sense));
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2], real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2]);
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), ab_curr[0],ab_curr[1]);
+        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), dq_curr[0],dq_curr[1], dt);
+        // delay(2);
 
         // CanMsg msg = {0x11, uint8_t(0x57)};
         // if(can1.pending() == 0) can1.write(msg);
@@ -340,10 +381,12 @@ int bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1]);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), real_t(adc1.inj(2)), real_t(adc1.inj(3)));
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), real_t(v_ch), real_t(w_ch));
-        DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), real_t(v_sense), real_t(w_sense));
+        // pwm_u = sin(t) * 0.5_r + 0.5_r;
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // delay(5);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(adc1.inj(1)), uint16_t(adc1.inj(1)));
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_ch), s_lpf_u_curr);
+        // DEBUG_PRINTLN(std::setprecision(3), std::dec, real_t(u_sense), s_lpf_u_curr);
         // auto [a,b] = Vector2{real_t(0), real_t(0.2)}.rotated(open_rad);
         // DEBUG_PRINTLN(a,b);
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, TIM1->CH1CVR, TIM1->CH4CVR, ADC1->IDATAR1);

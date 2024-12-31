@@ -109,11 +109,11 @@ public:
 };
 
 #ifdef ENABLE_OPA1
-static inline Opa opa1;
+extern Opa opa1;
 #endif
 
 #ifdef ENABLE_OPA2
-static inline Opa opa2;
+extern Opa opa2;
 #endif
 
 }

@@ -33,13 +33,13 @@ void preinit(){
 int main(){
     #ifdef CH32V20X
     Sys::Misc::prework();
-    eeprom_main();
+    // eeprom_main();
     // while(true);
     //  uart_main();
     // qlz_main();
     // embd_main();
     // embd_main();
-    // bldc_main();
+    bldc_main();
     // uart_main();
     // wlsy_main();
     // lt8920_main();
