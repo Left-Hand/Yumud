@@ -1,9 +1,6 @@
 #include "timer.hpp"
 #include "sys/core/system.hpp"
 
-// #define TIM_DEBUG
-// TIM1_RM
-
 #define TIM1_RM_A8_A9_A10_A11__B13_B14_B15 0
 #define TIM1_RM_A8_A9_A10_A11__A7_B0_B1 1
 #define TIM1_RM_E9_E11_E13_E14__E8_E10_E12 3

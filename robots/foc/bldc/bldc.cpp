@@ -17,6 +17,7 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
 
+#include <ostream>
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -158,6 +159,8 @@ static __inline real_t f(const real_t x){
     // return sin(5 * x) / 5 + sin(3 * x)/ 3 + sin(x);
     return sin(x);
 }
+
+real_t pos;
 int bldc_main(){
     uart2.init(576000);
     DEBUGGER.change(uart2);
@@ -354,7 +357,7 @@ int bldc_main(){
         ledr = (millis() % 200) > 100;
         ledb = (millis() % 400) > 200;
         ledg = (millis() % 800) > 400;
-
+        pos = odo.getPosition();
         // auto _t = real_t(0);
 
         // DEBUG_PRINTLN(odo.getPosition());
@@ -363,8 +366,9 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2]);
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), ab_curr[0],ab_curr[1]);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), dq_curr[0],dq_curr[1], dt);
         // delay(2);
+        DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
+        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
 
         // CanMsg msg = {0x11, uint8_t(0x57)};
         // if(can1.pending() == 0) can1.write(msg);
