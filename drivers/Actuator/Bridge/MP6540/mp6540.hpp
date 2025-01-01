@@ -38,6 +38,7 @@ protected:
     struct MP6540CurrentChannel:public AnalogInChannel{
         AnalogInChannel & ain_;
         const real_t & ratio_;
+        // const real_t ratio_;
         real_t bias_ = real_t(0);
         size_t index_;
 

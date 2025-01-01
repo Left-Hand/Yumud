@@ -127,7 +127,43 @@ constexpr real_t dutyScale = real_t(0.17f);
 scexpr uint chopper_freq = 32768;
 
 using Current = real_t;
-using Current3 = std::array<Current, 3>;
+
+struct Current3{
+    Current u, v, w;
+
+    Current operator [](const size_t idx) const {
+        return *(&u + idx);
+    }
+
+    Current & operator [](const size_t idx){
+        return *(&u + idx);
+    }
+};
+
+struct DqCurrent{
+    Current d, q;
+
+    Current operator [](const size_t idx) const {
+        return *(&d + idx);
+    }
+
+    Current & operator [](const size_t idx){
+        return *(&d + idx);
+    }
+};
+
+struct AbCurrent{
+    Current a, b;
+
+    Current operator [](const size_t idx) const {
+        return *(&a + idx);
+    }
+
+    Current & operator [](const size_t idx){
+        return *(&b + idx);
+    }
+};
+
 using Current2 = std::array<Current, 2>;
 using Voltage = real_t;
 
@@ -139,11 +175,14 @@ __inline auto data_to_curr(const real_t data) -> real_t{
 };
 
 __inline auto uvw_to_ab(const Current3 & uvw) -> Current2{
-    return {uvw[0] - ((uvw[1] + uvw[2]) >> 1), (uvw[2] - uvw[1]) * real_t(1.73 / 2)};
+    scexpr real_t scale = real_t(1.731 / 2);
+    return {uvw.u - ((uvw.v + uvw.w) >> 1), (uvw.w - uvw.v) * scale};
 };
 
 __inline auto ab_to_dq(const Current2 & ab, const real_t rad) -> Current2{
-    return {cos(rad) * ab[1] - sin(rad) * ab[0], sin(rad) * ab[1] + cos(rad) * ab[0]};
+    const auto s = sin(rad);
+    const auto c = cos(rad);
+    return {c * ab[1] - s * ab[0], s * ab[1] + c * ab[0]};
 };
 
 static __inline real_t sign_sqrt(const real_t x){
@@ -161,6 +200,37 @@ static __inline real_t f(const real_t x){
 }
 
 real_t pos;
+
+class CurrentSensor{
+protected:
+    AnalogInChannel & _u_sense;
+    AnalogInChannel & _v_sense;
+    AnalogInChannel & _w_sense;
+    Current3 _uvw_curr;
+    Current2 _ab_curr;
+    Current2 _dq_curr;
+public:
+    CurrentSensor(AnalogInChannel & u_sense, AnalogInChannel & v_sense, AnalogInChannel & w_sense): 
+        _u_sense(u_sense), _v_sense(v_sense), _w_sense(w_sense){}
+
+    void update(const real_t rad){
+        _uvw_curr[0] = real_t(_u_sense);
+        _uvw_curr[1] = real_t(_v_sense);
+        _uvw_curr[2] = real_t(_w_sense);
+
+        _ab_curr = uvw_to_ab(_uvw_curr);
+        _dq_curr = ab_to_dq(_ab_curr, rad);
+    }
+
+    auto & uvw()const{return _uvw_curr;}
+    auto & uvw(){return _uvw_curr;}
+    auto & ab()const{return _ab_curr;}
+    auto & ab(){return _ab_curr;}
+    auto & dq()const{return _dq_curr;}
+    auto & dq(){return _dq_curr;}
+};
+
+
 int bldc_main(){
     uart2.init(576000);
     DEBUGGER.change(uart2);
@@ -255,11 +325,11 @@ int bldc_main(){
 
     real_t rad = 0;
 
-    Current3 uvw_curr = {0,0,0};
+    // Current3 uvw_curr = {0,0,0};
     Current3 uvw_curr_bias = {14.62_r,14.68_r,14.68_r};
 
-    Current2 ab_curr = {0,0};
-    Current2 dq_curr = {0,0};
+    // Current2 ab_curr = {0,0};
+    // Current2 dq_curr = {0,0};
 
     // Voltage bus_volt = 0;
     real_t est_rad;
@@ -267,41 +337,31 @@ int bldc_main(){
     // real_t s_lpf_u_curr = 0;
 
 
-    #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
+    // #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
+    // #define LPF(x,y) x = (x + y) >> 1;
     // #define LPF(x,y) x = y;
+
     // #define SLPF(x,y) x = (((x >> 2) * ((1 << 16) - 1) + (y >> 2)) >> 14);
     // #define SLPF(x,y) x = ((x * ((1 << 14) - 1) + y) >> 14);
 
+    // CurrentSensor current_sensor = {u_sense, v_sense, w_sense};
+    CurrentSensor current_sensor = {adc1.inj(1), adc1.inj(2), adc1.inj(3)};
+
     auto update_curr = [&](){
-        // #define LPF(x,y) x = (((x >> 4) * 15 + (y >> 4)));
-
-
-        static Current3 uvw_curr_raw;
-                
-        LPF(uvw_curr_raw[0], real_t(u_sense));
-        LPF(uvw_curr_raw[1], real_t(v_sense));
-        LPF(uvw_curr_raw[2], real_t(w_sense));
-
-        // SLPF(s_lpf_u_curr, uvw_curr_raw[0]);
-        
-        for(size_t i = 0; i < 3; i++){
-            uvw_curr[i] = uvw_curr_raw[i];
-        }
-
-        ab_curr = uvw_to_ab(uvw_curr);
-        dq_curr = ab_to_dq(ab_curr, rad);
-        // bus_volt = data_to_volt(adc_data[3]);
+        current_sensor.update(rad);
     };
 
 
     uint32_t dt;
-    auto cb = [&](){
+    auto cb = [&]{
+
         auto m = micros();
+        odo.update();
+
+        auto pos = odo.getLapPosition();
         update_curr();
 
-        odo.update();
-        auto pos = ma730.getLapPosition();
-        rad = real_t(TAU + PI / 2) + real_t(PI / 2) + real_t(0.7)  - frac(pos * 7) * real_t(TAU);
+        rad = real_t(TAU + PI / 2) + real_t(PI / 2) + real_t(0.5)  - frac(pos * 7) * real_t(TAU);
         // real_t open_rad = t * real_t(12.3);
         // real_t targ_pos = t * real_t(1);
         // real_t targ_pos = t * real_t(10);
@@ -310,7 +370,8 @@ int bldc_main(){
         // real_t targ_pos = smooth(t) * 20;
         // real_t targ_pos = 4 * floor(2 * t);
         // real_t targ_pos = 40 * f(t);
-        real_t targ_pos = real_t(50.0 / 7) * t;
+        // real_t targ_pos = real_t(50.0 / 7) * sin(t);
+        real_t targ_pos = real_t(50.0/7) * sin(t * 3);
         // real_t targ_pos = sin(4 * t) * real_t(0.2);
         // real_t targ_pos = sin(t) * real_t(12.3);
         // real_t targ_pos = 20 * sin(t);
@@ -328,10 +389,11 @@ int bldc_main(){
         // svpwm.setDuty(CLAMP2((-0.17_r) * sign_sqrt(targ_pos - odo.getPosition()), 0.4_r) , rad);
         // svpwm.setDuty(curr, rad - curr);
         svpwm.setDuty(curr, rad + curr);
-        
+        dt = micros() - m;
+        // dt = micros() ;
         // setDQDuty(0, real_t(0.01), est_rad);
         // auto temp_dq_curr = ab_to_dq(ab_curr, rad);
-        dt = micros() - m;
+
     };
 
     auto & ledr = portC[13];
@@ -378,7 +440,9 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), ab_curr[0],ab_curr[1]);
         // delay(2);
         // DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt, sin(real_t(50 * TAU) * t));
+        const auto & dq_curr = current_sensor.dq();
+        // const auto & ab_curr = current_sensor.ab();
+        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt, sin(real_t(50 * TAU) * t), dt > 100 ? 1000 + dt : dt);
         Sys::Clock::reCalculateTime();
 
         // CanMsg msg = {0x11, uint8_t(0x57)};

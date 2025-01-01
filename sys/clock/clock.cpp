@@ -32,6 +32,19 @@ uint32_t millis(void){
   return msTick;
 }
 uint64_t micros(void){
+    // M_SYSTICK_DISER;
+    // static uint64_t last_m = 0;
+    // uint32_t m = msTick;
+    // uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
+    // M_SYSTICK_ENER;
+
+    // uint64_t new_m(m * 1000 + ticks / TICKS_PER_US);
+    // if(new_m < last_m){
+    //     return last_m = new_m + 1000;
+    // }else{
+    //     return last_m = new_m;
+    // }
+
     M_SYSTICK_DISER;
     uint32_t m = msTick;
     uint32_t ticks = (uint32_t)M_SYSTICK_CNT;

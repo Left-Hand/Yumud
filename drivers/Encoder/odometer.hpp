@@ -33,6 +33,8 @@ protected:
     }
 
 public:
+    Odometer(const Odometer & other) = delete;
+    Odometer(Odometer && other) = default;
     Odometer(Encoder & _encoder):encoder(_encoder){;}
 
     real_t getRawLapPosition(){
@@ -48,11 +50,11 @@ public:
         locate(0);
     }
 
-    void locateRelatively(const real_t offset = 0){
+    void locateRelatively(const real_t offset){
         locate(offset);
     }
 
-    void locateAbsolutely(const real_t offset = 0){
+    void locateAbsolutely(const real_t offset){
         locate(getLapPosition() + offset);
     }
 

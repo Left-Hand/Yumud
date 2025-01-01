@@ -5,24 +5,23 @@ using namespace ymd::drivers;
 
 
 void Odometer::update(){
-
-    {
-        encoder.update();
-        real_t undiredRawLapPostion = encoder.getLapPosition();
-        if (rsv) rawLapPosition = real_t(1) - undiredRawLapPostion;
-        else rawLapPosition = undiredRawLapPostion;
+    encoder.update();
+    real_t undiredRawLapPostion = encoder.getLapPosition();
+    if (rsv){
+        rawLapPosition = real_t(1) - undiredRawLapPostion;
+    }else{
+        rawLapPosition = undiredRawLapPostion;
     }
 
     lapPosition = correctPosition(rawLapPosition);
     deltaLapPosition = lapPosition - lapPositionLast;
 
-    scexpr auto one = real_t(1);
     scexpr auto half_one = real_t(1)/2;
 
-    if(deltaLapPosition > half_one){
-        deltaLapPosition -= one;
-    }else if (deltaLapPosition < -half_one){
-        deltaLapPosition += one;
+    if(deltaLapPosition >= half_one){
+        deltaLapPosition -= 1;
+    }else if (deltaLapPosition <= -half_one){
+        deltaLapPosition += 1;
     }
 
     lapPositionLast = lapPosition;
