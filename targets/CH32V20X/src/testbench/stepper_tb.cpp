@@ -1,10 +1,8 @@
 #include "tb.h"
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/can/can.hpp"
-// #include "hal/adc/adcs/adc1.hpp"
 
 #include "robots/foc/stepper/stepper.hpp"
-#include "algo/interpolation/cubic.hpp"
 #include "algo/interpolation/cubic.hpp"
 
 #include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"

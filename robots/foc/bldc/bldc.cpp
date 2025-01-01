@@ -229,22 +229,22 @@ int bldc_main(){
     auto & v_sense = mp6540.ch(2);
     auto & w_sense = mp6540.ch(3);
     
-    using AdcChannelEnum = AdcUtils::ChannelIndex;
-    using AdcCycleEnum = AdcUtils::SampleCycles;
+    using AdcChannelIndex = AdcUtils::ChannelIndex;
+    using AdcCycles = AdcUtils::SampleCycles;
 
     adc1.init(
         {
-            AdcChannelConfig{AdcChannelEnum::VREF, AdcCycleEnum::T28_5}
+            {AdcChannelIndex::VREF, AdcCycles::T28_5}
         },{
-            AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T7_5},
-            AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T7_5},
-            AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T7_5},
-            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T7_5},
-            // AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T28_5},
-            // AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T28_5},
-            // AdcChannelConfig{AdcChannelEnum::CH1, AdcCycleEnum::T41_5},
-            // AdcChannelConfig{AdcChannelEnum::CH4, AdcCycleEnum::T41_5},
-            // AdcChannelConfig{AdcChannelEnum::CH5, AdcCycleEnum::T41_5},
+            {AdcChannelIndex::CH1, AdcCycles::T7_5},
+            {AdcChannelIndex::CH4, AdcCycles::T7_5},
+            {AdcChannelIndex::CH5, AdcCycles::T7_5},
+            // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T7_5},
+            // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T28_5},
+            // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T28_5},
+            // AdcChannelConfig{AdcChannelIndex::CH1, AdcCycles::T41_5},
+            // AdcChannelConfig{AdcChannelIndex::CH4, AdcCycles::T41_5},
+            // AdcChannelConfig{AdcChannelIndex::CH5, AdcCycles::T41_5},
         }
     );
 
@@ -268,8 +268,9 @@ int bldc_main(){
 
 
     #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
+    // #define LPF(x,y) x = y;
     // #define SLPF(x,y) x = (((x >> 2) * ((1 << 16) - 1) + (y >> 2)) >> 14);
-    #define SLPF(x,y) x = ((x * ((1 << 14) - 1) + y) >> 14);
+    // #define SLPF(x,y) x = ((x * ((1 << 14) - 1) + y) >> 14);
 
     auto update_curr = [&](){
         // #define LPF(x,y) x = (((x >> 4) * 15 + (y >> 4)));
@@ -308,7 +309,8 @@ int bldc_main(){
         // real_t targ_pos = 200;
         // real_t targ_pos = smooth(t) * 20;
         // real_t targ_pos = 4 * floor(2 * t);
-        real_t targ_pos = 10 * f(t);
+        // real_t targ_pos = 40 * f(t);
+        real_t targ_pos = real_t(50.0 / 7) * t;
         // real_t targ_pos = sin(4 * t) * real_t(0.2);
         // real_t targ_pos = sin(t) * real_t(12.3);
         // real_t targ_pos = 20 * sin(t);
@@ -320,10 +322,12 @@ int bldc_main(){
         // setDQDuty(0, real_t(0.01), open_rad);
 
         // svpwm.setDuty(real_t(0.3) * sin(t), rad);
+        auto curr = CLAMP2(- 0.2_r * (targ_pos - odo.getPosition()), 0.5_r);
         // signs
         // svpwm.setDuty(0.1_r, frac(targ_pos) * real_t(7*TAU));
         // svpwm.setDuty(CLAMP2((-0.17_r) * sign_sqrt(targ_pos - odo.getPosition()), 0.4_r) , rad);
-        svpwm.setDuty(CLAMP2(- 0.2_r * (targ_pos - odo.getPosition()), 0.5_r) , rad);
+        // svpwm.setDuty(curr, rad - curr);
+        svpwm.setDuty(curr, rad + curr);
         
         // setDQDuty(0, real_t(0.01), est_rad);
         // auto temp_dq_curr = ab_to_dq(ab_curr, rad);
@@ -374,7 +378,8 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), ab_curr[0],ab_curr[1]);
         // delay(2);
         // DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
+        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt, sin(real_t(50 * TAU) * t));
+        Sys::Clock::reCalculateTime();
 
         // CanMsg msg = {0x11, uint8_t(0x57)};
         // if(can1.pending() == 0) can1.write(msg);
