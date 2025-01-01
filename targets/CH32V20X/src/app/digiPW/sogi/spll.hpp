@@ -2,7 +2,7 @@
 
 #include "sys/math/real.hpp"
 
-namespace ymd{
+namespace ymd::digipw{
 class Spll{
 public:
 

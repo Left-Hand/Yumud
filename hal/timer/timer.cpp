@@ -271,13 +271,10 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 
 
 void BasicTimer::enable(const bool en){
-    if(en){
-        TIM_Cmd(instance, en);
-        if(isAdvancedTimer(instance)){
-            TIM_CtrlPWMOutputs(instance, en);
-        }
-    }else{
-        TIM_Cmd(instance, DISABLE);
+    TIM_Cmd(instance, en);
+    
+    if(en and isAdvancedTimer(instance)){
+        TIM_CtrlPWMOutputs(instance, en);
     }
 }
 
@@ -285,7 +282,7 @@ void GenericTimer::initAsEncoder(const Mode mode){
     this->enableRcc(true);
 
     {
-        TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
+        const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
             .TIM_Prescaler = 0,
             .TIM_CounterMode = (uint16_t)mode,
             .TIM_Period = 65535,

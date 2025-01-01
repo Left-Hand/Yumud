@@ -35,6 +35,7 @@ using Sys::t;
 
 using namespace ymd;
 using namespace ymd::drivers;
+using namespace ymd::digipw;
 
 void test_sogi(){
     scexpr int ac_freq = 50;
@@ -131,7 +132,7 @@ void digipw_main(){
 
     /*-----------------------*/
 
-    Buck buck{curr_ch, volt_ch, mp1907};
+    BuckConverter buck{curr_ch, volt_ch, mp1907};
     buck.init();
     while(true){
         mp1907 = real_t(0.5) + real_t(0.5) * sin(t);

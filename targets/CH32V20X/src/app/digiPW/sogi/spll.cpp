@@ -1,6 +1,6 @@
 #include "spll.hpp"
 
-using namespace ymd;
+using namespace ymd::digipw;
 
 void Spll::coeff_calc(){
     const real_t delta_t = delta_t_x256 >> 8;
