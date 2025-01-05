@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "../drivers/device_defs.h"
 
 namespace ymd::drivers{
 class DistanceSensor{

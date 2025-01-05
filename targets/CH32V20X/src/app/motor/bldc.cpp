@@ -49,10 +49,6 @@ using Sys::t;
 // constexpr float dutyScale = 0.3f;
 // constexpr float mk = 0.3f;
 
-constexpr int pwmFreq = 65536;
-constexpr auto adc_sample_cycles = ADC_SampleTime_28Cycles5;
-constexpr float sample_ticks = -10.5;
-constexpr real_t dutyScale = real_t(0.17f);
 
 // void processCurrentSensing(){
 
@@ -125,6 +121,7 @@ constexpr real_t dutyScale = real_t(0.17f);
 
 
 scexpr uint chopper_freq = 32768;
+// scexpr uint chopper_freq = 65536;
 
 using Current = real_t;
 
@@ -257,7 +254,7 @@ int bldc_main(){
     DEBUGGER.change(uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
-
+    delay(200);
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
 
@@ -287,8 +284,9 @@ int bldc_main(){
 
     can1.init(1_MHz);
 
-    BMI160 bmi{spi1, 0};
-    bmi.init();
+    // BMI160 bmi{spi1, 0};
+
+    // bmi.init();
 
     MA730 ma730{spi1, 2};
     ma730.init();

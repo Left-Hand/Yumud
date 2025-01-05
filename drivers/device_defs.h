@@ -17,3 +17,5 @@
 
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/adc/adc_channel.hpp"
+
+using namespace ymd::hal;

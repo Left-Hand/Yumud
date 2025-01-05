@@ -21,6 +21,9 @@ using namespace ymd;
 #define READ_REG(reg) this->readReg(reg.address, reg);
 
 void BMI160::init(){
+    reset();
+    delay(10);
+
     verify();
 
     setAccOdr(AccOdr::_800);
@@ -36,7 +39,7 @@ void BMI160::init(){
 	setPmuMode(PmuType::GYR, PmuMode::NORMAL);		//Gro normal mode
 	//check the PMU_status	Register(0x03) 
 
-    delay(20);
+    delay(2);
 
 	BMI160_ASSERT(getPmuMode(PmuType::ACC) == PmuMode::NORMAL, "acc pmu mode verify failed");
     BMI160_ASSERT(getPmuMode(PmuType::GYR) == PmuMode::NORMAL, "gyr pmu mode verify failed");

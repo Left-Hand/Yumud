@@ -1,7 +1,7 @@
 #include "i2csw.hpp"
 #include "sys/clock/time_stamp.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 I2cSw::Error I2cSw::wait_ack(){
     sda_gpio.set();

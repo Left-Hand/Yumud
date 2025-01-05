@@ -9,7 +9,7 @@
 #include <initializer_list>
 
 
-namespace ymd{
+namespace ymd::hal{
 
 template <typename T>
 concept valid_i2c_regaddr = std::integral<T> and (sizeof(T) <= 2) and std::is_unsigned_v<T>;
@@ -113,13 +113,15 @@ public:
 };
 
 
-namespace internal{
-template <>
-struct DrvOfBus<I2c>{
-    using DrvType = I2cDrv;  // 默认错误类型
-};
+
 
 }
+
+namespace ymd::internal{
+template <>
+struct DrvOfBus<ymd::hal::I2c>{
+    using DrvType = ymd::hal::I2cDrv;  // 默认错误类型
+};
 
 }
 

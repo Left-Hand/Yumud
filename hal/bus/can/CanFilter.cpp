@@ -5,7 +5,8 @@
 #include "sys/debug/debug_inc.h"
 
 using namespace ymd;
-
+using namespace ymd::hal;
+using RemoteType = CanUtils::RemoteType; 
 
 struct bits_queue{
 protected:
@@ -127,7 +128,7 @@ public:
 
 template<typename T>
 std::tuple<T, T> id_and_mask(const code_parser::parse_result & result){
-    using RemoteType = CanRemoteType; 
+
     switch(result.rm_sel){
         default:
         case remote_selection::any:

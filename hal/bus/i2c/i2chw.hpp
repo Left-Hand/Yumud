@@ -2,7 +2,7 @@
 
 #include "i2c.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
 class I2cHw: public I2c{
 private:

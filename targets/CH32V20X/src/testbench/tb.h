@@ -7,12 +7,16 @@
 #include "hal/bus/i2c/i2c.hpp"
 
 namespace ymd{
-    class Can;
     class UartHw;
     class OutputStream;
 }
 
+namespace ymd::hal{
+    class Can;
+}
+
 using namespace ymd;
+using namespace ymd::hal;
 
 using Sys::t;
 
@@ -42,7 +46,7 @@ void dma_tb(OutputStream & logger, DmaChannel & channel);
 
 void ch9141_tb(IOStream & logger, Uart & uart);
 
-void can_tb(IOStream & logger, Can & can, bool tx_role = true);
+void can_tb(IOStream & logger, hal::Can & can, bool tx_role = true);
 
 void usbcdc_tb();
 

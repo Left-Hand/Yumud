@@ -215,8 +215,8 @@ void stepper_tb(UartHw & logger){
     // can.enableHwReTransmit();
     
     can[0].mask(
-        CanID16{uint16_t(uint16_t(node_id) << 7), CanRemoteType::Any}, CanID16::IGNORE_LOW(7, CanRemoteType::Any),
-        CanID16{0x000, CanRemoteType::Any}, CanID16::IGNORE_LOW(7, CanRemoteType::Any));
+        CanID16{uint16_t(uint16_t(node_id) << 7), Can::RemoteType::Any}, CanID16::IGNORE_LOW(7, Can::RemoteType::Any),
+        CanID16{0x000, Can::RemoteType::Any}, CanID16::IGNORE_LOW(7, Can::RemoteType::Any));
 
     FOCStepper stp{node_id, svpwm, encoder, mem};
     FOCMotor::AsciiProtocol ascii_p{logger, stp};

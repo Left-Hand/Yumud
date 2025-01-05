@@ -3,7 +3,7 @@
 #include "i2c.hpp"
 #include "sys/clock/clock.h"
 
-namespace ymd{
+namespace ymd::hal{
 class I2cSw: public I2c{
 private:
     volatile int8_t occupied = -1;

@@ -7,7 +7,7 @@
 #include <memory>
 #include <functional>
 
-namespace ymd::CanUtils{
+namespace ymd::hal::CanUtils{
     enum class BaudRate:uint8_t{
         _125K,
         _250K,
@@ -40,10 +40,6 @@ namespace ymd::CanUtils{
         Specified = 1
     };  
 };
-
-namespace ymd{
-using CanRemoteType = CanUtils::RemoteType;
-}
 
 
 #ifndef CAN_SOFTFIFO_SIZE

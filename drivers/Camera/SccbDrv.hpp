@@ -9,7 +9,7 @@
 #include <initializer_list>
 
 
-namespace ymd{
+namespace ymd::hal{
 
 class SccbDrv:public BusDrv<I2c> {
 protected:

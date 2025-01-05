@@ -18,7 +18,7 @@
         return Bus::ErrorType::ZERO_LENGTH;\
     }\
 
-namespace ymd{
+namespace ymd::hal{
 
 template<typename T>
 requires valid_i2c_regaddr<T>

@@ -2,6 +2,7 @@
 #include "hal/gpio/port.hpp"
 #include "sys/debug/debug_inc.h"
 
+using namespace ymd::hal;
 using namespace ymd;
 
 void I2cHw::enableRcc(const bool en){

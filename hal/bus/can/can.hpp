@@ -43,14 +43,15 @@ void CAN2_SCE_IRQHandler(void);
 
 
 
-namespace ymd{
+namespace ymd::hal{
 
 struct CanFilter;
-class Can: public PackedBus<CanMsg>,public CanTrait{
+class Can: public PackedBus<CanMsg>,public traits::CanTrait{
 public:
     using BaudRate = CanUtils::BaudRate;
     using Mode = CanUtils::Mode;
     using ErrCode = CanUtils::ErrCode;
+    using RemoteType = CanUtils::RemoteType;
 
     using Packet = CanMsg;
     using Callback = std::function<void(void)>;
@@ -160,11 +161,11 @@ public:
 };
 
 #ifdef ENABLE_CAN1
-inline Can can1{CAN1};
+extern Can can1;
 #endif
 
 #ifdef ENABLE_CAN2
-inline Can can2{CAN2};
+extern Can can2;
 #endif
 
 }

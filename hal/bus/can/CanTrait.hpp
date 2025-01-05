@@ -1,6 +1,6 @@
 #pragma once
 
-namespace ymd{
+namespace ymd::traits{
 
 class CanTrait{
 public:
