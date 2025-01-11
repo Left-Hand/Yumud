@@ -4,13 +4,6 @@
 
 // #define DRV2605L_DEBUG
 
-#ifdef DRV2605L_DEBUG
-#undef DRV2605L_DEBUG
-#define DRV2605L_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define DRV2605L_DEBUG(...)
-#endif
-
 namespace ymd::drivers{
 
 class DRV2605L{
@@ -173,7 +166,7 @@ protected:
         i2c_drv_.readReg<uint8_t>((uint8_t)address, reg);
     }
 
-    void requestPool(const RegAddress addr, uint8_t * data, size_t len){
+    void requestBurst(const RegAddress addr, uint8_t * data, size_t len){
         i2c_drv_.readMulti((uint8_t)addr, data, len);
     }
 public:

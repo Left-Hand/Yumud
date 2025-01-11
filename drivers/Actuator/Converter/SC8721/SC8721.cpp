@@ -2,6 +2,19 @@
 
 using namespace ymd::drivers;
 
+#define SC8721_DEBUG
+
+#ifdef SC8721_DEBUG
+#undef SC8721_DEBUG
+#define SC8721_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define SC8721_PANIC(...) PANIC(__VA_ARGS__)
+#define SC8721_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define SC8721_DEBUG(...)
+#define SC8721_PANIC(...)  PANIC()
+#define SC8721_ASSERT(cond, ...) ASSERT(cond)
+#endif
+
 #define WRITE_REG(reg) writeReg(reg.address, reg);
 #define READ_REG(reg) readReg(reg.address, reg);
 

@@ -2,14 +2,6 @@
 
 #include "drivers/device_defs.h"
 
-// #define SC8721_DEBUG
-
-#ifdef SC8721_DEBUG
-#undef SC8721_DEBUG
-#define SC8721_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define SC8721_DEBUG(...)
-#endif
 
 namespace ymd::drivers{
 
