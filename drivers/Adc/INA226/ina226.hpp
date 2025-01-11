@@ -2,13 +2,6 @@
 
 #include "drivers/device_defs.h"
 
-#ifdef INA226_DEBUG
-#undef INA226_DEBUG
-#define INA226_DEBUG(...) DEBUG_LOG(...)
-#else 
-#define INA226_DEBUG(...)
-#endif
-
 namespace ymd::drivers{
 class INA226 {
 public:
@@ -142,21 +135,18 @@ public:
     
     scexpr uint8_t default_i2c_addr = 0x80;
 
-    #define CHANNEL_CONTEX\
+    #define CHANNEL_CONTENT\
         INA226Channel{*this, INA226Channel::Index::SHUNT_VOLT},\
         INA226Channel{*this, INA226Channel::Index::BUS_VOLT},\
         INA226Channel{*this, INA226Channel::Index::CURRENT},\
         INA226Channel{*this, INA226Channel::Index::POWER}\
 
-    INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
-    INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTEX}{;}
-    INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTEX}{};
+    INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTENT}{;}
+    INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTENT}{;}
+    INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTENT}{};
 
-    #undef CHANNEL_CONTEX
+    #undef CHANNEL_CONTENT
 
-    auto & ch(const Index index){
-        return channels[uint8_t(index)];
-    }
 
     void update();
 
@@ -167,6 +157,19 @@ public:
     void setAverageTimes(const uint16_t times);
 
     bool verify();
+
+    auto & ch(const Index index){
+        return channels[uint8_t(index)];
+    }
+
+    auto & currChannel(){
+        return ch(INA226Channel::Index::CURRENT);
+    }
+
+    auto & voltChannel(){
+        return ch(INA226Channel::Index::BUS_VOLT);
+    }
+
 
     real_t getVoltage(){
         return busVoltageReg * voltageLsb;

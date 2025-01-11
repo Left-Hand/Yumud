@@ -7,19 +7,17 @@ namespace gxm{
 
 class CanMaster{
 protected:
-    using Can = ymd::Can;
-    using CanProtocolConcept = ymd::CanProtocolConcept;
     // using Wrapper = (CanProtocolConcept *);
-    using Container = std::vector<CanProtocolConcept *>;
+    using Container = std::vector<ymd::CanProtocolConcept *>;
 
     Container pool = {};
-    Can & can_;
+    ymd::hal::Can & can_;
 public:
-    CanMaster(Can & can):can_(can){;}
+    CanMaster(ymd::hal::Can & can):can_(can){;}
     CanMaster(CanMaster && other) = delete;
     CanMaster(CanMaster & other) = delete;
 
-    void registerNode(CanProtocolConcept & proto){
+    void registerNode(ymd::CanProtocolConcept & proto){
         pool.push_back(&proto);
     }
 

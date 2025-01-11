@@ -1,6 +1,6 @@
 #include "opa.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
 #ifdef ENABLE_OPA1
 Opa opa1 = {OPA1};

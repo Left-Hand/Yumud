@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../bus.hpp"
+#include "hal/bus/bus.hpp"
 
 namespace ymd{
 class Sdi:public OutputStream{

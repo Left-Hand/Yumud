@@ -9,7 +9,7 @@
 
 
 namespace ymd::foc{
-
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 class FOCMotorConcept{ 
@@ -140,7 +140,7 @@ public:
         FOCMotor & motor;
 
     public:
-        CanProtocol(Can & _can, FOCMotor & _motor):
+        CanProtocol(hal::Can & _can, FOCMotor & _motor):
             CanProtocolConcept(_can, _motor.id()),
             motor(_motor){;}
 

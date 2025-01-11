@@ -6,10 +6,14 @@
 #include "sys/io/regs.hpp"
 #include "CanUtils.hpp"
 
+
 namespace ymd{
+    class StringView;
+}
+
+namespace ymd::hal{
 
 class Can;
-class StringView;
 
 struct CanID16{
     using RemoteType = CanUtils::RemoteType;

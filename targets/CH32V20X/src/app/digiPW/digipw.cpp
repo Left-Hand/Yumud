@@ -1,5 +1,5 @@
 #include "digipw.hpp"
-
+#include <ostream>
 
 
 #include "dsp/filter/LowpassFilter.hpp"
@@ -29,17 +29,82 @@
 #include "buck/buck.hpp"
 
 #include "sys/core/system.hpp"
+#include "sogi/spll.hpp"
 
 using Sys::t;
 
 using namespace ymd;
 using namespace ymd::drivers;
+using namespace ymd::digipw;
 
+void test_sogi(){
+    scexpr int ac_freq = 50;
+    // scexpr int ac_freq = 25;
+    // scexpr int ac_freq = 5;
+    // scexpr int isr_freq = 16384/4;
+    // scexpr int isr_freq = 16384;
+    scexpr int isr_freq = 8192;
+
+    Spll spll = {
+        isr_freq, ac_freq,
+        // 33,-32
+    };
+
+    real_t raw_theta;
+    real_t u0;
+
+
+    timer1.init(isr_freq);
+
+    auto run_sogi = [&](){
+        static real_t tm = 0;
+        scexpr real_t dt = real_t(1) / isr_freq;
+        tm += dt;
+
+        raw_theta = real_t(TAU) * frac(ac_freq * tm);
+        // raw_theta = real_t(TAU) * frac((ac_freq-4.2_r) * tm);
+        u0 = 32.0_r * sin(raw_theta) * (0.05_r * sin(8 * tm) + 1);
+        spll.update(u0);
+    };
+
+    if(false){
+        scexpr size_t times = 10000;
+
+        DEBUG_PRINTLN("--------------");
+        DEBUG_PRINTLN("start");
+
+        uint32_t t0 = micros();
+        for(size_t i = 0; i < times; i++){
+            run_sogi();
+        }
+
+        DEBUG_PRINTLN(real_t(micros() - t0) / times, "us per call");
+        while(true);
+    }
+
+    uint32_t dm = 0;
+    timer1.bindCb(TimerUtils::IT::Update, [&](){
+        auto m = micros();
+        run_sogi();
+        dm = micros() - m;
+    });
+
+    timer1.enableIt(TimerUtils::IT::Update, {0,0});
+
+    while(true){
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(raw_theta, spll.theta(), dm);
+        DEBUG_PRINTLN(u0, raw_theta, spll.theta());
+        delay(1);
+    }
+}
 void digipw_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-
+    uart2.init(576000);
+    DEBUGGER.change(uart2);
+    DEBUGGER.setEps(4);
+    DEBUGGER.setSplitter(",");
     /*-----------------------*/
 
+    test_sogi();
     auto & scl_gpio = portB[15];
     auto & sda_gpio = portB[14];
 
@@ -49,8 +114,8 @@ void digipw_main(){
     INA226 ina226{i2csw};
     ina226.init(real_t(0.006), 5);
 
-    auto & curr_ch = ina226.ch(INA226::Index::CURRENT);
-    auto & volt_ch = ina226.ch(INA226::Index::BUS_VOLT);
+    auto & curr_ch = ina226.currChannel();
+    auto & volt_ch = ina226.voltChannel();
 
     /*-----------------------*/
 
@@ -67,7 +132,7 @@ void digipw_main(){
 
     /*-----------------------*/
 
-    Buck buck{curr_ch, volt_ch, mp1907};
+    BuckConverter buck{curr_ch, volt_ch, mp1907};
     buck.init();
     while(true){
         mp1907 = real_t(0.5) + real_t(0.5) * sin(t);

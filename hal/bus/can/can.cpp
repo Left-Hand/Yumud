@@ -12,6 +12,7 @@
 //#endregion switches
 
 using namespace ymd;
+using namespace ymd::hal;
 
 using Callback = Can::Callback;
 
@@ -579,3 +580,13 @@ void CAN2_SCE_IRQHandler(void){
 }
 #endif
 #endif
+
+namespace ymd::hal{
+#ifdef ENABLE_CAN1
+Can can1 = {CAN1};
+#endif
+
+#ifdef ENABLE_CAN2
+Can can2 = {CAN2};
+#endif
+}

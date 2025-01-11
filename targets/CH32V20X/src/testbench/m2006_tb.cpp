@@ -6,6 +6,7 @@
 
 #include "hal/timer/instance/timer_hw.hpp"
 
+using namespace hal;
 void m2006_main(){
     // scexpr size_t cb_freq = 200;
 
@@ -15,7 +16,7 @@ void m2006_main(){
     DEBUGGER_INST.init(576000, CommMethod::Blocking);
     auto & can = can1;
     can.init(1_MHz);
-    can[0].mask(CanID16{0x201, CanRemoteType::Data}, CanID16{0xffff, CanRemoteType::Remote});
+    can[0].mask(CanID16{0x201, Can::RemoteType::Data}, CanID16{0xffff, Can::RemoteType::Remote});
     while(true){
         auto s = real_t(0.07) * sin(4 * t);
         auto c = real_t(0.07) * cos(4 * t);

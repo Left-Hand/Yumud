@@ -3,6 +3,7 @@
 
 using namespace gxm;
 using namespace ymd;
+using namespace ymd::hal;
 
 void CanMaster::update(){
     if(can_.available()){

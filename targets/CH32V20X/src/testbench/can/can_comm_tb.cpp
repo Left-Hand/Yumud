@@ -3,8 +3,8 @@
 #include "hal/bus/can/can.hpp"
 #include "sys/debug/debug_inc.h"
 
-void can_tb(IOStream & logger, Can & can, bool tx_role){
-    can.init(1_MHz, Can::Mode::Normal);
+void can_tb(IOStream & logger, hal::Can & can, bool tx_role){
+    can.init(1_MHz, hal::Can::Mode::Normal);
 
     portC[13].outpp();
     portC[14].outpp();

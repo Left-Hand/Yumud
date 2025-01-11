@@ -5,19 +5,6 @@
 using namespace ymd;
 
 
-#ifdef ENABLE_SPI1
-void SPI1_IRQHandler(void){
-
-}
-#endif
-
-#ifdef ENABLE_SPI2
-void SPI2_IRQHandler(void){
-    
-}
-#endif
-
-
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef ENABLE_SPI1
@@ -251,6 +238,7 @@ void SpiHw::setDataBits(const uint8_t bits){
     uint16_t tempreg =  instance->CTLR1;
 
     switch(bits){
+        default:
         case 16:
             if(tempreg & SPI_DataSize_16b) return;
             tempreg |= SPI_DataSize_16b;
@@ -258,8 +246,6 @@ void SpiHw::setDataBits(const uint8_t bits){
         case 8:
             tempreg &= ~SPI_DataSize_16b;
             break;
-        default:
-            HALT;
     }
 
     instance->CTLR1 = tempreg;
@@ -334,3 +320,15 @@ SpiHw spi1{SPI1};
 SpiHw spi2{SPI2};
 #endif
 }
+
+#ifdef ENABLE_SPI1
+void SPI1_IRQHandler(void){
+
+}
+#endif
+
+#ifdef ENABLE_SPI2
+void SPI2_IRQHandler(void){
+    
+}
+#endif

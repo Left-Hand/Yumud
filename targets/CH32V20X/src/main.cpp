@@ -9,6 +9,7 @@
 #include "app/gui/gui.hpp"
 #include "app/gxmatch/gxmatch.hpp"
 #include "app/eyetrack/etk.hpp"
+#include "app/digiPW/digipw.hpp"
 
 
 void preinit(){
@@ -40,6 +41,7 @@ int main(){
     // embd_main();
     // embd_main();
     bldc_main();
+    // digipw_main();
     // uart_main();
     // wlsy_main();
     // lt8920_main();

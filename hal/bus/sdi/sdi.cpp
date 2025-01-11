@@ -12,12 +12,12 @@ void Sdi::write(const char data){
     while(*(DEBUG_DATA0_ADDRESS));
 }
 
-void Sdi::write(const char * data_ptr, const size_t len){
+void Sdi::write(const char * pdata, const size_t len){
     int i = 0;
 
     int writeSize = len;
 
-    #define GET_DATA(n) ((size_t(i + n) < len) ? (*(data_ptr+i)) : 0)
+    #define GET_DATA(n) ((size_t(i + n) < len) ? (*(pdata+i)) : 0)
 
     #define WRITE(size) \
     *(DEBUG_DATA1_ADDRESS) = GET_DATA(3) | (GET_DATA(4)<<8) | (GET_DATA(5)<<16) | (GET_DATA(6)<<24);\

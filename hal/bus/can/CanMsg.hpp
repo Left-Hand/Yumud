@@ -10,7 +10,7 @@
 #include <utility>
 #include <tuple>
 
-namespace ymd{
+namespace ymd::hal{
 
 //TODO do not inhert from CanRxMsg
 struct CanMsg{

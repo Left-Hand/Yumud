@@ -1,7 +1,7 @@
 
 #include "MT9V034.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 #define DEVICE_ADDR 0xB8

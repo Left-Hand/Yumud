@@ -45,31 +45,25 @@ extern ymd::Debugger & DEBUGGER;
 
 #define NARG(...) (std::tuple_size_v<decltype(std::make_tuple(__VA_ARGS__))>)
 
-template<typename... Args>
-void __panic_impl(Args&&... args){
-    if constexpr(NARG(args...)){
-        DEBUG_ERROR(std::forward<Args>(args)...);
-        delay(10);
-    }
-    DISABLE_INT;
-    DISABLE_INT;
-    HALT;
-}
-
-
 #define PANIC(...)\
-__panic_impl(__VA_ARGS__);\
+do{\
+    if constexpr(NARG(__VA_ARGS__)){\
+        DEBUG_ERROR(__VA_ARGS__);\
+        delay(10);\
+    }\
+    DISABLE_INT;\
+    DISABLE_INT;\
+    HALT;\
+}while(false);\
 
-template<typename... Args>
-bool __assert_impl(bool cond, Args&&... args) {
-    if (!cond) {
-        __panic_impl(std::forward<Args>(args)...);
-    }
-    return cond;
-}
-
-#define ASSERT(condition, ...)\
-__assert_impl((bool)(condition), ##__VA_ARGS__);
+#define ASSERT(cond, ...)\
+({\
+    bool __assert_result = (cond); \
+    if (!__assert_result) {\
+        PANIC(__VA_ARGS__);\
+    }\
+    __assert_result;\
+})
 
 #define BREAKPOINT __nopn(1);
 #define TODO(...) do{PANIC("todo", ##__VA_ARGS__)}while(false);

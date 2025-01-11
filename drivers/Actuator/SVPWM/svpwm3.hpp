@@ -9,22 +9,43 @@ protected:
     using Driver = Coil3Driver;
 
     Driver & driver_;
-
-
+    const uint bus_volt = 12;
+    // real_t ta;
+    // real_t tb;
 
 public:
 
     SVPWM3(Driver & _driver):driver_(_driver){;}
 
-    __inline void setDuty(const real_t modu_amp, const real_t modu_rad) override{
-        scexpr real_t _30_deg = real_t(TAU / 6);
-        scexpr real_t inv_30_deg = real_t(6 / TAU);
+    void setDQVolt(const real_t dv, const real_t qv, const real_t rad){
+        {
+            auto c = cos(rad);
+            auto s = sin(rad);
+            setABVolt(dv * c - qv * s, dv * c + qv * s);
+        }
 
-        int modu_sect = (int(modu_rad * inv_30_deg) % 6);
-        real_t sixtant_theta = modu_rad - _30_deg * modu_sect;
+        {
+        // setDuty(sqrt(dv * dv + qv * qv) / bus_volt, rad);
+        }
+    }
 
-        real_t ta = sin(sixtant_theta) * modu_amp;
-        real_t tb = sin(_30_deg - sixtant_theta) * modu_amp;
+    void setABVolt(const real_t av, const real_t bv){
+        setDuty(sqrt(av * av + bv * bv) / bus_volt, atan2(bv, av));
+    }
+
+    void setVolt(const real_t volt, const real_t modu_rad){
+        setDuty(frac(volt / bus_volt), modu_rad);
+    }
+
+    __inline void setDuty(const real_t duty, const real_t modu_rad) override{
+        scexpr real_t _60_deg = real_t(TAU / 6);
+        scexpr real_t inv_60_deg = real_t(6 / TAU);
+
+        int modu_sect = ((int(modu_rad * inv_60_deg) + 7) % 6);
+        real_t sixtant_theta = modu_rad - _60_deg * (modu_sect - 1);
+
+        real_t ta = sin(sixtant_theta) * duty;
+        real_t tb = sin(_60_deg - sixtant_theta) * duty;
         
         real_t t0 = (real_t(1) - ta - tb) >> 1;
         real_t t1 = (real_t(1) + ((modu_sect % 2) ? (tb - ta) : (ta - tb))) >> 1;
@@ -55,15 +76,15 @@ public:
     }
 
     __inline void setDutyPU(const real_t modu_amp, real_t modu_rad_pu){
-        scexpr real_t _30_deg = real_t(TAU / 6);
-        scexpr real_t _30_deg_pu = real_t(1 / 6);
+        scexpr real_t _60_deg = real_t(TAU / 6);
+        scexpr real_t _60_deg_pu = real_t(1 / 6);
 
         modu_rad_pu = frac(modu_rad_pu);
         int modu_sect = (int(modu_rad_pu * 6) % 6);
-        real_t sixtant_theta = (modu_rad_pu - _30_deg_pu * modu_sect) * real_t(TAU);
+        real_t sixtant_theta = (modu_rad_pu - _60_deg_pu * modu_sect) * real_t(TAU);
 
         real_t ta = sin(sixtant_theta) * modu_amp;
-        real_t tb = sin(_30_deg - sixtant_theta) * modu_amp;
+        real_t tb = sin(_60_deg - sixtant_theta) * modu_amp;
         
         real_t t0 = (real_t(1) - ta - tb) >> 1;
         real_t t1 = (real_t(1) + ((modu_sect % 2) ? (tb - ta) : (ta - tb))) >> 1;
@@ -100,6 +121,10 @@ public:
     void enable(const bool en = true) override{
         driver_.enable(en);
     }
+
+    // std::array<real_t, 2> ab() const{
+    //     return {0,0};
+    // }
 };
 
 

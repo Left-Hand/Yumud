@@ -1,6 +1,6 @@
 #include "SccbDrv.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 void SccbDrv::writeReg(const uint8_t reg_address, const uint16_t reg_data){
     if(bus_.begin(index_) == Bus::ErrorType::OK){

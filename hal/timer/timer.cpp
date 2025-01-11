@@ -1,9 +1,6 @@
 #include "timer.hpp"
 #include "sys/core/system.hpp"
 
-// #define TIM_DEBUG
-// TIM1_RM
-
 #define TIM1_RM_A8_A9_A10_A11__B13_B14_B15 0
 #define TIM1_RM_A8_A9_A10_A11__A7_B0_B1 1
 #define TIM1_RM_E9_E11_E13_E14__E8_E10_E12 3
@@ -274,13 +271,10 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 
 
 void BasicTimer::enable(const bool en){
-    if(en){
-        TIM_Cmd(instance, en);
-        if(isAdvancedTimer(instance)){
-            TIM_CtrlPWMOutputs(instance, en);
-        }
-    }else{
-        TIM_Cmd(instance, DISABLE);
+    TIM_Cmd(instance, en);
+    
+    if(en and isAdvancedTimer(instance)){
+        TIM_CtrlPWMOutputs(instance, en);
     }
 }
 
@@ -288,7 +282,7 @@ void GenericTimer::initAsEncoder(const Mode mode){
     this->enableRcc(true);
 
     {
-        TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
+        const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
             .TIM_Prescaler = 0,
             .TIM_CounterMode = (uint16_t)mode,
             .TIM_Period = 65535,

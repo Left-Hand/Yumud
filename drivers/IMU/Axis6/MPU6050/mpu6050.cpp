@@ -20,7 +20,7 @@
 
 using namespace ymd::drivers;
 void MPU6050::init(){
-    bool ok = MPU6050_ASSERT(this->verify(), "MPU6050 verify failed")
+    bool ok = MPU6050_ASSERT(this->verify(), "MPU6050 verify failed");
     if(ok){
         this->writeReg(0x6b, 0);
         this->writeReg(0x19, 0x00);
