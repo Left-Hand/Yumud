@@ -40,7 +40,7 @@ void SmoPos::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
 
     // 滑模控制计算器
     if (abs(IalphaError) < E0) {
-        Zalpha = (Kslide * IalphaError / E0);  // (Kslide * (IalphaError) / E0)
+        Zalpha = (Kslide * IalphaError * invE0);  // (Kslide * (IalphaError) / E0)
     } else if (IalphaError >= E0) {
         Zalpha = Kslide;
     } else if (IalphaError <= -E0) {
@@ -48,7 +48,7 @@ void SmoPos::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
     }
 
     if (abs(IbetaError) < E0) {
-        Zbeta = (Kslide * IbetaError / E0);  // (Kslide * (IbetaError) / E0)
+        Zbeta = (Kslide * IbetaError * invE0);  // (Kslide * (IbetaError) / E0)
     } else if (IbetaError >= E0) {
         Zbeta = Kslide;
     } else if (IbetaError <= -E0) {

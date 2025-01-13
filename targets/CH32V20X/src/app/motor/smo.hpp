@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/math/real.hpp"  // 假设 iq_t 类型定义在这个头文件中
+#include "sys/math/real.hpp"
 
 namespace ymd::foc{
 
@@ -11,9 +11,6 @@ public:
 
     // 构造函数
     SmoPos(iq_t _f_para, iq_t _g_para, iq_t _Kslide, iq_t _Kslf);
-
-    // 初始化函数
-    // void init(iq_t _g_para, iq_t _f_para, iq_t _Kslide, iq_t _Kslf);
 
     void reset();
 
@@ -46,7 +43,7 @@ public:
     // 滑模阈值
     static constexpr iq_t E0 = iq_t(1.5);
     // 滑模阈值的倒数
-    static constexpr iq_t invE0 = 1 / E0;
+    static constexpr iq_t invE0 = iq_t(1/1.5);
 };
 
 } // namespace ymd
