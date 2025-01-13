@@ -16,7 +16,8 @@
 #include "drivers/Actuator/SVPWM/svpwm.hpp"
 #include "hal/bus/spi/spihw.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
-#include "smo.hpp"
+#include "smo/SmoObserver.hpp"
+#include "lbg/RolbgObserver.hpp"
 #include "utils.hpp"
 
 #include <ostream>
@@ -241,12 +242,13 @@ int bldc_main(){
 
     // scexpr real_t r_ohms = 7.1_r;
     // scepxr real_t l_mh = 1.45_r;
-    SmoPos smo_pos = {0.7_r, 0.04_r, 8.22_r, 0.3_r};
+    SmoObserver smo_pos = {0.7_r, 0.04_r, 8.22_r, 0.3_r};
+    RolbgObserver lbg_pos;
 
     auto cb = [&]{
 
         auto m = micros();
-        odo.update();
+        // odo.update();
 
         // targ_pos = real_t(6.0) * sin(2 * t);
         targ_pos = real_t(1.0) * t;
@@ -266,10 +268,16 @@ int bldc_main(){
         // rad = smo_pos.getTheta() + real_t(-PI);
         // fmod(t,8)
         // rad = smo_pos.getTheta() - real_t(PI/2) + real_t(PI/2 + 1.4);
+
+
         auto change = real_t(1.5) * real_t(PI) * sin(4 * t);
         if(change > real_t(PI/2) || change < -real_t(PI/2)){
-            rad = smo_pos.getTheta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
+            // rad = smo_pos.getTheta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
+            rad = lbg_pos.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
         }
+        // rad = lbg_pos.theta();
+
+
         // rad = smo_pos.getTheta() + real_t(PI/2);
         // rad = smo_pos.getTheta() + real_t(PI/2) - real_t(PI/2);
         // rad = smo_pos.getTheta() + real_t(-PI/2) + real_t(PI/2 ) * sin(4 * t);
@@ -316,11 +324,12 @@ int bldc_main(){
         // real_t v = 3;
         // real_t v = 4.0_r;
         // real_t v = 4.0_r;
-        real_t v = 5.0_r;
+        real_t v = 4.0_r;
         ab_volt = {v * cos(rad), v * sin(rad)};
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
         const auto & ab_curr = current_sensor.ab();
-        smo_pos.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        // smo_pos.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        lbg_pos.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         current_sensor.updateDQ(smo_pos.getTheta());
         // svpwm.setVolt(2, rad);
         dt = micros() - m;
@@ -418,7 +427,7 @@ int bldc_main(){
 
 
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_pos.getTheta(),  dt > 100 ? 1000 + dt : dt);
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], smo_pos.Ealpha, smo_pos.Ebeta);
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], smo_pos.Ealpha, smo_pos.Ebeta, lbg_pos._e_alpha, lbg_pos._e_beta,  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], ab_volt[0], hfi_result);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], ab_volt[0]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr[0], dq_curr[1], targ_pos, pos, smo_pos.getTheta(), dt > 100 ? 1000 + dt : dt);

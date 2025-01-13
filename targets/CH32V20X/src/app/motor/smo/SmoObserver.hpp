@@ -4,13 +4,13 @@
 
 namespace ymd::foc{
 
-class SmoPos {
+class SmoObserver {
 public:
-    SmoPos(const SmoPos & other) = delete;
-    SmoPos(SmoPos && other) = default;
+    SmoObserver(const SmoObserver & other) = delete;
+    SmoObserver(SmoObserver && other) = default;
 
     // 构造函数
-    SmoPos(iq_t _f_para, iq_t _g_para, iq_t _Kslide, iq_t _Kslf);
+    SmoObserver(iq_t _f_para, iq_t _g_para, iq_t _Kslide, iq_t _Kslf);
 
     void reset();
 
@@ -36,8 +36,6 @@ public:
     iq_t EstIalpha;
     iq_t EstIbeta;
 
-    iq_t IalphaError;
-    iq_t IbetaError;
     iq_t Theta;
 
     // 滑模阈值
