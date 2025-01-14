@@ -61,9 +61,5 @@ void SmoObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
     Theta = atan2(-Ealpha, Ebeta);
 }
 
-// 获取估计的转子角度
-iq_t SmoObserver::getTheta() const {
-    return Theta;
-}
 
 } // namespace ymd

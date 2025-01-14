@@ -12,7 +12,7 @@ namespace ymd::drivers{
 
 class DRV8301:public Coil3Driver{
 public:
-    enum class PeakCurrent:uint8_t{
+    enum PeakCurrent:uint8_t{
         _1_7A = 0,
         _0_7A = 1,
         _0_25A = 2,
@@ -31,11 +31,11 @@ public:
         OConly = 2,
     };
 
-    enum class Gain:uint8_t{
-        _10 = 0,
-        _20 = 1,
-        _40 = 2,
-        _80 = 3
+    enum Gain:uint8_t{
+        X10 = 0,
+        X20 = 1,
+        X40 = 2,
+        X80 = 3
     };
 
     enum class OcAdTable:uint8_t{

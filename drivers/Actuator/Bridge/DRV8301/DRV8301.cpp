@@ -2,6 +2,19 @@
 
 using namespace ymd::drivers;
 
+#define DRV8301_DEBUG
+
+#ifdef DRV8301_DEBUG
+#undef DRV8301_DEBUG
+#define DRV8301_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define DRV8301_PANIC(...) PANIC(__VA_ARGS__)
+#define DRV8301_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define DRV8301_DEBUG(...)
+#define DRV8301_PANIC(...)  PANIC()
+#define DRV8301_ASSERT(cond, ...) ASSERT(cond)
+#endif
+
 
 #define WRITE_REG(reg) writeReg(reg.address, reg);
 #define READ_REG(reg) readReg(reg.address, reg);
@@ -53,7 +66,7 @@ struct SpiFormat{
     uint16_t write:1;
 
     operator uint16_t() const{
-        return *reinterpret_cast<const uint16_t *>(this);
+        return std::bit_cast<uint16_t>(*this);
     }
 
     operator uint16_t &(){
@@ -65,7 +78,7 @@ void DRV8301::writeReg(const RegAddress addr, const uint16_t reg){
     const SpiFormat spi_format = {
         .data = reg,
         .addr = uint16_t(addr),
-        .write = 1
+        .write = 0
     };
 
     spi_drv_.writeSingle<uint16_t>((spi_format));
@@ -73,6 +86,7 @@ void DRV8301::writeReg(const RegAddress addr, const uint16_t reg){
 
 void DRV8301::readReg(const RegAddress addr, uint16_t & reg){
     SpiFormat spi_format = {
+        .data = 0,
         .addr = uint16_t(addr),
         .write = 1
     };

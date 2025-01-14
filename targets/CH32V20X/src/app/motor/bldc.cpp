@@ -1,26 +1,28 @@
-#include "../sys/core/system.hpp"
 
-#include "../types/vector3/vector3_t.hpp"
-#include "../types/quat/Quat_t.hpp"
+// #include "../types/vector3/vector3_t.hpp"
+// #include "../types/quat/Quat_t.hpp"
 
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
+#include "hal/bus/spi/spihw.hpp"
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
 #include "drivers/Encoder/odometer.hpp"
 #include "drivers/Actuator/Bridge/MP6540/mp6540.hpp"
 #include "drivers/Actuator/SVPWM/svpwm.hpp"
-#include "hal/bus/spi/spihw.hpp"
 #include "drivers/Actuator/SVPWM/svpwm3.hpp"
+#include "drivers/Actuator/Bridge/DRV8301/DRV8301.hpp"
+
 #include "smo/SmoObserver.hpp"
 #include "lbg/RolbgObserver.hpp"
 #include "utils.hpp"
 
 #include <ostream>
+#include "sys/core/system.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -48,11 +50,23 @@ static __inline real_t f(const real_t x){
 // }
 
 __fast_inline iq_t LPF5(const iq_t x, const iq_t y){
-    return (x * 31 + y) >> 5;
+    // return (x * 31 + y) >> 5;
+    return y;
+    auto temp = x * 31 + y;
+    if((int32_t(temp.value) & 31) > 16){
+        return (temp >> 5) + iq_t(_iq(1));
+    }else{
+        return (temp) >> 5;
+    }
 }
 
 __fast_inline iq_t LPF6(const iq_t x, const iq_t y){
     return (x * 63 + y) >> 6;
+}
+
+template<size_t N>
+__fast_inline iq_t LPFN(const iq_t x, const iq_t y){
+    return (x * ((1 << N) - 1) + y) >> N;
 }
 
 __fast_inline iq_t LPF7(const iq_t x, const iq_t y){
@@ -67,8 +81,72 @@ __fast_inline iq_t LPF3(const iq_t x, const iq_t y){
     return (x * 7 + y) >> 3;
 }
 
+// template<typename T, size_t N>
+// class AverageFilter{
+// protected:
+//     std::array<T, N> data_;
+//     size_t index = 0;
+//     bool inited = false;
+// public:
+//     void reset(const T x = 0){
+//         data_.fill(0);
+//     }
+
+//     T update(const T x){
+//         if(!inited){
+//             inited = true;
+//             data_.fill(x);
+//             return x;
+//         }
+
+//         data_[index] = x;
+//         index = (index + 1) % N;
+
+//         T sum = 0;
+//         for(const auto & x : data_){
+//             sum += x;
+//         }
+
+//         return sum / int(N);
+//     }
+
+// };
 
 
+template<typename T, size_t N>
+class AverageFilter {
+protected:
+    scexpr T invN = T(1.0 / N);
+
+    std::array<T, N> data_;
+    size_t index = 0;
+    bool inited = false;
+    T sum = 0;
+    
+
+public:
+    void reset(const T x) {
+        data_.fill(x);
+        sum = x * N;
+        inited = true;
+    }
+
+    T update(const T x) {
+        if (unlikely(!inited)) {
+            inited = true;
+            reset(x);
+            return x;
+        }
+
+        T old_value = data_[index];
+        data_[index] = x;
+        index = (index + 1) % N;
+
+        sum += x - old_value;
+
+        return sum * invN;
+    }
+};
 
 __fast_inline iq_t LPF(const iq_t x, const iq_t y){
     // const iq_t temp = x * 31 + y;
@@ -192,7 +270,7 @@ int bldc_main(){
     };
 
     mp6540.init();
-    mp6540.setSoRes(1_K);
+    mp6540.setSoRes(10_K);
     
     SVPWM3 svpwm {mp6540};
     
@@ -273,8 +351,12 @@ int bldc_main(){
         auto change = real_t(1.5) * real_t(PI) * sin(4 * t);
         if(change > real_t(PI/2) || change < -real_t(PI/2)){
             // rad = smo_pos.getTheta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
-            rad = lbg_pos.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
+            // rad = lbg_pos.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
         }
+        // rad = lbg_pos.theta();
+        // rad = smo_pos.theta();
+        // rad = lbg_pos.theta() + ;
+        rad = frac(4*t)*real_t(TAU);
         // rad = lbg_pos.theta();
 
 
@@ -324,13 +406,13 @@ int bldc_main(){
         // real_t v = 3;
         // real_t v = 4.0_r;
         // real_t v = 4.0_r;
-        real_t v = 4.0_r;
+        real_t v = 6.0_r;
         ab_volt = {v * cos(rad), v * sin(rad)};
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
         const auto & ab_curr = current_sensor.ab();
-        // smo_pos.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        smo_pos.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         lbg_pos.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        current_sensor.updateDQ(smo_pos.getTheta());
+        current_sensor.updateDQ(smo_pos.theta());
         // svpwm.setVolt(2, rad);
         dt = micros() - m;
         // dt = micros() ;
@@ -344,34 +426,46 @@ int bldc_main(){
     auto cb_hfi = [&]{
 
         static int cnt = 0;
-        scexpr int hfi_freq = 4096;
-        // scexpr int hfi_freq = 2048;
+        // scexpr int hfi_freq = 4096;
+        // scexpr int hfi_freq = 2500;
         // scexpr int hfi_freq = 1024;
         // scexpr int hfi_freq = 512;
         // scexpr int hfi_freq = 256;
-        scexpr int divider = chopper_freq / 2 / hfi_freq;
+        // scexpr int divider = chopper_freq / 2 / hfi_freq;
+        scexpr int divider = 8;
         cnt = (cnt + 1) % divider;
 
         auto m = micros();
 
 
 
-        real_t v = 4.2_r;
+        real_t hfi_base_volt = 3.2_r;
         real_t hfi_rad = real_t(TAU) * real_t(cnt) / divider;
-        real_t c = cos(hfi_rad);
-        real_t s = sin(hfi_rad);
+        real_t hfi_c = cos(hfi_rad);
+        real_t hfi_out = hfi_base_volt * hfi_c;
 
-        ab_volt = {v * c, 0};
+        real_t openloop_base_volt = 6.0_r;
+        real_t openloop_rad = -frac(13.1_r * t)*real_t(TAU);
+        real_t openloop_c = cos(openloop_rad);
+        real_t openloop_s = sin(openloop_rad);
+        // real_t s = sin(hfi_rad);
+
+        ab_volt = {hfi_out + openloop_base_volt * openloop_c, openloop_base_volt * openloop_s};
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
 
         current_sensor.updatUVW();
         current_sensor.updateAB();
         current_sensor.updateDQ(0);
 
-        real_t mul = current_sensor.dq()[1] * s;
+        // real_t mul = current_sensor.ab()[1] * s;
+        real_t mul = current_sensor.ab()[1] * hfi_c;
         // real_t last_hfi_result = hfi_result;
         // hfi_result = LPF(last_hfi_result, mul);
-        hfi_result = LPF5(hfi_result, mul);
+        static AverageFilter<iq_t, 64> hfi_filter;
+        hfi_result = hfi_filter.update(mul);
+        // hfi_result = LPFN<9>(hfi_result, mul);
+
+        // hfi_result = mul;
         
         dt = micros() - m;
     };
@@ -394,8 +488,8 @@ int bldc_main(){
     v_sense.setBasis(uvw_curr_bias[1]);
     w_sense.setBasis(uvw_curr_bias[2]);
 
-    adc1.bindCb(AdcUtils::IT::JEOC, cb);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb);
+    adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
     en_gpio = true;
@@ -427,8 +521,12 @@ int bldc_main(){
 
 
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_pos.getTheta(),  dt > 100 ? 1000 + dt : dt);
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], smo_pos.Ealpha, smo_pos.Ebeta, lbg_pos._e_alpha, lbg_pos._e_beta,  dt > 100 ? 1000 + dt : dt);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], ab_volt[0], hfi_result);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], lbg_pos._e_alpha, lbg_pos._e_beta,  dt > 100 ? 1000 + dt : dt);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], lbg_pos._e_alpha, lbg_pos.theta());
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(lbg_pos.theta());
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(hfi_result);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_volt[0]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], ab_volt[0]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr[0], dq_curr[1], targ_pos, pos, smo_pos.getTheta(), dt > 100 ? 1000 + dt : dt);
         // delay(2);

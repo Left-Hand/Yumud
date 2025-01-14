@@ -40,7 +40,8 @@ int main(){
     // qlz_main();
     // embd_main();
     // embd_main();
-    bldc_main();
+    // bldc_main();
+    co_ab_main();
     // digipw_main();
     // uart_main();
     // wlsy_main();

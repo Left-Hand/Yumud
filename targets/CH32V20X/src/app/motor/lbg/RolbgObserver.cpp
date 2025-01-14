@@ -21,7 +21,7 @@ void RolbgObserver::reset() {
 void RolbgObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
 
 
-    scexpr double freq = 32768/2;
+    scexpr double freq = 50000;
     scexpr double T = 1.0 / freq;
     scexpr double R = 7.1;
     scexpr double L = 1.45E-3;
