@@ -50,13 +50,15 @@ void co_ab_main(){
     pwm_p.init();
     pwm_n.init();
 
+    pwm_p.setIdleState(true);
+    pwm_n.setIdleState(true);
     TimerOCPair pwm_pair{pwm_p, pwm_n};
 
     while(true){
         DEBUG_PRINTLN(millis());
         // pwm_gpio.toggle();
         // auto prog = sin(10 * t) * 0.5_r + 0.5_r;
-        auto prog = sin(10 * t);
+        auto prog = sin(6 * t);
         // pwm_gpio = bool(prog > 0.5_r);
         // pwm_p = prog;
         pwm_pair = prog;
