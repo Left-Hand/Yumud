@@ -4,8 +4,8 @@
 
 namespace ymd::foc{
 
-scexpr uint chopper_freq = 32768;
-// scexpr uint chopper_freq = 65536;
+// scexpr uint chopper_freq = 32768;
+scexpr uint chopper_freq = 50000;
 
 using Current = real_t;
 

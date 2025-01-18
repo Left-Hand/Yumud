@@ -18,7 +18,7 @@ public:
     void update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta);
 
     // 获取估计的转子角度
-    iq_t getTheta() const;
+    iq_t theta() const {return Theta;}
 
 private:
     // 参数: 电机相关的植物矩阵
