@@ -40,7 +40,8 @@ public:
         iq_t pm_flux_linkage; // [V / (rad/s)]
         size_t freq;
     };
-protected:
+// protected:
+public:
     const Config & config_;
     iq_t flux_state_mul_freq[2];        // [Vs * Fs]
     iq_t V_alpha_beta_last_[2]; // [V]
@@ -55,5 +56,7 @@ public:
     void reset();
     void init();
     void update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta);
+
+    auto theta() const {return phase_;}
 };
 }

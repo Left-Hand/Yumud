@@ -132,6 +132,8 @@ void NonlinearObserver2::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta
     iq_t est_pm_flux_sqr_mul_freq2 = sq(eta_mul_freq[0]) + sq(eta_mul_freq[1]);
     iq_t eta_factor = 0.5_r * (config_.observer_gain / pm_flux_sqr_mul_freq2) * (pm_flux_sqr_mul_freq2 - est_pm_flux_sqr_mul_freq2);
 
+
+
     // alpha-beta vector operations
     for (size_t i = 0; i < 2; ++i) {
         // add observer action to flux estimate dynamics
@@ -146,5 +148,6 @@ void NonlinearObserver2::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta
     V_alpha_beta_last_[0] = Valpha;
     V_alpha_beta_last_[1] = Vbeta;
 
-    phase_ = atan2(eta_mul_freq[1], eta_mul_freq[0]);
+    // phase_ = atan2(eta_mul_freq[1], eta_mul_freq[0]);
+    phase_ = atan2(-eta_mul_freq[0], eta_mul_freq[1]);
 }
