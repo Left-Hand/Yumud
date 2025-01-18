@@ -1,10 +1,11 @@
 #pragma once
 
 #include "sys/math/real.hpp"
+#include "../SensorlessObserverIntf.hpp"
 
 namespace ymd::foc{
 
-class SmoObserver {
+class SmoObserver:public SensorlessObserverIntf{
 public:
     SmoObserver(const SmoObserver & other) = delete;
     SmoObserver(SmoObserver && other) = default;
@@ -21,7 +22,6 @@ public:
     iq_t theta() const {return Theta;}
 
 private:
-    // 参数: 电机相关的植物矩阵
     const iq_t f_para;
     const iq_t g_para;
     const iq_t Kslide;

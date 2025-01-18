@@ -3,7 +3,6 @@
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/gpio/port_virtual.hpp"
 #include "sys/debug/debug_inc.h"
-#include "robots/foc/bldc/bldc.hpp"
 
 #include "testbench/tb.h"
 #include "app/gui/gui.hpp"

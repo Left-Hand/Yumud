@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-class AS5047:public MagEncoder{
+class AS5047:public MagEncoderIntf{
 protected:
 
     using RegAddress = uint16_t;

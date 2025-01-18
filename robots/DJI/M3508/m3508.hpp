@@ -63,16 +63,16 @@ public:
         uint32_t micros_delta;
 
 
-        class M3508Encoder : public Encoder{
+        class M3508Encoder : public EncoderIntf{
         protected:
             M3508 & owner;
 
         public:
             M3508Encoder(M3508 & _owner):owner(_owner){;}
-            virtual void init() override {}
-            virtual void update() override{}
-            virtual real_t getLapPosition() override {return owner.lap_position;}
-            virtual bool stable() override {return true;}
+            void init() override {}
+            void update() override{}
+            real_t getLapPosition() override {return owner.lap_position;}
+            bool stable() override {return true;}
         };
 
         M3508Encoder enc_{*this};

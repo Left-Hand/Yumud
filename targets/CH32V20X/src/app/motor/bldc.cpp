@@ -156,6 +156,8 @@ __fast_inline iq_t LPF(const iq_t x, const iq_t y){
     // return (() >> 5);
 }
 
+
+
 class CurrentSensor{
 protected:
     AnalogInChannel & _u_sense;
@@ -205,6 +207,22 @@ public:
     auto & dq()const{return _dq_curr;}
     auto & dq(){return _dq_curr;}
 };
+
+
+class SensorlessEncoder:public EncoderIntf{
+protected:
+    SensorlessObserverIntf & ob_;
+public:
+    SensorlessEncoder(
+        SensorlessObserverIntf & ob
+    ):
+        ob_(ob){;}
+    real_t getLapPosition() = 0;
+    void update() = 0;
+    void init() = 0;
+    bool stable() = 0;
+};
+
 
 int bldc_main(){
     uart2.init(576000);
@@ -310,7 +328,7 @@ int bldc_main(){
     CurrentSensor current_sensor = {u_sense, v_sense, w_sense};
     // CurrentSensor current_sensor = {adc1.inj(1), adc1.inj(2), adc1.inj(3)};
 
-    uint32_t dt;
+    // uint32_t dt;
 
     std::array<real_t, 2> ab_volt;
 
@@ -318,7 +336,7 @@ int bldc_main(){
     // scepxr real_t l_mh = 1.45_r;
     SmoObserver smo_ob = {0.7_r, 0.04_r, 8.22_r, 0.3_r};
     RolbgObserver lbg_ob;
-    NonlinearObserver2::Config nlr_conf = {
+    NonlinearObserver::Config nlr_conf = {
         .phase_inductance = 1.45E-3_r,
         .phase_resistance = 7.1_r,
         .observer_gain = 0.1_r,
@@ -328,7 +346,7 @@ int bldc_main(){
         .freq = chopper_freq/2,
     };
 
-    NonlinearObserver2 nlr_ob = {
+    NonlinearObserver nlr_ob = {
         nlr_conf
     };
 
@@ -361,13 +379,14 @@ int bldc_main(){
         if(change > real_t(PI/2) || change < -real_t(PI/2)){
             // rad = smo_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
             // rad = lbg_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
-            // rad = nlr_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
+            // rad = nlr_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI * 0.9));
         }
         // rad = lbg_ob.theta();
         // rad = smo_ob.theta();
+        rad = nlr_ob.theta() + 0.8_r;
         // rad = nlr_ob.theta();
         
-        rad = frac(4*t)*real_t(TAU);
+        // rad = frac(4*t)*real_t(TAU);
         // rad = lbg_ob.theta();
 
 
@@ -417,13 +436,15 @@ int bldc_main(){
         // real_t v = 3;
         // real_t v = 4.0_r;
         // real_t v = 4.0_r;
-        real_t v = 4.0_r;
+        real_t v = 6.0_r;
         ab_volt = {v * cos(rad), v * sin(rad)};
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
         const auto & ab_curr = current_sensor.ab();
-        smo_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+
+        // smo_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         // lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+
         current_sensor.updateDQ(smo_ob.theta());
         // svpwm.setVolt(2, rad);
         // dt = micros() - m;
@@ -529,13 +550,11 @@ int bldc_main(){
         [[maybe_unused]] const auto & dq_curr = current_sensor.dq();
         [[maybe_unused]] const auto & ab_curr = current_sensor.ab();
 
-       
-
 
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob.theta());
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(nlr_ob.flux_state_mul_freq[0], nlr_ob.flux_state_mul_freq[1], nlr_ob.theta(), smo_ob.theta(), lbg_ob.theta());
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(nlr_ob.theta(), smo_ob.theta(), lbg_ob.theta(), uvw_curr[0]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
         
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(hfi_result);
