@@ -51,7 +51,7 @@ static __inline real_t f(const real_t x){
 
 __fast_inline iq_t LPF5(const iq_t x, const iq_t y){
     // return (x * 31 + y) >> 5;
-    return y;
+    // return y;
     auto temp = x * 31 + y;
     if((int32_t(temp.value) & 31) > 16){
         return (temp >> 5) + iq_t(_iq(1));
@@ -350,13 +350,13 @@ int bldc_main(){
 
         auto change = real_t(1.5) * real_t(PI) * sin(4 * t);
         if(change > real_t(PI/2) || change < -real_t(PI/2)){
-            // rad = smo_pos.getTheta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
+            rad = smo_pos.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
             // rad = lbg_pos.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
         }
         // rad = lbg_pos.theta();
         // rad = smo_pos.theta();
         // rad = lbg_pos.theta() + ;
-        rad = frac(4*t)*real_t(TAU);
+        // rad = frac(4*t)*real_t(TAU);
         // rad = lbg_pos.theta();
 
 
@@ -488,8 +488,8 @@ int bldc_main(){
     v_sense.setBasis(uvw_curr_bias[1]);
     w_sense.setBasis(uvw_curr_bias[2]);
 
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb);
-    adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
+    adc1.bindCb(AdcUtils::IT::JEOC, cb);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
     en_gpio = true;
