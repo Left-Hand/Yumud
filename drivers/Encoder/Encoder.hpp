@@ -3,7 +3,8 @@
 
 
 namespace ymd::drivers{
-class Encoder{
+
+class EncoderIntf{
 public:
     virtual real_t getLapPosition() = 0;
     virtual void update() = 0;
@@ -11,11 +12,11 @@ public:
     virtual bool stable() = 0;
 };
 
-class IncrementalEncoder: public Encoder{
+class IncrementalEncoderIntf: public EncoderIntf{
 
 };
 
-class AbsoluteEncoder: public Encoder{
+class AbsoluteEncoderIntf: public EncoderIntf{
 protected:
     // virtual void forward() = 0;
     // virtual void backward() = 0;

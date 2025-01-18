@@ -49,10 +49,4 @@ void RolbgObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
     _theta = atan2(-_e_alpha, _e_beta);
 }
 
-iq_t RolbgObserver::getEstimatedTheta() const {
-    // 假设通过 e_alpha 和 e_beta 可以计算出转子角度
-    // 这里只是一个示例，实际计算方法需要根据具体应用确定
-    return atan2(_e_beta, _e_alpha);
-}
-
 }

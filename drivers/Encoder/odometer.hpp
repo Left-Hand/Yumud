@@ -8,7 +8,7 @@
 namespace ymd::drivers{
 class Odometer{
 public:
-    Encoder & encoder;
+    EncoderIntf & encoder;
 protected:
     real_t rawLapPosition = real_t(0);
 
@@ -35,7 +35,7 @@ protected:
 public:
     Odometer(const Odometer & other) = delete;
     Odometer(Odometer && other) = default;
-    Odometer(Encoder & _encoder):encoder(_encoder){;}
+    Odometer(EncoderIntf & _encoder):encoder(_encoder){;}
 
     real_t getRawLapPosition(){
         return rawLapPosition;

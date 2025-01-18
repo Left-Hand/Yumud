@@ -5,7 +5,7 @@
 
 namespace ymd::drivers{
 
-class MA730:public MagEncoder{
+class MA730:public MagEncoderIntf{
 public:
     enum class Width:uint8_t{
         W90, W180, W270, W360

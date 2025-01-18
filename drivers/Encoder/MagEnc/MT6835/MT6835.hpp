@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-class MT6835:public MagEncoder{
+class MT6835:public MagEncoderIntf{
 protected:
 
     using RegAddress = uint8_t;

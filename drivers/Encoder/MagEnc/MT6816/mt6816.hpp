@@ -7,7 +7,7 @@
 
 namespace ymd::drivers{
 
-class MT6816:public MagEncoder{
+class MT6816:public MagEncoderIntf{
 protected:
     SpiDrv spi_drv_;
 

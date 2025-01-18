@@ -63,7 +63,7 @@ class FOCStepper:public FOCMotor{
     friend class AsciiProtocol;
     friend class CanProtocol;
 public:
-    FOCStepper(const NodeId _id, SVPWM & _svpwm, Encoder & _encoder, Memory & _memory):
+    FOCStepper(const NodeId _id, SVPWM & _svpwm, EncoderIntf & _encoder, Memory & _memory):
             FOCMotor(_id, _svpwm, _encoder, 50, _memory){;}
 
     bool isActive() const {

@@ -15,7 +15,7 @@
 
 
 namespace ymd::drivers{
-class MT6701:public MagEncoder{
+class MT6701:public MagEncoderIntf{
 public:
     enum class Hysteresis:uint8_t{
         LSB1, LSB2, LSB4, LSB8,

@@ -3,7 +3,7 @@
 
 
 namespace ymd::drivers{
-class MagEncoder:public AbsoluteEncoder{
+class MagEncoderIntf:public AbsoluteEncoderIntf{
 public:
 };
 

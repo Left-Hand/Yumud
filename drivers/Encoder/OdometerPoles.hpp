@@ -18,7 +18,7 @@ protected:
 
     real_t correctPosition(const real_t rawPosition) override;
 public:
-    OdometerPoles(Encoder & _encoder, const size_t _poles):
+    OdometerPoles(EncoderIntf & _encoder, const size_t _poles):
             Odometer(_encoder),
             poles(_poles)
         {
