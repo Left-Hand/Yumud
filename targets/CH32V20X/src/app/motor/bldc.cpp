@@ -49,11 +49,12 @@ __fast_inline iq_t LPF5(const iq_t x, const iq_t y){
     // return (x * 31 + y) >> 5;
     // return y;
     auto temp = x * 31 + y;
-    if((int32_t(temp.value) & 31) > 16){
-        return (temp >> 5) + iq_t(_iq(1));
-    }else{
+    
+    // if((int32_t(temp.value) & 31) > 16){
+    //     return (temp >> 5) + iq_t(_iq(1));
+    // }else{
         return (temp) >> 5;
-    }
+    // }
 }
 
 __fast_inline iq_t LPF6(const iq_t x, const iq_t y){
@@ -77,36 +78,6 @@ __fast_inline iq_t LPF3(const iq_t x, const iq_t y){
     return (x * 7 + y) >> 3;
 }
 
-// template<typename T, size_t N>
-// class AverageFilter{
-// protected:
-//     std::array<T, N> data_;
-//     size_t index = 0;
-//     bool inited = false;
-// public:
-//     void reset(const T x = 0){
-//         data_.fill(0);
-//     }
-
-//     T update(const T x){
-//         if(!inited){
-//             inited = true;
-//             data_.fill(x);
-//             return x;
-//         }
-
-//         data_[index] = x;
-//         index = (index + 1) % N;
-
-//         T sum = 0;
-//         for(const auto & x : data_){
-//             sum += x;
-//         }
-
-//         return sum / int(N);
-//     }
-
-// };
 
 
 template<typename T, size_t N>
@@ -350,10 +321,12 @@ int bldc_main(){
         nlr_conf
     };
 
+    Pll pll;
     // auto m = micros();
+    odo.inverse();
     auto cb = [&]{
 
-        // odo.update();
+        odo.update();
 
         // targ_pos = real_t(6.0) * sin(2 * t);
         targ_pos = real_t(1.0) * t;
@@ -368,22 +341,26 @@ int bldc_main(){
         //     rad = -frac(targ_pos * 7) * real_t(TAU);
         // }else{
         
-        // rad = -frac(targ_pos * 7) * real_t(TAU);
+
         // rad =  + real_t(PI/2);
         // rad = smo_ob.getTheta() + real_t(-PI);
         // fmod(t,8)
         // rad = smo_ob.getTheta() - real_t(PI/2) + real_t(PI/2 + 1.4);
 
 
-        auto change = real_t(1.5) * real_t(PI) * sin(4 * t);
+        auto change = real_t(0.7) * real_t(PI) * sin(2 * t);
         if(change > real_t(PI/2) || change < -real_t(PI/2)){
             // rad = smo_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
             // rad = lbg_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
-            // rad = nlr_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI * 0.9));
+            // rad = pll.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
+            // rad = nlr_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI * 0.7));
         }
-        // rad = lbg_ob.theta();
+        // rad = -frac(pos * 7) * real_t(PI/2 + PI) + CLAMP2(change, real_t(PI));
+        rad = frac(pos * 7) * real_t(TAU) + real_t(2.1);
+        // rad = lbg_ob.theta() + 0.8_r;
         // rad = smo_ob.theta();
-        rad = nlr_ob.theta() + 0.8_r;
+        // rad = pll.theta() + 0.8_r;
+        // rad = nlr_ob.theta();
         // rad = nlr_ob.theta();
         
         // rad = frac(4*t)*real_t(TAU);
@@ -436,16 +413,16 @@ int bldc_main(){
         // real_t v = 3;
         // real_t v = 4.0_r;
         // real_t v = 4.0_r;
-        real_t v = 6.0_r;
+        real_t v = 7.0_r;
         ab_volt = {v * cos(rad), v * sin(rad)};
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
         const auto & ab_curr = current_sensor.ab();
 
         // smo_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        // lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-        nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
-
-        current_sensor.updateDQ(smo_ob.theta());
+        lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        pll.update(lbg_ob.theta());
+        current_sensor.updateDQ(lbg_ob.theta());
         // svpwm.setVolt(2, rad);
         // dt = micros() - m;
         // m = micros();
@@ -554,7 +531,7 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob.theta());
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(nlr_ob.theta(), smo_ob.theta(), lbg_ob.theta(), uvw_curr[0]);
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(lbg_ob.theta(), pll.theta(),pos);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
         
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(hfi_result);

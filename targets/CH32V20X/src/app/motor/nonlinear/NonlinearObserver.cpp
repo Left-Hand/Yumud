@@ -3,7 +3,7 @@
 using namespace ymd::foc;
 
 scexpr __fast_inline iq_t wrap_pm_pi(const iq_t x){
-    return fposmodp(x, iq_t(TAU));
+    return fposmodp(x + iq_t(PI), iq_t(TAU)) - iq_t(PI);
 }
 
 scexpr __fast_inline iq_t sq(const iq_t x){
@@ -11,10 +11,10 @@ scexpr __fast_inline iq_t sq(const iq_t x){
 }
 
 void NonlinearObserver::reset(){
-    V_alpha_beta_last_[0] = 0.0_r;
-    V_alpha_beta_last_[1] = 0.0_r;
-    flux_state_mul_freq[0] = 0.0_r;
-    flux_state_mul_freq[1] = 0.0_r;
+    V_alpha_beta_last_[0] = 0;
+    V_alpha_beta_last_[1] = 0;
+    flux_state_mul_freq[0] = 0;
+    flux_state_mul_freq[1] = 0;
 }
 
 void NonlinearObserver::init(){
@@ -66,4 +66,26 @@ void NonlinearObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta)
 
     // phase_ = atan2(eta_mul_freq[1], eta_mul_freq[0]);
     phase_ = atan2(-eta_mul_freq[0], eta_mul_freq[1]);
+}
+
+void Pll::update(const iq_t phase){
+    scexpr iq_t pll_kp = 0.17_r;
+    scexpr iq_t pll_ki = 0.0027_r;
+
+    const iq_t lap_pos = frac(phase * iq_t(1 / TAU) + 10); 
+    iq_t delta_lap_pos = lap_pos - last_lap_pos;
+
+    if(delta_lap_pos >= iq_t(0.5)){
+        delta_lap_pos -= 1;
+    }else if (delta_lap_pos <= -iq_t(0.5)){
+        delta_lap_pos += 1;
+    }
+
+    accu_pos_ += delta_lap_pos;
+    last_lap_pos = lap_pos;
+    
+    iq_t pos_err = accu_pos_ - pll_pos_;
+    err_int_ += (pos_err);
+    pll_pos_ += (err_int_ * pll_ki + pos_err * pll_kp);
+
 }
