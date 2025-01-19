@@ -134,22 +134,31 @@ protected:
     AnalogInChannel & _u_sense;
     AnalogInChannel & _v_sense;
     AnalogInChannel & _w_sense;
+    UvwCurrent _uvw_bias;
+
     UvwCurrent _uvw_curr;
     AbCurrent _ab_curr;
     DqCurrent _dq_curr;
 public:
-    CurrentSensor(AnalogInChannel & u_sense, AnalogInChannel & v_sense, AnalogInChannel & w_sense): 
-        _u_sense(u_sense), _v_sense(v_sense), _w_sense(w_sense){}
+    CurrentSensor(
+        AnalogInChannel & u_sense,
+        AnalogInChannel & v_sense, 
+        AnalogInChannel & w_sense
+    ): 
+        _u_sense(u_sense),
+        _v_sense(v_sense), 
+        _w_sense(w_sense){
+            reset();
+        }
+
+    void reset(){
+        _uvw_curr = {0, 0, 0};
+        _uvw_bias = {0, 0, 0};
+        _ab_curr = {0, 0};
+        _dq_curr = {0, 0};
+    }
 
     void updatUVW(){
-
-        // #define LPF(x,y) x = ((x * 31 + y) >> 5);
-        // #define LPF(x,y) x = (((x >> 5) * 31 + (y >> 5)));
-        // #define LPF(x,y) x = (((x >> 4) * 15 + (y >> 4)));
-        // #define LPF(x,y) x = (((x >> 3) * 7 + (y >> 3)));
-        // #define LPF(x,y) x = (((x >> 1)  + (y >> 1)));
-        // #define LPF(x,y) x = y;
-
         _uvw_curr[0] = LPF5(_uvw_curr[0], real_t(_u_sense));
         _uvw_curr[1] = LPF5(_uvw_curr[1], real_t(_v_sense));
         _uvw_curr[2] = LPF5(_uvw_curr[2], real_t(_w_sense));
@@ -163,6 +172,10 @@ public:
         const auto dq_curr = ab_to_dq(_ab_curr, rad);
         _dq_curr[0] = LPF5(_dq_curr[0], real_t(dq_curr[0]));
         _dq_curr[1] = LPF5(_dq_curr[1], real_t(dq_curr[1]));
+    }
+
+    void calibrate(){
+
     }
 
     void update(const real_t rad){
@@ -480,6 +493,71 @@ int bldc_main(){
         // dt = micros() - m;
     };
 
+    static int sector_cnt = 0;
+    [[maybe_unused]] auto cb_pulse = [&]{
+        static int cnt = 0;
+
+        scexpr real_t pulse_volt = 6;
+        scexpr int sustain = (0.0003) * 25000;
+        scexpr int dur = (0.02) * 25000;
+
+        cnt ++;
+        if(cnt >= sustain + dur){
+            cnt = 0;
+            sector_cnt = (sector_cnt + 1) % 6;
+        }
+
+        const int sector = []() -> int{
+            switch(sector_cnt){
+                default:
+                case 0: return 0;
+                case 1: return 3;
+                case 2: return 1;
+                case 3: return 4;
+                case 4: return 2;
+                case 5: return 5;
+            }
+        }();
+
+        real_t pulse_rad = real_t(PI/3) * real_t(sector);
+
+        real_t pulse_s = sin(pulse_rad);
+        real_t pulse_c = cos(pulse_rad);
+
+        real_t pulse_out = (cnt < sustain) ? pulse_volt : 0;
+        // real_t pulse_out = 0;
+
+
+        ab_volt = {pulse_out * pulse_c, pulse_out * pulse_s};
+        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+
+        current_sensor.updatUVW();
+        current_sensor.updateAB();
+    };
+
+    [[maybe_unused]] auto cb_sing = [&]{
+
+        // scexpr real_t sing_volt = 6;
+        // scexpr int sustain = (0.0003) * 25000;
+        // scexpr int dur = (0.02) * 25000;
+        
+        static iq_t sing_t = 0;
+        sing_t += iq_t(_iq(1));
+
+        real_t sing_rad = 0;
+
+        real_t sing_s = sin(sing_rad);
+        real_t sing_c = cos(sing_rad);
+
+        real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t(TAU) + 3 * sin(40 * frac(sing_t) * iq_t(TAU)));
+
+        ab_volt = {sing_out * sing_c, sing_out * sing_s};
+        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+
+        current_sensor.updatUVW();
+        current_sensor.updateAB();
+    };
+
     auto & ledr = portC[13];
     auto & ledb = portC[14];
     auto & ledg = portC[15];
@@ -498,7 +576,8 @@ int bldc_main(){
     v_sense.setBasis(uvw_curr_bias[1]);
     w_sense.setBasis(uvw_curr_bias[2]);
 
-    adc1.bindCb(AdcUtils::IT::JEOC, cb);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
+    adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
@@ -531,7 +610,10 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob.theta());
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(lbg_ob.theta(), pll.theta(),pos);
+        auto s_curr = [&](){
+            return uvw_curr.u * uvw_curr.u + uvw_curr.v * uvw_curr.v + uvw_curr.w * uvw_curr.w;
+        }();
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr.u, uvw_curr.v, uvw_curr.w,sector_cnt, s_curr);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
         
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(hfi_result);

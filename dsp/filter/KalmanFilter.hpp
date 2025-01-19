@@ -1,10 +1,9 @@
 #pragma once
 
-#include "sys/math/real.hpp"
+#include "sys/core/platform.h"
 
-template<typename T>
-requires std::is_arithmetic_v<T>
-class KalmanFilterZ_t{
+template<arithmetic T>
+class KalmanFilter_t{
 
 private:
     T r;
@@ -16,17 +15,24 @@ private:
     T p_mid;
     T kg;
 
-    bool init = false;
-
+    bool inited = false;
 public:
-    KalmanFilterZ_t(const arithmetic auto & _r,const arithmetic auto & _q ):r(static_cast<T>(_r)), q(static_cast<T>(_q)){;}
+    KalmanFilter_t(
+        const T _r,
+        const T _q
+    ):
+        r(static_cast<T>(_r)), 
+        q(static_cast<T>(_q)){;}
 
     const T update(const arithmetic auto x);
 
     const T predict(const arithmetic auto x);
+
+    void reset(){
+        p_last = 0;
+        inited = false;
+    }
 };
 
 #include "KalmanFilter.tpp"
-
-typedef KalmanFilterZ_t<real_t> KalmanFilterZ;
 
