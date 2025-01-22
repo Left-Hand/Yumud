@@ -13,7 +13,7 @@ protected:
     using AddressView = Range_t<Address>;
 
     Storage & storage_;
-    AddressView view_;
+    const AddressView view_;
 public:
     Memory(Storage & storage, const AddressView & view);
     // Memory(Memory & memory, const AddressView & view):storage_(memory.storage_), view_(storage_..intersection(memory_.view())){;}
@@ -23,7 +23,7 @@ public:
 
     size_t size(){return view_.length();}
 
-void store(const Address loc, const is_stdlayout auto & data);
+    void store(const Address loc, const is_stdlayout auto & data);
     void store(const Address loc, is_stdlayout auto && data);
     void store(const Address loc, const uint8_t * begin, const uint8_t * end);
 

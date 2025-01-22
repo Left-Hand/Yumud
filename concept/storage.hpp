@@ -45,27 +45,11 @@ public:
     Address size() const {return capacity_;}
     AddressView view() const {return {0, capacity_};}
 
-    void store(const Address loc, const void * data, const Address len){
-        if(view().has(loc)){
-            entry_store();
-            storeBytes(loc, data, len);
-            exit_store();
-        }
-    }
+    void store(const Address loc, const void * data, const Address len);
 
-    void load(const Address loc, void * data, const Address len){
-        entry_load();
-        loadBytes(loc, data, len);
-        exit_load();
-    }
+    void load(const Address loc, void * data, const Address len);
 
-
-    void erase(const Address loc, const size_t len){
-        // if(len < )
-        entry_store();
-        eraseBytes(loc, len);
-        exit_store();
-    }
+    void erase(const Address loc, const size_t len);
 
     operator Memory();
     Memory slice(const AddressView & _view);

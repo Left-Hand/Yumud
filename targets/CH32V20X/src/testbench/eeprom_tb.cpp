@@ -28,8 +28,15 @@ struct TestData{
     char name[8] = "Rstr1aN";
     real_t value = real_t(0.1);
     uint32_t crc = 0x08;
+
+    friend OutputStream & operator<<(OutputStream & os, const TestData & td){
+        os << "data:" << std::hex << td.data;
+        os << std::dec << "name:" << td.name << "value:" << td.value << "crc:" << td.crc;
+        return os;
+    }
 };
 
+constexpr auto size = sizeof(TestData);
 static void mem_tb(OutputStream & logger, Memory & mem){
     [[maybe_unused]] bool passflag = true;
 
@@ -141,19 +148,19 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     {
 
         logger.prints("content tb");
-        TestData temp;
+        TestData archive;
 
-        logger.prints("write", temp);
-        mem.store(0,temp);
-        temp.value = real_t(0.2);
-        temp.crc = 0x12;
-        // temp.name = "rstr1aN";
-        temp.data = {22,44,6,78};
-        // temp.data.fill(0x78);
-        // memset(&temp, 'a', sizeof(temp));
-        logger.prints("modi", temp);
-        mem.load(0,temp);
-        logger.prints("read", temp);
+        logger.prints("write", archive);
+        mem.store(0,archive);
+        archive.value = real_t(0.2);
+        archive.crc = 0x12;
+        // archive.name = "rstr1aN";
+        archive.data = {22,44,6,78};
+        // archive.data.fill(0x78);
+        // memset(&archive, 'a', sizeof(archive));
+        logger.prints("modi", archive);
+        mem.load(0,archive);
+        logger.prints("read", archive);
 
     }
     #endif
@@ -184,78 +191,104 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 // }
 
 
-[[maybe_unused]] static void flash_tb(IOStream & logger){
+[[maybe_unused]] static void flash_tb(OutputStream & logger){
+    logger.setSplitter(" ");
+    logger.setRadix(10);
 
-    Flash sto(-1);
+    // logger.prints("Flash Size:", Sys::Chip::getFlashSize());
+    // logger.prints("SYS Clock:", Sys::Clock::getSystemFreq());
+    // logger.prints("SYS Clock:", 14000000u);
+    // logger.prints("AHB Clock:", Sys::Clock::getAHBFreq());
+    // logger.prints("APB1 Clock:", Sys::Clock::getAPB1Freq());
+    // logger.prints("APB2 Clock:", Sys::Clock::getAPB2Freq());
+
+    // logger.setRadix(16);
+    // while(true);
+    // logger.prints(Flash::getMaxPages());
+    // while(true);
+    Flash sto(0);
     sto.init();
-    Memory flash = sto;
+    Memory flash = sto.slicePages(-1);
     Sys::Misc::prework();
 
-    logger.setSplitter(" ");
-    logger.setRadix(16);
+    // logger.prints("ok");
+    delay(10);
 
-    logger.prints("Flash Size:", Sys::Chip::getFlashSize());
-    logger.prints("../sys Clock:", Sys::Clock::getSystemFreq());
-    logger.prints("AHB Clock:", Sys::Clock::getAHBFreq());
-    logger.prints("APB1 Clock:", Sys::Clock::getAPB1Freq());
-    logger.prints("APB2 Clock:", Sys::Clock::getAPB2Freq());
-
-    TestData temp;
-
-    flash.load(0,temp);
-    if(temp.data[0] == 0x39){
-        logger.prints("need to store new");
-        logger.prints("new data is");
-        TestData new_temp = TestData();
-        logger.prints(new_temp.data[0], new_temp.data[1], new_temp.data[2], new_temp.data[3]);
-        flash.store(0,new_temp);
-        flash.load(0,temp);
-        logger.prints("new store done");
+    if(true){
+        using Cnt = size_t;
+        Cnt cnt = 0;
+        flash.load(0,cnt);
+        if(cnt > 100){
+            DEBUG_PRINTLN("unknown cnt:", cnt);
+            cnt = 0;
+        }
+        flash.store(0, cnt+1);
+        DEBUG_PRINTLN(cnt);
+        DEBUG_PRINTLN("done");
+        while(true);
     }
 
+    TestData archive;
+    flash.load(0,archive);
+    // if(archive.data[0] != 0x39){
+    if(true){
+        logger.prints("need to store new");
+        TestData new_archive = TestData();
+        logger.prints("new archive is", new_archive);
+        logger.prints("start to store");
+        flash.store(0, new_archive);
+        flash.load(0, archive);
+        logger.prints("new store done", archive);
+        while(true);
+    }else{
+        logger.prints("data is:", archive.data[0]);
+        logger.prints("new data is:", TestData());
+
+    }
+    while(true);
     logger.prints("data loaded");
-    logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    logger.prints(temp.name);
-    logger.prints(temp.value);
-    logger.prints(temp.crc);
+    logger.prints(archive.data[0], archive.data[1], archive.data[2], archive.data[3]);
+    logger.prints(archive.name);
+    logger.prints(archive.value);
+    logger.prints(archive.crc);
 
     logger.prints("init bkp");
     bkp.init();
     bkp[1] = bkp[1] + 1;
-    temp.crc = bkp[1];
-    flash.store(0,temp);
+    archive.crc = bkp[1];
+    flash.store(0,archive);
     logger.prints("flash tb done");
 
-    // flash.load(temp);
+    // flash.load(archive);
     // logger.prints();
-    // if(temp.data[0] == 0xE3 || temp.data[0] == 0x39 || (bkp.readData(1) & 0b11) == 0){
-    //     logger.prints(temp.data[0]);
+    // if(archive.data[0] == 0xE3 || archive.data[0] == 0x39 || (bkp.readData(1) & 0b11) == 0){
+    //     logger.prints(archive.data[0]);
 
-    //     temp.data[3] = bkp.readData(1);
-    //     temp.name[2] = 'k';
-    //     // temp.value = real_t(0.2);
-    //     temp.crc = 10;
+    //     archive.data[3] = bkp.readData(1);
+    //     archive.name[2] = 'k';
+    //     // archive.value = real_t(0.2);
+    //     archive.crc = 10;
 
-    //     logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    //     logger.prints(temp.name);
-    //     logger.prints(temp.value);
-    //     logger.prints(temp.crc);
-    //     flash.store(temp);
-    //     flash.load(temp);
+    //     logger.prints(archive.data[0], archive.data[1], archive.data[2], archive.data[3]);
+    //     logger.prints(archive.name);
+    //     logger.prints(archive.value);
+    //     logger.prints(archive.crc);
+    //     flash.store(archive);
+    //     flash.load(archive);
     // }else{
     //     logger.prints("suss");
-    //         logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    // logger.prints(temp.name);
-    // logger.prints(temp.value);
-    // logger.prints(temp.crc);
+    //         logger.prints(archive.data[0], archive.data[1], archive.data[2], archive.data[3]);
+    // logger.prints(archive.name);
+    // logger.prints(archive.value);
+    // logger.prints(archive.crc);
     // }
 
 
     // }
-    // logger.prints(temp.data[0], temp.data[1], temp.data[2], temp.data[3]);
-    // logger.prints(temp.name);
-    // logger.prints(temp.value);
-    // logger.prints(temp.crc);
+    // logger.prints(archive.data[0], archive.data[1], archive.data[2], archive.data[3]);
+    // logger.prints(archive.name);
+    // logger.prints(archive.value);
+    // logger.prints(archive.crc);
 
     // 
 }
@@ -274,6 +307,21 @@ void eeprom_main(){
     // flash_tb(logger);
 }
 
-OutputStream & operator << (OutputStream & os, const TestData & td){
-    return os << td.data << ',' << td.name << ',' << td.value << ',' << td.crc;
+void flash_main(){
+    // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+
+    DEBUGGER.init();
+
+    // auto & led = portA[8];
+    // led.outpp();
+    // while(true){
+    //     DEBUG_PRINTLN(millis());
+    //     delay(100);
+    //     led.toggle();
+    // }
+    flash_tb(DEBUGGER);
 }
+
+// OutputStream & operator << (OutputStream & os, const TestData & td){
+//     return os << td.data << ',' << td.name << ',' << td.value << ',' << td.crc;
+// }

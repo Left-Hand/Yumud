@@ -41,7 +41,7 @@ struct AbCurrent{
     }
 
     Current & operator [](const size_t idx){
-        return *(&b + idx);
+        return *(&a + idx);
     }
 };
 

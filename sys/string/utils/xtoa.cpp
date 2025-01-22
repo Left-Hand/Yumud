@@ -16,39 +16,59 @@ scexpr auto scale_map = [](){
 
 
 template<sintegral T>
-static __fast_inline constexpr size_t get_scalar(T value){
+static __fast_inline constexpr size_t get_scalar(T value, const size_t radix){
     if(value == 0) return 1;
 
-	size_t scalar = 0;
-	value = ABS(value);
-	
-	while(value > 1000000){
-		value /= 1000000;
-		scalar += 6;
-	}
-	
-	size_t i = 0;
-	while(uint32_t(value) >= scale_map[i]) i++;
-	return scalar + i;
+    if(radix == 10){
+        size_t scalar = 0;
+        value = ABS(value);
+        
+        while(value > 1000000){
+            value /= 1000000;
+            scalar += 6;
+        }
+        
+        size_t i = 0;
+        while(uint32_t(value) >= scale_map[i]) i++;
+        return scalar + i;
+    }else{
+        size_t i = 0;
+        size_t sum = 1;
+        while(size_t(value) > sum){
+            sum *= radix;
+            i++;
+        }
+        return MAX(i, 1);
+    }
 }
 
 
 
 template<uintegral T>
-static __fast_inline constexpr size_t get_scalar(T value){
+static __fast_inline constexpr size_t get_scalar(T value, const size_t radix){
     if(value == 0) return 1;
 
-	size_t scalar = 0;
-	
-	while(value > 1000000){
-		value /= 1000000;
-		scalar += 6;
-	}
-	
-	size_t i = 0;
+    if(radix == 10){
+        size_t scalar = 0;
+        
+        while(value > 1000000){
+            value /= 1000000;
+            scalar += 6;
+        }
+        
+        size_t i = 0;
 
-	while(value >= scale_map[i]) i++;
-	return scalar + i;
+        while(value >= scale_map[i]) i++;
+        return scalar + i;
+    }else{
+        size_t i = 0;
+        size_t sum = 1;
+        while(size_t(value) > sum){
+            sum *= radix;
+            i++;
+        }
+        return MAX(i, 1);
+    }
 }
 
 
@@ -79,7 +99,7 @@ static size_t itoa_impl(T value, char * str, uint8_t radix){
     value = ABS(value);
     const bool minus = value < 0;
 
-    const size_t len = get_scalar(value) + minus;
+    const size_t len = get_scalar(value, radix) + minus;
     str[len] = 0;
     int i = len - 1;
 

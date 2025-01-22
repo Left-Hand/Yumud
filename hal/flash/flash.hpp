@@ -22,34 +22,20 @@ protected:
     using AddressWindow = Range_t<Address>;
 
     scexpr Page page_size = 256;
-    scexpr Address base_address = 0x80000000;
+    scexpr Address base_address = 0x08'00'00'00;
     scexpr uint max_clock = 72000000;
 
-    Page page_count;
+    const Page page_count;
     uint32_t orginal_clock;
 
     void configClock();
 
     void revertClock();
 
-    void entry_store() override{
-        configClock();
-        // Systick_Init();
-        // delay(1);
-    }
-
-    void exit_store() override{
-        revertClock();
-    }
-
-    void entry_load() override{
-
-    }
-
-    void exit_load() override{
-        revertClock();
-    }
-
+    void entry_store() override;
+    void exit_store() override;
+    void entry_load() override;
+    void exit_load() override;
 
     void lock();
 
@@ -62,18 +48,33 @@ protected:
     void erasePage(const Address vaddr);
     void programPage(const Address vaddr, const void * buf);
 public:
-    Flash(Address _page_begin):Flash(_page_begin, Sys::Chip::getFlashSize() / page_size){;}
-    Flash(Address _page_begin, Address _page_end):Storage((_page_end - _page_begin) * page_size),
-            page_count(Sys::Chip::getFlashSize() / page_size){;}
+    Flash(Address _page_begin, Address _page_end):
+        Storage((_page_end - _page_begin) * page_size),
+        page_count(_page_end - _page_begin){;}
+            
+    Flash(int _page_begin = 0):
+        Flash(_page_begin < 0 ? (getMaxPages() + _page_begin) : _page_begin, getMaxPages()){;}
 
     ~Flash(){}
 
+    static size_t getMaxPages(){
+        return Sys::Chip::getFlashSize() / page_size;
+    }
     void init() override{
 
     }
 
     bool busy() override{
         return false;
+    }
+
+    Memory slicePages(const int page_from){
+        return slicePages(page_from < 0 ? getMaxPages() + page_from : page_from, getMaxPages()); 
+    }
+
+    Memory slicePages(const size_t page_from, const size_t page_to){
+        // DEBUG_PRINTLN(page_from, page_to);
+        return slice(page_from * page_size, page_to * page_size); 
     }
 };
 };

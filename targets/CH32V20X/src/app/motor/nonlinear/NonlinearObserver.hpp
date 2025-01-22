@@ -34,12 +34,12 @@ public:
     iq_t theta() const {return phase_;}
 };
 
+
+
 class Pll{
-    // iq_t phase_;
-public:
+protected:
     iq_t last_lap_pos = 0;
     iq_t err_int_ = 0;
-    // iq_t vel_mul_fs = 0;
     iq_t accu_pos_ = 0;
     iq_t pll_pos_ = 0;
 
@@ -48,6 +48,21 @@ public:
 
     iq_t theta() const {return (frac(pll_pos_ - 0.5_r) - 0.5_r) * real_t(TAU);}
 };
+
+
+// class Pll{
+// protected:
+//     iq_t last_lap_pos = 0;
+//     iq_t err_int_ = 0;
+//     iq_t accu_pos_ = 0;
+//     iq_t pll_pos_ = 0;
+
+// public:
+//     void update(const iq_t phase);
+
+//     iq_t theta() const {return (frac(pll_pos_ - 0.5_r) - 0.5_r) * real_t(TAU);}
+// };
+
 
 
 

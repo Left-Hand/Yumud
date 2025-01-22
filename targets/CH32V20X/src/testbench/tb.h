@@ -58,6 +58,8 @@ void w25qxx_main();
 
 void eeprom_main();
 
+void flash_main();
+
 void qlz_main();
 
 void uart_main();

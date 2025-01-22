@@ -16,6 +16,8 @@
 #include "lbg/RolbgObserver.hpp"
 #include "nonlinear/NonlinearObserver.hpp"
 #include "utils.hpp"
+#include "../digiPW/sogi/spll.hpp"
+#include "sogi/sogi.hpp"
 
 #include <ostream>
 #include "sys/core/system.hpp"
@@ -23,6 +25,7 @@
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
+using namespace ymd::digipw;
 
 
 using Sys::t;
@@ -334,7 +337,19 @@ int bldc_main(){
         nlr_conf
     };
 
+    SogiQ sogi({
+        .w = real_t(50 * TAU),
+        .freq = 25000
+    });
+
+    // for(int i = 0; i < 1000; ++i){
+    //     const real_t uin = sin((real_t(50 * TAU / 25000) * i));
+    //     sogi.update(uin);
+    //     DEBUG_PRINTLN(uin, sogi.ab()[0]);
+    //     delayMicroseconds(500);
+    // }
     Pll pll;
+    Spll spll{25000};
     // auto m = micros();
     odo.inverse();
     auto cb = [&]{
@@ -368,8 +383,8 @@ int bldc_main(){
             // rad = pll.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI));
             // rad = nlr_ob.theta() - real_t(PI/2) + CLAMP2(change, real_t(PI * 0.7));
         }
-        // rad = -frac(pos * 7) * real_t(PI/2 + PI) + CLAMP2(change, real_t(PI));
-        rad = frac(pos * 7) * real_t(TAU) + real_t(2.1);
+        rad = -frac(pos * 7) * real_t(PI/2 + TAU) + CLAMP2(change, real_t(PI));
+        // rad = frac(pos * 7) * real_t(TAU) + real_t(2.1) + CLAMP2£¨change;
         // rad = lbg_ob.theta() + 0.8_r;
         // rad = smo_ob.theta();
         // rad = pll.theta() + 0.8_r;
@@ -536,10 +551,6 @@ int bldc_main(){
     };
 
     [[maybe_unused]] auto cb_sing = [&]{
-
-        // scexpr real_t sing_volt = 6;
-        // scexpr int sustain = (0.0003) * 25000;
-        // scexpr int dur = (0.02) * 25000;
         
         static iq_t sing_t = 0;
         sing_t += iq_t(_iq(1));
@@ -557,6 +568,22 @@ int bldc_main(){
         current_sensor.updatUVW();
         current_sensor.updateAB();
     };
+
+    [[maybe_unused]] auto cb_openloop = [&]{
+        scexpr auto w = real_t(50 * TAU);
+        scexpr auto u = real_t(1.8);
+        // auto theta = w * t + real_t(12) * sin(2 * real_t(TAU) * t);
+        auto theta = w * t;
+        ab_volt = {u * cos(theta), u * sin(theta)};
+        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+
+        current_sensor.updatUVW();
+        current_sensor.updateAB();
+
+        sogi.update(current_sensor.ab()[0]);
+        // spll.update(current_sensor.ab()[0] * 10);
+    };
+
 
     auto & ledr = portC[13];
     auto & ledb = portC[14];
@@ -577,12 +604,15 @@ int bldc_main(){
     w_sense.setBasis(uvw_curr_bias[2]);
 
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
-    adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb);
+    adc1.bindCb(AdcUtils::IT::JEOC, cb_openloop);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
     en_gpio = true;
     slp_gpio = true;
+
 
 
     while(true){
@@ -609,11 +639,13 @@ int bldc_main(){
 
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob.theta());
-        auto s_curr = [&](){
-            return uvw_curr.u * uvw_curr.u + uvw_curr.v * uvw_curr.v + uvw_curr.w * uvw_curr.w;
-        }();
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr.u, uvw_curr.v, uvw_curr.w,sector_cnt, s_curr);
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
+
+
+        // auto s_curr = [&](){
+        //     return uvw_curr.u * uvw_curr.u + uvw_curr.v * uvw_curr.v + uvw_curr.w * uvw_curr.w;
+        // }();
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr.u, uvw_curr.v, uvw_curr.w,sector_cnt, s_curr);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
         
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(hfi_result);
