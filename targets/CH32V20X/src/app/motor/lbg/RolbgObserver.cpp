@@ -46,7 +46,9 @@ void RolbgObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
     update(_i_alpha, _e_alpha, _i_alpha, _e_alpha, Valpha, Ialpha);
     update(_i_beta, _e_beta, _i_beta, _e_beta, Vbeta, Ibeta);
 
-    _theta = atan2(-_e_alpha, _e_beta);
+    // _theta = atan2(-_e_alpha, _e_beta);
+    // _theta = atan2(_e_beta, _e_alpha) + real_t(PI/2);
+    _theta = atan2(_e_beta, _e_alpha);
 }
 
 }

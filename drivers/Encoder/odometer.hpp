@@ -50,10 +50,12 @@ public:
         locate(0);
     }
 
+    //将当前的位置视为某偏移
     void locateRelatively(const real_t offset){
         locate(offset);
     }
 
+    //圈内寻址 设定偏移
     void locateAbsolutely(const real_t offset){
         locate(getLapPosition() + offset);
     }
