@@ -172,9 +172,9 @@ protected:
         uint8_t fifo_ths:1;
     };
 
-    struct OutputXReg:public Reg16i{scexpr RegAddress address = 0x28; int16_t data;}
-    struct OutputYReg:public Reg16i{scexpr RegAddress address = 0x2A; int16_t data;}
-    struct OutputZReg:public Reg16i{scexpr RegAddress address = 0x2C; int16_t data;}
+    struct OutputXReg:public Reg16i{scexpr RegAddress address = 0x28; int16_t data;};
+    struct OutputYReg:public Reg16i{scexpr RegAddress address = 0x2A; int16_t data;};
+    struct OutputZReg:public Reg16i{scexpr RegAddress address = 0x2C; int16_t data;};
 
     struct FifoCtrlReg:public Reg8{
         scexpr RegAddress address = 0x2E;
