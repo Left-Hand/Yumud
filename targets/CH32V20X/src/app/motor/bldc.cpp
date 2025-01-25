@@ -22,6 +22,7 @@
 #include <ostream>
 #include "sys/core/system.hpp"
 #include "ctrl.hpp"
+
 #include "algo/interpolation/cubic.hpp"
 
 using namespace ymd;
@@ -422,7 +423,7 @@ int bldc_main(){
 
     static PIController speed_pi_ctrl{
     {
-        .kp = 4.0_r,
+        .kp = 9.0_r,
         .ki = 0.189_r,
         .out_min = -0.5_r,
         .out_max = 0.5_r
@@ -474,14 +475,13 @@ int bldc_main(){
         const auto d_volt = d_pi_ctrl.update(0.0_r, dq_curr.d);
         // const auto q_volt = q_pi_ctrl.update(0.1_r * sign(sin(t)), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(int(5 * floor(6 * t)) % 60, meas_spd), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(40 * sin(10 * t), meas_spd), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(2.7_r, meas_spd), dq_curr.q);
-        const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(47.8_r * (targ_pos - meas_pos) + 1.2_r*(targ_spd - meas_spd), odo.getSpeed()), dq_curr.q);
+        const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(20 * sin(30 * t), meas_spd), dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(0.1_r, dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(47.8_r * (targ_pos - meas_pos) + 1.2_r*(targ_spd - meas_spd), odo.getSpeed()), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(CLAMP2(5.4_r * (targ_pos - meas_pos),1), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(0.3_r * sign(2 * frac(t/2) - 1), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(-0.3_r, dq_curr.q);
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, meas_rad);
-
         const auto ab_curr = current_sensor.ab();
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
         lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
@@ -779,7 +779,7 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1], pi_ctrl.output());
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, odo.getSpeed());
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, odo.getSpeed(), dq_curr.d, dq_curr.q);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, dq_curr[0], dq_curr[1], d_pi_ctrl.output(), q_pi_ctrl.output(), odo.getSpeed());
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(spll.theta(), ab_curr[0],phase_ind * 1000);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, mg_meas_rad, sl_meas_rad, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
