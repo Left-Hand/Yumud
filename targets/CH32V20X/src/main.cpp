@@ -41,6 +41,8 @@ int main(){
     // embd_main();
     bldc_main();
     // co_ab_main();
+    // eeprom_main();
+    // flash_main();
     // digipw_main();
     // uart_main();
     // wlsy_main();

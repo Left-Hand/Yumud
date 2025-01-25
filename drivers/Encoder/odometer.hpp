@@ -10,24 +10,19 @@ class Odometer{
 public:
     EncoderIntf & encoder;
 protected:
-    real_t rawLapPosition = real_t(0);
+    real_t rawLapPosition;
 
-    real_t lapPosition = real_t(0);
-    real_t lapPositionLast = real_t(0);
-    real_t deltaLapPosition = real_t(0);
+    real_t lapPosition;
+    real_t lapPositionLast;
+    real_t deltaLapPosition;
 
-    real_t accPosition = real_t(0);
-    real_t accPositionLast = real_t(0);
+    real_t accPosition;
+    real_t accPositionLast;
+    real_t speed;
 
     bool rsv = false;
 
-    void locate(const real_t pos){
-        update();
-        lapPosition = getLapPosition();
-        lapPositionLast = lapPosition;
-        accPosition = pos;
-    }
-
+    void locate(const real_t pos);
     virtual real_t correctPosition(const real_t rawPosition){
         return rawPosition;
     }
@@ -35,10 +30,16 @@ protected:
 public:
     Odometer(const Odometer & other) = delete;
     Odometer(Odometer && other) = default;
-    Odometer(EncoderIntf & _encoder):encoder(_encoder){;}
+    Odometer(EncoderIntf & _encoder):encoder(_encoder){
+        reset();
+    }
 
     real_t getRawLapPosition(){
         return rawLapPosition;
+    }
+
+    real_t getSpeed(){
+        return speed;
     }
 
     real_t getLapPosition(){
@@ -46,25 +47,19 @@ public:
     }
 
     void init(){
-        encoder.init();
+        reset();
         locate(0);
     }
 
+    virtual void reset();
+    //将当前的位置视为某偏移
     void locateRelatively(const real_t offset){
         locate(offset);
     }
 
+    //圈内寻址 设定偏移
     void locateAbsolutely(const real_t offset){
         locate(getLapPosition() + offset);
-    }
-
-    virtual void reset(){
-        rawLapPosition = real_t(0);
-        lapPosition = real_t(0);
-        lapPositionLast = real_t(0);
-
-        accPosition = real_t(0);
-        accPositionLast = real_t(0);
     }
 
     void inverse(const bool en = true){

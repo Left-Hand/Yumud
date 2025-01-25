@@ -36,7 +36,7 @@ private:
     real_t   fn;         //!< Nominal frequency (Hz)
     real_t   delta_t_x256;    //!< Inverse of the ISR rate at which module is called
     real_t   fo;         //!< Output frequency of PLL(Hz)
-    real_t   _theta;      //!< Angle output (0-2*pi)
+    real_t   _theta_x256;      //!< Angle output (0-2*pi)
     real_t   cosine;     //!< Cosine value of the PLL angle
     real_t   sine;       //!< Sine value of the PLL angle
 
@@ -68,7 +68,7 @@ public:
 
     real_t ferq() const{return this->fo;}
 
-    real_t theta() const{return this->_theta;}
+    real_t theta() const{return this->_theta_x256 >> 8;}
 
     real_t ud() const{return this->u_D[0] << volt_scale_bits;}
 

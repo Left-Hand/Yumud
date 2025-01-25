@@ -13,8 +13,8 @@ scexpr __fast_inline iq_t sq(const iq_t x){
 void NonlinearObserver::reset(){
     V_alpha_beta_last_[0] = 0;
     V_alpha_beta_last_[1] = 0;
-    flux_state_mul_freq[0] = 0;
-    flux_state_mul_freq[1] = 0;
+    flux_state_mf_[0] = 0;
+    flux_state_mf_[1] = 0;
 }
 
 void NonlinearObserver::init(){
@@ -32,43 +32,45 @@ void NonlinearObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta)
 
     iq_t I_alpha_beta[2] = {Ialpha, Ibeta};
     // alpha-beta vector operations
-    iq_t eta_mul_freq[2];
+    iq_t eta_mf_[2];
     for (size_t i = 0; i < 2; ++i) {
         // flux dynamics (prediction)
         iq_t x_dot = -config_.phase_resistance * I_alpha_beta[i] + V_alpha_beta_last_[i];
         // integrate prediction to current timestep
-        flux_state_mul_freq[i] += x_dot;
+        flux_state_mf_[i] += x_dot;
 
         // eta is the estimated permanent magnet flux (see paper eqn 6)
-        eta_mul_freq[i] = flux_state_mul_freq[i] - (config_.phase_inductance * config_.freq) * I_alpha_beta[i];
+        eta_mf_[i] = flux_state_mf_[i] - (config_.phase_inductance * config_.freq) * I_alpha_beta[i];
     }
 
     // Non-linear observer (see paper eqn 8):
-    iq_t pm_flux_sqr_mul_freq2 = sq(config_.pm_flux_linkage * config_.freq);
-    iq_t est_pm_flux_sqr_mul_freq2 = sq(eta_mul_freq[0]) + sq(eta_mul_freq[1]);
-    iq_t eta_factor = 0.5_r * (config_.observer_gain / pm_flux_sqr_mul_freq2) * (pm_flux_sqr_mul_freq2 - est_pm_flux_sqr_mul_freq2);
+    iq_t pm_flux_sqr_mf_2 = sq(config_.pm_flux_linkage * config_.freq);
+    iq_t est_pm_flux_sqr_mf_2 = sq(eta_mf_[0]) + sq(eta_mf_[1]);
+    iq_t eta_factor = 0.5_r * (config_.observer_gain / pm_flux_sqr_mf_2) * (pm_flux_sqr_mf_2 - est_pm_flux_sqr_mf_2);
 
 
 
     // alpha-beta vector operations
     for (size_t i = 0; i < 2; ++i) {
         // add observer action to flux estimate dynamics
-        iq_t x_dot = eta_factor * eta_mul_freq[i];
+        iq_t x_dot = eta_factor * eta_mf_[i];
         // convert action to discrete-time
-        flux_state_mul_freq[i] += x_dot;
+        flux_state_mf_[i] += x_dot;
         // update new eta
-        eta_mul_freq[i] = flux_state_mul_freq[i] - (config_.phase_inductance * config_.freq) * I_alpha_beta[i];
+        eta_mf_[i] = flux_state_mf_[i] - (config_.phase_inductance * config_.freq) * I_alpha_beta[i];
     }
 
     // Flux state estimation done, store V_alpha_beta for next timestep
     V_alpha_beta_last_[0] = Valpha;
     V_alpha_beta_last_[1] = Vbeta;
 
-    // phase_ = atan2(eta_mul_freq[1], eta_mul_freq[0]);
-    phase_ = atan2(-eta_mul_freq[0], eta_mul_freq[1]);
+    // phase_ = atan2(eta_mf_[1], eta_mf_[0]);
+    phase_ = atan2(-eta_mf_[0], eta_mf_[1]);
 }
 
 void Pll::update(const iq_t phase){
+    // scexpr iq_t pll_kp = 0.17_r;
+    // scexpr iq_t pll_ki = 0.0027_r;
     scexpr iq_t pll_kp = 0.17_r;
     scexpr iq_t pll_ki = 0.0027_r;
 
