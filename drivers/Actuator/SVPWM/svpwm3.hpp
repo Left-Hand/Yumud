@@ -9,9 +9,8 @@ protected:
     using Driver = Coil3Driver;
 
     Driver & driver_;
-    const uint bus_volt = 12;
-    // real_t ta;
-    // real_t tb;
+    // const uint bus_volt = 12;
+    const real_t inv_scale = real_t(1.0 / 12 * 1.15);
 
 public:
 
@@ -30,11 +29,11 @@ public:
     }
 
     void setABVolt(const real_t av, const real_t bv){
-        setDuty(sqrt(av * av + bv * bv) / bus_volt, atan2(bv, av));
+        setDuty(sqrt(av * av + bv * bv) * inv_scale, atan2(bv, av));
     }
 
     void setVolt(const real_t volt, const real_t modu_rad){
-        setDuty(frac(volt / bus_volt), modu_rad);
+        setDuty(frac(volt * inv_scale), modu_rad);
     }
 
     __inline void setDuty(const real_t duty, const real_t modu_rad) override{

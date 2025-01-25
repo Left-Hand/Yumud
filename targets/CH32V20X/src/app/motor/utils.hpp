@@ -10,7 +10,9 @@ scexpr uint chopper_freq = 50000;
 using Current = real_t;
 
 struct UvwValue{
+    #pragma pack(push, 1)
     real_t u, v, w;
+    #pragma pack(pop)
 
     real_t operator [](const size_t idx) const {
         return *(&u + idx);
@@ -23,8 +25,12 @@ struct UvwValue{
 
 struct UvwCurrent: public UvwValue{};
 struct UvwVoltage: public UvwValue{};
+
+
 struct DqValue{
+    #pragma pack(push, 1)
     real_t d, q;
+    #pragma pack(pop)
 
     real_t operator [](const size_t idx) const {
         return *(&d + idx);
@@ -39,7 +45,9 @@ struct DqCurrent: public DqValue{};
 struct DqVoltage: public DqValue{};
 
 struct AbValue{
+    #pragma pack(push, 1)
     real_t a, b;
+    #pragma pack(pop)
 
     real_t operator [](const size_t idx) const {
         return *(&a + idx);
@@ -54,9 +62,8 @@ struct AbCurrent: public AbValue{};
 struct AbVoltage: public AbValue{};
 
 
-__inline auto uvw_to_ab(const UvwCurrent & uvw) -> AbCurrent{
-    scexpr real_t scale = real_t(1.731 / 2);
-    return {uvw.u - ((uvw.v + uvw.w) >> 1), (uvw.w - uvw.v) * scale};
+__inline AbCurrent uvw_to_ab(const UvwCurrent & uvw){
+    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * real_t(2.0/3), (uvw.w - uvw.v) * real_t(1.731 / 3)};
 };
 
 DqCurrent ab_to_dq(const AbCurrent & ab, const real_t rad);
