@@ -1,9 +1,4 @@
-/*
-see protocol.md for the protocol specification
-*/
-
-#ifndef __PROTOCOL_HPP
-#define __PROTOCOL_HPP
+#pragma once
 
 // TODO: resolve assert
 #define assert(expr)
@@ -27,6 +22,7 @@ see protocol.md for the protocol specification
 #define LOG_FIBRE(...)  ((void) 0)
 #endif
 
+namespace ymd::fibre{
 
 // Default CRC-8 Polynomial: x^8 + x^5 + x^4 + x^2 + x + 1
 // Can protect a 4 byte payload against toggling of up to 5 bits
@@ -86,26 +82,26 @@ typedef struct
 
 #include <cstring>
 
-template<typename T, typename = typename std::enable_if_t<!std::is_const<T>::value>>
+template<typename T, typename = typename ::std::enable_if_t<! ::std::is_const<T>::value>>
 inline size_t write_le(T value, uint8_t *buffer)
 {
     //TODO: add static_assert that this is still a little endian machine
-    std::memcpy(&buffer[0], &value, sizeof(value));
+    memcpy(&buffer[0], &value, sizeof(value));
     return sizeof(value);
 }
 
 template<typename T>
-typename std::enable_if_t<std::is_const<T>::value, size_t>
+typename ::std::enable_if_t<::std::is_const<T>::value, size_t>
 write_le(T value, uint8_t *buffer)
 {
-    return write_le<std::remove_const_t<T>>(value, buffer);
+    return write_le<::std::remove_const_t<T>>(value, buffer);
 }
 
 template<>
 inline size_t write_le<float>(float value, uint8_t *buffer)
 {
     static_assert(CHAR_BIT * sizeof(float) == 32, "32 bit floating point expected");
-    static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 floating point expected");
+    static_assert(::std::numeric_limits<float>::is_iec559, "IEEE 754 floating point expected");
     const uint32_t *value_as_uint32 = reinterpret_cast<const uint32_t *>(&value);
     return write_le<uint32_t>(*value_as_uint32, buffer);
 }
@@ -114,7 +110,7 @@ template<typename T>
 inline size_t read_le(T *value, const uint8_t *buffer)
 {
     // TODO: add static_assert that this is still a little endian machine
-    std::memcpy(value, buffer, sizeof(*value));
+    memcpy(value, buffer, sizeof(*value));
     return sizeof(*value);
 }
 
@@ -122,7 +118,7 @@ template<>
 inline size_t read_le<float>(float *value, const uint8_t *buffer)
 {
     static_assert(CHAR_BIT * sizeof(float) == 32, "32 bit floating point expected");
-    static_assert(std::numeric_limits<float>::is_iec559, "IEEE 754 floating point expected");
+    static_assert(::std::numeric_limits<float>::is_iec559, "IEEE 754 floating point expected");
 
     return read_le(reinterpret_cast<uint32_t *>(value), buffer);
 }
@@ -382,13 +378,13 @@ private:
 // @param output: The stream where to write the output to. Can be null.
 //                The handler shall abort as soon as the stream returns
 //                a non-zero error code on write.
-typedef std::function<void(void *ctx, const uint8_t *input, size_t input_length, StreamSink *output)> EndpointHandler;
+typedef ::std::function<void(void *ctx, const uint8_t *input, size_t input_length, StreamSink *output)> EndpointHandler;
 
 
 // @brief Default endpoint handler for const types
 // @return: True if endpoint was written to, False otherwise
 template<typename T>
-std::enable_if_t<!std::is_same<T, endpoint_ref_t>::value && std::is_const<T>::value, bool>
+::std::enable_if_t<! ::std::is_same<T, endpoint_ref_t>::value && ::std::is_const<T>::value, bool>
 default_readwrite_endpoint_handler(T *value, const uint8_t *input, size_t input_length, StreamSink *output)
 {
     // If the old value was requested, call the corresponding little endian serialization function
@@ -405,7 +401,7 @@ default_readwrite_endpoint_handler(T *value, const uint8_t *input, size_t input_
 
 // @brief Default endpoint handler for non-const types
 template<typename T>
-std::enable_if_t<!std::is_same<T, endpoint_ref_t>::value && !std::is_const<T>::value, bool>
+::std::enable_if_t<! ::std::is_same<T, endpoint_ref_t>::value && ! ::std::is_const<T>::value, bool>
 default_readwrite_endpoint_handler(T *value, const uint8_t *input, size_t input_length, StreamSink *output)
 {
     // Read the endpoint value into output
@@ -761,8 +757,8 @@ public:
         return nullptr;
     }
 
-    std::tuple<> get_names_as_tuple() const
-    { return std::tuple<>(); }
+    ::std::tuple<> get_names_as_tuple() const
+    { return ::std::tuple<>(); }
 };
 
 template<typename TMember, typename ... TMembers>
@@ -773,19 +769,19 @@ public:
     static constexpr bool is_empty = false;
 
     MemberList(TMember &&this_member, TMembers &&... subsequent_members) :
-            this_member_(std::forward<TMember>(this_member)),
-            subsequent_members_(std::forward<TMembers>(subsequent_members)...)
+            this_member_(::std::forward<TMember>(this_member)),
+            subsequent_members_(::std::forward<TMembers>(subsequent_members)...)
     {}
 
     MemberList(TMember &&this_member, MemberList<TMembers...> &&subsequent_members) :
-            this_member_(std::forward<TMember>(this_member)),
-            subsequent_members_(std::forward<MemberList<TMembers...>>(subsequent_members))
+            this_member_(::std::forward<TMember>(this_member)),
+            subsequent_members_(::std::forward<MemberList<TMembers...>>(subsequent_members))
     {}
 
     // @brief Move constructor
 /*    MemberList(MemberList&& other) :
-        this_member_(std::move(other.this_member_)),
-        subsequent_members_(std::move(other.subsequent_members_)) {}*/
+        this_member_(::std::move(other.this_member_)),
+        subsequent_members_(::std::move(other.subsequent_members_)) {}*/
 
     void write_json(size_t id, StreamSink *output) /*final*/ {
         this_member_.write_json(id, output);
@@ -813,7 +809,7 @@ public:
 template<typename ... TMembers>
 MemberList<TMembers...> make_protocol_member_list(TMembers &&... member_list)
 {
-    return MemberList<TMembers...>(std::forward<TMembers>(member_list)...);
+    return MemberList<TMembers...>(::std::forward<TMembers>(member_list)...);
 }
 
 template<typename ... TMembers>
@@ -822,7 +818,7 @@ class ProtocolObject
 public:
     ProtocolObject(const char *name, TMembers &&... member_list) :
             name_(name),
-            member_list_(std::forward<TMembers>(member_list)...)
+            member_list_(::std::forward<TMembers>(member_list)...)
     {}
 
     static constexpr size_t endpoint_count = MemberList<TMembers...>::endpoint_count;
@@ -857,10 +853,10 @@ public:
 template<typename ... TMembers>
 ProtocolObject<TMembers...> make_protocol_object(const char *name, TMembers &&... member_list)
 {
-    return ProtocolObject<TMembers...>(name, std::forward<TMembers>(member_list)...);
+    return ProtocolObject<TMembers...>(name, ::std::forward<TMembers>(member_list)...);
 }
 
-//template<typename T, typename = typename std>
+//template<typename T, typename = typename ::std>
 //bool set_from_float_ex(float value, T* property) {
 //    return false;
 //}
@@ -880,7 +876,7 @@ namespace conversion
         return *property = (value >= 0.0f), true;
     }
 
-    template<typename T, typename = std::enable_if_t<std::is_integral<T>::value && !std::is_const<T>::value>>
+    template<typename T, typename = ::std::enable_if_t<::std::is_integral<T>::value && ! ::std::is_const<T>::value>>
     bool set_from_float_ex(float value, T *property, int)
     {
         return *property = static_cast<T>(round(value)), true;
@@ -921,14 +917,14 @@ public:
     ProtocolProperty(const ProtocolProperty&) = delete;
     // @brief Move constructor
     ProtocolProperty(ProtocolProperty&& other) :
-        Endpoint(std::move(other)),
-        name_(std::move(other.name_)),
+        Endpoint(::std::move(other)),
+        name_(::std::move(other.name_)),
         property_(other.property_)
     {}
     constexpr ProtocolProperty& operator=(const ProtocolProperty& other) = delete;
     constexpr ProtocolProperty& operator=(const ProtocolProperty& other) {
-        //Endpoint(std::move(other)),
-        //name_(std::move(other.name_)),
+        //Endpoint(::std::move(other)),
+        //name_(::std::move(other.name_)),
         //property_(other.property_)
         name_ = other.name_;
         property_ = other.property_;
@@ -1019,7 +1015,7 @@ public:
 };
 
 // Non-const non-enum types
-template<typename TProperty, ENABLE_IF(!std::is_enum<TProperty>::value) >
+template<typename TProperty, ENABLE_IF(! ::std::is_enum<TProperty>::value) >
 ProtocolProperty<TProperty> make_protocol_property(const char *name, TProperty *property,
                                                    void (*written_hook)(void *) = nullptr, void *ctx = nullptr)
 {
@@ -1027,7 +1023,7 @@ ProtocolProperty<TProperty> make_protocol_property(const char *name, TProperty *
 };
 
 // Const non-enum types
-template<typename TProperty, ENABLE_IF(!std::is_enum<TProperty>::value) >
+template<typename TProperty, ENABLE_IF(! ::std::is_enum<TProperty>::value) >
 ProtocolProperty<const TProperty> make_protocol_ro_property(const char *name, TProperty *property,
                                                             void (*written_hook)(void *) = nullptr, void *ctx = nullptr)
 {
@@ -1035,23 +1031,23 @@ ProtocolProperty<const TProperty> make_protocol_ro_property(const char *name, TP
 };
 
 // Non-const enum types
-template<typename TProperty, ENABLE_IF(std::is_enum<TProperty>::value) >
-ProtocolProperty<std::underlying_type_t<TProperty>> make_protocol_property(const char *name, TProperty *property,
+template<typename TProperty, ENABLE_IF(::std::is_enum<TProperty>::value) >
+ProtocolProperty<::std::underlying_type_t<TProperty>> make_protocol_property(const char *name, TProperty *property,
                                                                            void (*written_hook)(void *) = nullptr,
                                                                            void *ctx = nullptr)
 {
-    return ProtocolProperty<std::underlying_type_t<TProperty>>(
-            name, reinterpret_cast<std::underlying_type_t<TProperty> *>(property), written_hook, ctx);
+    return ProtocolProperty<::std::underlying_type_t<TProperty>>(
+            name, reinterpret_cast<::std::underlying_type_t<TProperty> *>(property), written_hook, ctx);
 };
 
 // Const enum types
-template<typename TProperty, ENABLE_IF(std::is_enum<TProperty>::value) >
-ProtocolProperty<const std::underlying_type_t<TProperty>>
+template<typename TProperty, ENABLE_IF(::std::is_enum<TProperty>::value) >
+ProtocolProperty<const ::std::underlying_type_t<TProperty>>
 make_protocol_ro_property(const char *name, TProperty *property,
                           void (*written_hook)(void *) = nullptr, void *ctx = nullptr)
 {
-    return ProtocolProperty<const std::underlying_type_t<TProperty>>(
-            name, reinterpret_cast<const std::underlying_type_t<TProperty> *>(property), written_hook, ctx);
+    return ProtocolProperty<const ::std::underlying_type_t<TProperty>>(
+            name, reinterpret_cast<const ::std::underlying_type_t<TProperty> *>(property), written_hook, ctx);
 };
 
 
@@ -1063,7 +1059,7 @@ struct PropertyListFactory<>
 {
     template<unsigned IPos, typename ... TAllProperties>
     static MemberList<>
-    make_property_list(std::array<const char *, sizeof...(TAllProperties)> names, std::tuple<TAllProperties...> &values)
+    make_property_list(::std::array<const char *, sizeof...(TAllProperties)> names, ::std::tuple<TAllProperties...> &values)
     {
         return MemberList<>();
     }
@@ -1074,10 +1070,10 @@ struct PropertyListFactory<TProperty, TProperties...>
 {
     template<unsigned IPos, typename ... TAllProperties>
     static MemberList<ProtocolProperty<TProperty>, ProtocolProperty<TProperties>...>
-    make_property_list(std::array<const char *, sizeof...(TAllProperties)> names, std::tuple<TAllProperties...> &values)
+    make_property_list(::std::array<const char *, sizeof...(TAllProperties)> names, ::std::tuple<TAllProperties...> &values)
     {
         return MemberList<ProtocolProperty<TProperty>, ProtocolProperty<TProperties>...>(
-                make_protocol_property(std::get<IPos>(names), &std::get<IPos>(values)),
+                make_protocol_property(::std::get<IPos>(names), & ::std::get<IPos>(values)),
                 PropertyListFactory<TProperties...>::template make_property_list<IPos + 1>(names, values)
         );
     }
@@ -1106,7 +1102,7 @@ struct return_type<T>
 template<typename T, typename ... Ts>
 struct return_type<T, Ts...>
 {
-    typedef std::tuple<T, Ts...> type;
+    typedef ::std::tuple<T, Ts...> type;
 };
 
 
@@ -1114,7 +1110,7 @@ template<typename TObj, typename ... TInputsAndOutputs>
 class ProtocolFunction;
 
 template<typename TObj, typename ... TInputs, typename ... TOutputs>
-class ProtocolFunction<TObj, std::tuple<TInputs...>, std::tuple<TOutputs...>> : Endpoint
+class ProtocolFunction<TObj, ::std::tuple<TInputs...>, ::std::tuple<TOutputs...>> : Endpoint
 {
 public:
     // @brief The return type of the function as written by a C++ programmer
@@ -1124,8 +1120,8 @@ public:
                                              MemberList<ProtocolProperty<TOutputs>...>::endpoint_count;
 
     ProtocolFunction(const char *name, TObj &obj, TRet(TObj::*func_ptr)(TInputs...),
-                     std::array<const char *, sizeof...(TInputs)> input_names,
-                     std::array<const char *, sizeof...(TOutputs)> output_names) :
+                     ::std::array<const char *, sizeof...(TInputs)> input_names,
+                     ::std::array<const char *, sizeof...(TOutputs)> output_names) :
             name_(name), obj_(&obj), func_ptr_(func_ptr),
             input_names_{input_names}, output_names_{output_names},
             input_properties_(PropertyListFactory<TInputs...>::template make_property_list<0>(input_names_, in_args_)),
@@ -1183,21 +1179,21 @@ public:
     }
 
     template<size_t i = sizeof...(TOutputs)>
-    std::enable_if_t<i == 0>
+    ::std::enable_if_t<i == 0>
     handle_ex()
     {
         invoke_function_with_tuple(*obj_, func_ptr_, in_args_);
     }
 
     template<size_t i = sizeof...(TOutputs)>
-    std::enable_if_t<i == 1>
+    ::std::enable_if_t<i == 1>
     handle_ex()
     {
-        std::get<0>(out_args_) = invoke_function_with_tuple(*obj_, func_ptr_, in_args_);
+        ::std::get<0>(out_args_) = invoke_function_with_tuple(*obj_, func_ptr_, in_args_);
     }
 
     template<size_t i = sizeof...(TOutputs)>
-    std::enable_if_t<i >= 2>
+    ::std::enable_if_t<i >= 2>
     handle_ex()
     {
         out_args_ = invoke_function_with_tuple(*obj_, func_ptr_, in_args_);
@@ -1209,7 +1205,7 @@ public:
         (void) input_length;
         (void) output;
         LOG_FIBRE("tuple still at %x and of size %u\r\n", (uintptr_t) &in_args_, sizeof(in_args_));
-        LOG_FIBRE("invoke function using %d and %.3f\r\n", std::get<0>(in_args_), std::get<1>(in_args_));
+        LOG_FIBRE("invoke function using %d and %.3f\r\n", ::std::get<0>(in_args_), ::std::get<1>(in_args_));
         handle_ex();
     }
 
@@ -1218,28 +1214,28 @@ public:
 
     TRet (TObj::*func_ptr_)(TInputs...);
 
-    std::array<const char *, sizeof...(TInputs)> input_names_; // TODO: remove
-    std::array<const char *, sizeof...(TOutputs)> output_names_; // TODO: remove
-    std::tuple<TInputs...> in_args_;
-    std::tuple<TOutputs...> out_args_;
+    ::std::array<const char *, sizeof...(TInputs)> input_names_; // TODO: remove
+    ::std::array<const char *, sizeof...(TOutputs)> output_names_; // TODO: remove
+    ::std::tuple<TInputs...> in_args_;
+    ::std::tuple<TOutputs...> out_args_;
     MemberList<ProtocolProperty<TInputs>...> input_properties_;
     MemberList<ProtocolProperty<TOutputs>...> output_properties_;
 };
 
 template<typename TObj, typename ... TArgs, typename ... TNames,
-        typename = std::enable_if_t<sizeof...(TArgs) == sizeof...(TNames)>>
-ProtocolFunction<TObj, std::tuple<TArgs...>, std::tuple<>>
+        typename = ::std::enable_if_t<sizeof...(TArgs) == sizeof...(TNames)>>
+ProtocolFunction<TObj, ::std::tuple<TArgs...>, ::std::tuple<>>
 make_protocol_function(const char *name, TObj &obj, void(TObj::*func_ptr)(TArgs...), TNames ... names)
 {
-    return ProtocolFunction<TObj, std::tuple<TArgs...>, std::tuple<>>(name, obj, func_ptr, {names...}, {});
+    return ProtocolFunction<TObj, ::std::tuple<TArgs...>, ::std::tuple<>>(name, obj, func_ptr, {names...}, {});
 }
 
 template<typename TObj, typename TRet, typename ... TArgs, typename ... TNames,
-        typename = std::enable_if_t<sizeof...(TArgs) == sizeof...(TNames) && !std::is_void<TRet>::value>>
-ProtocolFunction<TObj, std::tuple<TArgs...>, std::tuple<TRet>>
+        typename = ::std::enable_if_t<sizeof...(TArgs) == sizeof...(TNames) && ! ::std::is_void<TRet>::value>>
+ProtocolFunction<TObj, ::std::tuple<TArgs...>, ::std::tuple<TRet>>
 make_protocol_function(const char *name, TObj &obj, TRet(TObj::*func_ptr)(TArgs...), TNames ... names)
 {
-    return ProtocolFunction<TObj, std::tuple<TArgs...>, std::tuple<TRet>>(name, obj, func_ptr, {names...}, {"result"});
+    return ProtocolFunction<TObj, ::std::tuple<TArgs...>, ::std::tuple<TRet>>(name, obj, func_ptr, {names...}, {"result"});
 }
 
 
@@ -1356,4 +1352,4 @@ int fibre_publish(T &application_objects)
 }
 
 
-#endif
+}

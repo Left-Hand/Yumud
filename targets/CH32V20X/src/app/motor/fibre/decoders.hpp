@@ -1,13 +1,11 @@
-
-#ifndef __DECODERS_HPP
-#define __DECODERS_HPP
+#pragma once
 
 #include "protocol.hpp"
 #include "crc.hpp"
 #include "utils.hpp"
 #include <utility>
 
-
+namespace ymd::fibre{
 /* Base classes --------------------------------------------------------------*/
 
 // @brief Base class for stream based decoders.
@@ -35,7 +33,7 @@ template<unsigned BLOCKSIZE>
 class BlockDecoder
 {
 public:
-    typedef std::integral_constant<size_t, BLOCKSIZE> block_size;
+    typedef ::std::integral_constant<size_t, BLOCKSIZE> block_size;
 
     virtual int get_status() = 0;
 
@@ -72,7 +70,7 @@ public:
     template<typename ... Args, ENABLE_IF(
             TypeChecker<Args...>::template first_is_not<StreamDecoder_from_BlockDecoder>()) >
     explicit StreamDecoder_from_BlockDecoder(Args &&... args)
-            : block_decoder_(std::forward<Args>(args)...)
+            : block_decoder_(::std::forward<Args>(args)...)
     {
         EXPECT_TYPE(T, BlockDecoder<T::block_size::value>);
     }
@@ -85,7 +83,7 @@ public:
     inline size_t get_expected_bytes() final
     {
         size_t expected_bytes = block_decoder_.get_expected_blocks() * T::block_size::value;
-        return expected_bytes - std::min(expected_bytes, buffer_pos_);
+        return expected_bytes - ::std::min(expected_bytes, buffer_pos_);
     }
 
     inline int process_bytes(const uint8_t *buffer, size_t length, size_t *processed_bytes) final
@@ -93,7 +91,7 @@ public:
         while (!get_status() && get_expected_bytes() && length)
         {
             // use the incoming bytes to fill internal buffer to get a complete block
-            size_t n_copy = std::min(length, T::block_size::value - buffer_pos_);
+            size_t n_copy = ::std::min(length, T::block_size::value - buffer_pos_);
             memcpy(buffer_ + buffer_pos_, buffer, n_copy);
             buffer += n_copy;
             length -= n_copy;
@@ -129,7 +127,7 @@ public:
     template<typename ... Args, ENABLE_IF(
             TypeChecker<Args...>::template first_is_not<BlockDecoder_from_ByteDecoder>()) >
     BlockDecoder_from_ByteDecoder(Args &&... args)
-            : byte_decoder_(std::forward<Args>(args)...)
+            : byte_decoder_(::std::forward<Args>(args)...)
     {
         EXPECT_TYPE(T, ByteDecoder);
     }
@@ -165,7 +163,7 @@ public:
     template<typename ... Args, ENABLE_IF(
             TypeChecker<Args...>::template first_is_not<StreamDecoder_from_ByteDecoder>()) >
     StreamDecoder_from_ByteDecoder(Args &&... args)
-            : byte_decoder_(std::forward<Args>(args)...)
+            : byte_decoder_(::std::forward<Args>(args)...)
     {
         EXPECT_TYPE(T, ByteDecoder);
     }
@@ -284,7 +282,7 @@ class CRC8BlockDecoder : public BlockDecoder<CRC8_BLOCKSIZE>
 {
 public:
     CRC8BlockDecoder(TDecoder &&inner_decoder) :
-            inner_decoder_(std::forward<TDecoder>(inner_decoder))
+            inner_decoder_(::std::forward<TDecoder>(inner_decoder))
     {
     }
 
@@ -318,7 +316,7 @@ using CRC8StreamDecoder = StreamDecoder_from_BlockDecoder<CRC8BlockDecoder<INIT,
 template<unsigned INIT, unsigned POLYNOMIAL, typename TDecoder>
 inline CRC8StreamDecoder<INIT, POLYNOMIAL, TDecoder> make_crc8_decoder(TDecoder &&decoder)
 {
-    return CRC8StreamDecoder<INIT, POLYNOMIAL, TDecoder>(std::forward<TDecoder>(decoder));
+    return CRC8StreamDecoder<INIT, POLYNOMIAL, TDecoder>(::std::forward<TDecoder>(decoder));
 }
 
 // TODO: ENABLE_IF(TypeChecker<TDecoders...>::template all_are<StreamDecoder>())
@@ -347,8 +345,8 @@ class DecoderChain<TDecoder, TDecoders...> : public StreamDecoder
 {
 public:
     DecoderChain(TDecoder &&this_decoder, TDecoders &&... subsequent_decoders) :
-            this_decoder_(std::forward<TDecoder>(this_decoder)),
-            subsequent_decoders_(std::forward<TDecoders>(subsequent_decoders)...)
+            this_decoder_(::std::forward<TDecoder>(this_decoder)),
+            subsequent_decoders_(::std::forward<TDecoders>(subsequent_decoders)...)
     {
         EXPECT_TYPE(TDecoder, StreamDecoder);
     }
@@ -399,7 +397,7 @@ private:
 template<typename ... TDecoders>
 inline DecoderChain<TDecoders...> make_decoder_chain(TDecoders &&... decoders)
 {
-    return DecoderChain<TDecoders...>(std::forward<TDecoders>(decoders)...);
+    return DecoderChain<TDecoders...>(::std::forward<TDecoders>(decoders)...);
 }
 
-#endif // __DECODERS_HPP
+}

@@ -1,12 +1,11 @@
-
-#ifndef __ENCODERS_HPP
-#define __ENCODERS_HPP
+#pragma once
 
 #include "protocol.hpp"
 #include "crc.hpp"
 #include "utils.hpp"
 #include <utility>
 
+namespace ymd::fibre{
 struct Request
 {
     endpoint_id_t endpoint_id;
@@ -40,7 +39,7 @@ template<unsigned BLOCKSIZE>
 class BlockEncoder
 {
 public:
-    typedef std::integral_constant<size_t, BLOCKSIZE> block_size;
+    typedef ::std::integral_constant<size_t, BLOCKSIZE> block_size;
 
     virtual int get_status() = 0;
 
@@ -77,7 +76,7 @@ public:
     template<typename ... Args, ENABLE_IF(
             TypeChecker<Args...>::template first_is_not<StreamEncoder_from_BlockEncoder>()) >
     explicit StreamEncoder_from_BlockEncoder(Args &&... args)
-            : block_encoder_(std::forward<Args>(args)...)
+            : block_encoder_(::std::forward<Args>(args)...)
     {
         EXPECT_TYPE(T, BlockEncoder<T::block_size::value>);
     }
@@ -105,7 +104,7 @@ public:
             }
 
             // hand the buffered bytes to the encoder
-            size_t n_copy = std::min(buffered_bytes_, length);
+            size_t n_copy = ::std::min(buffered_bytes_, length);
             memcpy(buffer, buffer_ + T::block_size::value - n_copy, n_copy);
             length -= n_copy;
             buffer += n_copy;
@@ -132,7 +131,7 @@ public:
     template<typename ... Args, ENABLE_IF(
             TypeChecker<Args...>::template first_is_not<BlockEncoder_from_ByteEncoder>()) >
     BlockEncoder_from_ByteEncoder(Args &&... args)
-            : byte_encoder_(std::forward<Args>(args)...)
+            : byte_encoder_(::std::forward<Args>(args)...)
     {
         EXPECT_TYPE(T, ByteEncoder);
     }
@@ -168,7 +167,7 @@ public:
     template<typename ... Args, ENABLE_IF(
             TypeChecker<Args...>::template first_is_not<StreamEncoder_from_ByteEncoder>()) >
     StreamEncoder_from_ByteEncoder(Args &&... args)
-            : byte_encoder_(std::forward<Args>(args)...)
+            : byte_encoder_(::std::forward<Args>(args)...)
     {
         EXPECT_TYPE(T, ByteEncoder);
     }
@@ -267,7 +266,7 @@ class CRC8BlockEncoder : public BlockEncoder<CRC8_BLOCKSIZE>
 {
 public:
     CRC8BlockEncoder(TEncoder &&inner_encoder)
-            : inner_encoder_(std::forward<TEncoder>(inner_encoder))
+            : inner_encoder_(::std::forward<TEncoder>(inner_encoder))
     {}
 
     int get_status() final
@@ -307,7 +306,7 @@ using CRC8StreamEncoder = StreamEncoder_from_BlockEncoder<CRC8BlockEncoder<INIT,
 template<unsigned INIT, unsigned POLYNOMIAL, typename TEncoder>
 CRC8StreamEncoder<INIT, POLYNOMIAL, TEncoder> make_crc8_encoder(TEncoder &&encoder)
 {
-    return CRC8StreamEncoder<INIT, POLYNOMIAL, TEncoder>(std::forward<TEncoder>(encoder));
+    return CRC8StreamEncoder<INIT, POLYNOMIAL, TEncoder>(::std::forward<TEncoder>(encoder));
 }
 
 template<typename ... TEncoders>
@@ -332,8 +331,8 @@ class EncoderChain<TEncoder, TEncoders...> : public StreamEncoder
 {
 public:
     EncoderChain(TEncoder &&this_encoder, TEncoders &&... subsequent_encoders) :
-            this_encoder_(std::forward<TEncoder>(this_encoder)),
-            subsequent_encoders_(std::forward<TEncoders>(subsequent_encoders)...)
+            this_encoder_(::std::forward<TEncoder>(this_encoder)),
+            subsequent_encoders_(::std::forward<TEncoders>(subsequent_encoders)...)
     {
         EXPECT_TYPE(TEncoder, StreamEncoder);
     }
@@ -382,7 +381,7 @@ private:
 template<typename ... TEncoders>
 EncoderChain<TEncoders...> make_encoder_chain(TEncoders &&... encoders)
 {
-    return EncoderChain<TEncoders...>(std::forward<TEncoders>(encoders)...);
+    return EncoderChain<TEncoders...>(::std::forward<TEncoders>(encoders)...);
 }
 
-#endif // __ENCODERS_HPP
+}
