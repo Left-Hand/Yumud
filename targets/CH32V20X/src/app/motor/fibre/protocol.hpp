@@ -1,7 +1,5 @@
 #pragma once
 
-// TODO: resolve assert
-#define assert(expr)
 
 #include <functional>
 #include <limits>
@@ -14,10 +12,14 @@
 #include "crc.hpp"
 #include "utils.hpp"
 
+#include "sys/debug/debug_inc.h"
+
+
 // Note that this option cannot be used to debug UART because it prints on UART
-//#define DEBUG_FIBRE
+#define DEBUG_FIBRE
 #ifdef DEBUG_FIBRE
-#define LOG_FIBRE(...)  do { printf(__VA_ARGS__); } while (0)
+#define DEBUG_PRINTF(...) DEBUG_PRINTLN(__VA_ARGS__)
+#define LOG_FIBRE(...)  do { DEBUG_PRINTF(__VA_ARGS__); } while (0)
 #else
 #define LOG_FIBRE(...)  ((void) 0)
 #endif
@@ -73,9 +75,7 @@ constexpr uint16_t RX_BUF_SIZE = 128; // larger values than 128 have currently n
 constexpr uint32_t PROTOCOL_SERVER_TIMEOUT_MS = 10;
 
 
-typedef struct
-{
-    uint16_t json_crc;
+typedef struct{
     uint16_t node_id;
     uint16_t endpoint_id;
 } endpoint_ref_t;
@@ -151,17 +151,8 @@ public:
     virtual int process_packet(const uint8_t *buffer, size_t length) = 0;
 };
 
-class StreamSink
-{
+class StreamSink{
 public:
-    enum ChannelType_t
-    {
-        CHANNEL_TYPE_USB,
-        CHANNEL_TYPE_UART4,
-        CHANNEL_TYPE_UART5
-    };
-
-    ChannelType_t channelType;
     // @brief Processes a chunk of bytes that is part of a continuous stream.
     // The blocking behavior shall depend on the thread-local deadline_ms variable.
     // @param processed_bytes: if not NULL, shall be incremented by the number of
@@ -180,8 +171,7 @@ public:
     }*/
 };
 
-class StreamSource
-{
+class StreamSource{
 public:
     // @brief Generate a chunk of bytes that are part of a continuous stream.
     // The blocking behavior shall depend on the thread-local deadline_ms variable.
@@ -196,8 +186,7 @@ public:
     //virtual size_t get_free_space() = 0;
 };
 
-class StreamToPacketSegmenter : public StreamSink
-{
+class StreamToPacketSegmenter : public StreamSink{
 public:
     StreamToPacketSegmenter(PacketSink &output) :
             output_(output)
@@ -219,8 +208,7 @@ private:
 };
 
 
-class StreamBasedPacketSink : public PacketSink
-{
+class StreamBasedPacketSink : public PacketSink{
 public:
     StreamBasedPacketSink(StreamSink &output) :
             output_(output)
@@ -236,8 +224,7 @@ private:
 
 // @brief: Represents a stream sink that's based on an underlying packet sink.
 // A single call to process_bytes may result in multiple packets being sent.
-class PacketBasedStreamSink : public StreamSink
-{
+class PacketBasedStreamSink : public StreamSink{
 public:
     PacketBasedStreamSink(PacketSink &packet_sink) : _packet_sink(packet_sink)
     {}
@@ -271,8 +258,7 @@ private:
 
 // Implements the StreamSink interface by writing into a fixed size
 // memory buffer.
-class MemoryStreamSink : public StreamSink
-{
+class MemoryStreamSink : public StreamSink{
 public:
     MemoryStreamSink(uint8_t *buffer, size_t length) :
             buffer_(buffer),
@@ -417,139 +403,6 @@ default_readwrite_endpoint_handler(T *value, const uint8_t *input, size_t input_
     {
         return false;
     }
-}
-
-// @brief Default endpoint handler for endpoint_ref_t types
-template<typename T>
-bool
-default_readwrite_endpoint_handler(endpoint_ref_t *value, const uint8_t *input, size_t input_length, StreamSink *output)
-{
-    constexpr size_t size = sizeof(value->endpoint_id) + sizeof(value->json_crc);
-    if (output)
-    {
-        // TODO: make buffer size dependent on the type
-        uint8_t buffer[size];
-        size_t cnt = write_le<decltype(value->endpoint_id)>(value->endpoint_id, buffer);
-        cnt += write_le<decltype(value->json_crc)>(value->json_crc, buffer + cnt);
-        if (cnt <= output->get_free_space())
-            output->process_bytes(buffer, cnt, nullptr);
-    }
-
-    // If a new value was passed, call the corresponding little endian deserialization function
-    if (input_length >= size)
-    {
-        read_le<decltype(value->endpoint_id)>(&value->endpoint_id, input);
-        read_le<decltype(value->json_crc)>(&value->json_crc, input + 2);
-        return true;
-    } else
-    {
-        return false;
-    }
-}
-
-template<typename T>
-static inline const char *get_default_json_modifier();
-
-template<>
-inline constexpr const char *get_default_json_modifier<const float>()
-{
-    return "\"type\":\"float\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<float>()
-{
-    return "\"type\":\"float\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<const int64_t>()
-{
-    return "\"type\":\"int64\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<int64_t>()
-{
-    return "\"type\":\"int64\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<const uint64_t>()
-{
-    return "\"type\":\"uint64\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<uint64_t>()
-{
-    return "\"type\":\"uint64\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<const int32_t>()
-{
-    return "\"type\":\"int32\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<int32_t>()
-{
-    return "\"type\":\"int32\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<const uint32_t>()
-{
-    return "\"type\":\"uint32\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<uint32_t>()
-{
-    return "\"type\":\"uint32\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<const uint16_t>()
-{
-    return "\"type\":\"uint16\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<uint16_t>()
-{
-    return "\"type\":\"uint16\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<const uint8_t>()
-{
-    return "\"type\":\"uint8\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<uint8_t>()
-{
-    return "\"type\":\"uint8\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<const bool>()
-{
-    return "\"type\":\"bool\",\"access\":\"r\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<bool>()
-{
-    return "\"type\":\"bool\",\"access\":\"rw\"";
-}
-
-template<>
-inline constexpr const char *get_default_json_modifier<endpoint_ref_t>()
-{
-    return "\"type\":\"endpoint_ref\",\"access\":\"rw\"";
 }
 
 class Endpoint
@@ -742,11 +595,6 @@ public:
     static constexpr size_t endpoint_count = 0;
     static constexpr bool is_empty = true;
 
-    void write_json(size_t id, StreamSink *output)
-    {
-        // no action
-    }
-
     void register_endpoints(Endpoint **list, size_t id, size_t length)
     {
         // no action
@@ -777,18 +625,6 @@ public:
             this_member_(::std::forward<TMember>(this_member)),
             subsequent_members_(::std::forward<MemberList<TMembers...>>(subsequent_members))
     {}
-
-    // @brief Move constructor
-/*    MemberList(MemberList&& other) :
-        this_member_(::std::move(other.this_member_)),
-        subsequent_members_(::std::move(other.subsequent_members_)) {}*/
-
-    void write_json(size_t id, StreamSink *output) /*final*/ {
-        this_member_.write_json(id, output);
-        if (!MemberList<TMembers...>::is_empty)
-            write_string(",", output);
-        subsequent_members_.write_json(id + TMember::endpoint_count, output);
-    }
 
     Endpoint *get_by_name(const char *name, size_t length)
     {
@@ -823,15 +659,6 @@ public:
 
     static constexpr size_t endpoint_count = MemberList<TMembers...>::endpoint_count;
 
-    void write_json(size_t id, StreamSink *output)
-    {
-        write_string("{\"name\":\"", output);
-        write_string(name_, output);
-        write_string("\",\"type\":\"object\",\"members\":[", output);
-        member_list_.write_json(id, output),
-                write_string("]}", output);
-    }
-
     Endpoint *get_by_name(const char *name, size_t length)
     {
         size_t segment_length = strlen(name);
@@ -855,11 +682,6 @@ ProtocolObject<TMembers...> make_protocol_object(const char *name, TMembers &&..
 {
     return ProtocolObject<TMembers...>(name, ::std::forward<TMembers>(member_list)...);
 }
-
-//template<typename T, typename = typename ::std>
-//bool set_from_float_ex(float value, T* property) {
-//    return false;
-//}
 
 namespace conversion
 {
@@ -905,7 +727,6 @@ template<typename TProperty>
 class ProtocolProperty : public Endpoint
 {
 public:
-    static constexpr const char *json_modifier = get_default_json_modifier<TProperty>();
     static constexpr size_t endpoint_count = 1;
 
     ProtocolProperty(const char *name, TProperty *property,
@@ -913,53 +734,6 @@ public:
             : name_(name), property_(property), written_hook_(written_hook), ctx_(ctx)
     {}
 
-/*  TODO: find out why the move constructor is not used when it could be
-    ProtocolProperty(const ProtocolProperty&) = delete;
-    // @brief Move constructor
-    ProtocolProperty(ProtocolProperty&& other) :
-        Endpoint(::std::move(other)),
-        name_(::std::move(other.name_)),
-        property_(other.property_)
-    {}
-    constexpr ProtocolProperty& operator=(const ProtocolProperty& other) = delete;
-    constexpr ProtocolProperty& operator=(const ProtocolProperty& other) {
-        //Endpoint(::std::move(other)),
-        //name_(::std::move(other.name_)),
-        //property_(other.property_)
-        name_ = other.name_;
-        property_ = other.property_;
-        return *this;
-    }
-    ProtocolProperty& operator=(ProtocolProperty&& other)
-        : name_(other.name_), property_(other.property_)
-    {}
-    ProtocolProperty& operator=(const ProtocolProperty& other)
-        : name_(other.name_), property_(other.property_)
-    {}*/
-
-    void write_json(size_t id, StreamSink *output)
-    {
-        // write name
-        write_string("{\"name\":\"", output);
-        LOG_FIBRE("json: this at %x, name at %x is s\r\n", (uintptr_t) this, (uintptr_t) name_);
-        //LOG_FIBRE("json\r\n");
-        write_string(name_, output);
-
-        // write endpoint ID
-        write_string("\",\"id\":", output);
-        char id_buf[10];
-        snprintf(id_buf, sizeof(id_buf), "%u", (unsigned) id); // TODO: get rid of printf
-        write_string(id_buf, output);
-
-        // write additional JSON data
-        if (json_modifier && json_modifier[0])
-        {
-            write_string(",", output);
-            write_string(json_modifier, output);
-        }
-
-        write_string("}", output);
-    }
 
     // special-purpose function - to be moved
     Endpoint *get_by_name(const char *name, size_t length)
@@ -1144,26 +918,6 @@ public:
         LOG_FIBRE("COPIED! my tuple is at %x and of size %u\r\n", (uintptr_t) &in_args_, sizeof(in_args_));
     }
 
-    void write_json(size_t id, StreamSink *output)
-    {
-        // write name
-        write_string("{\"name\":\"", output);
-        write_string(name_, output);
-
-        // write endpoint ID
-        write_string("\",\"id\":", output);
-        char id_buf[10];
-        snprintf(id_buf, sizeof(id_buf), "%u", (unsigned) id); // TODO: get rid of printf
-        write_string(id_buf, output);
-
-        // write arguments
-        write_string(",\"type\":\"function\",\"inputs\":[", output);
-        input_properties_.write_json(id + 1, output),
-                write_string("],\"outputs\":[", output);
-        output_properties_.write_json(id + 1 + decltype(input_properties_)::endpoint_count, output),
-                write_string("]}", output);
-    }
-
     // special-purpose function - to be moved
     Endpoint *get_by_name(const char *name, size_t length)
     {
@@ -1256,8 +1010,6 @@ class EndpointProvider
 public:
     virtual size_t get_endpoint_count() = 0;
 
-    virtual void write_json(size_t id, StreamSink *output) = 0;
-
     virtual Endpoint *get_by_name(char *name, size_t length) = 0;
 
     virtual void register_endpoints(Endpoint **list, size_t id, size_t length) = 0;
@@ -1273,11 +1025,6 @@ public:
     size_t get_endpoint_count() final
     {
         return T::endpoint_count;
-    }
-
-    void write_json(size_t id, StreamSink *output) final
-    {
-        return member_list_.write_json(id, output);
     }
 
     void register_endpoints(Endpoint **list, size_t id, size_t length) final
@@ -1299,57 +1046,12 @@ public:
     T &member_list_;
 };
 
-
-class JSONDescriptorEndpoint : Endpoint
-{
-public:
-    static constexpr size_t endpoint_count = 1;
-
-    void write_json(size_t id, StreamSink *output);
-
-    void register_endpoints(Endpoint **list, size_t id, size_t length);
-
-    void handle(const uint8_t *input, size_t input_length, StreamSink *output);
-};
-
 // defined in protocol.cpp
 extern Endpoint **endpoint_list_;
 extern size_t n_endpoints_;
-extern uint16_t json_crc_;
-extern JSONDescriptorEndpoint json_file_endpoint_;
 extern EndpointProvider *application_endpoints_;
 
 bool is_endpoint_ref_valid(endpoint_ref_t endpoint_ref);
 
 Endpoint *get_endpoint(endpoint_ref_t endpoint_ref);
-
-// @brief Registers the specified application object list using the provided endpoint table.
-// This function should only be called once during the lifetime of the application. TODO: fix this.
-// @param application_objects The application objects to be registred.
-template<typename T>
-int fibre_publish(T &application_objects)
-{
-    static constexpr size_t endpoint_list_size = 1 + T::endpoint_count;
-    static Endpoint *endpoint_list[endpoint_list_size];
-    static auto endpoint_provider = EndpointProvider_from_MemberList<T>(application_objects);
-
-    json_file_endpoint_.register_endpoints(endpoint_list, 0, endpoint_list_size);
-    application_objects.register_endpoints(endpoint_list, 1, endpoint_list_size);
-
-    // Update the global endpoint table
-    endpoint_list_ = endpoint_list;
-    n_endpoints_ = endpoint_list_size;
-    application_endpoints_ = &endpoint_provider;
-
-    // Calculate the CRC16 of the JSON file.
-    // The init value is the protocol version.
-    CRC16Calculator crc16_calculator(PROTOCOL_VERSION);
-    uint8_t offset[4] = {0};
-    json_file_endpoint_.handle(offset, sizeof(offset), &crc16_calculator);
-    json_crc_ = crc16_calculator.get_crc16();
-
-    return 0;
-}
-
-
 }

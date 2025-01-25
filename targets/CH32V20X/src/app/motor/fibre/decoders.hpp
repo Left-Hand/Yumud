@@ -373,7 +373,7 @@ public:
     {
         if (this_decoder_.get_expected_bytes())
         {
-            LOG_FIBRE("decoder chain: process %zu bytes in segment %s\n", length, typeid(TDecoder).name());
+            // LOG_FIBRE("decoder chain: process %zu bytes in segment %s\n", length, typeid(TDecoder).name());
             size_t chunk = 0;
             int status = this_decoder_.process_bytes(input, length, &chunk);
             input += chunk;

@@ -10,6 +10,7 @@
 #include <vector>
 #include <string>
 #include <string_view>
+#include <optional>
 
 
 namespace ymd{
@@ -26,6 +27,7 @@ public:
     constexpr StringView(const ::std::string_view & str): data_(str.data()), size_(str.length()) {}
     constexpr StringView(const char* str) : data_(str), size_(str ? strlen(str) : 0) {}
     constexpr StringView(const char* str, size_t size) : data_(str), size_(size) {}
+    constexpr StringView(const std::nullopt_t): data_(nullptr), size_(0){;}
 
     constexpr StringView(const StringView & other): data_(other.data_), size_(other.size_){;}
     constexpr StringView(StringView && other): data_(other.data_), size_(other.size_){;}

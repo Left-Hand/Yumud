@@ -357,9 +357,7 @@ public:
 
     int get_bytes(uint8_t *output, size_t length, size_t *generated_bytes) final
     {
-        if (this_encoder_.get_available_bytes())
-        {
-            LOG_FIBRE("encoder chain: generate %zu bytes in segment %s\n", length, typeid(TEncoder).name());
+        if (this_encoder_.get_available_bytes()){
             size_t chunk = 0;
             int status = this_encoder_.get_bytes(output, length, &chunk);
             if (status)
