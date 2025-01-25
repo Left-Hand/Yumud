@@ -48,9 +48,9 @@ void init_adc(){
         {
             {AdcChannelIndex::VREF, AdcCycles::T28_5}
         },{
-            {AdcChannelIndex::CH1, AdcCycles::T7_5},
-            {AdcChannelIndex::CH4, AdcCycles::T7_5},
-            {AdcChannelIndex::CH5, AdcCycles::T7_5},
+            {AdcChannelIndex::CH1, AdcCycles::T28_5},
+            {AdcChannelIndex::CH4, AdcCycles::T28_5},
+            {AdcChannelIndex::CH5, AdcCycles::T28_5},
 
             // {AdcChannelIndex::CH1, AdcCycles::T7_5},
             // {AdcChannelIndex::CH4, AdcCycles::T7_5},

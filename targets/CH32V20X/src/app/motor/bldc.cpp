@@ -191,8 +191,10 @@ public:
 
     void updateDQ(const real_t rad){
         const auto dq_curr = ab_to_dq(_ab_curr, rad);
-        _dq_curr[0] = LPFN<3>(_dq_curr[0],dq_curr[0]);
-        _dq_curr[1] = LPFN<3>(_dq_curr[1],dq_curr[1]);
+        // _dq_curr[0] = LPFN<3>(_dq_curr[0],dq_curr[0]);
+        // _dq_curr[1] = LPFN<3>(_dq_curr[1],dq_curr[1]);
+        _dq_curr[0] = LPFN<7>(_dq_curr[0],dq_curr[0]);
+        _dq_curr[1] = LPFN<7>(_dq_curr[1],dq_curr[1]);
     }
 
     void calibrate(){
@@ -351,34 +353,36 @@ int bldc_main(){
     real_t mg_meas_rad;
     real_t sl_meas_rad;
 
-    static PIController::Config pi_conf = {
-        .kp = 30.0_r,
-        // .kp = 0.0_r,
-        .ki = 0.009_r,
-        .out_min = -5.5_r,
-        .out_max = 5.5_r
-    };
+    // static PIController pos_pi_ctrl{
+    // {
+    //     .kp = 27.0_r,
+    //     .ki = 0.00_r,
+    //     .out_min = -50.6_r,
+    //     .out_max = 50.6_r
+    // }};
 
-    static PIController pi_ctrl{pi_conf};
+    static PIController speed_pi_ctrl{
+    {
+        .kp = 4.0_r,
+        .ki = 0.189_r,
+        .out_min = -0.8_r,
+        .out_max = 0.8_r
+    }};
 
-
-    static PIController::Config d_curr_pi_conf = {
-        .kp = 0.1_r,
-        .ki = 0.016_r,
+    static PIController d_pi_ctrl{
+    {
+        .kp = 0.0_r,
+        .ki = 0.011_r,
         .out_min = -6.0_r,
         .out_max = 6.0_r
-    };
-
-    static PIController::Config q_curr_pi_conf = {
-        // .kp = 20.0_r,
-        .kp = 0.1_r,
-        .ki = 0.016_r,
+    }};
+    static PIController q_pi_ctrl{
+    {
+        .kp = 0.0_r,
+        .ki = 0.011_r,
         .out_min = -6.0_r,
         .out_max = 6.0_r
-    };
-
-    static PIController d_pi_ctrl{d_curr_pi_conf};
-    static PIController q_pi_ctrl{q_curr_pi_conf};
+    }};
 
     AbVoltage ab_volt;
 
@@ -386,8 +390,14 @@ int bldc_main(){
         odo.update();
 
         // targ_pos = 5 * sin(t);
-        targ_pos = 15 * t;
+        // targ_pos = 0.2_r * sin(real_t(50 * TAU)*t);
+        // auto targ_spd = real_t(10 * TAU) * cos(real_t(50 * TAU) * t);
+        targ_pos = 4 * floor(3*t);
+        auto targ_spd = 0.0_r;
+        // targ_pos = 10.0_r*floor(2*t);
+        // targ_pos = sin(t);
         meas_pos = odo.getPosition();
+        auto meas_spd = odo.getSpeed();
         const real_t meas_lap = odo.getLapPosition();
 
         const real_t meas_rad = (frac(frac(meas_lap) * 7) * real_t(TAU));
@@ -402,7 +412,11 @@ int bldc_main(){
             // const auto q_volt = q_pi_ctrl.update(-0.6_r, dq_curr.q);
 
             const auto d_volt = d_pi_ctrl.update(-0.0_r, dq_curr.d);
-            const auto q_volt = q_pi_ctrl.update(0.2_r * sin(t), dq_curr.q);
+            // const auto q_volt = q_pi_ctrl.update(0.1_r * sign(sin(t)), dq_curr.q);
+            // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(int(5 * floor(6 * t)) % 60, meas_spd), dq_curr.q);
+            const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(40  *sin(10 * t), meas_spd), dq_curr.q);
+            // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(2.7_r, meas_spd), dq_curr.q);
+            // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(37.8_r * (targ_pos - meas_pos) + 1.1_r*(targ_spd - meas_spd), odo.getSpeed()), dq_curr.q);
             // const auto q_volt = q_pi_ctrl.update(CLAMP2(5.4_r * (targ_pos - meas_pos),1), dq_curr.q);
             // const auto q_volt = q_pi_ctrl.update(0.3_r * sign(2 * frac(t/2) - 1), dq_curr.q);
             // const auto q_volt = q_pi_ctrl.update(-0.3_r, dq_curr.q);
@@ -410,11 +424,11 @@ int bldc_main(){
         }else{
             // const real_t raddiff = (real_t(PI/2 + 0.4));
             const real_t rad = meas_rad;
-            const real_t v = CLAMP2(-pi_ctrl.update(targ_pos, meas_pos),3);
+            // const real_t v = CLAMP2(-pi_ctrl.update(targ_pos, meas_pos),3);
 
             // const real_t v = 4;
             // const real_t rad = frac(t * 7) * real_t(TAU);
-            ab_volt = {v * cos(rad), v * sin(rad)};
+            // ab_volt = {v * cos(rad), v * sin(rad)};
         }
         const auto ab_curr = current_sensor.ab();
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
@@ -457,7 +471,9 @@ int bldc_main(){
         // const auto q_volt = q_pi_ctrl.update(-0.3_r, dq_curr.q);
 
         // ab_volt = {4 * cos(rad), 4 * sin(rad)};
-        ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
+        // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
+        // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
+        ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 2.0_r);
         svpwm.setABVolt(ab_volt[0], ab_volt[1]);
     };
 
@@ -604,8 +620,8 @@ int bldc_main(){
 
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
-    adc1.bindCb(AdcUtils::IT::JEOC, cb_sensorless);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sensorless);
+    adc1.bindCb(AdcUtils::IT::JEOC, cb);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_openloop);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
@@ -645,7 +661,7 @@ int bldc_main(){
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1], pi_ctrl.output());
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1], d_pi_ctrl.output(), q_pi_ctrl.output());
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, dq_curr[0], dq_curr[1], d_pi_ctrl.output(), q_pi_ctrl.output(), odo.getSpeed());
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, mg_meas_rad, sl_meas_rad, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
 
         // auto s_curr = [&](){
