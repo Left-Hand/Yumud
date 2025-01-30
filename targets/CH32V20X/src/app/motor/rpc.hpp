@@ -20,8 +20,8 @@ namespace ymd::rpc{
 //需送入函数中执行的参数 包含了对应的字段和可能的指定参数名
 class CallParam{
 protected:
-    String value_;
-    String spec_;
+    StringView value_;
+    StringView spec_;
 public:
     CallParam(const char * value):
         value_(value),
@@ -132,10 +132,12 @@ enum class EntryType:uint8_t{
 
 namespace internal{
     PRO_DEF_MEM_DISPATCH(MemCall, call);
+    PRO_DEF_MEM_DISPATCH(MemName, name);
 
     struct EntryFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::nontrivial>
         ::add_convention<internal::MemCall, AccessResult(AccessReponserIntf &, const AccessProviderIntf &)>
+        ::add_convention<internal::MemName, StringView()>
         ::build {};
 }
 using EntryProxy = pro::proxy<internal::EntryFacade>;
@@ -239,9 +241,12 @@ public:
         }
 
         auto tuple_params = convert_params<std::tuple<Args...>>(ap, std::index_sequence_for<Args...>{});
-        Ret ret = std::apply(callback_, tuple_params);
 
-        ar << ret;
+        if constexpr(std::is_void_v<Ret>){
+            std::apply(callback_, tuple_params);
+        } else {
+            ar << std::apply(callback_, tuple_params);
+        }
         return AccessResult::OK;
     }
 };
@@ -305,10 +310,26 @@ public:
     }
 
     AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) override{
-        for(auto & entry:entries_){
-            entry->call(ar,ap);
+        // ar << ap;
+        // if(ap.size() < 2) return AccessResult::Fail;
+
+        auto head_hash = StringView(ap[0]).hash();
+
+        if(head_hash == "ls"_ha){
+            for(auto & entry:entries_){
+                ar.println(entry->name());
+            }
+            return AccessResult::OK;
         }
-        return AccessResult::OK;
+
+        for(auto & entry:entries_){
+            auto ent_hash = entry->name().hash();
+            if(head_hash == ent_hash){
+                return entry->call(ar, {ap.begin() + 1, ap.end()});
+            }
+        }
+
+        return AccessResult::Fail;
     }
 
     void add(EntryProxy & entry){

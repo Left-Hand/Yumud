@@ -1,11 +1,14 @@
 #include "rpc.hpp"
 #include "tb.h"
 #include "sys/debug/debug_inc.h"
+#include "robots/rpc/arg_parser.hpp"
+#include "types/vector3/vector3_t.hpp"
 
 using namespace ymd;
 
 class Ball{
 public:
+    int a;
     void set_xy(iq_t x, iq_t y){
         DEBUG_PRINTLN(x,y);
         // return 0;
@@ -47,8 +50,10 @@ void rpc_main(){
     auto res2 = rpc::make_function("ball", ball, &Ball::set_xy);
 
     real_t a;
-    const real_t b;
+    real_t b;
     auto p = rpc::make_property("a", a);
+
+    portA[8].outpp();
 
     auto list = rpc::make_list(
         "list", 
@@ -56,9 +61,17 @@ void rpc_main(){
         res2, 
         res3, 
         p,
-        rpc::make_ro_property("b", b)
+        rpc::make_ro_property("b", b),
+        rpc::make_ro_property("ba", ball.a),
+        rpc::make_function("setm", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
+        rpc::make_function("xyz", [](){DEBUG_PRINTLN(Vector3_t<real_t>(0,0,0))}),
+        rpc::make_function("crc", [](){DEBUG_PRINTS(Sys::Chip::getChipIdCrc())}),
+        rpc::make_function("led", [](const int i){portA[8].write(i);})
     );
 
+    ArgSplitter splitter;
+
+    // pro::proxy_reflect
     // char buf[64];
     // memset(buf, 0, sizeof(buf));
     // BufStream os(buf);
@@ -75,7 +88,33 @@ void rpc_main(){
         //     // rpc::MethodParam("2"),
         //     // rpc::MethodParam(String(millis())),
         // };
+        {
+            auto strs_opt = splitter.update(uart2);
+            if(strs_opt.has_value()){
+                auto & strs = strs_opt.value();
 
+                DEBUG_PRINTLN("------");
+                DEBUG_PRINTS("Inputs:", strs);
+
+                b = sin(t);
+
+                {
+                    std::vector<rpc::CallParam> params;
+                    params.reserve(strs.size());
+                    for(const auto & str  : strs){
+                        params.push_back(rpc::CallParam(str));
+                    }
+                    DEBUGGER.print("->");
+                    auto res = list ->call(DEBUGGER, params);
+                    DEBUG_PRINTS("\r\n^^Function exited with return code", uint8_t(res))
+                    DEBUG_PRINTLN("------");
+                }
+
+                splitter.clear();
+            }
+        }
+
+        continue;
         // // res->call(DEBUGGER, params);
         // // res2->call(DEBUGGER, params);
         // // p->call(DEBUGGER, params);
@@ -89,12 +128,8 @@ void rpc_main(){
         // auto & body = *res;
 
         // res->call(DEBUGGER, rpc::Params{rpc::CallParam{t}, rpc::CallParam{t}});
-        std::vector params_holder = {rpc::CallParam{t}, rpc::CallParam{t}};
-        auto params = params_holder;
-        // res->call(DEBUGGER, params);
-        // res3 ->call(DEBUGGER, params);
-        // list ->call(DEBUGGER, params);
-        DEBUG_PRINTLN("")
+        // std::vector params_holder = {rpc::CallParam{"b"}, rpc::CallParam{t}};
+
         delay(1);
         // DEBUG_PRINTLN(res, sizeof(res));
     }

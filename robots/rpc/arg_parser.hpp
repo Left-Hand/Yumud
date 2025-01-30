@@ -5,12 +5,12 @@
 
 namespace ymd{
 
-class ArgParser{
+class ArgSplitter{
 private:
     String temp = "";
 public:
-    ArgParser(){;}
-    Strings update(InputStream & _input);
+    ArgSplitter(){;}
+    std::optional<Strings> update(InputStream & _input);
     void clear(){temp = "";}
 };
 
