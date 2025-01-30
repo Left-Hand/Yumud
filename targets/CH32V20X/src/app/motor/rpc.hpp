@@ -2,6 +2,7 @@
 
 #include "sys/string/string.hpp"
 #include "sys/stream/ostream.hpp"
+#include "sys/stream/BufStream.hpp"
 #include <span>
 #include <functional>
 #include <utility>
@@ -68,6 +69,12 @@ public:
     virtual int call(OutputStream & os, const Params params) = 0;
 };
 
+enum class EntryType:uint8_t{
+    Func,
+    MemFunc,
+    Const,
+    Var,
+};
 
 // template<typename... Args>
 // size_t mysprintf(char *str, Args &&... params) {
@@ -229,32 +236,6 @@ public:
 };
 
 
-template<typename Ret, typename ... Args>
-auto make_rpc_function(auto && callback, const StringView name = ""){
-    // using Ret = ymd::function_return_t<Callback>;
-    // using Args = typename ymd::function_arg_t<Callback>::type;
-    return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
-        name,
-        std::forward<decltype(callback)>(callback)
-    );
-}
-
-template<typename Ret, typename ... Args>
-auto make_rpc_memfunc(auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(Args...), const StringView name = "") {
-    return pro::make_proxy<internal::EntryFacade, MethodByMemFunc<std::remove_cvref_t<decltype(obj)>, Ret, Args...>>(
-        name,
-        &obj,
-        member_func_ptr
-    );
-}
-
-template<typename T>
-auto make_property(T & val, const StringView name = ""){
-    return pro::make_proxy<internal::EntryFacade, Property<T>>(
-        name, 
-        val
-    );
-}
 
 class EntryList:public Entry{
 protected:
@@ -290,14 +271,86 @@ public:
         return 0;
     }
 
-    void add(EntryProxy && entry){
-        entries_.push_back(std::move(entry));
-    }
-
     void add(EntryProxy & entry){
         entries_.push_back(entry);
     }
 };
+
+
+struct EntryRID{
+protected:
+    const uint32_t hash_;
+public:
+
+    template<typename T>
+    constexpr EntryRID(const T & ent):
+        hash_(hash_impl(ent))
+    {
+        ;
+    }
+
+    uint32_t hash() const{ return hash_; }
+    operator uint32_t () const{ return hash_; }
+};
+
+
+struct EntryRef{
+    const EntryRID rid;
+    EntryProxy p;
+};
+
+struct EntryRefs{
+protected:
+    std::vector<EntryRef> refs_;
+public:
+    EntryRefs() = default;
+    EntryRefs(const EntryRefs &) = delete;
+    EntryRefs(EntryRefs &&) = delete;
+
+    EntryRef & operator [](const size_t idx){return refs_.at(idx);}
+    const EntryRef & operator [](const size_t idx) const {return refs_.at(idx);}
+};
+
+class DataBase{
+protected:
+
+};
+
+
+
+
+
+
+
+
+
+template<typename Ret, typename ... Args>
+auto make_function(auto && callback, const StringView name = ""){
+    // using Ret = ymd::function_return_t<Callback>;
+    // using Args = typename ymd::function_arg_t<Callback>::type;
+    return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
+        name,
+        std::forward<decltype(callback)>(callback)
+    );
+}
+
+template<typename Ret, typename ... Args>
+auto make_memfunc(auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(Args...), const StringView name = "") {
+    return pro::make_proxy<internal::EntryFacade, MethodByMemFunc<std::remove_cvref_t<decltype(obj)>, Ret, Args...>>(
+        name,
+        &obj,
+        member_func_ptr
+    );
+}
+
+template<typename T>
+auto make_property(T & val, const StringView name = ""){
+    return pro::make_proxy<internal::EntryFacade, Property<T>>(
+        name, 
+        val
+    );
+}
+
 
 template<typename ... Args>
 auto make_list(const StringView name, Args && ... entries){

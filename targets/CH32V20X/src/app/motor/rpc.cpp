@@ -21,8 +21,8 @@ void rpc_main(){
 
     Ball ball;
 
-    auto res2 = rpc::make_rpc_memfunc<void, iq_t, iq_t>(ball, &Ball::set_xy);
-    auto res = rpc::make_rpc_function<iq_t, iq_t, iq_t>(([](iq_t x, iq_t a){
+    auto res2 = rpc::make_memfunc<void, iq_t, iq_t>(ball, &Ball::set_xy);
+    auto res = rpc::make_function<iq_t, iq_t, iq_t>(([](iq_t x, iq_t a){
         return sin(x + a);
     }));
 
@@ -31,6 +31,12 @@ void rpc_main(){
 
     // auto list = rpc::make_list("list", res, res2, p, rpc::make_property(a));
     auto list = rpc::make_list("list", res, res2, p);
+
+    // char buf[64];
+    // memset(buf, 0, sizeof(buf));
+    // BufStream os(buf);
+    // snprintf(os, 4,5,6,"Hello", iq_t(3.14));
+
 
     while(true){
         a = sin(8 * t);
@@ -46,8 +52,8 @@ void rpc_main(){
         // res->call(DEBUGGER, params);
         // res2->call(DEBUGGER, params);
         // p->call(DEBUGGER, params);
-        list->call(DEBUGGER, params);
-        DEBUG_PRINTLN();
+        // list->call(DEBUGGER, params);
+        DEBUG_PRINTLN(buf);
         // DEBUG_PRINTLN(params);
         delay(10);
     }
