@@ -47,17 +47,17 @@ void rpc_main(){
     auto res2 = rpc::make_function("ball", ball, &Ball::set_xy);
 
     real_t a;
-    real_t b;
+    const real_t b;
     auto p = rpc::make_property("a", a);
 
-    // auto list = rpc::make_list(
-    //     "list", 
-    //     res, 
-    //     res2, 
-    //     res3, 
-    //     p,
-    //     rpc::make_property("b", b)
-    // );
+    auto list = rpc::make_list(
+        "list", 
+        res, 
+        res2, 
+        res3, 
+        p,
+        rpc::make_ro_property("b", b)
+    );
 
     // char buf[64];
     // memset(buf, 0, sizeof(buf));
@@ -92,8 +92,8 @@ void rpc_main(){
         std::vector params_holder = {rpc::CallParam{t}, rpc::CallParam{t}};
         auto params = params_holder;
         // res->call(DEBUGGER, params);
-        res3 ->call(DEBUGGER, params);
-        
+        // res3 ->call(DEBUGGER, params);
+        // list ->call(DEBUGGER, params);
         DEBUG_PRINTLN("")
         delay(1);
         // DEBUG_PRINTLN(res, sizeof(res));

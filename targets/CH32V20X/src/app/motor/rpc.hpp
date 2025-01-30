@@ -15,6 +15,8 @@
 namespace ymd::rpc{
 
 
+
+
 //需送入函数中执行的参数 包含了对应的字段和可能的指定参数名
 class CallParam{
 protected:
@@ -61,6 +63,36 @@ public:
 using Param = CallParam;
 using Params = std::span<const CallParam>;
 
+
+// class AccessProviderIntf{
+// public:
+//     virtual size_t size() const = 0;
+// };
+
+// class AccessProviderByString{
+// public:
+
+// };
+
+using AccessProviderIntf = Params;
+
+// class AccessReponserIntf{
+
+// };
+
+// class AccessReponserByString:public AccessReponserIntf{
+// public:
+// };
+
+using AccessReponserIntf = OutputStream;
+
+enum class AccessResult: uint8_t{
+    OK,
+    Fail,
+};
+
+
+
 //一个可以被检索的词条
 class Entry{
 protected:
@@ -72,7 +104,7 @@ public:
         return name_;
     }
 
-    virtual int call(OutputStream & os, const Params params) = 0;
+    virtual AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) = 0;
 };
 
 enum class EntryType:uint8_t{
@@ -103,7 +135,7 @@ namespace internal{
 
     struct EntryFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::nontrivial>
-        ::add_convention<internal::MemCall, int(OutputStream &, const std::span<const CallParam>)>
+        ::add_convention<internal::MemCall, AccessResult(AccessReponserIntf &, const AccessProviderIntf &)>
         ::build {};
 }
 using EntryProxy = pro::proxy<internal::EntryFacade>;
@@ -123,34 +155,25 @@ public:
         return *value_;
     }
 
-    int call(OutputStream & os, const Params params) override{
-        // switch(params.size()){
-        //     case 0:
-        //         os << value();
-        //         return 0;
-        //     case 1:
-        //         value() = static_cast
-        //     default:
-        //         return -1;
-        // }
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override{
 
         if constexpr(!std::is_const_v<T>){
-            if(params.size()){
-                if(params.size() == 1){
-                    value() = static_cast<T>(params[0]);
-                    return 0;
+            if(ap.size()){
+                if(ap.size() == 1){
+                    value() = static_cast<T>(ap[0]);
+                    return AccessResult::OK;
                 }else{
-                    return -1;
+                    return AccessResult::Fail;
                 }
             }
         }else{
-            if(params.size()){
-                return -1;
+            if(ap.size()){
+                return AccessResult::Fail;
             }
         }
 
-        os << value();
-        return 0;
+        ar << value();
+        return AccessResult::OK;
 
     }
 };
@@ -192,7 +215,7 @@ protected:
 public:
     MethodConcept(const StringView & name):Entry(name){;}
 
-    virtual int call(OutputStream & os, const Params params) = 0;
+    virtual AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) = 0;
 };
 
 
@@ -210,16 +233,16 @@ protected:
 public:
     MethodByLambda(const StringView name, const Callback && callback)
         : MethodConcept(name), callback_(callback) {}
-    int call(OutputStream & os, const Params params) final override {
-        if (params.size() != N) {
-            return -1;
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
+        if (ap.size() != N) {
+            return AccessResult::Fail;
         }
 
-        auto tuple_params = convert_params<std::tuple<Args...>>(params, std::index_sequence_for<Args...>{});
+        auto tuple_params = convert_params<std::tuple<Args...>>(ap, std::index_sequence_for<Args...>{});
         Ret ret = std::apply(callback_, tuple_params);
 
-        os << ret;
-        return 0;
+        ar << ret;
+        return AccessResult::OK;
     }
 };
 
@@ -240,15 +263,15 @@ public:
     ) : MethodConcept(name), 
         obj_(obj),
         callback_(callback) {}
-    int call(OutputStream & os, const std::span<const CallParam> params) final override {
-        auto tuple_params = convert_params<std::tuple<Args...>>(params, std::index_sequence_for<Args...>{});
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
+        auto tuple_params = convert_params<std::tuple<Args...>>(ap, std::index_sequence_for<Args...>{});
 
         if constexpr(std::is_void_v<Ret>){
             std::apply([this](Args... args) { (obj_->*callback_)(args...); }, tuple_params);
         } else {
-            os << std::apply([this](Args... args) -> Ret { return (obj_->*callback_)(args...); }, tuple_params);
+            ar << std::apply([this](Args... args) -> Ret { return (obj_->*callback_)(args...); }, tuple_params);
         }
-        return 0;
+        return AccessResult::OK;
     }
 };
 
@@ -281,11 +304,11 @@ public:
         (entries_.push_back(entries), ...);
     }
 
-    int call(OutputStream & os, const Params params) override{
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) override{
         for(auto & entry:entries_){
-            entry->call(os,params);
+            entry->call(ar,ap);
         }
-        return 0;
+        return AccessResult::OK;
     }
 
     void add(EntryProxy & entry){
@@ -395,9 +418,8 @@ auto make_property(const StringView name, T & val){
 }
 
 template<typename T>
-requires std::is_const_v<T>
-auto make_property(const StringView name, T & val){
-    return pro::make_proxy<internal::EntryFacade, Property<T>>(
+auto make_ro_property(const StringView name, const T & val){
+    return pro::make_proxy<internal::EntryFacade, Property<const T>>(
         name, 
         val
     );
@@ -412,3 +434,6 @@ auto make_list(const StringView name, const Args & ... entries){
     );
 }
 }
+
+
+
