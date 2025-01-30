@@ -9,6 +9,8 @@
 #include "utils.hpp"
 #include "function_traits.hpp"
 #include "sys/polymorphism/proxy.hpp"
+#include <utility>
+#include <type_traits>
 
 namespace ymd::rpc{
 
@@ -30,9 +32,13 @@ public:
     CallParam(const String && value):
         value_(std::move(value)),
         spec_(std::nullopt){;}
+
     CallParam(const StringView value, const StringView spec):
         value_(value),
         spec_(spec){;}
+
+    template<typename T>
+    CallParam(const T & value): value_(String(value)), spec_(std::nullopt){;}
 
     const auto value() const{
         return value_;
@@ -118,8 +124,34 @@ public:
     }
 
     int call(OutputStream & os, const Params params) override{
+        // switch(params.size()){
+        //     case 0:
+        //         os << value();
+        //         return 0;
+        //     case 1:
+        //         value() = static_cast
+        //     default:
+        //         return -1;
+        // }
+
+        if constexpr(!std::is_const_v<T>){
+            if(params.size()){
+                if(params.size() == 1){
+                    value() = static_cast<T>(params[0]);
+                    return 0;
+                }else{
+                    return -1;
+                }
+            }
+        }else{
+            if(params.size()){
+                return -1;
+            }
+        }
+
         os << value();
         return 0;
+
     }
 };
 
@@ -180,8 +212,6 @@ public:
         : MethodConcept(name), callback_(callback) {}
     int call(OutputStream & os, const Params params) final override {
         if (params.size() != N) {
-        //     os << "Error: Incorrect number of arguments";
-        //     return 0;  // 返回 0 表示错误
             return -1;
         }
 
@@ -189,9 +219,6 @@ public:
         Ret ret = std::apply(callback_, tuple_params);
 
         os << ret;
-        // os << params;
-        // os << "hi";
-        // return os.tellp();  // 返回输出的字节数
         return 0;
     }
 };
@@ -214,11 +241,6 @@ public:
         obj_(obj),
         callback_(callback) {}
     int call(OutputStream & os, const std::span<const CallParam> params) final override {
-        // if (params.size() != N) {
-        // //     os << "Error: Incorrect number of arguments";
-        // //     return 0;  // 返回 0 表示错误
-        //     return -1;
-        // }
         auto tuple_params = convert_params<std::tuple<Args...>>(params, std::index_sequence_for<Args...>{});
 
         if constexpr(std::is_void_v<Ret>){
@@ -226,11 +248,6 @@ public:
         } else {
             os << std::apply([this](Args... args) -> Ret { return (obj_->*callback_)(args...); }, tuple_params);
         }
-
-        // os << params;
-
-        // os << "hi";
-        // return os.tellp();  // 返回输出的字节数
         return 0;
     }
 };
@@ -317,25 +334,51 @@ protected:
 };
 
 
+//一个帮助解析变参包的辅助元函数
+namespace internal{
+template<typename Ret, typename ArgsTuple, template<typename, typename...> class MethodByLambda, typename Lambda>
+struct make_method_by_lambda_impl;
 
+template<typename Ret, template<typename, typename...> class MethodByLambda, typename... Args, typename Lambda>
+struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
+    static auto make(const StringView name, Lambda&& lambda) {
+        return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
+            name,
+            std::forward<Lambda>(lambda)
+        );
+    }
+};
 
+}
 
+// make_lambda 实现
+template<typename Lambda>
+auto make_function(const StringView name, Lambda&& lambda) {
+    // 使用 std::decay 来移除 Lambda 类型的引用和 const 修饰符
+    using DecayedLambda = typename std::decay<Lambda>::type;
 
+    // 提取 Lambda 的返回类型和参数类型
+    using Ret = typename function_traits<DecayedLambda>::return_type;
+    using ArgsTuple = typename function_traits<DecayedLambda>::args_type;
 
+    // 将 ArgsTuple 还原为参数包，并调用 make_proxy
+    return internal::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
+        name,
+        std::forward<Lambda>(lambda)
+    );
+}
 
 
 template<typename Ret, typename ... Args>
-auto make_function(auto && callback, const StringView name = ""){
-    // using Ret = ymd::function_return_t<Callback>;
-    // using Args = typename ymd::function_arg_t<Callback>::type;
+auto make_function(const StringView name, Ret(*callback)(Args...)) {
     return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
         name,
-        std::forward<decltype(callback)>(callback)
+        static_cast<Ret(*)(Args...)>(callback)
     );
 }
 
 template<typename Ret, typename ... Args>
-auto make_memfunc(auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(Args...), const StringView name = "") {
+auto make_function( const StringView name, auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(Args...)) {
     return pro::make_proxy<internal::EntryFacade, MethodByMemFunc<std::remove_cvref_t<decltype(obj)>, Ret, Args...>>(
         name,
         &obj,
@@ -344,7 +387,16 @@ auto make_memfunc(auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*membe
 }
 
 template<typename T>
-auto make_property(T & val, const StringView name = ""){
+auto make_property(const StringView name, T & val){
+    return pro::make_proxy<internal::EntryFacade, Property<T>>(
+        name, 
+        val
+    );
+}
+
+template<typename T>
+requires std::is_const_v<T>
+auto make_property(const StringView name, T & val){
     return pro::make_proxy<internal::EntryFacade, Property<T>>(
         name, 
         val
@@ -353,14 +405,10 @@ auto make_property(T & val, const StringView name = ""){
 
 
 template<typename ... Args>
-auto make_list(const StringView name, Args && ... entries){
+auto make_list(const StringView name, const Args & ... entries){
     return pro::make_proxy<internal::EntryFacade, EntryList>(
         name, 
-        std::forward<Args>(entries)...
+        (entries)...
     );
 }
-// template<typename Callback>
-// auto make_protocol_function(Callback && callback) {
-//     return make_protocol_function("", std::forward<Callback>(callback));
-// }
 }

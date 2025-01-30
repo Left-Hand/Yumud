@@ -12,6 +12,14 @@ public:
     }
 };
 
+iq_t add(iq_t x, iq_t y){
+    return x - y;
+}
+
+
+iq_t add2(const iq_t x, const iq_t y){
+    return x - 0.9_r * y;
+}
 
 void rpc_main(){
     uart2.init(576000);
@@ -21,16 +29,35 @@ void rpc_main(){
 
     Ball ball;
 
-    auto res2 = rpc::make_memfunc<void, iq_t, iq_t>(ball, &Ball::set_xy);
-    auto res = rpc::make_function<iq_t, iq_t, iq_t>(([](iq_t x, iq_t a){
-        return sin(x + a);
-    }));
+
+
+
+    int v = 2;
+    auto func = [&v](iq_t x, iq_t a){
+        return sin(x) + a + v;
+    };
+
+    //function pointer
+    auto res3 = rpc::make_function("add2", add2);
+
+    //lambda
+    auto res = rpc::make_function("add", func);
+
+    //memfunc
+    auto res2 = rpc::make_function("ball", ball, &Ball::set_xy);
 
     real_t a;
-    auto p = rpc::make_property(a);
+    real_t b;
+    auto p = rpc::make_property("a", a);
 
-    // auto list = rpc::make_list("list", res, res2, p, rpc::make_property(a));
-    auto list = rpc::make_list("list", res, res2, p);
+    // auto list = rpc::make_list(
+    //     "list", 
+    //     res, 
+    //     res2, 
+    //     res3, 
+    //     p,
+    //     rpc::make_property("b", b)
+    // );
 
     // char buf[64];
     // memset(buf, 0, sizeof(buf));
@@ -39,22 +66,36 @@ void rpc_main(){
 
 
     while(true){
-        a = sin(8 * t);
-        std::vector<rpc::CallParam> params = {
-            rpc::CallParam(String(t)),
-            rpc::CallParam(String(sin(t))),
+        // a = sin(8 * t);
+        // std::vector<rpc::CallParam> params = {
+        //     rpc::CallParam(String(t)),
+        //     rpc::CallParam(String(sin(t))),
 
-            // rpc::MethodParam("1"),
-            // rpc::MethodParam("2"),
-            // rpc::MethodParam(String(millis())),
-        };
+        //     // rpc::MethodParam("1"),
+        //     // rpc::MethodParam("2"),
+        //     // rpc::MethodParam(String(millis())),
+        // };
 
+        // // res->call(DEBUGGER, params);
+        // // res2->call(DEBUGGER, params);
+        // // p->call(DEBUGGER, params);
+        // // list->call(DEBUGGER, params);
+        // // DEBUG_PRINTLN(buf);
+        // // DEBUG_PRINTLN(params);
+        // res->call(DEBUGGER, {{frac(t)}, {t}});
+        // p->call(DEBUGGER, {});
+        // DEBUG_PRINTLN("")
+        // delay(10);
+        // auto & body = *res;
+
+        // res->call(DEBUGGER, rpc::Params{rpc::CallParam{t}, rpc::CallParam{t}});
+        std::vector params_holder = {rpc::CallParam{t}, rpc::CallParam{t}};
+        auto params = params_holder;
         // res->call(DEBUGGER, params);
-        // res2->call(DEBUGGER, params);
-        // p->call(DEBUGGER, params);
-        // list->call(DEBUGGER, params);
-        DEBUG_PRINTLN(buf);
-        // DEBUG_PRINTLN(params);
-        delay(10);
+        res3 ->call(DEBUGGER, params);
+        
+        DEBUG_PRINTLN("")
+        delay(1);
+        // DEBUG_PRINTLN(res, sizeof(res));
     }
 }   
