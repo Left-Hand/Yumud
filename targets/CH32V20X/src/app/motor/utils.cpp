@@ -1,5 +1,7 @@
 #include "utils.hpp"
 #include "hal/adc/adcs/adc1.hpp"
+#include "rpc.hpp"
+
 
 using namespace ymd::foc;
 
@@ -16,6 +18,7 @@ static __fast_inline void __dq_to_ab(AbValue & ab, const DqValue & dq, const rea
 };
 
 namespace ymd::foc{
+
 DqCurrent ab_to_dq(const AbCurrent & ab, const real_t rad){
     DqCurrent dq;
     __ab_to_dq(dq, ab, rad);
@@ -69,4 +72,6 @@ void init_adc(){
     // adc1.enableContinous();
     adc1.enableAutoInject(false);
 }
+
 }
+

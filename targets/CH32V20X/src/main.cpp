@@ -39,7 +39,8 @@ int main(){
     // qlz_main();
     // embd_main();
     // embd_main();
-    bldc_main();
+    // bldc_main();
+    rpc_main();
     // co_ab_main();
     // eeprom_main();
     // flash_main();
