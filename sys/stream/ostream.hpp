@@ -5,6 +5,7 @@
 #include "sys/string/string.hpp"
 #include <ostream>
 #include <span>
+#include <ranges>
 
 namespace ymd{
 
@@ -53,8 +54,9 @@ protected:
         }
     }
 public:
-    OutputStream(){;}
-    DELETE_COPY_AND_MOVE(OutputStream)
+    OutputStream() = default;
+    OutputStream(const OutputStream &) = delete;
+    OutputStream(OutputStream &&) = delete;
 
     virtual void write(const char data) = 0;
     virtual void write(const char * data_ptr, const size_t len){
@@ -101,11 +103,8 @@ public:
     
     template<typename T>
     OutputStream& operator<<(const ::std::optional<T> v){
-        if(bool(v)){
-            return *this << v.value();
-        }else{
-            return *this << ::std::nullopt;        
-        }
+        if(v.has_value()) return *this << v.value();
+        else return *this << '/';
     }
 
     template<size_t N>
@@ -157,43 +156,8 @@ private:
         *this << ']';
     }
 
-
-public:
-    template<typename T, size_t N>
-    OutputStream & operator<<(const T (&arr)[N]){
-        print_arr(&arr[0], N);
-        return *this;
-    }
-
-    template<typename T, size_t N>
-    OutputStream & operator<<(const ::std::array<T, N> & arr){
-        print_arr(arr.cbegin(), N);
-        return *this;
-    }
-
-    template<typename T>
-    OutputStream & operator<<(const ::std::vector<T> & arr){
-        print_arr((const T *)&arr[0], arr.size());
-        // print_arr(arr.cbegin(), arr.size());
-        return *this;
-    }
-
-    template<typename T, size_t N>
-    OutputStream & operator<<(const sstl::vector<T, N> & arr){
-        print_arr(arr.begin(), N);
-        return *this;
-    }
-
-    OutputStream & operator<<(std::span<auto> span){
-        print_arr(span.data(), span.size());
-        return *this;
-    }
-
-    //#endregion
-
-
     template <typename... Args>
-    auto& operator<<(const ::std::tuple<Args...>& t) {
+    void print_tuple(const ::std::tuple<Args...> & t){
         using TupleType = ::std::tuple<Args...>;
         constexpr size_t tupleSize = ::std::tuple_size<TupleType>::value;
         *this << '(';
@@ -204,6 +168,20 @@ public:
             t
         );
         *this << ')';
+    }
+public:
+    template <typename T>
+    requires std::ranges::contiguous_range<T>
+    OutputStream & operator<<(const T& range) {
+        print_arr(std::ranges::data(range), std::ranges::size(range));
+        return *this;
+    }
+    //#endregion
+
+
+    template <typename... Args>
+    OutputStream & operator<<(const ::std::tuple<Args...>& t) {
+        print_tuple(t);
         return *this;
     }
 
@@ -214,26 +192,22 @@ public:
         return *this;
     }
 
-
-
     template<HasToString T>
     OutputStream & operator<<(const T & misc){*this << misc.toString(eps_); return *this;}
 
-
-
-    template <class... Args>
+    template <typename ... Args>
     void println(Args&&... args){
         skip_split = true;
         (..., print_entity(args));
         *this << "\r\n";
     }
 
-    template <class... Args>
+    template <typename ... Args>
     void prints(Args&&... args){
         (*this << ... << args) << "\r\n";
     }
 
-    template <class... Args>
+    template <typename ... Args>
     void print(Args&&... args){
         (*this << ... << args);
     }
@@ -241,7 +215,6 @@ public:
 
     auto eps() const {return eps_;}
     auto radix() const {return radix_;}
-
     void flush(){while(pending()){__nopn(1);};}
 };
 
