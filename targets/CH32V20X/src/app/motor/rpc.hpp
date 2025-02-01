@@ -14,9 +14,6 @@
 
 namespace ymd::rpc{
 
-
-
-
 //需送入函数中执行的参数 包含了对应的字段和可能的指定参数名
 class CallParam{
 protected:
