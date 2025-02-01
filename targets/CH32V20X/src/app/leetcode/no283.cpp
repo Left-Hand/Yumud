@@ -1,6 +1,7 @@
 #include "tb.h"
 
 #include "sys/debug/debug_inc.h"
+#include "sys/core/system.hpp"
 
 class Solution283{
 public:
@@ -83,12 +84,12 @@ public:
     }
 };
 
-class Solution46{
-public:
-    vector<vector<int>> permute(vector<int>& nums) {
+// class Solution46{
+// public:
+//     std::vector<std::vector<int>> permute(std::vector<int>& nums) {
         
-    }
-};
+//     }
+// };
 
 void leetcode_no283(){
 	Solution283 solu;
@@ -119,6 +120,10 @@ void leetcode_no11(){
     DEBUG_PRINTLN(n);
 }
 
+
+
+using Sys::t;
+
 void leetcode_main(){
     uart2.init(576000);
     DEBUGGER.change(uart2);
@@ -131,5 +136,4 @@ void leetcode_main(){
     leetcode_no11();
 
     DEBUG_PRINTS("done, use", micros() - m, "us")
-    while(true);
 }

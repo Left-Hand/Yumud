@@ -32,9 +32,6 @@ void rpc_main(){
 
     Ball ball;
 
-
-
-
     int v = 2;
     auto func = [&v](iq_t x, iq_t a){
         return sin(x) + a + v;
