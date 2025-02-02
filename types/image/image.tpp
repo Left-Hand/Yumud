@@ -26,10 +26,10 @@ uint64_t Image<ColorType>::sum(const Rect2i & roi) const{
 
 template<typename ColorType>
 void Image<ColorType>::load(const uint8_t * buf, const Vector2i & _size){
-    this->size = _size;
+    this->size_ = _size;
     this->data = std::make_shared<ColorType[]>(_size.x * _size.y);
     // *this = Image<ColorType>{_size};
-    auto area = this->size.x * this->size.y;
+    auto area = this->size().x * this->size().y;
     memcpy((uint8_t *)this->data.get(), buf, area);
 }
 

@@ -40,8 +40,6 @@ void rpc_main(){
     //function pointer
     auto res3 = rpc::make_function("add2", add2);
 
-    //lambda
-    auto res = rpc::make_function("add", func);
 
     //memfunc
     auto res2 = rpc::make_function("ball", ball, &Ball::set_xy);
@@ -54,7 +52,7 @@ void rpc_main(){
 
     auto list = rpc::make_list(
         "list", 
-        res, 
+        rpc::make_function("add", func), 
         res2, 
         res3, 
         p,

@@ -22,7 +22,7 @@ protected:
     void drawStr(const Vector2i & pos, const char * str_ptr, const size_t str_len) override{
         GBKIterator iterator(str_ptr);
 
-        for(int x = pos.x; x < src_image->size.x;){
+        for(int x = pos.x; x < src_image->size().x;){
             if(iterator){
                 auto chr = iterator.next();
                 drawChar(Vector2i(x, pos.y), chr);
@@ -40,7 +40,7 @@ public:
 
 
     Rect2i getClipWindow() override {
-        return src_image->get_view();
+        return src_image->rect();
     }
 
     void bindImage(ImageWritable<ColorType> & _source){
@@ -60,7 +60,7 @@ public:
     template<typename w_ColorType>
     void drawImage(ImageWithData<w_ColorType, w_ColorType> & image, const Vector2i & pos = Vector2i(0,0)){
         if(!src_image->get_view().contains(image.get_view()) || image.data == nullptr) return;
-        auto rect = Rect2i(pos, image.get_size());
+        auto rect = Rect2i(pos, image.size());
         src_image->setarea_unsafe(rect);
         uint32_t i = 0;
         w_ColorType * ptr = image.data.get();
@@ -70,7 +70,7 @@ public:
     }
 
     void drawFilledRect(const Rect2i & rect) override {
-        Rect2i rect_area = src_image->get_view().intersection(rect);
+        Rect2i rect_area = src_image->rect().intersection(rect);
         if(!rect_area) return;
         
         //FIXME use rect_area rather than rect will cause crash 
@@ -82,10 +82,10 @@ public:
     }
 
     void drawLine(const Vector2i & from, const Vector2i & to) override{
-        if(!src_image->has_point(from)){
+        if(!src_image->size().has_point(from)){
             // ASSERT_WITH_HALT(false, "start point lost: ", from);
             return;
-        }else if(!src_image->has_point(to)){
+        }else if(!src_image->size().has_point(to)){
             // ASSERT_WITH_HALT(false, "end point lost: ", to);
             return;
         }
@@ -132,7 +132,7 @@ public:
         const Font * font = chr > 0x80 ? chfont : enfont;
         if(font == nullptr) return;
         
-        Rect2i image_area = Rect2i(Vector2i{}, src_image->size);
+        Rect2i image_area = Rect2i(Vector2i{}, src_image->size());
         const Vector2i font_size = font->getSize();
         Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
 

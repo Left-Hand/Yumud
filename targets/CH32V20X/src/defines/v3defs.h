@@ -62,6 +62,7 @@
 
 #define ENABLE_OPA1
 #define ENABLE_OPA2
+#define ENABLE_ADC1
 
 #define ENABLE_USBFS
 

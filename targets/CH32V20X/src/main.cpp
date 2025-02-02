@@ -39,7 +39,8 @@ int main(){
     // qlz_main();
     // embd_main();
     // embd_main();
-    bldc_main();
+    gui_main();
+    // bldc_main();
     // rpc_main();
     // leetcode_main();
     // co_ab_main();
@@ -82,7 +83,7 @@ int main(){
     // gui_main();
     // math_tb(uart2);
 
-    curve_tb();
+    // curve_tb();
 
     // math_tb(uart2);
     // gpio_tb(UART7_TX_GPIO);
@@ -108,13 +109,13 @@ int main(){
     // st77xx_tb(spi2);
     // embd_main();
     // mpu6050_main();
-    // gui_main();
+    gui_main();
     // sdc_main();
     // proxy_tb();
     // paj7620_main();
     // can_ring_main();
     // m2006_main();
-    gxm::host_main();
+    // gxm::host_main();
     // can_tb(logger, can1);
     while(true);
     #endif

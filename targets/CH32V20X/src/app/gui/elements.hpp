@@ -20,11 +20,37 @@ public:
     }
 };
 
+class Signal {
+private:
+    using Callback = std::function<void()>;
+    using Callbacks = std::vector<Callback>; 
+
+    Callbacks callbacks_;
+
+public:
+    void connect(const Callback & callback) {
+        callbacks_.push_back(callback);
+    }
+
+    void emit() {
+        for (auto& callback : callbacks_) {
+            callback();
+        }
+    }
+};
 
 struct Theme{
-    RGB888 stoke_color;
+    RGB888 stroke_color;
     RGB888 bg_color;
     RGB888 text_color;
+
+    static Theme defaultTheme() {
+        return Theme{
+            .stroke_color = RGB888(0, 0, 0),
+            .bg_color = RGB888(255, 255, 255),
+            .text_color = RGB888(0, 0, 0)
+        };
+    }
 };
 
 // scexpr auto a = sizeof(Theme);
@@ -61,7 +87,7 @@ public:
         painter.setColor(theme_.bg_color);
         painter.drawFilledRect(rect);
 
-        painter.setColor(theme_.stoke_color);
+        painter.setColor(theme_.stroke_color);
         painter.drawHollowRect(rect);
 
         painter.setColor(theme_.text_color);
@@ -84,14 +110,14 @@ public:
         painter.setColor(theme_.bg_color);
         painter.drawFilledRect(rect);
 
-        painter.setColor(theme_.stoke_color);
+        painter.setColor(theme_.stroke_color);
         painter.drawHollowRect(rect);
         
         scexpr auto sp = 3;
         auto sb = rect.position + Vector2i{sp, rect.size.y/2};
         auto sw = rect.size.x - 2 * sp;
 
-        painter.setColor(theme_.stoke_color);
+        painter.setColor(theme_.stroke_color);
         painter.drawFilledRect(Rect2i{sb, Vector2i{sw, 2}});
 
         scexpr auto h = 6;
@@ -110,10 +136,10 @@ public:
         painter.setColor(theme_.bg_color);
         painter.drawFilledRect(rect);
 
-        painter.setColor(theme_.stoke_color);
+        painter.setColor(theme_.stroke_color);
         painter.drawHollowRect(rect);
 
-        painter.setColor(theme_.stoke_color);
+        painter.setColor(theme_.stroke_color);
         painter.drawFilledRect(Rect2i{rect.position + Vector2i(3,6), Vector2i(22,10)});
 
         painter.setColor(theme_.text_color);

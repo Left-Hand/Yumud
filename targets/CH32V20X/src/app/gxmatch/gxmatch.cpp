@@ -785,17 +785,17 @@ void host_main(){
     if(false){
         bindSystickCb(nullptr);
         [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
-            const auto area = Rect2i(pos, src.get_size());
+            const auto area = Rect2i(pos, src.size());
             displayer.puttexture(area, src.get_data());
         };
 
         [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
-            const auto area = Rect2i(pos, src.get_size());
+            const auto area = Rect2i(pos, src.size());
             displayer.puttexture(area, src.get_data());
         };
 
         [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
-            const auto area = Rect2i(pos, src.get_size());
+            const auto area = Rect2i(pos, src.size());
             displayer.puttexture(area, src.get_data());
         };
 
@@ -826,11 +826,11 @@ void host_main(){
             plot_gray(img, {0, 0});
             // auto img = raw_img.space();
             // Geometry::perspective(img, raw_img);
-            // plot_gray(img, {0, img.get_size().y * 1});
+            // plot_gray(img, {0, img.size().y * 1});
             continue;
             auto img_ada = img.space();
             // Shape::adaptive_threshold(img_ada, img);
-            // plot_gray(img_ada, {0, img.get_size().y * 2});
+            // plot_gray(img_ada, {0, img.size().y * 2});
 
             auto img_processed = img.space<Grayscale>();
             // Shape::canny(img_bina, img, {60, 120});
@@ -839,8 +839,8 @@ void host_main(){
             Shape::eye(img_processed2, img_processed);
             // Pixels::binarization(img_bina, img_ada, 220);
             // Pixels::inverse(img_bina);
-            plot_gray(img_processed, {0, img.get_size().y * 2});
-            plot_gray(img_processed2, {0, img.get_size().y * 3});
+            plot_gray(img_processed, {0, img.size().y * 2});
+            plot_gray(img_processed2, {0, img.size().y * 3});
 
         }
     }

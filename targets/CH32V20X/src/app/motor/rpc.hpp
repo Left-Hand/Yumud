@@ -183,9 +183,9 @@ class MethodArgInfo:public Entry{
 protected:
     T preset_;
 public:
-    MethodArgInfo(const StringView & name,T preset_):
+    MethodArgInfo(const StringView & name,T preset):
         Entry(name),
-        preset_(preset_){;}
+        preset_(preset){;}
 
     T preset(){
         return preset_;

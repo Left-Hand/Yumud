@@ -11,7 +11,7 @@ public:
     using Vector2i = ImageBasics::Vector2i;
 protected:
     DisplayerPhy & interface;
-    SSD13XX(DisplayerPhy & _interface):Displayer(size), interface(_interface){;}
+    SSD13XX(DisplayerPhy & _interface):Displayer(size_), interface(_interface){;}
 
     void setarea_unsafe(const Rect2i & area) override{
         setpos_unsafe(area.position);

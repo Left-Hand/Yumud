@@ -91,7 +91,7 @@ bool MT9V034::init(){
     writeReg(AGC_AEC_ENABLE_ADDR, AGC_AEC_ENABLE_VALUE);
 
     #ifdef ENABLE_DVP
-    dvp.init((uint32_t *)data.get(), (uint32_t *)data.get(), size.x * size.y, size.y);
+    dvp.init((uint32_t *)data.get(), (uint32_t *)data.get(), size_.x * size_.y, size_.y);
     #endif
 
 

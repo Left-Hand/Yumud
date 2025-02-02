@@ -43,7 +43,7 @@ private:
 protected:
 
     __fast_inline uint32_t getPointIndex(const uint16_t x, const uint16_t y){
-        return (x + y * size_t(size.x));
+        return (x + y * size_t(size().x));
     }
 
     void setpos_unsafe(const Vector2i & pos) override;
