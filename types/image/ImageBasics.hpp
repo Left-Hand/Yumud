@@ -55,19 +55,13 @@ public:
         return Vector2(real_t(2) / this->size().x, real_t(2) / this->size().y);
     }
 
-    // bool size().has_point(const Vector2i & pos) const{
-    //     return size_.size().has_point(pos);
-    // }
-
     virtual Rect2i rect() const{
-        return {Vector2i(), this->size_};
+        return {Vector2i(0,0), this->size_};
     }
 
     __fast_inline Vector2i size() const{
         return this->size_;
     }
-
-
 };
 
 template<typename ColorType>
@@ -105,10 +99,13 @@ public:
 
 };
 
+// namespace gui{
+    class Renderer;
+// }
+
 template<typename ColorType>
 class ImageWritable:virtual public ImageBasics{
 protected:
-    friend class Painter<ColorType>;
 
     virtual void setpos_unsafe(const Vector2i & pos) = 0;
     virtual void setarea_unsafe(const Rect2i & rect) = 0;
@@ -164,28 +161,30 @@ protected:
         }
     }
 
+    friend class Painter<ColorType>;
+    friend class Renderer;
     friend class PixelProxy<ColorType>;
 public:
     ImageWritable(const Vector2i & _size):ImageBasics(_size){;}
 
-    void setpos(const Vector2i & pos){if(this->size().has_point(pos)){
-        setpos_unsafe(pos);
-    }}
+    // void setpos(const Vector2i & pos){if(this->size().has_point(pos)){
+    //     setpos_unsafe(pos);
+    // }}
 
     void fill(const ColorType color){
         putrect_unsafe(Rect2i{Vector2i{}, ImageBasics::size()}, color);
     }
 
-    void putrect(const Rect2i & rect, const ColorType color){
+    void putRect(const Rect2i & rect, const ColorType color){
         auto area = rect.intersection(this->get_view());
         putrect_unsafe(area, color);
     }
 
-    void puttexture(const Rect2i & rect, const ColorType * color_ptr){
-        if(rect.inside(this->get_view())){
+    virtual void putTexture(const Rect2i & rect, const ColorType * color_ptr){
+        if(rect.inside(this->rect())){
             puttexture_unsafe(rect, color_ptr);
         }else{
-            auto area = rect.intersection(this->get_view());
+            auto area = rect.intersection(this->rect());
             if(bool(area) == false) return;
             setarea_unsafe(area);
             uint32_t i = 0;

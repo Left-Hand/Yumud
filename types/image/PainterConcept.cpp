@@ -65,7 +65,7 @@ void PainterConcept::drawHollowCircle(const Vector2i & pos, const uint radius){
 }
 
 void PainterConcept::drawFilledCircle(const Vector2i & pos, const uint radius){
-    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(), getClipWindow().size)))) || radius == 0) return;
+    if((!(Rect2i::from_center(pos, Vector2i(radius, radius)).inside(Rect2i(Vector2i(0,0), getClipWindow().size)))) || radius == 0) return;
     if(radius == 1){
         return drawPixel(pos);
     }

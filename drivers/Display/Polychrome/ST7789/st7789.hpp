@@ -67,7 +67,7 @@ public:
 
     void init();
 
-    void puttexture(const Rect2i & rect, const is_color auto * color_ptr){
+    void putTexture(const Rect2i & rect, const is_color auto * color_ptr){
         setarea_unsafe(rect);
         interface.writeMulti<RGB565>(color_ptr, int(rect));
     }

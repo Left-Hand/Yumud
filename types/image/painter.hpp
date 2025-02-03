@@ -132,7 +132,7 @@ public:
         const Font * font = chr > 0x80 ? chfont : enfont;
         if(font == nullptr) return;
         
-        Rect2i image_area = Rect2i(Vector2i{}, src_image->size());
+        Rect2i image_area = Rect2i{Vector2i{0,0}, src_image->size()};
         const Vector2i font_size = font->getSize();
         Rect2i char_area = Rect2i(pos, font_size).intersection(image_area);
 

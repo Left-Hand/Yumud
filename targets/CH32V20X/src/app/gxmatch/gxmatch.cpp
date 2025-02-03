@@ -786,17 +786,17 @@ void host_main(){
         bindSystickCb(nullptr);
         [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
             const auto area = Rect2i(pos, src.size());
-            displayer.puttexture(area, src.get_data());
+            displayer.putTexture(area, src.get_data());
         };
 
         [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
             const auto area = Rect2i(pos, src.size());
-            displayer.puttexture(area, src.get_data());
+            displayer.putTexture(area, src.get_data());
         };
 
         [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
             const auto area = Rect2i(pos, src.size());
-            displayer.puttexture(area, src.get_data());
+            displayer.putTexture(area, src.get_data());
         };
 
         // [[maybe_unused]] auto plot_roi = [&](const Rect2i & rect){

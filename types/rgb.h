@@ -240,8 +240,8 @@ public:
         v(_data >> 16)
     {;}
 
-    __fast_inline constexpr HSV888(const uint8_t _h, const uint8_t _s, const uint8_t _v):
-        h(_h), s(_s), v(_v)
+    __fast_inline constexpr HSV888(const int _h, const int _s, const int _v):
+        h(uint8_t(_h)), s(uint8_t(_s)), v(uint8_t(_v))
     {;}
 
     __fast_inline constexpr explicit operator uint24_t() const {return (uint24_t)(

@@ -23,8 +23,9 @@ protected:
     }
 
     void setpos_unsafe(const Vector2i & pos) override{
-        auto & frame = fetchFrame();
-        frame.setpos(pos);
+        // auto & frame = fetchFrame();
+        // frame.setpos_unsafe(pos);
+        DEBUG_PRINTLN("not implemented");
     }
 
     virtual Vector2i getOffset() const = 0;

@@ -19,6 +19,8 @@
 #include "hal/bus/i2c/i2cdrv.hpp"
 #include "hal/bus/i2c/i2csw.hpp"
 
+#include "Renderer.hpp"
+
 #include "elements.hpp"
 
 using namespace ymd;
@@ -148,18 +150,20 @@ void gui_main(){
         tftDisplayer.setInversion(true);
     }
 
-    Painter<RGB565> painter = Painter<RGB565>();
-    painter.bindImage(tftDisplayer);
-    painter.fill(ColorEnum::BLACK);
+    // Painter<RGB565> painter = Painter<RGB565>();
+
+
+    // painter.bindImage(tftDisplayer);
+    // painter.fill(ColorEnum::BLACK);
 
     // painter.setChFont(ymd::font7x7);
-    painter.setEnFont(ymd::font8x5);
+    // painter.setEnFont(ymd::font8x5);
 
-    Theme theme{
-        .stroke_color =  {70,70,70},
-        .bg_color =     {10,10,10},
-        .text_color =   ColorEnum::PINK
-    };
+    // Theme theme{
+    //     .stroke_color =  {70,70,70},
+    //     .bg_color =     {10,10,10},
+    //     .text_color =   ColorEnum::PINK
+    // };
     
     // Label label{theme};
     // label.text = "hello world";
@@ -168,9 +172,9 @@ void gui_main(){
     // Label label2{theme};
     // label2.text = "你好世界";
  
-    Slider slider{theme};
+    // Slider slider{theme};
 
-    OptionButton opt{theme};
+    // OptionButton opt{theme};
     
     // I2cSw       i2c{portD[2], portC[12]};
     // i2c.init(125_KHz);
@@ -181,46 +185,59 @@ void gui_main(){
 
     [[maybe_unused]] auto plot_gray = [&](const Image<Grayscale> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.size());
-        tftDisplayer.puttexture(area, src.get_data());
+        tftDisplayer.putTexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_bina = [&](const Image<Binary> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.size());
-        tftDisplayer.puttexture(area, src.get_data());
+        tftDisplayer.putTexture(area, src.get_data());
     };
 
     [[maybe_unused]] auto plot_rgb = [&](const Image<RGB565> & src, const Vector2i & pos){
         auto area = Rect2i(pos, src.size());
-        tftDisplayer.puttexture(area, src.get_data());
+        tftDisplayer.putTexture(area, src.get_data());
     };
 
+    Image<RGB565> img{{tftDisplayer.rect().w, 4}};
+
+    Renderer renderer = {};
+    renderer.bind(tftDisplayer);
+    renderer.setColor(ColorEnum::BLACK);
+    renderer.drawRect(tftDisplayer.rect());
+
     while(true){
+        renderer.bind(img);
+        renderer.setColor(HSV888{0, int(100 + 100 * sin(t)), 255});
+        renderer.drawPixel(Vector2i(0, 0));
+        renderer.drawRect(Rect2i(20, 0, 20, 40));
+
+        tftDisplayer.putTexture(img.rect(), img.get_data());
+    }
+}
 
         // #ifdef DRAW_TB
-        painter.setColor(ColorEnum::WHITE);
+        // painter.setColor(ColorEnum::WHITE);
         
         // painter.drawString({20,20 + 10 * sin(t)}, String(millis()));
         // painter.drawString({20,20}, String(millis()));
 
-        painter.setColor(ColorEnum::RED);
+        // painter.setColor(ColorEnum::RED);
         // painter.drawFilledRect({60,60 + 10 * sin(t),20,20});
-        Rect2i rect = {30,7,12,20};
+        // Rect2i rect = {30,40,80,50};
         // painter.drawFilledRect(rect);
         // painter.drawHollowRect(rect);
-        painter.drawPixel(rect.position);
-        painter.drawLine(rect.position, rect.get_end());
-        painter.setColor(ColorEnum::BLUE);
+        // painter.drawPixel(rect.position);
+        // painter.drawLine(rect.position, rect.get_end());
+        // painter.setColor(ColorEnum::BLUE);
         // painter.drawHollowRect(rect);
         // painter.drawFilledRect(rect);
-        painter.drawFilledCircle(rect.position, 5);
+        // painter.drawFilledCircle(rect.position, 15);
 
         // painter.drawString({0,0}, "hello");
         // painter.drawFilledRect(rect);
         // logger.println(rect, tftDisplayer.get_view().intersection(rect));
 
         // painter.println(millis());
-    }
-}
 
         // // logger.println(millis());
         // #endif
