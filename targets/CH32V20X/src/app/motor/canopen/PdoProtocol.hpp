@@ -1,0 +1,32 @@
+#pragma once
+
+#include "Protocol.hpp"
+// #include "PdoSession.hpp"
+
+namespace ymd::canopen{
+
+class PdoSession;
+
+class PdoProtocol : public Protocol {
+public:
+    PdoProtocol(Driver& driver, ObjectDictionary& od1);
+
+    void appendRxPdo(PdoSession & ps) {
+        rpdos.push_back(&ps);
+    }
+
+    void appendTxPdo(PdoSession & ps) {
+        tpdos.push_back(&ps);
+    }
+
+    bool sendSyncEvents();
+
+    bool processMessage(const CanMessage& msg) override;
+
+private:
+    std::vector<PdoSession*> rpdos;
+    std::vector<PdoSession*> tpdos;
+
+};
+
+}
