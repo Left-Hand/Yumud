@@ -11,16 +11,16 @@ public:
         // debugPrint("new Sync");
     }
 
-    bool processMessage(const CanMessage& msg) override {
+    bool processMessage(const CanMsg& msg) override {
         if (!Protocol::processMessage(msg) && (msg.id() != 0x080)) {
             return false;
         }
 
         // debugPrint("Sync.processMessage()");
-        bool retval = pdo_.sendSyncEvents();
+        // bool retval = pdo_.sy();
 
         // notifyListeners(msg);
-        return retval;
+        return true;
     }
 
     bool start() override {
@@ -36,7 +36,7 @@ private:
 
     void sendSync() {
         int id = int(getSubEntry(0x1005, 1).unwarp());
-        CanMessage msg(id);
+        CanMsg msg(id);
         sendMessage(msg);
     }
 };

@@ -1,11 +1,12 @@
 #pragma once
 
-#include "ObjectDict.hpp"
-#include "utils.hpp"
+#include "canopen/CanOpenNode.hpp"
+#include "canopen/ObjectDict.hpp"
+#include "canopen/utils.hpp"
 
 namespace ymd::canopen {
 
-using CanMessage = CanMsg;
+using CanMsg = CanMsg;
 
 struct CobId{
     uint16_t nodeid:7;
@@ -61,15 +62,15 @@ public:
 
     StringView name() const{return StringView(name_);}
 
-    virtual bool processMessage(const CanMessage& msg) {
+    virtual bool processMessage(const CanMsg& msg) {
         if (!isEnabled) {
             return false;
         }
-        
+
         return true;
     }
 
-    void sendMessage(const CanMessage& msg) {
+    void sendMessage(const CanMsg& msg) {
         driver_.write(msg);
     }
 

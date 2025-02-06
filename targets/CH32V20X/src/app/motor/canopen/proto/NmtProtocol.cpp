@@ -2,7 +2,7 @@
 
 using namespace ymd::canopen;
 
-bool NmtProtocol::processMessage(const CanMessage& msg) {
+bool NmtProtocol::processMessage(const CanMsg& msg) {
     if (!Protocol::processMessage(msg) && (msg.id() != 0)) {
         return false;
     }

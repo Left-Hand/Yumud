@@ -192,6 +192,9 @@ public:
     bool set(int val);
 
     bool put(const std::span<const uint8_t> val) ;
+    bool put(const CanMsg & msg){
+        return this->put(std::span<const uint8_t>(msg.begin(), msg.size()));
+    }
 
 	size_t dsize() const {return data_type_.dsize();}
 	size_t size() const {return data_type_.dsize();}
@@ -223,17 +226,9 @@ public:
 		subentries_.push_back(&sub);
 	}
 
-    // SubEntry & getSub(SubIndex i){
-    //     return(*subentries_[i]);
-    // }
-
     optref<SubEntry> operator [](const SubIndex idx){
         return subentries_[idx];
     }
-
-    // const SubEntry & getSub(SubIndex i) const {
-    //     return(*subentries_[i]);
-    // }
 
     StringView name() const {
         return StringView(name_);

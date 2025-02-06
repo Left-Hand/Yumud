@@ -3,6 +3,7 @@
 #include "hal/bus/can/can.hpp"
 #include <variant>
 #include <unordered_map>
+#include <tuple>
 #include "sys/string/String.hpp"
 
 namespace ymd::canopen{

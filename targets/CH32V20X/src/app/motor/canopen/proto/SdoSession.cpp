@@ -5,7 +5,7 @@
 using namespace ymd::canopen;
 
 
-bool SdoSession::processMessage(const CanMessage & msg_) {
+bool SdoSession::processMessage(const CanMsg & msg_) {
     msg = msg_;
     int cmd = extractCmdSpecifier();
     switch(cmd) {
@@ -130,7 +130,7 @@ bool SdoSession::downloadRequest() {
     data[2] = (unsigned char)((index >> 8) & 0xFF);
     data[3] = (unsigned char)(subIndex);
     memset(data + 4, 0, 4);
-    sdo_.sendMessage(CanMessage{txCobId, data, 8});
+    sdo_.sendMessage(CanMsg{txCobId, data, 8});
 
     return false;
 }
@@ -149,14 +149,14 @@ bool SdoSession::segmentUploadRequest() {
 
     if (len > 7) {
         memcpy(data + 1, bbSeg, 7);
-        sdo_.sendMessage(CanMessage{txCobId, data, 8});
+        sdo_.sendMessage(CanMsg{txCobId, data, 8});
         bbSeg += 7;
         return true;
     } else {
         data[0] |= (unsigned char)(1 | ((7 - len) << 1));
         memcpy(data + 1, bbSeg, len);
         memset(data + 1 + len, 0, 7 - len);
-        sdo_.sendMessage(CanMessage{txCobId, data, 8});
+        sdo_.sendMessage(CanMsg{txCobId, data, 8});
         bbSeg += len;
         return false;
     }
@@ -184,7 +184,7 @@ bool SdoSession::uploadRequest() {
         data[5] = (unsigned char)(len >> 8);
         data[6] = (unsigned char)(len >> 16);
         data[7] = (unsigned char)(len >> 24);
-        sdo_.sendMessage(CanMessage{txCobId, data, 8});
+        sdo_.sendMessage(CanMsg{txCobId, data, 8});
         bbSeg = data;
         bbSegSize = len;
         return true;
@@ -196,7 +196,7 @@ bool SdoSession::uploadRequest() {
         data[3] = (unsigned char)(subIndex);
         memcpy(data + 4, data, len);
         memset(data + 4 + len, 0, 4 - len);
-        sdo_.sendMessage(CanMessage{txCobId, data, 8});
+        sdo_.sendMessage(CanMsg{txCobId, data, 8});
     }
     return false;
 }

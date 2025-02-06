@@ -60,17 +60,17 @@ public:
     }
 
     // void send(int cobid, unsigned char data[]) {
-    //     CanMessage msg(cobid, 0, data);
+    //     CanMsg msg(cobid, 0, data);
     //     sendMessage(&msg);
     // }
 
-    bool processMessage(const CanMessage & msg) override;
+    bool processMessage(const CanMsg & msg) override;
 
-    static int extractIndex(const CanMessage & msg) {
+    static int extractIndex(const CanMsg & msg) {
         return (msg[1] & 0xFF) | ((msg[2] & 0xFF) << 8);
     }
 
-    static int extractSubIndex(const CanMessage& msg) {
+    static int extractSubIndex(const CanMsg& msg) {
         return msg[3];
     }
 

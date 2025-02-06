@@ -2,7 +2,7 @@
 
 // #include "Driver.hpp"
 #include "SdoProtocol.hpp"
-#include "Entry.hpp"
+#include "canopen/Entry.hpp"
 
 namespace ymd::canopen{
 class SdoSession {
@@ -16,15 +16,15 @@ public:
         // bbSeg = nullptr;
         bbSegSize = 0;
     }
-    
-    bool processMessage(const CanMessage & msg_);
+
+    bool processMessage(const CanMsg & msg_);
 
 private:
     SdoProtocol & sdo_;
     SubEntry& sub_;
     uint32_t txCobId;
     bool inProgress;
-    CanMessage msg;
+    CanMsg msg;
     int index;
     int subIndex;
     uint8_t * bbSeg;

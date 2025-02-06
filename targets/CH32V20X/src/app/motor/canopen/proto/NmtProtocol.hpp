@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Protocol.hpp"
-#include "CanOpenNode.hpp"
+#include "canopen/CanOpenNode.hpp"
 #include "sys/debug/debug_inc.h"
 
 namespace ymd::canopen{
@@ -24,7 +24,7 @@ public:
         : Protocol("NMT", driver, od1), canOpen(coDevice) {
     }
 
-    bool processMessage(const CanMessage& msg) override;
+    bool processMessage(const CanMsg& msg) override;
 
     bool start() override {
         if (Protocol::start()) {

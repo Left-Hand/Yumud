@@ -5,9 +5,6 @@
 
 namespace ymd::canopen{
 
-
-
-
 class ObjectDictionary{
 private:
     using Index = OdIndex;

@@ -1,8 +1,6 @@
 #pragma once
 
-// #include "Protocol.hpp"
 #include "PdoProtocol.hpp"
-// #include "CanMessage.hpp"
 
 
 namespace ymd::canopen {
@@ -13,7 +11,7 @@ public:
         : Protocol("HeartBeat", driver, od1), pdo_(pdo), heartbeatTime(1000), isEnabled(false) {
     }
 
-    bool processMessage(const CanMessage& msg) override {
+    bool processMessage(const CanMsg& msg) override {
         if (!Protocol::processMessage(msg) && (msg.id() != 0x700)) {
             return false;
         }
@@ -48,7 +46,7 @@ private:
     void sendHeartbeat() {
 		auto & se = getSubEntry(0x1017, 1).unwarp();
         int id = int(se);
-        CanMessage msg(
+        CanMsg msg(
 			id, 
 			std::make_tuple<uint8_t>(int(se))
 		);

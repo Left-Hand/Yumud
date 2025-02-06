@@ -2,9 +2,9 @@
 
 // package com.gcdc.canopen;
 
-// import com.gcdc.can.CanMessage;
+// import com.gcdc.can.CanMsg;
 // import com.gcdc.can.Driver;
-// import com.gcdc.can.CanMessageConsumer;
+// import com.gcdc.can.CanMsgConsumer;
 // import java.util.TimerTask;
 // import java.util.Timer;
 // import java.util.concurrent.atomic.*;
@@ -12,7 +12,7 @@
 // import java.util.Iterator;
 // import java.util.List;
 
-#include "Protocol.hpp"
+// #include "Protocol.hpp"
 
 namespace ymd::canopen{
 
@@ -211,7 +211,7 @@ public:
 
 
 
-// 	public void processMessage(CanMessage msg)
+// 	public void processMessage(CanMsg msg)
 // 	{
 // 		if(msg == null)
 // 		{
