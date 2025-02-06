@@ -5,32 +5,29 @@
 
 namespace ymd::canopen{
 
+
+
+
 class ObjectDictionary{
 private:
-    using Index = uint16_t;
-    using SubIndex = uint8_t;
+    using Index = OdIndex;
+    using SubIndex = OdSubIndex;
 
     std::unordered_map<Index, OdEntry *> dict_;
-
 public:
     ObjectDictionary() = default;
 
-	void addListener(int index, int subindex, CanOpenListener & coListener){
-		SubEntry & se = getSubEntry(index, subindex);
-		se.addListener(coListener);
-	}
+    optref<OdEntry> operator [](const Index index){
+        return dict_[index];
+    }
 
-
-	OdEntry & getEntry(Index index){
-		OdEntry & oe = *dict_[index];
-		return (oe);
-	}
-
-	SubEntry & getSubEntry(Index index, SubIndex subindex){
-		OdEntry & oe = getEntry(index);
-		return( oe.getSub(subindex));
-	}
-
+    optref<SubEntry> operator [](const Index index, const SubIndex subindex){
+        auto entry_opt = ((*this)[index]);
+        if (entry_opt.has_value())
+            return entry_opt.value()[subindex];
+        else
+            return std::nullopt;
+    }
 
 	void insert(OdEntry & odEntry){
 		dict_[odEntry.index()] = &odEntry;

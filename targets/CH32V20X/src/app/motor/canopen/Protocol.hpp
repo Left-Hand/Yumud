@@ -29,11 +29,8 @@ public:
     static constexpr int NODE_GUARD = 0xE;
     static constexpr int LSS = 0xF;
 
-    Protocol(Driver& driver, const StringView name, ObjectDictionary& od1)
-        : busDriver(driver), name_(name), objDict(od1) {
-
-        cobIdList.clear();
-        messageListeners.clear();
+    Protocol(const StringView name, Driver& driver,  ObjectDictionary& od1)
+        : name_(name), busDriver(driver),  objDict(od1) {
     }
 
     virtual bool start() {
@@ -66,26 +63,19 @@ public:
         busDriver.write(msg);
     }
 
-    void addCobId(int index, int subIndex) {
-        OdEntry od = objDict.getEntry(index);
-        addCobId(od, subIndex);
+    void addCobId(OdIndex index, OdSubIndex subIndex) {
+        addCobId(objDict[index].unwarp(), subIndex);
     }
 
     void addCobId(OdEntry& od, int subentry) {
-        // std::any ref = od.getSub(subentry).getIntReference();
-        // if (std::holds_alternative<CobId*>(ref)) {
-        //     addCobId(*std::any_cast<CobId*>(ref));
-        // } else {
-        //     std::cerr << "Invalid reference type" << std::endl;
-        // }
     }
 
     void addCobId(CobId cobId) {
         cobIdList.push_back(cobId);
     }
 
-    SubEntry& getSubEntry(int index, int subindex) {
-        return objDict.getSubEntry(index, subindex);
+    auto getSubEntry(OdIndex index, OdSubIndex subindex) {
+        return objDict[index, subindex];
     }
 
     bool isValidCobId(int cobId) {
@@ -112,8 +102,8 @@ public:
     }
 
 private:
-    Driver& busDriver;
     const String name_;
+    Driver& busDriver;
     ObjectDictionary& objDict;
     bool isEnabled = false;
     std::vector<CobId> cobIdList;

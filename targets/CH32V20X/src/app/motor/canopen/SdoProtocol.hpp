@@ -28,7 +28,7 @@ public:
     static constexpr int OD_VALUE_TOO_HIGH = 0x06090032;
 
     SdoProtocol(Driver & driver, ObjectDictionary & od1)
-        : Protocol(driver, "SDOProtocol", od1), driver_(driver), od1_(od1) {
+        : Protocol("Sdo", driver, od1), driver_(driver), od1_(od1) {
         addCobId(0x1200, 1);
         addCobId(0x1200, 2);
     }
@@ -83,7 +83,7 @@ private:
 
     SubEntry& getSubEntry(int index, int subIndex) {
         // Assuming ObjectDictionary has a method getSubEntry
-        return od1_.getSubEntry(index, subIndex);
+        return od1_[index, subIndex].unwarp();
     }
 };
 

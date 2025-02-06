@@ -9,83 +9,169 @@ namespace ymd::canopen {
 // Forward declaration of CanOpenListener
 class SubEntry;
 
-class CanOpenListener {
+
+
+class SdoError {
 public:
-    virtual void onObjDictChange(SubEntry* subEntry) = 0;
-    virtual void onMessage(const CanMsg & msg);
-    virtual ~CanOpenListener() = default;
+	enum Enum : uint32_t {
+        None                        = 0x00000000,          // 无错误
+        ToggleBitNotAlternated      = 0x05030000,          // 切换位未交替
+        SdoProtocolTimedOut         = 0x05040000,          // SDO 协议超时
+        CommandSpecifierNotValid    = 0x05040001,          // 命令指定符无效
+        InvalidBlockSize            = 0x05040002,          // 无效的块大小
+        InvalidSequenceNumber       = 0x05040003,          // 无效的序列号
+        CRCError                    = 0x05040004,          // CRC 错误
+        OutOfMemory                 = 0x05040005,          // 内存不足
+        UnsupportedAccess           = 0x06010000,          // 不支持的访问类型
+        ReadOnlyAccess              = 0x06010001,          // 只读访问
+        WriteOnlyAccess             = 0x06010002,          // 只写访问
+        ObjectDoesNotExist          = 0x06020000,          // 对象不存在
+        ObjectCannotBeMapped        = 0x06040041,          // 对象无法映射
+        PdoLengthExceeded           = 0x06040042,          // PDO 长度超出
+        ParameterIncompatibility    = 0x06040043,          // 参数不兼容
+        InternalIncompatibility     = 0x06040047,          // 内部不兼容
+        HardwareError               = 0x06060000,          // 硬件错误
+        ServiceParameterIncorrect   =0x06070010,          // 服务参数不正确
+        ServiceParameterTooLong     = 0x06070012,          // 服务参数过长
+        ServiceParameterTooShort    = 0x06070013,          // 服务参数过短
+        SubIndexDoesNotExist        = 0x06090011,          // 子索引不存在
+        InvalidValue                = 0x06090030,          // 无效的值
+        ValueTooHigh                = 0x06090031,          // 值过高
+        ValueTooLow                 = 0x06090032,          // 值过低
+        MaxLessThanMin              = 0x06090036,          // 最大值小于最小值
+        ResourceNotAvailable        = 0x060A0023,          // 资源不可用
+        GeneralError                = 0x08000000           // 一般错误
+	};
+
+	SdoError(const Enum e) : e_(e) {;}
+
+	operator Enum() const { return e_; }
+
+    operator bool() const { return e_ != Enum::None; }
+
+private:
+	Enum e_;
+};
+
+
+enum class EntryAccessType : uint8_t {
+    RW = 0,
+    WO = 0x01,
+    RO = 0x02,
+    CONST = 0x03
 };
 
 
 
-class SubEntry {
+
+class EntryDataType {
 public:
-    // AccessType enum
-    enum class AccessType : uint8_t {
-        RW = 0,
-        WO = 0x01,
-        RO = 0x02,
-        CONST = 0x03
-    };
+    using Item = E_Item<uint8_t>;
 
-    enum class DataType : uint16_t {
-        bit = 0x01, // is boolean in spec, but that is a reserved keyword in C++
-        int8 = 0x02, 
-        int16 = 0x03, 
-        int32 = 0x04, 
-        uint8 = 0x05, 
-        uint16 = 0x06, 
-        uint32 = 0x07, 
-        real32 = 0x08,
 
-        // visible_string = 0x09, 
-        // octet_string = 0x0A, 
-        // unicode_string = 0x0B,
+    static constexpr Item bit{0x01};
+    static constexpr Item int8{0x02};
+    static constexpr Item int16{0x03};
+    static constexpr Item int32{0x04};
+    static constexpr Item uint8{0x05};
+    static constexpr Item uint16{0x06};
+    static constexpr Item uint32{0x07};
+    static constexpr Item real32{0x08};
+    static constexpr Item visible_string{0x09};
+    static constexpr Item octet_string{0x0A};
+    static constexpr Item unicode_string{0x0B};
+    static constexpr Item time_of_day{0x0C};
+    static constexpr Item time_difference{0x0D};
+    static constexpr Item domain{0x0F};
+    static constexpr Item int24{0x10};
+    static constexpr Item real64{0x11};
+    static constexpr Item int40{0x12};
+    static constexpr Item int48{0x13};
+    static constexpr Item int56{0x14};
+    static constexpr Item int64{0x15};
+    static constexpr Item uint24{0x16};
+    static constexpr Item pdo_mapping{0x21};
+    static constexpr Item sdo_parameter{0x22};
+    static constexpr Item identity{0x23};
 
-        time_of_day = 0x0C, time_difference = 0x0D,
+    EntryDataType(Item e) : e_(e) {}
 
-        domain = 0x0F,
-        int24 = 0x10,
-        real64 = 0x11, 
-        int40 = 0x12, 
-        int48 = 0x13, 
-        int56 = 0x14, 
-        int64 = 0x15, 
-        uint24 = 0x16,
-        
-        pdo_mapping = 0x21, sdo_parameter = 0x22, identity = 0x23
-    };
+    // 类型转换操作符
+    operator Item() const { return e_; }
 
-    SubEntry(AccessType accessT, DataType dataT, int size, const StringView& name)
-        : accessType(accessT), dataType(dataT), size_(size), pname(name), pdoMapping(false) {}
+    // 判断是否为整数类型
+    bool is_int() const {
+        return e_ <= real32;
+    }
 
-    // SubEntry(AccessType accessT, DataType dataT, int size, const StringView& name, std::any obj)
-    //     : SubEntry(accessT, dataT, size, name) {
-    //     pObject = obj;
-    // }
+    // 获取数据类型的大小
+    size_t dsize() const {
+        switch (e_.v_) {
+            case bit.v_: return 1; // bit 类型通常按 1 字节处理
+            case int8.v_: return 1;
+            case int16.v_: return 2;
+            case int24.v_: return 3;
+            case int32.v_: return 4;
+            case int40.v_: return 5;
+            case int48.v_: return 6;
+            case int56.v_: return 7;
+            case int64.v_: return 8;
+            case uint8.v_: return 1;
+            case uint16.v_: return 2;
+            case uint24.v_: return 3;
+            case uint32.v_: return 4;
+            case real32.v_: return 4;
+            case real64.v_: return 8;
+            default: return 0; // 其他类型（如字符串）大小不确定，返回 0
+        }
+    }
 
-    // SubEntry(AccessType accessT, const StringView& name, const StringView& val)
-    //     : SubEntry(accessT, DataType::visible_string, val.length(), name) {
-    //     pObject = val;
-    // }
+private:
+    Item e_;
+};
 
-    SubEntry(AccessType accessT, const StringView& name, int x)
-        : SubEntry(accessT, DataType::uint32, 4, name) {
+using OdIndex = uint16_t;
+using OdSubIndex = uint8_t;
+
+
+class SubEntry {
+
+public:
+    using AccessType = EntryAccessType;
+    using DataType = EntryDataType;
+
+private:
+    const AccessType access_type_;
+    const DataType data_type_;
+    const String name_;
+
+    uint32_t pObject;
+    bool pdoMapping;
+    std::vector<CanOpenListener * > listeners;
+public:
+    SubEntry(const SubEntry &) = delete;
+    SubEntry(SubEntry &&) = default;
+
+    SubEntry(const StringView name, AccessType accessT, DataType dataT)
+        : access_type_(accessT), data_type_(dataT), name_(name), pdoMapping(false) {}
+
+    SubEntry(const StringView name, AccessType accessT, int x)
+        : SubEntry(name, accessT, DataType::uint32) {
         pObject = x;
     }
 
-    SubEntry(AccessType accessT, const StringView& name, short x)
-        : SubEntry(accessT, DataType::uint16, 2, name) {
+    SubEntry(const StringView name, AccessType accessT, short x)
+        : SubEntry(name, accessT, DataType::uint16) {
         pObject = static_cast<int>(x);
     }
 
-    SubEntry(AccessType accessT, const StringView& name, uint8_t x)
-        : SubEntry(accessT, DataType::uint8, 1, name) {
-        byte1 = x;
+    SubEntry(const StringView name, AccessType accessT, uint8_t x)
+        : SubEntry(name, accessT, DataType::uint8) {
+        pObject = x;
     }
 
-    SubEntry(AccessType accessT, const StringView& name, bool x)
-        : SubEntry(accessT, DataType::int8, 1, name) {
+    SubEntry(const StringView name, AccessType accessT, bool x)
+        : SubEntry(name, accessT, DataType::int8) {
         pObject = x;
     }
     void addListener(CanOpenListener & coListener) {
@@ -98,123 +184,48 @@ public:
 
     void notifyListeners() {
         for (const auto& listener : listeners) {
-            listener->onObjDictChange(this);
+            listener->onObjDictChange(*this);
         }
     }
 
-    std::vector<uint8_t> getByteBuffer() const {
-        std::vector<uint8_t> retval(size_);
-        if (dataType == DataType::uint8) {
-            retval[0] = byte1;
-        } else if (dataType == DataType::uint32) {
-            int val = std::bit_cast<int>(pObject);
-            retval[0] = val & 0xFF;
-            retval[1] = (val >> 8) & 0xFF;
-            retval[2] = (val >> 16) & 0xFF;
-            retval[3] = (val >> 24) & 0xFF;
-        } else if (dataType == DataType::uint16) {
-            int val = std::bit_cast<int>(pObject);
-            retval[0] = val & 0xFF;
-            retval[1] = (val >> 8) & 0xFF;
-        }
-        return retval;
+    const uint8_t * data() const {
+        return reinterpret_cast<const uint8_t *>(pObject);
+    }
+
+    uint8_t * data() {
+        return reinterpret_cast<uint8_t *>(pObject);
     }
 
     int getInt() const {
-        if (dataType == DataType::uint8) {
-            return byte1;
-        } else if (dataType == DataType::uint32 || dataType == DataType::int32) {
-            return std::bit_cast<int>(pObject);
-        } else if (dataType == DataType::uint16) {
-            return std::bit_cast<int>(pObject) & 0x0000FFFF;
-        }
-        return 0;
-        // COException::invalidLength("dataType: 0x" + std::to_string(static_cast<int>(dataType)));
+        return int(*this);
     }
 
-    operator int() const {
-        return getInt();
-    }
+    operator int() const ;
 
-    void set(int val) {
-        if (accessType == AccessType::CONST || accessType == AccessType::RO) {
-            // COException::isReadOnly("Value cannot be written, Read only or Const");
-        }
+    bool set(int val);
 
-        if (dataType == DataType::uint8) {
-            byte1 = static_cast<uint8_t>(val);
-        } else if (dataType == DataType::uint32 || dataType == DataType::int32) {
-            pObject = val;
-        } else if (dataType == DataType::uint16) {
-            pObject = val & 0x0000FFFF;
-        } else {
-            // COException::notMappable("unable to cast datatype from int is " + std::to_string(static_cast<int>(dataType)));
-        }
-        notifyListeners();
-    }
+    bool put(const std::span<const uint8_t> val) ;
 
-    void setIgnorePermissions(int val) {
-        if (dataType == DataType::uint8) {
-            byte1 = static_cast<uint8_t>(val);
-        } else if (dataType == DataType::uint32 || dataType == DataType::int32) {
-            pObject = val;
-        } else if (dataType == DataType::uint16) {
-            pObject = val & 0x0000FFFF;
-        } else {
-            // COException::notMappable("unable to cast datatype from int is " + std::to_string(static_cast<int>(dataType)));
-        }
-        notifyListeners();
-    }
+	size_t dsize() const {return data_type_.dsize();}
+	size_t size() const {return data_type_.dsize();}
 
-    void put(const std::vector<uint8_t>& val) {
-        if (accessType == AccessType::CONST || accessType == AccessType::RO) {
-            // COException::isReadOnly("Value cannot be written, Read only or Const");
-        }
+    StringView name() const {return StringView(name_);}
 
-        if (dataType == DataType::uint8) {
-            byte1 = val[0];
-        } else if (dataType == DataType::uint32 || dataType == DataType::int32) {
-            int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8) | ((val[2] & 0xFF) << 16) | ((val[3] & 0xFF) << 24);
-            pObject = value;
-        } else if (dataType == DataType::uint16) {
-            int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8);
-            pObject = value & 0x0000FFFF;
-        } else {
-            // COException::notMappable("unable to cast datatype from ByteBuffer to " + std::to_string(static_cast<int>(dataType)));
-        }
-        notifyListeners();
-    }
-
-    template<typename T>
-    void put(const T & val){
-        
-    }
-
-private:
-    const AccessType accessType;
-    const DataType dataType;
-    const size_t size_;
-    const String pname;
-
-    uint32_t pObject;
-    // std::any pObject;
-    uint8_t byte1;
-    bool pdoMapping;
-    std::vector<CanOpenListener * > listeners;
 };
 
 
 class OdEntry{
 private:
-    using Index = uint16_t; 
-    using SubIndex = uint8_t; 
+    using Index = OdIndex; 
+    using SubIndex = OdSubIndex; 
 
 
 	const Index index_;
 	const String name_;
 	std::vector<SubEntry *> subentries_ = {};
 public:
-
+    OdEntry(const OdEntry &) = delete;
+    OdEntry(OdEntry &&) = default;
 	OdEntry(Index index, StringView name):
         index_(index),
         name_(name){}
@@ -225,13 +236,17 @@ public:
 		subentries_.push_back(&sub);
 	}
 
-    SubEntry & getSub(SubIndex i){
-        return(*subentries_[i]);
+    // SubEntry & getSub(SubIndex i){
+    //     return(*subentries_[i]);
+    // }
+
+    optref<SubEntry> operator [](const SubIndex idx){
+        return subentries_[idx];
     }
 
-    const SubEntry & getSub(SubIndex i) const {
-        return(*subentries_[i]);
-    }
+    // const SubEntry & getSub(SubIndex i) const {
+    //     return(*subentries_[i]);
+    // }
 
     StringView name() const {
         return StringView(name_);

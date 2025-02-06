@@ -7,7 +7,7 @@ namespace ymd::canopen{
 class SyncProtocol : public Protocol {
 public:
     SyncProtocol(Driver& driver, PdoProtocol & pdo, ObjectDictionary& od1)
-        : Protocol(driver, "SYNC", od1), pdo_(pdo) {
+        : Protocol("Sync", driver, od1), pdo_(pdo) {
         // debugPrint("new Sync");
     }
 
@@ -35,7 +35,7 @@ private:
     PdoProtocol & pdo_;
 
     void sendSync() {
-        int id = getSubEntry(0x1005, 1).getInt();
+        int id = int(getSubEntry(0x1005, 1).unwarp());
         CanMessage msg(id);
         sendMessage(msg);
     }

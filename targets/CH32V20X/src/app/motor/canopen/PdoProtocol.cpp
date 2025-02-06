@@ -5,15 +5,13 @@ using namespace ymd::canopen;
 
 
 PdoProtocol::PdoProtocol(Driver& driver, ObjectDictionary& od1)
-    : Protocol(driver, "PDO", od1) {
-    rpdos.clear();
-    tpdos.clear();
+    : Protocol("Pdo", driver, od1) {
 
     // debugPrint("creating Rx Pdo's from Od");
     for (int i = 0; i < 4; i++) {
         // default rx pdo's (RPDO)
-        OdEntry odComm = od1.getEntry(0x1400 + i);
-        OdEntry odMap = od1.getEntry(0x1600 + i);
+        OdEntry & odComm = od1[0x1400 + i].value();
+        OdEntry & odMap = od1[0x1600 + i].value();
         PdoSession* pdoSession = new PdoSession(*this, odComm, odMap);
         appendRxPdo(*pdoSession);
     }
@@ -21,8 +19,8 @@ PdoProtocol::PdoProtocol(Driver& driver, ObjectDictionary& od1)
     // debugPrint("creating Tx Pdo's from Od");
     for (int i = 0; i < 4; i++) {
         // default tx pdo's (TPDO)
-        OdEntry odComm = od1.getEntry(0x1800 + i);
-        OdEntry odMap = od1.getEntry(0x1A00 + i);
+        OdEntry & odComm = od1[0x1800 + i].value();
+        OdEntry & odMap = od1[0x1A00 + i].value();
         PdoSession* pdoSession = new PdoSession(*this, odComm, odMap);
         appendTxPdo(*pdoSession);
     }
@@ -35,24 +33,22 @@ bool PdoProtocol::processMessage(const CanMessage& msg) {
         return false;
     }
 
-    std::vector<PdoSession*>& ps = (msg.isRemote() == 0) ? rpdos : tpdos;
+    auto & ps = (msg.isRemote() == 0) ? rpdos_ : tpdos_;
 
-    for (auto* pdoSession : ps) {
+    for (auto * pdoSession : ps) {
         if (pdoSession->processMessage(msg)) {
             notifyListeners(msg);
             return true;
         }
     }
 
-    // std::cout << "Warning: pdo cobId not found" << std::endl;
-    // msg.dump();
     return false;
 }
 
 bool PdoProtocol::sendSyncEvents() {
     bool retval = false;
 
-    for (auto* ps : tpdos) {
+    for (auto* ps : tpdos_) {
         if (ps->syncEvent()) {
             retval = true;
         }

@@ -13,7 +13,7 @@ public:
         txCobId = cobid;
         inProgress = false;
         toggle = 0;
-        bbSeg = nullptr;
+        // bbSeg = nullptr;
         bbSegSize = 0;
     }
 
@@ -33,7 +33,7 @@ private:
     CanMessage msg;
     int index;
     int subIndex;
-    unsigned char* bbSeg;
+    uint8_t * bbSeg;
     int bbSegSize;
     int toggle;
 

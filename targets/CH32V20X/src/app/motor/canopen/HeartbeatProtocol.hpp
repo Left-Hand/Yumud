@@ -10,8 +10,7 @@ namespace ymd::canopen {
 class HeartbeatProtocol : public Protocol {
 public:
     HeartbeatProtocol(Driver& driver, PdoProtocol & pdo, ObjectDictionary& od1)
-        : Protocol(driver, "HEARTBEAT", od1), pdo_(pdo), heartbeatTime(1000), isEnabled(false) {
-        debugPrint("new HeartbeatProtocol");
+        : Protocol("HeartBeat", driver, od1), pdo_(pdo), heartbeatTime(1000), isEnabled(false) {
     }
 
     bool processMessage(const CanMessage& msg) override {
@@ -29,12 +28,7 @@ public:
             return false;
         }
         isEnabled = true;
-        debugPrint("heartbeat starting");
 
-        // while (isEnabled) {
-        //     std::this_thread::sleep_for(std::chrono::milliseconds(heartbeatTime));
-        //     sendHeartbeat();
-        // }
         return true;
     }
 
@@ -52,17 +46,14 @@ private:
     bool isEnabled;
 
     void sendHeartbeat() {
-        std::vector<uint8_t> dataBytes(1);
-        dataBytes[0] = static_cast<uint8_t>(getSubEntry(0x1017, 1).getInt());
-        int id = getSubEntry(0x1017, 0).getInt();
-        CanMessage msg(id, dataBytes.data(), dataBytes.size());
-        sendMessage(msg);
-    }
+		auto & se = getSubEntry(0x1017, 1).unwarp();
+        int id = int(se);
+        CanMessage msg(
+			id, 
+			std::make_tuple<uint8_t>(int(se))
+		);
 
-    void debugPrint(const std::string& v) const {
-        // if (debug) {
-        //     std::cout << v << std::endl;
-        // }
+        sendMessage(msg);
     }
 };
 

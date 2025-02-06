@@ -21,67 +21,47 @@ public:
 };
 
 
+template<typename T>
+class optref{
+private:
+    T * ptr_;
 
+    void check() const{
+        if(ptr_ == nullptr){
+            HALT;
+        }
+    }
+public:
+    optref(T & ptr): ptr_(&ptr){}
+    optref(T * ptr): ptr_(ptr){}
+    optref(std::nullopt_t): ptr_(nullptr){}
 
-// class ObjectDictionary {
-// public:
-//     using ObjectDictValue = std::variant<uint8_t, uint16_t, uint32_t, int8_t, int16_t, int32_t, float>;
+    bool has_value() const{return ptr_ != nullptr;}
 
-//     struct Index {
-//         uint16_t index;
-//         uint8_t subindex;
+    T & value() const{check();return *ptr_;}
+    T & unwarp() const{check();return *ptr_;}
+};
 
-//         // Define equality operator for use in unordered_map
-//         bool operator==(const Index& other) const {
-//             return index == other.index && subindex == other.subindex;
-//         }
+class SubEntry;
 
-//         struct Hasher {
-//             size_t operator()(const Index& idx) const {
-//                 return std::hash<uint16_t>{}(idx.index) ^ std::hash<uint8_t>{}(idx.subindex);
-//             }
-//         };
-//     };
+class CanOpenListener {
+public:
+    virtual void onObjDictChange(SubEntry & subEntry) = 0;
+    virtual void onMessage(const CanMsg & msg) = 0;
+    virtual ~CanOpenListener() = default;
+};
 
-//     // Set a value in the object dictionary
-//     void set(const Index idx, const ObjectDictValue& value) {
-//         dict[idx] = value;
-//     }
+template<typename T>
+struct E_Item {
+    T v_;
 
-//     // Get a value from the object dictionary
-//     std::optional<ObjectDictValue> get(const Index idx) const {
-//         auto it = dict.find(idx);
-//         if (it != dict.end()) {
-//             return it->second;
-//         }
-//         return std::nullopt; // Return nullopt if key not found
-//     }
+    constexpr E_Item(T v) : v_(v) {}
 
-// private:
-//     // Custom hash function for Index
+    // 添加比较操作符，方便枚举值的比较
+    bool operator==(const E_Item& other) const { return v_ == other.v_; }
+    bool operator!=(const E_Item& other) const { return v_ != other.v_; }
+    bool operator<=(const E_Item& other) const { return v_ <= other.v_; }
+};
 
-
-//     std::unordered_map<Index, ObjectDictValue, Index::Hasher> dict;
-// };
-
-
-// class NmtService{
-//     NmtService(CanDriver& driver, uint8_t nodeId) : driver_(driver), nodeId_(nodeId) {}
-
-//     void sendHeartbeat() {
-//         // Send heartbeat message
-//     }
-
-//     void setState(uint8_t newState) {
-//         // Set new state
-//     }
-// };
-// class Sdo{
-
-// };
-
-// class Pdo{
-
-// };
 
 }

@@ -12,11 +12,11 @@ public:
     PdoProtocol(Driver& driver, ObjectDictionary& od1);
 
     void appendRxPdo(PdoSession & ps) {
-        rpdos.push_back(&ps);
+        rpdos_.push_back(&ps);
     }
 
     void appendTxPdo(PdoSession & ps) {
-        tpdos.push_back(&ps);
+        tpdos_.push_back(&ps);
     }
 
     bool sendSyncEvents();
@@ -24,9 +24,8 @@ public:
     bool processMessage(const CanMessage& msg) override;
 
 private:
-    std::vector<PdoSession*> rpdos;
-    std::vector<PdoSession*> tpdos;
-
+    std::vector<PdoSession*> rpdos_;
+    std::vector<PdoSession*> tpdos_;
 };
 
 }

@@ -108,7 +108,7 @@ bool SdoSession::downloadRequest() {
         // std::cout << "SDO downloadRequest is expedited val: " << std::hex << value << std::dec << std::endl;
 
         // try {
-            sub_.put(value);
+            sub_.set(value);
         // } catch (...) {
         //     // std::cout << "downloadRequest() error : Unable to copy the data in the object dictionary" << std::endl;
         //     sdo_.sendAbort(index, subIndex, SdoProtocol::SDOABT_GENERAL_ERROR);
@@ -170,9 +170,9 @@ bool SdoSession::uploadRequest() {
     }
     inProgress = true;
 
-    auto buffer = sub_.getByteBuffer();
-    bbSeg = buffer.data();
-    int len = buffer.size();
+    // auto buffer = sub_.getByteBuffer();
+    bbSeg = sub_.data();
+    int len = sub_.dsize();
 
     if (len > 4) {
         unsigned char data[8];

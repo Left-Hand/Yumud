@@ -23,8 +23,7 @@ public:
 
     PdoSession(PdoProtocol & pdo, OdEntry& params, OdEntry& mapping)
         : pdo_(pdo), params_(params), mapping_(mapping) {
-        cobId = int(params.getSub(1));
-        // debugPrint("pdo cobId: " + toIndexFmt(cobId.load()));
+        cobId = int(params[1].unwarp());
         pdo.addCobId(cobId);
     }
 
@@ -33,7 +32,6 @@ public:
             return false;
         }
         isEnabled = true;
-        // debugPrint("PdoSession timers starting for " + name);
         return true;
     }
 
@@ -52,34 +50,30 @@ public:
         if (msg.id() != cobId) {
             return false;
         }
-        // debugPrint("PdoSession cobId match " + toIndexFmt(msg.id));
 
-        int numMaps = mapping_.getSub(0).getInt();
+        int numMaps = int(mapping_[0].unwarp());
         int totalBits = 0;
         std::vector<uint8_t> data(msg.data(), msg.data() + msg.size());
 
         for (int i = 1; i <= numMaps; i++) {
-            int map = mapping_.getSub(i).getInt();
-            // debugPrint("PdoSession.processMessage() map: 0x" + toIndexFmt(map));
+            int map = int(mapping_[i].unwarp());
             int index = 0x0000ffff & (map >> 16);
             int sub = 0x000000ff & (map >> 8);
             int bits = 0x000000ff & (map);
-            SubEntry& se = pdo_.getSubEntry(index, sub);
+            SubEntry& se = pdo_.getSubEntry(index, sub).unwarp();
 
             if (bits == 8) {
                 uint8_t b1 = data[totalBits / 8];
                 se.set(b1);
             } else if (bits == 16) {
                 uint16_t s1 = (data[totalBits / 8] | (data[totalBits / 8 + 1] << 8));
-                // debugPrint("PdoSession.processMessage() setting Object Dict entry to 0x" + toIndexFmt(s1));
                 se.set(s1);
             } else if (bits == 32) {
                 uint32_t i1 = (data[totalBits / 8] | (data[totalBits / 8 + 1] << 8) |
                               (data[totalBits / 8 + 2] << 16) | (data[totalBits / 8 + 3] << 24));
                 se.set(i1);
-            } else {
-                // std::cout << "Error: PdoSession.processMsg() " << bits << " not supported, Fixme!" << std::endl;
             }
+
             totalBits += bits;
             if (totalBits > 64) {
                 break;
@@ -93,7 +87,7 @@ public:
         if ((id & 0x8000) == 0x8000) {
             return false;
         }
-        int transType = params_.getSub(2).getInt();
+        int transType = int(params_[2].unwarp());
         if (transType >= TRANS_SYNC_MIN && transType <= TRANS_SYNC_MAX) {
             // Cyclic synchronous type
             transSyncCount++;
@@ -114,7 +108,7 @@ public:
                 pdo_.sendMessage(lastMsg);
             }
         }
-        // debugPrint("PdoSession.syncEvent() cobId: 0x" + toIndexFmt(cobId.load()));
+        // DEBUG_PRINTLN("PdoSession.syncEvent() cobId: 0x" + toIndexFmt(cobId.load()));
         return true;
     }
 
@@ -127,11 +121,6 @@ private:
     int transSyncCount = 0;
     CanMessage lastMsg;
 
-    void debugPrint(const std::string& msg) const {
-        // std::cout << msg << std::endl;
-        // For extra info on stdout uncomment above line
-    }
-
     // static std::string toIndexFmt(int index) {
     //     std::stringstream ss;
     //     ss << std::hex << std::uppercase << std::setw(4) << std::setfill('0') << index;
@@ -140,17 +129,17 @@ private:
 
     CanMessage buildMessage() {
         std::vector<uint8_t> data(8, 0);
-        int numMaps = mapping_.getSub(0).getInt();
+        int numMaps = int(mapping_[0].unwarp());
         int totalBits = 0;
 
         for (int i = 1; i <= numMaps; i++) {
-            int map = mapping_.getSub(i).getInt();
-            // debugPrint("PdoSession.buildMessage() map: 0x" + toIndexFmt(map));
+            int map = int(mapping_[i].unwarp());
+            // DEBUG_PRINTLN("PdoSession.buildMessage() map: 0x" + toIndexFmt(map));
             int index = 0x0000ffff & (map >> 16);
             int sub = 0x000000ff & (map >> 8);
             int bits = 0x000000ff & (map);
-            int val = int(pdo_.getSubEntry(index, sub));
-            // debugPrint("PdoSession.buildMessage() val: 0x" + toIndexFmt(val) + " bits:" + std::to_string(bits));
+            int val = int(pdo_.getSubEntry(index, sub).unwarp());
+            // DEBUG_PRINTLN("PdoSession.buildMessage() val: 0x" + toIndexFmt(val) + " bits:" + std::to_string(bits));
 
             if (bits == 8) {
                 data[totalBits / 8] = static_cast<uint8_t>(val);
