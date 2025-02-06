@@ -20,8 +20,8 @@ bool SdoProtocol::processMessage(const CanMessage & msg) {
     if (it == sessions.end()) {
         index = extractIndex(msg);
         subIndex = extractSubIndex(msg);
-        SubEntry & se1 = getSubEntry(index, subIndex);
-        int txCobId = getSubEntry(0x1200, 2).getInt();
+        SubEntry & se1 = getSubEntry(index, subIndex).unwarp();
+        int txCobId = int(getSubEntry(0x1200, 2).unwarp());
         SdoSession* session = new SdoSession(*this, txCobId, se1);
         sessions[msg.id()] = session;
     }
@@ -32,6 +32,6 @@ bool SdoProtocol::processMessage(const CanMessage & msg) {
         sessions.erase(msg.id());
     }
 
-    notifyListeners(msg);
+    // notifyListeners(msg);
     return true;
 }

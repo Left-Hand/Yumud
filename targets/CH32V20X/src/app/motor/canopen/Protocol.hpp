@@ -7,7 +7,15 @@ namespace ymd::canopen {
 
 using CanMessage = CanMsg;
 
-using CobId = uint16_t;
+struct CobId{
+    uint16_t nodeid:7;
+    uint16_t fcode:4;
+
+    CobId(const uint16_t id):
+        nodeid(id & 0x7F),
+        fcode((id >> 7) & 0x0f){;}
+    constexpr operator uint16_t() const {return nodeid | fcode << 7;}
+};
 
 class Protocol {
 public:
@@ -30,13 +38,14 @@ public:
     static constexpr int LSS = 0xF;
 
     Protocol(const StringView name, Driver& driver,  ObjectDictionary& od1)
-        : name_(name), busDriver(driver),  objDict(od1) {
+        : name_(name), driver_(driver),  od_(od1) {
     }
 
     virtual bool start() {
         if (isEnabled) {
             return false;
         }
+
         isEnabled = true;
         return true;
     }
@@ -45,6 +54,7 @@ public:
         if (!isEnabled) {
             return false;
         }
+
         isEnabled = false;
         return true;
     }
@@ -55,69 +65,24 @@ public:
         if (!isEnabled) {
             return false;
         }
-        bool retval = isValidCobId(msg.id());
-        return retval;
+        
+        return true;
     }
 
     void sendMessage(const CanMessage& msg) {
-        busDriver.write(msg);
-    }
-
-    void addCobId(OdIndex index, OdSubIndex subIndex) {
-        addCobId(objDict[index].unwarp(), subIndex);
-    }
-
-    void addCobId(OdEntry& od, int subentry) {
-    }
-
-    void addCobId(CobId cobId) {
-        cobIdList.push_back(cobId);
+        driver_.write(msg);
     }
 
     auto getSubEntry(OdIndex index, OdSubIndex subindex) {
-        return objDict[index, subindex];
+        return od_[index, subindex];
     }
+protected:
 
-    bool isValidCobId(int cobId) {
-        for (const auto id : cobIdList) {
-            if (cobId == id) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void addListener(CanOpenListener* coListener) {
-        messageListeners.push_back(coListener);
-    }
-
-    void removeListener(CanOpenListener* coListener) {
-        messageListeners.erase(std::remove(messageListeners.begin(), messageListeners.end(), coListener), messageListeners.end());
-    }
-
-    void notifyListeners(const CanMessage& msg) {
-        for (auto* listener : messageListeners) {
-            listener->onMessage(msg);
-        }
-    }
-
+    bool isEnabled = false;
 private:
     const String name_;
-    Driver& busDriver;
-    ObjectDictionary& objDict;
-    bool isEnabled = false;
-    std::vector<CobId> cobIdList;
-    std::vector<CanOpenListener*> messageListeners;
-
-
-    static int extractIndex(const CanMessage& msg) {
-        int retval = ((static_cast<int>(msg[2]) << 8) & 0x0000FF00) | (static_cast<int>(msg[1]) & 0x000000FF);
-        return retval;
-    }
-
-    static int extractSubIndex(const CanMessage& msg) {
-        return static_cast<int>(msg[3]) & 0x000000FF;
-    }
+    Driver& driver_;
+    ObjectDictionary& od_;
 };
 
-} // namespace ymd::canopen
+}

@@ -19,7 +19,7 @@ public:
         }
 
         // debugPrint("HeartbeatProtocol.processMessage()");
-        notifyListeners(msg);
+        // notifyListeners(msg);
         return true;
     }
 

@@ -147,7 +147,6 @@ private:
 
     uint32_t pObject;
     bool pdoMapping;
-    std::vector<CanOpenListener * > listeners;
 public:
     SubEntry(const SubEntry &) = delete;
     SubEntry(SubEntry &&) = default;
@@ -174,19 +173,7 @@ public:
         : SubEntry(name, accessT, DataType::int8) {
         pObject = x;
     }
-    void addListener(CanOpenListener & coListener) {
-        listeners.push_back(&coListener);
-    }
 
-    void removeListener(CanOpenListener & coListener) {
-        listeners.erase(std::remove(listeners.begin(), listeners.end(), &coListener), listeners.end());
-    }
-
-    void notifyListeners() {
-        for (const auto& listener : listeners) {
-            listener->onObjDictChange(*this);
-        }
-    }
 
     const uint8_t * data() const {
         return reinterpret_cast<const uint8_t *>(pObject);

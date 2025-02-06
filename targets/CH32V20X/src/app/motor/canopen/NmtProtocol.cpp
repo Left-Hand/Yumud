@@ -44,6 +44,6 @@ bool NmtProtocol::processMessage(const CanMessage& msg) {
             DEBUG_PRINTLN("unknown comm");
             return false;
     }
-    notifyListeners(msg);
+    // notifyListeners(msg);
     return true;
 }

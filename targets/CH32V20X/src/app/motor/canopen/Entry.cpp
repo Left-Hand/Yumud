@@ -52,7 +52,7 @@ bool SubEntry::put(const std::span<const uint8_t> val) {
     } else {
         return false;
     }
-    notifyListeners();
+
     return true;
 }
 

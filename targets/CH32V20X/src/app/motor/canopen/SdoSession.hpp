@@ -16,13 +16,7 @@ public:
         // bbSeg = nullptr;
         bbSegSize = 0;
     }
-
-    // SdoSession::~SdoSession() {
-    //     if (bbSeg != nullptr) {
-    //         delete[] bbSeg;
-    //     }
-    // }
-
+    
     bool processMessage(const CanMessage & msg_);
 
 private:

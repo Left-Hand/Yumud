@@ -29,8 +29,8 @@ public:
 
     SdoProtocol(Driver & driver, ObjectDictionary & od1)
         : Protocol("Sdo", driver, od1), driver_(driver), od1_(od1) {
-        addCobId(0x1200, 1);
-        addCobId(0x1200, 2);
+        // addCobId(0x1200, 1);
+        // addCobId(0x1200, 2);
     }
 
     // ~SdoProtocol() {
@@ -53,7 +53,7 @@ public:
         can_data[7] = (unsigned char)((abortCode >> 24) & 0xFF);
 
         // int cobid = 0;
-        SubEntry& se = getSubEntry(0x1200, 2);
+        SubEntry& se = getSubEntry(0x1200, 2).unwarp();
         uint32_t cobid = se.getInt();
 
         sendMessage({cobid, can_data, 8});
@@ -79,12 +79,6 @@ private:
     Driver & driver_;
     ObjectDictionary & od1_;
     std::unordered_map<uint16_t, SdoSession * > sessions;
-
-
-    SubEntry& getSubEntry(int index, int subIndex) {
-        // Assuming ObjectDictionary has a method getSubEntry
-        return od1_[index, subIndex].unwarp();
-    }
 };
 
 

@@ -19,7 +19,7 @@ public:
         // debugPrint("Sync.processMessage()");
         bool retval = pdo_.sendSyncEvents();
 
-        notifyListeners(msg);
+        // notifyListeners(msg);
         return retval;
     }
 

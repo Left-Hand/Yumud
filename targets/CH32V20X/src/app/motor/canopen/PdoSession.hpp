@@ -24,7 +24,7 @@ public:
     PdoSession(PdoProtocol & pdo, OdEntry& params, OdEntry& mapping)
         : pdo_(pdo), params_(params), mapping_(mapping) {
         cobId = int(params[1].unwarp());
-        pdo.addCobId(cobId);
+        // pdo.addCobId(cobId);
     }
 
     bool start() {
