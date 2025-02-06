@@ -29,16 +29,8 @@ public:
 
     SdoProtocol(Driver & driver, ObjectDictionary & od1)
         : Protocol("Sdo", driver, od1), driver_(driver), od1_(od1) {
-        // addCobId(0x1200, 1);
-        // addCobId(0x1200, 2);
     }
 
-    // ~SdoProtocol() {
-    //     for (auto& session : sessions) {
-    //         delete session.second;
-    //     }
-    //     sessions.clear();
-    // }
 
     void sendAbort(int index, int subIndex, int abortCode) {
         unsigned char can_data[8];
@@ -59,15 +51,10 @@ public:
         sendMessage({cobid, can_data, 8});
     }
 
-    // void send(int cobid, unsigned char data[]) {
-    //     CanMsg msg(cobid, 0, data);
-    //     sendMessage(&msg);
-    // }
-
     bool processMessage(const CanMsg & msg) override;
 
     static int extractIndex(const CanMsg & msg) {
-        return (msg[1] & 0xFF) | ((msg[2] & 0xFF) << 8);
+        return (msg[2] << 8) | msg[1] ;
     }
 
     static int extractSubIndex(const CanMsg& msg) {

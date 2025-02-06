@@ -1,13 +1,14 @@
 #pragma once
 
-#include "utils.hpp"
-#include "PdoProtocol.hpp"
+#include "canopen/utils.hpp"
+#include "canopen/ObjectDict.hpp"
+// #include "PdoProtocol.hpp"
 
 namespace ymd::canopen{
 
+class PdoProtocol;
 
-
-class PdoSession {
+class PdoSessionBase {
 public:
     using Driver = CanDriver;
     using CobId = uint16_t;
@@ -59,23 +60,38 @@ public:
         EventProfile = 255
     };
 
-    PdoSession(PdoProtocol & pdo, OdEntry & params, OdEntry & mapping)
+    PdoSessionBase(PdoProtocol & pdo, OdEntry & params, OdEntry & mapping)
         : pdo_(pdo), params_(params), mapping_(mapping) {
-        cobId = int(params[1].unwarp());
     }
 
 
-    bool processMessage(const CanMsg& msg);
-    bool onSyncEvent();
-private:
+protected:
     PdoProtocol & pdo_;
     OdEntry & params_;
     OdEntry & mapping_;
-    CobId cobId;
-    int transSyncCount = 0;
-
-    CanMsg buildMessage() const ;
 };
 
+
+class PdoTxSession:public PdoSessionBase{
+private:
+    CanMsg buildMessage() const ;
+    int transSyncCount = 0;
+public:
+    PdoTxSession(PdoProtocol & pdo, OdEntry & params, OdEntry & mapping)
+        : PdoSessionBase(pdo, params, mapping) {
+    }
+
+    bool onSyncEvent();
+};
+
+
+class PdoRxSession:public PdoSessionBase{
+public:
+    PdoRxSession(PdoProtocol & pdo, OdEntry & params, OdEntry & mapping)
+        : PdoSessionBase(pdo, params, mapping) {
+    }
+    
+    bool processMessage(const CanMsg& msg);
+};
 
 }

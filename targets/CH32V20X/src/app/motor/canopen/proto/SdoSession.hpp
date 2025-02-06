@@ -5,45 +5,71 @@
 #include "canopen/Entry.hpp"
 
 namespace ymd::canopen{
-class SdoSession {
+class SdoSessionBase {
 public:
-    SdoSession(SdoProtocol & sdo, int cobid, SubEntry & sub):
-    sdo_(sdo), sub_(sub) {
-        
-        txCobId = cobid;
-        inProgress = false;
-        toggle = 0;
-        // bbSeg = nullptr;
-        bbSegSize = 0;
+    SdoSessionBase(SdoProtocol & sdo, CobId cobid, SubEntry & sub):
+    sdo_(sdo), cobid_(cobid), sub_(sub) {
     }
 
-    bool processMessage(const CanMsg & msg_);
+    virtual bool processMessage(const CanMsg & msg_) = 0;
 
-private:
+protected:
+    int extractCmdSpecifier(const CanMsg & msg) {return (msg[0] >> 5);}
+    int extractN2(const CanMsg & msg) {return ((msg[0] >> 2) & 0x03);}
+    int extractCommandSpecifier(const CanMsg & msg) {return ((msg[0] >> 5) & 0x03);}
+    int extractN3(const CanMsg & msg) {return ((msg[0] >> 1) & 0x07);}
+    int extractExpidited(const CanMsg & msg) {return ((msg[0] >> 1) & 0x01);}
+    int extractSizeInd(const CanMsg & msg) {return (msg[0] & 0x01);}
+    int extractEndTrans(const CanMsg & msg) {return (msg[0] & 0x01);}
+    int extractToggle(const CanMsg & msg) {return ((msg[0] >> 4) & 0x01);}
+
     SdoProtocol & sdo_;
-    SubEntry& sub_;
-    uint32_t txCobId;
-    bool inProgress;
-    CanMsg msg;
-    int index;
-    int subIndex;
-    uint8_t * bbSeg;
-    int bbSegSize;
-    int toggle;
+    const CobId cobid_;
+    SubEntry & sub_;
+    // bool inProgress;
+    // int index;
+    // int subIndex;
+    // uint8_t * bbSeg;
+    // int bbSegSize;
+    // int toggle;
 
-    int extractCmdSpecifier();
-    int extractN2();
-    int extractCommandSpecifier();
-    int extractN3();
-    int extractExpidited();
-    int extractSizeInd();
-    int extractEndTrans();
-    int extractToggle();
+    virtual bool segmentDownloadRequest(const CanMsg & msg) = 0;
+    virtual bool segmentUploadRequest(const CanMsg & msg) = 0;
+    virtual bool uploadRequest(const CanMsg & msg) = 0;
+    // virtual bool processMessage(const CanMsg & msg) = 0;
+};
 
-    bool segmentDownloadRequest();
-    bool downloadRequest();
-    bool segmentUploadRequest();
-    bool uploadRequest();
+
+class SdoServerSession : public SdoSessionBase{
+public:
+    SdoServerSession(SdoProtocol & sdo, CobId cobid, SubEntry & sub) : SdoSessionBase(sdo, cobid, sub) {}
+
+    bool uploadRequest(const CanMsg & msg);
+
+    bool processMessage(const CanMsg & msg);
+
+    void processWriteRequest(const CanMsg & msg);
+    void processReadRequest(const CanMsg & msg);
+
+    void sendWriteResponse(const uint8_t cmd, const OdIndex idx, const OdSubIndex subidx, uint32_t data);
+    void sendReadResponse(const uint8_t cmd, const OdIndex idx, const OdSubIndex subidx, uint32_t data);
+};
+
+class SdoClientSession : public SdoSessionBase{
+public:
+    SdoClientSession(SdoProtocol & sdo, CobId cobid, SubEntry & sub) : SdoSessionBase(sdo, cobid, sub) {}
+
+    // bool downloadRequest(const CanMsg & msg);
+    bool downloadRequest(const CanMsg & msg);
+
+    void requestWrite(const OdIndex idx, const OdSubIndex subidx, SubEntry & et);
+
+    void requestRead(const OdIndex idx, const OdSubIndex subidx, SubEntry & et);
+
+    void handleWriteResponse(const CanMsg & msg);
+    void handleReadResponse(const CanMsg & msg);
+
+    bool processMessage(const CanMsg & msg);
 };
 
 }

@@ -2,6 +2,19 @@
 
 using namespace ymd::canopen;
 
+
+bool NmtProtocol::start() {
+    if (Protocol::start()) {
+        DEBUG_PRINTLN("sending boot up message");
+        if (!sendBootUp()) {
+            DEBUG_PRINTLN("ERROR; starting nmt no nodeid");
+            return false;
+        }
+        return true;
+    }
+    return false;
+}
+
 bool NmtProtocol::processMessage(const CanMsg& msg) {
     if (!Protocol::processMessage(msg) && (msg.id() != 0)) {
         return false;
@@ -14,8 +27,6 @@ bool NmtProtocol::processMessage(const CanMsg& msg) {
     if (nodeId != canOpen->getNodeId()) {
         return false;
     }
-
-
 
     const auto cmd = msg[0];
 

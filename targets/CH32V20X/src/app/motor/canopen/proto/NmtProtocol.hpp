@@ -26,17 +26,7 @@ public:
 
     bool processMessage(const CanMsg& msg) override;
 
-    bool start() override {
-        if (Protocol::start()) {
-            DEBUG_PRINTLN("sending boot up message");
-            if (!sendBootUp()) {
-                DEBUG_PRINTLN("ERROR; starting nmt no nodeid");
-                return false;
-            }
-            return true;
-        }
-        return false;
-    }
+    bool start() override ;
 
 private:
     CanOpenNode * canOpen;

@@ -296,7 +296,7 @@ uint8_t Can::transmit(const CanMsg & msg){
             #pragma GCC diagnostic push
             #pragma GCC diagnostic ignored "-Wuninitialized"
 
-            uint64_t data = msg.data();
+            uint64_t data = msg.data64();
             instance->sTxMailBox[transmit_mailbox].TXMDLR = data & UINT32_MAX;
             instance->sTxMailBox[transmit_mailbox].TXMDHR = data >> 32;
 

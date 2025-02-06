@@ -61,7 +61,20 @@ enum class EntryAccessType : uint8_t {
     CONST = 0x03
 };
 
-
+enum class EntryAccessError:uint8_t{
+    None = 0,
+    InvalidValue = 0x01,
+    InvalidLength = 0x02,
+    InvalidType = 0x03,
+    InvalidSubIndex = 0x04,
+    InvalidIndex = 0x05,
+    InvalidAccess = 0x06,
+    InvalidAccessType = 0x07,
+    InvalidAccessError = 0x08,
+    InvalidAccessError2 = 0x09,
+    ReadOnlyAccess,
+    WriteOnlyAccess,
+};
 
 
 class EntryDataType {
@@ -189,15 +202,22 @@ public:
 
     operator int() const ;
 
-    bool set(int val);
+    uint32_t data32() const{
+        return pObject;
+    }
 
-    bool put(const std::span<const uint8_t> val) ;
-    bool put(const CanMsg & msg){
+    EntryAccessError set(int val);
+
+    EntryAccessError put(const std::span<const uint8_t> val) ;
+    EntryAccessError put(const CanMsg & msg){
         return this->put(std::span<const uint8_t>(msg.begin(), msg.size()));
     }
 
 	size_t dsize() const {return data_type_.dsize();}
 	size_t size() const {return data_type_.dsize();}
+
+    bool readable() const {return access_type_ != AccessType::WO;}
+    bool writeable() const {return access_type_ == AccessType::RW || access_type_ == AccessType::WO;}
 
     StringView name() const {return StringView(name_);}
 

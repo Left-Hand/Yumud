@@ -1,4 +1,6 @@
 #include "PdoSession.hpp"
+#include "PdoProtocol.hpp"
+
 
 using namespace ymd::canopen;
 
@@ -16,12 +18,15 @@ struct Mapping{
 
 
 //从当前pdo的参数构造一个报文
-CanMsg PdoSession::buildMessage() const {
+CanMsg PdoTxSession::buildMessage() const {
     //mapping条目0项对应映射项数目
     //mapping条目s剩余子项按照Packet映射
 
     std::array<uint8_t, 8> data;
-    int cnt = int(mapping_[0].unwarp());
+
+    const int cnt = int(mapping_[0].unwarp());
+    const CobId cobId = int(params_[1].unwarp());
+
     int bits_cnt = 0;
 
     for (int i = 1; i <= cnt; i++) {
@@ -57,7 +62,9 @@ CanMsg PdoSession::buildMessage() const {
 }
 
 //将收到的pdo报文写入字典
-bool PdoSession::processMessage(const CanMsg& msg){
+bool PdoRxSession::processMessage(const CanMsg& msg){
+    const CobId cobId = int(params_[1].unwarp());
+
     if (msg.id() != cobId) {
         return false;
     }
@@ -88,8 +95,7 @@ bool PdoSession::processMessage(const CanMsg& msg){
 
 //TODO transfer type的模式匹配问题
 
-bool PdoSession::onSyncEvent() {
-    int id = cobId;
+bool PdoTxSession::onSyncEvent() {
     TransferType transType = TransferType(int(params_[2].unwarp()));
     if (int(transType) >= int(TransferType::SyncMin) and 
         int(transType) <= int(TransferType::SyncMax)) {

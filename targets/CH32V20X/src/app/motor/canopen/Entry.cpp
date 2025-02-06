@@ -19,9 +19,9 @@ using namespace ymd::canopen;
 // }
 
 
-bool SubEntry::set(int val) {
+EntryAccessError SubEntry::set(int val) {
     if (access_type_ == AccessType::CONST || access_type_  == AccessType::RO) {
-        return false;
+        return EntryAccessError::ReadOnlyAccess;
     }
 
     // if (data_type_ == DataType::uint8) {
@@ -33,12 +33,12 @@ bool SubEntry::set(int val) {
     // } else {
     //     return false;
     // }
-    return true;
+    return EntryAccessError::None;
 }
 
-bool SubEntry::put(const std::span<const uint8_t> val) {
+EntryAccessError SubEntry::put(const std::span<const uint8_t> val) {
     if (access_type_ == AccessType::CONST || access_type_  == AccessType::RO) {
-        return false;
+        return EntryAccessError::ReadOnlyAccess;
     }
 
     if (data_type_ == DataType::uint8) {
@@ -50,10 +50,10 @@ bool SubEntry::put(const std::span<const uint8_t> val) {
         int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8);
         pObject = value & 0x0000FFFF;
     } else {
-        return false;
+        return EntryAccessError::ReadOnlyAccess;
     }
 
-    return true;
+    return EntryAccessError::None;
 }
 
 

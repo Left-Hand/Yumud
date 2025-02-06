@@ -37,7 +37,7 @@ protected:
 
     union{
         uint8_t Data[8];
-        uint64_t data64;
+        uint64_t data64_;
     };
 
     uint8_t FMI;     /* Specifies the index of the filter the message stored in 
@@ -78,7 +78,7 @@ public:
         ExtId = id;
         IDE = (id > 0x7FF ? CAN_ID_EXT : CAN_ID_STD);
         RTR = CAN_RTR_DATA;
-        data64 = data;
+        data64_ = data;
         DLC = dlc;
     }
 
@@ -135,8 +135,8 @@ public:
     constexpr const uint8_t * end() const {return Data + size();}
     constexpr size_t size() const {return MIN(DLC, 8);}
 
-    constexpr uint64_t data() const{ return data64;}
-    constexpr uint64_t & data() {return data64;}
+    constexpr uint64_t data64() const{ return data64_;}
+    constexpr uint64_t & data64() {return data64_;}
 
     operator std::vector<uint8_t>() const{return std::vector<uint8_t>{begin(), end()};}
 
