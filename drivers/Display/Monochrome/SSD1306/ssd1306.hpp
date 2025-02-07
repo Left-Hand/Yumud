@@ -11,7 +11,7 @@ public:
     using Vector2i = ImageBasics::Vector2i;
 protected:
     DisplayerPhy & interface;
-    SSD13XX(DisplayerPhy & _interface):Displayer(size), interface(_interface){;}
+    SSD13XX(DisplayerPhy & _interface):Displayer(size_), interface(_interface){;}
 
     void setarea_unsafe(const Rect2i & area) override{
         setpos_unsafe(area.position);
@@ -23,8 +23,9 @@ protected:
     }
 
     void setpos_unsafe(const Vector2i & pos) override{
-        auto & frame = fetchFrame();
-        frame.setpos(pos);
+        // auto & frame = fetchFrame();
+        // frame.setpos_unsafe(pos);
+        DEBUG_PRINTLN("not implemented");
     }
 
     virtual Vector2i getOffset() const = 0;

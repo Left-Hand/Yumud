@@ -4,12 +4,6 @@
 #include "concept/storage.hpp"
 #include "concept/memory.hpp"
 
-#ifdef FLASH_DEBUG
-#undef FLASH_DEBUG
-#define FLASH_DEBUG(...) DEBUG_LOG(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define FLASH_DEBUG(...)
-#endif
 
 
 namespace ymd{

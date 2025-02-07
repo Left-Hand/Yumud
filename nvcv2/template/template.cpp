@@ -28,7 +28,7 @@ static auto stddev(const Itpair<auto> & src){
 namespace ymd::nvcv2::Match{
 
 real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, const Vector2i & offs){
-    // auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_view());
+    // auto rect = Rect2i(offs, tmp.size()).intersection(src.rect());
 
     // uint and_score = 0;
     // uint or_score = 0;
@@ -47,7 +47,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
     // u16_to_uni(res, ret);
     // return ret;
 
-    auto rect = Rect2i(offs, tmp.get_size()).intersection(src.get_view());
+    auto rect = Rect2i(offs, tmp.size()).intersection(src.rect());
 
     uint score = 0;
     // uint base = tmp.sum() / 255;
@@ -74,7 +74,7 @@ real_t template_match(const Image<Binary> & src, const Image<Binary> & tmp, cons
 }
 
 #define BOUNDARY_CHECK()\
-if(not src.get_view().contains(Rect2i{offs, tmp.get_size()})){\
+if(not src.rect().contains(Rect2i{offs, tmp.size()})){\
     ASSERT(false, "template_match: out of bound");\
     return 0;\
 }\
@@ -86,18 +86,18 @@ real_t template_match_ncc(const Image<Grayscale> & src, const Image<Grayscale> &
     BOUNDARY_CHECK()
 
     int t_mean = int(tmp.mean());
-    int s_mean = int(src.mean(Rect2i(offs, tmp.get_size())));
+    int s_mean = int(src.mean(Rect2i(offs, tmp.size())));
 
     int64_t num = 0;
     uint32_t den_t = 0;
     uint32_t den_s = 0;
 
-    for(auto y = 0; y < tmp.get_size().y; y++){
+    for(auto y = 0; y < tmp.size().y; y++){
         const auto * tmp_ptr = &tmp[Vector2i{0,y}];
         const auto * src_ptr = &src[Vector2i{0,y} + offs];
 
         int32_t line_num = 0;
-        for(auto x = 0; x < tmp.get_size().x; x++){
+        for(auto x = 0; x < tmp.size().x; x++){
             int32_t tmp_val = *tmp_ptr - t_mean;
             int32_t src_val = *src_ptr - s_mean;
 
@@ -129,14 +129,14 @@ real_t template_match_squ(const Image<Grayscale> & src, const Image<Grayscale> &
     BOUNDARY_CHECK();
 
     uint64_t num = 0;
-    uint32_t area = tmp.get_size().x * tmp.get_size().y;
+    uint32_t area = tmp.size().x * tmp.size().y;
 
-    for(auto y = 0; y < tmp.get_size().y; y++){
+    for(auto y = 0; y < tmp.size().y; y++){
         const auto * tmp_ptr = &tmp[Vector2i{0,y}];
         const auto * src_ptr = &src[Vector2i{0,y} + offs];
 
         uint32_t line_num = 0;
-        for(auto x = 0; x < tmp.get_size().x; x++){
+        for(auto x = 0; x < tmp.size().x; x++){
             int32_t tmp_val = *tmp_ptr;
             int32_t src_val = *src_ptr;
 

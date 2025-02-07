@@ -63,7 +63,7 @@ protected:
     }
 
     void getpixel_unsafe(const Vector2i & pos, Grayscale & color) const override{
-        color = data[pos.x + pos.y * size.x];
+        color = data[pos.x + pos.y * size_.x];
     };
 
 public:

@@ -9,6 +9,13 @@ using namespace ymd;
 #define CLOCK_CONFIG CLOCK_CONFIG_BY_REG
 // #define CLOCK_CONFIG CLOCK_CONFIG_BY_AHB
 
+#ifdef FLASH_DEBUG
+#undef FLASH_DEBUG
+#define FLASH_DEBUG(...) DEBUG_LOG(SpecToken::Space, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
+#else
+#define FLASH_DEBUG(...)
+#endif
+
 void Flash::storeBytes(const Address vaddr, const void * data, const Address len){
 
     unlock();

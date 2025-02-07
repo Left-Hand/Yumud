@@ -26,6 +26,11 @@
 
 #include "algo/interpolation/cubic.hpp"
 
+#include "rpc.hpp"
+#include "tb.h"
+#include "sys/debug/debug_inc.h"
+#include "robots/rpc/arg_parser.hpp"
+
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
@@ -242,7 +247,7 @@ struct TurnSolver{
     real_t vb = 0;
 };
 
-static real_t demo(uint milliseconds){
+[[maybe_unused]] static real_t demo(uint milliseconds){
     // using Vector2 = CubicInterpolation::Vector2;
     static TurnSolver turnSolver;
     
@@ -292,7 +297,7 @@ static real_t demo(uint milliseconds){
     return new_pos;
 }
 
-int bldc_main(){
+void bldc_main(){
     uart2.init(576000);
     DEBUGGER.change(uart2);
     DEBUGGER.setEps(4);
@@ -407,7 +412,7 @@ int bldc_main(){
     //     delayMicroseconds(500);
     // }
     Pll pll;
-    Spll spll{25000, 500};
+    // Spll spll{25000, 500};
     // auto m = micros();
     odo.inverse();
 
@@ -437,6 +442,7 @@ int bldc_main(){
         .out_min = -6.0_r,
         .out_max = 6.0_r
     }};
+
     static PIController q_pi_ctrl{
     {
         .kp = 0.0_r,
@@ -450,13 +456,13 @@ int bldc_main(){
     [[maybe_unused]] auto cb = [&]{
         odo.update();
 
-        // targ_pos = 5 * sin(t);
+        targ_pos = 5 * sin(t);
         // targ_pos = 0.2_r * sin(real_t(50 * TAU)*t);
         // auto targ_spd = real_t(10 * TAU) * cos(real_t(50 * TAU) * t);
         // targ_pos = 4 * floor(2*t);
         // targ_pos = 7*t + sin(7*t);
-        targ_pos = demo(2*millis());
-        auto targ_spd = 0.0_r;
+        // targ_pos = demo(2*millis());
+        // auto targ_spd = 0.0_r;
         // targ_pos = 10.0_r*floor(2*t);
         // targ_pos = sin(t);
         meas_pos = odo.getPosition();
@@ -484,7 +490,7 @@ int bldc_main(){
         // const auto q_volt = q_pi_ctrl.update(-0.3_r, dq_curr.q);
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, meas_rad);
         const auto ab_curr = current_sensor.ab();
-        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
         lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
 
         // const auto ab_curr = current_sensor.ab();
@@ -557,7 +563,7 @@ int bldc_main(){
             last_curr = this_curr;
         }
         ab_volt = {test_volt * sin(omega * cnt),0};
-        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
     };
 
     [[maybe_unused]] auto cb_sensorless = [&]{
@@ -592,7 +598,7 @@ int bldc_main(){
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.0_r * sin(t));
         // ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 1.5_r);
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, sl_meas_rad + 2.0_r);
-        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
     };
 
     [[maybe_unused]] auto cb_hfi = [&]{
@@ -622,7 +628,7 @@ int bldc_main(){
         // real_t s = sin(hfi_rad);
 
         ab_volt = {hfi_out + openloop_base_volt * openloop_c, openloop_base_volt * openloop_s};
-        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
         current_sensor.updatUVW();
         current_sensor.updateAB();
@@ -677,7 +683,7 @@ int bldc_main(){
 
 
         ab_volt = {pulse_out * pulse_c, pulse_out * pulse_s};
-        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
         current_sensor.updatUVW();
         current_sensor.updateAB();
@@ -696,7 +702,7 @@ int bldc_main(){
         real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t(TAU) + 3 * sin(40 * frac(sing_t) * iq_t(TAU)));
 
         ab_volt = {sing_out * sing_c, sing_out * sing_s};
-        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
         current_sensor.updatUVW();
         current_sensor.updateAB();
@@ -708,12 +714,12 @@ int bldc_main(){
         // auto theta = w * t + real_t(12) * sin(2 * real_t(TAU) * t);
         auto theta = w * t;
         ab_volt = {u * cos(theta), u * sin(theta)};
-        svpwm.setABVolt(ab_volt[0], ab_volt[1]);
+        svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
         current_sensor.updatUVW();
         current_sensor.updateAB();
 
-        sogi.update(current_sensor.ab()[0]);
+        // sogi.update(current_sensor.ab()[0]);
         // spll.update(current_sensor.ab()[0] * 10);
     };
 
@@ -748,10 +754,41 @@ int bldc_main(){
     en_gpio = true;
     slp_gpio = true;
 
+    auto list = rpc::make_list(
+        "list", 
+        rpc::make_function("setm", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
+        rpc::make_function("crc", [](){DEBUG_PRINTS(Sys::Chip::getChipIdCrc())}),
+        rpc::make_function("led", [](const int i){portA[8].write(i);})
+    );
 
+    ArgSplitter splitter;
 
     while(true){
         // auto pos = ma730.getLapPosition();
+
+        {
+            auto strs_opt = splitter.update(uart2);
+            if(strs_opt.has_value()){
+                auto & strs = strs_opt.value();
+
+                DEBUG_PRINTLN("------");
+                DEBUG_PRINTS("Inputs:", strs);
+
+                {
+                    std::vector<rpc::CallParam> params;
+                    params.reserve(strs.size());
+                    for(const auto & str  : strs){
+                        params.push_back(rpc::CallParam(str));
+                    }
+                    DEBUGGER.print("->");
+                    auto res = list ->call(DEBUGGER, params);
+                    DEBUG_PRINTS("\r\n^^Function exited with return code", uint8_t(res))
+                    DEBUG_PRINTLN("------");
+                }
+
+                splitter.clear();
+            }
+        }
 
         ledr = (millis() % 200) > 100;
         ledb = (millis() % 400) > 200;

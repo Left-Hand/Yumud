@@ -3,9 +3,8 @@
 
 using namespace ymd;
 
-Strings ArgParser::update(InputStream & is){
+std::optional<Strings> ArgSplitter::update(InputStream & is){
     while(is.available()){
-        // DEBUG_P
         auto chr = is.read();
         if(chr == 0) continue;
         temp += chr;
@@ -17,5 +16,5 @@ Strings ArgParser::update(InputStream & is){
             }
         }
     }
-    return Strings{};
+    return std::nullopt;
 }

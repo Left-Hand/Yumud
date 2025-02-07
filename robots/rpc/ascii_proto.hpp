@@ -92,7 +92,7 @@ namespace ymd{
 
 class AsciiProtocolConcept{
 protected:
-    ArgParser parser;
+    ArgSplitter parser;
 
     InputStream & is;
     OutputStream & os;
@@ -103,8 +103,8 @@ public:
 
     void update(){
         auto args = parser.update(is);
-        if(args.size()){
-            parseArgs(args);
+        if(args){
+            parseArgs(args.value());
             parser.clear();
         }
     }

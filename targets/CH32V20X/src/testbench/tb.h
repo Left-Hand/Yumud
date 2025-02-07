@@ -113,3 +113,7 @@ void co_ab_main();
 void bldc_main();
 
 void rpc_main();
+
+void leetcode_main();
+
+void canopen_main();

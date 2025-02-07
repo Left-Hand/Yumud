@@ -41,7 +41,7 @@ namespace ymd::nvcv2::Pixels{
 
     uint sum(const Image<Grayscale>& src){
         uint s = 0;
-        for (size_t i = 0; i < size_t(src.get_size().area()); i++) {
+        for (size_t i = 0; i < size_t(src.size().area()); i++) {
             s += uint8_t(src[i]);
         }
 
@@ -50,16 +50,16 @@ namespace ymd::nvcv2::Pixels{
 
 
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Grayscale>& src) {
-        for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
-            for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
+        for (auto x = 0; x < MIN(dst.size().x, src.size().x); x++) {
+            for (auto y = 0; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2i{x, y}] = src[Vector2i{x, y}];
             }
         }
     }
 
     void conv(ImageWritable<RGB565>& dst, const ImageReadable<Binary>& src) {
-        for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
-            for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
+        for (auto x = 0; x < MIN(dst.size().x, src.size().x); x++) {
+            for (auto y = 0; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2i{x, y}] = src[Vector2i{x, y}];
             }
         }
@@ -69,8 +69,8 @@ namespace ymd::nvcv2::Pixels{
     static UniqueRandomGenerator lcg;
 
     void dyeing(ImageWritable<Grayscale>& dst, const ImageReadable<Grayscale>& src){
-        for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
-            for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
+        for (auto x = 0; x < MIN(dst.size().x, src.size().x); x++) {
+            for (auto y = 0; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2i{x, y}] = lcg[src[Vector2i{x, y}]];
             }
         }
@@ -81,27 +81,27 @@ namespace ymd::nvcv2::Pixels{
     }
 
     auto dyeing(const ImageReadable<Grayscale>& src){
-        Image<Grayscale> tmp{src.get_size()};
+        Image<Grayscale> tmp{src.size()};
         dyeing(tmp, src);
         return tmp;
     }
 
     void binarization(ImageWritable<Binary>& dst, const ImageReadable<Grayscale>& src, const Grayscale threshold){
-        for (auto x = 0; x < std::min(dst.get_size().x, src.get_size().x); x++) {
-            for (auto y = 0; y < std::min(dst.get_size().y, src.get_size().y); y++) {
+        for (auto x = 0; x < std::min(dst.size().x, src.size().x); x++) {
+            for (auto y = 0; y < std::min(dst.size().y, src.size().y); y++) {
                 dst[Vector2i{x, y}] = src[Vector2i{x, y}].to_bina(threshold);
             }
         }
     }
 
     Image<Binary> binarization(const ImageReadable<Grayscale>& src, const Grayscale threshold){
-        Image<Binary> dst{src.get_size()};
+        Image<Binary> dst{src.size()};
         binarization(dst, src, threshold);
         return dst;
     }
 
     void ostu(Image<Binary>& dst, const Image<Grayscale>& src){
-        const Vector2i size = src.get_size();
+        const Vector2i size = src.size();
         std::array<int, 256> statics;
         statics.fill(0);
 
@@ -159,7 +159,7 @@ namespace ymd::nvcv2::Pixels{
 
 
     void iter_threshold(Image<Binary>& dst, const Image<Grayscale>& src, const real_t k, const real_t eps){
-        const Vector2i size = src.get_size();
+        const Vector2i size = src.size();
         std::array<int, 256> statics;
         statics.fill(0);
 
@@ -212,7 +212,7 @@ namespace ymd::nvcv2::Pixels{
     }
 
     void max_entropy(const Image<Grayscale>& src, const int thresh){
-        const Vector2i size = src.get_size();
+        const Vector2i size = src.size();
         float probability = 0.0; //概率
         float max_Entropy = 0.0; //最大熵
         int totalpix = size.x * size.y;
@@ -330,7 +330,7 @@ namespace ymd::nvcv2::Pixels{
         // DEBUG_PRINT("huang");
         Histogram hist;
         hist.fill(0);
-        auto size = dst.get_size();
+        auto size = dst.size();
             // DEBUG_VALUE(size);
         for(int i = 0; i < size.x * size.y; i++){
             // DEBUG_VALUE(src[i]);
@@ -344,7 +344,7 @@ namespace ymd::nvcv2::Pixels{
 
 
     void inverse(Image<Grayscale>& src) {
-        for (auto i = 0; i < src.get_size().area(); i++) {
+        for (auto i = 0; i < src.size().area(); i++) {
             src[i] = ~uint8_t(src[i]);
         }
     }
@@ -361,7 +361,7 @@ namespace ymd::nvcv2::Pixels{
             }
         }
 
-        for (auto i = 0; i < src.get_size().area(); i++) {
+        for (auto i = 0; i < src.size().area(); i++) {
             src[i] = lut[uint8_t(src[i])];
         }
     }
@@ -369,20 +369,20 @@ namespace ymd::nvcv2::Pixels{
 
 
     void sum_with(Image<Grayscale> & src, Image<Grayscale>& op) {
-        for (auto i = 0; i < src.get_size().area(); i++) {
+        for (auto i = 0; i < src.size().area(); i++) {
             src[i] = MIN((uint8_t)src[i] + (uint8_t)op[i], 255);
         }
     }
 
     void sub_with(Image<Grayscale> & src, Image<Grayscale>& op) {
-        for (auto i = 0; i < src.get_size().area(); i++) {
+        for (auto i = 0; i < src.size().area(); i++) {
             src[i] = MAX((uint8_t)src[i] - (uint8_t)op[i], 0);
         }
     }
 
 
     void mask_with(Image<Grayscale> & src, const ImageReadable<Binary>& op) {
-        for (auto i = 0; i < src.get_size().area(); i++) {
+        for (auto i = 0; i < src.size().area(); i++) {
             src[i] = (uint8_t)op[i] ? src[i] : Grayscale(0);
         }
     }

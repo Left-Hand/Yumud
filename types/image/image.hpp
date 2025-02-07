@@ -17,13 +17,13 @@ public:
 
     Image(const Vector2i & _size): ImageBasics(_size), ImageWithData<ColorType, ColorType>(_size) {}
 
-    Image(Image&& other) noexcept : ImageBasics(other.get_size()),  ImageWithData<ColorType, ColorType>(std::move(other)){;}
+    Image(Image&& other) noexcept : ImageBasics(other.size()),  ImageWithData<ColorType, ColorType>(std::move(other)){;}
 
-    Image(const Image & other) noexcept: ImageBasics(other.get_size()),  ImageWithData<ColorType, ColorType>(other) {}
+    Image(const Image & other) noexcept: ImageBasics(other.size()),  ImageWithData<ColorType, ColorType>(other) {}
  
     Image & operator=(Image && other) noexcept {
         if (this != &other) {
-            this->size = std::move(other.size);
+            this->size_ = std::move(other.size());
             this->select_area = std::move(other.select_area);
             this->data = std::move(other.data);
         }
@@ -31,15 +31,14 @@ public:
     }
 
     Image<ColorType> clone() const {
-        auto _size = this->size;
-        auto temp = Image<ColorType>(_size);
-        memcpy(temp.data.get(), this->data.get(), _size.x * _size.y * sizeof(ColorType));
+        auto temp = Image<ColorType>(this->size());
+        memcpy(temp.data.get(), this->data.get(), this->size().x * this->size().y * sizeof(ColorType));
         return temp;
     }
 
     Image<ColorType> & clone(const Image<ColorType> & other){
-        auto _size = (Rect2i(ImageBasics::get_size())).intersection(Rect2i(other.get_size())).size;
-        this->size = _size;
+        const auto _size = (Rect2i(ImageBasics::size())).intersection(Rect2i(other.size())).size;
+        this->size_ = _size;
         this->data = std::make_shared<ColorType[]>(_size.x * _size.y);
         memcpy(this->data.get(), other.data.get(), _size.x * _size.y * sizeof(ColorType));
         return *this;
@@ -58,10 +57,10 @@ public:
     auto clone(const Vector2i & _size) const{return clone(Rect2i(Vector2i{0,0}, _size));}
 
     Grayscale mean(const Rect2i & view) const;
-    Grayscale mean() const{return mean(this->get_view());}
+    Grayscale mean() const{return mean(this->rect());}
 
     uint64_t sum(const Rect2i & roi) const;
-    uint64_t sum() const{return sum(this->get_view());}
+    uint64_t sum() const{return sum(this->rect());}
     Grayscale bilinear_interpol(const Vector2 & pos) const;
 
     void load(const uint8_t * buf, const Vector2i & _size);
@@ -73,7 +72,7 @@ public:
 
     template<typename toColorType = ColorType>
     Image<toColorType> space() const {
-        return Image<toColorType>(this->get_size());
+        return Image<toColorType>(this->size());
     }
 };
 
@@ -99,7 +98,7 @@ public:
 
     ImageView(ImageView & other, const Rect2i & _window):instance(other.instance), 
         window(Rect2i(other.window.position + _window.position, other.window.size).intersection(Vector2i(), other.instance.getSize())){;}
-    Rect2i get_view() const {return window;}
+    Rect2i rect() const {return window;}
 };
 
 template<typename ColorType>
@@ -116,7 +115,7 @@ public:
     using Vector2 = ImageBasics::Vector2;
     using Vector2i = ImageBasics::Vector2i;
 public:
-    Displayer(const Vector2i & _size):ImageBasics(_size), ImageWritable<ColorType>(_size){;}
+    Displayer(const Vector2i & size):ImageBasics(size), ImageWritable<ColorType>(size){;}
 };
 
 template<typename ColorType>
@@ -154,7 +153,7 @@ __inline auto make_bina(const ImageBasics::Vector2i & _size){return make_image<B
 template<typename ColorType>
 __inline auto make_mirror(const Image<auto> &src){
     return Image<ColorType>(std::reinterpret_pointer_cast<ColorType[]>(src.get_ptr()),
-        src.get_size());
+        src.size());
 }
 
 

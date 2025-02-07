@@ -117,100 +117,6 @@ static size_t itoa_impl(T value, char * str, uint8_t radix){
     return len;
 }
 
-// template<uintegral T>
-// static void itoa_impl(T value, char * str, uint8_t radix){
-//     int i = get_scalar(value) - 1;
-//     str[i + 1] = 0;
-//     do {
-// 		const uint8_t digit = value % radix;
-//         str[i] = ((digit) > 9) ? 
-// 		(digit - 10) + ('A') : (digit) + '0';
-
-//         i--;
-//     } while((value /= radix) > 0 and (i >= 0));
-// }
-
-
-// template<integral T>
-// static void itoa_impl(T value, char * str, uint8_t radix){
-//     int sign = 0;
-//     size_t i=0;
-//     if(value < 0){
-//         sign = -1;
-//         value = -value;  
-//     }
-//     const size_t scalar = get_scalar(value);
-//     do {
-// 		const uint8_t digit = value % radix;
-//         if(digit > 9){
-//             str[i] = digit +'0'+7;
-//         }else{
-//             str[i] = digit +'0';
-//         }i++;
-//     } while((value/=radix)>0 and i <= scalar);
-//     if(sign<0) {
-//         str[i] = '-';
-//         i++;
-//     }
-
-//     reverse_str(str, i);
-// }
-
-
-// template<integral T>
-// static __fast_inline constexpr void itoa_impl(const T _value, char * _str, uint8_t radix){
-// 	const bool minus = (_value < 0);
-// 	std::make_unsigned_t<T> value = ABS(_value);
-// 	const size_t scalar = get_scalar(_value);
-
-// 	char * str = _str + scalar + minus - 1;
-// 	do{
-// 		const uint8_t digit = value % radix;
-// 		*str = ((digit) > 9) ? 
-// 		(digit - 10) + ('A') : (digit) + '0';
-		
-// 		str--;
-// 	}while(((value /= radix) > 0) and (str >= _str));
-	
-// 	if(minus) {
-// 		_str[0] = '-';
-// 	}
-// }
-
-// static void itoas(int value, char *str, uint8_t radix, uint8_t size)  {
-// 	size_t i = 0;
-//     value = ABS(value);
-// 	do{
-// 		if(value%radix>9){
-// 			str[i] = value % radix +'0' + 7;
-//         }else{
-// 			str[i] = value % radix +'0';
-//         }
-// 		i++;
-// 	}while(((value /= radix) >0) && i < size);
-
-// 	for(;i< size; i++)str[i] = '0';
-
-// 	reverse_str(str, size);
-// }
-
-// static __fast_inline constexpr void itoas(uint32_t value, char *_str, uint8_t radix, uint8_t size)  {
-// 	char * str = _str + size - 1;
-// 	do{
-// 		const uint8_t digit = value % radix;
-// 		*str = ((digit) > 9) ? 
-// 		(digit - 10) + ('A') : (digit) + '0';
-
-// 		str--;
-// 	}while(((value /= radix) > 0) and (str >= _str));
-// 	// }while(((value /= radix) > 0));
-	
-// 	while(str >= _str){
-// 		*str = '0';
-// 		str--;
-// 	}
-// }
-
 static __fast_inline constexpr void itoas(uint32_t value, char *str, uint8_t radix, int8_t i)  {
     i -= 1;
 	do{
@@ -267,17 +173,9 @@ size_t StringUtils::itoa(int32_t value, char *str, uint8_t radix){
 
 
 size_t StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
-    // int i=0;
-
-    // do {
-    //     if(value%radix>9)
-    //         str[i] = value%radix +'0'+7;
-    //     else
-    //         str[i] = value%radix +'0';
-    //     i++;
-    // } while((value/=radix)>0);
-
-    // reverse_str(str, i);
+    // if(value > INT32_MAX or value < INT32_MIN){
+    //     return itoa_impl<int32_t>(value, str, radix);
+    // }
     return itoa_impl(value, str, radix);
 }
 

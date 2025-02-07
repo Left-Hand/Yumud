@@ -10,17 +10,16 @@ static void error(){
 }
 
 MP6540::MP6540(PWM3_WP && pwms, AIN3_WP && ains)
-        : pwms_{
-            &pwms[0].get(),
-            &pwms[1].get(),
-            &pwms[2].get()
-        },ains_{
-            &ains[0].get(),
-            &ains[1].get(),
-            &ains[2].get()
-        }
+: pwms_{
+    &pwms[0].get(),
+    &pwms[1].get(),
+    &pwms[2].get()}
+,ains_{
+    &ains[0].get(),
+    &ains[1].get(),
+    &ains[2].get()}
     
-    {
+{
 
 }
 

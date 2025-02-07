@@ -17,8 +17,8 @@ namespace ymd::nvcv2::Pixels{
     template<typename T>
     requires (std::is_same_v<T, Grayscale> || std::is_same_v<T, Binary>)
     void copy(ImageWritable<T>& dst, const ImageReadable<T>& src) {
-        for (auto x = 0; x < MIN(dst.get_size().x, src.get_size().x); x++) {
-            for (auto y = 0; y < MIN(dst.get_size().y, src.get_size().y); y++) {
+        for (auto x = 0; x < MIN(dst.size().x, src.size().x); x++) {
+            for (auto y = 0; y < MIN(dst.size().y, src.size().y); y++) {
                 dst[Vector2i{x, y}] = src[Vector2i{x, y}];
             }
         }
@@ -32,7 +32,7 @@ namespace ymd::nvcv2::Pixels{
             return;
         }
 
-        auto window = dst.get_view().intersection(src.get_view());
+        auto window = dst.rect().intersection(src.rect());
         for (auto y = window.y; y < window.y + window.h; y++) {
             for (auto x = window.x; x < window.x + window.w; x++) {
                 const int a = src[Vector2i{x,y}];
@@ -47,7 +47,7 @@ namespace ymd::nvcv2::Pixels{
     }
 
     __inline void fast_bina_opera(Image<Binary> & out,const Image<Grayscale> & em, const uint8_t et,const Image<Grayscale>& dm, const uint8_t dt) {
-        const auto size = (Rect2i(Vector2i(), em.get_size()).intersection(Rect2i(Vector2i(), dm.get_size()))).size;
+        const auto size = (Rect2i(Vector2i(), em.size()).intersection(Rect2i(Vector2i(), dm.size()))).size;
         const auto area = size.x * size.y;
 
         for (auto i = 0; i < area; i++) {
@@ -72,7 +72,7 @@ namespace ymd::nvcv2::Pixels{
     uint sum(const Image<Grayscale>& src);
 
     __inline Grayscale average(const Image<Grayscale>& src){
-        return sum(src) / src.get_size().area();
+        return sum(src) / src.size().area();
     }
 
     void gamma(Image<Grayscale>& src, const real_t ga);
@@ -84,7 +84,7 @@ namespace ymd::nvcv2::Pixels{
 
     template<is_monocolour_v T>
     void inverse(ImageWithData<T, T>& src) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.size().x * src.size().y; i++) {
             src[i] = uint8_t(~uint8_t(src[i]));
         }
     }
@@ -92,7 +92,7 @@ namespace ymd::nvcv2::Pixels{
 
     template<is_monocolour_v T>
     void inverse(ImageWritable<T>& dst, const ImageReadable<T> & src) {
-        auto window = dst.get_view().intersection(src.get_view());
+        auto window = dst.rect().intersection(src.rect());
         for (auto y = window.y; y < window.y + window.h; y++) {
             for (auto x = window.x; x < window.x + window.w; x++) {
                     dst[{x,y}] = uint8_t(~uint8_t(T(src[{x,y}])));
@@ -101,14 +101,14 @@ namespace ymd::nvcv2::Pixels{
     }
     template<is_monocolour_v T>
     void and_with(ImageWithData<T, T> & src, ImageWithData<T, T>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.size().x * src.size().y; i++) {
             src[i] = std::min((uint8_t)src[i], (uint8_t)op[i]);
         }
     }
 
     template<is_monocolour_v T>
     void or_with(ImageWithData<T, T> & src, ImageWithData<T, T>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.size().x * src.size().y; i++) {
             src[i] = std::max((uint8_t)src[i], (uint8_t)op[i]);
         }
     }
@@ -116,7 +116,7 @@ namespace ymd::nvcv2::Pixels{
 
     template<is_monocolour_v T>
     void xor_with(ImageWithData<T, T> & src, ImageWithData<T, T>& op) {
-        for (auto i = 0; i < src.get_size().x * src.get_size().y; i++) {
+        for (auto i = 0; i < src.size().x * src.size().y; i++) {
             src[i] = ((uint8_t)src[i] ^ (uint8_t)op[i]);
         }
     }

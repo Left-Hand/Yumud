@@ -12,21 +12,35 @@ namespace ymd{
 template<arithmetic T>
 struct Range_t{
 public:
+    #pragma pack(push, 1)
     T from;
     T to;
+    #pragma pack(pop)
 
     scexpr Range_t<T> INF = {std::numeric_limits<T>::min(), std::numeric_limits<T>::max()};
     scexpr Range_t<T> POS = {T(0), std::numeric_limits<T>::max()};
     scexpr Range_t<T> NEG = {std::numeric_limits<T>::min(), T(0)};
-    constexpr Range_t(): from(std::numeric_limits<T>::min()), to(std::numeric_limits<T>::max()) {;}
+    // constexpr Range_t(): from(std::numeric_limits<T>::min()), to(std::numeric_limits<T>::max()) {;}
 
-    constexpr Range_t(const auto & _from, const auto & _to): from(static_cast<T>(_from)), to(static_cast<T>(_to)) {;}
+    constexpr Range_t() = default;
 
-    constexpr Range_t(const Range_t<auto> & other): from(static_cast<T>(other.from)), to(static_cast<T>(other.to)) {;}
+    constexpr Range_t(const auto & _from, const auto & _to): from(static_cast<T>(_from)), to(static_cast<T>(_to)) {
+        *this = this -> abs();
+    }
 
-    constexpr Range_t(const std::pair<arithmetic auto, arithmetic auto> & other): from(static_cast<T>(other.first)), to(static_cast<T>(other.second)) {;}
+    constexpr Range_t(const Range_t<auto> & other): from(static_cast<T>(other.from)), to(static_cast<T>(other.to)) {
+        *this = this -> abs(); 
+    }
 
-    constexpr Range_t(const std::tuple<auto, auto> & other): from(static_cast<T>(std::get<0>(other))), to(static_cast<T>(std::get<1>(other))) {;}
+    constexpr Range_t(const std::pair<arithmetic auto, arithmetic auto> & other): 
+    from(static_cast<T>(other.first)), to(static_cast<T>(other.second)) {
+        *this = this -> abs(); 
+    }
+
+    constexpr Range_t(const std::tuple<auto, auto> & other):
+    from(static_cast<T>(std::get<0>(other))), to(static_cast<T>(std::get<1>(other))) {
+        *this = this -> abs(); 
+    }
 
     T & operator [](const size_t index) { return *(&this->from + index);}
 
@@ -35,8 +49,6 @@ public:
     const T * begin() const { return &this->from;}
 
     const T * end() const { return &this->to;}
-
-    constexpr size_t size() const {return 2;}
 
     constexpr Range_t<T> & operator=(const Range_t<auto> & other) {
         this->from = static_cast<T>(other.from);
@@ -55,44 +67,43 @@ public:
     constexpr T length() const{
         return ABS(to - from);
     }
+
     constexpr T length_signed() const{
         return (to - from);
     }
 
     constexpr Range_t<T> abs() const{
-        if(from > to) return Range_t<T>(to, from);
+        if(unlikely(from > to)) return Range_t<T>(to, from);
         else return *this;
     }
 
-    constexpr Range_t<T> operator + (const arithmetic auto & rvalue) const{
-        Range_t<T> regular = this -> abs();
-        return Range_t<T>(regular.from + rvalue, regular.to + rvalue);
-    }
+    // constexpr Range_t<T> operator + (const arithmetic auto & rvalue) const{
+    //     Range_t<T> regular = this -> abs();
+    //     return Range_t<T>(this->from + rvalue, this->to + rvalue);
+    // }
 
-    constexpr Range_t<T> operator - (const arithmetic auto & rvalue) const{
-        Range_t<T> regular = this -> abs();
-        return Range_t<T>(regular.from - rvalue, regular.to - rvalue);
-    }
+    // constexpr Range_t<T> operator - (const arithmetic auto & rvalue) const{
+    //     Range_t<T> regular = this -> abs();
+    //     return Range_t<T>(this->from - rvalue, this->to - rvalue);
+    // }
 
-    constexpr Range_t<T> operator * (const arithmetic auto & rvalue) const{
-        Range_t<T> regular = this -> abs();
-        return Range_t<T>(regular.from * rvalue, regular.to * rvalue);
+    constexpr Range_t<T> operator * (const arithmetic auto rvalue) const{
+        return Range_t<T>(this->from * rvalue, this->to * rvalue);
     }
 
     __fast_inline constexpr Range_t<T> operator / (const arithmetic auto & rvalue) const{
-        Range_t<T> regular = this -> abs();
-        return Range_t<T>(regular.from / rvalue, regular.to / rvalue);
+        return Range_t<T>(this->from / rvalue, this->to / rvalue);
     }
 
-    constexpr Range_t<T> & operator += (const arithmetic auto & rvalue) {
-        *this = *this + rvalue;
-        return *this;
-    }
+    // constexpr Range_t<T> & operator += (const arithmetic auto & rvalue) {
+    //     *this = *this + rvalue;
+    //     return *this;
+    // }
 
-    [[deprecated]] constexpr Range_t<T> & operator -= (const arithmetic auto & rvalue) {
-        *this = *this - rvalue;
-        return *this;
-    }
+    // [[deprecated]] constexpr Range_t<T> & operator -= (const arithmetic auto & rvalue) {
+    //     *this = *this - rvalue;
+    //     return *this;
+    // }
 
     constexpr Range_t<T> & operator *= (const arithmetic auto & rvalue) {
         *this = *this * rvalue;
@@ -105,9 +116,7 @@ public:
     }
 
     constexpr bool operator == (const Range_t<auto> & other) const {
-        Range_t<T> regular = this -> abs();
-        Range_t<T> other_regular = other.abs();
-        return (regular.from == other_regular.from && regular.to == other_regular.to);
+        return (this->from == other.from && this->to == other.to);
     }
 
     constexpr bool operator!= (const Range_t<auto> & other) const {
@@ -115,15 +124,11 @@ public:
     }
 
     constexpr bool intersects(const Range_t<auto> & other) const {
-        Range_t<T> regular = this -> abs();
-        Range_t<T> other_regular = other.abs();
-        return(regular.has(other_regular.from) || other_regular.has(regular.from));
+        return(this->has(other.from) || other.has(this->from));
     }
 
     constexpr bool contains(const Range_t<auto> & other) const {
-        Range_t<T> regular = this -> abs();
-        Range_t<T> other_regular = other.abs();
-        return (regular.from <= other_regular.from && regular.to >= other_regular.to);
+        return (this->from <= other.from && this->to >= other.to);
     }
 
     constexpr bool inside(const Range_t<auto> & other) const {
@@ -131,24 +136,19 @@ public:
     }
 
     constexpr bool has(const arithmetic auto & value) const{
-        Range_t<T> regular = this -> abs();
-        return (regular.from <= static_cast<T>(value) && static_cast<T>(value) < regular.to);
+        return (this->from <= static_cast<T>(value) && static_cast<T>(value) < this->to);
     }
 
     constexpr bool has(const Range_t<auto> & other) const{return contains(other);}
 
     constexpr T padding(const Range_t<T> other) const {
-        Range_t<T> regular = this -> abs();
-        Range_t<T> other_regular = other.abs();
-        if(regular.intersects(other_regular)) return 0;
-        return MIN((other_regular.to - regular.from), (other_regular.from - regular.to));
+        if(this->intersects(other)) return 0;
+        return MIN((other.to - this->from), (other.from - this->to));
     }
 
     constexpr Range_t<T> intersection(const Range_t<auto> & other) const {
-        Range_t<T> regular = this -> abs();
-        Range_t<T> other_regular = other.abs();
-        if(false == regular.intersects(other_regular)) return Range_t<T>();
-        return Range_t<T>(MAX(T(regular.from), T(other_regular.from)), MIN(T(regular.to), T(other_regular.to)));
+        if(false == this->intersects(other)) return Range_t<T>();
+        return Range_t<T>(MAX(T(this->from), T(other.from)), MIN(T(this->to), T(other.to)));
     }
 
     constexpr T get_center()const{
@@ -202,30 +202,24 @@ public:
     }
 
 
-    constexpr Range_t<T> room_left(const Range_t<auto> & _content) const{
-        Range_t<T> content = _content.abs();
-        Range_t<T> regular = this -> abs();
-        return {regular.from, MAX(content.from, regular.from)};
+    constexpr Range_t<T> room_left(const Range_t<auto> & content) const{
+        return {this->from, MAX(content.from, this->from)};
     }
 
-    constexpr Range_t<T> room_right(const Range_t<auto> & _content) const{
-        Range_t<T> content = _content.abs();
-        Range_t<T> regular = this -> abs();
-        return {regular.from, MIN(content.from, regular.from)};
+    constexpr Range_t<T> room_right(const Range_t<auto> & content) const{
+        return {this->from, MIN(content.from, this->from)};
     }
 
     constexpr int rooms(const Range_t<auto> & _content) const{
         return bool(room_left(_content)) + bool(room_right(_content));
     }
 
-    constexpr Range_t<T> grid_forward(const Range_t<auto> & _before, const auto & grid_size) const{
-        Range_t<T> before = _before.abs();
-        Range_t<T> regular = this -> abs();
+    constexpr Range_t<T> grid_forward(const Range_t<auto> & before, const auto & grid_size) const{
 
         if(before.from == before.to && before.from == 0){//initial
-            auto grid_field = grid(regular.from, grid_size);
-            if(grid_field.has(regular)) return regular;
-            else return {regular.from, grid_field.to};
+            auto grid_field = grid(this->from, grid_size);
+            if(grid_field.has(*this)) return *this;
+            else return {this->from, grid_field.to};
         }
 
 
@@ -234,44 +228,38 @@ public:
         }
 
         auto ret = grid_next_right(before.from, grid_size);
-        if(ret.has(regular.to)){
-            return ret.part_left_in_grid(regular.to, grid_size);
+        if(ret.has(this->to)){
+            return ret.part_left_in_grid(this->to, grid_size);
         }
         return ret;
     }
 
     constexpr Range_t<T> scale(const auto & amount){
-        Range_t<T> regular = *this.abs();
-        T len = regular.length();
-        T center = regular.get_center();
-        Range_t<T> ret = Range_t<T>(center - len * amount / 2, center + len * amount / 2);
+        const T len = this->length();
+        const T center = this->get_center();
+        const Range_t<T> ret = Range_t<T>(center - len * amount / 2, center + len * amount / 2);
         if (ret.is_regular()) return ret;
         else return Range_t<T>();
     }
 
 
     constexpr Range_t<T> grow(const arithmetic auto & value) const{
-        Range_t<T> regular = this -> abs();
-        Range_t<T> ret = Range_t<T>(regular.from - value, regular.to + value);
+        const Range_t<T> ret = Range_t<T>(this->from - value, this->to + value);
         if (ret.is_regular()) return ret;
         else return Range_t<T>();
     }
 
     constexpr Range_t<T> merge(const Range_t<arithmetic auto> & other) const {
-        Range_t<T> regular = this -> abs();
-        Range_t<T> other_regular = other.abs();
-        return Range_t<T>(MIN(regular.from, other_regular.from), MAX(regular.to, other_regular.to));
+        return Range_t<T>(MIN(this->from, other.from), MAX(this->to, other.to));
     }
 
     constexpr Range_t<T> shift(const arithmetic auto & value) const{
-        Range_t<T> regular = this -> abs();
-        Range_t<T> ret = Range_t<T>(regular.from + value, regular.to + value);
+        Range_t<T> ret = Range_t<T>(this->from + value, this->to + value);
         return ret;
     }
 
     constexpr Range_t<T> merge(const arithmetic auto & value) const{
-        Range_t<T> regular = this -> abs();
-        return Range_t<T>(MIN(T(regular.from), T(value)), MAX(T(regular.to), T(value)));
+        return Range_t<T>(MIN(T(this->from), T(value)), MAX(T(this->to), T(value)));
     }
 
     constexpr T invlerp(const arithmetic auto & value) const{
@@ -283,28 +271,23 @@ public:
     }
 
     constexpr bool operator<(const arithmetic auto & value) const {
-        Range_t<T> regular = this -> abs();
-        return value < regular.from;
+        return value < this->from;
     }
 
     constexpr bool operator<=(const arithmetic auto & value) const {
-        Range_t<T> regular = this -> abs();
-        return value <= regular.to;
+        return value <= this->to;
     }
 
     constexpr bool operator>(const arithmetic auto & value) const {
-        Range_t<T> regular = this -> abs();
-        return value > regular.to;
+        return value > this->to;
     }
     constexpr bool operator>=(const arithmetic auto & value) const {
-        Range_t<T> regular = this -> abs();
-        return value >= regular.from;
+        return value >= this->from;
     }
 
 
     constexpr T clamp(const arithmetic auto & value) const{
-        Range_t<T> regular = this -> abs();
-        return CLAMP(value, regular.from, regular.to);
+        return CLAMP(value, this->from, this->to);
     }
 
     constexpr explicit operator bool() const{

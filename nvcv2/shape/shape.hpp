@@ -114,13 +114,13 @@ namespace ymd::nvcv2::Shape{
     }
 
     __inline void morph_open(Image<Binary> & dst, const Image<Binary> & src){
-        Image<Binary> temp(dst.get_size());        
+        Image<Binary> temp(dst.size());        
         erosion(temp, src);
         dilate(dst, temp);
     }
 
     __inline void morph_close(Image<Binary> & dst, const Image<Binary> & src){
-        Image<Binary> temp(dst.get_size());        
+        Image<Binary> temp(dst.size());        
         dilate(temp, src);
         erosion(dst, temp);
     }

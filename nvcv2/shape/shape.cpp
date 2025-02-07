@@ -9,7 +9,7 @@ namespace ymd::nvcv2::Shape{
     using Vector2i = Vector2_t<int>;
 
     static void clear_corners(ImageWritable<is_monochrome auto> & dst){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         scexpr uint8_t targ_v = 0;
@@ -21,7 +21,7 @@ namespace ymd::nvcv2::Shape{
 
 
     void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const size_t core[3][3], const size_t div){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         for(size_t y = 1; y < h-1u; y++){
@@ -54,7 +54,7 @@ namespace ymd::nvcv2::Shape{
 
 
     void gauss5x5(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         scexpr auto core_radius = 2u;
@@ -96,7 +96,7 @@ namespace ymd::nvcv2::Shape{
 
         {
             while(true){
-                if(not src.has_point(current_point)){
+                if(not src.size().has_point(current_point)){
                     return {0,0};//nothing
                 }
                 // DEBUG_PRINTLN(current_point, src[current_point]);
@@ -146,7 +146,7 @@ namespace ymd::nvcv2::Shape{
         // return current_point;
     }
     void sobel_xy(Image<Grayscale> & dst, const ImageReadable<Grayscale> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         {
@@ -195,7 +195,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void convolution(ImageWritable<Grayscale> & dst, const ImageReadable<Grayscale> & src, const size_t core[2][2]){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         for(size_t y = 1; y < h-1u; y++){
@@ -214,7 +214,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void dilate(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -242,7 +242,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void dilate_xy(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -308,7 +308,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void dilate_y(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -331,7 +331,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void erosion(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -364,7 +364,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void erosion_x(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -390,7 +390,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void dilate_x(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -414,7 +414,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void erosion_y(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -437,7 +437,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void erosion_xy(Image<Binary> & dst, const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -461,15 +461,15 @@ namespace ymd::nvcv2::Shape{
     }
 
     auto x4(const ImageReadable<Grayscale> & src, const size_t m){
-        Image<Grayscale> dst(src.get_size() / m);
+        Image<Grayscale> dst(src.size() / m);
         x4(dst, src, m);
         return dst;
     }
 
 
     Image<Grayscale> x2(const Image<Grayscale> & src){
-        Image<Grayscale> dst(src.get_size() / 2);
-        const auto size = dst.get_size();
+        Image<Grayscale> dst(src.size() / 2);
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
 
@@ -492,7 +492,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void anti_pepper_x(Image<Binary> & dst,const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -517,7 +517,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void anti_pepper_y(Image<Binary> & dst,const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
 
@@ -543,7 +543,7 @@ namespace ymd::nvcv2::Shape{
     }
 
     void anti_pepper(Image<Binary> & dst,const Image<Binary> & src){
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         if(src == dst){
@@ -569,7 +569,7 @@ namespace ymd::nvcv2::Shape{
 
 
     void XN(Image<Binary> dst, const Image<Binary> & src, const size_t m, const real_t percent){
-        const auto size = src.get_size();
+        const auto size = src.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
 
@@ -600,7 +600,7 @@ namespace ymd::nvcv2::Shape{
             return;
         }
 
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         auto temp = src.clone();
@@ -660,7 +660,7 @@ namespace ymd::nvcv2::Shape{
             return;
         }
 
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
         auto temp = src.clone();
@@ -718,7 +718,7 @@ namespace ymd::nvcv2::Shape{
             return;
         }
 
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
     
@@ -741,7 +741,7 @@ namespace ymd::nvcv2::Shape{
             return;
         }
 
-        const auto size = dst.get_size();
+        const auto size = dst.size();
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
     
@@ -792,7 +792,7 @@ namespace ymd::nvcv2::Shape{
     } 
 
     void canny(Image<Binary> &dst, const Image<Grayscale> &src, const Range_t<uint16_t> & threshold){
-        auto roi = src.get_view();
+        auto roi = src.rect();
 
         const auto [low_thresh, high_thresh] = threshold;
 
@@ -938,7 +938,7 @@ namespace ymd::nvcv2::Shape{
         scexpr size_t shift_bits = 3;
     
         // sizeof(vec_t);
-        auto roi = src.get_view();
+        auto roi = src.rect();
         auto gm = new vec_t[int(roi)];
         
         const auto w = size_t(roi.w);
@@ -1043,7 +1043,7 @@ namespace ymd::nvcv2::Shape{
             return;
         }
     
-        const auto size = (Rect2i(Vector2i(), dst.get_size()).intersection(Rect2i(Vector2i(), src.get_size()))).size;
+        const auto size = (Rect2i(Vector2i(), dst.size()).intersection(Rect2i(Vector2i(), src.size()))).size;
         const auto w = size_t(size.x);
         const auto h = size_t(size.y);
 

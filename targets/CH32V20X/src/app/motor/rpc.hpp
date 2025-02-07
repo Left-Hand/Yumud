@@ -9,15 +9,16 @@
 #include "utils.hpp"
 #include "function_traits.hpp"
 #include "sys/polymorphism/proxy.hpp"
+#include <utility>
+#include <type_traits>
 
 namespace ymd::rpc{
-
 
 //需送入函数中执行的参数 包含了对应的字段和可能的指定参数名
 class CallParam{
 protected:
-    String value_;
-    String spec_;
+    StringView value_;
+    StringView spec_;
 public:
     CallParam(const char * value):
         value_(value),
@@ -30,9 +31,13 @@ public:
     CallParam(const String && value):
         value_(std::move(value)),
         spec_(std::nullopt){;}
+
     CallParam(const StringView value, const StringView spec):
         value_(value),
         spec_(spec){;}
+
+    template<typename T>
+    CallParam(const T & value): value_(String(value)), spec_(std::nullopt){;}
 
     const auto value() const{
         return value_;
@@ -55,6 +60,36 @@ public:
 using Param = CallParam;
 using Params = std::span<const CallParam>;
 
+
+// class AccessProviderIntf{
+// public:
+//     virtual size_t size() const = 0;
+// };
+
+// class AccessProviderByString{
+// public:
+
+// };
+
+using AccessProviderIntf = Params;
+
+// class AccessReponserIntf{
+
+// };
+
+// class AccessReponserByString:public AccessReponserIntf{
+// public:
+// };
+
+using AccessReponserIntf = OutputStream;
+
+enum class AccessResult: uint8_t{
+    OK,
+    Fail,
+};
+
+
+
 //一个可以被检索的词条
 class Entry{
 protected:
@@ -66,7 +101,7 @@ public:
         return name_;
     }
 
-    virtual int call(OutputStream & os, const Params params) = 0;
+    virtual AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) = 0;
 };
 
 enum class EntryType:uint8_t{
@@ -94,10 +129,12 @@ enum class EntryType:uint8_t{
 
 namespace internal{
     PRO_DEF_MEM_DISPATCH(MemCall, call);
+    PRO_DEF_MEM_DISPATCH(MemName, name);
 
     struct EntryFacade : pro::facade_builder
         ::support_copy<pro::constraint_level::nontrivial>
-        ::add_convention<internal::MemCall, int(OutputStream &, const std::span<const CallParam>)>
+        ::add_convention<internal::MemCall, AccessResult(AccessReponserIntf &, const AccessProviderIntf &)>
+        ::add_convention<internal::MemName, StringView()>
         ::build {};
 }
 using EntryProxy = pro::proxy<internal::EntryFacade>;
@@ -117,9 +154,26 @@ public:
         return *value_;
     }
 
-    int call(OutputStream & os, const Params params) override{
-        os << value();
-        return 0;
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override{
+
+        if constexpr(!std::is_const_v<T>){
+            if(ap.size()){
+                if(ap.size() == 1){
+                    value() = static_cast<T>(ap[0]);
+                    return AccessResult::OK;
+                }else{
+                    return AccessResult::Fail;
+                }
+            }
+        }else{
+            if(ap.size()){
+                return AccessResult::Fail;
+            }
+        }
+
+        ar << value();
+        return AccessResult::OK;
+
     }
 };
 
@@ -129,9 +183,9 @@ class MethodArgInfo:public Entry{
 protected:
     T preset_;
 public:
-    MethodArgInfo(const StringView & name,T preset_):
+    MethodArgInfo(const StringView & name,T preset):
         Entry(name),
-        preset_(preset_){;}
+        preset_(preset){;}
 
     T preset(){
         return preset_;
@@ -160,7 +214,7 @@ protected:
 public:
     MethodConcept(const StringView & name):Entry(name){;}
 
-    virtual int call(OutputStream & os, const Params params) = 0;
+    virtual AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) = 0;
 };
 
 
@@ -178,21 +232,19 @@ protected:
 public:
     MethodByLambda(const StringView name, const Callback && callback)
         : MethodConcept(name), callback_(callback) {}
-    int call(OutputStream & os, const Params params) final override {
-        if (params.size() != N) {
-        //     os << "Error: Incorrect number of arguments";
-        //     return 0;  // 返回 0 表示错误
-            return -1;
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
+        if (ap.size() != N) {
+            return AccessResult::Fail;
         }
 
-        auto tuple_params = convert_params<std::tuple<Args...>>(params, std::index_sequence_for<Args...>{});
-        Ret ret = std::apply(callback_, tuple_params);
+        auto tuple_params = convert_params<std::tuple<Args...>>(ap, std::index_sequence_for<Args...>{});
 
-        os << ret;
-        // os << params;
-        // os << "hi";
-        // return os.tellp();  // 返回输出的字节数
-        return 0;
+        if constexpr(std::is_void_v<Ret>){
+            std::apply(callback_, tuple_params);
+        } else {
+            ar << std::apply(callback_, tuple_params);
+        }
+        return AccessResult::OK;
     }
 };
 
@@ -213,25 +265,15 @@ public:
     ) : MethodConcept(name), 
         obj_(obj),
         callback_(callback) {}
-    int call(OutputStream & os, const std::span<const CallParam> params) final override {
-        // if (params.size() != N) {
-        // //     os << "Error: Incorrect number of arguments";
-        // //     return 0;  // 返回 0 表示错误
-        //     return -1;
-        // }
-        auto tuple_params = convert_params<std::tuple<Args...>>(params, std::index_sequence_for<Args...>{});
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) final override {
+        auto tuple_params = convert_params<std::tuple<Args...>>(ap, std::index_sequence_for<Args...>{});
 
         if constexpr(std::is_void_v<Ret>){
             std::apply([this](Args... args) { (obj_->*callback_)(args...); }, tuple_params);
         } else {
-            os << std::apply([this](Args... args) -> Ret { return (obj_->*callback_)(args...); }, tuple_params);
+            ar << std::apply([this](Args... args) -> Ret { return (obj_->*callback_)(args...); }, tuple_params);
         }
-
-        // os << params;
-
-        // os << "hi";
-        // return os.tellp();  // 返回输出的字节数
-        return 0;
+        return AccessResult::OK;
     }
 };
 
@@ -264,11 +306,27 @@ public:
         (entries_.push_back(entries), ...);
     }
 
-    int call(OutputStream & os, const Params params) override{
-        for(auto & entry:entries_){
-            entry->call(os,params);
+    AccessResult call(AccessReponserIntf & ar, const AccessProviderIntf & ap) override{
+        // ar << ap;
+        // if(ap.size() < 2) return AccessResult::Fail;
+
+        auto head_hash = StringView(ap[0]).hash();
+
+        if(head_hash == "ls"_ha){
+            for(auto & entry:entries_){
+                ar.println(entry->name());
+            }
+            return AccessResult::OK;
         }
-        return 0;
+
+        for(auto & entry:entries_){
+            auto ent_hash = entry->name().hash();
+            if(head_hash == ent_hash){
+                return entry->call(ar, {ap.begin() + 1, ap.end()});
+            }
+        }
+
+        return AccessResult::Fail;
     }
 
     void add(EntryProxy & entry){
@@ -317,25 +375,51 @@ protected:
 };
 
 
+//一个帮助解析变参包的辅助元函数
+namespace internal{
+template<typename Ret, typename ArgsTuple, template<typename, typename...> class MethodByLambda, typename Lambda>
+struct make_method_by_lambda_impl;
 
+template<typename Ret, template<typename, typename...> class MethodByLambda, typename... Args, typename Lambda>
+struct make_method_by_lambda_impl<Ret, std::tuple<Args...>, MethodByLambda, Lambda> {
+    static auto make(const StringView name, Lambda&& lambda) {
+        return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
+            name,
+            std::forward<Lambda>(lambda)
+        );
+    }
+};
 
+}
 
+// make_lambda 实现
+template<typename Lambda>
+auto make_function(const StringView name, Lambda&& lambda) {
+    // 使用 std::decay 来移除 Lambda 类型的引用和 const 修饰符
+    using DecayedLambda = typename std::decay<Lambda>::type;
 
+    // 提取 Lambda 的返回类型和参数类型
+    using Ret = typename function_traits<DecayedLambda>::return_type;
+    using ArgsTuple = typename function_traits<DecayedLambda>::args_type;
 
+    // 将 ArgsTuple 还原为参数包，并调用 make_proxy
+    return internal::make_method_by_lambda_impl<Ret, ArgsTuple, MethodByLambda, Lambda>::make(
+        name,
+        std::forward<Lambda>(lambda)
+    );
+}
 
 
 template<typename Ret, typename ... Args>
-auto make_function(auto && callback, const StringView name = ""){
-    // using Ret = ymd::function_return_t<Callback>;
-    // using Args = typename ymd::function_arg_t<Callback>::type;
+auto make_function(const StringView name, Ret(*callback)(Args...)) {
     return pro::make_proxy<internal::EntryFacade, MethodByLambda<Ret, Args...>>(
         name,
-        std::forward<decltype(callback)>(callback)
+        static_cast<Ret(*)(Args...)>(callback)
     );
 }
 
 template<typename Ret, typename ... Args>
-auto make_memfunc(auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(Args...), const StringView name = "") {
+auto make_function( const StringView name, auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*member_func_ptr)(Args...)) {
     return pro::make_proxy<internal::EntryFacade, MethodByMemFunc<std::remove_cvref_t<decltype(obj)>, Ret, Args...>>(
         name,
         &obj,
@@ -344,8 +428,16 @@ auto make_memfunc(auto & obj, Ret(std::remove_reference_t<decltype(obj)>::*membe
 }
 
 template<typename T>
-auto make_property(T & val, const StringView name = ""){
+auto make_property(const StringView name, T & val){
     return pro::make_proxy<internal::EntryFacade, Property<T>>(
+        name, 
+        val
+    );
+}
+
+template<typename T>
+auto make_ro_property(const StringView name, const T & val){
+    return pro::make_proxy<internal::EntryFacade, Property<const T>>(
         name, 
         val
     );
@@ -353,14 +445,13 @@ auto make_property(T & val, const StringView name = ""){
 
 
 template<typename ... Args>
-auto make_list(const StringView name, Args && ... entries){
+auto make_list(const StringView name, const Args & ... entries){
     return pro::make_proxy<internal::EntryFacade, EntryList>(
         name, 
-        std::forward<Args>(entries)...
+        (entries)...
     );
 }
-// template<typename Callback>
-// auto make_protocol_function(Callback && callback) {
-//     return make_protocol_function("", std::forward<Callback>(callback));
-// }
 }
+
+
+
