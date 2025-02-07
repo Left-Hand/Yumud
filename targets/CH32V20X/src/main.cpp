@@ -39,7 +39,8 @@ int main(){
     // qlz_main();
     // embd_main();
     // embd_main();
-    gui_main();
+    // gui_main();
+    canopen_main();
     // bldc_main();
     // rpc_main();
     // leetcode_main();

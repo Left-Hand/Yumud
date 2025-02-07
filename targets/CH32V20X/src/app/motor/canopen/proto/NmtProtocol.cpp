@@ -3,28 +3,26 @@
 using namespace ymd::canopen;
 
 
-bool NmtProtocol::start() {
-    if (Protocol::start()) {
-        DEBUG_PRINTLN("sending boot up message");
-        if (!sendBootUp()) {
-            DEBUG_PRINTLN("ERROR; starting nmt no nodeid");
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
+// bool NmtProtocol::start() {
+//     if (Protocol::start()) {
+//         DEBUG_PRINTLN("sending boot up message");
+//         if (!sendBootUp()) {
+//             DEBUG_PRINTLN("ERROR; starting nmt no nodeid");
+//             return false;
+//         }
+//         return true;
+//     }
+//     return false;
+// }
 
-bool NmtProtocol::processMessage(const CanMsg& msg) {
+bool NmtSlaveProtocol::processStateSwitchRequest(const CanMsg & msg){
     if (!Protocol::processMessage(msg) && (msg.id() != 0)) {
         return false;
     }
 
-    DEBUG_PRINTLN("NmtProtocol.processMessage()");
-
     const auto nodeId = msg[1];
 
-    if (nodeId != canOpen->getNodeId()) {
+    if (nodeId != dev_.NMT_getNodeId()) {
         return false;
     }
 
@@ -35,15 +33,15 @@ bool NmtProtocol::processMessage(const CanMsg& msg) {
     switch (NmtCmd(cmd)) {
         case START:
             DEBUG_PRINTLN("Start");
-            canOpen->toOperationalState();
+            dev_.NMT_toOperationalState();
             break;
         case STOP:
             DEBUG_PRINTLN("Stop");
-            canOpen->toStoppedState();
+            dev_.NMT_toStoppedState();
             break;
         case PREOP:
             DEBUG_PRINTLN("Preop");
-            canOpen->toPreoperationalState();
+            dev_.NMT_toPreoperationalState();
             break;
         case RESET_NODE:
             DEBUG_PRINTLN("reset node");
@@ -57,4 +55,13 @@ bool NmtProtocol::processMessage(const CanMsg& msg) {
     }
     // notifyListeners(msg);
     return true;
+}
+
+void NmtMasterProtocol::requestStateSwitch(const uint8_t node_id, const NmtCmd cmd){
+    sendMessage(
+        CanMsg(
+            0x000,
+            std::make_tuple<uint8_t, uint8_t>(uint8_t(cmd), uint8_t(node_id))
+        )
+    );
 }

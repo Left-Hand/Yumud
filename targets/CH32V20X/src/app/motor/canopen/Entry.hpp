@@ -159,13 +159,13 @@ private:
     const String name_;
 
     uint32_t pObject;
-    bool pdoMapping;
+    // bool pdoMapping;
 public:
     SubEntry(const SubEntry &) = delete;
     SubEntry(SubEntry &&) = default;
 
     SubEntry(const StringView name, AccessType accessT, DataType dataT)
-        : access_type_(accessT), data_type_(dataT), name_(name), pdoMapping(false) {}
+        : access_type_(accessT), data_type_(dataT), name_(name){}
 
     SubEntry(const StringView name, AccessType accessT, int x)
         : SubEntry(name, accessT, DataType::uint32) {
@@ -230,14 +230,16 @@ private:
     using SubIndex = OdSubIndex; 
 
 
-	const Index index_;
 	const String name_;
+	// const Index index_;
 	std::vector<SubEntry *> subentries_ = {};
 public:
     OdEntry(const OdEntry &) = delete;
     OdEntry(OdEntry &&) = default;
-	OdEntry(Index index, StringView name):
-        index_(index),
+	// OdEntry(const StringView name, Index index):
+    //     name_(name),
+    //     index_(index){}
+	OdEntry(const StringView name):
         name_(name){}
 
 	size_t size(){return(subentries_.size());}
@@ -254,7 +256,7 @@ public:
         return StringView(name_);
     }
 
-    Index index() const { return index_; }
+    // Index index() const { return index_; }
 };
 
 

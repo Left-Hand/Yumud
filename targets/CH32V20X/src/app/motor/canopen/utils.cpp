@@ -6,4 +6,3 @@
 #include "proto/PdoSession.hpp"
 #include "proto/PdoProtocol.hpp"
 #include "proto/SyncProtocol.hpp"
-#include "proto/HeartbeatProtocol.hpp"

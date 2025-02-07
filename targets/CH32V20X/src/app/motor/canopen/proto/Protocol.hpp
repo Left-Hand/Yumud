@@ -5,9 +5,7 @@
 #include "canopen/utils.hpp"
 
 namespace ymd::canopen {
-
-using CanMsg = CanMsg;
-
+    
 struct CobId{
     uint16_t nodeid:7;
     uint16_t fcode:4;
