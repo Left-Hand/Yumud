@@ -13,8 +13,6 @@ EntryAccessError StaticObjectDictBase::write(const std::span<const uint8_t> pdat
     auto & se = se_opt.value();
 
     return se.write(pdata);
-
-    return EntryAccessError::None;
 }
 
 EntryAccessError StaticObjectDictBase::read(const std::span<uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) const{
@@ -24,7 +22,25 @@ EntryAccessError StaticObjectDictBase::read(const std::span<uint8_t> pdata, cons
     
     auto & se = (se_opt.value());
     return se.read(pdata);
-    return EntryAccessError::None;
+}
+
+EntryAccessError StaticObjectDictBase::_write_any(const void * pdata, const std::pair<const Index, const SubIndex> didx){
+    auto se_opt = find(didx);
+
+    if(unlikely(!se_opt.has_value())) return EntryAccessError::InvalidIndex;
+
+    auto & se = se_opt.value();
+
+    return se.write_any(pdata);
+
+}
+EntryAccessError StaticObjectDictBase::_read_any(void * pdata, const std::pair<const Index, const SubIndex> didx) const{
+    auto se_opt = const_cast<StaticObjectDictBase *>(this)->find(didx);
+    
+    if(unlikely(!se_opt.has_value())) return EntryAccessError::InvalidIndex;
+    
+    auto & se = (se_opt.value());
+    return se.read_any(pdata);
 }
 
 StringView StaticObjectDictBase::ename(const std::pair<const Index, const SubIndex> didx) const{

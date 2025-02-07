@@ -4,6 +4,7 @@
 #include "canopen/ObjectDict.hpp"
 
 using namespace ymd;
+using namespace ymd::canopen;
 
 void canopen_main(){
     uart2.init(576000);
@@ -11,18 +12,25 @@ void canopen_main(){
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 
-    canopen::SdoObjectDict sdo_od;
+    // SdoObjectDict od;
+    Cia402ObjectDict od;
     
     uint16_t data = 0;
+
+    const auto index = std::make_pair<const OdIndex, const OdSubIndex>(0x6061, 0x00);
     while(true){
 
         const auto m = micros();
-        for(size_t i = 0; i < 1000; i++){
-            // const auto write_err = sdo_od.write<uint16_t>(data+100, {0x1200, 0x01});
-            const auto read_err = sdo_od.read<uint16_t>(data, {0x1200, 0x01});
-        }
-        
-        DEBUG_PRINTLN(data, sdo_od.ename({0x1200, 0x01}), micros() - m);
+        // for(size_t i = 0; i < 1000; i++){
+        //     od.find(index);
+        // }
+        auto et = od.find(index).value();
+
+        et.write_any(data + 1);
+        et.read_any(data);
+        // et.(&data, index);
+        DEBUG_PRINTLN(data, et.name(), micros() - m);
+        // DEBUG_PRINTLN(data, et.name(),(index), micros() - m);
         
         delay(1);
     }

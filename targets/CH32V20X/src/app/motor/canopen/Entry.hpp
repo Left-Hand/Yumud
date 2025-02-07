@@ -238,6 +238,25 @@ public:
         return EntryAccessError::None;
     }
 
+
+    EntryAccessError write_any(const void * pdata){
+        memcpy(obj_.data(), pdata, dsize());
+        return EntryAccessError::None;
+    }
+
+    template<typename T>
+    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
+    EntryAccessError write_any(const T pdata){
+        return write_any((&pdata));
+    }
+
+    template<typename T>
+    requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
+    EntryAccessError read_any(T & pdata){
+        return read_any((&pdata));
+    }
+
+
     EntryAccessError read(std::span<uint8_t> pdata) const{
         if(unlikely(!is_readable())) return EntryAccessError::ReadOnlyAccess;
         if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
@@ -245,6 +264,12 @@ public:
         memcpy(pdata.data(), obj_.data(), pdata.size());
         return EntryAccessError::None;
     }
+
+    EntryAccessError read_any(void * pdata){
+        memcpy(pdata, obj_.data(), dsize());
+        return EntryAccessError::None;
+    }
+
 
     SubEntry copy() const{return *this;}
 
