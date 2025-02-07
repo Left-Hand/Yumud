@@ -45,7 +45,7 @@ public:
         can_data[7] = (unsigned char)((abortCode >> 24) & 0xFF);
 
         // int cobid = 0;
-        SubEntry& se = getSubEntry(0x1200, 2).unwarp();
+        SubEntry& se = getSubEntry(0x1200, 2).value();
         uint32_t cobid = se.getInt();
 
         sendMessage({cobid, can_data, 8});

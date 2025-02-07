@@ -40,7 +40,7 @@ public:
     bool has_value() const{return ptr_ != nullptr;}
 
     T & value() const{check();return *ptr_;}
-    T & unwarp() const{check();return *ptr_;}
+    // T & value() const{check();return *ptr_;}
 };
 
 class SubEntry;
@@ -59,9 +59,12 @@ struct E_Item {
     constexpr E_Item(T v) : v_(v) {}
 
     // 添加比较操作符，方便枚举值的比较
-    bool operator==(const E_Item& other) const { return v_ == other.v_; }
-    bool operator!=(const E_Item& other) const { return v_ != other.v_; }
-    bool operator<=(const E_Item& other) const { return v_ <= other.v_; }
+    constexpr bool operator==(const E_Item& other) const { return v_ == other.v_; }
+    constexpr bool operator!=(const E_Item& other) const { return v_ != other.v_; }
+    constexpr bool operator<=(const E_Item& other) const { return v_ <= other.v_; }
+    constexpr bool operator<(const E_Item& other) const { return v_ < other.v_; }
+    constexpr bool operator>=(const E_Item& other) const { return v_ >= other.v_; }
+    constexpr bool operator>(const E_Item& other) const { return v_ > other.v_; }
 };
 
 

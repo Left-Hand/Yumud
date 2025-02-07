@@ -35,7 +35,7 @@ private:
     PdoProtocol & pdo_;
 
     void sendSync() {
-        int id = int(getSubEntry(0x1005, 1).unwarp());
+        int id = int(getSubEntry(0x1005, 1).value());
         CanMsg msg(id);
         sendMessage(msg);
     }

@@ -20,8 +20,8 @@ bool SdoProtocol::processMessage(const CanMsg & msg) {
     // if (it == sessions.end()) {
     //     index = extractIndex(msg);
     //     subIndex = extractSubIndex(msg);
-    //     SubEntry & se1 = getSubEntry(index, subIndex).unwarp();
-    //     int txCobId = int(getSubEntry(0x1200, 2).unwarp());
+    //     SubEntry & se1 = getSubEntry(index, subIndex).value();
+    //     int txCobId = int(getSubEntry(0x1200, 2).value());
     //     SdoSession* session = new SdoSession(*this, txCobId, se1);
     //     sessions[msg.id()] = session;
     // }

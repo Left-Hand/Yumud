@@ -73,7 +73,7 @@ public:
     }
 
     auto getSubEntry(OdIndex index, OdSubIndex subindex) {
-        return od_[index].unwarp().operator[](subindex);
+        return od_[index].value().operator[](subindex);
     }
 
     auto getEntry(OdIndex index) {

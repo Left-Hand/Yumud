@@ -203,7 +203,7 @@ void SdoServerSession::processWriteRequest(const CanMsg & msg) {
         return;
     }
 
-    auto & sub_entry = sub_entry_opt.unwarp();
+    auto & sub_entry = sub_entry_opt.value();
 
     // 检查数据大小是否匹配
     const auto dsize = sub_entry.dsize();
@@ -244,7 +244,7 @@ void SdoServerSession::processReadRequest(const CanMsg & msg) {
         return;
     }
 
-    auto & sub_entry = sub_entry_opt.unwarp();
+    auto & sub_entry = sub_entry_opt.value();
 
     // 检查客户端请求的读取权限
     if (!sub_entry.readable()) {

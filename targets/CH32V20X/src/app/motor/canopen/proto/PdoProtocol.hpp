@@ -14,17 +14,17 @@ public:
 
 private:
     std::array<PdoRxSession, 4> rpdos_ = {
-        PdoRxSession(*this, getEntry(0x1400).unwarp(), getEntry(0x1600).unwarp()),
-        PdoRxSession(*this, getEntry(0x1400).unwarp(), getEntry(0x1600).unwarp()),
-        PdoRxSession(*this, getEntry(0x1400).unwarp(), getEntry(0x1600).unwarp()),
-        PdoRxSession(*this, getEntry(0x1400).unwarp(), getEntry(0x1600).unwarp())
+        PdoRxSession(*this, getEntry(0x1400).value(), getEntry(0x1600).value()),
+        PdoRxSession(*this, getEntry(0x1400).value(), getEntry(0x1600).value()),
+        PdoRxSession(*this, getEntry(0x1400).value(), getEntry(0x1600).value()),
+        PdoRxSession(*this, getEntry(0x1400).value(), getEntry(0x1600).value())
     };
 
     std::array<PdoTxSession, 4> tpdos_ = {
-        PdoTxSession(*this, getEntry(0x1800).unwarp(), getEntry(0x1A00).unwarp()),
-        PdoTxSession(*this, getEntry(0x1800).unwarp(), getEntry(0x1A00).unwarp()),
-        PdoTxSession(*this, getEntry(0x1800).unwarp(), getEntry(0x1A00).unwarp()),
-        PdoTxSession(*this, getEntry(0x1800).unwarp(), getEntry(0x1A00).unwarp()),
+        PdoTxSession(*this, getEntry(0x1800).value(), getEntry(0x1A00).value()),
+        PdoTxSession(*this, getEntry(0x1800).value(), getEntry(0x1A00).value()),
+        PdoTxSession(*this, getEntry(0x1800).value(), getEntry(0x1A00).value()),
+        PdoTxSession(*this, getEntry(0x1800).value(), getEntry(0x1A00).value()),
     };
 };
 

@@ -61,7 +61,7 @@ enum class EntryAccessType : uint8_t {
     CONST = 0x03
 };
 
-enum class EntryAccessError:uint8_t{
+enum class EntryAccessError: uint8_t{
     None = 0,
     InvalidValue = 0x01,
     InvalidLength = 0x02,
@@ -107,18 +107,16 @@ public:
     static constexpr Item sdo_parameter{0x22};
     static constexpr Item identity{0x23};
 
-    EntryDataType(Item e) : e_(e) {}
+    constexpr EntryDataType(Item e) : e_(e) {}
 
     // 类型转换操作符
-    operator Item() const { return e_; }
+    constexpr operator Item() const { return e_; }
 
     // 判断是否为整数类型
-    bool is_int() const {
-        return e_ <= real32;
-    }
+    constexpr bool is_int() const {return e_ <= real32;}
 
     // 获取数据类型的大小
-    size_t dsize() const {
+    constexpr size_t dsize() const {
         switch (e_.v_) {
             case bit.v_: return 1; // bit 类型通常按 1 字节处理
             case int8.v_: return 1;
@@ -154,57 +152,102 @@ public:
     using DataType = EntryDataType;
 
 private:
-    const AccessType access_type_;
-    const DataType data_type_;
-    const String name_;
 
-    uint32_t pObject;
-    // bool pdoMapping;
+#pragma pack(push, 1)
+// #pragma pack(pop)
+    StringView name_;
+    AccessType access_type_;
+    DataType data_type_;
+#pragma pack(pop)
+    class ObjRef{
+    private:
+        bool is_ref_ = false;
+        union{
+            void * pdata_;
+            uint32_t data32_;
+        };
+    public:
+        constexpr ObjRef(uint32_t data):is_ref_(false), data32_(data){}
+        constexpr ObjRef(void * pdata):is_ref_(true), pdata_(pdata){}
+
+        template<typename T>
+        requires (sizeof(T) <= 4)
+        constexpr void write(const T val){
+            if(likely(is_ref_)){
+                *reinterpret_cast<T*>(pdata_) = val;
+            }else{
+                data32_ = std::bit_cast<T>(val);
+            }
+        }
+
+        template<typename T>
+        constexpr void read(T & val) const{
+            if(likely(is_ref_)){
+                val = *reinterpret_cast<T*>(pdata_);
+            }else{
+                val = std::bit_cast<T>(data32_);
+            }
+        }
+
+        template<typename T>
+        constexpr T read() const {
+            if(likely(is_ref_)){
+                return *reinterpret_cast<T*>(pdata_);
+            }else{
+                return std::bit_cast<T>(data32_);
+            }
+        }
+
+        constexpr const void * data() const{
+            return likely(is_ref_) ? pdata_ : (&data32_);
+        }
+
+        constexpr void * data(){
+            return likely(is_ref_) ? pdata_ : (&data32_);
+        }
+
+        constexpr ObjRef & operator =(const auto val){this->write(val); return *this;}
+        
+        template<typename T>
+        explicit constexpr operator T(){return this->read<T>();}
+
+    };
+
+    ObjRef obj_;
+
+
+    // SubEntry(const SubEntry &) = default;
 public:
-    SubEntry(const SubEntry &) = delete;
+    SubEntry(const SubEntry &) = default;
+    // SubEntry(const SubEntry &) = delete;
     SubEntry(SubEntry &&) = default;
 
-    SubEntry(const StringView name, AccessType accessT, DataType dataT)
-        : access_type_(accessT), data_type_(dataT), name_(name){}
+    SubEntry & operator = (const SubEntry &) = default;
+    SubEntry & operator = (SubEntry &&) = default;
 
-    SubEntry(const StringView name, AccessType accessT, int x)
-        : SubEntry(name, accessT, DataType::uint32) {
-        pObject = x;
-    }
-
-    SubEntry(const StringView name, AccessType accessT, short x)
-        : SubEntry(name, accessT, DataType::uint16) {
-        pObject = static_cast<int>(x);
-    }
-
-    SubEntry(const StringView name, AccessType accessT, uint8_t x)
-        : SubEntry(name, accessT, DataType::uint8) {
-        pObject = x;
-    }
-
-    SubEntry(const StringView name, AccessType accessT, bool x)
-        : SubEntry(name, accessT, DataType::int8) {
-        pObject = x;
-    }
-
-
-    const uint8_t * data() const {
-        return reinterpret_cast<const uint8_t *>(pObject);
-    }
-
-    uint8_t * data() {
-        return reinterpret_cast<uint8_t *>(pObject);
-    }
-
-    int getInt() const {
-        return int(*this);
-    }
+    constexpr SubEntry(const StringView name, auto & val, AccessType access_type = AccessType::RW, DataType data_type = DataType::int32)
+        : name_(name), access_type_(access_type), data_type_(data_type), obj_(&val){}
 
     operator int() const ;
 
-    uint32_t data32() const{
-        return pObject;
+    EntryAccessError write(const std::span<const uint8_t> pdata){
+        if(unlikely(!is_writeable())) return EntryAccessError::WriteOnlyAccess;
+        if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
+        if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
+        memcpy(obj_.data(), pdata.data(), pdata.size());
+        return EntryAccessError::None;
     }
+
+    EntryAccessError read(std::span<uint8_t> pdata) const{
+        if(unlikely(!is_readable())) return EntryAccessError::ReadOnlyAccess;
+        if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
+        if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
+        memcpy(pdata.data(), obj_.data(), pdata.size());
+        return EntryAccessError::None;
+    }
+
+    SubEntry copy() const{return *this;}
+
 
     EntryAccessError set(int val);
 
@@ -216,9 +259,8 @@ public:
 	size_t dsize() const {return data_type_.dsize();}
 	size_t size() const {return data_type_.dsize();}
 
-    bool readable() const {return access_type_ != AccessType::WO;}
-    bool writeable() const {return access_type_ == AccessType::RW || access_type_ == AccessType::WO;}
-
+    bool is_readable() const {return access_type_ != AccessType::WO;}
+    bool is_writeable() const {return access_type_ == AccessType::RW || access_type_ == AccessType::WO;}
     StringView name() const {return StringView(name_);}
 
 };
@@ -230,33 +272,35 @@ private:
     using SubIndex = OdSubIndex; 
 
 
-	const String name_;
-	// const Index index_;
-	std::vector<SubEntry *> subentries_ = {};
+	StringView name_;
+	std::vector<SubEntry> subentries_ = {};
 public:
-    OdEntry(const OdEntry &) = delete;
+    OdEntry(const OdEntry &) = default;
     OdEntry(OdEntry &&) = default;
-	// OdEntry(const StringView name, Index index):
-    //     name_(name),
-    //     index_(index){}
+
+    OdEntry & operator=(const OdEntry &) = default;
+    OdEntry & operator=(OdEntry &&) = default;
+    
 	OdEntry(const StringView name):
         name_(name){}
 
+	OdEntry():
+        name_(std::nullopt){}
+    
 	size_t size(){return(subentries_.size());}
 
-	void appendSub(SubEntry & sub){
-		subentries_.push_back(&sub);
+	void add(SubEntry && sub){
+		subentries_.push_back(sub);
 	}
 
-    optref<SubEntry> operator [](const SubIndex idx){
-        return subentries_[idx];
+    std::optional<SubEntry> operator [](const SubIndex idx){
+    // optref<SubEntry> operator [](const SubIndex idx){
+        return (subentries_[idx]);
     }
 
     StringView name() const {
         return StringView(name_);
     }
-
-    // Index index() const { return index_; }
 };
 
 

@@ -11,28 +11,19 @@ void canopen_main(){
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 
-    canopen::ObjectDictionary od;
-
-    auto et = canopen::OdEntry("a");
-    auto et2 = canopen::OdEntry("abc");
-    // auto et2 = canopen::SubEntry("abc");
-
-    constexpr auto a = sizeof(et);
-    // constexpr auto a = sizeof(et);
-
-    od.insert(et, 1);
-    for(size_t i = 2; i < 400; i++){
-        od.insert(et2, i);
-    }
-
+    canopen::SdoObjectDict sdo_od;
+    
+    uint16_t data = 0;
     while(true){
 
-        auto m = micros();
-        for(size_t i = 0; i < 10000; i++)
-            (void)od[1].unwarp().name();
-        DEBUG_PRINTLN(uint32_t(micros() - m));
-        DEBUG_PRINTLN(od[2].unwarp().name(), a);
-
+        const auto m = micros();
+        for(size_t i = 0; i < 1000; i++){
+            // const auto write_err = sdo_od.write<uint16_t>(data+100, {0x1200, 0x01});
+            const auto read_err = sdo_od.read<uint16_t>(data, {0x1200, 0x01});
+        }
+        
+        DEBUG_PRINTLN(data, sdo_od.ename({0x1200, 0x01}), micros() - m);
+        
         delay(1);
     }
 }   

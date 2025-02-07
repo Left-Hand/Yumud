@@ -24,21 +24,21 @@ CanMsg PdoTxSession::buildMessage() const {
 
     std::array<uint8_t, 8> data;
 
-    const int cnt = int(mapping_[0].unwarp());
-    const CobId cobId = int(params_[1].unwarp());
+    const int cnt = int(mapping_[0].value());
+    const CobId cobId = int(params_[1].value());
 
     int bits_cnt = 0;
 
     for (int i = 1; i <= cnt; i++) {
 
         //获取mapping条目i的子项 得到映射
-        const int map = int(mapping_[i].unwarp());
+        const int map = int(mapping_[i].value());
 
         //拆分为条目的比特数 索引
         const auto [bits, subindex, index] = Mapping(map);
 
         //获取映射项的值
-        const auto val = int(pdo_.getSubEntry(index, subindex).unwarp());
+        const auto val = int(pdo_.getSubEntry(index, subindex).value());
 
         //将获得的值复制到data中
         memcpy(data.begin(), &val, bits/8);
@@ -63,24 +63,24 @@ CanMsg PdoTxSession::buildMessage() const {
 
 //将收到的pdo报文写入字典
 bool PdoRxSession::processMessage(const CanMsg& msg){
-    const CobId cobId = int(params_[1].unwarp());
+    const CobId cobId = int(params_[1].value());
 
     if (msg.id() != cobId) {
         return false;
     }
 
-    int cnt = int(mapping_[0].unwarp());
+    int cnt = int(mapping_[0].value());
     int bits_cnt = 0;
 
     for (int i = 1; i <= cnt; i++) {
 
-        const int map = int(mapping_[i].unwarp());
+        const int map = int(mapping_[i].value());
 
         //拆分为条目的比特数 索引
         const auto [bits, subindex, index] = Mapping(map);
     
         //获取映射项
-        SubEntry& se = pdo_.getSubEntry(index, subindex).unwarp();
+        SubEntry& se = pdo_.getSubEntry(index, subindex).value();
 
         se.put(msg);
 
@@ -96,7 +96,7 @@ bool PdoRxSession::processMessage(const CanMsg& msg){
 //TODO transfer type的模式匹配问题
 
 bool PdoTxSession::onSyncEvent() {
-    TransferType transType = TransferType(int(params_[2].unwarp()));
+    TransferType transType = TransferType(int(params_[2].value()));
     if (int(transType) >= int(TransferType::SyncMin) and 
         int(transType) <= int(TransferType::SyncMax)) {
         //周期性同步传输 每transType次发生同步事件才发送数据

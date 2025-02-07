@@ -27,9 +27,9 @@ EntryAccessError SubEntry::set(int val) {
     // if (data_type_ == DataType::uint8) {
     //     byte1 = static_cast<uint8_t>(val);
     // } else if (data_type_ == DataType::uint32 || data_type_ == DataType::int32) {
-        pObject = val;
+    obj_.write(val);
     // } else if (data_type_ == DataType::uint16) {
-    //     pObject = val & 0x0000FFFF;
+    //     obj_ = val & 0x0000FFFF;
     // } else {
     //     return false;
     // }
@@ -42,13 +42,13 @@ EntryAccessError SubEntry::put(const std::span<const uint8_t> val) {
     }
 
     if (data_type_ == DataType::uint8) {
-        pObject = val[0];
+        obj_ = val[0];
     } else if (data_type_ == DataType::uint32 || data_type_ == DataType::int32) {
         int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8) | ((val[2] & 0xFF) << 16) | ((val[3] & 0xFF) << 24);
-        pObject = value;
+        obj_ = value;
     } else if (data_type_ == DataType::uint16) {
         int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8);
-        pObject = value & 0x0000FFFF;
+        obj_ = value & 0x0000FFFF;
     } else {
         return EntryAccessError::ReadOnlyAccess;
     }
@@ -58,12 +58,5 @@ EntryAccessError SubEntry::put(const std::span<const uint8_t> val) {
 
 
 SubEntry::operator int() const {
-    if (data_type_ == DataType::uint8) {
-        return std::bit_cast<int>(pObject);
-    } else if (data_type_ == DataType::uint32 || data_type_ == DataType::int32) {
-        return std::bit_cast<int>(pObject);
-    } else if (data_type_ == DataType::uint16) {
-        return std::bit_cast<int>(pObject) & 0x0000FFFF;
-    }
-    return 0;
+    return obj_.read<int>();
 }
