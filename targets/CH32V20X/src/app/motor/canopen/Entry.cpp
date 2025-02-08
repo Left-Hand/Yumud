@@ -19,43 +19,32 @@ using namespace ymd::canopen;
 // }
 
 
-EntryAccessError SubEntry::set(int val) {
-    if (access_type_ == AccessType::CONST || access_type_  == AccessType::RO) {
-        return EntryAccessError::ReadOnlyAccess;
-    }
-
-    // if (data_type_ == DataType::uint8) {
-    //     byte1 = static_cast<uint8_t>(val);
-    // } else if (data_type_ == DataType::uint32 || data_type_ == DataType::int32) {
-    obj_.write(val);
-    // } else if (data_type_ == DataType::uint16) {
-    //     obj_ = val & 0x0000FFFF;
-    // } else {
-    //     return false;
-    // }
+EntryAccessError SubEntry::read(std::span<uint8_t> pdata) const{
+    if(unlikely(!is_readable())) return EntryAccessError::ReadOnlyAccess;
+    if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
+    if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
+    memcpy(pdata.data(), obj_.data(), pdata.size());
     return EntryAccessError::None;
 }
 
-EntryAccessError SubEntry::put(const std::span<const uint8_t> val) {
-    if (access_type_ == AccessType::CONST || access_type_  == AccessType::RO) {
-        return EntryAccessError::ReadOnlyAccess;
-    }
-
-    if (data_type_ == DataType::uint8) {
-        obj_ = val[0];
-    } else if (data_type_ == DataType::uint32 || data_type_ == DataType::int32) {
-        int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8) | ((val[2] & 0xFF) << 16) | ((val[3] & 0xFF) << 24);
-        obj_ = value;
-    } else if (data_type_ == DataType::uint16) {
-        int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8);
-        obj_ = value & 0x0000FFFF;
-    } else {
-        return EntryAccessError::ReadOnlyAccess;
-    }
-
+EntryAccessError SubEntry::write(const std::span<const uint8_t> pdata){
+    if(unlikely(!is_writeable())) return EntryAccessError::WriteOnlyAccess;
+    if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
+    if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
+    memcpy(obj_.data(), pdata.data(), pdata.size());
     return EntryAccessError::None;
 }
 
+
+EntryAccessError SubEntry::read_any(void * pdata){
+    memcpy(pdata, obj_.data(), dsize());
+    return EntryAccessError::None;
+}
+
+EntryAccessError SubEntry::write_any(const void * pdata){
+    memcpy(obj_.data(), pdata, dsize());
+    return EntryAccessError::None;
+}
 
 SubEntry::operator int() const {
     return obj_.read<int>();

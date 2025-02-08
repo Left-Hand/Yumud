@@ -137,6 +137,18 @@ public:
         }
     }
 
+    template<typename U>
+    static Item from(){
+        using T = std::decay_t<U>;
+        if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+            return uint8;
+        } else if constexpr (std::is_same_v<T, int16_t> || std::is_same_v<T, uint16_t>) {
+            return uint16;
+        } else if constexpr (std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>){
+            return uint32;
+        }
+    }
+
 private:
     Item e_;
 };
@@ -162,6 +174,7 @@ private:
     class ObjRef{
     private:
         bool is_ref_ = false;
+        bool is_const_ = false;
         union{
             void * pdata_;
             uint32_t data32_;
@@ -169,6 +182,7 @@ private:
     public:
         constexpr ObjRef(uint32_t data):is_ref_(false), data32_(data){}
         constexpr ObjRef(void * pdata):is_ref_(true), pdata_(pdata){}
+        constexpr ObjRef(const void * pdata):is_ref_(true), pdata_(const_cast<void *>(pdata)){}
 
         template<typename T>
         requires (sizeof(T) <= 4)
@@ -215,34 +229,21 @@ private:
 
     ObjRef obj_;
 
-
-    // SubEntry(const SubEntry &) = default;
 public:
     SubEntry(const SubEntry &) = default;
-    // SubEntry(const SubEntry &) = delete;
     SubEntry(SubEntry &&) = default;
 
     SubEntry & operator = (const SubEntry &) = default;
     SubEntry & operator = (SubEntry &&) = default;
-
-    constexpr SubEntry(const StringView name, auto & val, AccessType access_type = AccessType::RW, DataType data_type = DataType::int32)
+    constexpr SubEntry(const StringView name, auto & val, AccessType access_type, DataType data_type)
         : name_(name), access_type_(access_type), data_type_(data_type), obj_(&val){}
 
-    operator int() const ;
+    explicit operator int() const ;
 
-    EntryAccessError write(const std::span<const uint8_t> pdata){
-        if(unlikely(!is_writeable())) return EntryAccessError::WriteOnlyAccess;
-        if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
-        if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
-        memcpy(obj_.data(), pdata.data(), pdata.size());
-        return EntryAccessError::None;
-    }
+    template<integral T>
+    explicit operator T() const{return int(*this);}
 
 
-    EntryAccessError write_any(const void * pdata){
-        memcpy(obj_.data(), pdata, dsize());
-        return EntryAccessError::None;
-    }
 
     template<typename T>
     requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
@@ -257,29 +258,15 @@ public:
     }
 
 
-    EntryAccessError read(std::span<uint8_t> pdata) const{
-        if(unlikely(!is_readable())) return EntryAccessError::ReadOnlyAccess;
-        if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
-        if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
-        memcpy(pdata.data(), obj_.data(), pdata.size());
-        return EntryAccessError::None;
-    }
+    EntryAccessError read(std::span<uint8_t> pdata) const;
 
-    EntryAccessError read_any(void * pdata){
-        memcpy(pdata, obj_.data(), dsize());
-        return EntryAccessError::None;
-    }
+    EntryAccessError write(const std::span<const uint8_t> pdata);
 
+    EntryAccessError read_any(void * pdata);
+
+    EntryAccessError write_any(const void * pdata);
 
     SubEntry copy() const{return *this;}
-
-
-    EntryAccessError set(int val);
-
-    EntryAccessError put(const std::span<const uint8_t> val) ;
-    EntryAccessError put(const CanMsg & msg){
-        return this->put(std::span<const uint8_t>(msg.begin(), msg.size()));
-    }
 
 	size_t dsize() const {return data_type_.dsize();}
 	size_t size() const {return data_type_.dsize();}
