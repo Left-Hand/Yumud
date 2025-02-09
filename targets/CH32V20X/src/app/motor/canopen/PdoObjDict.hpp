@@ -26,7 +26,7 @@ struct PdoObjDict:public StaticObjectDictBase{
 
     PdoObjDict() = default;
 
-    std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx) final override;
+    std::optional<SubEntry> find(const Didx didx) final override;
 };
         
     

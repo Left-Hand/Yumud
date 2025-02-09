@@ -8,7 +8,7 @@ using namespace ymd;
 
 
 
-std::optional<SubEntry> SdoObjDict::find(const std::pair<const Index, const SubIndex> didx) {
+std::optional<SubEntry> SdoObjDict::find(const Didx didx) {
     const auto [idx, subidx] = didx;
 
     switch (idx) {

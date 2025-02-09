@@ -11,36 +11,36 @@ public:
     using Index = OdIndex;
     using SubIndex = OdSubIndex;
 protected:
-    virtual EntryAccessError _write_any(const void * pdata, const std::pair<const Index, const SubIndex> didx) = 0;
-    virtual EntryAccessError _read_any(void * pdata, const std::pair<const Index, const SubIndex> didx) const = 0;
+    virtual EntryAccessError _write_any(const void * pdata, const Didx didx) = 0;
+    virtual EntryAccessError _read_any(void * pdata, const Didx didx) const = 0;
 public:
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError write(const auto data, const std::pair<const Index, const SubIndex> didx){
+    EntryAccessError write(const auto data, const Didx didx){
         static_assert(std::is_convertible_v<T, decltype(data)>, "type mismatch");
-        return write({reinterpret_cast<const uint8_t *>(&data), sizeof(T)}, {didx.first, didx.second});
+        return write({reinterpret_cast<const uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
     }
 
     template<typename T, typename U>
     requires (sizeof(T) <= 4)
-    EntryAccessError read(U & data, const std::pair<const Index, const SubIndex> didx) const {
+    EntryAccessError read(U & data, const Didx didx) const {
         static_assert(std::is_same_v<T, U>, "type mismatch");
-        return read({reinterpret_cast<uint8_t *>(&data), sizeof(T)}, {didx.first, didx.second});
+        return read({reinterpret_cast<uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
     }
 
 
-    virtual EntryAccessError write(const std::span<const uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) = 0;
-    virtual EntryAccessError read(const std::span<uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) const = 0;
+    virtual EntryAccessError write(const std::span<const uint8_t> pdata, const Didx didx) = 0;
+    virtual EntryAccessError read(const std::span<uint8_t> pdata, const Didx didx) const = 0;
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError write_any(const T pdata, const std::pair<const Index, const SubIndex> didx){return _write_any(&pdata, didx);}
+    EntryAccessError write_any(const T pdata, const Didx didx){return _write_any(&pdata, didx);}
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError read_any(T & pdata, const std::pair<const Index, const SubIndex> didx) const {return _read_any(&pdata, didx);}
-    virtual StringView ename(const std::pair<const Index, const SubIndex> didx) const = 0;
+    EntryAccessError read_any(T & pdata, const Didx didx) const {return _read_any(&pdata, didx);}
+    virtual StringView ename(const Didx didx) const = 0;
 };
 
 class ObjectDict:public ObjectDictIntf{
@@ -53,7 +53,7 @@ public:
         return (dict_[index]);
     }
 
-    std::optional<SubEntry> operator [](const std::pair<const Index, const SubIndex> id){
+    std::optional<SubEntry> operator [](const Didx id){
         const auto [index, subindex] = id;
         auto entry_opt = ((*this)[index]);
         if (entry_opt.has_value()){
@@ -63,11 +63,11 @@ public:
         }
     }
 
-    EntryAccessError write(const std::span<const uint8_t> pdata, const std::pair<const Index, const SubIndex> didx){
+    EntryAccessError write(const std::span<const uint8_t> pdata, const Didx didx){
         return EntryAccessError::None;
     }
     
-    EntryAccessError read(const std::span<uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) const {
+    EntryAccessError read(const std::span<uint8_t> pdata, const Didx didx) const {
         return EntryAccessError::None;
     }
 
@@ -96,24 +96,20 @@ public:
 class StaticObjectDictBase:public ObjectDictIntf{
 protected:
     using CobId = uint16_t;
-    EntryAccessError _write_any(const void * pdata, const std::pair<const Index, const SubIndex> didx) final override;
-    EntryAccessError _read_any(void * pdata, const std::pair<const Index, const SubIndex> didx) const final override;
+    EntryAccessError _write_any(const void * pdata, const Didx didx) final override;
+    EntryAccessError _read_any(void * pdata, const Didx didx) const final override;
 public:
     StaticObjectDictBase() = default;
     StaticObjectDictBase(const StaticObjectDictBase & other) = delete;
     StaticObjectDictBase(StaticObjectDictBase && other) = delete;
-
-
     
-    EntryAccessError write(const std::span<const uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) final override;
+    EntryAccessError write(const std::span<const uint8_t> pdata, const Didx didx) final override;
     
-    EntryAccessError read(const std::span<uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) const final override;
+    EntryAccessError read(const std::span<uint8_t> pdata, const Didx didx) const final override;
 
-
-
-    StringView ename(const std::pair<const Index, const SubIndex> didx) const final override;
+    StringView ename(const Didx didx) const final override;
     
-    virtual std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx) = 0;
+    virtual std::optional<SubEntry> find(const Didx didx) = 0;
 };
 
 

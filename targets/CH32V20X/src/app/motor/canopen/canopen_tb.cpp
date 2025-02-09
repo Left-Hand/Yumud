@@ -18,7 +18,10 @@ void canopen_main(){
     
     uint16_t data = 0;
 
-    const auto index = std::make_pair<const OdIndex, const OdSubIndex>(0x6061, 0x00);
+    const Didx index = {
+        0x2000, 0
+    };
+
     while(true){
 
         const auto m = micros();

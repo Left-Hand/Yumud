@@ -4,6 +4,8 @@
 #include <variant>
 #include <unordered_map>
 #include <tuple>
+// #include <pair>
+
 #include "sys/string/String.hpp"
 
 namespace ymd::canopen{
@@ -78,4 +80,25 @@ struct CobId{
         fcode((id >> 7) & 0x0f){;}
     constexpr operator uint16_t() const {return nodeid | fcode << 7;}
 };
+
+using OdIndex = uint16_t;
+using OdSubIndex = uint8_t;
+
+struct Didx{
+    OdIndex idx;
+    OdSubIndex subidx;
+
+    constexpr Didx(const std::pair<OdIndex, OdSubIndex> didx):
+        idx(didx.first),
+        subidx(didx.second){;}
+
+    constexpr Didx(const OdIndex idx, const OdSubIndex subidx):
+        idx(idx),
+        subidx(subidx){;}
+
+    constexpr bool operator==(const Didx& other) const { return idx == other.idx && subidx == other.subidx; }
+    constexpr bool operator!=(const Didx& other) const { return !(*this == other); }
+
+};
+
 }

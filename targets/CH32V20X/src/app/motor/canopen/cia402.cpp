@@ -2,7 +2,7 @@
 
 using namespace ymd::canopen;
 
-std::optional<SubEntry> Cia402ObjectDict::find(const std::pair<const Index, const SubIndex> didx) {
+std::optional<SubEntry> Cia402ObjectDict::find(const Didx didx) {
 
     const auto [idx, subidx] = didx;
 

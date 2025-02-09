@@ -153,8 +153,6 @@ private:
     Item e_;
 };
 
-using OdIndex = uint16_t;
-using OdSubIndex = uint8_t;
 
 
 class SubEntry {

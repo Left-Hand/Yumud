@@ -192,7 +192,7 @@ protected:
 public:
     Cia402ObjectDict() = default;
 
-    std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx);
+    std::optional<SubEntry> find(const Didx didx);
 };
 
 

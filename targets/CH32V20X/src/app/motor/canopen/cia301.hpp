@@ -136,7 +136,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
     ErrorReg error_reg;
     Cia301ObjectDict() = default;
 
-    std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx);
+    std::optional<SubEntry> find(const Didx didx);
 };
 
 
