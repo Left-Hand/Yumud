@@ -19,31 +19,31 @@ using namespace ymd::canopen;
 // }
 
 
-EntryAccessError SubEntry::read(std::span<uint8_t> pdata) const{
-    if(unlikely(!is_readable())) return EntryAccessError::ReadOnlyAccess;
-    if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
-    if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
+SdoAbortCode SubEntry::read(std::span<uint8_t> pdata) const{
+    if(unlikely(!is_readable())) return SdoAbortCode::ReadOnlyAccess;
+    if(unlikely(pdata.size() != dsize())) return SdoAbortCode::GeneralError;
+    if(unlikely(pdata.size() > 4)) return SdoAbortCode::GeneralError;
     memcpy(pdata.data(), obj_.data(), pdata.size());
-    return EntryAccessError::None;
+    return SdoAbortCode::None;
 }
 
-EntryAccessError SubEntry::write(const std::span<const uint8_t> pdata){
-    if(unlikely(!is_writeable())) return EntryAccessError::WriteOnlyAccess;
-    if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
-    if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
+SdoAbortCode SubEntry::write(const std::span<const uint8_t> pdata){
+    if(unlikely(!is_writeable())) return SdoAbortCode::WriteOnlyAccess;
+    if(unlikely(pdata.size() != dsize())) return SdoAbortCode::GeneralError;
+    if(unlikely(pdata.size() > 4)) return SdoAbortCode::GeneralError;
     memcpy(obj_.data(), pdata.data(), pdata.size());
-    return EntryAccessError::None;
+    return SdoAbortCode::None;
 }
 
 
-EntryAccessError SubEntry::read_any(void * pdata){
+SdoAbortCode SubEntry::read_any(void * pdata){
     memcpy(pdata, obj_.data(), dsize());
-    return EntryAccessError::None;
+    return SdoAbortCode::None;
 }
 
-EntryAccessError SubEntry::write_any(const void * pdata){
+SdoAbortCode SubEntry::write_any(const void * pdata){
     memcpy(obj_.data(), pdata, dsize());
-    return EntryAccessError::None;
+    return SdoAbortCode::None;
 }
 
 SubEntry::operator int() const {

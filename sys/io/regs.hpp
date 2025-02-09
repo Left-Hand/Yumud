@@ -12,6 +12,9 @@ struct RegC_t:public __RegBase{
 protected:
     RegC_t() = default;
 public:
+    RegC_t(const std::span<const uint8_t> pdata){
+        *(reinterpret_cast<T *>(this)) = *(reinterpret_cast<const T *>(pdata.data()));
+    };
     using value_type = T;
     RegC_t<T> copy() const{return *this;}
     constexpr operator T() const {return (*reinterpret_cast<const T *>(this));}
@@ -28,11 +31,13 @@ struct Reg_t:public RegC_t<T>{
 protected:
     Reg_t<T> & operator = (const Reg_t<T> & other) = default;
     Reg_t<T> & operator = (Reg_t<T> && other) = default;
-    Reg_t() = default;
     Reg_t(const T & data){*this = data;};
     Reg_t(T && data){*this = data;};
+
 public:
     using value_type = T;
+    
+    using RegC_t<T>::RegC_t;
 
     Reg_t<T> copy() const{return *this;}
     constexpr Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}
@@ -46,6 +51,7 @@ public:
 
 #define REG_TEMPLATE(name, T)\
 struct name:public Reg_t<T>{\
+    using Reg_t<T>::Reg_t;\
     using Reg_t<T>::operator T;\
     using Reg_t<T>::operator T &;\
     using Reg_t<T>::operator =;\
@@ -53,6 +59,7 @@ struct name:public Reg_t<T>{\
 
 #define REGC_TEMPLATE(name, T)\
 struct name:public RegC_t<T>{\
+    using RegC_t<T>::RegC_t;\
     using RegC_t<T>::operator T;\
     using RegC_t<T>::operator =;\
 };\

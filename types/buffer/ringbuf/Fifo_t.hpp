@@ -13,8 +13,11 @@ protected:
         return ptr + step >= this->buf + N;
     }
 
-    Pointer advance(Pointer ptr, const size_t step) {
-        // return over(ptr, step) ? ptr + step - N : ptr + step;
+    T * advance(T * ptr, const size_t step) {
+        return (ptr + step >= this->buf + N) ? ptr + step - N : ptr + step;
+    }
+
+    const T * advance(const T * ptr, const size_t step) const {
         return (ptr + step >= this->buf + N) ? ptr + step - N : ptr + step;
     }
 public:
@@ -113,6 +116,9 @@ public:
         }
     }
 
+    __fast_inline const T foresee(const size_t idx) const{
+        return *advance(read_ptr, idx);
+    }
     void vent(const size_t len){
         read_ptr = advance(read_ptr, len);
         return;

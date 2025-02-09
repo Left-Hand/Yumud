@@ -5,39 +5,39 @@
 using namespace ymd::canopen;
 using namespace ymd;
 
-EntryAccessError StaticObjectDictBase::write(const std::span<const uint8_t> pdata, const Didx didx){
+SdoAbortCode StaticObjectDictBase::write(const std::span<const uint8_t> pdata, const Didx didx){
     auto se_opt = find(didx);
 
-    if(unlikely(!se_opt.has_value())) return EntryAccessError::InvalidIndex;
+    if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
 
     auto & se = se_opt.value();
 
     return se.write(pdata);
 }
 
-EntryAccessError StaticObjectDictBase::read(const std::span<uint8_t> pdata, const Didx didx) const{
+SdoAbortCode StaticObjectDictBase::read(const std::span<uint8_t> pdata, const Didx didx) const{
     auto se_opt = const_cast<StaticObjectDictBase *>(this)->find(didx);
     
-    if(unlikely(!se_opt.has_value())) return EntryAccessError::InvalidIndex;
+    if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
     
     auto & se = (se_opt.value());
     return se.read(pdata);
 }
 
-EntryAccessError StaticObjectDictBase::_write_any(const void * pdata, const Didx didx){
+SdoAbortCode StaticObjectDictBase::_write_any(const void * pdata, const Didx didx){
     auto se_opt = find(didx);
 
-    if(unlikely(!se_opt.has_value())) return EntryAccessError::InvalidIndex;
+    if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
 
     auto & se = se_opt.value();
 
     return se.write_any(pdata);
 
 }
-EntryAccessError StaticObjectDictBase::_read_any(void * pdata, const Didx didx) const{
+SdoAbortCode StaticObjectDictBase::_read_any(void * pdata, const Didx didx) const{
     auto se_opt = const_cast<StaticObjectDictBase *>(this)->find(didx);
     
-    if(unlikely(!se_opt.has_value())) return EntryAccessError::InvalidIndex;
+    if(unlikely(!se_opt.has_value())) return SdoAbortCode::ServiceParameterIncorrect;
     
     auto & se = (se_opt.value());
     return se.read_any(pdata);

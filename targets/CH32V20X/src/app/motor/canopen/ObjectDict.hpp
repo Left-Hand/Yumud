@@ -11,35 +11,35 @@ public:
     using Index = OdIndex;
     using SubIndex = OdSubIndex;
 protected:
-    virtual EntryAccessError _write_any(const void * pdata, const Didx didx) = 0;
-    virtual EntryAccessError _read_any(void * pdata, const Didx didx) const = 0;
+    virtual SdoAbortCode _write_any(const void * pdata, const Didx didx) = 0;
+    virtual SdoAbortCode _read_any(void * pdata, const Didx didx) const = 0;
 public:
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError write(const auto data, const Didx didx){
+    SdoAbortCode write(const auto data, const Didx didx){
         static_assert(std::is_convertible_v<T, decltype(data)>, "type mismatch");
         return write({reinterpret_cast<const uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
     }
 
     template<typename T, typename U>
     requires (sizeof(T) <= 4)
-    EntryAccessError read(U & data, const Didx didx) const {
+    SdoAbortCode read(U & data, const Didx didx) const {
         static_assert(std::is_same_v<T, U>, "type mismatch");
         return read({reinterpret_cast<uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
     }
 
 
-    virtual EntryAccessError write(const std::span<const uint8_t> pdata, const Didx didx) = 0;
-    virtual EntryAccessError read(const std::span<uint8_t> pdata, const Didx didx) const = 0;
+    virtual SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) = 0;
+    virtual SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const = 0;
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError write_any(const T pdata, const Didx didx){return _write_any(&pdata, didx);}
+    SdoAbortCode write_any(const T pdata, const Didx didx){return _write_any(&pdata, didx);}
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError read_any(T & pdata, const Didx didx) const {return _read_any(&pdata, didx);}
+    SdoAbortCode read_any(T & pdata, const Didx didx) const {return _read_any(&pdata, didx);}
     virtual StringView ename(const Didx didx) const = 0;
 };
 
@@ -63,12 +63,12 @@ public:
         }
     }
 
-    EntryAccessError write(const std::span<const uint8_t> pdata, const Didx didx){
-        return EntryAccessError::None;
+    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx){
+        return SdoAbortCode::None;
     }
     
-    EntryAccessError read(const std::span<uint8_t> pdata, const Didx didx) const {
-        return EntryAccessError::None;
+    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const {
+        return SdoAbortCode::None;
     }
 
 	void insert(OdEntry && odEntry, const Index idx){
@@ -96,16 +96,16 @@ public:
 class StaticObjectDictBase:public ObjectDictIntf{
 protected:
     using CobId = uint16_t;
-    EntryAccessError _write_any(const void * pdata, const Didx didx) final override;
-    EntryAccessError _read_any(void * pdata, const Didx didx) const final override;
+    SdoAbortCode _write_any(const void * pdata, const Didx didx) final override;
+    SdoAbortCode _read_any(void * pdata, const Didx didx) const final override;
 public:
     StaticObjectDictBase() = default;
     StaticObjectDictBase(const StaticObjectDictBase & other) = delete;
     StaticObjectDictBase(StaticObjectDictBase && other) = delete;
     
-    EntryAccessError write(const std::span<const uint8_t> pdata, const Didx didx) final override;
+    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) override;
     
-    EntryAccessError read(const std::span<uint8_t> pdata, const Didx didx) const final override;
+    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const override;
 
     StringView ename(const Didx didx) const final override;
     

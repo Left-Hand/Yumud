@@ -10,50 +10,6 @@ namespace ymd::canopen {
 class SubEntry;
 
 
-
-class SdoError {
-public:
-	enum Enum : uint32_t {
-        None                        = 0x00000000,          // 无错误
-        ToggleBitNotAlternated      = 0x05030000,          // 切换位未交替
-        SdoProtocolTimedOut         = 0x05040000,          // SDO 协议超时
-        CommandSpecifierNotValid    = 0x05040001,          // 命令指定符无效
-        InvalidBlockSize            = 0x05040002,          // 无效的块大小
-        InvalidSequenceNumber       = 0x05040003,          // 无效的序列号
-        CRCError                    = 0x05040004,          // CRC 错误
-        OutOfMemory                 = 0x05040005,          // 内存不足
-        UnsupportedAccess           = 0x06010000,          // 不支持的访问类型
-        ReadOnlyAccess              = 0x06010001,          // 只读访问
-        WriteOnlyAccess             = 0x06010002,          // 只写访问
-        ObjectDoesNotExist          = 0x06020000,          // 对象不存在
-        ObjectCannotBeMapped        = 0x06040041,          // 对象无法映射
-        PdoLengthExceeded           = 0x06040042,          // PDO 长度超出
-        ParameterIncompatibility    = 0x06040043,          // 参数不兼容
-        InternalIncompatibility     = 0x06040047,          // 内部不兼容
-        HardwareError               = 0x06060000,          // 硬件错误
-        ServiceParameterIncorrect   =0x06070010,          // 服务参数不正确
-        ServiceParameterTooLong     = 0x06070012,          // 服务参数过长
-        ServiceParameterTooShort    = 0x06070013,          // 服务参数过短
-        SubIndexDoesNotExist        = 0x06090011,          // 子索引不存在
-        InvalidValue                = 0x06090030,          // 无效的值
-        ValueTooHigh                = 0x06090031,          // 值过高
-        ValueTooLow                 = 0x06090032,          // 值过低
-        MaxLessThanMin              = 0x06090036,          // 最大值小于最小值
-        ResourceNotAvailable        = 0x060A0023,          // 资源不可用
-        GeneralError                = 0x08000000           // 一般错误
-	};
-
-	SdoError(const Enum e) : e_(e) {;}
-
-	operator Enum() const { return e_; }
-
-    operator bool() const { return e_ != Enum::None; }
-
-private:
-	Enum e_;
-};
-
-
 enum class EntryAccessType : uint8_t {
     RW = 0,
     WO = 0x01,
@@ -61,20 +17,6 @@ enum class EntryAccessType : uint8_t {
     CONST = 0x03
 };
 
-enum class EntryAccessError: uint8_t{
-    None = 0,
-    InvalidValue = 0x01,
-    InvalidLength = 0x02,
-    InvalidType = 0x03,
-    InvalidSubIndex = 0x04,
-    InvalidIndex = 0x05,
-    InvalidAccess = 0x06,
-    InvalidAccessType = 0x07,
-    InvalidAccessError = 0x08,
-    InvalidAccessError2 = 0x09,
-    ReadOnlyAccess,
-    WriteOnlyAccess,
-};
 
 
 class EntryDataType {
@@ -261,24 +203,24 @@ public:
 
     template<typename T>
     requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    EntryAccessError write_any(const T pdata){
+    SdoAbortCode write_any(const T pdata){
         return write_any((&pdata));
     }
 
     template<typename T>
     requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    EntryAccessError read_any(T & pdata){
+    SdoAbortCode read_any(T & pdata){
         return read_any((&pdata));
     }
 
 
-    EntryAccessError read(std::span<uint8_t> pdata) const;
+    SdoAbortCode read(std::span<uint8_t> pdata) const;
 
-    EntryAccessError write(const std::span<const uint8_t> pdata);
+    SdoAbortCode write(const std::span<const uint8_t> pdata);
 
-    EntryAccessError read_any(void * pdata);
+    SdoAbortCode read_any(void * pdata);
 
-    EntryAccessError write_any(const void * pdata);
+    SdoAbortCode write_any(const void * pdata);
 
     SubEntry copy() const{return *this;}
 
