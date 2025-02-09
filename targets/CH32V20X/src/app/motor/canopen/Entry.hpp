@@ -179,11 +179,22 @@ private:
         };
     public:
         constexpr ObjRef(uint32_t data):is_ref_(false), data32_(data){}
-        constexpr ObjRef(void * pdata):is_ref_(true), pdata_(pdata){}
-        constexpr ObjRef(const void * pdata):is_ref_(true), pdata_(const_cast<void *>(pdata)){}
+
 
         template<typename T>
-        requires (sizeof(T) <= 4)
+        requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_lvalue_reference_v<T>)
+        constexpr ObjRef(T & pdata):is_ref_(true), pdata_((void *)(&pdata)){}
+
+        // template<typename T>
+        // requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_rvalue_reference_v<T>)
+        // constexpr ObjRef(T pdata):is_ref_(true), data32_((pdata)){
+        //     // static_assert(false);
+        //     // static_assert(std::is_lvalue_reference_v<T>);
+        // }
+
+
+        template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr void write(const T val){
             if(likely(is_ref_)){
                 *reinterpret_cast<T*>(pdata_) = val;
@@ -193,6 +204,7 @@ private:
         }
 
         template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr void read(T & val) const{
             if(likely(is_ref_)){
                 val = *reinterpret_cast<T*>(pdata_);
@@ -202,6 +214,7 @@ private:
         }
 
         template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr T read() const {
             if(likely(is_ref_)){
                 return *reinterpret_cast<T*>(pdata_);
@@ -221,6 +234,7 @@ private:
         constexpr ObjRef & operator =(const auto val){this->write(val); return *this;}
         
         template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         explicit constexpr operator T(){return this->read<T>();}
 
     };
@@ -233,8 +247,10 @@ public:
 
     SubEntry & operator = (const SubEntry &) = default;
     SubEntry & operator = (SubEntry &&) = default;
-    constexpr SubEntry(const StringView name, auto & val, AccessType access_type, DataType data_type)
-        : name_(name), access_type_(access_type), data_type_(data_type), obj_(&val){}
+
+    template<typename T>
+    constexpr SubEntry(const StringView name, T && val, AccessType access_type, DataType data_type)
+        : name_(name), access_type_(access_type), data_type_(data_type), obj_(std::forward<T>(val)){}
 
     explicit operator int() const ;
 

@@ -16,11 +16,9 @@ void canopen_main(){
     // SdoObjectDict od;
     Cia402ObjectDict od;
     
-    uint16_t data = 0;
+    uint32_t data = 0;
 
-    const Didx index = {
-        0x2000, 0
-    };
+    const Didx index = {0x6061, 0x00};
 
     while(true){
 
@@ -33,7 +31,7 @@ void canopen_main(){
         et.write_any(data + 1);
         et.read_any(data);
         // et.(&data, index);
-        DEBUG_PRINTLN(data, et.name(), micros() - m);
+        DEBUG_PRINTLN(data, et.name(), et.dsize(), micros() - m);
         // DEBUG_PRINTLN(data, et.name(),(index), micros() - m);
         
         delay(1);
