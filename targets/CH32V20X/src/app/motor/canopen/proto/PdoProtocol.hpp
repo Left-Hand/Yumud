@@ -6,7 +6,7 @@
 namespace ymd::canopen{
 
 
-class PdoProtocol : public Protocol {
+class PdoProtocol : public ProtocolBase {
 public:
     PdoProtocol(Driver& driver, ObjectDictionary& od1);
 

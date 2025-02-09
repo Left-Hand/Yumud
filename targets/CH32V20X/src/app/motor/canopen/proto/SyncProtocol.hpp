@@ -8,7 +8,6 @@ class SyncProtocol : public Protocol {
 public:
     SyncProtocol(Driver& driver, PdoProtocol & pdo, ObjectDictionary& od1)
         : Protocol("Sync", driver, od1), pdo_(pdo) {
-        // debugPrint("new Sync");
     }
 
     bool processMessage(const CanMsg& msg) override {
@@ -34,11 +33,7 @@ public:
 private:
     PdoProtocol & pdo_;
 
-    void sendSync() {
-        int id = int(getSubEntry(0x1005, 1).value());
-        CanMsg msg(id);
-        sendMessage(msg);
-    }
+
 };
 
 }

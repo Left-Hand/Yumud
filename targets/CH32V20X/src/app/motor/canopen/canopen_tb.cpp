@@ -2,6 +2,7 @@
 #include "sys/debug/debug_inc.h"
 #include "canopen/Entry.hpp"
 #include "canopen/ObjectDict.hpp"
+#include "canopen/cia402.hpp"
 
 using namespace ymd;
 using namespace ymd::canopen;

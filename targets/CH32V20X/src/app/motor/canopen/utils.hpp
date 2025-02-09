@@ -68,4 +68,14 @@ struct E_Item {
 };
 
 
+
+struct CobId{
+    uint16_t nodeid:7;
+    uint16_t fcode:4;
+
+    CobId(const uint16_t id):
+        nodeid(id & 0x7F),
+        fcode((id >> 7) & 0x0f){;}
+    constexpr operator uint16_t() const {return nodeid | fcode << 7;}
+};
 }
