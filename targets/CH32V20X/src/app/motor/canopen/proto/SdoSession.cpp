@@ -16,41 +16,41 @@ enum class SdoCommandType : uint8_t {
     BlockEnd = 0x07  // 块结束
 };
 
-enum class SdoAbortCode : uint32_t {
-    NoError = 0x00000000,  // 无错误
-    ToggleBitNotAlternated = 0x05030000,  // 切换位未交替
-    SDOProtocolTimedOut = 0x05040000,  // SDO协议超时
-    CommandSpecifierNotValid = 0x05040001,  // 命令字无效
-    InvalidBlockSize = 0x05040002,  // 无效的块大小
-    InvalidSequenceNumber = 0x05040003,  // 无效的序列号
-    CRCError = 0x05040004,  // CRC校验错误
-    OutOfMemory = 0x05040005,  // 内存不足
+// enum class SdoAbortCode : uint32_t {
+//     NoError = 0x00000000,  // 无错误
+//     ToggleBitNotAlternated = 0x05030000,  // 切换位未交替
+//     SDOProtocolTimedOut = 0x05040000,  // SDO协议超时
+//     CommandSpecifierNotValid = 0x05040001,  // 命令字无效
+//     InvalidBlockSize = 0x05040002,  // 无效的块大小
+//     InvalidSequenceNumber = 0x05040003,  // 无效的序列号
+//     CRCError = 0x05040004,  // CRC校验错误
+//     OutOfMemory = 0x05040005,  // 内存不足
 
-    // 对象字典相关错误
-    UnsupportedAccess = 0x06010000,  // 不支持的访问类型
-    ReadOnlyAccess = 0x06010001,  // 只读访问
-    WriteOnlyAccess = 0x06010002,  // 只写访问
-    ObjectDoesNotExist = 0x06020000,  // 对象不存在
-    ObjectCannotBeMapped = 0x06040041,  // 对象无法映射
-    PDOLengthExceeded = 0x06040042,  // PDO长度超出限制
-    ParameterIncompatibility = 0x06040043,  // 参数不兼容
-    InternalIncompatibility = 0x06040047,  // 内部不兼容
-    HardwareError = 0x06060000,  // 硬件错误
-    DataTypeMismatch = 0x06070010,  // 数据类型不匹配
-    DataTypeLengthMismatch = 0x06070012,  // 数据长度不匹配
-    SubIndexDoesNotExist = 0x06090011,  // 子索引不存在
-    ValueRangeExceeded = 0x06090030,  // 值超出范围
-    ValueTooHigh = 0x06090031,  // 值过高
-    ValueTooLow = 0x06090032,  // 值过低
-    MaximumLessThanMinimum = 0x06090036,  // 最大值小于最小值
-    ResourceNotAvailable = 0x060A0023,  // 资源不可用
-    GeneralError = 0x08000000,  // 通用错误
-    DataCannotBeTransferred = 0x08000020,  // 数据无法传输
-    DataCannotBeTransferredLocalControl = 0x08000021,  // 数据无法传输（本地控制）
-    DataCannotBeTransferredDeviceState = 0x08000022,  // 数据无法传输（设备状态）
-    DataCannotBeTransferredOD = 0x08000023,  // 数据无法传输（对象字典）
-    NoDataAvailable = 0x08000024  // 无可用数据
-};
+//     // 对象字典相关错误
+//     UnsupportedAccess = 0x06010000,  // 不支持的访问类型
+//     ReadOnlyAccess = 0x06010001,  // 只读访问
+//     WriteOnlyAccess = 0x06010002,  // 只写访问
+//     ObjectDoesNotExist = 0x06020000,  // 对象不存在
+//     ObjectCannotBeMapped = 0x06040041,  // 对象无法映射
+//     PDOLengthExceeded = 0x06040042,  // PDO长度超出限制
+//     ParameterIncompatibility = 0x06040043,  // 参数不兼容
+//     InternalIncompatibility = 0x06040047,  // 内部不兼容
+//     HardwareError = 0x06060000,  // 硬件错误
+//     DataTypeMismatch = 0x06070010,  // 数据类型不匹配
+//     DataTypeLengthMismatch = 0x06070012,  // 数据长度不匹配
+//     SubIndexDoesNotExist = 0x06090011,  // 子索引不存在
+//     ValueRangeExceeded = 0x06090030,  // 值超出范围
+//     ValueTooHigh = 0x06090031,  // 值过高
+//     ValueTooLow = 0x06090032,  // 值过低
+//     MaximumLessThanMinimum = 0x06090036,  // 最大值小于最小值
+//     ResourceNotAvailable = 0x060A0023,  // 资源不可用
+//     GeneralError = 0x08000000,  // 通用错误
+//     DataCannotBeTransferred = 0x08000020,  // 数据无法传输
+//     DataCannotBeTransferredLocalControl = 0x08000021,  // 数据无法传输（本地控制）
+//     DataCannotBeTransferredDeviceState = 0x08000022,  // 数据无法传输（设备状态）
+//     DataCannotBeTransferredOD = 0x08000023,  // 数据无法传输（对象字典）
+//     NoDataAvailable = 0x08000024  // 无可用数据
+// };
 
 struct SdoCommandSpecifier {
     uint8_t command : 3;  // 命令类型，占3位

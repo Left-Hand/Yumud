@@ -11,36 +11,36 @@ public:
     using Index = OdIndex;
     using SubIndex = OdSubIndex;
 protected:
-    virtual EntryAccessError _write_any(const void * pdata, const std::pair<const Index, const SubIndex> didx) = 0;
-    virtual EntryAccessError _read_any(void * pdata, const std::pair<const Index, const SubIndex> didx) const = 0;
+    virtual SdoAbortCode _write_any(const void * pdata, const Didx didx) = 0;
+    virtual SdoAbortCode _read_any(void * pdata, const Didx didx) const = 0;
 public:
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError write(const auto data, const std::pair<const Index, const SubIndex> didx){
+    SdoAbortCode write(const auto data, const Didx didx){
         static_assert(std::is_convertible_v<T, decltype(data)>, "type mismatch");
-        return write({reinterpret_cast<const uint8_t *>(&data), sizeof(T)}, {didx.first, didx.second});
+        return write({reinterpret_cast<const uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
     }
 
     template<typename T, typename U>
     requires (sizeof(T) <= 4)
-    EntryAccessError read(U & data, const std::pair<const Index, const SubIndex> didx) const {
+    SdoAbortCode read(U & data, const Didx didx) const {
         static_assert(std::is_same_v<T, U>, "type mismatch");
-        return read({reinterpret_cast<uint8_t *>(&data), sizeof(T)}, {didx.first, didx.second});
+        return read({reinterpret_cast<uint8_t *>(&data), sizeof(T)}, {didx.idx, didx.subidx});
     }
 
 
-    virtual EntryAccessError write(const std::span<const uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) = 0;
-    virtual EntryAccessError read(const std::span<uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) const = 0;
+    virtual SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) = 0;
+    virtual SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const = 0;
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError write_any(const T pdata, const std::pair<const Index, const SubIndex> didx){return _write_any(&pdata, didx);}
+    SdoAbortCode write_any(const T pdata, const Didx didx){return _write_any(&pdata, didx);}
 
     template<typename T>
     requires ((sizeof(T) <= 4))
-    EntryAccessError read_any(T & pdata, const std::pair<const Index, const SubIndex> didx) const {return _read_any(&pdata, didx);}
-    virtual StringView ename(const std::pair<const Index, const SubIndex> didx) const = 0;
+    SdoAbortCode read_any(T & pdata, const Didx didx) const {return _read_any(&pdata, didx);}
+    virtual StringView ename(const Didx didx) const = 0;
 };
 
 class ObjectDict:public ObjectDictIntf{
@@ -53,7 +53,7 @@ public:
         return (dict_[index]);
     }
 
-    std::optional<SubEntry> operator [](const std::pair<const Index, const SubIndex> id){
+    std::optional<SubEntry> operator [](const Didx id){
         const auto [index, subindex] = id;
         auto entry_opt = ((*this)[index]);
         if (entry_opt.has_value()){
@@ -63,12 +63,12 @@ public:
         }
     }
 
-    EntryAccessError write(const std::span<const uint8_t> pdata, const std::pair<const Index, const SubIndex> didx){
-        return EntryAccessError::None;
+    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx){
+        return SdoAbortCode::None;
     }
     
-    EntryAccessError read(const std::span<uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) const {
-        return EntryAccessError::None;
+    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const {
+        return SdoAbortCode::None;
     }
 
 	void insert(OdEntry && odEntry, const Index idx){
@@ -96,101 +96,48 @@ public:
 class StaticObjectDictBase:public ObjectDictIntf{
 protected:
     using CobId = uint16_t;
-    EntryAccessError _write_any(const void * pdata, const std::pair<const Index, const SubIndex> didx) final override;
-    EntryAccessError _read_any(void * pdata, const std::pair<const Index, const SubIndex> didx) const final override;
+    SdoAbortCode _write_any(const void * pdata, const Didx didx) final override;
+    SdoAbortCode _read_any(void * pdata, const Didx didx) const final override;
 public:
     StaticObjectDictBase() = default;
     StaticObjectDictBase(const StaticObjectDictBase & other) = delete;
     StaticObjectDictBase(StaticObjectDictBase && other) = delete;
-
-
     
-    EntryAccessError write(const std::span<const uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) final override;
+    SdoAbortCode write(const std::span<const uint8_t> pdata, const Didx didx) override;
     
-    EntryAccessError read(const std::span<uint8_t> pdata, const std::pair<const Index, const SubIndex> didx) const final override;
+    SdoAbortCode read(const std::span<uint8_t> pdata, const Didx didx) const override;
 
-
-
-    StringView ename(const std::pair<const Index, const SubIndex> didx) const final override;
+    StringView ename(const Didx didx) const final override;
     
-    virtual std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx) = 0;
+    virtual std::optional<SubEntry> find(const Didx didx) = 0;
 };
 
 
 
-class SdoObjectDict:public StaticObjectDictBase{
-protected:
-    struct{
-    #pragma pack(push, 1)
-        CobId c2s_cobid_ = 0;
-        CobId s2c_cobid_ = 0;
-        uint16_t heartbeat_time_ = 0;
-        uint16_t node_guarding_time_ = 0;
-        uint32_t sync_period_ = 0;
-        uint32_t sync_window_length_ = 0;
-        uint32_t emergency_consumer_cobid_ = 0;
-        uint32_t emergency_producer_cobid_ = 0;
-    #pragma pack(pop)
-    };
-public:
-    SdoObjectDict() = default;
-
-    std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx) final override;
+template<typename T>
+struct reg_decay{
+    using type = std::conditional_t<
+        std::is_base_of_v<__RegBase, T>,
+        typename T::value_type, T>;
 };
 
 
-class NmtObjectDict:public StaticObjectDictBase{
-protected:
-    struct{
-    #pragma pack(push, 1)
-        uint32_t device_type_;
-        uint8_t error_register_;
-        uint32_t manufacturer_status_;
-        uint8_t num_errors_;
-        uint32_t error_code_1_;
-        uint32_t error_code_2_;
-        uint32_t manufacturer_specific_1_;
-        uint32_t manufacturer_specific_2_;
-    #pragma pack(pop)
-    };
-public:
-    NmtObjectDict() = default;
-
-    std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx) final override;
-};
+template<typename T>
+using reg_decay_t = typename reg_decay<T>::type;
 
 
-class Cia402ObjectDict:public StaticObjectDictBase{
-protected:
-    struct{
-    #pragma pack(push, 1)
-        uint16_t control_word_;
-        uint16_t status_word_;
-        int8_t modes_of_operation_;
-        int8_t modes_of_operation_display_;
-        int32_t position_actual_value_;
-        int32_t velocity_actual_value_;
-        int16_t torque_actual_value_;
-        int32_t position_demand_value_;
-        int32_t velocity_demand_value_;
-        int16_t torque_demand_value_;
-        int32_t target_position_;
-        int32_t target_velocity_;
-        int16_t target_torque_;
-        int32_t max_profile_velocity_;
-        int16_t max_motor_current_;
-        int32_t max_profile_acceleration_;
-        int32_t max_profile_deceleration_;
-        int32_t software_position_limit_;
-        int32_t software_velocity_limit_;
-        int16_t software_torque_limit_;
-    #pragma pack(pop)
-    };
-public:
-    Cia402ObjectDict() = default;
+template<typename T>
+constexpr SubEntry make_subentry_impl(
+        const StringView name, 
+        T & val, 
+        EntryAccessType access_type = std::is_const_v<T> ? EntryAccessType::RO : EntryAccessType::RW, 
+        EntryDataType data_type = EntryDataType::from<reg_decay_t<T>>()){
+    return SubEntry{name, val, access_type, data_type};
+}
 
-    std::optional<SubEntry> find(const std::pair<const Index, const SubIndex> didx) final override;
-};
 
+#define make_subentry(val) make_subentry_impl(NAME(#val), val);
+#define make_ro_subentry(val) make_subentry_impl(NAME(#val), val, EntryAccessType::RO);
+#define make_subentry_spec(val, access_type, data_type) make_subentry_impl(NAME(#val), val, access_type, data_type);
 
 }

@@ -2,6 +2,7 @@
 #include "sys/debug/debug_inc.h"
 #include "canopen/Entry.hpp"
 #include "canopen/ObjectDict.hpp"
+#include "canopen/cia402.hpp"
 
 using namespace ymd;
 using namespace ymd::canopen;
@@ -15,9 +16,10 @@ void canopen_main(){
     // SdoObjectDict od;
     Cia402ObjectDict od;
     
-    uint16_t data = 0;
+    uint32_t data = 0;
 
-    const auto index = std::make_pair<const OdIndex, const OdSubIndex>(0x6061, 0x00);
+    const Didx index = {0x6061, 0x00};
+
     while(true){
 
         const auto m = micros();
@@ -29,7 +31,7 @@ void canopen_main(){
         et.write_any(data + 1);
         et.read_any(data);
         // et.(&data, index);
-        DEBUG_PRINTLN(data, et.name(), micros() - m);
+        DEBUG_PRINTLN(data, et.name(), et.dsize(), micros() - m);
         // DEBUG_PRINTLN(data, et.name(),(index), micros() - m);
         
         delay(1);

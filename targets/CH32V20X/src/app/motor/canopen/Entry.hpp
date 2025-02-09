@@ -10,50 +10,6 @@ namespace ymd::canopen {
 class SubEntry;
 
 
-
-class SdoError {
-public:
-	enum Enum : uint32_t {
-        None                        = 0x00000000,          // 无错误
-        ToggleBitNotAlternated      = 0x05030000,          // 切换位未交替
-        SdoProtocolTimedOut         = 0x05040000,          // SDO 协议超时
-        CommandSpecifierNotValid    = 0x05040001,          // 命令指定符无效
-        InvalidBlockSize            = 0x05040002,          // 无效的块大小
-        InvalidSequenceNumber       = 0x05040003,          // 无效的序列号
-        CRCError                    = 0x05040004,          // CRC 错误
-        OutOfMemory                 = 0x05040005,          // 内存不足
-        UnsupportedAccess           = 0x06010000,          // 不支持的访问类型
-        ReadOnlyAccess              = 0x06010001,          // 只读访问
-        WriteOnlyAccess             = 0x06010002,          // 只写访问
-        ObjectDoesNotExist          = 0x06020000,          // 对象不存在
-        ObjectCannotBeMapped        = 0x06040041,          // 对象无法映射
-        PdoLengthExceeded           = 0x06040042,          // PDO 长度超出
-        ParameterIncompatibility    = 0x06040043,          // 参数不兼容
-        InternalIncompatibility     = 0x06040047,          // 内部不兼容
-        HardwareError               = 0x06060000,          // 硬件错误
-        ServiceParameterIncorrect   =0x06070010,          // 服务参数不正确
-        ServiceParameterTooLong     = 0x06070012,          // 服务参数过长
-        ServiceParameterTooShort    = 0x06070013,          // 服务参数过短
-        SubIndexDoesNotExist        = 0x06090011,          // 子索引不存在
-        InvalidValue                = 0x06090030,          // 无效的值
-        ValueTooHigh                = 0x06090031,          // 值过高
-        ValueTooLow                 = 0x06090032,          // 值过低
-        MaxLessThanMin              = 0x06090036,          // 最大值小于最小值
-        ResourceNotAvailable        = 0x060A0023,          // 资源不可用
-        GeneralError                = 0x08000000           // 一般错误
-	};
-
-	SdoError(const Enum e) : e_(e) {;}
-
-	operator Enum() const { return e_; }
-
-    operator bool() const { return e_ != Enum::None; }
-
-private:
-	Enum e_;
-};
-
-
 enum class EntryAccessType : uint8_t {
     RW = 0,
     WO = 0x01,
@@ -61,20 +17,6 @@ enum class EntryAccessType : uint8_t {
     CONST = 0x03
 };
 
-enum class EntryAccessError: uint8_t{
-    None = 0,
-    InvalidValue = 0x01,
-    InvalidLength = 0x02,
-    InvalidType = 0x03,
-    InvalidSubIndex = 0x04,
-    InvalidIndex = 0x05,
-    InvalidAccess = 0x06,
-    InvalidAccessType = 0x07,
-    InvalidAccessError = 0x08,
-    InvalidAccessError2 = 0x09,
-    ReadOnlyAccess,
-    WriteOnlyAccess,
-};
 
 
 class EntryDataType {
@@ -137,12 +79,22 @@ public:
         }
     }
 
+    template<typename U>
+    static Item from(){
+        using T = std::decay_t<U>;
+        if constexpr (std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) {
+            return uint8;
+        } else if constexpr (std::is_same_v<T, int16_t> || std::is_same_v<T, uint16_t>) {
+            return uint16;
+        } else if constexpr (std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>){
+            return uint32;
+        }
+    }
+
 private:
     Item e_;
 };
 
-using OdIndex = uint16_t;
-using OdSubIndex = uint8_t;
 
 
 class SubEntry {
@@ -162,16 +114,29 @@ private:
     class ObjRef{
     private:
         bool is_ref_ = false;
+        bool is_const_ = false;
         union{
             void * pdata_;
             uint32_t data32_;
         };
     public:
         constexpr ObjRef(uint32_t data):is_ref_(false), data32_(data){}
-        constexpr ObjRef(void * pdata):is_ref_(true), pdata_(pdata){}
+
 
         template<typename T>
-        requires (sizeof(T) <= 4)
+        requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_lvalue_reference_v<T>)
+        constexpr ObjRef(T & pdata):is_ref_(true), pdata_((void *)(&pdata)){}
+
+        // template<typename T>
+        // requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_rvalue_reference_v<T>)
+        // constexpr ObjRef(T pdata):is_ref_(true), data32_((pdata)){
+        //     // static_assert(false);
+        //     // static_assert(std::is_lvalue_reference_v<T>);
+        // }
+
+
+        template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr void write(const T val){
             if(likely(is_ref_)){
                 *reinterpret_cast<T*>(pdata_) = val;
@@ -181,6 +146,7 @@ private:
         }
 
         template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr void read(T & val) const{
             if(likely(is_ref_)){
                 val = *reinterpret_cast<T*>(pdata_);
@@ -190,6 +156,7 @@ private:
         }
 
         template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         constexpr T read() const {
             if(likely(is_ref_)){
                 return *reinterpret_cast<T*>(pdata_);
@@ -209,77 +176,53 @@ private:
         constexpr ObjRef & operator =(const auto val){this->write(val); return *this;}
         
         template<typename T>
+        requires (sizeof(T) <= 4 and std::is_standard_layout_v<T>)
         explicit constexpr operator T(){return this->read<T>();}
 
     };
 
     ObjRef obj_;
 
-
-    // SubEntry(const SubEntry &) = default;
 public:
     SubEntry(const SubEntry &) = default;
-    // SubEntry(const SubEntry &) = delete;
     SubEntry(SubEntry &&) = default;
 
     SubEntry & operator = (const SubEntry &) = default;
     SubEntry & operator = (SubEntry &&) = default;
 
-    constexpr SubEntry(const StringView name, auto & val, AccessType access_type = AccessType::RW, DataType data_type = DataType::int32)
-        : name_(name), access_type_(access_type), data_type_(data_type), obj_(&val){}
+    template<typename T>
+    constexpr SubEntry(const StringView name, T && val, AccessType access_type, DataType data_type)
+        : name_(name), access_type_(access_type), data_type_(data_type), obj_(std::forward<T>(val)){}
 
-    operator int() const ;
+    explicit operator int() const ;
 
-    EntryAccessError write(const std::span<const uint8_t> pdata){
-        if(unlikely(!is_writeable())) return EntryAccessError::WriteOnlyAccess;
-        if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
-        if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
-        memcpy(obj_.data(), pdata.data(), pdata.size());
-        return EntryAccessError::None;
-    }
+    template<integral T>
+    explicit operator T() const{return int(*this);}
 
 
-    EntryAccessError write_any(const void * pdata){
-        memcpy(obj_.data(), pdata, dsize());
-        return EntryAccessError::None;
-    }
 
     template<typename T>
     requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    EntryAccessError write_any(const T pdata){
+    SdoAbortCode write_any(const T pdata){
         return write_any((&pdata));
     }
 
     template<typename T>
     requires ((sizeof(T) <= 4) and (!std::is_pointer_v<T>))
-    EntryAccessError read_any(T & pdata){
+    SdoAbortCode read_any(T & pdata){
         return read_any((&pdata));
     }
 
 
-    EntryAccessError read(std::span<uint8_t> pdata) const{
-        if(unlikely(!is_readable())) return EntryAccessError::ReadOnlyAccess;
-        if(unlikely(pdata.size() != dsize())) return EntryAccessError::InvalidLength;
-        if(unlikely(pdata.size() > 4)) return EntryAccessError::InvalidLength;
-        memcpy(pdata.data(), obj_.data(), pdata.size());
-        return EntryAccessError::None;
-    }
+    SdoAbortCode read(std::span<uint8_t> pdata) const;
 
-    EntryAccessError read_any(void * pdata){
-        memcpy(pdata, obj_.data(), dsize());
-        return EntryAccessError::None;
-    }
+    SdoAbortCode write(const std::span<const uint8_t> pdata);
 
+    SdoAbortCode read_any(void * pdata);
+
+    SdoAbortCode write_any(const void * pdata);
 
     SubEntry copy() const{return *this;}
-
-
-    EntryAccessError set(int val);
-
-    EntryAccessError put(const std::span<const uint8_t> val) ;
-    EntryAccessError put(const CanMsg & msg){
-        return this->put(std::span<const uint8_t>(msg.begin(), msg.size()));
-    }
 
 	size_t dsize() const {return data_type_.dsize();}
 	size_t size() const {return data_type_.dsize();}

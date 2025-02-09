@@ -19,43 +19,32 @@ using namespace ymd::canopen;
 // }
 
 
-EntryAccessError SubEntry::set(int val) {
-    if (access_type_ == AccessType::CONST || access_type_  == AccessType::RO) {
-        return EntryAccessError::ReadOnlyAccess;
-    }
-
-    // if (data_type_ == DataType::uint8) {
-    //     byte1 = static_cast<uint8_t>(val);
-    // } else if (data_type_ == DataType::uint32 || data_type_ == DataType::int32) {
-    obj_.write(val);
-    // } else if (data_type_ == DataType::uint16) {
-    //     obj_ = val & 0x0000FFFF;
-    // } else {
-    //     return false;
-    // }
-    return EntryAccessError::None;
+SdoAbortCode SubEntry::read(std::span<uint8_t> pdata) const{
+    if(unlikely(!is_readable())) return SdoAbortCode::ReadOnlyAccess;
+    if(unlikely(pdata.size() != dsize())) return SdoAbortCode::GeneralError;
+    if(unlikely(pdata.size() > 4)) return SdoAbortCode::GeneralError;
+    memcpy(pdata.data(), obj_.data(), pdata.size());
+    return SdoAbortCode::None;
 }
 
-EntryAccessError SubEntry::put(const std::span<const uint8_t> val) {
-    if (access_type_ == AccessType::CONST || access_type_  == AccessType::RO) {
-        return EntryAccessError::ReadOnlyAccess;
-    }
-
-    if (data_type_ == DataType::uint8) {
-        obj_ = val[0];
-    } else if (data_type_ == DataType::uint32 || data_type_ == DataType::int32) {
-        int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8) | ((val[2] & 0xFF) << 16) | ((val[3] & 0xFF) << 24);
-        obj_ = value;
-    } else if (data_type_ == DataType::uint16) {
-        int value = (val[0] & 0xFF) | ((val[1] & 0xFF) << 8);
-        obj_ = value & 0x0000FFFF;
-    } else {
-        return EntryAccessError::ReadOnlyAccess;
-    }
-
-    return EntryAccessError::None;
+SdoAbortCode SubEntry::write(const std::span<const uint8_t> pdata){
+    if(unlikely(!is_writeable())) return SdoAbortCode::WriteOnlyAccess;
+    if(unlikely(pdata.size() != dsize())) return SdoAbortCode::GeneralError;
+    if(unlikely(pdata.size() > 4)) return SdoAbortCode::GeneralError;
+    memcpy(obj_.data(), pdata.data(), pdata.size());
+    return SdoAbortCode::None;
 }
 
+
+SdoAbortCode SubEntry::read_any(void * pdata){
+    memcpy(pdata, obj_.data(), dsize());
+    return SdoAbortCode::None;
+}
+
+SdoAbortCode SubEntry::write_any(const void * pdata){
+    memcpy(obj_.data(), pdata, dsize());
+    return SdoAbortCode::None;
+}
 
 SubEntry::operator int() const {
     return obj_.read<int>();
