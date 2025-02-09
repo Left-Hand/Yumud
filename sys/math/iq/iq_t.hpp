@@ -121,12 +121,12 @@ public:
 
     template<integral T>
     __fast_inline constexpr iq_t operator*(const T other) const {
-        return iq_t(_iq(value * other));
+        return iq_t(_iq(value * int(other)));
     }
 
     template<integral T>
     __fast_inline constexpr iq_t operator/(const T other) const {
-        return iq_t(_iq((value / other)));
+        return iq_t(_iq((value / int(other))));
     }
 
 
@@ -337,7 +337,7 @@ __fast_inline constexpr iq_t abs(const iq_t iq){
 
 __fast_inline constexpr bool isnormal(const iq_t iq){return bool(iq.value);}
 
-__fast_inline constexpr bool signbit(const iq_t iq){return bool(long(iq.value) < 0);}
+__fast_inline constexpr bool signbit(const iq_t iq){return std::bit_cast<int32_t>(iq.value) & (1 << 31);}
 
 
 __fast_inline constexpr iq_t sign(const iq_t iq){

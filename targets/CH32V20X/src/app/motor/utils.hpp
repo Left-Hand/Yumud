@@ -63,7 +63,7 @@ struct AbVoltage: public AbValue{};
 
 
 __inline AbCurrent uvw_to_ab(const UvwCurrent & uvw){
-    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * real_t(2.0/3), (uvw.w - uvw.v) * real_t(1.731 / 3)};
+    return {(uvw.u - ((uvw.v + uvw.w) >> 1)) * real_t(2.0/3), (uvw.v - uvw.w) * real_t(1.731 / 3)};
 };
 
 DqCurrent ab_to_dq(const AbCurrent & ab, const real_t rad);

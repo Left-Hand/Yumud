@@ -370,15 +370,35 @@ void bldc_main(){
     init_adc();
 
     real_t meas_pos = 0;
-    real_t targ_pos;
+    real_t meas_spd = 0;
+    real_t targ_pos = 0;
+    real_t targ_spd = 0;
 
     // UvwCurrent uvw_curr = {0,0,0};
-    UvwCurrent uvw_curr_bias = {14.62_r,14.68_r,14.66_r};
     real_t est_rad;
 
     CurrentSensor current_sensor = {u_sense, v_sense, w_sense};
     // CurrentSensor current_sensor = {adc1.inj(1), adc1.inj(2), adc1.inj(3)};
+    auto & ledr = portC[13];
+    auto & ledb = portC[14];
+    auto & ledg = portC[15];
+    ledr.outpp(); 
+    ledb.outpp(); 
+    ledg.outpp();
+    portA[7].inana();
 
+    // for(size_t i = 0; i < 400; ++i){
+    //     current_sensor.updatUVW();
+    //     current_sensor.updateAB();
+    //     delay(1);
+    // }
+    
+    mp6540.setBias(14.68_r,14.68_r,14.62_r);
+
+
+
+    en_gpio = true;
+    slp_gpio = true;
     // uint32_t dt;
 
     // std::array<real_t, 2> ab_volt;
@@ -429,8 +449,15 @@ void bldc_main(){
 
     static PIController speed_pi_ctrl{
     {
-        .kp = 9.0_r,
-        .ki = 0.189_r,
+        .kp = 2.3_r,
+        // .kp = 0,
+        .ki = 0.0277_r,
+        // .ki = 0.0001_r,
+        // .out_min = -0.3_r,
+        // .out_max = 0.3_r
+
+        // .kp = 2.3_r,
+        // .ki = 0.009_r,
         .out_min = -0.5_r,
         .out_max = 0.5_r
     }};
@@ -452,11 +479,13 @@ void bldc_main(){
     }};
 
     AbVoltage ab_volt;
-
+    uint32_t exe_micros;
     [[maybe_unused]] auto cb = [&]{
+        auto m = micros();
         odo.update();
 
-        targ_pos = 5 * sin(t);
+        // targ_spd = 0;
+        // targ_pos = 4.25_r * floor(3 * t);
         // targ_pos = 0.2_r * sin(real_t(50 * TAU)*t);
         // auto targ_spd = real_t(10 * TAU) * cos(real_t(50 * TAU) * t);
         // targ_pos = 4 * floor(2*t);
@@ -466,14 +495,12 @@ void bldc_main(){
         // targ_pos = 10.0_r*floor(2*t);
         // targ_pos = sin(t);
         meas_pos = odo.getPosition();
-        auto meas_spd = odo.getSpeed();
+        meas_spd = odo.getSpeed();
         const real_t meas_lap = odo.getLapPosition();
 
-        const real_t meas_rad = (frac(frac(meas_lap) * 7) * real_t(TAU));
+        const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
         mg_meas_rad = meas_rad;
         current_sensor.update(meas_rad);
-
-
 
         const auto dq_curr = current_sensor.dq();
         // const auto d_volt = d_pi_ctrl.update(0.2_r, dq_curr.d);
@@ -482,15 +509,27 @@ void bldc_main(){
         const auto d_volt = d_pi_ctrl.update(0.0_r, dq_curr.d);
         // const auto q_volt = q_pi_ctrl.update(0.1_r * sign(sin(t)), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(int(5 * floor(6 * t)) % 60, meas_spd), dq_curr.q);
-        const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(20 * sin(30 * t), meas_spd), dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(20 * sin(30 * t), meas_spd), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(0.1_r, dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(47.8_r * (targ_pos - meas_pos) + 1.2_r*(targ_spd - meas_spd), odo.getSpeed()), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(CLAMP2(5.4_r * (targ_pos - meas_pos),1), dq_curr.q);
+        const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(35.8_r * (targ_pos - meas_pos) + 0.7_r*(targ_spd - meas_spd), odo.getSpeed()), dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(targ_spd, meas_spd), dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(0.2_r, dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(CLAMP2(0.07_r * (targ_pos - meas_pos),0.3_r), dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(0.1_r, dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(0.3_r * sign(2 * frac(t/2) - 1), dq_curr.q);
-        // const auto q_volt = q_pi_ctrl.update(-0.3_r, dq_curr.q);
+        // const auto q_volt = q_pi_ctrl.update(0.1_r, dq_curr.q);
+
+        // const auto d_volt = 0;
+        // const auto q_volt = 2;
+
         ab_volt = dq_to_ab(DqVoltage{d_volt, q_volt}, meas_rad);
         const auto ab_curr = current_sensor.ab();
+
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
+
+        exe_micros = micros() - m;
+
+
         lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
 
         // const auto ab_curr = current_sensor.ab();
@@ -709,38 +748,36 @@ void bldc_main(){
     };
 
     [[maybe_unused]] auto cb_openloop = [&]{
-        scexpr auto w = real_t(20 * TAU);
-        const auto u = real_t(2.8) + sin(t);
+        scexpr auto w = real_t(22 * TAU);
+        const auto u = real_t(2.2);
+        // const auto u = real_t(2.8) + sin(t);
         // auto theta = w * t + real_t(12) * sin(2 * real_t(TAU) * t);
         auto theta = w * t;
+        // const auto theta = 0;
         ab_volt = {u * cos(theta), u * sin(theta)};
+        // ab_volt = {u, u};
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
         current_sensor.updatUVW();
         current_sensor.updateAB();
 
+        odo.update();
+        const real_t meas_lap = odo.getLapPosition();
+
+        const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
+        mg_meas_rad = meas_rad;
+
+        const auto ab_curr = current_sensor.ab();
+        lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
+        pll.update(lbg_ob.theta());
+        // sl_meas_rad = pll.theta() + 0.3_r;
+        sl_meas_rad = pll.theta();
+
         // sogi.update(current_sensor.ab()[0]);
         // spll.update(current_sensor.ab()[0] * 10);
     };
 
-
-    auto & ledr = portC[13];
-    auto & ledb = portC[14];
-    auto & ledg = portC[15];
-    ledr.outpp(); 
-    ledb.outpp(); 
-    ledg.outpp();
-    portA[7].inana();
-
-    // for(size_t i = 0; i < 400; ++i){
-    //     current_sensor.updatUVW();
-    //     current_sensor.updateAB();
-    //     delay(1);
-    // }
-    
-    u_sense.setBasis(uvw_curr_bias[0]);
-    v_sense.setBasis(uvw_curr_bias[1]);
-    w_sense.setBasis(uvw_curr_bias[2]);
 
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
@@ -751,14 +788,21 @@ void bldc_main(){
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
-    en_gpio = true;
-    slp_gpio = true;
-
     auto list = rpc::make_list(
         "list", 
-        rpc::make_function("setm", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
-        rpc::make_function("crc", [](){DEBUG_PRINTS(Sys::Chip::getChipIdCrc())}),
-        rpc::make_function("led", [](const int i){portA[8].write(i);})
+        // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
+        // rpc::make_function("spd", [](const real_t duty){}),
+        // rpc::make_function("crc", [](){DEBUG_PRINTS(Sys::Chip::getChipIdCrc())})
+        rpc::make_property("pos", targ_pos),
+        rpc::make_property("spd", targ_spd),
+        rpc::make_ro_property("mpos", meas_pos),
+        rpc::make_ro_property("mspd", meas_spd),
+
+        rpc::make_list(
+            "l2", 
+            rpc::make_ro_property("mpos", meas_pos),
+            rpc::make_ro_property("mspd", meas_spd)
+        )
     );
 
     ArgSplitter splitter;
@@ -766,6 +810,7 @@ void bldc_main(){
     while(true){
         // auto pos = ma730.getLapPosition();
 
+        // if(false)
         {
             auto strs_opt = splitter.update(uart2);
             if(strs_opt.has_value()){
@@ -814,10 +859,14 @@ void bldc_main(){
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
 
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr[0], uvw_curr[1], uvw_curr[2]);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_volt[0], ab_volt[1]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1], pi_ctrl.output());
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, odo.getSpeed(), dq_curr.d, dq_curr.q);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, meas_spd, dq_curr[0], dq_curr[1], exe_micros);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1]);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(mg_meas_rad, sl_meas_rad, uvw_curr.u, uvw_curr.v, uvw_curr.w);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, odo.getSpeed(), dq_curr.d, dq_curr.q);
 
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, dq_curr[0], dq_curr[1], d_pi_ctrl.output(), q_pi_ctrl.output(), odo.getSpeed());
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(spll.theta(), ab_curr[0],phase_ind * 1000);

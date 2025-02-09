@@ -4,12 +4,14 @@
 
 namespace ymd::drivers{
 
+std::tuple<iq_t, iq_t, iq_t> SVM(const iq_t alpha, const iq_t beta);
+
 class SVPWM3:public SVPWM{
 protected:
     using Driver = Coil3Driver;
 
     Driver & driver_;
-    const uint bus_volt = 12;
+    const int bus_volt = 12;
     // const real_t inv_scale = real_t(1.0 / 12 * 1.15);
 
 public:
@@ -42,6 +44,7 @@ public:
         driver_.enable(en);
     }
 };
+
 
 
 

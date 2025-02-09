@@ -69,9 +69,9 @@ void NonlinearObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta)
 }
 
 void Pll::update(const iq_t phase){
-    // scexpr iq_t pll_kp = 0.17_r;
-    // scexpr iq_t pll_ki = 0.0027_r;
     scexpr iq_t pll_kp = 0.17_r;
+    // scexpr iq_t pll_ki = 0.0027_r;
+    // scexpr iq_t pll_kp = 0.01_r;
     scexpr iq_t pll_ki = 0.0027_r;
 
     const iq_t lap_pos = frac(phase * iq_t(1 / TAU) + 10); 
