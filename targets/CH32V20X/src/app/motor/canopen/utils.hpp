@@ -92,9 +92,9 @@ struct Didx{
         idx(didx.first),
         subidx(didx.second){;}
 
-    constexpr Didx(const OdIndex idx, const OdSubIndex subidx):
-        idx(idx),
-        subidx(subidx){;}
+    constexpr Didx(const OdIndex _idx, const OdSubIndex _subidx):
+        idx(_idx),
+        subidx(_subidx){;}
 
     constexpr bool operator==(const Didx& other) const { return idx == other.idx && subidx == other.subidx; }
     constexpr bool operator!=(const Didx& other) const { return !(*this == other); }

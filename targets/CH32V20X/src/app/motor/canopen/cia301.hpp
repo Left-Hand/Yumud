@@ -71,16 +71,16 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         void addError(const Error error){error_fifo.push(error);}
         uint8_t getErrorCnt() const{return error_fifo.available();}
 
-        std::optional<Error> getError(const size_t idx) const {
-            if(idx >= error_fifo.available()){
+        std::optional<Error> getError(const size_t _idx) const {
+            if(_idx >= error_fifo.available()){
                 return std::nullopt;
             }else{
-                return error_fifo.foresee(idx);
+                return error_fifo.foresee(_idx);
             }
         }
 
-        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex subidx){
-            if(unlikely(subidx) != 0) return SdoAbortCode::InvalidValue;
+        SdoAbortCode write(const std::span<const uint8_t> pdata, const SubIndex sidx){
+            if(unlikely(sidx) != 0) return SdoAbortCode::InvalidValue;
             if(unlikely(pdata.size() < 1)) return SdoAbortCode::InvalidValue;
 
             if(likely(pdata[0] == 0)){
@@ -90,8 +90,6 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
                 return SdoAbortCode::InvalidValue;
             }
         }
-
-
 
         SdoAbortCode read(const std::span<uint8_t> pdata, const SubIndex sidx) const {
             static constexpr SubIndex base_idx = 1;
@@ -143,7 +141,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
     struct CoStringObj{
 
         String str;
-        CoStringObj(String && str):str(str){}
+        CoStringObj(String && _str):str(_str){}
 
         auto * c_str(){
             return str.c_str();
