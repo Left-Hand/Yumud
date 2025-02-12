@@ -31,7 +31,10 @@ public:
         Error & operator = (Error && other){type = other.type; return *this;}
 
         bool operator ==(const ErrorType & _type){return type == _type;}
+        bool operator !=(const ErrorType & _type){return type != _type;}
         explicit operator bool() {return type != ErrorType::OK;}
+
+        bool ok() const {return type == ErrorType::OK;}
         explicit operator ErrorType() {return type;}
     };
     

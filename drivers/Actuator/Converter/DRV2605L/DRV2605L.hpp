@@ -8,29 +8,26 @@ namespace ymd::drivers{
 
 class DRV2605L{
 public:
+    enum class Package:uint8_t{
+        _2605,
+        _2604,
+        _2604L,
+        _2605L
+    };
+
     scexpr uint8_t default_i2c_addr = 0b01100000;
 
     DRV2605L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     DRV2605L(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     DRV2605L(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
 
-    void update();
 
-    bool verify();
-
-    void reset();
 
 protected:
     using RegAddress = uint8_t;
 
     I2cDrv i2c_drv_;
 
-    enum class Package:uint8_t{
-        _DRV2605,
-        _DRV2604,
-        _DRV2604L,
-        _DRV2605L
-    };
 
     enum class Mode:uint8_t{
         // 0: Internal trigger
@@ -84,7 +81,7 @@ protected:
         AutoCalibration
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public RegC8{
         scexpr RegAddress address = 0x00;
 
         uint8_t oc_detect:1;
@@ -102,6 +99,8 @@ protected:
         uint8_t :3;
         uint8_t standby:1;
         uint8_t dev_reset:1;
+
+        using Reg8::operator=;
     };
 
     struct RtpReg:public Reg8{
@@ -152,25 +151,228 @@ protected:
         uint8_t :8;
     };
 
-    struct BrakeTimeReg:public Reg8{
+    struct BrakeTimeOffsetReg:public Reg8{
         scexpr RegAddress address = 0x10;
 
         uint8_t :8;
     };
+
+
+    enum class A2V_LPF_Freq{
+        _100Hz,
+        _125Hz,
+        _150Hz,
+        _200Hz
+    };
+
+    enum class A2V_Peak_Time{
+        _10ms,
+        _20ms,
+        _30ms,
+        _40ms,
+
+    };
+    struct Audio2VibeReg:public Reg8{
+        scexpr RegAddress address = 0x11;
+
+        uint8_t ath_filter:2;
+        uint8_t ath_peak_time:2;
+        uint8_t :4;
+    };
+
     
-    void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv_.writeReg<uint8_t>((uint8_t)address, reg);
+    struct Audio2VibeMinimalInputLevelReg:public Reg8{
+        scexpr RegAddress address = 0x12;
+
+        uint8_t :8;
+    };
+
+    
+    struct Audio2VibeMaxmalInputLevelReg:public Reg8{
+        scexpr RegAddress address = 0x13;
+
+        uint8_t :8;
+    };
+
+    struct Audio2VibeMinimalOutputDriveReg:public Reg8{
+        scexpr RegAddress address = 0x14;
+
+        uint8_t :8;
+    };
+
+
+    struct Audio2VibeMaxmalOutputDriveReg:public Reg8{
+        scexpr RegAddress address = 0x15;
+
+        uint8_t :8;
+    };
+
+    struct RatedVoltageReg:public Reg8{
+        scexpr RegAddress address = 0x16;
+
+        uint8_t :8;
+    };
+
+    struct OverdriveClampVoltageReg:public Reg8{
+        scexpr RegAddress address = 0x17;
+
+        uint8_t :8;
+    };
+
+    struct AutoCaliCompResultReg:public Reg8{
+        scexpr RegAddress address = 0x18;
+
+        uint8_t :8;
+    };
+
+    struct AutoCaliBackEMFReg:public Reg8{
+        scexpr RegAddress address = 0x19;
+
+        uint8_t :8;
+    };
+
+    enum class FbBrakeFactor:uint8_t{
+        _1x,
+        _2x,
+        _3x,
+        _4x,
+        _6x,
+        _8x,
+        _16x,
+    };
+
+    enum class LoopGain:uint8_t{
+        Low = 0,
+        Medium,
+        High,
+        VeryHigh
+    };
+
+    enum class BemfGain:uint8_t{
+        _0_33x,
+        _1x,
+        _1_8x,
+        _4x,
+        _5x,
+        _10x,
+        _20x,
+        _30x
+    };
+
+    struct FeedbackControlReg:public Reg8{
+        scexpr RegAddress address = 0x1a;
+
+        uint8_t bemf_gain:2;
+        uint8_t loop_gain:2;
+        uint8_t fb_brake_factor:3;
+
+        // 0: ERM Mode
+        // 1: LRA Mode
+        uint8_t n_erm_lra:1;
+    };
+
+    struct Control1Reg:public Reg8{
+        scexpr RegAddress address = 0x1b;
+
+        uint8_t drive_time:5;
+        uint8_t ac_couple:1;
+        uint8_t :1;
+        uint8_t startup_boost:1;
+    };
+
+    struct Control2Reg:public Reg8{
+        scexpr RegAddress address = 0x1c;
+
+        uint8_t idiss_time:2;
+        uint8_t blanking_time:2;
+        uint8_t sample_time:2;
+        uint8_t brake_stabilizer:2;
+        uint8_t bidir_input:2;
+    };
+
+    struct Control3Reg:public Reg8{
+        scexpr RegAddress address = 0x1d;
+
+        uint8_t lra_openloop:1;
+        uint8_t n_pwm_analog:1;
+        uint8_t lra_drive_mode:1;
+        uint8_t data_format_rtp:1;
+        uint8_t supply_comp_dis:1;
+        uint8_t erm_openloop:1;
+        uint8_t ng_thresh:1;
+    };
+
+    struct Control4Reg:public Reg8{
+        scexpr RegAddress address = 0x1e;
+
+        uint8_t otp_program:1;
+        uint8_t :1;
+        uint8_t otp_status:1;
+        uint8_t :1;
+        uint8_t autocal_time:2;
+        uint8_t :2;
+    };
+
+    struct VbatVoltageMonitorReg:public Reg8{
+        scexpr RegAddress address = 0x1e;
+
+        uint8_t :8;
+    };
+
+    struct LRA_ResonancePeriodReg:public Reg8{
+        scexpr RegAddress address = 0x1f;
+
+        uint8_t :8;
+    };
+    
+    StatusReg status_reg;
+    ModeReg mode_reg;
+    RtpReg rtp_reg;
+    LibrarySelReg library_sel_reg;
+    WaveformSegReg waveform_seg_reg;
+    GoReg go_reg;
+    OverrideTimeOffset override_time_offset_reg;
+    SustainTimeOffsetPositiveReg sustain_time_offset_positive_reg;
+    SustainTimeOffsetNegitiveReg sustain_time_offset_negitive_reg;
+    BrakeTimeOffsetReg brake_time_offset_reg;
+    Audio2VibeReg audio2vibe_reg;
+    Audio2VibeMinimalInputLevelReg audio2vibe_minimal_input_level_reg;
+    Audio2VibeMaxmalInputLevelReg audio2vibe_maxmal_input_level_reg;
+    Audio2VibeMinimalOutputDriveReg audio2vibe_minimal_output_drive_reg;
+    Audio2VibeMaxmalOutputDriveReg audio2vibe_maxmal_output_drive_reg;
+    RatedVoltageReg rated_voltage_reg;
+    OverdriveClampVoltageReg overdrive_clamp_voltage_reg;
+    AutoCaliCompResultReg auto_cali_comp_result_reg;
+    AutoCaliBackEMFReg auto_cali_back_emf_reg;
+    FeedbackControlReg feedback_control_reg;
+    Control1Reg control1_reg;
+    Control2Reg control2_reg;
+
+    auto writeReg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.writeReg<uint8_t>((uint8_t)address, reg);
     }
 
-    void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv_.readReg<uint8_t>((uint8_t)address, reg);
+    auto readReg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.readReg<uint8_t>((uint8_t)address, reg);
     }
 
-    void requestBurst(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readMulti((uint8_t)addr, data, len);
+    auto requestBurst(const RegAddress addr, uint8_t * data, size_t len){
+        return i2c_drv_.readMulti((uint8_t)addr, data, len);
     }
+
+
+    void setFbBrakeFactor(const FbBrakeFactor factor);
+    void setFbBrakeFactor(const int fractor);
 public:
-
+    void reset();
+    void update();
+    bool verify();
+    bool init();
+    Package getPackage();
+    void setBemfGain(const BemfGain gain);
+    void setLoopGain(const LoopGain gain);
+    void play(const uint8_t idx);
+    bool autocal();
 };
 
 }
