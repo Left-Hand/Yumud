@@ -140,8 +140,8 @@ public:
     }
 
     void init(){
-        at_gpio.outpp(1);
-        slp_gpio.outpp(1);
+        at_gpio.outpp(HIGH);
+        slp_gpio.outpp(HIGH);
     }
 
     void reset(){sendAtCommand("RESET");}

@@ -8,7 +8,7 @@ std::tuple<iq_t, iq_t, iq_t> SVM(const iq_t alpha, const iq_t beta);
 
 class SVPWM3:public SVPWM{
 protected:
-    using Driver = Coil3Driver;
+    using Driver = Coil3DriverIntf;
 
     Driver & driver_;
     const int bus_volt = 12;
@@ -28,24 +28,11 @@ public:
         setAbDuty(av / bus_volt, bv / bus_volt);
     }
 
-    void setVolt(const real_t volt, const real_t modu_rad){
-        setDuty(volt / bus_volt, modu_rad);
-    }
-
-    void setDuty(const real_t duty, const real_t modu_rad);
-
     void setAbDuty(const real_t x, const real_t y);
 
-    void init() override{
-        driver_.init();
-    }
-
-    void enable(const bool en = true) override{
+    void enable(const bool en = true){
         driver_.enable(en);
     }
 };
-
-
-
 
 }

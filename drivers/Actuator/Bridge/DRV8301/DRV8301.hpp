@@ -10,7 +10,7 @@
 
 namespace ymd::drivers{
 
-class DRV8301:public Coil3Driver{
+class DRV8301:public Coil3DriverIntf{
 public:
     enum PeakCurrent:uint8_t{
         _1_7A = 0,

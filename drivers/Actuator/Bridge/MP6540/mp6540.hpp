@@ -21,7 +21,7 @@ namespace ymd::drivers{
 
 
 
-class MP6540:public Coil3Driver{
+class MP6540:public Coil3DriverIntf{
 protected:
     using PWM3 = std::array<PwmChannel *, 3>;
     using AIN3 = std::array<AnalogInChannel *, 3>;

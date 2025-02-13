@@ -15,7 +15,7 @@ void AD7607::reset(void){
 }
  
 void AD7607::init(void){
-    rst_gpio.outpp(0);
+    rst_gpio.outpp(LOW);
     reset();
 }
  

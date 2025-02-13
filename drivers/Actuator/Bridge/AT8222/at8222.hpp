@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-class AT8222:public Coil2Driver{
+class AT8222:public Coil2DriverIntf{
 protected:
     PwmChannel & forward_pwm;
     PwmChannel & backward_pwm;

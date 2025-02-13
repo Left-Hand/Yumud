@@ -9,20 +9,27 @@ class SVPWM{
 protected:
     bool rsv = false;
 public:
-    virtual void init() = 0;
+    virtual void setDuty(const real_t duty, const real_t _elecrad) final{
+        real_t elecrad = rsv ? -_elecrad : _elecrad;
+        setAbDuty(cos(elecrad) * duty, sin(elecrad) * duty);
+    }
 
-
-    virtual void setDuty(const real_t duty, const real_t _elecrad) = 0;
-
-    // __inline void setDQDuty(const real_t d_duty, const real_t q_duty, const real_t elecrad){
-    //     setDQDuty({d_duty, q_duty}, elecrad);
+    // void setVolt(const real_t volt, const real_t modu_rad){
+    //     setDuty(volt / bus_volt, modu_rad);
     // }
 
-    // __inline void setDQDuty(const Vector2 dq, const real_t _elecrad){
-    //     // const real_t elecrad = rsv ? -_elecrad : _elecrad;
-    //     const Vector2 ab = dq.rotated(_elecrad);
-    //     setDuty(ab.length(), ab.angle());
+    virtual void setDqDuty(const real_t d_duty, const real_t q_duty, const real_t _elecrad) final{
+        real_t elecrad = rsv ? -_elecrad : _elecrad;
+        const auto c = cos(elecrad);
+        const auto s = sin(elecrad);
+        setAbDuty(d_duty * c - q_duty * s, d_duty * c + q_duty * s);
+    }
+
+    // void setDqVolt(const real_t volt, const real_t modu_rad){
+    //     setDqDuty(volt / bus_volt, modu_rad);
     // }
+
+    virtual void setAbDuty(const real_t alpha_duty, const real_t beta_duty) = 0;
 
     void inverse(const bool en = true){
         rsv = en;

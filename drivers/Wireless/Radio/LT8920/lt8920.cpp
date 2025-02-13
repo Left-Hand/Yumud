@@ -254,7 +254,7 @@ void LT8920::readBlock(uint8_t * data, uint8_t len){
 
 void LT8920::reset(){
     if(nrst_gpio){
-        nrst_gpio->outpp(0);
+        nrst_gpio->outpp(LOW);
         delay(20);
         nrst_gpio->set();
         delay(20);

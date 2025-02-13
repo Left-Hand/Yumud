@@ -14,13 +14,13 @@ void AD9959::init(){
     // digitalWrite(ResetPin, 0);
 
     // ResetPin = false;
-    reset_gpio.outpp(false);
+    reset_gpio.outpp(LOW);
     // pinMode(ResetPin, OUTPUT);          // Ensure we can reset the AD9959
     // digitalWrite(ChipEnablePin, 1);
 
     // pinMode(ChipEnablePin, OUTPUT);     // This control signal applies the loaded values
     // digitalWrite(UpdatePin, 0);
-    update_gpio.outpp(false);
+    update_gpio.outpp(LOW);
     // pinMode(UpdatePin, OUTPUT);         // This control signal applies the loaded values
 
     reset();

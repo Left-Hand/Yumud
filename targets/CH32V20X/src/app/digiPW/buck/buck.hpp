@@ -28,7 +28,7 @@ protected:
 
 class BuckConverter {
 protected:
-    using Coil2Driver = ymd::drivers::Coil2Driver;
+    using Coil2Driver = ymd::drivers::Coil2DriverIntf;
     BuckController ctrl_;
     AnalogInChannel & curr_ch_;
     AnalogInChannel & volt_ch_;

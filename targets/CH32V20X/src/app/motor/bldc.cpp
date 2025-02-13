@@ -306,8 +306,8 @@ void bldc_main(){
     auto & en_gpio = portA[11];
     auto & slp_gpio = portA[12];
 
-    en_gpio.outpp(0);
-    slp_gpio.outpp(0);
+    en_gpio.outpp(LOW);
+    slp_gpio.outpp(LOW);
 
     timer1.init(chopper_freq, TimerUtils::Mode::CenterAlignedUpTrig);
 

@@ -17,7 +17,7 @@ void MP1907::init(){
     inst_.init();
     inst_n_.init();
     if(en_gpio_){
-        en_gpio_->outpp(0);
+        en_gpio_->outpp(LOW);
     }
 }
 

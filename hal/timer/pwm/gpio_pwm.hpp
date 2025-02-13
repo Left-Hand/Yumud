@@ -16,7 +16,7 @@ public:
     GpioPwm(Gpio & _gpio):gpio_(_gpio){;}
 
     void init(){
-        gpio_.outpp(false);
+        gpio_.outpp(LOW);
         cnt_ = 0;
     }
 

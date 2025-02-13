@@ -115,7 +115,7 @@ void gui_main(){
     auto & dev_rst = portA[12];
     
     
-    lcd_blk.outpp(1);
+    lcd_blk.outpp(HIGH);
     #endif
 
     

@@ -8,24 +8,18 @@
 
 namespace ymd::drivers{
 
-class CoilDriverConcept: public Actuator{
+class Coil2DriverIntf: public ActuatorIntf{
 public:
-    // virtual void setClamp(const real_t abs_max_value){}
-    // virtual void setDuty(const real_t duty){}
+    virtual Coil2DriverIntf& operator= (const real_t duty) = 0;
 };
 
-class Coil2Driver: public Actuator{
-public:
-    virtual Coil2Driver& operator= (const real_t duty) = 0;
-};
-
-class Coil3Driver: public Actuator{
+class Coil3DriverIntf: public ActuatorIntf{
 
 public:
     using UVW_Duty = std::tuple<real_t, real_t, real_t>;
     using AlphaBeta_Duty = std::tuple<real_t, real_t>;
 
-    virtual Coil3Driver& operator= (const UVW_Duty & duty) = 0;
+    virtual Coil3DriverIntf& operator= (const UVW_Duty & duty) = 0;
 };
 
 
