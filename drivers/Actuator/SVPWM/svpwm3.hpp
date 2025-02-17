@@ -28,9 +28,9 @@ public:
         setAbDuty(av / bus_volt, bv / bus_volt);
     }
 
-    void setAbDuty(const real_t x, const real_t y);
+    void setAbDuty(const real_t x, const real_t y) final override;
 
-    void enable(const bool en = true){
+    void enable(const bool en = true) final override{
         driver_.enable(en);
     }
 };
