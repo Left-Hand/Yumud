@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/string/String.hpp"
+#include "sys/utils/rustlike/Result.hpp"
 #include "hal/bus/can/CanMsg.hpp"
 
 #include <variant>
@@ -8,50 +9,10 @@
 namespace ymd::drivers{
 
 
+
 class AsciiCanIntf{
 public:
     using Msg = hal::CanMsg;
-
-    template<typename Ret, typename Error>
-    class Result_t {
-    private:
-        std::variant<Ret, Error> result_;
-    
-    public:
-        // 构造函数，用于成功情况
-        constexpr Result_t(Ret value) : result_(std::move(value)) {}
-    
-        // 构造函数，用于错误情况
-        constexpr Result_t(Error error) : result_(std::move(error)) {}
-    
-        // 检查是否成功
-        constexpr bool is_ok() const {
-            return std::holds_alternative<Ret>(result_);
-        }
-    
-        // 检查是否出错
-        constexpr bool is_err() const {
-            return std::holds_alternative<Error>(result_);
-        }
-    
-        // 获取成功值，如果当前是错误状态则抛出异常
-        constexpr Ret unwrap() const {
-            if (is_ok()) {
-                return std::get<Ret>(result_);
-            } else {
-                HALT
-            }
-        }
-    
-        // 获取错误值，如果当前是成功状态则抛出异常
-        constexpr Error unwrap_err() const {
-            if (is_err()) {
-                return std::get<Error>(result_);
-            } else {
-                HALT
-            }
-        }
-    };
 
 
     enum class Error{
@@ -180,32 +141,18 @@ private:
 
     Error handleSendStdMsg(const StringView str, const bool is_rmt){
         if(!str.size()) return Error::NoArg;
-
         if(str.size() < 4) return Error::InvalidDataLength;
 
-        #define PARSE(name, func, from, to) \
-            const auto name##_result = func(str.substring(from, to)); \
-            if(name##_result.is_err()) return name##_result.unwrap_err(); \
-            const auto name = name##_result.unwrap();\
-        
-        
-        // const auto id_result = parseStdId(str.substr(0, 3));
-        // if(id_result.is_err()) return id_result.unwrap_err();
-        // const auto id = id_result.unwrap();
-
-        PARSE(id, parseStdId, 0, 3)
-        PARSE(dlc, parseLen, 3, 4)
-
+        const auto id = UNWRAP(parseStdId(str.substring(0, 3)));
+        const auto dlc = UNWRAP(parseLen(str.substring(3, 4)));
         const StringView data_str = str.substring(4, str.size());
         
         if(is_rmt){
-            const auto data_res = parseData(data_str, dlc);
-            if(data_res.is_err()) return data_res.unwrap_err();
-            const auto data = data_res.unwrap();
+            const auto data = UNWRAP(parseData(data_str, dlc));
             devSendMsg(id, false, data);
         }else{
             if(data_str.size()) return Error::InvalidData;
-            devSendMsg(id, true, std::span<const uint8_t>());
+            devSendMsg(id, true, {});
         }
 
     }
