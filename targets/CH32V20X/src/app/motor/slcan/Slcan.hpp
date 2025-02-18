@@ -8,8 +8,6 @@
 
 namespace ymd::drivers{
 
-
-
 class AsciiCanIntf{
 public:
     using Msg = hal::CanMsg;

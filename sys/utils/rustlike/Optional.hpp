@@ -1,12 +1,11 @@
 #pragma once
 
-#include "sys/debug/debug_inc.h"
-
+#include "util.hpp"
 
 namespace ymd{
 
-template<typename T>
-class Optional{
+template<typename T, typename E = std::nullopt_t>
+class Optional_t{
 private:
     bool exists_;
     T value_;
@@ -36,6 +35,11 @@ public:
         return value_;
     }
 
+
+    E unexpected() const {
+        return {}
+    }
+
     T * operator->() {
        return &unwarp();
     }
@@ -47,13 +51,32 @@ public:
     T && operator*() && {
         return std::move(unwarp());
     }
-    const T & expect(const char * msg) const {
-        if(exists_ == false){
-            PANIC(msg);
-        }
-        return value_;
+};
+
+
+// Specialization for std::optional
+template <typename T, typename E>
+struct __unwrap_helper<Optional_t<T, E>> {
+    using Obj = Optional_t<T, E>;
+    // Unwrap a non-const rvalue optional
+    static constexpr T unwrap(Obj && obj) {
+        return std::move(obj.unwrap());
+    }
+
+    static constexpr T unwrap(const Obj & obj) {
+        return obj.value();
+    }
+
+    static constexpr E unexpected(Obj && obj) {
+        return std::move(obj.unexpected());
+    }
+
+    static constexpr E unexpected(const Obj & obj) {
+        return obj.unexpected();
     }
 };
+
+
 
 
 }

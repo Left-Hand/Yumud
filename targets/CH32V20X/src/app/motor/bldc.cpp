@@ -297,6 +297,133 @@ struct TurnSolver{
     return new_pos;
 }
 
+
+class BldcMotor{
+public:
+    SVPWM3 & svpwm_;
+    Odometer & odo_;
+    CurrentSensor & curr_sensor_;
+
+    BldcMotor(SVPWM3 & svpwm, Odometer & odo, CurrentSensor & curr_sensor):
+        svpwm_(svpwm),
+        odo_(odo),
+        curr_sensor_(curr_sensor){;}
+
+    using Torque = real_t;
+    using Speed = real_t;
+    using Position = real_t;
+
+    struct CurrentCtrl{
+        DqVoltage update(const DqCurrent targ_curr, const DqCurrent meas_curr){
+            return {
+                d_pi_ctrl.update(targ_curr.d, meas_curr.d),
+                q_pi_ctrl.update(targ_curr.q, meas_curr.q)
+            };
+        }
+
+        PIController d_pi_ctrl = {
+        {
+            .kp = 0.0_r,
+            .ki = 0.011_r,
+            .out_min = -6.0_r,
+            .out_max = 6.0_r
+        }};
+        
+        PIController q_pi_ctrl = {
+        {
+            .kp = 0.0_r,
+            .ki = 0.011_r,
+            .out_min = -6.0_r,
+            .out_max = 6.0_r
+        }};
+    };
+
+    struct TorqueCtrl{
+        DqCurrent update(const Torque targ_torque){
+            return {0, targ_torque};
+        }
+    };
+
+    struct TraditionalSpeedCtrl{
+        Torque update(const Speed targ_spd, const Speed meas_spd){
+            return {
+                speed_pi_ctrl.update(targ_spd, meas_spd)
+            };
+        }
+
+
+        PIController speed_pi_ctrl = {{
+            .kp = 2.3_r,
+            // .kp = 0,
+            .ki = 0.0277_r,
+            // .ki = 0.0001_r,
+            // .out_min = -0.3_r,
+            // .out_max = 0.3_r
+    
+            // .kp = 2.3_r,
+            // .ki = 0.009_r,
+            .out_min = -0.5_r,
+            .out_max = 0.5_r
+        }};
+    };
+
+    struct TraditionalPositionCtrl{
+        Speed update(const Position targ_pos, const Position meas_pos, const Speed meas_spd){
+            const auto targ_spd = 0;
+            return {
+                35.8_r * (targ_pos - meas_pos) + 0.7_r*(targ_spd - meas_spd)
+            };
+        }
+
+
+        PIController speed_pi_ctrl = {{
+            .kp = 2.3_r,
+            // .kp = 0,
+            .ki = 0.0277_r,
+            // .ki = 0.0001_r,
+            // .out_min = -0.3_r,
+            // .out_max = 0.3_r
+    
+            // .kp = 2.3_r,
+            // .ki = 0.009_r,
+            .out_min = -0.5_r,
+            .out_max = 0.5_r
+        }};
+    };
+
+    CurrentCtrl curr_ctrl_  = {};
+    TorqueCtrl torque_ctrl_ = {};
+    TraditionalSpeedCtrl spd_ctrl_ = {};
+    TraditionalPositionCtrl pos_ctrl_ = {};
+
+    void tick(){
+        odo_.update();
+
+        const auto targ_pos = real_t(0);
+        const auto lap_pos = odo_.getLapPosition();
+        const auto meas_pos = odo_.getPosition();
+        const auto meas_spd = odo_.getSpeed();
+
+        const real_t meas_rad = (frac(frac(lap_pos - 0.25_r) * 7) * real_t(TAU));
+
+        curr_sensor_.update(meas_rad);
+        const auto meas_dq_curr = curr_sensor_.dq();
+
+        const auto cmd_spd = pos_ctrl_.update(targ_pos, meas_pos, meas_spd);
+        const auto cmd_torque = spd_ctrl_.update(cmd_spd, meas_spd);
+        const auto cmd_dq_curr = torque_ctrl_.update(cmd_torque);
+        const auto cmd_dq_volt = curr_ctrl_.update(cmd_dq_curr, meas_dq_curr);
+
+        const auto cmd_ab_volt = dq_to_ab(cmd_dq_volt, meas_rad);
+
+        svpwm_.setAbVolt(cmd_ab_volt[0], cmd_ab_volt[1]);
+    }
+private:
+
+
+
+};
+
 void bldc_main(){
     uart2.init(576000);
     DEBUGGER.change(uart2);
