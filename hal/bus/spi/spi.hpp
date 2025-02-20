@@ -23,7 +23,7 @@ protected:
     Error lead(const uint8_t index) override{
         last_index = index;
         cs_port[last_index].clr();
-        return ErrorType::OK;
+        return Error::OK;
     }
 
     void trail() override{

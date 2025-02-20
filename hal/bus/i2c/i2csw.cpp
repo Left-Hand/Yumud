@@ -23,9 +23,9 @@ I2cSw::Error I2cSw::wait_ack(){
     delayDur();
     
     if(ovt){
-        return ErrorType::NO_ACK;
+        return Error::NO_ACK;
     }else{
-        return ErrorType::OK;
+        return Error::OK;
     }
 
 }
@@ -93,7 +93,7 @@ I2cSw::Error I2cSw::read(uint32_t & data, const bool toAck){
     sda_gpio.inpu();
 
     data = ret;
-    return I2cSw::ErrorType::OK;
+    return Error::OK;
 }
 
 void I2cSw::init(const uint32_t baudRate){

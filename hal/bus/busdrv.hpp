@@ -57,7 +57,7 @@ protected:
 public:
     NonProtocolBusDrv(BusType & _bus, const uint8_t _index) : BusDrv<BusType>(_bus, _index) {}
     void release(){
-        if (Bus::ErrorType::OK == bus_.begin(index_) ) {
+        if (BusError::OK == bus_.begin(index_) ) {
             delay(1);
             bus_.end();
         }

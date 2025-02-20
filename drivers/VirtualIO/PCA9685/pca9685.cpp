@@ -19,7 +19,7 @@ void PCA9685::setFrequency(uint freq, real_t trim){
         writeReg(RegAddress::Mode1, mode1_reg);
         // enableSleep(false);
         delay(5);
-        mode1_reg |= 0xa1;
+        mode1_reg = uint8_t(mode1_reg | uint8_t(0xa1));
         writeReg(RegAddress::Mode1, mode1_reg);
     }
 

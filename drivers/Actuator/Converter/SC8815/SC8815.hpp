@@ -423,23 +423,23 @@ protected:
     MaskReg mask_reg = {};
 
 
-    void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv_.writeReg((uint8_t)address, reg);
+    BusError writeReg(const RegAddress address, const uint8_t reg){
+        return i2c_drv_.writeReg((uint8_t)address, reg);
     }
 
-    void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv_.readReg((uint8_t)address, reg);
+    BusError readReg(const RegAddress address, uint8_t & reg){
+        return i2c_drv_.readReg((uint8_t)address, reg);
     }
 
-    void writeReg(const RegAddress address, const uint16_t reg){
-        i2c_drv_.writeReg((uint8_t)address, reg, LSB);
+    BusError writeReg(const RegAddress address, const uint16_t reg){
+        return i2c_drv_.writeReg((uint8_t)address, reg, LSB);
     }
 
-    void readReg(const RegAddress address, uint16_t & reg){
-        i2c_drv_.readReg((uint8_t)address, reg, LSB);
+    BusError readReg(const RegAddress address, uint16_t & reg){
+        return i2c_drv_.readReg((uint8_t)address, reg, LSB);
     }
-    void requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readMulti((uint8_t)addr, data, len);
+    BusError requestPool(const RegAddress addr, uint8_t * data, size_t len){
+        return i2c_drv_.readMulti((uint8_t)addr, data, len);
     }
 public:
     real_t getBusVolt();
@@ -452,7 +452,6 @@ public:
     auto & setBatCurrLimit(const real_t curr);
 
     void setOutputVolt(const iq_t volt);
-
 };
 
 }

@@ -516,7 +516,7 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const Com
 
 UartHw::Error UartHw::lead(const uint8_t index){
     while((instance->STATR & USART_FLAG_TXE) == RESET);
-    return ErrorType::OK;
+    return Error::OK;
 }
 
 void UartHw::trail(){

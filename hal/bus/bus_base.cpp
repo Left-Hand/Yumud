@@ -6,12 +6,12 @@
 using namespace ymd;
 
 
-OutputStream & ymd::operator << (OutputStream & os, const Bus::Error & err){
+OutputStream & ymd::operator << (OutputStream & os, const BusError & err){
     return os << err.type;
 }
 
-OutputStream & ymd::operator << (OutputStream & os, const Bus::ErrorType & err){
-    using ErrorType = Bus::ErrorType;
+OutputStream & ymd::operator << (OutputStream & os, const BusError::ErrorType & err){
+    using ErrorType = BusError::ErrorType;
 
     switch(err){
         case ErrorType::OK:

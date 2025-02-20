@@ -48,14 +48,14 @@ public:
     Error write(const uint32_t data) override {
         uint32_t dummy;
         transfer(dummy, data, false);
-        return Bus::ErrorType::OK;
+        return Error::OK;
     }
 
     Error read(uint32_t & data, bool toAck = true) {
         uint32_t ret;
         scexpr uint32_t dummy = 0;
         transfer(ret, dummy, toAck); 
-        return Bus::ErrorType::OK;
+        return Error::OK;
     }
 
     Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override ;

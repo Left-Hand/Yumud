@@ -7,9 +7,9 @@
 
 namespace ymd{
 
-class Bus:public BusTrait{
+struct BusError{
 public:
-    enum class ErrorType:uint8_t{
+    enum ErrorType:uint8_t{
         OK,
         ALREADY,
         OCCUPIED,
@@ -20,26 +20,27 @@ public:
         ZERO_LENGTH,
     };
 
-    struct Error{
-        ErrorType type = ErrorType::OK;
+    ErrorType type = ErrorType::OK;
 
-        Error(const ErrorType & _type):type(_type){;}
-        Error(ErrorType && _type):type(_type){;}
-        Error(const Error & other):type(other.type){;}
-        Error(Error && other):type(other.type){;}
-        Error & operator = (const Error & other){type = other.type; return *this;}
-        Error & operator = (Error && other){type = other.type; return *this;}
+    BusError(const ErrorType & _type):type(_type){;}
+    BusError(ErrorType && _type):type(_type){;}
+    BusError(const BusError & other):type(other.type){;}
+    BusError(BusError && other):type(other.type){;}
+    BusError & operator = (const BusError & other){type = other.type; return *this;}
+    BusError & operator = (BusError && other){type = other.type; return *this;}
 
-        bool operator ==(const ErrorType & _type){return type == _type;}
-        bool operator !=(const ErrorType & _type){return type != _type;}
-        explicit operator bool() {return type != ErrorType::OK;}
+    bool operator ==(const ErrorType & _type){return type == _type;}
+    bool operator !=(const ErrorType & _type){return type != _type;}
+    explicit operator bool() {return type != ErrorType::OK;}
 
-        bool ok() const {return type == ErrorType::OK;}
-        explicit operator ErrorType() {return type;}
-    };
-    
-    // scexpr int a = sizeof(Error);
+    bool ok() const {return type == ErrorType::OK;}
+    explicit operator ErrorType() {return type;}
+};
 
+
+class Bus:public BusTrait{
+public:
+    using Error = BusError;
     using Mode = CommMode;
 
 
@@ -56,8 +57,8 @@ private:
         uint16_t oninterrupt_:1 = false;
         uint16_t locked_:1 = false;
     public:
-        DELETE_COPY_AND_MOVE(Locker)
-
+        Locker(const Locker & other) = delete;
+        Locker(Locker && other) = delete;
         Locker(){;}
         Locker(Locker * last, Locker * next):last_(last), next_(next){;}
 
@@ -108,7 +109,7 @@ public:
             lock(index);
             return lead(index);
         }else{
-            return ErrorType::OCCUPIED;
+            return Error::OCCUPIED;
         }
     }
 
@@ -125,8 +126,8 @@ public:
 
 
 
-OutputStream & operator << (OutputStream & os, const Bus::ErrorType & err);
+OutputStream & operator << (OutputStream & os, const BusError & err);
 
-OutputStream & operator << (OutputStream & os, const Bus::Error & err);
+OutputStream & operator << (OutputStream & os, const BusError::ErrorType & err);
 
 };
