@@ -6,29 +6,23 @@
 namespace ymd::drivers{
 class SVPWM2:public SVPWM{
 public:
-    using Driver = Coil2Driver;
+    using Driver = Coil2DriverIntf;
 
-    Driver & coil_a;
-    Driver & coil_b;
+    Driver & coil_a_;
+    Driver & coil_b_;
 
 public:
-    SVPWM2(Driver & _coilA, Driver & _coilB):coil_a(_coilA), coil_b(_coilB){;}
+    SVPWM2(Driver & coil_a, Driver & coil_b):coil_a_(coil_a), coil_b_(coil_b){;}
 
-    void init() override{
-        coil_a.init();
-        coil_b.init();
+
+    __fast_inline void setAbDuty(const real_t duty_a, const real_t duty_b) final override{
+        coil_a_ = duty_a;
+        coil_b_ = duty_b;
     }
 
-    __fast_inline void setDuty(const real_t duty, const real_t _elecrad) override{ 
-        real_t elecrad = rsv ? -_elecrad : _elecrad;
-        coil_a = cos(elecrad) * duty;
-        coil_b = sin(elecrad) * duty;
-        
-    }
-
-    void enable(const bool en = true) override{
-        coil_a.enable(en);
-        coil_b.enable(en);
+    void enable(const bool en = true) final override{
+        coil_a_.enable(en);
+        coil_b_.enable(en);
     }
 };
 

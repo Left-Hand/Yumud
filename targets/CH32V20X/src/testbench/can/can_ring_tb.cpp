@@ -10,7 +10,7 @@ void can_ring_main(){
     // scexpr size_t cb_freq = 200;
 
     auto & led = portC[14];
-    led.outpp(1);
+    led.outpp(HIGH);
 
     DEBUGGER_INST.init(576000, CommMethod::Blocking);
     auto & can = can1;

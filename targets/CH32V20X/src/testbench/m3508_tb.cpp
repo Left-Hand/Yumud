@@ -12,7 +12,7 @@ void m3508_main(){
     scexpr size_t cb_freq = 200;
 
     auto & led = portC[14];
-    led.outpp(1);
+    led.outpp(HIGH);
 
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 

@@ -34,7 +34,7 @@ void UartSw::tick(){
 
 void UartSw::setTxMethod(const CommMethod _txMethod){
     if(_txMethod != CommMethod::None){
-        m_tx_gpio.outpp(true);
+        m_tx_gpio.outpp(HIGH);
     }
 }
 

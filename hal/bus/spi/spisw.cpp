@@ -6,11 +6,11 @@ void SpiSw::init(const uint32_t baudRate, const CommMethod tx_method , const Com
     setBaudRate(baudRate);
 
     mosi_gpio.outpp();
-    sclk_gpio.outpp(1);
+    sclk_gpio.outpp(HIGH);
 
     for(auto & cs_gpio : cs_port){
         if(cs_gpio.isValid()){
-            cs_gpio.outpp(1);
+            cs_gpio.outpp(HIGH);
         }
     }
 

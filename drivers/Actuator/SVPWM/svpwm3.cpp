@@ -1,8 +1,8 @@
 #include "svpwm3.hpp"
 
-using namespace ymd::drivers;
+namespace ymd::drivers{
 
-static std::tuple<iq_t, iq_t, iq_t> SVM(const real_t alpha, const real_t beta){
+std::tuple<iq_t, iq_t, iq_t> SVM(const iq_t alpha, const iq_t beta){
 
     enum Sector:uint8_t{
         _1 = 0b010,
@@ -68,11 +68,13 @@ static std::tuple<iq_t, iq_t, iq_t> SVM(const real_t alpha, const real_t beta){
     }
 }
 
-void SVPWM3::setDuty(const real_t duty, const real_t rad) {
-    driver_ = SVM(duty * cos(rad), duty * sin(rad));
-}
+// void SVPWM3::setDuty(const real_t duty, const real_t rad) {
+//     driver_ = SVM(iq_t(duty * cos(rad)), iq_t(duty * sin(rad)));
+// }
 
 
 void SVPWM3::setAbDuty(const real_t alaph, const real_t beta){
-    driver_ = SVM(alaph, beta);
+    driver_ = SVM(iq_t(alaph), iq_t(beta));
+}
+
 }

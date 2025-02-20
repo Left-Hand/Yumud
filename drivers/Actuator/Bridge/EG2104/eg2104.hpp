@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-class EG2104:public Coil2Driver{
+class EG2104:public Coil2DriverIntf{
 
 };
 

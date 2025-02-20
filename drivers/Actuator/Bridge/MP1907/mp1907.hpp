@@ -11,7 +11,7 @@ struct AdvancedTimer;
 
 namespace ymd::drivers{
 
-class MP1907:public Coil2Driver{
+class MP1907:public Coil2DriverIntf{
 protected:
     TimerOC & inst_;
     TimerOCN & inst_n_;

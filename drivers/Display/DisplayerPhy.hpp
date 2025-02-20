@@ -59,8 +59,8 @@ public:
 
     void init() override{
         dc_gpio.outpp();
-        res_gpio.outpp(1);
-        blk_gpio.outpp(1);
+        res_gpio.outpp(HIGH);
+        blk_gpio.outpp(HIGH);
 
         reset();
     }

@@ -10,7 +10,7 @@ class TimerOCN;
 
 namespace ymd::drivers{
 
-class EG2103:public Coil2Driver{
+class EG2103:public Coil2DriverIntf{
 protected:
     TimerOC & inst_;
     TimerOCN * p_inst_n_;

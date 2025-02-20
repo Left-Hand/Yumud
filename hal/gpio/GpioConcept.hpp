@@ -17,20 +17,20 @@ public:
     virtual bool read() const = 0;
     bool toggle() {bool val = !this->read(); write(val); return val;}
 
-    void outpp(){setMode(GpioMode::OutPP);}
-    void outod(){setMode(GpioMode::OutOD);}
-    void afpp(){setMode(GpioMode::OutAfPP);}
-    void afod(){setMode(GpioMode::OutAfOD);}
+    GpioConcept & outpp(){setMode(GpioMode::OutPP);return *this;}
+    GpioConcept & outod(){setMode(GpioMode::OutOD);return *this;}
+    GpioConcept & afpp(){setMode(GpioMode::OutAfPP);return *this;}
+    GpioConcept & afod(){setMode(GpioMode::OutAfOD);return *this;}
 
-    void outpp(const bool initial_state){setMode(GpioMode::OutPP);write(initial_state);}
-    void outod(const bool initial_state){setMode(GpioMode::OutOD);write(initial_state);}
-    void afpp(const bool initial_state){setMode(GpioMode::OutAfPP);write(initial_state);}
-    void afod(const bool initial_state){setMode(GpioMode::OutAfOD);write(initial_state);}
+    GpioConcept & outpp(const BoolLevel initial_state){setMode(GpioMode::OutPP);write(bool(initial_state));return *this;}
+    GpioConcept & outod(const BoolLevel initial_state){setMode(GpioMode::OutOD);write(bool(initial_state));return *this;}
+    GpioConcept & afpp(const BoolLevel initial_state){setMode(GpioMode::OutAfPP);write(bool(initial_state));return *this;}
+    GpioConcept & afod(const BoolLevel initial_state){setMode(GpioMode::OutAfOD);write(bool(initial_state));return *this;}
 
-    void inana(){setMode(GpioMode::InAnalog);}
-    void inflt(){setMode(GpioMode::InFloating);}
-    void inpu(){setMode(GpioMode::InPullUP);}
-    void inpd(){setMode(GpioMode::InPullDN);}
+    GpioConcept & inana(){setMode(GpioMode::InAnalog);return *this;}
+    GpioConcept & inflt(){setMode(GpioMode::InFloating);return *this;}
+    GpioConcept & inpu(){setMode(GpioMode::InPullUP);return *this;}
+    GpioConcept & inpd(){setMode(GpioMode::InPullDN);return *this;}
 
     bool isValid() const {return pin_index >= 0;}
     int8_t getIndex() const {return pin_index;}
