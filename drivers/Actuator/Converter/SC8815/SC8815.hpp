@@ -29,14 +29,18 @@ public:
     SC8815(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     SC8815(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
 
-    void update();
+    SC8815 & init();
 
     bool verify();
 
-    void reset();
+    SC8815 & reset();
 
 protected:
     using RegAddress = uint8_t;
+    uint bus_shunt_res_mohms_;
+    uint bat_shunt_res_mohms_;
+    real_t fb_up_res_kohms_;
+    real_t fb_down_res_kohms_;
 
     I2cDrv i2c_drv_;
 
@@ -95,24 +99,34 @@ protected:
         return *this;
     }
 
-    template<typename T>
-    static constexpr uint16_t b10(const T value, const T step) {
+    // template<typename T>
+    static constexpr uint16_t b10(const int value, const int step) {
         
         int cnt = (value / step) - 1;
         uint8_t byte2 = cnt % 4;
-        uint8_t byte1 = cnt >> 2;
 
+        // uint8_t byte1 = ((cnt >> 2) << 6);
+        uint8_t byte1 = ((cnt << 4) & 0xC0);
+        
         return (byte2 << 8) | byte1;
     }
 
+    static constexpr int inv_b10(const uint16_t data, const int step) {
+        
+        uint8_t byte1 = data & 0xFF;
+        uint8_t byte2 = data >> 14;
+
+        return (4 * byte1 + byte2 + 1) * step;
+    }
+
     auto & setInternalVbusRef(const real_t volt){
-        vbus_ref_i_set_reg.vbus_ref_i = b10(int(volt * 1000), 2);
+        vbus_ref_i_set_reg = b10(int(volt * 1000), 2);
         WRITE_REG(vbus_ref_i_set_reg)
         return *this;
     }
 
     auto & setExternalVbusRef(const real_t volt){
-        vbus_ref_e_set_reg.vbus_ref_e = b10(int(volt * 1000), 2);
+        vbus_ref_e_set_reg = b10(int(volt * 1000), 2);
         WRITE_REG(vbus_ref_e_set_reg)
         return *this;
     }
@@ -196,6 +210,24 @@ protected:
         return*this;
     }
 
+    auto & enableSFB(const bool en = true){
+        ctrl3_set_reg.dis_shortfoldback = !en;
+        WRITE_REG(ctrl3_set_reg);
+        return *this;
+    }
+
+    auto & enableGpo(const bool en = true){
+        ctrl3_set_reg.gpo_ctrl = en;
+        WRITE_REG(ctrl3_set_reg);
+        return *this;
+    }
+
+    auto & enablePgate(const bool en = true){
+        ctrl3_set_reg.en_pgate = en;
+        WRITE_REG(ctrl3_set_reg);
+        return *this;
+    }
+
     enum class SwitchingFreq{
         _150kHz = 0b00,
         _300kHz = 0b01,
@@ -220,44 +252,46 @@ protected:
     };
 
     struct VbusRefISetReg:public Reg16{
+        using Reg16::operator=;
         scexpr RegAddress address = 0x01;
 
-        uint16_t vbus_ref_i:10;
-        uint16_t :6;
+        uint16_t :16;
     };
 
     struct VbusRefESetReg:public Reg16{
+        using Reg16::operator=;
         scexpr RegAddress address = 0x03;
-
-        uint16_t vbus_ref_e:10;
-        uint16_t :6;
+        
+        uint16_t :16;
     };
-
+    
     struct IBusLimSetReg:public Reg8{
+        using Reg8::operator=;
         scexpr RegAddress address = 0x05;
-
-        uint8_t setting;
+        
+        uint8_t :8;
     };
-
+    
     struct IBatLimSetReg:public Reg8{
-        scexpr RegAddress address = 0x05;
+        using Reg8::operator=;
+        scexpr RegAddress address = 0x06;
 
-        uint8_t setting;
+        uint8_t :8;
     };
 
     
     struct VinSetReg:public Reg8{
-        scexpr RegAddress address = 0x05;
+        scexpr RegAddress address = 0x07;
 
-        uint8_t setting;
+        uint8_t :8;
     };
     
     struct RatioReg:public Reg8{
-        scexpr RegAddress address = 0x05;
+        scexpr RegAddress address = 0x08;
 
         uint8_t vbus_ratio:1;
         uint8_t vbat_mon_ratio:1;
-        uint8_t ibus_ratio:3;
+        uint8_t ibus_ratio:2;
         uint8_t ibat_ratio:1;
         uint8_t :3;
     };
@@ -273,7 +307,7 @@ protected:
     };
 
     struct Ctrl1SetReg:public Reg8{
-        scexpr RegAddress address = 0x09;
+        scexpr RegAddress address = 0x0A;
         
         uint8_t :2;
         uint8_t dis_ovp:1;
@@ -285,7 +319,7 @@ protected:
     };
 
     struct Ctrl2SetReg:public Reg8{
-        scexpr RegAddress address = 0x09;
+        scexpr RegAddress address = 0x0B;
         
         uint8_t slew_set:2;
         uint8_t en_dither:1;
@@ -294,7 +328,7 @@ protected:
     };
 
     struct Ctrl3SetReg:public Reg8{
-        scexpr RegAddress address = 0x09;
+        scexpr RegAddress address = 0x0C;
         
         uint8_t en_pfm:1;
         uint8_t eoc_set:1;
@@ -307,42 +341,37 @@ protected:
     };
 
     struct VbusFbValueReg:public Reg16{
-        scexpr RegAddress address = 0x03;
+        scexpr RegAddress address = 0x0d;
 
-        uint16_t fb_value:10;
-        uint16_t :6;
+        uint16_t value;
     };
 
-    struct VbusBatValueSetReg:public Reg16{
-        scexpr RegAddress address = 0x03;
+    struct VbatFbValueReg:public Reg16{
+        scexpr RegAddress address = 0x0f;
 
-        uint16_t fb_value:10;
-        uint16_t :6;
+        uint16_t value;
     };
 
     struct IBusValueReg:public Reg16{
-        scexpr RegAddress address = 0x03;
+        scexpr RegAddress address = 0x11;
 
-        uint16_t value:10;
-        uint16_t :6;
+        uint16_t :16;
     };
 
     struct IBatValueReg:public Reg16{
-        scexpr RegAddress address = 0x03;
+        scexpr RegAddress address = 0x13;
 
-        uint16_t value:10;
-        uint16_t :6;
+        uint16_t :16;
     };
 
     struct AdinValueReg:public Reg16{
         scexpr RegAddress address = 0x03;
 
-        uint16_t value:10;
-        uint16_t :6;
+        uint16_t :16;
     };
 
     struct StatusReg:public Reg8{
-        scexpr RegAddress address = 0x03;
+        scexpr RegAddress address = 0x17;
 
         uint8_t :1;
         uint8_t eoc:1;
@@ -355,7 +384,7 @@ protected:
     };
 
     struct MaskReg:public Reg8{
-        scexpr RegAddress address = 0x03;
+        scexpr RegAddress address = 0x19;
 
         uint8_t :1;
         uint8_t eoc:1;
@@ -373,7 +402,6 @@ protected:
     VbusRefESetReg vbus_ref_e_set_reg = {};
 
     IBusLimSetReg ibus_lim_set_reg = {};
-
     IBatLimSetReg ibat_lim_set_reg = {};
     
     VinSetReg vin_set_reg = {};
@@ -385,7 +413,7 @@ protected:
     Ctrl3SetReg ctrl3_set_reg = {};
 
     VbusFbValueReg vbus_fb_value_reg = {};
-    VbusBatValueSetReg vbus_bat_value_set_reg = {};
+    VbatFbValueReg vbat_fb_value_reg = {};
 
     IBusValueReg ibus_value_reg = {};
     IBatValueReg ibat_value_reg = {};
@@ -403,10 +431,27 @@ protected:
         i2c_drv_.readReg((uint8_t)address, reg);
     }
 
+    void writeReg(const RegAddress address, const uint16_t reg){
+        i2c_drv_.writeReg((uint8_t)address, reg, LSB);
+    }
+
+    void readReg(const RegAddress address, uint16_t & reg){
+        i2c_drv_.readReg((uint8_t)address, reg, LSB);
+    }
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
         i2c_drv_.readMulti((uint8_t)addr, data, len);
     }
 public:
+    real_t getBusVolt();
+    real_t getBusCurr();
+    real_t getBatVolt();
+    real_t getBatCurr();
+    real_t getAdinVolt();
+
+    auto & setBusCurrLimit(const real_t curr);
+    auto & setBatCurrLimit(const real_t curr);
+
+    void setOutputVolt(const iq_t volt);
 
 };
 
