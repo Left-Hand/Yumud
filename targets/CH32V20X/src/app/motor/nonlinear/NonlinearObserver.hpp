@@ -2,6 +2,7 @@
 
 #include "sys/math/real.hpp"
 #include "../SensorlessObserverIntf.hpp"
+#include "Pll.hpp"
 
 
 namespace ymd::foc{
@@ -15,7 +16,7 @@ public:
         size_t freq;
     };
 protected:
-    const Config config_;
+    Config config_;
     iq_t flux_state_mf_[2];        // [Vs * Fs]
     iq_t V_alpha_beta_last_[2]; // [V]
     iq_t phase_;                   // [rad]
@@ -27,43 +28,12 @@ public:
     }
 
     void reset();
+    void reconfig(const Config & config){config_ = config;}
     void init();
     void update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta);
 
     iq_t theta() const {return phase_;}
 };
-
-
-
-class Pll{
-protected:
-    iq_t last_lap_pos = 0;
-    iq_t err_int_ = 0;
-    iq_t accu_pos_ = 0;
-    iq_t pll_pos_ = 0;
-
-public:
-    void update(const iq_t phase);
-
-    // iq_t theta() const {return (frac(pll_pos_ - 0.5_r) - 0.5_r) * real_t(TAU);}
-    iq_t theta() const {return frac(pll_pos_) * real_t(TAU);}
-};
-
-
-// class Pll{
-// protected:
-//     iq_t last_lap_pos = 0;
-//     iq_t err_int_ = 0;
-//     iq_t accu_pos_ = 0;
-//     iq_t pll_pos_ = 0;
-
-// public:
-//     void update(const iq_t phase);
-
-//     iq_t theta() const {return (frac(pll_pos_ - 0.5_r) - 0.5_r) * real_t(TAU);}
-// };
-
-
 
 
 }

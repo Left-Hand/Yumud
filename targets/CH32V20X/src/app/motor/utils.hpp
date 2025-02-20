@@ -39,6 +39,10 @@ struct DqValue{
     real_t & operator [](const size_t idx){
         return *(&d + idx);
     }
+
+    real_t length() const {
+        return sqrt(d*d + q*q);
+    }
 };
 
 struct DqCurrent: public DqValue{};
@@ -55,6 +59,10 @@ struct AbValue{
 
     real_t & operator [](const size_t idx){
         return *(&a + idx);
+    }
+
+    real_t length() const {
+        return sqrt(a*a + b*b);
     }
 };
 
