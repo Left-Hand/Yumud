@@ -2,39 +2,11 @@
 
 #include "drivers/device_defs.h"
 
-#define SC8815_DEBUG
 
-#ifdef SC8815_DEBUG
-#undef SC8815_DEBUG
-#define SC8815_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define SC8815_PANIC(...) PANIC(__VA_ARGS__)
-#define SC8815_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
-#else
-#define SC8815_DEBUG(...)
-#define SC8815_PANIC(...)  PANIC()
-#define SC8815_ASSERT(cond, ...) ASSERT(cond)
-#endif
-
-
-#define WRITE_REG(reg) writeReg(reg.address, reg);
-#define READ_REG(reg) readReg(reg.address, reg);
 
 namespace ymd::drivers{
 
 class SC8815{
-public:
-    scexpr uint8_t default_i2c_addr = 0b01100000;
-
-    SC8815(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SC8815(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    SC8815(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
-
-    SC8815 & init();
-
-    bool verify();
-
-    SC8815 & reset();
-
 protected:
     using RegAddress = uint8_t;
     uint bus_shunt_res_mohms_;
@@ -43,6 +15,40 @@ protected:
     real_t fb_down_res_kohms_;
 
     I2cDrv i2c_drv_;
+
+
+    enum class IBatRatio:uint8_t{
+        _6x = 0,
+        _12x = 1//default
+    };
+
+    enum class IBusRatio:uint8_t{
+        _6x = 1,//default
+        _3x = 2//default
+    };
+
+    enum class VBatMonRatio:uint8_t{
+        _12_5x = 0,//default
+        _5x = 1
+    };
+    
+    enum class VBusRatio:uint8_t{
+        _12_5x = 0,//default
+        _5x = 1,
+    };
+
+    enum class SwitchingFreq{
+        _150kHz = 0b00,
+        _300kHz = 0b01,
+        _450kHz = 0b11,
+    };
+
+    enum class DeadZone{
+        _20ns = 0b00, //default
+        _40ns = 0b01,
+        _60ns = 0b10,
+        _80ns = 0b11,
+    };
 
     enum class BatVoltType:uint8_t{
         _4_1V,
@@ -69,177 +75,28 @@ protected:
         _80m,
     };
 
-    auto & setBatVolt(const BatVoltType bat_volt){
-        vbat_set_reg.vcell_set = uint8_t(bat_volt);
-        WRITE_REG(vbat_set_reg)
-        return *this;
-    }
 
-    auto & setBatCells(const BatCellsType bat_cells){
-        vbat_set_reg.vcell_set = uint8_t(bat_cells);
-        WRITE_REG(vbat_set_reg)
-        return *this;
-    }
-
-    auto & setBatCells(const uint bat_cells){
-        if(bat_cells > 4) SC8815_PANIC();
-        setBatCells(BatCellsType(bat_cells));
-        return *this;
-    }
-
-    auto & setVbatUseExtneral(const bool use){
-        vbat_set_reg.vbat_sel = use;
-        WRITE_REG(vbat_set_reg)
-        return *this;
-    }
-
-    auto & setBatIrComp(const BatIrCompType bat_ir_comp){
-        vbat_set_reg.ircomp = uint8_t(bat_ir_comp);
-        WRITE_REG(vbat_set_reg)
-        return *this;
-    }
-
-    // template<typename T>
-    static constexpr uint16_t b10(const int value, const int step) {
-        
-        int cnt = (value / step) - 1;
-        uint8_t byte2 = cnt % 4;
-
-        // uint8_t byte1 = ((cnt >> 2) << 6);
-        uint8_t byte1 = ((cnt << 4) & 0xC0);
-        
-        return (byte2 << 8) | byte1;
-    }
-
-    static constexpr int inv_b10(const uint16_t data, const int step) {
-        
-        uint8_t byte1 = data & 0xFF;
-        uint8_t byte2 = data >> 14;
-
-        return (4 * byte1 + byte2 + 1) * step;
-    }
-
-    auto & setInternalVbusRef(const real_t volt){
-        vbus_ref_i_set_reg = b10(int(volt * 1000), 2);
-        WRITE_REG(vbus_ref_i_set_reg)
-        return *this;
-    }
-
-    auto & setExternalVbusRef(const real_t volt){
-        vbus_ref_e_set_reg = b10(int(volt * 1000), 2);
-        WRITE_REG(vbus_ref_e_set_reg)
-        return *this;
-    }
-
-    auto & setIBusCurrLimit(const real_t curr){
-        TODO();
-        return *this;
-    }
-
-    auto & setEBusCurrLimit(const real_t curr){
-        TODO();
-        return *this;
-    }
-
-    auto & setVinRegRefVolt(const real_t volt){
-        TODO();
-        return *this;
-    }
-
-    enum class IBatRatio:uint8_t{
-        _6x = 0,
-        _12x = 1//default
+    struct BatConfig{
+        BatVoltType vcell_set;
+        BatCellsType csel;
+        bool use_ext_setting;
+        BatIrCompType ircomp;
     };
 
-    enum class IBusRatio:uint8_t{
-        _6x = 1,//default
-        _3x = 2//default
-    };
 
-    enum class VbatMonRatio:uint8_t{
-        _12_5x = 0,//default
-        _5x = 1
+
+    struct Interrupts{
+        uint8_t :1;
+        uint8_t eoc:1;
+        uint8_t otp:1;
+        uint8_t vbus_short:1;
+        uint8_t :1;
+        uint8_t indet:1;
+        uint8_t ac_ok:1;
+        uint8_t :1;
     };
     
-    enum class VBusRatio:uint8_t{
-        _12_5x = 0,//default
-        _5x = 1,
-    };
 
-    auto & setIBatLimRatio(){
-        return *this;
-    }
-
-    auto & enableOtg(const bool en = true){
-        ctrl0_set_reg.en_otg = en;
-        WRITE_REG(ctrl0_set_reg)
-        return *this;
-    }
-
-    auto & enableTrikleCharge(const bool en = true){
-        ctrl1_set_reg.dis_trickle = !en;
-        WRITE_REG(ctrl1_set_reg)
-        return *this;
-    }
-
-    auto & enableOvpProtect(const bool en = true){
-        return *this;
-    }
-
-    auto & powerUp(){
-        ctrl2_set_reg.factory = 1;//Factory setting bit. MCU shall write this bit to 1 after power up.
-        WRITE_REG(ctrl2_set_reg);
-        return*this;
-    }
-
-    auto & enableDither(const bool en = true){
-        ctrl2_set_reg.en_dither = en;
-        WRITE_REG(ctrl2_set_reg);
-        return *this;
-    }
-
-    auto & enableAdcConv(const bool en = true){
-        ctrl3_set_reg.ad_start = en;
-        WRITE_REG(ctrl3_set_reg);
-        return *this;
-    }
-
-    auto & enablePfmMode(const bool en = true){
-        ctrl3_set_reg.en_pfm = en;
-        WRITE_REG(ctrl3_set_reg);
-        return*this;
-    }
-
-    auto & enableSFB(const bool en = true){
-        ctrl3_set_reg.dis_shortfoldback = !en;
-        WRITE_REG(ctrl3_set_reg);
-        return *this;
-    }
-
-    auto & enableGpo(const bool en = true){
-        ctrl3_set_reg.gpo_ctrl = en;
-        WRITE_REG(ctrl3_set_reg);
-        return *this;
-    }
-
-    auto & enablePgate(const bool en = true){
-        ctrl3_set_reg.en_pgate = en;
-        WRITE_REG(ctrl3_set_reg);
-        return *this;
-    }
-
-    enum class SwitchingFreq{
-        _150kHz = 0b00,
-        _300kHz = 0b01,
-        _450kHz = 0b11,
-    };
-
-    enum class DeadZone{
-        _20ns = 0b00, //default
-        _40ns = 0b01,
-        _60ns = 0b10,
-        _80ns = 0b11,
-    };
 
 
     struct VbatSetReg:public Reg8{
@@ -294,6 +151,13 @@ protected:
         uint8_t ibus_ratio:2;
         uint8_t ibat_ratio:1;
         uint8_t :3;
+    };
+
+    struct RatioConfig{
+        VBusRatio vbus_ratio;
+        VBatMonRatio vbat_mon_ratio;
+        IBusRatio ibus_ratio;
+        IBatRatio ibat_ratio;
     };
 
     struct Ctrl0SetReg:public Reg8{
@@ -370,30 +234,16 @@ protected:
         uint16_t :16;
     };
 
-    struct StatusReg:public Reg8{
-        scexpr RegAddress address = 0x17;
+    struct StatusReg:public Reg8, public Interrupts{
+        using Reg8::operator =;
 
-        uint8_t :1;
-        uint8_t eoc:1;
-        uint8_t otp:1;
-        uint8_t vbus_short:1;
-        uint8_t :1;
-        uint8_t indet:1;
-        uint8_t ac_ok:1;
-        uint8_t :1;
+        scexpr RegAddress address = 0x17;
     };
 
-    struct MaskReg:public Reg8{
-        scexpr RegAddress address = 0x19;
+    struct MaskReg:public Reg8, public Interrupts{
+        using Reg8::operator =;
 
-        uint8_t :1;
-        uint8_t eoc:1;
-        uint8_t otp:1;
-        uint8_t vbus_short:1;
-        uint8_t :1;
-        uint8_t indet:1;
-        uint8_t ac_ok:1;
-        uint8_t :1;
+        scexpr RegAddress address = 0x19;
     };
 
 
@@ -441,17 +291,72 @@ protected:
     BusError requestPool(const RegAddress addr, uint8_t * data, size_t len){
         return i2c_drv_.readMulti((uint8_t)addr, data, len);
     }
-public:
+
+    SC8815 & powerUp();
+    public:
+
+    scexpr uint8_t default_i2c_addr = 0b01100000;
+
+    SC8815(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    SC8815(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    SC8815(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
+
+    Interrupts interrupts();
+    
+    SC8815 & init(const BatConfig & bat_conf = {
+        .vcell_set = BatVoltType::_4_2V,
+        .csel = BatCellsType::_1S,
+        .use_ext_setting = false,
+        .ircomp = BatIrCompType::_20m
+    });
+
+    bool verify();
+
+    SC8815 & reset();
     real_t getBusVolt();
     real_t getBusCurr();
     real_t getBatVolt();
     real_t getBatCurr();
     real_t getAdinVolt();
 
-    auto & setBusCurrLimit(const real_t curr);
-    auto & setBatCurrLimit(const real_t curr);
+    SC8815 & setBusCurrLimit(const real_t curr);
+    SC8815 & setBatCurrLimit(const real_t curr);
+    SC8815 & setOutputVolt(const iq_t volt);
 
-    void setOutputVolt(const iq_t volt);
+    SC8815 & setInternalVbusRef(const real_t volt);
+    SC8815 & setExternalVbusRef(const real_t volt);
+
+    SC8815 & setIBusCurrLimit(const real_t curr);
+    SC8815 & setEBusCurrLimit(const real_t curr);
+
+    SC8815 & setVinRegRefVolt(const real_t volt);
+
+    SC8815 & setIBatLimRatio();
+
+    SC8815 & enableOtg(const bool en = true);
+    SC8815 & enableTrikleCharge(const bool en = true);
+    SC8815 & enableOvpProtect(const bool en = true);
+    SC8815 & enableDither(const bool en = true);
+    SC8815 & enableAdcConv(const bool en = true);
+    SC8815 & enablePfmMode(const bool en = true);
+    SC8815 & enableSFB(const bool en = true);
+    SC8815 & enableGpo(const bool en = true);
+    SC8815 & enablePgate(const bool en = true);
+    SC8815 & setBatVolt(const BatVoltType bat_volt);
+    SC8815 & setBatCells(const BatCellsType bat_cells);
+    SC8815 & setBatCells(const uint bat_cells);
+    SC8815 & enableVbatUseExtneral(const bool use);
+    SC8815 & setBatIrComp(const BatIrCompType bat_ir_comp);
+    
+    SC8815 & setIBatRatio(const IBatRatio ratio);
+    SC8815 & setIBusRatio(const IBusRatio ratio);
+    SC8815 & setVBatMonRatio(const VBatMonRatio ratio);
+    SC8815 & setVBusRatio(const VBusRatio ratio);
+    
+    
+    SC8815 & reconfBat(const BatConfig & config);
+    SC8815 & reconfRatio(const RatioConfig & config);
+    SC8815 & reconfInterruptMask(const Interrupts mask);
 };
 
 }
