@@ -22,7 +22,7 @@ public:
     T operator &(const T data) const {return T(*this) & data;}
     T operator |(const T data) const {return T(*this) | data;}
     constexpr const T * operator &() const {return (reinterpret_cast<const T *>(this));}
-    constexpr const uint8_t & operator [](const size_t idx) const {return (*(reinterpret_cast<const uint8_t *>(this) + idx));} 
+    constexpr const uint8_t operator [](const size_t idx) const {return (*(reinterpret_cast<const uint8_t *>(this) + idx));} 
 
     constexpr operator std::span<const uint8_t>() const {return {reinterpret_cast<const uint8_t *>(this), sizeof(T)};}
     auto span() const {return std::span<const uint8_t>(*this);}
@@ -41,6 +41,7 @@ public:
     using value_type = T;
     
     using __RegC_t<T>::__RegC_t;
+    using __RegC_t<T>::operator [];
 
     __Reg_t<T> copy() const{return *this;}
     constexpr __Reg_t<T> & operator =(const T data){*reinterpret_cast<T *>(this) = data;return *this;}

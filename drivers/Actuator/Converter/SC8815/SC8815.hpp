@@ -75,15 +75,12 @@ protected:
         _80m,
     };
 
-
     struct BatConfig{
         BatVoltType vcell_set;
         BatCellsType csel;
         bool use_ext_setting;
         BatIrCompType ircomp;
     };
-
-
 
     struct Interrupts{
         uint8_t :1;
@@ -96,8 +93,6 @@ protected:
         uint8_t :1;
     };
     
-
-
 
     struct VbatSetReg:public Reg8{
         scexpr RegAddress address = 0x00;
@@ -302,7 +297,7 @@ protected:
     SC8815(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
 
     Interrupts interrupts();
-    
+
     SC8815 & init(const BatConfig & bat_conf = {
         .vcell_set = BatVoltType::_4_2V,
         .csel = BatCellsType::_1S,
