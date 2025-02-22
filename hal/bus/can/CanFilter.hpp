@@ -115,19 +115,20 @@ protected:
     using RemoteType = CanUtils::RemoteType;
 
     CAN_TypeDef * can;
-    uint8_t idx;
-    bool is32;
-    bool islist;
-
+    
     union{
         uint16_t id16[2];
         uint32_t id32;
     };
-
+    
     union{
         uint16_t mask16[2];
         uint32_t mask32;
     };
+    
+    uint8_t idx:6;
+    uint8_t is32:1;
+    uint8_t islist:1;
 
     void apply();
 

@@ -2,7 +2,7 @@
 
 #include <sys/io/regs.hpp>
 
-namespace hwspec::CH32V00x::AFIO_Regs{
+namespace hwspec::CH32L103::AFIO_Regs{
 
 struct CTLR_Reg{
     static constexpr uint32_t offset = 0;

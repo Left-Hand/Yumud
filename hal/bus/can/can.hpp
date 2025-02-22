@@ -41,12 +41,10 @@ void CAN2_SCE_IRQHandler(void);
 }
 #endif
 
-
-
 namespace ymd::hal{
 
 struct CanFilter;
-class Can: public PackedBus<CanMsg>,public traits::CanTrait{
+class Can: public PackedBus<CanMsg>{
 public:
     using BaudRate = CanUtils::BaudRate;
     using Mode = CanUtils::Mode;
@@ -85,27 +83,11 @@ protected:
     CanMsg receive(const uint8_t fifo_num);
     friend class CanFilter;
 
-    // std::array<CanFilter, 14> filters = {
-    //     CanFilter{this->instance, 0},
-    //     CanFilter{this->instance, 1},
-    //     CanFilter{this->instance, 2},
-    //     CanFilter{this->instance, 3},
-    //     CanFilter{this->instance, 4},
-    //     CanFilter{this->instance, 5},
-    //     CanFilter{this->instance, 6},
-    //     CanFilter{this->instance, 7},
-    //     CanFilter{this->instance, 8},
-    //     CanFilter{this->instance, 9},
-    //     CanFilter{this->instance, 10},
-    //     CanFilter{this->instance, 11},
-    //     CanFilter{this->instance, 12},
-    //     CanFilter{this->instance, 13},
-    // };
 public:
     Can(CAN_TypeDef * _instance):instance(_instance){;}
-
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
+
     void setBaudRate(const uint32_t baudRate) override;
 
     void init(const uint baudRate, const Mode mode = Mode::Normal);
