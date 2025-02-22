@@ -24,8 +24,8 @@ public:
 protected:
     I2cDrv i2c_drv;
     
-    real_t currentLsb = real_t(0.0002);
-    real_t voltageLsb = real_t(0.00125);
+    real_t current_lsb_ma = real_t(0.2);
+    scexpr real_t voltage_lsb_mv = real_t(1.25);
 
     enum class RegAddress:uint8_t{
         Config = 0x00,
@@ -150,9 +150,9 @@ public:
 
     void update();
 
-    void init(const real_t ohms, const real_t max_current_a);
+    void init(const real_t ohms, const uint max_current_a);
 
-    void config(const real_t ohms, const real_t max_current_a);
+    void config(const real_t ohms, const uint max_current_a);
 
     void setAverageTimes(const uint16_t times);
 
@@ -172,7 +172,7 @@ public:
 
 
     real_t getVoltage(){
-        return busVoltageReg * voltageLsb;
+        return busVoltageReg * voltage_lsb_mv / 1000;
     }
 
     int getShuntVoltageuV(){
@@ -185,11 +185,11 @@ public:
     }
 
     real_t getCurrent(){
-        return currentReg * currentLsb;
+        return currentReg * current_lsb_ma / 1000;
     }
 
     real_t getPower(){
-        return powerReg * currentLsb * 25;
+        return powerReg * current_lsb_ma / 40;
     }
 
     void setAverageTimes(const AverageTimes times){

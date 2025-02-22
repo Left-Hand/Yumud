@@ -20,7 +20,7 @@ void INA226::update(){
 }
 
 
-void INA226::init(const real_t ohms, const real_t max_current_a){
+void INA226::init(const real_t ohms, const uint max_current_a){
     configReg.rst = 0b0;
     configReg.__resv__ = 0b100;
 
@@ -36,9 +36,9 @@ void INA226::init(const real_t ohms, const real_t max_current_a){
     delay(10);
 }
 
-void INA226::config(const real_t ohms, const real_t max_current_a){
-    currentLsb = max_current_a * real_t(1/32768.0);
-    calibrationReg = (int16_t)real_t(real_t(0.00512 * 32768) / (ohms * max_current_a));
+void INA226::config(const real_t ohms, const uint max_current_a){
+    current_lsb_ma = real_t(int(max_current_a) * 1000) >> 15;
+    calibrationReg = int16_t(real_t(0.00512 * 32768) / int(ohms * max_current_a));
     writeReg(RegAddress::calibration, calibrationReg);
 }
 

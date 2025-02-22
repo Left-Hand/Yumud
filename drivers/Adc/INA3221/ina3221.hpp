@@ -1,27 +1,20 @@
 #pragma once
 
 #include "drivers/device_defs.h"
-#include "hal/bus/i2c/i2cdrv.hpp"
-
-#ifdef INA3221_DEBUG
-#define INA3221_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define INA3221_DEBUG(...)
-#endif
 
 
 namespace ymd::drivers{
 
 class INA3221{
 public:
-// Address Pins and Slave Addresses
-// A0   ADDRESS0
-// GND  10000000
-// VS   10000010
-// SDA  10000100
-// SCL  10000110
+    // Address Pins and Slave Addresses
+    // A0   ADDRESS 0
+    // GND  1000000 0
+    // VS   1000001 0
+    // SDA  1000010 0
+    // SCL  1000011 0
 
-    scexpr uint8_t default_i2c_addr = 0b1000000;
+    scexpr uint8_t default_i2c_addr = 0b10000000;
 
     enum class AverageTimes:uint8_t{
         _1 = 0,
@@ -169,34 +162,36 @@ protected:
 
     struct INA3221Channel:public AnalogInChannel{
     public:
-        enum class CHType:uint8_t{
+        enum class ChannelType:uint8_t{
             SHUNT_VOLT,
             BUS_VOLT,
         };
 
-        using CHIndex = uint8_t;
+        using ChannelIndex = uint8_t;
 
     protected:
         INA3221 & parent_;
-        CHType ch_;
-        CHIndex idx_;
+        ChannelType ch_;
+        ChannelIndex idx_;
     public:
-        INA3221Channel(INA3221 & parent, const CHType ch, const CHIndex idx):
+        INA3221Channel(INA3221 & parent, const ChannelType ch, const ChannelIndex idx):
                 parent_(parent), ch_(ch), idx_(idx){}
 
         INA3221Channel(const INA3221Channel & other) = delete;
         INA3221Channel(INA3221Channel && other) = delete;
         operator real_t() override{
             switch(ch_){
-                case CHType::SHUNT_VOLT:
-                    return parent_.getShuntVoltage(idx_);
-                case CHType::BUS_VOLT:
-                    return parent_.getBusVoltage(idx_);
+                case ChannelType::SHUNT_VOLT:
+                    return parent_.getShuntVolt(idx_);
+                case ChannelType::BUS_VOLT:
+                    return parent_.getBusVolt(idx_);
                 default:
                     return 0;
             }
         }
     };
+    
+    I2cDrv i2c_drv;
 
     ConfigReg       config_reg;
     ShuntVoltReg    shuntvolt1_reg;
@@ -221,44 +216,43 @@ protected:
     ManuIdReg       manu_id_reg;
     ChipIdReg       chip_id_reg;
 
-    I2cDrv i2c_drv;
+
     std::array<INA3221Channel, 6> channels = {
-        INA3221Channel{*this, INA3221Channel::CHType::BUS_VOLT, 0},
-        INA3221Channel{*this, INA3221Channel::CHType::SHUNT_VOLT, 0},
-        INA3221Channel{*this, INA3221Channel::CHType::BUS_VOLT, 1},
-        INA3221Channel{*this, INA3221Channel::CHType::SHUNT_VOLT, 1},
-        INA3221Channel{*this, INA3221Channel::CHType::BUS_VOLT, 2},
-        INA3221Channel{*this, INA3221Channel::CHType::SHUNT_VOLT, 2},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BUS_VOLT, 0},
+        INA3221Channel{*this, INA3221Channel::ChannelType::SHUNT_VOLT, 0},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BUS_VOLT, 1},
+        INA3221Channel{*this, INA3221Channel::ChannelType::SHUNT_VOLT, 1},
+        INA3221Channel{*this, INA3221Channel::ChannelType::BUS_VOLT, 2},
+        INA3221Channel{*this, INA3221Channel::ChannelType::SHUNT_VOLT, 2},
     };
 public:
     INA3221(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    INA3221(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
+    INA3221(I2cDrv && _i2c_drv):i2c_drv(std::move(_i2c_drv)){;}
     INA3221(I2c & _i2c, const uint8_t addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, addr)){;}
     ~INA3221(){;}
     
-    void init();
-    void update();
-    void update(const size_t index);
-    bool verify();
     bool ready();
-    void reset();
-    void setAverageTimes(const uint16_t times);
+
+    INA3221 & init();
+    INA3221 & update();
+    INA3221 & update(const size_t index);
+    bool verify();
+    INA3221 & reset();
+    INA3221 & setAverageTimes(const uint16_t times);
     
-    void enableChannel(const size_t index, const bool en = true);
+    INA3221 & enableChannel(const size_t index, const bool en = true);
 
-    void setBusConversionTime(const ConversionTime time);
+    INA3221 & setBusConversionTime(const ConversionTime time);
+    INA3221 & setShuntConversionTime(const ConversionTime time);
 
-    void setShuntConversionTime(const ConversionTime time);
+    int getShuntVoltuV(const size_t index);
+    int getBusVoltmV(const size_t index);
 
-    int getShuntVoltageuV(const size_t index);
+    real_t getShuntVolt(const size_t index);
+    real_t getBusVolt(const size_t index);
 
-    int getBusVoltagemV(const size_t index);
-
-    real_t getShuntVoltage(const size_t index);
-    real_t getBusVoltage(const size_t index);
-
-    void setInstantOVC(const size_t index, const real_t volt);
-    void setConstantOVC(const size_t index, const real_t volt);
+    INA3221 & setInstantOVC(const size_t index, const real_t volt);
+    INA3221 & setConstantOVC(const size_t index, const real_t volt);
 };
 
 }
