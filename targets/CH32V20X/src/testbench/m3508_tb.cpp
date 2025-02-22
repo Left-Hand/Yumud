@@ -37,7 +37,7 @@ void m3508_main(){
         // port.setTargetCurrent();
         // real_t targ_curr = real_t(1.5) * sin(real_t(TAU/4) * t);
         // real_t target = 3 * sin(t);
-        real_t target = 3 * t;
+        real_t target = 3 * time();
         // real_t targ_curr = 4 * sin( t*real_t(1.7));
         // real_t targ_curr = 0;
         // motor.setTargetCurrent(targ_curr);

@@ -87,13 +87,9 @@ public:
         odo.init();
 
         // panel_led.init();
-        red_pwm.init();
-        green_pwm.init();
-        blue_pwm.init();
-
-        red_pwm.setPeriod(25);
-        green_pwm.setPeriod(25);
-        blue_pwm.setPeriod(25);
+        red_pwm.init(25);
+        green_pwm.init(25);
+        blue_pwm.init(25);
     }
 
     void setTargetCurrent(const real_t curr){

@@ -13,29 +13,38 @@ namespace ymd{
 class String;
 class StringStream;
 
-template<typename T>
-concept HasToString = requires(T t, unsigned char eps) {
-    { t.toString(eps) } -> ::std::convertible_to<String>;
-};
 
 class OutputStream: virtual public BasicStream{
-protected:
-    #pragma pack(push, 1)
-    uint8_t radix_ = 10;
-    uint8_t eps_ = 3;
+private:
 
-    bool skip_split:1 = false;
-    bool b_boolalpha:1 = false;
-    bool b_showpos:1 = false;
-    bool b_showbase:1 = false;
-    #pragma pack(pop)
+    bool skip_split = false;
 
-    String splitter = ", ";
+    struct Config{
+        char splitter[4] = ", ";
+
+        uint8_t radix = 10;
+        uint8_t eps = 3;
+
+        union{
+            uint8_t flags;
+            struct{
+                bool boolalpha:1 = false;
+                bool showpos:1 = false;
+                bool showbase:1 = false;
+                bool nobrackets:1 = false;
+                bool nospace:1 = false;
+            };
+        };
+    };
+
+    Config config_;
+
     
     void print_entity(auto && any){
-        if(skip_split == false){
-            *this << splitter;
+        if(likely(skip_split == false) and likely(config_.splitter[0])){
+            write(config_.splitter, strlen(config_.splitter));
         }
+
         skip_split = false;
         *this << any;
     }
@@ -53,38 +62,57 @@ protected:
                 return "0x";
         }
     }
+
+    int transform(const char chr) const;
+    void checked_write(const char data);
+    void checked_write(const char * pdata, const size_t len);
 public:
     OutputStream() = default;
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
 
     virtual void write(const char data) = 0;
-    virtual void write(const char * data_ptr, const size_t len){
-        
-        // for(size_t i = 0; i<len; i++){
-        //     auto chr = data_ptr[i];
-        //     if(chr == 0) break;
-        //     write(chr);
-        // }
-        for(size_t i = 0; i<len; i++) write(data_ptr[i]);
+    virtual void write(const char * pdata, const size_t len){
+        for(size_t i = 0; i<len; i++) write(pdata[i]);
 	}
 
     virtual size_t pending() const = 0;
 
-    void setSplitter(const StringView _sp){splitter = _sp;}
-    void setRadix(const uint8_t _radix){radix_ = _radix;}
-    void setEps(const uint8_t _eps){eps_ = _eps;}
+    OutputStream & setSplitter(const char * splitter){
+        strcpy(config_.splitter, splitter);
+        return *this;
+    }
+
+    OutputStream & setRadix(const uint8_t radix){
+        config_.radix = radix;
+        return *this;
+    }
+
+    OutputStream & setEps(const uint8_t eps){
+        config_.eps = eps;
+        return *this;
+    }
+
+    OutputStream & noBrackets(const bool disen = true){
+        config_.nobrackets = disen;
+        return *this;
+    }
+
+    OutputStream & noSpace(const bool disen = true){
+        config_.nospace = disen;
+        return *this;
+    }
 
 
     OutputStream & operator<<(const bool val);
-    __inline OutputStream & operator<<(const char chr){write(chr); return *this;}
-    __inline OutputStream & operator<<(const wchar_t chr){write(chr); return *this;}
-    __inline OutputStream & operator<<(char * str){if(str) write(str, strlen(str)); return *this;}
-    __inline OutputStream & operator<<(const char* str){if(str) write(str, strlen(str)); return *this;}
-    __inline OutputStream & operator<<(const std::string & str){write(str.c_str(),str.length()); return *this;}
-    __inline OutputStream & operator<<(const std::string_view str){write(str.data(),str.length()); return *this;}
-    __inline OutputStream & operator<<(const String & str){write(str.c_str(), str.length()); return * this;}
-    __inline OutputStream & operator<<(const StringView str){write(str.data(), str.length()); return * this;}
+    __inline OutputStream & operator<<(const char chr){checked_write(chr); return *this;}
+    __inline OutputStream & operator<<(const wchar_t chr){checked_write(chr); return *this;}
+    __inline OutputStream & operator<<(char * str){if(str) checked_write(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const char* str){if(str) checked_write(str, strlen(str)); return *this;}
+    __inline OutputStream & operator<<(const std::string & str){checked_write(str.c_str(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const std::string_view str){checked_write(str.data(),str.length()); return *this;}
+    __inline OutputStream & operator<<(const String & str){checked_write(str.c_str(), str.length()); return * this;}
+    __inline OutputStream & operator<<(const StringView str){checked_write(str.data(), str.length()); return * this;}
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const iq_t val);
@@ -98,7 +126,7 @@ public:
     }
 
     OutputStream& operator<<(::std::ios_base& (*func)(::std::ios_base&));
-    OutputStream& operator<<(const ::std::_Setprecision & n){eps_ = n._M_n; skip_split = true; return *this;}
+    OutputStream& operator<<(const ::std::_Setprecision & n){config_.eps = n._M_n; skip_split = true; return *this;}
     OutputStream& operator<<(const ::std::nullopt_t n){return *this << '/';}
     
     template<typename T>
@@ -193,7 +221,7 @@ public:
     }
 
     template<HasToString T>
-    OutputStream & operator<<(const T & misc){*this << misc.toString(eps_); return *this;}
+    OutputStream & operator<<(const T & misc){*this << misc.toString(config_.eps); return *this;}
 
     template <typename ... Args>
     void println(Args&&... args){
@@ -213,9 +241,31 @@ public:
     }
 
 
-    auto eps() const {return eps_;}
-    auto radix() const {return radix_;}
-    void flush(){while(pending()){__nopn(1);};}
+    auto eps() const {return config_.eps;}
+    auto radix() const {return config_.radix;}
+    OutputStream & flush();
+
+    OutputStream & reconf(const Config config){
+        config_ = config;
+        return *this;
+    }
+
+    Config config() const {return config_;}
+
+    class __Guard{
+        OutputStream & os_;
+        const Config config_;
+    public:
+        __Guard(OutputStream & os) : os_(os), config_(os.config()){}
+
+        ~__Guard(){
+            os_.reconf(config_);
+        }
+    };
+
+    __Guard guard(){
+        return __Guard(*this);
+    }
 };
 
 };

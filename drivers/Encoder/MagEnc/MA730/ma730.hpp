@@ -78,20 +78,11 @@ protected:
     DirectionReg directionReg;
     MagnitudeReg magnitudeReg;
 
-    void writeReg(const RegAddress reg_addr, uint8_t data){
-        spi_drv_.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
-    }
+    BusError writeReg(const RegAddress reg_addr, uint8_t data);
 
-    void readReg(const RegAddress reg_addr, uint8_t & reg){
-        uint16_t dummy;
-        spi_drv_.writeSingle((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
-        spi_drv_.readSingle(dummy);
-        reg = dummy >> 8;
-    }
+    BusError readReg(const RegAddress reg_addr, uint8_t & reg);
 
-    void directRead(uint16_t & data){
-        spi_drv_.readSingle(data);
-    }
+    BusError directRead(uint16_t & data);
 
     uint16_t getRawData();
 

@@ -14,8 +14,8 @@ StringView::operator iq_t() const {
 }
 
 
-Strings StringView::split(const char delimiter, const size_t times) const{
-    Strings strs;
+std::vector<StringView> StringView::split(const char delimiter, const size_t max_pieces) const{
+    std::vector<StringView> strs;
     
     size_t from = 0;
     for(size_t i = 0; i < this->length(); i++){
@@ -27,7 +27,7 @@ Strings StringView::split(const char delimiter, const size_t times) const{
             strs.push_back(this->substring(from, i+1));
         }
 
-        if((times != 0) and (strs.size() == times)) break;
+        if((max_pieces != 0) and (strs.size() == max_pieces)) break;
     }
 
     return strs;

@@ -37,7 +37,6 @@ using namespace ymd::foc;
 using namespace ymd::digipw;
 using namespace ymd::intp;
 
-using Sys::t;
 
 // __attribute__((no_return))
 void jump_to(const uint32_t addr){
@@ -435,7 +434,7 @@ private:
 
 void bldc_main(){
     uart2.init(576000);
-    DEBUGGER.change(uart2);
+    DEBUGGER.retarget(uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
     delay(200);
@@ -683,7 +682,7 @@ void bldc_main(){
         // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(cmd_spd, meas_spd) + 0.06_r * sin(80 * t), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(cmd_spd, meas_spd), dq_curr.q);
         // const auto q_curr_cmd = CLAMP(1.258_r * sign_sqrt(targ_pos - meas_pos) + 0.14_r*(targ_spd - meas_spd), -0.7_r, 0.7_r);
-        const auto q_curr_cmd =  0.2_r * sin(t);
+        const auto q_curr_cmd =  0.2_r * sin(time());
         const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
 
         // struct ShakeParam{
@@ -800,7 +799,7 @@ void bldc_main(){
     [[maybe_unused]] auto cb_sensorless = [&]{
 
         // targ_pos = real_t(6.0) * sin(2 * t);
-        targ_pos = real_t(1.0) * t;
+        targ_pos = real_t(1.0) * time();
 
         const auto ab_curr = current_sensor.ab();
         // const auto dq_curr = current_sensor.dq();
@@ -853,7 +852,7 @@ void bldc_main(){
         real_t hfi_out = hfi_base_volt * hfi_c;
 
         real_t openloop_base_volt = 6.0_r;
-        real_t openloop_rad = -frac(13.1_r * t)*real_t(TAU);
+        real_t openloop_rad = -frac(13.1_r * time())*real_t(TAU);
         real_t openloop_c = cos(openloop_rad);
         real_t openloop_s = sin(openloop_rad);
         // real_t s = sin(hfi_rad);
@@ -944,7 +943,7 @@ void bldc_main(){
         const auto u = real_t(2.2);
         // const auto u = real_t(2.8) + sin(t);
         // auto theta = w * t + real_t(12) * sin(2 * real_t(TAU) * t);
-        auto theta = w * t;
+        auto theta = w * time();
         // const auto theta = 0;
         ab_volt = {u * cos(theta), u * sin(theta)};
         // ab_volt = {u, u};
@@ -973,8 +972,8 @@ void bldc_main(){
 
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
-    adc1.bindCb(AdcUtils::IT::JEOC, cb_sensorless);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sensorless);
+    adc1.bindCb(AdcUtils::IT::JEOC, cb);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_measure);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_openloop);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
@@ -1078,12 +1077,20 @@ void bldc_main(){
 
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(rad, sin(rad), cos(rad), atan2(sin(rad), cos(rad)));
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dt > 100 ? 1000 + dt : dt);
-        Sys::Clock::reCalculateTime();
+        // Sys::Clock::reCalculateTime();
 
         // CanMsg msg = {0x11, uint8_t(0x57)};
         // if(can1.pending() == 0) can1.write(msg);
         // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
-        if(DEBUGGER.pending() == 0)DEBUG_PRINTLN(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
+        delay(2);
+        DEBUGGER.noBrackets(true);
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        delay(2);
+        if(auto guard = DEBUGGER.guard(); true){
+            DEBUGGER.noBrackets(false);
+            if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        }
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data_cache[0], adc_data_cache[1], adc_data_cache[2], (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
         // (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3); 

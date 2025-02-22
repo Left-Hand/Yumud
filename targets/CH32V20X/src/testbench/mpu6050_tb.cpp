@@ -6,7 +6,6 @@
 
 using namespace ymd::drivers;
 
-using Sys::t;
 
 void mpu6050_tb(OutputStream & logger, I2c & i2c){
     MPU6050 mpu{i2c};

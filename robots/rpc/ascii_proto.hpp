@@ -96,7 +96,7 @@ protected:
 
     InputStream & is;
     OutputStream & os;
-    virtual void parseArgs(const Strings & args);
+    virtual void parseArgs(const StringViews args);
 public:
     AsciiProtocolConcept(IOStream & _logger):is(_logger), os(_logger){}
     AsciiProtocolConcept(InputStream & _is, OutputStream & _os):is(_is), os(_os){}

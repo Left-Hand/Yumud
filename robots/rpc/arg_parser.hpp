@@ -10,7 +10,7 @@ private:
     String temp = "";
 public:
     ArgSplitter(){;}
-    std::optional<Strings> update(InputStream & _input);
+    std::optional<const StringViews> update(InputStream & _input);
     void clear(){temp = "";}
 };
 

@@ -4,18 +4,18 @@
 
 namespace ymd::drivers{
 
-
+template<size_t Sectors>
 class HallEncoderIntf:public EncoderIntf{
 public:
     virtual int getSector() = 0;
-    virtual int getSectorCount() = 0;
 
     void getLapPosition() final override{
-        return real_t(getSector()) / getSectorCount();
+        return real_t(getSector()) / Sectors;
     }
 };
 
-class SimulatedHall:public HallEncoderIntf{
+template<size_t Sectors>
+class SimulatedHall:public HallEncoderIntf<Sectors>{
 protected:
     EncoderIntf & enc_;
     int sector_ = 0;

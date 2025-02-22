@@ -26,7 +26,7 @@ iq_t add2(const iq_t x, const iq_t y){
 
 void rpc_main(){
     uart2.init(576000);
-    DEBUGGER.change(uart2);
+    DEBUGGER.retarget(uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 
@@ -91,7 +91,7 @@ void rpc_main(){
                 DEBUG_PRINTLN("------");
                 DEBUG_PRINTS("Inputs:", strs);
 
-                b = sin(t);
+                b = sin(time());
 
                 {
                     std::vector<rpc::CallParam> params;

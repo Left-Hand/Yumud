@@ -26,6 +26,7 @@
 // extern volatile uint32_t msTick;
 
 volatile uint32_t msTick = 0;
+volatile uint64_t micros_base = 0;
 
 
 uint32_t millis(void){
@@ -46,24 +47,24 @@ uint64_t micros(void){
     // }
 
     M_SYSTICK_DISER;
-    uint32_t m = msTick;
-    uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
+    // const uint32_t m = msTick;
+    const uint32_t base = micros_base;
+    const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
     M_SYSTICK_ENER;
 
-    return (m * 1000 + ticks / TICKS_PER_US);
+    return (base + ticks / TICKS_PER_US);
 }
 
 uint64_t nanos(void){
     M_SYSTICK_DISER;
-    uint32_t m = msTick;
-    uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
+    const uint32_t base = micros_base;
+    const uint32_t ticks = (uint32_t)M_SYSTICK_CNT;
     M_SYSTICK_ENER;
 
-    return (m * 1000000 + NANO_MUT(ticks));
+    return (base + NANO_MUT(ticks));
 }
 
-void delay(const uint32_t ms)
-{
+void delay(const uint32_t ms){
   delayMicroseconds(ms * 1000);
 }
 
@@ -114,9 +115,6 @@ void delayNanoseconds(uint32_t ns) {
 }
 
 void Systick_Init(){
-    static uint8_t initd = 0;
-    if(initd) return;
-    initd = 1;
     SysTick->SR  = 0;
     SysTick->CTLR= 0;
     SysTick->CNT = 0;
@@ -137,17 +135,46 @@ void bindSystickCb(std::function<void(void)> && _cb){
 
 
 void SysTick_Handler(void){
-    msTick+=1;
+    msTick += 1;
+    micros_base += 1000;
+
     SysTick->SR = 0;
-    Sys::Clock::reCalculateTime();
-    // DEBUG_PRINTLN(Sys::t);
     EXECUTE(cb);
 }
 
+static consteval double sepow(const double base, const size_t times){
+    double ret = 1;
+    for(size_t i = 0; i < times; i++){
+        ret *= base;
+    }
+    return ret;
+}
+
 real_t time(){
-    return iq_t(_iq(
-        (micros() * (1 << GLOBAL_Q)) / 1000000
-    ));
+    if constexpr(std::is_same_v<real_t, iq_t>){
+        union Depart{
+            uint64_t res64;
+            struct{
+                uint64_t l15:15;
+                uint64_t m15:15;
+                uint64_t h31:31;
+                uint64_t unused:3;//精度足以万年 可以舍弃3位
+            };
+        };
+
+        const Depart microsec = Depart{.res64 = micros()};
+
+        return 
+            + iq_t{_iq((int(microsec.l15) << GLOBAL_Q) / 1000000)} 
+            + iq_t{int(microsec.m15)} * iq_t(sepow(2, 15) / sepow(10, 6))
+            + iq_t{int(microsec.h31)} * iq_t(sepow(2, 30) / sepow(10, 6))
+            ;
+    }else{
+
+        HALT;
+        return 0;
+    }
+
 }
 
 #undef TICKS_PER_MS

@@ -6,25 +6,23 @@
 namespace ymd::drivers{
 
 
-/* 注册到组件对象结构体 */
 class YT8512C{
 protected:
     uint32_t            devaddr;                        /* PHY地址 */
-    uint32_t            is_initialized;                 /* 描述该设备是否初始化 */
+    // uint32_t            is_initialized;                 /* 描述该设备是否初始化 */
 
     int32_t readreg(uint32_t, uint32_t, uint32_t *){
-        //TODO
+        TODO();
         return 0;
     }
     int32_t writereg(uint32_t, uint32_t, uint32_t){
-        //TODO
+        TODO();
         return 0;
     }
 
 public:
-    YT8512C();
+    YT8512C(){;}
 
-    // int32_t regster_bus_io(yt8512c_ioc_tx_t *ioctx);             /* 将IO函数注册到组件对象 */
     int32_t init();                                                 /* 初始化YT8512C并配置所需的硬件资源 */
     int32_t deinit();                                               /* 反初始化YT8512C及其硬件资源 */
     int32_t disable_power_down_mode();                              /* 关闭YT8512C的下电模式 */

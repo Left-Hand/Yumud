@@ -9,7 +9,7 @@ using namespace ymd::canopen;
 
 void canopen_main(){
     uart2.init(576000);
-    DEBUGGER.change(uart2);
+    DEBUGGER.retarget(uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 

@@ -80,7 +80,6 @@ public:
 };
 
 
-using Sys::t;
 
 
 void gui_main(){
@@ -94,7 +93,7 @@ void gui_main(){
     // }
 
     uart2.init(576000);
-    DEBUGGER.change(uart2);
+    DEBUGGER.retarget(uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 
@@ -207,7 +206,7 @@ void gui_main(){
 
     while(true){
         renderer.bind(img);
-        renderer.setColor(HSV888{0, int(100 + 100 * sin(t)), 255});
+        renderer.setColor(HSV888{0, int(100 + 100 * sin(time())), 255});
         renderer.drawPixel(Vector2i(0, 0));
         renderer.drawRect(Rect2i(20, 0, 20, 40));
 

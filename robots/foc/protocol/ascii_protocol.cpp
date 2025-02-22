@@ -5,7 +5,7 @@ using namespace ymd;
 using namespace ymd::foc;
 using namespace ymd::drivers;
 
-void FOCMotor::AsciiProtocol::parseArgs(const Strings & args){
+void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
 
     auto targ_pos_setter = [&](const real_t arg, const real_t offset){
         if(args.size() > 1){

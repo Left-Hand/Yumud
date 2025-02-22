@@ -3,20 +3,12 @@
 
 namespace ymd{
 
-void Debugger::init(const uint baud){
-    _os->init(baud);
-}
-
-void Debugger::init(){
-    _os->init(DEBUG_UART_BAUD);
-}
-
-Debugger & Debugger::singleton(){
-    static Debugger dbg(DEBUGGER_INST);
+__Debugger & __Debugger::singleton(){
+    static __Debugger dbg(DEBUGGER_INST);
     return dbg;
 }
 
-Debugger & DEBUGGER = Debugger::singleton();
+__Debugger & DEBUGGER = __Debugger::singleton();
 OutputStream & LOGGER = LOGGER_INST;
 
 }

@@ -2,7 +2,6 @@
 #include "sys/clock/clock.hpp"
 #include "sys/core/system.hpp"
 
-using Sys::t;
 
 namespace gxm{
 
@@ -68,7 +67,7 @@ void draw_turtle(PainterConcept & painter, const Ray & ray){
     auto p2 = org + Vector2::from_angle(len, rad + real_t(- PI * 0.8));
 
     // painter.setColor(ColorEnum::RED);
-    painter.setColor(RGB888(HSV888(int(t * 64),255,255)));
+    painter.setColor(RGB888(HSV888(int(time() * 64),255,255)));
     painter.drawFilledTriangle(pf, p1, p2);
     // painter.drawPixel(org);
 
@@ -78,7 +77,7 @@ void draw_turtle(PainterConcept & painter, const Ray & ray){
 
 void test_servo(RadianServo & servo, std::function<real_t(real_t)> && func){
     while(true){
-        auto targ = func(t);
+        auto targ = func(time());
         servo.setRadian(targ);
         // DEBUG_PRINTLN(joint.getRadian(), targ);
         delay(20);
@@ -87,7 +86,7 @@ void test_servo(RadianServo & servo, std::function<real_t(real_t)> && func){
 
 void test_joint(JointLR & joint, std::function<real_t(real_t)> && func){
     while(true){
-        auto targ = func(t);
+        auto targ = func(time());
         joint.setRadian(targ);
         // DEBUG_PRINTLN(joint.getRadian(), targ);
         delay(20);

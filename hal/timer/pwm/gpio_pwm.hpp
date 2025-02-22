@@ -13,15 +13,13 @@ protected:
     volatile uint16_t arr_ = 1;
 public:
 
-    GpioPwm(Gpio & _gpio):gpio_(_gpio){;}
+    GpioPwm(Gpio & gpio):gpio_(gpio){;}
 
-    void init(){
-        gpio_.outpp(LOW);
-        cnt_ = 0;
-    }
 
     void init(const uint16_t _arr){
-        init();
+        gpio_.outpp(LOW);
+        
+        cnt_ = 0;
         arr_ = _arr;
     }
 

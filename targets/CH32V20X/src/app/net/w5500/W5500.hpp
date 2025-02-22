@@ -21,30 +21,6 @@
  #define MAX_SOCK_NUM 8
  
  typedef uint8_t SOCKET;
- /*
- class MR {
- public:
-   static const uint8_t RST   = 0x80;
-   static const uint8_t PB    = 0x10;
-   static const uint8_t PPPOE = 0x08;
-   static const uint8_t LB    = 0x04;
-   static const uint8_t AI    = 0x02;
-   static const uint8_t IND   = 0x01;
- };
- */
- /*
- class IR {
- public:
-   static const uint8_t CONFLICT = 0x80;
-   static const uint8_t UNREACH  = 0x40;
-   static const uint8_t PPPoE    = 0x20;
-   static const uint8_t SOCK0    = 0x01;
-   static const uint8_t SOCK1    = 0x02;
-   static const uint8_t SOCK2    = 0x04;
-   static const uint8_t SOCK3    = 0x08;
-   static inline uint8_t SOCK(SOCKET ch) { return (0x01 << ch); };
- };
- */
  
  class SnMR {
  public:

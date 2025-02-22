@@ -4,7 +4,7 @@
 
 using namespace ymd;
 
-void AsciiProtocolConcept::parseArgs(const Strings & args){
+void AsciiProtocolConcept::parseArgs(const StringViews args){
     switch(args[0].hash()){
         case "reset"_ha:
         case "rst"_ha:

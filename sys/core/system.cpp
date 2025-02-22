@@ -106,15 +106,6 @@ void Sys::Misc::reset(){
     NVIC_SystemReset();
 }
 
-
-void Sys::Clock::reCalculateTime(){
-    #ifdef USE_IQ
-    t = time();
-    #else
-    t = msTick * (1 / 1000.0f);
-    #endif
-}
-
 uint64_t Sys::Chip::getChipId(){
     static uint32_t chip_id[2] = {
         *(volatile uint32_t *)0x1FFFF7E8,

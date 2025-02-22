@@ -16,7 +16,6 @@
 
 using namespace nvcv2;
 using namespace gxm;
-using Sys::t;
 
 class VisionModule:public AsciiProtocolConcept{
 protected:
@@ -35,7 +34,7 @@ public:
     VisionModule(UartHw & uart):
         AsciiProtocolConcept(uart){;}
 
-    void parseArgs(const Strings & args) override{
+    void parseArgs(const StringViews args) override{
         // DEBUG_PRINTLN(args);
         switch(args[0].hash()){
             case "color"_ha:
@@ -317,9 +316,10 @@ void host_main(){
             // });
 
             test_joint(joint_right, [](const real_t time)->real_t{
-                // return real_t(PI);
+                return real_t(PI);
                 // return real_t(PI*0.75) + sin(t) * real_t(PI/4);
-                return real_t(PI*0.25) + sin(t) * real_t(PI*0.25);
+                // return real_t(PI*0.25) + real_t(PI*0.25) * sin(time());
+
                 // return LERP(0, real_t(PI/2), (sin(t) + 1) >> 1);
             });
 
@@ -368,7 +368,7 @@ void host_main(){
                 joint_left.setRadian(rad_left);
                 joint_right.setRadian(rad_right);
 
-                auto height = LERP(0.14_r, 0.14_r, (sin(t) + 1) >> 1);
+                auto height = LERP(0.14_r, 0.14_r, (sin(time()) + 1) >> 1);
                 auto inv_radz = cross_solver.inverse(height);
 
                 // DEBUG_PRINTLN(joint_left.getRadian(), joint_right.getRadian(), joint_z.getRadian());
@@ -382,8 +382,8 @@ void host_main(){
         //#region 测试机械臂位置反馈
         if(false){
             while(true){
-                auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(t);
-                auto height = LERP(0.12_r, 0.17_r, (sin(t) + 1) >> 1);
+                auto pos = Vector2(0, 0.19_r) + Vector2(0.10_r, 0).rotated(time());
+                auto height = LERP(0.12_r, 0.17_r, (sin(time()) + 1) >> 1);
 
                 grab_module.rapid(Vector3(pos.x, pos.y, height));
 
@@ -645,7 +645,7 @@ void host_main(){
                 const auto rot_raw = -atan2(mag3_raw.y, mag3_raw.x);
                 const auto gyr_raw = gyr3_raw.z;
 
-                const auto rot = rot_obs.update(rot_raw, gyr_raw, t);
+                const auto rot = rot_obs.update(rot_raw, gyr_raw, time());
 
                 flow_sensor_.update(rot);
 
@@ -672,7 +672,7 @@ void host_main(){
             stp.reset();
             delay(1000);
             while(true){
-                auto targ = sin(t);
+                auto targ = sin(time());
                 stp.setTargetPosition(targ);
                 delay(5);
                 DEBUG_PRINTLN(targ);
@@ -680,7 +680,7 @@ void host_main(){
 
             if(true){//测试单个轮子
                 Wheel wheel = {wheel_config, stp};
-                wheel.setPosition(0.2_r * sin(t));
+                wheel.setPosition(0.2_r * sin(time()));
                 delay(5);
             }
         };
@@ -1352,7 +1352,7 @@ void host_main(){
             // wheels.setCurrent({0, 0, 0, 1});
             // DEBUG_PRINTLN(chassis.gyr(), chassis.rad());
             delay(10);
-            chassis.setCurrent({0,0,0.1_r * sin(t)});
+            chassis.setCurrent({0,0,0.1_r * sin(time())});
             // vuart.println("color");
             // vision.offset();
             // delay(2000);
@@ -1453,7 +1453,7 @@ void host_main(){
         while(true){
             // auto targ = 0.4_r * sin(10 * t);
             // auto targ = 10.4_r * sin(4 * t);
-            auto targ = 4.4_r * t;
+            auto targ = 4.4_r * time();
             // stp.setTargetCurrent(targ);
             stp.setTargetPosition(targ);
             // stp.setTargetSpeed(targ);

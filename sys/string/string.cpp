@@ -682,7 +682,7 @@ String & String::toUpperCase(void)
 	return *this;
 }
 
-Strings String::split(const char delimiter, const size_t times) const{
+std::vector<StringView> String::split(const char delimiter, const size_t times) const{
 	return StringView(*this).split(delimiter, times);
 }
 	
