@@ -3,14 +3,6 @@
 #include "drivers/device_defs.h"
 #include "drivers/IMU/IMU.hpp"
 
-// #define IST8310_DEBUG
-
-#ifdef IST8310_DEBUG
-#undef IST8310_DEBUG
-#define IST8310_DEBUG(...) DEBUG_PRINTLN(SpecToken::Space, std::hex, ##__VA_ARGS__, "\t|", __PRETTY_FUNCTION__);
-#else
-#define IST8310_DEBUG(...)
-#endif
 
 namespace ymd::drivers{
 
@@ -28,7 +20,7 @@ public:
     };
     
     IST8310(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    IST8310(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    IST8310(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
     IST8310(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
 
     void init();
@@ -116,7 +108,7 @@ protected:
         uint8_t :4;
     };
 
-    struct SelfTestReg:public Reg8{;
+    struct SelfTestReg:public Reg8{
         scexpr RegAddress address = 0x0C;
 
         uint8_t :6;

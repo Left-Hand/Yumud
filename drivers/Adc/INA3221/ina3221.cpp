@@ -19,14 +19,16 @@ readReg(reg.address, reg);\
 #define WRITE_REG(reg)\
 writeReg(reg.address, reg);\
 
-#define FAULT_IF(x)\
-do{\
-    if(x) PANIC()\
-}while(false);\
 
+INA3221 & INA3221::init(){
+    if(verify()){
+        INA3221_DEBUG("INA3221 init success");
+    }
+    return *this;
+}
 
-void INA3221::init(){
-
+bool INA3221::ready(){
+    return true;
 }
 
 
@@ -37,29 +39,35 @@ bool INA3221::verify(){
     return (chip_id_reg.address == (chip_id_reg)) and (manu_id_reg.address == (manu_id_reg));
 }
 
-void INA3221::update(){
+INA3221 & INA3221::update(){
     requestPool(shuntvolt1_reg.address1, &shuntvolt1_reg, 6);
+
+    return *this;
 }
  
-void INA3221::update(const size_t index){
+INA3221 & INA3221::update(const size_t index){
     requestPool(shuntvolt1_reg.address1 + ((index - 1) * 2), &shuntvolt1_reg + ((index - 1) * 2), 2);
+
+    return *this;
 } 
 
-void INA3221::setAverageTimes(const uint16_t times){
+INA3221 & INA3221::setAverageTimes(const uint16_t times){
     uint8_t temp = CTZ(times);
     uint8_t temp2;
 
     if(times <= 64){
-        temp2 = temp / 2;
+        temp2 = temp >> 1;
     }else{
         temp2 = 4 + (temp - 7); 
     }
 
     config_reg.average_times = temp2;
     WRITE_REG(config_reg);
+
+    return *this;
 }
 
-void INA3221::enableChannel(const size_t index, const bool en){
+INA3221 & INA3221::enableChannel(const size_t index, const bool en){
     switch(index){
         default: PANIC()
         case 1:
@@ -73,29 +81,37 @@ void INA3221::enableChannel(const size_t index, const bool en){
             break;
     }
     WRITE_REG(config_reg);
+
+    return *this;
 }
 
 
-void INA3221::setBusConversionTime(const ConversionTime time){
+INA3221 & INA3221::setBusConversionTime(const ConversionTime time){
     config_reg.bus_conv_time = uint8_t(time);
     WRITE_REG(config_reg);
+
+    return *this;
 }
 
 
-void INA3221::setShuntConversionTime(const ConversionTime time){
+INA3221 & INA3221::setShuntConversionTime(const ConversionTime time){
     config_reg.shunt_conv_time = uint8_t(time);
     WRITE_REG(config_reg);
+
+    return *this;
 }
 
 
-void INA3221::reset(){
+INA3221 & INA3221::reset(){
     config_reg.rst = true;
     WRITE_REG(config_reg);
     config_reg.rst = false;
+
+    return *this;
 }
 
 
-int INA3221::getShuntVoltageuV(const size_t index){
+int INA3221::getShuntVoltuV(const size_t index){
 
     RegAddress addr;
     ShuntVoltReg & reg = [&]() -> ShuntVoltReg &{
@@ -120,7 +136,7 @@ int INA3221::getShuntVoltageuV(const size_t index){
 
 
 
-int INA3221::getBusVoltagemV(const size_t index){
+int INA3221::getBusVoltmV(const size_t index){
     RegAddress addr;
     BusVoltReg & reg = [&]() -> BusVoltReg &{
         switch(index){
@@ -143,16 +159,16 @@ int INA3221::getBusVoltagemV(const size_t index){
 }
 
 
-real_t INA3221::getShuntVoltage(const size_t index){
-    return real_t(getShuntVoltageuV(index) / 100) / 10000;
+real_t INA3221::getShuntVolt(const size_t index){
+    return real_t(getShuntVoltuV(index) / 100) / 10000;
 }
 
-real_t INA3221::getBusVoltage(const size_t index){
-    return real_t(getBusVoltagemV(index)) / 1000;
+real_t INA3221::getBusVolt(const size_t index){
+    return real_t(getBusVoltmV(index)) / 1000;
 }
 
 
-void INA3221::setInstantOVC(const size_t index, const real_t volt){
+INA3221 & INA3221::setInstantOVC(const size_t index, const real_t volt){
     RegAddress addr;
     switch(index){
         default: PANIC()
@@ -168,10 +184,12 @@ void INA3221::setInstantOVC(const size_t index, const real_t volt){
     }
 
     writeReg(addr, ShuntVoltReg::to_i16(volt));
+
+    return *this;
 }
 
 
-void INA3221::setConstantOVC(const size_t index, const real_t volt){
+INA3221 & INA3221::setConstantOVC(const size_t index, const real_t volt){
     RegAddress addr;
     switch(index){
         default: PANIC()
@@ -187,6 +205,8 @@ void INA3221::setConstantOVC(const size_t index, const real_t volt){
     }
 
     writeReg(addr, ShuntVoltReg::to_i16(volt));
+
+    return *this;
 }
 
 // INA3221::INA3221Channel operator real_t(){
