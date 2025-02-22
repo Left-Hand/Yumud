@@ -20,7 +20,7 @@
 */
 
 #pragma once
-#ifdef __cplusplus
+
 
 #include <string.h>
 #include <ctype.h>
@@ -36,7 +36,6 @@ namespace ymd{
 // result objects are assumed to be writable by subsequent concatenations.
 class StringSumHelper;
 
-using Strings = StringView::Strings;
 
 // The string class
 class String
@@ -183,7 +182,7 @@ public:
 	StringView substring( size_t beginIndex ) const { return substring(beginIndex, len); };
 	StringView substring( size_t beginIndex, size_t endIndex ) const;
 
-	Strings split(const char chr, const size_t times = 0) const;
+	std::vector<StringView> split(const char chr, const size_t times = 0) const;
     constexpr const char * begin() const {return buffer;}
     constexpr const char * end() const {return buffer + len;}
 	constexpr size_t size() const {return len;}
@@ -263,5 +262,9 @@ String toString(unsigned long long value, uint8_t base = 10);
 String toString(float value, uint8_t decimalPlaces = 3);
 String toString(double value, uint8_t decimalPlaces = 3);
 
+template<typename T>
+concept HasToString = requires(T t, unsigned char eps) {
+    { t.toString(eps) } -> std::same_as<String>; // 假设 toString 返回 String 类型
+};
+
 }
-#endif  // __cplusplus

@@ -21,41 +21,47 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         }
         
         if (func == &std::boolalpha){
-            b_boolalpha = true;
+            config_.boolalpha = true;
             break;
         }
 
         if (func == &std::noboolalpha){
-            b_boolalpha = false;
+            config_.boolalpha = false;
             break;
         }
 
         if (func == &std::showpos){
-            b_showpos = true;
+            config_.showpos = true;
             break;
         }
         
         if (func == &std::noshowpos){
-            b_showpos = false;
+            config_.showpos = false;
             break;
         }
 
         if (func == &std::showbase){
-            b_showbase = true;
+            config_.showbase = true;
             break;
         }
         
         if (func == &std::noshowbase){
-            b_showbase = false;
+            config_.showbase = false;
             break;
         }
+        //TODO 支持std::flush
 
-        // if (func == &std::flush){
+        if (func == &std::flush<std::true_type, std::true_type>){
+            this->flush();
+            break;
+        }
+        // if (func == static_cast<std::ios_base&(*)(std::ios_base&)>(&std::flush)) {
         //     this->flush();
         //     break;
         // }
+        //TODO 支持std::endl
 
-        // if (func == &std::endl){
+        // if (func == +[](OutputStream& os) -> OutputStream& { return std::endl(os); }){
         //     this->write("\r\n", 2);
         //     this->flush();
         //     break;
@@ -70,8 +76,77 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
 #define PRINT_FLOAT_TEMPLATE(type, convfunc)\
     char str[12] = {0};\
     const auto len = convfunc(value, str, this->eps());\
-    if(b_showpos and value >= 0) *this << '+';\
+    if(config_.showpos and value >= 0) *this << '+';\
     this->write(str, len);\
+
+int OutputStream::transform(const char chr) const{
+    if(likely(!config_.flags)) return chr;
+
+    if(unlikely(config_.nospace) and unlikely(chr == ' ')) return -1;
+    if(unlikely(config_.nobrackets)){
+        switch(chr){
+            case '(':
+            case ')':
+            case '[':
+            case ']':
+            case '{':
+            case '}':
+                return -1;
+            default:
+                return chr;
+        }
+    }
+
+    return chr;
+}
+
+void OutputStream::checked_write(const char data){
+    const auto res = transform(data);
+    if(likely(res) >= 0) write(res);
+}
+
+struct Buf{
+    scexpr size_t buf_cap = 64;
+
+    char buf[buf_cap];
+    uint8_t size = 0;
+
+
+    __inline void push_back(const char data){
+        buf[size++] = data;
+    }
+
+    __inline bool full() const {
+        return unlikely(size == buf_cap);
+    }
+
+    __inline void clear(){
+        size = 0;
+    }
+};
+
+void OutputStream::checked_write(const char * pdata, const size_t len){
+    //将数据分为大块处理提高性能
+
+    Buf buf;
+
+    for(size_t i = 0; i < len; i++){
+        const auto res = transform(pdata[i]);
+        if(likely(res) >= 0){
+            if(unlikely(buf.full())){
+                write(buf.buf, buf.buf_cap);
+                buf.clear();
+            }else{
+                buf.push_back(res);
+            }
+        }
+    }
+
+    if(likely(buf.size)){
+        write(buf.buf, buf.size);
+    }
+}
+
 
 OutputStream & OutputStream::operator<<(const iq_t value){
     PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::qtoa);
@@ -84,10 +159,10 @@ OutputStream & OutputStream::operator<<(const float value){
 }
 
 #define PRINT_INT_TEMPLATE(blen, convfunc)\
-    if(b_showpos and val >= 0) *this << '+';\
-    if(b_showbase and (radix() != 10)){*this << get_basealpha(radix());}\
+    if(config_.showpos and val >= 0) this->write('+');\
+    if(config_.showbase and (radix() != 10)){*this << get_basealpha(radix());}\
     char str[blen];\
-    const auto len = convfunc(val, str, this->radix_);\
+    const auto len = convfunc(val, str, this->config_.radix);\
     this->write(str, len);\
 
 void OutputStream::print_int(const int val){
@@ -105,10 +180,16 @@ void OutputStream::print_int(const int64_t val){
 #undef PUT_FLOAT_TEMPLATE
 
 OutputStream & OutputStream::operator<<(const bool val){
-    if(b_boolalpha == false){
+    if(config_.boolalpha == false){
         write(val ? '1' : '0');
         return *this;
     }else{
         return *this << ((val) ? "true" : "false"); 
     }
+}
+
+
+OutputStream & OutputStream::flush(){
+    while(pending()){__nopn(1);};
+    return *this;
 }

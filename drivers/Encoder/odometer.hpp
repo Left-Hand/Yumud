@@ -68,6 +68,10 @@ public:
 
     void update();
 
+    bool stable(){
+        return encoder.stable();
+    }
+
     virtual real_t getPosition(){
         return accPosition;
     }

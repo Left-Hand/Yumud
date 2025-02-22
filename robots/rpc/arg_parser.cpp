@@ -3,7 +3,7 @@
 
 using namespace ymd;
 
-std::optional<Strings> ArgSplitter::update(InputStream & is){
+std::optional<const StringViews> ArgSplitter::update(InputStream & is){
     while(is.available()){
         auto chr = is.read();
         if(chr == 0) continue;
@@ -12,7 +12,7 @@ std::optional<Strings> ArgSplitter::update(InputStream & is){
             temp.alphanum();
             auto args = temp.split(' ');
             if(args.size()){
-                return args;
+                return StringViews{args.data(), args.size()};
             }
         }
     }

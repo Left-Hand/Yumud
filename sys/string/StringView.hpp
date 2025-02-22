@@ -3,10 +3,9 @@
 #include "sys/string/utils/StringUtils.hpp"
 #include "sys/utils/hash_func.hpp"
 
-#include <cstdint>
 #include <memory.h>
 #include <string.h>
-
+#include <span>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -19,7 +18,6 @@ class String;
 
 class StringView {
 public:
-    using Strings = ::std::vector<StringView>;
 
     // 构造函数
     StringView(const String & str);
@@ -65,7 +63,7 @@ public:
     operator iq_t() const;
     constexpr char operator [](const size_t index) const {return data_[index];}
 
-	Strings split(const char chr, const size_t times = 0) const;
+	std::vector<StringView> split(const char chr, const size_t max_pieces = 0) const;
 
 	__fast_inline constexpr StringView substring(size_t left) const {return substring(left, size_ - left);};
 	__fast_inline constexpr StringView substring(size_t left, size_t right) const {
@@ -86,5 +84,7 @@ private:
     const char * data_;
     size_t size_;
 };
+
+using StringViews = std::span<const StringView>;
 
 }

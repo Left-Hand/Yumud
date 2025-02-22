@@ -18,8 +18,8 @@ void m2006_main(){
     can.init(1_MHz);
     can[0].mask(CanID16{0x201, Can::RemoteType::Data}, CanID16{0xffff, Can::RemoteType::Remote});
     while(true){
-        auto s = real_t(0.07) * sin(4 * t);
-        auto c = real_t(0.07) * cos(4 * t);
+        auto s = real_t(0.07) * sin(4 * time());
+        auto c = real_t(0.07) * cos(4 * time());
         // real_t s = real_t(0.07);
         // real_t c = real_t(0.07);
         int16_t d = int16_t(s * 32768 * real_t(0.2));

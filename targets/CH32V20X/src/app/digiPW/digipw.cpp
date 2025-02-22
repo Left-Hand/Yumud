@@ -31,7 +31,6 @@
 #include "sys/core/system.hpp"
 #include "sogi/spll.hpp"
 
-using Sys::t;
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -99,7 +98,7 @@ void test_sogi(){
 }
 void digipw_main(){
     uart2.init(576000);
-    DEBUGGER.change(uart2);
+    DEBUGGER.retarget(uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
     /*-----------------------*/
@@ -135,7 +134,7 @@ void digipw_main(){
     BuckConverter buck{curr_ch, volt_ch, mp1907};
     buck.init();
     while(true){
-        mp1907 = real_t(0.5) + real_t(0.5) * sin(t);
+        mp1907 = real_t(0.5) + real_t(0.5) * sin(time());
 
         ina226.update();
         DEBUG_PRINTLN(real_t(curr_ch), real_t(volt_ch));

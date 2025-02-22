@@ -18,7 +18,6 @@ namespace ymd::hal{
 using namespace ymd;
 using namespace ymd::hal;
 
-using Sys::t;
 
 void memory_tb(OutputStream & logger);
 

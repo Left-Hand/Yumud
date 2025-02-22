@@ -174,7 +174,7 @@ void proxy_tb(){
         char buf[16] = {0};
         for(size_t i = 0; i < 100000; i++){
             // ss.println(*shapes[i]);
-            StringUtils::qtoa(t, buf, 4);
+            StringUtils::qtoa(time(), buf, 4);
             // DEBUG_PRINTLN(*shapes[i]);
             // rect.width() = rect.width() + 1;
             // DEBUG_PRINTLN(rect);

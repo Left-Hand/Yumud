@@ -4,7 +4,6 @@
 #include "sys/math/real.hpp"
 
 namespace Sys{
-    extern real_t t;
     
     namespace Misc{
         void prework();
@@ -42,7 +41,7 @@ namespace Sys{
         void setAPB2Div(const uint8_t div);
         void setAHBDiv(const uint8_t div);
 
-        void reCalculateTime();
+        // void reCalculateTime();
         // void reCalculateTimeMs();
     };
 };

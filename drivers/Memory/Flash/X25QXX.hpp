@@ -9,7 +9,7 @@
 
 #ifdef X25QXX_DEBUG
 #undef X25QXX_DEBUG
-#define X25QXX_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
+#define X25QXX_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
 #else
 #define X25QXX_DEBUG(...)
 #endif

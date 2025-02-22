@@ -126,7 +126,7 @@ public:
     protected:
         FOCMotor & motor;
         using Command = MotorUtils::Command;
-        void parseArgs(const Strings & args) override;
+        void parseArgs(const StringViews args) override;
     public:
         AsciiProtocol(IOStream & _logger, FOCMotor & _motor):AsciiProtocolConcept(_logger), motor(_motor){;}
     };

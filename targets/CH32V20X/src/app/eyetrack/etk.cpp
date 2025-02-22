@@ -36,7 +36,6 @@ using Vector2i = Vector2_t<int>;
 #define WHARE_OK while(true){DEBUGGER.println(millis());};
 
 
-using Sys::t;
 
 void etk_main(){
 

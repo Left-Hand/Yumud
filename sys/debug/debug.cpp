@@ -3,11 +3,13 @@
 
 using namespace ymd;
 
-__attribute__((used)) int _write(int fd, char *buf, int size){
-    DEBUGGER_INST.write(buf, size);
-    return size;
+int _write(int file, char *buf, int len){
+    __Debugger::singleton().write(buf, len);
+    return len;
 }
-__attribute__((used)) void *_sbrk(ptrdiff_t incr){
+
+
+void *_sbrk(ptrdiff_t incr){
     extern char _end[];
     extern char _heap_end[];
     static char *curbrk = _end;
@@ -19,10 +21,10 @@ __attribute__((used)) void *_sbrk(ptrdiff_t incr){
     return curbrk - incr;
 }
 
-__attribute__((used)) void _exit(int status){
+void _exit(int status){
     while(true);
 }
 
-__attribute__((used)) ssize_t _read(int fd, void *buf, size_t count){
+ssize_t _read(int fd, void *buf, size_t count){
     return 0;
 }

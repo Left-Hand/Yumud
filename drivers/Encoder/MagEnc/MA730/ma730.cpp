@@ -3,11 +3,44 @@
 using namespace ymd::drivers;
 using namespace ymd;
 
+#define MA730_DEBUG
 
+#ifdef MA730_DEBUG
+#undef MA730_DEBUG
+#define MA730_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
+#define MA730_PANIC(...) PANIC(__VA_ARGS__)
+#define MA730_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#else
+#define MA730_DEBUG(...)
+#define MA730_PANIC(...)  PANIC()
+#define MA730_ASSERT(cond, ...) ASSERT(cond)
+#endif
 
 void MA730::init(){
-    
+    getLapPosition();
 }
+
+BusError MA730::writeReg(const RegAddress reg_addr, uint8_t data){
+    const auto err = spi_drv_.writeSingle((uint16_t)(0x8000 | ((uint8_t)reg_addr << 8) | data));
+    return err;
+}
+
+BusError MA730::readReg(const RegAddress reg_addr, uint8_t & reg){
+    uint16_t dummy;
+    spi_drv_.writeSingle((uint16_t)(0x4000 | ((uint8_t)reg_addr << 8)));
+    const auto err = spi_drv_.readSingle(dummy);
+    reg = dummy >> 8;
+    // ASSERT(BusError::OK);
+    // PANIC("???");
+    return err;
+}
+
+BusError MA730::directRead(uint16_t & data){
+    const auto err = spi_drv_.readSingle(data);
+    // ASSERT(BusError::OK);
+    return err;
+}
+
 
 uint16_t MA730::getRawData(){
     uint16_t data = 0;

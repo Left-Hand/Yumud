@@ -59,7 +59,7 @@ void co_ab_main(){
         DEBUG_PRINTLN(millis());
         // pwm_gpio.toggle();
         // auto prog = sin(10 * t) * 0.5_r + 0.5_r;
-        auto prog = sin(6 * t);
+        auto prog = sin(6 * time());
         // pwm_gpio = bool(prog > 0.5_r);
         // pwm_p = prog;
         pwm_pair = prog;
