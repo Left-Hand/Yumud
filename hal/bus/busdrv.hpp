@@ -66,27 +66,27 @@ public:
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_writable_bus<BusType>
-    void writeSingle(const T data, Continuous cont = DISC);
+    BusError writeSingle(const T data, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
-    void writeMulti(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
+    BusError writeMulti(const is_stdlayout auto & data, const size_t len, Continuous cont = DISC);
 
     template<typename U>
     requires std::is_standard_layout_v<U> and is_writable_bus<BusType>
-    void writeMulti(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
+    BusError writeMulti(const is_stdlayout auto * data_ptr, const size_t len, Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
-    void readMulti(T * data_ptr, const size_t len, const Continuous cont = DISC);
+    BusError readMulti(T * data_ptr, const size_t len, const Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_readable_bus<BusType>
-    void readSingle(T & data, const Continuous cont = DISC);
+    BusError readSingle(T & data, const Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> and is_fulldup_bus<BusType>
-    void transferSingle(T & datarx, T datatx, Continuous cont = DISC);
+    BusError transferSingle(T & datarx, T datatx, Continuous cont = DISC);
 
     template<typename T>
     requires std::is_standard_layout_v<T> && is_fulldup_bus<BusType>
