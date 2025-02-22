@@ -143,13 +143,13 @@ I2cHw::Error I2cHw::lead(const uint8_t _address){
     while(I2C_CheckEvent(instance, I2C_EVENT_MASTER_MODE_SELECT) == ErrorStatus::NoREADY);
     I2C_Send7bitAddress(instance, _address & 0xFE, is_read ? I2C_Direction_Receiver : I2C_Direction_Transmitter);
     while(I2C_CheckEvent(instance, is_read ? I2C_EVENT_MASTER_RECEIVER_MODE_SELECTED :  I2C_EVENT_MASTER_TRANSMITTER_MODE_SELECTED) == ErrorStatus::NoREADY);
-    return ErrorType::OK;
+    return Error::OK;
 }
 
 I2cHw::Error I2cHw::write(const uint32_t data){
     I2C_SendData(instance, data);
     while(I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_TRANSMITTED) == ErrorStatus::NoREADY);
-    return Bus::ErrorType::OK;
+    return Error::OK;
 }
 
 I2cHw::Error I2cHw::read(uint32_t & data, const bool toAck){
@@ -157,5 +157,5 @@ I2cHw::Error I2cHw::read(uint32_t & data, const bool toAck){
     while(I2C_GetFlagStatus(instance, I2C_FLAG_RXNE) == ErrorStatus::NoREADY);
     // while(!I2C_CheckEvent(instance, I2C_EVENT_MASTER_BYTE_RECEIVED));
     data = I2C_ReceiveData(instance);
-    return ErrorType::OK;
+    return Error::OK;
 }

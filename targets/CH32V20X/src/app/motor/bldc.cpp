@@ -39,7 +39,16 @@ using namespace ymd::intp;
 
 using Sys::t;
 
-
+// __attribute__((no_return))
+void jump_to(const uint32_t addr){
+    __asm__ volatile (
+        "jmp %0"
+        :
+        : "r" (addr)
+        : "memory"
+    );
+    __builtin_unreachable();
+}
 
 static __inline real_t f(const real_t x){
     // return sin(7 * x) / 7 + sin(5 * x) / 5 + sin(3 * x)/ 3 + sin(x);

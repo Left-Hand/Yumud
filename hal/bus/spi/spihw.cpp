@@ -308,7 +308,7 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
         data_rx = instance->DATAR;
     }
 
-    return Bus::ErrorType::OK;
+    return Error::OK;
 }
 
 namespace ymd{

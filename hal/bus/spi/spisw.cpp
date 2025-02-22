@@ -45,5 +45,5 @@ SpiSw::Error SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
     sclk_gpio.set();
 
     data_rx = ret;
-    return Bus::ErrorType::OK;
+    return Error::OK;
 }

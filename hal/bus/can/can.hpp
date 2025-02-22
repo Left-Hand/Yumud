@@ -67,7 +67,7 @@ protected:
 
     Gpio & getTxGpio();
     Gpio & getRxGpio();
-    Error lead(const uint8_t index) override{return ErrorType::OK;};
+    Error lead(const uint8_t index) override{return Error::OK;};
     void trail() override{};
 
     void installGpio();

@@ -14,7 +14,6 @@ public:
     using Mode = CommMode;
     using Callback = std::function<void(void)>;
     using DuplexBus::Error;
-    using DuplexBus::ErrorType;
     using DuplexBus::txMethod;
     using DuplexBus::rxMethod;
     using InputStream::read;
@@ -37,11 +36,8 @@ protected:
     Callback txPostCb;
     Callback rxPostCb;
 
-    Error read(uint32_t & data, const bool toack) override {char _;read(_);return ErrorType::OK;};
-    Error write(const uint32_t data) override {write((char)data); return ErrorType::OK;};
-
-    // virtual void writeBytes(const char * pdata, const size_t len) = 0;
-
+    Error read(uint32_t & data, const bool toack) override {char _;read(_);return Error::OK;};
+    Error write(const uint32_t data) override {write((char)data); return Error::OK;};
     Uart(){;}
 public:
     Uart(const Uart & other) = delete;
