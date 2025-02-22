@@ -99,6 +99,8 @@ void restore_context(void){
 
     SP_ADDI(128);
 #endif
+    MRET;
+    __builtin_unreachable();
 }
 
 }
@@ -280,4 +282,6 @@ void SW_Handler(void){
 
     SP_ADDI(128);
 #endif
+    MRET;
+    __builtin_unreachable();
 }

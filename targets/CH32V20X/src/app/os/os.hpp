@@ -103,7 +103,7 @@ namespace RiscvCpu{
         size_t stack_size;
     };
 
-    // __attribute__((no_return))
+    __attribute__((noreturn))
     void restore_context(void);
 
     void int_disable(void){
@@ -157,6 +157,6 @@ namespace RiscvCpu{
 extern "C"{
 
 __interrupt __attribute__((used))
-// __attribute__((no_return))
+__attribute__((noreturn))
 void SW_Handler(void);
 }

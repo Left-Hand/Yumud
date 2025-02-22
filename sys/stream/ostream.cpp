@@ -51,10 +51,10 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         }
         //TODO 支持std::flush
 
-        if (func == &std::flush<std::true_type, std::true_type>){
-            this->flush();
-            break;
-        }
+        // if (func == &std::flush<std::true_type, std::true_type>){
+        //     this->flush();
+        //     break;
+        // }
         // if (func == static_cast<std::ios_base&(*)(std::ios_base&)>(&std::flush)) {
         //     this->flush();
         //     break;
