@@ -192,21 +192,6 @@ SC8815 & SC8815::setExternalVbusRef(const real_t volt){
     return *this;
 }
 
-// SC8815 & SC8815::setIBusCurrLimit(const real_t curr){
-//     TODO();
-//     return *this;
-// }
-
-// SC8815 & SC8815::setEBusCurrLimit(const real_t curr){
-//     TODO();
-//     return *this;
-// }
-
-// SC8815 & SC8815::setVinRegRefVolt(const real_t volt){
-//     TODO();
-//     return *this;
-// }
-
 
 SC8815 & SC8815::setIBatLimRatio(){
     return *this;

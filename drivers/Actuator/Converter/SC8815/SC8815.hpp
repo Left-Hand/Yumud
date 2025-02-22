@@ -321,11 +321,6 @@ protected:
     SC8815 & setInternalVbusRef(const real_t volt);
     SC8815 & setExternalVbusRef(const real_t volt);
 
-    SC8815 & setIBusCurrLimit(const real_t curr);
-    SC8815 & setEBusCurrLimit(const real_t curr);
-
-    SC8815 & setVinRegRefVolt(const real_t volt);
-
     SC8815 & setIBatLimRatio();
 
     SC8815 & enableOtg(const bool en = true);
