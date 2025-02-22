@@ -2,7 +2,20 @@
 #include "offset_table.hpp"
 
 #define STORE_REG(lhs, rhs) asm volatile("lw " #lhs ", (" #rhs ")")
-#define RESTORE_BY_OFFSET(lhs, offset) asm volatile("lw " #lhs ", " #offset "(sp)")
+
+// secondary liternal string
+// 将宏所代表的数值进行字面量字符串化 而不是宏传入的参数本身的字符串
+//https://www.cnblogs.com/LiuYanYGZ/p/10659457.html
+#define __STR(R) #R
+#define STR(R) __STR(R)
+
+// 通过SP指针的偏移量载入到寄存器中
+#define LOAD_BY_OFFSET(lhs, offset) asm volatile("lw " STR(lhs) ", " STR(offset) "(sp)")
+#define STORE_BY_OFFSET(lhs, offset) asm volatile("sw " STR(lhs) ", " STR(offset) "(sp)")
+
+// 通过SP指针和宏定义的寄存器对应的偏移量载入到寄存器中
+#define LOAD(lhs) asm volatile("lw " STR(lhs) ", " STR(__reg_ ## lhs ## _OFFSET) "(sp)")
+#define STORE(lhs) asm volatile("sw " STR(lhs) ", " STR(__reg_ ## lhs ## _OFFSET) "(sp)")
 
 #define SP_ADDI(offset) asm volatile("addi sp, sp, " #offset)
 #define CSRW(lhs, rhs) asm volatile("csrw " #lhs ", " #rhs)
@@ -10,83 +23,87 @@
 
 namespace RiscvCpu{
 
+
 void restore_context(void){
 
-    RESTORE_BY_OFFSET(t0, __reg_mepc_OFFSET);
+    LOAD_BY_OFFSET(t0, __reg_mepc_OFFSET);
     CSRW(mepc, t0);
-    RESTORE_BY_OFFSET(t0, __reg_mstatus_OFFSET);
+    LOAD_BY_OFFSET(t0, __reg_mstatus_OFFSET);
     CSRW(mstatus, t0);
 
-    RESTORE_BY_OFFSET(x1, __reg_x1_OFFSET);
-    RESTORE_BY_OFFSET(x3, __reg_x3_OFFSET);
-    RESTORE_BY_OFFSET(x4, __reg_x4_OFFSET);
-    RESTORE_BY_OFFSET(x5, __reg_x5_OFFSET);
-    RESTORE_BY_OFFSET(x6, __reg_x6_OFFSET);
-    RESTORE_BY_OFFSET(x7, __reg_x7_OFFSET);
-    RESTORE_BY_OFFSET(x8, __reg_x8_OFFSET);
-    RESTORE_BY_OFFSET(x9, __reg_x9_OFFSET);
-    RESTORE_BY_OFFSET(x10, __reg_x10_OFFSET);
-    RESTORE_BY_OFFSET(x11, __reg_x11_OFFSET);
-    RESTORE_BY_OFFSET(x12, __reg_x12_OFFSET);
-    RESTORE_BY_OFFSET(x13, __reg_x13_OFFSET);
-    RESTORE_BY_OFFSET(x14, __reg_x14_OFFSET);
-    RESTORE_BY_OFFSET(x15, __reg_x15_OFFSET);
-    RESTORE_BY_OFFSET(x16, __reg_x16_OFFSET);
-    RESTORE_BY_OFFSET(x17, __reg_x17_OFFSET);
-    RESTORE_BY_OFFSET(x18, __reg_x18_OFFSET);
-    RESTORE_BY_OFFSET(x19, __reg_x19_OFFSET);
-    RESTORE_BY_OFFSET(x20, __reg_x20_OFFSET);
-    RESTORE_BY_OFFSET(x21, __reg_x21_OFFSET);
-    RESTORE_BY_OFFSET(x22, __reg_x22_OFFSET);
-    RESTORE_BY_OFFSET(x23, __reg_x23_OFFSET);
-    RESTORE_BY_OFFSET(x24, __reg_x24_OFFSET);
-    RESTORE_BY_OFFSET(x25, __reg_x25_OFFSET);
-    RESTORE_BY_OFFSET(x26, __reg_x26_OFFSET);
-    RESTORE_BY_OFFSET(x27, __reg_x27_OFFSET);
-    RESTORE_BY_OFFSET(x28, __reg_x28_OFFSET);
-    RESTORE_BY_OFFSET(x29, __reg_x29_OFFSET);
-    RESTORE_BY_OFFSET(x30, __reg_x30_OFFSET);
-    RESTORE_BY_OFFSET(x31, __reg_x31_OFFSET);
+    LOAD(x1);
+    LOAD(x3);
+    LOAD(x4);
+    LOAD(x5);
+    LOAD(x6);
+    LOAD(x7);
+    LOAD(x8);
+    LOAD(x9);
+    LOAD(x10);
+    LOAD(x11);
+    LOAD(x12);
+    LOAD(x13);
+    LOAD(x14);
+    LOAD(x15);
+    LOAD(x16);
+    LOAD(x17);
+    LOAD(x18);
+    LOAD(x19);
+    LOAD(x20);
+    LOAD(x21);
+    LOAD(x22);
+    LOAD(x23);
+    LOAD(x24);
+    LOAD(x25);
+    LOAD(x26);
+    LOAD(x27);
+    LOAD(x28);
+    LOAD(x29);
+    LOAD(x30);
+    LOAD(x31);
 
     SP_ADDI(128);
 
 #ifdef __riscv_f
-    RESTORE_BY_OFFSET(f0, __reg_f0_OFFSET);
-    RESTORE_BY_OFFSET(f1, __reg_f1_OFFSET);
-    RESTORE_BY_OFFSET(f2, __reg_f2_OFFSET);
-    RESTORE_BY_OFFSET(f3, __reg_f3_OFFSET);
-    RESTORE_BY_OFFSET(f4, __reg_f4_OFFSET);
-    RESTORE_BY_OFFSET(f5, __reg_f5_OFFSET);
-    RESTORE_BY_OFFSET(f6, __reg_f6_OFFSET);
-    RESTORE_BY_OFFSET(f7, __reg_f7_OFFSET);
-    RESTORE_BY_OFFSET(f8, __reg_f8_OFFSET);
-    RESTORE_BY_OFFSET(f9, __reg_f9_OFFSET);
-    RESTORE_BY_OFFSET(f10, __reg_f10_OFFSET);
-    RESTORE_BY_OFFSET(f11, __reg_f11_OFFSET);
-    RESTORE_BY_OFFSET(f12, __reg_f12_OFFSET);
-    RESTORE_BY_OFFSET(f13, __reg_f13_OFFSET);
-    RESTORE_BY_OFFSET(f14, __reg_f14_OFFSET);
-    RESTORE_BY_OFFSET(f15, __reg_f15_OFFSET);
-    RESTORE_BY_OFFSET(f16, __reg_f16_OFFSET);
-    RESTORE_BY_OFFSET(f17, __reg_f17_OFFSET);
-    RESTORE_BY_OFFSET(f18, __reg_f18_OFFSET);
-    RESTORE_BY_OFFSET(f19, __reg_f19_OFFSET);
-    RESTORE_BY_OFFSET(f20, __reg_f20_OFFSET);
-    RESTORE_BY_OFFSET(f21, __reg_f21_OFFSET);
-    RESTORE_BY_OFFSET(f22, __reg_f22_OFFSET);
-    RESTORE_BY_OFFSET(f23, __reg_f23_OFFSET);
-    RESTORE_BY_OFFSET(f24, __reg_f24_OFFSET);
-    RESTORE_BY_OFFSET(f25, __reg_f25_OFFSET);
-    RESTORE_BY_OFFSET(f26, __reg_f26_OFFSET);
-    RESTORE_BY_OFFSET(f27, __reg_f27_OFFSET);
-    RESTORE_BY_OFFSET(f28, __reg_f28_OFFSET);
-    RESTORE_BY_OFFSET(f29, __reg_f29_OFFSET);
-    RESTORE_BY_OFFSET(f30, __reg_f30_OFFSET);
-    RESTORE_BY_OFFSET(f31, __reg_f31_OFFSET);
+    LOAD(f1);
+    LOAD(f2);
+    LOAD(f3);
+    LOAD(f4);
+    LOAD(f5);
+    LOAD(f6);
+    LOAD(f7);
+    LOAD(f8);
+    LOAD(f9);
+    LOAD(f10);
+    LOAD(f11);
+    LOAD(f12);
+    LOAD(f13);
+    LOAD(f14);
+    LOAD(f15);
+    LOAD(f16);
+    LOAD(f17);
+    LOAD(f18);
+    LOAD(f19);
+    LOAD(f20);
+    LOAD(f21);
+    LOAD(f22);
+    LOAD(f23);
+    LOAD(f24);
+    LOAD(f25);
+    LOAD(f26);
+    LOAD(f27);
+    LOAD(f28);
+    LOAD(f29);
+    LOAD(f30);
+    LOAD(f31);
 
     SP_ADDI(128);
 #endif
 }
+
+}
+
+using namespace RiscvCpu;
 
 void SW_Handler(void){
     #if ARCH_RISCV_FPU
@@ -195,75 +212,72 @@ void SW_Handler(void){
 // 	lw t0, __reg_mepc_OFFSET(sp)
 // 	csrw mepc, t0
 
-    RESTORE_BY_OFFSET(x1, __reg_x1_OFFSET);
-    RESTORE_BY_OFFSET(x3, __reg_x3_OFFSET);
-    RESTORE_BY_OFFSET(x4, __reg_x4_OFFSET);
-    RESTORE_BY_OFFSET(x5, __reg_x5_OFFSET);
-    RESTORE_BY_OFFSET(x6, __reg_x6_OFFSET);
-    RESTORE_BY_OFFSET(x7, __reg_x7_OFFSET);
-    RESTORE_BY_OFFSET(x8, __reg_x8_OFFSET);
-    RESTORE_BY_OFFSET(x9, __reg_x9_OFFSET);
-    RESTORE_BY_OFFSET(x10, __reg_x10_OFFSET);
-    RESTORE_BY_OFFSET(x11, __reg_x11_OFFSET);
-    RESTORE_BY_OFFSET(x12, __reg_x12_OFFSET);
-    RESTORE_BY_OFFSET(x13, __reg_x13_OFFSET);
-    RESTORE_BY_OFFSET(x14, __reg_x14_OFFSET);
-    RESTORE_BY_OFFSET(x15, __reg_x15_OFFSET);
-    RESTORE_BY_OFFSET(x16, __reg_x16_OFFSET);
-    RESTORE_BY_OFFSET(x17, __reg_x17_OFFSET);
-    RESTORE_BY_OFFSET(x18, __reg_x18_OFFSET);
-    RESTORE_BY_OFFSET(x19, __reg_x19_OFFSET);
-    RESTORE_BY_OFFSET(x20, __reg_x20_OFFSET);
-    RESTORE_BY_OFFSET(x21, __reg_x21_OFFSET);
-    RESTORE_BY_OFFSET(x22, __reg_x22_OFFSET);
-    RESTORE_BY_OFFSET(x23, __reg_x23_OFFSET);
-    RESTORE_BY_OFFSET(x24, __reg_x24_OFFSET);
-    RESTORE_BY_OFFSET(x25, __reg_x25_OFFSET);
-    RESTORE_BY_OFFSET(x26, __reg_x26_OFFSET);
-    RESTORE_BY_OFFSET(x27, __reg_x27_OFFSET);
-    RESTORE_BY_OFFSET(x28, __reg_x28_OFFSET);
-    RESTORE_BY_OFFSET(x29, __reg_x29_OFFSET);
-    RESTORE_BY_OFFSET(x30, __reg_x30_OFFSET);
-    RESTORE_BY_OFFSET(x31, __reg_x31_OFFSET);
+    LOAD(x1);
+    LOAD(x3);
+    LOAD(x4);
+    LOAD(x5);
+    LOAD(x6);
+    LOAD(x7);
+    LOAD(x8);
+    LOAD(x9);
+    LOAD(x10);
+    LOAD(x11);
+    LOAD(x12);
+    LOAD(x13);
+    LOAD(x14);
+    LOAD(x15);
+    LOAD(x16);
+    LOAD(x17);
+    LOAD(x18);
+    LOAD(x19);
+    LOAD(x20);
+    LOAD(x21);
+    LOAD(x22);
+    LOAD(x23);
+    LOAD(x24);
+    LOAD(x25);
+    LOAD(x26);
+    LOAD(x27);
+    LOAD(x28);
+    LOAD(x29);
+    LOAD(x30);
+    LOAD(x31);
 
     SP_ADDI(128);
 
 #ifdef __riscv_f
-    RESTORE_BY_OFFSET(f0, __reg_f0_OFFSET);
-    RESTORE_BY_OFFSET(f1, __reg_f1_OFFSET);
-    RESTORE_BY_OFFSET(f2, __reg_f2_OFFSET);
-    RESTORE_BY_OFFSET(f3, __reg_f3_OFFSET);
-    RESTORE_BY_OFFSET(f4, __reg_f4_OFFSET);
-    RESTORE_BY_OFFSET(f5, __reg_f5_OFFSET);
-    RESTORE_BY_OFFSET(f6, __reg_f6_OFFSET);
-    RESTORE_BY_OFFSET(f7, __reg_f7_OFFSET);
-    RESTORE_BY_OFFSET(f8, __reg_f8_OFFSET);
-    RESTORE_BY_OFFSET(f9, __reg_f9_OFFSET);
-    RESTORE_BY_OFFSET(f10, __reg_f10_OFFSET);
-    RESTORE_BY_OFFSET(f11, __reg_f11_OFFSET);
-    RESTORE_BY_OFFSET(f12, __reg_f12_OFFSET);
-    RESTORE_BY_OFFSET(f13, __reg_f13_OFFSET);
-    RESTORE_BY_OFFSET(f14, __reg_f14_OFFSET);
-    RESTORE_BY_OFFSET(f15, __reg_f15_OFFSET);
-    RESTORE_BY_OFFSET(f16, __reg_f16_OFFSET);
-    RESTORE_BY_OFFSET(f17, __reg_f17_OFFSET);
-    RESTORE_BY_OFFSET(f18, __reg_f18_OFFSET);
-    RESTORE_BY_OFFSET(f19, __reg_f19_OFFSET);
-    RESTORE_BY_OFFSET(f20, __reg_f20_OFFSET);
-    RESTORE_BY_OFFSET(f21, __reg_f21_OFFSET);
-    RESTORE_BY_OFFSET(f22, __reg_f22_OFFSET);
-    RESTORE_BY_OFFSET(f23, __reg_f23_OFFSET);
-    RESTORE_BY_OFFSET(f24, __reg_f24_OFFSET);
-    RESTORE_BY_OFFSET(f25, __reg_f25_OFFSET);
-    RESTORE_BY_OFFSET(f26, __reg_f26_OFFSET);
-    RESTORE_BY_OFFSET(f27, __reg_f27_OFFSET);
-    RESTORE_BY_OFFSET(f28, __reg_f28_OFFSET);
-    RESTORE_BY_OFFSET(f29, __reg_f29_OFFSET);
-    RESTORE_BY_OFFSET(f30, __reg_f30_OFFSET);
-    RESTORE_BY_OFFSET(f31, __reg_f31_OFFSET);
+    LOAD(f1);
+    LOAD(f2);
+    LOAD(f3);
+    LOAD(f4);
+    LOAD(f5);
+    LOAD(f6);
+    LOAD(f7);
+    LOAD(f8);
+    LOAD(f9);
+    LOAD(f10);
+    LOAD(f11);
+    LOAD(f12);
+    LOAD(f13);
+    LOAD(f14);
+    LOAD(f15);
+    LOAD(f16);
+    LOAD(f17);
+    LOAD(f18);
+    LOAD(f19);
+    LOAD(f20);
+    LOAD(f21);
+    LOAD(f22);
+    LOAD(f23);
+    LOAD(f24);
+    LOAD(f25);
+    LOAD(f26);
+    LOAD(f27);
+    LOAD(f28);
+    LOAD(f29);
+    LOAD(f30);
+    LOAD(f31);
 
     SP_ADDI(128);
 #endif
-}
-
 }

@@ -7,8 +7,8 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright (c) 2017 STMicroelectronics.
-  * All rights reserved.</center></h2>
+  * 2017 STMicroelectronics.
+  * All rights reserved
   *
   * This software component is licensed by ST under BSD 3-Clause license,
   * the "License"; You may not use this file except in compliance with the
@@ -24,38 +24,34 @@
 
 namespace ymd::drivers{
 
-
-  
 class LAN8742 {
 protected:
     int32_t ReadReg(uint32_t, uint32_t, uint32_t *){
-        //TODO
+        TODO();
         return 0;
     }
     int32_t WriteReg(uint32_t, uint32_t, uint32_t){
-        //TODO
+        TODO();
         return 0;
     }
 public:
     uint32_t            DevAddr;
-    uint32_t            Is_Initialized;
-    // lan8742_IOCtx_t     IO;
+    // uint32_t            Is_Initialized;
     void               *pData;
 
-    // int32_t RegisterBusIO(lan8742_IOCtx_t *ioctx);
-    int32_t Init();
-    int32_t DeInit();
-    int32_t DisablePowerDownMode();
-    int32_t EnablePowerDownMode();
-    int32_t StartAutoNego();
-    int32_t GetLinkState();
-    int32_t SetLinkState(uint32_t LinkState);
-    int32_t EnableLoopbackMode();
-    int32_t DisableLoopbackMode();
-    int32_t EnableIT(uint32_t Interrupt);
-    int32_t DisableIT(uint32_t Interrupt);
-    int32_t ClearIT(uint32_t Interrupt);
-    int32_t GetITStatus(uint32_t Interrupt);
+    int32_t init();
+    int32_t deinit();
+    int32_t disablePowerDownMode();
+    int32_t enablePowerDownMode();
+    int32_t startAutoNego();
+    int32_t getLinkState();
+    int32_t setLinkState(uint32_t LinkState);
+    int32_t enableLoopbackMode();
+    int32_t disableLoopbackMode();
+    int32_t enableIT(uint32_t Interrupt);
+    int32_t disableIT(uint32_t Interrupt);
+    int32_t clearIT(uint32_t Interrupt);
+    int32_t getITStatus(uint32_t Interrupt);
 };
 
 

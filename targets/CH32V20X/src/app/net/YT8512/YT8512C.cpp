@@ -78,75 +78,71 @@ int32_t YT8512C::init()
     uint32_t tickstart = 0, regvalue = 0, addr = 0;
     int32_t status = YT8512C_STATUS_OK;
     
-    if (this->is_initialized == 0)
+
+    /* 设置PHY地址为32 */
+    this->devaddr = YT8512C_MAX_DEV_ADDR + 1;
+
+    /* 主要为了查找PHY地址 */  
+    for (addr = 0; addr <= YT8512C_MAX_DEV_ADDR; addr ++)
     {
-        this->init();
-
-        /* 设置PHY地址为32 */
-        this->devaddr = YT8512C_MAX_DEV_ADDR + 1;
-
-        /* 主要为了查找PHY地址 */  
-        for (addr = 0; addr <= YT8512C_MAX_DEV_ADDR; addr ++)
-        {
-            if (this->readreg(addr, YT8512C_PHYSCSR, &regvalue) < 0)
-            { 
-                status = YT8512C_STATUS_READ_ERROR;
-                /* 无法读取这个设备地址继续下一个地址 */
-                continue;
-            }
-            /* 已经找到PHY地址了 */
-            if ((regvalue & YT8512C_PHY_COUNT) == addr)
-            {
-                this->devaddr = addr;
-                status = YT8512C_STATUS_OK;
-                break;
-            }
+        if (this->readreg(addr, YT8512C_PHYSCSR, &regvalue) < 0)
+        { 
+            status = YT8512C_STATUS_READ_ERROR;
+            /* 无法读取这个设备地址继续下一个地址 */
+            continue;
         }
-        
-        /* 判断这个PHY地址是否大于32（2^5）*/
-        if (this->devaddr > YT8512C_MAX_DEV_ADDR)
+        /* 已经找到PHY地址了 */
+        if ((regvalue & YT8512C_PHY_COUNT) == addr)
         {
-            status = YT8512C_STATUS_ADDRESS_ERROR;
+            this->devaddr = addr;
+            status = YT8512C_STATUS_OK;
+            break;
         }
+    }
+    
+    /* 判断这个PHY地址是否大于32（2^5）*/
+    if (this->devaddr > YT8512C_MAX_DEV_ADDR)
+    {
+        status = YT8512C_STATUS_ADDRESS_ERROR;
+    }
 
-        /* 如果PHY地址有效 */
-        if (status == YT8512C_STATUS_OK)
-        {
-            /* 设置软件复位  */
-            if (this->writereg(this->devaddr, YT8512C_BCR, YT8512C_BCR_SOFT_RESET) >= 0)
+    /* 如果PHY地址有效 */
+    if (status == YT8512C_STATUS_OK)
+    {
+        /* 设置软件复位  */
+        if (this->writereg(this->devaddr, YT8512C_BCR, YT8512C_BCR_SOFT_RESET) >= 0)
+        { 
+            /* 获取软件重置状态 */
+            if (this->readreg(this->devaddr, YT8512C_BCR, &regvalue) >= 0)
             { 
-                /* 获取软件重置状态 */
-                if (this->readreg(this->devaddr, YT8512C_BCR, &regvalue) >= 0)
-                { 
-                    tickstart = millis();
+                tickstart = millis();
 
-                    /* 等待软件复位完成或超时  */
-                    while (regvalue & YT8512C_BCR_SOFT_RESET)
+                /* 等待软件复位完成或超时  */
+                while (regvalue & YT8512C_BCR_SOFT_RESET)
+                {
+                    if ((millis() - tickstart) <= YT8512C_SW_RESET_TO)
                     {
-                        if ((millis() - tickstart) <= YT8512C_SW_RESET_TO)
-                        {
-                            if (this->readreg(this->devaddr, YT8512C_BCR, &regvalue) < 0)
-                            { 
-                                status = YT8512C_STATUS_READ_ERROR;
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            status = YT8512C_STATUS_RESET_TIMEOUT;
+                        if (this->readreg(this->devaddr, YT8512C_BCR, &regvalue) < 0)
+                        { 
+                            status = YT8512C_STATUS_READ_ERROR;
                             break;
                         }
-                    } 
-                }
-                else
-                {
-                    status = YT8512C_STATUS_READ_ERROR;
-                }
+                    }
+                    else
+                    {
+                        status = YT8512C_STATUS_RESET_TIMEOUT;
+                        break;
+                    }
+                } 
             }
             else
             {
-                status = YT8512C_STATUS_WRITE_ERROR;
+                status = YT8512C_STATUS_READ_ERROR;
             }
+        }
+        else
+        {
+            status = YT8512C_STATUS_WRITE_ERROR;
         }
     }
     
@@ -154,7 +150,6 @@ int32_t YT8512C::init()
     if (status == YT8512C_STATUS_OK){
         /* 等待2s进行初始化 */
         delay(YT8512C_INIT_TO);
-        this->is_initialized = 1;
     }
 
     return status;
@@ -168,15 +163,7 @@ int32_t YT8512C::init()
   * @retval      YT8512C_STATUS_OK：反初始化失败成功
                  YT8512C_STATUS_ERROR：反初始化失败
   */
-int32_t YT8512C::deinit()
-{
-    if (this->is_initialized){
-        if (this->deinit() < 0){
-            return YT8512C_STATUS_ERROR;
-        }
-
-        this->is_initialized = 0;  
-    }
+int32_t YT8512C::deinit(){
 
     return YT8512C_STATUS_OK;
 }
