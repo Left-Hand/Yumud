@@ -7,6 +7,7 @@ namespace ymd::foc{
 
 // scexpr uint chopper_freq = 32768;
 scexpr uint chopper_freq = 50000;
+scexpr uint foc_freq = 25000;
 
 using Current = real_t;
 
@@ -101,5 +102,8 @@ namespace ymd{
     
     inline OutputStream & operator << (OutputStream & os, const foc::DqValue & dq){
         return os << '(' << dq.d << os.splitter() << dq.q << ')';
+    }
+    inline OutputStream & operator << (OutputStream & os, const foc::UvwValue & uvw){
+        return os << '(' << uvw.u << os.splitter() << uvw.v <<  os.splitter() << uvw.w << ')';
     }
 }

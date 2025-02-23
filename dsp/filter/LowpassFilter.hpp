@@ -3,74 +3,92 @@
 #include "../lti.hpp"
 
 
-template<typename real, typename time>
-class LowpassFilter_t:public Filter_t<real, time>{
+template<arithmetic T>
+class LowpassFilter_t{
 protected:
-    using Point = LtiUtils::Point<real, time>;
+    using Point = LtiUtils::Point<T, T>;
 
-    Point last;
-    const real inverse_tau;
+    Point last_;
+    const T inverse_tau;
     bool inited = false;
 
-    void init(const real & x){
-        // if(!inited){
-            last.x = x;
-            inited = true;
-            // return last.x;
-        // }
+    void init(const T x){
+        last_.x = x;
+        inited = true;
     }
 public:
-    LowpassFilter_t(const real & cutoff_freq) : last(Point{real(0), time(0)}), inverse_tau(real(TAU) * real(cutoff_freq)) {;}
+    LowpassFilter_t(const T cutoff_freq) : last_(Point{T(0), T(0)}), inverse_tau(T(TAU) * T(cutoff_freq)) {;}
 
-    real update(const real & x, const time & tm) override {
+    T update(const T x, const T tm){
         if(!inited){
             init(x);
-            last.t = tm;
+            last_.t = tm;
             return x;
         }
-        real ret = forward(x, tm - last.t);
-        last.t = tm;
+
+        T ret = forward(x, tm - last_.t);
+        last_.t = tm;
         return ret;
     }
 
-    real forward(const real & x, const time & delta){
+    T forward(const T x, const T delta){
         if(!inited){
             init(x);
             return x;
         }
-        real b = delta * inverse_tau;
-        real alpha = b / (b + 1);
-        last.x = last.x + alpha * (x - last.x);
-        return last.x;
+        T b = delta * inverse_tau;
+        T alpha = b / (b + 1);
+        last_.x = last_.x + alpha * (x - last_.x);
+        return last_.x;
     }
 };
 
-template<typename real>
-requires std::is_arithmetic_v<real>
-class LowpassFilterZ_t{
+//Z域低通滤波器
+template<arithmetic T>
+struct LowpassFilterZ_t{
+private:
+    T alpha_;
+    T last_;
+    bool inited_;
 public:
-    const real m_alaph;
-    real last = 0;
-public:
-    LowpassFilterZ_t() = delete;
-
-    LowpassFilterZ_t(const real fc, const real fs) : LowpassFilterZ_t(calculateAlaph(fc, fs)) {;}
-    LowpassFilterZ_t(const real alaph) : m_alaph(alaph) {reset();}
-
-    void reset(){
-        last = 0;
+    constexpr LowpassFilterZ_t(){
+        reset();
     }
 
-    real update(const real x){
-        return last = last * (1-m_alaph) + (m_alaph) * x;
+    constexpr LowpassFilterZ_t(const auto fc, const auto fs) : LowpassFilterZ_t(solve_alaph(fc, fs)) {;}
+    constexpr LowpassFilterZ_t(const auto alpha) : alpha_(static_cast<T>(alpha)) {reset();}
+
+    constexpr void reconf(const auto fc, const auto fs){
+        alpha_ = solve_alpha(fc, fs);
     }
 
-    static real calculateAlaph(const real fc, const real fs){
-        real omega_c = TAU * fc / fs;  // Angular cutoff frequency
-        real alpha = omega_c / (1 + omega_c);  // Alpha coefficient
-        return alpha;
+    constexpr void reconf(const auto alpha){
+        alpha_ = static_cast<T>(alpha);
+    }
+
+    constexpr void reset(){
+        last_ = 0;
+        inited_ = false;
+    }
+
+    constexpr T update(const T x){
+        if(unlikely(inited_ == false)){
+            last_ = x;
+            inited_ = true;
+        }else{
+            last_ = (last_ * (1-alpha_) + (alpha_) * x);
+        }
+        return last_;
+    }
+
+    constexpr T result() const {
+        return last_;
+    }
+
+    static constexpr T solve_alpha(const auto fc, const auto fs){
+        return T(628 * fc) / (100 * fs + 628 * fc);
     }
 };
 
-using LPF = LowpassFilter_t<real_t, real_t>;
-using LPFZ = LowpassFilterZ_t<real_t>;
+using Lpf = LowpassFilter_t<real_t>;
+using LpfZ = LowpassFilterZ_t<real_t>;

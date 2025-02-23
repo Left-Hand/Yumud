@@ -314,9 +314,8 @@ public:
             return prints(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity(' ', std::forward<Args>(args)), ...);
-            return prints();
         }
-        return *this;
+        return prints();
     }
 
     OutputStream & prints(){
@@ -331,9 +330,8 @@ public:
             return printt(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity('\t', std::forward<Args>(args)), ...);
-            return printt();
         }
-        return *this;
+        return printt();
     }
 
     OutputStream & printt(){
@@ -348,9 +346,8 @@ public:
             return println(std::forward<Args>(args)...);
         }else if constexpr (sizeof...(args)) {
             (print_splt_then_entity(std::forward<Args>(args)), ...);
-            return println();
         }
-        return *this;
+        return println();
     }
 
     OutputStream & println(){
