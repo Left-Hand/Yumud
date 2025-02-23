@@ -29,11 +29,20 @@ struct __needprint_helper<std::_Setprecision>{
 };
 
 
+template<>
+struct __needprint_helper<std::_Setbase>{
+    static constexpr bool value = false;
+};
+
+struct __Splitter{};
+
+template<>
+struct __needprint_helper<__Splitter>{
+    static constexpr bool value = false;
+};
+
 class OutputStream: virtual public BasicStream{
-private:
-
-    uint8_t sp_len;
-
+public:
     struct Config{
         char splitter[4];
 
@@ -52,6 +61,9 @@ private:
             };
         };
     };
+private:
+    uint8_t sp_len;
+
 
     scexpr Config default_config = {
         .splitter = ", ",
@@ -60,14 +72,16 @@ private:
         .flags = 0,
     };
 
-    // scexpr auto a = sizeof(Config);
-
     Config config_;
+
+    __fast_inline void print_splt(){
+        write(config_.splitter, sp_len);
+    }
 
     template<typename T>
     __fast_inline void print_splt_then_entity(T && any){
         if constexpr(true == __needprint_helper<std::decay_t<T>>::value){
-            write(config_.splitter, sp_len);
+            print_splt();
         }
         *this << std::forward<T>(any);
     }
@@ -96,7 +110,7 @@ private:
         switch(_radix){
             default:
             case 10:
-                return "\0";
+                return "";
             case 2:
                 return "0b";
             case 8:
@@ -186,8 +200,11 @@ public:
     }
 
     OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
-    OutputStream& operator<<(const std::_Setprecision & n){config_.eps = n._M_n; return *this;}
-    OutputStream& operator<<(const std::nullopt_t n){return *this << '/';}
+    OutputStream& operator<<(const std::_Setprecision n){config_.eps = n._M_n; return *this;}
+    OutputStream& operator<<(const std::_Setbase n){config_.radix = n._M_base; return *this;}
+    
+    OutputStream& operator<<(const std::nullopt_t){return *this << '/';}
+    OutputStream& operator<<(const __Splitter){print_splt(); return *this;}
     
     template<typename T>
     OutputStream& operator<<(const std::optional<T> v){
@@ -280,11 +297,6 @@ public:
         return *this;
     }
 
-    template<HasToString T>
-    OutputStream & operator<<(const T & misc){*this << misc.toString(config_.eps); return *this;}
-
-
-
     template <typename ... Args>
     OutputStream & print(Args&&... args){
         if constexpr (sizeof...(args)) {
@@ -349,9 +361,9 @@ public:
     auto eps() const {return config_.eps;}
     auto radix() const {return config_.radix;}
 
-    // struct __Splitter{
-    // };
-    const char * splitter() const {return config_.splitter;}
+
+
+    __Splitter splitter() const {return {};}
 
     OutputStream & flush();
 

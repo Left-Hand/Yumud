@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/math/real.hpp"
+#include "sys/stream/ostream.hpp"
 
 namespace ymd::foc{
 
@@ -90,5 +91,15 @@ static __inline real_t smooth(const real_t x){
 }
 
 
+
 }
 
+namespace ymd{
+    inline OutputStream & operator << (OutputStream & os, const foc::AbValue & ab){
+        return os << '(' << ab.a << os.splitter() << ab.b << ')';
+    }
+    
+    inline OutputStream & operator << (OutputStream & os, const foc::DqValue & dq){
+        return os << '(' << dq.d << os.splitter() << dq.q << ')';
+    }
+}

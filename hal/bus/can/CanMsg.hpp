@@ -12,48 +12,78 @@
 
 namespace ymd::hal{
 
-//TODO do not inhert from CanRxMsg
+namespace CanUtils{
+    template<typename T>
+    concept valid_arg = (sizeof(T) <= 8) 
+        && (std::is_same_v<std::decay_t<T>, T>) 
+    ;
+
+    template<typename ... Args>
+    concept valid_args = 
+        (sizeof(std::tuple<Args...>) <= 8) 
+        && (std::is_same_v<std::decay_t<Args>, Args> && ...)
+    ;
+}
+
+
 struct CanMsg{
 protected:
-
     #pragma pack(push, 1)
-
-    uint32_t StdId;  /* Specifies the standard identifier.
-                        This parameter can be a value between 0 to 0x7FF. */
-
-    uint32_t ExtId;  /* Specifies the extended identifier.
-                        This parameter can be a value between 0 to 0x1FFFFFFF. */
-
-    uint8_t IDE;     /* Specifies the type of identifier for the message that 
-                        will be received. This parameter can be a value of 
-                        @ref CAN_identifier_type */
-
-    uint8_t RTR;     /* Specifies the type of frame for the received message.
-                        This parameter can be a value of 
-                        @ref CAN_remote_transmission_request */
-
-    uint8_t DLC;     /* Specifies the length of the frame that will be received.
-                        This parameter can be a value between 0 to 8 */
-
-    union{
-        uint8_t Data[8];
+    uint32_t :1;
+    
+    //是否为远程帧
+    uint32_t is_remote_:1;
+    
+    //是否为扩展帧
+    uint32_t is_ext_:1;
+    uint32_t id_:29;
+    
+    union alignas(4){
+        uint8_t data_[8];
         uint64_t data64_;
     };
-
-    uint8_t FMI;     /* Specifies the index of the filter the message stored in 
-                        the mailbox passes through. This parameter can be a 
-                        value between 0 to 0xFF */
-    uint8_t mbox;
+    
+    
+    uint8_t dlc_:4;     /* Specifies the length of the frame that will be received.
+    This parameter can be a value between 0 to 8 */
+    
+    uint8_t mbox_:4;
+    
+    uint8_t fmi_;     /* Specifies the index of the filter the message stored in 
+    the mailbox passes through. This parameter can be a 
+    value between 0 to 0xFF */
     #pragma pack(pop)
+private:
+    // template<typename T>
+    // requires CanUtils::valid_arg<T>
+    // constexpr CanMsg & operator << (const T & val){ 
+    //     for(size_t i = 0; i < sizeof(T) and dlc_ < 8; i++){
+    //         data_[dlc_++] = ((const uint8_t *)&val)[i];
+    //     }
+    //     is_remote_ = false;
+    //     return *this;
+    // }
 
+
+    // // 输入流运算符重载
+    // template<typename T>
+    // requires CanUtils::valid_arg<T>
+    // constexpr CanMsg & operator>>(T && val) {
+    //     if (dlc_ < sizeof(T)-1) {
+    //         return *this;
+    //     }
+    //     for (size_t i = 0; i < sizeof(T); i++) {
+    //         ((uint8_t *)&val)[i] = data_[i];
+    //     }
+    //     // 更新 DLC，假设读取后清空数据
+    //     dlc_ -= sizeof(T);
+    //     for (size_t i = 0; i < dlc_; i++) {
+    //         data_[i] = data_[i + sizeof(T)];  // 移动剩余数据
+    //     }
+    //     return *this;
+    // }
 public:
-    constexpr CanMsg(){
-        // StdId = 0;
-        // ExtId = 0;
-        // IDE = 0;
-        // RTR = 0;
-        // DLC = 0;
-    }
+    constexpr CanMsg() = default;
 
     constexpr CanMsg(const CanMsg & other) = default;
     constexpr CanMsg(CanMsg && other) = default;
@@ -66,168 +96,98 @@ public:
     }
 
     constexpr CanMsg(const uint32_t id, const bool remote = true){
-        StdId = id;
-        ExtId = id;
-        IDE = (id > 0x7FF ? CAN_ID_EXT : CAN_ID_STD);
-        RTR = remote ? CAN_RTR_Remote : CAN_RTR_DATA;
-        DLC = 0;
+        id_ = id;
+        is_ext_ = (id > 0x7FF ? true : false);
+        is_remote_ = remote ? true : false;
+        dlc_ = 0;
     }
 
     explicit constexpr CanMsg(const uint32_t id, const uint64_t data, const uint8_t dlc){
-        StdId = id;
-        ExtId = id;
-        IDE = (id > 0x7FF ? CAN_ID_EXT : CAN_ID_STD);
-        RTR = CAN_RTR_DATA;
+        id_ = id;
+        is_ext_ = (id > 0x7FF ? true : false);
+        is_remote_ = false;
         data64_ = data;
-        DLC = dlc;
+        dlc_ = dlc;
     }
 
-    template<typename T>
-    requires (sizeof(T) <= 8) and (!std::is_pointer_v<T>)
-    constexpr CanMsg & operator << (const T & val){
-        for(size_t i = 0; i < sizeof(T) and DLC < 8; i++){
-            Data[DLC++] = ((const uint8_t *)&val)[i];
-        }
-        RTR = CAN_RTR_Data;
-        return *this;
-    }
 
-    // 输入流运算符重载
-    template<typename T>
-    requires (sizeof(T) <= 8)
-    constexpr CanMsg & operator>>(T && val) {
-        if (DLC < sizeof(T)-1) {
-            return *this;
-        }
-        for (size_t i = 0; i < sizeof(T); i++) {
-            ((uint8_t *)&val)[i] = Data[i];
-        }
-        // 更新 DLC，假设读取后清空数据
-        DLC -= sizeof(T);
-        for (size_t i = 0; i < DLC; i++) {
-            Data[i] = Data[i + sizeof(T)];  // 移动剩余数据
-        }
-        return *this;
-    }
+
 
 
     template <typename... Args>
-    requires (sizeof(std::tuple<Args...>) <= 8) and (!std::disjunction_v<std::is_pointer<Args>...>)
+    requires CanUtils::valid_args<Args...>
     constexpr CanMsg(const uint32_t id, const std::tuple<Args...>& tup):CanMsg(id) {
-        std::apply(
-            [&](auto&&... args) {
-                ((*this << args), ...);
-            }, tup
-        );
+        // std::apply(
+        //     [&](auto&&... args) {
+        //         ((*this << args), ...);
+        //     }, tup
+        // );
+
+        // for(size_t i = 0; i < sizeof(T) and dlc_ < 8; i++){
+        //     data_[dlc_++] = ((const uint8_t *)&val)[i];
+        // }
+        memcpy(data_, &tup, sizeof(tup));
+        dlc_ = sizeof(tup);
+        is_remote_ = false;
     }
 
     constexpr CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id) {
         resize(MIN(len, 8));
-
-        for(uint8_t i = 0; i < size(); i++){
-            this->operator[](i) = buf[i];
-        }
+        memcpy(data_, buf, dlc_);
+        is_remote_ = false;
     }
 
-    constexpr uint8_t * begin(){return Data;}
-    constexpr uint8_t * end(){return Data + size();}
-    constexpr const uint8_t * begin() const {return Data;}
-    constexpr const uint8_t * end() const {return Data + size();}
-    constexpr size_t size() const {return MIN(DLC, 8);}
+    constexpr uint8_t * begin(){return data_;}
+    constexpr uint8_t * end(){return data_ + size();}
+    constexpr uint8_t * data() {return data_;}
+    constexpr const uint8_t * begin() const {return data_;}
+    constexpr const uint8_t * end() const {return data_ + size();}
+    constexpr size_t size() const {return MIN(dlc_, 8);}
 
     constexpr uint64_t data64() const{ return data64_;}
     constexpr uint64_t & data64() {return data64_;}
 
-    operator std::vector<uint8_t>() const{return std::vector<uint8_t>{begin(), end()};}
-
-    template<size_t N>
-    operator std::array<uint8_t, N>() const{
-        std::array<uint8_t, N> ret;
-        for(size_t i = 0; i < N; i++){
-            ret[i] = (*this)[i];
-        }
-        return ret;
+    std::span<const uint8_t> span() const{
+        return std::span<const uint8_t>(begin(), size());
     }
 
-    auto to_vector() const {
-        return std::vector<uint8_t>(*this);
-    }
-
-    template<size_t N>
-    auto to_array() const {
-        return std::array<uint8_t, N>(*this);
-    }
-
-    constexpr bool isStd() const {return IDE == CAN_Id_Standard;}
-    constexpr bool isExt() const {return IDE == CAN_Id_Extended;}
-    constexpr bool isRemote() const {return (RTR == CAN_RTR_Remote);}
-    constexpr uint8_t mailbox() const {return mbox;}
+    constexpr bool isStd() const {return is_ext_ == CAN_Id_Standard;}
+    constexpr bool isExt() const {return is_ext_ == CAN_Id_Extended;}
+    constexpr bool isRemote() const {return (is_remote_ == true);}
+    constexpr uint8_t mailbox() const {return mbox_;}
     void read(uint8_t * buf, size_t len){
-        if(RTR == CAN_RTR_Remote) return;
+        if(is_remote_ == true) return;
         len = MIN(len, 8);
-        memcpy(buf, Data, len);
-        DLC = len;
+        memcpy(buf, data_, len);
+        dlc_ = len;
     }
 
     uint32_t id() const {
-        if(isStd()) return StdId;
-        else if(isExt()) return ExtId;
-        else return 0; 
+        return id_;
     }
-    constexpr const uint8_t operator[](const int index) const {return *(Data + index);};
-    constexpr uint8_t & operator[](const int index) {return *(Data + index);};
+
+    constexpr const uint8_t operator[](const size_t index) const {return *(data_ + index);};
+    constexpr uint8_t & operator[](const size_t index) {return *(data_ + index);};
 
 
     template<typename T>
-    requires (sizeof(T) <= 8)
+    requires CanUtils::valid_arg<T>
     constexpr operator T () const {
         T ret;
-        memcpy((void *)&ret, &Data, MIN(sizeof(ret), size()));
+        memcpy((void *)&ret, &data_, MIN(sizeof(T), size()));
         return ret;
     }
 
     
     void setExt(const bool en){
-        IDE = (en ? CAN_ID_EXT : CAN_ID_STD);
+        is_ext_ = (en ? true : false);
     }
     
-    constexpr void resize(const size_t size) {DLC = size;}
-
-
-    #ifdef HDW_SXX32
-
-    CanTxMsg * ptx() {
-        return reinterpret_cast<CanTxMsg *>(this);
-    }
-
-    CanRxMsg * prx() {
-        return reinterpret_cast<CanRxMsg *>(this);
-    }
-
-    const CanTxMsg * cptx() const {
-        return reinterpret_cast<const CanTxMsg *>(this);
-    }
-
-    const CanRxMsg * cprx() const {
-        return reinterpret_cast<const CanRxMsg *>(this);
-    }
-
-
-    #endif
+    constexpr void resize(const size_t size) {dlc_ = size;}
 };
 
-__inline OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
-    const auto guard = os.createGuard();
-
-    os << "{" << std::showbase << 
-        std::hex << std::bitset<11>(msg.id()) << '<'
-        << ((msg.isStd()) ? 'S' : 'E')
-        << ((msg.isRemote()) ? 'R' : 'D') << std::noshowbase
-        << '[' << std::dec << msg.size() << ']';
-    os << "> ";
-    
-    os << std::hex << std::span<const uint8_t>{msg.begin(), msg.size()};
-
-    return os << '}';
 }
+
+namespace ymd{
+    OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg);
 }

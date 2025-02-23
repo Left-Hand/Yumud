@@ -11,6 +11,8 @@ extern ymd::__Debugger & DEBUGGER;
 
 #define DEBUG_PRINTLN(...) ymd::DEBUGGER.println(__VA_ARGS__);
 
+#define DEBUG_PRINTLN_IDLE(...) if(ymd::DEBUGGER.pending() == 0) ymd::DEBUGGER.println(__VA_ARGS__);
+
 #define DEBUG_PRINTS(...) ymd::DEBUGGER.prints(__VA_ARGS__);
 
 #define DEBUG_PRINTT(...) ymd::DEBUGGER.printt(__VA_ARGS__);
