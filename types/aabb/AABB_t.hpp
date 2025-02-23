@@ -490,8 +490,9 @@ AABB_t<T> AABB_t<T>::quantized(T p_unit) const {
 
 template<arithmetic T>
 __inline OutputStream & operator<<(OutputStream & os, const AABB_t<T> & aabb){
+	const auto splt = os.splitter();
     os << "(";
-	os << aabb.position << ',';
+	os << aabb.position << splt;
 	os << aabb.size << ')';
 	return os;
 }

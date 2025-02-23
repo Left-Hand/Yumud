@@ -13,40 +13,83 @@ namespace ymd{
 class String;
 class StringStream;
 
+template <typename T>
+struct __needprint_helper {
+    static constexpr bool value = true;
+};
+
+template <>
+struct __needprint_helper<std::ios_base& (*)(std::ios_base&)>{
+    static constexpr bool value = false;
+};
+
+template<>
+struct __needprint_helper<std::_Setprecision>{
+    static constexpr bool value = false;
+};
+
 
 class OutputStream: virtual public BasicStream{
 private:
 
-    bool skip_split = false;
+    uint8_t sp_len;
 
     struct Config{
-        char splitter[4] = ", ";
+        char splitter[4];
 
-        uint8_t radix = 10;
-        uint8_t eps = 3;
+        uint8_t radix;
+        uint8_t eps;
 
         union{
-            uint8_t flags;
+            uint16_t flags;
             struct{
-                bool boolalpha:1 = false;
-                bool showpos:1 = false;
-                bool showbase:1 = false;
-                bool nobrackets:1 = false;
-                bool nospace:1 = false;
+                uint16_t boolalpha:1;
+                uint16_t showpos:1;
+                uint16_t showbase:1;
+                uint16_t nobrackets:1;
+                uint16_t nospace:1;
+                uint16_t forcesync:1;
             };
         };
     };
 
+    scexpr Config default_config = {
+        .splitter = ", ",
+        .radix = 10,
+        .eps = 3,
+        .flags = 0,
+    };
+
+    // scexpr auto a = sizeof(Config);
+
     Config config_;
 
-    
-    void print_entity(auto && any){
-        if(likely(skip_split == false) and likely(config_.splitter[0])){
-            write(config_.splitter, strlen(config_.splitter));
+    template<typename T>
+    __fast_inline void print_splt_then_entity(T && any){
+        if constexpr(true == __needprint_helper<std::decay_t<T>>::value){
+            write(config_.splitter, sp_len);
         }
+        *this << std::forward<T>(any);
+    }
 
-        skip_split = false;
-        *this << any;
+    template<typename T>
+    __fast_inline void print_splt_then_entity(const char splt, T && any){
+        if constexpr(true ==__needprint_helper<std::decay_t<T>>::value){
+            write(splt);
+        }
+        *this << std::forward<T>(any);
+    }
+
+    __fast_inline void print_end(){
+        if(unlikely(config_.forcesync)) flush();
+    }
+
+    __fast_inline void print_enter(){
+        scexpr const char * enter_str = "\r\n";
+        scexpr size_t enter_str_len = 2;
+        
+        write(enter_str, enter_str_len);
+        print_end();
     }
 
     scexpr const char * get_basealpha(const size_t _radix){
@@ -63,11 +106,14 @@ private:
         }
     }
 
-    int transform(const char chr) const;
+    int transform_char(const char chr) const;
     void checked_write(const char data);
     void checked_write(const char * pdata, const size_t len);
 public:
-    OutputStream() = default;
+    OutputStream(){
+        reconf(default_config);
+    }
+
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
 
@@ -80,6 +126,14 @@ public:
 
     OutputStream & setSplitter(const char * splitter){
         strcpy(config_.splitter, splitter);
+        sp_len = strlen(splitter);
+        return *this;
+    }
+    
+    OutputStream & setSplitter(const char splitter){
+        config_.splitter[0] = splitter;
+        config_.splitter[1] = 0;
+        sp_len = 1;
         return *this;
     }
 
@@ -95,6 +149,11 @@ public:
 
     OutputStream & noBrackets(const bool disen = true){
         config_.nobrackets = disen;
+        return *this;
+    }
+
+    OutputStream & forceSync(const bool en = true){
+        config_.forcesync = en;
         return *this;
     }
 
@@ -115,6 +174,7 @@ public:
     __inline OutputStream & operator<<(const StringView str){checked_write(str.data(), str.length()); return * this;}
     
     OutputStream & operator<<(const float val);
+    OutputStream & operator<<(const double val);
     OutputStream & operator<<(const iq_t val);
 
     OutputStream& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
@@ -125,18 +185,18 @@ public:
         return *this;
     }
 
-    OutputStream& operator<<(::std::ios_base& (*func)(::std::ios_base&));
-    OutputStream& operator<<(const ::std::_Setprecision & n){config_.eps = n._M_n; skip_split = true; return *this;}
-    OutputStream& operator<<(const ::std::nullopt_t n){return *this << '/';}
+    OutputStream& operator<<(std::ios_base& (*func)(std::ios_base&));
+    OutputStream& operator<<(const std::_Setprecision & n){config_.eps = n._M_n; return *this;}
+    OutputStream& operator<<(const std::nullopt_t n){return *this << '/';}
     
     template<typename T>
-    OutputStream& operator<<(const ::std::optional<T> v){
+    OutputStream& operator<<(const std::optional<T> v){
         if(v.has_value()) return *this << v.value();
         else return *this << '/';
     }
 
     template<size_t N>
-    OutputStream & operator<<(const ::std::bitset<N> & bs){
+    OutputStream & operator<<(const std::bitset<N> bs){
         char str[N + 1];
         for(size_t i = 0; i < N; ++i){
             str[N - 1 - i] = (bs[i]) ? '1' : '0';
@@ -155,12 +215,12 @@ public:
 
 
     template<typename T>
-    requires ::std::is_integral_v<T>
+    requires std::is_integral_v<T>
     OutputStream & operator<<(const T val){
         if constexpr(sizeof(T) <= 4){
             print_int(int(val));
         }else{
-            if constexpr (::std::is_signed_v<T>){
+            if constexpr (std::is_signed_v<T>){
                 print_int(int64_t(val));
             }else{
                 print_int(uint64_t(val));
@@ -185,11 +245,11 @@ private:
     }
 
     template <typename... Args>
-    void print_tuple(const ::std::tuple<Args...> & t){
-        using TupleType = ::std::tuple<Args...>;
-        constexpr size_t tupleSize = ::std::tuple_size<TupleType>::value;
+    void print_tuple(const std::tuple<Args...> & t){
+        using TupleType = std::tuple<Args...>;
+        constexpr size_t tupleSize = std::tuple_size<TupleType>::value;
         *this << '(';
-        ::std::apply(
+        std::apply(
             [&](const auto&... args) {
                 ((tupleSize > 1 && &args != &std::get<tupleSize - 1>(t) ? (*this << args << ',') : (*this << args)), ...);
             },
@@ -208,13 +268,13 @@ public:
 
 
     template <typename... Args>
-    OutputStream & operator<<(const ::std::tuple<Args...>& t) {
+    OutputStream & operator<<(const std::tuple<Args...>& t) {
         print_tuple(t);
         return *this;
     }
 
     template<typename T>
-    requires ::std::is_enum_v<T>
+    requires std::is_enum_v<T>
     OutputStream & operator<<(T && e){
         print_int(static_cast<int>(e));
         return *this;
@@ -223,30 +283,81 @@ public:
     template<HasToString T>
     OutputStream & operator<<(const T & misc){*this << misc.toString(config_.eps); return *this;}
 
-    template <typename ... Args>
-    void println(Args&&... args){
-        skip_split = true;
-        (..., print_entity(args));
-        *this << "\r\n";
-    }
+
 
     template <typename ... Args>
-    void prints(Args&&... args){
-        (*this << ... << args) << "\r\n";
+    OutputStream & print(Args&&... args){
+        if constexpr (sizeof...(args)) {
+            ((*this << std::forward<Args>(args)), ...);
+        }
+        return *this;
     }
 
-    template <typename ... Args>
-    void print(Args&&... args){
-        (*this << ... << args);
+    
+    template <typename First, typename ... Args>
+    OutputStream & prints(First && first, Args&&... args){
+        *this << std::forward<First>(first);
+
+        if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
+            return prints(std::forward<Args>(args)...);
+        }else if constexpr (sizeof...(args)) {
+            (print_splt_then_entity(' ', std::forward<Args>(args)), ...);
+            return prints();
+        }
+        return *this;
     }
 
+    OutputStream & prints(){
+        print_enter();
+        return *this;
+    }
+
+    template <typename First, typename ... Args>
+    OutputStream & printt(First && first, Args&&... args){
+        *this << std::forward<First>(first);
+        if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
+            return printt(std::forward<Args>(args)...);
+        }else if constexpr (sizeof...(args)) {
+            (print_splt_then_entity('\t', std::forward<Args>(args)), ...);
+            return printt();
+        }
+        return *this;
+    }
+
+    OutputStream & printt(){
+        print_enter();
+        return *this;
+    }
+
+    template <typename First, typename ... Args>
+    OutputStream & println(First && first, Args&&... args){
+        *this << std::forward<First>(first);
+        if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
+            return println(std::forward<Args>(args)...);
+        }else if constexpr (sizeof...(args)) {
+            (print_splt_then_entity(std::forward<Args>(args)), ...);
+            return println();
+        }
+        return *this;
+    }
+
+    OutputStream & println(){
+        print_enter();
+        return *this;
+    }
 
     auto eps() const {return config_.eps;}
     auto radix() const {return config_.radix;}
+
+    // struct __Splitter{
+    // };
+    const char * splitter() const {return config_.splitter;}
+
     OutputStream & flush();
 
     OutputStream & reconf(const Config config){
         config_ = config;
+        sp_len = strlen(config_.splitter);
         return *this;
     }
 
@@ -263,7 +374,7 @@ public:
         }
     };
 
-    __Guard guard(){
+    [[nodiscard]] __Guard createGuard(){
         return __Guard(*this);
     }
 };

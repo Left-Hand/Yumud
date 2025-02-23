@@ -997,11 +997,11 @@ void bldc_main(){
     );
 
     ArgSplitter splitter;
-
+    DEBUGGER.setSplitter(',');
     while(true){
         // auto pos = ma730.getLapPosition();
 
-        // if(false)
+        if(false)
         {
             auto strs_opt = splitter.update(uart2);
             if(strs_opt.has_value()){
@@ -1049,7 +1049,7 @@ void bldc_main(){
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
 
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr[0], uvw_curr[1], uvw_curr[2]);
+        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr[0], uvw_curr[1], uvw_curr[2]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_volt[0], ab_volt[1]);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
@@ -1083,17 +1083,30 @@ void bldc_main(){
         // if(can1.pending() == 0) can1.write(msg);
         // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
         // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
-        delay(2);
-        DEBUGGER.noBrackets(true);
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
-        delay(2);
-        if(auto guard = DEBUGGER.guard(); true){
-            DEBUGGER.noBrackets(false);
-            if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
-        }
+        // delay(2);
+        // DEBUGGER.noBrackets(true);
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        // delay(2);
+
+        // DEBUGGER.forceSync();
+        // if(false){
+        //     const auto guard = DEBUGGER.createGuard();
+        //     DEBUGGER.noBrackets(false);
+        //     DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        //     // DEBUGGER.flush();
+        // }
+
+        // if(true){
+        //     const auto guard = DEBUGGER.createGuard();
+        //     // DEBUGGER.setSplitter('|');
+        //     DEBUGGER.noBrackets(true);
+        //     DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        //     // DEBUGGER.flush();
+        // }
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data_cache[0], adc_data_cache[1], adc_data_cache[2], (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
         // (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3
-        // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3); 
+
+        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3); 
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3); 
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1], est_rad, rad);
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100), int(uvw_curr[1]*100), int(uvw_curr[2]*100));

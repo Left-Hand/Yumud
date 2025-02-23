@@ -4,7 +4,7 @@
 using namespace ymd;
 
 int _write(int file, char *buf, int len){
-    __Debugger::singleton().write(buf, len);
+    DEBUGGER.write(buf, len);
     return len;
 }
 

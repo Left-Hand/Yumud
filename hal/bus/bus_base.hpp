@@ -18,6 +18,7 @@ public:
         NO_ACK,
         NO_CS_PIN,
         ZERO_LENGTH,
+        VERIFY_FAILD
     };
 
     ErrorType type = ErrorType::OK;
@@ -26,14 +27,16 @@ public:
     BusError(ErrorType && _type):type(_type){;}
     BusError(const BusError & other):type(other.type){;}
     BusError(BusError && other):type(other.type){;}
-    BusError & operator = (const BusError & other){type = other.type; return *this;}
-    BusError & operator = (BusError && other){type = other.type; return *this;}
+    BusError & operator = (const BusError & other) = delete;
+    BusError & operator = (BusError && other) = delete;
+    __fast_inline BusError & emplace(const BusError & other){type = other.type; return *this;}
+    __fast_inline BusError & emplace(BusError && other){type = other.type; return *this;}
 
     bool operator ==(const ErrorType & _type){return type == _type;}
     bool operator !=(const ErrorType & _type){return type != _type;}
-    explicit operator bool() {return type != ErrorType::OK;}
 
-    bool ok() const {return type == ErrorType::OK;}
+    __fast_inline bool wrong() const {return unlikely(type != ErrorType::OK);}
+    __fast_inline bool ok() const {return likely(type == ErrorType::OK);}
     explicit operator ErrorType() {return type;}
 };
 

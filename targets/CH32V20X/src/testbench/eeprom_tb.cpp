@@ -60,7 +60,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 
     #ifdef MEMORY_TB_SEVERLBYTES
     {
-        auto before = Sys::Chip::getChipIdCrc();
+        auto before = sys::Chip::getChipIdCrc();
         mem.store(0,before);
 
         decltype(before) after;
@@ -209,7 +209,7 @@ static void mem_tb(OutputStream & logger, Memory & mem){
     Flash sto(0);
     sto.init();
     Memory flash = sto.slicePages(-1);
-    Sys::Misc::prework();
+    sys::preinit();
 
     // logger.prints("ok");
     delay(10);
@@ -310,7 +310,7 @@ void eeprom_main(){
 void flash_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
-    DEBUGGER.init();
+    DEBUGGER.init(DEBUGGER_INST, DEBUG_UART_BAUD);
 
     // auto & led = portA[8];
     // led.outpp();

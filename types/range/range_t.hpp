@@ -317,7 +317,7 @@ using Range = Range_t<real_t>;
 
 // namespace ymd{
 __inline OutputStream & operator<<(OutputStream & os, const Range_t<auto> & value){
-    return os << '[' << value.from << ',' << value.to << ')';
+    return os << '[' << value.from << os.splitter() << value.to << ')';
 }
 
 // };

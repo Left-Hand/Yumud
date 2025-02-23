@@ -10,7 +10,7 @@ void AsciiProtocolConcept::parseArgs(const StringViews args){
         case "rst"_ha:
         case "r"_ha:
             os.prints("rsting");
-            Sys::Misc::reset();
+            sys::reset();
             break;
         case "alive"_ha:
         case "a"_ha:

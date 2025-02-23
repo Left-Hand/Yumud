@@ -68,7 +68,6 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
         // }
     }while(false);
 
-    skip_split = true;
     return *this;
 }
 
@@ -79,7 +78,7 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
     if(config_.showpos and value >= 0) *this << '+';\
     this->write(str, len);\
 
-int OutputStream::transform(const char chr) const{
+int OutputStream::transform_char(const char chr) const{
     if(likely(!config_.flags)) return chr;
 
     if(unlikely(config_.nospace) and unlikely(chr == ' ')) return -1;
@@ -91,6 +90,8 @@ int OutputStream::transform(const char chr) const{
             case ']':
             case '{':
             case '}':
+            case '<':
+            case '>':
                 return -1;
             default:
                 return chr;
@@ -101,7 +102,7 @@ int OutputStream::transform(const char chr) const{
 }
 
 void OutputStream::checked_write(const char data){
-    const auto res = transform(data);
+    const auto res = transform_char(data);
     if(likely(res) >= 0) write(res);
 }
 
@@ -131,7 +132,7 @@ void OutputStream::checked_write(const char * pdata, const size_t len){
     Buf buf;
 
     for(size_t i = 0; i < len; i++){
-        const auto res = transform(pdata[i]);
+        const auto res = transform_char(pdata[i]);
         if(likely(res) >= 0){
             if(unlikely(buf.full())){
                 write(buf.buf, buf.buf_cap);
@@ -154,6 +155,11 @@ OutputStream & OutputStream::operator<<(const iq_t value){
 }
 
 OutputStream & OutputStream::operator<<(const float value){
+    PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::ftoa);
+    return *this;
+}
+
+OutputStream & OutputStream::operator<<(const double value){
     PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::ftoa);
     return *this;
 }

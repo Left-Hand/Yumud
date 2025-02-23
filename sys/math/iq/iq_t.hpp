@@ -26,10 +26,10 @@ struct iq_t;
 
 namespace std{
     template <>
-    struct is_arithmetic<iq_t> : ::std::true_type {};
+    struct is_arithmetic<iq_t> : std::true_type {};
 
     template <>
-    struct is_floating_point<iq_t> : ::std::false_type {};
+    struct is_floating_point<iq_t> : std::false_type {};
 }
 
 struct iq_t{

@@ -30,7 +30,7 @@ public:
 
 
 __inline OutputStream & operator <<(OutputStream & os, const Circle2D_t<auto> & circle){
-    return os << '(' << circle.org << ','  << circle.r << ')';
+    return os << '(' << circle.org << os.splitter()  << circle.r << ')';
 }
 
 }

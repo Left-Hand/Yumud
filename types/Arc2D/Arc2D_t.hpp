@@ -31,7 +31,8 @@ public:
 
 
 __inline OutputStream & operator <<(OutputStream & os, const Arc2D_t<auto> & arc){
-    return os << '(' << arc.org << ',' << arc.r << ',' << arc.range << ')';
+	const auto splt = os.splitter();
+    return os << '(' << arc.org << splt << arc.r << splt << arc.range << ')';
 }
 
 }

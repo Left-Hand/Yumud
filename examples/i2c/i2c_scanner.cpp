@@ -1,13 +1,14 @@
-#include "sys/debug/debug_inc.h"
 
-#include "src/testbench/tb.h"
-#include "hal/bus/i2c/i2csw.hpp"
-#include <bitset>
 
-void i2c_scanner_main(){
-    auto & logger = DEBUGGER_INST;
-    logger.init(DEBUG_UART_BAUD);
+#include <examples/exmaples.hpp>
+#include <hal/bus/i2c/i2csw.hpp>
+
+
+namespace exmaples{
     
+void i2c_scanner(){
+    DEBUGGER.init(DEBUGGER_INST, DEBUG_UART_BAUD);
+
     I2cSw i2c = {portD[2], portC[12]};
     i2c.init(100_KHz);
 
@@ -15,7 +16,7 @@ void i2c_scanner_main(){
         bool found = false;
         for(uint8_t i = 0; i < 128; i++){
             auto err = i2c.begin(i << 1);
-            if(err.ok()){
+            if(!err){
                 DEBUG_PRINTS("Found device at address: ", std::bitset<8>(i << 1));
 
                 found = true;
@@ -29,4 +30,6 @@ void i2c_scanner_main(){
     }
 
     while(true);
+}
+
 }

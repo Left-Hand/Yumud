@@ -194,7 +194,7 @@ void zdt_main(UartHw & logger){
     motor.triggerCali();
     while(true){
         motor.enable();
-        motor.setTargetPosition(sin(t));    
+        motor.setTargetPosition(sin(time()));    
         delay(10);
         if(can1.available()) DEBUG_PRINTLN(can1.read());
         // DEBUG_PRINTLN(can1.pending(), can1.getRxErrCnt(), can1.getTxErrCnt());

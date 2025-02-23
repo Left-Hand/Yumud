@@ -243,6 +243,6 @@ using Rect2 = Rect2_t<real_t>;
 using Rect2f = Rect2_t<float>;
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Rect2_t<auto> & value){
-    return os << '(' << value.position << ',' << value.size << ')';
+    return os << '(' << value.position << os.splitter() << value.size << ')';
 }
 };

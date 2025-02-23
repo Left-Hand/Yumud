@@ -140,7 +140,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
             break;
 
         case "crc"_ha:
-            os.prints(std::hex, std::showbase, Sys::Chip::getChipIdCrc());
+            os.prints(std::hex, std::showbase, sys::Chip::getChipIdCrc());
             break;
 
         case "eleczero"_ha:

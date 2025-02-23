@@ -291,7 +291,7 @@ __fast_inline Plane_t<T> Transform3D_t<T>::xform_inv_fast(const Plane_t<T> &p_pl
 template<arithmetic T>
 __inline OutputStream & operator<<(OutputStream & os, const Transform3D_t<T> & transform){
     os << "(";
-	os << transform.basis << ',';
+	os << transform.basis << os.splitter();
 	os << transform.origin << ')';
 	return os;
 }

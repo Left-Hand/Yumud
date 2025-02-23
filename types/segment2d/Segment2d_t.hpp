@@ -121,7 +121,7 @@ public:
 
 
 __inline OutputStream & operator <<(OutputStream & os, const Segment2D_t<auto> & seg){
-    return os << '(' << seg.from << ',' << seg.to << ')';
+    return os << '(' << seg.from << os.splitter() << seg.to << ')';
 }
 
 }
