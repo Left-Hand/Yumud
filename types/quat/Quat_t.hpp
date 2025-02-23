@@ -171,7 +171,8 @@ __fast_inline constexpr auto lerp(const Quat_t<arithmetic auto> & a, const Quat_
 
 }
 __fast_inline ymd::OutputStream & operator<<(ymd::OutputStream & os, const ymd::Quat_t<auto> & value){
-    return os << '(' << value.x << ',' << value.y << ',' << value.z << ',' << value.w << ')';
+    const auto splt = os.splitter();
+    return os << '(' << value.x << splt << value.y << splt << value.z << splt << value.w << ')';
 }
 
 

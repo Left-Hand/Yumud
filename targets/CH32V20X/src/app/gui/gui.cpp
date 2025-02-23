@@ -101,7 +101,7 @@ void gui_main(){
     auto & spi = spi2;
     auto & lcd_blk = portC[7];
     
-    lcd_blk.outpp(1);
+    lcd_blk.outpp(HIGH);
 
     auto & lcd_cs = portD[6];
     auto & lcd_dc = portD[7];

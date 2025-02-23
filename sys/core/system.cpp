@@ -41,25 +41,22 @@
 #define M_RCC_CLK_GETTER RCC_GetClocksFreq
 #endif
 
-namespace Sys{
-real_t t;
-}
 
-void Sys::Clock::delayMs(const uint32_t ms){
+void sys::Clock::delayMs(const uint32_t ms){
     delay(ms);
 }
 
-void Sys::Clock::delayUs(const uint32_t us){
+void sys::Clock::delayUs(const uint32_t us){
     delayMicroseconds(us);
 }
 
-void Sys::Misc::prework(){
+void sys::preinit(){
     #ifdef N32G45X
     RCC_ConfigPclk1(RCC_HCLK_DIV1);
     RCC_ConfigPclk2(RCC_HCLK_DIV1);
 
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-    Systick_Init();
+    systick_Init();
 
     RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOC, ENABLE);
     RCC_EnableAPB2PeriphClk(RCC_APB2_PERIPH_GPIOA | RCC_APB2_PERIPH_GPIOB | RCC_APB2_PERIPH_AFIO, ENABLE);
@@ -73,7 +70,7 @@ void Sys::Misc::prework(){
     //TODO
     BKP_TPEnable(DISABLE);
     PWR_BackupAccessEnable(DISABLE);
-    #else
+    #elif defined(CH32V20X)
     RCC_PCLK1Config(RCC_HCLK_Div1);
     RCC_PCLK2Config(RCC_HCLK_Div1);
     NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
@@ -96,17 +93,33 @@ void Sys::Misc::prework(){
     RCC_LSEConfig( RCC_LSE_OFF );
     BKP_TamperPinCmd(DISABLE);
     PWR_BackupAccessCmd(DISABLE);
+    #elif defined(CH32V30X)
+    RCC_PCLK1Config(RCC_HCLK_Div1);
+    RCC_PCLK2Config(RCC_HCLK_Div1);
+    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
+
+    Systick_Init();
+
+    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
+    PWR_BackupAccessCmd( ENABLE );
+    RCC_LSEConfig( RCC_LSE_OFF );
+    BKP_TamperPinCmd(DISABLE);
+    PWR_BackupAccessCmd(DISABLE);
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE | RCC_APB2Periph_GPIOD, ENABLE);
     #endif
 }
 
 
-void Sys::Misc::reset(){
+void sys::reset(){
     __disable_irq();
     __disable_irq();
     NVIC_SystemReset();
 }
 
-uint64_t Sys::Chip::getChipId(){
+uint64_t sys::Chip::getChipId(){
     static uint32_t chip_id[2] = {
         *(volatile uint32_t *)0x1FFFF7E8,
         *(volatile uint32_t *)0x1FFFF7EC
@@ -114,12 +127,12 @@ uint64_t Sys::Chip::getChipId(){
     return ((uint64_t)chip_id[1] << 32) | chip_id[0];
 }
 
-uint32_t Sys::Chip::getFlashSize(){
+uint32_t sys::Chip::getFlashSize(){
     static uint32_t chip_flash_size = operator"" _KB(*(volatile uint16_t *)0x1FFFF7E0);
     return chip_flash_size;
 }
 
-uint32_t Sys::Chip::getChipIdCrc(){
+uint32_t sys::Chip::getChipIdCrc(){
 
     using ymd::crc;
     
@@ -133,7 +146,7 @@ uint32_t Sys::Chip::getChipIdCrc(){
     return chip_id_crc;
 }
 
-uint64_t Sys::Chip::getMacAddress(){
+uint64_t sys::Chip::getMacAddress(){
     uint64_t ret = 0;
     #ifdef CHIP_HAS_RF
     FLASH_GetMACAddress(reinterpret_cast<uint8_t *>(&ret));
@@ -142,14 +155,8 @@ uint64_t Sys::Chip::getMacAddress(){
 }
 
 
-// static M_CLOCK_TYPEDEF RCC_CLK;
-
-// static void ClockUpdate(){
-// 	M_RCC_CLK_GETTER(&RCC_CLK);//Get chip frequencies
-// }
-
 #ifdef N32G45X
-#define M_RCC_SYSCLK(inst) inst.SysclkFreq;
+#define M_RCC_SYSCLK(inst) inst.sysclkFreq;
 #define M_RCC_HCLK(inst) inst.HclkFreq;
 #define M_RCC_PCLK1(inst) inst.Pclk1Freq;
 #define M_RCC_PCLK2(inst) inst.Pclk2Freq;
@@ -166,21 +173,21 @@ uint64_t Sys::Chip::getMacAddress(){
 
 
 
-uint32_t Sys::Clock::getSystemFreq(){
+uint32_t sys::Clock::getSystemFreq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_SYSCLK(RCC_CLK);
 }
 
 
-uint32_t Sys::Clock::getAPB1Freq(){
+uint32_t sys::Clock::getAPB1Freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_PCLK1(RCC_CLK);
 }
 
 
-void Sys::Clock::setAHBDiv(const uint8_t _div){
+void sys::Clock::setAHBDiv(const uint8_t _div){
 
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
@@ -196,7 +203,7 @@ void Sys::Clock::setAHBDiv(const uint8_t _div){
 
 }
 
-void Sys::Clock::setAPB1Div(const uint8_t _div){
+void sys::Clock::setAPB1Div(const uint8_t _div){
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
         case 1:
@@ -217,7 +224,7 @@ void Sys::Clock::setAPB1Div(const uint8_t _div){
     }
 }
 
-void Sys::Clock::setAPB2Div(const uint8_t _div){
+void sys::Clock::setAPB2Div(const uint8_t _div){
 
     uint8_t div = NEXT_POWER_OF_2(_div);
     switch(div){
@@ -240,32 +247,32 @@ void Sys::Clock::setAPB2Div(const uint8_t _div){
 }
 
 
-uint32_t Sys::Clock::getAPB2Freq(){
+uint32_t sys::Clock::getAPB2Freq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_PCLK2(RCC_CLK);
 }
 
-uint32_t Sys::Clock::getAHBFreq(){
+uint32_t sys::Clock::getAHBFreq(){
     M_CLOCK_TYPEDEF RCC_CLK;
     M_RCC_CLK_GETTER(&RCC_CLK);
     return M_RCC_HCLK(RCC_CLK);
 }
 
-void Sys::Clock::setAHBFreq(const uint32_t freq){
+void sys::Clock::setAHBFreq(const uint32_t freq){
     setAHBDiv(getAHBFreq() / freq);
 }
 
-void Sys::Clock::setAPB1Freq(const uint32_t freq){
+void sys::Clock::setAPB1Freq(const uint32_t freq){
     setAPB1Div(getAPB1Freq() / freq);
 }
 
-void Sys::Clock::setAPB2Freq(const uint32_t freq){
+void sys::Clock::setAPB2Freq(const uint32_t freq){
     setAPB2Div(getAPB2Freq() / freq);
 }
 
 
-bool Sys::Exception::isInterruptPending(){
+bool sys::Exception::isInterruptPending(){
     #ifdef ARCH_QKV4
     return QingKeV4::isInterruptPending();
     #else
@@ -273,7 +280,7 @@ bool Sys::Exception::isInterruptPending(){
     #endif
 }
 
-bool Sys::Exception::isIntrruptActing(){
+bool sys::Exception::isIntrruptActing(){
     #ifdef ARCH_QKV4
     return QingKeV4::isIntrruptActing();
     #else
@@ -281,7 +288,7 @@ bool Sys::Exception::isIntrruptActing(){
     #endif
 }
 
-uint8_t Sys::Exception::getInterruptDepth(){
+uint8_t sys::Exception::getInterruptDepth(){
     #ifdef ARCH_QKV4
     return QingKeV4::getInterruptDepth();
     #else
@@ -289,10 +296,10 @@ uint8_t Sys::Exception::getInterruptDepth(){
     #endif
 }
 
-void Sys::Exception::disableInterrupt(){
+void sys::Exception::disableInterrupt(){
     __disable_irq();
 }
 
-void Sys::Exception::enableInterrupt(){
+void sys::Exception::enableInterrupt(){
     __enable_irq();
 }

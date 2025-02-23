@@ -2,36 +2,29 @@
 
 #include "sys/clock/clock.h"
 #include "debugger.hpp"
+#include <source_location>
 
 namespace ymd{
-extern ymd::OutputStream & LOGGER;
+// extern ymd::OutputStream & LOGGER;
 extern ymd::__Debugger & DEBUGGER;
 }
 
-#ifndef VOFA_PRINT
-#define VOFA_PRINT(...) ymd::LOGGER.println(__VA_ARGS__);
-#endif
-
-
-#ifndef DEBUG_PRINTLN
 #define DEBUG_PRINTLN(...) ymd::DEBUGGER.println(__VA_ARGS__);
-#endif
 
-#ifndef DEBUG_PRINTS
 #define DEBUG_PRINTS(...) ymd::DEBUGGER.prints(__VA_ARGS__);
-#endif
 
-#ifndef DEBUG_ERROR
-#define DEBUG_ERROR(...) DEBUG_PRINTS("[E][", __FUNCTION__, ' ', __FILE__, ':', __LINE__ , ']', ##__VA_ARGS__)
-#endif
+#define DEBUG_PRINTT(...) ymd::DEBUGGER.printt(__VA_ARGS__);
 
-#ifndef DEBUG_WARN
-#define DEBUG_WARN(...) DEBUG_PRINTS("[W][", __FUNCTION__, ' ', __FILE__, ':', __LINE__ , ']', ##__VA_ARGS__)
-#endif
+#define DEBUG_PRINT(...) ymd::DEBUGGER.print(__VA_ARGS__);
 
-#ifndef DEBUG_VALUE
-#define DEBUG_VALUE(value, ...) DEBUG_PRINTS("<", #value, ">\tis:", value, ##__VA_ARGS__)
-#endif
+
+#define DEBUG_SOURCE(...) __DEBUG_SOURCE(std::source_location::current(), ##__VA_ARGS__)
+
+#define DEBUG_ERROR(...) DEBUG_PRINT("[Err] "); __DEBUG_SOURCE(std::source_location::current(), ##__VA_ARGS__);
+
+#define DEBUG_WARN(...) DEBUG_PRINT("[Warn] "); __DEBUG_SOURCE(,std::source_location::current(), ##__VA_ARGS__);
+
+#define DEBUG_VALUE(value, ...) DEBUG_PRINTS("<", #value, ">\tis:", value, ##__VA_ARGS__);
 
 
 #define PANIC(...)\
@@ -47,12 +40,32 @@ do{\
 
 #define ASSERT(cond, ...)\
 ({\
-    bool __assert_result = (cond); \
+    bool __assert_result = static_cast<bool>(cond); \
     if (!__assert_result) {\
         PANIC(__VA_ARGS__);\
     }\
     __assert_result;\
 })
+
+template<typename ... Args>
+void __DEBUG_SOURCE(const std::source_location location,Args && ... args){
+    {
+        const auto guard = ymd::DEBUGGER.createGuard();
+        ymd::DEBUGGER.reconf({
+            .splitter = ", ",
+            .radix = 10,
+            .eps = 3,
+            .flags = 0,
+        });
+        
+        DEBUG_PRINT(location.file_name(), 
+        '(' ,location.line() , ':' , location.column() , ')'
+        , location.function_name() , ':');
+    }
+    
+    DEBUG_PRINTLN(std::forward<Args>(args)...);
+}
+
 
 #define TODO(...) do{PANIC("todo:", ##__VA_ARGS__)}while(false);
 

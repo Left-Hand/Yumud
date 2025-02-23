@@ -94,16 +94,16 @@ scexpr uint8_t GES_WAVE_FLAG				 = (1<<0);
 
 
 void PAJ7620::readReg(uint8_t addr, uint8_t & data){
-	auto err = i2c_drv_.readReg<uint8_t>(addr, data);
-	if(err){
+	const auto err = i2c_drv_.readReg<uint8_t>(addr, data);
+	if(err.wrong()){
 		PAJ7620_DEBUG(err);
 	}
 };
 
 void PAJ7620::writeReg(uint8_t cmd, uint8_t data){
-	auto err = i2c_drv_.writeReg<uint8_t>(cmd, data);
+	const auto err = i2c_drv_.writeReg<uint8_t>(cmd, data);
 	// PAJ7620_DEBUG(cmd, data);
-	if(err){
+	if(err.wrong()){
 		PAJ7620_DEBUG(err);
 	}
 };

@@ -217,24 +217,17 @@ public:
 };
 
 __inline OutputStream & operator<<(OutputStream & os, const CanMsg & msg){
+    const auto guard = os.createGuard();
+
     os << "{" << std::showbase << 
         std::hex << std::bitset<11>(msg.id()) << '<'
-        // std::hex << std::bitset<11>(msg.id()) << '<'
-        << ((msg.isStd()) ? "Std" : "Ext")
-        << ((msg.isRemote()) ? "Rmt" : "Dat") << std::noshowbase
+        << ((msg.isStd()) ? 'S' : 'E')
+        << ((msg.isRemote()) ? 'R' : 'D') << std::noshowbase
         << '[' << std::dec << msg.size() << ']';
     os << "> ";
     
-    os << std::hex;
+    os << std::hex << std::span<const uint8_t>{msg.begin(), msg.size()};
 
-    for(size_t i = 0; i < msg.size(); i++){
-        os << msg[i];
-        if(i == msg.size() - 1) break;
-        os << ',';
-    }
-    
-    os << std::dec;
-        
     return os << '}';
 }
 }

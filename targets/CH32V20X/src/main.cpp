@@ -11,28 +11,9 @@
 #include "app/digiPW/digipw.hpp"
 
 
-void preinit(){
-    RCC_PCLK1Config(RCC_HCLK_Div1);
-    RCC_PCLK2Config(RCC_HCLK_Div1);
-    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-
-    Systick_Init();
-
-    GPIO_PinRemapConfig(GPIO_Remap_PD01, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_GPIOB | RCC_APB2Periph_AFIO, ENABLE );
-    PWR_BackupAccessCmd( ENABLE );
-    RCC_LSEConfig( RCC_LSE_OFF );
-    BKP_TamperPinCmd(DISABLE);
-    PWR_BackupAccessCmd(DISABLE);
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOE | RCC_APB2Periph_GPIOD, ENABLE);
-}
-
-
 int main(){
+    sys::preinit();
     #ifdef CH32V20X
-    Sys::Misc::prework();
     // eeprom_main();
     // while(true);
     //  uart_main();
@@ -78,7 +59,6 @@ int main(){
 
     while(true);
     #elif defined(CH32V30X)
-    preinit();
     // programmer_main();
     // DEBUG_PRINTLN("??");
     // gui_main();

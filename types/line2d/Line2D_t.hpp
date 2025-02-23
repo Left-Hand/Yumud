@@ -273,7 +273,7 @@ public:
 
 
 __fast_inline OutputStream & operator <<(OutputStream & os, const Line2D_t<auto> & line){
-    return os << '(' << line.d << ',' << line.rad << ')';
+    return os << '(' << line.d << os.splitter() << line.rad << ')';
 }
 
 }

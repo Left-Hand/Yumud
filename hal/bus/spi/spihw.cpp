@@ -116,13 +116,13 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudrate){
     switch((uint32_t)instance){
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
-            busFreq = Sys::Clock::getAPB1Freq();
+            busFreq = sys::Clock::getAPB1Freq();
             break;
         #endif
 
         #ifdef ENABLE_SPI2
         case SPI2_BASE:
-            busFreq = Sys::Clock::getAPB2Freq();
+            busFreq = sys::Clock::getAPB2Freq();
             break;
         #endif
 

@@ -63,8 +63,8 @@ public:
     explicit String(char * c);
     explicit String(char * c, const size_t size);
     explicit String(const char * c, const size_t size);
-	String(const ::std::string & str):String(str.c_str(), str.length()){};
-	String(const ::std::string_view & str):String(str.data(), str.length()){};
+	String(const std::string & str):String(str.c_str(), str.length()){};
+	String(const std::string_view & str):String(str.data(), str.length()){};
 	String(const StringView & str):String(str.data(), str.length()){};
 
 	explicit String(uint8_t value, uint8_t base=10);

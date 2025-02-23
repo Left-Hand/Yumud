@@ -7,7 +7,7 @@ void float_main(){
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
     while(true){
-        bf16 i = sin(t);
+        bf16 i = sin(time());
         bf16 o = i;
 
         auto mic = micros();

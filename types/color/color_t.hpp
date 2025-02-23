@@ -234,7 +234,8 @@ public:
 };
 
 __fast_inline OutputStream & operator<<(OutputStream & os, const Color_t<auto> & value){
-    return os << '(' << value.r << ',' << value.g << ',' << value.b << ',' << value.a << ')';
+	const auto splt = os.splitter();
+    return os << '(' << value.r << splt << value.g << splt << value.b << splt << value.a << ')';
 }
 }
 

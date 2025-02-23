@@ -3,12 +3,10 @@
 #include "sys/core/platform.h"
 #include "sys/math/real.hpp"
 
-namespace Sys{
+namespace sys{
+    void preinit();
+    void reset();
     
-    namespace Misc{
-        void prework();
-        void reset();
-    };
 
     namespace Chip{
         uint64_t getChipId();

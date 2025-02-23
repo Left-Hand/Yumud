@@ -358,9 +358,10 @@ T Basis_t<T>::determinant() const {
 
 template<arithmetic T>
 __inline OutputStream & operator<<(OutputStream & os, const Basis_t<T> & mat){
+	const auto splt = os.splitter();
     os << "(";
-	os << mat[0] << ',';
-	os << mat[1] << ',';
+	os << mat[0] << splt;
+	os << mat[1] << splt;
 	os << mat[2] << ')';
 	return os;
 }

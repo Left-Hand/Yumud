@@ -176,7 +176,7 @@ public:
     }
 
     void reset()override{
-        Sys::Misc::reset();
+        sys::reset();
     }
 
     void shutdown(){

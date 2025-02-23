@@ -151,7 +151,7 @@ __inline OutputStream & operator<<(OutputStream & os, const Jet_t<T, N> & jet){
     for (size_t _j = 0; _j < N; _j++) {
         os << jet[_j];
         if(_j == N - 1) break;
-        os << ", ";
+        os << os.splitter();
     }
     os << " ]";
     return os;

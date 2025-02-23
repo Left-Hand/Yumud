@@ -32,16 +32,16 @@ OutputStream & ymd::operator << (OutputStream & os, const BusError::ErrorType & 
 }
 
 void Bus::Locker::lock(const uint8_t index){
-    Sys::Exception::disableInterrupt();
-    oninterrupt_ = Sys::Exception::isIntrruptActing();
+    sys::Exception::disableInterrupt();
+    oninterrupt_ = sys::Exception::isIntrruptActing();
     req = index >> 1;
     locked_ = true;
-    Sys::Exception::enableInterrupt();
+    sys::Exception::enableInterrupt();
 }
 
 
 bool Bus::Locker::owned_by(const uint8_t index) const {
-    return (req == index >> 1) and (Sys::Exception::isIntrruptActing() == oninterrupt_);
+    return (req == index >> 1) and (sys::Exception::isIntrruptActing() == oninterrupt_);
 }
 
 

@@ -50,7 +50,7 @@ void lt8920_main(){
 
     // LT8920::Role role = LT8920::Role::BROADCASTER;
     // lt.setRole(role);
-    bool is_rx = (Sys::Chip::getChipIdCrc() != 0x5E0799D2);
+    bool is_rx = (sys::Chip::getChipIdCrc() != 0x5E0799D2);
     
     if(is_rx) lt.startListen();
 
