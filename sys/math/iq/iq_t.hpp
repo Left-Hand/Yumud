@@ -3,7 +3,6 @@
 
 #include "sys/core/platform.h"
 
-// #include "dsp/constexprmath/ConstexprMath.hpp"
 
 #if defined(RISCV)
 #include "riscv/IQmath_RV32.h"
@@ -16,9 +15,9 @@
 
 
 struct _iq{
-    _iq16 value = 0;
-    __fast_inline constexpr explicit _iq(const _iq16 _value) : value(_value){;}
-    __fast_inline constexpr operator _iq16() const{return value;}
+    int32_t value = 0;
+    __fast_inline constexpr explicit _iq(const int32_t _value) : value(_value){;}
+    __fast_inline constexpr operator int32_t() const{return value;}
 };
 
 

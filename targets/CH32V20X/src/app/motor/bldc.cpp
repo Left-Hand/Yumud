@@ -153,80 +153,77 @@ __fast_inline iq_t LPF(const iq_t x, const iq_t y){
 
 class CurrentSensor{
 protected:
-    AnalogInChannel & _u_sense;
-    AnalogInChannel & _v_sense;
-    AnalogInChannel & _w_sense;
-    UvwCurrent _uvw_bias;
+    AnalogInChannel & u_sense_;
+    AnalogInChannel & v_sense_;
+    AnalogInChannel & w_sense_;
 
-    UvwCurrent _uvw_curr;
-    real_t _mid_curr;
-    AbCurrent _ab_curr;
-    DqCurrent _dq_curr;
+    UvwCurrent uvw_bias_;
+    UvwCurrent uvw_raw_;
+    UvwCurrent uvw_curr_;
+    real_t mid_curr_;
+    AbCurrent ab_curr_;
+    DqCurrent dq_curr_;
 public:
     CurrentSensor(
         AnalogInChannel & u_sense,
         AnalogInChannel & v_sense, 
         AnalogInChannel & w_sense
     ): 
-        _u_sense(u_sense),
-        _v_sense(v_sense), 
-        _w_sense(w_sense){
+        u_sense_(u_sense),
+        v_sense_(v_sense), 
+        w_sense_(w_sense){
             reset();
         }
 
     void reset(){
-        _uvw_curr = {0, 0, 0};
-        _uvw_bias = {0, 0, 0};
-        _ab_curr = {0, 0};
-        _dq_curr = {0, 0};
+        uvw_curr_ = {0, 0, 0};
+        uvw_bias_ = {0, 0, 0};
+        ab_curr_ = {0, 0};
+        dq_curr_ = {0, 0};
     }
 
 
     void capture(){
-        const real_t raw_u_curr = real_t(_u_sense);
-        const real_t raw_v_curr = real_t(_v_sense);
-        const real_t raw_w_curr = real_t(_w_sense);
-        const real_t raw_sum_curr = raw_u_curr + raw_v_curr + raw_w_curr;
-        _mid_curr = LPF5(_mid_curr, raw_sum_curr / 3);
-        const real_t mid_curr = _mid_curr;
-        _uvw_curr[0] = (raw_u_curr - mid_curr);
-        _uvw_curr[1] = (raw_v_curr - mid_curr);
-        _uvw_curr[2] = (raw_w_curr - mid_curr);
+        uvw_raw_ = {real_t(u_sense_),
+                    real_t(v_sense_),
+                    real_t(w_sense_)};
+        mid_curr_ = LPF5(mid_curr_, (uvw_raw_.u + uvw_raw_.v + uvw_raw_.w) / 3);
+        uvw_curr_[0] = (uvw_raw_.u - mid_curr_ - uvw_bias_.u);
+        uvw_curr_[1] = (uvw_raw_.v - mid_curr_ - uvw_bias_.v);
+        uvw_curr_[2] = (uvw_raw_.w - mid_curr_ - uvw_bias_.w);
     }
 
-
-    void calibrate(){
-
-    }
 
     void update(const real_t rad){
 
-        const real_t raw_u_curr = real_t(_u_sense);
-        const real_t raw_v_curr = real_t(_v_sense);
-        const real_t raw_w_curr = real_t(_w_sense);
+        const real_t raw_u_curr = real_t(u_sense_);
+        const real_t raw_v_curr = real_t(v_sense_);
+        const real_t raw_w_curr = real_t(w_sense_);
         const real_t raw_sum_curr = raw_u_curr + raw_v_curr + raw_w_curr;
-        _mid_curr = LPF5(_mid_curr, raw_sum_curr / 3);
-        const real_t mid_curr = _mid_curr;
-        _uvw_curr[0] = (raw_u_curr - mid_curr);
-        _uvw_curr[1] = (raw_v_curr - mid_curr);
-        _uvw_curr[2] = (raw_w_curr - mid_curr);
+        mid_curr_ = LPF5(mid_curr_, raw_sum_curr / 3);
+        const real_t mid_curr_ = mid_curr_;
+        uvw_curr_[0] = (raw_u_curr - mid_curr_);
+        uvw_curr_[1] = (raw_v_curr - mid_curr_);
+        uvw_curr_[2] = (raw_w_curr - mid_curr_);
 
-        _ab_curr = uvw_to_ab(_uvw_curr);
-        const auto dq_curr = ab_to_dq(_ab_curr, rad);
+        ab_curr_ = uvw_to_ab(uvw_curr_);
+        const auto dq_curr = ab_to_dq(ab_curr_, rad);
         
-        // if(likely(ABS(dq_curr[0]) < 1))_dq_curr[0] = LPFN<7>(_dq_curr[0],dq_curr[0]);
-        // if(likely(ABS(dq_curr[1]) < 1))_dq_curr[1] = LPFN<7>(_dq_curr[1],dq_curr[1]);
+        // if(likely(ABS(dq_curr[0]) < 1))dq_curr_[0] = LPFN<7>(dq_curr_[0],dq_curr[0]);
+        // if(likely(ABS(dq_curr[1]) < 1))dq_curr_[1] = LPFN<7>(dq_curr_[1],dq_curr[1]);
 
-        _dq_curr[0] = LPFN<7>(_dq_curr[0],dq_curr[0]);
-        _dq_curr[1] = LPFN<7>(_dq_curr[1],dq_curr[1]);
+        dq_curr_[0] = LPFN<7>(dq_curr_[0],dq_curr[0]);
+        dq_curr_[1] = LPFN<7>(dq_curr_[1],dq_curr[1]);
     }
+    auto raw()const {return uvw_raw_;}
 
-    auto & uvw()const{return _uvw_curr;}
-    auto & uvw(){return _uvw_curr;}
-    auto & ab()const{return _ab_curr;}
-    auto & ab(){return _ab_curr;}
-    auto & dq()const{return _dq_curr;}
-    auto & dq(){return _dq_curr;}
+    auto mid() const {return mid_curr_;}
+    auto uvw()const{return uvw_curr_;}
+    // auto uvw(){return uvw_curr_;}
+    auto ab()const{return ab_curr_;}
+    // auto ab(){return ab_curr_;}
+    auto dq()const{return dq_curr_;}
+    // auto dq(){return dq_curr_;}
 };
 
 
@@ -457,7 +454,7 @@ public:
 
     __fast_inline void update(bool match){
         if(unlikely(match)) grades_ += step_;
-        else grades_ -= 1;
+        else grades_ = CLAMP(grades_ - 1, 0, 2 * threshold_);
     }
 
     __fast_inline bool overflow() const{
@@ -474,22 +471,21 @@ class CurrentBiasCalibrater{
 public:
     struct Config{
         uint period_ticks;
-        uint cutoff_freq;
-        uint isr_freq;
+        uint fc;
+        uint fs;
     };
 
-    using Lpf = LowpassFilterZ_t<iq_t>;
+    using Lpf = LowpassFilter_t<iq_t>;
     using Lpfs = std::array<Lpf, 3>;
-
-    // scexpr uint cutoff_freq = 3;
-    // scexpr uint isr_freq = 25000;
-    // scexpr iq_t lpf_alpha = iq_t(LowpassFilterZ_t<double>::solve_alpha(cutoff_freq, isr_freq));
 
     Lpfs lpfs_ = {};
 
 protected:
     uint period_ticks_;
     uint elapsed_ticks_;
+    uint fs_;
+
+    // real_t last_midp_curr_ = 0;
 public:
     CurrentBiasCalibrater(const Config & config){
         reconf(config);
@@ -498,11 +494,13 @@ public:
 
     void reconf(const Config & config){
         period_ticks_ = config.period_ticks;
+        fs_ = config.fs;
 
-        const auto alpha = Lpf::solve_alpha(config.cutoff_freq, config.isr_freq);
-        lpfs_[0].reconf(alpha);
-        lpfs_[1].reconf(alpha);
-        lpfs_[2].reconf(alpha);
+        // const auto alpha = Lpf::solve_alpha(config.fc, config.fs);
+        lpfs_[0].reconf({config.fc, config.fs});
+        lpfs_[1].reconf({config.fc, config.fs});
+        lpfs_[2].reconf({config.fc, config.fs});
+
     }
 
     void reset(){
@@ -512,12 +510,19 @@ public:
         }
     }
 
-    void update(const UvwCurrent & uvw){
-        // if(done()) return;
+    void update(const UvwCurrent & uvw, const real_t mid_point){
         lpfs_[0].update(uvw.u);
         lpfs_[1].update(uvw.v);
         lpfs_[2].update(uvw.w);
         elapsed_ticks_ ++;
+
+        // constexpr auto stable_curr_slewrate = 10.0_r;
+        // constexpr auto stable_threshold = stable_curr_slewrate / foc_freq;
+
+        // const auto mid_point_diff = ABS(mid_point - last_midp_curr_);
+        // last_midp_curr_ = mid_point;
+
+        // curr_stable_checker.update(mid_point_diff < stable_threshold);
     }
 
     bool done(){
@@ -633,7 +638,7 @@ void bldc_main(){
     //     delay(1);
     // }
     
-    mp6540.setBias(14.68_r,14.68_r,14.62_r);
+    // mp6540.setBias(14.68_r,14.68_r,14.62_r);
 
 
 
@@ -897,13 +902,13 @@ void bldc_main(){
 
 
 
-        scexpr int isr_freq = chopper_freq / 2;
+        scexpr int fs = chopper_freq / 2;
         // scexpr int test_freq = 200;
         scexpr int test_freq = 500;
         scexpr real_t test_volt = 0.2_r;
         // scexpr int test_freq = 1000;
         static int cnt = 0; 
-        scexpr int div = isr_freq / test_freq;
+        scexpr int div = fs / test_freq;
 
         static bool upedge_captured = true;
 
@@ -912,7 +917,7 @@ void bldc_main(){
             cnt = 0;
             upedge_captured = false;
         }
-        scexpr real_t omega = real_t((TAU * test_freq) / isr_freq);
+        scexpr real_t omega = real_t((TAU * test_freq) / fs);
 
         {
             static real_t last_curr = 0;
@@ -1118,7 +1123,7 @@ void bldc_main(){
         "list", 
         // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
         // rpc::make_function("spd", [](const real_t duty){}),
-        // rpc::make_function("crc", [](){DEBUG_PRINTS(Sys::Chip::getChipIdCrc())})
+        rpc::make_function("rst", [](){sys::reset();}),
         rpc::make_property("pos", targ_pos),
         rpc::make_property("spd", targ_spd),
         rpc::make_ro_property("mpos", meas_pos),
@@ -1140,15 +1145,29 @@ void bldc_main(){
 
     CurrentBiasCalibrater calibrater = {{
         .period_ticks = 10000,
-        .cutoff_freq = 10,
-        .isr_freq = foc_freq
+        .fc = 20,
+        .fs = foc_freq
     }};
+
+    // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
+    // LowpassFilterD_t<iq_t> speed_measurer = {
+    // LowpassFilterD_t<iq_t> speed_measurer = {
+    LowpassFilterD_t<float> speed_measurer = {
+        {
+            10, 
+            foc_freq
+        }
+    };
 
     auto measure_bias = [&]{
         
         // mp6540.enable(false);
         curr_sens.capture();
-        calibrater.update(curr_sens.uvw());
+        calibrater.update(curr_sens.raw(), curr_sens.mid());
+
+        odo.update();
+        speed_measurer.update(float(odo.getPosition()));
+
         // mp6540.enable(true);
         if(calibrater.done()) {
             // const auto guard = DEBUGGER.createGuard();
@@ -1174,7 +1193,9 @@ void bldc_main(){
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
     while(true){
-        DEBUG_PRINTLN_IDLE(curr_sens.uvw(), calibrater.result());
+        // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), (speed_measurer.result()));
+        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t::from(speed_measurer.result()));
         // if(false)
         {
             auto strs_opt = splitter.update(uart2);

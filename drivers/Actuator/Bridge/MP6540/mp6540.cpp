@@ -4,10 +4,18 @@
 using namespace ymd;
 using namespace ymd::drivers;
 
+#ifdef MP6540_DEBUG
+#undef MP6540_DEBUG
+#define MP6540_DEBUG(...) DEBUG_LOG(...)
+#else 
+#define MP6540_DEBUG(...)
+#endif
+
 static void error(){
     MP6540_DEBUG("terminated!!!");
     PANIC();
 }
+
 
 MP6540::MP6540(PWM3_WP && pwms, AIN3_WP && ains)
 : pwms_{
@@ -70,15 +78,16 @@ void MP6540::setSoRes(const uint so_res_ohms){
     const auto volt_to_curr_ratio = curr_mirror_ratio / so_res_ohms;
 
     for(auto & ch : chs){
-        ch.ratio_ = volt_to_curr_ratio;
+        ch.setRatio(volt_to_curr_ratio);
     }
 }
 
-void MP6540::setBias(const real_t b0, const real_t b1, const real_t b2){
-    chs[0].bias_ = b0;
-    chs[1].bias_ = b1;
-    chs[2].bias_ = b2;
-}
+// void MP6540::setBias(const real_t b0, const real_t b1, const real_t b2){
+//     chs[0].bias_ = b0;
+//     chs[1].bias_ = b1;
+//     chs[2].bias_ = b2;
+// }
+
 MP6540::MP6540CurrentChannel & MP6540::ch(const size_t index){
     if(index == 0 or index > 3){
         MP6540_DEBUG("Channel index out of range:", index);
