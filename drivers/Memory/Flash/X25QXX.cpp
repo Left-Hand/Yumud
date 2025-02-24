@@ -80,7 +80,7 @@ void X25QXX::writePage(const Address addr, const uint8_t * data, size_t len){
 void X25QXX::entry_store(){
     auto & self = *this;
 
-    self.waitForFree(UINT_MAX);
+    self.waitForFree(UINT32_MAX);
     self.enableWrite();
 }
     
@@ -161,7 +161,7 @@ void X25QXX::storeBytes(const Address loc, const void * data, const Address len)
     do{
         op_window = store_window.grid_forward(op_window, m_pagesize);
         if(op_window){
-            self.waitForFree(UINT_MAX);
+            self.waitForFree(UINT32_MAX);
             auto * ptr = (reinterpret_cast<const uint8_t *>(data) + (op_window.from - store_window.from));
             self.writePage(op_window.from, ptr, op_window.length());
         }

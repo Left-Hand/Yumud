@@ -120,7 +120,7 @@ __fast_inline constexpr static float fast_cbrtf(float x) {
 }
 
 __fast_inline constexpr static auto xyz_gamma(const real_t x) -> real_t{
-    return (x > 0.008856_r) ? iq_t::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
+    return (x > 0.008856_r) ? iq_t<16>::from(fast_cbrtf(float(x))) : ((x * 7.787037_r) + 0.137931_r);
 }
 
 __fast_inline constexpr static auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
@@ -130,9 +130,9 @@ __fast_inline constexpr static auto inv_xyz_gamma_to8(const real_t x) -> uint8_t
 __fast_inline constexpr static XYZ rgb888_to_xyz(const RGB888 & rgb){
     auto [r,g,b] = rgb;
     
-    real_t r_lin = iq_t(xyz_table[r]) >> 8;
-    real_t g_lin = iq_t(xyz_table[g]) >> 8;
-    real_t b_lin = iq_t(xyz_table[b]) >> 8;
+    real_t r_lin = iq_t<16>(xyz_table[r]) >> 8;
+    real_t g_lin = iq_t<16>(xyz_table[g]) >> 8;
+    real_t b_lin = iq_t<16>(xyz_table[b]) >> 8;
 
     real_t x = ((r_lin * 0.4124_r) + (g_lin * 0.3576_r) + (b_lin * 0.1805_r)) * real_t(1.0f / 095.047f);
     real_t y = ((r_lin * 0.2126_r) + (g_lin * 0.7152_r) + (b_lin * 0.0722_r)) * real_t(1.0f / 100.000f);

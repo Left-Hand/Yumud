@@ -19,17 +19,17 @@ struct Blob{
 };
 
 struct BlobFilter{
-    Range_t<uint> area_range = {0, UINT_MAX};
-    Range_t<uint> width_range = {0, UINT_MAX};
-    Range_t<uint> height_range = {0, UINT_MAX};
+    Range_t<uint> area_range = {0, UINT32_MAX};
+    Range_t<uint> width_range = {0, UINT32_MAX};
+    Range_t<uint> height_range = {0, UINT32_MAX};
 
-    static BlobFilter clamp_width(const uint min_width, const uint max_width = UINT_MAX){
+    static BlobFilter clamp_width(const uint min_width, const uint max_width = UINT32_MAX){
         BlobFilter filter;
         filter.width_range = {min_width, max_width};
         return filter;
     }
 
-    static BlobFilter clamp_area(const uint min_area, const uint max_area = UINT_MAX){
+    static BlobFilter clamp_area(const uint min_area, const uint max_area = UINT32_MAX){
         BlobFilter filter;
         filter.area_range = {min_area, max_area};
         return filter;

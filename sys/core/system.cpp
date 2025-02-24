@@ -303,3 +303,44 @@ void sys::Exception::disableInterrupt(){
 void sys::Exception::enableInterrupt(){
     __enable_irq();
 }
+
+// 定义宏：读取寄存器的值
+#define READ_REGISTER(reg) ({ \
+    uint32_t ret; \
+    __asm__ volatile ( \
+        "mv %0, " #reg "\n" \
+        : "=r" (ret) \
+    ); \
+    ret; \
+})
+
+// 定义宏：读取CSR寄存器的值
+#define READ_CSR(csr) ({ \
+    uint32_t ret; \
+    __asm__ volatile ( \
+        "csrr %0, " #csr "\n" \
+        : "=r" (ret) \
+    ); \
+    ret; \
+})
+
+void sys::exit() {
+    // 使用宏读取寄存器的值
+    const uint32_t cpu_x1 = READ_REGISTER(x1);
+    const uint32_t cpu_x3 = READ_REGISTER(x3);
+    const uint32_t cpu_mstatus = READ_CSR(mstatus);
+
+    // 打印寄存器值
+    DEBUG_PRINTLN(
+        "system exited, here is map:",
+        "mstatus: ", cpu_mstatus,
+        "x1: ", cpu_x1,
+        "x3: ", cpu_x3
+    );
+
+    // 退出程序
+    _exit(0);
+}
+void sys::halt(){
+    HALT;
+}

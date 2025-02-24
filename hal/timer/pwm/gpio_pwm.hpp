@@ -33,8 +33,8 @@ public:
     __inline void setPeriod(const uint16_t val){arr_ = val - 1;}
 
     __fast_inline GpioPwm & operator = (const real_t duty) override{
-        if(duty == 0) {cvr_ = 0;}
-        else if(duty == 1) {cvr_ = arr_ - 1;}
+        if(duty == real_t(0)) {cvr_ = 0;}
+        else if(duty == real_t(1)) {cvr_ = arr_ - 1;}
         else {cvr_ = int(duty * arr_);}
         return *this;
     }

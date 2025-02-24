@@ -43,7 +43,7 @@ protected:
     }
 
     real_t time() const {
-        return real_t(CLAMP(full_ - sustain_, size_t(0), size_t((1 << GLOBAL_Q )- 5))) / 1000;
+        return CLAMP(full_ - sustain_, size_t(0), UINT32_MAX) / 1000;
     }
 public:
     Action(const size_t s, Callback &&f) : func_(std::move(f)), sustain_(MIN(s, INT32_MAX)), full_(sustain_){}

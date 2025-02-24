@@ -27,7 +27,9 @@ struct bf16 {
     constexpr bf16(const bf16 & other):raw(other.raw){;}
     constexpr bf16(bf16 && other):raw(other.raw){;}
     constexpr bf16(float fv) : raw(std::bit_cast<uint32_t>(fv) >> 16) {}
-    constexpr bf16(iq_t qv): bf16(float(qv)) {;}
+
+    template<size_t Q>
+    constexpr bf16(iq_t<Q> qv): bf16(float(qv)) {;}
     constexpr bf16(int iv) : bf16(float(iv)) {}
 
     explicit constexpr operator float() const {

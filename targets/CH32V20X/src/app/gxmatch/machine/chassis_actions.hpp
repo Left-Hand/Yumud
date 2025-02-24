@@ -31,7 +31,7 @@ public:
     ACTION_NAME(straight)
 
     StraightAction(Inst & inst, const real_t dest):
-        ChassisAction(UINT_MAX, [this](){
+        ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();
                 inst_.entry_shift();
@@ -69,7 +69,7 @@ public:
 //     ACTION_NAME(straight)
 
 //     StraightAction(Inst & inst, const real_t dest):
-//         ChassisAction(UINT_MAX, [this](){
+//         ChassisAction(UINT32_MAX, [this](){
 //             if(first()){
 //                 init();
 //                 inst_.entry_shift();
@@ -109,7 +109,7 @@ public:
     ACTION_NAME(side)
     
     SideAction(Inst & inst, const real_t dest):
-        ChassisAction(UINT_MAX, [this](){
+        ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();
                 inst_.entry_shift();
@@ -151,7 +151,7 @@ public:
     ACTION_NAME(shift)
     
     ShiftAction(Inst & inst, const Vector2 & dest):
-        ChassisAction(UINT_MAX, [this](){
+        ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();
                 inst_.entry_shift();
@@ -187,7 +187,7 @@ protected:
 public:
     ACTION_NAME(spin)
     SpinAction(Inst & inst, const real_t rad):
-        ChassisAction(UINT_MAX, [this](){
+        ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();
                 inst_.entry_spin();
@@ -223,7 +223,7 @@ protected:
 public:
     ACTION_NAME(strict_spin)
     StrictSpinAction(Inst & inst, const real_t rad):
-        ChassisAction(UINT_MAX, [this](){
+        ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();
                 inst_.entry_strict_spin();
@@ -264,7 +264,7 @@ public:
     ACTION_NAME(strict_shift)
     
     StrictShiftAction(Inst & inst, const Vector2 & dest):
-        ChassisAction(UINT_MAX, [this](){
+        ChassisAction(UINT32_MAX, [this](){
             if(first()){
                 init();
                 inst_.entry_strict_shift();
@@ -288,7 +288,7 @@ public:
 // public:
 //     ACTION_NAME(wait_arrive)
 //     WaitArriveAction(Inst & inst):
-//         ChassisAction(UINT_MAX, [this](){
+//         ChassisAction(UINT32_MAX, [this](){
 //             if(inst_.arrived()) kill();
 //         }, inst)
 //         {};
@@ -322,7 +322,7 @@ protected:
 public:
     ACTION_NAME(trim)
     TrimAction(Inst & inst, const Ray & trim):
-        ChassisAction(UINT_MAX, [this](){
+        ChassisAction(UINT32_MAX, [this](){
             // if(inst_.arrived()) kill();
             // TODO("csd");
         }, inst),

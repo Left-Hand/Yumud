@@ -6,6 +6,9 @@
 namespace sys{
     void preinit();
     void reset();
+
+    void exit();
+    void halt();
     
 
     namespace Chip{

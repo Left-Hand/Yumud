@@ -39,13 +39,13 @@ class SogiQ{
 public:
 
     struct Config{
-        iq_t w;
+        iq_t<16> w;
         int freq;
     };
 
-    const iq_t w_by_freq;
-    iq_t u_alpha_;
-    iq_t u_beta_;
+    const iq_t<16> w_by_freq;
+    iq_t<16> u_alpha_;
+    iq_t<16> u_beta_;
 
     SogiQ(const Config & config):
         w_by_freq(config.w / config.freq){
@@ -57,8 +57,8 @@ public:
         u_beta_ = 0;
     }
 
-    void update(const iq_t uin){
-        scexpr iq_t kp = iq_t(1.414_r);
+    void update(const iq_t<16> uin){
+        scexpr iq_t<16> kp = iq_t<16>(1.414_r);
         const auto u_alpha = u_alpha_;
         const auto u_beta = u_beta_;
    

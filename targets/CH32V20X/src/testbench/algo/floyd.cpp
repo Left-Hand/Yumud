@@ -67,7 +67,7 @@ struct Matrix_t{
 			DEBUGGER << '[';
 			for(size_t x = 0; x < w; x++){
 				auto v = self[x,y];
-				if(v == UINT_MAX)DEBUGGER << "inf";
+				if(v == UINT32_MAX)DEBUGGER << "inf";
 				else DEBUGGER << v;
 				DEBUGGER << ",\t";
 			}
@@ -87,7 +87,7 @@ using MatrixS = Matrix_t<real_t, W, H>;
 using Path = std::vector<size_t>;
 
 struct Topology{
-	static constexpr size_t INF = UINT_MAX;
+	static constexpr size_t INF = UINT32_MAX;
 	
 	std::vector<Edge> _edges;
 
@@ -101,7 +101,7 @@ struct Topology{
 	
 	bool connects(size_t a, size_t b) const {
 		if(b < a) std::swap(a,b);
-		for(const auto [_a, _b, cost]: _edges){
+		for(const auto & [_a, _b, cost]: _edges){
 			if(_a == a and _b == b) return true;
 		}
 		return false;
@@ -110,7 +110,7 @@ struct Topology{
 	void initR(MatrixR & mat) const {
 		mat.fill(INF);
 		mat.cross(0);
-		for(const auto [a, b, cost]: _edges){
+		for(const auto & [a, b, cost]: _edges){
 			mat[a-1,b-1] = a;
 			mat[b-1,a-1] = b;
 		}
@@ -119,7 +119,7 @@ struct Topology{
 	void initS(MatrixS & mat) const {
 		mat.fill(INF);
 		mat.cross(0);
-		for(const auto [a, b, cost]: _edges){
+		for(const auto & [a, b, cost]: _edges){
 			mat[a-1,b-1] = cost;
 			mat[b-1,a-1] = cost;
 		}

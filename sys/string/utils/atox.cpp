@@ -23,7 +23,7 @@ int StringUtils::atoi(const char * str, const size_t len) {
 		}
 	}
 
-	if(ret < 0) ret = INT_MAX;
+	if(ret < 0) ret = INT32_MAX;
 	return minus ? (-ret) : ret;
 }
 
@@ -32,8 +32,3 @@ float StringUtils::atof(const char * str, const size_t len) {
     return(int_part + float(frac_part) / scale);
 }
 
-iq_t StringUtils::atoq(const char * str, const size_t len){
-    auto [int_part, frac_part, scale] = StringUtils::disassemble_fstr(str, len);
-	
-    return iq_t(int_part) + iq_t(_iq((frac_part << GLOBAL_Q) / scale));
-}

@@ -260,11 +260,24 @@ constexpr __fast_inline T __inverse_if_impl(const bool b, const T & x){
 #endif
 
 #ifndef LSHIFT
+#ifdef __cplusplus
+#define LSHIFT(x,s) __lshift_impl(x, s);
+template<typename T>
+constexpr __fast_inline T __lshift_impl(const T & x, const int s){
+    if (s >= 0){
+        return x << s;
+    }else{
+        return x >> -s;
+    }
+}
+#else
 #define LSHIFT(x,s) ((s) >= 0 ? ((x) << (s)) : ((x) >> (-(s))))
 #endif
 
+#endif
+
 #ifndef RSHIFT
-#define RSHIFT(x,s) LSHIFT(x, (-(s)))
+#define RSHIFT(x,s) LSHIFT(x, (-s))
 #endif
 
 #define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))

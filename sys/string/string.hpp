@@ -78,7 +78,16 @@ public:
 
 	explicit String(float value, uint8_t decimalPlaces = 3);
 	explicit String(double value, uint8_t decimalPlaces = 3);
-	explicit String(const iq_t value, uint8_t decimalPlaces = 3);
+
+	template<size_t Q>
+	explicit String(const iq_t<Q> value, uint8_t decimalPlaces){
+		init();
+		char str[12] = {0};
+		StringUtils::qtoa<Q>(value, str, decimalPlaces);
+		*this = str;
+	}
+
+	
 	~String(void);
 
     uint32_t hash() const {return StringView(*this).hash();}
@@ -206,8 +215,9 @@ public:
 
 	template<floating T>
     explicit operator T(void) const{return T(StringView(*this));}
-
-	explicit operator iq_t() const {return iq_t(StringView(*this));}
+	
+	template<size_t Q>
+	explicit operator iq_t<Q>() const {return iq_t<Q>(StringView(*this));}
 
 	explicit operator std::string(void) const {return std::string(this->c_str(), this->length());}
 	explicit operator std::string_view(void) const {return std::string(this->c_str(), this->length());}
@@ -250,17 +260,6 @@ public:
 };
 
 
-String toString(char c);
-String toString(const char * c);
-String toString(uint8_t value, uint8_t base = 10);
-String toString(int value, uint8_t base = 10);
-String toString(size_t value, uint8_t base = 10);
-String toString(long value, uint8_t base = 10);
-String toString(unsigned long value, uint8_t base = 10);
-String toString(long long value, uint8_t base = 10);
-String toString(unsigned long long value, uint8_t base = 10);
-String toString(float value, uint8_t decimalPlaces = 3);
-String toString(double value, uint8_t decimalPlaces = 3);
 
 template<typename T>
 concept HasToString = requires(T t, unsigned char eps) {

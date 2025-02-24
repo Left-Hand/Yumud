@@ -91,7 +91,7 @@ void test_sogi(){
     timer1.enableIt(TimerUtils::IT::Update, {0,0});
 
     while(true){
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(raw_theta, spll.theta(), dm);
+        // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);
         DEBUG_PRINTLN(u0, raw_theta, spll.theta());
         delay(1);
     }

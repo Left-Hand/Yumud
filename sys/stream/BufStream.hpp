@@ -17,7 +17,7 @@ public:
         buf_(reinterpret_cast<char *>(std::ranges::data(range))),
         max_len_(std::ranges::size(range)){;}
 
-    BufStream(char * buf, const size_t max_len = UINT_MAX):
+    BufStream(char * buf, const size_t max_len = UINT32_MAX):
         buf_(buf),
         max_len_(max_len){;}
 

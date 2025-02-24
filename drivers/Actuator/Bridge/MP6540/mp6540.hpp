@@ -8,12 +8,6 @@
 #include <array>
 
 
-#ifdef MP6540_DEBUG
-#undef MP6540_DEBUG
-#define MP6540_DEBUG(...) DEBUG_LOG(...)
-#else 
-#define MP6540_DEBUG(...)
-#endif
 
 struct PwmChannel;
 
@@ -38,17 +32,15 @@ protected:
     struct MP6540CurrentChannel:public AnalogInChannel{
         AnalogInChannel & ain_;
         real_t ratio_ = 0;
-        real_t bias_ = 0;
 
         MP6540CurrentChannel(AnalogInChannel & _ain):
             ain_(_ain){}
         MP6540CurrentChannel(const MP6540CurrentChannel & other) = delete;
         MP6540CurrentChannel(MP6540CurrentChannel && other) = delete;
 
-        real_t getRawVoltage() {return real_t(ain_);}
-        void setBias(const real_t _basis) {bias_ = _basis;}
+        void setRatio(const real_t ratio){ratio_ = ratio;}
         operator real_t() override{
-            return - (real_t(ain_) * ratio_ - bias_);
+            return - (real_t(ain_) * ratio_);
         }
     };
 
@@ -70,7 +62,7 @@ public:
     MP6540CurrentChannel & ch(const size_t index);
 
     void setSoRes(const uint so_res_ohms);
-    void setBias(const real_t b0, const real_t b1, const real_t b2);
+    // void setBias(const real_t b0, const real_t b1, const real_t b2);
 
     MP6540 & operator= (const UVW_Duty & duty) override;
 

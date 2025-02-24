@@ -13,7 +13,9 @@ void can_tb(IOStream & logger, hal::Can & can, bool tx_role){
         auto data = std::to_array<uint8_t>({3,4}); 
         uint32_t id = 0x1314;
         CanMsg msg{id, data.begin(), data.size()};
-        auto read = std::vector<uint8_t>(msg);
+
+        // constexpr auto a = sizeof(msg);
+        auto read = msg.span();
         logger.println(id, data, read);
     }
 
@@ -23,13 +25,13 @@ void can_tb(IOStream & logger, hal::Can & can, bool tx_role){
         uint32_t id = 0x5678;
         CanMsg msg{id, std::make_tuple(data)};
         // msg.load(data);
-        auto read = msg.to_vector();
-        logger.println(id, msg.size(), read, real_t(msg));
+        // auto read = msg.to_vector();
+        logger.println(id, msg.size(), msg.span(), real_t(msg));
 
         // auto read2 = msg.to_vector();
-        auto read2 = msg.to_array<8>();
+        // auto read2 = msg.to_array<8>();
         msg = {id, std::make_tuple(data2)};
-        logger.println(id, msg.size(), read2, real_t(msg));
+        logger.println(id, msg.size(), msg.span(), real_t(msg));
         for(uint8_t i = 0; i < msg.size(); i++){
             logger.println(msg[i]);
         }

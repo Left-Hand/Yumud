@@ -153,12 +153,7 @@ String::String(double value, uint8_t decimalPlaces)
     *this = buf;
 }
 
-String::String(const iq_t value, uint8_t decimalPlaces){
-	init();
-	char str[12] = {0};
-    StringUtils::qtoa(value, str, decimalPlaces);
-	*this = str;
-}
+
 
 String::~String()
 {
@@ -717,23 +712,3 @@ void String::alphanum(void){
 
 bool String::isNumeric(void) const {return StringUtils::is_numeric(c_str(), len);}
 bool String::isDigit(void) const {return StringUtils::is_digit(c_str(), len);}
-String toString(char c) { return String(c); }
-String toString(const char * c) { return String(c); }
-
-String toString(uint8_t value, uint8_t base) { return String(value, base); }
-String toString(int value, uint8_t base) { return String(value, base); }
-String toString(size_t value, uint8_t base) { return String(value, base); }
-String toString(long value, uint8_t base) { return String(value, base); }
-String toString(unsigned long value, uint8_t base) { return String(value, base); }
-String toString(long long value, uint8_t base) { return String(value, base); }
-String toString(unsigned long long value, uint8_t base) { return String(value, base); }
-
-String toString(float value, uint8_t decimalPlaces) {return String(value, decimalPlaces);}
-String toString(double value, uint8_t decimalPlaces) {return String(value, decimalPlaces);}
-
-
-String toString(const iq_t iq, const uint8_t eps) {
-    char str[12] = {0};
-    StringUtils::qtoa(iq, str, eps);
-    return String(str);
-}

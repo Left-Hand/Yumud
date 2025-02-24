@@ -25,11 +25,11 @@
 #endif
 
 #ifdef USE_IQ
-typedef iq_t real_t;
+using real_t = iq_t<16>;
 #elif defined(USE_DOUBLE)
-typedef double real_t;
+using real_t = double;
 #else
-typedef float real_t;
+using real_t = float;
 #endif
 
 scexpr real_t pi_4 = real_t(PI/4);
@@ -40,6 +40,10 @@ scexpr real_t tau = real_t(TAU);
 
 consteval real_t operator"" _r(long double x){
     return real_t(x);
+}
+
+consteval iq_t<16> operator"" _q(long double x){
+    return iq_t<16>(x);
 }
 
 
@@ -65,7 +69,7 @@ __fast_inline constexpr T round(const T x)
 
 
 template<floating T>
-__fast_inline constexpr bool is_equal_approx(const T & a, const T & b) {
+__fast_inline constexpr bool is_equal_approx(const T a, const T b) {
     // Check for exact equality first, required to handle "infinity" values.
     if (a == b) {
         return true;
@@ -90,6 +94,34 @@ __fast_inline constexpr bool is_equal_approx_ratio(const T a, const T b, const T
     return diff < epsilon;
 }
 
+template<size_t Q>
+bool is_equal_approx(const iq_t<Q> a, const iq_t<Q> b) {
+    // Check for exact equality first, required to handle "infinity" values.
+    if (a == b) {
+        return true;
+    }
+    // Then check for approximate equality.
+    iq_t<Q> tolerance = iq_t<Q>(CMP_EPSILON) * abs(a);
+    if (tolerance < iq_t<Q>(CMP_EPSILON)) {
+        tolerance = iq_t<Q>(CMP_EPSILON);
+    }
+    return abs(a - b) < tolerance;
+}
+
+template<size_t Q>
+bool is_equal_approx_ratio(const iq_t<Q> a, const iq_t<Q> b, iq_t<Q> epsilon, iq_t<Q> min_epsilon){
+
+    iq_t<Q> diff = abs(a - b);
+    if (diff == 0 || diff < min_epsilon) {
+        return true;
+    }
+    iq_t<Q> avg_size = (abs(a) + abs(b)) >> 1;
+    diff /= avg_size;
+    return diff < epsilon;
+}
+
+
+
 template<floating T>
 __fast_inline constexpr T sign(const T fv){
     if(fv > 0.0f) return 1.0f;
@@ -111,11 +143,71 @@ template<integral T>
 __fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 : 1);}
 
 
-template<floating T>
-__fast_inline constexpr T u16_to_uni(const uint16_t data){
-    return (T)data / 65535;
+
+__fast_inline constexpr real_t u16_to_uni(const uint16_t data){
+    if constexpr(is_fixed_point_v<real_t>){
+        size_t Q = real_t::q_num;
+        real_t qv;
+        if(Q > 16)
+            qv.value = _iq(data << (Q - 16));
+        else if(Q < 16)
+            qv.value = _iq(data >> (16 - Q));
+        else
+            qv.value = _iq(data);
+        return qv;
+    }else if constexpr(std::is_floating_point_v<real_t>){
+        return real_t(data / 65535);
+    }
 }
 
+template<size_t Q>
+__fast_inline constexpr iq_t<Q> u32_to_uni(const uint32_t data){
+    iq_t<Q> qv;
+#if Q > 16
+    qv.value = data << (Q - 16);
+#elif(Q < 16)
+    qv.value = data >> (16 - Q);
+#else
+    qv.value = _iq(data);
+#endif
+    return qv;
+}
+
+__fast_inline constexpr real_t s16_to_uni(const int16_t data){
+    if constexpr(is_fixed_point_v<real_t>){
+        real_t qv;
+        qv.value = data > 0 ? _iq(data << 1) : _iq(-(_iq(-data << 1)));
+        return qv;
+    }
+    return 0;
+}
+
+template<size_t Q>
+__fast_inline constexpr uint16_t uni_to_u16(const iq_t<Q> qv){
+    uint16_t data;
+#if Q >= 16
+    data = qv.value >> (Q - 16);
+#else
+    data = qv.value << (16 - Q);
+#endif
+    if(data == 0 && long(qv.value) != 0) data = 0xffff;
+    return data;
+}
+
+template<size_t Q>
+__fast_inline constexpr int16_t uni_to_s16(const iq_t<Q> qv){
+    int16_t data;
+#if Q >= 16
+    data = qv.value >> (Q - 16);
+#else
+    data = qv.value << (16 - Q);
+#endif
+    return data;
+}
+
+__fast_inline real_t uni(const uint16_t data){return u16_to_uni(data);}
+
+__fast_inline real_t uni(const int16_t data){return s16_to_uni(data);}
 
 __fast_inline constexpr int warp_mod(const int x, const int y){
     int ret = x % y;

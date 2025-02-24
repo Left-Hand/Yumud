@@ -189,7 +189,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         case "locate"_ha:
         case "loc"_ha:
         {
-            real_t loc = (args.size() > 1)? real_t(args[1]) : 0;
+            real_t loc = (args.size() > 1)? real_t(args[1]) : 0.0_r;
             motor.locateRelatively(loc);
             os.prints("located to", loc);
         }

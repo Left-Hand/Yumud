@@ -132,7 +132,7 @@ SC8815 & SC8815::setBatCurrLimit(const real_t limit_ma){
     return *this;
 }
 
-SC8815 & SC8815::setOutputVolt(const iq_t volt){
+SC8815 & SC8815::setOutputVolt(const real_t volt){
 
     //判断 VBUS 电压反馈的模式
     if (ctrl1_set_reg.fb_sel){

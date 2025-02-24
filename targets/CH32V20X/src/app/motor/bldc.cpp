@@ -31,6 +31,8 @@
 #include "sys/debug/debug_inc.h"
 #include "robots/rpc/arg_parser.hpp"
 
+#include "dsp/filter/LowpassFilter.hpp"
+
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
@@ -58,44 +60,44 @@ static __inline real_t f(const real_t x){
 // template<size_t N>
 // class SimpleLPF{
 // protected:
-//     iq_t output;
+//     iq_t<16> output;
 // public:
-//     iq_t update(const iq_t x){
+//     iq_t<16> update(const iq_t<16> x){
 //         // return ((x * 31 + y) >> 5);
 //     }
 // }
 
-__fast_inline iq_t LPF5(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF5(const iq_t<16> x, const iq_t<16> y){
     // return (x * 31 + y) >> 5;
     // return y;
     auto temp = x * 31 + y;
     
     // if((int32_t(temp.value) & 31) > 16){
-    //     return (temp >> 5) + iq_t(_iq(1));
+    //     return (temp >> 5) + iq_t<16>(_iq(1));
     // }else{
         return (temp) >> 5;
     // }
 }
 
-__fast_inline iq_t LPF6(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF6(const iq_t<16> x, const iq_t<16> y){
     return (x * 63 + y) >> 6;
 }
 
 template<size_t N>
-__fast_inline iq_t LPFN(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPFN(const iq_t<16> x, const iq_t<16> y){
     constexpr size_t sc = ((1 << N) - 1);
     return (x * sc + y) >> N;
 }
 
-__fast_inline iq_t LPF7(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF7(const iq_t<16> x, const iq_t<16> y){
     return (x * 127 + y) >> 7;
 }
 
-__fast_inline iq_t LPF4(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF4(const iq_t<16> x, const iq_t<16> y){
     return (x * 15 + y) >> 4;
 }
 
-__fast_inline iq_t LPF3(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF3(const iq_t<16> x, const iq_t<16> y){
     return (x * 7 + y) >> 3;
 }
 
@@ -136,11 +138,11 @@ public:
     }
 };
 
-__fast_inline iq_t LPF(const iq_t x, const iq_t y){
-    // const iq_t temp = x * 31 + y;
+__fast_inline iq_t<16> LPF(const iq_t<16> x, const iq_t<16> y){
+    // const iq_t<16> temp = x * 31 + y;
 
     // if(int32_t(temp.value) & 16){
-    //     return ((temp >> 5) + (iq_t(1) >> GLOBAL_Q));
+    //     return ((temp >> 5) + (iq_t<16>(1) >> GLOBAL_Q));
     // }else{
     //     return (temp >> 5);
     // }
@@ -151,84 +153,77 @@ __fast_inline iq_t LPF(const iq_t x, const iq_t y){
 
 class CurrentSensor{
 protected:
-    AnalogInChannel & _u_sense;
-    AnalogInChannel & _v_sense;
-    AnalogInChannel & _w_sense;
-    UvwCurrent _uvw_bias;
+    AnalogInChannel & u_sense_;
+    AnalogInChannel & v_sense_;
+    AnalogInChannel & w_sense_;
 
-    UvwCurrent _uvw_curr;
-    real_t _mid_curr;
-    AbCurrent _ab_curr;
-    DqCurrent _dq_curr;
+    UvwCurrent uvw_bias_;
+    UvwCurrent uvw_raw_;
+    UvwCurrent uvw_curr_;
+    real_t mid_curr_;
+    AbCurrent ab_curr_;
+    DqCurrent dq_curr_;
 public:
     CurrentSensor(
         AnalogInChannel & u_sense,
         AnalogInChannel & v_sense, 
         AnalogInChannel & w_sense
     ): 
-        _u_sense(u_sense),
-        _v_sense(v_sense), 
-        _w_sense(w_sense){
+        u_sense_(u_sense),
+        v_sense_(v_sense), 
+        w_sense_(w_sense){
             reset();
         }
 
     void reset(){
-        _uvw_curr = {0, 0, 0};
-        _uvw_bias = {0, 0, 0};
-        _ab_curr = {0, 0};
-        _dq_curr = {0, 0};
+        uvw_curr_ = {0, 0, 0};
+        uvw_bias_ = {0, 0, 0};
+        ab_curr_ = {0, 0};
+        dq_curr_ = {0, 0};
     }
 
-    void updatUVW(){
-        const real_t raw_u_curr = real_t(_u_sense);
-        const real_t raw_v_curr = real_t(_v_sense);
-        const real_t raw_w_curr = real_t(_w_sense);
-        const real_t raw_sum_curr = raw_u_curr + raw_v_curr + raw_w_curr;
-        _mid_curr = LPF5(_mid_curr, raw_sum_curr / 3);
-        const real_t mid_curr = _mid_curr;
-        // _uvw_curr[0] = LPFN<1>(_uvw_curr[0], raw_u_curr - mid_curr);
-        // _uvw_curr[1] = LPFN<1>(_uvw_curr[1], raw_v_curr - mid_curr);
-        // _uvw_curr[2] = LPFN<1>(_uvw_curr[2], raw_w_curr - mid_curr);
-        _uvw_curr[0] = (raw_u_curr - mid_curr);
-        _uvw_curr[1] = (raw_v_curr - mid_curr);
-        _uvw_curr[2] = (raw_w_curr - mid_curr);
-        // _uvw_curr[0] = LPFN<1>(_uvw_curr[0], real_t(_u_sense));
-        // _uvw_curr[1] = LPFN<1>(_uvw_curr[1], real_t(_v_sense));
-        // _uvw_curr[2] = LPFN<1>(_uvw_curr[2], real_t(_w_sense));
 
-        // _uvw_curr[0] = real_t(_u_sense);
-        // _uvw_curr[1] = real_t(_v_sense);
-        // _uvw_curr[2] = real_t(_w_sense);
+    void capture(){
+        uvw_raw_ = {real_t(u_sense_),
+                    real_t(v_sense_),
+                    real_t(w_sense_)};
+        mid_curr_ = LPF5(mid_curr_, (uvw_raw_.u + uvw_raw_.v + uvw_raw_.w) / 3);
+        uvw_curr_[0] = (uvw_raw_.u - mid_curr_ - uvw_bias_.u);
+        uvw_curr_[1] = (uvw_raw_.v - mid_curr_ - uvw_bias_.v);
+        uvw_curr_[2] = (uvw_raw_.w - mid_curr_ - uvw_bias_.w);
     }
 
-    void updateAB(){
-        _ab_curr = uvw_to_ab(_uvw_curr);
-    }
-
-    void updateDQ(const real_t rad){
-        const auto dq_curr = ab_to_dq(_ab_curr, rad);
-        // _dq_curr[0] = LPFN<3>(_dq_curr[0],dq_curr[0]);
-        // _dq_curr[1] = LPFN<3>(_dq_curr[1],dq_curr[1]);
-        _dq_curr[0] = LPFN<7>(_dq_curr[0],dq_curr[0]);
-        _dq_curr[1] = LPFN<7>(_dq_curr[1],dq_curr[1]);
-    }
-
-    void calibrate(){
-
-    }
 
     void update(const real_t rad){
-        updatUVW();
-        updateAB();
-        updateDQ(rad);
-    }
 
-    auto & uvw()const{return _uvw_curr;}
-    auto & uvw(){return _uvw_curr;}
-    auto & ab()const{return _ab_curr;}
-    auto & ab(){return _ab_curr;}
-    auto & dq()const{return _dq_curr;}
-    auto & dq(){return _dq_curr;}
+        const real_t raw_u_curr = real_t(u_sense_);
+        const real_t raw_v_curr = real_t(v_sense_);
+        const real_t raw_w_curr = real_t(w_sense_);
+        const real_t raw_sum_curr = raw_u_curr + raw_v_curr + raw_w_curr;
+        mid_curr_ = LPF5(mid_curr_, raw_sum_curr / 3);
+        const real_t mid_curr_ = mid_curr_;
+        uvw_curr_[0] = (raw_u_curr - mid_curr_);
+        uvw_curr_[1] = (raw_v_curr - mid_curr_);
+        uvw_curr_[2] = (raw_w_curr - mid_curr_);
+
+        ab_curr_ = uvw_to_ab(uvw_curr_);
+        const auto dq_curr = ab_to_dq(ab_curr_, rad);
+        
+        // if(likely(ABS(dq_curr[0]) < 1))dq_curr_[0] = LPFN<7>(dq_curr_[0],dq_curr[0]);
+        // if(likely(ABS(dq_curr[1]) < 1))dq_curr_[1] = LPFN<7>(dq_curr_[1],dq_curr[1]);
+
+        dq_curr_[0] = LPFN<7>(dq_curr_[0],dq_curr[0]);
+        dq_curr_[1] = LPFN<7>(dq_curr_[1],dq_curr[1]);
+    }
+    auto raw()const {return uvw_raw_;}
+
+    auto mid() const {return mid_curr_;}
+    auto uvw()const{return uvw_curr_;}
+    // auto uvw(){return uvw_curr_;}
+    auto ab()const{return ab_curr_;}
+    // auto ab(){return ab_curr_;}
+    auto dq()const{return dq_curr_;}
+    // auto dq(){return dq_curr_;}
 };
 
 
@@ -432,6 +427,121 @@ private:
 
 };
 
+class GradeCounter{
+public:
+    struct Config{
+        uint step;
+        uint threshold;
+    };
+private:
+    uint step_;
+    uint threshold_;
+    uint grades_;
+public:
+    GradeCounter(const Config & config):
+        step_(config.step),
+        threshold_(config.threshold),
+        grades_(0){;}
+
+    void reconf(const Config & config){
+        step_ = config.step;
+        threshold_ = config.threshold;
+    }
+
+    __fast_inline void reset(){
+        grades_ = 0;
+    }
+
+    __fast_inline void update(bool match){
+        if(unlikely(match)) grades_ += step_;
+        else grades_ = CLAMP(grades_ - 1, 0, 2 * threshold_);
+    }
+
+    __fast_inline bool overflow() const{
+        return grades_ >= threshold_;
+    }
+
+    __fast_inline auto grades() const{
+        return grades_;
+    }
+};
+
+
+class CurrentBiasCalibrater{
+public:
+    struct Config{
+        uint period_ticks;
+        uint fc;
+        uint fs;
+    };
+
+    using Lpf = LowpassFilter_t<iq_t<16>>;
+    using Lpfs = std::array<Lpf, 3>;
+
+    Lpfs lpfs_ = {};
+
+protected:
+    uint period_ticks_;
+    uint elapsed_ticks_;
+    uint fs_;
+
+    // real_t last_midp_curr_ = 0;
+public:
+    CurrentBiasCalibrater(const Config & config){
+        reconf(config);
+        reset();
+    }
+
+    void reconf(const Config & config){
+        period_ticks_ = config.period_ticks;
+        fs_ = config.fs;
+
+        // const auto alpha = Lpf::solve_alpha(config.fc, config.fs);
+        lpfs_[0].reconf({config.fc, config.fs});
+        lpfs_[1].reconf({config.fc, config.fs});
+        lpfs_[2].reconf({config.fc, config.fs});
+
+    }
+
+    void reset(){
+        elapsed_ticks_ = 0;
+        for(auto & lpf : lpfs_){
+            lpf.reset();
+        }
+    }
+
+    void update(const UvwCurrent & uvw, const real_t mid_point){
+        lpfs_[0].update(uvw.u);
+        lpfs_[1].update(uvw.v);
+        lpfs_[2].update(uvw.w);
+        elapsed_ticks_ ++;
+
+        // constexpr auto stable_curr_slewrate = 10.0_r;
+        // constexpr auto stable_threshold = stable_curr_slewrate / foc_freq;
+
+        // const auto mid_point_diff = ABS(mid_point - last_midp_curr_);
+        // last_midp_curr_ = mid_point;
+
+        // curr_stable_checker.update(mid_point_diff < stable_threshold);
+    }
+
+    bool done(){
+        return elapsed_ticks_ >= period_ticks_;
+    }
+
+    UvwCurrent result() const{
+        return {
+            lpfs_[0].result(),
+            lpfs_[1].result(),
+            lpfs_[2].result(),
+        };
+    }
+};
+
+class CalibraterOrchestor{
+
+};
+
 void bldc_main(){
     uart2.init(576000);
     DEBUGGER.retarget(uart2);
@@ -512,8 +622,8 @@ void bldc_main(){
     // UvwCurrent uvw_curr = {0,0,0};
     real_t est_rad;
 
-    CurrentSensor current_sensor = {u_sense, v_sense, w_sense};
-    // CurrentSensor current_sensor = {adc1.inj(1), adc1.inj(2), adc1.inj(3)};
+    CurrentSensor curr_sens = {u_sense, v_sense, w_sense};
+    // CurrentSensor curr_sens = {adc1.inj(1), adc1.inj(2), adc1.inj(3)};
     auto & ledr = portC[13];
     auto & ledb = portC[14];
     auto & ledg = portC[15];
@@ -523,12 +633,12 @@ void bldc_main(){
     portA[7].inana();
 
     // for(size_t i = 0; i < 400; ++i){
-    //     current_sensor.updatUVW();
-    //     current_sensor.updateAB();
+    //     curr_sens.updatUVW();
+    //     curr_sens.updateAB();
     //     delay(1);
     // }
     
-    mp6540.setBias(14.68_r,14.68_r,14.62_r);
+    // mp6540.setBias(14.68_r,14.68_r,14.62_r);
 
 
 
@@ -558,7 +668,7 @@ void bldc_main(){
     static int sector_cnt = 0;
 
 
-    // scexpr iq_t pll_freq = iq_t(0.2);
+    // scexpr iq_t<16> pll_freq = iq_t<16>(0.2);
     LapPosPll pll = {
         {
             // .kp = real_t(2 * pll_freq),
@@ -660,17 +770,59 @@ void bldc_main(){
 
         const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
         mg_meas_rad = meas_rad;
-        current_sensor.update(meas_rad);
+        curr_sens.update(meas_rad);
 
-        const auto dq_curr = current_sensor.dq();
+        const auto dq_curr = curr_sens.dq();
+
+        #define TEST_MODE_Q_SIN_CURR 1
+        #define TEST_MODE_VOLT_POS_CTRL 2
+        #define TEST_MODE_WEAK_MAG 3
+        #define TEST_MODE_POS_SIN 4
+        #define TEST_MODE_SQUARE_SWING 5
+        // #define TEST_MODE TEST_MODE_Q_SIN_CURR
+        // #define TEST_MODE TEST_MODE_POS_SIN
+        #define TEST_MODE TEST_MODE_SQUARE_SWING
+
+
+        #if (TEST_MODE == TEST_MODE_Q_SIN_CURR)
+        const auto d_curr_cmd = 0.0_r;
+        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
+        const auto q_curr_cmd =  0.2_r * sin(time());
+        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
+        #elif (TEST_MODE == TEST_MODE_VOLT_POS_CTRL)
+
+        #elif (TEST_MODE == TEST_MODE_WEAK_MAG)
+        const auto d_curr_cmd = 0.0_r;
+        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
+        const auto q_curr_cmd =  0.2_r * sin(time());
+        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
+
         // const auto d_volt = d_pi_ctrl.update(0.2_r, dq_curr.d);
         // const auto q_volt = q_pi_ctrl.update(-0.6_r, dq_curr.q);
 
         // const auto d_volt = d_pi_ctrl.update(0.0_r, dq_curr.d);
         // const auto d_volt = d_pi_ctrl.update((MAX(ab_volt.length() * 0.03_r - 0.2_r)), dq_curr.d);
         // const auto d_curr_cmd = (meas_spd > 10) ? -CLAMP(ab_volt.length() * 0.03_r - 0.2_r, 0.0_r, 0.7_r) : 0.0_r;
+        #elif (TEST_MODE == TEST_MODE_POS_SIN)
+        scexpr real_t omega = 3 * real_t(TAU);
+        scexpr real_t amp = 1.5_r;
+        targ_pos = amp * sin(omega * time());
+        targ_spd = amp * omega * cos(omega * time());
+
         const auto d_curr_cmd = 0.0_r;
         const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
+        const auto q_curr_cmd = CLAMP(1.258_r * sign_sqrt(targ_pos - meas_pos) + 0.14_r*(targ_spd - meas_spd), -0.7_r, 0.7_r);
+        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
+
+        #elif (TEST_MODE == TEST_MODE_SQUARE_SWING)
+        scexpr real_t omega = 1 * real_t(TAU);
+        scexpr real_t amp = 0.5_r;
+
+        const auto d_curr_cmd = 0.0_r;
+        const auto d_volt = d_pi_ctrl.update(d_curr_cmd, dq_curr.d);
+        const auto q_curr_cmd = SIGN_AS(amp, sin(omega * time()));
+        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
+        #endif
         // const auto d_volt = 0;
         // const auto q_volt = q_pi_ctrl.update(0.1_r * sign(sin(t)), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(int(5 * floor(6 * t)) % 60, meas_spd), dq_curr.q);
@@ -681,9 +833,6 @@ void bldc_main(){
         // const auto cmd_spd = 35.8_r * (targ_pos - meas_pos); 
         // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(cmd_spd, meas_spd) + 0.06_r * sin(80 * t), dq_curr.q);
         // const auto q_volt = q_pi_ctrl.update(speed_pi_ctrl.update(cmd_spd, meas_spd), dq_curr.q);
-        // const auto q_curr_cmd = CLAMP(1.258_r * sign_sqrt(targ_pos - meas_pos) + 0.14_r*(targ_spd - meas_spd), -0.7_r, 0.7_r);
-        const auto q_curr_cmd =  0.2_r * sin(time());
-        const auto q_volt = q_pi_ctrl.update(q_curr_cmd, dq_curr.q);
 
         // struct ShakeParam{
         //     real_t torque;
@@ -722,7 +871,7 @@ void bldc_main(){
 
         // lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
 
-        // const auto ab_curr = current_sensor.ab();
+        // const auto ab_curr = curr_sens.ab();
         // lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         // pll.update(lbg_ob.theta());
  
@@ -749,17 +898,17 @@ void bldc_main(){
 
         targ_pos = 0;
 
-        current_sensor.update(0);
+        curr_sens.update(0);
 
 
 
-        scexpr int isr_freq = chopper_freq / 2;
+        scexpr int fs = chopper_freq / 2;
         // scexpr int test_freq = 200;
         scexpr int test_freq = 500;
         scexpr real_t test_volt = 0.2_r;
         // scexpr int test_freq = 1000;
         static int cnt = 0; 
-        scexpr int div = isr_freq / test_freq;
+        scexpr int div = fs / test_freq;
 
         static bool upedge_captured = true;
 
@@ -768,11 +917,11 @@ void bldc_main(){
             cnt = 0;
             upedge_captured = false;
         }
-        scexpr real_t omega = real_t((TAU * test_freq) / isr_freq);
+        scexpr real_t omega = real_t((TAU * test_freq) / fs);
 
         {
             static real_t last_curr = 0;
-            real_t this_curr = current_sensor.ab().a;
+            real_t this_curr = curr_sens.ab().a;
             // spll.update(this_curr);
 
             if(upedge_captured == false and last_curr < 0 and this_curr > 0){                
@@ -801,8 +950,8 @@ void bldc_main(){
         // targ_pos = real_t(6.0) * sin(2 * t);
         targ_pos = real_t(1.0) * time();
 
-        const auto ab_curr = current_sensor.ab();
-        // const auto dq_curr = current_sensor.dq();
+        const auto ab_curr = curr_sens.ab();
+        // const auto dq_curr = curr_sens.dq();
 
         // smo_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
@@ -810,8 +959,8 @@ void bldc_main(){
         // pll.update(lbg_ob.theta());
         // sl_meas_rad = pll.theta() + 0.3_r;
         sl_meas_rad = lbg_ob.theta();
-        // current_sensor.update(pll.theta());
-        current_sensor.update(sl_meas_rad);
+        // curr_sens.update(pll.theta());
+        curr_sens.update(sl_meas_rad);
         // const auto rad = sl_meas_rad + 3.0_r;
 
         // const auto d_volt = d_pi_ctrl.update(0.01_r, dq_curr.d);
@@ -860,15 +1009,15 @@ void bldc_main(){
         ab_volt = {hfi_out + openloop_base_volt * openloop_c, openloop_base_volt * openloop_s};
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
-        current_sensor.updatUVW();
-        current_sensor.updateAB();
-        current_sensor.updateDQ(0);
-
-        // real_t mul = current_sensor.ab()[1] * s;
-        real_t mul = current_sensor.ab()[1] * hfi_c;
+        // curr_sens.updatUVW();
+        // curr_sens.updateAB();
+        // curr_sens.updateDQ(0);
+        curr_sens.update(0);
+        // real_t mul = curr_sens.ab()[1] * s;
+        real_t mul = curr_sens.ab()[1] * hfi_c;
         // real_t last_hfi_result = hfi_result;
         // hfi_result = LPF(last_hfi_result, mul);
-        static AverageFilter<iq_t, 64> hfi_filter;
+        static AverageFilter<iq_t<16>, 64> hfi_filter;
         hfi_result = hfi_filter.update(mul);
         // hfi_result = LPFN<9>(hfi_result, mul);
 
@@ -908,49 +1057,44 @@ void bldc_main(){
         real_t pulse_s = sin(pulse_rad);
         real_t pulse_c = cos(pulse_rad);
 
-        real_t pulse_out = (cnt < sustain) ? pulse_volt : 0;
+        real_t pulse_out = (cnt < sustain) ? pulse_volt : real_t(0);
         // real_t pulse_out = 0;
 
 
         ab_volt = {pulse_out * pulse_c, pulse_out * pulse_s};
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
-        current_sensor.updatUVW();
-        current_sensor.updateAB();
+        curr_sens.update(0);
     };
 
     [[maybe_unused]] auto cb_sing = [&]{
         
-        static iq_t sing_t = 0;
-        sing_t += iq_t(_iq(1));
+        static iq_t<16> sing_t = 0;
+        sing_t += iq_t<16>(_iq(1));
 
         real_t sing_rad = 0;
 
         real_t sing_s = sin(sing_rad);
         real_t sing_c = cos(sing_rad);
 
-        real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t(TAU) + 3 * sin(40 * frac(sing_t) * iq_t(TAU)));
+        real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
 
         ab_volt = {sing_out * sing_c, sing_out * sing_s};
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
 
-        current_sensor.updatUVW();
-        current_sensor.updateAB();
+        curr_sens.update(0);
     };
 
     [[maybe_unused]] auto cb_openloop = [&]{
-        scexpr auto w = real_t(22 * TAU);
-        const auto u = real_t(2.2);
-        // const auto u = real_t(2.8) + sin(t);
-        // auto theta = w * t + real_t(12) * sin(2 * real_t(TAU) * t);
-        auto theta = w * time();
+        scexpr auto omega = real_t(22 * TAU);
+        const auto amp = real_t(2.2);
+        // const auto amp = real_t(2.8) + sin(t);
+        // auto theta = omega * t + real_t(12) * sin(2 * real_t(TAU) * t);
+        auto theta = omega * time();
         // const auto theta = 0;
-        ab_volt = {u * cos(theta), u * sin(theta)};
-        // ab_volt = {u, u};
+        ab_volt = {amp * cos(theta), amp * sin(theta)};
+        // ab_volt = {amp, amp};
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
-
-        current_sensor.updatUVW();
-        current_sensor.updateAB();
 
         odo.update();
         const real_t meas_lap = odo.getLapPosition();
@@ -958,36 +1102,33 @@ void bldc_main(){
         const real_t meas_rad = (frac(frac(meas_lap - 0.25_r) * 7) * real_t(TAU));
         mg_meas_rad = meas_rad;
 
-        const auto ab_curr = current_sensor.ab();
+        const auto ab_curr = curr_sens.ab();
         lbg_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         // nlr_ob.update(ab_volt[0], ab_volt[1], ab_curr[0], ab_curr[1]);
         pll.update(lbg_ob.theta());
         // sl_meas_rad = pll.theta() + 0.3_r;
         sl_meas_rad = pll.theta();
 
-        // sogi.update(current_sensor.ab()[0]);
-        // spll.update(current_sensor.ab()[0] * 10);
+        curr_sens.update(meas_rad);
+
+        // sogi.update(curr_sens.ab()[0]);
+        // spll.update(curr_sens.ab()[0] * 10);
     };
 
 
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sensorless);
-    adc1.bindCb(AdcUtils::IT::JEOC, cb);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_measure);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_openloop);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
-    adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
+
+    bool can_en = false;
     auto list = rpc::make_list(
         "list", 
         // rpc::make_function("pos", [](const real_t duty){DEBUG_PRINTS("duty is set to:", duty)}),
         // rpc::make_function("spd", [](const real_t duty){}),
-        // rpc::make_function("crc", [](){DEBUG_PRINTS(Sys::Chip::getChipIdCrc())})
+        rpc::make_function("rst", [](){sys::reset();}),
         rpc::make_property("pos", targ_pos),
         rpc::make_property("spd", targ_spd),
         rpc::make_ro_property("mpos", meas_pos),
         rpc::make_ro_property("mspd", meas_spd),
+        rpc::make_property("cen", can_en),
 
         rpc::make_list(
             "l2", 
@@ -997,11 +1138,65 @@ void bldc_main(){
     );
 
     ArgSplitter splitter;
-    DEBUGGER.setSplitter(',');
-    while(true){
-        // auto pos = ma730.getLapPosition();
 
-        if(false)
+    DEBUGGER.setSplitter(',');
+    DEBUGGER.noBrackets();
+    // OutputStream::Config
+
+    CurrentBiasCalibrater calibrater = {{
+        .period_ticks = 10000,
+        .fc = 20,
+        .fs = foc_freq
+    }};
+
+    // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
+    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
+    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
+    LowpassFilterD_t<float> speed_measurer = {
+        {
+            10, 
+            foc_freq
+        }
+    };
+
+    auto measure_bias = [&]{
+        
+        // mp6540.enable(false);
+        curr_sens.capture();
+        calibrater.update(curr_sens.raw(), curr_sens.mid());
+
+        odo.update();
+        speed_measurer.update(float(odo.getPosition()));
+
+        // mp6540.enable(true);
+        if(calibrater.done()) {
+            // const auto guard = DEBUGGER.createGuard();
+            // DEBUGGER.forceSync();
+            // DEBUG_PRINTLN("Done Current Bias Measure!!");
+            // DEBUG_PRINTLN(calibrater.result());
+            // delay(100);
+            // ASSERT(false);
+            // delay(1000); sys::reset();
+        }
+    };
+
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sensorless);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_measure);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_openloop);
+    // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
+
+    adc1.bindCb(AdcUtils::IT::JEOC, measure_bias);
+
+    adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
+
+    while(true){
+        // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), (speed_measurer.result()));
+        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>::from(speed_measurer.result()), atan2(cos(real_t(TAU) * time()), sin(real_t(TAU) * time())));
+        // if(false)
         {
             auto strs_opt = splitter.update(uart2);
             if(strs_opt.has_value()){
@@ -1034,58 +1229,63 @@ void bldc_main(){
 
         // DEBUG_PRINTLN(odo.getPosition());
         // DEBUG_PRINTLN((odo.getPosition()), real_t(u_sense), real_t(v_sense), real_t(w_sense));
-        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2], real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2]);
-        // if(DEBUGGER.pending() == 0)DEBUG_PRINTLN((odo.getPosition()), ab_curr[0],ab_curr[1]);
+        // DEBUG_PRINTLN_IDLE((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2], real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // DEBUG_PRINTLN_IDLE((odo.getPosition()), real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // DEBUG_PRINTLN_IDLE((odo.getPosition()), uvw_curr[0],uvw_curr[1], uvw_curr[2]);
+        // DEBUG_PRINTLN_IDLE((odo.getPosition()), ab_curr[0],ab_curr[1]);
         // delay(2);
         // DEBUG_PRINTLN(pos, dq_curr[0],dq_curr[1], dt);
-        [[maybe_unused]] const auto uvw_curr = current_sensor.uvw();
-        [[maybe_unused]] const auto dq_curr = current_sensor.dq();
-        [[maybe_unused]] const auto ab_curr = current_sensor.ab();
+        [[maybe_unused]] const auto uvw_curr = curr_sens.uvw();
+        [[maybe_unused]] const auto dq_curr = curr_sens.dq();
+        [[maybe_unused]] const auto ab_curr = curr_sens.ab();
 
 
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
+        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], ab_volt[0], ab_volt[1], smo_ob.getTheta(),  dt > 100 ? 1000 + dt : dt);
+        // DEBUG_PRINTLN_IDLE(pos, ab_curr[0], ab_curr[1], lbg_ob._e_alpha, lbg_ob._e_beta,  dt > 100 ? 1000 + dt : dt);
+        // DEBUG_PRINTLN_IDLE(ab_curr[0], ab_curr[1], sogi.ab()[0], sogi.ab()[1]);
 
-        if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr[0], uvw_curr[1], uvw_curr[2]);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_volt[0], ab_volt[1]);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, meas_spd, dq_curr[0], dq_curr[1], exe_micros);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1]);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(mg_meas_rad, sl_meas_rad, uvw_curr.u, uvw_curr.v, uvw_curr.w);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, odo.getSpeed(), dq_curr.d, dq_curr.q);
-
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, dq_curr[0], dq_curr[1], d_pi_ctrl.output(), q_pi_ctrl.output(), odo.getSpeed());
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(spll.theta(), ab_curr[0],phase_ind * 1000);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(meas_pos, mg_meas_rad, sl_meas_rad, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
-
-        // auto s_curr = [&](){
-        //     return uvw_curr.u * uvw_curr.u + uvw_curr.v * uvw_curr.v + uvw_curr.w * uvw_curr.w;
-        // }();
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(uvw_curr.u, uvw_curr.v, uvw_curr.w,sector_cnt, s_curr);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
+        // DEBUG_PRINTLN_IDLE(real_t(pwm_u), real_t(pwm_v), real_t(pwm_w));
+        // DEBUG_PRINTLN_IDLE(ab_volt[0], ab_volt[1]);
+        // DEBUG_PRINTLN_IDLE(ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
+        // DEBUG_PRINTLN_IDLE(meas_pos, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
+        // DEBUG_PRINTLN_IDLE(meas_pos, meas_spd, dq_curr[0], dq_curr[1], exe_micros);
+        // DEBUG_PRINTLN_IDLE(mg_meas_rad, sl_meas_rad, dq_curr[0], dq_curr[1]);
+        // DEBUG_PRINTLN_IDLE(mg_meas_rad, sl_meas_rad, uvw_curr.u, uvw_curr.v, uvw_curr.w);
+        // DEBUG_PRINTLN_IDLE(meas_pos, odo.getSpeed(), dq_curr.d, dq_curr.q);
         
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(hfi_result);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_volt[0]);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(ab_curr[0], ab_curr[1], ab_volt[0]);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr[0], dq_curr[1], targ_pos, pos, smo_ob.getTheta(), dt > 100 ? 1000 + dt : dt);
-        // delay(2);
+        // DEBUG_PRINTLN_IDLE(meas_pos, dq_curr[0], dq_curr[1], d_pi_ctrl.output(), q_pi_ctrl.output(), odo.getSpeed());
+        // DEBUG_PRINTLN_IDLE(spll.theta(), ab_curr[0],phase_ind * 1000);
+        // DEBUG_PRINTLN_IDLE(meas_pos, mg_meas_rad, sl_meas_rad, ab_curr[0], ab_curr[1], dq_curr[0], dq_curr[1]);
+        
+        // auto s_curr = [&](){
+            //     return uvw_curr.u * uvw_curr.u + uvw_curr.v * uvw_curr.v + uvw_curr.w * uvw_curr.w;
+            // }();
+            // DEBUG_PRINTLN_IDLE(uvw_curr.u, uvw_curr.v, uvw_curr.w,sector_cnt, s_curr);
+            // DEBUG_PRINTLN_IDLE(ab_curr[1], ab_volt[0], hfi_result, acos(hfi_result * real_t(1 / 0.045 )));
+            
+            // DEBUG_PRINTLN_IDLE(hfi_result);
+            // DEBUG_PRINTLN_IDLE(ab_volt[0]);
+            // DEBUG_PRINTLN_IDLE(ab_curr[0], ab_curr[1], ab_volt[0]);
+            // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr[0], dq_curr[1], targ_pos, pos, smo_ob.getTheta(), dt > 100 ? 1000 + dt : dt);
+            // delay(2);
+            
+            // DEBUG_PRINTLN_IDLE(rad, sin(rad), cos(rad), atan2(sin(rad), cos(rad)));
+            // DEBUG_PRINTLN_IDLE(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dt > 100 ? 1000 + dt : dt);
+            // Sys::Clock::reCalculateTime();
+            
+        // CanMsg msg = {0x11, std::make_tuple<uint8_t, uint8_t>(0x55, 0xAA)};
+        // if(can1.pending() == 0 and can_en) can1.write(msg);
 
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(rad, sin(rad), cos(rad), atan2(sin(rad), cos(rad)));
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(pos, uvw_curr[0], uvw_curr[1], uvw_curr[2], dt > 100 ? 1000 + dt : dt);
-        // Sys::Clock::reCalculateTime();
-
-        // CanMsg msg = {0x11, uint8_t(0x57)};
-        // if(can1.pending() == 0) can1.write(msg);
-        // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
+        
+        // DEBUG_PRINTLN_IDLE(uvw_curr[0], uvw_curr[1], uvw_curr[2], dq_curr, odo.getPosition()); 
+        // DEBUG_PRINTLN_IDLE(1); 
+            // DEBUG_PRINTLN_IDLE(ab_curr, dq_curr, can1.available(), can1.getTxErrCnt(), std::setbase(2), 11);
+            // DEBUG_PRINTLN_IDLE(ab_curr, dq_curr, can1.available(), can1.getTxErrCnt(), std::setbase(2), CAN1->ERRSR);
+            // , real_t(pwm_v), real_t(pwm_w), std::dec, data[0]>>12, data[1] >>12, data[2]>>12);
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), odo.getSpeed(), pll.pos_est_, pll.spd_est_, dq_curr.d, dq_curr.q);
         // delay(2);
         // DEBUGGER.noBrackets(true);
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(odo.getPosition(), Vector2(1,1));
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), Vector2(1,1));
         // delay(2);
 
         // DEBUGGER.forceSync();
@@ -1106,7 +1306,7 @@ void bldc_main(){
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, adc_data_cache[0], adc_data_cache[1], adc_data_cache[2], (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3);
         // (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3
 
-        // if(DEBUGGER.pending() == 0) DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3); 
+        // DEBUG_PRINTLN_IDLE(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3); 
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, ADC1->IDATAR1, ADC1->IDATAR2, ADC1->IDATAR3, (ADC1->IDATAR1 + ADC1->IDATAR2 + ADC1->IDATAR3)/3); 
         // DEBUG_PRINTLN(std::setprecision(3), std::dec, uvw_curr[0], uvw_curr[1], uvw_curr[2], ab_curr[0], ab_curr[1], est_rad, rad);
         // DEBUG_PRINTLN(std::setprecision(2), std::dec, int(uvw_curr[0]*100), int(uvw_curr[1]*100), int(uvw_curr[2]*100));
