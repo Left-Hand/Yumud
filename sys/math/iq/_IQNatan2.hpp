@@ -157,7 +157,7 @@ constexpr int_fast32_t __IQNatan2_impl(int_fast32_t iqNInputY, int_fast32_t iqNI
          *
          *     iq31mpy(iq32, iq28) = iq29
          */
-        iq29Result = __mpyf_l(uiq32ResultPU, iq28_twoPi);
+        iq29Result = __mpyf_l(uiq32ResultPU, _iq28_twoPi);
 
         /* Only round IQ formats < 29 */
         if (q_value < 29) {

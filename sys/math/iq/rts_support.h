@@ -1,39 +1,5 @@
 #pragma once
 
-
-// #define __mpyfs_start(ui16IntState, ui16MPYState)
-
-// #define __mpy_clear_ctl0()
-
-// #define __mpy_set_frac()
-
-
-// #define __mpy_start(arg1, arg2)
-// #define __mpyf_start(arg1, arg2)
-
-// #define __mpy_stop(arg1, arg2)
-
-
-// #define __mpy_w(arg1, arg2) ((int_fast16_t)(((int_fast16_t)arg1) * ((int_fast16_t)arg2)))
-// #define __mpy_uw(arg1, arg2) ((uint_fast16_t)(((uint_fast16_t)arg1) * ((uint_fast16_t)arg2)))
-
-// #define __mpyx_w(arg1, arg2) ((int_fast32_t)(((int_fast32_t)arg1) * ((int_fast32_t)arg2)))
-// #define __mpyx_uw(arg1, arg2) ((uint_fast32_t)(((uint_fast32_t)arg1) * ((uint_fast32_t)arg2)))
-
-
-// #define __mpy_l(arg1, arg2) ((int_fast32_t)((int_fast32_t)(arg1) * (int_fast32_t)(arg2)))
-// #define __mpy_ul(arg1, arg2) ((uint_fast32_t)((uint_fast32_t)(arg1) * (uint_fast32_t)(arg2)))
-
-
-// #define __mpyx(arg1, arg2) ((int_fast64_t)((int_fast64_t)(arg1) * (int_fast64_t)(arg2)))
-// #define __mpyx_u(arg1, arg2) ((uint_fast64_t)((uint_fast64_t)(arg1) * (uint_fast64_t)(arg2)))
-
-// #define __mpyf_l(arg1, arg2) ((int_fast32_t)(((int_fast64_t)(arg1) * (int_fast64_t)(arg2)) >> 31));
-// #define __mpyf_l_reuse_arg1(arg1, arg2) ((int_fast32_t)(((int_fast64_t)(arg1) * (int_fast64_t)(arg2)) >> 31))
-
-// #define __mpyf_ul(arg1, arg2) ((uint_fast32_t)(((uint_fast64_t)(arg1) * (uint_fast64_t)(arg2)) >> 31));
-// #define __mpyf_ul_reuse_arg1(arg1, arg2) (uint_fast32_t)(((uint_fast64_t)(arg1) * (uint_fast64_t)(arg2)) >> 31)
-
 #ifndef __fast_inline
 #define __fast_inline __inline
 #endif

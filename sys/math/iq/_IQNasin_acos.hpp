@@ -159,7 +159,7 @@ constexpr int_fast32_t _IQNasin(int_fast32_t iqNInput)
     if (ui8Status & 2) {
         /* asin(x) = pi/2 - 2*iq29Result */
         iq29Result = iq29Result << 1;
-        iq29Result -= iq29_halfPi;      // this is equivalent to the above
+        iq29Result -= _iq29_halfPi;      // this is equivalent to the above
         iq29Result = -iq29Result;       // but avoids using temporary registers
     }
 

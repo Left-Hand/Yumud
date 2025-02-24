@@ -58,8 +58,8 @@ constexpr int_fast32_t _IQNexp(int_fast32_t iqNInput){
         uiqNIntegerResult = iqNLookupTable[i16Integer];
 
         /* Reduce the fractional portion to -ln(2) < iq31Fractional < 0 */
-        if (iq31Fractional <= -iq31_ln2) {
-            iq31Fractional += iq31_ln2;
+        if (iq31Fractional <= -_iq31_ln2) {
+            iq31Fractional += _iq31_ln2;
             uiqNIntegerResult >>= 1;
         }
     }
@@ -83,8 +83,8 @@ constexpr int_fast32_t _IQNexp(int_fast32_t iqNInput){
         uiqNIntegerResult = iqNLookupTable[i16Integer];
 
         /* Reduce the fractional portion to 0 < iq31Fractional < ln(2) */
-        if (iq31Fractional >= iq31_ln2) {
-            iq31Fractional -= iq31_ln2;
+        if (iq31Fractional >= _iq31_ln2) {
+            iq31Fractional -= _iq31_ln2;
             uiqNIntegerResult <<= 1;
         }
     }

@@ -214,7 +214,7 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
          * Multiply unsigned iq32 input by 2*pi and scale to unsigned iq30:
          *     iq32 * iq30 = iq30 * 2
          */
-        uiq30Input = __mpyf_ul(uiq32Input, iq30_pi);
+        uiq30Input = __mpyf_ul(uiq32Input, _iq30_pi);
 
     }
     /* Radians API */
@@ -227,16 +227,16 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
 
         /* Reduce the input exponent to zero by scaling by 2*pi. */
         while (exp) {
-            if (uiq29Input >= iq29_pi) {
-                uiq29Input -= iq29_pi;
+            if (uiq29Input >= _iq29_pi) {
+                uiq29Input -= _iq29_pi;
             }
             uiq29Input <<= 1;
             exp--;
         }
 
         /* Reduce the range to the first two quadrants. */
-        if (uiq29Input >= iq29_pi) {
-            uiq29Input -= iq29_pi;
+        if (uiq29Input >= _iq29_pi) {
+            uiq29Input -= _iq29_pi;
             ui8Sign ^= 1;
         }
 
@@ -245,8 +245,8 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
     }
 
     /* Reduce the iq30 input range to the first quadrant. */
-    if (uiq30Input >= iq30_halfPi) {
-        uiq30Input = iq30_pi - uiq30Input;
+    if (uiq30Input >= _iq30_halfPi) {
+        uiq30Input = _iq30_pi - uiq30Input;
 
         /* flip sign for cos calculations */
         if (type == TYPE_COS) {
@@ -260,16 +260,16 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
     /* Only one of these cases will be compiled per function. */
     if (type == TYPE_COS) {
         /* If input is greater than pi/4 use sin for calculations */
-        if (uiq31Input > iq31_quarterPi) {
-            uiq31Input = iq31_halfPi - uiq31Input;
+        if (uiq31Input > _iq31_quarterPi) {
+            uiq31Input = _iq31_halfPi - uiq31Input;
             uiq31Result = __IQNcalcSin(uiq31Input);
         } else {
             uiq31Result = __IQNcalcCos(uiq31Input);
         }
     } else if (type == TYPE_SIN) {
         /* If input is greater than pi/4 use cos for calculations */
-        if (uiq31Input > iq31_quarterPi) {
-            uiq31Input = iq31_halfPi - uiq31Input;
+        if (uiq31Input > _iq31_quarterPi) {
+            uiq31Input = _iq31_halfPi - uiq31Input;
             uiq31Result = __IQNcalcCos(uiq31Input);
         } else {
             uiq31Result = __IQNcalcSin(uiq31Input);
@@ -315,3 +315,8 @@ template<int8_t q_value>
 constexpr int_fast32_t _IQNcosPU(int_fast32_t iqNInput){
     return __IQNsin_cos<TYPE_COS, TYPE_PU, q_value>(iqNInput);
 }
+
+#undef TYPE_SIN
+#undef TYPE_COS
+#undef TYPE_RAD
+#undef TYPE_PU

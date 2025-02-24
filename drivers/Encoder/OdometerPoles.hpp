@@ -55,7 +55,7 @@ public:
         CompressedMap ret;
         for(const auto & item : cali_map){
             scexpr auto ratio = real_t(1 / TAU);
-            ret.push_back(int8_t(real_t(item - (radfix / poles * ratio)) << shift_bits));
+            ret.push_back(int8_t(real_t(item - (radfix / poles * ratio)) << int(shift_bits)));
         }
         return ret;
     }

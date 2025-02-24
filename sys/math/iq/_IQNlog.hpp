@@ -54,7 +54,7 @@ constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin
      *     0.666666 < uiq31Input < 1.333333.
      */
     uiq31Input = (uint_fast32_t)iqNInput;
-    while (uiq31Input < iq31_twoThird) {
+    while (uiq31Input < _iq31_twoThird) {
         uiq31Input <<= 1;
         i16Exp--;
     }
@@ -74,7 +74,7 @@ constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin
      */
     piq30Coeffs = _IQ30log_coeffs;
     iq30Result = *piq30Coeffs++;
-    uiq31Input -= iq31_one;
+    uiq31Input -= _iq31_one;
 
     /* Calculate log(uiq31Input) using the iq30 Taylor Series coefficients. */
     for (ui8Counter = _IQ30log_order; ui8Counter > 0; ui8Counter--) {
@@ -92,9 +92,9 @@ constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin
      * unsigned data type.
      */
     if (i16Exp > 0) {
-        iqNResult += __mpyf_ul(iq31_ln2, ((int_fast32_t)i16Exp << q_value));
+        iqNResult += __mpyf_ul(_iq31_ln2, ((int_fast32_t)i16Exp << q_value));
     } else {
-        iqNResult -= __mpyf_ul(iq31_ln2, (((uint_fast32_t) - i16Exp) << q_value));
+        iqNResult -= __mpyf_ul(_iq31_ln2, (((uint_fast32_t) - i16Exp) << q_value));
     }
 
     /*

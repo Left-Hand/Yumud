@@ -293,3 +293,8 @@ template<const int8_t q_value>
 constexpr int_fast32_t _IQNimag(int_fast32_t iqNInputX, int_fast32_t iqNInputY){
     return __IQNsqrt<TYPE_IMAG, q_value>(iqNInputX, iqNInputY);
 }
+
+#undef TYPE_ISQRT
+#undef TYPE_SQRT
+#undef TYPE_MAG
+#undef TYPE_IMAG
