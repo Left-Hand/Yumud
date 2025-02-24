@@ -60,44 +60,44 @@ static __inline real_t f(const real_t x){
 // template<size_t N>
 // class SimpleLPF{
 // protected:
-//     iq_t output;
+//     iq_t<16> output;
 // public:
-//     iq_t update(const iq_t x){
+//     iq_t<16> update(const iq_t<16> x){
 //         // return ((x * 31 + y) >> 5);
 //     }
 // }
 
-__fast_inline iq_t LPF5(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF5(const iq_t<16> x, const iq_t<16> y){
     // return (x * 31 + y) >> 5;
     // return y;
     auto temp = x * 31 + y;
     
     // if((int32_t(temp.value) & 31) > 16){
-    //     return (temp >> 5) + iq_t(_iq(1));
+    //     return (temp >> 5) + iq_t<16>(_iq(1));
     // }else{
         return (temp) >> 5;
     // }
 }
 
-__fast_inline iq_t LPF6(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF6(const iq_t<16> x, const iq_t<16> y){
     return (x * 63 + y) >> 6;
 }
 
 template<size_t N>
-__fast_inline iq_t LPFN(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPFN(const iq_t<16> x, const iq_t<16> y){
     constexpr size_t sc = ((1 << N) - 1);
     return (x * sc + y) >> N;
 }
 
-__fast_inline iq_t LPF7(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF7(const iq_t<16> x, const iq_t<16> y){
     return (x * 127 + y) >> 7;
 }
 
-__fast_inline iq_t LPF4(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF4(const iq_t<16> x, const iq_t<16> y){
     return (x * 15 + y) >> 4;
 }
 
-__fast_inline iq_t LPF3(const iq_t x, const iq_t y){
+__fast_inline iq_t<16> LPF3(const iq_t<16> x, const iq_t<16> y){
     return (x * 7 + y) >> 3;
 }
 
@@ -138,11 +138,11 @@ public:
     }
 };
 
-__fast_inline iq_t LPF(const iq_t x, const iq_t y){
-    // const iq_t temp = x * 31 + y;
+__fast_inline iq_t<16> LPF(const iq_t<16> x, const iq_t<16> y){
+    // const iq_t<16> temp = x * 31 + y;
 
     // if(int32_t(temp.value) & 16){
-    //     return ((temp >> 5) + (iq_t(1) >> GLOBAL_Q));
+    //     return ((temp >> 5) + (iq_t<16>(1) >> GLOBAL_Q));
     // }else{
     //     return (temp >> 5);
     // }
@@ -475,7 +475,7 @@ public:
         uint fs;
     };
 
-    using Lpf = LowpassFilter_t<iq_t>;
+    using Lpf = LowpassFilter_t<iq_t<16>>;
     using Lpfs = std::array<Lpf, 3>;
 
     Lpfs lpfs_ = {};
@@ -668,7 +668,7 @@ void bldc_main(){
     static int sector_cnt = 0;
 
 
-    // scexpr iq_t pll_freq = iq_t(0.2);
+    // scexpr iq_t<16> pll_freq = iq_t<16>(0.2);
     LapPosPll pll = {
         {
             // .kp = real_t(2 * pll_freq),
@@ -1017,7 +1017,7 @@ void bldc_main(){
         real_t mul = curr_sens.ab()[1] * hfi_c;
         // real_t last_hfi_result = hfi_result;
         // hfi_result = LPF(last_hfi_result, mul);
-        static AverageFilter<iq_t, 64> hfi_filter;
+        static AverageFilter<iq_t<16>, 64> hfi_filter;
         hfi_result = hfi_filter.update(mul);
         // hfi_result = LPFN<9>(hfi_result, mul);
 
@@ -1057,7 +1057,7 @@ void bldc_main(){
         real_t pulse_s = sin(pulse_rad);
         real_t pulse_c = cos(pulse_rad);
 
-        real_t pulse_out = (cnt < sustain) ? pulse_volt : 0;
+        real_t pulse_out = (cnt < sustain) ? pulse_volt : real_t(0);
         // real_t pulse_out = 0;
 
 
@@ -1069,15 +1069,15 @@ void bldc_main(){
 
     [[maybe_unused]] auto cb_sing = [&]{
         
-        static iq_t sing_t = 0;
-        sing_t += iq_t(_iq(1));
+        static iq_t<16> sing_t = 0;
+        sing_t += iq_t<16>(_iq(1));
 
         real_t sing_rad = 0;
 
         real_t sing_s = sin(sing_rad);
         real_t sing_c = cos(sing_rad);
 
-        real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t(TAU) + 3 * sin(40 * frac(sing_t) * iq_t(TAU)));
+        real_t sing_out = 4 * sin(2400 * frac(sing_t) * iq_t<16>(TAU) + 3 * sin(40 * frac(sing_t) * iq_t<16>(TAU)));
 
         ab_volt = {sing_out * sing_c, sing_out * sing_s};
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
@@ -1150,8 +1150,8 @@ void bldc_main(){
     }};
 
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
-    // LowpassFilterD_t<iq_t> speed_measurer = {
-    // LowpassFilterD_t<iq_t> speed_measurer = {
+    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
+    // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     LowpassFilterD_t<float> speed_measurer = {
         {
             10, 
@@ -1195,7 +1195,7 @@ void bldc_main(){
     while(true){
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), (speed_measurer.result()));
-        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t::from(speed_measurer.result()));
+        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>::from(speed_measurer.result()), atan2(cos(real_t(TAU) * time()), sin(real_t(TAU) * time())));
         // if(false)
         {
             auto strs_opt = splitter.update(uart2);

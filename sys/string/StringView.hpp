@@ -60,7 +60,8 @@ public:
     template<floating T>
     constexpr explicit operator T() const {return StringUtils::atof(this->data(), this->length());}
 
-    operator iq_t() const;
+    template<size_t Q>
+    operator iq_t<Q>() const{return StringUtils::atoq<Q>(this->data_, this->size_);}
     constexpr char operator [](const size_t index) const {return data_[index];}
 
 	std::vector<StringView> split(const char chr, const size_t max_pieces = 0) const;

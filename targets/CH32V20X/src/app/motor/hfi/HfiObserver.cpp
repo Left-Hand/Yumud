@@ -2,7 +2,7 @@
 
 namespace ymd::foc {
 
-HfiObserver::HfiObserver(const iq_t _f_inj, const iq_t _Kf, const iq_t _Ki)
+HfiObserver::HfiObserver(const iq_t<16> _f_inj, const iq_t<16> _Kf, const iq_t<16> _Ki)
     : f_inj(_f_inj),
       Kf(_Kf),
       Ki(_Ki),
@@ -24,7 +24,7 @@ void HfiObserver::init() {
     integral_IbetaError = 0;
 }
 
-void HfiObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
+void HfiObserver::update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<16> Ibeta) {
     // 计算电流误差
     IalphaError = Ialpha - EstIalpha;
     IbetaError = Ibeta - EstIbeta;
@@ -42,11 +42,11 @@ void HfiObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
     EstIbeta = Kp * (Ld * omega_hat * cos(theta_hat) - Lq * omega_hat * sin(theta_hat)) + R * Ibeta;
 }
 
-iq_t HfiObserver::getTheta() const {
+iq_t<16> HfiObserver::getTheta() const {
     return theta_hat;
 }
 
-iq_t HfiObserver::getOmega() const {
+iq_t<16> HfiObserver::getOmega() const {
     return omega_hat;
 }
 

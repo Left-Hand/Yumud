@@ -229,7 +229,7 @@ public:
         T lengthsq = length_squared();
         if (lengthsq == 0) {
             x = y = z = 0;
-        } else if(not is_equal_approx(lengthsq, 1)){
+        } else if(not is_equal_approx(lengthsq, T(1))){
             T length = sqrt(lengthsq);
             x /= length;
             y /= length;

@@ -157,7 +157,7 @@ public:
     constexpr bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
     constexpr T length() const {
         auto c = length_squared();
-        return c ? sqrt(c) : 0;}
+        return c ? sqrt(c) : T(0);}
     constexpr T length_squared() const {return (x*x + y*y);}
     
     __fast_inline constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const arithmetic auto & t) const;
@@ -210,16 +210,17 @@ public:
     }
 
     __fast_inline constexpr Vector2_t<T> & operator*=(const arithmetic auto & n){
-        using CommonType = typename std::common_type<T, decltype(n)>::type;
-        x = static_cast<T>(static_cast<CommonType>(x) * n);
-        y = static_cast<T>(static_cast<CommonType>(y) * n);
+        // using CommonType = typename std::common_type<T, decltype(n)>::type;/
+        // using CommonType = T;
+        x = static_cast<T>(x * n);
+        y = static_cast<T>(y * n);
         return *this;
     }
 
     __fast_inline constexpr Vector2_t<T> & operator/=(const arithmetic auto & n){
-        using CommonType = typename std::common_type<T, decltype(n)>::type;
-        x = static_cast<T>(static_cast<CommonType>(x) / n);
-        y = static_cast<T>(static_cast<CommonType>(y) / n);
+        // using CommonType = typename std::common_type<T, decltype(n)>::type;
+        x = static_cast<T>(x / n);
+        y = static_cast<T>(y / n);
         return *this;
     }
 

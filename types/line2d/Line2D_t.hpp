@@ -95,7 +95,7 @@ public:
         auto regular = this->abs();
         auto other_regular = other.abs();
         return (is_equal_approx(regular.d, other_regular.d)) and 
-                is_equal_approx(fposmodp(other_regular.rad - regular.rad, T(PI)), 0);
+                is_equal_approx(fposmodp(other_regular.rad - regular.rad, T(PI)), T(0));
     }
 
     __fast_inline constexpr std::optional<T> distance_with(const Line2D_t<T> & other) const{
@@ -169,7 +169,7 @@ public:
     }
     
     __fast_inline constexpr bool has_point(const Vector2_t<T> & p) const{
-        return is_equal_approx(distance_to(p), 0);
+        return is_equal_approx(distance_to(p), T(0));
     }
 
     __fast_inline constexpr int sign(const Vector2_t<T> & p) const{

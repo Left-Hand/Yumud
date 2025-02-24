@@ -3,7 +3,7 @@
 namespace ymd::foc{
 
 // 构造函数
-SmoObserver::SmoObserver(iq_t _f_para, iq_t _g_para,  iq_t _Kslide, iq_t _Kslf)
+SmoObserver::SmoObserver(iq_t<16> _f_para, iq_t<16> _g_para,  iq_t<16> _Kslide, iq_t<16> _Kslf)
 :   f_para(_f_para),
    g_para(_g_para),
    Kslide(_Kslide),
@@ -26,7 +26,7 @@ void SmoObserver::reset(){
 
 
 // 更新函数
-void SmoObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
+void SmoObserver::update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<16> Ibeta) {
 
     // 滑模电流观测器
     EstIalpha = (f_para * EstIalpha) + (g_para * (Valpha - Ealpha - Zalpha));

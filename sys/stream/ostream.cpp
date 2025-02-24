@@ -72,7 +72,7 @@ OutputStream& OutputStream::operator<<(std::ios_base& (*func)(std::ios_base&)){
 }
 
 
-#define PRINT_FLOAT_TEMPLATE(type, convfunc)\
+#define PRINT_FLOAT_TEMPLATE(convfunc)\
     char str[12] = {0};\
     const auto len = convfunc(value, str, this->eps());\
     if(config_.showpos and value >= 0) *this << '+';\
@@ -149,18 +149,13 @@ void OutputStream::checked_write(const char * pdata, const size_t len){
 }
 
 
-OutputStream & OutputStream::operator<<(const iq_t value){
-    PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::qtoa);
-    return *this;
-}
-
 OutputStream & OutputStream::operator<<(const float value){
-    PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::ftoa);
+    PRINT_FLOAT_TEMPLATE(StringUtils::ftoa);
     return *this;
 }
 
 OutputStream & OutputStream::operator<<(const double value){
-    PRINT_FLOAT_TEMPLATE(iq_t, StringUtils::ftoa);
+    PRINT_FLOAT_TEMPLATE(StringUtils::ftoa);
     return *this;
 }
 

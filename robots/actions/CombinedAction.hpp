@@ -14,7 +14,7 @@ protected:
 public:
     template<typename... Args,
              std::enable_if_t<(std::is_base_of_v<Action, Args> &&...), int> = 0>
-    CombinedAction(Args&&... actions) : Action([this]() { execute(); }, UINT_MAX, false) {
+    CombinedAction(Args&&... actions) : Action([this]() { execute(); }, UINT32_MAX, false) {
         (action_queue.emplace(std::make_unique<Args>(std::forward<Args>(actions))), ...);
     }
 

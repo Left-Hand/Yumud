@@ -189,7 +189,15 @@ public:
     
     OutputStream & operator<<(const float val);
     OutputStream & operator<<(const double val);
-    OutputStream & operator<<(const iq_t val);
+
+    template<size_t Q>
+    OutputStream & operator<<(const iq_t<Q> val){
+        char str[12] = {0};
+        const auto len = StringUtils::qtoa<Q>(val, str, this->eps());
+        if(config_.showpos and val >= 0) *this << '+';
+        this->write(str, len);
+        return *this;
+    }
 
     OutputStream& operator<<(std::ostream& (*manipulator)(std::ostream&)) {
         if (manipulator == static_cast<std::ostream& (*)(std::ostream&)>(std::endl)) {

@@ -67,7 +67,7 @@ protected:
 public:
     ACTION_NAME(move)
     MoveAction(Inst & inst, const Vector3 & to):
-        GrabAction(UINT_MAX, [this](){
+        GrabAction(UINT32_MAX, [this](){
             if(this->first()){//将计算延迟到实际开始运行而不是构造时 确保起始位置正确
                 init(inst_.getPos());
             }
@@ -115,7 +115,7 @@ protected:
 public:
     ACTION_NAME(movez)
     MoveZAction(Inst & inst, const real_t to):
-        GrabAction(UINT_MAX, [this](){
+        GrabAction(UINT32_MAX, [this](){
             if(this->first()){//将计算延迟到实际开始运行而不是构造时 确保起始位置正确
                 init(inst_.getPos());
             }
@@ -161,7 +161,7 @@ protected:
 public:
     ACTION_NAME(movexy)
     MoveXYAction(Inst & inst, const Vector2 to):
-        GrabAction(UINT_MAX, [this](){
+        GrabAction(UINT32_MAX, [this](){
             if(this->first()){//将计算延迟到实际开始运行而不是构造时 确保起始位置正确
                 init(inst_.getPos());
             }
@@ -185,7 +185,7 @@ class ReachedAction:public GrabAction{
 public:
     ACTION_NAME(reached)
     ReachedAction(Inst & inst):
-        GrabAction(UINT_MAX, [this](){
+        GrabAction(UINT32_MAX, [this](){
             if(inst_.reached()) kill();
         }, inst)
         {};
@@ -197,7 +197,7 @@ protected:
 public:
     ACTION_NAME(rapid)
     RapidAction(Inst & inst, const Vector3 & to):
-        GrabAction(UINT_MAX, [this](){
+        GrabAction(UINT32_MAX, [this](){
             if(first()){
                 inst_.rapid(to_);
             }

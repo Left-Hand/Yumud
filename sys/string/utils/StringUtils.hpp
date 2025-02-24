@@ -10,6 +10,70 @@
 
 namespace ymd::StringUtils {
 
+// scexpr auto scale_map = [](){
+//     std::array<uint32_t, 8> ret = {};
+//     ret[0] = 1;
+//     for(size_t i = 1; i < ret.size(); i++){
+//         ret[i] = ret[i-1] * 10;
+//     }
+//     return ret;
+// }();
+
+scexpr uint32_t scale_map[] = {1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000000UL, 10000000UL};
+
+
+template<typename T>
+__fast_inline constexpr size_t _get_scalar(T value, const size_t radix){
+    if(value == 0) return 1;
+
+    if(radix == 10){
+        size_t scalar = 0;
+        value = ABS(value);
+        
+        while(value > 1000000){
+            value /= 1000000;
+            scalar += 6;
+        }
+        
+        size_t i = 0;
+        while(uint32_t(value) >= scale_map[i]) i++;
+        return scalar + i;
+    }else{
+        size_t i = 0;
+        size_t sum = 1;
+        while(size_t(value) > sum){
+            sum *= radix;
+            i++;
+        }
+        return MAX(i, 1);
+    }
+}
+
+
+
+template<integral T>
+size_t _itoa_impl(T value, char * str, uint8_t radix){
+    value = ABS(value);
+    const bool minus = value < 0;
+
+    const size_t len = _get_scalar(value, radix) + minus;
+    str[len] = 0;
+    int i = len - 1;
+
+    do {
+		const uint8_t digit = value % radix;
+        str[i] = ((digit) > 9) ? 
+		(digit - 10) + ('A') : (digit) + '0';
+        i--;
+    } while((value /= radix) > 0 and (i >= 0));
+
+    if(minus) {
+        str[0] = '-';
+    }
+
+    return len;
+}
+
 void reverse_str(char * str,const size_t len);
 ::std::tuple<int,int,int> disassemble_fstr(const char * str, const size_t len);
 int kmp_find(char *src, const size_t src_len, const char *match, const size_t match_len);
@@ -28,13 +92,71 @@ size_t iltoa(int64_t value, char * str, uint8_t radix);
 
 
 size_t ftoa(float value, char * str, uint8_t eps);
-size_t qtoa(const iq_t value, char * str, uint8_t eps);
+
 
 
 int atoi(const char * str, const size_t len);
 float atof(const char * str, const size_t len);
-iq_t atoq(const char * str, const size_t len);
+
 
 __inline int atoi(const char * str){return atoi(str, strlen(str));}
 __inline float atof(const char * str){return atof(str, strlen(str));};
+
+static __fast_inline constexpr void itoas(uint32_t value, char *str, uint8_t radix, int8_t i)  {
+    i -= 1;
+	do{
+		const uint8_t digit = value % radix;
+		str[i] = ((digit) > 9) ? 
+		(digit - 10) + ('A') : (digit) + '0';
+
+		i--;
+        value /= radix;
+	}while(i >= 0);
+}
+
+
+
+template<size_t Q>
+size_t qtoa(const iq_t<Q> value, char * str, uint8_t eps){
+
+    eps = MIN(eps, 5);
+
+	const bool minus = value < 0;
+    const uint32_t abs_value = ABS(int32_t(_iq(value)));
+    const uint32_t lower_mask = ((1 << Q)- 1);
+
+    const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
+
+    const uint32_t scale = scale_map[eps];
+
+    const uint32_t fs = frac_part * scale;
+    
+    const bool upper_round = (fs & lower_mask) >= (lower_mask >> 1);
+
+    const uint32_t frac_int = (fs >> Q) + upper_round;
+    const uint32_t int_part = (uint32_t(abs_value) >> Q) + bool(frac_int >= scale);
+
+    if(minus){
+        str[0] = '-';
+    }
+
+    const auto end = _itoa_impl<int>(int_part, str + minus, 10) + minus;
+
+    if(eps){
+        str[end] = '.';
+        //add dot to seprate
+        itoas(frac_int, str + end + 1, 10, eps);
+    }
+
+    return end + 1 + eps;
+}
+
+
+template<size_t Q>
+iq_t<Q> atoq(const char * str, const size_t len){
+    auto [int_part, frac_part, scale] = StringUtils::disassemble_fstr(str, len);
+	
+    return iq_t<Q>(int_part) + iq_t<Q>(_iq((frac_part << Q) / scale));
+}
+
 }

@@ -17,35 +17,33 @@ protected:
 public:
     CaptureChannelConcept(const uint32_t _unit,const bool _double_edge): unit(_unit), double_edge(_double_edge){;}
     real_t getFreq() const{
-        #ifdef USE_IQ
-        iq_t unit_value;
-        iq_t period_value;
-        unit_value.value = _iq(unit);
-        period_value.value = _iq(period);
-        #else
-        float unit_value = unit;
-        float period_value = period;
-        #endif
-
-        return unit_value / period_value;
+        // #ifdef USE_IQ
+        if constexpr(is_fixed_point_v<real_t>){
+            real_t unit_value;
+            real_t period_value;
+            unit_value.value = _iq(unit);
+            period_value.value = _iq(period);
+            return unit_value / period_value;
+        }else{
+            return unit / period;
+        }
+        //     float unit_value = unit;
+        //     float period_value = period;
+        //     return unit_value / period_value;
+        // }
     }
 
     real_t getDuty() const{
-        #ifdef USE_IQ
-        iq_t pulse_value;
-        iq_t period_value;
-        pulse_value.value = _iq(pulse);
-        period_value.value = _iq(period);
-        iq_t ret = pulse_value/period_value;
-        // iq_t ret = pulse_value/period_value;
-        // if((pulse > (period - pulse)) ^ (ret.value < 0.5)) ret = 1 - ret;
-        #else
-        float pulse_value = pulse;
-        float period_value = period;
-        float ret = pulse_value/period_value;
-        #endif
+        if constexpr(is_fixed_point_v<real_t>){
+            real_t pulse_value;
+            real_t period_value;
+            pulse_value.value = _iq(pulse);
+            period_value.value = _iq(period);
+            return pulse_value/period_value;
 
-        return ret;
+        }else{
+            return pulse/period;
+        }
     }
 
     virtual uint32_t getPulseUs() const = 0;

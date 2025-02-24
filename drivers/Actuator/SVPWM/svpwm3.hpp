@@ -4,7 +4,7 @@
 
 namespace ymd::drivers{
 
-std::tuple<iq_t, iq_t, iq_t> SVM(const iq_t alpha, const iq_t beta);
+std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta);
 
 class SVPWM3:public SVPWM{
 protected:

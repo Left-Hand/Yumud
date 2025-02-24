@@ -316,7 +316,7 @@ protected:
 
     SC8815 & setBusCurrLimit(const real_t curr);
     SC8815 & setBatCurrLimit(const real_t curr);
-    SC8815 & setOutputVolt(const iq_t volt);
+    SC8815 & setOutputVolt(const real_t volt);
 
     SC8815 & setInternalVbusRef(const real_t volt);
     SC8815 & setExternalVbusRef(const real_t volt);

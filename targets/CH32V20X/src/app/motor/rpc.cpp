@@ -9,18 +9,18 @@ using namespace ymd;
 class Ball{
 public:
     int a;
-    void set_xy(iq_t x, iq_t y){
+    void set_xy(iq_t<16> x, iq_t<16> y){
         DEBUG_PRINTLN(x,y);
         // return 0;
     }
 };
 
-iq_t add(iq_t x, iq_t y){
+iq_t<16> add(iq_t<16> x, iq_t<16> y){
     return x - y;
 }
 
 
-iq_t add2(const iq_t x, const iq_t y){
+iq_t<16> add2(const iq_t<16> x, const iq_t<16> y){
     return x - 0.9_r * y;
 }
 
@@ -33,7 +33,7 @@ void rpc_main(){
     Ball ball;
 
     int v = 2;
-    auto func = [&v](iq_t x, iq_t a){
+    auto func = [&v](iq_t<16> x, iq_t<16> a){
         return sin(x) + a + v;
     };
 
@@ -70,7 +70,7 @@ void rpc_main(){
     // char buf[64];
     // memset(buf, 0, sizeof(buf));
     // BufStream os(buf);
-    // snprintf(os, 4,5,6,"Hello", iq_t(3.14));
+    // snprintf(os, 4,5,6,"Hello", iq_t<16>(3.14));
 
 
     while(true){

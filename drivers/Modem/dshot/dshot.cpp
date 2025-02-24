@@ -35,7 +35,7 @@ void DShotChannel::init(){
 
 DShotChannel & DShotChannel::operator = (const real_t duty){
     // DEBUG_PRINTLN(duty);
-    if(duty != 0) update(m_crc(MAX(int(duty * 2047), 48)));
+    if(duty) update(m_crc(MAX(int(duty * 2047), 48)));
     else update(0);
     // DEBUG_PRINTLN(buf);
     invoke();

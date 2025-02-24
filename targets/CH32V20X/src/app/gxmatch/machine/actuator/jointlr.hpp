@@ -37,7 +37,7 @@ public:
     
     bool reached() override;
     void setRadian(const real_t dist) override; 
-    real_t getRadian(){return std::bit_cast<real_t>(last_radian_);}
+    real_t getRadian(){return (last_radian_);}
     void tick() override;
     void idle();
     void inverse(const bool en = true){

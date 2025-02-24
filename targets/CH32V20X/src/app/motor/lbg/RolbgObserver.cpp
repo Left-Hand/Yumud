@@ -1,7 +1,7 @@
 #include "RolbgObserver.hpp"
 
 namespace ymd::foc{
-// RolbgObserver::RolbgObserver(const iq_t _h, const iq_t _Ls, const iq_t _Rs, const iq_t _Tc, const iq_t _omega)
+// RolbgObserver::RolbgObserver(const iq_t<16> _h, const iq_t<16> _Ls, const iq_t<16> _Rs, const iq_t<16> _Tc, const iq_t<16> _omega)
 //     : h(_h), Ls(_Ls), Rs(_Rs), Tc(_Tc), omega(_omega){}
 
 
@@ -18,7 +18,7 @@ void RolbgObserver::reset() {
 
 
 
-void RolbgObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
+void RolbgObserver::update(iq_t<16> Valpha, iq_t<16> Vbeta, iq_t<16> Ialpha, iq_t<16> Ibeta) {
 
 
     scexpr double freq = 50000;
@@ -32,13 +32,13 @@ void RolbgObserver::update(iq_t Valpha, iq_t Vbeta, iq_t Ialpha, iq_t Ibeta) {
     // scexpr double l1 = -6000;
     // scexpr double l2 = 70000;
 
-    scexpr iq_t _1_l1T_Tr_L = iq_t(1 + l1 * T - T * R / L);
-    scexpr iq_t T_L = iq_t(T / L);
-    scexpr iq_t l1T = iq_t(l1 * T);
-    scexpr iq_t l2T = iq_t(l2 * T);
+    scexpr iq_t<16> _1_l1T_Tr_L = iq_t<16>(1 + l1 * T - T * R / L);
+    scexpr iq_t<16> T_L = iq_t<16>(T / L);
+    scexpr iq_t<16> l1T = iq_t<16>(l1 * T);
+    scexpr iq_t<16> l2T = iq_t<16>(l2 * T);
 
 
-    auto update = [](iq_t & i, iq_t & e, const iq_t est_i, const iq_t est_volt, const iq_t meas_volt, const iq_t meas_i){
+    auto update = [](iq_t<16> & i, iq_t<16> & e, const iq_t<16> est_i, const iq_t<16> est_volt, const iq_t<16> meas_volt, const iq_t<16> meas_i){
         i = _1_l1T_Tr_L * i - T_L * est_volt + T_L * meas_volt - l1T * meas_i;
         e = est_volt + l2T * (est_i - meas_i);
     };

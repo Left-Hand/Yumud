@@ -166,7 +166,7 @@ void ChassisModule::tick800(){
         // auto gyr_raw = Vector3(acc_gyr_sensor_.getGyr()).z - real_t(0.134);
 
         static KalmanFilter_t<real_t> kf{10,0.01_r};
-        gyr_ = ABS(gyr_raw) > 3 ? 0 : kf.update(gyr_raw);
+        gyr_ = ABS(gyr_raw) > 3 ? real_t(0) : kf.update(gyr_raw);
 
 
         DEBUG_PRINTLN(gyr_, rad());

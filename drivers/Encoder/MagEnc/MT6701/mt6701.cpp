@@ -62,7 +62,7 @@ void MT6701::update(){
 
         semantic = Semantic{data8, data16};
         if(semantic.valid(fast_mode)){
-            lap_position = u16_to_uni(semantic.data_14bit << 2);
+            lap_position = real_t(iq_t<16>(semantic.data_14bit << 2) >> 16);
         } 
     }else{
         MT6701_DEBUG("no drv!!");
