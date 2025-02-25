@@ -16,6 +16,8 @@ using namespace ymd;
 #define FLASH_DEBUG(...)
 #endif
 
+#define FAULT_IF(x) 
+
 void Flash::storeBytes(const Address vaddr, const void * data, const Address len){
 
     unlock();
@@ -87,7 +89,7 @@ void Flash::loadBytes(const Address vaddr, void * data, const Address len){
 void Flash::erasePage(const Address vaddr){
     const auto phyaddr = base_address + vaddr;
     FAULT_IF(!ISALIGNED(phyaddr));
-    BREAKPOINT
+    // BREAKPOINT
     // delay(2);
     // DEBUG_VALUE(phyaddr, "erase")
     // FLASH_ErasePage_Fast(phyaddr);

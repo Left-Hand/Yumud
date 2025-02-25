@@ -1,3 +1,6 @@
+#include "sys/debug/debug_inc.h"
+#include "sys/clock/time.hpp"
+
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
 #include "hal/bus/can/can.hpp"
@@ -28,60 +31,22 @@
 
 #include "rpc.hpp"
 #include "tb.h"
-#include "sys/debug/debug_inc.h"
+
 #include "robots/rpc/arg_parser.hpp"
 
 #include "dsp/filter/LowpassFilter.hpp"
+#include "dsp/filter/SecondOrderLpf.hpp"
+#include "CurrentSensor.hpp"
+#include "GradeCounter.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
 using namespace ymd::foc;
 using namespace ymd::digipw;
+using namespace ymd::dsp;
 using namespace ymd::intp;
 
 
-// __attribute__((no_return))
-void jump_to(const uint32_t addr){
-    __asm__ volatile (
-        "jmp %0"
-        :
-        : "r" (addr)
-        : "memory"
-    );
-    __builtin_unreachable();
-}
-
-static __inline real_t f(const real_t x){
-    // return sin(7 * x) / 7 + sin(5 * x) / 5 + sin(3 * x)/ 3 + sin(x);
-    // return sin(5 * x) / 5 + sin(3 * x)/ 3 + sin(x);
-    return sin(x);
-}
-
-// template<size_t N>
-// class SimpleLPF{
-// protected:
-//     iq_t<16> output;
-// public:
-//     iq_t<16> update(const iq_t<16> x){
-//         // return ((x * 31 + y) >> 5);
-//     }
-// }
-
-__fast_inline iq_t<16> LPF5(const iq_t<16> x, const iq_t<16> y){
-    // return (x * 31 + y) >> 5;
-    // return y;
-    auto temp = x * 31 + y;
-    
-    // if((int32_t(temp.value) & 31) > 16){
-    //     return (temp >> 5) + iq_t<16>(_iq(1));
-    // }else{
-        return (temp) >> 5;
-    // }
-}
-
-__fast_inline iq_t<16> LPF6(const iq_t<16> x, const iq_t<16> y){
-    return (x * 63 + y) >> 6;
-}
 
 template<size_t N>
 __fast_inline iq_t<16> LPFN(const iq_t<16> x, const iq_t<16> y){
@@ -89,145 +54,10 @@ __fast_inline iq_t<16> LPFN(const iq_t<16> x, const iq_t<16> y){
     return (x * sc + y) >> N;
 }
 
-__fast_inline iq_t<16> LPF7(const iq_t<16> x, const iq_t<16> y){
-    return (x * 127 + y) >> 7;
-}
-
-__fast_inline iq_t<16> LPF4(const iq_t<16> x, const iq_t<16> y){
-    return (x * 15 + y) >> 4;
-}
-
-__fast_inline iq_t<16> LPF3(const iq_t<16> x, const iq_t<16> y){
-    return (x * 7 + y) >> 3;
-}
 
 __inline constexpr real_t degrees(const real_t deg){
     return deg * real_t(TAU / 180);
 }
-
-
-template<typename T, size_t N>
-class AverageFilter {
-protected:
-    scexpr T invN = T(1.0 / N);
-
-    std::array<T, N> data_;
-    size_t index = 0;
-    bool inited = false;
-    T sum = 0;
-    
-
-public:
-    void reset(const T x) {
-        data_.fill(x);
-        sum = x * N;
-        inited = true;
-    }
-
-    T update(const T x) {
-        if (unlikely(!inited)) {
-            inited = true;
-            reset(x);
-            return x;
-        }
-
-        T old_value = data_[index];
-        data_[index] = x;
-        index = (index + 1) % N;
-
-        sum += x - old_value;
-
-        return sum * invN;
-    }
-};
-
-__fast_inline iq_t<16> LPF(const iq_t<16> x, const iq_t<16> y){
-    // const iq_t<16> temp = x * 31 + y;
-
-    // if(int32_t(temp.value) & 16){
-    //     return ((temp >> 5) + (iq_t<16>(1) >> GLOBAL_Q));
-    // }else{
-    //     return (temp >> 5);
-    // }
-    return y;
-    // return (() >> 5);
-}
-
-
-class CurrentSensor{
-protected:
-    AnalogInChannel & u_sense_;
-    AnalogInChannel & v_sense_;
-    AnalogInChannel & w_sense_;
-
-    UvwCurrent uvw_bias_;
-    UvwCurrent uvw_raw_;
-    UvwCurrent uvw_curr_;
-    real_t mid_curr_;
-    AbCurrent ab_curr_;
-    DqCurrent dq_curr_;
-public:
-    CurrentSensor(
-        AnalogInChannel & u_sense,
-        AnalogInChannel & v_sense, 
-        AnalogInChannel & w_sense
-    ): 
-        u_sense_(u_sense),
-        v_sense_(v_sense), 
-        w_sense_(w_sense){
-            reset();
-        }
-
-    void reset(){
-        uvw_curr_ = {0, 0, 0};
-        uvw_bias_ = {0, 0, 0};
-        ab_curr_ = {0, 0};
-        dq_curr_ = {0, 0};
-    }
-
-
-    void capture(){
-        uvw_raw_ = {real_t(u_sense_),
-                    real_t(v_sense_),
-                    real_t(w_sense_)};
-        mid_curr_ = LPF5(mid_curr_, (uvw_raw_.u + uvw_raw_.v + uvw_raw_.w) / 3);
-        uvw_curr_[0] = (uvw_raw_.u - mid_curr_ - uvw_bias_.u);
-        uvw_curr_[1] = (uvw_raw_.v - mid_curr_ - uvw_bias_.v);
-        uvw_curr_[2] = (uvw_raw_.w - mid_curr_ - uvw_bias_.w);
-    }
-
-
-    void update(const real_t rad){
-
-        const real_t raw_u_curr = real_t(u_sense_);
-        const real_t raw_v_curr = real_t(v_sense_);
-        const real_t raw_w_curr = real_t(w_sense_);
-        const real_t raw_sum_curr = raw_u_curr + raw_v_curr + raw_w_curr;
-        mid_curr_ = LPF5(mid_curr_, raw_sum_curr / 3);
-        const real_t mid_curr_ = mid_curr_;
-        uvw_curr_[0] = (raw_u_curr - mid_curr_);
-        uvw_curr_[1] = (raw_v_curr - mid_curr_);
-        uvw_curr_[2] = (raw_w_curr - mid_curr_);
-
-        ab_curr_ = uvw_to_ab(uvw_curr_);
-        const auto dq_curr = ab_to_dq(ab_curr_, rad);
-        
-        // if(likely(ABS(dq_curr[0]) < 1))dq_curr_[0] = LPFN<7>(dq_curr_[0],dq_curr[0]);
-        // if(likely(ABS(dq_curr[1]) < 1))dq_curr_[1] = LPFN<7>(dq_curr_[1],dq_curr[1]);
-
-        dq_curr_[0] = LPFN<7>(dq_curr_[0],dq_curr[0]);
-        dq_curr_[1] = LPFN<7>(dq_curr_[1],dq_curr[1]);
-    }
-    auto raw()const {return uvw_raw_;}
-
-    auto mid() const {return mid_curr_;}
-    auto uvw()const{return uvw_curr_;}
-    // auto uvw(){return uvw_curr_;}
-    auto ab()const{return ab_curr_;}
-    // auto ab(){return ab_curr_;}
-    auto dq()const{return dq_curr_;}
-    // auto dq(){return dq_curr_;}
-};
 
 
 class SensorlessEncoder:public EncoderIntf{
@@ -430,44 +260,6 @@ private:
 
 };
 
-class GradeCounter{
-public:
-    struct Config{
-        uint step;
-        uint threshold;
-    };
-private:
-    uint step_;
-    uint threshold_;
-    uint grades_;
-public:
-    GradeCounter(const Config & config):
-        step_(config.step),
-        threshold_(config.threshold),
-        grades_(0){;}
-
-    void reconf(const Config & config){
-        step_ = config.step;
-        threshold_ = config.threshold;
-    }
-
-    __fast_inline void reset(){
-        grades_ = 0;
-    }
-
-    __fast_inline void update(bool match){
-        if(unlikely(match)) grades_ += step_;
-        else grades_ = CLAMP(grades_ - 1, 0, 2 * threshold_);
-    }
-
-    __fast_inline bool overflow() const{
-        return grades_ >= threshold_;
-    }
-
-    __fast_inline auto grades() const{
-        return grades_;
-    }
-};
 
 
 class CurrentBiasCalibrater{
@@ -1022,8 +814,9 @@ void bldc_main(){
         real_t mul = curr_sens.ab()[1] * hfi_c;
         // real_t last_hfi_result = hfi_result;
         // hfi_result = LPF(last_hfi_result, mul);
-        static AverageFilter<iq_t<16>, 64> hfi_filter;
-        hfi_result = hfi_filter.update(mul);
+        static LowpassFilter_t<real_t> hfi_filter{{.fc = 10, .fs = 10000}};
+        hfi_filter.update(mul);
+        hfi_result = hfi_filter.result();
         // hfi_result = LPFN<9>(hfi_result, mul);
 
         // hfi_result = mul;
@@ -1157,7 +950,8 @@ void bldc_main(){
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    LowpassFilterD_t<float> speed_measurer = {
+    // LowpassFilterD_t<iq_t<14>> speed_measurer = {
+        SecondOrderLowpassFilter_t<iq_t<16>> speed_measurer = {
         {
             10, 
             foc_freq
@@ -1171,7 +965,7 @@ void bldc_main(){
         calibrater.update(curr_sens.raw(), curr_sens.mid());
 
         odo.update();
-        speed_measurer.update(float(odo.getPosition()));
+        speed_measurer.update(odo.getPosition());
 
         // mp6540.enable(true);
         if(calibrater.done()) {
@@ -1200,20 +994,7 @@ void bldc_main(){
     
     while(true){
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), (speed_measurer.result()));
-        // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>::from(speed_measurer.result()), atan2(cos(real_t(TAU) * time()), sin(real_t(TAU) * time())));
-        // DEBUG_PRINTLN_IDLE(int(std::bit_cast<int32_t>(time().value)), millis(), real_t(millis() / real_t(1000)));
-        // const auto t = real_t((millis())) / 1000;
-
-        // DEBUG_PRINTLN_IDLE(iq_t<16>(sin(t)), t);
-        // DEBUG_PRINTLN_IDLE((std::bit_cast<int32_t>((sin(t)).value) >> 16), t);
-
-        // DEBUG_PRINTLN_IDLE(sin(t), cos(t), atan2<28>(sin(t), cos(t)), sin(t) * cos(t), rad, atan(-rad), t);
-        DEBUGGER.noBrackets();
-        const auto t = time();
-        const auto s = sin(t);
-        DEBUG_PRINTLN_IDLE(SVM(cos(t), sin(t)), sin(t), t, asin(iq_t<29>(s)));
-        // DEBUG_PRINTLN_IDLE(((sin(t)).value), t);
+        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()));
         // if(false)
         {
             auto strs_opt = splitter.update(uart2);

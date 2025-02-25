@@ -53,7 +53,7 @@
  *     root(x) = x * 1/root(x)
  */
 
-template<const size_t Q, const int32_t type>
+template<const int Q, const int32_t type>
 constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
     uint8_t ui8Index;
     uint8_t ui8Loops;
@@ -85,7 +85,7 @@ constexpr int32_t __IQNsqrt(int32_t iqNInputX, int32_t iqNInputY){
         if constexpr(type == TYPE_MAG) {
             i16Exponent = (32 - Q);
         } else {
-            i16Exponent = -(32 - Q);
+            i16Exponent = (Q - 32);
         }
 
         /* Shift to iq64 by keeping track of exponent. */

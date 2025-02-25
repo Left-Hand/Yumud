@@ -1,6 +1,5 @@
 #include "i2chw.hpp"
 #include "hal/gpio/port.hpp"
-#include "sys/debug/debug_inc.h"
 
 using namespace ymd::hal;
 using namespace ymd;

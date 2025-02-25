@@ -536,6 +536,31 @@ __fast_inline iq_t<Q> pow(const iq_t<Q> base, const iq_t<Q> exponent) {
 
 #endif
 
+template<size_t Q>
+__fast_inline iq_t<31> sinpu(const iq_t<Q> iq){
+    return iq_t<31>(_IQNsinPU<Q>(iq.value.to_i32()));
+}
+
+template<size_t Q>
+__fast_inline iq_t<31> cospu(const iq_t<Q> iq){
+    return iq_t<31>(_IQNcosPU<Q>(iq.value));
+}
+
+template<size_t Q>
+__fast_inline iq_t<Q> isqrt(const iq_t<Q> iq){
+    return iq_t<Q>(_IQNisqrt<Q>(iq.value));
+}
+
+template<size_t Q>
+__fast_inline iq_t<Q> mag(const iq_t<Q> a, const iq_t<Q> b){
+    return iq_t<Q>(_IQNmag<Q>(a.value, b.value));
+}
+
+template<size_t Q>
+__fast_inline iq_t<Q> imag(const iq_t<Q> a, const iq_t<Q> b){
+    return iq_t<Q>(_IQNimag<Q>(a.value, a.value));
+}
+
 namespace std{
     template<size_t Q>
     class numeric_limits<iq_t<Q>> {

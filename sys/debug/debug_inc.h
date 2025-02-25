@@ -71,8 +71,6 @@ void __DEBUG_SOURCE(const std::source_location location,Args && ... args){
 
 #define TODO(...) do{PANIC("todo:", ##__VA_ARGS__)}while(false);
 
-#define BREAKPOINT __nopn(1);
-
 extern "C"{
 __attribute__((used))
 int _write(int file, char *buf, int len);

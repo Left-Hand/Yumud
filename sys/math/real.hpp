@@ -230,6 +230,31 @@ __fast_inline constexpr T powi(const T base, const int exponent) {
     return powi(base, exponent);
 }
 
+template<floating T>
+__fast_inline T sinpu(const T val){
+    return sin(val * (1 / TAU));
+}
+
+template<floating T>
+__fast_inline T cospu(const T val){
+    return cos(val * (1 / TAU));
+}
+
+template<floating T>
+__fast_inline T isqrt(const T val){
+    return 1.0 / sqrt(val);
+}
+
+template<floating T>
+__fast_inline T imag(const T a, const T b){
+    return 1 / mag(a,b);
+}
+
+template<floating T>
+__fast_inline T mag(const T a, const T b){
+    return sqrt(a * a + b * b);
+}
+
 template<arithmetic T>
 __fast_inline constexpr T square(const T x) {
     return x * x;

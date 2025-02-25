@@ -344,3 +344,13 @@ void sys::exit() {
 void sys::halt(){
     HALT;
 }
+
+void sys::jumpto(const uint32_t addr){
+    __asm__ volatile (
+        "jmp %0"
+        :
+        : "r" (addr)
+        : "memory"
+    );
+    __builtin_unreachable();
+}

@@ -156,8 +156,9 @@ public:
     constexpr bool has_point(const Vector2_t<auto> & _v)const;
     constexpr bool is_normalized() const {return (fabs(x*x + y*y + T(-1)) <= T(CMP_EPSILON));}
     constexpr T length() const {
-        auto c = length_squared();
-        return c ? sqrt(c) : T(0);}
+        return imag(x,y);
+    }
+    
     constexpr T length_squared() const {return (x*x + y*y);}
     
     __fast_inline constexpr Vector2_t<T> lerp(const Vector2_t<T> & b, const arithmetic auto & t) const;

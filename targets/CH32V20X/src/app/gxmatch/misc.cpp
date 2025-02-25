@@ -1,6 +1,7 @@
 #include "misc.hpp"
 #include "sys/clock/clock.hpp"
 #include "sys/core/system.hpp"
+#include "sys/clock/time.hpp"
 
 
 namespace gxm{

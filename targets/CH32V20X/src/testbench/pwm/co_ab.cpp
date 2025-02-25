@@ -2,7 +2,7 @@
 #include "sys/debug/debug_inc.h"
 
 #include "hal/timer/instance/timer_hw.hpp"
-
+#include "sys/clock/time.hpp"
 
 class TimerOCPair:public PwmChannel{
 protected:

@@ -2,8 +2,6 @@
 #include "CanFilter.hpp"
 #include "hal/nvic/nvic.hpp"
 
-#include "hal/bus/uart/uarthw.hpp"
-
 //#region switches
 
 // #define SCE_ENABLED

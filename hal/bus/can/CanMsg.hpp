@@ -1,13 +1,9 @@
 #pragma once
 
 #include "sys/core/platform.h"
-#include "sys/core/sdk.h"
-#include "sys/stream/ostream.hpp"
 
+#include <span>
 #include <memory.h>
-#include <initializer_list>
-#include <vector>
-#include <utility>
 #include <tuple>
 
 namespace ymd::hal{
@@ -151,8 +147,8 @@ public:
         return std::span<const uint8_t>(begin(), size());
     }
 
-    constexpr bool isStd() const {return is_ext_ == CAN_Id_Standard;}
-    constexpr bool isExt() const {return is_ext_ == CAN_Id_Extended;}
+    constexpr bool isStd() const {return is_ext_ == false;}
+    constexpr bool isExt() const {return is_ext_ == true;}
     constexpr bool isRemote() const {return (is_remote_ == true);}
     constexpr uint8_t mailbox() const {return mbox_;}
     void read(uint8_t * buf, size_t len){
@@ -189,5 +185,6 @@ public:
 }
 
 namespace ymd{
+    class OutputStream;
     OutputStream & operator<<(OutputStream & os, const hal::CanMsg & msg);
 }
