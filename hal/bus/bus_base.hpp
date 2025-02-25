@@ -2,7 +2,6 @@
 
 #include "sys/core/platform.h"
 #include "BusTrait.hpp"
-#include "sys/stream/stream.hpp"
 #include "bus_enums.hpp"
 
 namespace ymd{

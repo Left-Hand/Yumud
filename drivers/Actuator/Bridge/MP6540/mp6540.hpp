@@ -31,7 +31,7 @@ protected:
 
     struct MP6540CurrentChannel:public AnalogInChannel{
         AnalogInChannel & ain_;
-        real_t ratio_ = 0;
+        real_t ratio_ = real_t(0);
 
         MP6540CurrentChannel(AnalogInChannel & _ain):
             ain_(_ain){}

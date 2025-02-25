@@ -107,7 +107,7 @@ real_t SC8815::getBatCurr(){
 real_t SC8815::getAdinVolt(){
     READ_REG(adin_value_reg);
 
-    return inv_b10(adin_value_reg, 1) / 1000;
+    return real_t(inv_b10(adin_value_reg, 1)) / 1000;
 }
 
 SC8815 & SC8815::setBusCurrLimit(const real_t limit_ma){

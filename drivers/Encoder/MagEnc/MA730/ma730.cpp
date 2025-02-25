@@ -87,7 +87,7 @@ void MA730::setTrimY(const real_t k){
 
 
 void MA730::setTrim(const real_t am, const real_t e){
-    real_t k = tan(am + e) / tan(am);
+    real_t k = ::tan(am + e) / ::tan(am);
     if(k > real_t(1)) setTrimX(k);
     else setTrimY(k);
 }

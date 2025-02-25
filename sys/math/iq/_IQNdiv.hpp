@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "support.h"
 #include "_IQNtables.hpp"
 
@@ -14,20 +12,18 @@
 #define TYPE_UNSIGNED   (1)
 
 
-template<const int type, const int8_t q_value>
-constexpr int_fast32_t __IQNdiv_impl(int_fast32_t iqNInput1, int_fast32_t iqNInput2)
+template<const int8_t Q, const int32_t type>
+constexpr int32_t __IQNdiv_impl(int32_t iqNInput1, int32_t iqNInput2)
 {
-    uint8_t ui8Index, ui8Sign = 0;
-    uint_fast32_t ui32Temp;
-    uint_fast32_t uiq30Guess;
-    uint_fast32_t uiqNInput1;
-    uint_fast32_t uiqNInput2;
-    uint_fast32_t uiqNResult;
-    uint_fast64_t uiiqNInput1;
-    uint_fast16_t ui16IntState;
-    uint_fast16_t ui16MPYState;
+    size_t ui8Index, ui8Sign = 0;
+    uint32_t ui32Temp;
+    uint32_t uiq30Guess;
+    uint32_t uiqNInput1;
+    uint32_t uiqNInput2;
+    uint32_t uiqNResult;
+    uint64_t uiiqNInput1;
 
-    if (type == TYPE_DEFAULT) {
+    if constexpr(type == TYPE_DEFAULT) {
         /* save sign of denominator */
         if (iqNInput2 <= 0) {
             /* check for divide by zero */
@@ -52,8 +48,8 @@ constexpr int_fast32_t __IQNdiv_impl(int_fast32_t iqNInput1, int_fast32_t iqNInp
     }
 
     /* Save input1 and input2 to unsigned IQN and IIQN (64-bit). */
-    uiiqNInput1 = (uint_fast64_t)iqNInput1;
-    uiqNInput2 = (uint_fast32_t)iqNInput2;
+    uiiqNInput1 = (uint64_t)iqNInput1;
+    uiqNInput2 = (uint32_t)iqNInput2;
 
     /* Scale inputs so that 0.5 <= uiqNInput2 < 1.0. */
     while (uiqNInput2 < 0x40000000) {
@@ -65,8 +61,8 @@ constexpr int_fast32_t __IQNdiv_impl(int_fast32_t iqNInput1, int_fast32_t iqNInp
      * Shift input1 back from iq31 to iqN but scale by 2 since we multiply
      * by result in iq30 format.
      */
-    if (q_value < 31) {
-        uiiqNInput1 >>= (31 - q_value - 1);
+    if constexpr(Q < 31) {
+        uiiqNInput1 >>= (31 - Q - 1);
     } else {
         uiiqNInput1 <<= 1;
     }
@@ -79,51 +75,40 @@ constexpr int_fast32_t __IQNdiv_impl(int_fast32_t iqNInput1, int_fast32_t iqNInp
             return INT32_MAX;
         }
     } else {
-        uiqNInput1 = (uint_fast32_t)uiiqNInput1;
+        uiqNInput1 = (uint32_t)uiiqNInput1;
     }
 
     /* use left most 7 bits as ui8Index into lookup table (range: 32-64) */
     ui8Index = uiqNInput2 >> 24;
     ui8Index -= 64;
-    uiq30Guess = (uint_fast32_t)_IQ6div_lookup[ui8Index] << 24;
+    uiq30Guess = (uint32_t)_IQ6div_lookup[ui8Index] << 24;
 
-    /*
-     * Mark the start of any multiplies. This will disable interrupts and set
-     * the multiplier to fractional mode. This is designed to reduce overhead
-     * of constantly switching states when using repeated multiplies (MSP430
-     * only).
-     */
-    __mpyf_start(&ui16IntState, &ui16MPYState);
+
 
     /* 1st iteration */
     ui32Temp = __mpyf_ul(uiq30Guess, uiqNInput2);
-    ui32Temp = -((uint_fast32_t)ui32Temp - 0x80000000);
+    ui32Temp = -((uint32_t)ui32Temp - 0x80000000);
     ui32Temp = ui32Temp << 1;
     uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui32Temp);
 
     /* 2nd iteration */
     ui32Temp = __mpyf_ul(uiq30Guess, uiqNInput2);
-    ui32Temp = -((uint_fast32_t)ui32Temp - 0x80000000);
+    ui32Temp = -((uint32_t)ui32Temp - 0x80000000);
     ui32Temp = ui32Temp << 1;
     uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui32Temp);
 
     /* 3rd iteration */
     ui32Temp = __mpyf_ul(uiq30Guess, uiqNInput2);
-    ui32Temp = -((uint_fast32_t)ui32Temp - 0x80000000);
+    ui32Temp = -((uint32_t)ui32Temp - 0x80000000);
     ui32Temp = ui32Temp << 1;
     uiq30Guess = __mpyf_ul_reuse_arg1(uiq30Guess, ui32Temp);
 
     /* Multiply 1/uiqNInput2 and uiqNInput1. */
     uiqNResult = __mpyf_ul(uiq30Guess, uiqNInput1);
 
-    /*
-     * Mark the end of all multiplies. This restores MPY and interrupt states
-     * (MSP430 only).
-     */
-    __mpy_stop(&ui16IntState, &ui16MPYState);
 
     /* Saturate, add the sign and return. */
-    if (type == TYPE_DEFAULT) {
+    if constexpr(type == TYPE_DEFAULT) {
         if (uiqNResult > INT32_MAX) {
             if (ui8Sign) {
                 return INT32_MIN;
@@ -132,9 +117,9 @@ constexpr int_fast32_t __IQNdiv_impl(int_fast32_t iqNInput1, int_fast32_t iqNInp
             }
         } else {
             if (ui8Sign) {
-                return -(int_fast32_t)uiqNResult;
+                return -(int32_t)uiqNResult;
             } else {
-                return (int_fast32_t)uiqNResult;
+                return (int32_t)uiqNResult;
             }
         }
     } else {
@@ -143,16 +128,16 @@ constexpr int_fast32_t __IQNdiv_impl(int_fast32_t iqNInput1, int_fast32_t iqNInp
 }
 
 
-template<const uint8_t q_value>
-constexpr int32_t _IQNdiv(int32_t a, int32_t b)
+template<const size_t Q>
+constexpr _iq<Q> _IQNdiv(_iq<Q> a, _iq<Q> b)
 {
-    return __IQNdiv_impl<TYPE_DEFAULT, q_value>(a, b);
+    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_DEFAULT>(a.to_i32(), b.to_i32()));
 }
 
-template<const uint8_t q_value>
-constexpr uint32_t _UIQdiv(uint32_t a, uint32_t b)
+template<const size_t Q>
+constexpr _iq<Q> _UIQdiv(_iq<Q> a, _iq<Q> b)
 {
-    return __IQNdiv_impl<TYPE_UNSIGNED, q_value>(a, b);
+    return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_UNSIGNED>(a.to_i32(), b.to_i32()));
 }
 
 #undef TYPE_DEFAULT

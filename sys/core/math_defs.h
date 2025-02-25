@@ -115,7 +115,18 @@
 
 
 #ifndef SIGN
+#ifdef __cplusplus
+#define SIGN(a) __sign_tmpl(a)
+
+template <typename T>
+requires std::is_arithmetic_v<T>
+constexpr __fast_inline T __sign_tmpl(const T a){
+    return (a < 0) ? T(-1) : T(1);
+}
+
+#else
 #define SIGN(x) ((x < 0) ? -1 : 1)
+#endif
 #endif
 
 #ifndef TYPE_CHECK

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "support.h"
 #include "_IQNtables.hpp"
 
@@ -14,29 +12,27 @@
  * @param ui8IntegerOffset  Integer portion offset
  * @param iqN_MIN           Minimum parameter value.
  * @param iqN_MAX           Maximum parameter value.
- * @param q_value           IQ format.
+ * @param Q           IQ format.
  *
  *
  * @return                  IQN type result of exponential.
  */
 
-template<const int8_t q_value>
-constexpr int_fast32_t _IQNexp(int_fast32_t iqNInput){
-    const uint_fast32_t *iqNLookupTable = _IQNexp_lookup[q_value - 1];
-    uint8_t ui8IntegerOffset = _IQNexp_offset[q_value - 1];
-    const int_fast32_t iqN_MIN = _IQNexp_min[q_value - 1];
-    const int_fast32_t iqN_MAX = _IQNexp_max[q_value - 1];
+template<const size_t Q>
+constexpr int32_t __IQNexp(int32_t iqNInput){
+    const uint32_t *iqNLookupTable = _IQNexp_lookup[Q - 1];
+    uint8_t ui8IntegerOffset = _IQNexp_offset[Q - 1];
+    const int32_t iqN_MIN = _IQNexp_min[Q - 1];
+    const int32_t iqN_MAX = _IQNexp_max[Q - 1];
     
     uint8_t ui8Count;
-    int_fast16_t i16Integer;
-    uint_fast16_t ui16IntState;
-    uint_fast16_t ui16MPYState;
-    int_fast32_t iq31Fractional;
-    uint_fast32_t uiqNResult;
-    uint_fast32_t uiqNIntegerResult;
-    uint_fast32_t uiq30FractionalResult;
-    uint_fast32_t uiq31FractionalResult;
-    const uint_fast32_t *piq30Coeffs;
+    int16_t i16Integer;
+    int32_t iq31Fractional;
+    uint32_t uiqNResult;
+    uint32_t uiqNIntegerResult;
+    uint32_t uiq30FractionalResult;
+    uint32_t uiq31FractionalResult;
+    const uint32_t *piq30Coeffs;
 
     /* Input is negative. */
     if (iqNInput < 0) {
@@ -47,11 +43,11 @@ constexpr int_fast32_t _IQNexp(int_fast32_t iqNInput){
 
         /* Extract the fractional portion in iq31 and set sign bit. */
         iq31Fractional = iqNInput;
-        iq31Fractional <<= (31 - q_value);
+        iq31Fractional <<= (31 - Q);
         iq31Fractional |= 0x80000000;
 
         /* Extract the integer portion. */
-        i16Integer = (int_fast16_t)(iqNInput >> q_value) + 1;
+        i16Integer = (int16_t)(iqNInput >> Q) + 1;
 
         /* Offset the integer portion and lookup the integer result. */
         i16Integer += ui8IntegerOffset;
@@ -72,11 +68,11 @@ constexpr int_fast32_t _IQNexp(int_fast32_t iqNInput){
 
         /* Extract the fractional portion in iq31 and clear sign bit. */
         iq31Fractional = iqNInput;
-        iq31Fractional <<= (31 - q_value);
+        iq31Fractional <<= (31 - Q);
         iq31Fractional &= 0x7fffffff;
 
         /* Extract the integer portion. */
-        i16Integer = (int_fast16_t)(iqNInput >> q_value);
+        i16Integer = (int16_t)(iqNInput >> Q);
 
         /* Offset the integer portion and lookup the integer result. */
         i16Integer += ui8IntegerOffset;
@@ -89,13 +85,6 @@ constexpr int_fast32_t _IQNexp(int_fast32_t iqNInput){
         }
     }
 
-    /*
-     * Mark the start of any multiplies. This will disable interrupts and set
-     * the multiplier to fractional mode. This is designed to reduce overhead
-     * of constantly switching states when using repeated multiplies (MSP430
-     * only).
-     */
-    __mpyf_start(&ui16IntState, &ui16MPYState);
 
     /*
      * Initialize the coefficient pointer to the Taylor Series iq30 coefficients
@@ -120,15 +109,15 @@ constexpr int_fast32_t _IQNexp(int_fast32_t iqNInput){
      */
     uiqNResult = __mpyf_ul(uiqNIntegerResult, uiq31FractionalResult);
 
-    /*
-     * Mark the end of all multiplies. This restores MPY and interrupt states
-     * (MSP430 only).
-     */
-    __mpy_stop(&ui16IntState, &ui16MPYState);
 
     /* The result is scaled by 2, round the result and scale to iqN format. */
     uiqNResult++;
     uiqNResult >>= 1;
 
     return uiqNResult;
+}
+
+template<const size_t Q>
+constexpr _iq<Q> _IQNexp(_iq<Q> input){
+    return std::bit_cast<_iq<Q>>(__IQNexp<Q>(std::bit_cast<int32_t>(input)));
 }

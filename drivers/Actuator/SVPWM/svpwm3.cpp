@@ -22,6 +22,7 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
     const auto p2 = std::signbit(beta_by_sqrt3 - alpha);
     const auto p3 = std::signbit(beta_by_sqrt3 + alpha);
 
+    // const auto a = beta_by_sqrt3 + alpha;
     Sector sector = Sector(
         p1 | (p2 << 1) | (p3 << 2)
     );

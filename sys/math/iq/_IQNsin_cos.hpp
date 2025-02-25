@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 #include "support.h"
 #include "_IQNtables.hpp"
 
@@ -45,7 +43,7 @@
  * First we calculate an index k and the remainder x according to the following
  * formulas:
  *
- *     k = 0x3F & int(Radian*64)
+ *     k = 0x3F & int32_t(Radian*64)
  *     x = fract(Radian*64)/64
  *
  * Two lookup tables store the values of sin(k) and cos(k) for all possible
@@ -66,15 +64,15 @@
  * Using a lookup table with a 64 bit index (52 indexes since the input range is
  * only 0 - 0.785398) and second order Taylor series gives 28 bits of accuracy.
  */
-static __inline constexpr int_fast32_t __IQNcalcSin(uint_fast32_t uiq31Input){
-    uint_fast16_t index;
-    int_fast32_t iq31X;
-    int_fast32_t iq31Sin;
-    int_fast32_t iq31Cos;
-    int_fast32_t iq31Res;
+static __inline constexpr int32_t __IQNcalcSin(uint32_t uiq31Input){
+    uint16_t index;
+    int32_t iq31X;
+    int32_t iq31Sin;
+    int32_t iq31Cos;
+    int32_t iq31Res;
 
     /* Calculate index for sin and cos lookup using bits 31:26 */
-    index = (uint_fast16_t)(uiq31Input >> 25) & 0x003f;
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
 
     /* Lookup S(k) and C(k) values. */
     iq31Sin = _IQ31SinLookup[index];
@@ -110,16 +108,16 @@ static __inline constexpr int_fast32_t __IQNcalcSin(uint_fast32_t uiq31Input){
     return iq31Res;
 }
 
-static __inline constexpr int_fast32_t __IQNcalcCos(uint_fast32_t uiq31Input)
+static __inline constexpr int32_t __IQNcalcCos(uint32_t uiq31Input)
 {
-    uint_fast16_t index;
-    int_fast32_t iq31X;
-    int_fast32_t iq31Sin;
-    int_fast32_t iq31Cos;
-    int_fast32_t iq31Res;
+    uint16_t index;
+    int32_t iq31X;
+    int32_t iq31Sin;
+    int32_t iq31Cos;
+    int32_t iq31Res;
 
     /* Calculate index for sin and cos lookup using bits 31:26 */
-    index = (uint_fast16_t)(uiq31Input >> 25) & 0x003f;
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
 
     /* Lookup S(k) and C(k) values. */
     iq31Sin = _IQ31SinLookup[index];
@@ -160,49 +158,40 @@ static __inline constexpr int_fast32_t __IQNcalcCos(uint_fast32_t uiq31Input)
  * @brief Computes the sine or cosine of an IQN input.
  *
  * @param iqNInput        IQN type input.
- * @param q_value         IQ format.
+ * @param Q         IQ format.
  * @param type            Specifies sine or cosine operation.
  * @param format          Specifies radians or per-unit operation.
  *
- * @return                IQN type result of sin or cosine operation.
+ * @return                IQ31 type result of sin or cosine operation.
  */
 
-template<const int8_t type, const int8_t format, const int8_t q_value>
-constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
+template<const int8_t Q, const int8_t type, const int8_t format>
+constexpr int32_t __IQNsin_cos(int32_t iqNInput){
     uint8_t ui8Sign = 0;
-    uint_fast16_t ui16IntState;
-    uint_fast16_t ui16MPYState;
-    uint_fast32_t uiq29Input;
-    uint_fast32_t uiq30Input;
-    uint_fast32_t uiq31Input;
-    uint_fast32_t uiq32Input;
-    uint_fast32_t uiq31Result = 0;
+    uint32_t uiq29Input;
+    uint32_t uiq30Input;
+    uint32_t uiq31Input;
+    uint32_t uiq32Input;
+    uint32_t uiq31Result = 0;
 
     /* Remove sign from input */
     if (iqNInput < 0) {
         iqNInput = -iqNInput;
 
         /* Flip sign only for sin */
-        if (type == TYPE_SIN) {
+        if constexpr(type == TYPE_SIN) {
             ui8Sign = 1;
         }
     }
 
-    /*
-     * Mark the start of any multiplies. This will disable interrupts and set
-     * the multiplier to fractional mode. This is designed to reduce overhead
-     * of constantly switching states when using repeated multiplies (MSP430
-     * only).
-     */
-    __mpyf_start(&ui16IntState, &ui16MPYState);
 
     /* Per unit API */
-    if (format == TYPE_PU) {
+    if constexpr(format == TYPE_PU) {
         /*
          * Scale input to unsigned iq32 to allow for maximum range. This removes
          * the integer component of the per unit input.
          */
-        uiq32Input = (uint_fast32_t)iqNInput << (32 - q_value);
+        uiq32Input = (uint32_t)iqNInput << (32 - Q);
 
         /* Reduce the input to the first two quadrants. */
         if (uiq32Input >= 0x80000000) {
@@ -220,10 +209,10 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
     /* Radians API */
     else {
         /* Calculate the exponent difference from input format to iq29. */
-        int_fast16_t exp = 29 - q_value;
+        int16_t exp = 29 - Q;
 
         /* Save input as unsigned iq29 format. */
-        uiq29Input = (uint_fast32_t)iqNInput;
+        uiq29Input = (uint32_t)iqNInput;
 
         /* Reduce the input exponent to zero by scaling by 2*pi. */
         while (exp) {
@@ -249,7 +238,7 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
         uiq30Input = _iq30_pi - uiq30Input;
 
         /* flip sign for cos calculations */
-        if (type == TYPE_COS) {
+        if constexpr(type == TYPE_COS) {
             ui8Sign ^= 1;
         }
     }
@@ -258,7 +247,7 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
     uiq31Input = uiq30Input << 1;
 
     /* Only one of these cases will be compiled per function. */
-    if (type == TYPE_COS) {
+    if constexpr(type == TYPE_COS) {
         /* If input is greater than pi/4 use sin for calculations */
         if (uiq31Input > _iq31_quarterPi) {
             uiq31Input = _iq31_halfPi - uiq31Input;
@@ -266,7 +255,7 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
         } else {
             uiq31Result = __IQNcalcCos(uiq31Input);
         }
-    } else if (type == TYPE_SIN) {
+    } else if constexpr(type == TYPE_SIN) {
         /* If input is greater than pi/4 use cos for calculations */
         if (uiq31Input > _iq31_quarterPi) {
             uiq31Input = _iq31_halfPi - uiq31Input;
@@ -276,44 +265,42 @@ constexpr int_fast32_t __IQNsin_cos(int_fast32_t iqNInput){
         }
     }
 
-    /*
-     * Mark the end of all multiplies. This restores MPY and interrupt states
-     * (MSP430 only).
-     */
-    __mpy_stop(&ui16IntState, &ui16MPYState);
-
-    /* Shift to Q type */
-    uiq31Result >>= (31 - q_value);
 
     /* set sign */
     if (ui8Sign) {
-        uiq31Result = -uiq31Result;
+        return -uiq31Result;
+    }else{
+        return uiq31Result;
     }
-
-    return uiq31Result;
 }
 
-template<int8_t q_value>
-constexpr int_fast32_t _IQNsin(int_fast32_t iqNInput){
-    return __IQNsin_cos<TYPE_SIN, TYPE_RAD, q_value>(iqNInput);
+// @param iqNInput        IQN type input.
+// @return                IQ31 type result of sin or cosine operation.
+template<int8_t Q>
+constexpr _iq<31> _IQNsin(const _iq<Q> iqNInput){
+    return std::bit_cast<_iq<31>>(__IQNsin_cos<Q, TYPE_SIN, TYPE_RAD>(iqNInput.to_i32()));
+}
+
+// @param iqNInput        IQN type input.
+// @return                IQ31 type result of sin or cosine operation.
+template<int8_t Q>
+constexpr _iq<31> _IQNcos(const _iq<Q> iqNInput){
+    return std::bit_cast<_iq<31>>(__IQNsin_cos<Q, TYPE_COS, TYPE_RAD>(iqNInput.to_i32()));
+}
+
+// @param iqNInput        IQN type input.
+// @return                IQ31 type result of sin or cosine operation.
+template<int8_t Q>
+constexpr _iq<31> _IQNsinPU(const _iq<Q> iqNInput){
+    return std::bit_cast<_iq<31>>(__IQNsin_cos<Q, TYPE_SIN, TYPE_PU>(iqNInput.to_i32()));
 }
 
 
-template<int8_t q_value>
-constexpr int_fast32_t _IQNcos(int_fast32_t iqNInput){
-    return __IQNsin_cos<TYPE_COS, TYPE_RAD, q_value>(iqNInput);
-}
-
-
-template<int8_t q_value>
-constexpr int_fast32_t _IQNsinPU(int_fast32_t iqNInput){
-    return __IQNsin_cos<TYPE_SIN, TYPE_PU, q_value>(iqNInput);
-}
-
-
-template<int8_t q_value>
-constexpr int_fast32_t _IQNcosPU(int_fast32_t iqNInput){
-    return __IQNsin_cos<TYPE_COS, TYPE_PU, q_value>(iqNInput);
+// @param iqNInput        IQN type input.
+// @return                IQ31 type result of sin or cosine operation.
+template<int8_t Q>
+constexpr _iq<31> _IQNcosPU(const _iq<Q> iqNInput){
+    return std::bit_cast<_iq<31>>(__IQNsin_cos<Q, TYPE_COS, TYPE_PU>(iqNInput.to_i32()));
 }
 
 #undef TYPE_SIN

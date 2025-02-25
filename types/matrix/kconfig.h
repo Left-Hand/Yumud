@@ -8,7 +8,6 @@
 #define KONFIG_H
 
 #include <stdint.h>
-// #include <math.h>
 
 
 /* State Space dimension */

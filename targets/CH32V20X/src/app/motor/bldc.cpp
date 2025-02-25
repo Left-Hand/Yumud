@@ -101,6 +101,9 @@ __fast_inline iq_t<16> LPF3(const iq_t<16> x, const iq_t<16> y){
     return (x * 7 + y) >> 3;
 }
 
+__inline constexpr real_t degrees(const real_t deg){
+    return deg * real_t(TAU / 180);
+}
 
 
 template<typename T, size_t N>
@@ -941,7 +944,9 @@ void bldc_main(){
             }
             last_curr = this_curr;
         }
-        ab_volt = {test_volt * sin(omega * cnt),0};
+
+        const auto __res = omega * cnt;
+        ab_volt = {test_volt * sin(__res),0};
         svpwm.setAbVolt(ab_volt[0], ab_volt[1]);
     };
 
@@ -1070,7 +1075,7 @@ void bldc_main(){
     [[maybe_unused]] auto cb_sing = [&]{
         
         static iq_t<16> sing_t = 0;
-        sing_t += iq_t<16>(_iq(1));
+        sing_t += iq_t<16>(_iq<16>::from_i32(1));
 
         real_t sing_rad = 0;
 
@@ -1192,10 +1197,22 @@ void bldc_main(){
 
     adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
 
+    
     while(true){
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
         // DEBUG_PRINTLN_IDLE(odo.getPosition(), (speed_measurer.result()));
-        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>::from(speed_measurer.result()), atan2(cos(real_t(TAU) * time()), sin(real_t(TAU) * time())));
+        // DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>::from(speed_measurer.result()), atan2(cos(real_t(TAU) * time()), sin(real_t(TAU) * time())));
+        // DEBUG_PRINTLN_IDLE(int(std::bit_cast<int32_t>(time().value)), millis(), real_t(millis() / real_t(1000)));
+        // const auto t = real_t((millis())) / 1000;
+
+        // DEBUG_PRINTLN_IDLE(iq_t<16>(sin(t)), t);
+        // DEBUG_PRINTLN_IDLE((std::bit_cast<int32_t>((sin(t)).value) >> 16), t);
+
+        // DEBUG_PRINTLN_IDLE(sin(t), cos(t), atan2<28>(sin(t), cos(t)), sin(t) * cos(t), rad, atan(-rad), t);
+        DEBUGGER.noBrackets();
+        const auto t = time();
+        DEBUG_PRINTLN_IDLE(SVM(cos(t), sin(t)), sin(t), t, asin(t));
+        // DEBUG_PRINTLN_IDLE(((sin(t)).value), t);
         // if(false)
         {
             auto strs_opt = splitter.update(uart2);

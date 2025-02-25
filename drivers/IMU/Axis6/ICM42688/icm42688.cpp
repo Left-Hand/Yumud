@@ -2,17 +2,17 @@
 
 using namespace ymd::drivers;
 
-scexpr real_t LSB_ACC_16G_x64 = 64 *  0.0047856934_r;
-scexpr real_t  LSB_ACC_8G_x64 = 64 *  0.0023928467_r;
-scexpr real_t  LSB_ACC_4G_x64 = 64 *  0.0011964233_r;
-scexpr real_t  LSB_ACC_2G_x64 = 64 * 0.00059821167_r;
+scexpr real_t LSB_ACC_16G_x64 = real_t(64 *  0.0047856934);
+scexpr real_t  LSB_ACC_8G_x64 = real_t(64 *  0.0023928467);
+scexpr real_t  LSB_ACC_4G_x64 = real_t(64 *  0.0011964233);
+scexpr real_t  LSB_ACC_2G_x64 = real_t(64 * 0.00059821167);
 
 /*Turn Into Radian*/
-scexpr real_t LSB_GYR_2000_R_x256	 = 256 * 0.0010652644_r;
-scexpr real_t LSB_GYR_1000_R_x256	= 256 * 0.00053263222_r;
-scexpr real_t  LSB_GYR_500_R_x256	= 256 * 0.00026631611_r;
-scexpr real_t  LSB_GYR_250_R_x256	= 256 * 0.00013315805_r;
-scexpr real_t LSB_GYR_125D_R_x256  = 256 * 0.000066579027_r;	
+scexpr real_t LSB_GYR_2000_R_x256	= real_t(256 * 0.0010652644);
+scexpr real_t LSB_GYR_1000_R_x256	= real_t(256 * 0.00053263222);
+scexpr real_t  LSB_GYR_500_R_x256	= real_t(256 * 0.00026631611);
+scexpr real_t  LSB_GYR_250_R_x256	= real_t(256 * 0.00013315805);
+scexpr real_t LSB_GYR_125D_R_x256  	= real_t(256 * 0.000066579027);	
 
 
 

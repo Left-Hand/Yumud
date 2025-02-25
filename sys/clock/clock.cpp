@@ -165,7 +165,7 @@ real_t time(){
         const Depart microsec = Depart{.res64 = micros()};
 
         return 
-            + real_t{_iq((int(microsec.l15) << 16) / 1000000)} 
+            + real_t{_iq<16>::from_i32((int(microsec.l15) << 16) / 1000000)} 
             + real_t{int(microsec.m15)} * real_t(sepow(2, 15) / sepow(10, 6))
             + real_t{int(microsec.h31)} * real_t(sepow(2, 30) / sepow(10, 6))
             ;

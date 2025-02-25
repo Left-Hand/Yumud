@@ -10,14 +10,6 @@
 
 namespace ymd::StringUtils {
 
-// scexpr auto scale_map = [](){
-//     std::array<uint32_t, 8> ret = {};
-//     ret[0] = 1;
-//     for(size_t i = 1; i < ret.size(); i++){
-//         ret[i] = ret[i-1] * 10;
-//     }
-//     return ret;
-// }();
 
 scexpr uint32_t scale_map[] = {1UL, 10UL, 100UL, 1000UL, 10000UL, 100000UL, 1000000UL, 10000000UL};
 
@@ -53,8 +45,9 @@ __fast_inline constexpr size_t _get_scalar(T value, const size_t radix){
 
 template<integral T>
 size_t _itoa_impl(T value, char * str, uint8_t radix){
-    value = ABS(value);
     const bool minus = value < 0;
+
+    value = ABS(value);
 
     const size_t len = _get_scalar(value, radix) + minus;
     str[len] = 0;
@@ -115,15 +108,16 @@ static __fast_inline constexpr void itoas(uint32_t value, char *str, uint8_t rad
 }
 
 
+template<size_t _Q>
+size_t qtoa(const iq_t<_Q> value, char * str, uint8_t eps){
+    //TODO 支持除了Q16格式外其他格式转换到字符串的函数 
 
-template<size_t Q>
-size_t qtoa(const iq_t<Q> value, char * str, uint8_t eps){
-
+    scexpr size_t Q = 16;
     eps = MIN(eps, 5);
 
 	const bool minus = value < 0;
-    const uint32_t abs_value = ABS(int32_t(_iq(value)));
-    const uint32_t lower_mask = ((1 << Q)- 1);
+    const uint32_t abs_value = ABS((iq_t<Q>(value).value.to_i32()));
+    const uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
 
     const uint32_t frac_part = uint32_t(abs_value) & lower_mask;
 
@@ -156,7 +150,7 @@ template<size_t Q>
 iq_t<Q> atoq(const char * str, const size_t len){
     auto [int_part, frac_part, scale] = StringUtils::disassemble_fstr(str, len);
 	
-    return iq_t<Q>(int_part) + iq_t<Q>(_iq((frac_part << Q) / scale));
+    return iq_t<Q>(int_part) + iq_t<Q>(_iq<Q>::from_i32((frac_part << Q) / scale));
 }
 
 }
