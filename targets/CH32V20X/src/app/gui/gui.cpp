@@ -1,6 +1,6 @@
 #include "gui.hpp"
 
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "sys/core/system.hpp"
 #include "sys/clock/time.hpp"
 

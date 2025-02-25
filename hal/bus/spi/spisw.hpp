@@ -4,7 +4,7 @@
 #include "sys/clock/clock.h"
 
 
-namespace ymd{
+namespace ymd::hal{
 class SpiSw: public Spi{
 protected:
     volatile int8_t occupied = -1;

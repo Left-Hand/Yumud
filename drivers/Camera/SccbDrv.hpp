@@ -1,7 +1,7 @@
 #pragma once
 
 #include "hal/bus/i2c/i2c.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "hal/bus/busdrv.hpp"
 
 #include <type_traits>

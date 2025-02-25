@@ -1,4 +1,4 @@
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include "src/testbench/tb.h"
 #include "hal/bus/i2c/i2csw.hpp"

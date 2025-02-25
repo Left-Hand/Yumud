@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../sys/debug/debug_inc.h"
-#include "../hal/bkp/bkp.hpp"
-#include "../thirdparty/enums/enum.h"
+#include "sys/debug/debug.hpp"
+
+#include "hal/bkp/bkp.hpp"
+#include "thirdparty/enums/enum.h"
 
 namespace SMC{
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sys/debug/debug.hpp"
 
 #include <functional>
 #include <limits>
@@ -12,7 +13,7 @@
 #include "crc.hpp"
 #include "utils.hpp"
 
-#include "sys/debug/debug_inc.h"
+
 
 
 // Note that this option cannot be used to debug UART because it prints on UART

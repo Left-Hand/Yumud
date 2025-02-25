@@ -1,7 +1,7 @@
 #include "etk.hpp"
 
 #include "sys/core/system.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"

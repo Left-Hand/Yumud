@@ -4,7 +4,7 @@
 #include <ostream>
 #include "sys/core/system.hpp"
 #include "tb.h"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 
 namespace RiscvCpu{

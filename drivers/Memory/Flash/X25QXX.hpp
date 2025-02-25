@@ -5,14 +5,7 @@
 #include "concept/storage.hpp"
 #include "concept/jedec.hpp"
 
-#define X25QXX_DEBUG
 
-#ifdef X25QXX_DEBUG
-#undef X25QXX_DEBUG
-#define X25QXX_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
-#else
-#define X25QXX_DEBUG(...)
-#endif
 
 namespace ymd::drivers{
 
@@ -69,27 +62,27 @@ protected:
     JedecId jedec_id;
 
 
-    void writeByte(const uint8_t data, const Continuous cont = DISC){
-        spi_drv_.writeSingle<uint8_t>(data, cont);
+    BusError writeByte(const uint8_t data, const Continuous cont = DISC){
+        return spi_drv_.writeSingle<uint8_t>(data, cont);
     }
 
-    void writeByte(const Command cmd, const Continuous cont = DISC){
-        writeByte(uint8_t(cmd), cont);
+    BusError writeByte(const Command cmd, const Continuous cont = DISC){
+        return writeByte(uint8_t(cmd), cont);
     }
 
-    void writeBytes(const void * data, const size_t len){
-        spi_drv_.writeMulti<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
+    BusError writeBytes(const void * data, const size_t len){
+        return spi_drv_.writeMulti<uint8_t>(reinterpret_cast<const uint8_t *>(data), len);
     }
 
-    void readByte(uint8_t & data, const Continuous cont = DISC){
-        spi_drv_.readSingle<uint8_t>(data, cont);
+    BusError readByte(uint8_t & data, const Continuous cont = DISC){
+        return spi_drv_.readSingle<uint8_t>(data, cont);
     }
 
-    void readBytes(void * data, const size_t len){
+    BusError readBytes(void * data, const size_t len){
         // DEBUGGER.print("nr");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("nr!");
-        spi_drv_.readMulti<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
+        return spi_drv_.readMulti<uint8_t>(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.print("ar");
         // DEBUGGER.print_arr(reinterpret_cast<uint8_t *>(data), len);
         // DEBUGGER.println("ar!");

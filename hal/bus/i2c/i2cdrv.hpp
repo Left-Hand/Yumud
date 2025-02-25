@@ -1,7 +1,6 @@
 #pragma once
 
 #include "i2c.hpp"
-#include "sys/debug/debug_inc.h"
 #include "hal/bus/busdrv.hpp"
 
 #include <type_traits>
@@ -112,18 +111,16 @@ public:
     __inline void release();
 };
 
-
-
-
 }
 
-namespace ymd::internal{
-template <>
-struct DrvOfBus<ymd::hal::I2c>{
-    using DrvType = ymd::hal::I2cDrv;  // 默认错误类型
+namespace ymd{
+template<>
+struct driver_of_bus<hal::I2c>{
+    using driver_type = hal::I2cDrv;
 };
-
+    
 }
+
 
 
 #include "i2cdrv.tpp"

@@ -2,7 +2,7 @@
 
 #include "arg_parser.hpp"
 #include "sys/string/string.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include <vector>
 

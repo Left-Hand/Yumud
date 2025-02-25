@@ -13,7 +13,7 @@ __interrupt void SPI2_IRQHandler(void);
 #endif
 }
 
-namespace ymd{
+namespace ymd::hal{
 
 class SpiHw:public Spi{
 protected:

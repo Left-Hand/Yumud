@@ -21,13 +21,10 @@ template<typename BusType>
 concept is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
 
 
-namespace internal{
 template <typename BusType>
-struct DrvOfBus {
-    using DrvType = void;
+struct driver_of_bus {
+    using driver_type = void;
 };
-
-}
 
 
 template<typename BusType>

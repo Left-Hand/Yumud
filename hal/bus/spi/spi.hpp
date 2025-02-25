@@ -5,7 +5,7 @@
 
 #include "spi_trait.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
 class Spi:public FullDuplexBus, traits::SpiTrait{
 public:

@@ -9,6 +9,7 @@
  */
 
 #include "AD5933.hpp"
+#include "sys/debug/debug.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;

@@ -3,7 +3,7 @@
 #include "hal/bus/can/can.hpp"
 
 #include "types/range/range_t.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 class ZdtMotor{
 protected:

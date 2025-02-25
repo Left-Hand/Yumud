@@ -1,9 +1,8 @@
 #include "spihw.hpp"
 #include "sys/core/system.hpp"
-// #include "sys/debug/debug_inc.h"
 
 using namespace ymd;
-
+using namespace ymd::hal;
 
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
@@ -311,7 +310,7 @@ SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
     return Error::OK;
 }
 
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_SPI1
 SpiHw spi1{SPI1};
 #endif

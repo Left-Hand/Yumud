@@ -1,7 +1,7 @@
 #include "tb.h"
+#include "sys/debug/debug.hpp"
 
 #include "sys/math/float/bf16.hpp"
-#include "sys/debug/debug_inc.h"
 
 void float_main(){
     DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);

@@ -1,9 +1,14 @@
 #include "ssd1306.hpp"
-
+#include "sys/debug/debug.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;
 
+void SSD13XX::setpos_unsafe(const Vector2i & pos){
+    // auto & frame = fetchFrame();
+    // frame.setpos_unsafe(pos);
+    DEBUG_PRINTLN("not implemented");
+}
 
 void SSD13XX::init(){   
     interface.init(); 

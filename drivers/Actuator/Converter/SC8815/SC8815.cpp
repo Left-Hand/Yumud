@@ -1,4 +1,5 @@
 #include "SC8815.hpp"
+#include "sys/debug/debug.hpp"
 
 using namespace ymd::drivers;
 

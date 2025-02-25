@@ -1,5 +1,7 @@
 #include "tb.h"
-#include "sys/debug/debug_inc.h"
+
+#include "sys/debug/debug.hpp"
+
 #include "canopen/Entry.hpp"
 #include "canopen/ObjectDict.hpp"
 #include "canopen/cia402.hpp"

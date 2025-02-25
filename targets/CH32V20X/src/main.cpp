@@ -2,7 +2,7 @@
 
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/gpio/port_virtual.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include "testbench/tb.h"
 #include "app/gui/gui.hpp"

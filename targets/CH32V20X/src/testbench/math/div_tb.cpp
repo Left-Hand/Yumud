@@ -5,9 +5,10 @@
 #include "../tb.h"
 
 #include "sys/math/int/int_t.hpp"
-#include "hal/bus/uart/uarthw.hpp"
+#include "sys/debug/debug.hpp"
 
-#include "sys/debug/debug_inc.h"
+
+#include "hal/bus/uart/uarthw.hpp"
 
 
 static inline constexpr auto get_m_a_s_udiv32(uint32_t Divisor){

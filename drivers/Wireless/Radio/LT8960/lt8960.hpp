@@ -3,12 +3,6 @@
 #include "drivers/device_defs.h"
 
 
-#ifdef LT8960_DEBUG
-#define LT8960_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define LT8960_DEBUG(...)
-#endif
-
 
 namespace ymd::drivers{
 
@@ -55,41 +49,13 @@ protected:
 
     void delayT5(){delayMicroseconds(1);}
 
-    void writeReg(const RegAddress address, const uint16_t reg){
-        if(i2c_drv){
-            i2c_drv->writeReg((uint8_t)address, reg, MSB);
-        }else if(spi_drv){
-            TODO("not implemented yet");
-        }
-        LT8960_DEBUG("write",*(uint16_t *)&reg, "at", (uint8_t)address);
-    }
+    void writeReg(const RegAddress address, const uint16_t reg);
 
-    void readReg(const RegAddress address, uint16_t & reg){
-        if(i2c_drv){
-            i2c_drv->readReg((uint8_t)address, reg, MSB);
-        }else if(spi_drv){
-            TODO("not implemented yet");
-        }
-        LT8960_DEBUG("read",*(uint16_t *)&reg, "at", (uint8_t)address);
-    }
+    void readReg(const RegAddress address, uint16_t & reg);
 
-    void writeByte(const RegAddress address, const uint8_t data){
-        if(i2c_drv){
-            i2c_drv->writeReg((uint8_t)address, data);
-        }else if(spi_drv){
-            TODO("not implemented yet");
-        }
-    }
+    void writeByte(const RegAddress address, const uint8_t data);
 
-    void readByte(const RegAddress address, uint8_t & data){
-        if(spi_drv){
-            spi_drv->writeSingle((uint8_t)((uint8_t)address & 0x80), CONT);
-            delayT3();
-            spi_drv->readSingle(data);
-        }else if(i2c_drv){
-            i2c_drv->readReg((uint8_t)address, data);
-        }
-    }
+    void readByte(const RegAddress address, uint8_t & data);
 public:
     LT8960(const SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
     LT8960(SpiDrv && _spi_drv) : spi_drv(_spi_drv) {;}

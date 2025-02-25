@@ -3,8 +3,9 @@
 
 #include "sys/utils/setget/Getter.hpp"
 #include "sys/utils/setget/Setter.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "sys/polymorphism/proxy.hpp"
+#include "sys/clock/time.hpp"
 
 #include "hal/bus/uart/uarthw.hpp"
 #include "algo/interpolation/Polynomial.hpp"
@@ -17,7 +18,7 @@
 
 #include "robots/tween/Tween.hpp"
 
-#include "sys/clock/time.hpp"
+
 
 using Point = Vector2_t<real_t>;
 using Points = std::vector<Vector2_t<real_t>>;
