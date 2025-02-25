@@ -378,6 +378,7 @@ template<size_t Q>
 __fast_inline iq_t<Q> tan(const iq_t<Q> iq) {return iq_t<Q>(sin(iq)) / iq_t<Q>(cos(iq));}
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<29> asin(const iq_t<Q> iq) {
     {
         return iq_t<29>(_iq<29>(_IQNasin<Q>(iq.value)));
@@ -385,6 +386,7 @@ __fast_inline iq_t<29> asin(const iq_t<Q> iq) {
 }
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<29> acos(const iq_t<Q> iq) {
     {
         return iq_t<29>(_iq<29>::from_i32(
@@ -395,12 +397,15 @@ __fast_inline iq_t<29> acos(const iq_t<Q> iq) {
 }
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<29> asinf(const iq_t<Q> iq){return ::asin(iq);}
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<29> acosf(const iq_t<Q> iq){return ::acos(iq);}
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<Q> atanf(const iq_t<Q> iq) {
     {
         return iq_t<Q>(_iq<Q>(_IQNatan2<Q>(iq.value, _iq<Q>::from_i32(1 << Q))));
@@ -408,11 +413,13 @@ __fast_inline iq_t<Q> atanf(const iq_t<Q> iq) {
 }
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<Q> atan(const iq_t<Q> iq) {
     return atanf(iq);
 }
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<Q> atan2f(const iq_t<Q> a, const iq_t<Q> b) {
     {
         return iq_t<Q>(_iq<Q>(_IQNatan2<Q>(a.value,b.value)));
@@ -420,6 +427,7 @@ __fast_inline iq_t<Q> atan2f(const iq_t<Q> a, const iq_t<Q> b) {
 }
 
 template<size_t Q>
+requires (Q < 30)
 __fast_inline iq_t<Q> atan2(const iq_t<Q> a, const iq_t<Q> b) {
     return atan2f(a, b);
 }

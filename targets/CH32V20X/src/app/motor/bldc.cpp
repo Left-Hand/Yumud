@@ -1211,7 +1211,8 @@ void bldc_main(){
         // DEBUG_PRINTLN_IDLE(sin(t), cos(t), atan2<28>(sin(t), cos(t)), sin(t) * cos(t), rad, atan(-rad), t);
         DEBUGGER.noBrackets();
         const auto t = time();
-        DEBUG_PRINTLN_IDLE(SVM(cos(t), sin(t)), sin(t), t, asin(t));
+        const auto s = sin(t);
+        DEBUG_PRINTLN_IDLE(SVM(cos(t), sin(t)), sin(t), t, asin(iq_t<29>(s)));
         // DEBUG_PRINTLN_IDLE(((sin(t)).value), t);
         // if(false)
         {
