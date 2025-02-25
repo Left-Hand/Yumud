@@ -2,7 +2,7 @@
 #include "config.hpp"
 #include "async/CanMaster.hpp"
 #include "sys/core/system.hpp"
-#include "sys/clock/clock.hpp"
+#include "sys/clock/clock.h"
 #include "sys/clock/time.hpp"
 
 #include "drivers/Camera/MT9V034/mt9v034.hpp"

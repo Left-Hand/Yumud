@@ -1,6 +1,11 @@
 #include "tb.h"
-#include "bus/spi/spihw.hpp"
+
+#include "sys/debug/debug.hpp"
+
+#include "hal/bus/spi/spihw.hpp"
+
 #include "drivers/IMU/Axis6/BMI160/bmi160.hpp"
+
 #include "types/quat/Quat_t.hpp"
 
 using namespace ymd::drivers;

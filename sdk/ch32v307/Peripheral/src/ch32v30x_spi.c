@@ -86,7 +86,7 @@ void SPI_I2S_DeInit(SPI_TypeDef *SPIx)
  *
  * @return  none
  */
-void SPI_Init(SPI_TypeDef *SPIx, SPI_InitTypeDef *SPI_InitStruct)
+void SPI_Init(SPI_TypeDef *SPIx, const SPI_InitTypeDef *SPI_InitStruct)
 {
     uint16_t tmpreg = 0;
 
@@ -114,7 +114,7 @@ void SPI_Init(SPI_TypeDef *SPIx, SPI_InitTypeDef *SPI_InitStruct)
  *        configured in I2S mode.
  * @return  none
  */
-void I2S_Init(SPI_TypeDef *SPIx, I2S_InitTypeDef *I2S_InitStruct)
+void I2S_Init(SPI_TypeDef *SPIx, const I2S_InitTypeDef *I2S_InitStruct)
 {
     uint16_t          tmpreg = 0, i2sdiv = 2, i2sodd = 0, packetlength = 1;
     uint32_t          tmp = 0;

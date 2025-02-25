@@ -1,5 +1,5 @@
 #include "misc.hpp"
-#include "sys/clock/clock.hpp"
+#include "sys/clock/clock.h"
 #include "sys/core/system.hpp"
 #include "sys/clock/time.hpp"
 

@@ -208,7 +208,7 @@ void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const Comm
 	enableRcc();
     installGpios();
 
-    SPI_InitTypeDef SPI_InitStructure = {
+    const SPI_InitTypeDef SPI_InitStructure = {
         .SPI_Direction = SPI_Direction_2Lines_FullDuplex,
         .SPI_Mode = SPI_Mode_Master,
         .SPI_DataSize = SPI_DataSize_8b,

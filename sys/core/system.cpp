@@ -7,7 +7,6 @@
 #include "hal/crc/crc.hpp"
 
 #include "sys/clock/clock.h"
-#include "sys/clock/clock.hpp"
 
 #include "sys/debug/debug.hpp"
 
