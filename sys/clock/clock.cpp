@@ -1,5 +1,8 @@
-#include "clock.hpp"
+#include "clock.h"
 #include "time.hpp"
+
+#include "sys/math/iq/iq_t.hpp"
+#include <functional>
 
 #include "sys/core/sdk.h"
 
@@ -150,7 +153,7 @@ static consteval double sepow(const double base, const size_t times){
     return ret;
 }
 
-real_t time(){
+real_t ymd::time(){
     if constexpr(is_fixed_point_v<real_t>){
         union Depart{
             uint64_t res64;

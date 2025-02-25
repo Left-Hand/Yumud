@@ -69,11 +69,6 @@ std::tuple<real_t, real_t, real_t> SVM(const real_t alpha, const real_t beta){
     }
 }
 
-// void SVPWM3::setDuty(const real_t duty, const real_t rad) {
-//     driver_ = SVM(real_t(duty * cos(rad)), real_t(duty * sin(rad)));
-// }
-
-
 void SVPWM3::setAbDuty(const real_t alaph, const real_t beta){
     driver_ = SVM(real_t(alaph), real_t(beta));
 }

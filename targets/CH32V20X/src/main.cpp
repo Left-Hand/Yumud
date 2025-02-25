@@ -23,6 +23,7 @@ int main(){
     // gui_main();
     // canopen_main();
     bldc_main();
+    // stepper_tb(uart2);
     // rpc_main();
     // leetcode_main();
     // co_ab_main();

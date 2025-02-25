@@ -330,37 +330,3 @@ uint32_t __get_SP(void)
   __ASM volatile ( "mv %0," "sp" : "=r"(result) : );
   return (result);
 }
-
-
-
-
-
-void _init(void) {}
-void _fini(void) {}
-
-
-
-void _kill(int pid, int sig) {
-    // 空实现
-}
-
-// void _kill_r(void *reent, int pid, int sig) {
-//     // 空实现
-// }
-#include "sys/types.h"
-pid_t _getpid(){
-  return 0;
-}
-
-int raise(int sig) {
-    // 不执行任何操作
-    return 0; // 返回0表示成功
-}
-
-void abort(void){
-  while(1);
-}
-
-void *__dso_handle = 0;
-void __cxa_atexit(void (*func)(void), void *objptr, void *dso_handle) {}
-// void * __cxa_atexit =0;
