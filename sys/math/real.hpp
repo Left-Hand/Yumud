@@ -12,13 +12,6 @@
 
 #if defined(USE_STDMATH)
 
-// #ifdef __cplusplus
-#include <cmath>
-// #else
-// #include "math.h"
-// #endif
-#include "math.h"
-
 
 #else
 #include "dsp/floatlib/floatlib.hpp"
@@ -146,17 +139,15 @@ __fast_inline constexpr T sign(const T val){return val == 0 ? 0 : (val < 0 ? -1 
 
 __fast_inline constexpr real_t u16_to_uni(const uint16_t data){
     if constexpr(is_fixed_point_v<real_t>){
-        size_t Q = real_t::q_num;
-        real_t qv;
-        if(Q > 16)
-            qv.value = _iq(data << (Q - 16));
-        else if(Q < 16)
-            qv.value = _iq(data >> (16 - Q));
+        constexpr size_t Q = real_t::q_num;
+        if constexpr(Q > 16)
+            return real_t(_iq<Q>::from_i32(data << (Q - 16)));
+        else if constexpr (Q < 16)
+            return real_t(_iq<Q>::from_i32(data >> (16 - Q)));
         else
-            qv.value = _iq(data);
-        return qv;
+            return real_t(_iq<Q>::from_i32(data));
     }else if constexpr(std::is_floating_point_v<real_t>){
-        return real_t(data / 65535);
+        return real_t(data) / 65536;
     }
 }
 
@@ -175,11 +166,9 @@ __fast_inline constexpr iq_t<Q> u32_to_uni(const uint32_t data){
 
 __fast_inline constexpr real_t s16_to_uni(const int16_t data){
     if constexpr(is_fixed_point_v<real_t>){
-        real_t qv;
-        qv.value = data > 0 ? _iq(data << 1) : _iq(-(_iq(-data << 1)));
-        return qv;
+        return iq_t<16>(data) >> 16;
     }
-    return 0;
+    return real_t(0);
 }
 
 template<size_t Q>
@@ -239,6 +228,31 @@ __fast_inline constexpr T powfi(const T base, const int exponent) {
 template<floating T>
 __fast_inline constexpr T powi(const T base, const int exponent) {
     return powi(base, exponent);
+}
+
+template<floating T>
+__fast_inline T sinpu(const T val){
+    return sin(val * (1 / TAU));
+}
+
+template<floating T>
+__fast_inline T cospu(const T val){
+    return cos(val * (1 / TAU));
+}
+
+template<floating T>
+__fast_inline T isqrt(const T val){
+    return 1.0 / sqrt(val);
+}
+
+template<floating T>
+__fast_inline T imag(const T a, const T b){
+    return 1 / mag(a,b);
+}
+
+template<floating T>
+__fast_inline T mag(const T a, const T b){
+    return sqrt(a * a + b * b);
 }
 
 template<arithmetic T>

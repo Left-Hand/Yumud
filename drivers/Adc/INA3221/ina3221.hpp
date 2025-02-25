@@ -186,7 +186,7 @@ protected:
                 case ChannelType::BUS_VOLT:
                     return parent_.getBusVolt(idx_);
                 default:
-                    return 0;
+                    return real_t(0);
             }
         }
     };

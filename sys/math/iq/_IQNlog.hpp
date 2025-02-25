@@ -1,5 +1,4 @@
 #pragma once
-#include <stdint.h>
 
 #include "support.h"
 #include "_IQNtables.hpp"
@@ -9,26 +8,26 @@
  *
  * @param iqNInput          IQN type input.
  * @param iqNMin            Minimum parameter value.
- * @param q_value           IQ format.
+ * @param Q           IQ format.
  *
  * @return                  IQN type result of exponential.
  */
-constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin, const int8_t q_value)
+
+template<size_t Q>
+constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
 {
     uint8_t ui8Counter;
-    int_fast16_t i16Exp;
-    uint_fast16_t ui16IntState;
-    uint_fast16_t ui16MPYState;
-    int_fast32_t iqNResult;
-    int_fast32_t iq30Result;
-    uint_fast32_t uiq31Input;
-    const uint_fast32_t *piq30Coeffs;
+    int16_t i16Exp;
+    int32_t iqNResult;
+    int32_t iq30Result;
+    uint32_t uiq31Input;
+    const uint32_t *piq30Coeffs;
 
     /*
-     * Check the sign of the input and for negative saturation for q_values
+     * Check the sign of the input and for negative saturation for Qs
      * larger than iq26.
      */
-    if (q_value > 26) {
+    if constexpr(Q > 26) {
         if (iqNInput <= 0) {
             return 0;
         } else if (iqNInput <= iqNMin) {
@@ -37,7 +36,7 @@ constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin
     }
     /*
      * Only check the sign of the input and that it is not equal to zero for
-     * q_values less than or equal to iq26.
+     * Qs less than or equal to iq26.
      */
     else {
         if (iqNInput <= 0) {
@@ -46,26 +45,19 @@ constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin
     }
 
     /* Initialize the exponent value. */
-    i16Exp = (31 - q_value);
+    i16Exp = (31 - Q);
 
     /*
      * Scale the input so it is within the following range in iq31:
      *
      *     0.666666 < uiq31Input < 1.333333.
      */
-    uiq31Input = (uint_fast32_t)iqNInput;
+    uiq31Input = (uint32_t)iqNInput;
     while (uiq31Input < _iq31_twoThird) {
         uiq31Input <<= 1;
         i16Exp--;
     }
 
-    /*
-     * Mark the start of any multiplies. This will disable interrupts and set
-     * the multiplier to fractional mode. This is designed to reduce overhead
-     * of constantly switching states when using repeated multiplies (MSP430
-     * only).
-     */
-    __mpyf_start(&ui16IntState, &ui16MPYState);
 
     /*
      * Initialize the coefficient pointer to the Taylor Series iq30 coefficients
@@ -83,7 +75,7 @@ constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin
     }
 
     /* Scale the iq30 result to match the function iq type. */
-    iqNResult = iq30Result >> (30 - q_value);
+    iqNResult = iq30Result >> (30 - Q);
 
     /*
      * Add i16Exp * ln(2) to the iqN result. This will never saturate since we
@@ -92,22 +84,15 @@ constexpr int_fast32_t __IQNlog(int_fast32_t iqNInput, const int_fast32_t iqNMin
      * unsigned data type.
      */
     if (i16Exp > 0) {
-        iqNResult += __mpyf_ul(_iq31_ln2, ((int_fast32_t)i16Exp << q_value));
+        iqNResult += __mpyf_ul(_iq31_ln2, ((int32_t)i16Exp << Q));
     } else {
-        iqNResult -= __mpyf_ul(_iq31_ln2, (((uint_fast32_t) - i16Exp) << q_value));
+        iqNResult -= __mpyf_ul(_iq31_ln2, (((uint32_t) - i16Exp) << Q));
     }
-
-    /*
-     * Mark the end of all multiplies. This restores MPY and interrupt states
-     * (MSP430 only).
-     */
-    __mpy_stop(&ui16IntState, &ui16MPYState);
 
     return iqNResult;
 }
 
-template<int8_t q_value>
-constexpr int32_t _IQNlog(int32_t a)
-{
-    return __IQNlog(a, q_value >= 27 ? _IQNlog_min[q_value - 27] : 1, q_value);
+template<size_t Q>
+constexpr _iq<Q> _IQNlog(int32_t a){
+    return _iq<Q>::from_i32(__IQNlog<Q>(a, Q >= 27 ? _IQNlog_min[Q - 27] : 1));
 }

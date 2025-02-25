@@ -3,6 +3,10 @@
 #include "sys/stream/StringStream.hpp"
 
 #include "sys/polymorphism/proxy.hpp"
+#include "sys/math/real.hpp"
+
+#include "sys/clock/time.hpp"
+
 
 using namespace ymd;
 

@@ -1,9 +1,6 @@
 #include "../tb.h"
 #include "sys/debug/debug_inc.h"
-#include <vector>
-#include <array>
-#include <cstdint>
-#include <ostream>
+#include "sys/clock/time.hpp"
 
 struct Node{
 	size_t idx;

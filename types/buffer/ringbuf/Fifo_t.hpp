@@ -1,12 +1,11 @@
 #pragma once
 
-#include "../buffer.hpp"
+#include "sys/core/platform.h"
 
 template<typename T, size_t N>
-class Fifo_t:public StaticBuffer_t<T, N>{
+class Fifo_t{
 protected:
-
-    // using Pointer = T * volatile;
+    T buf[N];
     using Pointer = T *;
 
     __fast_inline bool over(Pointer ptr, const size_t step){
@@ -26,6 +25,9 @@ public:
 
     Fifo_t():read_ptr(this->buf), write_ptr(this->buf){;}
 
+    __fast_inline constexpr size_t size() const {
+        return N;
+    }
 
     __fast_inline void push(auto && data){
         T * porg = (T *)write_ptr;
@@ -100,7 +102,7 @@ public:
         return *(const T *)read_ptr;
     }
 
-    size_t available() const override{
+    size_t available() const {
         if (write_ptr >= read_ptr) {
             return size_t(write_ptr - read_ptr);
         } else {

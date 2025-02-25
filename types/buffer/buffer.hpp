@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../sys/core/platform.h"
+#include "sys/core/platform.h"
 #include <cstdint>
 #include <string>
 #include <array>

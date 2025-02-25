@@ -28,10 +28,10 @@
 namespace ymd{
 
 class ImuFusion{
+public:
     using Vector3 = ymd::Vector3_t<real_t>;
     using Basis = ymd::Basis_t<real_t>;
     using Quat = ymd::Quat_t<real_t>;
-public:
 protected:
     real_t vx, vy, vz;
     real_t aex, aey, aez;
@@ -41,12 +41,12 @@ protected:
 
     real_t delta; // 解算周期
 
-    Quat quat;
+    Quat quat_;
 public:
     void update9(const Vector3 & gyr, const Vector3 & acc, const Vector3 & mag);
 
-    auto get_quat() const { return quat; }
-    auto get_euler() const {return Basis(get_quat()).get_euler_xyz();} 
+    auto quat() const { return quat_;}
+    auto euler() const {return Basis(quat_).get_euler_xyz();} 
 };
 
 }

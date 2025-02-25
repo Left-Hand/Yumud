@@ -19,11 +19,11 @@ public:
     real_t getFreq() const{
         // #ifdef USE_IQ
         if constexpr(is_fixed_point_v<real_t>){
-            real_t unit_value;
-            real_t period_value;
-            unit_value.value = _iq(unit);
-            period_value.value = _iq(period);
-            return unit_value / period_value;
+            // real_t unit_value;
+            // real_t period_value;
+            // unit_value.value = _iq<16>(unit);
+            // period_value.value = _iq<16>(period);
+            return unit / period;
         }else{
             return unit / period;
         }
@@ -35,11 +35,12 @@ public:
 
     real_t getDuty() const{
         if constexpr(is_fixed_point_v<real_t>){
-            real_t pulse_value;
-            real_t period_value;
-            pulse_value.value = _iq(pulse);
-            period_value.value = _iq(period);
-            return pulse_value/period_value;
+            // real_t pulse_value;
+            // real_t period_value;
+            // pulse_value.value = _iq<16>(pulse);
+            // period_value.value = _iq<16>(period);
+            // return pulse_value/period_value;
+            return unit / period;
 
         }else{
             return pulse/period;

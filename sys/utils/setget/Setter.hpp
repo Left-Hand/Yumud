@@ -1,10 +1,11 @@
 #pragma once
 
-#include <type_traits>
 #include "sys/utils/setget/Getter.hpp"
-
-
 #include "sys/polymorphism/proxy.hpp"
+
+#include "sys/math/real.hpp"
+
+#include <type_traits>
 
 namespace ymd::utils{
 // template<typename T>

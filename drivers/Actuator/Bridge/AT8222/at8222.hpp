@@ -29,14 +29,14 @@ public:
 
 AT8222 & AT8222::operator = (const real_t duty){
     if(duty > 0){
-        forward_pwm = 0;
-        backward_pwm = MIN(duty, 1);
+        forward_pwm = real_t(0);
+        backward_pwm = MIN(duty, real_t(1));
     }else if(duty < 0){
-        forward_pwm = MAX(-duty, -1);
-        backward_pwm = 0;
+        forward_pwm = MAX(-duty, real_t(-1));
+        backward_pwm = real_t(0);
     }else{
-        forward_pwm = 0;
-        backward_pwm = 0;
+        forward_pwm = real_t(0);
+        backward_pwm = real_t(0);
     }
     return *this;
 }

@@ -76,7 +76,7 @@ protected:
     std::optional<SpiDrv> spi_drv;
 
     Semantic semantic = {0, 0};
-    real_t lap_position = 0;
+    real_t lap_position = real_t(0);
     bool fast_mode = true;
 
     struct UVWMuxReg{

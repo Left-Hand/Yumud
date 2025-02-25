@@ -1,6 +1,4 @@
-#ifndef __IQL_T_HPP__
-
-#define __IQL_T_HPP__
+#pragma once
 
 #include "iqt.hpp"
 

@@ -124,7 +124,10 @@ __fast_inline constexpr static auto xyz_gamma(const real_t x) -> real_t{
 }
 
 __fast_inline constexpr static auto inv_xyz_gamma_to8(const real_t x) -> uint8_t{
-    return __USAT8(int((x > 0.0031308_r) ? (((1.055_r * 255) * pow(x, 0.416666_r)) - (0.055_r * 255)) : (x * 12.92_r * 255)));
+    if((x > 0.0031308_r)) 
+        return __USAT8(uint8_t(((1.055_r * 255) * pow(x, 0.416666_r)) - (0.055_r * 255)));
+    else
+        return __USAT8(uint8_t(x * 12.92_r * 255));
 }
 
 __fast_inline constexpr static XYZ rgb888_to_xyz(const RGB888 & rgb){

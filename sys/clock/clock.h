@@ -23,7 +23,4 @@ __interrupt void SysTick_Handler(void);
 #ifdef __cplusplus
 }
 
-#include "sys/math/real.hpp"
-
-real_t time();
 #endif

@@ -4,11 +4,11 @@ using namespace ymd;
 
 
 // 设置加速度修正PI值
-#define Acc_Kp (3)
-#define Acc_Ki (0)
+#define Acc_Kp real_t(3)
+#define Acc_Ki real_t(0)
 // 设置磁力计修正PI值
-#define Magnetic_Kp (5) // 10.0f
-#define Magnetic_Ki (0)
+#define Magnetic_Kp real_t(5) // 10.0f
+#define Magnetic_Ki real_t(0)
 
 
 #define Fusion_Initial_X_North
@@ -24,16 +24,16 @@ void ImuFusion::update9(const Vector3 & gyr, const Vector3 & acc, const Vector3 
     scexpr real_t mkp = Magnetic_Kp;
     scexpr real_t mki = Magnetic_Ki; // 170 0.05f
     
-    real_t q0q0 = this->quat.x * this->quat.x;
-    real_t q0q1 = this->quat.x * this->quat.y;
-    real_t q0q2 = this->quat.x * this->quat.z;
-    real_t q0q3 = this->quat.x * this->quat.w;
-    real_t q1q1 = this->quat.y * this->quat.y;
-    real_t q1q2 = this->quat.y * this->quat.z;
-    real_t q1q3 = this->quat.y * this->quat.w;
-    real_t q2q2 = this->quat.z * this->quat.z;
-    real_t q2q3 = this->quat.z * this->quat.w;
-    real_t q3q3 = this->quat.w * this->quat.w;
+    real_t q0q0 = this->quat_.x * this->quat_.x;
+    real_t q0q1 = this->quat_.x * this->quat_.y;
+    real_t q0q2 = this->quat_.x * this->quat_.z;
+    real_t q0q3 = this->quat_.x * this->quat_.w;
+    real_t q1q1 = this->quat_.y * this->quat_.y;
+    real_t q1q2 = this->quat_.y * this->quat_.z;
+    real_t q1q3 = this->quat_.y * this->quat_.w;
+    real_t q2q2 = this->quat_.z * this->quat_.z;
+    real_t q2q3 = this->quat_.z * this->quat_.w;
+    real_t q3q3 = this->quat_.w * this->quat_.w;
 
     auto [Ax, Ay, Az] = acc.normalized();
     auto [Gx, Gy, Gz] = gyr; // 角速度信息 - 用户输入
@@ -104,10 +104,10 @@ void ImuFusion::update9(const Vector3 & gyr, const Vector3 & acc, const Vector3 
     Gy += (aey * akp + aeyInt * aki) + (mey * mkp + meyInt * mki);
     Gz += (aez * akp + aezInt * aki) + (mez * mkp + mezInt * mki);
 
-    this->quat.x += real_t(0.5f) * (-this->quat.y * Gx - this->quat.z * Gy - this->quat.w * Gz) * this->delta;
-    this->quat.y += real_t(0.5f) * (this->quat.x * Gx + this->quat.z * Gz - this->quat.w * Gy) * this->delta;
-    this->quat.z += real_t(0.5f) * (this->quat.x * Gy - this->quat.y * Gz + this->quat.w * Gx) * this->delta;
-    this->quat.w += real_t(0.5f) * (this->quat.x * Gz + this->quat.y * Gy - this->quat.z * Gx) * this->delta;
+    this->quat_.x += real_t(0.5f) * (-this->quat_.y * Gx - this->quat_.z * Gy - this->quat_.w * Gz) * this->delta;
+    this->quat_.y += real_t(0.5f) * (this->quat_.x * Gx + this->quat_.z * Gz - this->quat_.w * Gy) * this->delta;
+    this->quat_.z += real_t(0.5f) * (this->quat_.x * Gy - this->quat_.y * Gz + this->quat_.w * Gx) * this->delta;
+    this->quat_.w += real_t(0.5f) * (this->quat_.x * Gz + this->quat_.y * Gy - this->quat_.z * Gx) * this->delta;
 
-    this->quat.normalize();
+    this->quat_.normalize();
 }

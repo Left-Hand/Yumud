@@ -71,15 +71,10 @@
 
 #define ARRSIZE(arr) (sizeof(arr) / sizeof(arr[0]))
 
-
 #define ISSFR(ptr) (((uint32_t)ptr > 0x40000000))
 #define ISRAM(ptr) ((!ISSFR(ptr)) && (((uint32_t)(ptr)) > 0x20000000))
 #define ISROM(ptr) (((uint32_t)(ptr)) < 0x20000000)
 #define ISALIGNED(ptr) ((((uint32_t)(ptr)) & 0x3) == 0)
-#define FAULT_IF(x)\
-do{\
-    if(x) PANIC()\
-}while(false);\
 
 
 #ifdef __cplusplus
@@ -133,6 +128,7 @@ do{\
 #define FORRANGE(val,a,b)\
     for(int val = a; val < b; val++) \
     
+#define BREAKPOINT __nopn(1);
 
 #if defined(__riscv)
 #define HALT asm("csrrw zero, mstatus, zero");

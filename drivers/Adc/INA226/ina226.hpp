@@ -123,7 +123,7 @@ protected:
                 case Index::POWER:
                     return parent_.getPower();
                 default:
-                    return 0;
+                    return real_t(0);
             }
         }
     };

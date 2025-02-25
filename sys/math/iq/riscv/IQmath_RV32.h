@@ -40,7 +40,6 @@ extern "C"
 #define DIV_FAST                 1
 
 #if MATH_TYPE == FLOAT_MATH
-#include <math.h>
 #include <stdlib.h>
 #endif
 #include <limits.h>

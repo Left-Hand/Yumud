@@ -1,6 +1,6 @@
 #include "spihw.hpp"
 #include "sys/core/system.hpp"
-#include "sys/debug/debug_inc.h"
+// #include "sys/debug/debug_inc.h"
 
 using namespace ymd;
 

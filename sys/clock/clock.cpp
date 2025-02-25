@@ -1,8 +1,9 @@
 #include "clock.hpp"
-#include "sys/core/sdk.h"
-#include "sys/core/system.hpp"
-#include "sys/debug/debug_inc.h"
+#include "time.hpp"
 
+#include "sys/core/sdk.h"
+
+using namespace ymd;
 
 #define TICKS_PER_MS (F_CPU / 1000)
 #define TICKS_PER_US (TICKS_PER_MS / 1000)
@@ -126,11 +127,10 @@ void Systick_Init(){
 }
 
 
-static std::function<void(void)> cb;
-
+static std::function<void(void)> systick_cb;
 
 void bindSystickCb(std::function<void(void)> && _cb){
-    cb = _cb;
+    systick_cb = _cb;
 }
 
 
@@ -139,7 +139,7 @@ void SysTick_Handler(void){
     micros_base += 1000;
 
     SysTick->SR = 0;
-    EXECUTE(cb);
+    EXECUTE(systick_cb);
 }
 
 static consteval double sepow(const double base, const size_t times){
@@ -165,7 +165,7 @@ real_t time(){
         const Depart microsec = Depart{.res64 = micros()};
 
         return 
-            + real_t{_iq((int(microsec.l15) << 16) / 1000000)} 
+            + real_t{_iq<16>::from_i32((int(microsec.l15) << 16) / 1000000)} 
             + real_t{int(microsec.m15)} * real_t(sepow(2, 15) / sepow(10, 6))
             + real_t{int(microsec.h31)} * real_t(sepow(2, 30) / sepow(10, 6))
             ;

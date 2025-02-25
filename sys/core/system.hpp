@@ -1,7 +1,6 @@
 #pragma once
 
 #include "sys/core/platform.h"
-#include "sys/math/real.hpp"
 
 namespace sys{
     void preinit();
@@ -9,7 +8,7 @@ namespace sys{
 
     void exit();
     void halt();
-    
+    void jumpto(const uint32_t addr);
 
     namespace Chip{
         uint64_t getChipId();

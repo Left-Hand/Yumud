@@ -1,12 +1,15 @@
 #pragma once
 
-#include "sys/core/sdk.h"
-#include "hal/bus/bus.hpp"
+#include <functional>
 
-#include "types/buffer/ringbuf/Fifo_t.hpp"
+#include "sys/core/sdk.h"
+#include "sys/stream/stream.hpp"
+
+#include "hal/bus/bus.hpp"
 #include "hal/gpio/port.hpp"
 
-#include <functional>
+#include "types/buffer/ringbuf/Fifo_t.hpp"
+
 
 namespace ymd{
 class Uart:public IOStream, DuplexBus{
