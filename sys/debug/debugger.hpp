@@ -7,9 +7,6 @@ namespace ymd{
 
 class __Debugger final:public OutputStream{
 private:
-    #ifndef YMD_DEFAULT_DEBUGGER_ROUTE_TYPE
-    #define YMD_DEFAULT_DEBUGGER_ROUTE_TYPE UartHw
-    #endif
 
     using Route = OutputStream;
     Route * p_route_ = nullptr;
@@ -21,7 +18,7 @@ private:
 public:
     static __Debugger & singleton();
 
-    template<typename T = YMD_DEFAULT_DEBUGGER_ROUTE_TYPE, typename ... Args>
+    template<typename T = DebuggerType, typename ... Args>
     constexpr __Debugger & init(T & route, Args && ... args){
         route.init(args...);
 

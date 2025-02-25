@@ -4,7 +4,6 @@
 
 #include <functional>
 #include <limits>
-#include <cmath>
 //#include <stdint.h>
 #include <string.h>
 #include <string>
@@ -702,7 +701,8 @@ namespace conversion
     template<typename T, typename = ::std::enable_if_t<::std::is_integral<T>::value && ! ::std::is_const<T>::value>>
     bool set_from_float_ex(float value, T *property, int)
     {
-        return *property = static_cast<T>(round(value)), true;
+        // return *property = static_cast<T>(round(value)), true;
+        return true;
     }
 
     template<typename T>

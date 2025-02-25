@@ -1,6 +1,7 @@
 #include "sdi.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 
 #define DEBUG_DATA0_ADDRESS  ((volatile uint32_t*)0xE0000380)
 #define DEBUG_DATA1_ADDRESS  ((volatile uint32_t*)0xE0000384)
@@ -50,6 +51,8 @@ void Sdi::init(){
     *DEBUG_DATA0_ADDRESS = 0u;
 }
 
+namespace ymd::hal{
 #ifdef ENABLE_SDI
 Sdi sdi;
 #endif
+}

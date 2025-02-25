@@ -11,7 +11,7 @@
 #include "types/buffer/ringbuf/Fifo_t.hpp"
 
 
-namespace ymd{
+namespace ymd::hal{
 class Uart:public IOStream, DuplexBus{
 public:
     using Mode = CommMode;
@@ -69,5 +69,7 @@ public:
     void onTxDone(Callback && cb){txPostCb = cb;}
     void onRxDone(Callback && cb){rxPostCb = cb;}
 };
+
+
 
 }

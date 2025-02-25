@@ -4,7 +4,7 @@
 
 #include "hal/bus/bus.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 class Sdi:public OutputStream{
 
 public:

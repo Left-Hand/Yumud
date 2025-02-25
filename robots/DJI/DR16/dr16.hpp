@@ -57,7 +57,7 @@ public:
     };
 
 protected:  
-    using DBUS = Uart;
+    using DBUS = hal::Uart;
     DBUS & inst;
 public:
     DR16(DBUS & _inst):inst(_inst){}

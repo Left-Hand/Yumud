@@ -1,6 +1,6 @@
 #include "uartsw.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 void UartSw::init(const uint32_t baudRate, const CommMethod _rxMethod,const CommMethod _txMethod){
     setTxMethod(_txMethod);
