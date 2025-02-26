@@ -1,5 +1,7 @@
 #include "tb.h"
 
+#include "sys/debug/debug.hpp"
+
 #include "hal/bus/i2c/i2csw.hpp"
 
 #include "drivers/VirtualIO/PCA9685/pca9685.hpp"
@@ -8,7 +10,7 @@
 
 using namespace ymd::drivers;
 
-void pca_tb(IOStream & logger){
+void pca_tb(OutputStream & logger){
     I2cSw i2c = {portD[2], portC[12]};
 
     scexpr int servo_freq = 50;
@@ -28,7 +30,8 @@ void pca_tb(IOStream & logger){
 }
 
 void pca_main(){
-    auto & logger = DEBUGGER_INST;
-    logger.init(DEBUG_UART_BAUD);
-    pca_tb(logger);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&DEBUGGER_INST);
+
+    pca_tb(DEBUGGER);
 }

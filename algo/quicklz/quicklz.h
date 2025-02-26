@@ -1,6 +1,9 @@
 #ifndef QLZ_HEADER
 #define QLZ_HEADER
 
+#include "stdint.h"
+#include "stddef.h"
+
 // Fast data compression library
 // Copyright (C) 2006-2011 Lasse Mikkel Reinhold
 // lar@quicklz.com

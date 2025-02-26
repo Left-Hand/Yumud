@@ -75,8 +75,8 @@ protected:
         array_append(buf, get_verify_code(verify_type, reinterpret_cast<const uint8_t *>(&obj), sizeof(T)));
 
         if(uart_){
-            uart_->write((char)id);
-            uart_->write((char *)buf.begin(), (size_t)buf.size());
+            uart_->write1((char)id);
+            uart_->writeN((char *)buf.begin(), (size_t)buf.size());
         }
         
         else if(can_){
@@ -183,7 +183,8 @@ public:
 
 void zdt_main(UartHw & logger){
     logger.init(576000, CommMethod::Blocking);
-    logger.setEps(4);
+    DEBUGGER.retarget(&logger);
+    DEBUGGER.setEps(4);
     
     can1.init(1_M);
 

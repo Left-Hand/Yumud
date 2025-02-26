@@ -1,8 +1,12 @@
 #include "tb.h"
-#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
+
+#include "sys/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
+
+#include "drivers/LightSensor/TCS34725/tcs34725.hpp"
+
 
 using namespace ymd::drivers;
 
@@ -17,9 +21,9 @@ void tcs34725_tb(OutputStream & logger, I2c & i2c){
 }
 
 void tcs34725_main(){
-    auto & logger = DEBUGGER_INST;
-    logger.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&DEBUGGER_INST);
     I2cSw i2c{portD[0], portD[1]};
     i2c.init(100000);
-    tcs34725_tb(logger, i2c);
+    tcs34725_tb(DEBUGGER, i2c);
 }
