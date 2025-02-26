@@ -100,7 +100,7 @@ void test_sogi(){
 }
 void digipw_main(){
     uart2.init(576000);
-    DEBUGGER.retarget(uart2);
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
     /*-----------------------*/

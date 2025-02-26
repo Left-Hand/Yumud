@@ -5,7 +5,7 @@
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/timer/timer_oc.hpp"
 
-#include "../drivers/Modem/dshot/dshot.hpp"
+#include "drivers/Modem/dshot/dshot.hpp"
 
 scexpr size_t n = 40;
 static std::array<uint16_t, 40> data;

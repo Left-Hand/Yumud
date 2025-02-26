@@ -546,16 +546,16 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const Com
     setRxMethod(_rxMethod);
 }
 
-UartHw::Error UartHw::lead(const uint8_t index){
+UartHw::BusError UartHw::lead(const uint8_t index){
     while((instance->STATR & USART_FLAG_TXE) == RESET);
-    return Error::OK;
+    return BusError::OK;
 }
 
 void UartHw::trail(){
     while((instance->STATR & USART_FLAG_TC) == RESET);
 }
 
-void UartHw::write(const char * pdata, const size_t len){
+void UartHw::writeN(const char * pdata, const size_t len){
     switch(txMethod){
         case CommMethod::Blocking:
             instance->DATAR;
@@ -582,7 +582,7 @@ void UartHw::write(const char * pdata, const size_t len){
     }
 }
 
-void UartHw::write(const char data){
+void UartHw::write1(const char data){
     switch(txMethod){
         case CommMethod::Blocking:
             tx_fifo.push(data);

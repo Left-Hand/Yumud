@@ -46,9 +46,11 @@ logger.println(__VA_ARGS__);\
 #define var auto
 
 
-void math_tb(UartHw & logger){
-    logger.init(576000, CommMethod::Dma);
-    logger.setEps(4);
+void math_tb(){
+    auto & logger = DEBUGGER;
+    DEBUGGER_INST.init(576000, CommMethod::Dma);
+    DEBUGGER.retarget(&DEBUGGER_INST);
+    DEBUGGER.setEps(4);
     
 
     // using Vector3 = Vector3_t<real_t>;

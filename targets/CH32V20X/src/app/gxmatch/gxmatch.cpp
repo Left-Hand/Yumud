@@ -18,6 +18,8 @@
 using namespace nvcv2;
 using namespace gxm;
 
+#define MY_OS_PRINTLN(...)
+
 class VisionModule:public AsciiProtocolConcept{
 protected:
     // UartHw & uart_;
@@ -72,13 +74,13 @@ public:
     }
 
     void close(){
-        os.println("close");
+        MY_OS_PRINTLN("close");
         mode_ = Mode::CLOSED;
     }
 
     auto color(){
         if(mode_ != Mode::COLOR){
-            os.println("color"); 
+            MY_OS_PRINTLN("color"); 
             color_ = std::nullopt;
             mode_ = Mode::COLOR;
         }
@@ -94,7 +96,7 @@ public:
     }
     auto offset(){
         if(mode_ != Mode::OFFSET){
-            os.println("offset");
+            MY_OS_PRINTLN("offset");
             offset_ = std::nullopt;
             mode_ = Mode::OFFSET;
         }

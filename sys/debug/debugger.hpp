@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/stream/ostream.hpp"
+#include "sys/stream/CharOpTraits.hpp"
 #include "debug_inst.hpp"
 
 namespace ymd{
@@ -8,8 +9,9 @@ namespace ymd{
 class __Debugger final:public OutputStream{
 private:
 
-    using Route = OutputStream;
-    Route * p_route_ = nullptr;
+    using Traits = WriteCharTraits;
+    using Route = pro::proxy<Traits>;
+    Route p_route_;
     __Debugger() = default;
 
     __fast_inline void check() const {
@@ -22,34 +24,26 @@ public:
     constexpr __Debugger & init(T & route, Args && ... args){
         route.init(args...);
 
-        p_route_ = reinterpret_cast<Route *>(&route);
+        p_route_ = pro::make_proxy<Traits>(&route);
         return *this;
     }
-    
-    // template<typename T = YMD_DEFAULT_DEBUGGER_ROUTE_TYPE>
-    // void init(){
-    //     if constexpr(std::is_base_of_v<Uart, T>){
-    //         reinterpret_cast<T *>(p_route_)->init(DEBUG_UART_BAUD);
-    //     }
-    // }
 
-    constexpr void retarget(OutputStream & route){
-        p_route_ = &route;
+    void retarget(Route p_route){
+        p_route_ = p_route;
     }
 
-    template<typename T>
-    T & route() {
+    Route & route() {
         check();
-        return reinterpret_cast<T &>(*p_route_);
+        return p_route_;
     }
 
     void write(const char data) override final{
         check();
-        p_route_->write(data);
+        p_route_->write1(data);
     }
     void write(const char * pdata, const size_t len) override final{
         check();
-        p_route_->write(pdata, len);
+        p_route_->writeN(pdata, len);
 	}
 
     size_t pending() const {

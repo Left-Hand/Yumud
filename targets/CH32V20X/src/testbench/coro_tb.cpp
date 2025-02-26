@@ -38,7 +38,8 @@ Task world(int max) {
 
 void coro_tb() {
     DEBUGGER_INST.init(576000, CommMethod::Dma);
-    DEBUGGER_INST.setEps(4);
+    DEBUGGER.retarget(&DEBUGGER_INST);
+    DEBUGGER.setEps(4);
     DEBUGGER << "Coroutine test bench started.\n";
     
     // ��������Э��ʵ��

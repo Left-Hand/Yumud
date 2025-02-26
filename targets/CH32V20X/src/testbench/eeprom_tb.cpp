@@ -314,7 +314,8 @@ void eeprom_main(){
 void flash_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
-    DEBUGGER.init(DEBUGGER_INST, DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&DEBUGGER_INST);
 
     // auto & led = portA[8];
     // led.outpp();

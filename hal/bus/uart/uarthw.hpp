@@ -78,12 +78,12 @@ protected:
     DmaChannel & tx_dma;
     DmaChannel & rx_dma;
 
-    Error lead(const uint8_t _address) override;
+    BusError lead(const uint8_t _address) override;
     void trail() override;
 public:
-    void write(const char * data_ptr, const size_t len) override;
+    void writeN(const char * data_ptr, const size_t len) override;
 
-    void write(const char data) override;
+    void write1(const char data) override;
 
     UartHw(USART_TypeDef * _instance, DmaChannel & _tx_dma, DmaChannel & _rx_dma):
             instance(_instance), tx_dma(_tx_dma), rx_dma(_rx_dma){;}

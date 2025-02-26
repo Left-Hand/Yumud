@@ -1,4 +1,5 @@
 #include "uartsw.hpp"
+#include "sys/stream/CharOpTraits.hpp"
 
 using namespace ymd::hal;
 
@@ -27,8 +28,6 @@ void UartSw::tick(){
             }
             break;
     }
-
-
 
 }
 

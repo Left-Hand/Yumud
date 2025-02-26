@@ -5,15 +5,17 @@ using namespace ymd;
 using namespace ymd::foc;
 using namespace ymd::drivers;
 
+#define MY_OS_PRINTS(...)
+
 void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
 
     auto targ_pos_setter = [&](const real_t arg, const real_t offset){
         if(args.size() > 1){
             auto val = arg + offset;
             motor.setTargetPosition(val);
-            os.prints("target position:", val, " n");
+            MY_OS_PRINTS("target position:", val, " n");
         }else{
-            os.prints("position:", motor.getPosition(), " n");
+            MY_OS_PRINTS("position:", motor.getPosition(), " n");
         }
     };
 
@@ -21,13 +23,13 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         case "save"_ha:
         case "sv"_ha:
 
-            os.prints("======");
-            os.prints("saving archive...");
+            MY_OS_PRINTS("======");
+            MY_OS_PRINTS("saving archive...");
 
             motor.saveArchive();
 
-            os.prints("done");
-            os.prints("======");
+            MY_OS_PRINTS("done");
+            MY_OS_PRINTS("======");
             break;
 
         case "pos.kp"_ha:
@@ -58,13 +60,13 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         case "remove"_ha:
         case "rm"_ha:
 
-            os.prints("======");
-            os.prints("removing archive...");
+            MY_OS_PRINTS("======");
+            MY_OS_PRINTS("removing archive...");
 
             motor.removeArchive();
 
-            os.prints("done");
-            os.prints("======");
+            MY_OS_PRINTS("done");
+            MY_OS_PRINTS("======");
             break;
 
 
@@ -92,9 +94,9 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
             if(args.size() > 1){
                 real_t spd = real_t(args[1]);
                 motor.setTargetSpeed(spd);
-                os.prints("target speed:", spd, " n/s");
+                MY_OS_PRINTS("target speed:", spd, " n/s");
             }else{
-                os.prints("speed:", motor.getSpeed(), " n/s");
+                MY_OS_PRINTS("speed:", motor.getSpeed(), " n/s");
             }
             break;
 
@@ -115,7 +117,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
             if(args.size() > 1){
                 real_t val = real_t(args[1]);
                 motor.setTargetTeach(val);
-                os.prints("target teach:", val);
+                MY_OS_PRINTS("target teach:", val);
             }
             break;
 
@@ -124,9 +126,9 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
             if(args.size() > 1){
                 real_t val = real_t(args[1]);
                 motor.setTargetCurrent(val);
-                os.prints("target current:", val, " n");
+                MY_OS_PRINTS("target current:", val, " n");
             }else{
-                os.prints("current:", motor.getCurrent(), " A");
+                MY_OS_PRINTS("current:", motor.getCurrent(), " A");
             }
             break;
 
@@ -135,12 +137,12 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
             if(args.size() > 1){
                 auto v = real_t(args[1]);
                 motor.setTargetVector(v);
-                os.prints("target vector:", v, " n");
+                MY_OS_PRINTS("target vector:", v, " n");
             }
             break;
 
         case "crc"_ha:
-            os.prints(std::hex, std::showbase, sys::Chip::getChipIdCrc());
+            MY_OS_PRINTS(std::hex, std::showbase, sys::Chip::getChipIdCrc());
             break;
 
         case "eleczero"_ha:
@@ -152,25 +154,25 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
 
         case "error"_ha:
         case "err"_ha:
-            if(motor.getErrMsg()) {os.prints(motor.getErrMsg());}
-            else {os.prints("no error");}
+            if(motor.getErrMsg()) {MY_OS_PRINTS(motor.getErrMsg());}
+            else {MY_OS_PRINTS("no error");}
             break;
 
         case "warn"_ha:
         case "wa"_ha:
-            if(motor.getWarnMsg()) {os.prints(motor.getWarnMsg());}
-            else {os.prints("no warn");}
+            if(motor.getWarnMsg()) {MY_OS_PRINTS(motor.getWarnMsg());}
+            else {MY_OS_PRINTS("no warn");}
             break;
 
         case "enable"_ha:
         case "en"_ha:
         case "e"_ha:
             motor.enable();
-            os.prints("enabled");
+            MY_OS_PRINTS("enabled");
             break;
         
         case "exe"_ha:
-            os.prints("exe", motor.exe(), "us");
+            MY_OS_PRINTS("exe", motor.exe(), "us");
             break;
 
         case "disable"_ha:
@@ -178,12 +180,12 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         case "de"_ha:
         case "d"_ha:
             motor.enable(false);
-            os.prints("disabled");
+            MY_OS_PRINTS("disabled");
             break;
 
         case "cali"_ha:
             motor.triggerCali();
-            os.prints("cali started");
+            MY_OS_PRINTS("cali started");
             break;
 
         case "locate"_ha:
@@ -191,7 +193,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         {
             real_t loc = (args.size() > 1)? real_t(args[1]) : 0.0_r;
             motor.locateRelatively(loc);
-            os.prints("located to", loc);
+            MY_OS_PRINTS("located to", loc);
         }
             break;
 
@@ -200,38 +202,38 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         //     break;
 
         case "id"_ha:
-            os.prints("node id is: ", uint8_t(motor.getNodeId()));
+            MY_OS_PRINTS("node id is: ", uint8_t(motor.getNodeId()));
             break;
 
         // case "rd"_ha:
         //     motor.run_debug_enabled = (args.size() > 1)? int(args[1]) : true;
-        //     os.prints("run debug enabled:", run_debug_enabled);
+        //     MY_OS_PRINTS("run debug enabled:", run_debug_enabled);
         //     break;
 
         // case "cl"_ha:{
         //     auto cl = (args.size() > 1)? real_t(args[1]) : 0;
-        //     os.prints("current clamp:", cl);
+        //     MY_OS_PRINTS("current clamp:", cl);
         // }
         //     break;
 
         // case "status"_ha:
         // case "stat"_ha:
-        //     os.prints("current status:", int(motor.run_status));
+        //     MY_OS_PRINTS("current status:", int(motor.run_status));
         //     break;
 
         // case "cd"_ha:
-        //     os.prints("dir changed");
+        //     MY_OS_PRINTS("dir changed");
         //     motor.elecrad_zerofix = real_t(PI);
         //     break;
 
         case "hlt"_ha:
-            os.prints("halt");
+            MY_OS_PRINTS("halt");
             PANIC();
             break;
 
         case "map"_ha:
             // for(const auto & item : motor.odo.map()){
-            //     os.prints(item);
+            //     MY_OS_PRINTS(item);
             //     delay(1);
             // }
             
@@ -245,7 +247,7 @@ void FOCMotor::AsciiProtocol::parseArgs(const StringViews args){
         // case "ver"_ha:
         //     break;
         // case "info"_ha:
-        //     os.prints(motor.archive_.board_info);
+        //     MY_OS_PRINTS(motor.archive_.board_info);
         //     break;
 
         default:

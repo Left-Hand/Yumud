@@ -126,7 +126,7 @@ public:
     }
 
     void read(char & data) override{
-        uart.read(data);
+        uart.read1(data);
     }
 
     using InputStream::read;

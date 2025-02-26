@@ -17,12 +17,12 @@ protected:
     char current_char;
     ByteProg byteProg = ByteProg::STOP;
     
-    void write(const char data) override{
-        tx_fifo.push(data);
-    }
+    // void write(const char data) override{
+    //     tx_fifo.push(data);
+    // }
 
     char fetch_next(){return tx_fifo.pop();}
-    Error lead(const uint8_t _address) override;
+    BusError lead(const uint8_t _address) override;
     void trail() override{;}
 public:
 
@@ -37,5 +37,10 @@ public:
     void setTxMethod(const CommMethod _txMethod) override;
 
     void setRxMethod(const CommMethod _rxMethod) override;
+
+    void setBaudRate(const uint32_t baud) override{};
+    Gpio & txio(){return Gpio::null();}
+    Gpio & rxio(){return Gpio::null();}
+    void setParity(const Parity parity){;}
 };
 }

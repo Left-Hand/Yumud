@@ -4,20 +4,22 @@
 
 using namespace ymd;
 
+#define MY_OS_PRINTS(...)
+
 void AsciiProtocolConcept::parseArgs(const StringViews args){
     switch(args[0].hash()){
         case "reset"_ha:
         case "rst"_ha:
         case "r"_ha:
-            os.prints("rsting");
+            MY_OS_PRINTS("rsting");
             sys::reset();
             break;
         case "alive"_ha:
         case "a"_ha:
-            os.prints("chip is alive");
+            MY_OS_PRINTS("chip is alive");
             break;
         default:
-            os.prints("no command available:", args[0]);
+            MY_OS_PRINTS("no command available:", args[0]);
             break;
     }
 }

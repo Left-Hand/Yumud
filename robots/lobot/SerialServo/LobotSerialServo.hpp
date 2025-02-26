@@ -11,7 +11,7 @@ protected:
 
     template<typename T>
     void writeFrame(const T & data){
-        uart_.write(reinterpret_cast<const char *>(&data), sizeof(data));
+        uart_.writeN(reinterpret_cast<const char *>(&data), sizeof(data));
     };
 
 public:

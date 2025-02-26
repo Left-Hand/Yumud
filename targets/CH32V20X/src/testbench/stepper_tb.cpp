@@ -121,12 +121,14 @@ uint8_t get_default_id(){
     DEBUG_PRINTLN("node_id", node_id);
     return node_id;
 };
-void stepper_tb(UartHw & logger){
+void stepper_tb(UartHw & logger_inst){
     using TimerUtils::Mode;
     using TimerUtils::IT;
 
-    logger.init(576000, CommMethod::Dma);
-    logger.setEps(4);
+
+    logger_inst.init(576000, CommMethod::Dma);
+    DEBUGGER.retarget(&logger_inst);
+    DEBUGGER.setEps(4);
 
     #if(MOTOR_TYPE == MOTOR_TYPE_STEPPER)
 
@@ -214,7 +216,7 @@ void stepper_tb(UartHw & logger){
         CanID16{0x000, Can::RemoteType::Any}, CanID16::IGNORE_LOW(7, Can::RemoteType::Any));
 
     FOCStepper stp{node_id, svpwm, encoder, mem};
-    FOCMotor::AsciiProtocol ascii_p{logger, stp};
+    FOCMotor::AsciiProtocol ascii_p{logger_inst, stp};
     FOCMotor::CanProtocol can_p{can, stp};
 
     stp.bindProtocol(ascii_p);

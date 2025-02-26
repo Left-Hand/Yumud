@@ -12,14 +12,13 @@
 
 
 namespace ymd::hal{
-class Uart:public IOStream, DuplexBus{
+class Uart:public DuplexBus{
 public:
     using Mode = CommMode;
     using Callback = std::function<void(void)>;
-    using DuplexBus::Error;
     using DuplexBus::txMethod;
     using DuplexBus::rxMethod;
-    using InputStream::read;
+    using BusError = ymd::BusError;
 
     enum class Parity{
         None = USART_Parity_No,
@@ -38,21 +37,23 @@ protected:
 
     Callback txPostCb;
     Callback rxPostCb;
-
-    Error read(uint32_t & data, const bool toack) override {char _;read(_);return Error::OK;};
-    Error write(const uint32_t data) override {write((char)data); return Error::OK;};
     Uart(){;}
 public:
+    BusError read(uint32_t & data, const bool toack) override {char _;read1(_);data = _;return BusError::OK;};
+    BusError write(const uint32_t data) override {write1((char)data); return BusError::OK;};
+
+    virtual void writeN(const char * data_ptr, const size_t len) = 0;
+
+    virtual void write1(const char data) = 0;
+
+    void read1(char & data);
+    void readN(char * pdata, const size_t len);
     Uart(const Uart & other) = delete;
     Uart(Uart && other) = delete;
 
-    void read(char & data) override;
-    void read(char * pdata, const size_t len) override;
 
     virtual Gpio & txio() = 0;
     virtual Gpio & rxio() = 0;
-
-    using IOStream::write;
 
     virtual void init(
         const uint32_t baudRate, 

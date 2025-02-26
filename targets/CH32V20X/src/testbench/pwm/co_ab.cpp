@@ -37,7 +37,8 @@ public:
 };
 
 void co_ab_main(){
-    DEBUGGER.init(DEBUGGER_INST, DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&DEBUGGER_INST);
 
 
     auto & pwm_gpio = portA[8];

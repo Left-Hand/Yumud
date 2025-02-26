@@ -140,7 +140,7 @@ void etk_main(){
         if(logger.available()){
             EtkToken tk;
             while(logger.available()){
-                tk = uint8_t(logger.read());
+                logger.read1(reinterpret_cast<char &>(tk));
             }
 
             eye.update(

@@ -30,7 +30,7 @@ protected:
         uart.write(data);
     }
     void read(char & data) override{
-        uart.read(data);
+        uart.read1(data);
     }
     size_t available() const override{
         return uart.available();
