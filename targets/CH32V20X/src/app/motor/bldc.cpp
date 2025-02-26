@@ -1,4 +1,4 @@
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "sys/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
@@ -339,7 +339,7 @@ class CalibraterOrchestor{
 
 void bldc_main(){
     uart2.init(576000);
-    DEBUGGER.retarget(uart2);
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
     delay(200);
@@ -950,11 +950,10 @@ void bldc_main(){
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    // LowpassFilterD_t<iq_t<14>> speed_measurer = {
-        SecondOrderLowpassFilter_t<iq_t<16>> speed_measurer = {
+    LowpassFilterD_t<iq_t<14>> speed_measurer = {
         {
-            10, 
-            foc_freq
+            .fc = 10, 
+            .fs = foc_freq
         }
     };
 
@@ -994,7 +993,8 @@ void bldc_main(){
     
     while(true){
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
-        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()));
+        const auto t = time();
+        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
         {
             auto strs_opt = splitter.update(uart2);

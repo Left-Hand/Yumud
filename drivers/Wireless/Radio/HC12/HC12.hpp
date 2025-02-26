@@ -22,7 +22,7 @@ public:
     };
 
 protected:
-    Uart & uart;
+    hal::Uart & uart;
     GpioConcept & set_pin;
     uint16_t timeout = 5;
 
@@ -30,7 +30,7 @@ protected:
         uart.write(data);
     }
     void read(char & data) override{
-        uart.read(data);
+        uart.read1(data);
     }
     size_t available() const override{
         return uart.available();
@@ -78,7 +78,7 @@ protected:
         return is_valid;
     }
 public:
-    HC12(Uart & _uart, GpioConcept & _set_pin = GpioNull):uart(_uart), set_pin(_set_pin){;}
+    HC12(hal::Uart & _uart, GpioConcept & _set_pin = GpioNull):uart(_uart), set_pin(_set_pin){;}
 
     void init(){;}
     void sleep(){sendAtCommand("SLEEP");}

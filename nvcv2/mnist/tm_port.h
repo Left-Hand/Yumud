@@ -14,7 +14,7 @@ limitations under the License.
 #define __TM_PORT_H
 
 #include "../sys/core/platform.h"
-#include "../sys/debug/debug_inc.h"
+#include "../sys/debug/debug.hpp"
 #include "sys/math/real.hpp"
 
 #define TM_ARCH_OPT0        (0) //default

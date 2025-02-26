@@ -1,5 +1,5 @@
 #include "bmi160.hpp"
-#include <array>
+#include "sys/debug/debug.hpp"
 
 using namespace ymd::drivers;
 using namespace ymd;

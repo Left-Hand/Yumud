@@ -76,7 +76,7 @@ protected:
         }
     };
 
-    Uart & uart;
+    hal::Uart & uart;
     GpioConcept & at_gpio;
     GpioConcept & slp_gpio;
 
@@ -119,14 +119,14 @@ protected:
         //TODO
     }
 public:
-    CH9141(Uart & _uart, GpioConcept & _set_gpio = GpioNull, GpioConcept & _slp_gpio = GpioNull):uart(_uart), at_gpio(_set_gpio), slp_gpio(_slp_gpio){;}
+    CH9141(hal::Uart & _uart, GpioConcept & _set_gpio = GpioNull, GpioConcept & _slp_gpio = GpioNull):uart(_uart), at_gpio(_set_gpio), slp_gpio(_slp_gpio){;}
 
     void write(const char data) override{
         uart.write(data);
     }
 
     void read(char & data) override{
-        uart.read(data);
+        uart.read1(data);
     }
 
     using InputStream::read;

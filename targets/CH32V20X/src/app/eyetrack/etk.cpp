@@ -1,7 +1,7 @@
 #include "etk.hpp"
 
 #include "sys/core/system.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include "hal/gpio/gpio.hpp"
 #include "hal/bus/spi/spihw.hpp"
@@ -140,7 +140,7 @@ void etk_main(){
         if(logger.available()){
             EtkToken tk;
             while(logger.available()){
-                tk = uint8_t(logger.read());
+                logger.read1(reinterpret_cast<char &>(tk));
             }
 
             eye.update(

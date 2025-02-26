@@ -9,25 +9,26 @@
 namespace ymd{
 
 template<typename BusType>
-concept is_bus = std::is_base_of_v<Bus, BusType>;
+concept is_bus = std::is_base_of_v<BusBase, BusType>;
 
 template<typename BusType>
-concept is_writable_bus = std::is_base_of_v<WritableBus, BusType>;
+concept is_writable_bus = requires(BusType bus, const uint32_t data) {
+    bus.write(data);
+};
 
 template<typename BusType>
-concept is_readable_bus = std::is_base_of_v<ReadableBus, BusType>;
+concept is_readable_bus = requires(BusType bus, uint32_t & data, Ack need_ack) {
+    bus.read(data);
+};
 
 template<typename BusType>
 concept is_fulldup_bus = std::is_base_of_v<FullDuplexBus, BusType>;
 
 
-namespace internal{
 template <typename BusType>
-struct DrvOfBus {
-    using DrvType = void;
+struct driver_of_bus {
+    using driver_type = void;
 };
-
-}
 
 
 template<typename BusType>
@@ -36,7 +37,7 @@ protected:
     BusType & bus_;
     uint8_t index_;
     uint8_t data_bits = 8;
-    uint32_t wait_time = 10;
+    uint16_t wait_time = 10;
 
     void setDataBits(const size_t _data_bits){
         bus_.setDataBits(_data_bits);
@@ -93,7 +94,7 @@ public:
     T transferSingle(T datatx, Continuous cont = DISC);
 };
 
-template <typename BusType, typename = std::enable_if_t<std::is_base_of_v<ProtocolBus, BusType>>>
+template <typename BusType>
 class ProtocolBusDrv : public BusDrv<BusType> {
 protected:
     using BusDrv<BusType>::index_;
@@ -104,13 +105,7 @@ protected:
 public:
 };
 
-template <typename BusType, typename = std::enable_if_t<std::is_base_of_v<PackedBus, BusType>>>
-class PackedBusDrv : public BusDrv<BusType> {
-protected:
-    using Packet = BusType::Packet;
-};
 }
-
 
 #include "NonProtocolBusDrv.tpp"
 

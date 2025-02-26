@@ -1,4 +1,5 @@
 #include "U13T.hpp"
+#include "sys/debug/debug.hpp"
 
 using namespace ymd::drivers;
 
@@ -51,7 +52,7 @@ bool U13T::checkNew(){
 void U13T::lineCb(){
     if(recv.size() == 12){
         constexpr auto cmds = std::to_array<char>({0x7f, 0x04, 0x00, 0x11, 0x04, 0x11});
-        uart_.write((const char *)cmds.begin(), (size_t)cmds.size());
+        uart_.writeN((const char *)cmds.begin(), (size_t)cmds.size());
     }else{
         uint8_t id = matcher.matchID(&recv[11]);
 
@@ -79,7 +80,9 @@ void U13T::clearBuffer(){
 
 void U13T::update(){
     if(uart_.available()){
-        buffer.push_back(uart_.read());
+        char chr;
+        uart_.read1(chr);
+        buffer.push_back(chr);
         dead_ticks = dead_limit;
     }
 

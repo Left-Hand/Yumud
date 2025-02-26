@@ -2,7 +2,7 @@
 
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/gpio/port_virtual.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include "testbench/tb.h"
 #include "app/gui/gui.hpp"
@@ -19,10 +19,12 @@ int main(){
     //  uart_main();
     // qlz_main();
     // embd_main();
+    // i2c_scanner_main();
     // embd_main();
     // gui_main();
     // canopen_main();
     bldc_main();
+    // stepper_tb(uart2);
     // rpc_main();
     // leetcode_main();
     // co_ab_main();

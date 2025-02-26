@@ -1,6 +1,9 @@
 #ifndef QLZ_HEADER
 #define QLZ_HEADER
 
+#include "stdint.h"
+#include "stddef.h"
+
 // Fast data compression library
 // Copyright (C) 2006-2011 Lasse Mikkel Reinhold
 // lar@quicklz.com
@@ -43,7 +46,6 @@
 #define QLZ_VERSION_REVISION 0
 
 // Using size_t, memset() and memcpy()
-#include <string.h>
 
 // Verify compression level
 #if QLZ_COMPRESSION_LEVEL != 1 && QLZ_COMPRESSION_LEVEL != 2 && QLZ_COMPRESSION_LEVEL != 3

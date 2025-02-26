@@ -59,7 +59,7 @@ BusError NonProtocolBusDrv<BusType>::readMulti(T * data_ptr, const size_t len, c
         if (sizeof(T) != 1) this->setDataBits(sizeof(T) * 8);
         for (size_t i = 0; i < len; i++) {
             uint32_t temp = 0;
-            bus_.read(temp, (i != len - 1));
+            bus_.read(temp);
             data_ptr[i] = temp;
         }
         if (cont == DISC) bus_.end();

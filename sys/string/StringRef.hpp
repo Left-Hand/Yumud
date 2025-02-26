@@ -4,8 +4,6 @@
 #include "sys/string/utils/StringUtils.hpp"
 
 #include <cstdint>
-#include <memory.h>
-#include <string.h>
 
 #include <string>
 #include <string_view>

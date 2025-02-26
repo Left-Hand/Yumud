@@ -1,12 +1,14 @@
 #pragma once
 
 #include "spi.hpp"
-#include "../busdrv.hpp"
+#include "hal/bus/busdrv.hpp"
+
 #include <type_traits>
+#include <concepts>
 #include <initializer_list>
 
 
-namespace ymd{
+namespace ymd::hal{
 
 class SpiDrv:public NonProtocolBusDrv<Spi>{
 protected:
@@ -35,12 +37,13 @@ public:
     void setBaud(const uint32_t baud){m_baudrate = baud;}
 };
 
-
-namespace internal{
-template <>
-struct DrvOfBus<Spi>{
-    using DrvType = SpiDrv;
-};
-
 }
+
+namespace ymd{
+
+template<>
+struct driver_of_bus<hal::Spi>{
+    using driver_type = hal::SpiDrv;
 };
+    
+}

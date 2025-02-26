@@ -31,7 +31,7 @@ OutputStream & ymd::operator << (OutputStream & os, const BusError::ErrorType & 
     }
 }
 
-void Bus::Locker::lock(const uint8_t index){
+void BusBase::Locker::lock(const uint8_t index){
     sys::Exception::disableInterrupt();
     oninterrupt_ = sys::Exception::isIntrruptActing();
     req = index >> 1;
@@ -39,28 +39,47 @@ void Bus::Locker::lock(const uint8_t index){
     sys::Exception::enableInterrupt();
 }
 
-
-bool Bus::Locker::owned_by(const uint8_t index) const {
+bool BusBase::Locker::owned_by(const uint8_t index) const {
     return (req == index >> 1) and (sys::Exception::isIntrruptActing() == oninterrupt_);
 }
 
 
-void Bus::lock(const uint8_t index){
-    if(locker == nullptr) HALT;
-    locker->lock(index);
+
+BusError BusBase::begin(const uint8_t index){
+    if(false == locker.locked()){
+        locker.lock(index);
+        return lead(index);
+    }else if(locker.owned_by(index)){
+        locker.lock(index);
+        return lead(index);
+    }else{
+        return BusError::OCCUPIED;
+    }
 }
 
-void Bus::unlock(){
-    if(locker == nullptr) HALT;
-    locker->unlock();
+BusError BusBase::end(){
+    this->trail();
+    locker.unlock();
+
+    return BusError::OK;
 }
 
-bool Bus::locked(){
-    if(locker == nullptr) HALT;
-    return locker->locked();
-}
+// void Bus::lock(const uint8_t index){
+//     if(locker == nullptr) HALT;
 
-bool Bus::owned_by(const uint8_t index){
-    if(locker == nullptr) HALT;
-    return locker->owned_by(index);
-}
+// }
+
+// void Bus::unlock(){
+//     if(locker == nullptr) HALT;
+    
+// }
+
+// bool Bus::locked(){
+//     if(locker == nullptr) HALT;
+//     return 
+// }
+
+// bool Bus::owned_by(const uint8_t index){
+//     if(locker == nullptr) HALT;
+//     return 
+// }

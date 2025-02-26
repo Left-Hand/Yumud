@@ -22,11 +22,7 @@ protected:
         frame.putpixel_unsafe(pos, color);
     }
 
-    void setpos_unsafe(const Vector2i & pos) override{
-        // auto & frame = fetchFrame();
-        // frame.setpos_unsafe(pos);
-        DEBUG_PRINTLN("not implemented");
-    }
+    void setpos_unsafe(const Vector2i & pos) override;
 
     virtual Vector2i getOffset() const = 0;
 

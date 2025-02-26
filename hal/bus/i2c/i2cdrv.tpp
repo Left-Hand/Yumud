@@ -141,14 +141,14 @@ BusError I2cDrv::readMulti_impl(const valid_i2c_regaddr auto addr, T * pdata, co
                 if(endian == MSB){
                     for(size_t j = size; j > 0; j--){
                         uint32_t temp = 0;
-                        const auto err = bus_.read(temp, !((j == 1) && (i == bytes - size)));
+                        const auto err = bus_.read(temp, Ack::from(!((j == 1) && (i == bytes - size))));
                         if(err.wrong()) return err;
                         u8_ptr[j-1 + i] = temp;
                     }
                 }else{
                     for(size_t j = 0; j < size; j++){
                         uint32_t temp = 0;
-                        const auto err = bus_.read(temp, (i + j != bytes - 1));
+                        const auto err = bus_.read(temp, Ack::from(i + j != bytes - 1));
                         if(err.wrong()) return err;
                         u8_ptr[j + i] = temp;
                     }
@@ -177,4 +177,6 @@ void I2cDrv::release(){
     bus_.end();
 }
 }
+
+
 #undef __I2CDRV_LENGTH_GUARD

@@ -6,27 +6,25 @@
 namespace ymd::hal{
 class I2cSw: public I2c{
 private:
-    volatile int8_t occupied = -1;
+    volatile int8_t occupied_ = -1;
 
-    uint16_t delays = 10;
+    uint16_t delays_ = 10;
 
-    __fast_inline void delayDur(){
-        delayMicroseconds(delays);
-    }
+    __no_inline void delayDur();
 
-    Error wait_ack();
-    Error lead(const uint8_t _address) override;
+    BusError wait_ack();
+    BusError lead(const uint8_t address) final override;
     void trail() override;
 protected :
-    void reset() override {};
-    void unlock_bus() override {};
+    BusError reset();
+    BusError unlock_bus();
 public:
 
     I2cSw(GpioConcept & scl,GpioConcept & sda):I2c(scl, sda){;}
-    Error write(const uint32_t data) final override;
-    Error read(uint32_t & data, bool toAck = true) final override;
+    BusError write(const uint32_t data) final override;
+    BusError read(uint32_t & data, const Ack ack) final override;
     void init(const uint32_t baudRate);
-    void setBaudRate(const uint32_t baudRate) final override;
+    void setBaudRate(const uint32_t baudRate);
 };
 
 }

@@ -1,7 +1,9 @@
 #pragma once
 
+#include "sys/debug/debug.hpp"
 
 #include "drivers/device_defs.h"
+
 
 namespace ymd::drivers{
 

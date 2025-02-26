@@ -1,5 +1,7 @@
 #include "tb.h"
 #include "hal/bus/i2c/i2csw.hpp"
+#include "sys/debug/debug.hpp"
+
 #include "drivers/Proximeter/PAJ7620/paj7620.hpp"
 
 using namespace ymd::drivers;

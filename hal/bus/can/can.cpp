@@ -14,10 +14,117 @@ using namespace ymd::hal;
 using Callback = Can::Callback;
 
 #define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x << 3))
-// #define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x * 8))
+
+ITStatus MY_CAN_GetITStatus(CAN_TypeDef* CANx, uint32_t CAN_IT){
+  
+    if((CANx->INTENR & CAN_IT) != RESET){
+        switch (CAN_IT){
+        case CAN_IT_TME:
+            return(CANx->TSTATR & (CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2));  
+            break;
+            
+        case CAN_IT_FMP0:
+            return (CANx->RFIFO0 & CAN_RFIFO0_FMP0);  
+            
+        case CAN_IT_FF0:
+            return (CANx->RFIFO0 & CAN_RFIFO0_FULL0);  
+            
+        case CAN_IT_FOV0:
+            return (CANx->RFIFO0 & CAN_RFIFO0_FOVR0);  
+            
+        case CAN_IT_FMP1:
+            return (CANx->RFIFO0 & CAN_RFIFO1_FMP1);  
+            
+        case CAN_IT_FF1:
+            return (CANx->RFIFO0 & CAN_RFIFO1_FULL1);  
+            
+        case CAN_IT_FOV1:
+            return (CANx->RFIFO0 & CAN_RFIFO1_FOVR1);  
+            
+        case CAN_IT_WKU:
+            return (CANx->STATR& CAN_STATR_WKUI);  
+            
+        case CAN_IT_SLK:
+            return (CANx->STATR& CAN_STATR_SLAKI);  
+            
+        case CAN_IT_EWG:
+            return (CANx->ERRSR& CAN_ERRSR_EWGF);  
+            
+        case CAN_IT_EPV:
+            return (CANx->ERRSR& CAN_ERRSR_EPVF);  
+            
+        case CAN_IT_BOF:
+            return (CANx->ERRSR& CAN_ERRSR_BOFF);  
+            
+        case CAN_IT_LEC:
+            return (CANx->ERRSR& CAN_ERRSR_LEC);  
+            
+        case CAN_IT_ERR:
+            return (CANx->STATR& CAN_STATR_ERRI); 
+        }
+    }
+    return RESET;
+}
 
 
+void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx, uint32_t CAN_IT)
+{
+	switch (CAN_IT)
+	{
+		case CAN_IT_TME:
+			CANx->TSTATR = CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2;  
+			break;
 
+		case CAN_IT_FF0:
+			CANx->RFIFO0 = CAN_RFIFO0_FULL0; 
+			break;
+
+		case CAN_IT_FOV0:
+			CANx->RFIFO0 = CAN_RFIFO0_FOVR0; 
+			break;
+
+		case CAN_IT_FF1:
+			CANx->RFIFO1 = CAN_RFIFO1_FULL1;  
+			break;
+
+		case CAN_IT_FOV1:
+			CANx->RFIFO1 = CAN_RFIFO1_FOVR1; 
+			break;
+
+		case CAN_IT_WKU:
+			CANx->STATR = CAN_STATR_WKUI;  
+			break;
+
+		case CAN_IT_SLK:
+			CANx->STATR = CAN_STATR_SLAKI;   
+			break;
+
+		case CAN_IT_EWG:
+			CANx->STATR = CAN_STATR_ERRI;
+			break;
+
+		case CAN_IT_EPV:
+			CANx->STATR = CAN_STATR_ERRI; 
+			break;
+
+		case CAN_IT_BOF:
+			CANx->STATR = CAN_STATR_ERRI; 
+			break;
+
+		case CAN_IT_LEC:
+			CANx->ERRSR = RESET; 
+			CANx->STATR = CAN_STATR_ERRI; 
+			break;
+
+		case CAN_IT_ERR:
+			CANx->ERRSR = RESET; 
+			CANx->STATR = CAN_STATR_ERRI; 
+			break;
+
+		default :
+			break;
+	}
+}
 void Can::initIt(){
     uint32_t it_mask = 
         CAN_IT_TME      //tx done
@@ -35,7 +142,7 @@ void Can::initIt(){
         #endif
     ;
 
-    CAN_ClearITPendingBit(instance, it_mask);
+    MY_CAN_ClearITPendingBit(instance, it_mask);
     CAN_ITConfig(instance, it_mask, ENABLE);
 
     switch(uint32_t(instance)){
@@ -335,10 +442,6 @@ bool Can::write(const CanMsg & msg){
     }
 }
 
-bool Can::write(const CanMsg && msg){
-    return write(static_cast<const CanMsg &>(msg));
-}
-
 const CanMsg && Can::read(){
     return std::move(rx_fifo_.pop());
 }
@@ -473,7 +576,7 @@ void Can::handleRx(const uint8_t fifo_num){
             break;
     }
 
-    if (CAN_GetITStatus(instance, fmp_mask)){
+    if (MY_CAN_GetITStatus(instance, fmp_mask)){
         //process rx pending
         do{
             // CanMsg rx_msg;
@@ -487,48 +590,43 @@ void Can::handleRx(const uint8_t fifo_num){
             rx_fifo_.push(receive(fifo_num));
         }while(false);
         EXECUTE(cb_rx);
-        CAN_ClearITPendingBit(instance, fmp_mask);
-    }else if(CAN_GetITStatus(instance, ff_mask)){
+        MY_CAN_ClearITPendingBit(instance, fmp_mask);
+    }else if(MY_CAN_GetITStatus(instance, ff_mask)){
         //process rx full
-        CAN_ClearITPendingBit(instance, ff_mask);
-    }else if(CAN_GetITStatus(instance, fov_mask)){
+        MY_CAN_ClearITPendingBit(instance, ff_mask);
+    }else if(MY_CAN_GetITStatus(instance, fov_mask)){
         //process rx overrun
-        CAN_ClearITPendingBit(instance, fov_mask);
+        MY_CAN_ClearITPendingBit(instance, fov_mask);
     }
 }
 
 void Can::handleSce(){
-    if (CAN_GetITStatus(instance, CAN_IT_WKU)) {
+    if (MY_CAN_GetITStatus(instance, CAN_IT_WKU)) {
         // Handle Wake-up interrupt
-        CAN_ClearITPendingBit(instance, CAN_IT_WKU);
-    } else if (CAN_GetITStatus(instance, CAN_IT_SLK)) {
+        MY_CAN_ClearITPendingBit(instance, CAN_IT_WKU);
+    } else if (MY_CAN_GetITStatus(instance, CAN_IT_SLK)) {
         // Handle Sleep acknowledge interrupt
-        CAN_ClearITPendingBit(instance, CAN_IT_SLK);
-    } else if (CAN_GetITStatus(instance, CAN_IT_ERR)) {
+        MY_CAN_ClearITPendingBit(instance, CAN_IT_SLK);
+    } else if (MY_CAN_GetITStatus(instance, CAN_IT_ERR)) {
         // Handle Error interrupt
-        CAN_ClearITPendingBit(instance, CAN_IT_ERR);
-    } else if (CAN_GetITStatus(instance, CAN_IT_EWG)) {
+        MY_CAN_ClearITPendingBit(instance, CAN_IT_ERR);
+    } else if (MY_CAN_GetITStatus(instance, CAN_IT_EWG)) {
         // Handle Error warning interrupt
-        CAN_ClearITPendingBit(instance, CAN_IT_EWG);
-    } else if (CAN_GetITStatus(instance, CAN_IT_EPV)) {
+        MY_CAN_ClearITPendingBit(instance, CAN_IT_EWG);
+    } else if (MY_CAN_GetITStatus(instance, CAN_IT_EPV)) {
         // Handle Error passive interrupt
-        CAN_ClearITPendingBit(instance, CAN_IT_EPV);
-    } else if (CAN_GetITStatus(instance, CAN_IT_BOF)) {
+        MY_CAN_ClearITPendingBit(instance, CAN_IT_EPV);
+    } else if (MY_CAN_GetITStatus(instance, CAN_IT_BOF)) {
         // Handle Bus-off interrupt
-        CAN_ClearITPendingBit(instance, CAN_IT_BOF);
-    } else if (CAN_GetITStatus(instance, CAN_IT_LEC)) {
+        MY_CAN_ClearITPendingBit(instance, CAN_IT_BOF);
+    } else if (MY_CAN_GetITStatus(instance, CAN_IT_LEC)) {
         // Handle Last error code interrupt
-        CAN_ClearITPendingBit(instance, CAN_IT_LEC);
+        MY_CAN_ClearITPendingBit(instance, CAN_IT_LEC);
     } else {
         // Handle other interrupts or add more cases as needed
     }
 }
 
-
-
-// CanFilter & Can::operator[](const size_t idx){
-//     return CanFilter{this->instance, 0};
-// }
 
 #ifdef ENABLE_CAN1
 __interrupt

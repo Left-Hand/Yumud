@@ -1,7 +1,16 @@
 #include "X25QXX.hpp"
+#include "sys/debug/debug.hpp"
 
 using namespace ymd::drivers;
 
+#define X25QXX_DEBUG
+
+#ifdef X25QXX_DEBUG
+#undef X25QXX_DEBUG
+#define X25QXX_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__)
+#else
+#define X25QXX_DEBUG(...)
+#endif
 
 class RAIIfunctor{
 protected:

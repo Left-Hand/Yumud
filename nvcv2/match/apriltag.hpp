@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include "types/image/image.hpp"
 

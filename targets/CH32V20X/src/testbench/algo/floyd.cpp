@@ -1,5 +1,5 @@
 #include "../tb.h"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "sys/clock/time.hpp"
 
 struct Node{

@@ -1,6 +1,7 @@
 #include "../tb.h"
 
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
+
 #include "hal/bus/can/can.hpp"
 #include "hal/timer/instance/timer_hw.hpp"
 

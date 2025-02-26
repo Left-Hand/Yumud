@@ -33,7 +33,7 @@ std::tuple<real_t, real_t> SeatInterpolation::get_ab(const Vector2 & handle){
 real_t SeatInterpolation::forward(const real_t x) const {
     real_t y = 0;
     if (x <= a){
-        y = b - b*pow(1-x/a, 3);
+        y = b - b*pow(1-x/a, real_t(3));
     } else {
         y = b + (1-b)*pow((x-a)/(1-a), 3);
     }
@@ -76,9 +76,9 @@ real_t SymmetricInterpolation::forward(const real_t x) const {
     else { 
         // odd polynomial
         if (x<=real_t(0.5)){
-        y = pow(2*x, +_n)/2;
+        y = pow(2*x, real_t(_n))/2;
         } else {
-        y = 1 + pow(2*(x-1), _n)/2;
+        y = 1 + pow(2*(x-1), real_t(_n))/2;
         }
     }
 

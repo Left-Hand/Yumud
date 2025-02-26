@@ -4,7 +4,7 @@
 #include "sys/clock/clock.h"
 
 
-namespace ymd{
+namespace ymd::hal{
 class SpiSw: public Spi{
 protected:
     volatile int8_t occupied = -1;
@@ -21,7 +21,7 @@ protected:
     }
 
 
-    Error lead(const uint8_t index) override{
+    BusError lead(const uint8_t index) override{
         auto ret = Spi::lead(index);
         delayDur();
         return ret;
@@ -45,20 +45,20 @@ public:
 
     DELETE_COPY_AND_MOVE(SpiSw);
 
-    Error write(const uint32_t data) override {
+    BusError write(const uint32_t data) {
         uint32_t dummy;
-        transfer(dummy, data, false);
-        return Error::OK;
+        transfer(dummy, data);
+        return BusError::OK;
     }
 
-    Error read(uint32_t & data, bool toAck = true) {
+    BusError read(uint32_t & data) {
         uint32_t ret;
         scexpr uint32_t dummy = 0;
-        transfer(ret, dummy, toAck); 
-        return Error::OK;
+        transfer(ret, dummy); 
+        return BusError::OK;
     }
 
-    Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) override ;
+    BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override ;
 
     void setBaudRate(const uint32_t baudRate) {
         if(baudRate == 0){

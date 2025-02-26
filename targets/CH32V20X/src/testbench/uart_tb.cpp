@@ -1,7 +1,10 @@
 #include "tb.h"
 
 #include <string>
-#include "sys/clock/clock.hpp"
+
+#include "sys/clock/clock.h"
+#include "sys/debug/debug.hpp"
+
 
 #define UART_TB_ECHO
 using std::string;
@@ -60,7 +63,7 @@ using std::string;
         // }
         delay(300);
         tx_led = false;
-        uart.println("noth", uart.available());
+        DEBUG_PRINTLN("noth", uart.available());
         tx_led = true;
     }
     #endif

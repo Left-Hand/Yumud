@@ -1,9 +1,12 @@
 #include "tb.h"
 
+#include "sys/clock/clock.h"
+#include "sys/debug/debug.hpp"
+
+#include "hal/bus/spi/spihw.hpp"
+#include "hal/bus/spi/spisw.hpp"
+
 #include "drivers/Wireless/Radio/LT8920/lt8920.hpp"
-#include "bus/spi/spihw.hpp"
-#include "bus/spi/spisw.hpp"
-#include "sys/clock/clock.hpp"
 
 using namespace ymd::drivers;
 

@@ -1,9 +1,8 @@
 #include "spihw.hpp"
 #include "sys/core/system.hpp"
-// #include "sys/debug/debug_inc.h"
 
 using namespace ymd;
-
+using namespace ymd::hal;
 
 void SpiHw::enableRcc(const bool en){
     switch((uint32_t)instance){
@@ -148,12 +147,12 @@ uint16_t SpiHw::calculatePrescaler(const uint32_t baudrate){
 }
 
 void SpiHw::installGpios(){
-    if(txMethod != CommMethod::None){
+    if(tx_method_ != CommMethod::None){
         Gpio & mosi_pin = getMosiGpio();
         mosi_pin.afpp();
     }
 
-    if(rxMethod != CommMethod::None){
+    if(rx_method_ != CommMethod::None){
         Gpio & miso_pin = getMisoGpio();
         miso_pin.inflt();
     }
@@ -204,12 +203,12 @@ void SpiHw::enableRxIt(const bool en){
 }
 void SpiHw::init(const uint32_t baudrate, const CommMethod tx_method, const CommMethod rx_method){
 
-    txMethod = tx_method;
-    rxMethod = rx_method;
+    tx_method_ = tx_method;
+    rx_method_ = rx_method;
 	enableRcc();
     installGpios();
 
-    SPI_InitTypeDef SPI_InitStructure = {
+    const SPI_InitTypeDef SPI_InitStructure = {
         .SPI_Direction = SPI_Direction_2Lines_FullDuplex,
         .SPI_Mode = SPI_Mode_Master,
         .SPI_DataSize = SPI_DataSize_8b,
@@ -266,13 +265,13 @@ void SpiHw::setBitOrder(const Endian endian){
 }
 
 
-SpiHw::Error SpiHw::write(const uint32_t data){
-    // if(txMethod != CommMethod::None){
+BusError SpiHw::write(const uint32_t data){
+    // if(tx_method_ != CommMethod::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
     //     instance->DATAR = data;
     // }
 
-    // if(rxMethod != CommMethod::None){
+    // if(rx_method_ != CommMethod::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
     //     instance->DATAR;
     // }
@@ -282,36 +281,36 @@ SpiHw::Error SpiHw::write(const uint32_t data){
 }
 
 
-SpiHw::Error SpiHw::read(uint32_t & data, bool toAck){
-    // if(txMethod != CommMethod::None){
+BusError SpiHw::read(uint32_t & data){
+    // if(tx_method_ != CommMethod::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
     //     instance->DATAR = 0;
     // }
 
-    // if(rxMethod != CommMethod::None){
+    // if(rx_method_ != CommMethod::None){
     //     while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
     //     data = instance->DATAR;
     // }
     // return ErrorType::OK;
-    return transfer(data, 0, toAck);
+    return transfer(data, 0);
 }
 
 
-SpiHw::Error SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
-    if(txMethod != CommMethod::None){
+BusError SpiHw::transfer(uint32_t & data_rx, const uint32_t data_tx){
+    if(tx_method_ != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_TXE) == RESET);
         instance->DATAR = data_tx;
     }
 
-    if(rxMethod != CommMethod::None){
+    if(rx_method_ != CommMethod::None){
         while ((instance->STATR & SPI_I2S_FLAG_RXNE) == RESET);
         data_rx = instance->DATAR;
     }
 
-    return Error::OK;
+    return BusError::OK;
 }
 
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_SPI1
 SpiHw spi1{SPI1};
 #endif

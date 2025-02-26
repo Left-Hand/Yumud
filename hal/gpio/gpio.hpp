@@ -64,6 +64,6 @@ public:
 };
 
 
-// extern Gpio GpioNull;
-static inline Gpio & GpioNull = Gpio::null();
+extern Gpio & GpioNull;
+// static inline Gpio & GpioNull = Gpio::null();
 }

@@ -39,7 +39,8 @@ uint8_t LDS14::LidarFrame::calc_crc() const {
 
 void LDS14::run(){
     while(m_uart.available()){
-        uint8_t data = m_uart.read();
+        char data;
+        m_uart.read1(data);
         switch(m_data_cnt){
             
             case 0:

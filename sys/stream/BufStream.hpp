@@ -12,7 +12,7 @@ protected:
     size_t len_ = 0;
 public:
     template <typename T>
-    requires std::ranges::contiguous_range<T>
+    requires std::ranges::contiguous_range<T> and (sizeof(T) == 1)
     BufStream(T& range):
         buf_(reinterpret_cast<char *>(std::ranges::data(range))),
         max_len_(std::ranges::size(range)){;}
@@ -38,7 +38,7 @@ __inline size_t snprintf(char * buf, size_t len, Args && ... args){
 }
 
 template <typename T, typename ... Args>
-requires std::ranges::contiguous_range<T>
+requires std::ranges::contiguous_range<T> and (sizeof(T) == 1)
 __inline size_t snprintf(T & range, Args && ... args){
     BufStream os(range);
     (os << ... << std::forward<Args>(args));

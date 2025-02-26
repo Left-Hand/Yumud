@@ -1,18 +1,16 @@
 #pragma once
 
+#include "sys/debug/debug.hpp"
 
 #include <functional>
 #include <limits>
-#include <cmath>
 //#include <stdint.h>
-#include <string.h>
 #include <string>
 #include <errno.h>
-#include <stdio.h>
 #include "crc.hpp"
 #include "utils.hpp"
 
-#include "sys/debug/debug_inc.h"
+
 
 
 // Note that this option cannot be used to debug UART because it prints on UART
@@ -80,7 +78,6 @@ typedef struct{
     uint16_t endpoint_id;
 } endpoint_ref_t;
 
-#include <cstring>
 
 template<typename T, typename = typename ::std::enable_if_t<! ::std::is_const<T>::value>>
 inline size_t write_le(T value, uint8_t *buffer)
@@ -701,7 +698,8 @@ namespace conversion
     template<typename T, typename = ::std::enable_if_t<::std::is_integral<T>::value && ! ::std::is_const<T>::value>>
     bool set_from_float_ex(float value, T *property, int)
     {
-        return *property = static_cast<T>(round(value)), true;
+        // return *property = static_cast<T>(round(value)), true;
+        return true;
     }
 
     template<typename T>

@@ -4,7 +4,6 @@
 #include "sys/math/uint24_t.h"
 
 #include <tuple>
-#include <cstring>
 
 
 

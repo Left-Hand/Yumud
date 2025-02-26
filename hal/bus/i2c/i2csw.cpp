@@ -1,9 +1,15 @@
 #include "i2csw.hpp"
 #include "sys/clock/time_stamp.hpp"
+// #include "sys/debug/debug.hpp"
 
+using namespace ymd;
 using namespace ymd::hal;
 
-I2cSw::Error I2cSw::wait_ack(){
+void I2cSw::delayDur(){
+    delayMicroseconds(delays_);
+}
+
+BusError I2cSw::wait_ack(){
     sda_gpio.set();
     sda_gpio.inflt();
     delayDur();
@@ -12,7 +18,7 @@ I2cSw::Error I2cSw::wait_ack(){
 
     bool ovt = false;
     while(sda_gpio.read()){
-        if(delta >= timeout){
+        if(delta >= timeout_){
             ovt = true;
             break;
         }
@@ -23,14 +29,14 @@ I2cSw::Error I2cSw::wait_ack(){
     delayDur();
     
     if(ovt){
-        return Error::NO_ACK;
+        return BusError::NO_ACK;
     }else{
-        return Error::OK;
+        return BusError::OK;
     }
 
 }
 
-I2cSw::Error I2cSw::lead(const uint8_t _address){
+BusError I2cSw::lead(const uint8_t address){
     scl_gpio.outod();
     sda_gpio.outod();
     sda_gpio.set();
@@ -40,7 +46,7 @@ I2cSw::Error I2cSw::lead(const uint8_t _address){
     delayDur();
     scl_gpio.clr();
     delayDur();
-    return write(_address);
+    return write(address);
 }
 
 void I2cSw::trail(){
@@ -56,7 +62,9 @@ void I2cSw::trail(){
 
 
 
-I2cSw::Error I2cSw::write(const uint32_t data){
+BusError I2cSw::write(const uint32_t data){
+    // DEBUG_PRINTLN("w", data);
+
     sda_gpio.outod();
 
     for(uint8_t mask = 0x80; mask; mask >>= 1){
@@ -70,7 +78,7 @@ I2cSw::Error I2cSw::write(const uint32_t data){
     return wait_ack();
 }
 
-I2cSw::Error I2cSw::read(uint32_t & data, const bool toAck){
+BusError I2cSw::read(uint32_t & data, const Ack ack){
     uint8_t ret = 0;
 
     sda_gpio.set();
@@ -85,7 +93,7 @@ I2cSw::Error I2cSw::read(uint32_t & data, const bool toAck){
         delayDur();
     }
 
-    sda_gpio.write(!toAck);
+    sda_gpio.write(!bool(ack));
     sda_gpio.outod();
     scl_gpio.set();
     delayDur();
@@ -93,7 +101,7 @@ I2cSw::Error I2cSw::read(uint32_t & data, const bool toAck){
     sda_gpio.inpu();
 
     data = ret;
-    return Error::OK;
+    return BusError::OK;
 }
 
 void I2cSw::init(const uint32_t baudRate){
@@ -109,9 +117,17 @@ void I2cSw::init(const uint32_t baudRate){
 
 void I2cSw::setBaudRate(const uint32_t baudRate) {
     if(baudRate == 0){
-        delays = 0;
+        delays_ = 0;
     }else{
         uint32_t b = baudRate / 1000;
-        delays = 400 / b;
+        delays_ = 400 / b;
     }
+}
+
+BusError I2cSw::reset(){
+    return BusError::OK;
+}
+
+BusError I2cSw::unlock_bus(){
+    return BusError::OK;
 }

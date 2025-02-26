@@ -1,9 +1,12 @@
 #include "../../testbench/tb.h"
 
+#include "sys/debug/debug.hpp"
+
 #include "hal/bus/spi/spihw.hpp"
 #include "hal/bus/spi/spisw.hpp"
 
 #include "drivers/Memory/Flash/X25QXX.hpp"
+
 
 using namespace ymd::drivers;
 

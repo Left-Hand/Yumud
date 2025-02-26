@@ -1,8 +1,9 @@
 #include "../tb.h"
 
-#include "hal/bus/can/can.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "sys/math/real.hpp"
+
+#include "hal/bus/can/can.hpp"
 
 void can_tb(IOStream & logger, hal::Can & can, bool tx_role){
     can.init(1_MHz, hal::Can::Mode::Normal);

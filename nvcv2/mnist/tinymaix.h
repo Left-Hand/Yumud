@@ -14,7 +14,6 @@ limitations under the License.
 #define __TINYMAIX_H
 
 #include <stdint.h>
-#include <string.h>
 
 
 #define  TM_MDL_INT8    0

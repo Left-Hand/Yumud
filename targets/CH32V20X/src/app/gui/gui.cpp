@@ -1,6 +1,6 @@
 #include "gui.hpp"
 
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "sys/core/system.hpp"
 #include "sys/clock/time.hpp"
 
@@ -93,7 +93,7 @@ void gui_main(){
     // }
 
     uart2.init(576000);
-    DEBUGGER.retarget(uart2);
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 

@@ -1,13 +1,17 @@
 #include "tb.h"
-#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
-#include "drivers/Memory/Flash/W25QXX/w25q16.hpp"
+
+#include "sys/debug/debug.hpp"
+
 #include "hal/flash/flash.hpp"
-
-#include "algo/random/random_generator.hpp"
 #include "hal/bkp/bkp.hpp"
-
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
+
+#include "drivers/Memory/EEprom/AT24CXX/at24cxx.hpp"
+#include "drivers/Memory/Flash/W25QXX/w25q16.hpp"
+
+#include "algo/random/random_generator.hpp"
+
 
 using namespace ymd::drivers;
 
@@ -294,23 +298,25 @@ static void mem_tb(OutputStream & logger, Memory & mem){
 }
 
 void eeprom_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    auto & logger = DEBUGGER;
-    logger.setEps(2);
-    logger.setRadix(10);
-    logger.setSplitter("\t\t");
+    uart2.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER.retarget(&uart2);
+    DEBUGGER.setEps(2);
+    DEBUGGER.setRadix(10);
+    DEBUGGER.setSplitter("\t\t");
 
-    I2cSw i2csw = I2cSw(portD[1], portD[0]);
+    I2cSw i2csw = I2cSw(portB[13], portB[12]);
     i2csw.init(400000);
 
-    eeprom02_tb(logger, i2csw);
+    // eeprom02_tb(DEBUGGER, i2csw);
+    eeprom64_tb(DEBUGGER, i2csw);
     // flash_tb(logger);
 }
 
 void flash_main(){
     // DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
 
-    DEBUGGER.init(DEBUGGER_INST, DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&DEBUGGER_INST);
 
     // auto & led = portA[8];
     // led.outpp();

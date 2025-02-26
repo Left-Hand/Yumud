@@ -1,8 +1,12 @@
 #include "tb.h"
-#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
+
+#include "sys/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
+
+#include "drivers/IMU/Axis6/MPU6050/mpu6050.hpp"
+
 
 using namespace ymd::drivers;
 
@@ -25,5 +29,5 @@ void mpu6050_main(){
     I2cSw i2c{portD[2], portC[12]};
     i2c.init(1_MHz);
     delay(200);
-    mpu6050_tb(logger, i2c);
+    mpu6050_tb(DEBUGGER, i2c);
 }

@@ -1,9 +1,9 @@
 #include "st7789.hpp"
+#include "sys/debug/debug.hpp"
+
 
 using namespace ymd::drivers;
 using namespace ymd;
-
-
 
 void ST7789::init(){
     interface.init();

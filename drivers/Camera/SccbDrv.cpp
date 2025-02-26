@@ -23,24 +23,21 @@ void SccbDrv::readReg(const uint8_t reg_address, uint16_t & reg_data){
     if(bus_.begin(index_).ok()){
         uint32_t data_l, data_h;
 
-        //#region 写入地址字节
+        // 写入地址字节
         bus_.write(reg_address);
-        //#endregion
 
-        //#region 写入第一个字节        
+        // 写入第一个字节        
         bus_.begin(index_ | 0x01);
-        bus_.read(data_h, false);
-        //#endregion 
+        bus_.read(data_h, NACK);
 
-        //#region 写入第二个字节
+        // 写入第二个字节
         bus_.begin(index_);
         bus_.write(0xF0);
 
         bus_.begin(index_ | 0x01);
-        bus_.read(data_l, false);
+        bus_.read(data_l, NACK);
         
         bus_.end();
-        //#endregion
 
         reg_data = ((uint8_t)data_h << 8) | (uint8_t)data_l;
     }

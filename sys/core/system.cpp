@@ -7,9 +7,8 @@
 #include "hal/crc/crc.hpp"
 
 #include "sys/clock/clock.h"
-#include "sys/clock/clock.hpp"
 
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #ifdef N32G45X
 #define M_RCC_CONFIGER RCC_ConfigHclk

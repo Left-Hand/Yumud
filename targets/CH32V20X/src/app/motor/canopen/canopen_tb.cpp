@@ -1,5 +1,7 @@
 #include "tb.h"
-#include "sys/debug/debug_inc.h"
+
+#include "sys/debug/debug.hpp"
+
 #include "canopen/Entry.hpp"
 #include "canopen/ObjectDict.hpp"
 #include "canopen/cia402.hpp"
@@ -9,7 +11,7 @@ using namespace ymd::canopen;
 
 void canopen_main(){
     uart2.init(576000);
-    DEBUGGER.retarget(uart2);
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 

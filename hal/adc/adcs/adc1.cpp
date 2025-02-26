@@ -1,5 +1,5 @@
 #include "adc1.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 using namespace ymd;
 

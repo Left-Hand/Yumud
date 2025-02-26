@@ -1,6 +1,10 @@
 #include "tb.h"
-#include "../../algo/quicklz/quicklz_warpper.hpp"
-#include "sys/clock/clock.hpp"
+
+#include "sys/clock/clock.h"
+#include "sys/debug/debug.hpp"
+
+#include "algo/quicklz/quicklz_warpper.hpp"
+
 void qlz_tb(OutputStream & logger){
 
 	logger.println("qlz_tb begin");
@@ -15,8 +19,8 @@ void qlz_tb(OutputStream & logger){
 }
 
 void qlz_main(){
-	auto & logger = DEBUGGER_INST;
-	logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-	logger.setSplitter(" ");
-	qlz_tb(logger);
+	DEBUGGER_INST.init(DEBUG_UART_BAUD);
+	DEBUGGER.retarget(&DEBUGGER_INST);
+	DEBUGGER.setSplitter(" ");
+	qlz_tb(DEBUGGER);
 }

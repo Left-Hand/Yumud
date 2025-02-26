@@ -1,8 +1,9 @@
 #include "tb.h"
-#include "sys/debug/debug_inc.h"
+
+#include "sys/debug/debug.hpp"
+#include "sys/clock/time.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
-#include "sys/clock/time.hpp"
 
 class TimerOCPair:public PwmChannel{
 protected:
@@ -36,7 +37,8 @@ public:
 };
 
 void co_ab_main(){
-    DEBUGGER.init(DEBUGGER_INST, DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&DEBUGGER_INST);
 
 
     auto & pwm_gpio = portA[8];

@@ -199,7 +199,7 @@ public:
     PCA9685 & operator = (const uint16_t data) override {writePort(data); return *this;}
 
     PCA8975Channel & operator [](const size_t index){
-        if(index >= channels.size()) PANIC();
+        if(index >= channels.size()) HALT;
         return channels[index];
     }
 };

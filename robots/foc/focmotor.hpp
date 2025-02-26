@@ -128,7 +128,7 @@ public:
         using Command = MotorUtils::Command;
         void parseArgs(const StringViews args) override;
     public:
-        AsciiProtocol(IOStream & _logger, FOCMotor & _motor):AsciiProtocolConcept(_logger), motor(_motor){;}
+        AsciiProtocol(hal::UartHw & _logger, FOCMotor & _motor):AsciiProtocolConcept(_logger), motor(_motor){;}
     };
 
     friend class AsciiProtocol;

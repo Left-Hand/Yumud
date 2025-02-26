@@ -21,6 +21,7 @@
 #pragma once
 
 #include "drivers/device_defs.h"
+#include "sys/debug/debug.hpp"
 
 namespace ymd::drivers{
 

@@ -122,12 +122,6 @@
 #define PTR8_AND_SIZE(x) (const uint8_t *)&x, sizeof(x)
 #define CHR8_AND_SIZE(x) (const char *)&x, sizeof(x)
 
-#define FOREACH(container,it) \
-    for(typeof((container).begin()) it = (container).begin();it!=(container).end();++it)
-
-#define FORRANGE(val,a,b)\
-    for(int val = a; val < b; val++) \
-    
 #define BREAKPOINT __nopn(1);
 
 #if defined(__riscv)

@@ -39,7 +39,7 @@ extern "C" __interrupt void UART8_IRQHandler(void);
 #endif
 
 
-namespace ymd{
+namespace ymd::hal{
 
 
 class UartHw:public Uart{
@@ -78,12 +78,12 @@ protected:
     DmaChannel & tx_dma;
     DmaChannel & rx_dma;
 
-    Error lead(const uint8_t _address) override;
+    BusError lead(const uint8_t _address) override;
     void trail() override;
 public:
-    void write(const char * data_ptr, const size_t len) override;
+    void writeN(const char * data_ptr, const size_t len) override;
 
-    void write(const char data) override;
+    void write1(const char data) override;
 
     UartHw(USART_TypeDef * _instance, DmaChannel & _tx_dma, DmaChannel & _rx_dma):
             instance(_instance), tx_dma(_tx_dma), rx_dma(_rx_dma){;}
@@ -96,9 +96,6 @@ public:
     void setTxMethod(const CommMethod _txMethod) override;
 
     void setRxMethod(const CommMethod _rxMethod) override;
-
-    void setBaudRate(const uint32_t baudRate) override{;}//TODO
-    void setParity(const Parity parity) override{;};//TODO
 
     Gpio & txio() override;
     Gpio & rxio() override;
@@ -137,38 +134,40 @@ public:
 
 };
 
+
+#ifdef ENABLE_UART1
+extern UartHw uart1;
+#endif
+
+#ifdef ENABLE_UART2
+extern UartHw uart2;
+#endif
+
+#ifdef ENABLE_UART3
+extern UartHw uart3;
+#endif
+
+#ifdef ENABLE_UART4
+extern UartHw uart4;
+#endif
+
+#ifdef ENABLE_UART5
+extern UartHw uart5;
+#endif
+
+#ifdef ENABLE_UART6
+extern UartHw uart6;
+#endif
+
+#ifdef ENABLE_UART7
+extern UartHw uart7;
+#endif
+
+#ifdef ENABLE_UART8
+extern UartHw uart8;
+#endif
+
 }
 
 
 
-#ifdef ENABLE_UART1
-extern ymd::UartHw uart1;
-#endif
-
-#ifdef ENABLE_UART2
-extern ymd::UartHw uart2;
-#endif
-
-#ifdef ENABLE_UART3
-extern ymd::UartHw uart3;
-#endif
-
-#ifdef ENABLE_UART4
-extern ymd::UartHw uart4;
-#endif
-
-#ifdef ENABLE_UART5
-extern ymd::UartHw uart5;
-#endif
-
-#ifdef ENABLE_UART6
-extern ymd::UartHw uart6;
-#endif
-
-#ifdef ENABLE_UART7
-extern ymd::UartHw uart7;
-#endif
-
-#ifdef ENABLE_UART8
-extern ymd::UartHw uart8;
-#endif

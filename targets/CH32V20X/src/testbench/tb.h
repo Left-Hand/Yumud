@@ -7,12 +7,13 @@
 #include "hal/bus/i2c/i2c.hpp"
 
 namespace ymd{
-    class UartHw;
+
     class OutputStream;
 }
 
 namespace ymd::hal{
     class Can;
+    class UartHw;
 }
 
 using namespace ymd;
@@ -21,7 +22,7 @@ using namespace ymd::hal;
 
 void memory_tb(OutputStream & logger);
 
-void stepper_tb(UartHw & logger);
+void stepper_tb(hal::UartHw & logger);
 
 void lua_tb(OutputStream & logger);
 void pwm_tb(OutputStream & logger);
@@ -69,6 +70,7 @@ void tcs34725_main();
 void dshot_main();
 
 void at24cxx_tb(OutputStream & logger, I2c & i2c);
+void i2c_scanner_main();
 
 void dshot_main();
 
@@ -89,9 +91,9 @@ void uart_main();
 void m3508_main();
 void m2006_main();
 
-void math_tb(UartHw & logger);
+void math_tb(hal::UartHw & logger);
 
-void zdt_main(UartHw & logger);
+void zdt_main(hal::UartHw & logger);
 
 void coro_tb();
 void pmw3901_main();

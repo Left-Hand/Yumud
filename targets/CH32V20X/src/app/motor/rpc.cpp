@@ -1,6 +1,6 @@
 #include "rpc.hpp"
 #include "tb.h"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 #include "robots/rpc/arg_parser.hpp"
 #include "types/vector3/vector3_t.hpp"
 #include "sys/clock/time.hpp"
@@ -27,7 +27,7 @@ iq_t<16> add2(const iq_t<16> x, const iq_t<16> y){
 
 void rpc_main(){
     uart2.init(576000);
-    DEBUGGER.retarget(uart2);
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 

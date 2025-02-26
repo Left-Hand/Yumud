@@ -1,7 +1,9 @@
 #include "tb.h"
+#include "sys/debug/debug.hpp"
+
+#include "hal/bus/spi/spihw.hpp"
 
 #include "drivers/Proximeter/PMW3901/PMW3901.hpp"
-#include "hal/bus/spi/spihw.hpp"
 
 
 using namespace ymd::drivers;

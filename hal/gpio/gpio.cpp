@@ -1,5 +1,6 @@
 #include "port_concept.hpp"
 #include "Gpio.hpp"
+#include "sys/core/sdk.h"
 
 using namespace ymd;
 
@@ -24,6 +25,6 @@ Gpio & Gpio::null(){
     return GpioNull;
 }
 
-// namespace ymd{
-// Gpio & GpioNull = Gpio::null();
-// }
+namespace ymd{
+Gpio & GpioNull = Gpio::null();
+}

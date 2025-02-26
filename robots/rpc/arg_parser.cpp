@@ -3,9 +3,10 @@
 
 using namespace ymd;
 
-std::optional<const StringViews> ArgSplitter::update(InputStream & is){
+std::optional<const StringViews> ArgSplitter::update(hal::UartHw & is){
     while(is.available()){
-        auto chr = is.read();
+        char chr;
+        is.read1(chr);
         if(chr == 0) continue;
         temp += chr;
         if(chr == '\n'){

@@ -4,6 +4,10 @@
 
 
 #ifdef __cplusplus
+#include <functional>
+namespace ymd{
+    void bindSystickCb(std::function<void(void)> && cb);
+}
 extern "C"{
 #endif
 

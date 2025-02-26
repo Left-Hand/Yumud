@@ -1,6 +1,8 @@
 #include "digipw.hpp"
-#include <ostream>
 
+#include "sys/core/system.hpp"
+#include "sys/clock/time.hpp"
+#include "sys/debug/debug.hpp"
 
 #include "dsp/filter/LowpassFilter.hpp"
 
@@ -28,8 +30,7 @@
 #include "hal/bus/i2c/i2csw.hpp"
 #include "buck/buck.hpp"
 
-#include "sys/core/system.hpp"
-#include "sys/clock/time.hpp"
+
 #include "sogi/spll.hpp"
 
 
@@ -99,7 +100,7 @@ void test_sogi(){
 }
 void digipw_main(){
     uart2.init(576000);
-    DEBUGGER.retarget(uart2);
+    DEBUGGER.retarget(&uart2);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
     /*-----------------------*/

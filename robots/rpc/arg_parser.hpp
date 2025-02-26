@@ -1,7 +1,7 @@
 #pragma once
 
 #include "sys/string/string.hpp"
-#include "sys/stream/stream.hpp"
+#include "hal/bus/uart/uarthw.hpp"
 
 namespace ymd{
 
@@ -10,7 +10,7 @@ private:
     String temp = "";
 public:
     ArgSplitter(){;}
-    std::optional<const StringViews> update(InputStream & _input);
+    std::optional<const StringViews> update(hal::UartHw & _input);
     void clear(){temp = "";}
 };
 

@@ -1,9 +1,12 @@
 #include "tb.h"
 
-#include "sys/clock/clock.hpp"
+#include "sys/clock/clock.h"
+#include "sys/debug/debug.hpp"
+
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/timer/timer_oc.hpp"
-#include "../drivers/Modem/dshot/dshot.hpp"
+
+#include "drivers/Modem/dshot/dshot.hpp"
 
 scexpr size_t n = 40;
 static std::array<uint16_t, 40> data;
@@ -85,10 +88,11 @@ using namespace ymd;
 
 void dshot_main(){
 
-    auto & logger = DEBUGGER_INST;
-    logger.init(DEBUG_UART_BAUD, CommMethod::Blocking);
-    logger.setRadix(10);
-    logger.setEps(4);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD, CommMethod::Blocking);
+    DEBUGGER.retarget(&DEBUGGER_INST);
+
+    DEBUGGER.setRadix(10);
+    DEBUGGER.setEps(4);
     AdvancedTimer & timer = timer8;
 
     // timer.enableArrSync();
@@ -99,7 +103,7 @@ void dshot_main(){
     auto & oc = timer.oc(1);
     auto & oc2 = timer.oc(2);
 
-    dshot_tb_new(logger,oc, oc2);
+    dshot_tb_new(DEBUGGER,oc, oc2);
     // dshot_tb_old(logger,oc, oc2);
 
     // while(true);

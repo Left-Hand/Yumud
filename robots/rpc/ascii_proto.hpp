@@ -2,7 +2,7 @@
 
 #include "arg_parser.hpp"
 #include "sys/string/string.hpp"
-#include "sys/debug/debug_inc.h"
+#include "sys/debug/debug.hpp"
 
 #include <vector>
 
@@ -94,12 +94,12 @@ class AsciiProtocolConcept{
 protected:
     ArgSplitter parser;
 
-    InputStream & is;
-    OutputStream & os;
+    hal::UartHw & is;
+    hal::UartHw & os;
     virtual void parseArgs(const StringViews args);
 public:
-    AsciiProtocolConcept(IOStream & _logger):is(_logger), os(_logger){}
-    AsciiProtocolConcept(InputStream & _is, OutputStream & _os):is(_is), os(_os){}
+    AsciiProtocolConcept(hal::UartHw & _logger):is(_logger), os(_logger){}
+    // AsciiProtocolConcept(InputStream & _is, OutputStream & _os):is(_is), os(_os){}
 
     void update(){
         auto args = parser.update(is);

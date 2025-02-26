@@ -12,7 +12,6 @@
 #pragma once
 
 #include <concepts>
-#include <cstdio>
 #include <functional>
 #include <type_traits>
 

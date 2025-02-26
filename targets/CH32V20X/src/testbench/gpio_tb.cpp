@@ -1,5 +1,5 @@
 #include "tb.h"
-#include "sys/clock/clock.hpp"
+#include "sys/clock/clock.h"
 void gpio_tb(GpioConcept & gpio){
     gpio.outpp();
     while(true){

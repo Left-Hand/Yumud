@@ -1,5 +1,5 @@
 #include "mp6540.hpp"
-
+#include "sys/debug/debug.hpp"
 
 using namespace ymd;
 using namespace ymd::drivers;
@@ -13,7 +13,6 @@ using namespace ymd::drivers;
 
 static void error(){
     MP6540_DEBUG("terminated!!!");
-    PANIC();
 }
 
 

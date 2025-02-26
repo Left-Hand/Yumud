@@ -1,6 +1,10 @@
 #include "tb.h"
+
+#include "sys/debug/debug.hpp"
+
+#include "hal/bus/spi/spihw.hpp"
+
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
-#include "bus/spi/spihw.hpp"
 
 
 using namespace ymd::drivers;

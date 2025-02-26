@@ -490,7 +490,7 @@ template<size_t Q>
 __fast_inline constexpr iq_t<Q> ceil(const iq_t<Q> iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
 
 template<size_t Q>
-__fast_inline constexpr iq_t<Q> round(const iq_t<Q> iq){return iq_t<Q>((int)_IQint(long(iq.value) + iq_t<Q>::from(0.5)));}
+__fast_inline constexpr iq_t<Q> round(const iq_t<Q> iq){return iq_t<Q>((int)(iq + iq_t<Q>::from(0.5)));}
 
 
 #ifdef IQ_USE_LOG
@@ -526,11 +526,16 @@ __fast_inline iq_t<Q> exp(const iq_t<Q> iq) {
 
 template<size_t Q>
 __fast_inline iq_t<Q> pow(const iq_t<Q> base, const iq_t<Q> exponent) {
-    // if(std::is_constant_evaluated()){
-    //     return iq_t(cem::pow(double(base), double(exponent)));
-    // }else
     {
         return exp(exponent * log(base));
+    }
+}
+
+template<size_t Q>
+__fast_inline iq_t<Q> pow(const iq_t<Q> base, const integral auto times) {
+    //TODO 判断使用循环还是pow运算 选取最优时间
+    {
+        return exp(iq_t<Q>(times) * log(base));
     }
 }
 

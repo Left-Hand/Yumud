@@ -1,12 +1,14 @@
 #include "tb.h"
-#include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
-#include "types/image/painter.hpp"
-#include "drivers/CommonIO/Key/Key.hpp"
+
+#include "sys/debug/debug.hpp"
 
 #include "hal/bus/i2c/i2csw.hpp"
 #include "hal/bus/i2c/i2cdrv.hpp"
 
-#include <array>
+#include "drivers/Display/Monochrome/SSD1306/ssd1306.hpp"
+#include "drivers/CommonIO/Key/Key.hpp"
+
+#include "types/image/painter.hpp"
 
 
 using namespace GpioUtils;
@@ -105,8 +107,8 @@ public:
 };
 
 static void oled_tb(){
-    auto & debugger = DEBUGGER_INST;
-    debugger.init(DEBUG_UART_BAUD);
+    DEBUGGER_INST.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&DEBUGGER_INST);
 
     auto & printer = uart2;
     printer.init(DEBUG_UART_BAUD);
@@ -130,7 +132,7 @@ static void oled_tb(){
     oled.enableFlipX(false);
     oled.enableFlipY(false);
 
-    Menu menu {frame, printer};
+    Menu menu {frame, DEBUGGER};
     while(true){
 
         menu.render();
