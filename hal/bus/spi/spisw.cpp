@@ -19,7 +19,7 @@ void SpiSw::init(const uint32_t baudRate, const CommMethod tx_method , const Com
 }
 
 
-SpiSw::Error SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck){
+BusError SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx){
     uint32_t ret = 0;
 
     sclk_gpio.set();
@@ -46,5 +46,5 @@ SpiSw::Error SpiSw::transfer(uint32_t & data_rx, const uint32_t data_tx, bool to
     sclk_gpio.set();
 
     data_rx = ret;
-    return Error::OK;
+    return BusError::OK;
 }

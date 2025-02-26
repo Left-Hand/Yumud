@@ -17,7 +17,7 @@ template <typename T>
 concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
 
-class I2cDrv : public BusDrv<I2c> {
+class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
     using BusDrv<I2c>::index;
     using BusDrv<I2c>::bus;
@@ -41,8 +41,7 @@ protected:
 
 public:
     I2cDrv(I2c & _bus, const uint8_t _index):
-        BusDrv<I2c>(_bus, _index){};
-
+        ProtocolBusDrv<I2c>(_bus, _index){};
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
@@ -118,9 +117,8 @@ template<>
 struct driver_of_bus<hal::I2c>{
     using driver_type = hal::I2cDrv;
 };
-    
-}
 
+}
 
 
 #include "i2cdrv.tpp"

@@ -38,7 +38,6 @@ public:
 
     void setRxMethod(const CommMethod _rxMethod) override;
 
-    void setBaudRate(const uint32_t baud) override{};
     Gpio & txio(){return Gpio::null();}
     Gpio & rxio(){return Gpio::null();}
     void setParity(const Parity parity){;}

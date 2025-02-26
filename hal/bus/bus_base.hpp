@@ -40,20 +40,9 @@ public:
 };
 
 
-class Bus:public BusTrait{
-public:
-    using Error = BusError;
-    using Mode = CommMode;
-
-
-protected:
-    Mode mode = Mode::TxRx;
-
+class BusBase{
 private:
     class Locker{
-    public:
-        Locker * last_ = nullptr;
-        Locker * next_ = nullptr;
     protected:
         uint16_t req:8 = 0;
         uint16_t oninterrupt_:1 = false;
@@ -62,11 +51,11 @@ private:
         Locker(const Locker & other) = delete;
         Locker(Locker && other) = delete;
         Locker(){;}
-        Locker(Locker * last, Locker * next):last_(last), next_(next){;}
+        // Locker(Locker * last, Locker * next):last_(last), next_(next){;}
 
         ~Locker(){
             unlock();
-            last_ = next_;
+            // last_ = next_;
         }
 
         void lock(const uint8_t index);
@@ -83,47 +72,21 @@ private:
     };
 
     Locker __own_locker__;
-    Locker * locker = nullptr;
+    Locker & locker;
 
-    virtual Error lead(const uint8_t _address) = 0;
+    virtual BusError lead(const uint8_t _address) = 0;
     virtual void trail() = 0;
-
-    void lock(const uint8_t index);
-    void unlock();
-    bool locked();
-    bool owned_by(const uint8_t index = 0);
-
 public:
-    Bus():locker(&__own_locker__){;}
-    DELETE_COPY_AND_MOVE(Bus)
+    BusBase():locker(__own_locker__){;}
+    
+    BusBase(const BusBase &) = delete;
+    BusBase(BusBase &&) = delete;
 
-    Locker createLocker(){
-        return Locker{locker, locker};
-    }
+    BusError begin(const uint8_t index);
 
-    Error begin(const uint8_t index){
-        if(false == locked()){
-            lock(index);
-            return lead(index);
-        }
+    BusError end();
 
-        else if(owned_by(index)){
-            lock(index);
-            return lead(index);
-        }else{
-            return Error::OCCUPIED;
-        }
-    }
-
-
-    void end(){
-        trail();
-        unlock();
-    }
-
-    bool occupied(){
-        return locker->locked();
-    }
+    bool occupied(){return locker.locked();}
 };
 
 

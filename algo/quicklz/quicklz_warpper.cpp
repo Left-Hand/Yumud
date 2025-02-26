@@ -1,7 +1,6 @@
 #include "quicklz_warpper.hpp"
 #include "quicklz.h"
 
-#include <string.h>
 
 std::vector<uint8_t> quicklz_compress(const std::vector<uint8_t> & src)
 {

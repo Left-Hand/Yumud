@@ -3,8 +3,6 @@
 #include "sys/string/utils/StringUtils.hpp"
 #include "sys/utils/hash_func.hpp"
 
-#include <memory.h>
-#include <string.h>
 #include <span>
 #include <vector>
 #include <string>

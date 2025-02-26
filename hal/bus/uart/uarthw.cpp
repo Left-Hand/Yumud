@@ -235,7 +235,7 @@ void UartHw::txeHandle(){
 }
 
 void UartHw::idleHandle(){
-    if(rxMethod == CommMethod::Dma){
+    if(rx_method_ == CommMethod::Dma){
         size_t index = UART_RX_DMA_BUF_SIZE - rx_dma.pending();
         if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
             // for(size_t i = rx_dma_buf_index; i < index; i++) this->rx_fifo.push(rx_dma_buf[i]); 
@@ -468,7 +468,7 @@ void UartHw::enableIdleIt(const bool en){
 }
 
 void UartHw::setTxMethod(const CommMethod _txMethod){
-    if(txMethod != _txMethod){
+    if(tx_method_ != _txMethod){
 
         Gpio & tx_pin = txio();
         if(_txMethod != CommMethod::None){
@@ -490,13 +490,13 @@ void UartHw::setTxMethod(const CommMethod _txMethod){
                 break;
         }
 
-        txMethod = _txMethod;
+        tx_method_ = _txMethod;
     }
 }
 
 
 void UartHw::setRxMethod(const CommMethod _rxMethod){
-    if(rxMethod != _rxMethod){
+    if(rx_method_ != _rxMethod){
         
         Gpio & rx_pin = rxio();
         if(_rxMethod != CommMethod::None){
@@ -520,7 +520,7 @@ void UartHw::setRxMethod(const CommMethod _rxMethod){
             default:
                 break;
         }
-        rxMethod = _rxMethod;
+        rx_method_ = _rxMethod;
     }
 }
 
@@ -556,7 +556,7 @@ void UartHw::trail(){
 }
 
 void UartHw::writeN(const char * pdata, const size_t len){
-    switch(txMethod){
+    switch(tx_method_){
         case CommMethod::Blocking:
             instance->DATAR;
 
@@ -583,7 +583,7 @@ void UartHw::writeN(const char * pdata, const size_t len){
 }
 
 void UartHw::write1(const char data){
-    switch(txMethod){
+    switch(tx_method_){
         case CommMethod::Blocking:
             tx_fifo.push(data);
 

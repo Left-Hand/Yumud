@@ -5,54 +5,35 @@
 
 namespace ymd{
 
+class ReadableBus:public BusBase{
+public:
+    virtual BusError read(uint32_t & data, const Ack ack) = 0;
+};
 
-class ReadableBus:virtual public Bus{
+class WritableBus:public BusBase{
 protected:
 public:
-    CommMethod rxMethod = CommMethod::None;
-    virtual Error read(uint32_t & data, bool toAck = true) = 0;
+    virtual BusError write(const uint32_t data) = 0;
 };
 
-class WritableBus:virtual public Bus{
-protected:
+class HalfDuplexBus:public BusBase{
 public:
-    CommMethod txMethod = CommMethod::None;
-    virtual Error write(const uint32_t data) = 0;
+    virtual BusError read(uint32_t & data, const Ack ack) = 0;
+    virtual BusError write(const uint32_t data) = 0;
 };
 
-class DuplexBus:public ReadableBus, WritableBus{
+class FullDuplexBus:public BusBase{
 public:
-// public:
-    using WritableBus::txMethod;
-    using ReadableBus::rxMethod;
-    using WritableBus::write;
-    using ReadableBus::read;
-    DuplexBus():ReadableBus(), WritableBus(){;}
-};
-
-class FullDuplexBus:public DuplexBus{
-public:
-    virtual Error transfer(uint32_t & data_rx, const uint32_t data_tx, bool toAck = true) = 0;
-};
-
-
-class ProtocolBus:public DuplexBus{
-protected:
-
+    virtual BusError read(uint32_t & data) = 0;
+    virtual BusError write(const uint32_t data) = 0;
+    virtual BusError transfer(uint32_t & data_rx, const uint32_t data_tx) = 0;
 };
 
 template<typename Packet>
-class PackedBus:public Bus{
-private:
-    using Bus::setDataBits;//disable this;
+class PackedBus:public BusBase{
 public:
-    // template <typename ... Args>
-    // bool write(Args&&... args){
-    //     return write(Packet(std::forward<Args>(args)...));
-    // }
-
     virtual bool write(const Packet & msg) = 0;
-    virtual bool write(const Packet && msg){return write(static_cast<const Packet &>(msg));}
+    // virtual bool write(const Packet && msg){return write(static_cast<const Packet &>(msg));}
     virtual const Packet && read() = 0;
 };
 

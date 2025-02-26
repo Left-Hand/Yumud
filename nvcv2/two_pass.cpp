@@ -8,14 +8,9 @@ namespace ymd::nvcv2::Shape{
 TwoPass::TwoPass(int size)
 {
 	M_maxsize = size;
-	parent = (uint16_t*)malloc(M_maxsize * sizeof(uint16_t));
-	memset(parent, 0, M_maxsize * sizeof(uint16_t));
+	parent = std::make_unique<uint16_t[]>(size);
 }
 
-TwoPass::~TwoPass()
-{
-	free(parent);
-}
 
 // find the root of label x
 int TwoPass::Find(int x)

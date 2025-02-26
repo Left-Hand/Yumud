@@ -950,11 +950,10 @@ void bldc_main(){
     // constexpr auto alpha = LowpassFilterD_t<double>::solve_alpha(5.0, foc_freq);
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
     // LowpassFilterD_t<iq_t<16>> speed_measurer = {
-    // LowpassFilterD_t<iq_t<14>> speed_measurer = {
-        SecondOrderLowpassFilter_t<iq_t<16>> speed_measurer = {
+    LowpassFilterD_t<iq_t<14>> speed_measurer = {
         {
-            10, 
-            foc_freq
+            .fc = 10, 
+            .fs = foc_freq
         }
     };
 
@@ -994,7 +993,8 @@ void bldc_main(){
     
     while(true){
         // DEBUG_PRINTLN_IDLE(curr_sens.raw(), calibrater.result(), calibrater.done(), speed_measurer.result());
-        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()));
+        const auto t = time();
+        DEBUG_PRINTLN_IDLE(odo.getPosition(), iq_t<16>(speed_measurer.result()), sin(t), t);
         // if(false)
         {
             auto strs_opt = splitter.update(uart2);

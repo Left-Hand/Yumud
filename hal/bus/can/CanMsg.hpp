@@ -129,7 +129,10 @@ public:
 
     constexpr CanMsg(const uint32_t id, const uint8_t *buf, const size_t len) : CanMsg(id) {
         resize(MIN(len, 8));
-        memcpy(data_, buf, dlc_);
+        // memcpy(data_, buf, dlc_);
+        for(uint8_t i = 0; i < dlc_; i++){
+            data_[i] = buf[i];
+        }
         is_remote_ = false;
     }
 
@@ -154,7 +157,10 @@ public:
     void read(uint8_t * buf, size_t len){
         if(is_remote_ == true) return;
         len = MIN(len, 8);
-        memcpy(buf, data_, len);
+        // memcpy(buf, data_, len);
+        for(uint8_t i = 0; i < len; i++){
+            buf[i] = data_[i];
+        }
         dlc_ = len;
     }
 

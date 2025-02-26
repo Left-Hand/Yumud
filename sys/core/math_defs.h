@@ -2,11 +2,91 @@
 
 #include "sys/core/sys_defs.h"
 
+// #define YMD_USE_MY_MEMORY
+
 #ifdef __cplusplus
 #include <type_traits>
 #include "bits/move.h"
 #include <bit>
+
+#if defined(YMD_USE_MY_MEMORY)
+//TODO 提高memcmp的性能
+__fast_inline constexpr int __ymd_memcmp(const void * str1, const void * str2, uint32_t len){
+    for (uint32_t i = 0; i < len; i++) {
+        if ((static_cast<const uint8_t*>(str1))[i] < (static_cast<const uint8_t*>(str2))[i]) {
+            return -1;
+        } else if ((static_cast<const uint8_t*>(str1))[i] > (static_cast<const uint8_t*>(str2))[i]) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#define memcmp(str1, str2, len) __ymd_memcmp(str1, str2, len)
+
+//TODO 提高memset的性能
+__fast_inline constexpr void * __ymd_memset(void * dest, const char c, const uint32_t len){
+	if(std::is_constant_evaluated()){
+		return __builtin_memset(dest, c, len);
+	}
+
+    for(uint32_t i = 0; i < len; i++){
+        reinterpret_cast<char *>(dest)[i] = c;
+    }
+
+    return dest;
+}
+
+#define memset(source, c, len) __ymd_memset(source, c, len)
+
+
+//TODO 提高memcpy的性能
+__fast_inline constexpr void * __ymd_memcpy(void * dest, const void * src, const uint32_t len){
+	if(std::is_constant_evaluated()){
+		return __builtin_memcpy(dest, src, len);
+	}
+
+    for (uint32_t i = 0; i < len; ++i) {
+        (static_cast<uint8_t*>(dest))[i] = (static_cast<const uint8_t*>(src))[i];
+    }
+    return dest;
+}
+
+#define memcpy(dest, source, len) __ymd_memcpy(dest, source, len)
+
+//TODO 提高strlen的性能
+__fast_inline constexpr size_t __ymd_strlen(const char * str){
+	if(std::is_constant_evaluated()){
+		return __builtin_strlen(str);
+	}
+	
+	size_t len = 0;
+	while (str[len] != '\0') {
+		++len;
+	}
+	return len;
+}
+
+#define strlen(str) __ymd_strlen(str)
+
+
+//TODO 提高strcpy的性能
+__fast_inline constexpr char * __ymd_strcpy(char * dest, const char * src){
+    for (; *src != '\0'; ++src, ++dest) {
+        *dest = *src;
+    }
+    return dest;
+}
+
+#define strcpy(d, s) __ymd_strcpy(d, s)
+
 #endif
+#endif
+
+#ifndef YMD_USE_MY_MEMORY
+#include "string.h"
+#endif
+
 
 #define CMP_EPSILON 0.001
 #define CMP_EPSILON2 (CMP_EPSILON * CMP_EPSILON)
@@ -272,9 +352,9 @@ constexpr __fast_inline T __inverse_if_impl(const bool b, const T & x){
 
 #ifndef LSHIFT
 #ifdef __cplusplus
-#define LSHIFT(x,s) __lshift_impl(x, s);
+
 template<typename T>
-constexpr __fast_inline T __lshift_impl(const T & x, const int s){
+constexpr __fast_inline T LSHIFT(const T x, const int s){
     if (s >= 0){
         return x << s;
     }else{
@@ -284,20 +364,91 @@ constexpr __fast_inline T __lshift_impl(const T & x, const int s){
 #else
 #define LSHIFT(x,s) ((s) >= 0 ? ((x) << (s)) : ((x) >> (-(s))))
 #endif
-
 #endif
 
 #ifndef RSHIFT
-#define RSHIFT(x,s) LSHIFT(x, (-s))
+#ifdef __cplusplus
+template<typename T>
+constexpr __fast_inline T RSHIFT(const T x, const int s){
+    if (s >= 0){
+        return x >> s;
+    }else{
+        return x << -s;
+    }
+}
+#else
+#define RSHIFT(x,s) LSHIFT(x, (-(s)))
+#endif
 #endif
 
 #define NEXT_POWER_OF_2(x) ((x == 0) ? 1 : (1 << (32 - __builtin_clz(x - 1))))
 #define PREV_POWER_OF_2(x) (1 << (31 - __builtin_clz(x)))
 
+#ifndef CTZ
+#ifdef __cplusplus
+#define CTZ(x) __ymd_ctz_impl(x)
+__fast_inline constexpr uint32_t __ymd_ctz_impl(uint32_t x) {
+    //https://github.com/microsoft/compiler-rt/blob/master/lib/builtins/ctzsi2.c
+
+    int32_t t = ((x & 0x0000FFFF) == 0) << 4;  /* if (x has no small bits) t = 16 else 0 */
+    x >>= t;           /* x = [0 - 0xFFFF] + higher garbage bits */
+    uint32_t r = t;       /* r = [0, 16]  */
+    /* return r + ctz(x) */
+    t = ((x & 0x00FF) == 0) << 3;
+    x >>= t;           /* x = [0 - 0xFF] + higher garbage bits */
+    r += t;            /* r = [0, 8, 16, 24] */
+    /* return r + ctz(x) */
+    t = ((x & 0x0F) == 0) << 2;
+    x >>= t;           /* x = [0 - 0xF] + higher garbage bits */
+    r += t;            /* r = [0, 4, 8, 12, 16, 20, 24, 28] */
+    /* return r + ctz(x) */
+    t = ((x & 0x3) == 0) << 1;
+    x >>= t;
+    x &= 3;            /* x = [0 - 3] */
+    r += t;            /* r = [0 - 30] and is even */
+
+    return r + ((2 - (x >> 1)) & -((x & 1) == 0));
+}
+
+#else
 #define CTZ(x) __builtin_ctz((size_t)(x))
+#endif
+#endif
+
+#ifndef CLZ
+#ifdef __cplusplus
+#define CLZ(x) __ymd_clz_impl(x)
+
+__fast_inline constexpr uint32_t  __ymd_clz_impl(uint32_t x){
+    // https://github.com/m-labs/compiler-rt-lm32/blob/master/lib/clzsi2.c
+
+    int32_t t = ((x & 0xFFFF0000) == 0) << 4;  /* if (x is small) t = 16 else 0 */
+    x >>= 16 - t;      /* x = [0 - 0xFFFF] */
+    uint32_t r = t;       /* r = [0, 16] */
+    /* return r + clz(x) */
+    t = ((x & 0xFF00) == 0) << 3;
+    x >>= 8 - t;       /* x = [0 - 0xFF] */
+    r += t;            /* r = [0, 8, 16, 24] */
+    /* return r + clz(x) */
+    t = ((x & 0xF0) == 0) << 2;
+    x >>= 4 - t;       /* x = [0 - 0xF] */
+    r += t;            /* r = [0, 4, 8, 12, 16, 20, 24, 28] */
+    /* return r + clz(x) */
+    t = ((x & 0xC) == 0) << 1;
+    x >>= 2 - t;       /* x = [0 - 3] */
+    r += t;            /* r = [0 - 30] and is even */
+
+    return r + ((2 - x) & -((x & 2) == 0));
+}
+
+#else
+#define CLZ(x) __builtin_clz(((size_t)(x)) << (PLAT_WIDTH - BITS(x)))
+#endif
+#endif
+
 #define BITS(x) (sizeof(x) * 8)
 #define PLAT_WIDTH (BITS(size_t))
-#define CLZ(x) __builtin_clz(((size_t)(x)) << (PLAT_WIDTH - BITS(x)))
+
 
 #define ANGLE2RAD(x) ((x) * TAU / 360)
 #define RAD2ANGLE(x) ((x) / TAU * 360)

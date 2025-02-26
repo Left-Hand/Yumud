@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sys/core/platform.h"
 #include "ImageBasics.hpp"
 
 

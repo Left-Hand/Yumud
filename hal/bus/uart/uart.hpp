@@ -12,12 +12,11 @@
 
 
 namespace ymd::hal{
-class Uart:public DuplexBus{
+class Uart:public FullDuplexBus{
+
 public:
     using Mode = CommMode;
     using Callback = std::function<void(void)>;
-    using DuplexBus::txMethod;
-    using DuplexBus::rxMethod;
     using BusError = ymd::BusError;
 
     enum class Parity{
@@ -27,6 +26,8 @@ public:
     };
 
 protected:
+    CommMethod tx_method_;
+    CommMethod rx_method_;
 
     #ifndef UART_FIFO_BUF_SIZE
     #define UART_FIFO_BUF_SIZE 256
@@ -39,8 +40,10 @@ protected:
     Callback rxPostCb;
     Uart(){;}
 public:
-    BusError read(uint32_t & data, const bool toack) override {char _;read1(_);data = _;return BusError::OK;};
+    BusError read(uint32_t & data) override {char _;read1(_);data = _;return BusError::OK;};
     BusError write(const uint32_t data) override {write1((char)data); return BusError::OK;};
+
+    BusError transfer(uint32_t & data_rx, const uint32_t data_tx)override {write1((char)data_tx); return BusError::OK;};
 
     virtual void writeN(const char * data_ptr, const size_t len) = 0;
 
@@ -66,7 +69,6 @@ public:
     virtual void flush();
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
-    virtual void setParity(const Parity parity) = 0;
     void onTxDone(Callback && cb){txPostCb = cb;}
     void onRxDone(Callback && cb){rxPostCb = cb;}
 };

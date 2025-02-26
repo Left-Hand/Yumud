@@ -12,7 +12,6 @@
 #pragma once
 
 #include "sys/core/platform.h"
-#include "string.h"
 
 #ifdef ENABLE_SDIO
 

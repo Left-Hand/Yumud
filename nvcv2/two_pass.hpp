@@ -7,11 +7,10 @@ namespace ymd::nvcv2::Shape{
 class TwoPass{
 public:
 	TwoPass(int size);
-	~TwoPass();
 
 private:
 	int M_maxsize;
-	uint16_t *parent;
+	std::unique_ptr<uint16_t[]> parent;
 
 private:
 	int Find(int x);

@@ -22,7 +22,6 @@
 #pragma once
 
 
-#include <string.h>
 #include <ctype.h>
 #include "sys/core/platform.h"
 

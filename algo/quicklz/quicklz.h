@@ -43,7 +43,6 @@
 #define QLZ_VERSION_REVISION 0
 
 // Using size_t, memset() and memcpy()
-#include <string.h>
 
 // Verify compression level
 #if QLZ_COMPRESSION_LEVEL != 1 && QLZ_COMPRESSION_LEVEL != 2 && QLZ_COMPRESSION_LEVEL != 3

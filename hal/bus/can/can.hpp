@@ -65,7 +65,7 @@ protected:
 
     Gpio & getTxGpio();
     Gpio & getRxGpio();
-    Error lead(const uint8_t index) override{return Error::OK;};
+    BusError lead(const uint8_t index) override{return BusError::OK;};
     void trail() override{};
 
     void installGpio();
@@ -88,12 +88,11 @@ public:
     Can(const Can & other) = delete;
     Can(Can && other) = delete;
 
-    void setBaudRate(const uint32_t baudRate) override;
+    void setBaudRate(const uint32_t baudRate);
 
     void init(const uint baudRate, const Mode mode = Mode::Normal);
 
     bool write(const CanMsg & msg) override;
-    bool write(const CanMsg && msg) override;
     const CanMsg && read() override;
     const CanMsg & front();
     size_t pending();

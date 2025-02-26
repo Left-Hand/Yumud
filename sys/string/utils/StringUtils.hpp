@@ -1,7 +1,6 @@
 #pragma once
 
-#include "stdint.h"
-#include "string.h"
+#include <cstdint>
 
 #include <concepts>
 #include <tuple>

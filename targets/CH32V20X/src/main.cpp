@@ -19,6 +19,7 @@ int main(){
     //  uart_main();
     // qlz_main();
     // embd_main();
+    // i2c_scanner_main();
     // embd_main();
     // gui_main();
     // canopen_main();

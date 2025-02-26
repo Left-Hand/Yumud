@@ -25,6 +25,6 @@ Gpio & Gpio::null(){
     return GpioNull;
 }
 
-// namespace ymd{
-// Gpio & GpioNull = Gpio::null();
-// }
+namespace ymd{
+Gpio & GpioNull = Gpio::null();
+}

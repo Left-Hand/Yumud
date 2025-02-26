@@ -61,14 +61,16 @@ size_t _itoa_impl(T value, char * str, uint8_t radix){
 }
 
 
-size_t ymd::StringUtils::_qtoa_impl(const int32_t value, char * str, uint8_t eps, const uint8_t _Q){
+size_t ymd::StringUtils::_qtoa_impl(int32_t value, char * str, uint8_t eps, const uint8_t _Q){
     //TODO 支持除了Q16格式外其他格式转换到字符串的函数 
-
     scexpr size_t Q = 16;
+
+
+    value = RSHIFT(value, _Q - Q);
     eps = MIN(eps, 5);
 
 	const bool minus = value < 0;
-    const uint32_t abs_value = ABS((iq_t<Q>(value).value.to_i32()));
+    const uint32_t abs_value = ABS(value);
     const uint32_t lower_mask = (Q == 31) ? 0x7fffffffu : uint32_t(((1 << Q) - 1));
 
     const uint32_t frac_part = uint32_t(abs_value) & lower_mask;

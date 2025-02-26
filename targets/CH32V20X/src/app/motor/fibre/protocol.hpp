@@ -5,10 +5,8 @@
 #include <functional>
 #include <limits>
 //#include <stdint.h>
-#include <string.h>
 #include <string>
 #include <errno.h>
-#include <stdio.h>
 #include "crc.hpp"
 #include "utils.hpp"
 
@@ -80,7 +78,6 @@ typedef struct{
     uint16_t endpoint_id;
 } endpoint_ref_t;
 
-#include <cstring>
 
 template<typename T, typename = typename ::std::enable_if_t<! ::std::is_const<T>::value>>
 inline size_t write_le(T value, uint8_t *buffer)

@@ -442,10 +442,6 @@ bool Can::write(const CanMsg & msg){
     }
 }
 
-bool Can::write(const CanMsg && msg){
-    return write(static_cast<const CanMsg &>(msg));
-}
-
 const CanMsg && Can::read(){
     return std::move(rx_fifo_.pop());
 }
