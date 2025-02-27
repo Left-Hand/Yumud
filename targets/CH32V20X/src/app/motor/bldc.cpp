@@ -6,6 +6,7 @@
 #include "hal/bus/can/can.hpp"
 #include "hal/bus/uart/uarthw.hpp"
 #include "hal/bus/spi/spihw.hpp"
+#include "hal/opa/opa.hpp"
 
 
 #include "drivers/Encoder/MagEnc/MA730/ma730.hpp"
@@ -337,6 +338,10 @@ class CalibraterOrchestor{
 
 };
 
+__no_inline void init_opa(){
+    opa1.init<1,1,1>();
+}
+
 void bldc_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
@@ -407,6 +412,7 @@ void bldc_main(){
     auto & w_sense = mp6540.ch(3);
     
 
+    init_opa();
     init_adc();
 
     real_t meas_pos = 0;
@@ -939,6 +945,8 @@ void bldc_main(){
 
     DEBUGGER.setSplitter(',');
     DEBUGGER.noBrackets();
+
+    
     // OutputStream::Config
 
     CurrentBiasCalibrater calibrater = {{

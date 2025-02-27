@@ -8,10 +8,10 @@ using namespace ymd;
 
 void Gpio::setMode(const GpioMode mode){
     if(!isValid()) return;
-    uint32_t tempreg = *pin_cfg;
+    uint32_t tempreg = pin_cfg;
     tempreg &= pin_mask;
     tempreg |= ((uint8_t)mode << ((pin_index % 8) * 4));
-    *pin_cfg = tempreg;
+    pin_cfg = tempreg;
 
     if(mode == GpioMode::InPullUP){
         instance -> OUTDR |= pin;
