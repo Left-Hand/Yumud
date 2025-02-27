@@ -36,7 +36,7 @@ void OPA_DeInit(void)
  *
  * @return  none
  */
-void OPA_Init(OPA_InitTypeDef *OPA_InitStruct)
+void OPA_Init(const OPA_InitTypeDef *OPA_InitStruct)
 {
     uint32_t tmp = 0;
     tmp = OPA->CR;

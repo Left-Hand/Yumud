@@ -73,8 +73,15 @@ namespace PeriphTags{
     };
 }
 
+
 template<GpioTags::PortSource port,GpioTags::PinSource pin>
-class GpioTag{
+struct __GpioTag{
+    static constexpr auto port_source = port;
+    static constexpr auto pin_source = pin;
+};
+
+template<GpioTags::PortSource port,GpioTags::PinSource pin>
+struct GpioTag:public __GpioTag<port, pin>{
 };
 
 }

@@ -63,7 +63,7 @@ typedef struct
 
 
 void OPA_DeInit(void);
-void OPA_Init(OPA_InitTypeDef* OPA_InitStruct);
+void OPA_Init(const OPA_InitTypeDef* OPA_InitStruct);
 void OPA_StructInit(OPA_InitTypeDef* OPA_InitStruct);
 void OPA_Cmd(OPA_Num_TypeDef OPA_NUM, FunctionalState NewState);
 

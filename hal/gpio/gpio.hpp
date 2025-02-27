@@ -2,6 +2,7 @@
 
 #include "GpioConcept.hpp"
 #include "gpio_utils.hpp"
+#include "GpioTag.hpp"
 
 #include "sys/core/sdk.h"
 
@@ -13,11 +14,11 @@ class Exti;
 
 class Gpio:public GpioConcept{
 protected:
-    volatile GPIO_TypeDef * instance = nullptr;
+    GPIO_TypeDef * instance;
     const uint16_t pin;
     const uint32_t pin_mask;
 
-    volatile uint32_t * pin_cfg;
+    volatile uint32_t & pin_cfg;
 
     Gpio(GPIO_TypeDef * _instance,const Pin _pin):
         GpioConcept((_pin != Pin::None) ? int(CTZ((uint16_t)_pin)) : -1),
@@ -32,7 +33,7 @@ protected:
         #endif
 
         pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
-        pin_cfg(CTZ(pin) >= 8 ? &((instance -> CFGHR)) : &((instance -> CFGLR))){
+        pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
     }
 
     friend class GpioVirtual;
@@ -61,6 +62,16 @@ public:
 
     void setMode(const GpioMode mode) override;
     __fast_inline volatile GPIO_TypeDef * inst() {return instance;} 
+
+    template<hal::GpioTags::PortSource port_source,hal::GpioTags::PinSource pin_source>
+    static constexpr Gpio reflect(){
+        GPIO_TypeDef * _instance = GPIOC;
+
+        return Gpio(
+            _instance, 
+            Pin(1 << uint8_t(pin_source))
+        );
+    }
 };
 
 

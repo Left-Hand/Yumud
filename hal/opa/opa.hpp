@@ -3,117 +3,143 @@
 #include "sys/core/platform.h"
 
 #include "hal/gpio/gpio.hpp"
+#include "hal/gpio/GpioTag.hpp"
 #include "hal/gpio/port.hpp"
+
+#include "hwspec/ch32/ch32v203_opa_def.hpp"
+
+
+
+#pragma once
+
+#include "hal/gpio/GpioTag.hpp"
+#include <cstdint>
+#include <type_traits>
+
+namespace ymd::hal{
+
+//OpaIndex: 运放序号 1/2
+//TChannel: 通道序号 0:Output -1:Neg 1:Pos
+//TMapping: 布局序号 0/1
+template<uint8_t TOpaIndex, int8_t TChannel, uint8_t TMapping>
+struct OpaGpioMapping{
+    using IoTag = void;
+};
+
+
+template<>
+struct OpaGpioMapping<1, -1, 0>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<1, -1, 1>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<1, 0, 0>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<1, 0, 1>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<1, 1, 0>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<1, 1, 1>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+
+template<>
+struct OpaGpioMapping<2, -1, 0>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<2, -1, 1>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<2, 0, 0>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<2, 0, 1>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<2, 1, 0>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+template<>
+struct OpaGpioMapping<2, 1, 1>{
+    using IoTag = GpioTag<GpioTags::PB, GpioTags::_10>;
+};
+
+}
+
 
 
 namespace ymd::hal{
-class Opa{
-protected:
-    uint8_t opa_index;
-    uint8_t psel;
-    uint8_t nsel;
-    uint8_t osel;
 
-    Gpio & getPosPin(){
-        switch(opa_index){
-            #ifdef ENABLE_OPA1
-            case 1:
-                switch(psel){
-                    case 0:
-                        return OPA1_P0_GPIO;
-                    case 1:
-                        return OPA1_P1_GPIO;
-                }
-            #endif
-            #ifdef ENABLE_OPA2
-            case 2:
-                switch(psel){
-                    case 0:
-                        return OPA2_P0_GPIO;
-                    case 1:
-                        return OPA2_P1_GPIO;
-                }
-            #endif
-            default:
-                return GpioNull;
-        }
-    }
-
-    Gpio & getNegPin(){
-        switch(opa_index){
-            #ifdef ENABLE_OPA1
-            case 1:
-                switch(psel){
-                    case 0:
-                        return OPA1_N0_GPIO;
-                    case 1:
-                        return OPA1_N1_GPIO;
-                }
-            #endif
-            #ifdef ENABLE_OPA2
-            case 2:
-                switch(psel){
-                    case 0:
-                        return OPA2_N0_GPIO;
-                    case 1:
-                        return OPA2_N1_GPIO;
-                }
-            #endif
-            default:
-                return GpioNull;
-        }
-    }
+template<uint8_t TOpaIndex>
+class Opa_t{
+private:
+    static constexpr uint8_t index = TOpaIndex;
+    static_assert((index >= 1) and (index <= 4), "Opa");
 
 
-    Gpio & getOutPin(){
-        switch(opa_index){
-            #ifdef ENABLE_OPA1
-            case 1:
-                switch(psel){
-                    case 0:
-                        return OPA1_O0_GPIO;
-                    case 1:
-                        return OPA1_O1_GPIO;
-                }
-            #endif
-            #ifdef ENABLE_OPA2
-            case 2:
-                switch(psel){
-                    case 0:
-                        return OPA2_O0_GPIO;
-                    case 1:
-                        return OPA2_O1_GPIO;
-                }
-            #endif
-            default:
-                return GpioNull;
-        }
-    }
 
 public:
-    Opa(const uint8_t _opa_index):opa_index( _opa_index ){;}
+    template<uint8_t NegMap, uint8_t PosMap, uint8_t OutMap>
+    static void remap(){
+        static_assert((NegMap >= 0) and (NegMap <= 1), "Opa");
+        static_assert((PosMap >= 0) and (PosMap <= 1), "Opa");
+        static_assert((OutMap >= 0) and (OutMap <= 1), "Opa");
 
-    void init( const uint8_t sel){
-        getNegPin().inana();
-        getPosPin().inana();
+        // using NegIoTag = OpaGpioMapping<TOpaIndex, -1, NegMap>::IoTag;
+        // using PosIoTag = OpaGpioMapping<TOpaIndex,  1, PosMap>::IoTag;
+        // using OutIoTag = OpaGpioMapping<TOpaIndex,  0, OutMap>::IoTag;
 
-        OPA_InitTypeDef OPA_InitStructure;
-        OPA_InitStructure.OPA_NUM = (OPA_Num_TypeDef)CLAMP((int)(OPA1 + (opa_index - 1)), (int)OPA1, (int)OPA4);
-        OPA_InitStructure.PSEL = (OPA_PSEL_TypeDef)sel;
-        OPA_InitStructure.NSEL = (OPA_NSEL_TypeDef)sel;
-        OPA_InitStructure.Mode = (OPA_Mode_TypeDef)sel;
-        OPA_Init(&OPA_InitStructure);
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
+        Gpio::reflect<GpioTags::PortSource::PA, GpioTags::PinSource::_0>().inana();
 
-        OPA_Cmd(OPA_InitStructure.OPA_NUM, ENABLE);
+        // Gpio::reflect<NegIoTag::source, NegIoTag::pin>().inana();
+        // Gpio::reflect<PosIoTag::source, PosIoTag::pin>().inana();
+        // Gpio::reflect<OutIoTag::source, OutIoTag::pin>().inana();
+    }
+
+    template<uint8_t NegMap, uint8_t PosMap, uint8_t OutMap>
+    static void init(){
+        using chip::OPA_Inst;
+
+        remap<NegMap, PosMap, OutMap>();
+        OPA_Inst->enable(index, true);
+        OPA_Inst->select_neg(index, NegMap);
+        OPA_Inst->select_pos(index, PosMap);
+        OPA_Inst->select_out(index, OutMap);
     }
 };
 
 #ifdef ENABLE_OPA1
-extern Opa opa1;
+extern Opa_t<1> opa1;
 #endif
 
 #ifdef ENABLE_OPA2
-extern Opa opa2;
+extern Opa_t<2> opa2;
 #endif
 
 }

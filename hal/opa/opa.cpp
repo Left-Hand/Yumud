@@ -3,11 +3,11 @@
 namespace ymd::hal{
 
 #ifdef ENABLE_OPA1
-Opa opa1 = {OPA1};
+Opa_t<1> opa1 = {};
 #endif
 
 #ifdef ENABLE_OPA2
-Opa opa2 = {OPA2};
+Opa_t<2> opa2 = {};
 #endif
 
 
