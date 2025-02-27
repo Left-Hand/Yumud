@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V20x::UART_Regs{
+namespace CH32V20x{
 
-struct STATR_Reg{
+struct R16_STATR{
     uint32_t PE:1;
     uint32_t FE:1;
     uint32_t NE:1;
@@ -15,20 +15,20 @@ struct STATR_Reg{
     uint32_t TXE:1;
     uint32_t LBD:1;
     uint32_t CTS:1;
-    uint32_t :22;
+    uint32_t :6;
 };   
 
-struct DATAR_Reg{
+struct R16_DATAR{
     uint32_t DR:9;
-    uint32_t :23;
+    uint32_t :7;
 };
 
-struct BRR_Reg{
+struct R16_BRR{
     uint32_t FRAC:4;
     uint32_t MANT:12;
 };
 
-struct CTLR1_Reg{
+struct R16_CTLR1{
     uint32_t SBK:1;
     uint32_t RWU:1;
     uint32_t RE:1;
@@ -46,11 +46,11 @@ struct CTLR1_Reg{
 
     uint32_t M:1;
     uint32_t UE:1;
-    uint32_t :18;
+    uint32_t :2;
 };
 
 
-struct CTLR2_Reg{
+struct R16_CTLR2{
     uint32_t ADD:4;
     uint32_t :1;
     uint32_t LBDL:1;
@@ -63,47 +63,143 @@ struct CTLR2_Reg{
     uint32_t CLKEN:1;
     uint32_t STOP:2;
     uint32_t LINEN:1;
-    uint32_t :16;
 };
 
-struct CTLR3_Reg{
+struct R16_CTLR3{
     uint32_t EIE:1;
     uint32_t IREN:1;
     uint32_t IRLP:1;
     uint32_t HDSEL:1;
+
     uint32_t NACK:1;
     uint32_t SCEN:1;
     uint32_t DMAR:1;
     uint32_t DMAT:1;
+
     uint32_t RTSE:1;
     uint32_t CTSE:1;
     uint32_t CTSIE:1;
-    uint32_t :31;
+    uint32_t :5;
 };
 
-struct GPR_Reg{
+struct R16_GPR{
     uint32_t PSC:8;
     uint32_t GT:8;
-    uint32_t :16;
 };
 
 struct UART_Def{
-    volatile STATR_Reg STATR;
-    volatile DATAR_Reg DATAR;
-    volatile BRR_Reg BRR;
-    volatile CTLR1_Reg CTLR1;
-    volatile CTLR2_Reg CTLR2;
-    volatile CTLR3_Reg CTLR3;
-    volatile GPR_Reg GPR;
+    volatile R16_STATR STATR;
+    uint16_t :16;
+    volatile R16_DATAR DATAR;
+    uint16_t :16;
+    volatile R16_BRR BRR;
+    uint16_t :16;
+    volatile R16_CTLR1 CTLR1;
+    uint16_t :16;
+    volatile R16_CTLR2 CTLR2;
+    uint16_t :16;
+    volatile R16_CTLR3 CTLR3;
+    uint16_t :16;
+    volatile R16_GPR GPR;
+    uint16_t :16;
+
+    void enable(const bool en){
+        CTLR1.UE = en;
+    }
+
+    void enable_tx_dma(const bool en){
+        CTLR3.DMAT = en;
+    }
+
+    void enable_rx_dma(const bool en){
+        CTLR3.DMAR = en;
+    }
+
+    void set_address(const uint8_t addr){
+        CTLR2.ADD = addr;
+    }
+    
+    void switch_wakeup_to_addressmark(){
+        CTLR1.WAKE = 1;
+    }
+
+    void switch_wakeup_to_idleline(){
+        CTLR1.WAKE = 0;
+    }
+
+    void enable_slave_wakeup(const bool en){
+        CTLR1.RWU = en;
+    }
+
+    void switch_lin_breakdetect_11bit(){
+        CTLR2.LBCL = 1;
+    }
+
+    void switch_lin_breakdetect_10bit(){
+        CTLR2.LBCL = 0;
+    }
+
+    void enable_lin(const bool en){
+        CTLR2.LINEN = en;
+    }
+
+    void send(const uint16_t data){
+        DATAR.DR = data & 0x1ff;
+    }
+
+    uint16_t receive(){
+        return (DATAR.DR) & 0x1ff;
+    }
+
+    void send_break(){
+        CTLR1.SBK = 1;
+    }
+
+    void set_guard_time(const uint8_t time){
+        GPR.GT = time;
+    }
+
+    void set_prescaler(const uint8_t scaler){
+        GPR.PSC = scaler;
+    }
+
+    void enable_smartcard(const bool en){
+        CTLR3.SCEN = en;
+    }
+
+    void enable_smartcard_nack(const bool en){
+        CTLR3.NACK = en;
+    }
+
+    void enable_halfduplex(const bool en){
+        CTLR3.HDSEL = en;
+    }
+
+    void enable_oversamp8(const bool en){
+        // CTLR1.
+    }
+
+    void switch_irda_lowpower(){
+        CTLR3.IRLP = 1;
+    }
+
+    void switch_irda_lowpower(){
+        CTLR3.IRLP = 0;
+    }
+
+    void enable_irda(const bool en){
+        CTLR3.IREN = en;
+    }
+
+    
+    
 };
 
-static inline UART_Def * UART1 = (UART_Def *)(0x40013800);
-static inline UART_Def * UART2 = (UART_Def *)(0x40004400);
-static inline UART_Def * UART3 = (UART_Def *)(0x40014800);
-static inline UART_Def * UART4 = (UART_Def *)(0x40004C00);
-static inline UART_Def * UART5 = (UART_Def *)(0x40015000);
-static inline UART_Def * UART6 = (UART_Def *)(0x40001800);
-static inline UART_Def * UART7 = (UART_Def *)(0x40011C00);
-static inline UART_Def * UART8 = (UART_Def *)(0x40002000);
-
+static inline UART_Def * UART1_Inst = (UART_Def *)(0x40013800);
+static inline UART_Def * UART2_Inst = (UART_Def *)(0x40004400);
+static inline UART_Def * UART3_Inst = (UART_Def *)(0x40014800);
+static inline UART_Def * UART4_Inst = (UART_Def *)(0x40004C00);
+static inline UART_Def * UART5_Inst = (UART_Def *)(0x40015000);
+static inline UART_Def * UART6_Inst = (UART_Def *)(0x40001800);
+static inline UART_Def * UART7_Inst = (UART_Def *)(0x40011C00);
 }
