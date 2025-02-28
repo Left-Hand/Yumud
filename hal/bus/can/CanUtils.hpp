@@ -39,7 +39,12 @@ namespace ymd::hal::CanUtils{
         Remote = 1,
         Specified = 1
     };  
+
+    using CanMode = CanUtils::Mode;
+    using CanErrCode = CanUtils::ErrCode;
+    using CanRemoteType = CanUtils::RemoteType;
 };
+
 
 
 #ifndef CAN_SOFTFIFO_SIZE

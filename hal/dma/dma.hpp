@@ -15,24 +15,51 @@
 #include <type_traits>
 #include <array>
 
+extern"C"{
+#ifdef ENABLE_DMA1
+    __interrupt void DMA1_Channel1_IRQHandler(void);
+    __interrupt void DMA1_Channel2_IRQHandler(void);
+    __interrupt void DMA1_Channel3_IRQHandler(void);
+    __interrupt void DMA1_Channel4_IRQHandler(void);
+    __interrupt void DMA1_Channel5_IRQHandler(void);
+    __interrupt void DMA1_Channel6_IRQHandler(void);
+    __interrupt void DMA1_Channel7_IRQHandler(void);
+#endif
+
+#ifdef ENABLE_DMA2
+    __interrupt void DMA2_Channel1_IRQHandler(void);
+    __interrupt void DMA2_Channel2_IRQHandler(void);
+    __interrupt void DMA2_Channel3_IRQHandler(void);
+    __interrupt void DMA2_Channel4_IRQHandler(void);
+    __interrupt void DMA2_Channel5_IRQHandler(void);
+    __interrupt void DMA2_Channel6_IRQHandler(void);
+    __interrupt void DMA2_Channel7_IRQHandler(void);
+    __interrupt void DMA2_Channel8_IRQHandler(void);
+    __interrupt void DMA2_Channel9_IRQHandler(void);
+    __interrupt void DMA2_Channel10_IRQHandler(void);
+    __interrupt void DMA2_Channel11_IRQHandler(void);
+#endif
+}
+
 namespace ymd{
 
 class DmaChannel{
-
 public:
-
     using Callback = std::function<void(void)>;
     using Mode = DmaUtils::Mode;
     using Priority = DmaUtils::Priority;
 protected:
-// public:
     DMA_Channel_TypeDef * instance;
-    Mode mode;
-    const uint8_t dma_index;
-    const uint8_t channel_index;
-
+    
     const uint32_t done_mask;
     const uint32_t half_mask;
+    
+    const uint8_t dma_index;
+    const uint8_t channel_index;
+    
+    Callback done_cb_;
+    Callback half_cb_;
+    Mode mode_;
 
     void enableRcc(const bool en);
     void configPeriphDataBytes(const size_t bytes){
@@ -50,7 +77,7 @@ protected:
     }
 
     void configDstMemDataBytes(const size_t bytes){
-        if(periphIsDst(mode)){
+        if(dstIsPeriph(mode_)){
             configPeriphDataBytes(bytes);
         }else{
             configMemDataBytes(bytes);
@@ -58,14 +85,14 @@ protected:
     }
 
     void configSrcMemDataBytes(const size_t bytes){
-        if(!periphIsDst(mode)){
+        if(!dstIsPeriph(mode_)){
             configPeriphDataBytes(bytes);
         }else{
             configMemDataBytes(bytes);
         }
     }
 
-    scexpr uint8_t calculateDmaIndex(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint8_t calculateDmaIndex(const DMA_Channel_TypeDef * _instance){
         #ifdef ENABLE_DMA2
         return _instance < DMA2_Channel1 ? 1 : 2;
         #else
@@ -73,7 +100,7 @@ protected:
         #endif
     }
 
-    scexpr uint8_t calculateChannelIndex(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint8_t calculateChannelIndex(const DMA_Channel_TypeDef * _instance){
         uint8_t dma_index = calculateDmaIndex(_instance);
         switch(dma_index){
             #ifdef ENABLE_DMA1
@@ -94,8 +121,8 @@ protected:
         }
     }
 
-    scexpr bool periphIsDst(const Mode mode_){
-        switch(mode_){
+    static constexpr bool dstIsPeriph(const Mode mode){
+        switch(mode){
             case Mode::toPeriph:
             case Mode::toPeriphCircular:
                 return true;
@@ -104,7 +131,7 @@ protected:
         }
     }
 
-    scexpr uint32_t calculateDoneMask(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint32_t calculateDoneMask(const DMA_Channel_TypeDef * _instance){
         uint8_t dma_index = calculateDmaIndex(_instance);
         uint8_t channel_index = calculateChannelIndex(_instance);
         switch(dma_index){
@@ -127,7 +154,7 @@ protected:
     }
 
 
-    scexpr uint32_t calculateHalfMask(const DMA_Channel_TypeDef * _instance){
+    static constexpr uint32_t calculateHalfMask(const DMA_Channel_TypeDef * _instance){
         uint8_t dma_index = calculateDmaIndex(_instance);
         uint8_t channel_index = calculateChannelIndex(_instance);
         switch(dma_index){
@@ -149,6 +176,32 @@ protected:
         return 0;
     }
 
+    void onTransmitHalfInterrupt();
+    void onTransmitDoneInterrupt();
+
+    #ifdef ENABLE_DMA1
+        friend void ::DMA1_Channel1_IRQHandler(void);
+        friend void ::DMA1_Channel2_IRQHandler(void);
+        friend void ::DMA1_Channel3_IRQHandler(void);
+        friend void ::DMA1_Channel4_IRQHandler(void);
+        friend void ::DMA1_Channel5_IRQHandler(void);
+        friend void ::DMA1_Channel6_IRQHandler(void);
+        friend void ::DMA1_Channel7_IRQHandler(void);
+    #endif
+
+    #ifdef ENABLE_DMA2
+        friend void ::DMA2_Channel1_IRQHandler(void);
+        friend void ::DMA2_Channel2_IRQHandler(void);
+        friend void ::DMA2_Channel3_IRQHandler(void);
+        friend void ::DMA2_Channel4_IRQHandler(void);
+        friend void ::DMA2_Channel5_IRQHandler(void);
+        friend void ::DMA2_Channel6_IRQHandler(void);
+        friend void ::DMA2_Channel7_IRQHandler(void);
+        friend void ::DMA2_Channel8_IRQHandler(void);
+        friend void ::DMA2_Channel9_IRQHandler(void);
+        friend void ::DMA2_Channel10_IRQHandler(void);
+        friend void ::DMA2_Channel11_IRQHandler(void);
+    #endif
 public:
 
     DmaChannel() = delete;
@@ -157,13 +210,13 @@ public:
     DmaChannel(DmaChannel && other) = delete;
 
     DmaChannel(DMA_Channel_TypeDef * _instance):
-                instance(_instance), 
-                dma_index(calculateDmaIndex(_instance)),
-                channel_index(calculateChannelIndex(_instance)),
-                done_mask(calculateDoneMask(instance)),
-                half_mask(calculateHalfMask(instance)){;}
+        instance(_instance), 
+        done_mask(calculateDoneMask(instance)),
+        half_mask(calculateHalfMask(instance)),
+        dma_index(calculateDmaIndex(_instance)),
+        channel_index(calculateChannelIndex(_instance)){;}
 
-    void init(const Mode _mode,const Priority priority = Priority::medium);
+    void init(const Mode mode,const Priority priority = Priority::medium);
 
     void start(){
         DMA_ClearFlag(done_mask);
@@ -218,8 +271,13 @@ public:
     }
 
 
-    void bindDoneCb(Callback && cb);
-    void bindHalfCb(Callback && cb);
+    void bindDoneCb(auto && cb){
+        done_cb_ = std::move(cb);
+    }
+
+    void bindHalfCb(auto && cb){
+        half_cb_ = std::move(cb);
+    }
 
     bool done(){
         return DMA_GetFlagStatus(done_mask);
@@ -227,62 +285,26 @@ public:
 };
 
 #ifdef ENABLE_DMA1
-
+    extern DmaChannel dma1Ch1;
+    extern DmaChannel dma1Ch2;
+    extern DmaChannel dma1Ch3;
+    extern DmaChannel dma1Ch4;
+    extern DmaChannel dma1Ch5;
+    extern DmaChannel dma1Ch6;
+    extern DmaChannel dma1Ch7;
 #endif
 
 #ifdef ENABLE_DMA2
-
+    extern DmaChannel dma2Ch1;
+    extern DmaChannel dma2Ch2;
+    extern DmaChannel dma2Ch3;
+    extern DmaChannel dma2Ch4;
+    extern DmaChannel dma2Ch5;
+    extern DmaChannel dma2Ch6;
+    extern DmaChannel dma2Ch7;
+    extern DmaChannel dma2Ch8;
+    extern DmaChannel dma2Ch9;
+    extern DmaChannel dma2Ch10;
+    extern DmaChannel dma2Ch11;
 #endif
-
 }
-
-#define DMA_XY_TEMPLATE(x,y)\
-extern"C"{__interrupt void DMA##x##_Channel##y##_IRQHandler(void);}\
-
-
-#ifdef ENABLE_DMA1
-    extern ymd::DmaChannel dma1Ch1;
-    extern ymd::DmaChannel dma1Ch2;
-    extern ymd::DmaChannel dma1Ch3;
-    extern ymd::DmaChannel dma1Ch4;
-    extern ymd::DmaChannel dma1Ch5;
-    extern ymd::DmaChannel dma1Ch6;
-    extern ymd::DmaChannel dma1Ch7;
-
-    DMA_XY_TEMPLATE(1,1)
-    DMA_XY_TEMPLATE(1,2)
-    DMA_XY_TEMPLATE(1,3)
-    DMA_XY_TEMPLATE(1,4)
-    DMA_XY_TEMPLATE(1,5)
-    DMA_XY_TEMPLATE(1,6)
-    DMA_XY_TEMPLATE(1,7)
-
-#endif
-
-#ifdef ENABLE_DMA2
-    extern ymd::DmaChannel dma2Ch1;
-    extern ymd::DmaChannel dma2Ch2;
-    extern ymd::DmaChannel dma2Ch3;
-    extern ymd::DmaChannel dma2Ch4;
-    extern ymd::DmaChannel dma2Ch5;
-    extern ymd::DmaChannel dma2Ch6;
-    extern ymd::DmaChannel dma2Ch7;
-    extern ymd::DmaChannel dma2Ch8;
-    extern ymd::DmaChannel dma2Ch9;
-    extern ymd::DmaChannel dma2Ch10;
-    extern ymd::DmaChannel dma2Ch11;
-
-    DMA_XY_TEMPLATE(2,1)
-    DMA_XY_TEMPLATE(2,2)
-    DMA_XY_TEMPLATE(2,3)
-    DMA_XY_TEMPLATE(2,4)
-    DMA_XY_TEMPLATE(2,5)
-    DMA_XY_TEMPLATE(2,6)
-    DMA_XY_TEMPLATE(2,7)
-    DMA_XY_TEMPLATE(2,8)
-    DMA_XY_TEMPLATE(2,9)
-    DMA_XY_TEMPLATE(2,10)
-    DMA_XY_TEMPLATE(2,11)
-#endif
-
-#undef DMA_XY_TEMPLATE

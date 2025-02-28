@@ -12,17 +12,20 @@ __fast_inline constexpr size_t _get_scalar(T value, const size_t radix){
     if(value == 0) return 1;
 
     if(radix == 10){
-        size_t scalar = 0;
         value = ABS(value);
         
+        size_t scalar = 0;
         while(value > 1000000){
             value /= 1000000;
+
+            //TODO 替换这个不太精确的实现
+            // value = (int64_t(value) * 4295) >> 32;
             scalar += 6;
         }
         
-        size_t i = 0;
+        size_t i = scalar;
         while(uint32_t(value) >= scale_map[i]) i++;
-        return scalar + i;
+        return i;
     }else{
         size_t i = 0;
         size_t sum = 1;
@@ -108,7 +111,9 @@ size_t StringUtils::iutoa(uint64_t value,char *str,uint8_t radix){
     // if(value > INT32_MAX or value < INT32_MIN){
     //     return _itoa_impl<int32_t>(value, str, radix);
     // }
-    return _itoa_impl(value, str, radix);
+
+    //TODO 64位除法的实现会大幅增大体积
+    return _itoa_impl<int64_t>(value, str, radix);
 }
 
 

@@ -1,16 +1,17 @@
 #pragma once
 
+#include <span>
+#include <utility>
+#include <functional>
+#include "utils.hpp"
+#include "function_traits.hpp"
+#include <utility>
+#include <type_traits>
+
 #include "sys/string/string.hpp"
 #include "sys/stream/ostream.hpp"
 #include "sys/stream/BufStream.hpp"
-#include <span>
-#include <functional>
-#include <utility>
-#include "utils.hpp"
-#include "function_traits.hpp"
 #include "sys/polymorphism/proxy.hpp"
-#include <utility>
-#include <type_traits>
 
 namespace ymd::rpc{
 

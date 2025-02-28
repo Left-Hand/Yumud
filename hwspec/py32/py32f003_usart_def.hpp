@@ -49,6 +49,7 @@ struct R16_CTLR1{
     uint32_t :2;
 };
 
+
 struct R16_CTLR2{
     uint32_t ADD:4;
     uint32_t :1;
@@ -81,10 +82,6 @@ struct R16_CTLR3{
     uint32_t :5;
 };
 
-struct R16_GPR{
-    uint32_t PSC:8;
-    uint32_t GT:8;
-};
 
 struct USART_Def{
     volatile R16_STATR STATR;
@@ -99,9 +96,6 @@ struct USART_Def{
     uint16_t :16;
     volatile R16_CTLR3 CTLR3;
     uint16_t :16;
-    volatile R16_GPR GPR;
-    uint16_t :16;
-
     void enable(const bool en){
         CTLR1.UE = en;
     }
@@ -154,13 +148,6 @@ struct USART_Def{
         CTLR1.SBK = 1;
     }
 
-    void set_guard_time(const uint8_t time){
-        GPR.GT = time;
-    }
-
-    void set_prescaler(const uint8_t scaler){
-        GPR.PSC = scaler;
-    }
 
     void enable_smartcard(const bool en){
         CTLR3.SCEN = en;
@@ -190,13 +177,7 @@ struct USART_Def{
         CTLR3.IREN = en;
     }
 
-    void wait_transmit_complete(){
-        while(!STATR.TC);
-    }
     
-    void wait_transmit_start(){
-        while(!STATR.TXE);
-    }
     
 };
 

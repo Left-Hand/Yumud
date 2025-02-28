@@ -324,8 +324,8 @@ private:
     
     MsgInfo msginfo_;
     Method method_;
-    uint8_t id[4];
-    uint8_t buf[64];
+    uint8_t id_[4];
+    uint8_t buf_[64];
 
     Error handleInput(const uint8_t data){
         switch(state_){

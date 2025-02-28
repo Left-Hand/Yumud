@@ -3,7 +3,7 @@
 #include "sys/core/platform.h"
 
 
-namespace ymd{
+namespace ymd::hal{
 class Bkp;
 
 struct BkpItem{
@@ -64,7 +64,7 @@ public:
     Bkp(const Bkp &) = delete;
     Bkp& operator=(const Bkp &) = delete;
 
-    static Bkp& getInstance() {
+    static Bkp& singleton() {
         static Bkp instance;
         return instance;
     }
@@ -78,6 +78,6 @@ public:
 };
 
 
-static inline Bkp & bkp = Bkp::getInstance();
+extern Bkp & bkp;
 
 }

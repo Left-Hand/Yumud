@@ -2,17 +2,17 @@
 
 using namespace ymd::digipw;
 
-// void Buck::init(){}
+void BuckConverter::init(){}
 
-// void Buck::run(){}
+void BuckConverter::run(){}
 
-// void Buck::tick(){
-//     switch(ctrl_mode_){
-//         case CtrlMode::CC:
-//             break;
-//         case CtrlMode::CV:
-//             break;
-//         case CtrlMode::CP:
-//             break;
-//     }
-// }
+void BuckConverter::tick(){
+    // switch(ctrl_mode_){
+    //     case CtrlMode::CC:
+    //         break;
+    //     case CtrlMode::CV:
+    //         break;
+    //     case CtrlMode::CP:
+    //         break;
+    // }
+}

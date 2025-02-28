@@ -7,7 +7,6 @@ namespace ymd{
 class Port : public PortConcept{
 protected:
     GPIO_TypeDef * instance;
-    static Gpio channel_none;
     Gpio channels[16];
 
     friend class Gpio;
@@ -44,16 +43,14 @@ public:
     operator uint16_t(){return instance->INDR;}
 
     Gpio & operator [](const int index){
-        if(index < 0) return channel_none;
+        if(index < 0) return Gpio::null();
         else return channels[index & 0b1111];
     };
     Gpio & operator [](const Pin pin){
         if(pin != Pin::None) return channels[CTZ((uint16_t)pin) & 0b1111];
-        else return channel_none;
+        else return Gpio::null();
     };
 
-    // Gpio operator [](const int index);
-    // Gpio operator [](const Pin pin);
     void setMode(const int index, const GpioMode mode) override;
 
 };
@@ -84,26 +81,25 @@ __inline void Port::clrPin(const Pin pin){
     instance->BCR = (uint16_t)pin;
 }
 
-}
 
 #ifdef ENABLE_GPIOA
-extern ymd::Port portA;
+extern Port portA;
 #endif
 
 #ifdef ENABLE_GPIOB
-extern ymd::Port portB;
+extern Port portB;
 #endif
 
 #ifdef ENABLE_GPIOC
-extern ymd::Port portC;
+extern Port portC;
 #endif
 
 #ifdef ENABLE_GPIOD
-extern ymd::Port portD;
+extern Port portD;
 #endif
 
 #ifdef ENABLE_GPIOE
-extern ymd::Port portE;
+extern Port portE;
 #endif
 
-
+}

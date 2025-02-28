@@ -1,9 +1,11 @@
-#include "rpc.hpp"
-#include "tb.h"
+#include "src/testbench/tb.h"
 #include "sys/debug/debug.hpp"
+#include "sys/clock/time.hpp"
+
 #include "robots/rpc/arg_parser.hpp"
 #include "types/vector3/vector3_t.hpp"
-#include "sys/clock/time.hpp"
+
+#include "rpc.hpp"
 
 using namespace ymd;
 

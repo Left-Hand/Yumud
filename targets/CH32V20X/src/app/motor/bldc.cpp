@@ -1,5 +1,6 @@
 #include "sys/debug/debug.hpp"
 #include "sys/clock/time.hpp"
+#include "sys/core/system.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -24,14 +25,12 @@
 #include "../digiPW/sogi/spll.hpp"
 #include "sogi/sogi.hpp"
 
-#include <ostream>
-#include "sys/core/system.hpp"
 #include "ctrl.hpp"
 
 #include "algo/interpolation/cubic.hpp"
 
 #include "rpc.hpp"
-#include "tb.h"
+#include "src/testbench/tb.h"
 
 #include "robots/rpc/arg_parser.hpp"
 
@@ -342,6 +341,10 @@ __no_inline void init_opa(){
     opa1.init<1,1,1>();
 }
 
+// __no_inline void test_gpio(){
+//     auto gpio = Gpio::reflect<GpioTags::PortSource::PC, GpioTags::PinSource::_0>().inana();
+// }
+
 void bldc_main(){
     uart2.init(576000);
     DEBUGGER.retarget(&uart2);
@@ -412,7 +415,7 @@ void bldc_main(){
     auto & w_sense = mp6540.ch(3);
     
 
-    init_opa();
+    // init_opa();
     init_adc();
 
     real_t meas_pos = 0;

@@ -2,9 +2,9 @@
 
 #include <cstdint>
 
-namespace hwspec::CH32V20x::TIM_Regs{
+namespace CH32V20x{
 
-struct CTLR1_Reg{
+struct R16_TIM_CTLR1{
     uint16_t CEN:1;
     uint16_t UDIS:1;
     uint16_t URS:1;
@@ -16,25 +16,24 @@ struct CTLR1_Reg{
     uint16_t :6;
 };
 
-struct CFGHR_Reg{
+struct R16_TIM_CTLR2{
     uint16_t CCPC:1;
     uint16_t :1;
     uint16_t CCUS:1;
     uint16_t CCDS:1;
-    uint16_t MMS:3;
-
-    uint16_t TI1S:1;
+    uint16_t MMS:1;
+    uint16_t TI1S:2;
     uint16_t OIS1:1;
-    uint16_t OIS1n:1;
-    uint16_t OIS2:1;
-    uint16_t OIS2n:1;
-    uint16_t OIS3:1;
-    uint16_t OIS3n:1;
-    uint16_t OIS4:1;
+    uint16_t OIS1N:2;
+    uint16_t OIS2:2;
+    uint16_t OIS2N:2;
+    uint16_t OIS3:2;
+    uint16_t OIS3N:2;
+    uint16_t OIS4:2;
     uint16_t :1;
 };
 
-struct SMCFGR_Reg{
+struct R16_TIM_SMCFGR{
     uint16_t SMS:3;
     uint16_t :1;
     uint16_t TS:3;
@@ -45,7 +44,7 @@ struct SMCFGR_Reg{
     uint16_t ETP:1;
 };
 
-struct DMAINTENR_Reg{
+struct R16_TIM_DMAINTENR{
     uint16_t UIE:1;
     uint16_t CC1IE:1;
     uint16_t CC2IE:1;
@@ -64,7 +63,7 @@ struct DMAINTENR_Reg{
     uint16_t :1;
 };
 
-struct INTFR_Reg{
+struct R16_TIM_INTFR{
     uint16_t UIF:1;
     uint16_t CC1IF:1;
     uint16_t CC2IF:1;
@@ -81,7 +80,7 @@ struct INTFR_Reg{
     uint16_t :3;
 };
 
-struct SWEVGR_Reg{
+struct R16_TIM_SWEVGR{
     uint16_t UG:1;
     uint16_t CC1G:1;
     uint16_t CC2G:1;
@@ -93,7 +92,7 @@ struct SWEVGR_Reg{
     uint16_t :8;
 };
 
-struct CNCCTLR1{
+struct R16_TIM_CHCTLR1{
     uint16_t CC1S:2;
     union{
         struct{
@@ -130,7 +129,7 @@ struct CNCCTLR1{
 };
 
 
-struct CNCCTLR2{
+struct R16_TIM_CHCTLR2{
     uint16_t CC3S:2;
     union{
         struct{
@@ -166,7 +165,7 @@ struct CNCCTLR2{
     };
 };
 
-struct CCER_Reg{
+struct R16_TIM_CCER{
     uint16_t CC1E:1;
     uint16_t CC1P:1;
     uint16_t CC1NE:1;
@@ -186,7 +185,136 @@ struct CCER_Reg{
     uint16_t CC4P:1;
 };
 
+
+using R16_TIM_CNT = uint16_t;
+using R16_TIM_PSC = uint16_t;
+using R16_TIM_ATRLR = uint16_t;
+using R16_TIM_CHCVR = uint16_t;
+
+struct R16_TIM_RPTCR{
+    uint8_t REP;
+    uint8_t :8;
+};
+
+
+struct R16_TIM_BDTR{
+    uint16_t DTG:8;
+
+    uint16_t LOCK:2;
+    uint16_t OSSI:1;
+    uint16_t OSSR:1;
+
+    uint16_t BKE:1;
+    uint16_t BKP:1;
+    uint16_t AOE:1;
+    uint16_t MOE:1;
+};
+
+struct R16_TIM_DMACFGR{
+    uint16_t DACFGR:5;
+    uint16_t :3;
+    uint16_t DBL:5;
+    uint16_t :3;
+};
+
+struct R16_TIM_DMAADR{
+    uint16_t DADDR;
+};
+
 struct TIM_Def{
+    volatile R16_TIM_CTLR1 CTLR1;
+    uint16_t :16;
+    volatile R16_TIM_CTLR2 CTLR2;
+    uint16_t :16;
+    
+    volatile R16_TIM_SMCFGR SMCFGR;
+    uint16_t :16;
+    volatile R16_TIM_DMAINTENR DMAINTENR;
+    uint16_t :16;
+    volatile R16_TIM_INTFR INTFR;
+    uint16_t :16;
+    volatile R16_TIM_SWEVGR SWEVGR;
+    uint16_t :16;
+    
+    volatile R16_TIM_CHCTLR1 CHCTLR1;
+    uint16_t :16;
+    volatile R16_TIM_CHCTLR2 CHCTLR2;
+    uint16_t :16;
+    volatile R16_TIM_CCER CCER;
+    uint16_t :16;
+    
+    volatile R16_TIM_CNT CNT;
+    uint16_t :16;
+    volatile R16_TIM_PSC PSC;
+    uint16_t :16;
+    volatile R16_TIM_ATRLR ATRLR;
+    uint16_t :16;
+    volatile R16_TIM_RPTCR RPTCR;
+    uint16_t :16;
+    volatile R16_TIM_CHCVR CH1CVR;
+    uint16_t :16;
+    volatile R16_TIM_CHCVR CH2CVR;
+    uint16_t :16;
+    volatile R16_TIM_CHCVR CH3CVR;
+    uint16_t :16;
+    volatile R16_TIM_CHCVR CH4CVR;
+    uint16_t :16;
+    
+    volatile R16_TIM_BDTR BDTR;
+    uint16_t :16;
+    volatile R16_TIM_DMACFGR DMACFGR;
+    uint16_t :16;
+    volatile R16_TIM_DMAADR DMAADR;
+    uint16_t :16;
+    
+    constexpr void enable(const bool en){
+        CTLR1.CEN = en;
+    }
+
+    constexpr void enable_generate_update_event(const bool en){
+        CTLR1.UDIS = en;
+    }
+
+    constexpr void exhibit_ug_trigger_uev(const bool en){
+        CTLR1.URS = en;
+    }
+
+    constexpr void set_single_pulse_mode(const bool en){
+        CTLR1.OPM = en;
+    }
+
+    constexpr void set_dec_mode(const bool en){
+        CTLR1.DIR = en;
+    }
+
+
+    // 00：边沿对齐模式。计数器依据方向位(DIR)向上或
+    // 向下计数。
+    // 01：中央对齐模式 1。计数器交替地向上和向下计
+    // 数。配置为输出的通道(CHCTLRx 寄存器中 CCxS=00)
+    // 的输出比较中断标志位，只在计数器向下计数时被
+    // 设置。
+    // 10：中央对齐模式 2。计数器交替地向上和向下计
+    // 数。配置为输出的通道(CHCTLRx 寄存器中 CCxS=00)
+    // 的输出比较中断标志位，只在计数器向上计数时被
+    // 设置。
+    // 11：中央对齐模式 3。计数器交替地向上和向下计
+    // 数。配置为输出的通道(CHCTLRx 寄存器中 CCxS=00)
+    // 的输出比较中断标志位，在计数器向上和向下计数
+    // 时均被设置。
+    // 注：在计数器使能
+
+    constexpr void set_align_mode(const uint8_t mode){
+        CTLR1.CMS = mode;
+    }
+
+    constexpr void enable_auto_preload(const bool en){
+        CTLR1.APRE = en;
+    }
+
+    constexpr void set_dts_prescale(const uint8_t prescale){
+        CTLR1.CKD = prescale;
+    }
 
 };
 

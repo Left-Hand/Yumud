@@ -77,17 +77,11 @@ protected:
     uint16_t manufactureIDReg;
     uint16_t chipIDReg;
 
-    void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv.writeReg((uint8_t)addr, data, MSB);
-    }
+    BusError writeReg(const RegAddress addr, const uint16_t data);
 
-    void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv.readReg((uint8_t)addr, data, MSB);
-    }
+    BusError readReg(const RegAddress addr, uint16_t & data);
 
-    void requestPool(const RegAddress addr, void * data_ptr, const size_t len){
-        i2c_drv.readMulti((uint8_t)addr, (uint16_t *)data_ptr, len, LSB);
-    }
+    BusError requestPool(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
     class CurrentChannel;
     class VoltageChannel;
@@ -150,9 +144,9 @@ public:
 
     void update();
 
-    void init(const real_t ohms, const uint max_current_a);
+    void init(const uint mohms, const uint max_current_a);
 
-    void config(const real_t ohms, const uint max_current_a);
+    void config(const uint mohms, const uint max_current_a);
 
     void setAverageTimes(const uint16_t times);
 
