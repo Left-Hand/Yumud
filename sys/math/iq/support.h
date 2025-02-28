@@ -2,6 +2,8 @@
 
 #include "rts_support.h"
 
+// #define __IQMATH_USE_MY_IMPL
+
 /* Common value defines. */
 #define _q15_ln2          0x58b9
 #define _q13_pi           0x6488

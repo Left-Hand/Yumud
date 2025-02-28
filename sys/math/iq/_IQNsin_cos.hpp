@@ -64,6 +64,8 @@
  * Using a lookup table with a 64 bit index (52 indexes since the input range is
  * only 0 - 0.785398) and second order Taylor series gives 28 bits of accuracy.
  */
+
+ #ifndef __IQMATH_USE_MY_IMPL
 static __inline constexpr int32_t __IQNcalcSin(uint32_t uiq31Input){
     uint16_t index;
     int32_t iq31X;
@@ -107,6 +109,7 @@ static __inline constexpr int32_t __IQNcalcSin(uint32_t uiq31Input){
 
     return iq31Res;
 }
+
 
 static __inline constexpr int32_t __IQNcalcCos(uint32_t uiq31Input)
 {
@@ -153,6 +156,140 @@ static __inline constexpr int32_t __IQNcalcCos(uint32_t uiq31Input)
     return iq31Res;
 }
 
+#else
+
+struct __UIQ32SinCos{
+    uint32_t uiq32Sin;
+    uint32_t uiq32Cos;
+};
+
+static __inline constexpr uint32_t __MY_GET_U32_COS(uint32_t uiq32X, uint32_t uiq32Sin, uint32_t uiq32Cos){
+
+    /* 0.333*x*S(k) */
+    uint32_t uiq32Res = __mpyf_ul32(0x2aaaaaab << 1, uiq32X);
+    uiq32Res = __mpyf_ul32(uiq32Sin, uiq32Res);
+
+    /* -S(k) - 0.333*x*S(k) */
+    uiq32Res = uiq32Res - uiq32Cos;
+
+    /* 0.5*x*(-C(k) - 0.333*x*S(k)) */
+    uiq32Res = uiq32Res >> 1;
+    uiq32Res = __mpyf_ul32(uiq32X, uiq32Res);
+
+    /* -S(k) + 0.5*x*(-C(k) - 0.333*x*S(k)) */
+    uiq32Res = uiq32Res - uiq32Sin;
+
+    // x*(-S(k) + 0.5*x*(-C(k) + 0.333*x*S(k)))
+    uiq32Res = __mpyf_ul32(uiq32X, uiq32Res);
+
+    // cos(Radian) = C(k) + x*(-S(k) + 0.5*x*(-C(k) + 0.333*x*S(k)))
+    uiq32Res = uiq32Cos + uiq32Res;
+
+    return uiq32Res >> 1;
+}
+
+static __inline constexpr uint32_t __MY_GET_U32_SIN(uint32_t uiq32X, uint32_t uiq32Sin, uint32_t uiq32Cos){
+    /* 0.333*x*C(k) */
+    uint32_t uiq32Res = __mpyf_ul32(0x2aaaaaab << 1, uiq32X);
+    uiq32Res = __mpyf_ul32(uiq32Cos, uiq32Res);
+
+    /* -S(k) - 0.333*x*C(k) */
+    uiq32Res = -(uiq32Sin + uiq32Res);
+
+    /* 0.5*x*(-S(k) - 0.333*x*C(k)) */
+    uiq32Res = uiq32Res >> 1;
+    uiq32Res = __mpyf_ul32(uiq32X, uiq32Res);
+
+    /* C(k) + 0.5*x*(-S(k) - 0.333*x*C(k)) */
+    uiq32Res = uiq32Cos + uiq32Res;
+
+    /* x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+    uiq32Res = __mpyf_ul32(uiq32X, uiq32Res);
+
+    /* sin(Radian) = S(k) + x*(C(k) + 0.5*x*(-S(k) - 0.333*x*C(k))) */
+    uiq32Res = uiq32Sin + uiq32Res;
+
+    return uiq32Res >> 1;
+}
+
+static __inline constexpr uint32_t __MY_IQNcalcSin(uint32_t uiq31Input){
+    uint16_t index;
+    uint32_t uiq32X;
+    uint32_t uiq32Sin;
+    uint32_t uiq32Cos;
+
+    /* Calculate index for sin and cos lookup using bits 31:26 */
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
+
+    /* Lookup S(k) and C(k) values. */
+    uiq32Sin = _UIQ32SinLookup[index];
+    uiq32Cos = _UIQ32CosLookup[index];
+
+    /*
+     * Calculated x (the remainder) by subtracting the index from the unsigned
+     * uiq32 input. This can be accomplished by masking out the bits used for
+     * the index.
+     */
+    uiq32X = (uiq31Input & 0x01ffffff);
+    uiq32X = uiq32X << 1;
+
+    return __MY_GET_U32_SIN(uiq32X, uiq32Sin, uiq32Cos);
+}
+
+static __inline constexpr uint32_t __MY_IQNcalcCos(uint32_t uiq31Input){
+    uint16_t index;
+    uint32_t uiq32X;
+    uint32_t uiq32Sin;
+    uint32_t uiq32Cos;
+
+    /* Calculate index for sin and cos lookup using bits 31:26 */
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
+
+    /* Lookup S(k) and C(k) values. */
+    uiq32Sin = _UIQ32SinLookup[index];
+    uiq32Cos = _UIQ32CosLookup[index];
+
+    /*
+     * Calculated x (the remainder) by subtracting the index from the unsigned
+     * uiq32 input. This can be accomplished by masking out the bits used for
+     * the index.
+     */
+    uiq32X = uiq31Input & 0x01ffffff;
+    uiq32X = uiq32X << 1;
+
+    return __MY_GET_U32_COS(uiq32X, uiq32Sin, uiq32Cos);
+}
+
+static __inline constexpr __UIQ32SinCos __MY_IQNcalcSinCos(uint32_t uiq31Input){
+    uint16_t index;
+    uint32_t uiq32X;
+    uint32_t uiq32Sin;
+    uint32_t uiq32Cos;
+
+    /* Calculate index for sin and cos lookup using bits 31:26 */
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
+
+    /* Lookup S(k) and C(k) values. */
+    uiq32Sin = _UIQ32SinLookup[index];
+    uiq32Cos = _UIQ32CosLookup[index];
+
+    /*
+     * Calculated x (the remainder) by subtracting the index from the unsigned
+     * uiq32 input. This can be accomplished by masking out the bits used for
+     * the index.
+     */
+    uiq32X = uiq31Input & 0x01ffffff;
+    uiq32X = uiq32X << 1;
+    
+    return {
+        __MY_GET_U32_SIN(uiq32X, uiq32Sin, uiq32Cos),
+        __MY_GET_U32_COS(uiq32X, uiq32Sin, uiq32Cos)
+    };
+}
+
+#define __IQNcalcSin(x) __MY_IQNcalcSin(x)
+#define __IQNcalcCos(x) __MY_IQNcalcCos(x)
+#endif
 
 /**
  * @brief Computes the sine or cosine of an IQN input.

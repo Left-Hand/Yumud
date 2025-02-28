@@ -84,6 +84,7 @@ __fast_inline constexpr int32_t __mpyf_l(int32_t arg1, int32_t arg2){
     return (int32_t)(((int64_t)arg1 * (int64_t)arg2) >> 31);
 }
 
+
 __fast_inline constexpr int32_t __mpyf_l_reuse_arg1(int32_t arg1, int32_t arg2){
     /* This is identical to __mpyf_l */
     return (int32_t)(((int64_t)arg1 * (int64_t)arg2) >> 31);
@@ -91,6 +92,10 @@ __fast_inline constexpr int32_t __mpyf_l_reuse_arg1(int32_t arg1, int32_t arg2){
 
 __fast_inline constexpr uint32_t __mpyf_ul(uint32_t arg1, uint32_t arg2){
     return (uint32_t)(((uint64_t)arg1 * (uint64_t)arg2) >> 31);
+}
+
+__fast_inline constexpr uint32_t __mpyf_ul32(uint32_t arg1, uint32_t arg2){
+    return (uint32_t)(((uint64_t)arg1 * (uint64_t)arg2) >> 32);
 }
 
 __fast_inline constexpr int32_t __mpyf_ul_reuse_arg1(uint32_t arg1, uint32_t arg2){

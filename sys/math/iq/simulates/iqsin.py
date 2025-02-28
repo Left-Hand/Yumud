@@ -129,3 +129,13 @@ plt.show()
 
 # print(np.uint32(iq31_cos_table) * 2)
 # print(np.uint32(iq31_sin_table) * 2)
+
+def print_uiq32_table(table):
+    print("static constexpr _UIQ32SinLookup[52] = {")
+    for i in range(0, len(table), 4):
+        line = ", ".join(f"{value}" for value in table[i:i+4])
+        print(f"    {line},")
+    print("};")
+
+# print(uiq32_cos_table)
+print_uiq32_table(uiq32_sin_table)
