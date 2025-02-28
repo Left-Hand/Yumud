@@ -88,7 +88,6 @@ DMA_IT_TEMPLATE(2,11);
 #endif
 
 
-
 void DmaChannel::enableRcc(bool en){
 
     #ifdef ENABLE_DMA2
@@ -106,7 +105,7 @@ void DmaChannel::enableRcc(bool en){
 
 void DmaChannel::start(void * dst, const void * src, const size_t size){
 
-    if(periphIsDst(mode)){
+    if(dstIsPeriph(mode_)){
         instance -> PADDR = (uint32_t)dst;
         instance -> MADDR = (uint32_t)src;
     }else{
@@ -118,9 +117,9 @@ void DmaChannel::start(void * dst, const void * src, const size_t size){
 }
 
 
-void DmaChannel::init(const Mode _mode,const Priority priority){
+void DmaChannel::init(const Mode mode,const Priority priority){
     enableRcc(true);
-    mode = _mode;
+    mode_ = mode;
     DMA_InitTypeDef DMA_InitStructure = {0};
     // DMA_DeInit(instance);
 

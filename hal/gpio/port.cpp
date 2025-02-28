@@ -3,9 +3,6 @@
 
 using namespace ymd;
 
-
-Gpio Port::channel_none = Gpio(GPIOD, Pin::None);
-
 void Port::setMode(const int index, const GpioMode mode){
     Gpio gpio = Gpio(instance, (Pin)(1 << index));
     gpio.setMode(mode);
@@ -58,23 +55,26 @@ void Port::init(){
     enableRcc();
 }
 
+
+namespace ymd{
 #ifdef ENABLE_GPIOA
-Port portA = Port(GPIOA);
+Port portA{GPIOA};
 #endif
 
 #ifdef ENABLE_GPIOB
-Port portB = Port(GPIOB);
+Port portB{GPIOB};
 #endif
 
 #ifdef ENABLE_GPIOC
-Port portC = Port(GPIOC);
+Port portC{GPIOC};
 #endif
 
 #ifdef ENABLE_GPIOD
-Port portD = Port(GPIOD);
+Port portD{GPIOD};
 #endif
 
 #ifdef ENABLE_GPIOE
-Port portE = Port(GPIOE);
+Port portE{GPIOE};
 #endif
 
+}

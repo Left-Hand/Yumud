@@ -279,10 +279,6 @@ void Can::enableRcc(){
     }
 }
 
-void Can::bindCbTxOk(Callback && _cb){cb_txok = _cb;}
-void Can::bindCbTxFail(Callback && _cb){cb_txfail = _cb;}
-void Can::bindCbRx(Callback && _cb){cb_rx = _cb;}
-
 void Can::init(const uint baudRate, const Mode _mode){
     BaudRate baud;
     switch(baudRate){
@@ -532,7 +528,7 @@ CanFilter Can::operator[](const size_t idx) const {
     return CanFilter(this->instance, idx);
 }
 
-void Can::handleTx(){
+void Can::onTxInterrupt(){
     for(uint8_t mbox = 0; mbox < 3; mbox++){
         if(isMailBoxDone(mbox)){ // if existing message done
             uint8_t tx_status = CAN_TransmitStatus(instance, mbox);
@@ -540,11 +536,11 @@ void Can::handleTx(){
             switch (tx_status){
                 case(CAN_TxStatus_Failed):
                     //process failed message
-                    EXECUTE(cb_txfail);
+                    EXECUTE(cb_txfail_);
                     break;
                 case(CAN_TxStatus_Ok):
                     //process success message
-                    EXECUTE(cb_txok);
+                    EXECUTE(cb_txok_);
                     break;
             }
 
@@ -557,7 +553,7 @@ void Can::handleTx(){
     }
 }
 
-void Can::handleRx(const uint8_t fifo_num){
+void Can::onRxInterrupt(const uint8_t fifo_num){
     uint32_t fmp_mask;
     uint32_t ff_mask;
     uint32_t fov_mask;
@@ -589,7 +585,7 @@ void Can::handleRx(const uint8_t fifo_num){
             
             rx_fifo_.push(receive(fifo_num));
         }while(false);
-        EXECUTE(cb_rx);
+        EXECUTE(cb_rx_);
         MY_CAN_ClearITPendingBit(instance, fmp_mask);
     }else if(MY_CAN_GetITStatus(instance, ff_mask)){
         //process rx full
@@ -600,7 +596,7 @@ void Can::handleRx(const uint8_t fifo_num){
     }
 }
 
-void Can::handleSce(){
+void Can::onSceInterrupt(){
     if (MY_CAN_GetITStatus(instance, CAN_IT_WKU)) {
         // Handle Wake-up interrupt
         MY_CAN_ClearITPendingBit(instance, CAN_IT_WKU);
@@ -631,23 +627,23 @@ void Can::handleSce(){
 #ifdef ENABLE_CAN1
 __interrupt
 void USB_HP_CAN1_TX_IRQHandler(void){
-    can1.handleTx();
+    can1.onTxInterrupt();
 }
 
 __interrupt
 void USB_LP_CAN1_RX0_IRQHandler(void) {
-    can1.handleRx(CAN_FIFO0);
+    can1.onRxInterrupt(CAN_FIFO0);
 }
 
 __interrupt
 void CAN1_RX1_IRQHandler(void){
-    can1.handleRx(CAN_FIFO1);
+    can1.onRxInterrupt(CAN_FIFO1);
 }
 
 #ifdef SCE_ENABLED
 __interrupt
 void CAN1_SCE_IRQHandler(void){
-    can1.handleSce();
+    can1.onSceInterrupt();
 }
 #endif
 #endif
@@ -655,23 +651,23 @@ void CAN1_SCE_IRQHandler(void){
 #ifdef ENABLE_CAN2
 __interrupt
 void CAN2_TX_IRQHandler(void){
-    can2.handleTx();
+    can2.onTxInterrupt();
 }
 
 __interrupt
 void CAN2_RX0_IRQHandler(void){
-    can2.handleRx(CAN_FIFO0);
+    can2.onRxInterrupt(CAN_FIFO0);
 }
 
 __interrupt
 void CAN2_RX1_IRQHandler(void){
-    can2.handleRx(CAN_FIFO1);
+    can2.onRxInterrupt(CAN_FIFO1);
 }
 
 #ifdef SCE_ENABLED
 __interrupt
 void CAN2_SCE_IRQHandler(void){
-    can2.handleSce();
+    can2.onSceInterrupt();
 }
 #endif
 #endif

@@ -1,8 +1,12 @@
-#pragma once
+#include "../tb.h"
 
-#include "support.h"
-#include "_IQNtables.hpp"
+#include "sys/math/int/int_t.hpp"
+#include "sys/debug/debug.hpp"
 
+#include "hal/bus/uart/uarthw.hpp"
+
+
+namespace iqdev{
 
 #ifndef PI
 #define PI (3.1415926536)
@@ -301,7 +305,5 @@ constexpr _iq<31> _IQNcosPU(const _iq<Q> iqNInput){
     return std::bit_cast<_iq<31>>(__IQNsin_cos<Q, TYPE_COS, TYPE_PU>(iqNInput.to_i32()));
 }
 
-#undef TYPE_SIN
-#undef TYPE_COS
-#undef TYPE_RAD
-#undef TYPE_PU
+}
+

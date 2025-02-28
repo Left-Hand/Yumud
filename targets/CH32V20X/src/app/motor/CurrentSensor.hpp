@@ -63,7 +63,6 @@ public:
         const real_t raw_w_curr = real_t(w_sense_);
         const real_t raw_sum_curr = raw_u_curr + raw_v_curr + raw_w_curr;
         mid_curr_ = LPFN<5>(mid_curr_, raw_sum_curr / 3);
-        const real_t mid_curr_ = mid_curr_;
         uvw_curr_[0] = (raw_u_curr - mid_curr_);
         uvw_curr_[1] = (raw_v_curr - mid_curr_);
         uvw_curr_[2] = (raw_w_curr - mid_curr_);

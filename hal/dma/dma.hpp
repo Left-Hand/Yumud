@@ -59,7 +59,7 @@ protected:
     
     Callback done_cb_;
     Callback half_cb_;
-    Mode mode;
+    Mode mode_;
 
     void enableRcc(const bool en);
     void configPeriphDataBytes(const size_t bytes){
@@ -77,7 +77,7 @@ protected:
     }
 
     void configDstMemDataBytes(const size_t bytes){
-        if(periphIsDst(mode)){
+        if(dstIsPeriph(mode_)){
             configPeriphDataBytes(bytes);
         }else{
             configMemDataBytes(bytes);
@@ -85,7 +85,7 @@ protected:
     }
 
     void configSrcMemDataBytes(const size_t bytes){
-        if(!periphIsDst(mode)){
+        if(!dstIsPeriph(mode_)){
             configPeriphDataBytes(bytes);
         }else{
             configMemDataBytes(bytes);
@@ -121,8 +121,8 @@ protected:
         }
     }
 
-    static constexpr bool periphIsDst(const Mode mode_){
-        switch(mode_){
+    static constexpr bool dstIsPeriph(const Mode mode){
+        switch(mode){
             case Mode::toPeriph:
             case Mode::toPeriphCircular:
                 return true;
@@ -216,7 +216,7 @@ public:
         dma_index(calculateDmaIndex(_instance)),
         channel_index(calculateChannelIndex(_instance)){;}
 
-    void init(const Mode _mode,const Priority priority = Priority::medium);
+    void init(const Mode mode,const Priority priority = Priority::medium);
 
     void start(){
         DMA_ClearFlag(done_mask);
@@ -271,11 +271,11 @@ public:
     }
 
 
-    void bindDoneCb(Callback && cb){
+    void bindDoneCb(auto && cb){
         done_cb_ = std::move(cb);
     }
 
-    void bindHalfCb(Callback && cb){
+    void bindHalfCb(auto && cb){
         half_cb_ = std::move(cb);
     }
 

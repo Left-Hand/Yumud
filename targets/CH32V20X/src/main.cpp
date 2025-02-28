@@ -23,7 +23,9 @@ int main(){
     // embd_main();
     // gui_main();
     // canopen_main();
-    bldc_main();
+    // bldc_main();
+    digipw_main();
+    // uart_main();
     // stepper_tb(uart2);
     // rpc_main();
     // leetcode_main();
@@ -76,7 +78,7 @@ int main(){
     // dshot_main();
     // usbcdc_tb();
     // embd_main();
-    // gxm::host_main();
+    gxm::host_main();
 
     // pca_main();
     // w25qxx_main();

@@ -1,7 +1,7 @@
 #include "bkp.hpp"
 #include "sys/core/sdk.h"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 
 #define BKP_DEBUG
@@ -46,4 +46,8 @@ void BkpItem::store(const uint16_t data){
 }
 uint16_t BkpItem::load(){
     return bkp.readData(index);
+}
+
+namespace ymd::hal{
+Bkp & bkp = Bkp::singleton();
 }

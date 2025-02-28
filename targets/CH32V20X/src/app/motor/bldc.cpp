@@ -32,7 +32,6 @@
 #include "rpc.hpp"
 #include "src/testbench/tb.h"
 
-
 #include "robots/rpc/arg_parser.hpp"
 
 #include "dsp/filter/LowpassFilter.hpp"

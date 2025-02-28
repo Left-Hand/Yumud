@@ -3,7 +3,7 @@
   "configurations": [
     {
       "cwd": "${workspaceRoot}",
-      "executable": "build\\CH32V20X\\LearnADC.elf",
+      "executable": "build\\CH32V203F8P6\\LearnADC.elf",
       "name": "Debug V20X",
       "request": "launch",
       "type": "cortex-debug",

@@ -233,50 +233,52 @@ public:
     ADVANCED_TIMER_FRIEND_DECL(10);
     #endif
 };
-}
+
 
 #undef BASIC_TIMER_FRIEND_DECL
 #undef GENERIC_TIMER_FRIEND_DECL
 #undef ADVANCED_TIMER_FRIEND_DECL
 
 #ifdef ENABLE_TIM1
-inline ymd::AdvancedTimer timer1{TIM1};
+extern AdvancedTimer timer1;
 #endif
 
 #ifdef ENABLE_TIM2
-inline ymd::GenericTimer timer2{TIM2};
+extern GenericTimer timer2;
 #endif
 
 #ifdef ENABLE_TIM3
-inline ymd::GenericTimer timer3{TIM3};
+extern GenericTimer timer3;
 #endif
 
 #ifdef ENABLE_TIM4
-inline ymd::GenericTimer timer4{TIM4};
+extern GenericTimer timer4;
 #endif
 
 #ifdef ENABLE_TIM5
-inline ymd::GenericTimer timer5{TIM5};
+extern GenericTimer timer5;
 #endif
 
 #ifdef ENABLE_TIM6
-inline ymd::BasicTimer timer6{TIM6};
+extern BasicTimer timer6;
 #endif
 
 #ifdef ENABLE_TIM7
-inline ymd::BasicTimer timer7{TIM7};
+extern BasicTimer timer7;
 #endif
 
 #ifdef ENABLE_TIM8
-inline ymd::AdvancedTimer timer8{TIM8};
+extern AdvancedTimer timer8;
 #endif
 
 #ifdef ENABLE_TIM9
-inline ymd::AdvancedTimer timer9{TIM9};
+extern AdvancedTimer timer9;
 #endif
 
 #ifdef ENABLE_TIM10
-inline ymd::AdvancedTimer timer10{TIM10};
+extern AdvancedTimer timer10;
 #endif
+
+}
 
 #endif

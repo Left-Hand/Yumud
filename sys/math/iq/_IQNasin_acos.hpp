@@ -154,7 +154,15 @@ constexpr int32_t __IQNasin(int32_t iqNInput)
 
 template<const size_t Q>
 constexpr _iq<29> _IQNasin(_iq<Q> iqNInput){
-    return std::bit_cast<_iq<29>>(
-        __IQNasin<Q>(std::bit_cast<int32_t>(iqNInput))
-    );
+    // static_assert(Q <= 29, "Input must be 29 bits or less.");
+
+    if constexpr (Q > 29){
+        return std::bit_cast<_iq<29>>(
+            _IQNasin<29>(_iq<29>(iqNInput).to_i32())
+        );
+    }else{
+        return std::bit_cast<_iq<29>>(
+            __IQNasin<Q>(iqNInput.to_i32())
+        );
+    }
 }

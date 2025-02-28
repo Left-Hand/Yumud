@@ -5,15 +5,15 @@
 #include "hal/bus/bus.hpp"
 
 namespace ymd::hal{
-class Sdi:public OutputStream{
+class Sdi{
 
 public:
 
-    void write(const char data) override;
+    void write(const char data);
 
-    void write(const char * data_ptr, const size_t len) override;
+    void write(const char * data_ptr, const size_t len);
 
-    size_t pending() const override;
+    size_t pending() const;
 
     void init();
 };

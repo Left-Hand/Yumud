@@ -2,14 +2,6 @@
 
 #include "rts_support.h"
 
-#if defined(__TI_COMPILER_VERSION__)
-#pragma FUNC_ALWAYS_INLINE(__IQNexp)
-#elif defined(__IAR_SYSTEMS_ICC__)
-#pragma inline=forced
-#elif defined(__GNUC__) && !defined(__STATIC_INLINE)
-#define __STATIC_INLINE inline __attribute__((always_inline))
-#endif
-
 /* Common value defines. */
 #define _q15_ln2          0x58b9
 #define _q13_pi           0x6488
