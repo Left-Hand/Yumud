@@ -39,6 +39,9 @@ protected:
     Callback txPostCb;
     Callback rxPostCb;
     Uart(){;}
+
+    void onPostTxCallback(){EXECUTE(txPostCb);}
+    void onPosRxCallback(){EXECUTE(rxPostCb);}
 public:
     BusError read(uint32_t & data) override {char _;read1(_);data = _;return BusError::OK;};
     BusError write(const uint32_t data) override {write1((char)data); return BusError::OK;};
@@ -66,11 +69,12 @@ public:
     size_t available() const {return rx_fifo.available();}
     size_t pending() const {return tx_fifo.available();}
     size_t remain() const {return tx_fifo.size() - tx_fifo.available();}
-    virtual void flush();
     virtual void setTxMethod(const CommMethod _txMethod) = 0;
     virtual void setRxMethod(const CommMethod _rxMethod) = 0;
-    void onTxDone(Callback && cb){txPostCb = cb;}
-    void onRxDone(Callback && cb){rxPostCb = cb;}
+    void setPostTxCb(Callback && cb){txPostCb = std::move(cb);}
+    void setPosRxCb(Callback && cb){rxPostCb = std::move(cb);}
+
+
 };
 
 
