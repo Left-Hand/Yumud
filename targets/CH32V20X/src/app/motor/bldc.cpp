@@ -1,5 +1,6 @@
 #include "sys/debug/debug.hpp"
 #include "sys/clock/time.hpp"
+#include "sys/core/system.hpp"
 
 #include "hal/timer/instance/timer_hw.hpp"
 #include "hal/adc/adcs/adc1.hpp"
@@ -24,14 +25,12 @@
 #include "../digiPW/sogi/spll.hpp"
 #include "sogi/sogi.hpp"
 
-#include <ostream>
-#include "sys/core/system.hpp"
 #include "ctrl.hpp"
 
 #include "algo/interpolation/cubic.hpp"
 
 #include "rpc.hpp"
-#include "tb.h"
+#include "src/testbench/tb.h"
 
 #include "robots/rpc/arg_parser.hpp"
 

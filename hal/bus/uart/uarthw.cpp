@@ -64,44 +64,6 @@ UART_IT_TEMPLATE(uart8, UART8)
 
 
 
-namespace ymd::hal{
-    #ifdef ENABLE_UART1
-    UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
-    #endif
-    
-    
-    #ifdef ENABLE_UART2
-    UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART3
-    UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
-    #endif
-    
-    
-    #ifdef ENABLE_UART4
-    UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART5
-    UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
-    #endif
-    
-    
-    #ifdef ENABLE_UART6
-    UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
-    #endif
-    
-    #ifdef ENABLE_UART7
-    UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
-    #endif
-    
-    
-    #ifdef ENABLE_UART8
-    UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
-    #endif
-}
-    
 
 void UartHw::enableRcc(const bool en){
     switch((uint32_t)instance){
@@ -242,7 +204,7 @@ void UartHw::idleHandle(){
             this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], (index - rx_dma_buf_index)); 
         }
         rx_dma_buf_index = index;
-        EXECUTE(rxPostCb);
+        callPostRxCallback();
     }
 }
 
@@ -451,7 +413,7 @@ void UartHw::invokeTxDma(){
             tx_fifo.pop(tx_dma_buf.begin(), tx_amount);
             tx_dma.start((void *)(size_t)(&instance->DATAR), (const void *)tx_dma_buf.begin(), tx_amount);
         }else{
-            EXECUTE(txPostCb);
+            callPostTxCallback();
         }
     }
 }
@@ -546,7 +508,7 @@ void UartHw::init(const uint32_t baudRate, const CommMethod _txMethod, const Com
     setRxMethod(_rxMethod);
 }
 
-UartHw::BusError UartHw::lead(const uint8_t index){
+BusError UartHw::lead(const uint8_t index){
     while((instance->STATR & USART_FLAG_TXE) == RESET);
     return BusError::OK;
 }
@@ -606,3 +568,41 @@ void UartHw::write1(const char data){
 }
 
 
+namespace ymd::hal{
+    #ifdef ENABLE_UART1
+    UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
+    #endif
+    
+    
+    #ifdef ENABLE_UART2
+    UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART3
+    UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
+    #endif
+    
+    
+    #ifdef ENABLE_UART4
+UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART5
+    UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
+    #endif
+    
+    
+    #ifdef ENABLE_UART6
+    UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
+    #endif
+    
+    #ifdef ENABLE_UART7
+    UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
+    #endif
+    
+    
+    #ifdef ENABLE_UART8
+    UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
+    #endif
+}
+    

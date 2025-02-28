@@ -489,3 +489,46 @@ void GenericTimer::onItHandler(){
 //     HANDLE_IT(IT::Trigger);
 //     HANDLE_IT(IT::Break);
 // }
+
+
+namespace ymd{
+#ifdef ENABLE_TIM1
+AdvancedTimer timer1{TIM1};
+#endif
+
+#ifdef ENABLE_TIM2
+GenericTimer timer2{TIM2};
+#endif
+
+#ifdef ENABLE_TIM3
+GenericTimer timer3{TIM3};
+#endif
+
+#ifdef ENABLE_TIM4
+GenericTimer timer4{TIM4};
+#endif
+
+#ifdef ENABLE_TIM5
+GenericTimer timer5{TIM5};
+#endif
+
+#ifdef ENABLE_TIM6
+BasicTimer timer6{TIM6};
+#endif
+
+#ifdef ENABLE_TIM7
+BasicTimer timer7{TIM7};
+#endif
+
+#ifdef ENABLE_TIM8
+AdvancedTimer timer8{TIM8};
+#endif
+
+#ifdef ENABLE_TIM9
+AdvancedTimer timer9{TIM9};
+#endif
+
+#ifdef ENABLE_TIM10
+AdvancedTimer timer10{TIM10};
+#endif
+}

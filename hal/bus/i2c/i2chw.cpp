@@ -158,3 +158,15 @@ BusError I2cHw::read(uint32_t & data, const Ack ack){
     data = I2C_ReceiveData(instance);
     return BusError::OK;
 }
+
+namespace ymd{
+
+#ifdef ENABLE_I2C1
+I2cHw i2c1{I2C1};
+#endif
+
+#ifdef ENABLE_I2C2
+I2cHw i2c2{I2C2};
+#endif
+
+}

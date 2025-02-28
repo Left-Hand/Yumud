@@ -41,13 +41,13 @@ using std::string;
     tx_led.outpp();
     rx_led.outpp();
 
-    uart.onTxDone([&](){
+    uart.bindPostTxCb([&](){
         tx_led.set();
         delay(1);
         tx_led.clr();
     });
 
-    uart.onRxDone([&](){
+    uart.bindPosRxCb([&](){
         rx_led.set();
         delay(1);
         rx_led.clr();
@@ -55,12 +55,12 @@ using std::string;
 
     while(true){
         // size_t size = uart.available();
-        // if(uart.available()){
-        //     delay(1);
-        //     auto str = uart.readString();
-        //     str.toUpperCase();
-        //     uart.println(str, size);
-        // }
+        while(uart.available()){
+            char chr;
+            uart.read1(chr);
+            uart.write1(chr);
+            delay(1);
+        }
         delay(300);
         tx_led = false;
         DEBUG_PRINTLN("noth", uart.available());
@@ -78,8 +78,8 @@ void uart_main(){
     //uart6 passed
     //uart8 passed
 
-    auto & logger = DEBUGGER_INST;
-    logger.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::Interrupt);
+    uart2.init(576000, CommMethod::Dma, CommMethod::Interrupt);
+    DEBUGGER.retarget(&uart2);
     // DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::None);
-    uart_tb(logger);
+    uart_tb(uart2);
 }

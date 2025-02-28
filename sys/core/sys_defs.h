@@ -42,7 +42,7 @@
 #define __interrupt_soft __attribute__((interrupt))
 #endif
 
-#define EXECUTE(x, ...) if(x) x(__VA_ARGS__)
+#define EXECUTE(func, ...) if(likely(func)) func(__VA_ARGS__)
 
 #ifndef __interrupt
 #if defined(__riscv) && defined(WCH)
@@ -86,8 +86,8 @@
 #endif
 
 #ifdef __GNUC__
-#define likely(x) __builtin_expect((x), 1)
-#define unlikely(x) __builtin_expect((x), 0)
+#define likely(x) __builtin_expect(!!(x), 1)
+#define unlikely(x) __builtin_expect(!!(x), 0)
 #else
 #define likely(x) x
 #define unlikely(x) x

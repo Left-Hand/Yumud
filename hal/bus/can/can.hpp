@@ -58,9 +58,11 @@ protected:
 
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> rx_fifo_;
     Fifo_t<CanMsg, CAN_SOFTFIFO_SIZE> tx_fifo_;
-    Callback cb_txok = nullptr;
-    Callback cb_txfail = nullptr;
-    Callback cb_rx = nullptr;
+
+    Callback cb_txok_;
+    Callback cb_txfail_;
+    Callback cb_rx_;
+
     bool sync_ = true;
 
     Gpio & getTxGpio();
@@ -73,52 +75,16 @@ protected:
     bool isMailBoxDone(const uint8_t mbox);
     void clearMailbox(const uint8_t mbox);
     void initIt();
-    void handleTx();
-    void handleRx(const uint8_t fifo_num);
-    void handleSce();
+    
+    void onTxInterrupt();
+    void onRxInterrupt(const uint8_t fifo_num);
+    void onSceInterrupt();
 
 
     void init(const BaudRate baudRate, const Mode mode);
     uint8_t transmit(const CanMsg & msg);
     CanMsg receive(const uint8_t fifo_num);
     friend class CanFilter;
-
-public:
-    Can(CAN_TypeDef * _instance):instance(_instance){;}
-    Can(const Can & other) = delete;
-    Can(Can && other) = delete;
-
-    void setBaudRate(const uint32_t baudRate);
-
-    void init(const uint baudRate, const Mode mode = Mode::Normal);
-
-    bool write(const CanMsg & msg) override;
-    const CanMsg && read() override;
-    const CanMsg & front();
-    size_t pending();
-    size_t available();
-
-    void clear(){while(this->available()){this->read();}}
-    void sync(const bool en){sync_ = en;}
-    bool isTranmitting();
-    bool isReceiving();
-    void enableHwReTransmit(const bool en = true);
-    void cancelTransmit(const uint8_t mbox);
-    void cancelAllTransmit();
-    void enableFifoLock(const bool en = true);
-    void enableIndexPriority(const bool en = true);
-    uint8_t getTxErrCnt();
-    uint8_t getRxErrCnt();
-    ErrCode getErrCode();
-
-    bool isBusOff();
-
-    void bindCbTxOk(Callback && _cb);
-    void bindCbTxFail(Callback && _cb);
-    void bindCbRx(Callback && _cb);
-
-    CanFilter operator[](const size_t idx) const ;
-
 
     #ifdef ENABLE_CAN1
     friend void ::USB_HP_CAN1_TX_IRQHandler(void);
@@ -139,6 +105,44 @@ public:
 
     friend void ::CAN2_SCE_IRQHandler(void);
     #endif
+public:
+    Can(CAN_TypeDef * _instance):instance(_instance){;}
+    Can(const Can & other) = delete;
+    Can(Can && other) = delete;
+
+    void setBaudRate(const uint32_t baudRate);
+
+    void init(const uint baudRate, const Mode mode = Mode::Normal);
+
+    bool write(const CanMsg & msg) override;
+    const CanMsg && read() override;
+    const CanMsg & front();
+    size_t pending();
+    size_t available();
+
+    void clear(){while(this->available()){this->read();}}
+    void setSync(const bool en){sync_ = en;}
+    bool isTranmitting();
+    bool isReceiving();
+    void enableHwReTransmit(const bool en = true);
+    void cancelTransmit(const uint8_t mbox);
+    void cancelAllTransmit();
+    void enableFifoLock(const bool en = true);
+    void enableIndexPriority(const bool en = true);
+    uint8_t getTxErrCnt();
+    uint8_t getRxErrCnt();
+    ErrCode getErrCode();
+
+    bool isBusOff();
+
+    void bindTxOkCb(auto && cb){cb_txok_ = std::forward<decltype(cb)>(cb);}
+    void bindTxFailCb(auto && cb){cb_txfail_ = std::forward<decltype(cb)>(cb);}
+    void bindRxCb(auto && cb){cb_rx_ = std::forward<decltype(cb)>(cb);}
+
+    CanFilter operator[](const size_t idx) const ;
+
+
+
 };
 
 #ifdef ENABLE_CAN1

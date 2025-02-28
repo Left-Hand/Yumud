@@ -31,11 +31,11 @@ public:
 };
 
 #ifdef ENABLE_I2C1
-inline ymd::I2cHw i2c1{I2C1};
+extern I2cHw i2c1;
 #endif
 
 #ifdef ENABLE_I2C2
-inline ymd::I2cHw i2c2{I2C2};
+extern I2cHw i2c2;
 #endif
 
 }

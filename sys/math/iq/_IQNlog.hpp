@@ -16,9 +16,7 @@
 template<size_t Q>
 constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
 {
-    uint8_t ui8Counter;
     int16_t i16Exp;
-    int32_t iqNResult;
     int32_t iq30Result;
     uint32_t uiq31Input;
     const uint32_t *piq30Coeffs;
@@ -69,13 +67,11 @@ constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
     uiq31Input -= _iq31_one;
 
     /* Calculate log(uiq31Input) using the iq30 Taylor Series coefficients. */
-    for (ui8Counter = _IQ30log_order; ui8Counter > 0; ui8Counter--) {
+    for (uint8_t ui8Counter = _IQ30log_order; ui8Counter > 0; ui8Counter--) {
         iq30Result = __mpyf_l(uiq31Input, iq30Result);
         iq30Result += *piq30Coeffs++;
     }
 
-    /* Scale the iq30 result to match the function iq type. */
-    iqNResult = iq30Result >> (30 - Q);
 
     /*
      * Add i16Exp * ln(2) to the iqN result. This will never saturate since we
@@ -84,15 +80,14 @@ constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
      * unsigned data type.
      */
     if (i16Exp > 0) {
-        iqNResult += __mpyf_ul(_iq31_ln2, ((int32_t)i16Exp << Q));
+        return iq30Result + __mpyf_ul(_iq31_ln2, ((int32_t)i16Exp << 30));
     } else {
-        iqNResult -= __mpyf_ul(_iq31_ln2, (((uint32_t) - i16Exp) << Q));
+        return iq30Result - __mpyf_ul(_iq31_ln2, (((uint32_t) - i16Exp) << 30));
     }
 
-    return iqNResult;
 }
 
 template<size_t Q>
-constexpr _iq<Q> _IQNlog(int32_t a){
-    return _iq<Q>::from_i32(__IQNlog<Q>(a, Q >= 27 ? _IQNlog_min[Q - 27] : 1));
+constexpr _iq<30> _IQNlog(_iq<Q> a){
+    return _iq<30>::from_i32(__IQNlog<Q>(a.to_i32(), ((Q >= 27) ? _IQNlog_min[Q - 27] : 1)));
 }

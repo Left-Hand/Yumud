@@ -3,6 +3,8 @@
 .vscode/settings.json
 .eide
 
+*.pyc
+
 # project out
 build
 node_modules
