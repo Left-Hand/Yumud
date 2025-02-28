@@ -49,7 +49,6 @@ struct R16_CTLR1{
     uint32_t :2;
 };
 
-
 struct R16_CTLR2{
     uint32_t ADD:4;
     uint32_t :1;
@@ -191,7 +190,13 @@ struct USART_Def{
         CTLR3.IREN = en;
     }
 
+    void wait_transmit_complete(){
+        while(!STATR.TC);
+    }
     
+    void wait_transmit_start(){
+        while(!STATR.TXE);
+    }
     
 };
 
