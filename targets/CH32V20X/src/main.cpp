@@ -24,7 +24,8 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
-    digipw_main();
+    // digipw_main();
+
     // uart_main();
     // stepper_tb(uart2);
     // rpc_main();
