@@ -5,13 +5,13 @@
 
 namespace ymd::drivers{
 
-class ScaledPwm:public PwmChannel{
+class ScaledPwm:public PwmChannelIntf{
 protected:
-    PwmChannel & instance_;
+    PwmChannelIntf & instance_;
     Range duty_range_;
     bool enabled = true;
 public:
-    ScaledPwm(PwmChannel & _instance, const Range & _duty_range
+    ScaledPwm(PwmChannelIntf & _instance, const Range & _duty_range
             ):instance_(_instance), duty_range_(_duty_range){;}
 
     void enable(const bool en = true){
@@ -50,7 +50,7 @@ protected:
     }
     
 public:
-    PwmRadianServo(PwmChannel & instance):
+    PwmRadianServo(PwmChannelIntf & instance):
             instance_(instance, {real_t(0.025), real_t(0.125)})
             {;}
 
@@ -79,7 +79,7 @@ protected:
         instance_ = (duty + 1) * real_t(0.5);
     }
 public:
-    PwmSpeedServo(PwmChannel & instance, const real_t max_turns_per_second = 2):
+    PwmSpeedServo(PwmChannelIntf & instance, const real_t max_turns_per_second = 2):
             instance_(instance, {real_t(0.025), real_t(0.125)}),
             max_turns_per_second_(max_turns_per_second),
             expect_speed_(real_t(0))
@@ -94,19 +94,19 @@ public:
 
 // class Servo180: public PwmRadianServo{
 // public:
-//     Servo180(PwmChannel & _instance):PwmRadianServo(_instance, 180){;}
+//     Servo180(PwmChannelIntf & _instance):PwmRadianServo(_instance, 180){;}
 // };
 
 
 // class Servo270: public PwmRadianServo{
 // public:
-//     Servo270(PwmChannel & _instance):PwmRadianServo(_instance, 270){;}
+//     Servo270(PwmChannelIntf & _instance):PwmRadianServo(_instance, 270){;}
 // };
 
 
 // class Servo360: public PwmSpeedServo{
 // public:
-//     Servo360(PwmChannel & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), 270){;}
+//     Servo360(PwmChannelIntf & _instance):PwmSpeedServo(_instance, real_t(0.025), real_t(0.125), 270){;}
 // };
 
     using MG995 = PwmRadianServo;

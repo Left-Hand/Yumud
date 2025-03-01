@@ -9,7 +9,7 @@
 
 
 
-struct PwmChannel;
+struct PwmChannelIntf;
 
 namespace ymd::drivers{
 
@@ -17,10 +17,10 @@ namespace ymd::drivers{
 
 class MP6540:public Coil3DriverIntf{
 protected:
-    using PWM3 = std::array<PwmChannel *, 3>;
+    using PWM3 = std::array<PwmChannelIntf *, 3>;
     using AIN3 = std::array<AnalogInChannel *, 3>;
 
-    using PWM3_WP = std::array<std::reference_wrapper<PwmChannel>, 3>;
+    using PWM3_WP = std::array<std::reference_wrapper<PwmChannelIntf>, 3>;
     using AIN3_WP = std::array<std::reference_wrapper<AnalogInChannel>, 3>;
     
     using EN3 = std::array<GpioConcept *, 3>;

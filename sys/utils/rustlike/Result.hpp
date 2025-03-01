@@ -100,18 +100,18 @@ public:
     constexpr Result_t(Error error) : result_(std::move(error)) {}
 
     // 检查是否成功
-    constexpr bool is_ok() const {
+    constexpr bool ok() const {
         return std::holds_alternative<Ret>(result_);
     }
 
     // 检查是否出错
-    constexpr bool is_err() const {
+    constexpr bool wrong() const {
         return std::holds_alternative<Error>(result_);
     }
 
     // 获取成功值，如果当前是错误状态则抛出异常
     constexpr Ret unwrap() const {
-        if (is_ok()) {
+        if (likely(ok())) {
             return std::get<Ret>(result_);
         } else {
             HALT
@@ -120,7 +120,7 @@ public:
 
     // 获取错误值，如果当前是成功状态则抛出异常
     constexpr Error unwrap_err() const {
-        if (is_err()) {
+        if (likely(wrong())) {
             return std::get<Error>(result_);
         } else {
             HALT
@@ -128,7 +128,7 @@ public:
     }
 
     constexpr operator bool () const {
-        return is_ok();
+        return ok();
     }
 };
 
@@ -137,12 +137,12 @@ template <typename T, typename E>
 struct __unwrap_helper<Result_t<T, E>> {
     using Obj = Result_t<T, E>;
     // Unwrap a non-const rvalue optional
-    static constexpr T unwrap(Obj && obj) {
+    static constexpr T && unwrap(Obj && obj) {
         return std::move(obj.unwrap());
     }
 
     static constexpr T unwrap(const Obj & obj) {
-        return obj.value();
+        return obj.unwrap();
     }
 
     static constexpr E unexpected(Obj && obj) {

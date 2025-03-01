@@ -2,9 +2,9 @@
 #include "sys/math/real.hpp"
 
 namespace ymd{
-class PwmChannel{
+class PwmChannelIntf{
 public:
-    virtual PwmChannel & operator = (const real_t duty) = 0;
+    virtual PwmChannelIntf & operator = (const real_t duty) = 0;
 };
 
 template <typename T>

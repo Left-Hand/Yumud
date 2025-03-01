@@ -21,7 +21,7 @@ public:
     virtual Gpio & io() = 0;
 };
 
-class TimerOC:public TimerOut, public PwmChannel{
+class TimerOC:public TimerOut, public PwmChannelIntf{
 public:
     using Mode = TimerUtils::OcMode;
 protected:
@@ -36,8 +36,8 @@ public:
     TimerOC & setMode(const Mode _mode);
 
     Gpio & io();
-    __fast_inline volatile uint16_t & cvr(){return cvr_;}
-    __fast_inline volatile uint16_t & arr(){return arr_;}
+    __fast_inline volatile uint16_t & cvr() {return cvr_;}
+    __fast_inline volatile uint16_t & arr() {return arr_;}
 
     __fast_inline TimerOC & operator = (const real_t duty) override{cvr_ = int(duty * arr_);return *this;}
     __fast_inline operator real_t(){return real_t(cvr_) / int(arr_);}

@@ -8,12 +8,12 @@ class TB67H450:public Coil2Driver{
 protected:
     TimerOC & forward_pwm;
     TimerOC & backward_pwm;
-    PwmChannel & vref_pwm;
+    PwmChannelIntf & vref_pwm;
     bool enabled = true;
     bool softmode = true;
     real_t inv_fullscale = (1);
 public:
-    TB67H450(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannel & _vref_pwm):
+    TB67H450(TimerOC & _forward_pwm, TimerOC & _backward_pwm, PwmChannelIntf & _vref_pwm):
             forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), vref_pwm(_vref_pwm){;}
 
     void init(){
@@ -58,11 +58,11 @@ public:
 };
 class Coil2:public Coil2Driver{
 protected:
-    PwmChannel & instanceP;
-    PwmChannel & instanceN;
+    PwmChannelIntf & instanceP;
+    PwmChannelIntf & instanceN;
     bool enabled = true;
 public:
-    Coil2(PwmChannel & _instanceP, PwmChannel & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
+    Coil2(PwmChannelIntf & _instanceP, PwmChannelIntf & _instanceN):instanceP(_instanceP), instanceN(_instanceN){;}
 
     void init() override{
         instanceP.init();

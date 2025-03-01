@@ -63,7 +63,7 @@ protected:
     LedRegs all_channel;
     uint8_t prescale_reg;
 
-    class PCA8975Channel:public PwmChannel, GpioConcept{
+    class PCA8975Channel:public PwmChannelIntf, GpioConcept{
     protected:
         PCA9685 & pca;
         uint8_t channel;
