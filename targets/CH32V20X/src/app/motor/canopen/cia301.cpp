@@ -27,8 +27,8 @@ SdoAbortCode Cia301ObjectDict::write(const std::span<const uint8_t> pdata, const
     switch (idx) {
         case 0x1003:
             return perdef_err_field_reg.write(pdata, subidx);
-        default:
-            return StaticObjectDictBase::write(pdata, didx);
+        // default:
+        //     return StaticObjectDictBase::write(pdata, didx);
     }
 
     return SdoAbortCode::None;
@@ -39,8 +39,8 @@ SdoAbortCode Cia301ObjectDict::read(const std::span<uint8_t> pdata, const Didx d
     switch (idx) {
         case 0x1003:
             return perdef_err_field_reg.read(pdata, subidx);
-        default:
-            return StaticObjectDictBase::read(pdata, didx);
+        // default:
+        //     return StaticObjectDictBase::read(pdata, didx);
     }
 
     return SdoAbortCode::None;

@@ -5,7 +5,7 @@
 
 #include "hal/timer/instance/timer_hw.hpp"
 
-class TimerOCPair:public PwmChannel{
+class TimerOCPair:public PwmChannelIntf{
 protected:
     TimerOC & oc_;
     TimerOCN & ocn_;

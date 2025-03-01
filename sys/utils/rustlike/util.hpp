@@ -37,9 +37,9 @@ struct __unwrap_helper<std::optional<T>> {
 // Macro to simplify unwrapping
 #define UNWRAP(expr) \
     ({ \
-        auto result = (expr); \
+        const auto result = (expr); \
         using helper = ymd::__unwrap_helper<std::decay_t<decltype(result)>>; \
-        if (!result) { \
+        if (unlikely(!result)) { \
             return helper::unexpected(result); \
         } \
         helper::unwrap(std::move(result)); \

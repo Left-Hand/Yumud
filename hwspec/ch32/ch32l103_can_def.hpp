@@ -1,10 +1,10 @@
 #pragma once
 
-#include <sys/io/regs.hpp>
+#include <cstdint>
 
-namespace hwspec::CH32L103::AFIO_Regs{
+namespace CH32L103{
 
-struct CTLR_Reg{
+struct R32_CAN_CTLR{
     static constexpr uint32_t offset = 0;
 
     // 初始化模式请求位
@@ -80,7 +80,7 @@ struct CTLR_Reg{
     uint32_t :15;
 };
 
-struct STATR_Reg{
+struct R32_CAN_STATR{
     static constexpr uint32_t offset = 4;
 
     // 初始化模式指示位。
@@ -132,7 +132,7 @@ struct STATR_Reg{
 
 };
 
-struct TSTATR_Reg{
+struct R32_CAN_TSTATR{
     static constexpr uint32_t offset = 8;
 
     uint32_t RQCP0:1;
@@ -172,7 +172,7 @@ struct TSTATR_Reg{
     uint32_t LOW2:1;
 };
 
-struct __RFIFO_Reg{
+struct R32_CAN_RFIFO{
     uint32_t FMP:2;
     uint32_t :1;
     uint32_t FULL:1;
@@ -181,15 +181,7 @@ struct __RFIFO_Reg{
     uint32_t :26;
 };
 
-struct RFIFO0_Reg:public __RFIFO_Reg{
-    static constexpr uint32_t offset = 0x0C;
-};
-
-struct RFIFO1_Reg:public __RFIFO_Reg{
-    static constexpr uint32_t offset = 0x10;
-};
-
-struct INTEN_Reg{
+struct R32_CAN_INTEN{
     static constexpr uint32_t offset = 0x14;
 
     uint32_t TMEIE:1;
@@ -217,7 +209,7 @@ struct INTEN_Reg{
 };
 
 
-struct ERRSR_Reg{
+struct R32_CAN_ERRSR{
     static constexpr uint32_t offset = 0x18;
 
     // 错误警告标志位。
@@ -269,7 +261,7 @@ struct ERRSR_Reg{
 };
 
 
-struct BTIMR_Reg{
+struct R32_CAN_BTIMR{
     static constexpr uint32_t offset = 0x1c;
 
     // 最小时间单元长度设置值
@@ -308,7 +300,7 @@ struct BTIMR_Reg{
     uint32_t SILM:1;
 };
 
-struct TTCTLR_Reg{
+struct R32_CAN_TTCTLR{
     static constexpr uint32_t offset = 0x20;
 
     // 内部计数器计数终值
@@ -325,14 +317,14 @@ struct TTCTLR_Reg{
     uint32_t :14;
 };
 
-struct TTCNT_Reg{
+struct R32_CAN_TTCNT{
     static constexpr uint32_t offset = 0x24;
     // 时间触发计数值
     uint32_t TIMCNT:16;
     uint32_t :16;
 };
 
-struct TERR_CNT_Reg{
+struct R32_CAN_TERR_CNT{
     static constexpr uint32_t offset = 0x28;
     // 当前离线恢复错误计数值，修改该计数值可
     // 从离线立即恢复
@@ -340,7 +332,7 @@ struct TERR_CNT_Reg{
     uint32_t :24;
 };
 
-struct FD_CR_Reg{
+struct R32_CANFD_CR{
     static constexpr uint32_t offset = 0x2c;
     uint32_t TX_FD:1;
     uint32_t TX_BRS_B:1;
@@ -351,7 +343,7 @@ struct FD_CR_Reg{
     uint32_t :22;
 };
 
-struct FD_BTR_Reg{
+struct R32_CANFD_BTR{
     static constexpr uint32_t offset = 0x30;
     uint32_t BTR_SJW_FD:4;
     uint32_t BTR_TS2_FD:4;
@@ -363,7 +355,7 @@ struct FD_BTR_Reg{
     uint32_t TDCE:8;
 };
 
-struct FD_TDCT_Reg{
+struct R32_CANFD_TDCT{
     static constexpr uint32_t offset = 0x34;
 
     uint32_t TDC0:6;
@@ -373,7 +365,7 @@ struct FD_TDCT_Reg{
     uint32_t :2;
 };
 
-struct FD_PSR_Reg{
+struct R32_CANFD_PSR{
     static constexpr uint32_t offset = 0x38;
     
     uint32_t :16;
@@ -381,36 +373,36 @@ struct FD_PSR_Reg{
     uint32_t :8;
 };
 
-struct __FD_DMA_Reg{
+struct __FD_DMA{
     uint32_t DMA_ADDR:15;
     uint32_t :17;
 };
 
-struct FD_DMA_T0_Reg:public __FD_DMA_Reg{
+struct R32_CANFD_DMA_T0:public __FD_DMA{
     static constexpr uint32_t offset = 0x3c;
 };
 
-struct FD_DMA_T1_Reg:public __FD_DMA_Reg{
+struct R32_CANFD_DMA_T1:public __FD_DMA{
     static constexpr uint32_t offset = 0x40;
 };
 
-struct FD_DMA_T2_Reg:public __FD_DMA_Reg{
+struct R32_CANFD_DMA_T2:public __FD_DMA{
     static constexpr uint32_t offset = 0x44;
 };
 
-struct FD_DMA_R0_Reg:public __FD_DMA_Reg{
+struct R32_CANFD_DMA_R0:public __FD_DMA{
     static constexpr uint32_t offset = 0x48;
 };
 
-struct FD_DMA_R1_Reg:public __FD_DMA_Reg{
+struct R32_CANFD_DMA_R1:public __FD_DMA{
     static constexpr uint32_t offset = 0x4c;
 };
 
-struct FD_DMA_R2_Reg:public __FD_DMA_Reg{
+struct R32_CANFD_DMA_R2:public __FD_DMA{
     static constexpr uint32_t offset = 0x50;
 };
 
-struct __TXMIR_Reg{
+struct R32_CAN_TXMIR{
     uint32_t TXRQ:1;
     uint32_t RTR:1;
     uint32_t IDE:1;
@@ -423,19 +415,8 @@ struct __TXMIR_Reg{
     };
 };
 
-struct TXMIR0_Reg:public __TXMIR_Reg{
-    static constexpr uint32_t offset = 0x180;
-};
 
-struct TXMIR1_Reg:public __TXMIR_Reg{
-    static constexpr uint32_t offset = 0x190;
-};
-
-struct TXMIR2_Reg:public __TXMIR_Reg{
-    static constexpr uint32_t offset = 0x1A0;
-};
-
-struct __TXMDTR_Reg{
+struct R32_CAN_TXMDTR{
     uint32_t DLC:4;
     uint32_t :4;
 
@@ -444,35 +425,12 @@ struct __TXMDTR_Reg{
     uint32_t TIME:16;
 };
 
-struct TXMDTR0_Reg:public __TXMIR_Reg{
-    static constexpr uint32_t offset = 0x184;
-};
-
-struct TXMDTR1_Reg:public __TXMIR_Reg{
-    static constexpr uint32_t offset = 0x194;
-};
-
-struct TXMDTR2_Reg:public __TXMIR_Reg{
-    static constexpr uint32_t offset = 0x1A4;
-};
-
-struct __TXMDR_Reg{
+struct R64_CAN_TXMDR{
     uint8_t DATA[8];
 };
 
-struct TXMDR0_Reg:public __TXMDR_Reg{
-    static constexpr uint32_t offset = 0x188;
-};
 
-struct TXMDR0_Reg:public __TXMDR_Reg{
-    static constexpr uint32_t offset = 0x198;
-};
-
-struct TXMDR0_Reg:public __TXMDR_Reg{
-    static constexpr uint32_t offset = 0x1A8;
-};
-
-struct __RXMIR_Reg{
+struct R32_CAN_RXMIR{
     uint32_t :1;
     uint32_t RTR:1;
     uint32_t IDE:1;
@@ -485,43 +443,19 @@ struct __RXMIR_Reg{
     };
 };
 
-struct RXMIR0_Reg:public __RXMIR_Reg{
-    static constexpr uint32_t offset = 0x1B0;
-};
-
-struct RXMIR1_Reg:public __RXMIR_Reg{
-    static constexpr uint32_t offset = 0x1C0;
-};
-
-struct __RXMDTR_Reg{
+struct R32_CAN_RXMDTR{
     uint32_t DLC:4;
     uint32_t :4;
     uint32_t FMI:8;
     uint32_t TIME:16;
 };
 
-struct RXMDTR0_Reg:public __RXMDTR_Reg{
-    static constexpr uint32_t offset = 0x1B4;
-};
 
-struct RXMDTR1_Reg:public __RXMDTR_Reg{
-    static constexpr uint32_t offset = 0x1C4;
-};
-
-struct __RXMDR_Reg{
+struct R64_CAN_RXMDR{
     uint8_t DATA[8];
 };
 
-struct RXMDR0_Reg:public __RXMDR_Reg{
-    static constexpr uint32_t offset = 0x1BC;
-};
-
-struct RXMDR1_Reg:public __RXMDR_Reg{
-    static constexpr uint32_t offset = 0x1CC;
-};
-
-
-struct FCTLR_Reg{
+struct R32_CAN_FCTLR{
     static constexpr uint32_t offset = 0x200;
     // 过滤器初始化模式使能标志位。
     // 1：过滤器组为初始化模式；
@@ -530,7 +464,7 @@ struct FCTLR_Reg{
     uint32_t :31;
 };
 
-struct FMCFGR_Reg{
+struct R32_CAN_FMCFGR{
     static constexpr uint32_t offset = 0x204;
 
     uint32_t FBM0:1;
@@ -567,7 +501,7 @@ struct FMCFGR_Reg{
     uint32_t :4;
 };
 
-struct FSCFGR_Reg{
+struct R32_CAN_FSCFGR{
     static constexpr uint32_t offset = 0x20C;
 
     uint32_t FSC0:1;
@@ -604,7 +538,7 @@ struct FSCFGR_Reg{
     uint32_t :4;
 };
 
-struct FAFIFOR_Reg{
+struct R32_CAN_FAFIFOR{
     static constexpr uint32_t offset = 0x214;
 
     uint32_t FFA0:1;
@@ -641,7 +575,7 @@ struct FAFIFOR_Reg{
     uint32_t :4;
 };
 
-struct FWR_Reg{
+struct R32_CAN_FWR{
     static constexpr uint32_t offset = 0x21C;
 
     uint32_t FACT0:1;
@@ -678,7 +612,7 @@ struct FWR_Reg{
     uint32_t :4;
 };
 
-struct FiR_Reg{
+struct FR32_CAN_iR{
     uint32_t FB0:1;
     uint32_t FB1:1;
     uint32_t FB2:1;
@@ -717,36 +651,39 @@ struct FiR_Reg{
 
 };
 
-// struct CAN_Def{
-//     CTLR_Reg CTLR;
-//     STATR_Reg STATR;
-//     TSTATR_Reg TSTATR;
-//     RFIFO_Reg RFIFO[2];
-//     INTEN_Reg INTENR;
-//     ERRSR_Reg ERRSR;
-//     BTIMR_Reg BTIMR;
-//     TTCTLR_Reg TTCTLR;
-//     TTCNT_Reg TTCNT;
+struct CAN_Def{
+    R32_CAN_CTLR CTLR;
+    R32_CAN_STATR STATR;
+    R32_CAN_TSTATR TSTATR;
+    R32_CAN_RFIFO RFIFO[2];
+    R32_CAN_INTEN INTENR;
+    R32_CAN_ERRSR ERRSR;
+    R32_CAN_BTIMR BTIMR;
+    R32_CAN_TTCTLR TTCTLR;
+    R32_CAN_TTCNT TTCNT;
 
-//     uint32_t __RESV1__[0x40006580 - (0x40006424+4)];
+    uint32_t __RESV1__[0x40006580 - (0x40006424+4)];
 
-//     TXMIR_Reg TXMIR[3];//0x40006580
-//     TXMDTR_Reg TXMDTR[3];
-// };
+    struct TxMailBox{
+        volatile R32_CAN_TXMIR  TXMIR;
+        volatile R32_CAN_TXMDTR  TXMDTR;
+        volatile R64_CAN_TXMDR  TXMDR;
+    };
+};
 
 // struct CAN_Filt_Def{
 // private:
 //     struct CAN_Filt_Pair{
-//         FiR_Reg FIR[2];
+//         FiR FIR[2];
 //     };
 // public:
 //     //0x40006600
-//     volatile FCTLR_Reg FCTLR;
+//     volatile FCTLR FCTLR;
 
-//     volatile FMCFGR_Reg FMCFGR;
-//     volatile FSCFGR_Reg FSCFGR;
-//     volatile FAFIFOR_Reg FAFIFOR;
-//     volatile FWR_Reg FWR;
+//     volatile FMCFGR FMCFGR;
+//     volatile FSCFGR FSCFGR;
+//     volatile FAFIFOR FAFIFOR;
+//     volatile FWR FWR;
 
 //     volatile CAN_Filt_Pair FILTER[28];
 // };

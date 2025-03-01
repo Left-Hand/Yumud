@@ -5,7 +5,7 @@
 
 
 namespace ymd{
-class GpioPwm:public PwmChannel, public Countable<uint16_t>{
+class GpioPwm:public PwmChannelIntf, public Countable<uint16_t>{
 protected:
     Gpio & gpio_;
     volatile uint16_t cnt_ = 0;

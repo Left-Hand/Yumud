@@ -71,7 +71,7 @@ protected:
     }
 
 
-    class AW9523Pwm:public PwmChannel{
+    class AW9523Pwm:public PwmChannelIntf{
     protected:
         AW9523 & aw9523;
         Pin pin;

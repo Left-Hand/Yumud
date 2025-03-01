@@ -18,8 +18,8 @@
 //     timer3[2].setPolarity(true);
 //     // timer3[1].setPolarity(false);
 //     // timer3[2].setPolarity(false);
-//     auto pwmL = PwmChannel(timer3[2]);
-//     auto pwmR = PwmChannel(timer3[1]);
+//     auto pwmL = PwmChannelIntf(timer3[2]);
+//     auto pwmR = PwmChannelIntf(timer3[1]);
 //     pwmL.init();
 //     pwmR.init();
 

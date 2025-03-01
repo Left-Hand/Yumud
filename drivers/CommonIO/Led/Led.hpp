@@ -8,7 +8,7 @@
 
 
 class GpioConcept;
-class PwmChannel;
+class PwmChannelIntf;
 
 namespace ymd::drivers{
 
