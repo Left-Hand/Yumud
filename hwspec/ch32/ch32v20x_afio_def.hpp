@@ -271,27 +271,27 @@ struct AFIO_Def{
         PCFR2.USART1_RM1 = remap & 0x01;
     }
 
-    void set_exti_source(const uint8_t port_source, const uint8_t pin_source){
-        switch(pin_source & 0x0f){
-            case 0: EXTICR1.EXTI0 = port_source; return;
-            case 1: EXTICR1.EXTI1 = port_source; return;
-            case 2: EXTICR1.EXTI2 = port_source; return;
-            case 3: EXTICR1.EXTI3 = port_source; return;
+    void set_exti_source(const uint8_t port, const uint8_t pin){
+        switch(pin & 0x0f){
+            case 0: EXTICR1.EXTI0 = port; return;
+            case 1: EXTICR1.EXTI1 = port; return;
+            case 2: EXTICR1.EXTI2 = port; return;
+            case 3: EXTICR1.EXTI3 = port; return;
     
-            case 4: EXTICR2.EXTI4 = port_source; return;
-            case 5: EXTICR2.EXTI5 = port_source; return;
-            case 6: EXTICR2.EXTI6 = port_source; return;
-            case 7: EXTICR2.EXTI7 = port_source; return;
+            case 4: EXTICR2.EXTI4 = port; return;
+            case 5: EXTICR2.EXTI5 = port; return;
+            case 6: EXTICR2.EXTI6 = port; return;
+            case 7: EXTICR2.EXTI7 = port; return;
     
-            case 8: EXTICR3.EXTI8 = port_source; return;
-            case 9: EXTICR3.EXTI9 = port_source; return;
-            case 10: EXTICR3.EXTI10 = port_source; return;
-            case 11: EXTICR3.EXTI11 = port_source; return;
+            case 8: EXTICR3.EXTI8 = port; return;
+            case 9: EXTICR3.EXTI9 = port; return;
+            case 10: EXTICR3.EXTI10 = port; return;
+            case 11: EXTICR3.EXTI11 = port; return;
     
-            case 12: EXTICR4.EXTI12 = port_source; return;
-            case 13: EXTICR4.EXTI13 = port_source; return;
-            case 14: EXTICR4.EXTI14 = port_source; return;
-            case 15: EXTICR4.EXTI15 = port_source; return;
+            case 12: EXTICR4.EXTI12 = port; return;
+            case 13: EXTICR4.EXTI13 = port; return;
+            case 14: EXTICR4.EXTI14 = port; return;
+            case 15: EXTICR4.EXTI15 = port; return;
         }
     }
 
