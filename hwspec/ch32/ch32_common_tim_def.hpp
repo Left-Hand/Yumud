@@ -2,6 +2,11 @@
 
 #include <cstdint>
 
+
+#ifndef BIT_CAST
+#define BIT_CAST(type, source) __builtin_bit_cast(type, (source))
+#endif
+
 namespace CH32V20x{
 
 struct R16_TIM_CTLR1{
@@ -13,7 +18,13 @@ struct R16_TIM_CTLR1{
     uint16_t CMS:2;
     uint16_t APRE:1;
     uint16_t CKD:2;
-    uint16_t :6;
+
+    uint16_t :2;
+    uint16_t BKSEL:1;
+
+    uint16_t :1;
+    uint16_t TMR_CAP_OV_EN:1;
+    uint16_t TMR_CAP_LVL_EN:1;
 };
 
 struct R16_TIM_CTLR2{
@@ -43,6 +54,23 @@ struct R16_TIM_SMCFGR{
     uint16_t ECE:1;
     uint16_t ETP:1;
 };
+
+#define TIM_EVENTS uint16_t UIE:1;\
+uint16_t CC1IE:1;\
+uint16_t CC2IE:1;\
+uint16_t CC3IE:1;\
+uint16_t CC4IE:1;\
+uint16_t CCMIE:1;\
+uint16_t TIE:1;\
+uint16_t BIE:1;\
+uint16_t UDE:1;\
+uint16_t CC1DE:1;\
+uint16_t CC2DE:1;\
+uint16_t CC3DE:1;\
+uint16_t CC4DE:1;\
+uint16_t COMDE:1;\
+uint16_t TDE:1;\
+uint16_t :1;\
 
 struct R16_TIM_DMAINTENR{
     uint16_t UIE:1;
@@ -283,7 +311,7 @@ struct TIM_Def{
         CTLR1.OPM = en;
     }
 
-    constexpr void set_dec_mode(const bool en){
+    constexpr void set_dec_count_mode(const bool en){
         CTLR1.DIR = en;
     }
 
@@ -316,6 +344,103 @@ struct TIM_Def{
         CTLR1.CKD = prescale;
     }
 
+    constexpr void enable_bkin_from_cmp(const bool en){
+        CTLR1.BKSEL = en;
+    }
+
+    constexpr void enable_cap_saturation(const bool en){
+        CTLR1.TMR_CAP_OV_EN = en;
+    }
+
+    constexpr void enable_cap_level_indicate(const bool en){
+        CTLR1.TMR_CAP_LVL_EN = en;
+    }
+
+    constexpr void enable_cc_preload(const bool en){
+        CTLR2.CCPC = en;
+    }
+
+    constexpr void enable_cc_update_by_com_trgi(const bool en){
+        CTLR2.CCUS = en;
+    }
+
+    constexpr void set_cc_dma_select(const uint8_t sel){
+        CTLR2.CCDS = sel;
+    }
+
+    constexpr void set_trgo_source(const uint8_t source){
+        CTLR2.MMS = source;
+    }
+
+    constexpr void set_ti1_select(const uint8_t sel){
+        CTLR2.TI1S = sel;
+    }
+
+    constexpr void set_co_output_idle_state(const uint8_t ch, const bool stat){
+        switch(ch){
+            case 1: CTLR2.OIS1N = stat; 
+            case 2: CTLR2.OIS2N = stat; 
+            case 3: CTLR2.OIS3N = stat; 
+        }
+    }
+
+    constexpr void set_coutput_idle_state(const uint8_t ch, const bool stat){
+        switch(ch){
+            case 1: CTLR2.OIS1 = stat; 
+            case 2: CTLR2.OIS2 = stat; 
+            case 3: CTLR2.OIS3 = stat; 
+            case 4: CTLR2.OIS4 = stat; 
+        }
+    }
+
+    constexpr void set_input_mode(const uint8_t mode){
+        SMCFGR.SMS = mode;
+    }
+
+    constexpr void set_trigger_source(const uint8_t source){
+        SMCFGR.TS = source;
+    }
+
+    constexpr void enable_master_slave_mode(const bool en){
+        SMCFGR.MSM = en;
+    }
+
+    constexpr void set_slave_mode(const uint8_t mode){
+        SMCFGR.SMS = mode;
+    }
+
+    constexpr void set_ext_trigger_filter(const uint8_t filt){
+        SMCFGR.ETF = filt;
+    }
+
+    constexpr void set_ext_trigger_prescale(const uint8_t prescale){
+        SMCFGR.ETPS = prescale;
+    }
+
+    constexpr void enable_ext_clockmode2(const bool en){
+        SMCFGR.ECE = en;
+    }
+
+    constexpr void enable_ext_trigger_inversion(const bool en){
+        SMCFGR.ETP = en;
+    }
+
+    struct Events{
+        TIM_EVENTS
+    };
+
+    constexpr void set_dma_interrupts_en(const Events events){
+        const_cast<R16_TIM_DMAINTENR &>(DMAINTENR) = 
+            BIT_CAST(R16_TIM_DMAINTENR, events);
+    }
+
+    constexpr void add_dma_interrupts_en(const Events events){
+        (uint16_t &)(DMAINTENR) |= BIT_CAST(uint16_t, events);
+    }
+
+    constexpr void remove_dma_interrupts_en(const Events events){
+        (uint16_t &)(DMAINTENR) &= ~BIT_CAST(uint16_t, events);
+    }
 };
 
 }
