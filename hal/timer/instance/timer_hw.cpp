@@ -8,19 +8,19 @@ using IT = TimerUtils::IT;
 #define ADVANCED_TIMER_IT_TEMPLATE(x)\
 extern "C"{\
 __interrupt void TIM##x##_BRK_IRQHandler(void){\
-    timer##x.onBreakHandler();\
+    timer##x.onBreakInterrupt();\
 }\
 \
 __interrupt void TIM##x##_UP_IRQHandler(void){\
-    timer##x.onUpdateHandler();\
+    timer##x.onUpdateInterrupt();\
 }\
 \
 __interrupt void TIM##x##_TRG_COM_IRQHandler(void){\
-    timer##x.onTriggerComHandler();\
+    timer##x.onTriggerComInterrupt();\
 }\
 \
 __interrupt void TIM##x##_CC_IRQHandler(void){\
-    timer##x.onCCHandler();\
+    timer##x.onCCInterrupt();\
 }\
 }\
 \
@@ -28,7 +28,7 @@ __interrupt void TIM##x##_CC_IRQHandler(void){\
 #define GENERIC_TIMER_IT_TEMPLATE(x)\
 extern "C"{\
 __interrupt void TIM##x##_IRQHandler(void){\
-    timer##x.onItHandler();\
+    timer##x.onItInterrupt();\
 }\
 }\
 \

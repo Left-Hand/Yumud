@@ -427,67 +427,67 @@ TimerChannel & AdvancedTimer::operator [](const TimerChannel::ChannelIndex ch){
     }
 }
 
-void BasicTimer::handleIt(const IT it){
+void BasicTimer::invokeCallback(const IT it){
     const uint16_t code = uint8_t(it);
     auto & cb = this->cbs[CTZ(code)];
     EXECUTE(cb);
     TIM_ClearITPendingBit(instance, code);
 }
 
-#define HANDLE_IT(it)     if((itstatus & uint8_t(it)) and (itenable & uint8_t(it))) handleIt(it);
+#define TRY_HANDLE_IT(it)     if((itstatus & uint8_t(it))) {invokeCallback(it);return;}
 
 
-void BasicTimer::onUpdateHandler(){
-    handleIt(IT::Update);
+void BasicTimer::onUpdateInterrupt(){
+    invokeCallback(IT::Update);
 }
 
-void BasicTimer::onBreakHandler(){
-    handleIt(IT::Break);
+void BasicTimer::onBreakInterrupt(){
+    invokeCallback(IT::Break);
 }
 
 
-void BasicTimer::onTriggerComHandler(){
+void BasicTimer::onTriggerComInterrupt(){
     const uint16_t itstatus = instance->INTFR;
-    const uint16_t itenable = instance->DMAINTENR;
+    // const uint16_t itenable = instance->DMAINTENR;
 
-    HANDLE_IT(IT::Trigger);
-    HANDLE_IT(IT::COM);
+    TRY_HANDLE_IT(IT::Trigger);
+    TRY_HANDLE_IT(IT::COM);
 }
 
-void GenericTimer::onCCHandler(){
+void GenericTimer::onCCInterrupt(){
     const uint16_t itstatus = instance->INTFR;
-    const uint16_t itenable = instance->DMAINTENR;
+    // const uint16_t itenable = instance->DMAINTENR;
 
-    HANDLE_IT(IT::CC1);
-    HANDLE_IT(IT::CC2);
-    HANDLE_IT(IT::CC3);
-    HANDLE_IT(IT::CC4);
+    TRY_HANDLE_IT(IT::CC1);
+    TRY_HANDLE_IT(IT::CC2);
+    TRY_HANDLE_IT(IT::CC3);
+    TRY_HANDLE_IT(IT::CC4);
 }
 
-void GenericTimer::onItHandler(){
+void GenericTimer::onItInterrupt(){
     const uint16_t itstatus = instance->INTFR;
-    const uint16_t itenable = instance->DMAINTENR;
+    // const uint16_t itenable = instance->DMAINTENR;
 
-    HANDLE_IT(IT::Update);
-    HANDLE_IT(IT::COM);
-    HANDLE_IT(IT::Trigger);
-    HANDLE_IT(IT::Break);
+    TRY_HANDLE_IT(IT::Update);
+    TRY_HANDLE_IT(IT::COM);
+    TRY_HANDLE_IT(IT::Trigger);
+    TRY_HANDLE_IT(IT::Break);
 }
 
-// void GenericTimer::onItHandler(){
+// void GenericTimer::onItInterrupt(){
 //     const uint16_t itstatus = instance->INTFR;
 //     const uint16_t itenable = instance->DMAINTENR;
 
-//     HANDLE_IT(IT::Update);
+//     TRY_HANDLE_IT(IT::Update);
 
-//     HANDLE_IT(IT::CC1);
-//     HANDLE_IT(IT::CC2);
-//     HANDLE_IT(IT::CC3);
-//     HANDLE_IT(IT::CC4);
+//     TRY_HANDLE_IT(IT::CC1);
+//     TRY_HANDLE_IT(IT::CC2);
+//     TRY_HANDLE_IT(IT::CC3);
+//     TRY_HANDLE_IT(IT::CC4);
 
-//     HANDLE_IT(IT::COM);
-//     HANDLE_IT(IT::Trigger);
-//     HANDLE_IT(IT::Break);
+//     TRY_HANDLE_IT(IT::COM);
+//     TRY_HANDLE_IT(IT::Trigger);
+//     TRY_HANDLE_IT(IT::Break);
 // }
 
 

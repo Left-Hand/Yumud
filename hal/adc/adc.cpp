@@ -61,9 +61,13 @@ void AdcPrimary::init(const std::initializer_list<AdcChannelConfig> & regular_li
         }
     }
 
-    if(temp_verf_activation) enableTempVref();
-    if(MAX(injected_list.size(), regular_list.size()) > 1) enableScan();
-    else enableSingleshot();
+    if(temp_verf_activation) enableTempVref(true);
+
+    if(MAX(injected_list.size(), regular_list.size()) > 1){
+        enableScan(true);  
+    }else{
+        enableSingleshot(true);
+    }
 
 
     ADC_ExternalTrigConvCmd(instance, ENABLE);

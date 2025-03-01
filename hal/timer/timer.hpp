@@ -107,10 +107,10 @@ protected:
     void enableRcc(const bool en);
     void remap(const uint8_t rm);
 
-    void onUpdateHandler();
-    void onBreakHandler();
-    void onTriggerComHandler();
-    void handleIt(const IT it);
+    void onUpdateInterrupt();
+    void onBreakInterrupt();
+    void onTriggerComInterrupt();
+    void invokeCallback(const IT it);
 public:
 
     
@@ -147,9 +147,9 @@ class GenericTimer:public BasicTimer{
 protected:
     TimerOC channels[4];
 
-    void onCCHandler();
+    void onCCInterrupt();
 private:
-    void onItHandler();
+    void onItInterrupt();
 public:
     GenericTimer(TIM_TypeDef * _base):
             BasicTimer(_base),

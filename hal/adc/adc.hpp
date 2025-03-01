@@ -166,19 +166,19 @@ protected:
         }
     }
 
-    void enableSingleshot(const bool en = true){
+    void enableSingleshot(const bool en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DISCEN = en;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableScan(const bool en = true){
+    void enableScan(const bool en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.SCAN = en;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableTempVref(const bool en = true){
+    void enableTempVref(const bool en){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.TSVREFE = en;
@@ -188,6 +188,18 @@ protected:
     #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
     friend void ::ADC1_2_IRQHandler(void);
     #endif
+
+    __fast_inline void onJeocInterrupt(){
+        EXECUTE(jeoc_cb);
+    }
+
+    __fast_inline void onEocInterrupt(){
+        EXECUTE(eoc_cb);
+    }
+
+    __fast_inline void onAwdInterrupt(){
+        EXECUTE(awd_cb);
+    }
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance),
         injected_channels{
