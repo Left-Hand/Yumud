@@ -158,6 +158,50 @@ struct R32_ADC_RDATAR{
     uint16_t :16;
 };
 
+
+struct R32_TKEY_CHARGE2{
+    uint32_t TKCG0:3;
+    uint32_t TKCG1:3;
+    uint32_t TKCG2:3;
+    uint32_t TKCG3:3;
+    uint32_t TKCG4:3;
+    uint32_t TKCG5:3;
+    uint32_t TKCG6:3;
+    uint32_t TKCG7:3;
+    uint32_t TKCG8:3;
+    uint32_t TKCG9:3;
+    uint32_t :2;
+
+};
+
+struct R32_TKEY_CHARGE1{
+ 
+    uint32_t TKCG10:3;
+    uint32_t TKCG11:3;
+    uint32_t TKCG12:3;
+    uint32_t TKCG13:3;
+    uint32_t TKCG14:3;
+    uint32_t TKCG15:3;
+    uint32_t TKCG16:3;
+    uint32_t TKCG17:3;
+    uint32_t :8;
+};
+
+struct R32_TKEY_CHGOFFSET{
+    uint32_t TKCGOFFSET:8;
+    uint32_t :24;
+};
+
+struct R32_TKEY_ACT_DCG{
+    uint32_t TKACT_DCG:8;
+    uint32_t :124;
+};
+
+struct R32_TKEY_DR{
+    uint32_t DATA:16;
+    uint32_t :116;
+};
+
 struct ADC_Def{
     volatile R32_ADC_STATR STATR;
     volatile R32_ADC_CTLR1 CTLR1;
@@ -413,52 +457,7 @@ struct ADC_Def{
 static_assert(sizeof(ADC_Def) == (0x40012450 - 0x40012400), "ADC_Def size mismatch");
 static_assert(sizeof(ADC_Def) == (0x40012850 - 0x40012800), "ADC_Def size mismatch");
 
-static inline ADC_Def * ADC1_Inst = (ADC_Def *)(0x40012400);
-static inline ADC_Def * ADC2_Inst = (ADC_Def *)(0x40012400);
 
-
-struct R32_TKEY_CHARGE2{
-    uint32_t TKCG0:3;
-    uint32_t TKCG1:3;
-    uint32_t TKCG2:3;
-    uint32_t TKCG3:3;
-    uint32_t TKCG4:3;
-    uint32_t TKCG5:3;
-    uint32_t TKCG6:3;
-    uint32_t TKCG7:3;
-    uint32_t TKCG8:3;
-    uint32_t TKCG9:3;
-    uint32_t :2;
-
-};
-
-struct R32_TKEY_CHARGE1{
- 
-    uint32_t TKCG10:3;
-    uint32_t TKCG11:3;
-    uint32_t TKCG12:3;
-    uint32_t TKCG13:3;
-    uint32_t TKCG14:3;
-    uint32_t TKCG15:3;
-    uint32_t TKCG16:3;
-    uint32_t TKCG17:3;
-    uint32_t :8;
-};
-
-struct R32_TKEY_CHGOFFSET{
-    uint32_t TKCGOFFSET:8;
-    uint32_t :24;
-};
-
-struct R32_TKEY_ACT_DCG{
-    uint32_t TKACT_DCG:8;
-    uint32_t :124;
-};
-
-struct R32_TKEY_DR{
-    uint32_t DATA:16;
-    uint32_t :116;
-};
 
 struct TKEY_De1f{
     volatile R32_TKEY_CHARGE1 CHARGE1;
@@ -505,5 +504,6 @@ struct TKEY_De1f{
     }
 };
 
-
+static inline ADC_Def * ADC1_Inst = (ADC_Def *)(0x40012400);
+static inline ADC_Def * ADC2_Inst = (ADC_Def *)(0x40012400);
 }

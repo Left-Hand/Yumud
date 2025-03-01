@@ -162,7 +162,7 @@ struct AFIO_Def{
         PCFR1.TIM4_RM = remap & 0b1;
     }
 
-    constexpr void set_can_remap(const uint8_t remap){
+    constexpr void set_can1_remap(const uint8_t remap){
         PCFR1.CAN_RM = remap & 0b11;
     }
 
@@ -232,6 +232,47 @@ struct AFIO_Def{
             case 13: EXTICR4.EXTI13 = port_source; return;
             case 14: EXTICR4.EXTI14 = port_source; return;
             case 15: EXTICR4.EXTI15 = port_source; return;
+        }
+    }
+
+    void set_tim_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_tim1_remap(remap); return;
+            case 2: set_tim2_remap(remap); return;
+            case 3: set_tim3_remap(remap); return;
+            case 4: set_tim4_remap(remap); return;
+        }
+    }
+
+    void set_usart_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_usart1_remap(remap);
+            case 2: set_usart2_remap(remap);
+            case 3: set_usart3_remap(remap);
+            case 4: set_usart4_remap(remap);
+        }
+    }
+
+    void set_spi_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_spi1_remap(remap); return;
+        }
+    }
+
+    void set_i2c_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_i2c1_remap(remap); return;
+        }
+    }
+
+    void set_can_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_can1_remap(remap); return;
         }
     }
 };
