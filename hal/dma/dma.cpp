@@ -34,8 +34,8 @@ DmaChannel dma2Ch11{DMA2_Channel11};
 
 #define NAME_OF_DMA_XY(x,y) dma##x##Ch##y
 
+#ifdef ENABLE_DMA1
 #define DMA1_Inst reinterpret_cast<DMA1_Def *>(DMA1)
-
 #define DMA1_IT_TEMPLATE(y)\
 __interrupt void DMA1##_Channel##y##_IRQHandler(void){\
     if(DMA1_Inst->get_transfer_done_flag(y)){\
@@ -47,10 +47,6 @@ __interrupt void DMA1##_Channel##y##_IRQHandler(void){\
     }\
 }\
 
-
-
-
-#ifdef ENABLE_DMA1
 DMA1_IT_TEMPLATE(1);
 DMA1_IT_TEMPLATE(2);
 DMA1_IT_TEMPLATE(3);
@@ -61,6 +57,18 @@ DMA1_IT_TEMPLATE(7);
 #endif
 
 #ifdef ENABLE_DMA2
+#define DMA2_Inst reinterpret_cast<DMA2_Def *>(DMA2)
+#define DMA2_IT_TEMPLATE(y)\
+__interrupt void DMA2##_Channel##y##_IRQHandler(void){\
+    if(DMA2_Inst->get_transfer_done_flag(y)){\
+        NAME_OF_DMA_XY(2,y).onTransferDoneInterrupt();\
+        DMA2_Inst->clear_transfer_done_flag(y);\
+    }else if(DMA2_Inst->get_transfer_onhalf_flag(y)){\
+        NAME_OF_DMA_XY(2,y).onTransferHalfInterrupt();\
+        DMA2_Inst->clear_transfer_onhalf_flag(y);\
+    }\
+}\
+
 DMA2_IT_TEMPLATE(1);
 DMA2_IT_TEMPLATE(2);
 DMA2_IT_TEMPLATE(3);

@@ -1,30 +1,35 @@
 #include "sys/core/platform.h"
+#include "hwspec/ch32/ch32_common_uart_def.hpp"
 
 #include "uarthw.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
+using namespace CH32;
 
 #define UART_TX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
 #define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
 
+
 #define UART_IT_TEMPLATE(name, uname)\
 __interrupt void uname##_IRQHandler(void){\
-    if(USART_GetITStatus(uname,USART_IT_RXNE)){\
+    const auto events = uname##_Inst->get_events();\
+    if(events.RXNE){\
         name.onRxneInterrupt();\
-        USART_ClearITPendingBit(uname,USART_IT_RXNE);\
-    }else if(USART_GetITStatus(uname,USART_IT_IDLE)){\
+        uname##_Inst->clear_events({.RXNE = 1});\
+    }else if(events.IDLE){\
         name.onIdleInterrupt();\
-        uname->STATR;\
-        uname->DATAR;\
-    }else if(USART_GetITStatus(uname,USART_IT_TXE)){\
+        uname##_Inst->STATR;\
+        uname##_Inst->DATAR;\
+    }else if(events.TXE){\
         name.onTxeInterrupt();\
-        USART_ClearITPendingBit(uname,USART_IT_TXE);\
-    }else if(USART_GetFlagStatus(uname,USART_FLAG_ORE)){\
-        uname->DATAR;\
-        USART_ClearFlag(uname,USART_FLAG_ORE);\
+        uname##_Inst->clear_events({.TXE = 1});\
+    }else if(events.ORE){\
+        uname##_Inst->DATAR;\
+        uname##_Inst->clear_events({.ORE = 1});\
     }\
 }\
+
 
 #ifdef ENABLE_UART1
 UART_IT_TEMPLATE(uart1, USART1)
