@@ -5,20 +5,20 @@
 
 #include "hal/timer/instance/timer_hw.hpp"
 
-class TimerOCPair:public PwmChannelIntf{
+class TimerOCTwins:public PwmChannelIntf{
 protected:
     TimerOC & oc_;
     TimerOCN & ocn_;
     bool last_polar = false;
 public:
-    TimerOCPair(AdvancedTimer & timer, const size_t idx):
+    TimerOCTwins(AdvancedTimer & timer, const size_t idx):
         oc_(timer.oc(idx)),
         ocn_(timer.ocn(idx)){;}
 
-    TimerOCPair(TimerOC & oc, TimerOCN & ocn):
+    TimerOCTwins(TimerOC & oc, TimerOCN & ocn):
         oc_(oc), ocn_(ocn){;}
 
-    TimerOCPair & operator = (const real_t value) override{
+    TimerOCTwins & operator = (const real_t value) override{
         const bool polar = value > 0;
         if(last_polar != polar){
             last_polar = polar;
@@ -37,12 +37,8 @@ public:
 };
 
 void co_ab_main(){
-    DEBUGGER_INST.init(DEBUG_UART_BAUD);
-    DEBUGGER.retarget(&DEBUGGER_INST);
-
-
-    auto & pwm_gpio = portA[8];
-    pwm_gpio.outpp();
+    uart2.init(DEBUG_UART_BAUD);
+    DEBUGGER.retarget(&uart2);
 
     auto & timer = timer1;
     auto & pwm_p = timer.oc(1);
@@ -55,7 +51,7 @@ void co_ab_main(){
 
     pwm_p.setIdleState(true);
     pwm_n.setIdleState(true);
-    TimerOCPair pwm_pair{pwm_p, pwm_n};
+    TimerOCTwins pwm_pair{pwm_p, pwm_n};
 
     while(true){
         DEBUG_PRINTLN(millis());

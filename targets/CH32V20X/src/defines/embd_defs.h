@@ -25,7 +25,7 @@
 #define TIM1_REMAP 0
 
 #define ENABLE_TIM2
-#define TIM2_REMAP 1
+#define TIM2_REMAP 0
 
 
 #define ENABLE_TIM3
