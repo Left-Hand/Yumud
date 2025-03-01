@@ -176,8 +176,8 @@ protected:
         return 0;
     }
 
-    void onTransmitHalfInterrupt();
-    void onTransmitDoneInterrupt();
+    void onTransferHalfInterrupt();
+    void onTransferDoneInterrupt();
 
     #ifdef ENABLE_DMA1
         friend void ::DMA1_Channel1_IRQHandler(void);

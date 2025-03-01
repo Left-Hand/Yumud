@@ -97,9 +97,9 @@ protected:
     void clearFifoReadPtr();
     void clearFifoPtr();
 
-    void handleFifoInterrupt();
-    void handlePktInterrupt();
-    void handleRxTimeoutInterrupt();
+    void onFifoInterrupt();
+    void onPktInterrupt();
+    void onRxTimeoutInterrupt();
  
     bool getFifoStatus();
     bool getPktStatus();

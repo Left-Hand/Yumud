@@ -7,7 +7,7 @@
 
 
 #ifdef ENABLE_UART1
-extern "C" __interrupt void USART1_IRQHandler();
+extern "C" __interrupt void USART1_IRQHandler(void);
 #endif
 
 #ifdef ENABLE_UART2
@@ -56,14 +56,14 @@ protected:
     void enableRxDma(const bool en);
     void enableTxDma(const bool en);
 
-    void rxDmaDoneHandler();
-    void rxDmaHalfHandler();
+    void onRxDmaDone();
+    void onRxDmaHalf();
 
     void invokeTxDma();
 
-    void rxneHandle();
-    void txeHandle();
-    void idleHandle();
+    void onRxneInterrupt();
+    void onTxeInterrupt();
+    void onIdleInterrupt();
 
     size_t rx_dma_buf_index;
     size_t tx_dma_buf_index;

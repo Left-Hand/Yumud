@@ -11,14 +11,14 @@ using namespace ymd::hal;
 #define UART_IT_TEMPLATE(name, uname)\
 __interrupt void uname##_IRQHandler(void){\
     if(USART_GetITStatus(uname,USART_IT_RXNE)){\
-        name.rxneHandle();\
+        name.onRxneInterrupt();\
         USART_ClearITPendingBit(uname,USART_IT_RXNE);\
     }else if(USART_GetITStatus(uname,USART_IT_IDLE)){\
-        name.idleHandle();\
+        name.onIdleInterrupt();\
         uname->STATR;\
         uname->DATAR;\
     }else if(USART_GetITStatus(uname,USART_IT_TXE)){\
-        name.txeHandle();\
+        name.onTxeInterrupt();\
         USART_ClearITPendingBit(uname,USART_IT_TXE);\
     }else if(USART_GetFlagStatus(uname,USART_FLAG_ORE)){\
         uname->DATAR;\
@@ -30,7 +30,6 @@ __interrupt void uname##_IRQHandler(void){\
 UART_IT_TEMPLATE(uart1, USART1)
 #endif
 
-
 #ifdef ENABLE_UART2
 UART_IT_TEMPLATE(uart2, USART2)
 #endif
@@ -38,7 +37,6 @@ UART_IT_TEMPLATE(uart2, USART2)
 #ifdef ENABLE_UART3
 UART_IT_TEMPLATE(uart3, USART3)
 #endif
-
 
 #ifdef ENABLE_UART4
 UART_IT_TEMPLATE(uart4, UART4)
@@ -48,7 +46,6 @@ UART_IT_TEMPLATE(uart4, UART4)
 UART_IT_TEMPLATE(uart5, UART5)
 #endif
 
-
 #ifdef ENABLE_UART6
 UART_IT_TEMPLATE(uart6, UART6)
 #endif
@@ -56,7 +53,6 @@ UART_IT_TEMPLATE(uart6, UART6)
 #ifdef ENABLE_UART7
 UART_IT_TEMPLATE(uart7, UART7)
 #endif
-
 
 #ifdef ENABLE_UART8
 UART_IT_TEMPLATE(uart8, UART8)
@@ -188,15 +184,15 @@ void UartHw::enableRcc(const bool en){
 }
 
 
-void UartHw::rxneHandle(){
-    this->rx_fifo.push(USART_ReceiveData(instance));
+void UartHw::onRxneInterrupt(){
+    this->rx_fifo.push(uint8_t(instance->DATAR));
 }
 
-void UartHw::txeHandle(){
+void UartHw::onTxeInterrupt(){
 
 }
 
-void UartHw::idleHandle(){
+void UartHw::onIdleInterrupt(){
     if(rx_method_ == CommMethod::Dma){
         size_t index = UART_RX_DMA_BUF_SIZE - rx_dma.pending();
         if(index != UART_RX_DMA_BUF_SIZE / 2 && index != UART_RX_DMA_BUF_SIZE){
@@ -371,7 +367,7 @@ void UartHw::enableTxDma(const bool en){
     }
 }
 
-void UartHw::rxDmaDoneHandler(){
+void UartHw::onRxDmaDone(){
     //将数据从当前索引填充至末尾
     rx_dma.start();
     // for(size_t i = rx_dma_buf_index; i < UART_RX_DMA_BUF_SIZE; i++) this->rx_fifo.push(rx_dma_buf[i]); 
@@ -379,7 +375,7 @@ void UartHw::rxDmaDoneHandler(){
     rx_dma_buf_index = 0;
 }
 
-void UartHw::rxDmaHalfHandler(){
+void UartHw::onRxDmaHalf(){
     //将数据从当前索引填充至半满
     this->rx_fifo.push(&rx_dma_buf[rx_dma_buf_index], (UART_RX_DMA_BUF_SIZE / 2) - rx_dma_buf_index); 
     rx_dma_buf_index = UART_RX_DMA_BUF_SIZE / 2;
@@ -397,8 +393,8 @@ void UartHw::enableRxDma(const bool en){
         // rx_dma.bindDoneCb(std::bind(&UartHw::rx_dmaDoneHandler, this));
         // rx_dma.bindHalfCb(std::bind(&UartHw::rx_dmaHalfHandler, this));
 
-        rx_dma.bindDoneCb([this](){this->rxDmaDoneHandler();});
-        rx_dma.bindHalfCb([this](){this->rxDmaHalfHandler();});
+        rx_dma.bindDoneCb([this](){this->onRxDmaDone();});
+        rx_dma.bindHalfCb([this](){this->onRxDmaHalf();});
         rx_dma.start((void *)rx_dma_buf.begin(), (const void *)(size_t)(&instance->DATAR), UART_RX_DMA_BUF_SIZE);
     }else{
         rx_dma.bindDoneCb(nullptr);
@@ -573,7 +569,6 @@ namespace ymd::hal{
     UartHw uart1{USART1, UART1_TX_DMA_CH, UART1_RX_DMA_CH};
     #endif
     
-    
     #ifdef ENABLE_UART2
     UartHw uart2{USART2, UART2_TX_DMA_CH, UART2_RX_DMA_CH};
     #endif
@@ -582,15 +577,13 @@ namespace ymd::hal{
     UartHw uart3{USART3, UART3_TX_DMA_CH, UART3_RX_DMA_CH};
     #endif
     
-    
     #ifdef ENABLE_UART4
-UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
+    UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
     #endif
     
     #ifdef ENABLE_UART5
     UartHw uart5{UART5, UART5_TX_DMA_CH, UART5_RX_DMA_CH};
     #endif
-    
     
     #ifdef ENABLE_UART6
     UartHw uart6{UART6, UART6_TX_DMA_CH, UART6_RX_DMA_CH};
@@ -599,7 +592,6 @@ UartHw uart4{UART4, UART4_TX_DMA_CH, UART4_RX_DMA_CH};
     #ifdef ENABLE_UART7
     UartHw uart7{UART7, UART7_TX_DMA_CH, UART7_RX_DMA_CH};
     #endif
-    
     
     #ifdef ENABLE_UART8
     UartHw uart8{UART8, UART8_TX_DMA_CH, UART8_RX_DMA_CH};
