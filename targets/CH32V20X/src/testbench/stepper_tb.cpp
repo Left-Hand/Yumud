@@ -169,8 +169,8 @@ void stepper_tb(UartHw & logger_inst){
     timer1.oc(3).setPolarity(false);
     timer1.oc(4).setPolarity(false);
     
-    // using AdcChannelEnum = AdcUtils::ChannelIndex;
-    // using AdcCycleEnum = AdcUtils::SampleCycles;
+    // using AdcChannelEnum = AdcChannelIndex;
+    // using AdcCycleEnum = AdcSampleCycles;
 
 
 
@@ -183,7 +183,7 @@ void stepper_tb(UartHw & logger_inst){
     //     }
     // );
 
-    // timer1.setTrgoSource(TimerUtils::TrgoSource::Update);
+    // timer1.setTrgoSource(TimerTrgoSource::Update);
     // timer1.setRepeatTimes(1);
     // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1TRGO);
     // adc1.enableAutoInject(false);

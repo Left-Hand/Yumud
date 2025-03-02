@@ -14,8 +14,8 @@
 // UART:576000波特率输出，用于观察信号 
 // TIM:CH1和CH2构成A相驱动芯片的两个输入端 CH3和CH4构成B相驱动芯片的两个输入端
 
-// #define FREQ 4_KHz
-#define FREQ 200
+#define FREQ 40_KHz
+// #define FREQ 200
 
 #define UART_INDEX 1
 // #define UART_INDEX 2
@@ -118,7 +118,7 @@ void sincos_pwm_main(){
     trig_oc.cvr() = timer.arr() - 1;
     #elif TIM_INDEX == 4
     //重要!!!!
-    timer.setTrgoSource(TimerUtils::TrgoSource::Update);
+    timer.setTrgoSource(TimerTrgoSource::Update);
     #endif
 
     pwm_ap.init();
@@ -169,27 +169,27 @@ void sincos_pwm_main(){
     trig_gpio.outpp();
 
     adc1.bindCb(AdcIT::JEOC, [&]{
-        // trig_gpio = !trig_gpio;
-        DEBUG_PRINTLN_IDLE(millis());
+        trig_gpio = !trig_gpio;
+        // DEBUG_PRINTLN_IDLE(millis());
     });
     
     adc1.enableIT(AdcIT::JEOC, {0,0});
     
-    // timer.bindCb(TimerUtils::IT::CC4, [&]{
+    // timer.bindCb(TimerIT::CC4, [&]{
     //     trig_gpio = !trig_gpio;
     // });
 
-    // timer.enableIt(TimerUtils::IT::CC4,{0,0});
+    // timer.enableIt(TimerIT::CC4,{0,0});
 
     while(true){
         
-        const auto t = time() * real_t(50 * TAU);
+        const auto t = time() * real_t(5 * TAU);
         const auto st = sin<30>(t);
         const auto ct = cos<30>(t);
         
         pwm_a = st;
         pwm_b = ct;
 
-        // DEBUG_PRINTLN_IDLE(st, ct, real_t(inj),     sizeof(Gpio));
+        DEBUG_PRINTLN_IDLE(st, ct, real_t(inj),     sizeof(Gpio));
     }
 }

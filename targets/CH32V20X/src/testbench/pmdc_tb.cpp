@@ -163,8 +163,8 @@ void pmdc_tb(){
     adc1.init(
         {
         },{
-            AdcChannelConfig{AdcUtils::Channel::CH3, AdcUtils::SampleCycles::T28_5},
-            AdcChannelConfig{AdcUtils::Channel::CH4, AdcUtils::SampleCycles::T28_5},
+            AdcChannelConfig{AdcChannel::CH3, AdcSampleCycles::T28_5},
+            AdcChannelConfig{AdcChannel::CH4, AdcSampleCycles::T28_5},
         });
 
     adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
@@ -174,7 +174,7 @@ void pmdc_tb(){
     // adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::SW);
 
     // constexpr auto a = F_CPU / 4096;
-    timer1.init(4096, 1, TimerUtils::Mode::CenterAlignedUpTrig);
+    timer1.init(4096, 1, TimerMode::CenterAlignedUpTrig);
     timer1.enableArrSync();
     TIM_SelectOutputTrigger(TIM1, TIM_TRGOSource_Update);
 
@@ -188,7 +188,7 @@ void pmdc_tb(){
     // timer1.oc(4).init();
     // timer1.oc(4)= 0.99;
 
-    timer3.init(4096, 1, TimerUtils::Mode::CenterAlignedDownTrig);
+    timer3.init(4096, 1, TimerMode::CenterAlignedDownTrig);
     timer3.enableArrSync();
     GPIO_PinRemapConfig(TIM3_REMAP, DISABLE);
 
@@ -204,18 +204,18 @@ void pmdc_tb(){
     // MaxFollower follower;
     CurrentGen cg;
 
-    adc1.bindCb(AdcUtils::IT::JEOC, [&](){
+    adc1.bindCb(AdcIT::JEOC, [&](){
         feed_current = driver.getCurrent();
         filt_current = cg.update(feed_current);
     });
 
-    adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
+    adc1.enableIT(AdcIT::JEOC, {0,0});
 
-    // timer3.bindCb(TimerUtils::IT::Update, [&](){
+    // timer3.bindCb(TimerIT::Update, [&](){
 
     // });
 
-    // timer3.enableIt(TimerUtils::IT::Update, {0,0});
+    // timer3.enableIt(TimerIT::Update, {0,0});
 
 
     driver.init();

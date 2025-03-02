@@ -212,8 +212,8 @@ void SmartCar::parse(){
 void SmartCar::init_it(){
     GenericTimer & timer = timer2;
     timer.init(ctrl_freq);
-    timer.bindCb(TimerUtils::IT::Update, [this](){this->ctrl();});
-    timer.enableIt(TimerUtils::IT::Update, NvicPriority{0,0});
+    timer.bindCb(TimerIT::Update, [this](){this->ctrl();});
+    timer.enableIt(TimerIT::Update, NvicPriority{0,0});
 }
 
 void SmartCar::main(){

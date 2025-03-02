@@ -989,13 +989,13 @@ void bldc_main(){
         }
     };
 
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_pulse);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sing);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_sensorless);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_measure);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_openloop);
-    // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
+    // adc1.bindCb(AdcIT::JEOC, cb_pulse);
+    // adc1.bindCb(AdcIT::JEOC, cb_sing);
+    // adc1.bindCb(AdcIT::JEOC, cb_sensorless);
+    // adc1.bindCb(AdcIT::JEOC, cb);
+    // adc1.bindCb(AdcIT::JEOC, cb_measure);
+    // adc1.bindCb(AdcIT::JEOC, cb_openloop);
+    // adc1.bindCb(AdcIT::JEOC, cb_hfi);
 
     adc1.bindCb(AdcIT::JEOC, measure_bias);
     adc1.enableIT(AdcIT::JEOC, {0,0});

@@ -15,8 +15,8 @@
 // DATA[4] <- temprature()
 
 void adc_tb(OutputStream & logger){
-    using AdcChannelEnum = AdcUtils::Channel;
-    using AdcCycleEnum = AdcUtils::SampleCycles;
+    using AdcChannelEnum = AdcChannel;
+    using AdcCycleEnum = AdcSampleCycles;
     #ifdef ADC_TB_MAIN
 
     adc1.init(
@@ -45,7 +45,7 @@ void adc_tb(OutputStream & logger){
     timer3.init(40000);
     timer3.oc(4).init();
     timer3.oc(4) = 0.5;
-    timer3.bindCb(TimerUtils::IT::CC4, [&](){
+    timer3.bindCb(TimerIT::CC4, [&](){
         real_t angle = TAU * t * 50;
         src_data = 0.5 + 0.2 * sin(angle) + 0.2 * sin(angle * 64);
         pwm = src_data;
@@ -54,14 +54,14 @@ void adc_tb(OutputStream & logger){
         Sys::Clock::reCalculateTime();
     });
 
-    timer3.enableIt(TimerUtils::IT::CC4, {0,0});
+    timer3.enableIt(TimerIT::CC4, {0,0});
 
     while(true){
         // bled = (millis() / 2000) & 0b1;
         // adc1.swStartInjected();
 
-        // auto Vsense = (real_t(uint16_t(ADC1->IDATAR1)) >> 12) * 3.3;           // µçÑ¹Öµ 
-        // auto temperate = ((1.43 - Vsense) / 0.0043 + 25);    // ×ª»»ÎªÎÂ¶ÈÖµ£¬×ª»»¹«Ê½£ºT£¨¡æ£©= ((V25 - Vsense) / Avg_Slope) + 25
+        // auto Vsense = (real_t(uint16_t(ADC1->IDATAR1)) >> 12) * 3.3;           // ï¿½ï¿½Ñ¹Öµ 
+        // auto temperate = ((1.43 - Vsense) / 0.0043 + 25);    // ×ªï¿½ï¿½Îªï¿½Â¶ï¿½Öµï¿½ï¿½×ªï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½Tï¿½ï¿½ï¿½æ£©= ((V25 - Vsense) / Avg_Slope) + 25
         auto temperate = TempSensor_Volt_To_Temper(ADC1->IDATAR1 * 3300 / 4096);
         auto vref = ADC1->IDATAR2 * 3300 / 4096;
         logger.println(ADC1->IDATAR3, ADC1->IDATAR4, temperate, vref);
@@ -100,7 +100,7 @@ void adc_tb(OutputStream & logger){
 
     #ifdef ADC_TB_REGULAR_DMA
     
-    // RegularChannel rch{ADC1, AdcUtils::Channel::CH0, 0};
+    // RegularChannel rch{ADC1, AdcChannel::CH0, 0};
 
     adc1.init(
         {
@@ -136,7 +136,7 @@ void adc_tb(OutputStream & logger){
     #endif
 
     #ifdef ADC_TB_INJECT
-    InjectedChannel jch{ADC1, AdcUtils::Channel::CH0, 0};
+    InjectedChannel jch{ADC1, AdcChannel::CH0, 0};
     #endif
 
 }
