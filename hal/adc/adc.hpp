@@ -214,11 +214,34 @@ public:
 
     AdcInjectedChannel & inj(const size_t index);
 
-    void bindCb(const IT it,Callback && cb);
+    void bindCb(const IT it,auto && cb){
+        switch(it){
+            case IT::JEOC:
+                jeoc_cb = std::forward<decltype(cb)>(cb);
+                break;
+            case IT::EOC:
+                eoc_cb = std::forward<decltype(cb)>(cb);
+                break;
+            case IT::AWD:
+                awd_cb = std::forward<decltype(cb)>(cb);
+                break;
+            default:
+                break;
+        }
+    }
 
-    void enableIT(const IT it, const NvicPriority & priority){
-        ADC_ITConfig(instance, (uint16_t)it, true);
+    void enableIT(const IT it, const NvicPriority & priority, const bool en = true){
+        ADC_ITConfig(instance, (uint16_t)it, en);
         priority.enable(ADC_IRQn);
+    }
+
+    void attach(const IT it, const NvicPriority & priority, auto && cb, const bool en = true){
+        bindCb(it, std::forward<decltype(cb)>(cb));
+        enableIT(it, priority, en);
+    }
+
+    void attach(const IT it, const NvicPriority & priority, std::nullptr_t cb){
+        attach(it, priority, nullptr, false);
     }
 
     void setMode(const Mode mode){

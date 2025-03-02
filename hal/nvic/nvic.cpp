@@ -9,16 +9,6 @@ NvicPriority::NvicPriority(const uint8_t pre, const uint8_t sub):
     _sub(sub & 0b111){;}
 
 void NvicPriority::enable(const NvicPriority & request, const IRQn _irq, const bool en){
-    // const NVIC_InitTypeDef NVIC_InitStructure = {
-    //     .NVIC_IRQChannel = _irq,
-    //     .NVIC_IRQChannelPreemptionPriority = request._pre,
-    //     .NVIC_IRQChannelSubPriority = request._sub,
-    //     .NVIC_IRQChannelCmd = en
-    // };
-
-    // NVIC_Init(&NVIC_InitStructure);
-
-
     NVIC_SetPriority(_irq, (request._pre << 7) | (request._sub << 4));
 
     if(en){

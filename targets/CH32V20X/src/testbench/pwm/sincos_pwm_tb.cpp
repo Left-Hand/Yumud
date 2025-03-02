@@ -168,18 +168,16 @@ void sincos_pwm_main(){
     auto & trig_gpio = portC[13];
     trig_gpio.outpp();
 
-    adc1.bindCb(AdcIT::JEOC, [&]{
+    
+    adc1.attach(AdcIT::JEOC, {0,0}, [&]{
         trig_gpio = !trig_gpio;
         // DEBUG_PRINTLN_IDLE(millis());
     });
     
-    adc1.enableIT(AdcIT::JEOC, {0,0});
-    
-    // timer.bindCb(TimerIT::CC4, [&]{
+
+    // timer.attach(TimerIT::CC4,{0,0}, [&]{
     //     trig_gpio = !trig_gpio;
     // });
-
-    // timer.enableIt(TimerIT::CC4,{0,0});
 
     while(true){
         
