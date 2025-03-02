@@ -28,7 +28,6 @@ int main(){
     sincos_pwm_main();
     // co_ab_main();
     // uart_main();
-    // stepper_tb(uart2);
     // rpc_main();
     // leetcode_main();
     // co_ab_main();
@@ -47,7 +46,7 @@ int main(){
     // gpio_tb(portC[13]);
     // can_tb(logger, can1, false);
     // m3508_main();
-    // stepper_tb(uart1);
+    stepper_tb(uart1);
     // pmw3901_main();
     // math_tb(uart1);
     // zdt_main(uart1);

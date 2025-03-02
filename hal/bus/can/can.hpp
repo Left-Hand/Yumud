@@ -77,7 +77,9 @@ protected:
     void initIt();
     
     void onTxInterrupt();
-    void onRxInterrupt(const uint8_t fifo_num);
+    void onRxMsgInterrupt(const uint8_t fifo_num);
+    void onRxOverrunInterrupt(){;}
+    void onRxFullInterrupt(){;}
     void onSceInterrupt();
 
 
