@@ -182,7 +182,7 @@ Gpio & getPin(const TIM_TypeDef * instance, const TimerChannelIndex channel){
 
     switch((uint32_t)instance){
         default:
-            return GpioNull;
+            return NullGpio;
 
         #ifdef ENABLE_TIM1
         ADVANCED_TIMER_GPIO_TEMPLATE(1)

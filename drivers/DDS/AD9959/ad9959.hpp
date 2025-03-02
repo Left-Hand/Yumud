@@ -164,8 +164,8 @@ protected:
 public:
     AD9959(
         const hal::SpiDrv & spi_drv, 
-        hal::GpioIntf & _reset_gpio = hal::GpioNull, 
-        hal::GpioIntf & _update_gpio = hal::GpioNull
+        hal::GpioIntf & _reset_gpio = hal::NullGpio, 
+        hal::GpioIntf & _update_gpio = hal::NullGpio
     ):
         spi_drv_(spi_drv),
         reset_gpio(_reset_gpio),
@@ -173,8 +173,8 @@ public:
 
     AD9959(
         hal::SpiDrv && spi_drv, 
-        hal::GpioIntf & _reset_gpio = hal::GpioNull, 
-        hal::GpioIntf & _update_gpio = hal::GpioNull
+        hal::GpioIntf & _reset_gpio = hal::NullGpio, 
+        hal::GpioIntf & _update_gpio = hal::NullGpio
     ):
         spi_drv_(std::move(spi_drv)),
         reset_gpio(_reset_gpio),

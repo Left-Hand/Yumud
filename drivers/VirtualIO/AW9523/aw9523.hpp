@@ -103,15 +103,6 @@ public:
         writeReg(RegAddress::swRst, (uint8_t)0x00);
     }
     
-    void setPin(const hal::Pin pin) override{
-        buf |= (uint16_t)pin;
-        writePort(buf);
-    }
-    
-    void clrPin(const hal::Pin pin) override{
-        buf &= ~(uint16_t)pin;
-        writePort(buf);
-    }
 
     void setPin(const uint16_t data) override{
         buf |= data;

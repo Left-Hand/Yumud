@@ -10,28 +10,25 @@ namespace ymd::hal{
 
 class Exti;
 
-class Gpio:public GpioIntf{
+class Gpio final: public GpioIntf{
 protected:
-    GPIO_TypeDef * instance;
-    const uint16_t pin;
-    const uint32_t pin_mask;
+    GPIO_TypeDef * instance_;
+    const Pin pin_;
+    // const uint32_t pin_mask_;
 
-    volatile uint32_t & pin_cfg;
+    // volatile uint32_t & pin_cfg;
 
-    Gpio(GPIO_TypeDef * _instance, const Pin _pin):
-        GpioIntf((_pin != Pin::None) ? int(CTZ((uint16_t)_pin)) : -1),
-        instance(_instance),
+    Gpio(GPIO_TypeDef * instance, const Pin pin):
+        instance_(instance)
 
         #if defined(CH32V20X) || defined(CH32V30X)
-        pin(((_instance == GPIOC) && 
+        ,pin_(Pin(((instance == GPIOC) && 
             (((*(uint32_t *) 0x40022030) & 0x0F000000) == 0)//MCU version for wch mcu, see wch sdk
-            ) ? (((uint16_t)_pin >> 13)) : (uint16_t)_pin),
+            ) ? (((uint16_t)pin >> 13)) : (uint16_t)pin))
         #elif defined(USE_STM32_HAL_LIB)
-        pin((uint16_t)_pin),
+        ,pin_(pin)
         #endif
-
-        pin_mask(~(0xf << ((CTZ(pin) % 8) * 4))),
-        pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
+        {
     }
 
     friend class VGpio;
@@ -49,18 +46,22 @@ public:
 
     static Gpio & null();
 
-    __fast_inline void set()override{
-        instance->BSHR = pin;
+    __fast_inline void set(){
+        instance_->BSHR = uint16_t(pin_);
     }
-    __fast_inline void clr()override{
-        instance->BCR = pin;
+    __fast_inline void clr(){
+        instance_->BCR = uint16_t(pin_);
     }
-    __fast_inline void write(const bool val)override{(val) ? instance->BSHR = pin : instance->BCR = pin;}
-    __fast_inline bool read() const override{return (bool)(instance->INDR & pin);}
+    __fast_inline void write(const bool val){(val) ? instance_->BSHR = uint16_t(pin_) : instance_->BCR = uint16_t(pin_);}
+    __fast_inline bool read() const {return (bool)(instance_->INDR & uint16_t(pin_));}
 
-    void setMode(const GpioMode mode) override;
-    __fast_inline volatile GPIO_TypeDef * inst() {return instance;} 
-
+    void setMode(const GpioMode mode) ;
+    __fast_inline GPIO_TypeDef * inst() const {return instance_;} 
+    __fast_inline int8_t index() const {
+        if(likely(uint16_t(pin_)))
+            return CTZ(uint16_t(pin_));
+        else return -1;
+    }
     template<hal::GpioTags::PortSource port_source,hal::GpioTags::PinSource pin_source>
     static constexpr Gpio reflect(){
         GPIO_TypeDef * _instance = GPIOC;
@@ -73,5 +74,5 @@ public:
 };
 
 
-extern Gpio & GpioNull;
+extern Gpio & NullGpio;
 }

@@ -5,7 +5,7 @@
 #include "drivers/device_defs.h"
 
 namespace ymd::drivers{
-class PCA9685: public hal::VGpioPortIntf<16>{
+class PCA9685 final: public hal::VGpioPortIntf<16>{
 public:
     scexpr uint8_t default_i2c_addr = 0b10000000;
 protected:
@@ -63,13 +63,13 @@ protected:
     LedRegs all_channel;
     uint8_t prescale_reg;
 
-    class PCA8975Channel:public hal::PwmIntf,  hal::GpioIntf{
+    class PCA8975Channel final:public hal::PwmIntf,  hal::GpioIntf{
     protected:
         PCA9685 & pca;
         uint8_t channel;
 
         PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):
-            hal::GpioIntf(_channel), pca(_pca), channel(_channel){;}
+            pca(_pca), channel(_channel){;}
         
         DELETE_COPY_AND_MOVE(PCA8975Channel)
         
@@ -85,6 +85,8 @@ protected:
         __fast_inline void clr() override {*this = real_t(0);}
         __fast_inline void write(const bool val){*this = real_t(val);}
         __fast_inline bool read() const override {return 0;}
+
+        __fast_inline int8_t index() const {return channel;}
 
         void setMode(const hal::GpioMode mode) override{}
     };
@@ -144,10 +146,6 @@ public:
     void init();
 
     void reset();
-
-    void setPin(const hal::Pin pin) override;
-
-    void clrPin(const hal::Pin pin) override;
 
     void setPin(const uint16_t data) override;
 

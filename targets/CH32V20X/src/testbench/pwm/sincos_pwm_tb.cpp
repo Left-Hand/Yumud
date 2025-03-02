@@ -14,16 +14,19 @@
 // UART:576000波特率输出，用于观察信号 
 // TIM:CH1和CH2构成A相驱动芯片的两个输入端 CH3和CH4构成B相驱动芯片的两个输入端
 
+// #define FREQ 4_KHz
+#define FREQ 200
+
 #define UART_INDEX 1
 // #define UART_INDEX 2
 
-// #define TIM_INDEX 1
-#define TIM_INDEX 2
+#define TIM_INDEX 1
+// #define TIM_INDEX 2
 // #define TIM_INDEX 3
 // #define TIM_INDEX 4
 
-// #define TIM1_USE_CC4 0
-#define TIM1_USE_CC4 1
+#define TIM1_USE_CC4 0
+// #define TIM1_USE_CC4 1
 
 class TimerOCPair:public PwmIntf{
 protected:
@@ -59,7 +62,6 @@ public:
     }
 };
     
-
 void sincos_pwm_main(){
     #if UART_INDEX == 1
     auto & uart = uart1;
@@ -86,13 +88,13 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc(4);
 
 
-    timer.init(40_KHz, TimerMode::CenterAlignedDualTrig);
+    timer.init(FREQ, TimerMode::CenterAlignedDualTrig);
     timer.enableArrSync();
 
     #if TIM_INDEX == 1
     #if TIM1_USE_CC4
     auto & trig_oc = timer.oc(4);
-    trig_oc.init(TimerUtils::OcMode::UpValid, false)
+    trig_oc.init(TimerOcMode::UpValid, false)
     .setOutputState(true)
     .setIdleState(false)
     ;
@@ -101,14 +103,14 @@ void sincos_pwm_main(){
     // trig_oc.cvr() = 10;
     #else
     //重要!!!!
-    timer.setTrgoSource(TimerUtils::TrgoSource::Update);
+    timer.setTrgoSource(TimerTrgoSource::Update);
     #endif
     #elif TIM_INDEX == 2
     //重要!!!!
     timer.setTrgoSource(TimerTrgoSource::Update);
     #elif TIM_INDEX == 3
     auto & trig_oc = timer.oc(4);
-    trig_oc.init(TimerUtils::OcMode::UpValid, false)
+    trig_oc.init(TimerOcMode::UpValid, false)
     .setOutputState(true)
     .setIdleState(false)
     ;
@@ -167,7 +169,8 @@ void sincos_pwm_main(){
     trig_gpio.outpp();
 
     adc1.bindCb(AdcIT::JEOC, [&]{
-        trig_gpio = !trig_gpio;
+        // trig_gpio = !trig_gpio;
+        DEBUG_PRINTLN_IDLE(millis());
     });
     
     adc1.enableIT(AdcIT::JEOC, {0,0});
@@ -187,6 +190,6 @@ void sincos_pwm_main(){
         pwm_a = st;
         pwm_b = ct;
 
-        DEBUG_PRINTLN_IDLE(st, ct, real_t(inj));
+        // DEBUG_PRINTLN_IDLE(st, ct, real_t(inj),     sizeof(Gpio));
     }
 }

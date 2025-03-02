@@ -244,7 +244,7 @@ Gpio & UartHw::rxio(){
             return UART8_RX_GPIO;
         #endif
         default:
-            return GpioNull;
+            return NullGpio;
     }
 }
 
@@ -283,7 +283,7 @@ Gpio & UartHw::txio(){
             return UART8_TX_GPIO;
         #endif
         default:
-            return GpioNull;
+            return NullGpio;
     }
 }
 

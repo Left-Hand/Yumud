@@ -33,26 +33,26 @@ public:
         }{;}
     void init();
     void enableRcc(const bool en = true);
+
+
     __inline void writeByIndex(const int index, const bool data) override;
     __inline void setPin(const uint16_t data) override;
-    __inline void setPin(const Pin pin) override;
     __inline void clrPin(const uint16_t data) override;
-    __inline void clrPin(const Pin pin) override;
     GpioPort & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
 
-    operator uint16_t(){return instance->INDR;}
+    explicit operator uint16_t(){return instance->INDR;}
 
     Gpio & operator [](const int index){
         if(index < 0) return Gpio::null();
         else return channels[index & 0b1111];
     };
+
     Gpio & operator [](const Pin pin){
         if(pin != Pin::None) return channels[CTZ((uint16_t)pin) & 0b1111];
         else return Gpio::null();
     };
 
     void setMode(const int index, const GpioMode mode) override;
-
 };
 
 __inline void GpioPort::writeByIndex(const int index, const bool data){
@@ -69,17 +69,10 @@ __inline void GpioPort::setPin(const uint16_t data){
     instance->BSHR = data;
 }
 
-__inline void GpioPort::setPin(const Pin pin){
-    instance->BSHR = (uint16_t)pin;
-}
-
 __inline void GpioPort::clrPin(const uint16_t data){
     instance->BCR = data;
 }
 
-__inline void GpioPort::clrPin(const Pin pin){
-    instance->BCR = (uint16_t)pin;
-}
 
 
 #ifdef ENABLE_GPIOA

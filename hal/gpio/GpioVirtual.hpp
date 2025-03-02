@@ -7,24 +7,26 @@ namespace ymd::hal{
 class Gpio;
 
 
-class VGpio:public GpioIntf{
+class VGpio final :public GpioIntf{
 protected:
-    GpioPortIntf & _port;
-
+    GpioPortIntf & port_;
+    int8_t pin_index_;
     static GpioPortIntf & form_gpiotypedef_to_port(uint32_t base);
 public:
-    DELETE_COPY_AND_MOVE(VGpio)
+    VGpio(const VGpio &) = delete;
+    VGpio(VGpio &&) = delete;
+
     using GpioIntf::operator=;
 
     VGpio(const Gpio & gpio);
-    VGpio(GpioPortIntf & port, const int8_t _pin_index);
-    VGpio(GpioPortIntf & port, const Pin _pin);
-    __fast_inline void set() override {_port.setByIndex(pin_index);}
-    __fast_inline void clr() override {_port.clrByIndex(pin_index);}
-    __fast_inline void write(const bool val){_port.writeByIndex(pin_index, val);}
-    __fast_inline bool read() const override {return _port.readByIndex(pin_index);}
-
-    void setMode(const GpioMode mode) override{ _port.setMode(pin_index, mode);}
+    VGpio(GpioPortIntf & port, const int8_t pin_index);
+    VGpio(GpioPortIntf & port, const Pin pin);
+    __fast_inline void set() {port_.setByIndex(pin_index_);}
+    __fast_inline void clr() {port_.clrByIndex(pin_index_);}
+    __fast_inline void write(const bool val){port_.writeByIndex(pin_index_, val);}
+    __fast_inline bool read() const {return port_.readByIndex(pin_index_);}
+    __fast_inline int8_t index() const {return pin_index_;}
+    void setMode(const GpioMode mode) { port_.setMode(pin_index_, mode);}
 };
 
 
