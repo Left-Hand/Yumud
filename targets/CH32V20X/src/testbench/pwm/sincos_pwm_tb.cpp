@@ -137,18 +137,11 @@ void sincos_pwm_main(){
 
     pwm_b.inverse(true);
 
-
-    using AdcChannelIndex = AdcUtils::ChannelIndex;
-    using AdcCycles = AdcUtils::SampleCycles;
-
-
     adc1.init(
         {
-            {AdcChannelIndex::VREF, AdcCycles::T28_5}
+            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelIndex::CH5, AdcCycles::T28_5},
-            // {AdcChannelIndex::CH4, AdcCycles::T28_5},
-            // {AdcChannelIndex::CH1, AdcCycles::T28_5},
+            {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
         }
     );
 
@@ -173,11 +166,11 @@ void sincos_pwm_main(){
     auto & trig_gpio = portC[13];
     trig_gpio.outpp();
 
-    adc1.bindCb(AdcUtils::IT::JEOC, [&]{
+    adc1.bindCb(AdcIT::JEOC, [&]{
         trig_gpio = !trig_gpio;
     });
     
-    adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
+    adc1.enableIT(AdcIT::JEOC, {0,0});
     
     // timer.bindCb(TimerUtils::IT::CC4, [&]{
     //     trig_gpio = !trig_gpio;

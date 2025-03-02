@@ -2,9 +2,9 @@
 
 #include "adc_channel.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
-class InjectedChannel: public AdcChannelOnChip{
+class AdcInjectedChannel: public AdcChannelOnChip{
 protected:
     uint8_t mask;
 
@@ -16,12 +16,12 @@ protected:
     friend class AdcPrimary;
     friend class AdcCompanion;
 public:
-    InjectedChannel(ADC_TypeDef * _instance, const ChannelIndex _channel, const uint8_t _rank);
+    AdcInjectedChannel(ADC_TypeDef * _instance, const AdcChannelIndex _channel, const uint8_t _rank);
 
-    InjectedChannel(const InjectedChannel & other) = delete;
-    InjectedChannel(InjectedChannel && other) = delete;
+    AdcInjectedChannel(const AdcInjectedChannel & other) = delete;
+    AdcInjectedChannel(AdcInjectedChannel && other) = delete;
 
-    void setSampleCycles(const SampleCycles cycles) override;
+    void setSampleCycles(const AdcSampleCycles cycles) override;
     
 
     uint16_t data() override;

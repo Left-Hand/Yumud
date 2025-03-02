@@ -1,8 +1,8 @@
 #include "adc_utils.hpp"
 
-namespace ymd::AdcUtils{
+namespace ymd::hal::__adc_internal{
 
-    void installPin(const ChannelIndex channel, const bool en){
+    void installPin(const AdcChannelIndex channel, const bool en){
         uint8_t ch_index = (uint8_t)channel;
 
         if(ch_index > 15) return;

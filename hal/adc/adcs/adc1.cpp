@@ -1,12 +1,9 @@
 #include "adc1.hpp"
 #include "sys/debug/debug.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
-using Callback = AdcUtils::Callback;
-
-
 __interrupt void ADC1_2_IRQHandler(void){
     // const uint32_t tempCTLR = ADC1->CTLR1;
     const uint32_t tempSTATR = ADC1->STATR;
@@ -70,7 +67,7 @@ uint16_t Adc1::getInjectedDataByRank(const uint8_t rank){
     else return injected_datas[rank];
 }
 
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_ADC1
 Adc1 adc1;
 #endif

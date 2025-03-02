@@ -997,8 +997,8 @@ void bldc_main(){
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_openloop);
     // adc1.bindCb(AdcUtils::IT::JEOC, cb_hfi);
 
-    adc1.bindCb(AdcUtils::IT::JEOC, measure_bias);
-    adc1.enableIT(AdcUtils::IT::JEOC, {0,0});
+    adc1.bindCb(AdcIT::JEOC, measure_bias);
+    adc1.enableIT(AdcIT::JEOC, {0,0});
 
     
     while(true){
