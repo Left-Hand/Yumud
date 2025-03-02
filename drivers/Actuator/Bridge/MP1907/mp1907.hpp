@@ -5,9 +5,11 @@
 
 #include <optional>
 
-struct TimerOC;
-struct TimerOCN;
-struct AdvancedTimer;
+namespace ymd::hal{
+    struct TimerOC;
+    struct TimerOCN;
+    struct AdvancedTimer;
+}
 
 namespace ymd::drivers{
 

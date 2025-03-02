@@ -86,13 +86,13 @@ void test_sogi(){
     }
 
     uint32_t dm = 0;
-    timer1.bindCb(TimerUtils::IT::Update, [&](){
+    timer1.bindCb(TimerIT::Update, [&](){
         auto m = micros();
         run_sogi();
         dm = micros() - m;
     });
 
-    timer1.enableIt(TimerUtils::IT::Update, {0,0});
+    timer1.enableIt(TimerIT::Update, {0,0});
 
     while(true){
         // DEBUG_PRINTLN_IDLE(raw_theta, spll.theta(), dm);

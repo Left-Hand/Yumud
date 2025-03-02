@@ -86,7 +86,7 @@ void sincos_pwm_main(){
     auto & pwm_bn = timer.oc(4);
 
 
-    timer.init(40_KHz, TimerUtils::Mode::CenterAlignedDualTrig);
+    timer.init(40_KHz, TimerMode::CenterAlignedDualTrig);
     timer.enableArrSync();
 
     #if TIM_INDEX == 1
@@ -105,7 +105,7 @@ void sincos_pwm_main(){
     #endif
     #elif TIM_INDEX == 2
     //重要!!!!
-    timer.setTrgoSource(TimerUtils::TrgoSource::Update);
+    timer.setTrgoSource(TimerTrgoSource::Update);
     #elif TIM_INDEX == 3
     auto & trig_oc = timer.oc(4);
     trig_oc.init(TimerUtils::OcMode::UpValid, false)

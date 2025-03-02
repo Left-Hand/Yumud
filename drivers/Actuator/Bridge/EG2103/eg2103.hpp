@@ -5,8 +5,10 @@
 
 #include <optional>
 
-class TimerOC;
-class TimerOCN;
+namespace ymd::hal{
+    class TimerOC;
+    class TimerOCN;
+}
 
 namespace ymd::drivers{
 

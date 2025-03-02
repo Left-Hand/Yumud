@@ -122,10 +122,6 @@ uint8_t get_default_id(){
     return node_id;
 };
 void stepper_tb(UartHw & logger_inst){
-    using TimerUtils::Mode;
-    using TimerUtils::IT;
-
-
     logger_inst.init(576000, CommMethod::Dma);
     DEBUGGER.retarget(&logger_inst);
     DEBUGGER.setEps(4);
@@ -161,7 +157,7 @@ void stepper_tb(UartHw & logger_inst){
     
     svpwm.inverse(false);
     
-    timer1.init(chopper_freq, Mode::CenterAlignedDownTrig);
+    timer1.init(chopper_freq, TimerMode::CenterAlignedDownTrig);
     timer1.enableArrSync();
     timer1.oc(1).init();
     timer1.oc(2).init();
@@ -222,13 +218,13 @@ void stepper_tb(UartHw & logger_inst){
     stp.bindProtocol(ascii_p);
     stp.bindProtocol(can_p);
 
-    timer3.init(foc_freq, Mode::CenterAlignedDownTrig);
+    timer3.init(foc_freq, TimerMode::CenterAlignedDownTrig);
     timer3.enableArrSync();
-    timer3.bindCb(IT::Update, [&](){
+    timer3.bindCb(TimerIT::Update, [&](){
         stp.tick();
     });
 
-    timer3.enableIt(IT::Update,{0,0});
+    timer3.enableIt(TimerIT::Update,{0,0});
 
  
     stp.init();

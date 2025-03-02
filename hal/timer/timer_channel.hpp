@@ -5,11 +5,11 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/dma/dma.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
 class TimerChannel{
 public:
-    using ChannelIndex = TimerUtils::ChannelIndex;
+    using ChannelIndex = TimerChannelIndex;
 protected:
     TIM_TypeDef * instance;
 

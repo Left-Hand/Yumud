@@ -87,33 +87,44 @@ ADVANCED_TIMER_IT_FORWARD_DECL(10)
 #undef BASIC_TIMER_IT_FORWARD_DECL
 
 
-namespace ymd{
+namespace ymd::hal{
 class TimerHw{};
 
 class BasicTimer:public TimerHw{
 public:
-    using IT = TimerUtils::IT;
-    using Mode = TimerUtils::Mode;
-    using TrgoSource = TimerUtils::TrgoSource;
-
+    using IT = TimerIT;
+    using Mode = TimerMode;
+    using TrgoSource = TimerTrgoSource;
+    using Callback = std::function<void(void)>;
+private:
+    std::array<Callback, 8> cbs_;
 protected:
     TIM_TypeDef * instance;
-
-    using Callback = std::function<void(void)>;
-
-    std::array<Callback, 8> cbs;
 
     uint getClk();
     void enableRcc(const bool en);
     void remap(const uint8_t rm);
+    
+    Callback & getCallback(const IT it){
+        switch(it){
+            default:
+            case IT::Update: return cbs_[0];
+            case IT::CC1: return cbs_[1];
+            case IT::CC2: return cbs_[2];
+            case IT::CC3: return cbs_[3];
+            case IT::CC4: return cbs_[4];
+            case IT::COM: return cbs_[5];
+            case IT::Trigger: return cbs_[6];
+            case IT::Break: return cbs_[7];
+        }
+    }
 
-    void onUpdateInterrupt();
-    void onBreakInterrupt();
-    void onTriggerComInterrupt();
-    void invokeCallback(const IT it);
+    __inline void invokeCallback(const IT it){
+        auto & cb = getCallback(it);
+        EXECUTE(cb);
+    }
 public:
 
-    
     BasicTimer(TIM_TypeDef * _base):instance(_base){;}
 
     void init(const uint32_t ferq, const Mode mode = Mode::Up, const bool en = true);
@@ -128,8 +139,8 @@ public:
     volatile uint16_t & cnt(){return instance->CNT;}
     volatile uint16_t & arr(){return instance->ATRLR;}
 
-    virtual void bindCb(const IT ch, std::function<void(void)> && cb){
-        cbs[CTZ((uint8_t)ch)] = std::move(cb);\
+    void bindCb(const IT ch, auto && cb){
+        getCallback(ch) = std::move(cb);
     }
 
     BasicTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
@@ -166,10 +177,9 @@ public:
     
     TimerOC & oc(const size_t index);
 
-    virtual TimerChannel & operator [](const int index);
-    virtual TimerChannel & operator [](const TimerChannel::ChannelIndex channel){return channels[(uint8_t)channel >> 1];}
-
-    GenericTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
+    TimerChannel & operator [](const int index);
+    TimerChannel & operator [](const TimerChannel::ChannelIndex channel){return channels[(uint8_t)channel >> 1];}
+    [[deprecated]] GenericTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM2
     GENERIC_TIMER_FRIEND_DECL(2)
@@ -195,8 +205,14 @@ protected:
     uint8_t calculateDeadzone(const uint deadzone_ns);
 
     TimerOCN n_channels[3];
+
+    __fast_inline void onUpdateInterrupt(){invokeCallback(IT::Update);}
+    __fast_inline void onBreakInterrupt(){invokeCallback(IT::Break);}
+    __fast_inline void onTriggerInterrupt(){invokeCallback(IT::Trigger);}
+    __fast_inline void onComInterrupt(){invokeCallback(IT::COM);}
+
 public:
-    using LockLevel = TimerUtils::BdtrLockLevel;
+    using LockLevel = TimerBdtrLockLevel;
 
     AdvancedTimer(TIM_TypeDef * _base):
             GenericTimer(_base),
@@ -208,14 +224,15 @@ public:
 
     void initBdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
     void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, (FunctionalState)_sync);}
+
     void setDeadZone(const uint32_t ns);
     void setRepeatTimes(const uint8_t rep){instance->RPTCR = rep;}
 
-    TimerChannel & operator [](const int index) override;
+    TimerChannel & operator [](const int index);
 
-    TimerChannel & operator [](const TimerChannel::ChannelIndex ch) override;
-    TimerOCN & ocn(const int index){return n_channels[CLAMP(index, 1, 3) - 1];}
-    AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
+    TimerChannel & operator [](const TimerChannel::ChannelIndex ch);
+    TimerOCN & ocn(const int index){return n_channels[index - 1];}
+    [[deprecated]] AdvancedTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM1
     ADVANCED_TIMER_FRIEND_DECL(1);

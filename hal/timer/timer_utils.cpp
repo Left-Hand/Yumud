@@ -1,10 +1,11 @@
 #include "timer_utils.hpp"
 
 using namespace ymd;
-using namespace ymd::TimerUtils::internal;
+using namespace ymd::hal;
+using namespace ymd::hal::internal;
 
-
-bool TimerUtils::internal::isBasicTimer(const TIM_TypeDef * instance){
+namespace ymd::hal::internal{
+bool isBasicTimer(const TIM_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM6
         case TIM6_BASE: return true;
@@ -18,7 +19,7 @@ bool TimerUtils::internal::isBasicTimer(const TIM_TypeDef * instance){
     }
 }
 
-bool TimerUtils::internal::isGenericTimer(const TIM_TypeDef * instance){
+bool isGenericTimer(const TIM_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM2
         case TIM2_BASE: return true;
@@ -41,7 +42,7 @@ bool TimerUtils::internal::isGenericTimer(const TIM_TypeDef * instance){
     }
 }
 
-bool TimerUtils::internal::isAdvancedTimer(const TIM_TypeDef * instance){
+bool isAdvancedTimer(const TIM_TypeDef * instance){
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM1
         case TIM1_BASE: return true;
@@ -64,8 +65,8 @@ bool TimerUtils::internal::isAdvancedTimer(const TIM_TypeDef * instance){
     }
 }
 
-IRQn TimerUtils::internal::ItToIrq(const TIM_TypeDef * instance, const IT it){
-    using enum ChannelIndex;
+IRQn ItToIrq(const TIM_TypeDef * instance, const TimerIT it){
+    using enum TimerChannelIndex;
 
     #define GENERIC_TIMER_IRQ_TEMPLATE(x)\
     case TIM##x##_BASE:\
@@ -74,17 +75,17 @@ IRQn TimerUtils::internal::ItToIrq(const TIM_TypeDef * instance, const IT it){
     #define ADVANCED_TIMER_IRQ_TEMPLATE(x)\
     case TIM##x##_BASE:\
         switch(it){\
-            case IT::Update:\
+            case TimerIT::Update:\
                 return TIM##x##_UP_IRQn;\
-            case IT::CC1:\
-            case IT::CC2:\
-            case IT::CC3:\
-            case IT::CC4:\
+            case TimerIT::CC1:\
+            case TimerIT::CC2:\
+            case TimerIT::CC3:\
+            case TimerIT::CC4:\
                 return TIM##x##_CC_IRQn;\
-            case IT::Trigger:\
-            case IT::COM:\
+            case TimerIT::Trigger:\
+            case TimerIT::COM:\
                 return TIM##x##_TRG_COM_IRQn;\
-            case IT::Break:\
+            case TimerIT::Break:\
                 return TIM##x##_BRK_IRQn;\
         }\
         break;\
@@ -140,8 +141,8 @@ IRQn TimerUtils::internal::ItToIrq(const TIM_TypeDef * instance, const IT it){
 }
 
 
-Gpio & TimerUtils::internal::getPin(const TIM_TypeDef * instance, const ChannelIndex channel){    
-    using enum ChannelIndex;
+Gpio & getPin(const TIM_TypeDef * instance, const TimerChannelIndex channel){    
+    using enum TimerChannelIndex;
 
     #define ADVANCED_TIMER_GPIO_TEMPLATE(x)\
     case TIM##x##_BASE:\
@@ -220,4 +221,6 @@ Gpio & TimerUtils::internal::getPin(const TIM_TypeDef * instance, const ChannelI
 
     #undef ADVANCED_TIMER_GPIO_TEMPLATE
     #undef GENERIC_TIMER_GPIO_TEMPLATE
+}
+
 }

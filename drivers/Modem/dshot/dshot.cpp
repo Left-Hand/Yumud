@@ -5,6 +5,7 @@
 
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void DShotChannel::update(uint16_t data){

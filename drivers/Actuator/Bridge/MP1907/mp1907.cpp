@@ -3,9 +3,8 @@
 #include "hal/timer/timer_oc.hpp"
 #include "hal/timer/timer.hpp"
 
-
-
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 MP1907::MP1907(AdvancedTimer & timer, const uint8_t pair_index, GpioConcept & en_gpio):

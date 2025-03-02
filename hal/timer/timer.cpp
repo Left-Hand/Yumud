@@ -31,8 +31,7 @@
 #define TIM10_RM_B3_B4_B5_C14__A5_A6_A7 1
 #define TIM10_RM_D1_D3_D5_D7__E3_E4_E5 2
 
-using namespace ymd;
-using namespace ymd::TimerUtils::internal;
+using namespace ymd::hal;
 
 
 #ifdef TIM_DEBUG
@@ -49,69 +48,23 @@ void BasicTimer::enableRcc(const bool en){
         #ifdef ENABLE_TIM1
         case TIM1_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1, en);
-            switch(TIM1_REMAP){
-                case 0:
-                    break;
-                case 1:
-                    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM1, en);
-                    break;
-                case 2:
-                    break;
-                case 3:
-                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM1, en);
-                    break;
-            }
             break;
         #endif
 
         #ifdef ENABLE_TIM2
         case TIM2_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, en);
-            switch(TIM2_REMAP){
-                case 0:
-                    break;
-                case 1:
-                    GPIO_PinRemapConfig(GPIO_PartialRemap1_TIM2, en);
-                    break;
-                case 2:
-                    GPIO_PinRemapConfig(GPIO_PartialRemap2_TIM2, en);
-                    break;
-                case 3:
-                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM2, en);
-                    break;
-            }
             break;
         #endif
 
         #ifdef ENABLE_TIM3
         case TIM3_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, en);
-            switch(TIM3_REMAP){
-                case 0:
-                    break;
-                case 1:
-                    break;
-                case 2:
-                    GPIO_PinRemapConfig(GPIO_PartialRemap_TIM3, en);
-                    break;
-                case 3:
-                    GPIO_PinRemapConfig(GPIO_FullRemap_TIM3, en);
-                    break;
-            }
-            break;
         #endif
 
         #ifdef ENABLE_TIM4
         case TIM4_BASE:
             RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM4, en);
-            switch(TIM4_REMAP){
-                case 0:
-                    break;
-                case 1:
-                    GPIO_PinRemapConfig(GPIO_Remap_TIM4, en);
-                    break;
-            }
-            break;
         #endif
 
         #ifdef ENABLE_TIM5
@@ -123,14 +76,6 @@ void BasicTimer::enableRcc(const bool en){
         #ifdef ENABLE_TIM8
         case TIM8_BASE:
             RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8, en);
-            switch(TIM8_REMAP){
-                case 0:
-                    break;
-                case 1:
-                    GPIO_PinRemapConfig(GPIO_Remap_TIM8, en);
-                    break;
-            }
-            break;
         #endif
     }
 }
@@ -222,7 +167,7 @@ void BasicTimer::remap(const uint8_t rm){
 }
 
 uint BasicTimer::getClk(){
-    return isAdvancedTimer(instance) ? sys::Clock::getAPB2Freq() : sys::Clock::getAPB1Freq();
+    return internal::isAdvancedTimer(instance) ? sys::Clock::getAPB2Freq() : sys::Clock::getAPB1Freq();
 }
 
 
@@ -273,7 +218,7 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 void BasicTimer::enable(const bool en){
     TIM_Cmd(instance, en);
     
-    if(en and isAdvancedTimer(instance)){
+    if(en and internal::isAdvancedTimer(instance)){
         TIM_CtrlPWMOutputs(instance, en);
     }
 }
@@ -389,7 +334,7 @@ uint8_t AdvancedTimer::calculateDeadzone(const uint ns){
 }
 
 void BasicTimer::enableIt(const IT it,const NvicPriority request, const bool en){
-    NvicPriority::enable(request, ItToIrq(instance, it), en);
+    NvicPriority::enable(request, internal::ItToIrq(instance, it), en);
     TIM_ITConfig(instance, (uint16_t)it, (FunctionalState)en);
 }
 
@@ -427,36 +372,11 @@ TimerChannel & AdvancedTimer::operator [](const TimerChannel::ChannelIndex ch){
     }
 }
 
-void BasicTimer::invokeCallback(const IT it){
-    const uint16_t code = uint8_t(it);
-    auto & cb = this->cbs[CTZ(code)];
-    EXECUTE(cb);
-    TIM_ClearITPendingBit(instance, code);
-}
 
-#define TRY_HANDLE_IT(it)     if((itstatus & uint8_t(it))) {invokeCallback(it);return;}
-
-
-void BasicTimer::onUpdateInterrupt(){
-    invokeCallback(IT::Update);
-}
-
-void BasicTimer::onBreakInterrupt(){
-    invokeCallback(IT::Break);
-}
-
-
-void BasicTimer::onTriggerComInterrupt(){
-    const uint16_t itstatus = instance->INTFR;
-    // const uint16_t itenable = instance->DMAINTENR;
-
-    TRY_HANDLE_IT(IT::Trigger);
-    TRY_HANDLE_IT(IT::COM);
-}
+#define TRY_HANDLE_IT(it)     if((itstatus & uint8_t(it))) {invokeCallback(it); TIM_ClearITPendingBit(instance, uint8_t(it)); return;}
 
 void GenericTimer::onCCInterrupt(){
     const uint16_t itstatus = instance->INTFR;
-    // const uint16_t itenable = instance->DMAINTENR;
 
     TRY_HANDLE_IT(IT::CC1);
     TRY_HANDLE_IT(IT::CC2);
@@ -466,32 +386,18 @@ void GenericTimer::onCCInterrupt(){
 
 void GenericTimer::onItInterrupt(){
     const uint16_t itstatus = instance->INTFR;
-    // const uint16_t itenable = instance->DMAINTENR;
 
     TRY_HANDLE_IT(IT::Update);
+    TRY_HANDLE_IT(IT::CC1);
+    TRY_HANDLE_IT(IT::CC2);
+    TRY_HANDLE_IT(IT::CC3);
+    TRY_HANDLE_IT(IT::CC4);
     TRY_HANDLE_IT(IT::COM);
     TRY_HANDLE_IT(IT::Trigger);
     TRY_HANDLE_IT(IT::Break);
 }
 
-// void GenericTimer::onItInterrupt(){
-//     const uint16_t itstatus = instance->INTFR;
-//     const uint16_t itenable = instance->DMAINTENR;
-
-//     TRY_HANDLE_IT(IT::Update);
-
-//     TRY_HANDLE_IT(IT::CC1);
-//     TRY_HANDLE_IT(IT::CC2);
-//     TRY_HANDLE_IT(IT::CC3);
-//     TRY_HANDLE_IT(IT::CC4);
-
-//     TRY_HANDLE_IT(IT::COM);
-//     TRY_HANDLE_IT(IT::Trigger);
-//     TRY_HANDLE_IT(IT::Break);
-// }
-
-
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_TIM1
 AdvancedTimer timer1{TIM1};
 #endif
