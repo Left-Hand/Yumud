@@ -683,7 +683,7 @@ int main(){
     - [x] 编码器模式
     - [ ] PWMModule PWM输出集线器
 
-    - [x] PwmChannelIntf PWM输出概念
+    - [x] PwmIntf PWM输出概念
         - [x] GPIOPwm 使用GPIO配合定时触发模拟pwm
         - [x] TimerOC(定时器输出)
             - [x] TimerOC

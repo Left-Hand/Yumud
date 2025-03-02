@@ -14,7 +14,7 @@ protected:
     real_t fb_up_res_kohms_;
     real_t fb_down_res_kohms_;
 
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
 
     enum class IBatRatio:uint8_t{
@@ -292,9 +292,9 @@ protected:
 
     scexpr uint8_t default_i2c_addr = 0b01100000;
 
-    SC8815(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SC8815(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    SC8815(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
+    SC8815(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    SC8815(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    SC8815(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     Interrupts interrupts();
 

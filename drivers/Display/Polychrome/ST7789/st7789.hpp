@@ -60,10 +60,10 @@ protected:
     void putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color) override;
 public:
     ST7789(const DisplayerPhySpi & _interface, const Vector2i & _size):
-            ImageBasics(_size), Displayer<RGB565>(_size),interface(_interface){;}
+            ImageBasics(_size), Displayer<RGB565>(_size), interface(_interface){;}
 
     ST7789(DisplayerPhySpi && _interface, const Vector2i & _size):
-            ImageBasics(_size), Displayer<RGB565>(_size),interface(std::move(_interface)){;}
+            ImageBasics(_size), Displayer<RGB565>(_size), interface(std::move(_interface)){;}
 
     void init();
 

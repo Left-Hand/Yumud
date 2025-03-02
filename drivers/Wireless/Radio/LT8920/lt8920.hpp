@@ -52,12 +52,12 @@ public:
     };
 
 public:
-    LT8920(const SpiDrv & spi_drv) : spi_drv_(spi_drv) {;}
-    LT8920(SpiDrv && spi_drv) : spi_drv_(std::move(spi_drv)) {;}
-    LT8920(Spi & spi, const uint8_t index) : spi_drv_(SpiDrv(spi, index)) {;}
+    LT8920(const hal::SpiDrv & spi_drv) : spi_drv_(spi_drv) {;}
+    LT8920(hal::SpiDrv && spi_drv) : spi_drv_(std::move(spi_drv)) {;}
+    LT8920(hal::Spi & spi, const uint8_t index) : spi_drv_(hal::SpiDrv(spi, index)) {;}
 
-    void bindNrstGpio(GpioConcept & gpio){nrst_gpio = &gpio;}
-    void bindPktGpio(GpioConcept & gpio){pkt_status_gpio = &gpio;}
+    void bindNrstGpio(hal::GpioIntf & gpio){nrst_gpio = &gpio;}
+    void bindPktGpio(hal::GpioIntf & gpio){pkt_status_gpio = &gpio;}
     uint16_t isRfSynthLocked();
     uint8_t getRssi();
     void setRfChannel(const uint8_t ch);
@@ -97,18 +97,18 @@ protected:
     void clearFifoReadPtr();
     void clearFifoPtr();
 
-    void handleFifoInterrupt();
-    void handlePktInterrupt();
-    void handleRxTimeoutInterrupt();
+    void onFifoInterrupt();
+    void onPktInterrupt();
+    void onRxTimeoutInterrupt();
  
     bool getFifoStatus();
     bool getPktStatus();
 
-    std::optional<SpiDrv> spi_drv_;
-    std::optional<I2cDrv> i2c_drv_;
-    GpioConcept * pkt_status_gpio = nullptr;
-    GpioConcept * fifo_status_gpio = nullptr;
-    GpioConcept * nrst_gpio = nullptr;
+    std::optional<hal::SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> i2c_drv_;
+    hal::GpioIntf * pkt_status_gpio = nullptr;
+    hal::GpioIntf * fifo_status_gpio = nullptr;
+    hal::GpioIntf * nrst_gpio = nullptr;
 
     State state = State::OFF;
     Role role = Role::IDLE;

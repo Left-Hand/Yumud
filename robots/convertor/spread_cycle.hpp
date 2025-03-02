@@ -10,8 +10,8 @@
 // constexpr float coil_current = 0.23;
 // constexpr float c2 = - coil_current * coil_resistor_Ohm / coil_inductor_mH;
 
-// PwmChannelIntf coil_pwm_p(timer1[3]);
-// PwmChannelIntf coil_pwm_n(timer1[4]);
+// PwmIntf coil_pwm_p(timer1[3]);
+// PwmIntf coil_pwm_n(timer1[4]);
 
 // real_t dual_duty[2] = {
 //     real_t(0.3),

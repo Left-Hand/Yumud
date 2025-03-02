@@ -46,10 +46,10 @@ public:
     PARampConfigReg pa_ramp_config_reg;
 
 protected:
-    SpiDrv spi_drv;
+    hal::SpiDrv spi_drv;
 public:
-    XL2400(const SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
-    XL2400(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+    XL2400(const hal::SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
+    XL2400(hal::SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
 };
 
 }

@@ -16,7 +16,7 @@ protected:
     using BusDrv<I2c>::index;
     using BusDrv<I2c>::bus;
 public:
-    SccbDrv(I2c & i2c, const uint8_t addr):BusDrv(i2c, addr){};
+    SccbDrv(hal::I2c & i2c, const uint8_t addr):BusDrv(i2c, addr){};
     SccbDrv(const SccbDrv & other) = default;
     SccbDrv(SccbDrv && other) = default;
 

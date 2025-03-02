@@ -4,6 +4,7 @@
 
 
 using namespace ymd::foc;
+using namespace ymd::hal;
 
 static __fast_inline void __ab_to_dq(DqValue & dq, const AbValue & ab, const real_t rad){
     const auto s = sin(rad);
@@ -43,17 +44,15 @@ AbVoltage dq_to_ab(const DqVoltage & dq, const real_t rad){
 }
 
 void init_adc(){
-    using AdcChannelIndex = AdcUtils::ChannelIndex;
-    using AdcCycles = AdcUtils::SampleCycles;
 
 
     adc1.init(
         {
-            {AdcChannelIndex::VREF, AdcCycles::T28_5}
+            {AdcChannelIndex::VREF, AdcSampleCycles::T28_5}
         },{
-            {AdcChannelIndex::CH5, AdcCycles::T28_5},
-            {AdcChannelIndex::CH4, AdcCycles::T28_5},
-            {AdcChannelIndex::CH1, AdcCycles::T28_5},
+            {AdcChannelIndex::CH5, AdcSampleCycles::T28_5},
+            {AdcChannelIndex::CH4, AdcSampleCycles::T28_5},
+            {AdcChannelIndex::CH1, AdcSampleCycles::T28_5},
 
             // {AdcChannelIndex::CH1, AdcCycles::T7_5},
             // {AdcChannelIndex::CH4, AdcCycles::T7_5},
@@ -68,7 +67,7 @@ void init_adc(){
     );
 
     // adc1.setTrigger(AdcOnChip::RegularTrigger::SW, AdcOnChip::InjectedTrigger::T1TRGO);
-    adc1.setInjectedTrigger(AdcOnChip::InjectedTrigger::T1CC4);
+    adc1.setInjectedTrigger(AdcInjectedTrigger::T1CC4);
     // adc1.enableContinous();
     adc1.enableAutoInject(false);
 }

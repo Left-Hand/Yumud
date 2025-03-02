@@ -7,7 +7,7 @@
 #define SUPPORT_VTF
 #endif
 
-namespace ymd{
+namespace ymd::hal{
 
 struct NvicPriority;
 class NvicRequest;

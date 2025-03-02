@@ -69,7 +69,7 @@ protected:
     uint fb_up_res_ohms = 90.9 * 1000;
     uint fb_down_res_ohms = 10 * 1000;
 
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     struct RefReg:public Reg16{
         scexpr RegAddress address = 0x00;
@@ -164,9 +164,9 @@ public:
 
     scexpr uint8_t default_i2c_addr = 0b01100000;
 
-    MP2980(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    MP2980(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    MP2980(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
+    MP2980(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    MP2980(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    MP2980(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     MP2980 & setFeedBackVref(const real_t vref);
     MP2980 & setFeedBackVrefMv(const uint vref_mv);

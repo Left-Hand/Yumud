@@ -86,8 +86,8 @@ public:
 protected:
     scexpr uint8_t default_i2c_addr = 0b11010010;
 
-    std::optional<I2cDrv> i2c_drv_;
-    std::optional<SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 
     real_t acc_scale = 0;
     real_t gyr_scale = 0;
@@ -197,12 +197,12 @@ protected:
     static real_t calculateGyrScale(const GyrRange range);
 public:
 
-    LIS2DW12(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, i2c_addr}){;}
-    LIS2DW12(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    LIS2DW12(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    LIS2DW12(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    LIS2DW12(SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    LIS2DW12(Spi & spi, const uint8_t index):spi_drv_(SpiDrv{spi, index}){;}
+    LIS2DW12(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
+    LIS2DW12(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    LIS2DW12(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    LIS2DW12(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    LIS2DW12(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
+    LIS2DW12(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
     void init();
     void update();

@@ -8,12 +8,12 @@ namespace ymd::drivers{
 
 class VL53L0X:public DistanceSensor{
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 public:
     scexpr uint8_t default_i2c_addr = 0x52;
-    VL53L0X(I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    VL53L0X(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    VL53L0X(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(i2c, i2c_addr){;}
+    VL53L0X(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    VL53L0X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    VL53L0X(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(i2c, i2c_addr){;}
     ~VL53L0X(){;}
 
     void startConv();

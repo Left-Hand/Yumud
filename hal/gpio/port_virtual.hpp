@@ -6,10 +6,10 @@
 #include <array>
 
 
-namespace ymd{
+namespace ymd::hal{
 
 template<size_t N>
-class PortVirtualConcept : public PortConcept{
+class VGpioPortIntf : public GpioPortIntf{
 protected:
     bool isIndexValid(const size_t index){return (index < N);}
 
@@ -32,13 +32,13 @@ public:
         uint16_t raw = readPort();
         writePort(raw & (~mask));
     }
-    PortVirtualConcept & operator = (const uint16_t data) override {writePort(data); return *this;}
+    VGpioPortIntf & operator = (const uint16_t data) override {writePort(data); return *this;}
 };
 
 template<size_t N>
-class PortVirtual : public PortVirtualConcept<N>{
+class VGpioPort : public VGpioPortIntf<N>{
 protected:
-    using E = GpioConcept;
+    using E = GpioIntf;
     std::array<E *, N> pin_ptrs = {nullptr};
 
     void writePort(const uint16_t data) override {
@@ -55,18 +55,18 @@ protected:
         return data;
     }
 public:
-    PortVirtual(){;}
+    VGpioPort(){;}
 
-    PortVirtual(const PortVirtual<N> & other){
+    VGpioPort(const VGpioPort<N> & other){
         pin_ptrs = other.pin_ptrs;
     }
 
-    PortVirtual(PortVirtual<N> && other){
+    VGpioPort(VGpioPort<N> && other){
         pin_ptrs = std::move(other.pin_ptrs);
     }
     void init(){;}
 
-    void bindPin(GpioConcept & gpio, const size_t index){
+    void bindPin(hal::GpioIntf & gpio, const size_t index){
         if(index >= N)return;
         pin_ptrs[size_t(index)] = &gpio;
     }
@@ -126,7 +126,7 @@ public:
 };
 
 template<size_t N>
-class PortVirtualLocal : public PortVirtualConcept<N>{
+class VGpioPortLocal : public VGpioPortIntf<N>{
 protected:
     using E = Gpio;
     std::array<E *, N> pin_ptrs = {nullptr};
@@ -144,7 +144,7 @@ protected:
         return data;
     }
 public:
-    PortVirtualLocal(){;}
+    VGpioPortLocal(){;}
     void init(){;}
 
     E * begin(){

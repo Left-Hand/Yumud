@@ -13,7 +13,7 @@ namespace ymd{
 
 class W25Q16:public StoragePaged{
 protected:
-    SpiDrv spi_drv;
+    hal::SpiDrv spi_drv;
 
     scexpr size_t _m_size = 16 * 1024 * 1024;
     scexpr size_t _pagesize = 4 * 1024;
@@ -60,8 +60,8 @@ protected:
     void exit_load() override;
 
 public:
-    W25Q16(SpiDrv & _spi_drv):StoragePaged(_m_size, _pagesize), spi_drv(_spi_drv){;}
-    W25Q16(Spi & _spi, const uint8_t index = 0):StoragePaged(_m_size, _pagesize), spi_drv(SpiDrv(_spi, index)){;}
+    W25Q16(hal::SpiDrv & _spi_drv):StoragePaged(_m_size, _pagesize), spi_drv(_spi_drv){;}
+    W25Q16(hal::Spi & _spi, const uint8_t index = 0):StoragePaged(_m_size, _pagesize), spi_drv(hal::SpiDrv(_spi, index)){;}
 
     void enableWrite(const bool en = true);
     uint8_t getDeviceManufacturer();

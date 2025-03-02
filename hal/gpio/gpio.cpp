@@ -2,9 +2,7 @@
 #include "Gpio.hpp"
 #include "sys/core/sdk.h"
 
-using namespace ymd;
-
-
+using namespace ymd::hal;
 
 void Gpio::setMode(const GpioMode mode){
     if(!isValid()) return;
@@ -25,6 +23,6 @@ Gpio & Gpio::null(){
     return GpioNull;
 }
 
-namespace ymd{
+namespace ymd::hal{
 Gpio & GpioNull = Gpio::null();
 }

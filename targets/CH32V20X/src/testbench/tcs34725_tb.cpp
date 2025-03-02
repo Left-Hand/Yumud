@@ -10,7 +10,7 @@
 
 using namespace ymd::drivers;
 
-void tcs34725_tb(OutputStream & logger, I2c & i2c){
+void tcs34725_tb(OutputStream & logger, hal::I2c & i2c){
     TCS34725 tcs{i2c};
     tcs.init();
     tcs.startConv();

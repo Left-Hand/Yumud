@@ -72,8 +72,8 @@ protected:
     
     scexpr uint8_t default_i2c_addr = 0b000'110'0;
 
-    std::optional<I2cDrv> i2c_drv;
-    std::optional<SpiDrv> spi_drv;
+    std::optional<hal::I2cDrv> i2c_drv;
+    std::optional<hal::SpiDrv> spi_drv;
 
     Semantic semantic = {0, 0};
     real_t lap_position = real_t(0);
@@ -154,13 +154,13 @@ protected:
     void writeReg(const RegAddress addr, const uint8_t data);
     void readReg(const RegAddress addr, uint8_t & data);
 public:
-    MT6701(I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
-    MT6701(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){};
-    MT6701(I2c & _i2c):i2c_drv(I2cDrv(_i2c, default_i2c_addr)){};
+    MT6701(hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){};
+    MT6701(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){};
+    MT6701(hal::I2c & _i2c):i2c_drv(hal::I2cDrv(_i2c, default_i2c_addr)){};
 
-    MT6701(SpiDrv & _spi_drv):spi_drv(_spi_drv){};
-    MT6701(SpiDrv && _spi_drv):spi_drv(_spi_drv){};
-    MT6701(Spi & _spi, const uint8_t spi_index):spi_drv(SpiDrv(_spi, spi_index)){};
+    MT6701(hal::SpiDrv & _spi_drv):spi_drv(_spi_drv){};
+    MT6701(hal::SpiDrv && _spi_drv):spi_drv(_spi_drv){};
+    MT6701(hal::Spi & _spi, const uint8_t spi_index):spi_drv(hal::SpiDrv(_spi, spi_index)){};
     ~MT6701(){};
 
 

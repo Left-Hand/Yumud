@@ -112,7 +112,7 @@ protected:
     #define M3508_CHECK_INDEX if(index > size or index == 0) PANIC(); 
     scexpr size_t max_size = 8;
     
-    Can & can;
+    hal::Can & can;
     size_t size = 8;
     std::bitset<8> occupation;
 
@@ -165,7 +165,7 @@ protected:
         curr_cache[index - 1] = curr_to_currdata(curr);
     }
 
-    void updateInst(const CanMsg & msg, const size_t index){
+    void updateInst(const hal::CanMsg & msg, const size_t index){
         M3508_CHECK_INDEX
         auto rx_data = RxData(msg);
         auto & inst = inst_[index - 1];
@@ -177,7 +177,7 @@ protected:
             rx_data.temp);
     }
 public:
-    M3508Port(Can & _can):can(_can){reset();}
+    M3508Port(hal::Can & _can):can(_can){reset();}
     
     void init();
 

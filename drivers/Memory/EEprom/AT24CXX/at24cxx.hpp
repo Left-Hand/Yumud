@@ -11,7 +11,7 @@ private:
 protected:
     scexpr uint32_t min_duration_ms = 6;
 
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
     uint32_t last_entry_ms = 0;
 
     void storeBytes(const Address loc, const void * data, const Address len) override;
@@ -42,9 +42,9 @@ protected:
         update_entry_ms();
     };
 
-    AT24CXX(I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_{_bus, default_i2c_addr}{;}
-    AT24CXX(I2cDrv && i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
-    AT24CXX(I2cDrv & i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
+    AT24CXX(hal::I2c & _bus, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_{_bus, default_i2c_addr}{;}
+    AT24CXX(hal::I2cDrv && i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
+    AT24CXX(hal::I2cDrv & i2c_drv, const Address _m_size, const Address _pagesize):StoragePaged(_m_size, _pagesize), i2c_drv_(i2c_drv){;}
 
 public:
     void init() override{};
@@ -61,9 +61,9 @@ private:
 #define AT24CXX_DEF_TEMPLATE(name, size, pagesize)\
 class AT24C##name:public AT24CXX{\
 public:\
-    AT24C##name(I2c & _bus):AT24CXX(_bus, size, pagesize){;}\
-    AT24C##name(I2cDrv & i2c_drv):AT24CXX(i2c_drv, size, pagesize){;}\
-    AT24C##name(I2cDrv && i2c_drv):AT24CXX(i2c_drv, size, pagesize){;}\
+    AT24C##name(hal::I2c & _bus):AT24CXX(_bus, size, pagesize){;}\
+    AT24C##name(hal::I2cDrv & i2c_drv):AT24CXX(i2c_drv, size, pagesize){;}\
+    AT24C##name(hal::I2cDrv && i2c_drv):AT24CXX(i2c_drv, size, pagesize){;}\
 };\
 
 AT24CXX_DEF_TEMPLATE(01, 1 << 7, 8)

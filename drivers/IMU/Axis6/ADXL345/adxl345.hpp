@@ -291,8 +291,8 @@ protected:
     FifoStatusReg fifoStatusReg;
 
 protected:
-    std::optional<I2cDrv> i2c_drv;
-    std::optional<SpiDrv> spi_drv;
+    std::optional<hal::I2cDrv> i2c_drv;
+    std::optional<hal::SpiDrv> spi_drv;
 
 
 
@@ -302,14 +302,14 @@ protected:
 public:
     scexpr uint8_t defualt_i2c_addr = 0x1D << 1;
 
-    ADXL345(const I2cDrv & _i2c_drv): i2c_drv(_i2c_drv){;}
-    ADXL345(I2cDrv && _i2c_drv): i2c_drv(_i2c_drv){;}
-    ADXL345(I2c & _i2c, const uint8_t addr = defualt_i2c_addr): i2c_drv(I2cDrv(_i2c, addr)){;}
+    ADXL345(const hal::I2cDrv & _i2c_drv): i2c_drv(_i2c_drv){;}
+    ADXL345(hal::I2cDrv && _i2c_drv): i2c_drv(_i2c_drv){;}
+    ADXL345(hal::I2c & _i2c, const uint8_t addr = defualt_i2c_addr): i2c_drv(hal::I2cDrv(_i2c, addr)){;}
 
-    ADXL345(const SpiDrv & _spi_drv): spi_drv(_spi_drv){;}
-    ADXL345(SpiDrv && _spi_drv): spi_drv(_spi_drv){;}
+    ADXL345(const hal::SpiDrv & _spi_drv): spi_drv(_spi_drv){;}
+    ADXL345(hal::SpiDrv && _spi_drv): spi_drv(_spi_drv){;}
 
-    ADXL345(Spi & _spi, const uint8_t index): spi_drv(SpiDrv(_spi, index)){;}
+    ADXL345(hal::Spi & _spi, const uint8_t index): spi_drv(hal::SpiDrv(_spi, index)){;}
     uint8_t getDeviceID(){
         readReg(RegAddress::DeviceID, deviceIDReg);
         return deviceIDReg.data;

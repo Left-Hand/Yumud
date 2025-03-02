@@ -3,12 +3,11 @@
 #include "hal/timer/timer_oc.hpp"
 #include "hal/timer/timer.hpp"
 
-
-
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
-MP1907::MP1907(AdvancedTimer & timer, const uint8_t pair_index, GpioConcept & en_gpio):
+MP1907::MP1907(AdvancedTimer & timer, const uint8_t pair_index, hal::GpioIntf & en_gpio):
     inst_(timer.oc(pair_index)),
     inst_n_(timer.ocn(pair_index)),
     en_gpio_(&en_gpio){;}

@@ -1,10 +1,10 @@
 #pragma once
 #include "sys/math/real.hpp"
 
-namespace ymd{
-class PwmChannelIntf{
+namespace ymd::hal{
+class PwmIntf{
 public:
-    virtual PwmChannelIntf & operator = (const real_t duty) = 0;
+    virtual PwmIntf & operator = (const real_t duty) = 0;
 };
 
 template <typename T>

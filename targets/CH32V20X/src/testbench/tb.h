@@ -35,10 +35,10 @@ void filter_tb(OutputStream & logger);
 void pmdc_tb();
 
 void lds14_tb(IOStream & logger,Uart & uart);
-void gpio_tb(GpioConcept & gpio);
+void gpio_tb(hal::GpioIntf & gpio);
 // void pca_tb(IOStream & logger);
 void pca_main();
-void st77xx_tb(Spi & spi);
+void st77xx_tb(hal::Spi & spi);
 
 void joystick_tb(OutputStream & logger);
 
@@ -50,7 +50,7 @@ void can_tb(IOStream & logger, hal::Can & can, bool tx_role = true);
 
 void usbcdc_tb();
 
-void at24cxx_tb(OutputStream & logger, I2c & i2c);
+void at24cxx_tb(OutputStream & logger, hal::I2c & i2c);
 
 void at24cxx_main();
 
@@ -63,13 +63,13 @@ void flash_main();
 void qlz_main();
 
 void uart_main();
-void tcs34725_tb(OutputStream & logger, I2c & i2c);
+void tcs34725_tb(OutputStream & logger, hal::I2c & i2c);
 
 void tcs34725_main();
 
 void dshot_main();
 
-void at24cxx_tb(OutputStream & logger, I2c & i2c);
+void at24cxx_tb(OutputStream & logger, hal::I2c & i2c);
 void i2c_scanner_main();
 
 void dshot_main();
@@ -110,6 +110,7 @@ void curve_tb();
 void btree_basic_tb();
 
 void co_ab_main();
+void sincos_pwm_main();
 
 void bldc_main();
 

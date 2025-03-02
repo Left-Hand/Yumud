@@ -80,12 +80,12 @@ void PCA9685::enableSleep(const bool en){
     mode1_reg.sleep = 0;
 }
     
-void PCA9685::setPin(const Pin pin){
+void PCA9685::setPin(const hal::Pin pin){
     // buf |= (uint16_t)pin;
     // write(buf);
 }
 
-void PCA9685::clrPin(const Pin pin){
+void PCA9685::clrPin(const hal::Pin pin){
     // buf &= ~(uint16_t)pin;
     // write(buf);
 }
@@ -114,7 +114,7 @@ bool PCA9685::readByIndex(const int index){
     return true;
 }
 
-void PCA9685::setMode(const int index, const GpioMode mode){
+void PCA9685::setMode(const int index, const hal::GpioMode mode){
 //     if(!isIndexValid(index))return;
 //     uint16_t mask = 1 << index;
 //     if(GpioMode::isIn(mode)) dir |= mask;

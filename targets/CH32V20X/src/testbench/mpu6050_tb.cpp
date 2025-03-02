@@ -11,7 +11,7 @@
 using namespace ymd::drivers;
 
 
-void mpu6050_tb(OutputStream & logger, I2c & i2c){
+void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
     MPU6050 mpu{i2c};
     mpu.init();
 

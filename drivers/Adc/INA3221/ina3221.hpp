@@ -160,7 +160,7 @@ protected:
         i2c_drv.readMulti((uint8_t)addr, (uint16_t *)data_ptr, len, LSB);
     }
 
-    struct INA3221Channel:public AnalogInChannel{
+    struct INA3221Channel:public hal::AnalogInIntf{
     public:
         enum class ChannelType:uint8_t{
             SHUNT_VOLT,
@@ -191,7 +191,7 @@ protected:
         }
     };
     
-    I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv;
 
     ConfigReg       config_reg;
     ShuntVoltReg    shuntvolt1_reg;
@@ -226,9 +226,9 @@ protected:
         INA3221Channel{*this, INA3221Channel::ChannelType::SHUNT_VOLT, 2},
     };
 public:
-    INA3221(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    INA3221(I2cDrv && _i2c_drv):i2c_drv(std::move(_i2c_drv)){;}
-    INA3221(I2c & _i2c, const uint8_t addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, addr)){;}
+    INA3221(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
+    INA3221(hal::I2cDrv && _i2c_drv):i2c_drv(std::move(_i2c_drv)){;}
+    INA3221(hal::I2c & _i2c, const uint8_t addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, addr)){;}
     ~INA3221(){;}
     
     bool ready();

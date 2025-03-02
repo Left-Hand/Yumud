@@ -17,16 +17,16 @@ public:
 
     scexpr uint8_t default_i2c_addr = 0b01100000;
 
-    DRV2605L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    DRV2605L(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    DRV2605L(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
+    DRV2605L(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    DRV2605L(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    DRV2605L(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
 
 
 protected:
     using RegAddress = uint8_t;
 
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
 
     enum class Mode:uint8_t{

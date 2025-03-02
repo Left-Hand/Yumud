@@ -1,5 +1,7 @@
 #include "sdi.hpp"
 
+#include <cstdint>
+
 using namespace ymd;
 using namespace ymd::hal;
 

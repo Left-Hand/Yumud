@@ -53,9 +53,9 @@ class U13T{
 
         void lineCb();
 
-        Uart & uart_;
+        hal::Uart & uart_;
     public:
-        U13T(Uart & uart):uart_(uart){;}
+        U13T(hal::Uart & uart):uart_(uart){;}
 
         void init();
         void tick();

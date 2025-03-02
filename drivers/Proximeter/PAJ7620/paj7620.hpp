@@ -6,7 +6,7 @@
 namespace ymd::drivers{
 class PAJ7620{
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     void writeReg(uint8_t addr, uint8_t cmd); /* Write to addressed register */
     void readReg(uint8_t addr, uint8_t & data); /* Read data from addressed register */
@@ -38,10 +38,10 @@ public:
     void init();
     void update();
     Flags detect();
-    PAJ7620(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, addr}){;}
+    PAJ7620(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
 
-    PAJ7620(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    PAJ7620(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    PAJ7620(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    PAJ7620(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 };
 
 }

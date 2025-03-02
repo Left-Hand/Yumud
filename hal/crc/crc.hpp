@@ -4,7 +4,7 @@
 #include <initializer_list>
 
 
-namespace ymd{
+namespace ymd::hal{
 class Crc{
 protected:
     Crc(){;}

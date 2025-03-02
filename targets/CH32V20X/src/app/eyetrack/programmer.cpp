@@ -15,6 +15,7 @@
 #include "algo/random/random_generator.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 
 void programmer_main(){

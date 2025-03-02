@@ -15,7 +15,7 @@ protected:
     Endian m_endian = LSB;  
     uint32_t m_baudrate = 1000000;
 public:
-    SpiDrv(Spi & _bus, const uint8_t _index):NonProtocolBusDrv<Spi>(_bus, _index){;}
+    SpiDrv(hal::Spi & _bus, const uint8_t _index):NonProtocolBusDrv<Spi>(_bus, _index){;}
 
     template<typename T>
     void forceWrite(const T data) {

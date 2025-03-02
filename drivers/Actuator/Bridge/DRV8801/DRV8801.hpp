@@ -7,12 +7,12 @@ namespace ymd::drivers{
 
 class DRV8801:public Coil2DriverIntf{
 protected:
-    PwmChannelIntf & pwm_;
-    GpioConcept & dir_;
-    AnalogInChannel & curr_ch_;
+    hal::PwmIntf & pwm_;
+    hal::GpioIntf & dir_;
+    hal::AnalogInIntf & curr_ch_;
 
     public:
-    DRV8801(PwmChannelIntf & _pwm, GpioConcept & _dir, AnalogInChannel & _curr_ch):
+    DRV8801(hal::PwmIntf & _pwm, hal::GpioIntf & _dir, hal::AnalogInIntf & _curr_ch):
         pwm_(_pwm),
         dir_(_dir),
         curr_ch_(_curr_ch){;}

@@ -38,12 +38,12 @@ protected:
 
     #include "lt8960_regs.ipp"
 
-    std::optional<SpiDrv> spi_drv;
-    std::optional<I2cDrv> i2c_drv;
+    std::optional<hal::SpiDrv> spi_drv;
+    std::optional<hal::I2cDrv> i2c_drv;
 
 
-    GpioConcept * packet_status_gpio = nullptr;
-    GpioConcept * fifo_status_gpio = nullptr;
+    hal::GpioIntf * packet_status_gpio = nullptr;
+    hal::GpioIntf * fifo_status_gpio = nullptr;
 
     void delayT3(){delayMicroseconds(1);}
 
@@ -57,9 +57,9 @@ protected:
 
     void readByte(const RegAddress address, uint8_t & data);
 public:
-    LT8960(const SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
-    LT8960(SpiDrv && _spi_drv) : spi_drv(_spi_drv) {;}
-    LT8960(Spi & _spi, const uint8_t _index) : spi_drv(SpiDrv(_spi, _index)) {;}
+    LT8960(const hal::SpiDrv & _spi_drv) : spi_drv(_spi_drv) {;}
+    LT8960(hal::SpiDrv && _spi_drv) : spi_drv(_spi_drv) {;}
+    LT8960(hal::Spi & _spi, const uint8_t _index) : spi_drv(hal::SpiDrv(_spi, _index)) {;}
 
     bool isRfSynthLocked(){
         readReg(RegAddress::RfSynthLock, (rfSynthLockReg));

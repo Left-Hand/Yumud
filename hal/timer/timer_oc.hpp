@@ -4,7 +4,7 @@
 #include "hal/timer/timer_utils.hpp"
 #include "hal/gpio/gpio.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 class TimerOut: public TimerChannel{
 protected:
     TimerOut(TIM_TypeDef * _instance, const ChannelIndex _channel):TimerChannel(_instance, _channel){;}
@@ -21,9 +21,9 @@ public:
     virtual Gpio & io() = 0;
 };
 
-class TimerOC:public TimerOut, public PwmChannelIntf{
+class TimerOC:public TimerOut, public PwmIntf{
 public:
-    using Mode = TimerUtils::OcMode;
+    using Mode = TimerOcMode;
 protected:
     volatile uint16_t & cvr_;
     volatile uint16_t & arr_;
@@ -48,7 +48,7 @@ public:
     TimerOCN(TIM_TypeDef * _base, const ChannelIndex _channel):TimerOut(_base, _channel){;}
     void init() {installToPin();}
 
-    Gpio & io() override;
+    Gpio & io();
 };
 
 };

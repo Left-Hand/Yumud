@@ -14,21 +14,21 @@ public:
         MSB2     = ((1 << 5) | (0 << 1) | (0 << 3))
     };
 protected:
-    SpiDrv spi_drv;
-    Gpio & fsync_gpio;
+    hal::SpiDrv spi_drv;
+    hal::GpioIntf & fsync_gpio;
     void writeData(uint16_t data); 
 public:
     AD9833(
-        const SpiDrv & _spi_drv,
-        Gpio & _fsync_gpio
+        const hal::SpiDrv & _spi_drv,
+        hal::GpioIntf & _fsync_gpio
     ):
         spi_drv(_spi_drv),
         fsync_gpio(_fsync_gpio){;
     }
 
     AD9833(
-        SpiDrv && _spi_drv,
-        Gpio & _fsync_gpio
+        hal::SpiDrv && _spi_drv,
+        hal::GpioIntf & _fsync_gpio
     ):
         spi_drv(std::move(_spi_drv)),
         fsync_gpio(_fsync_gpio){;

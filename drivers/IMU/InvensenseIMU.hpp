@@ -6,8 +6,8 @@ namespace ymd{
 
 class InvensenseSensor{
 protected:
-    std::optional<I2cDrv> i2c_drv_;
-    std::optional<SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 
     virtual void writeReg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
@@ -36,11 +36,11 @@ protected:
         }
     }
 public:
-    InvensenseSensor(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    InvensenseSensor(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    InvensenseSensor(I2c & i2c, const uint8_t addr):i2c_drv_(I2cDrv{i2c, addr}){;}
-    InvensenseSensor(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    InvensenseSensor(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    InvensenseSensor(Spi & spi, const uint8_t index):spi_drv_(SpiDrv{spi, index}){;}
+    InvensenseSensor(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    InvensenseSensor(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    InvensenseSensor(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+    InvensenseSensor(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    InvensenseSensor(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    InvensenseSensor(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 };
 }

@@ -6,8 +6,8 @@ namespace ymd{
 
 class BoschSensor{
 protected:
-    std::optional<I2cDrv> i2c_drv_;
-    std::optional<SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 
     virtual void writeReg(const uint8_t addr, const uint8_t data){
         if(i2c_drv_){
@@ -37,11 +37,11 @@ protected:
     }
 public:
 
-    BoschSensor(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BoschSensor(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    BoschSensor(I2c & i2c, const uint8_t addr):i2c_drv_(I2cDrv{i2c, addr}){;}
-    BoschSensor(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    BoschSensor(SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    BoschSensor(Spi & spi, const uint8_t index):spi_drv_(SpiDrv{spi, index}){;}
+    BoschSensor(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    BoschSensor(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    BoschSensor(hal::I2c & i2c, const uint8_t addr):i2c_drv_(hal::I2cDrv{i2c, addr}){;}
+    BoschSensor(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    BoschSensor(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
+    BoschSensor(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 };
 }

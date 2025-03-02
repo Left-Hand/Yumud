@@ -11,8 +11,8 @@ public:
         A128 = 1, B32, A64
     };
 protected:
-    GpioConcept & sck_pin;
-    GpioConcept & sdo_pin;
+    hal::Gpio & sck_gpio_;
+    hal::Gpio & sdo_gpio_;
     ConvType conv_type = ConvType::A128;
 
     uint32_t last_data;
@@ -27,16 +27,17 @@ protected:
 
     };
 public:
-    HX711(GpioConcept & _sck_pin, GpioConcept & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin){;}
+    HX711(hal::Gpio & sck_gpio, hal::Gpio & sdo_gpio):
+        sck_gpio_(sck_gpio), sdo_gpio_(sdo_gpio){;}
     ~HX711(){;}
     void init(){
-        sck_pin.outpp();
-        sdo_pin.inpu();
+        sck_gpio_.outpp();
+        sdo_gpio_.inpu();
         read_data();
     }
 
     bool isIdle(){
-        return sdo_pin == false;
+        return sdo_gpio_ == false;
     }
 
     void update(){

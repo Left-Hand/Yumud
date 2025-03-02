@@ -2,7 +2,7 @@
 
 #include "sys/core/platform.h"
 
-namespace ymd{
+namespace ymd::hal{
 struct Rng{
 public:
     Rng(){};
@@ -14,5 +14,5 @@ public:
 }
 
 #ifdef ENABLE_RNG
-static inline Rng rng
+extern Rng rng
 #endif

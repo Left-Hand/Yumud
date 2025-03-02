@@ -595,59 +595,59 @@ struct RCC_Def{
         }
     }
 
-    constexpr void reset_spi(const uint8_t index){
+    constexpr void reset_spi(const uint8_t index, const bool en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.SPI1_EN = 1; return;
-            case 2:   APB1PCENR.SPI2_EN = 1; return;
-            case 3:   APB1PCENR.SPI3_EN = 1; return;
+            case 1:   APB2PCENR.SPI1_EN = en; return;
+            case 2:   APB1PCENR.SPI2_EN = en; return;
+            case 3:   APB1PCENR.SPI3_EN = en; return;
         }
     }
 
-    constexpr void enable_i2c(const uint8_t index){
+    constexpr void enable_i2c(const uint8_t index, const bool en){
         switch(index){
             default:    return;
-            case 1:   APB1PCENR.I2C1_EN = 1;return;
-            case 2:   APB1PCENR.I2C2_EN = 1;return;
+            case 1:   APB1PCENR.I2C1_EN = en;return;
+            case 2:   APB1PCENR.I2C2_EN = en;return;
         }
     }
 
-    constexpr void enable_timer(const uint8_t index){
+    constexpr void enable_timer(const uint8_t index, const bool en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.TIM1_EN = 1; return;
-            case 2:   APB1PCENR.TIM2_EN = 1; return;
-            case 3:   APB1PCENR.TIM3_EN = 1; return;
-            case 4:   APB1PCENR.TIM4_EN = 1; return;
-            case 5:   APB1PCENR.TIM5_EN = 1; return;
-            case 6:   APB1PCENR.TIM6_EN = 1; return;
-            case 7:   APB1PCENR.TIM7_EN = 1; return;
-            case 8:   APB2PCENR.TIM8_EN = 1; return;
-            case 9:   APB2PCENR.TIM9_EN = 1; return;
-            case 10:  APB2PCENR.TIM10_EN = 1; return;
+            case 1:   APB2PCENR.TIM1_EN = en; return;
+            case 2:   APB1PCENR.TIM2_EN = en; return;
+            case 3:   APB1PCENR.TIM3_EN = en; return;
+            case 4:   APB1PCENR.TIM4_EN = en; return;
+            case 5:   APB1PCENR.TIM5_EN = en; return;
+            case 6:   APB1PCENR.TIM6_EN = en; return;
+            case 7:   APB1PCENR.TIM7_EN = en; return;
+            case 8:   APB2PCENR.TIM8_EN = en; return;
+            case 9:   APB2PCENR.TIM9_EN = en; return;
+            case 10:  APB2PCENR.TIM10_EN = en; return;
         }
     }
 
-    constexpr void enable_usart(const uint8_t index){
+    constexpr void enable_usart(const uint8_t index, const bool en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.USART1_EN = 1; return;
-            case 2:   APB1PCENR.USART2_EN = 1; return;
-            case 3:   APB1PCENR.USART3_EN = 1; return;
-            case 4:   APB1PCENR.USART4_EN = 1; return;
-            case 5:   APB1PCENR.USART5_EN = 1; return;
-            case 6:   APB1PCENR.USART6_EN = 1; return;
-            case 7:   APB1PCENR.USART7_EN = 1; return;
-            case 8:   APB1PCENR.USART8_EN = 1; return;
+            case 1:   APB2PCENR.USART1_EN = en; return;
+            case 2:   APB1PCENR.USART2_EN = en; return;
+            case 3:   APB1PCENR.USART3_EN = en; return;
+            case 4:   APB1PCENR.USART4_EN = en; return;
+            case 5:   APB1PCENR.USART5_EN = en; return;
+            case 6:   APB1PCENR.USART6_EN = en; return;
+            case 7:   APB1PCENR.USART7_EN = en; return;
+            case 8:   APB1PCENR.USART8_EN = en; return;
         }
     }
 
-    constexpr void enable_spi(const uint8_t index){
+    constexpr void enable_spi(const uint8_t index, const bool en){
         switch(index){
             default:    return;
-            case 1:   APB2PCENR.SPI1_EN = 1; return;
-            case 2:   APB1PCENR.SPI2_EN = 1; return;
-            case 3:   APB1PCENR.SPI3_EN = 1; return;
+            case 1:   APB2PCENR.SPI1_EN = en; return;
+            case 2:   APB1PCENR.SPI2_EN = en; return;
+            case 3:   APB1PCENR.SPI3_EN = en; return;
         }
     }
 };

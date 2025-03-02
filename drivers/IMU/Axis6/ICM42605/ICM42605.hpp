@@ -146,8 +146,8 @@ public:
         INTF_CONFIG6              = 0x7C
     };
 protected:
-    std::optional<I2cDrv> i2c_drv_;
-    std::optional<SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 
     scexpr uint8_t default_i2c_addr = 0x68;
 
@@ -165,7 +165,7 @@ protected:
     }
 public:
     using InvensenseSensor::InvensenseSensor;
-    ICM42605(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(I2cDrv(i2c, default_i2c_addr)){;}
+    ICM42605(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(hal::I2cDrv(i2c, default_i2c_addr)){;}
 
     void init();
     

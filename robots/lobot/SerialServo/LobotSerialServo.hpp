@@ -6,7 +6,7 @@ namespace ymd::drivers{
 
 class LobotSerialServo{
 protected:
-    Uart & uart_;
+    hal::Uart & uart_;
     uint8_t id_;
 
     template<typename T>
@@ -15,7 +15,7 @@ protected:
     };
 
 public:
-    LobotSerialServo(Uart & uart, const uint8_t id):
+    LobotSerialServo(hal::Uart & uart, const uint8_t id):
             uart_(uart), id_(id){}
 
     void setID(const uint8_t newID);

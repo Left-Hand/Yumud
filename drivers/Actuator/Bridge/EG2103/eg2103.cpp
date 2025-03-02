@@ -3,7 +3,7 @@
 #include "hal/timer/timer_oc.hpp"
 
 using namespace ymd::drivers;
-using namespace ymd;
+using namespace ymd::hal;
 
 void EG2103::init(){
     inst_.init();

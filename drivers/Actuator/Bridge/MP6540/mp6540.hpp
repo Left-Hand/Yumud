@@ -9,7 +9,7 @@
 
 
 
-struct PwmChannelIntf;
+struct PwmIntf;
 
 namespace ymd::drivers{
 
@@ -17,23 +17,23 @@ namespace ymd::drivers{
 
 class MP6540:public Coil3DriverIntf{
 protected:
-    using PWM3 = std::array<PwmChannelIntf *, 3>;
-    using AIN3 = std::array<AnalogInChannel *, 3>;
+    using PWM3 = std::array<hal::PwmIntf *, 3>;
+    using AIN3 = std::array<hal::AnalogInIntf *, 3>;
 
-    using PWM3_WP = std::array<std::reference_wrapper<PwmChannelIntf>, 3>;
-    using AIN3_WP = std::array<std::reference_wrapper<AnalogInChannel>, 3>;
+    using PWM3_WP = std::array<std::reference_wrapper<hal::PwmIntf>, 3>;
+    using AIN3_WP = std::array<std::reference_wrapper<hal::AnalogInIntf>, 3>;
     
-    using EN3 = std::array<GpioConcept *, 3>;
+    using EN3 = std::array<hal::GpioIntf *, 3>;
 
     PWM3 pwms_;
     AIN3 ains_;
     EN3 ens_ = {nullptr, nullptr, nullptr};
 
-    struct MP6540CurrentChannel:public AnalogInChannel{
-        AnalogInChannel & ain_;
+    struct MP6540CurrentChannel:public hal::AnalogInIntf{
+        hal::AnalogInIntf & ain_;
         real_t ratio_ = real_t(0);
 
-        MP6540CurrentChannel(AnalogInChannel & _ain):
+        MP6540CurrentChannel(hal::AnalogInIntf & _ain):
             ain_(_ain){}
         MP6540CurrentChannel(const MP6540CurrentChannel & other) = delete;
         MP6540CurrentChannel(MP6540CurrentChannel && other) = delete;

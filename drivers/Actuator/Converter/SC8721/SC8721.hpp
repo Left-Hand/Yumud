@@ -45,9 +45,9 @@ public:
     };
 
 
-    SC8721(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SC8721(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    SC8721(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
+    SC8721(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    SC8721(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    SC8721(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     void update();
 
@@ -69,7 +69,7 @@ public:
 protected:
     using RegAddress = uint8_t;
 
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     struct CSOReg:public Reg8{
         scexpr RegAddress address = 0x01;

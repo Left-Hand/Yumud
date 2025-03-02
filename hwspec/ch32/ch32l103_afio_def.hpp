@@ -84,12 +84,12 @@ struct R32_AFIO_CR{
     uint32_t USBPD_IN_HVT:2;
     uint32_t :6;
 
-    uint32_t UDM_BC_VSRC:1;
     uint32_t UDP_BC_VSRC:1;
-    uint32_t UDM_BC_CMPE:1;
+    uint32_t UDM_BC_VSRC:1;
+    uint32_t UDP_BC_CMPE:1;
     uint32_t UDM_BC_CMPE:1;
     uint32_t UDP_BC_CMPO:1;
-    uint32_t UDP_BC_CMPO:1;
+    uint32_t UDM_BC_CMPO:1;
     uint32_t :10;
 };
 
@@ -120,16 +120,160 @@ struct AFIO_Def{
     volatile R32_AFIO_CR         CR;
     volatile R32_AFIO_PCFR2      PCFR2;
 
-    void SET_SWCFG(const uint8_t val){
-        PCFR1.SWCFG = val;
+    constexpr void set_spi1_remap(const uint8_t remap){
+        PCFR1.SPI1_RM = remap & 0b1;
+        PCFR2.SPI1_RM_H = remap >> 1;
     }
 
-    void SET_USART3_RM(const uint8_t val){
-        PCFR1.USART3_RM = val;
+    constexpr void set_i2c1_remap(const uint8_t remap){
+        PCFR1.I2C1_RM = remap & 0b1;
+        PCFR2.I2C1_RM_H = remap >> 1;
     }
 
-    void SET_TIM3_RM(const uint8_t val){
-        PCFR1.TIM3_RM = val;
+    constexpr void set_usart1_remap(const uint8_t remap){
+        PCFR1.USART1_RM = remap & 0b1;
+        PCFR2.USART1_RM_H = remap >> 1;
+    }
+
+    constexpr void set_usart2_remap(const uint8_t remap){
+        PCFR1.USART2_RM = remap & 0b1;
+        PCFR2.USART2_RM_H = remap >> 1;
+    }
+
+    constexpr void set_usart3_remap(const uint8_t remap){
+        PCFR1.USART3_RM = remap & 0b11;
+    }
+
+    constexpr void set_tim1_remap(const uint8_t remap){
+        PCFR1.TIM1_RM = remap & 0b11;
+        PCFR2.TIM1_RM_H = remap >> 2;
+    }
+
+    constexpr void set_tim2_remap(const uint8_t remap){
+        PCFR1.TIM2_RM = remap & 0b11;
+        PCFR2.TIM2_RM_H = remap >> 2;
+    }
+
+    constexpr void set_tim3_remap(const uint8_t remap){
+        PCFR1.TIM3_RM = remap & 0b1;
+    }
+
+    constexpr void set_tim4_remap(const uint8_t remap){
+        PCFR1.TIM4_RM = remap & 0b1;
+    }
+
+    constexpr void set_can1_remap(const uint8_t remap){
+        PCFR1.CAN_RM = remap & 0b11;
+    }
+
+    constexpr void set_pd0pd1_remap(const uint8_t remap){
+        PCFR1.PD0PD1_RM = remap & 0b1;
+    }
+
+    // unsafe
+    // constexpr void set_swcfg_remap(const uint8_t remap){
+    //     PCFR1.SWCFG = remap & 0b111;
+    // }
+
+    constexpr void enable_usbpd_high_threshold(const bool en){
+        CR.USBPD_IN_HVT = en;
+    }
+
+    constexpr void enable_udp_bc_source_volt(const bool en){
+        CR.UDP_BC_VSRC = en;
+    }
+
+    constexpr void enable_udm_bc_source_volt(const bool en){
+        CR.UDM_BC_VSRC = en;
+    }
+
+    constexpr void enable_udp_bc_cmp(const bool en){
+        CR.UDP_BC_CMPE = en;
+    }
+
+    constexpr void enable_udm_bc_cmp(const bool en){
+        CR.UDM_BC_CMPE = en;
+    }
+
+    constexpr bool get_udp_bc_cmp_state(){
+        return CR.UDP_BC_CMPO;
+    }
+
+    constexpr bool get_udm_bc_cmp_state(){
+        return CR.UDM_BC_CMPO;
+    }
+
+    constexpr void set_usart4_remap(const uint8_t remap){
+        PCFR2.USART4_RM = remap & 0b1;
+    }
+
+    constexpr void set_lptim_remap(const uint8_t remap){
+        PCFR2.LPTIM_RM = remap & 0b1;
+    }
+
+    constexpr void set_exti_source(const uint8_t port_source, const uint8_t pin_source){
+        switch(pin_source & 0x0f){
+            case 0: EXTICR1.EXTI0 = port_source; return;
+            case 1: EXTICR1.EXTI1 = port_source; return;
+            case 2: EXTICR1.EXTI2 = port_source; return;
+            case 3: EXTICR1.EXTI3 = port_source; return;
+    
+            case 4: EXTICR2.EXTI4 = port_source; return;
+            case 5: EXTICR2.EXTI5 = port_source; return;
+            case 6: EXTICR2.EXTI6 = port_source; return;
+            case 7: EXTICR2.EXTI7 = port_source; return;
+    
+            case 8: EXTICR3.EXTI8 = port_source; return;
+            case 9: EXTICR3.EXTI9 = port_source; return;
+            case 10: EXTICR3.EXTI10 = port_source; return;
+            case 11: EXTICR3.EXTI11 = port_source; return;
+    
+            case 12: EXTICR4.EXTI12 = port_source; return;
+            case 13: EXTICR4.EXTI13 = port_source; return;
+            case 14: EXTICR4.EXTI14 = port_source; return;
+            case 15: EXTICR4.EXTI15 = port_source; return;
+        }
+    }
+
+    void set_tim_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_tim1_remap(remap); return;
+            case 2: set_tim2_remap(remap); return;
+            case 3: set_tim3_remap(remap); return;
+            case 4: set_tim4_remap(remap); return;
+        }
+    }
+
+    void set_usart_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_usart1_remap(remap);
+            case 2: set_usart2_remap(remap);
+            case 3: set_usart3_remap(remap);
+            case 4: set_usart4_remap(remap);
+        }
+    }
+
+    void set_spi_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_spi1_remap(remap); return;
+        }
+    }
+
+    void set_i2c_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_i2c1_remap(remap); return;
+        }
+    }
+
+    void set_can_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_can1_remap(remap); return;
+        }
     }
 };
 }

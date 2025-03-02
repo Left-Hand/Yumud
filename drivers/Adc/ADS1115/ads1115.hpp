@@ -32,7 +32,7 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv;
 
     using RegAddress = uint8_t;
 
@@ -83,9 +83,9 @@ public:
     // SDA 1001010
     // SCL 1001011
     scexpr uint8_t default_i2c_addr = 0b10010000;
-    ADS111X(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS111X(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS111X(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)){};
+    ADS111X(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
+    ADS111X(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
+    ADS111X(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)){};
 
     void startConv(){
         auto & reg = config_reg;

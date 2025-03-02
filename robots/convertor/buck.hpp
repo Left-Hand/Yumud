@@ -21,7 +21,7 @@
 //     chn.setIdleState(false);
 //     chn.init();
 
-//     auto buck_pwm = PwmChannelIntf(ch);
+//     auto buck_pwm = PwmIntf(ch);
 //     buck_pwm.setClamp(real_t(0.1), real_t(0.9));
 //     buck_pwm.init();
 

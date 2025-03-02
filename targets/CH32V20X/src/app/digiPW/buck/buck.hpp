@@ -29,15 +29,19 @@ protected:
 class BuckConverter {
 protected:
     using Coil2Driver = ymd::drivers::Coil2DriverIntf;
+    hal::AnalogInIntf & curr_ch_;
+    hal::AnalogInIntf & volt_ch_;
     BuckController ctrl_;
-    AnalogInChannel & curr_ch_;
-    AnalogInChannel & volt_ch_;
     Coil2Driver & driver_;
 public:
-    BuckConverter(AnalogInChannel & _curr_ch, AnalogInChannel & _volt_ch, Coil2Driver & _driver):
-        ctrl_(),
+    BuckConverter(
+        hal::AnalogInIntf & _curr_ch, 
+        hal::AnalogInIntf & _volt_ch, 
+        Coil2Driver & _driver
+    ):
         curr_ch_(_curr_ch),
         volt_ch_(_volt_ch),
+        ctrl_(),
         driver_(_driver)
     {;}
 

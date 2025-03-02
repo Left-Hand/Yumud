@@ -10,23 +10,23 @@ namespace ymd::drivers{
 
 class AD7607{
 protected:
-    SpiDrv spi_drv;
-    TimerOC & trigger;
-    Gpio & rst_gpio;
+    hal::SpiDrv spi_drv;
+    hal::TimerOC & trigger;
+    hal::GpioIntf & rst_gpio;
 public:
     AD7607(
-        SpiDrv && _spi_drv, 
-        TimerOC & _trgger, 
-        Gpio & _rst_gpio = GpioNull
+        hal::SpiDrv && _spi_drv, 
+        hal::TimerOC & _trgger, 
+        hal::GpioIntf & _rst_gpio = hal::GpioNull
     ):
         spi_drv(std::move(_spi_drv)), 
         trigger(_trgger), 
         rst_gpio(_rst_gpio){;}
 
     AD7607(
-        const SpiDrv & _spi_drv, 
-        TimerOC & _trgger, 
-        Gpio & _rst_gpio = GpioNull
+        const hal::SpiDrv & _spi_drv, 
+        hal::TimerOC & _trgger, 
+        hal::GpioIntf & _rst_gpio = hal::GpioNull
     ):
         spi_drv(_spi_drv), 
         trigger(_trgger), 

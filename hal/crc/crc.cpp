@@ -1,7 +1,7 @@
 #include "crc.hpp"
 #include "sys/core/sdk.h"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 Crc & crc = Crc::getInstance();
 

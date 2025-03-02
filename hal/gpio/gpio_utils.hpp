@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "sys/core/platform.h"
 
-namespace ymd{
+namespace ymd::hal{
 enum class Pin:uint16_t{
     None,
     _0 = 1 << 0,

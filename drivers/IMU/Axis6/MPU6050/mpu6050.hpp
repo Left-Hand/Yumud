@@ -28,7 +28,7 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
 
     
@@ -106,9 +106,9 @@ public:
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;
 
-    MPU6050(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    MPU6050(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    MPU6050(I2c & bus, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(bus, i2c_addr){;}
+    MPU6050(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    MPU6050(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    MPU6050(hal::I2c & bus, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(bus, i2c_addr){;}
 
     bool verify();
     void init();

@@ -13,7 +13,7 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     struct EnableReg:public Reg8{
         uint8_t powerOn : 1;
@@ -104,9 +104,9 @@ protected:
 public:
     scexpr uint8_t default_i2c_addr = 0x52;
 
-    TCS34725(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    TCS34725(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    TCS34725(I2c & bus, const uint8_t addr = default_i2c_addr):i2c_drv_(bus, addr){;}
+    TCS34725(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    TCS34725(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    TCS34725(hal::I2c & bus, const uint8_t addr = default_i2c_addr):i2c_drv_(bus, addr){;}
 
     void setIntegration(const uint16_t ms){
         uint16_t cycles = CLAMP(ms * 10 / 24, 1, 256);

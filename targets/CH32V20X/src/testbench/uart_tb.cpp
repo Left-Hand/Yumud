@@ -1,13 +1,14 @@
 #include "tb.h"
 
-#include <string>
+// #include <string>
 
 #include "sys/clock/clock.h"
 #include "sys/debug/debug.hpp"
 
-
 #define UART_TB_ECHO
 using std::string;
+
+#define TARG_UART uart2            
 
 [[maybe_unused]] static void getline(IOStream & logger, string & str){
     String temp_str;
@@ -72,14 +73,14 @@ using std::string;
 void uart_main(){
     // uart_tb_old();
     //uart1 passed
-    //uart2 passed
+    //TARG_UART passed
     //uart3 passed
     //uart5 passed
     //uart6 passed
     //uart8 passed
 
-    uart2.init(576000, CommMethod::Dma, CommMethod::Interrupt);
-    DEBUGGER.retarget(&uart2);
+    TARG_UART.init(576000, CommMethod::Dma, CommMethod::Interrupt);
+    DEBUGGER.retarget(&TARG_UART);
     // DEBUGGER.init(DEBUG_UART_BAUD, CommMethod::Dma, CommMethod::None);
-    uart_tb(uart2);
+    uart_tb(TARG_UART);
 }

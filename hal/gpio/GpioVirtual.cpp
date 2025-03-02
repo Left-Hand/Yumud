@@ -1,12 +1,12 @@
-#include "GpioVirtual.hpp"
+#include "gpiovirtual.hpp"
 #include "gpio.hpp"
 #include "port.hpp"
 
-using namespace ymd;
-GpioVirtual::GpioVirtual(const Gpio & gpio):GpioConcept(gpio.pin_index), _port(form_gpiotypedef_to_port(uint32_t(gpio.instance))){;}
-GpioVirtual::GpioVirtual(PortConcept & port, const int8_t _pin_index):GpioConcept(_pin_index), _port(port){;}
-GpioVirtual::GpioVirtual(PortConcept & port, const Pin _pin):GpioConcept(CTZ((uint16_t)_pin)), _port(port){;}
-PortConcept & GpioVirtual::form_gpiotypedef_to_port(uint32_t base){
+using namespace ymd::hal;
+VGpio::VGpio(const Gpio & gpio):GpioIntf(gpio.pin_index), _port(form_gpiotypedef_to_port(uint32_t(gpio.instance))){;}
+VGpio::VGpio(GpioPortIntf & port, const int8_t _pin_index):GpioIntf(_pin_index), _port(port){;}
+VGpio::VGpio(GpioPortIntf & port, const Pin _pin):GpioIntf(CTZ((uint16_t)_pin)), _port(port){;}
+GpioPortIntf & VGpio::form_gpiotypedef_to_port(uint32_t base){
     switch(base){
         default:
         #ifdef ENABLE_GPIOA

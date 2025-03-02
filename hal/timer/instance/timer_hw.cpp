@@ -1,37 +1,38 @@
 #include "timer_hw.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
-using IT = TimerUtils::IT;
+using IT = TimerIT;
 
 
 #define ADVANCED_TIMER_IT_TEMPLATE(x)\
-extern "C"{\
-__interrupt void TIM##x##_BRK_IRQHandler(void){\
-    timer##x.onBreakHandler();\
+void TIM##x##_BRK_IRQHandler(void){\
+    timer##x.onBreakInterrupt();\
+    TIM_ClearFlag(TIM##x, TIM_IT_Break);\
 }\
-\
-__interrupt void TIM##x##_UP_IRQHandler(void){\
-    timer##x.onUpdateHandler();\
+void TIM##x##_UP_IRQHandler(void){\
+    timer##x.onUpdateInterrupt();\
+    TIM_ClearFlag(TIM##x, TIM_IT_Update);\
 }\
-\
-__interrupt void TIM##x##_TRG_COM_IRQHandler(void){\
-    timer##x.onTriggerComHandler();\
+void TIM##x##_TRG_COM_IRQHandler(void){\
+    if(TIM_GetITStatus(TIM##x, TIM_IT_Trigger)){\
+        timer##x.onTriggerInterrupt();\
+        TIM_ClearFlag(TIM##x, TIM_IT_Trigger);\
+    }else if(TIM_GetITStatus(TIM##x, TIM_IT_COM)){\
+        timer##x.onComInterrupt();\
+        TIM_ClearFlag(TIM##x, TIM_IT_COM);\
+    }\
 }\
-\
-__interrupt void TIM##x##_CC_IRQHandler(void){\
-    timer##x.onCCHandler();\
+void TIM##x##_CC_IRQHandler(void){\
+    timer##x.onCCInterrupt();\
 }\
-}\
-\
+
 
 #define GENERIC_TIMER_IT_TEMPLATE(x)\
-extern "C"{\
-__interrupt void TIM##x##_IRQHandler(void){\
-    timer##x.onItHandler();\
+void TIM##x##_IRQHandler(void){\
+    timer##x.onItInterrupt();\
 }\
-}\
-\
+
 
 
 #ifdef ENABLE_TIM1

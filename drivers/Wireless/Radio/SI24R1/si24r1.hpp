@@ -247,10 +247,10 @@ protected:
         spi_drv.transferSingle(reinterpret_cast<uint8_t &>(status_reg), uint8_t(Command::NOP));
     }
 protected:
-    SpiDrv spi_drv;
+    hal::SpiDrv spi_drv;
 public: 
-    Si24R1(const SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
-    Si24R1(SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
+    Si24R1(const hal::SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
+    Si24R1(hal::SpiDrv && _spi_drv):spi_drv(_spi_drv){;}
 
     size_t available(){
         uint8_t size;

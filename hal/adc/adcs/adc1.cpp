@@ -1,35 +1,27 @@
 #include "adc1.hpp"
 #include "sys/debug/debug.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
-using Callback = AdcUtils::Callback;
-
-
-extern "C"{
 __interrupt void ADC1_2_IRQHandler(void){
-    const uint32_t tempCTLR = ADC1->CTLR1;
+    // const uint32_t tempCTLR = ADC1->CTLR1;
     const uint32_t tempSTATR = ADC1->STATR;
 
-    #define CHECK_IT(x) (tempSTATR & (x >> 8) and tempCTLR & (x & 0xFF))
+    // #define CHECK_IT(x) (tempSTATR & (x >> 8) and tempCTLR & (x & 0xFF))
+    #define CHECK_IT(x) (tempSTATR & (x >> 8))
     #define CLEAR_IT(x) ADC1->STATR = ~(uint32_t)(x >> 8);
 
     if(CHECK_IT(ADC_IT_JEOC)){
-
-        if(adc1.jeoc_cb){
-            BREAKPOINT;
-            adc1.jeoc_cb();
-        }
+        adc1.onJeocInterrupt();
         CLEAR_IT(ADC_IT_JEOC);
     }else if(CHECK_IT(ADC_IT_EOC)){
-        EXECUTE(adc1.eoc_cb);
+        adc1.onEocInterrupt();
         CLEAR_IT(ADC_IT_EOC);
     }else if(CHECK_IT(ADC_IT_AWD)){
-        EXECUTE(adc1.awd_cb);
+        adc1.onAwdInterrupt();
         CLEAR_IT(ADC_IT_AWD);
     }
-}
 }
 #endif
 
@@ -75,7 +67,7 @@ uint16_t Adc1::getInjectedDataByRank(const uint8_t rank){
     else return injected_datas[rank];
 }
 
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_ADC1
 Adc1 adc1;
 #endif

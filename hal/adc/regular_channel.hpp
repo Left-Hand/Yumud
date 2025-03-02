@@ -2,9 +2,9 @@
 
 #include "adc_channel.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
-class RegularChannel: public AdcChannelOnChip{
+class AdcRegularChannel: public AdcChannelOnChip{
 public:
 protected:
     uint32_t data_cache;
@@ -14,7 +14,7 @@ protected:
     friend class AdcCompanion;
 
 public:
-    RegularChannel(ADC_TypeDef * _instance,const ChannelIndex _channel, const uint8_t _rank):
+    AdcRegularChannel(ADC_TypeDef * _instance,const ChannelIndex _channel, const uint8_t _rank):
         AdcChannelOnChip(_instance, _channel, _rank){;}
 
 

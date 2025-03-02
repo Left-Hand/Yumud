@@ -6,13 +6,11 @@
 
 #include "sys/core/sdk.h"
 
-namespace ymd{
-
-
+namespace ymd::hal{
 
 class Exti;
 
-class Gpio:public GpioConcept{
+class Gpio:public GpioIntf{
 protected:
     GPIO_TypeDef * instance;
     const uint16_t pin;
@@ -20,8 +18,8 @@ protected:
 
     volatile uint32_t & pin_cfg;
 
-    Gpio(GPIO_TypeDef * _instance,const Pin _pin):
-        GpioConcept((_pin != Pin::None) ? int(CTZ((uint16_t)_pin)) : -1),
+    Gpio(GPIO_TypeDef * _instance, const Pin _pin):
+        GpioIntf((_pin != Pin::None) ? int(CTZ((uint16_t)_pin)) : -1),
         instance(_instance),
 
         #if defined(CH32V20X) || defined(CH32V30X)
@@ -36,13 +34,13 @@ protected:
         pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
     }
 
-    friend class GpioVirtual;
+    friend class VGpio;
     friend class ExtiChannel;
-    friend class Port;
+    friend class GpioPort;
 
 
 public:
-    using GpioConcept::operator=;
+    using GpioIntf::operator=;
 
     Gpio(const Gpio & other) = delete;
     Gpio(Gpio && other) = delete;
@@ -76,5 +74,4 @@ public:
 
 
 extern Gpio & GpioNull;
-// static inline Gpio & GpioNull = Gpio::null();
 }

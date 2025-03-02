@@ -1,5 +1,6 @@
 #pragma once
 
+#include "drivers/device_defs.h"
 #include "../CoilDriver.hpp"
 #include "types/range/range_t.hpp"
 #include "hal/adc/analog_channel.hpp"
@@ -77,7 +78,7 @@ public:
     };
 
 protected:
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
 
     using RegAddress = uint8_t;
 
@@ -141,9 +142,9 @@ protected:
     void readReg(const RegAddress addr, uint16_t & reg);
 
 public:
-    DRV8301(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    DRV8301(SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    DRV8301(Spi & spi, const uint8_t index):spi_drv_(SpiDrv(spi, index)){;}
+    DRV8301(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    DRV8301(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
+    DRV8301(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
     void init();

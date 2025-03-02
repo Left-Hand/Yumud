@@ -5,7 +5,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/gpio/gpio.hpp"
 
-class GpioConcept;
+class GpioIntf;
 
 namespace ymd::drivers{
 class RgbLedConcept{
@@ -24,23 +24,23 @@ public:
 class RgbLedDigital:public RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
-    GpioConcept & red_gpio;
-    GpioConcept & green_gpio;
-    GpioConcept & blue_gpio;
+    hal::GpioIntf & red_gpio_;
+    hal::GpioIntf & green_gpio_;
+    hal::GpioIntf & blue_gpio_;
 public:
-    RgbLedDigital(GpioConcept & _red_gpio, GpioConcept & _green_gpio, GpioConcept & _blue_gpio):
-            red_gpio(_red_gpio), green_gpio(_green_gpio), blue_gpio(_blue_gpio){;}
+    RgbLedDigital(hal::GpioIntf & _red_gpio_, hal::GpioIntf & _green_gpio_, hal::GpioIntf & _blue_gpio_):
+            red_gpio_(_red_gpio_), green_gpio_(_green_gpio_), blue_gpio_(_blue_gpio_){;}
     
     void init(){
-        red_gpio.outpp();
-        green_gpio.outpp();
-        blue_gpio.outpp();
+        red_gpio_.outpp();
+        green_gpio_.outpp();
+        blue_gpio_.outpp();
     }
 
     RgbLedDigital & operator = (const Color & color) override{
-        red_gpio = (color.r > real_t(0.5));
-        green_gpio = (color.g > real_t(0.5));
-        blue_gpio = (color.b > real_t(0.5));
+        red_gpio_ = (color.r > real_t(0.5));
+        green_gpio_ = (color.g > real_t(0.5));
+        blue_gpio_ = (color.b > real_t(0.5));
         return *this;
     }
 };
@@ -52,7 +52,7 @@ public:
     LedAnalog green;
     LedAnalog blue;
 
-    RgbLedAnalog(gpio_or_pwm auto & _red_ch, gpio_or_pwm auto & _green_ch, gpio_or_pwm auto & _blue_ch):
+    RgbLedAnalog(auto & _red_ch, auto & _green_ch, auto & _blue_ch):
         red(_red_ch), green(_green_ch), blue(_blue_ch){;}
 
     RgbLedAnalog & operator = (const Color & color) override{

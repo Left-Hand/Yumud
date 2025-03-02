@@ -3,7 +3,7 @@
 #include "hal/gpio/port_virtual.hpp"
 #include "hal/timer/pwm/pwm_channel.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 // void GpioOrPwm::init(){
 //     if(std::holds_alternative<GpioRef>(inst_)){

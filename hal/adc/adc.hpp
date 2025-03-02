@@ -18,29 +18,29 @@ __interrupt void ADC1_2_IRQHandler(void);
 #endif
 
 
-namespace ymd{
+namespace ymd::hal{
 class AdcConcept{
 protected:
 public:
-    using Callback = AdcUtils::Callback;
+    using Callback = std::function<void()>;
 };
 
 struct AdcChannelConfig{
 public:
-    using ChannelIndex = AdcUtils::ChannelIndex;
-    using SampleCycles = AdcUtils::SampleCycles;
+    using ChannelIndex = AdcChannelIndex;
+    using SampleCycles = AdcSampleCycles;
 
     ChannelIndex channel;
-    SampleCycles cycles = SampleCycles::T41_5;
+    SampleCycles cycles;
 };
 
 
 class AdcOnChip:AdcConcept{
 public:
 
-    using Pga = AdcUtils::Pga;
-    using RegularTrigger = AdcUtils::RegularTrigger;
-    using InjectedTrigger = AdcUtils::InjectedTrigger;
+    using Pga = AdcPga;
+    using RegularTrigger = AdcRegularTrigger;
+    using InjectedTrigger = AdcInjectedTrigger;
 
 protected:
     ADC_TypeDef * instance;
@@ -112,11 +112,10 @@ protected:
     Callback eoc_cb;
     Callback awd_cb;
 
-    using ChannelIndex = AdcUtils::ChannelIndex;
-    using SampleCycles = AdcUtils::SampleCycles;
-    using Mode = AdcUtils::Mode;
-    using IT = AdcUtils::IT;
-    using Callback = AdcUtils::Callback;
+    using ChannelIndex = AdcChannelIndex;
+    using SampleCycles = AdcSampleCycles;
+    using Mode = AdcMode;
+    using IT = AdcIT;
 
     bool right_align = true;
 
@@ -128,7 +127,7 @@ protected:
     uint16_t regular_data_cache[16] = {0};
 
     // RegularChannel regular_channels[16];
-    InjectedChannel injected_channels[4];
+    AdcInjectedChannel injected_channels[4];
 
 
     uint32_t getMaxValue() const {
@@ -166,19 +165,19 @@ protected:
         }
     }
 
-    void enableSingleshot(const bool en = true){
+    void enableSingleshot(const bool en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.DISCEN = en;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableScan(const bool en = true){
+    void enableScan(const bool en){
         auto tempreg = std::bit_cast<CTLR1>(instance->CTLR1);
         tempreg.SCAN = en;
         instance->CTLR1 = std::bit_cast<uint32_t>(tempreg);
     }
 
-    void enableTempVref(const bool en = true){
+    void enableTempVref(const bool en){
         CTLR2 tempreg;
         tempreg.data = instance->CTLR2;
         tempreg.TSVREFE = en;
@@ -188,20 +187,32 @@ protected:
     #if defined(ENABLE_ADC1) || defined(ENABLE_ADC2)
     friend void ::ADC1_2_IRQHandler(void);
     #endif
+
+    __fast_inline void onJeocInterrupt(){
+        EXECUTE(jeoc_cb);
+    }
+
+    __fast_inline void onEocInterrupt(){
+        EXECUTE(eoc_cb);
+    }
+
+    __fast_inline void onAwdInterrupt(){
+        EXECUTE(awd_cb);
+    }
 public:
     AdcPrimary(ADC_TypeDef * _instance):AdcOnChip(_instance),
         injected_channels{
-            InjectedChannel(instance, ChannelIndex::VREF, 1),
-            InjectedChannel(instance, ChannelIndex::VREF, 2),
-            InjectedChannel(instance, ChannelIndex::VREF, 3),
-            InjectedChannel(instance, ChannelIndex::VREF, 4)
+            AdcInjectedChannel(instance, AdcChannelIndex::VREF, 1),
+            AdcInjectedChannel(instance, AdcChannelIndex::VREF, 2),
+            AdcInjectedChannel(instance, AdcChannelIndex::VREF, 3),
+            AdcInjectedChannel(instance, AdcChannelIndex::VREF, 4)
         }{;}
 
     void init(const std::initializer_list<AdcChannelConfig> & regular_list,
             const std::initializer_list<AdcChannelConfig> & injected_list, 
             const Mode mode = Mode::Independent);
 
-    InjectedChannel & inj(const size_t index);
+    AdcInjectedChannel & inj(const size_t index);
 
     void bindCb(const IT it,Callback && cb);
 

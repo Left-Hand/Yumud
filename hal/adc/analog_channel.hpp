@@ -2,7 +2,7 @@
 
 #include "sys/math/real.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 
 struct AnalogChannel{
 public:
@@ -10,17 +10,17 @@ public:
 
 };
 
-class AnalogInChannel: public AnalogChannel{
+class AnalogInIntf: public AnalogChannel{
 public:
     virtual operator real_t() = 0;
 };
 
-class AnalogOutChannel: public AnalogChannel{
+class AnalogOutIntf: public AnalogChannel{
 protected:
     virtual void write(const uint32_t data) = 0;
 public:
 
-    AnalogOutChannel & operator = (const real_t value){
+    AnalogOutIntf & operator = (const real_t value){
         write(uni_to_u16(value));
         return *this;
     }

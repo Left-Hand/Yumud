@@ -9,18 +9,18 @@ using namespace ymd;
 scexpr uint8_t cfr3[4]={0x05,0x0F,0x41,0x32};       									//cfr3控制字  40M输入  25倍频  VC0=101   ICP=001;
   
 
-#define AD9910_PWR 	portB[5] 
-#define DRHOLD 			portB[7]   
-#define DROVER 			portB[8]   
-#define UP_DAT 			portB[9]    
+#define AD9910_PWR 		hal::portB[5] 
+#define DRHOLD 			hal::portB[7]   
+#define DROVER 			hal::portB[8]   
+#define UP_DAT 			hal::portB[9]    
 
-#define MAS_REST 		portA[2]   
-#define DRCTL  			portA[4]   
-#define OSK 			portA[5]  
+#define MAS_REST 		hal::portA[2]   
+#define DRCTL  			hal::portA[4]   
+#define OSK 			hal::portA[5]  
      
-#define PROFILE0 		portA[6]  
-#define PROFILE1 		portB[12] 
-#define PROFILE2 		portA[7]  
+#define PROFILE0 		hal::portA[6]  
+#define PROFILE1 		hal::portB[12] 
+#define PROFILE2 		hal::portA[7]  
 
 #define DLY __nopn(10);
 #define UDT()\

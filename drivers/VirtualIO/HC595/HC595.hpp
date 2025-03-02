@@ -8,9 +8,9 @@
 template<uint8_t len>
 class HC595{
 protected:
-    GpioConcept & sclk_pin;
-    GpioConcept & data_pin;
-    GpioConcept & latch_pin;
+    hal::GpioIntf & sclk_pin;
+    hal::GpioIntf & data_pin;
+    hal::GpioIntf & latch_pin;
 
     std::array<uint8_t, len> buf;
 
@@ -30,7 +30,7 @@ protected:
         }
     }
 public:
-    HC595(GpioConcept & _sclk_pin, GpioConcept & _data_pin, GpioConcept & _latch_pin):
+    HC595(hal::GpioIntf & _sclk_pin, hal::GpioIntf & _data_pin, hal::GpioIntf & _latch_pin):
             sclk_pin(_sclk_pin), data_pin(_data_pin), latch_pin(_latch_pin){;}
 
     void init(){
@@ -59,11 +59,11 @@ public:
     HC595 & operator << (const uint8_t data){write(data); return *this;}
 };
 
-class HC595Single: public PortVirtualConcept<8>{
+class HC595Single: public VGpioPortIntf<8>{
 protected:
-    GpioConcept & sclk_pin;
-    GpioConcept & data_pin;
-    GpioConcept & latch_pin;
+    hal::GpioIntf & sclk_pin;
+    hal::GpioIntf & data_pin;
+    hal::GpioIntf & latch_pin;
 
     uint8_t buf = 0;
 
@@ -83,7 +83,7 @@ protected:
     }
 
 public:
-    HC595Single(GpioConcept & _sclk_pin, GpioConcept & _data_pin, GpioConcept & _latch_pin):
+    HC595Single(hal::GpioIntf & _sclk_pin, hal::GpioIntf & _data_pin, hal::GpioIntf & _latch_pin):
             sclk_pin(_sclk_pin), data_pin(_data_pin), latch_pin(_latch_pin){;}
 
     void init(){

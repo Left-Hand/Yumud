@@ -1,9 +1,11 @@
 #include "dma.hpp"
+#include "hwspec/ch32/ch32_common_dma_def.hpp"
 
 
-using namespace ymd;
+using namespace ymd::hal;
+using namespace CH32;
 
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_DMA1
 DmaChannel dma1Ch1{DMA1_Channel1};
 DmaChannel dma1Ch2{DMA1_Channel2};
@@ -29,67 +31,59 @@ DmaChannel dma2Ch11{DMA2_Channel11};
 #endif
 }
 
-[[maybe_unused]] static FlagStatus PL_DMA_GetFlagStatus(uint32_t DMAy_FLAG)
-{
-    FlagStatus bitstatus = RESET;
-    uint32_t   tmpreg = 0;
-
-    tmpreg = DMA1->INTFR;
-
-    if((tmpreg & DMAy_FLAG) != (uint32_t)RESET)
-    {
-        bitstatus = SET;
-    }
-    else
-    {
-        bitstatus = RESET;
-    }
-
-    return bitstatus;
-}
-
 
 #define NAME_OF_DMA_XY(x,y) dma##x##Ch##y
 
-#define DMA_IT_TEMPLATE(x,y)\
-__interrupt void DMA##x##_Channel##y##_IRQHandler(void){\
-    if(DMA_GetFlagStatus(DMA##x##_IT_TC##y)){\
-        NAME_OF_DMA_XY(x,y).onTransmitDoneInterrupt();\
-        DMA_ClearFlag(DMA##x##_IT_TC##y);\
-    }else if(DMA_GetFlagStatus(DMA##x##_IT_HT##y)){\
-        NAME_OF_DMA_XY(x,y).onTransmitHalfInterrupt();\
-        DMA_ClearFlag(DMA##x##_IT_HT##y);\
+#ifdef ENABLE_DMA1
+#define DMA1_Inst reinterpret_cast<DMA1_Def *>(DMA1)
+#define DMA1_IT_TEMPLATE(y)\
+__interrupt void DMA1##_Channel##y##_IRQHandler(void){\
+    if(DMA1_Inst->get_transfer_done_flag(y)){\
+        NAME_OF_DMA_XY(1,y).onTransferDoneInterrupt();\
+        DMA1_Inst->clear_transfer_done_flag(y);\
+    }else if(DMA1_Inst->get_transfer_onhalf_flag(y)){\
+        NAME_OF_DMA_XY(1,y).onTransferHalfInterrupt();\
+        DMA1_Inst->clear_transfer_onhalf_flag(y);\
     }\
 }\
 
-
-#ifdef ENABLE_DMA1
-DMA_IT_TEMPLATE(1,1);
-DMA_IT_TEMPLATE(1,2);
-DMA_IT_TEMPLATE(1,3);
-DMA_IT_TEMPLATE(1,4);
-DMA_IT_TEMPLATE(1,5);
-DMA_IT_TEMPLATE(1,6);
-DMA_IT_TEMPLATE(1,7);
+DMA1_IT_TEMPLATE(1);
+DMA1_IT_TEMPLATE(2);
+DMA1_IT_TEMPLATE(3);
+DMA1_IT_TEMPLATE(4);
+DMA1_IT_TEMPLATE(5);
+DMA1_IT_TEMPLATE(6);
+DMA1_IT_TEMPLATE(7);
 #endif
 
 #ifdef ENABLE_DMA2
-DMA_IT_TEMPLATE(2,1);
-DMA_IT_TEMPLATE(2,2);
-DMA_IT_TEMPLATE(2,3);
-DMA_IT_TEMPLATE(2,4);
-DMA_IT_TEMPLATE(2,5);
-DMA_IT_TEMPLATE(2,6);
-DMA_IT_TEMPLATE(2,7);
-DMA_IT_TEMPLATE(2,8);
-DMA_IT_TEMPLATE(2,9);
-DMA_IT_TEMPLATE(2,10);
-DMA_IT_TEMPLATE(2,11);
+#define DMA2_Inst reinterpret_cast<DMA2_Def *>(DMA2)
+#define DMA2_IT_TEMPLATE(y)\
+__interrupt void DMA2##_Channel##y##_IRQHandler(void){\
+    if(DMA2_Inst->get_transfer_done_flag(y)){\
+        NAME_OF_DMA_XY(2,y).onTransferDoneInterrupt();\
+        DMA2_Inst->clear_transfer_done_flag(y);\
+    }else if(DMA2_Inst->get_transfer_onhalf_flag(y)){\
+        NAME_OF_DMA_XY(2,y).onTransferHalfInterrupt();\
+        DMA2_Inst->clear_transfer_onhalf_flag(y);\
+    }\
+}\
+
+DMA2_IT_TEMPLATE(1);
+DMA2_IT_TEMPLATE(2);
+DMA2_IT_TEMPLATE(3);
+DMA2_IT_TEMPLATE(4);
+DMA2_IT_TEMPLATE(5);
+DMA2_IT_TEMPLATE(6);
+DMA2_IT_TEMPLATE(7);
+DMA2_IT_TEMPLATE(8);
+DMA2_IT_TEMPLATE(9);
+DMA2_IT_TEMPLATE(10);
+DMA2_IT_TEMPLATE(11);
 #endif
 
 
 void DmaChannel::enableRcc(bool en){
-
     #ifdef ENABLE_DMA2
     if(instance < DMA2_Channel1){
         RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, en);
@@ -202,10 +196,10 @@ void DmaChannel::enableIt(const NvicPriority _priority, const bool en){
     NvicPriority::enable(_priority, IRQn(irq), en);
 }
 
-void DmaChannel::onTransmitHalfInterrupt(){
+void DmaChannel::onTransferHalfInterrupt(){
     EXECUTE(half_cb_);
 }
 
-void DmaChannel::onTransmitDoneInterrupt(){
+void DmaChannel::onTransferDoneInterrupt(){
     EXECUTE(done_cb_);
 }

@@ -8,8 +8,8 @@
 #include <functional>
 
 
-namespace ymd::TimerUtils{
-    enum class Mode:uint8_t{
+namespace ymd::hal{
+    enum class TimerMode:uint8_t{
         Up                      = TIM_CounterMode_Up,
         Down                    = TIM_CounterMode_Down,
         CenterAlignedDownTrig   = TIM_CounterMode_CenterAligned1,
@@ -17,7 +17,7 @@ namespace ymd::TimerUtils{
         CenterAlignedDualTrig   = TIM_CounterMode_CenterAligned3
     };
 
-    enum class ChannelIndex:uint8_t{
+    enum class TimerChannelIndex:uint8_t{
         CH1     =   0b000,
         CH1N    =   0b001,
         CH2     =   0b010,
@@ -27,7 +27,7 @@ namespace ymd::TimerUtils{
         CH4     =   0b110
     };
 
-    enum class TrgoSource:uint8_t{
+    enum class TimerTrgoSource:uint8_t{
         Reset   =  TIM_TRGOSource_Reset,             
         Enable  = TIM_TRGOSource_Enable,           
         Update  = TIM_TRGOSource_Update,           
@@ -38,7 +38,7 @@ namespace ymd::TimerUtils{
         OC4R    = TIM_TRGOSource_OC4Ref            
     };
 
-    enum class IT:uint8_t{
+    enum class TimerIT:uint8_t{
         Update  = TIM_IT_Update,
         CC1     = TIM_IT_CC1,
         CC2     = TIM_IT_CC2,
@@ -49,14 +49,14 @@ namespace ymd::TimerUtils{
         Break   = TIM_IT_Break,
     };
 
-    enum class BdtrLockLevel:uint16_t{
+    enum class TimerBdtrLockLevel:uint16_t{
         Off     = TIM_LOCKLevel_OFF,
         Low     = TIM_LOCKLevel_1,
         Medium  = TIM_LOCKLevel_2,
         High    = TIM_LOCKLevel_3
     };
 
-    enum class OcMode:uint8_t{
+    enum class TimerOcMode:uint8_t{
         Timing      = TIM_OCMode_Timing,
         Active      = TIM_OCMode_Active,
         Inactive    = TIM_OCMode_Inactive,
@@ -66,17 +66,15 @@ namespace ymd::TimerUtils{
     };
 
     namespace internal{
-        
     bool isBasicTimer(const TIM_TypeDef * instance);
 
     bool isGenericTimer(const TIM_TypeDef * instance);
 
     bool isAdvancedTimer(const TIM_TypeDef * instance);
 
-    IRQn ItToIrq(const TIM_TypeDef * instance, const IT it);
+    IRQn ItToIrq(const TIM_TypeDef * instance, const TimerIT it);
 
-    Gpio & getPin(const TIM_TypeDef * instance, const ChannelIndex channel);
-
+    Gpio & getPin(const TIM_TypeDef * instance, const TimerChannelIndex channel);
     }
 
 };

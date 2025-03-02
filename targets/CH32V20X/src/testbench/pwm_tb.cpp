@@ -19,7 +19,7 @@ void pwm_tb(OutputStream & logger){
     #endif
 
     #ifdef PWM_TB_TIMEROC
-    PwmChannelIntf & pwm = timer1.oc(1);
+    PwmIntf & pwm = timer1.oc(1);
     
 
     #ifdef PWM_TB_CO

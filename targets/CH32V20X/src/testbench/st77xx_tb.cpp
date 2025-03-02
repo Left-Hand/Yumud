@@ -140,7 +140,7 @@ constexpr uint32_t hash_djb2_buffer(const uint8_t *p_buff, int p_len, uint32_t p
 // };
 
 
-void st77xx_tb(Spi & spi){
+void st77xx_tb(hal::Spi & spi){
     DEBUGGER_INST.init(DEBUG_UART_BAUD);
 
     auto & led = portC[14];

@@ -9,7 +9,7 @@ namespace ymd::drivers{
 
 class MT6816:public MagEncoderIntf{
 protected:
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
 
     real_t lap_position;
     size_t errcnt = 0;
@@ -26,9 +26,9 @@ protected:
 
     uint16_t getPositionData();
 public:
-    MT6816(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    MT6816(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    MT6816(Spi & _bus, const uint8_t index):spi_drv_(SpiDrv{_bus, index}){;}
+    MT6816(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    MT6816(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    MT6816(hal::Spi & _bus, const uint8_t index):spi_drv_(hal::SpiDrv{_bus, index}){;}
 
     void init() override;
 

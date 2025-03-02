@@ -104,9 +104,9 @@
  
  class W5500 {
  protected:
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
  public:
-    W5500(SpiDrv && spi_drv): spi_drv_(std::move(spi_drv)) {}
+    W5500(hal::SpiDrv && spi_drv): spi_drv_(std::move(spi_drv)) {}
    void init(uint8_t ss_pin = 10);
    void init(uint8_t sck_pin, uint8_t miso_pin, uint8_t mosi_pin, uint8_t ss_pin); // extension for M5Stack ATOM
    uint8_t readVersion(void);

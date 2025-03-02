@@ -171,7 +171,7 @@ struct AFIO_Def{
         PCFR1.TIM4_RM = remap & 0x01;
     }
 
-    void set_can_remap(const uint8_t remap){
+    void set_can1_remap(const uint8_t remap){
         PCFR1.CAN_RM = remap & 0x03;
     }
 
@@ -271,27 +271,78 @@ struct AFIO_Def{
         PCFR2.USART1_RM1 = remap & 0x01;
     }
 
-    void set_exti_source(const uint8_t port_source, const uint8_t pin_source){
-        switch(pin_source & 0x0f){
-            case 0: EXTICR1.EXTI0 = port_source; return;
-            case 1: EXTICR1.EXTI1 = port_source; return;
-            case 2: EXTICR1.EXTI2 = port_source; return;
-            case 3: EXTICR1.EXTI3 = port_source; return;
+    void set_exti_source(const uint8_t port, const uint8_t pin){
+        switch(pin & 0x0f){
+            case 0: EXTICR1.EXTI0 = port; return;
+            case 1: EXTICR1.EXTI1 = port; return;
+            case 2: EXTICR1.EXTI2 = port; return;
+            case 3: EXTICR1.EXTI3 = port; return;
     
-            case 4: EXTICR2.EXTI4 = port_source; return;
-            case 5: EXTICR2.EXTI5 = port_source; return;
-            case 6: EXTICR2.EXTI6 = port_source; return;
-            case 7: EXTICR2.EXTI7 = port_source; return;
+            case 4: EXTICR2.EXTI4 = port; return;
+            case 5: EXTICR2.EXTI5 = port; return;
+            case 6: EXTICR2.EXTI6 = port; return;
+            case 7: EXTICR2.EXTI7 = port; return;
     
-            case 8: EXTICR3.EXTI8 = port_source; return;
-            case 9: EXTICR3.EXTI9 = port_source; return;
-            case 10: EXTICR3.EXTI10 = port_source; return;
-            case 11: EXTICR3.EXTI11 = port_source; return;
+            case 8: EXTICR3.EXTI8 = port; return;
+            case 9: EXTICR3.EXTI9 = port; return;
+            case 10: EXTICR3.EXTI10 = port; return;
+            case 11: EXTICR3.EXTI11 = port; return;
     
-            case 12: EXTICR4.EXTI12 = port_source; return;
-            case 13: EXTICR4.EXTI13 = port_source; return;
-            case 14: EXTICR4.EXTI14 = port_source; return;
-            case 15: EXTICR4.EXTI15 = port_source; return;
+            case 12: EXTICR4.EXTI12 = port; return;
+            case 13: EXTICR4.EXTI13 = port; return;
+            case 14: EXTICR4.EXTI14 = port; return;
+            case 15: EXTICR4.EXTI15 = port; return;
+        }
+    }
+
+    void set_tim_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_tim1_remap(remap); return;
+            case 2: set_tim2_remap(remap); return;
+            case 3: set_tim3_remap(remap); return;
+            case 4: set_tim4_remap(remap); return;
+            case 5: set_tim5ch4_remap(remap); return;
+            case 8: set_tim8_remap(remap); return;
+            case 9: set_tim9_remap(remap); return;
+            case 10: set_tim10_remap(remap); return;
+        }
+    }
+
+    void set_usart_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_usart1_remap(remap);
+            case 2: set_usart2_remap(remap);
+            case 3: set_usart3_remap(remap);
+            case 4: set_usart4_remap(remap);
+            case 5: set_usart5_remap(remap);
+            case 6: set_usart6_remap(remap);
+            case 7: set_usart7_remap(remap);
+            case 8: set_usart8_remap(remap);
+        }
+    }
+
+    void set_spi_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_spi1_remap(remap); return;
+            case 3: set_spi3_remap(remap); return;
+        }
+    }
+
+    void set_i2c_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_i2c1_remap(remap); return;
+        }
+    }
+
+    void set_can_remap(const uint8_t index, const uint8_t remap){
+        switch(index){
+            default: return;
+            case 1: set_can1_remap(remap); return;
+            case 2: set_can2_remap(remap); return;
         }
     }
 };

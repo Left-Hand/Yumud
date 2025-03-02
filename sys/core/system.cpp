@@ -133,7 +133,7 @@ uint32_t sys::Chip::getFlashSize(){
 
 uint32_t sys::Chip::getChipIdCrc(){
 
-    using ymd::crc;
+    using ymd::hal::crc;
     
     static const uint32_t chip_id_crc = [&](){
         crc.init();

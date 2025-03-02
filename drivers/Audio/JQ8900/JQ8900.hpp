@@ -6,27 +6,27 @@
 
 namespace ymd::drivers{
 class JQ8900{
-    private:
-        Gpio & ser;
+private:
+    hal::GpioIntf & ser;
 
-        enum class CMD:uint8_t{
-            CLR = 0x0A,
-            SET_DISC = 0x0B,
-            SET_VOL = 0x0C,
-            SET_EQ = 0x0D,
-        };
+    enum class CMD:uint8_t{
+        CLR = 0x0A,
+        SET_DISC = 0x0B,
+        SET_VOL = 0x0C,
+        SET_EQ = 0x0D,
+    };
 
-        void send(const uint8_t data);
-        void sendLine(const uint8_t value, const CMD cmd);
-        void sendNum(const int value);
-    public:
-        JQ8900(Gpio & _ser):ser(_ser){};
+    void send(const uint8_t data);
+    void sendLine(const uint8_t value, const CMD cmd);
+    void sendNum(const int value);
+public:
+    JQ8900(hal::GpioIntf & _ser):ser(_ser){};
 
-        void init(){;}
+    void init(){;}
 
 
-        void setVol(const uint8_t value){sendLine(value, CMD::SET_VOL);}
-        void setDisc(const uint8_t value){sendLine(value, CMD::SET_DISC);}
+    void setVol(const uint8_t value){sendLine(value, CMD::SET_VOL);}
+    void setDisc(const uint8_t value){sendLine(value, CMD::SET_DISC);}
 
 };
 

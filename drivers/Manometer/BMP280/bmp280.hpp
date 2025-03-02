@@ -32,7 +32,7 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     scexpr uint8_t default_i2c_addr = 0xec;
     scexpr uint8_t valid_chipid = 0x58;
@@ -155,9 +155,9 @@ protected:
     }
 
 public:
-    BMP280(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BMP280(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    BMP280(I2c & _i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(_i2c, addr)){;}
+    BMP280(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    BMP280(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    BMP280(hal::I2c & _i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(_i2c, addr)){;}
     ~BMP280(){;}
 
     bool isChipValid();

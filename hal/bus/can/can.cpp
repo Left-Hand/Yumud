@@ -15,114 +15,60 @@ using Callback = Can::Callback;
 
 #define Mailbox_Index_To_TSTATR(x) (CAN_TSTATR_RQCP0 << (x << 3))
 
-ITStatus MY_CAN_GetITStatus(CAN_TypeDef* CANx, uint32_t CAN_IT){
+
+template<uint32_t IT>
+ITStatus MY_CAN_GetITStatus(CAN_TypeDef* CANx){
   
-    if((CANx->INTENR & CAN_IT) != RESET){
-        switch (CAN_IT){
-        case CAN_IT_TME:
+    if((CANx->INTENR & IT) != RESET){
+        if constexpr(IT == CAN_IT_TME){
             return(CANx->TSTATR & (CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2));  
-            break;
-            
-        case CAN_IT_FMP0:
+        }else if constexpr(IT == CAN_IT_FMP0){
             return (CANx->RFIFO0 & CAN_RFIFO0_FMP0);  
-            
-        case CAN_IT_FF0:
+        }else if constexpr(IT == CAN_IT_FF0){
             return (CANx->RFIFO0 & CAN_RFIFO0_FULL0);  
-            
-        case CAN_IT_FOV0:
+        }else if constexpr(IT == CAN_IT_FOV0){
             return (CANx->RFIFO0 & CAN_RFIFO0_FOVR0);  
-            
-        case CAN_IT_FMP1:
+        }else if constexpr(IT == CAN_IT_FMP1){
             return (CANx->RFIFO0 & CAN_RFIFO1_FMP1);  
-            
-        case CAN_IT_FF1:
+        }else if constexpr(IT == CAN_IT_FF1){
             return (CANx->RFIFO0 & CAN_RFIFO1_FULL1);  
-            
-        case CAN_IT_FOV1:
+        }else if constexpr(IT == CAN_IT_FOV0){
             return (CANx->RFIFO0 & CAN_RFIFO1_FOVR1);  
-            
-        case CAN_IT_WKU:
-            return (CANx->STATR& CAN_STATR_WKUI);  
-            
-        case CAN_IT_SLK:
-            return (CANx->STATR& CAN_STATR_SLAKI);  
-            
-        case CAN_IT_EWG:
-            return (CANx->ERRSR& CAN_ERRSR_EWGF);  
-            
-        case CAN_IT_EPV:
-            return (CANx->ERRSR& CAN_ERRSR_EPVF);  
-            
-        case CAN_IT_BOF:
-            return (CANx->ERRSR& CAN_ERRSR_BOFF);  
-            
-        case CAN_IT_LEC:
-            return (CANx->ERRSR& CAN_ERRSR_LEC);  
-            
-        case CAN_IT_ERR:
-            return (CANx->STATR& CAN_STATR_ERRI); 
         }
     }
     return RESET;
 }
 
 
-void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx, uint32_t CAN_IT)
+template<uint32_t IT>
+void MY_CAN_ClearITPendingBit(CAN_TypeDef* CANx)
 {
-	switch (CAN_IT)
-	{
-		case CAN_IT_TME:
-			CANx->TSTATR = CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2;  
-			break;
-
-		case CAN_IT_FF0:
-			CANx->RFIFO0 = CAN_RFIFO0_FULL0; 
-			break;
-
-		case CAN_IT_FOV0:
-			CANx->RFIFO0 = CAN_RFIFO0_FOVR0; 
-			break;
-
-		case CAN_IT_FF1:
-			CANx->RFIFO1 = CAN_RFIFO1_FULL1;  
-			break;
-
-		case CAN_IT_FOV1:
-			CANx->RFIFO1 = CAN_RFIFO1_FOVR1; 
-			break;
-
-		case CAN_IT_WKU:
-			CANx->STATR = CAN_STATR_WKUI;  
-			break;
-
-		case CAN_IT_SLK:
-			CANx->STATR = CAN_STATR_SLAKI;   
-			break;
-
-		case CAN_IT_EWG:
-			CANx->STATR = CAN_STATR_ERRI;
-			break;
-
-		case CAN_IT_EPV:
-			CANx->STATR = CAN_STATR_ERRI; 
-			break;
-
-		case CAN_IT_BOF:
-			CANx->STATR = CAN_STATR_ERRI; 
-			break;
-
-		case CAN_IT_LEC:
-			CANx->ERRSR = RESET; 
-			CANx->STATR = CAN_STATR_ERRI; 
-			break;
-
-		case CAN_IT_ERR:
-			CANx->ERRSR = RESET; 
-			CANx->STATR = CAN_STATR_ERRI; 
-			break;
-
-		default :
-			break;
+    if constexpr(IT == CAN_IT_TME){
+        CANx->TSTATR = CAN_TSTATR_RQCP0|CAN_TSTATR_RQCP1|CAN_TSTATR_RQCP2;  
+    }else if constexpr(IT == CAN_IT_FF0){
+        CANx->RFIFO0 = CAN_RFIFO0_FULL0;
+    }else if constexpr(IT == CAN_IT_FOV0){
+        CANx->RFIFO0 = CAN_RFIFO0_FOVR0;
+    }else if constexpr(IT == CAN_IT_FF1){
+        CANx->RFIFO1 = CAN_RFIFO1_FULL1;
+    }else if constexpr(IT == CAN_IT_FOV1){
+        CANx->RFIFO1 = CAN_RFIFO1_FOVR1;
+    }else if constexpr(IT == CAN_IT_WKU){
+        CANx->STATR = CAN_STATR_WKUI;
+    }else if constexpr(IT == CAN_IT_SLK){
+        CANx->STATR = CAN_STATR_SLAKI;
+    }else if constexpr(IT == CAN_IT_EWG){
+        CANx->STATR = CAN_STATR_ERRI;
+    }else if constexpr(IT == CAN_IT_EPV){
+        CANx->STATR = CAN_STATR_ERRI; 
+    }else if constexpr (IT == CAN_IT_BOF){
+        CANx->STATR = CAN_STATR_ERRI; 
+    }else if constexpr (IT == CAN_IT_LEC){
+        CANx->ERRSR = RESET; 
+        CANx->STATR = CAN_STATR_ERRI; 
+    }else if constexpr (IT == CAN_IT_ERR){
+        CANx->ERRSR = RESET; 
+        CANx->STATR = CAN_STATR_ERRI; 
 	}
 }
 void Can::initIt(){
@@ -142,7 +88,7 @@ void Can::initIt(){
         #endif
     ;
 
-    MY_CAN_ClearITPendingBit(instance, it_mask);
+    CAN_ClearITPendingBit(instance, it_mask);
     CAN_ITConfig(instance, it_mask, ENABLE);
 
     switch(uint32_t(instance)){
@@ -235,8 +181,9 @@ void Can::installGpio(){
 
     txGpio.afpp();
     rxGpio.afpp();
-
 }
+
+
 void Can::enableRcc(){
     switch((uint32_t)instance){
         #ifdef ENABLE_CAN1
@@ -283,7 +230,7 @@ void Can::init(const uint baudRate, const Mode _mode){
     BaudRate baud;
     switch(baudRate){
         default:
-            HALT
+            while(true);
         case 125_KHz:
             baud = BaudRate::_125K;
             break;
@@ -503,7 +450,7 @@ CanMsg Can::receive(const uint8_t fifo_num){
     bool ext = (uint8_t)0x04 & rxmir;
     uint32_t id = ext ? ((rxmir >> 3)) : (((1 << 11) - 1) & (rxmir >> 21));
     // uint32_t id = (rxmir >> 21);
-    bool remote = (uint8_t)0x02 & rxmir;
+    bool is_remote = (uint8_t)0x02 & rxmir;
     uint8_t dlc = (uint8_t)0x0F & rxmdtr;
     // uint8_t fmi = (uint8_t)0xFF & (rxmdtr >> 8);
 
@@ -515,8 +462,8 @@ CanMsg Can::receive(const uint8_t fifo_num){
         instance->RFIFO1 = CAN_RFIFO1_RFOM1 | instance->RFIFO1;
     }
 
-    if(remote){
-        return CanMsg(id, true);
+    if(is_remote){
+        return CanMsg(id);
     }else{
         return CanMsg(id, data, dlc);
     }
@@ -553,74 +500,46 @@ void Can::onTxInterrupt(){
     }
 }
 
-void Can::onRxInterrupt(const uint8_t fifo_num){
-    uint32_t fmp_mask;
-    uint32_t ff_mask;
-    uint32_t fov_mask;
+void Can::onRxMsgInterrupt(const uint8_t fifo_num){
+    //process rx pending
+    do{
+        //如果没有接收到 直接返回
+        if(CAN_MessagePending(instance, fifo_num) == 0) return;
 
-    switch(fifo_num){
-        default:
-        case CAN_FIFO0:
-            fmp_mask = CAN_IT_FMP0;
-            ff_mask = CAN_IT_FF0;
-            fov_mask = CAN_IT_FOV0;
-            break;
-        case CAN_FIFO1:
-            fmp_mask = CAN_IT_FMP1;
-            ff_mask = CAN_IT_FF1;
-            fov_mask = CAN_IT_FOV1;
-            break;
-    }
-
-    if (MY_CAN_GetITStatus(instance, fmp_mask)){
-        //process rx pending
-        do{
-            // CanMsg rx_msg;
-
-            //如果没有接收到 直接返回
-            if(CAN_MessagePending(instance, fifo_num) == 0) return;
-
-            //从外设读入报文到变量
-            // CAN_Receive(instance, fifo_num, rx_msg.prx());
-            
-            rx_fifo_.push(receive(fifo_num));
-        }while(false);
+        //从外设读入报文到变量
+        // CAN_Receive(instance, fifo_num, rx_msg.prx());
+        
+        rx_fifo_.push(receive(fifo_num));
         EXECUTE(cb_rx_);
-        MY_CAN_ClearITPendingBit(instance, fmp_mask);
-    }else if(MY_CAN_GetITStatus(instance, ff_mask)){
-        //process rx full
-        MY_CAN_ClearITPendingBit(instance, ff_mask);
-    }else if(MY_CAN_GetITStatus(instance, fov_mask)){
-        //process rx overrun
-        MY_CAN_ClearITPendingBit(instance, fov_mask);
-    }
+    }while(false);
 }
 
 void Can::onSceInterrupt(){
-    if (MY_CAN_GetITStatus(instance, CAN_IT_WKU)) {
-        // Handle Wake-up interrupt
-        MY_CAN_ClearITPendingBit(instance, CAN_IT_WKU);
-    } else if (MY_CAN_GetITStatus(instance, CAN_IT_SLK)) {
-        // Handle Sleep acknowledge interrupt
-        MY_CAN_ClearITPendingBit(instance, CAN_IT_SLK);
-    } else if (MY_CAN_GetITStatus(instance, CAN_IT_ERR)) {
-        // Handle Error interrupt
-        MY_CAN_ClearITPendingBit(instance, CAN_IT_ERR);
-    } else if (MY_CAN_GetITStatus(instance, CAN_IT_EWG)) {
-        // Handle Error warning interrupt
-        MY_CAN_ClearITPendingBit(instance, CAN_IT_EWG);
-    } else if (MY_CAN_GetITStatus(instance, CAN_IT_EPV)) {
-        // Handle Error passive interrupt
-        MY_CAN_ClearITPendingBit(instance, CAN_IT_EPV);
-    } else if (MY_CAN_GetITStatus(instance, CAN_IT_BOF)) {
-        // Handle Bus-off interrupt
-        MY_CAN_ClearITPendingBit(instance, CAN_IT_BOF);
-    } else if (MY_CAN_GetITStatus(instance, CAN_IT_LEC)) {
-        // Handle Last error code interrupt
-        MY_CAN_ClearITPendingBit(instance, CAN_IT_LEC);
-    } else {
-        // Handle other interrupts or add more cases as needed
-    }
+    // if (MY_CAN_GetITStatus(instance, CAN_IT_WKU)) {
+    //     // Handle Wake-up interrupt
+    //     MY_CAN_ClearITPendingBit(instance, CAN_IT_WKU);
+    // } else if (MY_CAN_GetITStatus(instance, CAN_IT_SLK)) {
+    //     // Handle Sleep acknowledge interrupt
+    //     MY_CAN_ClearITPendingBit(instance, CAN_IT_SLK);
+    // } else if (MY_CAN_GetITStatus(instance, CAN_IT_ERR)) {
+    //     // Handle Error interrupt
+    //     MY_CAN_ClearITPendingBit(instance, CAN_IT_ERR);
+    // } else if (MY_CAN_GetITStatus(instance, CAN_IT_EWG)) {
+    //     // Handle Error warning interrupt
+    //     MY_CAN_ClearITPendingBit(instance, CAN_IT_EWG);
+    // } else if (MY_CAN_GetITStatus(instance, CAN_IT_EPV)) {
+    //     // Handle Error passive interrupt
+    //     MY_CAN_ClearITPendingBit(instance, CAN_IT_EPV);
+    // } else if (MY_CAN_GetITStatus(instance, CAN_IT_BOF)) {
+    //     // Handle Bus-off interrupt
+    //     MY_CAN_ClearITPendingBit(instance, CAN_IT_BOF);
+    // } else if (MY_CAN_GetITStatus(instance, CAN_IT_LEC)) {
+    //     // Handle Last error code interrupt
+    //     MY_CAN_ClearITPendingBit(instance, CAN_IT_LEC);
+    // } else {
+    //     // Handle other interrupts or add more cases as needed
+    // }
+    CAN_ClearITPendingBit(instance, 0xFFFFFFFF);
 }
 
 
@@ -630,14 +549,32 @@ void USB_HP_CAN1_TX_IRQHandler(void){
     can1.onTxInterrupt();
 }
 
+
+#define CAN_RX_HANDLER(inst, uinst, nfifo)\
+static constexpr auto fmp_mask = CAN_IT_FMP1;\
+static constexpr auto ff_mask = CAN_IT_FF1;\
+static constexpr auto fov_mask = CAN_IT_FOV1;\
+static constexpr auto fifo_num = nfifo;\
+if (MY_CAN_GetITStatus<fmp_mask>(uinst)){\
+    inst.onRxMsgInterrupt(fifo_num);\
+    MY_CAN_ClearITPendingBit<fmp_mask>(uinst);\
+}else if(MY_CAN_GetITStatus<ff_mask>(uinst)){\
+    inst.onRxFullInterrupt();\
+    MY_CAN_ClearITPendingBit<ff_mask>(uinst);\
+}else if(MY_CAN_GetITStatus<fov_mask>(uinst)){\
+    inst.onRxOverrunInterrupt();\
+    MY_CAN_ClearITPendingBit<fov_mask>(uinst);\
+}\
+
+
 __interrupt
 void USB_LP_CAN1_RX0_IRQHandler(void) {
-    can1.onRxInterrupt(CAN_FIFO0);
+    CAN_RX_HANDLER(can1, CAN1, CAN_FIFO0)
 }
 
 __interrupt
 void CAN1_RX1_IRQHandler(void){
-    can1.onRxInterrupt(CAN_FIFO1);
+    CAN_RX_HANDLER(can1, CAN1, CAN_FIFO1)
 }
 
 #ifdef SCE_ENABLED
@@ -656,12 +593,12 @@ void CAN2_TX_IRQHandler(void){
 
 __interrupt
 void CAN2_RX0_IRQHandler(void){
-    can2.onRxInterrupt(CAN_FIFO0);
+    CAN_RX_HANDLER(can2, CAN2, CAN_FIFO0)
 }
 
 __interrupt
 void CAN2_RX1_IRQHandler(void){
-    can2.onRxInterrupt(CAN_FIFO1);
+    CAN_RX_HANDLER(can2, CAN2, CAN_FIFO1)
 }
 
 #ifdef SCE_ENABLED

@@ -4,9 +4,9 @@
 
 namespace ymd::drivers{
 
-class KeyTrait{
+class KeyIntf{
     virtual bool pressed() = 0;
-    virtual GpioConcept & io() = 0;
+    virtual hal::GpioIntf & io() = 0;
     virtual void update() = 0;
 };
 

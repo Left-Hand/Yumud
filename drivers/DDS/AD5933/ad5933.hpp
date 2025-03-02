@@ -19,13 +19,13 @@ namespace ymd::drivers{
 
 class AD5933 {
 protected:
-    I2cDrv _i2c_drv;
+    hal::I2cDrv _i2c_drv;
 public:
     scexpr uint8_t default_i2c_addr = 0x0D;
 public:
-    AD5933(const I2cDrv & i2c_drv):_i2c_drv(i2c_drv){;}
-    AD5933(I2cDrv && i2c_drv):_i2c_drv(std::move(i2c_drv)){;}
-    AD5933(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):_i2c_drv(i2c, i2c_addr){;}
+    AD5933(const hal::I2cDrv & i2c_drv):_i2c_drv(i2c_drv){;}
+    AD5933(hal::I2cDrv && i2c_drv):_i2c_drv(std::move(i2c_drv)){;}
+    AD5933(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):_i2c_drv(hal::I2cDrv(i2c, i2c_addr)){;}
     bool reset(void);
 
     // Temperature measuring

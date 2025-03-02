@@ -2,8 +2,8 @@
 #include "hal/gpio/port.hpp"
 
 using namespace ymd;
-using namespace ymd::TimerUtils;
-using namespace ymd::TimerUtils::internal;
+using namespace ymd::hal;
+using namespace ymd::hal::internal;
 
 
 

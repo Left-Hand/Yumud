@@ -10,14 +10,13 @@
 
 
 
-namespace ymd{
-
+namespace ymd::hal{
 
 class AdcOnChip;
 class AdcPrimary;
 class AdcCompanion;
 
-class AdcChannelConcept:public AnalogInChannel{
+class AdcChannelConcept:public hal::AnalogInIntf{
 public:
     virtual real_t uni() = 0;
     virtual uint16_t data() = 0;
@@ -33,8 +32,8 @@ public:
 
 class AdcChannelOnChip: public AdcChannelConcept{
 protected:
-    using ChannelIndex = AdcUtils::ChannelIndex;
-    using SampleCycles = AdcUtils::SampleCycles;
+    using ChannelIndex = AdcChannelIndex;
+    using SampleCycles = AdcSampleCycles;
 
     ADC_TypeDef * instance;
     ChannelIndex channel;
@@ -48,7 +47,7 @@ public:
             instance(_instance), channel(_channel), rank(_rank){};
     
     void init(){
-        AdcUtils::installPin(channel, true);
+        __adc_internal::installPin(channel, true);
     }
 
     virtual void setSampleCycles(const SampleCycles cycles) = 0;

@@ -2,7 +2,7 @@
 
 #include "sys/math/real.hpp"
 
-namespace ymd{
+namespace ymd::hal{
     class TimerOC;
     class DmaChannel;
 }
@@ -48,8 +48,8 @@ public:
 protected:
     uint16_t high_cnt;
     uint16_t low_cnt;
-    TimerOC & oc;
-    DmaChannel & dma_channel;
+    hal::TimerOC & oc;
+    hal::DmaChannel & dma_channel;
     scexpr uint16_t m_crc(uint16_t data_in){
         uint16_t speed_data;
         speed_data = data_in << 5;
@@ -61,7 +61,7 @@ protected:
     void update(uint16_t data);
     void invoke();
 public:
-    DShotChannel(TimerOC & _oc);
+    DShotChannel(hal::TimerOC & _oc);
     DShotChannel(const DShotChannel & other) = delete;
     DShotChannel(DShotChannel && other) = delete;
 

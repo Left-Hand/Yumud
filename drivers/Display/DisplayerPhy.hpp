@@ -21,41 +21,41 @@ public:
 class DisplayerPhySpi:public DisplayerPhy{
 protected:
 // public:
-    SpiDrv spi_drv_;
-    GpioConcept & dc_gpio;
-    GpioConcept & res_gpio;
-    GpioConcept & blk_gpio;
+    hal::SpiDrv spi_drv_;
+    hal::GpioIntf & dc_gpio;
+    hal::GpioIntf & res_gpio;
+    hal::GpioIntf & blk_gpio;
 
     static constexpr bool command_level = false;
     static constexpr bool data_level = true;
 
-    // DisplayerPhySpi(const DisplayerPhySpi & other) = default;
-    // DisplayerPhySpi(DisplayerPhySpi && other) = default;
+    // DisplayerPhySpi(const DisplayerPhyhal::Spi & other) = default;
+    // DisplayerPhySpi(DisplayerPhyhal::Spi && other) = default;
 public:
 
     DisplayerPhySpi(
-            SpiDrv && sou_drv, 
-            GpioConcept & _dc_gpio, 
-            GpioConcept & _res_gpio = GpioNull,
-            GpioConcept & _blk_gpio = GpioNull
-        ) :spi_drv_(std::move(sou_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
+            hal::SpiDrv && spi_drv, 
+            hal::GpioIntf & _dc_gpio, 
+            hal::GpioIntf & _res_gpio = hal::GpioNull,
+            hal::GpioIntf & _blk_gpio = hal::GpioNull
+        ) :spi_drv_(std::move(spi_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
     // 拷贝构造函数
     DisplayerPhySpi(
-        const SpiDrv & sou_drv, 
-        GpioConcept & _dc_gpio, 
-        GpioConcept & _res_gpio = GpioNull,
-        GpioConcept & _blk_gpio = GpioNull
-    ) : spi_drv_(sou_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
+        const hal::SpiDrv & spi_drv, 
+        hal::GpioIntf & _dc_gpio, 
+        hal::GpioIntf & _res_gpio = hal::GpioNull,
+        hal::GpioIntf & _blk_gpio = hal::GpioNull
+    ) : spi_drv_(spi_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
 
     DisplayerPhySpi(
-            Spi & _bus,
+            hal::Spi & _bus,
             const uint8_t index,
-            GpioConcept & _dc_gpio, 
-            GpioConcept & _res_gpio = GpioNull,
-            GpioConcept & _blk_gpio = GpioNull
-            ):DisplayerPhySpi(SpiDrv(_bus, index), _dc_gpio, _res_gpio, _blk_gpio) {};
+            hal::GpioIntf & _dc_gpio, 
+            hal::GpioIntf & _res_gpio = hal::GpioNull,
+            hal::GpioIntf & _blk_gpio = hal::GpioNull
+            ):DisplayerPhySpi(hal::SpiDrv(_bus, index), _dc_gpio, _res_gpio, _blk_gpio) {};
 
     void init() override{
         dc_gpio.outpp();
@@ -123,14 +123,14 @@ public:
 
 class DisplayerPhyI2c:public DisplayerPhy{
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
     static constexpr uint8_t cmd_token = 0x00;
     static constexpr uint8_t data_token = 0x40;
     static constexpr uint8_t default_i2c_addr = 0x78;
 public:
-    DisplayerPhyI2c(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){};
-    DisplayerPhyI2c(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){};
-    DisplayerPhyI2c(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, i2c_addr}){};
+    DisplayerPhyI2c(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){};
+    DisplayerPhyI2c(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){};
+    DisplayerPhyI2c(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){};
 
     void init()override{;}
 

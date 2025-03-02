@@ -1,6 +1,6 @@
 #include "dvp.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 #ifdef ENABLE_DVP
 
 void Dvp::install(){

@@ -2,6 +2,7 @@
 #include "hal/dma/dma.hpp"
 
 using namespace ymd;
+using namespace ymd::hal;
 
 volatile uint16_t & TimerChannel::from_channel_to_cvr(TIM_TypeDef * timer, const ChannelIndex _channel){
     using enum ChannelIndex;

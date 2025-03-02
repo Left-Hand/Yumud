@@ -37,7 +37,7 @@ protected:
     // };
 
 
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
 
     real_t lap_position;
     size_t errcnt = 0;
@@ -53,9 +53,9 @@ protected:
 
 
 public:
-    AS5047(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    AS5047(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    AS5047(Spi & spi, const uint8_t index):spi_drv_(SpiDrv{spi, index}){;}
+    AS5047(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    AS5047(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    AS5047(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
     void init() override;
 
