@@ -23,7 +23,7 @@ protected:
     using PWM3_WP = std::array<std::reference_wrapper<hal::PwmChannelIntf>, 3>;
     using AIN3_WP = std::array<std::reference_wrapper<hal::AnalogInChannel>, 3>;
     
-    using EN3 = std::array<hal::GpioConcept *, 3>;
+    using EN3 = std::array<hal::GpioIntf *, 3>;
 
     PWM3 pwms_;
     AIN3 ains_;

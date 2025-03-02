@@ -4,7 +4,7 @@
 #include "port_concept.hpp"
 
 namespace ymd::hal{
-class GpioPort : public GpioPortConcept{
+class GpioPort : public GpioPortIntf{
 protected:
     GPIO_TypeDef * instance;
     Gpio channels[16];

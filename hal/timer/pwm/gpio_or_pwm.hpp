@@ -6,11 +6,11 @@
 
 namespace ymd::hal{
 
-struct GpioConcept;
+struct GpioIntf;
 
 
 template<typename T>
-static constexpr bool is_gpio_v = std::is_base_of_v<GpioConcept, T>;
+static constexpr bool is_gpio_v = std::is_base_of_v<GpioIntf, T>;
 
 template<typename T>
 static constexpr bool is_pwm_v = std::is_base_of_v<PwmChannelIntf, T>;
@@ -20,7 +20,7 @@ concept gpio_or_pwm = is_gpio_v<T> || is_pwm_v<T>;
 
 class GpioOrPwm:public PwmChannelIntf{
 public:
-    using GpioRef = std::reference_wrapper<GpioConcept>; 
+    using GpioRef = std::reference_wrapper<GpioIntf>; 
     using PwmRef = std::reference_wrapper<PwmChannelIntf>; 
 
     std::variant<GpioRef, PwmRef> inst_;

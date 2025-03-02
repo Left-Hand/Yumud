@@ -7,18 +7,18 @@ namespace ymd::hal{
 class Gpio;
 
 
-class VGpio:public GpioConcept{
+class VGpio:public GpioIntf{
 protected:
-    GpioPortConcept & _port;
+    GpioPortIntf & _port;
 
-    static GpioPortConcept & form_gpiotypedef_to_port(uint32_t base);
+    static GpioPortIntf & form_gpiotypedef_to_port(uint32_t base);
 public:
     DELETE_COPY_AND_MOVE(VGpio)
-    using GpioConcept::operator=;
+    using GpioIntf::operator=;
 
     VGpio(const Gpio & gpio);
-    VGpio(GpioPortConcept & port, const int8_t _pin_index);
-    VGpio(GpioPortConcept & port, const Pin _pin);
+    VGpio(GpioPortIntf & port, const int8_t _pin_index);
+    VGpio(GpioPortIntf & port, const Pin _pin);
     __fast_inline void set() override {_port.setByIndex(pin_index);}
     __fast_inline void clr() override {_port.clrByIndex(pin_index);}
     __fast_inline void write(const bool val){_port.writeByIndex(pin_index, val);}

@@ -5,7 +5,7 @@
 #include "hal/timer/pwm/pwm_channel.hpp"
 #include "hal/gpio/gpio.hpp"
 
-class GpioConcept;
+class GpioIntf;
 
 namespace ymd::drivers{
 class RgbLedConcept{
@@ -24,11 +24,11 @@ public:
 class RgbLedDigital:public RgbLedConcept{
 protected:
     using Color = Color_t<real_t>;
-    hal::GpioConcept & red_gpio_;
-    hal::GpioConcept & green_gpio_;
-    hal::GpioConcept & blue_gpio_;
+    hal::GpioIntf & red_gpio_;
+    hal::GpioIntf & green_gpio_;
+    hal::GpioIntf & blue_gpio_;
 public:
-    RgbLedDigital(hal::GpioConcept & _red_gpio_, hal::GpioConcept & _green_gpio_, hal::GpioConcept & _blue_gpio_):
+    RgbLedDigital(hal::GpioIntf & _red_gpio_, hal::GpioIntf & _green_gpio_, hal::GpioIntf & _blue_gpio_):
             red_gpio_(_red_gpio_), green_gpio_(_green_gpio_), blue_gpio_(_blue_gpio_){;}
     
     void init(){

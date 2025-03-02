@@ -18,11 +18,11 @@ namespace ymd::drivers{
 class AD9854{
 public:
     struct Ports{
-        GpioConcept & IO_RESET;
-        GpioConcept & MRESET;
-        GpioConcept & UD_CLK;
-        GpioConcept & F_B_H;
-        GpioConcept & OSK;
+        GpioIntf & IO_RESET;
+        GpioIntf & MRESET;
+        GpioIntf & UD_CLK;
+        GpioIntf & F_B_H;
+        GpioIntf & OSK;
     };
 
 protected:

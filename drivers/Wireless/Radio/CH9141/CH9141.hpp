@@ -61,12 +61,12 @@ public:
 protected:
     struct SetKeeper{
     protected:
-        hal::GpioConcept & m_set_gpio;
+        hal::GpioIntf & m_set_gpio;
         void mdelay(){
             delay(1);
         }
     public:
-        SetKeeper(hal::GpioConcept & set_pin):m_set_gpio(set_pin){
+        SetKeeper(hal::GpioIntf & set_pin):m_set_gpio(set_pin){
             m_set_gpio.clr();
             mdelay();
         }
@@ -77,8 +77,8 @@ protected:
     };
 
     hal::Uart & uart_;
-    hal::GpioConcept & at_gpio_;
-    hal::GpioConcept & slp_gpio_;
+    hal::GpioIntf & at_gpio_;
+    hal::GpioIntf & slp_gpio_;
 
     bool sendAtCommand(const char * token){
         SetKeeper{at_gpio_};
@@ -121,8 +121,8 @@ protected:
 public:
     CH9141(
         hal::Uart & uart, 
-        hal::GpioConcept & set_gpio = hal::GpioNull, 
-        hal::GpioConcept & slp_gpio = hal::GpioNull)
+        hal::GpioIntf & set_gpio = hal::GpioNull, 
+        hal::GpioIntf & slp_gpio = hal::GpioNull)
     :uart_(uart), at_gpio_(set_gpio), slp_gpio_(slp_gpio){;}
 
     void write(const char data){

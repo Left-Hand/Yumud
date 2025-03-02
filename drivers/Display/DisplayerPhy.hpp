@@ -22,9 +22,9 @@ class DisplayerPhySpi:public DisplayerPhy{
 protected:
 // public:
     SpiDrv spi_drv_;
-    GpioConcept & dc_gpio;
-    GpioConcept & res_gpio;
-    GpioConcept & blk_gpio;
+    GpioIntf & dc_gpio;
+    GpioIntf & res_gpio;
+    GpioIntf & blk_gpio;
 
     static constexpr bool command_level = false;
     static constexpr bool data_level = true;
@@ -35,26 +35,26 @@ public:
 
     DisplayerPhySpi(
             SpiDrv && sou_drv, 
-            GpioConcept & _dc_gpio, 
-            GpioConcept & _res_gpio = GpioNull,
-            GpioConcept & _blk_gpio = GpioNull
+            GpioIntf & _dc_gpio, 
+            GpioIntf & _res_gpio = GpioNull,
+            GpioIntf & _blk_gpio = GpioNull
         ) :spi_drv_(std::move(sou_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
     // 拷贝构造函数
     DisplayerPhySpi(
         const SpiDrv & sou_drv, 
-        GpioConcept & _dc_gpio, 
-        GpioConcept & _res_gpio = GpioNull,
-        GpioConcept & _blk_gpio = GpioNull
+        GpioIntf & _dc_gpio, 
+        GpioIntf & _res_gpio = GpioNull,
+        GpioIntf & _blk_gpio = GpioNull
     ) : spi_drv_(sou_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
 
     DisplayerPhySpi(
             Spi & _bus,
             const uint8_t index,
-            GpioConcept & _dc_gpio, 
-            GpioConcept & _res_gpio = GpioNull,
-            GpioConcept & _blk_gpio = GpioNull
+            GpioIntf & _dc_gpio, 
+            GpioIntf & _res_gpio = GpioNull,
+            GpioIntf & _blk_gpio = GpioNull
             ):DisplayerPhySpi(SpiDrv(_bus, index), _dc_gpio, _res_gpio, _blk_gpio) {};
 
     void init() override{

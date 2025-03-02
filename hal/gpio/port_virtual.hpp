@@ -9,7 +9,7 @@
 namespace ymd::hal{
 
 template<size_t N>
-class VGpioPortConcept : public GpioPortConcept{
+class VGpioPortIntf : public GpioPortIntf{
 protected:
     bool isIndexValid(const size_t index){return (index < N);}
 
@@ -32,13 +32,13 @@ public:
         uint16_t raw = readPort();
         writePort(raw & (~mask));
     }
-    VGpioPortConcept & operator = (const uint16_t data) override {writePort(data); return *this;}
+    VGpioPortIntf & operator = (const uint16_t data) override {writePort(data); return *this;}
 };
 
 template<size_t N>
-class VGpioPort : public VGpioPortConcept<N>{
+class VGpioPort : public VGpioPortIntf<N>{
 protected:
-    using E = GpioConcept;
+    using E = GpioIntf;
     std::array<E *, N> pin_ptrs = {nullptr};
 
     void writePort(const uint16_t data) override {
@@ -66,7 +66,7 @@ public:
     }
     void init(){;}
 
-    void bindPin(GpioConcept & gpio, const size_t index){
+    void bindPin(GpioIntf & gpio, const size_t index){
         if(index >= N)return;
         pin_ptrs[size_t(index)] = &gpio;
     }
@@ -126,7 +126,7 @@ public:
 };
 
 template<size_t N>
-class VGpioPortLocal : public VGpioPortConcept<N>{
+class VGpioPortLocal : public VGpioPortIntf<N>{
 protected:
     using E = Gpio;
     std::array<E *, N> pin_ptrs = {nullptr};

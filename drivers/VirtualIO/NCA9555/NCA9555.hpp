@@ -3,7 +3,7 @@
 #include "hal/gpio/port_virtual.hpp"
 
 namespace ymd::drivers{ 
-class NCA9555: public VGpioPortConcept<16>{
+class NCA9555: public VGpioPortIntf<16>{
 protected:
     I2cDrv i2c_drv_;
 

@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class AW9523: public VGpioPortConcept<16>{
+class AW9523: public VGpioPortIntf<16>{
 public:
     enum class CurrentLimit{
         Max, High, Medium, Low
@@ -93,25 +93,6 @@ protected:
         }
     };
 
-    std::array<AW9523Pwm, 16> channels = {
-        AW9523Pwm(*this, Pin::_0),
-        AW9523Pwm(*this, Pin::_1),
-        AW9523Pwm(*this, Pin::_2),
-        AW9523Pwm(*this, Pin::_3),
-        AW9523Pwm(*this, Pin::_4),
-        AW9523Pwm(*this, Pin::_5),
-        AW9523Pwm(*this, Pin::_6),
-        AW9523Pwm(*this, Pin::_7),
-        AW9523Pwm(*this, Pin::_8),
-        AW9523Pwm(*this, Pin::_9),
-        AW9523Pwm(*this, Pin::_10),
-        AW9523Pwm(*this, Pin::_11),
-        AW9523Pwm(*this, Pin::_12),
-        AW9523Pwm(*this, Pin::_13),
-        AW9523Pwm(*this, Pin::_14),
-        AW9523Pwm(*this, Pin::_15),
-    };
-
 public:
     AW9523(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
     AW9523(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
@@ -159,8 +140,8 @@ public:
     bool verify();
     AW9523 & operator = (const uint16_t data) override {writePort(data); return *this;}
 
-    AW9523Pwm & operator [](const size_t index){
-        return channels[index];
+    AW9523Pwm operator [](const size_t index){
+        return AW9523Pwm(*this, Pin(1 << index));
     }
 };
 

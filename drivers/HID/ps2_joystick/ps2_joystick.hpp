@@ -12,7 +12,7 @@
 namespace ymd::drivers{
 class Ps2Joystick{
     // struct Ps2Interface{
-    //     Ps2Interface(GpioConcept & _sck_pin, GpioConcept & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin)
+    //     Ps2Interface(GpioIntf & _sck_pin, GpioIntf & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin)
     // };
 public:
     enum class JoyStickEvent:uint8_t{

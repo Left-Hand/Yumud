@@ -5,7 +5,7 @@
 #include "drivers/device_defs.h"
 
 namespace ymd::drivers{
-class PCA9685: public VGpioPortConcept<16>{
+class PCA9685: public VGpioPortIntf<16>{
 public:
     scexpr uint8_t default_i2c_addr = 0b10000000;
 protected:
@@ -63,12 +63,12 @@ protected:
     LedRegs all_channel;
     uint8_t prescale_reg;
 
-    class PCA8975Channel:public PwmChannelIntf, GpioConcept{
+    class PCA8975Channel:public PwmChannelIntf, GpioIntf{
     protected:
         PCA9685 & pca;
         uint8_t channel;
 
-        PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):GpioConcept(_channel), pca(_pca), channel(_channel){;}
+        PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):GpioIntf(_channel), pca(_pca), channel(_channel){;}
         
         DELETE_COPY_AND_MOVE(PCA8975Channel)
         

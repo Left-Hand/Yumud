@@ -42,8 +42,8 @@ protected:
     std::optional<I2cDrv> i2c_drv;
 
 
-    GpioConcept * packet_status_gpio = nullptr;
-    GpioConcept * fifo_status_gpio = nullptr;
+    GpioIntf * packet_status_gpio = nullptr;
+    GpioIntf * fifo_status_gpio = nullptr;
 
     void delayT3(){delayMicroseconds(1);}
 

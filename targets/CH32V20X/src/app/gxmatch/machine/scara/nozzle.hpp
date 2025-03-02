@@ -13,11 +13,11 @@ public:
 protected:
     const Config & config_;
     
-    using GpioConcept = ymd::GpioConcept;
+    using GpioIntf = ymd::GpioIntf;
     using PwmChannelIntf = ymd::PwmChannelIntf;
 
-    // GpioConcept & gpio_a_;
-    // GpioConcept & gpio_b_;
+    // GpioIntf & gpio_a_;
+    // GpioIntf & gpio_b_;
     PwmChannelIntf & pwm_;
 
 public:

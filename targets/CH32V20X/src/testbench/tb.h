@@ -35,7 +35,7 @@ void filter_tb(OutputStream & logger);
 void pmdc_tb();
 
 void lds14_tb(IOStream & logger,Uart & uart);
-void gpio_tb(GpioConcept & gpio);
+void gpio_tb(GpioIntf & gpio);
 // void pca_tb(IOStream & logger);
 void pca_main();
 void st77xx_tb(Spi & spi);

@@ -8,7 +8,7 @@ namespace ymd::drivers{
 class Key:public KeyIntf{
 protected:
     using Level = BoolLevel;
-    hal::GpioConcept & m_gpio;
+    hal::GpioIntf & m_gpio;
 
     DigitalFilter filter;
     const Level level_= LOW;
@@ -16,7 +16,7 @@ protected:
     bool last_state = false;
     bool now_state = false;
 public:
-    Key(hal::GpioConcept & gpio, const Level _level):m_gpio(gpio), level_(_level){;}
+    Key(hal::GpioIntf & gpio, const Level _level):m_gpio(gpio), level_(_level){;}
 
     void init(){
         init(level_);
@@ -43,7 +43,7 @@ public:
         return m_gpio.read() == bool(level_);
     }
 
-    hal::GpioConcept & io() override{
+    hal::GpioIntf & io() override{
         return m_gpio;
     }
 };

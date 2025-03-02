@@ -7,7 +7,7 @@
 #include "hal/timer/pwm/gpio_or_pwm.hpp"
 
 namespace ymd::hal{
-    class GpioConcept;
+    class GpioIntf;
     class PwmChannelIntf;
 }
 
@@ -21,12 +21,12 @@ public:
 
 class LedGpio:public LedConcept{
 protected:
-    hal::GpioConcept & inst_;
+    hal::GpioIntf & inst_;
     bool state = false;
     bool inversed;
 
 public:
-    LedGpio(hal::GpioConcept & inst, const bool inv = false):inst_(inst), inversed(inv){;}
+    LedGpio(hal::GpioIntf & inst, const bool inv = false):inst_(inst), inversed(inv){;}
 
     LedGpio & operator = (const real_t duty) override;
 

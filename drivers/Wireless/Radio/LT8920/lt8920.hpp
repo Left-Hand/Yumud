@@ -56,8 +56,8 @@ public:
     LT8920(SpiDrv && spi_drv) : spi_drv_(std::move(spi_drv)) {;}
     LT8920(Spi & spi, const uint8_t index) : spi_drv_(SpiDrv(spi, index)) {;}
 
-    void bindNrstGpio(GpioConcept & gpio){nrst_gpio = &gpio;}
-    void bindPktGpio(GpioConcept & gpio){pkt_status_gpio = &gpio;}
+    void bindNrstGpio(GpioIntf & gpio){nrst_gpio = &gpio;}
+    void bindPktGpio(GpioIntf & gpio){pkt_status_gpio = &gpio;}
     uint16_t isRfSynthLocked();
     uint8_t getRssi();
     void setRfChannel(const uint8_t ch);
@@ -106,9 +106,9 @@ protected:
 
     std::optional<SpiDrv> spi_drv_;
     std::optional<I2cDrv> i2c_drv_;
-    GpioConcept * pkt_status_gpio = nullptr;
-    GpioConcept * fifo_status_gpio = nullptr;
-    GpioConcept * nrst_gpio = nullptr;
+    GpioIntf * pkt_status_gpio = nullptr;
+    GpioIntf * fifo_status_gpio = nullptr;
+    GpioIntf * nrst_gpio = nullptr;
 
     State state = State::OFF;
     Role role = Role::IDLE;

@@ -20,7 +20,7 @@ protected :
     BusError unlock_bus();
 public:
 
-    I2cSw(GpioConcept & scl,GpioConcept & sda):I2c(scl, sda){;}
+    I2cSw(GpioIntf & scl,GpioIntf & sda):I2c(scl, sda){;}
     BusError write(const uint32_t data) final override;
     BusError read(uint32_t & data, const Ack ack) final override;
     void init(const uint32_t baudRate);
