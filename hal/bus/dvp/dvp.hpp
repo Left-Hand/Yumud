@@ -6,7 +6,7 @@
 #include "hal/gpio/port.hpp"
 
 
-namespace ymd{
+namespace ymd::hal{
 class Dvp{
 protected:
     void install();

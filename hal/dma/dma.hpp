@@ -41,7 +41,7 @@ extern"C"{
 #endif
 }
 
-namespace ymd{
+namespace ymd::hal{
 
 class DmaChannel{
 public:

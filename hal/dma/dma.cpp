@@ -2,10 +2,10 @@
 #include "hwspec/ch32/ch32_common_dma_def.hpp"
 
 
-using namespace ymd;
+using namespace ymd::hal;
 using namespace CH32;
 
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_DMA1
 DmaChannel dma1Ch1{DMA1_Channel1};
 DmaChannel dma1Ch2{DMA1_Channel2};

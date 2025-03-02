@@ -1,7 +1,7 @@
 #include "rng.hpp"
 #include "sys/core/sdk.h"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 void Rng::init(){
 

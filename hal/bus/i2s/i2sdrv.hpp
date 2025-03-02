@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <initializer_list>
 
-namespace ymd{
+namespace ymd::hal{
 
 class I2sDrv:public BusDrv<I2s>{
 public:

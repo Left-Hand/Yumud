@@ -3,7 +3,7 @@
 #include "hal/bus/bus.hpp"
 #include "hal/gpio/gpio.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 class Smbus:public ProtocolBus{
 protected:
     // GpioConcept & scl_gpio;

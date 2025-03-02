@@ -4,8 +4,6 @@
 
 namespace ymd::hal{
     class TimerOC;
-}
-namespace ymd{
     class DmaChannel;
 }
 
@@ -51,7 +49,7 @@ protected:
     uint16_t high_cnt;
     uint16_t low_cnt;
     hal::TimerOC & oc;
-    DmaChannel & dma_channel;
+    hal::DmaChannel & dma_channel;
     scexpr uint16_t m_crc(uint16_t data_in){
         uint16_t speed_data;
         speed_data = data_in << 5;
