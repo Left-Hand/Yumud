@@ -55,7 +55,7 @@ protected:
         }
     };
 
-    _Guard createGuard(){return _Guard{bus_};}
+    [[nodiscard]] _Guard createGuard(){return _Guard{bus_};}
 public:
     BusType & bus() const {return bus_;}
     auto index() const {return index_;}

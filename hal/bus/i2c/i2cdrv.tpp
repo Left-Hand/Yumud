@@ -33,8 +33,8 @@ BusError I2cDrv::writeRegAddress(const T addr, const Endian endian){
             err.emplace(bus_.write(uint8_t(addr)));
             break;
         case 2:
-            err.emplace(bus_.write(uint8_t(addr >> 8)));
-            err.emplace(bus_.write(uint8_t(addr)));
+                err.emplace(bus_.write(uint8_t(addr >> 8)));
+                err.emplace(bus_.write(uint8_t(addr)));
             break;
         default:
             break;
@@ -54,7 +54,7 @@ BusError I2cDrv::writeCommand_impl(const T cmd, const Endian endian){
 
     BusError err = BusError::OK;
 
-    createGuard();
+    const auto guard = createGuard();
 
     switch(size){
         case 1:
@@ -83,8 +83,8 @@ BusError I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto addr, const T * pd
 
     
     if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
-        createGuard();
-        if(const auto err = writeRegAddress(addr, endian); err.ok()){
+        const auto guard = createGuard();
+        if(const auto err = writeRegAddress(addr, endian); err.wrong()){
             return err;
         }
 
@@ -120,8 +120,8 @@ BusError I2cDrv::writeSame_impl(const valid_i2c_regaddr auto addr, const T data,
 
     
     if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
-        createGuard();
-        if(const auto err = writeRegAddress(addr, endian); err.ok()){
+        const auto guard = createGuard();
+        if(const auto err = writeRegAddress(addr, endian); err.wrong()){
             return err;
         }
         for(size_t i = 0; i < bytes; i += size){
@@ -157,8 +157,8 @@ BusError I2cDrv::readMulti_impl(const valid_i2c_regaddr auto addr, T * pdata, co
 
     
     if(const auto begin_err = bus_.begin(index_); begin_err.ok()){
-        createGuard();
-        if(const auto err = writeRegAddress(addr, endian); err.ok()){
+        const auto guard = createGuard();
+        if(const auto err = writeRegAddress(addr, endian); err.wrong()){
             return err;
         }
         if(bus_.begin(index_ | 0x01).ok()){

@@ -98,8 +98,8 @@ template <typename... Args>
 struct PANIC
 {    
 	PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
         if constexpr(sizeof...(args)){
-            DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
             delay(10);
         }
 
@@ -121,8 +121,8 @@ public:
 	constexpr ASSERT(Texpr && expr, Args &&... args, const std::source_location& loc = std::source_location::current()):
 		result_(bool(expr)){
 		if(!result_){
+            DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
 			if constexpr(sizeof...(args)){
-				DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
                 delay(10);
 			}
             DISABLE_INT;

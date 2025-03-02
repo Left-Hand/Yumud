@@ -1,6 +1,5 @@
 #include "i2csw.hpp"
 #include "sys/clock/time_stamp.hpp"
-// #include "sys/debug/debug.hpp"
 
 using namespace ymd;
 using namespace ymd::hal;
@@ -63,7 +62,6 @@ void I2cSw::trail(){
 
 
 BusError I2cSw::write(const uint32_t data){
-    // DEBUG_PRINTLN("w", data);
 
     sda_gpio.outod();
 
@@ -105,7 +103,6 @@ BusError I2cSw::read(uint32_t & data, const Ack ack){
 }
 
 void I2cSw::init(const uint32_t baudRate){
-    // preinit();
 
     sda_gpio.set();
     sda_gpio.outod();
