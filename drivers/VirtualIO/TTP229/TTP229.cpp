@@ -4,13 +4,13 @@ using namespace ymd::drivers;
 
 void TTP229::scan(){
     uint16_t new_map = 0;
-    sck_pin = false;
+    sck_gpio_ = false;
 
     for (int i = 0; i < 16; i++)
     {
-        sck_pin = true;
-        sck_pin = false;
-        new_map <<= 1; new_map |= sdo_pin.read();
+        sck_gpio_ = true;
+        sck_gpio_ = false;
+        new_map <<= 1; new_map |= sdo_gpio_.read();
     }
     map = new_map;
     uint8_t new_num = 0;

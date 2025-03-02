@@ -6,9 +6,10 @@
 #include "sys/core/system.hpp"
 #include "hal/timer/pwm/gpio_or_pwm.hpp"
 
-
-class GpioConcept;
-class PwmChannelIntf;
+namespace ymd::hal{
+    class GpioConcept;
+    class PwmChannelIntf;
+}
 
 namespace ymd::drivers{
 
@@ -20,12 +21,12 @@ public:
 
 class LedGpio:public LedConcept{
 protected:
-    GpioConcept & inst;
+    hal::GpioConcept & inst_;
     bool state = false;
     bool inversed;
 
 public:
-    LedGpio(GpioConcept & _instance, const bool inv = false):inst(_instance), inversed(inv){;}
+    LedGpio(hal::GpioConcept & inst, const bool inv = false):inst_(inst), inversed(inv){;}
 
     LedGpio & operator = (const real_t duty) override;
 
@@ -37,13 +38,13 @@ public:
 
 class LedAnalog : public LedConcept{
 protected:
-    GpioOrPwm inst;
+    hal::GpioOrPwm inst;
     real_t last_duty_ = 0;
     bool inversed = false;
 
 public:
 
-    LedAnalog(gpio_or_pwm auto & _inst, const bool inv = false):inst(_inst), inversed(inv){;}
+    LedAnalog(auto & _inst, const bool inv = false):inst(_inst), inversed(inv){;}
 
     void toggle() override {
         last_duty_ = 1 - last_duty_;

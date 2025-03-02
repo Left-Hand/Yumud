@@ -6,9 +6,7 @@
 
 #include "sys/core/sdk.h"
 
-namespace ymd{
-
-
+namespace ymd::hal{
 
 class Exti;
 
@@ -20,7 +18,7 @@ protected:
 
     volatile uint32_t & pin_cfg;
 
-    Gpio(GPIO_TypeDef * _instance,const Pin _pin):
+    Gpio(GPIO_TypeDef * _instance, const Pin _pin):
         GpioConcept((_pin != Pin::None) ? int(CTZ((uint16_t)_pin)) : -1),
         instance(_instance),
 
@@ -36,9 +34,9 @@ protected:
         pin_cfg(CTZ(pin) >= 8 ? ((instance -> CFGHR)) : ((instance -> CFGLR))){
     }
 
-    friend class GpioVirtual;
+    friend class VGpio;
     friend class ExtiChannel;
-    friend class Port;
+    friend class GpioPort;
 
 
 public:
@@ -76,5 +74,4 @@ public:
 
 
 extern Gpio & GpioNull;
-// static inline Gpio & GpioNull = Gpio::null();
 }

@@ -11,7 +11,7 @@ public:
     #ifndef SPI_MAX_PINS
     #define SPI_MAX_PINS 4
     #endif
-    PortVirtual <SPI_MAX_PINS> cs_port = PortVirtual<SPI_MAX_PINS>();
+    VGpioPort <SPI_MAX_PINS> cs_port = VGpioPort<SPI_MAX_PINS>();
 
     #ifdef SPI_MAX_PINS
     #undef SPI_MAX_PINS

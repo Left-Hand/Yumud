@@ -7,17 +7,17 @@ uint32_t HX711::read_data(void){
     uint32_t data=0;
 
     for(uint8_t i = 0; i < 24; i++){
-        sck_pin = true;
+        sck_gpio_ = true;
         __nopn(2);
-        sck_pin = false;
+        sck_gpio_ = false;
 
-        data <<= 1; data |= bool(sdo_pin);
+        data <<= 1; data |= bool(sdo_gpio_);
     }
 
     for(uint8_t i = 0; i < (uint8_t)conv_type; i++){
-        sck_pin = true;
+        sck_gpio_ = true;
         __nopn(2);
-        sck_pin = false;
+        sck_gpio_ = false;
     }
 
     data ^= 0x800000;

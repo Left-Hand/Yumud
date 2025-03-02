@@ -1,7 +1,7 @@
 #pragma once
 #include "sys/math/real.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 class PwmChannelIntf{
 public:
     virtual PwmChannelIntf & operator = (const real_t duty) = 0;

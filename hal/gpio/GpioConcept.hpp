@@ -2,7 +2,7 @@
 
 #include "gpio_utils.hpp"
 
-namespace ymd{
+namespace ymd::hal{
 class GpioConcept{
 public:
     const int8_t pin_index = 0;

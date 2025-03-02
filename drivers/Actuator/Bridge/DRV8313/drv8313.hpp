@@ -16,7 +16,7 @@ namespace ymd::drivers{
 class DRV8313:public Coil3Driver{
 protected:
     // using PWM3 = std::array<PwmChannelIntf &, 3>;
-    using EnablePort = PortVirtual<3>;
+    using EnablePort = VGpioPort<3>;
     using OptionalGpio = GpioConcept *;
 
     // PWM3 pwms_;

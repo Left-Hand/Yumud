@@ -8,7 +8,7 @@ namespace ymd::drivers{
 
 class WS2812: public RgbLedConcept{
 protected:
-    Gpio & gpio;
+    hal::Gpio & gpio;
 
     __no_inline void delayLong();
     __no_inline void delayShort();
@@ -21,7 +21,7 @@ protected:
 
     void _update(const Color &color);
 public:
-    WS2812(Gpio & _gpio):gpio(_gpio){;}
+    WS2812(hal::Gpio & _gpio):gpio(_gpio){;}
     void init(){
         gpio.outpp();
     }
@@ -54,7 +54,7 @@ template<size_t N>
 class WS2812Chain{
 protected:
     using Color = Color_t<real_t>;
-    Gpio & gpio;
+    hal::Gpio & gpio;
     std::array<WS2812Single, N> leds;
 
     void delayLong(){
@@ -93,7 +93,7 @@ protected:
     }
 
 public:
-    WS2812Chain(Gpio & _gpio):gpio(_gpio){;}
+    WS2812Chain(hal::Gpio & _gpio):gpio(_gpio){;}
     void init(){
         for(auto & led : leds) led = Color(0,0,0);
         gpio.outpp();

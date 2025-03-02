@@ -6,7 +6,11 @@
 
 #include <functional>
 
-namespace ymd{
+namespace ymd::hal{
+class Exti{
+
+};
+
 class ExtiChannel{
 public:
     enum class Trigger:uint8_t{
@@ -70,6 +74,15 @@ protected:
     const Trigger trigger;
     const Mode mode;
 
+    // auto & getCallback(const Line line){
+    //     return funcs[CTZ((uint32_t)line)];
+    // }
+
+    // void onLineInterrupt(const Line line){
+    //     auto & func = getCallback(line);
+    //     EXECUTE(func);
+    // }
+
     friend class CaptureChannelExti;
 public:
     ExtiChannel(const Line _line, const NvicPriority & _priority,
@@ -80,7 +93,9 @@ public:
 
 
     void init();
-    void bindCb(std::function<void(void)> && func);
+    void bindCb(auto && func){
+        // getCallback = std::move(func);
+    }
     void enableIt(const bool en = true){
         NvicPriority::enable(priority, from_line_to_irqn(line));
     }

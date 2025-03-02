@@ -36,7 +36,7 @@ public:
     uint8_t & operator [](const size_t index) {return buf[index];}
 };
 
-class CH9141:public IOStream, public Radio{
+class CH9141: public Radio{
 public:
     enum class PowerMode{
         Low,
@@ -61,12 +61,12 @@ public:
 protected:
     struct SetKeeper{
     protected:
-        GpioConcept & m_set_gpio;
+        hal::GpioConcept & m_set_gpio;
         void mdelay(){
             delay(1);
         }
     public:
-        SetKeeper(GpioConcept & set_pin):m_set_gpio(set_pin){
+        SetKeeper(hal::GpioConcept & set_pin):m_set_gpio(set_pin){
             m_set_gpio.clr();
             mdelay();
         }
@@ -76,21 +76,21 @@ protected:
         }
     };
 
-    hal::Uart & uart;
-    GpioConcept & at_gpio;
-    GpioConcept & slp_gpio;
+    hal::Uart & uart_;
+    hal::GpioConcept & at_gpio_;
+    hal::GpioConcept & slp_gpio_;
 
     bool sendAtCommand(const char * token){
-        SetKeeper{at_gpio};
+        SetKeeper{at_gpio_};
 
-        print("AT");
+        write("AT");
         if(token[0] != '.'){// string command
-            print('+');
-            print(token);
+            write('+');
+            write(token);
         }else{//... command
-            print("...");
+            write("...");
         }
-        println();
+        write("\r\n");
 
         String recv = "";
         recv.reserve(3);
@@ -110,7 +110,7 @@ protected:
 
 
         delayMicroseconds(1);
-        at_gpio = true;
+        at_gpio_ = true;
         return is_valid;
     }
 
@@ -119,29 +119,35 @@ protected:
         //TODO
     }
 public:
-    CH9141(hal::Uart & _uart, GpioConcept & _set_gpio = GpioNull, GpioConcept & _slp_gpio = GpioNull):uart(_uart), at_gpio(_set_gpio), slp_gpio(_slp_gpio){;}
+    CH9141(
+        hal::Uart & uart, 
+        hal::GpioConcept & set_gpio = hal::GpioNull, 
+        hal::GpioConcept & slp_gpio = hal::GpioNull)
+    :uart_(uart), at_gpio_(set_gpio), slp_gpio_(slp_gpio){;}
 
-    void write(const char data) override{
-        uart.write(data);
+    void write(const char data){
+        uart_.write(data);
     }
 
-    void read(char & data) override{
-        uart.read1(data);
+    void write(const char * data){
+        uart_.writeN(data, strlen(data));
     }
 
-    using InputStream::read;
-
-    size_t available() const override{
-        return uart.available();
+    void read(char & data){
+        uart_.read1(data);
     }
 
-    size_t pending() const override{
-        return uart.pending();
+    size_t available() const {
+        return uart_.available();
+    }
+
+    size_t pending() const {
+        return uart_.pending();
     }
 
     void init(){
-        at_gpio.outpp(HIGH);
-        slp_gpio.outpp(HIGH);
+        at_gpio_.outpp(HIGH);
+        slp_gpio_.outpp(HIGH);
     }
 
     void reset(){sendAtCommand("RESET");}

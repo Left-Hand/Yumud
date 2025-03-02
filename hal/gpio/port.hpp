@@ -3,15 +3,15 @@
 #include "gpio.hpp"
 #include "port_concept.hpp"
 
-namespace ymd{
-class Port : public PortConcept{
+namespace ymd::hal{
+class GpioPort : public GpioPortConcept{
 protected:
     GPIO_TypeDef * instance;
     Gpio channels[16];
 
     friend class Gpio;
 public:
-    Port(GPIO_TypeDef * _instance):
+    GpioPort(GPIO_TypeDef * _instance):
         instance(_instance),
         channels{
             Gpio(instance, Pin::_0),
@@ -38,7 +38,7 @@ public:
     __inline void setPin(const Pin pin) override;
     __inline void clrPin(const uint16_t data) override;
     __inline void clrPin(const Pin pin) override;
-    Port & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
+    GpioPort & operator = (const uint16_t data) override {instance->OUTDR = data; return *this;}
 
     operator uint16_t(){return instance->INDR;}
 
@@ -55,7 +55,7 @@ public:
 
 };
 
-__inline void Port::writeByIndex(const int index, const bool data){
+__inline void GpioPort::writeByIndex(const int index, const bool data){
     if(index < 0) return;
     uint16_t mask = 1 << index;
     if(data){
@@ -65,41 +65,41 @@ __inline void Port::writeByIndex(const int index, const bool data){
     }
 }
 
-__inline void Port::setPin(const uint16_t data){
+__inline void GpioPort::setPin(const uint16_t data){
     instance->BSHR = data;
 }
 
-__inline void Port::setPin(const Pin pin){
+__inline void GpioPort::setPin(const Pin pin){
     instance->BSHR = (uint16_t)pin;
 }
 
-__inline void Port::clrPin(const uint16_t data){
+__inline void GpioPort::clrPin(const uint16_t data){
     instance->BCR = data;
 }
 
-__inline void Port::clrPin(const Pin pin){
+__inline void GpioPort::clrPin(const Pin pin){
     instance->BCR = (uint16_t)pin;
 }
 
 
 #ifdef ENABLE_GPIOA
-extern Port portA;
+extern GpioPort portA;
 #endif
 
 #ifdef ENABLE_GPIOB
-extern Port portB;
+extern GpioPort portB;
 #endif
 
 #ifdef ENABLE_GPIOC
-extern Port portC;
+extern GpioPort portC;
 #endif
 
 #ifdef ENABLE_GPIOD
-extern Port portD;
+extern GpioPort portD;
 #endif
 
 #ifdef ENABLE_GPIOE
-extern Port portE;
+extern GpioPort portE;
 #endif
 
 }

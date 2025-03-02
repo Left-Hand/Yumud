@@ -4,7 +4,7 @@
 #include "pwm_channel.hpp"
 
 
-namespace ymd{
+namespace ymd::hal{
 class GpioPwm:public PwmChannelIntf, public Countable<uint16_t>{
 protected:
     Gpio & gpio_;

@@ -1,6 +1,6 @@
 #include "exti.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 ExtiChannel::ExtiChannel(const Line _line, const NvicPriority & _priority,
         const Trigger _trigger, const Mode _mode):
@@ -99,9 +99,6 @@ void ExtiChannel::init(){
 
 
 static std::array<std::function<void(void)>, 21> funcs;
-void ExtiChannel::bindCb(std::function<void(void)> && func){
-    funcs[CTZ((uint32_t)line)] = func;
-}
 
 #define EXTI_INTERRUPT_CONTENT_TEMPLATE(n)\
 if(EXTI_GetITStatus((uint32_t)ExtiChannel::Line::_##n)){\

@@ -7,7 +7,7 @@ namespace ymd::hal::__adc_internal{
 
         if(ch_index > 15) return;
 
-        Port * gpio_port = nullptr;
+        GpioPort * gpio_port = nullptr;
         Pin gpio_pin = Pin::None;
 
         if(ch_index <= 7){

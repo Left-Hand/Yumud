@@ -1,6 +1,6 @@
 #include "nvic.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
 // static uint8_t NVIC_Priority_Group;
 

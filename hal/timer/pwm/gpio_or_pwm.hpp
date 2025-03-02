@@ -4,12 +4,19 @@
 
 #include <variant>
 
-namespace ymd{
+namespace ymd::hal{
 
 struct GpioConcept;
 
+
 template<typename T>
-concept gpio_or_pwm = std::is_base_of_v<GpioConcept, T> || std::is_base_of_v<PwmChannelIntf, T>;
+static constexpr bool is_gpio_v = std::is_base_of_v<GpioConcept, T>;
+
+template<typename T>
+static constexpr bool is_pwm_v = std::is_base_of_v<PwmChannelIntf, T>;
+
+template<typename T>
+concept gpio_or_pwm = is_gpio_v<T> || is_pwm_v<T>;
 
 class GpioOrPwm:public PwmChannelIntf{
 public:

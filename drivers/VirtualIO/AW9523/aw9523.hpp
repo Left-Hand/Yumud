@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class AW9523: public PortVirtualConcept<16>{
+class AW9523: public VGpioPortConcept<16>{
 public:
     enum class CurrentLimit{
         Max, High, Medium, Low

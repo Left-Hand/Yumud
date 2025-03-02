@@ -23,7 +23,7 @@ public:
 
 protected:
     hal::Uart & uart;
-    GpioConcept & set_pin;
+    hal::GpioConcept & set_pin;
     uint16_t timeout = 5;
 
     void write(const char data) override{
@@ -78,7 +78,10 @@ protected:
         return is_valid;
     }
 public:
-    HC12(hal::Uart & _uart, GpioConcept & _set_pin = GpioNull):uart(_uart), set_pin(_set_pin){;}
+    HC12(
+        hal::Uart & _uart, 
+        hal::GpioConcept & _set_pin = hal::GpioNull)
+    :uart(_uart), set_pin(_set_pin){;}
 
     void init(){;}
     void sleep(){sendAtCommand("SLEEP");}

@@ -5,7 +5,7 @@
 #include "drivers/device_defs.h"
 
 namespace ymd::drivers{
-class PCA9685: public PortVirtualConcept<16>{
+class PCA9685: public VGpioPortConcept<16>{
 public:
     scexpr uint8_t default_i2c_addr = 0b10000000;
 protected:

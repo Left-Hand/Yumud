@@ -6,7 +6,7 @@
 #include "sys/math/real.hpp"
 
 
-namespace ymd{
+namespace ymd::hal{
 
 class CaptureChannelConcept{
 protected:

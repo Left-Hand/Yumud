@@ -59,7 +59,7 @@ public:
     HC595 & operator << (const uint8_t data){write(data); return *this;}
 };
 
-class HC595Single: public PortVirtualConcept<8>{
+class HC595Single: public VGpioPortConcept<8>{
 protected:
     GpioConcept & sclk_pin;
     GpioConcept & data_pin;

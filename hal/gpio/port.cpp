@@ -1,25 +1,25 @@
 #include "port.hpp"
 #include "gpio.hpp"
 
-using namespace ymd;
+using namespace ymd::hal;
 
-void Port::setMode(const int index, const GpioMode mode){
+void GpioPort::setMode(const int index, const GpioMode mode){
     Gpio gpio = Gpio(instance, (Pin)(1 << index));
     gpio.setMode(mode);
 }
 
-// Gpio Port::operator [](const int index){
+// Gpio GpioPort::operator [](const int index){
 //     if(index < 0) return channel_none;
 
 //     return Gpio(instance, Pin(1 << index));
 // };
-// Gpio Port::operator [](const Pin pin){
+// Gpio GpioPort::operator [](const Pin pin){
 //     if(pin != Pin::None) return channel_none;
 
 //     return Gpio(instance, pin);
 // };
 
-void Port::enableRcc(const bool en){
+void GpioPort::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef ENABLE_GPIOA
         case GPIOA_BASE:
@@ -51,30 +51,30 @@ void Port::enableRcc(const bool en){
     }
 }
 
-void Port::init(){
+void GpioPort::init(){
     enableRcc();
 }
 
 
-namespace ymd{
+namespace ymd::hal{
 #ifdef ENABLE_GPIOA
-Port portA{GPIOA};
+GpioPort portA{GPIOA};
 #endif
 
 #ifdef ENABLE_GPIOB
-Port portB{GPIOB};
+GpioPort portB{GPIOB};
 #endif
 
 #ifdef ENABLE_GPIOC
-Port portC{GPIOC};
+GpioPort portC{GPIOC};
 #endif
 
 #ifdef ENABLE_GPIOD
-Port portD{GPIOD};
+GpioPort portD{GPIOD};
 #endif
 
 #ifdef ENABLE_GPIOE
-Port portE{GPIOE};
+GpioPort portE{GPIOE};
 #endif
 
 }
