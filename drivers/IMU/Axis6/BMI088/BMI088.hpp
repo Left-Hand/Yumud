@@ -13,8 +13,8 @@ public:
 
 
 protected:
-    std::optional<I2cDrv> i2c_drv_;
-    std::optional<SpiDrv> spi_drv_;
+    std::optional<hal::I2cDrv> i2c_drv_;
+    std::optional<hal::SpiDrv> spi_drv_;
 
     using RegAddress = uint8_t;
 
@@ -46,13 +46,13 @@ protected:
 
     void requestData(const RegAddress reg_addr, int16_t * datas, const size_t len);
 public:
-    BMI088(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BMI088(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    BMI088(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, default_i2c_addr}){;}
+    BMI088(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    BMI088(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    BMI088(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, default_i2c_addr}){;}
 
-    BMI088(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    BMI088(SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    BMI088(Spi & spi, const uint8_t index):spi_drv_(SpiDrv{spi, index}){;}
+    BMI088(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    BMI088(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
+    BMI088(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
 
     void init();

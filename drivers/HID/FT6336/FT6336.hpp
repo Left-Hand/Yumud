@@ -151,13 +151,13 @@ protected:
     // };
 
 protected:
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
 public:
     static constexpr uint8_t default_spi_addr = 0x38;
 
-    FT6336(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    FT6336(SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    FT6336(Spi & spi, const uint8_t spi_addr = default_spi_addr):spi_drv_(SpiDrv{spi, spi_addr}){;}
+    FT6336(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    FT6336(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
+    FT6336(hal::Spi & spi, const uint8_t spi_addr = default_spi_addr):spi_drv_(hal::SpiDrv{spi, spi_addr}){;}
 };
 
 }

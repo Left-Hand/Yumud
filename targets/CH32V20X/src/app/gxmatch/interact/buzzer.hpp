@@ -1,14 +1,14 @@
 #pragma once
 
 namespace ymd{
-class PwmChannelIntf;
+class PwmIntf;
 }
 
 namespace gxm{
 
 class Buzzer{
 protected:
-    using Inst = ymd::PwmChannelIntf;
+    using Inst = ymd::PwmIntf;
     Inst & instance_;
 
 public:

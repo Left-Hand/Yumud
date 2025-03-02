@@ -22,7 +22,7 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv;
     
     real_t current_lsb_ma = real_t(0.2);
     scexpr real_t voltage_lsb_mv = real_t(1.25);
@@ -89,7 +89,7 @@ protected:
     friend class CurrentChannel;
     friend class VoltageChannel;
 
-    class INA226Channel:public AnalogInChannel{
+    class INA226Channel:public hal::AnalogInIntf{
     public:
         enum class Index:uint8_t{
             SHUNT_VOLT,
@@ -135,9 +135,9 @@ public:
         INA226Channel{*this, INA226Channel::Index::CURRENT},\
         INA226Channel{*this, INA226Channel::Index::POWER}\
 
-    INA226(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTENT}{;}
-    INA226(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTENT}{;}
-    INA226(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTENT}{};
+    INA226(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTENT}{;}
+    INA226(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv), channels{CHANNEL_CONTENT}{;}
+    INA226(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)), channels{CHANNEL_CONTENT}{};
 
     #undef CHANNEL_CONTENT
 

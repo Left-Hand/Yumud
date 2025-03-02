@@ -118,7 +118,7 @@ protected:
     static real_t calculateGyrScale(const GyrRange range);
 public:
     using BoschSensor::BoschSensor;
-    BMI160(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(i2c, i2c_addr){;}
+    BMI160(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):BoschSensor(i2c, i2c_addr){;}
 
     void init();
     void update();

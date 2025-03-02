@@ -6,7 +6,7 @@ namespace ymd::drivers{
 
 class Si5351C{
 protected:
-    I2cDrv _i2c_drv;
+    hal::I2cDrv _i2c_drv;
 
     struct DeviceStatusReg:public Reg8{
         scexpr uint8_t address = 0x00;
@@ -143,9 +143,9 @@ protected:
     void readReg(const uint8_t address, uint8_t & data);
     void readMulti(const uint8_t address, uint8_t * data, const size_t len);
 public:
-    Si5351C(const I2cDrv & i2c_drv):
+    Si5351C(const hal::I2cDrv & i2c_drv):
         _i2c_drv(i2c_drv){};
-    Si5351C(I2cDrv && i2c_drv):
+    Si5351C(hal::I2cDrv && i2c_drv):
         _i2c_drv(std::move(i2c_drv)){};
     
     void init();

@@ -34,9 +34,9 @@ public:
         _1_2ms
     };
     
-    MMC5603(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    MMC5603(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    MMC5603(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
+    MMC5603(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    MMC5603(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    MMC5603(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     void update();
 
@@ -187,7 +187,7 @@ protected:
     AxisSelfTestZReg z_st_reg;
     ProductIdReg product_id_reg;
 
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     void writeReg(const RegAddress address, const uint8_t reg){
         i2c_drv_.writeReg((uint8_t)address, reg);

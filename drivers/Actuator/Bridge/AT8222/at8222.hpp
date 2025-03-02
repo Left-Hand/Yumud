@@ -6,26 +6,26 @@ namespace ymd::drivers{
 
 class AT8222:public Coil2DriverIntf{
 protected:
-    hal::PwmChannelIntf & forward_pwm;
-    hal::PwmChannelIntf & backward_pwm;
+    hal::PwmIntf & forward_pwm;
+    hal::PwmIntf & backward_pwm;
     hal::GpioIntf * p_enable_gpio;
 
     AT8222(
-        hal::PwmChannelIntf & _forward_pwm, 
-        hal::PwmChannelIntf & _backward_pwm, 
+        hal::PwmIntf & _forward_pwm, 
+        hal::PwmIntf & _backward_pwm, 
         hal::GpioIntf * _p_en_gpio = nullptr):
     forward_pwm(_forward_pwm), backward_pwm(_backward_pwm), p_enable_gpio(_p_en_gpio){;}
 public:
 
     AT8222(
-        hal::PwmChannelIntf & _forward_pwm, 
-        hal::PwmChannelIntf & _backward_pwm, 
+        hal::PwmIntf & _forward_pwm, 
+        hal::PwmIntf & _backward_pwm, 
         hal::GpioIntf & _en_gpio):
     AT8222(_forward_pwm, _backward_pwm, &_en_gpio){;}
 
     AT8222(
-        PwmChannelIntf & _forward_pwm, 
-        PwmChannelIntf & _backward_pwm):
+        hal::PwmIntf & _forward_pwm, 
+        hal::PwmIntf & _backward_pwm):
     AT8222(_forward_pwm, _backward_pwm, nullptr){;}
 
 

@@ -83,7 +83,7 @@ public:
         _1571uA  = 0b11111  // 11111: 1.571 mA
     };
 protected:
-    I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv;
 
     using RegAddress =uint8_t;
 
@@ -226,9 +226,9 @@ protected:
 public:
     scexpr uint8_t default_i2c_addr = 0x54;
 
-    FDC2X1X(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    FDC2X1X(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    FDC2X1X(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)){};
+    FDC2X1X(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
+    FDC2X1X(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
+    FDC2X1X(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)){};
 
     void init();
 

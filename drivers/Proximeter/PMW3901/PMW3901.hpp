@@ -37,7 +37,7 @@ DeltaReg dy;
 
 class PMW3901:public internal::PMW3901_Data, public FlowSensor{
 protected:
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
     real_t x_cm;
     real_t y_cm;
 
@@ -53,9 +53,9 @@ public:
     PMW3901(const PMW3901 & other) = delete;
     PMW3901(PMW3901 && other) = delete;
 
-    PMW3901(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    PMW3901(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    PMW3901(Spi & spi, const uint8_t index):spi_drv_(SpiDrv(spi, index)){;}
+    PMW3901(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    PMW3901(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    PMW3901(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
     bool verify();
     void init();

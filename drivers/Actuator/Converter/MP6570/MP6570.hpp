@@ -15,12 +15,12 @@ public:
     public: 
         using SlaveAddress = uint8_t;
 
-        Phy(const I2cDrv & i2c_drv) : i2c_drv_(i2c_drv) {}
-        Phy(I2cDrv && i2c_drv) : i2c_drv_(std::move(i2c_drv)) {}
+        Phy(const hal::I2cDrv & i2c_drv) : i2c_drv_(i2c_drv) {}
+        Phy(hal::I2cDrv && i2c_drv) : i2c_drv_(std::move(i2c_drv)) {}
 
-        Phy(const SlaveAddress spi_slave_addr, const SpiDrv & spi_drv)
+        Phy(const SlaveAddress spi_slave_addr, const hal::SpiDrv & spi_drv)
              : spi_slave_addr_(spi_slave_addr), spi_drv_(spi_drv) {}
-        Phy(const SlaveAddress spi_slave_addr, SpiDrv && spi_drv)
+        Phy(const SlaveAddress spi_slave_addr, hal::SpiDrv && spi_drv)
              : spi_slave_addr_(spi_slave_addr), spi_drv_(std::move(spi_drv)) {}
 
         
@@ -28,9 +28,9 @@ public:
         
         BusError readReg(const uint8_t reg_addr, uint16_t & data);
     private:
-        std::optional<I2cDrv> i2c_drv_;
+        std::optional<hal::I2cDrv> i2c_drv_;
         SlaveAddress spi_slave_addr_ = 0;
-        std::optional<SpiDrv> spi_drv_;
+        std::optional<hal::SpiDrv> spi_drv_;
     };
 
 private:

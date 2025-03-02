@@ -13,15 +13,15 @@ template<typename T>
 static constexpr bool is_gpio_v = std::is_base_of_v<GpioIntf, T>;
 
 template<typename T>
-static constexpr bool is_pwm_v = std::is_base_of_v<PwmChannelIntf, T>;
+static constexpr bool is_pwm_v = std::is_base_of_v<PwmIntf, T>;
 
 template<typename T>
 concept gpio_or_pwm = is_gpio_v<T> || is_pwm_v<T>;
 
-class GpioOrPwm:public PwmChannelIntf{
+class GpioOrPwm:public PwmIntf{
 public:
     using GpioRef = std::reference_wrapper<GpioIntf>; 
-    using PwmRef = std::reference_wrapper<PwmChannelIntf>; 
+    using PwmRef = std::reference_wrapper<PwmIntf>; 
 
     std::variant<GpioRef, PwmRef> inst_;
 

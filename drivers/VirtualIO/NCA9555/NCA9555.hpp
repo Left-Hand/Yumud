@@ -3,9 +3,9 @@
 #include "hal/gpio/port_virtual.hpp"
 
 namespace ymd::drivers{ 
-class NCA9555: public VGpioPortIntf<16>{
+class NCA9555: public hal::VGpioPortIntf<16>{
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     scexpr uint8_t default_i2c_addr = 0b01000000;
 
@@ -49,14 +49,14 @@ protected:
 
 public:
 
-    NCA9555(I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    NCA9555(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    NCA9555(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, default_i2c_addr}){;}
+    NCA9555(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    NCA9555(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    NCA9555(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, default_i2c_addr}){;}
 
     void init();
     void setInversion(const uint16_t mask);
     void writePort(const uint16_t data) override;
     uint16_t readPort() override;
-    void setMode(const int index, const GpioMode mode)override;
+    void setMode(const int index, const hal::GpioMode mode)override;
 };
 }

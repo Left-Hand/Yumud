@@ -27,7 +27,7 @@ public:
         RT2_3 = 0, RT1, RT2, RT4, RT8, RT16
     };
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     struct ConfigReg:public Reg16{
         
@@ -112,10 +112,10 @@ protected:
 public:
     scexpr uint8_t default_i2c_addr = 0b0100000;
 
-    SGM58031(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    SGM58031(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    SGM58031(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    SGM58031(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 
-    SGM58031(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, i2c_addr}){;}
+    SGM58031(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, i2c_addr}){;}
 
     void init();
 

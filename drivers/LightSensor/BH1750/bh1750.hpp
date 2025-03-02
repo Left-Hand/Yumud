@@ -13,7 +13,7 @@ public:
     };
 
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     enum Command:uint8_t{
         PowerDown = 0,
@@ -33,8 +33,8 @@ protected:
     void sendCommand(const uint8_t cmd);
 
 public:
-    BH1750(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    BH1750(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    BH1750(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    BH1750(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
 
     void powerOn(){
         sendCommand(Command::PowerOn);

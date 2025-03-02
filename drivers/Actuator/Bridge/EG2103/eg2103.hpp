@@ -14,12 +14,12 @@ namespace ymd::drivers{
 
 class EG2103:public Coil2DriverIntf{
 protected:
-    TimerOC & inst_;
-    TimerOCN * p_inst_n_;
+    hal::TimerOC & inst_;
+    hal::TimerOCN * p_inst_n_;
     Range duty_range = {real_t(0.03), real_t(0.97)};
 public:
-    EG2103(TimerOC & ch):inst_(ch), p_inst_n_(nullptr){;}
-    EG2103(TimerOC & ch, TimerOCN & chn):inst_(ch), p_inst_n_(&chn){;}
+    EG2103(hal::TimerOC & ch):inst_(ch), p_inst_n_(nullptr){;}
+    EG2103(hal::TimerOC & ch, hal::TimerOCN & chn):inst_(ch), p_inst_n_(&chn){;}
 
     void init();
 

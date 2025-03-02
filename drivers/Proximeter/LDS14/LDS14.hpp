@@ -7,7 +7,7 @@ namespace ymd::drivers{
 
 class LDS14{
 protected:
-    Uart & m_uart;
+    hal::Uart & m_uart;
 
     static constexpr uint8_t header_token = 0x54;
     static constexpr uint16_t verlen_token = 0x55;
@@ -45,7 +45,7 @@ protected:
     size_t m_data_cnt;
 
 public:
-    LDS14(Uart & uart):m_uart(uart){;}
+    LDS14(hal::Uart & uart):m_uart(uart){;}
 
     void init(){
         m_uart.init(115200);

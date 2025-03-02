@@ -27,6 +27,7 @@
 
 
 using namespace ymd;
+using namespace ymd::hal;
 using namespace ymd::drivers;
 using namespace ymd::nvcv2;
 using namespace etk;
@@ -121,6 +122,8 @@ void etk_main(){
     };
 
 
+    // auto x_pwm = pca[6];
+    // auto y_pwm = pca[7];
     MG995 servo_x{pca[6]};
     MG995 servo_y{pca[7]};
 

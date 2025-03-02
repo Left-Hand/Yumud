@@ -17,12 +17,12 @@ protected:
 
     Key key_;
 public:
-    FunctionalKey(GpioIntf & gpio, const Level _level):key_{gpio, _level}{;}
+    FunctionalKey(hal::GpioIntf & gpio, const Level _level):key_{gpio, _level}{;}
 
     bool pressed(){
         return key_.pressed();
     }
-    GpioIntf & io() override{
+    hal::GpioIntf & io() override{
         return key_.io();
     }
 

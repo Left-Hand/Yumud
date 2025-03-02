@@ -16,7 +16,7 @@ class AdcOnChip;
 class AdcPrimary;
 class AdcCompanion;
 
-class AdcChannelConcept:public AnalogInChannel{
+class AdcChannelConcept:public hal::AnalogInIntf{
 public:
     virtual real_t uni() = 0;
     virtual uint16_t data() = 0;

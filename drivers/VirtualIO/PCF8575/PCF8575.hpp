@@ -4,15 +4,15 @@
 namespace ymd::drivers{
 class PCF8575{
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     uint8_t data;
 public:
     scexpr uint8_t default_i2c_addr = 0b01000000;
 
-    PCF8575(I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    PCF8575(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    PCF8575(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv{i2c, default_i2c_addr}){;}
+    PCF8575(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    PCF8575(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    PCF8575(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv{i2c, default_i2c_addr}){;}
     // void write(const uint8_t _data){
     //     data = _data;
     //     i2c_drv_.write(data);

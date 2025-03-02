@@ -43,7 +43,7 @@ protected:
         uint64_t mid:8;
     };
 
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
 
     void writeCommand(const Command & command){
         spi_drv_.end();
@@ -53,9 +53,9 @@ protected:
     
 
 public:
-    SDcard(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    SDcard(SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
-    SDcard(Spi & spi, const uint8_t index):spi_drv_(SpiDrv(spi, index)){;}
+    SDcard(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    SDcard(hal::SpiDrv && spi_drv):spi_drv_(std::move(spi_drv)){;}
+    SDcard(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
     
     void init();
 };

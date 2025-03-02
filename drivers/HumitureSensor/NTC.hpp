@@ -14,7 +14,7 @@ protected:
 
     real_t last_temp = 0;
 
-    AdcChannelConcept & channel_;
+    hal::AdcChannelConcept & channel_;
     uint B_ = 3950;
     
     real_t get_uniV(){
@@ -23,7 +23,7 @@ protected:
 
 public:
 
-    NTC(AdcChannelConcept & channel, const uint B = 3950):channel_(channel), B_(B){;}
+    NTC(hal::AdcChannelConcept & channel, const uint B = 3950):channel_(channel), B_(B){;}
 
     void init() override{
 

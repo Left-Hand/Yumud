@@ -8,7 +8,7 @@
 
 namespace ymd::drivers{
 
-class AW9523: public VGpioPortIntf<16>{
+class AW9523: public hal::VGpioPortIntf<16>{
 public:
     enum class CurrentLimit{
         Max, High, Medium, Low
@@ -16,7 +16,7 @@ public:
 
     scexpr uint8_t default_i2c_addr = 0b10110000;
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
     uint16_t buf;
     scexpr uint8_t valid_chipid = 0x23;
 
@@ -71,12 +71,12 @@ protected:
     }
 
 
-    class AW9523Pwm:public PwmChannelIntf{
+    class AW9523Pwm:public hal::PwmIntf{
     protected:
         AW9523 & aw9523;
-        Pin pin;
+        hal::Pin pin;
 
-        AW9523Pwm(AW9523 & _aw9523, const Pin _pin):aw9523(_aw9523), pin(_pin){;}
+        AW9523Pwm(AW9523 & _aw9523, const hal::Pin _pin):aw9523(_aw9523), pin(_pin){;}
 
         DELETE_COPY_AND_MOVE(AW9523Pwm)
         
@@ -94,21 +94,21 @@ protected:
     };
 
 public:
-    AW9523(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    AW9523(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    AW9523(I2c & bus):i2c_drv_(I2cDrv(bus, default_i2c_addr)){;}
+    AW9523(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    AW9523(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    AW9523(hal::I2c & bus):i2c_drv_(hal::I2cDrv(bus, default_i2c_addr)){;}
 
     void init();
     void reset(){
         writeReg(RegAddress::swRst, (uint8_t)0x00);
     }
     
-    void setPin(const Pin pin) override{
+    void setPin(const hal::Pin pin) override{
         buf |= (uint16_t)pin;
         writePort(buf);
     }
     
-    void clrPin(const Pin pin) override{
+    void clrPin(const hal::Pin pin) override{
         buf &= ~(uint16_t)pin;
         writePort(buf);
     }
@@ -127,21 +127,21 @@ public:
     
     bool readByIndex(const int index) override;
 
-    void setMode(const int index, const GpioMode mode) override;
+    void setMode(const int index, const hal::GpioMode mode) override;
 
     void enableIrqByIndex(const int index, const bool en = true);
 
-    void enableLedMode(const Pin pin, const bool en = true);
+    void enableLedMode(const hal::Pin pin, const bool en = true);
 
     void setLedCurrentLimit(const CurrentLimit limit);
 
-    void setLedCurrent(const Pin pin, const uint8_t current);
+    void setLedCurrent(const hal::Pin pin, const uint8_t current);
     
     bool verify();
     AW9523 & operator = (const uint16_t data) override {writePort(data); return *this;}
 
     AW9523Pwm operator [](const size_t index){
-        return AW9523Pwm(*this, Pin(1 << index));
+        return AW9523Pwm(*this, hal::Pin(1 << index));
     }
 };
 

@@ -40,7 +40,7 @@ protected:
     BusError readMulti_impl(const valid_i2c_regaddr auto addr, T * data_ptr, const size_t length, const Endian endian);
 
 public:
-    I2cDrv(I2c & _bus, const uint8_t _index):
+    I2cDrv(hal::I2c & _bus, const uint8_t _index):
         ProtocolBusDrv<I2c>(_bus, _index){};
 
     template<typename T>

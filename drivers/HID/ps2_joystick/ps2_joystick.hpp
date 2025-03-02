@@ -12,7 +12,7 @@
 namespace ymd::drivers{
 class Ps2Joystick{
     // struct Ps2Interface{
-    //     Ps2Interface(GpioIntf & _sck_pin, GpioIntf & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin)
+    //     Ps2Interface(hal::GpioIntf & _sck_pin, hal::GpioIntf & _sdo_pin):sck_pin(_sck_pin), sdo_pin(_sdo_pin)
     // };
 public:
     enum class JoyStickEvent:uint8_t{
@@ -70,9 +70,9 @@ protected:
 
     DataFrame frame;
     
-    SpiDrv & spi_drv_;
+    hal::SpiDrv & spi_drv_;
 public:
-    Ps2Joystick(SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    Ps2Joystick(hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
     void init(){
         // Initialize the PS2 controller and set up the necessary pins
         // Configure the SPI interface and enable the controller

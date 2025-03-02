@@ -157,24 +157,24 @@ protected:
     #endif
     ChannelIndex               last_channels;
     scexpr uint32_t reference_freq = 25000000; // Use your crystal or reference frequency
-    SpiDrv spi_drv_;
-    Gpio &         reset_gpio;               // Reset pin (active = high)
-    Gpio &         update_gpio;              // I/O_UPDATE: Apply config changes
+    hal::SpiDrv spi_drv_;
+    hal::GpioIntf &         reset_gpio;               // Reset pin (active = high)
+    hal::GpioIntf &         update_gpio;              // I/O_UPDATE: Apply config changes
 
 public:
     AD9959(
-        const SpiDrv & spi_drv, 
-        Gpio & _reset_gpio = GpioNull, 
-        Gpio & _update_gpio = GpioNull
+        const hal::SpiDrv & spi_drv, 
+        hal::GpioIntf & _reset_gpio = hal::GpioNull, 
+        hal::GpioIntf & _update_gpio = hal::GpioNull
     ):
         spi_drv_(spi_drv),
         reset_gpio(_reset_gpio),
         update_gpio(_update_gpio){;}
 
     AD9959(
-        SpiDrv && spi_drv, 
-        Gpio & _reset_gpio = GpioNull, 
-        Gpio & _update_gpio = GpioNull
+        hal::SpiDrv && spi_drv, 
+        hal::GpioIntf & _reset_gpio = hal::GpioNull, 
+        hal::GpioIntf & _update_gpio = hal::GpioNull
     ):
         spi_drv_(std::move(spi_drv)),
         reset_gpio(_reset_gpio),
@@ -217,16 +217,16 @@ public:
     // To read channel registers, you must first use setChannels to select exactly one channel!
     uint32_t read(Register reg);
     protected:
-    void pulse(Gpio & gpio){
+    void pulse(hal::GpioIntf & gpio){
         raise(gpio);
         lower(gpio);
     }
 
-    void lower(Gpio & gpio){
+    void lower(hal::GpioIntf & gpio){
         gpio.clr();
     }
 
-    void raise(Gpio & gpio){
+    void raise(hal::GpioIntf & gpio){
         gpio.set();
     }
     uint32_t write(Register reg, uint32_t value)

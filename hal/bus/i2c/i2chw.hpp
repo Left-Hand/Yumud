@@ -12,8 +12,8 @@ private:
 
 protected:
     I2C_TypeDef * instance;
-    static GpioIntf & getScl(const I2C_TypeDef *);
-    static GpioIntf & getSda(const I2C_TypeDef *);
+    static hal::GpioIntf & getScl(const I2C_TypeDef *);
+    static hal::GpioIntf & getSda(const I2C_TypeDef *);
 public:
 
     I2cHw(I2C_TypeDef * _instance):

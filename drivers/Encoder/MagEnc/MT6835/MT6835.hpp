@@ -115,7 +115,7 @@ protected:
     };
 
 
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
 
     real_t lap_position;
     size_t errcnt = 0;
@@ -128,9 +128,9 @@ protected:
     void writeReg(const RegAddress addr, const uint8_t data);
     void readReg(const RegAddress addr, uint8_t & data);
 public:
-    MT6835(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    MT6835(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    MT6835(Spi & spi, const uint8_t index):spi_drv_(SpiDrv{spi, index}){;}
+    MT6835(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    MT6835(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    MT6835(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv{spi, index}){;}
 
     void init() override;
 

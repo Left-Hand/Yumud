@@ -21,7 +21,7 @@ public:
     virtual Gpio & io() = 0;
 };
 
-class TimerOC:public TimerOut, public PwmChannelIntf{
+class TimerOC:public TimerOut, public PwmIntf{
 public:
     using Mode = TimerOcMode;
 protected:

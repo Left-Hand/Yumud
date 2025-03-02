@@ -8,9 +8,9 @@ namespace ymd::hal{
 class SpiSw: public Spi{
 protected:
     volatile int8_t occupied = -1;
-    GpioIntf & sclk_gpio;
-    GpioIntf & mosi_gpio;
-    GpioIntf & miso_gpio;
+    hal::GpioIntf & sclk_gpio;
+    hal::GpioIntf & mosi_gpio;
+    hal::GpioIntf & miso_gpio;
 
     uint16_t delays = 100;
     uint8_t data_bits = 8;
@@ -35,11 +35,11 @@ protected:
 protected :
 public:
 
-    SpiSw(GpioIntf & _sclk_pin,GpioIntf & _mosi_pin,
-            GpioIntf & _miso_pin):sclk_gpio(_sclk_pin),
+    SpiSw(hal::GpioIntf & _sclk_pin,hal::GpioIntf & _mosi_pin,
+            hal::GpioIntf & _miso_pin):sclk_gpio(_sclk_pin),
                 mosi_gpio(_mosi_pin), miso_gpio(_miso_pin){;}
-    SpiSw(GpioIntf & _sclk_pin,GpioIntf & _mosi_pin,
-            GpioIntf & _miso_pin,GpioIntf & _cs_pin):SpiSw(_sclk_pin, _mosi_pin, _miso_pin){
+    SpiSw(hal::GpioIntf & _sclk_pin,hal::GpioIntf & _mosi_pin,
+            hal::GpioIntf & _miso_pin,hal::GpioIntf & _cs_pin):SpiSw(_sclk_pin, _mosi_pin, _miso_pin){
                 bindCsPin(_cs_pin, 0);
             }
 

@@ -8,7 +8,7 @@
 
 namespace ymd::hal{
     class GpioIntf;
-    class PwmChannelIntf;
+    class PwmIntf;
 }
 
 namespace ymd::drivers{

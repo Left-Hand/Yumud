@@ -29,7 +29,7 @@ protected:
     }
 public:
     using BoschSensor::BoschSensor;
-    BMM150(I2c & bus, const uint8_t addr = default_i2c_addr):BoschSensor(I2cDrv(bus, addr)){;}
+    BMM150(hal::I2c & bus, const uint8_t addr = default_i2c_addr):BoschSensor(hal::I2cDrv(bus, addr)){;}
 
 
     void init();

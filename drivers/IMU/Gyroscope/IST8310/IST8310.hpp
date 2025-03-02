@@ -19,9 +19,9 @@ public:
         _16 = 0b100,
     };
     
-    IST8310(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    IST8310(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    IST8310(I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, addr)){;}
+    IST8310(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    IST8310(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    IST8310(hal::I2c & i2c, const uint8_t addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, addr)){;}
 
     void init();
     void update();
@@ -136,7 +136,7 @@ protected:
 
 
 
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     WhoAmIReg whoami_reg;
     Status1Reg status1_reg;

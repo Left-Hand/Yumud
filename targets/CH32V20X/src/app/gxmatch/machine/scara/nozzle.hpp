@@ -14,14 +14,14 @@ protected:
     const Config & config_;
     
     using GpioIntf = ymd::GpioIntf;
-    using PwmChannelIntf = ymd::PwmChannelIntf;
+    using PwmIntf = ymd::PwmIntf;
 
-    // GpioIntf & gpio_a_;
-    // GpioIntf & gpio_b_;
-    PwmChannelIntf & pwm_;
+    // hal::GpioIntf & gpio_a_;
+    // hal::GpioIntf & gpio_b_;
+    PwmIntf & pwm_;
 
 public:
-    Nozzle(const Config & config, PwmChannelIntf & pwm):
+    Nozzle(const Config & config, PwmIntf & pwm):
         config_(config), pwm_(pwm){;}
 
     void release();

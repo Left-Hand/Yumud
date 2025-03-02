@@ -64,7 +64,7 @@ public:
         __RESV__ = 0b11 // 11 : CRC 24-bit
     };
 protected:
-    I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv;
 
     // [A1]     [A0]    [I2C ADDRESS]
     // DGND     DGND    100 0000
@@ -171,9 +171,9 @@ protected:
     }
 public:
 
-    ADS112C04(const I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS112C04(I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS112C04(I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(I2cDrv(_i2c, _addr)){};
+    ADS112C04(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
+    ADS112C04(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
+    ADS112C04(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)){};
 
     void init(){
         config3_reg.__resv__ = 0;

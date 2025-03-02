@@ -172,7 +172,7 @@ protected:
     }
 public:
     using InvensenseSensor::InvensenseSensor;
-    ICM42688(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(i2c, default_i2c_addr){;}
+    ICM42688(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):InvensenseSensor(i2c, default_i2c_addr){;}
 
     void init();
     

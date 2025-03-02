@@ -47,12 +47,12 @@ protected:
     std::array<EyelidPhy,2> eyelid_phys_;
 
     struct Refs{
-        PwmChannelIntf & yaw;
-        PwmChannelIntf & pitch; 
-        PwmChannelIntf & upper_l;
-        PwmChannelIntf & lower_l;
-        PwmChannelIntf & upper_r;
-        PwmChannelIntf & lower_r;
+        hal::PwmIntf & yaw;
+        hal::PwmIntf & pitch; 
+        hal::PwmIntf & upper_l;
+        hal::PwmIntf & lower_l;
+        hal::PwmIntf & upper_r;
+        hal::PwmIntf & lower_r;
     };
 
     friend class Eyes;

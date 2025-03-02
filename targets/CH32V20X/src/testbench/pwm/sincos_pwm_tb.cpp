@@ -25,7 +25,7 @@
 // #define TIM1_USE_CC4 0
 #define TIM1_USE_CC4 1
 
-class TimerOCPair:public PwmChannelIntf{
+class TimerOCPair:public PwmIntf{
 protected:
     TimerOC & oc_;
     TimerOC & ocn_;

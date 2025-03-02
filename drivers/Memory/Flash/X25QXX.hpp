@@ -12,10 +12,10 @@ namespace ymd::drivers{
 
 class SpiDevice{
 protected:
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
 
-    SpiDevice(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    SpiDevice(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    SpiDevice(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    SpiDevice(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
 };
 
 
@@ -120,9 +120,9 @@ protected:
     void eraseWholeChip();
 
 public:
-    X25QXX(const SpiDrv & spi_drv, const Address capacity):SpiDevice(spi_drv), StoragePaged(capacity, 256){;}
+    X25QXX(const hal::SpiDrv & spi_drv, const Address capacity):SpiDevice(spi_drv), StoragePaged(capacity, 256){;}
 
-    X25QXX(SpiDrv && spi_drv, const Address capacity):SpiDevice(std::move(spi_drv)), StoragePaged(capacity, 256){;}
+    X25QXX(hal::SpiDrv && spi_drv, const Address capacity):SpiDevice(std::move(spi_drv)), StoragePaged(capacity, 256){;}
     void init() override{}
 
     bool busy() override;

@@ -29,7 +29,7 @@ public:
 
     scexpr uint8_t default_i2c_addr = 0x3d;
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     real_t lsb;
 
@@ -142,9 +142,9 @@ protected:
         }
     }
 public:
-    HMC5883L(const I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    HMC5883L(I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
-    HMC5883L(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(I2cDrv(i2c, i2c_addr)){;}
+    HMC5883L(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    HMC5883L(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    HMC5883L(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(i2c, i2c_addr)){;}
 
     void init();
     void enableHighSpeed(const bool en = true);

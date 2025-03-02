@@ -5,11 +5,11 @@
 #include "drivers/device_defs.h"
 
 namespace ymd::drivers{
-class PCA9685: public VGpioPortIntf<16>{
+class PCA9685: public hal::VGpioPortIntf<16>{
 public:
     scexpr uint8_t default_i2c_addr = 0b10000000;
 protected:
-    I2cDrv i2c_drv_;
+    hal::I2cDrv i2c_drv_;
 
     scexpr uint8_t valid_chipid = 0x23;
     struct Mode1Reg:public Reg8{
@@ -63,12 +63,13 @@ protected:
     LedRegs all_channel;
     uint8_t prescale_reg;
 
-    class PCA8975Channel:public PwmChannelIntf, GpioIntf{
+    class PCA8975Channel:public hal::PwmIntf,  hal::GpioIntf{
     protected:
         PCA9685 & pca;
         uint8_t channel;
 
-        PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):GpioIntf(_channel), pca(_pca), channel(_channel){;}
+        PCA8975Channel(PCA9685 & _pca, const uint8_t _channel):
+            hal::GpioIntf(_channel), pca(_pca), channel(_channel){;}
         
         DELETE_COPY_AND_MOVE(PCA8975Channel)
         
@@ -85,47 +86,9 @@ protected:
         __fast_inline void write(const bool val){*this = real_t(val);}
         __fast_inline bool read() const override {return 0;}
 
-        void setMode(const GpioMode mode) override{}
+        void setMode(const hal::GpioMode mode) override{}
     };
 
-
-    std::array<PCA8975Channel,16> channels{
-        PCA8975Channel{*this, 0},
-        PCA8975Channel{*this, 1},
-        PCA8975Channel{*this, 2},
-        PCA8975Channel{*this, 3},
-        PCA8975Channel{*this, 4},
-        PCA8975Channel{*this, 5},
-        PCA8975Channel{*this, 6},
-        PCA8975Channel{*this, 7},
-        PCA8975Channel{*this, 8},
-        PCA8975Channel{*this, 9},
-        PCA8975Channel{*this, 10},
-        PCA8975Channel{*this, 11},
-        PCA8975Channel{*this, 12},
-        PCA8975Channel{*this, 13},
-        PCA8975Channel{*this, 14},
-        PCA8975Channel{*this, 15}
-    };
-
-
-    // template<typename T>
-    // requires is_reg<T>
-    // __fast_inline void writeReg(const RegAddress addr, const T reg){
-    //     i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
-    // };
-
-    // template<typename T>
-    // requires is_reg<T>
-    // __fast_inline void readReg(const RegAddress addr, T & reg){
-    //     i2c_drv_.readReg((uint8_t)addr, reg, LSB);
-    // }
-
-    // uint8_t readReg(const RegAddress addr){
-    //     uint8_t data;
-    //     i2c_drv_.readReg((uint8_t)addr, data, LSB);
-    //     return data;
-    // }
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
         i2c_drv_.writeReg((uint8_t)addr, reg);
     };
@@ -159,9 +122,9 @@ protected:
         static_assert(sizeof(mode2_reg) == 1);
     }
 public:
-    PCA9685(I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
-    PCA9685(I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
-    PCA9685(I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_{i2c, i2c_addr}{;}
+    PCA9685(hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    PCA9685(hal::I2cDrv && i2c_drv):i2c_drv_(std::move(i2c_drv)){;}
+    PCA9685(hal::I2c & i2c, const uint8_t i2c_addr = default_i2c_addr):i2c_drv_{i2c, i2c_addr}{;}
 
     void setFrequency(const uint freq, const real_t trim = real_t(1));
 
@@ -182,9 +145,9 @@ public:
 
     void reset();
 
-    void setPin(const Pin pin) override;
+    void setPin(const hal::Pin pin) override;
 
-    void clrPin(const Pin pin) override;
+    void clrPin(const hal::Pin pin) override;
 
     void setPin(const uint16_t data) override;
 
@@ -194,12 +157,32 @@ public:
 
     bool readByIndex(const int index) override;
 
-    void setMode(const int index, const GpioMode mode) override;
+    void setMode(const int index, const hal::GpioMode mode) override;
 
     PCA9685 & operator = (const uint16_t data) override {writePort(data); return *this;}
 
+    std::array<PCA8975Channel, 16> channels ={
+        PCA8975Channel{*this, 0},
+        PCA8975Channel{*this, 1},
+        PCA8975Channel{*this, 2},
+        PCA8975Channel{*this, 3},
+        PCA8975Channel{*this, 4},
+        PCA8975Channel{*this, 5},
+        PCA8975Channel{*this, 6},
+        PCA8975Channel{*this, 7},
+        PCA8975Channel{*this, 8},
+        PCA8975Channel{*this, 9},
+        PCA8975Channel{*this, 10},
+        PCA8975Channel{*this, 11},
+        PCA8975Channel{*this, 12},
+        PCA8975Channel{*this, 13},
+        PCA8975Channel{*this, 14},
+        PCA8975Channel{*this, 15},
+    };
+    
     PCA8975Channel & operator [](const size_t index){
-        if(index >= channels.size()) HALT;
+
+        if(index >= 16) HALT;
         return channels[index];
     }
 };

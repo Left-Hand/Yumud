@@ -7,17 +7,17 @@
 namespace ymd::hal{
 class I2c:public HalfDuplexBus{
 protected:
-    GpioIntf & scl_gpio;
-    GpioIntf & sda_gpio;
+    hal::GpioIntf & scl_gpio;
+    hal::GpioIntf & sda_gpio;
 
     uint32_t timeout_ = 10;
 
-    I2c(GpioIntf & _scl_gpio, GpioIntf & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio){}
+    I2c(hal::GpioIntf & _scl_gpio, hal::GpioIntf & _ada_gpio):scl_gpio(_scl_gpio),sda_gpio(_ada_gpio){}
 public:
     void setTimeout(const uint32_t timeout){timeout_ = timeout;}
 
-    GpioIntf & scl(){return scl_gpio;};
-    GpioIntf & sda(){return sda_gpio;};
+    hal::GpioIntf & scl(){return scl_gpio;};
+    hal::GpioIntf & sda(){return sda_gpio;};
 };
 
 

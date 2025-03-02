@@ -24,7 +24,7 @@ namespace ymd::drivers{
 
 class AD9910{
 protected:
-    SpiDrv spi_drv;
+    hal::SpiDrv spi_drv;
     
     scexpr uint8_t cfr1[4] = {0x00,0x40,0x00,0x00};
     scexpr uint8_t cfr2[4] = {0x01,0x00,0x00,0x00};
@@ -59,9 +59,9 @@ protected:
 
 
 public:
-    AD9910(const SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
-    AD9910(SpiDrv && _spi_drv):spi_drv(std::move(_spi_drv)){;}
-    AD9910(Spi & _spi, const uint8_t index):spi_drv(SpiDrv(_spi, index)){;}
+    AD9910(const hal::SpiDrv & _spi_drv):spi_drv(_spi_drv){;}
+    AD9910(hal::SpiDrv && _spi_drv):spi_drv(std::move(_spi_drv)){;}
+    AD9910(hal::Spi & _spi, const uint8_t index):spi_drv(hal::SpiDrv(_spi, index)){;}
     void init(void);
     void freqConvert(uint32_t Freq);
 

@@ -20,7 +20,7 @@ public:
     };
 
 protected:
-    SpiDrv spi_drv_;
+    hal::SpiDrv spi_drv_;
     real_t lap_position;
 
     enum class RegAddress:uint8_t{
@@ -88,9 +88,9 @@ protected:
 
     void setZeroData(const uint16_t data);
 public:
-    MA730(const SpiDrv & spi_drv):spi_drv_(spi_drv){;}
-    MA730(SpiDrv && spi_drv):spi_drv_(spi_drv){;}
-    MA730(Spi & _bus, const uint8_t index):spi_drv_(SpiDrv(_bus, index)){;}
+    MA730(const hal::SpiDrv & spi_drv):spi_drv_(spi_drv){;}
+    MA730(hal::SpiDrv && spi_drv):spi_drv_(spi_drv){;}
+    MA730(hal::Spi & spi, const uint8_t index):spi_drv_(hal::SpiDrv(spi, index)){;}
 
 
     void init() override;

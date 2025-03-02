@@ -135,7 +135,7 @@ public:
 using MaxFollower = MaxFollower_t<real_t>;
 
 
-class CurrentGen:public AnalogInChannel{
+class CurrentGen:public hal::AnalogInIntf{
 protected:
     MaxFollower_t<real_t> follower;
     LowpassFilterZ_t<real_t> lpf{0.999};
