@@ -85,5 +85,5 @@ void ST7789::putseg_v8_unsafe(const Vector2i & pos, const uint8_t mask, const RG
 }
 
 void ST7789::putseg_h8_unsafe(const Vector2i & pos, const uint8_t mask, const RGB565 color){
-    PANIC()
+    PANIC();
 }

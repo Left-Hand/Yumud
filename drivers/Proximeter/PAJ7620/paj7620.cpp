@@ -15,7 +15,7 @@ using namespace ymd::drivers;
 #else
 #define PAJ7620_DEBUG(...)
 #define PAJ7620_PANIC(...)  PANIC()
-#define PAJ7620_ASSERT(cond, ...) ASSERT(cond)
+#define PAJ7620_ASSERT(cond, ...) ASSERT(cond, ##__VA_ARGS__)
 #endif
 
 #define WRITE_REG(reg) this->writeReg(reg.address, reg);

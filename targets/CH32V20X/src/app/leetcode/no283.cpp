@@ -134,5 +134,5 @@ void leetcode_main(){
     // leetcode_no283();
     leetcode_no11();
 
-    DEBUG_PRINTS("done, use", micros() - m, "us")
+    DEBUG_PRINTS("done, use", micros() - m, "us");
 }

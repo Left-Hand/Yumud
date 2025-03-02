@@ -12,8 +12,8 @@ using namespace ymd::drivers;
 #define HMC5883L_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define HMC5883L_DEBUG(...)
-#define HMC5883L_PANIC(...)  PANIC()
-#define HMC5883L_ASSERT(cond, ...) ASSERT(cond)
+#define HMC5883L_PANIC(...)  PANIC{}
+#define HMC5883L_ASSERT(cond, ...) ASSERT{cond}
 #endif
 
 void HMC5883L::init(){

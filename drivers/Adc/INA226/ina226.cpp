@@ -17,7 +17,7 @@ using namespace ymd;
 #else
 #define INA226_DEBUG(...)
 #define INA226_PANIC(...)  PANIC()
-#define INA226_ASSERT(cond, ...) ASSERT(cond)
+#define INA226_ASSERT(cond, ...) ASSERT{cond}
 #endif
 
 #define WRITE_REG(reg) this->writeReg(reg.address, reg);

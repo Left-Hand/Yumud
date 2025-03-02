@@ -5,7 +5,7 @@
 #endif
 
 #ifndef __fast_access
-#define __fast_access
+#define __fast_access 
 #endif
 
 #ifndef __fast_inline

@@ -88,20 +88,39 @@ protected:
         GyrZ = 0x47,
     };
 
-    void writeReg(const uint8_t addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
-    }
+    BusError writeReg(const uint8_t addr, const uint8_t data);
 
-    void readReg(const uint8_t addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
-    }
+    BusError readReg(const uint8_t addr, uint8_t & data);
 
-    void requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
-        i2c_drv_.readMulti((uint8_t)reg_addr, datas, len, MSB);
-    }
+    BusError requestData(const uint8_t reg_addr, int16_t * datas, const size_t len);
     
-    static real_t calculateAccScale(const AccRange range);
-    static real_t calculateGyrScale(const GyrRange range);
+    static constexpr real_t calculateAccScale(const AccRange range){
+        constexpr double g = 9.806;
+        switch(range){
+            default:
+            case AccRange::_2G:
+                return real_t(g * 2);
+            case AccRange::_4G:
+                return real_t(g * 4);
+            case AccRange::_8G:
+                return real_t(g * 8);
+            case AccRange::_16G:
+                return real_t(g * 16);
+        }
+    }
+    static constexpr real_t calculateGyrScale(const GyrRange range){
+        switch(range){
+            default:
+            case GyrRange::_250deg:
+                return real_t(ANGLE2RAD(250));
+            case GyrRange::_500deg:
+                return real_t(ANGLE2RAD(500));
+            case GyrRange::_1000deg:
+                return real_t(ANGLE2RAD(1000));
+            case GyrRange::_2000deg:
+                return real_t(ANGLE2RAD(2000));
+        }
+    }
 public:
     MPU6050(const MPU6050 & other) = delete;
     MPU6050(MPU6050 && other) = delete;

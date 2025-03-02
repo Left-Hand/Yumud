@@ -24,9 +24,9 @@ void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
 }
 
 void mpu6050_main(){
-    auto & logger = DEBUGGER_INST;
-    logger.init(576_KHz);
-    I2cSw i2c{portD[2], portC[12]};
+    uart1.init(576_KHz);
+    DEBUGGER.retarget(&uart1);
+    I2cSw i2c{portA[12], portA[15]};
     i2c.init(1_MHz);
     delay(200);
     mpu6050_tb(DEBUGGER, i2c);

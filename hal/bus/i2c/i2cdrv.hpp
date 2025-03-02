@@ -19,8 +19,6 @@ concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 
 class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
-    using BusDrv<I2c>::index;
-    using BusDrv<I2c>::bus;
 
     template<typename T>
     requires valid_i2c_regaddr<T>
@@ -39,6 +37,9 @@ protected:
     requires valid_i2c_data<T>
     BusError readMulti_impl(const valid_i2c_regaddr auto addr, T * data_ptr, const size_t length, const Endian endian);
 
+    template<typename T>
+    requires valid_i2c_regaddr<T>
+    BusError writeCommand_impl(const T cmd, const Endian endian);
 public:
     I2cDrv(hal::I2c & _bus, const uint8_t _index):
         ProtocolBusDrv<I2c>(_bus, _index){};
@@ -86,6 +87,18 @@ public:
     BusError writeReg(const valid_i2c_regaddr auto addr, const T data, const Endian endian){
         // this->writeMulti_impl<T>
         return this->writeMulti_impl<T>(addr, &data, 1, endian);
+    }
+
+    template<typename T>
+    requires valid_i2c_regaddr<T> and (sizeof(T) == 1)
+    BusError writeCommand(const T cmd){
+        return writeCommand_impl<T>(cmd, LSB);
+    }
+
+    template<typename T>
+    requires valid_i2c_regaddr<T> and (sizeof(T) != 1)
+    BusError writeCommand(const T cmd, const Endian endian  ){
+        return writeCommand_impl<T>(cmd, endian);
     }
 
     template<typename T>

@@ -1022,7 +1022,7 @@ void bldc_main(){
                     }
                     DEBUGGER.print("->");
                     auto res = list ->call(DEBUGGER, params);
-                    DEBUG_PRINTS("\r\n^^Function exited with return code", uint8_t(res))
+                    DEBUG_PRINTS("\r\n^^Function exited with return code", uint8_t(res));
                     DEBUG_PRINTLN("------");
                 }
 

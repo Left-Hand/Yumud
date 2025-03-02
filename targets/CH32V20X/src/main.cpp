@@ -25,12 +25,15 @@ int main(){
     // canopen_main();
     // bldc_main();
     // digipw_main();
-    sincos_pwm_main();
+    // sincos_pwm_main();
+    // stepper_tb(uart1);
     // co_ab_main();
     // uart_main();
     // rpc_main();
     // leetcode_main();
     // co_ab_main();
+    mpu6050_main();
+    // tca9548_main();
     // eeprom_main();
     // flash_main();
     // digipw_main();

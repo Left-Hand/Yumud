@@ -18,10 +18,38 @@
 #define WRITE_REG(reg) this->writeReg(reg.address, reg);
 #define READ_REG(reg) this->readReg(reg.address, reg);
 
+using namespace ymd;
 using namespace ymd::drivers;
+
+BusError MPU6050::writeReg(const uint8_t addr, const uint8_t data){
+    auto err = i2c_drv_.writeReg((uint8_t)addr, data);
+    MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
+    return err;
+}
+
+BusError MPU6050::readReg(const uint8_t addr, uint8_t & data){
+    auto err = i2c_drv_.readReg((uint8_t)addr, data);
+    MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err);
+    return err;
+}
+
+BusError MPU6050::requestData(const uint8_t reg_addr, int16_t * datas, const size_t len){
+    MPU6050_ASSERT(i2c_drv_.readMulti((uint8_t)reg_addr, datas, len, MSB).ok(), "MPU6050 read reg failed");
+    return BusError::OK;
+}
+
+
+bool MPU6050::verify(){
+    //0x75 0x68
+    uint8_t data = 0;
+    auto err = readReg(0x75, data);
+    return (data == 0x68) && err.ok();
+    // return MPU6050_ASSERT(ok, "MPU6050 verify failed", data, err);
+}
+
+
 void MPU6050::init(){
-    bool ok = MPU6050_ASSERT(this->verify(), "MPU6050 verify failed");
-    if(ok){
+    if(MPU6050_ASSERT(this->verify(), "MPU6050 verify failed")){
         this->writeReg(0x6b, 0);
         this->writeReg(0x19, 0x00);
         this->writeReg(0x1a, 0x00);
@@ -57,12 +85,6 @@ real_t MPU6050::getTemperature(){
 }
 
 
-bool MPU6050::verify(){
-    //0x75 0x68
-    uint8_t data;
-    readReg(0x75, data);
-    return data == 0x68;
-}
 
 void MPU6050::setAccRange(const AccRange range){
     auto & reg = acc_conf_reg;
@@ -79,33 +101,3 @@ void MPU6050::setGyrRange(const GyrRange range){
     
     this->gyr_scaler = this->calculateGyrScale(range);
 }
-
-real_t MPU6050::calculateAccScale(const AccRange range){
-    scexpr double g = 9.806;
-    switch(range){
-        default:
-        case AccRange::_2G:
-            return real_t(g * 2);
-        case AccRange::_4G:
-            return real_t(g * 4);
-        case AccRange::_8G:
-            return real_t(g * 8);
-        case AccRange::_16G:
-            return real_t(g * 16);
-    }
-}
-
-real_t MPU6050::calculateGyrScale(const GyrRange range){
-    switch(range){
-        default:
-        case GyrRange::_250deg:
-            return real_t(ANGLE2RAD(250));
-        case GyrRange::_500deg:
-            return real_t(ANGLE2RAD(500));
-        case GyrRange::_1000deg:
-            return real_t(ANGLE2RAD(1000));
-        case GyrRange::_2000deg:
-            return real_t(ANGLE2RAD(2000));
-    }
-}
-

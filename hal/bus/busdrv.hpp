@@ -44,9 +44,21 @@ protected:
     }
                                                                                                                            
     BusDrv(BusType & bus, const uint8_t index):bus_(bus), index_(index){;}
+
+    struct _Guard{
+        BusType & bus_;
+
+        _Guard(BusType & bus):
+            bus_(bus){;}
+        ~_Guard(){
+            bus_.end();
+        }
+    };
+
+    _Guard createGuard(){return _Guard{bus_};}
 public:
-    auto & bus(){return bus_;}
-    auto index(){return index_;}
+    BusType & bus() const {return bus_;}
+    auto index() const {return index_;}
 };
 
 template <typename BusType>
