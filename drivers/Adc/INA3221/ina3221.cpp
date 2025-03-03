@@ -34,6 +34,14 @@ bool INA3221::ready(){
 
 
 bool INA3221::verify(){
+    // PANIC(i2c_drv.verify().ok());
+    // return false;
+    if(const auto res = i2c_drv.verify(); true){
+        // DEBUG_PRINTLN("INA3221 drv lost");
+        DEBUG_PRINTLN("INA3221 drv lost", res);
+        return false;
+    }
+
     READ_REG(chip_id_reg);
     READ_REG(manu_id_reg);
 

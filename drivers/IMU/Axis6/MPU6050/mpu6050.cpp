@@ -10,8 +10,8 @@
 #define MPU6050_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
 #else
 #define MPU6050_DEBUG(...)
-#define MPU6050_PANIC(...)  PANIC()
-#define MPU6050_ASSERT(cond, ...) ASSERT(cond)
+#define MPU6050_PANIC(...)  CHECK(false)
+#define MPU6050_ASSERT(cond, ...) CHECK(cond)
 #endif
 
 

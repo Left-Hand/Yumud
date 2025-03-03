@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sys/core/platform.h"
+#include "sys/debug/debug.hpp"
 #include "util.hpp"
 #include <variant>
 #include <source_location>
@@ -17,11 +18,6 @@ public:
 
     constexpr Ok(auto val):val_((val)){}
 
-    template<typename E>
-    constexpr operator Result<T, E>() const{
-        return Result<T, E>{std::move(val_)};
-    }
-
     constexpr operator T() const{
         return val_;
     }
@@ -33,11 +29,6 @@ template<>
 struct Ok<void>{
 public:
     constexpr Ok() = default;
-
-    template<typename E>
-    constexpr operator Result<void, E>() const{
-        return Result<void, E>{};
-    }
 };
 
 template<typename E>
@@ -52,17 +43,18 @@ public:
     constexpr Err(const E2 & err):val_(err){}
     template<typename E2>
     constexpr Err(E2 && err):val_(std::forward<E>(err)){}
-
-    template<typename T>
-    constexpr operator Result<T, E>() const{
-        return Result<T, E>{std::move(val_)};
-    }
-
     constexpr operator E() const{
         return val_;
     }
 private:
     E val_;
+};
+
+
+template<>
+struct Err<void>{
+public:
+    constexpr Err() = default;
 };
 
 
@@ -75,6 +67,8 @@ Ok() -> Ok<void>;
 template<typename E>
 Err(E && val) -> Err<std::decay_t<E>>;
 
+template<typename TDummy = void>
+Err() -> Err<void>;
 
 template<typename T, typename E>
 struct _Storage{
@@ -108,9 +102,6 @@ struct _Storage<void, E>{
     constexpr _Storage(const Ok<void> &):
         data_(std::nullopt){;}
 
-    // constexpr _Storage(Err<E> && val):
-        // data_(std::forward<E>(val)){;}
-
     constexpr _Storage(const Err<E> & val):
         data_(std::forward<E>(val)){;}
 
@@ -126,6 +117,24 @@ private:
     Data data_;
 };
 
+template<>
+struct _Storage<void, void>{
+    constexpr _Storage(Ok<void> &&){}
+
+    constexpr _Storage(const Ok<void> &){}
+
+    constexpr _Storage(const Err<void> & val){}
+
+    constexpr _Storage(const _Storage &) = default;
+    constexpr _Storage(_Storage &&) = default;
+
+    constexpr bool is_ok() const{return is_ok_;}
+    constexpr bool is_err() const{return !is_ok_;}
+    constexpr void unwrap() const{}
+    constexpr void unwrap_err() const{}
+private:
+    bool is_ok_;
+};
 
 
 template<typename T, typename E>
@@ -187,14 +196,14 @@ public:
     template<typename F>
     constexpr auto map(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
         if (is_ok()) return fn(unwrap());
-        else return err();
+        else return unwrap_err();
     }
 
     // 链式处理
     template<typename F>
     constexpr auto and_then(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
         if (is_ok()) return fn(unwrap());
-        else return err();
+        else return unwrap_err();
     }
 
     template<typename F>
@@ -227,27 +236,41 @@ public:
             return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
-            DEBUG_PRINTLN(std::forward<Args>(args)...);
+            DEBUG_PRINTS(std::forward<Args>(args)...);
             #endif
             exit(1);
         }
     }
-
+    
+    template<typename ... Args>
+    const Result & check(Args && ... args) const{
+        if(unlikely(is_err())){
+            #ifdef __DEBUG_INCLUDED
+            DEBUG_PRINTS(unwrap_err(), std::forward<Args>(args)...);
+            #endif
+            exit(1);
+        }
+        return *this;
+    } 
     constexpr _Loc loc(const std::source_location & loca = std::source_location::current()) const{
         return {*this, loca};
     }
 
-    constexpr E err() const {
+    constexpr E unwrap_err() const {
         if (likely(is_err())) {
             return result_.unwrap_err();
         } else {
             exit(1);
         }
     }
+
 };
 
 template<typename E>
 Result(Err<E> && val) -> Result<void, E>;
+
+template<typename TDummy>
+Result() -> Result<void, void>;
 
 // Specialization for std::optional
 template <typename T, typename E>
@@ -270,7 +293,7 @@ struct __unwrap_helper<Result<T, E>> {
     }
 
     static constexpr E unexpected(const Obj & obj) {
-        return obj.err();
+        return obj.unwrap_err();
     }
 };
 

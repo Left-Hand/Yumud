@@ -1,14 +1,18 @@
 #pragma once
 
 #include "drivers/device_defs.h"
+#include "sys/utils/rustlike/Result.hpp"
+#include "sys/utils/rustlike/Optional.hpp"
 
-#ifdef ADS111X_DEBUG
-#define ADS111X_DEBUG(...) DEBUG_LOG(__VA_ARGS__)
-#else
-#define ADS111X_DEBUG(...)
-#endif
 
 namespace ymd::drivers{
+
+using BusResult = Result<void, BusError>;
+__inline Result<void, BusError> make_result(const BusError res){
+    if(res.ok()) return Ok();
+    else return Err(res); 
+}
+
 
 class ADS111X{
 public:
@@ -32,27 +36,32 @@ public:
     };
 
 protected:
-    hal::I2cDrv i2c_drv;
+    hal::I2cDrv i2c_drv_;
 
     using RegAddress = uint8_t;
 
     struct ConversionReg:public Reg16{
         scexpr RegAddress address = 0b00; 
-        uint16_t data;
+        int16_t data;
     };
 
     struct ConfigReg:public Reg16{
         scexpr RegAddress address = 0b01; 
         uint16_t comp_que:2;
-        bool comp_latch:1;
-        bool comp_pol:1;
-        bool comp_mode_is_window:1;
-        DataRate data_rate:3;
-        bool oneshot_en:1;
-        PGA pga:3;
-        MUX mux:3;
-        bool busy:1;
+        uint16_t comp_latch:1;
+        uint16_t comp_pol:1;
+
+        uint16_t comp_mode_is_window:1;
+        uint16_t data_rate:3;
+
+        uint16_t oneshot_en:1;
+        uint16_t pga:3;
+
+        uint16_t mux:3;
+        uint16_t busy:1;
     };
+
+    // static constexpr auto a = sizeof(ConfigReg);
 
     struct LowThreshReg:public Reg16i{
         scexpr RegAddress address = 0b10;
@@ -69,13 +78,9 @@ protected:
     LowThreshReg low_thresh_reg;
     HighThreshReg high_thresh_reg;
 
-    void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv.readReg(uint8_t(addr), data, LSB);
-    }
 
-    void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv.writeReg(uint8_t(addr), data, LSB);
-    }
+    BusResult readReg(const RegAddress addr, uint16_t & data);
+    BusResult writeReg(const RegAddress addr, const uint16_t data);
 public:
     // ADDR PIN CONNECTION SLAVE ADDRESS
     // GND 1001000
@@ -83,52 +88,70 @@ public:
     // SDA 1001010
     // SCL 1001011
     scexpr uint8_t default_i2c_addr = 0b10010000;
-    ADS111X(const hal::I2cDrv & _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS111X(hal::I2cDrv && _i2c_drv):i2c_drv(_i2c_drv){;}
-    ADS111X(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv(hal::I2cDrv(_i2c, _addr)){};
+    ADS111X(const hal::I2cDrv & i2c_drv):i2c_drv_(i2c_drv){;}
+    ADS111X(hal::I2cDrv && i2c_drv):i2c_drv_(i2c_drv){;}
+    ADS111X(hal::I2c & _i2c, const uint8_t _addr = default_i2c_addr):i2c_drv_(hal::I2cDrv(_i2c, _addr)){};
 
-    void startConv(){
-        auto & reg = config_reg;
-        reg.busy = true;
-        writeReg(reg.address, (reg));
-        reg.busy = false;
+    void startConv();
+
+    bool isBusy();
+
+    void setThreshold(int16_t low, int16_t high);
+
+    void enableContMode(bool en = true);
+
+    void setPga(const PGA pga);
+
+    void setMux(const MUX mux);
+
+    void setDataRate(const DataRate data_rate);
+
+    bool ready();
+
+    Option<real_t> result();
+
+    BusResult verify();
+
+    [[nodiscard]] static constexpr Option<MUX> singleend(const size_t N){
+        switch(N){
+            case 0: return Some(MUX::P0NG);
+            case 1: return Some(MUX::P1NG);
+            case 2: return Some(MUX::P2NG);
+            case 3: return Some(MUX::P3NG);
+        }
+        return None;
     }
 
-    bool isBusy(){
-        auto & reg = config_reg;
-        readReg(reg.address, (reg));
-        return reg.busy;
+    [[nodiscard]] static constexpr Option<MUX> differential(const size_t P, const size_t N){
+
+        constexpr std::array mappings{
+            std::tuple{0UL,1UL,MUX::P0N1},
+            std::tuple{0UL,3UL,MUX::P0N3},
+            std::tuple{1UL,3UL,MUX::P1N3},
+            std::tuple{2UL,3UL,MUX::P2N3}
+        };
+    
+        // 使用范围遍历+模式匹配
+        for (const auto& [valid_P, valid_N, mux_val] : mappings) {
+            if (P == valid_P && N == valid_N) {
+                return Some(mux_val);
+            }
+        }
+        return None;
     }
 
-    void setThreshold(int16_t low, int16_t high){
-        low_thresh_reg.data = low;
-        high_thresh_reg.data = high;
-        writeReg(LowThreshReg::address, (low_thresh_reg));
-        writeReg(HighThreshReg::address, (high_thresh_reg));
-    }
-
-    void enableContMode(bool en = true){
-        auto & reg = config_reg;
-        reg.oneshot_en =!en;
-        writeReg(reg.address, (reg));
-    }
-
-    void setPga(const PGA pga){
-        auto & reg = config_reg;
-        reg.pga = pga;
-        writeReg(reg.address, (reg));
-    }
-
-    void setMux(const MUX mux){
-        auto & reg = config_reg;
-        reg.mux = mux;
-        writeReg(reg.address, (reg));
-    }
-
-    void setDataRate(const DataRate data_rate){
-        auto & reg = config_reg;
-        reg.data_rate = data_rate;
-        writeReg(reg.address, (reg));
+    [[nodiscard]] static constexpr Option<DataRate> datarate(const size_t dr){
+        switch(dr){
+            case 8: return Some(DataRate::_8);
+            case 16: return Some(DataRate::_16);
+            case 32: return Some(DataRate::_32);
+            case 64: return Some(DataRate::_64);
+            case 128: return Some(DataRate::_128);
+            case 250: return Some(DataRate::_250);
+            case 475: return Some(DataRate::_475);
+            case 860: return Some(DataRate::_860);
+        }
+        return None;
     }
 };
 
