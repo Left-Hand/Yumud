@@ -42,10 +42,12 @@ struct I2cTester{
         }();
 
 
-        return max_baud;
+        return Ok{max_baud};
     }
-    static BusError verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
-        return hal::I2cDrv{i2c, read_addr}.verify();
+    static Result<void, BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
+        auto res = hal::I2cDrv{i2c, read_addr}.verify();
+        if(res.ok()) return Ok();
+        else return res; 
     }
 
 };
@@ -119,7 +121,10 @@ auto log(Args && ... args) {
 void test_result(){
     // DEBUG_SOURCE("hahah");
     // while(1);
-
+    // using MyResult = Result<void, BusError>;
+    // auto ok = Ok<void>{};
+    // auto ok = Ok();
+    // MyResult res = {ok};
     // DEBUG_PRINTLN("before");
     // auto res = Result<uint, BusError>(Err(BusError(BusError::NO_ACK)));
     // res.loc().expect("Device is not responding", "nmd");
@@ -178,7 +183,11 @@ void i2c_scanner_main(){
         for(uint8_t i = 0; i < 128; i++){
             auto read_addr = (i << 1);
             auto err = I2cTester::verify(i2c, read_addr);
+            
+            // if(err.ok)
+
             if(err.ok()){
+                // DEBUG_PRINTLN(err.unwrap());
                 const auto result = I2cTester::getMaxBaudRate(i2c, read_addr);
                 // if(result.ok()){
                 founded_devices.emplace_back(read_addr, result.loc().expect("unknown bug"));

@@ -10,10 +10,13 @@ namespace ymd{
 template<typename T, typename E>
 class Result;
 
-template<typename T>
+template<typename T = void>
 struct Ok{
 public:
-    constexpr Ok(auto && val):val_(std::forward<T>(val)){}
+    using TDecay = std::decay_t<T>;
+
+    // template<typename TDummy>
+    constexpr Ok(auto val):val_((val)){}
 
     template<typename E>
     constexpr operator Result<T, E>() const{
@@ -24,13 +27,32 @@ public:
         return val_;
     }
 private:
-    T val_;
+    TDecay val_;
+};
+
+template<>
+struct Ok<void>{
+public:
+    constexpr Ok() = default;
+
+    template<typename E>
+    constexpr operator Result<void, E>() const{
+        return Result<void, E>{};
+    }
 };
 
 template<typename E>
 struct Err{
 public:
-    constexpr Err(auto && val):val_(std::forward<E>(val)){}
+    template<typename E2>
+    constexpr Err(const Err<E2> & err):val_(std::forward<E>(err.val_)){}
+    template<typename E2>
+    constexpr Err(Err<E2> && err):val_(std::forward<E>(err.val_)){}
+
+    template<typename E2>
+    constexpr Err(const E2 & err):val_(std::forward<E>(err)){}
+    template<typename E2>
+    constexpr Err(E2 && err):val_(std::forward<E>(err)){}
 
     template<typename T>
     constexpr operator Result<T, E>() const{
@@ -58,14 +80,72 @@ private:
 template<typename T>
 Ok(T && val) -> Ok<std::decay_t<T>>;
 
+template<typename TDummy = void>
+Ok() -> Ok<void>;
+
 template<typename E>
 Err(E && val) -> Err<std::decay_t<E>>;
+
+
+template<typename T, typename E>
+struct _Storage{
+public:
+    using Data = std::variant<T, E>;
+
+    constexpr _Storage(T && val):
+        data_(std::forward<T>(val)){;}
+
+    constexpr _Storage(E && val):
+        data_(std::forward<E>(val)){;}
+
+    constexpr _Storage(const _Storage &) = default;
+    constexpr _Storage(_Storage &&) = default;
+
+    constexpr bool ok() const{return std::holds_alternative<T>(data_);}
+    constexpr bool wrong() const{return std::holds_alternative<E>(data_);}
+
+    constexpr T unwrap() const{return std::get<T>(data_);}
+    constexpr E error() const{return std::get<E>(data_);}
+private:
+    Data data_;
+};
+
+template<typename E>
+struct _Storage<void, E>{
+    using Data = std::optional<E>;
+    constexpr _Storage(Ok<void> &&):
+        data_(std::nullopt){;}
+
+    constexpr _Storage(const Ok<void> &):
+        data_(std::nullopt){;}
+
+    // constexpr _Storage(Err<E> && val):
+        // data_(std::forward<E>(val)){;}
+
+    constexpr _Storage(const Err<E> & val):
+        data_(std::forward<E>(val)){;}
+
+    constexpr _Storage(const _Storage &) = default;
+    constexpr _Storage(_Storage &&) = default;
+
+    constexpr bool ok() const{return !data_.has_value();}
+    constexpr bool wrong() const{return data_.has_value();}
+
+    constexpr void unwrap() const{}
+    constexpr E error() const{return (data_.value());}
+private:
+    Data data_;
+};
+
+
 
 template<typename T, typename E>
 class Result{
 private:
-    using Storage = std::variant<T, E>;
+    // using Storage = std::variant<T, E>;
 
+
+    using Storage = _Storage<T, E>;
     Storage result_;
 
     struct _Loc{
@@ -84,7 +164,7 @@ private:
         Args && ... args
     ) const {
         if (likely(ok())) {
-            return std::get<T>(result_);
+            return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
             __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
@@ -94,17 +174,24 @@ private:
     }
     friend class _Loc;
 public:
+    // template<typename TDummy = void>
+    // requires (!std::is_void_v<T>)
+    // constexpr Result(T value) : result_(std::move(value)) {}
 
-    constexpr Result(T value) : result_(std::move(value)) {}
+    // template<typename TDummy = void>
+    // requires (std::is_void_v<T>)
+    // constexpr Result(void){}
 
     constexpr Result(E error) : result_(std::move(error)) {}
     
 
     // template<typename T>
-    constexpr Result(Ok<T> value) : result_(T(value)){}
+    constexpr Result(Ok<T> && value) : result_((value)){}
+    constexpr Result(const Ok<T> & value) : result_((value)){}
 
-    // template<typename E>`
-    constexpr Result(Err<E> error) : Result(E(error)){}
+    // template<typename E>
+    // constexpr Result(Err<E> && error) : result_((error)){}
+    constexpr Result(const Err<E> & error) : result_((error)){}
 
     
     // 映射成功值
@@ -123,16 +210,16 @@ public:
     
 
     constexpr bool ok() const {
-        return std::holds_alternative<T>(result_);
+        return result_.ok();
     }
 
     constexpr bool wrong() const {
-        return std::holds_alternative<E>(result_);
+        return result_.wrong();
     }
     
     constexpr T unwrap() const {
         if (likely(ok())) {
-            return std::get<T>(result_);
+            return result_.unwrap();
         } else {
             exit(1);
         }
@@ -141,7 +228,7 @@ public:
     template<typename ... Args>
     constexpr T expect(Args && ... args) const{
         if (likely(ok())) {
-            return std::get<T>(result_);
+            return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
             DEBUG_PRINTLN(std::forward<Args>(args)...);
@@ -156,7 +243,7 @@ public:
 
     constexpr E err() const {
         if (likely(wrong())) {
-            return std::get<E>(result_);
+            return result_.error();
         } else {
             exit(1);
         }
