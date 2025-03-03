@@ -1,7 +1,6 @@
 #pragma once
 
 #include "sys/core/platform.h"
-#include "sys/utils/rustlike/Result.hpp"
 
 #include "BusTrait.hpp"
 #include "bus_enums.hpp"

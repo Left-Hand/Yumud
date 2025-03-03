@@ -18,6 +18,11 @@ struct FoundInfo{
     uint max_bbaud;
 };
 
+Result<void, BusError> make_result(const BusError res){
+    if(res.ok()) return Ok();
+    else return Err(res); 
+}
+
 struct I2cTester{
     static constexpr uint start_freq = 200_KHz;
     static constexpr auto grow_scale = 2;
@@ -45,9 +50,7 @@ struct I2cTester{
         return Ok{max_baud};
     }
     static Result<void, BusError> verify(I2c & i2c, const uint8_t read_addr, const uint bbaud = start_freq){
-        auto res = hal::I2cDrv{i2c, read_addr}.verify();
-        if(res.ok()) return Ok();
-        else return res; 
+        return make_result(hal::I2cDrv{i2c, read_addr}.verify());
     }
 
 };
@@ -181,20 +184,17 @@ void i2c_scanner_main(){
 
 
         for(uint8_t i = 0; i < 128; i++){
-            auto read_addr = (i << 1);
-            auto err = I2cTester::verify(i2c, read_addr);
-            
-            // if(err.ok)
+            const uint8_t read_addr = i << 1;
+            I2cTester::verify(i2c, read_addr)
+                .if_ok([&] {
+                    const auto result = I2cTester::getMaxBaudRate(i2c, read_addr);
+                    founded_devices.emplace_back(
+                        read_addr, 
+                        result.loc().expect("unknown bug")
+                    );
+                }
+            );
 
-            if(err.ok()){
-                // DEBUG_PRINTLN(err.unwrap());
-                const auto result = I2cTester::getMaxBaudRate(i2c, read_addr);
-                // if(result.ok()){
-                founded_devices.emplace_back(read_addr, result.loc().expect("unknown bug"));
-                // }else{
-                // }
-            }else{
-            }
             delay(1);
         }
 
@@ -214,6 +214,9 @@ void i2c_scanner_main(){
 
                     delay(1);
                 }
+                // Result<void, int> res = {Err{0}};
+                // res.loc().expect("unknown bug");
+
             }
             DEBUG_PRINTLN("---------");
         }else{

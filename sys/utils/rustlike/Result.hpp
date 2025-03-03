@@ -15,7 +15,6 @@ struct Ok{
 public:
     using TDecay = std::decay_t<T>;
 
-    // template<typename TDummy>
     constexpr Ok(auto val):val_((val)){}
 
     template<typename E>
@@ -50,7 +49,7 @@ public:
     constexpr Err(Err<E2> && err):val_(std::forward<E>(err.val_)){}
 
     template<typename E2>
-    constexpr Err(const E2 & err):val_(std::forward<E>(err)){}
+    constexpr Err(const E2 & err):val_(err){}
     template<typename E2>
     constexpr Err(E2 && err):val_(std::forward<E>(err)){}
 
@@ -65,16 +64,6 @@ public:
 private:
     E val_;
 };
-
-// template<typename Ret>
-// struct Ok{
-//     Ret val;
-// };
-
-// template<typename Error>
-// struct Err{
-//     Error val;
-// };
 
 
 template<typename T>
@@ -101,11 +90,11 @@ public:
     constexpr _Storage(const _Storage &) = default;
     constexpr _Storage(_Storage &&) = default;
 
-    constexpr bool ok() const{return std::holds_alternative<T>(data_);}
-    constexpr bool wrong() const{return std::holds_alternative<E>(data_);}
+    constexpr bool is_ok() const{return std::holds_alternative<T>(data_);}
+    constexpr bool is_err() const{return std::holds_alternative<E>(data_);}
 
     constexpr T unwrap() const{return std::get<T>(data_);}
-    constexpr E error() const{return std::get<E>(data_);}
+    constexpr E unwrap_err() const{return std::get<E>(data_);}
 private:
     Data data_;
 };
@@ -128,11 +117,11 @@ struct _Storage<void, E>{
     constexpr _Storage(const _Storage &) = default;
     constexpr _Storage(_Storage &&) = default;
 
-    constexpr bool ok() const{return !data_.has_value();}
-    constexpr bool wrong() const{return data_.has_value();}
+    constexpr bool is_ok() const{return !data_.has_value();}
+    constexpr bool is_err() const{return data_.has_value();}
 
     constexpr void unwrap() const{}
-    constexpr E error() const{return (data_.value());}
+    constexpr E unwrap_err() const{return (data_.value());}
 private:
     Data data_;
 };
@@ -163,7 +152,7 @@ private:
         const std::source_location & loc,
         Args && ... args
     ) const {
-        if (likely(ok())) {
+        if (likely(is_ok())) {
             return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
@@ -182,7 +171,7 @@ public:
     // requires (std::is_void_v<T>)
     // constexpr Result(void){}
 
-    constexpr Result(E error) : result_(std::move(error)) {}
+    constexpr Result(E unwrap_err) : result_(std::move(unwrap_err)) {}
     
 
     // template<typename T>
@@ -190,35 +179,42 @@ public:
     constexpr Result(const Ok<T> & value) : result_((value)){}
 
     // template<typename E>
-    // constexpr Result(Err<E> && error) : result_((error)){}
-    constexpr Result(const Err<E> & error) : result_((error)){}
+    // constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
+    constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
 
     
     // 映射成功值
     template<typename F>
     constexpr auto map(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
-        if (ok()) return fn(unwrap());
+        if (is_ok()) return fn(unwrap());
         else return err();
     }
 
     // 链式处理
     template<typename F>
-    constexpr auto then(F&& fn) -> Result<std::invoke_result_t<F, T>, E> {
-        if (ok()) return fn(unwrap());
+    constexpr auto and_then(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
+        if (is_ok()) return fn(unwrap());
         else return err();
     }
-    
 
-    constexpr bool ok() const {
-        return result_.ok();
+    template<typename F>
+    constexpr void if_ok(F&& fn) const {
+        if (is_ok()) {
+            (fn)();
+        }
     }
 
-    constexpr bool wrong() const {
-        return result_.wrong();
+
+    constexpr bool is_ok() const {
+        return result_.is_ok();
+    }
+
+    constexpr bool is_err() const {
+        return result_.is_err();
     }
     
     constexpr T unwrap() const {
-        if (likely(ok())) {
+        if (likely(is_ok())) {
             return result_.unwrap();
         } else {
             exit(1);
@@ -227,7 +223,7 @@ public:
 
     template<typename ... Args>
     constexpr T expect(Args && ... args) const{
-        if (likely(ok())) {
+        if (likely(is_ok())) {
             return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
@@ -242,15 +238,11 @@ public:
     }
 
     constexpr E err() const {
-        if (likely(wrong())) {
-            return result_.error();
+        if (likely(is_err())) {
+            return result_.unwrap_err();
         } else {
             exit(1);
         }
-    }
-    
-    constexpr operator bool () const {
-        return ok();
     }
 };
 
@@ -259,6 +251,9 @@ template <typename T, typename E>
 struct __unwrap_helper<Result<T, E>> {
     using Obj = Result<T, E>;
     // Unwrap a non-const rvalue optional
+    static constexpr bool is_ok(const Obj & obj) {
+        return obj.is_ok();
+    }
     static constexpr T && unwrap(Obj && obj) {
         return std::move(obj.unwrap());
     }
