@@ -18,6 +18,8 @@ public:
 
     hal::GpioIntf & scl(){return scl_gpio;};
     hal::GpioIntf & sda(){return sda_gpio;};
+
+    virtual void setBaudRate(const uint32_t baudrate) = 0;
 };
 
 

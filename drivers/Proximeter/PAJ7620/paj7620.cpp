@@ -148,7 +148,7 @@ PAJ7620::Flags PAJ7620::detect(){
 }
 
 bool PAJ7620::verify(){
-	if(auto passed = i2c_drv_.verify(); !passed){
+	if(auto passed = i2c_drv_.verify().ok(); !passed){
 		PAJ7620_DEBUG("PAJ7620 not found");
 		return false;
 	}

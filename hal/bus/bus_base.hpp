@@ -36,6 +36,21 @@ public:
 
     __fast_inline bool wrong() const {return unlikely(type != ErrorType::OK);}
     __fast_inline bool ok() const {return likely(type == ErrorType::OK);}
+
+
+    // template<typename F>
+    // auto map(F&& fn) -> BusError<std::invoke_result_t<F, T>, E> {
+    //     if (ok()) return fn(unwrap());
+    //     else return err();
+    // }
+
+    // // 链式处理
+    // template<typename F>
+    // auto and_then(F&& fn) -> BusError<std::invoke_result_t<F, T>, E> {
+    //     if (ok()) return fn(unwrap());
+    //     else return err();
+    // }
+
     explicit operator ErrorType() {return type;}
 };
 

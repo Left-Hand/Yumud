@@ -22,18 +22,18 @@ __fast_inline void DEBUG_PRINTLN_IDLE(Args&&... args) {
 
 template<typename ... Args>
 __fast_inline void DEBUG_PRINTS(Args&&... args) {
-    if(ymd::DEBUGGER.pending() == 0) ymd::DEBUGGER.prints(std::forward<Args>(args)...);
+    ymd::DEBUGGER.prints(std::forward<Args>(args)...);
 }
 
 
 template<typename ... Args>
 __fast_inline void DEBUG_PRINTT(Args&& ... args) {
-    if(ymd::DEBUGGER.pending() == 0) ymd::DEBUGGER.printt(std::forward<Args>(args)...);
+    ymd::DEBUGGER.printt(std::forward<Args>(args)...);
 }
 
 template<typename ... Args>
 __fast_inline void DEBUG_PRINT(Args&& ... args) {
-    if(ymd::DEBUGGER.pending() == 0) ymd::DEBUGGER.print(std::forward<Args>(args)...);
+    ymd::DEBUGGER.print(std::forward<Args>(args)...);
 }
 
 //目前还没办法做到不借助宏将变量名转为字符串

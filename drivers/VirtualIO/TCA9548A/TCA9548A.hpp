@@ -11,12 +11,14 @@ protected:
     hal::I2c & i2c_;
     hal::I2cDrv self_i2c_drv_;
     uint8_t last_ch_ = -1;
-    
+
     void switch_vbus(const uint8_t ch);
 
     BusError lead(const uint8_t address, const uint8_t ch);
 
     void trail(const uint8_t ch);
+
+    void setBaudRate(const uint32_t baud){i2c_.setBaudRate(baud);}
 
     BusError write(const uint32_t data){
         return i2c_.write(data);
@@ -39,6 +41,8 @@ protected:
 
         BusError write(const uint32_t data) override final {return host_.write(data);}
         BusError read(uint32_t & data, const Ack ack) override final {return host_.read(data, ack);}
+
+        void setBaudRate(const uint32_t baud) override final{return host_.setBaudRate(baud);}
     };
 
     friend class VirtualI2c;
@@ -67,6 +71,10 @@ public:
     }
 
     auto which() const {return last_ch_;}
+
+    BusError verify() {
+        return self_i2c_drv_.verify();
+    }
 };
 
 }

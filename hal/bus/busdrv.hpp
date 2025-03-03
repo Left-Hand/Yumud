@@ -6,7 +6,7 @@
 #include <initializer_list>
 
 
-namespace ymd{
+namespace ymd::hal{
 
 template<typename BusType>
 concept is_bus = std::is_base_of_v<BusBase, BusType>;
@@ -39,26 +39,30 @@ protected:
     uint8_t data_bits = 8;
     uint16_t wait_time = 10;
 
-    void setDataBits(const size_t _data_bits){
-        bus_.setDataBits(_data_bits);
-    }
-                                                                                                                           
+    
     BusDrv(BusType & bus, const uint8_t index):bus_(bus), index_(index){;}
-
+    
     struct _Guard{
         BusType & bus_;
-
+        
         _Guard(BusType & bus):
-            bus_(bus){;}
+        bus_(bus){;}
         ~_Guard(){
             bus_.end();
         }
     };
-
+    
     [[nodiscard]] _Guard createGuard(){return _Guard{bus_};}
-public:
+    public:
     BusType & bus() const {return bus_;}
     auto index() const {return index_;}
+    void setDataBits(const size_t _data_bits){
+        bus_.setDataBits(_data_bits);
+    }
+    
+    void setBaudRate(const uint buad){
+        bus_.setBaudRate(buad);
+    }
 };
 
 template <typename BusType>
@@ -116,6 +120,12 @@ protected:
 
 public:
 };
+
+
+
+auto operator|(BusDrv<auto> & drv, auto&& fn) -> decltype(auto) {
+    return fn(drv);
+}
 
 }
 

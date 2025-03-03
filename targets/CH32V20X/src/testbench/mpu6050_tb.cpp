@@ -13,13 +13,18 @@ using namespace ymd::drivers;
 
 void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
     MPU6050 mpu{i2c};
+
     mpu.init();
+    mpu.setAccRange(MPU6050::AccRange::_2G);
 
     while(true){
         mpu.update();
-        auto [x,y,z] = mpu.getGyr();
-        logger.println(x,y,z);
-        delay(1);
+        // auto [x,y,z] = mpu.getGyr();
+        // auto [x,y,z] = mpu.getAcc();
+        const auto acc = mpu.getAcc();
+        logger.noBrackets();
+        logger.println(acc);
+        delayMicroseconds(200);
     }
 }
 

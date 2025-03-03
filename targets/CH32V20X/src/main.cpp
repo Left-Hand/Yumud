@@ -26,13 +26,14 @@ int main(){
     // bldc_main();
     // digipw_main();
     // sincos_pwm_main();
-    stepper_tb(uart1);
+    // stepper_tb(uart1);
     // co_ab_main();
     // uart_main();
     // rpc_main();
     // leetcode_main();
     // co_ab_main();
     // mpu6050_main();
+    i2c_scanner_main();
     // tca9548_main();
     // eeprom_main();
     // flash_main();

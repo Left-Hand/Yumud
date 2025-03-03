@@ -20,116 +20,163 @@ concept valid_i2c_data = std::is_standard_layout_v<T> and (sizeof(T) <= 4);
 class I2cDrv:public ProtocolBusDrv<I2c> {
 protected:
 
-    template<typename T>
-    requires valid_i2c_regaddr<T>
-    BusError writeRegAddress(const T addr, const Endian endian);
+    BusError writeRegAddress(
+        const valid_i2c_regaddr auto addr, 
+        const Endian endian);
 
-    template<typename T>
-    requires valid_i2c_data<T>
-    BusError writeSame_impl(const valid_i2c_regaddr auto addr, const T data, const size_t length, const Endian endian);
-
-    template<typename T>
-    requires valid_i2c_data<T>
-    BusError writeMulti_impl(const valid_i2c_regaddr auto addr, const T * data_ptr, const size_t length, const Endian endian);
+    BusError writeSame_impl(
+        const valid_i2c_regaddr auto addr, 
+        const valid_i2c_data auto data, 
+        const size_t length, 
+        const Endian endian);
 
 
-    template<typename T>
-    requires valid_i2c_data<T>
-    BusError readMulti_impl(const valid_i2c_regaddr auto addr, T * data_ptr, const size_t length, const Endian endian);
+    BusError writeMulti_impl(
+        const valid_i2c_regaddr auto addr, 
+        const valid_i2c_data auto * data_ptr, 
+        const size_t length, 
+        const Endian endian);
 
-    template<typename T>
-    requires valid_i2c_regaddr<T>
-    BusError writeCommand_impl(const T cmd, const Endian endian);
+    BusError readMulti_impl(
+        const valid_i2c_regaddr auto addr, 
+        valid_i2c_data auto * data_ptr, 
+        const size_t length, 
+        const Endian endian);
+
+    BusError writeCommand_impl(
+        const valid_i2c_regaddr auto cmd, 
+        const Endian endian);
 public:
     I2cDrv(hal::I2c & _bus, const uint8_t _index):
         ProtocolBusDrv<I2c>(_bus, _index){};
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
-    BusError writeMulti(const valid_i2c_regaddr auto addr, const T * data_ptr, const size_t length, const Endian endian){
-        return writeMulti_impl<T>(addr, data_ptr, length, endian);
+    BusError writeMulti(
+        const valid_i2c_regaddr auto addr, 
+        const T * data_ptr, 
+        const size_t length, 
+        const Endian endian
+    ){
+        return writeMulti_impl(addr, data_ptr, length, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
-    BusError writeMulti(const valid_i2c_regaddr auto addr, const T * data_ptr, const size_t length){
-        return writeMulti_impl<T>(addr, data_ptr, length, LSB);
+    BusError writeMulti(
+        const valid_i2c_regaddr auto addr, 
+        const T * data_ptr, 
+        const size_t length
+    ){
+        return writeMulti_impl(addr, data_ptr, length, LSB);
     }
 
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
-    BusError writeSame(const valid_i2c_regaddr auto addr, const T data, const size_t length, const Endian endian){
-        return writeSame_impl<T>(addr, data, length, endian);
+    BusError writeSame(
+        const valid_i2c_regaddr auto addr,
+        const T data, 
+        const size_t length, 
+        const Endian endian
+    ){
+        return writeSame_impl(addr, data, length, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
-    BusError writeSame(const valid_i2c_regaddr auto addr, const T data, const size_t length){
-        return writeSame_impl<T>(addr, data, length, LSB);
+    BusError writeSame(
+        const valid_i2c_regaddr auto addr, 
+        const T data, 
+        const size_t length
+    ){
+        return writeSame_impl(addr, data, length, LSB);
     }
 
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
-    BusError readMulti(const valid_i2c_regaddr auto addr, T * data_ptr, const size_t length, const Endian endian){
-        return this->readMulti_impl<T>(addr, data_ptr, length, endian);
+    BusError readMulti(
+        const valid_i2c_regaddr auto addr, 
+        T * data_ptr, 
+        const size_t length, 
+        const Endian endian
+    ){
+        return this->readMulti_impl(addr, data_ptr, length, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
-    BusError readMulti(const valid_i2c_regaddr auto addr, T * data_ptr, const size_t length){
-        return this->readMulti_impl<T>(addr, data_ptr, length, LSB);
+    BusError readMulti(
+        const valid_i2c_regaddr auto addr,
+        T * data_ptr, 
+        const size_t length
+    ){
+        return this->readMulti_impl(addr, data_ptr, length, LSB);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
-    BusError writeReg(const valid_i2c_regaddr auto addr, const T data, const Endian endian){
-        // this->writeMulti_impl<T>
-        return this->writeMulti_impl<T>(addr, &data, 1, endian);
+    BusError writeReg(
+        const valid_i2c_regaddr auto addr, 
+        const T data, 
+        const Endian endian
+    ){
+        return this->writeMulti_impl(addr, &data, 1, endian);
     }
 
     template<typename T>
     requires valid_i2c_regaddr<T> and (sizeof(T) == 1)
     BusError writeCommand(const T cmd){
-        return writeCommand_impl<T>(cmd, LSB);
+        return writeCommand_impl(cmd, LSB);
     }
 
     template<typename T>
     requires valid_i2c_regaddr<T> and (sizeof(T) != 1)
-    BusError writeCommand(const T cmd, const Endian endian  ){
+    BusError writeCommand(
+        const T cmd, 
+        const Endian endian
+    ){
         return writeCommand_impl<T>(cmd, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
-    BusError writeReg(const valid_i2c_regaddr auto addr, const T & data){
+    BusError writeReg(
+        const valid_i2c_regaddr auto addr, 
+        const T & data
+    ){
         return this->writeMulti_impl<T>(addr, &data, 1, LSB);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) != 1)
-    BusError readReg(const valid_i2c_regaddr auto addr, T & data, Endian endian){
+    BusError readReg(
+        const valid_i2c_regaddr auto addr,
+        T & data, 
+        Endian endian
+    ){
         return this->readMulti_impl<T>(addr, &data, 1, endian);
     }
 
     template<typename T>
     requires valid_i2c_data<T> and (sizeof(T) == 1)
-    BusError readReg(const valid_i2c_regaddr auto addr, T & data){
+    BusError readReg(
+        const valid_i2c_regaddr auto addr,
+        T & data
+    ){
         return this->readMulti_impl<T>(addr, &data, 1, LSB);
     }
 
-    __inline bool verify();
-    __inline void release();
+    BusError verify();
+    BusError release();
 };
 
-}
-
-namespace ymd{
 template<>
 struct driver_of_bus<hal::I2c>{
     using driver_type = hal::I2cDrv;
 };
+
 
 }
 

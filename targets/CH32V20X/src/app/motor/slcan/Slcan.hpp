@@ -33,7 +33,7 @@ public:
     };
 
     template<typename T>
-    using Result = Result_t<T, Error>;
+    using Result = Result<T, Error>;
 
 
     enum class Flags:uint8_t{

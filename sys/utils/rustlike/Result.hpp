@@ -6,127 +6,76 @@
 
 namespace ymd{
 
+template<typename Ret>
+struct Ok{
+    Ret val;
+};
 
-// template<typename T, typename E>
-// class Result{
-// private:
-//     bool is_ok_;
-//     union {
-//         T value_;
-//         E error_;
-//     };
+template<typename Error>
+struct Err{
+    Error val;
+};
 
-// public:
-//     // Ok 构造函数
-//     Result(const T & value):
-//         is_ok_(true), value_(value)
-//     {}
+template<typename T, typename Tdecay = std::decay_t<T>>
+Ok(T && val) -> Ok<Tdecay>;
 
-//     // Ok 移动构造函数
-//     Result(T && value):
-//         is_ok_(true), value_(std::move(value))
-//     {}
-
-//     // Err 构造函数
-//     Result(const E & error):
-//         is_ok_(false), error_(error)
-//     {}
-
-//     // Err 移动构造函数
-//     Result(E && error):
-//         is_ok_(false), error_(std::move(error))
-//     {}
-
-//     // 检查是否为 Ok
-//     bool is_ok() const {
-//         return is_ok_;
-//     }
-
-//     // 检查是否为 Err
-//     bool is_err() const {
-//         return !is_ok_;
-//     }
-
-//     // 获取 Ok 值
-//     const T & ok() const {
-//         if (!is_ok_) {
-//             PANIC("Called 'ok' on an 'Err' value");
-//         }
-//         return value_;
-//     }
-
-//     // 获取 Err 值
-//     const E & err() const {
-//         if (is_ok_) {
-//             PANIC("Called 'err' on an 'Ok' value");
-//         }
-//         return error_;
-//     }
-
-//     // 如果是 Ok，则返回值；否则返回默认值
-//     T unwrap_or(const T & default_value) const {
-//         return is_ok_ ? value_ : default_value;
-//     }
-
-//     // 如果是 Ok，则返回值；否则调用 PANIC 并传递错误信息
-//     T unwrap() const {
-//         if (!is_ok_) {
-//             PANIC("Called 'unwrap' on an 'Err' value");
-//         }
-//         return value_;
-//     }
-
-//     // 如果是 Ok，则返回值；否则调用 PANIC 并传递自定义错误信息
-//     T expect(const std::string & message) const {
-//         if (!is_ok_) {
-//             PANIC(message);
-//         }
-//         return value_;
-//     }
-// };
-
-
+template<typename E, typename Edecay = std::decay_t<E>>
+Err(E && val) -> Err<Edecay>;
 
 template<typename Ret, typename Error>
-class Result_t {
+class Result{
 private:
     std::variant<Ret, Error> result_;
-
 public:
-    // 构造函数，用于成功情况
-    constexpr Result_t(Ret value) : result_(std::move(value)) {}
 
-    // 构造函数，用于错误情况
-    constexpr Result_t(Error error) : result_(std::move(error)) {}
+    constexpr Result(Ret value) : result_(std::move(value)) {}
 
-    // 检查是否成功
+    constexpr Result(Error error) : result_(std::move(error)) {}
+    
+
+    constexpr Result(Ok<Ret> value) : result_(std::move(value.val)) {}
+
+    constexpr Result(Err<Error> error) : result_(std::move(error.val)) {}
+
+    
+    // 映射成功值
+    template<typename F>
+    auto map(F&& fn) -> Result<std::invoke_result_t<F, Ret>, Error> {
+        if (ok()) return fn(unwrap());
+        else return err();
+    }
+
+    // 链式处理
+    template<typename F>
+    auto then(F&& fn) -> Result<std::invoke_result_t<F, Ret>, Error> {
+        if (ok()) return fn(unwrap());
+        else return err();
+    }
+    
     constexpr bool ok() const {
         return std::holds_alternative<Ret>(result_);
     }
 
-    // 检查是否出错
     constexpr bool wrong() const {
         return std::holds_alternative<Error>(result_);
     }
-
-    // 获取成功值，如果当前是错误状态则抛出异常
+    
     constexpr Ret unwrap() const {
         if (likely(ok())) {
             return std::get<Ret>(result_);
         } else {
-            HALT
+            exit(1);
         }
     }
 
-    // 获取错误值，如果当前是成功状态则抛出异常
-    constexpr Error unwrap_err() const {
+    constexpr Error err() const {
         if (likely(wrong())) {
             return std::get<Error>(result_);
         } else {
-            HALT
+            exit(1);
         }
     }
-
+    
     constexpr operator bool () const {
         return ok();
     }
@@ -134,25 +83,26 @@ public:
 
 // Specialization for std::optional
 template <typename T, typename E>
-struct __unwrap_helper<Result_t<T, E>> {
-    using Obj = Result_t<T, E>;
+struct __unwrap_helper<Result<T, E>> {
+    using Obj = Result<T, E>;
     // Unwrap a non-const rvalue optional
     static constexpr T && unwrap(Obj && obj) {
         return std::move(obj.unwrap());
     }
-
+    
     static constexpr T unwrap(const Obj & obj) {
         return obj.unwrap();
     }
-
+    
     static constexpr E unexpected(Obj && obj) {
         return std::move(obj.unwrap_err());
     }
 
     static constexpr E unexpected(const Obj & obj) {
-        return obj.unwrap_err();
+        return obj.err();
     }
 };
+
 
 
 

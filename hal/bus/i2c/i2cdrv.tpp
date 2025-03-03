@@ -20,11 +20,11 @@
 
 namespace ymd::hal{
 
-
-template<typename T>
-requires valid_i2c_regaddr<T>
-BusError I2cDrv::writeRegAddress(const T addr, const Endian endian){
-    constexpr size_t size = sizeof(T);
+BusError I2cDrv::writeRegAddress(
+    const valid_i2c_regaddr auto addr,
+    const Endian endian
+){
+    constexpr size_t size = sizeof(std::decay_t<decltype(addr)>);
 
     BusError err = BusError::OK;
 
@@ -47,10 +47,11 @@ BusError I2cDrv::writeRegAddress(const T addr, const Endian endian){
     return err;
 }
 
-template<typename T>
-requires valid_i2c_regaddr<T>
-BusError I2cDrv::writeCommand_impl(const T cmd, const Endian endian){
-    constexpr size_t size = sizeof(T);
+BusError I2cDrv::writeCommand_impl(
+    const valid_i2c_regaddr auto cmd,
+    const Endian endian
+){
+    constexpr size_t size = sizeof(std::decay_t<decltype(cmd)>);
 
     BusError err = BusError::OK;
 
@@ -71,10 +72,13 @@ BusError I2cDrv::writeCommand_impl(const T cmd, const Endian endian){
     return err;
 }
 
-template<typename T>
-requires valid_i2c_data<T>
-BusError I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto addr, const T * pdata, const size_t len, const Endian endian){
-    constexpr size_t size = sizeof(T);
+BusError I2cDrv::writeMulti_impl(
+    const valid_i2c_regaddr auto addr, 
+    const valid_i2c_data auto * pdata, 
+    const size_t len, 
+    const Endian endian
+){
+    constexpr size_t size = sizeof(std::decay_t<decltype(*pdata)>);
 
     __I2CDRV_LENGTH_GUARD;
 
@@ -108,10 +112,13 @@ BusError I2cDrv::writeMulti_impl(const valid_i2c_regaddr auto addr, const T * pd
 }
 
 
-template<typename T>
-requires valid_i2c_data<T>
-BusError I2cDrv::writeSame_impl(const valid_i2c_regaddr auto addr, const T data, const size_t len, const Endian endian){
-    constexpr size_t size = sizeof(T);
+BusError I2cDrv::writeSame_impl(
+    const valid_i2c_regaddr auto addr,
+    const valid_i2c_data auto data,
+    const size_t len,
+    const Endian endian
+){
+    constexpr size_t size = sizeof(std::decay_t<decltype(data)>);
 
     __I2CDRV_LENGTH_GUARD;
 
@@ -145,10 +152,13 @@ BusError I2cDrv::writeSame_impl(const valid_i2c_regaddr auto addr, const T data,
     }
 }
 
-template<typename T>
-requires valid_i2c_data<T>
-BusError I2cDrv::readMulti_impl(const valid_i2c_regaddr auto addr, T * pdata, const size_t len, const Endian endian){
-    constexpr size_t size = sizeof(T);
+BusError I2cDrv::readMulti_impl(
+    const valid_i2c_regaddr auto addr, 
+    valid_i2c_data auto * pdata, 
+    const size_t len, 
+    const Endian endian
+){
+    constexpr size_t size = sizeof(std::decay_t<decltype(*pdata)>);
 
     __I2CDRV_LENGTH_GUARD;
 
@@ -187,19 +197,8 @@ BusError I2cDrv::readMulti_impl(const valid_i2c_regaddr auto addr, T * pdata, co
 
 }
 
-bool I2cDrv::verify(){
-    if(const auto err = bus_.begin(index_ | 0x00); err.wrong()) return false;
-    bus_.end();
-    if(const auto err = bus_.begin(index_ | 0x01); err.wrong()) return false;
-    bus_.end();
-    return true;
-}
-
-void I2cDrv::release(){
-    bus_.begin(index_);
-    bus_.end();
-}
 }
 
 
 #undef __I2CDRV_LENGTH_GUARD
+#undef I2CDRV_DEBUG

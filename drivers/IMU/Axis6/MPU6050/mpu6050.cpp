@@ -1,7 +1,7 @@
 #include "mpu6050.hpp"
 #include "sys/debug/debug.hpp"
 
-#define MPU6050_DEBUG
+// #define MPU6050_DEBUG
 
 #ifdef MPU6050_DEBUG
 #undef MPU6050_DEBUG
