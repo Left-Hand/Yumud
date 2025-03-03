@@ -13,8 +13,8 @@ public:
 protected:
     const Config & config_;
     
-    using GpioIntf = ymd::GpioIntf;
-    using PwmIntf = ymd::PwmIntf;
+    using GpioIntf = ymd::hal::GpioIntf;
+    using PwmIntf = ymd::hal::PwmIntf;
 
     // hal::GpioIntf & gpio_a_;
     // hal::GpioIntf & gpio_b_;

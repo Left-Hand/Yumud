@@ -7,8 +7,11 @@
 #include <span>
 #include <ranges>
 
-namespace ymd{
+namespace std{
+    class source_location;
+}
 
+namespace ymd{
 
 class String;
 class StringStream;
@@ -46,9 +49,9 @@ public:
     struct Config{
         char splitter[4];
 
-        uint8_t radix;
-        uint8_t eps;
-
+        uint8_t radix:4;
+        uint8_t eps:4;
+        uint8_t indent;
         union{
             uint16_t flags;
             struct{
@@ -98,6 +101,13 @@ private:
         if(unlikely(config_.forcesync)) flush();
     }
 
+    __fast_inline void print_indent(){
+        if(likely(config_.indent == 0)) return;
+        for(size_t i = 0; i < config_.indent; i++){
+            write('\t');
+        }
+    }
+
     __fast_inline void print_enter(){
         scexpr const char * enter_str = "\r\n";
         scexpr size_t enter_str_len = 2;
@@ -123,6 +133,8 @@ private:
     int transform_char(const char chr) const;
     void checked_write(const char data);
     void checked_write(const char * pdata, const size_t len);
+
+    void print_source_loc(const std::source_location & loc);
 public:
     OutputStream(){
         reconf(default_config);
@@ -154,6 +166,15 @@ public:
     OutputStream & setRadix(const uint8_t radix){
         config_.radix = radix;
         return *this;
+    }
+
+    OutputStream & setIndent(const uint8_t indent){
+        config_.indent = indent;
+        return *this;
+    }
+
+    uint8_t indent() const{
+        return config_.indent;
     }
 
     OutputStream & setEps(const uint8_t eps){
@@ -213,6 +234,7 @@ public:
     
     OutputStream& operator<<(const std::nullopt_t){return *this << '/';}
     OutputStream& operator<<(const __Splitter){print_splt(); return *this;}
+    OutputStream& operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
     
     template<typename T>
     OutputStream& operator<<(const std::optional<T> v){
@@ -307,6 +329,7 @@ public:
 
     template <typename ... Args>
     OutputStream & print(Args&&... args){
+        print_indent();
         if constexpr (sizeof...(args)) {
             ((*this << std::forward<Args>(args)), ...);
         }
@@ -316,6 +339,7 @@ public:
     
     template <typename First, typename ... Args>
     OutputStream & prints(First && first, Args&&... args){
+        print_indent();
         *this << std::forward<First>(first);
 
         if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
@@ -333,6 +357,7 @@ public:
 
     template <typename First, typename ... Args>
     OutputStream & printt(First && first, Args&&... args){
+        print_indent();
         *this << std::forward<First>(first);
         if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
             return printt(std::forward<Args>(args)...);
@@ -349,6 +374,7 @@ public:
 
     template <typename First, typename ... Args>
     OutputStream & println(First && first, Args&&... args){
+        print_indent();
         *this << std::forward<First>(first);
         if constexpr(false == __needprint_helper<std::decay_t<First>>::value){
             return println(std::forward<Args>(args)...);

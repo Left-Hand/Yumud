@@ -31,6 +31,7 @@ namespace gxm{
     using CrossSolver = CrossSolver_t<real_t>;
 }
 
+using namespace ymd::hal;
 
 #include "decl/RotorInfo.hpp"
 #include "decl/RowInfo.hpp"

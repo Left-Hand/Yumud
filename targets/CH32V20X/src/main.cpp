@@ -19,7 +19,7 @@ int main(){
     //  uart_main();
     // qlz_main();
     // embd_main();
-    // i2c_scanner_main();
+    i2c_scanner_main();
     // embd_main();
     // gui_main();
     // canopen_main();
@@ -33,7 +33,7 @@ int main(){
     // leetcode_main();
     // co_ab_main();
     // mpu6050_main();
-    i2c_scanner_main();
+    // i2c_scanner_main();
     // tca9548_main();
     // eeprom_main();
     // flash_main();

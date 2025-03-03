@@ -19,11 +19,12 @@ void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
 
     while(true){
         mpu.update();
-        // auto [x,y,z] = mpu.getGyr();
+        auto [x,y,z] = mpu.getGyr();
         // auto [x,y,z] = mpu.getAcc();
-        const auto acc = mpu.getAcc();
-        logger.noBrackets();
-        logger.println(acc);
+        // const auto acc = mpu.getAcc();
+        // logger.noBrackets();
+        // logger.println(acc);
+        logger.println(x,y,z);
         delayMicroseconds(200);
     }
 }

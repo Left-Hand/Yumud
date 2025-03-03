@@ -33,7 +33,7 @@ public:
     };
 
     template<typename T>
-    using Result = Result<T, Error>;
+    using MyResult = Result<T, Error>;
 
 
     enum class Flags:uint8_t{
@@ -170,7 +170,7 @@ private:
         return Msg();
     }
 
-    static constexpr Result<int> parseStdId(const StringView str){
+    static constexpr MyResult<int> parseStdId(const StringView str){
         if(!str.size()) return Error::NoArg;
         if(str.size() != 3) return Error::InvalidDataLength;
         const auto id = int(str);
@@ -178,7 +178,7 @@ private:
         return id;
     }
 
-    static constexpr Result<int> parseExtId(const StringView str){
+    static constexpr MyResult<int> parseExtId(const StringView str){
         if(!str.size()) return Error::NoArg;
         if(str.size() != 3) return Error::InvalidDataLength;
         const auto id = int(str);
@@ -186,7 +186,7 @@ private:
         return id;
     }
 
-    static constexpr Result<std::array<uint8_t, 8>> parseData(const StringView str, const uint8_t dlc){
+    static constexpr MyResult<std::array<uint8_t, 8>> parseData(const StringView str, const uint8_t dlc){
         if(str.size() != dlc * 2) return Error::InvalidDataLength;
 
         std::array<uint8_t, 8> buf;
@@ -198,7 +198,7 @@ private:
         return buf;
     }
 
-    static constexpr Result<int> parseLen(const StringView str){
+    static constexpr MyResult<int> parseLen(const StringView str){
         if(!str.size()) return Error::NoArg;
         if(str.size() != 1) return Error::InvalidDataLength;
         const auto len = int(str);
@@ -257,8 +257,8 @@ private:
             return reinterpret_cast<T>(this)->next(chr);
         }
 
-        // auto result() const{
-        //     return reinterpret_cast<T>(this)->result();
+        // auto MyResult() const{
+        //     return reinterpret_cast<T>(this)->MyResult();
         // }
     };
 

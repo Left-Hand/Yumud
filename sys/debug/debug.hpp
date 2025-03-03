@@ -1,5 +1,7 @@
 #pragma once
 
+#define __DEBUG_INCLUDED
+
 #include "sys/clock/clock.h"
 #include "debugger.hpp"
 #include <source_location>
@@ -7,7 +9,7 @@
 namespace ymd{
 // extern ymd::OutputStream & LOGGER;
 extern ymd::__Debugger & DEBUGGER;
-}
+
 
 template<typename ... Args>
 __fast_inline void DEBUG_PRINTLN(Args&&... args) {
@@ -46,21 +48,21 @@ template <typename... Args>
 struct DEBUG_SOURCE
 {    
 	DEBUG_SOURCE(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        DEBUG_PRINTLN(std::forward<Args>(args)...);
+        delay(1);
+        
         {
             const auto guard = ymd::DEBUGGER.createGuard();
             ymd::DEBUGGER.reconf({
                 .splitter = ", ",
                 .radix = 10,
                 .eps = 3,
+                .indent = ymd::DEBUGGER.indent(),
                 .flags = 0,
             });
             
-            DEBUG_PRINT(loc.file_name(), 
-            '(' ,loc.line() , ':' , loc.column() , ')'
-            , loc.function_name() , ':');
+            DEBUG_PRINT(loc);
         }
-        
-        DEBUG_PRINTLN(std::forward<Args>(args)...);
 	}
 };
 
@@ -97,8 +99,13 @@ DEBUG_WARN(Args &&...) -> DEBUG_WARN<Args ...>;
 template <typename... Args>
 struct PANIC
 {    
-	PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
-        DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
+	__attribute__((noreturn)) PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        ymd::DEBUGGER.setIndent(0);
+        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("panicked: ");
+        ymd::DEBUGGER.setIndent(1);
+        // DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
+        DEBUG_SOURCE<Args...>(std::forward<Args>(args)..., loc);
         if constexpr(sizeof...(args)){
             delay(10);
         }
@@ -109,8 +116,16 @@ struct PANIC
 	}
 };
 
+
 template <typename... Args>
 PANIC(Args &&...) -> PANIC<Args ...>;
+
+template <typename... Args>
+PANIC<Args ...> __PANIC_EXPLICIT_SOURCE(
+    const std::source_location& loc = std::source_location::current(), 
+    Args &&... args){
+    return PANIC<Args ...>(std::forward<Args>(args)..., loc);
+}
 
 
 template <typename Texpr, typename... Args>
@@ -136,8 +151,9 @@ public:
 template <typename Texpr, typename... Args>
 ASSERT(Texpr&&, Args &&...) -> ASSERT<Texpr, Args...>;
 
-
 #define TODO(...) PANIC("todo:", ##__VA_ARGS__)
+}
+
 
 extern "C"{
 __attribute__((used))

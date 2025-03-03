@@ -44,7 +44,7 @@ void can_ring_main(){
                 DEBUG_PRINTLN(rx_msg);
             }
         }else{
-            DEBUG_PRINTLN('N')
+            DEBUG_PRINTLN('N');
         }
     }
 }

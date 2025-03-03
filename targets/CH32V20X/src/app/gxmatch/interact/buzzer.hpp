@@ -1,6 +1,7 @@
 #pragma once
 
-namespace ymd{
+
+namespace ymd::hal{
 class PwmIntf;
 }
 
@@ -8,7 +9,7 @@ namespace gxm{
 
 class Buzzer{
 protected:
-    using Inst = ymd::PwmIntf;
+    using Inst = ymd::hal::PwmIntf;
     Inst & instance_;
 
 public:
