@@ -28,7 +28,7 @@ ExtiChannel::ExtiChannel(Gpio & _gpio, const NvicPriority & _priority,
 
 
 ExtiChannel::Source ExtiChannel::from_gpio_to_source(const Gpio & gpio){
-    switch((uint32_t)gpio.instance){
+    switch((uint32_t)gpio.inst()){
         default:
         #ifdef ENABLE_GPIOA
         case GPIOA_BASE:
@@ -59,7 +59,7 @@ ExtiChannel::Source ExtiChannel::from_gpio_to_source(const Gpio & gpio){
 
 
 ExtiChannel::Line ExtiChannel::from_gpio_to_line(const Gpio & gpio){
-    return gpio.isValid() ? (Line)(1 << gpio.getIndex()) : (Line::_None);
+    return gpio.valid() ? (Line)(1 << gpio.valid()) : (Line::_None);
 }
 
 
@@ -80,7 +80,7 @@ IRQn ExtiChannel::from_line_to_irqn(const Line line){
 void ExtiChannel::init(){
     if(gpio){
         gpio->setMode(gpio_mode);
-        if(gpio->getIndex() > 0) GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(*gpio), gpio->getIndex());
+        if(gpio->index() > 0) GPIO_EXTILineConfig((uint8_t)from_gpio_to_source(*gpio), gpio->index());
     }
 
     EXTI_InitTypeDef EXTI_InitStructure = {0};

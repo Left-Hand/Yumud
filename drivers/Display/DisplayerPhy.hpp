@@ -36,16 +36,16 @@ public:
     DisplayerPhySpi(
             hal::SpiDrv && spi_drv, 
             hal::GpioIntf & _dc_gpio, 
-            hal::GpioIntf & _res_gpio = hal::GpioNull,
-            hal::GpioIntf & _blk_gpio = hal::GpioNull
+            hal::GpioIntf & _res_gpio = hal::NullGpio,
+            hal::GpioIntf & _blk_gpio = hal::NullGpio
         ) :spi_drv_(std::move(spi_drv)), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
     // 拷贝构造函数
     DisplayerPhySpi(
         const hal::SpiDrv & spi_drv, 
         hal::GpioIntf & _dc_gpio, 
-        hal::GpioIntf & _res_gpio = hal::GpioNull,
-        hal::GpioIntf & _blk_gpio = hal::GpioNull
+        hal::GpioIntf & _res_gpio = hal::NullGpio,
+        hal::GpioIntf & _blk_gpio = hal::NullGpio
     ) : spi_drv_(spi_drv), dc_gpio(_dc_gpio), res_gpio(_res_gpio), blk_gpio(_blk_gpio){}
 
 
@@ -53,8 +53,8 @@ public:
             hal::Spi & _bus,
             const uint8_t index,
             hal::GpioIntf & _dc_gpio, 
-            hal::GpioIntf & _res_gpio = hal::GpioNull,
-            hal::GpioIntf & _blk_gpio = hal::GpioNull
+            hal::GpioIntf & _res_gpio = hal::NullGpio,
+            hal::GpioIntf & _blk_gpio = hal::NullGpio
             ):DisplayerPhySpi(hal::SpiDrv(_bus, index), _dc_gpio, _res_gpio, _blk_gpio) {};
 
     void init() override{

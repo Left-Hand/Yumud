@@ -31,7 +31,7 @@ uint16_t NCA9555::readPort(){
 }
 
 void NCA9555::setMode(const int index, const hal::GpioMode mode){
-    if(index > 15) PANIC()
+    if(index > 15) PANIC();
 
     auto & reg = config_reg;
     uint16_t new_dir = reg;

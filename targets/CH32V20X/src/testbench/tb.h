@@ -119,3 +119,5 @@ void rpc_main();
 void leetcode_main();
 
 void canopen_main();
+
+void tca9548_main();

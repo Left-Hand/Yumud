@@ -37,9 +37,6 @@ public:
     void setBaud(const uint32_t baud){m_baudrate = baud;}
 };
 
-}
-
-namespace ymd{
 
 template<>
 struct driver_of_bus<hal::Spi>{

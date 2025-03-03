@@ -80,7 +80,7 @@ protected:
 public:
     HC12(
         hal::Uart & _uart, 
-        hal::GpioIntf & _set_pin = hal::GpioNull)
+        hal::GpioIntf & _set_pin = hal::NullGpio)
     :uart(_uart), set_pin(_set_pin){;}
 
     void init(){;}

@@ -121,8 +121,8 @@ protected:
 public:
     CH9141(
         hal::Uart & uart, 
-        hal::GpioIntf & set_gpio = hal::GpioNull, 
-        hal::GpioIntf & slp_gpio = hal::GpioNull)
+        hal::GpioIntf & set_gpio = hal::NullGpio, 
+        hal::GpioIntf & slp_gpio = hal::NullGpio)
     :uart_(uart), at_gpio_(set_gpio), slp_gpio_(slp_gpio){;}
 
     void write(const char data){

@@ -5,9 +5,9 @@
 namespace ymd::hal{
 class GpioIntf{
 public:
-    const int8_t pin_index = 0;
+    // const int8_t pin_index = 0;
 public:
-    GpioIntf(int8_t _pin_index):pin_index(_pin_index){;}
+    GpioIntf() = default;
     GpioIntf(const hal::GpioIntf & other) = delete;
     GpioIntf(hal::GpioIntf && other) = delete;
     
@@ -32,12 +32,12 @@ public:
     hal::GpioIntf & inpu(){setMode(GpioMode::InPullUP);return *this;}
     hal::GpioIntf & inpd(){setMode(GpioMode::InPullDN);return *this;}
 
-    bool isValid() const {return pin_index >= 0;}
-    int8_t getIndex() const {return pin_index;}
+    bool valid() const{return (index() >= 0);}
+    virtual int8_t index() const = 0;
     virtual void setMode(const GpioMode mode) = 0;
     
-    hal::GpioIntf & operator = (const bool _val){
-        write(_val);
+    hal::GpioIntf & operator = (const bool val){
+        write(val);
         return *this;
     }
 

@@ -196,7 +196,7 @@ void BasicTimer::init(const uint16_t period, const uint16_t cycle, const Mode mo
 
     TIM_InternalClockConfig(instance);
 
-    TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
+    const TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure{
         .TIM_Prescaler = uint16_t(MAX(int(cycle - 1), 0)),
         .TIM_CounterMode = (uint16_t)mode,
         .TIM_Period = uint16_t(MAX(int(period - 1), 0)),

@@ -39,7 +39,7 @@ struct __unwrap_helper<std::optional<T>> {
     ({ \
         const auto result = (expr); \
         using helper = ymd::__unwrap_helper<std::decay_t<decltype(result)>>; \
-        if (unlikely(!result)) { \
+        if (unlikely(!helper::is_ok(result))) { \
             return helper::unexpected(result); \
         } \
         helper::unwrap(std::move(result)); \

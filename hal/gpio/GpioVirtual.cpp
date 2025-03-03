@@ -3,9 +3,14 @@
 #include "port.hpp"
 
 using namespace ymd::hal;
-VGpio::VGpio(const Gpio & gpio):GpioIntf(gpio.pin_index), _port(form_gpiotypedef_to_port(uint32_t(gpio.instance))){;}
-VGpio::VGpio(GpioPortIntf & port, const int8_t _pin_index):GpioIntf(_pin_index), _port(port){;}
-VGpio::VGpio(GpioPortIntf & port, const Pin _pin):GpioIntf(CTZ((uint16_t)_pin)), _port(port){;}
+VGpio::VGpio(const Gpio & gpio):
+    port_(form_gpiotypedef_to_port(uint32_t(gpio.inst()))), pin_index_(gpio.index()){;}
+VGpio::VGpio(GpioPortIntf & port, const int8_t pin_index):
+    port_(port), pin_index_(pin_index){;}
+VGpio::VGpio(GpioPortIntf & port, const Pin pin):
+    port_(port), pin_index_(CTZ(uint16_t(pin))){;}
+
+
 GpioPortIntf & VGpio::form_gpiotypedef_to_port(uint32_t base){
     switch(base){
         default:

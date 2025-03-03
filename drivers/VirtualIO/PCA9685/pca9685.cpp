@@ -79,16 +79,6 @@ void PCA9685::enableSleep(const bool en){
     writeReg(RegAddress::Mode1, mode1_reg);
     mode1_reg.sleep = 0;
 }
-    
-void PCA9685::setPin(const hal::Pin pin){
-    // buf |= (uint16_t)pin;
-    // write(buf);
-}
-
-void PCA9685::clrPin(const hal::Pin pin){
-    // buf &= ~(uint16_t)pin;
-    // write(buf);
-}
 
 void PCA9685::setPin(const uint16_t data){
     // buf |= data;

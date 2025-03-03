@@ -26,24 +26,6 @@ __interrupt void ADC1_2_IRQHandler(void){
 #endif
 
 
-
-void AdcPrimary::bindCb(const IT it,Callback && cb){
-    switch(it){
-        case IT::JEOC:
-            jeoc_cb = std::move(cb);
-            break;
-        case IT::EOC:
-            eoc_cb = std::move(cb);
-            break;
-        case IT::AWD:
-            awd_cb = std::move(cb);
-            break;
-        default:
-            break;
-    }
-}
-
-
 void Adc1::refreshRegularData(){
     if(regular_conv_index < 16){
         regular_datas[regular_conv_index] = ADC1->RDATAR;

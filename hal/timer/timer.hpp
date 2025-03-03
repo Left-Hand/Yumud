@@ -139,8 +139,17 @@ public:
     volatile uint16_t & cnt(){return instance->CNT;}
     volatile uint16_t & arr(){return instance->ATRLR;}
 
+    void attach(const IT it, const NvicPriority & priority, auto && cb, const bool en = true){
+        bindCb(it, std::forward<decltype(cb)>(cb));
+        enableIt(it, priority, en);
+    }
+
+    void attach(const IT it, const NvicPriority & priority, std::nullptr_t cb){
+        attach(it, priority, nullptr, false);
+    }
+
     void bindCb(const IT ch, auto && cb){
-        getCallback(ch) = std::move(cb);
+        getCallback(ch) = std::forward<decltype(cb)>(cb);
     }
 
     BasicTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}

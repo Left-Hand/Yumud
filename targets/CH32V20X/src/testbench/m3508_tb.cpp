@@ -26,10 +26,10 @@ void m3508_main(){
     
     timer3.init(cb_freq);
 
-    timer3.bindCb(TimerUtils::IT::Update, [&](){
+    timer3.bindCb(TimerIT::Update, [&](){
         port.tick();
     });
-    timer3.enableIt(TimerUtils::IT::Update, {0,0});
+    timer3.enableIt(TimerIT::Update, {0,0});
 
     auto & motor = port[4];
     auto & motor2 = port[1];

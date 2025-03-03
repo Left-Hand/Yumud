@@ -5,7 +5,7 @@
 #endif
 
 #ifndef __fast_access
-#define __fast_access
+#define __fast_access 
 #endif
 
 #ifndef __fast_inline
@@ -125,12 +125,12 @@
 #define BREAKPOINT __nopn(1);
 
 #if defined(__riscv)
-#define HALT asm("csrrw zero, mstatus, zero");
+#define __HALT asm("csrrw zero, mstatus, zero");
 #define DISABLE_INT   __asm volatile ("csrw 0x800, %0" : : "r" (0x6000) );
 #define ENABLE_INT    __asm volatile ("csrw 0x800, %0" : : "r" (0x6088) );
 #elif defined(__arm__)
     #if defined(__thumb__)
-    #define HALT asm("bkpt 0x00000000");
+    #define __HALT asm("bkpt 0x00000000");
     #else
     #define HALT asm("swi 0x00000000");
     #endif
@@ -141,6 +141,8 @@
 #error "Not supported architecture"
 #endif
 
+// #define HALT __HALT; __builtin_unreachable();
+#define HALT __HALT;
 
 #ifdef __cplusplus
 

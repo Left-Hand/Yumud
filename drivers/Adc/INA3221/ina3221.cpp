@@ -70,7 +70,7 @@ INA3221 & INA3221::setAverageTimes(const uint16_t times){
 
 INA3221 & INA3221::enableChannel(const size_t index, const bool en){
     switch(index){
-        default: PANIC()
+        default: PANIC();
         case 1:
             config_reg.ch1_en = en;
             break;
@@ -117,7 +117,7 @@ int INA3221::getShuntVoltuV(const size_t index){
     RegAddress addr;
     ShuntVoltReg & reg = [&]() -> ShuntVoltReg &{
         switch(index){
-        default: PANIC()
+        default: PANIC();
         case 1:
             addr = shuntvolt1_reg.address1;
             return shuntvolt1_reg;
@@ -141,7 +141,7 @@ int INA3221::getBusVoltmV(const size_t index){
     RegAddress addr;
     BusVoltReg & reg = [&]() -> BusVoltReg &{
         switch(index){
-        default: PANIC()
+        default: PANIC();
         case 1:
             addr = busvolt1_reg.address1;
             return busvolt1_reg;
@@ -172,7 +172,7 @@ real_t INA3221::getBusVolt(const size_t index){
 INA3221 & INA3221::setInstantOVC(const size_t index, const real_t volt){
     RegAddress addr;
     switch(index){
-        default: PANIC()
+        default: PANIC();
         case 1:
             addr = instant_ovc1_reg.address1;
             break;
@@ -193,7 +193,7 @@ INA3221 & INA3221::setInstantOVC(const size_t index, const real_t volt){
 INA3221 & INA3221::setConstantOVC(const size_t index, const real_t volt){
     RegAddress addr;
     switch(index){
-        default: PANIC()
+        default: PANIC();
         case 1:
             addr = constant_ovc1_reg.address1;
             break;

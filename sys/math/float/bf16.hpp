@@ -40,7 +40,8 @@ struct bf16 {
         return int(float(*this));
     }
 
-    constexpr operator real_t() const {
-        return real_t::from(float(*this));
+    template <size_t Q>
+    explicit constexpr operator iq_t<Q>() const{
+        return iq_t<Q>::from(float(*this));
     }
 };

@@ -13,21 +13,28 @@ using namespace ymd::drivers;
 
 void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
     MPU6050 mpu{i2c};
+
     mpu.init();
+    mpu.setAccRange(MPU6050::AccRange::_2G);
 
     while(true){
         mpu.update();
         auto [x,y,z] = mpu.getGyr();
+        // auto [x,y,z] = mpu.getAcc();
+        // const auto acc = mpu.getAcc();
+        // logger.noBrackets();
+        // logger.println(acc);
         logger.println(x,y,z);
-        delay(1);
+        delayMicroseconds(200);
     }
 }
 
 void mpu6050_main(){
-    auto & logger = DEBUGGER_INST;
-    logger.init(576_KHz);
-    I2cSw i2c{portD[2], portC[12]};
-    i2c.init(1_MHz);
+    uart1.init(576_KHz);
+    DEBUGGER.retarget(&uart1);
+    I2cSw i2c{portA[12], portA[15]};
+    i2c.init(40_KHz);
+
     delay(200);
     mpu6050_tb(DEBUGGER, i2c);
 }

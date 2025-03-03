@@ -40,7 +40,7 @@ hal::GpioIntf & I2cHw::getScl(const I2C_TypeDef * _instance){
         #endif
 
         default:
-            return GpioNull;
+            return NullGpio;
     }
 }
 
@@ -57,7 +57,7 @@ hal::GpioIntf & I2cHw::getSda(const I2C_TypeDef * _instance){
         #endif
 
         default:
-            return GpioNull;
+            return NullGpio;
     }
 }
 

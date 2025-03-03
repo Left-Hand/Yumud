@@ -1,5 +1,7 @@
 #pragma once
 
+#define __DEBUG_INCLUDED
+
 #include "sys/clock/clock.h"
 #include "debugger.hpp"
 #include <source_location>
@@ -7,69 +9,151 @@
 namespace ymd{
 // extern ymd::OutputStream & LOGGER;
 extern ymd::__Debugger & DEBUGGER;
+
+
+template<typename ... Args>
+__fast_inline void DEBUG_PRINTLN(Args&&... args) {
+    ymd::DEBUGGER.println(std::forward<Args>(args)...);
 }
 
-#define DEBUG_PRINTLN(...) ymd::DEBUGGER.println(__VA_ARGS__);
 
-#define DEBUG_PRINTLN_IDLE(...) if(ymd::DEBUGGER.pending() == 0) ymd::DEBUGGER.println(__VA_ARGS__);
+template<typename ... Args>
+__fast_inline void DEBUG_PRINTLN_IDLE(Args&&... args) {
+    if(ymd::DEBUGGER.pending() == 0) ymd::DEBUGGER.println(std::forward<Args>(args)...);
+}
 
-#define DEBUG_PRINTS(...) ymd::DEBUGGER.prints(__VA_ARGS__);
+template<typename ... Args>
+__fast_inline void DEBUG_PRINTS(Args&&... args) {
+    ymd::DEBUGGER.prints(std::forward<Args>(args)...);
+}
 
-#define DEBUG_PRINTT(...) ymd::DEBUGGER.printt(__VA_ARGS__);
 
-#define DEBUG_PRINT(...) ymd::DEBUGGER.print(__VA_ARGS__);
+template<typename ... Args>
+__fast_inline void DEBUG_PRINTT(Args&& ... args) {
+    ymd::DEBUGGER.printt(std::forward<Args>(args)...);
+}
 
+template<typename ... Args>
+__fast_inline void DEBUG_PRINT(Args&& ... args) {
+    ymd::DEBUGGER.print(std::forward<Args>(args)...);
+}
 
-#define DEBUG_SOURCE(...) __DEBUG_SOURCE(std::source_location::current(), ##__VA_ARGS__)
-
-#define DEBUG_ERROR(...) DEBUG_PRINT("[Err] "); __DEBUG_SOURCE(std::source_location::current(), ##__VA_ARGS__);
-
-#define DEBUG_WARN(...) DEBUG_PRINT("[Warn] "); __DEBUG_SOURCE(,std::source_location::current(), ##__VA_ARGS__);
-
+//目前还没办法做到不借助宏将变量名转为字符串
 #define DEBUG_VALUE(value, ...) DEBUG_PRINTS("<", #value, ">\tis:", value, ##__VA_ARGS__);
 
 
-#define PANIC(...)\
-do{\
-    if constexpr((std::tuple_size_v<decltype(std::make_tuple(__VA_ARGS__))>)){\
-        DEBUG_ERROR(__VA_ARGS__);\
-        delay(10);\
-    }\
-    DISABLE_INT;\
-    DISABLE_INT;\
-    HALT;\
-}while(false);\
-
-#define ASSERT(cond, ...)\
-({\
-    bool __assert_result = static_cast<bool>(cond); \
-    if (!__assert_result) {\
-        PANIC(__VA_ARGS__);\
-    }\
-    __assert_result;\
-})
-
-template<typename ... Args>
-void __DEBUG_SOURCE(const std::source_location location,Args && ... args){
-    {
-        const auto guard = ymd::DEBUGGER.createGuard();
-        ymd::DEBUGGER.reconf({
-            .splitter = ", ",
-            .radix = 10,
-            .eps = 3,
-            .flags = 0,
-        });
+// CATD模板 在构造时传递定位信息
+// https://stackoverflow.com/questions/57547273/how-to-use-source-location-in-a-variadic-template-function
+template <typename... Args>
+struct DEBUG_SOURCE
+{    
+	DEBUG_SOURCE(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        DEBUG_PRINTLN(std::forward<Args>(args)...);
+        delay(1);
         
-        DEBUG_PRINT(location.file_name(), 
-        '(' ,location.line() , ':' , location.column() , ')'
-        , location.function_name() , ':');
-    }
-    
-    DEBUG_PRINTLN(std::forward<Args>(args)...);
+        {
+            const auto guard = ymd::DEBUGGER.createGuard();
+            ymd::DEBUGGER.reconf({
+                .splitter = ", ",
+                .radix = 10,
+                .eps = 3,
+                .indent = ymd::DEBUGGER.indent(),
+                .flags = 0,
+            });
+            
+            DEBUG_PRINT(loc);
+        }
+	}
+};
+
+template <typename... Args>
+DEBUG_SOURCE(Args &&...) -> DEBUG_SOURCE<Args ...>;
+
+
+template <typename... Args>
+struct DEBUG_ERROR
+{    
+	DEBUG_ERROR(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        DEBUG_PRINT("[Err] ");
+        DEBUG_SOURCE<Args...>(std::forward<Args>(args)..., loc);
+	}
+};
+
+template <typename... Args>
+DEBUG_ERROR(Args &&...) -> DEBUG_ERROR<Args...>;
+
+
+template <typename... Args>
+struct DEBUG_WARN
+{    
+	DEBUG_WARN(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        DEBUG_PRINT("[Warn] ");
+        DEBUG_SOURCE<Args ...>(std::forward<Args>(args)..., loc);
+	}
+};
+
+template <typename... Args>
+DEBUG_WARN(Args &&...) -> DEBUG_WARN<Args ...>;
+
+
+template <typename... Args>
+struct PANIC
+{    
+	__attribute__((noreturn)) PANIC(Args &&... args, const std::source_location& loc = std::source_location::current()){
+        ymd::DEBUGGER.setIndent(0);
+        DEBUG_PRINTLN();
+        DEBUG_PRINTLN("panicked: ");
+        ymd::DEBUGGER.setIndent(1);
+        // DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
+        DEBUG_SOURCE<Args...>(std::forward<Args>(args)..., loc);
+        if constexpr(sizeof...(args)){
+            delay(10);
+        }
+
+        DISABLE_INT;
+        DISABLE_INT;
+        exit(1);
+	}
+};
+
+
+template <typename... Args>
+PANIC(Args &&...) -> PANIC<Args ...>;
+
+template <typename... Args>
+PANIC<Args ...> __PANIC_EXPLICIT_SOURCE(
+    const std::source_location& loc = std::source_location::current(), 
+    Args &&... args){
+    return PANIC<Args ...>(std::forward<Args>(args)..., loc);
 }
 
 
-#define TODO(...) do{PANIC("todo:", ##__VA_ARGS__)}while(false);
+template <typename Texpr, typename... Args>
+struct ASSERT{
+private:
+	bool result_;
+public:
+	constexpr ASSERT(Texpr && expr, Args &&... args, const std::source_location& loc = std::source_location::current()):
+		result_(bool(expr)){
+		if(!result_){
+            DEBUG_ERROR<Args ...>(std::forward<Args>(args)..., loc);
+			if constexpr(sizeof...(args)){
+                delay(10);
+			}
+            DISABLE_INT;
+            DISABLE_INT;
+			exit(1);
+		}
+	}
+	constexpr operator bool() const {return result_;}
+};
+
+template <typename Texpr, typename... Args>
+ASSERT(Texpr&&, Args &&...) -> ASSERT<Texpr, Args...>;
+
+#define TODO(...) PANIC("todo:", ##__VA_ARGS__)
+}
+
 
 extern "C"{
 __attribute__((used))

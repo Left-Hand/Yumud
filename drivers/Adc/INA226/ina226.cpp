@@ -13,11 +13,11 @@ using namespace ymd;
 #undef INA226_DEBUG
 #define INA226_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define INA226_PANIC(...) PANIC(__VA_ARGS__)
-#define INA226_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#define INA226_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
 #else
 #define INA226_DEBUG(...)
 #define INA226_PANIC(...)  PANIC()
-#define INA226_ASSERT(cond, ...) ASSERT(cond)
+#define INA226_ASSERT(cond, ...) ASSERT{cond}
 #endif
 
 #define WRITE_REG(reg) this->writeReg(reg.address, reg);
@@ -33,17 +33,20 @@ void INA226::update(){
 
 
 BusError INA226::writeReg(const RegAddress addr, const uint16_t data){
-    INA226_DEBUG("w", uint8_t(addr), data);
-    return i2c_drv.writeReg((uint8_t)addr, data, MSB);
+    // INA226_DEBUG("w", uint8_t(addr), data);
+    const auto err = i2c_drv.writeReg((uint8_t)addr, data, MSB);
+    // INA226_ASSERT(err.ok(), "write error", uint8_t(addr), data);
+    return err;
 }
 
 BusError INA226::readReg(const RegAddress addr, uint16_t & data){
-    INA226_DEBUG("r",uint8_t(addr), data);
-    return i2c_drv.readReg((uint8_t)addr, data, MSB);
+    const auto err = i2c_drv.readReg((uint8_t)addr, data, MSB);
+    // INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
+    return err;
 }
 
 BusError INA226::requestPool(const RegAddress addr, uint16_t * p_data, const size_t len){
-    INA226_DEBUG("p",uint8_t(addr), uint32_t(p_data), len);
+    // INA226_DEBUG("p",uint8_t(addr), uint32_t(p_data), len);
     return i2c_drv.readMulti((uint8_t)addr, p_data, len, LSB);
 }
 
@@ -54,7 +57,7 @@ void INA226::init(const uint mohms, const uint max_current_a){
 
     INA226_DEBUG("init");
 
-    INA226_ASSERT(verify());
+    INA226_ASSERT(verify(), "INA226 not found");
     
     setAverageTimes(16);
     setBusConversionTime(ConversionTime::_140us);
@@ -102,5 +105,5 @@ bool INA226::verify(){
     readReg(RegAddress::chipID, chipIDReg);
     readReg(RegAddress::manufactureID, manufactureIDReg);
 
-    return chipIDReg == valid_chip_id and manufactureIDReg == valid_manu_id;
+    return INA226_ASSERT(chipIDReg == valid_chip_id and manufactureIDReg == valid_manu_id, "INA226 not found", chipIDReg, manufactureIDReg);
 }

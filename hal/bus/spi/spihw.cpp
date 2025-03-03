@@ -27,7 +27,7 @@ void SpiHw::enableRcc(const bool en){
 Gpio & SpiHw::getMosiGpio(){
     switch((uint32_t)instance){
         default:
-            return GpioNull;
+            return NullGpio;
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_MOSI_GPIO;
@@ -48,7 +48,7 @@ Gpio & SpiHw::getMosiGpio(){
 Gpio & SpiHw::getMisoGpio(){
     switch((uint32_t)instance){
         default:
-            return GpioNull;
+            return NullGpio;
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_MISO_GPIO;
@@ -69,7 +69,7 @@ Gpio & SpiHw::getMisoGpio(){
 Gpio & SpiHw::getSclkGpio(){
     switch((uint32_t)instance){
         default:
-            return GpioNull;
+            return NullGpio;
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_SCLK_GPIO;
@@ -90,7 +90,7 @@ Gpio & SpiHw::getSclkGpio(){
 Gpio & SpiHw::getHwCsGpio(){
     switch((uint32_t)instance){
         default:
-            return GpioNull;
+            return NullGpio;
         #ifdef ENABLE_SPI1
         case SPI1_BASE:
             return SPI1_CS_GPIO;

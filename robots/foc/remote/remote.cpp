@@ -74,10 +74,10 @@ void RemoteFOCMotor::parseCanmsg(const CanMsg &msg){
             break;
         case Command::GET_ALL:{
             auto res = E_4(msg);
-            meta.curr =     std::get<0>(res);
-            meta.spd =      std::get<1>(res);
-            meta.pos =      std::get<2>(res);
-            meta.acc =    std::get<3>(res);
+            meta.curr =     real_t(std::get<0>(res));
+            meta.spd =      real_t(std::get<1>(res));
+            meta.pos =      real_t(std::get<2>(res));
+            meta.acc =      real_t(std::get<3>(res));
             break;
         }
         default:

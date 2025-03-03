@@ -10,7 +10,7 @@ void SpiSw::init(const uint32_t baudRate, const CommMethod tx_method , const Com
     sclk_gpio.outpp(HIGH);
 
     for(auto & cs_gpio : cs_port){
-        if(cs_gpio.isValid()){
+        if(cs_gpio.valid()){
             cs_gpio.outpp(HIGH);
         }
     }

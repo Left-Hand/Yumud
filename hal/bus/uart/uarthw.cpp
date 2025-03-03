@@ -11,8 +11,8 @@ using namespace CH32;
 #define UART_RX_DMA_BUF_SIZE UART_DMA_BUF_SIZE
 
 
-#define UART_IT_TEMPLATE(name, uname)\
-__interrupt void uname##_IRQHandler(void){\
+#define UART_IT_TEMPLATE(name, uname, fname)\
+__interrupt void fname(void){\
     const auto events = uname##_Inst->get_events();\
     if(events.RXNE){\
         name.onRxneInterrupt();\
@@ -32,35 +32,35 @@ __interrupt void uname##_IRQHandler(void){\
 
 
 #ifdef ENABLE_UART1
-UART_IT_TEMPLATE(uart1, USART1)
+UART_IT_TEMPLATE(uart1, USART1, USART1_IRQHandler)
 #endif
 
 #ifdef ENABLE_UART2
-UART_IT_TEMPLATE(uart2, USART2)
+UART_IT_TEMPLATE(uart2, USART2, USART2_IRQHandler)
 #endif
 
 #ifdef ENABLE_UART3
-UART_IT_TEMPLATE(uart3, USART3)
+UART_IT_TEMPLATE(uart3, USART3, USART3_IRQHandler)
 #endif
 
 #ifdef ENABLE_UART4
-UART_IT_TEMPLATE(uart4, UART4)
+UART_IT_TEMPLATE(uart4, USART4, UART4_IRQHandler)
 #endif
 
 #ifdef ENABLE_UART5
-UART_IT_TEMPLATE(uart5, UART5)
+UART_IT_TEMPLATE(uart5, USART5, UART5_IRQHandler)
 #endif
 
 #ifdef ENABLE_UART6
-UART_IT_TEMPLATE(uart6, UART6)
+UART_IT_TEMPLATE(uart6, USART6, UART6_IRQHandler)
 #endif
 
 #ifdef ENABLE_UART7
-UART_IT_TEMPLATE(uart7, UART7)
+UART_IT_TEMPLATE(uart7, USART7, UART7_IRQHandler)
 #endif
 
 #ifdef ENABLE_UART8
-UART_IT_TEMPLATE(uart8, UART8)
+UART_IT_TEMPLATE(uart8, USART8, UART8_IRQHandler)
 #endif
 
 
@@ -244,7 +244,7 @@ Gpio & UartHw::rxio(){
             return UART8_RX_GPIO;
         #endif
         default:
-            return GpioNull;
+            return NullGpio;
     }
 }
 
@@ -283,7 +283,7 @@ Gpio & UartHw::txio(){
             return UART8_TX_GPIO;
         #endif
         default:
-            return GpioNull;
+            return NullGpio;
     }
 }
 

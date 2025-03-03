@@ -8,17 +8,6 @@ void GpioPort::setMode(const int index, const GpioMode mode){
     gpio.setMode(mode);
 }
 
-// Gpio GpioPort::operator [](const int index){
-//     if(index < 0) return channel_none;
-
-//     return Gpio(instance, Pin(1 << index));
-// };
-// Gpio GpioPort::operator [](const Pin pin){
-//     if(pin != Pin::None) return channel_none;
-
-//     return Gpio(instance, pin);
-// };
-
 void GpioPort::enableRcc(const bool en){
     switch((uint32_t)instance){
         #ifdef ENABLE_GPIOA

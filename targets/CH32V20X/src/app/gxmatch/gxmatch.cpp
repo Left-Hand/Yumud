@@ -613,7 +613,7 @@ void host_main(){
                 //     wheels[3].getPosition()
                 // )
                 // DEBUG_PRINTLN(est_.rot());
-                DEBUG_PRINTLN(mag_sensor_.getMagnet())
+                DEBUG_PRINTLN(mag_sensor_.getMagnet());
                 delay(5);
             }
         };
@@ -636,7 +636,7 @@ void host_main(){
             
             ComplementaryFilter rot_obs = {rot_config};
         
-            DEBUG_PRINTLN(std::setprecision(4))
+            DEBUG_PRINTLN(std::setprecision(4));
             while(true){
 
                 acc_gyr_sensor_.update();
@@ -741,7 +741,7 @@ void host_main(){
                 // DEBUG_PRINTLN(std::get<0>(delta));
                 // DEBUG_PRINTLN(delta);
                 // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
-                DEBUG_PRINTLN(ang)
+                DEBUG_PRINTLN(ang);
                 delay(5);
             }
         }
@@ -771,7 +771,7 @@ void host_main(){
                 // DEBUG_PRINTLN(std::get<0>(delta));
                 // DEBUG_PRINTLN(delta);
                 // DEBUG_PRINTLN(wheels[0].getPosition(), wheels[1].getPosition(), wheels[2].getPosition(), wheels[3].getPosition());
-                DEBUG_PRINTLN(std::setprecision(4), py)
+                DEBUG_PRINTLN(std::setprecision(4), py);
                 delay(5);
             }
         }

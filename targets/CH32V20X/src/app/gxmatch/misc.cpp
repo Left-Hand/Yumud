@@ -168,8 +168,8 @@ void bind_tick_200hz(std::function<void(void)> && func){
     auto & timer = timer3;
     timer.init(200);
 
-    timer.bindCb(TimerUtils::IT::Update, std::move(func));
-    timer.enableIt(TimerUtils::IT::Update, {1,0});
+    timer.bindCb(TimerIT::Update, std::move(func));
+    timer.enableIt(TimerIT::Update, {1,0});
     DEBUG_PRINTLN("tick200 binded");
 };
 
@@ -178,8 +178,8 @@ void bind_tick_800hz(std::function<void(void)> && func){
     auto & timer = timer3;
     timer.init(800);
 
-    timer.bindCb(TimerUtils::IT::Update, std::move(func));
-    timer.enableIt(TimerUtils::IT::Update, {1,0});
+    timer.bindCb(TimerIT::Update, std::move(func));
+    timer.enableIt(TimerIT::Update, {1,0});
     DEBUG_PRINTLN("tick800 binded");
 };
 
@@ -189,8 +189,8 @@ void bind_tick_50hz(std::function<void(void)> && func){
     auto & timer = timer2;
     timer.init(50);
 
-    timer.bindCb(TimerUtils::IT::Update, std::move(func));
-    timer.enableIt(TimerUtils::IT::Update, {1,0});
+    timer.bindCb(TimerIT::Update, std::move(func));
+    timer.enableIt(TimerIT::Update, {1,0});
     DEBUG_PRINTLN("tick50 binded");
     // }
 }

@@ -1,6 +1,6 @@
 //TODO fix duplicate code 
 
-namespace ymd{
+namespace ymd::hal{
 
 template <typename BusType>
 template<typename T>

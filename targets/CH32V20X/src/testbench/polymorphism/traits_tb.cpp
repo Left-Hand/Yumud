@@ -149,5 +149,5 @@ void traits_tb(){
     area(ptr);
     area(&circle);
 
-    DEBUG_PRINTLN("\r\nstart")
+    DEBUG_PRINTLN("\r\nstart");
 }

@@ -40,6 +40,7 @@
 #define M_RCC_CLK_GETTER RCC_GetClocksFreq
 #endif
 
+using namespace ymd;
 
 void sys::Clock::delayMs(const uint32_t ms){
     delay(ms);

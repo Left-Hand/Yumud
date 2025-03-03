@@ -13,8 +13,8 @@ void pwm_tb(OutputStream & logger){
     #ifdef PWM_TB_GPIO
     GpioPwm pwm{portA[8], 32};
 
-    timer1.enableIt(TimerUtils::IT::Update, {0,0});
-    timer1.bindCb(TimerUtils::IT::Update, [&](){pwm.tick();});
+    timer1.enableIt(TimerIT::Update, {0,0});
+    timer1.bindCb(TimerIT::Update, [&](){pwm.tick();});
 
     #endif
 

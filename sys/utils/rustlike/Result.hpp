@@ -3,156 +3,277 @@
 #include "sys/core/platform.h"
 #include "util.hpp"
 #include <variant>
+#include <source_location>
 
 namespace ymd{
 
+template<typename T, typename E>
+class Result;
 
-// template<typename T, typename E>
-// class Result{
-// private:
-//     bool is_ok_;
-//     union {
-//         T value_;
-//         E error_;
-//     };
-
-// public:
-//     // Ok 构造函数
-//     Result(const T & value):
-//         is_ok_(true), value_(value)
-//     {}
-
-//     // Ok 移动构造函数
-//     Result(T && value):
-//         is_ok_(true), value_(std::move(value))
-//     {}
-
-//     // Err 构造函数
-//     Result(const E & error):
-//         is_ok_(false), error_(error)
-//     {}
-
-//     // Err 移动构造函数
-//     Result(E && error):
-//         is_ok_(false), error_(std::move(error))
-//     {}
-
-//     // 检查是否为 Ok
-//     bool is_ok() const {
-//         return is_ok_;
-//     }
-
-//     // 检查是否为 Err
-//     bool is_err() const {
-//         return !is_ok_;
-//     }
-
-//     // 获取 Ok 值
-//     const T & ok() const {
-//         if (!is_ok_) {
-//             PANIC("Called 'ok' on an 'Err' value");
-//         }
-//         return value_;
-//     }
-
-//     // 获取 Err 值
-//     const E & err() const {
-//         if (is_ok_) {
-//             PANIC("Called 'err' on an 'Ok' value");
-//         }
-//         return error_;
-//     }
-
-//     // 如果是 Ok，则返回值；否则返回默认值
-//     T unwrap_or(const T & default_value) const {
-//         return is_ok_ ? value_ : default_value;
-//     }
-
-//     // 如果是 Ok，则返回值；否则调用 PANIC 并传递错误信息
-//     T unwrap() const {
-//         if (!is_ok_) {
-//             PANIC("Called 'unwrap' on an 'Err' value");
-//         }
-//         return value_;
-//     }
-
-//     // 如果是 Ok，则返回值；否则调用 PANIC 并传递自定义错误信息
-//     T expect(const std::string & message) const {
-//         if (!is_ok_) {
-//             PANIC(message);
-//         }
-//         return value_;
-//     }
-// };
-
-
-
-template<typename Ret, typename Error>
-class Result_t {
-private:
-    std::variant<Ret, Error> result_;
-
+template<typename T = void>
+struct Ok{
 public:
-    // 构造函数，用于成功情况
-    constexpr Result_t(Ret value) : result_(std::move(value)) {}
+    using TDecay = std::decay_t<T>;
 
-    // 构造函数，用于错误情况
-    constexpr Result_t(Error error) : result_(std::move(error)) {}
+    constexpr Ok(auto val):val_((val)){}
 
-    // 检查是否成功
-    constexpr bool ok() const {
-        return std::holds_alternative<Ret>(result_);
+    template<typename E>
+    constexpr operator Result<T, E>() const{
+        return Result<T, E>{std::move(val_)};
     }
 
-    // 检查是否出错
-    constexpr bool wrong() const {
-        return std::holds_alternative<Error>(result_);
+    constexpr operator T() const{
+        return val_;
     }
+private:
+    TDecay val_;
+};
 
-    // 获取成功值，如果当前是错误状态则抛出异常
-    constexpr Ret unwrap() const {
-        if (likely(ok())) {
-            return std::get<Ret>(result_);
-        } else {
-            HALT
-        }
-    }
+template<>
+struct Ok<void>{
+public:
+    constexpr Ok() = default;
 
-    // 获取错误值，如果当前是成功状态则抛出异常
-    constexpr Error unwrap_err() const {
-        if (likely(wrong())) {
-            return std::get<Error>(result_);
-        } else {
-            HALT
-        }
-    }
-
-    constexpr operator bool () const {
-        return ok();
+    template<typename E>
+    constexpr operator Result<void, E>() const{
+        return Result<void, E>{};
     }
 };
 
+template<typename E>
+struct Err{
+public:
+    template<typename E2>
+    constexpr Err(const Err<E2> & err):val_(std::forward<E>(err.val_)){}
+    template<typename E2>
+    constexpr Err(Err<E2> && err):val_(std::forward<E>(err.val_)){}
+
+    template<typename E2>
+    constexpr Err(const E2 & err):val_(err){}
+    template<typename E2>
+    constexpr Err(E2 && err):val_(std::forward<E>(err)){}
+
+    template<typename T>
+    constexpr operator Result<T, E>() const{
+        return Result<T, E>{std::move(val_)};
+    }
+
+    constexpr operator E() const{
+        return val_;
+    }
+private:
+    E val_;
+};
+
+
+template<typename T>
+Ok(T && val) -> Ok<std::decay_t<T>>;
+
+template<typename TDummy = void>
+Ok() -> Ok<void>;
+
+template<typename E>
+Err(E && val) -> Err<std::decay_t<E>>;
+
+
+template<typename T, typename E>
+struct _Storage{
+public:
+    using Data = std::variant<T, E>;
+
+    constexpr _Storage(T && val):
+        data_(std::forward<T>(val)){;}
+
+    constexpr _Storage(E && val):
+        data_(std::forward<E>(val)){;}
+
+    constexpr _Storage(const _Storage &) = default;
+    constexpr _Storage(_Storage &&) = default;
+
+    constexpr bool is_ok() const{return std::holds_alternative<T>(data_);}
+    constexpr bool is_err() const{return std::holds_alternative<E>(data_);}
+
+    constexpr T unwrap() const{return std::get<T>(data_);}
+    constexpr E unwrap_err() const{return std::get<E>(data_);}
+private:
+    Data data_;
+};
+
+template<typename E>
+struct _Storage<void, E>{
+    using Data = std::optional<E>;
+    constexpr _Storage(Ok<void> &&):
+        data_(std::nullopt){;}
+
+    constexpr _Storage(const Ok<void> &):
+        data_(std::nullopt){;}
+
+    // constexpr _Storage(Err<E> && val):
+        // data_(std::forward<E>(val)){;}
+
+    constexpr _Storage(const Err<E> & val):
+        data_(std::forward<E>(val)){;}
+
+    constexpr _Storage(const _Storage &) = default;
+    constexpr _Storage(_Storage &&) = default;
+
+    constexpr bool is_ok() const{return !data_.has_value();}
+    constexpr bool is_err() const{return data_.has_value();}
+
+    constexpr void unwrap() const{}
+    constexpr E unwrap_err() const{return (data_.value());}
+private:
+    Data data_;
+};
+
+
+
+template<typename T, typename E>
+class Result{
+private:
+    // using Storage = std::variant<T, E>;
+
+
+    using Storage = _Storage<T, E>;
+    Storage result_;
+
+    struct _Loc{
+        const Result<T, E> & owner_;
+        std::source_location loc_;
+
+        template<typename ... Args>
+        constexpr T expect(Args && ... args) const{
+            return owner_.except_impl(loc_, std::forward<Args>(args)...);
+        }
+    };
+
+    template<typename ... Args>
+    constexpr T except_impl(
+        const std::source_location & loc,
+        Args && ... args
+    ) const {
+        if (likely(is_ok())) {
+            return result_.unwrap();
+        } else {
+            #ifdef __DEBUG_INCLUDED
+            __PANIC_EXPLICIT_SOURCE(loc, std::forward<Args>(args)...);
+            #endif
+            exit(1);
+        }
+    }
+    friend class _Loc;
+public:
+    // template<typename TDummy = void>
+    // requires (!std::is_void_v<T>)
+    // constexpr Result(T value) : result_(std::move(value)) {}
+
+    // template<typename TDummy = void>
+    // requires (std::is_void_v<T>)
+    // constexpr Result(void){}
+
+    constexpr Result(E unwrap_err) : result_(std::move(unwrap_err)) {}
+    
+
+    // template<typename T>
+    constexpr Result(Ok<T> && value) : result_((value)){}
+    constexpr Result(const Ok<T> & value) : result_((value)){}
+
+    // template<typename E>
+    // constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
+    constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
+
+    
+    // 映射成功值
+    template<typename F>
+    constexpr auto map(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
+        if (is_ok()) return fn(unwrap());
+        else return err();
+    }
+
+    // 链式处理
+    template<typename F>
+    constexpr auto and_then(F&& fn) -> Result<std::invoke_result_t<F, T>, E> const {
+        if (is_ok()) return fn(unwrap());
+        else return err();
+    }
+
+    template<typename F>
+    constexpr void if_ok(F&& fn) const {
+        if (is_ok()) {
+            (fn)();
+        }
+    }
+
+
+    constexpr bool is_ok() const {
+        return result_.is_ok();
+    }
+
+    constexpr bool is_err() const {
+        return result_.is_err();
+    }
+    
+    constexpr T unwrap() const {
+        if (likely(is_ok())) {
+            return result_.unwrap();
+        } else {
+            exit(1);
+        }
+    }
+
+    template<typename ... Args>
+    constexpr T expect(Args && ... args) const{
+        if (likely(is_ok())) {
+            return result_.unwrap();
+        } else {
+            #ifdef __DEBUG_INCLUDED
+            DEBUG_PRINTLN(std::forward<Args>(args)...);
+            #endif
+            exit(1);
+        }
+    }
+
+    constexpr _Loc loc(const std::source_location & loca = std::source_location::current()) const{
+        return {*this, loca};
+    }
+
+    constexpr E err() const {
+        if (likely(is_err())) {
+            return result_.unwrap_err();
+        } else {
+            exit(1);
+        }
+    }
+};
+
+template<typename E>
+Result(Err<E> && val) -> Result<void, E>;
+
 // Specialization for std::optional
 template <typename T, typename E>
-struct __unwrap_helper<Result_t<T, E>> {
-    using Obj = Result_t<T, E>;
+struct __unwrap_helper<Result<T, E>> {
+    using Obj = Result<T, E>;
     // Unwrap a non-const rvalue optional
+    static constexpr bool is_ok(const Obj & obj) {
+        return obj.is_ok();
+    }
     static constexpr T && unwrap(Obj && obj) {
         return std::move(obj.unwrap());
     }
-
+    
     static constexpr T unwrap(const Obj & obj) {
         return obj.unwrap();
     }
-
+    
     static constexpr E unexpected(Obj && obj) {
         return std::move(obj.unwrap_err());
     }
 
     static constexpr E unexpected(const Obj & obj) {
-        return obj.unwrap_err();
+        return obj.err();
     }
 };
+
 
 
 
