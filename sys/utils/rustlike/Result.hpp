@@ -246,6 +246,9 @@ public:
     }
 };
 
+template<typename E>
+Result(Err<E> && val) -> Result<void, E>;
+
 // Specialization for std::optional
 template <typename T, typename E>
 struct __unwrap_helper<Result<T, E>> {

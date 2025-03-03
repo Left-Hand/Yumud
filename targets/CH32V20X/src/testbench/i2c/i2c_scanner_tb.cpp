@@ -214,7 +214,7 @@ void i2c_scanner_main(){
 
                     delay(1);
                 }
-                // Result<void, int> res = {Err{0}};
+                // const Result res = Err{0};
                 // res.loc().expect("unknown bug");
 
             }
