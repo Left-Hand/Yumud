@@ -98,6 +98,12 @@ public:
     constexpr const T & operator *(){
         return val_;
     }
+
+    template <typename E>
+    operator Result<T, E>() const {
+        return Result<T, E>(Ok<T>(val_));
+    }
+
 private:
     TDecay val_;
 };
@@ -128,6 +134,12 @@ public:
     constexpr const E & operator *(){
         return val_;
     }
+
+    
+    // template <typename T>
+    // operator Result<T, E>() const {
+    //     return Result<T, E>(Err<E>(val_));
+    // }
 private:
     E val_;
 };
@@ -151,5 +163,58 @@ Err(E && val) -> Err<std::decay_t<E>>;
 
 template<typename TDummy = void>
 Err() -> Err<void>;
+
+
+template<std::size_t Size>
+struct size_to_int;
+
+template<>
+struct size_to_int<1> {
+    using type = int8_t;
+};
+
+template<>
+struct size_to_int<2> {
+    using type = int16_t;
+};
+
+template<>
+struct size_to_int<4> {
+    using type = int32_t;
+};
+
+template<>
+struct size_to_int<8> {
+    using type = int64_t;
+};
+
+template<std::size_t Size>
+struct size_to_uint;
+
+template<>
+struct size_to_uint<1> {
+    using type = int8_t;
+};
+
+template<>
+struct size_to_uint<2> {
+    using type = int16_t;
+};
+
+template<>
+struct size_to_uint<4> {
+    using type = int32_t;
+};
+
+template<>
+struct size_to_uint<8> {
+    using type = int64_t;
+};
+
+template<size_t Size>
+using size_to_int_t = typename size_to_int<Size>::type;
+
+template<size_t Size>
+using size_to_uint_t = typename size_to_uint<Size>::type;
 
 } // namespace ymd

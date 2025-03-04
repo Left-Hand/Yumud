@@ -156,7 +156,14 @@ constexpr auto operator|(Option<T> && opt, Fn&& fn){
     return (std::move(opt).and_then(std::forward<Fn>(fn)));
 }
 
-
+template<
+    typename T, 
+    typename Tdecay = std::decay_t<T>
+>
+[[nodiscard]] Option<Tdecay> optcond(bool cond, T&& value){
+    if(cond) return Some<Tdecay>(std::forward<T>(value));
+    else return None;
+}
 
 // Specialization for std::Option
 template <typename T>

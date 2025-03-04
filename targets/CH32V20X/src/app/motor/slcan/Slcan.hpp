@@ -172,20 +172,25 @@ private:
 
     static constexpr MyResult<int> parseStdId(const StringView str){
         using enum Error;
-        if(!str.size()) return Err(NoArg);
-        if(str.size() != 3) return Err(InvalidDataLength);
-        const auto id = int(str);
-        if(id > 0x7FF) return Err(InvalidStdId);
-        return Ok<int>{id};
+        return Result<StringView, void>{str}
+            .validate([](auto&& s){ return s.size() != 0; }, NoArg)
+            .validate([](auto&& s){ return s.size() == 3; }, InvalidDataLength)
+            .transform([](auto&& s){ 
+                const int id = int(s);
+                return rescond(id > 0x7FF, id, InvalidExtId);
+            });
     }
     
     static constexpr MyResult<int> parseExtId(const StringView str){
         using enum Error;
-        if(!str.size()) return Err(NoArg);
-        if(str.size() != 3) return Err(InvalidDataLength);
-        const auto id = int(str);
-        if(id > 0x7FF) return Err(InvalidExtId);
-        return Ok{id};
+
+        return Result<StringView, void>{str}
+            .validate([](auto&& s) -> bool{ return s.size() != 0; }, NoArg)
+            .validate([](auto&& s)-> bool{ return s.size() == 3; }, InvalidDataLength)
+            .transform([](auto&& s){ 
+                const int id = int(s);
+                return rescond(id <= 0x7ff, id, InvalidExtId);
+            });
     }
 
     static constexpr MyResult<std::array<uint8_t, 8>> parseData(const StringView str, const uint8_t dlc){
@@ -202,12 +207,16 @@ private:
     }
 
     static constexpr MyResult<int> parseLen(const StringView str){
+
         using enum Error;
-        if(!str.size()) return Err(NoArg);
-        if(str.size() != 1) return Err(InvalidDataLength);
-        const auto len = int(str);
-        if(len > 8) return Err(InvalidDataLength);
-        return Ok{len};
+
+        return Result<StringView, void>{str}
+            .validate([](auto&& s){ return s.size() != 0; }, NoArg)
+            .validate([](auto&& s){ return s.size() == 1; }, InvalidDataLength)
+            .transform([](auto&& s){ 
+                const int len = int(s);
+                return rescond(len <= 8, len, InvalidDataLength);
+            });
     }
 };
 
