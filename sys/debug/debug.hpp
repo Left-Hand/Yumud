@@ -48,7 +48,7 @@ template <typename... Args>
 struct DEBUG_SOURCE
 {    
 	DEBUG_SOURCE(Args &&... args, const std::source_location& loc = std::source_location::current()){
-        DEBUG_PRINTLN(std::forward<Args>(args)...);
+        DEBUG_PRINTS(std::forward<Args>(args)...);
         delay(1);
         
         {

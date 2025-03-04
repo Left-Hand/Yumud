@@ -39,6 +39,8 @@ using namespace ymd::hal;
 using namespace ymd::drivers;
 using namespace ymd::digipw;
 
+#define UART uart2
+
 void test_sogi(){
     scexpr int ac_freq = 50;
     // scexpr int ac_freq = 25;
@@ -102,8 +104,8 @@ void test_sogi(){
     }
 }
 void digipw_main(){
-    uart2.init(576000);
-    DEBUGGER.retarget(&uart2);
+    UART.init(576000);
+    DEBUGGER.retarget(&UART);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 
@@ -114,7 +116,7 @@ void digipw_main(){
     auto & sda_gpio = portB[14];
     
     I2cSw i2csw{scl_gpio, sda_gpio};
-    i2csw.init(100000);
+    i2csw.init(10000);
     
     INA226 ina226{i2csw};
     ina226.init(6, 5);

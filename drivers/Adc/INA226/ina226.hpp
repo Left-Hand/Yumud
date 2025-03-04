@@ -1,10 +1,18 @@
 #pragma once
 
 #include "drivers/device_defs.h"
+#include "sys/utils/rustlike/Result.hpp"
+#include "sys/utils/rustlike/Optional.hpp"
 
 namespace ymd::drivers{
 class INA226 {
-public:
+    static __inline Result<void, BusError> make_result(const BusError res){
+        if(res.ok()) return Ok();
+        else return Err(res); 
+    }
+
+    public:
+    using BusResult = Result<void, BusError>;
 
     enum class AverageTimes:uint8_t{
         _1 = 0,
@@ -27,20 +35,11 @@ protected:
     real_t current_lsb_ma = real_t(0.2);
     scexpr real_t voltage_lsb_mv = real_t(1.25);
 
-    enum class RegAddress:uint8_t{
-        Config = 0x00,
-        shuntVoltage = 0x01,
-        busVoltage = 0x02,
-        power = 0x03,
-        current = 0x04,
-        calibration = 0x05,
-        mask = 0x06,
-        alertLimit = 0x07,
-        manufactureID = 0xFE,
-        chipID = 0xFF,
-    };
+    using RegAddress = uint8_t;
 
     struct ConfigReg:public Reg16{
+        scexpr RegAddress address = 0x00;
+
         uint16_t shuntVoltageEnable :1;
         uint16_t busVoltageEnable :1;
         uint16_t continuos :1;
@@ -52,6 +51,8 @@ protected:
     };
 
     struct MaskReg:public Reg16{
+        scexpr RegAddress address = 0x06;
+
         uint16_t alertLatchEnable:1;
         uint16_t alertPolarity:1;
         uint16_t mathOverflow:1;
@@ -66,22 +67,59 @@ protected:
         uint16_t shuntOverVoltage:1;
     };
 
+    struct ShuntVoltReg:public Reg16{
+        scexpr RegAddress address = 0x01;
+        uint16_t :16;
+    };
+
+    struct BusVoltReg:public Reg16{
+        scexpr RegAddress address = 0x02;
+        uint16_t :16;
+    };
+
+    struct PowerReg:public Reg16{
+        scexpr RegAddress address = 0x03;
+        uint16_t :16;
+    };
+    struct CurrentReg:public Reg16{
+        scexpr RegAddress address = 0x04;
+        uint16_t :16;
+    };
+    struct CalibrationReg:public Reg16{
+        scexpr RegAddress address = 0x05;
+        uint16_t :16;
+    };
+    struct AlertLimitReg:public Reg16{
+        scexpr RegAddress address = 0x07;
+        uint16_t :16;
+    };
+
+    struct ManufactureReg:public Reg16{
+        scexpr RegAddress address = 0x07;
+        uint16_t :16;
+    };
+
+    struct ChipIdReg:public Reg16{
+        scexpr RegAddress address = 0x07;
+        uint16_t :16;
+    };
+
     ConfigReg configReg;
-    uint16_t shuntVoltageReg;
-    uint16_t busVoltageReg;
-    uint16_t powerReg;
-    int16_t currentReg;
-    int16_t calibrationReg;
+    ShuntVoltReg shuntVoltageReg;
+    BusVoltReg busVoltageReg;
+    PowerReg powerReg;
+    CurrentReg currentReg;
+    CalibrationReg calibrationReg;
     MaskReg maskReg;
-    uint16_t alertLimitReg;
-    uint16_t manufactureIDReg;
-    uint16_t chipIDReg;
+    AlertLimitReg alertLimitReg;
+    ManufactureReg manufactureIDReg;
+    ChipIdReg chipIDReg;
 
-    BusError writeReg(const RegAddress addr, const uint16_t data);
+    [[nodiscard]] BusResult writeReg(const RegAddress addr, const uint16_t data);
 
-    BusError readReg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] BusResult readReg(const RegAddress addr, uint16_t & data);
 
-    BusError requestPool(const RegAddress addr, uint16_t * data_ptr, const size_t len);
+    [[nodiscard]] BusResult requestPool(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
     class CurrentChannel;
     class VoltageChannel;
@@ -165,67 +203,31 @@ public:
     }
 
 
-    real_t getVoltage(){
-        return busVoltageReg * voltage_lsb_mv / 1000;
-    }
+    real_t getVoltage();
 
-    int getShuntVoltageuV(){
-        return((shuntVoltageReg << 1) + (shuntVoltageReg >> 1));
-    }
+    int getShuntVoltageuV();
 
-    real_t getShuntVoltage(){
-        auto uv = getShuntVoltageuV();
-        return real_t(uv / 100) / 10000;
-    }
+    real_t getShuntVoltage();
 
-    real_t getCurrent(){
-        return currentReg * current_lsb_ma / 1000;
-    }
+    real_t getCurrent();
 
-    real_t getPower(){
-        return powerReg * current_lsb_ma / 40;
-    }
+    real_t getPower();
 
-    void setAverageTimes(const AverageTimes times){
-        configReg.averageMode = uint8_t(times);
-        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
-    }
+    void setAverageTimes(const AverageTimes times);
 
-    void setBusConversionTime(const ConversionTime time){
-        configReg.busVoltageConversionTime = uint8_t(time);
-        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
-    }
+    void setBusConversionTime(const ConversionTime time);
 
-    void setShuntConversionTime(const ConversionTime time){
-        configReg.shuntVoltageConversionTime = uint8_t(time);
-        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
-    }
+    void setShuntConversionTime(const ConversionTime time);
 
-    void reset(){
-        configReg.rst = 1;
-        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
-        configReg.rst = 0;
-    }
+    void reset();
 
-    void enableShuntVoltageMeasure(const bool en = true){
-        configReg.shuntVoltageEnable = en;
-        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
-    }
+    void enableShuntVoltageMeasure(const bool en = true);
 
-    void enableBusVoltageMeasure(const bool en = true){
-        configReg.busVoltageEnable = en;
-        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
-    }
+    void enableBusVoltageMeasure(const bool en = true);
 
-    void enableContinuousMeasure(const bool en = true){
-        configReg.continuos = en;
-        writeReg(RegAddress::Config, std::bit_cast<uint16_t>(configReg));
-    }
+    void enableContinuousMeasure(const bool en = true);
 
-    void enableAlertLatch(const bool en = true){
-        maskReg.alertLatchEnable = en;
-        writeReg(RegAddress::mask, std::bit_cast<uint16_t>(maskReg));
-    }
+    void enableAlertLatch(const bool en = true);
 };
 
 }

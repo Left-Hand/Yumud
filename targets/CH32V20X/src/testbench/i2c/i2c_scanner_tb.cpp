@@ -13,6 +13,8 @@
 
 using namespace ymd;
 
+#define UART uart2
+
 struct FoundInfo{
     uint8_t addr;
     uint max_bbaud;
@@ -58,9 +60,8 @@ struct I2cTester{
 
 void i2c_scanner_functional(){
 
-    auto & logger = uart1;
-    logger.init(576_KHz);
-    DEBUGGER.retarget(&logger);
+    UART.init(576_KHz);
+    DEBUGGER.retarget(&UART);
 
     // log("i2c_scanner_main") | log("1");
     
@@ -137,9 +138,8 @@ void test_result(){
     while(true);
 }
 void i2c_scanner_main(){
-    auto & logger = uart1;
-    logger.init(576_KHz);
-    DEBUGGER.retarget(&logger);
+    UART.init(576_KHz);
+    DEBUGGER.retarget(&UART);
     DEBUGGER.forceSync();
     
     // test_result();

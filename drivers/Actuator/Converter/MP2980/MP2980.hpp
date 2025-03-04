@@ -78,15 +78,15 @@ protected:
 
         RefReg & set(const uint16_t data){
             auto & self = *this;
-            self.to_bytes()[0] = data & 0b111;
-            self.to_bytes()[1] = data >> 3;
+            self.as_bytes()[0] = data & 0b111;
+            self.as_bytes()[1] = data >> 3;
 
             return *this;
         }
 
         uint16_t get() const {
             auto & self = *this;
-            return (self.to_bytes()[1] << 3) | self.to_bytes()[0];
+            return (self.as_bytes()[1] << 3) | self.as_bytes()[0];
         }
     };
 

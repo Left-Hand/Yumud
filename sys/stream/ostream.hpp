@@ -16,6 +16,12 @@ namespace ymd{
 class String;
 class StringStream;
 
+template<typename T>
+class __RegC_t;
+
+template<typename T>
+class __Reg_t;
+
 template <typename T>
 struct __needprint_helper {
     static constexpr bool value = true;
@@ -235,6 +241,9 @@ public:
     OutputStream& operator<<(const std::nullopt_t){return *this << '/';}
     OutputStream& operator<<(const __Splitter){print_splt(); return *this;}
     OutputStream& operator<<(const std::source_location & loc){print_source_loc(loc); return *this;}
+
+    template<typename T>
+    OutputStream& operator<<(const __RegC_t<T> & reg){return *this << std::bitset<sizeof(T) * 8>(reg.as_val());}
     
     template<typename T>
     OutputStream& operator<<(const std::optional<T> v){

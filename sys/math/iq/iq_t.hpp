@@ -110,7 +110,7 @@ public:
     #ifdef STRICT_IQ
     __fast_inline consteval explicit iq_t(const float fv):value((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
     #else
-    __fast_inline constexpr iq_t(const float fv):value((std::is_constant_evaluated()) ? _IQFtoN<Q>(fv) : _IQFtoN<Q>(fv)){};
+    __fast_inline constexpr iq_t(const float fv):value((std::is_constant_evaluated()) ? __iqdetails::_IQFtoN<Q>(fv) : __iqdetails::_IQFtoN<Q>(fv)){};
     #endif
 
     static __fast_inline constexpr iq_t from (const floating auto fv){return iq_t{__iqdetails::_IQFtoN<Q>(fv)};}

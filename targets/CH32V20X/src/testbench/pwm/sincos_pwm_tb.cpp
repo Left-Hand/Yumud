@@ -17,8 +17,8 @@
 #define FREQ 40_KHz
 // #define FREQ 200
 
-#define UART_INDEX 1
-// #define UART_INDEX 2
+// #define UART uart1
+#define UART uart2
 
 #define TIM_INDEX 1
 // #define TIM_INDEX 2
@@ -63,13 +63,8 @@ public:
 };
     
 void sincos_pwm_main(){
-    #if UART_INDEX == 1
-    auto & uart = uart1;
-    #elif UART_INDEX == 2
-    auto & uart = uart2;
-    #endif
-    uart.init(576000);
-    DEBUGGER.retarget(&uart);
+    UART.init(576000);
+    DEBUGGER.retarget(&UART);
 
     
     #if TIM_INDEX == 1

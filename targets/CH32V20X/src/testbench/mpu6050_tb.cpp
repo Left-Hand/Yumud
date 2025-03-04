@@ -10,7 +10,8 @@
 
 using namespace ymd::drivers;
 
-
+// #define UART uart2
+#define UART uart1
 void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
     MPU6050 mpu{i2c};
 
@@ -30,8 +31,8 @@ void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
 }
 
 void mpu6050_main(){
-    uart1.init(576_KHz);
-    DEBUGGER.retarget(&uart1);
+    UART.init(576_KHz);
+    DEBUGGER.retarget(&UART);
     I2cSw i2c{portA[12], portA[15]};
     i2c.init(400_KHz);
     // i2c.init();

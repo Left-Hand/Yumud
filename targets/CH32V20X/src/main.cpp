@@ -20,7 +20,7 @@ int main(){
     // qlz_main();
     // embd_main();
     // i2c_scanner_main();
-    ads1115_main();
+    // ads1115_main();
     // embd_main();
     // gui_main();
     // canopen_main();
@@ -33,7 +33,7 @@ int main(){
     // rpc_main();
     // leetcode_main();
     // co_ab_main();
-    // mpu6050_main();
+    mpu6050_main();
     // ina3221_main();
 
     // i2c_scanner_main();

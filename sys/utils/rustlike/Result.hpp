@@ -389,7 +389,7 @@ public:
             return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
-            DEBUG_PRINTS(std::forward<Args>(args)...);
+            if constexpr(sizeof...(args)) DEBUG_PRINTS(std::forward<Args>(args)...);
             #endif
             exit(1);
         }

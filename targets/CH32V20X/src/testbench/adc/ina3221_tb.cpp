@@ -9,12 +9,14 @@
 #include "drivers/IMU/Axis6/MPU6050/MPU6050.hpp"
 
 using namespace ymd;
+#define UART uart2
 
 void ina3221_main()
+
 {
 
-    uart1.init(576000);
-    DEBUGGER.retarget(&uart1);
+    UART.init(576000);
+    DEBUGGER.retarget(&UART);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
 

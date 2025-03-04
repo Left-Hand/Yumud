@@ -10,11 +10,13 @@
 
 using namespace ymd;
 
+#define UART uart2
+
 void tca9548_main()
 {
 
-    uart1.init(576000);
-    DEBUGGER.retarget(&uart1);
+    UART.init(576000);
+    DEBUGGER.retarget(&UART);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
     DEBUGGER.noBrackets();

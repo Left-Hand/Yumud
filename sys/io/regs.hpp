@@ -26,8 +26,11 @@ public:
     [[deprecated("use to_bytes instead")]] constexpr operator std::span<const uint8_t>() const {return {reinterpret_cast<const uint8_t *>(this), sizeof(T)};}
     [[deprecated("use to_bytes instead")]] constexpr uint8_t operator [](const size_t idx) const {return (*(reinterpret_cast<const uint8_t *>(this) + idx));} 
 
-    constexpr std::span<const uint8_t> to_bytes() const {
+    constexpr std::span<const uint8_t> as_bytes() const {
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
+
+    constexpr const T & as_ref() const {return (reinterpret_cast<const T &>(this));}
+    constexpr T as_val() const {return (reinterpret_cast<const T &>(*this));}
 };
 
 
@@ -44,7 +47,7 @@ public:
     
     using __RegC_t<T>::__RegC_t;
     using __RegC_t<T>::operator [];
-    using __RegC_t<T>::to_bytes;
+    using __RegC_t<T>::as_bytes;
     using TReg = __RegC_t<T>::TReg;
 
     __Reg_t<T> copy() const{return *this;}
@@ -55,9 +58,9 @@ public:
     [[deprecated("use clr_bits instead")]] constexpr __Reg_t<T> & operator &=(const T data) {static_cast<T &>(*this) = static_cast<T>(*this) & static_cast<T>(data); return *this;}
     [[deprecated("use set_bits instead")]] constexpr __Reg_t<T> & operator |=(const T data) {static_cast<T &>(*this) = static_cast<T>(*this) | static_cast<T>(data); return *this;}
 
-    constexpr std::span<uint8_t> to_bytes() {
+    constexpr std::span<uint8_t> as_bytes() {
         return std::span<uint8_t>(reinterpret_cast<uint8_t *>(this), sizeof(TReg));}
-    constexpr std::span<const uint8_t> to_bytes() const {
+    constexpr std::span<const uint8_t> as_bytes() const {
         return std::span<const uint8_t>(reinterpret_cast<const uint8_t *>(this), sizeof(TReg));}
 
     constexpr __Reg_t<T> & set_bits(const T data) {
@@ -66,6 +69,10 @@ public:
         static_cast<T &>(*this) = static_cast<T>(*this) & ~static_cast<T>(data); return *this;}
     constexpr __Reg_t<T> & reconf_bits(const T data) {
         static_cast<T &>(*this) = static_cast<T>(data); return *this;}
+
+    constexpr T & as_ref() {return (reinterpret_cast<T &>(*this));}
+    constexpr const T & as_ref() const {return (reinterpret_cast<const T &>(this));}
+    constexpr T as_val() const {return (reinterpret_cast<const T &>(*this));}
 };
 
 
