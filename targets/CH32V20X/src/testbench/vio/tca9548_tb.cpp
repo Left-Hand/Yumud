@@ -18,9 +18,6 @@ void tca9548_main()
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
     DEBUGGER.noBrackets();
-
-    const auto a = 1.4_q14;
-
     
     auto i2c = hal::I2cSw(hal::portA[12], hal::portA[15]);
     i2c.init(400_KHz);
