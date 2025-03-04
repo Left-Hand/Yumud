@@ -94,6 +94,10 @@ public:
     constexpr operator T() const{
         return val_;
     }
+
+    constexpr const T & operator *(){
+        return val_;
+    }
 private:
     TDecay val_;
 };
@@ -116,7 +120,12 @@ public:
     constexpr Err(const E2 & err):val_(err){}
     template<typename E2>
     constexpr Err(E2 && err):val_(std::forward<E>(err)){}
+
     constexpr operator E() const{
+        return val_;
+    }
+
+    constexpr const E & operator *(){
         return val_;
     }
 private:

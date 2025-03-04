@@ -16,6 +16,19 @@ static constexpr bool is_option_v = false;
 template<typename T>
 static constexpr bool is_option_v<Option<T>> = true;
 
+
+template<typename T>
+struct _option_type{
+};
+
+template<typename T>
+struct _option_type<Option<T>>{
+    using type = T;
+};
+
+template<typename T>
+using option_type_t = _option_type<T>::type;
+
 template<typename T>
 class Option{
 private:
@@ -41,7 +54,7 @@ public:
         return exists_ ? value_ : default_value;
     }
 
-    constexpr const T & unwarp(const std::source_location & loc = std::source_location::current()) const {
+    constexpr const T & unwrap(const std::source_location & loc = std::source_location::current()) const {
         if(exists_ == false){
             __PANIC_EXPLICIT_SOURCE(loc);
         }
@@ -51,12 +64,6 @@ public:
     constexpr void unexpected() const {
         return;
     }
-
-    // // 管道运算符支持 (|> 类似F#)
-    // template<typename U, typename Fn>
-    // auto operator|(const Option<U>& opt, Fn&& fn) {
-    //     return fn(opt);
-    // }
 
     // // 逻辑组合运算符
     // template<typename U>
@@ -70,7 +77,7 @@ public:
     // }
 
     template<typename FnSome, typename FnNone>
-    auto match(FnSome&& some_fn, FnNone&& none_fn) const& {
+    constexpr auto match(FnSome&& some_fn, FnNone&& none_fn) const& {
         if (is_some()) {
             return std::invoke(std::forward<FnSome>(some_fn), value_);
         } else {
@@ -79,25 +86,76 @@ public:
     }
 
     // 函数式映射 (Monadic map)
-    template<typename Fn>
-    auto map(Fn&& fn) const& -> Option<std::invoke_result_t<Fn, const T&>> {
-        // using RetType = std::invoke_result_t<Fn, const T&>;
+    template<
+        typename Fn,
+        typename TIResult = std::invoke_result_t<Fn, T>
+    >
+    constexpr auto map(Fn&& fn) const& -> Option<TIResult> {
         if (is_some()) {
-            return Some(fn(value_));
+            return Some<TIResult>(std::forward<Fn>(fn)(value_));
         }
         return None;
     }
 
     // 链式操作 (Monadic and_then)
-    template<typename Fn>
-    auto and_then(Fn&& fn) const& {
-        using RetType = std::invoke_result_t<Fn, const T&>;
-        static_assert(is_option_v<RetType>, 
-            "Fn must return an Option type");
-        
-        return is_some() ? fn(value_) : RetType(None);
+    template<
+        typename Fn, 
+        typename TIResult = std::invoke_result_t<Fn, T>, 
+        typename TData = std::conditional_t<
+            is_option_v<TIResult>, 
+            option_type_t<TIResult>, 
+            TIResult
+        >
+    >
+
+    constexpr auto and_then(Fn&& fn) const -> Option<TData>{
+        if (is_some()){
+            if constexpr(is_option_v<TIResult>){
+                return std::forward<Fn>(fn)(value_);
+            }else{
+                return Some<TData>(std::forward<Fn>(fn)(value_));
+            }
+        }
+        return None;
     }
+
+    // // 安全空值传播
+    template<typename Fn>
+    requires requires(Fn fn, T val) { 
+        { fn(val) } -> std::same_as<Option<typename std::invoke_result_t<Fn, T>>>; 
+    }
+    constexpr auto operator>>=(Fn&& fn) const {
+        return this->and_then(std::forward<Fn>(fn));
+    }
+
+    // template<typename U, typename Fn>
+    // friend auto operator|(const Option<U>& opt, Fn&& fn);
+
 };
+
+
+template<std::size_t I, typename T>
+auto get(const Option<T>& opt) {
+    if constexpr (I == 0) return opt.unwrap();
+}
+
+// 增强CTAD
+template<typename T>
+Option(Some<T>) -> Option<T>;
+
+Option(_None_t) -> Option<std::monostate>;  // 显式空类型
+
+
+template<typename T, typename Fn>
+constexpr auto operator|(const Option<T>& opt, Fn&& fn){
+    return (opt.and_then(std::forward<Fn>(fn)));
+}
+
+template<typename T, typename Fn>
+constexpr auto operator|(Option<T> && opt, Fn&& fn){
+    return (std::move(opt).and_then(std::forward<Fn>(fn)));
+}
+
 
 
 // Specialization for std::Option
@@ -121,5 +179,19 @@ struct __unwrap_helper<Option<T>> {
         return obj.unexpected();
     }
 };
+
+}
+
+
+namespace std{
+    // 结构化绑定支持 (C++17)
+    template<typename T>
+    struct tuple_size<ymd::Option<T>> 
+        : integral_constant<std::size_t, 1> {};
+
+    template<typename T>
+    struct tuple_element<0, ymd::Option<T>> {
+        using type = T;
+    };
 
 }
