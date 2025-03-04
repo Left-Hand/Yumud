@@ -18,7 +18,7 @@
 #endif
 
 #ifdef USE_IQ
-using real_t = iq_t<16>;
+using real_t = iq_t<IQ_DEFAULT_Q>;
 #elif defined(USE_DOUBLE)
 using real_t = double;
 #else
@@ -35,10 +35,48 @@ consteval real_t operator"" _r(long double x){
     return real_t(x);
 }
 
-consteval iq_t<16> operator"" _q(long double x){
-    return iq_t<16>(x);
+consteval iq_t<IQ_DEFAULT_Q> operator"" _q(long double x){
+    return iq_t<IQ_DEFAULT_Q>(x);
 }
 
+#define __IQ_STRING_LITERAL_HELPER(n)\
+consteval iq_t<n> operator"" _q##n(long double x){\
+    return iq_t<n>(x);\
+}\
+
+__IQ_STRING_LITERAL_HELPER(1)
+__IQ_STRING_LITERAL_HELPER(2)
+__IQ_STRING_LITERAL_HELPER(3)
+__IQ_STRING_LITERAL_HELPER(4)
+__IQ_STRING_LITERAL_HELPER(5)
+__IQ_STRING_LITERAL_HELPER(6)
+__IQ_STRING_LITERAL_HELPER(7)
+__IQ_STRING_LITERAL_HELPER(8)
+__IQ_STRING_LITERAL_HELPER(9)
+__IQ_STRING_LITERAL_HELPER(10)
+__IQ_STRING_LITERAL_HELPER(11)
+__IQ_STRING_LITERAL_HELPER(12)
+__IQ_STRING_LITERAL_HELPER(13)
+__IQ_STRING_LITERAL_HELPER(14)
+__IQ_STRING_LITERAL_HELPER(15)
+__IQ_STRING_LITERAL_HELPER(16)
+__IQ_STRING_LITERAL_HELPER(17)
+__IQ_STRING_LITERAL_HELPER(18)
+__IQ_STRING_LITERAL_HELPER(19)
+__IQ_STRING_LITERAL_HELPER(20)
+__IQ_STRING_LITERAL_HELPER(21)
+__IQ_STRING_LITERAL_HELPER(22)
+__IQ_STRING_LITERAL_HELPER(23)
+__IQ_STRING_LITERAL_HELPER(24)
+__IQ_STRING_LITERAL_HELPER(25)
+__IQ_STRING_LITERAL_HELPER(26)
+__IQ_STRING_LITERAL_HELPER(27)
+__IQ_STRING_LITERAL_HELPER(28)
+__IQ_STRING_LITERAL_HELPER(29)
+__IQ_STRING_LITERAL_HELPER(30)
+__IQ_STRING_LITERAL_HELPER(31)
+
+#undef __IQ_STRING_LITERAL_HELPER
 
 __fast_inline constexpr int mean(const int a, const int b){
     return ((a+b) >> 1);

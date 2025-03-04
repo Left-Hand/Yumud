@@ -5,7 +5,7 @@
 
 #include "_IQNsqrt.hpp"
 
-
+namespace __iqdetails{
 /**
  * @brief Computes the inverse sine of the IQN input.
  *
@@ -165,4 +165,6 @@ constexpr _iq<29> _IQNasin(_iq<Q> iqNInput){
             __IQNasin<Q>(iqNInput.to_i32())
         );
     }
+}
+
 }

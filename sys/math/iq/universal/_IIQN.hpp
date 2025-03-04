@@ -2,6 +2,8 @@
 
 #include "rts_support.h"
 
+namespace __iqdetails{
+
 template<size_t Q>
 requires (Q < 64)
 struct _iiq{
@@ -41,3 +43,5 @@ public:
         }
     }
 };
+
+}

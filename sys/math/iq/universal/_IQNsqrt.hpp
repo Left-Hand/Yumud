@@ -4,6 +4,7 @@
 #include "_IQNtables.hpp"
 
 
+
 /*!
  * @brief Specifies inverse square root operation type.
  */
@@ -20,6 +21,8 @@
  * @brief Specifies inverse magnitude operation type.
  */
 #define TYPE_IMAG    (3)
+
+namespace __iqdetails{
 
 /**
  * @brief Calculate square root, inverse square root and the magnitude of two inputs.
@@ -294,6 +297,8 @@ constexpr _iq<Q> _IQNimag(_iq<Q> iqNInputX, _iq<Q> iqNInputY){
             std::bit_cast<int32_t>(iqNInputY)
         )
     );
+}
+
 }
 
 #undef TYPE_ISQRT

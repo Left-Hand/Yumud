@@ -17,6 +17,9 @@ void tca9548_main()
     DEBUGGER.retarget(&uart1);
     DEBUGGER.setEps(4);
     DEBUGGER.setSplitter(",");
+    DEBUGGER.noBrackets();
+
+    const auto a = 1.4_q14;
 
     
     auto i2c = hal::I2cSw(hal::portA[12], hal::portA[15]);
@@ -26,17 +29,17 @@ void tca9548_main()
 
     auto & vi2c = tca[0];   
 
-    auto & act_i2c = i2c;   
+    // auto & act_i2c = i2c;   
+    auto & act_i2c = vi2c;   
 
     auto mpu = drivers::MPU6050{act_i2c};
     
-    // mpu.init();
+    mpu.init();
 
-    DEBUGGER.noBrackets();
 
     while(true){
-        // mpu.update();
-        // DEBUG_PRINTLN(millis(), mpu.getAcc());
+        mpu.update();
+        DEBUG_PRINTLN(millis(), mpu.getAcc());
         DEBUG_PRINTLN(millis(), tca.verify());
         delay(20);
     }

@@ -12,6 +12,8 @@
 #define TYPE_PU         (0)
 #define TYPE_RAD        (1)
 
+
+namespace __iqdetails{
 /**
  * @brief Compute the 4-quadrant arctangent of the IQN input
  *        and return the result.
@@ -177,6 +179,7 @@ constexpr _iq<Q> _IQNatan2PU(_iq<Q> iqNInputY, _iq<Q> iqNInputX){
     );
 }
 
+}
 
 #undef TYPE_PU
 #undef TYPE_RAD

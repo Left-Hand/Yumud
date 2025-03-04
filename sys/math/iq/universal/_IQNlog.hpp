@@ -3,6 +3,8 @@
 #include "support.h"
 #include "_IQNtables.hpp"
 
+
+namespace __iqdetails{
 /**
  * @brief Computes the base-e logarithm of an IQN input.
  *
@@ -90,4 +92,6 @@ constexpr int32_t __IQNlog(int32_t iqNInput, const int32_t iqNMin)
 template<size_t Q>
 constexpr _iq<30> _IQNlog(_iq<Q> a){
     return _iq<30>::from_i32(__IQNlog<Q>(a.to_i32(), ((Q >= 27) ? _IQNlog_min[Q - 27] : 1)));
+}
+
 }

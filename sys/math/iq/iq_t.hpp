@@ -10,18 +10,18 @@
 #include "arm/IQmath_ARM.h"
 #else
 
-#include "_IQNdiv.hpp"
-#include "_IQNatan2.hpp"
-#include "_IQNtoF.hpp"
-#include "_IQFtoN.hpp"
-#include "_IQNsqrt.hpp"
-#include "_IQNexp.hpp"
-#include "_IQNasin_acos.hpp"
-#include "_IQNsin_cos.hpp"
-#include "_IQNlog.hpp"
-
-#include "rts_support.h"
+#include "universal/_IQNdiv.hpp"
+#include "universal/_IQNatan2.hpp"
+#include "universal/_IQNtoF.hpp"
+#include "universal/_IQFtoN.hpp"
+#include "universal/_IQNsqrt.hpp"
+#include "universal/_IQNexp.hpp"
+#include "universal/_IQNasin_acos.hpp"
+#include "universal/_IQNsin_cos.hpp"
+#include "universal/_IQNlog.hpp"
 #include <numeric>
+
+using namespace __iqdetails;
 
 #ifndef LOG_E
 #define LOG_E (0.434294481903)

@@ -25,6 +25,9 @@
  */
 #define TYPE_PU      (1)
 
+
+namespace __iqdetails{
+
 /**
  * @brief Computes the sine of an UIQ31 input.
  *
@@ -436,6 +439,8 @@ constexpr _iq<31> _IQNsinPU(const _iq<Q> iqNInput){
 template<int8_t Q>
 constexpr _iq<31> _IQNcosPU(const _iq<Q> iqNInput){
     return std::bit_cast<_iq<31>>(__IQNsin_cos<Q, TYPE_COS, TYPE_PU>(iqNInput.to_i32()));
+}
+
 }
 
 #undef TYPE_SIN
