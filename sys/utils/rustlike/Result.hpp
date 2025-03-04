@@ -1,74 +1,12 @@
 #pragma once
 
-#include "sys/core/platform.h"
-#include "sys/debug/debug.hpp"
-#include "util.hpp"
-#include <variant>
-#include <source_location>
+
+
+#include "Optional.hpp"
 
 namespace ymd{
 
-template<typename T, typename E>
-class Result;
 
-template<typename T = void>
-struct Ok{
-public:
-    using TDecay = std::decay_t<T>;
-
-    constexpr Ok(auto val):val_((val)){}
-
-    constexpr operator T() const{
-        return val_;
-    }
-private:
-    TDecay val_;
-};
-
-template<>
-struct Ok<void>{
-public:
-    constexpr Ok() = default;
-};
-
-template<typename E>
-struct Err{
-public:
-    template<typename E2>
-    constexpr Err(const Err<E2> & err):val_(std::forward<E>(err.val_)){}
-    template<typename E2>
-    constexpr Err(Err<E2> && err):val_(std::forward<E>(err.val_)){}
-
-    template<typename E2>
-    constexpr Err(const E2 & err):val_(err){}
-    template<typename E2>
-    constexpr Err(E2 && err):val_(std::forward<E>(err)){}
-    constexpr operator E() const{
-        return val_;
-    }
-private:
-    E val_;
-};
-
-
-template<>
-struct Err<void>{
-public:
-    constexpr Err() = default;
-};
-
-
-template<typename T>
-Ok(T && val) -> Ok<std::decay_t<T>>;
-
-template<typename TDummy = void>
-Ok() -> Ok<void>;
-
-template<typename E>
-Err(E && val) -> Err<std::decay_t<E>>;
-
-template<typename TDummy = void>
-Err() -> Err<void>;
 
 template<typename T, typename E>
 struct _Storage{
@@ -180,7 +118,7 @@ public:
     // requires (std::is_void_v<T>)
     // constexpr Result(void){}
 
-    constexpr Result(E unwrap_err) : result_(std::move(unwrap_err)) {}
+    // constexpr Result(E unwrap_err) : result_(std::move(unwrap_err)) {}
     
 
     // template<typename T>
@@ -222,13 +160,7 @@ public:
         return result_.is_err();
     }
     
-    constexpr T unwrap() const {
-        if (likely(is_ok())) {
-            return result_.unwrap();
-        } else {
-            exit(1);
-        }
-    }
+
 
     template<typename ... Args>
     constexpr T expect(Args && ... args) const{
@@ -252,8 +184,17 @@ public:
         }
         return *this;
     } 
+    
     constexpr _Loc loc(const std::source_location & loca = std::source_location::current()) const{
         return {*this, loca};
+    }
+
+    constexpr T unwrap() const {
+        if (likely(is_ok())) {
+            return result_.unwrap();
+        } else {
+            exit(1);
+        }
     }
 
     constexpr E unwrap_err() const {
@@ -264,6 +205,21 @@ public:
         }
     }
 
+    constexpr Option<T> ok() const{
+        if (likely(is_ok())) {
+            return Some(result_.unwrap());
+        } else {
+            return None;
+        }
+    }
+
+    constexpr Option<E> err() const{
+        if (likely(is_err())) {
+            return Some(result_.unwrap_err());
+        } else {
+            return None;
+        }
+    }
 };
 
 template<typename E>
@@ -296,8 +252,6 @@ struct __unwrap_helper<Result<T, E>> {
         return obj.unwrap_err();
     }
 };
-
-
 
 
 }

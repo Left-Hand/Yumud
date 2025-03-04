@@ -171,23 +171,26 @@ private:
     }
 
     static constexpr MyResult<int> parseStdId(const StringView str){
-        if(!str.size()) return Error::NoArg;
-        if(str.size() != 3) return Error::InvalidDataLength;
+        using enum Error;
+        if(!str.size()) return Err(NoArg);
+        if(str.size() != 3) return Err(InvalidDataLength);
         const auto id = int(str);
-        if(id > 0x7FF) return Error::InvalidStdId;
+        if(id > 0x7FF) return Err(InvalidStdId);
         return Ok<int>{id};
     }
-
+    
     static constexpr MyResult<int> parseExtId(const StringView str){
-        if(!str.size()) return Error::NoArg;
-        if(str.size() != 3) return Error::InvalidDataLength;
+        using enum Error;
+        if(!str.size()) return Err(NoArg);
+        if(str.size() != 3) return Err(InvalidDataLength);
         const auto id = int(str);
-        if(id > 0x7FF) return Error::InvalidExtId;
+        if(id > 0x7FF) return Err(InvalidExtId);
         return Ok{id};
     }
 
     static constexpr MyResult<std::array<uint8_t, 8>> parseData(const StringView str, const uint8_t dlc){
-        if(str.size() != dlc * 2) return Error::InvalidDataLength;
+        using enum Error;
+        if(str.size() != dlc * 2) return Err(InvalidDataLength);
 
         std::array<uint8_t, 8> buf;
 
@@ -199,10 +202,11 @@ private:
     }
 
     static constexpr MyResult<int> parseLen(const StringView str){
-        if(!str.size()) return Error::NoArg;
-        if(str.size() != 1) return Error::InvalidDataLength;
+        using enum Error;
+        if(!str.size()) return Err(NoArg);
+        if(str.size() != 1) return Err(InvalidDataLength);
         const auto len = int(str);
-        if(len > 8) return Error::InvalidDataLength;
+        if(len > 8) return Err(InvalidDataLength);
         return Ok{len};
     }
 };
