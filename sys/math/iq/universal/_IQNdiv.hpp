@@ -4,12 +4,14 @@
 #include "_IQNtables.hpp"
 
 
-
 #define TYPE_DEFAULT    (0)
 /*!
  * @brief Used to specify unsigned division on IQNdiv
  */
 #define TYPE_UNSIGNED   (1)
+
+
+namespace __iqdetails{
 
 
 template<const int8_t Q, const int32_t type>
@@ -138,6 +140,8 @@ template<const size_t Q>
 constexpr _iq<Q> _UIQdiv(_iq<Q> a, _iq<Q> b)
 {
     return _iq<Q>::from_i32(__IQNdiv_impl<Q, TYPE_UNSIGNED>(a.to_i32(), b.to_i32()));
+}
+
 }
 
 #undef TYPE_DEFAULT

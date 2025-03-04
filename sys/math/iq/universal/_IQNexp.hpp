@@ -3,6 +3,7 @@
 #include "support.h"
 #include "_IQNtables.hpp"
 
+namespace __iqdetails{
 
 /**
  * @brief Computes the exponential of an IQN input.
@@ -120,4 +121,6 @@ constexpr int32_t __IQNexp(int32_t iqNInput){
 template<const size_t Q>
 constexpr _iq<Q> _IQNexp(_iq<Q> input){
     return std::bit_cast<_iq<Q>>(__IQNexp<Q>(std::bit_cast<int32_t>(input)));
+}
+
 }

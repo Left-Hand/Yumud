@@ -151,6 +151,19 @@ public:
 template <typename Texpr, typename... Args>
 ASSERT(Texpr&&, Args &&...) -> ASSERT<Texpr, Args...>;
 
+
+template<typename Texpr>
+bool CHECK(Texpr && expr){
+    const auto result_ = (bool(expr));
+    if(!result_){
+        DISABLE_INT;
+        DISABLE_INT;
+        exit(1);
+    }
+
+    return result_;
+}
+
 #define TODO(...) PANIC("todo:", ##__VA_ARGS__)
 }
 

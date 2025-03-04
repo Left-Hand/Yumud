@@ -121,3 +121,6 @@ void leetcode_main();
 void canopen_main();
 
 void tca9548_main();
+void ads1115_main();
+
+void ina3221_main();

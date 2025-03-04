@@ -2,6 +2,7 @@
 
 #include "support.h"
 
+namespace __iqdetails{
 
 template<const size_t Q>
 constexpr float _IQNtoF(_iq<Q> iqNInput)
@@ -47,4 +48,6 @@ constexpr float _IQNtoF(_iq<Q> iqNInput)
 
     /* Return the mantissa + exp + sign result as a floating point type. */
     return std::bit_cast<float>(uiq23Result);
+}
+
 }

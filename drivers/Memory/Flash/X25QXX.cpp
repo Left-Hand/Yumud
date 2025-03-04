@@ -33,16 +33,16 @@ void X25QXX::updateDeviceId(){
     skipByte();
     skipByte();
 
-    readByte(jedec_id[2], CONT);
-    readByte(jedec_id[0]);
+    readByte(jedec_id.to_bytes()[2], CONT);
+    readByte(jedec_id.to_bytes()[0]);
 }
 
 void X25QXX::updateJedecId(){
     writeByte(0x9F, CONT);
 
-    readByte(jedec_id[2], CONT);
-    readByte(jedec_id[1], CONT);
-    readByte(jedec_id[0]);
+    readByte(jedec_id.to_bytes()[2], CONT);
+    readByte(jedec_id.to_bytes()[1], CONT);
+    readByte(jedec_id.to_bytes()[0]);
 }
 
 bool X25QXX::waitForFree(size_t timeout){

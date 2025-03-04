@@ -171,23 +171,31 @@ private:
     }
 
     static constexpr MyResult<int> parseStdId(const StringView str){
-        if(!str.size()) return Error::NoArg;
-        if(str.size() != 3) return Error::InvalidDataLength;
-        const auto id = int(str);
-        if(id > 0x7FF) return Error::InvalidStdId;
-        return Ok<int>{id};
+        using enum Error;
+        return Result<StringView, void>{str}
+            .validate([](auto&& s){ return s.size() != 0; }, NoArg)
+            .validate([](auto&& s){ return s.size() == 3; }, InvalidDataLength)
+            .transform([](auto&& s){ 
+                const int id = int(s);
+                return rescond(id > 0x7FF, id, InvalidExtId);
+            });
     }
-
+    
     static constexpr MyResult<int> parseExtId(const StringView str){
-        if(!str.size()) return Error::NoArg;
-        if(str.size() != 3) return Error::InvalidDataLength;
-        const auto id = int(str);
-        if(id > 0x7FF) return Error::InvalidExtId;
-        return Ok{id};
+        using enum Error;
+
+        return Result<StringView, void>{str}
+            .validate([](auto&& s) -> bool{ return s.size() != 0; }, NoArg)
+            .validate([](auto&& s)-> bool{ return s.size() == 3; }, InvalidDataLength)
+            .transform([](auto&& s){ 
+                const int id = int(s);
+                return rescond(id <= 0x7ff, id, InvalidExtId);
+            });
     }
 
     static constexpr MyResult<std::array<uint8_t, 8>> parseData(const StringView str, const uint8_t dlc){
-        if(str.size() != dlc * 2) return Error::InvalidDataLength;
+        using enum Error;
+        if(str.size() != dlc * 2) return Err(InvalidDataLength);
 
         std::array<uint8_t, 8> buf;
 
@@ -199,11 +207,16 @@ private:
     }
 
     static constexpr MyResult<int> parseLen(const StringView str){
-        if(!str.size()) return Error::NoArg;
-        if(str.size() != 1) return Error::InvalidDataLength;
-        const auto len = int(str);
-        if(len > 8) return Error::InvalidDataLength;
-        return Ok{len};
+
+        using enum Error;
+
+        return Result<StringView, void>{str}
+            .validate([](auto&& s){ return s.size() != 0; }, NoArg)
+            .validate([](auto&& s){ return s.size() == 1; }, InvalidDataLength)
+            .transform([](auto&& s){ 
+                const int len = int(s);
+                return rescond(len <= 8, len, InvalidDataLength);
+            });
     }
 };
 

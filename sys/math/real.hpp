@@ -18,7 +18,7 @@
 #endif
 
 #ifdef USE_IQ
-using real_t = iq_t<16>;
+using real_t = iq_t<IQ_DEFAULT_Q>;
 #elif defined(USE_DOUBLE)
 using real_t = double;
 #else
@@ -35,10 +35,42 @@ consteval real_t operator"" _r(long double x){
     return real_t(x);
 }
 
-consteval iq_t<16> operator"" _q(long double x){
-    return iq_t<16>(x);
+consteval iq_t<IQ_DEFAULT_Q> operator"" _q(long double x){
+    return iq_t<IQ_DEFAULT_Q>(x);
 }
 
+
+consteval iq_t<1> operator"" _q1(long double x) { return iq_t<1>(x); }
+consteval iq_t<2> operator"" _q2(long double x) { return iq_t<2>(x); }
+consteval iq_t<3> operator"" _q3(long double x) { return iq_t<3>(x); }
+consteval iq_t<4> operator"" _q4(long double x) { return iq_t<4>(x); }
+consteval iq_t<5> operator"" _q5(long double x) { return iq_t<5>(x); }
+consteval iq_t<6> operator"" _q6(long double x) { return iq_t<6>(x); }
+consteval iq_t<7> operator"" _q7(long double x) { return iq_t<7>(x); }
+consteval iq_t<8> operator"" _q8(long double x) { return iq_t<8>(x); }
+consteval iq_t<9> operator"" _q9(long double x) { return iq_t<9>(x); }
+consteval iq_t<10> operator"" _q10(long double x) { return iq_t<10>(x); }
+consteval iq_t<11> operator"" _q11(long double x) { return iq_t<11>(x); }
+consteval iq_t<12> operator"" _q12(long double x) { return iq_t<12>(x); }
+consteval iq_t<13> operator"" _q13(long double x) { return iq_t<13>(x); }
+consteval iq_t<14> operator"" _q14(long double x) { return iq_t<14>(x); }
+consteval iq_t<15> operator"" _q15(long double x) { return iq_t<15>(x); }
+consteval iq_t<16> operator"" _q16(long double x) { return iq_t<16>(x); }
+consteval iq_t<17> operator"" _q17(long double x) { return iq_t<17>(x); }
+consteval iq_t<18> operator"" _q18(long double x) { return iq_t<18>(x); }
+consteval iq_t<19> operator"" _q19(long double x) { return iq_t<19>(x); }
+consteval iq_t<20> operator"" _q20(long double x) { return iq_t<20>(x); }
+consteval iq_t<21> operator"" _q21(long double x) { return iq_t<21>(x); }
+consteval iq_t<22> operator"" _q22(long double x) { return iq_t<22>(x); }
+consteval iq_t<23> operator"" _q23(long double x) { return iq_t<23>(x); }
+consteval iq_t<24> operator"" _q24(long double x) { return iq_t<24>(x); }
+consteval iq_t<25> operator"" _q25(long double x) { return iq_t<25>(x); }
+consteval iq_t<26> operator"" _q26(long double x) { return iq_t<26>(x); }
+consteval iq_t<27> operator"" _q27(long double x) { return iq_t<27>(x); }
+consteval iq_t<28> operator"" _q28(long double x) { return iq_t<28>(x); }
+consteval iq_t<29> operator"" _q29(long double x) { return iq_t<29>(x); }
+consteval iq_t<30> operator"" _q30(long double x) { return iq_t<30>(x); }
+consteval iq_t<31> operator"" _q31(long double x) { return iq_t<31>(x); }
 
 __fast_inline constexpr int mean(const int a, const int b){
     return ((a+b) >> 1);

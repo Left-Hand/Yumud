@@ -2,10 +2,12 @@
 
 #include "rts_support.h"
 
+namespace __iqdetails{
+
 #define _IQ30log_order  14
 #define _IQ30exp_order  10
 
-scexpr int32_t _IQ31CosLookup[52] = {
+static constexpr int32_t _IQ31CosLookup[52] = {
     2147483647, 2147221509, 2146435157, 2145124784,
     2143290709, 2140933381, 2138053374, 2134651392,
     2130728266, 2126284953, 2121322538, 2115842232,
@@ -22,7 +24,7 @@ scexpr int32_t _IQ31CosLookup[52] = {
 };
 
 /* sin */
-scexpr int32_t _IQ31SinLookup[52] = {
+static constexpr int32_t _IQ31SinLookup[52] = {
     0,   33553067,   67097942,  100626436,
     134130364,  167601545,  201031810,  234412995,
     267736951,  300995544,  334180652,  367284176,
@@ -71,7 +73,7 @@ static constexpr uint32_t _UIQ32SinLookup[52] = {
 };
 
 /* Asin */
-scexpr int32_t _IQ29Asin_coeffs[17][5] = {
+static constexpr int32_t _IQ29Asin_coeffs[17][5] = {
     {  3149732,   89392309,       962, 536870908,       0},
     {  9526495,   88593699,     40416, 536870004,       8},
     { 16138900,   86937495,    197996, 536863257,     118},
@@ -92,7 +94,7 @@ scexpr int32_t _IQ29Asin_coeffs[17][5] = {
 };
 
 /* atan */
-scexpr int32_t _IQ32atan_coeffs[132] = {
+static constexpr int32_t _IQ32atan_coeffs[132] = {
     -227484580, -9261, 683565333, 0,
         -224831707, -276221, 683574534, -108,
         -219602897, -1274081, 683638558, -1488,
@@ -129,13 +131,13 @@ scexpr int32_t _IQ32atan_coeffs[132] = {
     };
 
 /* exp */
-scexpr uint32_t _IQ30exp_coeffs[11] = {
+static constexpr uint32_t _IQ30exp_coeffs[11] = {
     0x00000127, 0x00000B93, 0x00006806, 0x00034034,
     0x0016C16C, 0x00888888, 0x02AAAAAA, 0x0AAAAAAA,
     0x20000000, 0x40000000, 0x40000000
 };
 
-scexpr uint32_t _IQNexp_min[30] = {
+static constexpr uint32_t _IQNexp_min[30] = {
     0xffffffff, 0xfffffffb, 0xfffffff0, 0xffffffd4, 0xffffff92, 0xfffffef6,
     0xfffffd93, 0xfffffa75, 0xfffff386, 0xffffe447, 0xffffc301, 0xffff7aeb,
     0xfffedfa7, 0xfffd92f1, 0xfffacd29, 0xfff4e8df, 0xffe86ed9, 0xffce17ea,
@@ -143,7 +145,7 @@ scexpr uint32_t _IQNexp_min[30] = {
     0xdd57b752, 0xb7e9a644, 0x80000000, 0x80000000, 0x80000000, 0x80000000
 };
 
-scexpr uint32_t _IQNexp_max[30] = {
+static constexpr uint32_t _IQNexp_max[30] = {
     0x00000029, 0x00000050, 0x0000009b, 0x0000012b, 0x00000240, 0x00000455,
     0x00000851, 0x00000ff1, 0x00001e7f, 0x00003a39, 0x00006ee7, 0x0000d2b7,
     0x00018f40, 0x0002f224, 0x00058b90, 0x000a65af, 0x0013687a, 0x00240b2c,
@@ -151,13 +153,13 @@ scexpr uint32_t _IQNexp_max[30] = {
     0x0851591f, 0x0ddce9df, 0x162e42fe, 0x2145647e, 0x2c5c85fd, 0x2c5c85fd
 };
 
-scexpr uint16_t _IQNexp_offset[30] = {
+static constexpr uint16_t _IQNexp_offset[30] = {
     0, 1, 2, 2, 3, 4, 4, 5, 6, 6, 7, 8,
     9, 9, 10, 11, 11, 12, 13, 13, 14,
     15, 15, 16, 17, 18, 18, 19, 20, 20
 };
 
-scexpr uint32_t _IQNexp_lookup[][22] = {
+static constexpr uint32_t _IQNexp_lookup[][22] = {
     0x00000004, 0x0000000A, 0x0000001D, 0x00000050, 0x000000DA, 0x00000251,
     0x0000064D, 0x00001122, 0x00002E93, 0x00007E9C, 0x00015829, 0x0003A788,
     0x0009EF0B, 0x001B00B5, 0x004966B1, 0x00C78665, 0x021E5D7A, 0x05C24D23,
@@ -281,18 +283,18 @@ scexpr uint32_t _IQNexp_lookup[][22] = {
 };
 
 /* log */
-scexpr uint32_t _IQNlog_min[5] = {
+static constexpr uint32_t _IQNlog_min[5] = {
     0x00000010, 0x00015FC3, 0x00960AAE, 0x08A95552, 0x2F16AC6D
 };
 
-scexpr uint32_t _IQ30log_coeffs[15] = {
+static constexpr uint32_t _IQ30log_coeffs[15] = {
     0xfb6db6db, 0x04ec4ec4, 0xfaaaaaab, 0x05d1745d, 0xf999999a,
     0x071c71c7, 0xf8000000, 0x09249249, 0xf5555556, 0x0ccccccc,
     0xf0000000, 0x15555555, 0xe0000000, 0x40000000, 0x00000000
 };
 
 /* div */
-scexpr uint8_t _IQ6div_lookup[65] = {
+static constexpr uint8_t _IQ6div_lookup[65] = {
     0x7F, 0x7D, 0x7B, 0x79, 0x78, 0x76, 0x74, 0x73,
     0x71, 0x6F, 0x6E, 0x6D, 0x6B, 0x6A, 0x68, 0x67,
     0x66, 0x65, 0x63, 0x62, 0x61, 0x60, 0x5F, 0x5E,
@@ -305,7 +307,7 @@ scexpr uint8_t _IQ6div_lookup[65] = {
 
 
 /* sqrt */
-scexpr uint16_t _IQ14sqrt_lookup[96] = {
+static constexpr uint16_t _IQ14sqrt_lookup[96] = {
     0x7f02, 0x7d19, 0x7b46, 0x7986, 0x77d9, 0x763d, 0x74b2, 0x7335,
     0x71c7, 0x7066, 0x6f11, 0x6dc8, 0x6c8b, 0x6b58, 0x6a2f, 0x690f,
     0x67f8, 0x66ea, 0x65e4, 0x64e5, 0x63ee, 0x62fe, 0x6214, 0x6131,
@@ -319,3 +321,6 @@ scexpr uint16_t _IQ14sqrt_lookup[96] = {
     0x4444, 0x43f7, 0x43aa, 0x435f, 0x4315, 0x42cc, 0x4284, 0x423c,
     0x41f6, 0x41b0, 0x416b, 0x4127, 0x40e4, 0x40a2, 0x4060, 0x4020
 };
+
+
+}

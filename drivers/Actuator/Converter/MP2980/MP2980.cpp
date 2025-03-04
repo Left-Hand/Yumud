@@ -126,7 +126,7 @@ MP2980 & MP2980::setCurrLimitThreshold(const CurrLimitThreshold threshold){
 
 MP2980::Interrupts MP2980::interrupts(){
     READ_REG(status_reg);
-    return std::bit_cast<Interrupts>(status_reg);
+    return Interrupts(status_reg);
 }
 
 MP2980 & MP2980::setInterruptMask(const Interrupts mask){

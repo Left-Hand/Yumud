@@ -56,14 +56,6 @@ struct I2cTester{
 };
 
 
-
-
-auto i2c_addresses() -> std::ranges::view auto {
-    return std::views::iota(0, 128) 
-        | std::views::transform([](uint8_t i) { return i << 1; });
-}
-
-
 void i2c_scanner_functional(){
 
     auto & logger = uart1;

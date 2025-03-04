@@ -25,6 +25,9 @@
  */
 #define TYPE_PU      (1)
 
+
+namespace __iqdetails{
+
 /**
  * @brief Computes the sine of an UIQ31 input.
  *
@@ -65,27 +68,15 @@
  * only 0 - 0.785398) and second order Taylor series gives 28 bits of accuracy.
  */
 
+ struct __IQ32SinCos{
+    int32_t uiq32Sin;
+    int32_t uiq32Cos;
+};
+
  #ifndef __IQMATH_USE_MY_IMPL
-static __inline constexpr int32_t __IQNcalcSin(uint32_t uiq31Input){
-    uint16_t index;
-    int32_t iq31X;
-    int32_t iq31Sin;
-    int32_t iq31Cos;
+
+static constexpr __inline int32_t __IQ31getSin(int32_t iq31X, int32_t iq31Sin, int32_t iq31Cos){
     int32_t iq31Res;
-
-    /* Calculate index for sin and cos lookup using bits 31:26 */
-    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
-
-    /* Lookup S(k) and C(k) values. */
-    iq31Sin = _IQ31SinLookup[index];
-    iq31Cos = _IQ31CosLookup[index];
-
-    /*
-     * Calculated x (the remainder) by subtracting the index from the unsigned
-     * iq31 input. This can be accomplished by masking out the bits used for
-     * the index.
-     */
-    iq31X = uiq31Input & 0x01ffffff;
 
     /* 0.333*x*C(k) */
     iq31Res = __mpyf_l(0x2aaaaaab, iq31X);
@@ -111,27 +102,8 @@ static __inline constexpr int32_t __IQNcalcSin(uint32_t uiq31Input){
 }
 
 
-static __inline constexpr int32_t __IQNcalcCos(uint32_t uiq31Input)
-{
-    uint16_t index;
-    int32_t iq31X;
-    int32_t iq31Sin;
-    int32_t iq31Cos;
+static constexpr __inline int32_t __IQ31getCos(int32_t iq31X, int32_t iq31Sin, int32_t iq31Cos){
     int32_t iq31Res;
-
-    /* Calculate index for sin and cos lookup using bits 31:26 */
-    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
-
-    /* Lookup S(k) and C(k) values. */
-    iq31Sin = _IQ31SinLookup[index];
-    iq31Cos = _IQ31CosLookup[index];
-
-    /*
-     * Calculated x (the remainder) by subtracting the index from the unsigned
-     * iq31 input. This can be accomplished by masking out the bits used for
-     * the index.
-     */
-    iq31X = uiq31Input & 0x01ffffff;
 
     /* 0.333*x*S(k) */
     iq31Res = __mpyf_l(0x2aaaaaab, iq31X);
@@ -156,12 +128,79 @@ static __inline constexpr int32_t __IQNcalcCos(uint32_t uiq31Input)
     return iq31Res;
 }
 
-#else
+static __inline constexpr int32_t __IQ31calcSin(uint32_t uiq31Input){
+    uint16_t index;
+    int32_t iq31X;
+    int32_t iq31Sin;
+    int32_t iq31Cos;
 
-struct __UIQ32SinCos{
-    uint32_t uiq32Sin;
-    uint32_t uiq32Cos;
-};
+    /* Calculate index for sin and cos lookup using bits 31:26 */
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
+
+    /* Lookup S(k) and C(k) values. */
+    iq31Sin = _IQ31SinLookup[index];
+    iq31Cos = _IQ31CosLookup[index];
+
+    /*
+     * Calculated x (the remainder) by subtracting the index from the unsigned
+     * iq31 input. This can be accomplished by masking out the bits used for
+     * the index.
+     */
+    iq31X = uiq31Input & 0x01ffffff;
+
+    return __IQ31getSin(iq31X, iq31Sin, iq31Cos);
+}
+
+
+static __inline constexpr int32_t __IQ31calcCos(uint32_t uiq31Input)
+{
+    uint16_t index;
+    int32_t iq31X;
+    int32_t iq31Sin;
+    int32_t iq31Cos;
+
+    /* Calculate index for sin and cos lookup using bits 31:26 */
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
+
+    /* Lookup S(k) and C(k) values. */
+    iq31Sin = _IQ31SinLookup[index];
+    iq31Cos = _IQ31CosLookup[index];
+
+    /*
+     * Calculated x (the remainder) by subtracting the index from the unsigned
+     * iq31 input. This can be accomplished by masking out the bits used for
+     * the index.
+     */
+    iq31X = uiq31Input & 0x01ffffff;
+
+    return __IQ31getCos(iq31X, iq31Sin, iq31Cos);
+}
+
+static __inline constexpr __IQ32SinCos __IQ31calcSinCos(uint32_t uiq31Input)
+{
+    uint16_t index;
+    int32_t iq31X;
+    int32_t iq31Sin;
+    int32_t iq31Cos;
+
+    /* Calculate index for sin and cos lookup using bits 31:26 */
+    index = (uint16_t)(uiq31Input >> 25) & 0x003f;
+
+    /* Lookup S(k) and C(k) values. */
+    iq31Sin = _IQ31SinLookup[index];
+    iq31Cos = _IQ31CosLookup[index];
+
+    /*
+     * Calculated x (the remainder) by subtracting the index from the unsigned
+     * iq31 input. This can be accomplished by masking out the bits used for
+     * the index.
+     */
+    iq31X = uiq31Input & 0x01ffffff;
+
+    return {__IQ31getSin(iq31X, iq31Sin, iq31Cos), __IQ31getCos(iq31X, iq31Sin, iq31Cos)};
+}
+
+#else
 
 static __inline constexpr uint32_t __MY_GET_U32_COS(uint32_t uiq32X, uint32_t uiq32Sin, uint32_t uiq32Cos){
 
@@ -387,19 +426,18 @@ constexpr int32_t __IQNsin_cos(int32_t iqNInput){
     if constexpr(type == TYPE_COS) {
         /* If input is greater than pi/4 use sin for calculations */
         if (uiq31Input > _iq31_quarterPi) {
-            uiq31Result = __IQNcalcSin(_iq31_halfPi - uiq31Input);
+            uiq31Result = __IQ31calcSin(_iq31_halfPi - uiq31Input);
         } else {
-            uiq31Result = __IQNcalcCos(uiq31Input);
+            uiq31Result = __IQ31calcCos(uiq31Input);
         }
     } else if constexpr(type == TYPE_SIN) {
         /* If input is greater than pi/4 use cos for calculations */
         if (uiq31Input > _iq31_quarterPi) {
-            uiq31Result = __IQNcalcCos(_iq31_halfPi - uiq31Input);
+            uiq31Result = __IQ31calcCos(_iq31_halfPi - uiq31Input);
         } else {
-            uiq31Result = __IQNcalcSin(uiq31Input);
+            uiq31Result = __IQ31calcSin(uiq31Input);
         }
     }
-
 
     /* set sign */
     if (ui8Sign) {
@@ -436,6 +474,8 @@ constexpr _iq<31> _IQNsinPU(const _iq<Q> iqNInput){
 template<int8_t Q>
 constexpr _iq<31> _IQNcosPU(const _iq<Q> iqNInput){
     return std::bit_cast<_iq<31>>(__IQNsin_cos<Q, TYPE_COS, TYPE_PU>(iqNInput.to_i32()));
+}
+
 }
 
 #undef TYPE_SIN

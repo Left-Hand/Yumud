@@ -1,8 +1,9 @@
 #pragma once
 
-#include <stdint.h>
 
 #include "support.h"
+
+namespace __iqdetails{
 
 template<size_t Q>
 requires (Q < 32)
@@ -35,5 +36,7 @@ __fast_inline scexpr _iq<Q> _IQFtoN(const float fv){
     }else{
         return std::bit_cast<_iq<Q>>(result);
     }
+
+}
 
 }

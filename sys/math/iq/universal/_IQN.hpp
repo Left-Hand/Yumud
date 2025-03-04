@@ -2,6 +2,7 @@
 
 #include "rts_support.h"
 
+
 template<size_t Q>
 requires (Q < 32)
 struct _iq{
