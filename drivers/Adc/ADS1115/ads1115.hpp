@@ -89,7 +89,8 @@ protected:
         DataRate datarate_;
         PGA pga_;
             
-        [[nodiscard]] static constexpr Option<MUX> singleend(const size_t N){
+        __pure [[nodiscard]]
+        static constexpr Option<MUX> singleend(const size_t N){
             switch(N){
                 case 0: return Some(MUX::P0NG);
                 case 1: return Some(MUX::P1NG);
@@ -99,7 +100,8 @@ protected:
             return None;
         }
 
-        [[nodiscard]] static constexpr Option<MUX> differential(const size_t P, const size_t N){
+        __pure [[nodiscard]] 
+        static constexpr Option<MUX> differential(const size_t P, const size_t N){
 
             constexpr std::array mappings{
                 std::tuple{0UL,1UL,MUX::P0N1},
@@ -117,7 +119,8 @@ protected:
             return None;
         }
 
-        [[nodiscard]] static constexpr Option<DataRate> datarate(const size_t dr){
+        __pure [[nodiscard]] 
+        static constexpr Option<DataRate> datarate(const size_t dr){
             switch(dr){
                 case 8: return Some(DataRate::_8);
                 case 16: return Some(DataRate::_16);

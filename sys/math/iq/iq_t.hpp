@@ -190,7 +190,7 @@ public:
     template<typename T>\
     requires std::is_integral_v<T>\
     __fast_inline constexpr bool operator op (const T other) const {\
-        return (((value.to_i32()) >> Q) op other);\
+        return (((value.to_i32()) >> Q) op int32_t(other));\
     }\
 
 

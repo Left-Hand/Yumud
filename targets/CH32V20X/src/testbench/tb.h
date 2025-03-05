@@ -124,3 +124,4 @@ void tca9548_main();
 void ads1115_main();
 
 void ina3221_main();
+void functional_main();

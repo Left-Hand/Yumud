@@ -368,6 +368,7 @@ public:
     template<typename Fn>
     __fast_inline constexpr void if_ok(Fn && fn) const {
         if (is_ok()) {
+            // std::forward<Fn>(fn)(unwrap());
             std::forward<Fn>(fn)();
         }
     }
@@ -375,7 +376,7 @@ public:
     template<typename Fn>
     __fast_inline constexpr void if_err(Fn && fn) const {
         if (is_err()) {
-            std::forward<Fn>(fn)();
+            std::forward<Fn>(fn)(unwrap_err());
         }
     }
 
@@ -425,11 +426,7 @@ public:
     }
 
     __fast_inline constexpr T operator +() const{
-        if(likely(is_ok())){
-            return result_.unwrap();
-        }else{
-            exit(1);
-        }
+        return result_.unwrap();
     }
 
     __fast_inline constexpr E unwrap_err() const {

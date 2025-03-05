@@ -27,12 +27,10 @@ public:
     }
 
     static T calculateAlaph(const T fc, const T fs){
-        T omega_c = 2 * M_PI * fc / fs;  // Angular cutoff frequency
+        T omega_c = 2 * T(PI) * fc / fs;  // Angular cutoff frequency
         T alpha = 1 / (1 + omega_c);  // Alpha coefficient
         return alpha;
     }
 };
 
 using HPFZ = HighpassFilter_t<real_t>;
-
-#endif

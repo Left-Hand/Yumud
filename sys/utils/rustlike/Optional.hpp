@@ -62,10 +62,7 @@ public:
     }
 
     __fast_inline constexpr T operator +() const{
-        if(unlikely(exists_ == false)){
-            PANIC();
-        }
-        return value_;
+        return unwrap();
     }
 
 
