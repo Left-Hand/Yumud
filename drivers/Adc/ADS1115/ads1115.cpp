@@ -13,8 +13,8 @@
 #define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
 #else
 #define ADS1115_DEBUG(...)
-#define ADS1115_PANIC(...)  PANIC{}
-#define ADS1115_ASSERT(cond, ...) ASSERT{cond}
+#define ADS1115_PANIC(...)  PANIC_NSRC()
+#define ADS1115_ASSERT(cond, ...) ASSERT_NSRC(cond)
 #define READ_REG(reg) readReg(reg.address, reg).expect();
 #define WRITE_REG(reg) writeReg(reg.address, reg).expect();
 #endif
@@ -22,16 +22,17 @@
 
 namespace ymd::drivers{
 
+using DeviceResult = ADS1115::DeviceResult;
 
-BusResult ADS1115::readReg(const RegAddress addr, uint16_t & data){
+DeviceResult ADS1115::readReg(const RegAddress addr, uint16_t & data){
     return make_result(i2c_drv_.readReg(uint8_t(addr), data, LSB)).check("readReg failed");
 }
 
-BusResult ADS1115::writeReg(const RegAddress addr, const uint16_t data){
+DeviceResult ADS1115::writeReg(const RegAddress addr, const uint16_t data){
     return make_result(i2c_drv_.writeReg(uint8_t(addr), data, LSB)).check("writeReg failed");
 }
 
-BusResult ADS1115::verify(){
+DeviceResult ADS1115::verify(){
     return make_result(i2c_drv_.verify()).check("verify failed");
 }
 void ADS1115::startConv(){

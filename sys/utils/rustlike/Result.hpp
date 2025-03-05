@@ -269,11 +269,11 @@ private:
     }
     friend class _Loc;
 public:
-    __fast_inline constexpr Result(Ok<T> && value) : result_((value)){}
-    __fast_inline constexpr Result(const Ok<T> & value) : result_((value)){}
+    [[nodiscard]] __fast_inline constexpr Result(Ok<T> && value) : result_((value)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Ok<T> & value) : result_((value)){}
 
-    __fast_inline constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
-    __fast_inline constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
+    [[nodiscard]] __fast_inline constexpr Result(Err<E> && unwrap_err) : result_((unwrap_err)){}
+    [[nodiscard]] __fast_inline constexpr Result(const Err<E> & unwrap_err) : result_((unwrap_err)){}
 
     
     // // 映射成功值
@@ -295,7 +295,7 @@ public:
         typename F,
         typename TFReturn = std::invoke_result_t<F, T>
     >
-    __fast_inline constexpr auto map(F&& fn) const -> Result<TFReturn, E>{
+    [[nodiscard]] __fast_inline constexpr auto map(F&& fn) const -> Result<TFReturn, E>{
         if (is_ok()) return Ok<TFReturn>(std::forward<F>(fn)(result_.unwrap()));
         else return Err<E>(unwrap_err());
     }
@@ -365,10 +365,17 @@ public:
     //     });
     // }
 
-    template<typename F>
-    __fast_inline constexpr void if_ok(F&& fn) const {
+    template<typename Fn>
+    __fast_inline constexpr void if_ok(Fn && fn) const {
         if (is_ok()) {
-            (fn)();
+            std::forward<Fn>(fn)();
+        }
+    }
+
+    template<typename Fn>
+    __fast_inline constexpr void if_err(Fn && fn) const {
+        if (is_err()) {
+            std::forward<Fn>(fn)();
         }
     }
 
@@ -389,7 +396,7 @@ public:
             return result_.unwrap();
         } else {
             #ifdef __DEBUG_INCLUDED
-            if constexpr(sizeof...(args)) DEBUG_PRINTS(std::forward<Args>(args)...);
+            PANIC_NSRC(std::forward<Args>(args)...);
             #endif
             exit(1);
         }
@@ -399,9 +406,8 @@ public:
     const Result & check(Args && ... args) const{
         if(unlikely(is_err())){
             #ifdef __DEBUG_INCLUDED
-            DEBUG_PRINTS(unwrap_err(), std::forward<Args>(args)...);
+            DEBUG_PRINTLN(unwrap_err(), std::forward<Args>(args)...);
             #endif
-            exit(1);
         }
         return *this;
     } 
@@ -414,6 +420,14 @@ public:
         if (likely(is_ok())) {
             return result_.unwrap();
         } else {
+            exit(1);
+        }
+    }
+
+    __fast_inline constexpr T operator +() const{
+        if(likely(is_ok())){
+            return result_.unwrap();
+        }else{
             exit(1);
         }
     }

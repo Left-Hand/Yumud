@@ -7,15 +7,18 @@
 
 namespace ymd::drivers{
 
-using BusResult = Result<void, BusError>;
-__inline Result<void, BusError> make_result(const BusError res){
-    if(res.ok()) return Ok();
-    else return Err(res); 
-}
 
 
 class ADS111X{
 public:
+
+    using DeviceResult = Result<void, BusError>;
+    __inline DeviceResult make_result(const BusError res){
+        if(res.ok()) return Ok();
+        else return Err(res); 
+    }
+
+
     enum class Package:uint8_t{
         ADS1113,
         ADS1114,
@@ -77,8 +80,8 @@ protected:
     HighThreshReg high_thresh_reg;
 
 
-    [[nodiscard]] BusResult readReg(const RegAddress addr, uint16_t & data);
-    [[nodiscard]] BusResult writeReg(const RegAddress addr, const uint16_t data); 
+    [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data);
+    [[nodiscard]] DeviceResult writeReg(const RegAddress addr, const uint16_t data); 
     struct ConfigBuilder{
 
         // ADS111X & owner_;
@@ -162,7 +165,7 @@ public:
 
     Option<real_t> result();
 
-    BusResult verify();
+    DeviceResult verify();
 
     [[nodiscard]] constexpr auto builder(){return ConfigBuilder{};}
 

@@ -35,15 +35,15 @@ private:
     bool exists_;
     T value_;
 public:
-    Option(_None_t):
+    [[nodiscard]] Option(_None_t):
         exists_(false)
     {}
 
-    constexpr Option(const Some<T> & value):
+    [[nodiscard]] constexpr Option(const Some<T> & value):
         exists_(true),
         value_(value){}
 
-    constexpr Option(Some<T> && value):
+    [[nodiscard]] constexpr Option(Some<T> && value):
         exists_(true),
         value_(std::move(*value)){}
 
@@ -55,11 +55,19 @@ public:
     }
 
     constexpr const T & unwrap(const std::source_location & loc = std::source_location::current()) const {
-        if(exists_ == false){
+        if(unlikely(exists_ == false)){
             __PANIC_EXPLICIT_SOURCE(loc);
         }
         return value_;
     }
+
+    __fast_inline constexpr T operator +() const{
+        if(unlikely(exists_ == false)){
+            PANIC();
+        }
+        return value_;
+    }
+
 
     constexpr void unexpected() const {
         return;
@@ -162,6 +170,15 @@ template<
 >
 [[nodiscard]] Option<Tdecay> optcond(bool cond, T&& value){
     if(cond) return Some<Tdecay>(std::forward<T>(value));
+    else return None;
+}
+
+template<
+    typename T, 
+    typename Tdecay = std::decay_t<T>
+>
+[[nodiscard]] Option<Tdecay> optcond(bool cond, Some<T>&& value){
+    if(cond) return Some<Tdecay>(std::forward<Some<T>>(value));
     else return None;
 }
 
