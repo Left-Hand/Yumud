@@ -37,15 +37,20 @@ void INA226::update(){
 
 
 BusResult INA226::writeReg(const RegAddress addr, const uint16_t data){
-    // INA226_DEBUG("w", uint8_t(addr), data);
     const auto err = i2c_drv.writeReg((uint8_t)addr, data, MSB);
-    // INA226_ASSERT(err.ok(), "write error", uint8_t(addr), data);
+    INA226_ASSERT(err.ok(), "write error", uint8_t(addr), data);
     return make_result(err);
 }
 
 BusResult INA226::readReg(const RegAddress addr, uint16_t & data){
     const auto err = i2c_drv.readReg((uint8_t)addr, data, MSB);
-    // INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
+    INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
+    return make_result(err);
+}
+
+BusResult INA226::readReg(const RegAddress addr, int16_t & data){
+    const auto err = i2c_drv.readReg((uint8_t)addr, data, MSB);
+    INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
     return make_result(err);
 }
 
@@ -166,12 +171,14 @@ void INA226::enableAlertLatch(const bool en){
 bool INA226::verify(){
     scexpr uint16_t valid_manu_id = 0x5449;
     scexpr uint16_t valid_chip_id = 0x2260;
+    
+    INA226_ASSERT(i2c_drv.verify().ok(), "INA226 i2c lost");
 
     READ_REG(chipIDReg);
     READ_REG(manufactureIDReg);
 
     return INA226_ASSERT(
         (chipIDReg == valid_chip_id and manufactureIDReg == valid_manu_id), 
-        "INA226 not found", chipIDReg.as_val(), manufactureIDReg.as_val()
+        "INA226 who am i failed", chipIDReg.as_val(), manufactureIDReg.as_val()
     );
 }

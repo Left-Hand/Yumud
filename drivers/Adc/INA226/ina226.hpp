@@ -50,6 +50,31 @@ protected:
         uint16_t rst:1;
     };
 
+
+
+    struct ShuntVoltReg:public Reg16{
+        scexpr RegAddress address = 0x01;
+        uint16_t :16;
+    };
+
+    struct BusVoltReg:public Reg16{
+        scexpr RegAddress address = 0x02;
+        uint16_t :16;
+    };
+
+    struct PowerReg:public Reg16i{
+        scexpr RegAddress address = 0x03;
+        int16_t :16;
+    };
+    struct CurrentReg:public Reg16i{
+        scexpr RegAddress address = 0x04;
+        int16_t :16;
+    };
+    struct CalibrationReg:public Reg16i{
+        scexpr RegAddress address = 0x05;
+        int16_t :16;
+    };
+    
     struct MaskReg:public Reg16{
         scexpr RegAddress address = 0x06;
 
@@ -67,40 +92,18 @@ protected:
         uint16_t shuntOverVoltage:1;
     };
 
-    struct ShuntVoltReg:public Reg16{
-        scexpr RegAddress address = 0x01;
-        uint16_t :16;
-    };
-
-    struct BusVoltReg:public Reg16{
-        scexpr RegAddress address = 0x02;
-        uint16_t :16;
-    };
-
-    struct PowerReg:public Reg16{
-        scexpr RegAddress address = 0x03;
-        uint16_t :16;
-    };
-    struct CurrentReg:public Reg16{
-        scexpr RegAddress address = 0x04;
-        uint16_t :16;
-    };
-    struct CalibrationReg:public Reg16{
-        scexpr RegAddress address = 0x05;
-        uint16_t :16;
-    };
     struct AlertLimitReg:public Reg16{
         scexpr RegAddress address = 0x07;
         uint16_t :16;
     };
 
     struct ManufactureReg:public Reg16{
-        scexpr RegAddress address = 0x07;
+        scexpr RegAddress address = 0xfe;
         uint16_t :16;
     };
 
     struct ChipIdReg:public Reg16{
-        scexpr RegAddress address = 0x07;
+        scexpr RegAddress address = 0xff;
         uint16_t :16;
     };
 
@@ -118,6 +121,8 @@ protected:
     [[nodiscard]] BusResult writeReg(const RegAddress addr, const uint16_t data);
 
     [[nodiscard]] BusResult readReg(const RegAddress addr, uint16_t & data);
+    
+    [[nodiscard]] BusResult readReg(const RegAddress addr, int16_t & data);
 
     [[nodiscard]] BusResult requestPool(const RegAddress addr, uint16_t * data_ptr, const size_t len);
 
@@ -194,13 +199,10 @@ public:
         return channels[uint8_t(index)];
     }
 
-    auto & currChannel(){
-        return ch(INA226Channel::Index::CURRENT);
-    }
-
-    auto & voltChannel(){
-        return ch(INA226Channel::Index::BUS_VOLT);
-    }
+    auto & getCurrChannel(){return ch(INA226Channel::Index::CURRENT);}
+    auto & getBusVoltChannel(){return ch(INA226Channel::Index::BUS_VOLT); }
+    auto & getShuntVoltChannel(){return ch(INA226Channel::Index::SHUNT_VOLT); }
+    auto & getPowerChannel(){return ch(INA226Channel::Index::POWER); }
 
 
     real_t getVoltage();

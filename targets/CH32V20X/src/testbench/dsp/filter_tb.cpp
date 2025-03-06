@@ -50,9 +50,9 @@ using GaussianNoiseGenerator = GaussianNoiseGenerator_t<real_t>;
 void filter_tb(OutputStream & logger){
     logger.setEps(4);
 
-    real_t fi = 2;
-    real_t fc = 2;
-    real_t fs = 1000;
+    // real_t fi = 2;
+    // real_t fc = 2;
+    // real_t fs = 1000;
 
     // const real_t mean = 0.0_r;//均值
     // const real_t stddev = 1.0_r;//标准差

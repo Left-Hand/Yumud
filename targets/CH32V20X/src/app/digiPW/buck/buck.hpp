@@ -31,8 +31,8 @@ protected:
     using Coil2Driver = ymd::drivers::Coil2DriverIntf;
     hal::AnalogInIntf & curr_ch_;
     hal::AnalogInIntf & volt_ch_;
-    BuckController ctrl_;
     Coil2Driver & driver_;
+    BuckController ctrl_;
 public:
     BuckConverter(
         hal::AnalogInIntf & _curr_ch, 
@@ -41,7 +41,6 @@ public:
     ):
         curr_ch_(_curr_ch),
         volt_ch_(_volt_ch),
-        ctrl_(),
         driver_(_driver)
     {;}
 

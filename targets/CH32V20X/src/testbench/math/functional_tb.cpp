@@ -39,10 +39,10 @@ void functional_main(){
         | std::views::transform([](uint8_t i) { return i << 1; });
 
 
-    const auto founded_devices = addresses
-        | std::views::transform(process_address)
-        | std::views::filter([](auto opt) { return opt.is_some(); })
-        | std::views::transform([](auto opt) { return opt.unwrap(); })
+    // const auto founded_devices = addresses
+    //     | std::views::transform(process_address)
+    //     | std::views::filter([](auto opt) { return opt.is_some(); })
+    //     | std::views::transform([](auto opt) { return opt.unwrap(); })
         // | std::ranges::to<std::vector>()
         ;
     

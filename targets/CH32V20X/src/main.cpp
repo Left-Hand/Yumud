@@ -25,7 +25,7 @@ int main(){
     // gui_main();
     // canopen_main();
     // bldc_main();
-    // digipw_main();
+    digipw_main();
     // sincos_pwm_main();
     // stepper_tb(uart1);
     // co_ab_main();
@@ -34,7 +34,7 @@ int main(){
     // leetcode_main();
     // co_ab_main();
     // mpu6050_main();
-    ina3221_main();
+    // ina3221_main();
 
     // i2c_scanner_main();
     // tca9548_main();

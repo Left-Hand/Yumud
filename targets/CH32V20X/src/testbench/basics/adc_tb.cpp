@@ -20,8 +20,6 @@ using namespace ymd;
 using namespace ymd::hal;
 
 void adc_tb(OutputStream & logger){
-    // using AdcChannelEnum = AdcChann;
-    using AdcCycleEnum = AdcSampleCycles;
     #ifdef ADC_TB_MAIN
 
     adc1.init(

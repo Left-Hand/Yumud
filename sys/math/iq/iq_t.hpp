@@ -79,8 +79,22 @@ public:
 
     template<size_t P>
     __fast_inline constexpr operator iq_t<P>() const {return iq_t<P>(value);}
-
+    
     __fast_inline constexpr iq_t(const iq_t<Q> & other):value(other.value){};
+    
+    template<size_t P>
+    __fast_inline constexpr iq_t & operator = (const iq_t<P> & other){
+        value = (_iq<Q>(other.value));
+        return *this;
+    };
+    
+
+    template<size_t P>
+    __fast_inline constexpr iq_t & operator = (iq_t<P> && other){
+        value = (_iq<Q>(other.value));
+        return *this;
+    };
+    
 
 
     template<typename T>
