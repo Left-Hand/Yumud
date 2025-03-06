@@ -71,27 +71,27 @@ protected:
 
     hal::I2cDrv i2c_drv_;
 
-    struct CSOReg:public Reg8{
+    struct CSOReg:public Reg8<>{
         scexpr RegAddress address = 0x01;
 
         uint8_t cso_set;
     };
 
-    struct SlopeCompReg:public Reg8{
+    struct SlopeCompReg:public Reg8<>{
         scexpr RegAddress address = 0x02;
 
         uint8_t slop_comp:1;
         uint8_t :7;
     };
 
-    struct VoutSetMsbReg:public Reg16{//msb
+    struct VoutSetMsbReg:public Reg16<>{//msb
         scexpr RegAddress address = 0x03;
 
         uint8_t vout_set_msb:8;
 
     };
 
-    struct VoutSetLsbReg:public Reg16{//msb
+    struct VoutSetLsbReg:public Reg16<>{//msb
         scexpr RegAddress address = 0x04;
 
         uint8_t vout_set_lsb:2;
@@ -101,7 +101,7 @@ protected:
         uint8_t :3;
     };
 
-    struct GlobalCtrlReg:public Reg8{//msb
+    struct GlobalCtrlReg:public Reg8<>{//msb
         scexpr RegAddress address = 0x05;
 
         uint8_t :1;
@@ -110,7 +110,7 @@ protected:
         uint8_t :5;
     };
 
-    struct SysSetReg:public Reg8{//msb
+    struct SysSetReg:public Reg8<>{//msb
         scexpr RegAddress address = 0x06;
 
         uint8_t :4;
@@ -120,14 +120,14 @@ protected:
         uint8_t en_pwm:1;
     };
 
-    struct FreqSetReg:public Reg8{
+    struct FreqSetReg:public Reg8<>{
         scexpr RegAddress address = 0x08;
 
         uint8_t freq_set:2;
         uint8_t :6;
     };
 
-    struct Status1Reg:public Reg8{
+    struct Status1Reg:public Reg8<>{
         scexpr RegAddress address = 0x09;
 
         uint8_t ocp:1;
@@ -138,7 +138,7 @@ protected:
         uint8_t vout_short:1;
     };
 
-    struct Status2Reg:public Reg8{
+    struct Status2Reg:public Reg8<>{
         scexpr RegAddress address = 0x0A;
 
         uint8_t :1;

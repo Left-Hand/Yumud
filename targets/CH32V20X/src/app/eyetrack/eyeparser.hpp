@@ -7,7 +7,7 @@ struct EtkDataFrame{
 };
 
 
-struct EtkToken:public Reg8{
+struct EtkToken:public Reg8<>{
     using Reg8::operator=;
 
     uint8_t right:1;

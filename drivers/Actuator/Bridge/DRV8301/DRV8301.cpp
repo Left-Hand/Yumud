@@ -16,8 +16,8 @@ using namespace ymd::drivers;
 #endif
 
 
-#define WRITE_REG(reg) writeReg(reg.address, reg);
-#define READ_REG(reg) readReg(reg.address, reg);
+#define WRITE_REG(reg) writeReg(reg.address, reg.as_val());
+#define READ_REG(reg) readReg(reg.address, reg.as_ref());
 
 void DRV8301::init(){
 

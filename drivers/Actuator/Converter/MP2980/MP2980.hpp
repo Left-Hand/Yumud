@@ -71,7 +71,7 @@ protected:
 
     hal::I2cDrv i2c_drv_;
 
-    struct RefReg:public Reg16{
+    struct RefReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
         uint16_t :16;
@@ -90,7 +90,7 @@ protected:
         }
     };
 
-    struct Ctrl1Reg:public Reg8{
+    struct Ctrl1Reg:public Reg8<>{
         scexpr RegAddress address = 0x02;
 
         uint8_t en_pwr:1;
@@ -102,7 +102,7 @@ protected:
         uint8_t sr:2;
     };
 
-    struct Ctrl2Reg:public Reg8{
+    struct Ctrl2Reg:public Reg8<>{
         scexpr RegAddress address = 0x03;
 
         uint8_t ovp_mode:1;
@@ -112,7 +112,7 @@ protected:
         uint8_t fsw:2;
     };
 
-    struct IlimReg:public Reg8{
+    struct IlimReg:public Reg8<>{
         scexpr RegAddress address = 0x04;
 
         uint8_t ilim:3;
@@ -128,11 +128,11 @@ protected:
         uint8_t :3;
     };
 
-    struct StatusReg:public Reg8, public Interrupts{
+    struct StatusReg:public Reg8<>, public Interrupts{
         scexpr RegAddress address = 0x05;
     };
 
-    struct MaskReg:public Reg8, public Interrupts{
+    struct MaskReg:public Reg8<>, public Interrupts{
         using Reg8::operator =;
         scexpr RegAddress address = 0x06;
     };

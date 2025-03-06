@@ -159,8 +159,8 @@ void digipw_main(){
         
         ina226.update();
         
-        const auto t = 6 * time();
-        const auto s = sinpu<31>(t);
+        // const auto t = 6 * time();
+        // const auto s = sinpu<31>(t);
         // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch));
         // DEBUG_PRINTLN_IDLE(real_t(curr_ch), real_t(volt_ch), sin(t), sqrt(t), atan2(cos(t), sin(t)));
 

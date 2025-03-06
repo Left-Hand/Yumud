@@ -14,24 +14,24 @@ public:
         MSB2     = ((1 << 5) | (0 << 1) | (0 << 3))
     };
 protected:
-    hal::SpiDrv spi_drv;
-    hal::GpioIntf & fsync_gpio;
+    hal::SpiDrv spi_drv_;
+    hal::GpioIntf & fsync_gpio_;
     void writeData(uint16_t data); 
 public:
     AD9833(
-        const hal::SpiDrv & _spi_drv,
-        hal::GpioIntf & _fsync_gpio
+        const hal::SpiDrv & spi_drv,
+        hal::GpioIntf & fsync_gpio
     ):
-        spi_drv(_spi_drv),
-        fsync_gpio(_fsync_gpio){;
+        spi_drv_(spi_drv),
+        fsync_gpio_(fsync_gpio){;
     }
 
     AD9833(
-        hal::SpiDrv && _spi_drv,
-        hal::GpioIntf & _fsync_gpio
+        hal::SpiDrv && spi_drv,
+        hal::GpioIntf & fsync_gpio
     ):
-        spi_drv(std::move(_spi_drv)),
-        fsync_gpio(_fsync_gpio){;
+        spi_drv_(std::move(spi_drv)),
+        fsync_gpio_(fsync_gpio){;
     }
 
     void init(uint16_t freq_reg, real_t freq, uint16_t phase_reg, uint16_t phase, WaveMode wave_mode);

@@ -20,7 +20,7 @@ protected:
     uint16_t buf;
     scexpr uint8_t valid_chipid = 0x23;
 
-    struct CtlReg:Reg8{
+    struct CtlReg:Reg8<>{
         uint8_t isel:2;
         uint8_t __resv1__:2;
         uint8_t p0mod:1;

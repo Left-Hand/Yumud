@@ -8,7 +8,7 @@ class Si5351C{
 protected:
     hal::I2cDrv _i2c_drv;
 
-    struct DeviceStatusReg:public Reg8{
+    struct DeviceStatusReg:public Reg8<>{
         scexpr uint8_t address = 0x00;
 
         uint8_t REVID:2;
@@ -19,7 +19,7 @@ protected:
         uint8_t SYS_INIT:1;
     };
 
-    struct InterruptStatusReg:public Reg8{
+    struct InterruptStatusReg:public Reg8<>{
         scexpr uint8_t address = 0x01;
 
         uint8_t :4;
@@ -29,7 +29,7 @@ protected:
         uint8_t SYS_INIT_STKY:1;
     };
 
-    struct InterruptMaskReg:public Reg8{
+    struct InterruptMaskReg:public Reg8<>{
         scexpr uint8_t address = 0x02;
 
         uint8_t :4;
@@ -39,7 +39,7 @@ protected:
         uint8_t SYS_INIT_MASK:1;
     };
 
-    struct OutputEnableCtrlReg:public Reg8{
+    struct OutputEnableCtrlReg:public Reg8<>{
         scexpr uint8_t address = 0x03;
 
         uint8_t CLK0_OEB:1;
@@ -52,7 +52,7 @@ protected:
         uint8_t CLK7_OEB:1;
     };
 
-    struct OEBPinEnableCtrlReg:public Reg8{
+    struct OEBPinEnableCtrlReg:public Reg8<>{
         scexpr uint8_t address = 0x09;
 
         uint8_t OEB_CLK0:1;
@@ -65,7 +65,7 @@ protected:
         uint8_t OEB_CLK7:1;
     };
 
-    struct PllInputSourceReg:public Reg8{
+    struct PllInputSourceReg:public Reg8<>{
         scexpr uint8_t address = 15;
 
         uint8_t :2;
@@ -74,7 +74,7 @@ protected:
         uint8_t :4;
     };
 
-    struct CLKCtrlReg:public Reg8{
+    struct CLKCtrlReg:public Reg8<>{
         scexpr uint8_t address = 16;
 
         uint8_t CLK_IDRV:2;
@@ -85,7 +85,7 @@ protected:
         uint8_t CLK_PDN:4;
     };
 
-    struct CLK0CtrlReg:public Reg8{
+    struct CLK0CtrlReg:public Reg8<>{
         scexpr uint8_t address = 16;
 
         uint8_t CLK0_IDRV:2;
@@ -96,7 +96,7 @@ protected:
         uint8_t CLK0_PDN:4;
     };
 
-    struct CLK1CtrlReg:public Reg8{
+    struct CLK1CtrlReg:public Reg8<>{
         scexpr uint8_t address = 17;
 
         uint8_t CLK1_IDRV:2;
@@ -107,7 +107,7 @@ protected:
         uint8_t CLK1_PDN:4;
     };
 
-    struct CLK2CtrlReg:public Reg8{
+    struct CLK2CtrlReg:public Reg8<>{
         scexpr uint8_t address = 18;
 
         uint8_t CLK2_IDRV:2;
@@ -118,7 +118,7 @@ protected:
         uint8_t CLK2_PDN:4;
     };
 
-    struct CLK3_0DisableStateReg:public Reg8{
+    struct CLK3_0DisableStateReg:public Reg8<>{
         scexpr uint8_t address = 24;
 
         uint8_t CLK0_DIS_STATE:2;
@@ -127,7 +127,7 @@ protected:
         uint8_t CLK3_DIS_STATE:2;
     };
 
-    struct CLK7_4DisableStateReg:public Reg8{
+    struct CLK7_4DisableStateReg:public Reg8<>{
         scexpr uint8_t address = 25;
 
         uint8_t CLK4_DIS_STATE:2;

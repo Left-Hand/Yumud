@@ -37,7 +37,7 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
         uint16_t shuntVoltageEnable :1;
@@ -52,30 +52,30 @@ protected:
 
 
 
-    struct ShuntVoltReg:public Reg16{
+    struct ShuntVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x01;
         uint16_t :16;
     };
 
-    struct BusVoltReg:public Reg16{
+    struct BusVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x02;
         uint16_t :16;
     };
 
-    struct PowerReg:public Reg16i{
+    struct PowerReg:public Reg16i<>{
         scexpr RegAddress address = 0x03;
         int16_t :16;
     };
-    struct CurrentReg:public Reg16i{
+    struct CurrentReg:public Reg16i<>{
         scexpr RegAddress address = 0x04;
         int16_t :16;
     };
-    struct CalibrationReg:public Reg16i{
+    struct CalibrationReg:public Reg16i<>{
         scexpr RegAddress address = 0x05;
         int16_t :16;
     };
     
-    struct MaskReg:public Reg16{
+    struct MaskReg:public Reg16<>{
         scexpr RegAddress address = 0x06;
 
         uint16_t alertLatchEnable:1;
@@ -92,17 +92,17 @@ protected:
         uint16_t shuntOverVoltage:1;
     };
 
-    struct AlertLimitReg:public Reg16{
+    struct AlertLimitReg:public Reg16<>{
         scexpr RegAddress address = 0x07;
         uint16_t :16;
     };
 
-    struct ManufactureReg:public Reg16{
+    struct ManufactureReg:public Reg16<>{
         scexpr RegAddress address = 0xfe;
         uint16_t :16;
     };
 
-    struct ChipIdReg:public Reg16{
+    struct ChipIdReg:public Reg16<>{
         scexpr RegAddress address = 0xff;
         uint16_t :16;
     };

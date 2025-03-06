@@ -36,31 +36,31 @@ protected:
     };
 
 
-    struct TrimConfigReg:public Reg8{
+    struct TrimConfigReg:public Reg8<>{
         uint8_t enableX:1;
         uint8_t enableY:1;
         uint8_t :6;
     };
 
-    struct ZParametersReg:public Reg8{
+    struct ZParametersReg:public Reg8<>{
         uint8_t :2;
         uint8_t zPhase :2;
         uint8_t zWidth :2;
         uint8_t ppt:2;
     };
 
-    struct ThresholdReg:public Reg8{
+    struct ThresholdReg:public Reg8<>{
         uint8_t :2;
         uint8_t thresholdHigh :3;
         uint8_t thresholdLow :3;
     };
 
-    struct DirectionReg:public Reg8{
+    struct DirectionReg:public Reg8<>{
         uint8_t :7;
         uint8_t direction :1;
     };
 
-    struct MagnitudeReg:public Reg8{
+    struct MagnitudeReg:public Reg8<>{
         uint8_t :2;
         uint8_t mgl1:1;
         uint8_t mgl2:1;

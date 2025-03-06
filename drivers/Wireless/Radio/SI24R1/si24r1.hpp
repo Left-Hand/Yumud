@@ -39,7 +39,7 @@ protected:
 
     
 
-    struct TopConfigReg:public Reg8{
+    struct TopConfigReg:public Reg8<>{
         scexpr RegAddress address = 0x00;
         bool prim_rx:1;
         bool power_up:1;
@@ -51,7 +51,7 @@ protected:
         uint8_t __resv__:1;
     };
 
-    struct AutoAcknowledgeReg:public Reg8{
+    struct AutoAcknowledgeReg:public Reg8<>{
         scexpr RegAddress address = 0x01;
         bool p0:1;
         bool p1:1;
@@ -62,7 +62,7 @@ protected:
         uint8_t __resv__ :2;
     };
     
-    struct EnableRxAddressReg:public Reg8{
+    struct EnableRxAddressReg:public Reg8<>{
         scexpr RegAddress address = 0x02;
         bool p0:1;
         bool p1:1;
@@ -73,13 +73,13 @@ protected:
         uint8_t __resv__ :2;
     };
 
-    struct AddressWidthReg:public Reg8{
+    struct AddressWidthReg:public Reg8<>{
         scexpr RegAddress address = 0x03;
         uint8_t pipex_address_width:2;
         uint8_t __resv__:6;
     };
 
-    struct AutoRetransmissionReg:public Reg8{
+    struct AutoRetransmissionReg:public Reg8<>{
         scexpr RegAddress address = 0x04;
         // 0000: disabled
         // 0001: up to 1 re-transmit on fail of AA
@@ -95,14 +95,14 @@ protected:
         uint8_t retrans_delay:4;
     };
 
-    struct RFChannelReg:public Reg8{
+    struct RFChannelReg:public Reg8<>{
         scexpr RegAddress address = 0x05;
 
         uint8_t rf_channel:7;
         uint8_t __resv__:1;
     };
 
-    struct RFConfigReg:public Reg8{
+    struct RFConfigReg:public Reg8<>{
         scexpr RegAddress address = 0x06;
         uint8_t rf_power:3;
         bool rf_datarate_highbit:1;
@@ -112,7 +112,7 @@ protected:
         bool cont_wave:1;
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         scexpr RegAddress address = 0x07;
         bool tx_full:1;
         uint8_t rx_pipe_number:2;
@@ -122,34 +122,34 @@ protected:
         uint8_t __resv__ :1;
     };
 
-    struct TransmissionObservationReg:public Reg8{
+    struct TransmissionObservationReg:public Reg8<>{
         scexpr RegAddress address = 0x08;
         uint8_t arc_cnt:4;
         uint8_t plos_cnt:4;
     };
 
-    struct RssiReg:public Reg8{
+    struct RssiReg:public Reg8<>{
         scexpr RegAddress address = 0x09;
         bool rssi_less_than_60dbm:1;
         uint8_t __resv__:7;
     };
 
-    struct RxAddrReg:public Reg8{
+    struct RxAddrReg:public Reg8<>{
         scexpr RegAddress head_address = 0x0A;
         uint8_t data;
     };
 
-    struct TxAddrReg:public Reg8{
+    struct TxAddrReg:public Reg8<>{
         scexpr RegAddress address = 0x10;
         uint64_t data;
     };
     
-    struct RxPowerReg:public Reg8{
+    struct RxPowerReg:public Reg8<>{
         scexpr RegAddress head_address = 0x11;
         uint8_t data;
     };
 
-    struct FifoStatusReg:public Reg8{
+    struct FifoStatusReg:public Reg8<>{
         scexpr RegAddress address = 0x17;
         bool rx_empty:1;
         bool rx_full:1;
@@ -160,7 +160,7 @@ protected:
         uint8_t __resv2__:1;
     };
 
-    struct DynamicPayloadLengthReg:public Reg8{
+    struct DynamicPayloadLengthReg:public Reg8<>{
         scexpr RegAddress address = 0x1c;
         bool dpl_p0:1;
         bool dpl_p1:1;
@@ -171,7 +171,7 @@ protected:
         uint8_t __resv__:2;
     };
 
-    struct FeatureReg:public Reg8 {
+    struct FeatureReg:public Reg8<> {
         scexpr RegAddress address = 0x1d;
         bool en_dyn_ack : 1;          // Set 1 enables the W_TX_PAYLOAD_NOACK command
         bool en_ack_pay : 1;          // Set 1 enables payload on ACK

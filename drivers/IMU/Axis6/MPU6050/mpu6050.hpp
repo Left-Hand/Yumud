@@ -43,17 +43,17 @@ protected:
 
     
     #define REG16I_QUICK_DEF(addr, typename, name)\
-    struct typename :public Reg16i{scexpr uint8_t address = addr; int16_t :16;} name
+    struct typename :public Reg16i<>{scexpr uint8_t address = addr; int16_t :16;} name
 
     #define REG16_QUICK_DEF(addr, typename, name)\
-    struct typename :public Reg16{scexpr uint8_t address = addr; int16_t :16;} name;
+    struct typename :public Reg16<>{scexpr uint8_t address = addr; int16_t :16;} name;
     
     #define REG8_QUICK_DEF(addr, typename, name)\
-    struct typename :public Reg16i{scexpr uint8_t address = addr; int16_t :16;} name;
+    struct typename :public Reg16i<>{scexpr uint8_t address = addr; int16_t :16;} name;
 
 
     
-    struct GyrConfReg:public Reg8{
+    struct GyrConfReg:public Reg8<>{
         scexpr uint8_t address = 0x1b;
 
         const uint8_t __resv__:3 = 0;
@@ -64,7 +64,7 @@ protected:
     } gyr_conf_reg;
     
 
-    struct AccConfReg:public Reg8{
+    struct AccConfReg:public Reg8<>{
         scexpr uint8_t address = 0x1c;
 
         const uint8_t __resv__:3 = 0;

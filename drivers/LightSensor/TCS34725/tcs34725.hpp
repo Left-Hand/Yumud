@@ -15,7 +15,7 @@ public:
 protected:
     hal::I2cDrv i2c_drv_;
 
-    struct EnableReg:public Reg8{
+    struct EnableReg:public Reg8<>{
         uint8_t powerOn : 1;
         uint8_t adcEn : 1;
         uint8_t __resv1__ :2;
@@ -24,25 +24,25 @@ protected:
         uint8_t __resv2__ :3;
     };
 
-    struct IntPersistenceReg:public Reg8{
+    struct IntPersistenceReg:public Reg8<>{
         using Reg8::operator=;
         uint8_t __resv__ :4;
         uint8_t apers   :4;
     };
 
-    struct LongWaitReg:public Reg8{
+    struct LongWaitReg:public Reg8<>{
         uint8_t __resv1__ :1;
         uint8_t waitLong : 1;
         uint8_t __resv2__ :6;
     };
 
-    struct GainReg:public Reg8{
+    struct GainReg:public Reg8<>{
         using Reg8::operator=;
         uint8_t gain        :2;
         uint8_t __resv2__   :6;
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         uint8_t done_flag    :1;
         uint8_t __resv1__   :3;
         uint8_t interrupt_flag     :1;

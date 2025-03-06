@@ -82,7 +82,7 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct Status1Reg:public Reg16{
+    struct Status1Reg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
         uint16_t fetlc_oc:1;
@@ -101,7 +101,7 @@ protected:
         uint16_t :6;
     };
 
-    struct Status2Reg:public Reg16{
+    struct Status2Reg:public Reg16<>{
         scexpr RegAddress address = 0x01;
 
         uint16_t device_id:4;
@@ -110,7 +110,7 @@ protected:
         uint16_t :9;
     };
 
-    struct Ctrl1Reg:public Reg16{
+    struct Ctrl1Reg:public Reg16<>{
         scexpr RegAddress address = 0x02;
 
         uint16_t gate_current:2;
@@ -121,7 +121,7 @@ protected:
         uint16_t :6;
     };
 
-    struct Ctrl2Reg:public Reg16{
+    struct Ctrl2Reg:public Reg16<>{
         scexpr RegAddress address = 0x03;
 
         uint16_t octw_mode:2;

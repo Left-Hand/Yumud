@@ -9,7 +9,7 @@ namespace ymd::drivers{
 namespace internal{
 #pragma pack(push, 1)
 
-struct MotionReg:public Reg8{
+struct MotionReg:public Reg8<>{
     using Reg8::operator=;
 
     uint8_t frameFrom0:1;
@@ -20,7 +20,7 @@ struct MotionReg:public Reg8{
     uint8_t occured:1;
 };
 
-struct DeltaReg:public Reg16{
+struct DeltaReg:public Reg16<>{
     using Reg16::operator =;
 
     uint16_t :16;

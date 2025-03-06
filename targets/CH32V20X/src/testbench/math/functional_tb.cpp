@@ -28,15 +28,15 @@ void functional_main(){
     DEBUGGER.retarget(&UART);
     DEBUGGER.forceSync();
     
-    auto process_address = [](uint8_t addr) -> Option<FoundInfo> {
-        // return 
-        //     .map([addr](auto baud) { return FoundInfo{addr, baud}; })
-        //     .ok();
-        return Some{FoundInfo{addr, 576_KHz}};
-    };
+    // auto process_address = [](uint8_t addr) -> Option<FoundInfo> {
+    //     // return 
+    //     //     .map([addr](auto baud) { return FoundInfo{addr, baud}; })
+    //     //     .ok();
+    //     return Some{FoundInfo{addr, 576_KHz}};
+    // };
 
-    const auto addresses = std::views::iota(0, 128)
-        | std::views::transform([](uint8_t i) { return i << 1; });
+    // const auto addresses = std::views::iota(0, 128)
+    //     | std::views::transform([](uint8_t i) { return i << 1; });
 
 
     // const auto founded_devices = addresses

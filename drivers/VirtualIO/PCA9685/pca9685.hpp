@@ -12,7 +12,7 @@ protected:
     hal::I2cDrv i2c_drv_;
 
     scexpr uint8_t valid_chipid = 0x23;
-    struct Mode1Reg:public Reg8{
+    struct Mode1Reg:public Reg8<>{
         using Reg8::operator=;
         
         uint8_t allcall:1;
@@ -23,7 +23,7 @@ protected:
         uint8_t restart:1;
     };
 
-    struct Mode2Reg:public Reg8{
+    struct Mode2Reg:public Reg8<>{
         using Reg8::operator=;
 
         uint8_t outne:2;
@@ -33,7 +33,7 @@ protected:
         uint8_t __resv__:3;
     };
 
-    struct LedOnOffReg:public Reg16{
+    struct LedOnOffReg:public Reg16<>{
         uint16_t cvr:12 = 0;
         uint16_t full:1 = 0;
         const uint16_t __resv__:3 = 0;

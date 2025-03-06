@@ -11,24 +11,24 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct InputReg:public Reg16{
+    struct InputReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
         uint16_t :16;
     };
 
-    struct OutputReg:public Reg16{
+    struct OutputReg:public Reg16<>{
         using Reg16::operator =;
         scexpr RegAddress address = 0x02;
         uint16_t :16;
     };
 
-    struct InversionReg:public Reg16{
+    struct InversionReg:public Reg16<>{
         using Reg16::operator =;
         scexpr RegAddress address = 0x04;
         uint16_t :16;
     };
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0x06;
         uint16_t :16;
     };

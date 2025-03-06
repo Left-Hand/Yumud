@@ -33,7 +33,7 @@ protected:
 
     real_t lsb;
 
-    struct ConfigAReg:public Reg8{
+    struct ConfigAReg:public Reg8<>{
         
         uint8_t measureMode:3;
         uint8_t dataRate:2;
@@ -42,14 +42,14 @@ protected:
         
     };
 
-    struct ConfigBReg:public Reg8{
+    struct ConfigBReg:public Reg8<>{
         
         uint8_t __resv__:5;
         uint8_t gain:3;
         
     };
 
-    struct ModeReg:public Reg8{
+    struct ModeReg:public Reg8<>{
         
         uint8_t mode:2;
         uint8_t __resv__:5;
@@ -57,7 +57,7 @@ protected:
         
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         
         uint8_t ready:1;
         uint8_t lock:1;

@@ -15,7 +15,7 @@ protected:
     size_t errcnt = 0;
     bool fast_mode = true;
 
-    struct Semantic:public Reg16{
+    struct Semantic:public Reg16<>{
         using Reg16::operator=;
         uint16_t pc:1;
         uint16_t no_mag:1;

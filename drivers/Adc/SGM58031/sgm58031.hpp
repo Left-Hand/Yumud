@@ -29,7 +29,7 @@ public:
 protected:
     hal::I2cDrv i2c_drv_;
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         
         uint8_t compQue : 2;
         uint8_t compLat : 1;
@@ -43,7 +43,7 @@ protected:
         
     };
 
-    struct Config1Reg:public Reg16{
+    struct Config1Reg:public Reg16<>{
         
         uint8_t __resv1__    :3;
         uint8_t extRef      :1;
@@ -56,7 +56,7 @@ protected:
         
     };
 
-    struct DeviceIdReg:public Reg16{
+    struct DeviceIdReg:public Reg16<>{
         
         uint8_t __resv1__   :5;
         uint8_t ver         :3;
@@ -65,24 +65,24 @@ protected:
         
     };
 
-    struct TrimReg:public Reg16{
+    struct TrimReg:public Reg16<>{
         
         uint16_t gn         :11;
         uint8_t __resv__    :5;
         
     };
 
-    struct ConvReg:public Reg16{
+    struct ConvReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct LowThrReg:public Reg16{
+    struct LowThrReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct HighThrReg:public Reg16{
+    struct HighThrReg:public Reg16<>{
         uint16_t data;
         
     };

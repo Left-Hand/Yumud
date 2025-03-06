@@ -47,7 +47,7 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
         uint16_t shunt_measure_en :1;
@@ -64,7 +64,7 @@ protected:
 
     static_assert(sizeof(ConfigReg) == 2);
 
-    struct ShuntVoltReg:public Reg16i{
+    struct ShuntVoltReg:public Reg16i<>{
 
         int16_t : 16;
 
@@ -87,7 +87,7 @@ protected:
     struct ShuntVolt2Reg:public ShuntVoltReg{scexpr RegAddress address = 0x03;};
     struct ShuntVolt3Reg:public ShuntVoltReg{scexpr RegAddress address = 0x05;};
 
-    struct BusVoltReg:public Reg16i{
+    struct BusVoltReg:public Reg16i<>{
 
         int16_t : 16;
 
@@ -108,7 +108,7 @@ protected:
     struct BusVolt2Reg:public BusVoltReg{scexpr RegAddress address = 0x04;};
     struct BusVolt3Reg:public BusVoltReg{scexpr RegAddress address = 0x06;};
 
-    struct InstantOVCReg:public Reg16i{
+    struct InstantOVCReg:public Reg16i<>{
         scexpr RegAddress address1 = 0x07;
         scexpr RegAddress address2 = 0x09;
         scexpr RegAddress address3 = 0x0b;
@@ -116,7 +116,7 @@ protected:
         int16_t :16;
     };
 
-    struct ConstantOVCReg:public Reg16i{
+    struct ConstantOVCReg:public Reg16i<>{
         scexpr RegAddress address1 = 0x07;
         scexpr RegAddress address2 = 0x09;
         scexpr RegAddress address3 = 0x0b;
@@ -124,7 +124,7 @@ protected:
         int16_t :16;
     };
 
-    struct MaskReg:public Reg16{
+    struct MaskReg:public Reg16<>{
         uint16_t conv_ready:1;
         uint16_t timing_alert:1;
         uint16_t power_valid_alert:1;
@@ -141,23 +141,23 @@ protected:
         uint16_t :1;
     };
 
-    struct PowerHoReg:public Reg16i{
+    struct PowerHoReg:public Reg16i<>{
         scexpr RegAddress address = 0x10;
         int16_t :16;
     };
 
-    struct PowerLoReg:public Reg16i{
+    struct PowerLoReg:public Reg16i<>{
         scexpr RegAddress address = 0x11;
         int16_t :16;
     };
 
-    struct ManuIdReg:public Reg16{
+    struct ManuIdReg:public Reg16<>{
         scexpr uint16_t key = 0x5449;
         scexpr RegAddress address = 0xfe;
         uint16_t:16;
     };
 
-    struct ChipIdReg:public Reg16{
+    struct ChipIdReg:public Reg16<>{
         scexpr uint16_t key = 0x3220;
         scexpr RegAddress address = 0xff;
         uint16_t:16;

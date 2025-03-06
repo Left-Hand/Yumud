@@ -57,7 +57,7 @@ public:
 protected:
     using RegAddress = uint8_t;
 
-    struct AxisReg:public Reg16{
+    struct AxisReg:public Reg16<>{
         scexpr RegAddress address_x = 0x00;
         scexpr RegAddress address_y = 0x02;
         scexpr RegAddress address_z = 0x04;
@@ -66,7 +66,7 @@ protected:
         uint8_t data_l;
     };
 
-    struct ExtAxisReg:public Reg8{
+    struct ExtAxisReg:public Reg8<>{
         scexpr RegAddress address_x = 0x06;
         scexpr RegAddress address_y = 0x07;
         scexpr RegAddress address_z = 0x08;
@@ -75,7 +75,7 @@ protected:
         uint8_t data:4;
     };
 
-    struct TempReg:public Reg8{
+    struct TempReg:public Reg8<>{
         scexpr RegAddress address = 0x09;
         uint8_t :8;
         operator int() const {
@@ -83,7 +83,7 @@ protected:
         }
     };
 
-    struct Status1Reg:public Reg8{
+    struct Status1Reg:public Reg8<>{
         scexpr RegAddress address = 0x18;
 
         uint8_t:4;
@@ -94,14 +94,14 @@ protected:
         uint8_t temp_measure_done:1;
     };
 
-    struct OdrReg:public Reg8{
+    struct OdrReg:public Reg8<>{
         using Reg8::operator=;
 
         scexpr RegAddress address = 0x1a;
         uint8_t :8;
     };
 
-    struct Ctrl0Reg:public Reg8{
+    struct Ctrl0Reg:public Reg8<>{
         scexpr RegAddress address = 0x1B;
 
         uint8_t do_mag_measure:1;
@@ -115,7 +115,7 @@ protected:
         uint8_t cmm_freq_en:1;
     };
 
-    struct Ctrl1Reg:public Reg8{
+    struct Ctrl1Reg:public Reg8<>{
         scexpr RegAddress address = 0x1C;
 
         uint8_t bandwidth:2;
@@ -128,7 +128,7 @@ protected:
         uint8_t sw_reset:1;
     };
 
-    struct Ctrl2Reg:public Reg8{
+    struct Ctrl2Reg:public Reg8<>{
         scexpr RegAddress address = 0x1D;
 
         //These bits determine how many measurements are done before a set is executed, when the 
@@ -144,24 +144,24 @@ protected:
         uint8_t high_pwr:1;
     };
 
-    struct AxisSelfTestXReg:public Reg8{
+    struct AxisSelfTestXReg:public Reg8<>{
         using Reg8::operator=;
         scexpr RegAddress address = 0x1e;
         uint8_t :8;
     };
 
-    struct AxisSelfTestYReg:public Reg8{
+    struct AxisSelfTestYReg:public Reg8<>{
         using Reg8::operator=;
         scexpr RegAddress address = 0x1f;
         uint8_t :8;
     };
 
-    struct AxisSelfTestZReg:public Reg8{
+    struct AxisSelfTestZReg:public Reg8<>{
         using Reg8::operator=;
         scexpr RegAddress address = 0x20;
         uint8_t :8;
     };
-    struct ProductIdReg:public Reg8{
+    struct ProductIdReg:public Reg8<>{
         scexpr RegAddress address = 0x39;
         scexpr uint8_t correct_id = 0b00010000;
         

@@ -32,37 +32,37 @@ public:
 protected:
     hal::I2cDrv i2c_drv_;
 
-    struct ProgramTimesReg:public Reg8{
+    struct ProgramTimesReg:public Reg8<>{
         
         uint8_t times :2;
         uint8_t __resv__ :6;
         
     };
 
-    struct StartAngleReg:public Reg16{
+    struct StartAngleReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct EndAngleReg:public Reg16{
+    struct EndAngleReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct AmountAngleReg:public Reg16{
+    struct AmountAngleReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct RawAngleReg:public Reg16{
+    struct RawAngleReg:public Reg16<>{
         uint16_t data;
     };
 
-    struct AngleReg:public Reg16{
+    struct AngleReg:public Reg16<>{
         uint16_t data;
     };
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         
         uint8_t powerMode :2;
         uint8_t hysteresis:2;
@@ -75,7 +75,7 @@ protected:
         
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         
         uint8_t __resv1__ :3;
         uint8_t magHigh:1;
@@ -85,15 +85,15 @@ protected:
         
     };
 
-    struct AutoGainReg:public Reg8{
+    struct AutoGainReg:public Reg8<>{
         uint8_t data;
     };
 
-    struct MagnitudeReg:public Reg16{
+    struct MagnitudeReg:public Reg16<>{
         uint16_t data;
     };
 
-    struct BurnReg:public Reg8{
+    struct BurnReg:public Reg8<>{
         uint8_t data;
     };
 

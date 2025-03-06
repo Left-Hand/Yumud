@@ -119,14 +119,14 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct Config0Reg:public Reg8{
+    struct Config0Reg:public Reg8<>{
         scexpr RegAddress address = 0;
         uint8_t pga_bypass:1;
         uint8_t gain:3;
         uint8_t mux:4;
     };
 
-    struct Config1Reg:public Reg8{
+    struct Config1Reg:public Reg8<>{
         scexpr RegAddress address = 1;
         uint8_t temp_sensor_mode:1;
         uint8_t vref:2;
@@ -135,7 +135,7 @@ protected:
         uint8_t data_rate:3;
     };
 
-    struct Config2Reg:public Reg8{
+    struct Config2Reg:public Reg8<>{
         scexpr RegAddress address = 2;
         uint8_t idac:3;
         uint8_t current_sense_en:1;
@@ -144,7 +144,7 @@ protected:
         uint8_t conv_done:1;
     };
 
-    struct Config3Reg:public Reg8{
+    struct Config3Reg:public Reg8<>{
         scexpr RegAddress address = 3;
         uint8_t __resv__:2;
         uint8_t idac1_mux:3;

@@ -50,13 +50,13 @@ protected:
     using RegAddress = uint8_t;
 
 
-    struct WhoAmIReg:public Reg8{
+    struct WhoAmIReg:public Reg8<>{
         scexpr RegAddress address = 0x00;
         scexpr uint8_t expected_value = 0x10;
         uint8_t data;
     };
 
-    struct Status1Reg:public Reg8{
+    struct Status1Reg:public Reg8<>{
         scexpr RegAddress address = 0x02;
 
         uint8_t drdy:1;
@@ -64,25 +64,25 @@ protected:
         uint8_t :6;
     };
 
-    struct AxisXReg:public Reg16i{
+    struct AxisXReg:public Reg16i<>{
         scexpr RegAddress address = 0x03;
 
         int16_t data;
     };
 
-    struct AxisYReg:public Reg16i{
+    struct AxisYReg:public Reg16i<>{
         scexpr RegAddress address = 0x05;
 
         int16_t data;
     };
 
-    struct AxisZReg:public Reg16i{
+    struct AxisZReg:public Reg16i<>{
         scexpr RegAddress address = 0x07;
 
         int16_t data;
     };
 
-    struct Status2Reg:public Reg8{
+    struct Status2Reg:public Reg8<>{
         scexpr RegAddress address = 0x09;
 
         uint8_t :3;
@@ -90,7 +90,7 @@ protected:
         uint8_t :4;
     };
 
-    struct Ctrl1Reg:public Reg8{
+    struct Ctrl1Reg:public Reg8<>{
         scexpr RegAddress address = 0x0A;
 
         uint8_t awake:1;
@@ -98,7 +98,7 @@ protected:
         uint8_t :6;
     };
 
-    struct Ctrl2Reg:public Reg8{
+    struct Ctrl2Reg:public Reg8<>{
         scexpr RegAddress address = 0x0B;
 
         uint8_t reset:1;
@@ -108,7 +108,7 @@ protected:
         uint8_t :4;
     };
 
-    struct SelfTestReg:public Reg8{
+    struct SelfTestReg:public Reg8<>{
         scexpr RegAddress address = 0x0C;
 
         uint8_t :6;
@@ -116,7 +116,7 @@ protected:
         uint8_t :1;
     };
 
-    struct TempReg:public Reg8{
+    struct TempReg:public Reg8<>{
         scexpr RegAddress address = 0x1C;
         uint16_t data;
 
@@ -126,7 +126,7 @@ protected:
     };
 
 
-    struct AverageReg:public Reg8{
+    struct AverageReg:public Reg8<>{
         scexpr RegAddress address = 0x41;
 
         uint8_t x_times:3;
