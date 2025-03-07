@@ -7,10 +7,10 @@ using namespace ymd::hal;
 using namespace ymd;
 
 
-#define INA226_DEBUG
+#define INA226_DEBUG_ON 0
+// #define INA226_DEBUG_ON 1
 
-#ifdef INA226_DEBUG
-#undef INA226_DEBUG
+#if (INA226_DEBUG_ON == 1)
 #define INA226_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
 #define INA226_PANIC(...) PANIC(__VA_ARGS__)
 #define INA226_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
@@ -22,8 +22,8 @@ using namespace ymd;
 #define INA226_PANIC(...)  PANIC()
 #define INA226_ASSERT(cond, ...) ASSERT{cond}
 
-#define WRITE_REG(reg) this->writeReg(reg.address, reg.as_val()).expect();
-#define READ_REG(reg) this->readReg(reg.address, reg.as_ref()).expect();
+#define WRITE_REG(reg) +this->writeReg(reg.address, reg.as_val());
+#define READ_REG(reg) +this->readReg(reg.address, reg.as_ref());
 #endif
 
 
@@ -37,25 +37,22 @@ void INA226::update(){
 
 
 BusResult INA226::writeReg(const RegAddress addr, const uint16_t data){
-    const auto err = i2c_drv.writeReg(uint8_t(addr), data, MSB);
-    INA226_ASSERT(err.ok(), "write error", uint8_t(addr), data);
-    return make_result(err);
+    return BusResult(i2c_drv.writeReg(uint8_t(addr), data, MSB))
+        .check_if<INA226_DEBUG_ON>("write error", uint8_t(addr), data);
 }
 
 BusResult INA226::readReg(const RegAddress addr, uint16_t & data){
-    const auto err = i2c_drv.readReg(uint8_t(addr), data, MSB);
-    INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
-    return make_result(err);
+    return BusResult(i2c_drv.readReg(uint8_t(addr), data, MSB))
+        .check_if<INA226_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
 BusResult INA226::readReg(const RegAddress addr, int16_t & data){
-    const auto err = i2c_drv.readReg(uint8_t(addr), data, MSB);
-    INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
-    return make_result(err);
+    return BusResult(i2c_drv.readReg(uint8_t(addr), data, MSB))
+        .check_if<INA226_DEBUG_ON>("read error", uint8_t(addr), data);
 }
 
 BusResult INA226::requestPool(const RegAddress addr, uint16_t * p_data, const size_t len){
-    return make_result(i2c_drv.readMulti(uint8_t(addr), p_data, len, LSB));
+    return i2c_drv.readMulti(uint8_t(addr), p_data, len, LSB);
 }
 
 

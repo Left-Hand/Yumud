@@ -4,12 +4,23 @@
 #include "sys/utils/rustlike/Result.hpp"
 #include "sys/utils/rustlike/Optional.hpp"
 
+
+namespace ymd::custom{
+    template<>
+    struct result_converter<void, BusError, BusError> {
+        static Result<void, BusError> convert(const BusError & res){
+            if(res.ok()) return Ok();
+            else return Err(res); 
+        }
+    };
+}
+
 namespace ymd::drivers{
+
+
+
 class INA226 {
-    static __inline Result<void, BusError> make_result(const BusError res){
-        if(res.ok()) return Ok();
-        else return Err(res); 
-    }
+
 
     public:
     using BusResult = Result<void, BusError>;
