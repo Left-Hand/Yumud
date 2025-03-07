@@ -71,6 +71,7 @@ DmaChannel & TimerChannel::dma() const {
             default:\
                 break;\
         }\
+        break;\
         
     switch((uint32_t)instance){
         #ifdef ENABLE_TIM1
@@ -93,6 +94,7 @@ DmaChannel & TimerChannel::dma() const {
             default:
                 break;
         }
+        break;
         #endif
 
         #ifdef ENABLE_TIM4
@@ -107,6 +109,7 @@ DmaChannel & TimerChannel::dma() const {
             default:
                 break;
         }
+        break;
         #endif
 
         #ifdef ENABLE_TIM5

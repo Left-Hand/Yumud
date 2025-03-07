@@ -63,13 +63,13 @@ void DRV2605L::setFbBrakeFactor(const FbBrakeFactor factor){
 
 void DRV2605L::setFbBrakeFactor(const int fractor){
     switch(fractor){
-        case 1:setFbBrakeFactor(FbBrakeFactor::_1x);
-        case 2:setFbBrakeFactor(FbBrakeFactor::_2x);
-        case 3:setFbBrakeFactor(FbBrakeFactor::_3x);
-        case 4:setFbBrakeFactor(FbBrakeFactor::_4x);
-        case 6:setFbBrakeFactor(FbBrakeFactor::_6x);
-        case 8:setFbBrakeFactor(FbBrakeFactor::_8x);
-        case 16:setFbBrakeFactor(FbBrakeFactor::_16x);
+        case 1:setFbBrakeFactor(FbBrakeFactor::_1x);break;
+        case 2:setFbBrakeFactor(FbBrakeFactor::_2x);break;
+        case 3:setFbBrakeFactor(FbBrakeFactor::_3x);break;
+        case 4:setFbBrakeFactor(FbBrakeFactor::_4x);break;
+        case 6:setFbBrakeFactor(FbBrakeFactor::_6x);break;
+        case 8:setFbBrakeFactor(FbBrakeFactor::_8x);break;
+        case 16:setFbBrakeFactor(FbBrakeFactor::_16x);break;
         default:
             HALT
     }

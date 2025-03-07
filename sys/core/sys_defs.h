@@ -142,7 +142,7 @@
 #endif
 
 // #define HALT __HALT; __builtin_unreachable();
-#define HALT __HALT;
+#define HALT __HALT; __builtin_unreachable();
 
 #ifdef __cplusplus
 

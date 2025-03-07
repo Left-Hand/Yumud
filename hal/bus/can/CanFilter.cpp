@@ -165,6 +165,7 @@ void CanFilter::list(const std::initializer_list<CanID16> & list){
     switch(list.size()){
         default:
             HALT;
+            break;
         case 2:
             id16[0] =       *std::next(list.begin(), 0);
             id16[1] =       *std::next(list.begin(), 1);
@@ -189,6 +190,8 @@ void CanFilter::list(const std::initializer_list<CanID32> & list){
     switch(list.size()){
         default:
             HALT;
+            [[fallthrough]];
+
         case 2:
             id32 =      *list.begin();
             mask32 =    *std::next(list.begin());
