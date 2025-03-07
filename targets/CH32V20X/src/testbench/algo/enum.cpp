@@ -295,7 +295,7 @@ std::byte get_byte_from_arg(const size_t idx, const ymd::iq_t<Q> & arg){
 }
 
 
-//通过刚刚获取到的字节信息构造一个定长数组
+// 通过刚刚获取到的字节信息构造一个定长数组
 template<
     typename Arg,
     size_t N = sizeof(std::decay_t<Arg>)
@@ -378,7 +378,7 @@ template<
 >
 __fast_inline constexpr 
 Arg make_arg_from_bytes(const std::span<const std::byte, ArgSize> & bytes) {
-    // static_assert(sizoef(Arg) <= 8, "N must be less than 8"); // 确保类型不超过8字节
+    static_assert(sizeof(Arg) <= 8, "N must be less than 8"); // 确保类型不超过8字节
 
     using T = bytes_to_uint_t<sizeof(Arg)>; // 使用预定义的中间类型
 
@@ -388,21 +388,9 @@ Arg make_arg_from_bytes(const std::span<const std::byte, ArgSize> & bytes) {
         temp |= static_cast<T>(static_cast<T>(bytes[i]) << (i * 8));
     }
 
-    return std::bit_cast<Arg>(temp);
+    if constexpr (is_fixed_point_v<Arg>) return Arg(std::bit_cast<typename Arg::iq_type>(temp));
+    else return std::bit_cast<Arg>(temp);
 }
-
-// template<
-//     size_t N_,
-//     typename Tup,
-//     typename Arg = tuple_element_t<N_, Tup>,
-//     size_t TupSize = total_bytes_v<Tup>,
-//     size_t ArgSize = sizeof(Arg)
-// >
-// constexpr 
-// Arg fetch_arg_from_bytes(const std::span<const std::byte> bytes){
-//     constexpr size_t offset = tuple_element_offset_v<N_, Tup>;
-//     return make_arg_from_bytes<Arg>(bytes.subspan(offset, ArgSize));
-// };
 
 template<
     size_t I,
@@ -414,7 +402,7 @@ template<
 constexpr 
 Arg fetch_arg_from_bytes(const std::span<const std::byte, TupSize> bytes) {
     // 静态断言确保元组元素索引有效
-    static_assert(I < std::tuple_size_v<Tup>, "索引超出元组元素范围");
+    static_assert(I < std::tuple_size_v<Tup>, "out of range");
 
     // 计算元组元素的偏移量
     constexpr size_t offset = tuple_element_offset_v<I, Tup>;
@@ -427,44 +415,12 @@ Arg fetch_arg_from_bytes(const std::span<const std::byte, TupSize> bytes) {
 }
 
 
-// template<
-//     typename Tup,
-//     size_t N = total_bytes_v<std::decay_t<Tup>>
-// >
-// constexpr 
-// Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
-//     using  Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
-//     // 使用索引序列展开元组元素类型
-//     return std::make_tuple( fetch_arg_from_bytes<Is, Tup>(bytes)...);
-// }
-
-// template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
-// constexpr 
-// Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
-//     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
-//     return std::make_tuple((fetch_arg_from_bytes<Is, Tup>(bytes)), ...);
-// }
-// template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
-// constexpr 
-// Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
-//     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
-
-//     // 辅助函数：根据索引序列展开并构造元组
-//     auto construct_tuple = [&bytes](auto... indices) {
-//         return std::make_tuple(fetch_arg_from_bytes<indices, Tup>(bytes)...);
-//     };
-
-//     // 使用索引序列调用辅助函数
-//     return construct_tuple(Is{});  // 自动展开索引序列
-// }
-
-
 template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
 constexpr 
-Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
+Tup make_tuple_from_bytes(const std::span<const std::byte, N> bytes) {
     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
 
-    // 辅助函数：根据索引序列展开并构造元组
+    // 根据索引序列展开并构造元组
     auto construct_tuple = [&bytes]<std::size_t... Indices>(std::index_sequence<Indices...>) {
         return std::make_tuple(fetch_arg_from_bytes<Indices, Tup>(bytes)...);
     };
@@ -481,9 +437,12 @@ template<
 >
 
 constexpr 
-void invoke_func_with_bytes(Fn && fn, const std::span<std::byte, N> bytes){
-
+Ret invoke_func_by_bytes(Fn && fn, const std::span<const std::byte, N> bytes){
+    if constexpr(std::is_void_v<Ret>) std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<Args>(bytes));
+    else return std::apply(std::forward<Fn>(fn), make_tuple_from_bytes<Args>(bytes));
 }
+
+
 
 void enum_main(){
     [[maybe_unused]] constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
@@ -558,8 +517,8 @@ void enum_main(){
         static_assert(f == f_);
 
         static constexpr uint16_t ui16 = 0xabcd;
-        // static constexpr auto q21 = 0.12_q21;
-        static constexpr auto q21 = 16;
+        static constexpr auto q21 = 0.12_q21;
+        // static constexpr auto q21 = 16;
 
         static constexpr auto arr3 = make_bytes_from_args(u, f, ui16, q21);
         static constexpr auto arr4 = make_bytes_from_tuple(std::make_tuple(u, f, ui16, q21));
@@ -568,9 +527,9 @@ void enum_main(){
         static constexpr auto tup = std::make_tuple(u, f, ui16, q21);
         using tup_t = std::decay_t<decltype(tup)>;
 
-        using a0 = tuple_element_t<0, tup_t>;
-        using a1 = tuple_element_t<1, tup_t>;
-        using a2 = tuple_element_t<2, tup_t>;
+        // [[maybe_unused]] using a0 = tuple_element_t<0, tup_t>;
+        // [[maybe_unused]] using a1 = tuple_element_t<1, tup_t>;
+        // [[maybe_unused]] using a2 = tuple_element_t<2, tup_t>;
 
         static constexpr auto u_2 = fetch_arg_from_bytes<0, tup_t>(std::span(arr3));
         static constexpr auto f_2 = fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
@@ -580,12 +539,24 @@ void enum_main(){
         // static constexpr auto f_2 = fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
 
         // static_ass
-        static constexpr auto tup_ = make_tuple_from_packed_bytes<tup_t>(std::span<const std::byte, 14>(arr4));
+        static constexpr auto tup_ = make_tuple_from_bytes<tup_t>(std::span<const std::byte, 14>(arr4));
         static_assert(tup == tup_);
         // static const auto make_arg_from_bytes
     }
 
     {
+        // constexpr 
+        auto func = [](const uint16_t u, const iq_t<10> q){
+            return iq_t<20>(q + u);
+        };
 
+        static constexpr uint16_t u1 = 10;
+        static constexpr iq_t<10> q1 = 0.1_r;
+        static constexpr auto r1 = func(u1, q1);
+
+        static constexpr auto bytes = make_bytes_from_args(u1, q1);
+        static constexpr auto r2 = invoke_func_by_bytes(func, std::span(bytes));
+
+        static_assert(r1 == r2);
     }
 }
