@@ -127,3 +127,5 @@ void ina3221_main();
 void functional_main();
 
 void fmt_main();
+
+void enum_main();

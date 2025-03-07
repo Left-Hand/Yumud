@@ -2,6 +2,9 @@
 
 #include "sys/math/real.hpp"
 
+#include "sys/debug/debug.hpp"
+#include "sys/clock/time.hpp"
+
 // #include 
 // https://taylorconor.com/blog/enum-reflection/
 
@@ -445,19 +448,44 @@ Ret invoke_func_by_bytes(Fn && fn, const std::span<const std::byte, N> bytes){
 
 
 void enum_main(){
-    [[maybe_unused]] constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
-    [[maybe_unused]] constexpr const char * _10 = enum_item_name_v<Fruit, Fruit(10)>;
 
-    [[maybe_unused]] constexpr size_t count = enum_count_v<Fruit>;
-    // constexpr const char * banana2 = enum_item_name_v2<Fruit::BANANA>;
-    // using type = decltype(Fruit::BANANA);
-    // constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
- 
-    // static_assert(!, "!enum_is_valid_v<Fruit, Fruit::10>()");
-    // const auto f = __PRETTY_FUNCTION__;
-    static_assert(enum_is_valid_v<Fruit, Fruit::BANANA>, "enum_is not _valid_v<Fruit, Fruit::BANANA>()");
-    static_assert(!enum_is_valid_v<Fruit, Fruit(10)>, "enum_is_valid_v<Fruit, Fruit::10>()");
-    // static_assert(!enum_is_valid_v<Fruit, Fruit>, "!enum_is_valid_v<Fruit, Fruit::10>()");
+    uart2.init(576000);
+    DEBUGGER.retarget(&uart2);
+    DEBUGGER.setEps(4);
+    DEBUGGER.setSplitter(",");
+
+
+    while(true){
+        auto func = [](const real_t a, real_t b){
+            return a + b;
+        };
+
+        const auto t = time();
+        const auto s = sin(t);
+        const auto c = cos(t);
+        // const auto bytes = make_bytes_from_args(s, c);
+        // const auto r = invoke_func_by_bytes(func, std::span(bytes));
+
+        DEBUG_PRINTLN(t);
+        // DEBUG_PRINTLN(,c);
+        delay(10);
+    }
+    {
+        [[maybe_unused]] constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
+        [[maybe_unused]] constexpr const char * _10 = enum_item_name_v<Fruit, Fruit(10)>;
+
+        [[maybe_unused]] constexpr size_t count = enum_count_v<Fruit>;
+        // constexpr const char * banana2 = enum_item_name_v2<Fruit::BANANA>;
+        // using type = decltype(Fruit::BANANA);
+        // constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
+    
+        // static_assert(!, "!enum_is_valid_v<Fruit, Fruit::10>()");
+        // const auto f = __PRETTY_FUNCTION__;
+        static_assert(enum_is_valid_v<Fruit, Fruit::BANANA>, "enum_is not _valid_v<Fruit, Fruit::BANANA>()");
+        static_assert(!enum_is_valid_v<Fruit, Fruit(10)>, "enum_is_valid_v<Fruit, Fruit::10>()");
+        // static_assert(!enum_is_valid_v<Fruit, Fruit>, "!enum_is_valid_v<Fruit, Fruit::10>()");
+    }
+
 
     // static constexpr size_t a = tuple_bytes_v<int, int, uint8_t>;
     {
