@@ -61,8 +61,6 @@ protected:
         uint16_t rst:1;
     };
 
-
-
     struct ShuntVoltReg:public Reg16<>{
         scexpr RegAddress address = 0x01;
         uint16_t :16;
@@ -77,10 +75,12 @@ protected:
         scexpr RegAddress address = 0x03;
         int16_t :16;
     };
+
     struct CurrentReg:public Reg16i<>{
         scexpr RegAddress address = 0x04;
         int16_t :16;
     };
+    
     struct CalibrationReg:public Reg16i<>{
         scexpr RegAddress address = 0x05;
         int16_t :16;

@@ -110,15 +110,15 @@ public:
         return {x, y + v};
     }
 
-    template<arithmetic U>
-    constexpr T cos(const Vector2_t<U> & b) const{
-        return this->dot(b) / this->length() / b.length();
-    }
+    // template<arithmetic U>
+    // constexpr T cos(const Vector2_t<U> & b) const{
+    //     return this->dot(b) / this->length() / b.length();
+    // }
 
-    template<arithmetic U>
-    constexpr T sin(const Vector2_t<U> & b) const{
-        return this->cross(b) / this->length() / b.length();
-    }
+    // template<arithmetic U>
+    // constexpr T sin(const Vector2_t<U> & b) const{
+    //     return this->cross(b) / this->length() / b.length();
+    // }
 
     constexpr T angle() const {return atan2(y, x);}
 	constexpr T angle_to(const Vector2_t<T> &p_vector2) const {return atan2(cross(p_vector2), dot(p_vector2));}
@@ -238,12 +238,12 @@ public:
         if constexpr(std::is_integral<T>::value){
             return x != 0 || y != 0;
         }else{
-            return !::is_equal_approx(x, T(0)) || !::is_equal_approx(y, T(0));
+            return !is_equal_approx(x, T(0)) || !is_equal_approx(y, T(0));
         }
     }
 
     __fast_inline static constexpr Vector2_t<T> from_angle(const T & len, const T & rad){
-        return {len * ::cos(rad), len * ::sin(rad)};
+        return {len * cos(rad), len * sin(rad)};
     }
 
     __fast_inline static constexpr Vector2_t<T> ones(const T & len){

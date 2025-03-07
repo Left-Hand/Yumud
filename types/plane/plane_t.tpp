@@ -73,7 +73,7 @@ bool Plane_t<T>::intersects_ray(const Vector3_t<T> &p_from, const Vector3_t<T> &
 	Vector3_t<T> segment = p_dir;
 	T den = normal.dot(segment);
 
-	if (::is_equal_approx(0, den)) {
+	if (is_equal_approx(0, den)) {
 		return false;
 	}
 
@@ -95,7 +95,7 @@ template<arithmetic T>
 bool Plane_t<T>::intersects_segment(const Vector3_t<T> &p_begin, const Vector3_t<T> &p_end, Vector3_t<T> & p_intersection) const {
 	Vector3_t<T> segment = p_begin - p_end;
 	T den = normal.dot(segment);
-	if (::is_equal_approx(0, den)) {
+	if (is_equal_approx(0, den)) {
 		return false;
 	}
 
@@ -147,13 +147,13 @@ std::optional<Vector3_t<T>> Plane_t<T>::intersects_segment(const Vector3_t<T> &p
 
 template<arithmetic T>
 bool Plane_t<T>::is_equal_approx_any_side(const Plane_t<T> &p_plane) const {
-	return (normal.is_equal_approx(p_plane.normal) && ::is_equal_approx(d, p_plane.d)) || (normal.is_equal_approx(-p_plane.normal) && ::is_equal_approx(d, -p_plane.d));
+	return (normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d)) || (normal.is_equal_approx(-p_plane.normal) && is_equal_approx(d, -p_plane.d));
 }
 
 
 template<arithmetic T>
 bool Plane_t<T>::is_equal_approx(const Plane_t<T> &p_plane) const {
-	return normal.is_equal_approx(p_plane.normal) && ::is_equal_approx(d, p_plane.d);
+	return normal.is_equal_approx(p_plane.normal) && is_equal_approx(d, p_plane.d);
 }
 
 

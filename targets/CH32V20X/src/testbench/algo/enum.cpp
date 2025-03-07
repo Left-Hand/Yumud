@@ -188,7 +188,7 @@ void enum_main(){
     [[maybe_unused]] constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
     [[maybe_unused]] constexpr const char * _10 = enum_item_name_v<Fruit, Fruit(10)>;
 
-    constexpr size_t count = enum_count_v<Fruit>;
+    [[maybe_unused]] constexpr size_t count = enum_count_v<Fruit>;
     // constexpr const char * banana2 = enum_item_name_v2<Fruit::BANANA>;
     // using type = decltype(Fruit::BANANA);
     // constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
