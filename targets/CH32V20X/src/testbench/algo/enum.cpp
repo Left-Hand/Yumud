@@ -127,13 +127,109 @@ constexpr int enum_count_v = _enum_internal_element_count<E>(std::make_integer_s
 // template <E V>
 // using enum_type_t = typename E;
 
+// template<typename T>
+// struct _tuple_bytes{};
 
+// template<typename First>
+// struct _tuple_bytes<std::tuple<First>>{
+//     static constexpr size_t value = sizeof(First);
+// };
+
+// template<typename First, typename ... Rest>
+// struct _tuple_bytes<std::tuple<First, Rest...>>{
+//     static constexpr size_t value = 
+//         sizeof(First) + _tuple_bytes<std::tuple<Rest...>>::value;
+// };
+
+// template<typename ... Args>
+// static constexpr size_t tuple_bytes_v = _tuple_bytes<std::tuple<Args...>>::value;
+
+
+
+template<size_t N, typename ... Args>
+struct _element_t{};
+
+template<typename First, typename ... Rest>
+struct _element_t<0, First, Rest...>{
+    using type = First;
+};
+
+template<typename First>
+struct _element_t<0, First>{
+    using type = First;
+};
+
+template<size_t N, typename First, typename ... Rest>
+requires (N != 0)
+struct _element_t<N, First, Rest...>{
+    static_assert(N < 1 + sizeof...(Rest), "tuple_element_bytes_v<N, Args...>: N >= sizeof...(Args)");
+
+    using type = typename _element_t<N - 1, Rest...>::type;
+};
+
+
+template<size_t N, typename ... Args>
+using element_t = typename _element_t<N, Args...>::type;
+
+template<size_t N, typename ... Args>
+static constexpr size_t element_bytes_v = sizeof(element_t<N, Args...>);
+
+
+
+
+
+template<size_t N, typename ... Args>
+struct _tuple_element_t{};
+
+template<size_t N, typename ... Args>
+struct _tuple_element_t<N, std::tuple<Args...>>{
+    using type = typename _element_t<N, Args...>::type;
+};
+
+template<size_t N, typename Tup>
+using tuple_element_t = typename _tuple_element_t<N, Tup>::type;
+
+// template<size_t N, typename ... Args>
+// struct _tuple_total_bytes_v{};
+template<size_t N, typename ... Args>
+struct _total_bytes_v{
+    static constexpr size_t value = _total_bytes_v<N-1, Args...>::value + sizeof(element_t<N, Args...>);
+};
+
+template<typename ... Args>
+struct _total_bytes_v<0, Args ...>{
+    static constexpr size_t value = sizeof(element_t<0, Args...>);
+};
+
+
+template<typename ... Args>
+static constexpr size_t total_bytes_v = _total_bytes_v<sizeof...(Args) - 1, Args...>::value;
+
+template<typename T>
+struct _tuple_total_bytes_v{};
+
+template<typename ... Args>
+struct _tuple_total_bytes_v<std::tuple<Args...>>{
+    static constexpr size_t value = total_bytes_v<Args...>;
+};
+
+template<typename Tup>
+static constexpr size_t tuple_total_bytes_v = _tuple_total_bytes_v<Tup>::value;
+
+template<typename T>
+static constexpr bool is_functor_v = requires(T t){t();};
 
 enum Fruit {
     BANANA = 5,
     APPLE = 12,
 };
-  
+
+// template<typename T>
+// void test(){
+//     static_assert(false_v<T>, "ji", __FUNCTION__);
+// }
+
+
 void enum_main(){
     [[maybe_unused]] constexpr const char * banana = enum_item_name_v<Fruit, Fruit::BANANA>;
     [[maybe_unused]] constexpr const char * _10 = enum_item_name_v<Fruit, Fruit(10)>;
@@ -148,4 +244,40 @@ void enum_main(){
     static_assert(enum_is_valid_v<Fruit, Fruit::BANANA>, "enum_is not _valid_v<Fruit, Fruit::BANANA>()");
     static_assert(!enum_is_valid_v<Fruit, Fruit(10)>, "enum_is_valid_v<Fruit, Fruit::10>()");
     // static_assert(!enum_is_valid_v<Fruit, Fruit>, "!enum_is_valid_v<Fruit, Fruit::10>()");
+
+    // static constexpr size_t a = tuple_bytes_v<int, int, uint8_t>;
+    {
+        using type = std::tuple<int, uint16_t, uint8_t, iq_t<16>>;
+        
+        // static constexpr size_t a1 = tuple_element_bytes_v<1, type>;
+        // static constexpr size_t a2 = tuple_element_bytes_v<2, type>;
+        // static constexpr size_t a2 = tuple_element_bytes_v<2, type>;
+
+        // static constexpr size_t a3 = element_bytes_v<2, int, uint16_t, uint8_t, iq_t<16>>;
+        using t0 = element_t<0, int, uint16_t, uint8_t, iq_t<16>>;
+        using t1 = element_t<1, int, uint16_t, uint8_t, iq_t<16>>;
+        
+        using t3 = tuple_element_t<3, std::tuple<int, uint16_t, uint8_t, iq_t<16>>>;
+        // test<t2>();
+
+        static_assert(std::is_same_v<t0, int>);
+        static_assert(std::is_same_v<t1, uint16_t>);
+        static_assert(std::is_same_v<t3, iq_t<16>>);
+
+        // static_assert(tuple_total_bytes_v<type> == sizeof(type));
+        // total_bytes_v<int, uint16_t, uint8_t, iq_t<16>>;
+        // tuple_total_bytes_v<type>;
+        // static constexpr size_t a0 = element_bytes_v<0, int, uint16_t, uint8_t, iq_t<16>>;
+        // static constexpr size_t a1 = element_bytes_v<1, int, uint16_t, uint8_t, iq_t<16>>;
+
+        // static constexpr size_t a = element_bytes_v<1, int, short>;
+        // static_assert(tuple_bytes_v<type> == sizeof(type));
+        // static_assert(tuple_bytes_v<type> ==);
+    }
+
+
+    {
+        // func_ty
+        
+    }
 }
