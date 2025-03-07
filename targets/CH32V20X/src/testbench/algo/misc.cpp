@@ -51,3 +51,46 @@
 // };
 
 // #define scinit static constinit;
+
+
+
+
+
+// template<typename E, auto...args>
+// struct __static_string_pool{
+//     using Key = E;
+//     using Value = const char *;
+
+//     using Pair = std::pair<Key, Value>;
+
+//     constexpr size_t N = sizeof...(args); 
+//     static constexpr std::array<Pair> pool={static_cast<const char *>(args)...};
+    
+//     constexpr Value
+//     operator [](const size_t idx) const{return pool[idx];}
+// };
+
+
+// template <typename E, size_t N = enum_count_v<E>>
+// consteval auto make_string_pool(){
+
+// }
+// template <E V>
+// using enum_type_t = typename E;
+
+// template<typename T>
+// struct _tuple_bytes{};
+
+// template<typename First>
+// struct _tuple_bytes<std::tuple<First>>{
+//     static constexpr size_t value = sizeof(First);
+// };
+
+// template<typename First, typename ... Rest>
+// struct _tuple_bytes<std::tuple<First, Rest...>>{
+//     static constexpr size_t value = 
+//         sizeof(First) + _tuple_bytes<std::tuple<Rest...>>::value;
+// };
+
+// template<typename ... Args>
+// static constexpr size_t tuple_bytes_v = _tuple_bytes<std::tuple<Args...>>::value;
