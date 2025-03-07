@@ -19,8 +19,8 @@ using namespace ymd;
 #define READ_REG(reg) this->readReg(reg.address, reg.as_ref()).loc().expect();
 #else
 #define INA226_DEBUG(...)
-#define INA226_PANIC(...)  PANIC()
-#define INA226_ASSERT(cond, ...) ASSERT{cond}
+#define INA226_PANIC(...)  PANIC_NSRC()
+#define INA226_ASSERT(cond, ...) ASSERT_NSRC(cond)
 
 #define WRITE_REG(reg) +this->writeReg(reg.address, reg.as_val());
 #define READ_REG(reg) +this->readReg(reg.address, reg.as_ref());
