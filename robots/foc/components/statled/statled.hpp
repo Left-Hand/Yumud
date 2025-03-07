@@ -28,8 +28,8 @@ protected:
 
     RgbLedConcept & led;
 
-    Color color_a;
-    Color color_b;
+    Color color_a = {};
+    Color color_b = {};
 
     uint period;
     Method method;
@@ -37,11 +37,9 @@ protected:
     volatile RunStatus & run_status;
     volatile CtrlType & ctrl_type;
 public:
-    StatLed(RgbLedConcept & _led, volatile RunStatus & _run_status, volatile CtrlType & _ctrl_type) : led(_led), run_status(_run_status), ctrl_type(_ctrl_type) {;}
-
-    // void init(){
-    //     led.init();
-    // }
+    StatLed(RgbLedConcept & _led, 
+        volatile RunStatus & _run_status, volatile CtrlType & _ctrl_type) : 
+        led(_led), run_status(_run_status), ctrl_type(_ctrl_type) {;}
 
     void setTranstit(const Color & _color_a, const Color & _color_b, const Method _method, const uint _period){
         color_a = _color_a;

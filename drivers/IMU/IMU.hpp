@@ -12,6 +12,7 @@ protected:
     };
 public:
     virtual void update() = 0;
+    virtual ~IMU_Base() = default;
 };
 
 class Accerometer:virtual public IMU_Base{

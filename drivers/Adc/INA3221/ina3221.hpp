@@ -216,28 +216,28 @@ protected:
     
     hal::I2cDrv i2c_drv;
 
-    ConfigReg       config_reg;
-    ShuntVolt1Reg    shuntvolt1_reg;
-    BusVolt1Reg      busvolt1_reg;
-    ShuntVolt2Reg    shuntvolt2_reg;
-    BusVolt2Reg      busvolt2_reg;
-    ShuntVolt3Reg    shuntvolt3_reg;
-    BusVolt3Reg      busvolt3_reg;
-    InstantOVCReg   instant_ovc1_reg;
-    ConstantOVCReg  constant_ovc1_reg;
-    InstantOVCReg   instant_ovc2_reg;
-    ConstantOVCReg  constant_ovc2_reg;
-    InstantOVCReg   instant_ovc3_reg;
-    ConstantOVCReg  constant_ovc3_reg;
+    ConfigReg       config_reg = {};
+    ShuntVolt1Reg    shuntvolt1_reg = {};
+    BusVolt1Reg      busvolt1_reg = {};
+    ShuntVolt2Reg    shuntvolt2_reg = {};
+    BusVolt2Reg      busvolt2_reg = {};
+    ShuntVolt3Reg    shuntvolt3_reg = {};
+    BusVolt3Reg      busvolt3_reg = {};
+    InstantOVCReg   instant_ovc1_reg = {};
+    ConstantOVCReg  constant_ovc1_reg = {};
+    InstantOVCReg   instant_ovc2_reg = {};
+    ConstantOVCReg  constant_ovc2_reg = {};
+    InstantOVCReg   instant_ovc3_reg = {};
+    ConstantOVCReg  constant_ovc3_reg = {};
 
-    ShuntVoltReg    shuntvolt_reg;
-    ShuntVoltReg    shuntvolt_limit_reg;
-    MaskReg         mask_reg;
-    PowerHoReg      power_ho_reg;
-    PowerLoReg      power_lo_reg;
+    ShuntVoltReg    shuntvolt_reg = {};
+    ShuntVoltReg    shuntvolt_limit_reg = {};
+    MaskReg         mask_reg = {};
+    PowerHoReg      power_ho_reg = {};
+    PowerLoReg      power_lo_reg = {};
 
-    ManuIdReg       manu_id_reg;
-    ChipIdReg       chip_id_reg;
+    ManuIdReg       manu_id_reg = {};
+    ChipIdReg       chip_id_reg = {};
 
 
     std::array<INA3221Channel, 6> channels = {

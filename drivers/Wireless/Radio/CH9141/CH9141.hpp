@@ -155,7 +155,8 @@ public:
     void chipInfo(){sendAtCommand("SHOW");}
     void save(){sendAtCommand("SAVE");}
     void exit(){sendAtCommand("EXIT");}
-    void setChannel(const uint16_t _channel) override {sendAtCommand(("BCCH=" + String((uint8_t)_channel)).c_str());}
+    // void setChannel(const uint16_t _channel) override {sendAtCommand(("BCCH=" + String((uint8_t)_channel)).c_str());}
+    void setChannel(const uint16_t _channel) override {}
 
     // void setMac(){}
     //TODO

@@ -55,13 +55,13 @@ protected:
         Prescale = 0xfe
     };
 
-    Mode1Reg mode1_reg;
-    Mode2Reg mode2_reg;
-    std::array<uint8_t,3> sub_addr_regs;
-    uint8_t all_addr_reg;
-    std::array<LedRegs,16> sub_channels;
-    LedRegs all_channel;
-    uint8_t prescale_reg;
+    Mode1Reg mode1_reg = {};
+    Mode2Reg mode2_reg = {};
+    std::array<uint8_t,3> sub_addr_regs = {};
+    uint8_t all_addr_reg = {};
+    std::array<LedRegs,16> sub_channels = {};
+    LedRegs all_channel = {};
+    uint8_t prescale_reg = {};
 
     class PCA8975Channel final:public hal::PwmIntf,  hal::GpioIntf{
     protected:

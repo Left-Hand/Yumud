@@ -50,6 +50,7 @@ public:
 
     Action(const Action & other) = delete;
     Action(Action && other) = default;
+    virtual ~Action() = default;
 
     bool died() const{
         // return sustain <= 0;

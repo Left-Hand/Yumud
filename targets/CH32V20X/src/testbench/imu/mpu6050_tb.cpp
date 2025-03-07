@@ -11,7 +11,7 @@
 using namespace ymd::drivers;
 
 // #define UART uart2
-#define UART uart1
+#define UART uart2
 void mpu6050_tb(OutputStream & logger, hal::I2c & i2c){
     MPU6050 mpu{i2c};
 

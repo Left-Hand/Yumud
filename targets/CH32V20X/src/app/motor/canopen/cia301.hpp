@@ -23,7 +23,7 @@ public:
 
     
 struct Cia301ObjectDict:public StaticObjectDictBase{
-    struct ControlWordReg:public RegC32{
+    struct ControlWordReg:public RegC32<>{
         //控制字寄存器 只读32位
         static constexpr Index idx = 0x1000;
         static constexpr SubIndex subidx = 0x00;
@@ -32,7 +32,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint16_t extra_msg;
     };
 
-    struct ErrorReg:public RegC8{
+    struct ErrorReg:public RegC8<>{
         //错误寄存器 只读8位
         static constexpr Index idx = 0x1001;
         static constexpr SubIndex subidx = 0x0;
@@ -45,7 +45,7 @@ struct Cia301ObjectDict:public StaticObjectDictBase{
         uint8_t :3;
     };
 
-    struct ManufacturerStatusReg:public RegC32{
+    struct ManufacturerStatusReg:public RegC32<>{
         //厂商信息 只读32位
         static constexpr Index idx = 0x1002;
         static constexpr SubIndex subidx = 0x0;

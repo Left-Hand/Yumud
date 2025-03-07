@@ -97,17 +97,17 @@ protected:
         uint8_t data;
     };
 
-    ProgramTimesReg programTimesReg;
-    StartAngleReg startAngleReg;
-    EndAngleReg endAngleReg;
-    AmountAngleReg amountAngleReg;
-    RawAngleReg rawAngleReg;
-    AngleReg angleReg;
-    ConfigReg configReg;
-    StatusReg statusReg;
-    AutoGainReg autoGainReg;
-    MagnitudeReg magnitudeReg;
-    BurnReg burnReg;
+    ProgramTimesReg programTimesReg = {};
+    StartAngleReg startAngleReg = {};
+    EndAngleReg endAngleReg = {};
+    AmountAngleReg amountAngleReg = {};
+    RawAngleReg rawAngleReg = {};
+    AngleReg angleReg = {};
+    ConfigReg configReg = {};
+    StatusReg statusReg = {};
+    AutoGainReg autoGainReg = {};
+    MagnitudeReg magnitudeReg = {};
+    BurnReg burnReg = {};
 
     enum class RegAddress : uint8_t {
         ProgramTimes = 0x00,

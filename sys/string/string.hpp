@@ -66,17 +66,17 @@ public:
 	String(const std::string_view & str):String(str.data(), str.length()){};
 	String(const StringView & str):String(str.data(), str.length()){};
 
-	explicit String(uint8_t value, uint8_t base=10);
-	explicit String(int value, uint8_t base=10);
-	explicit String(size_t value, uint8_t base=10);
-	explicit String(long value, uint8_t base=10);
-	explicit String(unsigned long value, uint8_t base=10);
-	explicit String(unsigned long long value, uint8_t base=10);
-	explicit String(long long value, uint8_t base=10);
+	// explicit String(uint8_t value, uint8_t base=10);
+	// explicit String(int value, uint8_t base=10);
+	// explicit String(size_t value, uint8_t base=10);
+	// explicit String(long value, uint8_t base=10);
+	// explicit String(unsigned long value, uint8_t base=10);
+	// explicit String(unsigned long long value, uint8_t base=10);
+	// explicit String(long long value, uint8_t base=10);
 
 
-	explicit String(float value, uint8_t decimalPlaces = 3);
-	explicit String(double value, uint8_t decimalPlaces = 3);
+	// explicit String(float value, uint8_t decimalPlaces = 3);
+	// explicit String(double value, uint8_t decimalPlaces = 3);
 
 	template<size_t Q>
 	explicit String(const iq_t<Q> value, uint8_t decimalPlaces){
@@ -117,40 +117,40 @@ public:
 	uint8_t concat(const char *cstr);
 	uint8_t concat(const char *cstr, size_t length);
 	uint8_t concat(char c);
-	uint8_t concat(uint8_t c);
-	uint8_t concat(int num);
-	uint8_t concat(size_t num);
-	uint8_t concat(long num);
-	uint8_t concat(unsigned long num);
-	uint8_t concat(float num);
-	uint8_t concat(double num);
+	// uint8_t concat(uint8_t c);
+	// uint8_t concat(int num);
+	// uint8_t concat(size_t num);
+	// uint8_t concat(long num);
+	// uint8_t concat(unsigned long num);
+	// uint8_t concat(float num);
+	// uint8_t concat(double num);
 	
 	// if there's not enough memory for the concatenated value, the string
 	// will be left unchanged (but this isn't signalled in any way)
-	String & operator += (const String &rhs)	{concat(rhs); return (*this);}
-	String & operator += (const char *cstr)		{concat(cstr); return (*this);}
-	String & operator += (char c)			{concat(c); return (*this);}
-	String & operator += (uint8_t num)		{concat(num); return (*this);}
-	String & operator += (int num)			{concat(num); return (*this);}
-	String & operator += (unsigned int num)		{concat(num); return (*this);}
-	String & operator += (long num)			{concat(num); return (*this);}
-	String & operator += (unsigned long num)	{concat(num); return (*this);}
-	String & operator += (float num)		{concat(num); return (*this);}
-	String & operator += (double num)		{concat(num); return (*this);}
+	// String & operator += (const String &rhs)	{concat(rhs); return (*this);}
+	// String & operator += (const char *cstr)		{concat(cstr); return (*this);}
+	// String & operator += (char c)			{concat(c); return (*this);}
+	// String & operator += (uint8_t num)		{concat(num); return (*this);}
+	// String & operator += (int num)			{concat(num); return (*this);}
+	// String & operator += (unsigned int num)		{concat(num); return (*this);}
+	// String & operator += (long num)			{concat(num); return (*this);}
+	// String & operator += (unsigned long num)	{concat(num); return (*this);}
+	// String & operator += (float num)		{concat(num); return (*this);}
+	// String & operator += (double num)		{concat(num); return (*this);}
 
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, const String &rhs);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, const char *cstr);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, char c);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, uint8_t num);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, int num);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, size_t num);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, long num);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned long num);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, float num);
-	friend StringSumHelper & operator + (const StringSumHelper & lhs, double num);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, const String &rhs);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, const char *cstr);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, char c);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, uint8_t num);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, int num);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, size_t num);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, long num);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, unsigned long num);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, float num);
+	// friend StringSumHelper & operator + (const StringSumHelper & lhs, double num);
 
 	// comparison (only works w/ Strings and "strings")
-	operator StringIfHelperType() const { return buffer ? &String::StringIfHelper : 0; }
+	// operator StringIfHelperType() const { return buffer ? &String::StringIfHelper : 0; }
 	int compareTo(const String &s) const;
 	uint8_t equals(const String &s) const;
 	uint8_t equals(const char *cstr) const;
@@ -243,20 +243,20 @@ public:
 	#endif
 };
 
-class StringSumHelper : public String
-{
-public:
-	StringSumHelper(const String &s) : String(s) {}
-	StringSumHelper(const char *p) : String(p) {}
-	StringSumHelper(char c) : String(c) {}
-	StringSumHelper(uint8_t num) : String(num) {}
-	StringSumHelper(int num) : String(num) {}
-	StringSumHelper(size_t num) : String(num) {}
-	StringSumHelper(long num) : String(num) {}
-	StringSumHelper(unsigned long num) : String(num) {}
-	StringSumHelper(float num) : String(num) {}
-	StringSumHelper(double num) : String(num) {}
-};
+// class StringSumHelper : public String
+// {
+// public:
+// 	StringSumHelper(const String &s) : String(s) {}
+// 	StringSumHelper(const char *p) : String(p) {}
+// 	StringSumHelper(char c) : String(c) {}
+// 	StringSumHelper(uint8_t num) : String(num) {}
+// 	StringSumHelper(int num) : String(num) {}
+// 	StringSumHelper(size_t num) : String(num) {}
+// 	StringSumHelper(long num) : String(num) {}
+// 	StringSumHelper(unsigned long num) : String(num) {}
+// 	StringSumHelper(float num) : String(num) {}
+// 	StringSumHelper(double num) : String(num) {}
+// };
 
 
 

@@ -6,6 +6,7 @@
 namespace ymd{
 class InputStream:virtual public BasicStream{
 public:
+    virtual ~InputStream() = default;
     virtual void read(char & data) = 0;
     virtual void read(char * data_ptr, const size_t len){
         for(size_t i=0;i<len;i++) read(data_ptr[i]);

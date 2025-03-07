@@ -78,13 +78,13 @@ protected:
         IDC = 12
     };
 
-    ConfigAReg configAReg;
-    ConfigBReg configBReg;
-    ModeReg modeReg;
-    int16_t magXReg;
-    int16_t magYReg;
-    int16_t magZReg;
-    StatusReg statusReg;
+    ConfigAReg configAReg = {};
+    ConfigBReg configBReg = {};
+    ModeReg modeReg = {};
+    int16_t magXReg = {};
+    int16_t magYReg = {};
+    int16_t magZReg = {};
+    StatusReg statusReg = {};
 
     void writeReg(const RegAddress addr, const uint16_t data){
         i2c_drv_.writeReg((uint8_t)addr, data, MSB);

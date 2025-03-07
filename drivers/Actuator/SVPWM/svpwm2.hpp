@@ -4,7 +4,7 @@
 
 
 namespace ymd::drivers{
-class SVPWM2:public SVPWM{
+class SVPWM2 final:public SVPWM{
 public:
     using Driver = Coil2DriverIntf;
 

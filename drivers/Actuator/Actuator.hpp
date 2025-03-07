@@ -9,5 +9,6 @@ class ActuatorIntf{
 public:
     // virtual void init() = 0;
     virtual void enable(const bool en) = 0;
+    virtual ~ActuatorIntf() = default;
 };
 }

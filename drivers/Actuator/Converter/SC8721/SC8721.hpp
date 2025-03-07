@@ -149,15 +149,15 @@ protected:
     };
 
 
-    CSOReg cso_reg;
-    SlopeCompReg slope_comp_reg;
-    VoutSetMsbReg vout_set_msb_reg;
-    VoutSetLsbReg vout_set_lsb_reg;
-    GlobalCtrlReg global_ctrl;
-    SysSetReg sys_set_reg;
-    FreqSetReg freq_set_reg;
-    Status1Reg status1_reg;
-    Status2Reg status2_reg;
+    CSOReg cso_reg = {};
+    SlopeCompReg slope_comp_reg = {};
+    VoutSetMsbReg vout_set_msb_reg = {};
+    VoutSetLsbReg vout_set_lsb_reg = {};
+    GlobalCtrlReg global_ctrl = {};
+    SysSetReg sys_set_reg = {};
+    FreqSetReg freq_set_reg = {};
+    Status1Reg status1_reg = {};
+    Status2Reg status2_reg = {};
 
     
     void writeReg(const RegAddress address, const uint8_t reg){

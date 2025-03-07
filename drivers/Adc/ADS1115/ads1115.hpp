@@ -74,10 +74,10 @@ protected:
         int16_t data;
     };
 
-    ConversionReg conversion_reg;
-    ConfigReg config_reg;
-    LowThreshReg low_thresh_reg;
-    HighThreshReg high_thresh_reg;
+    ConversionReg conversion_reg = {};
+    ConfigReg config_reg = {};
+    LowThreshReg low_thresh_reg = {};
+    HighThreshReg high_thresh_reg = {};
 
 
     [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data);

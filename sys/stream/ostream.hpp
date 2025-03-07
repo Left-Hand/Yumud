@@ -140,6 +140,8 @@ public:
         reconf(default_config);
     }
 
+    virtual ~OutputStream() = default;
+
     OutputStream(const OutputStream &) = delete;
     OutputStream(OutputStream &&) = delete;
 

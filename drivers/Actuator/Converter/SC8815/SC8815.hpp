@@ -9,10 +9,10 @@ namespace ymd::drivers{
 class SC8815{
 protected:
     using RegAddress = uint8_t;
-    uint bus_shunt_res_mohms_;
-    uint bat_shunt_res_mohms_;
-    real_t fb_up_res_kohms_;
-    real_t fb_down_res_kohms_;
+    uint bus_shunt_res_mohms_ = 0;
+    uint bat_shunt_res_mohms_ = 0;
+    real_t fb_up_res_kohms_ = 0;
+    real_t fb_down_res_kohms_ = 0;
 
     hal::I2cDrv i2c_drv_;
 

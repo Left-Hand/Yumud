@@ -154,6 +154,10 @@ void digipw_main(){
     // buck.init();
 
     iq_t<24> duty = 0.5_r;
+
+    // int a;
+    // DEBUG_PRINTLN(a);
+
     while(true){
         
         ina226.update();

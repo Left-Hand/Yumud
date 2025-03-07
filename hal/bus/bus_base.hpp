@@ -88,13 +88,15 @@ private:
         }
     };
 
-    Locker __own_locker__;
+    Locker __own_locker__ = {};
     Locker & locker;
 
     virtual BusError lead(const uint8_t _address) = 0;
     virtual void trail() = 0;
 public:
     BusBase():locker(__own_locker__){;}
+
+    virtual ~BusBase(){;}
     
     BusBase(const BusBase &) = delete;
     BusBase(BusBase &&) = delete;

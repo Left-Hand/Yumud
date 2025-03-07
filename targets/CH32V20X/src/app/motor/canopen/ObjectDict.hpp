@@ -116,9 +116,13 @@ public:
 
 template<typename T>
 struct reg_decay{
-    using type = std::conditional_t<
-        std::is_base_of_v<__RegBase, T>,
-        typename T::value_type, T>;
+    // using type = void;
+};
+
+template<typename T>
+requires std::is_base_of_v<__RegBase, T>
+struct reg_decay<T>{
+    using type = T::value_type;
 };
 
 

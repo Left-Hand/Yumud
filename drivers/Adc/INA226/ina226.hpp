@@ -107,16 +107,16 @@ protected:
         uint16_t :16;
     };
 
-    ConfigReg configReg;
-    ShuntVoltReg shuntVoltageReg;
-    BusVoltReg busVoltageReg;
-    PowerReg powerReg;
-    CurrentReg currentReg;
-    CalibrationReg calibrationReg;
-    MaskReg maskReg;
-    AlertLimitReg alertLimitReg;
-    ManufactureReg manufactureIDReg;
-    ChipIdReg chipIDReg;
+    ConfigReg configReg = {};
+    ShuntVoltReg shuntVoltageReg = {};
+    BusVoltReg busVoltageReg = {};
+    PowerReg powerReg = {};
+    CurrentReg currentReg = {};
+    CalibrationReg calibrationReg = {};
+    MaskReg maskReg = {};
+    AlertLimitReg alertLimitReg = {};
+    ManufactureReg manufactureIDReg = {};
+    ChipIdReg chipIDReg = {};
 
     [[nodiscard]] BusResult writeReg(const RegAddress addr, const uint16_t data);
 

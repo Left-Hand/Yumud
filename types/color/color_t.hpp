@@ -44,10 +44,27 @@ template <typename T>
 requires std::is_arithmetic_v<T>
 struct Color_t {
 public:
-    T r;
-    T g;
-    T b;
-    T a;
+    T r = T(0);
+    T g = T(0);
+    T b = T(0);
+    T a = T(1);
+
+	Color_t() = default;
+
+	
+    template <typename U>
+	constexpr __fast_inline Color_t(U p_r, U p_g, U p_b, U p_a = U(1)) {
+		r = static_cast<T>(p_r);
+		g = static_cast<T>(p_g);
+		b = static_cast<T>(p_b);
+		a = static_cast<T>(p_a);
+	}
+
+	Color_t(const Color_t &) = default;
+	Color_t(Color_t &&) = default;
+
+	Color_t &operator=(const Color_t &) = default;
+	Color_t &operator=(Color_t &&) = default;
     
 	constexpr bool operator==(const Color_t &p_Color) const { return (r == p_Color.r && g == p_Color.g && b == p_Color.b && a == p_Color.a); }
 	constexpr bool operator!=(const Color_t &p_Color) const { return (r != p_Color.r || g != p_Color.g || b != p_Color.b || a != p_Color.a); }
@@ -203,20 +220,6 @@ public:
 
 	constexpr static Color_t<T> from_hsv(const auto & p_h, const auto & p_s = 1, const auto & p_v = 1, const auto & p_a = 1);
 
-	__fast_inline constexpr Color_t() {
-		r = T(0);
-		g = T(0);
-		b = T(0);
-		a = T(1);
-	}
-
-    template <typename U>
-	constexpr __fast_inline Color_t(U p_r, U p_g, U p_b, U p_a = U(1)) {
-		r = static_cast<T>(p_r);
-		g = static_cast<T>(p_g);
-		b = static_cast<T>(p_b);
-		a = static_cast<T>(p_a);
-	}
 
     __fast_inline constexpr operator RGB565() const {
         return RGB565(

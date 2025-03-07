@@ -17,6 +17,8 @@ protected:
 protected:
     Storage(const Address capacity):capacity_(capacity), view_({0, capacity}){;}
     Storage(const Address capacity, const AddressView & _view):capacity_(capacity), view_(_view){;}
+
+    virtual ~Storage() = default;
     friend class Memory;
 
     virtual void entry_store() = 0;

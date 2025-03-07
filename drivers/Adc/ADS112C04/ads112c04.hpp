@@ -151,10 +151,10 @@ protected:
         uint8_t idac2_mux:3;
     };
 
-    Config0Reg config0_reg;
-    Config1Reg config1_reg;
-    Config2Reg config2_reg;
-    Config3Reg config3_reg;
+    Config0Reg config0_reg = {};
+    Config1Reg config1_reg = {};
+    Config2Reg config2_reg = {};
+    Config3Reg config3_reg = {};
 
 
 

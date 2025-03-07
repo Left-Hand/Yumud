@@ -117,7 +117,7 @@ protected:
 
     hal::SpiDrv spi_drv_;
 
-    real_t lap_position;
+    real_t lap_position = 0;
     size_t errcnt = 0;
     bool fast_mode = true;
 

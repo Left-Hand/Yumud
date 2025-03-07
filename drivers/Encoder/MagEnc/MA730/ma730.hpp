@@ -21,7 +21,7 @@ public:
 
 protected:
     hal::SpiDrv spi_drv_;
-    real_t lap_position;
+    real_t lap_position = {};
 
     enum class RegAddress:uint8_t{
         ZeroDataLow,
@@ -69,14 +69,14 @@ protected:
         uint8_t magnitudeHigh :1;
     };
 
-    uint16_t zeroDataReg;
-    uint8_t trimReg;
-    TrimConfigReg trimConfigReg;
-    ZParametersReg zParametersReg;
-    uint8_t pulsePerTurnReg;
-    ThresholdReg thresholdReg;
-    DirectionReg directionReg;
-    MagnitudeReg magnitudeReg;
+    uint16_t zeroDataReg = {};
+    uint8_t trimReg = {};
+    TrimConfigReg trimConfigReg = {};
+    ZParametersReg zParametersReg = {};
+    uint8_t pulsePerTurnReg = {};
+    ThresholdReg thresholdReg = {};
+    DirectionReg directionReg = {};
+    MagnitudeReg magnitudeReg = {};
 
     BusError writeReg(const RegAddress reg_addr, uint8_t data);
 

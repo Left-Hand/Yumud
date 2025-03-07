@@ -27,9 +27,10 @@ struct Info{
     int a;
     char b;
     iq_t<16> c;
-}
+};
+
 void reflect_main(){
     // REFLECT_NARGS(a,b,c)
     // REFLECT_CONCAT(REFLECT_FOREACH_, 3)
-    // REFLECT_FOREACH(Info, a, b, c);
+    // REFLECT_FOREACH(knfo, a, b, c);
 }

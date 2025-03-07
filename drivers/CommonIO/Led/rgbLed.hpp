@@ -18,6 +18,8 @@ public:
         brightness = _brightness;
     }
 
+    virtual ~RgbLedConcept() = default;
+
     virtual RgbLedConcept & operator = (const Color & color) = 0;
 };
 

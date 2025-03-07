@@ -11,7 +11,7 @@
 using namespace ymd;
 using drivers::INA3221;
 
-#define UART uart1
+#define UART uart2
 
 void ina3221_main(){
     UART.init(576000);

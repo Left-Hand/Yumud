@@ -47,7 +47,7 @@ protected:
         uint8_t __resv__:1;
     };
 
-    StatusReg statusReg;
+    StatusReg statusReg = {};
 
 
     void writePage(const size_t addr, const void * data, const Address len);

@@ -133,10 +133,10 @@ protected:
         uint16_t :10;
     };
 
-    Status1Reg status1_reg;
-    Status2Reg status2_reg;
-    Ctrl1Reg ctrl1_reg;
-    Ctrl2Reg ctrl2_reg;
+    Status1Reg status1_reg = {};
+    Status2Reg status2_reg = {};
+    Ctrl1Reg ctrl1_reg = {};
+    Ctrl2Reg ctrl2_reg = {};
 
     void writeReg(const RegAddress addr, const uint16_t reg);
     void readReg(const RegAddress addr, uint16_t & reg);

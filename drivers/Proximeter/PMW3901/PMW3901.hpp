@@ -27,10 +27,10 @@ struct DeltaReg:public Reg16<>{
 };
 
 struct PMW3901_Data {
-MotionReg motion;
-uint8_t observation;
-DeltaReg dx;
-DeltaReg dy;
+MotionReg motion = {};
+uint8_t observation = {};
+DeltaReg dx = {};
+DeltaReg dy = {};
 };
 #pragma pack(pop)
 }
@@ -38,8 +38,8 @@ DeltaReg dy;
 class PMW3901:public internal::PMW3901_Data, public FlowSensor{
 protected:
     hal::SpiDrv spi_drv_;
-    real_t x_cm;
-    real_t y_cm;
+    real_t x_cm = {};
+    real_t y_cm = {};
 
     bool assertReg(const uint8_t command, const uint8_t data);
     void writeReg(const uint8_t command, const uint8_t data);
