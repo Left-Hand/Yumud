@@ -25,7 +25,7 @@
         uint8_t pmu_en:1;
     };
 
-    struct AutoAcknowledgeReg:public Reg8{
+    struct AutoAcknowledgeReg:public Reg8<>{
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -35,7 +35,7 @@
         uint8_t __resv__ :2;
     };
 
-    struct EnableRxAddressReg:public Reg8{
+    struct EnableRxAddressReg:public Reg8<>{
         uint8_t p0:1;
         uint8_t p1:1;
         uint8_t p2:1;
@@ -45,7 +45,7 @@
         uint8_t __resv__ :2;
     };
 
-    struct AddressWidthReg:public Reg8{
+    struct AddressWidthReg:public Reg8<>{
         uint8_t pipex_address_width:2;
         uint8_t tx_address_width:2;
         uint8_t pillon_lock_time:4;

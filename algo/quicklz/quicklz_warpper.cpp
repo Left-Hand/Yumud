@@ -13,7 +13,7 @@ std::vector<uint8_t> quicklz_compress(const std::vector<uint8_t> & src)
 	for(size_t pos = 0;pos<src.size();pos+=n) {
 		size_t len = MIN(src.size() - pos, n);
 		len = qlz_compress(src.data() + pos, buffer, len, &state);
-		for(size_t i = 0;i < len; i++)dst.push_back((uint8_t)buffer[i]);
+		for(size_t i = 0;i < len; i++)dst.push_back(uint8_t(buffer[i]));
 	}
 	return dst;
 }
@@ -26,11 +26,11 @@ std::vector<uint8_t> quicklz_decompress(const std::vector<uint8_t>& qlzdata)
 	std::vector<uint8_t> dst;
 	for(size_t pos = 0;pos < qlzdata.size(); ){
 		// 获取压缩数据段大小
-		size_t co_size = qlz_size_compressed((const char *)(qlzdata.data()) + pos);
+		size_t co_size = qlz_size_compressed(reinterpret_cast<const char*>(qlzdata.data()) + pos);
 		// 获取该压缩段解压后的大小
-		size_t de_size = qlz_size_decompressed((const char *)qlzdata.data() + pos);
+		size_t de_size = qlz_size_decompressed(reinterpret_cast<const char*>(qlzdata.data()) + pos);
 		std::vector<uint8_t> buffer(de_size,0);
-		qlz_decompress((const char *)qlzdata.data()+pos, (char*)buffer.data(),&state);
+		qlz_decompress((const char *)qlzdata.data()+pos, reinterpret_cast<char*>(buffer.data()),&state);
 		pos += co_size;
 //		dst.push_back(buffer);
 		for(const auto & item :buffer){

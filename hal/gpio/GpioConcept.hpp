@@ -8,6 +8,7 @@ public:
     // const int8_t pin_index = 0;
 public:
     GpioIntf() = default;
+    virtual ~GpioIntf() = default;
     GpioIntf(const hal::GpioIntf & other) = delete;
     GpioIntf(hal::GpioIntf && other) = delete;
     

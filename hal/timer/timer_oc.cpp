@@ -30,6 +30,8 @@ TimerOC & TimerOC::setMode(const TimerOC::Mode mode){
     switch(idx_){
         default:
             HALT;
+            [[fallthrough]];
+
         case CH1:
             {
                 uint16_t tmpccmrx = instance->CHCTLR1;

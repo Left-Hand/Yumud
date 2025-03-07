@@ -57,6 +57,9 @@ public:
     // 判断是否为整数类型
     constexpr bool is_int() const {return e_ <= real32;}
 
+
+    template<typename T>
+    static constexpr bool false_v = false;
     // 获取数据类型的大小
     constexpr size_t dsize() const {
         switch (e_.v_) {
@@ -88,6 +91,8 @@ public:
             return uint16;
         } else if constexpr (std::is_same_v<T, int32_t> || std::is_same_v<T, uint32_t>){
             return uint32;
+        } else{
+            static_assert(false_v<U>, "EntryDataType::from() only support int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t");
         }
     }
 
@@ -122,10 +127,13 @@ private:
     public:
         constexpr ObjRef(uint32_t data):is_ref_(false), data32_(data){}
 
+        
+        template<typename T>
+        requires ((sizeof(std::decay_t<T>) == 4) and std::is_standard_layout_v<std::decay_t<T>> and std::is_lvalue_reference_v<T>)
+        constexpr ObjRef(const T & pdata):is_ref_(true), pdata_(reinterpret_cast<void *>(const_cast<T *>(&pdata))){}
 
         template<typename T>
-        requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_lvalue_reference_v<T>)
-        constexpr ObjRef(T & pdata):is_ref_(true), pdata_((void *)(&pdata)){}
+        constexpr ObjRef(const T && pdata):is_ref_(false), pdata_(reinterpret_cast<void *>(&pdata)){}
 
         // template<typename T>
         // requires (sizeof(std::decay_t<T>)= 4 and std::is_standard_layout_v<std::decay_t<T>> and std::is_rvalue_reference_v<T>)

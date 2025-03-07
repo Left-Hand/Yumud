@@ -9,7 +9,7 @@ namespace ymd::drivers{
 namespace internal{
 #pragma pack(push, 1)
 
-struct MotionReg:public Reg8{
+struct MotionReg:public Reg8<>{
     using Reg8::operator=;
 
     uint8_t frameFrom0:1;
@@ -20,17 +20,17 @@ struct MotionReg:public Reg8{
     uint8_t occured:1;
 };
 
-struct DeltaReg:public Reg16{
+struct DeltaReg:public Reg16<>{
     using Reg16::operator =;
 
     uint16_t :16;
 };
 
 struct PMW3901_Data {
-MotionReg motion;
-uint8_t observation;
-DeltaReg dx;
-DeltaReg dy;
+MotionReg motion = {};
+uint8_t observation = {};
+DeltaReg dx = {};
+DeltaReg dy = {};
 };
 #pragma pack(pop)
 }
@@ -38,8 +38,8 @@ DeltaReg dy;
 class PMW3901:public internal::PMW3901_Data, public FlowSensor{
 protected:
     hal::SpiDrv spi_drv_;
-    real_t x_cm;
-    real_t y_cm;
+    real_t x_cm = {};
+    real_t y_cm = {};
 
     bool assertReg(const uint8_t command, const uint8_t data);
     void writeReg(const uint8_t command, const uint8_t data);

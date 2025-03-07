@@ -93,16 +93,16 @@ protected:
     real_t gyr_scale = 0;
 
     using RegAddress = uint8_t;
-    struct TempOutReg:public Reg16{scexpr RegAddress address = 0x0D; uint8_t data;};
-    struct WhoAmIReg:public Reg8{scexpr RegAddress address = 0x0F; uint8_t data;};
-    struct Ctrl1Reg:public Reg8{
+    struct TempOutReg:public Reg16<>{scexpr RegAddress address = 0x0D; uint8_t data;};
+    struct WhoAmIReg:public Reg8<>{scexpr RegAddress address = 0x0F; uint8_t data;};
+    struct Ctrl1Reg:public Reg8<>{
         scexpr RegAddress address = 0x20;
         uint8_t lp_mode:2;
         uint8_t mode:2;
         uint8_t odr:4;    
     };
 
-    struct Ctrl2Reg:public Reg8{
+    struct Ctrl2Reg:public Reg8<>{
         scexpr RegAddress address = 0x21;
         uint8_t sim:1;
         uint8_t i2c_disable:1;
@@ -114,7 +114,7 @@ protected:
         uint8_t boot:1;
     };
 
-    struct Ctrl3Reg:public Reg8{
+    struct Ctrl3Reg:public Reg8<>{
         scexpr RegAddress address = 0x22;
         uint8_t slp_mode_1:1;
         uint8_t slp_mode_sel:1;
@@ -125,7 +125,7 @@ protected:
         uint8_t selftest_mode:2;
     };
 
-    struct Ctrl4Reg:public Reg8{
+    struct Ctrl4Reg:public Reg8<>{
         scexpr RegAddress address = 0x23;
         uint8_t int1_drdy:1;
         uint8_t int1_fth:1;
@@ -137,7 +137,7 @@ protected:
         uint8_t int1_6d:1;
     };
 
-    struct Ctrl5Reg:public Reg8{
+    struct Ctrl5Reg:public Reg8<>{
         scexpr RegAddress address = 0x24;
         uint8_t int2_drdy:1;
         uint8_t int2_fth:1;
@@ -149,7 +149,7 @@ protected:
         uint8_t int2_sleep_state:1;
     };
 
-    struct Ctrl6Reg:public Reg8{
+    struct Ctrl6Reg:public Reg8<>{
         scexpr RegAddress address = 0x25;
         uint8_t :2;
         uint8_t low_noise:1;
@@ -158,9 +158,9 @@ protected:
         uint8_t bw_filt:2;
     };
 
-    struct TempOut8Reg:public Reg16{scexpr RegAddress address = 0x26; uint8_t data;};
+    struct TempOut8Reg:public Reg16<>{scexpr RegAddress address = 0x26; uint8_t data;};
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         scexpr RegAddress address = 0x27;
         uint8_t drdy:1;
         uint8_t ff_ia:1;
@@ -172,17 +172,17 @@ protected:
         uint8_t fifo_ths:1;
     };
 
-    struct OutputXReg:public Reg16i{scexpr RegAddress address = 0x28; int16_t data;};
-    struct OutputYReg:public Reg16i{scexpr RegAddress address = 0x2A; int16_t data;};
-    struct OutputZReg:public Reg16i{scexpr RegAddress address = 0x2C; int16_t data;};
+    struct OutputXReg:public Reg16i<>{scexpr RegAddress address = 0x28; int16_t data;};
+    struct OutputYReg:public Reg16i<>{scexpr RegAddress address = 0x2A; int16_t data;};
+    struct OutputZReg:public Reg16i<>{scexpr RegAddress address = 0x2C; int16_t data;};
 
-    struct FifoCtrlReg:public Reg8{
+    struct FifoCtrlReg:public Reg8<>{
         scexpr RegAddress address = 0x2E;
         uint8_t fth:5;
         uint8_t fmode:3;
     };
 
-    struct FifoSamplesReg:public Reg8{
+    struct FifoSamplesReg:public Reg8<>{
         scexpr RegAddress address = 0x2F;
         uint8_t diff0:6;
         uint8_t fifo_ovr:1;

@@ -33,7 +33,7 @@ protected:
 
     real_t lsb;
 
-    struct ConfigAReg:public Reg8{
+    struct ConfigAReg:public Reg8<>{
         
         uint8_t measureMode:3;
         uint8_t dataRate:2;
@@ -42,14 +42,14 @@ protected:
         
     };
 
-    struct ConfigBReg:public Reg8{
+    struct ConfigBReg:public Reg8<>{
         
         uint8_t __resv__:5;
         uint8_t gain:3;
         
     };
 
-    struct ModeReg:public Reg8{
+    struct ModeReg:public Reg8<>{
         
         uint8_t mode:2;
         uint8_t __resv__:5;
@@ -57,7 +57,7 @@ protected:
         
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         
         uint8_t ready:1;
         uint8_t lock:1;
@@ -78,33 +78,33 @@ protected:
         IDC = 12
     };
 
-    ConfigAReg configAReg;
-    ConfigBReg configBReg;
-    ModeReg modeReg;
-    int16_t magXReg;
-    int16_t magYReg;
-    int16_t magZReg;
-    StatusReg statusReg;
+    ConfigAReg configAReg = {};
+    ConfigBReg configBReg = {};
+    ModeReg modeReg = {};
+    int16_t magXReg = {};
+    int16_t magYReg = {};
+    int16_t magZReg = {};
+    StatusReg statusReg = {};
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, MSB);
+        i2c_drv_.writeReg(uint8_t(addr), data, MSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, MSB);
+        i2c_drv_.readReg(uint8_t(addr), data, MSB);
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
+        i2c_drv_.writeReg(uint8_t(addr), data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
+        i2c_drv_.readReg(uint8_t(addr), data);
     }
 
 
     void requestPool(const RegAddress addr, int16_t * pdata, size_t len){
-        i2c_drv_.readMulti((uint8_t)addr, pdata, len, MSB);
+        i2c_drv_.readMulti(uint8_t(addr), pdata, len, MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){

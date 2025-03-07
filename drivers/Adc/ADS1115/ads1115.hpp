@@ -43,12 +43,12 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct ConversionReg:public Reg16{
+    struct ConversionReg:public Reg16<>{
         scexpr RegAddress address = 0b00; 
         int16_t data;
     };
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         scexpr RegAddress address = 0b01; 
         uint16_t comp_que:2;
         uint16_t comp_latch:1;
@@ -64,20 +64,20 @@ protected:
         uint16_t busy:1;
     };
 
-    struct LowThreshReg:public Reg16i{
+    struct LowThreshReg:public Reg16i<>{
         scexpr RegAddress address = 0b10;
         int16_t data;
     };
 
-    struct HighThreshReg:public Reg16i{
+    struct HighThreshReg:public Reg16i<>{
         scexpr RegAddress address = 0b11; 
         int16_t data;
     };
 
-    ConversionReg conversion_reg;
-    ConfigReg config_reg;
-    LowThreshReg low_thresh_reg;
-    HighThreshReg high_thresh_reg;
+    ConversionReg conversion_reg = {};
+    ConfigReg config_reg = {};
+    LowThreshReg low_thresh_reg = {};
+    HighThreshReg high_thresh_reg = {};
 
 
     [[nodiscard]] DeviceResult readReg(const RegAddress addr, uint16_t & data);

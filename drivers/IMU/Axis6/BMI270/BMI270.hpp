@@ -51,18 +51,18 @@ protected:
     
     #include "regs.ipp"
 
-    ChipIdReg chipid_reg;
+    ChipIdReg chipid_reg = {};
     uint8_t :8;
-    ErrReg err_reg;
-    StatusReg status_reg;
+    ErrReg err_reg = {};
+    StatusReg status_reg = {};
 
-    uint8_t data_regs[Data0Reg::size];
-    uint8_t sensor_time_regs[SensorTime0Reg::size];
+    uint8_t data_regs[Data0Reg::size] = {};
+    uint8_t sensor_time_regs[SensorTime0Reg::size] = {};
 
-    EventReg event_reg;
+    EventReg event_reg = {};
     
-    IntStatus0Reg int_status0_reg;
-    IntStatus1Reg int_status1_reg;
+    IntStatus0Reg int_status0_reg = {};
+    IntStatus1Reg int_status1_reg = {};
 
 
     void writeCommand(const uint8_t cmd){

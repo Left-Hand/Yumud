@@ -174,11 +174,11 @@ public:
     }
 
     void setPin(const Pin pin) override{
-        const auto i = CTZ((uint16_t)pin);
+        const auto i = CTZ(uint16_t(pin));
         if(isIndexValid(i)) pin_ptrs[]->setPin();
     }
     void clrPin(const Pin pin) override{
-        const auto i = CTZ((uint16_t)pin);
+        const auto i = CTZ(uint16_t(pin));
         if(isIndexValid(i)) pin_ptrs[i]->clrPin();
     }
 

@@ -18,7 +18,7 @@ public:
         uint32_t prime = 16777619U;
         uint32_t ret = 2166136261U;
         for (size_t i = 0; i < length; i++) {
-            ret ^= (uint32_t)(data[i]);
+            ret ^= uint32_t(data[i]);
             ret *= prime;
         }
         return ret;
@@ -39,7 +39,7 @@ public:
 
 template<typename T>
 __inline constexpr uint32_t hash_impl(T const * data,const size_t length){
-    return Hasher::hash_djb((char const *)(data), sizeof(T) * length);
+    return Hasher::hash_djb(reinterpret_cast<char const *>(data), sizeof(T) * length);
 }
 
 template<typename T>

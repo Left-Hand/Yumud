@@ -37,25 +37,25 @@ void INA226::update(){
 
 
 BusResult INA226::writeReg(const RegAddress addr, const uint16_t data){
-    const auto err = i2c_drv.writeReg((uint8_t)addr, data, MSB);
+    const auto err = i2c_drv.writeReg(uint8_t(addr), data, MSB);
     INA226_ASSERT(err.ok(), "write error", uint8_t(addr), data);
     return make_result(err);
 }
 
 BusResult INA226::readReg(const RegAddress addr, uint16_t & data){
-    const auto err = i2c_drv.readReg((uint8_t)addr, data, MSB);
+    const auto err = i2c_drv.readReg(uint8_t(addr), data, MSB);
     INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
     return make_result(err);
 }
 
 BusResult INA226::readReg(const RegAddress addr, int16_t & data){
-    const auto err = i2c_drv.readReg((uint8_t)addr, data, MSB);
+    const auto err = i2c_drv.readReg(uint8_t(addr), data, MSB);
     INA226_ASSERT(err.ok(), "read error", uint8_t(addr), data);
     return make_result(err);
 }
 
 BusResult INA226::requestPool(const RegAddress addr, uint16_t * p_data, const size_t len){
-    return make_result(i2c_drv.readMulti((uint8_t)addr, p_data, len, LSB));
+    return make_result(i2c_drv.readMulti(uint8_t(addr), p_data, len, LSB));
 }
 
 

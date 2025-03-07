@@ -25,7 +25,7 @@ protected:
         const uint8_t __end__:1 = 0b1;
     };
 
-    struct Response:public Reg16{
+    struct Response:public Reg16<>{
 
     };
 

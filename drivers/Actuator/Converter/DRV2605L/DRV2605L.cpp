@@ -1,21 +1,22 @@
 #include "DRV2605L.hpp"
 
-
-#define DRV2605_DEBUG
+#include "sys/debug/debug.hpp"
 
 #ifdef DRV2605_DEBUG
 #undef DRV2605_DEBUG
 #define DRV2605_DEBUG(...) DEBUG_PRINTLN(__VA_ARGS__);
-#define DRV2605_PANIC(...) PANIC(__VA_ARGS__)
-#define DRV2605_ASSERT(cond, ...) ASSERT(cond, __VA_ARGS__)
+#define DRV2605_PANIC(...) PANIC{__VA_ARGS__}
+#define DRV2605_ASSERT(cond, ...) ASSERT{cond, ##__VA_ARGS__}
+#define READ_REG(reg) readReg(reg.address, reg).loc().expect();
+#define WRITE_REG(reg) writeReg(reg.address, reg).loc().expect();
 #else
 #define DRV2605_DEBUG(...)
-#define DRV2605_PANIC(...)  PANIC()
-#define DRV2605_ASSERT(cond, ...) ASSERT(cond)
+#define DRV2605_PANIC(...)  PANIC_NSRC()
+#define DRV2605_ASSERT(cond, ...) ASSERT_NSRC(cond)
+#define READ_REG(reg) (void) readReg(reg.address, reg);
+#define WRITE_REG(reg) (void) writeReg(reg.address, reg);
 #endif
 
-#define WRITE_REG(reg) this->writeReg(reg.address, reg);
-#define READ_REG(reg) this->readReg(reg.address, reg);
 
 #define STATUS_Reg          0x00
 #define MODE_Reg            0x01
@@ -63,15 +64,15 @@ void DRV2605L::setFbBrakeFactor(const FbBrakeFactor factor){
 
 void DRV2605L::setFbBrakeFactor(const int fractor){
     switch(fractor){
-        case 1:setFbBrakeFactor(FbBrakeFactor::_1x);
-        case 2:setFbBrakeFactor(FbBrakeFactor::_2x);
-        case 3:setFbBrakeFactor(FbBrakeFactor::_3x);
-        case 4:setFbBrakeFactor(FbBrakeFactor::_4x);
-        case 6:setFbBrakeFactor(FbBrakeFactor::_6x);
-        case 8:setFbBrakeFactor(FbBrakeFactor::_8x);
-        case 16:setFbBrakeFactor(FbBrakeFactor::_16x);
+        case 1:setFbBrakeFactor(FbBrakeFactor::_1x);break;
+        case 2:setFbBrakeFactor(FbBrakeFactor::_2x);break;
+        case 3:setFbBrakeFactor(FbBrakeFactor::_3x);break;
+        case 4:setFbBrakeFactor(FbBrakeFactor::_4x);break;
+        case 6:setFbBrakeFactor(FbBrakeFactor::_6x);break;
+        case 8:setFbBrakeFactor(FbBrakeFactor::_8x);break;
+        case 16:setFbBrakeFactor(FbBrakeFactor::_16x);break;
         default:
-            HALT
+            DRV2605_PANIC("invalid brake factor");
     }
 }
 

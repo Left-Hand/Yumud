@@ -38,34 +38,34 @@ protected:
     scexpr uint8_t valid_chipid = 0x58;
     scexpr uint8_t reset_key = 0xB6;
 
-    struct ChipIDReg:public Reg8{};
+    struct ChipIDReg:public Reg8<>{};
 
-    struct ResetReg:public Reg8{};
+    struct ResetReg:public Reg8<>{};
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         uint8_t im:1;
         uint8_t __resv1__:2;
         uint8_t busy:1;
         uint8_t __resv2__:4;
     };
 
-    struct CtrlReg:public Reg8{
+    struct CtrlReg:public Reg8<>{
         uint8_t mode:2;
         uint8_t osrs_p:3;
         uint8_t osrs_t:3;
     };
 
-    struct ConfigReg:public Reg8{
+    struct ConfigReg:public Reg8<>{
         uint8_t spi3_en:1;
         uint8_t __resv__:1;
         uint8_t filter:3;
         uint8_t t_sb:3;
     };
 
-    struct PressureReg:public Reg16{uint16_t:16;};
-    struct PressureXReg:public Reg8{uint8_t:8;};
-    struct TemperatureReg:public Reg16{uint16_t:16;};
-    struct TemperatureXReg:public Reg8{uint8_t:8;};
+    struct PressureReg:public Reg16<>{uint16_t:16;};
+    struct PressureXReg:public Reg8<>{uint8_t:8;};
+    struct TemperatureReg:public Reg16<>{uint16_t:16;};
+    struct TemperatureXReg:public Reg8<>{uint8_t:8;};
 
     enum class RegAddress:uint8_t{
         DigT1 = 0x88,
@@ -114,24 +114,24 @@ protected:
     TemperatureXReg temperatureXReg;
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
+        i2c_drv_.writeReg(uint8_t(addr), data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
-        // BMP280_DEBUG((uint8_t)addr, (uint8_t)data);
+        i2c_drv_.readReg(uint8_t(addr), data);
+        // BMP280_DEBUG(uint8_t(addr), (uint8_t)data);
     }
 
     void requestPool(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
-        i2c_drv_.readMulti((uint8_t)addr, datas, len);
+        i2c_drv_.readMulti(uint8_t(addr), datas, len);
     }
 
     uint32_t getPressureData(){

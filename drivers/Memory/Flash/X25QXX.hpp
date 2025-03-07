@@ -41,7 +41,7 @@ protected:
         JedecId = 0x9F
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         using Reg8::operator=;
         uint8_t busy:1;
         uint8_t write_enable_latch:1;
@@ -51,8 +51,7 @@ protected:
         uint8_t __resv__:1;
     };
 
-    struct JedecId:public Reg24{
-        using Reg24::operator=;
+    struct JedecId{
         uint8_t capacity;
         uint8_t memory_type;
         uint8_t manufacturer_id;

@@ -12,9 +12,9 @@ scexpr uint foc_freq = 25000;
 using Current = real_t;
 
 struct UvwValue{
-    #pragma pack(push, 1)
-    real_t u, v, w;
-    #pragma pack(pop)
+    real_t u = {};
+    real_t v = {};
+    real_t w = {};
 
     real_t operator [](const size_t idx) const {
         return *(&u + idx);
@@ -51,9 +51,8 @@ struct DqCurrent: public DqValue{};
 struct DqVoltage: public DqValue{};
 
 struct AbValue{
-    #pragma pack(push, 1)
-    real_t a, b;
-    #pragma pack(pop)
+    real_t a = {};
+    real_t b = {};
 
     real_t operator [](const size_t idx) const {
         return *(&a + idx);

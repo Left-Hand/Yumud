@@ -31,30 +31,30 @@ protected:
     real_t fs;
     uint8_t ovsfix = 0;
 
-    struct MagXReg:public Reg16i{
+    struct MagXReg:public Reg16i<>{
         int16_t :16;
     };
 
-    struct MagYReg:public Reg16i{
+    struct MagYReg:public Reg16i<>{
         int16_t :16;
     };
 
-    struct MagZReg:public Reg16i{
+    struct MagZReg:public Reg16i<>{
         int16_t :16;
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         uint8_t ready:1;
         uint8_t ovl:1;
         uint8_t lock:1;
         uint8_t __resv__:5;
     };
 
-    struct TemperatureReg:public Reg16{
+    struct TemperatureReg:public Reg16<>{
         uint16_t data;
     };
 
-    struct ConfigAReg:public Reg8{
+    struct ConfigAReg:public Reg8<>{
         
         uint8_t measureMode:2;
         uint8_t dataRate:2;
@@ -63,7 +63,7 @@ protected:
         
     };
 
-    struct ConfigBReg:public Reg8{
+    struct ConfigBReg:public Reg8<>{
         
         uint8_t intEn:1;
         uint8_t __resv__:5;
@@ -72,12 +72,12 @@ protected:
         
     };
 
-    struct ResetPeriodReg:public Reg8{
+    struct ResetPeriodReg:public Reg8<>{
         using Reg8::operator=;
         uint8_t data;
     };
 
-    struct ChipIDReg:public Reg8{
+    struct ChipIDReg:public Reg8<>{
         uint8_t data;
     };
 
@@ -104,23 +104,23 @@ protected:
     ChipIDReg chipIDReg;
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
+        i2c_drv_.writeReg(uint8_t(addr), data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
+        i2c_drv_.readReg(uint8_t(addr), data);
     }
 
     void requestPool(const RegAddress addr, int16_t * datas, const size_t len){
-        i2c_drv_.readMulti((uint8_t)addr, datas, len, LSB);
+        i2c_drv_.readMulti(uint8_t(addr), datas, len, LSB);
     }
 
     real_t From16BitToGauss(const int16_t data);

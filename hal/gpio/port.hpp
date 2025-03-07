@@ -48,7 +48,7 @@ public:
     };
 
     Gpio & operator [](const Pin pin){
-        if(pin != Pin::None) return channels[CTZ((uint16_t)pin) & 0b1111];
+        if(pin != Pin::None) return channels[CTZ(uint16_t(pin)) & 0b1111];
         else return Gpio::null();
     };
 

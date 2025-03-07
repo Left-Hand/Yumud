@@ -18,13 +18,13 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct AccChipIdReg:public Reg8{
+    struct AccChipIdReg:public Reg8<>{
         scexpr RegAddress address = 0x00;
         scexpr uint8_t default_value = 0x1E;
         uint8_t chip_id;
     };
 
-    struct AccErrReg:public Reg8{
+    struct AccErrReg:public Reg8<>{
         scexpr RegAddress address = 0x02;
         uint8_t fatal_err:1;
         uint8_t :1;
@@ -32,7 +32,7 @@ protected:
         uint8_t:3;
     };
 
-    struct AccStatusReg:public Reg8{
+    struct AccStatusReg:public Reg8<>{
         scexpr RegAddress address = 0x03;
         uint8_t :7;
         uint8_t drdy:1;

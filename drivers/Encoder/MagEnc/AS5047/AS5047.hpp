@@ -12,7 +12,7 @@ protected:
 
     using RegAddress = uint16_t;
 
-    struct ErrflReg:public Reg8{
+    struct ErrflReg:public Reg8<>{
         scexpr RegAddress address = 0x001;
         uint8_t frame_error:1;
         uint8_t invalid_cmd_error:1;
@@ -20,7 +20,7 @@ protected:
         uint8_t :5;
     };
 
-    struct ProgReg:public Reg8{
+    struct ProgReg:public Reg8<>{
         scexpr RegAddress address = 0x002;
 
         uint8_t prog_otp_en:1;
@@ -30,7 +30,7 @@ protected:
         uint8_t :4;
     };
 
-    // struct DiaagcReg:public Reg8{
+    // struct DiaagcReg:public Reg8<>{
     //     scexpr RegAddress address = 0x3ffc;
 
     //     uint8_t 

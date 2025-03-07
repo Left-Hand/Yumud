@@ -32,37 +32,37 @@ public:
 protected:
     hal::I2cDrv i2c_drv_;
 
-    struct ProgramTimesReg:public Reg8{
+    struct ProgramTimesReg:public Reg8<>{
         
         uint8_t times :2;
         uint8_t __resv__ :6;
         
     };
 
-    struct StartAngleReg:public Reg16{
+    struct StartAngleReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct EndAngleReg:public Reg16{
+    struct EndAngleReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct AmountAngleReg:public Reg16{
+    struct AmountAngleReg:public Reg16<>{
         uint16_t data;
         
     };
 
-    struct RawAngleReg:public Reg16{
+    struct RawAngleReg:public Reg16<>{
         uint16_t data;
     };
 
-    struct AngleReg:public Reg16{
+    struct AngleReg:public Reg16<>{
         uint16_t data;
     };
 
-    struct ConfigReg:public Reg16{
+    struct ConfigReg:public Reg16<>{
         
         uint8_t powerMode :2;
         uint8_t hysteresis:2;
@@ -75,7 +75,7 @@ protected:
         
     };
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         
         uint8_t __resv1__ :3;
         uint8_t magHigh:1;
@@ -85,29 +85,29 @@ protected:
         
     };
 
-    struct AutoGainReg:public Reg8{
+    struct AutoGainReg:public Reg8<>{
         uint8_t data;
     };
 
-    struct MagnitudeReg:public Reg16{
+    struct MagnitudeReg:public Reg16<>{
         uint16_t data;
     };
 
-    struct BurnReg:public Reg8{
+    struct BurnReg:public Reg8<>{
         uint8_t data;
     };
 
-    ProgramTimesReg programTimesReg;
-    StartAngleReg startAngleReg;
-    EndAngleReg endAngleReg;
-    AmountAngleReg amountAngleReg;
-    RawAngleReg rawAngleReg;
-    AngleReg angleReg;
-    ConfigReg configReg;
-    StatusReg statusReg;
-    AutoGainReg autoGainReg;
-    MagnitudeReg magnitudeReg;
-    BurnReg burnReg;
+    ProgramTimesReg programTimesReg = {};
+    StartAngleReg startAngleReg = {};
+    EndAngleReg endAngleReg = {};
+    AmountAngleReg amountAngleReg = {};
+    RawAngleReg rawAngleReg = {};
+    AngleReg angleReg = {};
+    ConfigReg configReg = {};
+    StatusReg statusReg = {};
+    AutoGainReg autoGainReg = {};
+    MagnitudeReg magnitudeReg = {};
+    BurnReg burnReg = {};
 
     enum class RegAddress : uint8_t {
         ProgramTimes = 0x00,
@@ -133,19 +133,19 @@ protected:
     }
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
+        i2c_drv_.writeReg(uint8_t(addr), data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
+        i2c_drv_.readReg(uint8_t(addr), data);
     }
 public:
     scexpr uint8_t default_i2c_addr = 0x1e;

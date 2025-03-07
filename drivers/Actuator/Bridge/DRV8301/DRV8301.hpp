@@ -13,7 +13,7 @@ namespace ymd::drivers{
 
 class DRV8301:public Coil3DriverIntf{
 public:
-    enum PeakCurrent:uint8_t{
+    enum class PeakCurrent:uint8_t{
         _1_7A = 0,
         _0_7A = 1,
         _0_25A = 2,
@@ -32,7 +32,7 @@ public:
         OConly = 2,
     };
 
-    enum Gain:uint8_t{
+    enum class Gain:uint8_t{
         X10 = 0,
         X20 = 1,
         X40 = 2,
@@ -82,7 +82,7 @@ protected:
 
     using RegAddress = uint8_t;
 
-    struct Status1Reg:public Reg16{
+    struct Status1Reg:public Reg16<>{
         scexpr RegAddress address = 0x00;
 
         uint16_t fetlc_oc:1;
@@ -101,7 +101,7 @@ protected:
         uint16_t :6;
     };
 
-    struct Status2Reg:public Reg16{
+    struct Status2Reg:public Reg16<>{
         scexpr RegAddress address = 0x01;
 
         uint16_t device_id:4;
@@ -110,7 +110,7 @@ protected:
         uint16_t :9;
     };
 
-    struct Ctrl1Reg:public Reg16{
+    struct Ctrl1Reg:public Reg16<>{
         scexpr RegAddress address = 0x02;
 
         uint16_t gate_current:2;
@@ -121,7 +121,7 @@ protected:
         uint16_t :6;
     };
 
-    struct Ctrl2Reg:public Reg16{
+    struct Ctrl2Reg:public Reg16<>{
         scexpr RegAddress address = 0x03;
 
         uint16_t octw_mode:2;
@@ -133,10 +133,10 @@ protected:
         uint16_t :10;
     };
 
-    Status1Reg status1_reg;
-    Status2Reg status2_reg;
-    Ctrl1Reg ctrl1_reg;
-    Ctrl2Reg ctrl2_reg;
+    Status1Reg status1_reg = {};
+    Status2Reg status2_reg = {};
+    Ctrl1Reg ctrl1_reg = {};
+    Ctrl2Reg ctrl2_reg = {};
 
     void writeReg(const RegAddress addr, const uint16_t reg);
     void readReg(const RegAddress addr, uint16_t & reg);

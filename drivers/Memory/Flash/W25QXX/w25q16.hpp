@@ -36,7 +36,7 @@ protected:
     };
 
 
-    struct StatusReg:public Reg8{
+    struct StatusReg:public Reg8<>{
         using Reg8::operator=;
 
         uint8_t busy:1;
@@ -47,7 +47,7 @@ protected:
         uint8_t __resv__:1;
     };
 
-    StatusReg statusReg;
+    StatusReg statusReg = {};
 
 
     void writePage(const size_t addr, const void * data, const Address len);

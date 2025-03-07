@@ -12,12 +12,12 @@ protected:
     static constexpr uint8_t channels = 12;
 
 
-    struct Threshold:public Reg16{
+    struct Threshold:public Reg16<>{
         uint8_t press;
         uint8_t release;
     };
 
-    struct FiltteredData:public Reg16{
+    struct FiltteredData:public Reg16<>{
         uint16_t value:10;
         uint16_t __resv__:6;
     };
@@ -33,7 +33,7 @@ protected:
         uint8_t toggle;
     };
 
-    struct ChargeTime:public Reg8{
+    struct ChargeTime:public Reg8<>{
         uint8_t cdt_a:3;
         uint8_t __resv1__:1;
         uint8_t cdt_b:3;
@@ -48,13 +48,13 @@ protected:
         uint8_t target_level;
     };
 
-    struct TouchStatus:public Reg16{
+    struct TouchStatus:public Reg16<>{
         uint16_t ele:13;
         uint16_t __resv__:2;
         uint16_t ovcf:1;
     };
 
-    struct OORStatus:public Reg16{
+    struct OORStatus:public Reg16<>{
         uint16_t ele:13;
         uint16_t __resv__:1;
         uint16_t arff:1;

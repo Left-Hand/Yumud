@@ -491,7 +491,7 @@ template<size_t Q = IQ_DEFAULT_Q, size_t P>
 __fast_inline constexpr iq_t<Q> ceil(const iq_t<P> iq){return (iq > int(iq)) ? int(iq) + 1 : int(iq);}
 
 template<size_t Q = IQ_DEFAULT_Q, size_t P>
-__fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){return iq_t<Q>((int)(iq + iq_t<Q>::from(0.5)));}
+__fast_inline constexpr iq_t<Q> round(const iq_t<P> iq){return iq_t<Q>(int(iq + iq_t<Q>::from(0.5)));}
 
 
 #ifdef IQ_USE_LOG

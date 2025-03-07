@@ -81,7 +81,7 @@ protected:
         AutoCalibration
     };
 
-    struct StatusReg:public RegC8{
+    struct StatusReg:public RegC8<>{
         scexpr RegAddress address = 0x00;
 
         uint8_t oc_detect:1;
@@ -92,7 +92,7 @@ protected:
         uint8_t device_id;
     };
 
-    struct ModeReg:public Reg8{
+    struct ModeReg:public Reg8<>{
         scexpr RegAddress address = 0x01;
 
         uint8_t mode:3;
@@ -103,13 +103,13 @@ protected:
         using Reg8::operator=;
     };
 
-    struct RtpReg:public Reg8{
+    struct RtpReg:public Reg8<>{
         scexpr RegAddress address = 0x02;
 
         uint8_t rtp_input:8;
     };
 
-    struct LibrarySelReg:public Reg8{
+    struct LibrarySelReg:public Reg8<>{
         scexpr RegAddress address = 0x03;
 
         uint8_t lib_sel:3;
@@ -118,7 +118,7 @@ protected:
         uint8_t :3;
     };
 
-    struct WaveformSegReg:public Reg8{
+    struct WaveformSegReg:public Reg8<>{
         scexpr RegAddress address = 0x04;
         scexpr RegAddress address_end = 0x0B;
 
@@ -126,32 +126,32 @@ protected:
         uint8_t wait:1;
     };
 
-    struct GoReg:public Reg8{
+    struct GoReg:public Reg8<>{
         scexpr RegAddress address = 0x0C;
 
         uint8_t go:1;
         uint8_t :7;
     };
 
-    struct OverrideTimeOffset:public Reg8{
+    struct OverrideTimeOffset:public Reg8<>{
         scexpr RegAddress address = 0x0D;
 
         uint8_t odt:8;
     };
 
-    struct SustainTimeOffsetPositiveReg:public Reg8{
+    struct SustainTimeOffsetPositiveReg:public Reg8<>{
         scexpr RegAddress address = 0x0E;
 
         uint8_t :8;
     };
 
-    struct SustainTimeOffsetNegitiveReg:public Reg8{
+    struct SustainTimeOffsetNegitiveReg:public Reg8<>{
         scexpr RegAddress address = 0x0F;
 
         uint8_t :8;
     };
 
-    struct BrakeTimeOffsetReg:public Reg8{
+    struct BrakeTimeOffsetReg:public Reg8<>{
         scexpr RegAddress address = 0x10;
 
         uint8_t :8;
@@ -172,7 +172,7 @@ protected:
         _40ms,
 
     };
-    struct Audio2VibeReg:public Reg8{
+    struct Audio2VibeReg:public Reg8<>{
         scexpr RegAddress address = 0x11;
 
         uint8_t ath_filter:2;
@@ -181,51 +181,51 @@ protected:
     };
 
     
-    struct Audio2VibeMinimalInputLevelReg:public Reg8{
+    struct Audio2VibeMinimalInputLevelReg:public Reg8<>{
         scexpr RegAddress address = 0x12;
 
         uint8_t :8;
     };
 
     
-    struct Audio2VibeMaxmalInputLevelReg:public Reg8{
+    struct Audio2VibeMaxmalInputLevelReg:public Reg8<>{
         scexpr RegAddress address = 0x13;
 
         uint8_t :8;
     };
 
-    struct Audio2VibeMinimalOutputDriveReg:public Reg8{
+    struct Audio2VibeMinimalOutputDriveReg:public Reg8<>{
         scexpr RegAddress address = 0x14;
 
         uint8_t :8;
     };
 
 
-    struct Audio2VibeMaxmalOutputDriveReg:public Reg8{
+    struct Audio2VibeMaxmalOutputDriveReg:public Reg8<>{
         scexpr RegAddress address = 0x15;
 
         uint8_t :8;
     };
 
-    struct RatedVoltageReg:public Reg8{
+    struct RatedVoltageReg:public Reg8<>{
         scexpr RegAddress address = 0x16;
 
         uint8_t :8;
     };
 
-    struct OverdriveClampVoltageReg:public Reg8{
+    struct OverdriveClampVoltageReg:public Reg8<>{
         scexpr RegAddress address = 0x17;
 
         uint8_t :8;
     };
 
-    struct AutoCaliCompResultReg:public Reg8{
+    struct AutoCaliCompResultReg:public Reg8<>{
         scexpr RegAddress address = 0x18;
 
         uint8_t :8;
     };
 
-    struct AutoCaliBackEMFReg:public Reg8{
+    struct AutoCaliBackEMFReg:public Reg8<>{
         scexpr RegAddress address = 0x19;
 
         uint8_t :8;
@@ -259,7 +259,7 @@ protected:
         _30x
     };
 
-    struct FeedbackControlReg:public Reg8{
+    struct FeedbackControlReg:public Reg8<>{
         scexpr RegAddress address = 0x1a;
 
         uint8_t bemf_gain:2;
@@ -271,7 +271,7 @@ protected:
         uint8_t n_erm_lra:1;
     };
 
-    struct Control1Reg:public Reg8{
+    struct Control1Reg:public Reg8<>{
         scexpr RegAddress address = 0x1b;
 
         uint8_t drive_time:5;
@@ -280,7 +280,7 @@ protected:
         uint8_t startup_boost:1;
     };
 
-    struct Control2Reg:public Reg8{
+    struct Control2Reg:public Reg8<>{
         scexpr RegAddress address = 0x1c;
 
         uint8_t idiss_time:2;
@@ -290,7 +290,7 @@ protected:
         uint8_t bidir_input:2;
     };
 
-    struct Control3Reg:public Reg8{
+    struct Control3Reg:public Reg8<>{
         scexpr RegAddress address = 0x1d;
 
         uint8_t lra_openloop:1;
@@ -302,7 +302,7 @@ protected:
         uint8_t ng_thresh:1;
     };
 
-    struct Control4Reg:public Reg8{
+    struct Control4Reg:public Reg8<>{
         scexpr RegAddress address = 0x1e;
 
         uint8_t otp_program:1;
@@ -313,51 +313,51 @@ protected:
         uint8_t :2;
     };
 
-    struct VbatVoltageMonitorReg:public Reg8{
+    struct VbatVoltageMonitorReg:public Reg8<>{
         scexpr RegAddress address = 0x1e;
 
         uint8_t :8;
     };
 
-    struct LRA_ResonancePeriodReg:public Reg8{
+    struct LRA_ResonancePeriodReg:public Reg8<>{
         scexpr RegAddress address = 0x1f;
 
         uint8_t :8;
     };
     
-    StatusReg status_reg;
-    ModeReg mode_reg;
-    RtpReg rtp_reg;
-    LibrarySelReg library_sel_reg;
-    WaveformSegReg waveform_seg_reg;
-    GoReg go_reg;
-    OverrideTimeOffset override_time_offset_reg;
-    SustainTimeOffsetPositiveReg sustain_time_offset_positive_reg;
-    SustainTimeOffsetNegitiveReg sustain_time_offset_negitive_reg;
-    BrakeTimeOffsetReg brake_time_offset_reg;
-    Audio2VibeReg audio2vibe_reg;
-    Audio2VibeMinimalInputLevelReg audio2vibe_minimal_input_level_reg;
-    Audio2VibeMaxmalInputLevelReg audio2vibe_maxmal_input_level_reg;
-    Audio2VibeMinimalOutputDriveReg audio2vibe_minimal_output_drive_reg;
-    Audio2VibeMaxmalOutputDriveReg audio2vibe_maxmal_output_drive_reg;
-    RatedVoltageReg rated_voltage_reg;
-    OverdriveClampVoltageReg overdrive_clamp_voltage_reg;
-    AutoCaliCompResultReg auto_cali_comp_result_reg;
-    AutoCaliBackEMFReg auto_cali_back_emf_reg;
-    FeedbackControlReg feedback_control_reg;
-    Control1Reg control1_reg;
-    Control2Reg control2_reg;
+    StatusReg status_reg = {};
+    ModeReg mode_reg = {};
+    RtpReg rtp_reg = {};
+    LibrarySelReg library_sel_reg = {};
+    WaveformSegReg waveform_seg_reg = {};
+    GoReg go_reg = {};
+    OverrideTimeOffset override_time_offset_reg = {};
+    SustainTimeOffsetPositiveReg sustain_time_offset_positive_reg = {};
+    SustainTimeOffsetNegitiveReg sustain_time_offset_negitive_reg = {};
+    BrakeTimeOffsetReg brake_time_offset_reg = {};
+    Audio2VibeReg audio2vibe_reg = {};
+    Audio2VibeMinimalInputLevelReg audio2vibe_minimal_input_level_reg = {};
+    Audio2VibeMaxmalInputLevelReg audio2vibe_maxmal_input_level_reg = {};
+    Audio2VibeMinimalOutputDriveReg audio2vibe_minimal_output_drive_reg = {};
+    Audio2VibeMaxmalOutputDriveReg audio2vibe_maxmal_output_drive_reg = {};
+    RatedVoltageReg rated_voltage_reg = {};
+    OverdriveClampVoltageReg overdrive_clamp_voltage_reg = {};
+    AutoCaliCompResultReg auto_cali_comp_result_reg = {};
+    AutoCaliBackEMFReg auto_cali_back_emf_reg = {};
+    FeedbackControlReg feedback_control_reg = {};
+    Control1Reg control1_reg = {};
+    Control2Reg control2_reg = {};
 
     auto writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg<uint8_t>((uint8_t)address, reg);
+        return i2c_drv_.writeReg<uint8_t>(uint8_t(address), reg);
     }
 
-    auto readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg<uint8_t>((uint8_t)address, reg);
+    auto readReg(const RegAddress addr, uint8_t & reg){
+        return i2c_drv_.readReg<uint8_t>(uint8_t(addr), reg);
     }
 
     auto requestBurst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.readMulti((uint8_t)addr, data, len);
+        return i2c_drv_.readMulti(uint8_t(addr), data, len);
     }
 
 

@@ -25,13 +25,13 @@ using namespace ymd::drivers;
 using DeviceResult = MPU6050::DeviceResult;
 
 DeviceResult MPU6050::writeReg(const uint8_t addr, const uint8_t data){
-    auto err = i2c_drv_.writeReg((uint8_t)addr, data);
+    auto err = i2c_drv_.writeReg(uint8_t(addr), data);
     MPU6050_ASSERT(err.ok(), "MPU6050 write reg failed", err);
     return make_result(err);
 }
 
 DeviceResult MPU6050::readReg(const uint8_t addr, uint8_t & data){
-    auto err = i2c_drv_.readReg((uint8_t)addr, data);
+    auto err = i2c_drv_.readReg(uint8_t(addr), data);
     MPU6050_ASSERT(err.ok(), "MPU6050 read reg failed", err);
     return make_result(err);
 }

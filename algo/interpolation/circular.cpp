@@ -238,10 +238,10 @@ void CircularFilletInterpoation::computeFilletParameters (
     real_t gv2x = pBx-pCx; 
     real_t gv2y = pBy-pCy;
 
-    real_t arcStart = (real_t) atan2(gv1y,gv1x); 
+    real_t arcStart = real_t(atan2(gv1y,gv1x)); 
     real_t arcAngle = 0;
-    real_t dd = (real_t) sqrt(((gv1x*gv1x)+(gv1y*gv1y)) * ((gv2x*gv2x)+(gv2y*gv2y)));
-    if (dd != (real_t) 0){
+    real_t dd = sqrt(((gv1x*gv1x)+(gv1y*gv1y)) * ((gv2x*gv2x)+(gv2y*gv2y)));
+    if (dd != 0){
     arcAngle = (acos((gv1x*gv2x + gv1y*gv2y)/dd));
     } 
     real_t crossProduct = (gv1x*gv2y - gv2x*gv1y);
