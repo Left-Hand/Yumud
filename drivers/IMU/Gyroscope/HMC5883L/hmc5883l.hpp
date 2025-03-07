@@ -87,24 +87,24 @@ protected:
     StatusReg statusReg = {};
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, MSB);
+        i2c_drv_.writeReg(uint8_t(addr), data, MSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, MSB);
+        i2c_drv_.readReg(uint8_t(addr), data, MSB);
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
+        i2c_drv_.writeReg(uint8_t(addr), data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
+        i2c_drv_.readReg(uint8_t(addr), data);
     }
 
 
     void requestPool(const RegAddress addr, int16_t * pdata, size_t len){
-        i2c_drv_.readMulti((uint8_t)addr, pdata, len, MSB);
+        i2c_drv_.readMulti(uint8_t(addr), pdata, len, MSB);
     }
 
     real_t From12BitToGauss(const uint16_t data){

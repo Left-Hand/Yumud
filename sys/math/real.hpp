@@ -129,7 +129,7 @@ __fast_inline constexpr T frac(const T fv){
 template<floating T>
 __fast_inline constexpr T round(const T x)
 {
-    return (int)(x+0.5f);
+    return int(x+0.5f);
 }
 
 

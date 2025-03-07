@@ -12,8 +12,8 @@ public:
     virtual void setByIndex(const int index);
     virtual void clrByIndex(const int index);
 
-    void setPin(const Pin pin){setPin((uint16_t)pin);}
-    void clrPin(const Pin pin){clrPin((uint16_t)pin);}
+    void setPin(const Pin pin){setPin(uint16_t(pin));}
+    void clrPin(const Pin pin){clrPin(uint16_t(pin));}
 
     virtual void setPin(const uint16_t mask) = 0;
     virtual void clrPin(const uint16_t mask) = 0;

@@ -145,19 +145,19 @@ protected:
     StatusReg status_reg = {};
 
     BusError writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg((uint8_t)address, reg);
+        return i2c_drv_.writeReg(uint8_t(address), reg);
     }
 
     BusError readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg((uint8_t)address, reg);
+        return i2c_drv_.readReg(uint8_t(address), reg);
     }
 
     BusError writeReg(const RegAddress address, const uint16_t reg){
-        return i2c_drv_.writeReg((uint8_t)address, reg, LSB);
+        return i2c_drv_.writeReg(uint8_t(address), reg, LSB);
     }
 
     BusError readReg(const RegAddress address, uint16_t & reg){
-        return i2c_drv_.readReg((uint8_t)address, reg, LSB);
+        return i2c_drv_.readReg(uint8_t(address), reg, LSB);
     }
 
 public:

@@ -114,24 +114,24 @@ protected:
     TemperatureXReg temperatureXReg;
 
     void writeReg(const RegAddress addr, const uint16_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data, LSB);
+        i2c_drv_.writeReg(uint8_t(addr), data, LSB);
     }
 
     void readReg(const RegAddress addr, uint16_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data, LSB);
+        i2c_drv_.readReg(uint8_t(addr), data, LSB);
     }
 
     void writeReg(const RegAddress addr, const uint8_t data){
-        i2c_drv_.writeReg((uint8_t)addr, data);
+        i2c_drv_.writeReg(uint8_t(addr), data);
     }
 
     void readReg(const RegAddress addr, uint8_t & data){
-        i2c_drv_.readReg((uint8_t)addr, data);
-        // BMP280_DEBUG((uint8_t)addr, (uint8_t)data);
+        i2c_drv_.readReg(uint8_t(addr), data);
+        // BMP280_DEBUG(uint8_t(addr), (uint8_t)data);
     }
 
     void requestPool(const RegAddress addr, uint8_t * datas, uint8_t size, uint8_t len){
-        i2c_drv_.readMulti((uint8_t)addr, datas, len);
+        i2c_drv_.readMulti(uint8_t(addr), datas, len);
     }
 
     uint32_t getPressureData(){

@@ -174,7 +174,7 @@ public:
 	char& operator [] (size_t index);
 	void getBytes(uint8_t *buf, size_t bufsize, size_t index=0) const;
 	void toCharArray(char *buf, size_t bufsize, size_t index=0) const
-		{getBytes((uint8_t *)buf, bufsize, index);}
+		{getBytes(reinterpret_cast<uint8_t *>(buf), bufsize, index);}
     char * getBuffer() const {return buffer;}
 	const char * c_str() const { return buffer; }
 

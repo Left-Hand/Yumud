@@ -92,24 +92,24 @@ protected:
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint8_t reg){
-        i2c_drv_.writeReg((uint8_t)addr, reg);
+        i2c_drv_.writeReg(uint8_t(addr), reg);
     };
 
     __fast_inline void writeReg(const RegAddress addr, const uint16_t reg){
-        i2c_drv_.writeReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.writeReg(uint8_t(addr), reg, LSB);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint8_t & reg){
-        i2c_drv_.readReg((uint8_t)addr, reg);
+        i2c_drv_.readReg(uint8_t(addr), reg);
     }
 
     __fast_inline void readReg(const RegAddress addr, uint16_t & reg){
-        i2c_drv_.readReg((uint8_t)addr, reg, LSB);
+        i2c_drv_.readReg(uint8_t(addr), reg, LSB);
     }
 
     uint8_t readReg(const RegAddress addr){
         uint8_t data;
-        i2c_drv_.readReg((uint8_t)addr, data);
+        i2c_drv_.readReg(uint8_t(addr), data);
         return data;
     }
     void writePort(const uint16_t data) override{

@@ -349,15 +349,15 @@ protected:
     Control2Reg control2_reg = {};
 
     auto writeReg(const RegAddress address, const uint8_t reg){
-        return i2c_drv_.writeReg<uint8_t>((uint8_t)address, reg);
+        return i2c_drv_.writeReg<uint8_t>(uint8_t(address), reg);
     }
 
-    auto readReg(const RegAddress address, uint8_t & reg){
-        return i2c_drv_.readReg<uint8_t>((uint8_t)address, reg);
+    auto readReg(const RegAddress addr, uint8_t & reg){
+        return i2c_drv_.readReg<uint8_t>(uint8_t(addr), reg);
     }
 
     auto requestBurst(const RegAddress addr, uint8_t * data, size_t len){
-        return i2c_drv_.readMulti((uint8_t)addr, data, len);
+        return i2c_drv_.readMulti(uint8_t(addr), data, len);
     }
 
 

@@ -47,9 +47,9 @@ protected:
     void callPostRxCallback(){EXECUTE(postrx_cb_);}
 public:
     BusError read(uint32_t & data) override {char _;read1(_);data = _;return BusError::OK;};
-    BusError write(const uint32_t data) override {write1((char)data); return BusError::OK;};
+    BusError write(const uint32_t data) override {write1(char(data)); return BusError::OK;};
 
-    BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override {write1((char)data_tx); return BusError::OK;};
+    BusError transfer(uint32_t & data_rx, const uint32_t data_tx) override {write1(char(data_tx)); return BusError::OK;};
 
     virtual void writeN(const char * data_ptr, const size_t len) = 0;
 

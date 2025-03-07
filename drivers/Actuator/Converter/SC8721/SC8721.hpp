@@ -161,15 +161,15 @@ protected:
 
     
     void writeReg(const RegAddress address, const uint8_t reg){
-        i2c_drv_.writeReg((uint8_t)address, reg);
+        i2c_drv_.writeReg(uint8_t(address), reg);
     }
 
     void readReg(const RegAddress address, uint8_t & reg){
-        i2c_drv_.readReg((uint8_t)address, reg);
+        i2c_drv_.readReg(uint8_t(address), reg);
     }
 
     void requestPool(const RegAddress addr, uint8_t * data, size_t len){
-        i2c_drv_.readMulti((uint8_t)addr, data, len);
+        i2c_drv_.readMulti(uint8_t(addr), data, len);
     }
 public:
 

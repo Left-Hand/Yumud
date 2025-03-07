@@ -132,7 +132,7 @@ public:
     void enable(const bool en = true);
 
     void enableIt(const IT it,const NvicPriority request, const bool en = true);
-    void enableArrSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, (FunctionalState)_sync);}
+    void enableArrSync(const bool _sync = true){TIM_ARRPreloadConfig(instance, FunctionalState(_sync));}
 
     auto & inst() {return instance;}
 
@@ -187,7 +187,7 @@ public:
     TimerOC & oc(const size_t index);
 
     TimerChannel & operator [](const int index);
-    TimerChannel & operator [](const TimerChannel::ChannelIndex channel){return channels[(uint8_t)channel >> 1];}
+    TimerChannel & operator [](const TimerChannel::ChannelIndex channel){return channels[uint8_t(channel) >> 1];}
     [[deprecated]] GenericTimer & operator = (const real_t duty){instance->CNT = uint16_t(instance->ATRLR * duty); return *this;}
 
     #ifdef ENABLE_TIM2
@@ -232,7 +232,7 @@ public:
             }{;}
 
     void initBdtr(const uint32_t ns = 200, const LockLevel level = LockLevel::Off);
-    void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, (FunctionalState)_sync);}
+    void enableCvrSync(const bool _sync = true){TIM_CCPreloadControl(instance, FunctionalState(_sync));}
 
     void setDeadZone(const uint32_t ns);
     void setRepeatTimes(const uint8_t rep){instance->RPTCR = rep;}

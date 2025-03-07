@@ -30,7 +30,7 @@ public:
     }
 
     __fast_inline void push(auto && data){
-        T * porg = (T *)write_ptr;
+        T * porg = write_ptr;
         write_ptr = advance(write_ptr, 1);
         new (porg) T(data);
         // if(write_ptr == read_ptr){
@@ -40,7 +40,7 @@ public:
 
     template <typename ... Args>
     __fast_inline void emplace(Args&&... args){
-        T * porg = (T *)write_ptr;
+        T * porg = write_ptr;
         write_ptr = advance(write_ptr, 1);
         new (porg) T(std::forward<Args>(args)...);
         // if (write_ptr == read_ptr) {
@@ -49,7 +49,7 @@ public:
     }
 
     __fast_inline void push(const T * pdata,const size_t len){
-        T * p_org = (T *)write_ptr;
+        T * p_org = write_ptr;
         const int over = (write_ptr + len - N - this->buf);
         if(over >= 0){
             write_ptr = this->buf + over;
@@ -74,7 +74,7 @@ public:
     }
 
     void pop(T * pdata, const size_t len){
-        T * p_org = (T *)read_ptr;
+        T * p_org = (read_ptr);
         const int over = (read_ptr + len - N - this->buf);
         if(over >= 0){
             read_ptr = this->buf + over;
@@ -99,7 +99,7 @@ public:
     }
 
     __fast_inline const T & front() {
-        return *(const T *)read_ptr;
+        return *read_ptr;
     }
 
     size_t available() const {
