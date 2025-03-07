@@ -374,40 +374,57 @@ std::array<std::byte, N> make_bytes_from_tuple(Tup && tup){
 template<
     typename _Arg,
     typename Arg = std::decay_t<_Arg>,
-    size_t N = sizeof(Arg)
+    size_t ArgSize = sizeof(Arg)
 >
 __fast_inline constexpr 
-Arg make_arg_from_bytes(const std::span<const std::byte, N> & bytes) {
-    static_assert(N <= 8, "N must be less than 8"); // 确保类型不超过8字节
+Arg make_arg_from_bytes(const std::span<const std::byte, ArgSize> & bytes) {
+    // static_assert(sizoef(Arg) <= 8, "N must be less than 8"); // 确保类型不超过8字节
 
-    using T = bytes_to_uint_t<N>; // 使用预定义的中间类型
+    using T = bytes_to_uint_t<sizeof(Arg)>; // 使用预定义的中间类型
 
     T temp = static_cast<T>(bytes[0]);
 
-    for(size_t i = 1; i < N; i++){
+    for(size_t i = 1; i < sizeof(Arg); i++){
         temp |= static_cast<T>(static_cast<T>(bytes[i]) << (i * 8));
     }
 
     return std::bit_cast<Arg>(temp);
 }
 
+// template<
+//     size_t N_,
+//     typename Tup,
+//     typename Arg = tuple_element_t<N_, Tup>,
+//     size_t TupSize = total_bytes_v<Tup>,
+//     size_t ArgSize = sizeof(Arg)
+// >
+// constexpr 
+// Arg fetch_arg_from_bytes(const std::span<const std::byte> bytes){
+//     constexpr size_t offset = tuple_element_offset_v<N_, Tup>;
+//     return make_arg_from_bytes<Arg>(bytes.subspan(offset, ArgSize));
+// };
+
 template<
-    size_t N_,
+    size_t I,
     typename Tup,
-    typename Arg = tuple_element_t<N_, Tup>,
+    typename Arg = tuple_element_t<I, Tup>,
     size_t TupSize = total_bytes_v<Tup>,
     size_t ArgSize = sizeof(Arg)
 >
 constexpr 
-Arg fetch_arg_from_bytes(const std::span<const std::byte> bytes){
-    // constexpr size_t arg_size = sizeof(Arg);
-    // const auto cut_span = bytes.subspan(tuple_element_offset_v<N_, Tup>, ArgSize);
-    // static_assert(ArgSize == cut_span);
-    // return make_arg_from_bytes<Arg>(bytes[tuple_element_offset_v<N_, Tup>]);
-    constexpr size_t offset = tuple_element_offset_v<N_, Tup>;
-    static_assert(offset == 0);
-    return make_arg_from_bytes<Arg>(bytes.subspan(offset, ArgSize));
-};
+Arg fetch_arg_from_bytes(const std::span<const std::byte, TupSize> bytes) {
+    // 静态断言确保元组元素索引有效
+    static_assert(I < std::tuple_size_v<Tup>, "索引超出元组元素范围");
+
+    // 计算元组元素的偏移量
+    constexpr size_t offset = tuple_element_offset_v<I, Tup>;
+
+    // 截取对应长度的子跨度（静态跨度）
+    auto subspan = bytes.subspan(offset, ArgSize);
+
+    // 使用静态跨度调用 make_arg_from_bytes
+    return make_arg_from_bytes<Arg>(subspan);
+}
 
 
 // template<
@@ -416,15 +433,45 @@ Arg fetch_arg_from_bytes(const std::span<const std::byte> bytes){
 // >
 // constexpr 
 // Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
-
-
-
 //     using  Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
 //     // 使用索引序列展开元组元素类型
-//     return std::make_tuple( fetch_arg_from_bytes.template operator()<Is>()...);
+//     return std::make_tuple( fetch_arg_from_bytes<Is, Tup>(bytes)...);
+// }
+
+// template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
+// constexpr 
+// Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
+//     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
+//     return std::make_tuple((fetch_arg_from_bytes<Is, Tup>(bytes)), ...);
+// }
+// template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
+// constexpr 
+// Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
+//     using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
+
+//     // 辅助函数：根据索引序列展开并构造元组
+//     auto construct_tuple = [&bytes](auto... indices) {
+//         return std::make_tuple(fetch_arg_from_bytes<indices, Tup>(bytes)...);
+//     };
+
+//     // 使用索引序列调用辅助函数
+//     return construct_tuple(Is{});  // 自动展开索引序列
 // }
 
 
+template<typename Tup, size_t N = total_bytes_v<std::decay_t<Tup>>>
+constexpr 
+Tup make_tuple_from_packed_bytes(const std::span<const std::byte, N> bytes) {
+    using Is = std::make_index_sequence<std::tuple_size_v<Tup>>;
+
+    // 辅助函数：根据索引序列展开并构造元组
+    auto construct_tuple = [&bytes]<std::size_t... Indices>(std::index_sequence<Indices...>) {
+        return std::make_tuple(fetch_arg_from_bytes<Indices, Tup>(bytes)...);
+    };
+
+    // 使用索引序列调用辅助函数
+    return construct_tuple(Is{});
+}
 
 template<
     typename Fn,
@@ -518,19 +565,23 @@ void enum_main(){
         static constexpr auto arr4 = make_bytes_from_tuple(std::make_tuple(u, f, ui16, q21));
         static_assert(arr3 == arr4);
 
-        using tup_t = decltype(std::make_tuple(u, f, ui16, q21));
+        static constexpr auto tup = std::make_tuple(u, f, ui16, q21);
+        using tup_t = std::decay_t<decltype(tup)>;
 
         using a0 = tuple_element_t<0, tup_t>;
         using a1 = tuple_element_t<1, tup_t>;
         using a2 = tuple_element_t<2, tup_t>;
 
         static constexpr auto u_2 = fetch_arg_from_bytes<0, tup_t>(std::span(arr3));
+        static constexpr auto f_2 = fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
 
-
+        static_assert(u == u_2);
+        static_assert(f == f_2);
         // static constexpr auto f_2 = fetch_arg_from_bytes<1, tup_t>(std::span(arr3));
 
         // static_ass
-        // static constexpr auto arr_ = make_tuple_from_packed_bytes<tup_t>(std::span(arr4));
+        static constexpr auto tup_ = make_tuple_from_packed_bytes<tup_t>(std::span<const std::byte, 14>(arr4));
+        static_assert(tup == tup_);
         // static const auto make_arg_from_bytes
     }
 
