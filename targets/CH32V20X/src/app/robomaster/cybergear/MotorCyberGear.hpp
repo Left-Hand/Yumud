@@ -4,6 +4,7 @@
 
 #include "sys/utils/rustlike/Optional.hpp"
 #include "sys/utils/rustlike/Result.hpp"
+#include "sys/utils/PerUnit.hpp"
 
 #include "sys/math/real.hpp"
 
@@ -51,8 +52,9 @@ enum class CgError:uint8_t{
     RET_DLC_SHORTER,
     RET_DLC_LONGER,
     RET_UNKOWN_CMD,
-    CMD_LOWER_THAN_LIMIT,
-    CMD_HIGHER_THAN_LIMIT,
+    INPUT_OUT_OF_RANGE,
+    INPUT_LOWER_THAN_LIMIT,
+    INPUT_HIGHER_THAN_LIMIT,
 };
 
 enum class CgCommand:uint8_t{
@@ -80,35 +82,6 @@ namespace details{
     // template<typename T = void>
     // using CgResult = Result<T, CgError>;
 
-    template<typename T>
-    struct PerUint{
-        uint16_t data;
-        constexpr PerUint(const real_t value):data(static_cast<uint16_t>(
-            iq_t<8>(INVLERP(get_min(), get_max(), CLAMP(value, get_min(), get_max())) * 65535))){;}
-    
-        constexpr operator real_t() const {return LERP(get_min(), get_max(), real_t(data) / 65535);} 
-
-        static constexpr CgResult<void> check(const real_t value){
-            if(unlikely(value > get_max())) return Err{CgError::CMD_HIGHER_THAN_LIMIT};
-            if(unlikely(value < get_min())) return Err{CgError::CMD_LOWER_THAN_LIMIT};
-            return Ok{};
-        }
-    private:
-        static constexpr real_t get_min() {return std::get<0>(T::get_range());}
-        static constexpr real_t get_max() {return std::get<1>(T::get_range());}
-    };
-    
-    #define DEF_PER_UNIT(name, min, max)\
-    struct name:public PerUint<name>{\
-        static constexpr std::tuple<real_t, real_t> get_range(){return {static_cast<real_t>(min),static_cast<real_t>(max)};}\
-    };\
-    
-    DEF_PER_UNIT(CmdRad, -2 * TAU, 2 * TAU)
-    DEF_PER_UNIT(CmdOmega, -30 * TAU, 30 * TAU)
-    DEF_PER_UNIT(CmdTorque, -12, 12)
-    DEF_PER_UNIT(CmdKp, 0, 500)
-    DEF_PER_UNIT(CmdKd, 0, 5)
-    
     struct Temperature{
         uint16_t data;
         
@@ -117,8 +90,12 @@ namespace details{
         }
     };
 
-    #undef DEF_PER_UINT
-
+    DEF_PER_UNIT(CmdRad, uint16_t, -2 * TAU, 2 * TAU)
+    DEF_PER_UNIT(CmdOmega, uint16_t, -30 * TAU, 30 * TAU)
+    DEF_PER_UNIT(CmdTorque, uint16_t, -12, 12)
+    DEF_PER_UNIT(CmdKp, uint16_t, 0, 500)
+    DEF_PER_UNIT(CmdKd, uint16_t, 0, 5)
+    
 
     struct Feedback{
         real_t rad = {};

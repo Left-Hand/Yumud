@@ -79,7 +79,7 @@ CgResult<void> MotorCyberGear::ctrl(const real_t cmd_torque, const real_t cmd_ra
             CmdKd::check(cmd_kd) 
         ;
 
-        if(res.is_err()) return res;
+        if(res) return Err(CgError::INPUT_OUT_OF_RANGE);
     }
 
     payload.cmd_rad() = CmdRad(cmd_rad);
